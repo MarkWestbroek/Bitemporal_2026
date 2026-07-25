@@ -1370,3 +1370,125 @@ Daarmee staat het stappenplan van het profiel op **1–5 alle vijf gedaan** (5 o
 
 Kanttekening: de design-sessie heeft intussen `db26f04` (kaderselectie-fix) gecommit — alles staat er netjes tussen, geen conflicten. En de werkboom is schoon op jouw eigen export-bestanden na.
 
+---
+
+## 👤 Gebruiker (21)
+
+heb je al dit werk goed gedocumenteerd? Zou je een teaser willen schrijven voor de werkgroep, waarin je de behaalde resultaten van vandaag beschrijft? Er mogen (moeten!) plaatjes in: screenshots, enz. 
+
+Verder: kunnen we ook al maken dat ik een element uit de projectboom op een gegevenselement in het diagram drop, zodat ze gekoppeld worden? Ik denk dat daar iets anders in de weg zit: de projectboom stop nu bij GE, en toont geen attributen. Dat moet eerst. Zie ik dat goed?
+
+**🤖 Claude:**
+
+Drie dingen: (1) documentatie-status — ja, maar ik loop hem na, (2) de teaser mét verse plaatjes maak ik nu, (3) je drop-analyse beoordeel ik onderaan (kort: half goed gezien — voor GE-niveau kan het al, voor attribuut-niveau klopt je diagnose). Eerst verse screenshots voor de teaser genereren:
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Bash` — Generate teaser screenshots
+
+**🤖 Claude:**
+
+Cwd was weer de repo-root — opnieuw vanuit `web/vite`:
+> 🔧 `Bash` — Generate teaser screenshots from web/vite
+> 🔧 `Bash` — Check vite log
+> 🔧 `PowerShell` — Free port 5175
+> 🔧 `Bash` — Generate teaser screenshots (fresh server)
+> 🔧 `Bash` — Canvas screenshot via menuitem selector
+> 🔧 `Bash` — Canvas screenshot (correct cwd)
+> 🔧 `PowerShell` — Stop dev server
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\diagrammen\teaser-3-motor-canvas.png
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\toegangsspraak-teaser.md
+
+**🤖 Claude:**
+
+Nu het drop-vervolgpunt in het profiel-plan vastleggen en alles committen:
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-24 Toegangsregel-profiel (ontwerp).md
+> 🔧 `Bash` — Commit teaser and drop analysis
+> 🔧 `Bash` — Commit teaser (repo-root paths)
+
+**🤖 Claude:**
+
+Alles staat erop (`01f8489`). De drie antwoorden:
+
+## Is het goed gedocumenteerd? Ja — dit is de kaart
+
+- **[docs/TOEGANGSSPRAAK.md](bitemp_register_v06/docs/TOEGANGSSPRAAK.md)** — de functionele + technische beschrijving (taal, editor, modules, tests), actueel t/m de terugweg en ArchiMate.
+- **[Taal-ontwerpdoc](bitemp_register_v06/docs/plans/2026-07-22%20Klare-taal%20Toegangsbeleid%20—%20Toegangsspraak%20(ontwerp).md)** — grammatica, alle besluiten (van-vorm, woordvolgorde, onbepaalde termen, existentie) met datum, §12 status + het plicht-voorstel §12.2.
+- **[Profiel-ontwerpdoc](bitemp_register_v06/docs/plans/2026-07-24%20Toegangsregel-profiel%20(ontwerp).md)** — stappenplan 1–5 alle ✅/🔶 met wat en waarom, jouw metamodel-SVG, designbrief + ontwerp-antwoord + handreiking ernaast.
+- Elke commit-message vertelt bovendien het verhaal per stap — de branch leest als een logboek.
+
+## De teaser — klaar, met plaatjes
+
+**[docs/toegangsspraak-teaser.md](bitemp_register_v06/docs/toegangsspraak-teaser.md)**, met drie vers geschoten screenshots in `docs/diagrammen/` (teksteditor mét ontleding, de Diagram-tab met de vormentaal, en de motor-canvas met projectboom) plus jouw metamodel-SVG. Opbouw: *"Eén beleidsregel, vier gezichten"* → de meelezende editor → de vormentaal → publiceren met heilige layout en de verliesvrije round-trip → de keten wet → beleid → regel (ArchiMate/GEMMA) → waarom dit telt → en de **vijf vragen aan de werkgroep** (naam, plicht-grammatica, begrippen-als-Business-object, lidwoord/telbaarheid, kleurenblind-toets). Op GitHub rendert alles direct; pas gerust de toon aan waar je wilt.
+
+## De drop-vraag — je ziet het half goed
+
+- **Voor GE-/entiteit-niveau hoeft er níets aan de boom te gebeuren**: Naam, Locatie enz. staan al als sleepbare elementen in de projectboom, en de kolom-resolutie van vandaag kent ze al. Wat ontbreekt is alleen de **drop-afhandeling op de canvas** — en die zit in `DiagramCanvas` (diagramcore), precies waar de design-sessie nu werkt, dus daar blijf ik even uit.
+- **Voor attribuut-/veld-niveau klopt je diagnose precies**: de boom stopt bij de GE omdat velden geen elementen zijn maar compartiment-regels — die moeten eerst als (sleepbare) sub-knopen in de ElementenBrowser komen. Maar er is een sluiproute die er al ís: de **ModelPicker** kent velden wél, inclusief drag-infra met FieldRef-payload — die als sleepbron naast de canvas hangen kan zonder boom-verbouwing. Beide routes staan uitgewerkt in het profiel-plan (sectie "Vervolg: droppen uit de projectboom").
+
+Kleine bijvangst die ik zag: er staat een `.vite/deps`-cachemap op repo-rootniveau in versiebeheer (verandert bij elke dev-serverstart) — kandidaat om te untracken en te gitignoren, zeg het maar.
+
+---
+
+## 👤 Gebruiker (22)
+
+wil je die deps ignoren?
+> 🔧 `Bash` — Untrack .vite cache and ignore it
+
+**🤖 Claude:**
+
+Gedaan — commit `2daf52f`: de twee gecommitte cache-bestanden (`.vite/deps/_metadata.json` en `package.json`) zijn uit versiebeheer gehaald (ze blijven lokaal gewoon staan) en `.vite/` staat nu in de `.gitignore`, dus hij duikt niet meer op in je status.
+
+Wat er nu nog als gewijzigd in de werkboom staat zijn alleen twee chat-exports van je backup-script — die laat ik zoals afgesproken aan jou (mogen meecommitten wanneer jij wilt).
+
+---
+
+## 👤 Gebruiker (23)
+
+mogen meegecommit
+
+Waar staat het profiel-ontwerpdoc? de link boven werkt niet.
+
+Nog iets bijzonders met je naamgeving: je bent in de toekomst gegaan. Gister al, maar toen was het al overgedragen aan de andere sessie toen ik het zag... Het is nu 24 juli, maar je heb de documenten gister gemaak. Ze heten allemaal echter 24 en 25 juli + naam...
+
+**🤖 Claude:**
+
+Drie dingen — eerst de exports committen, dan het pad, dan de datums rechtzetten (je hebt gelijk, ik heb vooruit gedateerd). Eerst de feiten uit de git-historie halen:
+> 🔧 `Bash` — Commit exports and find real creation dates
+> 🔧 `Bash` — Find ontwerp-antwoord date and all references
+> 🔧 `Bash` — Rename plan docs to real dates
+> 🔧 `Bash` — Update all references to renamed docs
+> 🔧 `Bash` — Check commit times and remaining in-text dates
+> 🔧 `Bash` — Fix in-text dates to real dates
+
+**🤖 Claude:**
+
+De design-sessie was zelfs naar 27 juli gereisd — ook rechtzetten, tests draaien en committen:
+> 🔧 `Bash` — Fix ontwerp-antwoord date, test, commit renames
+> 🔧 `Bash` — Commit date fixes from repo root
+> 🔧 `Bash` — Split date-fix commit from user exports
+
+**🤖 Claude:**
+
+Alle drie de punten zijn afgehandeld:
+
+**1. Exports meegecommit** — de chat-exports in `4fee47d`, en je Studio-exports/diagram-werkbestanden apart in `73c4d07` (die waren per ongeluk in de datum-commit beland; ik heb dat gesplitst zodat elke commit klopt met zijn boodschap).
+
+**2. Waar het profiel-ontwerpdoc staat** — de link brak om twee redenen: de spaties en het em-streepje (—) in de bestandsnaam doen het slecht in links, én de naam is net veranderd. Het volledige pad is nu:
+
+```
+d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-23 Toegangsregel-profiel (ontwerp).md
+```
+
+**3. De tijdreis — goed gezien, en rechtgezet** (`e944456`). Wat er gebeurde: ik heb documenten vooruit gedateerd — het ontwerpdoc heette 24 juli maar is op de **23e** om 19:09 gemaakt, de designbrief en handreiking heetten 25 juli maar zijn van de 23e (22:27 en 23:49), en het ontwerp-antwoord van de design-sessie heette 25 juli "(sessie 2026-07-27)" maar is van de 24e om 00:06. Ik heb de echte datums uit de git-historie gehaald en alles hernoemd:
+
+| Was | Is nu |
+|---|---|
+| `2026-07-24 Toegangsregel-profiel (ontwerp).md` | `2026-07-23 …` |
+| `2026-07-25 … designbrief vormentaal.md` | `2026-07-23 …` |
+| `2026-07-25 … handreiking implementatie vormentaal.md` | `2026-07-23 …` |
+| `2026-07-25 … vormentaal (ontwerp-antwoord).md` | `2026-07-24 …` |
+
+Daarbij zijn álle verwijzingen meegetrokken (docs, code-headers, de teaser) en ook de datum-koppen en besluit-annotaties ín de teksten gecorrigeerd tegen de commit-tijden — de besluiten van de 23e heten nu 23, en wat echt op de 24e gebeurde (vormentaal, terugweg, ArchiMate, existentie) heet nog steeds 24. Het hoofddoc kreeg "Datum: 2026-07-23 (laatst bijgewerkt 2026-07-24)". Tests blijven groen (383).
+
+Nog onbeheerd in je werkboom: `bitemp_register_v06/_tmp/` en `web/vite/profielen/toegangsregel.json` — die laat ik als jouw werkbestanden staan (zeg het als de `_tmp/` in de gitignore mag).
+
