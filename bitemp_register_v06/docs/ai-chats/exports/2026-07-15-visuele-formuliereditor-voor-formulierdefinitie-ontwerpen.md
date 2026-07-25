@@ -2806,3 +2806,44 @@ Prima — dat is de nette route. Eén ding om die chat mee te geven: `main` is v
 
 Voor de rest: alles van de formulier-lijn staat op `main` en is gepusht. Roep maar als ik verder kan met het volgende (gefilterde projectboom, dnd-kit, of P3).
 
+---
+
+## 👤 Gebruiker (28)
+
+ik werk komende weken op mijn laptop
+
+Wil je een overdrachtsdocument voor de volgende chat maken, die samenvat wat je gedaan hebt en wat er nog te doen is qua formulieren?
+
+**🤖 Claude:**
+
+Goed idee. Ik kijk eerst even naar het bestaande overdrachtsbestand (voor de laptop) zodat ik dezelfde stijl/plek aanhoud, en check de exacte stand.
+> 🔧 `Bash` — Find existing handover doc for style
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-24 Overdracht Toegangsspraak (laptop).md
+> 🔧 `Bash` — Check DB definitions + replay files
+> 🔧 `Bash` — Inventory files and test counts
+> 🔧 `Bash` — Check dates, persist, tags
+> 🔧 `Bash` — Verify formulier work in main + tag
+> 🔧 `Bash` — Check imprint doc referencing formuliereditor
+
+**🤖 Claude:**
+
+Ik heb het complete beeld. Ik schrijf het overdrachtsdocument.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-25 Overdracht Formulieren (laptop).md
+> 🔧 `Bash` — Commit + push handover doc
+
+**🤖 Claude:**
+
+Klaar en gepusht: [plans/2026-07-25 Overdracht Formulieren (laptop).md](bitemp_register_v06/docs/plans/2026-07-25%20Overdracht%20Formulieren%20(laptop).md) — zelfde opzet als je toegangsspraak-overdracht.
+
+**Wat erin staat:**
+
+1. **Wat er staat** — de formulier-lijn in één alinea (editor, padadressering, meervoudigheid, register-schrijfpad, runtime, dogfood-profiel).
+2. **Waar het leeft** — tabel met alle code-paden en de vier relevante docs, zodat de volgende chat niet hoeft te zoeken.
+3. **Op de laptop beginnen** — commando's, waar de activiteit zit, hoe je de tests draait (met de Windows-glob-valkuil), en dat de Go-backend nodig is.
+4. **⚠ Wat niet meereist** — het belangrijkste punt: **FormulierDefinities leven in Postgres**, niet in een werkbestand zoals de andere profielen. Op de laptop is je lijst dus leeg → replay-file of gewoon nieuw beginnen. Plus localStorage en het feit dat de editor-state **niet persistent** is (refresh = werk kwijt).
+5. **Wat er nog te doen is** — geprioriteerd, met mijn advies: dnd-kit (niveau veranderen is de enige echt gemiste UX) → gefilterde projectboom (levert je mappen gratis) → F47 kolommen → editor-state persistent. Daarna het inhoudelijke werk: P2 (virtuele velden/regels/zetWaarde — je oorspronkelijke wens), F42 wizard, F48 P3 + kruisverband-traces.
+6. **Valkuilen & lessen** — de dingen die deze sessie tijd kostten: afgevoerde definities met levende meta, de lege `baseUrl`, de update-in-place-semantiek (leeg extra hub-record is onschadelijk), en dat mijn testtroep in je échte DB belandde.
+7. **Verificatie-status** — 37/37 tests uitgesplitst, plus expliciet wat ik **niet** kon automatiseren en dus met de hand nagereden moet worden: de flow *diagram → zet terug → preview → opslaan*.
+
+Twee dingen die ik onderweg constateerde en die je misschien nog niet wist: `main` is intussen doorbewogen tot 25 juli (toegangsspraak, diagramcore) en er staat al een `studio/v0.5.0`-tag; en er is op 20 juli een imprint-doc bijgekomen dat expliciet **hergebruik van de formuliereditor** beschrijft — mogelijk relevant als je P3 oppakt.
+

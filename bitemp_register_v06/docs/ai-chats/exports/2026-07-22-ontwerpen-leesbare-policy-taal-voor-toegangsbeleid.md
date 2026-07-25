@@ -1540,3 +1540,50 @@ Beide zijn naar-buiten-acties, dus die laat ik aan jou (of zeg het, dan doe ik d
 
 Eén observatie tot slot: je `7263b809 "backup filetjes Studio"`-commit stond er al netjes op — dus samen met de exports-commits is je Studio-werk van deze dagen ook echt aan boord van de branch.
 
+---
+
+## 👤 Gebruiker (25)
+
+ik heb gepusht, hoe maak ik nu die PR, of kun jij dat doen?
+
+**🤖 Claude:**
+
+Dat kan ik doen — je hebt gepusht, dus ik maak de PR via `gh`:
+> 🔧 `Bash` — Create PR feat/toegangsspraak → main
+
+**🤖 Claude:**
+
+De PR staat klaar: **https://github.com/MarkWestbroek/Bitemporal_2026/pull/13** — `feat/toegangsspraak` → `main`, met een volledige beschrijving (wat het is, hoofdpunten, de 383-tests/round-trip-garanties, documentatie-verwijzingen en het bewust opengelaten vervolgwerk).
+
+Mergen kan op twee manieren, wat je prettig vindt:
+
+- **In de GitHub-UI**: de PR openen → *Merge pull request* (de proef-merge was schoon, dus dit gaat zonder conflicten);
+- **Of vanaf de command line**: `gh pr merge 13 --merge` (eventueel met `--delete-branch` als je de branch daarna wilt opruimen — al zou ik hem nog even laten staan tot de laptop is bijgewerkt).
+
+Voor de laptop daarna: `git pull` op main (of `git fetch && git checkout feat/toegangsspraak` als je vóór de merge al wilt beginnen), en vergeet de localStorage-waarschuwing uit het overdrachtsbestand niet — importeer je Studio-exports uit `docs/exports/Studio exports/` om je diagram-layouts en kruisverbanden mee te nemen. Goede weken op de laptop!
+
+---
+
+## 👤 Gebruiker (26)
+
+gemerged. Wil je de lokale branche opruimen?
+> 🔧 `Bash` — Verify branch fully merged and worktree clean before cleanup
+
+**🤖 Claude:**
+
+Alles zit in origin/main, niets ongepusht, worktree schoon — veilig om op te ruimen:
+> 🔧 `Bash` — Remove worktree, delete merged branch, update local main
+> 🔧 `Bash` — Update local main and delete merged branch
+
+**🤖 Claude:**
+
+Opgeruimd:
+
+- **Worktree `D:/Git/Bitemporal_2026_gedrag` verwijderd** (was schoon, alles gecommit en gepusht).
+- **Lokale branch `feat/toegangsspraak` verwijderd** — na verificatie dat er 0 commits ontbraken in origin/main (de `-d`-weigering was een vals alarm: die checkte tegen je huidige formulier-branch, niet tegen main).
+- **Lokale `main` bijgewerkt** naar `327c7035` — de merge van PR #13 staat erop, met het overdrachtsbestand als laatste commit eronder.
+
+Je staat zelf nog gewoon op `feat/formulier-meta-standaard`, onaangeroerd. De remote branch `origin/feat/toegangsspraak` bestaat nog — handig als je op de laptop eerst de branch wilt bekijken; opruimen kan later met `git push origin --delete feat/toegangsspraak` (of het "Delete branch"-knopje op de gemergde PR).
+
+Daarmee is het hele Toegangsspraak-traject van deze week netjes geland op main: taal, editor, profiel, round-trip, koppelingen, ArchiMate, teaser en overdracht. Veel plezier op de laptop — het overdrachtsbestand (`docs/plans/2026-07-24 Overdracht Toegangsspraak (laptop).md`) wijst je daar de weg, inclusief de localStorage-waarschuwing voor je diagram-layouts.
+
