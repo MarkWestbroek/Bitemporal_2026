@@ -338,6 +338,29 @@ export function maakElement(elementTypeId) {
   return element;
 }
 
+/**
+ * OperatieResolver-facet (ontwerp "Sequence hermetisch" §2): de operaties
+ * van een klasse/interface — de velden van het operaties-compartiment.
+ * De signatuur staat in `naam` (bv. "bestel(order: Order): Bevestiging"),
+ * het retourtype eventueel in `typeLabel`.
+ */
+export function operatiesVan(element) {
+  const et = elementTypes.find((t) => t.id === element?.elementType);
+  const idx = (et?.compartments || []).findIndex((c) => c.id === "operaties");
+  if (idx < 0) return [];
+  // De inspector schrijft compartimenten met een compartmentType-id (in
+  // aanmaakvolgorde!) — dáárop matchen; index alleen als fallback voor
+  // ongetypeerde (hand-/testdata) compartimenten.
+  const comp =
+    (element.compartimenten || []).find((c) => c.compartmentType === "operaties") ||
+    ((element.compartimenten?.[idx]?.compartmentType ?? null) === null
+      ? element.compartimenten?.[idx]
+      : null);
+  return (comp?.velden || [])
+    .filter((v) => v?.naam)
+    .map((v, i) => ({ id: `${element.id}:op:${i}`, naam: v.naam, retour: v.typeLabel || null }));
+}
+
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerPuurUml() {
   if (!getDiagramType(PUUR_UML_ID)) {

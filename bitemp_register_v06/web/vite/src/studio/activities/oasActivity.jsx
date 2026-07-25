@@ -5,7 +5,7 @@
  */
 import { parse as parseYaml, stringify as naarYaml } from "yaml";
 import { IconOAS05 } from "../icons";
-import { registreerOas31, oas31DiagramType, maakElement } from "../../diagramprofielen/oas31/index.js";
+import { registreerOas31, oas31DiagramType, maakElement, operatiesVan } from "../../diagramprofielen/oas31/index.js";
 import { vanOasDocument, naarOasDocument } from "../../diagramprofielen/oas31/adapter.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 
@@ -25,6 +25,8 @@ export default maakDiagramActiviteit({
   standaardVerborgen: true, // gedekt door de Modelleren-host
   previewTekst: "OpenAPI 3.1-schemas — derde profiel (fase 5-vuurproef), lege sandbox.",
   devHookNaam: "__oas05Store",
+  // OperatieResolver: OAS-operations ("GET /pad"), ook via connectoren.
+  operatiesVan,
   koppeling: {
     /**
      * OAS 3.0/3.1 YAML/JSON → diagram (YAML is een superset van JSON).

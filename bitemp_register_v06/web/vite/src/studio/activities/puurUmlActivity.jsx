@@ -5,7 +5,7 @@
  * het canonieke model, geen serialisatie, geen eigen componenten.
  */
 import { IconUML05 } from "../icons";
-import { registreerPuurUml, puurUmlDiagramType, maakElement } from "../../diagramprofielen/puur-uml/index.js";
+import { registreerPuurUml, puurUmlDiagramType, maakElement, operatiesVan } from "../../diagramprofielen/puur-uml/index.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 
 registreerPuurUml();
@@ -24,4 +24,6 @@ export default maakDiagramActiviteit({
   standaardVerborgen: true, // gedekt door de Modelleren-host
   previewTekst: "Puur UML-klassediagram — tweede profiel (fase 5-lakmoesproef), lege sandbox.",
   devHookNaam: "__puurUml05Store",
+  // OperatieResolver: operaties-compartiment van klassen/interfaces.
+  operatiesVan,
 });

@@ -19,6 +19,7 @@ import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
 import { vraagNaam } from "../naamDialog.jsx";
+import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
@@ -828,7 +829,10 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
             onDragStart={(e) => {
               if (!sleutel) return;
               e.dataTransfer.setData(PLAATSING_MIME, meeTeNemen(sleutel).join("\n"));
-              e.dataTransfer.effectAllowed = "move";
+              // Cross-profiel referentie (instantie-van): op een canvas-node
+              // droppen (bv. levenslijn typeren) — zie ELEMENT_REF_MIME.
+              e.dataTransfer.setData(ELEMENT_REF_MIME, JSON.stringify({ profielId: profiel.id, elementId }));
+              e.dataTransfer.effectAllowed = "copyMove";
             }}
           >
             <span className="studio-project__regel-profiel" style={{ color: stijl.kleur || "inherit" }}>

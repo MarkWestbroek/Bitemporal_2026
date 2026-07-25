@@ -1,9 +1,27 @@
 # Sequence hermetisch — objecten, operaties en getypeerde levenslijnen (ontwerp)
 
 > Datum: 2026-07-17 (n.a.v. Marks review van sequence v0)
-> Status: **ontwerp/denkwerk — richting voor sequence v1/v2 en twee nieuwe
-> kernconcepten.** Zie `STUDIO-05-gedragsdiagrammen.md` (stand) en
-> `diagramprofielen/sequence/` (v0).
+> Status: **§5 stap 1 (v1, hermetisch minimum) is gebouwd** — zie hieronder;
+> stappen 2–4 open. Zie `STUDIO-05-gedragsdiagrammen.md` (stand) en
+> `diagramprofielen/sequence/`.
+>
+> **Stand na de bouw (2026-07-17, avond):**
+> - datatype **"element-verwijzing"** + **`instantieVan`** op de levenslijn
+>   (`studio/elementVerwijzing.jsx`; editors registreren zich van buitenaf
+>   op het core-koppelvlak — de core kent de profieltypeRegistry niet);
+> - de kop rendert **`naam:Type` onderstreept** (UML-objectnotatie;
+>   onvindbaar type → ⚠);
+> - **OperatieResolver-facet**: `operatiesVan` op het profieltype
+>   (doorgegeven via de activiteit-fabriek), geïmplementeerd voor
+>   **puur-UML** (operaties-compartiment) en **OAS** («operation» zelf +
+>   via connectoren verbonden operations);
+> - **operatie-keuze op berichten** (datatype "operatie-keuze": volgt de
+>   keten bericht → doel-punt → levenslijn → instantieVan) + vrij
+>   argumenten-veld; het edge-label toont de signatuur;
+> - **boom-drop**: element uit de Modelleren-projectboom (of de
+>   elementen-browser) op een levenslijn droppen typeert hem —
+>   `ELEMENT_REF_MIME` + canvas-`onExternDrop` + descriptor-hook
+>   `hooks.ontvangtDrop` (generiek herbruikbaar).
 
 ## 0. De visie (Marks punten, samengevat)
 

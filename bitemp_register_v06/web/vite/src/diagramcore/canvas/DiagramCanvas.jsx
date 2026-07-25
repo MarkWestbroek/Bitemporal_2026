@@ -43,6 +43,8 @@ import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
 import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX } from "./materialiseerConnectoren.js";
 
+import { ELEMENT_REF_MIME } from "./externDrop.js";
+
 /** Intern core-ElementType voor de synthetische anker-nodes (ASOC-patroon). */
 const ANKER_ELEMENT_TYPE = {
   id: "__anker",
@@ -130,6 +132,7 @@ function CanvasBinnenkant({
   onContainerDrop,
   onRandAanhechting,
   onNodeDoubleClick,
+  onExternDrop,
   shapeSet,
   layoutApiRef,
   bouwContextMenu,
@@ -650,6 +653,50 @@ function CanvasBinnenkant({
     [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups, verwerkRandAanhechting]
   );
 
+  // Externe drop (ELEMENT_REF_MIME uit de elementen-/projectbrowser): zoek
+  // de node onder de cursor en meld {nodeId|null, ref, positie} — de
+  // activiteit beslist (bv. elementType.hooks.ontvangtDrop → levenslijn
+  // typeren met instantie-van).
+  const handleExternDragOver = useCallback(
+    (ev) => {
+      if (!onExternDrop) return;
+      if (![...(ev.dataTransfer?.types || [])].includes(ELEMENT_REF_MIME)) return;
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "link";
+    },
+    [onExternDrop]
+  );
+  const handleExternDrop = useCallback(
+    (ev) => {
+      if (!onExternDrop) return;
+      const rauw = ev.dataTransfer?.getData(ELEMENT_REF_MIME);
+      if (!rauw) return;
+      ev.preventDefault();
+      let ref = null;
+      try {
+        ref = JSON.parse(rauw);
+      } catch {
+        return;
+      }
+      const punt = screenToFlowPosition({ x: ev.clientX, y: ev.clientY });
+      // Kleinste (bovenste) raakvlak wint — zelfde regel als containers.
+      const raak = getNodes()
+        .filter((n) => {
+          const w = n.measured?.width ?? 200;
+          const h = n.measured?.height ?? 80;
+          const abs = getInternalNode(n.id)?.internals?.positionAbsolute || n.position;
+          return punt.x >= abs.x && punt.x <= abs.x + w && punt.y >= abs.y && punt.y <= abs.y + h;
+        })
+        .sort(
+          (a, b) =>
+            (a.measured?.width ?? 200) * (a.measured?.height ?? 80) -
+            (b.measured?.width ?? 200) * (b.measured?.height ?? 80)
+        );
+      onExternDrop(raak[0]?.id || null, ref, punt);
+    },
+    [onExternDrop, screenToFlowPosition, getNodes, getInternalNode]
+  );
+
   // Dubbelklik op een node: gedragsverwijzing (§3.2) — de activiteit opent
   // het gerefereerde diagram (data.gedragDiagramId). Generiek doorgegeven;
   // de activiteit beslist wat "openen" betekent (tab, actief diagram, …).
@@ -919,6 +966,8 @@ function CanvasBinnenkant({
       onEdgesDelete={handleEdgesDelete}
       onEdgeDoubleClick={handleEdgeDoubleClick}
       onNodeDoubleClick={handleNodeDoubleClick}
+      onDragOver={handleExternDragOver}
+      onDrop={handleExternDrop}
       onPaneContextMenu={openContextMenu}
       onNodeContextMenu={openContextMenu}
       onEdgeContextMenu={openContextMenu}

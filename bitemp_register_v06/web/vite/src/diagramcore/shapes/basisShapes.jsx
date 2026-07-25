@@ -59,11 +59,20 @@ function VeldRegel({ veld, fieldType }) {
 }
 
 /** Compartimenten-stapel: divider + (optioneel label) + veld-regels. */
-export function CompartimentLijst({ element, fieldTypesById, compartmentTypesById }) {
+export function CompartimentLijst({ element, elementType, fieldTypesById, compartmentTypesById }) {
   const compartimenten = element.compartimenten || [];
+  // De inspector vult compartimenten in aanmaakvolgorde (append per
+  // compartmentType); de node hoort ze in de descriptor-volgorde van het
+  // elementtype te tonen — attributen boven operaties, wat je ook eerst
+  // invoerde. Ongetypeerde compartimenten behouden hun plek (stabiel).
+  const orde = new Map((elementType?.compartments || []).map((ct, i) => [ct.id, i]));
+  const gesorteerd = compartimenten
+    .map((c, i) => ({ c, sleutel: orde.get(c.compartmentType) ?? 1000 + i }))
+    .sort((a, b) => a.sleutel - b.sleutel)
+    .map((x) => x.c);
   return (
     <>
-      {compartimenten
+      {gesorteerd
         .filter((c) => (c.velden || []).length > 0)
         .map((c, i) => {
           const ct = compartmentTypesById?.[c.compartmentType];
@@ -112,6 +121,7 @@ function ClassBoxShape({ element, elementType, selected, fieldTypesById, compart
       </div>
       <CompartimentLijst
         element={element}
+        elementType={elementType}
         fieldTypesById={fieldTypesById}
         compartmentTypesById={compartmentTypesById}
       />
@@ -150,6 +160,7 @@ function ChipShape({ element, elementType, selected, fieldTypesById, compartment
       </div>
       <CompartimentLijst
         element={element}
+        elementType={elementType}
         fieldTypesById={fieldTypesById}
         compartmentTypesById={compartmentTypesById}
       />
