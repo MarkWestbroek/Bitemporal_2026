@@ -8,6 +8,29 @@
 
 ---
 
+## Docker-publicatie + tag-beleid: api 0.5.0 / studio 0.6.0 (2026-07-29)
+
+Backend en frontend als losse images naar Docker Hub gepubliceerd, en het tag-beleid
+vastgelegd.
+
+- **Nieuw**: [`docs/DOCKER_RELEASE.md`](docs/DOCKER_RELEASE.md) — welke images we publiceren,
+  hoe we taggen (kale component-semver **plus** `latest`; versie-tag onveranderlijk), waarom
+  altijd `linux/amd64`, de releaseprocedure per component, rollback en de checklist.
+- **Vervallen**: het oude image-tagschema `v06.00.01`. De Docker-tag is voortaan het
+  componentnummer uit `docs/versiebeheer.md` §7 zonder prefix en zonder `v`.
+- **Gepubliceerd**:
+  - `markwestbroek/bitemp-go-api:0.5.0` + `latest` — ongewijzigde Go-code t.o.v. tag
+    `api/v0.5.0`; dit is de **eerste** v06-API op Docker Hub (daar stonden alleen nog
+    `v04.*`-tags uit maart/april).
+  - `markwestbroek/bitemp-viz-frontend:0.6.0` + `latest` — bevat Toegangsspraak/Toegangsregel
+    en de Sequence-, BPMN- en ArchiMate-profielen; zie `web/vite/CHANGELOG.md`.
+- **Bijgewerkt**: `docker.md` (§ inleiding, componenttabel, §12), `.env.docker.example`,
+  `docker-compose.api-only.yml` en `docker-compose.frontend-only.yml` (verouderde
+  `:v05`/`:v06` defaults → `:latest`), `docs/versiebeheer.md` (§6, §7.1a),
+  `docs/TRUENAS_DEPLOYMENT.md` (backend krijgt nu ook een versie-tag).
+
+---
+
 ## Operaton-provenance op Registratie + PoC Process Engine v2 (2026-05-21)
 
 Twee gekoppelde wijzigingen: (1) `bron`/`bron_kenmerk` velden op `Registratie` in bitemp v06, en (2) de Go-worker en BPMN v2-flow in `process_engine_v01`.

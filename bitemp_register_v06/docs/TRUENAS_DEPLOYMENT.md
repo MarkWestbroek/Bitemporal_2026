@@ -107,16 +107,28 @@ Bij upgrade van Go (bijv. 1.24 → 1.25), moeten **alle** Dockerfiles bijgewerkt
 
 ## 3. Nieuwe versie deployen (cheatsheet)
 
+> Tag-beleid (versie **én** `latest`, kale semver, altijd `linux/amd64`):
+> [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md).
+
 ### Backend (Go API) updaten
 
 **Op je lokale machine (Windows, PowerShell):**
 ```powershell
 cd D:\Git\Bitemporal_2026\bitemp_register_v06
 
-# 1. Build het image
-docker build -f Dockerfile.api -t markwestbroek/bitemp-go-api:latest .
+# 1. Versienummer = de api/-git-tag zonder prefix en 'v'
+$versie = "0.5.0"
+$commit = (git rev-parse --short HEAD)
+$bt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
-# 2. Push naar Docker Hub
+# 2. Build het image — tag met de versie én latest
+docker build -f Dockerfile.api `
+  --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt `
+  -t markwestbroek/bitemp-go-api:$versie `
+  -t markwestbroek/bitemp-go-api:latest .
+
+# 3. Push beide tags naar Docker Hub
+docker push markwestbroek/bitemp-go-api:$versie
 docker push markwestbroek/bitemp-go-api:latest
 ```
 

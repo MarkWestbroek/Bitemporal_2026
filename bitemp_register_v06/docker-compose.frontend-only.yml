@@ -21,7 +21,7 @@ services:
       dockerfile: Dockerfile.frontend
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
-    image: ${FRONTEND_IMAGE:-bitemp-viz-frontend:v06}
+    image: ${FRONTEND_IMAGE:-markwestbroek/bitemp-viz-frontend:latest}
     container_name: bitemp-viz-frontend-v06-standalone
     restart: unless-stopped
     ports:

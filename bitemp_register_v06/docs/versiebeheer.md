@@ -61,8 +61,12 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.5.0`**
-  (2026-07-17, gedragsdiagram-mijlpaal); zie `web/vite/CHANGELOG.md`.
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.6.0`**
+  (2026-07-29, Toegangsspraak/Toegangsregel + Sequence/BPMN/ArchiMate-profielen);
+  zie `web/vite/CHANGELOG.md`.
+- Backend: **`api/v0.5.0`** — sinds die tag zijn er geen Go-wijzigingen.
+- Deze nummers zijn óók de Docker-image-tags (zonder `v`): zie
+  [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md).
 
 ---
 
@@ -122,6 +126,12 @@ minor waren — het nummer stond echter al vast. Nummers mogen bij herziening wi
 gemengde FE/BE-historie; niet per component te reconstrueren (zie `git log`).
 
 **Generator** — `codegen/v0.1.0` als baseline op `main` (`10c69f9`).
+
+### 7.1a Van git-tag naar Docker-tag
+
+De Docker-image-tag is hetzelfde nummer, zónder component-prefix en zónder `v`:
+`studio/v0.6.0` → `markwestbroek/bitemp-viz-frontend:0.6.0`. Elke push zet daarnaast
+`latest`. Het volledige beleid staat in [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md).
 
 ### 7.2 Release-logs (per component)
 

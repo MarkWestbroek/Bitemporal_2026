@@ -1,6 +1,6 @@
 services:
   bitemp-go-api:
-    image: ${API_IMAGE:-markwestbroek/bitemp-go-api:v05}
+    image: ${API_IMAGE:-markwestbroek/bitemp-go-api:latest}
     container_name: bitemp-go-api-v06
     restart: unless-stopped
     env_file:

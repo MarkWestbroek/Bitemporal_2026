@@ -4,6 +4,12 @@ Deze handleiding beschrijft hoe je de vier componenten van het register als loss
 
 Snelle releaseflow: zie ook [RELEASE.md](RELEASE.md).
 
+> **Tags: lees eerst [`docs/DOCKER_RELEASE.md`](docs/DOCKER_RELEASE.md).** Dat is sinds
+> 2026-07-29 het geldende beleid over *welke* images we publiceren en *hoe* we ze taggen:
+> kale component-semver (`0.6.0`) **plus** `latest`, versie-tag onveranderlijk, altijd
+> `linux/amd64`. De tags `v06.00.01` die je hieronder in de voorbeelden ziet staan volgen
+> een **vervallen** schema — lees ze als "een willekeurig versienummer", niet als conventie.
+
 ## Vier componenten
 
 De stack bestaat uit vier onafhankelijke deelservices:
@@ -12,8 +18,8 @@ De stack bestaat uit vier onafhankelijke deelservices:
 |--------------|--------------------------|---------------------------------------------|-----------------|
 | **DB**       | `postgres:16-alpine`     | PostgreSQL database (data-opslag)           | 5433 → 5432    |
 | **Filestore**| `minio/minio:latest`     | MinIO S3-compatibele objectopslag (IDE-bestanden, modellen) | 9000 (API), 9001 (console) |
-| **BE (API)** | `bitemp-go-api:v06.*`    | Go backend — REST, GraphQL, schema-API      | 8082 → 8080    |
-| **FE**       | `bitemp-viz-frontend:v06.*` | Vite/React frontend via nginx            | 8083 → 80      |
+| **BE (API)** | `markwestbroek/bitemp-go-api` | Go backend — REST, GraphQL, schema-API | 8082 → 8080    |
+| **FE**       | `markwestbroek/bitemp-viz-frontend` | Vite/React frontend via nginx    | 8083 → 80      |
 
 Doel:
 - Elk component eenvoudig apart vervangen/upgraden.
@@ -587,13 +593,22 @@ Praktische routine per release:
 
 ## 12. Release checklist (2 minuten)
 
-Gebruik dit bij elke nieuwe API-versie.
+Gebruik dit bij elke nieuwe API-versie. Volledige procedure incl. frontend en
+tag-beleid: [`docs/DOCKER_RELEASE.md`](docs/DOCKER_RELEASE.md).
 
 ### 12.1 Build en push
 
+Altijd **twee** tags: het versienummer én `latest`.
+
 ```bash
-docker build --no-cache -t markwestbroek/bitemp-go-api:v06.00.01 .
-docker push markwestbroek/bitemp-go-api:v06.00.01
+docker build -f Dockerfile.api \
+  --build-arg COMMIT=$(git rev-parse --short HEAD) \
+  --build-arg BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  -t markwestbroek/bitemp-go-api:0.5.0 \
+  -t markwestbroek/bitemp-go-api:latest .
+
+docker push markwestbroek/bitemp-go-api:0.5.0
+docker push markwestbroek/bitemp-go-api:latest
 ```
 
 ### 12.2 Tag in stack bijwerken
@@ -601,7 +616,7 @@ docker push markwestbroek/bitemp-go-api:v06.00.01
 Werk op de server in `.env.docker` bij:
 
 ```dotenv
-API_IMAGE=markwestbroek/bitemp-go-api:v06.00.01
+API_IMAGE=markwestbroek/bitemp-go-api:0.5.0
 ```
 
 ### 12.3 API redeployen
