@@ -7,6 +7,23 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+
+_(nog niets)_
+
+## [studio/v0.6.0] — 2026-07-29
+### Toegevoegd — Toegangsspraak & Toegangsregel
+- **Toegangsspraak-editor**: ontleding van regeltekst met autocomplete,
+  element-focus, bijzinsvolgorde, spans en koppeling aan het metamodel;
+  structuurwoorden en modaliteit-kleur, plus een canonieke tab.
+- **Existentie-voorwaarden** ("er is een lopend dossier voor de betrokkene").
+- **Toegangsregel-profiel** op de diagram-motor: read-only Diagram-tab (stap 1–2),
+  policy + map en kruisverbanden (stap 3), kolom-resolutie naar echte
+  canoniek-elementen, **de terugweg** diagram-model → tekst (stap 4), en
+  **ArchiMate-koppeling** naar wet, doel en begrippen (stap 5 v0).
+- **Vormentaal**: de zin als silhouetten; lijnlabels alleen op structuur,
+  layout blijft heilig bij herpubliceren.
+
+### Toegevoegd — diagram-motor & notaties
 - **Sequence v1 — hermetisch minimum** (ontwerp "Sequence hermetisch" §5.1):
   getypeerde levenslijnen via het nieuwe cross-profiel **instantie-van**-concept
   (datatype "element-verwijzing"; kop toont `naam:Type` onderstreept; element
@@ -29,6 +46,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   laag-kleuren (archimate-box met type-icoon rechtsboven), junction (en/of)
   en alle elf relaties; geldigheidsmatrix volgt in v1.
 - Core: property-datatype **"keuze"** (select over `PropertyType.opties`).
+
+### Gewijzigd
+- Core: **lijndikte per connector** (`presentatie.dikte`).
+- Kaderselectie selecteert wat het raakt; node-acties in het selectie-menu.
+
+### Gepubliceerd
+- Docker: `markwestbroek/bitemp-viz-frontend:0.6.0` + `latest`
+  (zie [`docs/DOCKER_RELEASE.md`](../../docs/DOCKER_RELEASE.md)).
 
 ## [studio/v0.5.0] — 2026-07-17  _(bij merge van `feat/diagramcore-gedrag-primitieven`)_
 ### Toegevoegd
