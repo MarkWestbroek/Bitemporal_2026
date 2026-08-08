@@ -213,6 +213,19 @@ export const IconMIM05 = (p) => (
   </svg>
 );
 
+/* ERD (0.5): twee entiteitsdozen, verbonden door de kraaienpoot zelf —
+   het symbool dat deze notatie herkenbaar maakt. */
+export const IconERD05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="2.5" y="3" width="9" height="7" rx="1" />
+    <path d="M2.5 6h9" />
+    <rect x="12.5" y="14" width="9" height="7" rx="1" />
+    <path d="M12.5 17h9" />
+    <path d="M7 10v3.5a1.5 1.5 0 0 0 1.5 1.5h1" />
+    <path d="M9.5 15 12.5 12.8M9.5 15h3M9.5 15 12.5 17.2" />
+  </svg>
+);
+
 /* Profiel-ontwerp (0.5): elementtype-stencil (gevuld sjabloonblok) + afgeleide. */
 export const IconProfielOntwerp05 = (p) => (
   <svg {...base} {...p}>
