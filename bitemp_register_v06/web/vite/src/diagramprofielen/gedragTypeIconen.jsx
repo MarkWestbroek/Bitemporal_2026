@@ -1,10 +1,29 @@
 /**
  * gedragTypeIconen — taakbalk-/browser-glyphs voor de gedragsprofielen
- * (state machine, activity, use case). Neutrale 14px-vormen in currentColor
- * op het typeIconen-koppelvlak; de échte merk-iconenset blijft een
- * ontwerp-sessie (plan §8.6a) — dan zijn dit puur her-registraties.
+ * (state machine, activity, use case, BPMN, sequence). 14px-vormen in
+ * currentColor op het typeIconen-koppelvlak, gedeeld tussen de profielen zodat
+ * "begin" overal hetzelfde glyph draagt.
  *
- * Gedeeld tussen de profielen zodat "begin" overal hetzelfde glyph draagt.
+ * **Ronde 2 (2026-08-08) heeft deze set bevestigd**, niet herontworpen — zie
+ * `docs/STUDIO-05-iconen-ronde2-antwoord.md`, scope B. Ze volgen de regel die
+ * ronde 1 vastlegde: waar de canvasvorm zélf de betekenis draagt, is het icoon
+ * het silhouet van die vorm. Voor gedragsnotaties is dat vrijwel altijd zo
+ * (een fork ís een balk, een eindtoestand ís een dubbele ring), dus de
+ * afgeleide-van-de-canvasvorm-aanpak was hier de juiste. Twee gerichte
+ * correcties zijn wél doorgevoerd:
+ *
+ *   1. `gedrag-toestand` was pixel-identiek aan de neutrale `rounded`-fallback
+ *      uit `typeIconen.jsx` — een toestand/taak was dus niet te onderscheiden
+ *      van "elementtype zonder icoon". Hij heeft nu het familie-accent: het
+ *      gevulde naamcompartiment.
+ *   2. BPMN's drie gateways deelden alle drie `gedrag-ruit` — drie knoppen
+ *      náást elkaar in één taakbalk met hetzelfde beeld. Ze hebben nu
+ *      `gedrag-gateway-xor` / `-and` / `-or`. `gedrag-ruit` blijft de kale
+ *      ruit voor activity ("beslissing/samenvoeging") en state machine
+ *      ("keuze"), waar hij de enige diamant in de balk is.
+ *
+ * De symboolvulling volgt besluit B2: waar de notatie een marker *open*
+ * tekent, blijft hij ook in het icoon open.
  */
 import React from "react";
 import { registreerTypeIcoon } from "../diagramcore/shapes/typeIconen.jsx";
@@ -44,6 +63,29 @@ const GLYPHS = {
       </>
     )),
   "gedrag-ruit": (m) => basis(m, <path d="M7 1.5 L12.5 7 L7 12.5 L1.5 7 Z" />),
+  // BPMN-gateways: dezelfde ruit, maar het inwendige teken draagt de
+  // semantiek — en dát is wat in de balk uit elkaar gehouden moet worden.
+  "gedrag-gateway-xor": (m) =>
+    basis(m, (
+      <>
+        <path d="M7 1.4 L12.6 7 L7 12.6 L1.4 7 Z" />
+        <path d="M5.5 5.5 L8.5 8.5 M8.5 5.5 L5.5 8.5" strokeWidth="1.45" />
+      </>
+    )),
+  "gedrag-gateway-and": (m) =>
+    basis(m, (
+      <>
+        <path d="M7 1.4 L12.6 7 L7 12.6 L1.4 7 Z" />
+        <path d="M7 4.8 V9.2 M4.8 7 H9.2" strokeWidth="1.45" />
+      </>
+    )),
+  "gedrag-gateway-or": (m) =>
+    basis(m, (
+      <>
+        <path d="M7 1.4 L12.6 7 L7 12.6 L1.4 7 Z" />
+        <circle cx="7" cy="7" r="2.15" strokeWidth="1.45" />
+      </>
+    )),
   "gedrag-junction": (m) => basis(m, <circle cx="7" cy="7" r="2.6" fill="currentColor" stroke="none" />),
   "gedrag-historie": (m) =>
     basis(m, (
@@ -69,7 +111,16 @@ const GLYPHS = {
       </>
     )),
   // ── toestanden/acties ──
-  "gedrag-toestand": (m) => basis(m, <rect x="1.5" y="3" width="11" height="8" rx="3.4" />),
+  // Het accent is het naamcompartiment: zónder was dit exact de neutrale
+  // `rounded`-fallback, en dan zegt het icoon "geen icoon".
+  "gedrag-toestand": (m) =>
+    basis(m, (
+      <>
+        <rect x="1.5" y="3" width="11" height="8" rx="3.4" />
+        <line x1="2.9" y1="7.4" x2="11.1" y2="7.4" />
+        <rect x="4.2" y="4.6" width="5.3" height="1.5" rx="0.75" fill="currentColor" stroke="none" />
+      </>
+    )),
   "gedrag-composiet": (m) =>
     basis(m, (
       <>

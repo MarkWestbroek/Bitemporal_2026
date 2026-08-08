@@ -35,6 +35,7 @@
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerSysmlShapes } from "./shapes.jsx";
+import { registreerSysmlIconen } from "./iconen.jsx";
 import { TRACE_OPTIES, traceLabels } from "./traces.js";
 
 export const SYSML_ID = "sysml";
@@ -94,6 +95,7 @@ const elementTypes = [
     label: "Blok",
     omschrijving: "«block» — het bouwsteentype van SysML. Sleep parts erin voor een intern blokdiagram.",
     kort: "BLK",
+    icoon: "sy-blok",
     stereotype: "«block»",
     shape: "class-box",
     kleur: "#dbeafe",
@@ -111,6 +113,7 @@ const elementTypes = [
     label: "Part",
     omschrijving: "Een deel binnen een blok (ibd): rolnaam : Type. Sleep hem in een blok.",
     kort: "PART",
+    icoon: "sy-part",
     stereotype: "«part»",
     shape: "class-box",
     kleur: "#eff6ff",
@@ -123,6 +126,7 @@ const elementTypes = [
     label: "Poort",
     omschrijving: "Sleep hem op de rand van een blok of part: het aansluitpunt voor connectoren.",
     kort: "PRT",
+    icoon: "sy-poort",
     shape: "sysml-poort",
     resizebaar: false,
     // Rand-aanhechting: de poort woont óp de omtrek van zijn gastheer.
@@ -147,6 +151,7 @@ const elementTypes = [
     label: "Waardetype",
     omschrijving: "«valueType» — een waarde zonder identiteit (met eenheid/dimensie).",
     kort: "VAL",
+    icoon: "datatype",
     stereotype: "«valueType»",
     shape: "class-box",
     kleur: "#dcfce7",
@@ -158,6 +163,7 @@ const elementTypes = [
     label: "Interfaceblok",
     omschrijving: "«interfaceBlock» — wat er over een poort heen gaat.",
     kort: "IFB",
+    icoon: "interface",
     stereotype: "«interfaceBlock»",
     shape: "class-box",
     kleur: "#e0f2fe",
@@ -169,6 +175,7 @@ const elementTypes = [
     label: "Constraintblok",
     omschrijving: "«constraint» — een vergelijking met parameters (basis voor parametrics).",
     kort: "CON",
+    icoon: "constraint",
     stereotype: "«constraint»",
     shape: "class-box",
     kleur: "#fef3c7",
@@ -183,6 +190,7 @@ const elementTypes = [
     label: "Enumeratie",
     omschrijving: "«enumeration» — een vaste verzameling waarden.",
     kort: "ENUM",
+    icoon: "enumeratie",
     stereotype: "«enumeration»",
     shape: "class-box",
     kleur: "#fef9c3",
@@ -194,6 +202,7 @@ const elementTypes = [
     label: "Requirement",
     omschrijving: "Een eis met id en tekst; koppel hem met satisfy/verify/derive/refine/trace.",
     kort: "REQ",
+    icoon: "sy-requirement",
     shape: "sysml-requirement",
     kleur: "#ede9fe",
     // Samengestelde requirement: kinderen erin slepen legt de containment.
@@ -209,6 +218,7 @@ const elementTypes = [
     label: "Pakket",
     omschrijving: "Groepeert blokken en requirements.",
     kort: "PKG",
+    icoon: "package",
     shape: "package",
     containerVoor: "bevat-pakket",
     properties: [KLEUR_VELD],
@@ -218,6 +228,7 @@ const elementTypes = [
     label: "Notitie",
     omschrijving: "Vrije notitie op het diagram.",
     kort: "NOT",
+    icoon: "notitie",
     shape: "note",
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
@@ -229,6 +240,7 @@ const elementTypes = [
     label: "Compositie",
     omschrijving: "Het geheel bezit de delen; delen gaan mee als het geheel verdwijnt.",
     kort: "◆",
+    icoon: "compositie",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["blok"] },
@@ -240,6 +252,7 @@ const elementTypes = [
     label: "Aggregatie",
     omschrijving: "Het geheel gebruikt de delen, maar bezit ze niet.",
     kort: "◇",
+    icoon: "aggregatie",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["blok"] },
@@ -251,6 +264,7 @@ const elementTypes = [
     label: "Generalisatie",
     omschrijving: "Het specifieke blok erft van het algemene (bron = specifiek).",
     kort: "▷",
+    icoon: "generalisatie",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: BLOKKEN },
@@ -262,6 +276,7 @@ const elementTypes = [
     label: "Associatie",
     omschrijving: "Een verband tussen blokken; kardinaliteit per uiteinde.",
     kort: "—",
+    icoon: "associatie",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: BLOKKEN },
@@ -286,6 +301,7 @@ const elementTypes = [
     label: "Afhankelijkheid",
     omschrijving: "De bron gebruikt het doel; verandert het doel, dan raakt dat de bron.",
     kort: "⇢",
+    icoon: "dependency",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: [...BLOKKEN, "pakket"] },
@@ -297,6 +313,7 @@ const elementTypes = [
     label: "Traceerrelatie",
     omschrijving: "satisfy · verify · deriveReqt · refine · trace — kies de soort in de inspector.",
     kort: "«t»",
+    icoon: "sy-trace",
     shape: "edge",
     isConnector: true,
     // Van ontwerp/test náár de requirement — de SysML-richting.
@@ -311,6 +328,7 @@ const elementTypes = [
     label: "Connector (ibd)",
     omschrijving: "Verbindt twee poorten (of parts) binnen een blok.",
     kort: "↔",
+    icoon: "sy-verbinding",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["poort", "part"] },
@@ -322,6 +340,7 @@ const elementTypes = [
     label: "Item flow",
     omschrijving: "Wat er over een connector stroomt; de naam is het item.",
     kort: "▸",
+    icoon: "sy-itemflow",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["poort", "part"] },
@@ -334,6 +353,7 @@ const elementTypes = [
     label: "Bevat (requirement)",
     omschrijving: "Deelrequirement van een samengestelde requirement.",
     kort: "REQ ⊕",
+    icoon: "sy-bevat-req",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["requirement"] },
@@ -345,6 +365,7 @@ const elementTypes = [
     label: "Bevat (part)",
     omschrijving: "Lidmaatschap van een blok-frame (ibd); verborgen zolang het lid erin ligt.",
     kort: "BLK ∋",
+    icoon: "sy-bevat-part",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: IBD_HOUDERS },
@@ -356,6 +377,7 @@ const elementTypes = [
     label: "Bevat (pakket)",
     omschrijving: "Lidmaatschap van een pakket; verborgen zolang het lid erin ligt.",
     kort: "PKG ∋",
+    icoon: "bevat",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["pakket"] },
@@ -407,6 +429,7 @@ export function maakElement(elementTypeId) {
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerSysml() {
   registreerSysmlShapes();
+  registreerSysmlIconen();
   if (!getDiagramType(SYSML_ID)) {
     registreerDiagramType(sysmlDiagramType);
   }

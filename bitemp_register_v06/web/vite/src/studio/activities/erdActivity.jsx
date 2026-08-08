@@ -5,9 +5,13 @@
  */
 import { IconERD05 } from "../icons";
 import { registreerErd, erdDiagramType, maakElement } from "../../diagramprofielen/erd/index.js";
+import { registreerErdIconen } from "../../diagramprofielen/erd/iconen.jsx";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 
 registreerErd();
+// De iconen staan hier en niet in registreerErd(): erd/index.js moet in node
+// laadbaar blijven voor erd.test.js, en .jsx kan dat niet.
+registreerErdIconen();
 
 export default maakDiagramActiviteit({
   id: "erd05",

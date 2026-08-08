@@ -87,6 +87,7 @@ const elementTypes = [
     label: "Entiteit",
     omschrijving: "Een ding waarover je gegevens vastlegt; de sleutel staat boven de streep.",
     kort: "ENT",
+    icoon: "erd-entiteit",
     shape: "class-box",
     kleur: "#fef9c3",
     properties: [KLEUR_VELD],
@@ -100,6 +101,7 @@ const elementTypes = [
     label: "Domein",
     omschrijving: "Groepeert entiteiten (schema, deelmodel); sleep ze erin.",
     kort: "DOM",
+    icoon: "kader",
     shape: "boundary",
     containerVoor: "bevat",
     achtergrond: true,
@@ -110,6 +112,7 @@ const elementTypes = [
     label: "Notitie",
     omschrijving: "Vrije notitie op het diagram.",
     kort: "NOT",
+    icoon: "notitie",
     shape: "note",
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
@@ -121,6 +124,7 @@ const elementTypes = [
     label: "Relatie",
     omschrijving: "Kraaienpootlijn; zet de kardinaliteit per uiteinde in de inspector.",
     kort: "|<",
+    icoon: "erd-relatie",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
@@ -173,6 +177,7 @@ const elementTypes = [
     label: "Subtype",
     omschrijving: "Het subtype erft de sleutel en kolommen van het supertype (bron = subtype).",
     kort: "▷",
+    icoon: "generalisatie",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
@@ -184,6 +189,7 @@ const elementTypes = [
     label: "Bevat (domein)",
     omschrijving: "Lidmaatschap van een domein; verborgen zolang het lid erin ligt.",
     kort: "DOM ∋",
+    icoon: "erd-bevat",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["domein"] },
@@ -229,7 +235,13 @@ export function maakElement(elementTypeId) {
   return element;
 }
 
-/** Idempotente registratie (veilig bij HMR/dubbele import). */
+/**
+ * Idempotente registratie (veilig bij HMR/dubbele import).
+ *
+ * Let op: dit bestand blijft bewust vrij van `.jsx`-imports, want `erd.test.js`
+ * laadt het rechtstreeks in node (anders dan sysml/ en cmmn/, die eigen shapes
+ * hebben). De taakbalk-iconen worden daarom in `erdActivity.jsx` geregistreerd.
+ */
 export function registreerErd() {
   if (!getDiagramType(ERD_ID)) {
     registreerDiagramType(erdDiagramType);

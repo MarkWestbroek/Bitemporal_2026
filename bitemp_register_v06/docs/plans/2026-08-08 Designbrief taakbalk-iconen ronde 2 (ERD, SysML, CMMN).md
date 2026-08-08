@@ -8,6 +8,12 @@ stijlrichting, besluiten B1–B6, wat er al staat) en
 `docs/plans/2026-07-29 Overdracht Notaties — diagramprofielen (status).md`
 (wat de drie nieuwe profielen zijn en waarom).
 
+> **Uitgevoerd (2026-08-08).** Antwoord + implementatie:
+> `docs/STUDIO-05-iconen-ronde2-antwoord.md`. Alle 38 elementtypen hebben een
+> icoon (22 nieuw in `erd|sysml|cmmn/iconen.jsx`, 13 hergebruikte ids), de vijf
+> ontwerpvragen zijn beantwoord en de gedragsset is bevestigd met twee
+> correcties. Wat hieronder staat is de opdracht, niet de uitkomst.
+
 > Dit is **ronde 2** van de iconensessie van 4/5 juli. Ronde 1 leverde de
 > stijlrichting en 30 iconen voor de structuurprofielen. Sindsdien zijn er
 > acht profielen bijgekomen; drie daarvan hebben **helemaal geen** iconen en

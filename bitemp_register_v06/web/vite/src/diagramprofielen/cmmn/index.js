@@ -38,6 +38,7 @@
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerCmmnShapes } from "./shapes.jsx";
+import { registreerCmmnIconen } from "./iconen.jsx";
 
 export const CMMN_ID = "cmmn";
 
@@ -62,6 +63,7 @@ const elementTypes = [
     label: "Case plan model",
     omschrijving: "De buitenste map: alles wat er in deze casus kan gebeuren.",
     kort: "CASE",
+    icoon: "cmmn-caseplan",
     shape: "cmmn-caseplan",
     containerVoor: "bevat",
     achtergrond: true,
@@ -74,6 +76,7 @@ const elementTypes = [
     label: "Stage",
     omschrijving: "Een fase in de casus; sleep taken en mijlpalen erin.",
     kort: "STAGE",
+    icoon: "cmmn-stage",
     shape: "cmmn-stage",
     containerVoor: "bevat",
     achtergrond: true,
@@ -86,6 +89,7 @@ const elementTypes = [
     label: "Task",
     omschrijving: "Werk in de casus. Kies de soort (human, process, case, decision) in de inspector.",
     kort: "TASK",
+    icoon: "cmmn-taak",
     shape: "cmmn-taak",
     kleur: "#e0f2fe",
     properties: [
@@ -110,6 +114,7 @@ const elementTypes = [
     label: "Milestone",
     omschrijving: "Een bereikt resultaat in de casus; heeft geen werk, alleen voorwaarden.",
     kort: "MILE",
+    icoon: "cmmn-mijlpaal",
     shape: "cmmn-mijlpaal",
     kleur: "#f3e8ff",
     properties: [KLEUR_VELD],
@@ -119,6 +124,7 @@ const elementTypes = [
     label: "Event listener",
     omschrijving: "Wacht op iets van buiten: een timer of een handeling van een gebruiker.",
     kort: "EVT",
+    icoon: "cmmn-event",
     shape: "cmmn-event",
     resizebaar: false,
     // Een dubbele ring van 32px draagt zelf geen tekst.
@@ -141,6 +147,7 @@ const elementTypes = [
     label: "Case file item",
     omschrijving: "Een gegeven in het casusdossier; kan een sentry laten aanslaan.",
     kort: "FILE",
+    icoon: "cmmn-casefile",
     shape: "cmmn-casefile",
     resizebaar: false,
     naamLabel: "buiten",
@@ -151,6 +158,7 @@ const elementTypes = [
     label: "Sentry",
     omschrijving: "Sleep hem op de rand: de bewaker. Open = entry (mag beginnen), gevuld = exit (moet stoppen).",
     kort: "◇",
+    icoon: "cmmn-sentry",
     shape: "cmmn-sentry",
     resizebaar: false,
     // Rand-aanhechting (§3.1): de sentry hóórt bij zijn plan item.
@@ -174,6 +182,7 @@ const elementTypes = [
     label: "Notitie",
     omschrijving: "Vrije notitie op het diagram.",
     kort: "NOT",
+    icoon: "notitie",
     shape: "note",
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
@@ -185,6 +194,7 @@ const elementTypes = [
     label: "On-part",
     omschrijving: "Wat de sentry laat aanslaan: 'als dit plan item/gegeven iets doet, gaat die bewaker open'.",
     kort: "⇢◇",
+    icoon: "cmmn-onpart",
     shape: "edge",
     isConnector: true,
     // CMMN heeft geen sequence flow: alle afhankelijkheid loopt via sentries.
@@ -221,6 +231,7 @@ const elementTypes = [
     label: "Associatie",
     omschrijving: "Losse koppeling, bijvoorbeeld naar een notitie.",
     kort: "┄",
+    icoon: "cmmn-associatie",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: [...PLAN_ITEMS, "case-file-item", "event-listener", "notitie"] },
@@ -232,6 +243,7 @@ const elementTypes = [
     label: "Bevat (stage)",
     omschrijving: "Lidmaatschap van een stage of het case plan model; verborgen zolang het lid erin ligt.",
     kort: "∋",
+    icoon: "cmmn-bevat",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: HOUDERS },
@@ -279,6 +291,7 @@ export function maakElement(elementTypeId) {
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerCmmn() {
   registreerCmmnShapes();
+  registreerCmmnIconen();
   if (!getDiagramType(CMMN_ID)) {
     registreerDiagramType(cmmnDiagramType);
   }
