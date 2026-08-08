@@ -295,6 +295,9 @@ te wijzigen.
 | modelleren   | BPMN               | preview  | `diagramcore` + `diagramprofielen/bpmn` (eigen motor: events incl. boundary, gateways, lanes; naast de bpmn.io-activiteit) — **niet in de balk** |
 | modelleren   | ArchiMate          | preview  | `diagramcore` + `diagramprofielen/archimate` (v0: vier lagen, elf relaties) — **niet in de balk** |
 | modelleren   | Sequence           | preview  | `diagramcore` + `diagramprofielen/sequence` (v0: levenslijnen; punten/activaties op het rand-primitief) — **niet in de balk** |
+| modelleren   | ERD                | preview  | `diagramcore` + `diagramprofielen/erd` (kraaienpoten; kardinaliteit per uiteinde, sleutel-compartiment) — **niet in de balk** |
+| modelleren   | SysML              | preview  | `diagramcore` + `diagramprofielen/sysml` (bdd, ibd met poorten op de rand, requirements + traceerrelaties) — **niet in de balk** |
+| modelleren   | CMMN               | preview  | `diagramcore` + `diagramprofielen/cmmn` (casusmodel; sentries op het rand-primitief) — **niet in de balk** |
 | modelleren   | DMN-beslissingen   | actief   | `dmn/DmnTableEditor` + dmn-js DRD + ModelPicker (heette "DMN-tabellen") |
 | modelleren   | DMN DRD            | preview  | `diagramcore` + `diagramprofielen/dmn-drd` — **niet in de balk** (één DMN-ingang; via Ga naar) |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
