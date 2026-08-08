@@ -41,10 +41,9 @@ function ActorShape({ element, selected, children }) {
           fontWeight: 600,
           color: "var(--s-fg, #0f172a)",
           textAlign: "center",
-          whiteSpace: "nowrap",
           maxWidth: 120,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
+          lineHeight: 1.25,
+          overflowWrap: "anywhere",
         }}
       >
         {element?.naam || "(actor)"}
@@ -65,6 +64,10 @@ function EllipsShape({ element, elementType, selected, children }) {
         height: "100%",
         minWidth: 150,
         minHeight: 60,
+        // Zelfde breedtegrens als .dc-node: een lange use case-naam wrapt
+        // i.p.v. de ellips eindeloos uit te rekken. Een handmatig geresizede
+        // node krijgt --dc-node-max: none en is dus weer vrij.
+        maxWidth: "var(--dc-node-max, 280px)",
         position: "relative",
         display: "flex",
         alignItems: "center",
@@ -90,8 +93,8 @@ function EllipsShape({ element, elementType, selected, children }) {
           color: "#0f172a",
           textAlign: "center",
           padding: "0 18px",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
+          lineHeight: 1.3,
+          overflowWrap: "anywhere",
         }}
       >
         {element?.naam || "(use case)"}

@@ -54,9 +54,11 @@ function LevenslijnShape({ element, selected, children }) {
           fontWeight: 700,
           color: "#0f172a",
           textAlign: "center",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+          // De kop heeft een vaste breedte (KOP_BREED); lange objectnamen
+          // wrappen daarbinnen naar een tweede regel in plaats van afgekapt te
+          // worden — de kop wordt dan hoger, de levenslijn schuift mee.
+          lineHeight: 1.25,
+          overflowWrap: "anywhere",
         }}
       >
         {ref ? (

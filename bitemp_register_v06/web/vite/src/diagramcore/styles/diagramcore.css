@@ -60,6 +60,12 @@
   min-width: 180px;
   width: 100%;
   height: 100%;
+  /* Breedtegrens voor niet-geresizede nodes. Een React Flow-node zonder
+     expliciete maat is shrink-to-fit: zonder max-width groeit hij mee met de
+     langste tekstregel en wrapt een lange naam dus nooit. Zodra de gebruiker
+     de node zélf een maat geeft, zet DiagramCanvas `--dc-node-max: none` op de
+     wrapper — dan wint de handmatige breedte. */
+  max-width: var(--dc-node-max, 280px);
   /* border-box: padding + rand tellen mee in width/height, zodat de shape
      precies zijn React Flow-node vult i.p.v. eroverheen te steken. Zonder dit
      werd de shape ~padding+rand breder dan de node → overflow naar rechts en
@@ -174,10 +180,46 @@
   font-weight: 700;
   color: #0f172a;
   margin-top: 1px;
+  /* Lange namen mogen over meerdere regels; `anywhere` breekt ook binnen één
+     lang woord (paden als `Initiatief.producten.naam`) en telt mee in de
+     min-content-breedte, zodat de node niet alsnog uitrekt. */
+  overflow-wrap: anywhere;
 }
 
 .dc-naam.is-abstract {
   font-style: italic;
+}
+
+/* Buitenlabel (motor-primitief, ElementType.naamLabel = "buiten"): de naam
+   onder een kleine vaste vorm — BPMN-events/gateways, state machine
+   begin/eind/keuze, activity-knooppunten. Broer van de shape, dus buiten het
+   `overflow: hidden` van .dc-node; `pointer-events: none` zodat het label de
+   node niet blokkeert bij slepen of verbinden. */
+.dc-buitenlabel {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 3px;
+  /* Vaste breedte, geen max-width: een absoluut gepositioneerd element krijgt
+     zijn shrink-to-fit-breedte uit het containing block, en dat is bij een
+     event-ring maar 30px — de tekst zou dan letter voor letter afbreken. */
+  width: 132px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--s-fg, #0f172a);
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Diagram-breed uit te zetten (menu Beeld → Buitenlabels). Eén schakelaar op
+   het canvasvlak, dus hij geldt voor élk profiel — zelfde patroon als
+   `data-dc-typering`. */
+[data-dc-labels="uit"] .dc-buitenlabel {
+  display: none;
 }
 
 .dc-badge {
@@ -239,6 +281,11 @@
 
 .dc-veld-naam {
   color: #1e293b;
+  /* min-width: 0 doorbreekt de flex-basis-op-inhoud, zodat een lange veldnaam
+     binnen de breedtegrens van de node wrapt in plaats van hem uit te rekken;
+     het typelabel rechts blijft op één regel. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .dc-veld-naam strong {

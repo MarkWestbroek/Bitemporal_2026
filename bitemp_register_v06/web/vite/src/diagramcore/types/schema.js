@@ -106,6 +106,15 @@
  * @property {string} [omschrijving]        - één-regel-uitleg (taakbalk-tooltip)
  * @property {string} shape                 - ShapeType-id (bv. "class-box", "chip", "knip-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
+ * @property {"binnen"|"buiten"|"geen"} [naamLabel] - waar de naam van het element
+ *   staat. `"binnen"` (default) = de shape rendert de naam zelf, zoals altijd.
+ *   `"buiten"` = de motor zet de naam als los label ónder de vorm — bedoeld voor
+ *   kleine, vaste vormen die geen tekst kunnen dragen (BPMN-events en -gateways,
+ *   state machine begin/eind/keuze, activity-knooppunten). `"geen"` = nooit tonen.
+ *   Het buitenlabel is diagram-breed uit te zetten (`data-dc-labels="uit"` op het
+ *   canvasvlak, menu Beeld → Buitenlabels) — dat geldt dan voor álle profielen.
+ *   N.B. shapes met `.dc-node` klippen hun inhoud (`overflow: hidden`); het
+ *   buitenlabel wordt daarom bewust náást de shape gerenderd, niet erin.
  * @property {string} [kleur]               - default; instantie kan overriden
  * @property {number} [randDikte]           - vormgrammatica: randbreedte in px (identiteit = dik, bv. 3)
  * @property {number} [hoekRadius]          - vormgrammatica: hoekafronding in px (structuur = rond)

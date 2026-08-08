@@ -1541,6 +1541,17 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       return descriptor.typeWeergave || "tekst";
     }
   };
+  // Buitenlabels: de namen die de motor ónder kleine vaste vormen zet
+  // (ElementType.naamLabel = "buiten"). Eén schakelaar op het canvasvlak, dus
+  // hij werkt in élk profiel — vandaar ook hier, naast typering en shape-set.
+  const labelsSleutel = `${taakbalkSleutel}-buitenlabels`;
+  const leesLabels = () => {
+    try {
+      return window.localStorage.getItem(labelsSleutel) || "aan";
+    } catch {
+      return "aan";
+    }
+  };
 
   function Main() {
     const { selectieId, setSelectieId, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind, layoutApiRef } =
@@ -1551,6 +1562,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     // (mini-icoon of stereotype-tekst renderen ze allebei al).
     const [typering, setTypering] = useState(leesTypering);
     const [shapeSetId, setShapeSetId] = useState(leesShapeSet);
+    const [buitenlabels, setBuitenlabels] = useState(leesLabels);
     // N.B. beide abonnementen in één effect-body. (Hier zat een venijnige
     // bug: de typering-subscribe stond per ongeluk op de deps-positie van
     // useEffect, waardoor hij bij élke render opnieuw registreerde en nooit
@@ -1574,6 +1586,15 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           }
           setTypering(waarde);
           // Zonder ververs blijft het menu-vinkje op de vórige stand hangen.
+          setTimeout(() => menuBus.emit("menu:ververs"), 0);
+        }),
+        menuBus.on(ev("buitenlabels"), (waarde) => {
+          try {
+            window.localStorage.setItem(labelsSleutel, waarde);
+          } catch {
+            /* localStorage kan uit staan; de state werkt dan alleen deze sessie */
+          }
+          setBuitenlabels(waarde);
           setTimeout(() => menuBus.emit("menu:ververs"), 0);
         }),
       ];
@@ -1994,6 +2015,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
         <div
           className="dc-canvasvlak"
           data-dc-typering={typering}
+          data-dc-labels={buitenlabels}
           style={{ flex: 1, minHeight: 0, position: "relative" }}
         >
           {diagram ? (
@@ -2443,6 +2465,19 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             label: waardeLabel,
             checked: leesTypering() === waarde,
             onClick: () => menuBus.emit(ev("typering"), waarde),
+          })),
+        },
+        {
+          id: `${menuPrefix}-buitenlabels`,
+          label: "Buitenlabels",
+          items: [
+            ["aan", "Namen bij kleine vormen tonen"],
+            ["uit", "Verbergen"],
+          ].map(([waarde, waardeLabel]) => ({
+            id: `${menuPrefix}-bl-${waarde}`,
+            label: waardeLabel,
+            checked: leesLabels() === waarde,
+            onClick: () => menuBus.emit(ev("buitenlabels"), waarde),
           })),
         },
       ],

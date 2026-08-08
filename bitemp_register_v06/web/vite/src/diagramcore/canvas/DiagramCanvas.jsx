@@ -274,8 +274,13 @@ function CanvasBinnenkant({
           type: "element",
           position: ref.position || { x: 0, y: 0 },
           ...(randVan ? { parentId: randVan, zIndex: 20 } : {}),
-          // Grootte per diagram-lidmaatschap (metamodel: Position.elementSize)
-          ...(ref.size ? { style: { width: ref.size.width, height: ref.size.height } } : {}),
+          // Grootte per diagram-lidmaatschap (metamodel: Position.elementSize).
+          // `--dc-node-max: none` heft de automatische breedtegrens van
+          // .dc-node op: wie zelf een maat kiest, wordt niet teruggeduwd naar
+          // de wrap-grens waar niet-geresizede nodes op staan.
+          ...(ref.size
+            ? { style: { width: ref.size.width, height: ref.size.height, "--dc-node-max": "none" } }
+            : {}),
           // Achtergrond-elementen (kaders) starten diep onder de rest (-10);
           // de handmatige z-order (contextmenu) telt daar bovenop, zodat ook
           // kaders onderling naar voren/achteren kunnen.
