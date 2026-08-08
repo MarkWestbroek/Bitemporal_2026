@@ -34,6 +34,7 @@ import bpmnMotorActivity from "./bpmnMotorActivity";
 import archimateActivity from "./archimateActivity";
 import sequenceActivity from "./sequenceActivity";
 import erdActivity from "./erdActivity";
+import sysmlActivity from "./sysmlActivity";
 // Data-shapes globaal registreren bij startup (side-effect), zodat ze in
 // elk profiel beschikbaar zijn.
 import "./vormenRegistratie.js";
@@ -98,6 +99,7 @@ registreerActiviteiten([
   archimateActivity, // "ArchiMate" — vier lagen, elf relaties (preview)
   sequenceActivity, // "Sequence" — levenslijnen op het rand-primitief (preview)
   erdActivity, // "ERD" — kraaienpoten, kardinaliteit per uiteinde (preview)
+  sysmlActivity, // "SysML" — bdd + ibd (poorten op de rand) + requirements (preview)
   formulierDiagramActivity, // "Formulier (diagram)" — formulier-profiel, dogfood (F48 P1; niet in de balk)
   toegangsregelsActivity, // "Toegangsregels" — toegangsregel-profiel op de motor (via Modelleren-host)
   dmnActivity,

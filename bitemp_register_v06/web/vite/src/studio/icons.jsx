@@ -213,6 +213,18 @@ export const IconMIM05 = (p) => (
   </svg>
 );
 
+/* SysML (0.5): een blok met een poort op de rand — het onderscheidende
+   ibd-motief; de tweede poort verbindt naar buiten. */
+export const IconSysML05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="4" y="5" width="14" height="14" rx="1" />
+    <rect x="16" y="8" width="4" height="4" {...vul} />
+    <rect x="16" y="15" width="4" height="4" />
+    <path d="M20 17h1.5" />
+    <path d="M7 9h6" />
+  </svg>
+);
+
 /* ERD (0.5): twee entiteitsdozen, verbonden door de kraaienpoot zelf —
    het symbool dat deze notatie herkenbaar maakt. */
 export const IconERD05 = (p) => (
