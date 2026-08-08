@@ -18,12 +18,19 @@
  *   dikte?:      lijndikte in px (default 1.5; selectie blijft 2.5) — bv. de
  *                kernzin-keten van het toegangsregel-profiel op 2
  *   opacity?:    number
- *   markerStart: "ruit" | "ruit-open" | null — compositie- (◆) of
- *                aggregatie-ruit (◇) aan de bronzijde
+ *   markerStart: "ruit" | "ruit-open" — compositie- (◆) of aggregatie-ruit (◇)
+ *                aan de bronzijde (polygon: buigt met de curve mee)
+ *              | "schuine-streep" — BPMN default flow (streepje ná de bron)
+ *              | "kruis-cirkel" — SysML containment (⊕ aan de ouderkant)
+ *              | "kraai-…" — kraaienpoot, zie markerEnd
+ *              | null
  *   markerEnd:   "pijl-open" | "driehoek" | "pijl-dicht" | "bol" | null
  *                — driehoek = open (canvas-gevuld, generalisatie ▷);
  *                pijl-dicht = gevulde driehoek (DMN information requirement);
  *                bol = gevulde stip (DMN authority requirement)
+ *              | "kraai-een" | "kraai-nul-of-een" | "kraai-een-of-meer" |
+ *                "kraai-nul-of-meer" — ERD-kardinaliteit per uiteinde
+ *                (||, o|, |<, o<); werkt aan bron- én doelzijde
  *   labels: [ { zijde: "bron"|"doel"|"midden", offset?: {x,y},
  *               delen: [ { tekst, soort: "rolnaam"|"kardinaliteit"|"constraint"|"naam", kleur? } ] } ]
  */
@@ -49,6 +56,57 @@ const SOORT_KLASSE = {
   constraint: "dc-edge-constraint",
   naam: "dc-edge-naam",
 };
+
+/**
+ * Kraaienpoten (ERD, Information Engineering-notatie). Elk uiteinde is een
+ * combinatie van twee symbolen: het symbool *tegen de entiteit aan* zegt
+ * één (streep) of veel (pootje), het symbool erachter zegt verplicht
+ * (streep) of optioneel (rondje).
+ */
+const KRAAIENPOTEN = {
+  "kraai-een": { veel: false, optioneel: false }, // ||  precies één
+  "kraai-nul-of-een": { veel: false, optioneel: true }, // o|  hooguit één
+  "kraai-een-of-meer": { veel: true, optioneel: false }, // |<  minstens één
+  "kraai-nul-of-meer": { veel: true, optioneel: true }, // o<  nul of meer
+};
+
+/**
+ * Eén kraaienpoot-marker. De geometrie is getekend met **+x naar de entiteit
+ * toe**; aan de bronzijde wijst de marker-as juist van de entiteit áf, dus
+ * daar spiegelen we de inhoud (en verschuift het referentiepunt mee).
+ */
+function KraaienpootMarker({ id, soort, kleur, kant }) {
+  const k = KRAAIENPOTEN[soort];
+  if (!k) return null;
+  const s = { fill: "none", stroke: kleur, strokeWidth: 1.2, strokeLinecap: "round" };
+  const inhoud = (
+    <>
+      {k.veel ? (
+        <path {...s} d="M 12 7 L 21 1.5 M 12 7 L 21 7 M 12 7 L 21 12.5" />
+      ) : (
+        <path {...s} d="M 20 1.5 L 20 12.5" />
+      )}
+      {k.optioneel ? (
+        <circle {...s} cx={k.veel ? 8 : 14} cy="7" r="3.2" fill="var(--dc-marker-vulling, #ffffff)" />
+      ) : (
+        <path {...s} d={k.veel ? "M 9 1.5 L 9 12.5" : "M 15 1.5 L 15 12.5"} />
+      )}
+    </>
+  );
+  return (
+    <marker
+      id={id}
+      markerWidth="22"
+      markerHeight="14"
+      refX={kant === "bron" ? 1 : 21}
+      refY="7"
+      orient="auto"
+      markerUnits="strokeWidth"
+    >
+      {kant === "bron" ? <g transform="translate(22,0) scale(-1,1)">{inhoud}</g> : inhoud}
+    </marker>
+  );
+}
 
 function ConnectorEdge({
   id,
@@ -191,6 +249,10 @@ function ConnectorEdge({
   const driehoekId = `dc-driehoek-${id}`;
   const pijlDichtId = `dc-pijl-dicht-${id}`;
   const bolId = `dc-bol-${id}`;
+  const streepId = `dc-streep-${id}`;
+  const kruisId = `dc-kruis-${id}`;
+  const kraaiBronId = `dc-kraai-bron-${id}`;
+  const kraaiDoelId = `dc-kraai-doel-${id}`;
 
   // Sleepbare labels (vgl. editor 0.2): pointer-drag in flow-coördinaten
   // (schermafstand gedeeld door de zoom); bij loslaten meldt de edge de
@@ -491,6 +553,24 @@ function ConnectorEdge({
             <circle cx="5" cy="5" r="3" fill={kleur} />
           </marker>
         )}
+        {/* SysML containment: het ⊕ aan de kant van de ouder (het pakket of de
+            samengestelde requirement). */}
+        {p.markerStart === "kruis-cirkel" && (
+          <marker id={kruisId} markerWidth="16" markerHeight="16" refX="1" refY="8" orient="auto" markerUnits="strokeWidth">
+            <circle cx="8" cy="8" r="6" fill="var(--dc-marker-vulling, #ffffff)" stroke={kleur} strokeWidth="1.2" />
+            <path d="M8 2.6 V13.4 M2.6 8 H13.4" stroke={kleur} strokeWidth="1.2" strokeLinecap="round" />
+          </marker>
+        )}
+        {/* BPMN default flow: een schuin streepje vlak ná de bron. Bewust géén
+            pijlpunt-vervanger — het streepje kruist de lijn, de pijl aan het
+            doel blijft gewoon staan. */}
+        {p.markerStart === "schuine-streep" && (
+          <marker id={streepId} markerWidth="16" markerHeight="14" refX="0" refY="7" orient="auto" markerUnits="strokeWidth">
+            <path d="M 5 11.5 L 11 2.5" fill="none" stroke={kleur} strokeWidth="1.3" strokeLinecap="round" />
+          </marker>
+        )}
+        <KraaienpootMarker id={kraaiBronId} soort={p.markerStart} kleur={kleur} kant="bron" />
+        <KraaienpootMarker id={kraaiDoelId} soort={p.markerEnd} kleur={kleur} kant="doel" />
       </defs>
 
       <BaseEdge
@@ -501,6 +581,16 @@ function ConnectorEdge({
           : p.markerEnd === "driehoek" ? `url(#${driehoekId})`
           : p.markerEnd === "pijl-dicht" ? `url(#${pijlDichtId})`
           : p.markerEnd === "bol" ? `url(#${bolId})`
+          : KRAAIENPOTEN[p.markerEnd] ? `url(#${kraaiDoelId})`
+          : undefined
+        }
+        // De ruit (compositie/aggregatie) is géén SVG-marker maar een polygon
+        // dat met de curve meebuigt — zie hieronder; de overige bron-markers
+        // zijn wél gewone markers.
+        markerStart={
+          p.markerStart === "schuine-streep" ? `url(#${streepId})`
+          : p.markerStart === "kruis-cirkel" ? `url(#${kruisId})`
+          : KRAAIENPOTEN[p.markerStart] ? `url(#${kraaiBronId})`
           : undefined
         }
         style={{
