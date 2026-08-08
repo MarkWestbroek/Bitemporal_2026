@@ -207,7 +207,12 @@ vormentaal de betekenis.
 Nog open: de **planningstabel** (discretionary items die een behandelaar tijdens de uitvoering
 toevoegt), caseFileItem-relaties, en de **expressietaal** achter sentries en rules. Dat
 laatste is het interessantst: koppelen aan CEL/Toegangsspraak in plaats van er een taal bij
-te verzinnen.
+te verzinnen. Plus één klein en waardevol punt: de **process task en case task missen nog
+`gedragsVerwijzing: true`** — met die paar regels klik je van een casus door naar het
+BPMN-proces dat één stap ervan uitvoert.
+
+Achtergrond bij de notatie zelf (begrippen, levenscyclus, toepasbaarheid, de fusie met
+BPMN): `docs/CMMN-in-het-kort.md`.
 
 ### Nog helemaal open (volgorde-advies uit het plan)
 **C4** (4 elementtypen, nesting via containers, doorklikken van niveau naar niveau = het
