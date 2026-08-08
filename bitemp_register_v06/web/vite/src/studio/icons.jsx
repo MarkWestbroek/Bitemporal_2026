@@ -225,6 +225,16 @@ export const IconSysML05 = (p) => (
   </svg>
 );
 
+/* CMMN (0.5): de casus-map met een sentry-ruit op de rand — sentries zijn
+   wat CMMN onderscheidt van een procesnotatie. */
+export const IconCMMN05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M3 7V5.5A1.5 1.5 0 0 1 4.5 4h4L10 6h9.5A1.5 1.5 0 0 1 21 7.5v11A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5Z" />
+    <rect x="8" y="10.5" width="9" height="6" rx="2.5" />
+    <path d="M8 10.5 6 13.5 8 16.5 10 13.5Z" {...vul} />
+  </svg>
+);
+
 /* ERD (0.5): twee entiteitsdozen, verbonden door de kraaienpoot zelf —
    het symbool dat deze notatie herkenbaar maakt. */
 export const IconERD05 = (p) => (
