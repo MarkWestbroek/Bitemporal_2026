@@ -199,6 +199,9 @@ export const dmnDrdDiagramType = {
   id: DMN_DRD_ID,
   label: "DMN DRD",
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
   // Omgekeerde hiërarchie: de requirement-pijl wijst náár de beslissing,
   // maar in de boom is de beslissing de ouder van haar vereisten.
   hierarchie: [{ type: "infoReq", omgekeerd: true }, { type: "knowReq", omgekeerd: true }],

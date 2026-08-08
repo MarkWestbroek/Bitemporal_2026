@@ -465,6 +465,9 @@ export const canoniekUmlDiagramType = {
   id: CANONIEK_UML_ID,
   label: "Canoniek datamodel",
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
   // P02: eerst package-lidmaatschap (domein), daarna de compositie
   // (ENT ◆ GE) — de browser toont packages → entiteiten → gegevenselementen.
   hierarchie: ["bevat", "compositie"],

@@ -52,6 +52,13 @@
 > bewijs dat §3.1 het juiste primitief was — in CMMN is de bewaker-op-de-rand
 > niet een detail maar de kérn van de taal: er zijn geen sequence flows, alle
 > afhankelijkheid loopt via sentries.
+>
+> **Stand 2026-08-08:** vierde motor-primitief — **zwevende aanhechting**
+> (`randAanhechting: "zijden" | "zwevend"`, §3.4). Vier handles is genoeg voor
+> een gateway maar niet voor een klassebox met acht associaties; zwevend hecht
+> aan de omtrek in plaats van aan een handle, zodat lijnen uitwaaieren en
+> meeglijden bij het slepen. Aan in de structuur- en architectuurprofielen; de
+> gedragsprofielen houden hun handles.
 
 Dit document legt de richting vast voor sequence-, activity-, state-machine- en
 BPMN-diagrammen op de generieke diagram-motor (`diagramcore`), met bijzondere aandacht
@@ -166,6 +173,40 @@ op het canvasvlak → één CSS-regel. Eén schakelaar voor álle profielen.
 Toegepast op: BPMN start/tussen/eind/boundary-event en de drie gateways; state
 machine begin/eind/keuze/junction/historie/entry/exit; activity begin/eind/
 flow-eind/beslissing/fork/pin.
+
+### 3.4 Zwevende aanhechting — de lijn hecht aan de omtrek (gebouwd 2026-08-08)
+
+Een connector pakt vast aan één van vier handles: het midden van elke zijde.
+Voor een BPMN-gateway of een begin-stip is dat prima — die vormen zijn klein,
+vier punten dekken ze. Voor een UML-klasse met acht associaties is het armoede:
+alle lijnen knijpen door hetzelfde punt.
+
+`ElementType.randAanhechting` (met `DiagramType.randAanhechting` als
+profiel-default) zet daar `"zwevend"` tegenover: het uiteinde ligt op de
+**omtrek**, op de plek waar de lijn naar de buur hem kruist. Lijnen naar
+verschillende buren waaieren dan vanzelf uit, en bij het slepen glijdt het
+aanhechtpunt mee — je hoeft nooit meer een handle "goed te zetten". Dat is wat
+EA, Archi en Visio doen, en de reden dat je daar nooit over handles nadenkt.
+
+Twee begrenzingen die het ontwerp bewust klein houden:
+
+1. **De zijde verandert niet.** Het zuivere snijpunt van de middellijn met de
+   omtrek geeft bij een brede, lage node rare uitkomsten — een buur die
+   duidelijk rechts ligt wordt dan via de bóvenrand verbonden, en de
+   orthogonale router maakt daar een lange omweg omheen (in de praktijk
+   geprobeerd; het zag er slechter uit dan het probleem dat het oploste).
+   Daarom kiest de zwevende variant de zijde met exact dezelfde regel als
+   `besteZijde`, en schuift alleen het punt **langs** die zijde op. Het
+   verschil met de oude situatie is precies één ding: dezelfde zijde, een
+   betere plek erop.
+2. **Een handmatig gekozen handle wint altijd.** Zweven geldt per uiteinde en
+   alleen waar `data.sourceHandle`/`targetHandle` leeg is — dus precies de
+   stand die "normaliseer relaties" achterlaat. Wie een lijn met de hand heeft
+   vastgezet, houdt hem.
+
+Aan in de structuur- en architectuurprofielen (puur-UML, canoniek-UML, MIM,
+OAS, ERD, SysML, ArchiMate, DMN DRD, use case); de gedragsprofielen houden hun
+handles, want daar zijn de vormen klein en dragen de vier punten betekenis.
 
 ---
 

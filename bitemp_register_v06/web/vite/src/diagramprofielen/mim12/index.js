@@ -455,6 +455,9 @@ export const mim12DiagramType = {
   id: MIM12_ID,
   label: "MIM 1.2",
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
   // Vormgrammatica (besluit 2026-07-07): de vorm draagt het type; de
   // Typering-toggle (hoofdmenu) kan het mini-icoon of de stereotype-tekst
   // erbij tonen. Standaard: alleen vorm.

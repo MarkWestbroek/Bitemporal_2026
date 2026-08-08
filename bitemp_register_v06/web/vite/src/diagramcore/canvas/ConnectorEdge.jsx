@@ -42,7 +42,9 @@ import {
   EdgeLabelRenderer,
   BaseEdge,
   useStore,
+  useInternalNode,
 } from "@xyflow/react";
+import { zwevendeUiteinden, nodeRechthoek } from "./zwevendeRand.js";
 
 const DASHES = {
   "dash-6-3": "6 3",
@@ -112,16 +114,39 @@ function ConnectorEdge({
   id,
   source,
   target,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
+  sourceX: sourceXVast,
+  sourceY: sourceYVast,
+  targetX: targetXVast,
+  targetY: targetYVast,
+  sourcePosition: sourcePositionVast,
+  targetPosition: targetPositionVast,
   data,
   selected,
 }) {
   const p = data?.presentatie || {};
+  // Zwevende aanhechting (zie zwevendeRand.js): in plaats van de vaste
+  // handle-coördinaten die React Flow aanlevert, hecht de lijn aan het punt
+  // waar hij de omtrek van de node snijdt. Per uiteinde apart aan/uit; de
+  // hooks draaien altijd (regels van hooks), het rekenwerk alleen als het mag.
+  const bronNode = useInternalNode(source);
+  const doelNode = useInternalNode(target);
+  const { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition } =
+    zwevendeUiteinden({
+      bronRect: nodeRechthoek(bronNode),
+      doelRect: nodeRechthoek(doelNode),
+      // Een zelf-lus heeft geen richting om mee te snijden — die houdt zijn
+      // handles, want daar bepalen ze juist de vorm van het oortje.
+      zwevendBron: !!p.zwevendBron && source !== target,
+      zwevendDoel: !!p.zwevendDoel && source !== target,
+      vast: {
+        sourceX: sourceXVast,
+        sourceY: sourceYVast,
+        targetX: targetXVast,
+        targetY: targetYVast,
+        sourcePosition: sourcePositionVast,
+        targetPosition: targetPositionVast,
+      },
+    });
   const padArgs = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition };
   // Zelf-verwijzing (source == target): een "oortje" buitenom de node —
   // anders valt het pad samen met één punt en is de connector onzichtbaar

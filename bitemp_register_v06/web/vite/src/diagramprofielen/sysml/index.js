@@ -368,6 +368,9 @@ export const sysmlDiagramType = {
   id: SYSML_ID,
   label: "SysML",
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
   fieldTypes,
   elementTypes,
   taakbalken: [

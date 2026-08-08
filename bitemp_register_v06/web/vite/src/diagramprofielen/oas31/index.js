@@ -511,6 +511,9 @@ export const oas31DiagramType = {
   id: OAS31_ID,
   label: "OpenAPI 3.1",
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
   // Boomordening in de elementen-browser: operatie → ($ref) → schema → ….
   hierarchie: "ref",
   fieldTypes,

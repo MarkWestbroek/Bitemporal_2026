@@ -100,7 +100,15 @@ function MiniMapNode({ id, x, y, width, height }) {
 
 function bouwLookups(diagramType) {
   const elementTypesById = {};
-  for (const et of diagramType?.elementTypes || []) elementTypesById[et.id] = et;
+  // De profiel-default voor randAanhechting hier één keer inbakken, zodat al
+  // het verderop liggende werk (materialisatie, edge) alleen nog naar het
+  // elementtype hoeft te kijken.
+  const randDefault = diagramType?.randAanhechting || "zijden";
+  for (const et of diagramType?.elementTypes || []) {
+    elementTypesById[et.id] = et.randAanhechting
+      ? et
+      : { ...et, randAanhechting: randDefault };
+  }
   const fieldTypesById = {};
   for (const ft of diagramType?.fieldTypes || []) fieldTypesById[ft.id] = ft;
   const compartmentTypesById = {};

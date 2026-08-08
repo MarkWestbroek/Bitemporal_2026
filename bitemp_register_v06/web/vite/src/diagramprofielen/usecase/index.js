@@ -142,6 +142,9 @@ export const usecaseDiagramType = {
   id: USECASE_ID,
   label: "Use case",
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
   fieldTypes: [],
   elementTypes,
   taakbalken: [
