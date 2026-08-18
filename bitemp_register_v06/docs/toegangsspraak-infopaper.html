@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Toegangsspraak — klare taal voor toegangsbeleid</title>
+<style>
+  @page { size: A4; margin: 17mm 19mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    font-size: 10.2pt; line-height: 1.5; color: #1e293b;
+    margin: 0; padding: 0;
+  }
+  /* ── kop ── */
+  .accent { height: 5px; background: linear-gradient(90deg, #60a5fa, #6366f1, #22d3ee); border-radius: 3px; }
+  header { margin: 10px 0 20px; }
+  h1 { font-size: 21pt; margin: 14px 0 2px; letter-spacing: -0.3px; }
+  .subtitel { font-size: 12pt; color: #475569; margin: 0 0 8px; }
+  .meta { font-size: 9pt; color: #64748b; }
+  /* ── structuur ── */
+  h2 { font-size: 13pt; margin: 22px 0 6px; color: #1e3a8a; letter-spacing: -0.2px; break-after: avoid; }
+  h3 { font-size: 10.8pt; margin: 14px 0 4px; break-after: avoid; }
+  p { margin: 5px 0 9px; }
+  ul { margin: 4px 0 10px; padding-left: 20px; }
+  li { margin-bottom: 3px; }
+  strong { color: #0f172a; }
+  .kader {
+    background: #eff6ff; border-left: 3px solid #6366f1; border-radius: 4px;
+    padding: 8px 12px; margin: 10px 0; break-inside: avoid;
+  }
+  .kader p { margin: 3px 0; }
+  /* ── code ── */
+  pre {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+    padding: 10px 12px; font-size: 8.6pt; line-height: 1.45; overflow-x: hidden;
+    white-space: pre-wrap; break-inside: avoid; margin: 8px 0 12px;
+  }
+  code, pre { font-family: "SF Mono", Menlo, Consolas, monospace; }
+  code { font-size: 0.92em; background: #f1f5f9; border-radius: 3px; padding: 0 3px; }
+  pre code { background: none; padding: 0; }
+  /* zinsontleding-kleuren, zoals in de editor */
+  .subj  { background: #dcfce7; border-radius: 2px; padding: 0 2px; }
+  .geg   { background: #fef9c3; border-radius: 2px; padding: 0 2px; }
+  .oper  { color: #7c3aed; font-weight: 600; }
+  .waarde{ color: #1d4ed8; }
+  .actie { background: #ffedd5; border-radius: 2px; padding: 0 2px; }
+  .plicht{ background: #ccfbf1; border-radius: 2px; padding: 0 2px; }
+  .modal { font-weight: 700; }
+  .kw    { color: #334155; font-weight: 600; }
+  .cmt   { color: #94a3b8; }
+  /* ── tabellen ── */
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 12px; font-size: 9.2pt; break-inside: avoid; }
+  th, td { border: 1px solid #e2e8f0; padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: #eff6ff; color: #1e3a8a; font-weight: 600; }
+  /* ── figuren ── */
+  figure { margin: 12px 0 14px; break-inside: avoid; }
+  figure img { width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; }
+  .placeholder {
+    border: 1.5px dashed #94a3b8; border-radius: 8px; background: #f8fafc;
+    min-height: 130px; display: flex; align-items: center; justify-content: center;
+    color: #64748b; font-size: 9pt; text-align: center; padding: 14px;
+  }
+  figcaption { font-size: 8.8pt; color: #475569; margin-top: 5px; }
+  figcaption b { color: #1e3a8a; }
+  /* ── pagina ── */
+  .pagina-einde { break-before: page; }
+  footer { margin-top: 26px; padding-top: 8px; border-top: 1px solid #e2e8f0; font-size: 8.5pt; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<div class="accent"></div>
+<header>
+  <h1>Toegangsspraak</h1>
+  <p class="subtitel">Klare taal voor toegangsbeleid — taal, editor en diagramprofiel in Omnium Studio</p>
+  <p class="meta">Mark Westbroek · augustus 2026 · info-paper, prototype-status</p>
+</header>
+
+<h2>1 &nbsp;Waar dit over gaat</h2>
+<p>
+Toegangsbeleid leeft vandaag op twee plekken die elkaar niet kennen: in beleidsdocumenten
+(leesbaar, maar niet uitvoerbaar) en in autorisatieregels van systemen (uitvoerbaar, maar
+voor niemand leesbaar). <strong>Toegangsspraak</strong> is een experiment om die kloof te
+sluiten: één beleidstekst in gewoon Nederlands die exact één betekenis heeft, verankerd is
+aan het onderliggende gegevensmodel, en verliesvrij heen en weer kan naar
+<strong>ODRL</strong> (JSON-LD, NLGov-profiel) — en via dat ODRL-spoor later naar
+runtime-engines als OPA/Rego, Cedar of XACML.
+</p>
+<p>De hele taal hangt aan één kernzin:</p>
+<div class="kader">
+  <p><b>&lt;wie&gt;</b> mag <b>&lt;gegevens&gt;</b> <b>&lt;handeling&gt;</b> — of <b>mag … niet</b> —
+  [ <b>als</b> &lt;voorwaarden&gt; ] [ <b>waarbij:</b> &lt;verplichtingen&gt; ]</p>
+</div>
+<p>Een volledig (klein) beleid, met de kleuren van de zinsontleding uit de editor:</p>
+<pre><span class="kw">Beleid</span> <span class="waarde">"Inzage inkomen bij schuldhulp"</span>.
+  <span class="kw">Geldig vanaf</span> 1 mei 2026.
+  <span class="kw">Grondslag:</span> de Wet gemeentelijke schuldhulpverlening.
+  <span class="kw">Doel:</span> <span class="waarde">"schuldhulpverlening"</span>.
+
+  <span class="kw">Begrippen.</span>
+    Een <span class="subj">schuldhulpverlener</span> is: iemand met rol <span class="waarde">"schuldhulpverlener"</span>.
+    <span class="geg">Inkomensgegevens</span> zijn: alle gegevens van het inkomen van een natuurlijk persoon.
+
+  <span class="kw">Regel</span> <span class="waarde">"inzage bij lopend dossier"</span>.
+    <span class="subj">Een schuldhulpverlener</span> <span class="modal">mag</span> <span class="geg">de inkomensgegevens</span> <span class="actie">bekijken</span>
+    <span class="kw">als</span> aan alle volgende voorwaarden is voldaan:
+      - <span class="geg">het doel van de aanvraag</span> <span class="oper">is</span> <span class="waarde">"schuldhulpverlening"</span>;
+      - <span class="geg">de achternaam van de naam van de betrokkene</span> <span class="oper">begint met</span> <span class="waarde">"A"</span>;
+    <span class="kw">waarbij:</span> <span class="plicht">elke raadpleging wordt vastgelegd in het logboek</span>.
+
+  <span class="kw">Regel</span> <span class="waarde">"geen export"</span>.
+    <span class="subj">Een schuldhulpverlener</span> <span class="modal">mag</span> <span class="geg">de achternaam van de namen van een natuurlijk persoon</span> <span class="modal">niet</span> <span class="actie">exporteren</span>.</pre>
+
+<figure>
+  <img src="img/toegangsspraak/01-editor.png" alt="De Toegangsspraak-editor in Omnium Studio">
+  <figcaption><b>Figuur 1.</b> De Toegangsspraak-editor in Omnium Studio: links de modelboom
+  van het canonieke model (klikken/slepen voegt de van-vorm in), in het midden de beleidstekst
+  met zinsontleding en statusregel, rechts de live meegenereerde ODRL-vorm.</figcaption>
+</figure>
+
+<h2>2 &nbsp;Hoe parse je de zinnen precies? Zit daar een formele grammatica onder?</h2>
+<p>
+<strong>Ja — er ligt een formele grammatica onder, en er komt geen taalmodel of
+NLP-gokwerk aan te pas.</strong> Toegangsspraak is een <em>gecontroleerde natuurlijke taal</em>
+(CNL), in dezelfde familie als RegelSpraak van de Belastingdienst: het leest als Nederlands,
+maar elke zin volgt een vast patroon uit een vaste grammatica en heeft precies één betekenis.
+Het parsen is daardoor volledig deterministisch — dezelfde tekst levert altijd dezelfde
+boom, en wat niet in de grammatica past is een foutmelding (in klare taal, met regel- en
+kolomnummer), geen interpretatie.
+</p>
+
+<h3>2.1 &nbsp;De grammatica (EBNF)</h3>
+<p>De kern in compacte EBNF (leesvorm; de editor schrijft altijd de canonieke vorm terug):</p>
+<pre>beleid         = kop , [ begrippen ] , { regel } ;
+kop            = "Beleid" , naam , "." , { kopregel } ;
+kopregel       = "Geldig vanaf" , datum , [ "tot" , datum ] , "."
+               | "Grondslag:" , tekst , "."  |  "Doel:" , string , "." ;
+
+begrippen      = "Begrippen." , { begripsdef } ;
+begripsdef     = [ lidwoord ] , naam , "is:" , "iemand" , kenmerken , "."          <span class="cmt">(* wie *)</span>
+               | [ lidwoord ] , naam , ("is:"|"zijn:") , wat , [ "waarvan" , voorwaarde ] , "." ;  <span class="cmt">(* wat *)</span>
+kenmerken      = "met" , kenmerk , string , { "en" , kenmerk , string } ;
+
+regel          = "Regel" , naam , "." , kernzin ;
+kernzin        = wie , "mag" , wat , [ "niet" ] , actie ,
+                 [ "als" , voorwaardeblok ] ,
+                 [ "waarbij:" , plicht , { ";" , plicht } ] , "." ;
+
+wie            = lidwoord , begripsnaam  |  "iemand" , kenmerken ;
+wat            = [ lidwoord ] , begripsnaam
+               | "alle gegevens van" , verwijzing
+               | verwijzing ;
+
+voorwaardeblok = voorwaarde
+               | kwantor , ":" , { "-" , ( voorwaarde | voorwaardeblok ) , [ ";" ] } ;
+kwantor        = "aan alle volgende voorwaarden is voldaan"                        <span class="cmt">(* AND  *)</span>
+               | "aan ten minste één van de volgende voorwaarden is voldaan"       <span class="cmt">(* OR   *)</span>
+               | "aan precies één van de volgende voorwaarden is voldaan" ;        <span class="cmt">(* XOR  *)</span>
+voorwaarde     = term , vergelijking , [ rechterdeel ]                             <span class="cmt">(* stelling én bijzin, §2.4 *)</span>
+               | "er" , [ "is" ] , [ "geen" ] , omschrijving , [ "voor" , verwijzing ] , [ "is" ] ;
+term           = string | getal | datum | verwijzing ;
+
+verwijzing     = groep , { "van" , groep }        <span class="cmt">(* van-keten; laatste groep = basis *)</span>
+               | pad ;                            <span class="cmt">(* technische shorthand: NatuurlijkPersoon.Naam.achternaam *)</span>
+groep          = lidwoord , woord , { woord } ;
+basis          = "de aanvrager" | "de betrokkene" | "de aanvraag" | "de gegevens"  <span class="cmt">(* ankers *)</span>
+               | typenaam ;
+
+vergelijking   = <span class="cmt">(* uit het operator-register, §2.3 *)</span> ;
+actie          = <span class="cmt">(* uit het actie-register: bekijken, opvoeren, veranderen, exporteren, … *)</span> ;
+plicht         = <span class="cmt">(* uit het plichten-register: "elke raadpleging wordt vastgelegd in het logboek", … *)</span> ;</pre>
+<p>
+De grammatica is <strong>LL(1)-achtig</strong>: elk alternatief is op het eerste woord (of
+token) te onderscheiden, zodat de parser nooit hoeft te backtracken over structuur.
+Interpunctie is betekenisdragend, net als in RegelSpraak: de opsomming met streepjes
+<em>is</em> de boolese structuur (AND/OR/XOR, nestbaar via insprong), waardoor de klassieke
+en/of-ambiguïteit van lopende tekst niet kán ontstaan.
+</p>
+
+<h3>2.2 &nbsp;De pijplijn: tokenizer → recursive descent → AST</h3>
+<p>
+De implementatie is een <strong>handgeschreven tokenizer + recursive-descent parser</strong>
+(plain JavaScript, geen parser-generator, geen dependencies). De tokenizer kent vijf
+tokensoorten — <em>woord</em>, <em>getal</em>, <em>string</em> (tussen aanhalingstekens,
+ook typografische), <em>pad</em> (het technische registerpad zoals
+<code>NatuurlijkPersoon.Naam.achternaam</code>) en <em>leesteken</em> — plus het
+opsommingsstreepje, dat zijn insprong meedraagt: daarmee bepaalt de parser de nesting van
+voorwaardeblokken. Elk token onthoudt zijn bronpositie.
+</p>
+<p>
+De parser volgt het klassieke recept <em>één functie per grammaticaregel</em>:
+<code>parseBeleid → parseBegrip / parseRegel → parseWat / parseVoorwaardeblok →
+parseVoorwaarde → parseTerm → parseVerwijzing</code>. Het resultaat is een
+<strong>AST</strong> (abstracte syntaxboom) die positie-onafhankelijk is, plus een losse
+lijst <em>spans</em>: bronposities per zinsdeel-soort (subject, gegevens, handeling,
+vergelijking, waarde, plicht, modaliteit). Die spans voeden de zinsontleding-weergave in de
+editor — de kleuren in het voorbeeld hierboven komen rechtstreeks uit de parser, niet uit
+een aparte highlighter. Doordat de spans buiten de AST blijven, is de AST zelf exact
+vergelijkbaar over round-trips heen.
+</p>
+
+<h3>2.3 &nbsp;Open slots: operatoren, handelingen en plichten zijn data, geen grammatica</h3>
+<p>
+De grammatica kent alleen de <em>slots</em> "vergelijking", "handeling" en "plicht"; de
+invulling komt uit <strong>registers</strong> (gewone datalijsten). De kernset bevat o.a.
+<code>is</code>, <code>is niet</code>, <code>is groter/kleiner dan</code>,
+<code>is ten minste/hoogste</code>, <code>begint met</code>, <code>eindigt op</code>,
+<code>bevat</code>, <code>is een van (…)</code>, <code>ligt tussen … en …</code>,
+<code>is bekend/onbekend</code> — elk met zijn ODRL-tegenhanger
+(<code>odrl:eq</code>, <code>nlgov:begintMet</code>, …) en de waardetypen waarop hij past.
+De parser matcht operatoren <em>longest match first</em>, zodat "is kleiner dan" wint van "is".
+</p>
+<p>
+Een domeinprofiel registreert extra termen zonder één grammaticaregel te wijzigen — er is
+een geo-profiel meegeleverd ("valt geheel binnen", "overlapt", → <code>geo:within</code>,
+<code>geo:intersects</code>). Dat is bewust het <strong>ODRL-Profile-mechanisme,
+doorgetrokken naar de taal</strong>.
+</p>
+
+<h3>2.4 &nbsp;Nederlandse woordvolgorde: stelling én bijzin</h3>
+<p>
+Correct Nederlands vraagt na "als" de bijzinsvolgorde ("… als de taal niet "nl" <em>is</em>"),
+terwijl een opsommingsregel de stellingsvorm heeft ("de taal <em>is niet</em> "nl""). De
+parser accepteert beide: herkent hij na de linksterm geen operator, dan haalt hij het
+werkwoord aan het einde van de voorwaarde naar voren en parseert het geheel opnieuw als
+stellingsvorm. Herformatteren normaliseert naar de canonieke vorm per context (bijzin na
+als/waarvan, stelling in opsommingen). Eén betekenis, twee leesbare schrijfwijzen.
+</p>
+
+<h3>2.5 &nbsp;Semantiek: verankering aan het gegevensmodel</h3>
+<p>
+Na het parsen volgt de semantische stap, en die maakt de taal meer dan een grammatica-oefening.
+Naar gegevens verwijs je in de <strong>van-vorm</strong>: "de achternaam van de naam van een
+natuurlijk persoon" — het woord "van" volgt de compositie in het model in omgekeerde richting.
+Zo'n keten wordt <strong>geresolvd tegen het echte metamodel</strong> (de schema-API van het
+register): de keten mag verkort worden zolang hij eenduidig blijft ("de achternaam van een
+natuurlijk persoon" volstaat als er maar één veld <code>achternaam</code> onder
+NatuurlijkPersoon hangt). Is de verwijzing dubbelzinnig — <code>achternaam</code> bestaat
+zowel onder <code>Naam</code> als onder <code>Partnernaam</code> — dan komt er een
+controle-melding en biedt de editor de kandidaten aan; één klik vervangt de keten door de
+eenduidige vorm (figuur 2).
+</p>
+<p>
+Dezelfde stap doet <strong>typebewaking</strong>: "begint met" kan alleen met tekst, een
+datumveld vergelijk je niet met een getal, en enum-velden alleen met hun toegestane waarden —
+met foutmeldingen die zelf ook klare taal zijn (<em>"'begint met' kan alleen met tekst;
+'geboortedatum' is een datum. Bedoelde je 'is eerder dan'?"</em>). De ODRL-uitvoer gebruikt
+de geresolvede registerpaden.
+</p>
+<figure>
+  <img src="img/toegangsspraak/02-resolutie.png" alt="Keten-resolutie met dubbelzinnige verwijzing">
+  <figcaption><b>Figuur 2.</b> Keten-resolutie tegen het metamodel: een dubbelzinnige
+  verwijzing levert een controle-melding; klikken op de juiste kandidaat (onderin of in de
+  modelboom) vervangt de keten in de policytekst.</figcaption>
+</figure>
+
+<h3>2.6 &nbsp;Round-trip als wet</h3>
+<p>
+De tekst is de bron; de canonieke vorm en de ODRL-weergave zijn projecties van dezelfde AST.
+De geteste garantie is: <code>render(parse(t))</code> is de canonieke schrijfwijze van
+<code>t</code>, en <code>parse(render(b)) = b</code> voor elk beleid. Diezelfde eis geldt
+langs de diagramkant (§4). Daarmee is álles wat in het register staat per constructie
+leesbaar — er kan geen policy bestaan die niet als Nederlandse tekst te tonen is.
+</p>
+
+<h2 class="pagina-einde">3 &nbsp;Van tekst naar ODRL (NLGov-profiel)</h2>
+<p>
+De afbeelding op ODRL is deterministisch en behoudt de structuur één-op-één:
+</p>
+<table>
+  <tr><th>Toegangsspraak</th><th>ODRL (JSON-LD, NLGov-profiel)</th></tr>
+  <tr><td>Beleid + kopregels (geldig, grondslag, doel)</td><td><code>Set</code> met <code>nlgov:geldigVanaf</code>, <code>nlgov:grondslag</code>, <code>nlgov:doelbinding</code></td></tr>
+  <tr><td><span class="modal">mag</span> / <span class="modal">mag … niet</span></td><td><code>permission</code> / <code>prohibition</code></td></tr>
+  <tr><td>begrip "wie" (iemand met rol …)</td><td><code>PartyCollection</code> met <code>refinement</code></td></tr>
+  <tr><td>begrip "wat" / van-keten</td><td><code>Asset</code> / <code>AssetCollection</code> met registerpad als <code>source</code></td></tr>
+  <tr><td>handeling (bekijken, exporteren, …)</td><td><code>action</code> (<code>nlgov:view</code>, <code>nlgov:export</code>, …)</td></tr>
+  <tr><td>voorwaardeblok (alle / ten minste één / precies één)</td><td><code>constraint</code> / <code>LogicalConstraint</code> (and / or / xone)</td></tr>
+  <tr><td>waarbij: plichten</td><td><code>duty</code> (<code>nlgov:log</code>, …)</td></tr>
+  <tr><td>vaste conflictregel: verbod wint, default deny</td><td><code>conflict: prohibit</code></td></tr>
+</table>
+<p>
+Zo wordt de regel "inzage bij lopend dossier" uit §1 dit fragment (ingekort):
+</p>
+<pre>"permission": [{
+  "nlgov:regelnaam": "inzage bij lopend dossier",
+  "target":   { "@type": "AssetCollection", "uid": "urn:nlgov:gegevens:inkomensgegevens",
+                "source": "nlgov:register:NatuurlijkPersoon.Inkomen" },
+  "assignee": { "@type": "PartyCollection", "uid": "urn:nlgov:rolgroep:schuldhulpverlener",
+                "refinement": [{ "leftOperand": {"@id": "nlgov:rol"}, "operator": "eq",
+                                 "rightOperand": "schuldhulpverlener" }] },
+  "action":   { "@id": "nlgov:view" },
+  "constraint": [
+    { "leftOperand": {"@id": "nlgov:doelbinding"}, "operator": "eq",
+      "rightOperand": "schuldhulpverlening" },
+    { "leftOperand": {"@id": "nlgov:betrokkene:naam.achternaam"},
+      "operator": "nlgov:begintMet", "rightOperand": "A" } ],
+  "duty": [{ "action": {"@id": "nlgov:log"} }]
+}]</pre>
+
+<h2>4 &nbsp;Hetzelfde beleid als diagram: het toegangsregel-profiel</h2>
+<p>
+Omnium Studio heeft een generieke diagrammotor met <em>profielen</em> (vormentaal + regels
+per notatie). Voor toegangsbeleid bestaan er twee weergaven op dezelfde AST:
+</p>
+<ul>
+  <li><strong>Regelkaarten</strong> — een read-only tab naast de tekst: per regel het subject,
+  de handeling, de gegevens, de voorwaardepoort (alle / ten minste één / precies één) en de
+  plichten, in dezelfde kleuren als de zinsontleding.</li>
+  <li><strong>Het bewerkbare model</strong> — de regels als echt diagram-model in de
+  modelleeromgeving. Daar kun je het beleid grafisch aanpassen en er de tekst en ODRL weer
+  uit genereren (<em>Publiceer naar Modelleren</em> / <em>Lees terug uit Modelleren</em>;
+  de layout blijft bij publiceren behouden). Elke gegevensselectie in het diagram draagt in
+  zijn eigenschappen de verwijzing naar het element in het canonieke model — bv.
+  <code>NatuurlijkPersoon.namen.achternaam</code> in het profiel <code>canoniek-model</code>.</li>
+</ul>
+<figure>
+  <img src="img/toegangsspraak/03-regelkaarten.png" alt="Regelkaarten-weergave (tab Diagram)">
+  <figcaption><b>Figuur 3.</b> Regelkaarten: toestemming (groen "mag") en verbod (rood
+  "mag niet"), met voorwaardepoort en plicht.</figcaption>
+</figure>
+<figure>
+  <div style="display:flex; gap:8px; align-items:flex-start;">
+    <img src="img/toegangsspraak/04-beleidsdiagram.svg" alt="Het bewerkbare beleidsdiagram" style="width:76%;">
+    <img src="img/toegangsspraak/04b-eigenschappen.png" alt="Eigenschappen-paneel van een gegevensselectie" style="width:23%;">
+  </div>
+  <figcaption><b>Figuur 4.</b> Het bewerkbare model: beide regels met subject, handeling,
+  gegevensselectie, voorwaardepoort en plicht. Rechts de eigenschappen van de gegevensselectie
+  "de achternaam van de namen van een natuurlijk persoon": de link naar profiel
+  <code>canoniek-model</code>, element <code>NatuurlijkPersoon.namen.achternaam</code>.</figcaption>
+</figure>
+<p>
+Het canonieke gegevensmodel zelf staat in dezelfde tool, in een gespecialiseerde UML-vorm
+(entiteiten, gegevenselementen, gegevenstypen met patronen en enumeraties). Dat model is
+tegelijk de bron waaruit elders een bitemporeel register wordt gegenereerd — maar voor de
+policytaal is het vooral: de plek waar de van-ketens naartoe resolven.
+</p>
+<figure>
+  <img src="img/toegangsspraak/05-canoniek-model.png" alt="Het canonieke model in gespecialiseerde UML">
+  <figcaption><b>Figuur 5.</b> Het canonieke model in gespecialiseerde UML — het
+  resolutiedoel van de van-vorm én de bron voor registergeneratie.</figcaption>
+</figure>
+<p>
+Ook het profiel zelf is model: een metamodel van elementtypen (Policy, Toegangsregel,
+Subject, Handeling, Gegevensselectie, Voorwaarde, Voorwaardepoort, Plicht, Begrip) met hun
+verbindingsregels (omvat, wie, doet, op, als, waarbij, verwijst naar). Profielen worden in de
+Studio getekend als diagram en dan geactiveerd tot werkende notatie — het toegangsregel-profiel
+is dus met zijn eigen mechanisme gebouwd.
+</p>
+<figure>
+  <img src="img/toegangsspraak/06-profiel-metamodel.svg" alt="Het metamodel van het toegangsregel-profiel">
+  <figcaption><b>Figuur 6.</b> Het metamodel onder het profiel: Policy omvat Toegangsregels
+  (wie / doet / op / als / waarbij), voorwaarden nestbaar via de Voorwaardepoort, en Begrip
+  en Gegevensselectie verwijzen naar het canonieke model. "Map" is alleen een
+  structuurelement.</figcaption>
+</figure>
+
+<h2>5 &nbsp;De editor in het kort</h2>
+<ul>
+  <li><strong>Live parsen</strong> met foutmeldingen in klare taal (regel + kolom) en een
+  statusregel ("✓ 2 regel(s), 2 begrip(pen) · 1 controle-melding(en)").</li>
+  <li><strong>Vier weergaven op één bron</strong>: Tekst, Canonieke vorm (geherformatteerd),
+  Diagram (regelkaarten) en Ontleding (zinsdelen gekleurd vanuit de parser-spans).</li>
+  <li><strong>Autocomplete, twee kanten op</strong>: een woord typen stelt van-vormen voor;
+  "de naam van&nbsp;" typen stelt de bases voor die zo'n veld hebben. Kort (verkorte keten)
+  of volledig invoegen; binnen een bestaande keten vervangt een suggestie de hele keten.</li>
+  <li><strong>Modelboom-koppeling</strong>: velden uit de modelboom klikken of slepen voegt
+  de van-vorm in; dubbelklik op een keten in de tekst toont het registerpad en focust het
+  element in de boom.</li>
+  <li><strong>Controle-meldingen</strong> (niet-blokkerend): keten-resolutie, dubbelzinnigheid,
+  typebewaking, enum-waarden.</li>
+  <li><strong>Menu Beleid</strong>: voorbeeld laden, herformatteren, ODRL-export, publiceren
+  naar / teruglezen uit de modelleeromgeving, koppelen aan ArchiMate (begrippen → Business
+  object/rol, grondslag → Constraint, doel → Goal).</li>
+</ul>
+
+<h2>6 &nbsp;Status en vervolg</h2>
+<p>
+Toegangsspraak is een <strong>werkend prototype</strong> (onderdeel van Omnium Studio,
+status concept): taal, parser, renderer, ODRL-export, metamodel-controle, editor en
+diagramprofiel werken en zijn met unit-tests afgedekt (grammatica, round-trip, ODRL,
+resolutie, suggesties). Het is nadrukkelijk <em>geen</em> runtime-engine — de PDP beslist —
+en nog geen productiestandaard. Op de rol staan: bitemporele registratie van beleidsteksten
+(zodat "welk beleid gold er op 1 maart?" een registervraag wordt), de vertalers
+ODRL → Rego/Cedar, en een nette subgrammatica voor plichten.
+</p>
+<p>
+Reacties zijn welkom — juist ook op de taalkeuzes: welke zinnen wil een beleidsmaker
+kunnen schrijven die nu nog niet passen?
+</p>
+
+<footer>
+Toegangsspraak · Omnium Studio — info-paper, augustus 2026 · Mark Westbroek ·
+gegenereerd uit de projectdocumentatie (TOEGANGSSPRAAK.md en het ontwerpdocument van 22 juli 2026)
+</footer>
+
+</body>
+</html>
