@@ -665,6 +665,9 @@ function ConnectorEdge({
           <EdgeLabelRenderer key={i}>
             <div
               className={alleenNaam ? undefined : "dc-edge-label"}
+              // De label-laag staat los van de edges in de DOM; dit koppelt hem
+              // terug aan zijn lijn voor de afbeeldings-export (exportFilter.js).
+              data-edge-id={id}
               onPointerDown={(e) => startLabelSleep(e, i, label)}
               title={magSlepen ? "Sleep om het label te verplaatsen" : undefined}
               style={{

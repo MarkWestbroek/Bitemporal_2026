@@ -9,13 +9,7 @@
  * thema leesbaar blijft.
  */
 import { toPng, toSvg } from "html-to-image";
-
-/** Sla React Flow-chrome over bij het serialiseren (incl. connectie-handles). */
-function neemMee(node) {
-  if (!(node instanceof Element) || !node.classList) return true;
-  const uit = ["react-flow__minimap", "react-flow__controls", "react-flow__background", "react-flow__panel", "react-flow__attribution", "react-flow__handle"];
-  return !uit.some((c) => node.classList.contains(c));
-}
+import { maakExportFilter } from "./exportFilter.js";
 
 function download(dataUrl, naam) {
   const a = document.createElement("a");
@@ -27,15 +21,17 @@ function download(dataUrl, naam) {
 /**
  * @param {object} p
  *   viewportEl: het `.react-flow__viewport` element (de te renderen laag)
- *   bounds: {x,y,width,height} in flow-coördinaten (van getNodesBounds)
+ *   bounds: {x,y,width,height} in flow-coördinaten (van tekenBounds)
  *   formaat: "png" | "svg"
  *   doel: "download" | "clipboard"
  *   achtergrond: css-kleur (canvas-achtergrond)
  *   naam: bestandsnaam zonder extensie
+ *   beperkTot: {nodeIds, edgeIds} — alleen deze elementen tekenen (selectie)
  * @returns {Promise<{ok:boolean, doel?:string, reden?:string}>}
  */
-export async function exporteerViewport({ viewportEl, bounds, formaat = "png", doel = "download", achtergrond, naam = "diagram", marge = 24, schaal = 2 }) {
+export async function exporteerViewport({ viewportEl, bounds, formaat = "png", doel = "download", achtergrond, naam = "diagram", marge = 24, schaal = 2, beperkTot }) {
   if (!viewportEl || !bounds || !bounds.width || !bounds.height) return { ok: false, reden: "niets te exporteren" };
+  const neemMee = maakExportFilter({ beperkTot });
   const w = Math.ceil(bounds.width + marge * 2);
   const h = Math.ceil(bounds.height + marge * 2);
   // Render op zoom 1 met een vaste pixelmarge: verschuif zó dat de linker-

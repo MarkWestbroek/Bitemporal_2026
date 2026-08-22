@@ -36,6 +36,8 @@ import {
   getNodesBounds,
 } from "@xyflow/react";
 import { exporteerViewport } from "../export/exporteerCanvas.js";
+import { maakExportFilter } from "../export/exportFilter.js";
+import { tekenBounds } from "../export/tekenBounds.js";
 import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
@@ -432,7 +434,47 @@ function CanvasBinnenkant({
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
   // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —
   // waardoor Delete op een connector nooit kon werken.
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [edges, setEdges, pasEdgeChangesToe] = useEdgesState([]);
+
+  /** Hangt deze lijn met beide uiteinden aan een geselecteerde node? */
+  const heelInSelectie = useCallback(
+    (edgeId) => {
+      const st = rfStoreApi.getState();
+      const e = st.edgeLookup?.get(edgeId);
+      if (!e) return false;
+      return !!st.nodeLookup?.get(e.source)?.selected && !!st.nodeLookup?.get(e.target)?.selected;
+    },
+    [rfStoreApi]
+  );
+
+  // Kader-selectie (Shift+slepen): React Flow selecteert élke lijn die aan een
+  // geselecteerde node hangt — óók lijnen naar elementen buiten het kader. Zo'n
+  // "halve" lijn hoort niet bij de selectie: verwijderen sloopt dan stilletjes
+  // een verbinding met een element dat je niet had geselecteerd, en een
+  // selectie-export zou het kader oprekken tot buiten de selectie. We laten die
+  // select-changes vallen zolang het kader open staat.
+  const onEdgesChange = useCallback(
+    (changes) => {
+      if (!rfStoreApi.getState().userSelectionActive) return pasEdgeChangesToe(changes);
+      pasEdgeChangesToe(changes.filter((c) => c.type !== "select" || !c.selected || heelInSelectie(c.id)));
+    },
+    [pasEdgeChangesToe, rfStoreApi, heelInSelectie]
+  );
+
+  // Naveegje bij het loslaten van het kader: de node-selectie van de láátste
+  // muisbeweging is pas ná die beweging in de store beland, dus daar kan nog
+  // een halve lijn tussen zijn geglipt.
+  const handleSelectionEnd = useCallback(() => {
+    setEdges((es) => {
+      let veranderd = false;
+      const volgende = es.map((e) => {
+        if (!e.selected || heelInSelectie(e.id)) return e;
+        veranderd = true;
+        return { ...e, selected: false };
+      });
+      return veranderd ? volgende : es;
+    });
+  }, [setEdges, heelInSelectie]);
   useEffect(() => {
     // Kortste-weg-handles voor presentatie-edges zonder expliciete handles
     // (na "normaliseer relaties" zijn ze gewist).
@@ -937,6 +979,7 @@ function CanvasBinnenkant({
           if (!nodes.length) return { ok: false, reden: "geen elementen op het diagram" };
           const root = rfStoreApi.getState().domNode;
           const viewportEl = root?.querySelector(".react-flow__viewport");
+          if (!viewportEl) return { ok: false, reden: "canvas niet gevonden" };
           // Achtergrond: canvas-kleur (de .react-flow-root is transparant; de
           // kleur zit op een voorouder — zoek de eerste ondoorzichtige zodat
           // lichte tekst op donker thema leesbaar blijft), wit of transparant.
@@ -958,9 +1001,34 @@ function CanvasBinnenkant({
           const naam =
             `${(diagram?.naam || "diagram").replace(/[^\w-]+/g, "_")}` +
             (alleenSelectie && sel.length ? "-selectie" : "");
+          // Kader: meten wat er getekend staat, niet wat het model zegt. Shapes
+          // tekenen buiten hun node-box (de graaf-bol zet zijn satellieten
+          // eromheen), edges bochten buiten de rechthoek van hun eindpunten en
+          // edge-labels staan daar weer naast — op `getNodesBounds` sneed de
+          // export dat allemaal af. Zie tekenBounds.js.
+          const beperkt = alleenSelectie && sel.length > 0;
+          const nodeIds = new Set(nodes.map((n) => n.id));
+          // Alleen lijnen waarvan beide uiteinden meedoen: een lijn naar buiten
+          // de selectie zou het kader oprekken tot aan een node die er niet in
+          // staat.
+          const edgeIds = new Set(edges.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target)).map((e) => e.id));
+          const beperkTot = beperkt ? { nodeIds, edgeIds } : undefined;
+          const neemMee = maakExportFilter({ beperkTot });
+          const labelLaag = root?.querySelector(".react-flow__edgelabel-renderer");
+          const wortels = [
+            ...(root?.querySelectorAll(".react-flow__node") || []),
+            ...(root?.querySelectorAll(".react-flow__edge") || []),
+            ...(labelLaag?.children || []),
+          ];
+          const zoom = rfStoreApi.getState().transform?.[2] || 1;
+          const bounds =
+            tekenBounds({ wortels, oorsprong: viewportEl.getBoundingClientRect(), zoom, neemMee }) ||
+            // Terugval als er (nog) niets gemeten kan worden: het modelkader.
+            getNodesBounds(nodes);
           return exporteerViewport({
             viewportEl,
-            bounds: getNodesBounds(nodes),
+            bounds,
+            beperkTot,
             formaat,
             doel,
             achtergrond,
@@ -990,6 +1058,7 @@ function CanvasBinnenkant({
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onSelectionChange={handleSelectionChange}
+      onSelectionEnd={handleSelectionEnd}
       onNodeClick={handleNodeClick}
       onEdgeClick={handleEdgeClick}
       onNodeDragStop={handleNodeDragStop}

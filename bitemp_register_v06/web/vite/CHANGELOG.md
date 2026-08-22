@@ -7,8 +7,22 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+### Gerepareerd
+- **Diagram-export sneed tekening af.** Het kader kwam van `getNodesBounds`
+  (alleen de node-boxen uit het model). Alles wat daarbuiten getekend wordt
+  viel weg: de satelliet-velden van de graaf-bol, buitenlabels, bochtige of
+  geknikte lijnen, edge-labels en rand-elementen (relatieve kind-positie). Het
+  kader wordt nu aan de DOM gemeten (`diagramcore/export/tekenBounds.js`).
+- **Selectie-export**: tekent alleen nog de selectie — geen half-afgesneden
+  buren meer in de rand, en zonder de blauwe resize-lijntjes van een
+  geselecteerde node. Lijnen buiten de selectie bleven eerst nog wél staan:
+  html-to-image kloont een `<svg>` in één keer diep en negeert daarbinnen het
+  `filter`, en React Flow zet elke edge in zo'n `<svg>`-wikkel.
 
-_(nog niets)_
+### Gewijzigd
+- **Kader-selectie** (Shift+slepen) neemt geen lijnen meer mee naar elementen
+  buiten het kader; een lijn hoort pas bij de selectie als beide uiteinden erin
+  zitten.
 
 ## [studio/v0.6.0] — 2026-07-29
 ### Toegevoegd — Toegangsspraak & Toegangsregel
