@@ -1,0 +1,132 @@
+classDiagram
+  direction LR
+
+  class OmniumStudio {
+    <<component>>
+    +string doel
+  }
+  class StudioShell {
+    <<component>>
+    +string projectbrowser
+    +string activiteiten
+    +string inspectors
+  }
+  class Diagrammotor {
+    <<component>>
+    +string canvas
+    +string typeRegistry
+    +string shapeRegistry
+  }
+  class Metametamodel {
+    <<metamodel>>
+    +string elementtypen
+    +string relatietypen
+    +string eigenschappen
+  }
+  class Modelprofielen {
+    <<component>>
+    +string canoniek
+    +string UML
+    +string ArchiMate
+    +string SysML
+    +string BPMN
+    +string DMN
+  }
+  class Editors {
+    <<component>>
+    +string model
+    +string proces
+    +string beslissing
+    +string bericht
+  }
+  class CanoniekModel {
+    <<model>>
+    +string entiteiten
+    +string gegevenselementen
+    +string relaties
+    +string referentielijsten
+  }
+  class V3JSON {
+    <<data>>
+    +string platformformaat
+  }
+  class MetaRegistry {
+    <<component>>
+    +string runtimeMetadata
+  }
+  class SchemaAPI {
+    <<interface>>
+    +string model
+    +string versies
+    +string diff
+  }
+  class RESTOpenAPI {
+    <<interface>>
+    +string generiekeRoutes
+  }
+  class GraphQL {
+    <<interface>>
+    +string dynamischSchema
+  }
+  class Codegenerator {
+    <<component>>
+    +string GoModelcode
+  }
+  class BitemporeelRegister {
+    <<component>>
+    +string registreren
+    +string corrigeren
+    +string ongedaanMaken
+    +string tijdreizen
+  }
+  class PostgreSQL {
+    <<database>>
+    +string registraties
+    +string representaties
+    +string schemaVersies
+  }
+  class DMNProjectie {
+    <<component>>
+    +string inputOutput
+  }
+  class BPMNProjectie {
+    <<component>>
+    +string messagesSignals
+  }
+  class Formulieren {
+    <<component>>
+    +string definities
+    +string renderer
+  }
+  class Toegangsspraak {
+    <<component>>
+    +string klareTaal
+    +string ODRL
+  }
+  class Visualisaties {
+    <<component>>
+    +string diagrammen
+    +string tijdlijn
+    +string universum3D
+  }
+
+  OmniumStudio *-- StudioShell : bevat
+  OmniumStudio *-- Diagrammotor : bevat
+  OmniumStudio *-- Editors : bevat
+  Metametamodel --> Modelprofielen : definieert
+  Modelprofielen --> Diagrammotor : configureert
+  Editors --> CanoniekModel : bewerkt
+  CanoniekModel --> V3JSON : serialiseert
+  MetaRegistry --> V3JSON : exporteert
+  SchemaAPI --> MetaRegistry : leest
+  RESTOpenAPI --> MetaRegistry : leest
+  GraphQL --> MetaRegistry : leest
+  Codegenerator --> V3JSON : genereertUit
+  RESTOpenAPI --> BitemporeelRegister : ontsluit
+  GraphQL --> BitemporeelRegister : ontsluit
+  BitemporeelRegister --> PostgreSQL : bewaart
+  CanoniekModel ..> DMNProjectie : typeert
+  CanoniekModel ..> BPMNProjectie : typeert
+  CanoniekModel ..> Formulieren : stuurt
+  CanoniekModel ..> Toegangsspraak : controleert
+  CanoniekModel ..> Visualisaties : projecteert

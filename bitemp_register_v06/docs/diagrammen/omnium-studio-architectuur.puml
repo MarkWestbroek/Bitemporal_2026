@@ -1,0 +1,143 @@
+@startuml omnium-components
+title Omnium Studio - UML componentdiagram
+left to right direction
+skinparam componentStyle rectangle
+
+actor "Modelleur / architect" as modelleur
+
+package "Omnium Studio (React + Vite)" {
+  [Studio-shell] as shell
+  [Projectbrowser en editors] as editors
+  [Generieke diagrammotor] as diagramcore
+  [Modelprofielen] as profielen
+  [Formuliereditor] as formulieren
+  [Toegangsspraak] as toegang
+}
+
+package "Modelgedreven kern" {
+  [Canoniek model] as canoniek
+  [V3 JSON adapters] as v3
+  [MetaRegistry] as metaregistry
+}
+
+package "Go API" {
+  [Schema-API] as schema
+  [Generieke handlers] as handlers
+  [REST / OpenAPI] as rest
+  [Dynamische GraphQL] as graphql
+  [Codegenerator] as codegen
+  [Registratieservice] as registratie
+}
+
+database "PostgreSQL" as postgres
+collections "Objectopslag" as filestore
+
+modelleur --> shell
+shell *-- editors
+editors *-- diagramcore
+diagramcore o-- profielen : configureert
+editors --> canoniek : bewerkt
+formulieren --> canoniek : gebruikt veldpaden
+toegang --> canoniek : resolveert beleid
+canoniek <--> v3 : roundtrip
+v3 <--> metaregistry : export / generatie
+schema --> metaregistry
+handlers --> metaregistry
+rest --> handlers
+graphql --> handlers
+codegen --> v3
+handlers --> registratie
+registratie --> postgres
+editors --> filestore
+@enduml
+
+@startuml omnium-deployment
+title Omnium Studio - UML deploymentdiagram
+left to right direction
+
+node "Werkstation" as workstation {
+  node "Webbrowser" as browser {
+    artifact "Omnium Studio\nReact/Vite bundle" as frontend
+  }
+}
+
+node "Applicatiehost / containerplatform" as apphost {
+  node "Frontend webserver\n(Vite dev of nginx)" as webserver
+  node "Go-runtime" as goruntime {
+    artifact "bitemp-register-v06 API" as api
+    artifact "MetaRegistry + modelcode" as modelcode
+  }
+}
+
+database "PostgreSQL\nregister + schema-versies" as db
+node "S3-compatibele objectopslag\n(optioneel MinIO)" as objects
+
+browser --> webserver : HTTPS / statische assets
+browser --> api : HTTP(S) / JSON / GraphQL
+webserver --> frontend : serveert
+api --> modelcode : laadt
+api --> db : SQL via Bun
+api --> objects : S3 API
+@enduml
+
+@startuml registratie-sequence
+title Bitemporele registratie vanuit een modelgedreven client
+
+actor Gebruiker
+participant "Omnium Studio / client" as Client
+participant "Schema-API" as Schema
+participant "Registratiehandler" as Handler
+participant "MetaRegistry" as Meta
+database PostgreSQL as DB
+
+Client -> Schema : GET /api/schema/model
+Schema -> Meta : exporteer typen en metadata
+Meta --> Schema : V3/schema
+Schema --> Client : model + velddefinities
+Gebruiker -> Client : voer wijziging in
+Client -> Handler : POST /registreer\nregistratie + wijzigingen
+Handler -> Meta : resolveer representatietypen
+Meta --> Handler : tabel-, sleutel- en tijdmetadata
+Handler -> DB : begin transactie
+Handler -> DB : schrijf registratie en wijzigingen
+Handler -> DB : werk afgeleide opvoer/afvoer bij
+DB --> Handler : commit
+Handler --> Client : geregistreerde representaties
+Client -> Handler : GET /full/{type}/{id}?t=...
+Handler -> DB : reconstrueer formele/materiële toestand
+DB --> Handler : momentopname
+Handler --> Client : geneste representatie
+@enduml
+
+@startuml model-publicatie-sequence
+title Publiceren van het canonieke model en self-rebuild
+
+actor Modelleur
+participant "Omnium Studio" as Studio
+participant "Schema-versie API" as SchemaAPI
+participant "Devloop rebuild" as Rebuild
+participant "Codegenerator" as Codegen
+participant "Go build" as Build
+database PostgreSQL as DB
+
+Modelleur -> Studio : wijzig canoniek model
+Studio -> SchemaAPI : POST /api/schema/model\nV3 JSON (proposed)
+SchemaAPI -> DB : bewaar schema-versie
+DB --> SchemaAPI : schemaVersieId
+SchemaAPI --> Studio : versie gepubliceerd
+Modelleur -> Studio : activeer en rebuild
+Studio -> SchemaAPI : PUT /api/schema/model/{id}/activeer
+SchemaAPI -> DB : markeer actieve versie
+Studio -> Rebuild : POST /admin/rebuild/{password}
+Rebuild -> Codegen : V3 JSON -> Go-modelbestanden
+Codegen --> Rebuild : gegenereerde broncode
+Rebuild -> Build : go build
+Build --> Rebuild : buildresultaat
+alt build geslaagd in container
+  Rebuild --> Studio : rebuild geaccepteerd
+  Rebuild -> Rebuild : exit 42 / herstart
+else build mislukt
+  Rebuild -> Rebuild : herstel baseline of pre-rebuild
+  Rebuild --> Studio : foutdetails
+end
+@enduml
