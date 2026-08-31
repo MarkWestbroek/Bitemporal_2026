@@ -108,6 +108,20 @@ const elementTypes = [
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
+  {
+    id: "kader",
+    label: "Kader",
+    omschrijving: "Puur visuele groepering in een view; geen ArchiMate-modelsemantiek.",
+    kort: "KADER",
+    icoon: "kader",
+    shape: "boundary",
+    achtergrond: true,
+    handleStijl: "onzichtbaar",
+    properties: [
+      { key: "kleur", label: "rand", datatype: "colour" },
+      { key: "achtergrondKleur", label: "achtergrond", datatype: "colour" },
+    ],
+  },
 
   // ── De elf relaties ────────────────────────────────────────────────────
   // v0 permissief: elke relatie mag tussen alle elementen (+ junction als
@@ -175,6 +189,17 @@ const elementTypes = [
         }
       : {}),
   })),
+  {
+    id: "toelichting",
+    label: "Toelichting",
+    omschrijving: "View-only stippellijn van een notitie naar een element; geen ArchiMate-relatie.",
+    kort: "Toel.",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["notitie"] },
+    doel: { elementTypes: [...ALLE_IDS, "kader"] },
+    edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#64748b" },
+  },
 ];
 
 export const archimateDiagramType = {
@@ -184,6 +209,7 @@ export const archimateDiagramType = {
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
   // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
   randAanhechting: "zwevend",
+  meerdereVoorkomens: true,
   typeWeergave: "geen", // het hoek-icoon zit al in de shape
   fieldTypes: [],
   elementTypes,

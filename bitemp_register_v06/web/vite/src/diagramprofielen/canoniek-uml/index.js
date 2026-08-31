@@ -468,6 +468,7 @@ export const canoniekUmlDiagramType = {
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
   // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
   randAanhechting: "zwevend",
+  meerdereVoorkomens: true,
   // P02: eerst package-lidmaatschap (domein), daarna de compositie
   // (ENT ◆ GE) — de browser toont packages → entiteiten → gegevenselementen.
   hierarchie: ["bevat", "compositie"],

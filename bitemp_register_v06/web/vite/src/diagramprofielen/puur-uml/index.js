@@ -306,6 +306,7 @@ export const puurUmlDiagramType = {
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
   // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
   randAanhechting: "zwevend",
+  meerdereVoorkomens: true,
   // Boomordening: eerst package-lidmaatschap ("plaatsing in"), daarna de
   // compositie — wie in een package hangt neemt zo zijn ◆-kinderen mee.
   hierarchie: ["bevat", "compositie"],
