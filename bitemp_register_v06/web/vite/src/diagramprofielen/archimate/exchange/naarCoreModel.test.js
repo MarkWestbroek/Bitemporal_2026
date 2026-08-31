@@ -16,6 +16,20 @@ test("mappingtabellen dekken 24 elementvarianten en alle elf relatietypen met na
   assert.equal(Object.keys(RELATIONSHIP_TYPE_MAPPING).length, 22);
 });
 
+test("adapter vertaalt alle elf relaties en beide junctionvarianten", () => {
+  const exchange = parseExchange(fixture("minimaal-model.xml"), { DOMParser });
+  exchange.elements.and = { ...exchange.elements["actor-1"], identifier: "and", type: "AndJunction", names: [] };
+  exchange.elements.or = { ...exchange.elements["actor-1"], identifier: "or", type: "OrJunction", names: [] };
+  const verwacht = ["compositie", "aggregatie", "toewijzing", "realisatie", "bediening", "toegang", "beinvloeding", "trigger", "stroom", "specialisatie", "associatie"];
+  const exchangeTypes = ["Composition", "AggregationRelationship", "Assignment", "RealizationRelationship", "Serving", "AccessRelationship", "Influence", "TriggeringRelationship", "Flow", "SpecializationRelationship", "Association"];
+  exchange.relationships = Object.fromEntries(exchangeTypes.map((type, index) => [`r${index}`, { ...exchange.relationships["rel-1"], identifier: `r${index}`, type }]));
+  const model = naarCoreModel(exchange, { importId: "alle" });
+  assert.deepEqual(exchangeTypes.map((_, index) => model.elements[`amx:alle:r${index}`].elementType), verwacht);
+  assert.equal(model.elements["amx:alle:and"].elementType, "junction");
+  assert.equal(model.elements["amx:alle:and"].data.soort, undefined);
+  assert.equal(model.elements["amx:alle:or"].data.soort, "of");
+});
+
 test("kiest importtaal, primaire taal, Engels, taalloos en eerste waarde", () => {
   const waarden = [{ lang: "de", value: "Deutsch" }, { lang: null, value: "Naamloos" }, { lang: "en", value: "English" }, { lang: "nl-NL", value: "Nederlands" }];
   assert.equal(kiesTaalwaarde(waarden, "nl-BE"), "Nederlands");
@@ -67,6 +81,8 @@ test("onbekende typen leveren diagnostics en nooit halve connectoren", () => {
   assert.deepEqual(Object.keys(model.elements), ["amx:test:goed"]);
   assert.ok(model.diagnostics.some((item) => item.code === "AMX-TYPE-ELEMENT"));
   assert.ok(model.diagnostics.filter((item) => item.code === "AMX-TYPE-RELATIE").length >= 2);
+  assert.equal(model.meta.exchange.overgeslagen.elements.vreemd.type, "Capability");
+  assert.equal(Object.keys(model.meta.exchange.overgeslagen.relationships).length, 2);
 });
 
 test("blokkerende parserdiagnostics verhinderen conversie", () => {

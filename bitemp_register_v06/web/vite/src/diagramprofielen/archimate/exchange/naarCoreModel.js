@@ -73,11 +73,13 @@ export function naarCoreModel(exchange, opties = {}) {
   const elements = {};
   const elementIdMap = new Map();
   const relatieIdMap = new Map();
+  const overgeslagen = { elements: {}, relationships: {} };
 
   for (const bron of Object.values(exchange.elements || {})) {
     const elementType = mapElementType(bron.type);
     if (!elementType) {
       diagnostics.push(diagnostic("warning", AMX.TYPE_ELEMENT, `Niet-ondersteund ArchiMate-elementtype: ${bron.type || "(leeg)"}.`, bron.identifier));
+      overgeslagen.elements[bron.identifier] = bron;
       continue;
     }
     const id = internId(importId, bron.identifier);
@@ -98,12 +100,14 @@ export function naarCoreModel(exchange, opties = {}) {
     const elementType = mapRelationshipType(bron.type);
     if (!elementType) {
       diagnostics.push(diagnostic("warning", AMX.TYPE_RELATIE, `Niet-ondersteund ArchiMate-relatietype: ${bron.type || "(leeg)"}.`, bron.identifier));
+      overgeslagen.relationships[bron.identifier] = bron;
       continue;
     }
     const source = elementIdMap.get(bron.source);
     const target = elementIdMap.get(bron.target);
     if (!source || !target) {
       diagnostics.push(diagnostic("warning", AMX.TYPE_RELATIE, "Relatie overgeslagen omdat een uiteinde een niet-ondersteund elementtype heeft.", bron.identifier));
+      overgeslagen.relationships[bron.identifier] = bron;
       continue;
     }
     const id = internId(importId, bron.identifier);
@@ -215,7 +219,7 @@ export function naarCoreModel(exchange, opties = {}) {
     diagrams,
     meta: {
       bronFormaat: "archimate-model-exchange",
-      exchange: { importId, namespace: exchange.namespace, model: exchange.model, organizations: exchange.organizations, propertyDefinitions: exchange.propertyDefinitions },
+      exchange: { importId, namespace: exchange.namespace, model: exchange.model, organizations: exchange.organizations, propertyDefinitions: exchange.propertyDefinitions, overgeslagen },
       diagnostics,
     },
     diagnostics,
