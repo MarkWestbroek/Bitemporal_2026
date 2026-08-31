@@ -8,7 +8,10 @@
  * hoeken, structuur rechte. Eén `archimate-box`-shape + iconen dekt dus de
  * hele elemententaal. v0-subset (~22 typen) over Business (geel),
  * Application (blauw), Technology (groen) en Motivation (paars), plus de
- * junction (en/of).
+ * junction (en/of). De **tweede officiële notatie** — het symbool zélf als
+ * vorm (poppetje, 3D-doos, …) — zit als shape-set "Iconen als vorm" naast de
+ * boxen: `vormSet.js` (mapping) + `vormShapes.jsx` (vormen), te kiezen via
+ * menu Beeld → Shape-set.
  *
  * Alle **elf relaties** zijn er, op bestaande lijn-/markermiddelen:
  * compositie/aggregatie (ruit aan de bron), toewijzing (bol→pijl),
@@ -24,6 +27,8 @@
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerArchimateIconen } from "./iconen.jsx";
 import { registreerArchimateShapes } from "./shapes.jsx";
+import { registreerArchimateVormShapes } from "./vormShapes.jsx";
+import { VORMEN_SET } from "./vormSet.js";
 
 export const ARCHIMATE_ID = "archimate";
 
@@ -213,6 +218,9 @@ export const archimateDiagramType = {
   randAanhechting: "zwevend",
   meerdereVoorkomens: true,
   typeWeergave: "geen", // het hoek-icoon zit al in de shape
+  // Tweede officiële notatie (P07): het symbool *als* vorm i.p.v. de box met
+  // hoek-icoon — menu Beeld → Shape-set. Mapping en motivatie: `vormSet.js`.
+  shapeSets: [VORMEN_SET],
   fieldTypes: [],
   elementTypes,
   taakbalken: [
@@ -245,6 +253,7 @@ export function maakElement(elementTypeId) {
 export function registreerArchimate() {
   registreerArchimateIconen();
   registreerArchimateShapes();
+  registreerArchimateVormShapes();
   if (!getDiagramType(ARCHIMATE_ID)) {
     registreerDiagramType(archimateDiagramType);
   }
