@@ -39,6 +39,14 @@ const TECHNOLOGY = "#d3f5cf";
 const MOTIVATION = "#e8d9f5";
 
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
+
+/** Laagkleur → taakbalkgroep (scheidingstekens in de Maken-balk). */
+const LAAG_GROEP = {
+  [BUSINESS]: "business",
+  [APPLICATION]: "application",
+  [TECHNOLOGY]: "technology",
+  [MOTIVATION]: "motivation",
+};
 const ROND = 10; // gedragselementen (proces/functie/service/event)
 
 /**
@@ -88,11 +96,18 @@ const elementTypes = [
     icoon,
     shape: "archimate-box",
     kleur,
+    // Laag als taakbalkgroep: de Maken-balk krijgt een scheidingsteken op
+    // elke laaggrens (business | application | technology | motivation).
+    taakbalkGroep: LAAG_GROEP[kleur],
+    // ArchiMate tekent motivation-elementen met afgeschuinde hoeken — dat is
+    // hun eigen vormgrammatica, net als ronde hoeken voor gedrag.
+    ...(kleur === MOTIVATION ? { hoekStijl: "afgeschuind" } : {}),
     ...(rond ? { hoekRadius: ROND } : {}),
     properties: [KLEUR_VELD],
   })),
   {
     id: "junction",
+    taakbalkGroep: "overig",
     label: "Junction",
     omschrijving: "Splitst/verbindt relaties van hetzelfde type (en = dicht, of = open).",
     kort: "Junctie",
@@ -106,6 +121,7 @@ const elementTypes = [
   },
   {
     id: "notitie",
+    taakbalkGroep: "overig",
     label: "Notitie",
     omschrijving: "Vrije notitie op het diagram; koppel hem met een toelichting-lijn aan een element.",
     kort: "NOT",
@@ -117,6 +133,7 @@ const elementTypes = [
   },
   {
     id: "kader",
+    taakbalkGroep: "overig",
     label: "Kader",
     omschrijving: "Puur visuele groepering in een view; geen ArchiMate-modelsemantiek.",
     kort: "KADER",
@@ -198,6 +215,7 @@ const elementTypes = [
   })),
   {
     id: "toelichting",
+    taakbalkGroep: "view",
     label: "Toelichting",
     omschrijving: "View-only stippellijn van een notitie naar een element; geen ArchiMate-relatie.",
     kort: "Toel.",

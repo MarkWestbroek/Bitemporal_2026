@@ -62,6 +62,12 @@ profiel** — groot, maar zonder nieuwe primitieven.
 - **Alternatieve gedaante** (het icoon *als* vorm, bv. de actor-poppetje-
   variant) kan later gratis via **shapeSets** (P07) — de Definitie blijft
   gelijk, alleen de skin wisselt.
+  **✅ Gebouwd (31-08, shapeSet "Iconen als vorm") en aangevuld (01-09):**
+  motivation-elementen dragen nu in béide gedaanten hun eigen vormgrammatica —
+  **afgeschuinde hoeken** (achthoek), conform spec en Archi; en de afgeleide
+  Maken-/Verbinding-balken tonen **scheidingstekens per laag** via het nieuwe
+  `ElementType.taakbalkGroep` (generiek motor-veld, zie
+  `diagramcore/taskbar/scheidingen.js`).
   **✅ gebouwd** (2026-09-01): shape-set `vormen` — "Iconen als vorm", te
   kiezen via **Beeld → Shape-set**. Twaalf vormshapes
   (`archimate/vormShapes.jsx`) over zestien elementtypen

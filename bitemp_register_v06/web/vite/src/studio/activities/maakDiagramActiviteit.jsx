@@ -49,6 +49,7 @@ import { registreerProfieltype } from "../profieltypeRegistry";
 import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
 import { staatMeerdereVoorkomensToe } from "../../diagramcore/model/voorkomens.js";
+import { metGroepScheidingen } from "../../diagramcore/taskbar/scheidingen.js";
 
 /** Huidige export-voorkeuren → opties voor layoutApi.exporteerAfbeelding. */
 const leesExportOpties = () => {
@@ -1963,8 +1964,8 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     const taakbalken = (descriptor.taakbalken || []).map((balk) => {
       let acties = [];
       if (balk.acties === "elementTypes") {
-        acties = descriptor.elementTypes
-          .filter((et) => !et.isConnector && et.kort)
+        const types = descriptor.elementTypes.filter((et) => !et.isConnector && et.kort);
+        acties = types
           .map((et) => ({
             id: et.id,
             label: et.kort,
@@ -1978,9 +1979,10 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             uitleg: et.omschrijving || null,
             onClick: () => plaatsNieuwElement(et.id),
           }));
+        acties = metGroepScheidingen(acties, (i) => types[i].taakbalkGroep);
       } else if (balk.acties === "connectorTypes") {
-        acties = descriptor.elementTypes
-          .filter((et) => et.isConnector)
+        const types = descriptor.elementTypes.filter((et) => et.isConnector);
+        acties = types
           .map((et) => ({
             id: et.id,
             label: `${et.kort} ${et.label}`,
@@ -1995,6 +1997,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             actief: verbindingsType === et.id,
             onClick: () => setVerbindingsType(verbindingsType === et.id ? null : et.id),
           }));
+        acties = metGroepScheidingen(acties, (i) => types[i].taakbalkGroep);
       } else if (balk.acties === "layouts") {
         acties = (descriptor.layouts || []).map((strategie) => ({
           id: strategie.id,

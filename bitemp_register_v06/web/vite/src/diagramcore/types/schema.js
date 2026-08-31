@@ -134,6 +134,10 @@
  * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
  * @property {boolean} [meerdereVoorkomens] - overschrijft de DiagramType-default voor dit elementtype
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
+ * @property {string} [taakbalkGroep]       - groep in de afgeleide Maken-/
+ *   Verbinding-balk (bv. de ArchiMate-laag); op elke groepsgrens komt een
+ *   scheidingsteken. Zonder groepen geen scheidingen — zie
+ *   diagramcore/taskbar/scheidingen.js
  * @property {boolean} [isConnector]
  * @property {string} [containerVoor]       - connectortype-id: dit type is een
  *   container (bv. package); een element erin slepen (canvas of boom) legt
