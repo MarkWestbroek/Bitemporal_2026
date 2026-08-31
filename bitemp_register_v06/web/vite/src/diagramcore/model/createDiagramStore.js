@@ -36,6 +36,47 @@ function splitsViewports(diagrams) {
 }
 
 /**
+ * Valideer een toevoegende modelimport volledig vóór de storemutatie.
+ * @returns {string[]} blokkerende fouten
+ */
+export function valideerImportModel(state, model, { modus = "toevoegen" } = {}) {
+  const fouten = [];
+  if (modus !== "toevoegen") fouten.push(`Onbekende importmodus: ${modus}.`);
+  const elements = model?.elements;
+  const diagrams = model?.diagrams;
+  if (!elements || typeof elements !== "object" || Array.isArray(elements)) {
+    fouten.push("Importmodel vereist een elements-object.");
+  }
+  if (!diagrams || typeof diagrams !== "object" || Array.isArray(diagrams)) {
+    fouten.push("Importmodel vereist een diagrams-object.");
+  }
+  if (fouten.length) return fouten;
+
+  const elementIds = new Set(Object.keys(elements));
+  const beschikbareIds = new Set([...Object.keys(state.elements || {}), ...elementIds]);
+  for (const [id, element] of Object.entries(elements)) {
+    if (!element?.id || element.id !== id) fouten.push(`Element ${id} heeft geen overeenkomende id.`);
+    if (state.elements?.[id]) fouten.push(`Element-id bestaat al: ${id}.`);
+    if (element?.source && !beschikbareIds.has(element.source)) {
+      fouten.push(`Connector ${id} verwijst naar ontbrekende bron ${element.source}.`);
+    }
+    if (element?.target && !beschikbareIds.has(element.target)) {
+      fouten.push(`Connector ${id} verwijst naar ontbrekend doel ${element.target}.`);
+    }
+  }
+  for (const [id, diagram] of Object.entries(diagrams)) {
+    if (!diagram?.id || diagram.id !== id) fouten.push(`Diagram ${id} heeft geen overeenkomende id.`);
+    if (state.diagrams?.[id]) fouten.push(`Diagram-id bestaat al: ${id}.`);
+    for (const node of diagram?.nodes || []) {
+      if (!node?.elementId || !beschikbareIds.has(node.elementId)) {
+        fouten.push(`Diagram ${id} verwijst naar ontbrekend element ${node?.elementId || "(leeg)"}.`);
+      }
+    }
+  }
+  return fouten;
+}
+
+/**
  * @param {{ persistKey?: string }} [opts]
  */
 export function createDiagramStore({ persistKey } = {}) {
@@ -79,6 +120,32 @@ export function createDiagramStore({ persistKey } = {}) {
     setActiefDiagram: (id) => set({ actiefDiagramId: id }),
 
     markeerOpgeslagen: () => set({ isDirty: false }),
+
+    /**
+     * Voeg een compleet, vooraf gevalideerd model atomisch toe. Eén `set`
+     * betekent één undo-stap; bij een validatiefout blijft de store intact.
+     */
+    importeerModel: (model, opties = { modus: "toevoegen" }) => {
+      const fouten = valideerImportModel(useStoreState(), model, opties);
+      if (fouten.length) {
+        const fout = new Error(`Modelimport geweigerd:\n- ${fouten.join("\n- ")}`);
+        fout.code = "DIAGRAM_IMPORT_INVALID";
+        fout.fouten = fouten;
+        throw fout;
+      }
+      set((state) => {
+        const { kaal, viewports } = splitsViewports(model.diagrams);
+        return {
+          diagramTypeId: model.diagramTypeId ?? state.diagramTypeId,
+          elements: { ...state.elements, ...model.elements },
+          diagrams: { ...state.diagrams, ...kaal },
+          viewports: { ...state.viewports, ...viewports },
+          meta: model.meta ?? state.meta,
+          actiefDiagramId: state.actiefDiagramId || Object.keys(kaal)[0] || null,
+          isDirty: true,
+        };
+      });
+    },
 
     // === Elementen ===
 
@@ -360,6 +427,9 @@ export function createDiagramStore({ persistKey } = {}) {
       }),
   });
 
+  let storeApi = null;
+  const useStoreState = () => storeApi?.getState?.() || leeg;
+
   const metUndo = temporal(definitie, {
     // Bewust NIET in de history: viewports (pan/zoom is geen modelwijziging)
     // en actiefDiagramId (undo hoort niet van diagram te wisselen — dat
@@ -372,9 +442,12 @@ export function createDiagramStore({ persistKey } = {}) {
     limit: 50,
   });
 
-  if (!persistKey) return create(metUndo);
+  if (!persistKey) {
+    storeApi = create(metUndo);
+    return storeApi;
+  }
 
-  return create(
+  storeApi = create(
     persist(metUndo, {
       name: persistKey,
       storage: createJSONStorage(() => localStorage),
@@ -388,4 +461,5 @@ export function createDiagramStore({ persistKey } = {}) {
       }),
     })
   );
+  return storeApi;
 }

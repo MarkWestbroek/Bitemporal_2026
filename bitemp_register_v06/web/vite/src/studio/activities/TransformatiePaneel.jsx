@@ -15,7 +15,13 @@
 import React from "react";
 import { create } from "zustand";
 import { useModellerenStore } from "./modellerenActivity.jsx";
-import { getTransformaties } from "./transformatieRegistry.js";
+import {
+  acceptVoor,
+  detecteerTransformatie,
+  getTransformaties,
+  normaliseerTransformatieResultaat,
+  standaardOpties,
+} from "./transformatieRegistry.js";
 import { mapProfielen } from "./transformaties.js";
 import { getProfieltype } from "../profieltypeRegistry";
 
@@ -76,8 +82,9 @@ export default function TransformatiePaneel() {
   const [bestandNaam, setBestandNaam] = React.useState(null);
   const [doelMapId, setDoelMapId] = React.useState("");
   const [doelNieuweNaam, setDoelNieuweNaam] = React.useState("");
+  const [optieWaarden, setOptieWaarden] = React.useState({});
   const [bezig, setBezig] = React.useState(false);
-  const [klaar, setKlaar] = React.useState(null);
+  const [resultaat, setResultaat] = React.useState(null);
 
   React.useEffect(() => {
     if (!open) return;
@@ -87,7 +94,8 @@ export default function TransformatiePaneel() {
     setBestandTekst(null);
     setBestandNaam(null);
     setDoelNieuweNaam("");
-    setKlaar(null);
+    setResultaat(null);
+    setOptieWaarden({});
     // De aangewezen map vult de relevante kant: bij import het doel, anders de bron.
     if (a === "import") { setDoelMapId(mapId || ""); setBronMapId(""); }
     else { setBronMapId(mapId || ""); setDoelMapId(""); }
@@ -101,14 +109,26 @@ export default function TransformatiePaneel() {
   const generatoren = getTransformaties(richting, filter);
   const gekozen = generatoren.find((g) => g.id === generatorId) || null;
 
+  React.useEffect(() => {
+    setOptieWaarden(standaardOpties(gekozen));
+    setResultaat(null);
+  }, [generatorId]);
+
   const kiesBestand = () => {
     const inp = document.createElement("input");
     inp.type = "file";
-    inp.accept = ".json,application/json,.yaml,.yml,.xml,text/*";
+    inp.accept = acceptVoor(gekozen);
     inp.onchange = () => {
       const f = inp.files?.[0];
       if (!f) return;
-      f.text().then((t) => { setBestandTekst(t); setBestandNaam(f.name); });
+      f.text().then((tekst) => {
+        setBestandTekst(tekst);
+        setBestandNaam(f.name);
+        if (!gekozen) {
+          const herkend = detecteerTransformatie(generatoren, { naam: f.name, tekst });
+          if (herkend) setGeneratorId(herkend.id);
+        }
+      });
     };
     inp.click();
   };
@@ -129,7 +149,7 @@ export default function TransformatiePaneel() {
   const uitvoeren = async () => {
     if (!kanUitvoeren) return;
     setBezig(true);
-    setKlaar(null);
+    setResultaat(null);
     try {
       const context = { richting };
       if (richting === "import") {
@@ -142,10 +162,15 @@ export default function TransformatiePaneel() {
         context.bronMap = bronMapId;
         context.doelMap = resolveerDoelMap();
       }
-      await gekozen.run(context);
-      setKlaar("Gelukt.");
+      context.opties = optieWaarden;
+      const runResultaat = await gekozen.run(context);
+      setResultaat(normaliseerTransformatieResultaat(runResultaat));
     } catch (e) {
-      setKlaar(`Mislukt: ${String(e).slice(0, 200)}`);
+      setResultaat({
+        status: "error",
+        summary: `Mislukt: ${e?.message || String(e)}`.slice(0, 500),
+        diagnostics: Array.isArray(e?.diagnostics) ? e.diagnostics : [],
+      });
     } finally {
       setBezig(false);
     }
@@ -249,12 +274,70 @@ export default function TransformatiePaneel() {
           ))
         )}
 
+        {gekozen?.opties?.length > 0 && (
+          <>
+            <div style={kopje}>Opties</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {gekozen.opties.map((optie) => {
+                const waarde = optieWaarden[optie.key];
+                if (optie.datatype === "boolean") {
+                  return (
+                    <label key={optie.key} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
+                      <input
+                        type="checkbox"
+                        checked={!!waarde}
+                        onChange={(e) => setOptieWaarden((huidig) => ({ ...huidig, [optie.key]: e.target.checked }))}
+                      />
+                      {optie.label}
+                    </label>
+                  );
+                }
+                return (
+                  <label key={optie.key} style={{ display: "grid", gridTemplateColumns: "minmax(130px, 1fr) 2fr", gap: 8, alignItems: "center", fontSize: 13 }}>
+                    <span>{optie.label}</span>
+                    <input
+                      type={optie.datatype === "number" ? "number" : "text"}
+                      value={waarde ?? ""}
+                      onChange={(e) => setOptieWaarden((huidig) => ({
+                        ...huidig,
+                        [optie.key]: optie.datatype === "number" ? Number(e.target.value) : e.target.value,
+                      }))}
+                      style={{ ...veld, width: "100%" }}
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          </>
+        )}
+
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14 }}>
           <button type="button" onClick={uitvoeren} disabled={!kanUitvoeren || bezig} style={{ ...knop, fontWeight: 600, opacity: !kanUitvoeren || bezig ? 0.5 : 1, cursor: !kanUitvoeren || bezig ? "default" : "pointer" }}>
             {bezig ? "Bezig…" : "Uitvoeren"}
           </button>
-          {klaar && <span style={{ fontSize: 12, color: klaar.startsWith("Mislukt") ? "#ef4444" : "#22c55e" }}>{klaar}</span>}
+          {resultaat?.summary && (
+            <span style={{ fontSize: 12, color: resultaat.status === "error" ? "#ef4444" : resultaat.status === "warning" ? "#f59e0b" : "#22c55e" }}>
+              {resultaat.summary}
+            </span>
+          )}
         </div>
+        {resultaat?.diagnostics?.length > 0 && (
+          <details open={resultaat.status === "error"} style={{ marginTop: 10, fontSize: 12 }}>
+            <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+              Meldingen ({resultaat.diagnostics.length})
+            </summary>
+            <ul style={{ margin: "6px 0 0", paddingLeft: 20, maxHeight: 180, overflow: "auto" }}>
+              {resultaat.diagnostics.map((diagnostic, index) => (
+                <li key={`${diagnostic.code || "melding"}-${diagnostic.sourceId || index}-${index}`} style={{ marginBottom: 4 }}>
+                  <strong>{diagnostic.severity || "info"}{diagnostic.code ? ` · ${diagnostic.code}` : ""}</strong>
+                  {diagnostic.sourceId ? ` · ${diagnostic.sourceId}` : ""}
+                  {diagnostic.path ? ` · ${diagnostic.path}` : ""}
+                  {`: ${diagnostic.message || "(geen bericht)"}`}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </div>
     </div>
   );
