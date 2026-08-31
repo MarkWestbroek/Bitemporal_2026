@@ -353,6 +353,26 @@ test("meerdere voorkomens kiezen het bron-doelpaar met de kortste afstand", () =
   assert.equal(edges[0].target, "B-tweede");
 });
 
+test("expliciet voorkomenpaar per diagram wint van de kortste afstand", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    connectorVoorkomens: { r1: { bronNodeId: "A", doelNodeId: "B" } },
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { nodeId: "A-tweede", elementId: "A", position: { x: 800, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+      { nodeId: "B-tweede", elementId: "B", position: { x: 850, y: 0 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges[0].source, "A");
+  assert.equal(edges[0].target, "B");
+});
+
 test("verborgenConnectoren onderdrukt alleen de genoemde connector", () => {
   const elements = {
     A,

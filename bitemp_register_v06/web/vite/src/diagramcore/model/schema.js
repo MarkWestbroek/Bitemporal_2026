@@ -98,6 +98,7 @@
  * @property {DiagramNode[]} nodes
  * @property {DiagramEdge[]} edges
  * @property {string[]} [verborgenConnectoren] - connector-ids die alleen in dit diagram verborgen zijn
+ * @property {Record<string,{bronNodeId:string,doelNodeId:string}>} [connectorVoorkomens] - expliciet voorkomenpaar per connector
  * @property {{x: number, y: number, zoom: number}} [viewport]
  */
 

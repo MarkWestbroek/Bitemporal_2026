@@ -110,7 +110,18 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     if (!et?.isConnector || !el.source || !el.target) continue;
     if (verborgenConnectoren.has(el.id)) continue;
 
-    const paar = kortsteVoorkomenPaar(nodeRefs.get(el.source), nodeRefs.get(el.target), maten);
+    const bronVoorkomens = nodeRefs.get(el.source) || [];
+    const doelVoorkomens = nodeRefs.get(el.target) || [];
+    const expliciet = diagram?.connectorVoorkomens?.[el.id];
+    const explicieteBron = expliciet
+      ? bronVoorkomens.find((node) => voorkomenId(node) === expliciet.bronNodeId)
+      : null;
+    const explicietDoel = expliciet
+      ? doelVoorkomens.find((node) => voorkomenId(node) === expliciet.doelNodeId)
+      : null;
+    const paar = explicieteBron && explicietDoel
+      ? { bron: explicieteBron, doel: explicietDoel }
+      : kortsteVoorkomenPaar(bronVoorkomens, doelVoorkomens, maten);
     if (!paar) continue; // beide uiteinden moeten op het diagram staan
     const { bron: bronRef, doel: doelRef } = paar;
     const bronVoorkomenId = voorkomenId(bronRef);
