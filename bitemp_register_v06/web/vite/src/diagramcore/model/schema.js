@@ -65,6 +65,7 @@
  * DiagramNode — lidmaatschap van een element op een diagram, mét Positie.
  *
  * @typedef {Object} DiagramNode
+ * @property {string} [nodeId]             - identiteit van dit voorkomen; afwezig = elementId
  * @property {string} elementId
  * @property {Coordinaten} position
  * @property {Afmeting} [size]
@@ -96,6 +97,7 @@
  * @property {string} diagramType        - id van het DiagramType
  * @property {DiagramNode[]} nodes
  * @property {DiagramEdge[]} edges
+ * @property {string[]} [verborgenConnectoren] - connector-ids die alleen in dit diagram verborgen zijn
  * @property {{x: number, y: number, zoom: number}} [viewport]
  */
 

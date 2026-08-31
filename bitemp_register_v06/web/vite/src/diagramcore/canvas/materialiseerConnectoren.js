@@ -28,6 +28,7 @@
  *
  * Puur en store-loos: testbaar met kale objecten.
  */
+import { kortsteVoorkomenPaar, voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
 
 export const ANKER_PREFIX = "anker:";
 
@@ -99,19 +100,23 @@ export function besteZijde(van, naar) {
  *                 DiagramNode ontbreekt, de connector-box zelf (id = conn.id)
  */
 export function materialiseerConnectoren(elements, diagram, elementTypesById, maten = null) {
-  const nodeRefs = new Map((diagram?.nodes || []).map((n) => [n.elementId, n]));
+  const nodeRefs = voorkomensPerElement(diagram?.nodes || []);
+  const verborgenConnectoren = new Set(diagram?.verborgenConnectoren || []);
   const edges = [];
   const extraNodes = [];
 
   for (const el of Object.values(elements || {})) {
     const et = elementTypesById[el.elementType];
     if (!et?.isConnector || !el.source || !el.target) continue;
+    if (verborgenConnectoren.has(el.id)) continue;
 
-    const bronRef = nodeRefs.get(el.source);
-    const doelRef = nodeRefs.get(el.target);
-    if (!bronRef || !doelRef) continue; // beide uiteinden moeten op het diagram staan
-    const bronMid = midden(bronRef, maten?.[el.source]);
-    const doelMid = midden(doelRef, maten?.[el.target]);
+    const paar = kortsteVoorkomenPaar(nodeRefs.get(el.source), nodeRefs.get(el.target), maten);
+    if (!paar) continue; // beide uiteinden moeten op het diagram staan
+    const { bron: bronRef, doel: doelRef } = paar;
+    const bronVoorkomenId = voorkomenId(bronRef);
+    const doelVoorkomenId = voorkomenId(doelRef);
+    const bronMid = midden(bronRef, maten?.[bronVoorkomenId]);
+    const doelMid = midden(doelRef, maten?.[doelVoorkomenId]);
 
     // Zwevende aanhechting per uiteinde (zie zwevendeRand.js). Twee
     // voorwaarden: het elementtype aan die kant moet het toestaan, én de
@@ -164,8 +169,8 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       edges.push({
         ...(verborgen ? { hidden: true } : {}),
         id: `conn:${el.id}`,
-        source: el.source,
-        target: el.target,
+        source: bronVoorkomenId,
+        target: doelVoorkomenId,
         // Expliciete handles winnen; anders de kortste weg (of de lus-default).
         sourceHandle:
           el.data?.sourceHandle || (isLus ? "source-top" : `source-${besteZijde(bronMid, doelMid)}`),
@@ -192,7 +197,8 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     }
 
     // ── Gematerialiseerde gedaante: anker + box + 3 edges ──────────────────
-    const connRef = nodeRefs.get(el.id);
+    const connRef = nodeRefs.get(el.id)?.[0] || null;
+    const connVoorkomenId = connRef ? voorkomenId(connRef) : el.id;
     const ankerPos = connRef?.ankerPosition || {
       x: (bronMid.x + doelMid.x) / 2 - 7,
       y: (bronMid.y + doelMid.y) / 2 - 7,
@@ -218,7 +224,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     const ankerMid = { x: ankerPos.x + 7, y: ankerPos.y + 7 };
     edges.push({
       id: `conn:${el.id}:bron`,
-      source: el.source,
+      source: bronVoorkomenId,
       target: ankerId,
       sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, ankerMid)}`,
       targetHandle: `target-${besteZijde(ankerMid, bronMid)}`,
@@ -239,7 +245,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     edges.push({
       id: `conn:${el.id}:doel`,
       source: ankerId,
-      target: el.target,
+      target: doelVoorkomenId,
       sourceHandle: `source-${besteZijde(ankerMid, doelMid)}`,
       targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, ankerMid)}`,
       data: {
@@ -259,7 +265,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     edges.push({
       id: `conn:${el.id}:link`,
       source: ankerId,
-      target: el.id,
+      target: connVoorkomenId,
       sourceHandle: `source-${besteZijde(ankerMid, boxMid)}`,
       targetHandle: `target-${besteZijde(boxMid, ankerMid)}`,
       data: {

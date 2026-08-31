@@ -14,6 +14,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { temporal } from "zundo";
+import { nieuwVoorkomenId, voorkomenId, vindVoorkomen } from "./voorkomens.js";
 
 /** @typedef {import("./schema.js").Element} Element */
 /** @typedef {import("./schema.js").Diagram} Diagram */
@@ -242,49 +243,65 @@ export function createDiagramStore({ persistKey } = {}) {
         };
       }),
 
-    /** Zet een element op een diagram (geen duplicaten). */
-    addElementToDiagram: (diagramId, elementId, position) =>
-      set((state) => {
-        const d = state.diagrams[diagramId];
-        if (!d || d.nodes.some((n) => n.elementId === elementId)) return state;
-        return {
-          isDirty: true,
-          diagrams: {
-            ...state.diagrams,
-            [diagramId]: { ...d, nodes: [...d.nodes, { elementId, position }] },
-          },
-        };
-      }),
-
-    /** Haal een element van een diagram af (element blijft in het model). */
-    removeElementFromDiagram: (diagramId, elementId) =>
+    /**
+     * Zet een element op een diagram. Bestaand gedrag weigert duplicaten;
+     * met meerdereVoorkomens krijgt een tweede plaatsing een eigen nodeId.
+     */
+    addElementToDiagram: (diagramId, elementId, position, { meerdereVoorkomens = false, nodeId = null } = {}) =>
       set((state) => {
         const d = state.diagrams[diagramId];
         if (!d) return state;
+        const bestaat = d.nodes.some((n) => n.elementId === elementId);
+        if (bestaat && !meerdereVoorkomens) return state;
+        const effectieveNodeId = nodeId || (bestaat ? nieuwVoorkomenId(elementId) : null);
+        if (effectieveNodeId && d.nodes.some((n) => voorkomenId(n) === effectieveNodeId)) return state;
         return {
           isDirty: true,
           diagrams: {
             ...state.diagrams,
             [diagramId]: {
               ...d,
-              nodes: d.nodes.filter((n) => n.elementId !== elementId),
-              edges: (d.edges || []).filter((e) => e.source !== elementId && e.target !== elementId),
+              nodes: [...d.nodes, { ...(effectieveNodeId ? { nodeId: effectieveNodeId } : {}), elementId, position }],
             },
           },
         };
       }),
 
-    updateNodePosition: (diagramId, elementId, position) =>
+    /** Haal een element van een diagram af (element blijft in het model). */
+    removeElementFromDiagram: (diagramId, voorkomenSleutel) =>
       set((state) => {
         const d = state.diagrams[diagramId];
         if (!d) return state;
+        const voorkomen = vindVoorkomen(d.nodes, voorkomenSleutel);
+        if (!voorkomen) return state;
+        const sleutel = voorkomenId(voorkomen);
         return {
           isDirty: true,
           diagrams: {
             ...state.diagrams,
             [diagramId]: {
               ...d,
-              nodes: d.nodes.map((n) => (n.elementId === elementId ? { ...n, position } : n)),
+              nodes: d.nodes.filter((n) => voorkomenId(n) !== sleutel),
+              edges: (d.edges || []).filter((e) => e.source !== sleutel && e.target !== sleutel),
+            },
+          },
+        };
+      }),
+
+    updateNodePosition: (diagramId, voorkomenSleutel, position) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const voorkomen = vindVoorkomen(d.nodes, voorkomenSleutel);
+        if (!voorkomen) return state;
+        const sleutel = voorkomenId(voorkomen);
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              nodes: d.nodes.map((n) => (voorkomenId(n) === sleutel ? { ...n, position } : n)),
             },
           },
         };
@@ -305,9 +322,10 @@ export function createDiagramStore({ persistKey } = {}) {
             ...state.diagrams,
             [diagramId]: {
               ...d,
-              nodes: d.nodes.map((n) =>
-                posities[n.elementId] ? { ...n, position: posities[n.elementId] } : n
-              ),
+              nodes: d.nodes.map((n) => {
+                const position = posities[voorkomenId(n)] ?? posities[n.elementId];
+                return position ? { ...n, position } : n;
+              }),
             },
           },
         };
@@ -391,20 +409,44 @@ export function createDiagramStore({ persistKey } = {}) {
       }),
 
     /** Grootte van een element op één diagram (metamodel: Position.elementSize). */
-    updateNodeSize: (diagramId, elementId, size) =>
+    updateNodeSize: (diagramId, voorkomenSleutel, size) =>
       set((state) => {
         const d = state.diagrams[diagramId];
         if (!d) return state;
+        const voorkomen = vindVoorkomen(d.nodes, voorkomenSleutel);
+        if (!voorkomen) return state;
+        const sleutel = voorkomenId(voorkomen);
         return {
           isDirty: true,
           diagrams: {
             ...state.diagrams,
             [diagramId]: {
               ...d,
-              nodes: d.nodes.map((n) => (n.elementId === elementId ? { ...n, size } : n)),
+              nodes: d.nodes.map((n) => (voorkomenId(n) === sleutel ? { ...n, size } : n)),
             },
           },
         };
+      }),
+
+    verbergConnectorOpDiagram: (diagramId, connectorId) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !connectorId || (d.verborgenConnectoren || []).includes(connectorId)) return state;
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: { ...d, verborgenConnectoren: [...(d.verborgenConnectoren || []), connectorId] },
+          },
+        };
+      }),
+
+    toonVerborgenConnectoren: (diagramId) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !(d.verborgenConnectoren || []).length) return state;
+        const { verborgenConnectoren: _weg, ...rest } = d;
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: rest } };
       }),
 
     /** Viewport: apart van de diagrammen, geen isDirty en geen undo-entry. */

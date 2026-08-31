@@ -132,6 +132,7 @@
  * @property {number} [minBreedte]          - resize-minimum (default 180) — bv. smalle balken
  * @property {number} [minHoogte]           - resize-minimum (default 56)
  * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
+ * @property {boolean} [meerdereVoorkomens] - overschrijft de DiagramType-default voor dit elementtype
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
  * @property {boolean} [isConnector]
  * @property {string} [containerVoor]       - connectortype-id: dit type is een
@@ -224,6 +225,7 @@
  *   resolver per ReferenceType-id (kandidaten uit model/runtime)
  * @property {TaskbarType[]} [taakbalken]
  * @property {LayoutStrategie[]} [layouts]
+ * @property {boolean} [meerdereVoorkomens] - elementen mogen meermaals in één diagram voorkomen (default false)
  * @property {{exporteer?: Function, importeer?: Function}} [serialisatie]
  * @property {(ctx: Object) => Array<Object>} [menus] - extra menubalk-menu's
  *   (zelfde itemmodel als studio/buildMenus.js)

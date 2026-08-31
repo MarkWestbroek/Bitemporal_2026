@@ -333,3 +333,40 @@ test("knikpunten op de connector-data komen mee op de kale edge", () => {
   const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
   assert.deepEqual(edges[0].data.knikken, [{ x: 100, y: 40 }]);
 });
+
+test("meerdere voorkomens kiezen het bron-doelpaar met de kortste afstand", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { nodeId: "A-tweede", elementId: "A", position: { x: 800, y: 0 } },
+      { elementId: "B", position: { x: 500, y: 0 } },
+      { nodeId: "B-tweede", elementId: "B", position: { x: 850, y: 0 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges[0].source, "A-tweede");
+  assert.equal(edges[0].target, "B-tweede");
+});
+
+test("verborgenConnectoren onderdrukt alleen de genoemde connector", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+    r2: { id: "r2", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    verborgenConnectoren: ["r1"],
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.deepEqual(edges.map((edge) => edge.data.connectorId), ["r2"]);
+});

@@ -167,3 +167,35 @@ test("importeerModel laat store exact gelijk bij id-botsing of ontbrekende refer
   assert.equal(na, voor);
   assert.equal(store.temporal.getState().pastStates.length, 0);
 });
+
+test("tweede voorkomen krijgt nodeId en positie/maat/verwijderen werken per voorkomen", () => {
+  const store = maakStoreMetModel();
+  const s = store.getState();
+  s.addElementToDiagram("d1", "A", { x: 300, y: 10 }, { meerdereVoorkomens: true });
+  let voorkomens = store.getState().diagrams.d1.nodes.filter((node) => node.elementId === "A");
+  assert.equal(voorkomens.length, 2);
+  assert.equal(voorkomens[0].nodeId, undefined, "bestaand werkbestand blijft ongewijzigd");
+  assert.ok(voorkomens[1].nodeId?.startsWith("A__voorkomen_"));
+
+  const tweedeId = voorkomens[1].nodeId;
+  store.getState().updateNodePosition("d1", tweedeId, { x: 350, y: 20 });
+  store.getState().updateNodeSize("d1", tweedeId, { width: 220, height: 90 });
+  voorkomens = store.getState().diagrams.d1.nodes.filter((node) => node.elementId === "A");
+  assert.deepEqual(voorkomens[0].position, { x: 0, y: 0 });
+  assert.deepEqual(voorkomens[1].position, { x: 350, y: 20 });
+  assert.deepEqual(voorkomens[1].size, { width: 220, height: 90 });
+
+  store.getState().removeElementFromDiagram("d1", tweedeId);
+  voorkomens = store.getState().diagrams.d1.nodes.filter((node) => node.elementId === "A");
+  assert.equal(voorkomens.length, 1);
+  assert.equal(voorkomens[0].nodeId, undefined);
+});
+
+test("hide-list is per diagram en kan zonder leeg veld worden hersteld", () => {
+  const store = maakStoreMetModel();
+  store.getState().verbergConnectorOpDiagram("d1", "c1");
+  store.getState().verbergConnectorOpDiagram("d1", "c1");
+  assert.deepEqual(store.getState().diagrams.d1.verborgenConnectoren, ["c1"]);
+  store.getState().toonVerborgenConnectoren("d1");
+  assert.equal("verborgenConnectoren" in store.getState().diagrams.d1, false);
+});
