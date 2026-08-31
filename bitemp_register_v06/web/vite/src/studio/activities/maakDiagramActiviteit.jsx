@@ -233,8 +233,9 @@ export function maakDiagramActiviteit(opties) {
     }, []);
 
     // Eerste keer: alleen laden als de (persistente) sandbox nog leeg is.
-    // Daarna altijd de undo-history wissen: de persist-rehydratie telt anders
-    // als eerste undo-stap, waardoor ver terug-undo'en het canvas leegmaakte.
+    // `herlaad` wist zelf de history. Wis hier niet onvoorwaardelijk bij mount:
+    // een mapimport kan plaatsvinden voordat dit profiel voor het eerst opent;
+    // die ene atomaire undo-stap moet na het openen beschikbaar blijven.
     useEffect(() => {
       const s = useStore.getState();
       // Alleen de allereerste keer spiegelen: als de (persistente) sandbox nog
@@ -249,7 +250,6 @@ export function maakDiagramActiviteit(opties) {
       ) {
         herlaad(false);
       }
-      useStore.temporal.getState().clear();
     }, [herlaad]);
 
     // Meld element-selecties aan de buitenwereld: de Modelleren-inspector
