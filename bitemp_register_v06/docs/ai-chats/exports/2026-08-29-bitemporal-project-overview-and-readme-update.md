@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-08-29 10:41
 - **Sessie-ID**: `428340f4-c609-49f6-9005-17bb6cd287e4`
-- **Berichten**: 12
+- **Berichten**: 14
 
 ---
 
@@ -105,5 +105,17 @@ Dit in de huidige uitgecheckte branch `feat/archimate-exchange`.
 ## 🤖 Assistant
 
 Ik lees eerst de opdracht, de v06-instructies en de actuele werkboom op `feat/archimate-exchange`, inclusief de tussentijdse wijzigingen van Claude. Daarna vorm ik één lokale hypothese over het eerste implementatiepunt en voer ik de kleinste toetsbare wijziging uit.
+
+---
+
+## 🧑 User
+
+Voer de opdracht uit in `bitemp_register_v06/docs/plans/2026-09-01 Opdracht fase B — ArchiMate Exchange-import.md` op branch `feat/archimate-exchange`.
+
+---
+
+## 🤖 Assistant
+
+Ik lees eerst de nieuwe fase-B-opdracht, de actuele branch/werkboom en de drie tussentijds gewijzigde bestanden. Daarna bepaal ik het kleinste verticale parser→mapping→transformatiepad en implementeer ik het volgens de bestaande fase-A-contracten, zonder gebruikerswijzigingen te overschrijven.De branch is schoon en bevat de drie aangekondigde vervolgcommits. Ik voer nu de verplichte pull uit en controleer daarna de fase-A/C0-contracten en testomgeving, met name hoe  in Node-tests geïnjecteerd moet worden zonder een nieuwe XML-library of netwerkafhankelijkheid.De branch is up-to-date en schoon. Mijn lokale hypothese voor de eerste slice: een parser met geïnjecteerde  kan browserproductie én Node-tests bedienen, en een neutraal indexmodel kan alle referentiecontrole doen vóór mapping. De goedkope falsificatie wordt een minimale fixture met namespace, element, relatie en view; ik lees nu de exacte fase-A-API en bestaande XML-testpatronen en maak daarna parser + eerste tests.Er is geen DOM-implementatie in de Node-testomgeving; productie gebruikt de browser-. Ik voeg `@xmldom/xmldom` uitsluitend als devDependency voor tests toe en injecteer de parserconstructor in `parseExchange`, zodat productie geen extra runtimebundle krijgt en parserlogica hetzelfde blijft. Daarna bouw ik de neutrale parser met vijf lokale fixtures.De testdependency is geïnstalleerd; audit meldt zeven bestaande hoge kwetsbaarheden, die ik niet automatisch wijzig omdat dat buiten scope valt. Ik voeg nu de neutrale Exchange-laag toe: typedefs, diagnostics, expliciete type-tabellen, namespace-/ID-/referentieparser en de vijf opdrachtfixtures met parserchecks.
 
 ---
