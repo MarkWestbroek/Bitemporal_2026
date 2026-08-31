@@ -102,10 +102,12 @@ const elementTypes = [
   {
     id: "notitie",
     label: "Notitie",
-    omschrijving: "Vrije notitie op het diagram.",
+    omschrijving: "Vrije notitie op het diagram; koppel hem met een toelichting-lijn aan een element.",
     kort: "NOT",
     shape: "note",
-    handleStijl: "onzichtbaar",
+    // Geen handleStijl "onzichtbaar" zoals in de andere profielen: de
+    // toelichting-connector vertrekt vanaf de notitie, en onzichtbare handles
+    // hebben pointer-events: none — dan is die lijn niet te slepen.
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
   {
