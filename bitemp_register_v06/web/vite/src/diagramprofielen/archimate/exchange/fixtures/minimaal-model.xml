@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="model-min" version="1.0">
+  <name xml:lang="nl">Minimaal model</name>
+  <elements>
+    <element identifier="actor-1" xsi:type="BusinessActor"><name xml:lang="nl">Burger</name></element>
+    <element identifier="proces-1" xsi:type="BusinessProcess"><name xml:lang="nl">Aanvragen</name></element>
+  </elements>
+  <relationships><relationship identifier="rel-1" source="actor-1" target="proces-1" xsi:type="Assignment"/></relationships>
+  <views><diagrams><view identifier="view-1" xsi:type="Diagram"><name xml:lang="nl">Overzicht</name><node identifier="node-a" elementRef="actor-1" xsi:type="Element" x="20" y="30" w="160" h="60"/><node identifier="node-p" elementRef="proces-1" xsi:type="Element" x="300" y="30" w="180" h="70"/><connection identifier="conn-1" relationshipRef="rel-1" source="node-a" target="node-p" xsi:type="Relationship"/></view></diagrams></views>
+</model>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="model-views">
+  <name xml:lang="nl">Meerdere views</name>
+  <elements>
+    <element identifier="app" xsi:type="ApplicationComponent"><name xml:lang="nl">Zaaksysteem</name></element>
+    <element identifier="service" xsi:type="ApplicationService"><name xml:lang="nl">Zaakservice</name></element>
+    <element identifier="los" xsi:type="Goal"><name xml:lang="nl">Ongebruikt doel</name></element>
+  </elements>
+  <relationships><relationship identifier="serveert" source="service" target="app" xsi:type="ServingRelationship"/></relationships>
+  <views><diagrams>
+    <view identifier="landschap" xsi:type="Diagram"><name xml:lang="nl">Landschap</name><node identifier="app-links" elementRef="app" xsi:type="Element" x="20" y="30" w="180" h="70"/><node identifier="app-rechts" elementRef="app" xsi:type="Element" x="620" y="30" w="180" h="70"/><node identifier="svc" elementRef="service" xsi:type="Element" x="350" y="220" w="180" h="70"/><connection identifier="conn-serving" relationshipRef="serveert" source="svc" target="app-rechts" xsi:type="Relationship"/></view>
+    <view identifier="zonder-relatie" xsi:type="Diagram"><name xml:lang="nl">Zonder relatie</name><node identifier="app-2" elementRef="app" xsi:type="Element" x="300" y="20" w="180" h="70"/><node identifier="svc-2" elementRef="service" xsi:type="Element" x="300" y="220" w="180" h="70"/></view>
+  </diagrams></views>
+  <organizations><item identifier="org-root"><label xml:lang="nl">Architectuur</label><item identifierRef="landschap"/></item></organizations>
+</model>

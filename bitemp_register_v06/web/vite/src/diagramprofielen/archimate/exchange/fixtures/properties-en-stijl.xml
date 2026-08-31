@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="model-props">
+  <name xml:lang="en">Properties</name><name xml:lang="nl-NL">Eigenschappen</name>
+  <propertyDefinitions><propertyDefinition identifier="pd-owner" type="string"><name xml:lang="nl">eigenaar</name></propertyDefinition></propertyDefinitions>
+  <elements><element identifier="data" xsi:type="DataObject"><name xml:lang="en">Case</name><name xml:lang="nl">Zaak</name><documentation xml:lang="nl">Zaakgegevens</documentation><properties><property propertyDefinitionRef="pd-owner"><value xml:lang="nl">Team Zaken</value></property></properties></element></elements>
+  <views><diagrams><view identifier="stijl" xsi:type="Diagram"><name xml:lang="nl">Stijl</name><node identifier="data-node" elementRef="data" xsi:type="Element" x="10" y="20" w="240" h="100"><style lineWidth="2"><fillColor r="12" g="100" b="220"/><font name="Arial" size="10"><color r="1" g="2" b="3"/></font></style></node></view></diagrams></views>
+</model>

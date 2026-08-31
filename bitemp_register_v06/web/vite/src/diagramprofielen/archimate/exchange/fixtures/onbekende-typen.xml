@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="model-onbekend">
+  <elements><element identifier="goed" xsi:type="BusinessActor"><name>Bekend</name></element><element identifier="vreemd" xsi:type="Capability"><name>Niet ondersteund</name></element></elements>
+  <relationships><relationship identifier="half" source="goed" target="vreemd" xsi:type="AssociationRelationship"/><relationship identifier="vreemde-rel" source="goed" target="goed" xsi:type="DerivedRelationship"/></relationships>
+</model>
