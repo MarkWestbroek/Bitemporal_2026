@@ -2,8 +2,9 @@
 
 > **Datum:** 2026-08-31
 >
-> **Status:** fase A en C0 gebouwd op `feat/archimate-exchange`; fase B en
-> verder nog niet geïmplementeerd
+> **Status:** fase A, B en C0 plus de verticale view-slice van fase C gebouwd
+> op `feat/archimate-exchange`; fase D/E en resterend fase-C-detail nog niet
+> geïmplementeerd
 >
 > **Scope:** Open Group ArchiMate Model Exchange File Format (XML) als externe
 > bron en bestemming voor het ArchiMate-profiel in Omnium Studio
@@ -970,6 +971,46 @@ Anders dan in de breedste ontwerpvariant:
 
 **Resultaat:** de modelinhoud is bruikbaar, ook zonder views.
 
+**Status 2026-09-01: ✅ gebouwd.** De pure Exchange-laag staat in
+`diagramprofielen/archimate/exchange/`: een neutraal bronmodel, parser op
+`localName` met namespace-/ID-/referentiecontrole, expliciete mappingtabellen,
+diagnostics en de adapter naar diagramcore. De parser gebruikt in de browser
+de native `DOMParser`; Node-tests injecteren `@xmldom/xmldom` als
+devDependency.
+
+Ondersteund:
+
+- 24 Exchange-elementvarianten: de 22 huidige profieltypen plus And/Or
+  Junction;
+- alle elf relaties, met zowel de korte naam als de expliciete
+  `*Relationship`-variant (22 invoernamen);
+- taalkeuze, meertalige bronwaarden, documentatie, property definitions en
+  getypeerde propertywaarden;
+- Access `Read`/`Write`/`ReadWrite`, Influence `modifier` en relatienamen;
+- namespaced interne IDs, oorspronkelijke identifiers en overgeslagen
+  concepten in `meta.exchange`;
+- organizations als bronmetadata, zonder projectmapprojectie;
+- atomische import in `archimate05`, diagramplaatsing en losse plaatsing van
+  niet-gevisualiseerde elementen in de gekozen Studio-map.
+
+De implementatie kent 15 diagnosticcodes in de families XML, ID, type, view,
+property en informatieverlies. Blokkerende parserdiagnostics voorkomen iedere
+store- of mapmutatie; onbekende typen worden gemeld, overgeslagen én als
+bronmetadata behouden.
+
+Afwijkingen en grenzen:
+
+- er vindt geen volledige XSD-validatie plaats; de parser valideert de voor de
+  import relevante structuur en referenties;
+- onbekende vendor-XML wordt nog niet als verliesvrij XML-fragment bewaard;
+  onbekende concepten en hun attributen blijven wel in de neutrale bron en
+  `meta.exchange.overgeslagen`;
+- een import krijgt een unieke ID op basis van modelidentifier, tijdstip en
+  teller. Merge/synchronisatie op eerder geïmporteerde IDs hoort niet bij deze
+  fase;
+- de testparser is geïnjecteerd omdat Node geen native `DOMParser` heeft; dit
+  voegt geen XML-parser toe aan de browserproductiebundle.
+
 ### Fase C0 — het voorkomen-primitief (motorwerk, vóór fase C)
 
 Kan parallel aan fase A/B; zie §9.1, §9.6 en §9.7 voor het ontwerp.
@@ -1023,6 +1064,34 @@ Anders of smaller dan aanvankelijk beschreven:
 
 **Resultaat:** gangbare Archi-views komen herkenbaar binnen — inclusief
 views waarin een element meermaals voorkomt of een relatie bewust ontbreekt.
+
+**Status verticale slice 2026-09-01: ✅ gebouwd.** Iedere Exchange-view wordt
+een diagram. View-node-identifiers worden `nodeId`; bounds worden positie en
+maat; geneste coördinaten worden absoluut zonder modelsemantiek af te leiden.
+Connections vullen `connectorVoorkomens`, terwijl relaties zonder connection
+in `verborgenConnectoren` komen. Label, Container en kale Label-connections
+worden respectievelijk `notitie`, `kader` en `toelichting`.
+
+Stijlen, fonts, bendpoints en attachments blijven in view-/connectormetadata.
+Met de optie **Kleuren uit views overnemen** wordt een fillkleur waar mogelijk
+naar `data.kleur` geprojecteerd; diagnostics melden presentatiedetails die de
+canvas nog niet exact weergeeft. Exacte bendpointrouting, attachmentplaatsing,
+fontpariteit, vendorstyles en verdere geneste-containersemantiek blijven
+openstaand fase-C-/E-werk.
+
+De verplichte browserproef gebruikte `meerdere-views.xml` via **Modelleren →
+Project → Transformeren → Importeren**. Resultaat: twee views, drie elementen,
+één relatie, dubbele voorkomens met gerichte connection, projectmapplaatsing en
+zero pageerrors. `Ctrl+Z` verwijderde de volledige modelimport in één stap. De
+proef vond en repareerde daarbij dat de eerste profielmount de import-history
+onvoorwaardelijk wiste.
+
+Bewijs:
+
+- [`01-import-resultaat.png`](../img/archimate-exchange-fase-b/01-import-resultaat.png)
+- [`02-landschap-dubbel-voorkomen.png`](../img/archimate-exchange-fase-b/02-landschap-dubbel-voorkomen.png)
+- [`03-projectboom.png`](../img/archimate-exchange-fase-b/03-projectboom.png)
+- [`04-undo-een-stap.png`](../img/archimate-exchange-fase-b/04-undo-een-stap.png)
 
 ### Fase D — canonieke export
 

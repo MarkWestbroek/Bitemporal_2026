@@ -268,6 +268,16 @@ te wijzigen.
 > sleep), contextmenu's met "Verplaats naar ▸", handmatige mapvolgorde,
 > auto-scroll bij slepen en "Zoek in projectboom" vanaf de canvas.
 >
+> **ArchiMate Model Exchange-import (2026-09-01):** via **Project →
+> Transformeren → Importeren** leest Studio standaard Exchange XML
+> (`.xml`/`.archimate`) in een gekozen projectmap. De import neemt ondersteunde
+> elementen, alle elf relaties en views mee, inclusief meerdere voorkomens,
+> posities/maten, Label/Container-annotaties en bewust verborgen relaties.
+> Voorkeurstaal en het overnemen van viewkleuren zijn opties; onbekende typen
+> en presentatieverlies verschijnen als diagnostics. De volledige import is
+> één model-undo-stap. Ontwerp, subset en bewijsbeelden:
+> [`ArchiMate Model Exchange import-export`](plans/2026-08-31%20ArchiMate%20Model%20Exchange%20import-export%20%28ontwerp%29.md).
+>
 > **Gedragsdiagram-primitieven (2026-07-17):** de motor kent twee nieuwe
 > declaratieve primitieven (zie
 > [`STUDIO-05-gedragsdiagrammen.md`](STUDIO-05-gedragsdiagrammen.md)) —
@@ -280,7 +290,7 @@ te wijzigen.
 > samengestelde toestand als container, submachine met doorklik, entry/exit);
 > nieuw profiel **Use case** (actor/use case/systeemkader,
 > associatie/«include»/«extend»/generalisatie). Notatie-roadmap:
-> [`plans/2026-07-17 ArchiMate en verdere notaties (plan).md`](plans/2026-07-17%20ArchiMate%20en%20verdere%20notaties%20(plan).md).
+> [`plans/2026-07-17 ArchiMate en verdere notaties (plan).md`](plans/2026-07-17%20ArchiMate%20en%20verdere%20notaties%20%28plan%29.md).
 
 | Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|
