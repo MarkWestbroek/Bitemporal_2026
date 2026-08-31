@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-08-29 10:41
 - **Sessie-ID**: `428340f4-c609-49f6-9005-17bb6cd287e4`
-- **Berichten**: 8
+- **Berichten**: 10
 
 ---
 
@@ -75,5 +75,19 @@ Wil je lezen wat de huidige staat is, en hoe je daarop kunt aansluiten?
 ## 🤖 Assistant
 
 Ik breng eerst de bestaande transformatieketen en het ArchiMate-profiel gericht in kaart: contracten voor externe import/export, interne profieltransformaties en de huidige ArchiMate-roadmap. Daarna geef ik een concreet aansluitingsontwerp; ik wijzig nog niets zolang je alleen om analyse vraagt.
+
+---
+
+## 🧑 User
+
+Wil je deze ideeen in een ontwerpdocument vastleggen, zodat ik dat even kan reviewen? Klinkt goed, trouwens!
+
+---
+
+## 🤖 Assistant
+
+Ik leg het voorstel vast als een specifiek ontwerpdocument onder `docs/plans`, inclusief huidige architectuur, contracten, mapping, fasering, bekende roundtripgrenzen en expliciete reviewbesluiten. Ik werk daarbij op de huidige featurebranch en laat de bestaande wijziging in  ongemoeid.
+
+Ik controleer alleen nog of er al een specifiek ArchiMate Exchange-ontwerp bestaat en welke naamconventie de recente plannen gebruiken. Daarna schrijf ik het document als zelfstandig reviewstuk, zonder codewijzigingen.
 
 ---
