@@ -2,6 +2,8 @@
 
 > Datum: 2026-07-17 (autonome nachtsessie) · **bijgewerkt 2026-07-17 (avond)**
 > Status: **v0 gebouwd** (§3 fase 1 ✅) — plus **BPMN v0** op de eigen motor.
+> Het afzonderlijke ontwerp voor standaarduitwisseling staat in
+> [`2026-08-31 ArchiMate Model Exchange import-export (ontwerp).md`](2026-08-31%20ArchiMate%20Model%20Exchange%20import-export%20%28ontwerp%29.md).
 > Bouwt voort op `docs/STUDIO-05-gedragsdiagrammen.md` en de twee inmiddels
 > gebouwde motor-primitieven: **rand-aanhechting** (`randElement`, §3.1) en
 > **gedragsverwijzing** (`gedragsVerwijzing` + dubbelklik, §3.2).
