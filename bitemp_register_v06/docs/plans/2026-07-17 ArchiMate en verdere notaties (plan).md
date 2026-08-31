@@ -62,6 +62,20 @@ profiel** — groot, maar zonder nieuwe primitieven.
 - **Alternatieve gedaante** (het icoon *als* vorm, bv. de actor-poppetje-
   variant) kan later gratis via **shapeSets** (P07) — de Definitie blijft
   gelijk, alleen de skin wisselt.
+  **✅ gebouwd** (2026-09-01): shape-set `vormen` — "Iconen als vorm", te
+  kiezen via **Beeld → Shape-set**. Twaalf vormshapes
+  (`archimate/vormShapes.jsx`) over zestien elementtypen
+  (`archimate/vormSet.js`): poppetje, liggende cilinder, proces-pijl,
+  chevron, afgerond blok (de drie services), event-pijl, rechthoek met
+  kopstreep (business- én data-object), component met uitsteeksels,
+  3D-doos, device, systeemsoftware-bol en artifact-dokje. De naam staat
+  ín de node onder het symbool (`naamLabel` is Definitie-niveau en wisselt
+  niet mee met een set); het symbool schaalt mee met de nodemaat, zodat een
+  in de box-gedaante opgerekte node bruikbaar blijft. De
+  **motivation**-elementen (stakeholder/driver/goal/principle/requirement/
+  constraint) blijven bewust de box met hoek-icoon: de spec kent daar geen
+  eigen-vorm-variant. Terugwisselen naar "Standaard" herstelt de boxen
+  (de set is puur skin, geen model).
 
 ### 2.2 Relaties (alle elf zijn met bestaande edge-middelen te doen)
 
