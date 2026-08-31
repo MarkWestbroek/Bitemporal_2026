@@ -39,6 +39,7 @@ Uit `STUDIO-05-gedragsdiagrammen.md` §2 kwamen vier cross-cutting motor-gaten. 
 | **Buitenlabel** (29-07) | ✅ `elementType.naamLabel: "buiten"` — ElementNode zet de naam ónder de vorm; diagram-breed uit te zetten (`data-dc-labels`) | BPMN-events/gateways, state machine begin/eind/keuze/junction/historie/entry/exit, activity begin/eind/flow-eind/beslissing/fork/pin |
 | **Zwevende aanhechting** (08-08) | ✅ `randAanhechting: "zwevend"` — het uiteinde ligt op de omtrek i.p.v. op een handle; zelfde zijde als voorheen, betere plek erop. Handmatig gekozen handles winnen | alle structuur- en architectuurprofielen; gedragsprofielen houden hun handles |
 | **Markers aan de bronzijde** (31-07) | ✅ `markerStart` was tot dan alléén de ruit (een polygon dat met de curve meebuigt); nu ook echte SVG-markers | ERD-kraaienpoten aan beide uiteinden, BPMN default flow |
+| **Voorkomen** (31-08) | ✅ optionele `DiagramNode.nodeId`; positie/maat/verwijderen per voorkomen, elementgerichte selectie, kortste of expliciet gekozen connectorpaar, per-view hide-list | ArchiMate, puur UML en canoniek UML; basis voor Model Exchange-views |
 
 Daarnaast is er core-datatype **`keuze`** bijgekomen (select over `PropertyType.opties`) en
 lijndikte per connector (`presentatie.dikte`).

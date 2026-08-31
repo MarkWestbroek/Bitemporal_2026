@@ -2,7 +2,8 @@
 
 > **Datum:** 2026-08-31
 >
-> **Status:** ontwerp ter review, nog niet geïmplementeerd
+> **Status:** fase A en C0 gebouwd op `feat/archimate-exchange`; fase B en
+> verder nog niet geïmplementeerd
 >
 > **Scope:** Open Group ArchiMate Model Exchange File Format (XML) als externe
 > bron en bestemming voor het ArchiMate-profiel in Omnium Studio
@@ -939,6 +940,25 @@ IDs en stijlmetadata normaliseren.
 **Resultaat:** de transformatielaag is geschikt voor serieuze
 standaardformaten, zonder ArchiMate-specials in de UI.
 
+**Status 2026-08-31: ✅ gebouwd.** De registry accepteert `bron`, `opties` en
+het resultaatcontract achterwaarts compatibel. Het paneel gebruikt het
+bestandsfilter van de gekozen transformatie, kan een bron via confidence-score
+herkennen, rendert string-, number- en booleanopties en toont samenvatting en
+uitklapbare diagnostics. `createDiagramStore.importeerModel` valideert
+element-, diagram- en referentie-IDs vóór één Zustand-mutatie; een mislukte
+preflight laat store en undo-history onaangeraakt.
+
+Anders dan in de breedste ontwerpvariant:
+
+- er is nog geen aparte `TransformationError`-klasse; gewone fouten mogen een
+  `diagnostics`-array dragen en worden door het paneel genormaliseerd;
+- de optiesrenderer ondersteunt nu de drie benodigde basistypen, nog geen
+  keuzevelden of profiel-eigen widgets;
+- automatische detectie selecteert de beste transformatie alleen wanneer de
+  gebruiker nog geen generator heeft gekozen;
+- dry-run plus afzonderlijke bevestigingsstap is nog niet toegevoegd. De
+  preflight en atomische mutatie voorkomen wel gedeeltelijke import.
+
 ### Fase B — semantische ArchiMate-import
 
 - neutraal Exchange-model en XML-parser;
@@ -967,6 +987,29 @@ Kan parallel aan fase A/B; zie §9.1, §9.6 en §9.7 voor het ontwerp.
 
 **Resultaat:** diagramcore kent het verschil tussen element en voorkomen —
 precies de aanname waarop fase C leunt.
+
+**Status 2026-08-31: ✅ gebouwd.** `DiagramNode.nodeId` is optioneel en oude
+diagrammen blijven zonder migratie geldig. React Flow en layoutmutaties werken
+op voorkomen-ID; selectie en inspector blijven elementgericht. De UI-vlag
+`meerdereVoorkomens` staat aan voor ArchiMate, puur UML en canoniek UML en kan
+per elementtype worden overschreven. Connectoren kiezen het kortste
+voorkomenpaar, met `diagram.connectorVoorkomens` als expliciete per-view
+override. `verborgenConnectoren`, contextmenu verbergen en herstel via Beeld
+zijn aanwezig. ArchiMate heeft daarnaast `kader` en de view-only
+`toelichting`-connector.
+
+Anders of smaller dan aanvankelijk beschreven:
+
+- er is geen nieuwe publieke methode `addVoorkomen`; de bestaande
+  `addElementToDiagram` kreeg een compatibele vierde optieparameter. Zonder
+  `meerdereVoorkomens: true` blijft de oude duplicaatweigering gelden;
+- herstel van de hide-list toont in één actie alle verborgen relaties van het
+  actieve diagram, in plaats van een keuzelijst per relatie;
+- rand-elementen blijven enkelvoudig en hechten bij een meervoudige gastheer
+  voorlopig aan het eerste voorkomen. De bestaande `data.randVan` blijft dus
+  een element-ID totdat een concreet profiel voorkomenkeuze nodig heeft;
+- Label/Container-import zelf hoort bij fase C; C0 levert nu de interne
+  `notitie`, `kader` en `toelichting` waarop die mapping kan landen.
 
 ### Fase C — views en presentatie
 

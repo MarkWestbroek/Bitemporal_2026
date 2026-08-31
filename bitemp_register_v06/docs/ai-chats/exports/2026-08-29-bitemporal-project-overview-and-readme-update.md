@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-08-29 10:41
 - **Sessie-ID**: `428340f4-c609-49f6-9005-17bb6cd287e4`
-- **Berichten**: 10
+- **Berichten**: 12
 
 ---
 
@@ -89,5 +89,21 @@ Wil je deze ideeen in een ontwerpdocument vastleggen, zodat ik dat even kan revi
 Ik leg het voorstel vast als een specifiek ontwerpdocument onder `docs/plans`, inclusief huidige architectuur, contracten, mapping, fasering, bekende roundtripgrenzen en expliciete reviewbesluiten. Ik werk daarbij op de huidige featurebranch en laat de bestaande wijziging in  ongemoeid.
 
 Ik controleer alleen nog of er al een specifiek ArchiMate Exchange-ontwerp bestaat en welke naamconventie de recente plannen gebruiken. Daarna schrijf ik het document als zelfstandig reviewstuk, zonder codewijzigingen.
+
+---
+
+## 🧑 User
+
+Ik heb Claude nog gevraagd ernaar te kijken, omdat deze de rest al gemaakt had en veel context had. Dit is er uitgekomen.
+
+*Voer de opdracht uit in `bitemp_register_v06/docs/plans/2026-08-31 Opdracht fase A + C0 — transformatielaag en voorkomen-primitief.md`*
+
+Dit in de huidige uitgecheckte branch `feat/archimate-exchange`.
+
+---
+
+## 🤖 Assistant
+
+Ik lees eerst de opdracht, de v06-instructies en de actuele werkboom op `feat/archimate-exchange`, inclusief de tussentijdse wijzigingen van Claude. Daarna vorm ik één lokale hypothese over het eerste implementatiepunt en voer ik de kleinste toetsbare wijziging uit.
 
 ---
