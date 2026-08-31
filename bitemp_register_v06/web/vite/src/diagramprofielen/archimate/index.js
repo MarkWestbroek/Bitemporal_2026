@@ -181,6 +181,9 @@ export const archimateDiagramType = {
   id: ARCHIMATE_ID,
   label: "ArchiMate",
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
   typeWeergave: "geen", // het hoek-icoon zit al in de shape
   fieldTypes: [],
   elementTypes,

@@ -128,7 +128,9 @@ function DataObjectShape({ element, selected, children }) {
         <path d="M2 2 H20 L28 10 V36 H2 Z" fill="var(--s-panel, #fff)" stroke={kleur} strokeWidth="1.5" strokeLinejoin="round" />
         <path d="M20 2 V10 H28" fill="none" stroke={kleur} strokeWidth="1.5" strokeLinejoin="round" />
       </svg>
-      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--s-fg, #0f172a)", textAlign: "center", whiteSpace: "nowrap", maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis" }}>
+      {/* Lange namen wrappen (geen ellipsis meer): een afgekapte naam is in een
+          procesplaat onbruikbaar, een tweede regel kost niets. */}
+      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--s-fg, #0f172a)", textAlign: "center", maxWidth: 110, lineHeight: 1.25, overflowWrap: "anywhere" }}>
         {element?.naam || ""}
       </div>
       {children}

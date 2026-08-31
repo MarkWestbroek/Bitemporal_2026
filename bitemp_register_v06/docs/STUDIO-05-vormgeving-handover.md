@@ -78,6 +78,21 @@ zijn geïmplementeerd. Samenvatting:
   MIM-termen in de descriptor voor de tekst-stand. Bestaande profielen
   veranderen niet (default "tekst" = oude gedrag).
 - Chatverslag: `ai-chats/summaries/2026-07-05-vormgevingssessie-iconen-en-tokens-v2.md`.
+- **Ronde 2 (2026-08-08, uitgevoerd)**: iconen voor de drie profielen die er
+  géén hadden — ERD, SysML en CMMN (38 elementtypen: 22 nieuwe iconen,
+  13 hergebruikte ids). Daarbij zijn de regels vastgelegd waar ronde 1 nog
+  improviseerde: **wanneer mini-vorm en wanneer symbool** (silhouet als het
+  silhouet onderscheidt, anders het symbool van de inhoud), het
+  **grondpatroon voor connector-iconen** (horizontale lijn, markersymbool
+  rechts, containment toont de container), en twee nieuwe familiemiddelen —
+  *context gestreept / onderwerp gevuld* en het **randelement-motief**
+  (gestreepte gastheerrand met het element erop, voor alles wat via
+  `randElement` op een omtrek klemt). De **gedragsset is bevestigd**, niet
+  herontworpen, met twee correcties: `gedrag-toestand` was identiek aan de
+  `rounded`-fallback, en BPMN's drie gateways deelden één ruit
+  (nu `gedrag-gateway-xor/-and/-or`). Volledig antwoord:
+  `STUDIO-05-iconen-ronde2-antwoord.md`; brief:
+  `plans/2026-08-08 Designbrief taakbalk-iconen ronde 2 (ERD, SysML, CMMN).md`.
 
 ## Doel van de sessie
 

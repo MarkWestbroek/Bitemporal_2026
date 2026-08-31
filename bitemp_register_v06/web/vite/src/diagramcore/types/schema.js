@@ -106,12 +106,28 @@
  * @property {string} [omschrijving]        - één-regel-uitleg (taakbalk-tooltip)
  * @property {string} shape                 - ShapeType-id (bv. "class-box", "chip", "knip-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
+ * @property {"binnen"|"buiten"|"geen"} [naamLabel] - waar de naam van het element
+ *   staat. `"binnen"` (default) = de shape rendert de naam zelf, zoals altijd.
+ *   `"buiten"` = de motor zet de naam als los label ónder de vorm — bedoeld voor
+ *   kleine, vaste vormen die geen tekst kunnen dragen (BPMN-events en -gateways,
+ *   state machine begin/eind/keuze, activity-knooppunten). `"geen"` = nooit tonen.
+ *   Het buitenlabel is diagram-breed uit te zetten (`data-dc-labels="uit"` op het
+ *   canvasvlak, menu Beeld → Buitenlabels) — dat geldt dan voor álle profielen.
+ *   N.B. shapes met `.dc-node` klippen hun inhoud (`overflow: hidden`); het
+ *   buitenlabel wordt daarom bewust náást de shape gerenderd, niet erin.
  * @property {string} [kleur]               - default; instantie kan overriden
  * @property {number} [randDikte]           - vormgrammatica: randbreedte in px (identiteit = dik, bv. 3)
  * @property {number} [hoekRadius]          - vormgrammatica: hoekafronding in px (structuur = rond)
  * @property {"dashed"} [randStijl]         - vormgrammatica: gestippeld = inhoud elders beheerd
  *   (ook per element via data.randStijl); geldt voor class-box, chip en package
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
+ * @property {"zijden"|"zwevend"} [randAanhechting] - waar een connector aan dit
+ *   element vastpakt. `"zijden"` = de vier handles (midden van elke zijde);
+ *   `"zwevend"` = het punt waar de lijn de omtrek snijdt, zodat lijnen naar
+ *   verschillende buren uitwaaieren en meeglijden als je de node versleept.
+ *   Zonder waarde geldt `DiagramType.randAanhechting`, en anders `"zijden"`.
+ *   Een handmatig gekozen handle (`data.sourceHandle`/`targetHandle` op de
+ *   connector) wint altijd — zweven geldt alleen waar niets gekozen is.
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
  * @property {number} [minBreedte]          - resize-minimum (default 180) — bv. smalle balken
  * @property {number} [minHoogte]           - resize-minimum (default 56)
@@ -197,6 +213,10 @@
  * @property {string} style                 - StyleType-id (Implementatie-domein)
  * @property {"geen"|"icoon"|"tekst"} [typeWeergave] - default voor de
  *   Typering-toggle: alleen vorm, mini-icoon of stereotype-tekst (default "tekst")
+ * @property {"zijden"|"zwevend"} [randAanhechting] - profiel-default voor waar
+ *   connectoren vastpakken (zie ElementType.randAanhechting); per elementtype
+ *   te overschrijven. Default "zijden" — bestaande profielen veranderen niet
+ *   tenzij ze het zelf zetten.
  * @property {ElementType[]} elementTypes
  * @property {FieldType[]} [fieldTypes]     - de veldtypen waar CompartmentTypes naar verwijzen
  * @property {ReferenceType[]} [referenceTypes] - declaratieve soorten verwijzings-kandidaten (§4.5b)

@@ -303,6 +303,9 @@ export const puurUmlDiagramType = {
   // Zelfde StyleType als canoniek-uml: klassieke UML-pastels. Een eigen
   // tokenset is een §8.5b-punt (thema's per StyleType), geen fase 5-blokker.
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
   // Boomordening: eerst package-lidmaatschap ("plaatsing in"), daarna de
   // compositie — wie in een package hangt neemt zo zijn ◆-kinderen mee.
   hierarchie: ["bevat", "compositie"],

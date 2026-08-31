@@ -2,7 +2,8 @@
 
 **Datum:** 2026-04-12  
 **Context:** FTV werkgroep, NLGov AuthZEN, aansluiting metamodel bitemporeel register  
-**Bronnen:** W3C ODRL Information Model 2.2, Claude/Gemini-analyse, bestaande `autoriseren.md`
+**Bronnen:** W3C ODRL Information Model 2.2, Claude/Gemini-analyse, bestaande `autoriseren.md`  
+**Vervolg:** `2026-08-18 ODRL 3.0 — W3C-workshop en gevolgen voor Toegangsspraak.md` (voorstellen voor ODRL 3.0 en de gevolgen voor deze subset)
 
 ---
 
@@ -372,7 +373,7 @@ Een schuldhulpverlener mag inkomensgegevens inzien van een burger, mits er een l
 | **AuthZEN-koppeling** | Hoe leest de PDP het ODRL-register? Als JSON-LD API? Als PIP? | Midden |
 | **Consent/betrokkene** | AVG-consent als ODRL Duty of als apart mechanisme? | Midden |
 | **Delegatie** | Mandaatverlening (organisatie A delegeert recht aan organisatie B) — mogelijk via Policy Inheritance in v2 | Laag |
-| **Temporal constraints** | ODRL heeft `dateTime` leftOperand; maar hoe koppel je dat aan de materiële tijd van het register? | Laag |
+| **Temporal constraints** | ODRL heeft `dateTime` leftOperand; maar hoe koppel je dat aan de materiële tijd van het register? Opgewaardeerd na de W3C-workshop van juli 2026: ODRL 2.2 kent maar één evaluatiemoment, en 3.0-voorstellen (o.a. JP Morgan) vragen om een expliciete temporele laag. | Midden |
 
 ### Relatie met bestaande `autoriseren.md`
 Het bestaande document in `autoriseren/autoriseren.md` is XACML-gebaseerd en beschrijft de runtime-kant (PxP, PDP evaluatie). Het ODRL-register is de **beschrijvende/administratieve laag erboven**. Beide vullen elkaar aan:

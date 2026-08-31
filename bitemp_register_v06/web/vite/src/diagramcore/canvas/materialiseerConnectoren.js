@@ -113,6 +113,17 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     const bronMid = midden(bronRef, maten?.[el.source]);
     const doelMid = midden(doelRef, maten?.[el.target]);
 
+    // Zwevende aanhechting per uiteinde (zie zwevendeRand.js). Twee
+    // voorwaarden: het elementtype aan die kant moet het toestaan, én de
+    // gebruiker mag daar niet zélf een handle hebben gekozen — een met de hand
+    // gelegde aanhechting blijft waar hij ligt. Een zelf-lus zweeft nooit; de
+    // ConnectorEdge vangt dat op, want daar is het pas te zien.
+    const zwevendKant = (elementId, handleSleutel) =>
+      elementTypesById[elements[elementId]?.elementType]?.randAanhechting === "zwevend" &&
+      !el.data?.[handleSleutel];
+    const zwevendBron = zwevendKant(el.source, "sourceHandle");
+    const zwevendDoel = zwevendKant(el.target, "targetHandle");
+
     const labels = et.hooks?.edgeLabels?.(el) || {};
     // Handmatig versleepte label-posities (data.labelOffsets, per zijde).
     const offsets = el.data?.labelOffsets || null;
@@ -171,6 +182,8 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
             // Per-connector lijnvorm (contextmenu) wint van het type-default;
             // een lus is standaard hoekig (het nette EA-oortje).
             vorm: el.data?.vorm || (isLus ? "hoekig" : basisPresentatie.vorm),
+            zwevendBron,
+            zwevendDoel,
             labels: metOffsets(kaalLabels),
           },
         },
@@ -218,6 +231,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
           vorm: el.data?.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerStart: basisPresentatie.markerStart,
+          zwevendBron,
           labels: metOffsets(labels.bron || []),
         },
       },
@@ -235,6 +249,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
           vorm: el.data?.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerEnd: basisPresentatie.markerEnd ?? (el.data?.directioneel ? "pijl-open" : null),
+          zwevendDoel,
           labels: metOffsets(labels.doel || []),
         },
       },

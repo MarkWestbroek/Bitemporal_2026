@@ -36,6 +36,29 @@
 > horizontaal-constraint, geen doorschuiven), lanes met betekenis
 > (lane-layout), regio's en de validatie-hook. Vervolgplan:
 > `docs/plans/2026-07-17 ArchiMate en verdere notaties (plan).md`.
+>
+> **Stand 2026-07-29:** derde motor-primitief erbij — het **buitenlabel**
+> (`elementType.naamLabel: "binnen" | "buiten" | "geen"`, §3.3). Kleine vaste
+> vormen kunnen hun naam niet ín zichzelf dragen; `ElementNode` zet hem er nu
+> onder. Toegepast op de BPMN-events en -gateways, de state machine-pseudostates
+> en de activity-knooppunten. Diagram-breed uit te zetten via Beeld →
+> Buitenlabels. Tegelijk is de **breedtegrens** van element-boxen ingevoerd
+> (`.dc-node { max-width: var(--dc-node-max, 280px) }`), zodat lange namen
+> wrappen in plaats van de node eindeloos uit te rekken. Status per notatie:
+> `docs/plans/2026-07-29 Overdracht Notaties — diagramprofielen (status).md`.
+>
+> **Stand 2026-07-31:** het rand-primitief (§3.1) draagt er twee notaties bij:
+> **SysML-poorten** (ibd) en **CMMN-sentries**. Die laatste is het mooiste
+> bewijs dat §3.1 het juiste primitief was — in CMMN is de bewaker-op-de-rand
+> niet een detail maar de kérn van de taal: er zijn geen sequence flows, alle
+> afhankelijkheid loopt via sentries.
+>
+> **Stand 2026-08-08:** vierde motor-primitief — **zwevende aanhechting**
+> (`randAanhechting: "zijden" | "zwevend"`, §3.4). Vier handles is genoeg voor
+> een gateway maar niet voor een klassebox met acht associaties; zwevend hecht
+> aan de omtrek in plaats van aan een handle, zodat lijnen uitwaaieren en
+> meeglijden bij het slepen. Aan in de structuur- en architectuurprofielen; de
+> gedragsprofielen houden hun handles.
 
 Dit document legt de richting vast voor sequence-, activity-, state-machine- en
 BPMN-diagrammen op de generieke diagram-motor (`diagramcore`), met bijzondere aandacht
@@ -118,6 +141,72 @@ Bouw dit één keer en:
   want het is dezelfde relatie;
 - containers (embedded) en referenties (call) delen de metamodel-basis; embedded vraagt extra
   om **container-layout** (lanes/regio's), call niet.
+
+### 3.3 Buitenlabel — de naam náást de vorm (gebouwd 2026-07-29)
+
+Een derde primitief, klein maar cross-cutting. `ElementNode` deed niets met
+`element.naam`: elke shape rendert zijn eigen tekst. Dat werkt voor boxen, maar
+een BPMN-event is een ring van 30px en een gateway een ruit van 34px — daar
+*past* geen tekst in. Gevolg: die elementen waren stilzwijgend naamloos, zonder
+dat iets erover klaagde.
+
+`ElementType.naamLabel` lost dat declaratief op:
+
+- `"binnen"` (default) — de shape rendert de naam zelf; niets verandert;
+- `"buiten"` — **de motor** zet de naam als los label onder de vorm;
+- `"geen"` — nooit tonen.
+
+Twee implementatiedetails die niet vanzelf spreken:
+
+1. Het label is een **broer** van de shape, geen kind. `.dc-node` heeft
+   `overflow: hidden` en zou het wegknippen; de React Flow-node-wrapper is
+   `position: absolute` en fungeert als referentiekader.
+2. Het label krijgt een **vaste** breedte, geen `max-width`. Een absoluut
+   gepositioneerd element ontleent zijn shrink-to-fit-breedte aan het containing
+   block — bij een event-ring is dat 30px, waardoor de tekst letter voor letter
+   afbreekt.
+
+Diagram-breed uit te zetten via **Beeld → Buitenlabels**, in hetzelfde patroon
+als `data-dc-typering`: menuBus → localStorage per taakbalk → `data-dc-labels`
+op het canvasvlak → één CSS-regel. Eén schakelaar voor álle profielen.
+
+Toegepast op: BPMN start/tussen/eind/boundary-event en de drie gateways; state
+machine begin/eind/keuze/junction/historie/entry/exit; activity begin/eind/
+flow-eind/beslissing/fork/pin.
+
+### 3.4 Zwevende aanhechting — de lijn hecht aan de omtrek (gebouwd 2026-08-08)
+
+Een connector pakt vast aan één van vier handles: het midden van elke zijde.
+Voor een BPMN-gateway of een begin-stip is dat prima — die vormen zijn klein,
+vier punten dekken ze. Voor een UML-klasse met acht associaties is het armoede:
+alle lijnen knijpen door hetzelfde punt.
+
+`ElementType.randAanhechting` (met `DiagramType.randAanhechting` als
+profiel-default) zet daar `"zwevend"` tegenover: het uiteinde ligt op de
+**omtrek**, op de plek waar de lijn naar de buur hem kruist. Lijnen naar
+verschillende buren waaieren dan vanzelf uit, en bij het slepen glijdt het
+aanhechtpunt mee — je hoeft nooit meer een handle "goed te zetten". Dat is wat
+EA, Archi en Visio doen, en de reden dat je daar nooit over handles nadenkt.
+
+Twee begrenzingen die het ontwerp bewust klein houden:
+
+1. **De zijde verandert niet.** Het zuivere snijpunt van de middellijn met de
+   omtrek geeft bij een brede, lage node rare uitkomsten — een buur die
+   duidelijk rechts ligt wordt dan via de bóvenrand verbonden, en de
+   orthogonale router maakt daar een lange omweg omheen (in de praktijk
+   geprobeerd; het zag er slechter uit dan het probleem dat het oploste).
+   Daarom kiest de zwevende variant de zijde met exact dezelfde regel als
+   `besteZijde`, en schuift alleen het punt **langs** die zijde op. Het
+   verschil met de oude situatie is precies één ding: dezelfde zijde, een
+   betere plek erop.
+2. **Een handmatig gekozen handle wint altijd.** Zweven geldt per uiteinde en
+   alleen waar `data.sourceHandle`/`targetHandle` leeg is — dus precies de
+   stand die "normaliseer relaties" achterlaat. Wie een lijn met de hand heeft
+   vastgezet, houdt hem.
+
+Aan in de structuur- en architectuurprofielen (puur-UML, canoniek-UML, MIM,
+OAS, ERD, SysML, ArchiMate, DMN DRD, use case); de gedragsprofielen houden hun
+handles, want daar zijn de vormen klein en dragen de vier punten betekenis.
 
 ---
 

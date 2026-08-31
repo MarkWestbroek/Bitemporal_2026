@@ -2,6 +2,8 @@
 
 > Datum: 2026-07-17 (autonome nachtsessie) · **bijgewerkt 2026-07-17 (avond)**
 > Status: **v0 gebouwd** (§3 fase 1 ✅) — plus **BPMN v0** op de eigen motor.
+> Het afzonderlijke ontwerp voor standaarduitwisseling staat in
+> [`2026-08-31 ArchiMate Model Exchange import-export (ontwerp).md`](2026-08-31%20ArchiMate%20Model%20Exchange%20import-export%20%28ontwerp%29.md).
 > Bouwt voort op `docs/STUDIO-05-gedragsdiagrammen.md` en de twee inmiddels
 > gebouwde motor-primitieven: **rand-aanhechting** (`randElement`, §3.1) en
 > **gedragsverwijzing** (`gedragsVerwijzing` + dubbelklik, §3.2).
@@ -121,7 +123,7 @@ laag-kleur als elementtype-default, per element overschrijfbaar (bestaat al).
 
 ## 4. Verkenning overige notaties (kort)
 
-### SysML (v1)
+### SysML (v1) ✅ **gebouwd 2026-07-31**
 SysML v1 ís een UML-profiel; het meeste is hergebruik:
 - **bdd** (block definition) ≈ class-diagram met «block»-stereotype — bijna
   gratis op de bestaande structuur-motor.
@@ -135,6 +137,25 @@ SysML v1 ís een UML-profiel; het meeste is hergebruik:
 SysML **v2** heeft een eigen metamodel/notatie — bewust negeren tot er
 vraag is. *Advies: na ArchiMate; begin met bdd + req.*
 
+**Zo is het gegaan** (`diagramprofielen/sysml/`, activiteit `sysml05`): het
+advies is gevolgd — bdd en req — maar **ibd is meteen meegenomen**, want het
+enige dat daarvoor ontbrak (ports) is in juli gebouwd. Het blok is nu óók het
+ibd-frame: parts erin via `containerVoor`, poorten erop via `randElement`, met
+de poortnaam eronder via het buitenlabel (een vierkantje van 16px draagt geen
+tekst). Connector en item flow verbinden de poorten.
+
+De **req**-kant bracht twee kleine vondsten. (1) De vijf traceerrelaties zijn
+notationeel identiek — gestreept, open pijl, alleen het «stereotype» verschilt.
+Vijf knoppen in de balk die er hetzelfde uitzien is slechtere UX dan één
+connector met een `soort`-keuze; dat is het geworden (`traces.js`, getest).
+(2) **Containment** (⊕ aan de ouderkant) vroeg een nieuwe marker,
+`kruis-cirkel` — mogelijk sinds `markerStart` echte SVG-markers aankan (zie
+ERD hieronder).
+
+Nog open: **parametrics** (zoals voorspeld achteraan), SysML v2, en het punt
+dat het plan zelf maakt — satisfy/verify/derive horen eigenlijk óók in de
+**kruisverbanden-matrix** (Koppelingen), niet alleen in een tekening.
+
 ### OWL / linked data
 Semantisch anders (open world, naamruimten, punning). Tekenen kan de motor
 nu al (nodes + gerichte edges, zie het "Graaf (demo)"-profiel), maar een
@@ -142,12 +163,34 @@ ontologie wíl je vooral als boom + facetten browsen, niet primair tekenen.
 *Advies: pas oppakken samen met een import (Turtle/JSON-LD) en de
 projectboom als primaire view; het diagram is daar een afgeleide.*
 
-### ERD met kraaienpoten
+### ERD met kraaienpoten ✅ **gebouwd 2026-07-31**
 Bijna gratis: entiteiten zijn class-boxes; alleen **vier nieuwe
 marker-defs** (één/veel × verplicht/optioneel: `||`, `|<`, `o|`, `o<`) in de
 markerregistry, en een connector die de kardinaliteit per uiteinde uit
 `data` haalt (de `edgePresentatie`-hook bestaat). *Advies: quick win van
 een dagdeel; mooi testgeval voor per-uiteinde markers.*
+
+**Zo is het gegaan** (`diagramprofielen/erd/`, activiteit `erd05`): de
+inschatting klopte, met één toevoeging die het plan niet zag. De vier markers
+zijn er (`kraai-een`, `kraai-nul-of-een`, `kraai-een-of-meer`,
+`kraai-nul-of-meer` — opgebouwd uit twee symbolen: één/veel tegen de entiteit,
+verplicht/optioneel erachter), en de connector vertaalt `bronKardinaliteit`/
+`doelKardinaliteit` via `hooks.edgePresentatie`. **Maar:** `markerStart` kon
+tot nu toe alléén een ruit zijn (compositie/aggregatie, en die is geen
+SVG-marker maar een polygon dat met de curve meebuigt). ERD-notatie vraagt
+dezelfde symbolenset aan *beide* uiteinden, dus `ConnectorEdge` is uitgebreid
+met echte bronmarkers. Dat was het werkelijke motor-werk — en het is meteen
+wat de BPMN default flow mogelijk maakte.
+
+Verder in het profiel: de entiteit heeft twee compartimenten (**sleutel** boven
+de streep, **kolommen** eronder — de klassieke ERD-doos, gratis via het
+bestaande compartiment-mechanisme), een **subtype**-relatie voor
+supertype/subtype-hiërarchieën, en een **domein**-container om entiteiten te
+groeperen. Niet-identificerende relaties zijn gestreept (IE-conventie).
+
+Nog open: Chen-notatie (ruiten en ovalen — een andere vormentaal), afleiding
+uit het canoniek model (kandidaat: adapter zoals `mim12/`), en DDL-import/
+-export. **DFD (Gane/Sarson)** is nu het volgende kleine ding, zoals gepland.
 
 ### Mindmap
 De motor kan het tekenen (kale nodes, edges zonder markers), maar een
@@ -163,6 +206,29 @@ met tekstlabels, nesting via containers, en **doorklikken van niveau naar
 niveau = ons gedragsverwijzing-primitief** (context → container-diagram →
 component-diagram). *Advies: goedkoop en populair bij developers; kandidaat
 direct na ArchiMate v0 — deelt de box-met-ondertitel-shape.*
+
+### CMMN ✅ **gebouwd 2026-07-31** (stond niet in dit plan)
+Case Management Model and Notation — de tegenhanger van BPMN: geen proces dat
+je vóóraf uittekent maar een **casus**, waarin dingen *kunnen* gebeuren zodra
+aan voorwaarden is voldaan. Er zijn dan ook geen sequence flows; er zijn
+**sentries** — bewakers op de rand van een task, stage of milestone.
+
+Dat maakt het een verrassend goede match: die sentry ís het
+rand-aanhechtingsprimitief (§3.1 van `STUDIO-05-gedragsdiagrammen.md`), de
+stage is een container, en het case plan model de buitenste. Hetzelfde
+mechanisme dat BPMN-boundary-events, state machine entry/exit-points,
+activity-pins en SysML-poorten draagt, draagt hier de **kern** van de taal.
+
+v0 (`diagramprofielen/cmmn/`, activiteit `cmmn05`): case plan model (mapvorm),
+stage (achthoek), task met soort (human/process/case/decision) en de
+planningsmarkeringen `!`/`#`/`▷`, milestone (stadion), event listener (dubbele
+cirkel), case file item, sentry (open = entry, gevuld = exit) en de on-part-
+lijn. Zeven eigen shapes — CMMN's vormentaal ís de betekenis.
+
+Nog open: de **planningstabel** (discretionary items die een behandelaar
+tijdens de uitvoering toevoegt), caseFileItem-relaties, en de **expressietaal**
+achter sentries en rules. Dat laatste is de interessantste: koppelen aan
+CEL/Toegangsspraak in plaats van er een taal bij te verzinnen.
 
 ### Nog niet geadresseerd (bewust)
 Sequence (grootste gat: as-semantiek + activations), activity/BPMN (volgende

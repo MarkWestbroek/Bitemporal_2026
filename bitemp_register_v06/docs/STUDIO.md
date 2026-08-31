@@ -295,6 +295,9 @@ te wijzigen.
 | modelleren   | BPMN               | preview  | `diagramcore` + `diagramprofielen/bpmn` (eigen motor: events incl. boundary, gateways, lanes; naast de bpmn.io-activiteit) — **niet in de balk** |
 | modelleren   | ArchiMate          | preview  | `diagramcore` + `diagramprofielen/archimate` (v0: vier lagen, elf relaties) — **niet in de balk** |
 | modelleren   | Sequence           | preview  | `diagramcore` + `diagramprofielen/sequence` (v0: levenslijnen; punten/activaties op het rand-primitief) — **niet in de balk** |
+| modelleren   | ERD                | preview  | `diagramcore` + `diagramprofielen/erd` (kraaienpoten; kardinaliteit per uiteinde, sleutel-compartiment) — **niet in de balk** |
+| modelleren   | SysML              | preview  | `diagramcore` + `diagramprofielen/sysml` (bdd, ibd met poorten op de rand, requirements + traceerrelaties) — **niet in de balk** |
+| modelleren   | CMMN               | preview  | `diagramcore` + `diagramprofielen/cmmn` (casusmodel; sentries op het rand-primitief) — **niet in de balk** |
 | modelleren   | DMN-beslissingen   | actief   | `dmn/DmnTableEditor` + dmn-js DRD + ModelPicker (heette "DMN-tabellen") |
 | modelleren   | DMN DRD            | preview  | `diagramcore` + `diagramprofielen/dmn-drd` — **niet in de balk** (één DMN-ingang; via Ga naar) |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
@@ -553,7 +556,11 @@ Er wordt de **selectie** geëxporteerd als er iets geselecteerd is, anders het
 **hele diagram**. Het beeld wordt strak om de inhoud bijgesneden (met marge),
 met de canvas-achtergrond zodat lichte tekst op het donkere thema leesbaar
 blijft; connectie-handles en canvas-chrome (minimap, controls, raster) vallen
-weg.
+weg — net als de blauwe resize-lijntjes van een geselecteerde node.
+
+Bij een **selectie**-export tekent de plaat alléén de geselecteerde nodes, de
+lijnen waarvan beide uiteinden in de selectie zitten en hun labels. Buren die
+toevallig in het kader vallen liften dus niet half-afgesneden mee.
 
 ### Voorkeuren — Studio-instellingen → Diagram-export
 
@@ -568,9 +575,41 @@ Zo stel je het één keer in; het contextmenu blijft de drie schone acties.
 ### Implementatie
 
 - `diagramcore/export/exporteerCanvas.js` — `exporteerViewport(...)` op basis
-  van **html-to-image** (`toPng`/`toSvg`): `getNodesBounds` bepaalt het
-  kader, de viewport wordt op zoom 1 met een vaste marge verschoven, een
-  `filter` laat de chrome weg.
+  van **html-to-image** (`toPng`/`toSvg`): de viewport wordt op zoom 1 met een
+  vaste marge verschoven, een `filter` laat de chrome weg.
+- `diagramcore/export/tekenBounds.js` — het **kader**, gemeten aan de DOM
+  (unie van de client-rects van alles wat mee-exporteert, gedeeld door de
+  zoomfactor). Dit verving `getNodesBounds` (2026-08-18), dat alleen de
+  node-boxen uit het model kent en daardoor stelselmatig te krap was: de
+  graaf-bol (`shape: "bol"`) tekent zijn satelliet-velden ~56 px búiten de
+  kern-cirkel, `naamLabel: "buiten"` hangt de naam ónder de node, edges lopen
+  met bocht of knik buiten de rechthoek van hun eindpunten, edge-labels staan
+  daar weer naast, en rand-elementen (poorten, sentries, boundary-events)
+  hebben een positie relatief aan hun gastheer die `getNodesBounds` als
+  absoluut leest. Al die tekening viel buiten het kader en werd afgesneden.
+  `getNodesBounds` is nog wel de terugval als er niets te meten valt.
+  Een `<svg>` met `overflow: visible` telt niet als eigen vlak mee maar alleen
+  zijn inhoud: de bol hangt zijn satellieten in een vierkant van 204x204,
+  terwijl de bolletjes op een cirkelbaan staan en de hoeken leeg laten — anders
+  krijgt zo'n plaat een onnodig royale rand.
+- `diagramcore/export/exportFilter.js` — één predicaat voor zowel de
+  serialisatie als de kadermeting (chrome eruit, en bij een selectie-export
+  alles buiten de selectie). Meet je een ander kader dan je tekent, dan valt er
+  per definitie iets buiten beeld.
+  **SVG-valkuil:** html-to-image kloont een `<svg>` in één keer diep en loopt
+  de inhoud daarna níet meer langs het `filter` (`clone-node.js`,
+  `cloneChildren`). React Flow zet elke edge in een eigen `<svg>`-wikkel, dus
+  een `<g class="react-flow__edge">` uitfilteren heeft géén effect — de
+  beslissing moet op de wikkel vallen. Vandaar `edgeIdVan()`, dat vanaf de
+  wikkel naar de `<g>` erbinnen kijkt.
+- **Kader-selectie en lijnen** (2026-08-18): React Flow selecteert bij
+  Shift+slepen élke lijn die aan een geselecteerde node hangt — ook lijnen naar
+  elementen búiten het kader. `DiagramCanvas` laat die select-changes vallen
+  (`onEdgesChange` zolang `userSelectionActive`, plus een naveeg op
+  `onSelectionEnd`): een lijn hoort pas bij de selectie als beide uiteinden
+  erin zitten. Dat scheelt niet alleen in de export — verwijderen sloopte
+  anders stilletjes een verbinding met een element dat je niet had
+  geselecteerd.
 - `DiagramCanvas` stelt `layoutApi.exporteerAfbeelding({ formaat,
   alleenSelectie, doel, achtergrondModus, schaal, marge })` beschikbaar
   (imperatief); het canvas-contextmenu (`maakDiagramActiviteit`) roept dit aan

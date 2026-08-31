@@ -2,8 +2,15 @@
 
 **Status:** v0 (werkend prototype, branch `feat/toegangsspraak`)
 **Ontwerp & besluiten:** `docs/plans/2026-07-22 Klare-taal Toegangsbeleid — Toegangsspraak (ontwerp).md`
+**Info-paper (extern deelbaar):** `docs/toegangsspraak-infopaper.html` (+ pdf) — compacte
+uitleg van taal, parser/grammatica (EBNF), ODRL-mapping, profiel en editor; screenshots
+en diagram-exports (svg) staan in `docs/img/toegangsspraak/`; pdf opnieuw maken met
+Chrome headless (`--headless=new --no-pdf-header-footer --print-to-pdf=…`).
 **Context:** Werkgroep FTV / Register Toegangsbeleid; ODRL-ontwerp in
 `docs/plans/ODRL-Register-Toegangsbeleid.md` en de whitepaper ernaast.
+**Vooruitblik:** `docs/plans/2026-08-18 ODRL 3.0 — W3C-workshop en gevolgen voor
+Toegangsspraak.md` — wat de voorgestelde ODRL 3.0 (o.a. FORCE-evaluatie, DPV-brug,
+policy-templates) betekent voor de exporter en de editor.
 
 ---
 

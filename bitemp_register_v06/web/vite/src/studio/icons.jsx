@@ -213,6 +213,41 @@ export const IconMIM05 = (p) => (
   </svg>
 );
 
+/* SysML (0.5): een blok met een poort op de rand — het onderscheidende
+   ibd-motief; de tweede poort verbindt naar buiten. */
+export const IconSysML05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="4" y="5" width="14" height="14" rx="1" />
+    <rect x="16" y="8" width="4" height="4" {...vul} />
+    <rect x="16" y="15" width="4" height="4" />
+    <path d="M20 17h1.5" />
+    <path d="M7 9h6" />
+  </svg>
+);
+
+/* CMMN (0.5): de casus-map met een sentry-ruit op de rand — sentries zijn
+   wat CMMN onderscheidt van een procesnotatie. */
+export const IconCMMN05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M3 7V5.5A1.5 1.5 0 0 1 4.5 4h4L10 6h9.5A1.5 1.5 0 0 1 21 7.5v11A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5Z" />
+    <rect x="8" y="10.5" width="9" height="6" rx="2.5" />
+    <path d="M8 10.5 6 13.5 8 16.5 10 13.5Z" {...vul} />
+  </svg>
+);
+
+/* ERD (0.5): twee entiteitsdozen, verbonden door de kraaienpoot zelf —
+   het symbool dat deze notatie herkenbaar maakt. */
+export const IconERD05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="2.5" y="3" width="9" height="7" rx="1" />
+    <path d="M2.5 6h9" />
+    <rect x="12.5" y="14" width="9" height="7" rx="1" />
+    <path d="M12.5 17h9" />
+    <path d="M7 10v3.5a1.5 1.5 0 0 0 1.5 1.5h1" />
+    <path d="M9.5 15 12.5 12.8M9.5 15h3M9.5 15 12.5 17.2" />
+  </svg>
+);
+
 /* Profiel-ontwerp (0.5): elementtype-stencil (gevuld sjabloonblok) + afgeleide. */
 export const IconProfielOntwerp05 = (p) => (
   <svg {...base} {...p}>

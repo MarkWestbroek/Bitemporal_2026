@@ -19,11 +19,25 @@
  *   - **lane** als container; **pools + message flow als collaboration-
  *     laag blijven buiten v0** (zie het notatie-plan) — de message flow
  *     is er alvast, permissief;
- *   - **data-object** met gestippelde data-associatie.
+ *   - **data-object** met gestippelde data-associatie;
+ *   - **default flow** (`data.standaard` op een sequence flow → schuin
+ *     streepje ná de bron, via `hooks.edgePresentatie`).
+ *
+ * De elementtype-**labels** volgen bewust de Engelse BPMN-termen (Task,
+ * Sub-process, Start/Intermediate/End event, Gateway, Lane, Data object,
+ * Sequence flow) — die kent de doelgroep. De omschrijvingen blijven
+ * Nederlands. De `id`'s zijn ongemoeid gelaten: die staan als `elementType`
+ * in opgeslagen diagrammen en werkbestanden.
+ *
+ * Events en gateways dragen hun naam via het motor-primitief
+ * `naamLabel: "buiten"` (ElementNode zet hem ónder de vorm) — een ring of ruit
+ * kan zelf geen tekst dragen. Diagram-breed uit te zetten via Beeld →
+ * Buitenlabels.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerBpmnShapes } from "./shapes.jsx";
+import { sequenceFlowPresentatie, sequenceFlowLabels } from "./sequenceFlow.js";
 
 export const BPMN_ID = "bpmn-motor";
 
@@ -50,19 +64,20 @@ const SEQ_DOELEN = [...ACTIVITEITEN, ...GATEWAYS, "tussen-event", "eind-event"];
 const elementTypes = [
   {
     id: "start-event",
-    label: "Start-event",
+    label: "Start event",
     omschrijving: "Waar het proces begint; soort bepaalt de trigger (bericht, timer, …).",
     kort: "Start",
     icoon: "gedrag-entry",
     shape: "bpmn-event",
+    naamLabel: "buiten",
     resizebaar: false,
     properties: [SOORT_VELD],
   },
   {
     id: "taak",
-    label: "Taak",
+    label: "Task",
     omschrijving: "Eén stap werk in het proces.",
-    kort: "Taak",
+    kort: "Task",
     icoon: "gedrag-toestand",
     shape: "rounded",
     kleur: "#e0f2fe",
@@ -70,9 +85,9 @@ const elementTypes = [
   },
   {
     id: "subproces",
-    label: "Subproces",
+    label: "Sub-process",
     omschrijving: "Samengevouwen deelproces; dubbelklik opent het onderliggende diagram.",
-    kort: "Subpr",
+    kort: "Sub",
     icoon: "gedrag-submachine",
     shape: "bpmn-subproces",
     kleur: "#e0f2fe",
@@ -89,6 +104,7 @@ const elementTypes = [
     kort: "Bound",
     icoon: "gedrag-exit",
     shape: "bpmn-event",
+    naamLabel: "buiten",
     resizebaar: false,
     // Rand-element (§3.1): woont op de rand van een activiteit.
     randElement: { ouderTypes: ACTIVITEITEN },
@@ -96,47 +112,51 @@ const elementTypes = [
   },
   {
     id: "tussen-event",
-    label: "Tussen-event",
+    label: "Intermediate event",
     omschrijving: "Gebeurtenis midden in de flow (wachten op bericht, timer, …).",
-    kort: "Tussen",
+    kort: "Interm",
     icoon: "gedrag-historie",
     shape: "bpmn-event",
+    naamLabel: "buiten",
     resizebaar: false,
     properties: [SOORT_VELD],
   },
   {
     id: "exclusief",
-    label: "Exclusieve gateway (XOR)",
+    label: "Exclusive gateway (XOR)",
     omschrijving: "Kies precies één uitgaande pad (condities op de flows).",
     kort: "XOR",
-    icoon: "gedrag-ruit",
+    icoon: "gedrag-gateway-xor",
     shape: "bpmn-gateway",
+    naamLabel: "buiten",
     resizebaar: false,
     properties: [],
   },
   {
     id: "parallel",
-    label: "Parallelle gateway (AND)",
+    label: "Parallel gateway (AND)",
     omschrijving: "Splitst naar álle paden of wacht tot ze allemaal binnen zijn.",
     kort: "AND",
-    icoon: "gedrag-ruit",
+    icoon: "gedrag-gateway-and",
     shape: "bpmn-gateway",
+    naamLabel: "buiten",
     resizebaar: false,
     properties: [],
   },
   {
     id: "inclusief",
-    label: "Inclusieve gateway (OR)",
+    label: "Inclusive gateway (OR)",
     omschrijving: "Eén of méér paden, op basis van condities (join-semantiek: alleen notatie).",
     kort: "OR",
-    icoon: "gedrag-ruit",
+    icoon: "gedrag-gateway-or",
     shape: "bpmn-gateway",
+    naamLabel: "buiten",
     resizebaar: false,
     properties: [],
   },
   {
     id: "data-object",
-    label: "Data-object",
+    label: "Data object",
     omschrijving: "Gegevens die het proces in- of uitgaan (koppel met een data-associatie).",
     kort: "Data",
     icoon: "gedrag-object",
@@ -157,19 +177,20 @@ const elementTypes = [
   },
   {
     id: "eind-event",
-    label: "Eind-event",
+    label: "End event",
     omschrijving: "Waar dit pad van het proces eindigt (dikke ring).",
-    kort: "Eind",
+    kort: "End",
     icoon: "gedrag-eind",
     shape: "bpmn-event",
+    naamLabel: "buiten",
     resizebaar: false,
     properties: [SOORT_VELD],
   },
   {
     id: "notitie",
-    label: "Notitie",
+    label: "Text annotation",
     omschrijving: "Vrije notitie op het diagram.",
-    kort: "NOT",
+    kort: "Text",
     shape: "note",
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
@@ -179,21 +200,20 @@ const elementTypes = [
   {
     id: "sequence-flow",
     label: "Sequence flow",
-    omschrijving: "De volgorde in het proces; optioneel met [conditie].",
+    omschrijving: "De volgorde in het proces; optioneel met [conditie]. Vink 'default' aan voor het standaardpad (schuin streepje).",
     kort: "→",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: SEQ_BRONNEN },
     doel: { elementTypes: SEQ_DOELEN },
     edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569", markerEnd: "pijl-dicht" },
-    properties: [{ key: "conditie", label: "conditie", datatype: "string" }],
-    hooks: {
-      edgeLabels: (conn) => {
-        const c = conn.data?.conditie;
-        if (!c) return {};
-        return { kaal: [{ zijde: "midden", delen: [{ tekst: `[${c}]`, soort: "constraint" }] }] };
-      },
-    },
+    properties: [
+      { key: "conditie", label: "conditie", datatype: "string" },
+      { key: "standaard", label: "default flow", datatype: "boolean" },
+    ],
+    // Conditie-label en default flow: zie ./sequenceFlow.js (pure module,
+    // zodat de logica testbaar blijft naast de shape-import hierboven).
+    hooks: { edgePresentatie: sequenceFlowPresentatie, edgeLabels: sequenceFlowLabels },
   },
   {
     id: "message-flow",
@@ -208,7 +228,7 @@ const elementTypes = [
   },
   {
     id: "data-associatie",
-    label: "Data-associatie",
+    label: "Data association",
     omschrijving: "Koppelt een data-object aan een taak (in- of output).",
     kort: "⇢D",
     shape: "edge",
@@ -221,7 +241,7 @@ const elementTypes = [
   },
   {
     id: "bevat",
-    label: "Bevat (lane)",
+    label: "Lane membership",
     omschrijving: "Lane-lidmaatschap; verborgen zolang het lid erin ligt.",
     kort: "LANE ∋",
     shape: "edge",
