@@ -101,9 +101,11 @@ export default function TransformatiePaneel() {
     else { setBronMapId(mapId || ""); setDoelMapId(""); }
   }, [open, mapId, actie]);
 
-  if (!open) return null;
-
   // Profielen van de bron-map bepalen welke export/transform-generatoren gelden.
+  // N.B. deze afleidingen en het effect hieronder staan bewust VÓÓR de
+  // early return bij een gesloten paneel: een hook na een conditionele
+  // return geeft "Rendered more hooks than during the previous render"
+  // zodra het paneel opent (gevonden 31-08, crash bij Project → Transformeren).
   const bronProfielen = bronMapId ? mapProfielen(bronMapId) : [];
   const filter = richting === "import" ? null : (bronProfielen.length ? bronProfielen : null);
   const generatoren = getTransformaties(richting, filter);
@@ -112,7 +114,10 @@ export default function TransformatiePaneel() {
   React.useEffect(() => {
     setOptieWaarden(standaardOpties(gekozen));
     setResultaat(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generatorId]);
+
+  if (!open) return null;
 
   const kiesBestand = () => {
     const inp = document.createElement("input");
@@ -205,7 +210,7 @@ export default function TransformatiePaneel() {
                 <button
                   key={a.id}
                   type="button"
-                  onClick={() => { setRichtingState(a.id); setGeneratorId(null); setKlaar(null); }}
+                  onClick={() => { setRichtingState(a.id); setGeneratorId(null); setResultaat(null); }}
                   style={{ ...knop, flex: 1, fontWeight: richting === a.id ? 700 : 400, borderColor: richting === a.id ? "var(--s-accent, #4f46e5)" : "var(--s-border)", background: richting === a.id ? "var(--s-hover)" : "var(--s-panel-head)" }}
                 >
                   {a.label}
