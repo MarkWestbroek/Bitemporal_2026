@@ -92,7 +92,7 @@ const elementTypes = [
     id,
     label,
     omschrijving,
-    kort: label.replace(/^(Business|Applicatie|Technology|Data-|Systeem)\s?/i, "").slice(0, 9) || label.slice(0, 9),
+    kort: label.replace(/^(Business|Applicatie|Technology|Data-|Systeem)\s?/i, "").slice(0, 11) || label.slice(0, 11),
     icoon,
     shape: "archimate-box",
     kleur,

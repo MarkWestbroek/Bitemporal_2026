@@ -44,10 +44,16 @@ test("elke mapping wijst naar een gedeclareerde vorm-shape, en elke vorm wordt g
   assert.equal(new Set(VORM_SHAPE_IDS).size, VORM_SHAPE_IDS.length, "dubbele shape-id");
 });
 
-test("motivation-elementen krijgen géén vorm (de spec kent daar geen variant)", () => {
-  for (const id of ["stakeholder", "driver", "goal", "principle", "requirement", "constraint"]) {
-    assert.ok(!(id in VORM_SHAPES), `${id} hoort in de box-gedaante te blijven`);
-  }
+test("motivation-elementen dragen de Archi-figuren (01-09)", () => {
+  // De spec toont motivation alleen als achthoekige box, maar Archi levert de
+  // figuur-variant wél — en dat verwachten gebruikers dus ook hier.
+  assert.equal(VORM_SHAPES.goal, "am-vorm-goal");
+  assert.equal(VORM_SHAPES.driver, "am-vorm-driver");
+  assert.equal(VORM_SHAPES.stakeholder, "am-vorm-stakeholder");
+  assert.equal(VORM_SHAPES.principle, "am-vorm-principle");
+  // Requirement en constraint delen het parallellogram, zoals in Archi.
+  assert.equal(VORM_SHAPES.requirement, "am-vorm-requirement");
+  assert.equal(VORM_SHAPES.constraint, "am-vorm-requirement");
 });
 
 test("junction, notitie en kader blijven buiten de set", () => {

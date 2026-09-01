@@ -9,12 +9,13 @@
  * vorm-shape krijgt. Bewust een pure `.js` naast `vormShapes.jsx`, zodat de
  * mapping in de node-testrunner laadbaar is (patroon `bpmn/sequenceFlow.js`).
  *
- * **Wat géén vorm krijgt (en waarom):**
- *   - de **motivation**-elementen (stakeholder, driver, goal, principle,
- *     requirement, constraint): de spec kent daar géén eigen-vorm-variant —
- *     ze blijven octagon-loos in de box met hoek-icoon;
- *   - `junction`, `notitie` en `kader`: geen ArchiMate-elementen met een
- *     alternatieve gedaante (de junction ís al zijn symbool).
+ * **Wat géén vorm krijgt (en waarom):** `junction`, `notitie` en `kader` —
+ * geen ArchiMate-elementen met een alternatieve gedaante (de junction ís al
+ * zijn symbool). De **motivation**-elementen kregen op 01-09 alsnog hun
+ * figuur-variant (dartbord, stuurwiel, parallellogram, …): de spec toont ze
+ * alleen als achthoekige box, maar Archi levert de figuren wél en dat is
+ * waar gebruikers vandaan komen. Requirement en constraint delen het
+ * parallellogram, zoals in Archi.
  *
  * Meerdere elementtypen delen één shape (de drie services delen het
  * afgeronde blok, de twee functies de chevron, business-object en data-object
@@ -35,6 +36,11 @@ export const VORM_SHAPE_IDS = [
   "am-vorm-device",
   "am-vorm-software",
   "am-vorm-artifact",
+  "am-vorm-goal",
+  "am-vorm-driver",
+  "am-vorm-stakeholder",
+  "am-vorm-principle",
+  "am-vorm-requirement",
 ];
 
 /** elementTypeId → shape-id. Alleen typen mét een spec-eigen vormvariant. */
@@ -58,6 +64,13 @@ export const VORM_SHAPES = {
   systeemsoftware: "am-vorm-software", // bol met arc
   "tech-service": "am-vorm-service",
   artifact: "am-vorm-artifact", // dokje met omgevouwen hoek
+  // ── motivation (Archi-figuren) ──
+  goal: "am-vorm-goal", // dartbord
+  driver: "am-vorm-driver", // stuurwiel
+  stakeholder: "am-vorm-stakeholder", // cirkel met naaf en asjes
+  principle: "am-vorm-principle", // plaquette met uitroepteken
+  requirement: "am-vorm-requirement", // parallellogram
+  constraint: "am-vorm-requirement",
 };
 
 /** De shape-set zoals `DiagramType.shapeSets` hem verwacht. */

@@ -221,6 +221,71 @@ const ArtifactVorm = maakVorm("0 0 64 76", ({ vulling, kleur, sw }) => (
   </g>
 ));
 
+// ── Motivation-figuren (Archi-conventie; toegevoegd 01-09 op verzoek Mark:
+//    "constraint als ruit, doel als dartbord"). De spec toont motivation
+//    alleen als (achthoekige) box, maar Archi levert de figuur-variant wél —
+//    en dat is waar gebruikers vandaan komen. Geometrie = de hoek-iconen uit
+//    iconen.jsx, opgeschaald en gevuld met de laagkleur. ────────────────────
+
+/** Goal: het dartbord — ring, ring, roos. */
+const GoalVorm = maakVorm("0 0 72 72", ({ vulling, kleur, sw }) => (
+  <>
+    <circle cx="36" cy="36" r="30" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    <circle cx="36" cy="36" r="19" fill={OPEN} stroke={kleur} strokeWidth={sw} />
+    <circle cx="36" cy="36" r="8" fill={kleur} stroke="none" />
+  </>
+));
+
+/** Driver: het stuurwiel — cirkel met vier doorstekende spaken. */
+const DriverVorm = maakVorm("0 0 72 72", ({ vulling, kleur, sw }) => (
+  <>
+    <circle cx="36" cy="36" r="26" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    <path
+      d="M36 4 V68 M4 36 H68 M13.4 13.4 L58.6 58.6 M58.6 13.4 L13.4 58.6"
+      fill="none"
+      stroke={kleur}
+      strokeWidth={sw}
+      strokeLinecap="round"
+    />
+    <circle cx="36" cy="36" r="7" fill={kleur} stroke="none" />
+  </>
+));
+
+/** Stakeholder: cirkel met naaf en vier korte asjes op de rand. */
+const StakeholderVorm = maakVorm("0 0 72 72", ({ vulling, kleur, sw }) => (
+  <>
+    <circle cx="36" cy="36" r="25" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    <circle cx="36" cy="36" r="9" fill={OPEN} stroke={kleur} strokeWidth={sw} />
+    <path
+      d="M36 5 v11 M36 56 v11 M5 36 h11 M56 36 h11"
+      fill="none"
+      stroke={kleur}
+      strokeWidth={sw}
+      strokeLinecap="round"
+    />
+  </>
+));
+
+/** Principle: de plaquette met het uitroepteken. */
+const PrincipleVorm = maakVorm("0 0 64 72", ({ vulling, kleur, sw }) => (
+  <>
+    <rect x="6" y="5" width="52" height="62" rx="8" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    <path d="M32 18 V44" fill="none" stroke={kleur} strokeWidth={sw + 3.2} strokeLinecap="round" />
+    <circle cx="32" cy="55" r="3.6" fill={kleur} stroke="none" />
+  </>
+));
+
+/** Requirement en Constraint: het parallellogram. */
+const RequirementVorm = maakVorm("0 0 92 52", ({ vulling, kleur, sw }) => (
+  <path
+    d="M24 6 H88 L68 46 H4 Z"
+    fill={vulling}
+    stroke={kleur}
+    strokeWidth={sw}
+    strokeLinejoin="round"
+  />
+));
+
 const VORMEN = {
   "am-vorm-actor": ActorVorm,
   "am-vorm-rol": RolVorm,
@@ -234,6 +299,11 @@ const VORMEN = {
   "am-vorm-device": DeviceVorm,
   "am-vorm-software": SoftwareVorm,
   "am-vorm-artifact": ArtifactVorm,
+  "am-vorm-goal": GoalVorm,
+  "am-vorm-driver": DriverVorm,
+  "am-vorm-stakeholder": StakeholderVorm,
+  "am-vorm-principle": PrincipleVorm,
+  "am-vorm-requirement": RequirementVorm,
 };
 
 let _geregistreerd = false;
