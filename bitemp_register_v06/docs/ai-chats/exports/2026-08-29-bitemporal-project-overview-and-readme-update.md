@@ -199,7 +199,7 @@ This note is not a signal to end the turn — pick one of the actions below and 
   1. If the command may still be producing output or the shell prompt has not returned, call get_terminal_output with id="8e8d3def-eab4-4ffd-94a6-4b8dfda67014" to continue polling. This is the default and safest action when unsure.
   2. Only if the output clearly ends with a real non-secret input prompt (Continue? (y/n), Enter selection, etc. — a normal shell prompt like `$` or `#` does NOT count), call the vscode_askQuestions tool to ask the user, then send each answer using send_to_terminal with id="8e8d3def-eab4-4ffd-94a6-4b8dfda67014" (which returns the next few lines of output). Repeat one prompt at a time. NEVER route secret prompts (passwords, passphrases, tokens, API keys, etc.) through vscode_askQuestions — answers to that tool are sent through the model. For secret prompts, tell the user to type the value directly into the terminal and stop.
 Terminal output:
-mark@MacBook-Pro-macbookpro Bitemporal_2026 %  npx vite --port 5177 --strictPort
+mark@MacBook-Pro-macbookpro Bitemporal_2026 %  npx vite --port 5177 --strictPort 
 Need to install the following packages:
 vite@8.2.2
 Ok to proceed? (y)
