@@ -36,6 +36,8 @@ export const VORM_SHAPE_IDS = [
   "am-vorm-device",
   "am-vorm-software",
   "am-vorm-artifact",
+  "am-vorm-interface",
+  "am-vorm-capability",
   "am-vorm-goal",
   "am-vorm-driver",
   "am-vorm-stakeholder",
@@ -64,6 +66,11 @@ export const VORM_SHAPES = {
   systeemsoftware: "am-vorm-software", // bol met arc
   "tech-service": "am-vorm-service",
   artifact: "am-vorm-artifact", // dokje met omgevouwen hoek
+  // ── 3.2-completering (04-09): de gedeelde figuren voor de nieuwe typen ──
+  "business-interface": "am-vorm-interface", // lollipop
+  "app-interface": "am-vorm-interface",
+  "tech-interface": "am-vorm-interface",
+  capability: "am-vorm-capability", // blokjes-trap
   // ── motivation (Archi-figuren) ──
   goal: "am-vorm-goal", // dartbord
   driver: "am-vorm-driver", // stuurwiel

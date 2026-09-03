@@ -130,6 +130,13 @@ validatie-hook die bestaande diagrammen naloopt.
 2. **v1:** volledige elemententabel + relatiematrix als data → gegenereerde
    verbindingsregels; nesting via containers; validatie-hook (matrix-check
    op bestaand diagram).
+   **✅ Elemententabel volledig (04-09):** alle 60 typen van 3.2 (strategy,
+   physical, impl & migration, location, grouping, collaborations,
+   interactions, interfaces, …) in `archimate/elementen.js` (pure data) met
+   laagkleuren, hoek-iconen en taakbalkgroepen — afgedwongen door de eerste
+   echte imports (Marks testexport en de GEMMA-doelarchitectuur: 1108
+   elementen, 0 overgeslagen). De **relatiematrix en nesting blijven het
+   open v1-restant**.
 3. **v2:** viewpoints; **Open Exchange Format (XML) import/export** — dé
    killer-feature: uitwisseling met Archi/BiZZdesign. Import mapt op
    elements/diagrams; onze kruisverbanden kunnen ArchiMate-relaties naar

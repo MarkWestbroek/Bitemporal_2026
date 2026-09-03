@@ -16,16 +16,11 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 import { VORM_SHAPES, VORM_SHAPE_IDS, VORMEN_SET } from "./vormSet.js";
+import { ELEMENT_IDS } from "./elementen.js";
 
 const hier = dirname(fileURLToPath(import.meta.url));
 const lees = (naam) => readFileSync(join(hier, naam), "utf8");
 
-/** Elementtype-id's uit de compacte ELEMENTEN-lijst van het profiel. */
-function elementIdsUitProfiel() {
-  const bron = lees("index.js");
-  const blok = bron.slice(bron.indexOf("const ELEMENTEN = ["), bron.indexOf("const ALLE_IDS"));
-  return new Set([...blok.matchAll(/^\s*\["([a-z0-9-]+)",/gm)].map((m) => m[1]));
-}
 
 test("de set draagt het afgesproken id en label", () => {
   assert.equal(VORMEN_SET.id, "vormen");
@@ -69,11 +64,11 @@ test("meerdere elementtypen mogen één vorm delen (services, functies, objecten
   assert.equal(VORM_SHAPES["business-object"], VORM_SHAPES["data-object"]);
 });
 
-test("elk gemapt elementtype bestaat in het profiel (drift-check op index.js)", () => {
-  const bestaand = elementIdsUitProfiel();
-  assert.ok(bestaand.size >= 20, "de ELEMENTEN-lijst kon niet gelezen worden");
+test("elk gemapt elementtype bestaat in het profiel", () => {
+  // Sinds de 3.2-completering (04-09) is de elemententabel een pure module
+  // (elementen.js) — de tekst-scrape van index.js is niet meer nodig.
   for (const id of Object.keys(VORM_SHAPES)) {
-    assert.ok(bestaand.has(id), `elementtype ${id} bestaat niet (meer) in archimate/index.js`);
+    assert.ok(ELEMENT_IDS.includes(id), `elementtype ${id} bestaat niet (meer) in archimate/elementen.js`);
   }
 });
 

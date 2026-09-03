@@ -1133,6 +1133,24 @@ weigeren.
 - volledige uitbreiding van het ArchiMate-profiel naar alle lagen en typen,
   tenzij hiervoor in de implementatiefase expliciet wordt gekozen.
 
+## 14b. Bevindingen eerste echte imports (04-09)
+
+Marks testexport en de GEMMA-doelarchitectuur (3 MB, 1108 elementen, 1327
+relaties, 98 views — parse + adapter in ~550 ms) brachten twee dingen aan het
+licht, allebei verholpen:
+
+1. **De v0-elementsubset was de echte grens**, niet de importer: Capability,
+   ApplicationInterface, Grouping, Resource enz. werden gemeld en overgeslagen.
+   De volledige 3.2-elemententabel (60 typen, `archimate/elementen.js`) lost
+   dit structureel op; GEMMA importeert nu met 0 overgeslagen concepten.
+2. **Lijn-op-lijn**: een view-connection mag op een ándere connection eindigen
+   (GEMMA doet dat 3×). De parser behandelde dat als blokkerende
+   volgorde-afhankelijke AMX-ID-REFERENTIE (connection-ids werden pas tijdens
+   het valideren geregistreerd — nu twee passen). De adapter slaat zo'n
+   connection over met een eigen warning en laat de onderliggende relatie
+   node-op-node tekenen (dus níet in de hide-list). Edge→edge als weergave is
+   motor-gat #4 en blijft bewust open.
+
 ## 15. Besluiten ter review
 
 De volgende besluiten zijn richtinggevend en vragen expliciete review:

@@ -29,70 +29,25 @@ import { registreerArchimateIconen } from "./iconen.jsx";
 import { registreerArchimateShapes } from "./shapes.jsx";
 import { registreerArchimateVormShapes } from "./vormShapes.jsx";
 import { VORMEN_SET } from "./vormSet.js";
+import { ELEMENTEN, LAAG_GROEP, MOTIVATION } from "./elementen.js";
 
 export const ARCHIMATE_ID = "archimate";
 
-// Laag-kleuren (conventie, per element overschrijfbaar via data.kleur).
-const BUSINESS = "#fff4b8";
-const APPLICATION = "#cfe6ff";
-const TECHNOLOGY = "#d3f5cf";
-const MOTIVATION = "#e8d9f5";
-
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
-
-/** Laagkleur → taakbalkgroep (scheidingstekens in de Maken-balk). */
-const LAAG_GROEP = {
-  [BUSINESS]: "business",
-  [APPLICATION]: "application",
-  [TECHNOLOGY]: "technology",
-  [MOTIVATION]: "motivation",
-};
-const ROND = 10; // gedragselementen (proces/functie/service/event)
-
-/**
- * Compacte element-declaratie: [id, label, laagkleur, icoon, rond?, omschrijving].
- * @type {[string, string, string, string, boolean, string][]}
- */
-const ELEMENTEN = [
-  // ── business ──
-  ["business-actor", "Business actor", BUSINESS, "am-actor", false, "Organisatie-entiteit die gedrag kan uitvoeren (persoon, afdeling, organisatie)."],
-  ["business-rol", "Business rol", BUSINESS, "am-rol", false, "Verantwoordelijkheid die aan een actor toegewezen wordt."],
-  ["business-proces", "Business proces", BUSINESS, "am-proces", true, "Reeks gedragingen die een product of dienst oplevert."],
-  ["business-functie", "Business functie", BUSINESS, "am-functie", true, "Gedrag gebundeld op benodigde kennis/kunde (afdelings-agnostisch)."],
-  ["business-service", "Business service", BUSINESS, "am-service", true, "Expliciet aangeboden dienst met waarde voor de omgeving."],
-  ["business-event", "Business event", BUSINESS, "am-event", true, "Gebeurtenis die business-gedrag start of beïnvloedt."],
-  ["business-object", "Business object", BUSINESS, "am-object", false, "Concept dat in de business gebruikt wordt (passieve structuur)."],
-  // ── application ──
-  ["app-component", "Applicatiecomponent", APPLICATION, "am-component", false, "Modulair, zelfstandig inzetbaar stuk applicatie-functionaliteit."],
-  ["app-service", "Applicatieservice", APPLICATION, "am-service", true, "Expliciet aangeboden applicatiedienst."],
-  ["app-functie", "Applicatiefunctie", APPLICATION, "am-functie", true, "Intern gedrag van een applicatiecomponent."],
-  ["data-object", "Data-object", APPLICATION, "am-object", false, "Gegevens geschikt voor geautomatiseerde verwerking."],
-  // ── technology ──
-  ["node", "Node", TECHNOLOGY, "am-node", false, "Reken-/opslagresource waarop artifacts draaien."],
-  ["device", "Device", TECHNOLOGY, "am-device", false, "Fysiek IT-middel (server, telefoon, sensor)."],
-  ["systeemsoftware", "Systeemsoftware", TECHNOLOGY, "am-software", false, "Software-omgeving voor het draaien van componenten (OS, DBMS)."],
-  ["tech-service", "Technologyservice", TECHNOLOGY, "am-service", true, "Expliciet aangeboden infrastructuurdienst."],
-  ["artifact", "Artifact", TECHNOLOGY, "am-artifact", false, "Fysiek stuk data/software (bestand, deployable)."],
-  // ── motivation ──
-  ["stakeholder", "Stakeholder", MOTIVATION, "am-stakeholder", false, "Belanghebbende met interesse in de architectuur-uitkomst."],
-  ["driver", "Driver", MOTIVATION, "am-driver", false, "Interne of externe drijfveer voor verandering."],
-  ["goal", "Goal", MOTIVATION, "am-goal", false, "Beoogd resultaat (doel) van een stakeholder."],
-  ["principle", "Principle", MOTIVATION, "am-principle", false, "Algemene ontwerpuitspraak die richting geeft."],
-  ["requirement", "Requirement", MOTIVATION, "am-requirement", false, "Concrete eis aan het systeem of de architectuur."],
-  // ArchiMate 3: Constraint is een specialisatie van Requirement — een
-  // opgelegde beperking, bv. wet- en regelgeving (grondslag van toegangsbeleid).
-  ["constraint", "Constraint", MOTIVATION, "am-requirement", false, "Opgelegde beperking op realisatie (bv. wet- en regelgeving)."],
-];
+const ROND = 10; // gedragselementen (proces/functie/service/event/…)
 
 const ALLE_IDS = [...ELEMENTEN.map(([id]) => id), "junction"];
 
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
-  ...ELEMENTEN.map(([id, label, kleur, icoon, rond, omschrijving]) => ({
+  ...ELEMENTEN.map(([id, label, kleur, icoon, rond, omschrijving, kort]) => ({
     id,
     label,
     omschrijving,
-    kort: label.replace(/^(Business|Applicatie|Technology|Data-|Systeem)\s?/i, "").slice(0, 11) || label.slice(0, 11),
+    kort:
+      kort ||
+      label.replace(/^(Business|Applicatie-?|Technology-?|Data-|Systeem)\s?/i, "").slice(0, 12) ||
+      label.slice(0, 12),
     icoon,
     shape: "archimate-box",
     kleur,

@@ -60,7 +60,7 @@ lijndikte per connector (`presentatie.dikte`).
 | `activity/` | UML 2 activity | 14 typen | balk (fork/join), ruit, pin, partitie |
 | `bpmn/` | BPMN v0 op de eigen motor | 16 typen | `bpmn-event`, `-gateway`, `-subproces`, `-data`, `-lane` |
 | `sequence/` | UML sequence v1 "hermetisch" | 9 typen | levenslijn, punt, activatie, fragment |
-| `archimate/` | ArchiMate 3.2 v0 | 22 elementen + 11 relaties | één `archimate-box` + 22 hoek-iconen |
+| `archimate/` | ArchiMate 3.2 — **volledige elemententabel** (04-09) | 60 elementen + 11 relaties | `archimate-box` (recht/rond/afgeschuind) + 42 hoek-iconen + vormen-set |
 | `erd/` | ERD met kraaienpoten (IE) | 6 typen | géén — puur declaratief |
 | `sysml/` | SysML v1: bdd + ibd + req | 10 typen + 10 relaties | `sysml-requirement`, `sysml-poort` |
 | `cmmn/` | CMMN 1.1 casusmodel | 8 typen + 3 relaties | 7 eigen vormen (case plan, stage, task, milestone, event, case file, sentry) |

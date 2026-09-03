@@ -176,8 +176,15 @@ export function parseExchange(xmlTekst, opties = {}) {
       viewNode.nodes.forEach((kind, i) => bezoek(kind, `${path}/node[${i}]`));
     };
     view.nodes.forEach((viewNode, i) => bezoek(viewNode, `/model/views/${identifier}/node[${i}]`));
+    // Twee passen: eerst álle connection-ids registreren, dan pas de
+    // referenties valideren. Een connection mag op een ándere connection
+    // eindigen (lijn-op-lijn, geldig Exchange — GEMMA doet dit echt), en die
+    // andere kan verderop in het bestand staan; één pas maakte dat een
+    // volgorde-afhankelijke blokkerende fout.
     for (const [i, connection] of view.connections.entries()) {
       registreerId(viewIds, connection.identifier, "View-connection", diagnostics, `/model/views/${identifier}/connection[${i}]`);
+    }
+    for (const connection of view.connections) {
       if (connection.source && !viewIds.has(connection.source)) diagnostics.push(diagnostic("error", AMX.ID_REFERENTIE, `Connection-bron ontbreekt: ${connection.source}.`, connection.identifier));
       if (connection.target && !viewIds.has(connection.target)) diagnostics.push(diagnostic("error", AMX.ID_REFERENTIE, `Connection-doel ontbreekt: ${connection.target}.`, connection.identifier));
       if (connection.relationshipRef && !relationships[connection.relationshipRef]) diagnostics.push(diagnostic("error", AMX.ID_REFERENTIE, `Connection-relatie ontbreekt: ${connection.relationshipRef}.`, connection.identifier));

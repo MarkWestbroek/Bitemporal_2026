@@ -227,6 +227,25 @@ const ArtifactVorm = maakVorm("0 0 64 76", ({ vulling, kleur, sw }) => (
 //    en dat is waar gebruikers vandaan komen. Geometrie = de hoek-iconen uit
 //    iconen.jsx, opgeschaald en gevuld met de laagkleur. ────────────────────
 
+/** Interface: de lollipop — steel met open bol (business/app/tech). */
+const InterfaceVorm = maakVorm("0 0 92 56", ({ vulling, kleur, sw }) => (
+  <>
+    <path d="M4 28 H48" fill="none" stroke={kleur} strokeWidth={sw} strokeLinecap="round" />
+    <circle cx="68" cy="28" r="20" fill={vulling} stroke={kleur} strokeWidth={sw} />
+  </>
+));
+
+/** Capability: de blokjes-trap (zoals Archi hem tekent). */
+const CapabilityVorm = maakVorm("0 0 76 76", ({ vulling, kleur, sw }) => (
+  <>
+    {[
+      [50, 2], [50, 26], [26, 26], [50, 50], [26, 50], [2, 50],
+    ].map(([x, y], i) => (
+      <rect key={i} x={x} y={y} width="24" height="24" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    ))}
+  </>
+));
+
 /** Goal: het dartbord — ring, ring, roos. */
 const GoalVorm = maakVorm("0 0 72 72", ({ vulling, kleur, sw }) => (
   <>
@@ -299,6 +318,8 @@ const VORMEN = {
   "am-vorm-device": DeviceVorm,
   "am-vorm-software": SoftwareVorm,
   "am-vorm-artifact": ArtifactVorm,
+  "am-vorm-interface": InterfaceVorm,
+  "am-vorm-capability": CapabilityVorm,
   "am-vorm-goal": GoalVorm,
   "am-vorm-driver": DriverVorm,
   "am-vorm-stakeholder": StakeholderVorm,

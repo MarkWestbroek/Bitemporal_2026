@@ -42,3 +42,25 @@ test("weigert onbekende namespace, verkeerde root, syntaxfout en dubbele ids", (
   const dubbel = parseExchange('<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><elements><element identifier="x" xsi:type="Goal"><name>x</name></element><element identifier="x" xsi:type="Goal"><name>x</name></element></elements></model>', { DOMParser });
   assert.ok(dubbel.diagnostics.some((d) => d.code === "AMX-ID-DUBBEL" && d.severity === "error"));
 });
+test("een connection mag op een latere connection eindigen (lijn-op-lijn)", () => {
+  // GEMMA-realiteit: volgorde in het bestand mag geen blokkerende
+  // AMX-ID-REFERENTIE opleveren wanneer het doel een connection is.
+  const xml = `<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="m">
+    <elements>
+      <element identifier="a" xsi:type="BusinessActor"><name>A</name></element>
+      <element identifier="b" xsi:type="BusinessRole"><name>B</name></element>
+    </elements>
+    <relationships>
+      <relationship identifier="r1" source="a" target="b" xsi:type="Assignment"/>
+      <relationship identifier="r2" source="a" target="b" xsi:type="Association"/>
+    </relationships>
+    <views><diagrams><view identifier="v" xsi:type="Diagram">
+      <node identifier="na" elementRef="a" xsi:type="Element" x="0" y="0" w="100" h="50"/>
+      <node identifier="nb" elementRef="b" xsi:type="Element" x="300" y="0" w="100" h="50"/>
+      <connection identifier="c-eerst" relationshipRef="r2" source="na" target="c-later" xsi:type="Relationship"/>
+      <connection identifier="c-later" relationshipRef="r1" source="na" target="nb" xsi:type="Relationship"/>
+    </view></diagrams></views>
+  </model>`;
+  const exchange = parseExchange(xml, { DOMParser });
+  assert.ok(!exchange.diagnostics.some((d) => d.code === "AMX-ID-REFERENTIE"), "lijn-op-lijn is geen referentiefout");
+});

@@ -6,12 +6,15 @@ import { DOMParser } from "@xmldom/xmldom";
 import { parseExchange } from "./parseExchange.js";
 import { naarCoreModel, kiesTaalwaarde } from "./naarCoreModel.js";
 import { ELEMENT_TYPE_MAPPING, RELATIONSHIP_TYPE_MAPPING } from "./typeMapping.js";
+import { ELEMENTEN } from "../elementen.js";
 
 const fixture = (naam) => fs.readFileSync(new URL(`./fixtures/${naam}`, import.meta.url), "utf8");
 const converteer = (naam, opties = {}) => naarCoreModel(parseExchange(fixture(naam), { DOMParser }), { importId: "test", ...opties });
 
-test("mappingtabellen dekken 24 elementvarianten en alle elf relatietypen met naamvarianten", () => {
-  assert.equal(Object.keys(ELEMENT_TYPE_MAPPING).length, 24);
+test("mappingtabellen dekken de volledige elemententabel en alle elf relatietypen", () => {
+  // Elke rij één Exchange-naam, plus de And/Or-junctionvarianten. De
+  // rij-voor-rij-dekking zelf staat in typeMapping.test.js.
+  assert.equal(Object.keys(ELEMENT_TYPE_MAPPING).length, ELEMENTEN.length + 2);
   assert.equal(new Set(Object.values(RELATIONSHIP_TYPE_MAPPING)).size, 11);
   assert.equal(Object.keys(RELATIONSHIP_TYPE_MAPPING).length, 22);
 });
@@ -81,7 +84,7 @@ test("onbekende typen leveren diagnostics en nooit halve connectoren", () => {
   assert.deepEqual(Object.keys(model.elements), ["amx:test:goed"]);
   assert.ok(model.diagnostics.some((item) => item.code === "AMX-TYPE-ELEMENT"));
   assert.ok(model.diagnostics.filter((item) => item.code === "AMX-TYPE-RELATIE").length >= 2);
-  assert.equal(model.meta.exchange.overgeslagen.elements.vreemd.type, "Capability");
+  assert.equal(model.meta.exchange.overgeslagen.elements.vreemd.type, "ToekomstigType");
   assert.equal(Object.keys(model.meta.exchange.overgeslagen.relationships).length, 2);
 });
 
@@ -89,4 +92,19 @@ test("blokkerende parserdiagnostics verhinderen conversie", () => {
   const exchange = parseExchange(fixture("minimaal-model.xml"), { DOMParser });
   exchange.diagnostics.push({ severity: "error", code: "AMX-ID-DUBBEL", message: "fout", sourceId: null, path: null });
   assert.throws(() => naarCoreModel(exchange), (fout) => fout.code === "AMX-ID-DUBBEL");
+});
+test("lijn-op-lijn: connection overgeslagen, relatie node-op-node en níet verborgen", () => {
+  const exchange = parseExchange(fixture("meerdere-views.xml"), { DOMParser });
+  const view = exchange.views.landschap;
+  // Extra relatie + een connection die op de bestaande connection eindigt.
+  exchange.relationships.assoc = { ...exchange.relationships.serveert, identifier: "assoc", type: "Association" };
+  view.connections.push({ ...view.connections[0], identifier: "c-op-c", relationshipRef: "assoc", source: "svc", target: "conn-serving" });
+  const model = naarCoreModel(exchange, { importId: "test" });
+  const diagram = Object.values(model.diagrams).find((d) => d.naam === "Landschap");
+  // De lijn-op-lijn-connection zelf: warning, geen voorkomen-koppeling.
+  assert.ok(model.diagnostics.some((d) => d.code === "AMX-VIEW-CONNECTION" && d.message.includes("lijn-op-lijn")));
+  assert.ok(!(diagram.connectorVoorkomens || {})["amx:test:assoc"]);
+  // Maar de relatie wordt getekend (afgeleid, node-op-node) — dus níet in de
+  // hide-list, anders zou een geldige GEMMA-lijn stilletjes verdwijnen.
+  assert.ok(!(diagram.verborgenConnectoren || []).includes("amx:test:assoc"));
 });

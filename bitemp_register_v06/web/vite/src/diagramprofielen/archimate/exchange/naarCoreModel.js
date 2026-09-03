@@ -166,12 +166,24 @@ export function naarCoreModel(exchange, opties = {}) {
 
     const connectorVoorkomens = {};
     const zichtbareRelaties = new Set();
+    const connectionIds = new Set((view.connections || []).map((c) => c.identifier));
     for (const connection of view.connections || []) {
       voegPresentatieDiagnostics(diagnostics, view.identifier, connection);
       const bronNode = nodeInfo.get(connection.source);
       const doelNode = nodeInfo.get(connection.target);
       if (!bronNode || !doelNode) {
-        diagnostics.push(diagnostic("warning", AMX.VIEW_CONNECTION, "View-connection overgeslagen omdat een bron- of doelvoorkomen ontbreekt.", connection.identifier, `/views/${view.identifier}`));
+        // Lijn-op-lijn: een eindpunt is zelf een connection (geldig Exchange;
+        // in de motor is edge→edge het bekende, bewust ongebouwde gat #4).
+        // Sla de connection over, maar laat de onderliggende relatie via het
+        // afgeleide pad node-op-node tekenen in plaats van hem te verbergen.
+        const lijnOpLijn = connectionIds.has(connection.source) || connectionIds.has(connection.target);
+        if (lijnOpLijn) {
+          const connectorId = connection.relationshipRef ? relatieIdMap.get(connection.relationshipRef) : null;
+          if (connectorId) zichtbareRelaties.add(connectorId);
+          diagnostics.push(diagnostic("warning", AMX.VIEW_CONNECTION, "Connection eindigt op een andere connection (lijn-op-lijn); die weergave wordt nog niet ondersteund — de relatie wordt node-op-node getekend.", connection.identifier, `/views/${view.identifier}`));
+        } else {
+          diagnostics.push(diagnostic("warning", AMX.VIEW_CONNECTION, "View-connection overgeslagen omdat een bron- of doelvoorkomen ontbreekt.", connection.identifier, `/views/${view.identifier}`));
+        }
         continue;
       }
       if (connection.relationshipRef) {
