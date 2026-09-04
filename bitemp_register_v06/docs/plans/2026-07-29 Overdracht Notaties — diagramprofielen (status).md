@@ -41,6 +41,20 @@ Uit `STUDIO-05-gedragsdiagrammen.md` §2 kwamen vier cross-cutting motor-gaten. 
 | **Markers aan de bronzijde** (31-07) | ✅ `markerStart` was tot dan alléén de ruit (een polygon dat met de curve meebuigt); nu ook echte SVG-markers | ERD-kraaienpoten aan beide uiteinden, BPMN default flow |
 | **Voorkomen** (31-08) | ✅ optionele `DiagramNode.nodeId`; positie/maat/verwijderen per voorkomen, elementgerichte selectie, kortste of expliciet gekozen connectorpaar, per-view hide-list | ArchiMate, puur UML en canoniek UML; basis voor Model Exchange-views |
 
+**Ontwerpprincipe — gedaanten van een samenstel (chat Mark, 04-09).** De
+ASOC-constructie en de UML-lollipop zijn hetzelfde concept: een **samenstel
+van modeldingen met een weergavestand**. ASOC = één element dat Association
+én Class tegelijk is (UML 2.5.1 §11.5 — apart elementtype, zoals ook in het
+canoniek metamodel), gedaante nu automatisch (inhoud ⇒ box). Lollipop =
+interface + realisatie/usage sámen omgeklapt (bolletje, compartimenten weg,
+lijn kaal) — per spec alternatieve notatie voor het paar, altijd handmatig;
+géén rand-constructie, en ArchiMate kent deze paar-notatie niet (daar is het
+figuur alleen de elementvorm en blijft de lijn een gewone relatie).
+De regel die beide dekt: **gedaante is een eigenschap van het voorkomen**
+(C0); een automatische regel mag de default zijn, een handmatige omschakeling
+de override — dus ook de ASOC handmatig omschakelbaar. Nog niet gebouwd;
+lollipop is bij bouw UML-only.
+
 Daarnaast is er core-datatype **`keuze`** bijgekomen (select over `PropertyType.opties`) en
 lijndikte per connector (`presentatie.dikte`).
 
