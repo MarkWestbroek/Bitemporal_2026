@@ -15,6 +15,7 @@
 import React from "react";
 import { create } from "zustand";
 import { useModellerenStore } from "./modellerenActivity.jsx";
+import { bundelDiagnostics } from "./diagnosticsBundel.js";
 import {
   acceptVoor,
   detecteerTransformatie,
@@ -331,15 +332,37 @@ export default function TransformatiePaneel() {
             <summary style={{ cursor: "pointer", fontWeight: 600 }}>
               Meldingen ({resultaat.diagnostics.length})
             </summary>
-            <ul style={{ margin: "6px 0 0", paddingLeft: 20, maxHeight: 180, overflow: "auto" }}>
-              {resultaat.diagnostics.map((diagnostic, index) => (
-                <li key={`${diagnostic.code || "melding"}-${diagnostic.sourceId || index}-${index}`} style={{ marginBottom: 4 }}>
-                  <strong>{diagnostic.severity || "info"}{diagnostic.code ? ` · ${diagnostic.code}` : ""}</strong>
-                  {diagnostic.sourceId ? ` · ${diagnostic.sourceId}` : ""}
-                  {diagnostic.path ? ` · ${diagnostic.path}` : ""}
-                  {`: ${diagnostic.message || "(geen bericht)"}`}
-                </li>
-              ))}
+            {/* Identieke meldingen gebundeld ("8× — …", bronnen uitklapbaar).
+                Weergave-only: de diagnostics in het resultaat blijven los. */}
+            <ul style={{ margin: "6px 0 0", paddingLeft: 20, maxHeight: 220, overflow: "auto" }}>
+              {bundelDiagnostics(resultaat.diagnostics).map((bundel, index) =>
+                bundel.items.length === 1 ? (
+                  <li key={`${bundel.code || "melding"}-${index}`} style={{ marginBottom: 4 }}>
+                    <strong>{bundel.severity}{bundel.code ? ` · ${bundel.code}` : ""}</strong>
+                    {bundel.items[0].sourceId ? ` · ${bundel.items[0].sourceId}` : ""}
+                    {bundel.items[0].path ? ` · ${bundel.items[0].path}` : ""}
+                    {`: ${bundel.message}`}
+                  </li>
+                ) : (
+                  <li key={`${bundel.code || "melding"}-${index}`} style={{ marginBottom: 4 }}>
+                    <strong>{bundel.severity}{bundel.code ? ` · ${bundel.code}` : ""}</strong>
+                    {` · ${bundel.items.length}× — ${bundel.message}`}
+                    <details style={{ marginTop: 2 }}>
+                      <summary style={{ cursor: "pointer", fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>
+                        {bundel.items.length} bronnen
+                      </summary>
+                      <ul style={{ margin: "2px 0 0", paddingLeft: 16 }}>
+                        {bundel.items.map((item, i) => (
+                          <li key={i} style={{ fontSize: 11 }}>
+                            {item.sourceId || "(zonder bron-id)"}
+                            {item.path ? ` · ${item.path}` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  </li>
+                )
+              )}
             </ul>
           </details>
         )}
