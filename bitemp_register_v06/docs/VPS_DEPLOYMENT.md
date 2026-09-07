@@ -1,4 +1,4 @@
-# VPS Deployment Guide — Omnium Studio op omnium.common-ground-lab.nl
+# VPS Deployment Guide — Omnium Studio op omnium-ide.nl
 
 > Datum: 4 september 2026. Doel: Omnium Studio publiek online vóór de demo's van
 > **maandag 14 en dinsdag 15 september 2026**, met proefaccounts voor bezoekers.
@@ -66,27 +66,44 @@ Controle: `curl -s https://hub.docker.com/v2/repositories/markwestbroek/bitemp-v
 
 ---
 
-## 2. DNS: A-record in Plesk
+## 2. DNS: drie A-records, op twee plekken
 
-`common-ground-lab.nl` staat met DNS bij Quickhost; dat blijft zo (DNS is geen Node).
-Zodra het VPS-IP bekend is:
+Omnium krijgt een **eigen domein**: `omnium-ide.nl` (met `omnium-ide.com` defensief
+ernaast). Bewust niet een subdomein van `common-ground-lab.nl` — dat is weliswaar
+Marks eigen domein, maar het hoort bij een opdracht die kan aflopen, en Omnium is
+breder dan Common Ground. De servernaam hangt om dezelfde reden aan `paratmos.nl`,
+het eigen bedrijfsdomein.
 
-Plesk → *Websites & Domains* → common-ground-lab.nl → *DNS Settings* → *Add Record*:
+Zodra het VPS-IP bekend is, drie A-records:
 
-| Type | Naam | Waarde | TTL |
-|---|---|---|---|
-| A | `omnium` | `<VPS-IP>` | 300 |
+| Domein | Type | Naam | Waarde | Waarvoor |
+|---|---|---|---|---|
+| omnium-ide.nl | A | `@` | `<VPS-IP>` | landingspagina |
+| omnium-ide.nl | A | `app` | `<VPS-IP>` | de Studio |
+| paratmos.nl | A | `vps1` | `<VPS-IP>` | hostnaam van de server |
 
-Niets anders aanraken: het hoofddomein, de `www`, de MX-records (mail loopt via
-`cordelia.exsilia.net`) en de bestaande site op `/studio/` blijven staan. Een *nieuw*
-record zit nergens in een cache, dus het werkt binnen minuten. Controle:
-`dig +short A omnium.common-ground-lab.nl`.
+De hostnaam `vps1.paratmos.nl` bepaalt **niet** welke site een bezoeker krijgt — dat
+doet Caddy op de Host-header. Hij verschijnt alleen in je shell-prompt, in de logs en
+in mail die de server zelf verstuurt. Kun je bij mijn.host de reverse DNS (PTR) van
+het IP zetten, zet die dan op dezelfde naam.
+
+**Let op waar je moet zijn.** `omnium-ide.nl` registreer je bij mijn.host, dus die
+twee records zet je in het mijn.host-paneel. `paratmos.nl` heeft zijn DNS bij
+Quickhost (`ns1/ns2.exsilia.net`), dus het `vps1`-record maak je in Plesk. Zoek je
+in het verkeerde paneel, dan vind je het domein niet.
+
+Laat bij `paratmos.nl` de MX-records met rust — de mail loopt via
+`mail.paratmos.nl` en die moet blijven staan.
+
+Een *nieuw* record zit nergens in een cache, dus het werkt binnen minuten. Controle:
+`dig +short A omnium-ide.nl app.omnium-ide.nl vps1.paratmos.nl`.
 
 ---
 
 ## 3. VPS bestellen
 
-Eisen: **Ubuntu 24.04 LTS**, **2 vCPU / ≥ 4 GB RAM (8 GB als musicbrain er later bij komt)**,
+Eisen: **Ubuntu 24.04 of 26.04 LTS** (beide werken; Caddy publiceert één
+repository voor alle versies en Docker ondersteunt `noble` én `resolute`), **2 vCPU / ≥ 4 GB RAM (8 GB als musicbrain er later bij komt)**,
 **≥ 40 GB schijf**, datacenter in Nederland. Alleen images pullen — er wordt op de
 VPS niets gebouwd, dus 4 GB is ruim voor Omnium alleen.
 
@@ -188,17 +205,26 @@ Voorwaarde: het A-record (§2) wijst al naar deze machine en poort 80/443 staan 
 anders kan Let's Encrypt de uitdaging niet doen. Test van buiten:
 
 ```bash
-curl -sI https://omnium.common-ground-lab.nl/ | head -3        # 302 → /viz/react/
-curl -s  https://omnium.common-ground-lab.nl/version
+curl -sI https://omnium-ide.nl/         | head -3    # landingspagina, 200
+curl -sI https://app.omnium-ide.nl/     | head -3    # 302 → /viz/react/
+curl -s  https://app.omnium-ide.nl/version
 ```
 
-Open in de browser: **https://omnium.common-ground-lab.nl/viz/react/studio.html** en log in
+Open in de browser: **https://app.omnium-ide.nl/viz/react/studio.html** en log in
 als `ADMIN_USERNAME`. Blijft de sessie na een refresh bestaan? Dan klopt `COOKIE_SECURE`.
 
-**Landingspagina koppelen.** De "Open de Studio"-links op common-ground-lab.nl/studio/
-zijn nu relatief en dood. Zet in `web/sync-omnium-website.ps1`
-`$StudioUrl = "https://omnium.common-ground-lab.nl/viz/react/studio.html"`, draai het
-script, push de omnium-website-repo; Plesk deployt (dat is statisch en werkt nog).
+**Landingspagina.** Die staat in `web/omnium-studio/` en gaat mee naar deze machine —
+geen aparte deploy-repo en geen Plesk meer nodig. Zet hem op de server neer:
+
+```bash
+scp -r web/omnium-studio/ omnium@<VPS-IP>:/tmp/www
+ssh omnium@<VPS-IP> 'sudo mkdir -p /srv/omnium && sudo mv /tmp/www /srv/omnium/www && sudo chmod -R a+rX /srv/omnium/www'
+```
+
+De "Open de Studio"-links in die pagina's zijn relatief (`../vite/studio.html`) en
+werken zo niet. Zet in `web/sync-omnium-website.ps1`
+`$StudioUrl = "https://app.omnium-ide.nl/viz/react/studio.html"` en draai het script
+vóór het kopiëren, dan worden ze herschreven.
 
 ---
 
@@ -247,7 +273,8 @@ crontab -e                                 # →  0 3 * * *  /srv/omnium/backup.
 ```
 
 Elke nacht: `postgres.dump` (pg_dump `-Fc`), `minio.tgz`, een kopie van `.env` en een
-manifest, 14 dagen bewaard. De NAS haalt de map op — de VPS opent nooit een verbinding
+manifest, **3 dagen** bewaard (`KEEP` in het script) — schijfruimte is op een
+VPS de schaarse bron en de NAS bewaart de lange historie. De NAS haalt de map op — de VPS opent nooit een verbinding
 naar huis: TrueNAS → *Data Protection* → *Rsync Tasks* → **Pull**, host `<VPS-IP>`, user
 `omnium`, SSH-key van de NAS in `/home/omnium/.ssh/authorized_keys`, remote path
 `/srv/omnium/backups/`, dagelijks om 04:00.
@@ -280,7 +307,9 @@ anders optie). Een snapshot is een noodrem, geen backup.
 
 Vanaf een **ander netwerk** (telefoon, 4G):
 
-- [ ] `https://omnium.common-ground-lab.nl/` → redirect naar `/viz/react/`, slotje groen
+- [ ] `https://omnium-ide.nl/` toont de landingspagina, slotje groen
+- [ ] `https://app.omnium-ide.nl/` → redirect naar `/viz/react/`, slotje groen
+- [ ] "Open de Studio" op de landingspagina komt uit bij de Studio
 - [ ] `http://` → wordt `https://`
 - [ ] `/version` geeft commit + buildtime van de gepushte image
 - [ ] Studio opent, inloggen als `demo1`, sessie overleeft een refresh

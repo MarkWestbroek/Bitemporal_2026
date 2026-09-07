@@ -5,12 +5,17 @@
 # De NAS haalt deze map op (TrueNAS → Rsync Task, pull over SSH): de VPS hoeft
 # dus nooit een verbinding naar huis te openen.
 #
+# KEEP staat bewust laag: schijfruimte is op een VPS de schaarse bron (een dag
+# bevat de hele MinIO-tar), terwijl de NAS de lange historie al bewaart. Drie
+# dagen lokaal is genoeg om een mislukte of half overgekomen pull op te vangen.
+# Bewaar je géén kopie elders, zet KEEP dan hoger.
+#
 # Cron (als gebruiker omnium):  0 3 * * *  /srv/omnium/backup.sh >> /srv/omnium/backups/backup.log 2>&1
 set -euo pipefail
 
 STACK_DIR="${STACK_DIR:-/srv/omnium}"
 BACKUP_DIR="${BACKUP_DIR:-/srv/omnium/backups}"
-KEEP="${KEEP:-14}"
+KEEP="${KEEP:-3}"
 COMPOSE="docker compose -f $STACK_DIR/docker-compose.vps.yml --env-file $STACK_DIR/.env"
 
 # shellcheck disable=SC1091
