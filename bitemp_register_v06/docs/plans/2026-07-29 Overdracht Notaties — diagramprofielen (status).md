@@ -52,8 +52,24 @@ géén rand-constructie, en ArchiMate kent deze paar-notatie niet (daar is het
 figuur alleen de elementvorm en blijft de lijn een gewone relatie).
 De regel die beide dekt: **gedaante is een eigenschap van het voorkomen**
 (C0); een automatische regel mag de default zijn, een handmatige omschakeling
-de override — dus ook de ASOC handmatig omschakelbaar. Nog niet gebouwd;
-lollipop is bij bouw UML-only.
+de override — dus ook de ASOC handmatig omschakelbaar.
+
+✅ **Gebouwd (07-09), beide richtingen omschakelbaar via het contextmenu:**
+
+- **Samentrekking (lollipop).** Declaratie op het ElementType:
+  `samentrekking: { gedaante: "bol", relatieTypes: ["realisatie"], … }`
+  (in puur-uml op `interface`). Per voorkomen: `DiagramNode.gedaante = "bol"`
+  (store: `zetNodeGedaante`) → ElementNode rendert `.dc-samentrek-bol`
+  (open cirkel, naam eronder als buitenlabel, bewaarde maat genegeerd) en
+  `materialiseerConnectoren` maakt de genoemde relatietypes aan die kant
+  kaal (solid, marker weg) — het steeltje. Operaties zijn in het bolletje
+  bewust onzichtbaar; uitklappen brengt alles terug. UML-only per declaratie.
+- **ASOC handmatig.** `diagram.gedaanteOverrides[connectorId] = "lijn"|"box"`
+  (store: `zetConnectorGedaante`) wint van de automatische inhoud-regel;
+  `effectieveConnectorGedaante()` is de ene beslisplek (materialisatie én
+  DiagramCanvas-boxfilter). Contextmenu op de lijn: "Toon als
+  associatieklasse (box)" / "Toon als lijn (verbergt attributen)"; terug
+  naar automatisch zodra de keuze weer met de inhoud overeenkomt.
 
 Daarnaast is er core-datatype **`keuze`** bijgekomen (select over `PropertyType.opties`) en
 lijndikte per connector (`presentatie.dikte`).

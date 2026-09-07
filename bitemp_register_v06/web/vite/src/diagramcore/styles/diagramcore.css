@@ -222,6 +222,23 @@
   display: none;
 }
 
+/* Samentrekking-bolletje (gedaante "bol" van een voorkomen): de UML-lollipop.
+   Open cirkel in de canvaskleur — dezelfde vulling als open markers, zodat
+   het bolletje in het donkere thema leesbaar blijft. De naam komt eronder
+   via .dc-buitenlabel. */
+.dc-samentrek-bol {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--dc-marker-vulling, #ffffff);
+  border: 1.7px solid var(--dc-lijn, #475569);
+  box-sizing: border-box;
+}
+.dc-samentrek-bol.is-geselecteerd {
+  border-color: var(--dc-selectie, #2563eb);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dc-selectie, #2563eb) 30%, transparent);
+}
+
 .dc-badge {
   display: inline-block;
   font-size: 9px;

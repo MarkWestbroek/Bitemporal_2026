@@ -48,7 +48,8 @@ import { ELEMENT_REF_MIME as REF_MIME } from "../../diagramcore/canvas/externDro
 import { registreerProfieltype } from "../profieltypeRegistry";
 import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
-import { staatMeerdereVoorkomensToe } from "../../diagramcore/model/voorkomens.js";
+import { staatMeerdereVoorkomensToe, vindVoorkomen } from "../../diagramcore/model/voorkomens.js";
+import { effectieveConnectorGedaante } from "../../diagramcore/canvas/materialiseerConnectoren.js";
 import { metGroepScheidingen } from "../../diagramcore/taskbar/scheidingen.js";
 
 /** Huidige export-voorkeuren → opties voor layoutApi.exporteerAfbeelding. */
@@ -1793,6 +1794,30 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   onClick: () => layoutApiRef.current?.maakGelijkeMaat(voorkomenId || nodeId),
                 });
               }
+              // Samentrekking (gedaanten van een samenstel): heen en weer
+              // schakelen tussen de volledige vorm en bv. het lollipop-
+              // bolletje — per vóórkomen, het model blijft ongemoeid.
+              const samentrekking = elementTypesById[s.elements[nodeId]?.elementType]?.samentrekking;
+              if (samentrekking && s.actiefDiagramId) {
+                const diagram = s.diagrams[s.actiefDiagramId];
+                const voorkomen = vindVoorkomen(diagram?.nodes || [], voorkomenId || nodeId);
+                const ingeklapt = voorkomen?.gedaante === samentrekking.gedaante;
+                items.push({
+                  id: "gedaante-samentrek",
+                  label: ingeklapt
+                    ? `Toon als ${samentrekking.labelUitgeklapt || "volledige vorm"}`
+                    : `Toon als ${samentrekking.labelIngeklapt || samentrekking.gedaante}`,
+                  icoon: ingeklapt ? "▣" : "◯",
+                  onClick: () => {
+                    const st = useStore.getState();
+                    st.zetNodeGedaante(
+                      st.actiefDiagramId,
+                      voorkomenId || nodeId,
+                      ingeklapt ? null : samentrekking.gedaante
+                    );
+                  },
+                });
+              }
               return items;
             })()
           : []),
@@ -1813,6 +1838,39 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     }
                   },
                 },
+                // ASOC-gedaante (gedaanten van een samenstel): een connector
+                // die inhoud kán dragen (compartments) is per diagram om te
+                // schakelen tussen lijn en associatieklasse-box. In de
+                // lijn-gedaante blijven aanwezige attributen verborgen.
+                ...(() => {
+                  const s = useStore.getState();
+                  const conn = s.elements[connectorId];
+                  const et = elementTypesById[conn?.elementType];
+                  if (!et?.compartments?.length || !s.actiefDiagramId) return [];
+                  const diagram = s.diagrams[s.actiefDiagramId];
+                  const alsBox = effectieveConnectorGedaante(conn, diagram) === "box";
+                  const heeftInhoud = (conn.compartimenten || []).some((c) => (c.velden || []).length > 0);
+                  return [
+                    {
+                      id: "gedaante-connector",
+                      label: alsBox
+                        ? `Toon als lijn${heeftInhoud ? " (verbergt attributen)" : ""}`
+                        : "Toon als associatieklasse (box)",
+                      icoon: alsBox ? "—" : "▣",
+                      onClick: () => {
+                        const st = useStore.getState();
+                        // Terug naar de automatische keuze waar dat kan:
+                        // alleen een keuze bewaren die van de inhoud afwijkt.
+                        const doel = alsBox ? "lijn" : "box";
+                        st.zetConnectorGedaante(
+                          st.actiefDiagramId,
+                          connectorId,
+                          (doel === "box") === heeftInhoud ? null : doel
+                        );
+                      },
+                    },
+                  ];
+                })(),
                 // Knikpunten: toevoegen gaat met ctrl-klik óp de lijn; hier
                 // alleen het wissen.
                 ...(() => {

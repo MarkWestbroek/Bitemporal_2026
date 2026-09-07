@@ -134,6 +134,22 @@ test("wisNodeMaten wist size van één voorkomen of van alle nodes", () => {
   assert.equal(nodes.some((n) => "size" in n), false);
 });
 
+test("zetNodeGedaante zet en wist de gedaante van één voorkomen", () => {
+  const store = maakStoreMetModel();
+  store.getState().zetNodeGedaante("d1", "A", "bol");
+  assert.equal(store.getState().diagrams.d1.nodes.find((n) => n.elementId === "A").gedaante, "bol");
+  store.getState().zetNodeGedaante("d1", "A", null);
+  assert.equal("gedaante" in store.getState().diagrams.d1.nodes.find((n) => n.elementId === "A"), false);
+});
+
+test("zetConnectorGedaante beheert gedaanteOverrides per diagram", () => {
+  const store = maakStoreMetModel();
+  store.getState().zetConnectorGedaante("d1", "r1", "lijn");
+  assert.deepEqual(store.getState().diagrams.d1.gedaanteOverrides, { r1: "lijn" });
+  store.getState().zetConnectorGedaante("d1", "r1", null);
+  assert.equal("gedaanteOverrides" in store.getState().diagrams.d1, false);
+});
+
 test("importeerModel voegt atomisch toe in één undo-stap", () => {
   const store = maakStoreMetModel();
   store.temporal.getState().clear();

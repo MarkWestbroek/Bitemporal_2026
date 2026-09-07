@@ -67,6 +67,32 @@ function heeftVelden(connector) {
 }
 
 /**
+ * Gedaante van een connector op dít diagram: "box" (gematerialiseerd, het
+ * ASOC-patroon) of "lijn" (kaal). Automatisch bepaalt de inhoud het
+ * (velden → box), maar een handmatige keuze per diagram wint —
+ * `diagram.gedaanteOverrides[connectorId]` (ontwerpprincipe "gedaanten van
+ * een samenstel": de gedaante hoort bij het voorkomen, niet bij het model).
+ * Let op: in de lijn-gedaante worden aanwezige attributen niet getoond.
+ */
+export function effectieveConnectorGedaante(connector, diagram) {
+  const keuze = diagram?.gedaanteOverrides?.[connector.id];
+  if (keuze === "box" || keuze === "lijn") return keuze;
+  return heeftVelden(connector) ? "box" : "lijn";
+}
+
+/**
+ * Samentrekking (lollipop-familie): staat het voorkomen aan deze kant
+ * ingeklapt (DiagramNode.gedaante === samentrekking.gedaante van zijn
+ * ElementType) én noemt die samentrekking dit relatietype, dan wordt de
+ * lijn aan die kant "kaal" getekend — het steeltje van de lollipop.
+ */
+function samengetrokkenKant(ref, elementId, connector, elements, elementTypesById) {
+  const st = elementTypesById[elements[elementId]?.elementType]?.samentrekking;
+  return !!(st && ref?.gedaante && ref.gedaante === st.gedaante &&
+    (st.relatieTypes || []).includes(connector.elementType));
+}
+
+/**
  * Middelpunt van een node: expliciete size (diagram-lidmaatschap) wint,
  * daarna de gemeten maat (React Flow, via de `maten`-parameter), en pas
  * als laatste de 200×80-schatting. Zonder echte maten koos de kortste-weg
@@ -154,7 +180,18 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       ...(et.hooks?.edgePresentatie?.(el) || {}),
     };
 
-    if (!heeftVelden(el)) {
+    // Samentrekking (lollipop): een ingeklapt uiteinde maakt de lijn daar
+    // kaal — geen streepjespatroon, geen marker. Bij realisatie-naar-bolletje
+    // blijft zo alleen het steeltje over.
+    const bronSamengetrokken = samengetrokkenKant(bronRef, el.source, el, elements, elementTypesById);
+    const doelSamengetrokken = samengetrokkenKant(doelRef, el.target, el, elements, elementTypesById);
+    if (bronSamengetrokken || doelSamengetrokken) {
+      basisPresentatie.lijn = "solid";
+      if (bronSamengetrokken) basisPresentatie.markerStart = null;
+      if (doelSamengetrokken) basisPresentatie.markerEnd = null;
+    }
+
+    if (effectieveConnectorGedaante(el, diagram) !== "box") {
       // ── Kale gedaante: één edge ──────────────────────────────────────────
       const kaalLabels = [...(basisPresentatie.labels || []), ...(labels.kaal || [])];
       if (el.naam) {

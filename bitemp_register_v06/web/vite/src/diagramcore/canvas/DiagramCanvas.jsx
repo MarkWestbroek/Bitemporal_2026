@@ -43,7 +43,7 @@ import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
-import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX } from "./materialiseerConnectoren.js";
+import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante } from "./materialiseerConnectoren.js";
 import { voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
 
 import { ELEMENT_REF_MIME } from "./externDrop.js";
@@ -266,12 +266,10 @@ function CanvasBinnenkant({
         if (!element) return null;
         const elementType = lookups.elementTypesById[element.elementType];
         if (!elementType) return null;
-        // Een kale connector (geen velden) heeft geen box-gedaante: zijn
-        // lidmaatschap bewaart alleen posities voor als hij weer velden krijgt.
-        if (
-          elementType.isConnector &&
-          !(element.compartimenten || []).some((c) => (c.velden || []).length > 0)
-        ) {
+        // Een connector in de lijn-gedaante heeft geen box-node: zijn
+        // lidmaatschap bewaart alleen posities voor als hij weer een box
+        // wordt. De gedaante is per diagram overschrijfbaar (ASOC-principe).
+        if (elementType.isConnector && effectieveConnectorGedaante(element, diagram) !== "box") {
           return null;
         }
         // Rand-aanhechting (§3.1): een aangehecht rand-element rendert als
@@ -293,7 +291,10 @@ function CanvasBinnenkant({
           // `--dc-node-max: none` heft de automatische breedtegrens van
           // .dc-node op: wie zelf een maat kiest, wordt niet teruggeduwd naar
           // de wrap-grens waar niet-geresizede nodes op staan.
-          ...(ref.size
+          // Een ingeklapt voorkomen (gedaante, bv. lollipop-bolletje) negeert
+          // de bewaarde maat: die hoort bij de volledige gedaante en komt
+          // terug zodra het voorkomen weer wordt uitgeklapt.
+          ...(ref.size && !ref.gedaante
             ? { style: { width: ref.size.width, height: ref.size.height, "--dc-node-max": "none" } }
             : {}),
           // Achtergrond-elementen (kaders) starten diep onder de rest (-10);
@@ -307,6 +308,9 @@ function CanvasBinnenkant({
             elementType,
             bewerkbaar,
             onResize: onNodeSize,
+            // Voorkomen-gedaante (samentrekking): ElementNode rendert bv. het
+            // lollipop-bolletje in plaats van de volledige shape.
+            gedaante: ref.gedaante || null,
             fieldTypesById: lookups.fieldTypesById,
             compartmentTypesById: lookups.compartmentTypesById,
           },

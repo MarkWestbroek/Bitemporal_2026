@@ -450,6 +450,49 @@ export function createDiagramStore({ persistKey } = {}) {
         return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: { ...d, nodes } } };
       }),
 
+    /**
+     * Gedaante van één voorkomen (ontwerpprincipe "gedaanten van een
+     * samenstel"): bv. "bol" klapt een interface samen tot lollipop-bolletje.
+     * `null` wist de keuze → terug naar de volledige gedaante. De gedaante
+     * hoort bij het vóórkomen, niet bij het model-element: hetzelfde element
+     * kan op een ander diagram (of ander voorkomen) voluit staan.
+     */
+    zetNodeGedaante: (diagramId, voorkomenSleutel, gedaante = null) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const voorkomen = vindVoorkomen(d.nodes, voorkomenSleutel);
+        if (!voorkomen) return state;
+        const sleutel = voorkomenId(voorkomen);
+        const nodes = d.nodes.map((n) => {
+          if (voorkomenId(n) !== sleutel) return n;
+          if (gedaante == null) {
+            const { gedaante: _weg, ...rest } = n;
+            return rest;
+          }
+          return { ...n, gedaante };
+        });
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: { ...d, nodes } } };
+      }),
+
+    /**
+     * Handmatige gedaante-keuze voor een connector op dít diagram:
+     * "box" (associatieklasse-patroon) of "lijn" (kaal; attributen worden dan
+     * niet getoond). `null` wist de keuze → automatisch (velden → box).
+     */
+    zetConnectorGedaante: (diagramId, connectorId, gedaante = null) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !connectorId) return state;
+        const overrides = { ...(d.gedaanteOverrides || {}) };
+        if (gedaante == null) delete overrides[connectorId];
+        else overrides[connectorId] = gedaante;
+        const rest = { ...d };
+        if (Object.keys(overrides).length) rest.gedaanteOverrides = overrides;
+        else delete rest.gedaanteOverrides;
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: rest } };
+      }),
+
     verbergConnectorOpDiagram: (diagramId, connectorId) =>
       set((state) => {
         const d = state.diagrams[diagramId];

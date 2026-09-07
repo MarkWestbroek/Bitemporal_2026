@@ -390,3 +390,79 @@ test("verborgenConnectoren onderdrukt alleen de genoemde connector", () => {
   const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
   assert.deepEqual(edges.map((edge) => edge.data.connectorId), ["r2"]);
 });
+
+// ── Gedaanten van een samenstel (07-09) ──────────────────────────────────
+
+const VELDEN = [{ compartmentType: "attributen", velden: [{ naam: "x" }] }];
+
+test("gedaanteOverrides 'lijn' dwingt een connector mét velden naar één kale edge", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: VELDEN, data: {} },
+  };
+  const diagram = {
+    gedaanteOverrides: { r1: "lijn" },
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+    ],
+  };
+  const { edges, extraNodes } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges.length, 1);
+  assert.equal(extraNodes.length, 0);
+});
+
+test("gedaanteOverrides 'box' materialiseert ook een connector zónder velden", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    gedaanteOverrides: { r1: "box" },
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+    ],
+  };
+  const { edges, extraNodes } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges.length, 3); // bron→anker, anker→doel, anker→box
+  assert.ok(extraNodes.some((n) => n.id === `${ANKER_PREFIX}r1`));
+  assert.ok(extraNodes.some((n) => n.soort === "box"));
+});
+
+test("samentrekking: ingeklapt doel-voorkomen maakt de lijn kaal (lollipop-steeltje)", () => {
+  const metSamentrekking = {
+    ...elementTypesById,
+    interface: {
+      id: "interface",
+      shape: "class-box",
+      samentrekking: { gedaante: "bol", relatieTypes: ["realisatie"] },
+    },
+    realisatie: {
+      id: "realisatie",
+      shape: "edge",
+      isConnector: true,
+      edgePresentatie: { lijn: "dash-6-3", markerEnd: "driehoek" },
+    },
+  };
+  const elements = {
+    A,
+    I: { id: "I", elementType: "interface" },
+    r1: { id: "r1", naam: "", elementType: "realisatie", source: "A", target: "I", compartimenten: [], data: {} },
+  };
+  const maak = (gedaante) =>
+    materialiseerConnectoren(elements, {
+      nodes: [
+        { elementId: "A", position: { x: 0, y: 0 } },
+        { elementId: "I", position: { x: 400, y: 0 }, ...(gedaante ? { gedaante } : {}) },
+      ],
+    }, metSamentrekking).edges[0].data.presentatie;
+  // Uitgeklapt: gewone realisatie (stippel + driehoek).
+  assert.equal(maak(null).lijn, "dash-6-3");
+  assert.equal(maak(null).markerEnd, "driehoek");
+  // Ingeklapt tot bolletje: kaal steeltje.
+  assert.equal(maak("bol").lijn, "solid");
+  assert.equal(maak("bol").markerEnd, null);
+});
