@@ -304,17 +304,18 @@
 
 /* === Handles === */
 
-/* Handles zijn hulpchrome, geen diagraminhoud — zeker in gedragsdiagrammen
-   waar rondjes óók symbolen zijn (begin/eind/junction) leidden de zware
-   witte stippen af. Daarom overal: klein (8px), licht van kleur en gedempt;
-   pas als je de node nadert (hover) of selecteert lichten ze op. */
+/* Handles zijn hulpchrome, geen diagraminhoud — het zijn tool-dingen, geen
+   model- of view-dingen (Mark, 07-09). Daarom volledig onzichtbaar tot je de
+   node aanwijst of selecteert; ook tijdens het slepen van een verbinding
+   verschijnen ze op de node onder de cursor (hover werkt bij pointer-drag
+   gewoon door). Connecteren verandert niet — alleen de opacity. */
 .dc-canvas .react-flow__handle {
   width: 8px;
   height: 8px;
   border: 1.5px solid #64748b;
   background: #ffffff;
   border-radius: 50%;
-  opacity: 0.3;
+  opacity: 0;
   transition: opacity 0.15s;
 }
 
@@ -510,8 +511,11 @@
 .dc-taakbalk-sep {
   align-self: stretch;
   width: 1px;
-  margin: 1px 2px;
-  background: var(--s-border, #e2e8f0);
+  margin: 1px 3px;
+  /* Niet --s-border: die is in het lichte thema vrijwel gelijk aan de
+     paneelkleur, waardoor de laag-scheidingen onzichtbaar waren. */
+  background: var(--s-fg-muted, #94a3b8);
+  opacity: 0.45;
 }
 
 .dc-taakbalk-knop {

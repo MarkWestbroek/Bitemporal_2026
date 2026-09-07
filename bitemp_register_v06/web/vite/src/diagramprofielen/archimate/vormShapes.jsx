@@ -74,7 +74,10 @@ function VormNode({ element, elementType, selected, children, viewBox, teken }) 
       <div style={{ position: "relative", width: "100%", flex: "1 1 auto", minHeight: MIN_SYMBOOL }}>
         <svg
           viewBox={viewBox}
-          preserveAspectRatio="xMidYMid meet"
+          // YMax: het symbool zakt naar de onderkant van zijn vlak, dus
+          // tégen de naam aan — bij een hoge node zweefde het los erboven
+          // met een gat ertussen (Mark, 07-09).
+          preserveAspectRatio="xMidYMax meet"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", pointerEvents: "none" }}
         >
           {teken({ vulling, kleur, sw })}

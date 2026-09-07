@@ -1982,14 +1982,21 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
         acties = metGroepScheidingen(acties, (i) => types[i].taakbalkGroep);
       } else if (balk.acties === "connectorTypes") {
         const types = descriptor.elementTypes.filter((et) => et.isConnector);
+        // "Compositie Compositie" (ArchiMate: kort is afgeleid van het label)
+        // is ruis — als het label al met de korte naam begint, volstaat het
+        // label; het kort-glyph (◆, ▷, |<) blijft wél als voorvoegsel nuttig.
+        const knopTekst = (et) =>
+          et.label.toLowerCase().startsWith(et.kort.toLowerCase().replace(/\.$/, ""))
+            ? et.label
+            : `${et.kort} ${et.label}`;
         acties = types
           .map((et) => ({
             id: et.id,
-            label: `${et.kort} ${et.label}`,
+            label: knopTekst(et),
             icoon: (
               <span className="dc-taakbalk-icoonlabel">
                 <TypeIcoon elementType={et} />
-                {`${et.kort} ${et.label}`}
+                {knopTekst(et)}
               </span>
             ),
             titel: `Verbindingsmodus: ${et.label} (klik nogmaals voor automatisch)`,
