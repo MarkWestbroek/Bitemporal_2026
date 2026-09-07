@@ -200,6 +200,9 @@ sudo docker compose -f /mnt/Pool1/share/Docker/Bitemporal/bitemp/compose.yaml up
 
 ## 4. Domeinnaam + SSL voor TrueNAS
 
+> **Publiek hosten?** Zie [`VPS_DEPLOYMENT.md`](VPS_DEPLOYMENT.md) — dezelfde stack op een
+> VPS achter Caddy, zonder tunnel of port-forwarding. De opties hieronder blijven plan B.
+
 ### Kan dat?
 Ja, dat kan. Er zijn meerdere routes:
 

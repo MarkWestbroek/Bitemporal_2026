@@ -1,0 +1,219 @@
+# docker-compose.vps.yml — Omnium Studio op een publieke VPS (achter Caddy)
+#
+# Afgeleid van docker-compose.truenas.yml, met de verschillen die een machine
+# op het open internet nodig heeft:
+#   - Geen enkele container publiceert een poort op het publieke IP. Alleen de
+#     frontend luistert op 127.0.0.1:8083; Caddy (op de host) zet daar HTTPS voor.
+#     Postgres en de MinIO-console zijn alleen via loopback bereikbaar — dus via
+#     een SSH-tunnel:  ssh -L 9001:127.0.0.1:9001 omnium@<vps>
+#   - AUTH_ENABLED=true en COOKIE_SECURE=true (HTTPS via Caddy).
+#   - Alle secrets komen uit .env (kopieer .env.example); geen defaults van 1234.
+#   - OpenFTV (Toegangsspraak/PDP) staat achter profile "authz": alleen starten
+#     als de demo het nodig heeft:  docker compose --profile authz up -d
+#
+# Starten:   docker compose -f docker-compose.vps.yml up -d
+# Bucket:    docker compose -f docker-compose.vps.yml --profile init up minio-init   (eenmalig)
+# Updaten:   docker compose -f docker-compose.vps.yml pull && \
+#            docker compose -f docker-compose.vps.yml up -d --force-recreate api frontend
+#            (frontend altijd mee-recreaten: nginx cachet het oude API-IP → 502)
+#
+# Zie docs/VPS_DEPLOYMENT.md voor het volledige runbook.
+
+services:
+
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    container_name: bitemp-postgres-06
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER ontbreekt in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD ontbreekt in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-bitemp_go_db_v06}
+    ports:
+      - "127.0.0.1:${PG_PORT:-5433}:5432"   # alleen loopback: backups + SSH-tunnel
+    volumes:
+      - bitemp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-bitemp_go_db_v06}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bitemp_net
+
+  minio:
+    image: ${MINIO_IMAGE:-minio/minio:latest}
+    container_name: bitemp-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY ontbreekt in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY ontbreekt in .env}
+    ports:
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"   # console alleen via SSH-tunnel
+    volumes:
+      - bitemp_minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bitemp_net
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: bitemp-minio-init
+    restart: "no"
+    profiles: ["init"]
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
+      mc mb --ignore-existing local/$${MINIO_BUCKET};
+      echo 'Bucket $${MINIO_BUCKET} aangemaakt of bestond al.';
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-ide-bestanden}
+    networks:
+      - bitemp_net
+
+  api:
+    image: ${API_IMAGE:-markwestbroek/bitemp-go-api:latest}
+    container_name: bitemp-go-api-06
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-bitemp_go_db_v06}?sslmode=disable
+      APP_ENV: production
+      GIN_MODE: release
+      BUNDEBUG: "0"
+      APP_DEBUG_LOGS: "0"
+      ALLOW_DROP_TABLES: "false"
+      ADMIN_DROP_PASSWORD: ${ADMIN_DROP_PASSWORD:?ADMIN_DROP_PASSWORD ontbreekt in .env}
+      AUTO_CREATE_DATABASE: "false"
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET: ${MINIO_BUCKET:-ide-bestanden}
+      MINIO_USE_SSL: "false"
+      # Authenticatie — publiek bereikbaar, dus altijd aan.
+      AUTH_ENABLED: "true"
+      COOKIE_SECURE: "true"                 # HTTPS via Caddy; anders bewaart de browser de cookie niet
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET ontbreekt in .env}
+      JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-24}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD ontbreekt in .env}
+      # OpenFTV alleen als het authz-profile draait.
+      AUTHZ_PDP_ENABLED: ${AUTHZ_PDP_ENABLED:-false}
+      OPENFTV_PDP_URL: http://openftv-pdp:8443
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - bitemp_net
+      - bitemp_auth_net
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-markwestbroek/bitemp-viz-frontend:latest}
+    container_name: bitemp-viz-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8083}:80"   # Caddy → hier; nginx proxiet /api enz. naar api:8080
+    networks:
+      - bitemp_net
+
+  # ── OpenFTV autorisatie-sidecar (profile: authz) ─────────────────────────
+  openftv-db:
+    image: postgres:15
+    container_name: bitemp-openftv-db
+    restart: unless-stopped
+    profiles: ["authz"]
+    environment:
+      POSTGRES_USER: openftv
+      POSTGRES_PASSWORD: ${OPENFTV_DB_PASSWORD:-openftv}
+      POSTGRES_DB: openftv
+    volumes:
+      - openftv_postgres_data:/var/lib/postgresql/data
+      - ./authz/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openftv -d openftv"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - bitemp_auth_net
+
+  openftv-manager:
+    image: registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/manager:2.2.3
+    container_name: bitemp-openftv-manager
+    restart: unless-stopped
+    profiles: ["authz"]
+    environment:
+      - MANAGER_PERSIST_TYPE=postgres
+      - MANAGER_PERSIST_POSTGRES_URL=postgres://openftv:${OPENFTV_DB_PASSWORD:-openftv}@openftv-db:5432/openftv?sslmode=disable
+      - MANAGER_MIGRATE_AUTO=true
+      - MANAGER_MIGRATE_SOURCE=*embed*
+      - MANAGER_POLICIES_LANGUAGE=rego
+      - MANAGER_POLICIES_STORE=/tmp/data/policies
+      - MANAGER_POLICIES_STORE_RECURSE=true
+      - MANAGER_PIP_STORE=/tmp/data/data
+      - MANAGER_PIP_STORE_RECURSE=true
+      - MANAGER_TAGS_PATH=/tmp/data/tags
+      - MANAGER_AUTHENTICATION_TYPE=none
+      - MANAGER_BUNDLE_CONFIGS=/tmp/data/bundles
+      - MANAGER_BUNDLE_RECURSE=true
+      - MANAGER_BUNDLE_SEND_TIMEOUT=60s
+      - MANAGER_ADL_TYPE=postgresql
+      - MANAGER_ADL_SERVICE_NAME=bitemp-register
+      - MANAGER_ADL_PG_URL=postgres://openftv:${OPENFTV_DB_PASSWORD:-openftv}@openftv-db:5432/openftv_adl?sslmode=disable
+    depends_on:
+      openftv-db:
+        condition: service_healthy
+    volumes:
+      - ./authz/manager:/tmp/data
+    networks:
+      - bitemp_auth_net
+
+  openftv-pdp:
+    image: registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp:2.2.3
+    container_name: bitemp-openftv-pdp
+    restart: unless-stopped
+    profiles: ["authz"]
+    environment:
+      - PDP_BUNDLE_MANAGER=http://openftv-manager:9443/v1/bundle/bitemp-pdp
+      - PDP_BUNDLE_ENCODING=bzip2
+      - PDP_BUNDLE_TIMEOUT=30s
+      - PDP_BUNDLE_RETRIES=5
+      - PDP_POLICIES_LANGUAGE=rego
+      - PDP_ADL_TYPE=postgresql
+      - PDP_ADL_SERVICE_NAME=bitemp-register
+      - PDP_ADL_PG_URL=postgres://openftv:${OPENFTV_DB_PASSWORD:-openftv}@openftv-db:5432/openftv_adl?sslmode=disable
+      - PDP_MIGRATE_AUTO=true
+      - PDP_MIGRATE_SOURCE=*embed*
+    depends_on:
+      openftv-manager:
+        condition: service_started
+    volumes:
+      - ./authz/pdp:/tmp/data
+    networks:
+      - bitemp_auth_net
+
+volumes:
+  bitemp_postgres_data:
+  bitemp_minio_data:
+  openftv_postgres_data:
+
+networks:
+  bitemp_net:
+    driver: bridge
+  bitemp_auth_net:
+    driver: bridge
