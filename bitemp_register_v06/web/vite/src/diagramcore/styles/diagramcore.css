@@ -351,6 +351,16 @@
 .dc-canvas .dc-punt-node .react-flow__handle-top { top: -8px; }
 .dc-canvas .dc-punt-node .react-flow__handle-bottom { bottom: -8px; }
 
+/* Compacte taakbalkknop (Beeld → Compacte taakbalken): alleen het icoon op
+   een chip in de elementkleur; de tekst zit in de tooltip. De donkere
+   icoonkleur blijft leesbaar omdat elementkleuren pastels zijn. */
+.dc-taakbalk-icoonlabel.is-compact {
+  padding: 3px 5px;
+  border-radius: 5px;
+  color: #334155;
+  line-height: 0;
+}
+
 /* Eigen taakbalk-tooltip (i.p.v. de kleine native title): naam + uitleg,
    direct leesbaar. Toggle in Studio-instellingen → Taakbalken. */
 .dc-taakbalk-tooltip {

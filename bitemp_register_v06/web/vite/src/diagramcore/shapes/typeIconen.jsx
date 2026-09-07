@@ -89,6 +89,47 @@ const IcoonLijn = ({ maat = 14 }) =>
     </>
   ));
 
+/* Connector-icoon afgeleid uit edgePresentatie: horizontale lijn met de
+ * echte begin-/eindmarkers (ruit, bol, driehoek, pijl …) en het echte
+ * streepjespatroon. Zo is elk relatietype in de Verbinding-taakbalk
+ * herkenbaar aan zijn notatie — ook in de compacte stand, waar de tekst
+ * wegvalt. Kraaienpoten (ERD) komen per connector via hooks, niet uit de
+ * statische edgePresentatie; die vallen terug op een kaal uiteinde. */
+const MARKER_START = {
+  ruit: <path d="M1 7 L3.4 5.2 L5.8 7 L3.4 8.8 Z" fill="currentColor" />,
+  "ruit-open": <path d="M1 7 L3.4 5.2 L5.8 7 L3.4 8.8 Z" />,
+  bol: <circle cx="2.6" cy="7" r="1.5" fill="currentColor" />,
+  "kruis-cirkel": (
+    <>
+      <circle cx="3" cy="7" r="2" />
+      <path d="M1 7 H5 M3 5 V9" />
+    </>
+  ),
+  "schuine-streep": <path d="M3.2 4.8 L1.8 9.2" />,
+};
+const MARKER_EIND = {
+  "pijl-open": <path d="M9.6 4.6 L13 7 L9.6 9.4" />,
+  driehoek: <path d="M9.2 4.4 L13 7 L9.2 9.6 Z" />,
+  "pijl-dicht": <path d="M9.2 4.4 L13 7 L9.2 9.6 Z" fill="currentColor" />,
+  bol: <circle cx="11.4" cy="7" r="1.5" fill="currentColor" />,
+};
+// De lijn stopt vóór een marker, zodat open figuren niet doorkruist worden.
+const LIJN_START_X = { ruit: 5.8, "ruit-open": 5.8, bol: 4.1, "kruis-cirkel": 5 };
+const LIJN_EIND_X = { "pijl-open": 12.6, driehoek: 9.2, "pijl-dicht": 9.2, bol: 9.9 };
+
+const IcoonEdgePresentatie = ({ maat = 14, presentatie = {} }) => {
+  const x1 = LIJN_START_X[presentatie.markerStart] ?? 1.4;
+  const x2 = LIJN_EIND_X[presentatie.markerEnd] ?? 12.6;
+  const dash = /dash|stippel/.test(presentatie.lijn || "") ? "2.2 1.8" : undefined;
+  return basis(maat, (
+    <>
+      <line x1={x1} y1="7" x2={x2} y2="7" strokeDasharray={dash} />
+      {MARKER_START[presentatie.markerStart] || null}
+      {MARKER_EIND[presentatie.markerEnd] || null}
+    </>
+  ));
+};
+
 const perShape = {
   "class-box": IcoonBox,
   bol: IcoonBol,
@@ -114,11 +155,14 @@ export function alleIcoonIds() {
   return [..._registraties.keys()].sort();
 }
 
-/** Icoon voor een ElementType: expliciete `icoon`-id wint, anders de shape. */
+/** Icoon voor een ElementType: expliciete `icoon`-id wint, anders de shape.
+ * Connectors met edgePresentatie krijgen hun eigen notatie als icoon. */
 export function TypeIcoon({ elementType, maat = 14 }) {
+  const expliciet = elementType?.icoon && _registraties.get(elementType.icoon);
+  if (!expliciet && elementType?.isConnector && elementType?.edgePresentatie) {
+    return <IcoonEdgePresentatie maat={maat} presentatie={elementType.edgePresentatie} />;
+  }
   const Component =
-    (elementType?.icoon && _registraties.get(elementType.icoon)) ||
-    (elementType?.isConnector ? IcoonLijn : perShape[elementType?.shape]) ||
-    IcoonBox;
+    expliciet || (elementType?.isConnector ? IcoonLijn : perShape[elementType?.shape]) || IcoonBox;
   return <Component maat={maat} />;
 }

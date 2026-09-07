@@ -428,6 +428,28 @@ export function createDiagramStore({ persistKey } = {}) {
         };
       }),
 
+    /**
+     * Wis de expliciete maat van één voorkomen (of van álle nodes bij null):
+     * de node valt terug op zijn natuurlijke inhoud-maat. Praktisch na een
+     * Exchange-import in de figuur-gedaante — de bewaarde Archi-boxmaat is
+     * daar veel groter dan het figuur (Mark, 07-09).
+     */
+    wisNodeMaten: (diagramId, voorkomenSleutel = null) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const doelSleutel = voorkomenSleutel == null
+          ? null
+          : voorkomenId(vindVoorkomen(d.nodes, voorkomenSleutel) || {});
+        const nodes = d.nodes.map((n) => {
+          if (doelSleutel != null && voorkomenId(n) !== doelSleutel) return n;
+          if (!("size" in n)) return n;
+          const { size: _weg, ...rest } = n;
+          return rest;
+        });
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: { ...d, nodes } } };
+      }),
+
     verbergConnectorOpDiagram: (diagramId, connectorId) =>
       set((state) => {
         const d = state.diagrams[diagramId];

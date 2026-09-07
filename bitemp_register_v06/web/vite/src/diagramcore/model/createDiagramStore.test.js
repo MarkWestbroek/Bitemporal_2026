@@ -117,6 +117,23 @@ test("updateNodeSize bewaart de grootte per diagram-lidmaatschap", () => {
   );
 });
 
+test("wisNodeMaten wist size van één voorkomen of van alle nodes", () => {
+  const store = maakStoreMetModel();
+  const s = store.getState();
+  s.addElementToDiagram("d1", "B", { x: 0, y: 100 });
+  s.updateNodeSize("d1", "A", { width: 240, height: 130 });
+  s.updateNodeSize("d1", "B", { width: 300, height: 200 });
+  // Eén voorkomen: alleen A raakt zijn size kwijt.
+  store.getState().wisNodeMaten("d1", "A");
+  let nodes = store.getState().diagrams.d1.nodes;
+  assert.equal("size" in nodes.find((n) => n.elementId === "A"), false);
+  assert.deepEqual(nodes.find((n) => n.elementId === "B").size, { width: 300, height: 200 });
+  // Zonder sleutel: alles.
+  store.getState().wisNodeMaten("d1");
+  nodes = store.getState().diagrams.d1.nodes;
+  assert.equal(nodes.some((n) => "size" in n), false);
+});
+
 test("importeerModel voegt atomisch toe in één undo-stap", () => {
   const store = maakStoreMetModel();
   store.temporal.getState().clear();

@@ -277,6 +277,23 @@ toegangsregel-profiel (ontworpen vormentaal — apart bekijken).
 > dan 280px stonden, worden nu smaller en hoger. Elementen die je ooit met de hand hebt
 > geresized behouden hun maat.
 
+**c) Drie kleinere motor-punten (07-09):**
+
+- **Maat aanpassen aan inhoud** — `wisNodeMaten(diagramId, voorkomenSleutel?)` in de store
+  wist de expliciete `size` van één voorkomen (rechtsklik op node) of van alle nodes
+  (rechtsklik op canvas: "Maten aanpassen aan inhoud (alles)"); de node valt terug op zijn
+  natuurlijke inhoudsmaat. Motivatie: Archi-imports geven bounds mee die veel ruimer zijn
+  dan onze vorm-figuren.
+- **Compacte taakbalken** — Beeld → "Compacte taakbalken" (patroon van typering/buitenlabels:
+  menuBus + localStorage per taakbalk-sleutel). Compact = alleen het typeicoon (18px) op een
+  chip in de laagkleur (`et.kleur`); de naam blijft via de hover-tooltip beschikbaar,
+  groepsscheiders blijven staan.
+- **Connector-iconen uit `edgePresentatie`** — het generieke lijn-icoon in `typeIconen.jsx`
+  is vervangen door een afgeleid icoon: horizontale lijn met het echte streepjespatroon en de
+  echte begin-/eindmarkers (ruit ◆/◇, bol, driehoek, pijl open/dicht, kruis-cirkel,
+  schuine streep). Geldt automatisch voor álle profielen; een expliciete `icoon`-id wint
+  nog steeds. Kraaienpoten (ERD, per connector via hooks) vallen terug op een kaal uiteinde.
+
 ## 6. Valkuilen & geleerde lessen
 
 - **`elementType`-id's zijn persistente data.** Ze staan in opgeslagen diagrammen,

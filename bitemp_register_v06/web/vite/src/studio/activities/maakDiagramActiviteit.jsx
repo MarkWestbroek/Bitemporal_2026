@@ -1568,6 +1568,16 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       return "aan";
     }
   };
+  // Compacte taakbalken (Marks optie d, 07-09): alleen het icoon, iets
+  // groter, met de elementkleur als chip — de naam via de eigen tooltip.
+  const compactSleutel = `${taakbalkSleutel}-compact`;
+  const leesCompact = () => {
+    try {
+      return window.localStorage.getItem(compactSleutel) === "aan";
+    } catch {
+      return false;
+    }
+  };
 
   function Main() {
     const { selectieId, selecteerVoorkomen, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind, layoutApiRef } =
@@ -1579,6 +1589,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     const [typering, setTypering] = useState(leesTypering);
     const [shapeSetId, setShapeSetId] = useState(leesShapeSet);
     const [buitenlabels, setBuitenlabels] = useState(leesLabels);
+    const [compacteBalk, setCompacteBalk] = useState(leesCompact);
     // N.B. beide abonnementen in één effect-body. (Hier zat een venijnige
     // bug: de typering-subscribe stond per ongeluk op de deps-positie van
     // useEffect, waardoor hij bij élke render opnieuw registreerde en nooit
@@ -1602,6 +1613,15 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           }
           setTypering(waarde);
           // Zonder ververs blijft het menu-vinkje op de vórige stand hangen.
+          setTimeout(() => menuBus.emit("menu:ververs"), 0);
+        }),
+        menuBus.on(ev("taakbalk-compact"), (aan) => {
+          try {
+            window.localStorage.setItem(compactSleutel, aan ? "aan" : "uit");
+          } catch {
+            /* localStorage kan uit staan; de state werkt dan alleen deze sessie */
+          }
+          setCompacteBalk(!!aan);
           setTimeout(() => menuBus.emit("menu:ververs"), 0);
         }),
         menuBus.on(ev("buitenlabels"), (waarde) => {
@@ -1691,6 +1711,15 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           : []),
         { id: "normaliseer", label: "Normaliseer relaties", icoon: "↔", onClick: () => menuBus.emit(ev("normaliseer")) },
         { id: "snap", label: "Snap nodes naar grid", icoon: UITLIJN_ICONEN.snap, onClick: () => layoutApiRef.current?.snapRaster() },
+        {
+          id: "maten-inhoud",
+          label: "Maten aanpassen aan inhoud (alles)",
+          icoon: "◱",
+          onClick: () => {
+            const s = useStore.getState();
+            if (s.actiefDiagramId) s.wisNodeMaten(s.actiefDiagramId);
+          },
+        },
         // Exporteren: selectie als er iets geselecteerd is, anders het hele
         // diagram. Achtergrond/schaal/marge komen uit Studio-instellingen →
         // Diagram-export (bij klik uitgelezen).
@@ -1744,6 +1773,18 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     }),
                 },
               ];
+              items.push({
+                id: "maat-inhoud",
+                label: "Maat aanpassen aan inhoud",
+                icoon: "◱",
+                // Wist de expliciete maat van dít voorkomen: terug naar de
+                // natuurlijke inhoud-maat (bv. het figuur i.p.v. de bewaarde
+                // Archi-boxmaat na een Exchange-import).
+                onClick: () => {
+                  const s = useStore.getState();
+                  if (s.actiefDiagramId) s.wisNodeMaten(s.actiefDiagramId, voorkomenId || nodeId);
+                },
+              });
               if (selectieAantal >= 2) {
                 items.push({
                   id: "gelijke-maat",
@@ -1963,18 +2004,29 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     // Taakbalken uit de DiagramType-descriptor (§4.6): acties afgeleid.
     const taakbalken = (descriptor.taakbalken || []).map((balk) => {
       let acties = [];
+      // Compact: alleen het (grotere) icoon op een chip in de elementkleur;
+      // naam en uitleg blijven via de taakbalk-tooltip beschikbaar.
+      const knopInhoud = (et, tekst) =>
+        compacteBalk ? (
+          <span
+            className="dc-taakbalk-icoonlabel is-compact"
+            style={et.kleur ? { background: et.kleur } : undefined}
+          >
+            <TypeIcoon elementType={et} maat={18} />
+          </span>
+        ) : (
+          <span className="dc-taakbalk-icoonlabel">
+            <TypeIcoon elementType={et} />
+            {tekst}
+          </span>
+        );
       if (balk.acties === "elementTypes") {
         const types = descriptor.elementTypes.filter((et) => !et.isConnector && et.kort);
         acties = types
           .map((et) => ({
             id: et.id,
             label: et.kort,
-            icoon: (
-              <span className="dc-taakbalk-icoonlabel">
-                <TypeIcoon elementType={et} />
-                {et.kort}
-              </span>
-            ),
+            icoon: knopInhoud(et, et.kort),
             titel: `Nieuw: ${et.label}`,
             uitleg: et.omschrijving || null,
             onClick: () => plaatsNieuwElement(et.id),
@@ -1993,12 +2045,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           .map((et) => ({
             id: et.id,
             label: knopTekst(et),
-            icoon: (
-              <span className="dc-taakbalk-icoonlabel">
-                <TypeIcoon elementType={et} />
-                {knopTekst(et)}
-              </span>
-            ),
+            icoon: knopInhoud(et, knopTekst(et)),
             titel: `Verbindingsmodus: ${et.label} (klik nogmaals voor automatisch)`,
             uitleg: et.omschrijving || null,
             actief: verbindingsType === et.id,
@@ -2513,6 +2560,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             checked: leesTypering() === waarde,
             onClick: () => menuBus.emit(ev("typering"), waarde),
           })),
+        },
+        {
+          id: `${menuPrefix}-taakbalk-compact`,
+          label: "Compacte taakbalken",
+          checked: leesCompact(),
+          onClick: () => menuBus.emit(ev("taakbalk-compact"), !leesCompact()),
         },
         {
           id: `${menuPrefix}-buitenlabels`,
