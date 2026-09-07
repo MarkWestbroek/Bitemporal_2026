@@ -1693,8 +1693,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     }, [layoutApiRef]);
 
     // Rechtsklik-contextmenu: zelfde acties als taakbalken/menu.
+    // Menu-volgorde: de sectie van het aangeklikte ding (element/verbinding)
+    // stáát bovenaan — het menu is lang, en onderaan viel de sectie buiten
+    // het eerste gezicht (Mark, 07-09: "ik zie alleen de alles-optie").
     const bouwContextMenu = useCallback(
-      ({ selectieAantal, connectorId, nodeId, voorkomenId }) => [
+      ({ selectieAantal, connectorId, nodeId, voorkomenId }) => {
+        const algemeenDeel = [
         { kop: true, label: "Uitlijnen" },
         ...UITLIJN_MODES.flatMap((m, i) => {
           const item = {
@@ -1737,8 +1741,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
         },
         { id: "exp-png", label: "Download PNG", icoon: "🖼", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1, ...leesExportOpties() }) },
         { id: "exp-svg", label: "Download SVG", icoon: "❖", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "svg", alleenSelectie: selectieAantal >= 1, ...leesExportOpties() }) },
+        ];
         // Rechtsklik op een element-node: z-order (L01) en gelijke maat (L02).
-        ...(nodeId
+        const elementDeel = (nodeId
           ? (() => {
               const s = useStore.getState();
               const zOrdes = Object.values(s.elements)
@@ -1820,9 +1825,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               }
               return items;
             })()
-          : []),
+          : []);
         // Rechtsklik op een connector: lijnvorm per connector (§8.5c).
-        ...(connectorId
+        const connectorDeel = (connectorId
           ? (() => {
               const huidig = useStore.getState().elements[connectorId]?.data?.vorm || "bezier";
               return [
@@ -1956,9 +1961,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 })(),
               ];
             })()
-          : []),
+          : []);
         // Rechtsklik op een node: kinderen in boomstijl + losmaken uit container.
-        ...(nodeId && !connectorId
+        const boomDeel = (nodeId && !connectorId
           ? (() => {
               const s = useStore.getState();
               const items = [];
@@ -2007,10 +2012,10 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 },
               ];
             })()
-          : []),
+          : []);
         // Rechtsklik op leeg canvas: activiteit-eigen acties (bv. "Activeer
         // profiel…") + exporteren zonder eerst naar het menu te hoeven.
-        ...(!nodeId && !connectorId
+        const canvasDeel = (!nodeId && !connectorId
           ? [
               { sep: true },
               ...canvasMenuExtra.map((m) => ({
@@ -2029,8 +2034,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 onClick: () => menuBus.emit(ev("importeer-05")),
               },
             ]
-          : []),
-      ],
+          : []);
+        // Aangeklikte ding eerst, dan het algemene deel (uitlijnen/exporteren).
+        const items = [...elementDeel, ...boomDeel, ...connectorDeel, ...algemeenDeel, ...canvasDeel];
+        while (items[0]?.sep) items.shift();
+        return items;
+      },
       [layoutApiRef]
     );
 
