@@ -61,9 +61,18 @@ de override — dus ook de ASOC handmatig omschakelbaar.
   (in puur-uml op `interface`). Per voorkomen: `DiagramNode.gedaante = "bol"`
   (store: `zetNodeGedaante`) → ElementNode rendert `.dc-samentrek-bol`
   (open cirkel, naam eronder als buitenlabel, bewaarde maat genegeerd) en
-  `materialiseerConnectoren` maakt de genoemde relatietypes aan die kant
-  kaal (solid, marker weg) — het steeltje. Operaties zijn in het bolletje
-  bewust onzichtbaar; uitklappen brengt alles terug. UML-only per declaratie.
+  `materialiseerConnectoren` maakt de genoemde relatie over de hele lengte
+  kaal (solid, béide markers weg) — het steeltje absorbeert de notatie van
+  de lijn. Operaties zijn in het bolletje bewust onzichtbaar; uitklappen
+  brengt alles terug.
+- **Ook in ArchiMate (07-09, na afstemming).** De drie interfaces
+  (`business-/app-/tech-interface`) hebben nu dezelfde samentrekking, met
+  `relatieTypes: ["compositie", "toewijzing"]`. Strikt genomen kent ArchiMate
+  alleen de cirkel als alternatieve *elementvorm* — maar de vormen-set tekende
+  daardoor een eigen steeltje naast de compositielijn mét ruit: twee stokjes
+  achter elkaar. Ingeklapt is het één kale lijn naar een bolletje. Mark
+  (07-09): "misschien niet helemaal des archimates, maar het model wijzigt
+  niet, het wordt alleen beter toonbaar" — precies de scheiding model/voorkomen.
 - **ASOC handmatig.** `diagram.gedaanteOverrides[connectorId] = "lijn"|"box"`
   (store: `zetConnectorGedaante`) wint van de automatische inhoud-regel;
   `effectieveConnectorGedaante()` is de ene beslisplek (materialisatie én

@@ -83,8 +83,11 @@ export function effectieveConnectorGedaante(connector, diagram) {
 /**
  * Samentrekking (lollipop-familie): staat het voorkomen aan deze kant
  * ingeklapt (DiagramNode.gedaante === samentrekking.gedaante van zijn
- * ElementType) én noemt die samentrekking dit relatietype, dan wordt de
- * lijn aan die kant "kaal" getekend — het steeltje van de lollipop.
+ * ElementType) én noemt die samentrekking dit relatietype, dan absorbeert
+ * het samenstel de notatie van de lijn: die wordt over de héle lengte kaal
+ * — het steeltje van de lollipop. Ook de marker aan de óverkant vervalt
+ * (ArchiMate-compositie: de ruit bij de aanbieder), want de aanhechting is
+ * juist wat het bolletje zelf al uitdrukt.
  */
 function samengetrokkenKant(ref, elementId, connector, elements, elementTypesById) {
   const st = elementTypesById[elements[elementId]?.elementType]?.samentrekking;
@@ -180,15 +183,15 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       ...(et.hooks?.edgePresentatie?.(el) || {}),
     };
 
-    // Samentrekking (lollipop): een ingeklapt uiteinde maakt de lijn daar
-    // kaal — geen streepjespatroon, geen marker. Bij realisatie-naar-bolletje
-    // blijft zo alleen het steeltje over.
-    const bronSamengetrokken = samengetrokkenKant(bronRef, el.source, el, elements, elementTypesById);
-    const doelSamengetrokken = samengetrokkenKant(doelRef, el.target, el, elements, elementTypesById);
-    if (bronSamengetrokken || doelSamengetrokken) {
+    // Samentrekking (lollipop): een ingeklapt uiteinde maakt de lijn kaal —
+    // geen streepjespatroon, geen markers. Wat overblijft is het steeltje.
+    if (
+      samengetrokkenKant(bronRef, el.source, el, elements, elementTypesById) ||
+      samengetrokkenKant(doelRef, el.target, el, elements, elementTypesById)
+    ) {
       basisPresentatie.lijn = "solid";
-      if (bronSamengetrokken) basisPresentatie.markerStart = null;
-      if (doelSamengetrokken) basisPresentatie.markerEnd = null;
+      basisPresentatie.markerStart = null;
+      basisPresentatie.markerEnd = null;
     }
 
     if (effectieveConnectorGedaante(el, diagram) !== "box") {

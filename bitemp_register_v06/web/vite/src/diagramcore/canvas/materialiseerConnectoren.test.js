@@ -466,3 +466,36 @@ test("samentrekking: ingeklapt doel-voorkomen maakt de lijn kaal (lollipop-steel
   assert.equal(maak("bol").lijn, "solid");
   assert.equal(maak("bol").markerEnd, null);
 });
+
+test("samentrekking maakt óók de marker aan de overkant kaal (ArchiMate-ruit)", () => {
+  // ArchiMate-geval: component ──◆ interface (compositie, ruit aan de bron).
+  // Ingeklapt hoort er één kaal steeltje te staan, dus zonder ruit.
+  const types = {
+    component: { id: "component", shape: "class-box" },
+    interface: {
+      id: "interface",
+      shape: "class-box",
+      samentrekking: { gedaante: "bol", relatieTypes: ["compositie"] },
+    },
+    compositie: {
+      id: "compositie",
+      shape: "edge",
+      isConnector: true,
+      edgePresentatie: { lijn: "solid", markerStart: "ruit" },
+    },
+  };
+  const elements = {
+    C: { id: "C", elementType: "component" },
+    I: { id: "I", elementType: "interface" },
+    r1: { id: "r1", naam: "", elementType: "compositie", source: "C", target: "I", compartimenten: [], data: {} },
+  };
+  const maak = (gedaante) =>
+    materialiseerConnectoren(elements, {
+      nodes: [
+        { elementId: "C", position: { x: 0, y: 0 } },
+        { elementId: "I", position: { x: 400, y: 0 }, ...(gedaante ? { gedaante } : {}) },
+      ],
+    }, types).edges[0].data.presentatie;
+  assert.equal(maak(null).markerStart, "ruit");
+  assert.equal(maak("bol").markerStart, null);
+});

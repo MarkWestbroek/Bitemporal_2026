@@ -35,6 +35,7 @@ import {
   useStoreApi,
   getNodesBounds,
 } from "@xyflow/react";
+import { createPortal } from "react-dom";
 import { exporteerViewport } from "../export/exporteerCanvas.js";
 import { maakExportFilter } from "../export/exportFilter.js";
 import { tekenBounds } from "../export/tekenBounds.js";
@@ -884,7 +885,12 @@ function CanvasBinnenkant({
         !connectorId && doel?.position && doel?.data?.element ? doel.id : null;
       const nodeId = voorkomenId ? doel.data.element.id : null;
       const items = bouwContextMenu({ selectieAantal, connectorId, nodeId, voorkomenId });
-      if (items?.length) setContextMenu({ x: ev.clientX, y: ev.clientY, items });
+      // Portaaldoel: het canvasvlak buiten `.react-flow`. React Flow zet
+      // `z-index: 0` op zijn wrapper en vormt daarmee een stacking context —
+      // een menu daarbinnen verliest van de taakbalken (z-index 20) hoezeer
+      // je zijn eigen z-index ook ophoogt (Mark, 07-09).
+      const vlak = ev.target?.closest?.(".dc-canvasvlak") || null;
+      if (items?.length) setContextMenu({ x: ev.clientX, y: ev.clientY, items, vlak });
     },
     [bouwContextMenu, getNodes]
   );
@@ -1109,7 +1115,7 @@ function CanvasBinnenkant({
     >
       <Background gap={16} size={1} />
       <Controls showInteractive={false} />
-      {contextMenu && (
+      {contextMenu && createPortal(
         <div
           className="dc-contextmenu"
           ref={(el) => {
@@ -1144,7 +1150,8 @@ function CanvasBinnenkant({
               </button>
             )
           )}
-        </div>
+        </div>,
+        contextMenu.vlak || document.body
       )}
       <MiniMap pannable zoomable nodeComponent={MiniMapNode} />
     </ReactFlow>

@@ -38,6 +38,17 @@ const ROND = 10; // gedragselementen (proces/functie/service/event/…)
 
 const ALLE_IDS = [...ELEMENTEN.map(([id]) => id), "junction"];
 
+/**
+ * De drie interfaces kennen de cirkel-notatie ("lollipop"). ArchiMate ziet
+ * die formeel als alternatieve *elementvorm* (de relatie ernaartoe blijft een
+ * gewone compositie/toewijzing) — daarom staat het figuur ook in de
+ * vormen-set. De samentrekking hieronder is de volgende stap: het voorkomen
+ * inklappen tot een kaal bolletje, waarbij de lijn vanaf de aanbieder hét
+ * steeltje wordt in plaats van een tweede stokje naast het figuur. Puur
+ * weergave per voorkomen; het model houdt zijn compositie/toewijzing.
+ */
+const INTERFACE_IDS = new Set(["business-interface", "app-interface", "tech-interface"]);
+
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
   ...ELEMENTEN.map(([id, label, kleur, icoon, rond, omschrijving, kort]) => ({
@@ -58,6 +69,16 @@ const elementTypes = [
     // hun eigen vormgrammatica, net als ronde hoeken voor gedrag.
     ...(kleur === MOTIVATION ? { hoekStijl: "afgeschuind" } : {}),
     ...(rond ? { hoekRadius: ROND } : {}),
+    ...(INTERFACE_IDS.has(id)
+      ? {
+          samentrekking: {
+            gedaante: "bol",
+            relatieTypes: ["compositie", "toewijzing"],
+            labelIngeklapt: "bolletje (lollipop)",
+            labelUitgeklapt: "volledig element",
+          },
+        }
+      : {}),
     properties: [KLEUR_VELD],
   })),
   {
