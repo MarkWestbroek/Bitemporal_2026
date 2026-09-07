@@ -309,6 +309,12 @@ toegangsregel-profiel (ontworpen vormentaal — apart bekijken).
   echte begin-/eindmarkers (ruit ◆/◇, bol, driehoek, pijl open/dicht, kruis-cirkel,
   schuine streep). Geldt automatisch voor álle profielen; een expliciete `icoon`-id wint
   nog steeds. Kraaienpoten (ERD, per connector via hooks) vallen terug op een kaal uiteinde.
+- **Vorm-node = het figuur** (archimate `vormShapes.jsx`) — de node was een ruimer vlak
+  (min 92×84, naam erin) waarin het symbool onderin zweefde; uitlijnen/aanhechten/selectie
+  werkten op die onzichtbare doos ("ik snap niet waarop ie alignt"). Nu is de node het
+  symboolvlak zelf, aspect-correct uit de viewBox (hoogte 64), met de naam eronder als
+  `.dc-buitenlabel` (doet mee met Beeld → Buitenlabels). Lijnen hechten op het figuur,
+  uitlijnen lijnt figuren uit, en "Maat aanpassen aan inhoud" krimpt naar het figuur.
 
 ## 6. Valkuilen & geleerde lessen
 

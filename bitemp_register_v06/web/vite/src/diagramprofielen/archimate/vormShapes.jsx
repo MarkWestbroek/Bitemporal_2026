@@ -38,65 +38,50 @@ const LIJN = "var(--dc-lijn, #334155)";
 const OPEN = "var(--dc-marker-vulling, #ffffff)";
 const TEKST = "var(--s-fg, #0f172a)";
 
-/** Minimum-maat van een niet-geresizede vormnode (symboolvlak + naamregel). */
-const MIN_BREEDTE = 92;
-const MIN_HOOGTE = 84;
-const MIN_SYMBOOL = 52;
+/** Standaard-symboolhoogte van een niet-geresizede vormnode. */
+const SYMBOOL_HOOGTE = 64;
 
 /**
- * Frame om elke vormshape: symboolvlak (schaalt) + de naam eronder, binnen de
- * node. `teken({ vulling, kleur, sw })` levert de SVG-inhoud in `viewBox`.
+ * Frame om elke vormshape: de node ís het symboolvlak, aspect-correct uit de
+ * viewBox (natuurlijke maat = viewBox geschaald naar SYMBOOL_HOOGTE); de naam
+ * hangt eronder als buitenlabel — buiten de node, zoals bij BPMN-events. Zo
+ * is de doos die uitlijnen/aanhechten/selectie zien exact het figuur (Mark,
+ * 07-09: uitlijnen leek nergens op te lijnen — dat was de onzichtbare, veel
+ * ruimere doos). `teken({ vulling, kleur, sw })` levert de SVG-inhoud.
  */
 function VormNode({ element, elementType, selected, children, viewBox, teken }) {
   const vulling = element?.data?.kleur || elementType?.kleur || OPEN;
   const kleur = selected ? "var(--dc-selectie, #4f46e5)" : LIJN;
   const sw = selected ? 2.8 : 1.8;
+  const [, , vbB, vbH] = String(viewBox).split(/\s+/).map(Number);
+  const natuurlijkeBreedte = Math.round((vbB / vbH) * SYMBOOL_HOOGTE);
   return (
     <div
       style={{
         width: "100%",
         height: "100%",
-        minWidth: MIN_BREEDTE,
-        minHeight: MIN_HOOGTE,
+        // Zonder expliciete maat (Position.elementSize) krimpt de React
+        // Flow-wrapper naar deze minima → het figuur op ware verhouding.
+        minWidth: natuurlijkeBreedte,
+        minHeight: SYMBOOL_HOOGTE,
         boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        gap: 3,
-        padding: 2,
         position: "relative",
       }}
     >
-      {/* Symboolvlak: absoluut gepositioneerde SVG in een relatief vlak, zodat
-          de hoogte deterministisch is (flex-item met minHoogte) en de SVG
-          precies dat vlak vult — "meet" houdt de verhouding. */}
-      <div style={{ position: "relative", width: "100%", flex: "1 1 auto", minHeight: MIN_SYMBOOL }}>
-        <svg
-          viewBox={viewBox}
-          // YMax: het symbool zakt naar de onderkant van zijn vlak, dus
-          // tégen de naam aan — bij een hoge node zweefde het los erboven
-          // met een gat ertussen (Mark, 07-09).
-          preserveAspectRatio="xMidYMax meet"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", pointerEvents: "none" }}
-        >
-          {teken({ vulling, kleur, sw })}
-        </svg>
-      </div>
-      <div
-        style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: TEKST,
-          textAlign: "center",
-          maxWidth: "100%",
-          lineHeight: 1.2,
-          overflowWrap: "anywhere",
-          pointerEvents: "none",
-        }}
+      <svg
+        viewBox={viewBox}
+        // YMax: bij een handmatig opgerekte node zakt het symbool naar de
+        // onderkant, tegen het naamlabel aan.
+        preserveAspectRatio="xMidYMax meet"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", pointerEvents: "none" }}
       >
+        {teken({ vulling, kleur, sw })}
+      </svg>
+      {/* Zelfde klasse als het motor-buitenlabel: vaste breedte, gecentreerd,
+          en hij luistert mee naar Beeld → Buitenlabels. */}
+      <span className="dc-buitenlabel" style={{ color: TEKST }}>
         {element?.naam || `(${elementType?.label || "?"})`}
-      </div>
+      </span>
       {children}
     </div>
   );
