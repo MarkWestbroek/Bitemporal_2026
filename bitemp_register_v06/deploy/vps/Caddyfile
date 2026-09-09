@@ -42,6 +42,12 @@ app.omnium-ide.nl {
 		max_size 20MB
 	}
 
+	# Het kale adres zelf doorverwijzen. Laat je dit aan de nginx in de
+	# frontend-container over, dan bouwt die een absolute http://-URL — hij
+	# weet niet dat de bezoeker via TLS binnenkwam, want Caddy praat intern
+	# over gewone http met hem. Resultaat: een onnodige hop over http.
+	redir / /viz/react/ 302
+
 	reverse_proxy 127.0.0.1:8083
 }
 
