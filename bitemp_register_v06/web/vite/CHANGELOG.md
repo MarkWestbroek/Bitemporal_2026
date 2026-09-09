@@ -7,6 +7,8 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+
+## [studio/v0.7.0] — 2026-09-09
 ### Gerepareerd
 - **Diagram-export sneed tekening af.** Het kader kwam van `getNodesBounds`
   (alleen de node-boxen uit het model). Alles wat daarbuiten getekend wordt
