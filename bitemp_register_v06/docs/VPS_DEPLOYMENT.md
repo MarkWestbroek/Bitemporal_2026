@@ -266,6 +266,7 @@ hoort rate-limiting en een quotum per account in de API, niet in de server.
 ## 8. Backups: VPS schrijft, NAS haalt op
 
 ```bash
+sudo apt -y install cron            # ontbreekt op de minimal image
 chmod +x /srv/omnium/backup.sh
 mkdir -p /srv/omnium/backups
 /srv/omnium/backup.sh                      # één keer met de hand; controleer de map

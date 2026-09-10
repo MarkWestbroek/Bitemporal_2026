@@ -11,6 +11,9 @@
 # Bewaar je géén kopie elders, zet KEEP dan hoger.
 #
 # Cron (als gebruiker omnium):  0 3 * * *  /srv/omnium/backup.sh >> /srv/omnium/backups/backup.log 2>&1
+# Let op: de minimal Ubuntu-image van mijn.host heeft géén cron — eerst
+# `sudo apt -y install cron`. De tar draait met --user zodat minio.tgz van
+# omnium is en niet van root (de rsync-pull vanaf de NAS leest als omnium).
 set -euo pipefail
 
 STACK_DIR="${STACK_DIR:-/srv/omnium}"
@@ -30,7 +33,7 @@ $COMPOSE exec -T postgres pg_dump -U "$POSTGRES_USER" -d "${POSTGRES_DB:-bitemp_
   > "$dest/postgres.dump"
 
 echo "[$stamp] minio → $dest/minio.tgz"
-docker run --rm \
+docker run --rm --user "$(id -u):$(id -g)" \
   -v "$(basename "$STACK_DIR")_bitemp_minio_data":/data:ro \
   -v "$dest":/out \
   alpine:3.21 tar czf /out/minio.tgz -C /data .
