@@ -266,7 +266,7 @@ hoort rate-limiting en een quotum per account in de API, niet in de server.
 ## 8. Backups: VPS schrijft, NAS haalt op
 
 ```bash
-sudo apt -y install cron            # ontbreekt op de minimal image
+sudo apt -y install cron rsync      # allebei afwezig op de minimal image; rsync is nodig voor de pull
 chmod +x /srv/omnium/backup.sh
 mkdir -p /srv/omnium/backups
 /srv/omnium/backup.sh                      # één keer met de hand; controleer de map
@@ -278,7 +278,16 @@ manifest, **3 dagen** bewaard (`KEEP` in het script) — schijfruimte is op een
 VPS de schaarse bron en de NAS bewaart de lange historie. De NAS haalt de map op — de VPS opent nooit een verbinding
 naar huis: TrueNAS → *Data Protection* → *Rsync Tasks* → **Pull**, host `<VPS-IP>`, user
 `omnium`, SSH-key van de NAS in `/home/omnium/.ssh/authorized_keys`, remote path
-`/srv/omnium/backups/`, dagelijks om 04:00.
+`/srv/omnium/backups/`, dagelijks om **06:00 lokale tijd** — de server draait op UTC, dus
+cron 03:00 is 05:00 zomertijd. *Delete* uit: de VPS houdt drie dagen, de NAS bewaart
+alles; grens dat op de NAS met periodieke ZFS-snapshots, niet in rsync.
+
+Tussendoor, of als de NAS uitstaat, is dezelfde pull naar een laptop één regel
+(buiten iCloud-mappen, want `env.txt` bevat de secrets):
+
+```bash
+rsync -av omnium@62.129.142.42:/srv/omnium/backups/ ~/Backups/omnium/
+```
 
 Terugzetten: `pg_restore -U bitemp -d bitemp_go_db_v06 --clean postgres.dump` in de
 postgres-container; `minio.tgz` uitpakken in het minio-volume.

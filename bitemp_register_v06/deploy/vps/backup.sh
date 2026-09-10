@@ -12,7 +12,7 @@
 #
 # Cron (als gebruiker omnium):  0 3 * * *  /srv/omnium/backup.sh >> /srv/omnium/backups/backup.log 2>&1
 # Let op: de minimal Ubuntu-image van mijn.host heeft géén cron — eerst
-# `sudo apt -y install cron`. De tar draait met --user zodat minio.tgz van
+# `sudo apt -y install cron rsync` (rsync voor de pull vanaf de NAS of een laptop). De tar draait met --user zodat minio.tgz van
 # omnium is en niet van root (de rsync-pull vanaf de NAS leest als omnium).
 set -euo pipefail
 
