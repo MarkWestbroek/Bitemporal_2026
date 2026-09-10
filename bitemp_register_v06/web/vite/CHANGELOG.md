@@ -8,6 +8,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.7.2] — 2026-09-10
+### Gerepareerd
+- **Help-menu gaf "Markdown file not found" in productie.** De link wees op
+  `/docs/bitemp_register_v06/docs/STUDIO.md`, dat de API alleen kan renderen
+  als hij vanuit een git-checkout draait (`findProjectRoot` zoekt een
+  `.git`-map); in de Docker-image zit alleen de binary. Wijst nu naar
+  STUDIO.md op GitHub. Structurele fix (gecureerde docs in de image +
+  `DOCS_ROOT`) staat op de backlog.
+
 ## [studio/v0.7.1] — 2026-09-10
 ### Gerepareerd
 - **Profiel-editor liet de hele Studio crashen in productie.** Openen gaf
