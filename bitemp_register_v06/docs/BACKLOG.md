@@ -1333,3 +1333,23 @@ server staan, niet in de map waaruit hij toevallig gestart wordt.**
   Imprint op dezelfde VPS (`imprint-engine.nl` is nog vrij, zie
   `VPS_DEPLOYMENT.md` §11). Als 27.2 er is, kan die site zelf ook op het
   register draaien — dan is de cirkel rond.
+
+## 28. Begeleiding in de Studio — palette, lege staten, hints, checklist (2026-09-10)
+
+Ontwerp: [`plans/2026-09-10 Begeleiding in de Studio — palette, lege staten, hints, checklist (ontwerp).md`](plans/2026-09-10%20Begeleiding%20in%20de%20Studio%20%E2%80%94%20palette%2C%20lege%20staten%2C%20hints%2C%20checklist%20%28ontwerp%29.md)
+
+Vervangt het eerdere backlogidee "wizards". Uitgangspunt: hulp die aanwezig
+en toestandsbewust is maar nooit modaal — de gebruiker houdt de besturing.
+
+- [ ] **28.1 Command palette (Cmd+K)** — tweede weergave van de acties uit
+      `buildMenus.js`, met `uitleg` en sneltoets, fuzzy zoeken. Eerst.
+- [ ] **28.2 Lege staten** — generiek `LegeStaat` in `maakDiagramActiviteit`,
+      gevoed door `previewTekst`/`laadVoorbeeld` + startacties per activiteit.
+- [ ] **28.3 Contextuele hints** — op toestandsovergangen, één keer,
+      niet-blokkerend; `studio05-hints-gezien`. Zoveel mogelijk **afgeleid**
+      uit het actieve profiel (verbindingsregels, elementtypen).
+- [ ] **28.4 Checklist publiceerpad** — model → schemaversie → rebuild, in
+      elke volgorde, met *toon me*.
+- [ ] 28.5 Rondleiding eerste minuut — alleen na gebruikerstest.
+- Hangt samen met §27.3 (help als Imprint-site: de referentie waar "Meer…"
+  naartoe linkt).
