@@ -8,6 +8,21 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.7.1] — 2026-09-10
+### Gerepareerd
+- **Profiel-editor liet de hele Studio crashen in productie.** Openen gaf
+  `Setting the value of 'studio05-profiel-ontwerp' exceeded the quota`, en
+  omdat `studio-shell` onthoudt welke activiteit open stond crashte hij bij
+  elke herlaad opnieuw — de Studio was daarmee onbereikbaar tot je
+  `localStorage` leegde. Oorzaak: `herlaadUitModel` materialiseert alle
+  twintig geregistreerde profielen tot ontwerp-diagrammen naast elkaar, en
+  die hele bak ging als één waarde naar `localStorage` (~5 MB per origin).
+  Alleen zichtbaar in productie: in dev vangt de `studio05Map`-plugin uit
+  `vite.config` de opslag af naar bestanden in `web/vite/`, zonder limiet.
+  De editor heeft die persistentie niet nodig — zijn inhoud is afgeleid en
+  wordt bij openen opnieuw opgebouwd; de layouts staan apart in
+  `studio05-profiel-layouts`. `persistKey` is daarom verwijderd.
+
 ## [studio/v0.7.0] — 2026-09-09
 ### Gerepareerd
 - **Diagram-export sneed tekening af.** Het kader kwam van `getNodesBounds`
