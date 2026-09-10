@@ -1283,3 +1283,53 @@ egistreer-bereikbaarheid topic — alleen bereikbaarheid (NP bestaat al, histori
 - process_engine_v01/internal/worker/service_task.go — external-task worker implementatie (6 topics)
 - Padnamen: zie MetaRegistry — altijd snake_case + meervoud (bijv. locaties, 
 atuurlijk_personen)
+
+## 27. Productie-hardheid — de Studio zonder git-checkout (2026-09-10)
+
+Aanleiding: de eerste uitrol op een eigen VPS (`app.omnium-ide.nl`, zie
+`VPS_DEPLOYMENT.md`) legde twee bugs bloot die in dev onzichtbaar zijn omdat
+de ontwikkelomgeving stilzwijgend meer biedt dan de productie-image: een
+git-checkout op schijf en een Vite-plugin die naar bestanden schrijft.
+Rode draad: **alles wat de Studio nodig heeft moet in de image of op de
+server staan, niet in de map waaruit hij toevallig gestart wordt.**
+
+### 27.1 Documentatie in de image — help-menu weer via `/docs` (open)
+
+- `handlers/docs_handler.go` → `findProjectRoot` klimt naar een `.git`-map en
+  serveert vandaaruit. In `Dockerfile.api` zit alleen de binary in `/root`,
+  dus `/docs/<pad>` geeft "Markdown file not found". Sinds studio 0.7.2 wijst
+  het help-menu daarom naar STUDIO.md op GitHub (tijdelijk; linkt naar `main`
+  terwijl de build van een feature-branch kan komen).
+- Te doen: (a) `DOCS_ROOT`-omgevingsvariabele met voorrang op het
+  `.git`-gezoek; (b) `Dockerfile.api` kopieert een **gecureerde** set
+  `.md`-bestanden naar bijv. `/app/docs` — `docs/` is 135 MB incl. pptx,
+  `CG PF` en chat-exports, dus niet integraal; (c) frontend-link terug naar
+  `/docs/STUDIO.md` zonder monorepo-prefix, zodat de help altijd bij de
+  draaiende versie hoort.
+
+### 27.2 Modellen bitemporeel opslaan — werk overleeft de browser niet (open)
+
+- Elke activiteit persisteert zijn diagrammen in `localStorage`
+  (`studio05-<profiel>`), per browser, per apparaat. Een geleegde cache, een
+  ander browserprofiel of een incognitovenster en het werk is weg; een
+  collega ziet nooit wat jij tekent. Gedeeld is alleen wat expliciet naar de
+  server gaat: schemaversies (`/api/schema/versies`) en bestanden in MinIO
+  (`/api/bestanden`).
+- De 0.7.1-bug (profiel-editor materialiseert alle profielen en liep tegen
+  de ~5 MB-limiet van `localStorage`) is hetzelfde probleem van de andere
+  kant: de browser is geen opslagplaats.
+- Richting: modellen (diagrammen, zelfgemaakte profielen/vormen/iconen) als
+  registraties in het bitemporele register zelf, via de bestaande API — met
+  formele én materiële tijd. Dan wordt "laat dit model zien zoals het op
+  1 juni was" een gewone query, en is `localStorage` nog hooguit een cache
+  voor onopgeslagen werk. Dezelfde beweging als de `BitempContentStore` voor
+  Imprint (zie imprint-engine `docs/backlog.md`); ontwerp eerst de
+  `ContentStore`-achtige laag, dan pas de UI.
+
+### 27.3 Help als Imprint-site in plaats van markdown (idee)
+
+- Een Imprint-imprint voor de Studio-documentatie geeft widgets, navigatie
+  en een redactionele workflow in plaats van platte `.md`. Hangt af van
+  Imprint op dezelfde VPS (`imprint-engine.nl` is nog vrij, zie
+  `VPS_DEPLOYMENT.md` §11). Als 27.2 er is, kan die site zelf ook op het
+  register draaien — dan is de cirkel rond.
