@@ -354,3 +354,64 @@ container of `apt install mariadb-server`, Next.js als systemd-service (of conta
 
 **Plan B (NAS)** blijft `docker-compose.truenas.yml` + `TRUENAS_DEPLOYMENT.md` §4.
 **Plan C** is `docker compose -f docker-compose.split.yml up` op de laptop.
+
+---
+
+## 12. Wat er verder op deze machine draait
+
+De VPS is niet alleen van Omnium. Wie hier later `ufw status` of `ip addr` bekijkt
+en zich afvraagt waarom poort 51820 open staat en er een `wg0` bestaat:
+
+### 12.1 WireGuard-knooppunt (sinds 12 september 2026)
+
+**Waarom.** Een MikroTik LHG LTE18 op een afgelegen locatie in Polen zit achter de
+CGNAT van Plus (adres in `100.64.0.0/10`) en is van buiten onbereikbaar. De VPS heeft
+wél een vast adres, dus beide kanten bellen naar de VPS en die zet ze aan elkaar.
+Vanaf de laptop is daarna `http://192.168.188.1` (WebFig) en het LAN erachter
+(camera's, later een NAS) bereikbaar alsof je ter plaatse bent.
+
+**Opzet.**
+
+| | adres | rol |
+|---|---|---|
+| VPS `wg0` | `10.10.0.1/24`, UDP 51820 | knooppunt, routeert tussen de peers, geen NAT |
+| MikroTik | `10.10.0.2`, LAN `192.168.188.0/24` erachter | belt uit, `PersistentKeepalive 25` |
+| laptop (macOS) | `10.10.0.3` | split tunnel: alleen `10.10.0.0/24` en `192.168.188.0/24` |
+
+**Bestanden op de server.** `/etc/wireguard/wg0.conf` (root, 600) en
+`/etc/wireguard/keys/` met `vps.key` en de drie `.pub`. De privésleutels van de
+clients zijn na oplevering van de server verwijderd; die staan alleen in de
+clientbestanden (laptop-`.conf`, MikroTik-invullijst) in Marks wachtwoordmanager.
+Service: `wg-quick@wg0`, enabled.
+
+**Wat er aan het systeem is veranderd — alleen toevoegingen:**
+
+```bash
+/etc/sysctl.d/99-wireguard.conf        # net.ipv4.ip_forward = 1 (stond al aan via Docker)
+ufw allow 51820/udp
+ufw route allow in on wg0 out on wg0   # DEFAULT_FORWARD_POLICY is DROP; dit is de enige route-regel
+```
+
+Docker zet zijn eigen `DOCKER-USER`/`DOCKER-FORWARD`-ketens vóór die van ufw, maar die
+raken `wg0` niet. Pakketten `wireguard-tools` en `tcpdump` zijn erbij geïnstalleerd.
+Met `tcpdump -ni eth0 udp port 51820` is aangetoond dat mijn.host geen firewall tussen
+internet en de VPS heeft voor deze poort.
+
+**Controleren.**
+
+```bash
+sudo wg show            # per peer: endpoint + "latest handshake" < ~2 min = verbonden
+ping -c3 10.10.0.2      # MikroTik door de tunnel
+ping -c3 192.168.188.1  # router-LAN via AllowedIPs (bewijst ook de MikroTik-firewall)
+```
+
+Aan de MikroTik-kant: `wg-vps` is toegevoegd aan de interfacelijst `LAN`, zodat de
+defconf-regel *drop all not coming from LAN* de tunnel doorlaat. Zonder dat werkt de
+tunnel wel, maar WebFig via de tunnel niet.
+
+**Een peer toevoegen.** Sleutelpaar genereren (`wg genkey | tee x.key | wg pubkey`),
+een `[Peer]`-blok met `AllowedIPs = 10.10.0.N/32` in `wg0.conf`, dan
+`sudo wg syncconf wg0 <(sudo wg-quick strip wg0)` — zonder de tunnel te herstarten.
+
+**Weghalen.** `sudo systemctl disable --now wg-quick@wg0`, de twee ufw-regels
+verwijderen (`ufw status numbered` → `ufw delete N`), `/etc/wireguard` wissen.
