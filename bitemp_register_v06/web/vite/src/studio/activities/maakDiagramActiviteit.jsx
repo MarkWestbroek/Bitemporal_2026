@@ -48,6 +48,9 @@ import { ELEMENT_REF_MIME as REF_MIME } from "../../diagramcore/canvas/externDro
 import { registreerProfieltype } from "../profieltypeRegistry";
 import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
+import { staatMeerdereVoorkomensToe, vindVoorkomen } from "../../diagramcore/model/voorkomens.js";
+import { effectieveConnectorGedaante } from "../../diagramcore/canvas/materialiseerConnectoren.js";
+import { metGroepScheidingen } from "../../diagramcore/taskbar/scheidingen.js";
 
 /** Huidige export-voorkeuren → opties voor layoutApi.exporteerAfbeelding. */
 const leesExportOpties = () => {
@@ -195,7 +198,16 @@ export function maakDiagramActiviteit(opties) {
   const Ctx = createContext(null);
 
   function Provider({ children }) {
-    const [selectieId, setSelectieId] = useState(null);
+    const [selectieId, setSelectieIdState] = useState(null);
+    const [selectieVoorkomenId, setSelectieVoorkomenId] = useState(null);
+    const setSelectieId = useCallback((elementId) => {
+      setSelectieIdState(elementId);
+      setSelectieVoorkomenId(null);
+    }, []);
+    const selecteerVoorkomen = useCallback((elementId, voorkomenId) => {
+      setSelectieIdState(elementId);
+      setSelectieVoorkomenId(voorkomenId || null);
+    }, []);
     const [verbindingsType, setVerbindingsType] = useState(null);
     // Werkbestand-import met keuze: het gelezen bestand wacht hier tot de
     // gebruiker kiest (over huidig diagram / ernaast / alles vervangen).
@@ -222,8 +234,9 @@ export function maakDiagramActiviteit(opties) {
     }, []);
 
     // Eerste keer: alleen laden als de (persistente) sandbox nog leeg is.
-    // Daarna altijd de undo-history wissen: de persist-rehydratie telt anders
-    // als eerste undo-stap, waardoor ver terug-undo'en het canvas leegmaakte.
+    // `herlaad` wist zelf de history. Wis hier niet onvoorwaardelijk bij mount:
+    // een mapimport kan plaatsvinden voordat dit profiel voor het eerst opent;
+    // die ene atomaire undo-stap moet na het openen beschikbaar blijven.
     useEffect(() => {
       const s = useStore.getState();
       // Alleen de allereerste keer spiegelen: als de (persistente) sandbox nog
@@ -238,7 +251,6 @@ export function maakDiagramActiviteit(opties) {
       ) {
         herlaad(false);
       }
-      useStore.temporal.getState().clear();
     }, [herlaad]);
 
     // Meld element-selecties aan de buitenwereld: de Modelleren-inspector
@@ -670,6 +682,8 @@ export function maakDiagramActiviteit(opties) {
         value={{
           selectieId,
           setSelectieId,
+          selectieVoorkomenId,
+          selecteerVoorkomen,
           verbindingsType,
           setVerbindingsType,
           herlaad,
@@ -1123,16 +1137,19 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
 
     const voegToe = (el) => {
       const midden = layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 160 };
+      const elementType = elementTypesById[el.elementType];
+      const meerdereVoorkomens = staatMeerdereVoorkomensToe(descriptor, elementType);
       useStore.getState().addElementToDiagram(actiefDiagram, el.id, {
         x: midden.x - 90,
         y: midden.y - 50,
-      });
+      }, { meerdereVoorkomens });
       setSelectieId(el.id);
     };
 
     const Rij = (el, diepte = 0) => {
       const et = elementTypesById[el.elementType];
       const zichtbaar = opDiagram.has(el.id);
+      const meerdereVoorkomens = staatMeerdereVoorkomensToe(descriptor, et);
       const kinderen =
         diepte < 8
           ? sorteer((kinderenVan.get(el.id) || []).map((kid) => inbegrepen.get(kid)).filter(Boolean))
@@ -1223,10 +1240,10 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             >
               {el.naam || `(${el.id})`}
             </span>
-            {!zichtbaar && !et?.isConnector && actiefDiagram && (
+            {(!zichtbaar || meerdereVoorkomens) && !et?.isConnector && actiefDiagram && (
               <button
                 className="dc-mini-knop"
-                title="Toevoegen aan het huidige diagram"
+                title={zichtbaar ? "Nog een voorkomen op het huidige diagram" : "Toevoegen aan het huidige diagram"}
                 onClick={(e) => {
                   e.stopPropagation();
                   voegToe(el);
@@ -1552,9 +1569,19 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       return "aan";
     }
   };
+  // Compacte taakbalken (Marks optie d, 07-09): alleen het icoon, iets
+  // groter, met de elementkleur als chip — de naam via de eigen tooltip.
+  const compactSleutel = `${taakbalkSleutel}-compact`;
+  const leesCompact = () => {
+    try {
+      return window.localStorage.getItem(compactSleutel) === "aan";
+    } catch {
+      return false;
+    }
+  };
 
   function Main() {
-    const { selectieId, setSelectieId, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind, layoutApiRef } =
+    const { selectieId, selecteerVoorkomen, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind, layoutApiRef } =
       useContext(Ctx);
     const theme = useUIStore((s) => s.theme);
 
@@ -1563,6 +1590,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     const [typering, setTypering] = useState(leesTypering);
     const [shapeSetId, setShapeSetId] = useState(leesShapeSet);
     const [buitenlabels, setBuitenlabels] = useState(leesLabels);
+    const [compacteBalk, setCompacteBalk] = useState(leesCompact);
     // N.B. beide abonnementen in één effect-body. (Hier zat een venijnige
     // bug: de typering-subscribe stond per ongeluk op de deps-positie van
     // useEffect, waardoor hij bij élke render opnieuw registreerde en nooit
@@ -1586,6 +1614,15 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           }
           setTypering(waarde);
           // Zonder ververs blijft het menu-vinkje op de vórige stand hangen.
+          setTimeout(() => menuBus.emit("menu:ververs"), 0);
+        }),
+        menuBus.on(ev("taakbalk-compact"), (aan) => {
+          try {
+            window.localStorage.setItem(compactSleutel, aan ? "aan" : "uit");
+          } catch {
+            /* localStorage kan uit staan; de state werkt dan alleen deze sessie */
+          }
+          setCompacteBalk(!!aan);
           setTimeout(() => menuBus.emit("menu:ververs"), 0);
         }),
         menuBus.on(ev("buitenlabels"), (waarde) => {
@@ -1656,8 +1693,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     }, [layoutApiRef]);
 
     // Rechtsklik-contextmenu: zelfde acties als taakbalken/menu.
+    // Menu-volgorde: de sectie van het aangeklikte ding (element/verbinding)
+    // stáát bovenaan — het menu is lang, en onderaan viel de sectie buiten
+    // het eerste gezicht (Mark, 07-09: "ik zie alleen de alles-optie").
     const bouwContextMenu = useCallback(
-      ({ selectieAantal, connectorId, nodeId }) => [
+      ({ selectieAantal, connectorId, nodeId, voorkomenId }) => {
+        const algemeenDeel = [
         { kop: true, label: "Uitlijnen" },
         ...UITLIJN_MODES.flatMap((m, i) => {
           const item = {
@@ -1675,6 +1716,15 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           : []),
         { id: "normaliseer", label: "Normaliseer relaties", icoon: "↔", onClick: () => menuBus.emit(ev("normaliseer")) },
         { id: "snap", label: "Snap nodes naar grid", icoon: UITLIJN_ICONEN.snap, onClick: () => layoutApiRef.current?.snapRaster() },
+        {
+          id: "maten-inhoud",
+          label: "Maten aanpassen aan inhoud (alles)",
+          icoon: "◱",
+          onClick: () => {
+            const s = useStore.getState();
+            if (s.actiefDiagramId) s.wisNodeMaten(s.actiefDiagramId);
+          },
+        },
         // Exporteren: selectie als er iets geselecteerd is, anders het hele
         // diagram. Achtergrond/schaal/marge komen uit Studio-instellingen →
         // Diagram-export (bij klik uitgelezen).
@@ -1691,8 +1741,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
         },
         { id: "exp-png", label: "Download PNG", icoon: "🖼", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1, ...leesExportOpties() }) },
         { id: "exp-svg", label: "Download SVG", icoon: "❖", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "svg", alleenSelectie: selectieAantal >= 1, ...leesExportOpties() }) },
+        ];
         // Rechtsklik op een element-node: z-order (L01) en gelijke maat (L02).
-        ...(nodeId
+        const elementDeel = (nodeId
           ? (() => {
               const s = useStore.getState();
               const zOrdes = Object.values(s.elements)
@@ -1728,23 +1779,103 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     }),
                 },
               ];
+              items.push({
+                id: "maat-inhoud",
+                label: "Maat aanpassen aan inhoud",
+                icoon: "◱",
+                // Wist de expliciete maat van dít voorkomen: terug naar de
+                // natuurlijke inhoud-maat (bv. het figuur i.p.v. de bewaarde
+                // Archi-boxmaat na een Exchange-import).
+                onClick: () => {
+                  const s = useStore.getState();
+                  if (s.actiefDiagramId) s.wisNodeMaten(s.actiefDiagramId, voorkomenId || nodeId);
+                },
+              });
               if (selectieAantal >= 2) {
                 items.push({
                   id: "gelijke-maat",
                   label: "Zelfde maat als dit element",
                   icoon: "⧉",
-                  onClick: () => layoutApiRef.current?.maakGelijkeMaat(nodeId),
+                  onClick: () => layoutApiRef.current?.maakGelijkeMaat(voorkomenId || nodeId),
+                });
+              }
+              // Samentrekking (gedaanten van een samenstel): heen en weer
+              // schakelen tussen de volledige vorm en bv. het lollipop-
+              // bolletje — per vóórkomen, het model blijft ongemoeid.
+              const samentrekking = elementTypesById[s.elements[nodeId]?.elementType]?.samentrekking;
+              if (samentrekking && s.actiefDiagramId) {
+                const diagram = s.diagrams[s.actiefDiagramId];
+                const voorkomen = vindVoorkomen(diagram?.nodes || [], voorkomenId || nodeId);
+                const ingeklapt = voorkomen?.gedaante === samentrekking.gedaante;
+                items.push({
+                  id: "gedaante-samentrek",
+                  label: ingeklapt
+                    ? `Toon als ${samentrekking.labelUitgeklapt || "volledige vorm"}`
+                    : `Toon als ${samentrekking.labelIngeklapt || samentrekking.gedaante}`,
+                  icoon: ingeklapt ? "▣" : "◯",
+                  onClick: () => {
+                    const st = useStore.getState();
+                    st.zetNodeGedaante(
+                      st.actiefDiagramId,
+                      voorkomenId || nodeId,
+                      ingeklapt ? null : samentrekking.gedaante
+                    );
+                  },
                 });
               }
               return items;
             })()
-          : []),
+          : []);
         // Rechtsklik op een connector: lijnvorm per connector (§8.5c).
-        ...(connectorId
+        const connectorDeel = (connectorId
           ? (() => {
               const huidig = useStore.getState().elements[connectorId]?.data?.vorm || "bezier";
               return [
                 { sep: true },
+                {
+                  id: "verberg-connector",
+                  label: "Verberg op dit diagram",
+                  onClick: () => {
+                    const s = useStore.getState();
+                    if (s.actiefDiagramId) {
+                      s.verbergConnectorOpDiagram(s.actiefDiagramId, connectorId);
+                      menuBus.emit("menu:ververs");
+                    }
+                  },
+                },
+                // ASOC-gedaante (gedaanten van een samenstel): een connector
+                // die inhoud kán dragen (compartments) is per diagram om te
+                // schakelen tussen lijn en associatieklasse-box. In de
+                // lijn-gedaante blijven aanwezige attributen verborgen.
+                ...(() => {
+                  const s = useStore.getState();
+                  const conn = s.elements[connectorId];
+                  const et = elementTypesById[conn?.elementType];
+                  if (!et?.compartments?.length || !s.actiefDiagramId) return [];
+                  const diagram = s.diagrams[s.actiefDiagramId];
+                  const alsBox = effectieveConnectorGedaante(conn, diagram) === "box";
+                  const heeftInhoud = (conn.compartimenten || []).some((c) => (c.velden || []).length > 0);
+                  return [
+                    {
+                      id: "gedaante-connector",
+                      label: alsBox
+                        ? `Toon als lijn${heeftInhoud ? " (verbergt attributen)" : ""}`
+                        : "Toon als associatieklasse (box)",
+                      icoon: alsBox ? "—" : "▣",
+                      onClick: () => {
+                        const st = useStore.getState();
+                        // Terug naar de automatische keuze waar dat kan:
+                        // alleen een keuze bewaren die van de inhoud afwijkt.
+                        const doel = alsBox ? "lijn" : "box";
+                        st.zetConnectorGedaante(
+                          st.actiefDiagramId,
+                          connectorId,
+                          (doel === "box") === heeftInhoud ? null : doel
+                        );
+                      },
+                    },
+                  ];
+                })(),
                 // Knikpunten: toevoegen gaat met ctrl-klik óp de lijn; hier
                 // alleen het wissen.
                 ...(() => {
@@ -1830,9 +1961,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 })(),
               ];
             })()
-          : []),
+          : []);
         // Rechtsklik op een node: kinderen in boomstijl + losmaken uit container.
-        ...(nodeId && !connectorId
+        const boomDeel = (nodeId && !connectorId
           ? (() => {
               const s = useStore.getState();
               const items = [];
@@ -1881,10 +2012,10 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 },
               ];
             })()
-          : []),
+          : []);
         // Rechtsklik op leeg canvas: activiteit-eigen acties (bv. "Activeer
         // profiel…") + exporteren zonder eerst naar het menu te hoeven.
-        ...(!nodeId && !connectorId
+        const canvasDeel = (!nodeId && !connectorId
           ? [
               { sep: true },
               ...canvasMenuExtra.map((m) => ({
@@ -1903,8 +2034,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 onClick: () => menuBus.emit(ev("importeer-05")),
               },
             ]
-          : []),
-      ],
+          : []);
+        // Aangeklikte ding eerst, dan het algemene deel (uitlijnen/exporteren).
+        const items = [...elementDeel, ...boomDeel, ...connectorDeel, ...algemeenDeel, ...canvasDeel];
+        while (items[0]?.sep) items.shift();
+        return items;
+      },
       [layoutApiRef]
     );
 
@@ -1936,39 +2071,54 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     // Taakbalken uit de DiagramType-descriptor (§4.6): acties afgeleid.
     const taakbalken = (descriptor.taakbalken || []).map((balk) => {
       let acties = [];
+      // Compact: alleen het (grotere) icoon op een chip in de elementkleur;
+      // naam en uitleg blijven via de taakbalk-tooltip beschikbaar.
+      const knopInhoud = (et, tekst) =>
+        compacteBalk ? (
+          <span
+            className="dc-taakbalk-icoonlabel is-compact"
+            style={et.kleur ? { background: et.kleur } : undefined}
+          >
+            <TypeIcoon elementType={et} maat={18} />
+          </span>
+        ) : (
+          <span className="dc-taakbalk-icoonlabel">
+            <TypeIcoon elementType={et} />
+            {tekst}
+          </span>
+        );
       if (balk.acties === "elementTypes") {
-        acties = descriptor.elementTypes
-          .filter((et) => !et.isConnector && et.kort)
+        const types = descriptor.elementTypes.filter((et) => !et.isConnector && et.kort);
+        acties = types
           .map((et) => ({
             id: et.id,
             label: et.kort,
-            icoon: (
-              <span className="dc-taakbalk-icoonlabel">
-                <TypeIcoon elementType={et} />
-                {et.kort}
-              </span>
-            ),
+            icoon: knopInhoud(et, et.kort),
             titel: `Nieuw: ${et.label}`,
             uitleg: et.omschrijving || null,
             onClick: () => plaatsNieuwElement(et.id),
           }));
+        acties = metGroepScheidingen(acties, (i) => types[i].taakbalkGroep);
       } else if (balk.acties === "connectorTypes") {
-        acties = descriptor.elementTypes
-          .filter((et) => et.isConnector)
+        const types = descriptor.elementTypes.filter((et) => et.isConnector);
+        // "Compositie Compositie" (ArchiMate: kort is afgeleid van het label)
+        // is ruis — als het label al met de korte naam begint, volstaat het
+        // label; het kort-glyph (◆, ▷, |<) blijft wél als voorvoegsel nuttig.
+        const knopTekst = (et) =>
+          et.label.toLowerCase().startsWith(et.kort.toLowerCase().replace(/\.$/, ""))
+            ? et.label
+            : `${et.kort} ${et.label}`;
+        acties = types
           .map((et) => ({
             id: et.id,
-            label: `${et.kort} ${et.label}`,
-            icoon: (
-              <span className="dc-taakbalk-icoonlabel">
-                <TypeIcoon elementType={et} />
-                {`${et.kort} ${et.label}`}
-              </span>
-            ),
+            label: knopTekst(et),
+            icoon: knopInhoud(et, knopTekst(et)),
             titel: `Verbindingsmodus: ${et.label} (klik nogmaals voor automatisch)`,
             uitleg: et.omschrijving || null,
             actief: verbindingsType === et.id,
             onClick: () => setVerbindingsType(verbindingsType === et.id ? null : et.id),
           }));
+        acties = metGroepScheidingen(acties, (i) => types[i].taakbalkGroep);
       } else if (balk.acties === "layouts") {
         acties = (descriptor.layouts || []).map((strategie) => ({
           id: strategie.id,
@@ -2029,21 +2179,21 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   bewerkbaar
                   verbindingsType={verbindingsType}
                   selectieId={selectieId}
-                  onSelectElement={(el) => setSelectieId(el?.id || null)}
-                  onNodePositie={(elementId, positie) => {
+                  onSelectElement={(el, voorkomenId) => selecteerVoorkomen(el?.id || null, voorkomenId)}
+                  onNodePositie={(voorkomenId, positie) => {
                     const s = useStore.getState();
-                    if (elementId.startsWith(ANKER_PREFIX)) {
-                      s.updateAnkerPosition(diagram.id, elementId.slice(ANKER_PREFIX.length), positie);
-                    } else if (!s.diagrams[diagram.id]?.nodes.some((n) => n.elementId === elementId)) {
-                      s.addElementToDiagram(diagram.id, elementId, positie);
+                    if (voorkomenId.startsWith(ANKER_PREFIX)) {
+                      s.updateAnkerPosition(diagram.id, voorkomenId.slice(ANKER_PREFIX.length), positie);
+                    } else if (!s.diagrams[diagram.id]?.nodes.some((n) => (n.nodeId || n.elementId) === voorkomenId)) {
+                      s.addElementToDiagram(diagram.id, voorkomenId, positie);
                     } else {
-                      s.updateNodePosition(diagram.id, elementId, positie);
+                      s.updateNodePosition(diagram.id, voorkomenId, positie);
                     }
                   }}
                   onNodePosities={(posities) => {
                     const s = useStore.getState();
                     const leden = new Set(
-                      (s.diagrams[diagram.id]?.nodes || []).map((n) => n.elementId)
+                      (s.diagrams[diagram.id]?.nodes || []).map((n) => n.nodeId || n.elementId)
                     );
                     const rest = {};
                     for (const [pid, pos] of Object.entries(posities)) {
@@ -2061,8 +2211,8 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     if (Object.keys(rest).length) s.updateNodePositions(diagram.id, rest);
                   }}
                   layoutApiRef={layoutApiRef}
-                  onNodeSize={(elementId, size) =>
-                    useStore.getState().updateNodeSize(diagram.id, elementId, size)
+                  onNodeSize={(voorkomenId, size) =>
+                    useStore.getState().updateNodeSize(diagram.id, voorkomenId, size)
                   }
                   onVerbind={verbind}
                   onVerwijder={(ids) => {
@@ -2098,14 +2248,14 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   onContainerDrop={(elementId, containerId) =>
                     verhangNaarContainer(useStore, elementId, containerId)
                   }
-                  onRandAanhechting={(elementId, ouderId, positie) => {
+                  onRandAanhechting={(elementId, ouderId, positie, voorkomenId) => {
                     // Rand-aanhechting (§3.1): gastheer op het element zelf
                     // (model-feit), relatieve/vrije positie op het diagram.
                     const s = useStore.getState();
                     const el = s.elements[elementId];
                     if (!el) return;
                     s.updateElement(elementId, { data: { randVan: ouderId || null } });
-                    s.updateNodePosition(diagram.id, elementId, positie);
+                    s.updateNodePosition(diagram.id, voorkomenId || elementId, positie);
                   }}
                   onNodeDoubleClick={(element) => {
                     // Gedragsverwijzing (§3.2): dubbelklik opent het
@@ -2118,10 +2268,21 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     menuBus.emit("studio:open-diagram", { profielId: id, diagramId: doelId });
                   }}
                   onExternDrop={(nodeId, ref, positie) => {
+                    const s = useStore.getState();
+                    // Een element uit de eigen elementen-/projectboom op lege
+                    // canvasruimte plaatsen. Alleen profielen/typen met de
+                    // voorkomen-vlag laten een tweede plaatsing toe.
+                    if (!nodeId && ref?.profielId === id && s.elements[ref.elementId]) {
+                      const el = s.elements[ref.elementId];
+                      const et = elementTypesById[el.elementType];
+                      const meerdereVoorkomens = staatMeerdereVoorkomensToe(descriptor, et);
+                      s.addElementToDiagram(diagram.id, el.id, positie, { meerdereVoorkomens });
+                      selecteerVoorkomen(el.id, null);
+                      return;
+                    }
                     // Cross-profiel drop (instantie-van-concept): het
                     // elementtype van de geraakte node beslist via zijn
                     // ontvangtDrop-hook (bv. levenslijn typeren).
-                    const s = useStore.getState();
                     const el = nodeId ? s.elements[nodeId] : null;
                     const et = el ? elementTypesById[el.elementType] : null;
                     if (el && et?.hooks?.ontvangtDrop) {
@@ -2250,7 +2411,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
   }
 
   function Inspector() {
-    const { selectieId, setSelectieId } = useContext(Ctx);
+    const { selectieId, setSelectieId, selectieVoorkomenId } = useContext(Ctx);
     const element = useStore((s) => (selectieId ? s.elements[selectieId] : null));
     const actief = useStore((s) => s.actiefDiagramId);
     const elements = useStore((s) => s.elements);
@@ -2290,7 +2451,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           bewerkbaar
           onUpdate={(patch) => useStore.getState().updateElement(element.id, patch)}
           onVerwijderVanDiagram={() => {
-            if (actief) useStore.getState().removeElementFromDiagram(actief, element.id);
+            if (actief) useStore.getState().removeElementFromDiagram(actief, selectieVoorkomenId || element.id);
             setSelectieId(null);
           }}
           onVerwijderUitModel={() => {
@@ -2468,6 +2629,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           })),
         },
         {
+          id: `${menuPrefix}-taakbalk-compact`,
+          label: "Compacte taakbalken",
+          checked: leesCompact(),
+          onClick: () => menuBus.emit(ev("taakbalk-compact"), !leesCompact()),
+        },
+        {
           id: `${menuPrefix}-buitenlabels`,
           label: "Buitenlabels",
           items: [
@@ -2480,6 +2647,21 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             onClick: () => menuBus.emit(ev("buitenlabels"), waarde),
           })),
         },
+        ...(() => {
+          const s = useStore.getState();
+          const actiefDiagram = s.diagrams[s.actiefDiagramId];
+          const aantal = actiefDiagram?.verborgenConnectoren?.length || 0;
+          return aantal
+            ? [{
+                id: `${menuPrefix}-toon-verborgen`,
+                label: `Toon verborgen relaties (${aantal})`,
+                onClick: () => {
+                  s.toonVerborgenConnectoren(s.actiefDiagramId);
+                  menuBus.emit("menu:ververs");
+                },
+              }]
+            : [];
+        })(),
       ],
     },
   ];

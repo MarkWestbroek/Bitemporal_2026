@@ -1,0 +1,68 @@
+# /etc/caddy/Caddyfile — Caddy als reverse proxy met automatisch Let's Encrypt.
+#
+# Caddy luistert op 80 en 443, vraagt zelf het certificaat aan zodra het A-record
+# naar deze machine wijst, vernieuwt het automatisch en stuurt http door naar
+# https. Herladen na wijziging:  sudo systemctl reload caddy
+#
+# Twee sites op één machine en één IP-adres. Caddy kiest op de Host-header, TLS
+# regelt dat via SNI — extra IP-adressen zijn dus niet nodig, hoeveel domeinen je
+# er ook bij zet. De hostnaam van de server zelf (vps1.paratmos.nl) speelt hier
+# geen rol; die zie je alleen in je shell-prompt en in de logs.
+
+(veilig) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
+
+# ── Landingspagina ────────────────────────────────────────────────────────
+# Statische site uit web/omnium-studio/, met scp naar /srv/omnium/www gezet.
+omnium-ide.nl {
+	import veilig
+	root * /srv/omnium/www
+	file_server
+}
+
+www.omnium-ide.nl {
+	redir https://omnium-ide.nl{uri} permanent
+}
+
+# ── Omnium Studio ─────────────────────────────────────────────────────────
+# De frontend-container (nginx) serveert /viz/react/ en proxiet de rest
+# (/api, /full, /registratie, /docs, /version, ...) door naar de Go-API.
+app.omnium-ide.nl {
+	import veilig
+
+	# Zelfde bovengrens als client_max_body_size in nginx.frontend.conf.
+	request_body {
+		max_size 20MB
+	}
+
+	# Het kale adres zelf doorverwijzen. Laat je dit aan de nginx in de
+	# frontend-container over, dan bouwt die een absolute http://-URL — hij
+	# weet niet dat de bezoeker via TLS binnenkwam, want Caddy praat intern
+	# over gewone http met hem. Resultaat: een onnodige hop over http.
+	redir / /viz/react/ 302
+
+	reverse_proxy 127.0.0.1:8083
+}
+
+# ── Later ─────────────────────────────────────────────────────────────────
+# Zet dit blok pas aan als het A-record van omnium-ide.com naar deze machine
+# wijst; anders blijft Caddy vergeefs een certificaat proberen op te halen.
+#
+# omnium-ide.com, www.omnium-ide.com {
+# 	redir https://omnium-ide.nl{uri} permanent
+# }
+#
+# En als musicbrain en imprint hierheen verhuizen: per site één blok, meer is
+# het niet.
+#
+# musicbrain.nl {
+# 	import veilig
+# 	reverse_proxy 127.0.0.1:3000
+# }

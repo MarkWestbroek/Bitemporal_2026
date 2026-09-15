@@ -208,6 +208,41 @@ Aan in de structuur- en architectuurprofielen (puur-UML, canoniek-UML, MIM,
 OAS, ERD, SysML, ArchiMate, DMN DRD, use case); de gedragsprofielen houden hun
 handles, want daar zijn de vormen klein en dragen de vier punten betekenis.
 
+### 3.5 Voorkomen — element en plaatsing zijn niet hetzelfde (gebouwd 2026-08-31)
+
+Een modelelement kan meer dan één keer op hetzelfde diagram staan. Dat is
+normaal in grote architectuurplaten en zit expliciet in het ArchiMate Model
+Exchange-formaat: het element heeft een identifier, ieder visueel voorkomen
+een eigen node-identifier. Diagramcore vereenzelvigde die twee voorheen.
+
+`DiagramNode.nodeId` maakt het onderscheid nu expliciet:
+
+- `nodeId` is optioneel; zonder waarde blijft `elementId` de voorkomen-ID.
+   Bestaande diagrammen en werkbestanden worden niet gemigreerd of herschreven;
+- React Flow, positie, grootte en verwijderen werken op
+   `nodeId ?? elementId`; selectie en inspector blijven naar het modelelement
+   wijzen;
+- `DiagramType.meerdereVoorkomens` staat standaard uit en kan per
+   `ElementType` worden overschreven. Het staat aan voor ArchiMate, puur UML en
+   canoniek UML;
+- boomknop en canvasdrop bieden alleen dan een tweede voorkomen aan;
+- connectoren groeperen voorkomens per element en kiezen standaard het paar
+   met de kortste afstand. `diagram.connectorVoorkomens` kan per connector een
+   expliciet `{bronNodeId, doelNodeId}` vastleggen;
+- `diagram.verborgenConnectoren` is een view-eigen hide-list. Een edge kan via
+   het contextmenu worden verborgen; **Beeld → Toon verborgen relaties** maakt
+   ze weer zichtbaar;
+- rand-elementen zijn in deze stap zelf enkelvoudig. Als hun gastheer meerdere
+   voorkomens heeft, gebruiken ze voorlopig het eerste voorkomen. Een
+   gastheer-voorkomen expliciet kiezen is vervolgwerk zodra een notatie dat
+   nodig heeft.
+
+ArchiMate gebruikt het primitief als eerste profiel volledig. Daarbij kwamen
+ook twee view-only typen: `kader` (boundary-shape, zonder ArchiMate-semantiek)
+en `toelichting` (een gestippelde lijn van een notitie naar een element).
+Samen vormen voorkomen-ID, hide-list en view-only inhoud de basis waarop de
+latere Exchange-viewimport kan landen.
+
 ---
 
 ## 4. "Is BPMN een UML-profiel van het Activity-diagram?"

@@ -222,6 +222,23 @@
   display: none;
 }
 
+/* Samentrekking-bolletje (gedaante "bol" van een voorkomen): de UML-lollipop.
+   Open cirkel in de canvaskleur — dezelfde vulling als open markers, zodat
+   het bolletje in het donkere thema leesbaar blijft. De naam komt eronder
+   via .dc-buitenlabel. */
+.dc-samentrek-bol {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--dc-marker-vulling, #ffffff);
+  border: 1.7px solid var(--dc-lijn, #475569);
+  box-sizing: border-box;
+}
+.dc-samentrek-bol.is-geselecteerd {
+  border-color: var(--dc-selectie, #2563eb);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dc-selectie, #2563eb) 30%, transparent);
+}
+
 .dc-badge {
   display: inline-block;
   font-size: 9px;
@@ -304,17 +321,18 @@
 
 /* === Handles === */
 
-/* Handles zijn hulpchrome, geen diagraminhoud — zeker in gedragsdiagrammen
-   waar rondjes óók symbolen zijn (begin/eind/junction) leidden de zware
-   witte stippen af. Daarom overal: klein (8px), licht van kleur en gedempt;
-   pas als je de node nadert (hover) of selecteert lichten ze op. */
+/* Handles zijn hulpchrome, geen diagraminhoud — het zijn tool-dingen, geen
+   model- of view-dingen (Mark, 07-09). Daarom volledig onzichtbaar tot je de
+   node aanwijst of selecteert; ook tijdens het slepen van een verbinding
+   verschijnen ze op de node onder de cursor (hover werkt bij pointer-drag
+   gewoon door). Connecteren verandert niet — alleen de opacity. */
 .dc-canvas .react-flow__handle {
   width: 8px;
   height: 8px;
   border: 1.5px solid #64748b;
   background: #ffffff;
   border-radius: 50%;
-  opacity: 0.3;
+  opacity: 0;
   transition: opacity 0.15s;
 }
 
@@ -349,6 +367,16 @@
 .dc-canvas .dc-punt-node .react-flow__handle-right { right: -8px; }
 .dc-canvas .dc-punt-node .react-flow__handle-top { top: -8px; }
 .dc-canvas .dc-punt-node .react-flow__handle-bottom { bottom: -8px; }
+
+/* Compacte taakbalkknop (Beeld → Compacte taakbalken): alleen het icoon op
+   een chip in de elementkleur; de tekst zit in de tooltip. De donkere
+   icoonkleur blijft leesbaar omdat elementkleuren pastels zijn. */
+.dc-taakbalk-icoonlabel.is-compact {
+  padding: 3px 5px;
+  border-radius: 5px;
+  color: #334155;
+  line-height: 0;
+}
 
 /* Eigen taakbalk-tooltip (i.p.v. de kleine native title): naam + uitleg,
    direct leesbaar. Toggle in Studio-instellingen → Taakbalken. */
@@ -510,8 +538,11 @@
 .dc-taakbalk-sep {
   align-self: stretch;
   width: 1px;
-  margin: 1px 2px;
-  background: var(--s-border, #e2e8f0);
+  margin: 1px 3px;
+  /* Niet --s-border: die is in het lichte thema vrijwel gelijk aan de
+     paneelkleur, waardoor de laag-scheidingen onzichtbaar waren. */
+  background: var(--s-fg-muted, #94a3b8);
+  opacity: 0.45;
 }
 
 .dc-taakbalk-knop {

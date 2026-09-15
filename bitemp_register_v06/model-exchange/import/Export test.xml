@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengroup.org/xsd/archimate/3.0/ http://www.opengroup.org/xsd/archimate/3.1/archimate3_Diagram.xsd" identifier="id-21b66b2e9f3740ea855c2c6e25f25a79">
+  <name xml:lang="nl">Export test</name>
+  <elements>
+    <element identifier="id-a747434fce514a59a7a5f55541d8b84a" xsi:type="Capability">
+      <name xml:lang="nl">Capability</name>
+    </element>
+    <element identifier="id-c4e842c03a064a5194005baed0fefceb" xsi:type="BusinessActor">
+      <name xml:lang="nl">Business Actor</name>
+    </element>
+    <element identifier="id-adfc8a4c81344f5299cf0785cd3bf8eb" xsi:type="BusinessRole">
+      <name xml:lang="nl">Business Role</name>
+    </element>
+    <element identifier="id-e8e7d76f9a3447e0a7188b3b1f121358" xsi:type="BusinessFunction">
+      <name xml:lang="nl">Business Function</name>
+    </element>
+    <element identifier="id-c816b4242f9d4ab885be6ba2f80e1d3a" xsi:type="ApplicationComponent">
+      <name xml:lang="nl">Application Component</name>
+    </element>
+    <element identifier="id-5c44952043ae47079c3c76cdef0739d8" xsi:type="ApplicationInterface">
+      <name xml:lang="nl">Application Interface</name>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="id-4ed6664fd0184de0af9036b1b134c929" source="id-c4e842c03a064a5194005baed0fefceb" target="id-adfc8a4c81344f5299cf0785cd3bf8eb" xsi:type="Assignment" />
+    <relationship identifier="id-5e063e1250ad4fd4a9d7b01f0125a8cf" source="id-c816b4242f9d4ab885be6ba2f80e1d3a" target="id-5c44952043ae47079c3c76cdef0739d8" xsi:type="Serving" />
+  </relationships>
+  <organizations>
+    <item>
+      <label xml:lang="nl">Strategy</label>
+      <item identifierRef="id-a747434fce514a59a7a5f55541d8b84a" />
+    </item>
+    <item>
+      <label xml:lang="nl">Business</label>
+      <item identifierRef="id-c4e842c03a064a5194005baed0fefceb" />
+      <item identifierRef="id-adfc8a4c81344f5299cf0785cd3bf8eb" />
+      <item identifierRef="id-e8e7d76f9a3447e0a7188b3b1f121358" />
+    </item>
+    <item>
+      <label xml:lang="nl">Application</label>
+      <item identifierRef="id-c816b4242f9d4ab885be6ba2f80e1d3a" />
+      <item identifierRef="id-5c44952043ae47079c3c76cdef0739d8" />
+    </item>
+    <item>
+      <label xml:lang="nl">Relations</label>
+      <item identifierRef="id-4ed6664fd0184de0af9036b1b134c929" />
+      <item identifierRef="id-5e063e1250ad4fd4a9d7b01f0125a8cf" />
+    </item>
+    <item>
+      <label xml:lang="nl">Views</label>
+      <item identifierRef="id-eae0ac2c38ff456f8767f05837a55731" />
+    </item>
+  </organizations>
+  <views>
+    <diagrams>
+      <view identifier="id-eae0ac2c38ff456f8767f05837a55731" xsi:type="Diagram">
+        <name xml:lang="nl">Test View</name>
+        <node identifier="id-4e0a7d477b11418395563610a8c20d7d" elementRef="id-c4e842c03a064a5194005baed0fefceb" xsi:type="Element" x="193" y="138" w="120" h="55">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-41c1c5eef9aa4f9c836f6fa11e3bb1bd" elementRef="id-adfc8a4c81344f5299cf0785cd3bf8eb" xsi:type="Element" x="432" y="138" w="120" h="55">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-e4437837d9834512a00b8c77c8681159" elementRef="id-a747434fce514a59a7a5f55541d8b84a" xsi:type="Element" x="74" y="48" w="120" h="55">
+          <style>
+            <fillColor r="245" g="222" b="170" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-fb85367977034a448164d9889df553b1" elementRef="id-c816b4242f9d4ab885be6ba2f80e1d3a" xsi:type="Element" x="312" y="480" w="120" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-49708fd11cef44338ee44ef76739ff3c" elementRef="id-5c44952043ae47079c3c76cdef0739d8" xsi:type="Element" x="312" y="348" w="120" h="55">
+          <style>
+            <fillColor r="181" g="255" b="255" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <node identifier="id-511c4c0ec3664ddaa9bcbc2a6e2a9297" elementRef="id-e8e7d76f9a3447e0a7188b3b1f121358" xsi:type="Element" x="312" y="240" w="120" h="55">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100" />
+            <lineColor r="92" g="92" b="92" a="100" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </node>
+        <connection identifier="id-fb5bbf80484b4d4fa75785cbf504ec2f" relationshipRef="id-4ed6664fd0184de0af9036b1b134c929" xsi:type="Relationship" source="id-4e0a7d477b11418395563610a8c20d7d" target="id-41c1c5eef9aa4f9c836f6fa11e3bb1bd">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+        <connection identifier="id-0944041551664389a827c4211c7bc8fc" relationshipRef="id-5e063e1250ad4fd4a9d7b01f0125a8cf" xsi:type="Relationship" source="id-fb85367977034a448164d9889df553b1" target="id-49708fd11cef44338ee44ef76739ff3c">
+          <style>
+            <lineColor r="0" g="0" b="0" />
+            <font name="Lucida Grande" size="12">
+              <color r="0" g="0" b="0" />
+            </font>
+          </style>
+        </connection>
+      </view>
+    </diagrams>
+  </views>
+</model>

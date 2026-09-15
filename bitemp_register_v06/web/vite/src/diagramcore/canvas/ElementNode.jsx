@@ -47,6 +47,21 @@ function ElementNode({ id, data, selected }) {
   const { element, elementType, bewerkbaar, onResize, fieldTypesById, compartmentTypesById } = data;
   if (!element || !elementType) return null;
 
+  // Samentrekking (ontwerpprincipe "gedaanten van een samenstel"): een
+  // voorkomen met gedaante "bol" rendert als lollipop-bolletje met de naam
+  // eronder — de inhoud (operaties enz.) verdwijnt bewust uit beeld. De
+  // relatielijnen blijven gewoon aan dit (kleine) voorkomen hangen.
+  if (data.gedaante === "bol") {
+    return (
+      <>
+        <div className={"dc-samentrek-bol" + (selected ? " is-geselecteerd" : "")}>
+          <StandaardHandles stijl={elementType.handleStijl} />
+        </div>
+        {element.naam && <span className="dc-buitenlabel">{element.naam}</span>}
+      </>
+    );
+  }
+
   const Shape = getShape(elementType.shape) || getShape("class-box");
   if (!Shape) return null;
 

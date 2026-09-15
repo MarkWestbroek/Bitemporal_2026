@@ -14,6 +14,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { temporal } from "zundo";
+import { nieuwVoorkomenId, voorkomenId, vindVoorkomen } from "./voorkomens.js";
 
 /** @typedef {import("./schema.js").Element} Element */
 /** @typedef {import("./schema.js").Diagram} Diagram */
@@ -33,6 +34,47 @@ function splitsViewports(diagrams) {
     if (viewport) viewports[id] = viewport;
   }
   return { kaal, viewports };
+}
+
+/**
+ * Valideer een toevoegende modelimport volledig vóór de storemutatie.
+ * @returns {string[]} blokkerende fouten
+ */
+export function valideerImportModel(state, model, { modus = "toevoegen" } = {}) {
+  const fouten = [];
+  if (modus !== "toevoegen") fouten.push(`Onbekende importmodus: ${modus}.`);
+  const elements = model?.elements;
+  const diagrams = model?.diagrams;
+  if (!elements || typeof elements !== "object" || Array.isArray(elements)) {
+    fouten.push("Importmodel vereist een elements-object.");
+  }
+  if (!diagrams || typeof diagrams !== "object" || Array.isArray(diagrams)) {
+    fouten.push("Importmodel vereist een diagrams-object.");
+  }
+  if (fouten.length) return fouten;
+
+  const elementIds = new Set(Object.keys(elements));
+  const beschikbareIds = new Set([...Object.keys(state.elements || {}), ...elementIds]);
+  for (const [id, element] of Object.entries(elements)) {
+    if (!element?.id || element.id !== id) fouten.push(`Element ${id} heeft geen overeenkomende id.`);
+    if (state.elements?.[id]) fouten.push(`Element-id bestaat al: ${id}.`);
+    if (element?.source && !beschikbareIds.has(element.source)) {
+      fouten.push(`Connector ${id} verwijst naar ontbrekende bron ${element.source}.`);
+    }
+    if (element?.target && !beschikbareIds.has(element.target)) {
+      fouten.push(`Connector ${id} verwijst naar ontbrekend doel ${element.target}.`);
+    }
+  }
+  for (const [id, diagram] of Object.entries(diagrams)) {
+    if (!diagram?.id || diagram.id !== id) fouten.push(`Diagram ${id} heeft geen overeenkomende id.`);
+    if (state.diagrams?.[id]) fouten.push(`Diagram-id bestaat al: ${id}.`);
+    for (const node of diagram?.nodes || []) {
+      if (!node?.elementId || !beschikbareIds.has(node.elementId)) {
+        fouten.push(`Diagram ${id} verwijst naar ontbrekend element ${node?.elementId || "(leeg)"}.`);
+      }
+    }
+  }
+  return fouten;
 }
 
 /**
@@ -79,6 +121,32 @@ export function createDiagramStore({ persistKey } = {}) {
     setActiefDiagram: (id) => set({ actiefDiagramId: id }),
 
     markeerOpgeslagen: () => set({ isDirty: false }),
+
+    /**
+     * Voeg een compleet, vooraf gevalideerd model atomisch toe. Eén `set`
+     * betekent één undo-stap; bij een validatiefout blijft de store intact.
+     */
+    importeerModel: (model, opties = { modus: "toevoegen" }) => {
+      const fouten = valideerImportModel(useStoreState(), model, opties);
+      if (fouten.length) {
+        const fout = new Error(`Modelimport geweigerd:\n- ${fouten.join("\n- ")}`);
+        fout.code = "DIAGRAM_IMPORT_INVALID";
+        fout.fouten = fouten;
+        throw fout;
+      }
+      set((state) => {
+        const { kaal, viewports } = splitsViewports(model.diagrams);
+        return {
+          diagramTypeId: model.diagramTypeId ?? state.diagramTypeId,
+          elements: { ...state.elements, ...model.elements },
+          diagrams: { ...state.diagrams, ...kaal },
+          viewports: { ...state.viewports, ...viewports },
+          meta: model.meta ?? state.meta,
+          actiefDiagramId: state.actiefDiagramId || Object.keys(kaal)[0] || null,
+          isDirty: true,
+        };
+      });
+    },
 
     // === Elementen ===
 
@@ -175,49 +243,65 @@ export function createDiagramStore({ persistKey } = {}) {
         };
       }),
 
-    /** Zet een element op een diagram (geen duplicaten). */
-    addElementToDiagram: (diagramId, elementId, position) =>
-      set((state) => {
-        const d = state.diagrams[diagramId];
-        if (!d || d.nodes.some((n) => n.elementId === elementId)) return state;
-        return {
-          isDirty: true,
-          diagrams: {
-            ...state.diagrams,
-            [diagramId]: { ...d, nodes: [...d.nodes, { elementId, position }] },
-          },
-        };
-      }),
-
-    /** Haal een element van een diagram af (element blijft in het model). */
-    removeElementFromDiagram: (diagramId, elementId) =>
+    /**
+     * Zet een element op een diagram. Bestaand gedrag weigert duplicaten;
+     * met meerdereVoorkomens krijgt een tweede plaatsing een eigen nodeId.
+     */
+    addElementToDiagram: (diagramId, elementId, position, { meerdereVoorkomens = false, nodeId = null } = {}) =>
       set((state) => {
         const d = state.diagrams[diagramId];
         if (!d) return state;
+        const bestaat = d.nodes.some((n) => n.elementId === elementId);
+        if (bestaat && !meerdereVoorkomens) return state;
+        const effectieveNodeId = nodeId || (bestaat ? nieuwVoorkomenId(elementId) : null);
+        if (effectieveNodeId && d.nodes.some((n) => voorkomenId(n) === effectieveNodeId)) return state;
         return {
           isDirty: true,
           diagrams: {
             ...state.diagrams,
             [diagramId]: {
               ...d,
-              nodes: d.nodes.filter((n) => n.elementId !== elementId),
-              edges: (d.edges || []).filter((e) => e.source !== elementId && e.target !== elementId),
+              nodes: [...d.nodes, { ...(effectieveNodeId ? { nodeId: effectieveNodeId } : {}), elementId, position }],
             },
           },
         };
       }),
 
-    updateNodePosition: (diagramId, elementId, position) =>
+    /** Haal een element van een diagram af (element blijft in het model). */
+    removeElementFromDiagram: (diagramId, voorkomenSleutel) =>
       set((state) => {
         const d = state.diagrams[diagramId];
         if (!d) return state;
+        const voorkomen = vindVoorkomen(d.nodes, voorkomenSleutel);
+        if (!voorkomen) return state;
+        const sleutel = voorkomenId(voorkomen);
         return {
           isDirty: true,
           diagrams: {
             ...state.diagrams,
             [diagramId]: {
               ...d,
-              nodes: d.nodes.map((n) => (n.elementId === elementId ? { ...n, position } : n)),
+              nodes: d.nodes.filter((n) => voorkomenId(n) !== sleutel),
+              edges: (d.edges || []).filter((e) => e.source !== sleutel && e.target !== sleutel),
+            },
+          },
+        };
+      }),
+
+    updateNodePosition: (diagramId, voorkomenSleutel, position) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const voorkomen = vindVoorkomen(d.nodes, voorkomenSleutel);
+        if (!voorkomen) return state;
+        const sleutel = voorkomenId(voorkomen);
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              nodes: d.nodes.map((n) => (voorkomenId(n) === sleutel ? { ...n, position } : n)),
             },
           },
         };
@@ -238,9 +322,10 @@ export function createDiagramStore({ persistKey } = {}) {
             ...state.diagrams,
             [diagramId]: {
               ...d,
-              nodes: d.nodes.map((n) =>
-                posities[n.elementId] ? { ...n, position: posities[n.elementId] } : n
-              ),
+              nodes: d.nodes.map((n) => {
+                const position = posities[voorkomenId(n)] ?? posities[n.elementId];
+                return position ? { ...n, position } : n;
+              }),
             },
           },
         };
@@ -324,20 +409,109 @@ export function createDiagramStore({ persistKey } = {}) {
       }),
 
     /** Grootte van een element op één diagram (metamodel: Position.elementSize). */
-    updateNodeSize: (diagramId, elementId, size) =>
+    updateNodeSize: (diagramId, voorkomenSleutel, size) =>
       set((state) => {
         const d = state.diagrams[diagramId];
         if (!d) return state;
+        const voorkomen = vindVoorkomen(d.nodes, voorkomenSleutel);
+        if (!voorkomen) return state;
+        const sleutel = voorkomenId(voorkomen);
         return {
           isDirty: true,
           diagrams: {
             ...state.diagrams,
             [diagramId]: {
               ...d,
-              nodes: d.nodes.map((n) => (n.elementId === elementId ? { ...n, size } : n)),
+              nodes: d.nodes.map((n) => (voorkomenId(n) === sleutel ? { ...n, size } : n)),
             },
           },
         };
+      }),
+
+    /**
+     * Wis de expliciete maat van één voorkomen (of van álle nodes bij null):
+     * de node valt terug op zijn natuurlijke inhoud-maat. Praktisch na een
+     * Exchange-import in de figuur-gedaante — de bewaarde Archi-boxmaat is
+     * daar veel groter dan het figuur (Mark, 07-09).
+     */
+    wisNodeMaten: (diagramId, voorkomenSleutel = null) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const doelSleutel = voorkomenSleutel == null
+          ? null
+          : voorkomenId(vindVoorkomen(d.nodes, voorkomenSleutel) || {});
+        const nodes = d.nodes.map((n) => {
+          if (doelSleutel != null && voorkomenId(n) !== doelSleutel) return n;
+          if (!("size" in n)) return n;
+          const { size: _weg, ...rest } = n;
+          return rest;
+        });
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: { ...d, nodes } } };
+      }),
+
+    /**
+     * Gedaante van één voorkomen (ontwerpprincipe "gedaanten van een
+     * samenstel"): bv. "bol" klapt een interface samen tot lollipop-bolletje.
+     * `null` wist de keuze → terug naar de volledige gedaante. De gedaante
+     * hoort bij het vóórkomen, niet bij het model-element: hetzelfde element
+     * kan op een ander diagram (of ander voorkomen) voluit staan.
+     */
+    zetNodeGedaante: (diagramId, voorkomenSleutel, gedaante = null) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const voorkomen = vindVoorkomen(d.nodes, voorkomenSleutel);
+        if (!voorkomen) return state;
+        const sleutel = voorkomenId(voorkomen);
+        const nodes = d.nodes.map((n) => {
+          if (voorkomenId(n) !== sleutel) return n;
+          if (gedaante == null) {
+            const { gedaante: _weg, ...rest } = n;
+            return rest;
+          }
+          return { ...n, gedaante };
+        });
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: { ...d, nodes } } };
+      }),
+
+    /**
+     * Handmatige gedaante-keuze voor een connector op dít diagram:
+     * "box" (associatieklasse-patroon) of "lijn" (kaal; attributen worden dan
+     * niet getoond). `null` wist de keuze → automatisch (velden → box).
+     */
+    zetConnectorGedaante: (diagramId, connectorId, gedaante = null) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !connectorId) return state;
+        const overrides = { ...(d.gedaanteOverrides || {}) };
+        if (gedaante == null) delete overrides[connectorId];
+        else overrides[connectorId] = gedaante;
+        const rest = { ...d };
+        if (Object.keys(overrides).length) rest.gedaanteOverrides = overrides;
+        else delete rest.gedaanteOverrides;
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: rest } };
+      }),
+
+    verbergConnectorOpDiagram: (diagramId, connectorId) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !connectorId || (d.verborgenConnectoren || []).includes(connectorId)) return state;
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: { ...d, verborgenConnectoren: [...(d.verborgenConnectoren || []), connectorId] },
+          },
+        };
+      }),
+
+    toonVerborgenConnectoren: (diagramId) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !(d.verborgenConnectoren || []).length) return state;
+        const { verborgenConnectoren: _weg, ...rest } = d;
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: rest } };
       }),
 
     /** Viewport: apart van de diagrammen, geen isDirty en geen undo-entry. */
@@ -360,6 +534,9 @@ export function createDiagramStore({ persistKey } = {}) {
       }),
   });
 
+  let storeApi = null;
+  const useStoreState = () => storeApi?.getState?.() || leeg;
+
   const metUndo = temporal(definitie, {
     // Bewust NIET in de history: viewports (pan/zoom is geen modelwijziging)
     // en actiefDiagramId (undo hoort niet van diagram te wisselen — dat
@@ -372,9 +549,12 @@ export function createDiagramStore({ persistKey } = {}) {
     limit: 50,
   });
 
-  if (!persistKey) return create(metUndo);
+  if (!persistKey) {
+    storeApi = create(metUndo);
+    return storeApi;
+  }
 
-  return create(
+  storeApi = create(
     persist(metUndo, {
       name: persistKey,
       storage: createJSONStorage(() => localStorage),
@@ -388,4 +568,5 @@ export function createDiagramStore({ persistKey } = {}) {
       }),
     })
   );
+  return storeApi;
 }

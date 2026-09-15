@@ -2,7 +2,9 @@
 
 > **Datum:** 2026-08-31
 >
-> **Status:** ontwerp ter review, nog niet geïmplementeerd
+> **Status:** fase A, B en C0 plus de verticale view-slice van fase C gebouwd
+> op `feat/archimate-exchange`; fase D/E en resterend fase-C-detail nog niet
+> geïmplementeerd
 >
 > **Scope:** Open Group ArchiMate Model Exchange File Format (XML) als externe
 > bron en bestemming voor het ArchiMate-profiel in Omnium Studio
@@ -939,6 +941,25 @@ IDs en stijlmetadata normaliseren.
 **Resultaat:** de transformatielaag is geschikt voor serieuze
 standaardformaten, zonder ArchiMate-specials in de UI.
 
+**Status 2026-08-31: ✅ gebouwd.** De registry accepteert `bron`, `opties` en
+het resultaatcontract achterwaarts compatibel. Het paneel gebruikt het
+bestandsfilter van de gekozen transformatie, kan een bron via confidence-score
+herkennen, rendert string-, number- en booleanopties en toont samenvatting en
+uitklapbare diagnostics. `createDiagramStore.importeerModel` valideert
+element-, diagram- en referentie-IDs vóór één Zustand-mutatie; een mislukte
+preflight laat store en undo-history onaangeraakt.
+
+Anders dan in de breedste ontwerpvariant:
+
+- er is nog geen aparte `TransformationError`-klasse; gewone fouten mogen een
+  `diagnostics`-array dragen en worden door het paneel genormaliseerd;
+- de optiesrenderer ondersteunt nu de drie benodigde basistypen, nog geen
+  keuzevelden of profiel-eigen widgets;
+- automatische detectie selecteert de beste transformatie alleen wanneer de
+  gebruiker nog geen generator heeft gekozen;
+- dry-run plus afzonderlijke bevestigingsstap is nog niet toegevoegd. De
+  preflight en atomische mutatie voorkomen wel gedeeltelijke import.
+
 ### Fase B — semantische ArchiMate-import
 
 - neutraal Exchange-model en XML-parser;
@@ -949,6 +970,46 @@ standaardformaten, zonder ArchiMate-specials in de UI.
 - niet-gevisualiseerde elementen los in de doelmap plaatsen.
 
 **Resultaat:** de modelinhoud is bruikbaar, ook zonder views.
+
+**Status 2026-09-01: ✅ gebouwd.** De pure Exchange-laag staat in
+`diagramprofielen/archimate/exchange/`: een neutraal bronmodel, parser op
+`localName` met namespace-/ID-/referentiecontrole, expliciete mappingtabellen,
+diagnostics en de adapter naar diagramcore. De parser gebruikt in de browser
+de native `DOMParser`; Node-tests injecteren `@xmldom/xmldom` als
+devDependency.
+
+Ondersteund:
+
+- 24 Exchange-elementvarianten: de 22 huidige profieltypen plus And/Or
+  Junction;
+- alle elf relaties, met zowel de korte naam als de expliciete
+  `*Relationship`-variant (22 invoernamen);
+- taalkeuze, meertalige bronwaarden, documentatie, property definitions en
+  getypeerde propertywaarden;
+- Access `Read`/`Write`/`ReadWrite`, Influence `modifier` en relatienamen;
+- namespaced interne IDs, oorspronkelijke identifiers en overgeslagen
+  concepten in `meta.exchange`;
+- organizations als bronmetadata, zonder projectmapprojectie;
+- atomische import in `archimate05`, diagramplaatsing en losse plaatsing van
+  niet-gevisualiseerde elementen in de gekozen Studio-map.
+
+De implementatie kent 15 diagnosticcodes in de families XML, ID, type, view,
+property en informatieverlies. Blokkerende parserdiagnostics voorkomen iedere
+store- of mapmutatie; onbekende typen worden gemeld, overgeslagen én als
+bronmetadata behouden.
+
+Afwijkingen en grenzen:
+
+- er vindt geen volledige XSD-validatie plaats; de parser valideert de voor de
+  import relevante structuur en referenties;
+- onbekende vendor-XML wordt nog niet als verliesvrij XML-fragment bewaard;
+  onbekende concepten en hun attributen blijven wel in de neutrale bron en
+  `meta.exchange.overgeslagen`;
+- een import krijgt een unieke ID op basis van modelidentifier, tijdstip en
+  teller. Merge/synchronisatie op eerder geïmporteerde IDs hoort niet bij deze
+  fase;
+- de testparser is geïnjecteerd omdat Node geen native `DOMParser` heeft; dit
+  voegt geen XML-parser toe aan de browserproductiebundle.
 
 ### Fase C0 — het voorkomen-primitief (motorwerk, vóór fase C)
 
@@ -968,6 +1029,29 @@ Kan parallel aan fase A/B; zie §9.1, §9.6 en §9.7 voor het ontwerp.
 **Resultaat:** diagramcore kent het verschil tussen element en voorkomen —
 precies de aanname waarop fase C leunt.
 
+**Status 2026-08-31: ✅ gebouwd.** `DiagramNode.nodeId` is optioneel en oude
+diagrammen blijven zonder migratie geldig. React Flow en layoutmutaties werken
+op voorkomen-ID; selectie en inspector blijven elementgericht. De UI-vlag
+`meerdereVoorkomens` staat aan voor ArchiMate, puur UML en canoniek UML en kan
+per elementtype worden overschreven. Connectoren kiezen het kortste
+voorkomenpaar, met `diagram.connectorVoorkomens` als expliciete per-view
+override. `verborgenConnectoren`, contextmenu verbergen en herstel via Beeld
+zijn aanwezig. ArchiMate heeft daarnaast `kader` en de view-only
+`toelichting`-connector.
+
+Anders of smaller dan aanvankelijk beschreven:
+
+- er is geen nieuwe publieke methode `addVoorkomen`; de bestaande
+  `addElementToDiagram` kreeg een compatibele vierde optieparameter. Zonder
+  `meerdereVoorkomens: true` blijft de oude duplicaatweigering gelden;
+- herstel van de hide-list toont in één actie alle verborgen relaties van het
+  actieve diagram, in plaats van een keuzelijst per relatie;
+- rand-elementen blijven enkelvoudig en hechten bij een meervoudige gastheer
+  voorlopig aan het eerste voorkomen. De bestaande `data.randVan` blijft dus
+  een element-ID totdat een concreet profiel voorkomenkeuze nodig heeft;
+- Label/Container-import zelf hoort bij fase C; C0 levert nu de interne
+  `notitie`, `kader` en `toelichting` waarop die mapping kan landen.
+
 ### Fase C — views en presentatie
 
 - iedere Exchange-view als diagram;
@@ -980,6 +1064,34 @@ precies de aanname waarop fase C leunt.
 
 **Resultaat:** gangbare Archi-views komen herkenbaar binnen — inclusief
 views waarin een element meermaals voorkomt of een relatie bewust ontbreekt.
+
+**Status verticale slice 2026-09-01: ✅ gebouwd.** Iedere Exchange-view wordt
+een diagram. View-node-identifiers worden `nodeId`; bounds worden positie en
+maat; geneste coördinaten worden absoluut zonder modelsemantiek af te leiden.
+Connections vullen `connectorVoorkomens`, terwijl relaties zonder connection
+in `verborgenConnectoren` komen. Label, Container en kale Label-connections
+worden respectievelijk `notitie`, `kader` en `toelichting`.
+
+Stijlen, fonts, bendpoints en attachments blijven in view-/connectormetadata.
+Met de optie **Kleuren uit views overnemen** wordt een fillkleur waar mogelijk
+naar `data.kleur` geprojecteerd; diagnostics melden presentatiedetails die de
+canvas nog niet exact weergeeft. Exacte bendpointrouting, attachmentplaatsing,
+fontpariteit, vendorstyles en verdere geneste-containersemantiek blijven
+openstaand fase-C-/E-werk.
+
+De verplichte browserproef gebruikte `meerdere-views.xml` via **Modelleren →
+Project → Transformeren → Importeren**. Resultaat: twee views, drie elementen,
+één relatie, dubbele voorkomens met gerichte connection, projectmapplaatsing en
+zero pageerrors. `Ctrl+Z` verwijderde de volledige modelimport in één stap. De
+proef vond en repareerde daarbij dat de eerste profielmount de import-history
+onvoorwaardelijk wiste.
+
+Bewijs:
+
+- [`01-import-resultaat.png`](../img/archimate-exchange-fase-b/01-import-resultaat.png)
+- [`02-landschap-dubbel-voorkomen.png`](../img/archimate-exchange-fase-b/02-landschap-dubbel-voorkomen.png)
+- [`03-projectboom.png`](../img/archimate-exchange-fase-b/03-projectboom.png)
+- [`04-undo-een-stap.png`](../img/archimate-exchange-fase-b/04-undo-een-stap.png)
 
 ### Fase D — canonieke export
 
@@ -1020,6 +1132,24 @@ weigeren.
 - server-side XML-parsing of databaseopslag van het bronbestand;
 - volledige uitbreiding van het ArchiMate-profiel naar alle lagen en typen,
   tenzij hiervoor in de implementatiefase expliciet wordt gekozen.
+
+## 14b. Bevindingen eerste echte imports (04-09)
+
+Marks testexport en de GEMMA-doelarchitectuur (3 MB, 1108 elementen, 1327
+relaties, 98 views — parse + adapter in ~550 ms) brachten twee dingen aan het
+licht, allebei verholpen:
+
+1. **De v0-elementsubset was de echte grens**, niet de importer: Capability,
+   ApplicationInterface, Grouping, Resource enz. werden gemeld en overgeslagen.
+   De volledige 3.2-elemententabel (60 typen, `archimate/elementen.js`) lost
+   dit structureel op; GEMMA importeert nu met 0 overgeslagen concepten.
+2. **Lijn-op-lijn**: een view-connection mag op een ándere connection eindigen
+   (GEMMA doet dat 3×). De parser behandelde dat als blokkerende
+   volgorde-afhankelijke AMX-ID-REFERENTIE (connection-ids werden pas tijdens
+   het valideren geregistreerd — nu twee passen). De adapter slaat zo'n
+   connection over met een eigen warning en laat de onderliggende relatie
+   node-op-node tekenen (dus níet in de hide-list). Edge→edge als weergave is
+   motor-gat #4 en blijft bewust open.
 
 ## 15. Besluiten ter review
 

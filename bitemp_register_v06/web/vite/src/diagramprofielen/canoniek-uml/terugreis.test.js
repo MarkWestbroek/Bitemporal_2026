@@ -323,10 +323,11 @@ test("V3-route: import zonder overzicht-entry reconstrueert zoals voorheen", () 
   // Oude-IDE-export (geen diagrammen-entry met id "overzicht"): de default
   // wordt afgeleid met alle elementen — bestaand gedrag blijft intact.
   // Packages en bevat-connectoren (uit de V3-domeinen) zijn bewust
-  // model-only en tellen niet mee als canvas-nodes.
+  // model-only en tellen niet mee als canvas-nodes. Compositie-connectoren
+  // evenmin: de core leidt ze af als lijn tussen twee nodes.
   const core = importeerV3(demoV3Model);
   const aantalElementen = Object.values(core.elements).filter(
-    (el) => el.elementType !== "package" && el.elementType !== "bevat"
+    (el) => el.elementType !== "package" && el.elementType !== "bevat" && el.elementType !== "compositie"
   ).length;
   assert.ok(core.diagrams.overzicht.nodes.length >= aantalElementen - 1);
 });
@@ -435,4 +436,35 @@ test("store-round-trip: bewerking in 0.5 (delta) wint van de bron-spiegel", () =
   assert.equal(terug.elements.A.data.typenaam, "Burger");
   assert.equal(terug.elements.A.naam, "Burger");
   assert.equal(terug.elements.A.data.velden[0].verplicht, false);
+});
+
+test("store-round-trip: gevouwen compositie behoudt edge-id, edge-data en (genormaliseerde) handles", () => {
+  const bron = maakBronState();
+  // Oude-editor-vorm: presentatie-edge met kale zijden als handle.
+  bron.diagrams.overzicht.edges.push({
+    id: "se1",
+    source: "A",
+    target: "GE1",
+    type: "metamodel",
+    sourceHandle: "left",
+    targetHandle: "top",
+    data: { momentvoorkomen: "enkelvoudig" },
+  });
+  const core = vanCanoniekModel(bron);
+  assert.ok(
+    Object.values(core.elements).some((el) => el.elementType === "compositie" && el.source === "A" && el.target === "GE1"),
+    "de compositie is een connector-element geworden"
+  );
+
+  const terug = naarCanoniekModel(core);
+  const se1 = terug.structuralEdges.find((e) => e.target === "GE1");
+  assert.equal(se1.id, "se1", "structurele edge-id blijft stabiel");
+  assert.equal(se1.data.momentvoorkomen, "enkelvoudig", "edge-data niet overschreven door de connector");
+
+  // storeNaarV3Model leest GE-handles uit de overzicht-edge met dit id.
+  const pe = terug.diagrams.overzicht.edges.filter((e) => e.source === "A" && e.target === "GE1");
+  assert.equal(pe.length, 1, "precies één presentatie-edge terug op het overzicht");
+  assert.equal(pe[0].id, "se1");
+  assert.equal(pe[0].sourceHandle, "source-left");
+  assert.equal(pe[0].targetHandle, "target-top");
 });

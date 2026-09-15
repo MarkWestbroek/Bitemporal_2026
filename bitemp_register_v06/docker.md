@@ -37,6 +37,7 @@ Doel:
 | `docker-compose.filestore-only.yml`   | Alleen Filestore (MinIO + init)            | Dockge/server: filestore als losse stack     |
 | `docker-compose.api-only.yml`         | Alleen BE (API)                            | Dockge/server: API als losse stack           |
 | `docker-compose.frontend-only.yml`    | Alleen FE                                  | FE tegen externe API                         |
+| `deploy/vps/docker-compose.vps.yml`   | DB + Filestore + BE + FE (+ OpenFTV via profile) | **Publieke VPS achter Caddy/HTTPS** — zie [`docs/VPS_DEPLOYMENT.md`](docs/VPS_DEPLOYMENT.md) |
 
 Bij de split-variant horen ook:
 - `Dockerfile.api` — bouwt alleen de Go-backend.

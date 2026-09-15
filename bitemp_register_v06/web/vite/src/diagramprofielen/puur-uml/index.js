@@ -79,6 +79,16 @@ const elementTypes = [
     shape: "class-box",
     kleur: "#dcfce7",
     icoon: "interface",
+    // Samentrekking (UML 2.5.1 §11.5-familie): een interface-voorkomen kan
+    // als lollipop-bolletje getoond worden; de realisatie-lijn wordt dan het
+    // kale steeltje. Per voorkomen omschakelbaar via het contextmenu —
+    // operaties zijn in het bolletje bewust niet zichtbaar.
+    samentrekking: {
+      gedaante: "bol",
+      relatieTypes: ["realisatie"],
+      labelIngeklapt: "bolletje (lollipop)",
+      labelUitgeklapt: "volledige interface",
+    },
     properties: [KLEUR_VELD],
     compartments: [{ id: "operaties", label: null, fieldType: "operatie" }],
   },
@@ -306,6 +316,7 @@ export const puurUmlDiagramType = {
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
   // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
   randAanhechting: "zwevend",
+  meerdereVoorkomens: true,
   // Boomordening: eerst package-lidmaatschap ("plaatsing in"), daarna de
   // compositie — wie in een package hangt neemt zo zijn ◆-kinderen mee.
   hierarchie: ["bevat", "compositie"],

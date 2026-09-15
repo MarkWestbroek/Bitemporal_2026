@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="model-view-only">
+  <elements><element identifier="component" xsi:type="ApplicationComponent"><name xml:lang="nl">Component</name></element></elements>
+  <views><diagrams><view identifier="view-only" xsi:type="Diagram"><name xml:lang="nl">Voorkomens en annotaties</name><node identifier="kader" xsi:type="Container" x="100" y="100" w="700" h="400"><label xml:lang="nl">Domein</label><node identifier="component-1" elementRef="component" xsi:type="Element" x="30" y="40" w="180" h="70"/><node identifier="component-2" elementRef="component" xsi:type="Element" x="430" y="40" w="180" h="70"/></node><node identifier="label" xsi:type="Label" x="260" y="300" w="220" h="60"><label xml:lang="nl">Belangrijke component</label></node><connection identifier="kale-lijn" source="label" target="component-2" xsi:type="Line"><bendpoint x="500" y="330"/><sourceAttachment x="10" y="10"/><style><lineColor r="90" g="90" b="90"/></style></connection></view></diagrams></views>
+</model>

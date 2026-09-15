@@ -39,6 +39,46 @@ Uit `STUDIO-05-gedragsdiagrammen.md` §2 kwamen vier cross-cutting motor-gaten. 
 | **Buitenlabel** (29-07) | ✅ `elementType.naamLabel: "buiten"` — ElementNode zet de naam ónder de vorm; diagram-breed uit te zetten (`data-dc-labels`) | BPMN-events/gateways, state machine begin/eind/keuze/junction/historie/entry/exit, activity begin/eind/flow-eind/beslissing/fork/pin |
 | **Zwevende aanhechting** (08-08) | ✅ `randAanhechting: "zwevend"` — het uiteinde ligt op de omtrek i.p.v. op een handle; zelfde zijde als voorheen, betere plek erop. Handmatig gekozen handles winnen | alle structuur- en architectuurprofielen; gedragsprofielen houden hun handles |
 | **Markers aan de bronzijde** (31-07) | ✅ `markerStart` was tot dan alléén de ruit (een polygon dat met de curve meebuigt); nu ook echte SVG-markers | ERD-kraaienpoten aan beide uiteinden, BPMN default flow |
+| **Voorkomen** (31-08) | ✅ optionele `DiagramNode.nodeId`; positie/maat/verwijderen per voorkomen, elementgerichte selectie, kortste of expliciet gekozen connectorpaar, per-view hide-list | ArchiMate, puur UML en canoniek UML; basis voor Model Exchange-views |
+
+**Ontwerpprincipe — gedaanten van een samenstel (chat Mark, 04-09).** De
+ASOC-constructie en de UML-lollipop zijn hetzelfde concept: een **samenstel
+van modeldingen met een weergavestand**. ASOC = één element dat Association
+én Class tegelijk is (UML 2.5.1 §11.5 — apart elementtype, zoals ook in het
+canoniek metamodel), gedaante nu automatisch (inhoud ⇒ box). Lollipop =
+interface + realisatie/usage sámen omgeklapt (bolletje, compartimenten weg,
+lijn kaal) — per spec alternatieve notatie voor het paar, altijd handmatig;
+géén rand-constructie, en ArchiMate kent deze paar-notatie niet (daar is het
+figuur alleen de elementvorm en blijft de lijn een gewone relatie).
+De regel die beide dekt: **gedaante is een eigenschap van het voorkomen**
+(C0); een automatische regel mag de default zijn, een handmatige omschakeling
+de override — dus ook de ASOC handmatig omschakelbaar.
+
+✅ **Gebouwd (07-09), beide richtingen omschakelbaar via het contextmenu:**
+
+- **Samentrekking (lollipop).** Declaratie op het ElementType:
+  `samentrekking: { gedaante: "bol", relatieTypes: ["realisatie"], … }`
+  (in puur-uml op `interface`). Per voorkomen: `DiagramNode.gedaante = "bol"`
+  (store: `zetNodeGedaante`) → ElementNode rendert `.dc-samentrek-bol`
+  (open cirkel, naam eronder als buitenlabel, bewaarde maat genegeerd) en
+  `materialiseerConnectoren` maakt de genoemde relatie over de hele lengte
+  kaal (solid, béide markers weg) — het steeltje absorbeert de notatie van
+  de lijn. Operaties zijn in het bolletje bewust onzichtbaar; uitklappen
+  brengt alles terug.
+- **Ook in ArchiMate (07-09, na afstemming).** De drie interfaces
+  (`business-/app-/tech-interface`) hebben nu dezelfde samentrekking, met
+  `relatieTypes: ["compositie", "toewijzing"]`. Strikt genomen kent ArchiMate
+  alleen de cirkel als alternatieve *elementvorm* — maar de vormen-set tekende
+  daardoor een eigen steeltje naast de compositielijn mét ruit: twee stokjes
+  achter elkaar. Ingeklapt is het één kale lijn naar een bolletje. Mark
+  (07-09): "misschien niet helemaal des archimates, maar het model wijzigt
+  niet, het wordt alleen beter toonbaar" — precies de scheiding model/voorkomen.
+- **ASOC handmatig.** `diagram.gedaanteOverrides[connectorId] = "lijn"|"box"`
+  (store: `zetConnectorGedaante`) wint van de automatische inhoud-regel;
+  `effectieveConnectorGedaante()` is de ene beslisplek (materialisatie én
+  DiagramCanvas-boxfilter). Contextmenu op de lijn: "Toon als
+  associatieklasse (box)" / "Toon als lijn (verbergt attributen)"; terug
+  naar automatisch zodra de keuze weer met de inhoud overeenkomt.
 
 Daarnaast is er core-datatype **`keuze`** bijgekomen (select over `PropertyType.opties`) en
 lijndikte per connector (`presentatie.dikte`).
@@ -59,7 +99,7 @@ lijndikte per connector (`presentatie.dikte`).
 | `activity/` | UML 2 activity | 14 typen | balk (fork/join), ruit, pin, partitie |
 | `bpmn/` | BPMN v0 op de eigen motor | 16 typen | `bpmn-event`, `-gateway`, `-subproces`, `-data`, `-lane` |
 | `sequence/` | UML sequence v1 "hermetisch" | 9 typen | levenslijn, punt, activatie, fragment |
-| `archimate/` | ArchiMate 3.2 v0 | 22 elementen + 11 relaties | één `archimate-box` + 22 hoek-iconen |
+| `archimate/` | ArchiMate 3.2 — **volledige elemententabel** (04-09) | 60 elementen + 11 relaties | `archimate-box` (recht/rond/afgeschuind) + 42 hoek-iconen + vormen-set |
 | `erd/` | ERD met kraaienpoten (IE) | 6 typen | géén — puur declaratief |
 | `sysml/` | SysML v1: bdd + ibd + req | 10 typen + 10 relaties | `sysml-requirement`, `sysml-poort` |
 | `cmmn/` | CMMN 1.1 casusmodel | 8 typen + 3 relaties | 7 eigen vormen (case plan, stage, task, milestone, event, case file, sentry) |
@@ -261,6 +301,29 @@ toegangsregel-profiel (ontworpen vormentaal — apart bekijken).
 > ⚠ Dit verandert bestaande diagrammen visueel: elementen zonder expliciete maat die breder
 > dan 280px stonden, worden nu smaller en hoger. Elementen die je ooit met de hand hebt
 > geresized behouden hun maat.
+
+**c) Drie kleinere motor-punten (07-09):**
+
+- **Maat aanpassen aan inhoud** — `wisNodeMaten(diagramId, voorkomenSleutel?)` in de store
+  wist de expliciete `size` van één voorkomen (rechtsklik op node) of van alle nodes
+  (rechtsklik op canvas: "Maten aanpassen aan inhoud (alles)"); de node valt terug op zijn
+  natuurlijke inhoudsmaat. Motivatie: Archi-imports geven bounds mee die veel ruimer zijn
+  dan onze vorm-figuren.
+- **Compacte taakbalken** — Beeld → "Compacte taakbalken" (patroon van typering/buitenlabels:
+  menuBus + localStorage per taakbalk-sleutel). Compact = alleen het typeicoon (18px) op een
+  chip in de laagkleur (`et.kleur`); de naam blijft via de hover-tooltip beschikbaar,
+  groepsscheiders blijven staan.
+- **Connector-iconen uit `edgePresentatie`** — het generieke lijn-icoon in `typeIconen.jsx`
+  is vervangen door een afgeleid icoon: horizontale lijn met het echte streepjespatroon en de
+  echte begin-/eindmarkers (ruit ◆/◇, bol, driehoek, pijl open/dicht, kruis-cirkel,
+  schuine streep). Geldt automatisch voor álle profielen; een expliciete `icoon`-id wint
+  nog steeds. Kraaienpoten (ERD, per connector via hooks) vallen terug op een kaal uiteinde.
+- **Vorm-node = het figuur** (archimate `vormShapes.jsx`) — de node was een ruimer vlak
+  (min 92×84, naam erin) waarin het symbool onderin zweefde; uitlijnen/aanhechten/selectie
+  werkten op die onzichtbare doos ("ik snap niet waarop ie alignt"). Nu is de node het
+  symboolvlak zelf, aspect-correct uit de viewBox (hoogte 64), met de naam eronder als
+  `.dc-buitenlabel` (doet mee met Beeld → Buitenlabels). Lijnen hechten op het figuur,
+  uitlijnen lijnt figuren uit, en "Maat aanpassen aan inhoud" krimpt naar het figuur.
 
 ## 6. Valkuilen & geleerde lessen
 

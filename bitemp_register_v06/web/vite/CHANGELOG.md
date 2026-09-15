@@ -7,6 +7,32 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+
+## [studio/v0.7.2] — 2026-09-10
+### Gerepareerd
+- **Help-menu gaf "Markdown file not found" in productie.** De link wees op
+  `/docs/bitemp_register_v06/docs/STUDIO.md`, dat de API alleen kan renderen
+  als hij vanuit een git-checkout draait (`findProjectRoot` zoekt een
+  `.git`-map); in de Docker-image zit alleen de binary. Wijst nu naar
+  STUDIO.md op GitHub. Structurele fix (gecureerde docs in de image +
+  `DOCS_ROOT`) staat op de backlog.
+
+## [studio/v0.7.1] — 2026-09-10
+### Gerepareerd
+- **Profiel-editor liet de hele Studio crashen in productie.** Openen gaf
+  `Setting the value of 'studio05-profiel-ontwerp' exceeded the quota`, en
+  omdat `studio-shell` onthoudt welke activiteit open stond crashte hij bij
+  elke herlaad opnieuw — de Studio was daarmee onbereikbaar tot je
+  `localStorage` leegde. Oorzaak: `herlaadUitModel` materialiseert alle
+  twintig geregistreerde profielen tot ontwerp-diagrammen naast elkaar, en
+  die hele bak ging als één waarde naar `localStorage` (~5 MB per origin).
+  Alleen zichtbaar in productie: in dev vangt de `studio05Map`-plugin uit
+  `vite.config` de opslag af naar bestanden in `web/vite/`, zonder limiet.
+  De editor heeft die persistentie niet nodig — zijn inhoud is afgeleid en
+  wordt bij openen opnieuw opgebouwd; de layouts staan apart in
+  `studio05-profiel-layouts`. `persistKey` is daarom verwijderd.
+
+## [studio/v0.7.0] — 2026-09-09
 ### Gerepareerd
 - **Diagram-export sneed tekening af.** Het kader kwam van `getNodesBounds`
   (alleen de node-boxen uit het model). Alles wat daarbuiten getekend wordt

@@ -160,7 +160,14 @@ export default maakDiagramActiviteit({
   groep: "beheer",
   descriptor,
   maakElement: maakGeneriekeMaakElement(descriptor),
-  persistKey: "studio05-profiel-ontwerp",
+  // Bewust géén persistKey. De inhoud van deze editor is afgeleid: herlaadUitModel
+  // bouwt hem op uit álle geregistreerde profielen (twintig stuks) plus de layouts
+  // uit studio05-profiel-layouts. Die materialisatie wegschrijven kostte meer dan de
+  // 5 MB die localStorage biedt, waardoor setItem faalde en de React-app crashte bij
+  // het openen van de editor — alleen in productie, want in dev schrijft de
+  // studio05Map-plugin naar bestanden op schijf. createDiagramStore werkt zonder
+  // persistKey (zie de vroege return daar); sandbox-werk overleeft nu geen herlaad,
+  // maar dat deed het hiervoor ook niet — de schrijfactie mislukte immers.
   taakbalkSleutel: "studio05-taakbalken-profiel-ontwerp",
   menuPrefix: "po05",
   menuLabel: "Ontwerp",

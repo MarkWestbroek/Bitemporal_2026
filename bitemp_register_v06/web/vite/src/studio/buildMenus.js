@@ -69,11 +69,17 @@ function standaardMenus(ctx) {
     window.location.href = window.location.pathname.replace(/[^/]*$/, "") || "/";
   };
 
-  // Documentatie wordt door de API-server gerenderd onder /docs/<pad>.
-  // In dev draait Vite op :5174 en de API op :8082.
-  const docsBasis = window.location.port === "5174" ? "http://localhost:8082" : "";
+  // Documentatie: voorlopig rechtstreeks naar GitHub. De API rendert /docs/<pad>
+  // alleen als hij vanuit een git-checkout draait (findProjectRoot zoekt een
+  // .git-map); in de productie-image zit alleen de binary, dus daar geeft
+  // /docs/... "Markdown file not found". Structurele fix staat op de backlog:
+  // gecureerde docs in de image + DOCS_ROOT, dan wordt dit weer /docs/STUDIO.md.
   const openDocs = () =>
-    window.open(`${docsBasis}/docs/bitemp_register_v06/docs/STUDIO.md`, "_blank", "noopener");
+    window.open(
+      "https://github.com/MarkWestbroek/Bitemporal_2026/blob/main/bitemp_register_v06/docs/STUDIO.md",
+      "_blank",
+      "noopener",
+    );
 
   // Versie-/build-info (compile-time geïnjecteerd via vite.config.js → define).
   const versie = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";

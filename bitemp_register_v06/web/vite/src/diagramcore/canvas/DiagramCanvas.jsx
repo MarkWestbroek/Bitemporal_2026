@@ -35,6 +35,7 @@ import {
   useStoreApi,
   getNodesBounds,
 } from "@xyflow/react";
+import { createPortal } from "react-dom";
 import { exporteerViewport } from "../export/exporteerCanvas.js";
 import { maakExportFilter } from "../export/exportFilter.js";
 import { tekenBounds } from "../export/tekenBounds.js";
@@ -43,7 +44,8 @@ import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
-import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX } from "./materialiseerConnectoren.js";
+import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante, normaliseerHandle } from "./materialiseerConnectoren.js";
+import { voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
 
 import { ELEMENT_REF_MIME } from "./externDrop.js";
 
@@ -257,30 +259,32 @@ function CanvasBinnenkant({
   useEffect(() => {
     // Element-ids op dít diagram — een rand-element (randVan) kan alleen
     // parent-relatief renderen als zijn gastheer hier ook staat.
-    const opDiagram = new Set((diagram?.nodes || []).map((n) => n.elementId));
+    const voorkomens = voorkomensPerElement(diagram?.nodes || []);
+    const opDiagram = new Set(voorkomens.keys());
     const flowNodes = (diagram?.nodes || [])
       .map((ref) => {
         const element = elements[ref.elementId];
         if (!element) return null;
         const elementType = lookups.elementTypesById[element.elementType];
         if (!elementType) return null;
-        // Een kale connector (geen velden) heeft geen box-gedaante: zijn
-        // lidmaatschap bewaart alleen posities voor als hij weer velden krijgt.
-        if (
-          elementType.isConnector &&
-          !(element.compartimenten || []).some((c) => (c.velden || []).length > 0)
-        ) {
+        // Een connector in de lijn-gedaante heeft geen box-node: zijn
+        // lidmaatschap bewaart alleen posities voor als hij weer een box
+        // wordt. De gedaante is per diagram overschrijfbaar (ASOC-principe).
+        if (elementType.isConnector && effectieveConnectorGedaante(element, diagram) !== "box") {
           return null;
         }
         // Rand-aanhechting (§3.1): een aangehecht rand-element rendert als
         // React Flow-kind van zijn gastheer (position = relatief) en beweegt
         // dus automatisch mee. De aanhechting zelf gebeurt in dragstop.
-        const randVan =
+        const randVanElement =
           elementType.randElement && element.data?.randVan && opDiagram.has(element.data.randVan)
             ? element.data.randVan
             : null;
+        // Rand-elementen blijven in C0 enkelvoudig. Bij meerdere voorkomens
+        // van de gastheer hechten ze aan diens eerste voorkomen.
+        const randVan = randVanElement ? voorkomenId(voorkomens.get(randVanElement)?.[0]) : null;
         return {
-          id: ref.elementId,
+          id: voorkomenId(ref),
           type: "element",
           position: ref.position || { x: 0, y: 0 },
           ...(randVan ? { parentId: randVan, zIndex: 20 } : {}),
@@ -288,7 +292,10 @@ function CanvasBinnenkant({
           // `--dc-node-max: none` heft de automatische breedtegrens van
           // .dc-node op: wie zelf een maat kiest, wordt niet teruggeduwd naar
           // de wrap-grens waar niet-geresizede nodes op staan.
-          ...(ref.size
+          // Een ingeklapt voorkomen (gedaante, bv. lollipop-bolletje) negeert
+          // de bewaarde maat: die hoort bij de volledige gedaante en komt
+          // terug zodra het voorkomen weer wordt uitgeklapt.
+          ...(ref.size && !ref.gedaante
             ? { style: { width: ref.size.width, height: ref.size.height, "--dc-node-max": "none" } }
             : {}),
           // Achtergrond-elementen (kaders) starten diep onder de rest (-10);
@@ -302,6 +309,9 @@ function CanvasBinnenkant({
             elementType,
             bewerkbaar,
             onResize: onNodeSize,
+            // Voorkomen-gedaante (samentrekking): ElementNode rendert bv. het
+            // lollipop-bolletje in plaats van de volledige shape.
+            gedaante: ref.gedaante || null,
             fieldTypesById: lookups.fieldTypesById,
             compartmentTypesById: lookups.compartmentTypesById,
           },
@@ -371,9 +381,10 @@ function CanvasBinnenkant({
     // de context alsnog overschrijft. (Breder ingrijpen liet de selectie
     // oscilleren.)
     const gedekt = nodes.some(
-      (n) => n.selected && (n.id === selectieId || n.id === ANKER_PREFIX + selectieId)
+      (n) => n.selected && (n.data?.element?.id === selectieId || n.id === ANKER_PREFIX + selectieId)
     );
-    const opDitDiagram = flowNodes.some((n) => n.id === selectieId);
+    const doelVoorkomen = flowNodes.find((n) => n.data?.element?.id === selectieId)?.id || null;
+    const opDitDiagram = !!doelVoorkomen;
     const programmatisch = selectiePropGewijzigd && !!selectieId && opDitDiagram && !gedekt;
     // Programmatische selectie van een element dat hier níet staat: haal dan
     // de oude node-highlight weg — anders lopen boom en canvas uiteen en
@@ -387,17 +398,17 @@ function CanvasBinnenkant({
         // Programmatische selectie (bv. klik in de projectboom) wint: de
         // handtekening vooraf melden zodat de React Flow-echo van deze
         // wijziging de context niet overschrijft.
-        geselecteerd = new Set([selectieId]);
-        gemeldeSelectieRef.current = selectieSig([selectieId]);
+        geselecteerd = new Set([doelVoorkomen]);
+        gemeldeSelectieRef.current = selectieSig([doelVoorkomen]);
       } else if (programmatischElders && geselecteerd.size) {
         geselecteerd = new Set();
         gemeldeSelectieRef.current = selectieSig([]);
       } else {
         // Programmatische selectie (bv. net geplaatst element) ook markeren,
         // anders "verliest" de inspector het element bij de eerstvolgende rebuild.
-        if (selectieId && !huidige.length) geselecteerd.add(selectieId);
-        if (selectieId && flowNodes.some((n) => n.id === selectieId) && geselecteerd.size === 0) {
-          geselecteerd.add(selectieId);
+        if (doelVoorkomen && !huidige.length) geselecteerd.add(doelVoorkomen);
+        if (doelVoorkomen && geselecteerd.size === 0) {
+          geselecteerd.add(doelVoorkomen);
         }
       }
       return flowNodes.map((n) => {
@@ -478,7 +489,7 @@ function CanvasBinnenkant({
   useEffect(() => {
     // Kortste-weg-handles voor presentatie-edges zonder expliciete handles
     // (na "normaliseer relaties" zijn ze gewist).
-    const refs = new Map((diagram?.nodes || []).map((n) => [n.elementId, n]));
+    const refs = new Map((diagram?.nodes || []).flatMap((n) => [[voorkomenId(n), n], ...(n.nodeId ? [] : [[n.elementId, n]])]));
     const mid = (id) => {
       const r = refs.get(id);
       if (!r) return null;
@@ -488,7 +499,10 @@ function CanvasBinnenkant({
       };
     };
     const geimporteerd = (diagram?.edges || []).map((e) => {
-      let { sourceHandle, targetHandle } = e;
+      // Oude modellen bewaren kale zijden ("left"); zonder normalisatie
+      // weigert React Flow de edge stil en verdwijnt de lijn.
+      let sourceHandle = normaliseerHandle(e.sourceHandle, "source");
+      let targetHandle = normaliseerHandle(e.targetHandle, "target");
       if (!sourceHandle || !targetHandle) {
         const b = mid(e.source);
         const d = mid(e.target);
@@ -542,9 +556,11 @@ function CanvasBinnenkant({
   const handleNodeClick = useCallback(
     (_e, node) => {
       if (!onSelectElement || !node) return;
-      const id = node.id.startsWith(ANKER_PREFIX) ? node.id.slice(ANKER_PREFIX.length) : node.id;
+      const id = node.id.startsWith(ANKER_PREFIX)
+        ? node.id.slice(ANKER_PREFIX.length)
+        : node.data?.element?.id;
       gemeldeSelectieRef.current = selectieSig([node.id]);
-      onSelectElement(elements[id] || null);
+      onSelectElement(elements[id] || null, node.id);
     },
     [onSelectElement, elements]
   );
@@ -573,8 +589,8 @@ function CanvasBinnenkant({
         // Anker aangeklikt → selecteer de achterliggende connector.
         const id = eerste.id.startsWith(ANKER_PREFIX)
           ? eerste.id.slice(ANKER_PREFIX.length)
-          : eerste.id;
-        onSelectElement(elements[id] || null);
+          : eerste.data?.element?.id;
+        onSelectElement(elements[id] || null, eerste.id);
         return;
       }
       // Edge van een connector aangeklikt → selecteer dat connector-element,
@@ -644,12 +660,12 @@ function CanvasBinnenkant({
           ];
           afstanden.sort((a, b) => a.d - b.d)[0].zet();
         }
-        onRandAanhechting(node.id, gastheer.id, { x: px - w / 2, y: py - h / 2 });
+        onRandAanhechting(node.data?.element?.id, gastheer.data?.element?.id, { x: px - w / 2, y: py - h / 2 }, node.id);
         return true;
       }
       if (node.data?.element?.data?.randVan) {
         // Losgesleept: terug naar een vrije (absolute) positie.
-        onRandAanhechting(node.id, null, abs);
+        onRandAanhechting(node.data?.element?.id, null, abs, node.id);
         return true;
       }
       return false;
@@ -701,7 +717,7 @@ function CanvasBinnenkant({
               (a.measured?.width ?? 200) * (a.measured?.height ?? 80) -
               (b.measured?.width ?? 200) * (b.measured?.height ?? 80)
           );
-          onContainerDrop(n.id, kandidaten[0].id);
+          onContainerDrop(n.data?.element?.id, kandidaten[0].data?.element?.id);
         }
       }
     },
@@ -747,7 +763,7 @@ function CanvasBinnenkant({
             (a.measured?.width ?? 200) * (a.measured?.height ?? 80) -
             (b.measured?.width ?? 200) * (b.measured?.height ?? 80)
         );
-      onExternDrop(raak[0]?.id || null, ref, punt);
+      onExternDrop(raak[0]?.data?.element?.id || null, ref, punt);
     },
     [onExternDrop, screenToFlowPosition, getNodes, getInternalNode]
   );
@@ -758,7 +774,7 @@ function CanvasBinnenkant({
   const handleNodeDoubleClick = useCallback(
     (_ev, node) => {
       if (!onNodeDoubleClick) return;
-      const id = node.id.startsWith(ANKER_PREFIX) ? node.id.slice(ANKER_PREFIX.length) : node.id;
+      const id = node.id.startsWith(ANKER_PREFIX) ? node.id.slice(ANKER_PREFIX.length) : node.data?.element?.id;
       const element = elements[id];
       if (element) onNodeDoubleClick(element);
     },
@@ -768,29 +784,35 @@ function CanvasBinnenkant({
   const isValidConnection = useCallback(
     (verbinding) => {
       if (!bewerkbaar) return false;
-      const bron = elements[verbinding.source];
-      const doel = elements[verbinding.target];
+      const bronNode = getNodes().find((node) => node.id === verbinding.source);
+      const doelNode = getNodes().find((node) => node.id === verbinding.target);
+      const bron = elements[bronNode?.data?.element?.id || verbinding.source];
+      const doel = elements[doelNode?.data?.element?.id || verbinding.target];
       return !!vindConnectorType(diagramType, bron, doel, verbindingsType);
     },
-    [bewerkbaar, elements, diagramType, verbindingsType]
+    [bewerkbaar, elements, diagramType, verbindingsType, getNodes]
   );
 
   const handleConnect = useCallback(
     (verbinding) => {
       if (!bewerkbaar || !onVerbind) return;
-      const bron = elements[verbinding.source];
-      const doel = elements[verbinding.target];
+      const bronNode = getNodes().find((node) => node.id === verbinding.source);
+      const doelNode = getNodes().find((node) => node.id === verbinding.target);
+      const bronId = bronNode?.data?.element?.id || verbinding.source;
+      const doelId = doelNode?.data?.element?.id || verbinding.target;
+      const bron = elements[bronId];
+      const doel = elements[doelId];
       const connectorType = vindConnectorType(diagramType, bron, doel, verbindingsType);
       if (!connectorType) return;
       onVerbind({
         connectorType,
-        source: verbinding.source,
-        target: verbinding.target,
+        source: bronId,
+        target: doelId,
         sourceHandle: verbinding.sourceHandle || null,
         targetHandle: verbinding.targetHandle || null,
       });
     },
-    [bewerkbaar, onVerbind, elements, diagramType, verbindingsType]
+    [bewerkbaar, onVerbind, elements, diagramType, verbindingsType, getNodes]
   );
 
   const handleNodesDelete = useCallback(
@@ -856,16 +878,22 @@ function CanvasBinnenkant({
       // activiteit het connector-id — voor connector-acties zoals lijnvorm.
       const connectorId =
         doel?.data?.connectorId ||
-        (doel?.data?.elementType?.isConnector ? doel.id : null) ||
+        (doel?.data?.elementType?.isConnector ? doel.data?.element?.id : null) ||
         (typeof doel?.id === "string" && doel.id.startsWith(ANKER_PREFIX)
           ? doel.id.slice(ANKER_PREFIX.length)
           : null);
       // Gewone element-node (geen connector/anker): voor node-acties zoals
       // z-order en "zelfde maat als deze".
-      const nodeId =
+      const voorkomenId =
         !connectorId && doel?.position && doel?.data?.element ? doel.id : null;
-      const items = bouwContextMenu({ selectieAantal, connectorId, nodeId });
-      if (items?.length) setContextMenu({ x: ev.clientX, y: ev.clientY, items });
+      const nodeId = voorkomenId ? doel.data.element.id : null;
+      const items = bouwContextMenu({ selectieAantal, connectorId, nodeId, voorkomenId });
+      // Portaaldoel: het canvasvlak buiten `.react-flow`. React Flow zet
+      // `z-index: 0` op zijn wrapper en vormt daarmee een stacking context —
+      // een menu daarbinnen verliest van de taakbalken (z-index 20) hoezeer
+      // je zijn eigen z-index ook ophoogt (Mark, 07-09).
+      const vlak = ev.target?.closest?.(".dc-canvasvlak") || null;
+      if (items?.length) setContextMenu({ x: ev.clientX, y: ev.clientY, items, vlak });
     },
     [bouwContextMenu, getNodes]
   );
@@ -902,9 +930,9 @@ function CanvasBinnenkant({
          * centreren op elke klik gaf te veel onrust.
          */
         focusNode: (elementId) => {
-          const n = getNodes().find((x) => x.id === elementId);
+          const n = getNodes().find((x) => x.id === elementId || x.data?.element?.id === elementId);
           if (!n) return;
-          setNodes((huidige) => huidige.map((x) => ({ ...x, selected: x.id === elementId })));
+          setNodes((huidige) => huidige.map((x) => ({ ...x, selected: x.id === n.id })));
           const { width, height } = rfStoreApi.getState();
           const vp = getViewport();
           const w = n.measured?.width ?? 200;
@@ -1090,7 +1118,7 @@ function CanvasBinnenkant({
     >
       <Background gap={16} size={1} />
       <Controls showInteractive={false} />
-      {contextMenu && (
+      {contextMenu && createPortal(
         <div
           className="dc-contextmenu"
           ref={(el) => {
@@ -1125,7 +1153,8 @@ function CanvasBinnenkant({
               </button>
             )
           )}
-        </div>
+        </div>,
+        contextMenu.vlak || document.body
       )}
       <MiniMap pannable zoomable nodeComponent={MiniMapNode} />
     </ReactFlow>

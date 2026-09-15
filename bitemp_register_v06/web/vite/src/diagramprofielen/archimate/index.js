@@ -8,7 +8,10 @@
  * hoeken, structuur rechte. Eén `archimate-box`-shape + iconen dekt dus de
  * hele elemententaal. v0-subset (~22 typen) over Business (geel),
  * Application (blauw), Technology (groen) en Motivation (paars), plus de
- * junction (en/of).
+ * junction (en/of). De **tweede officiële notatie** — het symbool zélf als
+ * vorm (poppetje, 3D-doos, …) — zit als shape-set "Iconen als vorm" naast de
+ * boxen: `vormSet.js` (mapping) + `vormShapes.jsx` (vormen), te kiezen via
+ * menu Beeld → Shape-set.
  *
  * Alle **elf relaties** zijn er, op bestaande lijn-/markermiddelen:
  * compositie/aggregatie (ruit aan de bron), toewijzing (bol→pijl),
@@ -24,70 +27,63 @@
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerArchimateIconen } from "./iconen.jsx";
 import { registreerArchimateShapes } from "./shapes.jsx";
+import { registreerArchimateVormShapes } from "./vormShapes.jsx";
+import { VORMEN_SET } from "./vormSet.js";
+import { ELEMENTEN, LAAG_GROEP, MOTIVATION } from "./elementen.js";
 
 export const ARCHIMATE_ID = "archimate";
 
-// Laag-kleuren (conventie, per element overschrijfbaar via data.kleur).
-const BUSINESS = "#fff4b8";
-const APPLICATION = "#cfe6ff";
-const TECHNOLOGY = "#d3f5cf";
-const MOTIVATION = "#e8d9f5";
-
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
-const ROND = 10; // gedragselementen (proces/functie/service/event)
-
-/**
- * Compacte element-declaratie: [id, label, laagkleur, icoon, rond?, omschrijving].
- * @type {[string, string, string, string, boolean, string][]}
- */
-const ELEMENTEN = [
-  // ── business ──
-  ["business-actor", "Business actor", BUSINESS, "am-actor", false, "Organisatie-entiteit die gedrag kan uitvoeren (persoon, afdeling, organisatie)."],
-  ["business-rol", "Business rol", BUSINESS, "am-rol", false, "Verantwoordelijkheid die aan een actor toegewezen wordt."],
-  ["business-proces", "Business proces", BUSINESS, "am-proces", true, "Reeks gedragingen die een product of dienst oplevert."],
-  ["business-functie", "Business functie", BUSINESS, "am-functie", true, "Gedrag gebundeld op benodigde kennis/kunde (afdelings-agnostisch)."],
-  ["business-service", "Business service", BUSINESS, "am-service", true, "Expliciet aangeboden dienst met waarde voor de omgeving."],
-  ["business-event", "Business event", BUSINESS, "am-event", true, "Gebeurtenis die business-gedrag start of beïnvloedt."],
-  ["business-object", "Business object", BUSINESS, "am-object", false, "Concept dat in de business gebruikt wordt (passieve structuur)."],
-  // ── application ──
-  ["app-component", "Applicatiecomponent", APPLICATION, "am-component", false, "Modulair, zelfstandig inzetbaar stuk applicatie-functionaliteit."],
-  ["app-service", "Applicatieservice", APPLICATION, "am-service", true, "Expliciet aangeboden applicatiedienst."],
-  ["app-functie", "Applicatiefunctie", APPLICATION, "am-functie", true, "Intern gedrag van een applicatiecomponent."],
-  ["data-object", "Data-object", APPLICATION, "am-object", false, "Gegevens geschikt voor geautomatiseerde verwerking."],
-  // ── technology ──
-  ["node", "Node", TECHNOLOGY, "am-node", false, "Reken-/opslagresource waarop artifacts draaien."],
-  ["device", "Device", TECHNOLOGY, "am-device", false, "Fysiek IT-middel (server, telefoon, sensor)."],
-  ["systeemsoftware", "Systeemsoftware", TECHNOLOGY, "am-software", false, "Software-omgeving voor het draaien van componenten (OS, DBMS)."],
-  ["tech-service", "Technologyservice", TECHNOLOGY, "am-service", true, "Expliciet aangeboden infrastructuurdienst."],
-  ["artifact", "Artifact", TECHNOLOGY, "am-artifact", false, "Fysiek stuk data/software (bestand, deployable)."],
-  // ── motivation ──
-  ["stakeholder", "Stakeholder", MOTIVATION, "am-stakeholder", false, "Belanghebbende met interesse in de architectuur-uitkomst."],
-  ["driver", "Driver", MOTIVATION, "am-driver", false, "Interne of externe drijfveer voor verandering."],
-  ["goal", "Goal", MOTIVATION, "am-goal", false, "Beoogd resultaat (doel) van een stakeholder."],
-  ["principle", "Principle", MOTIVATION, "am-principle", false, "Algemene ontwerpuitspraak die richting geeft."],
-  ["requirement", "Requirement", MOTIVATION, "am-requirement", false, "Concrete eis aan het systeem of de architectuur."],
-  // ArchiMate 3: Constraint is een specialisatie van Requirement — een
-  // opgelegde beperking, bv. wet- en regelgeving (grondslag van toegangsbeleid).
-  ["constraint", "Constraint", MOTIVATION, "am-requirement", false, "Opgelegde beperking op realisatie (bv. wet- en regelgeving)."],
-];
+const ROND = 10; // gedragselementen (proces/functie/service/event/…)
 
 const ALLE_IDS = [...ELEMENTEN.map(([id]) => id), "junction"];
 
+/**
+ * De drie interfaces kennen de cirkel-notatie ("lollipop"). ArchiMate ziet
+ * die formeel als alternatieve *elementvorm* (de relatie ernaartoe blijft een
+ * gewone compositie/toewijzing) — daarom staat het figuur ook in de
+ * vormen-set. De samentrekking hieronder is de volgende stap: het voorkomen
+ * inklappen tot een kaal bolletje, waarbij de lijn vanaf de aanbieder hét
+ * steeltje wordt in plaats van een tweede stokje naast het figuur. Puur
+ * weergave per voorkomen; het model houdt zijn compositie/toewijzing.
+ */
+const INTERFACE_IDS = new Set(["business-interface", "app-interface", "tech-interface"]);
+
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
-  ...ELEMENTEN.map(([id, label, kleur, icoon, rond, omschrijving]) => ({
+  ...ELEMENTEN.map(([id, label, kleur, icoon, rond, omschrijving, kort]) => ({
     id,
     label,
     omschrijving,
-    kort: label.replace(/^(Business|Applicatie|Technology|Data-|Systeem)\s?/i, "").slice(0, 9) || label.slice(0, 9),
+    kort:
+      kort ||
+      label.replace(/^(Business|Applicatie-?|Technology-?|Data-|Systeem)\s?/i, "").slice(0, 12) ||
+      label.slice(0, 12),
     icoon,
     shape: "archimate-box",
     kleur,
+    // Laag als taakbalkgroep: de Maken-balk krijgt een scheidingsteken op
+    // elke laaggrens (business | application | technology | motivation).
+    taakbalkGroep: LAAG_GROEP[kleur],
+    // ArchiMate tekent motivation-elementen met afgeschuinde hoeken — dat is
+    // hun eigen vormgrammatica, net als ronde hoeken voor gedrag.
+    ...(kleur === MOTIVATION ? { hoekStijl: "afgeschuind" } : {}),
     ...(rond ? { hoekRadius: ROND } : {}),
+    ...(INTERFACE_IDS.has(id)
+      ? {
+          samentrekking: {
+            gedaante: "bol",
+            relatieTypes: ["compositie", "toewijzing"],
+            labelIngeklapt: "bolletje (lollipop)",
+            labelUitgeklapt: "volledig element",
+          },
+        }
+      : {}),
     properties: [KLEUR_VELD],
   })),
   {
     id: "junction",
+    taakbalkGroep: "overig",
     label: "Junction",
     omschrijving: "Splitst/verbindt relaties van hetzelfde type (en = dicht, of = open).",
     kort: "Junctie",
@@ -101,12 +97,30 @@ const elementTypes = [
   },
   {
     id: "notitie",
+    taakbalkGroep: "overig",
     label: "Notitie",
-    omschrijving: "Vrije notitie op het diagram.",
+    omschrijving: "Vrije notitie op het diagram; koppel hem met een toelichting-lijn aan een element.",
     kort: "NOT",
     shape: "note",
-    handleStijl: "onzichtbaar",
+    // Geen handleStijl "onzichtbaar" zoals in de andere profielen: de
+    // toelichting-connector vertrekt vanaf de notitie, en onzichtbare handles
+    // hebben pointer-events: none — dan is die lijn niet te slepen.
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
+  },
+  {
+    id: "kader",
+    taakbalkGroep: "overig",
+    label: "Kader",
+    omschrijving: "Puur visuele groepering in een view; geen ArchiMate-modelsemantiek.",
+    kort: "KADER",
+    icoon: "kader",
+    shape: "boundary",
+    achtergrond: true,
+    handleStijl: "onzichtbaar",
+    properties: [
+      { key: "kleur", label: "rand", datatype: "colour" },
+      { key: "achtergrondKleur", label: "achtergrond", datatype: "colour" },
+    ],
   },
 
   // ── De elf relaties ────────────────────────────────────────────────────
@@ -175,6 +189,18 @@ const elementTypes = [
         }
       : {}),
   })),
+  {
+    id: "toelichting",
+    taakbalkGroep: "view",
+    label: "Toelichting",
+    omschrijving: "View-only stippellijn van een notitie naar een element; geen ArchiMate-relatie.",
+    kort: "Toel.",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["notitie"] },
+    doel: { elementTypes: [...ALLE_IDS, "kader"] },
+    edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#64748b" },
+  },
 ];
 
 export const archimateDiagramType = {
@@ -184,7 +210,11 @@ export const archimateDiagramType = {
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
   // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
   randAanhechting: "zwevend",
+  meerdereVoorkomens: true,
   typeWeergave: "geen", // het hoek-icoon zit al in de shape
+  // Tweede officiële notatie (P07): het symbool *als* vorm i.p.v. de box met
+  // hoek-icoon — menu Beeld → Shape-set. Mapping en motivatie: `vormSet.js`.
+  shapeSets: [VORMEN_SET],
   fieldTypes: [],
   elementTypes,
   taakbalken: [
@@ -217,6 +247,7 @@ export function maakElement(elementTypeId) {
 export function registreerArchimate() {
   registreerArchimateIconen();
   registreerArchimateShapes();
+  registreerArchimateVormShapes();
   if (!getDiagramType(ARCHIMATE_ID)) {
     registreerDiagramType(archimateDiagramType);
   }

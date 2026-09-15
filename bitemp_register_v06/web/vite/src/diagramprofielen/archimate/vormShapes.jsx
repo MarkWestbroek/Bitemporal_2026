@@ -1,0 +1,327 @@
+/**
+ * ArchiMate-vormshapes — de **tweede officiële notatie**: niet een box met een
+ * hoek-icoon, maar het symbool *zélf* als vorm (actor = poppetje, component =
+ * blok met uitsteeksels, node = 3D-doos, …). Geactiveerd via de shape-set
+ * "Iconen als vorm" (`vormSet.js`, menu **Beeld → Shape-set**); de Definitie
+ * blijft gelijk, alleen de gedaante wisselt.
+ *
+ * **Naam ín de node.** `naamLabel: "buiten"` (het motor-primitief dat de naam
+ * ónder een kleine vaste vorm zet) is Definitie-niveau en wisselt dus níet
+ * mee met een shape-set. Elke vormshape draagt zijn naam daarom zelf, onder
+ * het symbool en binnen de node — patroon `DataObjectShape` in
+ * `diagramprofielen/bpmn/shapes.jsx`.
+ *
+ * **Maatvoering (bewuste keuze).** `resizebaar` en de minima staan óók op
+ * descriptor-niveau: de ArchiMate-elementtypen zijn resizebaar en een node kan
+ * al een handmatige maat (`Position.elementSize`) hebben uit de box-gedaante.
+ * Een vaste BPMN-achtige maat zou dan een klein symbooltje in een grote lege
+ * node geven. Daarom **schaalt** het symbool mee: de vormlaag is een
+ * `flex`-vlak met een `viewBox`-SVG op `preserveAspectRatio="xMidYMid meet"`,
+ * met bescheiden minima (92×84) voor niet-geresizede nodes. Zo werkt dezelfde
+ * shape voor een verse node én voor een node die in de box-gedaante is
+ * opgerekt, en blijft terugwisselen naar de box verliesvrij. De minima van de
+ * *resizer* (180×56) blijven descriptor-niveau en gelden dus ook hier — een
+ * vormnode is met de muis niet kleiner te trekken dan de box.
+ *
+ * Kleur: de laagkleur van het elementtype (of `data.kleur`) vult het symbool;
+ * lijnen en tekst komen uit de thema-tokens (`--dc-lijn`, `--dc-selectie`,
+ * `--s-fg`, en `--dc-marker-vulling` voor vlakken die *open* moeten ogen) —
+ * zie de tokentoelichting bovenin `diagramcore/styles/diagramcore.css`.
+ *
+ * `children` bevat de React Flow-handles (+ resizer/badge) — altijd renderen.
+ */
+import React from "react";
+import { registreerShape } from "../../diagramcore/shapes/shapeRegistry.js";
+import { VORM_SHAPE_IDS } from "./vormSet.js";
+
+const LIJN = "var(--dc-lijn, #334155)";
+const OPEN = "var(--dc-marker-vulling, #ffffff)";
+const TEKST = "var(--s-fg, #0f172a)";
+
+/** Standaard-symboolhoogte van een niet-geresizede vormnode. */
+const SYMBOOL_HOOGTE = 64;
+
+/**
+ * Frame om elke vormshape: de node ís het symboolvlak, aspect-correct uit de
+ * viewBox (natuurlijke maat = viewBox geschaald naar SYMBOOL_HOOGTE); de naam
+ * hangt eronder als buitenlabel — buiten de node, zoals bij BPMN-events. Zo
+ * is de doos die uitlijnen/aanhechten/selectie zien exact het figuur (Mark,
+ * 07-09: uitlijnen leek nergens op te lijnen — dat was de onzichtbare, veel
+ * ruimere doos). `teken({ vulling, kleur, sw })` levert de SVG-inhoud.
+ */
+function VormNode({ element, elementType, selected, children, viewBox, teken }) {
+  const vulling = element?.data?.kleur || elementType?.kleur || OPEN;
+  const kleur = selected ? "var(--dc-selectie, #4f46e5)" : LIJN;
+  const sw = selected ? 2.8 : 1.8;
+  const [, , vbB, vbH] = String(viewBox).split(/\s+/).map(Number);
+  const natuurlijkeBreedte = Math.round((vbB / vbH) * SYMBOOL_HOOGTE);
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        // Zonder expliciete maat (Position.elementSize) krimpt de React
+        // Flow-wrapper naar deze minima → het figuur op ware verhouding.
+        minWidth: natuurlijkeBreedte,
+        minHeight: SYMBOOL_HOOGTE,
+        boxSizing: "border-box",
+        position: "relative",
+      }}
+    >
+      <svg
+        viewBox={viewBox}
+        // YMax: bij een handmatig opgerekte node zakt het symbool naar de
+        // onderkant, tegen het naamlabel aan.
+        preserveAspectRatio="xMidYMax meet"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", pointerEvents: "none" }}
+      >
+        {teken({ vulling, kleur, sw })}
+      </svg>
+      {/* Zelfde klasse als het motor-buitenlabel: vaste breedte, gecentreerd,
+          en hij luistert mee naar Beeld → Buitenlabels. */}
+      <span className="dc-buitenlabel" style={{ color: TEKST }}>
+        {element?.naam || `(${elementType?.label || "?"})`}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/** Fabriek: van een viewBox + tekenfunctie naar een shape-component. */
+const maakVorm = (viewBox, teken) => {
+  const Shape = (props) => <VormNode {...props} viewBox={viewBox} teken={teken} />;
+  return Shape;
+};
+
+// ── De vormen (spec-symbolen als vorm) ────────────────────────────────────
+
+/** Business actor: het poppetje. */
+const ActorVorm = maakVorm("0 0 48 60", ({ vulling, kleur, sw }) => (
+  <g stroke={kleur} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" fill="none">
+    <circle cx="24" cy="12" r="9" fill={vulling} />
+    <path d="M24 21 V38 M9 27 H39 M24 38 L12 56 M24 38 L36 56" />
+  </g>
+));
+
+/**
+ * Business rol: de liggende cilinder. De omtrek heeft twee bogen in dezélfde
+ * richting (de linker is de achterkant); de **naad** aan de rechterkant is de
+ * andere helft van de voorste ellips en buigt dus tegengesteld — zonder die
+ * naad oogt de vorm als een gewone afgeronde rechthoek (en dus als een
+ * service).
+ */
+const RolVorm = maakVorm("0 0 72 44", ({ vulling, kleur, sw }) => (
+  <g stroke={kleur} strokeWidth={sw} strokeLinejoin="round" fill="none">
+    <path d="M18 6 H50 a11 16 0 0 1 0 32 H18 a11 16 0 0 1 0 -32 Z" fill={vulling} />
+    <path d="M50 6 a11 16 0 0 0 0 32" />
+  </g>
+));
+
+/** Business proces: de pijl. */
+const ProcesVorm = maakVorm("0 0 96 48", ({ vulling, kleur, sw }) => (
+  <path
+    d="M4 14 H60 V4 L92 24 L60 44 V34 H4 Z"
+    fill={vulling}
+    stroke={kleur}
+    strokeWidth={sw}
+    strokeLinejoin="round"
+  />
+));
+
+/** Functie (business/applicatie): de chevron met de punt naar boven. */
+const FunctieVorm = maakVorm("0 0 60 60", ({ vulling, kleur, sw }) => (
+  <path
+    d="M30 4 L56 26 V56 L30 38 L4 56 V26 Z"
+    fill={vulling}
+    stroke={kleur}
+    strokeWidth={sw}
+    strokeLinejoin="round"
+  />
+));
+
+/** Service (business/applicatie/technology): het afgeronde blok. */
+const ServiceVorm = maakVorm("0 0 96 44", ({ vulling, kleur, sw }) => (
+  <rect x="4" y="6" width="88" height="32" rx="16" fill={vulling} stroke={kleur} strokeWidth={sw} />
+));
+
+/** Business event: de pijl met de inkeping aan de achterkant. */
+const EventVorm = maakVorm("0 0 92 44", ({ vulling, kleur, sw }) => (
+  <path
+    d="M6 6 H62 L86 22 L62 38 H6 L24 22 Z"
+    fill={vulling}
+    stroke={kleur}
+    strokeWidth={sw}
+    strokeLinejoin="round"
+  />
+));
+
+/** Object (business/data): de rechthoek met de kopstreep. */
+const ObjectVorm = maakVorm("0 0 96 56", ({ vulling, kleur, sw }) => (
+  <g stroke={kleur} strokeWidth={sw} strokeLinejoin="round">
+    <rect x="4" y="6" width="88" height="44" fill={vulling} />
+    <line x1="4" y1="18" x2="92" y2="18" />
+  </g>
+));
+
+/** Applicatiecomponent: het blok met de twee uitsteeksels. */
+const ComponentVorm = maakVorm("0 0 84 60", ({ vulling, kleur, sw }) => (
+  <g stroke={kleur} strokeWidth={sw} strokeLinejoin="round">
+    <rect x="18" y="4" width="62" height="52" fill={vulling} />
+    <rect x="4" y="14" width="28" height="12" fill={vulling} />
+    <rect x="4" y="34" width="28" height="12" fill={vulling} />
+  </g>
+));
+
+/** Node: de 3D-doos (voorvlak + bovenvlak + zijvlak). */
+const NodeVorm = maakVorm("0 0 84 64", ({ vulling, kleur, sw }) => (
+  <g stroke={kleur} strokeWidth={sw} strokeLinejoin="round">
+    {/* Boven- en zijvlak iets doorschijnend: diepte zonder een tweede,
+        thema-onvriendelijke vaste kleur. */}
+    <path d="M4 18 L20 4 H80 L64 18 Z" fill={vulling} fillOpacity="0.65" />
+    <path d="M64 18 L80 4 V46 L64 60 Z" fill={vulling} fillOpacity="0.65" />
+    <rect x="4" y="18" width="60" height="42" fill={vulling} />
+  </g>
+));
+
+/** Device: de afgeronde doos op een voet. */
+const DeviceVorm = maakVorm("0 0 88 64", ({ vulling, kleur, sw }) => (
+  <g stroke={kleur} strokeWidth={sw} strokeLinejoin="round">
+    <rect x="10" y="4" width="68" height="40" rx="7" fill={vulling} />
+    <path d="M2 58 L16 44 H72 L86 58 Z" fill={vulling} />
+  </g>
+));
+
+/** Systeemsoftware: de bol met de arc van de "onderliggende" bol erachter. */
+const SoftwareVorm = maakVorm("0 0 72 68", ({ vulling, kleur, sw }) => (
+  <g stroke={kleur} strokeWidth={sw} strokeLinecap="round" fill="none">
+    <path d="M12 30 A24 24 0 0 1 48 8" />
+    <circle cx="42" cy="40" r="24" fill={vulling} />
+  </g>
+));
+
+/** Artifact: het dokje met de omgevouwen hoek. */
+const ArtifactVorm = maakVorm("0 0 64 76", ({ vulling, kleur, sw }) => (
+  <g stroke={kleur} strokeWidth={sw} strokeLinejoin="round">
+    <path d="M6 4 H40 L58 22 V72 H6 Z" fill={vulling} />
+    {/* De omgevouwen hoek blijft *onvuld*: het hoekvlak ligt buiten de omtrek,
+        dus een vaste vulling zou in het donkere thema als vlek oplichten. */}
+    <path d="M40 4 V22 H58" fill="none" />
+  </g>
+));
+
+// ── Motivation-figuren (Archi-conventie; toegevoegd 01-09 op verzoek Mark:
+//    "constraint als ruit, doel als dartbord"). De spec toont motivation
+//    alleen als (achthoekige) box, maar Archi levert de figuur-variant wél —
+//    en dat is waar gebruikers vandaan komen. Geometrie = de hoek-iconen uit
+//    iconen.jsx, opgeschaald en gevuld met de laagkleur. ────────────────────
+
+/** Interface: de lollipop — steel met open bol (business/app/tech). */
+const InterfaceVorm = maakVorm("0 0 92 56", ({ vulling, kleur, sw }) => (
+  <>
+    <path d="M4 28 H48" fill="none" stroke={kleur} strokeWidth={sw} strokeLinecap="round" />
+    <circle cx="68" cy="28" r="20" fill={vulling} stroke={kleur} strokeWidth={sw} />
+  </>
+));
+
+/** Capability: de blokjes-trap (zoals Archi hem tekent). */
+const CapabilityVorm = maakVorm("0 0 76 76", ({ vulling, kleur, sw }) => (
+  <>
+    {[
+      [50, 2], [50, 26], [26, 26], [50, 50], [26, 50], [2, 50],
+    ].map(([x, y], i) => (
+      <rect key={i} x={x} y={y} width="24" height="24" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    ))}
+  </>
+));
+
+/** Goal: het dartbord — ring, ring, roos. */
+const GoalVorm = maakVorm("0 0 72 72", ({ vulling, kleur, sw }) => (
+  <>
+    <circle cx="36" cy="36" r="30" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    <circle cx="36" cy="36" r="19" fill={OPEN} stroke={kleur} strokeWidth={sw} />
+    <circle cx="36" cy="36" r="8" fill={kleur} stroke="none" />
+  </>
+));
+
+/** Driver: het stuurwiel — cirkel met vier doorstekende spaken. */
+const DriverVorm = maakVorm("0 0 72 72", ({ vulling, kleur, sw }) => (
+  <>
+    <circle cx="36" cy="36" r="26" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    <path
+      d="M36 4 V68 M4 36 H68 M13.4 13.4 L58.6 58.6 M58.6 13.4 L13.4 58.6"
+      fill="none"
+      stroke={kleur}
+      strokeWidth={sw}
+      strokeLinecap="round"
+    />
+    <circle cx="36" cy="36" r="7" fill={kleur} stroke="none" />
+  </>
+));
+
+/** Stakeholder: cirkel met naaf en vier korte asjes op de rand. */
+const StakeholderVorm = maakVorm("0 0 72 72", ({ vulling, kleur, sw }) => (
+  <>
+    <circle cx="36" cy="36" r="25" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    <circle cx="36" cy="36" r="9" fill={OPEN} stroke={kleur} strokeWidth={sw} />
+    <path
+      d="M36 5 v11 M36 56 v11 M5 36 h11 M56 36 h11"
+      fill="none"
+      stroke={kleur}
+      strokeWidth={sw}
+      strokeLinecap="round"
+    />
+  </>
+));
+
+/** Principle: de plaquette met het uitroepteken. */
+const PrincipleVorm = maakVorm("0 0 64 72", ({ vulling, kleur, sw }) => (
+  <>
+    <rect x="6" y="5" width="52" height="62" rx="8" fill={vulling} stroke={kleur} strokeWidth={sw} />
+    <path d="M32 18 V44" fill="none" stroke={kleur} strokeWidth={sw + 3.2} strokeLinecap="round" />
+    <circle cx="32" cy="55" r="3.6" fill={kleur} stroke="none" />
+  </>
+));
+
+/** Requirement en Constraint: het parallellogram. */
+const RequirementVorm = maakVorm("0 0 92 52", ({ vulling, kleur, sw }) => (
+  <path
+    d="M24 6 H88 L68 46 H4 Z"
+    fill={vulling}
+    stroke={kleur}
+    strokeWidth={sw}
+    strokeLinejoin="round"
+  />
+));
+
+const VORMEN = {
+  "am-vorm-actor": ActorVorm,
+  "am-vorm-rol": RolVorm,
+  "am-vorm-proces": ProcesVorm,
+  "am-vorm-functie": FunctieVorm,
+  "am-vorm-service": ServiceVorm,
+  "am-vorm-event": EventVorm,
+  "am-vorm-object": ObjectVorm,
+  "am-vorm-component": ComponentVorm,
+  "am-vorm-node": NodeVorm,
+  "am-vorm-device": DeviceVorm,
+  "am-vorm-software": SoftwareVorm,
+  "am-vorm-artifact": ArtifactVorm,
+  "am-vorm-interface": InterfaceVorm,
+  "am-vorm-capability": CapabilityVorm,
+  "am-vorm-goal": GoalVorm,
+  "am-vorm-driver": DriverVorm,
+  "am-vorm-stakeholder": StakeholderVorm,
+  "am-vorm-principle": PrincipleVorm,
+  "am-vorm-requirement": RequirementVorm,
+};
+
+let _geregistreerd = false;
+/** Idempotente registratie (veilig bij HMR/dubbele import). */
+export function registreerArchimateVormShapes() {
+  if (_geregistreerd) return;
+  for (const id of VORM_SHAPE_IDS) {
+    const Shape = VORMEN[id];
+    if (Shape) registreerShape(id, Shape);
+  }
+  _geregistreerd = true;
+}

@@ -62,6 +62,26 @@ profiel** — groot, maar zonder nieuwe primitieven.
 - **Alternatieve gedaante** (het icoon *als* vorm, bv. de actor-poppetje-
   variant) kan later gratis via **shapeSets** (P07) — de Definitie blijft
   gelijk, alleen de skin wisselt.
+  **✅ Gebouwd (31-08, shapeSet "Iconen als vorm") en aangevuld (01-09):**
+  motivation-elementen dragen nu in béide gedaanten hun eigen vormgrammatica —
+  **afgeschuinde hoeken** (achthoek), conform spec en Archi; en de afgeleide
+  Maken-/Verbinding-balken tonen **scheidingstekens per laag** via het nieuwe
+  `ElementType.taakbalkGroep` (generiek motor-veld, zie
+  `diagramcore/taskbar/scheidingen.js`).
+  **✅ gebouwd** (2026-09-01): shape-set `vormen` — "Iconen als vorm", te
+  kiezen via **Beeld → Shape-set**. Twaalf vormshapes
+  (`archimate/vormShapes.jsx`) over zestien elementtypen
+  (`archimate/vormSet.js`): poppetje, liggende cilinder, proces-pijl,
+  chevron, afgerond blok (de drie services), event-pijl, rechthoek met
+  kopstreep (business- én data-object), component met uitsteeksels,
+  3D-doos, device, systeemsoftware-bol en artifact-dokje. De naam staat
+  ín de node onder het symbool (`naamLabel` is Definitie-niveau en wisselt
+  niet mee met een set); het symbool schaalt mee met de nodemaat, zodat een
+  in de box-gedaante opgerekte node bruikbaar blijft. De
+  **motivation**-elementen (stakeholder/driver/goal/principle/requirement/
+  constraint) blijven bewust de box met hoek-icoon: de spec kent daar geen
+  eigen-vorm-variant. Terugwisselen naar "Standaard" herstelt de boxen
+  (de set is puur skin, geen model).
 
 ### 2.2 Relaties (alle elf zijn met bestaande edge-middelen te doen)
 
@@ -110,6 +130,13 @@ validatie-hook die bestaande diagrammen naloopt.
 2. **v1:** volledige elemententabel + relatiematrix als data → gegenereerde
    verbindingsregels; nesting via containers; validatie-hook (matrix-check
    op bestaand diagram).
+   **✅ Elemententabel volledig (04-09):** alle 60 typen van 3.2 (strategy,
+   physical, impl & migration, location, grouping, collaborations,
+   interactions, interfaces, …) in `archimate/elementen.js` (pure data) met
+   laagkleuren, hoek-iconen en taakbalkgroepen — afgedwongen door de eerste
+   echte imports (Marks testexport en de GEMMA-doelarchitectuur: 1108
+   elementen, 0 overgeslagen). De **relatiematrix en nesting blijven het
+   open v1-restant**.
 3. **v2:** viewpoints; **Open Exchange Format (XML) import/export** — dé
    killer-feature: uitwisseling met Archi/BiZZdesign. Import mapt op
    elements/diagrams; onze kruisverbanden kunnen ArchiMate-relaties naar
