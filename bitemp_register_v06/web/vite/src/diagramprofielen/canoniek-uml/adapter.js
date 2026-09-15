@@ -15,6 +15,7 @@
  * compartiment (vergt modeltraversal), geen domein-overlay, labels niet sleepbaar
  * (bestaande labelOffsets worden wél gerespecteerd).
  */
+import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
 import { CANONIEK_UML_ID } from "./index.js";
 
 /** Type-kolomtekst voor een veld — zelfde opbouw als EntiteitNode. */
@@ -348,6 +349,51 @@ export function vanCanoniekModel(state) {
     };
   }
 
+  // Composities (ENT ◆ GE) als echte compositie-connectoren, net als relaties
+  // sinds fase 3B. Voorheen bestonden ze alleen als presentatie-edge per
+  // diagram: een GE die je op een nieuw diagram naast zijn entiteit zette,
+  // kreeg dan nooit een lijn. Als connector leidt de core de lijn af op elk
+  // diagram waar beide uiteinden staan.
+  const compositieVoorPaar = new Map(); // "bron->doel" → connector-id
+  for (const e of structuralEdges) {
+    if (bronElements[e.source]?.type !== "entiteit") continue;
+    if (bronElements[e.target]?.type !== "gegevenselement") continue;
+    if (!elements[e.source] || !elements[e.target]) continue;
+    const sleutel = `${e.source}->${e.target}`;
+    if (compositieVoorPaar.has(sleutel)) continue;
+    const ed = e.data || {};
+    const ge = bronElements[e.target]?.data || {};
+    const id = `comp_${e.id || sleutel}`;
+    const data = { bron: ed, structuralEdgeId: e.id || null };
+    for (const sleutelNaam of ["rolnaam", "kardinaliteit", "momentvoorkomen"]) {
+      if (ed[sleutelNaam]) data[sleutelNaam] = ed[sleutelNaam];
+    }
+    const heen = ed.naamLabelHeen || ge.naamLabelHeen;
+    const terug = ed.naamLabelTerug || ge.naamLabelTerug;
+    if (heen) data.naamLabelHeen = heen;
+    if (terug) data.naamLabelTerug = terug;
+    // Handles: een connector heeft er één paar voor alle diagrammen; neem de
+    // eerste gezette (en genormaliseerde) waarde van een presentatie-edge.
+    for (const diag of Object.values(state?.diagrams || {})) {
+      const pe = (diag.edges || []).find((x) => x.source === e.source && x.target === e.target);
+      if (!pe) continue;
+      const bronH = normaliseerHandle(pe.sourceHandle, "source");
+      const doelH = normaliseerHandle(pe.targetHandle, "target");
+      if (bronH && !data.sourceHandle) data.sourceHandle = bronH;
+      if (doelH && !data.targetHandle) data.targetHandle = doelH;
+    }
+    elements[id] = {
+      id,
+      naam: "",
+      elementType: "compositie",
+      source: e.source,
+      target: e.target,
+      compartimenten: [],
+      data,
+    };
+    compositieVoorPaar.set(sleutel, id);
+  }
+
   const heeftVelden = (id) =>
     (elements[id]?.compartimenten || []).some((c) => (c.velden || []).length > 0);
 
@@ -377,6 +423,8 @@ export function vanCanoniekModel(state) {
     const edges = (diag.edges || [])
       .filter((e) => {
         if (ankerIds.has(e.source) || ankerIds.has(e.target)) return false;
+        // Gevouwen compositie: de core materialiseert de lijn uit de connector.
+        if (compositieVoorPaar.has(`${e.source}->${e.target}`)) return false;
         const raaktRel = relIds.has(e.source) || relIds.has(e.target);
         if (!raaktRel) return true;
         const isBijzonder = e.data?.isDependency === true || e.data?.kind === "scope";
@@ -513,6 +561,7 @@ export function naarCanoniekModel(coreState) {
   const structuralEdges = [];
   const overgeslagen = [];
   const composities = new Map(); // "src->tgt" → {source, target, data}
+  const compositieHandles = new Map(); // "src->tgt" → {sourceHandle, targetHandle}
   const generalisaties = []; // {id, source, target, data}
   const gebruikConnectoren = [];
 
@@ -674,10 +723,20 @@ export function naarCanoniekModel(coreState) {
         break;
       case "compositie":
         if (el.source && el.target) {
-          composities.set(`${el.source}->${el.target}`, {
+          const sleutel = `${el.source}->${el.target}`;
+          const bestaand = composities.get(sleutel);
+          // De meta-seed (heenreis) draagt id + edge-data (momentvoorkomen,
+          // rolnaam, …); een bij de heenreis gevouwen connector draagt ze in
+          // data.bron. Een in 0.5 getekende compositie heeft geen van beide.
+          composities.set(sleutel, {
+            id: bestaand?.id || d.structuralEdgeId || undefined,
             source: el.source,
             target: el.target,
-            data: {},
+            data: { ...(bestaand?.data || {}), ...(d.bron || {}) },
+          });
+          compositieHandles.set(sleutel, {
+            sourceHandle: d.sourceHandle || null,
+            targetHandle: d.targetHandle || null,
           });
         }
         break;
@@ -770,12 +829,32 @@ export function naarCanoniekModel(coreState) {
     // Sla composities over waarvan een uiteinde niet (meer) bestaat,
     // bv. omdat het gegevenselement in 0.5 verwijderd is.
     if (!elements[c.source] || !elements[c.target]) continue;
+    const edgeId = c.id || `se_${sleutel}`;
     structuralEdges.push({
-      id: c.id || `se_${sleutel}`,
+      id: edgeId,
       source: c.source,
       target: c.target,
       data: c.data || {},
     });
+    // Een gevouwen compositie heeft geen presentatie-edge meer in de core;
+    // schrijf hem terug op elk diagram waar beide uiteinden staan, zodat de
+    // oude store hem tekent en de V3-export zijn handles bewaart.
+    const handles = compositieHandles.get(sleutel);
+    if (!handles) continue;
+    for (const diag of Object.values(diagrams)) {
+      const opDiagram = new Set((diag.nodes || []).map((n) => n.elementId));
+      if (!opDiagram.has(c.source) || !opDiagram.has(c.target)) continue;
+      if ((diag.edges || []).some((e) => e.source === c.source && e.target === c.target)) continue;
+      diag.edges.push({
+        id: edgeId,
+        source: c.source,
+        target: c.target,
+        type: "metamodel",
+        ...(handles.sourceHandle ? { sourceHandle: handles.sourceHandle } : {}),
+        ...(handles.targetHandle ? { targetHandle: handles.targetHandle } : {}),
+        data: c.data || {},
+      });
+    }
   }
 
   // Generalisaties horen in het "overzicht"-diagram (daar leest

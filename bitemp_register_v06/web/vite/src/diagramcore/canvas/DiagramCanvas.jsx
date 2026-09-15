@@ -44,7 +44,7 @@ import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
-import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante } from "./materialiseerConnectoren.js";
+import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante, normaliseerHandle } from "./materialiseerConnectoren.js";
 import { voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
 
 import { ELEMENT_REF_MIME } from "./externDrop.js";
@@ -499,7 +499,10 @@ function CanvasBinnenkant({
       };
     };
     const geimporteerd = (diagram?.edges || []).map((e) => {
-      let { sourceHandle, targetHandle } = e;
+      // Oude modellen bewaren kale zijden ("left"); zonder normalisatie
+      // weigert React Flow de edge stil en verdwijnt de lijn.
+      let sourceHandle = normaliseerHandle(e.sourceHandle, "source");
+      let targetHandle = normaliseerHandle(e.targetHandle, "target");
       if (!sourceHandle || !targetHandle) {
         const b = mid(e.source);
         const d = mid(e.target);

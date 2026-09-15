@@ -32,6 +32,27 @@ import { kortsteVoorkomenPaar, voorkomenId, voorkomensPerElement } from "../mode
 
 export const ANKER_PREFIX = "anker:";
 
+const ZIJDEN = new Set(["top", "bottom", "left", "right"]);
+
+/**
+ * Normaliseer een opgeslagen handle-id naar de vorm die ElementNode kent
+ * (`source-left`, `target-top`, …).
+ *
+ * Oudere modellen (de eerste umleditor) bewaarden kale zijden als `"left"` of
+ * `"bottom"`. React Flow weigert een edge met een onbekend handle-id stil —
+ * de lijn verdwijnt dan zonder foutmelding. Onherkenbare waarden worden
+ * `null`, zodat de aanroeper terugvalt op de kortste weg.
+ *
+ * @param {unknown} waarde  opgeslagen handle ("left", "source-left", …)
+ * @param {"source"|"target"} soort  welke kant van de verbinding
+ * @returns {string|null}
+ */
+export function normaliseerHandle(waarde, soort) {
+  if (typeof waarde !== "string" || !waarde) return null;
+  const zijde = waarde.replace(/^(source|target)-/, "");
+  return ZIJDEN.has(zijde) ? `${soort}-${zijde}` : null;
+}
+
 /**
  * Zoek het connector-ElementType dat een verbinding bron→doel toestaat.
  * Bij een expliciete voorkeur (taakbalk "Verbinding") is die leidend; zonder
@@ -163,11 +184,13 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     // gebruiker mag daar niet zélf een handle hebben gekozen — een met de hand
     // gelegde aanhechting blijft waar hij ligt. Een zelf-lus zweeft nooit; de
     // ConnectorEdge vangt dat op, want daar is het pas te zien.
-    const zwevendKant = (elementId, handleSleutel) =>
-      elementTypesById[elements[elementId]?.elementType]?.randAanhechting === "zwevend" &&
-      !el.data?.[handleSleutel];
-    const zwevendBron = zwevendKant(el.source, "sourceHandle");
-    const zwevendDoel = zwevendKant(el.target, "targetHandle");
+    // Handles genormaliseerd: een kale oude waarde ("left") telt als geen keuze.
+    const bronHandle = normaliseerHandle(el.data?.sourceHandle, "source");
+    const doelHandle = normaliseerHandle(el.data?.targetHandle, "target");
+    const zwevendKant = (elementId, handle) =>
+      elementTypesById[elements[elementId]?.elementType]?.randAanhechting === "zwevend" && !handle;
+    const zwevendBron = zwevendKant(el.source, bronHandle);
+    const zwevendDoel = zwevendKant(el.target, doelHandle);
 
     const labels = et.hooks?.edgeLabels?.(el) || {};
     // Handmatig versleepte label-posities (data.labelOffsets, per zijde).
@@ -224,9 +247,9 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
         target: doelVoorkomenId,
         // Expliciete handles winnen; anders de kortste weg (of de lus-default).
         sourceHandle:
-          el.data?.sourceHandle || (isLus ? "source-top" : `source-${besteZijde(bronMid, doelMid)}`),
+          bronHandle || (isLus ? "source-top" : `source-${besteZijde(bronMid, doelMid)}`),
         targetHandle:
-          el.data?.targetHandle || (isLus ? "target-right" : `target-${besteZijde(doelMid, bronMid)}`),
+          doelHandle || (isLus ? "target-right" : `target-${besteZijde(doelMid, bronMid)}`),
         data: {
           connectorId: el.id,
           // Handmatige knikpunten (ctrl-klik; alleen in deze directe gedaante —
@@ -277,7 +300,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       id: `conn:${el.id}:bron`,
       source: bronVoorkomenId,
       target: ankerId,
-      sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, ankerMid)}`,
+      sourceHandle: bronHandle || `source-${besteZijde(bronMid, ankerMid)}`,
       targetHandle: `target-${besteZijde(ankerMid, bronMid)}`,
       data: {
         connectorId: el.id,
@@ -298,7 +321,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       source: ankerId,
       target: doelVoorkomenId,
       sourceHandle: `source-${besteZijde(ankerMid, doelMid)}`,
-      targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, ankerMid)}`,
+      targetHandle: doelHandle || `target-${besteZijde(doelMid, ankerMid)}`,
       data: {
         connectorId: el.id,
         presentatie: {

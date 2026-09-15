@@ -356,6 +356,27 @@ const elementTypes = [
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["gegevenselement"] },
     edgePresentatie: { lijn: "solid", kleur: "#64748b", markerStart: "ruit" },
+    hooks: {
+      /**
+       * Labels zoals de oude presentatie-edge ze toonde (zie
+       * adapter.presentatieVoorEdge): rolnaam, kardinaliteit en
+       * {enkelvoudig|meervoudig} aan de GE-kant; heen/terug-namen erbij.
+       */
+      edgeLabels: (conn) => {
+        const d = conn.data || {};
+        const kaal = [];
+        const delen = [];
+        if (d.rolnaam) delen.push({ tekst: d.rolnaam, soort: "rolnaam" });
+        if (d.kardinaliteit) delen.push({ tekst: d.kardinaliteit, soort: "kardinaliteit" });
+        if (d.momentvoorkomen === "enkelvoudig" || d.momentvoorkomen === "meervoudig") {
+          delen.push({ tekst: `{${d.momentvoorkomen}}`, soort: "constraint" });
+        }
+        if (delen.length) kaal.push({ zijde: "doel", delen });
+        if (d.naamLabelHeen) kaal.push({ zijde: "bron", delen: [{ tekst: `▶ ${d.naamLabelHeen}`, soort: "naam" }] });
+        if (d.naamLabelTerug) kaal.push({ zijde: "doel", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
+        return { bron: kaal.filter((l) => l.zijde === "bron"), doel: kaal.filter((l) => l.zijde === "doel"), kaal };
+      },
+    },
   },
   {
     id: "generalisatie",
@@ -474,9 +495,10 @@ export const canoniekUmlDiagramType = {
   hierarchie: ["bevat", "compositie"],
   hooks: {
     /**
-     * Gespiegelde composities uit het oude model zijn presentatie-edges
-     * (markerStart "ruit"), geen connector-elementen — lever ze als extra
-     * hiërarchie-paren aan de elementen-browser.
+     * Composities uit een V3-import zijn sinds de heenreis compositie-
+     * connectoren (die de "compositie"-hiërarchie al dekt). Deze hook vangt
+     * alleen nog presentatie-edges met een ruit zónder structurele edge —
+     * oudere opgeslagen modellen.
      */
     hierarchieParen: ({ diagrams }) => {
       const paren = [];

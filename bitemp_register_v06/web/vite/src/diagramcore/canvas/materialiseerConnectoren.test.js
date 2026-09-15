@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { materialiseerConnectoren, vindConnectorType, ANKER_PREFIX } from "./materialiseerConnectoren.js";
+import { materialiseerConnectoren, vindConnectorType, ANKER_PREFIX, normaliseerHandle } from "./materialiseerConnectoren.js";
 
 const diagramType = {
   id: "test",
@@ -498,4 +498,46 @@ test("samentrekking maakt óók de marker aan de overkant kaal (ArchiMate-ruit)"
     }, types).edges[0].data.presentatie;
   assert.equal(maak(null).markerStart, "ruit");
   assert.equal(maak("bol").markerStart, null);
+});
+
+
+test("normaliseerHandle: kale oude zijden en huidige ids → ElementNode-vorm", () => {
+  assert.equal(normaliseerHandle("left", "source"), "source-left");
+  assert.equal(normaliseerHandle("top", "target"), "target-top");
+  assert.equal(normaliseerHandle("source-bottom", "source"), "source-bottom");
+  // De zijde telt; een prefix van de verkeerde kant wordt gecorrigeerd.
+  assert.equal(normaliseerHandle("target-right", "source"), "source-right");
+  // Onherkenbaar of leeg → null, zodat de kortste weg het overneemt.
+  assert.equal(normaliseerHandle("midden", "source"), null);
+  assert.equal(normaliseerHandle("", "source"), null);
+  assert.equal(normaliseerHandle(undefined, "target"), null);
+});
+
+test("connector met kale oude handles krijgt geldige handle-ids (de lijn verdwijnt niet)", () => {
+  // Een edge met handle-id "left" wordt door React Flow stil geweigerd.
+  const elements = {
+    A,
+    G,
+    c1: {
+      id: "c1",
+      naam: "",
+      elementType: "compositie",
+      source: "A",
+      target: "G",
+      compartimenten: [],
+      data: { sourceHandle: "left", targetHandle: "top" },
+    },
+  };
+  const diagram = {
+    id: "d",
+    nodes: [
+      { elementId: "A", position: { x: 400, y: 0 } },
+      { elementId: "G", position: { x: 0, y: 300 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges.length, 1);
+  assert.equal(edges[0].sourceHandle, "source-left");
+  assert.equal(edges[0].targetHandle, "target-top");
+  assert.equal(edges[0].data.presentatie.markerStart, "ruit");
 });

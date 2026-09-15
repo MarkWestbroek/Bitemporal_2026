@@ -370,6 +370,31 @@ fase 2 een **bewerkbare sandbox**:
   JSON (elements + diagrammen incl. viewports + meta, met profiel-check bij
   import). Zo is een handmatig geschoven view (bv. een OAS-import) deelbaar
   en niet aan localStorage gebonden.
+- **Composities zijn connectoren (2026-09-15).** Tot deze datum bestond
+  ENT ◆ GE na een V3-import alleen als *presentatie-edge per diagram*
+  (plus `meta.compositieEdges` voor de terugreis). Gevolg: zette je een
+  entiteit en haar gegevenselementen op een nieuw diagram, dan kwam er geen
+  lijn mee. De heenreis-adapter (`vanCanoniekModel`) vouwt nu elke
+  structurele ENT→GE-edge tot een `compositie`-connector — net als relaties
+  sinds fase 3B — en de core leidt de lijn af op elk diagram waar beide
+  uiteinden staan. De dubbele presentatie-edge wordt weggefilterd; labels
+  (rolnaam, kardinaliteit, `{enkelvoudig}`, heen/terug) komen uit
+  `hooks.edgeLabels` van het `compositie`-type. De terugreis bewaart
+  edge-id en edge-data en schrijft de presentatie-edge per diagram terug,
+  zodat `storeNaarV3Model` de GE-handles blijft vinden.
+  *Label-offsets* van de oude edge (`rolnaamDst`/`heen`/`terug`) gaan
+  daarbij verloren: die passen niet op de per-zijde-offsets van een connector.
+- **Handle-normalisatie (2026-09-15).** Modellen uit de eerste umleditor
+  bewaren kale zijden als handle (`"left"`, `"bottom"`); de nodes kennen
+  alleen `source-left`/`target-top`. React Flow weigert zo'n edge **stil** —
+  de lijn verdwijnt zonder melding. `normaliseerHandle()` in
+  `diagramcore/canvas/materialiseerConnectoren.js` zet ze om (onherkenbaar →
+  `null` → kortste weg), zowel voor connectoren als voor opgeslagen
+  presentatie-edges in `DiagramCanvas`. Een V3-export schrijft ze voortaan in
+  de genormaliseerde vorm terug (de oude editor gebruikt die vorm zelf ook).
+  **Let op:** de sandbox persisteert; een al geladen model krijgt de
+  compositie-connectoren pas na opnieuw inladen (**Bestand → Importeer V3
+  JSON…** of **Herlaad uit UML-model…**). De handle-fix werkt direct.
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.
