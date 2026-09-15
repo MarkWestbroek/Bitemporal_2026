@@ -20,14 +20,15 @@ type AdellijkeTitel struct {
 
 // Locatie — Fysiek bezoekbare locatie gelegen op het aardoppervlak.
 type Locatie struct {
-	bun.BaseModel `bun:"table:locatie,alias:locatie"`
-	ID            int                  `json:"id" bun:"id,pk"`
-	Opvoer        *time.Time           `json:"opvoer,omitempty"`
-	Afvoer        *time.Time           `json:"afvoer,omitempty"`
-	Adressen      []Locatie_Adres      `bun:"rel:has-many,join:id=locatie_id" json:"adressen,omitempty"`
-	Baglocaties   []Locatie_BAGlocatie `bun:"rel:has-many,join:id=locatie_id" json:"baglocaties,omitempty"`
-	Aanvang       []Locatie_Aanvang    `bun:"rel:has-many,join:id=locatie_id" json:"aanvang,omitempty"`
-	Einde         []Locatie_Einde      `bun:"rel:has-many,join:id=locatie_id" json:"einde,omitempty"`
+	bun.BaseModel  `bun:"table:locatie,alias:locatie"`
+	ID             int                  `json:"id" bun:"id,pk"`
+	Opvoer         *time.Time           `json:"opvoer,omitempty"`
+	Afvoer         *time.Time           `json:"afvoer,omitempty"`
+	Adressen       []Locatie_Adres      `bun:"rel:has-many,join:id=locatie_id" json:"adressen,omitempty"`
+	Baglocaties    []Locatie_BAGlocatie `bun:"rel:has-many,join:id=locatie_id" json:"baglocaties,omitempty"`
+	Gebiedsligging []Gebiedsligging     `bun:"rel:has-many,join:id=locatie_id" json:"gebiedsligging,omitempty"`
+	Aanvang        []Locatie_Aanvang    `bun:"rel:has-many,join:id=locatie_id" json:"aanvang,omitempty"`
+	Einde          []Locatie_Einde      `bun:"rel:has-many,join:id=locatie_id" json:"einde,omitempty"`
 }
 
 // Locatie_Aanvang — aanvangdatum van entiteit Locatie.
@@ -61,7 +62,10 @@ type NatuurlijkPersoon struct {
 	Partnernamen           []NatuurlijkPersoon_Partnernaam           `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"partnernamen,omitempty"`
 	Naamgebruiken          []NatuurlijkPersoon_Naamgebruik           `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"naamgebruiken,omitempty"`
 	Burgerschappen         []NatuurlijkPersoon_Burgerschap           `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"burgerschappen,omitempty"`
+	Geslacht               []NatuurlijkPersoon_Geslacht              `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"geslacht,omitempty"`
+	Aanspraak              []NatuurlijkPersoon_Aanspraak             `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"aanspraak,omitempty"`
 	Bereikbaarheden        []Bereikbaarheid                          `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"bereikbaarheden,omitempty"`
+	Woonlocatie            []Woonlocatie                             `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"woonlocatie,omitempty"`
 	Aanvang                []NatuurlijkPersoon_Aanvang               `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"aanvang,omitempty"`
 	Einde                  []NatuurlijkPersoon_Einde                 `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"einde,omitempty"`
 }

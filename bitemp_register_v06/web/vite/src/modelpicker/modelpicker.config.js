@@ -12,6 +12,12 @@ export const modelPickerConfig = {
     // ABUVWXY is een test/referentiedomein en mag standaard verborgen blijven.
     "abuvwxy"    
   ],
+  // Doorkijk over relaties: hoeveel hops naar een andere entiteit standaard in
+  // de boom worden meegenomen. 0 = alleen de eigen GE's en relaties van een
+  // entiteit. Activiteiten die ketens over registers heen nodig hebben (zoals
+  // de toegang-activity, met "de wijk van de woonlocatie van …") zetten dit
+  // per picker hoger via de prop `relatieDiepte`.
+  defaultRelatieDiepte: 0,
   // De domeintak mag default gesloten zijn in de browser.
   defaultExpandDomeinen: false,
   // Entiteiten mogen standaard alleen open zijn wanneer een domein wordt

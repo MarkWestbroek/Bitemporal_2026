@@ -110,3 +110,91 @@ test("filterTree op entiteitnaam behoudt alle velden", () => {
   const np = result[0].entiteiten[0];
   assert.equal(np.kinderen[0].velden.length, 3);
 });
+
+// ── Doorkijk over relaties ───────────────────────────────────────────────────
+// Kleine keten NatuurlijkPersoon ──Woonlocatie──▶ Locatie ──Gebiedsligging──▶
+// Gemeentedeel, zoals in het demo-model np-loc-org+geo. De relatie Kringloop
+// wijst terug naar NatuurlijkPersoon en test de cyclusbewaking.
+const doorkijkTypes = [
+  {
+    typenaam: "NatuurlijkPersoon",
+    metatype: "entiteit",
+    domein: "np-loc",
+    velden: [],
+    onderliggende: [{ rolnaam: "Woonlocatie", jsonRolnaam: "woonlocatie", doeltype: "Woonlocatie", momentvoorkomen: "enkelvoudig" }],
+  },
+  { typenaam: "Woonlocatie", metatype: "relatie", domein: "np-loc", doelEntiteit: "Locatie", velden: [] },
+  {
+    typenaam: "Locatie",
+    metatype: "entiteit",
+    domein: "np-loc",
+    velden: [],
+    onderliggende: [
+      { rolnaam: "Gebiedsligging", jsonRolnaam: "gebiedsligging", doeltype: "Gebiedsligging", momentvoorkomen: "enkelvoudig" },
+      { rolnaam: "Kringloop", jsonRolnaam: "kringloop", doeltype: "Kringloop", momentvoorkomen: "enkelvoudig" },
+    ],
+  },
+  { typenaam: "Gebiedsligging", metatype: "relatie", domein: "np-loc", doelEntiteit: "Gemeentedeel", velden: [] },
+  { typenaam: "Kringloop", metatype: "relatie", domein: "np-loc", doelEntiteit: "NatuurlijkPersoon", velden: [] },
+  {
+    typenaam: "Gemeentedeel",
+    metatype: "entiteit",
+    domein: "org-geo",
+    velden: [],
+    onderliggende: [{ rolnaam: "Wijkaanduiding", jsonRolnaam: "wijkaanduiding", doeltype: "Gemeentedeel_Wijkaanduiding", momentvoorkomen: "enkelvoudig" }],
+  },
+  {
+    typenaam: "Gemeentedeel_Wijkaanduiding",
+    metatype: "gegevenselement",
+    domein: "org-geo",
+    velden: [{ naam: "wijk", type: "string", verplicht: true }],
+  },
+];
+
+/** Alle veldpaden van één entiteit uit een gebouwde boom. */
+function veldpaden(tree, typenaam) {
+  for (const domein of tree) {
+    for (const ent of domein.entiteiten) {
+      if (ent.type.typenaam !== typenaam) continue;
+      return ent.kinderen.flatMap((ge) => ge.velden.map((k) => k.ref.veldpad));
+    }
+  }
+  return [];
+}
+
+test("relatieDiepte 0 (default) laat de boom bij de eigen GE's en relaties", () => {
+  const tree = bouwModelTree(doorkijkTypes);
+  assert.deepEqual(veldpaden(tree, "NatuurlijkPersoon"), []);
+  assert.deepEqual(veldpaden(tree, "Locatie"), []);
+});
+
+test("relatieDiepte volgt relaties naar de doel-entiteit en stapelt het rolpad", () => {
+  const eenHop = bouwModelTree(doorkijkTypes, { relatieDiepte: 1 });
+  // Eén hop: NatuurlijkPersoon ziet de GE's/relaties van Locatie, nog niet die
+  // van Gemeentedeel.
+  assert.deepEqual(veldpaden(eenHop, "NatuurlijkPersoon"), []);
+  assert.deepEqual(veldpaden(eenHop, "Locatie"), ["Locatie.gebiedsligging.wijkaanduiding.wijk"]);
+
+  const tweeHops = bouwModelTree(doorkijkTypes, { relatieDiepte: 2 });
+  assert.deepEqual(veldpaden(tweeHops, "NatuurlijkPersoon"), [
+    "NatuurlijkPersoon.woonlocatie.gebiedsligging.wijkaanduiding.wijk",
+  ]);
+});
+
+test("doorkijk-takken zijn gemarkeerd en dragen het samengestelde rolpad", () => {
+  const tree = bouwModelTree(doorkijkTypes, { relatieDiepte: 2 });
+  const np = tree.find((d) => d.naam === "np-loc").entiteiten.find((e) => e.type.typenaam === "NatuurlijkPersoon");
+  const eigen = np.kinderen.find((ge) => ge.rol === "woonlocatie");
+  assert.equal(eigen.doorkijk, false);
+  const doorkijk = np.kinderen.find((ge) => ge.rol === "woonlocatie.gebiedsligging.wijkaanduiding");
+  assert.equal(doorkijk.doorkijk, true);
+  assert.equal(doorkijk.velden[0].ref.entiteit, "NatuurlijkPersoon");
+});
+
+test("doorkijk loopt niet rond in een cyclus (A → B → A)", () => {
+  // Kringloop wijst van Locatie terug naar NatuurlijkPersoon; met ruime diepte
+  // mag dat niet tot oneindige recursie of herhaalde takken leiden.
+  const tree = bouwModelTree(doorkijkTypes, { relatieDiepte: 6 });
+  const paden = veldpaden(tree, "NatuurlijkPersoon");
+  assert.deepEqual(paden, ["NatuurlijkPersoon.woonlocatie.gebiedsligging.wijkaanduiding.wijk"]);
+});

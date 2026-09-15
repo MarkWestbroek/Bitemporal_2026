@@ -29,7 +29,7 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useState,
 import EditorModule from "react-simple-code-editor";
 const Editor = EditorModule.default ?? EditorModule;
 import Prism from "../../shared/prismSetup";
-import { ModelPicker, FIELDREF_MIME, useSchemaModel, bouwModelTree } from "../../modelpicker";
+import { ModelPicker, FIELDREF_MIME, useSchemaModel, verzamelVelden } from "../../modelpicker";
 import {
   parseBeleid, renderBeleid, naarOdrl, padNaarVerwijzing, renderVerwijzing,
   verwijzingNaarPad, maakVeldIndex, resolveerBeleid, resolveerVerwijzing,
@@ -79,25 +79,11 @@ function veldpadNaarVanVorm(veldpad) {
   return renderVerwijzing(padNaarVerwijzing(veldpad));
 }
 
-/** Platte veldenlijst (voor metamodel.js) uit de schema-API types. */
-function verzamelVelden(types) {
-  const velden = [];
-  for (const domein of bouwModelTree(types)) {
-    for (const ent of domein.entiteiten) {
-      const pak = (knopen) => {
-        for (const knoop of knopen || []) {
-          const ref = knoop.ref;
-          // Collectie-velden (arrays) zijn adressen van lijsten, geen waarden.
-          if (!ref || ref.format === "array") continue;
-          velden.push(ref);
-        }
-      };
-      pak(ent.velden);
-      for (const kind of ent.kinderen) pak(kind.velden);
-    }
-  }
-  return velden;
-}
+// Doorkijk over relaties: Toegangsspraak-ketens lopen over registergrenzen
+// heen ("de wijk van de woonlocatie van de betrokkene"). Met twee hops komt
+// NatuurlijkPersoon ──Woonlocatie──▶ Locatie ──Gebiedsligging──▶ Gemeentedeel
+// als één veldpad in de index; de keten-verkorting in metamodel.js doet de rest.
+const RELATIE_DIEPTE = 2;
 
 // ── Zinsontleding: spans → gekleurde HTML ────────────────────────────────────
 
@@ -138,7 +124,7 @@ function ToegangProvider({ children }) {
   // autocomplete. Zonder backend blijft alles werken, alleen zonder controle.
   const { types } = useSchemaModel({ baseUrl: apiBase() });
   const veldIndex = useMemo(() => {
-    const velden = verzamelVelden(types || []);
+    const velden = verzamelVelden(types || [], { relatieDiepte: RELATIE_DIEPTE });
     return velden.length ? maakVeldIndex(velden) : null;
   }, [types]);
 
@@ -367,7 +353,13 @@ function ToegangSidebar() {
         de tekst op een gegevens-keten om hem hier terug te vinden.
       </p>
       <div style={{ flex: 1, minHeight: 0 }}>
-        <ModelPicker baseUrl={apiBase()} onPick={onPick} expandEntiteiten focusVeldpad={focusVeldpad} />
+        <ModelPicker
+          baseUrl={apiBase()}
+          onPick={onPick}
+          expandEntiteiten
+          focusVeldpad={focusVeldpad}
+          relatieDiepte={RELATIE_DIEPTE}
+        />
       </div>
     </div>
   );
