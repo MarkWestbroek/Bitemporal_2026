@@ -73,6 +73,16 @@ func (lb Locatie_BAGlocatie) GetAfvoer() *time.Time   { return lb.Afvoer }
 func (lb *Locatie_BAGlocatie) SetAfvoer(t *time.Time) { lb.Afvoer = t }
 func (lb Locatie_BAGlocatie) String() string          { return RepresentatieToString(lb) }
 
+// Gebiedsligging
+func (g Gebiedsligging) GetID() any              { return g.Rel_ID }
+func (g Gebiedsligging) Metatype() Metatype      { return MetatypeRelatie }
+func (g *Gebiedsligging) ClearID()               { g.Rel_ID = 0 }
+func (g Gebiedsligging) GetOpvoer() *time.Time   { return g.Opvoer }
+func (g *Gebiedsligging) SetOpvoer(t *time.Time) { g.Opvoer = t }
+func (g Gebiedsligging) GetAfvoer() *time.Time   { return g.Afvoer }
+func (g *Gebiedsligging) SetAfvoer(t *time.Time) { g.Afvoer = t }
+func (g Gebiedsligging) String() string          { return RepresentatieToString(g) }
+
 // NatuurlijkPersoon_Persoonsidentificatie
 func (np NatuurlijkPersoon_Persoonsidentificatie) GetID() any              { return np.Rel_ID }
 func (np NatuurlijkPersoon_Persoonsidentificatie) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -123,6 +133,26 @@ func (nb NatuurlijkPersoon_Burgerschap) GetAfvoer() *time.Time   { return nb.Afv
 func (nb *NatuurlijkPersoon_Burgerschap) SetAfvoer(t *time.Time) { nb.Afvoer = t }
 func (nb NatuurlijkPersoon_Burgerschap) String() string          { return RepresentatieToString(nb) }
 
+// NatuurlijkPersoon_Geslacht
+func (ng NatuurlijkPersoon_Geslacht) GetID() any              { return ng.Rel_ID }
+func (ng NatuurlijkPersoon_Geslacht) Metatype() Metatype      { return MetatypeGegevenselement }
+func (ng *NatuurlijkPersoon_Geslacht) ClearID()               { ng.Rel_ID = 0 }
+func (ng NatuurlijkPersoon_Geslacht) GetOpvoer() *time.Time   { return ng.Opvoer }
+func (ng *NatuurlijkPersoon_Geslacht) SetOpvoer(t *time.Time) { ng.Opvoer = t }
+func (ng NatuurlijkPersoon_Geslacht) GetAfvoer() *time.Time   { return ng.Afvoer }
+func (ng *NatuurlijkPersoon_Geslacht) SetAfvoer(t *time.Time) { ng.Afvoer = t }
+func (ng NatuurlijkPersoon_Geslacht) String() string          { return RepresentatieToString(ng) }
+
+// NatuurlijkPersoon_Aanspraak
+func (na NatuurlijkPersoon_Aanspraak) GetID() any              { return na.Rel_ID }
+func (na NatuurlijkPersoon_Aanspraak) Metatype() Metatype      { return MetatypeGegevenselement }
+func (na *NatuurlijkPersoon_Aanspraak) ClearID()               { na.Rel_ID = 0 }
+func (na NatuurlijkPersoon_Aanspraak) GetOpvoer() *time.Time   { return na.Opvoer }
+func (na *NatuurlijkPersoon_Aanspraak) SetOpvoer(t *time.Time) { na.Opvoer = t }
+func (na NatuurlijkPersoon_Aanspraak) GetAfvoer() *time.Time   { return na.Afvoer }
+func (na *NatuurlijkPersoon_Aanspraak) SetAfvoer(t *time.Time) { na.Afvoer = t }
+func (na NatuurlijkPersoon_Aanspraak) String() string          { return RepresentatieToString(na) }
+
 // Bereikbaarheid
 func (b Bereikbaarheid) GetID() any              { return b.Rel_ID }
 func (b Bereikbaarheid) Metatype() Metatype      { return MetatypeRelatie }
@@ -132,6 +162,16 @@ func (b *Bereikbaarheid) SetOpvoer(t *time.Time) { b.Opvoer = t }
 func (b Bereikbaarheid) GetAfvoer() *time.Time   { return b.Afvoer }
 func (b *Bereikbaarheid) SetAfvoer(t *time.Time) { b.Afvoer = t }
 func (b Bereikbaarheid) String() string          { return RepresentatieToString(b) }
+
+// Woonlocatie
+func (w Woonlocatie) GetID() any              { return w.Rel_ID }
+func (w Woonlocatie) Metatype() Metatype      { return MetatypeRelatie }
+func (w *Woonlocatie) ClearID()               { w.Rel_ID = 0 }
+func (w Woonlocatie) GetOpvoer() *time.Time   { return w.Opvoer }
+func (w *Woonlocatie) SetOpvoer(t *time.Time) { w.Opvoer = t }
+func (w Woonlocatie) GetAfvoer() *time.Time   { return w.Afvoer }
+func (w *Woonlocatie) SetAfvoer(t *time.Time) { w.Afvoer = t }
+func (w Woonlocatie) String() string          { return RepresentatieToString(w) }
 
 /* ================================================================
    3. _DATA — interface-methoden
@@ -166,6 +206,16 @@ func (d *Locatie_BAGlocatie_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
 func (d Locatie_BAGlocatie_Data) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *Locatie_BAGlocatie_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d Locatie_BAGlocatie_Data) String() string          { return RepresentatieToString(d) }
+
+// Gebiedsligging_Data
+func (d Gebiedsligging_Data) GetID() any              { return d.Versie }
+func (d Gebiedsligging_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *Gebiedsligging_Data) ClearID()               { d.Versie = 0 }
+func (d Gebiedsligging_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *Gebiedsligging_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d Gebiedsligging_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *Gebiedsligging_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d Gebiedsligging_Data) String() string          { return RepresentatieToString(d) }
 
 // NatuurlijkPersoon_Persoonsidentificatie_Data
 func (d NatuurlijkPersoon_Persoonsidentificatie_Data) GetID() any { return d.Versie }
@@ -221,6 +271,26 @@ func (d NatuurlijkPersoon_Burgerschap_Data) GetAfvoer() *time.Time   { return d.
 func (d *NatuurlijkPersoon_Burgerschap_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d NatuurlijkPersoon_Burgerschap_Data) String() string          { return RepresentatieToString(d) }
 
+// NatuurlijkPersoon_Geslacht_Data
+func (d NatuurlijkPersoon_Geslacht_Data) GetID() any              { return d.Versie }
+func (d NatuurlijkPersoon_Geslacht_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *NatuurlijkPersoon_Geslacht_Data) ClearID()               { d.Versie = 0 }
+func (d NatuurlijkPersoon_Geslacht_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *NatuurlijkPersoon_Geslacht_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d NatuurlijkPersoon_Geslacht_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *NatuurlijkPersoon_Geslacht_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d NatuurlijkPersoon_Geslacht_Data) String() string          { return RepresentatieToString(d) }
+
+// NatuurlijkPersoon_Aanspraak_Data
+func (d NatuurlijkPersoon_Aanspraak_Data) GetID() any              { return d.Versie }
+func (d NatuurlijkPersoon_Aanspraak_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *NatuurlijkPersoon_Aanspraak_Data) ClearID()               { d.Versie = 0 }
+func (d NatuurlijkPersoon_Aanspraak_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *NatuurlijkPersoon_Aanspraak_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d NatuurlijkPersoon_Aanspraak_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *NatuurlijkPersoon_Aanspraak_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d NatuurlijkPersoon_Aanspraak_Data) String() string          { return RepresentatieToString(d) }
+
 // Bereikbaarheid_Data
 func (d Bereikbaarheid_Data) GetID() any              { return d.Versie }
 func (d Bereikbaarheid_Data) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -230,6 +300,16 @@ func (d *Bereikbaarheid_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
 func (d Bereikbaarheid_Data) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *Bereikbaarheid_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d Bereikbaarheid_Data) String() string          { return RepresentatieToString(d) }
+
+// Woonlocatie_Data
+func (d Woonlocatie_Data) GetID() any              { return d.Versie }
+func (d Woonlocatie_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *Woonlocatie_Data) ClearID()               { d.Versie = 0 }
+func (d Woonlocatie_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *Woonlocatie_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d Woonlocatie_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *Woonlocatie_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d Woonlocatie_Data) String() string          { return RepresentatieToString(d) }
 
 /* ================================================================
    4. _AANVANG/_EINDE (entiteits-plumbing) — interface-methoden
@@ -279,6 +359,26 @@ func (n NatuurlijkPersoon_Einde) String() string          { return Representatie
    5. _AANVANG/_EINDE (hub-level plumbing) — interface-methoden
    ================================================================ */
 
+// Gebiedsligging_Aanvang
+func (g Gebiedsligging_Aanvang) GetID() any              { return g.Versie }
+func (g Gebiedsligging_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (g *Gebiedsligging_Aanvang) ClearID()               { g.Versie = 0 }
+func (g Gebiedsligging_Aanvang) GetOpvoer() *time.Time   { return g.Opvoer }
+func (g *Gebiedsligging_Aanvang) SetOpvoer(t *time.Time) { g.Opvoer = t }
+func (g Gebiedsligging_Aanvang) GetAfvoer() *time.Time   { return g.Afvoer }
+func (g *Gebiedsligging_Aanvang) SetAfvoer(t *time.Time) { g.Afvoer = t }
+func (g Gebiedsligging_Aanvang) String() string          { return RepresentatieToString(g) }
+
+// Gebiedsligging_Einde
+func (g Gebiedsligging_Einde) GetID() any              { return g.Versie }
+func (g Gebiedsligging_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (g *Gebiedsligging_Einde) ClearID()               { g.Versie = 0 }
+func (g Gebiedsligging_Einde) GetOpvoer() *time.Time   { return g.Opvoer }
+func (g *Gebiedsligging_Einde) SetOpvoer(t *time.Time) { g.Opvoer = t }
+func (g Gebiedsligging_Einde) GetAfvoer() *time.Time   { return g.Afvoer }
+func (g *Gebiedsligging_Einde) SetAfvoer(t *time.Time) { g.Afvoer = t }
+func (g Gebiedsligging_Einde) String() string          { return RepresentatieToString(g) }
+
 // NatuurlijkPersoon_Burgerschap_Aanvang
 func (n NatuurlijkPersoon_Burgerschap_Aanvang) GetID() any              { return n.Versie }
 func (n NatuurlijkPersoon_Burgerschap_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -319,6 +419,26 @@ func (b Bereikbaarheid_Einde) GetAfvoer() *time.Time   { return b.Afvoer }
 func (b *Bereikbaarheid_Einde) SetAfvoer(t *time.Time) { b.Afvoer = t }
 func (b Bereikbaarheid_Einde) String() string          { return RepresentatieToString(b) }
 
+// Woonlocatie_Aanvang
+func (w Woonlocatie_Aanvang) GetID() any              { return w.Versie }
+func (w Woonlocatie_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (w *Woonlocatie_Aanvang) ClearID()               { w.Versie = 0 }
+func (w Woonlocatie_Aanvang) GetOpvoer() *time.Time   { return w.Opvoer }
+func (w *Woonlocatie_Aanvang) SetOpvoer(t *time.Time) { w.Opvoer = t }
+func (w Woonlocatie_Aanvang) GetAfvoer() *time.Time   { return w.Afvoer }
+func (w *Woonlocatie_Aanvang) SetAfvoer(t *time.Time) { w.Afvoer = t }
+func (w Woonlocatie_Aanvang) String() string          { return RepresentatieToString(w) }
+
+// Woonlocatie_Einde
+func (w Woonlocatie_Einde) GetID() any              { return w.Versie }
+func (w Woonlocatie_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (w *Woonlocatie_Einde) ClearID()               { w.Versie = 0 }
+func (w Woonlocatie_Einde) GetOpvoer() *time.Time   { return w.Opvoer }
+func (w *Woonlocatie_Einde) SetOpvoer(t *time.Time) { w.Opvoer = t }
+func (w Woonlocatie_Einde) GetAfvoer() *time.Time   { return w.Afvoer }
+func (w *Woonlocatie_Einde) SetAfvoer(t *time.Time) { w.Afvoer = t }
+func (w Woonlocatie_Einde) String() string          { return RepresentatieToString(w) }
+
 /* ================================================================
    6. _INPUT — interface-methoden (no-op opvoer/afvoer)
    ================================================================ */
@@ -352,6 +472,16 @@ func (i *Locatie_BAGlocatie_Input) SetOpvoer(t *time.Time) {}
 func (i Locatie_BAGlocatie_Input) GetAfvoer() *time.Time   { return nil }
 func (i *Locatie_BAGlocatie_Input) SetAfvoer(t *time.Time) {}
 func (i Locatie_BAGlocatie_Input) String() string          { return RepresentatieToString(i) }
+
+// Gebiedsligging_Input
+func (i Gebiedsligging_Input) GetID() any              { return i.Rel_ID }
+func (i Gebiedsligging_Input) Metatype() Metatype      { return MetatypeRelatie }
+func (i *Gebiedsligging_Input) ClearID()               { i.Rel_ID = 0 }
+func (i Gebiedsligging_Input) GetOpvoer() *time.Time   { return nil }
+func (i *Gebiedsligging_Input) SetOpvoer(t *time.Time) {}
+func (i Gebiedsligging_Input) GetAfvoer() *time.Time   { return nil }
+func (i *Gebiedsligging_Input) SetAfvoer(t *time.Time) {}
+func (i Gebiedsligging_Input) String() string          { return RepresentatieToString(i) }
 
 // NatuurlijkPersoon_Persoonsidentificatie_Input
 func (i NatuurlijkPersoon_Persoonsidentificatie_Input) GetID() any { return i.Rel_ID }
@@ -407,6 +537,26 @@ func (i NatuurlijkPersoon_Burgerschap_Input) GetAfvoer() *time.Time   { return n
 func (i *NatuurlijkPersoon_Burgerschap_Input) SetAfvoer(t *time.Time) {}
 func (i NatuurlijkPersoon_Burgerschap_Input) String() string          { return RepresentatieToString(i) }
 
+// NatuurlijkPersoon_Geslacht_Input
+func (i NatuurlijkPersoon_Geslacht_Input) GetID() any              { return i.Rel_ID }
+func (i NatuurlijkPersoon_Geslacht_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *NatuurlijkPersoon_Geslacht_Input) ClearID()               { i.Rel_ID = 0 }
+func (i NatuurlijkPersoon_Geslacht_Input) GetOpvoer() *time.Time   { return nil }
+func (i *NatuurlijkPersoon_Geslacht_Input) SetOpvoer(t *time.Time) {}
+func (i NatuurlijkPersoon_Geslacht_Input) GetAfvoer() *time.Time   { return nil }
+func (i *NatuurlijkPersoon_Geslacht_Input) SetAfvoer(t *time.Time) {}
+func (i NatuurlijkPersoon_Geslacht_Input) String() string          { return RepresentatieToString(i) }
+
+// NatuurlijkPersoon_Aanspraak_Input
+func (i NatuurlijkPersoon_Aanspraak_Input) GetID() any              { return i.Rel_ID }
+func (i NatuurlijkPersoon_Aanspraak_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *NatuurlijkPersoon_Aanspraak_Input) ClearID()               { i.Rel_ID = 0 }
+func (i NatuurlijkPersoon_Aanspraak_Input) GetOpvoer() *time.Time   { return nil }
+func (i *NatuurlijkPersoon_Aanspraak_Input) SetOpvoer(t *time.Time) {}
+func (i NatuurlijkPersoon_Aanspraak_Input) GetAfvoer() *time.Time   { return nil }
+func (i *NatuurlijkPersoon_Aanspraak_Input) SetAfvoer(t *time.Time) {}
+func (i NatuurlijkPersoon_Aanspraak_Input) String() string          { return RepresentatieToString(i) }
+
 // Bereikbaarheid_Input
 func (i Bereikbaarheid_Input) GetID() any              { return i.Rel_ID }
 func (i Bereikbaarheid_Input) Metatype() Metatype      { return MetatypeRelatie }
@@ -416,6 +566,16 @@ func (i *Bereikbaarheid_Input) SetOpvoer(t *time.Time) {}
 func (i Bereikbaarheid_Input) GetAfvoer() *time.Time   { return nil }
 func (i *Bereikbaarheid_Input) SetAfvoer(t *time.Time) {}
 func (i Bereikbaarheid_Input) String() string          { return RepresentatieToString(i) }
+
+// Woonlocatie_Input
+func (i Woonlocatie_Input) GetID() any              { return i.Rel_ID }
+func (i Woonlocatie_Input) Metatype() Metatype      { return MetatypeRelatie }
+func (i *Woonlocatie_Input) ClearID()               { i.Rel_ID = 0 }
+func (i Woonlocatie_Input) GetOpvoer() *time.Time   { return nil }
+func (i *Woonlocatie_Input) SetOpvoer(t *time.Time) {}
+func (i Woonlocatie_Input) GetAfvoer() *time.Time   { return nil }
+func (i *Woonlocatie_Input) SetAfvoer(t *time.Time) {}
+func (i Woonlocatie_Input) String() string          { return RepresentatieToString(i) }
 
 /* ================================================================
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
@@ -445,6 +605,12 @@ func (l *Locatie) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresenta
 			l.Baglocaties[idx].Locatie_ID = l.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_BAGlocatie", Representatie: &l.Baglocaties[idx]})
+	}
+	for idx := range l.Gebiedsligging {
+		if l.Gebiedsligging[idx].Locatie_ID == 0 {
+			l.Gebiedsligging[idx].Locatie_ID = l.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Gebiedsligging", Representatie: &l.Gebiedsligging[idx]})
 	}
 	for idx := range l.Aanvang {
 		if l.Aanvang[idx].Locatie_ID == 0 {
@@ -493,11 +659,29 @@ func (n *NatuurlijkPersoon) GeefOnderliggendeGegevenselementen() []Onderliggende
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Burgerschap", Representatie: &n.Burgerschappen[idx]})
 	}
+	for idx := range n.Geslacht {
+		if n.Geslacht[idx].NatuurlijkPersoon_ID == 0 {
+			n.Geslacht[idx].NatuurlijkPersoon_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Geslacht", Representatie: &n.Geslacht[idx]})
+	}
+	for idx := range n.Aanspraak {
+		if n.Aanspraak[idx].NatuurlijkPersoon_ID == 0 {
+			n.Aanspraak[idx].NatuurlijkPersoon_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Aanspraak", Representatie: &n.Aanspraak[idx]})
+	}
 	for idx := range n.Bereikbaarheden {
 		if n.Bereikbaarheden[idx].NatuurlijkPersoon_ID == 0 {
 			n.Bereikbaarheden[idx].NatuurlijkPersoon_ID = n.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Bereikbaarheid", Representatie: &n.Bereikbaarheden[idx]})
+	}
+	for idx := range n.Woonlocatie {
+		if n.Woonlocatie[idx].NatuurlijkPersoon_ID == 0 {
+			n.Woonlocatie[idx].NatuurlijkPersoon_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Woonlocatie", Representatie: &n.Woonlocatie[idx]})
 	}
 	for idx := range n.Aanvang {
 		if n.Aanvang[idx].NatuurlijkPersoon_ID == 0 {
@@ -556,6 +740,38 @@ func (h *Locatie_BAGlocatie) GeefOnderliggendeGegevenselementen() []Onderliggend
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_BAGlocatie_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *Gebiedsligging) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].Locatie_ID == 0 {
+			h.Data[i].Locatie_ID = h.Locatie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Gebiedsligging_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].Locatie_ID == 0 {
+			h.Aanvang[i].Locatie_ID = h.Locatie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Gebiedsligging_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].Locatie_ID == 0 {
+			h.Einde[i].Locatie_ID = h.Locatie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Gebiedsligging_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }
@@ -648,6 +864,34 @@ func (h *NatuurlijkPersoon_Burgerschap) GeefOnderliggendeGegevenselementen() []O
 	return result
 }
 
+func (h *NatuurlijkPersoon_Geslacht) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].NatuurlijkPersoon_ID == 0 {
+			h.Data[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Geslacht_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *NatuurlijkPersoon_Aanspraak) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].NatuurlijkPersoon_ID == 0 {
+			h.Data[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Aanspraak_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
 func (h *Bereikbaarheid) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
 	for i := range h.Data {
@@ -676,6 +920,38 @@ func (h *Bereikbaarheid) GeefOnderliggendeGegevenselementen() []OnderliggendeRep
 			h.Einde[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Bereikbaarheid_Einde", Representatie: &h.Einde[i]})
+	}
+	return result
+}
+
+func (h *Woonlocatie) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].NatuurlijkPersoon_ID == 0 {
+			h.Data[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Woonlocatie_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].NatuurlijkPersoon_ID == 0 {
+			h.Aanvang[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Woonlocatie_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].NatuurlijkPersoon_ID == 0 {
+			h.Einde[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Woonlocatie_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }

@@ -99,6 +99,8 @@ function GERij({ ge, selectedKeys, onPick, multiSelect, focusVeldpad }) {
         <span className="mp-caret">{heeftVelden ? (open ? "▾" : "▸") : "·"}</span>
         <span className="mp-ge-naam">{ge.rol}</span>
         <span className="mp-rol">
+          {/* Doorkijk-takken komen uit een andere entiteit, via een relatie. */}
+          {ge.doorkijk ? "↗ " : ""}
           {ge.metatype === "relatie" ? "relatie" : "GE"}
           {ge.momentvoorkomen ? ` · ${ge.momentvoorkomen}` : ""}
         </span>
@@ -214,6 +216,12 @@ function DomeinRij({ domein, selectedKeys, onPick, multiSelect, defaultOpen, foc
  * @param {boolean}  [props.expandDomeinen=false]   domeinen standaard uitgeklapt
  * @param {boolean}  [props.expandEntiteiten=false] entiteiten standaard uitgeklapt
  * @param {string[]} [props.hiddenDomains=[]]      domeinen die niet weergegeven mogen worden
+ * @param {number}   [props.relatieDiepte]         doorkijk over relaties: hoeveel hops naar
+ *                                                 andere entiteiten meegenomen worden. 0 (default)
+ *                                                 houdt de boom bij de eigen GE's en relaties;
+ *                                                 hoger toont ketens als
+ *                                                 "woonlocatie.gebiedsligging.wijkaanduiding"
+ *                                                 (nodig voor Toegangsspraak-ketens)
  * @param {string}   [props.externeZoekterm]       zet de zoekterm van buitenaf (bv. "toon in
  *                                                 modelboom" vanuit een editor); de gebruiker
  *                                                 kan daarna gewoon verder typen/wissen
@@ -235,6 +243,7 @@ export default function ModelPicker({
   expandDomeinen = modelPickerConfig.defaultExpandDomeinen,
   expandEntiteiten = modelPickerConfig.defaultExpandEntiteiten,
   hiddenDomains = modelPickerConfig.hiddenDomains,
+  relatieDiepte = modelPickerConfig.defaultRelatieDiepte,
   externeZoekterm = null,
   focusVeldpad = null,
 }) {
@@ -248,8 +257,15 @@ export default function ModelPicker({
   const [toonTechnisch, setToonTechnisch] = useState(false);
 
   const tree = useMemo(
-    () => bouwModelTree(types, { includeAfgeleid: toonAfgeleid, includeTechnisch: toonTechnisch, tDimensie, hiddenDomains }),
-    [types, toonAfgeleid, toonTechnisch, tDimensie, hiddenDomains]
+    () =>
+      bouwModelTree(types, {
+        includeAfgeleid: toonAfgeleid,
+        includeTechnisch: toonTechnisch,
+        tDimensie,
+        hiddenDomains,
+        relatieDiepte,
+      }),
+    [types, toonAfgeleid, toonTechnisch, tDimensie, hiddenDomains, relatieDiepte]
   );
   const zichtbaar = useMemo(() => filterTree(tree, zoekterm), [tree, zoekterm]);
 

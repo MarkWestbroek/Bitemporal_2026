@@ -1353,3 +1353,71 @@ en toestandsbewust is maar nooit modaal — de gebruiker houdt de besturing.
 - [ ] 28.5 Rondleiding eerste minuut — alleen na gebruikerstest.
 - Hangt samen met §27.3 (help als Imprint-site: de referentie waar "Meer…"
   naartoe linkt).
+
+## 29. Demo-model np-loc-org+geo en codegen-hygiëne (2026-09-14)
+
+Opdracht: [`plans/2026-09-10 Opdracht demo-model np-loc-org-geo en OAS-naar-canoniek.md`](plans/2026-09-10%20Opdracht%20demo-model%20np-loc-org-geo%20en%20OAS-naar-canoniek.md).
+Deel A is uitgevoerd, zie [`demo-model-np-loc-org-geo.md`](demo-model-np-loc-org-geo.md).
+
+- [x] **29.1 Demo-model** — np-loc uitgebreid (`Geslacht`, `Aanspraak`,
+      `Woonlocatie`, `Gebiedsligging`) en nieuw domein `org-geo` (`Afdeling`,
+      `Medewerker`, `Gemeentedeel`). De draaiboek-beleidstekst parseert zonder
+      controle-meldingen; bewaakt door `model/demo_model_test.go` en
+      `studio/activities/toegangDemoModel.test.js`.
+- [x] **29.2 Doorkijk over relaties in de modelboom** — `bouwModelTree`-optie
+      `relatieDiepte` (default 0; toegang-activity 2), `ModelPicker`-prop
+      idem, `modelpicker/veldenlijst.js` gedeeld met de activity.
+- [ ] **29.3 Codegen: `_Input`-structs zonder materiële plumbing.**
+      `cmd/codegen/gen_input.go` genereert `Aanvang`/`Einde` als platte velden
+      in elke `_Input`; alle ingecheckte `*_modellen_input.go` hebben ze met de
+      hand weer verwijderd (de normalizer splitst ze af). Elke regeneratie
+      herintroduceert ze. Laat codegen ze weglaten, of maak het een expliciete
+      optie — en beslis in dezelfde slag wat er met de `schema:"…"`-tags op
+      `_Input`-velden moet gebeuren (nu inconsistent: `BSN` wél, `NLPostcode`
+      niet). Zie `docs/CODEGEN.md` §7.4b.
+- [ ] **29.4 Codegen: `datatype_aliases.go` mag `datatype_aliases_extra.go`
+      niet dubbelen.** Een volledige export bevat ook de 29 handmatig
+      onderhouden datatypes; codegen schrijft daar Go-type-aliassen voor die al
+      bestaan → de build breekt. Laat codegen de handmatige aliassen
+      overslaan (of markeer ze in de `DatatypeRegistry`). Zie §7.4a.
+- [x] **29.5 OAS → canoniek model (deel B van de opdracht).** Transformatie
+      *"OpenAPI (components.schemas) → canoniek model"*: `oasNaarV3.js` (puur)
+      + `oasCanoniekImport.js` (descriptor) in
+      `diagramprofielen/canoniek-uml/`. Zie `docs/STUDIO.md` →
+      "OpenAPI → canoniek model".
+- [x] **29.6 Casus OpenOrganisatie gedraaid** (`~/Documents/GitHub/CG/Registers/open-organisatie/src/`).
+      Legde twee echte bugs bloot, beide gerepareerd + regressietest:
+      `allOf: [$ref X]` op property-niveau werd een tekstveld in plaats van een
+      verwijzing (6 relaties platgeslagen), en `oneOf: [Enum, BlankEnum]` werd
+      stil genegeerd zodat de enum onverbonden bleef. Resultaat nu: 27 schemas →
+      25 entiteiten, 33 GE's, 28 relaties, 1 enum.
+- [ ] **29.7 OAS → canoniek: vervolgstappen.** Wat de eerste stap bewust laat
+      liggen: `paths`/operations (nu alleen `components.schemas`);
+      `allOf`/`oneOf` op schema-niveau als echte generalisatie in plaats van
+      platslaan (vraagt overerving in het canonieke model, zie
+      `docs/overerving-analyse.md`); `format` → bestaand gegevenstype herkennen
+      in plaats van een nieuw datatype maken; een *merge*-modus die bij
+      herimport bestaande elementen bijwerkt in plaats van een nieuwe id-prefix
+      te gebruiken.
+- [ ] **29.8 REST-schil herkennen bij de OAS-import (idee).** In een
+      gegenereerde OAS komen `Paginated…List`, `Patched…` en `Nested…` als
+      volwaardige schemas voor; de import maakt er entiteiten van, want zo staan
+      ze er. Overweeg een *optionele* filterstap ("envelope-schemas overslaan")
+      met een diagnostic per overgeslagen schema — nadrukkelijk als keuze van de
+      gebruiker, niet als stille aanname.
+- [x] **29.9 Verdwenen compositielijnen in het canonieke diagram (2026-09-15).**
+      Twee defecten, beide gerepareerd + regressietests (515/515 groen):
+      (a) kale oude handle-namen (`"left"`, `"bottom"`) lieten React Flow de
+      edge stil weigeren — `normaliseerHandle()`; (b) ENT ◆ GE bestond alleen
+      als presentatie-edge per diagram, dus op een nieuw diagram kwam de lijn
+      nooit mee — nu een `compositie`-connector. Zie `docs/STUDIO.md` →
+      "Composities zijn connectoren".
+- [ ] **29.10 Label-offsets van composities meenemen.** Bij het vouwen tot
+      connector vallen de handmatig versleepte label-posities van de oude
+      edge (`rolnaamDst`/`heen`/`terug`) weg; connectoren kennen alleen
+      offsets per zijde (`bron`/`doel`/`midden`). Afbeelden vraagt een keuze
+      bij botsingen (heen en rolnaam delen soms een zijde).
+- [ ] **29.11 Handles per diagram in plaats van per connector.** Een
+      connector draagt één handle-paar voor álle diagrammen; bij het vouwen
+      wint de eerste gezette waarde. Hetzelfde geldt al voor relaties. Een
+      handle hoort eigenlijk bij het voorkomen (vgl. `connectorVoorkomens`).

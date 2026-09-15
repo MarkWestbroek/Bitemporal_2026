@@ -84,6 +84,7 @@ import { registreerActiviteitAlsProfieltype } from "./activiteitAlsProfieltype.j
 // Side-effect: registreert de ingebouwde transformaties (import/export/transform).
 import "./transformaties.js";
 import "./archimateTransformaties.js";
+import "./oasCanoniekTransformatie.js";
 
 registreerActiviteiten([
   // modelleren

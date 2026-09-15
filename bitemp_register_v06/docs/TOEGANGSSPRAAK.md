@@ -160,16 +160,36 @@ Inspector, menu's via `menuBus`), `status: "concept"`. Editor op
 `react-simple-code-editor` + Prism (eigen grammar); zinsontleding rendert de
 parser-spans als gekleurde HTML (`toegangActivity.css`). Invoegingen lopen via
 `document.execCommand("insertText")` zodat de undo-historie intact blijft.
-De `ModelPicker` (gedeeld component) kreeg twee optionele props:
+De `ModelPicker` (gedeeld component) kreeg drie optionele props:
 `focusVeldpad` (element-focus: openklappen + markeren + scrollIntoView, boom
-blijft staan) en `externeZoekterm` (gestuurd filteren).
+blijft staan), `externeZoekterm` (gestuurd filteren) en `relatieDiepte`
+(doorkijk over relaties, zie hieronder).
+
+### Doorkijk over relaties in de modelboom
+
+Beleidsketens lopen over registergrenzen heen: "de wijk van de woonlocatie van
+de betrokkene" gaat van `NatuurlijkPersoon` via een relatie naar `Locatie` en
+van daar naar `Gemeentedeel`. De modelboom stopte bij een relatie. `bouwModelTree`
+(`modelpicker/modelTree.js`) heeft daarom de optie **`relatieDiepte`**: hoeveel
+relatie-hops naar een andere entiteit meegenomen worden. De GE's van de
+doel-entiteit komen als extra takken onder dezelfde entiteit, met een
+samengesteld rolpad —
+`NatuurlijkPersoon.woonlocatie.gebiedsligging.wijkaanduiding.wijk`. De
+keten-verkorting in `metamodel.js` doet de rest; cycli worden afgekapt.
+
+Default is 0 (het oude gedrag, voor alle andere activiteiten); de
+toegang-activity zet 2, zowel voor de veldindex als voor de `ModelPicker`.
+`modelpicker/veldenlijst.js` (`verzamelVelden`) bouwt de platte veldenlijst die
+`maakVeldIndex` voedt. Zie `docs/demo-model-np-loc-org-geo.md`.
 
 ### Tests & draaien
 
 - Unit tests naast de code (`*.test.js`, Node test runner):
   `toegangsspraak.test.js` (grammatica, round-trip, ODRL),
   `metamodel.test.js` (resolutie, typebewaking, suggesties),
-  `editorSuggesties.test.js` (contexten, span-vervanging, dubbele-de).
+  `editorSuggesties.test.js` (contexten, span-vervanging, dubbele-de),
+  `studio/activities/toegangDemoModel.test.js` (de FTV-demo-beleidstekst tegen
+  het demo-model: nul controle-meldingen — zie `docs/demo-model-np-loc-org-geo.md`).
   Draaien: `npm test` in `web/vite` (of `node --import ./test/register-aliases.mjs --test src/toegangsspraak/*.test.js`).
 - Editor: `npm run dev` → `/viz/react/studio` → menu *Ga naar* →
   Toegangverlening. Zonder draaiende Go-backend werkt alles behalve de

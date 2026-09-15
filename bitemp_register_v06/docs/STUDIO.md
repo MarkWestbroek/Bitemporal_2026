@@ -575,6 +575,59 @@ fase 2 een **bewerkbare sandbox**:
   "Herlaad uit UML-model" — anders missen de `bron`-bijlagen die de export
   verliesvrij maken.
 
+### OpenAPI → canoniek model (transformatie)
+
+Naast het `oas31`-profiel (dat een OAS als *eigen notatie* toont) is er een
+transformatie die de schemas van een OAS omzet naar het **canonieke model**, in
+de map van de modelleeromgeving: *Transformeren → importeren →* **"OpenAPI
+(components.schemas) → canoniek model"**. Route:
+
+```
+OAS (JSON/YAML) ──oasNaarV3──▶ V3 ──importeerV3──▶ core-model ──▶ profiel diagram05
+```
+
+Modules: `diagramprofielen/canoniek-uml/oasNaarV3.js` (puur, geen stores) en
+`oasCanoniekImport.js` (de descriptor, stores geïnjecteerd zoals bij de
+ArchiMate-import); de wiring staat in
+`studio/activities/oasCanoniekTransformatie.js`.
+
+De heuristiek in het kort — een object-schema wordt een **entiteit** als het een
+`id`-achtige property heeft, nergens ge-`$ref`d wordt (top-level) of door meerdere
+schemas gedeeld wordt; anders een **gegevenselement** van zijn enige verwijzer.
+Scalars van een entiteit belanden in één GE `<Entiteit>Gegevens`; `$ref` naar een
+entiteit wordt een relatie; arrays worden meervoudigheid; `required` stuurt de
+optionaliteit (en de `*`-prefix op het goType); property-enums en top-level enums
+worden V3Enums; primitieve top-level schemas worden gegevenstypen.
+
+Generatoren **verpakken** verwijzingen graag; die worden afgepeld, anders
+verdwijnen echte relaties als tekstveld:
+
+| Patroon (drf-spectacular e.d.) | Betekenis | Wordt |
+|---|---|---|
+| `allOf: [$ref X]` + `description` | een $ref mét extra sleutels | verwijzing naar X |
+| `oneOf: [$ref Enum, $ref BlankEnum]` | "deze enum, of leeg" | veld met die enum, optioneel |
+| enum-schema met alleen `''` | "mag leeg zijn" | géén enumeratie |
+| `oneOf` met meerdere echte varianten | een keuze | de eerste, mét diagnostic |
+
+Uitgangspunt is **eerlijk tonen wat er in het document staat**, niet mooi
+normaliseren: `allOf` op schema-niveau wordt platgeslagen, technische velden
+(`id`, `rel_id`, `versie`, `*_id`) vallen standaard weg (optie om ze te houden),
+en alles wat niet past komt als diagnostic terug in plaats van stil te
+verdwijnen. Opschonen doe je daarna met de hand. Elke import krijgt een eigen
+id-prefix, zodat hetzelfde document twee keer importeren niet botst.
+
+Gedraaid op twee echte documenten. **OpenOrganisatie** (`Registers/open-organisatie/src/`,
+niet in deze repo): *Organisatie API* — 27 schemas → 25 entiteiten, 33
+gegevenselementen, 28 relaties, 1 enum; *Identiteit API* — 4 schemas → 3
+entiteiten. En de eigen `docs/OAS/np-loc.yaml` — 19 entiteiten. Wat je in beide
+ziet: de REST-schil komt gewoon mee. `Paginated…List`, `Patched…` en `Nested…`
+worden entiteiten, want zo staan ze in het document. Dat is opzet — de import
+verzint niets — maar het betekent wel dat er ná de import handwerk zit.
+
+Buiten scope: `paths`/operations, security en de terugweg naar OAS (die heeft het
+`oas31`-profiel al voor zijn eigen notatie).
+
+
 ## Diagram exporteren als afbeelding
 
 > Toegevoegd: 2026-07-14. Geldt voor elk diagramcore-canvas (Modelleren én de

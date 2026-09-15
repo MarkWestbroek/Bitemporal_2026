@@ -80,6 +80,59 @@ niets nieuws van de taal.
 - "**alleen** … als" hoeft niet gezegd: default deny maakt elke permission al
   "alleen als" (zie stapeling hieronder).
 
+## Alternatief: voorbeeldbeleid puur np-loc (geen org/geo nodig)
+
+Getest tegen het np-loc-model zoals in `model/np_loc_*.go` (veldenlijst via
+`verzamelVelden`, relatieDiepte 2): parse ✓, **0 controle-meldingen**, ODRL
+3 permissions + 1 prohibition.
+
+```
+Beleid "Burgerzaken np-loc voorbeeld".
+  Geldig vanaf 15 september 2026.
+  Grondslag: de Wet basisregistratie personen.
+  Doel: "burgerzaken".
+
+  Begrippen.
+    Een baliemedewerker is: iemand met rol "baliemedewerker".
+    Een postmedewerker is: iemand met rol "postmedewerker".
+    De naamgegevens zijn: alle gegevens van de namen van een natuurlijk persoon.
+
+  Regel "naam aan de balie".
+    Een baliemedewerker mag de naamgegevens bekijken
+    waarbij: elke raadpleging wordt vastgelegd in het logboek.
+
+  Regel "partnernaam alleen bij partnernaamgebruik".
+    Een baliemedewerker mag de achternaam van de partnernamen van een natuurlijk persoon bekijken
+    als het naamgebruik van de naamgebruiken van de betrokkene niet "EigenNaam" is.
+
+  Regel "briefadres voor de post".
+    Een postmedewerker mag de postcode van de adressen van de bereikbaarheden van een natuurlijk persoon bekijken
+    als de soort van de bereikbaarheden van de betrokkene een van ("Briefadres", "Correspondentieadres") is.
+
+  Regel "geen bsn naar de post".
+    Een postmedewerker mag de bsn van een natuurlijk persoon niet bekijken.
+```
+
+Registerpaden na resolutie: `NatuurlijkPersoon.partnernamen.achternaam`,
+`NatuurlijkPersoon.bereikbaarheden.adressen.postcode`, en voor het verbod
+`NatuurlijkPersoon.persoonsidentificaties.bsn` — "de bsn van een natuurlijk
+persoon" is dus de **verkorte** keten, eenduidig resolved.
+
+**Twee live-momenten voor een controle-melding** (beide getest):
+
+- *Dubbelzinnigheid*: maak in regel 2 van de keten "de achternaam van een natuurlijk
+  persoon" → melding "dubbelzinnig: het kan `…namen.achternaam`,
+  `…partnernamen.achternaam` zijn. Gebruik de volledige keten."
+- *Enum-bewaking*: schrijf de voorwaarde als `als het naamgebruik van een natuurlijk
+  persoon niet "Eigennaam" is` (typfout) → melding "geen toegestane waarde …
+  Toegestaan: "EigenNaam", "PartnerNaam", …".
+
+**Let op:** de typebewaking werkt alleen op ketens die op een **type** eindigen
+("… van een natuurlijk persoon"). Ketens die op een **anker** eindigen ("… van de
+betrokkene") worden niet tegen het model gecontroleerd: dezelfde typfout in die vorm
+geeft géén melding. Voor de demo de type-vorm gebruiken; als bekend gat noemen
+(backlog-kandidaat: anker-ketens resolven via het type van het doelwit van de regel).
+
 ## Prio / stapeling van regels (vraag uit de werkgroep voor zijn)
 
 Er zijn **geen numerieke prioriteiten** — bewust. Het combinatie-algoritme ligt vast
@@ -99,13 +152,22 @@ het ODRL v2-spoor (Policy Inheritance) — benoemen als plan, niet demoën.
 
 ## Checklist vóór dinsdag
 
-- [ ] Demo-model np-loc-org+geo staat in de modelleeromgeving en de velden verschijnen
-      in de modelboom van de toegang-activity (opdracht bij andere chat; acceptatie:
-      bovenstaande tekst parseert zonder controle-meldingen).
+- [x] Demo-model np-loc-org+geo staat in de modelleeromgeving en de velden verschijnen
+      in de modelboom van de toegang-activity (acceptatie gehaald: bovenstaande tekst
+      **en** de bonus-regel parseren zonder controle-meldingen — bewaakt door
+      `studio/activities/toegangDemoModel.test.js` en `model/demo_model_test.go`).
+      Zie `docs/demo-model-np-loc-org-geo.md`. Let op: de Go-backend moet op de
+      demo-machine herbouwd draaien, anders levert de schema-API het oude model.
 - [ ] Beleidstekst hierboven als fallback klaarzetten (plak-versie) naast het live typen.
 - [ ] Round-trip één keer doorlopen op de demo-machine (publiceer → canvas-edit →
       teruglezen → Ctrl+Z tonen).
 - [ ] Info-paper-pdf klaarzetten om te delen in de meeting-chat.
-- [ ] OAS → canoniek: alléén als plan noemen, tenzij de andere chat het vóór dinsdag
-      af heeft (oas31-profiel importeert al OAS 3.0/3.1 als eigen notatie; de
-      transformatie naar canoniek-uml bestaat nog niet).
+- [x] OAS → canoniek: is er — *Transformeren → importeren → "OpenAPI
+      (components.schemas) → canoniek model"*. Eerste stap: alleen
+      `components.schemas`, eerlijk in plaats van genormaliseerd, met diagnostics.
+      Gedraaid op de **OpenOrganisatie**-OAS (`~/Documents/GitHub/CG/Registers/
+      open-organisatie/src/organisatie-openapi.yaml`): 27 schemas → 25 entiteiten,
+      33 GE's, 28 relaties, 1 enum. Let op voor de demo: de REST-schil komt mee
+      (`Paginated…List`, `Patched…`, `Nested…` worden entiteiten) — dat is opzet,
+      maar noem het even, anders leest het als een fout.
+      Zie `docs/STUDIO.md` → "OpenAPI → canoniek model".
