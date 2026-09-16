@@ -7,6 +7,9 @@ zoeken — of helemaal niet — boven water komt.
 - Volledige letterlijke export van de sessie:
   `docs/ai-chats/exports/2026-08-18-toegangsspraak-infopaper-ftv-demo-en-release-0-8-0.md`
 - Samenvatting: `docs/ai-chats/summaries/` (zelfde stamnaam)
+- Hosting, VPS, WireGuard en toegang vanaf Windows: het tweede document van
+  dezelfde dag, `2026-09-16 Handover naar desktop — hosting, VPS en toegang
+  vanaf Windows.md` (regel dáár eerst je SSH-sleutel, zie Deel 2 punt 5).
 
 ---
 
