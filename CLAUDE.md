@@ -36,6 +36,15 @@ Bewaar betekenisvolle AI-chats (Copilot én Claude) als markdown in
 - Controleer vóór commit op secrets, persoonsgegevens en interne URL's.
 - Doe dit wanneer de gebruiker erom vraagt of wanneer een chat tot concrete code-/ontwerp-
   beslissingen leidde. Zie `bitemp_register_v06/docs/copilot-chat-sync.md` voor de export-hook.
+- **Claude-sessies** exporteer je letterlijk met `bitemp_register_v06/scripts/export-claude-chats.py`
+  (leest `~/.claude/projects/<project>/*.jsonl`, vindt de projectmap zelf via git, schrijft naar
+  `docs/ai-chats/exports/`). Bv. `python3 bitemp_register_v06/scripts/export-claude-chats.py
+  --session <id> --title <onderwerp>`; `--all` slaat al geëxporteerde sessies over (`--force`
+  overschrijft). Op Windows draait dezelfde versie als gedeelde kopie in `D:\Git\_VScode-scripts`,
+  op macOS in `~/Documents/GitHub/_VScode-scripts` (VS Code-tasks *Export Claude Chats*).
+- **De GitHub-repo is publiek.** Een letterlijke export komt dus openbaar online: redigeer vóór
+  commit gebruikersnamen/rollen van live accounts, hostnamen en andere aanvalsinformatie, en
+  meld wat je hebt geredigeerd.
 
 > **Let op — chat-backups zijn normaal.** De gebruiker back-upt chats af en toe met een script
 > (soms ook via de GitHub-UI, commit-titel `Create <bestand>.md`). Zo verschijnt er een
