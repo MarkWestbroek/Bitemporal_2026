@@ -59,10 +59,17 @@
 > 10. ⚠️→✅ **Eigen §4.1-fout gevonden en hersteld:** de partial unique index brak ongedaanmaking (tijdelijk twee actieve
 >     records binnen de tx bij ont-afvoer→ont-opvoer). Vervangen door een `EXCLUDE … WHERE … DEFERRABLE INITIALLY DEFERRED`-
 >     constraint die bij COMMIT checkt. Zonder de regressietest was dit pas in gebruik opgevallen.
-> 11. 🆕 **PATCH `/full` injecteert de URL-id niet als parent-FK** → 500 zonder expliciete FK per kind (pre-existing,
->     `wijziging_builder.go`). Klein te fixen; gedocumenteerd als bekend gat (scenario 08b).
-> 12. 🆕 **Enumwaarden worden niet gevalideerd** (`schema:"enum=…"` wordt genegeerd door `validation.go`). Klein te fixen;
->     bekend gat (scenario 13).
+> 11. 🆕→✅ **PATCH `/full` injecteerde de URL-id niet als parent-FK** → 500 zonder expliciete FK per kind (pre-existing,
+>     `wijziging_builder.go`). Gefixt: de builder injecteert de URL-id (meegestuurde FK wint); scenario 08b is strikt.
+> 12. 🆕→✅ **Enumwaarden werden niet gevalideerd**: de walker kende alleen `datatype:`-tags én de ingecheckte
+>     np-loc `_Input`-structs misten de `schema:`-tags die de generator inmiddels wél uitschrijft. Gefixt in de walker
+>     (`enum=` → 422 problem+json) + tags op de np-loc Input-structs; scenario 13 is strikt.
+> 13. 🆕 **Regressie-UI** op `/admin/regressie` (devtools-build): scenario's tonen, alle/selectie afspelen via
+>     `go test -json`, live resultaat. Zelfde beveiligingsringen als de overige admin-routes.
+> 14. 🆕 **`.env` met dev-credentials staat in git** (`bitemp_register_v06/.env`, `DATABASE_ADMIN_URL`, `postgres:1234`).
+>     Dev-only, maar de repo is publiek en `.env.example` bestaat al: `.env` uit git halen en in `.gitignore` zetten.
+>     Bijkomend effect: `DATABASE_ADMIN_URL` uit die `.env` liet `ensureDatabaseExists` de DB op de verkeerde server
+>     aanmaken bij een lokale test tegen 5433 (zie REGRESSIETEST.md, bevinding 4).
 >
 > Alle overige gedragswijzigingen uit §3/§4 zijn nu ook tegen een echte database bewezen (tijdreizen, POST-per-padnaam,
 > DELETE+409, 422+rollback, N+1: 21 queries voor 5 entiteiten, auth-flow).

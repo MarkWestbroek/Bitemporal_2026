@@ -16,6 +16,7 @@ Bestanden:
 | `regressie_np_loc_test.go` | de test zelf (`//go:build integration`, package `main`) |
 | `scripts/regressie-np-loc.ps1` | runner: start een dedicated Postgres-container (poort **5433**) en draait de test |
 | `postman/regressie-np-loc.postman_collection.json` + `…environment.json` | dezelfde scenario's voor handmatig prikken of `newman run` |
+| `handlers/regressie_ui_handler.go` | devtools-pagina `/admin/regressie` om de suite vanuit de browser te draaien |
 | `replay files/registraties-replay-synth-natuurlijkpersoon-locatie-woonadres.json` | seed: 5 NP's + 5 locaties + woonadres-links (15 registraties) |
 | `replay files/registraties-replay-init-adellijketitels.json` | seed: referentielijst-items |
 
@@ -55,12 +56,12 @@ replay-bestanden; default de twee hierboven).
 | 06 | synthetisch tijdstip | `tijdstip == 2026-01-01 + id·uur + id·µs` (`REGISTRATIE_TIJD=synthetisch`) |
 | 07 | `POST /full` geneste shape | `namen[].data[]` wordt genormaliseerd tot hub+data |
 | 08 | `PATCH /full` (merge patch) | nieuwe naam actief, oude afgevoerd |
-| 08b | PATCH zónder expliciete FK | **SKIP — bekend gat**, zie hieronder |
+| 08b | PATCH zónder expliciete FK | URL-id is leidend: builder injecteert de parent-FK (gefixt 2026-09-16) |
 | 09 | ongedaanmaking van 08 | vorige naam weer actief |
 | 10 | `DELETE /{padnaam}` | 200 + registratie; 404 op afvoertijdstip, 200 ervoor; tweede DELETE → **409** |
 | 11 | `POST /registraties`, `/wijzigingen` | **404** (audit-routes read-only, §3.5) |
 | 12 | ongeldige BSN | **422** `application/problem+json` + rollback (NP bestaat niet) |
-| 13 | ongeldige enumwaarde | **SKIP — bekend gat**, zie hieronder |
+| 13 | ongeldige enumwaarde | **422** met enumnaam in de melding (enum-validatie toegevoegd 2026-09-16) |
 | 14 | GraphQL introspectie | endpoint werkt |
 | 15 | `/admin/rebuild` | 404 (productie-build) / 403 (devtools-build zonder `DEVLOOP`) (§3.3) |
 | 16 | N+1-guard | `GET /full/…?t=&size=5` → **21 queries** (grens 40; vóór §4.4 was dit 60+) |
@@ -81,17 +82,46 @@ zodra iemand het gat dicht, slaat de skip niet meer aan en gaat de echte asserti
    actieve records zijn. Een unique index checkt per statement en weigert dat. Vervangen door een
    **`EXCLUDE … WHERE (…) DEFERRABLE INITIALLY DEFERRED`**-constraint (checkt bij COMMIT): de
    tussenstand mag, de eindtoestand is geborgd. Zie `dbsetup.createEnkelvoudigInvariantIndexes`.
-2. **PATCH `/full/{padnaam}/:id` injecteert de URL-id niet als parent-FK** (`wijziging_builder.go`).
-   Zonder `natuurlijkpersoon_id` in elk kind-item faalt de engine met 500 "bovenliggende … id
-   ontbreekt". De builder gebruikt de URL-id alleen voor de id-mismatch-check, en `WijzigEntiteitCore`
-   roept `NormaliseerWijzigingen` (die bij POST wél FK's injecteert) niet aan. Workaround: FK
-   meesturen. Fix: FK-injectie in de builder (klein). → scenario 08b.
-3. **Enumwaarden worden niet gevalideerd.** Velden dragen `schema:"enum=Naamgebruiksoort"` en
-   `EnumWaarden` bestaat, maar `model/validation.go` kent geen enum-regel; "Onzin" wordt
-   opgeslagen. Fix: enum-check toevoegen aan de validatie-walker (klein). → scenario 13.
-4. **Replay-opnames zijn niet altijd zelfstandige seeds.** `registraties-replay-p1-… allerlei leuke
+2. **PATCH `/full/{padnaam}/:id` injecteerde de URL-id niet als parent-FK** (`wijziging_builder.go`).
+   Zonder `natuurlijkpersoon_id` in elk kind-item faalde de engine met 500 "bovenliggende … id
+   ontbreekt". **Gefixt (zelfde dag):** `bouwWijzigingVoorItem` injecteert nu de URL-id via
+   `injecteerParentFK` (een meegestuurde FK wint); de FK telt niet mee als "inhoud", zodat een
+   correctie-item met alleen `rel_id` een no-op blijft. → scenario 08b (strikt).
+3. **Enumwaarden werden niet gevalideerd.** Twee oorzaken: `model/validation_walker.go` kende alleen
+   `datatype:`-tags, én de ingecheckte `np_loc_modellen_input.go` miste de `schema:`-tags die de
+   generator (`inputContentField`) inmiddels wél uitschrijft. **Gefixt:** walker valideert
+   `enum=<Naam>` tegen `EnumWaarden` (code `enum`, 422 problem+json), en de drie ontbrekende tags
+   zijn op de np-loc-Input-structs gezet. Let op: de branch-generator zou bij regeneratie óók
+   `Aanvang`/`Einde` terugzetten op `Burgerschap_Input`/`Bereikbaarheid_Input`, wat het ingecheckte
+   bestand bewust niet heeft — die keuze is niet aangeraakt; bij een merge met `main` (nieuwere
+   codegen) verdient dit een blik. Andere domeinen krijgen de enum-tags bij hun volgende regeneratie.
+   → scenario 13 (strikt).
+4. **`DATABASE_ADMIN_URL` kan de database op de verkeerde server aanmaken.** De (ingecheckte) `.env`
+   zet `DATABASE_ADMIN_URL` naar 5432; `ensureDatabaseExists` maakt de DB dan dáár aan terwijl de
+   app op 5433 verbindt ("database does not exist" direct na "created successfully"). De regressietest
+   negeert `DATABASE_ADMIN_URL` daarom expliciet. Start je de API zelf tegen 5433, zet dan
+   `DATABASE_ADMIN_URL=""` of maak de DB vooraf aan.
+5. **Replay-opnames zijn niet altijd zelfstandige seeds.** `registraties-replay-p1-… allerlei leuke
    ongedaanmakingen test.json` verwijst naar NP=1 / rel_id=1 uit een andere basisdataset en is dus
    alleen afspeelbaar op die basis. Synth-bestanden (`…-synth-…`) zijn wél zelfstandig.
+
+## Regressie-UI (devtools-build)
+
+In een build met `-tags devtools` is er een pagina op **`/admin/regressie`** die de scenario's
+toont, ze alle of een selectie afspeelt en het resultaat live laat zien:
+
+- `GET /admin/regressie` — pagina (inline HTML, geen CDN); `GET …/scenarios` — lijst (geparsed
+  uit `regressie_np_loc_test.go`); `GET …/status` — snapshot van de run;
+  `POST …/run` — start `go test -tags integration -run '^TestRegressieNpLoc$/^(00|05|…)_' -json`.
+- Seed (00) en afhankelijkheden (06←05, 09←08) worden automatisch aan een selectie toegevoegd.
+- Beveiliging als de overige `/admin/*`-routes: alleen in devtools-builds, rol `admin` bij
+  `AUTH_ENABLED=true`, run vereist `DEVLOOP=true` + header `X-Beheer-Wachtwoord` (`DEVLOOP_PASSWORD`).
+  Eén run tegelijk (409 bij samenloop). De dev-DSN wordt geweigerd.
+- Vereist Go-toolchain + broncode in de API-omgeving (zoals de devloop-container) en een Postgres
+  op de opgegeven DSN (default `REGRESSIE_DATABASE_URL` of 5433).
+
+Lokaal proberen: `DEVLOOP=true DEVLOOP_PASSWORD=… PORT=8099 DATABASE_ADMIN_URL="" go run -tags devtools .`
+en open <http://localhost:8099/admin/regressie>.
 
 ## Uitbreiden
 
