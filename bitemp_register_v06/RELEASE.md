@@ -8,6 +8,45 @@
 
 ---
 
+## Demo-model np-loc-org+geo en OAS → canoniek: api 0.6.0 / studio 0.8.0 (2026-09-16)
+
+Consolidatie na de FTV-demo van Toegangsspraak (15 september). Baseline voor het
+volgende werk; de eerstvolgende stap is een UI voor gebruikersbeheer.
+
+### Backend (api 0.6.0)
+
+- **np-loc uitgebreid**: GE's `Geslacht` (enum `Geslachtsaanduiding`) en `Aanspraak`
+  (`aanspreektitel`, `formeelAanspreken` — beide optioneel, de illustratie van
+  driewaardige optionaliteit), plus de relaties `Woonlocatie` → `Locatie` en
+  `Gebiedsligging` → `Gemeentedeel`.
+- **Nieuw domein `org-geo`** (prefix `org_geo_`): `Afdeling`, `Medewerker`,
+  `Gemeentedeel`; `Organisatie` en `Gemeente` uit CG hergebruikt in plaats van
+  nagemaakt (de MetaRegistry is één map op typenaam). Init in
+  `model/metaregistry_plumbing.go`.
+- **Databasegevolg bij uitrol**: puur additief. `dbsetup.CreateTables` loopt over de
+  `MetaRegistry` en maakt elke tabel met `CREATE TABLE IF NOT EXISTS`; de nieuwe
+  `org_geo_*`- en np-loc-tabellen komen er bij het opstarten vanzelf bij. Geen
+  migratie, geen wijziging aan bestaande data.
+- **Codegen-voetangels vastgelegd** in `docs/CODEGEN.md` §7.4: `datatype_aliases.go`
+  botst met `datatype_aliases_extra.go` bij een volledige export, en
+  `*_modellen_input.go` draagt handmatige delta's (Aanvang/Einde eruit,
+  sommige `schema:`-tags weg). Structureel oplossen staat op backlog §29.3/29.4.
+- Bewaakt door `model/demo_model_test.go` (rollen, velden, relatie-doelen, enums).
+
+### Frontend (studio 0.8.0)
+
+OpenAPI → canoniek model, doorkijk over relaties in de modelboom, composities als
+connector en de handle-normalisatie — zie
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+
+### Uitrol
+
+VPS: `docs/VPS_DEPLOYMENT.md` §11 (`docker compose pull` +
+`up -d --force-recreate api frontend`). De Studio-sandbox persisteert: een al geladen
+canoniek model toont de compositielijnen pas na opnieuw inladen.
+
+---
+
 ## Docker-publicatie + tag-beleid: api 0.5.0 / studio 0.6.0 (2026-07-29)
 
 Backend en frontend als losse images naar Docker Hub gepubliceerd, en het tag-beleid

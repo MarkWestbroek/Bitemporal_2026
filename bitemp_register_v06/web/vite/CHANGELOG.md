@@ -8,6 +8,40 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.8.0] — 2026-09-16
+### Toegevoegd
+- **OpenAPI → canoniek model.** Nieuwe transformatie onder *Transformeren →
+  importeren*: `components.schemas` uit een OAS-document wordt een canoniek
+  model (`oasNaarV3.js` puur, `oasCanoniekImport.js` als descriptor), met
+  diagnostics per schema. Eerste stap — `paths`/operations en generalisatie
+  via `allOf` blijven bewust liggen (backlog §29.7).
+- **Doorkijk over relaties in de modelboom.** `bouwModelTree` kreeg de optie
+  `relatieDiepte` (default 0, dus ongewijzigd voor bestaande activiteiten; de
+  toegang-activity zet 2), zodat beleidsketens over registergrenzen resolven —
+  "de wijk van de woonlocatie van een natuurlijk persoon". `ModelPicker` kreeg
+  dezelfde prop; `modelpicker/veldenlijst.js` deelt de platte veldenlijst met
+  de activity. Doorkijk-takken zijn gemarkeerd met `↗`.
+
+### Gewijzigd
+- **Composities (ENT ◆ GE) zijn connectoren.** De heenreis van het
+  canoniek-uml-profiel vouwt structurele ENT→GE-edges tot een
+  `compositie`-connector, net als relaties sinds fase 3B; de core leidt de
+  lijn af op elk diagram waar beide uiteinden staan. Labels komen uit
+  `hooks.edgeLabels`. **Let op:** de sandbox persisteert — een al geladen
+  model krijgt de connectoren pas na *Bestand → Importeer V3 JSON…* of
+  *Herlaad uit UML-model…*. Label-offsets van de oude edge gaan daarbij
+  verloren (backlog §29.10).
+
+### Gerepareerd
+- **Verdwenen compositielijnen.** Modellen uit de eerste umleditor bewaren
+  kale zijden als handle (`"left"`, `"bottom"`); React Flow weigert zo'n edge
+  **stil**, waardoor de lijn zonder melding verdween. `normaliseerHandle()`
+  zet ze om, voor connectoren én opgeslagen presentatie-edges. Werkt direct,
+  ook op een al geladen model.
+- **OAS-import sloeg verwijzingen plat.** `allOf: [$ref X]` op property-niveau
+  werd een tekstveld (6 relaties weg in de OpenOrganisatie-casus) en
+  `oneOf: [Enum, BlankEnum]` werd stil genegeerd. Beide met regressietest.
+
 ## [studio/v0.7.2] — 2026-09-10
 ### Gerepareerd
 - **Help-menu gaf "Markdown file not found" in productie.** De link wees op
