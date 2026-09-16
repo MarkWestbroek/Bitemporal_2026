@@ -87,6 +87,10 @@ func nieuweRegressieOmgeving(t *testing.T) *regressieOmgeving {
 	}
 
 	// Maak de database aan als die nog niet bestaat (hergebruik main.go-logica).
+	// DATABASE_ADMIN_URL bewust negeren: die kan naar een andere Postgres wijzen
+	// (bv. de dev-DB op 5432), waardoor de DB elders wordt aangemaakt dan waar
+	// we verbinden. De admin-DSN wordt dan uit de regressie-DSN zelf afgeleid.
+	t.Setenv("DATABASE_ADMIN_URL", "")
 	if err := ensureDatabaseExists(dsn); err != nil {
 		t.Fatalf("regressie-database aanmaken/controleren mislukt: %v\n(draait er een Postgres op de DSN? zie scripts/regressie-np-loc.ps1)", err)
 	}
@@ -431,15 +435,14 @@ func TestRegressieNpLoc(t *testing.T) {
 		}
 	})
 
-	t.Run("08b PATCH zonder expliciete FK (URL-id hoort leidend te zijn)", func(t *testing.T) {
+	t.Run("08b PATCH zonder expliciete FK (URL-id is leidend)", func(t *testing.T) {
 		o := o.met(t)
 		body := map[string]any{"namen": []any{map[string]any{"voorletters": "X.", "achternaam": "ZonderFK"}}}
-		status, _, raw := o.do(http.MethodPatch, "/full/natuurlijk_personen/3", body)
-		if status == http.StatusInternalServerError && strings.Contains(string(raw), "id ontbreekt") {
-			t.Skipf("BEKEND GAT: PATCH /full injecteert URL-id niet als parent-FK (500: %s)", kort(raw))
-		}
-		if status != http.StatusOK {
-			t.Fatalf("wil 200, kreeg %d: %s", status, kort(raw))
+		// Gefixt 2026-09-16: de builder injecteert de URL-id als parent-FK.
+		o.eisStatus(http.MethodPatch, "/full/natuurlijk_personen/3", body, http.StatusOK)
+		full, raw := o.eisStatus(http.MethodGet, "/full/natuurlijk_personen/3", nil, http.StatusOK)
+		if naam, ok := actieveDataVeld(full, "namen", "achternaam"); !ok || naam != "ZonderFK" {
+			t.Fatalf("na PATCH zonder FK: wil actieve achternaam 'ZonderFK', kreeg %q\n%s", naam, kort(raw))
 		}
 	})
 
@@ -512,7 +515,7 @@ func TestRegressieNpLoc(t *testing.T) {
 		}
 	})
 
-	t.Run("13 validatie: ongeldige enumwaarde wordt geweigerd", func(t *testing.T) {
+	t.Run("13 validatie: ongeldige enumwaarde geeft 422", func(t *testing.T) {
 		o := o.met(t)
 		body := map[string]any{
 			"registratie": map[string]any{"registratietype": "registratie"},
@@ -520,13 +523,15 @@ func TestRegressieNpLoc(t *testing.T) {
 				map[string]any{"opvoer": map[string]any{"naamgebruik": map[string]any{"natuurlijkpersoon_id": 3, "naamgebruik": "Onzin"}}},
 			},
 		}
-		status, _, raw := o.do(http.MethodPost, "/registratie/", body)
-		if status == http.StatusCreated {
-			t.Skipf("BEKEND GAT: enumwaarden worden niet gevalideerd (schema:\"enum=…\" wordt genegeerd); 'Onzin' is opgeslagen (registratie %v)", kort(raw))
+		// Gefixt 2026-09-16: enum-validatie in de walker + schema-tags op de _Input-structs.
+		status, parsed, raw := o.do(http.MethodPost, "/registratie/", body)
+		if status != http.StatusUnprocessableEntity {
+			t.Fatalf("ongeldige enum: wil 422, kreeg %d: %s", status, kort(raw))
 		}
-		if status < 400 || status >= 500 {
-			t.Fatalf("ongeldige enum: wil 4xx, kreeg %d: %s", status, kort(raw))
+		if !strings.Contains(string(raw), "Naamgebruiksoort") {
+			t.Errorf("wil de enumnaam in de foutmelding, kreeg %s", kort(raw))
 		}
+		_ = parsed
 	})
 
 	t.Run("14 GraphQL smoke", func(t *testing.T) {

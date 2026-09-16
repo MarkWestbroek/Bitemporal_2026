@@ -729,7 +729,7 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		// Stap 3: Go build
 		stappen = append(stappen, "Binary hercompileren...")
 		// -tags devtools: de devloop-binary moet zijn eigen rebuild-endpoint behouden.
-	buildCmd := exec.Command("go", "build", "-tags", "devtools", "-o", filepath.Join(appDir, "bitemp-go-api"), ".")
+		buildCmd := exec.Command("go", "build", "-tags", "devtools", "-o", filepath.Join(appDir, "bitemp-go-api"), ".")
 		buildCmd.Dir = appDir
 		buildCmd.Env = append(os.Environ(), "CGO_ENABLED=0")
 		buildOutput, err := buildCmd.CombinedOutput()

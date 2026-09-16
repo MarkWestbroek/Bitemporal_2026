@@ -6,6 +6,7 @@ package model
 // Plan B.A.2 (zie docs/BACKLOG_UITVOERING_INCREMENTEN.md).
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -39,12 +40,17 @@ func ValideerRepresentatie(rep any, padPrefix string) []ValidatieFout {
 		if !field.IsExported() {
 			continue
 		}
+		// Ondersteunde schema-tags: `datatype:<V3Datatype>` en `enum=<EnumNaam>`
+		// (enum-validatie toegevoegd 2026-09-16 n.a.v. regressietest scenario 13).
 		schemaTag := field.Tag.Get("schema")
-		if !strings.HasPrefix(schemaTag, "datatype:") {
-			continue
+		var datatypeNaam, enumNaam string
+		switch {
+		case strings.HasPrefix(schemaTag, "datatype:"):
+			datatypeNaam = strings.TrimPrefix(schemaTag, "datatype:")
+		case strings.HasPrefix(schemaTag, "enum="), strings.HasPrefix(schemaTag, "enum:"):
+			enumNaam = schemaTag[len("enum="):]
 		}
-		datatypeNaam := strings.TrimPrefix(schemaTag, "datatype:")
-		if datatypeNaam == "" {
+		if datatypeNaam == "" && enumNaam == "" {
 			continue
 		}
 
@@ -78,7 +84,34 @@ func ValideerRepresentatie(rep any, padPrefix string) []ValidatieFout {
 			veldPad = padPrefix + "." + jsonNaam
 		}
 
+		if enumNaam != "" {
+			fouten = append(fouten, valideerEnumWaarde(enumNaam, s, veldPad)...)
+			continue
+		}
 		fouten = append(fouten, ValideerWaarde(datatypeNaam, s, veldPad)...)
 	}
 	return fouten
+}
+
+// valideerEnumWaarde controleert een waarde tegen EnumWaarden[enumNaam] (gevuld
+// door de gegenereerde *_enum_registry.go). Een onbekende enum-naam levert geen
+// fout op (registry niet geladen); een waarde buiten de lijst wel.
+func valideerEnumWaarde(enumNaam, waarde, pad string) []ValidatieFout {
+	toegestaan, ok := EnumWaarden[enumNaam]
+	if !ok {
+		return nil
+	}
+	for _, t := range toegestaan {
+		if t == waarde {
+			return nil
+		}
+	}
+	return []ValidatieFout{{
+		Veld:     pad,
+		Datatype: enumNaam,
+		Code:     "enum",
+		Bericht:  fmt.Sprintf("waarde %q is geen geldige %s (toegestaan: %s)", waarde, enumNaam, strings.Join(toegestaan, ", ")),
+		Waarde:   waarde,
+		Severity: SeverityError,
+	}}
 }
