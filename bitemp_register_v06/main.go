@@ -231,6 +231,8 @@ func NewRouter() *gin.Engine {
 		router.GET("/admin/rebuild/status", admin, handlers.MaakRebuildStatusHandler())
 		router.POST("/admin/diff", admin, handlers.MaakDiffHandler())
 		router.POST("/admin/diff/:password", admin, handlers.MaakDiffHandler())
+		// Regressie-UI (regressie_np_loc_test.go afspelen vanuit de browser); zie docs/REGRESSIETEST.md.
+		handlers.RegistreerRegressieRoutes(router, admin)
 	}
 
 	//Add all functional routes
