@@ -51,6 +51,21 @@
 >    (zelfde ordering als voorheen). Een lijst van 100 entiteiten × 10 kinderen ging van 1000+ queries naar 1.
 >    **Nog open uit §4.4:** de gecorreleerde subquery per rij in `applyFormeleTijdFilterVoorModel` (het WHERE-filter
 >    bij `?peiltijdstip=` op lijsten) — kandidaat voor een `LATERAL JOIN`-herschrijving, meten met `EXPLAIN ANALYZE`.
+>
+> **Derde aanvulling (2026-09-16, geautomatiseerde regressietest):** zie `docs/REGRESSIETEST.md`.
+> Een in-process integratietest op np-loc (`regressie_np_loc_test.go`, `-tags integration`, eigen Postgres op 5433,
+> seed via replay, ~4 s) plus Postman-collectie. De eerste run leverde direct op:
+>
+> 10. ⚠️→✅ **Eigen §4.1-fout gevonden en hersteld:** de partial unique index brak ongedaanmaking (tijdelijk twee actieve
+>     records binnen de tx bij ont-afvoer→ont-opvoer). Vervangen door een `EXCLUDE … WHERE … DEFERRABLE INITIALLY DEFERRED`-
+>     constraint die bij COMMIT checkt. Zonder de regressietest was dit pas in gebruik opgevallen.
+> 11. 🆕 **PATCH `/full` injecteert de URL-id niet als parent-FK** → 500 zonder expliciete FK per kind (pre-existing,
+>     `wijziging_builder.go`). Klein te fixen; gedocumenteerd als bekend gat (scenario 08b).
+> 12. 🆕 **Enumwaarden worden niet gevalideerd** (`schema:"enum=…"` wordt genegeerd door `validation.go`). Klein te fixen;
+>     bekend gat (scenario 13).
+>
+> Alle overige gedragswijzigingen uit §3/§4 zijn nu ook tegen een echte database bewezen (tijdreizen, POST-per-padnaam,
+> DELETE+409, 422+rollback, N+1: 21 queries voor 5 entiteiten, auth-flow).
 
 ## 1. Eindoordeel
 

@@ -1,0 +1,1445 @@
+{
+  "info": {
+    "name": "Regressie np-loc (BE-review 2026-07-07)",
+    "description": "Handmatige/newman-variant van regressie_np_loc_test.go. Volgorde is belangrijk: mappen 0→9 in volgorde draaien. Vereist een draaiende API (default http://localhost:8082) met een LEGE of dedicated database; map 0 wist np-loc via het admin-endpoint (alleen in een -tags devtools build met ALLOW_DROP_TABLES=true).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 Reset np-loc (optioneel, devtools-build)",
+      "description": "Alleen nodig als je tegen een reeds gevulde DB draait.",
+      "item": [
+        {
+          "name": "DELETE np-loc tabellen",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Beheer-Wachtwoord",
+                "value": "{{adminDropPassword}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/db/droptables?domein=np-loc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "db",
+                "droptables"
+              ],
+              "query": [
+                {
+                  "key": "domein",
+                  "value": "np-loc"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200/403/404 (afhankelijk van build)\", () => pm.expect([200,403,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST createtables",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/db/createtables",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "db",
+                "createtables"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200/403/404 (afhankelijk van build)\", () => pm.expect([200,403,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 Seed (3 replay-entries: NP=2, LOC=2, woonadres)",
+      "description": "",
+      "item": [
+        {
+          "name": "Seed NP=2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registratie/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registratie"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registratie\": {\n    \"id\": 0,\n    \"opmerking\": \"Synthetische NatuurlijkPersoon NP=2\",\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"0001-01-01T00:00:00Z\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 2\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"persoonsidentificatie\": {\n          \"natuurlijkpersoon_id\": 2,\n          \"bsn\": \"100000010\",\n          \"ingezetene\": true\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"naam\": {\n          \"natuurlijkpersoon_id\": 2,\n          \"voorletters\": \"J.K.\",\n          \"roepnaam\": \"Joris\",\n          \"tussenvoegsel\": \"de\",\n          \"achternaam\": \"Vries\"\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"burgerschap\": {\n          \"natuurlijkpersoon_id\": 2,\n          \"landcode\": \"NL\",\n          \"nationaliteit\": \"Nederlandse\"\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"partnernaam\": {\n          \"natuurlijkpersoon_id\": 2,\n          \"achternaam\": \"Bakker\"\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"naamgebruik\": {\n          \"natuurlijkpersoon_id\": 2,\n          \"naamgebruik\": \"EigenNaam\"\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon_aanvang\": {\n          \"natuurlijkpersoon_id\": 2,\n          \"datum\": \"1990-05-14\"\n        }\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"regSeedNp2\", pm.response.json().registratie_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Seed LOC=2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registratie/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registratie"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registratie\": {\n    \"id\": 0,\n    \"opmerking\": \"Synthetische Locatie LOC=2\",\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"0001-01-01T00:00:00Z\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"locatie\": {\n          \"id\": 2\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"adres\": {\n          \"locatie_id\": 2,\n          \"straatnaam\": \"Lindelaan\",\n          \"huisnummer\": \"42A\",\n          \"postcode\": \"3511AA\",\n          \"gemeente_id\": 344\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"baglocatie\": {\n          \"locatie_id\": 2,\n          \"adresaanduiding\": \"0363200000123456\"\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"locatie_aanvang\": {\n          \"locatie_id\": 2,\n          \"datum\": \"2018-09-01\"\n        }\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Seed woonadres NP=2→LOC=2",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registratie/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registratie"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registratie\": {\n    \"id\": 0,\n    \"opmerking\": \"Synthetische woonadres-link NP=2 -> LOC=2\",\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"0001-01-01T00:00:00Z\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"bereikbaarheid\": {\n          \"natuurlijkpersoon_id\": 2,\n          \"locatie_id\": 2,\n          \"soort\": \"Woonadres\"\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"bereikbaarheid_aanvang\": {\n          \"natuurlijkpersoon_id\": 2,\n          \"datum\": \"2020-01-01\"\n        }\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"regSeedLaatste\", pm.response.json().registratie_id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 Lezen",
+      "description": "",
+      "item": [
+        {
+          "name": "GET lijst natuurlijk_personen",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen?size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"total_count ≥ 1\", () => pm.expect(pm.response.json().total_count).to.be.at.least(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET detail NP=2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen",
+                "2"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"id=2\", () => pm.expect(pm.response.json().id).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET full NP=2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/full/natuurlijk_personen/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "full",
+                "natuurlijk_personen",
+                "2"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "const namen = pm.response.json().namen || [];",
+                  "const actief = namen.find(h => !h.afvoer); const data = (actief && actief.data || []).find(d => !d.afvoer) || {};",
+                  "pm.test(\"actieve achternaam = Vries\", () => pm.expect(data.achternaam).to.eql(\"Vries\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET onbekend id → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"geen SQL-lek\", () => pm.expect(pm.response.text().toLowerCase()).to.not.include(\"sql:\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET full onbekend id → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/full/natuurlijk_personen/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "full",
+                "natuurlijk_personen",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"geen SQL-lek\", () => pm.expect(pm.response.text().toLowerCase()).to.not.include(\"sql:\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 Tijdreizen",
+      "description": "",
+      "item": [
+        {
+          "name": "GET full NP=2 op t=0 → 404 (bestond nog niet)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/full/natuurlijk_personen/2?t=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "full",
+                "natuurlijk_personen",
+                "2"
+              ],
+              "query": [
+                {
+                  "key": "t",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"geen SQL-lek\", () => pm.expect(pm.response.text().toLowerCase()).to.not.include(\"sql:\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET full NP=2 op t={{regSeedNp2}} → 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/full/natuurlijk_personen/2?t={{regSeedNp2}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "full",
+                "natuurlijk_personen",
+                "2"
+              ],
+              "query": [
+                {
+                  "key": "t",
+                  "value": "{{regSeedNp2}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 POST per padnaam via de engine",
+      "description": "",
+      "item": [
+        {
+          "name": "POST /natuurlijk_personen {id:42}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 42\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"registratie_id aanwezig\", () => pm.expect(pm.response.json().registratie_id).to.be.above(0));",
+                  "pm.collectionVariables.set(\"regPost42\", pm.response.json().registratie_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET registratie van die POST",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registraties/{{regPost42}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registraties",
+                "{{regPost42}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"type registratie\", () => pm.expect(pm.response.json().registratietype).to.eql(\"registratie\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET NP=42 heeft opvoer",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen/42",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen",
+                "42"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"opvoer gezet\", () => pm.expect(pm.response.json().opvoer).to.not.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /full geneste shape {id:43}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/full/natuurlijk_personen",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "full",
+                "natuurlijk_personen"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 43,\n  \"namen\": [\n    {\n      \"data\": [\n        {\n          \"voorletters\": \"A.\",\n          \"achternaam\": \"Volledig\"\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 PATCH + ongedaanmaking",
+      "description": "",
+      "item": [
+        {
+          "name": "PATCH /full NP=2 (naam → Gewijzigd)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/full/natuurlijk_personen/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "full",
+                "natuurlijk_personen",
+                "2"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"namen\": [\n    {\n      \"voorletters\": \"J.K.\",\n      \"achternaam\": \"Gewijzigd\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"regPatch\", pm.response.json().registratie_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET full NP=2 → Gewijzigd actief",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/full/natuurlijk_personen/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "full",
+                "natuurlijk_personen",
+                "2"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "const namen = pm.response.json().namen || [];",
+                  "const actief = namen.find(h => !h.afvoer); const data = (actief && actief.data || []).find(d => !d.afvoer) || {};",
+                  "pm.test(\"actieve achternaam = Gewijzigd\", () => pm.expect(data.achternaam).to.eql(\"Gewijzigd\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST ongedaanmaking van de PATCH",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registratie/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registratie"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"ongedaanmaking\",\n    \"maakt_ongedaan_registratie_id\": \"{{regPatch}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET full NP=2 → Vries terug",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/full/natuurlijk_personen/2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "full",
+                "natuurlijk_personen",
+                "2"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "const namen = pm.response.json().namen || [];",
+                  "const actief = namen.find(h => !h.afvoer); const data = (actief && actief.data || []).find(d => !d.afvoer) || {};",
+                  "pm.test(\"actieve achternaam = Vries\", () => pm.expect(data.achternaam).to.eql(\"Vries\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6 DELETE per padnaam",
+      "description": "",
+      "item": [
+        {
+          "name": "DELETE NP=42",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen/42",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen",
+                "42"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"regDelete\", pm.response.json().registratie_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET full NP=42 op afvoertijdstip → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/full/natuurlijk_personen/42?t={{regDelete}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "full",
+                "natuurlijk_personen",
+                "42"
+              ],
+              "query": [
+                {
+                  "key": "t",
+                  "value": "{{regDelete}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"geen SQL-lek\", () => pm.expect(pm.response.text().toLowerCase()).to.not.include(\"sql:\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE NP=42 nogmaals → 409",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen/42",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen",
+                "42"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"409 Conflict\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7 Audit-routes read-only + validatie",
+      "description": "",
+      "item": [
+        {
+          "name": "POST /registraties → 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registraties",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registraties"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registratietype\": \"registratie\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /wijzigingen → 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wijzigingen",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "wijzigingen"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"wijzigingstype\": \"opvoer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ongeldige BSN → 422 problem+json",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registratie/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registratie"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 90\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"persoonsidentificatie\": {\n          \"natuurlijkpersoon_id\": 90,\n          \"bsn\": \"123456789\"\n        }\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"problem+json\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rollback: NP=90 bestaat niet",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen/90",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen",
+                "90"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ongeldige enum → 4xx",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/registratie/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "registratie"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"naamgebruik\": {\n          \"natuurlijkpersoon_id\": 2,\n          \"naamgebruik\": \"Onzin\"\n        }\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"4xx\", () => pm.expect(pm.response.code).to.be.within(400, 499));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8 Overig",
+      "description": "",
+      "item": [
+        {
+          "name": "GraphQL introspectie-smoke",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/graphql/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql",
+                "query"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ __schema { queryType { name } } }\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"data.__schema\", () => pm.expect(pm.response.json().data.__schema).to.exist);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Referentielijst-items adellijke_titels (gewone padnaam-route)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/adellijke_titels?size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "adellijke_titels"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin rebuild afgeschermd",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/rebuild",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "rebuild"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 (productie) of 403 (devtools zonder DEVLOOP)\", () => pm.expect([403, 404, 401]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9 Auth (alleen met AUTH_ENABLED=true op de API)",
+      "description": "",
+      "item": [
+        {
+          "name": "Anonieme POST → 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 77\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 (of 201 als AUTH_ENABLED=false)\", () => pm.expect([401, 201]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gebruikersnaam\": \"{{adminUsername}}\",\n  \"wachtwoord\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 (of 401 als auth uit/geen seed)\", () => pm.expect([200, 401]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ingelogde POST → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/natuurlijk_personen",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "natuurlijk_personen"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 78\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "regSeedNp2",
+      "value": ""
+    },
+    {
+      "key": "regSeedLaatste",
+      "value": ""
+    },
+    {
+      "key": "regPost42",
+      "value": ""
+    },
+    {
+      "key": "regPatch",
+      "value": ""
+    },
+    {
+      "key": "regDelete",
+      "value": ""
+    }
+  ]
+}
