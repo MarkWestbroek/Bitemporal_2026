@@ -146,7 +146,13 @@ function IcoonKeuzeEditor({ regel, waarde, onChange }) {
  * eerste optie ("(geen)") ontstaat door een optie met waarde "".
  */
 function KeuzeEditor({ regel, waarde, onChange }) {
-  const opties = regel.opties || [];
+  const basis = regel.opties || [];
+  // Een opgeslagen waarde buiten de lijst (bv. "1" uit een oud model) blijft
+  // zichtbaar als eigen optie — anders toont de select stil de eerste optie.
+  const opties =
+    waarde != null && waarde !== "" && !basis.some((o) => o.waarde === waarde)
+      ? [...basis, { waarde, label: `${waarde} (buiten lijst)` }]
+      : basis;
   return (
     <select
       value={waarde ?? ""}

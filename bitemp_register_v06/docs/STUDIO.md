@@ -392,9 +392,25 @@ fase 2 een **bewerkbare sandbox**:
   `null` → kortste weg), zowel voor connectoren als voor opgeslagen
   presentatie-edges in `DiagramCanvas`. Een V3-export schrijft ze voortaan in
   de genormaliseerde vorm terug (de oude editor gebruikt die vorm zelf ook).
-  **Let op:** de sandbox persisteert; een al geladen model krijgt de
-  compositie-connectoren pas na opnieuw inladen (**Bestand → Importeer V3
-  JSON…** of **Herlaad uit UML-model…**). De handle-fix werkt direct.
+  **Let op:** de sandbox persisteert en spiegelt het model alleen als hij
+  leeg is. Een vóór deze datum geladen sandbox hield daardoor de oude vorm
+  (lijn wel zichtbaar, maar niet selecteerbaar en zonder compositie-menu's).
+  **Sinds 2026-09-17 gaat dat automatisch:** de profiel-hook
+  `hooks.migreerModel` (`canoniek-uml/migratie.js`, `vouwOudeComposities`)
+  vouwt bij het laden — en na elke latere laad/import — de oude
+  presentatie-edges én `meta.compositieEdges` tot connectoren, buiten de
+  undo-historie. `meta.compositiesGevouwen` markeert dat het gebeurd is, zodat
+  een daarna zelf verwijderde compositie niet uit meta terugkomt. De
+  handle-fix werkte al direct.
+- **Compositie-velden bewerkbaar (2026-09-17).** Het `compositie`-type heeft
+  dezelfde velden als *Edge* in de oude IDE-details: rolnaam, JSON rolnaam,
+  momentvoorkomen en kardinaliteit (keuzelijst `0..1`/`0..*`/`1..1`/`1..*`).
+  De terugreis schrijft in 0.5 bewerkte waarden over de heenreis-kopie
+  (`data.bron`) heen naar de structurele edge (`COMPOSITIE_VELDEN` in
+  `canoniek-uml/migratie.js`). Connectoren die eerder gevouwen zijn krijgen een
+  ontbrekende `jsonRolnaam` aangevuld uit `data.bron`. De core-`keuze`-editor
+  toont een opgeslagen waarde buiten de lijst (bv. `1`) als eigen optie in
+  plaats van stil de eerste optie.
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.

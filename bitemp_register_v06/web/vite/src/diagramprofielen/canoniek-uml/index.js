@@ -16,6 +16,7 @@
  *
  * Kleuren komen overeen met defaultKleur() in umleditor/metamodel/types.js.
  */
+import { vouwOudeComposities } from "./migratie.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { berekenAutoLayout } from "../../umleditor/metamodel/autoLayout.js";
 
@@ -63,6 +64,13 @@ const fieldTypes = [
     ],
   },
   {
+    // Opname: een gegevenselement dat ín zijn entiteit getoond wordt (vak in
+    // het vak). Alleen weergave — gevuld door de core (canvas/opname.js).
+    id: "ingebedDeel",
+    viewer: "sub-vak",
+    properties: [{ key: "naam", datatype: "string" }],
+  },
+  {
     id: "regel",
     viewer: "tekst",
     properties: [{ key: "naam", label: "regel", datatype: "string", verplicht: true }],
@@ -94,6 +102,14 @@ const elementTypes = [
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
+      // Opgenomen gegevenselementen (per diagram gekozen, zie opname op GE).
+      {
+        id: "gegevenselementen",
+        label: null,
+        fieldType: "ingebedDeel",
+        alleenWeergave: true,
+        verbergInInspector: true,
+      },
       { id: "overerving", label: null, fieldType: "attribuut", alleenWeergave: true },
     ],
     hooks: {
@@ -142,6 +158,17 @@ const elementTypes = [
     shape: "class-box",
     kleur: "#bbf7d0",
     icoon: "veld",
+    // Opname (gedaanten van een samenstel): per diagram kan een GE-voorkomen
+    // ín zijn entiteit getoond worden — de compositielijn vervalt, de GE wordt
+    // een sub-vak met naam, rolnaam, kardinaliteit en {momentvoorkomen} als
+    // kopregel. Keuze via het contextmenu op de GE, de compositie of de ENT.
+    opname: {
+      gedaante: "ingebed",
+      relatieTypes: ["compositie"],
+      compartiment: "gegevenselementen",
+      labelIngebed: "Neem op in entiteit",
+      labelLos: "Toon als los gegevenselement",
+    },
     properties: [KLEUR_VELD, { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" }],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
@@ -356,6 +383,35 @@ const elementTypes = [
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["gegevenselement"] },
     edgePresentatie: { lijn: "solid", kleur: "#64748b", markerStart: "ruit" },
+    // Dezelfde velden als "Edge" in de oude IDE-details (ide/DetailsPanel.jsx);
+    // de terugreis (adapter.naarCanoniekModel) schrijft ze naar de
+    // structurele edge. Keuzelijsten = KARDINALITEIT_/MOMENTVOORKOMEN_OPTIES.
+    properties: [
+      { key: "rolnaam", label: "rolnaam", datatype: "string" },
+      { key: "jsonRolnaam", label: "JSON rolnaam", datatype: "string" },
+      {
+        key: "momentvoorkomen",
+        label: "momentvoorkomen",
+        datatype: "keuze",
+        opties: [
+          { waarde: "", label: "—" },
+          { waarde: "enkelvoudig", label: "enkelvoudig" },
+          { waarde: "meervoudig", label: "meervoudig" },
+        ],
+      },
+      {
+        key: "kardinaliteit",
+        label: "kardinaliteit",
+        datatype: "keuze",
+        opties: [
+          { waarde: "", label: "—" },
+          { waarde: "0..1", label: "0..1" },
+          { waarde: "0..*", label: "0..*" },
+          { waarde: "1..1", label: "1..1" },
+          { waarde: "1..*", label: "1..*" },
+        ],
+      },
+    ],
     hooks: {
       /**
        * Labels zoals de oude presentatie-edge ze toonde (zie
@@ -494,6 +550,11 @@ export const canoniekUmlDiagramType = {
   // (ENT ◆ GE) — de browser toont packages → entiteiten → gegevenselementen.
   hierarchie: ["bevat", "compositie"],
   hooks: {
+    /**
+     * Opgeslagen sandbox bijwerken: composities die nog als presentatie-edge
+     * bestaan (vóór 2026-09-15) worden compositie-connectoren.
+     */
+    migreerModel: vouwOudeComposities,
     /**
      * Composities uit een V3-import zijn sinds de heenreis compositie-
      * connectoren (die de "compositie"-hiërarchie al dekt). Deze hook vangt

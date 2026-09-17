@@ -29,6 +29,7 @@
  * Puur en store-loos: testbaar met kale objecten.
  */
 import { kortsteVoorkomenPaar, voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
+import { bepaalOpnames } from "./opname.js";
 
 export const ANKER_PREFIX = "anker:";
 
@@ -155,13 +156,29 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
   const edges = [];
   const extraNodes = [];
 
+  // Opname (zie opname.js): een ingebed deel-voorkomen is geen eigen node.
+  // Lijnen van het deel hangen dan aan zijn geheel; een lijn die daardoor
+  // binnen één geheel valt (de compositie zelf) vervalt — de nesting zegt het.
+  const opnames = bepaalOpnames(elements, diagram, elementTypesById);
+  const zichtbareVoorkomens = (elementId) => {
+    const lijst = (nodeRefs.get(elementId) || []).filter(
+      (ref) => !opnames.ingebedVoorkomens.has(voorkomenId(ref))
+    );
+    if (lijst.length) return { lijst, elementId };
+    const geheel = opnames.geheelVan.get(elementId);
+    return geheel ? { lijst: nodeRefs.get(geheel) || [], elementId: geheel } : { lijst, elementId };
+  };
+
   for (const el of Object.values(elements || {})) {
     const et = elementTypesById[el.elementType];
     if (!et?.isConnector || !el.source || !el.target) continue;
     if (verborgenConnectoren.has(el.id)) continue;
 
-    const bronVoorkomens = nodeRefs.get(el.source) || [];
-    const doelVoorkomens = nodeRefs.get(el.target) || [];
+    const bronKant = zichtbareVoorkomens(el.source);
+    const doelKant = zichtbareVoorkomens(el.target);
+    if (el.source !== el.target && bronKant.elementId === doelKant.elementId) continue;
+    const bronVoorkomens = bronKant.lijst;
+    const doelVoorkomens = doelKant.lijst;
     const expliciet = diagram?.connectorVoorkomens?.[el.id];
     const explicieteBron = expliciet
       ? bronVoorkomens.find((node) => voorkomenId(node) === expliciet.bronNodeId)

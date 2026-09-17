@@ -69,6 +69,11 @@ registreerHandlerInfo("hook", "hierarchieParen", {
   beschrijving:
     "Levert extra ouder→kind-paren aan de elementen-boom, voor relaties die niet als connector-element bestaan (bv. gespiegelde composities).",
 });
+registreerHandlerInfo("hook", "migreerModel", {
+  naam: "Model-migratie",
+  beschrijving:
+    "Brengt een opgeslagen (persistente) sandbox bij met de huidige profielvorm — bv. oude presentatie-edges omzetten naar connectoren. Idempotent; geeft null als er niets te doen is.",
+});
 registreerHandlerInfo("hook", "valideer", {
   naam: "Validatie",
   beschrijving: "Valideert element-data bij bewerking (profiel-eigen regels).",

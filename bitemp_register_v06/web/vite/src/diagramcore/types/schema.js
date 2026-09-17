@@ -60,8 +60,9 @@
  *
  * @typedef {Object} FieldType
  * @property {string} id
- * @property {"naam-type"|"tekst"|"waarde"} viewer - FieldTypeViewer-id: de
- *   compacte rij-weergave op de node (componeert de property-weergaven)
+ * @property {"naam-type"|"tekst"|"waarde"|"sub-vak"} viewer - FieldTypeViewer-id: de
+ *   compacte rij-weergave op de node (componeert de property-weergaven).
+ *   "sub-vak" = een opgenomen deel als vak in het vak (zie ElementType.opname)
  * @property {PropertyType[]} [properties]
  */
 
@@ -155,6 +156,16 @@
  *   verwijzen (submachine state, BPMN call-activity). De verwijzing leeft in
  *   element.data.gedragDiagramId (property-datatype "diagram-verwijzing");
  *   dubbelklik op de node opent dat diagram (nieuwe tab in Modelleren).
+ * @property {{gedaante: string, relatieTypes: string[], labelIngeklapt?: string, labelUitgeklapt?: string}} [samentrekking]
+ *   - gedaanten van een samenstel (lollipop): een voorkomen met
+ *   `DiagramNode.gedaante === gedaante` rendert ingeklapt en maakt de genoemde
+ *   relaties over de hele lengte kaal
+ * @property {{gedaante: string, relatieTypes: string[], compartiment?: string, labelIngebed?: string, labelLos?: string}} [opname]
+ *   - gedaanten van een samenstel (opname): een voorkomen van dit *deel* met
+ *   `DiagramNode.gedaante === gedaante` verdwijnt als node en verschijnt als
+ *   sub-vak in `compartiment` van het geheel (bron van een van de
+ *   `relatieTypes`); die relatielijn vervalt. Per voorkomen, dus per diagram.
+ *   Zie canvas/opname.js
  * @property {boolean} [standaardDichtInBoom] - boomrijen van dit type beginnen
  *   ingeklapt (zoals mappen in een verkenner); de chevron-klik wint daarna
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector

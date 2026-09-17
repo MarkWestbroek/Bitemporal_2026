@@ -468,3 +468,19 @@ test("store-round-trip: gevouwen compositie behoudt edge-id, edge-data en (genor
   assert.equal(pe[0].sourceHandle, "source-left");
   assert.equal(pe[0].targetHandle, "target-top");
 });
+
+test("store-round-trip: in 0.5 bewerkte compositie-velden (kardinaliteit, rolnamen) gaan terug naar de structurele edge", () => {
+  const bron = maakBronState();
+  const core = vanCanoniekModel(bron);
+  const comp = Object.values(core.elements).find(
+    (el) => el.elementType === "compositie" && el.source === "A" && el.target === "GE1"
+  );
+  assert.ok(comp, "compositie-connector aanwezig");
+  comp.data = { ...comp.data, kardinaliteit: "1..*", rolnaam: "adressen", jsonRolnaam: "adressen", momentvoorkomen: "meervoudig" };
+
+  const se1 = naarCanoniekModel(core).structuralEdges.find((e) => e.source === "A" && e.target === "GE1");
+  assert.equal(se1.data.kardinaliteit, "1..*");
+  assert.equal(se1.data.rolnaam, "adressen");
+  assert.equal(se1.data.jsonRolnaam, "adressen");
+  assert.equal(se1.data.momentvoorkomen, "meervoudig");
+});

@@ -17,6 +17,7 @@
  */
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
 import { CANONIEK_UML_ID } from "./index.js";
+import { COMPOSITIE_VELDEN } from "./migratie.js";
 
 /** Type-kolomtekst voor een veld — zelfde opbouw als EntiteitNode. */
 export function veldTypeLabel(v) {
@@ -365,7 +366,7 @@ export function vanCanoniekModel(state) {
     const ge = bronElements[e.target]?.data || {};
     const id = `comp_${e.id || sleutel}`;
     const data = { bron: ed, structuralEdgeId: e.id || null };
-    for (const sleutelNaam of ["rolnaam", "kardinaliteit", "momentvoorkomen"]) {
+    for (const sleutelNaam of COMPOSITIE_VELDEN) {
       if (ed[sleutelNaam]) data[sleutelNaam] = ed[sleutelNaam];
     }
     const heen = ed.naamLabelHeen || ge.naamLabelHeen;
@@ -465,6 +466,8 @@ export function vanCanoniekModel(state) {
     // Zonder deze kopie zou een compositie waarvan het kind op geen enkel
     // diagram staat (geen presentatie-edge) verloren gaan in de spiegel.
     meta: {
+      // De composities zijn hierboven al connectoren (zie migratie.js).
+      compositiesGevouwen: true,
       modelMeta: state?.modelMeta || null,
       domains: state?.domains || [],
       domainMeta: state?.domainMeta || {},
@@ -732,7 +735,12 @@ export function naarCanoniekModel(coreState) {
             id: bestaand?.id || d.structuralEdgeId || undefined,
             source: el.source,
             target: el.target,
-            data: { ...(bestaand?.data || {}), ...(d.bron || {}) },
+            data: {
+              ...(bestaand?.data || {}),
+              ...(d.bron || {}),
+              // In de inspector bewerkte waarden winnen van de heenreis-kopie.
+              ...Object.fromEntries(COMPOSITIE_VELDEN.filter((k) => k in d).map((k) => [k, d[k]])),
+            },
           });
           compositieHandles.set(sleutel, {
             sourceHandle: d.sourceHandle || null,
