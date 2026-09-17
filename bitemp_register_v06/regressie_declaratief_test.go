@@ -28,8 +28,11 @@
 // Verwachtingen: `status` (default 200), `bevat` (substring van de body) en
 // `json` (map van gepunt pad → waarde; waarde mag ">0", ">=1", "<10", "!=null"
 // of "null" zijn, anders gelijkheid op tekst). `bewaar` slaat een JSON-pad op
-// als variabele; variabelen zijn als {{naam}} bruikbaar in path en body.
-// Ingebouwd: {{seedLaatsteRegistratieID}}.
+// als variabele; variabelen zijn als {{naam}} bruikbaar in path, body en
+// verwachtingen. Ingebouwd: {{seedLaatsteRegistratieID}}.
+//
+// Een stap kan ook een replay-bestand afspelen: {"replay": "replay files/x.json"}.
+// Daarna zijn {{laatsteRegistratieID}} en {{replayAantal}} beschikbaar.
 package main
 
 import (
@@ -46,6 +49,9 @@ import (
 const declaratieveScenarioMap = "regressie/scenarios"
 
 type declStap struct {
+	// Replay: speel een replay-bestand af op dit punt (i.p.v. één request). Daarna
+	// zijn {{laatsteRegistratieID}} en {{replayAantal}} beschikbaar.
+	Replay   string          `json:"replay,omitempty"`
 	Method   string          `json:"method"`
 	Path     string          `json:"path"`
 	Body     json.RawMessage `json:"body,omitempty"`
@@ -169,6 +175,16 @@ func checkVerwachting(actueel any, verwacht any) error {
 func (o *regressieOmgeving) voerDeclaratiefUit(t *testing.T, sc declScenario, vars map[string]string) {
 	t.Helper()
 	for i, stap := range sc.Stappen {
+		if stap.Replay != "" {
+			// Replay-stap: bestand afspelen zoals de seed dat doet (elke entry met
+			// zijn expected_response_code); mislukt een entry, dan faalt het scenario.
+			pad := vervangVars(stap.Replay, vars)
+			aantal, laatste := o.replay(pad)
+			t.Logf("stap %d: replay %s → %d entries, laatste registratie_id=%d", i+1, filepath.Base(pad), aantal, laatste)
+			vars["laatsteRegistratieID"] = strconv.FormatInt(laatste, 10)
+			vars["replayAantal"] = strconv.Itoa(aantal)
+			continue
+		}
 		method := strings.ToUpper(strings.TrimSpace(stap.Method))
 		if method == "" {
 			method = "GET"

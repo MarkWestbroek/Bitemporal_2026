@@ -95,7 +95,9 @@ Per stap: `method` (default GET), `path`, optioneel `body`; `verwacht.status` (d
 `verwacht.bevat` (substring), `verwacht.json` (gepunt pad → waarde; `">0"`, `">=1"`, `"<10"`,
 `"!=null"`, `"null"` of letterlijke waarde); `bewaar` (variabelenaam → gepunt pad). Variabelen zijn als
 `{{naam}}` bruikbaar in `path`, `body` en verwachtingswaarden; ingebouwd is
-`{{seedLaatsteRegistratieID}}`. Declaratieve scenario's draaien **na** de gecodeerde en na de
+`{{seedLaatsteRegistratieID}}`. Een stap kan ook een **replay-bestand afspelen** op dat punt:
+`{"replay": "replay files/x.json"}` — elke entry met zijn `expected_response_code`; daarna zijn
+`{{laatsteRegistratieID}}` en `{{replayAantal}}` beschikbaar (voorbeeld: scenario 21). Declaratieve scenario's draaien **na** de gecodeerde en na de
 seed — kies eigen id's (entiteit-id's ≥ 40) die niet met seed of andere scenario's botsen.
 
 ### Beleid voor bekende gaten

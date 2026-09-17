@@ -1,0 +1,30 @@
+{
+  "id": "21",
+  "naam": "replay-stap: 50 extra locaties afspelen en controleren",
+  "beschrijving": "Speelt een synth-replaybestand af als stap (LOC 101..150), controleert de totale lijst en een tijdreis op de laatste registratie.",
+  "stappen": [
+    {
+      "replay": "replay files/registraties-replay-synth-50x-locatie-adres ID=101 tm 150.json"
+    },
+    {
+      "method": "GET",
+      "path": "/locaties?size=500",
+      "verwacht": {"status": 200, "json": {"total_count": ">=55"}}
+    },
+    {
+      "method": "GET",
+      "path": "/full/locaties/120",
+      "verwacht": {"status": 200, "json": {"id": 120, "adressen.0.data.0.straatnaam": "!=null"}}
+    },
+    {
+      "method": "GET",
+      "path": "/registraties/{{laatsteRegistratieID}}",
+      "verwacht": {"status": 200, "json": {"registratietype": "registratie"}}
+    },
+    {
+      "method": "GET",
+      "path": "/full/locaties/150?t={{seedLaatsteRegistratieID}}",
+      "verwacht": {"status": 404}
+    }
+  ]
+}

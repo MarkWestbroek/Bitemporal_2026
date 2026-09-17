@@ -264,10 +264,19 @@ func regressieScenarios(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	// Beschikbare replay-bestanden (voor replay-stappen in declaratieve scenario's).
+	var replays []string
+	if paden, _ := filepath.Glob(filepath.Join(resolveAppDir(), "replay files", "*.json")); len(paden) > 0 {
+		for _, p := range paden {
+			replays = append(replays, "replay files/"+filepath.Base(p))
+		}
+		sort.Strings(replays)
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"scenarios":        sc,
 		"afhankelijkheden": regressieAfhankelijkheden,
 		"declaratief_map":  regressieDeclaratiefD,
+		"replay_bestanden": replays,
 		"default_dsn":      defaultRegressieDSNUitEnv(),
 		"devloop":          isDevloopEnabled(),
 	})
@@ -345,15 +354,22 @@ func regressieScenarioOpslaan(c *gin.Context) {
 		}
 	}
 
-	// Stappen valideren op vorm (method/path/verwacht) door ze te parsen.
+	// Stappen valideren op vorm: een request-stap heeft 'path', een replay-stap 'replay'.
 	for i, raw := range sc.Stappen {
 		var stap struct {
 			Method string `json:"method"`
 			Path   string `json:"path"`
+			Replay string `json:"replay"`
 		}
-		if err := json.Unmarshal(raw, &stap); err != nil || strings.TrimSpace(stap.Path) == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("stap %d: 'path' is verplicht en de stap moet een JSON-object zijn", i+1)})
+		if err := json.Unmarshal(raw, &stap); err != nil || (strings.TrimSpace(stap.Path) == "" && strings.TrimSpace(stap.Replay) == "") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("stap %d: geef 'path' (request) of 'replay' (replay-bestand) op; de stap moet een JSON-object zijn", i+1)})
 			return
+		}
+		if r := strings.TrimSpace(stap.Replay); r != "" {
+			if _, err := os.Stat(filepath.Join(resolveAppDir(), r)); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("stap %d: replay-bestand %q niet gevonden (pad relatief aan de app-map, bv. \"replay files/x.json\")", i+1, r)})
+				return
+			}
 		}
 	}
 
@@ -681,7 +697,8 @@ const regressiePaginaHTML = `<!DOCTYPE html>
 <details style="margin-top:12px"><summary>Run-log (buildfouten, go test-output)</summary><pre id="log"></pre></details>
 
 <h2>Nieuw declaratief scenario</h2>
-<div class="sub">Wordt opgeslagen als <code>regressie/scenarios/&lt;id&gt;-&lt;naam&gt;.json</code> en draait daarna mee onder scenario 90. Variabelen: <code>{{naam}}</code> uit <code>bewaar</code>, plus <code>{{seedLaatsteRegistratieID}}</code>. Verwachtingen in <code>json</code>: waarde, <code>"&gt;0"</code>, <code>"!=null"</code>, <code>"null"</code>.</div>
+<div class="sub">Wordt opgeslagen als <code>regressie/scenarios/&lt;id&gt;-&lt;naam&gt;.json</code> en draait daarna mee onder scenario 90. Variabelen: <code>{{naam}}</code> uit <code>bewaar</code>, plus <code>{{seedLaatsteRegistratieID}}</code>. Verwachtingen in <code>json</code>: waarde, <code>"&gt;0"</code>, <code>"!=null"</code>, <code>"null"</code>. Een stap <code>{"replay": "replay files/….json"}</code> speelt een replay-bestand af en zet <code>{{laatsteRegistratieID}}</code> en <code>{{replayAantal}}</code>.
+<details><summary>beschikbare replay-bestanden</summary><pre id="replays"></pre></details></div>
 <div class="rij">
   <label>Id <input type="text" id="nid" placeholder="21" style="min-width:80px"></label>
   <label>Naam <input type="text" id="nnaam" placeholder="korte omschrijving"></label>
@@ -710,6 +727,7 @@ const regressiePaginaHTML = `<!DOCTYPE html>
     if (!r.ok) { $('melding').textContent = d.error || 'kan scenario’s niet laden'; return; }
     scenarios = d.scenarios;
     if (d.declaratief_map) $('declmap').textContent = d.declaratief_map + '/*.json';
+    $('replays').textContent = (d.replay_bestanden || []).join('\n') || '(geen replay-bestanden gevonden)';
     if (!$('dsn').value) $('dsn').value = d.default_dsn || '';
     if (!d.devloop) $('melding').textContent = 'DEVLOOP staat uit op de API; runs en opslaan worden geweigerd (bekijken kan wel).';
     render([]);
