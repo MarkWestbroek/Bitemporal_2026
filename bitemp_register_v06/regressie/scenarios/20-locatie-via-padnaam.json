@@ -1,0 +1,29 @@
+{
+  "id": "20",
+  "naam": "locatie via padnaam (declaratief voorbeeld)",
+  "beschrijving": "POST /locaties loopt via de engine: registratie ontstaat, record krijgt opvoer, tijdreis vóór de registratie geeft 404.",
+  "stappen": [
+    {
+      "method": "POST",
+      "path": "/locaties",
+      "body": {"id": 42},
+      "verwacht": {"status": 201, "json": {"registratie_id": ">0", "tijdstip": "!=null"}},
+      "bewaar": {"regId": "registratie_id"}
+    },
+    {
+      "method": "GET",
+      "path": "/registraties/{{regId}}",
+      "verwacht": {"status": 200, "json": {"registratietype": "registratie", "id": "{{regId}}"}}
+    },
+    {
+      "method": "GET",
+      "path": "/locaties/42",
+      "verwacht": {"status": 200, "json": {"id": 42, "opvoer": "!=null", "afvoer": "null"}}
+    },
+    {
+      "method": "GET",
+      "path": "/full/locaties/42?t={{seedLaatsteRegistratieID}}",
+      "verwacht": {"status": 404, "bevat": "not found"}
+    }
+  ]
+}

@@ -17,7 +17,9 @@ Bestanden:
 | `scripts/regressie-np-loc.ps1` | runner: start een dedicated Postgres-container (poort **5433**) en draait de test |
 | `scripts/regressie-ui.ps1` | start de devtools-API (8099) voor de regressie-UI, incl. container + eigen DB |
 | `postman/regressie-np-loc.postman_collection.json` + `…environment.json` | dezelfde scenario's voor handmatig prikken of `newman run` |
-| `handlers/regressie_ui_handler.go` | devtools-pagina `/admin/regressie` om de suite vanuit de browser te draaien |
+| `regressie_declaratief_test.go` | runner voor declaratieve (JSON-)scenario's; draait ze als sub-subtests onder scenario 90 |
+| `regressie/scenarios/*.json` | de declaratieve scenario's zelf (één bestand per scenario; ook via de UI aan te maken) |
+| `handlers/regressie_ui_handler.go` | devtools-pagina `/admin/regressie`: scenario's tonen (incl. inhoud), afspelen, declaratieve scenario's toevoegen |
 | `replay files/registraties-replay-synth-natuurlijkpersoon-locatie-woonadres.json` | seed: 5 NP's + 5 locaties + woonadres-links (15 registraties) |
 | `replay files/registraties-replay-init-adellijketitels.json` | seed: referentielijst-items |
 
@@ -67,6 +69,34 @@ replay-bestanden; default de twee hierboven).
 | 15 | `/admin/rebuild` | 404 (productie-build) / 403 (devtools-build zonder `DEVLOOP`) (§3.3) |
 | 16 | N+1-guard | `GET /full/…?t=&size=5` → **21 queries** (grens 40; vóór §4.4 was dit 60+) |
 | 17 | auth | `AUTH_ENABLED=true`: anonieme POST 401, lezen open, login → cookie → 201, logout → 401 |
+| 90 | declaratieve scenario's | speelt elk `regressie/scenarios/*.json` af als eigen sub-subtest (bv. `20 locatie via padnaam`) |
+
+### Waar staan de scenario's?
+
+- **Gecodeerd (00–17):** in `regressie_np_loc_test.go`, elk als `t.Run("NN naam", …)`. Go-code, dus
+  vrij in wat je kunt asserteren (query-teller, cookies, env-vlaggen), maar aanpassen vereist Go.
+- **Declaratief (20+):** in `regressie/scenarios/<id>-<slug>.json`. Geen Go nodig; te schrijven
+  in een editor of via het formulier op `/admin/regressie`. Formaat:
+
+```json
+{
+  "id": "20", "naam": "locatie via padnaam", "beschrijving": "optioneel",
+  "stappen": [
+    {"method": "POST", "path": "/locaties", "body": {"id": 42},
+     "verwacht": {"status": 201, "json": {"registratie_id": ">0"}},
+     "bewaar": {"regId": "registratie_id"}},
+    {"method": "GET", "path": "/registraties/{{regId}}",
+     "verwacht": {"status": 200, "json": {"registratietype": "registratie", "id": "{{regId}}"}}}
+  ]
+}
+```
+
+Per stap: `method` (default GET), `path`, optioneel `body`; `verwacht.status` (default 200),
+`verwacht.bevat` (substring), `verwacht.json` (gepunt pad → waarde; `">0"`, `">=1"`, `"<10"`,
+`"!=null"`, `"null"` of letterlijke waarde); `bewaar` (variabelenaam → gepunt pad). Variabelen zijn als
+`{{naam}}` bruikbaar in `path`, `body` en verwachtingswaarden; ingebouwd is
+`{{seedLaatsteRegistratieID}}`. Declaratieve scenario's draaien **na** de gecodeerde en na de
+seed — kies eigen id's (entiteit-id's ≥ 40) die niet met seed of andere scenario's botsen.
 
 ### Beleid voor bekende gaten
 
@@ -114,7 +144,11 @@ toont, ze alle of een selectie afspeelt en het resultaat live laat zien:
 - `GET /admin/regressie` — pagina (inline HTML, geen CDN); `GET …/scenarios` — lijst (geparsed
   uit `regressie_np_loc_test.go`); `GET …/status` — snapshot van de run;
   `POST …/run` — start `go test -tags integration -run '^TestRegressieNpLoc$/^(00|05|…)_' -json`.
-- Seed (00) en afhankelijkheden (06←05, 09←08) worden automatisch aan een selectie toegevoegd.
+- Seed (00) en afhankelijkheden (06←05, 09←08) worden automatisch aan een selectie toegevoegd; een
+  declaratief scenario wordt gedraaid als `^TestRegressieNpLoc$/^(00|90)_/^(<id>)_`.
+- Per scenario is de **inhoud** uitklapbaar: de Go-broncode van de subtest, of de JSON.
+- Onderaan staat een formulier **Nieuw declaratief scenario** (id, naam, stappen-JSON, overschrijven);
+  `POST /admin/regressie/scenarios` schrijft het bestand. Id's van gecodeerde scenario's zijn geblokkeerd.
 - Beveiliging als de overige `/admin/*`-routes: alleen in devtools-builds, rol `admin` bij
   `AUTH_ENABLED=true`, run vereist `DEVLOOP=true` + header `X-Beheer-Wachtwoord` (`DEVLOOP_PASSWORD`).
   Eén run tegelijk (409 bij samenloop). De dev-DSN wordt geweigerd.
@@ -129,7 +163,8 @@ Handmatig: `DEVLOOP=true DEVLOOP_PASSWORD=… PORT=8099 DATABASE_ADMIN_URL="" go
 
 ## Uitbreiden
 
-- Nieuw scenario: voeg een `t.Run("NN …", func(t *testing.T) { o := o.met(t); … })` toe; helpers
+- Nieuw scenario zonder Go: JSON in `regressie/scenarios/` (zie boven) of via de UI.
+- Nieuw gecodeerd scenario: voeg een `t.Run("NN …", func(t *testing.T) { o := o.met(t); … })` toe; helpers
   `o.eisStatus`, `o.do`, `actieveDataVeld`. Scenario's delen state en lopen in volgorde.
 - Ander domein: kopieer het bestand, wijzig seeds + padnamen; of parametriseer op domein.
 - Nieuwe seed: leg vast als replay-bestand (FE-replaypagina kan exporteren) en zet het in

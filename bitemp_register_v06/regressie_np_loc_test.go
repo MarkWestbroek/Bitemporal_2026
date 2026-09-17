@@ -597,6 +597,25 @@ func TestRegressieNpLoc(t *testing.T) {
 			t.Errorf("na logout: wil 401, kreeg %d", status)
 		}
 	})
+
+	// Declaratieve scenario's (regressie/scenarios/*.json) — zie regressie_declaratief_test.go.
+	// Draaien als laatste, na alle gecodeerde scenario's; elk als eigen sub-subtest
+	// zodat de regressie-UI ze afzonderlijk kan selecteren en tonen.
+	t.Run("90 declaratieve scenario's", func(t *testing.T) {
+		o := o.met(t)
+		scenarios := laadDeclaratieveScenarios(t)
+		if len(scenarios) == 0 {
+			t.Skip("geen declaratieve scenario's in " + declaratieveScenarioMap)
+		}
+		for _, sc := range scenarios {
+			sc := sc
+			t.Run(sc.ID+" "+sc.Naam, func(t *testing.T) {
+				o := o.met(t)
+				vars := map[string]string{"seedLaatsteRegistratieID": fmt.Sprint(seedRegistraties)}
+				o.voerDeclaratiefUit(t, sc, vars)
+			})
+		}
+	})
 }
 
 func mustJSON(v any) string {
