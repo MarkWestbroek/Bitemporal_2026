@@ -16,7 +16,7 @@
  * (bestaande labelOffsets worden wél gerespecteerd).
  */
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
-import { CANONIEK_UML_ID, canoniekUmlDiagramType } from "./index.js";
+import { CANONIEK_UML_ID, canoniekUmlDiagramType, isRefLijstItem } from "./index.js";
 import { vertaalbareVelden } from "./mappingV3Canoniek.js";
 
 /**
@@ -25,6 +25,10 @@ import { vertaalbareVelden } from "./mappingV3Canoniek.js";
  */
 const profielVelden = (elementTypeId) =>
   vertaalbareVelden(canoniekUmlDiagramType.elementTypes.find((et) => et.id === elementTypeId));
+
+/** Terugreis: de in de inspector bewerkte profielvelden (winnen van data.bron). */
+const bewerkt = (elementTypeId, data) =>
+  Object.fromEntries(profielVelden(elementTypeId).filter((k) => k in data).map((k) => [k, data[k]]));
 
 /** Type-kolomtekst voor een veld — zelfde opbouw als EntiteitNode. */
 export function veldTypeLabel(v) {
@@ -95,6 +99,9 @@ function naarCoreElement(el) {
       bron: d,
     },
   };
+  // Bewerkbare profiel-properties (1-op-1, mappingV3Canoniek.js) in data;
+  // typespecifieke code hieronder mag ze nog verfijnen.
+  for (const k of profielVelden(el.type)) if (d[k]) basis.data[k] = d[k];
 
   switch (el.type) {
     case "entiteit": {
@@ -105,10 +112,6 @@ function naarCoreElement(el) {
     }
     case "gegevenselement":
     case "relatie": {
-      if (el.type === "gegevenselement") {
-        // Bewerkbare GE-properties (index.js) lezen uit data, niet uit bron.
-        for (const k of profielVelden("gegevenselement")) if (d[k]) basis.data[k] = d[k];
-      }
       if (el.type === "relatie" && d.relatieSubtype === "referentielijst_items") {
         basis.data.stereotype = "«ref.lijst items»";
       }
@@ -510,7 +513,7 @@ function parseTypeLabel(label, coreElements) {
       const b = el.data?.bron || {};
       return { type: b.basistype || "string", format: b.format || "", datatypeNaam: schoon };
     }
-    if (el.elementType === "entiteit" && el.data?.stereotype === "«ref.lijst item»") {
+    if (isRefLijstItem(el)) {
       return { type: "integer", format: "", refItemNaam: schoon };
     }
   }
@@ -616,6 +619,7 @@ export function naarCanoniekModel(coreState) {
           domein: domeinVoor(el),
           data: {
             ...bron,
+            ...bewerkt("entiteit", d),
             typenaam: el.naam,
             kleur: d.kleur ?? bron.kleur,
             isAbstract: d.abstract === true,
@@ -634,7 +638,7 @@ export function naarCanoniekModel(coreState) {
           data: {
             ...bron,
             // In de inspector bewerkte GE-velden winnen van de heenreis-kopie.
-            ...Object.fromEntries(profielVelden("gegevenselement").filter((k) => k in d).map((k) => [k, d[k]])),
+            ...bewerkt("gegevenselement", d),
             klassenaam: el.naam,
             typenaam: ("typenaam" in d ? d.typenaam : bron.typenaam) || el.naam,
             kleur: d.kleur ?? bron.kleur,
@@ -653,6 +657,7 @@ export function naarCanoniekModel(coreState) {
           domein: domeinVoor(el),
           data: {
             ...bron,
+            ...bewerkt("relatie", d),
             typenaam: el.naam,
             kleur: d.kleur ?? bron.kleur,
             isMaterieel: d.materieel === true,
@@ -664,7 +669,7 @@ export function naarCanoniekModel(coreState) {
             directioneel: d.directioneel ?? bron.directioneel,
             geordend: d.geordend ?? bron.geordend,
             momentvoorkomen:
-              bronKard === "0..1" || bronKard === "1" ? "enkelvoudig" : "meervoudig",
+              bronKard === "0..1" || bronKard === "1" || bronKard === "1..1" ? "enkelvoudig" : "meervoudig",
             velden: basisVelden(),
             afgeleideVelden: basisAfgeleid(),
           },
@@ -752,7 +757,7 @@ export function naarCanoniekModel(coreState) {
               ...(bestaand?.data || {}),
               ...(d.bron || {}),
               // In de inspector bewerkte waarden winnen van de heenreis-kopie.
-              ...Object.fromEntries(profielVelden("compositie").filter((k) => k in d).map((k) => [k, d[k]])),
+              ...bewerkt("compositie", d),
             },
           });
           compositieHandles.set(sleutel, {

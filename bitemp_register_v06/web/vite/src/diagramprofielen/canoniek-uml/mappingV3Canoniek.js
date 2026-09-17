@@ -29,7 +29,7 @@
 export const EIGEN_VERTALING = new Set(["kleur", "materieel", "domein"]);
 
 /** Elementtypen waarvan de properties 1-op-1 tussen sandbox en oude vorm gaan. */
-export const GENERIEKE_TYPES = new Set(["gegevenselement", "compositie"]);
+export const GENERIEKE_TYPES = new Set(["entiteit", "gegevenselement", "relatie", "compositie"]);
 
 /**
  * @param {{id: string, properties?: Array<{key: string}>}|undefined|null} elementType

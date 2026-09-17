@@ -426,12 +426,26 @@ fase 2 een **bewerkbare sandbox**:
   `index.js` verschijnt dus in de inspector én gaat mee naar IDE-store en V3.
   Twee bewuste uitzonderingen, allebei adapter-kennis:
   `EIGEN_VERTALING` (`kleur`, `materieel` ↔ `isMaterieel`, `domein` naast
-  `data`) en `GENERIEKE_TYPES` (nu `gegevenselement` en `compositie`;
-  gegevenstype/enumeratie hebben een eigen structuur in de oude vorm).
-  `mappingV3Canoniek.test.js` bewaakt dat élk vertaalbaar profielveld heen én terug gaat.
+  `data`) en `GENERIEKE_TYPES` (`entiteit`, `gegevenselement`, `relatie`,
+  `compositie`; gegevenstype/enumeratie hebben een eigen structuur in de oude
+  vorm). `mappingV3Canoniek.test.js` bewaakt dat élke profiel-property van die
+  typen heen én terug gaat — de test leest de properties rechtstreeks uit het
+  profiel, zodat hij faalt als een type uit `GENERIEKE_TYPES` valt.
   De migratie krijgt de elementtypen mee (`migreerModel: (state) =>
   vouwOudeComposities(state, elementTypes)`) — geen import van `index.js`,
   dus geen importkring.
+- **Entiteit- en relatievelden bewerkbaar (2026-09-17).** Zoals *Details* in
+  de oude IDE. Entiteit: beschrijving, meervoud, materieel, kleur, subtype.
+  Relatie: domein, beschrijving, meervoud, materieel, kleur, subtype,
+  kardinaliteit bron/doel, label heen/terug, gericht, geordend. Bewust géén
+  aparte *typenaam* (de oude IDE houdt die gelijk aan de naam; de terugreis zet
+  `typenaam := naam`, en bij een entiteit is dat ook de V3-id — hernoemen is
+  getest) en bij de entiteit géén *domein* (dat is het package). Het
+  **stereotype volgt het subtype** via de nieuwe core-hook
+  `ElementType.hooks.stereotype(element)` (`undefined` = het opgeslagen
+  `data.stereotype`, voor sandboxen zonder subtype-sleutel);
+  `isRefLijstItem()` in `index.js` vervangt de losse stereotype-vergelijkingen.
+  De terugreis telt kardinaliteit `1..1` nu ook als enkelvoudig.
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.

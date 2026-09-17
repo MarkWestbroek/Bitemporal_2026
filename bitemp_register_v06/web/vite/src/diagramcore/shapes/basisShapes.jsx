@@ -21,12 +21,18 @@ import { TypeIcoon } from "./typeIconen.jsx";
  */
 function NodeTypering({ element, elementType }) {
   const d = element.data || {};
+  // Profiel-hook `stereotype(element)`: afgeleid uit bewerkbare data (bv. een
+  // subtype). `undefined` = geen mening → opgeslagen data.stereotype; een lege
+  // string = het type-stereotype.
+  const afgeleid = elementType.hooks?.stereotype?.(element);
+  const stereotype =
+    afgeleid !== undefined ? afgeleid || elementType.stereotype : d.stereotype || elementType.stereotype;
   return (
     <>
       <div className="dc-type-icoon">
         <TypeIcoon elementType={elementType} maat={13} />
       </div>
-      <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+      <div className="dc-stereotype">{stereotype || ""}</div>
     </>
   );
 }

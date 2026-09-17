@@ -115,3 +115,16 @@ test("vult GE-velden (typenaam, beschrijving, meervoud, labels) aan uit data.bro
   assert.equal(r.elements.Y.data.meervoud, "", "leeggemaakt blijft leeg");
   assert.equal(vouw(r), null);
 });
+
+test("vult ook entiteit- en relatievelden (subtype, beschrijving) aan uit data.bron", () => {
+  const s = oudeSandbox();
+  s.meta.compositiesGevouwen = true;
+  s.diagrams.d1.edges = [];
+  s.elements.B = { ...s.elements.B, data: { stereotype: "«referentielijst»", bron: { entiteitSubtype: "referentielijst", description: "Lijst" } } };
+  s.elements.R = { id: "R", naam: "R", elementType: "relatie", source: "B", target: "B", compartimenten: [], data: { bron: { relatieSubtype: "associatie", meervoud: "rs" } } };
+  const r = vouw(s);
+  assert.equal(r.elements.B.data.entiteitSubtype, "referentielijst");
+  assert.equal(r.elements.B.data.description, "Lijst");
+  assert.equal(r.elements.R.data.relatieSubtype, "associatie");
+  assert.equal(r.elements.R.data.meervoud, "rs");
+});

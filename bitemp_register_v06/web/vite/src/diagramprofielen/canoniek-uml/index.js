@@ -87,6 +87,47 @@ function regelVelden(paren) {
     .map(([sleutel, waarde]) => ({ naam: `${sleutel}: ${waarde}`, fieldType: "regel" }));
 }
 
+// Subtypes zoals in de oude IDE (ide/DetailsPanel.jsx: ENTITEIT_/RELATIE_SUBTYPES).
+const opties = (lijst) => lijst.map((w) => ({ waarde: w, label: w || "—" }));
+const ENTITEIT_SUBTYPES = ["", "kernentiteit", "subentiteit", "referentielijst", "referentielijst_item"];
+const RELATIE_SUBTYPES = ["", "samenstelling", "associatie", "generalisatie", "referentielijst_items"];
+const KARDINALITEITEN = ["", "0..1", "0..*", "1..1", "1..*"];
+
+/** Stereotype dat een subtype oplegt (anders het type-stereotype). */
+const SUBTYPE_STEREOTYPE = {
+  referentielijst: "«referentielijst»",
+  referentielijst_item: "«ref.lijst item»",
+  referentielijst_items: "«ref.lijst items»",
+};
+
+/**
+ * Stereotype-hook (core: NodeTypering): volgt het bewerkbare subtype. Zolang
+ * het element nog geen subtype-sleutel heeft (oude sandbox vóór migratie)
+ * `undefined` → de core valt terug op het bij het inladen gezette
+ * `data.stereotype`.
+ */
+function stereotypeUitSubtype(sleutel) {
+  return (element) => {
+    const d = element.data || {};
+    if (!(sleutel in d)) return undefined;
+    return SUBTYPE_STEREOTYPE[d[sleutel]] || "";
+  };
+}
+
+/** Referentielijst-item-entiteit — volgt het subtype, met terugval op het oude stereotype. */
+export function isRefLijstItem(el) {
+  if (el?.elementType !== "entiteit") return false;
+  const d = el.data || {};
+  return "entiteitSubtype" in d
+    ? d.entiteitSubtype === "referentielijst_item"
+    : d.stereotype === "«ref.lijst item»";
+}
+
+/** Beschrijving en meervoud: zoals "Details" in de oude IDE voor ENT/GE/REL. */
+const BESCHRIJVING_VELD = { key: "description", label: "beschrijving", datatype: "tekst" };
+const MEERVOUD_VELD = { key: "meervoud", label: "meervoud", datatype: "string", placeholder: "bijv. Personen" };
+const MATERIEEL_VELD = { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" };
+
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
   {
@@ -97,8 +138,17 @@ const elementTypes = [
     shape: "class-box",
     kleur: "#bfdbfe",
     icoon: "klasse",
+    // Velden als "Details" in de oude IDE. Typenaam = naam (de oude IDE houdt
+    // ze gelijk; de terugreis zet typenaam := naam) en domein = het package
+    // waar de entiteit in staat — daarom geen aparte properties.
     // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
-    properties: [KLEUR_VELD, { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" }],
+    properties: [
+      BESCHRIJVING_VELD,
+      MEERVOUD_VELD,
+      MATERIEEL_VELD,
+      KLEUR_VELD,
+      { key: "entiteitSubtype", label: "subtype", datatype: "keuze", opties: opties(ENTITEIT_SUBTYPES) },
+    ],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -113,6 +163,7 @@ const elementTypes = [
       { id: "overerving", label: null, fieldType: "attribuut", alleenWeergave: true },
     ],
     hooks: {
+      stereotype: stereotypeUitSubtype("entiteitSubtype"),
       /**
        * Overgeërfde velden (weergave-compartiment, niet in het element zelf):
        * volg de generalisatie-connectoren kind → ouder en toon de velden van
@@ -176,9 +227,9 @@ const elementTypes = [
     properties: [
       { key: "typenaam", label: "typenaam", datatype: "string", placeholder: "bijv. NatuurlijkPersoon_Naam" },
       { key: "domein", label: "domein", datatype: "string" },
-      { key: "description", label: "beschrijving", datatype: "tekst" },
-      { key: "meervoud", label: "meervoud", datatype: "string", placeholder: "bijv. namen" },
-      { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" },
+      BESCHRIJVING_VELD,
+      { ...MEERVOUD_VELD, placeholder: "bijv. namen" },
+      MATERIEEL_VELD,
       KLEUR_VELD,
       { key: "naamLabelHeen", label: "label heen", datatype: "string", placeholder: "bijv. heeft" },
       { key: "naamLabelTerug", label: "label terug", datatype: "string", placeholder: "bijv. behoort bij" },
@@ -206,9 +257,21 @@ const elementTypes = [
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["entiteit"] },
     edgePresentatie: { lijn: "solid", kleur: "#64748b" },
+    // Velden als "Details" in de oude IDE, plus de kardinaliteiten en
+    // gericht (die de oude IDE via de lijnen bewerkte). Typenaam = naam (de
+    // terugreis zet typenaam := naam); doel-entiteit = het doel van de lijn.
     properties: [
+      { key: "domein", label: "domein", datatype: "string" },
+      BESCHRIJVING_VELD,
+      MEERVOUD_VELD,
+      MATERIEEL_VELD,
       KLEUR_VELD,
-      { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" },
+      { key: "relatieSubtype", label: "subtype", datatype: "keuze", opties: opties(RELATIE_SUBTYPES) },
+      { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "keuze", opties: opties(KARDINALITEITEN) },
+      { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "keuze", opties: opties(KARDINALITEITEN) },
+      { key: "naamLabelHeen", label: "label heen", datatype: "string", placeholder: "bijv. woont op" },
+      { key: "naamLabelTerug", label: "label terug", datatype: "string", placeholder: "bijv. is woonadres van" },
+      { key: "directioneel", label: "gericht (→ doel)", datatype: "boolean" },
       { key: "geordend", label: "geordend {ordered}", datatype: "boolean" },
     ],
     compartments: [
@@ -216,6 +279,7 @@ const elementTypes = [
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
     ],
     hooks: {
+      stereotype: stereotypeUitSubtype("relatieSubtype"),
       /** Labels voor de gematerialiseerde/kale gedaante (UML-conventies). */
       edgeLabels: (conn) => {
         const d = conn.data || {};
@@ -548,7 +612,7 @@ const referenceResolvers = {
   refitem: ({ elements }) =>
     elementKandidaten(
       elements,
-      (el) => el.elementType === "entiteit" && el.data?.stereotype === "«ref.lijst item»",
+      isRefLijstItem,
       "▣",
       "Referentielijst-items",
       (el) => `${el.naam} (ref.lijst)`

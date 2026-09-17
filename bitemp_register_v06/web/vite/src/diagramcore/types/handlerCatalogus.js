@@ -74,6 +74,11 @@ registreerHandlerInfo("hook", "migreerModel", {
   beschrijving:
     "Brengt een opgeslagen (persistente) sandbox bij met de huidige profielvorm — bv. oude presentatie-edges omzetten naar connectoren. Idempotent; geeft null als er niets te doen is.",
 });
+registreerHandlerInfo("hook", "stereotype", {
+  naam: "Stereotype (afgeleid)",
+  beschrijving:
+    "Leidt het stereotype op de node af uit element-data (bv. een subtype). undefined = opgeslagen stereotype gebruiken, lege string = het type-stereotype.",
+});
 registreerHandlerInfo("hook", "valideer", {
   naam: "Validatie",
   beschrijving: "Valideert element-data bij bewerking (profiel-eigen regels).",
