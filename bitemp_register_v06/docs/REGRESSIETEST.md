@@ -121,7 +121,7 @@ toont, ze alle of een selectie afspeelt en het resultaat live laat zien:
 - Vereist Go-toolchain + broncode in de API-omgeving (zoals de devloop-container) en een Postgres
   op de opgegeven DSN (default `REGRESSIE_DATABASE_URL` of 5433).
 
-**Snelstart:** `.\scriptsegressie-ui.ps1` — start/maakt de Postgres-container (5433) en de eigen
+**Snelstart:** `.\scripts\regressie-ui.ps1` — start/maakt de Postgres-container (5433) en de eigen
 API-database, en draait een devtools-build op **http://localhost:8099/admin/regressie**
 (wachtwoord default `regressie`, aanpasbaar met `-Wachtwoord`; poort met `-Port`). Ctrl+C stopt.
 Deze instantie staat volledig los van je dev-omgeving (5432/8082): eigen poort, eigen databases.
