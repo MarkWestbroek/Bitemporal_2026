@@ -93,9 +93,10 @@ export function bepaalOpnames(elements, diagram, elementTypesById) {
  * @param {Object} geheel
  * @param {Array<{deel: Object, connector: Object}>} delen
  * @param {Record<string, Object>} elementTypesById
+ * @param {Record<string, Object>|null} [elements]  voor de edgeLabels-hook
  * @returns {Object|null}  compartiment `{compartmentType, velden}` of null
  */
-export function opnameCompartiment(geheel, delen, elementTypesById) {
+export function opnameCompartiment(geheel, delen, elementTypesById, elements = null) {
   if (!delen?.length) return null;
   const geheelType = elementTypesById[geheel?.elementType];
   const eersteOpname = elementTypesById[delen[0].deel.elementType]?.opname || {};
@@ -105,7 +106,7 @@ export function opnameCompartiment(geheel, delen, elementTypesById) {
   const velden = delen.map(({ deel, connector }) => {
     const deelType = elementTypesById[deel.elementType];
     const connType = elementTypesById[connector.elementType];
-    const labels = connType?.hooks?.edgeLabels?.(connector) || {};
+    const labels = connType?.hooks?.edgeLabels?.(connector, { elements }) || {};
     const deelLabels = labels.doel?.length
       ? labels.doel
       : (labels.kaal || []).filter((l) => l.zijde === "doel");

@@ -94,3 +94,19 @@ test("vult ontbrekende compositie-velden (jsonRolnaam) aan uit data.bron, maar l
   assert.equal(r.elements.comp_se2.data.kardinaliteit, "", "leeggemaakt blijft leeg");
   assert.equal(vouwOudeComposities(r), null, "daarna niets meer te doen");
 });
+
+test("vult GE-velden (typenaam, beschrijving, meervoud, labels) aan uit data.bron", () => {
+  const s = oudeSandbox();
+  s.meta.compositiesGevouwen = true;
+  s.diagrams.d1.edges = [];
+  s.elements.Y = {
+    ...s.elements.Y,
+    data: { meervoud: "", bron: { typenaam: "B_Y", description: "Uitleg", meervoud: "ys", naamLabelHeen: "heeft" } },
+  };
+  const r = vouwOudeComposities(s);
+  assert.equal(r.elements.Y.data.typenaam, "B_Y");
+  assert.equal(r.elements.Y.data.description, "Uitleg");
+  assert.equal(r.elements.Y.data.naamLabelHeen, "heeft");
+  assert.equal(r.elements.Y.data.meervoud, "", "leeggemaakt blijft leeg");
+  assert.equal(vouwOudeComposities(r), null);
+});

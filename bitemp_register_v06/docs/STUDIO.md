@@ -411,6 +411,16 @@ fase 2 een **bewerkbare sandbox**:
   ontbrekende `jsonRolnaam` aangevuld uit `data.bron`. De core-`keuze`-editor
   toont een opgeslagen waarde buiten de lijst (bv. `1`) als eigen optie in
   plaats van stil de eerste optie.
+- **GE-velden bewerkbaar (2026-09-17).** `gegevenselement` toont dezelfde
+  velden als *Details* in de oude IDE: typenaam, domein, beschrijving
+  (`description`), meervoud, materieel, kleur, label heen/terug. De sleutels
+  zijn die van de oude datavorm (`GE_VELDEN` in `canoniek-uml/migratie.js`);
+  de heenreis zet ze in `data`, de terugreis schrijft bewerkte waarden terug
+  (typenaam valt bij leegmaken terug op de klassenaam). Eerder ingeladen GE's
+  krijgen ontbrekende sleutels aangevuld uit `data.bron`. **Leesrichtingen
+  horen bij de GE:** de `edgeLabels`-hook krijgt nu `ctx.elements` en de
+  compositie leest label heen/terug van haar GE (de connector-kopie is alleen
+  terugval). `PropertyType.placeholder` is nieuw in de core.
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.

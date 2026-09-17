@@ -287,3 +287,14 @@ test("compositie komt mee op een nieuw diagram, met ruit en labels uit de profie
     assert.ok(teksten.includes(verwacht), `label "${verwacht}" ontbreekt (labels: ${teksten.join(", ")})`);
   }
 });
+
+test("compositie-labels: leesrichting komt van de GE, de connector-kopie is terugval", () => {
+  const comp = canoniekUmlDiagramType.elementTypes.find((et) => et.id === "compositie");
+  const conn = { id: "c", source: "E", target: "G", data: { rolnaam: "adres", naamLabelHeen: "oud" } };
+  const teksten = (ctx) => (comp.hooks.edgeLabels(conn, ctx).kaal || []).flatMap((l) => l.delen.map((d) => d.tekst));
+  assert.ok(teksten(undefined).includes("▶ oud"));
+  const elements = { G: { id: "G", data: { naamLabelHeen: "woont op", naamLabelTerug: "hoort bij" } } };
+  assert.ok(teksten({ elements }).includes("▶ woont op"));
+  assert.ok(teksten({ elements }).includes("◀ hoort bij"));
+  assert.ok(!teksten({ elements }).includes("▶ oud"));
+});

@@ -169,7 +169,19 @@ const elementTypes = [
       labelIngebed: "Neem op in entiteit",
       labelLos: "Toon als los gegevenselement",
     },
-    properties: [KLEUR_VELD, { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" }],
+    // Zelfde velden en volgorde als "Details" in de oude IDE; sleutels = de
+    // oude datavorm (GE_VELDEN in migratie.js), de terugreis schrijft terug.
+    // Label heen/terug tekent de compositie (edgeLabels leest ze van de GE).
+    properties: [
+      { key: "typenaam", label: "typenaam", datatype: "string", placeholder: "bijv. NatuurlijkPersoon_Naam" },
+      { key: "domein", label: "domein", datatype: "string" },
+      { key: "description", label: "beschrijving", datatype: "tekst" },
+      { key: "meervoud", label: "meervoud", datatype: "string", placeholder: "bijv. namen" },
+      { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" },
+      KLEUR_VELD,
+      { key: "naamLabelHeen", label: "label heen", datatype: "string", placeholder: "bijv. heeft" },
+      { key: "naamLabelTerug", label: "label terug", datatype: "string", placeholder: "bijv. behoort bij" },
+    ],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -418,8 +430,12 @@ const elementTypes = [
        * adapter.presentatieVoorEdge): rolnaam, kardinaliteit en
        * {enkelvoudig|meervoudig} aan de GE-kant; heen/terug-namen erbij.
        */
-      edgeLabels: (conn) => {
-        const d = conn.data || {};
+      edgeLabels: (conn, ctx) => {
+        // Leesrichtingen horen (zoals in de oude IDE) bij de GE; de kopie op
+        // de connector (heenreis) is alleen nog terugval.
+        const ge = ctx?.elements?.[conn.target]?.data || {};
+        const d = { ...(conn.data || {}) };
+        for (const k of ["naamLabelHeen", "naamLabelTerug"]) if (k in ge) d[k] = ge[k];
         const kaal = [];
         const delen = [];
         if (d.rolnaam) delen.push({ tekst: d.rolnaam, soort: "rolnaam" });

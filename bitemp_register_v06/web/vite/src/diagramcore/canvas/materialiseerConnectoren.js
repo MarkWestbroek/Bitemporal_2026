@@ -23,7 +23,7 @@
  *     hiermee ingebouwd gedrag).
  *
  * Labels komen uit de optionele profiel-hook
- * `elementType.hooks.edgeLabels(connector)` →
+ * `elementType.hooks.edgeLabels(connector, { elements })` →
  *   { bron?: Label[], doel?: Label[], kaal?: Label[] } (ConnectorEdge-vorm).
  *
  * Puur en store-loos: testbaar met kale objecten.
@@ -209,7 +209,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     const zwevendBron = zwevendKant(el.source, bronHandle);
     const zwevendDoel = zwevendKant(el.target, doelHandle);
 
-    const labels = et.hooks?.edgeLabels?.(el) || {};
+    const labels = et.hooks?.edgeLabels?.(el, { elements }) || {};
     // Handmatig versleepte label-posities (data.labelOffsets, per zijde).
     const offsets = el.data?.labelOffsets || null;
     const metOffsets = (lijst) =>

@@ -484,3 +484,24 @@ test("store-round-trip: in 0.5 bewerkte compositie-velden (kardinaliteit, rolnam
   assert.equal(se1.data.jsonRolnaam, "adressen");
   assert.equal(se1.data.momentvoorkomen, "meervoudig");
 });
+
+test("store-round-trip: in 0.5 bewerkte GE-velden gaan terug naar de oude datavorm", () => {
+  const core = vanCanoniekModel(maakBronState());
+  const ge = core.elements.GE1;
+  ge.data = {
+    ...ge.data,
+    typenaam: "A_Adres",
+    description: "Adresgegevens",
+    meervoud: "adressen",
+    naamLabelHeen: "woont op",
+    naamLabelTerug: "is adres van",
+    domein: "np-loc",
+  };
+  const terug = naarCanoniekModel(core).elements.GE1;
+  assert.equal(terug.data.typenaam, "A_Adres");
+  assert.equal(terug.data.description, "Adresgegevens");
+  assert.equal(terug.data.meervoud, "adressen");
+  assert.equal(terug.data.naamLabelHeen, "woont op");
+  assert.equal(terug.data.naamLabelTerug, "is adres van");
+  assert.equal(terug.domein, "np-loc");
+});

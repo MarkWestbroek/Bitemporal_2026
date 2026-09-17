@@ -19,10 +19,11 @@
  * markeert dat de meta-kopie verwerkt is, zodat een compositie die je daarna
  * zelf in de sandbox verwijdert niet terugkomt.
  *
- * Tweede stap (17-09): connectoren die vóór de compositie-properties zijn
- * gevouwen missen `data.jsonRolnaam` (die zat alleen in `data.bron`). Een
- * ontbrekende sleutel wordt aangevuld uit `data.bron`; een sleutel die er al
- * is (ook leeg, na bewerken) blijft staan.
+ * Tweede stap (17-09): elementen die vóór de bewerkbare properties zijn
+ * ingeladen missen die sleutels in `data` (ze zaten alleen in `data.bron`):
+ * `jsonRolnaam` op composities, typenaam/beschrijving/meervoud/labels op
+ * GE's. Een ontbrekende sleutel wordt aangevuld uit `data.bron`; een sleutel
+ * die er al is (ook leeg, na bewerken) blijft staan.
  *
  * Puur en store-loos: testbaar met kale objecten.
  */
@@ -35,6 +36,16 @@ import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnect
  */
 export const COMPOSITIE_VELDEN = ["rolnaam", "jsonRolnaam", "kardinaliteit", "momentvoorkomen"];
 const OVERNEMEN = COMPOSITIE_VELDEN;
+
+/**
+ * Bewerkbare GE-velden (properties van `gegevenselement`, als "Details" in de
+ * oude IDE). Sleutels = de oude datavorm, zodat de terugreis ze 1-op-1
+ * terugschrijft. Domein, kleur en materieel had de heenreis al.
+ */
+export const GE_VELDEN = ["typenaam", "description", "meervoud", "naamLabelHeen", "naamLabelTerug"];
+
+/** Welke data-sleutels per elementtype uit `data.bron` aangevuld worden. */
+const AANVULLEN = { compositie: COMPOSITIE_VELDEN, gegevenselement: GE_VELDEN };
 
 /** Is deze presentatie-edge een (oude) compositie ENT → GE? */
 function isOudeCompositie(edge, elements) {
@@ -64,10 +75,11 @@ export function vouwOudeComposities(state) {
   // Aanvullen uit data.bron (zie kop). Werkt op een kopie van de elementen.
   let aangevuld = null;
   for (const el of Object.values(elements)) {
-    if (el.elementType !== "compositie") continue;
+    const velden = AANVULLEN[el.elementType];
+    if (!velden) continue;
     const d = el.data || {};
     const bron = d.bron || {};
-    const ontbrekend = COMPOSITIE_VELDEN.filter((k) => !(k in d) && bron[k]);
+    const ontbrekend = velden.filter((k) => !(k in d) && bron[k]);
     if (!ontbrekend.length) continue;
     aangevuld = aangevuld || { ...elements };
     aangevuld[el.id] = { ...el, data: { ...d, ...Object.fromEntries(ontbrekend.map((k) => [k, bron[k]])) } };

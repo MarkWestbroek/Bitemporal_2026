@@ -17,7 +17,7 @@
  */
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
 import { CANONIEK_UML_ID } from "./index.js";
-import { COMPOSITIE_VELDEN } from "./migratie.js";
+import { COMPOSITIE_VELDEN, GE_VELDEN } from "./migratie.js";
 
 /** Type-kolomtekst voor een veld — zelfde opbouw als EntiteitNode. */
 export function veldTypeLabel(v) {
@@ -98,6 +98,10 @@ function naarCoreElement(el) {
     }
     case "gegevenselement":
     case "relatie": {
+      if (el.type === "gegevenselement") {
+        // Bewerkbare GE-properties (index.js) lezen uit data, niet uit bron.
+        for (const k of GE_VELDEN) if (d[k]) basis.data[k] = d[k];
+      }
       if (el.type === "relatie" && d.relatieSubtype === "referentielijst_items") {
         basis.data.stereotype = "«ref.lijst items»";
       }
@@ -622,8 +626,10 @@ export function naarCanoniekModel(coreState) {
           domein: domeinVoor(el),
           data: {
             ...bron,
+            // In de inspector bewerkte GE-velden winnen van de heenreis-kopie.
+            ...Object.fromEntries(GE_VELDEN.filter((k) => k in d).map((k) => [k, d[k]])),
             klassenaam: el.naam,
-            typenaam: bron.typenaam || el.naam,
+            typenaam: ("typenaam" in d ? d.typenaam : bron.typenaam) || el.naam,
             kleur: d.kleur ?? bron.kleur,
             isMaterieel: d.materieel === true,
             velden: basisVelden(),

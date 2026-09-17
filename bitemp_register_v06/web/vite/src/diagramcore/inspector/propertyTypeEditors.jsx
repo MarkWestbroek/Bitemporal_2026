@@ -38,7 +38,7 @@ function StringEditor({ regel, waarde, onChange }) {
     <input
       type="text"
       value={waarde ?? ""}
-      placeholder={regel.label || regel.key}
+      placeholder={regel.placeholder || regel.label || regel.key}
       onChange={(e) => onChange(e.target.value)}
     />
   );

@@ -51,6 +51,7 @@
  * @property {{waarde: string, label: string}[]} [opties] - bij datatype "keuze":
  *   de vaste lijst (bv. BPMN-event-soorten, ArchiMate-access lezen/schrijven)
  * @property {boolean} [verplicht]
+ * @property {string} [placeholder]        - voorbeeldtekst in een leeg invoerveld
  * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
  */
 

@@ -57,7 +57,7 @@ registreerHandlerInfo("hook", "extraCompartimenten", {
 registreerHandlerInfo("hook", "edgeLabels", {
   naam: "Edge-labels",
   beschrijving:
-    "Bepaalt de labels op een connector (kardinaliteiten, rolnamen, «stereotype»-teksten) uit de connector-data, per zijde en voor de kale gedaante.",
+    "Bepaalt de labels op een connector (kardinaliteiten, rolnamen, «stereotype»-teksten) uit de connector-data (en via ctx.elements eventueel uit bron/doel), per zijde en voor de kale gedaante.",
 });
 registreerHandlerInfo("hook", "edgePresentatie", {
   naam: "Edge-presentatie (dynamisch)",

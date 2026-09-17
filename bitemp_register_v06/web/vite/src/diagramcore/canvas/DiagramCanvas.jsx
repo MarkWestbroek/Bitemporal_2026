@@ -218,7 +218,7 @@ function CanvasBinnenkant({
   const verrijk = useCallback(
     (element, elementType) => {
       const extra = [...(elementType.hooks?.extraCompartimenten?.(element, { elements }) || [])];
-      const opgenomen = opnameCompartiment(element, opnames.delenVan.get(element.id), lookups.elementTypesById);
+      const opgenomen = opnameCompartiment(element, opnames.delenVan.get(element.id), lookups.elementTypesById, elements);
       if (opgenomen) extra.push(opgenomen);
       if (!extra.length) return element;
       return { ...element, compartimenten: [...(element.compartimenten || []), ...extra] };
