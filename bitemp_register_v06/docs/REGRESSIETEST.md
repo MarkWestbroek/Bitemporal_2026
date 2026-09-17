@@ -147,6 +147,9 @@ toont, ze alle of een selectie afspeelt en het resultaat live laat zien:
 - Seed (00) en afhankelijkheden (06←05, 09←08) worden automatisch aan een selectie toegevoegd; een
   declaratief scenario wordt gedraaid als `^TestRegressieNpLoc$/^(00|90)_/^(<id>)_`.
 - Per scenario is de **inhoud** uitklapbaar: de Go-broncode van de subtest, of de JSON.
+- Bij scenario **00** zijn ook de **seed-replaybestanden** uitklapbaar: per bestand een samenvatting
+  per entry (index, registratietype, opmerking, verwachte status, welke opvoer/afvoer) plus de ruwe
+  JSON. De lijst volgt `REGRESSIE_SEEDS` of anders `defaultSeeds` uit het testbestand.
 - Onderaan staat een formulier **Nieuw declaratief scenario** (id, naam, stappen-JSON, overschrijven);
   `POST /admin/regressie/scenarios` schrijft het bestand. Id's van gecodeerde scenario's zijn geblokkeerd.
 - Beveiliging als de overige `/admin/*`-routes: alleen in devtools-builds, rol `admin` bij

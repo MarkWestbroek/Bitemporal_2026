@@ -58,11 +58,106 @@ var (
 )
 
 type regressieScenario struct {
-	ID      string `json:"id"`
-	Naam    string `json:"naam"`
-	Soort   string `json:"soort"`             // "go" (gecodeerd) | "json" (declaratief)
-	Bestand string `json:"bestand,omitempty"` // bij json: bestandsnaam
-	Inhoud  string `json:"inhoud"`            // Go-broncode van de subtest, of de JSON
+	ID      string          `json:"id"`
+	Naam    string          `json:"naam"`
+	Soort   string          `json:"soort"`             // "go" (gecodeerd) | "json" (declaratief)
+	Bestand string          `json:"bestand,omitempty"` // bij json: bestandsnaam
+	Inhoud  string          `json:"inhoud"`            // Go-broncode van de subtest, of de JSON
+	Seeds   []regressieSeed `json:"seeds,omitempty"`   // alleen bij "00": de replay-bestanden
+}
+
+// regressieSeed is één replay-bestand dat scenario 00 afspeelt, met een leesbare
+// samenvatting per entry naast de ruwe JSON.
+type regressieSeed struct {
+	Bestand      string   `json:"bestand"`
+	Aantal       int      `json:"aantal"`
+	Samenvatting []string `json:"samenvatting"`
+	Inhoud       string   `json:"inhoud"`
+	Fout         string   `json:"fout,omitempty"`
+}
+
+var regressieSeedsRE = regexp.MustCompile(`(?s)defaultSeeds = \[\]string\{(.*?)\}`)
+
+// leesRegressieSeeds bepaalt de seed-bestanden (REGRESSIE_SEEDS, anders defaultSeeds
+// uit het testbestand) en leest ze in met een samenvatting per replay-entry.
+func leesRegressieSeeds(testSrc string) []regressieSeed {
+	var paden []string
+	if env := strings.TrimSpace(os.Getenv("REGRESSIE_SEEDS")); env != "" {
+		for _, p := range strings.Split(env, ";") {
+			if p = strings.TrimSpace(p); p != "" {
+				paden = append(paden, p)
+			}
+		}
+	} else if m := regressieSeedsRE.FindStringSubmatch(testSrc); len(m) == 2 {
+		for _, q := range regexp.MustCompile(`"([^"]+)"`).FindAllStringSubmatch(m[1], -1) {
+			paden = append(paden, q[1])
+		}
+	}
+
+	var out []regressieSeed
+	for _, pad := range paden {
+		seed := regressieSeed{Bestand: pad}
+		raw, err := os.ReadFile(filepath.Join(resolveAppDir(), pad))
+		if err != nil {
+			seed.Fout = "kan bestand niet lezen: " + err.Error()
+			out = append(out, seed)
+			continue
+		}
+		seed.Inhoud = string(raw)
+		var rb struct {
+			Entries []struct {
+				RequestPath          string `json:"request_path"`
+				ExpectedResponseCode *int   `json:"expected_response_code"`
+				RequestBody          struct {
+					Registratie struct {
+						Registratietype string `json:"registratietype"`
+						Opmerking       string `json:"opmerking"`
+					} `json:"registratie"`
+					Wijzigingen []map[string]map[string]any `json:"wijzigingen"`
+				} `json:"request_body"`
+			} `json:"entries"`
+		}
+		if err := json.Unmarshal(raw, &rb); err != nil {
+			seed.Fout = "geen geldig replay-bestand: " + err.Error()
+			out = append(out, seed)
+			continue
+		}
+		seed.Aantal = len(rb.Entries)
+		for i, e := range rb.Entries {
+			// Per entry: welke opvoer/afvoer (o:/a: + veldnaam), herhalingen samengevouwen (×n).
+			telling := map[string]int{}
+			for _, w := range e.RequestBody.Wijzigingen {
+				for modus, rep := range w {
+					for veldnaam := range rep {
+						telling[modus[:1]+":"+veldnaam]++
+					}
+				}
+			}
+			delen := make([]string, 0, len(telling))
+			for k, n := range telling {
+				if n > 1 {
+					k = fmt.Sprintf("%s×%d", k, n)
+				}
+				delen = append(delen, k)
+			}
+			sort.Strings(delen)
+			verwacht := 201
+			if e.ExpectedResponseCode != nil {
+				verwacht = *e.ExpectedResponseCode
+			}
+			seed.Samenvatting = append(seed.Samenvatting, fmt.Sprintf("%2d  %-14s %-42s → %d  [%s]",
+				i, e.RequestBody.Registratie.Registratietype, kortTekst(e.RequestBody.Registratie.Opmerking, 42), verwacht, strings.Join(delen, " ")))
+		}
+		out = append(out, seed)
+	}
+	return out
+}
+
+func kortTekst(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n-1] + "…"
 }
 
 type regressieResultaat struct {
@@ -118,7 +213,11 @@ func leesGecodeerdeScenarios() ([]regressieScenario, error) {
 		if einde >= 0 {
 			inhoud = src[start : loc[1]+einde+len("\n\t})")]
 		}
-		out = append(out, regressieScenario{ID: id, Naam: naam, Soort: "go", Inhoud: inhoud})
+		sc := regressieScenario{ID: id, Naam: naam, Soort: "go", Inhoud: inhoud}
+		if id == "00" {
+			sc.Seeds = leesRegressieSeeds(src)
+		}
+		out = append(out, sc)
 	}
 	if len(out) == 0 {
 		return nil, fmt.Errorf("geen scenario's gevonden in %s", pad)
@@ -626,8 +725,13 @@ const regressiePaginaHTML = `<!DOCTYPE html>
       const duur = r && r.duur_s ? r.duur_s.toFixed(2) + 's' : '';
       const out = r && r.output && r.output.length ? '<details><summary>output (' + r.output.length + ')</summary><pre>' + esc(r.output.join('\n')) + '</pre></details>' : '';
       const inhoud = s.inhoud ? '<details><summary>inhoud (' + (s.soort === 'json' ? esc(s.bestand || 'json') : 'Go') + ')</summary><pre>' + esc(s.inhoud) + '</pre></details>' : '';
+      const seeds = (s.seeds || []).map(sd => sd.fout
+        ? '<details><summary class="waarschuwing">seed: ' + esc(sd.bestand) + ' — ' + esc(sd.fout) + '</summary></details>'
+        : '<details><summary>seed: ' + esc(sd.bestand) + ' (' + sd.aantal + ' registraties)</summary>' +
+          '<pre>' + esc((sd.samenvatting || []).join('\n')) + '</pre>' +
+          '<details><summary>ruwe JSON</summary><pre>' + esc(sd.inhoud) + '</pre></details></details>').join('');
       const vast = s.id === '00' ? ' checked disabled title="seed draait altijd mee"' : (gekozen[s.id] ? ' checked' : '');
-      return '<tr><td><input type="checkbox" data-id="' + esc(s.id) + '"' + vast + '></td><td>' + esc(s.id) + '</td><td>' + esc(s.naam) + '<span class="soort">' + esc(s.soort) + '</span>' + inhoud + out + '</td><td>' + badge + '</td><td>' + duur + '</td></tr>';
+      return '<tr><td><input type="checkbox" data-id="' + esc(s.id) + '"' + vast + '></td><td>' + esc(s.id) + '</td><td>' + esc(s.naam) + '<span class="soort">' + esc(s.soort) + '</span>' + inhoud + seeds + out + '</td><td>' + badge + '</td><td>' + duur + '</td></tr>';
     }).join('');
   }
 
