@@ -6,6 +6,11 @@ import assert from "node:assert/strict";
 
 import { vouwOudeComposities } from "./migratie.js";
 import { vanCanoniekModel } from "./adapter.js";
+import { canoniekUmlDiagramType } from "./index.js";
+
+/** Het profiel is de bron van de veldnamen: altijd de echte elementtypen meegeven. */
+const TYPES = canoniekUmlDiagramType.elementTypes;
+const vouw = (state) => vouwOudeComposities(state, TYPES);
 
 /** Sandbox zoals de heenreis hem vóór 2026-09-15 opsloeg. */
 function oudeSandbox() {
@@ -41,7 +46,7 @@ function oudeSandbox() {
 }
 
 test("vouwt oude presentatie-edges én meta-composities tot connectoren", () => {
-  const r = vouwOudeComposities(oudeSandbox());
+  const r = vouw(oudeSandbox());
   const comps = Object.values(r.elements).filter((e) => e.elementType === "compositie");
   assert.deepEqual(comps.map((c) => `${c.source}->${c.target}`).sort(), ["B->X", "B->Y", "B->Z"]);
 
@@ -60,22 +65,22 @@ test("vouwt oude presentatie-edges én meta-composities tot connectoren", () => 
 });
 
 test("idempotent: tweede ronde doet niets", () => {
-  const eerste = vouwOudeComposities(oudeSandbox());
-  assert.equal(vouwOudeComposities(eerste), null);
+  const eerste = vouw(oudeSandbox());
+  assert.equal(vouw(eerste), null);
 });
 
 test("een na de migratie verwijderde compositie komt niet terug uit meta", () => {
-  const eerste = vouwOudeComposities(oudeSandbox());
+  const eerste = vouw(oudeSandbox());
   const { comp_se3: _weg, ...zonderZ } = eerste.elements;
-  assert.equal(vouwOudeComposities({ ...eerste, elements: zonderZ }), null);
+  assert.equal(vouw({ ...eerste, elements: zonderZ }), null);
 });
 
 test("bestaande connector wordt niet verdubbeld; lege sandbox doet niets", () => {
   const s = oudeSandbox();
   s.elements.c = { id: "c", elementType: "compositie", source: "B", target: "X", data: {} };
-  const r = vouwOudeComposities(s);
+  const r = vouw(s);
   assert.equal(Object.values(r.elements).filter((e) => e.target === "X" && e.elementType === "compositie").length, 1);
-  assert.equal(vouwOudeComposities({ elements: {}, diagrams: {}, meta: {} }), null);
+  assert.equal(vouw({ elements: {}, diagrams: {}, meta: {} }), null);
 });
 
 test("een verse heenreis is al gevouwen", () => {
@@ -84,15 +89,15 @@ test("een verse heenreis is al gevouwen", () => {
 });
 
 test("vult ontbrekende compositie-velden (jsonRolnaam) aan uit data.bron, maar laat bewerkte waarden staan", () => {
-  const eerste = vouwOudeComposities(oudeSandbox());
+  const eerste = vouw(oudeSandbox());
   const comp = eerste.elements.comp_se1;
   // Vóór de compositie-properties gevouwen: jsonRolnaam alleen in bron.
   const oud = { ...comp, data: { ...comp.data, bron: { ...comp.data.bron, jsonRolnaam: "xen" } } };
   const bewerkt = { ...eerste.elements.comp_se2, data: { ...eerste.elements.comp_se2.data, kardinaliteit: "", bron: { kardinaliteit: "0..1" } } };
-  const r = vouwOudeComposities({ ...eerste, elements: { ...eerste.elements, comp_se1: oud, comp_se2: bewerkt } });
+  const r = vouw({ ...eerste, elements: { ...eerste.elements, comp_se1: oud, comp_se2: bewerkt } });
   assert.equal(r.elements.comp_se1.data.jsonRolnaam, "xen");
   assert.equal(r.elements.comp_se2.data.kardinaliteit, "", "leeggemaakt blijft leeg");
-  assert.equal(vouwOudeComposities(r), null, "daarna niets meer te doen");
+  assert.equal(vouw(r), null, "daarna niets meer te doen");
 });
 
 test("vult GE-velden (typenaam, beschrijving, meervoud, labels) aan uit data.bron", () => {
@@ -103,10 +108,10 @@ test("vult GE-velden (typenaam, beschrijving, meervoud, labels) aan uit data.bro
     ...s.elements.Y,
     data: { meervoud: "", bron: { typenaam: "B_Y", description: "Uitleg", meervoud: "ys", naamLabelHeen: "heeft" } },
   };
-  const r = vouwOudeComposities(s);
+  const r = vouw(s);
   assert.equal(r.elements.Y.data.typenaam, "B_Y");
   assert.equal(r.elements.Y.data.description, "Uitleg");
   assert.equal(r.elements.Y.data.naamLabelHeen, "heeft");
   assert.equal(r.elements.Y.data.meervoud, "", "leeggemaakt blijft leeg");
-  assert.equal(vouwOudeComposities(r), null);
+  assert.equal(vouw(r), null);
 });

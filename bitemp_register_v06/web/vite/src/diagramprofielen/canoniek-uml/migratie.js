@@ -20,32 +20,16 @@
  * zelf in de sandbox verwijdert niet terugkomt.
  *
  * Tweede stap (17-09): elementen die vóór de bewerkbare properties zijn
- * ingeladen missen die sleutels in `data` (ze zaten alleen in `data.bron`):
- * `jsonRolnaam` op composities, typenaam/beschrijving/meervoud/labels op
- * GE's. Een ontbrekende sleutel wordt aangevuld uit `data.bron`; een sleutel
- * die er al is (ook leeg, na bewerken) blijft staan.
+ * ingeladen missen die sleutels in `data` (ze zaten alleen in `data.bron`),
+ * bv. `jsonRolnaam` op composities of typenaam/meervoud op GE's. Welke
+ * sleutels dat zijn volgt uit het profiel (mappingV3Canoniek.js). Een ontbrekende
+ * sleutel wordt aangevuld uit `data.bron`; een sleutel die er al is (ook
+ * leeg, na bewerken) blijft staan.
  *
  * Puur en store-loos: testbaar met kale objecten.
  */
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
-
-/**
- * Bewerkbare velden van een compositie-connector (de properties van het
- * `compositie`-type): de heenreis kopieert ze uit de structurele edge naar
- * `data`, de terugreis schrijft de in 0.5 bewerkte waarden terug.
- */
-export const COMPOSITIE_VELDEN = ["rolnaam", "jsonRolnaam", "kardinaliteit", "momentvoorkomen"];
-const OVERNEMEN = COMPOSITIE_VELDEN;
-
-/**
- * Bewerkbare GE-velden (properties van `gegevenselement`, als "Details" in de
- * oude IDE). Sleutels = de oude datavorm, zodat de terugreis ze 1-op-1
- * terugschrijft. Domein, kleur en materieel had de heenreis al.
- */
-export const GE_VELDEN = ["typenaam", "description", "meervoud", "naamLabelHeen", "naamLabelTerug"];
-
-/** Welke data-sleutels per elementtype uit `data.bron` aangevuld worden. */
-const AANVULLEN = { compositie: COMPOSITIE_VELDEN, gegevenselement: GE_VELDEN };
+import { vertaalbareVeldenPerType } from "./mappingV3Canoniek.js";
 
 /** Is deze presentatie-edge een (oude) compositie ENT → GE? */
 function isOudeCompositie(edge, elements) {
@@ -57,10 +41,12 @@ function isOudeCompositie(edge, elements) {
 
 /**
  * @param {{elements: Record<string, Object>, diagrams: Record<string, Object>, meta?: Object}} state
+ * @param {Array<Object>} [elementTypes]  de elementtypen van het profiel (bron van de veldnamen)
  * @returns {{elements: Record<string, Object>, diagrams: Record<string, Object>, meta: Object} | null}
  *   de bijgewerkte delen, of null als er niets te doen is
  */
-export function vouwOudeComposities(state) {
+export function vouwOudeComposities(state, elementTypes = []) {
+  const veldenPerType = vertaalbareVeldenPerType(elementTypes);
   const elements = state?.elements || {};
   const diagrams = state?.diagrams || {};
   const meta = state?.meta || {};
@@ -75,7 +61,7 @@ export function vouwOudeComposities(state) {
   // Aanvullen uit data.bron (zie kop). Werkt op een kopie van de elementen.
   let aangevuld = null;
   for (const el of Object.values(elements)) {
-    const velden = AANVULLEN[el.elementType];
+    const velden = veldenPerType[el.elementType];
     if (!velden) continue;
     const d = el.data || {};
     const bron = d.bron || {};
@@ -119,7 +105,7 @@ export function vouwOudeComposities(state) {
     const geBron = elements[target]?.data?.bron || {};
 
     const data = { bron: ed, structuralEdgeId };
-    for (const k of OVERNEMEN) if (ed[k]) data[k] = ed[k];
+    for (const k of veldenPerType.compositie || []) if (ed[k]) data[k] = ed[k];
     const heen = ed.naamLabelHeen || geBron.naamLabelHeen;
     const terug = ed.naamLabelTerug || geBron.naamLabelTerug;
     if (heen) data.naamLabelHeen = heen;

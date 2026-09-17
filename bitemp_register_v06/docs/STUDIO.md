@@ -406,21 +406,32 @@ fase 2 een **bewerkbare sandbox**:
   dezelfde velden als *Edge* in de oude IDE-details: rolnaam, JSON rolnaam,
   momentvoorkomen en kardinaliteit (keuzelijst `0..1`/`0..*`/`1..1`/`1..*`).
   De terugreis schrijft in 0.5 bewerkte waarden over de heenreis-kopie
-  (`data.bron`) heen naar de structurele edge (`COMPOSITIE_VELDEN` in
-  `canoniek-uml/migratie.js`). Connectoren die eerder gevouwen zijn krijgen een
+  (`data.bron`) heen naar de structurele edge. Connectoren die eerder gevouwen zijn krijgen een
   ontbrekende `jsonRolnaam` aangevuld uit `data.bron`. De core-`keuze`-editor
   toont een opgeslagen waarde buiten de lijst (bv. `1`) als eigen optie in
   plaats van stil de eerste optie.
 - **GE-velden bewerkbaar (2026-09-17).** `gegevenselement` toont dezelfde
   velden als *Details* in de oude IDE: typenaam, domein, beschrijving
   (`description`), meervoud, materieel, kleur, label heen/terug. De sleutels
-  zijn die van de oude datavorm (`GE_VELDEN` in `canoniek-uml/migratie.js`);
-  de heenreis zet ze in `data`, de terugreis schrijft bewerkte waarden terug
+  zijn die van de oude datavorm; de heenreis zet ze in `data`, de terugreis schrijft bewerkte waarden terug
   (typenaam valt bij leegmaken terug op de klassenaam). Eerder ingeladen GE's
   krijgen ontbrekende sleutels aangevuld uit `data.bron`. **Leesrichtingen
   horen bij de GE:** de `edgeLabels`-hook krijgt nu `ctx.elements` en de
   compositie leest label heen/terug van haar GE (de connector-kopie is alleen
   terugval). `PropertyType.placeholder` is nieuw in de core.
+- **Het profiel is de bron van de veldnamen (2026-09-17).** Heenreis,
+  terugreis en migratie lezen welke velden 1-op-1 meegaan uit de
+  `properties` van het elementtype (`canoniek-uml/mappingV3Canoniek.js`,
+  `vertaalbareVelden`); er is geen aparte veldlijst meer. Een property erbij in
+  `index.js` verschijnt dus in de inspector én gaat mee naar IDE-store en V3.
+  Twee bewuste uitzonderingen, allebei adapter-kennis:
+  `EIGEN_VERTALING` (`kleur`, `materieel` ↔ `isMaterieel`, `domein` naast
+  `data`) en `GENERIEKE_TYPES` (nu `gegevenselement` en `compositie`;
+  gegevenstype/enumeratie hebben een eigen structuur in de oude vorm).
+  `mappingV3Canoniek.test.js` bewaakt dat élk vertaalbaar profielveld heen én terug gaat.
+  De migratie krijgt de elementtypen mee (`migreerModel: (state) =>
+  vouwOudeComposities(state, elementTypes)`) — geen import van `index.js`,
+  dus geen importkring.
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.

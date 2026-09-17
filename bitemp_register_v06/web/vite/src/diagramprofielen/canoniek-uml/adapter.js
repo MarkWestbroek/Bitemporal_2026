@@ -16,8 +16,15 @@
  * (bestaande labelOffsets worden wél gerespecteerd).
  */
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
-import { CANONIEK_UML_ID } from "./index.js";
-import { COMPOSITIE_VELDEN, GE_VELDEN } from "./migratie.js";
+import { CANONIEK_UML_ID, canoniekUmlDiagramType } from "./index.js";
+import { vertaalbareVelden } from "./mappingV3Canoniek.js";
+
+/**
+ * Veldnamen die 1-op-1 meegaan, uit het profiel (mappingV3Canoniek.js). Op aanroeptijd
+ * opgezocht: index.js is bij het laden van deze module mogelijk nog niet klaar.
+ */
+const profielVelden = (elementTypeId) =>
+  vertaalbareVelden(canoniekUmlDiagramType.elementTypes.find((et) => et.id === elementTypeId));
 
 /** Type-kolomtekst voor een veld — zelfde opbouw als EntiteitNode. */
 export function veldTypeLabel(v) {
@@ -100,7 +107,7 @@ function naarCoreElement(el) {
     case "relatie": {
       if (el.type === "gegevenselement") {
         // Bewerkbare GE-properties (index.js) lezen uit data, niet uit bron.
-        for (const k of GE_VELDEN) if (d[k]) basis.data[k] = d[k];
+        for (const k of profielVelden("gegevenselement")) if (d[k]) basis.data[k] = d[k];
       }
       if (el.type === "relatie" && d.relatieSubtype === "referentielijst_items") {
         basis.data.stereotype = "«ref.lijst items»";
@@ -370,7 +377,7 @@ export function vanCanoniekModel(state) {
     const ge = bronElements[e.target]?.data || {};
     const id = `comp_${e.id || sleutel}`;
     const data = { bron: ed, structuralEdgeId: e.id || null };
-    for (const sleutelNaam of COMPOSITIE_VELDEN) {
+    for (const sleutelNaam of profielVelden("compositie")) {
       if (ed[sleutelNaam]) data[sleutelNaam] = ed[sleutelNaam];
     }
     const heen = ed.naamLabelHeen || ge.naamLabelHeen;
@@ -627,7 +634,7 @@ export function naarCanoniekModel(coreState) {
           data: {
             ...bron,
             // In de inspector bewerkte GE-velden winnen van de heenreis-kopie.
-            ...Object.fromEntries(GE_VELDEN.filter((k) => k in d).map((k) => [k, d[k]])),
+            ...Object.fromEntries(profielVelden("gegevenselement").filter((k) => k in d).map((k) => [k, d[k]])),
             klassenaam: el.naam,
             typenaam: ("typenaam" in d ? d.typenaam : bron.typenaam) || el.naam,
             kleur: d.kleur ?? bron.kleur,
@@ -745,7 +752,7 @@ export function naarCanoniekModel(coreState) {
               ...(bestaand?.data || {}),
               ...(d.bron || {}),
               // In de inspector bewerkte waarden winnen van de heenreis-kopie.
-              ...Object.fromEntries(COMPOSITIE_VELDEN.filter((k) => k in d).map((k) => [k, d[k]])),
+              ...Object.fromEntries(profielVelden("compositie").filter((k) => k in d).map((k) => [k, d[k]])),
             },
           });
           compositieHandles.set(sleutel, {

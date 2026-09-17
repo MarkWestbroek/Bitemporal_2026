@@ -170,7 +170,8 @@ const elementTypes = [
       labelLos: "Toon als los gegevenselement",
     },
     // Zelfde velden en volgorde als "Details" in de oude IDE; sleutels = de
-    // oude datavorm (GE_VELDEN in migratie.js), de terugreis schrijft terug.
+    // oude datavorm. Het profiel is de bron: heenreis, terugreis en migratie
+    // lezen de veldnamen hieruit (mappingV3Canoniek.js).
     // Label heen/terug tekent de compositie (edgeLabels leest ze van de GE).
     properties: [
       { key: "typenaam", label: "typenaam", datatype: "string", placeholder: "bijv. NatuurlijkPersoon_Naam" },
@@ -397,7 +398,8 @@ const elementTypes = [
     edgePresentatie: { lijn: "solid", kleur: "#64748b", markerStart: "ruit" },
     // Dezelfde velden als "Edge" in de oude IDE-details (ide/DetailsPanel.jsx);
     // de terugreis (adapter.naarCanoniekModel) schrijft ze naar de
-    // structurele edge. Keuzelijsten = KARDINALITEIT_/MOMENTVOORKOMEN_OPTIES.
+    // structurele edge — veldnamen uit deze lijst (mappingV3Canoniek.js).
+    // Keuzelijsten = KARDINALITEIT_/MOMENTVOORKOMEN_OPTIES.
     properties: [
       { key: "rolnaam", label: "rolnaam", datatype: "string" },
       { key: "jsonRolnaam", label: "JSON rolnaam", datatype: "string" },
@@ -570,7 +572,7 @@ export const canoniekUmlDiagramType = {
      * Opgeslagen sandbox bijwerken: composities die nog als presentatie-edge
      * bestaan (vóór 2026-09-15) worden compositie-connectoren.
      */
-    migreerModel: vouwOudeComposities,
+    migreerModel: (state) => vouwOudeComposities(state, elementTypes),
     /**
      * Composities uit een V3-import zijn sinds de heenreis compositie-
      * connectoren (die de "compositie"-hiërarchie al dekt). Deze hook vangt
