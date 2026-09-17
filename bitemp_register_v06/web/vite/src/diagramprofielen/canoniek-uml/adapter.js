@@ -16,7 +16,19 @@
  * (bestaande labelOffsets worden wél gerespecteerd).
  */
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
-import { CANONIEK_UML_ID } from "./index.js";
+import { CANONIEK_UML_ID, canoniekUmlDiagramType, isRefLijstItem } from "./index.js";
+import { vertaalbareVelden } from "./mappingV3Canoniek.js";
+
+/**
+ * Veldnamen die 1-op-1 meegaan, uit het profiel (mappingV3Canoniek.js). Op aanroeptijd
+ * opgezocht: index.js is bij het laden van deze module mogelijk nog niet klaar.
+ */
+const profielVelden = (elementTypeId) =>
+  vertaalbareVelden(canoniekUmlDiagramType.elementTypes.find((et) => et.id === elementTypeId));
+
+/** Terugreis: de in de inspector bewerkte profielvelden (winnen van data.bron). */
+const bewerkt = (elementTypeId, data) =>
+  Object.fromEntries(profielVelden(elementTypeId).filter((k) => k in data).map((k) => [k, data[k]]));
 
 /** Type-kolomtekst voor een veld — zelfde opbouw als EntiteitNode. */
 export function veldTypeLabel(v) {
@@ -87,6 +99,9 @@ function naarCoreElement(el) {
       bron: d,
     },
   };
+  // Bewerkbare profiel-properties (1-op-1, mappingV3Canoniek.js) in data;
+  // typespecifieke code hieronder mag ze nog verfijnen.
+  for (const k of profielVelden(el.type)) if (d[k]) basis.data[k] = d[k];
 
   switch (el.type) {
     case "entiteit": {
@@ -365,7 +380,7 @@ export function vanCanoniekModel(state) {
     const ge = bronElements[e.target]?.data || {};
     const id = `comp_${e.id || sleutel}`;
     const data = { bron: ed, structuralEdgeId: e.id || null };
-    for (const sleutelNaam of ["rolnaam", "kardinaliteit", "momentvoorkomen"]) {
+    for (const sleutelNaam of profielVelden("compositie")) {
       if (ed[sleutelNaam]) data[sleutelNaam] = ed[sleutelNaam];
     }
     const heen = ed.naamLabelHeen || ge.naamLabelHeen;
@@ -465,6 +480,8 @@ export function vanCanoniekModel(state) {
     // Zonder deze kopie zou een compositie waarvan het kind op geen enkel
     // diagram staat (geen presentatie-edge) verloren gaan in de spiegel.
     meta: {
+      // De composities zijn hierboven al connectoren (zie migratie.js).
+      compositiesGevouwen: true,
       modelMeta: state?.modelMeta || null,
       domains: state?.domains || [],
       domainMeta: state?.domainMeta || {},
@@ -496,7 +513,7 @@ function parseTypeLabel(label, coreElements) {
       const b = el.data?.bron || {};
       return { type: b.basistype || "string", format: b.format || "", datatypeNaam: schoon };
     }
-    if (el.elementType === "entiteit" && el.data?.stereotype === "«ref.lijst item»") {
+    if (isRefLijstItem(el)) {
       return { type: "integer", format: "", refItemNaam: schoon };
     }
   }
@@ -602,6 +619,7 @@ export function naarCanoniekModel(coreState) {
           domein: domeinVoor(el),
           data: {
             ...bron,
+            ...bewerkt("entiteit", d),
             typenaam: el.naam,
             kleur: d.kleur ?? bron.kleur,
             isAbstract: d.abstract === true,
@@ -619,8 +637,10 @@ export function naarCanoniekModel(coreState) {
           domein: domeinVoor(el),
           data: {
             ...bron,
+            // In de inspector bewerkte GE-velden winnen van de heenreis-kopie.
+            ...bewerkt("gegevenselement", d),
             klassenaam: el.naam,
-            typenaam: bron.typenaam || el.naam,
+            typenaam: ("typenaam" in d ? d.typenaam : bron.typenaam) || el.naam,
             kleur: d.kleur ?? bron.kleur,
             isMaterieel: d.materieel === true,
             velden: basisVelden(),
@@ -637,6 +657,7 @@ export function naarCanoniekModel(coreState) {
           domein: domeinVoor(el),
           data: {
             ...bron,
+            ...bewerkt("relatie", d),
             typenaam: el.naam,
             kleur: d.kleur ?? bron.kleur,
             isMaterieel: d.materieel === true,
@@ -648,7 +669,7 @@ export function naarCanoniekModel(coreState) {
             directioneel: d.directioneel ?? bron.directioneel,
             geordend: d.geordend ?? bron.geordend,
             momentvoorkomen:
-              bronKard === "0..1" || bronKard === "1" ? "enkelvoudig" : "meervoudig",
+              bronKard === "0..1" || bronKard === "1" || bronKard === "1..1" ? "enkelvoudig" : "meervoudig",
             velden: basisVelden(),
             afgeleideVelden: basisAfgeleid(),
           },
@@ -732,7 +753,12 @@ export function naarCanoniekModel(coreState) {
             id: bestaand?.id || d.structuralEdgeId || undefined,
             source: el.source,
             target: el.target,
-            data: { ...(bestaand?.data || {}), ...(d.bron || {}) },
+            data: {
+              ...(bestaand?.data || {}),
+              ...(d.bron || {}),
+              // In de inspector bewerkte waarden winnen van de heenreis-kopie.
+              ...bewerkt("compositie", d),
+            },
           });
           compositieHandles.set(sleutel, {
             sourceHandle: d.sourceHandle || null,

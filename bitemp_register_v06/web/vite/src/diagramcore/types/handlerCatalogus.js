@@ -57,7 +57,7 @@ registreerHandlerInfo("hook", "extraCompartimenten", {
 registreerHandlerInfo("hook", "edgeLabels", {
   naam: "Edge-labels",
   beschrijving:
-    "Bepaalt de labels op een connector (kardinaliteiten, rolnamen, «stereotype»-teksten) uit de connector-data, per zijde en voor de kale gedaante.",
+    "Bepaalt de labels op een connector (kardinaliteiten, rolnamen, «stereotype»-teksten) uit de connector-data (en via ctx.elements eventueel uit bron/doel), per zijde en voor de kale gedaante.",
 });
 registreerHandlerInfo("hook", "edgePresentatie", {
   naam: "Edge-presentatie (dynamisch)",
@@ -68,6 +68,16 @@ registreerHandlerInfo("hook", "hierarchieParen", {
   naam: "Hiërarchie-paren",
   beschrijving:
     "Levert extra ouder→kind-paren aan de elementen-boom, voor relaties die niet als connector-element bestaan (bv. gespiegelde composities).",
+});
+registreerHandlerInfo("hook", "migreerModel", {
+  naam: "Model-migratie",
+  beschrijving:
+    "Brengt een opgeslagen (persistente) sandbox bij met de huidige profielvorm — bv. oude presentatie-edges omzetten naar connectoren. Idempotent; geeft null als er niets te doen is.",
+});
+registreerHandlerInfo("hook", "stereotype", {
+  naam: "Stereotype (afgeleid)",
+  beschrijving:
+    "Leidt het stereotype op de node af uit element-data (bv. een subtype). undefined = opgeslagen stereotype gebruiken, lege string = het type-stereotype.",
 });
 registreerHandlerInfo("hook", "valideer", {
   naam: "Validatie",

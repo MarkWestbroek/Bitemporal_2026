@@ -80,6 +80,42 @@ de override — dus ook de ASOC handmatig omschakelbaar.
   associatieklasse (box)" / "Toon als lijn (verbergt attributen)"; terug
   naar automatisch zodra de keuze weer met de inhoud overeenkomt.
 
+✅ **Opname — GE ín de entiteit (17-09, branch `feat/ge-opname-in-entiteit`).**
+Derde gedaante van een samenstel: het patroon ENT ◆── GE compact als
+sub-vakken in één compartiment van de ENT ("vak in een vak"). Mark: *een
+andere weergave van dezelfde elementen*, **per GE en per diagram** gekozen —
+dus nooit automatisch.
+
+- **Declaratie op het deel.** `ElementType.opname = { gedaante: "ingebed",
+  relatieTypes: ["compositie"], compartiment: "gegevenselementen", labelIngebed,
+  labelLos }` (canoniek-uml, op `gegevenselement`). Het geheel (`entiteit`)
+  heeft het compartiment `gegevenselementen` (`alleenWeergave`,
+  `verbergInInspector`) met fieldType `ingebedDeel` → nieuwe core-viewer
+  **`sub-vak`** (`basisShapes.jsx`).
+- **Keuze per voorkomen.** Hergebruikt `DiagramNode.gedaante` /
+  `zetNodeGedaante` van de samentrekking; positie en maat van het GE-voorkomen
+  blijven bewaard en zijn terug zodra je hem losmaakt.
+- **Eén beslisplek:** `diagramcore/canvas/opname.js` (`bepaalOpnames`, puur,
+  getest in `opname.test.js`). Een ingebed voorkomen rendert niet als node
+  (`DiagramCanvas`); de compositielijn vervalt; **andere lijnen van de GE
+  (bv. «use») hangen aan de ENT** (`materialiseerConnectoren`). Staat de ENT
+  niet op het diagram, dan blijft de GE gewoon zichtbaar. Een tweede,
+  niet-ingebed voorkomen van dezelfde GE blijft een losse node mét lijn.
+- **Kopregel** van het sub-vak: GE-naam vet, daarna rolnaam, kardinaliteit en
+  `{momentvoorkomen}` klein en niet vet (uit de `edgeLabels`-hook van de
+  compositie, zonder de ▶/◀-leesrichtingen), plus de *materieel*-badge.
+  Daaronder de compartimenten van de GE in descriptor-volgorde.
+- **Contextmenu (kop "Opname"):** op de GE → *Neem op in entiteit (ENT)*; op
+  de compositielijn → idem; op de ENT → per GE *Toon als los gegevenselement*
+  of *Neem op in entiteit*.
+- **Oude sandboxen:** opname vraagt een echte `compositie`-connector. Een
+  sandbox die vóór 15-09 geladen was, had ENT ◆ GE nog als presentatie-edge
+  (Marks X/Y-geval, 17-09). Die worden nu automatisch omgezet via
+  `hooks.migreerModel` — zie `docs/STUDIO.md` → "Composities zijn connectoren".
+- **Nog niet:** klikken op een sub-vak selecteert de ENT (niet de GE); de
+  keuze reist niet mee in de V3-export (net als maten en ASOC-overrides); een
+  vaste ENT-maat groeit niet mee (*Maat aanpassen aan inhoud*).
+
 Daarnaast is er core-datatype **`keuze`** bijgekomen (select over `PropertyType.opties`) en
 lijndikte per connector (`presentatie.dikte`).
 

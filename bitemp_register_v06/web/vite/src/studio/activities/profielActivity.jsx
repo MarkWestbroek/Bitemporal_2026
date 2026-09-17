@@ -255,7 +255,7 @@ function ProfielInspector() {
         <strong>Shapes:</strong> class-box, bol, note, rounded, boundary
       </p>
       <p style={blok}>
-        <strong>Veld-viewers:</strong> naam-type, waarde, tekst
+        <strong>Veld-viewers:</strong> naam-type, waarde, tekst, sub-vak
       </p>
       <p style={blok}>
         <strong>Property-datatypes:</strong> string, tekst, boolean, colour (+

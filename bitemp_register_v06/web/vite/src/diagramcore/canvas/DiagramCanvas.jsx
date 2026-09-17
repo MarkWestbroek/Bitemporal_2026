@@ -46,6 +46,7 @@ import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
 import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante, normaliseerHandle } from "./materialiseerConnectoren.js";
 import { voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
+import { bepaalOpnames, opnameCompartiment } from "./opname.js";
 
 import { ELEMENT_REF_MIME } from "./externDrop.js";
 
@@ -204,15 +205,25 @@ function CanvasBinnenkant({
     };
   }, [contextMenu]);
 
+  // Opname (opname.js): welke deel-voorkomens op dít diagram ín hun geheel
+  // staan. Die renderen niet als node; het geheel toont ze als sub-vak.
+  const opnames = useMemo(
+    () => bepaalOpnames(elements, diagram, lookups.elementTypesById),
+    [elements, diagram, lookups]
+  );
+
   // Afgeleide weergave-compartimenten (bv. overgeërfde velden) via de
-  // profiel-hook elementType.hooks.extraCompartimenten(element, ctx).
+  // profiel-hook elementType.hooks.extraCompartimenten(element, ctx), plus
+  // de sub-vakken van opgenomen delen.
   const verrijk = useCallback(
     (element, elementType) => {
-      const extra = elementType.hooks?.extraCompartimenten?.(element, { elements });
-      if (!extra?.length) return element;
+      const extra = [...(elementType.hooks?.extraCompartimenten?.(element, { elements }) || [])];
+      const opgenomen = opnameCompartiment(element, opnames.delenVan.get(element.id), lookups.elementTypesById, elements);
+      if (opgenomen) extra.push(opgenomen);
+      if (!extra.length) return element;
       return { ...element, compartimenten: [...(element.compartimenten || []), ...extra] };
     },
-    [elements]
+    [elements, opnames, lookups]
   );
 
   // Nodes als interne React Flow-state, gevoed vanuit de props. Nodig omdat
@@ -273,6 +284,9 @@ function CanvasBinnenkant({
         if (elementType.isConnector && effectieveConnectorGedaante(element, diagram) !== "box") {
           return null;
         }
+        // Opgenomen in zijn geheel (opname): geen eigen node; het lidmaatschap
+        // bewaart positie en maat voor als het deel weer losgemaakt wordt.
+        if (opnames.ingebedVoorkomens.has(voorkomenId(ref))) return null;
         // Rand-aanhechting (§3.1): een aangehecht rand-element rendert als
         // React Flow-kind van zijn gastheer (position = relatief) en beweegt
         // dus automatisch mee. De aanhechting zelf gebeurt in dragstop.
@@ -440,7 +454,7 @@ function CanvasBinnenkant({
         hd.some((e) => e.selected) ? hd.map((e) => (e.selected ? { ...e, selected: false } : e)) : hd
       );
     }
-  }, [diagram, elements, lookups, gematerialiseerd, verrijk, setNodes, bewerkbaar, onNodeSize, selectieId]);
+  }, [diagram, elements, lookups, gematerialiseerd, opnames, verrijk, setNodes, bewerkbaar, onNodeSize, selectieId]);
 
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
   // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —

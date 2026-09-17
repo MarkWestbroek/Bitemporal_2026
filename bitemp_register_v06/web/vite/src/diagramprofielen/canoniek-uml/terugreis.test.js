@@ -468,3 +468,40 @@ test("store-round-trip: gevouwen compositie behoudt edge-id, edge-data en (genor
   assert.equal(pe[0].sourceHandle, "source-left");
   assert.equal(pe[0].targetHandle, "target-top");
 });
+
+test("store-round-trip: in 0.5 bewerkte compositie-velden (kardinaliteit, rolnamen) gaan terug naar de structurele edge", () => {
+  const bron = maakBronState();
+  const core = vanCanoniekModel(bron);
+  const comp = Object.values(core.elements).find(
+    (el) => el.elementType === "compositie" && el.source === "A" && el.target === "GE1"
+  );
+  assert.ok(comp, "compositie-connector aanwezig");
+  comp.data = { ...comp.data, kardinaliteit: "1..*", rolnaam: "adressen", jsonRolnaam: "adressen", momentvoorkomen: "meervoudig" };
+
+  const se1 = naarCanoniekModel(core).structuralEdges.find((e) => e.source === "A" && e.target === "GE1");
+  assert.equal(se1.data.kardinaliteit, "1..*");
+  assert.equal(se1.data.rolnaam, "adressen");
+  assert.equal(se1.data.jsonRolnaam, "adressen");
+  assert.equal(se1.data.momentvoorkomen, "meervoudig");
+});
+
+test("store-round-trip: in 0.5 bewerkte GE-velden gaan terug naar de oude datavorm", () => {
+  const core = vanCanoniekModel(maakBronState());
+  const ge = core.elements.GE1;
+  ge.data = {
+    ...ge.data,
+    typenaam: "A_Adres",
+    description: "Adresgegevens",
+    meervoud: "adressen",
+    naamLabelHeen: "woont op",
+    naamLabelTerug: "is adres van",
+    domein: "np-loc",
+  };
+  const terug = naarCanoniekModel(core).elements.GE1;
+  assert.equal(terug.data.typenaam, "A_Adres");
+  assert.equal(terug.data.description, "Adresgegevens");
+  assert.equal(terug.data.meervoud, "adressen");
+  assert.equal(terug.data.naamLabelHeen, "woont op");
+  assert.equal(terug.data.naamLabelTerug, "is adres van");
+  assert.equal(terug.domein, "np-loc");
+});

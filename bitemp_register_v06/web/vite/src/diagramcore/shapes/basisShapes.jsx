@@ -21,12 +21,18 @@ import { TypeIcoon } from "./typeIconen.jsx";
  */
 function NodeTypering({ element, elementType }) {
   const d = element.data || {};
+  // Profiel-hook `stereotype(element)`: afgeleid uit bewerkbare data (bv. een
+  // subtype). `undefined` = geen mening → opgeslagen data.stereotype; een lege
+  // string = het type-stereotype.
+  const afgeleid = elementType.hooks?.stereotype?.(element);
+  const stereotype =
+    afgeleid !== undefined ? afgeleid || elementType.stereotype : d.stereotype || elementType.stereotype;
   return (
     <>
       <div className="dc-type-icoon">
         <TypeIcoon elementType={elementType} maat={13} />
       </div>
-      <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+      <div className="dc-stereotype">{stereotype || ""}</div>
     </>
   );
 }
@@ -36,10 +42,35 @@ const isDashed = (element, elementType) =>
   (element.data?.randStijl || elementType.randStijl) === "dashed";
 
 /** Eén veld-regel, gerenderd volgens de FieldTypeViewer (fieldType.viewer). */
-function VeldRegel({ veld, fieldType }) {
+function VeldRegel({ veld, fieldType, fieldTypesById, compartmentTypesById }) {
   const viewer = fieldType?.viewer || fieldType?.render || "naam-type";
   const d = veld.data || {};
 
+  if (viewer === "sub-vak") {
+    // Opname (diagramcore/canvas/opname.js): een deel dat ín zijn geheel
+    // getoond wordt — een vak in het vak. Kopregel: naam vet, daarna de
+    // relatie-labels (rolnaam, kardinaliteit, constraint) klein en niet vet,
+    // eventueel de materieel-badge; daaronder de compartimenten van het deel.
+    return (
+      <div className="dc-subvak" data-element-id={d.elementId || undefined}>
+        <div className="dc-subvak-kop">
+          <strong className="dc-subvak-naam">{veld.naam}</strong>
+          {(d.kop || []).map((deel, i) => (
+            <span key={i} className={"dc-subvak-meta is-" + (deel.soort || "tekst")}>
+              {deel.tekst}
+            </span>
+          ))}
+          {d.materieel && <span className="dc-badge dc-subvak-badge">materieel</span>}
+        </div>
+        <CompartimentLijst
+          element={{ compartimenten: d.compartimenten || [] }}
+          elementType={null}
+          fieldTypesById={fieldTypesById}
+          compartmentTypesById={compartmentTypesById}
+        />
+      </div>
+    );
+  }
   if (viewer === "waarde") {
     return <div className="dc-veld is-waarde">{veld.naam}</div>;
   }
@@ -82,7 +113,13 @@ export function CompartimentLijst({ element, elementType, fieldTypesById, compar
               <div className="dc-compartiment">
                 {ct?.label ? <div className="dc-compartiment-label">{ct.label}</div> : null}
                 {c.velden.map((v, j) => (
-                  <VeldRegel key={j} veld={v} fieldType={fieldTypesById?.[v.fieldType]} />
+                  <VeldRegel
+                    key={j}
+                    veld={v}
+                    fieldType={fieldTypesById?.[v.fieldType]}
+                    fieldTypesById={fieldTypesById}
+                    compartmentTypesById={compartmentTypesById}
+                  />
                 ))}
               </div>
             </div>

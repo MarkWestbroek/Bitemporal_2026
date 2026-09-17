@@ -50,6 +50,7 @@ import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
 import { staatMeerdereVoorkomensToe, vindVoorkomen } from "../../diagramcore/model/voorkomens.js";
 import { effectieveConnectorGedaante } from "../../diagramcore/canvas/materialiseerConnectoren.js";
+import { bepaalOpnames } from "../../diagramcore/canvas/opname.js";
 import { metGroepScheidingen } from "../../diagramcore/taskbar/scheidingen.js";
 
 /** Huidige export-voorkeuren → opties voor layoutApi.exporteerAfbeelding. */
@@ -133,6 +134,30 @@ export function maakDiagramActiviteit(opties) {
   const diagramTermMv = diagramTerm === "diagram" ? "diagrammen" : `${diagramTerm}en`;
 
   const useStore = createDiagramStore({ persistKey });
+  // Model-migratie (DiagramType.hooks.migreerModel): een persistente sandbox
+  // bewaart de vorm van het moment van inladen. Breng hem bij — direct na het
+  // hydrateren én na elke latere laad (project-import, herlaad). Buiten de
+  // undo-historie: een migratie is geen gebruikershandeling.
+  if (descriptor.hooks?.migreerModel) {
+    const migreer = (state) => {
+      const bijgewerkt = descriptor.hooks.migreerModel({
+        elements: state.elements,
+        diagrams: state.diagrams,
+        meta: state.meta,
+      });
+      if (!bijgewerkt) return;
+      const temporal = useStore.temporal?.getState?.();
+      temporal?.pause?.();
+      useStore.setState(bijgewerkt);
+      temporal?.resume?.();
+    };
+    migreer(useStore.getState());
+    useStore.subscribe((state, vorige) => {
+      if (state.elements !== vorige.elements || state.diagrams !== vorige.diagrams || state.meta !== vorige.meta) {
+        migreer(state);
+      }
+    });
+  }
   if (devHookNaam && typeof window !== "undefined" && import.meta.env && import.meta.env.DEV) {
     window[devHookNaam] = useStore;
   }
@@ -1823,6 +1848,67 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   },
                 });
               }
+              // Opname (gedaanten van een samenstel): een deel (bv. GE) ín zijn
+              // geheel (ENT) tonen, of weer los — per voorkomen, dus per
+              // diagram. Op het deel: "neem op"; op het geheel: per deel
+              // opnemen of losmaken.
+              if (s.actiefDiagramId) {
+                const diagram = s.diagrams[s.actiefDiagramId];
+                const nodes = diagram?.nodes || [];
+                const opDiagram = (elId) => nodes.some((n) => n.elementId === elId);
+                const opnameRelatie = (deelId) => {
+                  const opname = elementTypesById[s.elements[deelId]?.elementType]?.opname;
+                  if (!opname) return null;
+                  const conn = Object.values(s.elements).find(
+                    (el) => el.target === deelId && el.source !== deelId &&
+                      (opname.relatieTypes || []).includes(el.elementType)
+                  );
+                  return conn ? { opname, conn } : null;
+                };
+                const zetDeel = (deelId, gedaante, alleenVoorkomen = null) => {
+                  const st = useStore.getState();
+                  const d = st.diagrams[st.actiefDiagramId];
+                  const doelen = alleenVoorkomen
+                    ? [alleenVoorkomen]
+                    : (d?.nodes || []).filter((n) => n.elementId === deelId).map((n) => n.nodeId || n.elementId);
+                  for (const sleutel of doelen) st.zetNodeGedaante(st.actiefDiagramId, sleutel, gedaante);
+                };
+                const opnameItems = [];
+                const alsDeel = opnameRelatie(nodeId);
+                if (alsDeel && opDiagram(alsDeel.conn.source)) {
+                  const geheel = s.elements[alsDeel.conn.source];
+                  opnameItems.push({
+                    id: "opname-neem-op",
+                    label: `${alsDeel.opname.labelIngebed || "Neem op in geheel"}${geheel?.naam ? ` (${geheel.naam})` : ""}`,
+                    icoon: "⊟",
+                    onClick: () => zetDeel(nodeId, alsDeel.opname.gedaante, voorkomenId || nodeId),
+                  });
+                }
+                const opgenomen = bepaalOpnames(s.elements, diagram, elementTypesById).delenVan.get(nodeId) || [];
+                const opgenomenIds = new Set(opgenomen.map((x) => x.deel.id));
+                for (const { deel } of opgenomen) {
+                  const opname = elementTypesById[deel.elementType]?.opname;
+                  opnameItems.push({
+                    id: `opname-los-${deel.id}`,
+                    label: `${opname?.labelLos || "Toon los"}: ${deel.naam || deel.id}`,
+                    icoon: "⊞",
+                    onClick: () => zetDeel(deel.id, null),
+                  });
+                }
+                for (const el of Object.values(s.elements)) {
+                  if (el.source !== nodeId || el.target === nodeId || opgenomenIds.has(el.target)) continue;
+                  const rel = opnameRelatie(el.target);
+                  if (!rel || rel.conn.id !== el.id || !opDiagram(el.target)) continue;
+                  const deel = s.elements[el.target];
+                  opnameItems.push({
+                    id: `opname-neem-op-${deel.id}`,
+                    label: `${rel.opname.labelIngebed || "Neem op in geheel"}: ${deel.naam || deel.id}`,
+                    icoon: "⊟",
+                    onClick: () => zetDeel(deel.id, rel.opname.gedaante),
+                  });
+                }
+                if (opnameItems.length) items.push({ sep: true }, { kop: true, label: "Opname" }, ...opnameItems);
+              }
               return items;
             })()
           : []);
@@ -1872,6 +1958,31 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                           connectorId,
                           (doel === "box") === heeftInhoud ? null : doel
                         );
+                      },
+                    },
+                  ];
+                })(),
+                // Opname: de relatie geheel ◆── deel "inklappen" door het deel
+                // ín het geheel te tonen (zet de gedaante op de deel-voorkomens).
+                ...(() => {
+                  const s = useStore.getState();
+                  const conn = s.elements[connectorId];
+                  const deel = s.elements[conn?.target];
+                  const opname = elementTypesById[deel?.elementType]?.opname;
+                  if (!opname || !s.actiefDiagramId || conn.source === conn.target) return [];
+                  if (!(opname.relatieTypes || []).includes(conn.elementType)) return [];
+                  const geheel = s.elements[conn.source];
+                  return [
+                    {
+                      id: "opname-neem-op",
+                      label: `${opname.labelIngebed || "Neem op in geheel"}${geheel?.naam ? ` (${deel.naam || deel.id} → ${geheel.naam})` : ""}`,
+                      icoon: "⊟",
+                      onClick: () => {
+                        const st = useStore.getState();
+                        const d = st.diagrams[st.actiefDiagramId];
+                        for (const n of (d?.nodes || []).filter((x) => x.elementId === deel.id)) {
+                          st.zetNodeGedaante(st.actiefDiagramId, n.nodeId || n.elementId, opname.gedaante);
+                        }
                       },
                     },
                   ];

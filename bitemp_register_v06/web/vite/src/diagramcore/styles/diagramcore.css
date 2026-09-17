@@ -319,6 +319,44 @@
   white-space: nowrap;
 }
 
+/* Opname: een deel ín zijn geheel (viewer "sub-vak", zie canvas/opname.js).
+   Een vak in het vak: dunne rand, de vulling van het deel-type is bewust
+   weggelaten zodat het geheel de kleur houdt. De geneste compartimenten
+   krijgen minder binnenruimte dan op een losse node. */
+.dc-subvak {
+  border: 1px solid var(--dc-node-rand, #94a3b8);
+  border-radius: 3px;
+  margin: 4px 0;
+  background: color-mix(in srgb, var(--dc-node-vulling, #ffffff) 55%, transparent);
+}
+.dc-subvak-kop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.dc-subvak-naam {
+  font-weight: 600;
+  color: #1e293b;
+}
+.dc-subvak-meta {
+  font-size: 10px;
+  font-weight: 400;
+  color: #64748b;
+}
+.dc-subvak-badge {
+  margin-top: 0;
+}
+.dc-subvak .dc-divider {
+  margin: 0;
+}
+.dc-subvak .dc-compartiment {
+  padding: 2px 8px 3px;
+}
+
 /* === Handles === */
 
 /* Handles zijn hulpchrome, geen diagraminhoud — het zijn tool-dingen, geen
