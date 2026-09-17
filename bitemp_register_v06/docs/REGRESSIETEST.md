@@ -15,6 +15,7 @@ Bestanden:
 |---|---|
 | `regressie_np_loc_test.go` | de test zelf (`//go:build integration`, package `main`) |
 | `scripts/regressie-np-loc.ps1` | runner: start een dedicated Postgres-container (poort **5433**) en draait de test |
+| `scripts/regressie-ui.ps1` | start de devtools-API (8099) voor de regressie-UI, incl. container + eigen DB |
 | `postman/regressie-np-loc.postman_collection.json` + `…environment.json` | dezelfde scenario's voor handmatig prikken of `newman run` |
 | `handlers/regressie_ui_handler.go` | devtools-pagina `/admin/regressie` om de suite vanuit de browser te draaien |
 | `replay files/registraties-replay-synth-natuurlijkpersoon-locatie-woonadres.json` | seed: 5 NP's + 5 locaties + woonadres-links (15 registraties) |
@@ -120,8 +121,11 @@ toont, ze alle of een selectie afspeelt en het resultaat live laat zien:
 - Vereist Go-toolchain + broncode in de API-omgeving (zoals de devloop-container) en een Postgres
   op de opgegeven DSN (default `REGRESSIE_DATABASE_URL` of 5433).
 
-Lokaal proberen: `DEVLOOP=true DEVLOOP_PASSWORD=… PORT=8099 DATABASE_ADMIN_URL="" go run -tags devtools .`
-en open <http://localhost:8099/admin/regressie>.
+**Snelstart:** `.\scriptsegressie-ui.ps1` — start/maakt de Postgres-container (5433) en de eigen
+API-database, en draait een devtools-build op **http://localhost:8099/admin/regressie**
+(wachtwoord default `regressie`, aanpasbaar met `-Wachtwoord`; poort met `-Port`). Ctrl+C stopt.
+Deze instantie staat volledig los van je dev-omgeving (5432/8082): eigen poort, eigen databases.
+Handmatig: `DEVLOOP=true DEVLOOP_PASSWORD=… PORT=8099 DATABASE_ADMIN_URL="" go run -tags devtools .`
 
 ## Uitbreiden
 
