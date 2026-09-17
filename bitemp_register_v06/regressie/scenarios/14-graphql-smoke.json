@@ -1,0 +1,23 @@
+{
+  "id": "14",
+  "naam": "GraphQL smoke",
+  "tags": [
+    "graphql"
+  ],
+  "volgorde": 140,
+  "stappen": [
+    {
+      "method": "POST",
+      "path": "/graphql/query",
+      "body": {
+        "query": "{ __schema { queryType { name } } }"
+      },
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "data.__schema": "!=null"
+        }
+      }
+    }
+  ]
+}

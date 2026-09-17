@@ -1,0 +1,44 @@
+{
+  "id": "01",
+  "naam": "lijst en detail",
+  "beschrijving": "Lezen na de seed: lijst, detail en full-shape met hub+data-navigatie.",
+  "tags": [
+    "lezen"
+  ],
+  "volgorde": 10,
+  "stappen": [
+    {
+      "naam": "lijst",
+      "method": "GET",
+      "path": "/natuurlijk_personen?size=100",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "total_count": ">=5"
+        }
+      }
+    },
+    {
+      "naam": "detail",
+      "method": "GET",
+      "path": "/natuurlijk_personen/2",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "id": 2
+        }
+      }
+    },
+    {
+      "naam": "full met actieve naam",
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/2",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "namen[afvoer=null].data[afvoer=null].achternaam": "Vries"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "id": "30",
+  "naam": "load: NP registreren en teruglezen",
+  "beschrijving": "Functioneel een keer in de regressierun (uniek=110001); als loadtest met N virtuele gebruikers x iteraties.",
+  "tags": [
+    "load",
+    "performance"
+  ],
+  "load": {
+    "vus": 8,
+    "iteraties": 25,
+    "drempels": {
+      "p95_ms": 250,
+      "fout_pct": 0
+    }
+  },
+  "volgorde": 300,
+  "stappen": [
+    {
+      "naam": "registreer",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": "{{int:uniek}}"
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "lees detail",
+      "method": "GET",
+      "path": "/natuurlijk_personen/{{uniek}}",
+      "verwacht": {
+        "status": 200
+      }
+    },
+    {
+      "naam": "lees full",
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/{{uniek}}",
+      "verwacht": {
+        "status": 200
+      }
+    }
+  ]
+}

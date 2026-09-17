@@ -1,0 +1,33 @@
+{
+  "id": "11",
+  "naam": "audit-routes zijn read-only",
+  "dekt": [
+    "BE-REVIEW-3.5"
+  ],
+  "tags": [
+    "audit"
+  ],
+  "volgorde": 110,
+  "stappen": [
+    {
+      "method": "POST",
+      "path": "/registraties",
+      "body": {
+        "registratietype": "registratie"
+      },
+      "verwacht": {
+        "status": 404
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/wijzigingen",
+      "body": {
+        "wijzigingstype": "opvoer"
+      },
+      "verwacht": {
+        "status": 404
+      }
+    }
+  ]
+}

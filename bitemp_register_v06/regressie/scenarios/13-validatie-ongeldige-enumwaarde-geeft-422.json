@@ -1,0 +1,34 @@
+{
+  "id": "13",
+  "naam": "validatie: ongeldige enumwaarde geeft 422",
+  "beschrijving": "Gefixt 2026-09-16: enum-validatie in de walker + schema-tags op de _Input-structs.",
+  "tags": [
+    "validatie"
+  ],
+  "volgorde": 130,
+  "stappen": [
+    {
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "natuurlijkpersoon_id": 3,
+                "naamgebruik": "Onzin"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 422,
+        "bevat": "Naamgebruiksoort"
+      }
+    }
+  ]
+}

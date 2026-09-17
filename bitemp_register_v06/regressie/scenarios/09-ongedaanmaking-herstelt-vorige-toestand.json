@@ -1,0 +1,41 @@
+{
+  "id": "09",
+  "naam": "ongedaanmaking herstelt vorige toestand",
+  "vereist": [
+    "08"
+  ],
+  "dekt": [
+    "BE-REVIEW-4.1"
+  ],
+  "tags": [
+    "ongedaanmaking"
+  ],
+  "volgorde": 90,
+  "stappen": [
+    {
+      "naam": "maak PATCH uit 08 ongedaan",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "ongedaanmaking",
+          "maakt_ongedaan_registratie_id": "{{int:$regPatch}}"
+        }
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "vorige naam weer actief",
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/2",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "namen[afvoer=null].data[afvoer=null].achternaam": "Vries"
+        }
+      }
+    }
+  ]
+}

@@ -31,3 +31,6 @@ uml-editor/dist/
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Resultaten van regressie-loadtests (artefacten, niet committen)
+perf-results/regressie-load-*.json

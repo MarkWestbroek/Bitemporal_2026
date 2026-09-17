@@ -1,0 +1,47 @@
+{
+  "id": "07",
+  "naam": "POST /full met geneste shape",
+  "dekt": [
+    "BE-REVIEW-3.5"
+  ],
+  "tags": [
+    "engine",
+    "normalizer"
+  ],
+  "volgorde": 70,
+  "stappen": [
+    {
+      "method": "POST",
+      "path": "/full/natuurlijk_personen",
+      "body": {
+        "id": 43,
+        "namen": [
+          {
+            "data": [
+              {
+                "voorletters": "A.",
+                "achternaam": "Volledig"
+              }
+            ]
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201,
+        "json": {
+          "registratie_id": ">0"
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/43",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "namen[afvoer=null].data[afvoer=null].achternaam": "Volledig"
+        }
+      }
+    }
+  ]
+}

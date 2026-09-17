@@ -1,0 +1,22 @@
+{
+  "id": "16",
+  "naam": "N+1-guard bij peiltijdstip",
+  "beschrijving": "Voor 4.4: 1 query per entiteit x per kind (60+). Nu set-based.",
+  "dekt": [
+    "BE-REVIEW-4.4"
+  ],
+  "tags": [
+    "performance"
+  ],
+  "volgorde": 160,
+  "stappen": [
+    {
+      "method": "GET",
+      "path": "/full/natuurlijk_personen?t={{seedLaatsteRegistratieID}}&size=5",
+      "verwacht": {
+        "status": 200
+      },
+      "max_queries": 40
+    }
+  ]
+}
