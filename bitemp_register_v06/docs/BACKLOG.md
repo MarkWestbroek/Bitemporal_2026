@@ -1421,3 +1421,39 @@ Deel A is uitgevoerd, zie [`demo-model-np-loc-org-geo.md`](demo-model-np-loc-org
       connector draagt één handle-paar voor álle diagrammen; bij het vouwen
       wint de eerste gezette waarde. Hetzelfde geldt al voor relaties. Een
       handle hoort eigenlijk bij het voorkomen (vgl. `connectorVoorkomens`).
+
+## 30. Opname van GE's in de entiteit, profielvelden en de profiel-editor (2026-09-17)
+
+Branch `feat/ge-opname-in-entiteit`, gemerged naar `main` (`3b22d01`). Zie
+`docs/STUDIO.md` en `plans/2026-07-29 Overdracht Notaties — diagramprofielen (status).md`.
+
+- [x] **30.1 Opname — GE als sub-vak in de ENT.** Derde gedaante van een
+      samenstel (na ASOC en samentrekking): per GE en per diagram te kiezen
+      via het contextmenu. `ElementType.opname` + `diagramcore/canvas/opname.js`
+      + core-viewer `sub-vak`.
+- [x] **30.2 Migratie van opgeslagen sandboxen.** Profiel-hook
+      `hooks.migreerModel` vouwt oude presentatie-composities tot connectoren
+      en vult ontbrekende velden aan uit `data.bron`.
+- [x] **30.3 Bewerkbare velden zoals de oude IDE.** Compositie (rolnaam, JSON
+      rolnaam, momentvoorkomen, kardinaliteit), GE, entiteit en relatie; het
+      profiel is de bron van de veldnamen (`mappingV3Canoniek.js`). Stereotype
+      volgt het subtype via de core-hook `hooks.stereotype`.
+- [ ] **30.4 Profiel-editor laten bijhalen.** Inventarisatie:
+      [`PROFIELEDITOR-GAP.md`](PROFIELEDITOR-GAP.md) (peildatum 2026-09-17).
+      Drie soorten gat: (a) code kan niet in data — de benoembare
+      `HOOK_CATALOGUS` heeft twee ids, diagram-hooks worden zelfs niet
+      vertaald; (b) de tekening kent maar een deel van de definitie
+      (vormgrammatica, `samentrekking`/`opname`, viewers, rijkere
+      PropertyTypes); (c) stille verliezen bij een round-trip — property-`key`s
+      worden `slug(label)`, `style`/taakbalken/layouts vallen weg, onbekende
+      shapes worden `class-box`. Eerste kandidaat: (c), want dat maakt de
+      tekening nu onbruikbaar om een bestaand profiel te beheren.
+- [ ] **30.5 Metamodel-tekening bijwerken.** De mermaid in
+      `STUDIO-05-diagramcore-plan.md` §2 (en het EA-plaatje) missen
+      `DiagramNode.gedaante`, de gedaanteregels (`samentrekking`/`opname`) en
+      `PropertyType.label`/`opties`/`placeholder`. Open vraag van Mark
+      (17-09): een gedaanteregel werkt op 1..* elementtypen en hoort misschien
+      eerder in **Style** dan in Definition.
+- [ ] **30.6 Restpunten opname.** Klik op een sub-vak selecteert de ENT en
+      niet de GE; de opname-keuze reist niet mee in de V3-export (net als
+      maten en `gedaanteOverrides`); een ENT met vaste maat groeit niet mee.

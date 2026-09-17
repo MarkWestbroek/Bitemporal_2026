@@ -497,6 +497,10 @@ fase 2 een **bewerkbare sandbox**:
   persistent in localStorage (overleven herlaad), sjablonen "leeg" en
   "Graaf-demo". Die demo gebruikt de nieuwe **"bol"-ShapeType** (§8.10-POC):
   naam in een ronde kern, velden als satelliet-bolletjes eromheen.
+  **Wat de editor (nog) niet kan** t.o.v. wat een profiel-descriptor toestaat:
+  zie `docs/PROFIELEDITOR-GAP.md` (peildatum 2026-09-17) — code-hooks buiten de
+  twee catalogus-ids, vormgrammatica, `samentrekking`/`opname`, viewers, rijkere
+  PropertyTypes, en de stille verliezen bij een round-trip via de tekening.
 - **Meta-editor trede 2: "Profiel-ontwerp (0.5)"** — conform het metamodel:
   teken **Elementtypen ◆ Compartimenttypen ◆ Veldtypen** (elk met eigen
   properties; de ◆-connector legt de bevat-relaties) plus verbindingsregels
