@@ -162,7 +162,13 @@ func NewRouter() *gin.Engine {
 	router.GET("/api/viz/entiteit/:typenaam/max-id", handlers.MaakVizEntiteitMaxIDHandler())
 	router.GET("/api/viz/relatie/:typenaam/secondaire-ids", handlers.MaakVizRelatieSecondaireIDsHandler())
 	router.GET("/api/viz/reflijst/:typenaam/opties", handlers.MaakVizReflijstOptiesHandler())
-	router.Static("/viz", "./web")
+	// WEB_DIR (optioneel): serveer de frontend uit een andere map, bv. de gebouwde frontend van een
+	// andere checkout. Handig voor een test-instantie in een worktree waar de frontend niet gebouwd is.
+	webDir := strings.TrimSpace(os.Getenv("WEB_DIR"))
+	if webDir == "" {
+		webDir = "./web"
+	}
+	router.Static("/viz", webDir)
 
 	// Autorisatie (BE-review 2026-07-07, actiepunt 3): muterende routes vereisen
 	// minimaal "editor", beheer-routes "admin". Beide zijn no-ops zolang
@@ -257,6 +263,7 @@ func connectToDatabase() (*bun.DB, error) {
 	}
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	configureerPool(sqldb) // zie db_pool.go
 	db := bun.NewDB(sqldb, pgdialect.New())
 	return db, nil
 }
