@@ -70,6 +70,25 @@
 >     Dev-only, maar de repo is publiek en `.env.example` bestaat al: `.env` uit git halen en in `.gitignore` zetten.
 >     Bijkomend effect: `DATABASE_ADMIN_URL` uit die `.env` liet `ensureDatabaseExists` de DB op de verkeerde server
 >     aanmaken bij een lokale test tegen 5433 (zie REGRESSIETEST.md, bevinding 4).
+> 15. 🆕 **Testsuite-editor, load en export (2026-09-18).** Alle regressiescenario's zijn nu data (JSON, formaat v2)
+>     in `regressie/scenarios/`; alleen reset + seed is Go. `/admin/regressie` is uitgegroeid tot een suite-editor
+>     (bewerken, verschuiven, kopiëren, selectie → nieuw scenario, replay-import, dekking per requirement). Dezelfde
+>     scenario's draaien als loadtest (`TestLoadNpLoc`, vus × iteraties, drempels laten de test falen) en zijn te
+>     exporteren naar k6 en Hurl. Zie `docs/REGRESSIETEST.md` en, voor de afweging tegenover bestaande open-source
+>     tools en de route naar requirements in Studio, `docs/TESTSUITE_VERKENNING.md`.
+> 16. 🆕→✅ **Connectiepool niet ingesteld** (gevonden met de loadtests, 2026-09-18). `database/sql` hield twee idle
+>     verbindingen aan en opende onbeperkt nieuwe: 500's met `too many clients already` bij 100 gelijktijdige
+>     gebruikers, en voortdurend opnieuw verbinden. Gefixt in `db_pool.go` (`DB_MAX_OPEN_CONNS`, default 25; app én
+>     testomgeving): leesdoorvoer ×3, p95 87 → 23 ms op 2000 NP's. Zie `test/2026-09-18-bevinding-001-…md`.
+> 17. 🆕 **Open — dubbel entiteit-id bij opvoer geeft 500 met de ruwe SQL-fout** (`SQLSTATE=23505`, constraintnaam in
+>     de body). Gewenst: 409 zonder SQL-tekst (zelfde klasse als §4.2/4.3). Vastgelegd als regressie-sc 18 (staat uit).
+> 18. 🆕 **Open — botsing tussen schrijvers op hetzelfde record geeft 500 met SQL-tekst.** `23P01` (de enkelvoudig-
+>     constraint uit §4.1 weigert de tweede van twee gelijktijdige correcties; de data blijft correct) en `40P01`
+>     (deadlock bij ongedaanmaking). Gewenst: 409 zonder SQL-tekst, eventueel één herkansing bij deadlock. Frequentie
+>     hangt af van het id-bereik: ~5% bij 4 schrijvers op 4 NP's, 1 op ~750 bij 6 schrijvers op 2000 NP's.
+> 19. 🆕 **Loadtests uitgebreid:** rollen (`load.mix`: lezen terwijl er geregistreerd wordt), willekeurige id's met seed,
+>     database behouden tussen runs, generator voor een dikke seed (`scripts/genereer-load-seed.py`), k6-export met
+>     gelijktijdige scenario's en login. Zie `docs/REGRESSIETEST.md`, *Loadtests*.
 >
 > Alle overige gedragswijzigingen uit §3/§4 zijn nu ook tegen een echte database bewezen (tijdreizen, POST-per-padnaam,
 > DELETE+409, 422+rollback, N+1: 21 queries voor 5 entiteiten, auth-flow).
