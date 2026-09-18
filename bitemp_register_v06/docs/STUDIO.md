@@ -668,6 +668,20 @@ fase 2 een **bewerkbare sandbox**:
   een gewone verbinding naar die pool. Alle canvasmenu's zijn met het
   **toetsenbord** te bedienen: eerste optie voorgeselecteerd, ↑/↓, Enter,
   Escape.
+- **Tekenen zet de aanhechting niet meer vast (2026-09-18).** Bij een
+  elementtype met `randAanhechting: "zwevend"` bewaart de canvas bij tekenen,
+  verhangen en de magic link **geen** handle meer. Je sleept nu eenmaal altijd
+  van handle naar handle; die toevallige keuze opslaan pinde elke nieuwe lijn
+  op het midden van een zijde, zodat zweven alleen werkte na *normaliseer
+  relaties*. Nu zweeft een nieuwe lijn meteen (uitwaaieren over de rand,
+  meeglijden bij slepen). **Vastzetten is een bewuste handeling:** houd
+  **Shift** ingedrukt bij het loslaten, of kies in het contextmenu van de lijn
+  *Bron-/Doel-uiteinde vastzetten* ("automatisch" laat weer los). Bij
+  "zijden"-types (events, gateways) blijft de handle gewoon bewaard. Code:
+  `handleVoorOpslag()` in `DiagramCanvas.jsx`. **BPMN:** taak, subproces,
+  data-object, pool en lane zweven nu; events en gateways houden hun vier
+  punten (klein en rond/ruit — een rechthoekige omtrek zou naast de rand
+  vallen).
 - **Lijnen verleggen — knikpunten**: **Ctrl-klik** op een connectorlijn
   voegt een knikpunt toe, slepen verplaatst het, dubbelklik op de lijn wist
   ze weer (en normaliseert de lijn). Haakse lijnen kun je daarnaast per

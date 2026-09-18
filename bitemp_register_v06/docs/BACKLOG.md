@@ -1530,6 +1530,17 @@ en afwegingen: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20c
       lege vlak (of het vlak van een container) → *"Nieuw na …"*: element +
       lidmaatschap + verbinding in één keer. Canvasmenu's met het toetsenbord
       (eerste optie voorgeselecteerd, ↑/↓, Enter, Escape).
+- [x] **31.10 Lijnen hangen alleen aan de vier handles.** *(gebouwd
+      2026-09-18, ter beoordeling)* Gemeld door Mark: "extra handles of vrije
+      aanhechting krijg ik niet (meer) voor elkaar". Oorzaak: zwevende
+      aanhechting bestaat sinds 08-08, maar (a) BPMN deed niet mee, en (b) élke
+      nieuw getekende lijn sloeg de toevallige handles op en gold daardoor als
+      "met de hand vastgezet" — zweven werkte alleen na *normaliseer
+      relaties*. Nu: tekenen/verhangen/magic link zetten bij zwevende types
+      niets vast (Shift = wél vastzetten), en BPMN-taak, -subproces,
+      -data-object, -pool en -lane zweven. Echte extra handles zijn er nooit
+      geweest. Zie `docs/STUDIO.md`. Bevalt het niet: terugdraaien is één
+      commit.
 - [ ] **31.9 Restpunten containers en afbakening.**
       (a) De begrenzing laat een lid over de **kopregel/naamband** van de
       container schuiven — de binnenruimte zou de kop moeten uitsluiten.

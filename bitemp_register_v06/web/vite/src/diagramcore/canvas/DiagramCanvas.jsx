@@ -285,9 +285,18 @@ function CanvasBinnenkant({
   // Alt ingedrukt = begrenzing tijdelijk uit, zodat je een lid over de rand
   // van zijn container kunt tillen (loslaten erbuiten = losmaken).
   const [altTilt, setAltTilt] = useState(false);
+  // Shift bij het loslaten van een lijn = aanhechting vastzetten (zie
+  // handleVoorOpslag). Een ref: onConnect krijgt zelf geen event mee.
+  const shiftRef = useRef(false);
   useEffect(() => {
-    const zet = (e) => setAltTilt(!!e.altKey);
-    const uit = () => setAltTilt(false);
+    const zet = (e) => {
+      setAltTilt(!!e.altKey);
+      shiftRef.current = !!e.shiftKey;
+    };
+    const uit = () => {
+      setAltTilt(false);
+      shiftRef.current = false;
+    };
     window.addEventListener("keydown", zet);
     window.addEventListener("keyup", zet);
     window.addEventListener("blur", uit);
@@ -938,6 +947,26 @@ function CanvasBinnenkant({
     [lookups]
   );
 
+  /**
+   * Welke handle bewaren we bij een net getekende of verhangen lijn?
+   * Bij een **zwevend** elementtype (randAanhechting) géén: je sleept nu
+   * eenmaal altijd van handle naar handle, en die toevallige keuze vastleggen
+   * pinde elke nieuwe lijn op het midden van een zijde — zweven werkte dan
+   * alleen na "normaliseer relaties". Vastzetten is nu een bewuste handeling:
+   * **Shift** ingedrukt bij het loslaten, of het contextmenu van de lijn
+   * (Bron-/Doel-uiteinde vastzetten). Bij "zijden"-types blijft de handle
+   * gewoon bewaard.
+   */
+  const handleVoorOpslag = useCallback(
+    (elementId, handleId) => {
+      if (!handleId) return null;
+      if (shiftRef.current) return handleId;
+      const et = lookups.elementTypesById[elements[elementId]?.elementType];
+      return et?.randAanhechting === "zwevend" ? null : handleId;
+    },
+    [lookups, elements]
+  );
+
   /** Element-id van de kleinste container onder een flow-punt (of null). */
   const containerOpPunt = useCallback(
     (punt) => {
@@ -973,8 +1002,8 @@ function CanvasBinnenkant({
           connectorType,
           source: bronId,
           target: doelId,
-          sourceHandle: verbinding.sourceHandle || null,
-          targetHandle: verbinding.targetHandle || null,
+          sourceHandle: handleVoorOpslag(bronId, verbinding.sourceHandle),
+          targetHandle: handleVoorOpslag(doelId, verbinding.targetHandle),
         });
       if (passend.length === 1) {
         leg(passend[0]);
@@ -982,7 +1011,7 @@ function CanvasBinnenkant({
       }
       wachtendeKeuzeRef.current = { passend, leg, bron, doel };
     },
-    [bewerkbaar, onVerbind, elementVanNode, diagramType, verbindingsType]
+    [bewerkbaar, onVerbind, elementVanNode, diagramType, verbindingsType, elements, handleVoorOpslag]
   );
 
   const handleConnectEnd = useCallback(
@@ -1081,7 +1110,7 @@ function CanvasBinnenkant({
                   positie,
                   connectorType: ct,
                   bronId: vast.id,
-                  bronHandle: toestand.fromHandle?.id || null,
+                  bronHandle: handleVoorOpslag(vast.id, toestand.fromHandle?.id || null),
                   omgekeerd: andersom,
                   containerId,
                 }),
@@ -1124,7 +1153,7 @@ function CanvasBinnenkant({
         ],
       });
     },
-    [bewerkbaar, omschrijf, elementVanNode, diagramType, verbindingsType, lookups, onVerbind, onMaakEnVerbind, screenToFlowPosition, elements, containerOpPunt]
+    [bewerkbaar, omschrijf, elementVanNode, diagramType, verbindingsType, lookups, onVerbind, onMaakEnVerbind, screenToFlowPosition, elements, containerOpPunt, handleVoorOpslag]
   );
 
   // ── Uiteinden lostrekken en elders aanhechten (§31.5) ─────────────────────
@@ -1144,11 +1173,11 @@ function CanvasBinnenkant({
       onVerhangConnector(connectorId, {
         source: bronId,
         target: doelId,
-        sourceHandle: verbinding.sourceHandle || null,
-        targetHandle: verbinding.targetHandle || null,
+        sourceHandle: handleVoorOpslag(bronId, verbinding.sourceHandle),
+        targetHandle: handleVoorOpslag(doelId, verbinding.targetHandle),
       });
     },
-    [bewerkbaar, onVerhangConnector, elementVanNode]
+    [bewerkbaar, onVerhangConnector, elementVanNode, handleVoorOpslag]
   );
   const handleReconnectEnd = useCallback(
     (ev, edge, handleType, toestand) => {

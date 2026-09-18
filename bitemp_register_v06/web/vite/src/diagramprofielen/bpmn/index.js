@@ -35,6 +35,13 @@
  * Nederlands. De `id`'s zijn ongemoeid gelaten: die staan als `elementType`
  * in opgeslagen diagrammen en werkbestanden.
  *
+ * **Aanhechting (2026-09-18):** de rechthoekige vormen — taak, subproces,
+ * data-object, pool en lane — hechten **zwevend** aan (`randAanhechting`,
+ * zie diagramcore/canvas/zwevendeRand.js): lijnen waaieren uit over de rand
+ * en glijden mee bij het slepen. Events en gateways zijn klein en rond of
+ * ruitvormig; daar dekken de vier punten de vorm al, en een rechthoekige
+ * omtrek-benadering zou naast de rand vallen — die houden hun handles.
+ *
  * Events en gateways dragen hun naam via het motor-primitief
  * `naamLabel: "buiten"` (ElementNode zet hem ónder de vorm) — een ring of ruit
  * kan zelf geen tekst dragen. Diagram-breed uit te zetten via Beeld →
@@ -81,6 +88,7 @@ const elementTypes = [
   },
   {
     id: "taak",
+    randAanhechting: "zwevend",
     label: "Task",
     omschrijving: "Eén stap werk in het proces.",
     kort: "Task",
@@ -91,6 +99,7 @@ const elementTypes = [
   },
   {
     id: "subproces",
+    randAanhechting: "zwevend",
     label: "Sub-process",
     omschrijving: "Samengevouwen deelproces; dubbelklik opent het onderliggende diagram.",
     kort: "Sub",
@@ -162,6 +171,7 @@ const elementTypes = [
   },
   {
     id: "data-object",
+    randAanhechting: "zwevend",
     label: "Data object",
     omschrijving: "Gegevens die het proces in- of uitgaan (koppel met een data-associatie).",
     kort: "Data",
@@ -172,6 +182,7 @@ const elementTypes = [
   },
   {
     id: "pool",
+    randAanhechting: "zwevend",
     label: "Pool",
     omschrijving:
       "Een deelnemer (participant) met zijn proces. Sequence flows blijven binnen de pool; tussen pools loopt een message flow. Leeg = black box.",
@@ -186,6 +197,7 @@ const elementTypes = [
   },
   {
     id: "lane",
+    randAanhechting: "zwevend",
     label: "Lane",
     omschrijving: "Wie of wat de taken uitvoert — sleep leden erin.",
     kort: "Lane",
