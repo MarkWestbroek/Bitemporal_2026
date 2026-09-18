@@ -82,7 +82,7 @@ replay-bestanden; default de twee hierboven).
 | 15 | `/admin/rebuild` | 404 (productie-build) / 403 (devtools-build zonder `DEVLOOP`) (§3.3) |
 | 16 | N+1-guard | `GET /full/…?t=&size=5` binnen `max_queries: 40` (gemeten 21; vóór §4.4 was dit 60+) |
 | 17 | auth | `env: AUTH_ENABLED=true`: anonieme POST 401, lezen open, login → cookie → 201, logout → 401 |
-| 18 | dubbel id bij opvoer | **staat uit (bekend gat):** geeft nu 500 met de ruwe SQL-fout; gewenst is 409 zonder SQL-tekst |
+| 18 | dubbel id bij opvoer | **409 Conflict** zonder SQL-tekst of constraintnaam in de body (gefixt 2026-09-18) |
 | 20 | locatie via padnaam | tweede entiteit door dezelfde engine-route |
 | 21 | replay-stap | speelt midden in de suite een replay-bestand af (50 extra locaties) en controleert het resultaat |
 | 30 | load: NP registreren en teruglezen | functioneel sc mét loadprofiel (8 vus × 25 iteraties, drempel p95 250 ms, 0% fouten) |
@@ -216,26 +216,36 @@ gaten uit de eerste run (08b, 13) zijn inmiddels gedicht en draaien strikt.
 5. **Replay-opnames zijn niet altijd zelfstandige seeds.** `registraties-replay-p1-… allerlei leuke
    ongedaanmakingen test.json` verwijst naar NP=1 / rel_id=1 uit een andere basisdataset en is dus
    alleen afspeelbaar op die basis. Synth-bestanden (`…-synth-…`) zijn wél zelfstandig.
-6. **Dubbel entiteit-id bij opvoer geeft 500 met de ruwe SQL-fout** (2026-09-18, gevonden bij de
+6. **Dubbel entiteit-id bij opvoer gaf 500 met de ruwe SQL-fout** (2026-09-18, gevonden bij de
    loadtests): `duplicate key value violates unique constraint "natuurlijkpersoon_pkey" (SQLSTATE=23505)`
-   staat letterlijk in de body. Gewenst: 409 zonder SQL-tekst, in lijn met §4.2/4.3. **Open**; vastgelegd
-   als sc 18 (staat uit tot het gat dicht is).
+   stond letterlijk in de body. **Gefixt (zelfde dag):** 409 zonder SQL-tekst, zie bevinding 8.
+   → sc 18 (strikt).
 7. **De connectiepool was niet ingesteld** (2026-09-18). `database/sql` houdt standaard twee idle
    verbindingen aan en opent onbeperkt nieuwe. Onder parallelle last gaf dat 500's met
    `too many clients already` (bij 100 vus) en op Windows uitputting van tijdelijke poorten.
    **Gefixt** in `db_pool.go`, gebruikt door app én testomgeving: 674 → 2109 req/s en p95 87 → 23 ms
    op dezelfde data. Zie `test/2026-09-18-bevinding-001-…md`.
-8. **Een samenloop-botsing geeft 500** (2026-09-18). Twee schrijvers op hetzelfde record geven twee
-   soorten 500, beide met SQL-tekst in de body:
+8. **Een samenloop-botsing gaf 500 met SQL-tekst** (2026-09-18). Twee schrijvers op hetzelfde record
+   gaven twee soorten 500:
    - `23P01` bij de commit: twee gelijktijdige correcties op dezelfde naam of hetzelfde adres. De
-     uitgestelde enkelvoudig-constraint uit §4.1 laat er één winnen. **De data blijft dus correct**
-     (nooit twee actieve voorkomens); alleen het antwoord aan de verliezer is verkeerd.
+     uitgestelde enkelvoudig-constraint uit §4.1 laat er één winnen. **De data bleef dus correct**
+     (nooit twee actieve voorkomens); alleen het antwoord aan de verliezer was verkeerd.
    - `40P01`: deadlock bij ongedaanmaking naast een correctie; Postgres breekt er één af na 1 s.
-   Hoe vaak het gebeurt hangt af van het id-bereik: 4 schrijvers op de kleine seed (4 NP's) gaven
-   ~5% fouten, 6 schrijvers op 2000 NP's 1 op ~750. Gewenst: **409** zonder SQL-tekst (en eventueel
-   één herkansing bij een deadlock). **Open**; daarom staat sc 31 standaard op 1 vu en sc 33 op
-   1 schrijver. Fout-voorbeelden in het loadresultaat tonen sinds deze bevinding ook het begin van
-   de response-body.
+
+   **Gefixt (zelfde dag)** in `handlers/db_conflict.go`: alle engine-fouten lopen door
+   `newRegistreerErr`, en die vertaalt `23505`, `23P01`, `40P01` en `40001` naar **409 Conflict** met
+   een boodschap zonder interne details; de volledige fout gaat naar de server-log
+   (`CONFLICT (SQLSTATE … → 409)`). Geldt daarmee voor REST, PATCH/DELETE én GraphQL. Bij een
+   deadlock of serialisatiefout doet `RegistreerJSONCore` **één herkansing** vanaf de ruwe body
+   (de transactie is dan volledig teruggedraaid); het PATCH/DELETE-pad herkanst niet, omdat daar
+   een opgebouwde tussenstand hergebruikt zou worden, en geeft 409.
+
+   Controle (4 schrijvers op de kleine seed, 691 requests): vóór de fix ~5% 500's; erna **geen
+   enkele 500**, 45 × 409, en 2 van de 4 deadlocks alsnog geslaagd door de herkansing. Hoe vaak een
+   conflict optreedt hangt af van het id-bereik: op 2000 NP's met 6 schrijvers 1 op ~750. Sc 31
+   blijft daarom standaard op 1 vu: een 409 is correct gedrag, maar telt in een loadtest als fout.
+   Een geweigerde ongedaanmaking omdat een ander intussen hetzelfde gegeven wijzigde (400) is
+   bestaand, bedoeld gedrag en wordt door sc 31 geaccepteerd.
 
 ## Suite-editor (devtools-build)
 
@@ -401,7 +411,8 @@ In de suite-editor doe je hetzelfde op de tab *Load & performance* met de velden
 
 Clashes op records die op hetzelfde moment bewerkt worden, zijn bewust **geen** doel van deze sc's:
 de schrijver corrigeert willekeurige NP's uit een groot bereik en voert alleen zijn eigen nieuwe
-NP's af. Dat is een inhoudelijk scenario voor later (zie bevinding 8).
+NP's af. Botst het toch, dan antwoordt de API met 409 (zie bevinding 8); een gericht
+samenloopscenario is iets voor later.
 
 ### Referentiecijfers
 

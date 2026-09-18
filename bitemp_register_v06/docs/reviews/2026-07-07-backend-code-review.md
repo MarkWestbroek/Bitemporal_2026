@@ -80,12 +80,12 @@
 >     verbindingen aan en opende onbeperkt nieuwe: 500's met `too many clients already` bij 100 gelijktijdige
 >     gebruikers, en voortdurend opnieuw verbinden. Gefixt in `db_pool.go` (`DB_MAX_OPEN_CONNS`, default 25; app én
 >     testomgeving): leesdoorvoer ×3, p95 87 → 23 ms op 2000 NP's. Zie `test/2026-09-18-bevinding-001-…md`.
-> 17. 🆕 **Open — dubbel entiteit-id bij opvoer geeft 500 met de ruwe SQL-fout** (`SQLSTATE=23505`, constraintnaam in
->     de body). Gewenst: 409 zonder SQL-tekst (zelfde klasse als §4.2/4.3). Vastgelegd als regressie-sc 18 (staat uit).
-> 18. 🆕 **Open — botsing tussen schrijvers op hetzelfde record geeft 500 met SQL-tekst.** `23P01` (de enkelvoudig-
->     constraint uit §4.1 weigert de tweede van twee gelijktijdige correcties; de data blijft correct) en `40P01`
->     (deadlock bij ongedaanmaking). Gewenst: 409 zonder SQL-tekst, eventueel één herkansing bij deadlock. Frequentie
->     hangt af van het id-bereik: ~5% bij 4 schrijvers op 4 NP's, 1 op ~750 bij 6 schrijvers op 2000 NP's.
+> 17. 🆕→✅ **Dubbel entiteit-id bij opvoer gaf 500 met de ruwe SQL-fout** (`SQLSTATE=23505`, constraintnaam in de body).
+>     Gefixt: 409 zonder SQL-tekst (`handlers/db_conflict.go`); regressie-sc 18 is strikt.
+> 18. 🆕→✅ **Botsing tussen schrijvers op hetzelfde record gaf 500 met SQL-tekst**: `23P01` (de enkelvoudig-constraint
+>     uit §4.1 weigert de tweede van twee gelijktijdige correcties; de data bleef correct) en `40P01` (deadlock).
+>     Gefixt op één plek, `newRegistreerErr`: 409 Conflict zonder interne details voor REST, PATCH/DELETE en GraphQL;
+>     één herkansing bij deadlock in `RegistreerJSONCore`. Botsingsrun: van ~5% 500's naar 0.
 > 19. 🆕 **Loadtests uitgebreid:** rollen (`load.mix`: lezen terwijl er geregistreerd wordt), willekeurige id's met seed,
 >     database behouden tussen runs, generator voor een dikke seed (`scripts/genereer-load-seed.py`), k6-export met
 >     gelijktijdige scenario's en login. Zie `docs/REGRESSIETEST.md`, *Loadtests*.

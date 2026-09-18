@@ -1,7 +1,7 @@
 {
   "id": "31",
   "naam": "load: mutaties door elkaar (registreren, corrigeren, ongedaanmaken, afvoeren)",
-  "beschrijving": "Schrijver-rol. Per iteratie: nieuwe NP met GE's, correctie op een willekeurige bestaande NP, soms die correctie ongedaan maken, correctie op een willekeurig adres, soms de eigen NP afvoeren. Standaard 1 vu: op de kleine standaard-seed (4 NP's) botsen meerdere schrijvers voortdurend op hetzelfde record (de API geeft dan 500 op de enkelvoudig-constraint of een deadlock; zie REGRESSIETEST.md, bevinding 8). Zet pas meer vus in op de dikke seed, met vars npVan=1;npTot=2000;locVan=1;locTot=2000. npTot=5 omdat sc 10 NP=6 afvoert.",
+  "beschrijving": "Schrijver-rol. Per iteratie: nieuwe NP met GE's, correctie op een willekeurige bestaande NP, soms die correctie ongedaan maken, correctie op een willekeurig adres, soms de eigen NP afvoeren. Standaard 1 vu: op de kleine standaard-seed (4 NP's) botsen meerdere schrijvers voortdurend op hetzelfde record (de API antwoordt dan met 409 Conflict; zie REGRESSIETEST.md, bevinding 8). Zet pas meer vus in op de dikke seed, met vars npVan=1;npTot=2000;locVan=1;locTot=2000. npTot=5 omdat sc 10 NP=6 afvoert.",
   "volgorde": 230,
   "tags": [
     "load",
@@ -100,8 +100,8 @@
       "verwacht": {
         "status_in": [
           201,
-          409,
-          422
+          400,
+          409
         ]
       }
     },

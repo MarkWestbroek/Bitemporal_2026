@@ -64,7 +64,7 @@ logische aanvulling: een export naar `.bru` is van dezelfde orde als de Hurl-exp
 
 | Onderdeel | Status |
 |---|---|
-| 25 sc's declaratief (01–18, 08b, 20, 21, 30–33), sc 00 in Go | draait groen, ~5 s (18 staat uit als bekend gat, 33 is alleen load) |
+| 25 sc's declaratief (01–18, 08b, 20, 21, 30–33), sc 00 in Go | draait groen, ~5 s (33 is alleen load en daarom SKIP) |
 | Editor: bewerken, stappen en sc's verschuiven, dupliceren, selectie → nieuw sc, verwijderen met afhankelijkheidscontrole | getest met Playwright (11 controles) |
 | Replay-import: opname → bewerkbaar sc | werkt |
 | Loadrunner + loadprofiel + drempels + resultaten per stap | werkt; referentie ~1600 req/s, p95 ~10 ms (in-process, laptop, na de poolfix) |
@@ -76,7 +76,8 @@ Inzichten uit de loadtests tot nu toe: (1) de connectiepool was niet ingesteld; 
 verdrievoudigde de leesdoorvoer en haalde de 500's bij 100 gelijktijdige gebruikers weg
 (`db_pool.go`); (2) `GET /full/…` en vooral de tijdreis `?t=` zijn de duurste leesstappen, ruim
 tien keer een detail-read; (3) lezen wordt niet merkbaar trager terwijl er geregistreerd wordt;
-(4) twee open gaten: een dubbel id geeft 500 met SQL-tekst, en een deadlock bij samenloop geeft 500.
+(4) een dubbel id en een botsing tussen schrijvers gaven 500 met SQL-tekst; dat is nu 409 Conflict
+zonder interne details, met één herkansing bij een deadlock (`handlers/db_conflict.go`).
 
 ## Vervolg: naar requirements en use cases in Studio
 
