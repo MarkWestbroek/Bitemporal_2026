@@ -129,7 +129,10 @@ de lijsten hierboven, plus:
 - **`key`s van properties worden herschreven.** Alleen `label || key`
   overleeft als veldnaam; bij genereren wordt de key `slug(label)`. Zo wordt
   `{key: "typeLabel", label: "type"}` stil `{key: "type"}` — en dan leest de
-  node de data niet meer.
+  node de data niet meer. Dit raakt ook het eigen `LEEG_SJABLOON` en
+  `GRAAF_DEMO` van de editor (`profielGereedschap.js:116`, `:159`): de viewer
+  `naam-type` leest hard `data.typeLabel` (`basisShapes.jsx:87`), dus na één
+  round-trip toont zelfs het startsjabloon geen veldtype meer.
 - **`style` gaat verloren:** genereren zet altijd `"uml-klassiek"`
   (`profielOntwerp.js:376`).
 - **`layouts` wordt leeg** (`:389`) en de **taakbalken** worden altijd
