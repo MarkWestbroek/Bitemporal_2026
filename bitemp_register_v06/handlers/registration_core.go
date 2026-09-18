@@ -37,12 +37,24 @@ type RegistreerError struct {
 	Status  int
 	Msg     string
 	Problem *model.ProblemDetails
+	// Herkansbaar: de transactie is teruggedraaid door een deadlock of serialisatiefout en
+	// kan ongewijzigd opnieuw geprobeerd worden (zie db_conflict.go).
+	Herkansbaar bool
 }
 
 func (e *RegistreerError) Error() string { return e.Msg }
 
 func newRegistreerErr(status int, format string, args ...any) *RegistreerError {
-	return &RegistreerError{Status: status, Msg: fmt.Sprintf(format, args...)}
+	msg := fmt.Sprintf(format, args...)
+	// Een databaseconflict (dubbele sleutel, enkelvoudig-constraint, deadlock) is geen
+	// serverfout: 409 met een boodschap zonder SQL-tekst; de volledige fout gaat naar de log.
+	if status == http.StatusInternalServerError {
+		if conflict := dbConflictUit(msg, args...); conflict != nil {
+			logConflict(conflict, msg)
+			return &RegistreerError{Status: http.StatusConflict, Msg: conflict.Publiek, Herkansbaar: conflict.Herkansbaar}
+		}
+	}
+	return &RegistreerError{Status: status, Msg: msg}
 }
 
 // AuditMeta bundelt request-metadata die in de Registratie-row terecht komt
@@ -55,6 +67,8 @@ type AuditMeta struct {
 	// Strengheid bepaalt of validatiefouten blokkeren (strict) of slechts
 	// gerapporteerd worden (lenient/warnings-only). Default = strict.
 	Strengheid model.Validatiestrengheid
+	// isHerkansing voorkomt een tweede herkansing na een deadlock (RegistreerJSONCore).
+	isHerkansing bool
 }
 
 // RegistreerResult bevat het succesresultaat van RegistreerCore.
