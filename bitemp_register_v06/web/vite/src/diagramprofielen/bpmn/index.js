@@ -16,9 +16,15 @@
  *     `onderbrekend` (uit → gestippelde ring, niet-onderbrekend);
  *   - **gateways**: exclusief (×), parallel (+), inclusief (○) — de
  *     inclusive-join-semantiek is bewust alleen notatie (bekende gap);
- *   - **lane** als container; **pools + message flow als collaboration-
- *     laag blijven buiten v0** (zie het notatie-plan) — de message flow
- *     is er alvast, permissief;
+ *   - **lane** als container (partitie: deelt alleen in) en **pool** als
+ *     **afbakening** (2026-09-18, backlog §31.4). BPMN 2.0: een Pool is de
+ *     weergave van een Participant, die naar één Process verwijst; sequence
+ *     flows zijn eigendom van dat proces en kruisen de poolgrens dus niet
+ *     (wél vrij door lanes — een lane is geen FlowElementsContainer). Een
+ *     message flow verbindt juist twee *verschillende* pools, eventueel aan
+ *     de poolrand zelf (black box). In de motor: `pool.afbakeningVoor` en
+ *     `message-flow.overbrugt` (zie `diagramcore/canvas/afbakening.js`).
+ *     Geen `processRef`: de pool is notatie, het proces erachter impliciet;
  *   - **data-object** met gestippelde data-associatie;
  *   - **default flow** (`data.standaard` op een sequence flow → schuin
  *     streepje ná de bron, via `hooks.edgePresentatie`).
@@ -28,6 +34,13 @@
  * Sequence flow) — die kent de doelgroep. De omschrijvingen blijven
  * Nederlands. De `id`'s zijn ongemoeid gelaten: die staan als `elementType`
  * in opgeslagen diagrammen en werkbestanden.
+ *
+ * **Aanhechting (2026-09-18):** de rechthoekige vormen — taak, subproces,
+ * data-object, pool en lane — hechten **zwevend** aan (`randAanhechting`,
+ * zie diagramcore/canvas/zwevendeRand.js): lijnen waaieren uit over de rand
+ * en glijden mee bij het slepen. Events en gateways zijn klein en rond of
+ * ruitvormig; daar dekken de vier punten de vorm al, en een rechthoekige
+ * omtrek-benadering zou naast de rand vallen — die houden hun handles.
  *
  * Events en gateways dragen hun naam via het motor-primitief
  * `naamLabel: "buiten"` (ElementNode zet hem ónder de vorm) — een ring of ruit
@@ -75,6 +88,7 @@ const elementTypes = [
   },
   {
     id: "taak",
+    randAanhechting: "zwevend",
     label: "Task",
     omschrijving: "Eén stap werk in het proces.",
     kort: "Task",
@@ -85,6 +99,7 @@ const elementTypes = [
   },
   {
     id: "subproces",
+    randAanhechting: "zwevend",
     label: "Sub-process",
     omschrijving: "Samengevouwen deelproces; dubbelklik opent het onderliggende diagram.",
     kort: "Sub",
@@ -156,6 +171,7 @@ const elementTypes = [
   },
   {
     id: "data-object",
+    randAanhechting: "zwevend",
     label: "Data object",
     omschrijving: "Gegevens die het proces in- of uitgaan (koppel met een data-associatie).",
     kort: "Data",
@@ -165,7 +181,23 @@ const elementTypes = [
     properties: [],
   },
   {
+    id: "pool",
+    randAanhechting: "zwevend",
+    label: "Pool",
+    omschrijving:
+      "Een deelnemer (participant) met zijn proces. Sequence flows blijven binnen de pool; tussen pools loopt een message flow. Leeg = black box.",
+    kort: "Pool",
+    icoon: "gedrag-lane",
+    shape: "bpmn-pool",
+    containerVoor: "bevat",
+    // Afbakening (motor-primitief): deze verbindingen kruisen mijn grens niet.
+    afbakeningVoor: ["sequence-flow"],
+    achtergrond: true,
+    properties: [KLEUR_VELD],
+  },
+  {
     id: "lane",
+    randAanhechting: "zwevend",
     label: "Lane",
     omschrijving: "Wie of wat de taken uitvoert — sleep leden erin.",
     kort: "Lane",
@@ -218,12 +250,15 @@ const elementTypes = [
   {
     id: "message-flow",
     label: "Message flow",
-    omschrijving: "Bericht tussen deelnemers (formeel tussen pools; v0 permissief).",
+    omschrijving:
+      "Bericht tussen deelnemers: verbindt twee verschillende pools (of een pool en het proces zonder pool) — aan een element erbinnen of aan de poolrand (black box).",
     kort: "✉→",
     shape: "edge",
     isConnector: true,
-    bron: { elementTypes: [...ACTIVITEITEN, "start-event", "tussen-event", "eind-event", "boundary-event"] },
-    doel: { elementTypes: [...ACTIVITEITEN, "start-event", "tussen-event"] },
+    // Afbakening (motor-primitief): deze verbinding móet een poolgrens kruisen.
+    overbrugt: ["pool"],
+    bron: { elementTypes: [...ACTIVITEITEN, "start-event", "tussen-event", "eind-event", "boundary-event", "pool"] },
+    doel: { elementTypes: [...ACTIVITEITEN, "start-event", "tussen-event", "pool"] },
     edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#64748b", markerStart: "bol", markerEnd: "pijl-open" },
   },
   {
@@ -241,12 +276,14 @@ const elementTypes = [
   },
   {
     id: "bevat",
-    label: "Lane membership",
-    omschrijving: "Lane-lidmaatschap; verborgen zolang het lid erin ligt.",
-    kort: "LANE ∋",
+    label: "Pool/lane membership",
+    omschrijving: "Lidmaatschap van een pool of lane; verborgen zolang het lid erin ligt.",
+    kort: "∋",
     shape: "edge",
     isConnector: true,
-    bron: { elementTypes: ["lane"] },
+    // Een pool bevat lanes en flow-elementen, een lane ook lanes — maar een
+    // pool ligt nooit ín iets.
+    bron: { elementTypes: ["pool", "lane"] },
     doel: {
       elementTypes: ["start-event", "tussen-event", "eind-event", ...ACTIVITEITEN, ...GATEWAYS, "data-object", "lane", "notitie"],
     },

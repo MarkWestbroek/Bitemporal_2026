@@ -573,6 +573,19 @@ fase 2 een **bewerkbare sandbox**:
   (kies een connector-type; zonder keuze wordt het type automatisch afgeleid
   uit de verbindingsregels van het DiagramType). Ongeldige verbindingen worden
   op de canvas geweigerd.
+- **Magic link (2026-09-18).** Sleep een lijn van A naar B **zonder** vooraf
+  een type te kiezen: past er precies één connectortype, dan ligt de lijn er
+  direct; passen er meerdere, dan opent op de losplek een keuzemenu
+  ("Start event → Task": Sequence flow / Message flow). Is er wél een type
+  gekozen dat tussen deze twee niet mag, dan verdwijnt de lijn niet meer
+  stil: het menu zegt *"Sequence flow mag hier niet — wel mogelijk:"* en
+  biedt de alternatieven aan (of meldt dat niets is toegestaan). Volledig
+  afgeleid uit het profiel: `vindConnectorTypes(diagramType, bron, doel)` in
+  `diagramcore/canvas/materialiseerConnectoren.js` geeft álle passende typen
+  in descriptor-volgorde (`vindConnectorType` is er nu een dunne schil
+  omheen). In `DiagramCanvas.jsx` zet `onConnect` de keuze klaar en opent
+  `onConnectEnd` het menu — alleen dát event kent de losplek. Het menu is het
+  bestaande contextmenu (`kop` + items met `kort` als icoon).
 - **Connectoren zijn elementen** met source/target (metamodel); de motor
   materialiseert ze als kale edges (compositie ◆, generalisatie ▷, «use»,
   relatie) — en een connector **mét velden** automatisch als het
@@ -600,6 +613,86 @@ fase 2 een **bewerkbare sandbox**:
   centreren, verdelen — op de selectie via Ctrl-klik — plus alles-op-raster)
   en de **Auto-layout**-taakbalk met de gelaagde plaatsingsstrategie van het
   profiel; ook via menu Diagram (0.5). Iedere layout-actie is één undo-stap.
+  **Verdelen = gelijke tussenruimte** (2026-09-18): de uitersten blijven
+  staan en de gaten ertussen worden even groot, ook bij ongelijke breedtes
+  (voorheen werden de *linkerranden* gelijk verdeeld, wat bij een brede taak
+  naast kleine events scheve gaten of overlap gaf). Aangehechte
+  rand-elementen (boundary events, `parentId` → positie relatief aan de
+  gastheer) en label-ankers doen niet mee aan uitlijnen/verdelen — ze reizen
+  met hun gastheer mee.
+- **Containers houden hun inhoud vast (2026-09-18, backlog §31.3).** Een lid
+  (lidmaatschaps-connector via `containerVoor`) dat geometrisch ín zijn
+  container ligt rendert als React Flow-kind daarvan: het **reist mee** als
+  je de container versleept (ook dieper genest, en met aangehechte
+  rand-elementen) en blijft **binnen de rand**. **Alt+slepen** tilt een lid
+  over de rand; buiten elke container loslaten = losmaken, in een andere =
+  verhangen (*Losmaken uit "…"* staat ook in het contextmenu). De store
+  blijft **absolute** posities voeren — de canvas rekent om bij het opbouwen
+  en bij dragstop — zodat connector-materialisatie, auto-layout en export
+  ongewijzigd doorrekenen en bestaande diagrammen niet migreren. Een lid dat
+  búiten zijn container ligt blijft vrij en toont zijn lidmaatschapslijn
+  (dezelfde regel als `verbergBijNesting`). Een nieuw element dat via
+  *Maken* of de magic link ín een container belandt wordt er meteen lid van.
+  Pure logica + tests: `diagramcore/canvas/nesting.js`.
+- **Afbakening — containers die verbindingen begrenzen (2026-09-18, §31.4).**
+  Motor-primitief naast `containerVoor` en `randElement`. Er zijn twee
+  soorten containers: een **partitie** deelt alleen in (BPMN-lane,
+  activity-partition, package), een **afbakening** begrenst wat verbonden mag
+  worden (BPMN-pool/proces, region van een samengestelde toestand,
+  CMMN-stage, block-context in SysML). Het profiel wijst alleen aan, de
+  betekenis zit in de core (`diagramcore/canvas/afbakening.js`):
+  `ElementType.afbakeningVoor: [connectortypen]` = bron en doel in
+  **dezelfde** afbakening; `ConnectorType.overbrugt: [elementtypen]` = bron en
+  doel in **verschillende**. De afbakening van een element is de
+  dichtstbijzijnde voorouder van dat type (via lidmaatschap, en voor een
+  rand-element via zijn gastheer); geen voorouder = de impliciete deelnemer.
+  De toets zit in `vindConnectorTypes(…, elements)`, dus slepen, magic link en
+  verhangen geven dezelfde uitkomst — en het menu noemt de **reden**:
+  *"Sequence flow mag de grens van een Pool niet kruisen — wel mogelijk:
+  Message flow"*. Eerste afnemer: **BPMN-pool** (`pool.afbakeningVoor =
+  ["sequence-flow"]`, `message-flow.overbrugt = ["pool"]`; message flow mag
+  ook aan de poolrand = black box). Achtergrond uit de BPMN-spec en de
+  afweging: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20containers%2C%20afbakening%20%28pools%29%2C%20reconnect%20en%20magic%20link%20%28ontwerp%29.md).
+- **Uiteinden lostrekken — reconnect (2026-09-18, §31.5).** Sleep het uiteinde
+  van een connectorlijn naar een ander element. Het **type blijft gelijk**;
+  geldig als dat type tussen het nieuwe paar mag (typeregels + afbakening).
+  Mag het niet, dan springt de lijn terug en zegt een menu waarom. Alleen op
+  de directe (kale) gedaante; knikpunten vervallen, de handle wordt de zijde
+  waar je loslaat. Eén `updateElement` = één undo-stap.
+- **Magic link op het lege vlak (2026-09-18, §31.8).** Laat je de lijn los op
+  het lege vlak — of op het vlak van een container, want binnen een pool ís
+  dat het lege vlak — dan opent *"Nieuw na …"* met de elementtypen die vanaf
+  deze bron bereikbaar zijn (gangbaarste connectortype eerst). Kiezen maakt
+  het element gecentreerd op de losplek, maakt het lid van de container
+  eronder en legt de verbinding. Loslaten op een **handle** van een pool blijft
+  een gewone verbinding naar die pool. Alle canvasmenu's zijn met het
+  **toetsenbord** te bedienen: eerste optie voorgeselecteerd, ↑/↓, Enter,
+  Escape.
+- **Tekenen zet de aanhechting niet meer vast (2026-09-18).** Bij een
+  elementtype met `randAanhechting: "zwevend"` bewaart de canvas bij tekenen,
+  verhangen en de magic link **geen** handle meer. Je sleept nu eenmaal altijd
+  van handle naar handle; die toevallige keuze opslaan pinde elke nieuwe lijn
+  op het midden van een zijde, zodat zweven alleen werkte na *normaliseer
+  relaties*. Nu zweeft een nieuwe lijn meteen (uitwaaieren over de rand,
+  meeglijden bij slepen). **Vastzetten is een bewuste handeling:** houd
+  **Shift** ingedrukt bij het loslaten, of kies in het contextmenu van de lijn
+  *Bron-/Doel-uiteinde vastzetten* ("automatisch" laat weer los). Bij
+  "zijden"-types (events, gateways) blijft de handle gewoon bewaard. Code:
+  `handleVoorOpslag()` in `DiagramCanvas.jsx`. **BPMN:** taak, subproces,
+  data-object, pool en lane zweven nu; events en gateways houden hun vier
+  punten (klein en rond/ruit — een rechthoekige omtrek zou naast de rand
+  vallen).
+- **Lijnen verleggen — knikpunten**: **Ctrl-klik** op een connectorlijn
+  voegt een knikpunt toe, slepen verplaatst het, dubbelklik op de lijn wist
+  ze weer (en normaliseert de lijn). Haakse lijnen kun je daarnaast per
+  segment duwen/trekken. Werkt op de directe (kale) gedaante; opslag in
+  `data.knikken` op de connector (`ConnectorEdge.jsx`). Eindpunten lostrekken
+  en elders aanhechten kan nog niet — backlog §31.5/§31.6.
+- **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
+  Escape is nodig binnen een container (lane, package, stage): daar is geen
+  leeg vlak — elke klik selecteert de container — en ook een kader-selectie
+  (Shift+slepen) ging met Escape niet weg. Escape wordt genegeerd tijdens
+  typen en zolang een contextmenu open is (dat sluit eerst zichzelf).
   Verder is er een **Kader**-element (boundary, §8.6b): gestippeld resizebaar
   kader dat achter de andere elementen rendert.
 - Taakbalken zijn **resizebaar** (hoekgreep: breed & plat of smal & hoog,

@@ -119,8 +119,10 @@
   cursor: pointer;
 }
 
-.dc-contextmenu-item:hover:not(:disabled) {
+.dc-contextmenu-item:hover:not(:disabled),
+.dc-contextmenu-item:focus:not(:disabled) {
   background: var(--s-hover, #f1f5f9);
+  outline: none;
 }
 
 .dc-contextmenu-item:disabled {
@@ -130,8 +132,11 @@
 
 .dc-contextmenu-icoon {
   display: inline-flex;
-  width: 16px;
+  min-width: 16px;
   justify-content: center;
+  /* Tekst-iconen van connectortypen ("✉→", "⇢D") zijn breder dan 16px en
+     braken anders over twee regels (magic link-keuzemenu). */
+  white-space: nowrap;
 }
 
 .dc-contextmenu-sep {

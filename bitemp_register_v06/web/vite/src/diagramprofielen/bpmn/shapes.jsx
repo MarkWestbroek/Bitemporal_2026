@@ -165,6 +165,58 @@ function LaneShape({ element, selected, children }) {
   );
 }
 
+/**
+ * Pool: zoals een lane, maar met de naam in een **staande band links** (de
+ * BPMN-conventie voor een horizontale pool) en een stevigere rand — zo zie je
+ * in één oogopslag wat afbakent (pool) en wat alleen indeelt (lane).
+ */
+function PoolShape({ element, selected, children }) {
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "#64748b";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 320,
+        minHeight: 160,
+        border: `2px solid ${rand}`,
+        borderRadius: 2,
+        background: element?.data?.kleur ? `${element.data.kleur}1a` : "rgba(100, 116, 139, 0.05)",
+        boxSizing: "border-box",
+        position: "relative",
+        display: "flex",
+        flexDirection: "row",
+      }}
+    >
+      <div
+        style={{
+          width: 30,
+          flex: "0 0 30px",
+          borderRight: `2px solid ${rand}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "hidden",
+        }}
+      >
+        <span
+          style={{
+            writingMode: "vertical-rl",
+            transform: "rotate(180deg)",
+            fontSize: 12,
+            fontWeight: 700,
+            color: "var(--s-fg, #0f172a)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {element?.naam || "(pool)"}
+        </span>
+      </div>
+      <div style={{ flex: 1, position: "relative" }}>{children}</div>
+    </div>
+  );
+}
+
 let _geregistreerd = false;
 export function registreerBpmnShapes() {
   if (_geregistreerd) return;
@@ -173,5 +225,6 @@ export function registreerBpmnShapes() {
   registreerShape("bpmn-subproces", SubprocesShape);
   registreerShape("bpmn-data", DataObjectShape);
   registreerShape("bpmn-lane", LaneShape);
+  registreerShape("bpmn-pool", PoolShape);
   _geregistreerd = true;
 }

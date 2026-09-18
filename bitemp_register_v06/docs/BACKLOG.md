@@ -1457,3 +1457,102 @@ Branch `feat/ge-opname-in-entiteit`, gemerged naar `main` (`3b22d01`). Zie
 - [ ] **30.6 Restpunten opname.** Klik op een sub-vak selecteert de ENT en
       niet de GE; de opname-keuze reist niet mee in de V3-export (net als
       maten en `gedaanteOverrides`); een ENT met vaste maat groeit niet mee.
+
+## 31. Diagrameditor in de Studio — bevindingen uit gebruik (2026-09-17)
+
+Bevindingen van Mark bij het tekenen van een BPMN-diagram op de eigen motor
+(`diagramcore` + profiel `bpmn`). De eerste vier zijn defecten/gaten, de laatste
+drie gaan over het bewerken van lijnen. **Stand 2026-09-18:** alles behalve 31.6
+(vindbaarheid van knikpunten) en de restpunten in 31.9 is gebouwd. Ontwerp
+en afwegingen: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20containers%2C%20afbakening%20%28pools%29%2C%20reconnect%20en%20magic%20link%20%28ontwerp%29.md). Zie `docs/STUDIO.md` en
+`STUDIO-05-diagramcore-plan.md`.
+
+- [x] **31.1 Horizontaal verdelen geeft een rare uitkomst.** *(opgelost
+      2026-09-18)* Gemeld met schermafbeeldingen: na *Horizontaal verdelen* op
+      een rij start-event → Task → event → eind-event stonden de vormen scheef
+      en schoof een boundary-event over de sequence flow. Twee oorzaken, beide
+      gerepareerd: (a) `layout/uitlijnen.js` verdeelde op de **linkerrand**
+      (`x`) — breedtes telden niet mee, dus ongelijke gaten bij een brede Task
+      naast smalle ringen. Nu: gelijke **tussenruimte**, uitersten blijven
+      staan (ook `distribute-v`); (b) `lijnUit` in `DiagramCanvas.jsx` nam
+      álle geselecteerde nodes mee, ook aangehechte **rand-elementen** — die
+      hebben een `parentId` en dus een positie *relatief* aan hun gastheer;
+      als absolute coördinaat meegerekend raakten ze los. Nodes met
+      `parentId` en label-ankers worden nu uitgefilterd. Tests in
+      `uitlijnen.test.js`.
+- [x] **31.2 Deselecteren op het diagram.** *(opgelost 2026-09-18)* Bij
+      natesten bleek klikken op het lege vlak wél te deselecteren; het echte
+      probleem zat elders: (a) binnen een **container** (lane die het canvas
+      vult) bestaat geen leeg vlak — elke klik selecteert de lane; (b)
+      `Escape` liet een kader-selectie (Shift+slepen) staan. `Escape` maakt nu
+      altijd de hele selectie leeg (nodes + edges + kader), behalve tijdens
+      typen of met een open contextmenu. Zie `docs/STUDIO.md` → "Deselecteren".
+- [x] **31.3 Een container houdt zijn elementen vast.** *(gebouwd
+      2026-09-18)* Leden die ín hun container liggen renderen als kind ervan:
+      ze reizen mee en blijven binnen de rand; **Alt+slepen** tilt eruit.
+      Presentatie relatief, opslag absoluut (geen migratie). Geldt voor álle
+      containers (lane, pool, partitie, package, stage, samengestelde
+      toestand). `diagramcore/canvas/nesting.js` + tests; zie `docs/STUDIO.md`.
+- [x] **31.4 Pool — het primitief "afbakening".** *(gebouwd 2026-09-18)*
+      Geen regeltaaltje maar een motor-primitief: `ElementType.afbakeningVoor`
+      (verbinding blijft binnen dezelfde afbakening) en
+      `ConnectorType.overbrugt` (verbinding móet de grens kruisen).
+      BPMN-pool als eerste afnemer; message flow mag ook aan de poolrand
+      (black box). Het menu noemt de reden van een weigering.
+      `diagramcore/canvas/afbakening.js` + tests. BPMN-spec en afweging:
+      [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20containers%2C%20afbakening%20%28pools%29%2C%20reconnect%20en%20magic%20link%20%28ontwerp%29.md).
+- [x] **31.5 Lijnen lostrekken en elders aanhechten (reconnect).** *(gebouwd
+      2026-09-18)* React Flow `onReconnect`; het type blijft gelijk, knikpunten
+      vervallen, alleen de directe gedaante; weigering wordt uitgelegd.
+- [ ] **31.6 Lijnen op een andere plek leggen — knikpunten zijn onvindbaar.**
+      *(gecorrigeerd 2026-09-18: de eerste versie van dit punt stelde ten
+      onrechte dat knikpunten niet bestaan.)* Ze bestaan wél, in
+      `diagramcore/canvas/ConnectorEdge.jsx`: **Ctrl-klik** op een lijn voegt
+      een knikpunt toe, slepen verplaatst het, dubbelklik wist ze; haakse
+      lijnen kun je per segment duwen/trekken. Opslag: `data.knikken` op de
+      connector. Wat er schort: (a) **vindbaarheid** — geen menu-item, hint of
+      cursor die het verraadt, tot 18-09 ook niet gedocumenteerd; voeg
+      "Knikpunt toevoegen" toe aan het edge-contextmenu en neem het mee in de
+      hints van §28.3; (b) het werkt alleen op de **directe** gedaante (niet
+      op de drie edges van een ASOC-box); (c) `knikken` hangt aan de
+      connector en geldt dus voor **alle** diagrammen — hoort per voorkomen
+      (vgl. §29.11); (d) de **eindpunten** verleggen kan niet — dat is 31.5.
+- [x] **31.7 "Magic link" — sleep een lijn en kies uit wat mag.** *(gebouwd
+      2026-09-18)* Trek een lijn van A naar B zonder vooraf een connectortype
+      te kiezen: één passend type → direct gelegd; meerdere → keuzemenu op de
+      losplek. Met een gekozen type dat hier niet mag verdwijnt de lijn niet
+      meer stil: het menu legt uit en biedt de alternatieven aan.
+      `vindConnectorTypes()` (alle treffers) naast `vindConnectorType()`;
+      `onConnect` zet de keuze klaar, `onConnectEnd` opent het menu. Zie
+      `docs/STUDIO.md` → "Magic link". Hangt samen met §28.3 (dezelfde
+      afgeleide kennis kan de hints voeden).
+- [x] **31.8 Magic link — vervolg.** *(gebouwd 2026-09-18)* Loslaten op het
+      lege vlak (of het vlak van een container) → *"Nieuw na …"*: element +
+      lidmaatschap + verbinding in één keer. Canvasmenu's met het toetsenbord
+      (eerste optie voorgeselecteerd, ↑/↓, Enter, Escape).
+- [x] **31.10 Lijnen hangen alleen aan de vier handles.** *(gebouwd
+      2026-09-18, ter beoordeling)* Gemeld door Mark: "extra handles of vrije
+      aanhechting krijg ik niet (meer) voor elkaar". Oorzaak: zwevende
+      aanhechting bestaat sinds 08-08, maar (a) BPMN deed niet mee, en (b) élke
+      nieuw getekende lijn sloeg de toevallige handles op en gold daardoor als
+      "met de hand vastgezet" — zweven werkte alleen na *normaliseer
+      relaties*. Nu: tekenen/verhangen/magic link zetten bij zwevende types
+      niets vast (Shift = wél vastzetten), en BPMN-taak, -subproces,
+      -data-object, -pool en -lane zweven. Echte extra handles zijn er nooit
+      geweest. Zie `docs/STUDIO.md`. Bevalt het niet: terugdraaien is één
+      commit.
+- [ ] **31.9 Restpunten containers en afbakening.**
+      (a) De begrenzing laat een lid over de **kopregel/naamband** van de
+      container schuiven — de binnenruimte zou de kop moeten uitsluiten.
+      (b) Geen "pas grootte aan inhoud aan"; een container krimpen laat leden
+      erbuiten vallen (ze worden dan vrij en tonen hun lidmaatschapslijn).
+      (c) *Verplaats naar package…* in het contextmenu gebruikt nog
+      `window.prompt` en zegt "package" waar het een pool/lane kan zijn.
+      (d) De afbakening toetst alleen **nieuwe** verbindingen; een validatie
+      die bestaande overtredingen in een diagram aanwijst ontbreekt.
+      (e) `afbakeningVoor`/`overbrugt` zijn nog niet tekenbaar in de
+      profiel-editor (past in §30.4: twee vinkjes/keuzelijsten).
+      (f) Andere profielen kunnen het primitief benutten: region van een
+      samengestelde toestand, CMMN-stage, uitgeklapt BPMN-subproces.
+      (g) BPMN: pool zonder `processRef`, geen verticale pools, en
+      data-associaties worden niet begrensd.

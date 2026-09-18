@@ -28,6 +28,7 @@
  *
  * Puur en store-loos: testbaar met kale objecten.
  */
+import { toetsAfbakening } from "./afbakening.js";
 import { kortsteVoorkomenPaar, voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
 import { bepaalOpnames } from "./opname.js";
 
@@ -54,13 +55,9 @@ export function normaliseerHandle(waarde, soort) {
   return ZIJDEN.has(zijde) ? `${soort}-${zijde}` : null;
 }
 
-/**
- * Zoek het connector-ElementType dat een verbinding bron→doel toestaat.
- * Bij een expliciete voorkeur (taakbalk "Verbinding") is die leidend; zonder
- * voorkeur wint de eerste passende in descriptor-volgorde.
- */
-export function vindConnectorType(diagramType, bronElement, doelElement, voorkeur = null) {
-  if (!bronElement || !doelElement) return null;
+/** Connectortypen die volgens de elementtype-regels bron→doel toestaan. */
+function passendOpType(diagramType, bronElement, doelElement) {
+  if (!bronElement || !doelElement) return [];
   const kandidaten = (diagramType?.elementTypes || []).filter((et) => et.isConnector);
   // 1..* verbindingsregels (volledige vorm) of de verkorte bron/doel-vorm:
   // een verbinding past zodra één regel de combinatie toestaat.
@@ -71,16 +68,62 @@ export function vindConnectorType(diagramType, bronElement, doelElement, voorkeu
           doel: r?.doel?.elementTypes || r?.doel || [],
         }))
       : [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
-  const past = (et) =>
+  return kandidaten.filter((et) =>
     regelsVan(et).some(
-      (r) =>
-        r.bron.includes(bronElement.elementType) && r.doel.includes(doelElement.elementType)
-    );
-  if (voorkeur) {
-    const gekozen = kandidaten.find((et) => et.id === voorkeur);
-    return gekozen && past(gekozen) ? gekozen : null;
-  }
-  return kandidaten.find(past) || null;
+      (r) => r.bron.includes(bronElement.elementType) && r.doel.includes(doelElement.elementType)
+    )
+  );
+}
+
+/**
+ * Álle connector-ElementTypes die een verbinding bron→doel toestaan, in
+ * descriptor-volgorde. Basis van de "magic link" (backlog §31.7): sleep een
+ * lijn zonder vooraf een type te kiezen en de canvas biedt deze lijst aan.
+ *
+ * Met `elements` erbij telt ook de **afbakening** mee (§31.4, zie
+ * `afbakening.js`): een sequence flow kruist geen poolgrens, een message flow
+ * moet er juist een kruisen. Zonder `elements` gelden alleen de typeregels.
+ *
+ * @param {Object} diagramType
+ * @param {Object} bronElement
+ * @param {Object} doelElement
+ * @param {Record<string, Object>} [elements]
+ * @param {Map<string, string>} [containerVan]  lid → container; alleen nodig om
+ *   een nog-niet-bestaand element een plek te geven
+ * @returns {Array<Object>} passende connectortypen (leeg = niets mag)
+ */
+export function vindConnectorTypes(diagramType, bronElement, doelElement, elements = null, containerVan = null) {
+  const opType = passendOpType(diagramType, bronElement, doelElement);
+  if (!elements) return opType;
+  return opType.filter(
+    (ct) => !toetsAfbakening(diagramType, ct, bronElement, doelElement, elements, containerVan)
+  );
+}
+
+/**
+ * De connectortypen die op elementtype wél passen maar op de afbakening
+ * stranden — met de reden, zodat de canvas kan uitleggen waarom.
+ * @returns {Array<{connectorType: Object, weigering: Object}>}
+ */
+export function geweigerdDoorAfbakening(diagramType, bronElement, doelElement, elements, containerVan = null) {
+  if (!elements) return [];
+  return passendOpType(diagramType, bronElement, doelElement)
+    .map((connectorType) => ({
+      connectorType,
+      weigering: toetsAfbakening(diagramType, connectorType, bronElement, doelElement, elements, containerVan),
+    }))
+    .filter((x) => x.weigering);
+}
+
+/**
+ * Zoek het connector-ElementType dat een verbinding bron→doel toestaat.
+ * Bij een expliciete voorkeur (taakbalk "Verbinding") is die leidend; zonder
+ * voorkeur wint de eerste passende in descriptor-volgorde.
+ */
+export function vindConnectorType(diagramType, bronElement, doelElement, voorkeur = null, elements = null) {
+  const passend = vindConnectorTypes(diagramType, bronElement, doelElement, elements);
+  if (voorkeur) return passend.find((et) => et.id === voorkeur) || null;
+  return passend[0] || null;
 }
 
 /** Heeft de connector inhoud die een box-gedaante rechtvaardigt? */

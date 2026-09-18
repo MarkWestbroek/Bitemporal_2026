@@ -683,6 +683,12 @@ export function maakDiagramActiviteit(opties) {
         : { x: 120 + cascade, y: 120 + cascade };
       s.addElement(el);
       s.addElementToDiagram(dId, el.id, positie);
+      // Belandt het nieuwe element in een container (lane/pool), dan wordt het
+      // daar meteen lid van — anders ligt het er wél in maar hoort het er
+      // niet bij, en weigert de afbakening onbegrijpelijk een sequence flow.
+      // Een container zelf (nieuwe lane) alleen in een ándere container.
+      const containerId = layoutApiRef.current?.containerOp?.({ x: positie.x + 90, y: positie.y + 50 });
+      if (containerId) verhangNaarContainer(useStore, el.id, containerId);
       setSelectieId(el.id);
     }, []);
 
@@ -2355,6 +2361,38 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   }}
                   onKnikken={(connectorId, lijst) =>
                     useStore.getState().updateElement(connectorId, { data: { knikken: lijst } })
+                  }
+                  // Magic link op het lege vlak (§31.8): nieuw element,
+                  // gecentreerd op de losplek, plus de verbinding — samen.
+                  onMaakEnVerbind={({ elementTypeId, positie, connectorType, bronId, bronHandle, omgekeerd, containerId }) => {
+                    const nieuw = maakElement(elementTypeId);
+                    const st = useStore.getState();
+                    if (!nieuw || !st.actiefDiagramId) return;
+                    const maat = elementTypesById[elementTypeId]?.standaardMaat || { width: 160, height: 70 };
+                    st.addElement(nieuw);
+                    st.addElementToDiagram(st.actiefDiagramId, nieuw.id, {
+                      x: positie.x - maat.width / 2,
+                      y: positie.y - maat.height / 2,
+                    });
+                    // Losgelaten in een container (lane/pool): meteen lid.
+                    if (containerId) verhangNaarContainer(useStore, nieuw.id, containerId);
+                    verbind({
+                      connectorType,
+                      source: omgekeerd ? nieuw.id : bronId,
+                      target: omgekeerd ? bronId : nieuw.id,
+                      sourceHandle: omgekeerd ? null : bronHandle,
+                      targetHandle: omgekeerd ? bronHandle : null,
+                    });
+                    selecteerVoorkomen(nieuw.id, null);
+                  }}
+                  // Uiteinde van een lijn elders aangehecht (§31.5): zelfde
+                  // connector, nieuw paar; knikpunten vervallen.
+                  onVerhangConnector={(connectorId, { source, target, sourceHandle, targetHandle }) =>
+                    useStore.getState().updateElement(connectorId, {
+                      source,
+                      target,
+                      data: { sourceHandle, targetHandle, knikken: null },
+                    })
                   }
                   onContainerDrop={(elementId, containerId) =>
                     verhangNaarContainer(useStore, elementId, containerId)

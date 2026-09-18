@@ -145,6 +145,15 @@
  *   container (bv. package); een element erin slepen (canvas of boom) legt
  *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg.
  *   Containers sorteren bovenaan in de elementen-boom
+ *   Leden die ín de container liggen renderen als kind ervan: ze reizen mee
+ *   en blijven binnen de rand (Alt+slepen tilt eruit) — canvas/nesting.js
+ * @property {string[]} [afbakeningVoor]    - connectortype-ids die dit
+ *   containertype **begrenst**: bron en doel moeten in dezelfde afbakening
+ *   liggen (BPMN: sequence flow kruist geen poolgrens). Motor-primitief, zie
+ *   canvas/afbakening.js
+ * @property {string[]} [overbrugt]         - (connectortype) elementtype-ids
+ *   van afbakeningen die deze verbinding **moet** kruisen: bron en doel in
+ *   verschillende afbakeningen (BPMN: message flow tussen pools)
  * @property {{ouderTypes: string[], klem?: "rand"|"as"}} [randElement] - rand-aanhechting
  *   (gedragsdiagram-primitief §3.1): dit element woont óp de rand van een
  *   gastheer-element (BPMN boundary-event, state entry/exit-point, activity

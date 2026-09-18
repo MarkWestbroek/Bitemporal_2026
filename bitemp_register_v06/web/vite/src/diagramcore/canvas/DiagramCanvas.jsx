@@ -14,6 +14,10 @@
  *   onVerbind?         — ({connectorType, source, target, sourceHandle, targetHandle}) => void
  *   onVerwijder?       — (elementIds: string[]) => void      (Delete op selectie)
  *   onViewport?        — ({x,y,zoom}) => void                (na pannen/zoomen)
+ *   onVerhangConnector? — (connectorId, {source, target, sourceHandle, targetHandle}) => void
+ *                        — uiteinde van een lijn elders aangehecht (§31.5)
+ *   onMaakEnVerbind? — ({elementTypeId, positie, connectorType, bronId, bronHandle, omgekeerd}) => void
+ *                        — magic link op het lege vlak: nieuw element + verbinding (§31.8)
  *   onRandAanhechting? — (elementId, ouderId|null, {x,y}) => void — rand-element
  *                        aangehecht (positie relatief) of losgemaakt (absoluut)
  *   onNodeDoubleClick? — (element) => void — bv. gedragsverwijzing openen
@@ -44,8 +48,10 @@ import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
-import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante, normaliseerHandle } from "./materialiseerConnectoren.js";
+import { weigeringTekst } from "./afbakening.js";
+import { materialiseerConnectoren, vindConnectorType, vindConnectorTypes, geweigerdDoorAfbakening, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante, normaliseerHandle } from "./materialiseerConnectoren.js";
 import { voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
+import { bepaalNesting, nakomelingenVan, containerVanElementen } from "./nesting.js";
 import { bepaalOpnames, opnameCompartiment } from "./opname.js";
 
 import { ELEMENT_REF_MIME } from "./externDrop.js";
@@ -142,6 +148,8 @@ function CanvasBinnenkant({
   onViewport,
   onLabelOffset,
   onKnikken,
+  onVerhangConnector,
+  onMaakEnVerbind,
   onContainerDrop,
   onRandAanhechting,
   onNodeDoubleClick,
@@ -267,6 +275,43 @@ function CanvasBinnenkant({
     [elements, diagram, lookups, maten]
   );
 
+  // Nesting (§31.3): leden die ín hun container liggen renderen als React
+  // Flow-kind daarvan — ze reizen mee en blijven binnen de rand. De store
+  // houdt absolute posities; omrekenen gebeurt hier en bij dragstop.
+  const nesting = useMemo(
+    () => bepaalNesting(elements, diagram, lookups.elementTypesById, maten),
+    [elements, diagram, lookups, maten]
+  );
+  // Alt ingedrukt = begrenzing tijdelijk uit, zodat je een lid over de rand
+  // van zijn container kunt tillen (loslaten erbuiten = losmaken).
+  const [altTilt, setAltTilt] = useState(false);
+  // Shift bij het loslaten van een lijn = aanhechting vastzetten (zie
+  // handleVoorOpslag). Een ref: onConnect krijgt zelf geen event mee.
+  const shiftRef = useRef(false);
+  useEffect(() => {
+    const zet = (e) => {
+      setAltTilt(!!e.altKey);
+      shiftRef.current = !!e.shiftKey;
+    };
+    const uit = () => {
+      setAltTilt(false);
+      shiftRef.current = false;
+    };
+    window.addEventListener("keydown", zet);
+    window.addEventListener("keyup", zet);
+    window.addEventListener("blur", uit);
+    return () => {
+      window.removeEventListener("keydown", zet);
+      window.removeEventListener("keyup", zet);
+      window.removeEventListener("blur", uit);
+    };
+  }, []);
+  /** Absolute flow-positie van een (mogelijk geneste) React Flow-node. */
+  const absVan = useCallback(
+    (n) => getInternalNode(n.id)?.internals?.positionAbsolute || n.position,
+    [getInternalNode]
+  );
+
   useEffect(() => {
     // Element-ids op dít diagram — een rand-element (randVan) kan alleen
     // parent-relatief renderen als zijn gastheer hier ook staat.
@@ -297,11 +342,23 @@ function CanvasBinnenkant({
         // Rand-elementen blijven in C0 enkelvoudig. Bij meerdere voorkomens
         // van de gastheer hechten ze aan diens eerste voorkomen.
         const randVan = randVanElement ? voorkomenId(voorkomens.get(randVanElement)?.[0]) : null;
+        // Nesting: positie relatief aan het container-voorkomen (de store
+        // blijft absoluut), begrensd door de container tenzij Alt = tillen.
+        const containerVk = randVan ? null : nesting.ouderVan.get(voorkomenId(ref)) || null;
+        const containerRef = containerVk
+          ? (diagram?.nodes || []).find((k) => voorkomenId(k) === containerVk)
+          : null;
+        const absoluut = ref.position || { x: 0, y: 0 };
         return {
           id: voorkomenId(ref),
           type: "element",
-          position: ref.position || { x: 0, y: 0 },
+          position: containerRef?.position
+            ? { x: absoluut.x - containerRef.position.x, y: absoluut.y - containerRef.position.y }
+            : absoluut,
           ...(randVan ? { parentId: randVan, zIndex: 20 } : {}),
+          ...(containerRef?.position
+            ? { parentId: containerVk, ...(altTilt ? {} : { extent: "parent" }) }
+            : {}),
           // Grootte per diagram-lidmaatschap (metamodel: Position.elementSize).
           // `--dc-node-max: none` heft de automatische breedtegrens van
           // .dc-node op: wie zelf een maat kiest, wordt niet teruggeduwd naar
@@ -332,9 +389,12 @@ function CanvasBinnenkant({
         };
       })
       .filter(Boolean);
-    // React Flow eist ouders vóór kinderen in de array (één niveau volstaat:
-    // rand-elementen hechten aan top-level nodes).
-    flowNodes.sort((a, b) => (a.parentId ? 1 : 0) - (b.parentId ? 1 : 0));
+    // React Flow eist ouders vóór kinderen in de array: sorteer op
+    // nestdiepte (lane in pool, taak in lane); een rand-element komt direct
+    // ná zijn gastheer-niveau.
+    const diepteVan = (n) =>
+      n.parentId ? (nesting.diepte.get(n.id) ?? (nesting.diepte.get(n.parentId) ?? 0) + 1) : 0;
+    flowNodes.sort((a, b) => diepteVan(a) - diepteVan(b));
 
     // Synthetische nodes uit de connector-materialisatie: ankers (klein
     // rondje op de lijn) en auto-geplaatste connector-boxen zonder eigen
@@ -441,6 +501,7 @@ function CanvasBinnenkant({
           // Rand-aanhechting: expliciet overnemen — `...oud` zou een net
           // toegekende parent wissen (of een losgemaakte juist vasthouden).
           parentId: n.parentId,
+          extent: n.extent,
         };
       });
     });
@@ -454,7 +515,7 @@ function CanvasBinnenkant({
         hd.some((e) => e.selected) ? hd.map((e) => (e.selected ? { ...e, selected: false } : e)) : hd
       );
     }
-  }, [diagram, elements, lookups, gematerialiseerd, opnames, verrijk, setNodes, bewerkbaar, onNodeSize, selectieId]);
+  }, [diagram, elements, lookups, gematerialiseerd, opnames, nesting, altTilt, verrijk, setNodes, bewerkbaar, onNodeSize, selectieId]);
 
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
   // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —
@@ -540,6 +601,10 @@ function CanvasBinnenkant({
       ...e,
       type: "connector",
       selectable: bewerkbaar,
+      // Uiteinden lostrekken (§31.5): alleen de directe gedaante — daar zet
+      // de materialisatie het knikken-veld. Bij een ASOC-box zijn de drie
+      // edges geen zelfstandige verbinding.
+      reconnectable: !!(bewerkbaar && onVerhangConnector && e.data?.connectorId && e.data.knikken !== undefined),
       // Sleepbare labels (vgl. 0.2): de edge meldt de nieuwe offset per
       // zijde; de activiteit bewaart hem op het connector-element.
       data:
@@ -562,7 +627,7 @@ function CanvasBinnenkant({
       const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
-  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, maten]);
+  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, onVerhangConnector, maten]);
 
   // Directe kliks altijd melden, óók als React Flow geen selectie-wijziging
   // ziet (node stond intern nog geselecteerd terwijl de inspector inmiddels
@@ -587,6 +652,29 @@ function CanvasBinnenkant({
     },
     [onSelectElement, elements]
   );
+
+  // Escape = selectie leegmaken (backlog §31.2). Klikken op het lege vlak
+  // deselecteert ook, maar binnen een container (lane, package, stage) ís er
+  // geen leeg vlak — elke klik selecteert dan de container — en een
+  // kader-selectie liet React Flow's eigen Escape ongemoeid. Niet tijdens
+  // typen, en een open contextmenu sluit eerst zichzelf.
+  useEffect(() => {
+    const esc = (e) => {
+      if (e.key !== "Escape" || e.defaultPrevented || contextMenu) return;
+      const doel = e.target;
+      if (doel?.closest?.("input, textarea, select, [contenteditable='true'], [role='dialog']")) return;
+      const ietsGeselecteerd =
+        getNodes().some((n) => n.selected) || rfStoreApi.getState().edges.some((ed) => ed.selected);
+      if (!ietsGeselecteerd) return;
+      setNodes((hd) => hd.map((n) => (n.selected ? { ...n, selected: false } : n)));
+      setEdges((hd) => hd.map((ed) => (ed.selected ? { ...ed, selected: false } : ed)));
+      rfStoreApi.setState({ nodesSelectionActive: false });
+      gemeldeSelectieRef.current = selectieSig([]);
+      onSelectElement?.(null);
+    };
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [contextMenu, getNodes, rfStoreApi, setNodes, setEdges, onSelectElement]);
 
   const handleSelectionChange = useCallback(
     ({ nodes: sel, edges: selEdges }) => {
@@ -636,15 +724,18 @@ function CanvasBinnenkant({
       const ouderTypes = new Set(elementType.randElement.ouderTypes || []);
       // Kandidaat-gastheren: juiste type, middelpunt binnen rect+marge.
       const kandidaten = getNodes().filter((k) => {
-        if (k.id === node.id || k.parentId) return false;
+        // Een gastheer mag zelf in een container genest zijn (taak in lane);
+        // alleen een ander aangehecht rand-element is geen gastheer.
+        if (k.id === node.id || (k.parentId && k.data?.elementType?.randElement)) return false;
         if (!ouderTypes.has(k.data?.element?.elementType)) return false;
         const kw = k.measured?.width ?? 200;
         const kh = k.measured?.height ?? 80;
+        const kp = absVan(k);
         return (
-          midden.x >= k.position.x - MARGE &&
-          midden.x <= k.position.x + kw + MARGE &&
-          midden.y >= k.position.y - MARGE &&
-          midden.y <= k.position.y + kh + MARGE
+          midden.x >= kp.x - MARGE &&
+          midden.x <= kp.x + kw + MARGE &&
+          midden.y >= kp.y - MARGE &&
+          midden.y <= kp.y + kh + MARGE
         );
       });
       if (kandidaten.length) {
@@ -657,8 +748,9 @@ function CanvasBinnenkant({
         const gastheer = kandidaten[0];
         const gw = gastheer.measured?.width ?? 200;
         const gh = gastheer.measured?.height ?? 80;
-        let px = Math.min(Math.max(midden.x - gastheer.position.x, 0), gw);
-        let py = Math.min(Math.max(midden.y - gastheer.position.y, 0), gh);
+        const gp = absVan(gastheer);
+        let px = Math.min(Math.max(midden.x - gp.x, 0), gw);
+        let py = Math.min(Math.max(midden.y - gp.y, 0), gh);
         if (elementType.randElement.klem === "as") {
           // Klem op de verticale as (lijn-achtige gastheren, bv. een
           // sequence-levenslijn): x gecentreerd, y vrij langs de lijn.
@@ -684,7 +776,7 @@ function CanvasBinnenkant({
       }
       return false;
     },
-    [onRandAanhechting, getNodes, getInternalNode]
+    [onRandAanhechting, getNodes, getInternalNode, absVan]
   );
 
   const handleNodeDragStop = useCallback(
@@ -695,34 +787,53 @@ function CanvasBinnenkant({
       const gesleept = nodes?.length ? nodes : node ? [node] : [];
       // Rand-element (enkel gesleept): aanhechten/losmaken persisteert zelf.
       if (gesleept.length === 1 && verwerkRandAanhechting(gesleept[0])) return;
-      if (gesleept.length > 1 && onNodePosities) {
-        const record = {};
-        for (const n of gesleept) if (n?.id) record[n.id] = n.position;
-        onNodePosities(record);
-      } else if (gesleept[0]?.id && onNodePositie) {
-        onNodePositie(gesleept[0].id, gesleept[0].position);
+      // De store voert absolute posities; een genest lid meldt React Flow
+      // relatief aan zijn container → omrekenen. Alleen een aangehecht
+      // rand-element bewaart zijn positie relatief (aan zijn gastheer).
+      const isAangehechtRand = (n) => !!n.parentId && !!n.data?.elementType?.randElement;
+      const record = {};
+      for (const n of gesleept) {
+        if (!n?.id) continue;
+        record[n.id] = isAangehechtRand(n) ? n.position : absVan(n);
       }
+      // Container versleept: alle (ook diepere) geneste leden schuiven in de
+      // store mee — React Flow verplaatste ze visueel al.
+      const opgeslagen = new Map((diagram?.nodes || []).map((k) => [voorkomenId(k), k]));
+      for (const n of gesleept) {
+        const oud = opgeslagen.get(n?.id)?.position;
+        if (!oud || !record[n.id] || isAangehechtRand(n)) continue;
+        const dx = record[n.id].x - oud.x;
+        const dy = record[n.id].y - oud.y;
+        if (!dx && !dy) continue;
+        for (const kindId of nakomelingenVan(nesting, n.id)) {
+          const kp = opgeslagen.get(kindId)?.position;
+          if (kp && !record[kindId]) record[kindId] = { x: kp.x + dx, y: kp.y + dy };
+        }
+      }
+      const ids = Object.keys(record);
+      if (ids.length > 1 && onNodePosities) onNodePosities(record);
+      else if (ids.length === 1 && onNodePositie) onNodePositie(ids[0], record[ids[0]]);
+      else if (ids.length > 1 && onNodePositie) for (const id of ids) onNodePositie(id, record[id]);
       // "Slepen ín een package": eindigt een enkele sleep met het middelpunt
       // binnen een container-node (ElementType.containerVoor), meld dat aan
       // de activiteit — die legt/verhangt de lidmaatschaps-connector.
-      if (onContainerDrop && gesleept.length === 1 && gesleept[0]?.id) {
+      if (onContainerDrop && gesleept.length === 1 && gesleept[0]?.id && !isAangehechtRand(gesleept[0])) {
         const n = gesleept[0];
+        const np = record[n.id];
         const mid = {
-          x: n.position.x + (n.measured?.width ?? 200) / 2,
-          y: n.position.y + (n.measured?.height ?? 80) / 2,
+          x: np.x + (n.measured?.width ?? 200) / 2,
+          y: np.y + (n.measured?.height ?? 80) / 2,
         };
+        // Eigen nakomelingen zijn geen doel (pool niet in zijn eigen lane).
+        const eigen = new Set(nakomelingenVan(nesting, n.id));
         const kandidaten = getNodes().filter((k) => {
-          if (k.id === n.id) return false;
+          if (k.id === n.id || eigen.has(k.id)) return false;
           const et = lookups.elementTypesById[k.data?.element?.elementType];
           if (!et?.containerVoor) return false;
           const w = k.measured?.width ?? 200;
           const h = k.measured?.height ?? 80;
-          return (
-            mid.x >= k.position.x &&
-            mid.x <= k.position.x + w &&
-            mid.y >= k.position.y &&
-            mid.y <= k.position.y + h
-          );
+          const kp = absVan(k);
+          return mid.x >= kp.x && mid.x <= kp.x + w && mid.y >= kp.y && mid.y <= kp.y + h;
         });
         if (kandidaten.length) {
           // Bij geneste containers wint de kleinste (binnenste).
@@ -732,10 +843,14 @@ function CanvasBinnenkant({
               (b.measured?.width ?? 200) * (b.measured?.height ?? 80)
           );
           onContainerDrop(n.data?.element?.id, kandidaten[0].data?.element?.id);
+        } else if (nesting.ouderVan.has(n.id)) {
+          // Was genest en is (met Alt) over de rand getild tot buiten elke
+          // container → het lidmaatschap vervalt.
+          onContainerDrop(n.data?.element?.id, null);
         }
       }
     },
-    [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups, verwerkRandAanhechting]
+    [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups, verwerkRandAanhechting, absVan, nesting, diagram]
   );
 
   // Externe drop (ELEMENT_REF_MIME uit de elementen-/projectbrowser): zoek
@@ -795,6 +910,8 @@ function CanvasBinnenkant({
     [onNodeDoubleClick, elements]
   );
 
+  // De edge die op dit moment aan een uiteinde versleept wordt (§31.5).
+  const verhangRef = useRef(null);
   const isValidConnection = useCallback(
     (verbinding) => {
       if (!bewerkbaar) return false;
@@ -802,31 +919,309 @@ function CanvasBinnenkant({
       const doelNode = getNodes().find((node) => node.id === verbinding.target);
       const bron = elements[bronNode?.data?.element?.id || verbinding.source];
       const doel = elements[doelNode?.data?.element?.id || verbinding.target];
-      return !!vindConnectorType(diagramType, bron, doel, verbindingsType);
+      // Tijdens het verhangen van een bestaande lijn geldt háár type, niet de
+      // keuze in de taakbalk.
+      const verhangType = elements[verhangRef.current?.data?.connectorId]?.elementType;
+      return !!vindConnectorType(diagramType, bron, doel, verhangType || verbindingsType, elements);
     },
     [bewerkbaar, elements, diagramType, verbindingsType, getNodes]
+  );
+
+  // "Magic link" (backlog §31.7): is er in de taakbalk geen verbindingstype
+  // gekozen en passen er meerdere, dan kiest de gebruiker op de losplek.
+  // onConnect kent die plek nog niet — React Flow roept daarna onConnectEnd
+  // mét het pointer-event aan; de keuze wacht daar in deze ref op.
+  const wachtendeKeuzeRef = useRef(null);
+  const magicMenuTijdRef = useRef(0);
+  const elementVanNode = useCallback(
+    (nodeId) => {
+      const node = getNodes().find((n) => n.id === nodeId);
+      const id = node?.data?.element?.id || nodeId;
+      return { id, element: elements[id] };
+    },
+    [getNodes, elements]
+  );
+  const omschrijf = useCallback(
+    (element) =>
+      element?.naam || lookups.elementTypesById[element?.elementType]?.label || element?.elementType || "?",
+    [lookups]
+  );
+
+  /**
+   * Welke handle bewaren we bij een net getekende of verhangen lijn?
+   * Bij een **zwevend** elementtype (randAanhechting) géén: je sleept nu
+   * eenmaal altijd van handle naar handle, en die toevallige keuze vastleggen
+   * pinde elke nieuwe lijn op het midden van een zijde — zweven werkte dan
+   * alleen na "normaliseer relaties". Vastzetten is nu een bewuste handeling:
+   * **Shift** ingedrukt bij het loslaten, of het contextmenu van de lijn
+   * (Bron-/Doel-uiteinde vastzetten). Bij "zijden"-types blijft de handle
+   * gewoon bewaard.
+   */
+  const handleVoorOpslag = useCallback(
+    (elementId, handleId) => {
+      if (!handleId) return null;
+      if (shiftRef.current) return handleId;
+      const et = lookups.elementTypesById[elements[elementId]?.elementType];
+      return et?.randAanhechting === "zwevend" ? null : handleId;
+    },
+    [lookups, elements]
+  );
+
+  /** Element-id van de kleinste container onder een flow-punt (of null). */
+  const containerOpPunt = useCallback(
+    (punt) => {
+      const raak = getNodes()
+        .filter((k) => {
+          if (!lookups.elementTypesById[k.data?.element?.elementType]?.containerVoor) return false;
+          const kp = absVan(k);
+          const w = k.measured?.width ?? 200;
+          const h = k.measured?.height ?? 80;
+          return punt.x >= kp.x && punt.x <= kp.x + w && punt.y >= kp.y && punt.y <= kp.y + h;
+        })
+        .sort(
+          (a, b) =>
+            (a.measured?.width ?? 200) * (a.measured?.height ?? 80) -
+            (b.measured?.width ?? 200) * (b.measured?.height ?? 80)
+        );
+      return raak[0]?.data?.element?.id || null;
+    },
+    [getNodes, lookups, absVan]
   );
 
   const handleConnect = useCallback(
     (verbinding) => {
       if (!bewerkbaar || !onVerbind) return;
-      const bronNode = getNodes().find((node) => node.id === verbinding.source);
-      const doelNode = getNodes().find((node) => node.id === verbinding.target);
-      const bronId = bronNode?.data?.element?.id || verbinding.source;
-      const doelId = doelNode?.data?.element?.id || verbinding.target;
-      const bron = elements[bronId];
-      const doel = elements[doelId];
-      const connectorType = vindConnectorType(diagramType, bron, doel, verbindingsType);
-      if (!connectorType) return;
-      onVerbind({
-        connectorType,
-        source: bronId,
-        target: doelId,
-        sourceHandle: verbinding.sourceHandle || null,
-        targetHandle: verbinding.targetHandle || null,
+      const { id: bronId, element: bron } = elementVanNode(verbinding.source);
+      const { id: doelId, element: doel } = elementVanNode(verbinding.target);
+      const passend = verbindingsType
+        ? [vindConnectorType(diagramType, bron, doel, verbindingsType, elements)].filter(Boolean)
+        : vindConnectorTypes(diagramType, bron, doel, elements);
+      if (!passend.length) return;
+      const leg = (connectorType) =>
+        onVerbind({
+          connectorType,
+          source: bronId,
+          target: doelId,
+          sourceHandle: handleVoorOpslag(bronId, verbinding.sourceHandle),
+          targetHandle: handleVoorOpslag(doelId, verbinding.targetHandle),
+        });
+      if (passend.length === 1) {
+        leg(passend[0]);
+        return;
+      }
+      wachtendeKeuzeRef.current = { passend, leg, bron, doel };
+    },
+    [bewerkbaar, onVerbind, elementVanNode, diagramType, verbindingsType, elements, handleVoorOpslag]
+  );
+
+  const handleConnectEnd = useCallback(
+    (ev, toestand) => {
+      const wacht = wachtendeKeuzeRef.current;
+      wachtendeKeuzeRef.current = null;
+      if (!bewerkbaar) return;
+      const punt = ev?.changedTouches?.[0] || ev;
+      if (punt?.clientX == null) return;
+      const vlak = ev?.target?.closest?.(".dc-canvasvlak") || null;
+      const keuzes = (typen, leg) =>
+        typen.map((et) => ({
+          id: `magic-${et.id}`,
+          label: et.label,
+          icoon: et.kort || null,
+          onClick: () => leg(et),
+        }));
+      if (wacht) {
+        setContextMenu({
+          x: punt.clientX,
+          y: punt.clientY,
+          vlak,
+          items: [
+            { kop: true, label: `${omschrijf(wacht.bron)} → ${omschrijf(wacht.doel)}` },
+            ...keuzes(wacht.passend, wacht.leg),
+          ],
+        });
+        return;
+      }
+      // Losgelaten op een node waar het (gekozen) type niet mag: zeg waarom,
+      // en bied aan wat wél kan in plaats van de lijn stil te laten verdwijnen.
+      if (toestand?.isValid || !toestand?.fromNode) return;
+      const onder = document.elementFromPoint(punt.clientX, punt.clientY);
+      const doelNodeId =
+        toestand.toNode?.id || onder?.closest?.(".react-flow__node")?.getAttribute("data-id");
+      // Losgelaten op het **lege vlak** (§31.8): bied de elementtypen aan die
+      // vanaf deze bron bereikbaar zijn; kiezen maakt het element op de
+      // losplek én legt de verbinding.
+      // Binnen een container (pool, lane) ís het lege vlak de container zelf:
+      // losgelaten op zijn vlak — dus niet op een van zijn handles, dan kent
+      // React Flow een toNode — telt als "leeg vlak daarbinnen".
+      const opContainerVlak =
+        !toestand.toNode &&
+        !!doelNodeId &&
+        doelNodeId !== toestand.fromNode.id &&
+        !!lookups.elementTypesById[elementVanNode(doelNodeId).element?.elementType]?.containerVoor;
+      if (onMaakEnVerbind && (opContainerVlak || (!doelNodeId && onder?.closest?.(".react-flow__pane")))) {
+        if (toestand.fromNode.id.startsWith(ANKER_PREFIX)) return;
+        const andersom = toestand.fromHandle?.type === "target";
+        const vast = elementVanNode(toestand.fromNode.id);
+        if (!vast.element) return;
+        const opties = [];
+        const positie = screenToFlowPosition({ x: punt.clientX, y: punt.clientY });
+        // Het nieuwe element komt in de container onder de losplek te liggen
+        // (en wordt daar lid van) — dat bepaalt mede wat er mag (afbakening).
+        const containerId = containerOpPunt(positie);
+        const ouders = containerVanElementen(elements, lookups.elementTypesById);
+        if (containerId) ouders.set("__nieuw", containerId);
+        for (const et of diagramType?.elementTypes || []) {
+          if (et.isConnector || !et.kort) continue;
+          const proef = { id: "__nieuw", elementType: et.id };
+          const passend = vindConnectorTypes(
+            diagramType,
+            andersom ? proef : vast.element,
+            andersom ? vast.element : proef,
+            elements,
+            ouders
+          ).filter(
+            (ct) =>
+              // Lidmaatschapslijnen (container → lid) horen niet bij "trek een
+              // lijn naar iets nieuws": dat doe je door erin te slepen.
+              !ct.edgePresentatie?.verbergBijNesting && (!verbindingsType || ct.id === verbindingsType)
+          );
+          if (passend.length) opties.push({ et, ct: passend[0] });
+        }
+        if (!opties.length) return;
+        // Het gangbaarste connectortype eerst (descriptor-volgorde: bv.
+        // Sequence flow vóór Message flow), daarbinnen de elementvolgorde —
+        // zo is de voorgeselecteerde eerste optie meestal de bedoelde.
+        const rang = new Map((diagramType?.elementTypes || []).map((t, i) => [t.id, i]));
+        opties.sort((a, b) => rang.get(a.ct.id) - rang.get(b.ct.id) || rang.get(a.et.id) - rang.get(b.et.id));
+        magicMenuTijdRef.current = Date.now();
+        setContextMenu({
+          x: punt.clientX,
+          y: punt.clientY,
+          vlak,
+          items: [
+            { kop: true, label: `Nieuw ${andersom ? "vóór" : "na"} ${omschrijf(vast.element)}` },
+            ...opties.map(({ et, ct }) => ({
+              id: `magic-nieuw-${et.id}`,
+              label: verbindingsType ? et.label : `${et.label}  ·  ${ct.label}`,
+              icoon: ct.kort || null,
+              onClick: () =>
+                onMaakEnVerbind({
+                  elementTypeId: et.id,
+                  positie,
+                  connectorType: ct,
+                  bronId: vast.id,
+                  bronHandle: handleVoorOpslag(vast.id, toestand.fromHandle?.id || null),
+                  omgekeerd: andersom,
+                  containerId,
+                }),
+            })),
+          ],
+        });
+        return;
+      }
+      if (!doelNodeId || doelNodeId === toestand.fromNode.id) return;
+      if (doelNodeId.startsWith(ANKER_PREFIX) || toestand.fromNode.id.startsWith(ANKER_PREFIX)) return;
+      // Een lijn vanaf een doel-handle getrokken loopt andersom.
+      const omgekeerd = toestand.fromHandle?.type === "target";
+      const van = elementVanNode(omgekeerd ? doelNodeId : toestand.fromNode.id);
+      const naar = elementVanNode(omgekeerd ? toestand.fromNode.id : doelNodeId);
+      if (!van.element || !naar.element || !onVerbind) return;
+      const alternatieven = vindConnectorTypes(diagramType, van.element, naar.element, elements);
+      const gekozen = verbindingsType ? lookups.elementTypesById[verbindingsType]?.label : null;
+      // Strandt het op een afbakening (poolgrens), zeg dát — "mag hier niet"
+      // leert de gebruiker niets.
+      const opGrens = geweigerdDoorAfbakening(diagramType, van.element, naar.element, elements);
+      const grensReden = (verbindingsType ? opGrens.find((g) => g.connectorType.id === verbindingsType) : opGrens[0]) || null;
+      const leg = (connectorType) =>
+        onVerbind({ connectorType, source: van.id, target: naar.id, sourceHandle: null, targetHandle: null });
+      setContextMenu({
+        x: punt.clientX,
+        y: punt.clientY,
+        vlak,
+        items: [
+          { kop: true, label: `${omschrijf(van.element)} → ${omschrijf(naar.element)}` },
+          {
+            id: "magic-geen",
+            disabled: true,
+            label: grensReden
+              ? `${weigeringTekst(grensReden.connectorType, grensReden.weigering)}${alternatieven.length ? " — wel mogelijk:" : ""}`
+              : gekozen
+                ? `${gekozen} mag hier niet${alternatieven.length ? " — wel mogelijk:" : ""}`
+                : "Geen verbinding toegestaan tussen deze elementen",
+          },
+          ...(gekozen ? keuzes(alternatieven, leg) : []),
+        ],
       });
     },
-    [bewerkbaar, onVerbind, elements, diagramType, verbindingsType, getNodes]
+    [bewerkbaar, omschrijf, elementVanNode, diagramType, verbindingsType, lookups, onVerbind, onMaakEnVerbind, screenToFlowPosition, elements, containerOpPunt, handleVoorOpslag]
+  );
+
+  // ── Uiteinden lostrekken en elders aanhechten (§31.5) ─────────────────────
+  // Het type blijft gelijk; geldig als dat type tussen het nieuwe paar mag
+  // (isValidConnection hierboven). Knikpunten vervallen: de geometrie klopt
+  // niet meer. De handle wordt de zijde waar je loslaat.
+  const handleReconnectStart = useCallback((_ev, edge) => {
+    verhangRef.current = edge;
+  }, []);
+  const handleReconnect = useCallback(
+    (oudeEdge, verbinding) => {
+      const connectorId = oudeEdge?.data?.connectorId;
+      if (!bewerkbaar || !onVerhangConnector || !connectorId) return;
+      const { id: bronId } = elementVanNode(verbinding.source);
+      const { id: doelId } = elementVanNode(verbinding.target);
+      verhangRef.current = { ...oudeEdge, gelukt: true };
+      onVerhangConnector(connectorId, {
+        source: bronId,
+        target: doelId,
+        sourceHandle: handleVoorOpslag(bronId, verbinding.sourceHandle),
+        targetHandle: handleVoorOpslag(doelId, verbinding.targetHandle),
+      });
+    },
+    [bewerkbaar, onVerhangConnector, elementVanNode, handleVoorOpslag]
+  );
+  const handleReconnectEnd = useCallback(
+    (ev, edge, handleType, toestand) => {
+      const gelukt = verhangRef.current?.gelukt;
+      verhangRef.current = null;
+      if (gelukt || !bewerkbaar || toestand?.isValid) return;
+      // Losgelaten op een node waar dit type niet heen mag: zeg waarom in
+      // plaats van de lijn stil terug te laten springen.
+      const punt = ev?.changedTouches?.[0] || ev;
+      if (punt?.clientX == null) return;
+      const doelNodeId =
+        toestand?.toNode?.id ||
+        document
+          .elementFromPoint(punt.clientX, punt.clientY)
+          ?.closest?.(".react-flow__node")
+          ?.getAttribute("data-id");
+      if (!doelNodeId || doelNodeId.startsWith(ANKER_PREFIX)) return;
+      const connector = elements[edge?.data?.connectorId];
+      if (!connector) return;
+      // React Flow geeft als handleType het uiteinde dat bleef **staan**
+      // (de sleep vertrekt vanaf de overkant).
+      const nieuw = elementVanNode(doelNodeId).element;
+      const van = handleType === "source" ? elements[connector.source] : nieuw;
+      const naar = handleType === "source" ? nieuw : elements[connector.target];
+      if (!van || !naar) return;
+      const label = lookups.elementTypesById[connector.elementType]?.label || connector.elementType;
+      const opGrens = geweigerdDoorAfbakening(diagramType, van, naar, elements).find(
+        (g) => g.connectorType.id === connector.elementType
+      );
+      setContextMenu({
+        x: punt.clientX,
+        y: punt.clientY,
+        vlak: ev?.target?.closest?.(".dc-canvasvlak") || null,
+        items: [
+          { kop: true, label: `${omschrijf(van)} → ${omschrijf(naar)}` },
+          {
+            id: "verhang-geen",
+            disabled: true,
+            label: `${opGrens ? weigeringTekst(opGrens.connectorType, opGrens.weigering) : `${label} mag hier niet`} — de lijn blijft waar hij was`,
+          },
+        ],
+      });
+    },
+    [bewerkbaar, elements, elementVanNode, lookups, omschrijf, diagramType]
   );
 
   const handleNodesDelete = useCallback(
@@ -919,11 +1314,14 @@ function CanvasBinnenkant({
   useImperativeHandle(
     layoutApiRef,
     () => {
+      // Store-eenheid: absoluut, behalve een aangehecht rand-element (dat
+      // bewaart zijn positie relatief aan zijn gastheer).
+      const storePos = (n) => (n.parentId && n.data?.elementType?.randElement ? n.position : absVan(n));
       const naarItems = (flowNodes) =>
         flowNodes.map((n) => ({
           id: n.id,
-          x: n.position.x,
-          y: n.position.y,
+          x: storePos(n).x,
+          y: storePos(n).y,
           width: n.measured?.width ?? 200,
           height: n.measured?.height ?? 100,
         }));
@@ -935,7 +1333,17 @@ function CanvasBinnenkant({
       return {
         /** Uitlijnen/verdelen op de selectie (minimaal 2 nodes). */
         lijnUit: (mode) => {
-          const selectie = getNodes().filter((n) => n.selected);
+          // Een aangehecht rand-element bewaart zijn positie *relatief* aan
+          // zijn gastheer — die als absolute coördinaat meerekenen trok
+          // boundary events los en verstoorde de verdeling (backlog §31.1).
+          // Label-ankers idem. Leden van een container doen wél mee: die
+          // rekenen (en bewaren) absoluut.
+          const selectie = getNodes().filter(
+            (n) =>
+              n.selected &&
+              !(n.parentId && n.data?.elementType?.randElement) &&
+              !n.id.startsWith(ANKER_PREFIX)
+          );
           pasToe(berekenUitlijning(mode, naarItems(selectie)));
         },
         /**
@@ -952,8 +1360,9 @@ function CanvasBinnenkant({
           const w = n.measured?.width ?? 200;
           const h = n.measured?.height ?? 80;
           const marge = 32;
-          const links = n.position.x * vp.zoom + vp.x;
-          const boven = n.position.y * vp.zoom + vp.y;
+          const np = absVan(n);
+          const links = np.x * vp.zoom + vp.x;
+          const boven = np.y * vp.zoom + vp.y;
           const rechts = links + w * vp.zoom;
           const onder = boven + h * vp.zoom;
           let dx = 0;
@@ -983,6 +1392,8 @@ function CanvasBinnenkant({
         snapRaster: (raster = 16) => {
           pasToe(berekenRasterSnap(naarItems(getNodes()), raster));
         },
+        /** Element-id van de kleinste container onder een flow-punt (of null). */
+        containerOp: (punt) => containerOpPunt(punt),
         /** Flow-coördinaat van het midden van het zichtbare canvas. */
         viewportMidden: () => {
           const el = document.querySelector(".dc-canvas");
@@ -996,7 +1407,9 @@ function CanvasBinnenkant({
           const flowNodes = getNodes().map((n) => ({
             id: n.id,
             type: n.data?.element?.elementType,
-            position: n.position,
+            // Absoluut (de store-eenheid); alleen een aangehecht rand-element
+            // blijft relatief aan zijn gastheer.
+            position: n.parentId && n.data?.elementType?.randElement ? n.position : absVan(n),
             measured: n.measured,
             hidden: n.hidden,
             data: n.data?.element?.data || {},
@@ -1081,7 +1494,7 @@ function CanvasBinnenkant({
         },
       };
     },
-    [getNodes, screenToFlowPosition, edges, elements, diagram, onNodePosities, rfStoreApi]
+    [getNodes, screenToFlowPosition, edges, elements, diagram, onNodePosities, rfStoreApi, absVan, containerOpPunt]
   );
 
   return (
@@ -1105,6 +1518,10 @@ function CanvasBinnenkant({
       onEdgeClick={handleEdgeClick}
       onNodeDragStop={handleNodeDragStop}
       onConnect={handleConnect}
+      onConnectEnd={handleConnectEnd}
+      onReconnectStart={handleReconnectStart}
+      onReconnect={handleReconnect}
+      onReconnectEnd={handleReconnectEnd}
       isValidConnection={isValidConnection}
       onNodesDelete={handleNodesDelete}
       onEdgesDelete={handleEdgesDelete}
@@ -1116,7 +1533,13 @@ function CanvasBinnenkant({
       onNodeContextMenu={openContextMenu}
       onEdgeContextMenu={openContextMenu}
       onSelectionContextMenu={openContextMenu}
-      onPaneClick={() => setContextMenu(null)}
+      onPaneClick={() => {
+        // Een verbinding loslaten op het lege vlak levert óók een pane-klik op
+        // (het vlak is de gezamenlijke voorouder van handle en losplek); die
+        // mag het zojuist geopende magic-link-menu niet meteen sluiten.
+        if (Date.now() - magicMenuTijdRef.current < 400) return;
+        setContextMenu(null);
+      }}
       onMoveEnd={handleMoveEnd}
       nodesDraggable={bewerkbaar}
       nodesConnectable={bewerkbaar}
@@ -1143,9 +1566,26 @@ function CanvasBinnenkant({
             const maxLeft = window.innerWidth - r.width - 8;
             if (contextMenu.y > maxTop) el.style.top = `${Math.max(8, maxTop)}px`;
             if (contextMenu.x > maxLeft) el.style.left = `${Math.max(8, maxLeft)}px`;
+            // Eerste bruikbare optie voorselecteren (één keer per menu).
+            if (!el.dataset.gefocust) {
+              el.dataset.gefocust = "1";
+              el.querySelector("button:not(:disabled)")?.focus({ preventScroll: true });
+            }
           }}
           style={{ left: contextMenu.x, top: contextMenu.y, maxHeight: "calc(100vh - 16px)", overflowY: "auto" }}
           onContextMenu={(e) => e.preventDefault()}
+          // Toetsenbord (§31.8): ↑/↓ wandelt langs de opties, Enter kiest (de
+          // knop heeft focus), Escape sluit. Handig na een magic link: je
+          // hand hoeft niet terug naar de muis voor de eerste optie.
+          onKeyDown={(e) => {
+            if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+            e.preventDefault();
+            const knoppen = [...e.currentTarget.querySelectorAll("button:not(:disabled)")];
+            if (!knoppen.length) return;
+            const i = knoppen.indexOf(document.activeElement);
+            const stap = e.key === "ArrowDown" ? 1 : -1;
+            knoppen[(i + stap + knoppen.length) % knoppen.length].focus();
+          }}
         >
           {contextMenu.items.map((item, i) =>
             item.sep ? (
