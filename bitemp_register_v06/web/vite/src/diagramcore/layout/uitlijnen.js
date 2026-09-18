@@ -69,20 +69,34 @@ export function berekenUitlijning(mode, items) {
       for (const i of items) zet(i, i.x, gemY - i.height / 2);
       break;
     }
+    // Verdelen = gelijke **tussenruimte** (niet gelijke linkerranden): de
+    // uitersten blijven staan, de rest schuift zó dat elk gat even groot is.
+    // Verdelen op `x` alleen gaf bij ongelijke breedtes (brede taak naast
+    // kleine events) zichtbaar ongelijke gaten, of zelfs overlap.
     case "distribute-h": {
-      const gesorteerd = [...items].sort((a, b) => a.x - b.x);
-      const eerste = gesorteerd[0].x;
-      const laatste = gesorteerd[gesorteerd.length - 1].x;
-      const stap = (laatste - eerste) / (gesorteerd.length - 1);
-      gesorteerd.forEach((i, idx) => zet(i, eerste + idx * stap, i.y));
+      const gesorteerd = [...items].sort((a, b) => a.x + a.width / 2 - (b.x + b.width / 2));
+      const eerste = gesorteerd[0];
+      const laatste = gesorteerd[gesorteerd.length - 1];
+      const som = gesorteerd.reduce((t, i) => t + i.width, 0);
+      const gat = (laatste.x + laatste.width - eerste.x - som) / (gesorteerd.length - 1);
+      let x = eerste.x;
+      for (const i of gesorteerd) {
+        if (i !== eerste && i !== laatste) zet(i, x, i.y);
+        x += i.width + gat;
+      }
       break;
     }
     case "distribute-v": {
-      const gesorteerd = [...items].sort((a, b) => a.y - b.y);
-      const eerste = gesorteerd[0].y;
-      const laatste = gesorteerd[gesorteerd.length - 1].y;
-      const stap = (laatste - eerste) / (gesorteerd.length - 1);
-      gesorteerd.forEach((i, idx) => zet(i, i.x, eerste + idx * stap));
+      const gesorteerd = [...items].sort((a, b) => a.y + a.height / 2 - (b.y + b.height / 2));
+      const eerste = gesorteerd[0];
+      const laatste = gesorteerd[gesorteerd.length - 1];
+      const som = gesorteerd.reduce((t, i) => t + i.height, 0);
+      const gat = (laatste.y + laatste.height - eerste.y - som) / (gesorteerd.length - 1);
+      let y = eerste.y;
+      for (const i of gesorteerd) {
+        if (i !== eerste && i !== laatste) zet(i, i.x, y);
+        y += i.height + gat;
+      }
       break;
     }
     default:

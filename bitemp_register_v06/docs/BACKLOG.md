@@ -1457,3 +1457,88 @@ Branch `feat/ge-opname-in-entiteit`, gemerged naar `main` (`3b22d01`). Zie
 - [ ] **30.6 Restpunten opname.** Klik op een sub-vak selecteert de ENT en
       niet de GE; de opname-keuze reist niet mee in de V3-export (net als
       maten en `gedaanteOverrides`); een ENT met vaste maat groeit niet mee.
+
+## 31. Diagrameditor in de Studio — bevindingen uit gebruik (2026-09-17)
+
+Bevindingen van Mark bij het tekenen van een BPMN-diagram op de eigen motor
+(`diagramcore` + profiel `bpmn`). De eerste vier zijn defecten/gaten, de laatste
+drie gaan over het bewerken van lijnen. **Stand 2026-09-18:** 31.1, 31.2 en
+31.7 zijn opgepakt; 31.3–31.6 staan nog open (containment, pools en
+reconnect vragen een ontwerpkeuze; knikpunten bestaan al maar zijn
+onvindbaar). Zie `docs/STUDIO.md` en
+`STUDIO-05-diagramcore-plan.md`.
+
+- [x] **31.1 Horizontaal verdelen geeft een rare uitkomst.** *(opgelost
+      2026-09-18)* Gemeld met schermafbeeldingen: na *Horizontaal verdelen* op
+      een rij start-event → Task → event → eind-event stonden de vormen scheef
+      en schoof een boundary-event over de sequence flow. Twee oorzaken, beide
+      gerepareerd: (a) `layout/uitlijnen.js` verdeelde op de **linkerrand**
+      (`x`) — breedtes telden niet mee, dus ongelijke gaten bij een brede Task
+      naast smalle ringen. Nu: gelijke **tussenruimte**, uitersten blijven
+      staan (ook `distribute-v`); (b) `lijnUit` in `DiagramCanvas.jsx` nam
+      álle geselecteerde nodes mee, ook aangehechte **rand-elementen** — die
+      hebben een `parentId` en dus een positie *relatief* aan hun gastheer;
+      als absolute coördinaat meegerekend raakten ze los. Nodes met
+      `parentId` en label-ankers worden nu uitgefilterd. Tests in
+      `uitlijnen.test.js`.
+- [x] **31.2 Deselecteren op het diagram.** *(opgelost 2026-09-18)* Bij
+      natesten bleek klikken op het lege vlak wél te deselecteren; het echte
+      probleem zat elders: (a) binnen een **container** (lane die het canvas
+      vult) bestaat geen leeg vlak — elke klik selecteert de lane; (b)
+      `Escape` liet een kader-selectie (Shift+slepen) staan. `Escape` maakt nu
+      altijd de hele selectie leeg (nodes + edges + kader), behalve tijdens
+      typen of met een open contextmenu. Zie `docs/STUDIO.md` → "Deselecteren".
+- [ ] **31.3 Een Lane houdt zijn elementen niet vast.** `containerVoor: "bevat"`
+      legt bij het droppen alleen een **lidmaatschaps-connector**; het is geen
+      React Flow-`parentNode`. Gevolg: de lane verslepen laat de inhoud staan,
+      de inhoud eruit slepen verbreekt niets zichtbaar, en er is geen clipping
+      of meegroeien. Dit raakt álle containers (partitie, package, stage,
+      samengestelde toestand), niet alleen de BPMN-lane. Keuze te maken:
+      echte parent/child in React Flow (met `extent: "parent"`) of een eigen
+      "verplaats leden mee"-regel bovenop de bestaande connector.
+- [ ] **31.4 Er is geen Pool.** Bewust buiten v0 gelaten (zie de kop van
+      `diagramprofielen/bpmn/index.js`: "pools + message flow als
+      collaboration-laag blijven buiten v0"), maar wel gemist. Een pool is
+      meer dan een tweede container: er horen **regels** bij die de motor nu
+      niet kent — een sequence flow mag niet tussen twee pools lopen (dat moet
+      een message flow zijn), en een message flow juist niet binnen één pool.
+      `verbindingsregels` werken nu op elementtype-paren; deze regel is
+      *contextueel* (hangt af van de container van bron en doel). Vraagt dus
+      een uitbreiding van het regelmodel in `materialiseerConnectoren.js`, en
+      hangt samen met 31.3 (zonder echte containment is "in dezelfde pool"
+      niet te bepalen).
+- [ ] **31.5 Lijnen lostrekken en elders aanhechten (reconnect).** Een
+      bestaande lijn kan niet van bron of doel losgetrokken worden; React
+      Flow's `onReconnect`/`reconnectable` wordt nergens gebruikt. Nu is de
+      enige weg: verwijderen en opnieuw tekenen — waarbij de velden op de
+      connector (rolnaam, kardinaliteit, …) verloren gaan. Bij het verhangen
+      moet `isValidConnection` opnieuw gelden, en voor connectoren in de
+      canonieke profielen moet het onderliggende model meeverhuizen.
+- [ ] **31.6 Lijnen op een andere plek leggen — knikpunten zijn onvindbaar.**
+      *(gecorrigeerd 2026-09-18: de eerste versie van dit punt stelde ten
+      onrechte dat knikpunten niet bestaan.)* Ze bestaan wél, in
+      `diagramcore/canvas/ConnectorEdge.jsx`: **Ctrl-klik** op een lijn voegt
+      een knikpunt toe, slepen verplaatst het, dubbelklik wist ze; haakse
+      lijnen kun je per segment duwen/trekken. Opslag: `data.knikken` op de
+      connector. Wat er schort: (a) **vindbaarheid** — geen menu-item, hint of
+      cursor die het verraadt, tot 18-09 ook niet gedocumenteerd; voeg
+      "Knikpunt toevoegen" toe aan het edge-contextmenu en neem het mee in de
+      hints van §28.3; (b) het werkt alleen op de **directe** gedaante (niet
+      op de drie edges van een ASOC-box); (c) `knikken` hangt aan de
+      connector en geldt dus voor **alle** diagrammen — hoort per voorkomen
+      (vgl. §29.11); (d) de **eindpunten** verleggen kan niet — dat is 31.5.
+- [x] **31.7 "Magic link" — sleep een lijn en kies uit wat mag.** *(gebouwd
+      2026-09-18)* Trek een lijn van A naar B zonder vooraf een connectortype
+      te kiezen: één passend type → direct gelegd; meerdere → keuzemenu op de
+      losplek. Met een gekozen type dat hier niet mag verdwijnt de lijn niet
+      meer stil: het menu legt uit en biedt de alternatieven aan.
+      `vindConnectorTypes()` (alle treffers) naast `vindConnectorType()`;
+      `onConnect` zet de keuze klaar, `onConnectEnd` opent het menu. Zie
+      `docs/STUDIO.md` → "Magic link". Hangt samen met §28.3 (dezelfde
+      afgeleide kennis kan de hints voeden).
+- [ ] **31.8 Magic link — vervolg (idee).** (a) Loslaten op het **lege vlak**
+      → menu "maak hier een nieuw element + verbinding" met alleen de
+      elementtypen die als doel mogen (vgl. de context-pad van bpmn.io);
+      (b) het keuzemenu met het toetsenbord bedienen (pijltjes/Enter, eerste
+      optie voorgeselecteerd); (c) contextuele regels (31.4) laten meewegen
+      zodra die er zijn.

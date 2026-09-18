@@ -130,8 +130,11 @@
 
 .dc-contextmenu-icoon {
   display: inline-flex;
-  width: 16px;
+  min-width: 16px;
   justify-content: center;
+  /* Tekst-iconen van connectortypen ("✉→", "⇢D") zijn breder dan 16px en
+     braken anders over twee regels (magic link-keuzemenu). */
+  white-space: nowrap;
 }
 
 .dc-contextmenu-sep {

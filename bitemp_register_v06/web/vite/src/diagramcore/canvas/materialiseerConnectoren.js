@@ -55,12 +55,13 @@ export function normaliseerHandle(waarde, soort) {
 }
 
 /**
- * Zoek het connector-ElementType dat een verbinding bron→doel toestaat.
- * Bij een expliciete voorkeur (taakbalk "Verbinding") is die leidend; zonder
- * voorkeur wint de eerste passende in descriptor-volgorde.
+ * Álle connector-ElementTypes die een verbinding bron→doel toestaan, in
+ * descriptor-volgorde. Basis van de "magic link" (backlog §31.7): sleep een
+ * lijn zonder vooraf een type te kiezen en de canvas biedt deze lijst aan.
+ * @returns {Array<Object>} passende connectortypen (leeg = niets mag)
  */
-export function vindConnectorType(diagramType, bronElement, doelElement, voorkeur = null) {
-  if (!bronElement || !doelElement) return null;
+export function vindConnectorTypes(diagramType, bronElement, doelElement) {
+  if (!bronElement || !doelElement) return [];
   const kandidaten = (diagramType?.elementTypes || []).filter((et) => et.isConnector);
   // 1..* verbindingsregels (volledige vorm) of de verkorte bron/doel-vorm:
   // een verbinding past zodra één regel de combinatie toestaat.
@@ -71,16 +72,22 @@ export function vindConnectorType(diagramType, bronElement, doelElement, voorkeu
           doel: r?.doel?.elementTypes || r?.doel || [],
         }))
       : [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
-  const past = (et) =>
+  return kandidaten.filter((et) =>
     regelsVan(et).some(
-      (r) =>
-        r.bron.includes(bronElement.elementType) && r.doel.includes(doelElement.elementType)
-    );
-  if (voorkeur) {
-    const gekozen = kandidaten.find((et) => et.id === voorkeur);
-    return gekozen && past(gekozen) ? gekozen : null;
-  }
-  return kandidaten.find(past) || null;
+      (r) => r.bron.includes(bronElement.elementType) && r.doel.includes(doelElement.elementType)
+    )
+  );
+}
+
+/**
+ * Zoek het connector-ElementType dat een verbinding bron→doel toestaat.
+ * Bij een expliciete voorkeur (taakbalk "Verbinding") is die leidend; zonder
+ * voorkeur wint de eerste passende in descriptor-volgorde.
+ */
+export function vindConnectorType(diagramType, bronElement, doelElement, voorkeur = null) {
+  const passend = vindConnectorTypes(diagramType, bronElement, doelElement);
+  if (voorkeur) return passend.find((et) => et.id === voorkeur) || null;
+  return passend[0] || null;
 }
 
 /** Heeft de connector inhoud die een box-gedaante rechtvaardigt? */

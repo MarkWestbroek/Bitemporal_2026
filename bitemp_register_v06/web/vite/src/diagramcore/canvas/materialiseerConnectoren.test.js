@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { materialiseerConnectoren, vindConnectorType, ANKER_PREFIX, normaliseerHandle } from "./materialiseerConnectoren.js";
+import { materialiseerConnectoren, vindConnectorType, vindConnectorTypes, ANKER_PREFIX, normaliseerHandle } from "./materialiseerConnectoren.js";
 
 const diagramType = {
   id: "test",
@@ -60,6 +60,13 @@ test("vindConnectorType: descriptor-volgorde wint bij automatisch afleiden", () 
   assert.equal(vindConnectorType(diagramType, A, B).id, "relatie");
   assert.equal(vindConnectorType(diagramType, A, B, "generalisatie").id, "generalisatie");
   assert.equal(vindConnectorType(diagramType, G, A), null);
+});
+
+test("vindConnectorTypes: alle passende typen, in descriptor-volgorde (magic link)", () => {
+  assert.deepEqual(vindConnectorTypes(diagramType, A, B).map((et) => et.id), ["relatie", "generalisatie"]);
+  assert.deepEqual(vindConnectorTypes(diagramType, A, G).map((et) => et.id), ["compositie"]);
+  assert.deepEqual(vindConnectorTypes(diagramType, G, A), []);
+  assert.deepEqual(vindConnectorTypes(diagramType, A, null), []);
 });
 
 test("kale connector (geen velden) → één edge", () => {
