@@ -126,6 +126,24 @@ Dubbelklik op een **instantie** → wormhole → je zit in die persoon/entity's 
 - **Relatie follow-through**: relaties met een `doelEntiteit` (bijv. Bereikbaarheid → Locatie) worden automatisch gevolgd. De secondaire entiteit wordt opgehaald en als extra bol weergegeven, met haar eigen GE-data en manen eromheen.
 - Data wordt genormaliseerd naar geflattend formaat (zowel vanuit REST als GraphQL)
 
+#### Dubbelklik-detectie (fix 2026-09-18)
+De graaf-library bepaalt *welke* node je aanklikt via een (throttled) raycast
+onder de cursor. De eerste klik start meteen de cameravlucht naar de node;
+bij een groot metamodel (kleine, verre bollen) staat de node bij de tweede klik
+dus al niet meer onder de cursor, en die klik kwam binnen als achtergrond- of
+link-klik. Gevolg: dubbelklikken deed niets en je bleef op het metaniveau
+(Enter en "nogmaals klikken op de geselecteerde node" werkten wél).
+
+Oplossing in `UniversumPage.jsx`: `onBackgroundClick`/`onLinkClick` vangen
+zo'n misklik op — valt hij binnen `DUBBELKLIK_MS` (400 ms) en binnen
+`DUBBELKLIK_STRAAL_PX` (12 px) van de eerste klik, dan telt hij alsnog als
+dubbelklik op díe node. De drie duik-paden (dubbelklik, herhaalde klik,
+Enter) delen de logica via `duikIn(node)`.
+
+Een entiteit **zonder objecten** (of een mislukte fetch) gaf voorheen geen
+enkele terugkoppeling — ook dan "bleef je op het metaniveau". Nu verschijnt er
+kort een melding onderin (`.universum-melding`).
+
 #### Terug-navigatie
 - **Escape** of **Backspace** gaat één niveau terug (concreet → instances → meta)
 - **Breadcrumb** ("🌌 Meta › NatuurlijkPersoon › Lars de Bakker") — klik op elk segment
@@ -189,7 +207,9 @@ Rechtsboven in de toolbar staan twee knoppen: **REST** (default) en **GQL**. Hie
 `graphqlFetcher.js` bouwt dynamisch GraphQL queries uit de schema-metadata die al geladen is via `/api/schema/model/code`:
 
 1. **Velden**: alle `velden[].naam` uit het schema-type, plus `opvoer`/`afvoer`
-2. **Afgeleide velden**: `afgeleideVelden[].naam` (bijv. `weergavenaam`)
+2. **Afgeleide velden**: `afgeleideVelden[].naam` (bijv. `weergavenaam`). Tekens die
+   in GraphQL niet in een naam mogen worden `_` — de backend doet hetzelfde
+   (`nl-titel` → `nl_titel`); zonder dat gaf Kennisartikel/Trefwoord een syntaxfout.
 3. **Onderliggende GE's/relaties**: recursief opgelost tot depth 2 via `onderliggende[].jsonRolnaam` → doeltype velden
 4. **ID-type detectie**: numerieke ID's worden als `Int` verstuurd, strings als `String`
 

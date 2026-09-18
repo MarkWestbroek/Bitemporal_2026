@@ -326,6 +326,11 @@ const SYSTEM_FIELDS = new Set([
   "id", "opvoer", "afvoer", "rel_id", "versie", "_weergavenaam",
 ]);
 
+/** Venster waarbinnen twee klikken op dezelfde node een dubbelklik zijn. */
+const DUBBELKLIK_MS = 400;
+/** Max. afstand (px) tussen beide klikken als de tweede de node mist. */
+const DUBBELKLIK_STRAAL_PX = 12;
+
 /* ── Helpers ────────────────────────────────────────────────────────── */
 
 function berekenWeergavenaam(record, entityMeta, typesByTypenaam) {
@@ -679,6 +684,16 @@ export default function UniversumPage() {
   const fgRef = useRef();
   const [rawSchema, setRawSchema] = useState(null);
   const [error, setError] = useState(null);
+  // Korte, vanzelf verdwijnende melding (bv. "geen objecten") — zonder deze
+  // bleef een mislukte of lege wormhole onzichtbaar op het metaniveau hangen.
+  const [melding, setMelding] = useState(null);
+  const meldingTimerRef = useRef(null);
+  const toonMelding = useCallback((tekst) => {
+    clearTimeout(meldingTimerRef.current);
+    setMelding(tekst);
+    meldingTimerRef.current = setTimeout(() => setMelding(null), 4000);
+  }, []);
+  useEffect(() => () => clearTimeout(meldingTimerRef.current), []);
   const [selectedNode, setSelectedNode] = useState(null);
 
   const [viewMode, setViewMode] = useState("meta");
@@ -1026,6 +1041,7 @@ export default function UniversumPage() {
             clearTimeout(wormholeTimer);
             setWormholeActive(false);
             setLoading(false);
+            toonMelding(`${entityNode.label} heeft nog geen objecten — er is niets om in te duiken.`);
             return;
           }
 
@@ -1054,9 +1070,10 @@ export default function UniversumPage() {
           clearTimeout(wormholeTimer);
           setWormholeActive(false);
           setLoading(false);
+          toonMelding(`Objecten van ${entityNode.label} laden mislukt: ${err.message}`);
         });
     },
-    [typesByTypenaam, flyToNode, dataSource]
+    [typesByTypenaam, flyToNode, dataSource, toonMelding]
   );
 
   /* ── Wormhole: instances → concreet ──────────────────────────────── */
@@ -1354,59 +1371,69 @@ export default function UniversumPage() {
 
   /* ── Click + dubbelklik ──────────────────────────────────────────── */
 
-  const handleNodeClick = useCallback(
+  // Duik een niveau dieper op deze node; false als de node niet drillable is.
+  const duikIn = useCallback(
     (node) => {
+      if (viewMode === "meta" && node.metatype === "entiteit") {
+        enterInstances(node);
+        return true;
+      }
+      if (viewMode === "instances" && node.nodeType === "instance") {
+        enterConcrete(node);
+        return true;
+      }
+      if (
+        viewMode === "concrete" &&
+        (node.nodeType === "sec_entity" || node.nodeType === "rev_entity") &&
+        node.entityTypenaam &&
+        node.entityPadnaam &&
+        node.entityId
+      ) {
+        // Drill-through: spring naar de concrete view van deze entiteit
+        const meta = typesByTypenaam[node.entityTypenaam];
+        enterConcrete(node, {
+          typenaam: node.entityTypenaam,
+          padnaam: node.entityPadnaam,
+          id: node.entityId,
+          label: meta?.klassenaam || node.entityTypenaam,
+          color: meta?.kleur || node.color,
+        });
+        return true;
+      }
+      return false;
+    },
+    [viewMode, enterInstances, enterConcrete, typesByTypenaam]
+  );
+
+  const handleNodeClick = useCallback(
+    (node, ev) => {
       const now = Date.now();
       const last = lastClickRef.current;
 
-      if (last.nodeId === node.id && now - last.time < 400) {
+      if (last.nodeId === node.id && now - last.time < DUBBELKLIK_MS) {
         lastClickRef.current = { time: 0, nodeId: null };
-        if (viewMode === "meta" && node.metatype === "entiteit")
-          enterInstances(node);
-        else if (viewMode === "instances" && node.nodeType === "instance")
-          enterConcrete(node);
-        else if (
-          viewMode === "concrete" &&
-          (node.nodeType === "sec_entity" || node.nodeType === "rev_entity") &&
-          node.entityTypenaam &&
-          node.entityPadnaam &&
-          node.entityId
-        ) {
-          // Drill-through: spring naar de concrete view van deze entiteit
-          const meta = typesByTypenaam[node.entityTypenaam];
-          enterConcrete(node, {
-            typenaam: node.entityTypenaam,
-            padnaam: node.entityPadnaam,
-            id: node.entityId,
-            label: meta?.klassenaam || node.entityTypenaam,
-            color: meta?.kleur || node.color,
-          });
-        }
+        duikIn(node);
         return;
       }
 
       // Eerste klik op een drillable node in instances/meta: vlieg ernaartoe
       // Als de node al geselecteerd was (= al in beeld), drill direct
       if (
-        viewMode === "meta" &&
-        node.metatype === "entiteit" &&
-        selectedNode?.id === node.id
+        viewMode !== "concrete" &&
+        selectedNode?.id === node.id &&
+        duikIn(node)
       ) {
         lastClickRef.current = { time: 0, nodeId: null };
-        enterInstances(node);
-        return;
-      }
-      if (
-        viewMode === "instances" &&
-        node.nodeType === "instance" &&
-        selectedNode?.id === node.id
-      ) {
-        lastClickRef.current = { time: 0, nodeId: null };
-        enterConcrete(node);
         return;
       }
 
-      lastClickRef.current = { time: now, nodeId: node.id };
+      lastClickRef.current = {
+        time: now,
+        nodeId: node.id,
+        node,
+        x: ev?.clientX,
+        y: ev?.clientY,
+      };
       setSelectedNode(node);
       sfx.ping();
 
@@ -1424,8 +1451,28 @@ export default function UniversumPage() {
         node.nodeType === "instance" || node.nodeType === "ge_data" ? 80 : 120;
       flyToNode(node, dist);
     },
-    [viewMode, selectedNode, enterInstances, enterConcrete, flyToNode, typesByTypenaam]
+    [viewMode, selectedNode, duikIn, flyToNode]
   );
+
+  // Tweede helft van een dubbelklik die de node mist. De eerste klik start de
+  // cameravlucht al; de library bepaalt een klik via de (throttled) raycast
+  // onder de cursor, dus bij een kleine/verre node valt de tweede klik op de
+  // achtergrond of op een link en kwam de wormhole nooit. Ligt zo'n klik
+  // binnen het dubbelklikvenster én vlak bij de eerste, dan is het alsnog een
+  // dubbelklik op die node.
+  const handleMisklik = useCallback(
+    (ev) => {
+      const last = lastClickRef.current;
+      if (!last.node || Date.now() - last.time >= DUBBELKLIK_MS) return;
+      const dx = (ev?.clientX ?? Infinity) - (last.x ?? 0);
+      const dy = (ev?.clientY ?? Infinity) - (last.y ?? 0);
+      if (Math.hypot(dx, dy) > DUBBELKLIK_STRAAL_PX) return;
+      lastClickRef.current = { time: 0, nodeId: null };
+      duikIn(last.node);
+    },
+    [duikIn]
+  );
+  const handleLinkMisklik = useCallback((_link, ev) => handleMisklik(ev), [handleMisklik]);
 
   /* ── Keyboard ────────────────────────────────────────────────────── */
 
@@ -1807,6 +1854,11 @@ export default function UniversumPage() {
           nodeThreeObjectExtend={false}
           extraRenderers={[cssRenderer]}
           onNodeClick={handleNodeClick}
+          onBackgroundClick={handleMisklik}
+          onLinkClick={handleLinkMisklik}
+          // Handje alleen boven nodes — niet boven links/achtergrond, die
+          // hun klik-handler enkel voor de dubbelklik-opvang hebben.
+          showPointerCursor={(obj) => !!obj && obj.source === undefined}
           linkVisibility={linkVisibility}
           linkColor={(l) => l.color || "rgba(148,163,184,0.4)"}
           linkWidth={1}
@@ -1818,6 +1870,8 @@ export default function UniversumPage() {
           showNavInfo={false}
         />
       )}
+
+      {melding && <div className="universum-melding" role="status">{melding}</div>}
 
       {/* Info-panel */}
       {selectedNode && (
