@@ -77,6 +77,14 @@ type regressieOmgeving struct {
 
 func nieuweRegressieOmgeving(t testing.TB) *regressieOmgeving {
 	t.Helper()
+	return nieuweRegressieOmgevingMet(t, false)
+}
+
+// nieuweRegressieOmgevingMet bouwt de omgeving; met behoud=true blijft de bestaande
+// database staan (geen DeleteTables/CreateTables) — voor loadtests op een eerder
+// gevulde en 'door elkaar gegooide' dataset. De aanroeper slaat dan ook de seed over.
+func nieuweRegressieOmgevingMet(t testing.TB, behoud bool) *regressieOmgeving {
+	t.Helper()
 	dsn := strings.TrimSpace(os.Getenv("REGRESSIE_DATABASE_URL"))
 	if dsn == "" {
 		dsn = defaultRegressieDSN
@@ -95,6 +103,7 @@ func nieuweRegressieOmgeving(t testing.TB) *regressieOmgeving {
 	}
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	configureerPool(sqldb) // dezelfde pool als de app (db_pool.go), zodat loadtests representatief zijn
 	db := bun.NewDB(sqldb, pgdialect.New())
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -103,12 +112,16 @@ func nieuweRegressieOmgeving(t testing.TB) *regressieOmgeving {
 	}
 	t.Cleanup(func() { _ = db.Close() })
 
-	// Schone lei: alle model- en plumbingtabellen weg en opnieuw opbouwen.
-	if err := dbsetup.DeleteTables(db); err != nil {
-		t.Fatalf("tabellen opruimen mislukt: %v", err)
-	}
-	if err := dbsetup.CreateTables(db); err != nil {
-		t.Fatalf("tabellen aanmaken mislukt: %v", err)
+	if behoud {
+		t.Logf("database behouden: geen reset en geen seed (%s)", dsn)
+	} else {
+		// Schone lei: alle model- en plumbingtabellen weg en opnieuw opbouwen.
+		if err := dbsetup.DeleteTables(db); err != nil {
+			t.Fatalf("tabellen opruimen mislukt: %v", err)
+		}
+		if err := dbsetup.CreateTables(db); err != nil {
+			t.Fatalf("tabellen aanmaken mislukt: %v", err)
+		}
 	}
 
 	teller := &queryTeller{}
@@ -128,9 +141,13 @@ func nieuweRegressieOmgeving(t testing.TB) *regressieOmgeving {
 
 	jar, _ := cookiejar.New(nil)
 	return &regressieOmgeving{
-		t:      t,
-		srv:    srv,
-		client: &http.Client{Jar: jar, Timeout: 30 * time.Second},
+		t:   t,
+		srv: srv,
+		// Eigen transport met ruime keep-alive-pool: de standaard (2 idle verbindingen per host)
+		// laat parallelle vus per request opnieuw verbinden en vertekent zo de loadmeting.
+		client: &http.Client{Jar: jar, Timeout: 30 * time.Second, Transport: &http.Transport{
+			MaxIdleConns: 512, MaxIdleConnsPerHost: 512, IdleConnTimeout: 90 * time.Second,
+		}},
 		db:     db,
 		teller: teller,
 	}
@@ -247,6 +264,17 @@ func (o *regressieOmgeving) replay(pad string) (aantal int, laatsteRegistratieID
 	return aantal, laatsteRegistratieID
 }
 
+// laatsteRegistratieID leest het hoogste registratie-id uit de database (bij behoud
+// van een bestaande dataset, waar geen seed is afgespeeld).
+func (o *regressieOmgeving) laatsteRegistratieID() int64 {
+	var id int64
+	err := o.db.NewSelect().TableExpr("registratie").ColumnExpr("coalesce(max(id), 0)").Scan(context.Background(), &id)
+	if err != nil {
+		o.t.Logf("laatste registratie-id niet leesbaar: %v", err)
+	}
+	return id
+}
+
 // seedViaReplay speelt de seed-bestanden af en geeft het laatste registratie-id terug.
 func (o *regressieOmgeving) seedViaReplay() int64 {
 	o.t.Helper()
@@ -301,10 +329,15 @@ func TestRegressieNpLoc(t *testing.T) {
 			if sc.Uit {
 				t.Skip("scenario staat uit")
 			}
+			if len(sc.Stappen) == 0 && sc.isMix() {
+				t.Skip("alleen als loadtest (load.mix: rollen uit andere scenario's)")
+			}
 			for k, v := range sc.Env {
 				t.Setenv(k, v)
 			}
-			o.met(t).voerDeclaratiefUit(t, sc, nieuweDeclVars(globaal, basisVars(seedLaatste)))
+			vars := nieuweDeclVars(globaal, basisVars(seedLaatste))
+			vars.zetAlle(sc.Vars)
+			o.met(t).voerDeclaratiefUit(t, sc, vars)
 		})
 	}
 }

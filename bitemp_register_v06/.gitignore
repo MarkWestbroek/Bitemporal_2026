@@ -34,3 +34,5 @@ Thumbs.db
 
 # Resultaten van regressie-loadtests (artefacten, niet committen)
 perf-results/regressie-load-*.json
+# gegenereerde load-seeds (scripts/genereer-load-seed.py)
+replay files/registraties-replay-load-*.json

@@ -18,8 +18,10 @@
 //	  "tags": ["engine"],
 //	  "uit": false,                    // true = overslaan
 //	  "env": {"AUTH_ENABLED": "true"}, // omgevingsvariabelen tijdens dit scenario
-//	  "load": {"vus": 5, "iteraties": 20, "drempels": {"p95_ms": 250, "fout_pct": 0}},
-//	  "stappen": [ … ]
+//	  "vars": {"npTot": "50"},         // scenariovariabelen (overschrijfbaar via LOAD_VARS)
+//	  "load": {"vus": 5, "iteraties": 20, "drempels": {"p95_ms": 250, "fout_pct": 0},
+//	           "mix": [{"scenario": "31", "vus": 3}, {"scenario": "32", "vus": 20}]},
+//	  "stappen": [ … ]                 // mag leeg zijn als load.mix gevuld is
 //	}
 //
 // Stap — precies één van: request (path), replay, actie:
@@ -29,6 +31,8 @@
 //	              "header": {"Content-Type": "problem+json"},
 //	              "json": {"registratie_id": ">0", "namen[afvoer=null].data[afvoer=null].achternaam": "Vries"}},
 //	 "max_queries": 40,
+//	 "zet": {"npId": "{{rnd:1-npTot}}"},   // variabelen vóór de request (functies toegestaan)
+//	 "kans": 0.5,                          // stap draait met deze kans (0 of weggelaten = altijd)
 //	 "bewaar": {"regId": "registratie_id", "$globaal": "registratie_id"}}
 //	{"replay": "replay files/x.json"}      → zet {{laatsteRegistratieID}} en {{replayAantal}}
 //	{"actie": "seed_admin"}                → ingebouwde actie
@@ -41,14 +45,16 @@
 // beginnen zijn globaal (blijven bestaan voor latere scenario's). Ingebouwd:
 // {{seedLaatsteRegistratieID}}, {{vu}}, {{iter}}, {{uniek}} (uniek per vu/iteratie;
 // in een gewone run 1/1). Functies: {{synthtijd:var}} (synthetisch tijdstip van een
-// registratie-id), {{min1:var}} (waarde − 1). Schrijf "{{int:var}}" (mét de quotes)
-// om een variabele als kaal getal in een JSON-body te zetten.
+// registratie-id), {{min1:var}} (waarde − 1), {{rnd:a-b}} (willekeurig geheel getal
+// in [a, b]; a en b zijn getallen of variabelen; de generator is geseed, dus herhaalbaar).
+// Schrijf "{{int:var}}" (mét de quotes) om een variabele als kaal getal in een JSON-body te zetten.
 package main
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -82,7 +88,16 @@ type declStap struct {
 	Body       json.RawMessage   `json:"body,omitempty"`
 	Verwacht   declVerwacht      `json:"verwacht"`
 	MaxQueries int64             `json:"max_queries,omitempty"`
+	Zet        map[string]string `json:"zet,omitempty"`
+	Kans       float64           `json:"kans,omitempty"`
 	Bewaar     map[string]string `json:"bewaar,omitempty"`
+}
+
+// declMixRol is één rol in een gemengde loadtest: een ander scenario met eigen vus/iteraties.
+type declMixRol struct {
+	Scenario  string `json:"scenario"`
+	VUs       int    `json:"vus,omitempty"`
+	Iteraties int    `json:"iteraties,omitempty"`
 }
 
 type declLoad struct {
@@ -92,6 +107,7 @@ type declLoad struct {
 		P95Ms   float64 `json:"p95_ms,omitempty"`
 		FoutPct float64 `json:"fout_pct"`
 	} `json:"drempels"`
+	Mix []declMixRol `json:"mix,omitempty"`
 }
 
 type declScenario struct {
@@ -104,10 +120,14 @@ type declScenario struct {
 	Tags         []string          `json:"tags,omitempty"`
 	Uit          bool              `json:"uit,omitempty"`
 	Env          map[string]string `json:"env,omitempty"`
+	Vars         map[string]string `json:"vars,omitempty"`
 	Load         *declLoad         `json:"load,omitempty"`
 	Stappen      []declStap        `json:"stappen"`
 	bestand      string
 }
+
+// isMix zegt of een scenario alleen als gemengde loadtest bestaat (rollen uit andere scenario's).
+func (sc declScenario) isMix() bool { return sc.Load != nil && len(sc.Load.Mix) > 0 }
 
 // laadDeclaratieveScenarios leest alle *.json uit regressie/scenarios, gesorteerd op (volgorde, id).
 func laadDeclaratieveScenarios(t *testing.T) []declScenario {
@@ -125,8 +145,8 @@ func laadDeclaratieveScenarios(t *testing.T) []declScenario {
 			t.Errorf("scenario %s: ongeldige JSON: %v", pad, err)
 			continue
 		}
-		if sc.ID == "" || len(sc.Stappen) == 0 {
-			t.Errorf("scenario %s: id en minimaal één stap zijn verplicht", pad)
+		if sc.ID == "" || (len(sc.Stappen) == 0 && !sc.isMix()) {
+			t.Errorf("scenario %s: id en minimaal één stap (of load.mix) zijn verplicht", pad)
 			continue
 		}
 		sc.bestand = filepath.Base(pad)
@@ -154,14 +174,55 @@ func laadDeclaratieveScenarios(t *testing.T) []declScenario {
 type declVars struct {
 	lokaal  map[string]string
 	globaal map[string]string
+	rng     *rand.Rand // voor {{rnd:a-b}} en `kans`; geseed → herhaalbaar
 }
 
 func nieuweDeclVars(globaal map[string]string, basis map[string]string) *declVars {
-	v := &declVars{lokaal: map[string]string{}, globaal: globaal}
+	v := &declVars{lokaal: map[string]string{}, globaal: globaal, rng: rand.New(rand.NewSource(1))}
 	for k, w := range basis {
 		v.lokaal[k] = w
 	}
 	return v
+}
+
+// metSeed geeft de generator een eigen seed (loadtest: per vu een andere, maar herhaalbaar).
+func (v *declVars) metSeed(seed int64) *declVars {
+	v.rng = rand.New(rand.NewSource(seed))
+	return v
+}
+
+// zetAlle zet meerdere variabelen (scenario-`vars`, LOAD_VARS), met substitutie in de waarden.
+func (v *declVars) zetAlle(m map[string]string) {
+	namen := make([]string, 0, len(m))
+	for k := range m {
+		namen = append(namen, k)
+	}
+	sort.Strings(namen)
+	for _, k := range namen {
+		v.zet(k, v.vervang(m[k]))
+	}
+}
+
+// getalOfVar leest een geheel getal, of de waarde van een variabele met die naam.
+func (v *declVars) getalOfVar(s string) (int64, bool) {
+	s = strings.TrimSpace(s)
+	if n, err := strconv.ParseInt(s, 10, 64); err == nil {
+		return n, true
+	}
+	if w, ok := v.haal(s); ok {
+		if n, err := strconv.ParseInt(strings.TrimSpace(w), 10, 64); err == nil {
+			return n, true
+		}
+	}
+	return 0, false
+}
+
+// willekeurig geeft een getal in [a, b] uit de geseede generator.
+func (v *declVars) willekeurig(a, b int64) int64 {
+	if b < a {
+		a, b = b, a
+	}
+	return a + v.rng.Int63n(b-a+1)
 }
 
 func (v *declVars) zet(naam, waarde string) {
@@ -180,7 +241,7 @@ func (v *declVars) haal(naam string) (string, bool) {
 	return w, ok
 }
 
-var declVarRE = regexp.MustCompile(`"\{\{int:([^}]+)\}\}"|\{\{(?:(synthtijd|min1|int):)?([^}]+)\}\}`)
+var declVarRE = regexp.MustCompile(`"\{\{int:([^}]+)\}\}"|\{\{(?:(synthtijd|min1|int|rnd):)?([^}]+)\}\}`)
 
 // synthetischTijdstip spiegelt handlers.tijdstipUitT: 2026-01-01T00:00:00Z + id uur + id µs.
 func synthetischTijdstip(id int64) time.Time {
@@ -201,6 +262,16 @@ func (v *declVars) vervang(s string) string {
 			return m
 		}
 		functie, naam := sub[2], strings.TrimSpace(sub[3])
+		if functie == "rnd" { // {{rnd:a-b}}: bereik, geen variabelenaam
+			if a, b, ok := strings.Cut(naam, "-"); ok {
+				if va, okA := v.getalOfVar(a); okA {
+					if vb, okB := v.getalOfVar(b); okB {
+						return strconv.FormatInt(v.willekeurig(va, vb), 10)
+					}
+				}
+			}
+			return m
+		}
 		w, ok := v.haal(naam)
 		if !ok {
 			return m
@@ -447,6 +518,16 @@ func stapLabel(i int, stap declStap, pad string) string {
 	return fmt.Sprintf("%s (%s %s)", kop, strings.ToUpper(stap.Method), pad)
 }
 
+// bereidStapVoor past `zet` toe en beslist via `kans` of de stap deze keer draait.
+// Geeft true als de stap overgeslagen moet worden.
+func bereidStapVoor(stap declStap, vars *declVars) (overslaan bool) {
+	if stap.Kans > 0 && stap.Kans < 1 && vars.rng.Float64() >= stap.Kans {
+		return true
+	}
+	vars.zetAlle(stap.Zet)
+	return false
+}
+
 // voerActieUit voert een ingebouwde actie uit.
 func voerActieUit(actie string) error {
 	switch actie {
@@ -462,6 +543,10 @@ func (o *regressieOmgeving) voerDeclaratiefUit(t *testing.T, sc declScenario, va
 	for i, stap := range sc.Stappen {
 		if stap.Uit {
 			t.Logf("stap %d overgeslagen (uit)", i+1)
+			continue
+		}
+		if bereidStapVoor(stap, vars) {
+			t.Logf("stap %d overgeslagen (kans %.2f)", i+1, stap.Kans)
 			continue
 		}
 		switch {
