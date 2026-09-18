@@ -1,23 +1,26 @@
 //go:build devtools
 
-// Package handlers — regressie_ui_handler.go (alleen in devtools-builds)
+// Package handlers — regressie-UI / suite-editor (alleen in devtools-builds).
 //
-// Regressie-UI: een pagina die de scenario's van de np-loc regressietest toont
-// (gecodeerd in regressie_np_loc_test.go én declaratief in regressie/scenarios/*.json),
-// ze alle of een selectie afspeelt via `go test -tags integration -json`, het
-// resultaat live laat zien, en waarmee je declaratieve scenario's kunt toevoegen.
-// Zie docs/REGRESSIETEST.md.
+// Een pagina op /admin/regressie waarmee je de np-loc testsuite beheert en draait:
+// scenario's bekijken, bewerken, herordenen, dupliceren, (selecties van) stappen naar
+// een nieuw scenario kopiëren, replay-bestanden importeren als bewerkbaar scenario,
+// de suite of een selectie afspelen, loadtests draaien en scenario's exporteren naar
+// k6/Hurl. Scenario's staan als JSON in regressie/scenarios/ (formaat: zie
+// regressie_declaratief_test.go); alleen 00 (DB-reset + seed) is Go-code.
 //
-//	GET  /admin/regressie            → HTML-pagina (inline, geen CDN)
-//	GET  /admin/regressie/scenarios  → JSON: scenario's incl. inhoud (Go-broncode of JSON)
-//	GET  /admin/regressie/status     → JSON: snapshot van de (laatste) run
-//	POST /admin/regressie/run        → start een run; body {"scenarios":[...],"dsn":"...","devtools":bool}
-//	POST /admin/regressie/scenarios  → declaratief scenario opslaan in regressie/scenarios/<id>-<slug>.json
-//	                                   (beide POSTs: DEVLOOP=true + X-Beheer-Wachtwoord = DEVLOOP_PASSWORD)
+// Bestanden:
+//
+//	regressie_ui_handler.go  routes, scenario's lezen, regressie-run + status
+//	regressie_ui_beheer.go   opslaan, verwijderen, volgorde, replay-import
+//	regressie_ui_load.go     loadtest-run + status
+//	regressie_ui_export.go   export naar k6 en Hurl
+//	regressie_ui_pagina.go   de HTML/JS van de pagina
 //
 // Beveiligingsringen zoals de overige /admin/*-routes: alleen meegecompileerd met
-// -tags devtools, rol "admin" bij AUTH_ENABLED=true, en de muterende acties achter
-// de devloop-vlag + wachtwoord. Eén run tegelijk (mutex); een tweede krijgt 409.
+// -tags devtools, rol "admin" bij AUTH_ENABLED=true, en alle muterende/uitvoerende
+// acties achter DEVLOOP=true + X-Beheer-Wachtwoord (DEVLOOP_PASSWORD). Eén run
+// (regressie of load) tegelijk; een tweede krijgt 409.
 package handlers
 
 import (
@@ -40,124 +43,53 @@ import (
 const (
 	regressieTestBestand  = "regressie_np_loc_test.go"
 	regressieTestNaam     = "TestRegressieNpLoc"
+	regressieLoadTestNaam = "TestLoadNpLoc"
 	regressieDeclaratiefD = "regressie/scenarios"
-	regressieDeclParentID = "90" // gecodeerde parent-subtest waaronder de JSON-scenario's draaien
 	regressieDefaultDSN   = "postgres://postgres:1234@127.0.0.1:5433/bitemp_regressie_np_loc?sslmode=disable"
 )
-
-// regressieAfhankelijkheden: scenario's die state van een eerder scenario nodig
-// hebben. "00" (seed) is altijd impliciet.
-var regressieAfhankelijkheden = map[string][]string{
-	"06": {"05"},
-	"09": {"08"},
-}
 
 var (
 	regressieIDPatroon = regexp.MustCompile(`^[0-9]{2,3}[a-z]?$`)
 	regressieRunRE     = regexp.MustCompile(`t\.Run\("([0-9]+[a-z]?) ([^"]+)"`)
+	regressieSeedsRE   = regexp.MustCompile(`(?s)defaultSeeds = \[\]string\{(.*?)\}`)
 )
 
-type regressieScenario struct {
-	ID      string          `json:"id"`
-	Naam    string          `json:"naam"`
-	Soort   string          `json:"soort"`             // "go" (gecodeerd) | "json" (declaratief)
-	Bestand string          `json:"bestand,omitempty"` // bij json: bestandsnaam
-	Inhoud  string          `json:"inhoud"`            // Go-broncode van de subtest, of de JSON
-	Seeds   []regressieSeed `json:"seeds,omitempty"`   // alleen bij "00": de replay-bestanden
+// regressieScenarioDef is de scenario-JSON zoals die op schijf staat. Stappen en load
+// blijven rauw, zodat de editor er vrij in kan zijn en niets verloren gaat.
+type regressieScenarioDef struct {
+	ID           string            `json:"id"`
+	Naam         string            `json:"naam"`
+	Beschrijving string            `json:"beschrijving,omitempty"`
+	Volgorde     int               `json:"volgorde,omitempty"`
+	Vereist      []string          `json:"vereist,omitempty"`
+	Dekt         []string          `json:"dekt,omitempty"`
+	Tags         []string          `json:"tags,omitempty"`
+	Uit          bool              `json:"uit,omitempty"`
+	Env          map[string]string `json:"env,omitempty"`
+	Vars         map[string]string `json:"vars,omitempty"`
+	Load         json.RawMessage   `json:"load,omitempty"`
+	Stappen      []json.RawMessage `json:"stappen"`
 }
 
-// regressieSeed is één replay-bestand dat scenario 00 afspeelt, met een leesbare
-// samenvatting per entry naast de ruwe JSON.
+// regressieScenario is wat de UI per scenario krijgt.
+type regressieScenario struct {
+	ID        string                `json:"id"`
+	Naam      string                `json:"naam"`
+	Soort     string                `json:"soort"` // "go" (alleen 00) | "json"
+	Bestand   string                `json:"bestand,omitempty"`
+	Inhoud    string                `json:"inhoud"`
+	Definitie *regressieScenarioDef `json:"definitie,omitempty"`
+	Seeds     []regressieSeed       `json:"seeds,omitempty"`
+	Fout      string                `json:"fout,omitempty"`
+}
+
+// regressieSeed is één replay-bestand dat scenario 00 afspeelt.
 type regressieSeed struct {
 	Bestand      string   `json:"bestand"`
 	Aantal       int      `json:"aantal"`
 	Samenvatting []string `json:"samenvatting"`
 	Inhoud       string   `json:"inhoud"`
 	Fout         string   `json:"fout,omitempty"`
-}
-
-var regressieSeedsRE = regexp.MustCompile(`(?s)defaultSeeds = \[\]string\{(.*?)\}`)
-
-// leesRegressieSeeds bepaalt de seed-bestanden (REGRESSIE_SEEDS, anders defaultSeeds
-// uit het testbestand) en leest ze in met een samenvatting per replay-entry.
-func leesRegressieSeeds(testSrc string) []regressieSeed {
-	var paden []string
-	if env := strings.TrimSpace(os.Getenv("REGRESSIE_SEEDS")); env != "" {
-		for _, p := range strings.Split(env, ";") {
-			if p = strings.TrimSpace(p); p != "" {
-				paden = append(paden, p)
-			}
-		}
-	} else if m := regressieSeedsRE.FindStringSubmatch(testSrc); len(m) == 2 {
-		for _, q := range regexp.MustCompile(`"([^"]+)"`).FindAllStringSubmatch(m[1], -1) {
-			paden = append(paden, q[1])
-		}
-	}
-
-	var out []regressieSeed
-	for _, pad := range paden {
-		seed := regressieSeed{Bestand: pad}
-		raw, err := os.ReadFile(filepath.Join(resolveAppDir(), pad))
-		if err != nil {
-			seed.Fout = "kan bestand niet lezen: " + err.Error()
-			out = append(out, seed)
-			continue
-		}
-		seed.Inhoud = string(raw)
-		var rb struct {
-			Entries []struct {
-				RequestPath          string `json:"request_path"`
-				ExpectedResponseCode *int   `json:"expected_response_code"`
-				RequestBody          struct {
-					Registratie struct {
-						Registratietype string `json:"registratietype"`
-						Opmerking       string `json:"opmerking"`
-					} `json:"registratie"`
-					Wijzigingen []map[string]map[string]any `json:"wijzigingen"`
-				} `json:"request_body"`
-			} `json:"entries"`
-		}
-		if err := json.Unmarshal(raw, &rb); err != nil {
-			seed.Fout = "geen geldig replay-bestand: " + err.Error()
-			out = append(out, seed)
-			continue
-		}
-		seed.Aantal = len(rb.Entries)
-		for i, e := range rb.Entries {
-			// Per entry: welke opvoer/afvoer (o:/a: + veldnaam), herhalingen samengevouwen (×n).
-			telling := map[string]int{}
-			for _, w := range e.RequestBody.Wijzigingen {
-				for modus, rep := range w {
-					for veldnaam := range rep {
-						telling[modus[:1]+":"+veldnaam]++
-					}
-				}
-			}
-			delen := make([]string, 0, len(telling))
-			for k, n := range telling {
-				if n > 1 {
-					k = fmt.Sprintf("%s×%d", k, n)
-				}
-				delen = append(delen, k)
-			}
-			sort.Strings(delen)
-			verwacht := 201
-			if e.ExpectedResponseCode != nil {
-				verwacht = *e.ExpectedResponseCode
-			}
-			seed.Samenvatting = append(seed.Samenvatting, fmt.Sprintf("%2d  %-14s %-42s → %d  [%s]",
-				i, e.RequestBody.Registratie.Registratietype, kortTekst(e.RequestBody.Registratie.Opmerking, 42), verwacht, strings.Join(delen, " ")))
-		}
-		out = append(out, seed)
-	}
-	return out
-}
-
-func kortTekst(s string, n int) string {
-	if len(s) <= n {
-		return s
-	}
-	return s[:n-1] + "…"
 }
 
 type regressieResultaat struct {
@@ -183,19 +115,41 @@ type regressieRun struct {
 var (
 	regressieMu  sync.Mutex
 	regressieRnn *regressieRun
+	regressieLd  *regressieLoadRun
 )
 
-// RegistreerRegressieRoutes hangt de regressie-UI aan de router (devtools-variant).
+// RegistreerRegressieRoutes hangt de suite-editor aan de router (devtools-variant).
 func RegistreerRegressieRoutes(router gin.IRoutes, admin gin.HandlerFunc) {
 	router.GET("/admin/regressie", admin, regressiePagina)
 	router.GET("/admin/regressie/scenarios", admin, regressieScenarios)
 	router.POST("/admin/regressie/scenarios", admin, regressieScenarioOpslaan)
+	router.DELETE("/admin/regressie/scenarios/:id", admin, regressieScenarioVerwijderen)
+	router.POST("/admin/regressie/volgorde", admin, regressieVolgordeOpslaan)
+	router.POST("/admin/regressie/import-replay", admin, regressieImportReplay)
 	router.GET("/admin/regressie/status", admin, regressieStatus)
 	router.POST("/admin/regressie/run", admin, regressieStart)
+	router.GET("/admin/regressie/load/status", admin, regressieLoadStatus)
+	router.POST("/admin/regressie/load", admin, regressieLoadStart)
+	router.GET("/admin/regressie/export/:formaat", admin, regressieExport)
 }
 
-// leesGecodeerdeScenarios parseert `t.Run("NN naam", …)` uit het testbestand en
-// neemt per subtest de broncode mee (tot de afsluitende `\t})` op subtest-niveau).
+// eisRegressieMutatie bundelt de checks voor muterende/uitvoerende acties.
+func eisRegressieMutatie(c *gin.Context) bool {
+	if !isDevloopEnabled() {
+		c.JSON(http.StatusForbidden, gin.H{"error": "deze actie is alleen beschikbaar in devloop modus (DEVLOOP=true)"})
+		return false
+	}
+	return eisBeheerWachtwoord(c, "DEVLOOP_PASSWORD")
+}
+
+func regressieScenarioDir() string {
+	return filepath.Join(resolveAppDir(), regressieDeclaratiefD)
+}
+
+// ── Scenario's lezen ────────────────────────────────────────────────────────
+
+// leesGecodeerdeScenarios parseert `t.Run("NN naam", …)` uit het testbestand (in de
+// praktijk alleen 00) en neemt de broncode + seed-bestanden mee.
 func leesGecodeerdeScenarios() ([]regressieScenario, error) {
 	pad := filepath.Join(resolveAppDir(), regressieTestBestand)
 	raw, err := os.ReadFile(pad)
@@ -206,7 +160,6 @@ func leesGecodeerdeScenarios() ([]regressieScenario, error) {
 	var out []regressieScenario
 	for _, loc := range regressieRunRE.FindAllStringSubmatchIndex(src, -1) {
 		id, naam := src[loc[2]:loc[3]], src[loc[4]:loc[5]]
-		// Broncode: vanaf het begin van de regel tot de eerstvolgende "\n\t})" (einde subtest).
 		start := strings.LastIndex(src[:loc[0]], "\n") + 1
 		einde := strings.Index(src[loc[1]:], "\n\t})")
 		inhoud := src[start:]
@@ -219,32 +172,43 @@ func leesGecodeerdeScenarios() ([]regressieScenario, error) {
 		}
 		out = append(out, sc)
 	}
-	if len(out) == 0 {
-		return nil, fmt.Errorf("geen scenario's gevonden in %s", pad)
-	}
 	return out, nil
 }
 
-// leesDeclaratieveScenarios leest regressie/scenarios/*.json (id/naam uit de inhoud).
+// leesDeclaratieveScenarios leest regressie/scenarios/*.json, gesorteerd op (volgorde, id).
 func leesDeclaratieveScenarios() []regressieScenario {
-	paden, _ := filepath.Glob(filepath.Join(resolveAppDir(), regressieDeclaratiefD, "*.json"))
-	sort.Strings(paden)
+	paden, _ := filepath.Glob(filepath.Join(regressieScenarioDir(), "*.json"))
 	var out []regressieScenario
 	for _, pad := range paden {
 		raw, err := os.ReadFile(pad)
 		if err != nil {
 			continue
 		}
-		var kop struct {
-			ID   string `json:"id"`
-			Naam string `json:"naam"`
+		sc := regressieScenario{Soort: "json", Bestand: filepath.Base(pad), Inhoud: string(raw)}
+		var def regressieScenarioDef
+		if err := json.Unmarshal(raw, &def); err != nil || def.ID == "" {
+			sc.ID, sc.Naam, sc.Fout = "?", "ONGELDIG: "+filepath.Base(pad), "ongeldige scenario-JSON"
+			if err != nil {
+				sc.Fout = err.Error()
+			}
+		} else {
+			sc.ID, sc.Naam, sc.Definitie = def.ID, def.Naam, &def
 		}
-		if err := json.Unmarshal(raw, &kop); err != nil || kop.ID == "" {
-			out = append(out, regressieScenario{ID: "?", Naam: "ONGELDIG: " + filepath.Base(pad), Soort: "json", Bestand: filepath.Base(pad), Inhoud: string(raw)})
-			continue
-		}
-		out = append(out, regressieScenario{ID: kop.ID, Naam: kop.Naam, Soort: "json", Bestand: filepath.Base(pad), Inhoud: string(raw)})
+		out = append(out, sc)
 	}
+	sort.SliceStable(out, func(i, j int) bool {
+		vi, vj := 1<<30, 1<<30
+		if out[i].Definitie != nil && out[i].Definitie.Volgorde > 0 {
+			vi = out[i].Definitie.Volgorde
+		}
+		if out[j].Definitie != nil && out[j].Definitie.Volgorde > 0 {
+			vj = out[j].Definitie.Volgorde
+		}
+		if vi != vj {
+			return vi < vj
+		}
+		return out[i].ID < out[j].ID
+	})
 	return out
 }
 
@@ -253,9 +217,108 @@ func leesAlleScenarios() ([]regressieScenario, error) {
 	if err != nil {
 		return nil, err
 	}
-	alle := append(gecodeerd, leesDeclaratieveScenarios()...)
-	sort.SliceStable(alle, func(i, j int) bool { return alle[i].ID < alle[j].ID })
-	return alle, nil
+	return append(gecodeerd, leesDeclaratieveScenarios()...), nil
+}
+
+// leesRegressieSeeds bepaalt de seed-bestanden (REGRESSIE_SEEDS, anders defaultSeeds
+// uit het testbestand) en leest ze in met een samenvatting per replay-entry.
+func leesRegressieSeeds(testSrc string) []regressieSeed {
+	var paden []string
+	if env := strings.TrimSpace(os.Getenv("REGRESSIE_SEEDS")); env != "" {
+		for _, p := range strings.Split(env, ";") {
+			if p = strings.TrimSpace(p); p != "" {
+				paden = append(paden, p)
+			}
+		}
+	} else if m := regressieSeedsRE.FindStringSubmatch(testSrc); len(m) == 2 {
+		for _, q := range regexp.MustCompile(`"([^"]+)"`).FindAllStringSubmatch(m[1], -1) {
+			paden = append(paden, q[1])
+		}
+	}
+	var out []regressieSeed
+	for _, pad := range paden {
+		out = append(out, leesReplaySamenvatting(pad))
+	}
+	return out
+}
+
+type replayEntry struct {
+	RequestPath          string          `json:"request_path"`
+	RequestMethod        string          `json:"request_method"`
+	RequestBody          json.RawMessage `json:"request_body"`
+	ExpectedResponseCode *int            `json:"expected_response_code"`
+}
+
+// leesReplayEntries leest de entries van een replay-bestand (pad relatief aan de app-map).
+func leesReplayEntries(pad string) ([]replayEntry, []byte, error) {
+	raw, err := os.ReadFile(filepath.Join(resolveAppDir(), pad))
+	if err != nil {
+		return nil, nil, fmt.Errorf("kan bestand niet lezen: %w", err)
+	}
+	var rb struct {
+		Entries []replayEntry `json:"entries"`
+	}
+	if err := json.Unmarshal(raw, &rb); err != nil {
+		return nil, raw, fmt.Errorf("geen geldig replay-bestand: %w", err)
+	}
+	return rb.Entries, raw, nil
+}
+
+// replayEntryKop haalt registratietype, opmerking en de opvoer/afvoer-sleutels uit een entry.
+func replayEntryKop(e replayEntry) (regtype, opmerking string, delen []string) {
+	var body struct {
+		Registratie struct {
+			Registratietype string `json:"registratietype"`
+			Opmerking       string `json:"opmerking"`
+		} `json:"registratie"`
+		Wijzigingen []map[string]map[string]any `json:"wijzigingen"`
+	}
+	_ = json.Unmarshal(e.RequestBody, &body)
+	telling := map[string]int{}
+	for _, w := range body.Wijzigingen {
+		for modus, rep := range w {
+			for veldnaam := range rep {
+				telling[modus[:1]+":"+veldnaam]++
+			}
+		}
+	}
+	for k, n := range telling {
+		if n > 1 {
+			k = fmt.Sprintf("%s×%d", k, n)
+		}
+		delen = append(delen, k)
+	}
+	sort.Strings(delen)
+	return body.Registratie.Registratietype, body.Registratie.Opmerking, delen
+}
+
+func leesReplaySamenvatting(pad string) regressieSeed {
+	seed := regressieSeed{Bestand: pad}
+	entries, raw, err := leesReplayEntries(pad)
+	seed.Inhoud = string(raw)
+	if err != nil {
+		seed.Fout = err.Error()
+		return seed
+	}
+	seed.Aantal = len(entries)
+	for i, e := range entries {
+		regtype, opmerking, delen := replayEntryKop(e)
+		verwacht := 201
+		if e.ExpectedResponseCode != nil {
+			verwacht = *e.ExpectedResponseCode
+		}
+		seed.Samenvatting = append(seed.Samenvatting, fmt.Sprintf("%2d  %-14s %-42s → %d  [%s]",
+			i, regtype, kortTekst(opmerking, 42), verwacht, strings.Join(delen, " ")))
+	}
+	return seed
+}
+
+func kortTekst(s string, n int) string {
+	r := []rune(s)
+	if len(r) <= n {
+		return s
+	}
+	return string(r[:n-1]) + "…"
 }
 
 func regressieScenarios(c *gin.Context) {
@@ -264,7 +327,18 @@ func regressieScenarios(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	// Beschikbare replay-bestanden (voor replay-stappen in declaratieve scenario's).
+
+	// Dekking (traceability): referentie → scenario-id's.
+	dekking := map[string][]string{}
+	for _, s := range sc {
+		if s.Definitie == nil {
+			continue
+		}
+		for _, ref := range s.Definitie.Dekt {
+			dekking[ref] = append(dekking[ref], s.ID)
+		}
+	}
+
 	var replays []string
 	if paden, _ := filepath.Glob(filepath.Join(resolveAppDir(), "replay files", "*.json")); len(paden) > 0 {
 		for _, p := range paden {
@@ -274,7 +348,7 @@ func regressieScenarios(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"scenarios":        sc,
-		"afhankelijkheden": regressieAfhankelijkheden,
+		"dekking":          dekking,
 		"declaratief_map":  regressieDeclaratiefD,
 		"replay_bestanden": replays,
 		"default_dsn":      defaultRegressieDSNUitEnv(),
@@ -289,6 +363,8 @@ func defaultRegressieDSNUitEnv() string {
 	return regressieDefaultDSN
 }
 
+// ── Regressie-run ───────────────────────────────────────────────────────────
+
 func regressieStatus(c *gin.Context) {
 	regressieMu.Lock()
 	defer regressieMu.Unlock()
@@ -299,116 +375,17 @@ func regressieStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, regressieRnn)
 }
 
-// slug maakt een bestandsnaam-veilige variant van een naam.
-func slug(s string) string {
-	s = strings.ToLower(strings.TrimSpace(s))
-	s = regexp.MustCompile(`[^a-z0-9]+`).ReplaceAllString(s, "-")
-	s = strings.Trim(s, "-")
-	if len(s) > 60 {
-		s = s[:60]
-	}
-	return s
+// ietsBezig meldt of er een regressie- of loadrun loopt (mutex moet vastgehouden zijn).
+func ietsBezig() bool {
+	return (regressieRnn != nil && regressieRnn.Bezig) || (regressieLd != nil && regressieLd.Bezig)
 }
 
-// regressieScenarioOpslaan schrijft een declaratief scenario naar regressie/scenarios/.
-func regressieScenarioOpslaan(c *gin.Context) {
-	if !isDevloopEnabled() {
-		c.JSON(http.StatusForbidden, gin.H{"error": "scenario's opslaan is alleen beschikbaar in devloop modus (DEVLOOP=true)"})
-		return
-	}
-	if !eisBeheerWachtwoord(c, "DEVLOOP_PASSWORD") {
-		return
-	}
-	var sc struct {
-		ID           string            `json:"id"`
-		Naam         string            `json:"naam"`
-		Beschrijving string            `json:"beschrijving,omitempty"`
-		Stappen      []json.RawMessage `json:"stappen"`
-		Overschrijf  bool              `json:"overschrijf"`
-	}
-	if err := c.ShouldBindJSON(&sc); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ongeldige JSON: " + err.Error()})
-		return
-	}
-	sc.ID = strings.TrimSpace(sc.ID)
-	sc.Naam = strings.TrimSpace(sc.Naam)
-	if !regressieIDPatroon.MatchString(sc.ID) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id moet 2–3 cijfers zijn, optioneel gevolgd door een letter (bv. 20 of 21a)"})
-		return
-	}
-	if sc.Naam == "" || len(sc.Stappen) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "naam en minimaal één stap zijn verplicht"})
-		return
-	}
-	gecodeerd, _ := leesGecodeerdeScenarios()
-	for _, g := range gecodeerd {
-		if g.ID == sc.ID {
-			c.JSON(http.StatusConflict, gin.H{"error": fmt.Sprintf("id %s is al in gebruik door een gecodeerd scenario", sc.ID)})
-			return
-		}
-	}
-	for _, d := range leesDeclaratieveScenarios() {
-		if d.ID == sc.ID && !sc.Overschrijf {
-			c.JSON(http.StatusConflict, gin.H{"error": fmt.Sprintf("id %s bestaat al (%s); vink 'overschrijven' aan om te vervangen", sc.ID, d.Bestand)})
-			return
-		}
-	}
-
-	// Stappen valideren op vorm: een request-stap heeft 'path', een replay-stap 'replay'.
-	for i, raw := range sc.Stappen {
-		var stap struct {
-			Method string `json:"method"`
-			Path   string `json:"path"`
-			Replay string `json:"replay"`
-		}
-		if err := json.Unmarshal(raw, &stap); err != nil || (strings.TrimSpace(stap.Path) == "" && strings.TrimSpace(stap.Replay) == "") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("stap %d: geef 'path' (request) of 'replay' (replay-bestand) op; de stap moet een JSON-object zijn", i+1)})
-			return
-		}
-		if r := strings.TrimSpace(stap.Replay); r != "" {
-			if _, err := os.Stat(filepath.Join(resolveAppDir(), r)); err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("stap %d: replay-bestand %q niet gevonden (pad relatief aan de app-map, bv. \"replay files/x.json\")", i+1, r)})
-				return
-			}
-		}
-	}
-
-	uit := map[string]any{"id": sc.ID, "naam": sc.Naam, "stappen": sc.Stappen}
-	if sc.Beschrijving != "" {
-		uit["beschrijving"] = sc.Beschrijving
-	}
-	inhoud, _ := json.MarshalIndent(uit, "", "  ")
-	dir := filepath.Join(resolveAppDir(), regressieDeclaratiefD)
-	if err := os.MkdirAll(dir, 0o750); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "kan scenario-map niet aanmaken: " + err.Error()})
-		return
-	}
-	// Bij overschrijven: oude bestand(en) met dit id opruimen (naam/slug kan veranderd zijn).
-	if sc.Overschrijf {
-		oud, _ := filepath.Glob(filepath.Join(dir, sc.ID+"-*.json"))
-		for _, p := range oud {
-			_ = os.Remove(p)
-		}
-	}
-	bestand := filepath.Join(dir, sc.ID+"-"+slug(sc.Naam)+".json")
-	if err := os.WriteFile(bestand, append(inhoud, '\n'), 0o644); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "kan scenario niet schrijven: " + err.Error()})
-		return
-	}
-	c.JSON(http.StatusCreated, gin.H{"bestand": filepath.Base(bestand), "id": sc.ID})
-}
-
-// regressieStart start een run. Selectie wordt aangevuld met "00" en afhankelijkheden;
-// declaratieve id's draaien als sub-subtest onder "90".
+// regressieStart start een run. Een selectie wordt aangevuld met 00 (seed) en, transitief,
+// de scenario's uit `vereist`.
 func regressieStart(c *gin.Context) {
-	if !isDevloopEnabled() {
-		c.JSON(http.StatusForbidden, gin.H{"error": "regressie-run is alleen beschikbaar in devloop modus (DEVLOOP=true)"})
+	if !eisRegressieMutatie(c) {
 		return
 	}
-	if !eisBeheerWachtwoord(c, "DEVLOOP_PASSWORD") {
-		return
-	}
-
 	var req struct {
 		Scenarios []string `json:"scenarios"`
 		DSN       string   `json:"dsn"`
@@ -418,7 +395,6 @@ func regressieStart(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ongeldige body: " + err.Error()})
 		return
 	}
-
 	alle, err := leesAlleScenarios()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -429,33 +405,24 @@ func regressieStart(c *gin.Context) {
 		bekend[s.ID] = s
 	}
 
-	// Selectie bepalen: leeg = alles (dan geen -run-filter op subtests).
-	goIDs := map[string]bool{}
-	jsonIDs := map[string]bool{}
+	selectie := map[string]bool{}
 	allesGeselecteerd := len(req.Scenarios) == 0
 	if allesGeselecteerd {
 		for _, s := range alle {
-			if s.Soort == "go" {
-				goIDs[s.ID] = true
-			} else {
-				jsonIDs[s.ID] = true
-			}
+			selectie[s.ID] = true
 		}
 	} else {
 		var voegToe func(id string)
 		voegToe = func(id string) {
 			s, ok := bekend[id]
-			if !ok || goIDs[id] || jsonIDs[id] {
+			if !ok || selectie[id] {
 				return
 			}
-			if s.Soort == "json" {
-				jsonIDs[id] = true
-				goIDs[regressieDeclParentID] = true
-				return
-			}
-			goIDs[id] = true
-			for _, dep := range regressieAfhankelijkheden[id] {
-				voegToe(dep)
+			selectie[id] = true
+			if s.Definitie != nil {
+				for _, dep := range s.Definitie.Vereist {
+					voegToe(dep)
+				}
 			}
 		}
 		voegToe("00")
@@ -463,44 +430,24 @@ func regressieStart(c *gin.Context) {
 			voegToe(strings.TrimSpace(id))
 		}
 	}
-	ids := make([]string, 0, len(goIDs)+len(jsonIDs))
-	for id := range goIDs {
-		ids = append(ids, id)
+	// Resultaatvolgorde = suitevolgorde.
+	var ids []string
+	for _, s := range alle {
+		if selectie[s.ID] {
+			ids = append(ids, s.ID)
+		}
 	}
-	for id := range jsonIDs {
-		ids = append(ids, id)
-	}
-	sort.Strings(ids)
 	if len(ids) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "geen (bekende) scenario's geselecteerd"})
 		return
 	}
 
-	// -run patroon per subtest-niveau: subtestnamen beginnen met "<id>_" (go test
-	// vervangt spaties door _). Niveau 3 alleen filteren bij een deelselectie van
-	// declaratieve scenario's; als "90" zelf gekozen is draaien ze allemaal.
+	// Subtestnamen beginnen met "<id>_" (go test vervangt spaties door _).
 	patroon := fmt.Sprintf("^%s$", regressieTestNaam)
 	if !allesGeselecteerd {
-		lvl2 := make([]string, 0, len(goIDs))
-		for id := range goIDs {
-			lvl2 = append(lvl2, id)
-		}
-		sort.Strings(lvl2)
-		patroon += fmt.Sprintf("/^(%s)_", strings.Join(lvl2, "|"))
-		expliciet90 := false
-		for _, id := range req.Scenarios {
-			if strings.TrimSpace(id) == regressieDeclParentID {
-				expliciet90 = true
-			}
-		}
-		if len(jsonIDs) > 0 && !expliciet90 {
-			lvl3 := make([]string, 0, len(jsonIDs))
-			for id := range jsonIDs {
-				lvl3 = append(lvl3, id)
-			}
-			sort.Strings(lvl3)
-			patroon += fmt.Sprintf("/^(%s)_", strings.Join(lvl3, "|"))
-		}
+		gesorteerd := append([]string(nil), ids...)
+		sort.Strings(gesorteerd)
+		patroon += fmt.Sprintf("/^(%s)_", strings.Join(gesorteerd, "|"))
 	}
 	tags := "integration"
 	if req.Devtools {
@@ -516,9 +463,9 @@ func regressieStart(c *gin.Context) {
 	}
 
 	regressieMu.Lock()
-	if regressieRnn != nil && regressieRnn.Bezig {
+	if ietsBezig() {
 		regressieMu.Unlock()
-		c.JSON(http.StatusConflict, gin.H{"error": "er loopt al een regressie-run"})
+		c.JSON(http.StatusConflict, gin.H{"error": "er loopt al een run (regressie of load)"})
 		return
 	}
 	nu := time.Now()
@@ -534,7 +481,6 @@ func regressieStart(c *gin.Context) {
 	regressieMu.Unlock()
 
 	go voerRegressieRunUit(run, cmd)
-
 	c.JSON(http.StatusAccepted, gin.H{"gestart": true, "selectie": ids, "commando": run.Commando})
 }
 
@@ -545,7 +491,7 @@ func voerRegressieRunUit(run *regressieRun, cmd *exec.Cmd) {
 		regressieAfronden(run, "kan stdout niet openen: "+err.Error())
 		return
 	}
-	cmd.Stderr = cmd.Stdout // buildfouten samen met de json-events loggen
+	cmd.Stderr = cmd.Stdout
 	if err := cmd.Start(); err != nil {
 		regressieAfronden(run, "kan go test niet starten: "+err.Error())
 		return
@@ -573,10 +519,7 @@ func voerRegressieRunUit(run *regressieRun, cmd *exec.Cmd) {
 			}
 			continue
 		}
-		// Id = eerste segment van het laatste subtest-niveau (niveau 2 voor gecodeerd,
-		// niveau 3 voor declaratief onder "90").
-		niveaus := strings.Split(strings.TrimPrefix(ev.Test, prefix), "/")
-		id, _, _ := strings.Cut(niveaus[len(niveaus)-1], "_")
+		id, _, _ := strings.Cut(strings.TrimPrefix(ev.Test, prefix), "_")
 		regressieMu.Lock()
 		for i := range run.Resultaten {
 			r := &run.Resultaten[i]
@@ -591,11 +534,11 @@ func voerRegressieRunUit(run *regressieRun, cmd *exec.Cmd) {
 				r.Duur = ev.Elapsed
 			case "output":
 				regel := strings.TrimSpace(ev.Output)
-				// Ruis weglaten: go test-markers en GIN-accesslog; wat overblijft zijn
-				// t.Log/t.Error-regels en engine-meldingen — dat wil je zien.
 				if regel == "" || strings.HasPrefix(regel, "=== RUN") || strings.HasPrefix(regel, "--- ") || strings.HasPrefix(regel, "[GIN]") {
 					break
 				}
+				// Bestandsverwijzing van de testhelper weglaten: leest rustiger.
+				regel = regexp.MustCompile(`^\S+_test\.go:\d+: `).ReplaceAllString(regel, "")
 				if len(r.Output) < 80 {
 					r.Output = append(r.Output, regel)
 				}
@@ -644,157 +587,3 @@ func regressieAfronden(run *regressieRun, fout string) {
 		run.Fout = fout // run kwam niet (goed) tot testen: buildfout, DB onbereikbaar, …
 	}
 }
-
-func regressiePagina(c *gin.Context) {
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(regressiePaginaHTML))
-}
-
-const regressiePaginaHTML = `<!DOCTYPE html>
-<html lang="nl">
-<head>
-<meta charset="utf-8">
-<title>Regressietest np-loc</title>
-<style>
-  :root { color-scheme: light dark; --ok:#16a34a; --fail:#dc2626; --skip:#d97706; --muted:#6b7280; --line:#e5e7eb; }
-  body { font: 14px/1.45 system-ui, sans-serif; margin: 0; padding: 20px; max-width: 1100px; }
-  h1 { font-size: 20px; margin: 0 0 4px; } h2 { font-size: 16px; margin: 20px 0 6px; } .sub { color: var(--muted); margin-bottom: 16px; }
-  .rij { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
-  input[type=text], input[type=password] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; min-width: 260px; }
-  textarea { width: 100%; min-height: 220px; font: 12px/1.4 ui-monospace, monospace; padding: 8px; border: 1px solid var(--line); border-radius: 6px; box-sizing: border-box; }
-  button { padding: 7px 14px; border-radius: 6px; border: 1px solid var(--line); cursor: pointer; background: #f3f4f6; }
-  button.primair { background: #2563eb; color: #fff; border-color: #2563eb; } button:disabled { opacity: .5; cursor: default; }
-  table { border-collapse: collapse; width: 100%; margin-top: 12px; } th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #fff; background: var(--muted); }
-  .pass { background: var(--ok); } .fail { background: var(--fail); } .skip { background: var(--skip); } .bezig { background: #2563eb; }
-  .soort { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-left: 6px; }
-  pre { font-size: 12px; background: #11182708; padding: 8px; border-radius: 6px; max-height: 320px; overflow: auto; white-space: pre-wrap; margin: 4px 0 0; }
-  details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
-  .samenvatting { font-weight: 600; margin: 10px 0; }
-  .waarschuwing { color: var(--fail); } .ok { color: var(--ok); }
-</style>
-</head>
-<body>
-<h1>Regressietest np-loc</h1>
-<div class="sub">Speelt scenario's uit <code>regressie_np_loc_test.go</code> (gecodeerd) en <code id="declmap">regressie/scenarios/*.json</code> (declaratief) af via <code>go test -tags integration -json</code> tegen een dedicated database. Seed (00) en afhankelijkheden worden automatisch meegenomen.</div>
-
-<div class="rij">
-  <label>DSN <input type="text" id="dsn" placeholder="postgres://…/bitemp_regressie_np_loc"></label>
-  <label>Wachtwoord <input type="password" id="pw" placeholder="DEVLOOP_PASSWORD"></label>
-  <label><input type="checkbox" id="devtools"> devtools-build (mét /admin/*)</label>
-</div>
-<div class="rij">
-  <button class="primair" id="alles">▶ Alles afspelen</button>
-  <button id="selectie">▶ Selectie afspelen</button>
-  <button id="geen">selectie wissen</button>
-  <span id="melding" class="waarschuwing"></span>
-</div>
-
-<div class="samenvatting" id="samenvatting"></div>
-<table>
-  <thead><tr><th style="width:34px"></th><th style="width:60px">#</th><th>Scenario</th><th style="width:110px">Status</th><th style="width:70px">Duur</th></tr></thead>
-  <tbody id="rijen"></tbody>
-</table>
-<details style="margin-top:12px"><summary>Run-log (buildfouten, go test-output)</summary><pre id="log"></pre></details>
-
-<h2>Nieuw declaratief scenario</h2>
-<div class="sub">Wordt opgeslagen als <code>regressie/scenarios/&lt;id&gt;-&lt;naam&gt;.json</code> en draait daarna mee onder scenario 90. Variabelen: <code>{{naam}}</code> uit <code>bewaar</code>, plus <code>{{seedLaatsteRegistratieID}}</code>. Verwachtingen in <code>json</code>: waarde, <code>"&gt;0"</code>, <code>"!=null"</code>, <code>"null"</code>. Een stap <code>{"replay": "replay files/….json"}</code> speelt een replay-bestand af en zet <code>{{laatsteRegistratieID}}</code> en <code>{{replayAantal}}</code>.
-<details><summary>beschikbare replay-bestanden</summary><pre id="replays"></pre></details></div>
-<div class="rij">
-  <label>Id <input type="text" id="nid" placeholder="21" style="min-width:80px"></label>
-  <label>Naam <input type="text" id="nnaam" placeholder="korte omschrijving"></label>
-  <label><input type="checkbox" id="noverschrijf"> overschrijven als id bestaat</label>
-</div>
-<textarea id="nstappen"></textarea>
-<div class="rij">
-  <button class="primair" id="opslaan">Opslaan</button>
-  <span id="nmelding"></span>
-</div>
-
-<script>
-(function () {
-  const $ = (id) => document.getElementById(id);
-  let scenarios = [], poller = null;
-  const esc = (s) => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-
-  const pw = sessionStorage.getItem('regressie_pw'); if (pw) $('pw').value = pw;
-  $('nstappen').value = JSON.stringify([
-    { method: 'POST', path: '/locaties', body: { id: 43 }, verwacht: { status: 201, json: { registratie_id: '>0' } }, bewaar: { regId: 'registratie_id' } },
-    { method: 'GET', path: '/registraties/{{regId}}', verwacht: { status: 200, json: { registratietype: 'registratie' } } }
-  ], null, 2);
-
-  async function laadScenarios() {
-    const r = await fetch('/admin/regressie/scenarios'); const d = await r.json();
-    if (!r.ok) { $('melding').textContent = d.error || 'kan scenario’s niet laden'; return; }
-    scenarios = d.scenarios;
-    if (d.declaratief_map) $('declmap').textContent = d.declaratief_map + '/*.json';
-    $('replays').textContent = (d.replay_bestanden || []).join('\n') || '(geen replay-bestanden gevonden)';
-    if (!$('dsn').value) $('dsn').value = d.default_dsn || '';
-    if (!d.devloop) $('melding').textContent = 'DEVLOOP staat uit op de API; runs en opslaan worden geweigerd (bekijken kan wel).';
-    render([]);
-  }
-
-  function render(resultaten) {
-    const map = {}; (resultaten || []).forEach(r => map[r.id] = r);
-    const gekozen = {}; document.querySelectorAll('input[data-id]').forEach(e => gekozen[e.dataset.id] = e.checked);
-    $('rijen').innerHTML = scenarios.map(s => {
-      const r = map[s.id]; const st = r ? r.status : '';
-      const klasse = { pass: 'pass', fail: 'fail', skip: 'skip', bezig: 'bezig' }[st] || '';
-      const badge = st ? '<span class="badge ' + klasse + '">' + esc(st) + '</span>' : '';
-      const duur = r && r.duur_s ? r.duur_s.toFixed(2) + 's' : '';
-      const out = r && r.output && r.output.length ? '<details><summary>output (' + r.output.length + ')</summary><pre>' + esc(r.output.join('\n')) + '</pre></details>' : '';
-      const inhoud = s.inhoud ? '<details><summary>inhoud (' + (s.soort === 'json' ? esc(s.bestand || 'json') : 'Go') + ')</summary><pre>' + esc(s.inhoud) + '</pre></details>' : '';
-      const seeds = (s.seeds || []).map(sd => sd.fout
-        ? '<details><summary class="waarschuwing">seed: ' + esc(sd.bestand) + ' — ' + esc(sd.fout) + '</summary></details>'
-        : '<details><summary>seed: ' + esc(sd.bestand) + ' (' + sd.aantal + ' registraties)</summary>' +
-          '<pre>' + esc((sd.samenvatting || []).join('\n')) + '</pre>' +
-          '<details><summary>ruwe JSON</summary><pre>' + esc(sd.inhoud) + '</pre></details></details>').join('');
-      const vast = s.id === '00' ? ' checked disabled title="seed draait altijd mee"' : (gekozen[s.id] ? ' checked' : '');
-      return '<tr><td><input type="checkbox" data-id="' + esc(s.id) + '"' + vast + '></td><td>' + esc(s.id) + '</td><td>' + esc(s.naam) + '<span class="soort">' + esc(s.soort) + '</span>' + inhoud + seeds + out + '</td><td>' + badge + '</td><td>' + duur + '</td></tr>';
-    }).join('');
-  }
-
-  async function status() {
-    const r = await fetch('/admin/regressie/status'); const d = await r.json();
-    render(d.resultaten);
-    $('samenvatting').textContent = (d.bezig ? '⏳ bezig… ' : '') + (d.samenvatting || '') + (d.fout ? '  — fout: ' + d.fout : '');
-    $('log').textContent = (d.log || []).join('\n');
-    $('alles').disabled = $('selectie').disabled = !!d.bezig;
-    if (!d.bezig && poller) { clearInterval(poller); poller = null; }
-  }
-
-  async function start(alle) {
-    $('melding').textContent = '';
-    sessionStorage.setItem('regressie_pw', $('pw').value);
-    const gekozen = alle ? [] : Array.from(document.querySelectorAll('input[data-id]:checked')).map(e => e.dataset.id);
-    if (!alle && gekozen.length <= 1) { $('melding').textContent = 'Selecteer minimaal één scenario.'; return; }
-    const r = await fetch('/admin/regressie/run', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Beheer-Wachtwoord': $('pw').value },
-      body: JSON.stringify({ scenarios: gekozen, dsn: $('dsn').value, devtools: $('devtools').checked }) });
-    const d = await r.json();
-    if (!r.ok) { $('melding').textContent = d.error || ('fout ' + r.status); return; }
-    if (!poller) poller = setInterval(status, 1000);
-    status();
-  }
-
-  async function opslaan() {
-    $('nmelding').className = ''; $('nmelding').textContent = '';
-    sessionStorage.setItem('regressie_pw', $('pw').value);
-    let stappen;
-    try { stappen = JSON.parse($('nstappen').value); } catch (e) { $('nmelding').className = 'waarschuwing'; $('nmelding').textContent = 'stappen is geen geldige JSON: ' + e.message; return; }
-    if (!Array.isArray(stappen)) { $('nmelding').className = 'waarschuwing'; $('nmelding').textContent = 'stappen moet een array zijn'; return; }
-    const r = await fetch('/admin/regressie/scenarios', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Beheer-Wachtwoord': $('pw').value },
-      body: JSON.stringify({ id: $('nid').value, naam: $('nnaam').value, stappen: stappen, overschrijf: $('noverschrijf').checked }) });
-    const d = await r.json();
-    if (!r.ok) { $('nmelding').className = 'waarschuwing'; $('nmelding').textContent = d.error || ('fout ' + r.status); return; }
-    $('nmelding').className = 'ok'; $('nmelding').textContent = 'opgeslagen als ' + d.bestand;
-    await laadScenarios(); status();
-  }
-
-  $('alles').onclick = () => start(true);
-  $('selectie').onclick = () => start(false);
-  $('geen').onclick = () => document.querySelectorAll('input[data-id]:not(:disabled)').forEach(e => e.checked = false);
-  $('opslaan').onclick = opslaan;
-  laadScenarios().then(status);
-})();
-</script>
-</body>
-</html>`
