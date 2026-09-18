@@ -1462,10 +1462,9 @@ Branch `feat/ge-opname-in-entiteit`, gemerged naar `main` (`3b22d01`). Zie
 
 Bevindingen van Mark bij het tekenen van een BPMN-diagram op de eigen motor
 (`diagramcore` + profiel `bpmn`). De eerste vier zijn defecten/gaten, de laatste
-drie gaan over het bewerken van lijnen. **Stand 2026-09-18:** 31.1, 31.2 en
-31.7 zijn opgepakt; 31.3–31.6 staan nog open (containment, pools en
-reconnect vragen een ontwerpkeuze; knikpunten bestaan al maar zijn
-onvindbaar). Zie `docs/STUDIO.md` en
+drie gaan over het bewerken van lijnen. **Stand 2026-09-18:** alles behalve 31.6
+(vindbaarheid van knikpunten) en de restpunten in 31.9 is gebouwd. Ontwerp
+en afwegingen: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20containers%2C%20afbakening%20%28pools%29%2C%20reconnect%20en%20magic%20link%20%28ontwerp%29.md). Zie `docs/STUDIO.md` en
 `STUDIO-05-diagramcore-plan.md`.
 
 - [x] **31.1 Horizontaal verdelen geeft een rare uitkomst.** *(opgelost
@@ -1488,32 +1487,23 @@ onvindbaar). Zie `docs/STUDIO.md` en
       `Escape` liet een kader-selectie (Shift+slepen) staan. `Escape` maakt nu
       altijd de hele selectie leeg (nodes + edges + kader), behalve tijdens
       typen of met een open contextmenu. Zie `docs/STUDIO.md` → "Deselecteren".
-- [ ] **31.3 Een Lane houdt zijn elementen niet vast.** `containerVoor: "bevat"`
-      legt bij het droppen alleen een **lidmaatschaps-connector**; het is geen
-      React Flow-`parentNode`. Gevolg: de lane verslepen laat de inhoud staan,
-      de inhoud eruit slepen verbreekt niets zichtbaar, en er is geen clipping
-      of meegroeien. Dit raakt álle containers (partitie, package, stage,
-      samengestelde toestand), niet alleen de BPMN-lane. Keuze te maken:
-      echte parent/child in React Flow (met `extent: "parent"`) of een eigen
-      "verplaats leden mee"-regel bovenop de bestaande connector.
-- [ ] **31.4 Er is geen Pool.** Bewust buiten v0 gelaten (zie de kop van
-      `diagramprofielen/bpmn/index.js`: "pools + message flow als
-      collaboration-laag blijven buiten v0"), maar wel gemist. Een pool is
-      meer dan een tweede container: er horen **regels** bij die de motor nu
-      niet kent — een sequence flow mag niet tussen twee pools lopen (dat moet
-      een message flow zijn), en een message flow juist niet binnen één pool.
-      `verbindingsregels` werken nu op elementtype-paren; deze regel is
-      *contextueel* (hangt af van de container van bron en doel). Vraagt dus
-      een uitbreiding van het regelmodel in `materialiseerConnectoren.js`, en
-      hangt samen met 31.3 (zonder echte containment is "in dezelfde pool"
-      niet te bepalen).
-- [ ] **31.5 Lijnen lostrekken en elders aanhechten (reconnect).** Een
-      bestaande lijn kan niet van bron of doel losgetrokken worden; React
-      Flow's `onReconnect`/`reconnectable` wordt nergens gebruikt. Nu is de
-      enige weg: verwijderen en opnieuw tekenen — waarbij de velden op de
-      connector (rolnaam, kardinaliteit, …) verloren gaan. Bij het verhangen
-      moet `isValidConnection` opnieuw gelden, en voor connectoren in de
-      canonieke profielen moet het onderliggende model meeverhuizen.
+- [x] **31.3 Een container houdt zijn elementen vast.** *(gebouwd
+      2026-09-18)* Leden die ín hun container liggen renderen als kind ervan:
+      ze reizen mee en blijven binnen de rand; **Alt+slepen** tilt eruit.
+      Presentatie relatief, opslag absoluut (geen migratie). Geldt voor álle
+      containers (lane, pool, partitie, package, stage, samengestelde
+      toestand). `diagramcore/canvas/nesting.js` + tests; zie `docs/STUDIO.md`.
+- [x] **31.4 Pool — het primitief "afbakening".** *(gebouwd 2026-09-18)*
+      Geen regeltaaltje maar een motor-primitief: `ElementType.afbakeningVoor`
+      (verbinding blijft binnen dezelfde afbakening) en
+      `ConnectorType.overbrugt` (verbinding móet de grens kruisen).
+      BPMN-pool als eerste afnemer; message flow mag ook aan de poolrand
+      (black box). Het menu noemt de reden van een weigering.
+      `diagramcore/canvas/afbakening.js` + tests. BPMN-spec en afweging:
+      [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20containers%2C%20afbakening%20%28pools%29%2C%20reconnect%20en%20magic%20link%20%28ontwerp%29.md).
+- [x] **31.5 Lijnen lostrekken en elders aanhechten (reconnect).** *(gebouwd
+      2026-09-18)* React Flow `onReconnect`; het type blijft gelijk, knikpunten
+      vervallen, alleen de directe gedaante; weigering wordt uitgelegd.
 - [ ] **31.6 Lijnen op een andere plek leggen — knikpunten zijn onvindbaar.**
       *(gecorrigeerd 2026-09-18: de eerste versie van dit punt stelde ten
       onrechte dat knikpunten niet bestaan.)* Ze bestaan wél, in
@@ -1536,9 +1526,22 @@ onvindbaar). Zie `docs/STUDIO.md` en
       `onConnect` zet de keuze klaar, `onConnectEnd` opent het menu. Zie
       `docs/STUDIO.md` → "Magic link". Hangt samen met §28.3 (dezelfde
       afgeleide kennis kan de hints voeden).
-- [ ] **31.8 Magic link — vervolg (idee).** (a) Loslaten op het **lege vlak**
-      → menu "maak hier een nieuw element + verbinding" met alleen de
-      elementtypen die als doel mogen (vgl. de context-pad van bpmn.io);
-      (b) het keuzemenu met het toetsenbord bedienen (pijltjes/Enter, eerste
-      optie voorgeselecteerd); (c) contextuele regels (31.4) laten meewegen
-      zodra die er zijn.
+- [x] **31.8 Magic link — vervolg.** *(gebouwd 2026-09-18)* Loslaten op het
+      lege vlak (of het vlak van een container) → *"Nieuw na …"*: element +
+      lidmaatschap + verbinding in één keer. Canvasmenu's met het toetsenbord
+      (eerste optie voorgeselecteerd, ↑/↓, Enter, Escape).
+- [ ] **31.9 Restpunten containers en afbakening.**
+      (a) De begrenzing laat een lid over de **kopregel/naamband** van de
+      container schuiven — de binnenruimte zou de kop moeten uitsluiten.
+      (b) Geen "pas grootte aan inhoud aan"; een container krimpen laat leden
+      erbuiten vallen (ze worden dan vrij en tonen hun lidmaatschapslijn).
+      (c) *Verplaats naar package…* in het contextmenu gebruikt nog
+      `window.prompt` en zegt "package" waar het een pool/lane kan zijn.
+      (d) De afbakening toetst alleen **nieuwe** verbindingen; een validatie
+      die bestaande overtredingen in een diagram aanwijst ontbreekt.
+      (e) `afbakeningVoor`/`overbrugt` zijn nog niet tekenbaar in de
+      profiel-editor (past in §30.4: twee vinkjes/keuzelijsten).
+      (f) Andere profielen kunnen het primitief benutten: region van een
+      samengestelde toestand, CMMN-stage, uitgeklapt BPMN-subproces.
+      (g) BPMN: pool zonder `processRef`, geen verticale pools, en
+      data-associaties worden niet begrensd.

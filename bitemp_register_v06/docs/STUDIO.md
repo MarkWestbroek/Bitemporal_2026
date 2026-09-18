@@ -620,6 +620,54 @@ fase 2 een **bewerkbare sandbox**:
   rand-elementen (boundary events, `parentId` → positie relatief aan de
   gastheer) en label-ankers doen niet mee aan uitlijnen/verdelen — ze reizen
   met hun gastheer mee.
+- **Containers houden hun inhoud vast (2026-09-18, backlog §31.3).** Een lid
+  (lidmaatschaps-connector via `containerVoor`) dat geometrisch ín zijn
+  container ligt rendert als React Flow-kind daarvan: het **reist mee** als
+  je de container versleept (ook dieper genest, en met aangehechte
+  rand-elementen) en blijft **binnen de rand**. **Alt+slepen** tilt een lid
+  over de rand; buiten elke container loslaten = losmaken, in een andere =
+  verhangen (*Losmaken uit "…"* staat ook in het contextmenu). De store
+  blijft **absolute** posities voeren — de canvas rekent om bij het opbouwen
+  en bij dragstop — zodat connector-materialisatie, auto-layout en export
+  ongewijzigd doorrekenen en bestaande diagrammen niet migreren. Een lid dat
+  búiten zijn container ligt blijft vrij en toont zijn lidmaatschapslijn
+  (dezelfde regel als `verbergBijNesting`). Een nieuw element dat via
+  *Maken* of de magic link ín een container belandt wordt er meteen lid van.
+  Pure logica + tests: `diagramcore/canvas/nesting.js`.
+- **Afbakening — containers die verbindingen begrenzen (2026-09-18, §31.4).**
+  Motor-primitief naast `containerVoor` en `randElement`. Er zijn twee
+  soorten containers: een **partitie** deelt alleen in (BPMN-lane,
+  activity-partition, package), een **afbakening** begrenst wat verbonden mag
+  worden (BPMN-pool/proces, region van een samengestelde toestand,
+  CMMN-stage, block-context in SysML). Het profiel wijst alleen aan, de
+  betekenis zit in de core (`diagramcore/canvas/afbakening.js`):
+  `ElementType.afbakeningVoor: [connectortypen]` = bron en doel in
+  **dezelfde** afbakening; `ConnectorType.overbrugt: [elementtypen]` = bron en
+  doel in **verschillende**. De afbakening van een element is de
+  dichtstbijzijnde voorouder van dat type (via lidmaatschap, en voor een
+  rand-element via zijn gastheer); geen voorouder = de impliciete deelnemer.
+  De toets zit in `vindConnectorTypes(…, elements)`, dus slepen, magic link en
+  verhangen geven dezelfde uitkomst — en het menu noemt de **reden**:
+  *"Sequence flow mag de grens van een Pool niet kruisen — wel mogelijk:
+  Message flow"*. Eerste afnemer: **BPMN-pool** (`pool.afbakeningVoor =
+  ["sequence-flow"]`, `message-flow.overbrugt = ["pool"]`; message flow mag
+  ook aan de poolrand = black box). Achtergrond uit de BPMN-spec en de
+  afweging: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20containers%2C%20afbakening%20%28pools%29%2C%20reconnect%20en%20magic%20link%20%28ontwerp%29.md).
+- **Uiteinden lostrekken — reconnect (2026-09-18, §31.5).** Sleep het uiteinde
+  van een connectorlijn naar een ander element. Het **type blijft gelijk**;
+  geldig als dat type tussen het nieuwe paar mag (typeregels + afbakening).
+  Mag het niet, dan springt de lijn terug en zegt een menu waarom. Alleen op
+  de directe (kale) gedaante; knikpunten vervallen, de handle wordt de zijde
+  waar je loslaat. Eén `updateElement` = één undo-stap.
+- **Magic link op het lege vlak (2026-09-18, §31.8).** Laat je de lijn los op
+  het lege vlak — of op het vlak van een container, want binnen een pool ís
+  dat het lege vlak — dan opent *"Nieuw na …"* met de elementtypen die vanaf
+  deze bron bereikbaar zijn (gangbaarste connectortype eerst). Kiezen maakt
+  het element gecentreerd op de losplek, maakt het lid van de container
+  eronder en legt de verbinding. Loslaten op een **handle** van een pool blijft
+  een gewone verbinding naar die pool. Alle canvasmenu's zijn met het
+  **toetsenbord** te bedienen: eerste optie voorgeselecteerd, ↑/↓, Enter,
+  Escape.
 - **Lijnen verleggen — knikpunten**: **Ctrl-klik** op een connectorlijn
   voegt een knikpunt toe, slepen verplaatst het, dubbelklik op de lijn wist
   ze weer (en normaliseert de lijn). Haakse lijnen kun je daarnaast per

@@ -119,8 +119,10 @@
   cursor: pointer;
 }
 
-.dc-contextmenu-item:hover:not(:disabled) {
+.dc-contextmenu-item:hover:not(:disabled),
+.dc-contextmenu-item:focus:not(:disabled) {
   background: var(--s-hover, #f1f5f9);
+  outline: none;
 }
 
 .dc-contextmenu-item:disabled {
