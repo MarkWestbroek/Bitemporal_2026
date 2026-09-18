@@ -2,6 +2,7 @@
   "id": "06",
   "naam": "synthetisch registratietijdstip",
   "beschrijving": "REGISTRATIE_TIJD=synthetisch: tijdstip = 2026-01-01 + id uur + id microseconden.",
+  "volgorde": 60,
   "vereist": [
     "05"
   ],
@@ -11,7 +12,6 @@
   "tags": [
     "tijd"
   ],
-  "volgorde": 60,
   "stappen": [
     {
       "method": "GET",

@@ -2,13 +2,13 @@
   "id": "16",
   "naam": "N+1-guard bij peiltijdstip",
   "beschrijving": "Voor 4.4: 1 query per entiteit x per kind (60+). Nu set-based.",
+  "volgorde": 170,
   "dekt": [
     "BE-REVIEW-4.4"
   ],
   "tags": [
     "performance"
   ],
-  "volgorde": 160,
   "stappen": [
     {
       "method": "GET",

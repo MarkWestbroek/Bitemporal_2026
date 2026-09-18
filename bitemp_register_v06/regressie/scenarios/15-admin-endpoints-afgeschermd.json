@@ -1,13 +1,13 @@
 {
   "id": "15",
   "naam": "admin-endpoints afgeschermd",
+  "volgorde": 160,
   "dekt": [
     "BE-REVIEW-3.3"
   ],
   "tags": [
     "security"
   ],
-  "volgorde": 150,
   "stappen": [
     {
       "naam": "404 (productie-build) of 403 (devtools zonder DEVLOOP)",

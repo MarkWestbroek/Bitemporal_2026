@@ -1,10 +1,10 @@
 {
   "id": "12",
   "naam": "validatie: ongeldige BSN geeft 422 problem+json",
+  "volgorde": 130,
   "tags": [
     "validatie"
   ],
-  "volgorde": 120,
   "stappen": [
     {
       "naam": "ongeldige 11-proef",

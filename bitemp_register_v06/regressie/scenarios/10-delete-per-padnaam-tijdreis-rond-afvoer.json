@@ -1,11 +1,11 @@
 {
   "id": "10",
   "naam": "DELETE per padnaam + tijdreis rond afvoer",
+  "volgorde": 110,
   "tags": [
     "afvoer",
     "tijdreizen"
   ],
-  "volgorde": 100,
   "stappen": [
     {
       "naam": "afvoeren",

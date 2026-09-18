@@ -1,10 +1,10 @@
 {
   "id": "08",
   "naam": "PATCH /full (merge patch, registratie)",
+  "volgorde": 80,
   "tags": [
     "patch"
   ],
-  "volgorde": 80,
   "stappen": [
     {
       "naam": "patch met expliciete FK",

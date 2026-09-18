@@ -2,6 +2,7 @@
   "id": "30",
   "naam": "load: NP registreren en teruglezen",
   "beschrijving": "Functioneel een keer in de regressierun (uniek=110001); als loadtest met N virtuele gebruikers x iteraties.",
+  "volgorde": 220,
   "tags": [
     "load",
     "performance"
@@ -14,7 +15,6 @@
       "fout_pct": 0
     }
   },
-  "volgorde": 300,
   "stappen": [
     {
       "naam": "registreer",

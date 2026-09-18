@@ -1,6 +1,7 @@
 {
   "id": "17",
   "naam": "auth wordt afgedwongen zodra AUTH_ENABLED=true",
+  "volgorde": 180,
   "dekt": [
     "BE-REVIEW-3.2",
     "BE-REVIEW-3.4"
@@ -10,12 +11,11 @@
     "auth"
   ],
   "env": {
-    "AUTH_ENABLED": "true",
-    "JWT_SECRET": "regressie-secret-1234567890-abcdefghij",
+    "ADMIN_PASSWORD": "regressie-wachtwoord",
     "ADMIN_USERNAME": "regressie-admin",
-    "ADMIN_PASSWORD": "regressie-wachtwoord"
+    "AUTH_ENABLED": "true",
+    "JWT_SECRET": "regressie-secret-1234567890-abcdefghij"
   },
-  "volgorde": 170,
   "stappen": [
     {
       "actie": "seed_admin"

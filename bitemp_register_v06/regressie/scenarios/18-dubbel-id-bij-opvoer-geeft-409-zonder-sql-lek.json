@@ -1,0 +1,40 @@
+{
+  "id": "18",
+  "naam": "dubbel id bij opvoer geeft 409 zonder sql-lek",
+  "beschrijving": "BEKEND GAT (gevonden 2026-09-18 bij het bouwen van de loadtests): een tweede opvoer met een bestaand entiteit-id geeft 500 met de ruwe Postgres-fout (SQLSTATE 23505, constraintnaam) in de body. Gewenst: 409 zonder SQL-tekst, zoals bij §4.2/4.3. Staat uit tot het gat gedicht is.",
+  "volgorde": 190,
+  "dekt": [
+    "BE-REVIEW-4.2",
+    "BE-REVIEW-4.3"
+  ],
+  "tags": [
+    "fouten",
+    "bekend-gat"
+  ],
+  "uit": true,
+  "stappen": [
+    {
+      "naam": "eerste opvoer",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": 47
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "tweede opvoer met hetzelfde id",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": 47
+      },
+      "verwacht": {
+        "status": 409,
+        "bevat_niet": "SQLSTATE"
+      }
+    }
+  ]
+}

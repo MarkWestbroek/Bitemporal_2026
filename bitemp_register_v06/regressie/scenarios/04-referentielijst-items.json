@@ -2,10 +2,10 @@
   "id": "04",
   "naam": "referentielijst-items",
   "beschrijving": "AdellijkeTitel is een referentielijst-ITEM en heeft een gewone padnaam-route.",
+  "volgorde": 40,
   "tags": [
     "referentielijst"
   ],
-  "volgorde": 40,
   "stappen": [
     {
       "method": "GET",

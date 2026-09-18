@@ -1,6 +1,7 @@
 {
   "id": "02",
   "naam": "onbekend id geeft 404 zonder sql-lek",
+  "volgorde": 20,
   "dekt": [
     "BE-REVIEW-4.2",
     "BE-REVIEW-4.3"
@@ -8,7 +9,6 @@
   "tags": [
     "fouten"
   ],
-  "volgorde": 20,
   "stappen": [
     {
       "method": "GET",

@@ -1,6 +1,7 @@
 {
   "id": "05",
   "naam": "POST per padnaam loopt via de engine",
+  "volgorde": 50,
   "dekt": [
     "BE-REVIEW-3.5"
   ],
@@ -8,7 +9,6 @@
     "engine",
     "audit"
   ],
-  "volgorde": 50,
   "stappen": [
     {
       "naam": "opvoeren",

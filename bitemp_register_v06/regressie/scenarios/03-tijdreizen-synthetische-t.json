@@ -2,10 +2,10 @@
   "id": "03",
   "naam": "tijdreizen (synthetische t)",
   "beschrijving": "NP=2 is opgevoerd in registratie 1: bestaat vanaf t=1, niet op t=0.",
+  "volgorde": 30,
   "tags": [
     "tijdreizen"
   ],
-  "volgorde": 30,
   "stappen": [
     {
       "naam": "bestond nog niet op t=0",

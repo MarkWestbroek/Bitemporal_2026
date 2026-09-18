@@ -1,13 +1,13 @@
 {
   "id": "11",
   "naam": "audit-routes zijn read-only",
+  "volgorde": 120,
   "dekt": [
     "BE-REVIEW-3.5"
   ],
   "tags": [
     "audit"
   ],
-  "volgorde": 110,
   "stappen": [
     {
       "method": "POST",

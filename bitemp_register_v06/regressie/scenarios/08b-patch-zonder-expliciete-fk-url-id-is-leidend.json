@@ -2,10 +2,10 @@
   "id": "08b",
   "naam": "PATCH zonder expliciete FK (URL-id is leidend)",
   "beschrijving": "Gefixt 2026-09-16: de builder injecteert de URL-id als parent-FK.",
+  "volgorde": 90,
   "tags": [
     "patch"
   ],
-  "volgorde": 85,
   "stappen": [
     {
       "method": "PATCH",

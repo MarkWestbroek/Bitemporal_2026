@@ -2,10 +2,10 @@
   "id": "13",
   "naam": "validatie: ongeldige enumwaarde geeft 422",
   "beschrijving": "Gefixt 2026-09-16: enum-validatie in de walker + schema-tags op de _Input-structs.",
+  "volgorde": 140,
   "tags": [
     "validatie"
   ],
-  "volgorde": 130,
   "stappen": [
     {
       "method": "POST",

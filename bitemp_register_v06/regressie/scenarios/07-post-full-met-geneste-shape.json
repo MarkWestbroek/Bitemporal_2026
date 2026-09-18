@@ -1,6 +1,7 @@
 {
   "id": "07",
   "naam": "POST /full met geneste shape",
+  "volgorde": 70,
   "dekt": [
     "BE-REVIEW-3.5"
   ],
@@ -8,7 +9,6 @@
     "engine",
     "normalizer"
   ],
-  "volgorde": 70,
   "stappen": [
     {
       "method": "POST",

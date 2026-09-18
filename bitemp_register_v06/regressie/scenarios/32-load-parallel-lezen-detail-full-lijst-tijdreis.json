@@ -1,0 +1,80 @@
+{
+  "id": "32",
+  "naam": "load: parallel lezen (detail, full, lijst, tijdreis)",
+  "beschrijving": "Lezer-rol. Alleen GET's op willekeurige bestaande id's: detail, full-shape van NP en LOC, een lijstpagina en een tijdreis naar een willekeurig registratiemoment. Wijzigt niets, dus herhaalbaar op een behouden database.",
+  "volgorde": 240,
+  "tags": [
+    "load",
+    "performance",
+    "lezen"
+  ],
+  "vars": {
+    "locTot": "6",
+    "locVan": "2",
+    "npTot": "5",
+    "npVan": "2"
+  },
+  "load": {
+    "vus": 16,
+    "iteraties": 50,
+    "drempels": {
+      "p95_ms": 250,
+      "fout_pct": 0
+    }
+  },
+  "stappen": [
+    {
+      "naam": "NP detail",
+      "zet": {
+        "npId": "{{rnd:npVan-npTot}}"
+      },
+      "path": "/natuurlijk_personen/{{npId}}",
+      "verwacht": {
+        "status": 200
+      }
+    },
+    {
+      "naam": "NP full",
+      "path": "/full/natuurlijk_personen/{{npId}}",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "namen[afvoer=null].data[afvoer=null].achternaam": "!=null"
+        }
+      }
+    },
+    {
+      "naam": "LOC full",
+      "zet": {
+        "locId": "{{rnd:locVan-locTot}}"
+      },
+      "path": "/full/locaties/{{locId}}",
+      "verwacht": {
+        "status": 200
+      }
+    },
+    {
+      "naam": "NP lijst (pagina)",
+      "path": "/natuurlijk_personen?page=1&size=20",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "total_count": ">0"
+        }
+      }
+    },
+    {
+      "naam": "NP full op tijdreis",
+      "zet": {
+        "regT": "{{rnd:1-seedLaatsteRegistratieID}}"
+      },
+      "path": "/full/natuurlijk_personen/{{npId}}?t={{regT}}",
+      "verwacht": {
+        "status_in": [
+          200,
+          404
+        ]
+      }
+    }
+  ]
+}

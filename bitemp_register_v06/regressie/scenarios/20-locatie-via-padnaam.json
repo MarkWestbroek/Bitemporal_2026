@@ -1,10 +1,10 @@
 {
   "id": "20",
   "naam": "locatie via padnaam",
+  "volgorde": 200,
   "tags": [
     "engine"
   ],
-  "volgorde": 200,
   "stappen": [
     {
       "method": "POST",

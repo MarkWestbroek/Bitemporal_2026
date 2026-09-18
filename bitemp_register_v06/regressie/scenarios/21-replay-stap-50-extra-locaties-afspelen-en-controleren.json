@@ -1,10 +1,10 @@
 {
   "id": "21",
   "naam": "replay-stap: 50 extra locaties afspelen en controleren",
+  "volgorde": 210,
   "tags": [
     "replay"
   ],
-  "volgorde": 210,
   "stappen": [
     {
       "replay": "replay files/registraties-replay-synth-50x-locatie-adres ID=101 tm 150.json"

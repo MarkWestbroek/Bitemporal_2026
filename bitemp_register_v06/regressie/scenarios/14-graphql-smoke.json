@@ -1,10 +1,10 @@
 {
   "id": "14",
   "naam": "GraphQL smoke",
+  "volgorde": 150,
   "tags": [
     "graphql"
   ],
-  "volgorde": 140,
   "stappen": [
     {
       "method": "POST",

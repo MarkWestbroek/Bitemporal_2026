@@ -2,10 +2,10 @@
   "id": "01",
   "naam": "lijst en detail",
   "beschrijving": "Lezen na de seed: lijst, detail en full-shape met hub+data-navigatie.",
+  "volgorde": 10,
   "tags": [
     "lezen"
   ],
-  "volgorde": 10,
   "stappen": [
     {
       "naam": "lijst",
