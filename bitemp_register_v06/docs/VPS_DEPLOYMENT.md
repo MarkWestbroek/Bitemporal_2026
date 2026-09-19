@@ -376,10 +376,15 @@ docker logs bitemp-go-api-06 --tail 10
 
 Rollback: `FRONTEND_IMAGE=markwestbroek/bitemp-viz-frontend:0.6.0` in `.env`, zelfde commando.
 
-**musicbrain en imprint erbij** (na de demo): eigen map `/srv/musicbrain`, MariaDB als
-container of `apt install mariadb-server`, Next.js als systemd-service (of container) op
-`127.0.0.1:3000`, en één blok in de Caddyfile — zie het commentaar onderin
-`deploy/vps/Caddyfile`. De Imprint-repo krijgt daarvoor een eigen deploy-hoofdstuk.
+**Imprint (musicbrain en de Imprint-site)** draait sinds 19 september 2026 naast
+Omnium, als eigen compose-stack in `/srv/imprint` (git-checkout van het
+imprint-engine-repo; runbook: `docs/deploy-vps.md` daar). Eén container per site
+(imprint op `127.0.0.1:3100`, musicbrain straks op `:3000`) en een **eigen Postgres 17**
+op `127.0.0.1:5434` — bewust niet de Postgres 16 van Omnium: andere versie, ander
+repo en releaseritme, en een `down` van de ene stack mag de andere niet raken.
+Caddy-blokken staan hierboven in `deploy/vps/Caddyfile`. (Het eerdere plan hier —
+`/srv/musicbrain`, MariaDB, Next.js als systemd-service — is vervallen: Imprint
+draait alleen nog op Postgres.)
 
 **Plan B (NAS)** blijft `docker-compose.truenas.yml` + `TRUENAS_DEPLOYMENT.md` §4.
 **Plan C** is `docker compose -f docker-compose.split.yml up` op de laptop.
