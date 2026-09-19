@@ -51,6 +51,18 @@ app.omnium-ide.nl {
 	reverse_proxy 127.0.0.1:8083
 }
 
+# ── Imprint ───────────────────────────────────────────────────────────────
+# Productsite van de Imprint-engine: repo imprint-engine, stack in
+# /srv/imprint/deploy/vps (docs/deploy-vps.md), container op 127.0.0.1:3100.
+# Tijdelijk op een subdomein van musicbrain.nl (DNS bij Quickhost). Zodra
+# imprint-engine.nl bij SIDN actief is: dat blok erbij (zie Caddyfile.snippet
+# in het repo) en dit wordt een redir. noindex zolang het tijdelijk is.
+imprint.musicbrain.nl {
+	import veilig
+	header X-Robots-Tag "noindex"
+	reverse_proxy 127.0.0.1:3100
+}
+
 # ── Later ─────────────────────────────────────────────────────────────────
 # Zet dit blok pas aan als het A-record van omnium-ide.com naar deze machine
 # wijst; anders blijft Caddy vergeefs een certificaat proberen op te halen.
