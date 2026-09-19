@@ -51,16 +51,34 @@ app.omnium-ide.nl {
 	reverse_proxy 127.0.0.1:8083
 }
 
+# ── MusicBrain ────────────────────────────────────────────────────────────
+# Imprint-site musicbrain.nl: stack in /srv/imprint/deploy/vps, container op
+# 127.0.0.1:3000 (sinds 19 september 2026; daarvoor Plesk bij Quickhost).
+# editor.musicbrain.nl staat nog bij Quickhost (statisch).
+musicbrain.nl {
+	import veilig
+	# Uploads via de admin en /api/ingest (board-renders, 3D-modellen).
+	request_body {
+		max_size 50MB
+	}
+	reverse_proxy 127.0.0.1:3000
+}
+
+www.musicbrain.nl {
+	redir https://musicbrain.nl{uri} permanent
+}
+
 # ── Imprint ───────────────────────────────────────────────────────────────
 # Productsite van de Imprint-engine: repo imprint-engine, stack in
 # /srv/imprint/deploy/vps (docs/deploy-vps.md), container op 127.0.0.1:3100.
-# Tijdelijk op een subdomein van musicbrain.nl (DNS bij Quickhost). Zodra
-# imprint-engine.nl bij SIDN actief is: dat blok erbij (zie Caddyfile.snippet
-# in het repo) en dit wordt een redir. noindex zolang het tijdelijk is.
-imprint.musicbrain.nl {
+# DNS bij mijn.host. imprint.musicbrain.nl was het tijdelijke adres.
+imprint-engine.nl {
 	import veilig
-	header X-Robots-Tag "noindex"
 	reverse_proxy 127.0.0.1:3100
+}
+
+www.imprint-engine.nl, imprint.musicbrain.nl {
+	redir https://imprint-engine.nl{uri} permanent
 }
 
 # ── Later ─────────────────────────────────────────────────────────────────
@@ -69,12 +87,4 @@ imprint.musicbrain.nl {
 #
 # omnium-ide.com, www.omnium-ide.com {
 # 	redir https://omnium-ide.nl{uri} permanent
-# }
-#
-# En als musicbrain en imprint hierheen verhuizen: per site één blok, meer is
-# het niet.
-#
-# musicbrain.nl {
-# 	import veilig
-# 	reverse_proxy 127.0.0.1:3000
 # }
