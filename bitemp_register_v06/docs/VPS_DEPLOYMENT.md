@@ -138,8 +138,9 @@ reboot houdt de instelling.
 
 ```bash
 # Dode template-resolvers vervangen door publieke (advies van mijn.host zelf)
-grep -rn "5\.254" /etc/netplan /etc/systemd/resolved.conf* 2>/dev/null
-#   → staan ze in /etc/netplan/*.yaml: daar vervangen door 1.1.1.1 en 9.9.9.9, dan: netplan apply
+# Het template gebruikt geen netplan maar ifupdown (/etc/network/interfaces), en
+# systemd-resolved staat uit: de resolvers staan alleen in resolv.conf. Controle:
+grep -rn "5\.254" /etc/network /etc/netplan /etc/systemd 2>/dev/null   # verwacht: niets
 rm -f /etc/resolv.conf
 printf 'nameserver 1.1.1.1\nnameserver 9.9.9.9\nnameserver 8.8.8.8\n' > /etc/resolv.conf
 chattr +i /etc/resolv.conf        # niemand overschrijft hem meer; wijzigen: eerst chattr -i

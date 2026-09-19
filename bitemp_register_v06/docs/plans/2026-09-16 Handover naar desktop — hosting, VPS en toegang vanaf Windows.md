@@ -255,8 +255,9 @@ sudo journalctl -u caddy --since today
   (overleeft reboot, getest). Wil je hem ooit wijzigen: eerst `sudo chattr -i /etc/resolv.conf`.
   *Aanvulling 19 september:* support van mijn.host bevestigt dat de template-resolvers
   (5.254.124.23/.124) definitief buiten gebruik zijn en dat publieke resolvers de
-  bedoelde oplossing zijn. Alleen een herinstallatie via het panel zet ze terug. Nog te
-  controleren: of ze ook nog in `/etc/netplan/` staan. Uitgewerkt in
+  bedoelde oplossing zijn. Alleen een herinstallatie via het panel zet ze terug.
+  Gecontroleerd: het template heeft geen netplan (ifupdown, `systemd-resolved` uit) en
+  de oude adressen staan nergens meer, alleen resolv.conf telde. Uitgewerkt in
   `docs/VPS_DEPLOYMENT.md` §4 en §9.
 - **AAAA-records.** mijn.host zet standaard AAAA-records naar een parkeeradres; daarmee
   faalt de Let's Encrypt-validatie. Verwijderd — en in het mijn.host-panel moet je na
