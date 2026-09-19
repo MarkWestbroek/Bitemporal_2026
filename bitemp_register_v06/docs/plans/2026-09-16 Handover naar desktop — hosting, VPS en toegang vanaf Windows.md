@@ -253,6 +253,11 @@ sudo journalctl -u caddy --since today
 - **DNS op de VPS.** De resolvers van mijn.host waren dood; `/etc/resolv.conf` staat
   hard op 1.1.1.1 / 9.9.9.9 / 8.8.8.8 en is met `chattr +i` onveranderbaar gemaakt
   (overleeft reboot, getest). Wil je hem ooit wijzigen: eerst `sudo chattr -i /etc/resolv.conf`.
+  *Aanvulling 19 september:* support van mijn.host bevestigt dat de template-resolvers
+  (5.254.124.23/.124) definitief buiten gebruik zijn en dat publieke resolvers de
+  bedoelde oplossing zijn. Alleen een herinstallatie via het panel zet ze terug. Nog te
+  controleren: of ze ook nog in `/etc/netplan/` staan. Uitgewerkt in
+  `docs/VPS_DEPLOYMENT.md` §4 en §9.
 - **AAAA-records.** mijn.host zet standaard AAAA-records naar een parkeeradres; daarmee
   faalt de Let's Encrypt-validatie. Verwijderd — en in het mijn.host-panel moet je na
   verwijderen nog apart op *Opslaan* klikken. ns1 liep achter op ns2/ns3.

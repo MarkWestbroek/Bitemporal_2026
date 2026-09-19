@@ -107,6 +107,15 @@ repository voor alle versies en Docker ondersteunt `noble` én `resolute`), **2 
 **≥ 40 GB schijf**, datacenter in Nederland. Alleen images pullen — er wordt op de
 VPS niets gebouwd, dus 4 GB is ruim voor Omnium alleen.
 
+*Besteld: mijn.host VPS M, 2 cores / 8 GB / 40 GB, Rotterdam.* Met Omnium draaiend
+is ±3 GB RAM en ±4 GB schijf in gebruik (september 2026). **Imprint bouwt wél op de
+VPS**: de Next-sites prerenderen uit hun database, dus `deploy.sh` in het
+Imprint-repo draait `docker build` op deze machine, één site tegelijk. Dat is de
+zwaarste piek (reken op 1–2 GB extra tijdens een build). Loopt een build vast of
+wordt hij gekilld: `free -h`, `dmesg | grep -i oom`, en zo nodig swap aanzetten.
+Schijf: elke build laat cache achter; `docker builder prune` als `df -h` krap wordt.
+Zie `docs/deploy-vps.md` in het Imprint-repo.
+
 Kandidaten (prijzen 3 sep 2026): mijn.host VPS M (2/8 GB/40 GB, €15 actie / €25),
 TransIP V3 (2/4 GB/100 GB NVMe, €20, AMS/RTM, snapshot inbegrepen), Hostinger KVM 2
 (2/8 GB/100 GB, €7,99 actie / €14,99, let op vooruitbetaling).
@@ -120,7 +129,22 @@ Bij bestellen: je **SSH-publieke sleutel** meegeven (`cat ~/.ssh/id_ed25519.pub`
 
 Als root inloggen: `ssh root@<VPS-IP>`.
 
+**Eerst DNS.** Het mijn.host-template zet `5.254.124.23` en `5.254.124.124` als
+resolvers. Die zijn buiten gebruik (bevestigd door mijn.host-support, september
+2026: "verouderde interne resolvers die niet meer actief zijn"). Zonder deze stap
+blijft `apt update` hangen op "Resolving timed out". Dit geldt ook na elke
+**herinstallatie** via het panel, want die rolt het template opnieuw uit. Een gewone
+reboot houdt de instelling.
+
 ```bash
+# Dode template-resolvers vervangen door publieke (advies van mijn.host zelf)
+grep -rn "5\.254" /etc/netplan /etc/systemd/resolved.conf* 2>/dev/null
+#   → staan ze in /etc/netplan/*.yaml: daar vervangen door 1.1.1.1 en 9.9.9.9, dan: netplan apply
+rm -f /etc/resolv.conf
+printf 'nameserver 1.1.1.1\nnameserver 9.9.9.9\nnameserver 8.8.8.8\n' > /etc/resolv.conf
+chattr +i /etc/resolv.conf        # niemand overschrijft hem meer; wijzigen: eerst chattr -i
+getent hosts archive.ubuntu.com      # moet direct een adres geven
+
 # Updates + basis
 apt update && apt -y upgrade
 apt -y install ufw unattended-upgrades fail2ban curl git
@@ -310,6 +334,10 @@ anders optie). Een snapshot is een noodrem, geen backup.
 - **Let's Encrypt faalt** — bijna altijd: A-record wijst nog niet hierheen, of poort 80 dicht.
   `journalctl -u caddy` zegt welke.
 - **Poort per ongeluk publiek** — `ss -tlnp | grep -v 127.0.0.1` mag alleen 22, 80, 443 tonen.
+- **Alles hangt op "Resolving timed out"** (apt, `docker pull`, `git pull`, `npm ci` in
+  een build, Let's Encrypt) — dan staat DNS weer op de dode template-resolvers, meestal
+  na een herinstallatie. `cat /etc/resolv.conf` en §4 "Eerst DNS". Containers nemen de
+  resolvers van de host over; met de host is ook elke build weer in orde.
 
 ---
 
