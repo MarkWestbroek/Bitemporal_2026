@@ -54,7 +54,7 @@ app.omnium-ide.nl {
 # ── MusicBrain ────────────────────────────────────────────────────────────
 # Imprint-site musicbrain.nl: stack in /srv/imprint/deploy/vps, container op
 # 127.0.0.1:3000 (sinds 19 september 2026; daarvoor Plesk bij Quickhost).
-# editor.musicbrain.nl staat nog bij Quickhost (statisch).
+# editor.musicbrain.nl: zie het blok hieronder.
 musicbrain.nl {
 	import veilig
 	# Uploads via de admin en /api/ingest (board-renders, 3D-modellen).
@@ -66,6 +66,19 @@ musicbrain.nl {
 
 www.musicbrain.nl {
 	redir https://musicbrain.nl{uri} permanent
+}
+
+# ── MusicBrain-editor ─────────────────────────────────────────────────────
+# Statische Vite-SPA uit het MusicBrain-repo (editor/). Gebouwd door
+# editor/deploy-vps.sh (gestart door de GitHub Action "Deploy editor"); www is
+# een symlink naar de actieve release. Banken buiten git: GitHub-release "banks".
+editor.musicbrain.nl {
+	import veilig
+	root * /srv/musicbrain-editor/www
+	# Vite-bundels hebben een hash in de naam: die mogen lang in de cache.
+	@hashed path /assets/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+	file_server
 }
 
 # ── Imprint ───────────────────────────────────────────────────────────────
