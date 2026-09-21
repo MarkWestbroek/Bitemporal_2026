@@ -382,6 +382,24 @@ docker logs bitemp-go-api-06 --tail 10
 
 Rollback: `FRONTEND_IMAGE=markwestbroek/bitemp-viz-frontend:0.6.0` in `.env`, zelfde commando.
 
+**Vijf sites naast Omnium** (stand 21 september 2026), elk met een eigen map onder
+`/srv` en hetzelfde patroon (git-checkout → `deploy/vps/deploy.sh` → container op een
+loopback-poort → Caddy-blok):
+
+| Site | Map | Poort | Repo |
+|---|---|---|---|
+| musicbrain.nl | `/srv/imprint` | 3000 | imprint-engine |
+| imprint-engine.nl | `/srv/imprint` | 3100 | imprint-engine |
+| editor.musicbrain.nl | `/srv/musicbrain-editor` | statisch | MusicBrain (GitHub Action) |
+| volksgebouwzeist.nl | `/srv/volksgebouw` | 3200 | VolksgebouwZeist |
+| psycholog.pi-utrecht.nl | `/srv/psycholog` | 3300 | ewa-psycholog |
+
+De laatste twee zijn zelfstandige Next.js-repo's met hun eigen `deploy/vps/`-map.
+Mail (contactformulier, later wachtwoord-vergeten) gaat via de relay van Quickhost:
+`mail.<domein>` op poort **465** met SSL — 587 met STARTTLS weigert daar, en het kale
+domein wijst na de verhuizing naar de VPS. Zie `docs/design/mail.md` in het
+imprint-engine-repo.
+
 **Imprint (musicbrain en de Imprint-site)** draait sinds 19 september 2026 naast
 Omnium, als eigen compose-stack in `/srv/imprint` (git-checkout van het
 imprint-engine-repo; runbook: `docs/deploy-vps.md` daar). Eén container per site
