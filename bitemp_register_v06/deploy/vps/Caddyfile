@@ -51,6 +51,19 @@ app.omnium-ide.nl {
 	reverse_proxy 127.0.0.1:8083
 }
 
+# ── Omnium pf (Common Ground-portfolio) ───────────────────────────────────
+# Tweede Omnium-instantie, stack /srv/omnium-pf (compose-project omnium-pf,
+# docker-compose.pf.yml), frontend op 127.0.0.1:8084. Eerst voor de iframe-
+# test (plan 2026-09-21 §5): frame-ancestors staat in de frontend, niet hier.
+pf.common-ground-lab.nl {
+	import veilig
+	request_body {
+		max_size 20MB
+	}
+	redir / /viz/react/ 302
+	reverse_proxy 127.0.0.1:8084
+}
+
 # ── Korte ingang naar de Studio ───────────────────────────────────────────
 # omnide.nl is alleen een kort adres (Marks eigen domein bij Quickhost); de
 # Studio blijft op app.omnium-ide.nl wonen, zodat er één echte URL is. Let op:

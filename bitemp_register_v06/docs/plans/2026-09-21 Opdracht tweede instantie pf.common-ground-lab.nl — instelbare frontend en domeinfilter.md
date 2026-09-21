@@ -142,6 +142,18 @@ Wat ervoor in de plaats komt, staat in §9 (later).
 
 ### C. De tweede stack op de VPS
 
+> **Status: uitgevoerd op 22 september 2026** (commits `861fb4c4`, `ab77baf0`). Compose-project
+> `omnium-pf` in `/srv/omnium-pf` (`deploy/vps/docker-compose.pf.yml`, beheer met
+> `deploy/vps/pf.sh`, voorbeeld-env `deploy/vps/.env.pf.example`). **Images op de VPS gebouwd** uit
+> de checkout (besluit Mark): `omnium-pf-api:<commit>` en `omnium-pf-frontend:<commit>`, niets naar
+> Docker Hub, `latest` onaangeroerd; app.omnium-ide.nl bleef op zijn eigen containers draaien. De API
+> meldt zelf "devtools endpoints meegecompileerd: false". Getest: Studio, `/version`, `/docs`,
+> OpenAPI (alle domeinen), schema; login 200 met cookie `HttpOnly; SameSite=Lax; Secure`, fout
+> wachtwoord 401. Beheerderswachtwoord alleen in `/srv/omnium-pf/.env`.
+> Tegengekomen: MinIO eist een gebruikersnaam van minstens 3 tekens (`pf` → `pf-minio`).
+> **Open:** de API waarschuwt `REGISTRATIE_TIJD=synthetisch in productiecontext`; beslissen vóór
+> het laden van echte data (`klok` voor een live register).
+
 - Nieuwe map **`/srv/omnium-pf`**, eigen compose-project. Of `docker-compose.vps.yml`
   parametriseren (`container_name`s en netwerken via `${…}`), of een apart
   `docker-compose.pf.yml`; kies wat het minst dubbel werk geeft.
@@ -154,6 +166,11 @@ Wat ervoor in de plaats komt, staat in §9 (later).
 - **Geheim-regel**: genereer de `.env` op de VPS zelf (`openssl rand`), toon geen waarden, `chmod 600`.
 
 ### D. Caddy en DNS
+
+> **Status: uitgevoerd op 22 september 2026.** A-record `pf` → VPS gezet door Mark (zone-serial
+> `2026092201`); Caddy-blok actief, certificaat Let's Encrypt tot 20 december 2026.
+> https://pf.common-ground-lab.nl stuurt `/` door naar `/viz/react/`, met `frame-ancestors *` (dus
+> inbedden mag) en HSTS. Repo-kopie van de Caddyfile bijgewerkt. Volgende stap: de iframe-test (§5).
 
 - Caddy-blok (live in `/etc/caddy/Caddyfile`, repo-kopie in `deploy/vps/Caddyfile`), naar het model
   van `app.omnium-ide.nl`:

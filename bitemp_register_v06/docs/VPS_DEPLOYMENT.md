@@ -403,6 +403,7 @@ loopback-poort → Caddy-blok):
 | editor.musicbrain.nl | `/srv/musicbrain-editor` | statisch | MusicBrain (GitHub Action) |
 | volksgebouwzeist.nl | `/srv/volksgebouw` | 3200 | VolksgebouwZeist |
 | psycholog.pi-utrecht.nl | `/srv/psycholog` | 3300 | ewa-psycholog |
+| pf.common-ground-lab.nl | `/srv/omnium-pf` | 8084 (PG 5435, MinIO-console 9002) | dit repo, `docker-compose.pf.yml` + `pf.sh`; images op de VPS gebouwd |
 
 De laatste twee zijn zelfstandige Next.js-repo's met hun eigen `deploy/vps/`-map.
 Mail (contactformulier, later wachtwoord-vergeten) gaat via de relay van Quickhost:
