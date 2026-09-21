@@ -23,7 +23,9 @@ backend aanbiedt. Geen aparte build per instantie.
 | Domeinen | `register` + `CG` + een vaste **kern**: `gegevenstypen`, `extra`, `configuratie`, `ide-bestanden` |
 | `abuvwxy` | **niet** in de kern: dat was een testmodel, ballast voor een live register |
 | Adres | `pf.common-ground-lab.nl` |
-| Data | de CG-replaybestanden (en het CG-domein zelf) — zie §6 |
+| Data | de CG-replaybestanden — **Mark laadt ze zelf**, met de hand (de set wijzigt nog). Deze opdracht levert een lege, draaiende instantie op — zie §6 |
+| MinIO | een **eigen MinIO-container** voor pf, volledig gescheiden van Omnium |
+| Autorisatie | **OpenFTV aan** op pf: daar staat het Common Ground-portfolio, dus *eat your own dogfood* — zie werkpakket F |
 | Uitvoering | in dít repo, inclusief VPS en Caddy, ná het mergen van Marks backend-werk |
 
 ## 3. Stand van de code (onderzocht 21 september 2026)
@@ -118,8 +120,8 @@ instelbaar.
   `docker-compose.vps.yml` parametriseren (`container_name`s en netwerken via
   `${…}`), of een apart `docker-compose.pf.yml` — kies wat het minst
   dubbel werk geeft.
-- Volledig gescheiden: eigen Postgres (eigen volume), eigen MinIO of eigen
-  bucket, eigen `JWT_SECRET`, `ADMIN_PASSWORD`, `ADMIN_DROP_PASSWORD`. Dezelfde
+- Volledig gescheiden: eigen Postgres (eigen volume), **eigen MinIO-container**
+  (besluit Mark), eigen `JWT_SECRET`, `ADMIN_PASSWORD`, `ADMIN_DROP_PASSWORD`. Dezelfde
   images als app.omnium-ide.nl, plus `ENABLED_DOMAINS=register,CG` en
   `API_UPSTREAM` naar de eigen API.
 - Loopback-poorten (bezet op de VPS: 3000, 3100, 3200, 3300, 5433, 5434, 8083,
@@ -176,29 +178,51 @@ instelbaar.
 
 ## 6. Data: de CG-replaybestanden
 
-In `docs/CG PF/Replay files/`, in deze volgorde:
+**Mark laadt de data zelf**, met de hand: de set replaybestanden (nu vijf of zes,
+in `docs/CG PF/Replay files/`, toelichting in `docs/CG PF/replay-mapping.md`)
+wijzigt nog. Deze opdracht levert dus een **lege, draaiende instantie** op,
+klaar om te replayen via het bestaande mechanisme
+(`pages/RegistratieReplayPage.jsx` of het onderliggende endpoint).
 
-1. `1. Gemeenten CBS 2026.replay.json`
-2. `2. Domeinen vast 2026.replay.json`
-3. `3. API standaarden rationalisatie 2026.replay.json`
-4. `4. Intake Portfolio Common Ground 2.replay (zonder gemeenten) CLEANED.json`
-5. `5. PO email naar Persoon.Contactgegevens 2026.replay - zonder piet en test.json`
-6. `6. Persooncorrecties David en cleanup 2026.replay.json`
-7. `7. Extra data CG Portfolio.replay.json`
+Wel nodig: één **proef-replay** van één bestand (bijvoorbeeld `1. Gemeenten CBS
+2026.replay.json`) om te bewijzen dat de domeinselectie klopt — geen registraties
+die falen op een ontbrekend type. Daarna de instantie weer leegmaken, zodat Mark
+vanaf nul kan laden.
 
-Niet: de map `oud of toch niet/`. Toelichting in `docs/CG PF/replay-mapping.md`.
-Laden via het bestaande replay-mechanisme (`pages/RegistratieReplayPage.jsx` of
-het onderliggende endpoint) tegen de nieuwe instantie, nadat die draait met
-`ENABLED_DOMAINS=register,CG`. Controleer na elk bestand dat er geen
-registraties falen op een ontbrekend type — dat zou betekenen dat de
-domeinselectie te krap is.
+### F. OpenFTV (autorisatie) op pf
+
+Op pf staat het Common Ground-portfolio; daar hoort het eigen autorisatiemodel
+aan te staan (*eat your own dogfood*, besluit Mark).
+
+- In de huidige compose zit OpenFTV achter het profiel `authz`
+  (`docker-compose.vps.yml:11-12, 110-112, 133-…`: `openftv-db`,
+  `openftv-manager`, `openftv-pdp`, met `./authz/manager` en `./authz/pdp`).
+  Voor pf gaat dat profiel **standaard aan**, met eigen containers en een eigen
+  database — geen gedeelde PDP met app.omnium-ide.nl.
+- API: `AUTHZ_PDP_ENABLED=true`, `OPENFTV_PDP_URL` naar de eigen PDP. Kies
+  bewust voor `AUTHZ_DENY_ON_ERROR`: aan betekent dat een uitgevallen PDP de
+  site dichtzet; noteer de keuze in het runbook.
+- Beleid: begin met de bundel die de FTV-demo gebruikte
+  (`2026-09-15 FTV-demo Toegangsspraak — draaiboek.md`) en het ontwerp in
+  `2026-07-22 Klare-taal Toegangsbeleid — Toegangsspraak`. Welke regels pf
+  precies krijgt (wie mag het portfolio lezen, wie mag wijzigen) is een
+  inhoudelijke keuze: leg een voorstel aan Mark voor, maar begin met een
+  **toegestaan-voor-ingelogde-beheerders**-regel zodat de instantie bruikbaar
+  is terwijl het beleid groeit.
+- Geheugen: drie extra containers (Postgres 15, manager, PDP). De VPS heeft
+  ruimte (±6 GB vrij bij normaal gebruik), maar meet het na het starten.
+- Test: een verzoek dat het beleid moet weigeren, wordt ook echt geweigerd; een
+  toegestaan verzoek komt erdoor; en app.omnium-ide.nl draait zonder PDP zoals nu.
 
 ## 7. Klaar als
 
 - https://pf.common-ground-lab.nl toont de Studio, met een eigen login.
 - OpenAPI, GraphQL en de schema-UI tonen alleen `register`, `CG` en de kern;
   geen `abuvwxy`, `financieel`, `kennis2`, `np-loc`, `org-geo`.
-- De CG-data is geladen (aantallen per type genoteerd in de opleverregel).
+- Eén proef-replay is gelukt en daarna weer opgeruimd; de instantie staat
+  leeg klaar voor Mark.
+- OpenFTV draait op pf met een eigen PDP; een te weigeren verzoek wordt
+  geweigerd.
 - **app.omnium-ide.nl is ongewijzigd**: alle domeinen, eigen login, geen 502
   meer na het herstarten van de API.
 - De nieuwe instantie zit in de nachtelijke backup en de NAS haalt hem op.
@@ -206,12 +230,11 @@ domeinselectie te krap is.
   sites en poorten), de repo-kopie van de Caddyfile, en de changelog/backlog
   volgens de gewoonten van dit repo.
 
-## 8. Open vragen voor Mark
+## 8. Beantwoord door Mark (21 september 2026)
 
-1. De twee replaybestanden in `docs/CG PF/` zelf (`Intake Portfolio Common
-   Ground 1.replay.json` en `… 3.replay (overige velden).json`): horen die er
-   ook bij, en zo ja, waar in de volgorde?
-2. MinIO: een eigen MinIO-container voor pf (volledig gescheiden), of een eigen
-   bucket in de bestaande (minder geheugen, maar dan hangen de stacks aan
-   elkaar)? Voorstel: eigen container, in lijn met "elke stack op zichzelf".
-3. Moet pf later ook OpenFTV (autorisatie) krijgen, of blijft dat profiel uit?
+1. De replaybestanden: de set (vijf of zes) wijzigt nog — **Mark laadt ze zelf**.
+2. MinIO: **eigen container** voor pf.
+3. OpenFTV: **ja, aan op pf** — het CG-portfolio moet zelf laten zien wat het
+   predikt.
+
+Open, voor tijdens de uitvoering: welke toegangsregels pf krijgt (§F).
