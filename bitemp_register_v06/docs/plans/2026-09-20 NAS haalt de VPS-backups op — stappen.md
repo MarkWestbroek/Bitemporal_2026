@@ -1,10 +1,12 @@
 # NAS haalt de VPS-backups op — stappen
 
-> **Bijgewerkt 21 september 2026: grotendeels gedaan.** De NAS-sleutel staat op
-> de VPS (alleen-lezen via `rrsync`), de host-sleutels zijn vergeleken en de
-> Rsync-taak voor Imprint maakt verbinding (`Accepted publickey for omnium …
-> RSA SHA256:tKLj6Xdk…`). Wat we daarbij tegenkwamen staat in §"Ervaringen"
-> onderaan. Rest: de tweede taak (Omnium) en de snapshot-taak.
+> **Bijgewerkt 21 september 2026: gedaan, op de snapshot-taak na.** Beide
+> Rsync-taken (Omnium en Imprint) draaien dagelijks om 06:00 en zijn met
+> **Run Now** getest: alle dagmappen staan op de NAS in
+> `/mnt/Pool1/backup/vps1/{omnium,imprint}` (logisch 2,33 MB en 114 MB; ZFS
+> comprimeert Omnium 4,9×). De NAS-sleutel staat alleen-lezen op de VPS via
+> `rrsync`; de ACL laat alleen root in de mappen. Wat we tegenkwamen staat in
+> §"Ervaringen" onderaan. Rest: stap 6, de snapshot-taak.
 >
 > Geschreven 19 september 2026, om de volgende dag af te werken.
 > Achtergrond: `docs/VPS_DEPLOYMENT.md` §8 (dit repo) en `docs/deploy-vps.md`

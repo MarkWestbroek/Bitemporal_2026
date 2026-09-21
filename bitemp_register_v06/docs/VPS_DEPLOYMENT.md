@@ -310,8 +310,10 @@ alles; grens dat op de NAS met periodieke ZFS-snapshots, niet in rsync.
 **Imprint** (musicbrain.nl, imprint-engine.nl) heeft een eigen `backup.sh` en map:
 cron `15 3 * * *` (een kwartier na Omnium), `/srv/imprint-backups/`. Op de NAS een
 **tweede** Rsync Task met dezelfde instellingen en remote path `/srv/imprint-backups/`.
-Details: `docs/deploy-vps.md` §Backups in het imprint-engine-repo. (Stand 19 september
-2026: beide crons draaien, beide NAS-taken moeten nog.)
+Details: `docs/deploy-vps.md` §Backups in het imprint-engine-repo. (Stand 21 september
+2026: beide crons draaien, en beide NAS-taken halen elke dag om 06:00 op naar
+`Pool1/backup/vps1/{omnium,imprint}`. Nog te doen: een snapshot-taak op die
+dataset.)
 
 Tussendoor, of als de NAS uitstaat, is dezelfde pull naar een laptop één regel
 (buiten iCloud-mappen, want `env.txt` bevat de secrets):
