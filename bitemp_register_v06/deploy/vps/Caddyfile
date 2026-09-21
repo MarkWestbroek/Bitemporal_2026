@@ -68,6 +68,19 @@ www.musicbrain.nl {
 	redir https://musicbrain.nl{uri} permanent
 }
 
+# ── Volksgebouw Zeist ─────────────────────────────────────────────────────
+# Next.js-site uit het VolksgebouwZeist-repo, stack in
+# /srv/volksgebouw/deploy/vps (zie deploy/vps/README.md daar), container op
+# 127.0.0.1:3200. DNS bij Quickhost; mail (MX, SPF, DKIM) blijft daar.
+volksgebouwzeist.nl {
+	import veilig
+	reverse_proxy 127.0.0.1:3200
+}
+
+www.volksgebouwzeist.nl {
+	redir https://volksgebouwzeist.nl{uri} permanent
+}
+
 # ── MusicBrain-editor ─────────────────────────────────────────────────────
 # Statische Vite-SPA uit het MusicBrain-repo (editor/). Gebouwd door
 # editor/deploy-vps.sh (gestart door de GitHub Action "Deploy editor"); www is
@@ -92,6 +105,19 @@ imprint-engine.nl {
 
 www.imprint-engine.nl, imprint.musicbrain.nl {
 	redir https://imprint-engine.nl{uri} permanent
+}
+
+# ── Psycholoog (Ewa) ──────────────────────────────────────────────────────
+# Next.js-site uit het ewa-psycholog-repo (PL/NL/EN, eigen mini-CMS op /admin),
+# stack in /srv/psycholog/deploy/vps, container op 127.0.0.1:3300. Alleen dit
+# subdomein staat hier; pi-utrecht.nl zelf blijft bij Quickhost.
+psycholog.pi-utrecht.nl {
+	import veilig
+	# De admin uploadt PDF's (next.config.mjs staat 25 MB toe).
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy 127.0.0.1:3300
 }
 
 # ── Later ─────────────────────────────────────────────────────────────────
