@@ -102,6 +102,13 @@ Volgorde voor nu: **A → C → D → iframe-test**. Daarna E, en later F en het
 
 ### A. Frontend: backend instelbaar in de proxy
 
+> **Status: uitgevoerd op 21 september 2026** (commit `2e69a6a5`), gebouwd en getest met de echte
+> image. De template staat in `deploy/frontend/default.conf.template`, de opstartcontrole in
+> `deploy/frontend/15-api-upstream.envsh`; de compose geeft `API_UPSTREAM` en `FRAME_ANCESTORS` door.
+> **Nog nodig vóór C:** de frontend-image opnieuw bouwen en naar de registry pushen; een oudere image
+> kent `API_UPSTREAM` niet. Inloggen via de proxy is niet apart getest (die regels zijn ongewijzigd):
+> probeer dat op pf als eerste. Onderstaande punten beschrijven wat er gebouwd is.
+
 - Maak van `nginx.frontend.conf` een template (`/etc/nginx/templates/default.conf.template`; de
   officiële nginx-image vult `${…}` bij het starten in via envsubst) met de upstream uit
   **`API_UPSTREAM`**. **Default `http://api:8080`**, zodat de bestaande deploy ongewijzigd werkt.
@@ -224,8 +231,9 @@ de Pleio-site zelf niets met een eigen Content-Security-Policy (`frame-src`) die
 
 ## 6. Werkwijze op de VPS
 
-- SSH: `ssh vps1` (alias: gebruiker `omnium`, IP `62.129.142.42`; het A-record van
-  `vps1.paratmos.nl` wijst nog niet naar de VPS). Vanuit Claude Code op Windows:
+- SSH: `ssh vps1`. Dat is een alias in de lokale `~/.ssh/config`; gebruikersnaam en sleutel staan
+  daar en bewust niet in dit document (de repo is publiek). Het A-record van `vps1.paratmos.nl`
+  wijst nog niet naar de VPS, dus de alias gebruikt het IP-adres. Vanuit Claude Code op Windows:
   `/c/Windows/System32/OpenSSH/ssh.exe` via de Bash-tool (die praat met de Windows-ssh-agent);
   PowerShell sloopt aanhalingstekens in remote-commando's.
 - Op de VPS staat geen `dig`; DNS controleren met `nslookup` vanaf de desktop.
