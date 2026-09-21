@@ -63,6 +63,14 @@ export function bouwGroepOptiesVanTypeMeta(typeMeta, typeMetaByTypenaam) {
       .filter((veld) => veld.naam);
 
     const groepKey = `${kind.rolnaam}__${kind.doeltype}`;
+    // Relaties: de secundaire id-kolom (bv. gemeente_id) verwijst naar de doel-entiteit.
+    // Toon die in de UI met de naam van de doel-entiteit (bv. "gemeente") en kies bij
+    // een referentielijst-item een zoekende RefCombobox i.p.v. een (afgekapte) dropdown.
+    const doelMeta = kindMeta?.doelEntiteit ? typeMetaByTypenaam?.[kindMeta.doelEntiteit] : null;
+    const secondaireRefType = doelMeta?.entiteitSubtype === "referentielijst_item" ? kindMeta.doelEntiteit : "";
+    const secondaireLabel = doelMeta
+      ? String(doelMeta.veldnaam || doelMeta.klassenaam || kindMeta.doelEntiteit).toLowerCase()
+      : "";
     return {
       groupKey: groepKey,
       metatype,
@@ -71,6 +79,8 @@ export function bouwGroepOptiesVanTypeMeta(typeMeta, typeMetaByTypenaam) {
       entiteitIDKolom: String(kindMeta?.entiteitIDKolom || ""),
       secondaireEntiteitIDKolom: kindMeta?.secondaireEntiteitIDKolom || "",
       doelEntiteit: kindMeta?.doelEntiteit || "",
+      secondaireRefType,
+      secondaireLabel,
       isMaterieel: Boolean(kindMeta?.isMaterieel && kindMeta?.ge_subtype === "hub"),
       momentvoorkomen: String(kind.momentvoorkomen || "enkelvoudig").toLowerCase(),
       veldDefinities: schemaVeldDefinities,

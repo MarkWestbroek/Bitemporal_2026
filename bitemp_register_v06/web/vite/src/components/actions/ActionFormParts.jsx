@@ -271,12 +271,23 @@ export function ActionRowCard({ children, onRemove, disabled, rowAccentColor = D
   );
 }
 
-export function ActionFieldControl({ veld, value, onChange, secondaireInfo, secondaireKolom }) {
+export function ActionFieldControl({ veld, value, onChange, secondaireInfo, secondaireKolom, secondaireRefType = "" }) {
   const booleanGroupId = useId();
   const controlStyle = { flex: 1, minWidth: 0 };
   const foutmelding = validatieMeldingVoorVeld(value, veld);
   const enumOpties = enumOptiesVoorVeld(veld);
   const isSecondaireVeld = String(veld?.naam || "").toLowerCase() === String(secondaireKolom || "").toLowerCase();
+
+  // Secundaire id naar een referentielijst-item (bv. gemeente_id → Gemeente):
+  // zoekende combobox met server-side zoeken, dus geen afkap op de eerste N items.
+  if (isSecondaireVeld && secondaireRefType) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 320 }}>
+        <RefCombobox refType={secondaireRefType} value={value} onChange={onChange} />
+        {foutmelding ? <span style={{ fontSize: 11, color: "#dc2626" }}>{foutmelding}</span> : null}
+      </div>
+    );
+  }
 
   if (isSecondaireVeld) {
     if (secondaireInfo?.loading) {
@@ -427,17 +438,29 @@ export function ActionGroupedSections({
               <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
                 <ActionFieldsGrid>
                   {velden.length === 0 ? <span className="muted" style={{ fontSize: 12 }}>Geen veldinformatie beschikbaar.</span> : null}
-                  {velden.map((veld) => (
-                    <ActionLabeledEditorField key={`${row.id}-${veld.naam}`} veldnaam={veld.naam} beschrijving={String(veld?.description || "")}>
-                      <ActionFieldControl
-                        veld={veld}
-                        value={row?.values?.[veld.naam] ?? ""}
-                        onChange={(waarde) => onUpdateField(row.id, veld.naam, waarde)}
-                        secondaireInfo={secondaireInfo}
-                        secondaireKolom={optie?.secondaireEntiteitIDKolom}
-                      />
-                    </ActionLabeledEditorField>
-                  ))}
+                  {velden.map((veld) => {
+                    // Secundaire id-kolom (bv. gemeente_id) tonen als de doel-entiteit ("gemeente");
+                    // onderwater blijft de payload het id in de kolom zelf.
+                    const isSecondair = optie?.secondaireLabel &&
+                      String(veld.naam).toLowerCase() === String(optie?.secondaireEntiteitIDKolom || "").toLowerCase();
+                    const beschrijving = String(veld?.description || "");
+                    return (
+                      <ActionLabeledEditorField
+                        key={`${row.id}-${veld.naam}`}
+                        veldnaam={isSecondair ? optie.secondaireLabel : veld.naam}
+                        beschrijving={isSecondair ? `${beschrijving}${beschrijving ? " " : ""}(kolom: ${veld.naam})` : beschrijving}
+                      >
+                        <ActionFieldControl
+                          veld={veld}
+                          value={row?.values?.[veld.naam] ?? ""}
+                          onChange={(waarde) => onUpdateField(row.id, veld.naam, waarde)}
+                          secondaireInfo={secondaireInfo}
+                          secondaireKolom={optie?.secondaireEntiteitIDKolom}
+                          secondaireRefType={optie?.secondaireRefType}
+                        />
+                      </ActionLabeledEditorField>
+                    );
+                  })}
                 </ActionFieldsGrid>
                 {materieleVelden.length > 0 ? (
                   <div style={{ padding: "8px 10px", borderRadius: 8, background: "#f0f9ff", border: "1px solid #bae6fd" }}>
