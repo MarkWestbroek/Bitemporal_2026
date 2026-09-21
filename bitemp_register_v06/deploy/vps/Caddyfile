@@ -51,6 +51,15 @@ app.omnium-ide.nl {
 	reverse_proxy 127.0.0.1:8083
 }
 
+# ── Korte ingang naar de Studio ───────────────────────────────────────────
+# omnide.nl is alleen een kort adres (Marks eigen domein bij Quickhost); de
+# Studio blijft op app.omnium-ide.nl wonen, zodat er één echte URL is. Let op:
+# de zone die ns1/ns2.quickhost.nl uitleveren is die van het Quickhost-
+# klantpanel, niet de Plesk-zone van dit domein.
+omnide.nl, www.omnide.nl {
+	redir https://app.omnium-ide.nl{uri} permanent
+}
+
 # ── MusicBrain ────────────────────────────────────────────────────────────
 # Imprint-site musicbrain.nl: stack in /srv/imprint/deploy/vps, container op
 # 127.0.0.1:3000 (sinds 19 september 2026; daarvoor Plesk bij Quickhost).
