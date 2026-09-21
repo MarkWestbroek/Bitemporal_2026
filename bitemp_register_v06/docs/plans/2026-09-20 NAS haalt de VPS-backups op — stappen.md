@@ -1,5 +1,11 @@
 # NAS haalt de VPS-backups op — stappen
 
+> **Bijgewerkt 21 september 2026: grotendeels gedaan.** De NAS-sleutel staat op
+> de VPS (alleen-lezen via `rrsync`), de host-sleutels zijn vergeleken en de
+> Rsync-taak voor Imprint maakt verbinding (`Accepted publickey for omnium …
+> RSA SHA256:tKLj6Xdk…`). Wat we daarbij tegenkwamen staat in §"Ervaringen"
+> onderaan. Rest: de tweede taak (Omnium) en de snapshot-taak.
+>
 > Geschreven 19 september 2026, om de volgende dag af te werken.
 > Achtergrond: `docs/VPS_DEPLOYMENT.md` §8 (dit repo) en `docs/deploy-vps.md`
 > §Backups in het imprint-engine-repo.
@@ -126,3 +132,30 @@ ongeluk iets overschrijft.
 - Dit repo, `docs/VPS_DEPLOYMENT.md` §8: de regel "beide NAS-taken moeten nog"
   aanpassen, en in de handover van 16 september §3 de alinea "Backups buiten
   de VPS" bijwerken.
+
+## Ervaringen (21 september 2026)
+
+Wat in TrueNAS SCALE anders bleek te werken dan hierboven beschreven:
+
+- **`Validate Remote Path` uitvinken.** TrueNAS controleert dat pad met een
+  los commando op de VPS, en dat mag de NAS-sleutel niet: die is vastgezet op
+  `rrsync -ro /srv/`. Met het vinkje aan faalt de taak.
+- **Remote Path is relatief**, juist door die beperking: `imprint-backups/` en
+  `omnium/backups/`, niet `/srv/…`.
+- **Twee velden heten "user"**: `User` bij Source is de gebruiker *op de NAS*
+  die in de dataset schrijft (`root`), `Username` in de SSH-verbinding is de
+  gebruiker *op de VPS* (`omnium`). Eén SSH-verbinding volstaat voor beide
+  taken.
+- **Setup Method "Semi-automatic" is voor TrueNAS↔TrueNAS.** Voor de VPS is het
+  **Manual**, of je kiest in de taak "SSH private key stored in user's home
+  directory" als de sleutel met `ssh-keygen` als root op de NAS is gemaakt
+  (comment `root@truenas`).
+- **Host-sleutel invullen mag gewoon**: dat is publieke informatie. De drie van
+  de VPS (ed25519, RSA, ECDSA) zijn op 21 september vergeleken met
+  `ssh-keyscan` en identiek. ed25519-vingerafdruk:
+  `SHA256:WFqOuAQtODE35kBCz57wtlMLs15C/em5AslKNhtzbJ4`.
+- **ACL op de dataset**: zet `Other` op `None` (recursief). In de dagmappen
+  staan `env.txt`-bestanden met alle productiegeheimen van de VPS.
+- De Imprint-backup bevat sinds 21 september ook de volumes en `.env` van
+  volksgebouwzeist.nl en psycholog.pi-utrecht.nl (±120 MB per dagmap, vooral
+  de MusicBrain-assets).
