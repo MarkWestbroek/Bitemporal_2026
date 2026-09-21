@@ -61,10 +61,12 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.6.0`**
-  (2026-07-29, Toegangsspraak/Toegangsregel + Sequence/BPMN/ArchiMate-profielen);
-  zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.5.0`** — sinds die tag zijn er geen Go-wijzigingen.
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.9.0`**
+  (2026-09-22: GE-opname, bewerkbare velden in canoniek-uml, magic link, containers en
+  pools, instelbare frontend-image); zie `web/vite/CHANGELOG.md`.
+- Backend: **`api/v0.7.0`** (2026-09-22: backend-review en hardening, regressie- en
+  loadsuite, hub-fix; **met brekende wijzigingen**); zie `RELEASE.md`.
+- Generator: **`codegen/v0.1.0`**; sindsdien alleen documentatie.
 - Deze nummers zijn óók de Docker-image-tags (zonder `v`): zie
   [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md).
 

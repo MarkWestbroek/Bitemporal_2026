@@ -8,6 +8,109 @@
 
 ---
 
+## Backend-review, hardening en testsuite: api 0.7.0 / studio 0.9.0 (2026-09-22)
+
+Uitkomst van de backend-review van 7 juli (`docs/reviews/2026-07-07-backend-code-review.md`),
+de regressie- en loadsuite die daaruit volgde, en de fix op de enkelvoudige hub-afvoer.
+**Deze release bevat brekende wijzigingen** (vóór 1.0 toegestaan in een minor, zie
+`docs/versiebeheer.md` §2). Lees *Brekend* vóór het uitrollen.
+
+### Backend (api 0.7.0)
+
+#### Brekend
+- **`/admin/*` bestaat alleen nog in een build met `-tags devtools`** (devloop, rebuild,
+  droptables, createtables, diff, de suite-editor). De standaard-images (`Dockerfile`,
+  `Dockerfile.api`) bouwen **zonder** die tag: daar geven die routes 404.
+  `Dockerfile.devloop` en de in-container rebuild bouwen mét. Lokaal: `go run -tags devtools .`
+- **`POST /registraties` en `POST /wijzigingen` zijn verwijderd** (de audit-routes zijn
+  read-only). `POST /{padnaam}` en `DELETE /{padnaam}/:id` lopen nu via de
+  registratie-engine en leveren een `registratie_id`; er ontstaat dus altijd een
+  registratie met wijzigingen.
+- **Authenticatie wordt afgedwongen.** Bij `AUTH_ENABLED=true` is `JWT_SECRET` verplicht
+  (anders start de API niet), muterende routes vereisen minimaal de rol `editor`, en een
+  onbekende rol wordt geweigerd. De autorisatie (PDP) staat standaard op dicht bij een fout.
+- **Beheerwachtwoorden**: de dev-default wordt in productie geweigerd; het wachtwoord kan
+  via de header `X-Beheer-Wachtwoord`.
+- **Statuscodes**: een onbekend id geeft **404** (was 500 met `sql: no rows`); een dubbel
+  id, twee gelijktijdige correcties op hetzelfde gegeven en een deadlock geven **409**
+  zonder SQL-tekst (was 500 met de ruwe Postgres-fout). Bij een deadlock doet
+  `RegistreerJSONCore` één herkansing. Interne fouten lekken geen databasetekst meer.
+
+#### Toegevoegd
+- **`REGISTRATIE_TIJD=synthetisch|klok`** (default `synthetisch`, de demo-modus waar de
+  tijdlijnpagina's op leunen; echte implementaties zoals het CG-domein horen `klok`).
+- **Connectiepool instelbaar** (`db_pool.go`): `DB_MAX_OPEN_CONNS` (default 25),
+  `DB_MAX_IDLE_CONNS`, `DB_CONN_MAX_LIFETIME`, `DB_CONN_MAX_IDLE_TIME`. Zonder pool gaf de
+  API bij 100 gelijktijdige gebruikers 500's (`too many clients`) en verbond hij
+  voortdurend opnieuw; met pool verdrievoudigt de leesdoorvoer op 2000 NP's.
+- **`WEB_DIR`**: serveer `/viz` uit een andere map (test-instantie in een worktree zonder
+  gebouwde frontend).
+- **Enum-validatie**: `schema:"enum=…"` wordt gecontroleerd tegen `EnumWaarden`
+  (422 `application/problem+json`, code `enum`).
+- **Regressie- en loadsuite** (`-tags integration`): alle scenario's als data
+  (`regressie/scenarios/*.json`, formaat v2), suite-editor op `/admin/regressie`
+  (devtools-build), loadtests met rollen (lezen terwijl er geregistreerd wordt),
+  drempels die de test laten falen, export naar k6 en Hurl. Zie `docs/REGRESSIETEST.md`
+  en `docs/TESTSUITE_VERKENNING.md`. Startscripts: `scripts/regressie-ui.ps1`,
+  `scripts/regressie-bekijk.ps1`, `scripts/regressie-np-loc.ps1`;
+  seed-generator `scripts/genereer-load-seed.py`.
+
+#### Gewijzigd
+- **Enkelvoudig-invariant in de database**: per enkelvoudige tabel een uitgestelde
+  `EXCLUDE`-constraint (precies één actief record), gecontroleerd bij de commit zodat
+  ongedaanmaking blijft werken. Reads in de engine gebruiken de transactie met
+  `FOR UPDATE`.
+- **`PATCH /full/{padnaam}/:id`** injecteert de URL-id als parent-FK; een item zonder
+  expliciete FK gaf 500.
+- **Formele-tijdafleiding set-based**: `GET /full/…?t=` doet voor 5 entiteiten 21 queries
+  (was 60+); bewaakt door een `max_queries`-scenario.
+- **`.env` staat niet meer in git**; `.env.example` dekt alle sleutels.
+
+#### Gerepareerd
+- **Enkelvoudige hub vervangen liet actieve data achter** (`fix/enkelvoudige-hub-afvoer`):
+  kinderen krijgen de `rel_id` van de hub zoals die na insert is, afvoer van een hub
+  (ook als enkelvoudige voorganger) voert zijn actieve kinderen af, en opvoer onder een
+  niet-actieve hub wordt geweigerd. Geborgd door regressiescenario 19. Bestaande data kan
+  restanten bevatten: zie
+  `docs/plans/2026-09-21 Merge-notitie — reflijst-combobox en enkelvoudige hub-afvoer.md` §5.
+- **`/api/viz/reflijst/{typenaam}/opties`** toont alleen data onder een actieve hub
+  (geen dubbele opties meer).
+
+#### Databasegevolg bij uitrol
+Bij het opstarten maakt `dbsetup` de nieuwe `EXCLUDE`-constraints aan en verwijdert de
+oude unieke index. Botst een constraint met bestaande inconsistente data, dan blijft het
+bij een regel `WARN: enkelvoudig-invariant constraint … niet aangemaakt` en start de API
+gewoon. **Kijk bij de eerste start naar die regels.** Verder geen migratie.
+
+#### Bekend en open
+- `/full`-reads zijn niet consistent op één leesmoment: onder schrijflast kan een lezer
+  een actieve hub met al afgevoerde data zien (~1% in de gemengde loadtest). De
+  opgeslagen data is correct. `test/2026-09-21-bevinding-002-…`, backlog §32.
+- Verplichte velden en `ref:`-verwijzingen worden niet afgedwongen; een weggelaten
+  verplicht veld wordt als nulwaarde opgeslagen. `test/2026-09-21-bevinding-003-…`,
+  backlog §33.
+- De hub-guard geeft 500 in plaats van 409/422 (backlog §32.7).
+
+### Frontend (studio 0.9.0)
+
+GE-opname in de entiteit, bewerkbare velden in canoniek-uml, magic link, containers en
+pools, reconnect, de zoekende combobox voor relatievelden, en een frontend-image die
+zonder nieuwe build instelbaar is — zie [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+
+### Uitrol
+
+- **Frontend-image 0.9.0**: kan overal uitgerold worden; de defaults geven het oude
+  gedrag. Nodig voor de tweede instantie pf.common-ground-lab.nl (`API_UPSTREAM`).
+- **API-image 0.7.0**: **niet uitrollen naar een omgeving waar de Studio `/admin/rebuild`
+  of `/admin/diff` gebruikt**, tenzij daar bewust een devtools-image draait. Voor
+  app.omnium-ide.nl is dat besluit nog open (zie
+  `docs/plans/2026-09-21 Opdracht tweede instantie pf.common-ground-lab.nl — …` §3a). Voor
+  een live register zoals pf is de standaard-build juist de bedoeling.
+- Controleer vóór het uitrollen met `AUTH_ENABLED=true` dat `JWT_SECRET` en de
+  beheerwachtwoorden gezet zijn; anders start de API niet.
+
+---
+
 ## Demo-model np-loc-org+geo en OAS → canoniek: api 0.6.0 / studio 0.8.0 (2026-09-16)
 
 Consolidatie na de FTV-demo van Toegangsspraak (15 september). Baseline voor het

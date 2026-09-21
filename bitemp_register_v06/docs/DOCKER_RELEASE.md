@@ -104,6 +104,14 @@ docker push markwestbroek/bitemp-go-api:latest
 De `COMMIT`/`BUILD_TIME` build-args landen via `-ldflags` in de binary en zijn opvraagbaar
 op `GET /version` — sla ze dus niet over, anders staat er `dev` in de image.
 
+> **Vanaf api 0.7.0: twee soorten build.** De standaard-image hierboven bouwt **zonder**
+> `-tags devtools`; alle routes onder `/admin/` (rebuild, diff, droptables, de suite-editor)
+> bestaan daar niet en geven 404. Dat is de bedoeling voor een live register. Een omgeving
+> waar de Studio `/admin/rebuild` of `/admin/diff` gebruikt, heeft een **devtools-image**
+> nodig (`Dockerfile.devloop` bouwt mét de tag). Bepaal per omgeving welke van de twee er
+> draait **vóór** je `latest` uitrolt; de startregel
+> `devtools endpoints (/admin/*) meegecompileerd: true|false` in de API-log laat zien wat er draait.
+
 ### 4.2 Frontend
 
 ```bash
@@ -147,6 +155,8 @@ FRONTEND_IMAGE=markwestbroek/bitemp-viz-frontend:0.5.0
 2. [ ] Frontend gewijzigd? → bump `web/vite/package.json` **en** de root-`"version"` in
        `package-lock.json`; werk `web/vite/CHANGELOG.md` bij ([Unreleased] → nieuwe sectie).
 3. [ ] Backend gewijzigd? → bepaal het nieuwe `api/`-nummer en werk `RELEASE.md` bij.
+       Brekende wijzigingen staan onder een eigen kopje *Brekend*.
+3a. [ ] Per omgeving vastgesteld of daar de standaard-image of een devtools-image hoort (§4.1)?
 4. [ ] Bouw beide images met versie-tag **én** `latest`; controleer `linux/amd64`.
 5. [ ] Push beide tags.
 6. [ ] Zet de annotated git-tag(s): `git tag -a studio/v0.6.0 -m "…"` / `api/v0.5.1`, en push die.
