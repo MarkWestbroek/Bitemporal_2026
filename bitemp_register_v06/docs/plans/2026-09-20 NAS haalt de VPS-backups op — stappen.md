@@ -84,7 +84,7 @@ Ook mogelijk: stuur de publieke sleutel naar Claude, dan zet die hem erop.
 | Rsync Mode | **SSH** | **SSH** |
 | Remote Host | `62.129.142.42` | `62.129.142.42` |
 | Remote SSH Port | 22 | 22 |
-| Remote user | `omnium` | `omnium` |
+| Remote user | de deploy-gebruiker (naam in de lokale `~/.ssh/config`) | idem |
 | Remote Path — met `rrsync`-beperking | `omnium/backups/` | `imprint-backups/` |
 | Remote Path — zonder beperking | `/srv/omnium/backups/` | `/srv/imprint-backups/` |
 | Schedule | dagelijks **06:00** | dagelijks **06:00** |
@@ -146,7 +146,8 @@ Wat in TrueNAS SCALE anders bleek te werken dan hierboven beschreven:
   `omnium/backups/`, niet `/srv/…`.
 - **Twee velden heten "user"**: `User` bij Source is de gebruiker *op de NAS*
   die in de dataset schrijft (`root`), `Username` in de SSH-verbinding is de
-  gebruiker *op de VPS* (`omnium`). Eén SSH-verbinding volstaat voor beide
+  gebruiker *op de VPS* (de deploy-gebruiker; de naam staat in de lokale
+  `~/.ssh/config`, bewust niet in dit openbare repo). Eén SSH-verbinding volstaat voor beide
   taken.
 - **Setup Method "Semi-automatic" is voor TrueNAS↔TrueNAS.** Voor de VPS is het
   **Manual**, of je kiest in de taak "SSH private key stored in user's home

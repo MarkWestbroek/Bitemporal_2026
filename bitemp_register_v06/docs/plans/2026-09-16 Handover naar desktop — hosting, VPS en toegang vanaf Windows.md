@@ -68,7 +68,7 @@ tot dat gefixt is het IP in SSH- en WireGuard-instellingen. Open punt, zie §6.
 **DNS** staat op twee panels: omnium-ide.nl (+ `app.`, `www.`) bij mijn.host;
 vps1.paratmos.nl bij de registrar van paratmos.nl.
 
-**Op de VPS** (`/srv/omnium/`, eigenaar `omnium`):
+**Op de VPS** (`/srv/omnium/`, eigenaar: de deploy-gebruiker):
 
 | Bestand/map | Wat |
 |---|---|
