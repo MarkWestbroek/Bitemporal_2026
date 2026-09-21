@@ -110,6 +110,10 @@ services:
       JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-24}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD ontbreekt in .env}
+      # Een live register: echte kloktijden. "synthetisch" (de default van de API)
+      # leidt tijdstippen af van het registratie-ID — mooi voor demo's, niet voor
+      # een echt register (besluit Mark, 22 september 2026).
+      REGISTRATIE_TIJD: ${REGISTRATIE_TIJD:-klok}
       # OpenFTV pas na de iframe-test (werkpakket F).
       AUTHZ_PDP_ENABLED: "false"
     depends_on:
