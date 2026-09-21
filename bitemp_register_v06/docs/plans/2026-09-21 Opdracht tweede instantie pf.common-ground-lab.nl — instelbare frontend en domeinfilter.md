@@ -3,7 +3,7 @@
 > Datum: 21 september 2026. Opgesteld in een sessie in het imprint-engine-repo,
 > uit te voeren in dít repo. **Start pas nadat Mark zijn lopende backend-werk
 > naar `main` heeft gemerged.**
-> Besluiten van Mark staan in §2; open vragen in §8.
+> Besluiten van Mark staan in §2 en §8. Open tijdens de uitvoering: de toegangsregels voor pf (§F).
 
 ## 1. Wat en waarom
 
