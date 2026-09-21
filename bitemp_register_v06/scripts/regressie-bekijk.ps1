@@ -26,16 +26,38 @@
     .\scripts\regressie-bekijk.ps1 -Database bitemp_regressie_np_loc_load
     .\scripts\regressie-bekijk.ps1 -Database bitemp_regressie_load -Port 8096
     .\scripts\regressie-bekijk.ps1 -WebDir D:\Git\Bitemporal_2026\bitemp_register_v06\web
+    .\scripts\regressie-bekijk.ps1 -Herstart          # stopt eerst een eerdere instantie op dezelfde poort
 #>
 param(
     [string]$Database = "",
     [int]$Port = 8097,
     [string]$WebDir = "",
+    [switch]$Herstart,
     [string]$ContainerName = "bitemp-regressie-pg"
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot   # bitemp_register_v06/
+
+# Poort al bezet? Meestal een eerdere instantie van dit script in een andere terminal. `go run`
+# start een kindproces (bitemp_register_v06.exe) dat de poort vasthoudt; na Ctrl+C blijft dat soms
+# achter. Met -Herstart wordt zo'n eerdere instantie (en zijn go.exe-ouder) gestopt.
+$luisteraar = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($luisteraar) {
+    $proc = Get-CimInstance Win32_Process -Filter "ProcessId=$($luisteraar.OwningProcess)"
+    $isEigen = $proc -and $proc.Name -like "bitemp_register_v06*"
+    if ($Herstart -and $isEigen) {
+        $ouder = Get-CimInstance Win32_Process -Filter "ProcessId=$($proc.ParentProcessId)"
+        Write-Host "Eerdere instantie op poort $Port stoppen (PID $($proc.ProcessId))..." -ForegroundColor Cyan
+        Stop-Process -Id $proc.ProcessId -Force -Confirm:$false
+        if ($ouder -and $ouder.Name -eq "go.exe") { Stop-Process -Id $ouder.ProcessId -Force -Confirm:$false -ErrorAction SilentlyContinue }
+        Start-Sleep -Seconds 1
+    } elseif ($isEigen) {
+        throw "Poort $Port is al in gebruik door een eerdere instantie (PID $($proc.ProcessId), gestart $($proc.CreationDate)). Stop die met Ctrl+C in zijn terminal, of start opnieuw met -Herstart."
+    } else {
+        throw "Poort $Port is in gebruik door een ander programma ($($proc.Name), PID $($proc.ProcessId)). Kies een andere poort met -Port."
+    }
+}
 
 docker start $ContainerName | Out-Null
 $lijst = docker exec $ContainerName psql -U postgres -tAc "SELECT datname FROM pg_database WHERE datname LIKE 'bitemp_%' ORDER BY 1"
