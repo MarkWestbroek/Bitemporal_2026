@@ -28,6 +28,12 @@
 - **Voorlopige richting** (te bevestigen): omdat de kern van dit project *model-gedreven generatie vanuit het canoniek model* is, is de zelfgebouwde, model-gebonden representatie het strategische middel en is `dmn-js` het best te positioneren als optionele *view/export-laag* (DRD tekenen, naar DMN-XML exporteren) i.p.v. bron van waarheid. Twee representaties synchroon houden is de echte onderhoudslast → één bron aanwijzen (het model).
 - **Vervolg**: keuze maken; bij "model = bron" een serializer model → DMN-XML overwegen zodat dmn-js puur als viewer kan draaien.
 
+### 0.0.2 OAS 3.0-ondersteuning in het oas31-profiel — ✅ KERN GEREED (2026-07-11), restpunt: volledige transformatie
+- Het `oas31`-profiel is per 2026-07-10 een vrijwel volledige **OAS 3.1**-representatie (api/servers, parameters/responses op operaties, property-details, benoemde componenten als pass-through — zie `docs/STUDIO.md`).
+- **Gekozen aanpak (2026-07-11)**: géén apart `oas30`-profiel maar één adapter met een **versie-schakelaar** — de descriptor is voor beide dialecten gelijk. Bij de import volgt na de bestandskeuze een dialectkeuze (auto/3.0/3.1, default auto = volg het openapi-veld); de keuze landt als **oas-version**-property op het api-element (metamodel) en stuurt de export: 3.0 vouwt `type: [T,"null"]` terug naar `nullable: true` en laat `$ref`-siblings weg. Het interne model is 3.1-vormig (`nullable` → `|null`-type; `example` en `examples` beide gelezen).
+- **Bijvangst**: de oas-version op het api-element omzetten transformeert de export al tussen de dialecten op de beheerde onderdelen (nullable/type-arrays, $ref-siblings, voorbeeld-vorm).
+- **Restpunt (t.z.t., "leuk voor later")**: volledige 3.0↔3.1-transformatie — `exclusiveMinimum/Maximum` (boolean ↔ getal), content-/mediatype-vormen, `example` → `examples`-array bij promotie naar 3.1, en pass-through-delen (benoemde componenten in `meta`) meevertalen.
+
 ### 0.1 Editor-v2 `removeChild` crash blijft levensgroot in beeld
 - Symptoom: `Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node` toont na elke pagina-edit; alleen Vite-dev-server herstart helpt voorlopig.
 - Eerdere RAF-deferral fix in `MetamodelEditor.jsx` werkt niet voor alle render-paden (HMR vs cold load).
@@ -972,7 +978,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F27 | ✅ useFormulierDefinitie hook (fetch actieve FormulierDefinitie voor een doeltype) | F1-Q1Q2Q3 Fase B |
 | F28 | ✅ EntiteitFormulier integratie: toggle custom/standaard weergave bij actieve FormulierDefinitie | F1-Q1Q2Q3 Fase B |
 | F29 | ✅ Custom formulier: editable modus met cross-GE save (één registratie, meerdere GE-wijzigingen) | F1-Q1Q2Q3 Fase B vervolg |
-| F30 | Visuele FormulierDefinitie layout-editor (drag-and-drop veldindeling) | F1-Q1Q2Q3 Fase B vervolg |
+| F30 | Visuele FormulierDefinitie layout-editor (drag-and-drop veldindeling) → **plan**: `plans/2026-07-16 Formulier-editor Studio-activiteit (plan).md` (zie F41) | F1-Q1Q2Q3 Fase B vervolg |
 | F34 | ✅ JSON- en Markdown-widget: side-by-side editor + live preview, full-width grid spanning, `widget: "json"` en `widget: "markdown"` in layout | inhoud-editor-technisch.md |
 | F41 | ✅ CEL evaluator uitbreiding met lijstoperaties: `celEvaluator.js` herschreven met tokenizer-ondersteuning voor `>=`, `<=`, `>`, `<`, `[`, `]`, `,`; parser met `parsePostfix` voor `.field`, `.method(args)`, `[key]`; lambda-methoden `filter(x, pred)`, `map`, `exists`, `all`; `size()`; `evaluate()` voor `index`, `methodcall`, `gt/gte/lt/lte`. `bouwCelContext` exposeert nu full actieve lijst onder `group.rolnaam` (naast enkelvoudig via `klassenaam`) zodat expressies als `Lijst.filter(x, x.veld == "v")[0].veld` werken. `childWeergave()` in `EntiteitFormulier` omgezet van minimale `ctx[klassenaam]` naar `bouwCelContext` voor uniforme lijstondersteuning. (2026-05-12) | CEL-evaluatie-js.md |
 | F42 | ✅ Afgeleide velden kennis2-domein: `AfgeleideVelden` in `kennis2_metaregistry.go` gevuld voor `Kennisartikel` (`nl-titel` via `KennisartikelTaalvarianten.filter(...)`), `KennisartikelTaalvariant` (`taal` en `titel` via enkelvoudige GE-klassenaam), `Trefwoord` (`nl-trefwoord` via `Trefwoordtaalvarianten.filter(t, t.taal == "nl")[0].woord`). Alle met `IsWeergaveVeld: true`. (2026-05-12) | afgeleide-velden.md |
@@ -981,13 +987,18 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F37 | Inhoud.html (content editor): export data als Bootstrap / replay file / sql | nieuw |
 | F38 | zelfde loading en filtering als de publicatie pagina | nieuw  |
 | F39 | validatie bij opvoer waarden |   |
-| F40 | edit widgets |   |
+| F40 | edit widgets — invoer-widgets per datatype (default + afwijkbaar), incl. rijke widgets zoals geo-kaart-picker voor `GeoPunt`. Widget-register (pluggable) opgenomen in F41-plan §4c. | zie F41 |
+| F41 | 🟢 Visuele formulier-definitie editor — **P1-MVP gebouwd** (2026-07-16, branch `feat/formulier-editor-studio`): nieuwe Omnium Studio-activiteit "Formulieren" (palette=ModelPicker · canvas=dnd-kit · inspector · live-preview via CustomFormulierRenderer). Fasen P1 (editor+label/conditie-uitbreiding, geen backend), P2 (regels + virtuele/voorinvul-velden), P3 (=F42 wizard). Veld-adressering wordt **padgebaseerd** (`ENT.GE.veld`, universeel model-adres zoals CEL/berichten/DMN) i.p.v. kale namen (GE-namen niet uniek), met `context`-shorthand + legacy-fallback. Layout-vocabulaire verder uitgebreid met `label`/object-`conditie`/`virtueelVeld`/`regel`/`zetWaarde`, backwards compatible. Activiteit in nieuwe balkgroep **"presentatie"**. Meegenomen: **domein** als primaire context + **cross-domein** formulieren (klant/onderwerp/geo), **databronnen** (referentielijsten als keuze-bron via RefCombobox), en **widget-register** incl. rijke widgets (geo-kaart-picker → raakt F40). **P1 gebouwd**: module `web/vite/src/formuliereditor/` (layoutModel + test, store, canvas, inspector, preview) + `studio/activities/formulierActivity.jsx`; renderer-uitbreiding label/beschrijving/object-conditie. Geverifieerd (unit 7/7 + build + Playwright-smoke). **Ook gebouwd (2026-07-16)**: DB-save (opslaan als nieuwe FormulierDefinitie via max-id + opvoer, knop/menu, geverifieerd tegen backend); **meervoudigheid via `lijst`-element** (auto-wrap van meervoudige velden, array-collectieveld → lege lijst, herhaalbare sectie in de renderer; `momentvoorkomen` op de FieldRef); **runtime-integratie in `EntiteitFormulier`**: mapping/save geëxtraheerd naar pure `customFormMapping.js` (11 unit-tests), veld-adressering op korte naam **én** vol pad (nieuwe editor-defs werken in de echte inhoud-editor, legacy ongewijzigd — Playwright-regressie groen), en **`lijst` runtime-save** (meervoudige GE's laden als array + per-item opvoer/afvoer). Doeltype vult automatisch uit het eerste veld. **Open**: nieuwe versie van bestaande definitie (laden-uit-DB + legacy-resolver), doeltype-gebonden palette-filter, dnd-kit. (2026-07-16) | `plans/2026-07-16 Formulier-editor Studio-activiteit (plan).md` |
+| F42 | Formulier invul-wizard — = P3 van F41-plan (stap-modus over dezelfde definitie, checkvragen als navigatie-gate; UX-ref SurveyJS) | zie F41 |
+| F43 | **Formulier-index**: lijst met filter van beschikbare `FormulierDefinitie`s (de *definities*, niet de ingevulde formulieren — die data leeft elders/nergens). Basis om te openen/bewerken → prerequisite voor "nieuwe versie van bestaande" (legacy-resolver). | nieuw |
+| F44 | **Aparte formulierboom in Studio** (beslist 2026-07-xx): formulieren zijn een andere *laag* dan het model — ze leunen erop maar horen er niet bij → eigen boom (niet in de modelboom), met filter. Geïdentificeerd per **hoofdentiteit via de entiteitnaam** (aangenomen uniek over domeinen). Let op: er zijn nu twee bomen (IDE + Studio); in Studio de nieuwe gebruiken (domeinen zitten daar nog niet echt in). Combineert met F43/F45. | nieuw |
+| F45 | Versies van een formulierdefinitie (bitemporeel: `definitie_versie` + registratie-historie) zichtbaar/uitklapbaar in de formulierboom. Cluster met F43/F44. | nieuw |
+| F46 | **Picker: technische velden standaard uit + read-only op formulier.** `id`/`rel_id`/`versie` zijn plumbing (staan niet in het getekende model, wél in de metaregistry) → in de ModelPicker **standaard verborgen, met toggle om ze te tonen** (geldt op meer plekken: berichten/DMN/formulieren). Wanneer gekozen (of een afgeleid/weergaveveld) → toevoegen als **read-only veld** (nuttig in testfase), nooit een bewerkbaar invulveld. **Interim (2026-07-16)**: nu hard geweigerd met melding (voorkomt "Onbekend veld"); read-only-rendering + palette-toggle nog te bouwen. | nieuw |
+| F47 | Visueel: naast rijen ook kolommen? (past in het formulier-profiel als tweede layout-container of richting-property op rij — zie F48-plan §4) |   |
+| F48 | **Formulier-profiel op de diagram-motor ("dogfood")**: layout_json als metamodel → diagramprofiel; formdef wordt modelleerbaar document in de Modelleren-boom (mappen gratis), `veld`→`ENT.GE.veld` als kruisverband-trace (impactanalyse), publiceren via saveFormulierDefinitie. Register blijft bron van waarheid; formulier-editor blijft als tweede control (P3: op hetzelfde documentmodel). Fasen: P1 read-only projectie, P2 bewerken+publiceren, P3 één documentmodel. | `plans/2026-07-16 Formulier-profiel op de diagram-motor (dogfood-plan).md` |
 | F |  |   |
-
 | F |  |   |
-
 | F |  |   |
-
 | F |  |   |
 
 
@@ -1272,3 +1283,276 @@ egistreer-bereikbaarheid topic — alleen bereikbaarheid (NP bestaat al, histori
 - process_engine_v01/internal/worker/service_task.go — external-task worker implementatie (6 topics)
 - Padnamen: zie MetaRegistry — altijd snake_case + meervoud (bijv. locaties, 
 atuurlijk_personen)
+
+## 27. Productie-hardheid — de Studio zonder git-checkout (2026-09-10)
+
+Aanleiding: de eerste uitrol op een eigen VPS (`app.omnium-ide.nl`, zie
+`VPS_DEPLOYMENT.md`) legde twee bugs bloot die in dev onzichtbaar zijn omdat
+de ontwikkelomgeving stilzwijgend meer biedt dan de productie-image: een
+git-checkout op schijf en een Vite-plugin die naar bestanden schrijft.
+Rode draad: **alles wat de Studio nodig heeft moet in de image of op de
+server staan, niet in de map waaruit hij toevallig gestart wordt.**
+
+### 27.1 Documentatie in de image — help-menu weer via `/docs` (open)
+
+- `handlers/docs_handler.go` → `findProjectRoot` klimt naar een `.git`-map en
+  serveert vandaaruit. In `Dockerfile.api` zit alleen de binary in `/root`,
+  dus `/docs/<pad>` geeft "Markdown file not found". Sinds studio 0.7.2 wijst
+  het help-menu daarom naar STUDIO.md op GitHub (tijdelijk; linkt naar `main`
+  terwijl de build van een feature-branch kan komen).
+- Te doen: (a) `DOCS_ROOT`-omgevingsvariabele met voorrang op het
+  `.git`-gezoek; (b) `Dockerfile.api` kopieert een **gecureerde** set
+  `.md`-bestanden naar bijv. `/app/docs` — `docs/` is 135 MB incl. pptx,
+  `CG PF` en chat-exports, dus niet integraal; (c) frontend-link terug naar
+  `/docs/STUDIO.md` zonder monorepo-prefix, zodat de help altijd bij de
+  draaiende versie hoort.
+
+### 27.2 Modellen bitemporeel opslaan — werk overleeft de browser niet (open)
+
+- Elke activiteit persisteert zijn diagrammen in `localStorage`
+  (`studio05-<profiel>`), per browser, per apparaat. Een geleegde cache, een
+  ander browserprofiel of een incognitovenster en het werk is weg; een
+  collega ziet nooit wat jij tekent. Gedeeld is alleen wat expliciet naar de
+  server gaat: schemaversies (`/api/schema/versies`) en bestanden in MinIO
+  (`/api/bestanden`).
+- De 0.7.1-bug (profiel-editor materialiseert alle profielen en liep tegen
+  de ~5 MB-limiet van `localStorage`) is hetzelfde probleem van de andere
+  kant: de browser is geen opslagplaats.
+- Richting: modellen (diagrammen, zelfgemaakte profielen/vormen/iconen) als
+  registraties in het bitemporele register zelf, via de bestaande API — met
+  formele én materiële tijd. Dan wordt "laat dit model zien zoals het op
+  1 juni was" een gewone query, en is `localStorage` nog hooguit een cache
+  voor onopgeslagen werk. Dezelfde beweging als de `BitempContentStore` voor
+  Imprint (zie imprint-engine `docs/backlog.md`); ontwerp eerst de
+  `ContentStore`-achtige laag, dan pas de UI.
+
+### 27.3 Help als Imprint-site in plaats van markdown (idee)
+
+- Een Imprint-imprint voor de Studio-documentatie geeft widgets, navigatie
+  en een redactionele workflow in plaats van platte `.md`. Hangt af van
+  Imprint op dezelfde VPS (`imprint-engine.nl` is nog vrij, zie
+  `VPS_DEPLOYMENT.md` §11). Als 27.2 er is, kan die site zelf ook op het
+  register draaien — dan is de cirkel rond.
+
+## 28. Begeleiding in de Studio — palette, lege staten, hints, checklist (2026-09-10)
+
+Ontwerp: [`plans/2026-09-10 Begeleiding in de Studio — palette, lege staten, hints, checklist (ontwerp).md`](plans/2026-09-10%20Begeleiding%20in%20de%20Studio%20%E2%80%94%20palette%2C%20lege%20staten%2C%20hints%2C%20checklist%20%28ontwerp%29.md)
+
+Vervangt het eerdere backlogidee "wizards". Uitgangspunt: hulp die aanwezig
+en toestandsbewust is maar nooit modaal — de gebruiker houdt de besturing.
+
+- [ ] **28.1 Command palette (Cmd+K)** — tweede weergave van de acties uit
+      `buildMenus.js`, met `uitleg` en sneltoets, fuzzy zoeken. Eerst.
+- [ ] **28.2 Lege staten** — generiek `LegeStaat` in `maakDiagramActiviteit`,
+      gevoed door `previewTekst`/`laadVoorbeeld` + startacties per activiteit.
+- [ ] **28.3 Contextuele hints** — op toestandsovergangen, één keer,
+      niet-blokkerend; `studio05-hints-gezien`. Zoveel mogelijk **afgeleid**
+      uit het actieve profiel (verbindingsregels, elementtypen).
+- [ ] **28.4 Checklist publiceerpad** — model → schemaversie → rebuild, in
+      elke volgorde, met *toon me*.
+- [ ] 28.5 Rondleiding eerste minuut — alleen na gebruikerstest.
+- Hangt samen met §27.3 (help als Imprint-site: de referentie waar "Meer…"
+  naartoe linkt).
+
+## 29. Demo-model np-loc-org+geo en codegen-hygiëne (2026-09-14)
+
+Opdracht: [`plans/2026-09-10 Opdracht demo-model np-loc-org-geo en OAS-naar-canoniek.md`](plans/2026-09-10%20Opdracht%20demo-model%20np-loc-org-geo%20en%20OAS-naar-canoniek.md).
+Deel A is uitgevoerd, zie [`demo-model-np-loc-org-geo.md`](demo-model-np-loc-org-geo.md).
+
+- [x] **29.1 Demo-model** — np-loc uitgebreid (`Geslacht`, `Aanspraak`,
+      `Woonlocatie`, `Gebiedsligging`) en nieuw domein `org-geo` (`Afdeling`,
+      `Medewerker`, `Gemeentedeel`). De draaiboek-beleidstekst parseert zonder
+      controle-meldingen; bewaakt door `model/demo_model_test.go` en
+      `studio/activities/toegangDemoModel.test.js`.
+- [x] **29.2 Doorkijk over relaties in de modelboom** — `bouwModelTree`-optie
+      `relatieDiepte` (default 0; toegang-activity 2), `ModelPicker`-prop
+      idem, `modelpicker/veldenlijst.js` gedeeld met de activity.
+- [ ] **29.3 Codegen: `_Input`-structs zonder materiële plumbing.**
+      `cmd/codegen/gen_input.go` genereert `Aanvang`/`Einde` als platte velden
+      in elke `_Input`; alle ingecheckte `*_modellen_input.go` hebben ze met de
+      hand weer verwijderd (de normalizer splitst ze af). Elke regeneratie
+      herintroduceert ze. Laat codegen ze weglaten, of maak het een expliciete
+      optie — en beslis in dezelfde slag wat er met de `schema:"…"`-tags op
+      `_Input`-velden moet gebeuren (nu inconsistent: `BSN` wél, `NLPostcode`
+      niet). Zie `docs/CODEGEN.md` §7.4b.
+- [ ] **29.4 Codegen: `datatype_aliases.go` mag `datatype_aliases_extra.go`
+      niet dubbelen.** Een volledige export bevat ook de 29 handmatig
+      onderhouden datatypes; codegen schrijft daar Go-type-aliassen voor die al
+      bestaan → de build breekt. Laat codegen de handmatige aliassen
+      overslaan (of markeer ze in de `DatatypeRegistry`). Zie §7.4a.
+- [x] **29.5 OAS → canoniek model (deel B van de opdracht).** Transformatie
+      *"OpenAPI (components.schemas) → canoniek model"*: `oasNaarV3.js` (puur)
+      + `oasCanoniekImport.js` (descriptor) in
+      `diagramprofielen/canoniek-uml/`. Zie `docs/STUDIO.md` →
+      "OpenAPI → canoniek model".
+- [x] **29.6 Casus OpenOrganisatie gedraaid** (`~/Documents/GitHub/CG/Registers/open-organisatie/src/`).
+      Legde twee echte bugs bloot, beide gerepareerd + regressietest:
+      `allOf: [$ref X]` op property-niveau werd een tekstveld in plaats van een
+      verwijzing (6 relaties platgeslagen), en `oneOf: [Enum, BlankEnum]` werd
+      stil genegeerd zodat de enum onverbonden bleef. Resultaat nu: 27 schemas →
+      25 entiteiten, 33 GE's, 28 relaties, 1 enum.
+- [ ] **29.7 OAS → canoniek: vervolgstappen.** Wat de eerste stap bewust laat
+      liggen: `paths`/operations (nu alleen `components.schemas`);
+      `allOf`/`oneOf` op schema-niveau als echte generalisatie in plaats van
+      platslaan (vraagt overerving in het canonieke model, zie
+      `docs/overerving-analyse.md`); `format` → bestaand gegevenstype herkennen
+      in plaats van een nieuw datatype maken; een *merge*-modus die bij
+      herimport bestaande elementen bijwerkt in plaats van een nieuwe id-prefix
+      te gebruiken.
+- [ ] **29.8 REST-schil herkennen bij de OAS-import (idee).** In een
+      gegenereerde OAS komen `Paginated…List`, `Patched…` en `Nested…` als
+      volwaardige schemas voor; de import maakt er entiteiten van, want zo staan
+      ze er. Overweeg een *optionele* filterstap ("envelope-schemas overslaan")
+      met een diagnostic per overgeslagen schema — nadrukkelijk als keuze van de
+      gebruiker, niet als stille aanname.
+- [x] **29.9 Verdwenen compositielijnen in het canonieke diagram (2026-09-15).**
+      Twee defecten, beide gerepareerd + regressietests (515/515 groen):
+      (a) kale oude handle-namen (`"left"`, `"bottom"`) lieten React Flow de
+      edge stil weigeren — `normaliseerHandle()`; (b) ENT ◆ GE bestond alleen
+      als presentatie-edge per diagram, dus op een nieuw diagram kwam de lijn
+      nooit mee — nu een `compositie`-connector. Zie `docs/STUDIO.md` →
+      "Composities zijn connectoren".
+- [ ] **29.10 Label-offsets van composities meenemen.** Bij het vouwen tot
+      connector vallen de handmatig versleepte label-posities van de oude
+      edge (`rolnaamDst`/`heen`/`terug`) weg; connectoren kennen alleen
+      offsets per zijde (`bron`/`doel`/`midden`). Afbeelden vraagt een keuze
+      bij botsingen (heen en rolnaam delen soms een zijde).
+- [ ] **29.11 Handles per diagram in plaats van per connector.** Een
+      connector draagt één handle-paar voor álle diagrammen; bij het vouwen
+      wint de eerste gezette waarde. Hetzelfde geldt al voor relaties. Een
+      handle hoort eigenlijk bij het voorkomen (vgl. `connectorVoorkomens`).
+
+## 30. Opname van GE's in de entiteit, profielvelden en de profiel-editor (2026-09-17)
+
+Branch `feat/ge-opname-in-entiteit`, gemerged naar `main` (`3b22d01`). Zie
+`docs/STUDIO.md` en `plans/2026-07-29 Overdracht Notaties — diagramprofielen (status).md`.
+
+- [x] **30.1 Opname — GE als sub-vak in de ENT.** Derde gedaante van een
+      samenstel (na ASOC en samentrekking): per GE en per diagram te kiezen
+      via het contextmenu. `ElementType.opname` + `diagramcore/canvas/opname.js`
+      + core-viewer `sub-vak`.
+- [x] **30.2 Migratie van opgeslagen sandboxen.** Profiel-hook
+      `hooks.migreerModel` vouwt oude presentatie-composities tot connectoren
+      en vult ontbrekende velden aan uit `data.bron`.
+- [x] **30.3 Bewerkbare velden zoals de oude IDE.** Compositie (rolnaam, JSON
+      rolnaam, momentvoorkomen, kardinaliteit), GE, entiteit en relatie; het
+      profiel is de bron van de veldnamen (`mappingV3Canoniek.js`). Stereotype
+      volgt het subtype via de core-hook `hooks.stereotype`.
+- [ ] **30.4 Profiel-editor laten bijhalen.** Inventarisatie:
+      [`PROFIELEDITOR-GAP.md`](PROFIELEDITOR-GAP.md) (peildatum 2026-09-17).
+      Drie soorten gat: (a) code kan niet in data — de benoembare
+      `HOOK_CATALOGUS` heeft twee ids, diagram-hooks worden zelfs niet
+      vertaald; (b) de tekening kent maar een deel van de definitie
+      (vormgrammatica, `samentrekking`/`opname`, viewers, rijkere
+      PropertyTypes); (c) stille verliezen bij een round-trip — property-`key`s
+      worden `slug(label)`, `style`/taakbalken/layouts vallen weg, onbekende
+      shapes worden `class-box`. Eerste kandidaat: (c), want dat maakt de
+      tekening nu onbruikbaar om een bestaand profiel te beheren.
+- [ ] **30.5 Metamodel-tekening bijwerken.** De mermaid in
+      `STUDIO-05-diagramcore-plan.md` §2 (en het EA-plaatje) missen
+      `DiagramNode.gedaante`, de gedaanteregels (`samentrekking`/`opname`) en
+      `PropertyType.label`/`opties`/`placeholder`. Open vraag van Mark
+      (17-09): een gedaanteregel werkt op 1..* elementtypen en hoort misschien
+      eerder in **Style** dan in Definition.
+- [ ] **30.6 Restpunten opname.** Klik op een sub-vak selecteert de ENT en
+      niet de GE; de opname-keuze reist niet mee in de V3-export (net als
+      maten en `gedaanteOverrides`); een ENT met vaste maat groeit niet mee.
+
+## 31. Diagrameditor in de Studio — bevindingen uit gebruik (2026-09-17)
+
+Bevindingen van Mark bij het tekenen van een BPMN-diagram op de eigen motor
+(`diagramcore` + profiel `bpmn`). De eerste vier zijn defecten/gaten, de laatste
+drie gaan over het bewerken van lijnen. **Stand 2026-09-18:** alles behalve 31.6
+(vindbaarheid van knikpunten) en de restpunten in 31.9 is gebouwd. Ontwerp
+en afwegingen: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20containers%2C%20afbakening%20%28pools%29%2C%20reconnect%20en%20magic%20link%20%28ontwerp%29.md). Zie `docs/STUDIO.md` en
+`STUDIO-05-diagramcore-plan.md`.
+
+- [x] **31.1 Horizontaal verdelen geeft een rare uitkomst.** *(opgelost
+      2026-09-18)* Gemeld met schermafbeeldingen: na *Horizontaal verdelen* op
+      een rij start-event → Task → event → eind-event stonden de vormen scheef
+      en schoof een boundary-event over de sequence flow. Twee oorzaken, beide
+      gerepareerd: (a) `layout/uitlijnen.js` verdeelde op de **linkerrand**
+      (`x`) — breedtes telden niet mee, dus ongelijke gaten bij een brede Task
+      naast smalle ringen. Nu: gelijke **tussenruimte**, uitersten blijven
+      staan (ook `distribute-v`); (b) `lijnUit` in `DiagramCanvas.jsx` nam
+      álle geselecteerde nodes mee, ook aangehechte **rand-elementen** — die
+      hebben een `parentId` en dus een positie *relatief* aan hun gastheer;
+      als absolute coördinaat meegerekend raakten ze los. Nodes met
+      `parentId` en label-ankers worden nu uitgefilterd. Tests in
+      `uitlijnen.test.js`.
+- [x] **31.2 Deselecteren op het diagram.** *(opgelost 2026-09-18)* Bij
+      natesten bleek klikken op het lege vlak wél te deselecteren; het echte
+      probleem zat elders: (a) binnen een **container** (lane die het canvas
+      vult) bestaat geen leeg vlak — elke klik selecteert de lane; (b)
+      `Escape` liet een kader-selectie (Shift+slepen) staan. `Escape` maakt nu
+      altijd de hele selectie leeg (nodes + edges + kader), behalve tijdens
+      typen of met een open contextmenu. Zie `docs/STUDIO.md` → "Deselecteren".
+- [x] **31.3 Een container houdt zijn elementen vast.** *(gebouwd
+      2026-09-18)* Leden die ín hun container liggen renderen als kind ervan:
+      ze reizen mee en blijven binnen de rand; **Alt+slepen** tilt eruit.
+      Presentatie relatief, opslag absoluut (geen migratie). Geldt voor álle
+      containers (lane, pool, partitie, package, stage, samengestelde
+      toestand). `diagramcore/canvas/nesting.js` + tests; zie `docs/STUDIO.md`.
+- [x] **31.4 Pool — het primitief "afbakening".** *(gebouwd 2026-09-18)*
+      Geen regeltaaltje maar een motor-primitief: `ElementType.afbakeningVoor`
+      (verbinding blijft binnen dezelfde afbakening) en
+      `ConnectorType.overbrugt` (verbinding móet de grens kruisen).
+      BPMN-pool als eerste afnemer; message flow mag ook aan de poolrand
+      (black box). Het menu noemt de reden van een weigering.
+      `diagramcore/canvas/afbakening.js` + tests. BPMN-spec en afweging:
+      [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20containers%2C%20afbakening%20%28pools%29%2C%20reconnect%20en%20magic%20link%20%28ontwerp%29.md).
+- [x] **31.5 Lijnen lostrekken en elders aanhechten (reconnect).** *(gebouwd
+      2026-09-18)* React Flow `onReconnect`; het type blijft gelijk, knikpunten
+      vervallen, alleen de directe gedaante; weigering wordt uitgelegd.
+- [ ] **31.6 Lijnen op een andere plek leggen — knikpunten zijn onvindbaar.**
+      *(gecorrigeerd 2026-09-18: de eerste versie van dit punt stelde ten
+      onrechte dat knikpunten niet bestaan.)* Ze bestaan wél, in
+      `diagramcore/canvas/ConnectorEdge.jsx`: **Ctrl-klik** op een lijn voegt
+      een knikpunt toe, slepen verplaatst het, dubbelklik wist ze; haakse
+      lijnen kun je per segment duwen/trekken. Opslag: `data.knikken` op de
+      connector. Wat er schort: (a) **vindbaarheid** — geen menu-item, hint of
+      cursor die het verraadt, tot 18-09 ook niet gedocumenteerd; voeg
+      "Knikpunt toevoegen" toe aan het edge-contextmenu en neem het mee in de
+      hints van §28.3; (b) het werkt alleen op de **directe** gedaante (niet
+      op de drie edges van een ASOC-box); (c) `knikken` hangt aan de
+      connector en geldt dus voor **alle** diagrammen — hoort per voorkomen
+      (vgl. §29.11); (d) de **eindpunten** verleggen kan niet — dat is 31.5.
+- [x] **31.7 "Magic link" — sleep een lijn en kies uit wat mag.** *(gebouwd
+      2026-09-18)* Trek een lijn van A naar B zonder vooraf een connectortype
+      te kiezen: één passend type → direct gelegd; meerdere → keuzemenu op de
+      losplek. Met een gekozen type dat hier niet mag verdwijnt de lijn niet
+      meer stil: het menu legt uit en biedt de alternatieven aan.
+      `vindConnectorTypes()` (alle treffers) naast `vindConnectorType()`;
+      `onConnect` zet de keuze klaar, `onConnectEnd` opent het menu. Zie
+      `docs/STUDIO.md` → "Magic link". Hangt samen met §28.3 (dezelfde
+      afgeleide kennis kan de hints voeden).
+- [x] **31.8 Magic link — vervolg.** *(gebouwd 2026-09-18)* Loslaten op het
+      lege vlak (of het vlak van een container) → *"Nieuw na …"*: element +
+      lidmaatschap + verbinding in één keer. Canvasmenu's met het toetsenbord
+      (eerste optie voorgeselecteerd, ↑/↓, Enter, Escape).
+- [x] **31.10 Lijnen hangen alleen aan de vier handles.** *(gebouwd
+      2026-09-18, ter beoordeling)* Gemeld door Mark: "extra handles of vrije
+      aanhechting krijg ik niet (meer) voor elkaar". Oorzaak: zwevende
+      aanhechting bestaat sinds 08-08, maar (a) BPMN deed niet mee, en (b) élke
+      nieuw getekende lijn sloeg de toevallige handles op en gold daardoor als
+      "met de hand vastgezet" — zweven werkte alleen na *normaliseer
+      relaties*. Nu: tekenen/verhangen/magic link zetten bij zwevende types
+      niets vast (Shift = wél vastzetten), en BPMN-taak, -subproces,
+      -data-object, -pool en -lane zweven. Echte extra handles zijn er nooit
+      geweest. Zie `docs/STUDIO.md`. Bevalt het niet: terugdraaien is één
+      commit.
+- [ ] **31.9 Restpunten containers en afbakening.**
+      (a) De begrenzing laat een lid over de **kopregel/naamband** van de
+      container schuiven — de binnenruimte zou de kop moeten uitsluiten.
+      (b) Geen "pas grootte aan inhoud aan"; een container krimpen laat leden
+      erbuiten vallen (ze worden dan vrij en tonen hun lidmaatschapslijn).
+      (c) *Verplaats naar package…* in het contextmenu gebruikt nog
+      `window.prompt` en zegt "package" waar het een pool/lane kan zijn.
+      (d) De afbakening toetst alleen **nieuwe** verbindingen; een validatie
+      die bestaande overtredingen in een diagram aanwijst ontbreekt.
+      (e) `afbakeningVoor`/`overbrugt` zijn nog niet tekenbaar in de
+      profiel-editor (past in §30.4: twee vinkjes/keuzelijsten).
+      (f) Andere profielen kunnen het primitief benutten: region van een
+      samengestelde toestand, CMMN-stage, uitgeklapt BPMN-subproces.
+      (g) BPMN: pool zonder `processRef`, geen verticale pools, en
+      data-associaties worden niet begrensd.

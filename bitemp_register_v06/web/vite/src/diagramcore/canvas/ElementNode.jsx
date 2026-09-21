@@ -47,33 +47,69 @@ function ElementNode({ id, data, selected }) {
   const { element, elementType, bewerkbaar, onResize, fieldTypesById, compartmentTypesById } = data;
   if (!element || !elementType) return null;
 
+  // Samentrekking (ontwerpprincipe "gedaanten van een samenstel"): een
+  // voorkomen met gedaante "bol" rendert als lollipop-bolletje met de naam
+  // eronder — de inhoud (operaties enz.) verdwijnt bewust uit beeld. De
+  // relatielijnen blijven gewoon aan dit (kleine) voorkomen hangen.
+  if (data.gedaante === "bol") {
+    return (
+      <>
+        <div className={"dc-samentrek-bol" + (selected ? " is-geselecteerd" : "")}>
+          <StandaardHandles stijl={elementType.handleStijl} />
+        </div>
+        {element.naam && <span className="dc-buitenlabel">{element.naam}</span>}
+      </>
+    );
+  }
+
   const Shape = getShape(elementType.shape) || getShape("class-box");
   if (!Shape) return null;
 
   const magResizen = bewerkbaar && elementType.resizebaar !== false;
+  // Gedragsverwijzing (§3.2): een gevulde verwijzing toont een ⧉-badge in de
+  // hoek — dubbelklik opent het gerefereerde diagram. Generiek in de node
+  // (via children in de shape-root), zodat élke shape hem meekrijgt.
+  const heeftGedrag = elementType.gedragsVerwijzing && element.data?.gedragDiagramId;
+  // Buitenlabel (motor-primitief): kleine vaste vormen — BPMN-events en
+  // -gateways, state machine begin/eind/keuze, activity-knooppunten — kunnen
+  // hun naam niet ín de vorm dragen. `naamLabel: "buiten"` laat de motor hem
+  // eronder zetten. Bewust een broer van de shape en niet een kind: shapes met
+  // `.dc-node` hebben `overflow: hidden` en zouden het label wegknippen. De
+  // React Flow-node-wrapper is `position: absolute` en dus het referentiekader.
+  const toonBuitenlabel = elementType.naamLabel === "buiten" && !!element.naam;
 
   return (
-    <Shape
-      element={element}
-      elementType={elementType}
-      selected={!!selected}
-      fieldTypesById={fieldTypesById}
-      compartmentTypesById={compartmentTypesById}
-    >
-      {magResizen && (
-        <NodeResizer
-          minWidth={180}
-          minHeight={56}
-          isVisible={!!selected}
-          lineStyle={{ borderColor: "#2563eb" }}
-          handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor: "#2563eb", background: "#ffffff" }}
-          onResizeEnd={(_ev, params) =>
-            onResize?.(id, { width: Math.round(params.width), height: Math.round(params.height) })
-          }
-        />
-      )}
-      <StandaardHandles stijl={elementType.handleStijl} />
-    </Shape>
+    <>
+      <Shape
+        element={element}
+        elementType={elementType}
+        selected={!!selected}
+        fieldTypesById={fieldTypesById}
+        compartmentTypesById={compartmentTypesById}
+      >
+        {magResizen && (
+          <NodeResizer
+            // Minimum-maten uit het elementtype (bv. smalle activatie-balken in
+            // een sequence-diagram); default de klassieke box-minima.
+            minWidth={elementType.minBreedte ?? 180}
+            minHeight={elementType.minHoogte ?? 56}
+            isVisible={!!selected}
+            lineStyle={{ borderColor: "#2563eb" }}
+            handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor: "#2563eb", background: "#ffffff" }}
+            onResizeEnd={(_ev, params) =>
+              onResize?.(id, { width: Math.round(params.width), height: Math.round(params.height) })
+            }
+          />
+        )}
+        {heeftGedrag && (
+          <span className="dc-gedrag-badge" title="Dubbelklik: open het gekoppelde diagram">
+            ⧉
+          </span>
+        )}
+        <StandaardHandles stijl={elementType.handleStijl} />
+      </Shape>
+      {toonBuitenlabel && <span className="dc-buitenlabel">{element.naam}</span>}
+    </>
   );
 }
 

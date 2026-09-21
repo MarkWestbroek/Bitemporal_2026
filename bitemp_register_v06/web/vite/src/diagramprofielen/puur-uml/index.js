@@ -64,6 +64,7 @@ const elementTypes = [
     kort: "KL",
     shape: "class-box",
     kleur: "#fef9c3",
+    icoon: "klasse",
     properties: [KLEUR_VELD, { key: "abstract", label: "abstract", datatype: "boolean" }],
     compartments: [
       { id: "attributen", label: null, fieldType: "attribuut" },
@@ -77,6 +78,17 @@ const elementTypes = [
     stereotype: "«interface»",
     shape: "class-box",
     kleur: "#dcfce7",
+    icoon: "interface",
+    // Samentrekking (UML 2.5.1 §11.5-familie): een interface-voorkomen kan
+    // als lollipop-bolletje getoond worden; de realisatie-lijn wordt dan het
+    // kale steeltje. Per voorkomen omschakelbaar via het contextmenu —
+    // operaties zijn in het bolletje bewust niet zichtbaar.
+    samentrekking: {
+      gedaante: "bol",
+      relatieTypes: ["realisatie"],
+      labelIngeklapt: "bolletje (lollipop)",
+      labelUitgeklapt: "volledige interface",
+    },
     properties: [KLEUR_VELD],
     compartments: [{ id: "operaties", label: null, fieldType: "operatie" }],
   },
@@ -87,6 +99,7 @@ const elementTypes = [
     stereotype: "«enumeration»",
     shape: "class-box",
     kleur: "#fef3c7",
+    icoon: "enumeratie",
     properties: [KLEUR_VELD],
     compartments: [{ id: "literals", label: null, fieldType: "literal" }],
   },
@@ -99,14 +112,33 @@ const elementTypes = [
     stereotype: "«dataType»",
     shape: "class-box",
     kleur: "#dbeafe",
+    icoon: "datatype",
     properties: [KLEUR_VELD],
     compartments: [{ id: "attributen", label: null, fieldType: "attribuut" }],
+  },
+  {
+    // UML-package: de "grotere ordening" (nesting mag). De bevat-relatie is
+    // "plaatsing in": een gewone connector die je meestal níet tekent — de
+    // elementen-browser nest erlangs (DiagramType.hierarchie).
+    id: "package",
+    label: "Package",
+    kort: "PKG",
+    stereotype: "«package»",
+    shape: "package",
+    kleur: "#f1f5f9",
+    icoon: "package",
+    // Drop-doel op canvas en in de boom: erin slepen legt de bevat-connector.
+    containerVoor: "bevat",
+    // Zoals mappen in een verkenner: dicht beginnen, openklikken op verzoek.
+    standaardDichtInBoom: true,
+    properties: [KLEUR_VELD],
   },
   {
     id: "notitie",
     label: "Notitie",
     kort: "NOT",
     shape: "note",
+    icoon: "notitie",
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
@@ -115,6 +147,7 @@ const elementTypes = [
     label: "Kader",
     kort: "KADER",
     shape: "boundary",
+    icoon: "kader",
     achtergrond: true,
     handleStijl: "onzichtbaar",
     properties: [
@@ -133,6 +166,7 @@ const elementTypes = [
     stereotype: "«associatie»",
     shape: "class-box",
     kleur: "#e0e7ff",
+    icoon: "associatie",
     isConnector: true,
     bron: { elementTypes: KLASSIFIERS },
     doel: { elementTypes: KLASSIFIERS },
@@ -172,6 +206,7 @@ const elementTypes = [
     label: "Aggregatie",
     kort: "◇",
     shape: "edge",
+    icoon: "aggregatie",
     isConnector: true,
     bron: { elementTypes: ["klasse"] },
     doel: { elementTypes: ["klasse"] },
@@ -182,6 +217,7 @@ const elementTypes = [
     label: "Compositie",
     kort: "◆",
     shape: "edge",
+    icoon: "compositie",
     isConnector: true,
     bron: { elementTypes: ["klasse"] },
     doel: { elementTypes: ["klasse"] },
@@ -192,6 +228,7 @@ const elementTypes = [
     label: "Generalisatie",
     kort: "▷",
     shape: "edge",
+    icoon: "generalisatie",
     isConnector: true,
     bron: { elementTypes: MET_DATATYPE },
     doel: { elementTypes: MET_DATATYPE },
@@ -202,6 +239,7 @@ const elementTypes = [
     label: "Realisatie",
     kort: "⊳┄",
     shape: "edge",
+    icoon: "realisatie",
     isConnector: true,
     bron: { elementTypes: ["klasse"] },
     doel: { elementTypes: ["interface"] },
@@ -212,6 +250,7 @@ const elementTypes = [
     label: "Dependency",
     kort: "use",
     shape: "edge",
+    icoon: "dependency",
     isConnector: true,
     bron: { elementTypes: MET_DATATYPE },
     doel: { elementTypes: MET_DATATYPE },
@@ -222,6 +261,19 @@ const elementTypes = [
       markerEnd: "pijl-open",
       labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }],
     },
+  },
+  {
+    // Package-lidmaatschap: getekend als subtiele stippellijn, maar meestal
+    // alleen aanwezig als model-feit (boomordening in de browser).
+    id: "bevat",
+    label: "Bevat (package)",
+    kort: "pkg ∋",
+    shape: "edge",
+    icoon: "bevat",
+    isConnector: true,
+    bron: { elementTypes: ["package"] },
+    doel: { elementTypes: [...MET_DATATYPE, "package", "notitie"] },
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#94a3b8" },
   },
 ];
 
@@ -261,6 +313,13 @@ export const puurUmlDiagramType = {
   // Zelfde StyleType als canoniek-uml: klassieke UML-pastels. Een eigen
   // tokenset is een §8.5b-punt (thema's per StyleType), geen fase 5-blokker.
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
+  meerdereVoorkomens: true,
+  // Boomordening: eerst package-lidmaatschap ("plaatsing in"), daarna de
+  // compositie — wie in een package hangt neemt zo zijn ◆-kinderen mee.
+  hierarchie: ["bevat", "compositie"],
   fieldTypes,
   elementTypes,
   referenceTypes,
@@ -291,6 +350,29 @@ export function maakElement(elementTypeId) {
     element.data.tekst = "";
   }
   return element;
+}
+
+/**
+ * OperatieResolver-facet (ontwerp "Sequence hermetisch" §2): de operaties
+ * van een klasse/interface — de velden van het operaties-compartiment.
+ * De signatuur staat in `naam` (bv. "bestel(order: Order): Bevestiging"),
+ * het retourtype eventueel in `typeLabel`.
+ */
+export function operatiesVan(element) {
+  const et = elementTypes.find((t) => t.id === element?.elementType);
+  const idx = (et?.compartments || []).findIndex((c) => c.id === "operaties");
+  if (idx < 0) return [];
+  // De inspector schrijft compartimenten met een compartmentType-id (in
+  // aanmaakvolgorde!) — dáárop matchen; index alleen als fallback voor
+  // ongetypeerde (hand-/testdata) compartimenten.
+  const comp =
+    (element.compartimenten || []).find((c) => c.compartmentType === "operaties") ||
+    ((element.compartimenten?.[idx]?.compartmentType ?? null) === null
+      ? element.compartimenten?.[idx]
+      : null);
+  return (comp?.velden || [])
+    .filter((v) => v?.naam)
+    .map((v, i) => ({ id: `${element.id}:op:${i}`, naam: v.naam, retour: v.typeLabel || null }));
 }
 
 /** Idempotente registratie (veilig bij HMR/dubbele import). */

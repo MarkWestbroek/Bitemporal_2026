@@ -43,9 +43,13 @@ function buildFieldSelection(typenaam, typesByTypenaam, depth = 2) {
   }
 
   // Afgeleide velden (weergavenaam etc.)
+  // De backend maakt van een naam als "nl-titel" het GraphQL-veld "nl_titel"
+  // (een koppelteken is geen geldig GraphQL-naamteken); ongezuiverd gaf dat een
+  // syntaxfout en kwam je Kennisartikel/Trefwoord niet in.
   for (const av of meta.afgeleideVelden || []) {
-    if (av.naam && !veldNamen.includes(av.naam)) {
-      veldNamen.push(av.naam);
+    const gqlNaam = av.naam?.replace(/[^A-Za-z0-9_]/g, "_");
+    if (gqlNaam && !veldNamen.includes(gqlNaam)) {
+      veldNamen.push(gqlNaam);
     }
   }
 

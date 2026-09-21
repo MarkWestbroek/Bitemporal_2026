@@ -83,6 +83,7 @@ replay-bestanden; default de twee hierboven).
 | 16 | N+1-guard | `GET /full/…?t=&size=5` binnen `max_queries: 40` (gemeten 21; vóór §4.4 was dit 60+) |
 | 17 | auth | `env: AUTH_ENABLED=true`: anonieme POST 401, lezen open, login → cookie → 201, logout → 401 |
 | 18 | dubbel id bij opvoer | **409 Conflict** zonder SQL-tekst of constraintnaam in de body (gefixt 2026-09-18) |
+| 19 | enkelvoudige hub vervangen | na wijzigen (met en zonder `rel_id`) en corrigeren precies één actieve hub met één actief data-record; data onder een afgevoerde hub wordt geweigerd (merge-notitie 2026-09-21 §3D; faalt zonder `fix/enkelvoudige-hub-afvoer`) |
 | 20 | locatie via padnaam | tweede entiteit door dezelfde engine-route |
 | 21 | replay-stap | speelt midden in de suite een replay-bestand af (50 extra locaties) en controleert het resultaat |
 | 30 | load: NP registreren en teruglezen | functioneel sc mét loadprofiel (8 vus × 25 iteraties, drempel p95 250 ms, 0% fouten) |

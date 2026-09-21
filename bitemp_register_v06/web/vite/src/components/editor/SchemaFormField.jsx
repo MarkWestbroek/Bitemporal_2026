@@ -20,7 +20,7 @@ import CodeEditor, { jsonParseFout } from "./CodeEditor";
  *  - readOnly:  forceer readonly (voor PK/FK/autoincrement)
  *  - widgetOverride: optionele expliciete widget-keuze uit formulier/weergaveconfiguratie
  */
-export default function SchemaFormField({ veld, value, onChange, error, readOnly, widgetOverride }) {
+export default function SchemaFormField({ veld, value, onChange, error, readOnly, widgetOverride, labelOverride }) {
   const fieldId = useId();
   const { datatypeByNaam } = useSchema();
   if (!veld) return null;
@@ -199,7 +199,7 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
   return (
     <div className="utrecht-form-field" style={{ marginBottom: "0.75rem", ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }}>
       <label htmlFor={fieldId} className="utrecht-form-label" style={{ display: "block", marginBottom: "0.25rem" }}>
-        {veld.naam}
+        {labelOverride || veld.naam}
         {veld.verplicht && <span style={{ color: "var(--cg-fout)", marginLeft: 4 }}>*</span>}
       </label>
       {veld.description && (

@@ -8,7 +8,7 @@
  * en de koppeling met het klassieke UML-model (spiegelen, terugschrijven,
  * V3-serialisatie en de API-dialogen; fase 4A/4B).
  */
-import { IconDiagram } from "../icons";
+import { IconDiagram05 } from "../icons";
 import useModelStore from "../../store/useModelStore";
 import {
   registreerCanoniekUml,
@@ -26,14 +26,16 @@ registreerCanoniekUmlImplementaties();
 
 export default maakDiagramActiviteit({
   id: "diagram05",
-  label: "Diagrammen (0.5)",
-  icon: <IconDiagram />,
+  label: "Canoniek model",
+  icon: <IconDiagram05 />,
   descriptor: canoniekUmlDiagramType,
   maakElement,
   persistKey: "studio05-canoniek-uml",
   taakbalkSleutel: "studio05-taakbalken-canoniek-uml",
   menuPrefix: "d05",
-  menuLabel: "Diagram (0.5)",
+  menuLabel: "Diagram",
+  kleur: "#6366f1",
+  standaardVerborgen: true, // gedekt door de Modelleren-host
   previewTekst: "Bewerkbare sandbox — wijzigingen blijven lokaal en raken het UML-model niet.",
   devHookNaam: "__diagram05Store",
   koppeling: {

@@ -16,6 +16,7 @@
  *
  * Kleuren komen overeen met defaultKleur() in umleditor/metamodel/types.js.
  */
+import { vouwOudeComposities } from "./migratie.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { berekenAutoLayout } from "../../umleditor/metamodel/autoLayout.js";
 
@@ -63,6 +64,13 @@ const fieldTypes = [
     ],
   },
   {
+    // Opname: een gegevenselement dat ín zijn entiteit getoond wordt (vak in
+    // het vak). Alleen weergave — gevuld door de core (canvas/opname.js).
+    id: "ingebedDeel",
+    viewer: "sub-vak",
+    properties: [{ key: "naam", datatype: "string" }],
+  },
+  {
     id: "regel",
     viewer: "tekst",
     properties: [{ key: "naam", label: "regel", datatype: "string", verplicht: true }],
@@ -79,6 +87,47 @@ function regelVelden(paren) {
     .map(([sleutel, waarde]) => ({ naam: `${sleutel}: ${waarde}`, fieldType: "regel" }));
 }
 
+// Subtypes zoals in de oude IDE (ide/DetailsPanel.jsx: ENTITEIT_/RELATIE_SUBTYPES).
+const opties = (lijst) => lijst.map((w) => ({ waarde: w, label: w || "—" }));
+const ENTITEIT_SUBTYPES = ["", "kernentiteit", "subentiteit", "referentielijst", "referentielijst_item"];
+const RELATIE_SUBTYPES = ["", "samenstelling", "associatie", "generalisatie", "referentielijst_items"];
+const KARDINALITEITEN = ["", "0..1", "0..*", "1..1", "1..*"];
+
+/** Stereotype dat een subtype oplegt (anders het type-stereotype). */
+const SUBTYPE_STEREOTYPE = {
+  referentielijst: "«referentielijst»",
+  referentielijst_item: "«ref.lijst item»",
+  referentielijst_items: "«ref.lijst items»",
+};
+
+/**
+ * Stereotype-hook (core: NodeTypering): volgt het bewerkbare subtype. Zolang
+ * het element nog geen subtype-sleutel heeft (oude sandbox vóór migratie)
+ * `undefined` → de core valt terug op het bij het inladen gezette
+ * `data.stereotype`.
+ */
+function stereotypeUitSubtype(sleutel) {
+  return (element) => {
+    const d = element.data || {};
+    if (!(sleutel in d)) return undefined;
+    return SUBTYPE_STEREOTYPE[d[sleutel]] || "";
+  };
+}
+
+/** Referentielijst-item-entiteit — volgt het subtype, met terugval op het oude stereotype. */
+export function isRefLijstItem(el) {
+  if (el?.elementType !== "entiteit") return false;
+  const d = el.data || {};
+  return "entiteitSubtype" in d
+    ? d.entiteitSubtype === "referentielijst_item"
+    : d.stereotype === "«ref.lijst item»";
+}
+
+/** Beschrijving en meervoud: zoals "Details" in de oude IDE voor ENT/GE/REL. */
+const BESCHRIJVING_VELD = { key: "description", label: "beschrijving", datatype: "tekst" };
+const MEERVOUD_VELD = { key: "meervoud", label: "meervoud", datatype: "string", placeholder: "bijv. Personen" };
+const MATERIEEL_VELD = { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" };
+
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
   {
@@ -88,13 +137,33 @@ const elementTypes = [
     stereotype: "«entiteit»",
     shape: "class-box",
     kleur: "#bfdbfe",
-    properties: [KLEUR_VELD],
+    icoon: "klasse",
+    // Velden als "Details" in de oude IDE. Typenaam = naam (de oude IDE houdt
+    // ze gelijk; de terugreis zet typenaam := naam) en domein = het package
+    // waar de entiteit in staat — daarom geen aparte properties.
+    // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
+    properties: [
+      BESCHRIJVING_VELD,
+      MEERVOUD_VELD,
+      MATERIEEL_VELD,
+      KLEUR_VELD,
+      { key: "entiteitSubtype", label: "subtype", datatype: "keuze", opties: opties(ENTITEIT_SUBTYPES) },
+    ],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
+      // Opgenomen gegevenselementen (per diagram gekozen, zie opname op GE).
+      {
+        id: "gegevenselementen",
+        label: null,
+        fieldType: "ingebedDeel",
+        alleenWeergave: true,
+        verbergInInspector: true,
+      },
       { id: "overerving", label: null, fieldType: "attribuut", alleenWeergave: true },
     ],
     hooks: {
+      stereotype: stereotypeUitSubtype("entiteitSubtype"),
       /**
        * Overgeërfde velden (weergave-compartiment, niet in het element zelf):
        * volg de generalisatie-connectoren kind → ouder en toon de velden van
@@ -139,7 +208,32 @@ const elementTypes = [
     stereotype: "«gegevenselement»",
     shape: "class-box",
     kleur: "#bbf7d0",
-    properties: [KLEUR_VELD],
+    icoon: "veld",
+    // Opname (gedaanten van een samenstel): per diagram kan een GE-voorkomen
+    // ín zijn entiteit getoond worden — de compositielijn vervalt, de GE wordt
+    // een sub-vak met naam, rolnaam, kardinaliteit en {momentvoorkomen} als
+    // kopregel. Keuze via het contextmenu op de GE, de compositie of de ENT.
+    opname: {
+      gedaante: "ingebed",
+      relatieTypes: ["compositie"],
+      compartiment: "gegevenselementen",
+      labelIngebed: "Neem op in entiteit",
+      labelLos: "Toon als los gegevenselement",
+    },
+    // Zelfde velden en volgorde als "Details" in de oude IDE; sleutels = de
+    // oude datavorm. Het profiel is de bron: heenreis, terugreis en migratie
+    // lezen de veldnamen hieruit (mappingV3Canoniek.js).
+    // Label heen/terug tekent de compositie (edgeLabels leest ze van de GE).
+    properties: [
+      { key: "typenaam", label: "typenaam", datatype: "string", placeholder: "bijv. NatuurlijkPersoon_Naam" },
+      { key: "domein", label: "domein", datatype: "string" },
+      BESCHRIJVING_VELD,
+      { ...MEERVOUD_VELD, placeholder: "bijv. namen" },
+      MATERIEEL_VELD,
+      KLEUR_VELD,
+      { key: "naamLabelHeen", label: "label heen", datatype: "string", placeholder: "bijv. heeft" },
+      { key: "naamLabelTerug", label: "label terug", datatype: "string", placeholder: "bijv. behoort bij" },
+    ],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -158,16 +252,34 @@ const elementTypes = [
     stereotype: "«relatie»",
     shape: "class-box",
     kleur: "#ede9fe",
+    icoon: "relatie-box",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["entiteit"] },
     edgePresentatie: { lijn: "solid", kleur: "#64748b" },
-    properties: [KLEUR_VELD],
+    // Velden als "Details" in de oude IDE, plus de kardinaliteiten en
+    // gericht (die de oude IDE via de lijnen bewerkte). Typenaam = naam (de
+    // terugreis zet typenaam := naam); doel-entiteit = het doel van de lijn.
+    properties: [
+      { key: "domein", label: "domein", datatype: "string" },
+      BESCHRIJVING_VELD,
+      MEERVOUD_VELD,
+      MATERIEEL_VELD,
+      KLEUR_VELD,
+      { key: "relatieSubtype", label: "subtype", datatype: "keuze", opties: opties(RELATIE_SUBTYPES) },
+      { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "keuze", opties: opties(KARDINALITEITEN) },
+      { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "keuze", opties: opties(KARDINALITEITEN) },
+      { key: "naamLabelHeen", label: "label heen", datatype: "string", placeholder: "bijv. woont op" },
+      { key: "naamLabelTerug", label: "label terug", datatype: "string", placeholder: "bijv. is woonadres van" },
+      { key: "directioneel", label: "gericht (→ doel)", datatype: "boolean" },
+      { key: "geordend", label: "geordend {ordered}", datatype: "boolean" },
+    ],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
     ],
     hooks: {
+      stereotype: stereotypeUitSubtype("relatieSubtype"),
       /** Labels voor de gematerialiseerde/kale gedaante (UML-conventies). */
       edgeLabels: (conn) => {
         const d = conn.data || {};
@@ -190,6 +302,17 @@ const elementTypes = [
           doel.push({ zijde: "bron", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
           kaal.push({ zijde: "doel", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
         }
+        // Tijdlijnvoorkomen (LGM): «materieel» op de lijn; formeel is default.
+        if (d.materieel) {
+          const label = { zijde: "midden", delen: [{ tekst: "«materieel»", soort: "constraint", kleur: "#0369a1" }] };
+          kaal.push(label);
+          bron.push(label);
+        }
+        if (d.geordend) {
+          const label = { zijde: "doel", delen: [{ tekst: "{ordered}", soort: "constraint" }] };
+          kaal.push(label);
+          doel.push(label);
+        }
         return { bron, doel, kaal };
       },
     },
@@ -201,6 +324,7 @@ const elementTypes = [
     stereotype: "«enumeratie»",
     shape: "class-box",
     kleur: "#fef3c7",
+    icoon: "enumeratie",
     properties: [KLEUR_VELD],
     compartments: [{ id: "waarden", label: null, fieldType: "waarde" }],
   },
@@ -211,6 +335,7 @@ const elementTypes = [
     stereotype: "«gegevenstype»",
     shape: "class-box",
     kleur: "#dbeafe",
+    icoon: "datatype",
     // Validatie/normalisatie/weergave zijn element-properties met eigen
     // PropertyTypeEditors (implementaties.jsx registreert "validatieregels"
     // en "weergaveregels" in de datatype-registry) — het PropertyType-patroon
@@ -268,14 +393,34 @@ const elementTypes = [
     stereotype: "«instantie»",
     shape: "class-box",
     kleur: "#fde68a",
+    icoon: "lijst",
     properties: [KLEUR_VELD],
     compartments: [{ id: "eigenschappen", label: null, fieldType: "eigenschap" }],
+  },
+  {
+    // Package = het V3-domein als gewoon elementtype (geen core-concept).
+    // Het bevat-lidmaatschap is een connector die je meestal niet tekent;
+    // de elementen-browser ordent er de boom mee en de adapter vertaalt
+    // hem heen en terug naar het domein-veld van V3.
+    id: "package",
+    label: "Package (domein)",
+    kort: "PKG",
+    stereotype: "«package»",
+    shape: "package",
+    kleur: "#f1f5f9",
+    icoon: "package",
+    // Drop-doel op canvas en in de boom: erin slepen legt de bevat-connector.
+    containerVoor: "bevat",
+    // Zoals mappen in een verkenner: dicht beginnen, openklikken op verzoek.
+    standaardDichtInBoom: true,
+    properties: [KLEUR_VELD],
   },
   {
     id: "notitie",
     label: "Notitie",
     kort: "NOT",
     shape: "note",
+    icoon: "notitie",
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
@@ -286,6 +431,7 @@ const elementTypes = [
     stereotype: "«constraint»",
     shape: "rounded",
     kleur: "#e0f2fe",
+    icoon: "constraint",
     handleStijl: "onzichtbaar",
     properties: [{ key: "expressie", label: "expressie (OCL/CEL)", datatype: "cel-expressie" }, KLEUR_VELD],
   },
@@ -294,6 +440,7 @@ const elementTypes = [
     label: "Kader",
     kort: "KADER",
     shape: "boundary",
+    icoon: "kader",
     achtergrond: true,
     handleStijl: "onzichtbaar",
     properties: [
@@ -308,16 +455,73 @@ const elementTypes = [
     label: "Compositie",
     kort: "◆",
     shape: "edge",
+    icoon: "compositie",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["gegevenselement"] },
     edgePresentatie: { lijn: "solid", kleur: "#64748b", markerStart: "ruit" },
+    // Dezelfde velden als "Edge" in de oude IDE-details (ide/DetailsPanel.jsx);
+    // de terugreis (adapter.naarCanoniekModel) schrijft ze naar de
+    // structurele edge — veldnamen uit deze lijst (mappingV3Canoniek.js).
+    // Keuzelijsten = KARDINALITEIT_/MOMENTVOORKOMEN_OPTIES.
+    properties: [
+      { key: "rolnaam", label: "rolnaam", datatype: "string" },
+      { key: "jsonRolnaam", label: "JSON rolnaam", datatype: "string" },
+      {
+        key: "momentvoorkomen",
+        label: "momentvoorkomen",
+        datatype: "keuze",
+        opties: [
+          { waarde: "", label: "—" },
+          { waarde: "enkelvoudig", label: "enkelvoudig" },
+          { waarde: "meervoudig", label: "meervoudig" },
+        ],
+      },
+      {
+        key: "kardinaliteit",
+        label: "kardinaliteit",
+        datatype: "keuze",
+        opties: [
+          { waarde: "", label: "—" },
+          { waarde: "0..1", label: "0..1" },
+          { waarde: "0..*", label: "0..*" },
+          { waarde: "1..1", label: "1..1" },
+          { waarde: "1..*", label: "1..*" },
+        ],
+      },
+    ],
+    hooks: {
+      /**
+       * Labels zoals de oude presentatie-edge ze toonde (zie
+       * adapter.presentatieVoorEdge): rolnaam, kardinaliteit en
+       * {enkelvoudig|meervoudig} aan de GE-kant; heen/terug-namen erbij.
+       */
+      edgeLabels: (conn, ctx) => {
+        // Leesrichtingen horen (zoals in de oude IDE) bij de GE; de kopie op
+        // de connector (heenreis) is alleen nog terugval.
+        const ge = ctx?.elements?.[conn.target]?.data || {};
+        const d = { ...(conn.data || {}) };
+        for (const k of ["naamLabelHeen", "naamLabelTerug"]) if (k in ge) d[k] = ge[k];
+        const kaal = [];
+        const delen = [];
+        if (d.rolnaam) delen.push({ tekst: d.rolnaam, soort: "rolnaam" });
+        if (d.kardinaliteit) delen.push({ tekst: d.kardinaliteit, soort: "kardinaliteit" });
+        if (d.momentvoorkomen === "enkelvoudig" || d.momentvoorkomen === "meervoudig") {
+          delen.push({ tekst: `{${d.momentvoorkomen}}`, soort: "constraint" });
+        }
+        if (delen.length) kaal.push({ zijde: "doel", delen });
+        if (d.naamLabelHeen) kaal.push({ zijde: "bron", delen: [{ tekst: `▶ ${d.naamLabelHeen}`, soort: "naam" }] });
+        if (d.naamLabelTerug) kaal.push({ zijde: "doel", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
+        return { bron: kaal.filter((l) => l.zijde === "bron"), doel: kaal.filter((l) => l.zijde === "doel"), kaal };
+      },
+    },
   },
   {
     id: "generalisatie",
     label: "Generalisatie",
     kort: "▷",
     shape: "edge",
+    icoon: "generalisatie",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["entiteit"] },
@@ -335,6 +539,7 @@ const elementTypes = [
     label: "Gebruik («use»)",
     kort: "use",
     shape: "edge",
+    icoon: "gebruik",
     isConnector: true,
     bron: { elementTypes: ["entiteit", "gegevenselement", "relatie"] },
     doel: { elementTypes: ["enumeratie", "gegevenstype", "referentielijstInstantie"] },
@@ -344,6 +549,29 @@ const elementTypes = [
       markerEnd: "pijl-open",
       labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }],
     },
+  },
+  {
+    // Package-lidmaatschap ("plaatsing in"): meestal alleen een model-feit
+    // (boomordening, V3-domein), maar tekenbaar als subtiele stippellijn.
+    id: "bevat",
+    label: "Bevat (package)",
+    kort: "pkg ∋",
+    shape: "edge",
+    icoon: "bevat",
+    isConnector: true,
+    bron: { elementTypes: ["package"] },
+    doel: {
+      elementTypes: [
+        "entiteit",
+        "enumeratie",
+        "gegevenstype",
+        "referentielijstInstantie",
+        "package",
+        "notitie",
+        "constraint",
+      ],
+    },
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#94a3b8" },
   },
 ];
 
@@ -384,7 +612,7 @@ const referenceResolvers = {
   refitem: ({ elements }) =>
     elementKandidaten(
       elements,
-      (el) => el.elementType === "entiteit" && el.data?.stereotype === "«ref.lijst item»",
+      isRefLijstItem,
       "▣",
       "Referentielijst-items",
       (el) => `${el.naam} (ref.lijst)`
@@ -396,6 +624,35 @@ export const canoniekUmlDiagramType = {
   id: CANONIEK_UML_ID,
   label: "Canoniek datamodel",
   style: "uml-klassiek",
+  // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
+  // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.
+  randAanhechting: "zwevend",
+  meerdereVoorkomens: true,
+  // P02: eerst package-lidmaatschap (domein), daarna de compositie
+  // (ENT ◆ GE) — de browser toont packages → entiteiten → gegevenselementen.
+  hierarchie: ["bevat", "compositie"],
+  hooks: {
+    /**
+     * Opgeslagen sandbox bijwerken: composities die nog als presentatie-edge
+     * bestaan (vóór 2026-09-15) worden compositie-connectoren.
+     */
+    migreerModel: (state) => vouwOudeComposities(state, elementTypes),
+    /**
+     * Composities uit een V3-import zijn sinds de heenreis compositie-
+     * connectoren (die de "compositie"-hiërarchie al dekt). Deze hook vangt
+     * alleen nog presentatie-edges met een ruit zónder structurele edge —
+     * oudere opgeslagen modellen.
+     */
+    hierarchieParen: ({ diagrams }) => {
+      const paren = [];
+      for (const d of Object.values(diagrams || {})) {
+        for (const e of d.edges || []) {
+          if (e.data?.presentatie?.markerStart === "ruit") paren.push([e.source, e.target]);
+        }
+      }
+      return paren;
+    },
+  },
   elementTypes,
   fieldTypes,
   referenceTypes,
@@ -458,6 +715,7 @@ export function maakElement(elementTypeId) {
     element.data.tekst = "";
   }
   if (et.id === "constraint") element.data.expressie = "";
+  if (et.id === "package") element.naam = "NieuwPackage";
   return element;
 }
 

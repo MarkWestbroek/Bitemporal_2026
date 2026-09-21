@@ -15,6 +15,7 @@ import { BpmnEditor, STARTER_BPMN, contractNaarIoMapping, valideerContract } fro
 import { IconBPMN } from "../icons";
 import { menuBus } from "../menuBus";
 import { apiBase, downloadTekst } from "../studioUtils";
+import { registreerDocumentKoppeling } from "./activiteitAlsProfieltype.jsx";
 
 const Ctx = createContext(null);
 
@@ -36,6 +37,19 @@ function BpmnProvider({ children }) {
     ];
     return () => af.forEach((off) => off());
   }, []);
+
+  // Documentkoppeling voor de Modelleren-host: meerdere BPMN-documenten,
+  // per document bewaard (inhoud = de BPMN-XML; null = starter).
+  useEffect(
+    () =>
+      registreerDocumentKoppeling("bpmn", {
+        haal: async () => (await editorRef.current?.exportXML()) || null,
+        zet: async (inhoud) => {
+          await editorRef.current?.laadXML(inhoud || STARTER_BPMN);
+        },
+      }),
+    []
+  );
 
   return (
     <Ctx.Provider value={{ editorRef, bericht, setBericht, selectie, setSelectie, xml, setXml }}>
@@ -140,6 +154,7 @@ function BpmnInspector() {
 export default {
   id: "bpmn",
   label: "BPMN-processen",
+  standaardVerborgen: true, // gedekt door de Modelleren-host
   icon: <IconBPMN />,
   groep: "modelleren",
   Provider: BpmnProvider,

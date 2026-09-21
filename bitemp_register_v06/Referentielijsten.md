@@ -641,7 +641,7 @@ Zie `docs/implementatieplan-referentielijsten.md` voor het gedetailleerde stappe
 
 
 # Nieuw plan 29 maart 2026!!
-D:\Git\Bitemporal_2026\bitemp_register_v06\docs\copilot-chats\exports\2026-03-29 referentielijsten PLAN.md
+D:\Git\Bitemporal_2026\bitemp_register_v06\docs\ai-chats\exports\2026-03-29 referentielijsten PLAN.md
 
 
 # Observaties na implementatie stappen 1 t/m 9 van het nieuwe plan

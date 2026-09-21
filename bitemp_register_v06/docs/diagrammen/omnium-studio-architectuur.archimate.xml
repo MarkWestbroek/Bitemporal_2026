@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       identifier="id-model-omnium-studio-architectuur">
+  <name xml:lang="nl">Omnium Studio en bitemporeel register</name>
+  <documentation xml:lang="nl">Architectuurmodel van de actieve v06-codebase. Bevat platform-, modelketen- en deploymentviews.</documentation>
+  <elements>
+    <element identifier="id-el-modelleur" xsi:type="BusinessActor"><name xml:lang="nl">Modelleur / architect</name></element>
+    <element identifier="id-el-modelleren" xsi:type="BusinessProcess"><name xml:lang="nl">Modelleren en verbinden</name></element>
+    <element identifier="id-el-publiceren" xsi:type="BusinessProcess"><name xml:lang="nl">Model publiceren</name></element>
+    <element identifier="id-el-registreren" xsi:type="BusinessProcess"><name xml:lang="nl">Bitemporeel registreren en opvragen</name></element>
+
+    <element identifier="id-el-studio" xsi:type="ApplicationComponent"><name xml:lang="nl">Omnium Studio</name></element>
+    <element identifier="id-el-shell" xsi:type="ApplicationComponent"><name xml:lang="nl">Studio-shell en projectbrowser</name></element>
+    <element identifier="id-el-diagramcore" xsi:type="ApplicationComponent"><name xml:lang="nl">Generieke diagrammotor</name></element>
+    <element identifier="id-el-profielen" xsi:type="ApplicationComponent"><name xml:lang="nl">Modelprofielen via MMM</name></element>
+    <element identifier="id-el-editors" xsi:type="ApplicationComponent"><name xml:lang="nl">Model-, proces-, beslissing- en berichteditors</name></element>
+    <element identifier="id-el-formulieren" xsi:type="ApplicationComponent"><name xml:lang="nl">Formuliereditor</name></element>
+    <element identifier="id-el-toegang" xsi:type="ApplicationComponent"><name xml:lang="nl">Toegangsspraak en ODRL</name></element>
+
+    <element identifier="id-el-api" xsi:type="ApplicationComponent"><name xml:lang="nl">Go API</name></element>
+    <element identifier="id-el-schema-api" xsi:type="ApplicationComponent"><name xml:lang="nl">Schema-API</name></element>
+    <element identifier="id-el-handlers" xsi:type="ApplicationComponent"><name xml:lang="nl">Generieke handlers</name></element>
+    <element identifier="id-el-rest" xsi:type="ApplicationInterface"><name xml:lang="nl">REST en OpenAPI 3.1</name></element>
+    <element identifier="id-el-graphql" xsi:type="ApplicationInterface"><name xml:lang="nl">GraphQL</name></element>
+    <element identifier="id-el-codegen" xsi:type="ApplicationComponent"><name xml:lang="nl">V3-codegenerator</name></element>
+    <element identifier="id-el-metaregistry" xsi:type="ApplicationComponent"><name xml:lang="nl">MetaRegistry</name></element>
+    <element identifier="id-el-registerservice" xsi:type="ApplicationComponent"><name xml:lang="nl">Registratieservice</name></element>
+
+    <element identifier="id-el-canoniek" xsi:type="DataObject"><name xml:lang="nl">Canoniek model</name></element>
+    <element identifier="id-el-v3" xsi:type="DataObject"><name xml:lang="nl">V3 JSON-model</name></element>
+    <element identifier="id-el-registraties" xsi:type="DataObject"><name xml:lang="nl">Registraties en representaties</name></element>
+    <element identifier="id-el-bestanden" xsi:type="DataObject"><name xml:lang="nl">Model- en projectbestanden</name></element>
+
+    <element identifier="id-el-dmn" xsi:type="ApplicationComponent"><name xml:lang="nl">DMN input/output</name></element>
+    <element identifier="id-el-bpmn" xsi:type="ApplicationComponent"><name xml:lang="nl">BPMN messages/signals</name></element>
+    <element identifier="id-el-visualisaties" xsi:type="ApplicationComponent"><name xml:lang="nl">Tijdlijn, diagrammen en 3D</name></element>
+
+    <element identifier="id-el-browser" xsi:type="Device"><name xml:lang="nl">Webbrowser</name></element>
+    <element identifier="id-el-webserver" xsi:type="Node"><name xml:lang="nl">Vite dev-server of nginx</name></element>
+    <element identifier="id-el-go-runtime" xsi:type="Node"><name xml:lang="nl">Go-runtime / API-container</name></element>
+    <element identifier="id-el-postgres" xsi:type="Node"><name xml:lang="nl">PostgreSQL</name></element>
+    <element identifier="id-el-objectstore" xsi:type="Node"><name xml:lang="nl">S3-compatibele objectopslag</name></element>
+    <element identifier="id-el-frontend-artifact" xsi:type="Artifact"><name xml:lang="nl">React/Vite frontend bundle</name></element>
+    <element identifier="id-el-api-artifact" xsi:type="Artifact"><name xml:lang="nl">bitemp-register-v06 binary</name></element>
+    <element identifier="id-el-model-artifact" xsi:type="Artifact"><name xml:lang="nl">Gegenereerde modelcode</name></element>
+  </elements>
+
+  <relationships>
+    <relationship identifier="id-rel-actor-modelleert" source="id-el-modelleur" target="id-el-modelleren" xsi:type="Assignment"/>
+    <relationship identifier="id-rel-modelleert-publiceert" source="id-el-modelleren" target="id-el-publiceren" xsi:type="Triggering"/>
+    <relationship identifier="id-rel-studio-serves-model" source="id-el-studio" target="id-el-modelleren" xsi:type="Serving"/>
+    <relationship identifier="id-rel-studio-shell" source="id-el-studio" target="id-el-shell" xsi:type="Composition"/>
+    <relationship identifier="id-rel-studio-core" source="id-el-studio" target="id-el-diagramcore" xsi:type="Composition"/>
+    <relationship identifier="id-rel-studio-editors" source="id-el-studio" target="id-el-editors" xsi:type="Composition"/>
+    <relationship identifier="id-rel-studio-form" source="id-el-studio" target="id-el-formulieren" xsi:type="Composition"/>
+    <relationship identifier="id-rel-studio-policy" source="id-el-studio" target="id-el-toegang" xsi:type="Composition"/>
+    <relationship identifier="id-rel-profiles-core" source="id-el-profielen" target="id-el-diagramcore" xsi:type="Serving"/>
+    <relationship identifier="id-rel-editors-canon" source="id-el-editors" target="id-el-canoniek" xsi:type="Access" accessType="ReadWrite"/>
+    <relationship identifier="id-rel-form-canon" source="id-el-formulieren" target="id-el-canoniek" xsi:type="Access" accessType="Read"/>
+    <relationship identifier="id-rel-policy-canon" source="id-el-toegang" target="id-el-canoniek" xsi:type="Access" accessType="Read"/>
+    <relationship identifier="id-rel-canon-v3" source="id-el-canoniek" target="id-el-v3" xsi:type="Realization"/>
+
+    <relationship identifier="id-rel-api-schema" source="id-el-api" target="id-el-schema-api" xsi:type="Composition"/>
+    <relationship identifier="id-rel-api-handlers" source="id-el-api" target="id-el-handlers" xsi:type="Composition"/>
+    <relationship identifier="id-rel-api-codegen" source="id-el-api" target="id-el-codegen" xsi:type="Composition"/>
+    <relationship identifier="id-rel-api-meta" source="id-el-api" target="id-el-metaregistry" xsi:type="Composition"/>
+    <relationship identifier="id-rel-api-register" source="id-el-api" target="id-el-registerservice" xsi:type="Composition"/>
+    <relationship identifier="id-rel-rest-handlers" source="id-el-rest" target="id-el-handlers" xsi:type="Serving"/>
+    <relationship identifier="id-rel-graphql-handlers" source="id-el-graphql" target="id-el-handlers" xsi:type="Serving"/>
+    <relationship identifier="id-rel-schema-meta" source="id-el-schema-api" target="id-el-metaregistry" xsi:type="Access" accessType="Read"/>
+    <relationship identifier="id-rel-handlers-meta" source="id-el-handlers" target="id-el-metaregistry" xsi:type="Access" accessType="Read"/>
+    <relationship identifier="id-rel-meta-v3" source="id-el-metaregistry" target="id-el-v3" xsi:type="Access" accessType="ReadWrite"/>
+    <relationship identifier="id-rel-codegen-v3" source="id-el-codegen" target="id-el-v3" xsi:type="Access" accessType="Read"/>
+    <relationship identifier="id-rel-codegen-model" source="id-el-codegen" target="id-el-model-artifact" xsi:type="Realization"/>
+    <relationship identifier="id-rel-handlers-register" source="id-el-handlers" target="id-el-registerservice" xsi:type="Serving"/>
+    <relationship identifier="id-rel-register-process" source="id-el-registerservice" target="id-el-registreren" xsi:type="Serving"/>
+    <relationship identifier="id-rel-register-data" source="id-el-registerservice" target="id-el-registraties" xsi:type="Access" accessType="ReadWrite"/>
+
+    <relationship identifier="id-rel-canon-dmn" source="id-el-canoniek" target="id-el-dmn" xsi:type="Association"/>
+    <relationship identifier="id-rel-canon-bpmn" source="id-el-canoniek" target="id-el-bpmn" xsi:type="Association"/>
+    <relationship identifier="id-rel-canon-visual" source="id-el-canoniek" target="id-el-visualisaties" xsi:type="Association"/>
+
+    <relationship identifier="id-rel-browser-frontend" source="id-el-browser" target="id-el-frontend-artifact" xsi:type="Assignment"/>
+    <relationship identifier="id-rel-web-frontend" source="id-el-webserver" target="id-el-frontend-artifact" xsi:type="Assignment"/>
+    <relationship identifier="id-rel-runtime-api" source="id-el-go-runtime" target="id-el-api-artifact" xsi:type="Assignment"/>
+    <relationship identifier="id-rel-runtime-model" source="id-el-go-runtime" target="id-el-model-artifact" xsi:type="Assignment"/>
+    <relationship identifier="id-rel-browser-api" source="id-el-browser" target="id-el-go-runtime" xsi:type="Flow"/>
+    <relationship identifier="id-rel-runtime-db" source="id-el-go-runtime" target="id-el-postgres" xsi:type="Flow"/>
+    <relationship identifier="id-rel-runtime-store" source="id-el-go-runtime" target="id-el-objectstore" xsi:type="Flow"/>
+    <relationship identifier="id-rel-postgres-data" source="id-el-postgres" target="id-el-registraties" xsi:type="Assignment"/>
+    <relationship identifier="id-rel-store-files" source="id-el-objectstore" target="id-el-bestanden" xsi:type="Assignment"/>
+  </relationships>
+
+  <views>
+    <diagrams>
+      <view identifier="id-view-platform" xsi:type="Diagram">
+        <name xml:lang="nl">1. Omnium Studio platformoverzicht</name>
+        <documentation xml:lang="nl">Van modelleur via Studio en het canonieke model naar API en bitemporele opslag.</documentation>
+        <node identifier="id-v1-modelleur" elementRef="id-el-modelleur" xsi:type="Element" x="30" y="210" w="150" h="55"/>
+        <node identifier="id-v1-modelleren" elementRef="id-el-modelleren" xsi:type="Element" x="30" y="320" w="170" h="60"/>
+        <node identifier="id-v1-studio" elementRef="id-el-studio" xsi:type="Element" x="240" y="170" w="180" h="70"/>
+        <node identifier="id-v1-profielen" elementRef="id-el-profielen" xsi:type="Element" x="240" y="40" w="180" h="60"/>
+        <node identifier="id-v1-core" elementRef="id-el-diagramcore" xsi:type="Element" x="480" y="40" w="180" h="60"/>
+        <node identifier="id-v1-editors" elementRef="id-el-editors" xsi:type="Element" x="480" y="145" w="180" h="65"/>
+        <node identifier="id-v1-canon" elementRef="id-el-canoniek" xsi:type="Element" x="720" y="145" w="180" h="65"/>
+        <node identifier="id-v1-v3" elementRef="id-el-v3" xsi:type="Element" x="720" y="260" w="180" h="60"/>
+        <node identifier="id-v1-api" elementRef="id-el-api" xsi:type="Element" x="960" y="170" w="180" h="70"/>
+        <node identifier="id-v1-meta" elementRef="id-el-metaregistry" xsi:type="Element" x="960" y="280" w="180" h="60"/>
+        <node identifier="id-v1-register" elementRef="id-el-registerservice" xsi:type="Element" x="1200" y="145" w="190" h="65"/>
+        <node identifier="id-v1-data" elementRef="id-el-registraties" xsi:type="Element" x="1200" y="280" w="190" h="60"/>
+        <connection identifier="id-v1-c0" relationshipRef="id-rel-actor-modelleert" xsi:type="Relationship" source="id-v1-modelleur" target="id-v1-modelleren"/>
+        <connection identifier="id-v1-c1" relationshipRef="id-rel-studio-serves-model" xsi:type="Relationship" source="id-v1-studio" target="id-v1-modelleren"/>
+        <connection identifier="id-v1-c2" relationshipRef="id-rel-profiles-core" xsi:type="Relationship" source="id-v1-profielen" target="id-v1-core"/>
+        <connection identifier="id-v1-c3" relationshipRef="id-rel-studio-editors" xsi:type="Relationship" source="id-v1-studio" target="id-v1-editors"/>
+        <connection identifier="id-v1-c4" relationshipRef="id-rel-editors-canon" xsi:type="Relationship" source="id-v1-editors" target="id-v1-canon"/>
+        <connection identifier="id-v1-c5" relationshipRef="id-rel-canon-v3" xsi:type="Relationship" source="id-v1-canon" target="id-v1-v3"/>
+        <connection identifier="id-v1-c6" relationshipRef="id-rel-api-meta" xsi:type="Relationship" source="id-v1-api" target="id-v1-meta"/>
+        <connection identifier="id-v1-c6b" relationshipRef="id-rel-meta-v3" xsi:type="Relationship" source="id-v1-meta" target="id-v1-v3"/>
+        <connection identifier="id-v1-c7" relationshipRef="id-rel-api-register" xsi:type="Relationship" source="id-v1-api" target="id-v1-register"/>
+        <connection identifier="id-v1-c8" relationshipRef="id-rel-register-data" xsi:type="Relationship" source="id-v1-register" target="id-v1-data"/>
+      </view>
+
+      <view identifier="id-view-modelketen" xsi:type="Diagram">
+        <name xml:lang="nl">2. Canonieke modelketen</name>
+        <documentation xml:lang="nl">Het canonieke model als gedeelde semantische bron voor runtime en projecties.</documentation>
+        <node identifier="id-v2-canon" elementRef="id-el-canoniek" xsi:type="Element" x="30" y="220" w="180" h="65"/>
+        <node identifier="id-v2-v3" elementRef="id-el-v3" xsi:type="Element" x="270" y="220" w="170" h="65"/>
+        <node identifier="id-v2-meta" elementRef="id-el-metaregistry" xsi:type="Element" x="510" y="220" w="170" h="65"/>
+        <node identifier="id-v2-schema" elementRef="id-el-schema-api" xsi:type="Element" x="760" y="30" w="180" h="60"/>
+        <node identifier="id-v2-rest" elementRef="id-el-rest" xsi:type="Element" x="760" y="120" w="180" h="60"/>
+        <node identifier="id-v2-graphql" elementRef="id-el-graphql" xsi:type="Element" x="760" y="210" w="180" h="60"/>
+        <node identifier="id-v2-codegen" elementRef="id-el-codegen" xsi:type="Element" x="760" y="300" w="180" h="60"/>
+        <node identifier="id-v2-dmn" elementRef="id-el-dmn" xsi:type="Element" x="1020" y="30" w="180" h="60"/>
+        <node identifier="id-v2-bpmn" elementRef="id-el-bpmn" xsi:type="Element" x="1020" y="120" w="180" h="60"/>
+        <node identifier="id-v2-form" elementRef="id-el-formulieren" xsi:type="Element" x="1020" y="210" w="180" h="60"/>
+        <node identifier="id-v2-policy" elementRef="id-el-toegang" xsi:type="Element" x="1020" y="300" w="180" h="60"/>
+        <node identifier="id-v2-visual" elementRef="id-el-visualisaties" xsi:type="Element" x="1020" y="390" w="180" h="60"/>
+        <connection identifier="id-v2-c1" relationshipRef="id-rel-canon-v3" xsi:type="Relationship" source="id-v2-canon" target="id-v2-v3"/>
+        <connection identifier="id-v2-c2" relationshipRef="id-rel-meta-v3" xsi:type="Relationship" source="id-v2-meta" target="id-v2-v3"/>
+        <connection identifier="id-v2-c3" relationshipRef="id-rel-schema-meta" xsi:type="Relationship" source="id-v2-schema" target="id-v2-meta"/>
+        <connection identifier="id-v2-c4" relationshipRef="id-rel-codegen-v3" xsi:type="Relationship" source="id-v2-codegen" target="id-v2-v3"/>
+        <connection identifier="id-v2-c5" relationshipRef="id-rel-canon-dmn" xsi:type="Relationship" source="id-v2-canon" target="id-v2-dmn"/>
+        <connection identifier="id-v2-c6" relationshipRef="id-rel-canon-bpmn" xsi:type="Relationship" source="id-v2-canon" target="id-v2-bpmn"/>
+        <connection identifier="id-v2-c7" relationshipRef="id-rel-form-canon" xsi:type="Relationship" source="id-v2-form" target="id-v2-canon"/>
+        <connection identifier="id-v2-c8" relationshipRef="id-rel-policy-canon" xsi:type="Relationship" source="id-v2-policy" target="id-v2-canon"/>
+        <connection identifier="id-v2-c9" relationshipRef="id-rel-canon-visual" xsi:type="Relationship" source="id-v2-canon" target="id-v2-visual"/>
+      </view>
+
+      <view identifier="id-view-deployment" xsi:type="Diagram">
+        <name xml:lang="nl">3. Logische deployment</name>
+        <documentation xml:lang="nl">Logische verdeling over browser, frontendserver, Go-runtime, database en objectopslag.</documentation>
+        <node identifier="id-v3-browser" elementRef="id-el-browser" xsi:type="Element" x="30" y="180" w="180" h="70"/>
+        <node identifier="id-v3-frontend" elementRef="id-el-frontend-artifact" xsi:type="Element" x="270" y="70" w="200" h="65"/>
+        <node identifier="id-v3-webserver" elementRef="id-el-webserver" xsi:type="Element" x="270" y="180" w="200" h="70"/>
+        <node identifier="id-v3-runtime" elementRef="id-el-go-runtime" xsi:type="Element" x="550" y="180" w="210" h="70"/>
+        <node identifier="id-v3-api" elementRef="id-el-api-artifact" xsi:type="Element" x="550" y="70" w="210" h="65"/>
+        <node identifier="id-v3-model" elementRef="id-el-model-artifact" xsi:type="Element" x="550" y="300" w="210" h="65"/>
+        <node identifier="id-v3-db" elementRef="id-el-postgres" xsi:type="Element" x="850" y="100" w="190" h="70"/>
+        <node identifier="id-v3-store" elementRef="id-el-objectstore" xsi:type="Element" x="850" y="260" w="190" h="70"/>
+        <node identifier="id-v3-data" elementRef="id-el-registraties" xsi:type="Element" x="1110" y="100" w="200" h="65"/>
+        <node identifier="id-v3-files" elementRef="id-el-bestanden" xsi:type="Element" x="1110" y="260" w="200" h="65"/>
+        <connection identifier="id-v3-c1" relationshipRef="id-rel-browser-frontend" xsi:type="Relationship" source="id-v3-browser" target="id-v3-frontend"/>
+        <connection identifier="id-v3-c2" relationshipRef="id-rel-web-frontend" xsi:type="Relationship" source="id-v3-webserver" target="id-v3-frontend"/>
+        <connection identifier="id-v3-c3" relationshipRef="id-rel-browser-api" xsi:type="Relationship" source="id-v3-browser" target="id-v3-runtime"/>
+        <connection identifier="id-v3-c4" relationshipRef="id-rel-runtime-api" xsi:type="Relationship" source="id-v3-runtime" target="id-v3-api"/>
+        <connection identifier="id-v3-c5" relationshipRef="id-rel-runtime-model" xsi:type="Relationship" source="id-v3-runtime" target="id-v3-model"/>
+        <connection identifier="id-v3-c6" relationshipRef="id-rel-runtime-db" xsi:type="Relationship" source="id-v3-runtime" target="id-v3-db"/>
+        <connection identifier="id-v3-c7" relationshipRef="id-rel-runtime-store" xsi:type="Relationship" source="id-v3-runtime" target="id-v3-store"/>
+        <connection identifier="id-v3-c8" relationshipRef="id-rel-postgres-data" xsi:type="Relationship" source="id-v3-db" target="id-v3-data"/>
+        <connection identifier="id-v3-c9" relationshipRef="id-rel-store-files" xsi:type="Relationship" source="id-v3-store" target="id-v3-files"/>
+      </view>
+    </diagrams>
+  </views>
+</model>

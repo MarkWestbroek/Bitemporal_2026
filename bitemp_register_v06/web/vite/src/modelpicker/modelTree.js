@@ -30,13 +30,16 @@ function normDomein(value) {
 }
 
 /** Bouw een FieldRef uit een veld-DTO. */
-export function maakFieldRef({ veld, ownerTypenaam, entiteitTypenaam, rol, afgeleid, tDimensie }) {
+export function maakFieldRef({ veld, ownerTypenaam, entiteitTypenaam, rol, afgeleid, tDimensie, momentvoorkomen }) {
   const veldnaam = veld?.naam || "";
   const padDelen = [entiteitTypenaam || ownerTypenaam, rol, veldnaam].filter(Boolean);
   return {
     typenaam: ownerTypenaam,
     veldnaam,
     veldpad: padDelen.join("."),
+    // Pad naar het bovenliggende GE/relatie (entiteit.rol) — het "adres" van de lijst
+    // waartoe dit veld hoort; nodig om meervoudige velden in een lijst te wrappen.
+    gepad: [entiteitTypenaam || ownerTypenaam, rol].filter(Boolean).join("."),
     entiteit: entiteitTypenaam || ownerTypenaam,
     datatype: veld?.datatype || "",
     type: veld?.type || "",
@@ -45,6 +48,7 @@ export function maakFieldRef({ veld, ownerTypenaam, entiteitTypenaam, rol, afgel
     ref: veld?.ref || "",
     afgeleid: Boolean(afgeleid),
     tDimensie: tDimensie || "formeel",
+    momentvoorkomen: momentvoorkomen || "",
   };
 }
 
@@ -61,9 +65,24 @@ export function fieldRefKey(ref) {
  * @param {object} opties
  * @param {boolean} opties.includeAfgeleid  neem afgeleide velden mee (default true)
  * @param {string} opties.tDimensie         "formeel" | "materieel" voor emitted refs
+ * @param {number} opties.relatieDiepte     doorkijk: hoeveel relatie-hops naar
+ *   andere entiteiten meegenomen worden (default 0 = alleen de eigen GE's en
+ *   relaties, het historische gedrag). Zie "Doorkijk over relaties" hieronder.
  * @returns {Array} domeinen: [{ naam, entiteiten: [{ type, velden, kinderen }] }]
  */
-export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "formeel", hiddenDomains = [] } = {}) {
+/**
+ * Is dit een technisch/plumbing veld (gegenereerde id's)? Deze staan niet in het
+ * getekende model (wél in de metaregistry) en zijn standaard verborgen in de picker.
+ */
+export function isTechnischVeldnaam(naam) {
+  const n = String(naam || "").toLowerCase();
+  return n === "id" || n === "rel_id" || n === "versie" || n.endsWith("_id");
+}
+
+export function bouwModelTree(
+  types,
+  { includeAfgeleid = true, includeTechnisch = false, tDimensie = "formeel", hiddenDomains = [], relatieDiepte = 0 } = {}
+) {
   const verborgen = new Set(safeArray(hiddenDomains).map(normDomein));
   const lijst = safeArray(types);
   const byTypenaam = new Map();
@@ -72,12 +91,13 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
   });
 
   // Velden + afgeleide velden van één type → FieldRef-knopen.
-  const veldKnopenVan = (type, { entiteitTypenaam, rol }) => {
+  const veldKnopenVan = (type, { entiteitTypenaam, rol, momentvoorkomen }) => {
     const knopen = [];
     safeArray(type?.velden).forEach((veld) => {
+      if (!includeTechnisch && isTechnischVeldnaam(veld?.naam)) return; // plumbing standaard verbergen
       knopen.push({
         kind: "veld",
-        ref: maakFieldRef({ veld, ownerTypenaam: type.typenaam, entiteitTypenaam, rol, afgeleid: false, tDimensie }),
+        ref: maakFieldRef({ veld, ownerTypenaam: type.typenaam, entiteitTypenaam, rol, afgeleid: false, tDimensie, momentvoorkomen }),
       });
     });
     if (includeAfgeleid) {
@@ -91,6 +111,7 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
             rol,
             afgeleid: true,
             tDimensie,
+            momentvoorkomen,
           }),
           afleidingsregel: av.afleidingsregel || "",
           afleidingsregelTaal: av.afleidingsregelTaal || "",
@@ -98,6 +119,57 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
       });
     }
     return knopen;
+  };
+
+  // Doorkijk over relaties.
+  //
+  // Een relatie (bv. NatuurlijkPersoon──Woonlocatie──▶Locatie) wijst naar een
+  // *andere* entiteit. Standaard stopt de boom daar: je ziet alleen de eigen
+  // velden van de relatie. Met `relatieDiepte > 0` lopen we door naar de
+  // doel-entiteit en hangen we diens GE's/relaties als extra takken onder
+  // dezelfde entiteit, met een samengesteld rolpad. Zo wordt
+  // "de wijk van de woonlocatie van een natuurlijk persoon" één veld:
+  //
+  //   NatuurlijkPersoon.woonlocatie.gebiedsligging.wijkaanduiding.wijk
+  //
+  // Dat is precies wat Toegangsspraak nodig heeft: de keten-verkorting in
+  // toegangsspraak/metamodel.js mag tussenstappen overslaan zolang het
+  // eenduidig blijft. Alleen de GE's/relaties van de doel-entiteit gaan mee,
+  // niet haar eigen (collectie- en id-)velden; die zeggen buiten hun eigen
+  // entiteit weinig. `bezocht` houdt de al bezochte entiteiten op dit pad bij,
+  // zodat cycli (A→B→A) niet oneindig doorlopen.
+  const bouwKinderen = (entType, ownerTypenaam, rolPrefix, diepte, bezocht) => {
+    const kinderen = [];
+    safeArray(entType?.onderliggende).forEach((child) => {
+      const childType = byTypenaam.get(child.doeltype);
+      if (!childType) return;
+      const eigenRol = child.jsonRolnaam || child.rolnaam || child.doeltype;
+      const rol = rolPrefix ? `${rolPrefix}.${eigenRol}` : eigenRol;
+      kinderen.push({
+        kind: "ge",
+        rol,
+        jsonRolnaam: child.jsonRolnaam || "",
+        momentvoorkomen: child.momentvoorkomen || "",
+        metatype: childType.metatype,
+        type: childType,
+        // Doorkijk-takken komen via een relatie uit een andere entiteit; de UI
+        // kan ze daardoor herkenbaar tonen.
+        doorkijk: Boolean(rolPrefix),
+        velden: veldKnopenVan(childType, {
+          entiteitTypenaam: ownerTypenaam,
+          rol,
+          momentvoorkomen: child.momentvoorkomen || "",
+        }),
+      });
+
+      if (diepte <= 0 || childType.metatype !== "relatie" || !childType.doelEntiteit) return;
+      const doel = byTypenaam.get(childType.doelEntiteit);
+      if (!doel || doel.metatype !== "entiteit" || bezocht.has(doel.typenaam)) return;
+      kinderen.push(
+        ...bouwKinderen(doel, ownerTypenaam, rol, diepte - 1, new Set([...bezocht, doel.typenaam]))
+      );
+    });
+    return kinderen;
   };
 
   const domeinen = new Map();
@@ -111,30 +183,28 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
     .filter((t) => t?.metatype === "entiteit")
     .forEach((ent) => {
       if (verborgen.has(normDomein(ent.domein))) return;
-      const kinderen = [];
-      // Onderliggende GE's/relaties resolven naar hun type-DTO.
-      safeArray(ent.onderliggende).forEach((child) => {
-        const childType = byTypenaam.get(child.doeltype);
-        if (!childType) return;
-        kinderen.push({
-          kind: "ge",
-          rol: child.jsonRolnaam || child.rolnaam || child.doeltype,
-          jsonRolnaam: child.jsonRolnaam || "",
-          momentvoorkomen: child.momentvoorkomen || "",
-          metatype: childType.metatype,
-          type: childType,
-          velden: veldKnopenVan(childType, {
-            entiteitTypenaam: ent.typenaam,
-            rol: child.jsonRolnaam || child.rolnaam,
-          }),
-        });
+      // Onderliggende GE's/relaties resolven naar hun type-DTO (plus doorkijk).
+      const kinderen = bouwKinderen(ent, ent.typenaam, "", relatieDiepte, new Set([ent.typenaam]));
+
+      // Eigen velden van de entiteit zelf (o.a. id + de collectie-velden per
+      // onderliggende, format "array"). Verrijk de collectie-velden met de
+      // momentvoorkomen van hun onderliggende, zodat de editor enkelvoudig vs.
+      // meervoudig kan onderscheiden bij een pick van het collectie-veld.
+      const mvPerRol = {};
+      safeArray(ent.onderliggende).forEach((o) => {
+        const rol = o.jsonRolnaam || o.rolnaam;
+        if (rol) mvPerRol[rol] = o.momentvoorkomen || "";
+      });
+      const eigenVelden = veldKnopenVan(ent, { entiteitTypenaam: ent.typenaam, rol: "" });
+      eigenVelden.forEach((knoop) => {
+        const mv = mvPerRol[knoop.ref?.veldnaam];
+        if (mv) knoop.ref.momentvoorkomen = mv;
       });
 
       ontvang(ent.domein).entiteiten.push({
         kind: "entiteit",
         type: ent,
-        // Eigen velden van de entiteit zelf (zeldzaam, maar mogelijk).
-        velden: veldKnopenVan(ent, { entiteitTypenaam: ent.typenaam, rol: "" }),
+        velden: eigenVelden,
         kinderen,
       });
     });

@@ -116,3 +116,119 @@ test("updateNodeSize bewaart de grootte per diagram-lidmaatschap", () => {
     { width: 240, height: 130 }
   );
 });
+
+test("wisNodeMaten wist size van één voorkomen of van alle nodes", () => {
+  const store = maakStoreMetModel();
+  const s = store.getState();
+  s.addElementToDiagram("d1", "B", { x: 0, y: 100 });
+  s.updateNodeSize("d1", "A", { width: 240, height: 130 });
+  s.updateNodeSize("d1", "B", { width: 300, height: 200 });
+  // Eén voorkomen: alleen A raakt zijn size kwijt.
+  store.getState().wisNodeMaten("d1", "A");
+  let nodes = store.getState().diagrams.d1.nodes;
+  assert.equal("size" in nodes.find((n) => n.elementId === "A"), false);
+  assert.deepEqual(nodes.find((n) => n.elementId === "B").size, { width: 300, height: 200 });
+  // Zonder sleutel: alles.
+  store.getState().wisNodeMaten("d1");
+  nodes = store.getState().diagrams.d1.nodes;
+  assert.equal(nodes.some((n) => "size" in n), false);
+});
+
+test("zetNodeGedaante zet en wist de gedaante van één voorkomen", () => {
+  const store = maakStoreMetModel();
+  store.getState().zetNodeGedaante("d1", "A", "bol");
+  assert.equal(store.getState().diagrams.d1.nodes.find((n) => n.elementId === "A").gedaante, "bol");
+  store.getState().zetNodeGedaante("d1", "A", null);
+  assert.equal("gedaante" in store.getState().diagrams.d1.nodes.find((n) => n.elementId === "A"), false);
+});
+
+test("zetConnectorGedaante beheert gedaanteOverrides per diagram", () => {
+  const store = maakStoreMetModel();
+  store.getState().zetConnectorGedaante("d1", "r1", "lijn");
+  assert.deepEqual(store.getState().diagrams.d1.gedaanteOverrides, { r1: "lijn" });
+  store.getState().zetConnectorGedaante("d1", "r1", null);
+  assert.equal("gedaanteOverrides" in store.getState().diagrams.d1, false);
+});
+
+test("importeerModel voegt atomisch toe in één undo-stap", () => {
+  const store = maakStoreMetModel();
+  store.temporal.getState().clear();
+  store.getState().importeerModel({
+    diagramTypeId: "test",
+    elements: {
+      C: { id: "C", naam: "C", elementType: "entiteit", compartimenten: [], data: {} },
+    },
+    diagrams: {
+      d2: {
+        id: "d2",
+        naam: "Import",
+        diagramType: "test",
+        nodes: [{ elementId: "C", position: { x: 10, y: 20 } }],
+        edges: [],
+        viewport: { x: 2, y: 3, zoom: 1.2 },
+      },
+    },
+    meta: { bron: "test" },
+  }, { modus: "toevoegen" });
+
+  assert.equal(store.getState().elements.C.naam, "C");
+  assert.equal(store.getState().diagrams.d2.viewport, undefined);
+  assert.deepEqual(store.getState().viewports.d2, { x: 2, y: 3, zoom: 1.2 });
+  assert.equal(store.temporal.getState().pastStates.length, 1);
+  store.temporal.getState().undo();
+  assert.equal(store.getState().elements.C, undefined);
+  assert.equal(store.getState().diagrams.d2, undefined);
+});
+
+test("importeerModel laat store exact gelijk bij id-botsing of ontbrekende referentie", () => {
+  const store = maakStoreMetModel();
+  store.temporal.getState().clear();
+  const voor = JSON.stringify(store.getState().diagrams) + JSON.stringify(store.getState().elements);
+
+  assert.throws(
+    () => store.getState().importeerModel({
+      elements: {
+        A: { id: "A", naam: "Botsing", elementType: "entiteit", data: {} },
+        c1: { id: "c1", elementType: "relatie", source: "A", target: "Z", data: {} },
+      },
+      diagrams: {},
+    }),
+    (fout) => fout.code === "DIAGRAM_IMPORT_INVALID" && fout.fouten.length === 2
+  );
+
+  const na = JSON.stringify(store.getState().diagrams) + JSON.stringify(store.getState().elements);
+  assert.equal(na, voor);
+  assert.equal(store.temporal.getState().pastStates.length, 0);
+});
+
+test("tweede voorkomen krijgt nodeId en positie/maat/verwijderen werken per voorkomen", () => {
+  const store = maakStoreMetModel();
+  const s = store.getState();
+  s.addElementToDiagram("d1", "A", { x: 300, y: 10 }, { meerdereVoorkomens: true });
+  let voorkomens = store.getState().diagrams.d1.nodes.filter((node) => node.elementId === "A");
+  assert.equal(voorkomens.length, 2);
+  assert.equal(voorkomens[0].nodeId, undefined, "bestaand werkbestand blijft ongewijzigd");
+  assert.ok(voorkomens[1].nodeId?.startsWith("A__voorkomen_"));
+
+  const tweedeId = voorkomens[1].nodeId;
+  store.getState().updateNodePosition("d1", tweedeId, { x: 350, y: 20 });
+  store.getState().updateNodeSize("d1", tweedeId, { width: 220, height: 90 });
+  voorkomens = store.getState().diagrams.d1.nodes.filter((node) => node.elementId === "A");
+  assert.deepEqual(voorkomens[0].position, { x: 0, y: 0 });
+  assert.deepEqual(voorkomens[1].position, { x: 350, y: 20 });
+  assert.deepEqual(voorkomens[1].size, { width: 220, height: 90 });
+
+  store.getState().removeElementFromDiagram("d1", tweedeId);
+  voorkomens = store.getState().diagrams.d1.nodes.filter((node) => node.elementId === "A");
+  assert.equal(voorkomens.length, 1);
+  assert.equal(voorkomens[0].nodeId, undefined);
+});
+
+test("hide-list is per diagram en kan zonder leeg veld worden hersteld", () => {
+  const store = maakStoreMetModel();
+  store.getState().verbergConnectorOpDiagram("d1", "c1");
+  store.getState().verbergConnectorOpDiagram("d1", "c1");
+  assert.deepEqual(store.getState().diagrams.d1.verborgenConnectoren, ["c1"]);
+  store.getState().toonVerborgenConnectoren("d1");
+  assert.equal("verborgenConnectoren" in store.getState().diagrams.d1, false);
+});

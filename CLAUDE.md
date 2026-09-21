@@ -23,26 +23,34 @@ relevante `README.md`. Liefst Nederlands, in lijn met de bestaande docs.
 ## Belangrijke chats archiveren
 
 Bewaar betekenisvolle AI-chats (Copilot én Claude) als markdown in
-`bitemp_register_v06/docs/copilot-chats/` (volg `doc/copilot-chats/` als het werk daar speelt):
+`bitemp_register_v06/docs/ai-chats/` (volg `doc/copilot-chats/` als het werk daar speelt):
 
 - **Volledige transcript** → `exports/`, **korte samenvatting** → `summaries/`
   (template: `templates/chat-summary-template.md`).
 - Naamconventie: `YYYY-MM-DD-onderwerp-korte-context`, kleine letters + koppeltekens,
   **dezelfde stamnaam** voor export en samenvatting. Datum eerst (natuurlijke sortering).
-- Vermeld in de export dat het een **Claude**-sessie is (de map heet historisch `copilot-chats`).
+- Vermeld in de export dat het een **Claude**-sessie is (de map heette historisch `copilot-chats`, nu `ai-chats`).
 - **Wel** bewaren: architectuur-/datamodel-/ontwerpkeuzes, belangrijke bugfix-redeneringen,
   branding-/productbeslissingen. **Niet** bewaren: korte Q&A zonder projectimpact, exploratie
   zonder uitkomst.
 - Controleer vóór commit op secrets, persoonsgegevens en interne URL's.
 - Doe dit wanneer de gebruiker erom vraagt of wanneer een chat tot concrete code-/ontwerp-
   beslissingen leidde. Zie `bitemp_register_v06/docs/copilot-chat-sync.md` voor de export-hook.
-- **Claude-sessies** exporteer je met `bitemp_register_v06/scripts/export-claude-chats.py`
-  (tegenhanger van het Copilot-script; leest `~/.claude/projects/<project>/*.jsonl`, vindt de
-  projectmap zelf via git — ook vanuit een worktree). Draai bijv.:
-  `python bitemp_register_v06/scripts/export-claude-chats.py --latest --title <onderwerp> --summary`.
-  Dat schrijft de export naar `exports/` én een samenvattingsstub naar `summaries/` (een reeds
-  bestaande, handgeschreven samenvatting wordt nooit overschreven); werk die stub daarna inhoudelijk
-  bij. Draai zónder `--title` (of met `--all`) voor een deterministische naam op datum + session-id.
+- **Claude-sessies** exporteer je letterlijk met `bitemp_register_v06/scripts/export-claude-chats.py`
+  (leest `~/.claude/projects/<project>/*.jsonl`, vindt de projectmap zelf via git, schrijft naar
+  `docs/ai-chats/exports/`). Bv. `python3 bitemp_register_v06/scripts/export-claude-chats.py
+  --session <id> --title <onderwerp>`; `--all` slaat al geëxporteerde sessies over (`--force`
+  overschrijft). Op Windows draait dezelfde versie als gedeelde kopie in `D:\Git\_VScode-scripts`,
+  op macOS in `~/Documents/GitHub/_VScode-scripts` (VS Code-tasks *Export Claude Chats*).
+- **De GitHub-repo is publiek.** Een letterlijke export komt dus openbaar online: redigeer vóór
+  commit gebruikersnamen/rollen van live accounts, hostnamen en andere aanvalsinformatie, en
+  meld wat je hebt geredigeerd.
+
+> **Let op — chat-backups zijn normaal.** De gebruiker back-upt chats af en toe met een script
+> (soms ook via de GitHub-UI, commit-titel `Create <bestand>.md`). Zo verschijnt er een
+> chat-export in `docs/ai-chats/exports/` — vaak de *huidige* chat, op de branch waarop je
+> staat. Dat is legitiem en mag meecommitten; verbaas je er niet over en zie het niet aan voor
+> een onverwachte/vreemde wijziging.
 
 ## Git
 

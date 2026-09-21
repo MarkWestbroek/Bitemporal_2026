@@ -26,6 +26,15 @@ type Locatie_BAGlocatie_Input struct {
 	Adresaanduiding string `json:"adresaanduiding"`
 }
 
+type Gebiedsligging_Input struct {
+	LOCATIE_ID      int `json:"locatie_id"`
+	Rel_ID          int `json:"rel_id"`
+	GEMEENTEDEEL_ID int `json:"gemeentedeel_id"`
+	// Aanvang en Einde zijn onderliggende GE's (Gebiedsligging_Aanvang/Einde)
+	// die via de normalizer als aparte wijzigingen worden uitgesplitst. Ze staan
+	// niet als directe velden in de Input-struct.
+}
+
 type NatuurlijkPersoon_Persoonsidentificatie_Input struct {
 	NATUURLIJKPERSOON_ID int    `json:"natuurlijkpersoon_id"`
 	Rel_ID               int    `json:"rel_id"`
@@ -65,11 +74,34 @@ type NatuurlijkPersoon_Burgerschap_Input struct {
 	// niet als directe velden in de Input-struct.
 }
 
+type NatuurlijkPersoon_Geslacht_Input struct {
+	NATUURLIJKPERSOON_ID int                 `json:"natuurlijkpersoon_id"`
+	Rel_ID               int                 `json:"rel_id"`
+	Geslacht             Geslachtsaanduiding `json:"geslacht" schema:"enum=Geslachtsaanduiding"`
+}
+
+type NatuurlijkPersoon_Aanspraak_Input struct {
+	NATUURLIJKPERSOON_ID int             `json:"natuurlijkpersoon_id"`
+	Rel_ID               int             `json:"rel_id"`
+	Aanspreektitel       *Aanspreektitel `json:"aanspreektitel,omitempty" schema:"enum=Aanspreektitel"`
+	FormeelAanspreken    *bool           `json:"formeelAanspreken,omitempty"`
+}
+
 type Bereikbaarheid_Input struct {
 	NATUURLIJKPERSOON_ID int                  `json:"natuurlijkpersoon_id"`
 	Rel_ID               int                  `json:"rel_id"`
 	LOCATIE_ID           int                  `json:"locatie_id"`
 	Soort                Bereikbaarheidssoort `json:"soort" schema:"enum=Bereikbaarheidssoort"`
 	// Aanvang en Einde zijn onderliggende GE's (Bereikbaarheid_Aanvang/Einde)
-	// die via de normalizer als aparte wijzigingen worden uitgesplitst.
+	// die via de normalizer als aparte wijzigingen worden uitgesplitst. Ze staan
+	// niet als directe velden in de Input-struct.
+}
+
+type Woonlocatie_Input struct {
+	NATUURLIJKPERSOON_ID int `json:"natuurlijkpersoon_id"`
+	Rel_ID               int `json:"rel_id"`
+	LOCATIE_ID           int `json:"locatie_id"`
+	// Aanvang en Einde zijn onderliggende GE's (Woonlocatie_Aanvang/Einde)
+	// die via de normalizer als aparte wijzigingen worden uitgesplitst. Ze staan
+	// niet als directe velden in de Input-struct.
 }

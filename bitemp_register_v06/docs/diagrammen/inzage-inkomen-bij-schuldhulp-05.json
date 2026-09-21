@@ -1,0 +1,457 @@
+{
+  "formaat": "studio05-diagram",
+  "versie": 1,
+  "diagramType": "toegangsregel",
+  "geexporteerd": "2026-07-24T00:49:38.903Z",
+  "elements": {
+    "trg_1": {
+      "id": "trg_1",
+      "naam": "Inzage inkomen bij schuldhulp",
+      "elementType": "policy",
+      "compartimenten": [],
+      "data": {
+        "geldigVanaf": "2026-05-01",
+        "geldigTot": "",
+        "grondslag": "de Wet gemeentelijke schuldhulpverlening",
+        "doel": "schuldhulpverlening"
+      }
+    },
+    "trg_2": {
+      "id": "trg_2",
+      "naam": "schuldhulpverlener",
+      "elementType": "begrip",
+      "compartimenten": [],
+      "data": {
+        "soort": "wie",
+        "definitie": "iemand met rol \"schuldhulpverlener\""
+      }
+    },
+    "trg_3": {
+      "id": "trg_3",
+      "naam": "Inkomensgegevens",
+      "elementType": "begrip",
+      "compartimenten": [],
+      "data": {
+        "soort": "wat",
+        "definitie": "alle gegevens van het inkomen van een natuurlijk persoon",
+        "verwijzingsprofiel": "canoniek-model",
+        "verwijzingselement": "NatuurlijkPersoon.Inkomen"
+      }
+    },
+    "trg_4": {
+      "id": "trg_4",
+      "naam": "inzage bij lopend dossier",
+      "elementType": "toegangsregel",
+      "compartimenten": [],
+      "data": {
+        "modaliteit": "mag"
+      }
+    },
+    "trg_5": {
+      "id": "trg_5",
+      "naam": "een schuldhulpverlener",
+      "elementType": "subject",
+      "compartimenten": [],
+      "data": {
+        "rol": "schuldhulpverlener"
+      }
+    },
+    "trg_6": {
+      "id": "trg_6",
+      "naam": "bekijken",
+      "elementType": "handeling",
+      "compartimenten": [],
+      "data": {
+        "nlgov": "nlgov:view"
+      }
+    },
+    "trg_7": {
+      "id": "trg_7",
+      "naam": "de inkomensgegevens",
+      "elementType": "gegevensselectie",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_8": {
+      "id": "trg_8",
+      "naam": "alle",
+      "elementType": "voorwaardepoort",
+      "compartimenten": [],
+      "data": {
+        "soort": "alle"
+      }
+    },
+    "trg_9": {
+      "id": "trg_9",
+      "naam": "het doel van de aanvraag is \"schuldhulpverlening\"",
+      "elementType": "voorwaarde",
+      "compartimenten": [],
+      "data": {
+        "links": "het doel van de aanvraag",
+        "vergelijking": "is",
+        "rechts": "\"schuldhulpverlening\""
+      }
+    },
+    "trg_10": {
+      "id": "trg_10",
+      "naam": "de achternaam van de naam van de betrokkene begint met \"A\"",
+      "elementType": "voorwaarde",
+      "compartimenten": [],
+      "data": {
+        "links": "de achternaam van de naam van de betrokkene",
+        "vergelijking": "begint met",
+        "rechts": "\"A\""
+      }
+    },
+    "trg_11": {
+      "id": "trg_11",
+      "naam": "elke raadpleging wordt vastgelegd in het logboek",
+      "elementType": "plicht",
+      "compartimenten": [],
+      "data": {
+        "nlgov": "nlgov:log"
+      }
+    },
+    "trg_12": {
+      "id": "trg_12",
+      "naam": "geen export",
+      "elementType": "toegangsregel",
+      "compartimenten": [],
+      "data": {
+        "modaliteit": "mag niet"
+      }
+    },
+    "trg_13": {
+      "id": "trg_13",
+      "naam": "een schuldhulpverlener",
+      "elementType": "subject",
+      "compartimenten": [],
+      "data": {
+        "rol": "schuldhulpverlener"
+      }
+    },
+    "trg_14": {
+      "id": "trg_14",
+      "naam": "exporteren",
+      "elementType": "handeling",
+      "compartimenten": [],
+      "data": {
+        "nlgov": "nlgov:export"
+      }
+    },
+    "trg_15": {
+      "id": "trg_15",
+      "naam": "de inkomensgegevens",
+      "elementType": "gegevensselectie",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_c1": {
+      "id": "trg_c1",
+      "naam": "",
+      "elementType": "omvat",
+      "source": "trg_1",
+      "target": "trg_4",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top"
+      }
+    },
+    "trg_c2": {
+      "id": "trg_c2",
+      "naam": "",
+      "elementType": "wie",
+      "source": "trg_4",
+      "target": "trg_5",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_c3": {
+      "id": "trg_c3",
+      "naam": "",
+      "elementType": "verwijst-naar",
+      "source": "trg_5",
+      "target": "trg_2",
+      "compartimenten": [],
+      "data": {
+        "vorm": null
+      }
+    },
+    "trg_c4": {
+      "id": "trg_c4",
+      "naam": "",
+      "elementType": "doet",
+      "source": "trg_5",
+      "target": "trg_6",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_c5": {
+      "id": "trg_c5",
+      "naam": "",
+      "elementType": "op",
+      "source": "trg_6",
+      "target": "trg_7",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_c6": {
+      "id": "trg_c6",
+      "naam": "",
+      "elementType": "verwijst-naar",
+      "source": "trg_7",
+      "target": "trg_3",
+      "compartimenten": [],
+      "data": {
+        "vorm": null,
+        "knikken": []
+      }
+    },
+    "trg_c7": {
+      "id": "trg_c7",
+      "naam": "",
+      "elementType": "als",
+      "source": "trg_4",
+      "target": "trg_8",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_c8": {
+      "id": "trg_c8",
+      "naam": "",
+      "elementType": "tak",
+      "source": "trg_8",
+      "target": "trg_9",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top"
+      }
+    },
+    "trg_c9": {
+      "id": "trg_c9",
+      "naam": "",
+      "elementType": "tak",
+      "source": "trg_8",
+      "target": "trg_10",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top"
+      }
+    },
+    "trg_c10": {
+      "id": "trg_c10",
+      "naam": "",
+      "elementType": "waarbij",
+      "source": "trg_4",
+      "target": "trg_11",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_c11": {
+      "id": "trg_c11",
+      "naam": "",
+      "elementType": "omvat",
+      "source": "trg_1",
+      "target": "trg_12",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top"
+      }
+    },
+    "trg_c12": {
+      "id": "trg_c12",
+      "naam": "",
+      "elementType": "wie",
+      "source": "trg_12",
+      "target": "trg_13",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_c13": {
+      "id": "trg_c13",
+      "naam": "",
+      "elementType": "verwijst-naar",
+      "source": "trg_13",
+      "target": "trg_2",
+      "compartimenten": [],
+      "data": {
+        "vorm": null
+      }
+    },
+    "trg_c14": {
+      "id": "trg_c14",
+      "naam": "",
+      "elementType": "doet",
+      "source": "trg_13",
+      "target": "trg_14",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_c15": {
+      "id": "trg_c15",
+      "naam": "",
+      "elementType": "op",
+      "source": "trg_14",
+      "target": "trg_15",
+      "compartimenten": [],
+      "data": {}
+    },
+    "trg_c16": {
+      "id": "trg_c16",
+      "naam": "",
+      "elementType": "verwijst-naar",
+      "source": "trg_15",
+      "target": "trg_3",
+      "compartimenten": [],
+      "data": {
+        "vorm": null,
+        "knikken": []
+      }
+    }
+  },
+  "diagrams": {
+    "trg_overzicht": {
+      "id": "trg_overzicht",
+      "naam": "Inzage inkomen bij schuldhulp",
+      "diagramType": "toegangsregel",
+      "nodes": [
+        {
+          "elementId": "trg_1",
+          "position": {
+            "x": -263.3779918743581,
+            "y": -12.350178341072592
+          },
+          "size": {
+            "width": 308,
+            "height": 88
+          }
+        },
+        {
+          "elementId": "trg_2",
+          "position": {
+            "x": 180.5001511620398,
+            "y": 436.605326861112
+          }
+        },
+        {
+          "elementId": "trg_3",
+          "position": {
+            "x": 1063.8308305754472,
+            "y": 345.35943119436473
+          }
+        },
+        {
+          "elementId": "trg_4",
+          "position": {
+            "x": -111.62800118282667,
+            "y": 210.92680186064297
+          }
+        },
+        {
+          "elementId": "trg_5",
+          "position": {
+            "x": 166.5001511620398,
+            "y": 112.04311296538768
+          },
+          "size": {
+            "width": 180,
+            "height": 48
+          }
+        },
+        {
+          "elementId": "trg_6",
+          "position": {
+            "x": 473.41213521563645,
+            "y": 129.15297299002683
+          }
+        },
+        {
+          "elementId": "trg_7",
+          "position": {
+            "x": 729.7994719379235,
+            "y": 125.15297299002683
+          }
+        },
+        {
+          "elementId": "trg_8",
+          "position": {
+            "x": 579.9219030279675,
+            "y": 215.42680186064297
+          }
+        },
+        {
+          "elementId": "trg_9",
+          "position": {
+            "x": 346.03489058981467,
+            "y": 374.2900576533728
+          }
+        },
+        {
+          "elementId": "trg_10",
+          "position": {
+            "x": 526.8689689671594,
+            "y": 458.8829687245443
+          }
+        },
+        {
+          "elementId": "trg_11",
+          "position": {
+            "x": -187.96770156087297,
+            "y": 322.06155956925966
+          },
+          "size": {
+            "width": 339,
+            "height": 48
+          }
+        },
+        {
+          "elementId": "trg_12",
+          "position": {
+            "x": -333.8977622106396,
+            "y": 583.8364891613867
+          }
+        },
+        {
+          "elementId": "trg_13",
+          "position": {
+            "x": 160.5001511620398,
+            "y": 579.8364891613867
+          },
+          "size": {
+            "width": 192,
+            "height": 56
+          }
+        },
+        {
+          "elementId": "trg_14",
+          "position": {
+            "x": 473.41213521563645,
+            "y": 588.8364891613867
+          }
+        },
+        {
+          "elementId": "trg_15",
+          "position": {
+            "x": 729.7994719379235,
+            "y": 584.8364891613867
+          }
+        }
+      ],
+      "edges": [],
+      "viewport": {
+        "x": 331.74385701916304,
+        "y": -8.000420711066567,
+        "zoom": 0.6597539553864471
+      }
+    }
+  },
+  "meta": null
+}

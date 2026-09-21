@@ -26,6 +26,22 @@ const (
 	BereikbaarheidssoortCorrespondentieadres Bereikbaarheidssoort = "Correspondentieadres"
 )
 
+type Geslachtsaanduiding string
+
+const (
+	GeslachtsaanduidingMan   Geslachtsaanduiding = "man"
+	GeslachtsaanduidingVrouw Geslachtsaanduiding = "vrouw"
+	GeslachtsaanduidingX     Geslachtsaanduiding = "X"
+)
+
+type Aanspreektitel string
+
+const (
+	AanspreektitelMeneer  Aanspreektitel = "meneer"
+	AanspreektitelMevrouw Aanspreektitel = "mevrouw"
+	AanspreektitelHen     Aanspreektitel = "hen"
+)
+
 // AdellijkeTitel_AdellijkeTitelTitel — Enkelvoudig gegevenselement titel van AdellijkeTitel.
 type AdellijkeTitel_AdellijkeTitelTitel struct {
 	bun.BaseModel        `bun:"table:adellijketitel_adellijketiteltitel,alias:adellijketitel_adellijketiteltitel"`
@@ -95,6 +111,52 @@ type Locatie_BAGlocatie_Data struct {
 	Adresaanduiding string     `json:"adresaanduiding"`
 	Opvoer          *time.Time `json:"opvoer,omitempty"`
 	Afvoer          *time.Time `json:"afvoer,omitempty"`
+}
+
+// Gebiedsligging — Het gemeentedeel (de wijk) waarin de locatie ligt; de brug van np-loc naar het geo-deel van het demo-model.
+type Gebiedsligging struct {
+	bun.BaseModel   `bun:"table:gebiedsligging,alias:gebiedsligging"`
+	Locatie_ID      int                      `json:"locatie_id" bun:"locatie_id,pk" schema_desc:"ID van de Locatie-entiteit"`
+	Rel_ID          int                      `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentLocatie   *Locatie                 `json:"-" bun:"rel:belongs-to,join:locatie_id=id,on_delete:cascade"`
+	Gemeentedeel_ID int                      `json:"gemeentedeel_id"`
+	Opvoer          *time.Time               `json:"opvoer,omitempty"`
+	Afvoer          *time.Time               `json:"afvoer,omitempty"`
+	Data            []Gebiedsligging_Data    `bun:"rel:has-many,join:locatie_id=locatie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang         []Gebiedsligging_Aanvang `bun:"rel:has-many,join:locatie_id=locatie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde           []Gebiedsligging_Einde   `bun:"rel:has-many,join:locatie_id=locatie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// Gebiedsligging_Data — geversioned inhoud van Gebiedsligging.
+type Gebiedsligging_Data struct {
+	bun.BaseModel `bun:"table:gebiedsligging_data,alias:gebiedsligging_data"`
+	Locatie_ID    int        `json:"locatie_id" bun:"locatie_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// Gebiedsligging_Aanvang — aanvangdatum van Gebiedsligging.
+type Gebiedsligging_Aanvang struct {
+	bun.BaseModel `bun:"table:gebiedsligging_aanvang,alias:gebiedsligging_aanvang"`
+	Locatie_ID    int        `json:"locatie_id" bun:"locatie_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// Gebiedsligging_Einde — eindedatum van Gebiedsligging.
+type Gebiedsligging_Einde struct {
+	bun.BaseModel `bun:"table:gebiedsligging_einde,alias:gebiedsligging_einde"`
+	Locatie_ID    int        `json:"locatie_id" bun:"locatie_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
 // NatuurlijkPersoon_Persoonsidentificatie — Identificerende gegevens van de natuurlijk persoon (BSN, ingezetene).
@@ -236,6 +298,51 @@ type NatuurlijkPersoon_Burgerschap_Einde struct {
 	Afvoer               *time.Time `json:"afvoer,omitempty"`
 }
 
+// NatuurlijkPersoon_Geslacht — Geslachtsaanduiding van de natuurlijk persoon; doelwit van een verbodsregel in het demo-beleid.
+type NatuurlijkPersoon_Geslacht struct {
+	bun.BaseModel           `bun:"table:natuurlijkpersoon_geslacht,alias:natuurlijkpersoon_geslacht"`
+	NatuurlijkPersoon_ID    int                               `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk" schema_desc:"ID van de NatuurlijkPersoon-entiteit"`
+	Rel_ID                  int                               `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentNatuurlijkPersoon *NatuurlijkPersoon                `json:"-" bun:"rel:belongs-to,join:natuurlijkpersoon_id=id,on_delete:cascade"`
+	Opvoer                  *time.Time                        `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time                        `json:"afvoer,omitempty"`
+	Data                    []NatuurlijkPersoon_Geslacht_Data `bun:"rel:has-many,join:natuurlijkpersoon_id=natuurlijkpersoon_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// NatuurlijkPersoon_Geslacht_Data — geversioned inhoud van NatuurlijkPersoon_Geslacht.
+type NatuurlijkPersoon_Geslacht_Data struct {
+	bun.BaseModel        `bun:"table:natuurlijkpersoon_geslacht_data,alias:natuurlijkpersoon_geslacht_data"`
+	NatuurlijkPersoon_ID int                 `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
+	Rel_ID               int                 `json:"rel_id" bun:"rel_id,pk"`
+	Versie               int64               `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Geslacht             Geslachtsaanduiding `json:"geslacht" schema:"enum=Geslachtsaanduiding"`
+	Opvoer               *time.Time          `json:"opvoer,omitempty"`
+	Afvoer               *time.Time          `json:"afvoer,omitempty"`
+}
+
+// NatuurlijkPersoon_Aanspraak — Hoe de natuurlijk persoon aangesproken wil worden. Beide velden zijn optioneel: onbekend versus bekend-met-waarde. Geen instantie = niet geregistreerd.
+type NatuurlijkPersoon_Aanspraak struct {
+	bun.BaseModel           `bun:"table:natuurlijkpersoon_aanspraak,alias:natuurlijkpersoon_aanspraak"`
+	NatuurlijkPersoon_ID    int                                `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk" schema_desc:"ID van de NatuurlijkPersoon-entiteit"`
+	Rel_ID                  int                                `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentNatuurlijkPersoon *NatuurlijkPersoon                 `json:"-" bun:"rel:belongs-to,join:natuurlijkpersoon_id=id,on_delete:cascade"`
+	Opvoer                  *time.Time                         `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time                         `json:"afvoer,omitempty"`
+	Data                    []NatuurlijkPersoon_Aanspraak_Data `bun:"rel:has-many,join:natuurlijkpersoon_id=natuurlijkpersoon_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// NatuurlijkPersoon_Aanspraak_Data — geversioned inhoud van NatuurlijkPersoon_Aanspraak.
+type NatuurlijkPersoon_Aanspraak_Data struct {
+	bun.BaseModel        `bun:"table:natuurlijkpersoon_aanspraak_data,alias:natuurlijkpersoon_aanspraak_data"`
+	NatuurlijkPersoon_ID int             `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
+	Rel_ID               int             `json:"rel_id" bun:"rel_id,pk"`
+	Versie               int64           `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Aanspreektitel       *Aanspreektitel `json:"aanspreektitel,omitempty" schema:"enum=Aanspreektitel"`
+	FormeelAanspreken    *bool           `json:"formeelAanspreken,omitempty"`
+	Opvoer               *time.Time      `json:"opvoer,omitempty"`
+	Afvoer               *time.Time      `json:"afvoer,omitempty"`
+}
+
 // Bereikbaarheid — Koppeling van een natuurlijk persoon aan een locatie als bereikbaarheidsadres.
 type Bereikbaarheid struct {
 	bun.BaseModel           `bun:"table:bereikbaarheid,alias:bereikbaarheid"`
@@ -275,6 +382,52 @@ type Bereikbaarheid_Aanvang struct {
 // Bereikbaarheid_Einde — eindedatum van Bereikbaarheid.
 type Bereikbaarheid_Einde struct {
 	bun.BaseModel        `bun:"table:bereikbaarheid_einde,alias:bereikbaarheid_einde"`
+	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
+	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer               *time.Time `json:"opvoer,omitempty"`
+	Afvoer               *time.Time `json:"afvoer,omitempty"`
+}
+
+// Woonlocatie — De locatie waar de natuurlijk persoon woont. Demo-vereenvoudiging naast de algemene Bereikbaarheid, zodat de keten 'de wijk van de woonlocatie van ...' eenduidig is.
+type Woonlocatie struct {
+	bun.BaseModel           `bun:"table:woonlocatie,alias:woonlocatie"`
+	NatuurlijkPersoon_ID    int                   `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk" schema_desc:"ID van de NatuurlijkPersoon-entiteit"`
+	Rel_ID                  int                   `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentNatuurlijkPersoon *NatuurlijkPersoon    `json:"-" bun:"rel:belongs-to,join:natuurlijkpersoon_id=id,on_delete:cascade"`
+	Locatie_ID              int                   `json:"locatie_id"`
+	Opvoer                  *time.Time            `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time            `json:"afvoer,omitempty"`
+	Data                    []Woonlocatie_Data    `bun:"rel:has-many,join:natuurlijkpersoon_id=natuurlijkpersoon_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang                 []Woonlocatie_Aanvang `bun:"rel:has-many,join:natuurlijkpersoon_id=natuurlijkpersoon_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                   []Woonlocatie_Einde   `bun:"rel:has-many,join:natuurlijkpersoon_id=natuurlijkpersoon_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// Woonlocatie_Data — geversioned inhoud van Woonlocatie.
+type Woonlocatie_Data struct {
+	bun.BaseModel        `bun:"table:woonlocatie_data,alias:woonlocatie_data"`
+	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
+	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Opvoer               *time.Time `json:"opvoer,omitempty"`
+	Afvoer               *time.Time `json:"afvoer,omitempty"`
+}
+
+// Woonlocatie_Aanvang — aanvangdatum van Woonlocatie.
+type Woonlocatie_Aanvang struct {
+	bun.BaseModel        `bun:"table:woonlocatie_aanvang,alias:woonlocatie_aanvang"`
+	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
+	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer               *time.Time `json:"opvoer,omitempty"`
+	Afvoer               *time.Time `json:"afvoer,omitempty"`
+}
+
+// Woonlocatie_Einde — eindedatum van Woonlocatie.
+type Woonlocatie_Einde struct {
+	bun.BaseModel        `bun:"table:woonlocatie_einde,alias:woonlocatie_einde"`
 	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
 	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`

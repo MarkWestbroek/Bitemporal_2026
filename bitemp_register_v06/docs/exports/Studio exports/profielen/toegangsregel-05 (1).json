@@ -1,0 +1,741 @@
+{
+  "formaat": "studio05-diagram",
+  "versie": 1,
+  "diagramType": "profiel-ontwerp",
+  "geexporteerd": "2026-07-23T18:10:43.892Z",
+  "elements": {
+    "ow15_et_policy": {
+      "id": "ow15_et_policy",
+      "naam": "Policy",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": [
+            {
+              "naam": "geldig vanaf",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "geldig tot",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "grondslag (wet)",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "doelbinding",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "kort": "POL",
+        "shape": "rect",
+        "doelKleur": "#e0e7ff"
+      }
+    },
+    "ow15_et_map": {
+      "id": "ow15_et_map",
+      "naam": "Map",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": []
+        }
+      ],
+      "data": {
+        "kort": "MAP",
+        "shape": "rect",
+        "doelKleur": "#f1f5f9"
+      }
+    },
+    "ow15_et_toegangsregel": {
+      "id": "ow15_et_toegangsregel",
+      "naam": "Toegangsregel",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": [
+            {
+              "naam": "modaliteit (mag / mag niet)",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "kort": "REG",
+        "shape": "rect",
+        "doelKleur": "#f8fafc"
+      }
+    },
+    "ow15_et_subject": {
+      "id": "ow15_et_subject",
+      "naam": "Subject",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": [
+            {
+              "naam": "rol",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "kenmerken",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "kort": "WIE",
+        "shape": "rect",
+        "doelKleur": "#d3f2d4"
+      }
+    },
+    "ow15_et_handeling": {
+      "id": "ow15_et_handeling",
+      "naam": "Handeling",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": [
+            {
+              "naam": "NLGov-actie",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "kort": "DOE",
+        "shape": "rect",
+        "doelKleur": "#ffe1c7"
+      }
+    },
+    "ow15_et_gegevensselectie": {
+      "id": "ow15_et_gegevensselectie",
+      "naam": "Gegevensselectie",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": [
+            {
+              "naam": "verwijst naar: profiel",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "verwijst naar: element",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "kort": "GEG",
+        "shape": "rect",
+        "doelKleur": "#fdf0a8"
+      }
+    },
+    "ow15_et_voorwaardepoort": {
+      "id": "ow15_et_voorwaardepoort",
+      "naam": "Voorwaardepoort",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": [
+            {
+              "naam": "soort (alle / ten minste één / precies één)",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "kort": "◇",
+        "shape": "rect",
+        "doelKleur": "#ecdcf7"
+      }
+    },
+    "ow15_et_voorwaarde": {
+      "id": "ow15_et_voorwaarde",
+      "naam": "Voorwaarde",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": [
+            {
+              "naam": "linksterm",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "vergelijking",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "rechtsterm",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "kort": "ALS",
+        "shape": "rect",
+        "doelKleur": "#ecdcf7"
+      }
+    },
+    "ow15_et_plicht": {
+      "id": "ow15_et_plicht",
+      "naam": "Plicht",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": [
+            {
+              "naam": "NLGov-plicht",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "kort": "⚑",
+        "shape": "note",
+        "doelKleur": "#d2f0ea"
+      }
+    },
+    "ow15_et_begrip": {
+      "id": "ow15_et_begrip",
+      "naam": "Begrip",
+      "elementType": "elementDef",
+      "compartimenten": [
+        {
+          "compartmentType": "eigenschappen",
+          "velden": [
+            {
+              "naam": "soort (wie / wat)",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "definitie",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "verwijst naar: profiel",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            },
+            {
+              "naam": "verwijst naar: element",
+              "fieldType": "eigenschapDef",
+              "data": {
+                "typeLabel": "string"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "kort": "DEF",
+        "shape": "rect",
+        "doelKleur": "#e2e8f0"
+      }
+    },
+    "ow15_regel_0_1": {
+      "id": "ow15_regel_0_1",
+      "naam": "omvat",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_policy",
+      "target": "ow15_et_toegangsregel",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "hoekig",
+        "markerStart": "ruit-open",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_1_1": {
+      "id": "ow15_regel_1_1",
+      "naam": "bevat",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_map",
+      "target": "ow15_et_map",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "hoekig",
+        "markerStart": "ruit",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false,
+        "isHierarchie": true
+      }
+    },
+    "ow15_regel_1_2": {
+      "id": "ow15_regel_1_2",
+      "naam": "bevat",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_map",
+      "target": "ow15_et_policy",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "boom",
+        "markerStart": "ruit",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false,
+        "isHierarchie": true,
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top"
+      }
+    },
+    "ow15_regel_1_3": {
+      "id": "ow15_regel_1_3",
+      "naam": "bevat",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_map",
+      "target": "ow15_et_toegangsregel",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "boom",
+        "markerStart": "ruit",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false,
+        "isHierarchie": true,
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top"
+      }
+    },
+    "ow15_regel_1_4": {
+      "id": "ow15_regel_1_4",
+      "naam": "bevat",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_map",
+      "target": "ow15_et_begrip",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "boom",
+        "markerStart": "ruit",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false,
+        "isHierarchie": true,
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top",
+        "labelOffsets": {
+          "midden": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      }
+    },
+    "ow15_regel_2_1": {
+      "id": "ow15_regel_2_1",
+      "naam": "wie",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_toegangsregel",
+      "target": "ow15_et_subject",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "hoekig",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_3_1": {
+      "id": "ow15_regel_3_1",
+      "naam": "doet",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_toegangsregel",
+      "target": "ow15_et_handeling",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "hoekig",
+        "markerEnd": "pijl",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_3_2": {
+      "id": "ow15_regel_3_2",
+      "naam": "doet",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_subject",
+      "target": "ow15_et_handeling",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "hoekig",
+        "markerEnd": "pijl",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_4_1": {
+      "id": "ow15_regel_4_1",
+      "naam": "op",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_toegangsregel",
+      "target": "ow15_et_gegevensselectie",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": null,
+        "markerEnd": "pijl",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_4_2": {
+      "id": "ow15_regel_4_2",
+      "naam": "op",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_handeling",
+      "target": "ow15_et_gegevensselectie",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": null,
+        "markerEnd": "pijl",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_5_1": {
+      "id": "ow15_regel_5_1",
+      "naam": "als",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_toegangsregel",
+      "target": "ow15_et_voorwaardepoort",
+      "compartimenten": [],
+      "data": {
+        "lijn": "dashed",
+        "vorm": "hoekig",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_5_2": {
+      "id": "ow15_regel_5_2",
+      "naam": "als",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_toegangsregel",
+      "target": "ow15_et_voorwaarde",
+      "compartimenten": [],
+      "data": {
+        "lijn": "dashed",
+        "vorm": "hoekig",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_6_1": {
+      "id": "ow15_regel_6_1",
+      "naam": "tak",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_voorwaardepoort",
+      "target": "ow15_et_voorwaardepoort",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "hoekig",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_6_2": {
+      "id": "ow15_regel_6_2",
+      "naam": "tak",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_voorwaardepoort",
+      "target": "ow15_et_voorwaarde",
+      "compartimenten": [],
+      "data": {
+        "lijn": "solid",
+        "vorm": "hoekig",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_7_1": {
+      "id": "ow15_regel_7_1",
+      "naam": "waarbij",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_toegangsregel",
+      "target": "ow15_et_plicht",
+      "compartimenten": [],
+      "data": {
+        "lijn": "dashed",
+        "vorm": "hoekig",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_8_1": {
+      "id": "ow15_regel_8_1",
+      "naam": "verwijst naar",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_gegevensselectie",
+      "target": "ow15_et_begrip",
+      "compartimenten": [],
+      "data": {
+        "lijn": "dotted",
+        "vorm": null,
+        "markerEnd": "pijl",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_8_2": {
+      "id": "ow15_regel_8_2",
+      "naam": "verwijst naar",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_subject",
+      "target": "ow15_et_begrip",
+      "compartimenten": [],
+      "data": {
+        "lijn": "dotted",
+        "vorm": "hoekig",
+        "markerEnd": "pijl",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false
+      }
+    },
+    "ow15_regel_8_3": {
+      "id": "ow15_regel_8_3",
+      "naam": "verwijst naar",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_begrip",
+      "target": "ow15_et_begrip",
+      "compartimenten": [],
+      "data": {
+        "lijn": "dotted",
+        "vorm": "hoekig",
+        "markerEnd": "pijl",
+        "doelKleur": "#475569",
+        "metKardinaliteiten": false,
+        "richtingOptie": false,
+        "knikken": [
+          {
+            "x": 295,
+            "y": 262
+          },
+          {
+            "x": 294,
+            "y": 262
+          },
+          {
+            "x": 395,
+            "y": 261
+          },
+          {
+            "x": 395,
+            "y": 329
+          }
+        ]
+      }
+    },
+    "conn_1784830011443_1": {
+      "id": "conn_1784830011443_1",
+      "naam": "",
+      "elementType": "verbindingsregel",
+      "source": "ow15_et_map",
+      "target": "ow15_et_map",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": "source-top",
+        "targetHandle": "target-left",
+        "knikken": [
+          {
+            "x": -155,
+            "y": -546
+          },
+          {
+            "x": -197,
+            "y": -536
+          },
+          {
+            "x": -232,
+            "y": -515
+          },
+          {
+            "x": -235,
+            "y": -444
+          }
+        ]
+      }
+    }
+  },
+  "diagrams": {
+    "ontw_toegangsregel": {
+      "id": "ontw_toegangsregel",
+      "naam": "Toegangsregel",
+      "nodes": [
+        {
+          "elementId": "ow15_et_policy",
+          "position": {
+            "x": -394.7231533877489,
+            "y": -177.8111596017526
+          }
+        },
+        {
+          "elementId": "ow15_et_map",
+          "position": {
+            "x": -188.84101862649473,
+            "y": -487.6252244212673
+          }
+        },
+        {
+          "elementId": "ow15_et_toegangsregel",
+          "position": {
+            "x": 0,
+            "y": -101
+          }
+        },
+        {
+          "elementId": "ow15_et_subject",
+          "position": {
+            "x": -435.30515234476104,
+            "y": 146.23098269729545
+          }
+        },
+        {
+          "elementId": "ow15_et_handeling",
+          "position": {
+            "x": 4.595656567748023,
+            "y": 117.06859708100086
+          }
+        },
+        {
+          "elementId": "ow15_et_gegevensselectie",
+          "position": {
+            "x": 526.8163776143074,
+            "y": 105.27986513774738
+          }
+        },
+        {
+          "elementId": "ow15_et_voorwaardepoort",
+          "position": {
+            "x": 623.9249358016341,
+            "y": -101.27077983469502
+          }
+        },
+        {
+          "elementId": "ow15_et_voorwaarde",
+          "position": {
+            "x": 383.849871603268,
+            "y": -298.841816462854
+          }
+        },
+        {
+          "elementId": "ow15_et_plicht",
+          "position": {
+            "x": -118.88546038511294,
+            "y": -299
+          }
+        },
+        {
+          "elementId": "ow15_et_begrip",
+          "position": {
+            "x": 167.76408996849537,
+            "y": 323.10546374212856
+          }
+        }
+      ],
+      "edges": [],
+      "viewport": {
+        "x": 333.1755438955322,
+        "y": 357.5536764500826,
+        "zoom": 0.4971478418032314
+      }
+    }
+  },
+  "meta": null
+}

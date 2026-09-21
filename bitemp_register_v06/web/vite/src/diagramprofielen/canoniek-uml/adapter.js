@@ -15,7 +15,20 @@
  * compartiment (vergt modeltraversal), geen domein-overlay, labels niet sleepbaar
  * (bestaande labelOffsets worden wél gerespecteerd).
  */
-import { CANONIEK_UML_ID } from "./index.js";
+import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
+import { CANONIEK_UML_ID, canoniekUmlDiagramType, isRefLijstItem } from "./index.js";
+import { vertaalbareVelden } from "./mappingV3Canoniek.js";
+
+/**
+ * Veldnamen die 1-op-1 meegaan, uit het profiel (mappingV3Canoniek.js). Op aanroeptijd
+ * opgezocht: index.js is bij het laden van deze module mogelijk nog niet klaar.
+ */
+const profielVelden = (elementTypeId) =>
+  vertaalbareVelden(canoniekUmlDiagramType.elementTypes.find((et) => et.id === elementTypeId));
+
+/** Terugreis: de in de inspector bewerkte profielvelden (winnen van data.bron). */
+const bewerkt = (elementTypeId, data) =>
+  Object.fromEntries(profielVelden(elementTypeId).filter((k) => k in data).map((k) => [k, data[k]]));
 
 /** Type-kolomtekst voor een veld — zelfde opbouw als EntiteitNode. */
 export function veldTypeLabel(v) {
@@ -86,6 +99,9 @@ function naarCoreElement(el) {
       bron: d,
     },
   };
+  // Bewerkbare profiel-properties (1-op-1, mappingV3Canoniek.js) in data;
+  // typespecifieke code hieronder mag ze nog verfijnen.
+  for (const k of profielVelden(el.type)) if (d[k]) basis.data[k] = d[k];
 
   switch (el.type) {
     case "entiteit": {
@@ -312,6 +328,87 @@ export function vanCanoniekModel(state) {
     elements[el.id] = core;
   }
 
+  // V3-domeinen → package-elementen + (niet-getekende) bevat-connectoren:
+  // de elementen-browser ordent er de boom mee. Alleen voor typen die het
+  // bevat-doel toestaat; gegevenselementen/relaties hangen al via de
+  // compositie resp. hun uiteinden, en houden hun domein in data.domein.
+  const PKG_DOELEN = new Set([
+    "entiteit",
+    "enumeratie",
+    "gegevenstype",
+    "referentielijstInstantie",
+    "notitie",
+    "constraint",
+  ]);
+  const pkgIdVoor = new Map();
+  for (const el of Object.values(bronElements)) {
+    const dom = (el?.domein || "").trim();
+    const core = elements[el?.id];
+    if (!dom || !core || !PKG_DOELEN.has(core.elementType)) continue;
+    if (!pkgIdVoor.has(dom)) {
+      const pid = `pkg_${dom.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+      pkgIdVoor.set(dom, pid);
+      if (!elements[pid]) {
+        elements[pid] = { id: pid, naam: dom, elementType: "package", compartimenten: [], data: {} };
+      }
+    }
+    const bid = `bevat_${pkgIdVoor.get(dom)}_${el.id}`;
+    elements[bid] = {
+      id: bid,
+      naam: "",
+      elementType: "bevat",
+      source: pkgIdVoor.get(dom),
+      target: el.id,
+      compartimenten: [],
+      data: {},
+    };
+  }
+
+  // Composities (ENT ◆ GE) als echte compositie-connectoren, net als relaties
+  // sinds fase 3B. Voorheen bestonden ze alleen als presentatie-edge per
+  // diagram: een GE die je op een nieuw diagram naast zijn entiteit zette,
+  // kreeg dan nooit een lijn. Als connector leidt de core de lijn af op elk
+  // diagram waar beide uiteinden staan.
+  const compositieVoorPaar = new Map(); // "bron->doel" → connector-id
+  for (const e of structuralEdges) {
+    if (bronElements[e.source]?.type !== "entiteit") continue;
+    if (bronElements[e.target]?.type !== "gegevenselement") continue;
+    if (!elements[e.source] || !elements[e.target]) continue;
+    const sleutel = `${e.source}->${e.target}`;
+    if (compositieVoorPaar.has(sleutel)) continue;
+    const ed = e.data || {};
+    const ge = bronElements[e.target]?.data || {};
+    const id = `comp_${e.id || sleutel}`;
+    const data = { bron: ed, structuralEdgeId: e.id || null };
+    for (const sleutelNaam of profielVelden("compositie")) {
+      if (ed[sleutelNaam]) data[sleutelNaam] = ed[sleutelNaam];
+    }
+    const heen = ed.naamLabelHeen || ge.naamLabelHeen;
+    const terug = ed.naamLabelTerug || ge.naamLabelTerug;
+    if (heen) data.naamLabelHeen = heen;
+    if (terug) data.naamLabelTerug = terug;
+    // Handles: een connector heeft er één paar voor alle diagrammen; neem de
+    // eerste gezette (en genormaliseerde) waarde van een presentatie-edge.
+    for (const diag of Object.values(state?.diagrams || {})) {
+      const pe = (diag.edges || []).find((x) => x.source === e.source && x.target === e.target);
+      if (!pe) continue;
+      const bronH = normaliseerHandle(pe.sourceHandle, "source");
+      const doelH = normaliseerHandle(pe.targetHandle, "target");
+      if (bronH && !data.sourceHandle) data.sourceHandle = bronH;
+      if (doelH && !data.targetHandle) data.targetHandle = doelH;
+    }
+    elements[id] = {
+      id,
+      naam: "",
+      elementType: "compositie",
+      source: e.source,
+      target: e.target,
+      compartimenten: [],
+      data,
+    };
+    compositieVoorPaar.set(sleutel, id);
+  }
+
   const heeftVelden = (id) =>
     (elements[id]?.compartimenten || []).some((c) => (c.velden || []).length > 0);
 
@@ -341,6 +438,8 @@ export function vanCanoniekModel(state) {
     const edges = (diag.edges || [])
       .filter((e) => {
         if (ankerIds.has(e.source) || ankerIds.has(e.target)) return false;
+        // Gevouwen compositie: de core materialiseert de lijn uit de connector.
+        if (compositieVoorPaar.has(`${e.source}->${e.target}`)) return false;
         const raaktRel = relIds.has(e.source) || relIds.has(e.target);
         if (!raaktRel) return true;
         const isBijzonder = e.data?.isDependency === true || e.data?.kind === "scope";
@@ -381,6 +480,8 @@ export function vanCanoniekModel(state) {
     // Zonder deze kopie zou een compositie waarvan het kind op geen enkel
     // diagram staat (geen presentatie-edge) verloren gaan in de spiegel.
     meta: {
+      // De composities zijn hierboven al connectoren (zie migratie.js).
+      compositiesGevouwen: true,
       modelMeta: state?.modelMeta || null,
       domains: state?.domains || [],
       domainMeta: state?.domainMeta || {},
@@ -412,7 +513,7 @@ function parseTypeLabel(label, coreElements) {
       const b = el.data?.bron || {};
       return { type: b.basistype || "string", format: b.format || "", datatypeNaam: schoon };
     }
-    if (el.elementType === "entiteit" && el.data?.stereotype === "«ref.lijst item»") {
+    if (isRefLijstItem(el)) {
       return { type: "integer", format: "", refItemNaam: schoon };
     }
   }
@@ -477,8 +578,19 @@ export function naarCanoniekModel(coreState) {
   const structuralEdges = [];
   const overgeslagen = [];
   const composities = new Map(); // "src->tgt" → {source, target, data}
+  const compositieHandles = new Map(); // "src->tgt" → {sourceHandle, targetHandle}
   const generalisaties = []; // {id, source, target, data}
   const gebruikConnectoren = [];
+
+  // Package → V3-domein: een bevat-connector wint van het (bij de heenreis
+  // gespiegelde) domein-veld, zodat verhangen in 0.5 doorwerkt in de export.
+  const pakketVan = new Map();
+  for (const el of Object.values(coreEls)) {
+    if (el.elementType !== "bevat" || !el.source || !el.target) continue;
+    const pkg = coreEls[el.source];
+    if (pkg?.elementType === "package" && pkg.naam) pakketVan.set(el.target, pkg.naam);
+  }
+  const domeinVoor = (el) => pakketVan.get(el.id) || el.data?.domein || "";
 
   // Seed met de bij de heenreis bewaarde structurele compositie-edges
   // (laagste prioriteit: connector-elementen en ruit-edges overschrijven).
@@ -504,9 +616,10 @@ export function naarCanoniekModel(coreState) {
           id: el.id,
           naam: el.naam,
           type: "entiteit",
-          domein: d.domein || "",
+          domein: domeinVoor(el),
           data: {
             ...bron,
+            ...bewerkt("entiteit", d),
             typenaam: el.naam,
             kleur: d.kleur ?? bron.kleur,
             isAbstract: d.abstract === true,
@@ -521,11 +634,13 @@ export function naarCanoniekModel(coreState) {
           id: el.id,
           naam: el.naam,
           type: "gegevenselement",
-          domein: d.domein || "",
+          domein: domeinVoor(el),
           data: {
             ...bron,
+            // In de inspector bewerkte GE-velden winnen van de heenreis-kopie.
+            ...bewerkt("gegevenselement", d),
             klassenaam: el.naam,
-            typenaam: bron.typenaam || el.naam,
+            typenaam: ("typenaam" in d ? d.typenaam : bron.typenaam) || el.naam,
             kleur: d.kleur ?? bron.kleur,
             isMaterieel: d.materieel === true,
             velden: basisVelden(),
@@ -539,9 +654,10 @@ export function naarCanoniekModel(coreState) {
           id: el.id,
           naam: el.naam,
           type: "relatie",
-          domein: d.domein || "",
+          domein: domeinVoor(el),
           data: {
             ...bron,
+            ...bewerkt("relatie", d),
             typenaam: el.naam,
             kleur: d.kleur ?? bron.kleur,
             isMaterieel: d.materieel === true,
@@ -551,8 +667,9 @@ export function naarCanoniekModel(coreState) {
             naamLabelHeen: d.naamLabelHeen ?? bron.naamLabelHeen,
             naamLabelTerug: d.naamLabelTerug ?? bron.naamLabelTerug,
             directioneel: d.directioneel ?? bron.directioneel,
+            geordend: d.geordend ?? bron.geordend,
             momentvoorkomen:
-              bronKard === "0..1" || bronKard === "1" ? "enkelvoudig" : "meervoudig",
+              bronKard === "0..1" || bronKard === "1" || bronKard === "1..1" ? "enkelvoudig" : "meervoudig",
             velden: basisVelden(),
             afgeleideVelden: basisAfgeleid(),
           },
@@ -572,7 +689,7 @@ export function naarCanoniekModel(coreState) {
           id: el.id,
           naam: el.naam,
           type: "enumeratie",
-          domein: d.domein || "",
+          domein: domeinVoor(el),
           data: { ...bron, naam: el.naam, waarden: compVelden(el, "waarden").map((v) => v.naam) },
         };
         break;
@@ -583,7 +700,7 @@ export function naarCanoniekModel(coreState) {
           id: el.id,
           naam: el.naam,
           type: "gegevenstype",
-          domein: d.domein || "",
+          domein: domeinVoor(el),
           data: {
             ...bron,
             naam: el.naam,
@@ -603,7 +720,7 @@ export function naarCanoniekModel(coreState) {
           id: el.id,
           naam: el.naam,
           type: "referentielijstInstantie",
-          domein: d.domein || "",
+          domein: domeinVoor(el),
           data: { ...bron, naam: el.naam, systeemnaam: bron.systeemnaam || el.naam },
         };
         break;
@@ -612,7 +729,7 @@ export function naarCanoniekModel(coreState) {
           id: el.id,
           naam: el.id,
           type: "notitie",
-          domein: d.domein || "",
+          domein: domeinVoor(el),
           data: { ...bron, tekst: d.tekst || "", kleur: d.kleur ?? bron.kleur },
         };
         break;
@@ -621,16 +738,31 @@ export function naarCanoniekModel(coreState) {
           id: el.id,
           naam: el.naam,
           type: "constraint",
-          domein: d.domein || "",
+          domein: domeinVoor(el),
           data: { ...bron, naam: el.naam, expressie: d.expressie || "", kleur: d.kleur ?? bron.kleur },
         };
         break;
       case "compositie":
         if (el.source && el.target) {
-          composities.set(`${el.source}->${el.target}`, {
+          const sleutel = `${el.source}->${el.target}`;
+          const bestaand = composities.get(sleutel);
+          // De meta-seed (heenreis) draagt id + edge-data (momentvoorkomen,
+          // rolnaam, …); een bij de heenreis gevouwen connector draagt ze in
+          // data.bron. Een in 0.5 getekende compositie heeft geen van beide.
+          composities.set(sleutel, {
+            id: bestaand?.id || d.structuralEdgeId || undefined,
             source: el.source,
             target: el.target,
-            data: {},
+            data: {
+              ...(bestaand?.data || {}),
+              ...(d.bron || {}),
+              // In de inspector bewerkte waarden winnen van de heenreis-kopie.
+              ...bewerkt("compositie", d),
+            },
+          });
+          compositieHandles.set(sleutel, {
+            sourceHandle: d.sourceHandle || null,
+            targetHandle: d.targetHandle || null,
           });
         }
         break;
@@ -646,6 +778,11 @@ export function naarCanoniekModel(coreState) {
         break;
       case "gebruik":
         if (el.source && el.target) gebruikConnectoren.push(el);
+        break;
+      case "package":
+      case "bevat":
+        // Al vertaald naar het domein-veld (zie pakketVan) — geen oude
+        // element-tegenhanger nodig.
         break;
       default:
         // Types zonder oude tegenhanger (bv. boundary/kader) gaan niet mee.
@@ -718,12 +855,32 @@ export function naarCanoniekModel(coreState) {
     // Sla composities over waarvan een uiteinde niet (meer) bestaat,
     // bv. omdat het gegevenselement in 0.5 verwijderd is.
     if (!elements[c.source] || !elements[c.target]) continue;
+    const edgeId = c.id || `se_${sleutel}`;
     structuralEdges.push({
-      id: c.id || `se_${sleutel}`,
+      id: edgeId,
       source: c.source,
       target: c.target,
       data: c.data || {},
     });
+    // Een gevouwen compositie heeft geen presentatie-edge meer in de core;
+    // schrijf hem terug op elk diagram waar beide uiteinden staan, zodat de
+    // oude store hem tekent en de V3-export zijn handles bewaart.
+    const handles = compositieHandles.get(sleutel);
+    if (!handles) continue;
+    for (const diag of Object.values(diagrams)) {
+      const opDiagram = new Set((diag.nodes || []).map((n) => n.elementId));
+      if (!opDiagram.has(c.source) || !opDiagram.has(c.target)) continue;
+      if ((diag.edges || []).some((e) => e.source === c.source && e.target === c.target)) continue;
+      diag.edges.push({
+        id: edgeId,
+        source: c.source,
+        target: c.target,
+        type: "metamodel",
+        ...(handles.sourceHandle ? { sourceHandle: handles.sourceHandle } : {}),
+        ...(handles.targetHandle ? { targetHandle: handles.targetHandle } : {}),
+        data: c.data || {},
+      });
+    }
   }
 
   // Generalisaties horen in het "overzicht"-diagram (daar leest
@@ -754,7 +911,7 @@ export function naarCanoniekModel(coreState) {
     elements,
     structuralEdges,
     diagrams,
-    domains: meta.domains || [],
+    domains: [...new Set([...(meta.domains || []), ...pakketVan.values()])],
     domainMeta: meta.domainMeta || {},
     modelMeta: meta.modelMeta || null,
     overgeslagen,

@@ -4,7 +4,7 @@ VS Code synchroniseert Copilot Chat-geschiedenis niet automatisch via GitHub of 
 
 ## Wat is ingericht
 
-- `scripts/export-copilot-chats.py` leest de lokale VS Code chatopslag uit en schrijft Markdown naar `docs/copilot-chats/exports/`.
+- `scripts/export-copilot-chats.py` leest de lokale VS Code chatopslag uit en schrijft Markdown naar `docs/ai-chats/exports/`.
 - `scripts/pre-commit-chat-export` draait dit exportscript automatisch bij elke `git commit`.
 - De hook voegt nieuwe of bijgewerkte chat-exports meteen toe aan dezelfde commit.
 

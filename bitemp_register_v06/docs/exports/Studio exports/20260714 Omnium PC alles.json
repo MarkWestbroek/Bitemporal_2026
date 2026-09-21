@@ -1,0 +1,97 @@
+{
+  "formaat": "studio05-diagram",
+  "versie": 1,
+  "diagramType": "statemachine",
+  "geexporteerd": "2026-07-14T05:51:49.452Z",
+  "elements": {
+    "sm_1783987432092_1": {
+      "id": "sm_1783987432092_1",
+      "naam": "Toestand",
+      "elementType": "toestand",
+      "compartimenten": [],
+      "data": {}
+    },
+    "sm_1783990380341_5": {
+      "id": "sm_1783990380341_5",
+      "naam": "Toestand",
+      "elementType": "toestand",
+      "compartimenten": [],
+      "data": {}
+    },
+    "sm_1783990384221_6": {
+      "id": "sm_1783990384221_6",
+      "naam": "",
+      "elementType": "begin",
+      "compartimenten": [],
+      "data": {}
+    },
+    "conn_1783990391925_2": {
+      "id": "conn_1783990391925_2",
+      "naam": "",
+      "elementType": "transitie",
+      "source": "sm_1783990384221_6",
+      "target": "sm_1783990380341_5",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "sm_1783990401325_7": {
+      "id": "sm_1783990401325_7",
+      "naam": "",
+      "elementType": "eind",
+      "compartimenten": [],
+      "data": {}
+    },
+    "conn_1783990404189_3": {
+      "id": "conn_1783990404189_3",
+      "naam": "",
+      "elementType": "transitie",
+      "source": "sm_1783990380341_5",
+      "target": "sm_1783990401325_7",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    }
+  },
+  "diagrams": {
+    "sm05_1783987429844": {
+      "nodes": [
+        {
+          "elementId": "sm_1783990380341_5",
+          "position": {
+            "x": 509.25006103515625,
+            "y": 249
+          }
+        },
+        {
+          "elementId": "sm_1783990384221_6",
+          "position": {
+            "x": 383.25006103515625,
+            "y": 259.5
+          }
+        },
+        {
+          "elementId": "sm_1783990401325_7",
+          "position": {
+            "x": 864.2500610351562,
+            "y": 270.5
+          }
+        }
+      ],
+      "edges": [],
+      "id": "sm05_1783987429844",
+      "naam": "State machine 1",
+      "diagramType": "statemachine",
+      "viewport": {
+        "x": -416.07225688884296,
+        "y": -228.12926302459437,
+        "zoom": 1.6624757922855753
+      }
+    }
+  },
+  "meta": null
+}

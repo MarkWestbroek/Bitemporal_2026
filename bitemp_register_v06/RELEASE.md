@@ -1,4 +1,76 @@
-﻿## Operaton-provenance op Registratie + PoC Process Engine v2 (2026-05-21)
+﻿# Release-/wijzigingslog — Backend (Go API) & overall
+
+> Dit is het chronologische wijzigingslog voor de **backend** en overkoepelende wijzigingen.
+> Frontend/Studio heeft een eigen log in [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md); de
+> generator in [`cmd/codegen/CHANGELOG.md`](cmd/codegen/CHANGELOG.md). Versionering-conventie:
+> [`docs/versiebeheer.md`](docs/versiebeheer.md) — backend-tags gebruiken de prefix `api/`
+> (baseline `api/v0.5.0` op `main`). Entries hieronder zijn deels gemengd FE/BE (historisch).
+
+---
+
+## Demo-model np-loc-org+geo en OAS → canoniek: api 0.6.0 / studio 0.8.0 (2026-09-16)
+
+Consolidatie na de FTV-demo van Toegangsspraak (15 september). Baseline voor het
+volgende werk; de eerstvolgende stap is een UI voor gebruikersbeheer.
+
+### Backend (api 0.6.0)
+
+- **np-loc uitgebreid**: GE's `Geslacht` (enum `Geslachtsaanduiding`) en `Aanspraak`
+  (`aanspreektitel`, `formeelAanspreken` — beide optioneel, de illustratie van
+  driewaardige optionaliteit), plus de relaties `Woonlocatie` → `Locatie` en
+  `Gebiedsligging` → `Gemeentedeel`.
+- **Nieuw domein `org-geo`** (prefix `org_geo_`): `Afdeling`, `Medewerker`,
+  `Gemeentedeel`; `Organisatie` en `Gemeente` uit CG hergebruikt in plaats van
+  nagemaakt (de MetaRegistry is één map op typenaam). Init in
+  `model/metaregistry_plumbing.go`.
+- **Databasegevolg bij uitrol**: puur additief. `dbsetup.CreateTables` loopt over de
+  `MetaRegistry` en maakt elke tabel met `CREATE TABLE IF NOT EXISTS`; de nieuwe
+  `org_geo_*`- en np-loc-tabellen komen er bij het opstarten vanzelf bij. Geen
+  migratie, geen wijziging aan bestaande data.
+- **Codegen-voetangels vastgelegd** in `docs/CODEGEN.md` §7.4: `datatype_aliases.go`
+  botst met `datatype_aliases_extra.go` bij een volledige export, en
+  `*_modellen_input.go` draagt handmatige delta's (Aanvang/Einde eruit,
+  sommige `schema:`-tags weg). Structureel oplossen staat op backlog §29.3/29.4.
+- Bewaakt door `model/demo_model_test.go` (rollen, velden, relatie-doelen, enums).
+
+### Frontend (studio 0.8.0)
+
+OpenAPI → canoniek model, doorkijk over relaties in de modelboom, composities als
+connector en de handle-normalisatie — zie
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+
+### Uitrol
+
+VPS: `docs/VPS_DEPLOYMENT.md` §11 (`docker compose pull` +
+`up -d --force-recreate api frontend`). De Studio-sandbox persisteert: een al geladen
+canoniek model toont de compositielijnen pas na opnieuw inladen.
+
+---
+
+## Docker-publicatie + tag-beleid: api 0.5.0 / studio 0.6.0 (2026-07-29)
+
+Backend en frontend als losse images naar Docker Hub gepubliceerd, en het tag-beleid
+vastgelegd.
+
+- **Nieuw**: [`docs/DOCKER_RELEASE.md`](docs/DOCKER_RELEASE.md) — welke images we publiceren,
+  hoe we taggen (kale component-semver **plus** `latest`; versie-tag onveranderlijk), waarom
+  altijd `linux/amd64`, de releaseprocedure per component, rollback en de checklist.
+- **Vervallen**: het oude image-tagschema `v06.00.01`. De Docker-tag is voortaan het
+  componentnummer uit `docs/versiebeheer.md` §7 zonder prefix en zonder `v`.
+- **Gepubliceerd**:
+  - `markwestbroek/bitemp-go-api:0.5.0` + `latest` — ongewijzigde Go-code t.o.v. tag
+    `api/v0.5.0`; dit is de **eerste** v06-API op Docker Hub (daar stonden alleen nog
+    `v04.*`-tags uit maart/april).
+  - `markwestbroek/bitemp-viz-frontend:0.6.0` + `latest` — bevat Toegangsspraak/Toegangsregel
+    en de Sequence-, BPMN- en ArchiMate-profielen; zie `web/vite/CHANGELOG.md`.
+- **Bijgewerkt**: `docker.md` (§ inleiding, componenttabel, §12), `.env.docker.example`,
+  `docker-compose.api-only.yml` en `docker-compose.frontend-only.yml` (verouderde
+  `:v05`/`:v06` defaults → `:latest`), `docs/versiebeheer.md` (§6, §7.1a),
+  `docs/TRUENAS_DEPLOYMENT.md` (backend krijgt nu ook een versie-tag).
+
+---
+
+## Operaton-provenance op Registratie + PoC Process Engine v2 (2026-05-21)
 
 Twee gekoppelde wijzigingen: (1) `bron`/`bron_kenmerk` velden op `Registratie` in bitemp v06, en (2) de Go-worker en BPMN v2-flow in `process_engine_v01`.
 

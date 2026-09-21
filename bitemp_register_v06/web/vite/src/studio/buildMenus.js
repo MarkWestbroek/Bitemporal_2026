@@ -9,6 +9,42 @@
  * vóór "Help" ingevoegd.
  */
 
+import { groepLabel } from "./activityRegistry";
+import { menuBus } from "./menuBus";
+
+/**
+ * Items van het Ga naar-menu: het opdrachtenpalet bovenaan, daarna per groep
+ * een kop met de activiteiten. Status verschijnt als badge; concept-
+ * activiteiten (niet in de activity bar) zijn hier gedempt maar wél
+ * aanklikbaar — dit menu is hun enige ingang.
+ */
+function gaNaarItems(activiteiten, actief, setActief) {
+  const items = [
+    {
+      id: "palette",
+      label: "Opdrachtenpalet…",
+      shortcut: "Ctrl+K",
+      onClick: () => menuBus.emit("palette:open"),
+    },
+  ];
+  let vorigeGroep;
+  for (const a of activiteiten || []) {
+    if (a.groep !== vorigeGroep) {
+      items.push({ type: "kop", label: groepLabel(a.groep) });
+      vorigeGroep = a.groep;
+    }
+    items.push({
+      id: `ga-${a.id}`,
+      label: a.label,
+      badge: a.status || undefined,
+      muted: a.status === "concept",
+      checked: a.id === actief?.id,
+      onClick: () => setActief(a.id),
+    });
+  }
+  return items;
+}
+
 /** Bouw de standaard-menu's (Bestand, Beeld, Ga naar, Help). */
 function standaardMenus(ctx) {
   const {
@@ -33,11 +69,17 @@ function standaardMenus(ctx) {
     window.location.href = window.location.pathname.replace(/[^/]*$/, "") || "/";
   };
 
-  // Documentatie wordt door de API-server gerenderd onder /docs/<pad>.
-  // In dev draait Vite op :5174 en de API op :8082.
-  const docsBasis = window.location.port === "5174" ? "http://localhost:8082" : "";
+  // Documentatie: voorlopig rechtstreeks naar GitHub. De API rendert /docs/<pad>
+  // alleen als hij vanuit een git-checkout draait (findProjectRoot zoekt een
+  // .git-map); in de productie-image zit alleen de binary, dus daar geeft
+  // /docs/... "Markdown file not found". Structurele fix staat op de backlog:
+  // gecureerde docs in de image + DOCS_ROOT, dan wordt dit weer /docs/STUDIO.md.
   const openDocs = () =>
-    window.open(`${docsBasis}/docs/bitemp_register_v06/docs/STUDIO.md`, "_blank", "noopener");
+    window.open(
+      "https://github.com/MarkWestbroek/Bitemporal_2026/blob/main/bitemp_register_v06/docs/STUDIO.md",
+      "_blank",
+      "noopener",
+    );
 
   // Versie-/build-info (compile-time geïnjecteerd via vite.config.js → define).
   const versie = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
@@ -103,12 +145,7 @@ function standaardMenus(ctx) {
     {
       id: "ganaar",
       label: "Ga naar",
-      items: (activiteiten || []).map((a) => ({
-        id: `ga-${a.id}`,
-        label: a.label + (a.status === "concept" ? "  (concept)" : ""),
-        checked: a.id === actief?.id,
-        onClick: () => setActief(a.id),
-      })),
+      items: gaNaarItems(activiteiten, actief, setActief),
     },
     {
       id: "help",
@@ -135,7 +172,17 @@ export function buildMenus(ctx) {
 
   const stdById = new Map(standaard.map((m) => [m.id, m]));
   const eigenById = new Map(eigen.map((m) => [m.id, m]));
-  const pick = (id) => eigenById.get(id) || stdById.get(id) || null;
+  // `aanvullen: true` op een activiteit-menu met een anker-id: de eigen
+  // items komen ónder de standaarditems (bv. weergave-instellingen in
+  // Beeld) in plaats van het hele menu te vervangen.
+  const pick = (id) => {
+    const eigenMenu = eigenById.get(id);
+    const stdMenu = stdById.get(id);
+    if (eigenMenu?.aanvullen && stdMenu) {
+      return { ...stdMenu, items: [...stdMenu.items, { type: "separator" }, ...eigenMenu.items] };
+    }
+    return eigenMenu || stdMenu || null;
+  };
 
   // Ankers die hun vaste plek houden; al het overige (eigen) komt in het midden.
   const ankers = new Set(["bestand", "beeld", "ganaar", "help"]);

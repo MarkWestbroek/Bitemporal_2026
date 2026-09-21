@@ -1,3 +1,49 @@
+/* ── StyleType-tokens v2 (plan §8.5b): licht + donker per canvas. ─────────
+   Shapes/edges gebruiken deze variabelen voor alles wat geen element-eigen
+   (pastel)kleur is: lijnen, randen, selectie, marker-vullingen. Profielen
+   kunnen ze later per StyleType overschrijven (fase 7-register); zolang er
+   één StyleType is ("uml-klassiek") ís dit die tokenset.
+   v2 (vormgevingssessie 2026-07-04/05, besluiten B3+B4):
+   - selectie in merk-indigo (Omnium-gradientmidden) i.p.v. generiek blauw;
+   - marker-vulling = canvaskleur, zodat open UML-markers (◇ ▷) in het
+     donkere thema écht open ogen — v1 vulde ze slate-200, waardoor ◇
+     op ◆ leek;
+   - canvas-achtergrond en label-achtergrond expliciet als tokens.
+   Het 0.5-canvas volgt het studio-thema (sessiebesluit 2026-07-05): de
+   fabriek zet `dc-canvasvlak` op de canvas-wrapper (derde-partij-canvassen
+   zoals bpmn/dmn-js houden het vaste witte `.studio-paper`). De tokens
+   staan op beide klassen: het vlak kleurt de achtergrond, de shapes/edges
+   erbinnen lezen dezelfde variabelen. Nodes houden hun lichte pastel —
+   "lichte kaarten op donker canvas", conform de goedgekeurde proefopzet. */
+.dc-canvas,
+.dc-canvasvlak {
+  --dc-lijn: #64748b;
+  --dc-lijn-zacht: #94a3b8;
+  --dc-node-rand: #94a3b8;
+  --dc-node-vulling: #f1f5f9;
+  --dc-selectie: #4f46e5;
+  --dc-canvas-achtergrond: var(--s-canvas, #ffffff);
+  --dc-marker-vulling: var(--dc-canvas-achtergrond);
+  --dc-label-achtergrond: rgba(255, 255, 255, 0.92);
+}
+[data-studio-theme="dark"] .dc-canvas,
+[data-studio-theme="dark"] .dc-canvasvlak {
+  --dc-lijn: #94a3b8;
+  --dc-lijn-zacht: #64748b;
+  --dc-node-rand: #64748b;
+  --dc-node-vulling: #e2e8f0;
+  --dc-selectie: #818cf8;
+  --dc-canvas-achtergrond: var(--s-canvas, #1b1b1f);
+  --dc-label-achtergrond: rgba(24, 24, 28, 0.92);
+}
+
+/* Het canvasvlak van de 0.5-activiteiten (wrapper om DiagramCanvas én de
+   "geen diagram"-melding): kleurt mee met het thema. */
+.dc-canvasvlak {
+  background: var(--dc-canvas-achtergrond);
+  color: var(--s-fg, #1f2937);
+}
+
 /**
  * diagramcore.css — opmaak voor de generieke diagram-motor (Studio 0.5).
  *
@@ -14,6 +60,17 @@
   min-width: 180px;
   width: 100%;
   height: 100%;
+  /* Breedtegrens voor niet-geresizede nodes. Een React Flow-node zonder
+     expliciete maat is shrink-to-fit: zonder max-width groeit hij mee met de
+     langste tekstregel en wrapt een lange naam dus nooit. Zodra de gebruiker
+     de node zélf een maat geeft, zet DiagramCanvas `--dc-node-max: none` op de
+     wrapper — dan wint de handmatige breedte. */
+  max-width: var(--dc-node-max, 280px);
+  /* border-box: padding + rand tellen mee in width/height, zodat de shape
+     precies zijn React Flow-node vult i.p.v. eroverheen te steken. Zonder dit
+     werd de shape ~padding+rand breder dan de node → overflow naar rechts en
+     boven/onder-handles links van het visuele midden (scheve vorm). */
+  box-sizing: border-box;
   border: 2px solid #94a3b8;
   border-radius: 8px;
   font-size: 12px;
@@ -27,7 +84,11 @@
 
 .dc-contextmenu {
   position: fixed;
-  z-index: 60;
+  /* Ruim boven taakbalken/minimap/panelen — het menu opent op muispositie
+     en mag nergens onder liggen. */
+  z-index: 200;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
   min-width: 210px;
   padding: 6px;
   background: var(--s-panel, #ffffff);
@@ -58,8 +119,10 @@
   cursor: pointer;
 }
 
-.dc-contextmenu-item:hover:not(:disabled) {
+.dc-contextmenu-item:hover:not(:disabled),
+.dc-contextmenu-item:focus:not(:disabled) {
   background: var(--s-hover, #f1f5f9);
+  outline: none;
 }
 
 .dc-contextmenu-item:disabled {
@@ -69,8 +132,11 @@
 
 .dc-contextmenu-icoon {
   display: inline-flex;
-  width: 16px;
+  min-width: 16px;
   justify-content: center;
+  /* Tekst-iconen van connectortypen ("✉→", "⇢D") zijn breder dan 16px en
+     braken anders over twee regels (magic link-keuzemenu). */
+  white-space: nowrap;
 }
 
 .dc-contextmenu-sep {
@@ -94,15 +160,88 @@
   font-style: italic;
 }
 
+/* ── Typering-weergave (MIM-besluit 2026-07-07): shapes renderen zowel het
+   mini-icoon als de stereotype-regel; `data-dc-typering` op het canvasvlak
+   kiest wat zichtbaar is. Zonder attribuut of bij "tekst" geldt het oude
+   gedrag (alleen stereotype) — bestaande profielen veranderen dus niet. */
+.dc-type-icoon {
+  display: none;
+  justify-content: center;
+  color: #64748b;
+  padding-top: 1px;
+}
+
+[data-dc-typering="geen"] .dc-stereotype,
+[data-dc-typering="icoon"] .dc-stereotype {
+  display: none;
+}
+
+[data-dc-typering="icoon"] .dc-type-icoon {
+  display: flex;
+}
+
 .dc-naam {
   font-size: 14px;
   font-weight: 700;
   color: #0f172a;
   margin-top: 1px;
+  /* Lange namen mogen over meerdere regels; `anywhere` breekt ook binnen één
+     lang woord (paden als `Initiatief.producten.naam`) en telt mee in de
+     min-content-breedte, zodat de node niet alsnog uitrekt. */
+  overflow-wrap: anywhere;
 }
 
 .dc-naam.is-abstract {
   font-style: italic;
+}
+
+/* Buitenlabel (motor-primitief, ElementType.naamLabel = "buiten"): de naam
+   onder een kleine vaste vorm — BPMN-events/gateways, state machine
+   begin/eind/keuze, activity-knooppunten. Broer van de shape, dus buiten het
+   `overflow: hidden` van .dc-node; `pointer-events: none` zodat het label de
+   node niet blokkeert bij slepen of verbinden. */
+.dc-buitenlabel {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 3px;
+  /* Vaste breedte, geen max-width: een absoluut gepositioneerd element krijgt
+     zijn shrink-to-fit-breedte uit het containing block, en dat is bij een
+     event-ring maar 30px — de tekst zou dan letter voor letter afbreken. */
+  width: 132px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--s-fg, #0f172a);
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Diagram-breed uit te zetten (menu Beeld → Buitenlabels). Eén schakelaar op
+   het canvasvlak, dus hij geldt voor élk profiel — zelfde patroon als
+   `data-dc-typering`. */
+[data-dc-labels="uit"] .dc-buitenlabel {
+  display: none;
+}
+
+/* Samentrekking-bolletje (gedaante "bol" van een voorkomen): de UML-lollipop.
+   Open cirkel in de canvaskleur — dezelfde vulling als open markers, zodat
+   het bolletje in het donkere thema leesbaar blijft. De naam komt eronder
+   via .dc-buitenlabel. */
+.dc-samentrek-bol {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--dc-marker-vulling, #ffffff);
+  border: 1.7px solid var(--dc-lijn, #475569);
+  box-sizing: border-box;
+}
+.dc-samentrek-bol.is-geselecteerd {
+  border-color: var(--dc-selectie, #2563eb);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dc-selectie, #2563eb) 30%, transparent);
 }
 
 .dc-badge {
@@ -164,6 +303,11 @@
 
 .dc-veld-naam {
   color: #1e293b;
+  /* min-width: 0 doorbreekt de flex-basis-op-inhoud, zodat een lange veldnaam
+     binnen de breedtegrens van de node wrapt in plaats van hem uit te rekken;
+     het typelabel rechts blijft op één regel. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .dc-veld-naam strong {
@@ -180,27 +324,141 @@
   white-space: nowrap;
 }
 
-/* === Handles === */
-
-.dc-canvas .react-flow__handle {
-  width: 10px;
-  height: 10px;
-  border: 2px solid #475569;
-  background: #ffffff;
-  border-radius: 50%;
+/* Opname: een deel ín zijn geheel (viewer "sub-vak", zie canvas/opname.js).
+   Een vak in het vak: dunne rand, de vulling van het deel-type is bewust
+   weggelaten zodat het geheel de kleur houdt. De geneste compartimenten
+   krijgen minder binnenruimte dan op een losse node. */
+.dc-subvak {
+  border: 1px solid var(--dc-node-rand, #94a3b8);
+  border-radius: 3px;
+  margin: 4px 0;
+  background: color-mix(in srgb, var(--dc-node-vulling, #ffffff) 55%, transparent);
+}
+.dc-subvak-kop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.dc-subvak-naam {
+  font-weight: 600;
+  color: #1e293b;
+}
+.dc-subvak-meta {
+  font-size: 10px;
+  font-weight: 400;
+  color: #64748b;
+}
+.dc-subvak-badge {
+  margin-top: 0;
+}
+.dc-subvak .dc-divider {
+  margin: 0;
+}
+.dc-subvak .dc-compartiment {
+  padding: 2px 8px 3px;
 }
 
-.dc-canvas .dc-node .react-flow__handle-left,
-.dc-canvas .dc-node .react-flow__handle-right {
+/* === Handles === */
+
+/* Handles zijn hulpchrome, geen diagraminhoud — het zijn tool-dingen, geen
+   model- of view-dingen (Mark, 07-09). Daarom volledig onzichtbaar tot je de
+   node aanwijst of selecteert; ook tijdens het slepen van een verbinding
+   verschijnen ze op de node onder de cursor (hover werkt bij pointer-drag
+   gewoon door). Connecteren verandert niet — alleen de opacity. */
+.dc-canvas .react-flow__handle {
   width: 8px;
   height: 8px;
-  opacity: 0.35;
+  border: 1.5px solid #64748b;
+  background: #ffffff;
+  border-radius: 50%;
+  opacity: 0;
   transition: opacity 0.15s;
 }
 
-.dc-canvas .dc-node:hover .react-flow__handle-left,
-.dc-canvas .dc-node:hover .react-flow__handle-right {
+.dc-canvas .react-flow__node:hover .react-flow__handle,
+.dc-canvas .react-flow__node.selected .react-flow__handle {
   opacity: 1;
+}
+
+/* Punt-vormige nodes (begin/eind, en straks junction/keuze): een mini-vorm
+   van ~22px. De acht standaard-handles (10px op elke rand) overwoekeren zo'n
+   bolletje volledig — de vorm zelf verdwijnt en de handles steken ver buiten
+   de kern uit. Daarom houden we ze onzichtbaar tot je de node aanwijst of
+   selecteert; connecteren blijft werken (alleen de opacity verandert). */
+.dc-canvas .dc-punt-node .react-flow__handle {
+  width: 7px;
+  height: 7px;
+  border-width: 1.5px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dc-canvas .react-flow__node:hover .dc-punt-node .react-flow__handle,
+.dc-canvas .react-flow__node.selected .dc-punt-node .react-flow__handle {
+  opacity: 0.7;
+}
+
+/* De handles liggen standaard half óver de rand; op een mini-vorm (junction
+   16px) dekken vier hover-handles dan de hele kern af — elke grijppoging
+   startte een verbinding i.p.v. een verplaatsing ("bloemetjes-effect").
+   Daarom liggen ze op punt-nodes net búiten de vorm: de kern blijft vrij
+   om te slepen, verbinden kan vanaf de uitstekende stippen. */
+.dc-canvas .dc-punt-node .react-flow__handle-left { left: -8px; }
+.dc-canvas .dc-punt-node .react-flow__handle-right { right: -8px; }
+.dc-canvas .dc-punt-node .react-flow__handle-top { top: -8px; }
+.dc-canvas .dc-punt-node .react-flow__handle-bottom { bottom: -8px; }
+
+/* Compacte taakbalkknop (Beeld → Compacte taakbalken): alleen het icoon op
+   een chip in de elementkleur; de tekst zit in de tooltip. De donkere
+   icoonkleur blijft leesbaar omdat elementkleuren pastels zijn. */
+.dc-taakbalk-icoonlabel.is-compact {
+  padding: 3px 5px;
+  border-radius: 5px;
+  color: #334155;
+  line-height: 0;
+}
+
+/* Eigen taakbalk-tooltip (i.p.v. de kleine native title): naam + uitleg,
+   direct leesbaar. Toggle in Studio-instellingen → Taakbalken. */
+.dc-taakbalk-tooltip {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 300;
+  max-width: 280px;
+  padding: 7px 11px;
+  background: var(--s-panel, #ffffff);
+  color: var(--s-fg, #1e293b);
+  border: 1px solid var(--s-border, #cbd5e1);
+  border-radius: 8px;
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.22);
+  font-size: 12.5px;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+.dc-taakbalk-tooltip-titel {
+  font-weight: 700;
+}
+
+.dc-taakbalk-tooltip-uitleg {
+  margin-top: 2px;
+  color: var(--s-fg-muted, #64748b);
+}
+
+/* Gedragsverwijzing (§3.2): hoek-badge op nodes met een gekoppeld diagram
+   (submachine state, call-activity). Dubbelklik opent dat diagram. */
+.dc-gedrag-badge {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font-size: 11px;
+  line-height: 1;
+  color: #6366f1;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* === Edge-labels === */
@@ -210,11 +468,33 @@
   gap: 4px;
   align-items: center;
   font-size: 10px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--dc-label-achtergrond, rgba(255, 255, 255, 0.92));
   padding: 2px 6px;
   border-radius: 4px;
   border: 1px solid #e2e8f0;
   white-space: nowrap;
+}
+
+/* Donker thema: de labelchip wordt canvas-donker (--dc-label-achtergrond),
+   dus rand en vaste tekstkleuren flippen mee naar donkere/lichte varianten. */
+[data-studio-theme="dark"] .dc-edge-label {
+  border-color: #3d3d46;
+}
+
+[data-studio-theme="dark"] .dc-edge-rolnaam {
+  color: #e2e8f0;
+}
+
+[data-studio-theme="dark"] .dc-edge-kardinaliteit {
+  color: #a78bfa;
+}
+
+[data-studio-theme="dark"] .dc-edge-constraint {
+  color: #94a3b8;
+}
+
+[data-studio-theme="dark"] .dc-edge-naam {
+  color: #94a3b8;
 }
 
 .dc-edge-rolnaam {
@@ -236,9 +516,9 @@
 .dc-edge-naam {
   font-style: italic;
   color: #475569;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--dc-label-achtergrond, rgba(255, 255, 255, 0.85));
   padding: 1px 4px;
-  border-radius: 3;
+  border-radius: 3px;
 }
 
 /* === Taakbalken (zwevend op de canvas) === */
@@ -301,8 +581,11 @@
 .dc-taakbalk-sep {
   align-self: stretch;
   width: 1px;
-  margin: 1px 2px;
-  background: var(--s-border, #e2e8f0);
+  margin: 1px 3px;
+  /* Niet --s-border: die is in het lichte thema vrijwel gelijk aan de
+     paneelkleur, waardoor de laag-scheidingen onzichtbaar waren. */
+  background: var(--s-fg-muted, #94a3b8);
+  opacity: 0.45;
 }
 
 .dc-taakbalk-knop {
@@ -390,12 +673,14 @@
 
 .dc-inspector textarea {
   resize: vertical;
-  min-height: 56px;
+  /* Compact: metagegevens-teksten zijn meestal kort; slepen maakt groter. */
+  min-height: 34px;
 }
 
-.dc-inspector .dc-mini-knop {
+.dc-mini-knop {
   font: inherit;
   font-size: 11px;
+  line-height: 1.3;
   padding: 2px 8px;
   border-radius: 6px;
   border: 1px solid var(--s-border, #cbd5e1);
@@ -404,14 +689,27 @@
   cursor: pointer;
 }
 
-.dc-inspector .dc-mini-knop:hover {
+.dc-mini-knop:hover {
   background: var(--s-hover, #f1f5f9);
 }
 
-.dc-inspector .dc-mini-knop.is-gevaar:hover {
+.dc-mini-knop.is-gevaar:hover {
   background: #fee2e2;
   border-color: #fca5a5;
   color: #991b1b;
+}
+
+
+/* === Knikpunten op connectoren (ctrl-klik) === */
+
+.dc-knik {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dc-selectie, #2563eb);
+  border: 1.5px solid var(--dc-marker-vulling, #ffffff);
+  box-sizing: border-box;
+  cursor: grab;
 }
 
 /* === Minibrowser (VerwijzingsKiezer-popover) === */
@@ -512,4 +810,12 @@
   border-radius: 4px;
   color: #ffffff;
   background: linear-gradient(90deg, #60a5fa, #6366f1, #22d3ee);
+}
+
+/* Icoon + korte code in taakbalk-knoppen (typeIconen.jsx). */
+.dc-taakbalk-icoonlabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
 }

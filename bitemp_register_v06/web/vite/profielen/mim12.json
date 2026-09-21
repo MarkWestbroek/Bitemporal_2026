@@ -1,0 +1,92 @@
+{
+  "layout": {
+    "elementDef:Objecttype#1": {
+      "x": 47,
+      "y": -46
+    },
+    "compartimentDef:attribuutsoorten#1": {
+      "x": 60,
+      "y": 330
+    },
+    "fieldDef:attribuutsoort#1": {
+      "x": 235,
+      "y": 495
+    },
+    "elementDef:Gegevensgroeptype#1": {
+      "x": 400,
+      "y": 60
+    },
+    "compartimentDef:attribuutsoorten#2": {
+      "x": 400,
+      "y": 330
+    },
+    "elementDef:Enumeratie#1": {
+      "x": 740,
+      "y": 60
+    },
+    "compartimentDef:waarden#1": {
+      "x": 740,
+      "y": 330
+    },
+    "fieldDef:waarde#1": {
+      "x": 808,
+      "y": 503
+    },
+    "elementDef:Codelijst#1": {
+      "x": 1080,
+      "y": 60
+    },
+    "elementDef:Referentielijst#1": {
+      "x": 1420,
+      "y": 60
+    },
+    "compartimentDef:elementen#1": {
+      "x": 1420,
+      "y": 330
+    },
+    "fieldDef:referentieElement#1": {
+      "x": 1469,
+      "y": 515
+    },
+    "elementDef:Primitief datatype#1": {
+      "x": 1760,
+      "y": 60
+    },
+    "elementDef:Gestructureerd datatype#1": {
+      "x": 2100,
+      "y": 60
+    },
+    "compartimentDef:dataElementen#1": {
+      "x": 2100,
+      "y": 330
+    },
+    "fieldDef:dataElement#1": {
+      "x": 2115,
+      "y": 512
+    },
+    "elementDef:Keuze#1": {
+      "x": 2440,
+      "y": 60
+    },
+    "elementDef:Constraint#1": {
+      "x": 2341,
+      "y": -379
+    },
+    "elementDef:Package#1": {
+      "x": 1483,
+      "y": -376
+    },
+    "elementDef:Notitie#1": {
+      "x": 2084,
+      "y": -388
+    },
+    "elementDef:Kader#1": {
+      "x": 3800,
+      "y": 60
+    },
+    "profielDef:MIM 1.2 — instellingen#1": {
+      "x": 73,
+      "y": -390
+    }
+  }
+}

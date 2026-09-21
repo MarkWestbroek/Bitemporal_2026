@@ -4,22 +4,26 @@
  * niet meer dan een descriptor + een fabriek-aanroep — geen koppeling met
  * het canonieke model, geen serialisatie, geen eigen componenten.
  */
-import { IconUML } from "../icons";
-import { registreerPuurUml, puurUmlDiagramType, maakElement } from "../../diagramprofielen/puur-uml/index.js";
+import { IconUML05 } from "../icons";
+import { registreerPuurUml, puurUmlDiagramType, maakElement, operatiesVan } from "../../diagramprofielen/puur-uml/index.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 
 registreerPuurUml();
 
 export default maakDiagramActiviteit({
   id: "puurUml05",
-  label: "UML (0.5)",
-  icon: <IconUML />,
+  label: "UML",
+  icon: <IconUML05 />,
   descriptor: puurUmlDiagramType,
   maakElement,
   persistKey: "studio05-puur-uml",
   taakbalkSleutel: "studio05-taakbalken-puur-uml",
   menuPrefix: "u05",
-  menuLabel: "UML (0.5)",
+  menuLabel: "UML",
+  kleur: "#60a5fa",
+  standaardVerborgen: true, // gedekt door de Modelleren-host
   previewTekst: "Puur UML-klassediagram — tweede profiel (fase 5-lakmoesproef), lege sandbox.",
   devHookNaam: "__puurUml05Store",
+  // OperatieResolver: operaties-compartiment van klassen/interfaces.
+  operatiesVan,
 });

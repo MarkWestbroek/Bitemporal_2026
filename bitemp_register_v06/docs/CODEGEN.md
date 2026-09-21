@@ -54,6 +54,11 @@ Het model is opgedeeld in **domeinen**. Elk domein heeft een eigen set gegeneree
 |--------|--------|-------------|
 | `register` | `register_` | Basisregistratie: Referentielijst, Land, etc. |
 | `np-loc` | `np_loc_` | Natuurlijke personen en locaties |
+| `org-geo` | `org_geo_` | Afdeling, Medewerker, Gemeentedeel (demo-model, zie `docs/demo-model-np-loc-org-geo.md`) |
+
+(Plus de domeinen die los van dit document zijn gegroeid: `abuvwxy`, `CG`,
+`configuratie`, `financieel`, `ide-bestanden`, `kennis2`, `gegevenstypen`. De
+init-volgorde staat in `model/metaregistry_plumbing.go`.)
 
 ### Register is altijd nodig
 
@@ -315,6 +320,36 @@ go test ./...
 ### Handmatige wijzigingen
 
 Voor kleine wijzigingen (extra veld, andere tag) kan je de gegenereerde bestanden direct aanpassen. Maar: bij de volgende codegen-run worden ze weer overschreven. Bewaar handmatige wijzigingen in apart niet-gegenereerde bestanden, of breng ze aan in het V3 model.
+
+### 7.4 Twee voetangels bij een regeneratie
+
+Waargenomen bij het regenereren van `np-loc` voor het demo-model
+(september 2026). Beide gaan om bestanden die codegen *deelt* met handwerk;
+controleer ze met `git diff` na elke run.
+
+**a. `datatype_aliases.go` botst met `datatype_aliases_extra.go`.**
+`generateDatatypeAliases` schrijft een `type X …` voor elk datatype in
+`v3.Datatypes` — en een export bevat de hele `DatatypeRegistry`, inclusief de 29
+handmatig onderhouden types (`Kleur`, `Duur`, `GeoPunt`, `BAGPandID`, …) die al
+in `datatype_aliases_extra.go` staan. Het resultaat compileert niet: dubbele
+Go-type-declaraties. Oplossing: haal die datatypes uit de `datatypes`-lijst van
+het modelbestand dat je aan codegen voert (zo is het demo-modelbestand
+opgebouwd), of zet `datatype_aliases.go` na de run terug. Het bestand hoort
+alleen te wijzigen als je écht een datatype toevoegt.
+
+**b. `*_modellen_input.go` draagt handmatige delta's.**
+Alle `_Input`-bestanden in `model/` zijn na generatie met de hand bijgewerkt:
+
+- **Aanvang/Einde zijn eruit gehaald.** De normalizer splitst materiële plumbing
+  als aparte wijzigingen af; codegen genereert ze wél als platte velden. Op hun
+  plek staat een comment die dat uitlegt.
+- **Sommige `schema:"…"`-tags zijn verwijderd** (bv. `datatype:NLPostcode` op
+  `Locatie_Adres_Input`, de `enum=`-tags). De schema-handler kent een fallback
+  via de `EnumWaarden`-registry voor `_Input`-structs zonder tag.
+
+Na een regeneratie zijn die delta's weg. Zet ze terug (of laat ze bewust vallen,
+maar dan met een testronde: het verandert de API-schema's). Structureel oplossen
+vraagt een aanpassing in `cmd/codegen/gen_input.go` — staat op de backlog.
 
 ---
 

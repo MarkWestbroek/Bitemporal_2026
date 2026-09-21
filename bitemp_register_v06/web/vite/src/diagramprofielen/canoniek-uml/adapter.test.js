@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 
 import { vanCanoniekModel, presentatieVoorEdge } from "./adapter.js";
 import { CANONIEK_UML_ID, canoniekUmlDiagramType } from "./index.js";
+import { materialiseerConnectoren } from "../../diagramcore/canvas/materialiseerConnectoren.js";
 
 /** Kleine representatieve store-state (vorm van useModelStore). */
 function maakBronState() {
@@ -210,4 +211,90 @@ test("presentatie: ASOC-edges — anker-zijden, class-link en terug-label", () =
   );
   assert.equal(link.lijn, "dash-4-3");
   assert.equal(link.labels.length, 0);
+});
+
+
+// ── Composities als connector ────────────────────────────────────────────────
+// Voorheen bestond ENT ◆ GE alleen als presentatie-edge per diagram: op een
+// nieuw diagram kwam de lijn nooit mee, en een kale oude handle ("left")
+// liet hem ook op het bestaande diagram verdwijnen.
+
+function maakCompositieState() {
+  const edgeData = { rolnaam: "Persoonsidentificatie", kardinaliteit: "0..1", momentvoorkomen: "enkelvoudig" };
+  return {
+    elements: {
+      NP: { id: "NP", naam: "NP", type: "entiteit", domein: "kern", data: { typenaam: "NatuurlijkPersoon", velden: [] } },
+      PI: {
+        id: "PI",
+        naam: "PI",
+        type: "gegevenselement",
+        domein: "kern",
+        data: {
+          klassenaam: "Persoonsidentificatie",
+          naamLabelHeen: "heeft",
+          velden: [{ naam: "bsn", type: "string", verplicht: true }],
+        },
+      },
+    },
+    structuralEdges: [{ id: "NP->PI", source: "NP", target: "PI", data: edgeData }],
+    diagrams: {
+      overzicht: {
+        id: "overzicht",
+        naam: "Overzicht",
+        nodes: [
+          { elementId: "NP", position: { x: 400, y: 0 } },
+          { elementId: "PI", position: { x: 0, y: 300 } },
+        ],
+        // Oude-editor-vorm: kale zijde als handle.
+        edges: [{ id: "NP->PI", source: "NP", target: "PI", type: "metamodel", sourceHandle: "left", data: edgeData }],
+      },
+    },
+  };
+}
+
+test("compositie ENT→GE wordt een compositie-connector; de presentatie-edge verdwijnt", () => {
+  const core = vanCanoniekModel(maakCompositieState());
+  const comps = Object.values(core.elements).filter((el) => el.elementType === "compositie");
+  assert.equal(comps.length, 1);
+  const c = comps[0];
+  assert.equal(c.source, "NP");
+  assert.equal(c.target, "PI");
+  assert.equal(c.data.sourceHandle, "source-left", "kale oude handle genormaliseerd");
+  assert.equal(c.data.targetHandle, undefined, "geen handle → kortste weg");
+  assert.equal(c.data.momentvoorkomen, "enkelvoudig");
+  assert.equal(c.data.naamLabelHeen, "heeft", "heen-naam van het GE komt mee");
+  assert.equal(c.data.structuralEdgeId, "NP->PI");
+  assert.equal(core.diagrams.overzicht.edges.length, 0, "geen dubbele lijn naast de connector");
+});
+
+test("compositie komt mee op een nieuw diagram, met ruit en labels uit de profiel-hook", () => {
+  const core = vanCanoniekModel(maakCompositieState());
+  const etById = Object.fromEntries(canoniekUmlDiagramType.elementTypes.map((et) => [et.id, et]));
+  // Een leeg diagram waarop je alleen de entiteit en haar GE zet.
+  const nieuw = {
+    id: "nieuw",
+    nodes: [
+      { elementId: "NP", position: { x: 400, y: 0 } },
+      { elementId: "PI", position: { x: 0, y: 300 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(core.elements, nieuw, etById);
+  assert.equal(edges.length, 1, "de compositielijn wordt afgeleid");
+  const p = edges[0].data.presentatie;
+  assert.equal(p.markerStart, "ruit");
+  const teksten = p.labels.flatMap((l) => l.delen.map((d) => d.tekst));
+  for (const verwacht of ["Persoonsidentificatie", "0..1", "{enkelvoudig}", "▶ heeft"]) {
+    assert.ok(teksten.includes(verwacht), `label "${verwacht}" ontbreekt (labels: ${teksten.join(", ")})`);
+  }
+});
+
+test("compositie-labels: leesrichting komt van de GE, de connector-kopie is terugval", () => {
+  const comp = canoniekUmlDiagramType.elementTypes.find((et) => et.id === "compositie");
+  const conn = { id: "c", source: "E", target: "G", data: { rolnaam: "adres", naamLabelHeen: "oud" } };
+  const teksten = (ctx) => (comp.hooks.edgeLabels(conn, ctx).kaal || []).flatMap((l) => l.delen.map((d) => d.tekst));
+  assert.ok(teksten(undefined).includes("▶ oud"));
+  const elements = { G: { id: "G", data: { naamLabelHeen: "woont op", naamLabelTerug: "hoort bij" } } };
+  assert.ok(teksten({ elements }).includes("▶ woont op"));
+  assert.ok(teksten({ elements }).includes("◀ hoort bij"));
+  assert.ok(!teksten({ elements }).includes("▶ oud"));
 });

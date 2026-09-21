@@ -1,0 +1,138 @@
+# /etc/caddy/Caddyfile — Caddy als reverse proxy met automatisch Let's Encrypt.
+#
+# Caddy luistert op 80 en 443, vraagt zelf het certificaat aan zodra het A-record
+# naar deze machine wijst, vernieuwt het automatisch en stuurt http door naar
+# https. Herladen na wijziging:  sudo systemctl reload caddy
+#
+# Twee sites op één machine en één IP-adres. Caddy kiest op de Host-header, TLS
+# regelt dat via SNI — extra IP-adressen zijn dus niet nodig, hoeveel domeinen je
+# er ook bij zet. De hostnaam van de server zelf (vps1.paratmos.nl) speelt hier
+# geen rol; die zie je alleen in je shell-prompt en in de logs.
+
+(veilig) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
+
+# ── Landingspagina ────────────────────────────────────────────────────────
+# Statische site uit web/omnium-studio/, met scp naar /srv/omnium/www gezet.
+omnium-ide.nl {
+	import veilig
+	root * /srv/omnium/www
+	file_server
+}
+
+www.omnium-ide.nl {
+	redir https://omnium-ide.nl{uri} permanent
+}
+
+# ── Omnium Studio ─────────────────────────────────────────────────────────
+# De frontend-container (nginx) serveert /viz/react/ en proxiet de rest
+# (/api, /full, /registratie, /docs, /version, ...) door naar de Go-API.
+app.omnium-ide.nl {
+	import veilig
+
+	# Zelfde bovengrens als client_max_body_size in nginx.frontend.conf.
+	request_body {
+		max_size 20MB
+	}
+
+	# Het kale adres zelf doorverwijzen. Laat je dit aan de nginx in de
+	# frontend-container over, dan bouwt die een absolute http://-URL — hij
+	# weet niet dat de bezoeker via TLS binnenkwam, want Caddy praat intern
+	# over gewone http met hem. Resultaat: een onnodige hop over http.
+	redir / /viz/react/ 302
+
+	reverse_proxy 127.0.0.1:8083
+}
+
+# ── Korte ingang naar de Studio ───────────────────────────────────────────
+# omnide.nl is alleen een kort adres (Marks eigen domein bij Quickhost); de
+# Studio blijft op app.omnium-ide.nl wonen, zodat er één echte URL is. Let op:
+# de zone die ns1/ns2.quickhost.nl uitleveren is die van het Quickhost-
+# klantpanel, niet de Plesk-zone van dit domein.
+omnide.nl, www.omnide.nl {
+	redir https://app.omnium-ide.nl{uri} permanent
+}
+
+# ── MusicBrain ────────────────────────────────────────────────────────────
+# Imprint-site musicbrain.nl: stack in /srv/imprint/deploy/vps, container op
+# 127.0.0.1:3000 (sinds 19 september 2026; daarvoor Plesk bij Quickhost).
+# editor.musicbrain.nl: zie het blok hieronder.
+musicbrain.nl {
+	import veilig
+	# Uploads via de admin en /api/ingest (board-renders, 3D-modellen).
+	request_body {
+		max_size 50MB
+	}
+	reverse_proxy 127.0.0.1:3000
+}
+
+www.musicbrain.nl {
+	redir https://musicbrain.nl{uri} permanent
+}
+
+# ── Volksgebouw Zeist ─────────────────────────────────────────────────────
+# Next.js-site uit het VolksgebouwZeist-repo, stack in
+# /srv/volksgebouw/deploy/vps (zie deploy/vps/README.md daar), container op
+# 127.0.0.1:3200. DNS bij Quickhost; mail (MX, SPF, DKIM) blijft daar.
+volksgebouwzeist.nl {
+	import veilig
+	reverse_proxy 127.0.0.1:3200
+}
+
+www.volksgebouwzeist.nl {
+	redir https://volksgebouwzeist.nl{uri} permanent
+}
+
+# ── MusicBrain-editor ─────────────────────────────────────────────────────
+# Statische Vite-SPA uit het MusicBrain-repo (editor/). Gebouwd door
+# editor/deploy-vps.sh (gestart door de GitHub Action "Deploy editor"); www is
+# een symlink naar de actieve release. Banken buiten git: GitHub-release "banks".
+editor.musicbrain.nl {
+	import veilig
+	root * /srv/musicbrain-editor/www
+	# Vite-bundels hebben een hash in de naam: die mogen lang in de cache.
+	@hashed path /assets/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+	file_server
+}
+
+# ── Imprint ───────────────────────────────────────────────────────────────
+# Productsite van de Imprint-engine: repo imprint-engine, stack in
+# /srv/imprint/deploy/vps (docs/deploy-vps.md), container op 127.0.0.1:3100.
+# DNS bij mijn.host. imprint.musicbrain.nl was het tijdelijke adres.
+imprint-engine.nl {
+	import veilig
+	reverse_proxy 127.0.0.1:3100
+}
+
+www.imprint-engine.nl, imprint.musicbrain.nl {
+	redir https://imprint-engine.nl{uri} permanent
+}
+
+# ── Psycholoog (Ewa) ──────────────────────────────────────────────────────
+# Next.js-site uit het ewa-psycholog-repo (PL/NL/EN, eigen mini-CMS op /admin),
+# stack in /srv/psycholog/deploy/vps, container op 127.0.0.1:3300. Alleen dit
+# subdomein staat hier; pi-utrecht.nl zelf blijft bij Quickhost.
+psycholog.pi-utrecht.nl {
+	import veilig
+	# De admin uploadt PDF's (next.config.mjs staat 25 MB toe).
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy 127.0.0.1:3300
+}
+
+# ── Later ─────────────────────────────────────────────────────────────────
+# Zet dit blok pas aan als het A-record van omnium-ide.com naar deze machine
+# wijst; anders blijft Caddy vergeefs een certificaat proberen op te halen.
+#
+# omnium-ide.com, www.omnium-ide.com {
+# 	redir https://omnium-ide.nl{uri} permanent
+# }

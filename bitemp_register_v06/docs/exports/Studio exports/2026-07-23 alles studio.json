@@ -1,0 +1,750 @@
+{
+  "formaat": "studio05-diagram",
+  "versie": 1,
+  "diagramType": "puur-uml",
+  "geexporteerd": "2026-07-23T17:28:26.680Z",
+  "elements": {
+    "pu_1783108250658_1": {
+      "id": "pu_1783108250658_1",
+      "naam": "A",
+      "elementType": "klasse",
+      "compartimenten": [
+        {
+          "compartmentType": "attributen",
+          "velden": [
+            {
+              "naam": "ndt",
+              "fieldType": "attribuut",
+              "data": {
+                "typeLabel": "NieuweDatatype"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {}
+    },
+    "pu_1783108254097_2": {
+      "id": "pu_1783108254097_2",
+      "naam": "NieuweInterface",
+      "elementType": "interface",
+      "compartimenten": [],
+      "data": {}
+    },
+    "pu_1783108256697_3": {
+      "id": "pu_1783108256697_3",
+      "naam": "NieuweEnumeratie",
+      "elementType": "enumeratie",
+      "compartimenten": [],
+      "data": {}
+    },
+    "pu_1783108259105_4": {
+      "id": "pu_1783108259105_4",
+      "naam": "note",
+      "elementType": "notitie",
+      "compartimenten": [],
+      "data": {
+        "tekst": ""
+      }
+    },
+    "pu_1783108270177_5": {
+      "id": "pu_1783108270177_5",
+      "naam": "B",
+      "elementType": "klasse",
+      "compartimenten": [
+        {
+          "compartmentType": "attributen",
+          "velden": [
+            {
+              "naam": "",
+              "fieldType": "attribuut",
+              "data": {}
+            }
+          ]
+        }
+      ],
+      "data": {}
+    },
+    "conn_1783108279842_1": {
+      "id": "conn_1783108279842_1",
+      "naam": "asoc",
+      "elementType": "associatie",
+      "source": "pu_1783108250658_1",
+      "target": "pu_1783108270177_5",
+      "compartimenten": [
+        {
+          "compartmentType": "attributen",
+          "velden": [
+            {
+              "naam": "veld",
+              "fieldType": "attribuut",
+              "data": {
+                "typeLabel": "NieuweDatatype"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null,
+        "bronKardinaliteit": "1",
+        "doelKardinaliteit": "*",
+        "labelOffsets": {
+          "bron": {
+            "x": -3,
+            "y": 12
+          },
+          "doel": {
+            "x": 4,
+            "y": -14
+          }
+        }
+      }
+    },
+    "conn_1783108301393_2": {
+      "id": "conn_1783108301393_2",
+      "naam": "",
+      "elementType": "realisatie",
+      "source": "pu_1783108270177_5",
+      "target": "pu_1783108254097_2",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "pu_1783108376458_6": {
+      "id": "pu_1783108376458_6",
+      "naam": "Sub A",
+      "elementType": "klasse",
+      "compartimenten": [],
+      "data": {}
+    },
+    "conn_1783108379393_3": {
+      "id": "conn_1783108379393_3",
+      "naam": "",
+      "elementType": "compositie",
+      "source": "pu_1783108250658_1",
+      "target": "pu_1783108376458_6",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "pu_1783110205185_1": {
+      "id": "pu_1783110205185_1",
+      "naam": "SpeciaalType",
+      "elementType": "datatype",
+      "compartimenten": [],
+      "data": {}
+    },
+    "pu_1783117785604_1": {
+      "id": "pu_1783117785604_1",
+      "naam": "aggreg onder A",
+      "elementType": "klasse",
+      "compartimenten": [],
+      "data": {}
+    },
+    "conn_1783117797268_2": {
+      "id": "conn_1783117797268_2",
+      "naam": "",
+      "elementType": "aggregatie",
+      "source": "pu_1783108250658_1",
+      "target": "pu_1783117785604_1",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "pu_1783243710768_1": {
+      "id": "pu_1783243710768_1",
+      "naam": "NieuwePackage",
+      "elementType": "package",
+      "compartimenten": [],
+      "data": {}
+    },
+    "bev_1783245717815_1": {
+      "id": "bev_1783245717815_1",
+      "naam": "",
+      "elementType": "bevat",
+      "source": "pu_1783243710768_1",
+      "target": "pu_1783108250658_1",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "bev_1783245727551_2": {
+      "id": "bev_1783245727551_2",
+      "naam": "",
+      "elementType": "bevat",
+      "source": "pu_1783243710768_1",
+      "target": "pu_1783117785604_1",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "bev_1783245742761_1": {
+      "id": "bev_1783245742761_1",
+      "naam": "",
+      "elementType": "bevat",
+      "source": "pu_1783243710768_1",
+      "target": "pu_1783108254097_2",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "bev_1783245746176_2": {
+      "id": "bev_1783245746176_2",
+      "naam": "",
+      "elementType": "bevat",
+      "source": "pu_1783243710768_1",
+      "target": "pu_1783108256697_3",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "bev_1783245749145_3": {
+      "id": "bev_1783245749145_3",
+      "naam": "",
+      "elementType": "bevat",
+      "source": "pu_1783243710768_1",
+      "target": "pu_1783108270177_5",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "bev_1783245758818_1": {
+      "id": "bev_1783245758818_1",
+      "naam": "",
+      "elementType": "bevat",
+      "source": "pu_1783243710768_1",
+      "target": "pu_1783110205185_1",
+      "compartimenten": [],
+      "data": {
+        "vorm": "boom",
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "pu_1783970669522_1": {
+      "id": "pu_1783970669522_1",
+      "naam": "Wijziging",
+      "elementType": "klasse",
+      "compartimenten": [
+        {
+          "compartmentType": "attributen",
+          "velden": [
+            {
+              "naam": "type",
+              "fieldType": "attribuut",
+              "data": {
+                "typeLabel": "Wijzigingstype"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {}
+    },
+    "pu_1783970679538_2": {
+      "id": "pu_1783970679538_2",
+      "naam": "{Representatie}",
+      "elementType": "klasse",
+      "compartimenten": [
+        {
+          "compartmentType": "attributen",
+          "velden": [
+            {
+              "naam": "naam",
+              "fieldType": "attribuut",
+              "data": {}
+            }
+          ]
+        }
+      ],
+      "data": {}
+    },
+    "conn_1783970721098_1": {
+      "id": "conn_1783970721098_1",
+      "naam": "",
+      "elementType": "associatie",
+      "source": "pu_1783970669522_1",
+      "target": "pu_1783970679538_2",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null,
+        "directioneel": true,
+        "vorm": "boom"
+      }
+    },
+    "pu_1783970773521_3": {
+      "id": "pu_1783970773521_3",
+      "naam": "Registratietype",
+      "elementType": "enumeratie",
+      "compartimenten": [
+        {
+          "compartmentType": "literals",
+          "velden": [
+            {
+              "naam": "registratie",
+              "fieldType": "literal",
+              "data": {}
+            },
+            {
+              "naam": "correctie",
+              "fieldType": "literal",
+              "data": {}
+            },
+            {
+              "naam": "ongedaanmaking",
+              "fieldType": "literal",
+              "data": {}
+            },
+            {
+              "naam": "betwijfeling",
+              "fieldType": "literal",
+              "data": {}
+            }
+          ]
+        }
+      ],
+      "data": {}
+    },
+    "pu_1783970873274_4": {
+      "id": "pu_1783970873274_4",
+      "naam": "Registratie",
+      "elementType": "klasse",
+      "compartimenten": [
+        {
+          "compartmentType": "attributen",
+          "velden": [
+            {
+              "naam": "tijdstip",
+              "fieldType": "attribuut",
+              "data": {}
+            },
+            {
+              "naam": "opmerking",
+              "fieldType": "attribuut",
+              "data": {}
+            }
+          ]
+        }
+      ],
+      "data": {}
+    },
+    "conn_1783970934586_5": {
+      "id": "conn_1783970934586_5",
+      "naam": "",
+      "elementType": "compositie",
+      "source": "pu_1783970873274_4",
+      "target": "pu_1783970669522_1",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "pu_1783970967266_5": {
+      "id": "pu_1783970967266_5",
+      "naam": "Annotatie",
+      "elementType": "klasse",
+      "compartimenten": [
+        {
+          "compartmentType": "attributen",
+          "velden": [
+            {
+              "naam": "type",
+              "fieldType": "attribuut",
+              "data": {
+                "typeLabel": "Annotatietype"
+              }
+            }
+          ]
+        }
+      ],
+      "data": {}
+    },
+    "conn_1783971016562_7": {
+      "id": "conn_1783971016562_7",
+      "naam": "",
+      "elementType": "compositie",
+      "source": "pu_1783970873274_4",
+      "target": "pu_1783970967266_5",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "pu_1783971030314_6": {
+      "id": "pu_1783971030314_6",
+      "naam": "Annotatietype",
+      "elementType": "enumeratie",
+      "compartimenten": [
+        {
+          "compartmentType": "literals",
+          "velden": [
+            {
+              "naam": "twijfel",
+              "fieldType": "literal",
+              "data": {}
+            }
+          ]
+        }
+      ],
+      "data": {}
+    },
+    "conn_1783971053818_8": {
+      "id": "conn_1783971053818_8",
+      "naam": "",
+      "elementType": "dependency",
+      "source": "pu_1783970967266_5",
+      "target": "pu_1783971030314_6",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null
+      }
+    },
+    "conn_1783971093666_9": {
+      "id": "conn_1783971093666_9",
+      "naam": "",
+      "elementType": "associatie",
+      "source": "pu_1783970967266_5",
+      "target": "pu_1783970679538_2",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": null,
+        "targetHandle": null,
+        "vorm": "boom"
+      }
+    },
+    "pu_1783971253123_7": {
+      "id": "pu_1783971253123_7",
+      "naam": "Werkmap",
+      "elementType": "klasse",
+      "compartimenten": [],
+      "data": {}
+    },
+    "pu_1783971279747_8": {
+      "id": "pu_1783971279747_8",
+      "naam": "Werkstap",
+      "elementType": "klasse",
+      "compartimenten": [],
+      "data": {}
+    },
+    "conn_1783971333635_10": {
+      "id": "conn_1783971333635_10",
+      "naam": "",
+      "elementType": "compositie",
+      "source": "pu_1783971253123_7",
+      "target": "pu_1783971279747_8",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top"
+      }
+    },
+    "conn_1783971361147_11": {
+      "id": "conn_1783971361147_11",
+      "naam": "doet",
+      "elementType": "associatie",
+      "source": "pu_1783971279747_8",
+      "target": "pu_1783970873274_4",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": "source-left",
+        "targetHandle": "target-right",
+        "directioneel": true
+      }
+    },
+    "pu_1783971460387_9": {
+      "id": "pu_1783971460387_9",
+      "naam": "",
+      "elementType": "notitie",
+      "compartimenten": [],
+      "data": {
+        "tekst": "Een werkstap kan een stukje registratie uit een aanvraag zijn, maar ook het onderzoek waarin de betwijfeling wordt onderzocht."
+      }
+    },
+    "conn_1783971745572_14": {
+      "id": "conn_1783971745572_14",
+      "naam": "",
+      "elementType": "dependency",
+      "source": "pu_1783970873274_4",
+      "target": "pu_1783970773521_3",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": "source-top",
+        "targetHandle": "target-bottom",
+        "vorm": "recht"
+      }
+    },
+    "pu_1783971754164_10": {
+      "id": "pu_1783971754164_10",
+      "naam": "Wijzigingstype",
+      "elementType": "enumeratie",
+      "compartimenten": [
+        {
+          "compartmentType": "literals",
+          "velden": [
+            {
+              "naam": "opvoer",
+              "fieldType": "literal",
+              "data": {}
+            },
+            {
+              "naam": "afvoer",
+              "fieldType": "literal",
+              "data": {}
+            }
+          ]
+        }
+      ],
+      "data": {}
+    },
+    "conn_1783971785404_15": {
+      "id": "conn_1783971785404_15",
+      "naam": "",
+      "elementType": "dependency",
+      "source": "pu_1783970669522_1",
+      "target": "pu_1783971754164_10",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": "source-top",
+        "targetHandle": "target-bottom"
+      }
+    },
+    "conn_1783973676072_17": {
+      "id": "conn_1783973676072_17",
+      "naam": "",
+      "elementType": "associatie",
+      "source": "pu_1783970873274_4",
+      "target": "pu_1783970873274_4",
+      "compartimenten": [],
+      "data": {
+        "sourceHandle": "source-right",
+        "targetHandle": "target-top",
+        "directioneel": true,
+        "vorm": "hoekig"
+      }
+    }
+  },
+  "diagrams": {
+    "u05_1783108248130": {
+      "nodes": [
+        {
+          "elementId": "pu_1783108250658_1",
+          "position": {
+            "x": 292.92242464395315,
+            "y": 214.73571825862263
+          }
+        },
+        {
+          "elementId": "pu_1783108254097_2",
+          "position": {
+            "x": 743.7988736587746,
+            "y": 97.4437821848118
+          }
+        },
+        {
+          "elementId": "pu_1783108256697_3",
+          "position": {
+            "x": 654.2776004839637,
+            "y": 408.3547315642962
+          }
+        },
+        {
+          "elementId": "pu_1783108259105_4",
+          "position": {
+            "x": 58.930470628912104,
+            "y": 458.51765990441646
+          }
+        },
+        {
+          "elementId": "pu_1783108270177_5",
+          "position": {
+            "x": 711.5122641910607,
+            "y": 228.88622893437565
+          }
+        },
+        {
+          "elementId": "conn_1783108279842_1",
+          "position": {
+            "x": 501.7401685294792,
+            "y": 114.58427064441972
+          }
+        },
+        {
+          "elementId": "pu_1783108376458_6",
+          "position": {
+            "x": 322.52783588643894,
+            "y": 377.93422125523455
+          }
+        },
+        {
+          "elementId": "pu_1783110205185_1",
+          "position": {
+            "x": 566.7671162989852,
+            "y": 332.4728096835845
+          }
+        },
+        {
+          "elementId": "pu_1783117785604_1",
+          "position": {
+            "x": 56.78802968551733,
+            "y": 375.06806317079185
+          }
+        },
+        {
+          "elementId": "pu_1783243710768_1",
+          "position": {
+            "x": 342.8681475631777,
+            "y": -91.48863880889883
+          },
+          "size": {
+            "width": 180,
+            "height": 56
+          }
+        }
+      ],
+      "edges": [],
+      "id": "u05_1783108248130",
+      "naam": "UML test",
+      "diagramType": "puur-uml",
+      "viewport": {
+        "x": 106.16161730885949,
+        "y": 167.56887095532136,
+        "zoom": 0.8021282128990292
+      }
+    },
+    "u05_1783970661489": {
+      "nodes": [
+        {
+          "elementId": "pu_1783970669522_1",
+          "position": {
+            "x": 404.8989667795627,
+            "y": 220.77488747358018
+          },
+          "size": {
+            "width": 180,
+            "height": 70
+          }
+        },
+        {
+          "elementId": "pu_1783970679538_2",
+          "position": {
+            "x": 108.25582917990818,
+            "y": 214.94814994276538
+          },
+          "size": {
+            "width": 180,
+            "height": 206
+          }
+        },
+        {
+          "elementId": "pu_1783970773521_3",
+          "position": {
+            "x": 656.4478050890011,
+            "y": 5.528603321023965
+          }
+        },
+        {
+          "elementId": "pu_1783970873274_4",
+          "position": {
+            "x": 728.1427788967026,
+            "y": 221.54787096346178
+          },
+          "size": {
+            "width": 190,
+            "height": 206
+          }
+        },
+        {
+          "elementId": "pu_1783970967266_5",
+          "position": {
+            "x": 406.29924575886633,
+            "y": 370.47190428881186
+          }
+        },
+        {
+          "elementId": "pu_1783971030314_6",
+          "position": {
+            "x": 407.69952473817,
+            "y": 513.0551649912926
+          }
+        },
+        {
+          "elementId": "pu_1783971253123_7",
+          "position": {
+            "x": 1018.3648127510432,
+            "y": 119.80788648314996
+          },
+          "size": {
+            "width": 189,
+            "height": 56
+          }
+        },
+        {
+          "elementId": "pu_1783971279747_8",
+          "position": {
+            "x": 1022.8648127510432,
+            "y": 289.25838173710315
+          },
+          "size": {
+            "width": 180,
+            "height": 66
+          }
+        },
+        {
+          "elementId": "pu_1783971460387_9",
+          "position": {
+            "x": 1003.02049005235,
+            "y": 378.38020655039145
+          },
+          "size": {
+            "width": 203,
+            "height": 129
+          }
+        },
+        {
+          "elementId": "pu_1783971754164_10",
+          "position": {
+            "x": 406.7761398244778,
+            "y": 39.46135986766758
+          }
+        }
+      ],
+      "edges": [],
+      "id": "u05_1783970661489",
+      "naam": "Registratie - Wijziging",
+      "diagramType": "puur-uml",
+      "viewport": {
+        "x": -22.466598559459953,
+        "y": 95.73263276160674,
+        "zoom": 0.8601641893087209
+      }
+    }
+  },
+  "meta": null
+}

@@ -13,7 +13,7 @@ if (-not $repoRoot) {
 
 $projectRoot = Join-Path $repoRoot 'bitemp_register_v06'
 $exportScript = Join-Path $projectRoot 'scripts/export-copilot-chats.py'
-$exportDir = Join-Path $projectRoot 'docs/copilot-chats/exports'
+$exportDir = Join-Path $projectRoot 'docs/ai-chats/exports'
 
 if (-not (Test-Path $exportScript)) {
     Write-Error "Export script niet gevonden: $exportScript"

@@ -46,8 +46,12 @@
  * @typedef {Object} PropertyType
  * @property {string} key                  - waar de waarde leeft (veld.naam of data[key])
  * @property {string} [label]
- * @property {string} [datatype]           - "string" (default) | "tekst" | "boolean" | "colour" | profiel-eigen
+ * @property {string} [datatype]           - "string" (default) | "tekst" | "boolean" | "colour" |
+ *   "keuze" | "diagram-verwijzing" | profiel-eigen
+ * @property {{waarde: string, label: string}[]} [opties] - bij datatype "keuze":
+ *   de vaste lijst (bv. BPMN-event-soorten, ArchiMate-access lezen/schrijven)
  * @property {boolean} [verplicht]
+ * @property {string} [placeholder]        - voorbeeldtekst in een leeg invoerveld
  * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
  */
 
@@ -57,8 +61,9 @@
  *
  * @typedef {Object} FieldType
  * @property {string} id
- * @property {"naam-type"|"tekst"|"waarde"} viewer - FieldTypeViewer-id: de
- *   compacte rij-weergave op de node (componeert de property-weergaven)
+ * @property {"naam-type"|"tekst"|"waarde"|"sub-vak"} viewer - FieldTypeViewer-id: de
+ *   compacte rij-weergave op de node (componeert de property-weergaven).
+ *   "sub-vak" = een opgenomen deel als vak in het vak (zie ElementType.opname)
  * @property {PropertyType[]} [properties]
  */
 
@@ -77,7 +82,11 @@
  */
 
 /**
- * Verbindingsregel voor een connector-uiteinde.
+ * Verbindingsregels: een connector-ElementType heeft er 1..* (metamodel:
+ * ConnectorType ◆ 1..* Verbindingsregel). `verbindingsregels` is de
+ * volledige vorm: elke regel is een toegestane bron×doel-combinatie.
+ * De verkorte vorm `bron`/`doel` (één regel, cartesiaans product) blijft
+ * ondersteund. Zie ook: Verbindingsregel voor een connector-uiteinde.
  *
  * @typedef {Object} ConnectorEindpunt
  * @property {string[]} elementTypes        - toegestane element-typen
@@ -88,17 +97,87 @@
  * ElementType — de betekenis-definitie van een soort element.
  * De vorm komt uit het ShapeType (Implementatie-domein), gekoppeld via `shape`.
  *
+ * DiagramType.shapeSets (P07): optionele alternatieve gedaanten voor één
+ * profiel — [{id, label, shapes: {elementTypeId: shapeId}}]. De gekozen set
+ * overschrijft per elementtype de shape (menu "Shape-set"); de Definitie
+ * blijft gelijk, alleen de vorm wisselt.
+ *
  * @typedef {Object} ElementType
  * @property {string} id
  * @property {string} label
- * @property {string} shape                 - ShapeType-id (bv. "class-box", "note", "boundary")
+ * @property {string} [omschrijving]        - één-regel-uitleg (taakbalk-tooltip)
+ * @property {string} shape                 - ShapeType-id (bv. "class-box", "chip", "knip-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
+ * @property {"binnen"|"buiten"|"geen"} [naamLabel] - waar de naam van het element
+ *   staat. `"binnen"` (default) = de shape rendert de naam zelf, zoals altijd.
+ *   `"buiten"` = de motor zet de naam als los label ónder de vorm — bedoeld voor
+ *   kleine, vaste vormen die geen tekst kunnen dragen (BPMN-events en -gateways,
+ *   state machine begin/eind/keuze, activity-knooppunten). `"geen"` = nooit tonen.
+ *   Het buitenlabel is diagram-breed uit te zetten (`data-dc-labels="uit"` op het
+ *   canvasvlak, menu Beeld → Buitenlabels) — dat geldt dan voor álle profielen.
+ *   N.B. shapes met `.dc-node` klippen hun inhoud (`overflow: hidden`); het
+ *   buitenlabel wordt daarom bewust náást de shape gerenderd, niet erin.
  * @property {string} [kleur]               - default; instantie kan overriden
+ * @property {number} [randDikte]           - vormgrammatica: randbreedte in px (identiteit = dik, bv. 3)
+ * @property {number} [hoekRadius]          - vormgrammatica: hoekafronding in px (structuur = rond)
+ * @property {"dashed"} [randStijl]         - vormgrammatica: gestippeld = inhoud elders beheerd
+ *   (ook per element via data.randStijl); geldt voor class-box, chip en package
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
+ * @property {"zijden"|"zwevend"} [randAanhechting] - waar een connector aan dit
+ *   element vastpakt. `"zijden"` = de vier handles (midden van elke zijde);
+ *   `"zwevend"` = het punt waar de lijn de omtrek snijdt, zodat lijnen naar
+ *   verschillende buren uitwaaieren en meeglijden als je de node versleept.
+ *   Zonder waarde geldt `DiagramType.randAanhechting`, en anders `"zijden"`.
+ *   Een handmatig gekozen handle (`data.sourceHandle`/`targetHandle` op de
+ *   connector) wint altijd — zweven geldt alleen waar niets gekozen is.
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
+ * @property {number} [minBreedte]          - resize-minimum (default 180) — bv. smalle balken
+ * @property {number} [minHoogte]           - resize-minimum (default 56)
  * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
+ * @property {boolean} [meerdereVoorkomens] - overschrijft de DiagramType-default voor dit elementtype
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
+ * @property {string} [taakbalkGroep]       - groep in de afgeleide Maken-/
+ *   Verbinding-balk (bv. de ArchiMate-laag); op elke groepsgrens komt een
+ *   scheidingsteken. Zonder groepen geen scheidingen — zie
+ *   diagramcore/taskbar/scheidingen.js
  * @property {boolean} [isConnector]
+ * @property {string} [containerVoor]       - connectortype-id: dit type is een
+ *   container (bv. package); een element erin slepen (canvas of boom) legt
+ *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg.
+ *   Containers sorteren bovenaan in de elementen-boom
+ *   Leden die ín de container liggen renderen als kind ervan: ze reizen mee
+ *   en blijven binnen de rand (Alt+slepen tilt eruit) — canvas/nesting.js
+ * @property {string[]} [afbakeningVoor]    - connectortype-ids die dit
+ *   containertype **begrenst**: bron en doel moeten in dezelfde afbakening
+ *   liggen (BPMN: sequence flow kruist geen poolgrens). Motor-primitief, zie
+ *   canvas/afbakening.js
+ * @property {string[]} [overbrugt]         - (connectortype) elementtype-ids
+ *   van afbakeningen die deze verbinding **moet** kruisen: bron en doel in
+ *   verschillende afbakeningen (BPMN: message flow tussen pools)
+ * @property {{ouderTypes: string[], klem?: "rand"|"as"}} [randElement] - rand-aanhechting
+ *   (gedragsdiagram-primitief §3.1): dit element woont óp de rand van een
+ *   gastheer-element (BPMN boundary-event, state entry/exit-point, activity
+ *   pin). `ouderTypes` = element-typen waaraan het mag hechten. Aanhechten =
+ *   het element op/naast de rand van een gastheer slepen; het klikt dan vast
+ *   op de omtrek en beweegt mee (element.data.randVan = gastheer-id; de
+ *   diagram-positie is dan relatief aan de gastheer). Wegslepen = losmaken.
+ * @property {boolean} [gedragsVerwijzing]  - behavior-reference
+ *   (gedragsdiagram-primitief §3.2): dit element kan naar een ander diagram
+ *   verwijzen (submachine state, BPMN call-activity). De verwijzing leeft in
+ *   element.data.gedragDiagramId (property-datatype "diagram-verwijzing");
+ *   dubbelklik op de node opent dat diagram (nieuwe tab in Modelleren).
+ * @property {{gedaante: string, relatieTypes: string[], labelIngeklapt?: string, labelUitgeklapt?: string}} [samentrekking]
+ *   - gedaanten van een samenstel (lollipop): een voorkomen met
+ *   `DiagramNode.gedaante === gedaante` rendert ingeklapt en maakt de genoemde
+ *   relaties over de hele lengte kaal
+ * @property {{gedaante: string, relatieTypes: string[], compartiment?: string, labelIngebed?: string, labelLos?: string}} [opname]
+ *   - gedaanten van een samenstel (opname): een voorkomen van dit *deel* met
+ *   `DiagramNode.gedaante === gedaante` verdwijnt als node en verschijnt als
+ *   sub-vak in `compartiment` van het geheel (bron van een van de
+ *   `relatieTypes`); die relatielijn vervalt. Per voorkomen, dus per diagram.
+ *   Zie canvas/opname.js
+ * @property {boolean} [standaardDichtInBoom] - boomrijen van dit type beginnen
+ *   ingeklapt (zoals mappen in een verkenner); de chevron-klik wint daarna
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector
  * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
  * @property {Object} [edgePresentatie]     - declaratieve edge-vorm voor kale
@@ -158,6 +237,12 @@
  * @property {string} id                    - bv. "canoniek-uml", "puur-uml", "oas31"
  * @property {string} label
  * @property {string} style                 - StyleType-id (Implementatie-domein)
+ * @property {"geen"|"icoon"|"tekst"} [typeWeergave] - default voor de
+ *   Typering-toggle: alleen vorm, mini-icoon of stereotype-tekst (default "tekst")
+ * @property {"zijden"|"zwevend"} [randAanhechting] - profiel-default voor waar
+ *   connectoren vastpakken (zie ElementType.randAanhechting); per elementtype
+ *   te overschrijven. Default "zijden" — bestaande profielen veranderen niet
+ *   tenzij ze het zelf zetten.
  * @property {ElementType[]} elementTypes
  * @property {FieldType[]} [fieldTypes]     - de veldtypen waar CompartmentTypes naar verwijzen
  * @property {ReferenceType[]} [referenceTypes] - declaratieve soorten verwijzings-kandidaten (§4.5b)
@@ -165,6 +250,7 @@
  *   resolver per ReferenceType-id (kandidaten uit model/runtime)
  * @property {TaskbarType[]} [taakbalken]
  * @property {LayoutStrategie[]} [layouts]
+ * @property {boolean} [meerdereVoorkomens] - elementen mogen meermaals in één diagram voorkomen (default false)
  * @property {{exporteer?: Function, importeer?: Function}} [serialisatie]
  * @property {(ctx: Object) => Array<Object>} [menus] - extra menubalk-menu's
  *   (zelfde itemmodel als studio/buildMenus.js)

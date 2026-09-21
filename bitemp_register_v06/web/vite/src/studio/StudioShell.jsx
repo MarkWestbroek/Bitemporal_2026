@@ -13,16 +13,18 @@
  * De shell kent alleen het activiteit-*contract* (Sidebar/Main/Inspector + Provider).
  * Welke activiteiten bestaan komt uit het activityRegistry — volledig uitbreidbaar.
  */
-import React, { Fragment, Suspense } from "react";
-import { getActiviteiten } from "./activityRegistry";
+import React, { Fragment, Suspense, useSyncExternalStore } from "react";
+import { getActiviteiten, abonneerOpActiviteiten, activiteitenVersie } from "./activityRegistry";
 import useStudioStore from "./useStudioStore";
 import useUIStore from "../store/useUIStore";
 import ActivityBar from "./ActivityBar";
 import SidePanel from "./SidePanel";
 import MenuBar from "./MenuBar";
+import CommandPalette from "./CommandPalette";
 import { buildMenus } from "./buildMenus";
 import { menuBus } from "./menuBus";
 import { OmniumMark } from "./icons";
+import { NaamDialogHost } from "./naamDialog";
 
 function ThemaKnop() {
   const theme = useUIStore((s) => s.theme);
@@ -40,6 +42,9 @@ function ThemaKnop() {
 }
 
 export default function StudioShell() {
+  // Hertekent zodra er (async) activiteiten bijkomen — bv. profielen die na
+  // het laden uit de git-map (dev-endpoint) geregistreerd worden.
+  useSyncExternalStore(abonneerOpActiviteiten, activiteitenVersie);
   const activiteiten = getActiviteiten();
   const activeId = useStudioStore((s) => s.activeId);
   const setActief = useStudioStore((s) => s.setActief);
@@ -115,11 +120,21 @@ export default function StudioShell() {
       links={
         <span className="studio-menubar__brand">
           {actief.label}
-          {actief.status === "concept" && (
-            <span className="studio-topbar__concept" style={{ marginLeft: 8 }}>concept</span>
+          {actief.status && (
+            <span className="studio-topbar__status" style={{ marginLeft: 8 }}>{actief.status}</span>
           )}
         </span>
       }
+    />
+  );
+
+  // Opdrachtenpalet (Ctrl+K) — altijd gemount, beheert zijn eigen open-stand.
+  const palette = (
+    <CommandPalette
+      menus={menus}
+      activiteiten={activiteiten}
+      actiefId={actief.id}
+      setActief={setActief}
     />
   );
 
@@ -129,6 +144,8 @@ export default function StudioShell() {
     return (
       <div className="studio" data-studio-theme={theme}>
         {menubar}
+        {palette}
+        <NaamDialogHost />
         <div className="studio-shell-row">
           <ActivityBar activiteiten={activiteiten} />
           <div className="studio-main">
@@ -148,6 +165,8 @@ export default function StudioShell() {
   return (
     <div className="studio" data-studio-theme={theme}>
       {menubar}
+      {palette}
+      <NaamDialogHost />
       <div className="studio-shell-row">
         <ActivityBar activiteiten={activiteiten} />
 
@@ -165,8 +184,8 @@ export default function StudioShell() {
                 </button>
               )}
               <span className="studio-topbar__titel">{actief.label}</span>
-              {actief.status === "concept" && (
-                <span className="studio-topbar__concept">concept</span>
+              {actief.status && (
+                <span className="studio-topbar__status">{actief.status}</span>
               )}
             </div>
             <div className="studio-topbar__right">

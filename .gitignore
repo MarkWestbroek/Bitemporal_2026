@@ -1,0 +1,12 @@
+# Office-lockbestanden (ontstaan zolang een document open staat)
+**/~$*
+
+# Vite dependency-cache (dev-server artefact)
+.vite/
+
+# Lokale omgevingsvariabelen — nooit committen (bevatten wachtwoorden/keys).
+# Alleen de *.example-sjablonen gaan mee de repo in.
+.env
+.env.*
+!.env.example
+!.env.*.example

@@ -1,0 +1,76 @@
+{
+  "id": "19",
+  "naam": "enkelvoudige hub vervangen laat precies een actief record",
+  "beschrijving": "Merge-notitie 2026-09-21 §3D/§4 (fix/enkelvoudige-hub-afvoer). Drie gedragsregels: (1) kinderen krijgen de rel_id van de hub zoals die na insert is; (2) afvoer van een hub, ook als enkelvoudige voorganger, voert zijn actieve kinderen af; (3) geen hub-kind opvoeren onder een niet-actieve hub. Na elke stap precies een actieve hub met precies een actief data-record.",
+  "volgorde": 195,
+  "dekt": [
+    "MERGE-2026-09-21-3D"
+  ],
+  "tags": [
+    "engine",
+    "enkelvoudig",
+    "hub"
+  ],
+  "stappen": [
+    {
+      "naam": "1 opvoer gemeente + gemeentegegevens",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"registratietype": "registratie"}, "wijzigingen": [{"opvoer": {"gemeente": {"id": 9999}}}, {"opvoer": {"gemeentegegevens": {"gemeente_id": 9999, "naam": "Proefgemeente", "code": "GM9999"}}}]},
+      "verwacht": {"status": 201}
+    },
+    {
+      "naam": "na 1: hub 1 actief met data",
+      "path": "/full/gemeenten/9999",
+      "verwacht": {"status": 200, "json": {"gemeentegegevens[afvoer=null].rel_id": 1, "gemeentegegevens[afvoer=null].data[afvoer=null].naam": "Proefgemeente"}}
+    },
+    {
+      "naam": "2 wijzigen MET rel_id 1 (regel 1: kind krijgt de nieuwe rel_id)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"registratietype": "registratie"}, "wijzigingen": [{"opvoer": {"gemeentegegevens": {"gemeente_id": 9999, "rel_id": 1, "naam": "Proefgemeente B", "code": "GM9999"}}}]},
+      "verwacht": {"status": 201}
+    },
+    {
+      "naam": "na 2: hub 2 actief MET data; hub 1 en zijn data afgevoerd (regel 2)",
+      "path": "/full/gemeenten/9999?geschiedenis=true",
+      "verwacht": {"status": 200, "json": {"gemeentegegevens[afvoer=null].rel_id": 2, "gemeentegegevens[afvoer=null].data[afvoer=null].naam": "Proefgemeente B", "gemeentegegevens[rel_id=1].afvoer": "!=null", "gemeentegegevens[rel_id=1].data[afvoer=null]": "null"}}
+    },
+    {
+      "naam": "3 wijzigen ZONDER rel_id",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"registratietype": "registratie"}, "wijzigingen": [{"opvoer": {"gemeentegegevens": {"gemeente_id": 9999, "naam": "Proefgemeente C", "code": "GM9999"}}}]},
+      "verwacht": {"status": 201}
+    },
+    {
+      "naam": "na 3: hub 3 actief met data; hub 2 en zijn data afgevoerd (regel 2 zonder rel_id)",
+      "path": "/full/gemeenten/9999?geschiedenis=true",
+      "verwacht": {"status": 200, "json": {"gemeentegegevens[afvoer=null].rel_id": 3, "gemeentegegevens[afvoer=null].data[afvoer=null].naam": "Proefgemeente C", "gemeentegegevens[rel_id=2].afvoer": "!=null", "gemeentegegevens[rel_id=2].data[afvoer=null]": "null"}}
+    },
+    {
+      "naam": "4 corrigeren op rel_id 3 (zelfde hub, nieuwe data-versie)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"registratietype": "correctie"}, "wijzigingen": [{"opvoer": {"gemeentegegevens": {"gemeente_id": 9999, "rel_id": 3, "naam": "Proefgemeente C2", "code": "GM9999"}}}]},
+      "verwacht": {"status": 201}
+    },
+    {
+      "naam": "na 4: hub 3 blijft, data is de nieuwe versie",
+      "path": "/full/gemeenten/9999",
+      "verwacht": {"status": 200, "json": {"gemeentegegevens[afvoer=null].rel_id": 3, "gemeentegegevens[afvoer=null].data[afvoer=null].naam": "Proefgemeente C2"}}
+    },
+    {
+      "naam": "5 data opvoeren onder afgevoerde hub 1 wordt geweigerd (regel 3: guard)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"registratietype": "correctie"}, "wijzigingen": [{"opvoer": {"gemeentegegevens": {"gemeente_id": 9999, "rel_id": 1, "naam": "Mag niet", "code": "GM9999"}}}]},
+      "verwacht": {"status_in": [400, 409, 422, 500], "bevat_niet": "SQLSTATE"}
+    },
+    {
+      "naam": "na 5: nog steeds precies hub 3 met C2",
+      "path": "/full/gemeenten/9999",
+      "verwacht": {"status": 200, "json": {"gemeentegegevens[afvoer=null].rel_id": 3, "gemeentegegevens[afvoer=null].data[afvoer=null].naam": "Proefgemeente C2"}}
+    }
+  ]
+}

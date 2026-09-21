@@ -5,6 +5,10 @@
 > **Code review (2026-06-30):** zie [`STUDIO-code-review-2026-06-30.md`](STUDIO-code-review-2026-06-30.md)
 > voor bevindingen over onderhoudbaarheid, dubbelingen, veiligheid en toegankelijkheid.
 >
+> **Verslag Studio 0.5 (2026-07-04):** zie [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md)
+> voor het complete overzicht van fase 0 t/m de meta-editor (architectuur,
+> screenshots, stand van zaken).
+>
 > **Plan Studio 0.5 (2026-07-02):** zie [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)
 > voor het voorstel om de UML-editor te veralgemeniseren naar een configureerbare
 > diagram-kern (diagramcore + profielen), parallel naast de huidige versie.
@@ -84,7 +88,7 @@ volgorde komt volledig uit het `activityRegistry`.
 ```js
 {
   id, label, icon,            // identiteit + iconenbalk
-  groep,                      // visuele groepering ("modelleren" | "diensten" | "data")
+  groep,                      // groepering ("modelleren" | "diensten" | "data" | "beheer")
   Provider?,                  // optioneel: deelt state tussen de slots via context
   Sidebar?,                   // links (tree-browser). null → geen linkerpaneel
   Main,                       // midden (editor/canvas) — verplicht
@@ -92,7 +96,9 @@ volgorde komt volledig uit het `activityRegistry`.
   sidebarLabel?, inspectorLabel?,
   fullMain?,                  // true → activiteit brengt eigen volledige layout mee
   menus?,                     // array of (ctx)=>array: extra/override menubalk-menu's
-  status?,                    // bv. "concept" voor nog-te-bouwen functies
+  status?,                    // "preview" (in aanbouw, bruikbaar) of "concept"
+                              // (nog te maken) — getoond als badge in topbar/menu
+  verborgenInBalk?,           // true → niet in de activity bar, wél in Ga naar
 }
 ```
 
@@ -192,29 +198,138 @@ te wijzigen.
 
 ## Geregistreerde activiteiten
 
-| Groep        | Functie            | Status   | Hergebruikt                        |
+> **Consolidatie fase 0 (2026-07-11):** zie het
+> [consolidatieplan](plans/2026-07-11%20STUDIO%20consolidatie.md). Labels dragen
+> geen bouwfase meer ("(0.5)"/"(concept)") — status is een **badge** (topbar +
+> Ga naar-menu; open ringetje = preview, gevulde stip = concept op een
+> balk-icoon). **Concept-activiteiten staan niet meer in de activity bar**: een
+> icoon dat een lege pagina opent is een valse belofte; ze blijven bereikbaar
+> via **Ga naar** (gedempt, met badge). Het Ga naar-menu heeft **groepskoppen**
+> (Modelleren · Diensten · Data · Beheer), de balk-tooltips noemen de groep, en
+> de **beheer-groep zit onderaan** de balk (VS Code-tandwielpatroon).
+>
+> **Consolidatie fase 1 (2026-07-11) — configureerbare complexiteit:**
+> **Studio-instellingen → Activiteiten** bepaalt per gebruiker (localStorage)
+> wat de balk toont: activiteiten aan/uit, **★ favorieten** (gepind bovenin,
+> in pinvolgorde, met amber scheidingslijn) en de **Labs**-schakelaar (uit →
+> preview-activiteiten uit de balk; favorieten winnen van Labs-uit). Alles
+> blijft bereikbaar via Ga naar en het **opdrachtenpalet** (`Ctrl+K`, ook via
+> Ga naar → Opdrachtenpalet…): één zoekveld over alle activiteiten én de
+> menubalk-acties van de actieve activiteit ("Menu › Submenu › Item").
+> Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
+> `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
+>
+> **Consolidatie fase 2 (2026-07-11) — Modelleren als één ingang:** nieuwe
+> activiteit **Modelleren** (bovenaan de balk, preview) met een
+> **projectbrowser** (per profieltype zijn diagrammen, ＋ voor nieuw) en een
+> **tab-host**: open diagrammen als tabs met profiel-icoon en accentkleur,
+> persist per browser; inspector en menubalk volgen het profiel van de
+> actieve tab. Onder water: `studio/profieltypeRegistry.js` — elk
+> `maakDiagramActiviteit`-profiel (groep "modelleren", incl. live
+> meta-editor-profielen) registreert zich met zijn store, slots, menu's en
+> `kleur`. De losse profiel-activiteiten blijven bestaan en delen dezelfde
+> store: de inhoud is identiek, hoe je hem ook opent. Zie
+> `activities/modellerenActivity.jsx`.
+>
+> **Consolidatie fase 3 v0 (2026-07-12) — vrije mappen + bewerkbare
+> profielstijl:** de Modelleren-browser heeft nu een **vrije mappenboom**
+> (Sparx-principe: de indeling is van de gebruiker) — mappen maken/nesten,
+> hernoemen via dubbelklik, verwijderen (inhoud valt terug naar de ouder),
+> en diagrammen **slepen** naar mappen of terug naar "Niet ingedeeld";
+> geplaatste diagrammen dragen hun profiel-icoon. Structuur persist in
+> localStorage. Daarnaast is de **visuele identiteit per profieltype
+> bewerkbaar**: Studio-instellingen → **Profieltypen** (kleurkiezer +
+> embleem 1–3 tekens + herstel) als override op de code-defaults —
+> `profieltypeRegistry.zetStijlOverride`/`effectieveStijl` +
+> `ProfielIcoon.jsx`, direct zichtbaar in browser en tabs. Onder de
+> mappenboom staat de **elementen-boom van het actieve tab-profiel** (de
+> bestaande 0.5-ElementenBrowser: zoekveld, hiërarchie, ＋ naar het actieve
+> diagram) — per profieltype geregistreerd en wisselend met de tab.
+> Mappen zijn te **hernoemen** (✎/dubbelklik) en zelf te **verslepen**
+> (nesten, of via de "Mappen"-kop terug naar de wortel; cycli geweigerd);
+> **elementen** zijn uit de elementen-boom **naar mappen te slepen** en
+> een klik erop heropent zonodig een tab van hun profiel en selecteert ze
+> in de inspector (menuBus `<profiel>:selecteer-element`).
+>
+> **Fase 2-sluitstuk (2026-07-12):** ook de **klassieke editors** staan in
+> de Modelleren-browser en openen als tab — dmn-js (DRD+tabel), BPMN,
+> Berichtdefinities en de klassieke UML-IDE — via
+> `activities/activiteitAlsProfieltype.jsx` (store-façade met vaste
+> documenten; de eigen sidebar van de activiteit verschijnt in het
+> ondervak van de browser; niet in de project-export).
+>
+> **Project-werkbestand (2026-07-12):** menu **Project →
+> Exporteer/Importeer project…** — één JSON ("studio-project" v1) met de
+> projectstructuur (mappen, plaatsingen, tabs) én de inhoud van alle
+> niet-lege profiel-sandboxes; import vervangt na bevestiging (onbekende
+> profielen overgeslagen). Verder: klikmodel (klik = eigenschappen,
+> dubbelklik = openen), structuur-undo (Ctrl+Z/Y in de boom, los van de
+> model-undo), Ctrl-klik-multiselect (boom én elementen-browser, bundel-
+> sleep), contextmenu's met "Verplaats naar ▸", handmatige mapvolgorde,
+> auto-scroll bij slepen en "Zoek in projectboom" vanaf de canvas.
+>
+> **ArchiMate Model Exchange-import (2026-09-01):** via **Project →
+> Transformeren → Importeren** leest Studio standaard Exchange XML
+> (`.xml`/`.archimate`) in een gekozen projectmap. De import neemt ondersteunde
+> elementen, alle elf relaties en views mee, inclusief meerdere voorkomens,
+> posities/maten, Label/Container-annotaties en bewust verborgen relaties.
+> Voorkeurstaal en het overnemen van viewkleuren zijn opties; onbekende typen
+> en presentatieverlies verschijnen als diagnostics. De volledige import is
+> één model-undo-stap. Ontwerp, subset en bewijsbeelden:
+> [`ArchiMate Model Exchange import-export`](plans/2026-08-31%20ArchiMate%20Model%20Exchange%20import-export%20%28ontwerp%29.md).
+>
+> **Gedragsdiagram-primitieven (2026-07-17):** de motor kent twee nieuwe
+> declaratieve primitieven (zie
+> [`STUDIO-05-gedragsdiagrammen.md`](STUDIO-05-gedragsdiagrammen.md)) —
+> **rand-aanhechting** (`elementType.randElement`: element klikt vast op de
+> omtrek van een gastheer en beweegt mee; entry/exit-points, straks pins en
+> BPMN boundary-events) en **gedragsverwijzing**
+> (`elementType.gedragsVerwijzing` + datatype `diagram-verwijzing`:
+> dubbelklik op de node opent het gekoppelde diagram, in Modelleren als tab;
+> ⧉-badge). **State machine v1** gebruikt beide (keuze/junction/historie,
+> samengestelde toestand als container, submachine met doorklik, entry/exit);
+> nieuw profiel **Use case** (actor/use case/systeemkader,
+> associatie/«include»/«extend»/generalisatie). Notatie-roadmap:
+> [`plans/2026-07-17 ArchiMate en verdere notaties (plan).md`](plans/2026-07-17%20ArchiMate%20en%20verdere%20notaties%20%28plan%29.md).
+
+| Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|
 | modelleren   | UML-model          | actief   | `IdePage` (FlexLayout, fullMain)   |
-| modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox) |
-| modelleren   | UML (0.5)          | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
-| modelleren   | OAS (0.5)          | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
-| modelleren   | Profiel (0.5)      | preview  | meta-editor: eigen profielen maken en live registreren (plan §8.9) |
-| modelleren   | Profiel-ontwerp (0.5) | preview | meta-editor trede 2: profielen tékenen en genereren (plan §8.9) |
-| modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
+| modelleren   | Canoniek model     | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox; heette "Diagrammen (0.5)") |
+| modelleren   | UML                | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
+| modelleren   | OAS                | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
+| modelleren   | MIM                | preview  | `diagramcore` + `diagramprofielen/mim12` (MIM 1.2, pas-toe-of-leg-uit) |
+| modelleren   | State machine      | preview  | `diagramcore` + `diagramprofielen/statemachine` (v1: pseudostates, composiet, submachine, entry/exit) — **niet in de balk** |
+| modelleren   | Use case           | preview  | `diagramcore` + `diagramprofielen/usecase` (actor/use case/systeemkader) — **niet in de balk** |
+| modelleren   | Activity           | preview  | `diagramcore` + `diagramprofielen/activity` (acties, fork/join, pins, aanroep-doorklik, partities) — **niet in de balk** |
+| modelleren   | BPMN               | preview  | `diagramcore` + `diagramprofielen/bpmn` (eigen motor: events incl. boundary, gateways, lanes; naast de bpmn.io-activiteit) — **niet in de balk** |
+| modelleren   | ArchiMate          | preview  | `diagramcore` + `diagramprofielen/archimate` (v0: vier lagen, elf relaties; tweede notatie "Iconen als vorm" via **Beeld → Shape-set**) — **niet in de balk** |
+| modelleren   | Sequence           | preview  | `diagramcore` + `diagramprofielen/sequence` (v0: levenslijnen; punten/activaties op het rand-primitief) — **niet in de balk** |
+| modelleren   | ERD                | preview  | `diagramcore` + `diagramprofielen/erd` (kraaienpoten; kardinaliteit per uiteinde, sleutel-compartiment) — **niet in de balk** |
+| modelleren   | SysML              | preview  | `diagramcore` + `diagramprofielen/sysml` (bdd, ibd met poorten op de rand, requirements + traceerrelaties) — **niet in de balk** |
+| modelleren   | CMMN               | preview  | `diagramcore` + `diagramprofielen/cmmn` (casusmodel; sentries op het rand-primitief) — **niet in de balk** |
+| modelleren   | DMN-beslissingen   | actief   | `dmn/DmnTableEditor` + dmn-js DRD + ModelPicker (heette "DMN-tabellen") |
+| modelleren   | DMN DRD            | preview  | `diagramcore` + `diagramprofielen/dmn-drd` — **niet in de balk** (één DMN-ingang; via Ga naar) |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
-| diensten     | API's              | concept  | placeholder                        |
-| diensten     | Toegangverlening   | concept  | placeholder (FTV/PBAC)             |
-| data         | Rollen             | concept  | placeholder                        |
-| data         | Referentielijsten  | concept  | placeholder                        |
+| diensten     | API's              | concept  | placeholder — alleen via Ga naar   |
+| diensten     | Toegangverlening   | preview  | Toegangsspraak-editor (`toegangsspraak/` + `toegangActivity`): klare taal, ontleding, autocomplete, Diagram-tab (toegangsregel-profiel), ODRL |
+| data         | Rollen             | concept  | placeholder — alleen via Ga naar   |
+| data         | Referentielijsten  | concept  | placeholder — alleen via Ga naar   |
+| beheer       | Profiel-editor     | preview  | meta-editor trede 1 (JSON, plan §8.9; heette "Profiel (0.5)") |
+| beheer       | Profiel-ontwerp    | preview  | meta-editor trede 2: profielen tékenen en genereren (plan §8.9) |
+| beheer       | Studio-instellingen| actief   | vorm-/icoon-galerij + eigen data-shapes |
 
-DMN-modellering komt later bij de UML-activiteit (zelfde IDE), zoals gewenst.
+De profiel-editors zijn gereedschap (geen modelleeractiviteit) en staan daarom
+in de beheer-groep. Zelfgemaakte profielen (meta-editor) registreren als
+preview-activiteit in de modelleren-groep. DMN-modellering komt later bij de
+UML-activiteit (zelfde IDE), zoals gewenst.
 
-### Diagrammen (0.5) — de generieke diagram-motor (bewerkbare sandbox)
+### Canoniek model — de generieke diagram-motor (bewerkbare sandbox)
 
 > Toegevoegd: 2026-07-03 (fase 1+2 van [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)).
 
-De activiteit **Diagrammen (0.5)** draait op de nieuwe generieke motor
+De activiteit **Canoniek model** (tot 2026-07-11 "Diagrammen (0.5)") draait op de nieuwe generieke motor
 (`src/diagramcore/` + profiel `src/diagramprofielen/canoniek-uml/`) en is sinds
 fase 2 een **bewerkbare sandbox**:
 
@@ -255,9 +370,114 @@ fase 2 een **bewerkbare sandbox**:
   JSON (elements + diagrammen incl. viewports + meta, met profiel-check bij
   import). Zo is een handmatig geschoven view (bv. een OAS-import) deelbaar
   en niet aan localStorage gebonden.
+- **Composities zijn connectoren (2026-09-15).** Tot deze datum bestond
+  ENT ◆ GE na een V3-import alleen als *presentatie-edge per diagram*
+  (plus `meta.compositieEdges` voor de terugreis). Gevolg: zette je een
+  entiteit en haar gegevenselementen op een nieuw diagram, dan kwam er geen
+  lijn mee. De heenreis-adapter (`vanCanoniekModel`) vouwt nu elke
+  structurele ENT→GE-edge tot een `compositie`-connector — net als relaties
+  sinds fase 3B — en de core leidt de lijn af op elk diagram waar beide
+  uiteinden staan. De dubbele presentatie-edge wordt weggefilterd; labels
+  (rolnaam, kardinaliteit, `{enkelvoudig}`, heen/terug) komen uit
+  `hooks.edgeLabels` van het `compositie`-type. De terugreis bewaart
+  edge-id en edge-data en schrijft de presentatie-edge per diagram terug,
+  zodat `storeNaarV3Model` de GE-handles blijft vinden.
+  *Label-offsets* van de oude edge (`rolnaamDst`/`heen`/`terug`) gaan
+  daarbij verloren: die passen niet op de per-zijde-offsets van een connector.
+- **Handle-normalisatie (2026-09-15).** Modellen uit de eerste umleditor
+  bewaren kale zijden als handle (`"left"`, `"bottom"`); de nodes kennen
+  alleen `source-left`/`target-top`. React Flow weigert zo'n edge **stil** —
+  de lijn verdwijnt zonder melding. `normaliseerHandle()` in
+  `diagramcore/canvas/materialiseerConnectoren.js` zet ze om (onherkenbaar →
+  `null` → kortste weg), zowel voor connectoren als voor opgeslagen
+  presentatie-edges in `DiagramCanvas`. Een V3-export schrijft ze voortaan in
+  de genormaliseerde vorm terug (de oude editor gebruikt die vorm zelf ook).
+  **Let op:** de sandbox persisteert en spiegelt het model alleen als hij
+  leeg is. Een vóór deze datum geladen sandbox hield daardoor de oude vorm
+  (lijn wel zichtbaar, maar niet selecteerbaar en zonder compositie-menu's).
+  **Sinds 2026-09-17 gaat dat automatisch:** de profiel-hook
+  `hooks.migreerModel` (`canoniek-uml/migratie.js`, `vouwOudeComposities`)
+  vouwt bij het laden — en na elke latere laad/import — de oude
+  presentatie-edges én `meta.compositieEdges` tot connectoren, buiten de
+  undo-historie. `meta.compositiesGevouwen` markeert dat het gebeurd is, zodat
+  een daarna zelf verwijderde compositie niet uit meta terugkomt. De
+  handle-fix werkte al direct.
+- **Compositie-velden bewerkbaar (2026-09-17).** Het `compositie`-type heeft
+  dezelfde velden als *Edge* in de oude IDE-details: rolnaam, JSON rolnaam,
+  momentvoorkomen en kardinaliteit (keuzelijst `0..1`/`0..*`/`1..1`/`1..*`).
+  De terugreis schrijft in 0.5 bewerkte waarden over de heenreis-kopie
+  (`data.bron`) heen naar de structurele edge. Connectoren die eerder gevouwen zijn krijgen een
+  ontbrekende `jsonRolnaam` aangevuld uit `data.bron`. De core-`keuze`-editor
+  toont een opgeslagen waarde buiten de lijst (bv. `1`) als eigen optie in
+  plaats van stil de eerste optie.
+- **GE-velden bewerkbaar (2026-09-17).** `gegevenselement` toont dezelfde
+  velden als *Details* in de oude IDE: typenaam, domein, beschrijving
+  (`description`), meervoud, materieel, kleur, label heen/terug. De sleutels
+  zijn die van de oude datavorm; de heenreis zet ze in `data`, de terugreis schrijft bewerkte waarden terug
+  (typenaam valt bij leegmaken terug op de klassenaam). Eerder ingeladen GE's
+  krijgen ontbrekende sleutels aangevuld uit `data.bron`. **Leesrichtingen
+  horen bij de GE:** de `edgeLabels`-hook krijgt nu `ctx.elements` en de
+  compositie leest label heen/terug van haar GE (de connector-kopie is alleen
+  terugval). `PropertyType.placeholder` is nieuw in de core.
+- **Het profiel is de bron van de veldnamen (2026-09-17).** Heenreis,
+  terugreis en migratie lezen welke velden 1-op-1 meegaan uit de
+  `properties` van het elementtype (`canoniek-uml/mappingV3Canoniek.js`,
+  `vertaalbareVelden`); er is geen aparte veldlijst meer. Een property erbij in
+  `index.js` verschijnt dus in de inspector én gaat mee naar IDE-store en V3.
+  Twee bewuste uitzonderingen, allebei adapter-kennis:
+  `EIGEN_VERTALING` (`kleur`, `materieel` ↔ `isMaterieel`, `domein` naast
+  `data`) en `GENERIEKE_TYPES` (`entiteit`, `gegevenselement`, `relatie`,
+  `compositie`; gegevenstype/enumeratie hebben een eigen structuur in de oude
+  vorm). `mappingV3Canoniek.test.js` bewaakt dat élke profiel-property van die
+  typen heen én terug gaat — de test leest de properties rechtstreeks uit het
+  profiel, zodat hij faalt als een type uit `GENERIEKE_TYPES` valt.
+  De migratie krijgt de elementtypen mee (`migreerModel: (state) =>
+  vouwOudeComposities(state, elementTypes)`) — geen import van `index.js`,
+  dus geen importkring.
+- **Entiteit- en relatievelden bewerkbaar (2026-09-17).** Zoals *Details* in
+  de oude IDE. Entiteit: beschrijving, meervoud, materieel, kleur, subtype.
+  Relatie: domein, beschrijving, meervoud, materieel, kleur, subtype,
+  kardinaliteit bron/doel, label heen/terug, gericht, geordend. Bewust géén
+  aparte *typenaam* (de oude IDE houdt die gelijk aan de naam; de terugreis zet
+  `typenaam := naam`, en bij een entiteit is dat ook de V3-id — hernoemen is
+  getest) en bij de entiteit géén *domein* (dat is het package). Het
+  **stereotype volgt het subtype** via de nieuwe core-hook
+  `ElementType.hooks.stereotype(element)` (`undefined` = het opgeslagen
+  `data.stereotype`, voor sandboxen zonder subtype-sleutel);
+  `isRefLijstItem()` in `index.js` vervangt de losse stereotype-vergelijkingen.
+  De terugreis telt kardinaliteit `1..1` nu ook als enkelvoudig.
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.
+- **Vormgeving (plan §8.5b/§8.5c/§8.6a)**: rechtsklik op een
+  connector geeft **"Lijnvorm"** (kromme/hoekig/recht, per connector bewaard
+  in `data.vorm`); de core kent **StyleType-tokens v2** (CSS-variabelen
+  `--dc-*` voor lijnen/randen/selectie/marker-vullingen plus
+  canvas-/label-achtergrond; selectie in merk-indigo `#4f46e5`) en een
+  **icoon-registry per ElementType** (`shapes/typeIconen.jsx`:
+  `elementType.icoon`-id of shape-fallback). De **integrale iconenset** uit
+  de vormgevingssessie (2026-07-04/05) staat in
+  `shapes/iconenVocabulaire.jsx`: 30 iconen (outline + één gevuld accent,
+  14×14, currentColor) die alle elementtypen van de vier profielen dekken;
+  gedeelde concepten delen een icoon-id (Entiteit en Klasse → `klasse`).
+  Het 0.5-canvas **volgt het studio-thema** (`dc-canvasvlak`, sessiebesluit
+  2026-07-05): donker canvas met lichte pastel-kaarten; alleen de
+  third-party-canvassen (bpmn/dmn-js) houden het vaste witte
+  `.studio-paper`. De **activity bar** draagt sinds dezelfde sessie eigen
+  0.5-emblemen (`studio/icons.jsx`: `IconDiagram05`, `IconUML05`,
+  `IconOAS05`, `IconProfiel05`, `IconProfielOntwerp05`) — familie-embleem
+  per profiel, met het ene gevulde accent als 0.5-kenmerk naast de puur
+  outline-getekende klassieke activiteiten.
+- **Elementen-browser** (plan §8.8): onder de diagrammenlijst staat in elk
+  0.5-profiel een boom van álle model-elementen, met zoekveld. Wijst de
+  descriptor een **hiërarchie-connectortype** aan (`hierarchie:
+  "compositie"`, P02/E01) dan nest de browser de elementen langs die
+  bevat-relatie (canoniek-uml: GE's onder hun entiteit — ook gespiegelde
+  composities via de `hierarchieParen`-hook; de profiel-ontwerper: VT's
+  onder CT's onder ET's); zonder hiërarchie of bij zoeken groepeert hij
+  plat per elementtype. Klik = selecteren in de inspector; elementen die niet op het
+  actieve diagram staan zijn cursief/gedempt en hebben een ＋-knop om ze in
+  het zichtbare viewport-midden toe te voegen.
 - **Fabriek + tweede profiel (fase 5)**: de activiteit-mechaniek zit in
   `studio/activities/maakDiagramActiviteit.jsx` (descriptor + opties →
   complete activiteit; model-/V3-/API-koppeling optioneel). De activiteit
@@ -277,26 +497,68 @@ fase 2 een **bewerkbare sandbox**:
   persistent in localStorage (overleven herlaad), sjablonen "leeg" en
   "Graaf-demo". Die demo gebruikt de nieuwe **"bol"-ShapeType** (§8.10-POC):
   naam in een ronde kern, velden als satelliet-bolletjes eromheen.
+  **Wat de editor (nog) niet kan** t.o.v. wat een profiel-descriptor toestaat:
+  zie `docs/PROFIELEDITOR-GAP.md` (peildatum 2026-09-17) — code-hooks buiten de
+  twee catalogus-ids, vormgrammatica, `samentrekking`/`opname`, viewers, rijkere
+  PropertyTypes, en de stille verliezen bij een round-trip via de tekening.
 - **Meta-editor trede 2: "Profiel-ontwerp (0.5)"** — conform het metamodel:
   teken **Elementtypen ◆ Compartimenttypen ◆ Veldtypen** (elk met eigen
   properties; de ◆-connector legt de bevat-relaties) plus verbindingsregels
-  (lijnstijl/markers, kardinaliteiten- en richting-vinkjes). *Ontwerp →
+  (lijnstijl/markers, kardinaliteiten-, richting- en
+  bevat-relatie-vinkjes — dat laatste zet `hierarchie` van het doelprofiel).
+  **Verbindingsregels zijn 1..*** per connectortype (metamodel:
+  ConnectorType ◆ Verbindingsregel): regel-lijnen met dezelfde náám
+  bundelen bij het genereren tot één connectortype dat zich als meerdere
+  lijnen manifesteert, en de core staat een verbinding toe zodra één regel
+  de bron×doel-combinatie dekt (de verkorte bron/doel-vorm = cartesiaans
+  product blijft ondersteund). *Ontwerp →
   Genereer & registreer profiel…* maakt er live een activiteit van (zelfde
   kanaal als trede 1); *Bekijk bestaand profiel als ontwerp…* laadt elk
   geregistreerd profiel als diagram, en een lege sandbox start met het
   voorbeeld-ontwerp. De minimap volgt tegenwoordig de ShapeType (bol →
   cirkel; kader → transparant vlak, ook met eigen achtergrondkleur).
 - **Derde profiel: "OAS (0.5)"** (`diagramprofielen/oas31/`, vuurproef op een
-  niet-UML-domein): «schema»-elementen met properties (JSON-typen/formats,
-  required), «enum», «operation» (method/pad/summary als element-properties
-  met live signatuurregel op de node), en de connectoren **$ref** (met
-  property-naam als rolnaam), **allOf** (overerving) en **items**
-  (array-elementtype). Ook hier: alleen een descriptor + fabriek-aanroep.
-  **Bestand → Importeer OAS 3.1 (YAML/JSON)…** leest een echt
-  OpenAPI-document in (`oas31/adapter.js`, parser: `yaml`): schemas, enums,
-  paths → operaties, en alle $ref/allOf/items-relaties als connectoren, met
-  een grid-geplaatst diagram genoemd naar `info.title`. Export terug naar
-  YAML is een later punt (eigen terugreis, vgl. canoniek-uml fase 4).
+  niet-UML-domein, sinds juli 2026 een **vrijwel volledige OAS
+  3.1-representatie**): «api» (het info-object: titel/versie/description/
+  licentie/contact, met versie-regel op de node), «server» (één per
+  servers-item, de url als naam), «schema»-elementen met properties
+  (JSON-typen/formats incl. 3.1-type-arrays zoals `string|null`, required,
+  én description/example/pattern/default per property), primitieve schemas
+  (bv. `TraceID: string «uuid»` — type als weergave-regel), externe
+  $ref-schemas (`./bestand.json` als weergave-regel), «enum», «operation»
+  (method/pad/summary/description/tag/deprecated als element-properties, met
+  live signatuurregel plus bewerkbare **parameters**- en
+  **responses**-compartimenten — álle statussen, ook 4xx/5xx), en de
+  connectoren **$ref** (met property-naam als rolnaam), **allOf**
+  (overerving), **items** (array-elementtype), **oneOf/anyOf** en
+  **servers** (api → server). Ook hier: alleen een descriptor +
+  fabriek-aanroep. **Bestand → Importeer OAS 3.0/3.1 (YAML/JSON)…** leest
+  een echt OpenAPI-document in (`oas31/adapter.js`, parser: `yaml`); na de
+  bestandskeuze volgt de **dialectkeuze** — auto (default: volg het
+  openapi-veld), 3.0 of 3.1 — die als **oas-version** op het api-element
+  landt. Het interne model is 3.1-vormig (3.0-`nullable` wordt een
+  `|null`-type, `example` én 3.1-`examples` worden gelezen); lokale $refs
+  naar benoemde componenten (components.requestBodies/responses/parameters)
+  worden voor de wéérgave gevolgd, terwijl de componenten zelf — net als
+  tags, security en andere document-sleutels — als pass-through in `meta`
+  meereizen. Naast het totaaloverzicht komt er **per tag** (of pad-groep)
+  een eigen diagram met de operaties plus de (transitief) geraakte schemas —
+  zo blijft een grote OAS leesbaar. Er is een **gelaagde auto-layout**
+  (api/servers → operaties → per $ref-stap een rij) en **Bestand →
+  Exporteer OAS (YAML)…** schrijft het model terug in het dialect van de
+  oas-version (spiegel + delta: info/servers/tags, properties/required/
+  allOf/oneOf/paths/parameters/responses gereconstrueerd, $refs naar
+  benoemde componenten blijven staan; 3.0 vouwt `type: [T,"null"]` terug
+  naar `nullable: true` en laat $ref-siblings weg — de oas-version op het
+  api-element omzetten transformeert dus meteen tussen de dialecten;
+  round-trip-getest in beide). Nog niet: securitySchemes/headers/links als
+  eigen elementen, inline oneOf-varianten, volledige 3.0↔3.1-transformatie
+  (exclusiveMinimum/Maximum, content-vormen).
+- **Tijdlijnvoorkomen & geordend (LGM)**: entiteit, gegevenselement en
+  relatie hebben een **materieel (tijdlijn)**-vinkje (mapping op
+  `isMaterieel`; formeel = uit) — op de node als MATERIEEL-badge, op de
+  relatie-lijn als «materieel»-label; relaties hebben daarnaast
+  **geordend** ({ordered}-label aan de doelzijde, 0.5-eigen).
 - **Gegevenstype-validatie bewerken**: validatie, normalisatie en weergave
   zijn element-properties van het gegevenstype met eigen PropertyTypeEditors
   (`ValidatieEditors.jsx`, datatypes "validatieregels"/"weergaveregels"):
@@ -311,6 +573,19 @@ fase 2 een **bewerkbare sandbox**:
   (kies een connector-type; zonder keuze wordt het type automatisch afgeleid
   uit de verbindingsregels van het DiagramType). Ongeldige verbindingen worden
   op de canvas geweigerd.
+- **Magic link (2026-09-18).** Sleep een lijn van A naar B **zonder** vooraf
+  een type te kiezen: past er precies één connectortype, dan ligt de lijn er
+  direct; passen er meerdere, dan opent op de losplek een keuzemenu
+  ("Start event → Task": Sequence flow / Message flow). Is er wél een type
+  gekozen dat tussen deze twee niet mag, dan verdwijnt de lijn niet meer
+  stil: het menu zegt *"Sequence flow mag hier niet — wel mogelijk:"* en
+  biedt de alternatieven aan (of meldt dat niets is toegestaan). Volledig
+  afgeleid uit het profiel: `vindConnectorTypes(diagramType, bron, doel)` in
+  `diagramcore/canvas/materialiseerConnectoren.js` geeft álle passende typen
+  in descriptor-volgorde (`vindConnectorType` is er nu een dunne schil
+  omheen). In `DiagramCanvas.jsx` zet `onConnect` de keuze klaar en opent
+  `onConnectEnd` het menu — alleen dát event kent de losplek. Het menu is het
+  bestaande contextmenu (`kop` + items met `kort` als icoon).
 - **Connectoren zijn elementen** met source/target (metamodel); de motor
   materialiseert ze als kale edges (compositie ◆, generalisatie ▷, «use»,
   relatie) — en een connector **mét velden** automatisch als het
@@ -338,6 +613,86 @@ fase 2 een **bewerkbare sandbox**:
   centreren, verdelen — op de selectie via Ctrl-klik — plus alles-op-raster)
   en de **Auto-layout**-taakbalk met de gelaagde plaatsingsstrategie van het
   profiel; ook via menu Diagram (0.5). Iedere layout-actie is één undo-stap.
+  **Verdelen = gelijke tussenruimte** (2026-09-18): de uitersten blijven
+  staan en de gaten ertussen worden even groot, ook bij ongelijke breedtes
+  (voorheen werden de *linkerranden* gelijk verdeeld, wat bij een brede taak
+  naast kleine events scheve gaten of overlap gaf). Aangehechte
+  rand-elementen (boundary events, `parentId` → positie relatief aan de
+  gastheer) en label-ankers doen niet mee aan uitlijnen/verdelen — ze reizen
+  met hun gastheer mee.
+- **Containers houden hun inhoud vast (2026-09-18, backlog §31.3).** Een lid
+  (lidmaatschaps-connector via `containerVoor`) dat geometrisch ín zijn
+  container ligt rendert als React Flow-kind daarvan: het **reist mee** als
+  je de container versleept (ook dieper genest, en met aangehechte
+  rand-elementen) en blijft **binnen de rand**. **Alt+slepen** tilt een lid
+  over de rand; buiten elke container loslaten = losmaken, in een andere =
+  verhangen (*Losmaken uit "…"* staat ook in het contextmenu). De store
+  blijft **absolute** posities voeren — de canvas rekent om bij het opbouwen
+  en bij dragstop — zodat connector-materialisatie, auto-layout en export
+  ongewijzigd doorrekenen en bestaande diagrammen niet migreren. Een lid dat
+  búiten zijn container ligt blijft vrij en toont zijn lidmaatschapslijn
+  (dezelfde regel als `verbergBijNesting`). Een nieuw element dat via
+  *Maken* of de magic link ín een container belandt wordt er meteen lid van.
+  Pure logica + tests: `diagramcore/canvas/nesting.js`.
+- **Afbakening — containers die verbindingen begrenzen (2026-09-18, §31.4).**
+  Motor-primitief naast `containerVoor` en `randElement`. Er zijn twee
+  soorten containers: een **partitie** deelt alleen in (BPMN-lane,
+  activity-partition, package), een **afbakening** begrenst wat verbonden mag
+  worden (BPMN-pool/proces, region van een samengestelde toestand,
+  CMMN-stage, block-context in SysML). Het profiel wijst alleen aan, de
+  betekenis zit in de core (`diagramcore/canvas/afbakening.js`):
+  `ElementType.afbakeningVoor: [connectortypen]` = bron en doel in
+  **dezelfde** afbakening; `ConnectorType.overbrugt: [elementtypen]` = bron en
+  doel in **verschillende**. De afbakening van een element is de
+  dichtstbijzijnde voorouder van dat type (via lidmaatschap, en voor een
+  rand-element via zijn gastheer); geen voorouder = de impliciete deelnemer.
+  De toets zit in `vindConnectorTypes(…, elements)`, dus slepen, magic link en
+  verhangen geven dezelfde uitkomst — en het menu noemt de **reden**:
+  *"Sequence flow mag de grens van een Pool niet kruisen — wel mogelijk:
+  Message flow"*. Eerste afnemer: **BPMN-pool** (`pool.afbakeningVoor =
+  ["sequence-flow"]`, `message-flow.overbrugt = ["pool"]`; message flow mag
+  ook aan de poolrand = black box). Achtergrond uit de BPMN-spec en de
+  afweging: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20containers%2C%20afbakening%20%28pools%29%2C%20reconnect%20en%20magic%20link%20%28ontwerp%29.md).
+- **Uiteinden lostrekken — reconnect (2026-09-18, §31.5).** Sleep het uiteinde
+  van een connectorlijn naar een ander element. Het **type blijft gelijk**;
+  geldig als dat type tussen het nieuwe paar mag (typeregels + afbakening).
+  Mag het niet, dan springt de lijn terug en zegt een menu waarom. Alleen op
+  de directe (kale) gedaante; knikpunten vervallen, de handle wordt de zijde
+  waar je loslaat. Eén `updateElement` = één undo-stap.
+- **Magic link op het lege vlak (2026-09-18, §31.8).** Laat je de lijn los op
+  het lege vlak — of op het vlak van een container, want binnen een pool ís
+  dat het lege vlak — dan opent *"Nieuw na …"* met de elementtypen die vanaf
+  deze bron bereikbaar zijn (gangbaarste connectortype eerst). Kiezen maakt
+  het element gecentreerd op de losplek, maakt het lid van de container
+  eronder en legt de verbinding. Loslaten op een **handle** van een pool blijft
+  een gewone verbinding naar die pool. Alle canvasmenu's zijn met het
+  **toetsenbord** te bedienen: eerste optie voorgeselecteerd, ↑/↓, Enter,
+  Escape.
+- **Tekenen zet de aanhechting niet meer vast (2026-09-18).** Bij een
+  elementtype met `randAanhechting: "zwevend"` bewaart de canvas bij tekenen,
+  verhangen en de magic link **geen** handle meer. Je sleept nu eenmaal altijd
+  van handle naar handle; die toevallige keuze opslaan pinde elke nieuwe lijn
+  op het midden van een zijde, zodat zweven alleen werkte na *normaliseer
+  relaties*. Nu zweeft een nieuwe lijn meteen (uitwaaieren over de rand,
+  meeglijden bij slepen). **Vastzetten is een bewuste handeling:** houd
+  **Shift** ingedrukt bij het loslaten, of kies in het contextmenu van de lijn
+  *Bron-/Doel-uiteinde vastzetten* ("automatisch" laat weer los). Bij
+  "zijden"-types (events, gateways) blijft de handle gewoon bewaard. Code:
+  `handleVoorOpslag()` in `DiagramCanvas.jsx`. **BPMN:** taak, subproces,
+  data-object, pool en lane zweven nu; events en gateways houden hun vier
+  punten (klein en rond/ruit — een rechthoekige omtrek zou naast de rand
+  vallen).
+- **Lijnen verleggen — knikpunten**: **Ctrl-klik** op een connectorlijn
+  voegt een knikpunt toe, slepen verplaatst het, dubbelklik op de lijn wist
+  ze weer (en normaliseert de lijn). Haakse lijnen kun je daarnaast per
+  segment duwen/trekken. Werkt op de directe (kale) gedaante; opslag in
+  `data.knikken` op de connector (`ConnectorEdge.jsx`). Eindpunten lostrekken
+  en elders aanhechten kan nog niet — backlog §31.5/§31.6.
+- **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
+  Escape is nodig binnen een container (lane, package, stage): daar is geen
+  leeg vlak — elke klik selecteert de container — en ook een kader-selectie
+  (Shift+slepen) ging met Escape niet weg. Escape wordt genegeerd tijdens
+  typen en zolang een contextmenu open is (dat sluit eerst zichzelf).
   Verder is er een **Kader**-element (boundary, §8.6b): gestippeld resizebaar
   kader dat achter de andere elementen rendert.
 - Taakbalken zijn **resizebaar** (hoekgreep: breed & plat of smal & hoog,
@@ -356,9 +711,9 @@ fase 2 een **bewerkbare sandbox**:
   ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
   modeldata.
 - Nog niet (bekend): rebuild vanuit 0.5, clipboard,
-  validatie-hook, domein-overlay, licht/donker-tokens
-  per StyleType (plan §8.5b), integrale iconenset voor de Maken-balk
-  (ontwerp-sessie, plan §8.6a), overerving in de gespiegelde weergave
+  validatie-hook, domein-overlay, eigen tokensets per StyleType-id
+  (plan §8.5b — het register bestaat; zolang "uml-klassiek" de enige is,
+  ís de default die set), overerving in de gespiegelde weergave
   (generalisaties uit het oude model zijn daar nog presentatie-edges),
   YAML-export en oneOf/anyOf in het OAS-profiel.
   Het incidentele **transient lege canvas** is vermoedelijk opgelost
@@ -367,6 +722,135 @@ fase 2 een **bewerkbare sandbox**:
   optreedt. Na de fase 4-update een bestaande sandbox eerst verversen via
   "Herlaad uit UML-model" — anders missen de `bron`-bijlagen die de export
   verliesvrij maken.
+
+### OpenAPI → canoniek model (transformatie)
+
+Naast het `oas31`-profiel (dat een OAS als *eigen notatie* toont) is er een
+transformatie die de schemas van een OAS omzet naar het **canonieke model**, in
+de map van de modelleeromgeving: *Transformeren → importeren →* **"OpenAPI
+(components.schemas) → canoniek model"**. Route:
+
+```
+OAS (JSON/YAML) ──oasNaarV3──▶ V3 ──importeerV3──▶ core-model ──▶ profiel diagram05
+```
+
+Modules: `diagramprofielen/canoniek-uml/oasNaarV3.js` (puur, geen stores) en
+`oasCanoniekImport.js` (de descriptor, stores geïnjecteerd zoals bij de
+ArchiMate-import); de wiring staat in
+`studio/activities/oasCanoniekTransformatie.js`.
+
+De heuristiek in het kort — een object-schema wordt een **entiteit** als het een
+`id`-achtige property heeft, nergens ge-`$ref`d wordt (top-level) of door meerdere
+schemas gedeeld wordt; anders een **gegevenselement** van zijn enige verwijzer.
+Scalars van een entiteit belanden in één GE `<Entiteit>Gegevens`; `$ref` naar een
+entiteit wordt een relatie; arrays worden meervoudigheid; `required` stuurt de
+optionaliteit (en de `*`-prefix op het goType); property-enums en top-level enums
+worden V3Enums; primitieve top-level schemas worden gegevenstypen.
+
+Generatoren **verpakken** verwijzingen graag; die worden afgepeld, anders
+verdwijnen echte relaties als tekstveld:
+
+| Patroon (drf-spectacular e.d.) | Betekenis | Wordt |
+|---|---|---|
+| `allOf: [$ref X]` + `description` | een $ref mét extra sleutels | verwijzing naar X |
+| `oneOf: [$ref Enum, $ref BlankEnum]` | "deze enum, of leeg" | veld met die enum, optioneel |
+| enum-schema met alleen `''` | "mag leeg zijn" | géén enumeratie |
+| `oneOf` met meerdere echte varianten | een keuze | de eerste, mét diagnostic |
+
+Uitgangspunt is **eerlijk tonen wat er in het document staat**, niet mooi
+normaliseren: `allOf` op schema-niveau wordt platgeslagen, technische velden
+(`id`, `rel_id`, `versie`, `*_id`) vallen standaard weg (optie om ze te houden),
+en alles wat niet past komt als diagnostic terug in plaats van stil te
+verdwijnen. Opschonen doe je daarna met de hand. Elke import krijgt een eigen
+id-prefix, zodat hetzelfde document twee keer importeren niet botst.
+
+Gedraaid op twee echte documenten. **OpenOrganisatie** (`Registers/open-organisatie/src/`,
+niet in deze repo): *Organisatie API* — 27 schemas → 25 entiteiten, 33
+gegevenselementen, 28 relaties, 1 enum; *Identiteit API* — 4 schemas → 3
+entiteiten. En de eigen `docs/OAS/np-loc.yaml` — 19 entiteiten. Wat je in beide
+ziet: de REST-schil komt gewoon mee. `Paginated…List`, `Patched…` en `Nested…`
+worden entiteiten, want zo staan ze in het document. Dat is opzet — de import
+verzint niets — maar het betekent wel dat er ná de import handwerk zit.
+
+Buiten scope: `paths`/operations, security en de terugweg naar OAS (die heeft het
+`oas31`-profiel al voor zijn eigen notatie).
+
+
+## Diagram exporteren als afbeelding
+
+> Toegevoegd: 2026-07-14. Geldt voor elk diagramcore-canvas (Modelleren én de
+> losse 0.5-activiteiten).
+
+**Rechtsklik op de canvas → sectie Exporteren** biedt drie acties:
+
+- **Kopieer als afbeelding** — PNG naar het **klembord** (voor plakken in een
+  chat of Word/document; PNG is het formaat dat overal betrouwbaar plakt).
+- **Download PNG** en **Download SVG** — naar je downloads. SVG is vector,
+  ideaal voor markdown of verdere bewerking.
+
+Er wordt de **selectie** geëxporteerd als er iets geselecteerd is, anders het
+**hele diagram**. Het beeld wordt strak om de inhoud bijgesneden (met marge),
+met de canvas-achtergrond zodat lichte tekst op het donkere thema leesbaar
+blijft; connectie-handles en canvas-chrome (minimap, controls, raster) vallen
+weg — net als de blauwe resize-lijntjes van een geselecteerde node.
+
+Bij een **selectie**-export tekent de plaat alléén de geselecteerde nodes, de
+lijnen waarvan beide uiteinden in de selectie zitten en hun labels. Buren die
+toevallig in het kader vallen liften dus niet half-afgesneden mee.
+
+### Voorkeuren — Studio-instellingen → Diagram-export
+
+- **Achtergrond**: *Canvas (thema)* · *Wit* · *Transparant*. Let op:
+  transparant + donker thema geeft lichte tekst — kies dan Wit of Canvas.
+- **Schaal (PNG)**: 1–4× (hoger = scherper/groter, bv. voor print). SVG negeert
+  de schaal (vector).
+- **Marge**: pixels rondom de inhoud.
+
+Zo stel je het één keer in; het contextmenu blijft de drie schone acties.
+
+### Implementatie
+
+- `diagramcore/export/exporteerCanvas.js` — `exporteerViewport(...)` op basis
+  van **html-to-image** (`toPng`/`toSvg`): de viewport wordt op zoom 1 met een
+  vaste marge verschoven, een `filter` laat de chrome weg.
+- `diagramcore/export/tekenBounds.js` — het **kader**, gemeten aan de DOM
+  (unie van de client-rects van alles wat mee-exporteert, gedeeld door de
+  zoomfactor). Dit verving `getNodesBounds` (2026-08-18), dat alleen de
+  node-boxen uit het model kent en daardoor stelselmatig te krap was: de
+  graaf-bol (`shape: "bol"`) tekent zijn satelliet-velden ~56 px búiten de
+  kern-cirkel, `naamLabel: "buiten"` hangt de naam ónder de node, edges lopen
+  met bocht of knik buiten de rechthoek van hun eindpunten, edge-labels staan
+  daar weer naast, en rand-elementen (poorten, sentries, boundary-events)
+  hebben een positie relatief aan hun gastheer die `getNodesBounds` als
+  absoluut leest. Al die tekening viel buiten het kader en werd afgesneden.
+  `getNodesBounds` is nog wel de terugval als er niets te meten valt.
+  Een `<svg>` met `overflow: visible` telt niet als eigen vlak mee maar alleen
+  zijn inhoud: de bol hangt zijn satellieten in een vierkant van 204x204,
+  terwijl de bolletjes op een cirkelbaan staan en de hoeken leeg laten — anders
+  krijgt zo'n plaat een onnodig royale rand.
+- `diagramcore/export/exportFilter.js` — één predicaat voor zowel de
+  serialisatie als de kadermeting (chrome eruit, en bij een selectie-export
+  alles buiten de selectie). Meet je een ander kader dan je tekent, dan valt er
+  per definitie iets buiten beeld.
+  **SVG-valkuil:** html-to-image kloont een `<svg>` in één keer diep en loopt
+  de inhoud daarna níet meer langs het `filter` (`clone-node.js`,
+  `cloneChildren`). React Flow zet elke edge in een eigen `<svg>`-wikkel, dus
+  een `<g class="react-flow__edge">` uitfilteren heeft géén effect — de
+  beslissing moet op de wikkel vallen. Vandaar `edgeIdVan()`, dat vanaf de
+  wikkel naar de `<g>` erbinnen kijkt.
+- **Kader-selectie en lijnen** (2026-08-18): React Flow selecteert bij
+  Shift+slepen élke lijn die aan een geselecteerde node hangt — ook lijnen naar
+  elementen búiten het kader. `DiagramCanvas` laat die select-changes vallen
+  (`onEdgesChange` zolang `userSelectionActive`, plus een naveeg op
+  `onSelectionEnd`): een lijn hoort pas bij de selectie als beide uiteinden
+  erin zitten. Dat scheelt niet alleen in de export — verwijderen sloopte
+  anders stilletjes een verbinding met een element dat je niet had
+  geselecteerd.
+- `DiagramCanvas` stelt `layoutApi.exporteerAfbeelding({ formaat,
+  alleenSelectie, doel, achtergrondModus, schaal, marge })` beschikbaar
+  (imperatief); het canvas-contextmenu (`maakDiagramActiviteit`) roept dit aan
+  en leest de voorkeuren uit `studio/exportInstellingen.js`
+  (UI: `studio/ExportInstellingen.jsx`).
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

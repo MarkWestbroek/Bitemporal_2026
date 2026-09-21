@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { materialiseerConnectoren, vindConnectorType, ANKER_PREFIX } from "./materialiseerConnectoren.js";
+import { materialiseerConnectoren, vindConnectorType, vindConnectorTypes, ANKER_PREFIX, normaliseerHandle } from "./materialiseerConnectoren.js";
 
 const diagramType = {
   id: "test",
@@ -60,6 +60,13 @@ test("vindConnectorType: descriptor-volgorde wint bij automatisch afleiden", () 
   assert.equal(vindConnectorType(diagramType, A, B).id, "relatie");
   assert.equal(vindConnectorType(diagramType, A, B, "generalisatie").id, "generalisatie");
   assert.equal(vindConnectorType(diagramType, G, A), null);
+});
+
+test("vindConnectorTypes: alle passende typen, in descriptor-volgorde (magic link)", () => {
+  assert.deepEqual(vindConnectorTypes(diagramType, A, B).map((et) => et.id), ["relatie", "generalisatie"]);
+  assert.deepEqual(vindConnectorTypes(diagramType, A, G).map((et) => et.id), ["compositie"]);
+  assert.deepEqual(vindConnectorTypes(diagramType, G, A), []);
+  assert.deepEqual(vindConnectorTypes(diagramType, A, null), []);
 });
 
 test("kale connector (geen velden) → één edge", () => {
@@ -253,4 +260,291 @@ test("labelOffsets op de connector verschuiven de labels per zijde", () => {
   const bronEdge = edges.find((e) => e.id.endsWith(":bron"));
   const bronLabel = bronEdge.data.presentatie.labels.find((l) => l.zijde === "bron");
   assert.deepEqual(bronLabel.offset, { x: 20, y: -10 });
+});
+
+test("verbindingsregels 1..*: paren gelden, het cartesiaans product niet", () => {
+  const types = {
+    entiteit: { id: "entiteit", shape: "class-box" },
+    gegevenselement: { id: "gegevenselement", shape: "class-box" },
+    enumeratie: { id: "enumeratie", shape: "class-box" },
+    gegevenstype: { id: "gegevenstype", shape: "class-box" },
+    gebruik: {
+      id: "gebruik",
+      shape: "edge",
+      isConnector: true,
+      // ENT→enum en GE→gegevenstype zijn toegestaan; ENT→gegevenstype niet.
+      verbindingsregels: [
+        { bron: ["entiteit"], doel: ["enumeratie"] },
+        { bron: ["gegevenselement"], doel: ["gegevenstype"] },
+      ],
+    },
+  };
+  const dt = { id: "t", elementTypes: Object.values(types) };
+  const el = (t) => ({ id: t, elementType: t });
+  assert.equal(vindConnectorType(dt, el("entiteit"), el("enumeratie"))?.id, "gebruik");
+  assert.equal(vindConnectorType(dt, el("gegevenselement"), el("gegevenstype"))?.id, "gebruik");
+  assert.equal(vindConnectorType(dt, el("entiteit"), el("gegevenstype")), null);
+  assert.equal(vindConnectorType(dt, el("gegevenselement"), el("enumeratie")), null);
+});
+
+test("kortste-weg gebruikt gemeten maten: brede lage node onder de bron → bottom/top", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    id: "d",
+    nodes: [
+      { elementId: "A", position: { x: 20, y: 100 } },
+      // B is in werkelijkheid breed en laag en ligt recht ónder A, maar met
+      // de 200×80-schatting lijkt zijn middelpunt links te liggen → "left".
+      { elementId: "B", position: { x: -60, y: 160 } },
+    ],
+  };
+  let { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges[0].sourceHandle, "source-left");
+
+  // Mét gemeten maten (A klein, B breed en laag) klopt de geometrie: B's
+  // middelpunt ligt vrijwel recht onder A → bottom/top.
+  const maten = { A: { width: 150, height: 60 }, B: { width: 380, height: 120 } };
+  ({ edges } = materialiseerConnectoren(elements, diagram, elementTypesById, maten));
+  assert.equal(edges[0].sourceHandle, "source-bottom");
+  assert.equal(edges[0].targetHandle, "target-top");
+});
+
+test("knikpunten op de connector-data komen mee op de kale edge", () => {
+  const elements = {
+    A: { id: "A", naam: "A", elementType: "knoop" },
+    B: { id: "B", naam: "B", elementType: "knoop" },
+    c1: {
+      id: "c1",
+      naam: "",
+      elementType: "kant",
+      source: "A",
+      target: "B",
+      compartimenten: [],
+      data: { knikken: [{ x: 100, y: 40 }] },
+    },
+  };
+  const diagram = {
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 300, y: 0 } },
+    ],
+  };
+  const elementTypesById = {
+    knoop: { id: "knoop" },
+    kant: { id: "kant", isConnector: true, bron: { elementTypes: ["knoop"] }, doel: { elementTypes: ["knoop"] } },
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.deepEqual(edges[0].data.knikken, [{ x: 100, y: 40 }]);
+});
+
+test("meerdere voorkomens kiezen het bron-doelpaar met de kortste afstand", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { nodeId: "A-tweede", elementId: "A", position: { x: 800, y: 0 } },
+      { elementId: "B", position: { x: 500, y: 0 } },
+      { nodeId: "B-tweede", elementId: "B", position: { x: 850, y: 0 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges[0].source, "A-tweede");
+  assert.equal(edges[0].target, "B-tweede");
+});
+
+test("expliciet voorkomenpaar per diagram wint van de kortste afstand", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    connectorVoorkomens: { r1: { bronNodeId: "A", doelNodeId: "B" } },
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { nodeId: "A-tweede", elementId: "A", position: { x: 800, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+      { nodeId: "B-tweede", elementId: "B", position: { x: 850, y: 0 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges[0].source, "A");
+  assert.equal(edges[0].target, "B");
+});
+
+test("verborgenConnectoren onderdrukt alleen de genoemde connector", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+    r2: { id: "r2", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    verborgenConnectoren: ["r1"],
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.deepEqual(edges.map((edge) => edge.data.connectorId), ["r2"]);
+});
+
+// ── Gedaanten van een samenstel (07-09) ──────────────────────────────────
+
+const VELDEN = [{ compartmentType: "attributen", velden: [{ naam: "x" }] }];
+
+test("gedaanteOverrides 'lijn' dwingt een connector mét velden naar één kale edge", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: VELDEN, data: {} },
+  };
+  const diagram = {
+    gedaanteOverrides: { r1: "lijn" },
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+    ],
+  };
+  const { edges, extraNodes } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges.length, 1);
+  assert.equal(extraNodes.length, 0);
+});
+
+test("gedaanteOverrides 'box' materialiseert ook een connector zónder velden", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    gedaanteOverrides: { r1: "box" },
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+    ],
+  };
+  const { edges, extraNodes } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges.length, 3); // bron→anker, anker→doel, anker→box
+  assert.ok(extraNodes.some((n) => n.id === `${ANKER_PREFIX}r1`));
+  assert.ok(extraNodes.some((n) => n.soort === "box"));
+});
+
+test("samentrekking: ingeklapt doel-voorkomen maakt de lijn kaal (lollipop-steeltje)", () => {
+  const metSamentrekking = {
+    ...elementTypesById,
+    interface: {
+      id: "interface",
+      shape: "class-box",
+      samentrekking: { gedaante: "bol", relatieTypes: ["realisatie"] },
+    },
+    realisatie: {
+      id: "realisatie",
+      shape: "edge",
+      isConnector: true,
+      edgePresentatie: { lijn: "dash-6-3", markerEnd: "driehoek" },
+    },
+  };
+  const elements = {
+    A,
+    I: { id: "I", elementType: "interface" },
+    r1: { id: "r1", naam: "", elementType: "realisatie", source: "A", target: "I", compartimenten: [], data: {} },
+  };
+  const maak = (gedaante) =>
+    materialiseerConnectoren(elements, {
+      nodes: [
+        { elementId: "A", position: { x: 0, y: 0 } },
+        { elementId: "I", position: { x: 400, y: 0 }, ...(gedaante ? { gedaante } : {}) },
+      ],
+    }, metSamentrekking).edges[0].data.presentatie;
+  // Uitgeklapt: gewone realisatie (stippel + driehoek).
+  assert.equal(maak(null).lijn, "dash-6-3");
+  assert.equal(maak(null).markerEnd, "driehoek");
+  // Ingeklapt tot bolletje: kaal steeltje.
+  assert.equal(maak("bol").lijn, "solid");
+  assert.equal(maak("bol").markerEnd, null);
+});
+
+test("samentrekking maakt óók de marker aan de overkant kaal (ArchiMate-ruit)", () => {
+  // ArchiMate-geval: component ──◆ interface (compositie, ruit aan de bron).
+  // Ingeklapt hoort er één kaal steeltje te staan, dus zonder ruit.
+  const types = {
+    component: { id: "component", shape: "class-box" },
+    interface: {
+      id: "interface",
+      shape: "class-box",
+      samentrekking: { gedaante: "bol", relatieTypes: ["compositie"] },
+    },
+    compositie: {
+      id: "compositie",
+      shape: "edge",
+      isConnector: true,
+      edgePresentatie: { lijn: "solid", markerStart: "ruit" },
+    },
+  };
+  const elements = {
+    C: { id: "C", elementType: "component" },
+    I: { id: "I", elementType: "interface" },
+    r1: { id: "r1", naam: "", elementType: "compositie", source: "C", target: "I", compartimenten: [], data: {} },
+  };
+  const maak = (gedaante) =>
+    materialiseerConnectoren(elements, {
+      nodes: [
+        { elementId: "C", position: { x: 0, y: 0 } },
+        { elementId: "I", position: { x: 400, y: 0 }, ...(gedaante ? { gedaante } : {}) },
+      ],
+    }, types).edges[0].data.presentatie;
+  assert.equal(maak(null).markerStart, "ruit");
+  assert.equal(maak("bol").markerStart, null);
+});
+
+
+test("normaliseerHandle: kale oude zijden en huidige ids → ElementNode-vorm", () => {
+  assert.equal(normaliseerHandle("left", "source"), "source-left");
+  assert.equal(normaliseerHandle("top", "target"), "target-top");
+  assert.equal(normaliseerHandle("source-bottom", "source"), "source-bottom");
+  // De zijde telt; een prefix van de verkeerde kant wordt gecorrigeerd.
+  assert.equal(normaliseerHandle("target-right", "source"), "source-right");
+  // Onherkenbaar of leeg → null, zodat de kortste weg het overneemt.
+  assert.equal(normaliseerHandle("midden", "source"), null);
+  assert.equal(normaliseerHandle("", "source"), null);
+  assert.equal(normaliseerHandle(undefined, "target"), null);
+});
+
+test("connector met kale oude handles krijgt geldige handle-ids (de lijn verdwijnt niet)", () => {
+  // Een edge met handle-id "left" wordt door React Flow stil geweigerd.
+  const elements = {
+    A,
+    G,
+    c1: {
+      id: "c1",
+      naam: "",
+      elementType: "compositie",
+      source: "A",
+      target: "G",
+      compartimenten: [],
+      data: { sourceHandle: "left", targetHandle: "top" },
+    },
+  };
+  const diagram = {
+    id: "d",
+    nodes: [
+      { elementId: "A", position: { x: 400, y: 0 } },
+      { elementId: "G", position: { x: 0, y: 300 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges.length, 1);
+  assert.equal(edges[0].sourceHandle, "source-left");
+  assert.equal(edges[0].targetHandle, "target-top");
+  assert.equal(edges[0].data.presentatie.markerStart, "ruit");
 });

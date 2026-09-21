@@ -26,6 +26,10 @@ function schrijfOpslag(state) {
         sidebarWidth: state.sidebarWidth,
         inspectorWidth: state.inspectorWidth,
         paneelStand: state.paneelStand,
+        balkVerborgen: state.balkVerborgen,
+        labsAan: state.labsAan,
+        favorieten: state.favorieten,
+        tooltipsAan: state.tooltipsAan,
       })
     );
   } catch { /* ignore */ }
@@ -44,6 +48,26 @@ const useStudioStore = create((set) => ({
    * { [activiteitId]: { sidebar: bool, inspector: bool } }
    */
   paneelStand: opgeslagen.paneelStand || {},
+  /**
+   * Configureerbare complexiteit (consolidatieplan fase 1). Alles blijft
+   * altijd bereikbaar via menu Ga naar en het opdrachtenpalet; deze
+   * instellingen bepalen alleen wat de activity bar toont.
+   */
+  /** { [activiteitId]: true } — door de gebruiker uit de balk gehaald. */
+  balkVerborgen: opgeslagen.balkVerborgen || {},
+  /** Labs uit → preview-activiteiten (in aanbouw) niet in de balk. */
+  labsAan: opgeslagen.labsAan ?? true,
+  /** Gepinde activiteiten, bovenin de balk (volgorde = pinvolgorde). */
+  favorieten: opgeslagen.favorieten || [],
+  /** Eigen taakbalk-tooltips (naam + omschrijving); uit → native title. */
+  tooltipsAan: opgeslagen.tooltipsAan ?? true,
+
+  toggleTooltips: () =>
+    set((s) => {
+      const next = { ...s, tooltipsAan: !s.tooltipsAan };
+      schrijfOpslag(next);
+      return { tooltipsAan: next.tooltipsAan };
+    }),
 
   setActief: (id) =>
     set((s) => {
@@ -93,6 +117,58 @@ const useStudioStore = create((set) => ({
         ...s.paneelStand,
         [id]: { ...huidig, [sleutel]: !(huidig[sleutel] ?? true) },
       };
+      const next = { ...s, paneelStand };
+      schrijfOpslag(next);
+      return { paneelStand };
+    }),
+
+  /**
+   * Toon/verberg een activiteit in de balk — expliciet (tri-state opslag):
+   * true = verborgen, false = zichtbaar, afwezig = descriptor-default
+   * (`standaardVerborgen`, bv. de losse editors die Modelleren al dekt).
+   * Verbergen haalt hem ook uit de favorieten.
+   */
+  zetBalkZichtbaar: (id, zichtbaar) =>
+    set((s) => {
+      const balkVerborgen = { ...s.balkVerborgen, [id]: !zichtbaar };
+      const favorieten = zichtbaar ? s.favorieten : s.favorieten.filter((f) => f !== id);
+      const next = { ...s, balkVerborgen, favorieten };
+      schrijfOpslag(next);
+      return { balkVerborgen, favorieten };
+    }),
+
+  toggleLabs: () =>
+    set((s) => {
+      const next = { ...s, labsAan: !s.labsAan };
+      schrijfOpslag(next);
+      return { labsAan: next.labsAan };
+    }),
+
+  /** Pin/unpin een favoriet. Pinnen maakt de activiteit ook weer zichtbaar. */
+  toggleFavoriet: (id) =>
+    set((s) => {
+      let favorieten;
+      const balkVerborgen = { ...s.balkVerborgen };
+      if (s.favorieten.includes(id)) {
+        favorieten = s.favorieten.filter((f) => f !== id);
+      } else {
+        favorieten = [...s.favorieten, id];
+        // Expliciet zichtbaar (wint van een standaardVerborgen-default).
+        balkVerborgen[id] = false;
+      }
+      const next = { ...s, favorieten, balkVerborgen };
+      schrijfOpslag(next);
+      return { favorieten, balkVerborgen };
+    }),
+
+  /**
+   * Paneelstand van een activiteit programmatisch zetten (bv. Modelleren
+   * dat zijn zijpanelen inklapt voor een editor met eigen schil).
+   */
+  zetPaneelStand: (activiteitId, patch) =>
+    set((s) => {
+      const huidig = s.paneelStand[activiteitId] || {};
+      const paneelStand = { ...s.paneelStand, [activiteitId]: { ...huidig, ...patch } };
       const next = { ...s, paneelStand };
       schrijfOpslag(next);
       return { paneelStand };

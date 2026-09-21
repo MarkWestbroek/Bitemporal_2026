@@ -322,9 +322,45 @@ test("V3-route: generalisatie (erft) overleeft ook een tweede export", () => {
 test("V3-route: import zonder overzicht-entry reconstrueert zoals voorheen", () => {
   // Oude-IDE-export (geen diagrammen-entry met id "overzicht"): de default
   // wordt afgeleid met alle elementen — bestaand gedrag blijft intact.
+  // Packages en bevat-connectoren (uit de V3-domeinen) zijn bewust
+  // model-only en tellen niet mee als canvas-nodes. Compositie-connectoren
+  // evenmin: de core leidt ze af als lijn tussen twee nodes.
   const core = importeerV3(demoV3Model);
-  const aantalElementen = Object.keys(core.elements).length;
+  const aantalElementen = Object.values(core.elements).filter(
+    (el) => el.elementType !== "package" && el.elementType !== "bevat" && el.elementType !== "compositie"
+  ).length;
   assert.ok(core.diagrams.overzicht.nodes.length >= aantalElementen - 1);
+});
+
+test("packages: V3-domein ↔ package/bevat, verhangen wint bij de terugreis", () => {
+  const bron = {
+    elements: {
+      E1: {
+        id: "E1",
+        naam: "E1",
+        type: "entiteit",
+        domein: "kern",
+        data: { typenaam: "E1", velden: [] },
+      },
+    },
+    structuralEdges: [],
+    diagrams: {},
+  };
+  const core = vanCanoniekModel(bron);
+  const pkg = Object.values(core.elements).find((el) => el.elementType === "package");
+  const bevat = Object.values(core.elements).find((el) => el.elementType === "bevat");
+  assert.equal(pkg?.naam, "kern", "domein wordt een package-element");
+  assert.equal(bevat?.source, pkg.id);
+  assert.equal(bevat?.target, "E1");
+
+  // Verhangen in 0.5: bevat wijst naar een nieuw package → de terugreis
+  // volgt de connector, niet het gespiegelde domein-veld.
+  core.elements.pkg2 = { id: "pkg2", naam: "anders", elementType: "package", compartimenten: [], data: {} };
+  core.elements[bevat.id] = { ...bevat, source: "pkg2" };
+  const terug = naarCanoniekModel(core);
+  assert.equal(terug.elements.E1.domein, "anders");
+  assert.ok(terug.domains.includes("anders"), "nieuw package komt in de domains-lijst");
+  assert.ok(!terug.overgeslagen.length, "package/bevat horen niet bij 'overgeslagen'");
 });
 
 test("gegevenstype: validatie/normalisatie/weergave zijn bewerkbaar en winnen van de bron", () => {
@@ -400,4 +436,72 @@ test("store-round-trip: bewerking in 0.5 (delta) wint van de bron-spiegel", () =
   assert.equal(terug.elements.A.data.typenaam, "Burger");
   assert.equal(terug.elements.A.naam, "Burger");
   assert.equal(terug.elements.A.data.velden[0].verplicht, false);
+});
+
+test("store-round-trip: gevouwen compositie behoudt edge-id, edge-data en (genormaliseerde) handles", () => {
+  const bron = maakBronState();
+  // Oude-editor-vorm: presentatie-edge met kale zijden als handle.
+  bron.diagrams.overzicht.edges.push({
+    id: "se1",
+    source: "A",
+    target: "GE1",
+    type: "metamodel",
+    sourceHandle: "left",
+    targetHandle: "top",
+    data: { momentvoorkomen: "enkelvoudig" },
+  });
+  const core = vanCanoniekModel(bron);
+  assert.ok(
+    Object.values(core.elements).some((el) => el.elementType === "compositie" && el.source === "A" && el.target === "GE1"),
+    "de compositie is een connector-element geworden"
+  );
+
+  const terug = naarCanoniekModel(core);
+  const se1 = terug.structuralEdges.find((e) => e.target === "GE1");
+  assert.equal(se1.id, "se1", "structurele edge-id blijft stabiel");
+  assert.equal(se1.data.momentvoorkomen, "enkelvoudig", "edge-data niet overschreven door de connector");
+
+  // storeNaarV3Model leest GE-handles uit de overzicht-edge met dit id.
+  const pe = terug.diagrams.overzicht.edges.filter((e) => e.source === "A" && e.target === "GE1");
+  assert.equal(pe.length, 1, "precies één presentatie-edge terug op het overzicht");
+  assert.equal(pe[0].id, "se1");
+  assert.equal(pe[0].sourceHandle, "source-left");
+  assert.equal(pe[0].targetHandle, "target-top");
+});
+
+test("store-round-trip: in 0.5 bewerkte compositie-velden (kardinaliteit, rolnamen) gaan terug naar de structurele edge", () => {
+  const bron = maakBronState();
+  const core = vanCanoniekModel(bron);
+  const comp = Object.values(core.elements).find(
+    (el) => el.elementType === "compositie" && el.source === "A" && el.target === "GE1"
+  );
+  assert.ok(comp, "compositie-connector aanwezig");
+  comp.data = { ...comp.data, kardinaliteit: "1..*", rolnaam: "adressen", jsonRolnaam: "adressen", momentvoorkomen: "meervoudig" };
+
+  const se1 = naarCanoniekModel(core).structuralEdges.find((e) => e.source === "A" && e.target === "GE1");
+  assert.equal(se1.data.kardinaliteit, "1..*");
+  assert.equal(se1.data.rolnaam, "adressen");
+  assert.equal(se1.data.jsonRolnaam, "adressen");
+  assert.equal(se1.data.momentvoorkomen, "meervoudig");
+});
+
+test("store-round-trip: in 0.5 bewerkte GE-velden gaan terug naar de oude datavorm", () => {
+  const core = vanCanoniekModel(maakBronState());
+  const ge = core.elements.GE1;
+  ge.data = {
+    ...ge.data,
+    typenaam: "A_Adres",
+    description: "Adresgegevens",
+    meervoud: "adressen",
+    naamLabelHeen: "woont op",
+    naamLabelTerug: "is adres van",
+    domein: "np-loc",
+  };
+  const terug = naarCanoniekModel(core).elements.GE1;
+  assert.equal(terug.data.typenaam, "A_Adres");
+  assert.equal(terug.data.description, "Adresgegevens");
+  assert.equal(terug.data.meervoud, "adressen");
+  assert.equal(terug.data.naamLabelHeen, "woont op");
+  assert.equal(terug.data.naamLabelTerug, "is adres van");
+  assert.equal(terug.domein, "np-loc");
 });

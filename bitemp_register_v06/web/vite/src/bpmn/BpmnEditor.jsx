@@ -81,6 +81,14 @@ const BpmnEditor = forwardRef(function BpmnEditor({ xml, onSelectionChange, onEr
   }, []);
 
   useImperativeHandle(ref, () => ({
+    /** Vervang de volledige inhoud (documentwissel in de Modelleren-host). */
+    async laadXML(nieuweXml) {
+      const modeler = modelerRef.current;
+      if (!modeler || !nieuweXml) return;
+      await modeler.importXML(nieuweXml);
+      modeler.get("canvas").zoom("fit-viewport");
+    },
+
     /** Koppel (of vervang) het Berichttype op het geselecteerde event. */
     bindBerichttype(berichttype) {
       const modeler = modelerRef.current;

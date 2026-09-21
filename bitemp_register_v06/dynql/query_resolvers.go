@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -94,6 +95,7 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		}
 		flat := flattenEntityMap(result, meta)
 		verrijkWeergavenamen(p.Context, flat, meta)
+		verrijkEigenAfgeleideVelden(flat, meta)
 		return flat, nil
 	}
 }
@@ -194,6 +196,7 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		for i, m := range maps {
 			flat := flattenEntityMap(m, meta)
 			verrijkWeergavenamen(p.Context, flat, meta)
+			verrijkEigenAfgeleideVelden(flat, meta)
 			maps[i] = flat
 		}
 		return maps, nil
@@ -987,7 +990,7 @@ func berekenWeergavenaamVlak(entityMap map[string]interface{}, meta model.TypeMe
 // Zelfde logica als handlers.evalueerCELConcatenatie maar werkt met geflattende data.
 func evalueerCELConcatenatieVlak(entityMap map[string]interface{}, expressie string, meta model.TypeMeta) string {
 	if !strings.Contains(expressie, "+") {
-		return navigeerAfgeleidPadVlak(entityMap, strings.TrimSpace(expressie), meta)
+		return evalueerCELSegmentVlak(entityMap, strings.TrimSpace(expressie), meta)
 	}
 
 	segmenten := strings.Split(expressie, "+")
@@ -1003,10 +1006,68 @@ func evalueerCELConcatenatieVlak(entityMap map[string]interface{}, expressie str
 			literal = strings.ReplaceAll(literal, `\\`, `\`)
 			resultaat.WriteString(literal)
 		} else {
-			resultaat.WriteString(navigeerAfgeleidPadVlak(entityMap, segment, meta))
+			resultaat.WriteString(evalueerCELSegmentVlak(entityMap, segment, meta))
 		}
 	}
 	return resultaat.String()
+}
+
+// evalueerCELSegmentVlak evalueert één segment (functie-aanroep of pad) op een
+// geflattende map. Parallel aan handlers.evalueerCELSegment.
+func evalueerCELSegmentVlak(entityMap map[string]interface{}, segment string, meta model.TypeMeta) string {
+	if lft, ok := evalueerLeeftijdCallVlak(entityMap, segment, meta); ok {
+		if lft == nil {
+			return ""
+		}
+		return strconv.Itoa(*lft)
+	}
+	return navigeerAfgeleidPadVlak(entityMap, segment, meta)
+}
+
+// evalueerLeeftijdCallVlak herkent en evalueert leeftijd(geboortedatum[, peildatum]).
+func evalueerLeeftijdCallVlak(entityMap map[string]interface{}, segment string, meta model.TypeMeta) (*int, bool) {
+	naam, args, ok := model.ParseAfgeleideFunctieAanroep(segment)
+	if !ok || naam != "leeftijd" || len(args) == 0 {
+		return nil, false
+	}
+	geboorte := evalueerAfgeleidArgumentVlak(entityMap, args[0], meta)
+	peil := ""
+	if len(args) > 1 {
+		peil = evalueerAfgeleidArgumentVlak(entityMap, args[1], meta)
+	}
+	return model.BerekenLeeftijdVanArgs(geboorte, peil), true
+}
+
+// evalueerAfgeleidArgumentVlak evalueert één functie-argument: string-literal of pad.
+func evalueerAfgeleidArgumentVlak(entityMap map[string]interface{}, arg string, meta model.TypeMeta) string {
+	arg = strings.TrimSpace(arg)
+	if len(arg) >= 2 && arg[0] == '"' && arg[len(arg)-1] == '"' {
+		lit := arg[1 : len(arg)-1]
+		lit = strings.ReplaceAll(lit, `\"`, `"`)
+		lit = strings.ReplaceAll(lit, `\\`, `\`)
+		return lit
+	}
+	return navigeerAfgeleidPadVlak(entityMap, arg, meta)
+}
+
+// verrijkEigenAfgeleideVelden injecteert de entiteit-eigen afgeleide velden
+// (bijv. leeftijd) op de geflattende result-map, onder hun GraphQL-veldnaam.
+// Weergavenaam-velden worden hier overgeslagen; die worden per relatie verrijkt.
+func verrijkEigenAfgeleideVelden(entityMap map[string]interface{}, meta model.TypeMeta) {
+	for _, av := range meta.AfgeleideVelden {
+		if av.IsWeergaveVeld {
+			continue
+		}
+		var waarde interface{}
+		if lft, ok := evalueerLeeftijdCallVlak(entityMap, strings.TrimSpace(av.Afleidingsregel), meta); ok {
+			if lft != nil {
+				waarde = *lft
+			}
+		} else {
+			waarde = evalueerCELConcatenatieVlak(entityMap, av.Afleidingsregel, meta)
+		}
+		entityMap[gqlSafeNaam(av.Naam)] = waarde
+	}
 }
 
 // navigeerAfgeleidPadVlak navigeert een punt-gescheiden pad door een geflattende entity-map.

@@ -9,13 +9,89 @@
  *   - Lijstmethoden:     list.filter(x, pred), list.map(x, expr),
  *                        list.exists(x, pred), list.all(x, pred), list.size()
  *   - Indexering:        list[n]
- *   - Ingebouwde func:   string(val), size(val)
+ *   - Ingebouwde func:   string(val), size(val), int(val),
+ *                        leeftijd(geboortedatum[, peildatum])
  *   - Haakjes:           ( expr )
  *
  * Geen eval(), geen Function() — veilige tokenizer + recursive-descent parser.
  */
 
 import { safeArray, platSlaHubItems } from "./schemaUtils.js";
+
+// ── Datum-helpers voor leeftijd() ─────────────────────────────────────────
+
+/**
+ * Ontleedt een datum-string naar {jaar, maand, dag}, waarbij onbekende
+ * BRP-componenten (00 of ontbrekend) als null worden teruggegeven.
+ * Accepteert "JJJJ-MM-DD", "JJJJ-MM", "JJJJ", een ISO date-time (T-deel wordt
+ * genegeerd) en DatumIncompleet (bijv. "1990-00-00", "1990-06-00").
+ * @returns {{jaar: number|null, maand: number|null, dag: number|null}|null}
+ */
+function ontleedDatumComponenten(str) {
+  if (typeof str !== "string") return null;
+  const datumDeel = str.trim().split("T")[0];
+  const m = datumDeel.match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?$/);
+  if (!m) return null;
+  const jaar = parseInt(m[1], 10);
+  const maand = m[2] != null ? parseInt(m[2], 10) : 0;
+  const dag = m[3] != null ? parseInt(m[3], 10) : 0;
+  return {
+    jaar: jaar === 0 ? null : jaar,
+    maand: maand === 0 ? null : maand,
+    dag: dag === 0 ? null : dag,
+  };
+}
+
+/**
+ * Zet een (mogelijk incomplete) geboortedatum om naar een concrete Date (UTC).
+ * DatumIncompleet-strategie (BRP-conventie, midpoint):
+ *   - alleen jaar bekend       → 1 juli van dat jaar
+ *   - jaar + maand bekend       → de 15e van die maand
+ *   - jaar onbekend / lege datum → null (leeftijd niet bepaalbaar)
+ * @returns {Date|null}
+ */
+function geboortedatumNaarDate(str) {
+  const c = ontleedDatumComponenten(str);
+  if (!c || c.jaar == null) return null;
+  let maand = c.maand;
+  let dag = c.dag;
+  if (maand == null) {
+    maand = 7; // juli
+    dag = 1;
+  } else if (dag == null) {
+    dag = 15;
+  }
+  return new Date(Date.UTC(c.jaar, maand - 1, dag));
+}
+
+/**
+ * Berekent de leeftijd in hele jaren op een peilmoment.
+ * @param {string} geboorte - geboortedatum (evt. DatumIncompleet).
+ * @param {string|Date|null} peil - peildatum; null = vandaag (wandklok).
+ * @returns {number|null} leeftijd in jaren, of null als niet bepaalbaar.
+ */
+function berekenLeeftijd(geboorte, peil) {
+  const g = geboortedatumNaarDate(geboorte);
+  if (!g) return null;
+
+  let p;
+  if (peil == null || peil === "") {
+    const nu = new Date();
+    p = new Date(Date.UTC(nu.getFullYear(), nu.getMonth(), nu.getDate()));
+  } else if (peil instanceof Date) {
+    p = new Date(Date.UTC(peil.getUTCFullYear(), peil.getUTCMonth(), peil.getUTCDate()));
+  } else {
+    p = geboortedatumNaarDate(peil);
+  }
+  if (!p || isNaN(p.getTime())) return null;
+
+  let jaren = p.getUTCFullYear() - g.getUTCFullYear();
+  const maandDiff = p.getUTCMonth() - g.getUTCMonth();
+  if (maandDiff < 0 || (maandDiff === 0 && p.getUTCDate() < g.getUTCDate())) {
+    jaren--; // verjaardag op het peilmoment nog niet geweest
+  }
+  return jaren < 0 ? null : jaren;
+}
 
 // ── Tokenizer ───────────────────────────────────────────────────────────
 
@@ -387,6 +463,13 @@ function evaluate(node, ctx) {
       if (name === "int") {
         const val = evaluate(args[0], ctx);
         return val == null ? 0 : parseInt(String(val), 10);
+      }
+      // leeftijd(geboortedatum) of leeftijd(geboortedatum, peildatum)
+      // Zonder peildatum wordt vandaag (wandklok) gebruikt.
+      if (name === "leeftijd") {
+        const geboorte = evaluate(args[0], ctx);
+        const peil = args.length > 1 ? evaluate(args[1], ctx) : null;
+        return berekenLeeftijd(geboorte == null ? null : String(geboorte), peil);
       }
       return null;
     }

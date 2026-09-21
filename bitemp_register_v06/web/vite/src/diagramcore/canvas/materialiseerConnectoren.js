@@ -23,30 +23,107 @@
  *     hiermee ingebouwd gedrag).
  *
  * Labels komen uit de optionele profiel-hook
- * `elementType.hooks.edgeLabels(connector)` →
+ * `elementType.hooks.edgeLabels(connector, { elements })` →
  *   { bron?: Label[], doel?: Label[], kaal?: Label[] } (ConnectorEdge-vorm).
  *
  * Puur en store-loos: testbaar met kale objecten.
  */
+import { toetsAfbakening } from "./afbakening.js";
+import { kortsteVoorkomenPaar, voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
+import { bepaalOpnames } from "./opname.js";
 
 export const ANKER_PREFIX = "anker:";
+
+const ZIJDEN = new Set(["top", "bottom", "left", "right"]);
+
+/**
+ * Normaliseer een opgeslagen handle-id naar de vorm die ElementNode kent
+ * (`source-left`, `target-top`, …).
+ *
+ * Oudere modellen (de eerste umleditor) bewaarden kale zijden als `"left"` of
+ * `"bottom"`. React Flow weigert een edge met een onbekend handle-id stil —
+ * de lijn verdwijnt dan zonder foutmelding. Onherkenbare waarden worden
+ * `null`, zodat de aanroeper terugvalt op de kortste weg.
+ *
+ * @param {unknown} waarde  opgeslagen handle ("left", "source-left", …)
+ * @param {"source"|"target"} soort  welke kant van de verbinding
+ * @returns {string|null}
+ */
+export function normaliseerHandle(waarde, soort) {
+  if (typeof waarde !== "string" || !waarde) return null;
+  const zijde = waarde.replace(/^(source|target)-/, "");
+  return ZIJDEN.has(zijde) ? `${soort}-${zijde}` : null;
+}
+
+/** Connectortypen die volgens de elementtype-regels bron→doel toestaan. */
+function passendOpType(diagramType, bronElement, doelElement) {
+  if (!bronElement || !doelElement) return [];
+  const kandidaten = (diagramType?.elementTypes || []).filter((et) => et.isConnector);
+  // 1..* verbindingsregels (volledige vorm) of de verkorte bron/doel-vorm:
+  // een verbinding past zodra één regel de combinatie toestaat.
+  const regelsVan = (et) =>
+    Array.isArray(et.verbindingsregels) && et.verbindingsregels.length
+      ? et.verbindingsregels.map((r) => ({
+          bron: r?.bron?.elementTypes || r?.bron || [],
+          doel: r?.doel?.elementTypes || r?.doel || [],
+        }))
+      : [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
+  return kandidaten.filter((et) =>
+    regelsVan(et).some(
+      (r) => r.bron.includes(bronElement.elementType) && r.doel.includes(doelElement.elementType)
+    )
+  );
+}
+
+/**
+ * Álle connector-ElementTypes die een verbinding bron→doel toestaan, in
+ * descriptor-volgorde. Basis van de "magic link" (backlog §31.7): sleep een
+ * lijn zonder vooraf een type te kiezen en de canvas biedt deze lijst aan.
+ *
+ * Met `elements` erbij telt ook de **afbakening** mee (§31.4, zie
+ * `afbakening.js`): een sequence flow kruist geen poolgrens, een message flow
+ * moet er juist een kruisen. Zonder `elements` gelden alleen de typeregels.
+ *
+ * @param {Object} diagramType
+ * @param {Object} bronElement
+ * @param {Object} doelElement
+ * @param {Record<string, Object>} [elements]
+ * @param {Map<string, string>} [containerVan]  lid → container; alleen nodig om
+ *   een nog-niet-bestaand element een plek te geven
+ * @returns {Array<Object>} passende connectortypen (leeg = niets mag)
+ */
+export function vindConnectorTypes(diagramType, bronElement, doelElement, elements = null, containerVan = null) {
+  const opType = passendOpType(diagramType, bronElement, doelElement);
+  if (!elements) return opType;
+  return opType.filter(
+    (ct) => !toetsAfbakening(diagramType, ct, bronElement, doelElement, elements, containerVan)
+  );
+}
+
+/**
+ * De connectortypen die op elementtype wél passen maar op de afbakening
+ * stranden — met de reden, zodat de canvas kan uitleggen waarom.
+ * @returns {Array<{connectorType: Object, weigering: Object}>}
+ */
+export function geweigerdDoorAfbakening(diagramType, bronElement, doelElement, elements, containerVan = null) {
+  if (!elements) return [];
+  return passendOpType(diagramType, bronElement, doelElement)
+    .map((connectorType) => ({
+      connectorType,
+      weigering: toetsAfbakening(diagramType, connectorType, bronElement, doelElement, elements, containerVan),
+    }))
+    .filter((x) => x.weigering);
+}
 
 /**
  * Zoek het connector-ElementType dat een verbinding bron→doel toestaat.
  * Bij een expliciete voorkeur (taakbalk "Verbinding") is die leidend; zonder
  * voorkeur wint de eerste passende in descriptor-volgorde.
  */
-export function vindConnectorType(diagramType, bronElement, doelElement, voorkeur = null) {
-  if (!bronElement || !doelElement) return null;
-  const kandidaten = (diagramType?.elementTypes || []).filter((et) => et.isConnector);
-  const past = (et) =>
-    (et.bron?.elementTypes || []).includes(bronElement.elementType) &&
-    (et.doel?.elementTypes || []).includes(doelElement.elementType);
-  if (voorkeur) {
-    const gekozen = kandidaten.find((et) => et.id === voorkeur);
-    return gekozen && past(gekozen) ? gekozen : null;
-  }
-  return kandidaten.find(past) || null;
+export function vindConnectorType(diagramType, bronElement, doelElement, voorkeur = null, elements = null) {
+  const passend = vindConnectorTypes(diagramType, bronElement, doelElement, elements);
+  if (voorkeur) return passend.find((et) => et.id === voorkeur) || null;
+  return passend[0] || null;
 }
 
 /** Heeft de connector inhoud die een box-gedaante rechtvaardigt? */
@@ -54,10 +131,44 @@ function heeftVelden(connector) {
   return (connector.compartimenten || []).some((c) => (c.velden || []).length > 0);
 }
 
-/** Geschat middelpunt van een node (posities zijn linksboven; maat geschat). */
-function midden(ref) {
-  const w = ref?.size?.width ?? 200;
-  const h = ref?.size?.height ?? 80;
+/**
+ * Gedaante van een connector op dít diagram: "box" (gematerialiseerd, het
+ * ASOC-patroon) of "lijn" (kaal). Automatisch bepaalt de inhoud het
+ * (velden → box), maar een handmatige keuze per diagram wint —
+ * `diagram.gedaanteOverrides[connectorId]` (ontwerpprincipe "gedaanten van
+ * een samenstel": de gedaante hoort bij het voorkomen, niet bij het model).
+ * Let op: in de lijn-gedaante worden aanwezige attributen niet getoond.
+ */
+export function effectieveConnectorGedaante(connector, diagram) {
+  const keuze = diagram?.gedaanteOverrides?.[connector.id];
+  if (keuze === "box" || keuze === "lijn") return keuze;
+  return heeftVelden(connector) ? "box" : "lijn";
+}
+
+/**
+ * Samentrekking (lollipop-familie): staat het voorkomen aan deze kant
+ * ingeklapt (DiagramNode.gedaante === samentrekking.gedaante van zijn
+ * ElementType) én noemt die samentrekking dit relatietype, dan absorbeert
+ * het samenstel de notatie van de lijn: die wordt over de héle lengte kaal
+ * — het steeltje van de lollipop. Ook de marker aan de óverkant vervalt
+ * (ArchiMate-compositie: de ruit bij de aanbieder), want de aanhechting is
+ * juist wat het bolletje zelf al uitdrukt.
+ */
+function samengetrokkenKant(ref, elementId, connector, elements, elementTypesById) {
+  const st = elementTypesById[elements[elementId]?.elementType]?.samentrekking;
+  return !!(st && ref?.gedaante && ref.gedaante === st.gedaante &&
+    (st.relatieTypes || []).includes(connector.elementType));
+}
+
+/**
+ * Middelpunt van een node: expliciete size (diagram-lidmaatschap) wint,
+ * daarna de gemeten maat (React Flow, via de `maten`-parameter), en pas
+ * als laatste de 200×80-schatting. Zonder echte maten koos de kortste-weg
+ * bij brede/lage nodes geregeld de verkeerde zijde.
+ */
+function midden(ref, maat) {
+  const w = ref?.size?.width ?? maat?.width ?? 200;
+  const h = ref?.size?.height ?? maat?.height ?? 80;
   return { x: ref.position.x + w / 2, y: ref.position.y + h / 2 };
 }
 
@@ -82,22 +193,66 @@ export function besteZijde(van, naar) {
  *   extraNodes  — synthetische nodes: ankers (id `anker:<conn>`) en, waar een
  *                 DiagramNode ontbreekt, de connector-box zelf (id = conn.id)
  */
-export function materialiseerConnectoren(elements, diagram, elementTypesById) {
-  const nodeRefs = new Map((diagram?.nodes || []).map((n) => [n.elementId, n]));
+export function materialiseerConnectoren(elements, diagram, elementTypesById, maten = null) {
+  const nodeRefs = voorkomensPerElement(diagram?.nodes || []);
+  const verborgenConnectoren = new Set(diagram?.verborgenConnectoren || []);
   const edges = [];
   const extraNodes = [];
+
+  // Opname (zie opname.js): een ingebed deel-voorkomen is geen eigen node.
+  // Lijnen van het deel hangen dan aan zijn geheel; een lijn die daardoor
+  // binnen één geheel valt (de compositie zelf) vervalt — de nesting zegt het.
+  const opnames = bepaalOpnames(elements, diagram, elementTypesById);
+  const zichtbareVoorkomens = (elementId) => {
+    const lijst = (nodeRefs.get(elementId) || []).filter(
+      (ref) => !opnames.ingebedVoorkomens.has(voorkomenId(ref))
+    );
+    if (lijst.length) return { lijst, elementId };
+    const geheel = opnames.geheelVan.get(elementId);
+    return geheel ? { lijst: nodeRefs.get(geheel) || [], elementId: geheel } : { lijst, elementId };
+  };
 
   for (const el of Object.values(elements || {})) {
     const et = elementTypesById[el.elementType];
     if (!et?.isConnector || !el.source || !el.target) continue;
+    if (verborgenConnectoren.has(el.id)) continue;
 
-    const bronRef = nodeRefs.get(el.source);
-    const doelRef = nodeRefs.get(el.target);
-    if (!bronRef || !doelRef) continue; // beide uiteinden moeten op het diagram staan
-    const bronMid = midden(bronRef);
-    const doelMid = midden(doelRef);
+    const bronKant = zichtbareVoorkomens(el.source);
+    const doelKant = zichtbareVoorkomens(el.target);
+    if (el.source !== el.target && bronKant.elementId === doelKant.elementId) continue;
+    const bronVoorkomens = bronKant.lijst;
+    const doelVoorkomens = doelKant.lijst;
+    const expliciet = diagram?.connectorVoorkomens?.[el.id];
+    const explicieteBron = expliciet
+      ? bronVoorkomens.find((node) => voorkomenId(node) === expliciet.bronNodeId)
+      : null;
+    const explicietDoel = expliciet
+      ? doelVoorkomens.find((node) => voorkomenId(node) === expliciet.doelNodeId)
+      : null;
+    const paar = explicieteBron && explicietDoel
+      ? { bron: explicieteBron, doel: explicietDoel }
+      : kortsteVoorkomenPaar(bronVoorkomens, doelVoorkomens, maten);
+    if (!paar) continue; // beide uiteinden moeten op het diagram staan
+    const { bron: bronRef, doel: doelRef } = paar;
+    const bronVoorkomenId = voorkomenId(bronRef);
+    const doelVoorkomenId = voorkomenId(doelRef);
+    const bronMid = midden(bronRef, maten?.[bronVoorkomenId]);
+    const doelMid = midden(doelRef, maten?.[doelVoorkomenId]);
 
-    const labels = et.hooks?.edgeLabels?.(el) || {};
+    // Zwevende aanhechting per uiteinde (zie zwevendeRand.js). Twee
+    // voorwaarden: het elementtype aan die kant moet het toestaan, én de
+    // gebruiker mag daar niet zélf een handle hebben gekozen — een met de hand
+    // gelegde aanhechting blijft waar hij ligt. Een zelf-lus zweeft nooit; de
+    // ConnectorEdge vangt dat op, want daar is het pas te zien.
+    // Handles genormaliseerd: een kale oude waarde ("left") telt als geen keuze.
+    const bronHandle = normaliseerHandle(el.data?.sourceHandle, "source");
+    const doelHandle = normaliseerHandle(el.data?.targetHandle, "target");
+    const zwevendKant = (elementId, handle) =>
+      elementTypesById[elements[elementId]?.elementType]?.randAanhechting === "zwevend" && !handle;
+    const zwevendBron = zwevendKant(el.source, bronHandle);
+    const zwevendDoel = zwevendKant(el.target, doelHandle);
+
+    const labels = et.hooks?.edgeLabels?.(el, { elements }) || {};
     // Handmatig versleepte label-posities (data.labelOffsets, per zijde).
     const offsets = el.data?.labelOffsets || null;
     const metOffsets = (lijst) =>
@@ -111,26 +266,73 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
       ...(et.hooks?.edgePresentatie?.(el) || {}),
     };
 
-    if (!heeftVelden(el)) {
+    // Samentrekking (lollipop): een ingeklapt uiteinde maakt de lijn kaal —
+    // geen streepjespatroon, geen markers. Wat overblijft is het steeltje.
+    if (
+      samengetrokkenKant(bronRef, el.source, el, elements, elementTypesById) ||
+      samengetrokkenKant(doelRef, el.target, el, elements, elementTypesById)
+    ) {
+      basisPresentatie.lijn = "solid";
+      basisPresentatie.markerStart = null;
+      basisPresentatie.markerEnd = null;
+    }
+
+    if (effectieveConnectorGedaante(el, diagram) !== "box") {
       // ── Kale gedaante: één edge ──────────────────────────────────────────
       const kaalLabels = [...(basisPresentatie.labels || []), ...(labels.kaal || [])];
       if (el.naam) {
         kaalLabels.push({ zijde: "midden", delen: [{ tekst: el.naam, soort: "rolnaam" }] });
       }
+      // Zelf-lus (oortje): standaard hoekig en van boven naar rechts —
+      // de kortste weg is bij één punt betekenisloos.
+      const isLus = el.source === el.target;
+      // Lidmaatschaps-lijnen (edgePresentatie.verbergBijNesting): de lijn is
+      // ruis zolang het lid geometrisch ín zijn container ligt — de nesting
+      // toont de relatie al. Ligt het lid erbuiten, dan is de lijn juist
+      // informatief en blijft hij zichtbaar (vgl. EA/Archi-nesting).
+      let verborgen = false;
+      if (basisPresentatie.verbergBijNesting && !isLus) {
+        const bw = bronRef?.size?.width ?? maten?.[el.source]?.width ?? 200;
+        const bh = bronRef?.size?.height ?? maten?.[el.source]?.height ?? 80;
+        verborgen =
+          doelMid.x >= bronRef.position.x &&
+          doelMid.x <= bronRef.position.x + bw &&
+          doelMid.y >= bronRef.position.y &&
+          doelMid.y <= bronRef.position.y + bh;
+      }
       edges.push({
+        ...(verborgen ? { hidden: true } : {}),
         id: `conn:${el.id}`,
-        source: el.source,
-        target: el.target,
-        // Expliciete handles winnen; anders de kortste weg.
-        sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, doelMid)}`,
-        targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, bronMid)}`,
-        data: { connectorId: el.id, presentatie: { ...basisPresentatie, labels: metOffsets(kaalLabels) } },
+        source: bronVoorkomenId,
+        target: doelVoorkomenId,
+        // Expliciete handles winnen; anders de kortste weg (of de lus-default).
+        sourceHandle:
+          bronHandle || (isLus ? "source-top" : `source-${besteZijde(bronMid, doelMid)}`),
+        targetHandle:
+          doelHandle || (isLus ? "target-right" : `target-${besteZijde(doelMid, bronMid)}`),
+        data: {
+          connectorId: el.id,
+          // Handmatige knikpunten (ctrl-klik; alleen in deze directe gedaante —
+          // de gematerialiseerde gedaante heeft het anker al als handvat).
+          knikken:
+            Array.isArray(el.data?.knikken) && el.data.knikken.length ? el.data.knikken : null,
+          presentatie: {
+            ...basisPresentatie,
+            // Per-connector lijnvorm (contextmenu) wint van het type-default;
+            // een lus is standaard hoekig (het nette EA-oortje).
+            vorm: el.data?.vorm || (isLus ? "hoekig" : basisPresentatie.vorm),
+            zwevendBron,
+            zwevendDoel,
+            labels: metOffsets(kaalLabels),
+          },
+        },
       });
       continue;
     }
 
     // ── Gematerialiseerde gedaante: anker + box + 3 edges ──────────────────
-    const connRef = nodeRefs.get(el.id);
+    const connRef = nodeRefs.get(el.id)?.[0] || null;
+    const connVoorkomenId = connRef ? voorkomenId(connRef) : el.id;
     const ankerPos = connRef?.ankerPosition || {
       x: (bronMid.x + doelMid.x) / 2 - 7,
       y: (bronMid.y + doelMid.y) / 2 - 7,
@@ -156,9 +358,9 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
     const ankerMid = { x: ankerPos.x + 7, y: ankerPos.y + 7 };
     edges.push({
       id: `conn:${el.id}:bron`,
-      source: el.source,
+      source: bronVoorkomenId,
       target: ankerId,
-      sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, ankerMid)}`,
+      sourceHandle: bronHandle || `source-${besteZijde(bronMid, ankerMid)}`,
       targetHandle: `target-${besteZijde(ankerMid, bronMid)}`,
       data: {
         connectorId: el.id,
@@ -166,9 +368,10 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         // zichtbaar aan de bronzijde.
         presentatie: {
           lijn: "solid",
-          vorm: basisPresentatie.vorm,
+          vorm: el.data?.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerStart: basisPresentatie.markerStart,
+          zwevendBron,
           labels: metOffsets(labels.bron || []),
         },
       },
@@ -176,16 +379,17 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
     edges.push({
       id: `conn:${el.id}:doel`,
       source: ankerId,
-      target: el.target,
+      target: doelVoorkomenId,
       sourceHandle: `source-${besteZijde(ankerMid, doelMid)}`,
-      targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, ankerMid)}`,
+      targetHandle: doelHandle || `target-${besteZijde(doelMid, ankerMid)}`,
       data: {
         connectorId: el.id,
         presentatie: {
           lijn: "solid",
-          vorm: basisPresentatie.vorm,
+          vorm: el.data?.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerEnd: basisPresentatie.markerEnd ?? (el.data?.directioneel ? "pijl-open" : null),
+          zwevendDoel,
           labels: metOffsets(labels.doel || []),
         },
       },
@@ -195,7 +399,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
     edges.push({
       id: `conn:${el.id}:link`,
       source: ankerId,
-      target: el.id,
+      target: connVoorkomenId,
       sourceHandle: `source-${besteZijde(ankerMid, boxMid)}`,
       targetHandle: `target-${besteZijde(boxMid, ankerMid)}`,
       data: {

@@ -30,12 +30,46 @@
  *     inspectorLabel?: string
  *     fullMain?:     boolean  // true → activiteit brengt eigen volledige layout mee
  *                             //        (shell toont géén eigen zijpanelen)
- *     status?:       string   // bv. "concept" voor nog-te-maken functies
+ *     status?:       string   // "preview" (in aanbouw, bruikbaar) of "concept"
+ *                             // (nog te maken). Getoond als badge; concepten
+ *                             // staan niet in de activity bar.
+ *     verborgenInBalk?: boolean // true → niet in de activity bar, wel in Ga naar
  *   }
  */
 
+/** Weergavenamen van de groepen (volgorde = balkvolgorde; "beheer" onderaan). */
+export const GROEP_LABELS = {
+  modelleren: "Modelleren",
+  diensten: "Diensten",
+  data: "Data",
+  presentatie: "Presentatie",
+  beheer: "Beheer",
+};
+
+/** Weergavenaam van een groep (valt terug op de sleutel zelf). */
+export function groepLabel(groep) {
+  return GROEP_LABELS[groep] || groep || "";
+}
+
 const _activiteiten = [];
 const _index = new Map();
+
+// Abonnementen: async registraties (bv. profielen uit de git-map) moeten de
+// activity bar kunnen verversen. useSyncExternalStore-vriendelijk: een
+// versienummer als snapshot.
+let _versie = 0;
+const _luisteraars = new Set();
+
+/** @param {() => void} fn @returns {() => void} afmelden */
+export function abonneerOpActiviteiten(fn) {
+  _luisteraars.add(fn);
+  return () => _luisteraars.delete(fn);
+}
+
+/** Snapshot voor useSyncExternalStore. */
+export function activiteitenVersie() {
+  return _versie;
+}
 
 /**
  * Registreer één activiteit. Volgorde van registratie = volgorde in de activity bar.
@@ -53,6 +87,8 @@ export function registreerActiviteit(descriptor) {
     _activiteiten.push(descriptor);
   }
   _index.set(descriptor.id, descriptor);
+  _versie += 1;
+  _luisteraars.forEach((fn) => fn());
 }
 
 /** Registreer meerdere activiteiten in volgorde. */

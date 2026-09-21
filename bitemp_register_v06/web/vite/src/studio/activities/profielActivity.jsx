@@ -12,7 +12,7 @@
  * een herlaad overleven.
  */
 import { useCallback, useContext, useState, createContext } from "react";
-import { IconReferentielijst } from "../icons";
+import { IconProfiel05 } from "../icons";
 import useStudioStore from "../useStudioStore";
 import { valideerDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { HOOK_CATALOGUS, vertaalHooks, LEEG_SJABLOON, GRAAF_DEMO } from "./profielGereedschap.js";
@@ -255,7 +255,7 @@ function ProfielInspector() {
         <strong>Shapes:</strong> class-box, bol, note, rounded, boundary
       </p>
       <p style={blok}>
-        <strong>Veld-viewers:</strong> naam-type, waarde, tekst
+        <strong>Veld-viewers:</strong> naam-type, waarde, tekst, sub-vak
       </p>
       <p style={blok}>
         <strong>Property-datatypes:</strong> string, tekst, boolean, colour (+
@@ -286,9 +286,11 @@ function ProfielInspector() {
 
 export default {
   id: "profiel05",
-  label: "Profiel (0.5)",
-  icon: <IconReferentielijst />,
-  groep: "modelleren",
+  label: "Profiel-editor",
+  icon: <IconProfiel05 />,
+  // Gereedschap, geen modelleeractiviteit: hoort bij beheer/instellingen
+  // (consolidatieplan 2026-07-11, §2 — Instellingen bevat de profiel-editors).
+  groep: "beheer",
   status: "preview",
   Provider: ProfielProvider,
   Sidebar: ProfielSidebar,

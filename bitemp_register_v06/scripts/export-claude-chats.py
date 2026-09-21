@@ -7,9 +7,10 @@ Canonieke, gedeelde versie (D:\\Git\\_VScode-scripts). Draai het vanuit (of met
 1. bepaalt de repo-root via ``git rev-parse --git-common-dir`` (werkt ook in een
    worktree),
 2. vindt daarmee de Claude-sessiemap ``~/.claude/projects/<geëncodeerd-pad>/``,
-3. zoekt in de repo een bestaande ``copilot-chats``-map (``doc/`` óf ``docs/``,
-   ook genest) en schrijft de export naar ``<die map>/exports/``. Bestaat er geen,
-   dan valt hij terug op ``<repo>/doc/copilot-chats/exports/``.
+3. zoekt in de repo een bestaande chatmap — ``ai-chats`` of (historisch)
+   ``copilot-chats``, onder ``doc/`` óf ``docs/``, ook genest — en schrijft de
+   export naar ``<die map>/exports/``. Bestaat er geen, dan valt hij terug op
+   ``<repo>/doc/copilot-chats/exports/``.
 
 Bestandsnaam = ``YYYY-MM-DD-<titel>.md``; de titel komt automatisch uit de sessie
 (Claude Code's ``ai-title``, anders de eerste prompt), of via ``--title``.
@@ -118,28 +119,34 @@ def _under(child: Path, parent: Path) -> bool:
         return False
 
 
+CHATMAP_NAMEN = ("ai-chats", "copilot-chats")
+
+
 def _chats_dir(repo_root: Path) -> Path:
-    """Bepaal de ``copilot-chats``-map (met ``doc/`` of ``docs/``, ook genest).
+    """Bepaal de chatmap (``ai-chats`` of ``copilot-chats``, onder ``doc/`` of
+    ``docs/``, ook genest).
 
     - Staat dit script **in** de repo (kopie-in-project, optie B), dan bepalen we
       de map deterministisch t.o.v. de scriptmap (``<scripts>/../(docs|doc)/
-      copilot-chats``) — zo klopt het ook bij een genest deelproject.
+      <chatmap>``) — zo klopt het ook bij een genest deelproject.
     - Draait het als **gedeeld** script (buiten de repo, optie A), dan zoeken we
-      in de repo naar een bestaande ``copilot-chats`` en kiezen de actief
-      gebruikte (meeste exports; bij gelijkspel de ondiepste).
+      in de repo naar een bestaande chatmap en kiezen de actief gebruikte
+      (meeste exports; bij gelijkspel de ondiepste). Zo wint een actieve
+      ``docs/ai-chats`` van een achtergebleven ``doc/copilot-chats``.
     - Niets gevonden → ``<repo>/doc/copilot-chats``.
     """
     script = Path(__file__).resolve()
     if _under(script, repo_root):
         base = script.parent.parent
         for name in ("docs", "doc"):
-            cand = base / name / "copilot-chats"
-            if cand.is_dir():
-                return cand
+            for chatmap in CHATMAP_NAMEN:
+                cand = base / name / chatmap
+                if cand.is_dir():
+                    return cand
         return base / "doc" / "copilot-chats"
 
     skip = {".git", "node_modules", ".venv", "venv", "__pycache__", "build", "dist"}
-    hits = [p for p in repo_root.rglob("copilot-chats")
+    hits = [p for chatmap in CHATMAP_NAMEN for p in repo_root.rglob(chatmap)
             if p.is_dir() and not any(part in skip for part in p.parts)]
     if hits:
         def score(p: Path):
@@ -302,6 +309,12 @@ def _already_exported_ids(out_dir: Path) -> set[str]:
     return ids
 
 
+def _schrijf(pad: Path, tekst: str) -> None:
+    # Path.write_text(newline=…) bestaat pas vanaf Python 3.10; macOS levert 3.9.
+    with io.open(pad, "w", encoding="utf-8", newline="\n") as f:
+        f.write(tekst)
+
+
 def _write_summary_stub(summaries_dir: Path, stem: str, jsonl_path: Path,
                         session_id: str, title: str | None) -> Path | None:
     dst = summaries_dir / f"{stem}.md"
@@ -318,7 +331,7 @@ def _write_summary_stub(summaries_dir: Path, stem: str, jsonl_path: Path,
     if branch:
         body = body.replace("- Gerelateerde branch/commit:", f"- Gerelateerde branch/commit: {branch}", 1)
     summaries_dir.mkdir(parents=True, exist_ok=True)
-    dst.write_text(body, encoding="utf-8", newline="\n")
+    _schrijf(dst, body)
     return dst
 
 
@@ -333,7 +346,7 @@ def main() -> None:
     sel.add_argument("--all", action="store_true", help="Alle sessies van dit project")
     parser.add_argument("--title", help="Titelslug (alleen bij één sessie); anders auto uit ai-title")
     parser.add_argument("--project-dir", help="Override ~/.claude/projects/<...> map")
-    parser.add_argument("--out-dir", help="Output-map (default: <repo>/(doc|docs)/copilot-chats/exports)")
+    parser.add_argument("--out-dir", help="Output-map (default: <repo>/(doc|docs)/(ai-chats|copilot-chats)/exports)")
     parser.add_argument("--summary", action="store_true", help="Maak ook een samenvattingsstub (nooit overschrijven)")
     parser.add_argument("--force", action="store_true", help="Bij --all: ook bestaande exports overschrijven")
     args = parser.parse_args()
@@ -370,7 +383,7 @@ def main() -> None:
         markdown = render_session(pad, session_id)
         stem = _output_stem(pad, session_id, args.title)
         dst = out_dir / f"{stem}.md"
-        dst.write_text(markdown, encoding="utf-8", newline="\n")
+        _schrijf(dst, markdown)
         try:
             shown = dst.relative_to(repo_root)
         except ValueError:
