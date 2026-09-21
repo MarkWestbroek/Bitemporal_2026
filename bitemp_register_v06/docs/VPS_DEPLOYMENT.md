@@ -151,14 +151,15 @@ apt update && apt -y upgrade
 apt -y install ufw unattended-upgrades fail2ban curl git
 dpkg-reconfigure -plow unattended-upgrades    # "Yes"
 
-# Eigen gebruiker, geen root-login meer
-adduser --disabled-password --gecos "" omnium
-usermod -aG sudo omnium
-mkdir -p /home/omnium/.ssh && cp /root/.ssh/authorized_keys /home/omnium/.ssh/
-chown -R omnium:omnium /home/omnium/.ssh && chmod 700 /home/omnium/.ssh
+# Eigen gebruiker, geen root-login meer. Kies zelf een naam voor <gebruiker>; die hoort niet in
+# deze (publieke) documentatie. Hij staat in je lokale ~/.ssh/config onder de alias van de VPS.
+adduser --disabled-password --gecos "" <gebruiker>
+usermod -aG sudo <gebruiker>
+mkdir -p /home/<gebruiker>/.ssh && cp /root/.ssh/authorized_keys /home/<gebruiker>/.ssh/
+chown -R <gebruiker>:<gebruiker> /home/<gebruiker>/.ssh && chmod 700 /home/<gebruiker>/.ssh
 sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/; s/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 systemctl restart ssh
-# → nu in een TWEEDE terminal testen: ssh omnium@<VPS-IP>   (pas daarna deze sluiten)
+# → nu in een TWEEDE terminal testen: ssh <gebruiker>@<VPS-IP>   (pas daarna deze sluiten)
 
 # Firewall: alleen ssh, http, https
 ufw default deny incoming && ufw default allow outgoing
@@ -167,7 +168,7 @@ ufw --force enable
 
 # Docker (officiële repo)
 curl -fsSL https://get.docker.com | sh
-usermod -aG docker omnium
+usermod -aG docker <gebruiker>
 
 # Caddy (officiële repo)
 apt -y install debian-keyring debian-archive-keyring apt-transport-https
@@ -189,9 +190,9 @@ Vanaf nu als `omnium`. Bestanden van je Mac naar de VPS:
 ```bash
 # op je Mac
 cd ~/Documents/GitHub/Bitemporal_2026/bitemp_register_v06
-ssh omnium@<VPS-IP> 'mkdir -p /srv/omnium/authz'
-scp deploy/vps/docker-compose.vps.yml deploy/vps/backup.sh deploy/vps/.env.example omnium@<VPS-IP>:/srv/omnium/
-scp -r authz/ omnium@<VPS-IP>:/srv/omnium/           # alleen nodig voor --profile authz
+ssh <gebruiker>@<VPS-IP> 'mkdir -p /srv/omnium/authz'
+scp deploy/vps/docker-compose.vps.yml deploy/vps/backup.sh deploy/vps/.env.example <gebruiker>@<VPS-IP>:/srv/omnium/
+scp -r authz/ <gebruiker>@<VPS-IP>:/srv/omnium/           # alleen nodig voor --profile authz
 ```
 
 Op de VPS:
@@ -242,8 +243,8 @@ als `ADMIN_USERNAME`. Blijft de sessie na een refresh bestaan? Dan klopt `COOKIE
 geen aparte deploy-repo en geen Plesk meer nodig. Zet hem op de server neer:
 
 ```bash
-scp -r web/omnium-studio/ omnium@<VPS-IP>:/tmp/www
-ssh omnium@<VPS-IP> 'sudo mkdir -p /srv/omnium && sudo mv /tmp/www /srv/omnium/www && sudo chmod -R a+rX /srv/omnium/www'
+scp -r web/omnium-studio/ <gebruiker>@<VPS-IP>:/tmp/www
+ssh <gebruiker>@<VPS-IP> 'sudo mkdir -p /srv/omnium && sudo mv /tmp/www /srv/omnium/www && sudo chmod -R a+rX /srv/omnium/www'
 ```
 
 De "Open de Studio"-links in die pagina's zijn relatief (`../vite/studio.html`) en
@@ -302,7 +303,7 @@ Elke nacht: `postgres.dump` (pg_dump `-Fc`), `minio.tgz`, een kopie van `.env` e
 manifest, **3 dagen** bewaard (`KEEP` in het script) — schijfruimte is op een
 VPS de schaarse bron en de NAS bewaart de lange historie. De NAS haalt de map op — de VPS opent nooit een verbinding
 naar huis: TrueNAS → *Data Protection* → *Rsync Tasks* → **Pull**, host `<VPS-IP>`, user
-`omnium`, SSH-key van de NAS in `/home/omnium/.ssh/authorized_keys`, remote path
+`<gebruiker>`, SSH-key van de NAS in `/home/<gebruiker>/.ssh/authorized_keys`, remote path
 `/srv/omnium/backups/`, dagelijks om **06:00 lokale tijd** — de server draait op UTC, dus
 cron 03:00 is 05:00 zomertijd. *Delete* uit: de VPS houdt drie dagen, de NAS bewaart
 alles; grens dat op de NAS met periodieke ZFS-snapshots, niet in rsync.
@@ -319,7 +320,7 @@ Tussendoor, of als de NAS uitstaat, is dezelfde pull naar een laptop één regel
 (buiten iCloud-mappen, want `env.txt` bevat de secrets):
 
 ```bash
-rsync -av omnium@62.129.142.42:/srv/omnium/backups/ ~/Backups/omnium/
+rsync -av <gebruiker>@<VPS-IP>:/srv/omnium/backups/ ~/Backups/omnium/
 ```
 
 Terugzetten: `pg_restore -U bitemp -d bitemp_go_db_v06 --clean postgres.dump` in de

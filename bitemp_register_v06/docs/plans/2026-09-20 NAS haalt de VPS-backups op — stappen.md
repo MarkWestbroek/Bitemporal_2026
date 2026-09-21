@@ -14,7 +14,7 @@
 
 ## Waar het om gaat
 
-Op de VPS (`62.129.142.42`, gebruiker `omnium`) draaien elke nacht twee backups:
+Op de VPS (`62.129.142.42`, de deploy-gebruiker uit de lokale `~/.ssh/config`) draaien elke nacht twee backups:
 
 | Stack | Script | Map op de VPS | Tijd (cron, UTC) |
 |---|---|---|---|

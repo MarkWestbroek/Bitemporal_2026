@@ -5,7 +5,7 @@
 #   - Geen enkele container publiceert een poort op het publieke IP. Alleen de
 #     frontend luistert op 127.0.0.1:8083; Caddy (op de host) zet daar HTTPS voor.
 #     Postgres en de MinIO-console zijn alleen via loopback bereikbaar — dus via
-#     een SSH-tunnel:  ssh -L 9001:127.0.0.1:9001 omnium@<vps>
+#     een SSH-tunnel:  ssh -L 9001:127.0.0.1:9001 <gebruiker>@<vps>
 #   - AUTH_ENABLED=true en COOKIE_SECURE=true (HTTPS via Caddy).
 #   - Alle secrets komen uit .env (kopieer .env.example); geen defaults van 1234.
 #   - OpenFTV (Toegangsspraak/PDP) staat achter profile "authz": alleen starten

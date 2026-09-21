@@ -91,7 +91,7 @@ musicbrain.nl staan als commentaar klaar.
 proefaccounts uit runbook §7 zijn **niet** aangemaakt.
 
 **Beveiliging**: root-login en wachtwoordlogin via SSH uit; alleen de sleutel op de
-laptop werkt (gebruiker `omnium`, sudo zonder wachtwoord). ufw: 22, 80, 443, 51820/udp,
+laptop werkt (een eigen deploy-gebruiker; de naam staat in de lokale `~/.ssh/config`, niet hier). ufw: 22, 80, 443, 51820/udp,
 plus forwarding binnen wg0. Verlies je de sleutel, dan is de VNC-console in het
 mijn.host-panel de nooduitgang.
 
@@ -117,12 +117,12 @@ ssh-keygen -t ed25519 -C "mark@windows" -f $env:USERPROFILE\.ssh\id_ed25519
 Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub
 ```
 
-De regel die dat toont (begint met `ssh-ed25519`) moet in `/home/omnium/.ssh/authorized_keys`
+De regel die dat toont (begint met `ssh-ed25519`) moet in `/home/<gebruiker>/.ssh/authorized_keys`
 op de VPS **erbij**, niet erover. Vanaf de laptop, met de publieke sleutel in een bestand:
 
 ```bash
-ssh omnium@62.129.142.42 'cat >> ~/.ssh/authorized_keys' < windows-key.pub
-ssh omnium@62.129.142.42 'wc -l ~/.ssh/authorized_keys'    # 2 regels
+ssh <gebruiker>@62.129.142.42 'cat >> ~/.ssh/authorized_keys' < windows-key.pub
+ssh <gebruiker>@62.129.142.42 'wc -l ~/.ssh/authorized_keys'    # 2 regels
 ```
 
 Daarna in `%USERPROFILE%\.ssh\config` (nieuw bestand, geen extensie):
@@ -130,7 +130,7 @@ Daarna in `%USERPROFILE%\.ssh\config` (nieuw bestand, geen extensie):
 ```
 Host vps1
     HostName 62.129.142.42
-    User omnium
+    User <gebruiker>
     IdentityFile ~/.ssh/id_ed25519
     ServerAliveInterval 60
     ServerAliveCountMax 5
