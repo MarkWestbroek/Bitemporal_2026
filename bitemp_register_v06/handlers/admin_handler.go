@@ -8,30 +8,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const defaultAdminDropTablesPassword = "1234"
-
 func isDropTablesAllowed() bool {
 	return os.Getenv("ALLOW_DROP_TABLES") == "true"
 }
 
-func getAdminDropTablesPassword() string {
-	password := os.Getenv("ADMIN_DROP_PASSWORD")
-	if password == "" {
-		return defaultAdminDropTablesPassword
-	}
-	return password
-}
-
+// DropTables dropt alle (of per ?domein= gefilterde) modeltabellen.
+// Drie ringen (BE-review 2026-07-07, §3.3): alleen in devtools-builds
+// geregistreerd, rol "admin" bij AUTH_ENABLED=true, en ALLOW_DROP_TABLES +
+// wachtwoord (constant-time; header X-Beheer-Wachtwoord of legacy :password).
 func DropTables(c *gin.Context) {
-	password := c.Param("password")
-
 	if !isDropTablesAllowed() {
 		c.JSON(http.StatusForbidden, gin.H{"error": "drop tables is disabled"})
 		return
 	}
 
-	if password != getAdminDropTablesPassword() {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid password"})
+	if !eisBeheerWachtwoord(c, "ADMIN_DROP_PASSWORD") {
 		return
 	}
 
@@ -62,7 +53,9 @@ func DropTables(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Tables dropped successfully"})
 }
 
-// handler voor het aanmaken van tabellen, alleen toegankelijk via admin route, zonder authenticatie (beveiliging via obscurity)
+// CreateTables maakt (idempotent) alle tabellen aan. Geen wachtwoord: de route
+// bestaat alleen in devtools-builds en vereist rol "admin" bij AUTH_ENABLED=true;
+// de operatie is bovendien niet-destructief (IF NOT EXISTS).
 func CreateTables(c *gin.Context) {
 	if DB == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "database not initialized"})

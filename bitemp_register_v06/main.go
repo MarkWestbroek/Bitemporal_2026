@@ -37,6 +37,18 @@ func main() {
 	if dropTablesEnabled && isProductionEnvironment() {
 		fmt.Println("WARNING: ALLOW_DROP_TABLES=true while running in production context")
 	}
+	fmt.Printf("devtools endpoints (/admin/*) meegecompileerd: %t\n", handlers.DevtoolsEnabled)
+	if !handlers.DevtoolsEnabled {
+		fmt.Println("  (devloop/rebuild/droptables vereisen een build met -tags devtools)")
+	}
+
+	// Registratie-tijdmodus: synthetisch (demo, default) of klok (productie).
+	// Zie handlers/registratie_tijd.go en .env.example (REGISTRATIE_TIJD).
+	tijdModus := handlers.RegistratieTijdModus()
+	fmt.Printf("registratie-tijdmodus: %s\n", tijdModus)
+	if tijdModus == handlers.RegistratieTijdSynthetisch && isProductionEnvironment() {
+		fmt.Println("WARNING: REGISTRATIE_TIJD=synthetisch in productiecontext — registraties krijgen fictieve demo-tijdstippen; zet REGISTRATIE_TIJD=klok voor echte implementaties")
+	}
 
 	// Establish a connection to the PostgreSQL database
 	db, err := connectToDatabase()
@@ -75,6 +87,12 @@ func main() {
 
 	// Seed admin-gebruiker als AUTH_ENABLED en ADMIN_USERNAME/ADMIN_PASSWORD zijn ingesteld
 	if middleware.IsAuthEnabled() {
+		// BE-review actiepunt 3: met auth aan is een expliciet JWT_SECRET verplicht
+		// (en in productie geen dev-default). Anders weigeren we te starten.
+		if err := middleware.ValideerAuthConfiguratie(isProductionEnvironment()); err != nil {
+			fmt.Println("FATAL:", err)
+			return
+		}
 		if err := handlers.SeedAdminGebruiker(context.Background()); err != nil {
 			fmt.Println("WARN: Admin-seed mislukt:", err)
 		}
@@ -144,19 +162,31 @@ func NewRouter() *gin.Engine {
 	router.GET("/api/viz/entiteit/:typenaam/max-id", handlers.MaakVizEntiteitMaxIDHandler())
 	router.GET("/api/viz/relatie/:typenaam/secondaire-ids", handlers.MaakVizRelatieSecondaireIDsHandler())
 	router.GET("/api/viz/reflijst/:typenaam/opties", handlers.MaakVizReflijstOptiesHandler())
-	router.Static("/viz", "./web")
+	// WEB_DIR (optioneel): serveer de frontend uit een andere map, bv. de gebouwde frontend van een
+	// andere checkout. Handig voor een test-instantie in een worktree waar de frontend niet gebouwd is.
+	webDir := strings.TrimSpace(os.Getenv("WEB_DIR"))
+	if webDir == "" {
+		webDir = "./web"
+	}
+	router.Static("/viz", webDir)
+
+	// Autorisatie (BE-review 2026-07-07, actiepunt 3): muterende routes vereisen
+	// minimaal "editor", beheer-routes "admin". Beide zijn no-ops zolang
+	// AUTH_ENABLED=false, dus dev-omgevingen zonder auth merken hier niets van.
+	editor := middleware.RequireRol("editor")
+	admin := middleware.RequireRol("admin")
 
 	// Schema model endpoints (v3-formaat, zie ontwerpkeuzen.md §7)
 	router.GET("/api/schema/model", handlers.MaakGetSchemaModelHandler())
 	router.GET("/api/schema/model/code", handlers.MaakGetSchemaModelCodeHandler())
 	router.GET("/api/schema/model/:id", handlers.MaakGetSchemaModelVersieHandler())
-	router.POST("/api/schema/model", handlers.MaakPostSchemaModelHandler())
-	router.PUT("/api/schema/model/:id/activeer", handlers.MaakActiveerSchemaVersieHandler())
+	router.POST("/api/schema/model", editor, handlers.MaakPostSchemaModelHandler())
+	router.PUT("/api/schema/model/:id/activeer", admin, handlers.MaakActiveerSchemaVersieHandler())
 	router.GET("/api/schema/versies", handlers.MaakLijstSchemaVersiesHandler())
 
 	// Schema-domeinen endpoints
 	router.GET("/api/schema/domeinen", handlers.MaakGetSchemaDomeinenHandler())
-	router.POST("/api/schema/domeinen", handlers.MaakPostSchemaDomeinHandler())
+	router.POST("/api/schema/domeinen", editor, handlers.MaakPostSchemaDomeinHandler())
 
 	// Version endpoint
 	router.GET("/version", func(c *gin.Context) {
@@ -179,20 +209,37 @@ func NewRouter() *gin.Engine {
 	if err != nil {
 		fmt.Println("WARN: GraphQL schema bouwen mislukt:", err)
 	} else {
+		// GraphQL kan zowel queries als mutaties uitvoeren en is op routeniveau
+		// niet te splitsen; daarom vereist het query-endpoint een ingelogde
+		// gebruiker (RequireAuth, no-op als AUTH_ENABLED=false). Fijnmaziger
+		// rol-checks per mutatie zijn vervolgwerk (zie BE-review §5.6).
 		router.GET("/graphql/playground", dynql.PlaygroundHandler("/graphql/query"))
-		router.POST("/graphql/query", dynql.GraphQLHandler(gqlSchema))
-		router.GET("/graphql/query", dynql.GraphQLHandler(gqlSchema))
+		router.POST("/graphql/query", middleware.RequireAuth(), dynql.GraphQLHandler(gqlSchema))
+		router.GET("/graphql/query", middleware.RequireAuth(), dynql.GraphQLHandler(gqlSchema))
 		fmt.Println("GraphQL endpoint geregistreerd op /graphql/query")
 	}
 
-	// admin routes
-	router.DELETE("/admin/db/droptables/:password", handlers.DropTables)
-	router.POST("/admin/db/createtables", handlers.CreateTables)
+	// admin/devloop routes — drie beveiligingsringen (BE-review 2026-07-07, §3.3):
+	//  1. Alleen meegecompileerd met `go build -tags devtools` (devloop-builds);
+	//     productie-builds (Dockerfile, Dockerfile.api) hebben deze routes niet.
+	//  2. Rol "admin" vereist zodra AUTH_ENABLED=true.
+	//  3. Eigen flag- en wachtwoordchecks in de handlers (constant-time;
+	//     wachtwoord bij voorkeur via header X-Beheer-Wachtwoord — de
+	//     :password-padvariant blijft werken maar lekt via access-logs).
+	if handlers.DevtoolsEnabled {
+		router.DELETE("/admin/db/droptables", admin, handlers.DropTables)
+		router.DELETE("/admin/db/droptables/:password", admin, handlers.DropTables)
+		router.POST("/admin/db/createtables", admin, handlers.CreateTables)
 
-	// Devloop rebuild routes (alleen actief als DEVLOOP=true)
-	router.POST("/admin/rebuild/:password", handlers.MaakRebuildHandler())
-	router.GET("/admin/rebuild/status", handlers.MaakRebuildStatusHandler())
-	router.POST("/admin/diff/:password", handlers.MaakDiffHandler())
+		// Devloop rebuild routes (alleen actief als DEVLOOP=true)
+		router.POST("/admin/rebuild", admin, handlers.MaakRebuildHandler())
+		router.POST("/admin/rebuild/:password", admin, handlers.MaakRebuildHandler())
+		router.GET("/admin/rebuild/status", admin, handlers.MaakRebuildStatusHandler())
+		router.POST("/admin/diff", admin, handlers.MaakDiffHandler())
+		router.POST("/admin/diff/:password", admin, handlers.MaakDiffHandler())
+		// Regressie-UI (regressie_np_loc_test.go afspelen vanuit de browser); zie docs/REGRESSIETEST.md.
+		handlers.RegistreerRegressieRoutes(router, admin)
+	}
 
 	//Add all functional routes
 	routes.AddRoutes(router)
@@ -216,6 +263,7 @@ func connectToDatabase() (*bun.DB, error) {
 	}
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	configureerPool(sqldb) // zie db_pool.go
 	db := bun.NewDB(sqldb, pgdialect.New())
 	return db, nil
 }

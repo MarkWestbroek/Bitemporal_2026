@@ -14,7 +14,7 @@ type Locatie_Adres_Input struct {
 	Rel_ID     int     `json:"rel_id"`
 	Straatnaam string  `json:"straatnaam"`
 	Huisnummer string  `json:"huisnummer"`
-	Postcode   *string `json:"postcode,omitempty"`
+	Postcode   *string `json:"postcode,omitempty" schema:"datatype:NLPostcode"`
 	Gemeente   int     `json:"gemeente"`
 	Plaats     *string `json:"plaats,omitempty"`
 	Land       int     `json:"land"`
@@ -60,7 +60,7 @@ type NatuurlijkPersoon_Partnernaam_Input struct {
 type NatuurlijkPersoon_Naamgebruik_Input struct {
 	NATUURLIJKPERSOON_ID int              `json:"natuurlijkpersoon_id"`
 	Rel_ID               int              `json:"rel_id"`
-	Naamgebruik          Naamgebruiksoort `json:"naamgebruik"`
+	Naamgebruik          Naamgebruiksoort `json:"naamgebruik" schema:"enum=Naamgebruiksoort"`
 }
 
 type NatuurlijkPersoon_Burgerschap_Input struct {
@@ -91,7 +91,7 @@ type Bereikbaarheid_Input struct {
 	NATUURLIJKPERSOON_ID int                  `json:"natuurlijkpersoon_id"`
 	Rel_ID               int                  `json:"rel_id"`
 	LOCATIE_ID           int                  `json:"locatie_id"`
-	Soort                Bereikbaarheidssoort `json:"soort"`
+	Soort                Bereikbaarheidssoort `json:"soort" schema:"enum=Bereikbaarheidssoort"`
 	// Aanvang en Einde zijn onderliggende GE's (Bereikbaarheid_Aanvang/Einde)
 	// die via de normalizer als aparte wijzigingen worden uitgesplitst. Ze staan
 	// niet als directe velden in de Input-struct.

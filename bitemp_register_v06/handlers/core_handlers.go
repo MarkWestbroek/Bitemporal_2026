@@ -117,41 +117,11 @@ Why this approach
 -Returning has_more avoids an extra COUNT query and is efficient for common use cases.
 */
 
-// MakeAddEntityHandler returns a gin.HandlerFunc that creates a fresh zero-value entity
-// for each request and inserts it into the DB after binding JSON.
-func MakeAddEntityHandler[T model.HasID](entity_name string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var newEntity T
-		if err := c.ShouldBindJSON(&newEntity); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		/*
-			NewInsert is a convenience method on baseQuery that creates and returns a
-			new *InsertQuery already bound to the baseQuery's database handle and connection.
-			Internally it calls NewInsertQuery(q.db) to create the query and then .Conn(q.conn)
-			to attach the same connection/transaction context.
-			The returned InsertQuery is intended for fluent chaining (e.g.,
-			NewInsert().Model(m).Exec(ctx)).
-			Model(...) sets the payload on the InsertQuery and Exec(...) uses scanOrExec to
-			either scan results into provided destinations or execute the insert, depending on whether dest args are present.
-
-			Gotchas: NewInsert does not set a model — you must call Model
-			before Exec if you expect data to be inserted/scanned. If q.conn is nil,
-			Conn(nil) behavior depends on its implementation (it may fall back to using the DB directly).
-			Exec delegates to scanOrExec, so check that function for how destination presence,
-			errors, and result/scan semantics are handled.
-		*/
-		_, err := DB.NewInsert().Model(&newEntity).Exec(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusCreated, gin.H{"message": entity_name + " created"})
-	}
-}
+// MakeAddEntityHandler is verwijderd (BE-review 2026-07-07, §3.5): de handler
+// deed directe INSERTs en werd alleen nog gebruikt voor POST /registraties en
+// POST /wijzigingen — routes waarmee clients audit-records konden aanmaken of
+// vervalsen. Die routes zijn read-only geworden; registraties ontstaan
+// uitsluitend via POST /registratie/ (RegistreerCore).
 
 // MakeGetEntitiesHandler returns a gin.HandlerFunc that retrieves entities of type T with pagination
 func MakeGetEntitiesHandler[T any](entity_name string) gin.HandlerFunc {
@@ -194,10 +164,9 @@ func MakeGetEntitiesHandler[T any](entity_name string) gin.HandlerFunc {
 			Model(&entities). // laadt alleen de entiteiten, zonder gerelateerde gegevenselementen
 			Limit(size).
 			Offset(offset).
-			Scan(c.Request.
-				Context())
+			Scan(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon lijst van "+entity_name+" niet ophalen", err)
 			return
 		}
 
@@ -223,8 +192,8 @@ func MakeGetEntityHandler[T model.HasID](entity_name string) gin.HandlerFunc {
 
 		var entity T
 		err := DB.NewSelect().Model(&entity).Where("id = ?", entityID).Scan(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// §4.2: bun geeft sql.ErrNoRows bij een onbekend ID → 404 (geen 500).
+		if scanFoutNaar404OfInterneFout(c, err, entity_name) {
 			return
 		}
 
@@ -353,7 +322,7 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 
 		err := query.Scan(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon lijst van "+meta.Typenaam+" niet ophalen", err)
 			return
 		}
 
@@ -364,7 +333,7 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		}
 		total, err := countQuery.Count(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon aantal "+meta.Typenaam+" niet bepalen", err)
 			return
 		}
 		hasMore := offset+size < total
@@ -402,8 +371,8 @@ func MakeGetEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			Model(entity).
 			Where(meta.IDKolom+" = ?", entityID).
 			Scan(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// §4.2: bun geeft sql.ErrNoRows bij een onbekend ID → 404 (geen 500).
+		if scanFoutNaar404OfInterneFout(c, err, meta.Typenaam) {
 			return
 		}
 
@@ -416,26 +385,7 @@ func MakeGetEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 	}
 }
 
-// MakeAddEntityByMetaHandler returns a gin.HandlerFunc that inserts an entity created by TypeMeta.DBFactory.
-func MakeAddEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if meta.DBFactory == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "DBFactory ontbreekt voor type " + meta.Typenaam})
-			return
-		}
-
-		newEntity := meta.DBFactory()
-		if err := c.ShouldBindJSON(newEntity); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		_, err := DB.NewInsert().Model(newEntity).Exec(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusCreated, gin.H{"message": meta.Typenaam + " created"})
-	}
-}
+// MakeAddEntityByMetaHandler is verwijderd (BE-review 2026-07-07, §3.5): de
+// handler deed een directe INSERT zonder Registratie/Wijziging/opvoer, waardoor
+// records buiten de bitemporele boekhouding ontstonden. POST /{padnaam} loopt
+// nu via MakeAddEntityViaEngineHandler (opvoer_handlers.go).

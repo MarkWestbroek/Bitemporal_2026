@@ -1,0 +1,52 @@
+{
+  "id": "18",
+  "naam": "dubbel id bij opvoer geeft 409 zonder sql-lek",
+  "beschrijving": "Gefixt 2026-09-18: een tweede opvoer met een bestaand entiteit-id gaf 500 met de ruwe Postgres-fout (SQLSTATE 23505, constraintnaam) in de body. Nu 409 zonder SQL-tekst (handlers/db_conflict.go).",
+  "volgorde": 190,
+  "dekt": [
+    "BE-REVIEW-4.2",
+    "BE-REVIEW-4.3"
+  ],
+  "tags": [
+    "fouten",
+    "conflict"
+  ],
+  "stappen": [
+    {
+      "naam": "eerste opvoer",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": 47
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "tweede opvoer met hetzelfde id",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": 47
+      },
+      "verwacht": {
+        "status": 409,
+        "bevat": "Conflict",
+        "bevat_niet": "SQLSTATE"
+      }
+    },
+    {
+      "naam": "geen constraintnaam in de body",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": 47
+      },
+      "verwacht": {
+        "status": 409,
+        "bevat_niet": "pkey"
+      }
+    }
+  ]
+}

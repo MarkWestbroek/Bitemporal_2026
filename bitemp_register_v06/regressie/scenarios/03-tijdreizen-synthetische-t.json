@@ -1,0 +1,30 @@
+{
+  "id": "03",
+  "naam": "tijdreizen (synthetische t)",
+  "beschrijving": "NP=2 is opgevoerd in registratie 1: bestaat vanaf t=1, niet op t=0.",
+  "volgorde": 30,
+  "tags": [
+    "tijdreizen"
+  ],
+  "stappen": [
+    {
+      "naam": "bestond nog niet op t=0",
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/2?t=0",
+      "verwacht": {
+        "status": 404
+      }
+    },
+    {
+      "naam": "bestaat op t=1",
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/2?t=1",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "namen[afvoer=null].data[afvoer=null].achternaam": "Vries"
+        }
+      }
+    }
+  ]
+}

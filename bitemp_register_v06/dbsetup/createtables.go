@@ -2,6 +2,9 @@ package dbsetup
 
 import (
 	"context"
+	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/uptrace/bun"
@@ -231,6 +234,11 @@ func CreateTables(db *bun.DB) error {
 		return err
 	}
 
+	// Partial unique indexes die de enkelvoudig-invariant in de database borgen
+	// (BE-review 2026-07-07, §4.1). Niet-fataal: bestaande data met dubbelingen
+	// mag de startup niet blokkeren.
+	createEnkelvoudigInvariantIndexes(ctx, db)
+
 	// Views voor formele tijdreisquery's
 	err = createFormeleTijdViews(ctx, db)
 	if err != nil {
@@ -241,3 +249,74 @@ func CreateTables(db *bun.DB) error {
 
 // syncReferentielijstRegister is verwijderd: Referentielijst heeft geen Systeemnaam-veld meer.
 // Referentielijst-instanties worden nu aangemaakt via de registratie-flow of replay-bestanden.
+
+// createEnkelvoudigInvariantIndexes borgt per enkelvoudig GE/REL-type de
+// invariant "maximaal één actief record per scope" in de database
+// (BE-review 2026-07-07, §4.1).
+//
+// De applicatie bewaakt dit al in sluitActieveEnkelvoudigeVoorgangersAf, maar
+// dat is een read-then-write: twee gelijktijdige registraties op dezelfde
+// entiteit konden allebei "geen actieve voorganger" zien en beide inserten.
+//
+// Implementatie: een EXCLUDE-constraint (btree, gelijkheid) met WHERE-clausule,
+// DEFERRABLE INITIALLY DEFERRED. Waarom géén partial unique index: die wordt
+// per statement gecontroleerd en breekt ongedaanmaking — daar wordt eerst de
+// oude versie her-geactiveerd (ont-afvoer) en pas daarna de nieuwe verwijderd
+// (ont-opvoer), zodat er binnen de transactie tijdelijk twee actieve records
+// zijn. Een uitgestelde constraint checkt pas bij COMMIT: de tussenstand mag,
+// de eindtoestand niet. (Gevonden door regressie_np_loc_test.go, scenario 09.)
+//
+// Scope per type (spiegel van de engine-logica):
+//   - hub-kinderen (_Data/_Aanvang/_Einde onder een hub/relatie): (entiteit_id, rel_id)
+//   - overige enkelvoudige GE's/RELs en entiteit-level plumbing: (entiteit_id)
+//
+// Fouten zijn niet-fataal (waarschuwing): een bestaande database met historische
+// dubbelingen mag de startup niet blokkeren; de warning maakt de schending zichtbaar.
+func createEnkelvoudigInvariantIndexes(ctx context.Context, db *bun.DB) {
+	typeNames := make([]string, 0, len(model.MetaRegistry))
+	for typeName := range model.MetaRegistry {
+		typeNames = append(typeNames, typeName)
+	}
+	sort.Strings(typeNames)
+
+	for _, typeName := range typeNames {
+		meta := model.MetaRegistry[typeName]
+		if meta.Metatype == model.MetatypeEntiteit {
+			continue
+		}
+		if meta.Momentvoorkomen != model.Enkelvoudig {
+			continue
+		}
+		if meta.Tabelnaam == "" || meta.EntiteitIDKolom == "" {
+			continue
+		}
+
+		elementen := fmt.Sprintf("%q WITH =", meta.EntiteitIDKolom)
+		if meta.HeeftHubChildRelIDScope() {
+			elementen += `, "rel_id" WITH =`
+		}
+
+		naam := fmt.Sprintf("ux_%s_enkelvoudig_actief", meta.Tabelnaam)
+		// Oudere runs maakten onder deze naam een (niet-uitstelbare) unique index aan;
+		// die moet weg voordat de constraint (met eigen gelijknamige index) kan bestaan.
+		stmt := fmt.Sprintf(`
+DO $$
+BEGIN
+	IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = %[1]s) THEN
+		DROP INDEX IF EXISTS %[2]q;
+		ALTER TABLE %[3]q ADD CONSTRAINT %[2]q
+			EXCLUDE USING btree (%[4]s)
+			WHERE (opvoer IS NOT NULL AND afvoer IS NULL)
+			DEFERRABLE INITIALLY DEFERRED;
+	END IF;
+END $$;`, quoteLiteral(naam), naam, meta.Tabelnaam, elementen)
+		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			fmt.Printf("WARN: enkelvoudig-invariant constraint %s niet aangemaakt (%s): %v\n", naam, meta.Tabelnaam, err)
+		}
+	}
+}
+
+// quoteLiteral maakt een veilige SQL-stringliteral ('...') van een identifier.
+func quoteLiteral(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", "''") + "'"
+}

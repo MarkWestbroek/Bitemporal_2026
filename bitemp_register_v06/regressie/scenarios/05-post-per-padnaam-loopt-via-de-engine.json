@@ -1,0 +1,53 @@
+{
+  "id": "05",
+  "naam": "POST per padnaam loopt via de engine",
+  "volgorde": 50,
+  "dekt": [
+    "BE-REVIEW-3.5"
+  ],
+  "tags": [
+    "engine",
+    "audit"
+  ],
+  "stappen": [
+    {
+      "naam": "opvoeren",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": 42
+      },
+      "verwacht": {
+        "status": 201,
+        "json": {
+          "registratie_id": ">0"
+        }
+      },
+      "bewaar": {
+        "$regPost42": "registratie_id"
+      }
+    },
+    {
+      "naam": "registratie bestaat",
+      "method": "GET",
+      "path": "/registraties/{{$regPost42}}",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "registratietype": "registratie"
+        }
+      }
+    },
+    {
+      "naam": "record heeft opvoer",
+      "method": "GET",
+      "path": "/natuurlijk_personen/42",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "opvoer": "!=null"
+        }
+      }
+    }
+  ]
+}

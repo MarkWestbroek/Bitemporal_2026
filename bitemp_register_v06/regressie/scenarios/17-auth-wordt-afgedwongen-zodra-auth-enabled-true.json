@@ -1,0 +1,96 @@
+{
+  "id": "17",
+  "naam": "auth wordt afgedwongen zodra AUTH_ENABLED=true",
+  "volgorde": 180,
+  "dekt": [
+    "BE-REVIEW-3.2",
+    "BE-REVIEW-3.4"
+  ],
+  "tags": [
+    "security",
+    "auth"
+  ],
+  "env": {
+    "ADMIN_PASSWORD": "regressie-wachtwoord",
+    "ADMIN_USERNAME": "regressie-admin",
+    "AUTH_ENABLED": "true",
+    "JWT_SECRET": "regressie-secret-1234567890-abcdefghij"
+  },
+  "stappen": [
+    {
+      "actie": "seed_admin"
+    },
+    {
+      "naam": "anoniem muteren",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": 77
+      },
+      "verwacht": {
+        "status": 401
+      }
+    },
+    {
+      "naam": "lezen blijft open",
+      "method": "GET",
+      "path": "/natuurlijk_personen/2",
+      "verwacht": {
+        "status": 200
+      }
+    },
+    {
+      "naam": "inloggen (cookie)",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "body": {
+        "gebruikersnaam": "regressie-admin",
+        "wachtwoord": "regressie-wachtwoord"
+      },
+      "verwacht": {
+        "status": 200
+      }
+    },
+    {
+      "naam": "wie ben ik",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "rol": "admin"
+        }
+      }
+    },
+    {
+      "naam": "ingelogd muteren",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": 77
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "uitloggen",
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "verwacht": {
+        "status": 200
+      }
+    },
+    {
+      "naam": "na logout weer 401",
+      "method": "POST",
+      "path": "/natuurlijk_personen",
+      "body": {
+        "id": 78
+      },
+      "verwacht": {
+        "status": 401
+      }
+    }
+  ]
+}

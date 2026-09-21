@@ -1,0 +1,44 @@
+{
+  "id": "08",
+  "naam": "PATCH /full (merge patch, registratie)",
+  "volgorde": 80,
+  "tags": [
+    "patch"
+  ],
+  "stappen": [
+    {
+      "naam": "patch met expliciete FK",
+      "method": "PATCH",
+      "path": "/full/natuurlijk_personen/2",
+      "body": {
+        "namen": [
+          {
+            "natuurlijkpersoon_id": 2,
+            "voorletters": "J.K.",
+            "achternaam": "Gewijzigd"
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "registratie_id": ">0"
+        }
+      },
+      "bewaar": {
+        "$regPatch": "registratie_id"
+      }
+    },
+    {
+      "naam": "nieuwe naam actief",
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/2",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "namen[afvoer=null].data[afvoer=null].achternaam": "Gewijzigd"
+        }
+      }
+    }
+  ]
+}

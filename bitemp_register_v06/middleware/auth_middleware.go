@@ -27,13 +27,42 @@ const (
 	ContextKeyGebruiker = "gebruiker"
 )
 
+// defaultDevJWTSecret is de dev-fallback voor het JWT-signeringsgeheim.
+// Mag nooit in productie worden gebruikt; zie ValideerAuthConfiguratie.
+const defaultDevJWTSecret = "bitemp-dev-secret-change-in-production"
+
 // jwtSecret geeft het JWT-signeringsgeheim, geladen uit de JWT_SECRET env var.
 func jwtSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "bitemp-dev-secret-change-in-production"
+		secret = defaultDevJWTSecret
 	}
 	return []byte(secret)
+}
+
+// ValideerAuthConfiguratie controleert de auth-configuratie bij startup
+// (BE-review 2026-07-07, actiepunt 3). Aanroepen wanneer AUTH_ENABLED=true.
+//
+// Regels:
+//   - JWT_SECRET moet expliciet gezet zijn (geen stille dev-fallback in een
+//     omgeving die auth serieus neemt).
+//   - In productiecontext mag JWT_SECRET niet gelijk zijn aan de dev-default.
+//   - Buiten productie geeft de dev-default alleen een waarschuwing.
+func ValideerAuthConfiguratie(productie bool) error {
+	secret := strings.TrimSpace(os.Getenv("JWT_SECRET"))
+	if secret == "" {
+		return fmt.Errorf("AUTH_ENABLED=true vereist een expliciete JWT_SECRET (zie .env.example); weiger te starten zonder")
+	}
+	if secret == defaultDevJWTSecret {
+		if productie {
+			return fmt.Errorf("JWT_SECRET staat op de bekende dev-defaultwaarde; kies een uniek, lang secret voor productie")
+		}
+		fmt.Println("AUTH WARN: JWT_SECRET staat op de dev-defaultwaarde — prima voor lokaal testen, niet voor productie.")
+	}
+	if len(secret) < 32 {
+		fmt.Printf("AUTH WARN: JWT_SECRET is kort (%d tekens); adviseer minimaal 32 willekeurige tekens.\n", len(secret))
+	}
+	return nil
 }
 
 // JwtExpiryHours geeft de JWT-geldigheidsduur in uren (exported voor handlers).
@@ -170,13 +199,19 @@ func RequireRol(minimaalRol string) gin.HandlerFunc {
 
 // rolToegestaan controleert of de huidige rol voldoende is voor de vereiste rol.
 // Hiërarchie: admin (3) > editor (2) > viewer (1).
+// Een onbekende vereiste rol (bijv. een typo in RequireRol("editer")) is een
+// deny: zonder deze check zou niveaus[vereist]=0 elke onbekende rol openzetten.
 func rolToegestaan(huidig, vereist string) bool {
 	niveaus := map[string]int{
 		"viewer": 1,
 		"editor": 2,
 		"admin":  3,
 	}
-	return niveaus[huidig] >= niveaus[vereist]
+	vereistNiveau, bekend := niveaus[vereist]
+	if !bekend {
+		return false
+	}
+	return niveaus[huidig] >= vereistNiveau
 }
 
 // GetClaims haalt de JWT-claims uit de Gin context (of nil als niet ingelogd).

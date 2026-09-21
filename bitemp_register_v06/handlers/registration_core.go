@@ -37,12 +37,24 @@ type RegistreerError struct {
 	Status  int
 	Msg     string
 	Problem *model.ProblemDetails
+	// Herkansbaar: de transactie is teruggedraaid door een deadlock of serialisatiefout en
+	// kan ongewijzigd opnieuw geprobeerd worden (zie db_conflict.go).
+	Herkansbaar bool
 }
 
 func (e *RegistreerError) Error() string { return e.Msg }
 
 func newRegistreerErr(status int, format string, args ...any) *RegistreerError {
-	return &RegistreerError{Status: status, Msg: fmt.Sprintf(format, args...)}
+	msg := fmt.Sprintf(format, args...)
+	// Een databaseconflict (dubbele sleutel, enkelvoudig-constraint, deadlock) is geen
+	// serverfout: 409 met een boodschap zonder SQL-tekst; de volledige fout gaat naar de log.
+	if status == http.StatusInternalServerError {
+		if conflict := dbConflictUit(msg, args...); conflict != nil {
+			logConflict(conflict, msg)
+			return &RegistreerError{Status: http.StatusConflict, Msg: conflict.Publiek, Herkansbaar: conflict.Herkansbaar}
+		}
+	}
+	return &RegistreerError{Status: status, Msg: msg}
 }
 
 // AuditMeta bundelt request-metadata die in de Registratie-row terecht komt
@@ -55,6 +67,8 @@ type AuditMeta struct {
 	// Strengheid bepaalt of validatiefouten blokkeren (strict) of slechts
 	// gerapporteerd worden (lenient/warnings-only). Default = strict.
 	Strengheid model.Validatiestrengheid
+	// isHerkansing voorkomt een tweede herkansing na een deadlock (RegistreerJSONCore).
+	isHerkansing bool
 }
 
 // RegistreerResult bevat het succesresultaat van RegistreerCore.
@@ -102,17 +116,25 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 	}()
 
 	// Stap 1: Insert Registratie en haal ID op.
+	//
+	// Registratietijdstip — twee modi (zie registratie_tijd.go):
+	//   - klok (productie): echte UTC-kloktijd, gezet vóór de insert.
+	//   - synthetisch (default, demo): 2026-01-01 + ID uren + ID µs; wordt
+	//     ná de insert afgeleid uit het toegekende ID en apart bijgewerkt.
+	klokModus := IsKlokTijdModus()
+	if klokModus {
+		req.Registratie.Tijdstip = time.Now().UTC()
+	}
 	if _, err := tx.NewInsert().Model(&req.Registratie).Returning("id").Exec(ctx); err != nil {
 		return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "failed to insert registratie: %v", err)
 	}
-
-	// TIJDELIJK: oplopend testtijdstip op basis van ID, zoals in originele handler.
-	req.Registratie.Tijdstip = time.
-		Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).
-		Add(time.Duration(req.Registratie.ID) * time.Hour).
-		Add(time.Microsecond * time.Duration(req.Registratie.ID))
-	if _, err := tx.NewUpdate().Model(&req.Registratie).Where("id = ?", req.Registratie.ID).Exec(ctx); err != nil {
-		return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "failed to update registratie with tijdstip: %v", err)
+	if !klokModus {
+		// Synthetisch tijdstip afleiden uit het toegekende ID (zelfde afbeelding
+		// als de ?t=-querystring shorthand, zie tijdstipUitT in full_handlers.go).
+		req.Registratie.Tijdstip = tijdstipUitT(int(req.Registratie.ID))
+		if _, err := tx.NewUpdate().Model(&req.Registratie).Where("id = ?", req.Registratie.ID).Exec(ctx); err != nil {
+			return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "failed to update registratie with tijdstip: %v", err)
+		}
 	}
 
 	registratieID := req.Registratie.ID
@@ -143,7 +165,7 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 
 	// ONGEDAANMAKING scenario.
 	if req.Registratie.Registratietype == model.RegistratietypeOngedaanmaking {
-		if rerr := verwerkOngedaanmaking(ctx, tx, db, &req); rerr != nil {
+		if rerr := verwerkOngedaanmaking(ctx, tx, &req); rerr != nil {
 			return RegistreerResult{}, rerr
 		}
 	}
@@ -317,15 +339,23 @@ func validatieOfNil(v model.ValidatieResultaat) *model.ValidatieResultaat {
 
 // verwerkOngedaanmaking voert de ONGEDAANMAKING-scenario-logica uit.
 // Wordt alleen aangeroepen wanneer req.Registratie.Registratietype = Ongedaanmaking.
-func verwerkOngedaanmaking(ctx context.Context, tx bun.Tx, db *bun.DB, req *model.RegistreerRequest) *RegistreerError {
+//
+// Concurrency (BE-review 2026-07-07, §4.1): alle reads lopen binnen de
+// transactie, en de ongedaan te maken registratie-rij wordt met FOR UPDATE
+// gelockt. Twee gelijktijdige ongedaanmakingen van dezelfde registratie
+// serialiseren daardoor: de tweede ziet is_ongedaan_gemaakt=true en faalt
+// netjes. Ook de check op "latere wijzigingen" leest nu de tx-consistente
+// toestand in plaats van een losse connectie buiten de transactie.
+func verwerkOngedaanmaking(ctx context.Context, tx bun.Tx, req *model.RegistreerRequest) *RegistreerError {
 	if req.Registratie.MaaktOngedaanRegistratieID == nil {
 		return newRegistreerErr(http.StatusBadRequest, "De ongedaan te maken registratie moet worden meegegeven via 'maakt_ongedaan_registratie_id' (of alias 'MaaktOngedaanRegistratieID')")
 	}
 
 	var ongedaanTeMakenRegistratie model.Registratie
-	if err := db.NewSelect().
+	if err := tx.NewSelect().
 		Model(&ongedaanTeMakenRegistratie).
 		Where("id = ?", *req.Registratie.MaaktOngedaanRegistratieID).
+		For("UPDATE").
 		Scan(ctx); err != nil {
 		return newRegistreerErr(http.StatusBadRequest, "De te ongedaan maken registratie met ID %d bestaat niet", *req.Registratie.MaaktOngedaanRegistratieID)
 	}
@@ -335,7 +365,7 @@ func verwerkOngedaanmaking(ctx context.Context, tx bun.Tx, db *bun.DB, req *mode
 	}
 
 	var wijzigingenOnderTeOngedaanMakenRegistratie []model.Wijziging
-	if err := db.NewSelect().
+	if err := tx.NewSelect().
 		Model(&wijzigingenOnderTeOngedaanMakenRegistratie).
 		Where("registratie_id = ?", ongedaanTeMakenRegistratie.ID).
 		Scan(ctx); err != nil {
@@ -344,7 +374,7 @@ func verwerkOngedaanmaking(ctx context.Context, tx bun.Tx, db *bun.DB, req *mode
 
 	for _, doelWijziging := range wijzigingenOnderTeOngedaanMakenRegistratie {
 		var latereWijzigingen []model.Wijziging
-		if err := db.NewSelect().
+		if err := tx.NewSelect().
 			Model(&latereWijzigingen).
 			Where("registratie_id <> ?", ongedaanTeMakenRegistratie.ID).
 			Where("tijdstip > ?", ongedaanTeMakenRegistratie.Tijdstip).

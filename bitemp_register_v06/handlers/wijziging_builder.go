@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 )
@@ -130,7 +131,7 @@ func BouwWijzigingen(in BouwWijzigingenInput) (*BouwWijzigingenResult, *Registre
 			}
 		}
 
-		if err := bouwWijzigingenVoorRol(og, raw, in.Modus, out); err != nil {
+		if err := bouwWijzigingenVoorRol(og, raw, in.Modus, in.URLID, out); err != nil {
 			return nil, err
 		}
 	}
@@ -148,7 +149,7 @@ func BouwWijzigingen(in BouwWijzigingenInput) (*BouwWijzigingenResult, *Registre
 //   - "null"           → afvoer van de hele relatie/GE (gehele key wegnemen)
 //   - object {…}        → enkelvoudig: één wijziging
 //   - array [{…}, …]   → meervoudig: wijziging per item
-func bouwWijzigingenVoorRol(og model.OnderliggendGegevenselement, raw json.RawMessage, modus PatchModus, out *BouwWijzigingenResult) *RegistreerError {
+func bouwWijzigingenVoorRol(og model.OnderliggendGegevenselement, raw json.RawMessage, modus PatchModus, urlID string, out *BouwWijzigingenResult) *RegistreerError {
 	doelMeta, ok := model.MetaRegistry.GetTypeMeta(og.Doeltype)
 	if !ok {
 		return &RegistreerError{Status: http.StatusInternalServerError, Msg: fmt.Sprintf("onbekend doeltype %s voor rol %s", og.Doeltype, og.JSONRolnaam)}
@@ -181,12 +182,12 @@ func bouwWijzigingenVoorRol(og model.OnderliggendGegevenselement, raw json.RawMe
 			return &RegistreerError{Status: http.StatusBadRequest, Msg: fmt.Sprintf("rol %q: array-payload ongeldig: %v", og.JSONRolnaam, err)}
 		}
 		for i, item := range items {
-			if rerr := bouwWijzigingVoorItem(doelMeta, og, item, modus, out, i); rerr != nil {
+			if rerr := bouwWijzigingVoorItem(doelMeta, og, item, modus, urlID, out, i); rerr != nil {
 				return rerr
 			}
 		}
 	case '{':
-		if rerr := bouwWijzigingVoorItem(doelMeta, og, rawTrimmed, modus, out, -1); rerr != nil {
+		if rerr := bouwWijzigingVoorItem(doelMeta, og, rawTrimmed, modus, urlID, out, -1); rerr != nil {
 			return rerr
 		}
 	default:
@@ -197,7 +198,23 @@ func bouwWijzigingenVoorRol(og model.OnderliggendGegevenselement, raw json.RawMe
 
 // bouwWijzigingVoorItem bouwt één Opvoer-wijziging (registratie) of Afvoer+Opvoer-paar (correctie)
 // voor één GE/REL-item.
-func bouwWijzigingVoorItem(doelMeta model.TypeMeta, og model.OnderliggendGegevenselement, item json.RawMessage, modus PatchModus, out *BouwWijzigingenResult, indexInArray int) *RegistreerError {
+func bouwWijzigingVoorItem(doelMeta model.TypeMeta, og model.OnderliggendGegevenselement, item json.RawMessage, modus PatchModus, urlID string, out *BouwWijzigingenResult, indexInArray int) *RegistreerError {
+	// URL-id is leidend (regressietest 2026-09-16, scenario 08b): injecteer de
+	// entiteit-FK in het kind-item als de client die niet meestuurt — zelfde
+	// semantiek als de normalizer bij geneste POST. Een expliciet meegestuurde
+	// FK wint (injecteerParentFK laat bestaande waarden staan).
+	if doelMeta.EntiteitIDKolom != "" && urlID != "" {
+		var parentID any = urlID
+		if n, err := strconv.Atoi(urlID); err == nil {
+			parentID = n
+		}
+		geinjecteerd, err := injecteerParentFK(item, doelMeta.EntiteitIDKolom, parentID)
+		if err != nil {
+			return &RegistreerError{Status: http.StatusInternalServerError, Msg: fmt.Sprintf("rol %q: FK-injectie mislukt: %v", og.JSONRolnaam, err)}
+		}
+		item = geinjecteerd
+	}
+
 	var itemMap map[string]json.RawMessage
 	if err := json.Unmarshal(item, &itemMap); err != nil {
 		return &RegistreerError{Status: http.StatusBadRequest, Msg: fmt.Sprintf("rol %q: item-payload ongeldig: %v", og.JSONRolnaam, err)}
@@ -205,9 +222,11 @@ func bouwWijzigingVoorItem(doelMeta model.TypeMeta, og model.OnderliggendGegeven
 
 	// Tel niet-rel_id velden — een item met alléén rel_id is een no-op (waarschuwing, geen fout).
 	relIDRaw, hasRelID := itemMap["rel_id"]
+	// De entiteit-FK is structureel (wordt hierboven geïnjecteerd) en telt niet
+	// als inhoud: een item met alleen rel_id (+FK) blijft een no-op.
 	overigeVelden := 0
 	for k := range itemMap {
-		if k != "rel_id" {
+		if k != "rel_id" && k != doelMeta.EntiteitIDKolom {
 			overigeVelden++
 		}
 	}

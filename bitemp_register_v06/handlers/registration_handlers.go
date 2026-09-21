@@ -51,6 +51,12 @@ func RegistreerJSONCore(ctx context.Context, rawBody []byte, defaultRegistratiet
 		audit.RawBody = rawBody
 	}
 	res, rerr := RegistreerCore(ctx, DB, request, audit)
+	if rerr != nil && rerr.Herkansbaar && !audit.isHerkansing {
+		// Deadlock/serialisatiefout: alles is teruggedraaid. Eén herkansing, opnieuw vanaf de
+		// ruwe body zodat er geen gemuteerde tussenstand (toegekende id's) wordt hergebruikt.
+		audit.isHerkansing = true
+		return RegistreerJSONCore(ctx, rawBody, defaultRegistratietype, audit)
+	}
 	if rerr != nil {
 		return nil, rerr
 	}

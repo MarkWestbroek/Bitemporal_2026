@@ -1,0 +1,36 @@
+{
+  "id": "33",
+  "naam": "load: lezen terwijl er geregistreerd wordt (mix 31 + 32)",
+  "beschrijving": "Gemengde belasting: schrijvers (sc 31) en lezers (sc 32) tegelijk. Heeft zelf geen stappen; de rollen komen uit load.mix. Vergelijk de lees-p95 met een run van alleen sc 32. Standaard 1 schrijver, zodat de run ook op de kleine seed schoon is; zet op de dikke seed meer schrijvers in load.mix (hele scenario als JSON).",
+  "volgorde": 250,
+  "tags": [
+    "load",
+    "performance",
+    "mix"
+  ],
+  "vars": {
+    "locTot": "6",
+    "locVan": "2",
+    "npTot": "5",
+    "npVan": "2"
+  },
+  "load": {
+    "drempels": {
+      "p95_ms": 500,
+      "fout_pct": 2
+    },
+    "mix": [
+      {
+        "scenario": "31",
+        "vus": 1,
+        "iteraties": 60
+      },
+      {
+        "scenario": "32",
+        "vus": 12,
+        "iteraties": 60
+      }
+    ]
+  },
+  "stappen": []
+}

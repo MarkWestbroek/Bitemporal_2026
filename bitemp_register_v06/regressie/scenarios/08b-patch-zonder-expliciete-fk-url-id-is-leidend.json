@@ -1,0 +1,36 @@
+{
+  "id": "08b",
+  "naam": "PATCH zonder expliciete FK (URL-id is leidend)",
+  "beschrijving": "Gefixt 2026-09-16: de builder injecteert de URL-id als parent-FK.",
+  "volgorde": 90,
+  "tags": [
+    "patch"
+  ],
+  "stappen": [
+    {
+      "method": "PATCH",
+      "path": "/full/natuurlijk_personen/3",
+      "body": {
+        "namen": [
+          {
+            "voorletters": "X.",
+            "achternaam": "ZonderFK"
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 200
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/3",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "namen[afvoer=null].data[afvoer=null].achternaam": "ZonderFK"
+        }
+      }
+    }
+  ]
+}

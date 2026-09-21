@@ -1,0 +1,51 @@
+{
+  "id": "12",
+  "naam": "validatie: ongeldige BSN geeft 422 problem+json",
+  "volgorde": 130,
+  "tags": [
+    "validatie"
+  ],
+  "stappen": [
+    {
+      "naam": "ongeldige 11-proef",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "natuurlijkpersoon": {
+                "id": 90
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "natuurlijkpersoon_id": 90,
+                "bsn": "123456789"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 422,
+        "header": {
+          "Content-Type": "application/problem+json"
+        }
+      }
+    },
+    {
+      "naam": "rollback: NP=90 bestaat niet",
+      "method": "GET",
+      "path": "/natuurlijk_personen/90",
+      "verwacht": {
+        "status": 404
+      }
+    }
+  ]
+}

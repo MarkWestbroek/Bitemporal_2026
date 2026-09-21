@@ -1,0 +1,24 @@
+{
+  "id": "15",
+  "naam": "admin-endpoints afgeschermd",
+  "volgorde": 160,
+  "dekt": [
+    "BE-REVIEW-3.3"
+  ],
+  "tags": [
+    "security"
+  ],
+  "stappen": [
+    {
+      "naam": "404 (productie-build) of 403 (devtools zonder DEVLOOP)",
+      "method": "POST",
+      "path": "/admin/rebuild",
+      "verwacht": {
+        "status_in": [
+          403,
+          404
+        ]
+      }
+    }
+  ]
+}

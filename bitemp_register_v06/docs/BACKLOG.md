@@ -1556,3 +1556,55 @@ en afwegingen: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20c
       samengestelde toestand, CMMN-stage, uitgeklapt BPMN-subproces.
       (g) BPMN: pool zonder `processRef`, geen verticale pools, en
       data-associaties worden niet begrensd.
+
+## 32. Leesconsistentie op het formele leesmoment (2026-09-21)
+
+**Prioriteit: hoog — raakt de kernbelofte van het register. Geparkeerd tot na de merge van
+`chore/be-code-review` naar `main`.** Volledige beschrijving, afgevallen alternatieven, plan en
+acceptatiecriteria: `test/2026-09-21-bevinding-002-full-read-niet-snapshot-consistent.md`.
+
+Probleem: `/full` bestaat uit meerdere losse queries in `READ COMMITTED`. Commit een schrijver
+daartussen, dan krijgt de lezer een toestand die nooit heeft bestaan (actieve hub met al afgevoerde
+data, nieuwe hub ontbreekt). Gemeten: ~1% van de NP-full-reads in loadtest sc 33. De opgeslagen
+data is correct; het antwoord niet.
+
+Uitgangspunt: de afgeleide actuele toestand (`afvoer IS NULL`) blijft het goedkope leespad; een
+actuele opvraging wordt **geen** tijdreis.
+
+- [ ] **32.1 Eén momentopname per opvraging:** alle queries van één request in een read-only
+      `REPEATABLE READ`-transactie (helper + `bun.IDB` doorgeven). Queries zelf ongewijzigd.
+- [ ] **32.2 Stand benoemen:** hoogste zichtbare registratie-id binnen dezelfde momentopname lezen
+      en teruggeven (`X-Register-Stand`), zodat het antwoord met `?t=N` reproduceerbaar is.
+- [ ] **32.3 Zelfde patroon elders:** publicatieweergave, GraphQL-queries, lijst-`/full`.
+- [ ] **32.4 Gerichte test** die de scheefheid afdwingt en borgt: volledig oud óf volledig nieuw.
+- [ ] **32.5 Meten** met sc 32 en sc 33 op de dikke seed, vóór en na.
+- [ ] **32.6 Apart beoordelen: tijdreizen dicht bij nu.** In klokmodus wordt het tijdstip bij de
+      start gezet en de registratie pas zichtbaar bij de commit; een tijdreis naar "net geleden"
+      kan later anders uitvallen. Marge, markering "voorlopig", of tijdstip vlak vóór de commit.
+- [ ] **32.7 Hub-guard geeft 500** bij opvoer onder een niet-actieve hub; hoort 409 of 422
+      (patroon: `handlers/db_conflict.go`).
+
+## 33. Verplichte velden en verwijzingen afdwingen (2026-09-21)
+
+**Geparkeerd tot na de merge van `chore/be-code-review` naar `main`.** Volledige beschrijving:
+`test/2026-09-21-bevinding-003-verplichte-velden-en-verwijzingen-niet-afgedwongen.md`.
+
+De API controleert niet op verplichte velden: een weggelaten verplicht veld wordt stilzwijgend de
+nulwaarde (`0`, `""`, `false`) en zo opgeslagen. Voorbeeld: `adres.land` is verplicht, ontbreekt in
+alle testdata en staat als `0` in de database, een verwijzing naar een land dat niet bestaat.
+Verwijzingen (`ref:`) worden evenmin gecontroleerd.
+
+- [ ] **33.1 Model nalopen op verplicht.** Besluit 2026-09-21: `adres.land` wordt **optioneel**, en
+      "geen land" betekent Nederland (het model is een benadering; adressen zijn een wereld op
+      zich). Welke andere velden zijn ten onrechte verplicht?
+- [ ] **33.1b Seedvolgorde:** referentietabellen altijd eerst, dan de rest (`defaultSeeds`,
+      load-seed, replay-recepten). Voorwaarde voor 33.4.
+- [ ] **33.2 Aanwezigheid controleren op de ruwe JSON** (in de normalizer), op basis van
+      `Verplicht` uit de MetaRegistry; melden als 422 problem+json met veldpad.
+- [ ] **33.3 Correctie en merge patch:** het resultaat na samenvoegen controleren, niet de
+      aangeleverde deelverzameling.
+- [ ] **33.4 Verwijzingen controleren** (bestaat het doel, en is het actief), gebundeld per type.
+- [ ] **33.5 Testdata mee:** seeds, replay-bestanden en scenario's aanvullen; nieuwe sc's voor
+      422 bij ontbrekend veld en bij een dode verwijzing.
+- [ ] **33.6 Overwegen:** `NOT NULL` als vangnet in de database, na een telling van bestaande
+      nulwaarden.

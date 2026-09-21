@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -21,104 +20,6 @@ This will require changes to the model structs and the handlers
 	to bind JSON to the full struct instead of just an ID field.
 The current implementation is a simplified version for demonstration purposes.
 */
-
-// (CoPilot made) parseBunRelationTag extracts the foreign key field name from a bun relation tag
-// Expected format: bun:"rel:has-many,join:parent_field=child_field"
-// Returns the child_field (FK field name) and parent_field (PK field name)
-func parseBunRelationTag(tag string) (fkField string, pkField string, err error) {
-	// tag format example: "rel:has-many,join:id=a_id"
-	parts := strings.Split(tag, ",")
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if strings.HasPrefix(part, "join:") {
-			joinSpec := strings.TrimPrefix(part, "join:")
-			// joinSpec is now "id=a_id"
-			joinParts := strings.Split(joinSpec, "=")
-			if len(joinParts) == 2 {
-				pkField = strings.TrimSpace(joinParts[0]) // "id"
-				fkField = strings.TrimSpace(joinParts[1]) // "a_id"
-				return fkField, pkField, nil
-			}
-		}
-	}
-	return "", "", fmt.Errorf("join specification not found in bun tag")
-}
-
-// setForeignKeyOnRelatedEntity sets the FK field on a related entity to the parent ID
-func setForeignKeyOnRelatedEntity(relatedEntity reflect.Value, fkFieldName string, parentID any) error {
-	// The fkFieldName is the column name (like "a_id"), we need to find the Go field
-	// Try direct field lookup first (if FK field is named exactly like fkFieldName)
-	elem := relatedEntity
-	if elem.Kind() == reflect.Ptr {
-		elem = elem.Elem()
-	}
-
-	structType := elem.Type()
-
-	// Search for a field with matching bun tag or json tag that corresponds to fkFieldName
-	for i := 0; i < elem.NumField(); i++ {
-		field := structType.Field(i)
-
-		// Check bun tag
-		if bunTag := field.Tag.Get("bun"); bunTag != "" {
-			// Extract the column name from bun tag (first part before comma)
-			bunParts := strings.Split(bunTag, ",")
-			columnName := bunParts[0]
-			if columnName == fkFieldName {
-				fieldValue := elem.Field(i)
-				if fieldValue.CanSet() {
-					switch fieldValue.Kind() {
-					case reflect.String:
-						if typedID, ok := parentID.(string); ok {
-							fieldValue.SetString(typedID)
-							return nil
-						}
-						return fmt.Errorf("cannot assign parentID type %T to string FK '%s'", parentID, fkFieldName)
-					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-						parentValue := reflect.ValueOf(parentID)
-						if !parentValue.IsValid() || !parentValue.Type().ConvertibleTo(fieldValue.Type()) {
-							return fmt.Errorf("cannot assign parentID type %T to int FK '%s'", parentID, fkFieldName)
-						}
-						fieldValue.Set(parentValue.Convert(fieldValue.Type()))
-						return nil
-					default:
-						return fmt.Errorf("unsupported FK field kind '%s' for field '%s'", fieldValue.Kind(), fkFieldName)
-					}
-				}
-			}
-		}
-
-		// Check json tag
-		if jsonTag := field.Tag.Get("json"); jsonTag != "" {
-			jsonParts := strings.Split(jsonTag, ",")
-			jsonName := jsonParts[0]
-			if jsonName == fkFieldName {
-				fieldValue := elem.Field(i)
-				if fieldValue.CanSet() {
-					switch fieldValue.Kind() {
-					case reflect.String:
-						if typedID, ok := parentID.(string); ok {
-							fieldValue.SetString(typedID)
-							return nil
-						}
-						return fmt.Errorf("cannot assign parentID type %T to string FK '%s'", parentID, fkFieldName)
-					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-						parentValue := reflect.ValueOf(parentID)
-						if !parentValue.IsValid() || !parentValue.Type().ConvertibleTo(fieldValue.Type()) {
-							return fmt.Errorf("cannot assign parentID type %T to int FK '%s'", parentID, fkFieldName)
-						}
-						fieldValue.Set(parentValue.Convert(fieldValue.Type()))
-						return nil
-					default:
-						return fmt.Errorf("unsupported FK field kind '%s' for field '%s'", fieldValue.Kind(), fkFieldName)
-					}
-				}
-			}
-		}
-	}
-
-	return fmt.Errorf("FK field '%s' not found or cannot be set", fkFieldName)
-}
 
 // parsePeiltijdstipUitQuerystring leest optionele querystring parameters voor formele tijd.
 // Ondersteunt:
@@ -862,74 +763,137 @@ func applyFormeleTijdFilterVoorModel(query *bun.SelectQuery, modelNaam string, p
 	`, target.EntiteitIDExpr, target.RepresentatieIDExpr, versieCondition), peiltijdstip, target.Entiteitnaam, target.Representatienaam, activeWijziging)
 }
 
+// ─── Afgeleide formele tijd op peiltijdstip ────────────────────────────────
+//
+// §4.4 (BE-review 2026-07-07): voorheen deed deze laag per entiteit én per
+// onderliggend GE/hub-kind een aparte query op f_formele_wijziging_op_peil —
+// een N+1 die bij een lijst van 100 entiteiten met 10 kinderen 1000+ queries
+// per request opleverde. Nu wordt per request één set-based query gedaan voor
+// alle entiteit-IDs tegelijk; de "laatste wijziging per representatie" wordt
+// in Go bepaald (zelfde ordering als de vroegere per-rij query) en via een
+// cache opgezocht tijdens de entity-walk.
+
 type laatsteWijzigingOpPeil struct {
 	Wijzigingstype      model.WijzigingstypeEnum `bun:"wijzigingstype"`
 	RegistratieTijdstip time.Time                `bun:"registratie_tijdstip"`
 }
 
-func haalLaatsteNietOngedaanGemaakteWijzigingOpPeil(
-	c *gin.Context,
-	entiteitnaam string,
-	entiteitID string,
-	representatienaam string,
-	representatieID string,
-	versie *int64,
-	peiltijdstip time.Time,
-) (*laatsteWijzigingOpPeil, error) {
-	row := new(laatsteWijzigingOpPeil)
-	query := DB.NewSelect().
+// formeleWijzigingRij is één rij uit f_formele_wijziging_op_peil.
+type formeleWijzigingRij struct {
+	WijzigingID         int64                    `bun:"wijziging_id"`
+	Wijzigingstype      model.WijzigingstypeEnum `bun:"wijzigingstype"`
+	RegistratieTijdstip time.Time                `bun:"registratie_tijdstip"`
+	EntiteitID          string                   `bun:"entiteit_id"`
+	Representatienaam   string                   `bun:"representatienaam"`
+	RepresentatieID     string                   `bun:"representatie_id"`
+	Versie              *int64                   `bun:"versie"`
+}
+
+// isNieuwerDan spiegelt de ordering van de vroegere per-rij query:
+// ORDER BY registratie_tijdstip DESC, wijziging_id DESC LIMIT 1.
+func (rij formeleWijzigingRij) isNieuwerDan(ander formeleWijzigingRij) bool {
+	if rij.RegistratieTijdstip.After(ander.RegistratieTijdstip) {
+		return true
+	}
+	return rij.RegistratieTijdstip.Equal(ander.RegistratieTijdstip) && rij.WijzigingID > ander.WijzigingID
+}
+
+// formeleTijdKey identificeert een representatie binnen de cache.
+type formeleTijdKey struct {
+	EntiteitID        string
+	Representatienaam string
+	RepresentatieID   string
+	Versie            int64
+	HeeftVersie       bool
+}
+
+// formeleTijdCache bevat per sleutel de laatste wijziging op peil. Twee kaarten
+// omdat de lookup zowel mét als zonder versie moet kunnen — precies zoals de
+// vroegere per-rij query wel/niet op versie filterde.
+type formeleTijdCache struct {
+	metVersie    map[formeleTijdKey]formeleWijzigingRij
+	zonderVersie map[formeleTijdKey]formeleWijzigingRij
+}
+
+func (cache *formeleTijdCache) bewaar(rij formeleWijzigingRij) {
+	zonder := formeleTijdKey{EntiteitID: rij.EntiteitID, Representatienaam: rij.Representatienaam, RepresentatieID: rij.RepresentatieID}
+	if huidig, ok := cache.zonderVersie[zonder]; !ok || rij.isNieuwerDan(huidig) {
+		cache.zonderVersie[zonder] = rij
+	}
+	if rij.Versie == nil {
+		return
+	}
+	met := zonder
+	met.Versie = *rij.Versie
+	met.HeeftVersie = true
+	if huidig, ok := cache.metVersie[met]; !ok || rij.isNieuwerDan(huidig) {
+		cache.metVersie[met] = rij
+	}
+}
+
+// laatste zoekt de laatste wijziging voor een representatie; versie==nil
+// betekent (net als vroeger) geen versie-filter.
+func (cache *formeleTijdCache) laatste(entiteitID, representatienaam, representatieID string, versie *int64) *laatsteWijzigingOpPeil {
+	key := formeleTijdKey{EntiteitID: entiteitID, Representatienaam: representatienaam, RepresentatieID: representatieID}
+	var rij formeleWijzigingRij
+	var ok bool
+	if versie != nil {
+		key.Versie = *versie
+		key.HeeftVersie = true
+		rij, ok = cache.metVersie[key]
+	} else {
+		rij, ok = cache.zonderVersie[key]
+	}
+	if !ok {
+		return nil
+	}
+	return &laatsteWijzigingOpPeil{Wijzigingstype: rij.Wijzigingstype, RegistratieTijdstip: rij.RegistratieTijdstip}
+}
+
+// laadFormeleTijdCache haalt in één query alle wijzigingen-op-peil op voor de
+// gegeven entiteit-IDs (van één entiteitstype) en bouwt de lookup-cache.
+func laadFormeleTijdCache(c *gin.Context, entiteitnaam string, entiteitIDs []string, peiltijdstip time.Time) (*formeleTijdCache, error) {
+	cache := &formeleTijdCache{
+		metVersie:    make(map[formeleTijdKey]formeleWijzigingRij),
+		zonderVersie: make(map[formeleTijdKey]formeleWijzigingRij),
+	}
+	if len(entiteitIDs) == 0 {
+		return cache, nil
+	}
+
+	var rijen []formeleWijzigingRij
+	err := DB.NewSelect().
 		TableExpr("f_formele_wijziging_op_peil(?) AS v", peiltijdstip).
+		ColumnExpr("v.wijziging_id").
 		ColumnExpr("v.wijzigingstype").
 		ColumnExpr("v.registratie_tijdstip").
+		ColumnExpr("v.entiteit_id").
+		ColumnExpr("v.representatienaam").
+		ColumnExpr("v.representatie_id").
+		ColumnExpr("v.versie").
 		Where("v.entiteitnaam = ?", entiteitnaam).
-		Where("v.entiteit_id = ?", entiteitID).
-		Where("v.representatienaam = ?", representatienaam).
-		Where("v.representatie_id = ?", representatieID)
-	if versie != nil {
-		query = query.Where("v.versie = ?", *versie)
-	}
-	err := query.
-		OrderExpr("v.registratie_tijdstip DESC, v.wijziging_id DESC").
-		Limit(1).
-		Scan(c.Request.Context(), row)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
+		Where("v.entiteit_id IN (?)", bun.In(entiteitIDs)).
+		Scan(c.Request.Context(), &rijen)
+	if err != nil && !isNoRows(err) {
 		return nil, err
 	}
 
-	return row, nil
+	for _, rij := range rijen {
+		cache.bewaar(rij)
+	}
+	return cache, nil
 }
 
-func zetAfgeleideFormeleTijdVoorRepresentatie(
-	c *gin.Context,
-	representatie model.HeeftOpvoerAfvoer,
-	entiteitnaam string,
-	entiteitID string,
-	representatienaam string,
-	representatieID string,
-	versie *int64,
-	peiltijdstip time.Time,
-) error {
-	wijziging, err := haalLaatsteNietOngedaanGemaakteWijzigingOpPeil(
-		c,
-		entiteitnaam,
-		entiteitID,
-		representatienaam,
-		representatieID,
-		versie,
-		peiltijdstip,
-	)
-	if err != nil {
-		return err
-	}
-
+// zetAfgeleideFormeleTijdUitCache zet opvoer/afvoer op een representatie op
+// basis van de cache (vervangt de vroegere per-representatie query).
+func zetAfgeleideFormeleTijdUitCache(representatie model.HeeftOpvoerAfvoer, cache *formeleTijdCache,
+	entiteitID, representatienaam, representatieID string, versie *int64) {
 	representatie.SetOpvoer(nil)
 	representatie.SetAfvoer(nil)
 
+	wijziging := cache.laatste(entiteitID, representatienaam, representatieID, versie)
 	if wijziging == nil {
-		return nil
+		return
 	}
 
 	t := wijziging.RegistratieTijdstip
@@ -939,8 +903,6 @@ func zetAfgeleideFormeleTijdVoorRepresentatie(
 	case model.WijzigingstypeAfvoer:
 		representatie.SetAfvoer(&t)
 	}
-
-	return nil
 }
 
 // entiteitMetaVoorFullEntity bepaalt op basis van het concrete full-model de bijbehorende
@@ -963,9 +925,30 @@ func entiteitMetaVoorFullEntity(entity any) (model.TypeMeta, error) {
 	return meta, nil
 }
 
-// vulAfgeleideFormeleTijdVoorFullSlice verwerkt een volledige lijst van full entiteiten generiek.
-// Dit vervangt hardcoded type-switches op A/B: elk slice-element wordt als pointer
-// doorgegeven aan de generieke entity-routine hieronder.
+// bepaalRepIDVersieVoorFormeleTijd bepaalt de cache-sleutelvelden voor een
+// (hub-)kindrepresentatie: versie-PK types gebruiken GetID() als versie en
+// rel_id (indien aanwezig) als representatieID; overige types gebruiken GetID()
+// als representatieID zonder versie.
+func bepaalRepIDVersieVoorFormeleTijd(typenaam string, rep model.FormeleRepresentatie) (string, *int64) {
+	kindMeta, ok := model.MetaRegistry.GetTypeMeta(typenaam)
+	if ok && kindMeta.IDKolom == "versie" {
+		var versie *int64
+		if vi, viOK := anyNaarInt(rep.GetID()); viOK {
+			v64 := int64(vi)
+			versie = &v64
+		}
+		repID := ""
+		if relID, err := haalIntWaardeVoorKolomUitRepresentatie(rep, "rel_id"); err == nil && relID != 0 {
+			repID = fmt.Sprint(relID)
+		}
+		return repID, versie
+	}
+	return fmt.Sprint(rep.GetID()), nil
+}
+
+// vulAfgeleideFormeleTijdVoorFullSlice verwerkt een volledige lijst van full
+// entiteiten set-based: één cache-query voor alle entiteit-IDs, daarna een
+// pure in-memory walk per entiteit.
 func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijdstip time.Time) error {
 	v := reflect.ValueOf(entities)
 	if !v.IsValid() || v.Kind() != reflect.Ptr || v.IsNil() {
@@ -976,10 +959,32 @@ func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijd
 	if sliceValue.Kind() != reflect.Slice {
 		return fmt.Errorf("entities moet een pointer naar slice zijn")
 	}
+	if sliceValue.Len() == 0 {
+		return nil
+	}
+
+	// Alle elementen zijn van hetzelfde type; meta afleiden van het eerste.
+	meta, err := entiteitMetaVoorFullEntity(sliceValue.Index(0).Addr().Interface())
+	if err != nil {
+		return err
+	}
+
+	entiteitIDs := make([]string, 0, sliceValue.Len())
+	for i := 0; i < sliceValue.Len(); i++ {
+		hasID, ok := sliceValue.Index(i).Addr().Interface().(model.HasID)
+		if !ok {
+			return fmt.Errorf("full entity %s implementeert HasID niet", meta.Typenaam)
+		}
+		entiteitIDs = append(entiteitIDs, fmt.Sprint(hasID.GetID()))
+	}
+
+	cache, err := laadFormeleTijdCache(c, meta.Typenaam, entiteitIDs, peiltijdstip)
+	if err != nil {
+		return err
+	}
 
 	for i := 0; i < sliceValue.Len(); i++ {
-		entityPtr := sliceValue.Index(i).Addr().Interface()
-		if err := vulAfgeleideFormeleTijdVoorFullEntity(c, entityPtr, peiltijdstip); err != nil {
+		if err := vulFormeleTijdVoorEntityUitCache(sliceValue.Index(i).Addr().Interface(), meta, cache); err != nil {
 			return err
 		}
 	}
@@ -987,12 +992,8 @@ func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijd
 	return nil
 }
 
-// vulAfgeleideFormeleTijdVoorFullEntity leidt opvoer/afvoer af voor een full entiteit en
-// haar onderliggende representaties via interfaces i.p.v. concrete type-switches.
-// Vereiste interfaces op de entiteit:
-// - HasID: voor entiteit-ID
-// - HeeftOpvoerAfvoer: voor opvoer/afvoer op entiteitsniveau
-// - HeeftOnderliggendeGegevenselementen: voor iteratie over kind-representaties
+// vulAfgeleideFormeleTijdVoorFullEntity leidt opvoer/afvoer af voor één full
+// entiteit (één cache-query voor dit ene ID, daarna de in-memory walk).
 func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijdstip time.Time) error {
 	meta, err := entiteitMetaVoorFullEntity(entity)
 	if err != nil {
@@ -1004,15 +1005,30 @@ func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijds
 		return fmt.Errorf("full entity %s implementeert HasID niet", meta.Typenaam)
 	}
 
+	cache, err := laadFormeleTijdCache(c, meta.Typenaam, []string{fmt.Sprint(hasID.GetID())}, peiltijdstip)
+	if err != nil {
+		return err
+	}
+
+	return vulFormeleTijdVoorEntityUitCache(entity, meta, cache)
+}
+
+// vulFormeleTijdVoorEntityUitCache is de generieke walk over entiteit →
+// GE's/relaties → hub-kinderen, nu zonder queries: alle lookups komen uit de
+// vooraf geladen cache.
+func vulFormeleTijdVoorEntityUitCache(entity any, meta model.TypeMeta, cache *formeleTijdCache) error {
+	hasID, ok := entity.(model.HasID)
+	if !ok {
+		return fmt.Errorf("full entity %s implementeert HasID niet", meta.Typenaam)
+	}
+
 	formeleEntiteit, ok := entity.(model.HeeftOpvoerAfvoer)
 	if !ok {
 		return fmt.Errorf("full entity %s implementeert HeeftOpvoerAfvoer niet", meta.Typenaam)
 	}
 
 	entiteitID := fmt.Sprint(hasID.GetID())
-	if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, formeleEntiteit, meta.Typenaam, entiteitID, "", "", nil, peiltijdstip); err != nil {
-		return err
-	}
+	zetAfgeleideFormeleTijdUitCache(formeleEntiteit, cache, entiteitID, "", "", nil)
 
 	metKinderen, ok := entity.(model.HeeftOnderliggendeGegevenselementen)
 	if !ok {
@@ -1024,25 +1040,8 @@ func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijds
 			continue
 		}
 
-		// Bepaal repID en versie op basis van het kindtype (via metaregistry)
-		kindMeta, kindOK := model.MetaRegistry.GetTypeMeta(kind.Typenaam)
-		var repID string
-		var versie *int64
-		if kindOK && kindMeta.IDKolom == "versie" {
-			// Versie-PK type: GetID() = versie; probeer rel_id op te halen
-			if vi, viOK := anyNaarInt(kind.Representatie.GetID()); viOK {
-				v64 := int64(vi)
-				versie = &v64
-			}
-			if relID, relErr := haalIntWaardeVoorKolomUitRepresentatie(kind.Representatie, "rel_id"); relErr == nil && relID != 0 {
-				repID = fmt.Sprint(relID)
-			}
-		} else {
-			repID = fmt.Sprint(kind.Representatie.GetID())
-		}
-		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, kind.Representatie, meta.Typenaam, entiteitID, kind.Typenaam, repID, versie, peiltijdstip); err != nil {
-			return err
-		}
+		repID, versie := bepaalRepIDVersieVoorFormeleTijd(kind.Typenaam, kind.Representatie)
+		zetAfgeleideFormeleTijdUitCache(kind.Representatie, cache, entiteitID, kind.Typenaam, repID, versie)
 
 		// Afdalen in hub-kinderen (Data/Aanvang/Einde) voor formele-tijdafleiding
 		if hubMetKinderen, hubOK := kind.Representatie.(model.HeeftOnderliggendeGegevenselementen); hubOK {
@@ -1050,23 +1049,8 @@ func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijds
 				if hubKind.Representatie == nil {
 					continue
 				}
-				hubKindMeta, hkOK := model.MetaRegistry.GetTypeMeta(hubKind.Typenaam)
-				var hkRepID string
-				var hkVersie *int64
-				if hkOK && hubKindMeta.IDKolom == "versie" {
-					if vi, viOK := anyNaarInt(hubKind.Representatie.GetID()); viOK {
-						v64 := int64(vi)
-						hkVersie = &v64
-					}
-					if relID, relErr := haalIntWaardeVoorKolomUitRepresentatie(hubKind.Representatie, "rel_id"); relErr == nil && relID != 0 {
-						hkRepID = fmt.Sprint(relID)
-					}
-				} else {
-					hkRepID = fmt.Sprint(hubKind.Representatie.GetID())
-				}
-				if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, hubKind.Representatie, meta.Typenaam, entiteitID, hubKind.Typenaam, hkRepID, hkVersie, peiltijdstip); err != nil {
-					return err
-				}
+				hkRepID, hkVersie := bepaalRepIDVersieVoorFormeleTijd(hubKind.Typenaam, hubKind.Representatie)
+				zetAfgeleideFormeleTijdUitCache(hubKind.Representatie, cache, entiteitID, hubKind.Typenaam, hkRepID, hkVersie)
 			}
 		}
 	}
@@ -1190,7 +1174,7 @@ func MakeGetRegistratiesMetWijzigingenHandler() gin.HandlerFunc {
 			Offset(offset).
 			Scan(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon lijst van registraties niet ophalen", err)
 			return
 		}
 
@@ -1236,11 +1220,11 @@ func MakeGetRegistratieMetWijzigingenByIDHandler() gin.HandlerFunc {
 			Relation("Wijzigingen").
 			Scan(c.Request.Context())
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if isNoRows(err) {
 				c.JSON(http.StatusNotFound, gin.H{"message": "Registratie not found"})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon registratie niet ophalen", err)
 			return
 		}
 
@@ -1504,7 +1488,7 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			Offset(offset).
 			Scan(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon lijst van "+meta.Typenaam+" niet ophalen", err)
 			return
 		}
 
@@ -1523,7 +1507,7 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 
 		total, err := DB.NewSelect().Model(meta.Factory()).Count(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon aantal "+meta.Typenaam+" niet bepalen", err)
 			return
 		}
 		hasMore := offset+size < total
@@ -1591,8 +1575,8 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		err = query.
 			Where(meta.IDKolom+" = ?", entityID).
 			Scan(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// §4.2: bun geeft sql.ErrNoRows bij een onbekend ID → 404 (geen 500).
+		if scanFoutNaar404OfInterneFout(c, err, meta.Typenaam) {
 			return
 		}
 
@@ -1630,91 +1614,7 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 	}
 }
 
-// MakeAddFullEntityByMetaHandler returns a gin.HandlerFunc that inserts one full entity and its child relations defined in the metaregistry.
-func MakeAddFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if meta.Factory == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Factory ontbreekt voor type " + meta.Typenaam})
-			return
-		}
-
-		entity := meta.Factory()
-		hasID, ok := entity.(model.HasID)
-		if !ok {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Factory levert geen HasID voor type " + meta.Typenaam})
-			return
-		}
-
-		if err := c.ShouldBindJSON(entity); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		LogRequestBodyAsJSON(c)
-
-		_, err := DB.NewInsert().Model(entity).Exec(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		if len(meta.OnderliggendeGegevenselementen) > 0 {
-			entityValue := reflect.ValueOf(entity)
-			if entityValue.Kind() != reflect.Ptr || entityValue.IsNil() {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Factory levert geen pointer voor type %s", meta.Typenaam)})
-				return
-			}
-			entityElem := entityValue.Elem()
-			entityType := entityElem.Type()
-			parentID := hasID.GetID()
-
-			for _, rel := range meta.OnderliggendeGegevenselementen {
-				relationName := rel.Rolnaam
-				relField, found := entityType.FieldByName(relationName)
-				if !found {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' not found", relationName)})
-					return
-				}
-
-				bunTag := relField.Tag.Get("bun")
-				if bunTag == "" {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("bun tag not found on relation field '%s'", relationName)})
-					return
-				}
-
-				fkField, _, err := parseBunRelationTag(bunTag)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to parse bun tag: %v", err)})
-					return
-				}
-
-				relatedValue := entityElem.FieldByName(relationName)
-				if !relatedValue.IsValid() || relatedValue.IsZero() {
-					continue
-				}
-
-				if relatedValue.Kind() != reflect.Slice {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' is not a slice", relationName)})
-					return
-				}
-
-				for i := 0; i < relatedValue.Len(); i++ {
-					relatedEntity := relatedValue.Index(i)
-
-					if err := setForeignKeyOnRelatedEntity(relatedEntity, fkField, parentID); err != nil {
-						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to set FK: %v", err)})
-						return
-					}
-
-					_, err := DB.NewInsert().Model(relatedEntity.Addr().Interface()).Exec(c.Request.Context())
-					if err != nil {
-						c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-						return
-					}
-				}
-			}
-		}
-
-		c.JSON(http.StatusCreated, gin.H{"message": meta.Typenaam + " created"})
-	}
-}
+// MakeAddFullEntityByMetaHandler is verwijderd (BE-review 2026-07-07, §3.5):
+// de handler deed directe INSERTs buiten de bitemporele boekhouding om.
+// POST /full/{padnaam} loopt nu via MakeAddEntityViaEngineHandler
+// (opvoer_handlers.go), die delegeert naar RegistreerJSONCore.

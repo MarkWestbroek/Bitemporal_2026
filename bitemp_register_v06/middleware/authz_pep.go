@@ -20,7 +20,8 @@ import (
 //   - AUTH_ENABLED=false of AUTHZ_PDP_ENABLED=false → no-op (alles toegestaan)
 //   - Geen JWT claims → 401 (wordt normaal al afgevangen door RequireAuth)
 //   - PDP retourneert decision=false → 403 Forbidden
-//   - PDP niet bereikbaar → afhankelijk van AUTHZ_DENY_ON_ERROR (default: false = permit)
+//   - PDP niet bereikbaar → afhankelijk van AUTHZ_DENY_ON_ERROR
+//     (default: true = deny / fail-closed; zet expliciet op false voor fail-open in dev)
 
 var authzClient *authz.Client
 
@@ -43,9 +44,17 @@ func IsAuthzPDPEnabled() bool {
 }
 
 // isDenyOnError bepaalt of PDP-fouten leiden tot deny (true) of permit (false).
+// Default is deny (fail-closed): wie autorisatie aanzet, wil niet dat een
+// onbereikbare PDP alles openzet (BE-review 2026-07-07, actiepunt 3).
+// Zet AUTHZ_DENY_ON_ERROR=false expliciet voor fail-open gedrag in dev.
 func isDenyOnError() bool {
 	v := strings.ToLower(strings.TrimSpace(os.Getenv("AUTHZ_DENY_ON_ERROR")))
-	return v == "1" || v == "true" || v == "yes" || v == "on"
+	switch v {
+	case "0", "false", "no", "off":
+		return false
+	default:
+		return true
+	}
 }
 
 // BepaalAuthZENActie mapt een HTTP-methode + routepad naar een AuthZEN action naam.

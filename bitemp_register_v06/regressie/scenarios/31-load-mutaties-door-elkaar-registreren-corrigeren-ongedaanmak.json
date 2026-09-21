@@ -1,0 +1,137 @@
+{
+  "id": "31",
+  "naam": "load: mutaties door elkaar (registreren, corrigeren, ongedaanmaken, afvoeren)",
+  "beschrijving": "Schrijver-rol. Per iteratie: nieuwe NP met GE's, correctie op een willekeurige bestaande NP, soms die correctie ongedaan maken, correctie op een willekeurig adres, soms de eigen NP afvoeren. Standaard 1 vu: op de kleine standaard-seed (4 NP's) botsen meerdere schrijvers voortdurend op hetzelfde record (de API antwoordt dan met 409 Conflict; zie REGRESSIETEST.md, bevinding 8). Zet pas meer vus in op de dikke seed, met vars npVan=1;npTot=2000;locVan=1;locTot=2000. npTot=5 omdat sc 10 NP=6 afvoert.",
+  "volgorde": 230,
+  "tags": [
+    "load",
+    "performance",
+    "schrijven"
+  ],
+  "vars": {
+    "locTot": "6",
+    "locVan": "2",
+    "npTot": "5",
+    "npVan": "2"
+  },
+  "load": {
+    "vus": 1,
+    "iteraties": 50,
+    "drempels": {
+      "p95_ms": 500,
+      "fout_pct": 2
+    }
+  },
+  "stappen": [
+    {
+      "naam": "registreer NP met GE's",
+      "zet": {
+        "nieuwId": "9{{uniek}}"
+      },
+      "method": "POST",
+      "path": "/full/natuurlijk_personen",
+      "body": {
+        "id": "{{int:nieuwId}}",
+        "namen": [
+          {
+            "data": [
+              {
+                "voorletters": "L.",
+                "roepnaam": "Load",
+                "achternaam": "Nieuw{{uniek}}"
+              }
+            ]
+          }
+        ],
+        "burgerschappen": [
+          {
+            "data": [
+              {
+                "landcode": "NL",
+                "nationaliteit": "Nederlandse"
+              }
+            ]
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201,
+        "json": {
+          "registratie_id": ">0"
+        }
+      }
+    },
+    {
+      "naam": "corrigeer naam (willekeurige NP)",
+      "zet": {
+        "npId": "{{rnd:npVan-npTot}}"
+      },
+      "method": "PATCH",
+      "path": "/full/natuurlijk_personen/{{npId}}",
+      "body": {
+        "namen": [
+          {
+            "voorletters": "C.",
+            "achternaam": "Corr{{uniek}}"
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "registratie_id": ">0"
+        }
+      },
+      "bewaar": {
+        "regCorr": "registratie_id"
+      }
+    },
+    {
+      "naam": "maak correctie ongedaan",
+      "kans": 0.5,
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "ongedaanmaking",
+          "maakt_ongedaan_registratie_id": "{{int:regCorr}}"
+        }
+      },
+      "verwacht": {
+        "status_in": [
+          201,
+          400,
+          409
+        ]
+      }
+    },
+    {
+      "naam": "corrigeer adres (willekeurige LOC)",
+      "zet": {
+        "locId": "{{rnd:locVan-locTot}}"
+      },
+      "method": "PATCH",
+      "path": "/full/locaties/{{locId}}",
+      "body": {
+        "adressen": [
+          {
+            "straatnaam": "Loadstraat",
+            "huisnummer": "{{iter}}"
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 200
+      }
+    },
+    {
+      "naam": "voer eigen NP af",
+      "kans": 0.3,
+      "method": "DELETE",
+      "path": "/natuurlijk_personen/{{nieuwId}}",
+      "verwacht": {
+        "status": 200
+      }
+    }
+  ]
+}

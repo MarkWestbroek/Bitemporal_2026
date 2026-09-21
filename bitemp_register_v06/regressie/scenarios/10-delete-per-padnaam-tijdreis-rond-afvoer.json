@@ -1,0 +1,49 @@
+{
+  "id": "10",
+  "naam": "DELETE per padnaam + tijdreis rond afvoer",
+  "volgorde": 110,
+  "tags": [
+    "afvoer",
+    "tijdreizen"
+  ],
+  "stappen": [
+    {
+      "naam": "afvoeren",
+      "method": "DELETE",
+      "path": "/natuurlijk_personen/6",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "registratie_id": ">0"
+        }
+      },
+      "bewaar": {
+        "regDel": "registratie_id"
+      }
+    },
+    {
+      "naam": "weg op afvoertijdstip",
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/6?t={{regDel}}",
+      "verwacht": {
+        "status": 404
+      }
+    },
+    {
+      "naam": "bestond er nog net voor",
+      "method": "GET",
+      "path": "/full/natuurlijk_personen/6?t={{min1:regDel}}",
+      "verwacht": {
+        "status": 200
+      }
+    },
+    {
+      "naam": "tweede afvoer geeft conflict",
+      "method": "DELETE",
+      "path": "/natuurlijk_personen/6",
+      "verwacht": {
+        "status": 409
+      }
+    }
+  ]
+}

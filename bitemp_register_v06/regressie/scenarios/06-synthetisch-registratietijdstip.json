@@ -1,0 +1,27 @@
+{
+  "id": "06",
+  "naam": "synthetisch registratietijdstip",
+  "beschrijving": "REGISTRATIE_TIJD=synthetisch: tijdstip = 2026-01-01 + id uur + id microseconden.",
+  "volgorde": 60,
+  "vereist": [
+    "05"
+  ],
+  "dekt": [
+    "BE-REVIEW-3.1"
+  ],
+  "tags": [
+    "tijd"
+  ],
+  "stappen": [
+    {
+      "method": "GET",
+      "path": "/registraties/{{$regPost42}}",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "tijdstip": "{{synthtijd:$regPost42}}"
+        }
+      }
+    }
+  ]
+}
