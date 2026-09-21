@@ -42,7 +42,9 @@ Doel:
 Bij de split-variant horen ook:
 - `Dockerfile.api` — bouwt alleen de Go-backend.
 - `Dockerfile.frontend` — bouwt alleen de Vite/nginx-frontend.
-- `nginx.frontend.conf` — reverse proxy zodat frontend en API via dezelfde origin werken.
+- `deploy/frontend/default.conf.template` (voorheen `nginx.frontend.conf`) — reverse proxy zodat frontend en API
+  via dezelfde origin werken. Een template: `API_UPSTREAM`, `FRAME_ANCESTORS` en `NGINX_RESOLVER` worden bij het
+  starten ingevuld; `deploy/frontend/15-api-upstream.envsh` controleert de upstream. Defaults = het oude gedrag.
 
 ### Aanbevolen stack-combinaties
 

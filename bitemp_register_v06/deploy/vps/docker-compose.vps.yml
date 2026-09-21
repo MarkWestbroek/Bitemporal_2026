@@ -15,7 +15,9 @@
 # Bucket:    docker compose -f docker-compose.vps.yml --profile init up minio-init   (eenmalig)
 # Updaten:   docker compose -f docker-compose.vps.yml pull && \
 #            docker compose -f docker-compose.vps.yml up -d --force-recreate api frontend
-#            (frontend altijd mee-recreaten: nginx cachet het oude API-IP → 502)
+#            (Met een frontend-image van na 2026-09-21 zoekt nginx de API per verzoek op en is
+#             mee-recreaten van de frontend niet meer nodig; bij een oudere image wel: die
+#             onthoudt het oude API-IP → 502.)
 #
 # Zie docs/VPS_DEPLOYMENT.md voor het volledige runbook.
 
@@ -125,6 +127,10 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+    environment:
+      # Instelbaar zonder nieuwe image (zie deploy/frontend/default.conf.template):
+      API_UPSTREAM: ${API_UPSTREAM:-http://api:8080}       # schema://host[:poort], zonder pad
+      FRAME_ANCESTORS: "${FRAME_ANCESTORS:-*}"              # wie de Studio in een iframe mag tonen
     ports:
       - "127.0.0.1:${FRONTEND_PORT:-8083}:80"   # Caddy → hier; nginx proxiet /api enz. naar api:8080
     networks:

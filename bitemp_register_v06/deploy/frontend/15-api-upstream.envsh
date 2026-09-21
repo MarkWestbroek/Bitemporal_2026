@@ -1,0 +1,31 @@
+#!/bin/sh
+# Wordt door het entrypoint van de nginx-image ge-sourced (extensie .envsh), vóór
+# 20-envsubst-on-templates.sh. Controleert en normaliseert API_UPSTREAM.
+#
+# Waarom: in de template staat `proxy_pass $api_upstream;` met een variabele. Bevat de upstream
+# een pad of een afsluitende slash, dan vervangt nginx daarmee de HELE request-URI en komt elk
+# verzoek op "/" van de API uit. Een afsluitende slash halen we stil weg; een echt pad weigeren we.
+
+API_UPSTREAM="${API_UPSTREAM:-http://api:8080}"
+API_UPSTREAM="${API_UPSTREAM%/}"
+
+case "$API_UPSTREAM" in
+    http://*|https://*) ;;
+    *)
+        echo "frontend: API_UPSTREAM moet beginnen met http:// of https:// (kreeg: $API_UPSTREAM)" >&2
+        exit 1
+        ;;
+esac
+
+# Alles na het schema mag geen slash meer bevatten (dus: geen pad).
+_zonder_schema="${API_UPSTREAM#*://}"
+case "$_zonder_schema" in
+    */*)
+        echo "frontend: API_UPSTREAM mag geen pad bevatten (kreeg: $API_UPSTREAM). Gebruik alleen schema://host[:poort]." >&2
+        exit 1
+        ;;
+esac
+unset _zonder_schema
+
+export API_UPSTREAM
+echo "frontend: API_UPSTREAM=$API_UPSTREAM  FRAME_ANCESTORS=${FRAME_ANCESTORS:-*}  NGINX_RESOLVER=${NGINX_RESOLVER:-127.0.0.11}"
