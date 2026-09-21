@@ -8,6 +8,75 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.9.0] — 2026-09-22
+### Toegevoegd
+- **GE opnemen in de entiteit.** Per diagram kan een gegevenselement ín zijn entiteit
+  getoond worden als sub-vak (*opname*); de compositielijn vervalt dan en andere lijnen
+  van de GE hangen aan de entiteit. Declaratie `ElementType.opname`, beslisplek
+  `diagramcore/canvas/opname.js`; contextmenu op GE, compositie en entiteit.
+- **Velden bewerkbaar in canoniek-uml**, zoals in de oude IDE: van de GE (typenaam, domein,
+  beschrijving, meervoud, materieel, kleur, label heen/terug), van de compositie (rolnaam,
+  JSON-rolnaam, momentvoorkomen, kardinaliteit), van de entiteit (beschrijving, meervoud,
+  materieel, kleur, subtype) en van de relatie (o.a. kardinaliteit bron/doel, label
+  heen/terug, gericht, geordend). Het stereotype volgt het subtype.
+- **Magic link.** Een lijn slepen zonder gekozen verbindingstype: één passend type wordt
+  direct gelegd, bij meerdere verschijnt een keuzemenu op de losplek. Een gekozen type dat
+  hier niet mag verdwijnt niet meer stil; het menu legt uit waarom en biedt alternatieven.
+  Werkt ook op het lege vlak (of het vlak van een container): nieuw element, lidmaatschap
+  en verbinding in één gebaar. Canvasmenu's zijn met het toetsenbord te bedienen.
+- **Containers houden hun inhoud vast.** Leden die ín hun container liggen reizen mee en
+  zijn begrensd door de rand (Alt+slepen tilt eruit); een nieuw element dat in een
+  container belandt wordt er meteen lid van. Presentatie relatief, opslag absoluut: geen
+  migratie. `diagramcore/canvas/nesting.js`.
+- **Afbakening (pools).** Motor-primitief `ElementType.afbakeningVoor` en
+  `ConnectorType.overbrugt`; het menu noemt de reden van een weigering. BPMN-pool is de
+  eerste afnemer: sequence flow binnen de pool, message flow ertussen of aan de poolrand.
+  `diagramcore/canvas/afbakening.js`.
+- **Reconnect.** Het uiteinde van een lijn verhangen; het type blijft gelijk, knikpunten
+  vervallen, een weigering wordt uitgelegd.
+- **Zoekende combobox voor relatievelden** (inhoud-editor). Op de nieuwe-entiteitpagina
+  heet de secundaire id-kolom van een relatie naar de doel-entiteit ("gemeente" in plaats
+  van `gemeente_id`); bij een referentielijst-item verschijnt een `RefCombobox` met
+  zoeken op de server, in plaats van een op 100 afgekapte keuzelijst. Overige doelen
+  pagineren over `/full/`.
+
+### Gewijzigd
+- **Het profiel is de bron van de veldnamen** voor heenreis, terugreis en migratie
+  (`mappingV3Canoniek.js`: `vertaalbareVelden(elementType)`); de vaste veldlijsten
+  vervallen. Een alleen in het profiel toegevoegde property gaat vanzelf mee, bewaakt
+  door `mappingV3Canoniek.test.js`.
+- **Verdelen** gebruikt gelijke tussenruimte in plaats van gelijke linkerranden;
+  aangehechte rand-elementen en label-ankers doen niet mee aan uitlijnen en verdelen.
+- **Escape** maakt de hele selectie leeg (nodig binnen containers en na een kader-selectie).
+- **Tekenen zet de aanhechting niet meer vast.** Bij zwevende randaanhechting bewaren
+  tekenen, verhangen en de magic link geen handle; Shift bij het loslaten zet hem wél
+  vast. In BPMN zweven taak, subproces, data-object, pool en lane; events en gateways
+  houden hun vier punten.
+- **Migratie van oude sandboxes.** Een vóór 15 september geladen sandbox had ENT ◆ GE nog
+  als presentatie-edge; die worden bij het laden compositie-connectoren.
+- **Frontend-image instelbaar zonder nieuwe build** (raakt de bundle niet): de
+  nginx-config is een template met `API_UPSTREAM` (welke backend), `FRAME_ANCESTORS`
+  (wie de Studio in een iframe mag tonen) en `NGINX_RESOLVER`; de defaults geven het oude
+  gedrag. Zie `deploy/frontend/default.conf.template` en `docs/VPS_DEPLOYMENT.md` §9.
+
+### Gerepareerd
+- **502 na het opnieuw aanmaken van de API-container.** nginx onthield het oude IP-adres
+  van de API; de frontend moest dan mee herstart worden. De nieuwe image zoekt de API per
+  verzoek op en antwoordt direct na een IP-wissel (gemeten; de oude config bleef op 502
+  hangen).
+- **Universum: dubbelklik naar objecten werkt weer.** Bij een groot metamodel stond de
+  node bij de tweede klik al niet meer onder de cursor; zo'n misklik wordt nu opgevangen
+  (binnen 400 ms en 12 px). Een entiteit zonder objecten of een mislukte fetch geeft een
+  korte melding in plaats van stil op het metaniveau te blijven.
+- **GraphQL-veldnamen met koppelteken** (`nl-titel`) worden `nl_titel`, zoals de backend ze
+  aanbiedt; Kennisartikel en Trefwoord gaven een syntaxfout.
+- **`RefCombobox`**: ▼ toont de eerste opties, geen "Geen resultaten" tijdens het wachten,
+  verouderde zoekantwoorden worden genegeerd, minimale breedte in smalle rijen.
+
+### Let op bij uitrol
+- De Studio roept `/admin/rebuild/` en `/admin/diff/` aan. Vanaf **api 0.7.0** bestaan die
+  routes alleen in een API-build met `-tags devtools`; zie `RELEASE.md`.
+
 ## [studio/v0.8.0] — 2026-09-16
 ### Toegevoegd
 - **OpenAPI → canoniek model.** Nieuwe transformatie onder *Transformeren →
