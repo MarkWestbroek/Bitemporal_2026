@@ -2,7 +2,18 @@
 
 > **Doel van dit document:** uitleggen wat er op 21 september 2026 (Claude-sessie) is
 > gewijzigd, zodat de merge van de zware backend-optimalisatie deze wijzigingen kan
-> herkennen en correct kan meenemen. Status bij schrijven: **niet gecommit**, werkkopie op `main`.
+> herkennen en correct kan meenemen.
+
+**Branch:** `fix/enkelvoudige-hub-afvoer` (afgetakt van `main` op `f34f082a`), nog niet gepusht/gemerged.
+
+| Commit | Inhoud | Onderdelen |
+|--------|--------|------------|
+| `a0dd5170` | fix(registratie): enkelvoudige hub vervangen laat geen actieve data achter | D (+ test, deze notitie) |
+| `5d37a021` | feat(inhoud): relatieveld als zoekende combobox met naam van doel-entiteit | A, B, C |
+
+De commits staan los van elkaar: bij conflicten met de backend-optimalisatie kan
+`a0dd5170` apart worden beoordeeld; `5d37a021` raakt aan backend-zijde alleen
+`viz_reflijst_opties_handler.go`.
 
 Het begon als frontend-werk (relatie-dropdown op `/t/gemeentedelen/nieuw`), maar leidde
 tot twee backend-aanpassingen. De **tweede (§3) is een echte correctheidsfix** in de
