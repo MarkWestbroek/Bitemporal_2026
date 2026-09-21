@@ -128,7 +128,7 @@ Zie [`TRUENAS_DEPLOYMENT.md`](TRUENAS_DEPLOYMENT.md) §3. Kort:
 ```bash
 sudo docker compose -f /mnt/Pool1/share/Docker/Bitemporal/bitemp/compose.yaml pull
 sudo docker compose -f .../compose.yaml up -d --force-recreate api frontend
-sudo docker restart bitemp-viz-frontend      # altijd: anders 502 door nginx DNS-cache
+sudo docker restart bitemp-viz-frontend      # alleen nog nodig bij een frontend-image van vóór 2026-09-21 (502 door nginx DNS-cache)
 ```
 
 ### 4.4 Rollback

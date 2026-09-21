@@ -334,8 +334,15 @@ anders optie). Een snapshot is een noodrem, geen backup.
 
 - **Secure cookie over http** — lokaal via `curl http://127.0.0.1:8083` werkt inloggen niet
   (cookie wordt geweigerd). Dat is correct; test inloggen altijd via de https-URL.
-- **502 na API-recreate** — nginx in de frontend-container cachet het oude API-IP.
-  Altijd `docker restart bitemp-viz-frontend` na `--force-recreate api`.
+- **502 na API-recreate** — opgelost in de frontend-image van na 2026-09-21: nginx zoekt de API
+  per verzoek op (`resolver` + variabele upstream in `deploy/frontend/default.conf.template`).
+  Gemeten: na het opnieuw aanmaken van de API op een ander IP antwoordt de nieuwe image direct;
+  de oude bleef op 502 hangen tot een herstart. Draait er nog een **oudere** frontend-image, dan
+  geldt de oude regel: `docker restart bitemp-viz-frontend` na `--force-recreate api`.
+- **Frontend instellen zonder nieuwe image** — `API_UPSTREAM` (welke backend; `schema://host[:poort]`,
+  zonder pad: met een pad weigert de container te starten), `FRAME_ANCESTORS` (wie de Studio in een
+  iframe mag tonen; default `*`) en `NGINX_RESOLVER` (default `127.0.0.11`, de DNS van Docker).
+  De opstartregel `frontend: API_UPSTREAM=…` in `docker logs` laat zien wat er geldt.
 - **`$` in wachtwoorden** — compose leest het als variabele. `.env.example` genereert ze zonder.
 - **`minio-init` stopt** — hoort zo; daarom achter `--profile init`.
 - **OpenFTV** — `openftv_adl` database, `package authz` in de rego, bundle-403: zie TrueNAS §2.3–2.6.

@@ -85,6 +85,9 @@ De OpenFTV images zijn distroless (geen shell, geen wget, geen nc). Healthchecks
 **Oplossing**: Nieuwe env var `COOKIE_SECURE` (default `false`). Alleen op `true` zetten bij HTTPS.
 
 ### 2.9 Valkuil: Nginx DNS-cache na API recreate
+> **Opgelost in de frontend-image van na 2026-09-21**: nginx zoekt de API per verzoek op
+> (`deploy/frontend/default.conf.template`). Onderstaande stap is alleen nog nodig bij een oudere image.
+
 **Probleem**: Na `docker compose up -d --force-recreate api` krijgt de API een nieuw IP. Nginx cached het oude IP → 502 Bad Gateway.
 
 **Oplossing**: Altijd ook de frontend herstarten na een API recreate:

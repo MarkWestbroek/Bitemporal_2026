@@ -20,7 +20,23 @@ RUN npm run build
 
 FROM nginx:1.27-alpine
 
-COPY nginx.frontend.conf /etc/nginx/conf.d/default.conf
+# Instelbaar per instantie, zonder nieuwe build (zie deploy/frontend/default.conf.template):
+#   API_UPSTREAM     backend achter deze frontend          (schema://host[:poort], zonder pad)
+#   NGINX_RESOLVER   DNS voor het per verzoek opzoeken     (127.0.0.11 = Docker; elders bv. de cluster-DNS)
+#   FRAME_ANCESTORS  wie de Studio in een iframe mag tonen ("*" = iedereen)
+# De defaults geven exact het gedrag van vóór deze instellingen.
+ENV API_UPSTREAM=http://api:8080 \
+    NGINX_RESOLVER=127.0.0.11 \
+    FRAME_ANCESTORS=*
+
+# De nginx-image zet templates bij het starten om naar /etc/nginx/conf.d/ (envsubst) en
+# sourced *.envsh in /docker-entrypoint.d/ vóór die stap. De meegeleverde default.conf moet weg,
+# anders luisteren er twee server-blokken op poort 80.
+RUN rm -f /etc/nginx/conf.d/default.conf
+COPY deploy/frontend/default.conf.template /etc/nginx/templates/default.conf.template
+COPY deploy/frontend/15-api-upstream.envsh /docker-entrypoint.d/15-api-upstream.envsh
+RUN chmod +x /docker-entrypoint.d/15-api-upstream.envsh
+
 COPY --from=frontend-builder /app/web/react /usr/share/nginx/html/viz/react
 
 EXPOSE 80

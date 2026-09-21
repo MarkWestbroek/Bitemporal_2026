@@ -1,0 +1,58 @@
+# nginx-config van de frontend-image — TEMPLATE.
+#
+# De officiële nginx-image vult bij het starten ${...} in (envsubst, alleen voor variabelen
+# die in de omgeving bestaan) en schrijft het resultaat naar /etc/nginx/conf.d/default.conf.
+# nginx-variabelen als $host en $uri blijven dus ongemoeid. Defaults staan in
+# Dockerfile.frontend; zonder instellingen gedraagt de image zich zoals voorheen.
+#
+#   API_UPSTREAM     backend waar alles behalve /viz/react/ naartoe gaat   (default http://api:8080)
+#                    ZONDER pad of slash aan het eind: zie de opmerking bij proxy_pass.
+#   NGINX_RESOLVER   DNS-server voor het per verzoek opzoeken van de API   (default 127.0.0.11 = Docker)
+#   FRAME_ANCESTORS  wie de Studio in een iframe mag tonen (CSP)           (default * = iedereen)
+#                    bv. "'self' https://www.commonground.nl"
+server {
+    listen 80;
+    server_name _;
+    charset utf-8;
+
+    root /usr/share/nginx/html;
+    client_max_body_size 20m;
+
+    # De API per verzoek opzoeken in plaats van eenmalig bij het starten. Zonder dit onthoudt
+    # nginx het IP-adres van de API-container; wordt die opnieuw aangemaakt (nieuw IP), dan geeft
+    # de frontend 502 tot hij zelf herstart wordt. Met een variabele in proxy_pass gebruikt nginx
+    # de resolver hieronder, met een korte geldigheid.
+    resolver ${NGINX_RESOLVER} valid=30s ipv6=off;
+    resolver_timeout 5s;
+
+    location = / {
+        return 302 /viz/react/;
+    }
+
+    location = /viz {
+        return 302 /viz/react/;
+    }
+
+    location /viz/react/ {
+        # Inbedden in een iframe: instelbaar per instantie (default: vanuit elke origin).
+        add_header Content-Security-Policy "frame-ancestors ${FRAME_ANCESTORS}" always;
+        try_files $uri $uri/ /viz/react/index.html;
+    }
+
+    location / {
+        # Variabele upstream ⇒ opzoeken per verzoek (zie resolver). Omdat API_UPSTREAM géén pad
+        # bevat, geeft nginx de oorspronkelijke URI inclusief querystring ongewijzigd door. Met een
+        # pad of afsluitende slash zou nginx de hele URI daardoor vervangen; het opstartscript
+        # 15-api-upstream.envsh haalt een afsluitende slash daarom weg.
+        set $api_upstream ${API_UPSTREAM};
+        proxy_pass $api_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}

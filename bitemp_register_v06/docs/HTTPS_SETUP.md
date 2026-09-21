@@ -24,7 +24,7 @@ Browsers blokkeren dit als **mixed content**:
 
 1. **Logo**: inline SVG in de wrapper (geen extern HTTP-verzoek meer) — **opgelost**
 2. **`?embed=1` querystring**: header van de publicatiepagina verbergen in embed-modus — **opgelost**
-3. **nginx `frame-ancestors`**: `Content-Security-Policy: frame-ancestors *` header toegevoegd in `nginx.frontend.conf` — **opgelost**
+3. **nginx `frame-ancestors`**: `Content-Security-Policy: frame-ancestors *` header toegevoegd in `nginx.frontend.conf` (sinds 2026-09-21 `deploy/frontend/default.conf.template`, instelbaar via `FRAME_ANCESTORS`) — **opgelost**
 4. **Mixed content fallback**: JavaScript detecteert HTTPS→HTTP mismatch en toont een nette fallback met "open in nieuw tabblad"-knop — **opgelost**
 5. **Frontend image gepusht**: `markwestbroek/bitemp-viz-frontend:latest` met nieuwe nginx-config — **opgelost**
 
@@ -230,7 +230,7 @@ Caddy met de Cloudflare DNS-01 challenge plugin. Certificaat wordt gevalideerd v
 | Bestand                                          | Beschrijving                                      |
 |-------------------------------------------------|---------------------------------------------------|
 | `demos/initiatieven-cg-wrapper.html`            | CG-styled wrapper met iframe (pas `IFRAME_SRC` aan na HTTPS) |
-| `nginx.frontend.conf`                           | Nginx config met `frame-ancestors *` header       |
+| `deploy/frontend/default.conf.template`         | Nginx config (template); `frame-ancestors` via `FRAME_ANCESTORS`, default `*` |
 | `web/vite/src/publicatie/main.jsx`              | `?embed=1` support voor header verbergen          |
 | `docs/TRUENAS_DEPLOYMENT.md`                    | TrueNAS deployment guide (sectie 4 = SSL opties)  |
 | `docker-compose.truenas.yml`                    | Basis compose; cloudflared/caddy hier toevoegen   |
