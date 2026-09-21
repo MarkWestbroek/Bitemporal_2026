@@ -218,6 +218,12 @@ func handleRepresentatieOpvoer(ctx context.Context, tx bun.Tx, registratie model
 				return fmt.Errorf("HANDLER: kon afgeleide rel_id=%d niet zetten op %s: %v", afgeleideRelID, representatienaam, err)
 			}
 		}
+		// Invariant: een hub-kind (_Data/_Aanvang/_Einde) mag alleen onder een ACTIEVE hub
+		// worden opgevoerd. Anders ontstaat een open data-record onder een afgevoerde hub,
+		// en heeft een enkelvoudig GE feitelijk twee actieve data-records.
+		if err := controleerBovenliggendeHubActief(ctx, tx, meta, representatie); err != nil {
+			return err
+		}
 	}
 
 	/*
@@ -387,7 +393,26 @@ func handleRepresentatieOpvoer(ctx context.Context, tx bun.Tx, registratie model
 			return fmt.Errorf("HANDLER: voor type %s vind ik geen onderliggende gegevenselementen in de metamap", representatienaam)
 		}
 
+		// Hub → kinderen: geef de werkelijke rel_id van de hub door. Bij een registratie
+		// (geen correctie) krijgt de hub via ClearID() + INSERT een NIEUWE rel_id, maar
+		// inputNaarHub heeft de rel_id uit de request (bv. rel_id=1 bij "Wijzigen") al naar
+		// de kinderen gekopieerd. Zonder deze stap belandt de nieuwe _Data-versie onder de
+		// zojuist afgevoerde hub en blijft de nieuwe hub zonder data.
+		hubRelID := 0
+		if meta.GESubtype == model.GESubtypeHub {
+			if relID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, "rel_id"); err == nil {
+				hubRelID = relID
+			}
+		}
+
 		for _, onderliggende := range onderliggendeRepresentaties.GeefOnderliggendeGegevenselementen() {
+			if hubRelID != 0 {
+				if childMeta, ok := model.MetaRegistry.GetTypeMeta(onderliggende.Typenaam); ok && isHubChildSubtypeMetRelID(childMeta) {
+					if err := zetIntWaardeVoorKolomOpRepresentatie(onderliggende.Representatie, "rel_id", hubRelID); err != nil {
+						return fmt.Errorf("HANDLER: kon rel_id=%d van hub %s niet doorgeven aan %s: %v", hubRelID, representatienaam, onderliggende.Typenaam, err)
+					}
+				}
+			}
 			if err := handleRepresentatieOpvoer(ctx, tx, registratie, entiteitnaam, entiteitID, onderliggende.Typenaam, onderliggende.Representatie); err != nil {
 				return err
 			}
@@ -487,31 +512,7 @@ func handleRepresentatieAfvoer(ctx context.Context, tx bun.Tx, registratieID int
 		}
 
 		// Doorloop onderliggende (Data, Aanvang, Einde) en voer die ook af
-		for _, rel := range meta.OnderliggendeGegevenselementen {
-			childMeta, childOK := model.MetaRegistry.GetTypeMeta(rel.Doeltype)
-			if !childOK {
-				return fmt.Errorf("HANDLER: onbekend child type %s bij hub afvoer", rel.Doeltype)
-			}
-
-			scope := hubScopeVoorChild(childMeta, hubEntiteitIDInt, hubRelIDInt)
-			activeIDs, err := haalActieveIDsMetScope(ctx, tx, childMeta, scope)
-			if err != nil {
-				return err
-			}
-
-			for _, versie := range activeIDs {
-				if err := updateAfvoerMetScope(ctx, tx, childMeta, versie, scope, afvoerTijdstip); err != nil {
-					return err
-				}
-				v64 := int64(versie)
-				if err := persisteerWijziging(ctx, tx, model.WijzigingstypeAfvoer, registratieID,
-					entiteitnaam, entiteitID, childMeta.Typenaam, fmt.Sprint(hubRelIDInt), &v64, afvoerTijdstip); err != nil {
-					return err
-				}
-			}
-		}
-
-		return nil
+		return voerActieveHubKinderenAf(ctx, tx, registratieID, afvoerTijdstip, entiteitnaam, entiteitID, meta, hubEntiteitIDInt, hubRelIDInt)
 	}
 
 	entiteitnaam = representatienaam
@@ -577,6 +578,38 @@ func handleRepresentatieAfvoer(ctx context.Context, tx bun.Tx, registratieID int
 // Bij PFK-types (HeeftPFK=true) is de IDKolom (versie) alleen uniek binnen de
 // entiteit; entiteitID voegt dan een extra WHERE op EntiteitIDKolom toe zodat
 // het juiste record wordt geraakt.
+// voerActieveHubKinderenAf voert alle actieve onderliggende _Data/_Aanvang/_Einde
+// van één hub (scope: entiteit-id + rel_id) af, met een wijziging-record per kind.
+// Gebruikt bij expliciete hub-afvoer én bij het afsluiten van een enkelvoudige
+// voorganger-hub: een afgevoerde hub mag geen actieve kinderen houden.
+func voerActieveHubKinderenAf(ctx context.Context, tx bun.Tx, registratieID int64, afvoerTijdstip time.Time,
+	entiteitnaam string, entiteitID string, hubMeta model.TypeMeta, hubEntiteitID int, hubRelID int) error {
+	for _, rel := range hubMeta.OnderliggendeGegevenselementen {
+		childMeta, childOK := model.MetaRegistry.GetTypeMeta(rel.Doeltype)
+		if !childOK {
+			return fmt.Errorf("HANDLER: onbekend child type %s bij hub afvoer", rel.Doeltype)
+		}
+
+		scope := hubScopeVoorChild(childMeta, hubEntiteitID, hubRelID)
+		activeIDs, err := haalActieveIDsMetScope(ctx, tx, childMeta, scope)
+		if err != nil {
+			return err
+		}
+
+		for _, versie := range activeIDs {
+			if err := updateAfvoerMetScope(ctx, tx, childMeta, versie, scope, afvoerTijdstip); err != nil {
+				return err
+			}
+			v64 := int64(versie)
+			if err := persisteerWijziging(ctx, tx, model.WijzigingstypeAfvoer, registratieID,
+				entiteitnaam, entiteitID, childMeta.Typenaam, fmt.Sprint(hubRelID), &v64, afvoerTijdstip); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func updateAfvoerByID(ctx context.Context, tx bun.Tx, meta model.TypeMeta, id any, entiteitID any, afvoerTijdstip time.Time) error {
 	query := tx.NewUpdate().
 		Table(meta.Tabelnaam).
@@ -867,6 +900,15 @@ func sluitActieveEnkelvoudigeVoorgangersAf(ctx context.Context, tx bun.Tx, regis
 			parentTypenaam, fmt.Sprint(entiteitID), representatienaam, voorgangerRepID, voorgangerVersie, registratietijdstip); err != nil {
 			return err
 		}
+		// Enkelvoudige voorganger is een hub: ook zijn actieve _Data/_Aanvang/_Einde afsluiten.
+		// Anders blijft (bij "Wijzigen" → nieuwe hub) de oude data-versie actief en heeft het
+		// enkelvoudige GE twee actieve data-records.
+		if meta.GESubtype == model.GESubtypeHub {
+			if err := voerActieveHubKinderenAf(ctx, tx, registratieID, registratietijdstip,
+				parentTypenaam, fmt.Sprint(entiteitID), meta, entiteitID, id); err != nil {
+				return fmt.Errorf("HANDLER: afvoer van onderliggende van voorganger %s rel_id=%v mislukt: %v", representatienaam, id, err)
+			}
+		}
 	}
 
 	return nil
@@ -950,6 +992,35 @@ func zetIntWaardeVoorKolomOpRepresentatie(representatie any, kolomnaam string, n
 	}
 
 	return fmt.Errorf("kolom %s niet gevonden in representatie", kolomnaam)
+}
+
+// controleerBovenliggendeHubActief geeft een fout als de hub waar dit hub-kind
+// (_Data/_Aanvang/_Einde) onder hangt — scope (entiteit-id, rel_id) — niet (meer) actief is.
+func controleerBovenliggendeHubActief(ctx context.Context, tx bun.Tx, meta model.TypeMeta, representatie any) error {
+	hubMeta, ok := model.MetaRegistry.GetTypeMeta(meta.BovenliggendTypenaam)
+	if !ok || hubMeta.EntiteitIDKolom == "" {
+		return nil
+	}
+	entiteitID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, hubMeta.EntiteitIDKolom)
+	if err != nil || entiteitID == 0 {
+		return nil
+	}
+	relID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, "rel_id")
+	if err != nil || relID == 0 {
+		return nil
+	}
+	actief, err := haalActieveIDsMetScope(ctx, tx, hubMeta, map[string]any{
+		hubMeta.EntiteitIDKolom: entiteitID,
+		hubMeta.IDKolom:         relID,
+	})
+	if err != nil {
+		return err
+	}
+	if len(actief) == 0 {
+		return fmt.Errorf("HANDLER: kan %s niet opvoeren: bovenliggende %s (%s=%d, rel_id=%d) is niet actief (afgevoerd of onbekend)",
+			meta.Typenaam, hubMeta.Typenaam, hubMeta.EntiteitIDKolom, entiteitID, relID)
+	}
+	return nil
 }
 
 func leidRelIDVoorHubKindAf(ctx context.Context, tx bun.Tx, meta model.TypeMeta, representatie any) (int, error) {

@@ -26,7 +26,8 @@ func (r *testUintRepresentatie) String() string           { return "testUintRepr
 func TestSluitActieveEnkelvoudigeVoorgangersAf_ClosesExistingActiveRecord(t *testing.T) {
 	// Given: een enkelvoudig gegevenselement met exact één actieve voorganger.
 	// When: de helper wordt uitgevoerd voor een nieuwe opvoer.
-	// Then: de actieve voorganger wordt afgevoerd en een afvoer-wijziging wordt vastgelegd.
+	// Then: de actieve voorganger wordt afgevoerd en een afvoer-wijziging wordt vastgelegd;
+	//       omdat de voorganger een hub is, wordt ook zijn actieve _Data afgevoerd.
 	gin.SetMode(gin.TestMode)
 	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
 	ctx.Request = httptest.NewRequest(http.MethodGet, "/", nil)
@@ -54,7 +55,9 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ClosesExistingActiveRecord(t *tes
 	representatie := &model.A_U{A_ID: 1, Rel_ID: 999}
 	tijdstip := time.Date(2026, 2, 25, 10, 0, 0, 0, time.UTC)
 
-	// SQL-volgorde: select actieve voorganger -> update afvoer -> insert wijziging.
+	// SQL-volgorde: select actieve voorganger -> update afvoer -> insert wijziging,
+	// daarna (A_U is een hub) cascade naar de actieve A_U_Data van die hub:
+	// select actieve data-versie -> update afvoer -> insert wijziging.
 	mock.ExpectQuery(`SELECT .*FROM "a_u".*opvoer IS NOT NULL.*afvoer IS NULL`).
 		WillReturnRows(sqlmock.NewRows([]string{"rel_id"}).AddRow(5))
 
@@ -63,6 +66,15 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ClosesExistingActiveRecord(t *tes
 
 	mock.ExpectQuery(`INSERT INTO "wijziging".*RETURNING "id"`).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(11))
+
+	mock.ExpectQuery(`SELECT CAST\(versie AS BIGINT\) FROM "a_u_data".*afvoer IS NULL.*a_id = 1.*rel_id = 5`).
+		WillReturnRows(sqlmock.NewRows([]string{"versie"}).AddRow(3))
+
+	mock.ExpectExec(`UPDATE "a_u_data" SET afvoer = .*versie = 3`).
+		WillReturnResult(sqlmock.NewResult(0, 1))
+
+	mock.ExpectQuery(`INSERT INTO "wijziging".*RETURNING "id"`).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(12))
 
 	err = sluitActieveEnkelvoudigeVoorgangersAf(ctx, tx, 42, tijdstip, "A_U", representatie, meta)
 	if err != nil {

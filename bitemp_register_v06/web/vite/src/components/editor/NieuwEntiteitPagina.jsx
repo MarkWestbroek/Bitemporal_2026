@@ -26,6 +26,10 @@ import {
 } from "../../shared/entiteitOpvoerUtils";
 import NieuweEntiteitActieBox from "../actions/NieuweEntiteitActieBox";
 
+// Paginering voor de doelentiteit-dropdown van relaties (server-maximum is 100).
+const PAGINA_GROOTTE = 100;
+const MAX_PAGINAS = 20;
+
 // ── ID-suggestie ────────────────────────────────────────────────────────
 
 async function fetchMaxId(baseUrl, typenaam) {
@@ -108,17 +112,25 @@ export default function NieuwEntiteitPagina({ typeMeta, onSuccess }) {
       for (const optie of relatieGroepOpties) {
         const doelEntTypenaam = optie.doelEntiteit;
         if (!doelEntTypenaam) continue;
+        // Referentielijst-items: RefCombobox zoekt zelf server-side, niets vooraf laden.
+        if (optie.secondaireRefType) continue;
         const doelEntMeta = typeMetaByTypenaam?.[doelEntTypenaam];
         if (!doelEntMeta?.padnaam) continue;
         try {
-          // Gebruik /full/ endpoint zodat geneste GE-data beschikbaar is voor weergaveveld-berekening
-          const res = await fetch(`${baseUrl}/full/${doelEntMeta.padnaam}?page=1&size=200`);
-          if (!res.ok) continue;
-          const json = await res.json();
-          // API retourneert { "<padnaam>": [...] }, bv. { "trefwoorden": [...] }
-          const items = Array.isArray(json)
-            ? json
-            : safeArray(json?.[doelEntMeta.padnaam] || json?.items || json?.data || json);
+          // Gebruik /full/ endpoint zodat geneste GE-data beschikbaar is voor weergaveveld-berekening.
+          // De server kapt `size` af op 100: pagineer tot een onvolledige pagina (max. 20 pagina's).
+          const items = [];
+          for (let page = 1; page <= MAX_PAGINAS; page++) {
+            const res = await fetch(`${baseUrl}/full/${doelEntMeta.padnaam}?page=${page}&size=${PAGINA_GROOTTE}`);
+            if (!res.ok) break;
+            const json = await res.json();
+            // API retourneert { "<padnaam>": [...] }, bv. { "trefwoorden": [...] }
+            const pagina = Array.isArray(json)
+              ? json
+              : safeArray(json?.[doelEntMeta.padnaam] || json?.items || json?.data || json);
+            items.push(...pagina);
+            if (pagina.length < PAGINA_GROOTTE) break;
+          }
           const idKolom = doelEntMeta.idKolom || "id";
           const ids = items.map((it) => String(it[idKolom] ?? ""));
           // Bereken weergavelabels via CEL-expressies (zelfde als RepresentatieTabel)

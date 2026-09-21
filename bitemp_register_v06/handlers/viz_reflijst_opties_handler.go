@@ -8,14 +8,15 @@ import (
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/gin-gonic/gin"
+	"github.com/uptrace/bun"
 )
 
 // vindDataMeta zoekt de data-TypeMeta van een referentielijst_item-entiteit:
 // Entiteit → Hub GE (eerste onderliggende) → Data GE (via DataTypenaam).
-// Retourneert ook de EntiteitIDKolom van het hub-GE (bijv. "gemeente_id").
-func vindDataMeta(entiteitMeta model.TypeMeta) (dataMeta model.TypeMeta, entiteitIDKolom string, ok bool) {
+// Retourneert ook de hub-TypeMeta en de EntiteitIDKolom van het hub-GE (bijv. "gemeente_id").
+func vindDataMeta(entiteitMeta model.TypeMeta) (dataMeta, hubMeta model.TypeMeta, entiteitIDKolom string, ok bool) {
 	if len(entiteitMeta.OnderliggendeGegevenselementen) == 0 {
-		return model.TypeMeta{}, "", false
+		return model.TypeMeta{}, model.TypeMeta{}, "", false
 	}
 	// Vind het eerste hub-GE
 	for _, oge := range entiteitMeta.OnderliggendeGegevenselementen {
@@ -30,9 +31,9 @@ func vindDataMeta(entiteitMeta model.TypeMeta) (dataMeta model.TypeMeta, entitei
 		if !found {
 			continue
 		}
-		return dm, hubMeta.EntiteitIDKolom, true
+		return dm, hubMeta, hubMeta.EntiteitIDKolom, true
 	}
-	return model.TypeMeta{}, "", false
+	return model.TypeMeta{}, model.TypeMeta{}, "", false
 }
 
 // zoekbareKolommenVanFactory extraheert kolomnamen van string-velden uit een
@@ -114,7 +115,7 @@ func MaakVizReflijstOptiesHandler() gin.HandlerFunc {
 			return
 		}
 
-		dataMeta, entiteitIDKolom, ok := vindDataMeta(entiteitMeta)
+		dataMeta, hubMeta, entiteitIDKolom, ok := vindDataMeta(entiteitMeta)
 		if !ok || dataMeta.DBSliceFactory == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "data-type niet gevonden voor " + typenaam})
 			return
@@ -133,9 +134,16 @@ func MaakVizReflijstOptiesHandler() gin.HandlerFunc {
 
 		ctx := c.Request.Context()
 
+		// Alleen actieve data onder een actieve hub. Zonder de hub-join kan een
+		// data-rij die (door een inconsistente registratie) nog open staat onder een
+		// afgevoerde hub als dubbele optie verschijnen (zelfde entiteit-id twee keer).
 		query := DB.NewSelect().
-			Table(dataMeta.Tabelnaam).
-			Where("afvoer IS NULL").
+			TableExpr("? AS d", bun.Ident(dataMeta.Tabelnaam)).
+			Where("d.afvoer IS NULL").
+			Where("EXISTS (SELECT 1 FROM ? AS h WHERE h.? = d.? AND h.? = d.? AND h.afvoer IS NULL)",
+				bun.Ident(hubMeta.Tabelnaam),
+				bun.Ident(hubMeta.IDKolom), bun.Ident(hubMeta.IDKolom),
+				bun.Ident(entiteitIDKolom), bun.Ident(entiteitIDKolom)).
 			Limit(size)
 
 		// Optionele zoekterm
@@ -145,7 +153,7 @@ func MaakVizReflijstOptiesHandler() gin.HandlerFunc {
 			var args []interface{}
 			pattern := "%" + q + "%"
 			for _, col := range stringCols {
-				clauses = append(clauses, fmt.Sprintf("%s ILIKE ?", col))
+				clauses = append(clauses, fmt.Sprintf("d.%s ILIKE ?", col))
 				args = append(args, pattern)
 			}
 			query = query.Where("("+strings.Join(clauses, " OR ")+")", args...)
@@ -154,7 +162,9 @@ func MaakVizReflijstOptiesHandler() gin.HandlerFunc {
 		// Selecteer alleen de entiteit-ID-kolom en string-kolommen
 		selectCols := []string{entiteitIDKolom}
 		selectCols = append(selectCols, stringCols...)
-		query = query.Column(selectCols...)
+		for _, col := range selectCols {
+			query = query.ColumnExpr("d.?", bun.Ident(col))
+		}
 
 		rows, err := query.Rows(ctx)
 		if err != nil {

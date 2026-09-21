@@ -37,6 +37,9 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
   const [alleOpties, setAlleOpties] = useState(null); // alleen voor kleine lijsten
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef(null);
+  // Volgnummer van de laatste zoekopdracht: oudere, later binnenkomende
+  // antwoorden (bv. voor "Z" na "Zo") mogen de lijst niet overschrijven.
+  const zoekVolgnrRef = useRef(0);
 
   // Haal de label op van de huidige waarde (voor weergave in gesloten staat)
   const [selectedLabel, setSelectedLabel] = useState("");
@@ -114,15 +117,21 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
         );
       }
     } else {
-      // Server-side zoeken met debounce
+      // Server-side zoeken met debounce. `loading` direct aan, zodat tijdens de
+      // debounce niet kortstondig "Geen resultaten" verschijnt.
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(async () => {
-        setLoading(true);
-        const items = await fetchOpties(inputValue || "");
-        setOpties(items);
-        setLoading(false);
-      }, DEBOUNCE_MS);
+      setLoading(true);
+      debounceRef.current = setTimeout(() => zoekOpServer(inputValue || ""), DEBOUNCE_MS);
     }
+  }
+
+  async function zoekOpServer(q) {
+    const volgnr = ++zoekVolgnrRef.current;
+    setLoading(true);
+    const items = await fetchOpties(q);
+    if (volgnr !== zoekVolgnrRef.current) return; // verouderd antwoord
+    setOpties(items);
+    setLoading(false);
   }
 
   // Gecontroleerde inputValue: synct met selectedLabel zolang gebruiker niet typt.
@@ -177,7 +186,11 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
       if (!isOpen) {
         userTypingRef.current = false;
         setInputValue(selectedLabel || "");
+        return;
       }
+      // Grote lijst geopend zonder zoekterm (bv. via ▼): toon de eerste opties
+      // i.p.v. een lege lijst met "Geen resultaten".
+      if (!isKlein && !userTypingRef.current) zoekOpServer("");
     },
   });
 
@@ -193,7 +206,7 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
   }
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", minWidth: 300 }}>
       <div style={{ display: "flex", gap: 2 }}>
         <input
           className="utrecht-textbox utrecht-textbox--html-input"
@@ -234,6 +247,7 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
           position: "absolute",
           zIndex: 100,
           width: "100%",
+          minWidth: 280,
           maxHeight: 240,
           overflowY: "auto",
           margin: 0,
