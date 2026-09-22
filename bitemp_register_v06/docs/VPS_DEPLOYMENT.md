@@ -348,6 +348,11 @@ anders optie). Een snapshot is een noodrem, geen backup.
   commonground.nl) — in een iframe schakelt de pagina vanzelf naar embed-modus: alleen zoekveld,
   tabel en tabelnavigatie, zonder header, terug-link en titel (`web/vite/src/publicatie/embed.js`).
   Forceren kan met `?embed=1`, uitzetten met `?embed=0` (querystring vóór de `#`).
+- **Na een deploy nog de oude pagina** (bv. het logo in het iframe) — de browser toonde een oude
+  `publicatie.html` uit zijn cache, die naar de oude bundle verwijst. Sinds 22 september 2026 stuurt
+  de frontend-nginx `Cache-Control: no-cache` voor alles onder `/viz/react/` behalve `assets/`
+  (gehashte namen: een jaar `immutable`); zie `deploy/frontend/default.conf.template`. Met een
+  oudere frontend-image: hard herladen (Cmd/Ctrl+Shift+R) of een privévenster.
 - **Kolomkoppen als `Planning · startdatumPlanning`** — dan ontbreekt in die instantie een actieve
   standaard-`WeergaveDefinitie` voor het type, en toont de tabel de technische terugvalkolommen.
   Koppen, kolomkeuze, sortering en rijen per pagina zijn **data**, geen code: een nieuwe instantie

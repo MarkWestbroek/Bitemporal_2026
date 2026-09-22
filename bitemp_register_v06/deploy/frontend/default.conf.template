@@ -10,6 +10,15 @@
 #   NGINX_RESOLVER   DNS-server voor het per verzoek opzoeken van de API   (default 127.0.0.11 = Docker)
 #   FRAME_ANCESTORS  wie de Studio in een iframe mag tonen (CSP)           (default * = iedereen)
 #                    bv. "'self' https://www.commonground.nl"
+# Cache: HTML (en overige ongehashte bestanden) altijd opnieuw laten controleren, zodat een
+# nieuwe deploy direct zichtbaar is — ook in een iframe op een andere site. Zonder Cache-Control
+# gokt de browser zelf een bewaartijd en toont hij soms nog de oude publicatie.html (met de oude
+# bundle). De bestanden in assets/ hebben een hash in hun naam en mogen dus lang bewaard worden.
+map $uri $viz_cache_control {
+    ~^/viz/react/assets/  "public, max-age=31536000, immutable";
+    default               "no-cache";
+}
+
 server {
     listen 80;
     server_name _;
@@ -36,6 +45,7 @@ server {
     location /viz/react/ {
         # Inbedden in een iframe: instelbaar per instantie (default: vanuit elke origin).
         add_header Content-Security-Policy "frame-ancestors ${FRAME_ANCESTORS}" always;
+        add_header Cache-Control $viz_cache_control always;
         try_files $uri $uri/ /viz/react/index.html;
     }
 
