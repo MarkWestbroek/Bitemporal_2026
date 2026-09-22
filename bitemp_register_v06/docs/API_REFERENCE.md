@@ -397,19 +397,21 @@ Elke opvoer/afvoer in `wijzigingen[]` wordt geparseerd via `RepresentatiePlusNaa
 ## 11. GraphQL Endpoints
 
 ### `GET /graphql/playground`
-- **Handler**: `handlers.PlaygroundHandler()` (`graphql_handler.go`)
+- **Handler**: `dynql.PlaygroundHandler()` (`dynql/handler.go`)
 - **Description**: Serves the GraphQL Playground UI (interactive query explorer).
 - **Query params**: none
 
 ### `POST /graphql/query`
-- **Handler**: `handlers.GraphQLHandler()` (`graphql_handler.go`)
+- **Handler**: `dynql.GraphQLHandler()` (`dynql/handler.go`)
 - **Description**: GraphQL query execution endpoint (POST). Body: standard GraphQL JSON (`query`, `variables`, `operationName`).
 - **Query params**: none
+- **Autorisatie**: queries openbaar; een document met een `mutation` vereist rol `editor` (anders 401/403). Zie `AUTH_DEVELOPER_GUIDE.md` §3.6.
 
 ### `GET /graphql/query`
-- **Handler**: `handlers.GraphQLHandler()` (`graphql_handler.go`)
+- **Handler**: `dynql.GraphQLHandler()` (`dynql/handler.go`)
 - **Description**: GraphQL query execution endpoint (GET). Supports query via URL parameters (standard GraphQL-over-GET).
 - **Query params**: standard GraphQL GET params
+- **Autorisatie**: als bij POST.
 
 ---
 

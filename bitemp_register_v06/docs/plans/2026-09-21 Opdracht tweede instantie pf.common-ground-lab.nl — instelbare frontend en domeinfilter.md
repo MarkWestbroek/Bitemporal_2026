@@ -225,13 +225,17 @@ beleidsvraag toe aan iets dat snel moet laten zien hoe inbedden werkt; daarom la
   normaal gebruik), maar meet het na het starten.
 - Test: een verzoek dat het beleid moet weigeren, wordt ook echt geweigerd; een toegestaan verzoek
   komt erdoor; en app.omnium-ide.nl draait zonder PDP zoals nu.
+- **GraphQL-lezen (toegevoegd 22 september 2026):** de publicatiepagina haalt detailweergaven via
+  `POST /graphql/query` op, anoniem. De PEP maakt van elke POST de actie `write`; met OpenFTV aan
+  weigert het beleid dan het doorklikken naar een initiatief. Regel dat vóór het aanzetten: in het
+  beleid, of in de PEP met `dynql.BevatMutatie`. Zie `AUTH_DEVELOPER_GUIDE.md` §3.6.
 
 ## 5. Inbedden in een iframe: wat te verwachten en te testen
 
 | Onderdeel | Verwachting | Waarom |
 |---|---|---|
 | De Studio laden in een iframe op de Pleio-site | werkt | `frame-ancestors *`, geen `X-Frame-Options` |
-| Lezen binnen het iframe (publicatie, inhoud bekijken) | werkt | lezen vraagt geen sessie |
+| Lezen binnen het iframe (publicatie, inhoud bekijken) | werkt | lezen vraagt geen sessie (GraphQL-queries pas sinds 22 september 2026: zie `AUTH_DEVELOPER_GUIDE.md` §3.6) |
 | Inloggen en bewerken **binnen** het iframe | werkt **niet** | sessiecookie is `SameSite=Lax`; in een iframe op een ander domein is dat een cookie van een derde partij |
 | Inloggen en bewerken **rechtstreeks** op pf.common-ground-lab.nl | werkt | zelfde site, gewone cookie. **Dit is de afgesproken werkwijze** (§2) |
 

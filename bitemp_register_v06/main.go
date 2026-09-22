@@ -210,12 +210,16 @@ func NewRouter() *gin.Engine {
 		fmt.Println("WARN: GraphQL schema bouwen mislukt:", err)
 	} else {
 		// GraphQL kan zowel queries als mutaties uitvoeren en is op routeniveau
-		// niet te splitsen; daarom vereist het query-endpoint een ingelogde
-		// gebruiker (RequireAuth, no-op als AUTH_ENABLED=false). Fijnmaziger
-		// rol-checks per mutatie zijn vervolgwerk (zie BE-review §5.6).
+		// niet te splitsen; de handler kijkt daarom naar het document zelf.
+		// Queries zijn openbaar, net als de GET-routes van REST (de publicatiepagina
+		// haalt detail-templates via GraphQL op). Een document met een mutatie vereist
+		// rol "editor", net als de muterende REST-routes (no-op als AUTH_ENABLED=false).
+		// Tot 22-09-2026 stond het hele endpoint achter RequireAuth: dat sloot anoniem
+		// lezen af en liet een "viewer" wél muteren. Zie docs/AUTH_DEVELOPER_GUIDE.md §3.4.
+		magMuteren := func(c *gin.Context) bool { return middleware.ControleerRol(c, "editor") }
 		router.GET("/graphql/playground", dynql.PlaygroundHandler("/graphql/query"))
-		router.POST("/graphql/query", middleware.RequireAuth(), dynql.GraphQLHandler(gqlSchema))
-		router.GET("/graphql/query", middleware.RequireAuth(), dynql.GraphQLHandler(gqlSchema))
+		router.POST("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren))
+		router.GET("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren))
 		fmt.Println("GraphQL endpoint geregistreerd op /graphql/query")
 	}
 

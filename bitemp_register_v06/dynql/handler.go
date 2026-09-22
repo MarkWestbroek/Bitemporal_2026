@@ -11,10 +11,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/graphql-go/graphql"
+	"github.com/graphql-go/graphql/language/ast"
+	"github.com/graphql-go/graphql/language/parser"
 )
 
+// MutatieGuard beslist of een verzoek met een mutatie door mag. Bij false heeft de guard
+// het verzoek zelf al afgebroken (401/403). Zie middleware.ControleerRol.
+type MutatieGuard func(c *gin.Context) bool
+
 // GraphQLHandler retourneert een Gin handler die GraphQL queries verwerkt.
-func GraphQLHandler(schema *graphql.Schema) gin.HandlerFunc {
+//
+// Lezen en schrijven zijn op routeniveau niet te scheiden (één endpoint), daarom kijkt de
+// handler naar het document zelf: bevat het een mutatie, dan beslist magMuteren; queries
+// gaan zonder controle door, net als de GET-routes van REST (openbaar lezen). Zo kan de
+// publicatiepagina zonder inloggen een detail-template via GraphQL ophalen.
+// magMuteren == nil betekent: geen controle.
+func GraphQLHandler(schema *graphql.Schema, magMuteren MutatieGuard) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var params struct {
 			Query         string                 `json:"query"`
@@ -44,6 +56,10 @@ func GraphQLHandler(schema *graphql.Schema) gin.HandlerFunc {
 			return
 		}
 
+		if magMuteren != nil && BevatMutatie(params.Query) && !magMuteren(c) {
+			return
+		}
+
 		result := graphql.Do(graphql.Params{
 			Schema:         *schema,
 			RequestString:  params.Query,
@@ -54,6 +70,23 @@ func GraphQLHandler(schema *graphql.Schema) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, result)
 	}
+}
+
+// BevatMutatie meldt of een GraphQL-document een mutatie-operatie bevat. Bewust ruim: één
+// mutatie in het document is genoeg, ongeacht operationName, zodat een document met een query
+// én een mutatie niet via de operationName langs de controle kan. Een document dat niet te
+// parsen is, wordt door graphql.Do toch niet uitgevoerd (parse-fout) en telt als geen mutatie.
+func BevatMutatie(query string) bool {
+	doc, err := parser.Parse(parser.ParseParams{Source: query})
+	if err != nil {
+		return false
+	}
+	for _, def := range doc.Definitions {
+		if op, ok := def.(*ast.OperationDefinition); ok && op.Operation == ast.OperationTypeMutation {
+			return true
+		}
+	}
+	return false
 }
 
 // PlaygroundHandler serveert een simpele GraphQL Playground UI.

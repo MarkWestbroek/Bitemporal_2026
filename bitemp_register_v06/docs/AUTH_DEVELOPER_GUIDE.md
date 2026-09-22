@@ -192,9 +192,11 @@ Request binnenkomst
     │                        Als AUTHZ_PDP_ENABLED=false:
     │                          • Doet niets (c.Next())
     ▼
-[5] RequireAuth()           — Aangesloten op /graphql/query (BE-review 2026-07-07):
-    │                          • Checkt of "gebruiker" in context staat
-    │                          • Zo nee: 401 Unauthorized
+[5] GraphQL-mutatiecontrole — In de handler van /graphql/query (sinds 2026-09-22, zie §3.6):
+    │                          • Query → door, zonder login (net als REST-GET's)
+    │                          • Document met een mutatie → ControleerRol("editor"):
+    │                            anoniem 401, viewer 403
+    │                          (Van 2026-07-07 tot 2026-09-22: RequireAuth() op het hele endpoint.)
     ▼
 [6] RequireRol("editor")   — Aangesloten op alle muterende routes;
     │                        RequireRol("admin") op /admin/* en schema-activeren
@@ -218,6 +220,54 @@ if middleware.IsAuthEnabled() {
 ```
 
 Dit leest `ADMIN_USERNAME` en `ADMIN_PASSWORD` uit de environment en maakt (eenmalig) een admin-gebruiker aan als die nog niet bestaat.
+
+
+### 3.6 GraphQL: queries openbaar, mutaties vereisen `editor`
+
+`/graphql/query` (GET en POST) is **één endpoint voor lezen én schrijven**. Een route-middleware
+ziet het verschil niet; daarom beslist de handler op basis van het GraphQL-document zelf.
+
+| Verzoek | Anoniem | viewer | editor / admin |
+|---|---|---|---|
+| Query (`{ … }`, `query …`) | ✅ | ✅ | ✅ |
+| Document met een `mutation` | 401 | 403 | ✅ |
+
+Zo geldt voor GraphQL precies hetzelfde als voor REST: **lezen is openbaar, schrijven vraagt
+`editor`** (§8). Met `AUTH_ENABLED=false` is de controle een no-op.
+
+**Waarom (22 september 2026).** Tot die datum stond het hele endpoint achter `RequireAuth()`
+(BE-review 2026-07-07, als tijdelijke maatregel; fijnmazige controle stond als vervolgwerk genoteerd).
+Dat had twee gevolgen:
+
+1. **Anoniem lezen via GraphQL was dicht.** De publicatiepagina haalt de detailweergave via GraphQL
+   op zodra er een detail-template in de WeergaveDefinitie staat (diepe navigatie via FK's). Op
+   pf.common-ground-lab.nl kon je daardoor zonder inloggen wel de tabel zien (REST `/full/…`), maar
+   niet doorklikken naar een initiatief — ook niet in het iframe op commonground.nl, waar inloggen
+   niet kan.
+2. **Een `viewer` kon muteren.** `RequireAuth()` vraagt alleen *ingelogd*, geen rol; via REST
+   mag een viewer niets schrijven, via GraphQL wél.
+
+**Hoe.**
+
+- `dynql.BevatMutatie(query)` parset het document (graphql-go `parser`) en meldt of er **ergens** een
+  `mutation`-operatie in staat. Bewust ruim: een document met een query én een mutatie telt als
+  mutatie, ongeacht `operationName`. Zo kan niemand met `operationName` langs de controle.
+  Een document dat niet parset, telt als geen mutatie; `graphql.Do` voert het toch niet uit.
+- `dynql.GraphQLHandler(schema, magMuteren)` roept bij een mutatie `magMuteren(c)` aan. In `main.go`
+  is dat `middleware.ControleerRol(c, "editor")`: dezelfde controle als `RequireRol`, maar
+  aanroepbaar binnen een handler. Bij `false` is het verzoek al afgebroken met 401/403.
+- Tests: `dynql/handler_test.go` (anoniem/viewer/editor/admin, query+mutatie met `operationName`,
+  mutatie via GET).
+
+**Let op bij OpenFTV (`AUTHZ_PDP_ENABLED=true`).** De PEP (§3.4 stap 4) beoordeelt op methode en
+pad; `POST /graphql/query` wordt daar de actie `write`. Anoniem lezen via GraphQL-POST wordt dan
+door het beleid geweigerd. Bij het aanzetten van OpenFTV (bv. op pf, werkpakket F) dus óf het
+beleid lezen via `graphql` laten toestaan, óf de PEP voor `/graphql/query` hetzelfde onderscheid
+laten maken (`BevatMutatie` → `read`/`write`).
+
+**Nog open.** Anonieme queries kunnen dieper nesten dan één REST-aanroep. Lijsten zijn begrensd
+(max. 100 per niveau), maar er is geen limiet op diepte of complexiteit. Voor een openbare instantie
+met veel verkeer: een dieptegrens toevoegen.
 
 ---
 
@@ -587,7 +637,7 @@ heeft_minimaal_rol(vereist) if {
 | Pagina | Minimale rol | Toelichting |
 |--------|-------------|-------------|
 | index, tijdlijn, registraties, universum | - (publiek) | Altijd toegankelijk |
-| swagger, redoc, graphiql | - (publiek) | API-documentatie |
+| swagger, redoc, graphiql | - (publiek) | API-documentatie; GraphQL-mutaties vragen wel `editor` (§3.6) |
 | publicatie | - (publiek) | Schema publicatie |
 | editor-v2, editor, ide, inhoud | editor | UML/metamodel/inhoud editors |
 
