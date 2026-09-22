@@ -405,9 +405,9 @@ initiatieven(filter: { aanmeldstatus: { status: { eq: "geaccepteerd" } } }, limi
 
 Aandachtspunten, in volgorde van scherpte:
 
-1. **SQL-vorm.** De entiteit heeft geen eigen velden; filteren betekent altijd `EXISTS` over
-   hub + `_Data`. Het patroon staat al in `handlers/viz_reflijst_opties_handler.go`: data telt alleen
-   als de hub óók actief is.
+1. **SQL-vorm.** De entiteit heeft geen eigen *opgeslagen* velden (wel afgeleide, zie 7.6.1);
+   filteren betekent dus altijd `EXISTS` over hub + `_Data`. Het patroon staat al in
+   `handlers/viz_reflijst_opties_handler.go`: data telt alleen als de hub óók actief is.
 2. **Actief-zijn is een filter op zichzelf.** `afvoer IS NULL` op zowel hub als data, tenzij er een
    peiltijdstip is. De lijst-queries kennen nu **geen** `peiltijdstip` (alleen de detail-queries),
    dus filter en formele tijd moeten in één keer goed: "geldt dit predicaat op peilmoment T".
@@ -419,6 +419,31 @@ Aandachtspunten, in volgorde van scherpte:
    buiten scope blijven.
 5. **Kosten**: een `EXISTS` per predicaat. Met ~120 initiatieven irrelevant; als het generiek wordt,
    is een index op `(entiteit_id, rel_id)` plus `afvoer IS NULL` de aandacht waard.
+
+#### 7.6.1 Afgeleide velden zijn (nog) geen filterdoel
+
+Een entiteit heeft wél afgeleide velden — `weergavenaam` bijvoorbeeld — en daar wil je logischerwijs
+op kunnen filteren. Dat kan nu niet: afgeleide velden worden **in Go berekend ná het laden**
+(`verrijkEigenAfgeleideVelden`, `dynql/query_resolvers.go:1056-1071`, over de al platgeslagen
+entity-map). De database kent ze niet, dus SQL kan er niet op filteren.
+
+| Route | Hoe | Prijs |
+|---|---|---|
+| na afloop filteren | laden, verrijken, dan in Go filteren | breekt paginering: je filtert ná `LIMIT`, dus "25 per pagina" klopt niet meer. Werkt alleen zolang je alles ophaalt (wat de publicatiepagina nu toevallig doet) |
+| afleidingsregel naar SQL vertalen | concatenatie/vergelijking is uit te drukken | **twee implementaties van dezelfde regel** die uit elkaar lopen; `leeftijd(...)` is al grensgeval |
+| materialiseren | bij registratie berekenen en als kolom opslaan | één implementatie, gewoon filteren én sorteren. Maar bij een gewijzigde afleidingsregel moet je herberekenen — en dan verandert de *historische* waarde |
+
+Die laatste afweging is dezelfde als bij de reflijst-pinning (§6.2): bevriest een opgeslagen afgeleide
+waarde de oude regel, of herschrijft herberekening het verleden? Voor een weergavenaam is
+herberekenen prima; voor iets met juridische betekenis niet.
+
+**Keuze:** stap 1 dekt alleen echte kolommen. Route 1 voor incidenteel gebruik, **materialiseren**
+voor de velden waarop structureel gefilterd of gesorteerd wordt, en vertalen naar SQL alleen als de
+afleidingstaal ooit een echte SQL-backend krijgt.
+
+**Sorteren heeft exact hetzelfde probleem**: server-side sorteren op `weergavenaam` kan vandaag ook
+niet. De bestaande work-around staat in de reflijst-combobox: die zoekt met `ILIKE` op de
+onderliggende stringkolommen van de data-tabel, niet op de afgeleide naam.
 
 ### 7.7 Volgorde
 
