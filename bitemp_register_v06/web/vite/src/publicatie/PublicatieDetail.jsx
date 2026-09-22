@@ -9,14 +9,17 @@ import {
   segmentNaarString,
   resolveVeldpadUitContext,
   buildGraphQLQuery,
+  verwerkVoorwaarden,
+  normaliseerLink,
 } from "./publicatieUtils";
 
 /**
- * Vervangt alle {{veldpad}} placeholders in een template met waarden uit de CEL-context.
+ * Vult een detail-template: eerst de voorwaardelijke blokken ({{#if veldpad}} … {{/if}},
+ * zie verwerkVoorwaarden), dan alle {{veldpad}} placeholders met waarden uit de context.
  */
 function renderTemplate(template, ctx) {
   if (!template) return "";
-  return template.replace(/\{\{([^}]+)\}\}/g, (_, veldpad) => {
+  return verwerkVoorwaarden(template, ctx).replace(/\{\{([^}]+)\}\}/g, (_, veldpad) => {
     const waarde = resolveVeldpadUitContext(ctx, veldpad.trim());
     if (waarde == null) return "";
     // Escape pipes zodat ze markdown-tabellen niet breken
@@ -122,11 +125,12 @@ function markdownNaarHtml(md) {
   html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
   html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
 
-  // Links: [tekst](url) — alleen http(s), mailto en relatieve URLs toegestaan
+  // Links: [tekst](url) — alleen http(s), mailto, paden vanaf "/" en kale domeinen
+  // (die krijgen https://, zie normaliseerLink)
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, tekst, url) => {
-    const veilig = /^(https?:|mailto:|\/)/i.test(url);
-    if (!veilig) return `[${tekst}](${url})`;
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${tekst}</a>`;
+    const href = normaliseerLink(url);
+    if (!href) return `[${tekst}](${url})`;
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer">${tekst}</a>`;
   });
 
   // Bold: **tekst**

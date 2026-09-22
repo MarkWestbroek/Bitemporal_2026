@@ -90,15 +90,75 @@ export function resolveVeldpadUitContext(ctx, veldpad) {
   return huidig ?? null;
 }
 
+// ─── Links ───────────────────────────────────────────────────────────────────
+
+/**
+ * Maakt van een URL uit een template een bruikbare link, of null als hij niet veilig is.
+ * http(s), mailto en paden vanaf "/" blijven zoals ze zijn. Een kaal domein zoals
+ * "openwoo.app" of "www.signalen.org/over" (zo staat het vaak in de data) krijgt "https://";
+ * zonder dat zou de browser het als pad binnen de publicatiepagina lezen.
+ */
+export function normaliseerLink(url) {
+  const u = String(url ?? "").trim();
+  if (/^(https?:|mailto:|\/)/i.test(u)) return u;
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?([/?#]\S*)?$/i.test(u)) return `https://${u}`;
+  return null;
+}
+
+// ─── Voorwaardelijke blokken ─────────────────────────────────────────────────
+
+/**
+ * Verwerkt voorwaardelijke blokken in een detail-template (vóór het invullen van {{veldpad}}):
+ *
+ *   {{#if veldpad}} … {{/if}}                 alleen tonen als veldpad een waarde heeft
+ *   {{#if veldpad}} … {{else}} … {{/if}}      anders het tweede deel
+ *   {{#unless veldpad}} … {{/unless}}         alleen tonen als veldpad leeg is
+ *
+ * Bedoeld om labels bij lege velden weg te laten, bijv.
+ *   {{#if producten.git_repo}} - Git: {{producten.git_repo}}{{/if}}
+ *
+ * "Heeft een waarde": niet null/undefined, niet "" (na trim), geen lege lijst en niet false.
+ * De voorwaarde is een veldpad met dezelfde syntax als {{…}}, inclusief [veld=waarde]-filters;
+ * extractVeldpaden neemt hem mee in de GraphQL-query. Blokken mogen genest worden.
+ */
+export function verwerkVoorwaarden(template, ctx) {
+  if (!template) return "";
+  // Binnenste blok eerst: een blok zonder geneste #if/#unless erin.
+  const re = /\{\{#(if|unless)\s+([^}]+?)\s*\}\}((?:(?!\{\{#(?:if|unless)\s)[\s\S])*?)\{\{\/\1\}\}/;
+  let uit = template;
+  let m;
+  while ((m = re.exec(uit)) !== null) {
+    const [geheel, soort, veldpad, inhoud] = m;
+    const [dan, anders = ""] = inhoud.split("{{else}}");
+    let waar = heeftWaarde(resolveVeldpadUitContext(ctx, veldpad.trim()));
+    if (soort === "unless") waar = !waar;
+    uit = uit.slice(0, m.index) + (waar ? dan : anders) + uit.slice(m.index + geheel.length);
+  }
+  return uit;
+}
+
+function heeftWaarde(w) {
+  if (w == null || w === false) return false;
+  if (Array.isArray(w)) return w.length > 0;
+  return String(w).trim() !== "";
+}
+
 // ─── GraphQL query builder ───────────────────────────────────────────────────
 
-/** Extraheert alle unieke {{veldpad}} placeholders uit een template. */
+/**
+ * Extraheert alle unieke veldpaden uit een template: de {{veldpad}} placeholders én de
+ * voorwaarden van {{#if veldpad}} / {{#unless veldpad}}. {{else}}, {{/if}} en {{/unless}}
+ * zijn geen veldpaden.
+ */
 export function extractVeldpaden(template) {
   const paden = new Set();
   const re = /\{\{([^}]+)\}\}/g;
   let match;
   while ((match = re.exec(template)) !== null) {
-    paden.add(match[1].trim());
+    const inhoud = match[1].trim();
+    if (inhoud === "else" || inhoud.startsWith("/")) continue;
+    const voorwaarde = /^#(?:if|unless)\s+(.+)$/.exec(inhoud);
+    paden.add(voorwaarde ? voorwaarde[1].trim() : inhoud);
   }
   return [...paden];
 }

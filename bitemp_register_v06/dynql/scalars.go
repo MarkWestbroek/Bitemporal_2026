@@ -26,6 +26,14 @@ var DateTimeScalar = graphql.NewScalar(graphql.ScalarConfig{
 				return nil
 			}
 			return v.Format(time.RFC3339)
+		case string:
+			// De resolvers zetten entiteiten om via een JSON-roundtrip (entityToMap), dus
+			// tijdstippen komen hier als tekst binnen (RFC 3339, zoals REST ze geeft).
+			// Zonder deze case was elk tijdstip in GraphQL null (opgelost 22-09-2026).
+			if v == "" {
+				return nil
+			}
+			return v
 		default:
 			return nil
 		}
@@ -72,6 +80,13 @@ var DateScalar = graphql.NewScalar(graphql.ScalarConfig{
 				return nil
 			}
 			return v.String()
+		case string:
+			// Via de JSON-roundtrip in entityToMap komt een datum als tekst binnen
+			// ("2020-03-12"). Zie DateTimeScalar; tot 22-09-2026 werd dit null.
+			if v == "" {
+				return nil
+			}
+			return v
 		default:
 			return nil
 		}

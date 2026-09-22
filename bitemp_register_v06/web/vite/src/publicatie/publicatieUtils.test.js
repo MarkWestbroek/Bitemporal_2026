@@ -15,6 +15,8 @@ import {
   treeNaarGql,
   buildGraphQLQuery,
   filterWaardeGelijk,
+  verwerkVoorwaarden,
+  normaliseerLink,
 } from "./publicatieUtils.js";
 
 // ─── parseSegment ─────────────────────────────────────────────────────────────
@@ -208,4 +210,47 @@ test("resolveVeldpadUitContext: [rol=Maakt_gebruik_van] vindt echte waarde met s
   };
   assert.equal(resolveVeldpadUitContext(ctx, "gemeenten[rol=Maakt_gebruik_van].naam"), "Gouda");
   assert.equal(resolveVeldpadUitContext(ctx, "gemeenten[rol=Maakt gebruik van].naam"), "Gouda");
+});
+
+// ─── verwerkVoorwaarden ({{#if}} / {{#unless}}) ──────────────────────────────
+
+const vwCtx = {
+  producten: { naam: "OpenWoo.app", git_repo: "", website: "openwoo.app" },
+  contacten: [],
+  gemeenten: [{ rol: "Maakt gebruik van", naam: "Gouda" }],
+};
+
+test("verwerkVoorwaarden: #if met en zonder waarde", () => {
+  const t = "A{{#if producten.naam}} - Naam: {{producten.naam}}{{/if}}{{#if producten.git_repo}} - Git: x{{/if}}B";
+  assert.equal(verwerkVoorwaarden(t, vwCtx), "A - Naam: {{producten.naam}}B");
+});
+
+test("verwerkVoorwaarden: else, unless, lege lijst, ontbrekend veld", () => {
+  assert.equal(verwerkVoorwaarden("{{#if producten.git_repo}}ja{{else}}nee{{/if}}", vwCtx), "nee");
+  assert.equal(verwerkVoorwaarden("{{#unless producten.git_repo}}leeg{{/unless}}", vwCtx), "leeg");
+  assert.equal(verwerkVoorwaarden("{{#if contacten}}x{{/if}}", vwCtx), "");
+  assert.equal(verwerkVoorwaarden("{{#if bestaat.niet}}x{{/if}}", vwCtx), "");
+});
+
+test("verwerkVoorwaarden: genest, over meerdere regels, met filter", () => {
+  const t = "{{#if producten.naam}}\nKop\n{{#if gemeenten[rol=Maakt_gebruik_van].naam}}G{{/if}}{{#if producten.git_repo}}X{{/if}}\n{{/if}}";
+  assert.equal(verwerkVoorwaarden(t, vwCtx), "\nKop\nG\n");
+});
+
+test("extractVeldpaden: neemt voorwaarden mee, slaat else en sluittags over", () => {
+  const t = "{{#if a.b}}{{c}}{{else}}{{d}}{{/if}}{{#unless e}}f{{/unless}}";
+  assert.deepEqual(extractVeldpaden(t).sort(), ["a.b", "c", "d", "e"]);
+});
+
+// ─── normaliseerLink ─────────────────────────────────────────────────────────
+
+test("normaliseerLink: schema's blijven, kaal domein krijgt https, rest geweigerd", () => {
+  assert.equal(normaliseerLink("https://x.nl/a"), "https://x.nl/a");
+  assert.equal(normaliseerLink("mailto:a@b.nl"), "mailto:a@b.nl");
+  assert.equal(normaliseerLink("/pad"), "/pad");
+  assert.equal(normaliseerLink("openwoo.app"), "https://openwoo.app");
+  assert.equal(normaliseerLink("www.signalen.org/over?x=1"), "https://www.signalen.org/over?x=1");
+  assert.equal(normaliseerLink("javascript:alert(1)"), null);
+  assert.equal(normaliseerLink("geen link"), null);
+  assert.equal(normaliseerLink(""), null);
 });
