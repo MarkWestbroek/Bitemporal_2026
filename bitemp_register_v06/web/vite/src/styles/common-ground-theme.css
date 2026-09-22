@@ -263,6 +263,23 @@
   padding: 0.75rem 0;
 }
 
+.cg-pagination__status {
+  font-size: 0.875rem;
+  color: var(--cg-donkergrijs);
+}
+
+.cg-pagination__grootte {
+  font-size: 0.875rem;
+  padding: 2px 6px;
+}
+
+/* Filterveld per kolom in de publicatietabel */
+.cg-kolomfilter {
+  width: 100%;
+  font-size: 0.8125rem;
+  padding: 2px 4px;
+}
+
 /* Formulier card */
 .cg-form-card {
   background: var(--cg-wit);

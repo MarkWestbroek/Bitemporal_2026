@@ -9,6 +9,7 @@ import { SchemaProvider, useSchema } from "../context/SchemaContext";
 import "@utrecht/component-library-css";
 import "@utrecht/design-tokens/dist/index.css";
 import "../styles/common-ground-theme.css";
+import "./embed.css"; // alleen actief onder .cg-embed
 
 import PublicatieTabel from "./PublicatieTabel";
 import PublicatieDetail from "./PublicatieDetail";
@@ -94,7 +95,7 @@ function PublicatieApp() {
     <AuthProvider>
       <SchemaProvider baseUrl={baseUrl}>
         <div
-          className="common-ground-theme"
+          className={isEmbed ? "common-ground-theme cg-embed" : "common-ground-theme"}
           style={{
             display: "flex",
             flexDirection: "column",
