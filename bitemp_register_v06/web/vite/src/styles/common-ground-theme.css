@@ -273,6 +273,23 @@
   padding: 2px 6px;
 }
 
+/* Detailpagina van de publicatie */
+.cg-publicatie-detail__kop {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cg-publicatie-detail__terug {
+  color: var(--cg-blauw);
+  text-decoration: none;
+}
+
+.cg-publicatie-detail__inhoud {
+  max-width: 800px;
+}
+
 /* Filterveld per kolom in de publicatietabel */
 .cg-kolomfilter {
   width: 100%;

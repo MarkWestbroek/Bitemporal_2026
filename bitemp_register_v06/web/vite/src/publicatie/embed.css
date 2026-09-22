@@ -5,6 +5,7 @@
  * Waarden gemeten op commonground.nl (22 september 2026):
  *   font        Rijksoverheid Sans, 16px, regelhoogte 24px, tekst zwart
  *   grijzen     Pleio-palet: #f5f5f5, #e3e3e3, #c9c9c9, #949494
+ *   koppen      h1 30px/38px vet #2e4057; h3 20px/28px vet zwart; links #2e4057
  *
  * Het font laden we rechtstreeks van commonground.nl: die server staat dat toe
  * (Access-Control-Allow-Origin: *), en zo hosten we het font niet zelf. Verandert Pleio de
@@ -48,6 +49,7 @@
   --cg-embed-lijn: #e3e3e3;
   --cg-embed-zacht: #f5f5f5;
   --cg-embed-gedempt: #595959;
+  --cg-embed-accent: #2e4057; /* Pleio: paginatitels en links */
 
   font-family: var(--cg-embed-font);
   font-size: 16px;
@@ -150,4 +152,80 @@
   border: 1px solid var(--cg-embed-rand);
   border-radius: 4px;
   background: #fff;
+}
+
+/* Detailpagina: de inhoud (gerenderd detail-template) zonder kaart, koppen en tabellen als Pleio */
+.cg-embed .cg-publicatie-detail__terug {
+  color: var(--cg-embed-accent);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.cg-embed .cg-publicatie-detail__terug:hover {
+  text-decoration: underline;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud h1 {
+  font-size: 1.875rem;
+  line-height: 2.375rem;
+  font-weight: bold;
+  color: var(--cg-embed-accent);
+  margin: 0 0 0.25rem;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud h2 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: bold;
+  color: #000;
+  margin: 0 0 1rem;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud h3 {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: bold;
+  color: #000;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud p {
+  margin: 0.75rem 0;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud a {
+  color: var(--cg-embed-accent);
+  text-decoration: underline;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud table {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud th,
+.cg-embed .cg-publicatie-detail__inhoud td {
+  border: 0;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  text-align: left;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud th {
+  background: none;
+  color: #000;
+  border-bottom: 2px solid #000;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud td {
+  border-bottom: 1px solid var(--cg-embed-lijn);
 }

@@ -14,6 +14,7 @@ import {
   buildSelectieTree,
   treeNaarGql,
   buildGraphQLQuery,
+  filterWaardeGelijk,
 } from "./publicatieUtils.js";
 
 // ─── parseSegment ─────────────────────────────────────────────────────────────
@@ -186,4 +187,25 @@ test("buildGraphQLQuery: bevat padnaam en id", () => {
 test("buildGraphQLQuery: entiteitId als string wordt geconverteerd naar number", () => {
   const query = buildGraphQLQuery("{{naam}}", "gemeenten", "7");
   assert.ok(query.includes("id: 7"), "id moet als getal in query staan");
+});
+
+// ─── filterWaardeGelijk (enum-waarden met spaties) ───────────────────────────
+
+test("filterWaardeGelijk: exact, en enum-naam tegen echte waarde (beide kanten)", () => {
+  assert.equal(filterWaardeGelijk("Realiseert", "Realiseert"), true);
+  assert.equal(filterWaardeGelijk("Maakt gebruik van", "Maakt_gebruik_van"), true);
+  assert.equal(filterWaardeGelijk("Maakt_gebruik_van", "Maakt gebruik van"), true);
+  assert.equal(filterWaardeGelijk("Maakt gebruik van", "Realiseert"), false);
+  assert.equal(filterWaardeGelijk(null, ""), true);
+});
+
+test("resolveVeldpadUitContext: [rol=Maakt_gebruik_van] vindt echte waarde met spaties", () => {
+  const ctx = {
+    gemeenten: [
+      { rol: "Realiseert", naam: "Epe" },
+      { rol: "Maakt gebruik van", naam: "Gouda" },
+    ],
+  };
+  assert.equal(resolveVeldpadUitContext(ctx, "gemeenten[rol=Maakt_gebruik_van].naam"), "Gouda");
+  assert.equal(resolveVeldpadUitContext(ctx, "gemeenten[rol=Maakt gebruik van].naam"), "Gouda");
 });

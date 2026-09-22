@@ -34,6 +34,25 @@ export function segmentNaarString(seg) {
 }
 
 /**
+ * Vergelijkt een waarde met de waarde uit een [veld=waarde]-filter. Exact gelijk, óf gelijk
+ * na dezelfde omzetting als de GraphQL-enumnamen in de backend (dynql sanitizeEnumValue:
+ * spatie en koppelteken → "_", overige tekens weg). Zo werken beide schrijfwijzen:
+ * [rol=Maakt gebruik van] en [rol=Maakt_gebruik_van]. Die laatste staat in bestaande
+ * detail-templates: tot 22-09-2026 gaf GraphQL enum-velden terug als enum-naam.
+ */
+export function filterWaardeGelijk(waarde, filterWaarde) {
+  const a = String(waarde ?? "");
+  if (a === filterWaarde) return true;
+  return enumNaam(a) === enumNaam(filterWaarde);
+}
+
+function enumNaam(s) {
+  return String(s ?? "")
+    .replace(/[ -]/g, "_")
+    .replace(/[^A-Za-z0-9_]/g, "");
+}
+
+/**
  * Resolvet een veldpad (bijv. "Naam.roepnaam") naar een waarde uit een context-object.
  * Ondersteunt:
  * - Arrays: meervoudige GE's/relaties worden gejoind met ", "
@@ -62,9 +81,7 @@ export function resolveVeldpadUitContext(ctx, veldpad) {
     }
     huidig = huidig[key];
     if (filter && Array.isArray(huidig)) {
-      huidig = huidig.filter(
-        (item) => String(item?.[filter.veld] ?? "") === filter.waarde
-      );
+      huidig = huidig.filter((item) => filterWaardeGelijk(item?.[filter.veld], filter.waarde));
     }
   }
   if (Array.isArray(huidig)) {

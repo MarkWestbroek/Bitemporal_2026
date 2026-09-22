@@ -128,10 +128,16 @@ var JSONScalar = graphql.NewScalar(graphql.ScalarConfig{
 
 // goTypeToGraphQL mapt een Go reflect.Type naar het juiste graphql.Output type.
 // Wordt gebruikt door field_builder om struct-velden te vertalen.
+//
+// Enum-velden worden in de UITVOER een gewone String met de echte waarde (bijv.
+// "Doorontwikkeling en beheer"), niet een GraphQL-enum. Een GraphQL-enum geeft zijn
+// naam terug, en die mag alleen [_A-Za-z0-9] bevatten (sanitizeEnumValue): de gebruiker
+// zag dan "Doorontwikkeling_en_beheer", terwijl REST de echte waarde toont. Voor INVOER
+// (mutaties, goTypeToGraphQLInput) blijft het een enum, zodat waarden gecontroleerd worden.
+// Gewijzigd 22-09-2026; zie docs/API_REFERENCE.md §11.
 func goTypeToGraphQL(goType string, format string, enumValues []string) graphql.Output {
-	// Enum: als er enum-waarden zijn, maak een GraphQL enum type
 	if len(enumValues) > 0 {
-		return makeEnumType(goType, enumValues)
+		return graphql.String
 	}
 
 	switch goType {

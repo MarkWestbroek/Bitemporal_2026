@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router";
+import { isEmbedModus } from "./embed";
 import { useSchema } from "../context/SchemaContext";
 import { useWeergaveDefinitie } from "../hooks/useWeergaveDefinitie";
 import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
@@ -322,20 +323,24 @@ export default function PublicatieDetail() {
     return <div style={{ padding: "2rem", color: "var(--cg-donkergrijs)" }}>Laden…</div>;
   }
 
+  // In embed-modus (iframe) geen eigen titel: het detail-template heeft er zelf een.
+  const isEmbed = isEmbedModus();
+
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-        <Link to={`/t/${typePad}`} style={{ color: "var(--cg-blauw)", textDecoration: "none" }}>
+    <div className="cg-publicatie-detail">
+      <div className="cg-publicatie-detail__kop">
+        <Link to={`/t/${typePad}`} className="cg-publicatie-detail__terug">
           ← Terug naar lijst
         </Link>
-        <h2 className="utrecht-heading-2" style={{ margin: 0 }}>
-          {typeMeta.klassenaam || typeMeta.typenaam} #{id}
-        </h2>
+        {!isEmbed && (
+          <h2 className="utrecht-heading-2" style={{ margin: 0 }}>
+            {typeMeta.klassenaam || typeMeta.typenaam} #{id}
+          </h2>
+        )}
       </div>
 
       <div
-        className="cg-form-card"
-        style={{ maxWidth: 800 }}
+        className="cg-form-card cg-publicatie-detail__inhoud"
         dangerouslySetInnerHTML={{ __html: gerenderdHtml }}
       />
     </div>

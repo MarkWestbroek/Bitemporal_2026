@@ -406,6 +406,7 @@ Elke opvoer/afvoer in `wijzigingen[]` wordt geparseerd via `RepresentatiePlusNaa
 - **Description**: GraphQL query execution endpoint (POST). Body: standard GraphQL JSON (`query`, `variables`, `operationName`).
 - **Query params**: none
 - **Autorisatie**: queries openbaar; een document met een `mutation` vereist rol `editor` (anders 401/403). Zie `AUTH_DEVELOPER_GUIDE.md` §3.6.
+- **Enum-velden**: in responses de echte waarde als String (`"Maakt gebruik van"`), gelijk aan REST; in mutatie-invoer een GraphQL-enum (`Maakt_gebruik_van`). Sinds 22-09-2026; zie `graphql-enum-handling.md`.
 
 ### `GET /graphql/query`
 - **Handler**: `dynql.GraphQLHandler()` (`dynql/handler.go`)
