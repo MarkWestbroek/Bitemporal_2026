@@ -12,6 +12,28 @@ import {
   verwerkVoorwaarden,
   normaliseerLink,
 } from "./publicatieUtils";
+import {
+  INTROSPECTIE_QUERY,
+  bouwSchemaIndex,
+  rootTypeVoor,
+  normaliseerTemplatePaden,
+} from "./graphqlPaden";
+
+// Het GraphQL-schema verandert niet tijdens een bezoek: één introspectie per pagina.
+let schemaIndexBelofte = null;
+function haalSchemaIndex(baseUrl) {
+  if (!schemaIndexBelofte) {
+    schemaIndexBelofte = fetch(`${baseUrl}/graphql/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: INTROSPECTIE_QUERY }),
+    })
+      .then((res) => res.json())
+      .then((json) => bouwSchemaIndex(json?.data))
+      .catch(() => null); // zonder schema: template ongewijzigd gebruiken
+  }
+  return schemaIndexBelofte;
+}
 
 /**
  * Vult een detail-template: eerst de voorwaardelijke blokken ({{#if veldpad}} … {{/if}},
@@ -180,7 +202,7 @@ export default function PublicatieDetail() {
     );
   }, [types, typePad]);
 
-  const { detailTemplate, loading: wdLoading, error: wdError } =
+  const { detailTemplate: ruwTemplate, loading: wdLoading, error: wdError } =
     useWeergaveDefinitie(typeMeta?.typenaam);
 
   const [entity, setEntity] = useState(null);
@@ -189,11 +211,38 @@ export default function PublicatieDetail() {
 
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
+  // Veldpaden in het template afstemmen op het GraphQL-schema (klassenamen, overgeslagen
+  // stappen, onbekende paden; zie graphqlPaden.js). Query en weergave gebruiken daarna
+  // allebei het genormaliseerde template. { bron, template }: bron = het ruwe template
+  // waarvoor de normalisatie klaar is.
+  const [genormaliseerd, setGenormaliseerd] = useState({ bron: null, template: null });
+  useEffect(() => {
+    if (!ruwTemplate || !baseUrl || !apiPath) return;
+    let weg = false;
+    haalSchemaIndex(baseUrl).then((index) => {
+      if (weg) return;
+      const { template, onbekend } = normaliseerTemplatePaden(
+        ruwTemplate,
+        index,
+        rootTypeVoor(index, apiPath)
+      );
+      if (onbekend.length > 0) {
+        console.warn("[PublicatieDetail] veldpaden niet in het GraphQL-schema, blijven leeg:", onbekend);
+      }
+      setGenormaliseerd({ bron: ruwTemplate, template });
+    });
+    return () => {
+      weg = true;
+    };
+  }, [ruwTemplate, baseUrl, apiPath]);
+  const templateKlaar = !ruwTemplate || genormaliseerd.bron === ruwTemplate;
+  const detailTemplate = ruwTemplate && templateKlaar ? genormaliseerd.template : null;
+
   // Haal de full entity op.
   // Met detailTemplate → GraphQL (ondersteunt diepe navigatie via forward FK).
   // Zonder template → REST /full/ (fallback voor generieke weergave).
   useEffect(() => {
-    if (!apiPath || !baseUrl || !id || wdLoading) return;
+    if (!apiPath || !baseUrl || !id || wdLoading || !templateKlaar) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -246,7 +295,7 @@ export default function PublicatieDetail() {
     return () => {
       cancelled = true;
     };
-  }, [baseUrl, apiPath, id, detailTemplate, wdLoading]);
+  }, [baseUrl, apiPath, id, detailTemplate, wdLoading, templateKlaar]);
 
   // Bouw CEL-context uit de entity data.
   // GraphQL: response is al geflattend — direct als context.
@@ -323,7 +372,7 @@ export default function PublicatieDetail() {
     return <div className="cg-feedback--fout">Fout: {error || wdError}</div>;
   }
 
-  if (loading || wdLoading) {
+  if (loading || wdLoading || !templateKlaar) {
     return <div style={{ padding: "2rem", color: "var(--cg-donkergrijs)" }}>Laden…</div>;
   }
 

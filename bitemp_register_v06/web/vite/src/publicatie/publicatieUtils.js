@@ -158,7 +158,9 @@ export function extractVeldpaden(template) {
     const inhoud = match[1].trim();
     if (inhoud === "else" || inhoud.startsWith("/")) continue;
     const voorwaarde = /^#(?:if|unless)\s+(.+)$/.exec(inhoud);
-    paden.add(voorwaarde ? voorwaarde[1].trim() : inhoud);
+    const pad = voorwaarde ? voorwaarde[1].trim() : inhoud;
+    if (pad.startsWith("__")) continue; // __onbekend: pad dat niet in het schema bestaat (graphqlPaden.js)
+    paden.add(pad);
   }
   return [...paden];
 }

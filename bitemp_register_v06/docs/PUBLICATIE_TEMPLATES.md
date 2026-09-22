@@ -3,17 +3,19 @@
 Naslag voor het `template_tekst`-veld van een **WeergaveDefinitie** (GE `DetailTemplate`). Het
 template bepaalt de detailpagina van één entiteit in `publicatie.html#/t/<type>/<id>`.
 
-Code: `web/vite/src/publicatie/PublicatieDetail.jsx` (renderen, Markdown) en
-`web/vite/src/publicatie/publicatieUtils.js` (veldpaden, filters, voorwaarden, GraphQL-query).
-Tests: `publicatieUtils.test.js` (`node --test src/publicatie/publicatieUtils.test.js`).
+Code: `web/vite/src/publicatie/PublicatieDetail.jsx` (renderen, Markdown),
+`web/vite/src/publicatie/publicatieUtils.js` (veldpaden, filters, voorwaarden, GraphQL-query) en
+`web/vite/src/publicatie/graphqlPaden.js` (paden afstemmen op het schema).
+Tests: `node --test src/publicatie/publicatieUtils.test.js src/publicatie/graphqlPaden.test.js`.
 
 ## Hoe het werkt
 
-1. De pagina leest alle veldpaden uit het template (`extractVeldpaden`) en bouwt daaruit **één
+1. De paden in het template worden afgestemd op het GraphQL-schema (zie onder).
+2. De pagina leest alle veldpaden uit het template (`extractVeldpaden`) en bouwt daaruit **één
    GraphQL-query** (`buildGraphQLQuery`). Alleen wat in het template staat, wordt opgehaald.
-2. Eerst worden de **voorwaardelijke blokken** verwerkt (`verwerkVoorwaarden`), daarna de
+3. Eerst worden de **voorwaardelijke blokken** verwerkt (`verwerkVoorwaarden`), daarna de
    **placeholders** ingevuld.
-3. Het resultaat is Markdown en wordt omgezet naar HTML (een eigen, beperkte omzetter, zie onder).
+4. Het resultaat is Markdown en wordt omgezet naar HTML (een eigen, beperkte omzetter, zie onder).
 
 Zonder detail-template valt de pagina terug op REST (`/full/<type>/<id>`) en toont alle velden.
 
@@ -32,6 +34,36 @@ Zonder detail-template valt de pagina terug op REST (`/full/<type>/<id>`) en too
 - **Filter `[veld=waarde]`**: vergelijkt exact, óf na omzetting naar enum-naam. `[rol=Maakt gebruik van]`
   en `[rol=Maakt_gebruik_van]` zijn dus gelijk (`filterWaardeGelijk`). Gebruik bij voorkeur de echte
   waarde. Zie `graphql-enum-handling.md`.
+
+## Paden worden afgestemd op het GraphQL-schema
+
+GraphQL kent **veldnamen**, geen klassenamen, en vraagt elke stap expliciet. Het juiste pad naar de
+naam van een gekoppelde gemeente is dus:
+
+```
+{{initiatief_gemeenten[rol=Realiseert].gemeente.gemeentegegevens.naam}}
+```
+
+Omdat template-auteurs vaak denken zoals in de CEL-expressie van een weergavenaam
+(`GemeenteGegevens.naam`), legt de pagina elk pad eerst naast het schema
+(`graphqlPaden.js`, `normaliseerTemplatePaden`; schema via introspectie, één keer per bezoek).
+Per segment:
+
+1. exacte veldnaam, of dezelfde naam met andere hoofdletters (`Producten` → `producten`);
+2. **klassenaam van een GE** → het veld van dat type (`GemeenteGegevens` → `gemeentegegevens`,
+   `Organisatienaam` → `organisatienamen`);
+3. **één overgeslagen stap** wordt ingevoegd als die eenduidig is:
+   `initiatief_gemeenten.GemeenteGegevens.naam` → `….gemeente.gemeentegegevens.naam`, en
+   `….gemeente.naam` → `….gemeente.gemeentegegevens.naam`. `aanvang`, `einde`, `data` en
+   `gerelateerde_*` tellen niet mee. Bij meer dan één kandidaat (bv. `organisatie.naam`: zowel
+   `organisatienamen` als `organisatiecontactgegevens` hebben `naam`) wordt niet geraden.
+
+Een pad dat niet bestaat, wordt **leeg** (in een voorwaarde: onwaar) en staat als waarschuwing in de
+browserconsole. Vroeger liet één onbekend veld de hele GraphQL-query mislukken, en dan bleef de hele
+detailpagina leeg.
+
+Tip: schrijf in een template bij voorkeur het volledige pad; dat werkt ook zonder normalisatie.
+De GraphiQL-pagina (`/graphql/playground`) toont welke velden er zijn.
 
 ## Voorwaardelijke blokken: labels bij lege velden weglaten
 
