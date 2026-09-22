@@ -1,0 +1,231 @@
+/*
+ * Embed-stijl voor de publicatiepagina — alleen actief onder .cg-embed (zie embed.js).
+ *
+ * Doel: in het iframe op commonground.nl (Pleio) naadloos aansluiten op de pagina eromheen.
+ * Waarden gemeten op commonground.nl (22 september 2026):
+ *   font        Rijksoverheid Sans, 16px, regelhoogte 24px, tekst zwart
+ *   grijzen     Pleio-palet: #f5f5f5, #e3e3e3, #c9c9c9, #949494
+ *   koppen      h1 30px/38px vet #2e4057; h3 20px/28px vet zwart; links #2e4057
+ *
+ * Het font laden we rechtstreeks van commonground.nl: die server staat dat toe
+ * (Access-Control-Allow-Origin: *), en zo hosten we het font niet zelf. Verandert Pleio de
+ * bestandsnamen (er zit een hash in), dan valt de pagina terug op sans-serif — lelijker,
+ * niet kapot.
+ */
+
+@font-face {
+  font-family: "Rijksoverheid Sans";
+  src:
+    url("https://commonground.nl/static/fonts/rijksoverheidsanswebtext-regular-webfont.b64ae9c9e044.woff2") format("woff2"),
+    url("https://commonground.nl/static/fonts/rijksoverheidsanswebtext-regular-webfont.3b32e523c23e.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rijksoverheid Sans";
+  src:
+    url("https://commonground.nl/static/fonts/rijksoverheidsanswebtext-bold-webfont.6348afc479a9.woff2") format("woff2"),
+    url("https://commonground.nl/static/fonts/rijksoverheidsanswebtext-bold-webfont.63a486815b7b.woff") format("woff");
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rijksoverheid Sans";
+  src:
+    url("https://commonground.nl/static/fonts/rijksoverheidsanswebtext-italic-webfont.9bbd8ebcefad.woff2") format("woff2"),
+    url("https://commonground.nl/static/fonts/rijksoverheidsanswebtext-italic-webfont.16933de989a0.woff") format("woff");
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+.cg-embed {
+  --cg-embed-font: "Rijksoverheid Sans", sans-serif;
+  --cg-embed-rand: #c9c9c9;
+  --cg-embed-lijn: #e3e3e3;
+  --cg-embed-zacht: #f5f5f5;
+  --cg-embed-gedempt: #595959;
+  --cg-embed-accent: #2e4057; /* Pleio: paginatitels en links */
+
+  font-family: var(--cg-embed-font);
+  font-size: 16px;
+  line-height: 1.5;
+  color: #000;
+}
+
+/* Formulierelementen erven het font niet vanzelf (browserdefault is Arial/system). */
+.cg-embed input,
+.cg-embed select,
+.cg-embed button,
+.cg-embed table {
+  font-family: inherit;
+  color: inherit;
+}
+
+.cg-embed *,
+.cg-embed *::before,
+.cg-embed *::after {
+  box-sizing: border-box; /* filtervelden met width 100% passen dan in hun kolom */
+}
+
+/* Zoekveld */
+.cg-embed .utrecht-textbox {
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--cg-embed-rand);
+  border-radius: 4px;
+  background: #fff;
+  margin-bottom: 0.25rem;
+}
+
+/* Tabel */
+.cg-embed .utrecht-table__header-cell {
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid #000;
+}
+
+.cg-embed .utrecht-table__cell {
+  font-size: 1rem;
+  line-height: 1.5;
+  vertical-align: top;
+  border-bottom: 1px solid var(--cg-embed-lijn);
+}
+
+.cg-embed .utrecht-table__row {
+  background: #fff !important; /* geen zebrastrepen: rustiger naast de Pleio-pagina */
+}
+
+.cg-embed .cg-table-row-clickable:hover {
+  background: var(--cg-embed-zacht) !important;
+}
+
+.cg-embed thead tr:nth-child(2) th {
+  background: #fff !important;
+  padding: 0.25rem 0.75rem 0.5rem !important;
+}
+
+.cg-embed .cg-kolomfilter {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--cg-embed-rand);
+  border-radius: 4px;
+  background: #fff;
+}
+
+/* Paginering */
+.cg-embed .cg-pagination {
+  flex-wrap: wrap;
+  padding: 1rem 0;
+}
+
+.cg-embed .cg-pagination .utrecht-button {
+  font-size: 1rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--cg-embed-rand);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.cg-embed .cg-pagination .utrecht-button:disabled {
+  color: var(--cg-embed-gedempt);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.cg-embed .cg-pagination__status {
+  font-size: 0.875rem;
+  color: var(--cg-embed-gedempt);
+}
+
+.cg-embed .cg-pagination__grootte {
+  font-size: 0.875rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--cg-embed-rand);
+  border-radius: 4px;
+  background: #fff;
+}
+
+/* Detailpagina: de inhoud (gerenderd detail-template) zonder kaart, koppen en tabellen als Pleio */
+.cg-embed .cg-publicatie-detail__terug {
+  color: var(--cg-embed-accent);
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.cg-embed .cg-publicatie-detail__terug:hover {
+  text-decoration: underline;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud h1 {
+  font-size: 1.875rem;
+  line-height: 2.375rem;
+  font-weight: bold;
+  color: var(--cg-embed-accent);
+  margin: 0 0 0.25rem;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud h2 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: bold;
+  color: #000;
+  margin: 0 0 1rem;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud h3 {
+  font-size: 1.125rem;
+  line-height: 1.625rem;
+  font-weight: bold;
+  color: #000;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud p {
+  margin: 0.75rem 0;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud a {
+  color: var(--cg-embed-accent);
+  text-decoration: underline;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud table {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 1.25rem;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud th,
+.cg-embed .cg-publicatie-detail__inhoud td {
+  border: 0;
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  text-align: left;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud th {
+  background: none;
+  color: #000;
+  border-bottom: 2px solid #000;
+}
+
+.cg-embed .cg-publicatie-detail__inhoud td {
+  border-bottom: 1px solid var(--cg-embed-lijn);
+}

@@ -12,6 +12,7 @@ import { useSchema } from "../context/SchemaContext";
 import { useWeergaveDefinitie } from "../hooks/useWeergaveDefinitie";
 import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
 import { bouwReflijstOptieLabel } from "../shared/celEvaluator";
+import { isEmbedModus } from "./embed";
 
 /**
  * Resolvet een veldpad (bijv. "namen.data.roepnaam" of "id") naar een waarde
@@ -365,16 +366,21 @@ export default function PublicatieTabel() {
     return <div className="cg-feedback--fout">Fout: {error || wdError}</div>;
   }
 
+  // In embed-modus (iframe) alleen zoekveld + tabel + paginering: geen terug-link en titel.
+  const isEmbed = isEmbedModus();
+
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-        <Link to="/" style={{ color: "var(--cg-blauw)", textDecoration: "none" }}>
-          ← Terug
-        </Link>
-        <h2 className="utrecht-heading-2" style={{ margin: 0 }}>
-          {typeMeta.klassenaam || typeMeta.typenaam}
-        </h2>
-      </div>
+      {!isEmbed && (
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+          <Link to="/" style={{ color: "var(--cg-blauw)", textDecoration: "none" }}>
+            ← Terug
+          </Link>
+          <h2 className="utrecht-heading-2" style={{ margin: 0 }}>
+            {typeMeta.klassenaam || typeMeta.typenaam}
+          </h2>
+        </div>
+      )}
 
       {/* Zoekbalk */}
       <div style={{ marginBottom: "0.75rem" }}>
@@ -435,7 +441,7 @@ export default function PublicatieTabel() {
                         header.column.setFilterValue(e.target.value || undefined)
                       }
                       placeholder="Filter…"
-                      style={{ width: "100%", fontSize: "0.8125rem", padding: "2px 4px" }}
+                      className="cg-kolomfilter"
                     />
                   ) : null}
                 </th>
@@ -492,7 +498,7 @@ export default function PublicatieTabel() {
         >
           ← Vorige
         </button>
-        <span style={{ fontSize: "0.875rem", color: "var(--cg-donkergrijs)" }}>
+        <span className="cg-pagination__status">
           Pagina {table.getState().pagination.pageIndex + 1} van {table.getPageCount()}
           {" "}({table.getFilteredRowModel().rows.length} van {data.length} records)
         </span>
@@ -508,7 +514,7 @@ export default function PublicatieTabel() {
           onChange={(e) =>
             setPagination((p) => ({ ...p, pageSize: Number(e.target.value), pageIndex: 0 }))
           }
-          style={{ fontSize: "0.875rem", padding: "2px 6px" }}
+          className="cg-pagination__grootte"
           aria-label="Rijen per pagina"
         >
           {[10, 25, 50, 100].map((n) => (

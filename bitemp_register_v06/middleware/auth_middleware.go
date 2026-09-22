@@ -173,28 +173,39 @@ func RequireAuth() gin.HandlerFunc {
 // Rolhiërarchie: admin > editor > viewer.
 func RequireRol(minimaalRol string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !IsAuthEnabled() {
-			c.Next()
-			return
-		}
-
-		val, exists := c.Get(ContextKeyGebruiker)
-		if !exists {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"error": "Authenticatie vereist.",
-			})
-			return
-		}
-
-		claims := val.(*JWTClaims)
-		if !rolToegestaan(claims.Rol, minimaalRol) {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": fmt.Sprintf("Onvoldoende rechten. Vereist: %s, huidig: %s.", minimaalRol, claims.Rol),
-			})
+		if !ControleerRol(c, minimaalRol) {
 			return
 		}
 		c.Next()
 	}
+}
+
+// ControleerRol doet dezelfde controle als RequireRol, maar binnen een handler: voor
+// endpoints waar pas ná het lezen van het verzoek duidelijk is of er geschreven wordt
+// (GraphQL: query of mutatie). Geeft true als het verzoek door mag; anders is het
+// verzoek al afgebroken met 401 of 403 en moet de handler stoppen.
+// No-op (true) als AUTH_ENABLED=false.
+func ControleerRol(c *gin.Context, minimaalRol string) bool {
+	if !IsAuthEnabled() {
+		return true
+	}
+
+	val, exists := c.Get(ContextKeyGebruiker)
+	if !exists {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"error": "Authenticatie vereist.",
+		})
+		return false
+	}
+
+	claims := val.(*JWTClaims)
+	if !rolToegestaan(claims.Rol, minimaalRol) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+			"error": fmt.Sprintf("Onvoldoende rechten. Vereist: %s, huidig: %s.", minimaalRol, claims.Rol),
+		})
+		return false
+	}
+	return true
 }
 
 // rolToegestaan controleert of de huidige rol voldoende is voor de vereiste rol.

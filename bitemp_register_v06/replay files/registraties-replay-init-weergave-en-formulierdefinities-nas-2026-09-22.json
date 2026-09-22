@@ -1,0 +1,315 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-22T12:36:17.000Z",
+  "source": "export://maak_definities_replay.py",
+  "description": "Actuele WeergaveDefinities en FormulierDefinities (alleen de geldende versie per GE, geen historie). Laad na de referentietabellen. Bron: NAS-instantie, 22 september 2026.",
+  "count": 5,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-22T12:36:17.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie voor NatuurlijkPersoon",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "WeergaveDefinitie 1 voor ENT NatuurlijkPersoon (actuele stand, geëxporteerd)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": {
+                "id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 1,
+                "naam": "Natuurlijk Persoon standaardweergave",
+                "beschrijving": "Standaard tabel- en detailweergave voor NatuurlijkPersoon entiteiten.",
+                "doeltype": "NatuurlijkPersoon",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": 1,
+                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"namen.data.roepnaam\",\"label\":\"Roepnaam\",\"breedte\":140,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"namen.data.achternaam\",\"label\":\"Achternaam\",\"breedte\":160,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"namen.data.tussenvoegsel\",\"label\":\"Tussenvoegsel\",\"breedte\":100},{\"veldpad\":\"persoonsidentificaties.data.bsn\",\"label\":\"BSN\",\"breedte\":120,\"filterbaar\":true},{\"veldpad\":\"burgerschappen.data.nationaliteit\",\"label\":\"Nationaliteit\",\"breedte\":130}],\"standaardSortering\":{\"veld\":\"id\",\"richting\":\"asc\"},\"rijenPerPagina\":25}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": 1,
+                "template_tekst": "# {{namen.data.roepnaam}} {{namen.data.tussenvoegsel}} {{namen.data.achternaam}}\n\n**BSN:** {{persoonsidentificaties.data.bsn}}\n\n**Nationaliteit:** {{burgerschappen.data.nationaliteit}}\n\n**Naamgebruik:** {{naamgebruiken.data.naamgebruik}}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": 1,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-22T12:36:17.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie voor Initiatief",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "WeergaveDefinitie 2 voor ENT Initiatief (actuele stand, geëxporteerd)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": {
+                "id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 2,
+                "naam": "Initiatief standaardweergave",
+                "beschrijving": "Standaard tabel- en detailweergave voor Initiatief entiteiten.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": 2,
+                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.naam\",\"label\":\"Productnaam\",\"breedte\":180,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.type\",\"label\":\"Type\",\"breedte\":120,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.CG_laag\",\"label\":\"CG-laag\",\"breedte\":120},{\"veldpad\":\"initiatief_domeinen.weergavenaam\",\"label\":\"Domeinen\",\"breedte\":180,\"sorteerbaar\":false,\"filterbaar\":true},{\"veldpad\":\"planningen.data.fase\",\"label\":\"Fase\",\"breedte\":120,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"planningen.data.startdatum\",\"label\":\"Startdatum\",\"breedte\":120,\"sorteerbaar\":true}],\"standaardSortering\":{\"veld\":\"id\",\"richting\":\"asc\"},\"rijenPerPagina\":25}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": 2,
+                "template_tekst": "# {{producten.naam}}\n## {{producten.data.type}}\n\n| **Korte omschrijving** | **Fase initiatief** | **Common Ground La(a)g(en)** |\n| --- | --- | --- |\n| {{producten.omschrijving}} | {{planningen.fase}} | {{producten.CG_laag}} |\n\n| Realiserende gemeenten | Gebruik makende gemeente | Domein |\n| --- | --- | --- |\n| {{initiatief_gemeenten[rol=Realiseert].weergavenaam}} | {{initiatief_gemeenten[rol=Maakt_gebruik_van].weergavenaam}} | tbd |\n\n[Website]({{producten.website}}) - Git: {{producten.git_repo}} - Contactpersoon: {{initiatief_organisaties.organisatie.contactpersonen.persoon.persoonnamen.naam}} - emailAdres: - startdatum: {{planningen.startdatum}} Betrokken leveranciers: - ",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": 2,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-22T12:36:17.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie voor A",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "WeergaveDefinitie 3 voor ENT A (actuele stand, geëxporteerd)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": {
+                "id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 3,
+                "naam": "A standaardweergave",
+                "beschrijving": "Standaard tabel- en detailweergave voor testentiteit A.",
+                "doeltype": "A",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": 3,
+                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"us.data.aaa\",\"label\":\"AAA\",\"breedte\":150,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"us.data.bbb\",\"label\":\"BBB\",\"breedte\":150},{\"veldpad\":\"vs.data.ccc\",\"label\":\"CCC\",\"breedte\":120},{\"veldpad\":\"ws.data.float\",\"label\":\"Float\",\"breedte\":100},{\"veldpad\":\"ws.data.heel\",\"label\":\"Heel\",\"breedte\":100}],\"standaardSortering\":{\"veld\":\"id\",\"richting\":\"asc\"},\"rijenPerPagina\":25}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": 3,
+                "template_tekst": "# A {{id}}\n\n**AAA:** {{us.data.aaa}}\n**BBB:** {{us.data.bbb}}\n\n## V-gegevens\n**CCC:** {{vs.data.ccc}}\n**DDD:** {{vs.data.ddd}}\n\n## W-gegevens\n**Float:** {{ws.data.float}}\n**Heel:** {{ws.data.heel}}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": 3,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-22T12:36:17.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie voor Land",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "WeergaveDefinitie 4 voor ENT Land (actuele stand, geëxporteerd)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": {
+                "id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 4,
+                "naam": "Land standaardweergave",
+                "beschrijving": "Standaard tabel- en detailweergave voor Land entiteiten.",
+                "doeltype": "Land",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": 4,
+                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"landcodes.data.landcode\",\"label\":\"Landcode\",\"breedte\":100,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"landnamen.data.landnaam\",\"label\":\"Landnaam\",\"breedte\":200,\"sorteerbaar\":true,\"filterbaar\":true}],\"standaardSortering\":{\"veld\":\"landcodes.data.landcode\",\"richting\":\"asc\"},\"rijenPerPagina\":50}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": 4,
+                "template_tekst": "# {{landnamen.data.landnaam}}\n\n**Landcode:** {{landcodes.data.landcode}}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": 4,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-22T12:36:17.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "FormulierDefinitie voor Initiatief",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "FormulierDefinitie 1 voor ENT Initiatief (actuele stand, geëxporteerd)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "formulierdefinitie": {
+                "id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": 1,
+                "naam": "Initiatief voorbeeldformulier",
+                "beschrijving": "Voorbeeld van een custom formulierlayout voor ENT Initiatief, over meerdere GE's heen.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "layout": {
+                "formulierdefinitie_id": 1,
+                "layout_json": "{\"type\":\"formulier\",\"elementen\":[{\"type\":\"groep\",\"label\":\"Product\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"naam\"},{\"type\":\"veld\",\"veld\":\"omschrijving\"},{\"type\":\"veld\",\"veld\":\"pitch\"},{\"type\":\"rij\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"website\",\"breedte\":\"50%\"},{\"type\":\"veld\",\"veld\":\"git_repo\",\"breedte\":\"50%\"}]},{\"type\":\"veld\",\"veld\":\"type\"},{\"type\":\"veld\",\"veld\":\"CG_laag\"}]},{\"type\":\"groep\",\"label\":\"Planning\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"planningsinfo\"},{\"type\":\"rij\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"startdatum\",\"breedte\":\"50%\"},{\"type\":\"veld\",\"veld\":\"ready_for_use\",\"breedte\":\"50%\"}]},{\"type\":\"veld\",\"veld\":\"fase\"},{\"type\":\"veld\",\"veld\":\"waar_tegenaan_gelopen\"}]},{\"type\":\"conditioneel\",\"als\":\"git_repo\",\"dan\":[{\"type\":\"groep\",\"label\":\"Repository aanwezig\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"git_repo\"}]}]}]}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_aanvang": {
+                "formulierdefinitie_id": 1,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}

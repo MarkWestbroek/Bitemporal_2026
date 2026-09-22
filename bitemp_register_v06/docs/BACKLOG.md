@@ -969,7 +969,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F21 | ✅ SchemaFormField: widget-rendering op basis van datatype weergave-hints | F1-Q1Q2Q3 plan |
 | F22 | ✅ Custom tabelweergaven (WeergaveDefinitie ENT + PublicatieTabel + TabelConfig kolom-selectie/sortering) | F1-Q1Q2Q3 Fase Q2 |
 | F23 | ✅ Server-side zoek/filter endpoint: `?filter.*`, `?sort=`, `?order=`, `total_count` in response | F1-Q1Q2Q3 Fase Q2 |
-| F24 | ✅ Detail-pagina template renderer (PublicatieDetail met `{{veldpad}}` inserts via CEL-paden) | F1-Q1Q2Q3 Fase Q2 |
+| F24 | ✅ Detail-pagina template renderer (PublicatieDetail met `{{veldpad}}` inserts via CEL-paden; sinds 22-09-2026 ook `{{#if}}`/`{{#unless}}`, zie `PUBLICATIE_TEMPLATES.md`) | F1-Q1Q2Q3 Fase Q2 |
 | F31 | ✅ WeergaveDefinitie bitemporale entiteit (codegen configuratie-domein: ENT + Meta/TabelConfig/DetailTemplate GE's) | F1-Q1Q2Q3 Fase Q2 |
 | F32 | ✅ useWeergaveDefinitie hook + publicatie.html apart entrypoint (HashRouter, server-side paginering) | F1-Q1Q2Q3 Fase Q2 |
 | F33 | ✅ Replay file: standaard WeergaveDefinities voor NatuurlijkPersoon, Initiatief, A en Land (v0.1, hub-veldnamen, definitie_versie) | F1-Q1Q2Q3 Fase Q2 |

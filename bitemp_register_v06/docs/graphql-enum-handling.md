@@ -1,7 +1,8 @@
 # GraphQL Enum Handling — Analyse en Oplossing
 
-> Datum: 16 april 2026
-> Status: **Opgelost** — enum cache-bug gefixt, gedrag gedocumenteerd
+> Datum: 16 april 2026, bijgewerkt 22 september 2026
+> Status: **Opgelost** — enum cache-bug gefixt (april); underscores in de uitvoer opgelost met
+> Strategie 1, alleen voor uitvoer (september). Zie [Huidige keuze](#huidige-keuze).
 
 ## Probleem
 
@@ -145,19 +146,27 @@ Override de `Serialize()` methode om `Value` te retourneren i.p.v. `Name`. Dit s
 
 ### Huidige keuze
 
-Voorlopig blijft de huidige implementatie (enum-types met sanitized namen) behouden. Zodra templates met spatie-enums nodig zijn, is **Strategie 1** het eenvoudigst te implementeren: vervang in `goTypeToGraphQL()` de enum-aanmaak door `graphql.String`:
+**Besluit 22 september 2026: Strategie 1, alleen voor de uitvoer, plus een tolerant template-filter.**
 
-```go
-func goTypeToGraphQL(goType string, format string, enumValues []string) graphql.Output {
-    // Strategie 1: geen GQL enums, gebruik String
-    // if len(enumValues) > 0 {
-    //     return graphql.String
-    // }
-    // ... rest
-}
-```
+Aanleiding: op pf.common-ground-lab.nl toonde de publicatie-detailpagina (die via GraphQL laadt)
+`Doorontwikkeling_en_beheer` en `Laag_5`, terwijl de tabel (REST) `Doorontwikkeling en beheer` en
+`Laag 5` liet zien.
 
-De schema-API (`/api/schema/model`) blijft de enum-waarden tonen via de V3-veldmeta, zodat de frontend nog steeds dropdown-lijsten kan bouwen.
+1. **Uitvoer: `graphql.String`.** `goTypeToGraphQL()` (`dynql/scalars.go`) geeft voor enum-velden
+   `graphql.String` terug. GraphQL levert nu dezelfde waarden als REST en de database.
+2. **Invoer: enum blijft.** `goTypeToGraphQLInput()` (`dynql/input_type_builder.go`) maakt nog steeds
+   een GraphQL-enum. Mutaties blijven dus gevalideerd; het nadeel "geen server-side validatie" van
+   Strategie 1 geldt hier niet. In een mutatie schrijf je een enum nog steeds als naam
+   (`Maakt_gebruik_van`); graphql-go zet die om naar de echte waarde.
+3. **Template-filter tolerant** (`filterWaardeGelijk` in `web/vite/src/publicatie/publicatieUtils.js`):
+   `[rol=Maakt gebruik van]` en `[rol=Maakt_gebruik_van]` matchen allebei. Bestaande templates
+   (o.a. de Initiatief-WeergaveDefinitie) gebruiken de underscore-vorm en blijven zo werken.
+   Nieuwe templates: gebruik gewoon de echte waarde.
+
+**Gevolg voor GraphQL-clients:** een enum-veld in een response is nu de echte waarde
+(`"Maakt gebruik van"`) in plaats van de enum-naam (`"Maakt_gebruik_van"`). Introspectie toont voor
+uitvoervelden geen lijst van toegestane waarden meer; die staat in de schema-API
+(`/api/schema/model`) en bij de invoertypen.
 
 ## Relatie met andere systemen
 
@@ -166,16 +175,19 @@ De schema-API (`/api/schema/model`) blijft de enum-waarden tonen via de V3-veldm
 | **Database** | `"Maakt gebruik van"` (origineel) | Go type alias + Bun |
 | **REST API** (`/full/...`) | `"Maakt gebruik van"` (origineel) | JSON marshal van Go struct |
 | **Schema API** (`/api/schema/model`) | Enum-waarden als array in veldmeta | V3 JSON exporter |
-| **GraphQL** | `"Maakt_gebruik_van"` (gesanitized) | graphql-go enum Serialize |
+| **GraphQL — uitvoer** | `"Maakt gebruik van"` (origineel; tot 22-09-2026 gesanitized) | `graphql.String` |
+| **GraphQL — invoer (mutaties)** | enum-naam `Maakt_gebruik_van` | graphql-go enum, gevalideerd |
 | **Frontend formulieren** | Dropdown met originele waarden | Schema API |
-| **Template [key=value] filter** | Moet matchen met GraphQL-response | PublicatieDetail |
+| **Template [key=value] filter** | Beide vormen matchen (`filterWaardeGelijk`) | PublicatieDetail |
 
 ## Betrokken bestanden
 
 | Bestand | Rol |
 |---------|-----|
 | `dynql/field_builder.go` | `fieldsVoorMeta()` — fix voor enum cache collision |
-| `dynql/scalars.go` | `makeEnumType()`, `sanitizeEnumValue()`, `goTypeToGraphQL()` |
+| `dynql/scalars.go` | `makeEnumType()`, `sanitizeEnumValue()`, `goTypeToGraphQL()` (uitvoer: String) |
+| `dynql/input_type_builder.go` | `goTypeToGraphQLInput()` (invoer: enum) |
+| `web/vite/src/publicatie/publicatieUtils.js` | `filterWaardeGelijk()` — tolerant `[key=value]`-filter |
 | `dynql/type_builder.go` | `buildObjectType()` — merget data-velden in hub-type |
 | `model/*_enum_registry.go` | Registratie van enum-waarden per domein |
 | `model/*_modellen_ge_rel.go` | Go type-aliassen (bijv. `type Gemeenterol string`) |

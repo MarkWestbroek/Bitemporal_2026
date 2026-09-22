@@ -344,6 +344,30 @@ anders optie). Een snapshot is een noodrem, geen backup.
   zonder pad: met een pad weigert de container te starten), `FRAME_ANCESTORS` (wie de Studio in een
   iframe mag tonen; default `*`) en `NGINX_RESOLVER` (default `127.0.0.11`, de DNS van Docker).
   De opstartregel `frontend: API_UPSTREAM=…` in `docker logs` laat zien wat er geldt.
+- **Publicatiepagina in een iframe** (bv. `pf…/viz/react/publicatie.html#/t/initiatieven` op
+  commonground.nl) — in een iframe schakelt de pagina vanzelf naar embed-modus: alleen zoekveld,
+  tabel en tabelnavigatie, zonder header, terug-link en titel (`web/vite/src/publicatie/embed.js`).
+  Forceren kan met `?embed=1`, uitzetten met `?embed=0` (querystring vóór de `#`).
+  De opmaak volgt dan commonground.nl (`publicatie/embed.css`, alleen onder `.cg-embed`):
+  Rijksoverheid Sans 16px/24px, geladen van commonground.nl (CORS `*`, dus niet zelf gehost),
+  zonder zebrastrepen, met het grijspalet van Pleio. De detailpagina volgt ook: geen eigen titel en
+  geen kaart, titel 30px vet `#2e4057` en tabellen als in de lijst. Wijzigt Pleio de gehashte fontnamen, dan valt
+  de tabel terug op sans-serif; pas dan de URL's in `embed.css` aan.
+- **Na een deploy nog de oude pagina** (bv. het logo in het iframe) — de browser toonde een oude
+  `publicatie.html` uit zijn cache, die naar de oude bundle verwijst. Sinds 22 september 2026 stuurt
+  de frontend-nginx `Cache-Control: no-cache` voor alles onder `/viz/react/` behalve `assets/`
+  (gehashte namen: een jaar `immutable`); zie `deploy/frontend/default.conf.template`. Met een
+  oudere frontend-image: hard herladen (Cmd/Ctrl+Shift+R) of een privévenster.
+- **Kolomkoppen als `Planning · startdatumPlanning`** — dan ontbreekt in die instantie een actieve
+  standaard-`WeergaveDefinitie` voor het type, en toont de tabel de technische terugvalkolommen.
+  Koppen, kolomkeuze, sortering en rijen per pagina zijn **data**, geen code: een nieuwe instantie
+  (pf, app.omnium-ide.nl) heeft ze pas na het laden van de WeergaveDefinities (op de NAS: vier,
+  o.a. `Initiatief`). Controle: `curl -s https://<host>/full/weergave_definities`.
+  Laden: `replay files/registraties-replay-init-weergave-en-formulierdefinities-nas-2026-09-22.json`
+  (vier WeergaveDefinities + de FormulierDefinitie voor Initiatief, actuele stand van de NAS), na
+  de referentietabellen. Opnieuw maken vanaf een instantie:
+  `python3 scripts/maak_definities_replay.py --bron <url> --uit <bestand>` — alleen de geldende
+  versie per GE, geen historie. Het bestand bevat geen hostnaam; zet die er ook niet in (publiek repo).
 - **`$` in wachtwoorden** — compose leest het als variabele. `.env.example` genereert ze zonder.
 - **`minio-init` stopt** — hoort zo; daarom achter `--profile init`.
 - **OpenFTV** — `openftv_adl` database, `package authz` in de rego, bundle-403: zie TrueNAS §2.3–2.6.
