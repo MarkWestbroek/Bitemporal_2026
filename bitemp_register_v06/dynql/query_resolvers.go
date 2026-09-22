@@ -43,22 +43,7 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			return nil, fmt.Errorf("id argument is verplicht")
 		}
 
-		// Peiltijdstip argument (optioneel)
-		// peiltijdstip heeft voorrang; als die ontbreekt, kijk naar t (integer shorthand)
-		var peiltijdstip *time.Time
-		if pt, ok := p.Args["peiltijdstip"]; ok && pt != nil {
-			if t, ok := pt.(time.Time); ok {
-				peiltijdstip = &t
-			}
-		}
-		if peiltijdstip == nil {
-			if tVal, ok := p.Args["t"]; ok && tVal != nil {
-				if tInt, ok := tVal.(int); ok {
-					pt := tijdstipUitT(tInt)
-					peiltijdstip = &pt
-				}
-			}
-		}
+		peiltijdstip := peiltijdstipUitArgs(p.Args)
 
 		entity := meta.Factory()
 		query := db.NewSelect().Model(entity)
@@ -100,6 +85,58 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	}
 }
 
+// peiltijdstipUitArgs leest het optionele formele peiltijdstip uit de argumenten.
+// peiltijdstip heeft voorrang; als die ontbreekt, kijk naar t (integer shorthand).
+func peiltijdstipUitArgs(args map[string]interface{}) *time.Time {
+	if pt, ok := args["peiltijdstip"]; ok && pt != nil {
+		if t, ok := pt.(time.Time); ok {
+			return &t
+		}
+	}
+	if tVal, ok := args["t"]; ok && tVal != nil {
+		if tInt, ok := tVal.(int); ok {
+			pt := tijdstipUitT(tInt)
+			return &pt
+		}
+	}
+	return nil
+}
+
+// lijstQuery bouwt de gemeenschappelijke basis van de lijst-queries: formele tijd op
+// de entiteit, het filter-argument, een vaste volgorde en paginering.
+// Zonder vaste volgorde levert paginering met limit/offset willekeurige pagina's op.
+func lijstQuery(p graphql.ResolveParams, meta model.TypeMeta, entities interface{}, peil *time.Time) (*bun.SelectQuery, error) {
+	limit := 20
+	offset := 0
+	if l, ok := p.Args["limit"]; ok && l != nil {
+		if v, ok := l.(int); ok && v > 0 {
+			if v > 100 {
+				limit = 100
+			} else {
+				limit = v
+			}
+		}
+	}
+	if o, ok := p.Args["offset"]; ok && o != nil {
+		if v, ok := o.(int); ok && v >= 0 {
+			offset = v
+		}
+	}
+
+	query := db.NewSelect().Model(entities)
+	if peil != nil {
+		query = applyFormeleTijdFilter(query, meta.Typenaam, *peil)
+	}
+	query, err := pasFilterToe(query, meta, p.Args["filter"], peil)
+	if err != nil {
+		return nil, err
+	}
+	if meta.IDKolom != "" {
+		query = query.OrderExpr("?TableAlias.? ASC", bun.Ident(meta.IDKolom))
+	}
+	return query.Limit(limit).Offset(offset), nil
+}
+
 // makeListResolver maakt een resolver voor een lijst van entiteiten/representaties met paginering.
 func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
@@ -110,30 +147,12 @@ func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			return nil, fmt.Errorf("SliceFactory ontbreekt voor type %s", meta.Typenaam)
 		}
 
-		limit := 20
-		offset := 0
-		if l, ok := p.Args["limit"]; ok && l != nil {
-			if v, ok := l.(int); ok && v > 0 {
-				if v > 100 {
-					limit = 100
-				} else {
-					limit = v
-				}
-			}
-		}
-		if o, ok := p.Args["offset"]; ok && o != nil {
-			if v, ok := o.(int); ok && v >= 0 {
-				offset = v
-			}
-		}
-
 		entities := meta.SliceFactory()
-		err := db.NewSelect().
-			Model(entities).
-			Limit(limit).
-			Offset(offset).
-			Scan(p.Context)
+		query, err := lijstQuery(p, meta, entities, peiltijdstipUitArgs(p.Args))
 		if err != nil {
+			return nil, err
+		}
+		if err := query.Scan(p.Context); err != nil {
 			return nil, fmt.Errorf("lijst query fout voor %s: %v", meta.Typenaam, err)
 		}
 
@@ -153,38 +172,22 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			return nil, fmt.Errorf("SliceFactory ontbreekt voor type %s", meta.Typenaam)
 		}
 
-		limit := 20
-		offset := 0
-		if l, ok := p.Args["limit"]; ok && l != nil {
-			if v, ok := l.(int); ok && v > 0 {
-				if v > 100 {
-					limit = 100
-				} else {
-					limit = v
-				}
-			}
-		}
-		if o, ok := p.Args["offset"]; ok && o != nil {
-			if v, ok := o.(int); ok && v >= 0 {
-				offset = v
-			}
-		}
-
+		peil := peiltijdstipUitArgs(p.Args)
 		entities := meta.SliceFactory()
-		query := db.NewSelect().
-			Model(entities).
-			Limit(limit).
-			Offset(offset)
+		query, err := lijstQuery(p, meta, entities, peil)
+		if err != nil {
+			return nil, err
+		}
 
 		// Onderliggende relaties laden
-		query = addOnderliggendeRelations(query, meta, nil)
+		query = addOnderliggendeRelations(query, meta, peil)
 
 		if err := query.Scan(p.Context); err != nil {
 			return nil, fmt.Errorf("full lijst query fout voor %s: %v", meta.Typenaam, err)
 		}
 
 		// Hub-kinderen laden (Bun workaround)
-		if err := laadHubKinderenNaQuery(p.Context, entities, meta, nil); err != nil {
+		if err := laadHubKinderenNaQuery(p.Context, entities, meta, peil); err != nil {
 			return nil, fmt.Errorf("hub-kinderen laden mislukt: %v", err)
 		}
 

@@ -101,9 +101,10 @@ GraphiQL is het actief onderhouden alternatief van de GraphQL Foundation. Voorde
 | Query | Argumenten | Retourtype | Beschrijving |
 |-------|-----------|------------|-------------|
 | `full_natuurlijk_personen(id, peiltijdstip?, t?)` | `id: Int!`, `peiltijdstip: DateTime`, `t: Int` | `NatuurlijkPersoon` | Volledige NP met alle GE's/relaties |
-| `natuurlijk_personen(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[NatuurlijkPersoon]` | Lijst NatuurlijkPersoon (paginering) |
+| `natuurlijk_personen(filter?, peiltijdstip?, t?, limit?, offset?)` | `filter: NatuurlijkPersoonFilter`, `peiltijdstip: DateTime`, `t: Int`, `limit: Int = 20`, `offset: Int = 0` | `[NatuurlijkPersoon]` | Lijst NatuurlijkPersoon (paginering, [filter](#filteren)) |
 | `full_locaties(id, peiltijdstip?, t?)` | `id: Int!`, `peiltijdstip: DateTime`, `t: Int` | `Locatie` | Volledige Locatie met GE's |
-| `locaties(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[Locatie]` | Lijst Locaties |
+| `locaties(filter?, peiltijdstip?, t?, limit?, offset?)` | idem | `[Locatie]` | Lijst Locaties |
+| `full_locaties_list(filter?, peiltijdstip?, t?, limit?, offset?)` | idem | `[Locatie]` | Lijst Locaties met alle GE's |
 | `registratie(id)` | `id: Int!` | `Registratie` | Eén registratie met wijzigingen |
 | `registraties(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[Registratie]` | Lijst registraties (nieuwste eerst) |
 
@@ -123,7 +124,7 @@ GraphiQL is het actief onderhouden alternatief van de GraphQL Foundation. Voorde
 
 ### Per entiteit (dynamisch vanuit MetaRegistry)
 
-Voor elke entiteit in de MetaRegistry worden twee queries geregistreerd:
+Voor elke entiteit in de MetaRegistry worden drie queries geregistreerd:
 
 ```graphql
 # Volledige entiteit met alle geneste GE's/relaties
@@ -134,14 +135,25 @@ query {
   }
 }
 
-# Lijst met paginering
+# Lijst met filter en paginering (alleen de entiteit zelf)
 query {
-  <padnaam>(limit: Int = 20, offset: Int = 0) {
+  <padnaam>(filter: <Entiteit>Filter, peiltijdstip: DateTime, t: Int, limit: Int = 20, offset: Int = 0) {
     id
     # ... velden
   }
 }
+
+# Idem, met alle onderliggende GE's/relaties (hub+data platgeslagen)
+query {
+  full_<padnaam>_list(filter: <Entiteit>Filter, peiltijdstip: DateTime, t: Int, limit: Int = 20, offset: Int = 0) {
+    id
+    # ... alle velden
+  }
+}
 ```
+
+De lijsten zijn gesorteerd op `id`, zodat `limit`/`offset` stabiele pagina's geven.
+Met een `peiltijdstip` tonen ze de situatie op dat formele moment; zie ook [Filteren](#filteren).
 
 Voorbeelden (afhankelijk van actuele MetaRegistry-inhoud):
 - `full_natuurlijk_personen(id: 1)` — NatuurlijkPersoon met alle GE's
@@ -154,6 +166,74 @@ Voorbeelden (afhankelijk van actuele MetaRegistry-inhoud):
 `2026-01-01T00:00:00Z + t uur + t microseconden`.
 
 Als zowel `peiltijdstip` als `t` is meegegeven, krijgt `peiltijdstip` voorrang.
+
+### Filteren
+
+*Sinds 22 september 2026 (Claude-sessie). Code: `dynql/filter.go`; achtergrond: plan
+`docs/plans/2026-09-22 Aanmeldformulier CG PF als formulierdefinitie (analyse).md` §7.6.*
+
+De lijst-queries hebben een `filter`-argument. Het type ervan (`<Entiteit>Filter`) wordt
+volledig uit de MetaRegistry gegenereerd; er staat geen typenaam in de code. Het volgt de
+vorm van het outputtype: per onderliggend GE of relatie een genest object met de velden van
+hub én `_Data` samen.
+
+```graphql
+# Initiatieven waar gemeente 363 aan meerealiseert, met een planning in de fase Idee
+query {
+  initiatieven(filter: {
+    initiatief_gemeenten: { gemeente_id: { eq: 363 }, rol: { eq: "Realiseert" } }
+    planningen:           { fase: { eq: "Idee (nog geen concrete opbrengsten)" } }
+  }) { id weergavenaam }
+}
+
+# Initiatieven zonder (actieve) beoordeling, of met id 1
+query {
+  initiatieven(filter: { or: [ { not: { beoordelingen: {} } }, { id: { eq: 1 } } ] }) { id }
+}
+```
+
+**Betekenis van een GE-object.** `initiatief_gemeenten: { … }` betekent: *er is ten minste
+één actief record van dit GE dat aan alle opgegeven condities voldoet*. Condities binnen één
+object gelden voor **hetzelfde record**: het eerste voorbeeld vindt dus niet een initiatief
+waar 363 alleen *gebruikt* en een andere gemeente *realiseert*. Een leeg object
+(`beoordelingen: {}`) betekent "er is een actief record"; met `not` eromheen "er is er geen".
+
+**Actief.** Hub én data niet afgevoerd. Met een `peiltijdstip` (of `t`): actief op dat
+moment — voor hub, data én de entiteit zelf. Filter en formele tijd gaan dus samen.
+
+**Operatoren** per soort veld:
+
+| Soort | Inputtype | Operatoren |
+|---|---|---|
+| tekst (ook enums) | `TekstFilter` | `eq`, `ne`, `in`, `contains`, `isNull` |
+| geheel getal | `GeheelGetalFilter` | `eq`, `ne`, `in`, `lt`, `lte`, `gt`, `gte`, `isNull` |
+| decimaal | `DecimaalFilter` | idem |
+| datum | `DatumFilter` | idem (waarden als `"2026-01-31"`) |
+| tijdstip | `TijdstipFilter` | idem (ISO 8601) |
+| ja/nee | `WaarheidFilter` | `eq`, `isNull` |
+
+- Meerdere operatoren of velden in één object gelden samen (EN); `and`, `or` en `not`
+  combineren op entiteitniveau.
+- `ne` is NULL-veilig (`IS DISTINCT FROM`): "fase is niet X" omvat ook records zonder fase.
+- `contains` is hoofdletterongevoelig; `%` en `_` in de zoektekst zijn letterlijk.
+- `in: []` is nooit waar.
+- **Enums** worden als tekst vergeleken, zoals ze in de output staan. Een waarde die niet in
+  de enum voorkomt geeft een fout met de toegestane waarden, in plaats van stilletjes nul
+  resultaten.
+
+**Nog niet mogelijk** (bewust buiten de eerste versie):
+
+- **Afgeleide velden** (bv. `weergavenaam`): die worden pas ná het laden in Go berekend en
+  bestaan niet in SQL. Zie plan §7.6.1 voor de routes (materialiseren).
+- **Hops** naar een andere entiteit, zoals filteren op de *naam* van de gemeente in plaats
+  van op `gemeente_id`.
+- **"Alle records voldoen"**: een GE-object betekent altijd "ten minste één".
+- **REST**: het filter bestaat alleen in GraphQL.
+
+Technisch wordt elk GE-object één `EXISTS`-subquery over hub + `_Data`; waarden gaan als
+parameters mee, identifiers gequote via `bun.Ident`. Tests: `dynql/filter_test.go`
+(SQL en schema, met sqlmock) en `dynql/filter_pg_test.go` (semantiek tegen een echte
+PostgreSQL; draait alleen met `DYNQL_TEST_PG_DSN`, instructies in de kop van het bestand).
 
 ### Registraties
 
@@ -228,6 +308,15 @@ De `JSON` scalar accepteert vrije JSON-payloads. Dit is bewust gekozen zodat het
 ### 5. Formele tijdfilter (vereenvoudigd)
 
 De query resolvers gebruiken momenteel een vereenvoudigd formeel tijdfilter (`opvoer <= ? AND (afvoer IS NULL OR afvoer > ?)`), vergelijkbaar met de REST handlers. Het geavanceerde filter via de `f_formele_wijziging_op_peil()` functie kan later toegevoegd worden.
+
+### 6. Filter als EXISTS per gegevenselement
+
+Alle gegevens van een entiteit zitten in GE's, dus filteren op een waarde betekent altijd
+over hub + `_Data` heen kijken. Een `JOIN` in de hoofdquery zou een entiteit met drie
+passende records drie keer opleveren (en paginering stil breken); een `EXISTS`
+(semi-join) toetst alleen óf zo'n record er is. Eén `EXISTS` per GE-object zorgt dat
+condities op hub-kolommen (bv. `gemeente_id`) en data-kolommen (bv. `rol`) voor hetzelfde
+record gelden. Zie [Filteren](#filteren).
 
 ## Type mapping
 
