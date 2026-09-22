@@ -12,6 +12,7 @@ import "../styles/common-ground-theme.css";
 
 import PublicatieTabel from "./PublicatieTabel";
 import PublicatieDetail from "./PublicatieDetail";
+import { isEmbedModus } from "./embed";
 
 const logoUrl = import.meta.env.BASE_URL + "common-ground-logo.svg";
 
@@ -86,16 +87,20 @@ function PublicatieLanding() {
 
 function PublicatieApp() {
   const baseUrl = detectBaseUrl();
-  // ?embed=1 in de querystring verbergt de header (voor iframe-inbedding).
-  // Lokaal (zonder querystring) blijft de header zichtbaar.
-  const isEmbed = new URLSearchParams(window.location.search).get("embed") === "1";
+  // Embed-modus (in een iframe, of ?embed=1) verbergt de header; zie embed.js.
+  const isEmbed = isEmbedModus();
 
   return (
     <AuthProvider>
       <SchemaProvider baseUrl={baseUrl}>
         <div
           className="common-ground-theme"
-          style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            // In een iframe geen minimale hoogte: anders ontstaat een lege rand/scrollbalk.
+            minHeight: isEmbed ? undefined : "100vh",
+          }}
         >
           {!isEmbed && (
             <header className="cg-editor-nav">
@@ -107,7 +112,7 @@ function PublicatieApp() {
             </header>
           )}
 
-          <main style={{ flex: 1, padding: "0.5rem 1rem" }}>
+          <main style={{ flex: 1, padding: isEmbed ? 0 : "0.5rem 1rem" }}>
             <Routes>
               <Route path="/t/:typePad" element={<PublicatieTabel />} />
               <Route path="/t/:typePad/:id" element={<PublicatieDetail />} />

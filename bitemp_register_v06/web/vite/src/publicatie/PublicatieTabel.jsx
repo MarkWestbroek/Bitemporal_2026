@@ -12,6 +12,7 @@ import { useSchema } from "../context/SchemaContext";
 import { useWeergaveDefinitie } from "../hooks/useWeergaveDefinitie";
 import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
 import { bouwReflijstOptieLabel } from "../shared/celEvaluator";
+import { isEmbedModus } from "./embed";
 
 /**
  * Resolvet een veldpad (bijv. "namen.data.roepnaam" of "id") naar een waarde
@@ -365,16 +366,21 @@ export default function PublicatieTabel() {
     return <div className="cg-feedback--fout">Fout: {error || wdError}</div>;
   }
 
+  // In embed-modus (iframe) alleen zoekveld + tabel + paginering: geen terug-link en titel.
+  const isEmbed = isEmbedModus();
+
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
-        <Link to="/" style={{ color: "var(--cg-blauw)", textDecoration: "none" }}>
-          ← Terug
-        </Link>
-        <h2 className="utrecht-heading-2" style={{ margin: 0 }}>
-          {typeMeta.klassenaam || typeMeta.typenaam}
-        </h2>
-      </div>
+      {!isEmbed && (
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+          <Link to="/" style={{ color: "var(--cg-blauw)", textDecoration: "none" }}>
+            ← Terug
+          </Link>
+          <h2 className="utrecht-heading-2" style={{ margin: 0 }}>
+            {typeMeta.klassenaam || typeMeta.typenaam}
+          </h2>
+        </div>
+      )}
 
       {/* Zoekbalk */}
       <div style={{ marginBottom: "0.75rem" }}>

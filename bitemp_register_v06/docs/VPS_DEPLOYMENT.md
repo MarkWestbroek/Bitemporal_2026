@@ -344,6 +344,20 @@ anders optie). Een snapshot is een noodrem, geen backup.
   zonder pad: met een pad weigert de container te starten), `FRAME_ANCESTORS` (wie de Studio in een
   iframe mag tonen; default `*`) en `NGINX_RESOLVER` (default `127.0.0.11`, de DNS van Docker).
   De opstartregel `frontend: API_UPSTREAM=…` in `docker logs` laat zien wat er geldt.
+- **Publicatiepagina in een iframe** (bv. `pf…/viz/react/publicatie.html#/t/initiatieven` op
+  commonground.nl) — in een iframe schakelt de pagina vanzelf naar embed-modus: alleen zoekveld,
+  tabel en tabelnavigatie, zonder header, terug-link en titel (`web/vite/src/publicatie/embed.js`).
+  Forceren kan met `?embed=1`, uitzetten met `?embed=0` (querystring vóór de `#`).
+- **Kolomkoppen als `Planning · startdatumPlanning`** — dan ontbreekt in die instantie een actieve
+  standaard-`WeergaveDefinitie` voor het type, en toont de tabel de technische terugvalkolommen.
+  Koppen, kolomkeuze, sortering en rijen per pagina zijn **data**, geen code: een nieuwe instantie
+  (pf, app.omnium-ide.nl) heeft ze pas na het laden van de WeergaveDefinities (op de NAS: vier,
+  o.a. `Initiatief`). Controle: `curl -s https://<host>/full/weergave_definities`.
+  Laden: `replay files/registraties-replay-init-weergave-en-formulierdefinities-nas-2026-09-22.json`
+  (vier WeergaveDefinities + de FormulierDefinitie voor Initiatief, actuele stand van de NAS), na
+  de referentietabellen. Opnieuw maken vanaf een instantie:
+  `python3 scripts/maak_definities_replay.py --bron <url> --uit <bestand>` — alleen de geldende
+  versie per GE, geen historie. Het bestand bevat geen hostnaam; zet die er ook niet in (publiek repo).
 - **`$` in wachtwoorden** — compose leest het als variabele. `.env.example` genereert ze zonder.
 - **`minio-init` stopt** — hoort zo; daarom achter `--profile init`.
 - **OpenFTV** — `openftv_adl` database, `package authz` in de rego, bundle-403: zie TrueNAS §2.3–2.6.
