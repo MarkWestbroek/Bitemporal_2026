@@ -300,3 +300,134 @@ gekozen, dan het initiatief afvoeren en de organisatie laten staan.
 | B5 (zoek-of-maak) | maak-diepte 1; aanvulbaarheid uit subtype/domein; FD mag alleen beperken |
 | B6 (openbare indiening) | `bron`/`bron_kenmerk` volstaan voor het logboek; **rijfilter in de publicatie is de harde voorwaarde** |
 | B7 (model) | + `Initiatief.Aanmeldstatus`; optioneel materiële tijd op reflijst-items + peildatum op de opties-API |
+
+## 7. Rijfiltering: waarom niet in de handler, en wat dan wel
+
+Vervolg op §6.4 (de publicatietabel toont elke proefaanmelding). Een eerdere versie van deze
+notitie stelde voor om het filter in `MakeGetFullEntitiesByMetaHandler` te zetten. **Dat is fout:**
+dan staat er een typenaam in een generieke handler, tegen `model/ontwerpkeuzen.md` §1 in
+("handlers volledig generiek, geen model-referenties"). In een modelgedreven API hoort daar een
+*mechanisme* dat een elders gedefinieerde regel uitvoert, geen regel.
+
+### 7.1 Stand van zaken: drie deuren, geen selectiepredicaat
+
+| Deur | Handler | Anoniem? |
+|---|---|---|
+| lijst | `MakeGetFullEntitiesByMetaHandler` (`handlers/full_handlers.go:1429`) | ja |
+| detail op id | `MakeGetFullEntityByMetaHandler` (`:1538`) | ja |
+| GraphQL-queries | `dynql.GraphQLHandler` (mutaties vereisen "editor") | ja |
+
+Sinds 22-09-2026 is anoniem lezen een bewuste keuze (`main.go:214-220`): de publicatiepagina moet
+zonder inlog werken. De pagina haalt daarbij **alles** op — `GET /full/{padnaam}?page=1&size=9999`
+(`PublicatieTabel.jsx:150`, server kapt af op 2000) — en filtert in de browser.
+
+**Er is geen selectiepredicaat in de API.** GraphQL-lijstqueries kennen alleen `limit` en `offset`
+(`dynql/schema_builder.go:70-105`), detail-queries daarnaast `id`, `peiltijdstip` en `t`. Het
+`initiatief_gemeenten[rol=Maakt gebruik van]` uit de weergavepaden is **client-side** filtering van
+geneste lijsten ná het ophalen (`publicatie/publicatieUtils.js:11-30`) — aardig genoeg precies het
+`vast`-patroon uit §5.2, maar het zegt niets over welke *rijen* de server teruggeeft.
+
+### 7.2 Drie kandidaat-constructen
+
+| | Idee | Oordeel |
+|---|---|---|
+| **Afgeleide klasse** | `GoedgekeurdInitiatief` = overerving van `Initiatief`, afgeleid met `aanmeldstatus = goedgekeurd` (backlog **B29 "Berekende klassen"**, 13-05-2026) | niet hiervoor — zie 7.3 |
+| **API-construct** | aanvullende API-definitie als model: wijst canonieke elementen aan en transformeert | later, bij ontkoppeling van de publieke API — zie 7.5 |
+| **Persisted queries** | trusted documents: opgeslagen, benoemde queries die de frontend aanroept | **eerste stap** — zie 7.4 |
+
+### 7.3 Waarom de afgeleide klasse hier niet past
+
+De intuïtie klopt — je wilt de deelverzameling een **naam** geven waar formulier, API en beleid naar
+kunnen wijzen. Maar als *klasse* wringt het:
+
+1. **Overerving is hier TPT**: `ParentTypenaam`, eigen tabel, eigen JSON-key. Een afgeleide klasse
+   mag juist géén tabel hebben; het is dezelfde entiteit met een andere classificatie. Eén construct
+   voor allebei vertroebelt het model.
+2. **Het lidmaatschap flipflopt.** Goedgekeurd kan teruggedraaid worden. Een type waarvan de
+   extensie van moment tot moment wisselt is een toestand, geen type — en bitemporeel wordt de vraag
+   "in welke klasse zat dit vorige week" onnodig raar.
+3. **Klasse-explosie**: `GoedgekeurdInitiatief`, `NieuweAanmelding`, `AfgewezenInitiatief`, …
+
+Waar hij wél hoort: structurele deelverzamelingen met eigen betekenis of eigen velden — dan is het
+een gewoon subtype. B29 blijft dus staan, maar niet voor statusfilters.
+
+**De naam hoort op de beleids-/selectielaag.** Toegangsspraak heeft daar al een constructie voor:
+`Begrippen` ("Inkomensgegevens zijn: …") plus rijcondities in de grammatica ("de achternaam van de
+naam van de betrokkene begint met 'A'"). "Goedgekeurde initiatieven zijn: alle initiatieven waarvan
+de aanmeldstatus 'geaccepteerd' is" is precies zo'n begrip — op de plek waar lidmaatschap *mag*
+wisselen. Alleen: toegangsspraak is v0 (branch `feat/toegangsspraak`), zonder runtime-handhaving.
+
+### 7.4 Persisted queries als `QueryDefinitie`
+
+Dit is de eerste stap, en niet alleen als noodgreep:
+
+- **Generiek in de backend.** `dynql.GraphQLHandler` (`dynql/handler.go:29-65`) is nu al typeloos:
+  query-string erin, mutatieguard erop. Een `documentId` dat een opgeslagen document oplevert
+  verandert daar niets wezenlijks aan.
+- **Het drieluik wordt compleet**: `WeergaveDefinitie` = presentatie, `FormulierDefinitie` = invoer,
+  `QueryDefinitie` = **selectie**. Daarmee zit het hek niet in de weergaveconfiguratie (die
+  redacteuren bewerken), maar is het wél data.
+- **Dogfooding**: `QueryDefinitie` is een uitbreiding van het **configuratie-domein**, getekend in de
+  editor, via de V3-JSON-roundtrip gegenereerd naar `model/configuratie_*.go` en dbsetup — net als
+  `WeergaveDefinitie` en `FormulierDefinitie`. Geen handgeschreven tabel.
+- **Bitemporeel**: de opgeslagen queries zijn gewone registerdata. Je kunt terugzien wélk document de
+  publieke site in juni uitvoerde, en een wijziging is een registratie met een reden. Voor een
+  publiek portfolio is dat winst, niet alleen boekhouding.
+- **De poort** (de tweede helft, zonder welke het cosmetica blijft): anoniem mag *alleen* opgeslagen
+  documenten uitvoeren; ad-hoc GraphQL en de generieke REST-GET's vereisen een rol. Eén generieke
+  regel in de routing, zonder typenaam.
+
+Gevolg voor de frontend: de publicatietabel moet van `/full/{padnaam}` naar een opgeslagen
+GraphQL-document. De detailpagina gaat al via GraphQL, dus het is een halve stap — en meteen de
+oplossing voor de stille afkap op 2000 rijen, want dan kan er server-side gepagineerd worden.
+
+### 7.5 Het API-construct: later, en bovenop
+
+Een publieke portfolio-API hoort niet de hub/`_Data`-structuur te tonen, en een eigen projectie per
+gebruik is precies wat een API-profiel doet; het sluit ook aan op de bestaande OAS-generatie per
+domein. Waarschuwing: "transformaties" is een hellend vlak. Projectie, hernoemen en een
+selectiepredicaat zijn te overzien; komen samenvoegen, afleiden en aggregeren erbij, dan bouw je een
+tweede querytaal naast de GraphQL-laag die er al is. Pas doen als het doel *ontkoppeling* is, en dan
+bovenop 7.4.
+
+### 7.6 De ontbrekende primitief: een generiek filter-argument
+
+Alle drie de constructen stranden op hetzelfde: **je kunt een deelverzameling nog niet uitdrukken.**
+Nodig is een `filter`-argument op de lijst-queries, gegenereerd uit de MetaRegistry zoals
+`dynql/input_type_builder.go` nu al inputtypen genereert.
+
+De vorm kan de GraphQL-schemavorm volgen, want **hub en `_Data` zijn daar al platgeslagen**
+(`dynql/type_builder.go:219-221`: een hubtype toont ook de velden van zijn `_Data`):
+
+```graphql
+initiatieven(filter: { aanmeldstatus: { status: { eq: "geaccepteerd" } } }, limit: 25) { … }
+```
+
+Aandachtspunten, in volgorde van scherpte:
+
+1. **SQL-vorm.** De entiteit heeft geen eigen velden; filteren betekent altijd `EXISTS` over
+   hub + `_Data`. Het patroon staat al in `handlers/viz_reflijst_opties_handler.go`: data telt alleen
+   als de hub óók actief is.
+2. **Actief-zijn is een filter op zichzelf.** `afvoer IS NULL` op zowel hub als data, tenzij er een
+   peiltijdstip is. De lijst-queries kennen nu **geen** `peiltijdstip` (alleen de detail-queries),
+   dus filter en formele tijd moeten in één keer goed: "geldt dit predicaat op peilmoment T".
+3. **Meervoudige GE's**: `EXISTS` betekent "ten minste één actief record voldoet". Voor
+   `betrokkenorganisatie.type = Gemeenten` is dat de bedoeling; wil je ooit "alle", dan is dat een
+   ander kwantor en moet de syntaxis dat kunnen zeggen. Begin met `EXISTS` en documenteer het.
+4. **Relaties en reflijsten**: filteren op `initiatiefgemeente.gemeente_id` is dezelfde `EXISTS`, maar
+   op de relatie-hub. Filteren op de *naam* van de gemeente is een hop verder en kan in stap 1
+   buiten scope blijven.
+5. **Kosten**: een `EXISTS` per predicaat. Met ~120 initiatieven irrelevant; als het generiek wordt,
+   is een index op `(entiteit_id, rel_id)` plus `afvoer IS NULL` de aandacht waard.
+
+### 7.7 Volgorde
+
+1. **Generiek `filter`-argument** op de lijst-queries, gegenereerd uit de MetaRegistry (7.6).
+2. **`QueryDefinitie`** in het configuratie-domein via model + codegen; publicatietabel roept een
+   opgeslagen document aan (7.4).
+3. **De poort**: anoniem alleen opgeslagen documenten; REST-GET's en ad-hoc GraphQL achter een rol.
+4. Later neemt **toegangsspraak** stap 3 over met echte rijcondities; de grammatica kan het al,
+   alleen de handhaving ontbreekt.
+
+Stap 1 en 2 zijn ook los van het aanmeldformulier nuttig (server-side paginering, benoemde queries
+voor de embed). Stap 3 is de harde voorwaarde vóór het formulier opengaat.
