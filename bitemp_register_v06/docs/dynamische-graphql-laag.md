@@ -105,6 +105,8 @@ GraphiQL is het actief onderhouden alternatief van de GraphQL Foundation. Voorde
 | `full_locaties(id, peiltijdstip?, t?)` | `id: Int!`, `peiltijdstip: DateTime`, `t: Int` | `Locatie` | Volledige Locatie met GE's |
 | `locaties(filter?, peiltijdstip?, t?, limit?, offset?)` | idem | `[Locatie]` | Lijst Locaties |
 | `full_locaties_list(filter?, peiltijdstip?, t?, limit?, offset?)` | idem | `[Locatie]` | Lijst Locaties met alle GE's |
+| `/graphql/query` met `documentId` | `documentId`, `variables?` | — | Opgeslagen document (QueryDefinitie) op naam uitvoeren, zie [Uitvoeren op naam](#uitvoeren-op-naam-opgeslagen-documenten-persisted-queries) |
+| `POST /graphql/valideer` | `document` | `{geldig, fouten}` | Document valideren zonder uitvoeren |
 | `registratie(id)` | `id: Int!` | `Registratie` | Eén registratie met wijzigingen |
 | `registraties(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[Registratie]` | Lijst registraties (nieuwste eerst) |
 
@@ -239,6 +241,83 @@ Technisch wordt elk GE-object één `EXISTS`-subquery over hub + `_Data`; waarde
 parameters mee, identifiers gequote via `bun.Ident`. Tests: `dynql/filter_test.go`
 (SQL en schema, met sqlmock) en `dynql/filter_pg_test.go` (semantiek tegen een echte
 PostgreSQL; draait alleen met `DYNQL_TEST_PG_DSN`, instructies in de kop van het bestand).
+
+### Uitvoeren op naam (opgeslagen documenten, persisted queries)
+
+*Sinds 24 september 2026 (Claude-sessie). Code: `dynql/opgeslagen_documenten.go`; model:
+`QueryDefinitie` in het configuratie-domein; achtergrond: plan
+`docs/plans/2026-09-22 Aanmeldformulier CG PF als formulierdefinitie (analyse).md` §7.4.*
+
+Naast een ad-hoc `query` accepteert `/graphql/query` een **`documentId`**: de naam van een
+opgeslagen `QueryDefinitie`. De frontend stuurt dan geen query-tekst meer, alleen de naam en
+eventueel variabelen — het patroon van *trusted documents* in GraphQL-over-HTTP.
+
+```http
+POST /graphql/query
+{ "documentId": "publieke-initiatieven", "variables": { "extra": { "id": { "eq": 3 } } } }
+
+GET /graphql/query?documentId=publieke-initiatieven&variables={"extra":{"id":{"eq":3}}}
+```
+
+`query` en `documentId` sluiten elkaar uit (400).
+
+**Er wordt niets opgebouwd.** Een QueryDefinitie is registerdata, geen model: het schema komt
+bij het opstarten uit de MetaRegistry, de documenten komen **per aanroep** uit de database. Een
+nieuwe of gewijzigde definitie werkt dus zonder herstart, en een vooruit geregistreerde status
+("actief vanaf 1 oktober") gaat vanzelf op die dag werken. Per aanroep zoekt de handler de
+definitie op naam en leest per GE het record dat op dat moment **formeel actueel én materieel
+geldig** is: naam, status (+ reden), toegankelijkheid en document.
+
+| Situatie | Antwoord |
+|---|---|
+| status `actief`, toegankelijkheid `publiek` | 200, het resultaat van het document |
+| status `actief`, toegankelijkheid `intern` (of ontbrekend) | uitgevoerd voor een ingelogde gebruiker (minimaal `viewer`); anders 401/403 |
+| status `inactief` | **410** `{"error":"document ingetrokken","reden":…}` — de reden is voor de afnemer |
+| onbekende naam, status `concept`, status nog niet/niet meer geldig, buiten de levensduur van de definitie, formeel afgevoerd, geen geldig document | **404** `onbekend of niet beschikbaar document` (bewust niet onderscheiden: een klad is niet zichtbaar) |
+| het opgeslagen document bevat een mutatie | 400 |
+| het contract klopt niet met het model (zie onder) | 501 |
+
+**Variabelen versmallen alleen.** Het document legt het vaste deel vast en laat de aanroeper
+via een optionele variabele alleen extra condities toevoegen — zie de opmerking bij `and`/`or`
+onder [Filteren](#filteren):
+
+```graphql
+query PubliekeInitiatieven($extra: InitiatiefFilter) {
+  initiatieven(filter: { and: [ { planningen: {} }, $extra ] }) { id weergavenaam }
+}
+```
+
+**Valideren vóór het opslaan.** `POST /graphql/valideer` met `{"document": "…"}` geeft
+`{"geldig": bool, "fouten": [...]}` terug zonder iets uit te voeren; een mutatie telt als fout.
+Bedoeld voor de frontend bij het bewerken van een QueryDefinitie. (Afdwingen in de
+registratie-engine — een ongeldig document weigeren — is nog niet gebouwd.)
+
+**Bij het opstarten** gebeuren twee controles, zichtbaar in het log:
+
+1. het **contract**: bestaat het gereserveerde type `QueryDefinitie` met de GE's
+   `QuerydefinitieNaam`, `…Beschrijving`, `…Status` (materieel), `…Toegankelijkheid` (materieel)
+   en `…Document` (materieel) en hun velden? Zo nee: `WARN … staat uit: <reden>` en elke
+   `documentId`-aanroep geeft 501;
+2. de **documenten**: alle actuele documenten worden tegen het schema gevalideerd
+   (`ValideerOpgeslagenDocumenten`), één logregel per definitie, `ONGELDIG — …` als het model
+   onder een document vandaan is veranderd. Zo'n document wordt bij aanroep gewoon uitgevoerd
+   en geeft dan een GraphQL-fout (200 met `errors`), geen 500.
+
+`QueryDefinitie` is een **gereserveerd woord**, zoals `Referentielijst` dat feitelijk ook is:
+`opgeslagen_documenten.go` kent de typenamen; laden, formele tijd en het platslaan van hub+data
+lopen via dezelfde generieke code als de gewone resolvers.
+
+**Enkelvoudig en materieel — een bekende beperking.** De uitvoerder kiest per GE uit álle
+formeel actieve hubs de hub die op dat moment materieel geldig is (`kiesGeldigeHub`). Dat is de
+bedoelde semantiek van enkelvoudig op een materieel GE: één geldig record tegelijk op de
+materiële lijn, meerdere formeel actief (zoals een woongeschiedenis). De exclusieconstraint
+in `dbsetup` laat nu echter maar één formeel actieve hub toe; tot die is aangepast (backlog
+B33) vervangt een vooruit geregistreerde status de vorige meteen en is de definitie tot de
+aanvangsdatum niet opvraagbaar.
+
+Tests: `dynql/opgeslagen_documenten_test.go` (contract, materiële keuze, validatie, handler)
+en `dynql/opgeslagen_documenten_pg_test.go` (13 scenario's tegen een echte PostgreSQL,
+`DYNQL_TEST_PG_DSN`).
 
 ### Registraties
 

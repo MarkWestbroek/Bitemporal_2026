@@ -546,6 +546,25 @@ Wat wél bij het opstarten en bij registratie gebeurt, is **valideren**:
 - **Cache** (later): de opzoekstap cachen op naam en ongeldig maken bij een registratie die het
   configuratie-domein raakt. Een optimalisatie, niet de waarheid; de database blijft de bron.
 
+**Stand 24-09-2026 — gebouwd** (branch `feat/persisted-queries-uitvoeren`), zie
+`docs/dynamische-graphql-laag.md` § Uitvoeren op naam:
+
+- `documentId` op `/graphql/query` (POST en GET); 404/410/401-403/400/501 zoals hierboven;
+  variabelen alleen versmallend. `POST /graphql/valideer` voor de frontend vóór het opslaan.
+- Contractcontrole in `BuildSchema`, documentvalidatie bij het opstarten in `main.go` (log).
+  Afdwingen in de registratie-engine is nog niet gebouwd.
+- Getest: 13 scenario's tegen PostgreSQL, en end-to-end met de echte binary: registreren via
+  `POST /registratie/`, meteen daarna uitvoeren op naam zonder herstart.
+
+**Bevinding bij het bouwen — enkelvoudig op een materieel GE (Mark, 24-09):** enkelvoudig
+hoort te betekenen *één materieel geldig record tegelijk*, met meerdere formeel actieve records
+(de woongeschiedenis is actueel; je woont op één adres tegelijk). De exclusieconstraint
+`ux_…_enkelvoudig_actief` dwingt nu "één formeel actieve hub" af, waardoor stagen naast de
+huidige status niet kan: een nieuwe status met aanvang 1 oktober vervangt de vorige meteen en de
+definitie is tot 1 oktober niet opvraagbaar. Backlog **B33**. De uitvoerder kiest al per GE het
+materieel geldige record uit alle formeel actieve hubs (`kiesGeldigeHub`) en werkt dus in beide
+werelden — de integratietest dekt het gestagede geval met twee formeel actieve hubs.
+
 ### 7.5 Het API-construct: later, en bovenop
 
 Een publieke portfolio-API hoort niet de hub/`_Data`-structuur te tonen, en een eigen projectie per
@@ -619,6 +638,8 @@ onderliggende stringkolommen van de data-tabel, niet op de afgeleide naam.
    PostgreSQL (`dynql/filter_pg_test.go`), inclusief de valkuil "363 gebruikt, 599 realiseert".
 2. **`QueryDefinitie`** in het configuratie-domein via model + codegen; publicatietabel roept een
    opgeslagen document aan (7.4).
+   ✅ Model (23-09) en uitvoeren op naam (24-09) gebouwd; de publicatietabel omzetten is de
+   volgende stap (daarna pas stap 3, anders valt de embed op commonground.nl weg).
 3. **De poort**: anoniem alleen opgeslagen documenten; REST-GET's en ad-hoc GraphQL achter een rol.
 4. Later neemt **toegangsspraak** stap 3 over met echte rijcondities; de grammatica kan het al,
    alleen de handhaving ontbreekt.

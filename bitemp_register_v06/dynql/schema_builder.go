@@ -85,6 +85,9 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 		}
 	}
 
+	// Contract van de opgeslagen documenten (QueryDefinitie) oplossen; puur, geen database.
+	initOpgeslagenContract()
+
 	// Registratie queries
 	queryFields["registratie"] = &graphql.Field{
 		Type:        RegistratieType,
