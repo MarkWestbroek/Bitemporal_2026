@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -217,10 +218,32 @@ func NewRouter() *gin.Engine {
 		// Tot 22-09-2026 stond het hele endpoint achter RequireAuth: dat sloot anoniem
 		// lezen af en liet een "viewer" wél muteren. Zie docs/AUTH_DEVELOPER_GUIDE.md §3.4.
 		magMuteren := func(c *gin.Context) bool { return middleware.ControleerRol(c, "editor") }
+		// Opgeslagen documenten (documentId, zie dynql/opgeslagen_documenten.go): een
+		// publiek document mag anoniem, een intern document vereist een ingelogde gebruiker
+		// (minimaal "viewer"; no-op als AUTH_ENABLED=false).
+		magIntern := func(c *gin.Context) bool { return middleware.ControleerRol(c, "viewer") }
 		router.GET("/graphql/playground", dynql.PlaygroundHandler("/graphql/query"))
-		router.POST("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren))
-		router.GET("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren))
-		fmt.Println("GraphQL endpoint geregistreerd op /graphql/query")
+		router.POST("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren, magIntern))
+		router.GET("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren, magIntern))
+		// Een document valideren zonder uit te voeren (voor de frontend, vóór het opslaan
+		// van een QueryDefinitie). Alleen-lezen en zonder data, dus openbaar zoals queries.
+		router.POST("/graphql/valideer", dynql.ValideerDocumentHandler(gqlSchema))
+		fmt.Println("GraphQL endpoint geregistreerd op /graphql/query (+ /graphql/valideer)")
+
+		// Uitvoeren op naam: er wordt niets opgebouwd (de documenten zijn data en worden
+		// per aanroep opgezocht), maar bij het opstarten worden het contract en de actuele
+		// documenten wél gecontroleerd, zodat een model dat onder een document vandaan is
+		// veranderd hier in het log staat.
+		if ok, reden := dynql.OpgeslagenDocumentenBeschikbaar(); !ok {
+			fmt.Println("WARN: GraphQL uitvoeren op naam (documentId) staat uit:", reden)
+		} else if regels, err := dynql.ValideerOpgeslagenDocumenten(context.Background(), gqlSchema, time.Now()); err != nil {
+			fmt.Println("WARN: opgeslagen documenten valideren mislukt:", err)
+		} else {
+			fmt.Printf("GraphQL uitvoeren op naam (documentId) aan; %d actuele QueryDefinitie(s)\n", len(regels))
+			for _, r := range regels {
+				fmt.Println("  ", r)
+			}
+		}
 	}
 
 	// admin/devloop routes — drie beveiligingsringen (BE-review 2026-07-07, §3.3):
