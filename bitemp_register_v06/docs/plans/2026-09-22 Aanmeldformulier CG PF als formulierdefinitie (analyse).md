@@ -425,43 +425,74 @@ Gevolg voor de frontend: de publicatietabel moet van `/full/{padnaam}` naar een 
 GraphQL-document. De detailpagina gaat al via GraphQL, dus het is een halve stap — en meteen de
 oplossing voor de stille afkap op 2000 rijen, want dan kan er server-side gepagineerd worden.
 
-#### 7.4.1 Het model (23-09-2026)
+#### 7.4.1 Het model (23-09-2026, tweede versie)
 
-✅ **Model gebouwd** (branch `feat/querydefinitie`): V3-invoer
-`docs/Model files (V3)/configuratie 2026-09-23 met QueryDefinitie — v3-model.json`, gegenereerd
-met `--domein configuratie` (werkwijze: `docs/CODEGEN.md` §7.5). Puur toevoegend; de tabellen
-ontstaan bij de eerste start. Nog **niet** gebouwd: het uitvoeren van een document op naam en de
-poort voor anonieme aanroepen (7.7 stap 2–3).
+✅ **Model gebouwd**, tweede versie (branch `feat/querydefinitie-losse-ges`). V3-invoer:
+`docs/Model files (V3)/configuratie 2026-09-23 QueryDefinitie v2 (losse GEs) — v3-model.json`,
+gegenereerd met `--domein configuratie` (werkwijze: `docs/CODEGEN.md` §7.5). De eerste versie
+van dezelfde dag (commit `e78c494`, een `Meta`-blob met vijf velden) is vervangen; instanties die
+die versie hebben gedraaid: `scripts/sql/2026-09-23-querydefinitie-losse-ges-opruimen.sql`.
+Nog **niet** gebouwd: uitvoeren op naam en de poort (7.4.2, 7.7 stap 2–3).
 
-In GraphQL heten de GE's naar hun rolnaam: `query_definities` met `query_definitie_metas` en
-`query_definitie_documents`. Bijvoorbeeld de actieve, publieke documenten:
+**Ontwerpregels** (uit de discussie van 23-09):
+
+- **QueryDefinitie is een gereserveerd woord**, geen subtype uit het metamodel. De backend zoekt
+  het bij naam op, zoals `Referentielijst` feitelijk ook (`routes/addroutes_helper.go`). Een
+  startcontrole toetst de verwachte GE's en velden en zet uitvoeren-op-naam anders uit.
+- **Eén GE per feit met een eigen tijdlijn.** Een `Meta`-blob kopieert bij elke statuswijziging
+  alles mee; dat is precies wat het register niet wil. Materialiteit per GE, niet op de blob.
+- **Enkelvoudig betekent al "0..* over de tijd, 1 tegelijk"** (`Momentvoorkomen` = het
+  voorkomen op enig moment). `Layout`, `TabelConfig` en `DetailTemplate` van de andere
+  definities zijn ten onrechte meervoudig (de frontend neemt `[0]`); dat wordt apart gerepareerd,
+  want daar staat data op de NAS en de VPS en enkelvoudig voegt een exclusieconstraint toe.
+- **Formeel** = in het register opgenomen; **materieel** = geldig in de buitenwereld, hier: de
+  geldigheid van de persisted query. Materialiteit van de entiteit = levensduur als geheel (één
+  keer starten, één keer stoppen); materialiteit van een GE = die wijziging is te **stagen**.
+
+| GE | Velden | Materieel | Waarom |
+|---|---|---|---|
+| **QueryDefinitie** (ENT) | — | ja | levensduur van de definitie als geheel |
+| `QuerydefinitieNaam` | `naam` | nee | het gepubliceerde contract (`documentId`); hernoemen is een nieuwe hub |
+| `QuerydefinitieBeschrijving` | `beschrijving` | nee | hoog-over |
+| `QuerydefinitieStatus` | `status` (concept / actief / inactief), `reden` | **ja** | "actief vanaf 1 oktober" stagen; `reden` vertelt de afnemer waarom de status is *geworden* wat hij is |
+| `QuerydefinitieToegankelijkheid` | `toegankelijkheid` (publiek / intern) | **ja** | enum i.p.v. bool, zodat FTV er later een policy-verwijzing van kan maken; ontbreekt het GE, dan geldt intern |
+| `QuerydefinitieDocument` | `graphql_document`, `definitie_versie`, `toelichting` | **ja** | nieuwe versie stagen; `toelichting` beschrijft déze versie |
+
+Alle GE's enkelvoudig. `Doeltype` is vervallen: afleidbaar uit de root-velden van het document,
+en een document kan er meer dan één hebben.
+
+**Betekenis van de status.** Concept = klad, niet opvraagbaar. Actief = opvraagbaar. Inactief =
+ingetrokken: bekend, maar niet meer opvraagbaar — een aanroep op die naam krijgt "ingetrokken"
+(410) met de `reden`, in plaats van "onbekend" (404).
+
+**Versienummer opvragen: nee.** De naam is het contract, de versie is informatief (zoals bij een
+REST-pad). Twee versies naast elkaar in de lucht = twee namen. Een oude versie bekijk je via het
+peiltijdstip. Daarom is `Document` enkelvoudig.
+
+**Beschrijving in het GraphQL-document zelf: nee.** Executable documents kennen in de spec geen
+description; `#`-commentaar gooien parsers weg, en het voorstel voor descriptions op operaties
+kent graphql-go 0.8.1 niet. `Document.toelichting` is de betere plek: registerdata met historie.
+
+**Naamgeving.** De GE's heten `QuerydefinitieNaam`, `QuerydefinitieBeschrijving`,
+`QuerydefinitieStatus`, `QuerydefinitieToegankelijkheid` en `QuerydefinitieDocument` — PascalCase
+met de entiteit als voorvoegsel, zoals `Organisatienaam` en `Persoonnaam` in CG. Dat is bewust: de
+codegen leidt de `Veldnaam` (de sleutel in de registratie-API) af uit het laatste deel van de
+typenaam, en `runtime.veldnaam` in de V3-JSON wordt niet gelezen. Een kaal `Naam` zou de veldnaam
+`naam` krijgen, die in CG al bestaat; met het voorvoegsel zijn de sleutels uniek:
+`querydefinitienaam`, `querydefinitiestatus`, `querydefinitiedocument`, … (tabellen:
+`querydefinitie_querydefinitienaam` enz.). In GraphQL heten ze naar hun rolnaam: `query_definitie_namen`, `query_definitie_statussen`,
+`query_definitie_toegankelijkheden`, `query_definitie_documenten`. De actieve, publieke documenten:
 
 ```graphql
 { full_query_definities_list(filter: {
-    query_definitie_metas: { status: { eq: "actief" }, is_publiek: { eq: true } } }) {
-  id query_definitie_metas { naam } query_definitie_documents { graphql_document } } }
+    query_definitie_statussen:        { status: { eq: "actief" } }
+    query_definitie_toegankelijkheden: { toegankelijkheid: { eq: "publiek" } } }) {
+  id query_definitie_namen { naam } query_definitie_documenten { graphql_document definitie_versie } } }
 ```
 
-Naar het patroon van `FormulierDefinitie` en `WeergaveDefinitie` in het configuratie-domein:
-een entiteit met een `Meta`-GE en één inhouds-GE.
-
-| GE | Velden | Opmerking |
-|---|---|---|
-| `QueryDefinitie_Meta` | `naam`, `beschrijving`, `doeltype`, `status` (enum `QueryDefinitieStatus`: concept / actief / inactief), **`is_publiek`** | `naam` is de sleutel waarmee de frontend het document aanroept |
-| `QueryDefinitie_Document` | `graphql_document` (tekst), `definitie_versie` | het opgeslagen document zelf; **enkelvoudig** |
-
-**Waarom `Document` enkelvoudig is, anders dan `Layout`/`TabelConfig`.** Die twee zijn
-meervoudig, en de frontend neemt dan de eerste hub (`entity.{geNaam}[0]` in
-`useFormulierDefinitie.js`). Voor een formulier is die dubbelzinnigheid onschuldig; voor een
-document dat anoniem uitgevoerd mag worden niet. Enkelvoudig betekent: altijd precies één actief
-document, en de historie zit in de bitemporele versies. (Of `Layout`/`TabelConfig` ook
-enkelvoudig horen te zijn, is een aparte vraag.)
-
-**`is_publiek` is optioneel, en weglaten betekent niet-publiek** — de veilige standaard.
-
-**`is_publiek` is de poort.** Niet elk opgeslagen document hoort anoniem uitvoerbaar te zijn;
-de vlag is de expliciete lijst van wat wél mag (stap 3 uit 7.7). Alleen `actief` + `is_publiek`
-is anoniem uitvoerbaar.
+Geverifieerd tegen een lege PostgreSQL: 19 tabellen bij de eerste start, registratie van twee
+definities via `POST /registratie/`, en de filters hierboven geven de juiste rijen (ook `not:
+{ query_definitie_toegankelijkheden: {} }` voor "zonder toegankelijkheid").
 
 **Variabelen mogen alleen versmallen.** Een opgeslagen document met `filter: $filter` zou een
 anonieme aanroeper elk filter laten meegeven — en dus het hek laten omzeilen. Het veilige patroon
@@ -483,6 +514,37 @@ op). Tegelijk opgelost: `or: []` gaf "geen conditie" (dus alles) en is nu nooit 
 een `or` in `$extra`. Dat is dezelfde invariant als bij §5.4: **definities mogen
 beperken, aanroepers niet verruimen.** Bij het opslaan is dit te controleren (een filter-argument
 dat als geheel een variabele is, wordt geweigerd voor `is_publiek`).
+
+#### 7.4.2 Dynamische opbouw: geen herstart bij een nieuwe QueryDefinitie
+
+Een QueryDefinitie is **data**, geen model. Dat is het verschil met een metamodelwijziging: die
+geeft nieuwe structs, endpoints en tabellen en vraagt codegen plus herstart. Een persisted query
+gebruikt het *bestaande* datamodel en het *al gebouwde* GraphQL-schema. Er hoeft dus niets
+"gebouwd" te worden; er hoeft alleen iets **opgezocht** te worden.
+
+Hoe een aanroep verloopt:
+
+1. De frontend stuurt `documentId` (de `Naam`) en variabelen, geen query-tekst.
+2. De handler zoekt de QueryDefinitie op **op het moment van de aanroep**: `Naam` = documentId,
+   `Status` actief en `Toegankelijkheid` toereikend voor de aanroeper, en het `Document` — alle
+   drie formeel actueel én materieel geldig op *nu*. Dit is één geïndexeerde query op het
+   eigen register; de generieke filter uit §7.6 kan hem uitdrukken.
+3. Het opgeslagen document gaat door dezelfde `graphql.Do` als een ad-hoc query, tegen het
+   schema dat bij het opstarten uit de MetaRegistry is gebouwd.
+
+Omdat stap 2 per aanroep gebeurt, werkt staging vanzelf: "actief vanaf 1 oktober" gaat op
+1 oktober werken zonder dat iemand iets doet. Een eenmalige opbouw bij het opstarten zou dat juist
+onmogelijk maken — en dat is de reden om de materialiteit níet in een statische set te vertalen.
+
+Wat wél bij het opstarten en bij registratie gebeurt, is **valideren**:
+
+- **Bij registratie** van een `Document`: het document parsen en valideren tegen het schema;
+  ongeldig = geweigerd. (Een hook op het gereserveerde type; de registratie-engine kent al de
+  `Domeinen` per wijziging.)
+- **Bij het opstarten**: alle actuele documenten opnieuw valideren en afwijkingen loggen. Dat
+  vangt het geval dat het metamodel onder een document vandaan is veranderd.
+- **Cache** (later): de opzoekstap cachen op naam en ongeldig maken bij een registratie die het
+  configuratie-domein raakt. Een optimalisatie, niet de waarheid; de database blijft de bron.
 
 ### 7.5 Het API-construct: later, en bovenop
 
@@ -563,3 +625,61 @@ onderliggende stringkolommen van de data-tabel, niet op de afgeleide naam.
 
 Stap 1 en 2 zijn ook los van het aanmeldformulier nuttig (server-side paginering, benoemde queries
 voor de embed). Stap 3 is de harde voorwaarde vóór het formulier opengaat.
+
+
+## 8. GegevensVerzameling — de query als modelelement
+
+*Uit de discussie van 23-09-2026; ontwerpidee, niets gebouwd.*
+
+Een **GegevensVerzameling (GV)** is een benoemd deelmodel, getekend in termen van het canonieke
+model: welke ENT's, GE's, relaties en referentielijsten, en van elk welke velden. Het is de
+visuele, in het model te tekenen tegenhanger van een query. Omdat de GraphQL-laag een mechanische
+afbeelding van het canonieke model is (typenaam → padnaam, hub + `_Data` platgeslagen, rolnaam
+als veld), kan een GV door diezelfde afbeelding worden gehaald: **de GraphQL-representatie van een
+GV is de persisted query.** `QueryDefinitie.Document` wordt dan een afgeleid veld ("gegenereerd
+uit GV X plus selectie"), met de handgeschreven variant als terugval zolang de GV er niet is.
+
+### 8.1 Wat een GV is en niet is
+
+- **Aggregatie** van een hele ENT met onderliggende GE's; **«gebruikt»** voor een deel, met een
+  veldenlijst en afgeleide velden (CEL) voor samenstellingen. Voorbeeld: `/NP-naam-geb-plaats` =
+  een dunnere NP: samengestelde naam, geboortedatum, woonplaats; geen BSN, burgerschap of adres.
+  Een GV kan zo'n persoon plus de gemeenteverzameling bevatten: de *ruimte* waarop te bevragen is.
+- **Een GV definieert de ruimte, niet de selectie.** Het predicaat (welke rijen) hoort bij de
+  QueryDefinitie, niet bij de GV; anders ontstaat "GV-op-predicaat" met dezelfde problemen als de
+  afgeleide klasse in §7.3.
+- **Alleen voor opvragen**: QueryDefinitie en WeergaveDefinitie, niet voor formulieren. Een
+  formulier schrijft, en schrijven op afgeleide gegevens vergt het terugvolgen van de afleiding
+  (de inverse functie). Formulieren blijven daarom op het canonieke model.
+- **Plat of genest** is een weergave-eigenschap: genest is de natuurlijke GraphQL-vorm, plat is
+  een projectie met afgeleide velden — wat de publicatietabel met veldpaden nu al doet.
+
+### 8.2 Wat het samenbrengt
+
+| Eerder in deze notitie | Wat de GV ermee doet |
+|---|---|
+| §7.5 API-construct ("transformaties zijn een hellend vlak") | begrenst het tot projectie, samenstelling en aggregatie: een deelmodel, geen tweede querytaal |
+| §7.3 afgeleide klasse (B29) | een dunnere representatie is een projectie, geen subtype-op-predicaat — het legitieme deel van B29 |
+| toegangsspraak `Begrippen` ("Inkomensgegevens zijn: …") | een begrip is een GV in woorden; een policy kan naar een GV wijzen |
+
+Zo wordt de GV het gedeelde **vocabulaire**: QueryDefinitie selecteert eruit, WeergaveDefinitie
+toont er kolommen van, toegangsspraak beschermt hem. Eén naam, drie gebruikers.
+
+### 8.3 Wat een persisted query nog meer moet definiëren
+
+Naast de GV (de vorm), van onmisbaar naar later:
+
+1. **Selectie** — het vaste deel van het filter (§7.6).
+2. **Variabelen** — welke, type, default; en de invariant dat ze alleen versmallen (§7.4.1).
+3. **Paginering** — limiet en offset, met een maximum dat de definitie zet.
+4. **Sortering** — nu alleen op id. Sorteren op een GE-veld vraagt dezelfde join-machinerie als
+   het filter; afgeleide velden kunnen server-side niet (§7.6.1). De eerstvolgende primitief.
+5. **Tijdcontext** — formeel peiltijdstip (vast op "nu" of als variabele); later de materiële
+   peildatum als die op de lijst-queries komt.
+6. **Identiteit en contract** — naam, versie, toelichting (de GE's van §7.4.1).
+7. **Toegankelijkheid** — nu publiek/intern, later een policy.
+8. **Cache-hint** — hoe lang de embed het antwoord mag bewaren; voor commonground.nl nuttig.
+
+Wat de GV zelf nodig heeft als metamodelelement: benoemde afgeleide representaties (dik of dun),
+«gebruikt» met veldenlijst, aggregatie van hele ENT's, multipliciteit van geneste verzamelingen,
+afgeleide velden in CEL — en een eigen diagramprofiel, naast het formulierprofiel (§5.5).

@@ -33,6 +33,13 @@ const (
 	QueryDefinitieStatusinactief QueryDefinitieStatus = "inactief"
 )
 
+type QueryDefinitieToegankelijkheid string
+
+const (
+	QueryDefinitieToegankelijkheidpubliek QueryDefinitieToegankelijkheid = "publiek"
+	QueryDefinitieToegankelijkheidintern  QueryDefinitieToegankelijkheid = "intern"
+)
+
 // FormulierDefinitie_Meta — Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.
 type FormulierDefinitie_Meta struct {
 	bun.BaseModel            `bun:"table:formulierdefinitie_meta,alias:formulierdefinitie_meta"`
@@ -154,51 +161,187 @@ type WeergaveDefinitie_DetailTemplate_Data struct {
 	Afvoer               *time.Time `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_Meta — Metadata van de querydefinitie: naam (de sleutel waarmee de frontend het document aanroept), beschrijving, doeltype, status en of het document anoniem uitgevoerd mag worden.
-type QueryDefinitie_Meta struct {
-	bun.BaseModel        `bun:"table:querydefinitie_meta,alias:querydefinitie_meta"`
-	QueryDefinitie_ID    int                        `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
-	Rel_ID               int                        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentQueryDefinitie *QueryDefinitie            `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
-	Opvoer               *time.Time                 `json:"opvoer,omitempty"`
-	Afvoer               *time.Time                 `json:"afvoer,omitempty"`
-	Data                 []QueryDefinitie_Meta_Data `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+// QueryDefinitie_QuerydefinitieNaam — De naam waarmee de frontend het document aanroept (documentId). Stabiel: dit is het gepubliceerde contract; hernoemen is een nieuwe hub.
+type QueryDefinitie_QuerydefinitieNaam struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitienaam,alias:querydefinitie_querydefinitienaam"`
+	QueryDefinitie_ID    int                                      `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                      `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                          `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                               `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                               `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieNaam_Data `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// QueryDefinitie_Meta_Data — geversioned inhoud van QueryDefinitie_Meta.
-type QueryDefinitie_Meta_Data struct {
-	bun.BaseModel     `bun:"table:querydefinitie_meta_data,alias:querydefinitie_meta_data"`
+// QueryDefinitie_QuerydefinitieNaam_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieNaam.
+type QueryDefinitie_QuerydefinitieNaam_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitienaam_data,alias:querydefinitie_querydefinitienaam_data"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam              string     `json:"naam"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieBeschrijving — Hoog-over beschrijving van de definitie (wat levert deze query, voor wie).
+type QueryDefinitie_QuerydefinitieBeschrijving struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitiebeschrijving,alias:querydefinitie_querydefinitiebeschrijving"`
+	QueryDefinitie_ID    int                                              `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                                  `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                                       `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                                       `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieBeschrijving_Data `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieBeschrijving_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieBeschrijving.
+type QueryDefinitie_QuerydefinitieBeschrijving_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiebeschrijving_data,alias:querydefinitie_querydefinitiebeschrijving_data"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Beschrijving      string     `json:"beschrijving"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieStatus — Levenscyclus: concept = klad, niet opvraagbaar; actief = opvraagbaar; inactief = ingetrokken, niet meer opvraagbaar (een aanroep krijgt 'ingetrokken' i.p.v. 'onbekend'). Materieel: 'actief vanaf …' is te stagen. `reden` legt uit waarom, vanuit het oogpunt van de afnemer.
+type QueryDefinitie_QuerydefinitieStatus struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitiestatus,alias:querydefinitie_querydefinitiestatus"`
+	QueryDefinitie_ID    int                                           `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                           `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                               `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                                    `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                                    `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieStatus_Data    `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang              []QueryDefinitie_QuerydefinitieStatus_Aanvang `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                []QueryDefinitie_QuerydefinitieStatus_Einde   `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieStatus_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieStatus.
+type QueryDefinitie_QuerydefinitieStatus_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiestatus_data,alias:querydefinitie_querydefinitiestatus_data"`
 	QueryDefinitie_ID int                  `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
 	Rel_ID            int                  `json:"rel_id" bun:"rel_id,pk"`
 	Versie            int64                `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Naam              string               `json:"naam"`
-	Beschrijving      string               `json:"beschrijving"`
-	Doeltype          string               `json:"doeltype"`
 	Status            QueryDefinitieStatus `json:"status" schema:"enum=QueryDefinitieStatus"`
-	IsPubliek         *bool                `json:"is_publiek,omitempty"`
+	Reden             *string              `json:"reden,omitempty"`
 	Opvoer            *time.Time           `json:"opvoer,omitempty"`
 	Afvoer            *time.Time           `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_Document — Het opgeslagen GraphQL-document. Enkelvoudig: er is altijd precies één actief document, zodat eenduidig is wat er (anoniem) wordt uitgevoerd; de historie zit in de bitemporele versies.
-type QueryDefinitie_Document struct {
-	bun.BaseModel        `bun:"table:querydefinitie_document,alias:querydefinitie_document"`
-	QueryDefinitie_ID    int                            `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
-	Rel_ID               int                            `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentQueryDefinitie *QueryDefinitie                `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
-	Opvoer               *time.Time                     `json:"opvoer,omitempty"`
-	Afvoer               *time.Time                     `json:"afvoer,omitempty"`
-	Data                 []QueryDefinitie_Document_Data `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+// QueryDefinitie_QuerydefinitieStatus_Aanvang — aanvangdatum van QueryDefinitie_QuerydefinitieStatus.
+type QueryDefinitie_QuerydefinitieStatus_Aanvang struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiestatus_aanvang,alias:querydefinitie_querydefinitiestatus_aanvang"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_Document_Data — geversioned inhoud van QueryDefinitie_Document.
-type QueryDefinitie_Document_Data struct {
-	bun.BaseModel     `bun:"table:querydefinitie_document_data,alias:querydefinitie_document_data"`
+// QueryDefinitie_QuerydefinitieStatus_Einde — eindedatum van QueryDefinitie_QuerydefinitieStatus.
+type QueryDefinitie_QuerydefinitieStatus_Einde struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiestatus_einde,alias:querydefinitie_querydefinitiestatus_einde"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid — Wie het document mag uitvoeren: publiek (ook anoniem) of intern (alleen met een rol). Later vervangbaar door een verwijzing naar een FTV-policy. Ontbreekt dit GE, dan geldt intern.
+type QueryDefinitie_QuerydefinitieToegankelijkheid struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitietoegankelijkheid,alias:querydefinitie_querydefinitietoegankelijkheid"`
+	QueryDefinitie_ID    int                                                     `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                                     `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                                         `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                                              `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                                              `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieToegankelijkheid_Data    `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang              []QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                []QueryDefinitie_QuerydefinitieToegankelijkheid_Einde   `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieToegankelijkheid.
+type QueryDefinitie_QuerydefinitieToegankelijkheid_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitietoegankelijkheid_data,alias:querydefinitie_querydefinitietoegankelijkheid_data"`
+	QueryDefinitie_ID int                            `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int                            `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64                          `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Toegankelijkheid  QueryDefinitieToegankelijkheid `json:"toegankelijkheid" schema:"enum=QueryDefinitieToegankelijkheid"`
+	Opvoer            *time.Time                     `json:"opvoer,omitempty"`
+	Afvoer            *time.Time                     `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang — aanvangdatum van QueryDefinitie_QuerydefinitieToegankelijkheid.
+type QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitietoegankelijkheid_aanvang,alias:querydefinitie_querydefinitietoegankelijkheid_aanvang"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Einde — eindedatum van QueryDefinitie_QuerydefinitieToegankelijkheid.
+type QueryDefinitie_QuerydefinitieToegankelijkheid_Einde struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitietoegankelijkheid_einde,alias:querydefinitie_querydefinitietoegankelijkheid_einde"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieDocument — Het opgeslagen GraphQL-document. Enkelvoudig: altijd precies één geldig document per naam; een oude versie is via het peiltijdstip te zien, niet via het versienummer. Materieel: een nieuwe versie is te stagen. `toelichting` beschrijft deze versie.
+type QueryDefinitie_QuerydefinitieDocument struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitiedocument,alias:querydefinitie_querydefinitiedocument"`
+	QueryDefinitie_ID    int                                             `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                                 `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                                      `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                                      `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieDocument_Data    `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang              []QueryDefinitie_QuerydefinitieDocument_Aanvang `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                []QueryDefinitie_QuerydefinitieDocument_Einde   `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieDocument.
+type QueryDefinitie_QuerydefinitieDocument_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiedocument_data,alias:querydefinitie_querydefinitiedocument_data"`
 	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
 	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	GraphqlDocument   string     `json:"graphql_document"`
 	DefinitieVersie   Versie     `json:"definitie_versie" schema:"datatype:Versie"`
+	Toelichting       *string    `json:"toelichting,omitempty"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Aanvang — aanvangdatum van QueryDefinitie_QuerydefinitieDocument.
+type QueryDefinitie_QuerydefinitieDocument_Aanvang struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiedocument_aanvang,alias:querydefinitie_querydefinitiedocument_aanvang"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Einde — eindedatum van QueryDefinitie_QuerydefinitieDocument.
+type QueryDefinitie_QuerydefinitieDocument_Einde struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiedocument_einde,alias:querydefinitie_querydefinitiedocument_einde"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer            *time.Time `json:"opvoer,omitempty"`
 	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }

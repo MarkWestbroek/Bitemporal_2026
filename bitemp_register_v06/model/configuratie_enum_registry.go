@@ -10,9 +10,12 @@ func initConfiguratieEnumRegistry() {
 	EnumDomeinen["WeergaveDefinitieStatus"] = "configuratie"
 	EnumWaarden["QueryDefinitieStatus"] = []string{"concept", "actief", "inactief"}
 	EnumDomeinen["QueryDefinitieStatus"] = "configuratie"
+	EnumWaarden["QueryDefinitieToegankelijkheid"] = []string{"publiek", "intern"}
+	EnumDomeinen["QueryDefinitieToegankelijkheid"] = "configuratie"
 
 	// Enum editor-layout (positie + lock)
 	EnumEditorLayouts["FormulierDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 2895, Y: -330}}
 	EnumEditorLayouts["WeergaveDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 3480, Y: -315}}
 	EnumEditorLayouts["QueryDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 4330, Y: -315}}
+	EnumEditorLayouts["QueryDefinitieToegankelijkheid"] = &EditorLayout{Positie: &V3Positie{X: 4580, Y: -315}}
 }
