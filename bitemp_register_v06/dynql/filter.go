@@ -146,9 +146,12 @@ func filterDefVoor(meta model.TypeMeta) *filterDef {
 				}
 			}
 			// Een modelveld met dezelfde naam wint (komt in de praktijk niet voor).
+			// De lijst-items zijn bewust nullable: zo past een optionele variabele in een
+			// opgeslagen document, bv. and: [ {<vast deel>}, $extra ]. Een weggelaten item
+			// telt niet mee (zie combineer), dus een aanroeper kan alleen versmallen.
 			combinatoren := map[string]*graphql.InputObjectFieldConfig{
-				filterEn:   {Type: graphql.NewList(graphql.NewNonNull(def.input)), Description: "Alle condities moeten gelden."},
-				filterOf:   {Type: graphql.NewList(graphql.NewNonNull(def.input)), Description: "Ten minste één conditie moet gelden."},
+				filterEn:   {Type: graphql.NewList(def.input), Description: "Alle condities moeten gelden. Een null-item telt niet mee."},
+				filterOf:   {Type: graphql.NewList(def.input), Description: "Ten minste één conditie moet gelden. Een null-item telt niet mee."},
 				filterNiet: {Type: def.input, Description: "De conditie mag niet gelden."},
 			}
 			for naam, cfg := range combinatoren {
@@ -464,6 +467,12 @@ func (b *filterBouwer) combineer(def *filterDef, naam string, waarde interface{}
 	}
 	delen := []string{}
 	for _, item := range lijst {
+		// Een null-item (bv. een weggelaten variabele) telt niet mee: in een and is het
+		// neutraal, en in een or voegt het geen alternatief toe. Het mag nooit als
+		// "altijd waar" in een or belanden, want dan zou het filter verruimen.
+		if item == nil {
+			continue
+		}
 		sub, ok := item.(map[string]interface{})
 		if !ok {
 			return "", fmt.Errorf("filter %s: verwacht een lijst van objecten", naam)
@@ -478,6 +487,9 @@ func (b *filterBouwer) combineer(def *filterDef, naam string, waarde interface{}
 		delen = append(delen, "("+cond+")")
 	}
 	if len(delen) == 0 {
+		if naam == filterOf {
+			return "FALSE", nil // geen enkel alternatief: nooit waar (niet "geen conditie")
+		}
 		return "", nil
 	}
 	sep := " AND "

@@ -217,6 +217,11 @@ moment — voor hub, data én de entiteit zelf. Filter en formele tijd gaan dus 
 - `ne` is NULL-veilig (`IS DISTINCT FROM`): "fase is niet X" omvat ook records zonder fase.
 - `contains` is hoofdletterongevoelig; `%` en `_` in de zoektekst zijn letterlijk.
 - `in: []` is nooit waar.
+- `and`/`or` accepteren null-items, en die tellen niet mee: in een `and` zijn ze neutraal, in
+  een `or` voegen ze geen alternatief toe. Een `or` zonder alternatieven (`or: []`) is nooit
+  waar. Zo past een optionele variabele in een opgeslagen document zonder het filter te kunnen
+  verruimen: `filter: { and: [ { <vast deel> }, $extra ] }` met `$extra: <Entiteit>Filter`
+  — de aanroeper kan alleen versmallen (test: `TestFilter_OpgeslagenDocumentAanroeperVersmaltAlleen`).
 - **Enums** worden als tekst vergeleken, zoals ze in de output staan. Een waarde die niet in
   de enum voorkomt geeft een fout met de toegestane waarden, in plaats van stilletjes nul
   resultaten.
