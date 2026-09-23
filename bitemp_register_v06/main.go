@@ -160,8 +160,10 @@ func NewRouter() *gin.Engine {
 	router.GET("/docs/*filepath", handlers.DocsPage)
 	router.GET("/api/viz/schema", handlers.MaakVizSchemaHandler())
 	router.GET("/api/viz/schema/datatypes", handlers.MaakVizSchemaDatatypesHandler())
-	router.GET("/api/viz/entiteit/:typenaam/max-id", handlers.MaakVizEntiteitMaxIDHandler())
-	router.GET("/api/viz/relatie/:typenaam/secondaire-ids", handlers.MaakVizRelatieSecondaireIDsHandler())
+	// max-id en secondaire-ids lezen registerdata: achter de leesguard (LEESTOEGANG, zie
+	// middleware/leestoegang.go). Schema en reflijst-opties zijn metadata/naslag en blijven open.
+	router.GET("/api/viz/entiteit/:typenaam/max-id", middleware.RequireLezer(), handlers.MaakVizEntiteitMaxIDHandler())
+	router.GET("/api/viz/relatie/:typenaam/secondaire-ids", middleware.RequireLezer(), handlers.MaakVizRelatieSecondaireIDsHandler())
 	router.GET("/api/viz/reflijst/:typenaam/opties", handlers.MaakVizReflijstOptiesHandler())
 	// WEB_DIR (optioneel): serveer de frontend uit een andere map, bv. de gebouwde frontend van een
 	// andere checkout. Handig voor een test-instantie in een worktree waar de frontend niet gebouwd is.
@@ -170,6 +172,18 @@ func NewRouter() *gin.Engine {
 		webDir = "./web"
 	}
 	router.Static("/viz", webDir)
+
+	// Leespoort (plan 2026-09-22 §7.7 stap 3): LEESTOEGANG=documenten sluit anoniem lezen van
+	// registerdata af; alleen publieke opgeslagen documenten, configuratie en naslag blijven open.
+	if middleware.LeesToegangAlleenDocumenten() {
+		if middleware.IsAuthEnabled() {
+			fmt.Println("leestoegang: documenten — anoniem alleen publieke QueryDefinities, configuratie en referentielijsten; overige registerdata vereist minimaal rol viewer")
+		} else {
+			fmt.Println("WARN: LEESTOEGANG=documenten heeft geen effect zolang AUTH_ENABLED=false")
+		}
+	} else {
+		fmt.Println("leestoegang: open — alle GET-routes en GraphQL-queries zijn anoniem leesbaar (zet LEESTOEGANG=documenten om de poort te sluiten)")
+	}
 
 	// Autorisatie (BE-review 2026-07-07, actiepunt 3): muterende routes vereisen
 	// minimaal "editor", beheer-routes "admin". Beide zijn no-ops zolang
@@ -222,9 +236,11 @@ func NewRouter() *gin.Engine {
 		// publiek document mag anoniem, een intern document vereist een ingelogde gebruiker
 		// (minimaal "viewer"; no-op als AUTH_ENABLED=false).
 		magIntern := func(c *gin.Context) bool { return middleware.ControleerRol(c, "viewer") }
+		// Een ad-hoc query (geen documentId, geen introspectie) leest registerdata en valt
+		// onder de leespoort: open, of minimaal "viewer" als LEESTOEGANG=documenten.
 		router.GET("/graphql/playground", dynql.PlaygroundHandler("/graphql/query"))
-		router.POST("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren, magIntern))
-		router.GET("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren, magIntern))
+		router.POST("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren, magIntern, middleware.MagLezen))
+		router.GET("/graphql/query", dynql.GraphQLHandler(gqlSchema, magMuteren, magIntern, middleware.MagLezen))
 		// Een document valideren zonder uit te voeren (voor de frontend, vóór het opslaan
 		// van een QueryDefinitie). Alleen-lezen en zonder data, dus openbaar zoals queries.
 		router.POST("/graphql/valideer", dynql.ValideerDocumentHandler(gqlSchema))

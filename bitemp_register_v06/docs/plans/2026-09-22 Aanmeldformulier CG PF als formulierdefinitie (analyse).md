@@ -647,6 +647,12 @@ onderliggende stringkolommen van de data-tabel, niet op de afgeleide naam.
    moet alle template-paden bevatten (voorproefje van de GV, §8).
 3. **De poort**: anoniem alleen opgeslagen documenten; REST-GET's en ad-hoc GraphQL achter een rol.
    **Let op bij het ontwerpen (24-09):** de publicatiepagina heeft naast de data ook *metadata*
+   ✅ **Voorbereid** (24-09, branch `feat/leestoegang-poort`, standaard uit): `LEESTOEGANG=open|documenten`
+   (`middleware/leestoegang.go`, `routes/leestoegang.go`, vierde guard in `dynql.GraphQLHandler`).
+   Open blijven: het configuratie-domein en referentielijsten (uit het model afgeleid),
+   schema/metadata-endpoints, introspectie, publieke `documentId`. Dicht: REST-GET's op
+   registerdata, `/registraties`, `/wijzigingen`, `/tests`, bestanden, `max-id`/`secondaire-ids`,
+   ad-hoc GraphQL. Aanzetten pas na verificatie van de embed (`VPS_DEPLOYMENT.md` §9).
    anoniem nodig: `/api/viz/schema` (typeMeta), `/full/weergave_definities` (de WD zelf),
    GraphQL-introspectie (`normaliseerTemplatePaden`) en `/api/viz/reflijst/…/opties` (alleen de
    terugval-kolommen). De poort gaat dus over *registerdata*, niet over configuratie en schema —

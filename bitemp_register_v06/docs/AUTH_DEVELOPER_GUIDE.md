@@ -222,7 +222,7 @@ if middleware.IsAuthEnabled() {
 Dit leest `ADMIN_USERNAME` en `ADMIN_PASSWORD` uit de environment en maakt (eenmalig) een admin-gebruiker aan als die nog niet bestaat.
 
 
-### 3.6 GraphQL: queries openbaar, mutaties vereisen `editor`
+### 3.6 GraphQL: queries openbaar (tenzij `LEESTOEGANG=documenten`, §7), mutaties vereisen `editor`
 
 `/graphql/query` (GET en POST) is **één endpoint voor lezen én schrijven**. Een route-middleware
 ziet het verschil niet; daarom beslist de handler op basis van het GraphQL-document zelf.
@@ -602,6 +602,26 @@ auth-configuratie via `middleware.ValideerAuthConfiguratie()`:
 
 ---
 
+
+### LEESTOEGANG
+
+*Sinds 24 september 2026 (voorbereid; standaard uit).* De **leespoort** voor anoniem lezen.
+
+| Waarde | Gedrag |
+|---|---|
+| `open` (default) | zoals voorheen: alle GET-routes en GraphQL-queries zijn anoniem leesbaar |
+| `documenten` | anoniem lezen van **registerdata** vereist minimaal de rol `viewer`; anoniem mag alleen nog: publieke opgeslagen documenten (`documentId`, zie `docs/dynamische-graphql-laag.md` § Uitvoeren op naam), GraphQL-introspectie, het configuratie-domein (WeergaveDefinitie, FormulierDefinitie, QueryDefinitie), referentielijsten, schema- en metadata-endpoints en de documentatie |
+
+Net als `RequireRol` is dit een no-op zolang `AUTH_ENABLED=false` (de API logt dan een WARN).
+Wat "registerdata" is en wat niet, wordt uit het model afgeleid (`routes.OpenbaarLeesbaar`:
+domein `configuratie` en subtype referentielijst zijn open); er staat geen typenaam in de code.
+Implementatie: `middleware/leestoegang.go` (`MagLezen`, `RequireLezer`), `routes/leestoegang.go`,
+de vierde guard van `dynql.GraphQLHandler`. Tests: `routes/leestoegang_test.go`,
+`dynql/leestoegang_test.go`.
+
+Zet de poort pas dicht als de publicatiepagina aantoonbaar via opgeslagen documenten werkt
+(`docs/VPS_DEPLOYMENT.md` §9); anders valt de embed op commonground.nl weg. Op termijn neemt
+toegangsspraak dit over met rijcondities (plan 2026-09-22 §7.7 stap 4).
 ## 8. Rollen en hiërarchie
 
 ```

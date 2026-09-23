@@ -85,7 +85,7 @@ func TestGraphQLHandler_QueriesOpenbaarMutatiesEditor(t *testing.T) {
 					c.Set(middleware.ContextKeyGebruiker, &middleware.JWTClaims{Gebruikersnaam: "t", Rol: tt.rol})
 				}
 				c.Next()
-			}, dynql.GraphQLHandler(testSchema(t, &mutaties), magMuteren, nil))
+			}, dynql.GraphQLHandler(testSchema(t, &mutaties), magMuteren, nil, nil))
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest(http.MethodPost, "/graphql/query", strings.NewReader(tt.body))
@@ -109,7 +109,7 @@ func TestGraphQLHandler_GetMutatieAnoniemGeweigerd(t *testing.T) {
 	mutaties := 0
 	r := gin.New()
 	r.GET("/graphql/query", dynql.GraphQLHandler(testSchema(t, &mutaties),
-		func(c *gin.Context) bool { return middleware.ControleerRol(c, "editor") }, nil))
+		func(c *gin.Context) bool { return middleware.ControleerRol(c, "editor") }, nil, nil))
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/graphql/query?query=mutation%7Bzet%7D", nil))

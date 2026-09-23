@@ -387,6 +387,10 @@ anders optie). Een snapshot is een noodrem, geen backup.
   QueryDefinitie(s)`. Volgorde is belangrijk: aanmeldstatus-replay vóór de correctie, anders
   is de tabel even leeg. Heeft een instantie de QueryDefinitie-versie van 23 september
   (`Meta`-GE) gedraaid, dan eerst `scripts/sql/2026-09-23-querydefinitie-losse-ges-opruimen.sql`.
+  **Daarna, en pas als de embed aantoonbaar via de documenten werkt:** de leespoort dicht met
+  `LEESTOEGANG=documenten` in de omgeving van de API (compose) en de API opnieuw starten;
+  anoniem lezen van registerdata geeft dan 401, de embed blijft werken via `documentId`.
+  Terugdraaien = de variabele weghalen. Zie `docs/AUTH_DEVELOPER_GUIDE.md` §7.
 - **`$` in wachtwoorden** — compose leest het als variabele. `.env.example` genereert ze zonder.
 - **`minio-init` stopt** — hoort zo; daarom achter `--profile init`.
 - **OpenFTV** — `openftv_adl` database, `package authz` in de rego, bundle-403: zie TrueNAS §2.3–2.6.

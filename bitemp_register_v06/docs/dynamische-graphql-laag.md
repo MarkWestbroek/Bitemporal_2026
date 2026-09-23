@@ -307,6 +307,12 @@ registratie-engine — een ongeldig document weigeren — is nog niet gebouwd.)
 `opgeslagen_documenten.go` kent de typenamen; laden, formele tijd en het platslaan van hub+data
 lopen via dezelfde generieke code als de gewone resolvers.
 
+**De poort (`LEESTOEGANG=documenten`, standaard uit).** Met de poort dicht mag een anonieme
+aanroeper op `/graphql/query` alleen nog `documentId` (publieke documenten) en introspectie
+(`__schema`, `__type`); een ad-hoc `query` vereist minimaal de rol `viewer`. Hetzelfde geldt
+voor de REST-GET's op registerdata; configuratie (WeergaveDefinitie enz.), referentielijsten
+en schema-endpoints blijven open. Zie `docs/AUTH_DEVELOPER_GUIDE.md` §7.
+
 **Enkelvoudig en materieel — een bekende beperking.** De uitvoerder kiest per GE uit álle
 formeel actieve hubs de hub die op dat moment materieel geldig is (`kiesGeldigeHub`). Dat is de
 bedoelde semantiek van enkelvoudig op een materieel GE: één geldig record tegelijk op de
