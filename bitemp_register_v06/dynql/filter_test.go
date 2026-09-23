@@ -123,6 +123,28 @@ func TestFilter_OrEnAnd(t *testing.T) {
 	verwachtBevat(t, sql, `(("initiatief"."id" = 1) OR ("initiatief"."id" = 2))`)
 }
 
+// Een or zonder alternatieven (leeg, of alleen null-items) is nooit waar. Vóór
+// 23-09-2026 leverde or: [] "geen conditie" op, dus alles — een verruiming.
+func TestFilter_OrZonderAlternatievenIsOnwaar(t *testing.T) {
+	for _, lijst := range [][]interface{}{{}, {nil}, {nil, nil}} {
+		sql := mustRender(t, map[string]interface{}{"or": lijst}, nil)
+		verwachtBevat(t, sql, "WHERE (FALSE)")
+	}
+}
+
+// Een null-item in een and telt niet mee (neutraal); in een or voegt het niets toe.
+func TestFilter_NullItemTeltNietMee(t *testing.T) {
+	sql := mustRender(t, map[string]interface{}{
+		"and": []interface{}{map[string]interface{}{"id": map[string]interface{}{"eq": 7}}, nil},
+	}, nil)
+	verwachtBevat(t, sql, `WHERE ((("initiatief"."id" = 7)))`)
+
+	sql = mustRender(t, map[string]interface{}{
+		"or": []interface{}{map[string]interface{}{"id": map[string]interface{}{"eq": 7}}, nil},
+	}, nil)
+	verwachtBevat(t, sql, `WHERE ((("initiatief"."id" = 7)))`)
+}
+
 func TestFilter_LeegFilterGeenWhere(t *testing.T) {
 	sql := mustRender(t, map[string]interface{}{}, nil)
 	if strings.Contains(sql, "WHERE") {
@@ -308,4 +330,63 @@ func TestFilter_EndToEndViaGraphQL(t *testing.T) {
 	if len(res.Errors) == 0 {
 		t.Fatal("verwacht een validatiefout voor een onbekend filterveld")
 	}
+}
+
+// Het patroon voor opgeslagen (publieke) documenten, plan §7.4.1: het vaste deel staat
+// in het document, de aanroeper kan via een optionele variabele alleen versmallen.
+func TestFilter_OpgeslagenDocumentAanroeperVersmaltAlleen(t *testing.T) {
+	meta := initiatiefMeta(t)
+
+	var mu sync.Mutex
+	var laatste string
+	matcher := sqlmock.QueryMatcherFunc(func(_, actual string) error {
+		mu.Lock()
+		laatste = actual
+		mu.Unlock()
+		return nil
+	})
+	sqlDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(matcher))
+	if err != nil {
+		t.Fatalf("sqlmock: %v", err)
+	}
+	defer sqlDB.Close()
+	mock.MatchExpectationsInOrder(false)
+	for i := 0; i < 3; i++ {
+		mock.ExpectQuery("").WillReturnRows(sqlmock.NewRows([]string{"id"}))
+	}
+	schema, err := BuildSchema(bun.NewDB(sqlDB, pgdialect.New()))
+	if err != nil {
+		t.Fatalf("BuildSchema: %v", err)
+	}
+	defer InitDB(nil)
+
+	document := `query($extra: InitiatiefFilter) {
+		` + meta.Padnaam + `(filter: { and: [ { id: { eq: 7 } }, $extra ] }) { id } }`
+
+	voer := func(t *testing.T, vars map[string]interface{}) string {
+		t.Helper()
+		laatste = ""
+		res := graphql.Do(graphql.Params{Schema: *schema, Context: context.Background(),
+			RequestString: document, VariableValues: vars})
+		if len(res.Errors) > 0 {
+			t.Fatalf("GraphQL-fouten: %v", res.Errors)
+		}
+		return laatste
+	}
+
+	t.Run("variabele weggelaten: alleen het vaste deel", func(t *testing.T) {
+		sql := voer(t, nil)
+		verwachtBevat(t, sql, `WHERE ((("initiatief"."id" = 7)))`)
+	})
+	t.Run("aanroeper versmalt", func(t *testing.T) {
+		sql := voer(t, map[string]interface{}{"extra": map[string]interface{}{"planningen": map[string]interface{}{}}})
+		verwachtBevat(t, sql, `("initiatief"."id" = 7) AND (EXISTS (SELECT 1 FROM "initiatief_planning"`)
+	})
+	t.Run("poging tot verruimen met or blijft binnen het vaste deel", func(t *testing.T) {
+		sql := voer(t, map[string]interface{}{"extra": map[string]interface{}{
+			"or": []interface{}{map[string]interface{}{"id": map[string]interface{}{"eq": 8}}},
+		}})
+		// De or zit binnen de and: id = 7 EN (id = 8) — nooit meer dan het vaste deel.
+		verwachtBevat(t, sql, `("initiatief"."id" = 7) AND ((("initiatief"."id" = 8)))`)
+	})
 }
