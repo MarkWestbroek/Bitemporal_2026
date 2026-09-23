@@ -106,6 +106,7 @@ Bouwstenen, in volgorde van noodzaak:
 | B5 | **Zoek-of-maak** voor Organisatie/Persoon: een bestaande kiezen via `RefCombobox`, of een nieuwe opvoeren met `$nieuw.org` | frontend + B1 | M |
 | B6 | **Openbare indiening**: een apart endpoint of een servicerol die alleen dit sjabloon mag indienen, met rate limit/captcha, plus een status op de aanmelding (zie §6.4: niet via `Beoordeling`) | backend/auth | M, beleidskeuze |
 | B7 | **Modelaanpassingen**: `Product.parallel_gebruik`, `Product.componenten`, `CG_laag` meervoudig (GE `ProductLaag`), enum `Producttype` + *Standaard*, eventueel `InitiatiefPersoon` | CG-model + codegen | S |
+| B7a | ✅ **`Initiatief.Aanmeldstatus`** (24-09-2026): enkelvoudig, niet materieel; enum `Aanmeldstatus` = `nieuwe_aanmelding` / `in_behandeling` / `geaccepteerd` / `afgewezen`, plus `toelichting`. V3: `docs/Model files (V3)/CG 2026-09-24 Aanmeldstatus`. Replay voor de 85 bestaande initiatieven → geaccepteerd, en de QueryDefinitie `publieke-initiatieven` als replay (zie `VPS_DEPLOYMENT.md` §9). `CG_laag` meervoudig blijft liggen: het is een veld in `Product`, dus een apart GE plus migratie | CG-model + codegen | gedaan |
 
 **Minimale eerste stap zonder nieuwe backend:** B2 + B4 met client-side id (`max-id`) voor alleen
 het initiatiefdeel (vragen 1–12, 16–29), achter login. Organisatie en PO kiezen dan uit bestaande
@@ -638,8 +639,9 @@ onderliggende stringkolommen van de data-tabel, niet op de afgeleide naam.
    PostgreSQL (`dynql/filter_pg_test.go`), inclusief de valkuil "363 gebruikt, 599 realiseert".
 2. **`QueryDefinitie`** in het configuratie-domein via model + codegen; publicatietabel roept een
    opgeslagen document aan (7.4).
-   ✅ Model (23-09) en uitvoeren op naam (24-09) gebouwd; de publicatietabel omzetten is de
-   volgende stap (daarna pas stap 3, anders valt de embed op commonground.nl weg).
+   ✅ Model (23-09), uitvoeren op naam (24-09) en de QueryDefinitie `publieke-initiatieven`
+   als replay (24-09, filtert op `aanmeldstatus = geaccepteerd`, B7a) gebouwd; de publicatietabel
+   omzetten is de volgende stap (daarna pas stap 3, anders valt de embed op commonground.nl weg).
 3. **De poort**: anoniem alleen opgeslagen documenten; REST-GET's en ad-hoc GraphQL achter een rol.
 4. Later neemt **toegangsspraak** stap 3 over met echte rijcondities; de grammatica kan het al,
    alleen de handhaving ontbreekt.

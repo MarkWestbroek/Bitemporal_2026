@@ -296,6 +296,7 @@ func initCgMetaRegistry() {
 			{Rolnaam: "BetrokkenOrganisatie", JSONRolnaam: "betrokken_organisatie", Doeltype: "Initiatief_BetrokkenOrganisatie", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "Beoordelingen", JSONRolnaam: "beoordelingen", Doeltype: "Initiatief_Beoordeling", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Etalages", JSONRolnaam: "etalages", Doeltype: "Initiatief_Etalage", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Aanmeldstatussen", JSONRolnaam: "aanmeldstatussen", Doeltype: "Initiatief_Aanmeldstatus", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "InitiatiefGemeenten", JSONRolnaam: "initiatief_gemeenten", Doeltype: "InitiatiefGemeente", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "InitiatiefDomeinen", JSONRolnaam: "initiatief_domeinen", Doeltype: "InitiatiefDomein", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "InitiatiefApiStandaarden", JSONRolnaam: "initiatief_api_standaarden", Doeltype: "InitiatiefAPIStandaard", Momentvoorkomen: Meervoudig},
@@ -642,6 +643,36 @@ func initCgMetaRegistry() {
 		Layout:                 &EditorLayout{Positie: &V3Positie{X: 945, Y: -2310}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Etalage_Data", Momentvoorkomen: Enkelvoudig},
+		},
+	}
+	MetaRegistry["Initiatief_Aanmeldstatus"] = TypeMeta{
+		Typenaam:               "Initiatief_Aanmeldstatus",
+		Klassenaam:             "Aanmeldstatus",
+		Description:            "Levenscyclus van de aanmelding, los van Beoordeling (het kwaliteitsdossier brons/zilver/goud): nieuwe_aanmelding (via het aanmeldformulier binnengekomen, nog niet bekeken), in_behandeling, geaccepteerd (zichtbaar op de publieke site), afgewezen. Alleen geaccepteerde initiatieven komen in de publieke QueryDefinitie. Niet materieel: de formele historie legt vast wanneer wat is besloten.",
+		Metatype:               MetatypeGegevenselement,
+		IsMaterieel:            false,
+		Domein:                 "CG",
+		GESubtype:              GESubtypeHub,
+		DataTypenaam:           "Initiatief_Aanmeldstatus_Data",
+		Kleur:                  "#bfdbfe",
+		Veldnaam:               "aanmeldstatus",
+		Padnaam:                "aanmeldstatussen",
+		Meervoud:               "aanmeldstatussen",
+		Factory:                func() Representatie { return &Initiatief_Aanmeldstatus_Input{} },
+		Tabelnaam:              "initiatief_aanmeldstatus",
+		IDKolom:                "rel_id",
+		DBFactory:              func() Representatie { return &Initiatief_Aanmeldstatus{} },
+		DBSliceFactory:         func() any { return &[]Initiatief_Aanmeldstatus{} },
+		HeeftPFK:               true,
+		RelatieveAutoincrement: true,
+		EntiteitIDKolom:        "initiatief_id",
+		Momentvoorkomen:        Enkelvoudig,
+		Layout: &EditorLayout{
+			Positie: &V3Positie{X: 1545, Y: -1200},
+			EdgeID:  "Initiatief->Initiatief_Aanmeldstatus",
+		},
+		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
+			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Aanmeldstatus_Data", Momentvoorkomen: Enkelvoudig},
 		},
 	}
 	MetaRegistry["InitiatiefGemeente"] = TypeMeta{
@@ -1033,6 +1064,28 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "Initiatief_Etalage",
+	}
+	MetaRegistry["Initiatief_Aanmeldstatus_Data"] = TypeMeta{
+		Typenaam:               "Initiatief_Aanmeldstatus_Data",
+		Klassenaam:             "Data",
+		Description:            "Geversioned inhoud van Initiatief_Aanmeldstatus.",
+		Metatype:               MetatypeGegevenselement,
+		GESubtype:              GESubtypeData,
+		Kleur:                  "#bfdbfe",
+		Veldnaam:               "initiatief_aanmeldstatus_data",
+		Padnaam:                "initiatief_aanmeldstatus_data",
+		Meervoud:               "initiatief_aanmeldstatus_data",
+		Factory:                func() Representatie { return &Initiatief_Aanmeldstatus_Data{} },
+		SliceFactory:           func() any { return &[]Initiatief_Aanmeldstatus_Data{} },
+		Tabelnaam:              "initiatief_aanmeldstatus_data",
+		IDKolom:                "versie",
+		DBFactory:              func() Representatie { return &Initiatief_Aanmeldstatus_Data{} },
+		DBSliceFactory:         func() any { return &[]Initiatief_Aanmeldstatus_Data{} },
+		HeeftPFK:               true,
+		RelatieveAutoincrement: true,
+		EntiteitIDKolom:        "initiatief_id",
+		Momentvoorkomen:        Enkelvoudig,
+		BovenliggendTypenaam:   "Initiatief_Aanmeldstatus",
 	}
 	MetaRegistry["InitiatiefGemeente_Data"] = TypeMeta{
 		Typenaam:               "InitiatiefGemeente_Data",
