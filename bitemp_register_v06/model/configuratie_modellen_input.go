@@ -44,19 +44,41 @@ type WeergaveDefinitie_DetailTemplate_Input struct {
 	DefinitieVersie      Versie `json:"definitie_versie"`
 }
 
-type QueryDefinitie_Meta_Input struct {
-	QUERYDEFINITIE_ID int                  `json:"querydefinitie_id"`
-	Rel_ID            int                  `json:"rel_id"`
-	Naam              string               `json:"naam"`
-	Beschrijving      string               `json:"beschrijving"`
-	Doeltype          string               `json:"doeltype"`
-	Status            QueryDefinitieStatus `json:"status"`
-	IsPubliek         *bool                `json:"is_publiek,omitempty"`
-}
-
-type QueryDefinitie_Document_Input struct {
+type QueryDefinitie_QuerydefinitieNaam_Input struct {
 	QUERYDEFINITIE_ID int    `json:"querydefinitie_id"`
 	Rel_ID            int    `json:"rel_id"`
-	GraphqlDocument   string `json:"graphql_document"`
-	DefinitieVersie   Versie `json:"definitie_versie"`
+	Naam              string `json:"naam"`
+}
+
+type QueryDefinitie_QuerydefinitieBeschrijving_Input struct {
+	QUERYDEFINITIE_ID int    `json:"querydefinitie_id"`
+	Rel_ID            int    `json:"rel_id"`
+	Beschrijving      string `json:"beschrijving"`
+}
+
+type QueryDefinitie_QuerydefinitieStatus_Input struct {
+	QUERYDEFINITIE_ID int                  `json:"querydefinitie_id"`
+	Rel_ID            int                  `json:"rel_id"`
+	Status            QueryDefinitieStatus `json:"status"`
+	Reden             *string              `json:"reden,omitempty"`
+	Aanvang           *Date                `json:"aanvang,omitempty"`
+	Einde             *Date                `json:"einde,omitempty"`
+}
+
+type QueryDefinitie_QuerydefinitieToegankelijkheid_Input struct {
+	QUERYDEFINITIE_ID int                            `json:"querydefinitie_id"`
+	Rel_ID            int                            `json:"rel_id"`
+	Toegankelijkheid  QueryDefinitieToegankelijkheid `json:"toegankelijkheid"`
+	Aanvang           *Date                          `json:"aanvang,omitempty"`
+	Einde             *Date                          `json:"einde,omitempty"`
+}
+
+type QueryDefinitie_QuerydefinitieDocument_Input struct {
+	QUERYDEFINITIE_ID int     `json:"querydefinitie_id"`
+	Rel_ID            int     `json:"rel_id"`
+	GraphqlDocument   string  `json:"graphql_document"`
+	DefinitieVersie   Versie  `json:"definitie_versie"`
+	Toelichting       *string `json:"toelichting,omitempty"`
+	Aanvang           *Date   `json:"aanvang,omitempty"`
+	Einde             *Date   `json:"einde,omitempty"`
 }

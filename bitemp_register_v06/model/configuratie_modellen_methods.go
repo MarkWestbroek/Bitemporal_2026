@@ -93,25 +93,61 @@ func (wd WeergaveDefinitie_DetailTemplate) GetAfvoer() *time.Time   { return wd.
 func (wd *WeergaveDefinitie_DetailTemplate) SetAfvoer(t *time.Time) { wd.Afvoer = t }
 func (wd WeergaveDefinitie_DetailTemplate) String() string          { return RepresentatieToString(wd) }
 
-// QueryDefinitie_Meta
-func (qm QueryDefinitie_Meta) GetID() any              { return qm.Rel_ID }
-func (qm QueryDefinitie_Meta) Metatype() Metatype      { return MetatypeGegevenselement }
-func (qm *QueryDefinitie_Meta) ClearID()               { qm.Rel_ID = 0 }
-func (qm QueryDefinitie_Meta) GetOpvoer() *time.Time   { return qm.Opvoer }
-func (qm *QueryDefinitie_Meta) SetOpvoer(t *time.Time) { qm.Opvoer = t }
-func (qm QueryDefinitie_Meta) GetAfvoer() *time.Time   { return qm.Afvoer }
-func (qm *QueryDefinitie_Meta) SetAfvoer(t *time.Time) { qm.Afvoer = t }
-func (qm QueryDefinitie_Meta) String() string          { return RepresentatieToString(qm) }
+// QueryDefinitie_QuerydefinitieNaam
+func (qq QueryDefinitie_QuerydefinitieNaam) GetID() any              { return qq.Rel_ID }
+func (qq QueryDefinitie_QuerydefinitieNaam) Metatype() Metatype      { return MetatypeGegevenselement }
+func (qq *QueryDefinitie_QuerydefinitieNaam) ClearID()               { qq.Rel_ID = 0 }
+func (qq QueryDefinitie_QuerydefinitieNaam) GetOpvoer() *time.Time   { return qq.Opvoer }
+func (qq *QueryDefinitie_QuerydefinitieNaam) SetOpvoer(t *time.Time) { qq.Opvoer = t }
+func (qq QueryDefinitie_QuerydefinitieNaam) GetAfvoer() *time.Time   { return qq.Afvoer }
+func (qq *QueryDefinitie_QuerydefinitieNaam) SetAfvoer(t *time.Time) { qq.Afvoer = t }
+func (qq QueryDefinitie_QuerydefinitieNaam) String() string          { return RepresentatieToString(qq) }
 
-// QueryDefinitie_Document
-func (qd QueryDefinitie_Document) GetID() any              { return qd.Rel_ID }
-func (qd QueryDefinitie_Document) Metatype() Metatype      { return MetatypeGegevenselement }
-func (qd *QueryDefinitie_Document) ClearID()               { qd.Rel_ID = 0 }
-func (qd QueryDefinitie_Document) GetOpvoer() *time.Time   { return qd.Opvoer }
-func (qd *QueryDefinitie_Document) SetOpvoer(t *time.Time) { qd.Opvoer = t }
-func (qd QueryDefinitie_Document) GetAfvoer() *time.Time   { return qd.Afvoer }
-func (qd *QueryDefinitie_Document) SetAfvoer(t *time.Time) { qd.Afvoer = t }
-func (qd QueryDefinitie_Document) String() string          { return RepresentatieToString(qd) }
+// QueryDefinitie_QuerydefinitieBeschrijving
+func (qq QueryDefinitie_QuerydefinitieBeschrijving) GetID() any { return qq.Rel_ID }
+func (qq QueryDefinitie_QuerydefinitieBeschrijving) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (qq *QueryDefinitie_QuerydefinitieBeschrijving) ClearID()               { qq.Rel_ID = 0 }
+func (qq QueryDefinitie_QuerydefinitieBeschrijving) GetOpvoer() *time.Time   { return qq.Opvoer }
+func (qq *QueryDefinitie_QuerydefinitieBeschrijving) SetOpvoer(t *time.Time) { qq.Opvoer = t }
+func (qq QueryDefinitie_QuerydefinitieBeschrijving) GetAfvoer() *time.Time   { return qq.Afvoer }
+func (qq *QueryDefinitie_QuerydefinitieBeschrijving) SetAfvoer(t *time.Time) { qq.Afvoer = t }
+func (qq QueryDefinitie_QuerydefinitieBeschrijving) String() string          { return RepresentatieToString(qq) }
+
+// QueryDefinitie_QuerydefinitieStatus
+func (qq QueryDefinitie_QuerydefinitieStatus) GetID() any              { return qq.Rel_ID }
+func (qq QueryDefinitie_QuerydefinitieStatus) Metatype() Metatype      { return MetatypeGegevenselement }
+func (qq *QueryDefinitie_QuerydefinitieStatus) ClearID()               { qq.Rel_ID = 0 }
+func (qq QueryDefinitie_QuerydefinitieStatus) GetOpvoer() *time.Time   { return qq.Opvoer }
+func (qq *QueryDefinitie_QuerydefinitieStatus) SetOpvoer(t *time.Time) { qq.Opvoer = t }
+func (qq QueryDefinitie_QuerydefinitieStatus) GetAfvoer() *time.Time   { return qq.Afvoer }
+func (qq *QueryDefinitie_QuerydefinitieStatus) SetAfvoer(t *time.Time) { qq.Afvoer = t }
+func (qq QueryDefinitie_QuerydefinitieStatus) String() string          { return RepresentatieToString(qq) }
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid
+func (qq QueryDefinitie_QuerydefinitieToegankelijkheid) GetID() any { return qq.Rel_ID }
+func (qq QueryDefinitie_QuerydefinitieToegankelijkheid) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (qq *QueryDefinitie_QuerydefinitieToegankelijkheid) ClearID()               { qq.Rel_ID = 0 }
+func (qq QueryDefinitie_QuerydefinitieToegankelijkheid) GetOpvoer() *time.Time   { return qq.Opvoer }
+func (qq *QueryDefinitie_QuerydefinitieToegankelijkheid) SetOpvoer(t *time.Time) { qq.Opvoer = t }
+func (qq QueryDefinitie_QuerydefinitieToegankelijkheid) GetAfvoer() *time.Time   { return qq.Afvoer }
+func (qq *QueryDefinitie_QuerydefinitieToegankelijkheid) SetAfvoer(t *time.Time) { qq.Afvoer = t }
+func (qq QueryDefinitie_QuerydefinitieToegankelijkheid) String() string {
+	return RepresentatieToString(qq)
+}
+
+// QueryDefinitie_QuerydefinitieDocument
+func (qq QueryDefinitie_QuerydefinitieDocument) GetID() any              { return qq.Rel_ID }
+func (qq QueryDefinitie_QuerydefinitieDocument) Metatype() Metatype      { return MetatypeGegevenselement }
+func (qq *QueryDefinitie_QuerydefinitieDocument) ClearID()               { qq.Rel_ID = 0 }
+func (qq QueryDefinitie_QuerydefinitieDocument) GetOpvoer() *time.Time   { return qq.Opvoer }
+func (qq *QueryDefinitie_QuerydefinitieDocument) SetOpvoer(t *time.Time) { qq.Opvoer = t }
+func (qq QueryDefinitie_QuerydefinitieDocument) GetAfvoer() *time.Time   { return qq.Afvoer }
+func (qq *QueryDefinitie_QuerydefinitieDocument) SetAfvoer(t *time.Time) { qq.Afvoer = t }
+func (qq QueryDefinitie_QuerydefinitieDocument) String() string          { return RepresentatieToString(qq) }
 
 /* ================================================================
    3. _DATA — interface-methoden
@@ -167,25 +203,65 @@ func (d WeergaveDefinitie_DetailTemplate_Data) GetAfvoer() *time.Time   { return
 func (d *WeergaveDefinitie_DetailTemplate_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d WeergaveDefinitie_DetailTemplate_Data) String() string          { return RepresentatieToString(d) }
 
-// QueryDefinitie_Meta_Data
-func (d QueryDefinitie_Meta_Data) GetID() any              { return d.Versie }
-func (d QueryDefinitie_Meta_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *QueryDefinitie_Meta_Data) ClearID()               { d.Versie = 0 }
-func (d QueryDefinitie_Meta_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *QueryDefinitie_Meta_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d QueryDefinitie_Meta_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *QueryDefinitie_Meta_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d QueryDefinitie_Meta_Data) String() string          { return RepresentatieToString(d) }
+// QueryDefinitie_QuerydefinitieNaam_Data
+func (d QueryDefinitie_QuerydefinitieNaam_Data) GetID() any              { return d.Versie }
+func (d QueryDefinitie_QuerydefinitieNaam_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *QueryDefinitie_QuerydefinitieNaam_Data) ClearID()               { d.Versie = 0 }
+func (d QueryDefinitie_QuerydefinitieNaam_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *QueryDefinitie_QuerydefinitieNaam_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d QueryDefinitie_QuerydefinitieNaam_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *QueryDefinitie_QuerydefinitieNaam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d QueryDefinitie_QuerydefinitieNaam_Data) String() string          { return RepresentatieToString(d) }
 
-// QueryDefinitie_Document_Data
-func (d QueryDefinitie_Document_Data) GetID() any              { return d.Versie }
-func (d QueryDefinitie_Document_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *QueryDefinitie_Document_Data) ClearID()               { d.Versie = 0 }
-func (d QueryDefinitie_Document_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *QueryDefinitie_Document_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d QueryDefinitie_Document_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *QueryDefinitie_Document_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d QueryDefinitie_Document_Data) String() string          { return RepresentatieToString(d) }
+// QueryDefinitie_QuerydefinitieBeschrijving_Data
+func (d QueryDefinitie_QuerydefinitieBeschrijving_Data) GetID() any { return d.Versie }
+func (d QueryDefinitie_QuerydefinitieBeschrijving_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *QueryDefinitie_QuerydefinitieBeschrijving_Data) ClearID()               { d.Versie = 0 }
+func (d QueryDefinitie_QuerydefinitieBeschrijving_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *QueryDefinitie_QuerydefinitieBeschrijving_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d QueryDefinitie_QuerydefinitieBeschrijving_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *QueryDefinitie_QuerydefinitieBeschrijving_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d QueryDefinitie_QuerydefinitieBeschrijving_Data) String() string {
+	return RepresentatieToString(d)
+}
+
+// QueryDefinitie_QuerydefinitieStatus_Data
+func (d QueryDefinitie_QuerydefinitieStatus_Data) GetID() any              { return d.Versie }
+func (d QueryDefinitie_QuerydefinitieStatus_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *QueryDefinitie_QuerydefinitieStatus_Data) ClearID()               { d.Versie = 0 }
+func (d QueryDefinitie_QuerydefinitieStatus_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *QueryDefinitie_QuerydefinitieStatus_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d QueryDefinitie_QuerydefinitieStatus_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *QueryDefinitie_QuerydefinitieStatus_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d QueryDefinitie_QuerydefinitieStatus_Data) String() string          { return RepresentatieToString(d) }
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Data
+func (d QueryDefinitie_QuerydefinitieToegankelijkheid_Data) GetID() any { return d.Versie }
+func (d QueryDefinitie_QuerydefinitieToegankelijkheid_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *QueryDefinitie_QuerydefinitieToegankelijkheid_Data) ClearID()               { d.Versie = 0 }
+func (d QueryDefinitie_QuerydefinitieToegankelijkheid_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *QueryDefinitie_QuerydefinitieToegankelijkheid_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d QueryDefinitie_QuerydefinitieToegankelijkheid_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *QueryDefinitie_QuerydefinitieToegankelijkheid_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d QueryDefinitie_QuerydefinitieToegankelijkheid_Data) String() string {
+	return RepresentatieToString(d)
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Data
+func (d QueryDefinitie_QuerydefinitieDocument_Data) GetID() any { return d.Versie }
+func (d QueryDefinitie_QuerydefinitieDocument_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *QueryDefinitie_QuerydefinitieDocument_Data) ClearID()               { d.Versie = 0 }
+func (d QueryDefinitie_QuerydefinitieDocument_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *QueryDefinitie_QuerydefinitieDocument_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d QueryDefinitie_QuerydefinitieDocument_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *QueryDefinitie_QuerydefinitieDocument_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d QueryDefinitie_QuerydefinitieDocument_Data) String() string          { return RepresentatieToString(d) }
 
 /* ================================================================
    4. _AANVANG/_EINDE (entiteits-plumbing) — interface-methoden
@@ -255,6 +331,88 @@ func (q QueryDefinitie_Einde) String() string          { return RepresentatieToS
    5. _AANVANG/_EINDE (hub-level plumbing) — interface-methoden
    ================================================================ */
 
+// QueryDefinitie_QuerydefinitieStatus_Aanvang
+func (q QueryDefinitie_QuerydefinitieStatus_Aanvang) GetID() any { return q.Versie }
+func (q QueryDefinitie_QuerydefinitieStatus_Aanvang) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (q *QueryDefinitie_QuerydefinitieStatus_Aanvang) ClearID()               { q.Versie = 0 }
+func (q QueryDefinitie_QuerydefinitieStatus_Aanvang) GetOpvoer() *time.Time   { return q.Opvoer }
+func (q *QueryDefinitie_QuerydefinitieStatus_Aanvang) SetOpvoer(t *time.Time) { q.Opvoer = t }
+func (q QueryDefinitie_QuerydefinitieStatus_Aanvang) GetAfvoer() *time.Time   { return q.Afvoer }
+func (q *QueryDefinitie_QuerydefinitieStatus_Aanvang) SetAfvoer(t *time.Time) { q.Afvoer = t }
+func (q QueryDefinitie_QuerydefinitieStatus_Aanvang) String() string          { return RepresentatieToString(q) }
+
+// QueryDefinitie_QuerydefinitieStatus_Einde
+func (q QueryDefinitie_QuerydefinitieStatus_Einde) GetID() any { return q.Versie }
+func (q QueryDefinitie_QuerydefinitieStatus_Einde) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (q *QueryDefinitie_QuerydefinitieStatus_Einde) ClearID()               { q.Versie = 0 }
+func (q QueryDefinitie_QuerydefinitieStatus_Einde) GetOpvoer() *time.Time   { return q.Opvoer }
+func (q *QueryDefinitie_QuerydefinitieStatus_Einde) SetOpvoer(t *time.Time) { q.Opvoer = t }
+func (q QueryDefinitie_QuerydefinitieStatus_Einde) GetAfvoer() *time.Time   { return q.Afvoer }
+func (q *QueryDefinitie_QuerydefinitieStatus_Einde) SetAfvoer(t *time.Time) { q.Afvoer = t }
+func (q QueryDefinitie_QuerydefinitieStatus_Einde) String() string          { return RepresentatieToString(q) }
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang) GetID() any { return q.Versie }
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (q *QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang) ClearID() { q.Versie = 0 }
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang) GetOpvoer() *time.Time {
+	return q.Opvoer
+}
+func (q *QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang) SetOpvoer(t *time.Time) { q.Opvoer = t }
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang) GetAfvoer() *time.Time {
+	return q.Afvoer
+}
+func (q *QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang) SetAfvoer(t *time.Time) { q.Afvoer = t }
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang) String() string {
+	return RepresentatieToString(q)
+}
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Einde
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Einde) GetID() any { return q.Versie }
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Einde) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (q *QueryDefinitie_QuerydefinitieToegankelijkheid_Einde) ClearID()               { q.Versie = 0 }
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Einde) GetOpvoer() *time.Time   { return q.Opvoer }
+func (q *QueryDefinitie_QuerydefinitieToegankelijkheid_Einde) SetOpvoer(t *time.Time) { q.Opvoer = t }
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Einde) GetAfvoer() *time.Time   { return q.Afvoer }
+func (q *QueryDefinitie_QuerydefinitieToegankelijkheid_Einde) SetAfvoer(t *time.Time) { q.Afvoer = t }
+func (q QueryDefinitie_QuerydefinitieToegankelijkheid_Einde) String() string {
+	return RepresentatieToString(q)
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Aanvang
+func (q QueryDefinitie_QuerydefinitieDocument_Aanvang) GetID() any { return q.Versie }
+func (q QueryDefinitie_QuerydefinitieDocument_Aanvang) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (q *QueryDefinitie_QuerydefinitieDocument_Aanvang) ClearID()               { q.Versie = 0 }
+func (q QueryDefinitie_QuerydefinitieDocument_Aanvang) GetOpvoer() *time.Time   { return q.Opvoer }
+func (q *QueryDefinitie_QuerydefinitieDocument_Aanvang) SetOpvoer(t *time.Time) { q.Opvoer = t }
+func (q QueryDefinitie_QuerydefinitieDocument_Aanvang) GetAfvoer() *time.Time   { return q.Afvoer }
+func (q *QueryDefinitie_QuerydefinitieDocument_Aanvang) SetAfvoer(t *time.Time) { q.Afvoer = t }
+func (q QueryDefinitie_QuerydefinitieDocument_Aanvang) String() string {
+	return RepresentatieToString(q)
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Einde
+func (q QueryDefinitie_QuerydefinitieDocument_Einde) GetID() any { return q.Versie }
+func (q QueryDefinitie_QuerydefinitieDocument_Einde) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (q *QueryDefinitie_QuerydefinitieDocument_Einde) ClearID()               { q.Versie = 0 }
+func (q QueryDefinitie_QuerydefinitieDocument_Einde) GetOpvoer() *time.Time   { return q.Opvoer }
+func (q *QueryDefinitie_QuerydefinitieDocument_Einde) SetOpvoer(t *time.Time) { q.Opvoer = t }
+func (q QueryDefinitie_QuerydefinitieDocument_Einde) GetAfvoer() *time.Time   { return q.Afvoer }
+func (q *QueryDefinitie_QuerydefinitieDocument_Einde) SetAfvoer(t *time.Time) { q.Afvoer = t }
+func (q QueryDefinitie_QuerydefinitieDocument_Einde) String() string          { return RepresentatieToString(q) }
+
 /* ================================================================
    6. _INPUT — interface-methoden (no-op opvoer/afvoer)
    ================================================================ */
@@ -309,25 +467,67 @@ func (i WeergaveDefinitie_DetailTemplate_Input) GetAfvoer() *time.Time   { retur
 func (i *WeergaveDefinitie_DetailTemplate_Input) SetAfvoer(t *time.Time) {}
 func (i WeergaveDefinitie_DetailTemplate_Input) String() string          { return RepresentatieToString(i) }
 
-// QueryDefinitie_Meta_Input
-func (i QueryDefinitie_Meta_Input) GetID() any              { return i.Rel_ID }
-func (i QueryDefinitie_Meta_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *QueryDefinitie_Meta_Input) ClearID()               { i.Rel_ID = 0 }
-func (i QueryDefinitie_Meta_Input) GetOpvoer() *time.Time   { return nil }
-func (i *QueryDefinitie_Meta_Input) SetOpvoer(t *time.Time) {}
-func (i QueryDefinitie_Meta_Input) GetAfvoer() *time.Time   { return nil }
-func (i *QueryDefinitie_Meta_Input) SetAfvoer(t *time.Time) {}
-func (i QueryDefinitie_Meta_Input) String() string          { return RepresentatieToString(i) }
+// QueryDefinitie_QuerydefinitieNaam_Input
+func (i QueryDefinitie_QuerydefinitieNaam_Input) GetID() any              { return i.Rel_ID }
+func (i QueryDefinitie_QuerydefinitieNaam_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *QueryDefinitie_QuerydefinitieNaam_Input) ClearID()               { i.Rel_ID = 0 }
+func (i QueryDefinitie_QuerydefinitieNaam_Input) GetOpvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieNaam_Input) SetOpvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieNaam_Input) GetAfvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieNaam_Input) SetAfvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieNaam_Input) String() string          { return RepresentatieToString(i) }
 
-// QueryDefinitie_Document_Input
-func (i QueryDefinitie_Document_Input) GetID() any              { return i.Rel_ID }
-func (i QueryDefinitie_Document_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *QueryDefinitie_Document_Input) ClearID()               { i.Rel_ID = 0 }
-func (i QueryDefinitie_Document_Input) GetOpvoer() *time.Time   { return nil }
-func (i *QueryDefinitie_Document_Input) SetOpvoer(t *time.Time) {}
-func (i QueryDefinitie_Document_Input) GetAfvoer() *time.Time   { return nil }
-func (i *QueryDefinitie_Document_Input) SetAfvoer(t *time.Time) {}
-func (i QueryDefinitie_Document_Input) String() string          { return RepresentatieToString(i) }
+// QueryDefinitie_QuerydefinitieBeschrijving_Input
+func (i QueryDefinitie_QuerydefinitieBeschrijving_Input) GetID() any { return i.Rel_ID }
+func (i QueryDefinitie_QuerydefinitieBeschrijving_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *QueryDefinitie_QuerydefinitieBeschrijving_Input) ClearID()               { i.Rel_ID = 0 }
+func (i QueryDefinitie_QuerydefinitieBeschrijving_Input) GetOpvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieBeschrijving_Input) SetOpvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieBeschrijving_Input) GetAfvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieBeschrijving_Input) SetAfvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieBeschrijving_Input) String() string {
+	return RepresentatieToString(i)
+}
+
+// QueryDefinitie_QuerydefinitieStatus_Input
+func (i QueryDefinitie_QuerydefinitieStatus_Input) GetID() any { return i.Rel_ID }
+func (i QueryDefinitie_QuerydefinitieStatus_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *QueryDefinitie_QuerydefinitieStatus_Input) ClearID()               { i.Rel_ID = 0 }
+func (i QueryDefinitie_QuerydefinitieStatus_Input) GetOpvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieStatus_Input) SetOpvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieStatus_Input) GetAfvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieStatus_Input) SetAfvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieStatus_Input) String() string          { return RepresentatieToString(i) }
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Input
+func (i QueryDefinitie_QuerydefinitieToegankelijkheid_Input) GetID() any { return i.Rel_ID }
+func (i QueryDefinitie_QuerydefinitieToegankelijkheid_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *QueryDefinitie_QuerydefinitieToegankelijkheid_Input) ClearID()               { i.Rel_ID = 0 }
+func (i QueryDefinitie_QuerydefinitieToegankelijkheid_Input) GetOpvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieToegankelijkheid_Input) SetOpvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieToegankelijkheid_Input) GetAfvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieToegankelijkheid_Input) SetAfvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieToegankelijkheid_Input) String() string {
+	return RepresentatieToString(i)
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Input
+func (i QueryDefinitie_QuerydefinitieDocument_Input) GetID() any { return i.Rel_ID }
+func (i QueryDefinitie_QuerydefinitieDocument_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *QueryDefinitie_QuerydefinitieDocument_Input) ClearID()               { i.Rel_ID = 0 }
+func (i QueryDefinitie_QuerydefinitieDocument_Input) GetOpvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieDocument_Input) SetOpvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieDocument_Input) GetAfvoer() *time.Time   { return nil }
+func (i *QueryDefinitie_QuerydefinitieDocument_Input) SetAfvoer(t *time.Time) {}
+func (i QueryDefinitie_QuerydefinitieDocument_Input) String() string          { return RepresentatieToString(i) }
 
 /* ================================================================
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
@@ -399,17 +599,35 @@ func (w *WeergaveDefinitie) GeefOnderliggendeGegevenselementen() []Onderliggende
 
 func (q *QueryDefinitie) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
-	for idx := range q.QueryDefinitieMetas {
-		if q.QueryDefinitieMetas[idx].QueryDefinitie_ID == 0 {
-			q.QueryDefinitieMetas[idx].QueryDefinitie_ID = q.ID
+	for idx := range q.QueryDefinitieNamen {
+		if q.QueryDefinitieNamen[idx].QueryDefinitie_ID == 0 {
+			q.QueryDefinitieNamen[idx].QueryDefinitie_ID = q.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_Meta", Representatie: &q.QueryDefinitieMetas[idx]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieNaam", Representatie: &q.QueryDefinitieNamen[idx]})
 	}
-	for idx := range q.QueryDefinitieDocuments {
-		if q.QueryDefinitieDocuments[idx].QueryDefinitie_ID == 0 {
-			q.QueryDefinitieDocuments[idx].QueryDefinitie_ID = q.ID
+	for idx := range q.QueryDefinitieBeschrijvingen {
+		if q.QueryDefinitieBeschrijvingen[idx].QueryDefinitie_ID == 0 {
+			q.QueryDefinitieBeschrijvingen[idx].QueryDefinitie_ID = q.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_Document", Representatie: &q.QueryDefinitieDocuments[idx]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieBeschrijving", Representatie: &q.QueryDefinitieBeschrijvingen[idx]})
+	}
+	for idx := range q.QueryDefinitieStatussen {
+		if q.QueryDefinitieStatussen[idx].QueryDefinitie_ID == 0 {
+			q.QueryDefinitieStatussen[idx].QueryDefinitie_ID = q.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus", Representatie: &q.QueryDefinitieStatussen[idx]})
+	}
+	for idx := range q.QueryDefinitieToegankelijkheden {
+		if q.QueryDefinitieToegankelijkheden[idx].QueryDefinitie_ID == 0 {
+			q.QueryDefinitieToegankelijkheden[idx].QueryDefinitie_ID = q.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid", Representatie: &q.QueryDefinitieToegankelijkheden[idx]})
+	}
+	for idx := range q.QueryDefinitieDocumenten {
+		if q.QueryDefinitieDocumenten[idx].QueryDefinitie_ID == 0 {
+			q.QueryDefinitieDocumenten[idx].QueryDefinitie_ID = q.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument", Representatie: &q.QueryDefinitieDocumenten[idx]})
 	}
 	for idx := range q.Aanvang {
 		if q.Aanvang[idx].QueryDefinitie_ID == 0 {
@@ -500,7 +718,7 @@ func (h *WeergaveDefinitie_DetailTemplate) GeefOnderliggendeGegevenselementen() 
 	return result
 }
 
-func (h *QueryDefinitie_Meta) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *QueryDefinitie_QuerydefinitieNaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
 		if h.Data[i].QueryDefinitie_ID == 0 {
@@ -509,12 +727,12 @@ func (h *QueryDefinitie_Meta) GeefOnderliggendeGegevenselementen() []Onderliggen
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_Meta_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieNaam_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
 
-func (h *QueryDefinitie_Document) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *QueryDefinitie_QuerydefinitieBeschrijving) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
 		if h.Data[i].QueryDefinitie_ID == 0 {
@@ -523,7 +741,103 @@ func (h *QueryDefinitie_Document) GeefOnderliggendeGegevenselementen() []Onderli
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_Document_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieBeschrijving_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *QueryDefinitie_QuerydefinitieStatus) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].QueryDefinitie_ID == 0 {
+			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].QueryDefinitie_ID == 0 {
+			h.Aanvang[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].QueryDefinitie_ID == 0 {
+			h.Einde[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus_Einde", Representatie: &h.Einde[i]})
+	}
+	return result
+}
+
+func (h *QueryDefinitie_QuerydefinitieToegankelijkheid) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].QueryDefinitie_ID == 0 {
+			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].QueryDefinitie_ID == 0 {
+			h.Aanvang[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].QueryDefinitie_ID == 0 {
+			h.Einde[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid_Einde", Representatie: &h.Einde[i]})
+	}
+	return result
+}
+
+func (h *QueryDefinitie_QuerydefinitieDocument) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].QueryDefinitie_ID == 0 {
+			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].QueryDefinitie_ID == 0 {
+			h.Aanvang[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].QueryDefinitie_ID == 0 {
+			h.Einde[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }

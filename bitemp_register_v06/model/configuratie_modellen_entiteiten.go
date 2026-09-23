@@ -74,16 +74,19 @@ type WeergaveDefinitie_Einde struct {
 	Afvoer               *time.Time `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie — Opgeslagen GraphQL-query (persisted query) die de frontend op naam aanroept. Bepaalt de selectie van het model — welke rijen — los van de weergave (WeergaveDefinitie) en de invoer (FormulierDefinitie). Alleen een actief document met is_publiek mag anoniem worden uitgevoerd. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.
+// QueryDefinitie — Opgeslagen GraphQL-query (persisted query) die de frontend op naam aanroept. Bepaalt de selectie van het model — welke rijen — los van de weergave (WeergaveDefinitie) en de invoer (FormulierDefinitie). Gereserveerd type: de backend zoekt het bij naam op. Elk GE is één feit met een eigen tijdlijn; Status, Toegankelijkheid en Document zijn materieel zodat een wijziging vooruit ingepland (gestaged) kan worden. Materialiteit van de entiteit zelf is de levensduur van de definitie als geheel.
 type QueryDefinitie struct {
-	bun.BaseModel           `bun:"table:querydefinitie,alias:querydefinitie"`
-	ID                      int                       `json:"id" bun:"id,pk"`
-	Opvoer                  *time.Time                `json:"opvoer,omitempty"`
-	Afvoer                  *time.Time                `json:"afvoer,omitempty"`
-	QueryDefinitieMetas     []QueryDefinitie_Meta     `bun:"rel:has-many,join:id=querydefinitie_id" json:"query_definitie_metas,omitempty"`
-	QueryDefinitieDocuments []QueryDefinitie_Document `bun:"rel:has-many,join:id=querydefinitie_id" json:"query_definitie_documents,omitempty"`
-	Aanvang                 []QueryDefinitie_Aanvang  `bun:"rel:has-many,join:id=querydefinitie_id" json:"aanvang,omitempty"`
-	Einde                   []QueryDefinitie_Einde    `bun:"rel:has-many,join:id=querydefinitie_id" json:"einde,omitempty"`
+	bun.BaseModel                   `bun:"table:querydefinitie,alias:querydefinitie"`
+	ID                              int                                             `json:"id" bun:"id,pk"`
+	Opvoer                          *time.Time                                      `json:"opvoer,omitempty"`
+	Afvoer                          *time.Time                                      `json:"afvoer,omitempty"`
+	QueryDefinitieNamen             []QueryDefinitie_QuerydefinitieNaam             `bun:"rel:has-many,join:id=querydefinitie_id" json:"query_definitie_namen,omitempty"`
+	QueryDefinitieBeschrijvingen    []QueryDefinitie_QuerydefinitieBeschrijving     `bun:"rel:has-many,join:id=querydefinitie_id" json:"query_definitie_beschrijvingen,omitempty"`
+	QueryDefinitieStatussen         []QueryDefinitie_QuerydefinitieStatus           `bun:"rel:has-many,join:id=querydefinitie_id" json:"query_definitie_statussen,omitempty"`
+	QueryDefinitieToegankelijkheden []QueryDefinitie_QuerydefinitieToegankelijkheid `bun:"rel:has-many,join:id=querydefinitie_id" json:"query_definitie_toegankelijkheden,omitempty"`
+	QueryDefinitieDocumenten        []QueryDefinitie_QuerydefinitieDocument         `bun:"rel:has-many,join:id=querydefinitie_id" json:"query_definitie_documenten,omitempty"`
+	Aanvang                         []QueryDefinitie_Aanvang                        `bun:"rel:has-many,join:id=querydefinitie_id" json:"aanvang,omitempty"`
+	Einde                           []QueryDefinitie_Einde                          `bun:"rel:has-many,join:id=querydefinitie_id" json:"einde,omitempty"`
 }
 
 // QueryDefinitie_Aanvang — aanvangdatum van entiteit QueryDefinitie.

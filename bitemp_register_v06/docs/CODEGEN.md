@@ -377,8 +377,21 @@ dat niet voor je eigen wijziging aanziet.
 6. **Controleren dat het puur toevoegend is**: `git diff model/ | grep '^-' | grep -v '^---'`
    hoort (op de commentaarregel na) leeg te zijn. Daarna `go build ./... && go test ./...`.
 
-**Databasegevolg**: geen migratie. `dbsetup.CreateTables` maakt bij de eerste start van de
-backend de nieuwe tabellen aan (`CREATE TABLE IF NOT EXISTS`); bestaande data blijft onaangeroerd.
+7. **Veldnamen**: `runtime.veldnaam` in de V3-JSON wordt **niet** gelezen. De codegen leidt de
+   `Veldnaam` van een GE af uit het laatste deel van de typenaam in kleine letters (`Naam` →
+   `naam`), en pakt de volledige typenaam alleen bij een conflict *binnen dezelfde run* (`Meta` →
+   `formulierdefinitie_meta`). Een conflict met een ander domein (`naam` bestaat ook in CG) ziet
+   hij niet. Geef een GE daarom de entiteit als voorvoegsel, PascalCase zonder underscore
+   (`QuerydefinitieNaam` → veldnaam `querydefinitienaam`, tabel
+   `querydefinitie_querydefinitienaam`), zoals `Organisatienaam` in CG. Bij een botsing valt de
+   registratie-engine terug op de entiteit-id in de payload, maar daar wil je niet op leunen.
+
+**Databasegevolg**: geen migratie zolang je alleen toevoegt. `dbsetup.CreateTables` maakt bij de
+eerste start van de backend de nieuwe tabellen aan (`CREATE TABLE IF NOT EXISTS`); bestaande data
+blijft onaangeroerd. Maar het voegt **geen kolommen toe** aan een bestaande tabel en verwijdert
+niets: verander je een GE dat al tabellen heeft (veld erbij, materieel gemaakt), dan moeten die
+tabellen weg vóór de herstart — met een opruimscript in `scripts/sql/`, kinderen vóór ouders
+(foreign keys). Voorbeeld: `scripts/sql/2026-09-23-querydefinitie-losse-ges-opruimen.sql`.
 Geverifieerd door de backend tegen een lege PostgreSQL te starten, een `QueryDefinitie` te
 registreren via `POST /registratie/` en hem via GraphQL (met filter) terug te vragen.
 

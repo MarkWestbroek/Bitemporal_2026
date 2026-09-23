@@ -1,0 +1,1900 @@
+{
+  "versie": "v3",
+  "datatypes": [
+    {
+      "naam": "KorteTekst",
+      "description": "Alfanumerieke tekst, max 255 tekens (MIM: AN255).",
+      "basistype": "string",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 2955,
+        "y": 330
+      },
+      "validatie": {
+        "maxLength": 255
+      },
+      "weergave": {}
+    },
+    {
+      "naam": "LangeTekst",
+      "description": "Onbeperkte tekst, meerdere regels (MIM: CharacterString).",
+      "basistype": "string",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 2940,
+        "y": 165
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "AN40",
+      "description": "Alfanumerieke tekst, max 40 tekens (MIM: AN40).",
+      "basistype": "string",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3205,
+        "y": 95
+      },
+      "validatie": {
+        "maxLength": 40
+      }
+    },
+    {
+      "naam": "AN200",
+      "description": "Alfanumerieke tekst, max 200 tekens (MIM: AN200).",
+      "basistype": "string",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3195,
+        "y": 330
+      },
+      "validatie": {
+        "maxLength": 200
+      }
+    },
+    {
+      "naam": "Geheel",
+      "description": "Geheel getal (MIM: Integer).",
+      "basistype": "integer",
+      "format": "int32",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3090,
+        "y": 750
+      },
+      "validatie": {}
+    },
+    {
+      "naam": "Decimaal",
+      "description": "Decimaal getal met 2 decimalen (MIM: Real).",
+      "basistype": "number",
+      "format": "double",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 2880,
+        "y": 750
+      },
+      "validatie": {}
+    },
+    {
+      "naam": "Bedrag",
+      "description": "Geldbedrag in euro's, 2 decimalen.",
+      "basistype": "number",
+      "format": "double",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3810,
+        "y": 600
+      },
+      "validatie": {}
+    },
+    {
+      "naam": "Percentage",
+      "description": "Percentagewaarde met 1 decimaal.",
+      "basistype": "number",
+      "format": "double",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3780,
+        "y": 75
+      },
+      "validatie": {
+        "regels": [
+          {
+            "naam": "0..100",
+            "type": "formula",
+            "expressie": "valueNum >= 0 && valueNum <= 100"
+          }
+        ]
+      }
+    },
+    {
+      "naam": "Datum",
+      "description": "Kalenderdatum zonder tijdcomponent (MIM: Date).",
+      "basistype": "string",
+      "format": "date",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3480,
+        "y": 315
+      },
+      "validatie": {
+        "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+      },
+      "weergave": {
+        "placeholder": "JJJJ-MM-DD"
+      }
+    },
+    {
+      "naam": "DatumTijd",
+      "description": "Datum en tijd met tijdzone (MIM: DateTime).",
+      "basistype": "string",
+      "format": "date-time",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3690,
+        "y": 330
+      },
+      "validatie": {},
+      "weergave": {
+        "placeholder": "JJJJ-MM-DDThh:mm"
+      }
+    },
+    {
+      "naam": "Jaar",
+      "description": "Jaartal, 4 cijfers (MIM: Year).",
+      "basistype": "integer",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3930,
+        "y": 285
+      },
+      "validatie": {
+        "minLength": 4,
+        "maxLength": 4
+      },
+      "weergave": {
+        "placeholder": "2025"
+      }
+    },
+    {
+      "naam": "JaNee",
+      "description": "Ja/Nee keuze (MIM: Boolean).",
+      "basistype": "boolean",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3495,
+        "y": 90
+      },
+      "validatie": {}
+    },
+    {
+      "naam": "KvKNummer",
+      "description": "KvK-nummer (8 cijfers).",
+      "basistype": "string",
+      "format": "kvk-nummer",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3420,
+        "y": 720
+      },
+      "validatie": {
+        "pattern": "^[0-9]{8}$",
+        "minLength": 8,
+        "maxLength": 8,
+        "voorbeelden": [
+          "12345678"
+        ],
+        "foutmelding": "Voer een geldig KvK-nummer in (8 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "12345678",
+        "inputMask": "00000000"
+      }
+    },
+    {
+      "naam": "NLPostcode",
+      "description": "Nederlandse postcode (4 cijfers + 2 letters).",
+      "basistype": "string",
+      "format": "nl-postcode",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 570,
+        "y": -330
+      },
+      "validatie": {
+        "pattern": "^[1-9][0-9]{3}\\s?[A-Za-z]{2}$",
+        "minLength": 6,
+        "maxLength": 7,
+        "voorbeelden": [
+          "1234 AB",
+          "9999ZZ"
+        ],
+        "foutmelding": "Voer een geldige postcode in (bijv. 1234 AB)"
+      },
+      "normalisatie": "uppercase_letters",
+      "weergave": {
+        "placeholder": "1234 AB",
+        "inputMask": "0000 AA"
+      }
+    },
+    {
+      "naam": "BSN",
+      "description": "Burgerservicenummer (9 cijfers, 11-proef).",
+      "basistype": "string",
+      "format": "bsn",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": -720,
+        "y": -570
+      },
+      "validatie": {
+        "pattern": "^[0-9]{9}$",
+        "minLength": 9,
+        "maxLength": 9,
+        "voorbeelden": [
+          "123456782"
+        ],
+        "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
+        "regels": [
+          {
+            "naam": "11-proef",
+            "type": "checksum",
+            "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "123456782",
+        "inputMask": "000000000"
+      }
+    },
+    {
+      "naam": "URL",
+      "description": "Volledig internetadres (http of https).",
+      "basistype": "string",
+      "format": "uri",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 1005,
+        "y": -1575
+      },
+      "validatie": {
+        "pattern": "^https?://[^\\s]+$",
+        "voorbeelden": [
+          "https://example.com/pad?x=1"
+        ],
+        "foutmelding": "Voer een geldige http(s)-URL in"
+      },
+      "weergave": {
+        "placeholder": "https://example.com"
+      }
+    },
+    {
+      "naam": "Emailadres",
+      "description": "E-mailadres conform RFC 5322 (vereenvoudigd).",
+      "basistype": "string",
+      "format": "email",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": -390,
+        "y": -2250
+      },
+      "validatie": {
+        "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+        "voorbeelden": [
+          "naam@example.com"
+        ],
+        "foutmelding": "Voer een geldig e-mailadres in"
+      },
+      "weergave": {
+        "placeholder": "naam@example.com"
+      }
+    },
+    {
+      "naam": "Telefoonnummer",
+      "description": "Telefoonnummer in nationale of internationale notatie.",
+      "basistype": "string",
+      "format": "phone",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": -600,
+        "y": -2250
+      },
+      "validatie": {
+        "pattern": "^[+0-9][0-9\\s\\-()]{6,20}$",
+        "voorbeelden": [
+          "+31 6 12345678",
+          "0612345678"
+        ],
+        "foutmelding": "Voer een geldig telefoonnummer in"
+      },
+      "weergave": {
+        "placeholder": "+31 6 12345678"
+      }
+    },
+    {
+      "naam": "Versie",
+      "description": "Versienummer in semver-achtig formaat: m.n (verplicht), optioneel m.n.o of m.n.o.p.",
+      "basistype": "string",
+      "format": "versie",
+      "domein": "configuratie",
+      "positie": {
+        "x": 3735,
+        "y": -345
+      },
+      "validatie": {
+        "pattern": "^\\d+\\.\\d+(\\.\\d+)?(\\.\\d+)?$",
+        "foutmelding": "Voer een geldig versienummer in (bijv. 1.0, 2.1.3 of 1.0.0.1)"
+      },
+      "weergave": {
+        "placeholder": "bijv. 1.0 of 2.1.3"
+      }
+    },
+    {
+      "naam": "IBAN",
+      "description": "Internationaal bankrekeningnummer (IBAN, ISO 13616), met mod-97 check.",
+      "basistype": "string",
+      "format": "iban",
+      "domein": "gegevenstypen",
+      "positie": {
+        "x": 3780,
+        "y": 780
+      },
+      "validatie": {
+        "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$",
+        "minLength": 15,
+        "maxLength": 34,
+        "voorbeelden": [
+          "NL91ABNA0417164300"
+        ],
+        "foutmelding": "Voer een geldig IBAN in (bijv. NL91ABNA0417164300)",
+        "regels": [
+          {
+            "naam": "mod-97",
+            "type": "function",
+            "expressie": "iban_mod97"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "NL91ABNA0417164300",
+        "inputMask": "AA00 AAAA 0000 0000 00"
+      }
+    },
+    {
+      "naam": "Kleur",
+      "description": "Hex-kleurcode in CSS-formaat (#RGB, #RRGGBB of #RRGGBBAA).",
+      "basistype": "string",
+      "format": "color-hex",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$",
+        "minLength": 4,
+        "maxLength": 9,
+        "voorbeelden": [
+          "#fff",
+          "#1a2b3c",
+          "#ff8800cc"
+        ],
+        "foutmelding": "Voer een geldige hex-kleur in (bijv. #1a2b3c)"
+      },
+      "weergave": {
+        "placeholder": "#1a2b3c",
+        "widget": "color"
+      }
+    },
+    {
+      "naam": "Duur",
+      "description": "Tijdsduur in ISO-8601 notatie (bijv. P1Y, PT30M, P1DT2H).",
+      "basistype": "string",
+      "format": "duration",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^P(?:\\d+Y)?(?:\\d+M)?(?:\\d+W)?(?:\\d+D)?(?:T(?:\\d+H)?(?:\\d+M)?(?:\\d+(?:\\.\\d+)?S)?)?$",
+        "minLength": 2,
+        "voorbeelden": [
+          "PT30M",
+          "P1D",
+          "P1Y2M3DT4H5M6S"
+        ],
+        "foutmelding": "Voer een geldige ISO-8601 duration in (bijv. PT30M of P1Y)"
+      },
+      "weergave": {
+        "placeholder": "PT30M"
+      }
+    },
+    {
+      "naam": "UrlHttps",
+      "description": "URL die uitsluitend het https-schema accepteert.",
+      "basistype": "string",
+      "format": "uri-https",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^https://[^\\s]+$",
+        "voorbeelden": [
+          "https://example.com/pad?x=1"
+        ],
+        "foutmelding": "Voer een geldige https:// URL in"
+      },
+      "weergave": {
+        "placeholder": "https://example.com"
+      }
+    },
+    {
+      "naam": "GeoPunt",
+      "description": "Geografische coördinaat (WGS84) als 'lat,lng' in decimale graden.",
+      "basistype": "string",
+      "format": "geo-point",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^-?\\d{1,3}(?:\\.\\d+)?,-?\\d{1,3}(?:\\.\\d+)?$",
+        "voorbeelden": [
+          "52.3676,4.9041",
+          "-33.8688,151.2093"
+        ],
+        "foutmelding": "Voer een geldig 'lat,lng'-paar in (bijv. 52.3676,4.9041)",
+        "regels": [
+          {
+            "naam": "geo-range",
+            "type": "function",
+            "expressie": "geo_range"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "52.3676,4.9041"
+      }
+    },
+    {
+      "naam": "AGBCode",
+      "description": "AGB-code: 8-cijferig identificatienummer voor zorgaanbieders en zorginstellingen (Agb = Algemeen Gegevens Beheer). Eerste 2 cijfers = specialismetype.",
+      "basistype": "string",
+      "format": "agb-code",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{8}$",
+        "minLength": 8,
+        "maxLength": 8,
+        "voorbeelden": [
+          "04010700",
+          "14010200"
+        ],
+        "foutmelding": "Voer een geldige AGB-code in (8 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "04010700",
+        "inputMask": "00000000"
+      }
+    },
+    {
+      "naam": "TIN",
+      "description": "Tax Identification Number: buitenlands fiscaal identificatienummer, bijv. voor UBO's. Formaat: ISO 3166-1 alpha-2 landcode + 1–20 alfanumerieke tekens. Per land verschilt de structuur; dit type valideert alleen het basisformaat. Gebruik BSN voor NL-ingezetenen.",
+      "basistype": "string",
+      "format": "tin",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[A-Z]{2}[A-Z0-9]{1,20}$",
+        "minLength": 3,
+        "maxLength": 22,
+        "voorbeelden": [
+          "DE123456789",
+          "BE12345678901",
+          "FR12345678901",
+          "GB1234567890"
+        ],
+        "foutmelding": "Voer een geldig TIN in (ISO 3166-1 landcode + fiscaal nummer, bijv. DE123456789)"
+      },
+      "weergave": {
+        "placeholder": "DE123456789"
+      }
+    },
+    {
+      "naam": "EUBTWNummer",
+      "description": "Europees BTW-identificatienummer (EU VAT, richtlijn 2006/112/EG). Twee hoofdletters landcode gevolgd door 2–12 alfanumerieke tekens (bijv. NL123456789B01, DE123456789).",
+      "basistype": "string",
+      "format": "eu-vat",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[A-Z]{2}[A-Z0-9]{2,12}$",
+        "minLength": 4,
+        "maxLength": 14,
+        "voorbeelden": [
+          "NL123456789B01",
+          "DE123456789",
+          "BE0123456789"
+        ],
+        "foutmelding": "Voer een geldig EU BTW-nummer in (landcode + 2–12 alfanumerieke tekens, bijv. NL123456789B01)"
+      },
+      "weergave": {
+        "placeholder": "NL123456789B01"
+      }
+    },
+    {
+      "naam": "Kenteken",
+      "description": "Nederlands kenteken (RDW): 6 alfanumerieke tekens in drie groepen gescheiden door koppeltekens (bijv. AB-12-34, 1-ABC-23). Dekt alle actieve sidecodes.",
+      "basistype": "string",
+      "format": "kenteken",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[A-Z0-9]{1,3}-[A-Z0-9]{1,3}-[A-Z0-9]{1,3}$",
+        "minLength": 6,
+        "maxLength": 11,
+        "voorbeelden": [
+          "AB-12-34",
+          "12-AB-34",
+          "1-ABC-23",
+          "AB-123-C"
+        ],
+        "foutmelding": "Voer een geldig kenteken in met koppeltekens (bijv. AB-12-34 of 1-ABC-23)"
+      },
+      "weergave": {
+        "placeholder": "AB-12-34"
+      }
+    },
+    {
+      "naam": "Paspoortnummer",
+      "description": "Nederlands paspoortnummer: 9 alfanumerieke tekens (hoofdletters + cijfers), conform ICAO Doc 9303 (BRP/DienstTerugkeer).",
+      "basistype": "string",
+      "format": "passport-nl",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[A-Z0-9]{9}$",
+        "minLength": 9,
+        "maxLength": 9,
+        "voorbeelden": [
+          "NX5R38654",
+          "AB1234567"
+        ],
+        "foutmelding": "Voer een geldig paspoortnummer in (9 hoofdletters en/of cijfers)"
+      },
+      "weergave": {
+        "placeholder": "NX5R38654",
+        "inputMask": "AAAAAAAAA"
+      }
+    },
+    {
+      "naam": "Rijbewijsnummer",
+      "description": "Nederlands rijbewijsnummer (CBR/RDW): 10 cijfers.",
+      "basistype": "string",
+      "format": "rijbewijs-nl",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{10}$",
+        "minLength": 10,
+        "maxLength": 10,
+        "voorbeelden": [
+          "1234567890"
+        ],
+        "foutmelding": "Voer een geldig rijbewijsnummer in (10 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "1234567890",
+        "inputMask": "0000000000"
+      }
+    },
+    {
+      "naam": "BIGNummer",
+      "description": "BIG-registratienummer (Beroepen in de Individuele Gezondheidszorg): 11 cijfers; uniek identificatienummer in het BIG-register (CIBG).",
+      "basistype": "string",
+      "format": "big-nummer",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{11}$",
+        "minLength": 11,
+        "maxLength": 11,
+        "voorbeelden": [
+          "19025051601"
+        ],
+        "foutmelding": "Voer een geldig BIG-nummer in (11 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "19025051601",
+        "inputMask": "00000000000"
+      }
+    },
+    {
+      "naam": "OIN",
+      "description": "Organisatie-Identificatienummer (Logius/DigiKoppeling): 20 cijfers; identificeert overheidsinstellingen en aangewezen organisaties in de NL e-overheid.",
+      "basistype": "string",
+      "format": "oin",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{20}$",
+        "minLength": 20,
+        "maxLength": 20,
+        "voorbeelden": [
+          "00000001001234567000"
+        ],
+        "foutmelding": "Voer een geldig OIN in (20 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "00000001001234567000",
+        "inputMask": "00000000000000000000"
+      }
+    },
+    {
+      "naam": "Loonheffingsnummer",
+      "description": "Loonheffingsnummer (Belastingdienst): 9-cijferig RSIN of BSN, gevolgd door 'L' en een 2-cijferig volgnummer (bijv. 123456789L01). Identificeert het inhoudingsplichtig subject.",
+      "basistype": "string",
+      "format": "loonheffing-nl",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{9}L[0-9]{2}$",
+        "minLength": 12,
+        "maxLength": 12,
+        "voorbeelden": [
+          "123456789L01",
+          "987654321L99"
+        ],
+        "foutmelding": "Voer een geldig loonheffingsnummer in (9 cijfers + L + 2 cijfers, bijv. 123456789L01)"
+      },
+      "weergave": {
+        "placeholder": "123456789L01"
+      }
+    },
+    {
+      "naam": "BAGPandID",
+      "description": "BAG Pand-ID: 16-cijferige unieke identificatiecode van een pand (bouwkundige constructie) in de Basisregistratie Adressen en Gebouwen (BAG). Opbouw: 4 gemeentecode + objecttypecode 10 + 10 volgnummer. Beheerd door de gemeente; raadpleegbaar via de Kadaster LVBAG API.",
+      "basistype": "string",
+      "format": "bag-pand-id",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{16}$",
+        "minLength": 16,
+        "maxLength": 16,
+        "voorbeelden": [
+          "0518100000258732",
+          "0363100012345678"
+        ],
+        "foutmelding": "Voer een geldig BAG Pand-ID in (16 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "0518100000258732",
+        "inputMask": "0000000000000000"
+      },
+      "externeReferentie": "https://lvbag.github.io/BAG-API/Technische%20specificatie/"
+    },
+    {
+      "naam": "BAGVBOID",
+      "description": "BAG Verblijfsobject-ID (VBO-ID): 16-cijferige unieke identificatiecode van een verblijfsobject (woning, kantoor, winkel) in de BAG. De kleinste zelfstandige eenheid binnen een pand met eigen toegang. Objecttypecode: 01.",
+      "basistype": "string",
+      "format": "bag-vbo-id",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{16}$",
+        "minLength": 16,
+        "maxLength": 16,
+        "voorbeelden": [
+          "0518010000258732",
+          "0363010012345678"
+        ],
+        "foutmelding": "Voer een geldig BAG VBO-ID in (16 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "0518010000258732",
+        "inputMask": "0000000000000000"
+      },
+      "externeReferentie": "https://lvbag.github.io/BAG-API/Technische%20specificatie/"
+    },
+    {
+      "naam": "BAGNummeraanduidingID",
+      "description": "BAG Nummeraanduiding-ID: 16-cijferige unieke identificatiecode van een officieel adres (postcode + huisnummer) in de BAG. Objecttypecode: 20. Koppelt een adresseerbaar object aan een postcode en huisnummer.",
+      "basistype": "string",
+      "format": "bag-nummeraanduiding-id",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{16}$",
+        "minLength": 16,
+        "maxLength": 16,
+        "voorbeelden": [
+          "0518200000258732",
+          "0363200012345678"
+        ],
+        "foutmelding": "Voer een geldig BAG Nummeraanduiding-ID in (16 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "0518200000258732",
+        "inputMask": "0000000000000000"
+      },
+      "externeReferentie": "https://lvbag.github.io/BAG-API/Technische%20specificatie/"
+    },
+    {
+      "naam": "WOZObjectnummer",
+      "description": "WOZ-objectnummer: 12-cijferig identificatienummer voor een WOZ-object (Waardering Onroerende Zaken). Opgebouwd uit een 4-cijferige CBS-gemeentecode + 8-cijferig volgnummer. Beheerd door de gemeente; raadpleegbaar via het WOZ-waardeloket.",
+      "basistype": "string",
+      "format": "woz-objectnummer",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{12}$",
+        "minLength": 12,
+        "maxLength": 12,
+        "voorbeelden": [
+          "030300001234",
+          "051800012345"
+        ],
+        "foutmelding": "Voer een geldig WOZ-objectnummer in (12 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "030300001234",
+        "inputMask": "000000000000"
+      },
+      "externeReferentie": "https://www.wozwaardeloket.nl/"
+    },
+    {
+      "naam": "OIDCode",
+      "description": "Object Identifier (OID) conform ISO/IEC 9834: een hiërarchische reeks van niet-negatieve integers gescheiden door punten (bijv. '2.16.528.1.1007.3.1' voor het NL BIG-register). Minimaal twee componenten. Gebruikt in zorg (CIBG, HL7), PKI en overheidssoftware.",
+      "basistype": "string",
+      "format": "oid",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]+(\\.[0-9]+)+$",
+        "minLength": 3,
+        "voorbeelden": [
+          "2.16.528.1.1007.3.1",
+          "1.2.840.10065.1.12.1.1",
+          "2.16.528.1.1003.1.2.5.5.2"
+        ],
+        "foutmelding": "Voer een geldige OID in (punt-gescheiden integers, bijv. 2.16.528.1.1007.3.1)"
+      },
+      "weergave": {
+        "placeholder": "2.16.528.1.1007.3.1"
+      },
+      "externeReferentie": "https://www.cibg.nl/oid-informatie"
+    },
+    {
+      "naam": "DatumIncompleet",
+      "description": "Gedeeltelijk bekende datum (MIM-standaard / BRP-GBA). Formaat: YYYY, YYYY-MM of YYYY-MM-DD. Onbekende onderdelen worden als '00' genoteerd (bijv. '1975-06-00' = juni 1975, dag onbekend; '1975-00-00' = 1975, maand+dag onbekend).",
+      "basistype": "string",
+      "format": "date-incomplete",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^\\d{4}(-\\d{2}(-\\d{2})?)?$",
+        "minLength": 4,
+        "maxLength": 10,
+        "voorbeelden": [
+          "1975",
+          "1975-06",
+          "1975-06-15",
+          "1975-06-00",
+          "1975-00-00"
+        ],
+        "foutmelding": "Voer een geldige onvolledige datum in (JJJJ, JJJJ-MM of JJJJ-MM-DD; gebruik 00 voor onbekende onderdelen)"
+      },
+      "weergave": {
+        "placeholder": "JJJJ-MM-00"
+      }
+    },
+    {
+      "naam": "RSIN",
+      "description": "Rechtspersonen en Samenwerkingsverbanden Identificatienummer: 9 cijfers met 11-proef (zelfde algoritme als BSN). Identificeert rechtspersonen en samenwerkingsverbanden; beheerd door de KvK en het Handelsregister.",
+      "basistype": "string",
+      "format": "rsin",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{9}$",
+        "minLength": 9,
+        "maxLength": 9,
+        "voorbeelden": [
+          "123456782",
+          "807729217"
+        ],
+        "foutmelding": "Voer een geldig RSIN in (9 cijfers, 11-proef)",
+        "regels": [
+          {
+            "naam": "11-proef",
+            "type": "checksum",
+            "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "123456782",
+        "inputMask": "000000000"
+      }
+    },
+    {
+      "naam": "Vestigingsnummer",
+      "description": "KvK-vestigingsnummer: 12-cijferig identificatienummer voor een vestiging (hoofd- of nevenvestiging) in het Handelsregister. Geen publieke checksum.",
+      "basistype": "string",
+      "format": "vestigingsnummer",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{12}$",
+        "minLength": 12,
+        "maxLength": 12,
+        "voorbeelden": [
+          "000012345678",
+          "123456789012"
+        ],
+        "foutmelding": "Voer een geldig vestigingsnummer in (12 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "000012345678",
+        "inputMask": "000000000000"
+      }
+    },
+    {
+      "naam": "Bestand",
+      "description": "Verwijzing naar een bestand in de filestore als RFC 4122 UUID-string. Het bestand zelf wordt beheerd in de filestore-service (/bestanden-API). Opslagformaat: UUID met koppeltekens.",
+      "basistype": "string",
+      "format": "file-ref",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+        "minLength": 36,
+        "maxLength": 36,
+        "voorbeelden": [
+          "550e8400-e29b-41d4-a716-446655440000"
+        ],
+        "foutmelding": "Voer een geldige UUID in voor de bestandsverwijzing (bijv. 550e8400-e29b-41d4-a716-446655440000)"
+      },
+      "weergave": {
+        "placeholder": "550e8400-e29b-41d4-a716-446655440000"
+      }
+    },
+    {
+      "naam": "GeoLijn",
+      "description": "Geografische lijn als GeoJSON LineString-object (RFC 7946). Minimaal 2 coördinatenparen [longitude, latitude] in WGS84. Waarde is een JSON-string. Voorbeeld: {\"type\":\"LineString\",\"coordinates\":[[4.9,52.3],[5.1,52.5]]}",
+      "basistype": "string",
+      "format": "geo-linestring",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "voorbeelden": [
+          "{\"type\":\"LineString\",\"coordinates\":[[4.9041,52.3676],[5.1,52.5]]}"
+        ],
+        "foutmelding": "Voer een geldige GeoJSON LineString in met minimaal 2 coördinaten",
+        "regels": [
+          {
+            "naam": "geojson-linestring",
+            "type": "function",
+            "expressie": "geolijn_geojson"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "{\"type\":\"LineString\",\"coordinates\":[[lon,lat],[lon,lat]]}"
+      }
+    },
+    {
+      "naam": "GeoVlak",
+      "description": "Geografisch vlak als GeoJSON Polygon-object (RFC 7946). Minimaal 4 coördinatenparen; eerste en laatste coördinaat zijn identiek (gesloten ring). WGS84 [longitude, latitude]. Voorbeeld: {\"type\":\"Polygon\",\"coordinates\":[[[4.9,52.3],[5.1,52.3],[5.1,52.5],[4.9,52.3]]]}",
+      "basistype": "string",
+      "format": "geo-polygon",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "voorbeelden": [
+          "{\"type\":\"Polygon\",\"coordinates\":[[[4.9,52.3],[5.1,52.3],[5.1,52.5],[4.9,52.3]]]}"
+        ],
+        "foutmelding": "Voer een geldige GeoJSON Polygon in met een gesloten ring van minimaal 4 coördinaten",
+        "regels": [
+          {
+            "naam": "geojson-polygon",
+            "type": "function",
+            "expressie": "geovlak_geojson"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "{\"type\":\"Polygon\",\"coordinates\":[[[lon,lat],...]]}"
+      }
+    },
+    {
+      "naam": "BAGLigplaatsID",
+      "description": "BAG Ligplaats-ID: 16-cijferige unieke identificatiecode van een ligplaats (watergebonden perceel voor een woonboot o.d.) in de BAG. Objecttypecode: 02. Zelfde 16-cijferig formaat als BAGPandID.",
+      "basistype": "string",
+      "format": "bag-ligplaats-id",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{16}$",
+        "minLength": 16,
+        "maxLength": 16,
+        "voorbeelden": [
+          "0518020000258732",
+          "0363020012345678"
+        ],
+        "foutmelding": "Voer een geldig BAG Ligplaats-ID in (16 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "0518020000258732",
+        "inputMask": "0000000000000000"
+      },
+      "externeReferentie": "https://lvbag.github.io/BAG-API/Technische%20specificatie/"
+    },
+    {
+      "naam": "BAGStandplaatsID",
+      "description": "BAG Standplaats-ID: 16-cijferige unieke identificatiecode van een standplaats (terreingebonden perceel voor een stacaravan o.d.) in de BAG. Objecttypecode: 03. Zelfde 16-cijferig formaat als BAGPandID.",
+      "basistype": "string",
+      "format": "bag-standplaats-id",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{16}$",
+        "minLength": 16,
+        "maxLength": 16,
+        "voorbeelden": [
+          "0518030000258732",
+          "0363030012345678"
+        ],
+        "foutmelding": "Voer een geldig BAG Standplaats-ID in (16 cijfers)"
+      },
+      "weergave": {
+        "placeholder": "0518030000258732",
+        "inputMask": "0000000000000000"
+      },
+      "externeReferentie": "https://lvbag.github.io/BAG-API/Technische%20specificatie/"
+    },
+    {
+      "naam": "ISBN10",
+      "description": "International Standard Book Number, 10-cijferige variant (vóór 2007). Bestaat uit 9 datacijfers + 1 controlecijfer (0-9 of 'X' voor 10). Checksum: gewogen som (gewichten 10..1) modulo 11 = 0.",
+      "basistype": "string",
+      "format": "isbn-10",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[0-9]{9}[0-9X]$",
+        "minLength": 10,
+        "maxLength": 10,
+        "voorbeelden": [
+          "0306406152",
+          "048665088X"
+        ],
+        "foutmelding": "Voer een geldig ISBN-10 in (9 cijfers + controlecijfer 0-9 of X, bijv. 0306406152)",
+        "regels": [
+          {
+            "naam": "mod-11",
+            "type": "function",
+            "expressie": "isbn10_mod11"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "0306406152"
+      },
+      "externeReferentie": "https://www.isbn-international.org/"
+    },
+    {
+      "naam": "ISBN13",
+      "description": "International Standard Book Number, 13-cijferige variant (actuele standaard). Begint met EAN-prefix 978 of 979; controlecijfer via EAN-13 mod-10 (gewichten afwisselend 1 en 3).",
+      "basistype": "string",
+      "format": "isbn-13",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^97[89][0-9]{10}$",
+        "minLength": 13,
+        "maxLength": 13,
+        "voorbeelden": [
+          "9780306406157",
+          "9789020416138"
+        ],
+        "foutmelding": "Voer een geldig ISBN-13 in (13 cijfers, beginnend met 978 of 979)",
+        "regels": [
+          {
+            "naam": "EAN-13 mod-10",
+            "type": "checksum",
+            "expressie": "(d1 + 3*d2 + d3 + 3*d4 + d5 + 3*d6 + d7 + 3*d8 + d9 + 3*d10 + d11 + 3*d12 + d13) % 10 == 0"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "9780306406157",
+        "inputMask": "0000000000000"
+      },
+      "externeReferentie": "https://www.isbn-international.org/"
+    },
+    {
+      "naam": "LEI",
+      "description": "Legal Entity Identifier (ISO 17442): 20-teken code voor unieke identificatie van rechtspersonen wereldwijd. Eerste 4 tekens: LOU-prefix. Tekens 5-18: entiteitscode. Tekens 19-20: numerieke controlecijfers. Validatie via ISO 7064 mod-97 (zelfde principe als IBAN).",
+      "basistype": "string",
+      "format": "lei",
+      "domein": "gegevenstypen",
+      "validatie": {
+        "pattern": "^[A-Z0-9]{18}[0-9]{2}$",
+        "minLength": 20,
+        "maxLength": 20,
+        "voorbeelden": [
+          "AAAAAAAAAAAAAAAAAA26"
+        ],
+        "foutmelding": "Voer een geldige LEI in (20 alfanumerieke tekens conform ISO 17442, bijv. AAAAAAAAAAAAAAAAAA26)",
+        "regels": [
+          {
+            "naam": "ISO 7064 mod-97",
+            "type": "function",
+            "expressie": "lei_mod97"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "AAAAAAAAAAAAAAAAAA26"
+      },
+      "externeReferentie": "https://www.gleif.org/en/about-lei/get-an-lei-find-lei-issuing-organizations"
+    }
+  ],
+  "enums": [
+    {
+      "goType": "FormulierDefinitieStatus",
+      "baseType": "string",
+      "domein": "configuratie",
+      "positie": {
+        "x": 2895,
+        "y": -330
+      },
+      "waarden": [
+        {
+          "constNaam": "FormulierDefinitieStatusconcept",
+          "waarde": "concept"
+        },
+        {
+          "constNaam": "FormulierDefinitieStatusactief",
+          "waarde": "actief"
+        },
+        {
+          "constNaam": "FormulierDefinitieStatusinactief",
+          "waarde": "inactief"
+        }
+      ]
+    },
+    {
+      "goType": "ReferentielijstAdrestype",
+      "baseType": "string",
+      "domein": "register",
+      "positie": {
+        "x": 1815,
+        "y": -480
+      },
+      "waarden": [
+        {
+          "constNaam": "ReferentielijstAdrestypeURL",
+          "waarde": "URL"
+        },
+        {
+          "constNaam": "ReferentielijstAdrestypeURN",
+          "waarde": "URN"
+        }
+      ]
+    },
+    {
+      "goType": "WeergaveDefinitieStatus",
+      "baseType": "string",
+      "domein": "configuratie",
+      "positie": {
+        "x": 3480,
+        "y": -315
+      },
+      "waarden": [
+        {
+          "constNaam": "WeergaveDefinitieStatusconcept",
+          "waarde": "concept"
+        },
+        {
+          "constNaam": "WeergaveDefinitieStatusactief",
+          "waarde": "actief"
+        },
+        {
+          "constNaam": "WeergaveDefinitieStatusinactief",
+          "waarde": "inactief"
+        }
+      ]
+    },
+    {
+      "goType": "QueryDefinitieStatus",
+      "baseType": "string",
+      "domein": "configuratie",
+      "positie": {
+        "x": 4330,
+        "y": -315
+      },
+      "waarden": [
+        {
+          "constNaam": "QueryDefinitieStatusconcept",
+          "waarde": "concept"
+        },
+        {
+          "constNaam": "QueryDefinitieStatusactief",
+          "waarde": "actief"
+        },
+        {
+          "constNaam": "QueryDefinitieStatusinactief",
+          "waarde": "inactief"
+        }
+      ]
+    },
+    {
+      "goType": "QueryDefinitieToegankelijkheid",
+      "baseType": "string",
+      "domein": "configuratie",
+      "positie": {
+        "x": 4580,
+        "y": -315
+      },
+      "waarden": [
+        {
+          "constNaam": "QueryDefinitieToegankelijkheidpubliek",
+          "waarde": "publiek"
+        },
+        {
+          "constNaam": "QueryDefinitieToegankelijkheidintern",
+          "waarde": "intern"
+        }
+      ]
+    }
+  ],
+  "referentielijstInstanties": [
+    {
+      "systeemnaam": "AdellijkeTitels",
+      "positie": {
+        "x": 1920,
+        "y": -330
+      }
+    },
+    {
+      "systeemnaam": "Landenlijst",
+      "positie": {
+        "x": 1005,
+        "y": -319.5
+      }
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "FormulierDefinitie",
+      "description": "Formulierdefinitie voor custom layouts van entiteitsformulieren. Bevat metadata (naam, status, doeltype) en een JSON layout-boom. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+      "domein": "configuratie",
+      "isMaterieel": true,
+      "kleur": "#c4b5fd",
+      "meervoud": "formulier_definities",
+      "positie": {
+        "x": 3010,
+        "y": -790
+      },
+      "runtime": {
+        "veldnaam": "formulierdefinitie",
+        "padnaam": "formulier_definities",
+        "tabelnaam": "formulierdefinitie",
+        "idKolom": "id",
+        "klassenaam": "FormulierDefinitie"
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Meta",
+          "description": "Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.",
+          "domein": "configuratie",
+          "meervoud": "formulier_definitie_metas",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 2860,
+            "y": -540
+          },
+          "id": "FormulierDefinitie->FormulierDefinitie_Meta",
+          "runtime": {
+            "veldnaam": "formulierdefinitie_meta",
+            "padnaam": "formulier_definitie_metas",
+            "tabelnaam": "formulierdefinitie_meta",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "formulierdefinitie_id",
+            "klassenaam": "Meta",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "beschrijving",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "doeltype",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "status",
+              "goType": "FormulierDefinitieStatus",
+              "type": "string",
+              "verplicht": true,
+              "enum": "FormulierDefinitieStatus"
+            },
+            {
+              "naam": "is_standaard",
+              "goType": "*bool",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "naam": "Layout",
+          "description": "De layout-boom van het formulier als JSON-structuur. Bevat groepen, rijen, velden en conditionele elementen.",
+          "domein": "configuratie",
+          "meervoud": "formulier_definitie_layouts",
+          "momentvoorkomen": "meervoudig",
+          "positie": {
+            "x": 3110,
+            "y": -540
+          },
+          "id": "FormulierDefinitie->FormulierDefinitie_Layout",
+          "runtime": {
+            "veldnaam": "layout",
+            "padnaam": "formulier_definitie_layouts",
+            "tabelnaam": "formulierdefinitie_layout",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "formulierdefinitie_id",
+            "klassenaam": "Layout",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "layout_json",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "definitie_versie",
+              "goType": "Versie",
+              "type": "string",
+              "verplicht": true,
+              "enum": "Versie",
+              "datatype": "Versie"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typenaam": "Land",
+      "description": "Referentielijst-item: individueel land.",
+      "domein": "register",
+      "entiteitSubtype": "referentielijst_item",
+      "isMaterieel": true,
+      "kleur": "#fde68a",
+      "meervoud": "landen",
+      "positie": {
+        "x": 1290,
+        "y": -135
+      },
+      "runtime": {
+        "veldnaam": "land",
+        "padnaam": "landen",
+        "tabelnaam": "land",
+        "idKolom": "id",
+        "klassenaam": "Land"
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Landcode",
+          "description": "Enkelvoudig gegevenselement landcode van Land.",
+          "domein": "register",
+          "meervoud": "landcodes",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 1170,
+            "y": 75
+          },
+          "id": "edge_1774646153149_10",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "runtime": {
+            "veldnaam": "landcode",
+            "padnaam": "landcodes",
+            "tabelnaam": "land_landcode",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "land_id",
+            "klassenaam": "Landcode",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "code",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            }
+          ]
+        },
+        {
+          "naam": "Landnaam",
+          "description": "Enkelvoudig gegevenselement landnaam van Land.",
+          "domein": "register",
+          "meervoud": "landnamen",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 1418,
+            "y": 75
+          },
+          "id": "edge_1774646072605_7",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "runtime": {
+            "veldnaam": "landnaam",
+            "padnaam": "landnamen",
+            "tabelnaam": "land_landnaam",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "land_id",
+            "klassenaam": "Landnaam",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typenaam": "Referentielijst",
+      "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+      "domein": "register",
+      "entiteitSubtype": "referentielijst",
+      "isMaterieel": true,
+      "kleur": "#fef3c7",
+      "meervoud": "referentielijsten",
+      "positie": {
+        "x": 1440,
+        "y": -720
+      },
+      "runtime": {
+        "veldnaam": "referentielijst",
+        "padnaam": "referentielijsten",
+        "tabelnaam": "referentielijst",
+        "idKolom": "id",
+        "klassenaam": "Referentielijst"
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Referentielijstnaam",
+          "description": "Leesbare naam van een referentielijst.",
+          "domein": "register",
+          "meervoud": "referentielijstnamen",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 1815,
+            "y": -975
+          },
+          "id": "Referentielijst->Referentielijst_Referentielijstnaam",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "runtime": {
+            "veldnaam": "referentielijstnaam",
+            "padnaam": "referentielijstnamen",
+            "tabelnaam": "referentielijst_referentielijstnaam",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "klassenaam": "Referentielijstnaam",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            }
+          ]
+        },
+        {
+          "naam": "Referentielijstomschrijving",
+          "description": "Omschrijving van een referentielijst.",
+          "domein": "register",
+          "meervoud": "referentielijstomschrijvingen",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 1815,
+            "y": -860.5
+          },
+          "id": "Referentielijst->Referentielijst_Referentielijstomschrijving",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "runtime": {
+            "veldnaam": "referentielijstomschrijving",
+            "padnaam": "referentielijstomschrijvingen",
+            "tabelnaam": "referentielijst_referentielijstomschrijving",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "klassenaam": "Referentielijstomschrijving",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "omschrijving",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            }
+          ]
+        },
+        {
+          "naam": "ReferentielijstVisibility",
+          "description": "Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).",
+          "domein": "register",
+          "meervoud": "visibilities",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 1815,
+            "y": -746
+          },
+          "id": "Referentielijst->Referentielijst_ReferentielijstVisibility",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "runtime": {
+            "veldnaam": "referentielijstvisibility",
+            "padnaam": "visibilities",
+            "tabelnaam": "referentielijst_referentielijstvisibility",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "klassenaam": "ReferentielijstVisibility",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "domein",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            }
+          ]
+        },
+        {
+          "naam": "ReferentielijstInternetadres",
+          "description": "Internetadres (URL/URN) van een referentielijst.",
+          "domein": "register",
+          "meervoud": "internetadressen",
+          "momentvoorkomen": "meervoudig",
+          "positie": {
+            "x": 1815,
+            "y": -631.5
+          },
+          "id": "Referentielijst->Referentielijst_ReferentielijstInternetadres",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "runtime": {
+            "veldnaam": "referentielijstinternetadres",
+            "padnaam": "internetadressen",
+            "tabelnaam": "referentielijst_referentielijstinternetadres",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "klassenaam": "ReferentielijstInternetadres",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "adrestype",
+              "goType": "ReferentielijstAdrestype",
+              "type": "string",
+              "verplicht": true,
+              "enum": "ReferentielijstAdrestype"
+            },
+            {
+              "naam": "adres",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "organisatie",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            }
+          ]
+        }
+      ],
+      "relaties": [
+        {
+          "naam": "LandenlijstLand",
+          "description": "Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).",
+          "domein": "register",
+          "relatieSubtype": "referentielijst_items",
+          "referentielijstInstantie": "Landenlijst",
+          "meervoud": "landenlijst_landen",
+          "momentvoorkomen": "meervoudig",
+          "doelEntiteit": "Land",
+          "positie": {
+            "x": 1290,
+            "y": -310.5
+          },
+          "id": "Referentielijst->LandenlijstLand",
+          "doelId": "LandenlijstLand->Land",
+          "runtime": {
+            "veldnaam": "landenlijstland",
+            "padnaam": "landenlijst_landen",
+            "tabelnaam": "landenlijstland",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "klassenaam": "LandenlijstLand",
+            "relatieveAutoincrement": true
+          }
+        },
+        {
+          "naam": "AdellijkeTitelsTitel",
+          "description": "Koppeling van een adellijke titel aan referentielijst-instantie AdellijkeTitels (referentielijst-items relatie).",
+          "domein": "register",
+          "relatieSubtype": "referentielijst_items",
+          "referentielijstInstantie": "AdellijkeTitels",
+          "meervoud": "adellijke_titels_titels",
+          "momentvoorkomen": "meervoudig",
+          "doelEntiteit": "AdellijkeTitel",
+          "positie": {
+            "x": 1665,
+            "y": -315
+          },
+          "id": "Referentielijst->AdellijkeTitelsTitel",
+          "doelId": "AdellijkeTitelsTitel->AdellijkeTitel",
+          "runtime": {
+            "veldnaam": "adellijketitelstitel",
+            "padnaam": "adellijke_titels_titels",
+            "tabelnaam": "adellijketitelstitel",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "klassenaam": "AdellijkeTitelsTitel",
+            "relatieveAutoincrement": true
+          }
+        }
+      ]
+    },
+    {
+      "typenaam": "WeergaveDefinitie",
+      "description": "Weergavedefinitie voor publicatie-views op entiteitsdata. Bevat metadata (naam, doeltype, status), een tabelconfiguratie (kolommen, sortering) en een detail-template met veldpad-inserts. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+      "domein": "configuratie",
+      "isMaterieel": true,
+      "kleur": "#a5f3fc",
+      "meervoud": "weergave_definities",
+      "positie": {
+        "x": 3630,
+        "y": -795
+      },
+      "runtime": {
+        "veldnaam": "weergavedefinitie",
+        "padnaam": "weergave_definities",
+        "tabelnaam": "weergavedefinitie",
+        "idKolom": "id",
+        "klassenaam": "WeergaveDefinitie"
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Meta",
+          "description": "Metadata van de weergavedefinitie: naam, beschrijving, doeltype en status.",
+          "domein": "configuratie",
+          "meervoud": "weergave_definitie_metas",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 3480,
+            "y": -545
+          },
+          "id": "WeergaveDefinitie->WeergaveDefinitie_Meta",
+          "runtime": {
+            "veldnaam": "weergavedefinitie_meta",
+            "padnaam": "weergave_definitie_metas",
+            "tabelnaam": "weergavedefinitie_meta",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "weergavedefinitie_id",
+            "klassenaam": "Meta",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "beschrijving",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "doeltype",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "status",
+              "goType": "WeergaveDefinitieStatus",
+              "type": "string",
+              "verplicht": true,
+              "enum": "WeergaveDefinitieStatus"
+            },
+            {
+              "naam": "is_standaard",
+              "goType": "*bool",
+              "type": "boolean"
+            }
+          ]
+        },
+        {
+          "naam": "TabelConfig",
+          "description": "Configuratie van de tabelweergave: kolomdefinities (veldpad, label, breedte, sorteerbaar, filterbaar), standaardsortering en aantal rijen per pagina.",
+          "domein": "configuratie",
+          "meervoud": "weergave_definitie_tabel_configs",
+          "momentvoorkomen": "meervoudig",
+          "positie": {
+            "x": 3730,
+            "y": -545
+          },
+          "id": "WeergaveDefinitie->WeergaveDefinitie_TabelConfig",
+          "runtime": {
+            "veldnaam": "tabelconfig",
+            "padnaam": "weergave_definitie_tabel_configs",
+            "tabelnaam": "weergavedefinitie_tabelconfig",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "weergavedefinitie_id",
+            "klassenaam": "TabelConfig",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "tabel_config_json",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "definitie_versie",
+              "goType": "Versie",
+              "type": "string",
+              "verplicht": true,
+              "enum": "Versie",
+              "datatype": "Versie"
+            }
+          ]
+        },
+        {
+          "naam": "DetailTemplate",
+          "description": "Template voor de detail-pagina met {{veldpad}} inserts. Wordt gerenderd als read-only publicatieweergave.",
+          "domein": "configuratie",
+          "meervoud": "weergave_definitie_detail_templates",
+          "momentvoorkomen": "meervoudig",
+          "positie": {
+            "x": 3980,
+            "y": -545
+          },
+          "id": "WeergaveDefinitie->WeergaveDefinitie_DetailTemplate",
+          "runtime": {
+            "veldnaam": "detailtemplate",
+            "padnaam": "weergave_definitie_detail_templates",
+            "tabelnaam": "weergavedefinitie_detailtemplate",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "weergavedefinitie_id",
+            "klassenaam": "DetailTemplate",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "template_tekst",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "definitie_versie",
+              "goType": "Versie",
+              "type": "string",
+              "verplicht": true,
+              "enum": "Versie",
+              "datatype": "Versie"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typenaam": "QueryDefinitie",
+      "description": "Opgeslagen GraphQL-query (persisted query) die de frontend op naam aanroept. Bepaalt de selectie van het model — welke rijen — los van de weergave (WeergaveDefinitie) en de invoer (FormulierDefinitie). Gereserveerd type: de backend zoekt het bij naam op. Elk GE is één feit met een eigen tijdlijn; Status, Toegankelijkheid en Document zijn materieel zodat een wijziging vooruit ingepland (gestaged) kan worden. Materialiteit van de entiteit zelf is de levensduur van de definitie als geheel.",
+      "domein": "configuratie",
+      "isMaterieel": true,
+      "kleur": "#fde68a",
+      "meervoud": "query_definities",
+      "positie": {
+        "x": 4630,
+        "y": -795
+      },
+      "runtime": {
+        "veldnaam": "querydefinitie",
+        "padnaam": "query_definities",
+        "tabelnaam": "querydefinitie",
+        "idKolom": "id",
+        "klassenaam": "QueryDefinitie"
+      },
+      "gegevenselementen": [
+        {
+          "naam": "QuerydefinitieNaam",
+          "description": "De naam waarmee de frontend het document aanroept (documentId). Stabiel: dit is het gepubliceerde contract; hernoemen is een nieuwe hub.",
+          "domein": "configuratie",
+          "meervoud": "query_definitie_namen",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 4130,
+            "y": -545
+          },
+          "id": "QueryDefinitie->QueryDefinitie_QuerydefinitieNaam",
+          "runtime": {
+            "veldnaam": "querydefinitienaam",
+            "padnaam": "query_definitie_namen",
+            "tabelnaam": "querydefinitie_querydefinitienaam",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "querydefinitie_id",
+            "klassenaam": "QuerydefinitieNaam",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            }
+          ]
+        },
+        {
+          "naam": "QuerydefinitieBeschrijving",
+          "description": "Hoog-over beschrijving van de definitie (wat levert deze query, voor wie).",
+          "domein": "configuratie",
+          "meervoud": "query_definitie_beschrijvingen",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 4330,
+            "y": -545
+          },
+          "id": "QueryDefinitie->QueryDefinitie_QuerydefinitieBeschrijving",
+          "runtime": {
+            "veldnaam": "querydefinitiebeschrijving",
+            "padnaam": "query_definitie_beschrijvingen",
+            "tabelnaam": "querydefinitie_querydefinitiebeschrijving",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "querydefinitie_id",
+            "klassenaam": "QuerydefinitieBeschrijving",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "beschrijving",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            }
+          ]
+        },
+        {
+          "naam": "QuerydefinitieStatus",
+          "description": "Levenscyclus: concept = klad, niet opvraagbaar; actief = opvraagbaar; inactief = ingetrokken, niet meer opvraagbaar (een aanroep krijgt 'ingetrokken' i.p.v. 'onbekend'). Materieel: 'actief vanaf …' is te stagen. `reden` legt uit waarom, vanuit het oogpunt van de afnemer.",
+          "domein": "configuratie",
+          "meervoud": "query_definitie_statussen",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 4530,
+            "y": -545
+          },
+          "id": "QueryDefinitie->QueryDefinitie_QuerydefinitieStatus",
+          "runtime": {
+            "veldnaam": "querydefinitiestatus",
+            "padnaam": "query_definitie_statussen",
+            "tabelnaam": "querydefinitie_querydefinitiestatus",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "querydefinitie_id",
+            "klassenaam": "QuerydefinitieStatus",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "status",
+              "goType": "QueryDefinitieStatus",
+              "type": "string",
+              "verplicht": true,
+              "enum": "QueryDefinitieStatus"
+            },
+            {
+              "naam": "reden",
+              "goType": "*string",
+              "type": "string"
+            }
+          ],
+          "isMaterieel": true
+        },
+        {
+          "naam": "QuerydefinitieToegankelijkheid",
+          "description": "Wie het document mag uitvoeren: publiek (ook anoniem) of intern (alleen met een rol). Later vervangbaar door een verwijzing naar een FTV-policy. Ontbreekt dit GE, dan geldt intern.",
+          "domein": "configuratie",
+          "meervoud": "query_definitie_toegankelijkheden",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 4730,
+            "y": -545
+          },
+          "id": "QueryDefinitie->QueryDefinitie_QuerydefinitieToegankelijkheid",
+          "runtime": {
+            "veldnaam": "querydefinitietoegankelijkheid",
+            "padnaam": "query_definitie_toegankelijkheden",
+            "tabelnaam": "querydefinitie_querydefinitietoegankelijkheid",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "querydefinitie_id",
+            "klassenaam": "QuerydefinitieToegankelijkheid",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "toegankelijkheid",
+              "goType": "QueryDefinitieToegankelijkheid",
+              "type": "string",
+              "verplicht": true,
+              "enum": "QueryDefinitieToegankelijkheid"
+            }
+          ],
+          "isMaterieel": true
+        },
+        {
+          "naam": "QuerydefinitieDocument",
+          "description": "Het opgeslagen GraphQL-document. Enkelvoudig: altijd precies één geldig document per naam; een oude versie is via het peiltijdstip te zien, niet via het versienummer. Materieel: een nieuwe versie is te stagen. `toelichting` beschrijft deze versie.",
+          "domein": "configuratie",
+          "meervoud": "query_definitie_documenten",
+          "momentvoorkomen": "enkelvoudig",
+          "positie": {
+            "x": 4930,
+            "y": -545
+          },
+          "id": "QueryDefinitie->QueryDefinitie_QuerydefinitieDocument",
+          "runtime": {
+            "veldnaam": "querydefinitiedocument",
+            "padnaam": "query_definitie_documenten",
+            "tabelnaam": "querydefinitie_querydefinitiedocument",
+            "idKolom": "rel_id",
+            "heeftPFK": true,
+            "entiteitIDKolom": "querydefinitie_id",
+            "klassenaam": "QuerydefinitieDocument",
+            "relatieveAutoincrement": true
+          },
+          "velden": [
+            {
+              "naam": "graphql_document",
+              "goType": "string",
+              "type": "string",
+              "verplicht": true
+            },
+            {
+              "naam": "definitie_versie",
+              "goType": "Versie",
+              "type": "string",
+              "verplicht": true,
+              "enum": "Versie",
+              "datatype": "Versie"
+            },
+            {
+              "naam": "toelichting",
+              "goType": "*string",
+              "type": "string"
+            }
+          ],
+          "isMaterieel": true
+        }
+      ]
+    }
+  ]
+}
