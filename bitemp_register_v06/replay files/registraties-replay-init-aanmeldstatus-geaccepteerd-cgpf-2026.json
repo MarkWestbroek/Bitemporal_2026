@@ -1,0 +1,793 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-24T12:00:00.000Z",
+  "source": "handmatig (Claude-sessie 24-09-2026)",
+  "description": "Zet de 85 bestaande initiatieven uit replay 4 (Intake Portfolio Common Ground, id 37–128) op aanmeldstatus 'geaccepteerd'. Eenmalig, ná replay 4 en ná een backend met het GE Initiatief.Aanmeldstatus (CG-model 24-09-2026). Initiatieven zonder aanmeldstatus zijn niet publiek: de publieke QueryDefinitie filtert op geaccepteerd.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T12:00:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Aanmeldstatus geaccepteerd voor alle bestaande initiatieven",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Aanmeldstatus geaccepteerd voor bestaande initiatieven (invoering aanmeldstatus 24-09-2026)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 37,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 38,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 39,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 40,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 42,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 43,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 44,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 45,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 46,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 47,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 48,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 49,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 50,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 51,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 52,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 53,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 54,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 55,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 56,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 57,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 58,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 59,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 60,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 61,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 62,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 63,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 64,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 65,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 66,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 67,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 68,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 69,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 70,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 71,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 72,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 73,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 74,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 75,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 76,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 77,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 78,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 79,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 80,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 81,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 82,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 83,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 85,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 86,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 87,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 88,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 94,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 95,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 96,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 97,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 98,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 99,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 100,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 101,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 102,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 103,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 104,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 105,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 106,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 107,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 108,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 109,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 110,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 111,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 112,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 113,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 114,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 115,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 116,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 117,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 118,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 119,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 120,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 121,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 122,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 123,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 124,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 125,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 126,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 127,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 128,
+                "status": "geaccepteerd",
+                "toelichting": "Bestaand initiatief uit de portfolio-intake, al gepubliceerd vóór de invoering van de aanmeldstatus (24-09-2026)."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

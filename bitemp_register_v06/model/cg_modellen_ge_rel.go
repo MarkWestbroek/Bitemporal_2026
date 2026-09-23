@@ -89,6 +89,15 @@ const (
 	OrganisatierolBetrokkenOrganisatie Organisatierol = "BetrokkenOrganisatie"
 )
 
+type Aanmeldstatus string
+
+const (
+	AanmeldstatusNieuweAanmelding Aanmeldstatus = "nieuwe_aanmelding"
+	AanmeldstatusInBehandeling    Aanmeldstatus = "in_behandeling"
+	AanmeldstatusGeaccepteerd     Aanmeldstatus = "geaccepteerd"
+	AanmeldstatusAfgewezen        Aanmeldstatus = "afgewezen"
+)
+
 type ApiStandaard_Naam struct {
 	bun.BaseModel      `bun:"table:apistandaard_naam,alias:apistandaard_naam"`
 	ApiStandaard_ID    int                      `json:"apistandaard_id" bun:"apistandaard_id,pk" schema_desc:"ID van de ApiStandaard-entiteit"`
@@ -491,6 +500,29 @@ type Initiatief_Etalage_Data struct {
 	Level2        *string    `json:"level2,omitempty"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// Initiatief_Aanmeldstatus — Levenscyclus van de aanmelding, los van Beoordeling (het kwaliteitsdossier brons/zilver/goud): nieuwe_aanmelding (via het aanmeldformulier binnengekomen, nog niet bekeken), in_behandeling, geaccepteerd (zichtbaar op de publieke site), afgewezen. Alleen geaccepteerde initiatieven komen in de publieke QueryDefinitie. Niet materieel: de formele historie legt vast wanneer wat is besloten.
+type Initiatief_Aanmeldstatus struct {
+	bun.BaseModel    `bun:"table:initiatief_aanmeldstatus,alias:initiatief_aanmeldstatus"`
+	Initiatief_ID    int                             `json:"initiatief_id" bun:"initiatief_id,pk" schema_desc:"ID van de Initiatief-entiteit"`
+	Rel_ID           int                             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentInitiatief *Initiatief                     `json:"-" bun:"rel:belongs-to,join:initiatief_id=id,on_delete:cascade"`
+	Opvoer           *time.Time                      `json:"opvoer,omitempty"`
+	Afvoer           *time.Time                      `json:"afvoer,omitempty"`
+	Data             []Initiatief_Aanmeldstatus_Data `bun:"rel:has-many,join:initiatief_id=initiatief_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Initiatief_Aanmeldstatus_Data — geversioned inhoud van Initiatief_Aanmeldstatus.
+type Initiatief_Aanmeldstatus_Data struct {
+	bun.BaseModel `bun:"table:initiatief_aanmeldstatus_data,alias:initiatief_aanmeldstatus_data"`
+	Initiatief_ID int           `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID        int           `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64         `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Status        Aanmeldstatus `json:"status" schema:"enum=Aanmeldstatus"`
+	Toelichting   *string       `json:"toelichting,omitempty"`
+	Opvoer        *time.Time    `json:"opvoer,omitempty"`
+	Afvoer        *time.Time    `json:"afvoer,omitempty"`
 }
 
 type InitiatiefGemeente struct {

@@ -368,6 +368,20 @@ anders optie). Een snapshot is een noodrem, geen backup.
   de referentietabellen. Opnieuw maken vanaf een instantie:
   `python3 scripts/maak_definities_replay.py --bron <url> --uit <bestand>` — alleen de geldende
   versie per GE, geen historie. Het bestand bevat geen hostnaam; zet die er ook niet in (publiek repo).
+- **Aanmeldstatus en de publieke QueryDefinitie (sinds 24 september 2026)** — het CG-model heeft
+  het GE `Initiatief.Aanmeldstatus` (`nieuwe_aanmelding` / `in_behandeling` / `geaccepteerd` /
+  `afgewezen`); de tabel ontstaat bij de eerste start. De publieke query filtert op
+  `geaccepteerd`, dus bestaande initiatieven zonder status zijn **niet** publiek. Na de deploy
+  daarom twee replays afspelen (na replay 4 en de definities):
+  `replay files/registraties-replay-init-aanmeldstatus-geaccepteerd-cgpf-2026.json` (zet de 85
+  initiatieven uit replay 4 op geaccepteerd) en
+  `replay files/registraties-replay-init-querydefinitie-publieke-initiatieven.json` (de
+  QueryDefinitie `publieke-initiatieven`). Controle: `curl -s -X POST https://<host>/graphql/query
+  -H 'Content-Type: application/json' -d '{"documentId":"publieke-initiatieven"}'`; in het
+  opstartlog van de API staat `GraphQL uitvoeren op naam (documentId) aan; 1 actuele
+  QueryDefinitie(s)`. De publicatiepagina gebruikt deze query nog niet (staat gepland), dus voor de
+  embed verandert er nog niets. Heeft een instantie de QueryDefinitie-versie van 23 september
+  (`Meta`-GE) gedraaid, dan eerst `scripts/sql/2026-09-23-querydefinitie-losse-ges-opruimen.sql`.
 - **`$` in wachtwoorden** — compose leest het als variabele. `.env.example` genereert ze zonder.
 - **`minio-init` stopt** — hoort zo; daarom achter `--profile init`.
 - **OpenFTV** — `openftv_adl` database, `package authz` in de rego, bundle-403: zie TrueNAS §2.3–2.6.

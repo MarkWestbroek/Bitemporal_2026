@@ -386,6 +386,17 @@ dat niet voor je eigen wijziging aanziet.
    `querydefinitie_querydefinitienaam`), zoals `Organisatienaam` in CG. Bij een botsing valt de
    registratie-engine terug op de entiteit-id in de payload, maar daar wil je niet op leunen.
 
+8. **Extra voetangels bij het CG-domein** (gezien op 24-09-2026 bij `Aanmeldstatus`), naast a en b
+   uit §7.4: de generator hernoemt bestaande **enum-constanten** naar een andere casing
+   (`FaseIdeeNogGeenConcreteOpbrengsten` → `FaseIdeenoggeenconcreteopbrengsten`, idem `CGLaag…`,
+   `CGPortfolioFase…`, `Gemeenterol…`), zet **`Aanvang`/`Einde` terug** in de `_Input`-structs van
+   materiële GE's, en **`cg_datatype_registry.go` verliest zijn datatypes** (`URL`, …). Werkwijze:
+   `git checkout model/datatype_aliases.go model/cg_datatype_registry.go`, de hernoemde constanten
+   terugzetten, en in `cg_modellen_input.go` de `schema:`-tags strippen en de twee
+   `Aanvang`/`Einde`-regels weer vervangen door de normalizer-opmerking. Daarna hoort
+   `git diff model/ | grep '^-'` alleen de commentaarregel van punt 6 te tonen. Structureel
+   oplossen: backlog §29.3/29.4.
+
 **Databasegevolg**: geen migratie zolang je alleen toevoegt. `dbsetup.CreateTables` maakt bij de
 eerste start van de backend de nieuwe tabellen aan (`CREATE TABLE IF NOT EXISTS`); bestaande data
 blijft onaangeroerd. Maar het voegt **geen kolommen toe** aan een bestaande tabel en verwijdert

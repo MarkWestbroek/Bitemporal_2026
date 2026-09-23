@@ -51,6 +51,7 @@ type Initiatief struct {
 	BetrokkenOrganisatie     []Initiatief_BetrokkenOrganisatie `bun:"rel:has-many,join:id=initiatief_id" json:"betrokken_organisatie,omitempty"`
 	Beoordelingen            []Initiatief_Beoordeling          `bun:"rel:has-many,join:id=initiatief_id" json:"beoordelingen,omitempty"`
 	Etalages                 []Initiatief_Etalage              `bun:"rel:has-many,join:id=initiatief_id" json:"etalages,omitempty"`
+	Aanmeldstatussen         []Initiatief_Aanmeldstatus        `bun:"rel:has-many,join:id=initiatief_id" json:"aanmeldstatussen,omitempty"`
 	InitiatiefGemeenten      []InitiatiefGemeente              `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_gemeenten,omitempty"`
 	InitiatiefDomeinen       []InitiatiefDomein                `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_domeinen,omitempty"`
 	InitiatiefApiStandaarden []InitiatiefAPIStandaard          `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_api_standaarden,omitempty"`

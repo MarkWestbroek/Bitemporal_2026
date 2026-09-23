@@ -22,8 +22,10 @@ func initCgEnumRegistry() {
 	EnumDomeinen["Gemeenterol"] = "CG"
 	EnumWaarden["Organisatierol"] = []string{"Contactorganisatie", "BetrokkenOrganisatie"}
 	EnumDomeinen["Organisatierol"] = "CG"
+	EnumWaarden["Aanmeldstatus"] = []string{"nieuwe_aanmelding", "in_behandeling", "geaccepteerd", "afgewezen"}
+	EnumDomeinen["Aanmeldstatus"] = "CG"
 
-	// Enum editor-posities
+	// Enum editor-layout (positie + lock)
 	EnumEditorLayouts["Fase"] = &EditorLayout{Positie: &V3Positie{X: 315, Y: -1560}}
 	EnumEditorLayouts["Producttype"] = &EditorLayout{Positie: &V3Positie{X: 615, Y: -1695}}
 	EnumEditorLayouts["CGLaag"] = &EditorLayout{Positie: &V3Positie{X: 810, Y: -1530}}
@@ -33,4 +35,5 @@ func initCgEnumRegistry() {
 	EnumEditorLayouts["CGPortfolioFase"] = &EditorLayout{Positie: &V3Positie{X: 1545, Y: -1590}}
 	EnumEditorLayouts["Gemeenterol"] = &EditorLayout{Positie: &V3Positie{X: 1395, Y: -3195}}
 	EnumEditorLayouts["Organisatierol"] = &EditorLayout{Positie: &V3Positie{X: 435, Y: -2280}}
+	EnumEditorLayouts["Aanmeldstatus"] = &EditorLayout{Positie: &V3Positie{X: 1545, Y: -1380}}
 }

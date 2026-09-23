@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-24T12:00:00.000Z",
+  "source": "handmatig (Claude-sessie 24-09-2026)",
+  "description": "QueryDefinitie 'publieke-initiatieven': het opgeslagen document voor de publicatiepagina/embed. Vast deel: aanmeldstatus geaccepteerd; aanroeper kan via $extra alleen versmallen. Laad na een backend met QueryDefinitie in losse GE's (configuratie-model 23-09-2026). Aanroepen: POST /graphql/query {\"documentId\":\"publieke-initiatieven\"}.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T12:00:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "QueryDefinitie publieke-initiatieven v0.1",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "QueryDefinitie publieke-initiatieven v0.1",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "querydefinitie": {
+                "id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitie_aanvang": {
+                "querydefinitie_id": 1,
+                "datum": "2026-09-24"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitienaam": {
+                "querydefinitie_id": 1,
+                "naam": "publieke-initiatieven"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitiebeschrijving": {
+                "querydefinitie_id": 1,
+                "beschrijving": "Geaccepteerde initiatieven voor de publicatiepagina en de embed op commonground.nl."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitiestatus": {
+                "querydefinitie_id": 1,
+                "status": "actief"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitietoegankelijkheid": {
+                "querydefinitie_id": 1,
+                "toegankelijkheid": "publiek"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitiedocument": {
+                "querydefinitie_id": 1,
+                "graphql_document": "query PubliekeInitiatieven($extra: InitiatiefFilter, $limit: Int = 100, $offset: Int = 0) {\n  full_initiatieven_list(\n    filter: { and: [ { aanmeldstatussen: { status: { eq: \"geaccepteerd\" } } }, $extra ] },\n    limit: $limit, offset: $offset\n  ) {\n    id\n    weergavenaam\n    producten { naam omschrijving type CG_laag website }\n    planningen { fase startdatum ready_for_use }\n    initiatief_domeinen { weergavenaam }\n    initiatief_gemeenten { rol weergavenaam }\n  }\n}",
+                "definitie_versie": "0.1",
+                "toelichting": "Eerste versie: alle geaccepteerde initiatieven met product, planning, domeinen en gemeenten; paginering via $limit/$offset (max 100)."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

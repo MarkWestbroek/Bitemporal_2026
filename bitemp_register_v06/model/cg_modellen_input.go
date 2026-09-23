@@ -113,6 +113,13 @@ type Initiatief_Etalage_Input struct {
 	Level2        *string `json:"level2,omitempty"`
 }
 
+type Initiatief_Aanmeldstatus_Input struct {
+	INITIATIEF_ID int           `json:"initiatief_id"`
+	Rel_ID        int           `json:"rel_id"`
+	Status        Aanmeldstatus `json:"status"`
+	Toelichting   *string       `json:"toelichting,omitempty"`
+}
+
 type InitiatiefGemeente_Input struct {
 	INITIATIEF_ID int         `json:"initiatief_id"`
 	Rel_ID        int         `json:"rel_id"`

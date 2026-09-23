@@ -203,6 +203,16 @@ func (ie Initiatief_Etalage) GetAfvoer() *time.Time   { return ie.Afvoer }
 func (ie *Initiatief_Etalage) SetAfvoer(t *time.Time) { ie.Afvoer = t }
 func (ie Initiatief_Etalage) String() string          { return RepresentatieToString(ie) }
 
+// Initiatief_Aanmeldstatus
+func (ia Initiatief_Aanmeldstatus) GetID() any              { return ia.Rel_ID }
+func (ia Initiatief_Aanmeldstatus) Metatype() Metatype      { return MetatypeGegevenselement }
+func (ia *Initiatief_Aanmeldstatus) ClearID()               { ia.Rel_ID = 0 }
+func (ia Initiatief_Aanmeldstatus) GetOpvoer() *time.Time   { return ia.Opvoer }
+func (ia *Initiatief_Aanmeldstatus) SetOpvoer(t *time.Time) { ia.Opvoer = t }
+func (ia Initiatief_Aanmeldstatus) GetAfvoer() *time.Time   { return ia.Afvoer }
+func (ia *Initiatief_Aanmeldstatus) SetAfvoer(t *time.Time) { ia.Afvoer = t }
+func (ia Initiatief_Aanmeldstatus) String() string          { return RepresentatieToString(ia) }
+
 // InitiatiefGemeente
 func (i InitiatiefGemeente) GetID() any              { return i.Rel_ID }
 func (i InitiatiefGemeente) Metatype() Metatype      { return MetatypeRelatie }
@@ -426,6 +436,16 @@ func (d *Initiatief_Etalage_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
 func (d Initiatief_Etalage_Data) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *Initiatief_Etalage_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d Initiatief_Etalage_Data) String() string          { return RepresentatieToString(d) }
+
+// Initiatief_Aanmeldstatus_Data
+func (d Initiatief_Aanmeldstatus_Data) GetID() any              { return d.Versie }
+func (d Initiatief_Aanmeldstatus_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *Initiatief_Aanmeldstatus_Data) ClearID()               { d.Versie = 0 }
+func (d Initiatief_Aanmeldstatus_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *Initiatief_Aanmeldstatus_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d Initiatief_Aanmeldstatus_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *Initiatief_Aanmeldstatus_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d Initiatief_Aanmeldstatus_Data) String() string          { return RepresentatieToString(d) }
 
 // InitiatiefGemeente_Data
 func (d InitiatiefGemeente_Data) GetID() any              { return d.Versie }
@@ -801,6 +821,16 @@ func (i Initiatief_Etalage_Input) GetAfvoer() *time.Time   { return nil }
 func (i *Initiatief_Etalage_Input) SetAfvoer(t *time.Time) {}
 func (i Initiatief_Etalage_Input) String() string          { return RepresentatieToString(i) }
 
+// Initiatief_Aanmeldstatus_Input
+func (i Initiatief_Aanmeldstatus_Input) GetID() any              { return i.Rel_ID }
+func (i Initiatief_Aanmeldstatus_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *Initiatief_Aanmeldstatus_Input) ClearID()               { i.Rel_ID = 0 }
+func (i Initiatief_Aanmeldstatus_Input) GetOpvoer() *time.Time   { return nil }
+func (i *Initiatief_Aanmeldstatus_Input) SetOpvoer(t *time.Time) {}
+func (i Initiatief_Aanmeldstatus_Input) GetAfvoer() *time.Time   { return nil }
+func (i *Initiatief_Aanmeldstatus_Input) SetAfvoer(t *time.Time) {}
+func (i Initiatief_Aanmeldstatus_Input) String() string          { return RepresentatieToString(i) }
+
 // InitiatiefGemeente_Input
 func (i InitiatiefGemeente_Input) GetID() any              { return i.Rel_ID }
 func (i InitiatiefGemeente_Input) Metatype() Metatype      { return MetatypeRelatie }
@@ -993,6 +1023,12 @@ func (i *Initiatief) GeefOnderliggendeGegevenselementen() []OnderliggendeReprese
 			i.Etalages[idx].Initiatief_ID = i.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Initiatief_Etalage", Representatie: &i.Etalages[idx]})
+	}
+	for idx := range i.Aanmeldstatussen {
+		if i.Aanmeldstatussen[idx].Initiatief_ID == 0 {
+			i.Aanmeldstatussen[idx].Initiatief_ID = i.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Initiatief_Aanmeldstatus", Representatie: &i.Aanmeldstatussen[idx]})
 	}
 	for idx := range i.InitiatiefGemeenten {
 		if i.InitiatiefGemeenten[idx].Initiatief_ID == 0 {
@@ -1351,6 +1387,20 @@ func (h *Initiatief_Etalage) GeefOnderliggendeGegevenselementen() []Onderliggend
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Initiatief_Etalage_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *Initiatief_Aanmeldstatus) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].Initiatief_ID == 0 {
+			h.Data[i].Initiatief_ID = h.Initiatief_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Initiatief_Aanmeldstatus_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
