@@ -351,6 +351,37 @@ Na een regeneratie zijn die delta's weg. Zet ze terug (of laat ze bewust vallen,
 maar dan met een testronde: het verandert de API-schema's). Structureel oplossen
 vraagt een aanpassing in `cmd/codegen/gen_input.go` — staat op de backlog.
 
+### 7.5 Werkwijze: één domein uitbreiden via V3 JSON (met nulmeting)
+
+Gebruikt op 23-09-2026 om `QueryDefinitie` aan het domein `configuratie` toe te voegen
+(Claude-sessie). De nulmeting maakt zichtbaar wat de generator hoe dan ook verandert, zodat je
+dat niet voor je eigen wijziging aanziet.
+
+1. **Exporteren**: `go run ./cmd/export_v3 --domein configuratie > origineel.json`
+   (zonder `--strict`: de register-context moet mee).
+2. **Nulmeting**: genereer het *ongewijzigde* export terug en bekijk `git diff model/`.
+   Voor `configuratie` gaf dat precies de voetangels uit §7.4 (`datatype_aliases.go`, en de
+   `schema:`-tags in `*_modellen_input.go`) plus één gewijzigde commentaarregel in
+   `*_enum_registry.go`. Zet de nulmeting terug: `git checkout model/`.
+3. **Wijzigen**: voeg entiteit, GE's en enum toe aan het export en sla het op in
+   `docs/Model files (V3)/` (bv. `configuratie 2026-09-23 met QueryDefinitie — v3-model.json`).
+   Dat bestand is de reproduceerbare invoer van de generatie.
+4. **Genereren** voor alleen dat domein:
+   ```sh
+   go run ./cmd/codegen --input "docs/Model files (V3)/<bestand>.json" \
+     --mode additive --domein configuratie --prefix configuratie --output model/
+   ```
+5. **Voetangels herstellen**: `git checkout model/datatype_aliases.go`, en de `schema:`-tags in
+   `*_modellen_input.go` weer weghalen — ook op de nieuwe structs, zodat het bestand consistent
+   blijft.
+6. **Controleren dat het puur toevoegend is**: `git diff model/ | grep '^-' | grep -v '^---'`
+   hoort (op de commentaarregel na) leeg te zijn. Daarna `go build ./... && go test ./...`.
+
+**Databasegevolg**: geen migratie. `dbsetup.CreateTables` maakt bij de eerste start van de
+backend de nieuwe tabellen aan (`CREATE TABLE IF NOT EXISTS`); bestaande data blijft onaangeroerd.
+Geverifieerd door de backend tegen een lege PostgreSQL te starten, een `QueryDefinitie` te
+registreren via `POST /registratie/` en hem via GraphQL (met filter) terug te vragen.
+
 ---
 
 ## 8. Cross-domein relaties

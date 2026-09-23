@@ -73,3 +73,35 @@ type WeergaveDefinitie_Einde struct {
 	Opvoer               *time.Time `json:"opvoer,omitempty"`
 	Afvoer               *time.Time `json:"afvoer,omitempty"`
 }
+
+// QueryDefinitie — Opgeslagen GraphQL-query (persisted query) die de frontend op naam aanroept. Bepaalt de selectie van het model — welke rijen — los van de weergave (WeergaveDefinitie) en de invoer (FormulierDefinitie). Alleen een actief document met is_publiek mag anoniem worden uitgevoerd. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.
+type QueryDefinitie struct {
+	bun.BaseModel           `bun:"table:querydefinitie,alias:querydefinitie"`
+	ID                      int                       `json:"id" bun:"id,pk"`
+	Opvoer                  *time.Time                `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time                `json:"afvoer,omitempty"`
+	QueryDefinitieMetas     []QueryDefinitie_Meta     `bun:"rel:has-many,join:id=querydefinitie_id" json:"query_definitie_metas,omitempty"`
+	QueryDefinitieDocuments []QueryDefinitie_Document `bun:"rel:has-many,join:id=querydefinitie_id" json:"query_definitie_documents,omitempty"`
+	Aanvang                 []QueryDefinitie_Aanvang  `bun:"rel:has-many,join:id=querydefinitie_id" json:"aanvang,omitempty"`
+	Einde                   []QueryDefinitie_Einde    `bun:"rel:has-many,join:id=querydefinitie_id" json:"einde,omitempty"`
+}
+
+// QueryDefinitie_Aanvang — aanvangdatum van entiteit QueryDefinitie.
+type QueryDefinitie_Aanvang struct {
+	bun.BaseModel     `bun:"table:querydefinitie_aanvang,alias:querydefinitie_aanvang"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_Einde — eindedatum van entiteit QueryDefinitie.
+type QueryDefinitie_Einde struct {
+	bun.BaseModel     `bun:"table:querydefinitie_einde,alias:querydefinitie_einde"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}

@@ -201,6 +201,50 @@ knop), *kan*.
 > verruimen**. Een formulier is een openbaar oppervlak; verruimen hoort een model- of
 > autorisatiebesluit te zijn, niet een FD-wijziging.
 
+### 5.5 Op het formulierprofiel uit Studio gelegd (23-09-2026)
+
+Het formulierprofiel (`web/vite/src/diagramprofielen/formulier/index.js`) modelleert de
+`layout_json` als diagram en noemt zichzelf een *tweede control op hetzelfde model*. Dat is de
+juiste lezing, in MVC-termen:
+
+| MVC | Hier | Construct |
+|---|---|---|
+| **Model** | de registerdata: ENT, GE, relaties, bitemporeel | canoniek model |
+| **Selectie** van het model | *welke* rijen | `QueryDefinitie` (§7.4), met het filter uit §7.6 |
+| **View** | hoe je het ziet | `WeergaveDefinitie`, de visualisaties |
+| **Control** | hoe je het bewerkt | `FormulierDefinitie` + widgets |
+
+Dezelfde datamanipulatie kan dus op verschillende manieren worden vormgegeven; een widget
+verandert de editor, niet de data. Het profiel kent nu:
+
+- **elementtypen** `Formulier` (doeltype, status, standaard, definitie-versie), `Groep`
+  (pad-context), `Rij` (richting), `Lijst` (bron ENT.GE meervoudig, min, max), `Conditioneel`
+  (veld, operator, waarde) en `Notitie`, genest via de connector `bevat` (met `volgorde`);
+- **veldtype** `veld` in het compartiment `velden`: veldpad, label, breedte, widget, alleen-lezen.
+
+De voorstellen uit §5.1–5.4 passen daar grotendeels in **zonder nieuwe elementtypen**:
+
+| Behoefte | Waar in het profiel | Wijziging |
+|---|---|---|
+| widget-afleiding (§5.1) | `veld.widget` bestaat al (vrije tekst) | leeg = afgeleid uit het model; waarden worden een vaste lijst |
+| **meerkeuze** / chips (§5.1) | een meervoudig GE met één betekenisdragend veld = een `Lijst` | **`widget` ook op `Lijst`** (rijen / meerkeuze / chips): de control-dimensie bestaat op twee niveaus, per waarde én per verzameling |
+| **`vast`** — filter én vaste waarde (§5.2) | een veld van het record met een vaste waarde | **`veld.vasteWaarde`**: niet als invoer getoond, geldt als filter bij lezen en als waarde bij opvoeren |
+| **vaste rijen** (drie bijdragen, §5.2) | drie `Lijst`-elementen op `Initiatief.bijdrage`, elk met `vasteWaarde` op `type_bijdrage` en `min = max = 1` | geen: vaste rijen *zijn* lijsten van precies één, gefilterd op hun vaste waarde |
+| vraag 8/9 (gemeenten per rol) | twee `Lijst`-elementen op `initiatief_gemeenten`, `vasteWaarde` op `rol` | geen, naast de `vasteWaarde` hierboven |
+| nieuwe doel-ENT aanmaken (§5.3–5.4) | een `veld` op de secundaire id van een relatie | **`veld.nieuwFormulier`** (verwijzing naar een FD) + `nieuwModus` (ingebed / modal); leeg = niet toegestaan, en alleen beperkend t.o.v. het model |
+| "indien toepassing" | `Conditioneel` | geen |
+
+Twee gevolgen die het plan kleiner maken:
+
+1. **Het registratiesjabloon (B3) krimpt sterk.** Met `vasteWaarde` en vaste rijen legt de layout
+   zelf al de afbeelding naar wijzigingen vast: elk veld heeft een modelpad, elke lijst een bron
+   en eventueel een vaste waarde. Wat overblijft voor een sjabloon is "één invoer naar twee
+   doelen" (startdatum) en het cross-ENT-deel — en dat laatste loopt via `nieuwFormulier`.
+2. **`vasteWaarde` en het API-filter zijn hetzelfde predicaat.** Een `Lijst` met
+   `vasteWaarde: {rol: "Realiseert"}` selecteert precies wat het filter
+   `initiatief_gemeenten: { rol: { eq: "Realiseert" } }` selecteert (§7.6). Het formulier gebruikt
+   de gelijkheids-deelverzameling van dezelfde predicaattaal; het hoeft geen eigen taal te krijgen.
+
 ## 6. Referentielijsten, materiële tijd en het formulierregister
 
 ### 6.1 Twee onafhankelijke assen
@@ -380,6 +424,65 @@ Dit is de eerste stap, en niet alleen als noodgreep:
 Gevolg voor de frontend: de publicatietabel moet van `/full/{padnaam}` naar een opgeslagen
 GraphQL-document. De detailpagina gaat al via GraphQL, dus het is een halve stap — en meteen de
 oplossing voor de stille afkap op 2000 rijen, want dan kan er server-side gepagineerd worden.
+
+#### 7.4.1 Het model (23-09-2026)
+
+✅ **Model gebouwd** (branch `feat/querydefinitie`): V3-invoer
+`docs/Model files (V3)/configuratie 2026-09-23 met QueryDefinitie — v3-model.json`, gegenereerd
+met `--domein configuratie` (werkwijze: `docs/CODEGEN.md` §7.5). Puur toevoegend; de tabellen
+ontstaan bij de eerste start. Nog **niet** gebouwd: het uitvoeren van een document op naam en de
+poort voor anonieme aanroepen (7.7 stap 2–3).
+
+In GraphQL heten de GE's naar hun rolnaam: `query_definities` met `query_definitie_metas` en
+`query_definitie_documents`. Bijvoorbeeld de actieve, publieke documenten:
+
+```graphql
+{ full_query_definities_list(filter: {
+    query_definitie_metas: { status: { eq: "actief" }, is_publiek: { eq: true } } }) {
+  id query_definitie_metas { naam } query_definitie_documents { graphql_document } } }
+```
+
+Naar het patroon van `FormulierDefinitie` en `WeergaveDefinitie` in het configuratie-domein:
+een entiteit met een `Meta`-GE en één inhouds-GE.
+
+| GE | Velden | Opmerking |
+|---|---|---|
+| `QueryDefinitie_Meta` | `naam`, `beschrijving`, `doeltype`, `status` (enum `QueryDefinitieStatus`: concept / actief / inactief), **`is_publiek`** | `naam` is de sleutel waarmee de frontend het document aanroept |
+| `QueryDefinitie_Document` | `graphql_document` (tekst), `definitie_versie` | het opgeslagen document zelf; **enkelvoudig** |
+
+**Waarom `Document` enkelvoudig is, anders dan `Layout`/`TabelConfig`.** Die twee zijn
+meervoudig, en de frontend neemt dan de eerste hub (`entity.{geNaam}[0]` in
+`useFormulierDefinitie.js`). Voor een formulier is die dubbelzinnigheid onschuldig; voor een
+document dat anoniem uitgevoerd mag worden niet. Enkelvoudig betekent: altijd precies één actief
+document, en de historie zit in de bitemporele versies. (Of `Layout`/`TabelConfig` ook
+enkelvoudig horen te zijn, is een aparte vraag.)
+
+**`is_publiek` is optioneel, en weglaten betekent niet-publiek** — de veilige standaard.
+
+**`is_publiek` is de poort.** Niet elk opgeslagen document hoort anoniem uitvoerbaar te zijn;
+de vlag is de expliciete lijst van wat wél mag (stap 3 uit 7.7). Alleen `actief` + `is_publiek`
+is anoniem uitvoerbaar.
+
+**Variabelen mogen alleen versmallen.** Een opgeslagen document met `filter: $filter` zou een
+anonieme aanroeper elk filter laten meegeven — en dus het hek laten omzeilen. Het veilige patroon
+vergt geen servercode, want GraphQL staat variabelen binnen een object-literal toe:
+
+```graphql
+query PubliekeInitiatieven($extra: InitiatiefFilter, $offset: Int) {
+  initiatieven(filter: { and: [ { aanmeldstatus: { status: { eq: "geaccepteerd" } } }, $extra ] },
+               limit: 25, offset: $offset) { id weergavenaam }
+}
+```
+
+Het vaste deel staat in het document; de aanroeper kan via `$extra` alleen nog extra condities
+toevoegen (EN), nooit iets weghalen. Dit werkt sinds 23-09-2026: graphql-go laat een optionele
+variabele niet toe op een plek die een niet-nullable item verwacht, dus de items van `and`/`or`
+zijn nullable gemaakt, en een null-item telt niet mee (in een `or` levert het géén "altijd waar"
+op). Tegelijk opgelost: `or: []` gaf "geen conditie" (dus alles) en is nu nooit waar. Getest in
+`TestFilter_OpgeslagenDocumentAanroeperVersmaltAlleen`, inclusief een poging tot verruimen met
+een `or` in `$extra`. Dat is dezelfde invariant als bij §5.4: **definities mogen
+beperken, aanroepers niet verruimen.** Bij het opslaan is dit te controleren (een filter-argument
+dat als geheel een variabele is, wordt geweigerd voor `is_publiek`).
 
 ### 7.5 Het API-construct: later, en bovenop
 
