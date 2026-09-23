@@ -106,6 +106,39 @@ templates vraagt dat de querybouwer de velden uit de expressie haalt; dat is een
 Let op: een enkel regeleinde wordt alleen een `<br>` tussen gewone tekst; na een link of vóór vette
 tekst niet. Gebruik voor losse regels een opsomming.
 
+## Data via opgeslagen documenten (`query` en `detailQuery`)
+
+*Sinds 24 september 2026.* De publicatiepagina haalt haar data standaard via REST op
+(`/full/<padnaam>`, alles) en met een ad-hoc GraphQL-query voor het detail. Met twee sleutels in
+`tabel_config_json` van de WeergaveDefinitie loopt dat via **opgeslagen documenten**
+(QueryDefinitie, `documentId` op `/graphql/query`; zie `docs/dynamische-graphql-laag.md`
+§ Uitvoeren op naam):
+
+```json
+{ "kolommen": [ … ], "rijenPerPagina": 25,
+  "query": "publieke-initiatieven",
+  "detailQuery": "publiek-initiatief-detail" }
+```
+
+- **`query`** — de lijst. Het document moet `$limit` en `$offset` accepteren en een lijst
+  teruggeven; de pagina bladert in stappen van 100 tot een korte pagina en houdt zoeken,
+  sorteren en pagineren in de browser zoals voorheen. Het vaste deel van het document bepaalt
+  wat er überhaupt te zien is (bij Initiatief: alleen `aanmeldstatus = geaccepteerd`).
+- **`detailQuery`** — één record, met `$id`. **De selectie ligt vast in het document**, dus het
+  document moet alle paden bevatten die het detail-template gebruikt, inclusief de hops
+  (`initiatief_organisaties.organisatie.contactpersonen.persoon.persoonnamen.naam`). Een pad
+  dat niet in het document zit blijft leeg. Wijzig je het template, controleer dan het
+  document (`POST /graphql/valideer` toetst alleen de syntaxis tegen het schema, niet of alle
+  template-paden erin zitten).
+- Ontbreekt een sleutel, dan geldt het oude gedrag voor dat deel.
+
+De veldpaden in de kolommen (`producten.data.naam`) blijven werken: GraphQL slaat hub en data
+plat, en `resolveVeldpad` (`publicatie/publicatieData.js`) accepteert beide vormen.
+
+Voor Initiatief staan de twee documenten in
+`replay files/registraties-replay-init-querydefinitie-publieke-initiatieven.json` en de
+verwijzing in `replay files/registraties-replay-correctie-initiatief-tabelconfig-query-2026-09-24.json`.
+
 ## Een template wijzigen op een instantie
 
 Een template is data. Wijzig het met een **correctie** op het bestaande `detailtemplate`-GE
