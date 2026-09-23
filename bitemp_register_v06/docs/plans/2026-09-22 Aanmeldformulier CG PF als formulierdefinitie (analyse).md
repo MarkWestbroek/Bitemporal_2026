@@ -639,10 +639,18 @@ onderliggende stringkolommen van de data-tabel, niet op de afgeleide naam.
    PostgreSQL (`dynql/filter_pg_test.go`), inclusief de valkuil "363 gebruikt, 599 realiseert".
 2. **`QueryDefinitie`** in het configuratie-domein via model + codegen; publicatietabel roept een
    opgeslagen document aan (7.4).
-   ✅ Model (23-09), uitvoeren op naam (24-09) en de QueryDefinitie `publieke-initiatieven`
-   als replay (24-09, filtert op `aanmeldstatus = geaccepteerd`, B7a) gebouwd; de publicatietabel
-   omzetten is de volgende stap (daarna pas stap 3, anders valt de embed op commonground.nl weg).
+   ✅ Model (23-09), uitvoeren op naam (24-09), de QueryDefinities `publieke-initiatieven` en
+   `publiek-initiatief-detail` als replay (filteren op `aanmeldstatus = geaccepteerd`, B7a) én de
+   publicatiepagina omgezet (24-09): `tabel_config_json` krijgt `query`/`detailQuery`, lijst in
+   pagina's van 100 via `documentId`, detail via `$id`; zonder die sleutels het oude gedrag
+   (`docs/PUBLICATIE_TEMPLATES.md`). De detailselectie ligt nu vast in het document — het
+   moet alle template-paden bevatten (voorproefje van de GV, §8).
 3. **De poort**: anoniem alleen opgeslagen documenten; REST-GET's en ad-hoc GraphQL achter een rol.
+   **Let op bij het ontwerpen (24-09):** de publicatiepagina heeft naast de data ook *metadata*
+   anoniem nodig: `/api/viz/schema` (typeMeta), `/full/weergave_definities` (de WD zelf),
+   GraphQL-introspectie (`normaliseerTemplatePaden`) en `/api/viz/reflijst/…/opties` (alleen de
+   terugval-kolommen). De poort gaat dus over *registerdata*, niet over configuratie en schema —
+   of de WD-lookup wordt zelf een opgeslagen document.
 4. Later neemt **toegangsspraak** stap 3 over met echte rijcondities; de grammatica kan het al,
    alleen de handhaving ontbreekt.
 

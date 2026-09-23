@@ -10,102 +10,10 @@ import {
 import { useParams, useNavigate, Link } from "react-router";
 import { useSchema } from "../context/SchemaContext";
 import { useWeergaveDefinitie } from "../hooks/useWeergaveDefinitie";
-import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
+import { safeArray } from "../shared/schemaUtils";
 import { bouwReflijstOptieLabel } from "../shared/celEvaluator";
 import { isEmbedModus } from "./embed";
-
-/**
- * Resolvet een veldpad (bijv. "namen.data.roepnaam" of "id") naar een waarde
- * uit een full-entity object.
- *
- * Ondersteunt drie patronen:
- *   - Direct entity-veld:       "id" → entity.id
- *   - Genest GE-veld:           "namen.data.roepnaam" → zoek in onderliggende GE "namen",
- *     neem het actuele (platgeslagen) item, en lees "roepnaam".
- *   - Meervoudig GE-veld:       "initiatief_domeinen.weergavenaam" → bij meervoudig
- *     momentvoorkomen worden ALLE actieve items verzameld en de waarden
- *     gejoined met ", ".
- *
- * Het segment ".data." in het pad wordt overgeslagen omdat platSlaHubItems de hub
- * al heeft platgeslagen naar directe veldwaarden.
- *
- * De lookup werkt op zowel jsonRolnaam (snake_case) als klassenaam (PascalCase).
- */
-function resolveVeldpad(entity, veldpad, typeMeta, typeMetaByTypenaam) {
-  if (!entity || !veldpad) return null;
-
-  // 1) Directe entity-velden (bijv. "id", "opvoer")
-  if (!veldpad.includes(".")) {
-    return entity[veldpad] ?? null;
-  }
-
-  // 2) Genest veldpad: splits op "." en verwijder "data" segmenten
-  const delen = veldpad.split(".").filter((d) => d !== "data");
-  if (delen.length < 2) return entity[delen[0]] ?? null;
-
-  const [geKey, ...restDelen] = delen;
-
-  // Zoek het onderliggende GE op basis van jsonRolnaam, rolnaam, doeltype of klassenaam.
-  // Klassenaam-matching (bijv. "Adres") is nodig voor fallback-kolommen die het pad
-  // opbouwen via childMeta.klassenaam (PascalCase) i.p.v. jsonRolnaam (snake_case).
-  const onderliggende = safeArray(typeMeta?.onderliggende);
-  const child = onderliggende.find(
-    (c) =>
-      c.jsonRolnaam === geKey ||
-      c.rolnaam === geKey ||
-      c.doeltype === geKey ||
-      typeMetaByTypenaam?.[c.doeltype]?.klassenaam === geKey
-  );
-  if (!child) return null;
-
-  // Haal de items op uit de entity (via jsonRolnaam of rolnaam)
-  const childMeta = typeMetaByTypenaam?.[child.doeltype];
-  const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
-  const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
-
-  // Bepaal of het meervoudig is (meerdere items per entiteit)
-  const isMeervoudig = child.momentvoorkomen === "meervoudig";
-
-  if (isMeervoudig) {
-    // Verzamel waarden van ALLE actieve items en join met ", "
-    const actieveItems = items.filter((item) => !item.afvoer);
-    if (actieveItems.length === 0) return null;
-
-    const waarden = actieveItems
-      .map((item) => {
-        let huidig = item;
-        for (const deel of restDelen) {
-          if (huidig == null || typeof huidig !== "object") return null;
-          huidig = huidig[deel];
-        }
-        return huidig ?? null;
-      })
-      .filter((v) => v != null);
-
-    return waarden.length > 0 ? waarden.join(", ") : null;
-  }
-
-  // Enkelvoudig: neem het eerste actieve item (zonder afvoer)
-  const actiefItem = items.find((item) => !item.afvoer) || items[0] || null;
-  if (!actiefItem) return null;
-
-  // Navigeer de resterende delen
-  let huidig = actiefItem;
-  for (const deel of restDelen) {
-    if (huidig == null || typeof huidig !== "object") return null;
-    huidig = huidig[deel];
-  }
-  return huidig ?? null;
-}
-
-/**
- * Vervangt punten in een veldpad door dubbel-underscore, zodat TanStack Table
- * het als een eenvoudige string-sleutel kan gebruiken (geen nested-path
- * interpretatie, geen problemen in _getAllFlatColumnsById).
- */
-function sanitizeKolId(veldpad) {
-  return (veldpad || "").replace(/\./g, "__");
-}
+import { haalLijstViaDocument, resolveVeldpad, sanitizeKolId } from "./publicatieData.js";
 
 /**
  * PublicatieTabel — configureerbare tabelweergave voor publicatie.
@@ -142,24 +50,34 @@ export default function PublicatieTabel() {
 
   // Data ophalen: alles in één keer, zodat filter + sortering over de volledige
   // dataset werken. Client-side paginering via TanStack getPaginationRowModel.
+  //
+  // Twee bronnen: met `query` in de tabelConfig het opgeslagen document (QueryDefinitie,
+  // in pagina's van 100 via documentId — de vaste selectie van de definitie, bv. alleen
+  // geaccepteerde initiatieven); anders REST /full/ (alles, zoals vóór 24-09-2026).
+  // De WeergaveDefinitie moet geladen zijn vóór we kiezen, anders laden we twee keer.
+  const documentNaam = tabelConfig?.query || null;
   const fetchData = useCallback(async () => {
-    if (!apiPath || !baseUrl) return;
+    if (!apiPath || !baseUrl || wdLoading) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `${baseUrl}/full/${apiPath}?page=1&size=9999`
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      const key = typeMeta?.meervoud || Object.keys(json).find((k) => Array.isArray(json[k]));
-      setData(safeArray(json[key] || json));
+      if (documentNaam) {
+        setData(await haalLijstViaDocument({ baseUrl, documentId: documentNaam }));
+      } else {
+        const res = await fetch(
+          `${baseUrl}/full/${apiPath}?page=1&size=9999`
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const key = typeMeta?.meervoud || Object.keys(json).find((k) => Array.isArray(json[k]));
+        setData(safeArray(json[key] || json));
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, apiPath, typeMeta]);
+  }, [baseUrl, apiPath, typeMeta, documentNaam, wdLoading]);
 
   useEffect(() => {
     fetchData();

@@ -376,11 +376,16 @@ anders optie). Een snapshot is een noodrem, geen backup.
   `replay files/registraties-replay-init-aanmeldstatus-geaccepteerd-cgpf-2026.json` (zet de 85
   initiatieven uit replay 4 op geaccepteerd) en
   `replay files/registraties-replay-init-querydefinitie-publieke-initiatieven.json` (de
-  QueryDefinitie `publieke-initiatieven`). Controle: `curl -s -X POST https://<host>/graphql/query
+  QueryDefinities `publieke-initiatieven` en `publiek-initiatief-detail`), en daarna
+  `replay files/registraties-replay-correctie-initiatief-tabelconfig-query-2026-09-24.json`
+  (WeergaveDefinitie 2 verwijst ernaar via `query`/`detailQuery`; vereist WD 2 en een
+  frontend-image van na 24-09-2026). Vanaf dat moment haalt de publicatiepagina — dus ook de
+  embed op commonground.nl — lijst en detail via de opgeslagen documenten en toont alleen
+  geaccepteerde initiatieven. Controle: `curl -s -X POST https://<host>/graphql/query
   -H 'Content-Type: application/json' -d '{"documentId":"publieke-initiatieven"}'`; in het
-  opstartlog van de API staat `GraphQL uitvoeren op naam (documentId) aan; 1 actuele
-  QueryDefinitie(s)`. De publicatiepagina gebruikt deze query nog niet (staat gepland), dus voor de
-  embed verandert er nog niets. Heeft een instantie de QueryDefinitie-versie van 23 september
+  opstartlog van de API staat `GraphQL uitvoeren op naam (documentId) aan; 2 actuele
+  QueryDefinitie(s)`. Volgorde is belangrijk: aanmeldstatus-replay vóór de correctie, anders
+  is de tabel even leeg. Heeft een instantie de QueryDefinitie-versie van 23 september
   (`Meta`-GE) gedraaid, dan eerst `scripts/sql/2026-09-23-querydefinitie-losse-ges-opruimen.sql`.
 - **`$` in wachtwoorden** — compose leest het als variabele. `.env.example` genereert ze zonder.
 - **`minio-init` stopt** — hoort zo; daarom achter `--profile init`.

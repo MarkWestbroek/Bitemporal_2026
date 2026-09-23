@@ -18,6 +18,7 @@ import {
   rootTypeVoor,
   normaliseerTemplatePaden,
 } from "./graphqlPaden";
+import { haalDetailViaDocument } from "./publicatieData.js";
 
 // Het GraphQL-schema verandert niet tijdens een bezoek: één introspectie per pagina.
 let schemaIndexBelofte = null;
@@ -202,8 +203,10 @@ export default function PublicatieDetail() {
     );
   }, [types, typePad]);
 
-  const { detailTemplate: ruwTemplate, loading: wdLoading, error: wdError } =
+  const { detailTemplate: ruwTemplate, tabelConfig, loading: wdLoading, error: wdError } =
     useWeergaveDefinitie(typeMeta?.typenaam);
+  // Opgeslagen document voor het detail (QueryDefinitie met $id), zie publicatieData.js.
+  const detailDocument = tabelConfig?.detailQuery || null;
 
   const [entity, setEntity] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -239,7 +242,9 @@ export default function PublicatieDetail() {
   const detailTemplate = ruwTemplate && templateKlaar ? genormaliseerd.template : null;
 
   // Haal de full entity op.
-  // Met detailTemplate → GraphQL (ondersteunt diepe navigatie via forward FK).
+  // Met detailQuery → het opgeslagen document (documentId + $id): de selectie van velden
+  //   ligt vast in de QueryDefinitie, die dus alle paden van het template moet bevatten.
+  // Met detailTemplate → ad-hoc GraphQL, opgebouwd uit de template-paden.
   // Zonder template → REST /full/ (fallback voor generieke weergave).
   useEffect(() => {
     if (!apiPath || !baseUrl || !id || wdLoading || !templateKlaar) return;
@@ -247,7 +252,21 @@ export default function PublicatieDetail() {
     setLoading(true);
     setError(null);
 
-    if (detailTemplate) {
+    if (detailDocument && detailTemplate) {
+      haalDetailViaDocument({ baseUrl, documentId: detailDocument, id })
+        .then((rec) => {
+          if (cancelled) return;
+          if (!rec) setError("Niet gevonden of niet beschikbaar.");
+          else setEntity(rec);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (!cancelled) {
+            setError(err.message);
+            setLoading(false);
+          }
+        });
+    } else if (detailTemplate) {
       // GraphQL: bouw query op basis van template veldpaden
       const query = buildGraphQLQuery(detailTemplate, apiPath, id);
       fetch(`${baseUrl}/graphql/query`, {
@@ -295,7 +314,7 @@ export default function PublicatieDetail() {
     return () => {
       cancelled = true;
     };
-  }, [baseUrl, apiPath, id, detailTemplate, wdLoading, templateKlaar]);
+  }, [baseUrl, apiPath, id, detailTemplate, detailDocument, wdLoading, templateKlaar]);
 
   // Bouw CEL-context uit de entity data.
   // GraphQL: response is al geflattend — direct als context.

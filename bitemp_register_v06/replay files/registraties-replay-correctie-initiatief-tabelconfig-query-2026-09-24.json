@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-24T12:00:02.000Z",
+  "source": "handmatig (Claude-sessie 24-09-2026)",
+  "description": "Correctie op de TabelConfig van WeergaveDefinitie 2 (Initiatief): `query` en `detailQuery` verwijzen naar de QueryDefinities publieke-initiatieven en publiek-initiatief-detail, zodat de publicatiepagina en de embed hun data via opgeslagen documenten ophalen (alleen geaccepteerde initiatieven) in plaats van via /full/. Vereist: WeergaveDefinitie 2 (replay …weergave-en-formulierdefinities-nas-2026-09-22), de QueryDefinitie-replay en een frontend van na 24-09-2026. Kolommen ongewijzigd.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "correctie",
+      "tijdstip": "2026-09-24T12:00:02.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "TabelConfig Initiatief: query + detailQuery",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "TabelConfig Initiatief: data via QueryDefinities publieke-initiatieven / publiek-initiatief-detail",
+          "registratietype": "correctie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": 2,
+                "rel_id": 1,
+                "definitie_versie": "0.2",
+                "tabel_config_json": "{\"kolommen\": [{\"veldpad\": \"id\", \"label\": \"ID\", \"breedte\": 80, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"producten.data.naam\", \"label\": \"Productnaam\", \"breedte\": 180, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"producten.data.type\", \"label\": \"Type\", \"breedte\": 120, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"producten.data.CG_laag\", \"label\": \"CG-laag\", \"breedte\": 120}, {\"veldpad\": \"initiatief_domeinen.weergavenaam\", \"label\": \"Domeinen\", \"breedte\": 180, \"sorteerbaar\": false, \"filterbaar\": true}, {\"veldpad\": \"planningen.data.fase\", \"label\": \"Fase\", \"breedte\": 120, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"planningen.data.startdatum\", \"label\": \"Startdatum\", \"breedte\": 120, \"sorteerbaar\": true}], \"standaardSortering\": {\"veld\": \"id\", \"richting\": \"asc\"}, \"rijenPerPagina\": 25, \"query\": \"publieke-initiatieven\", \"detailQuery\": \"publiek-initiatief-detail\"}"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}

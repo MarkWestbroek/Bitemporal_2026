@@ -2,8 +2,8 @@
   "version": 1,
   "exported_at": "2026-09-24T12:00:00.000Z",
   "source": "handmatig (Claude-sessie 24-09-2026)",
-  "description": "QueryDefinitie 'publieke-initiatieven': het opgeslagen document voor de publicatiepagina/embed. Vast deel: aanmeldstatus geaccepteerd; aanroeper kan via $extra alleen versmallen. Laad na een backend met QueryDefinitie in losse GE's (configuratie-model 23-09-2026). Aanroepen: POST /graphql/query {\"documentId\":\"publieke-initiatieven\"}.",
-  "count": 1,
+  "description": "QueryDefinities 'publieke-initiatieven' (lijst, $limit/$offset/$extra) en 'publiek-initiatief-detail' (één record, $id): de opgeslagen documenten voor de publicatiepagina/embed. Vast deel: aanmeldstatus geaccepteerd. Laad na een backend met QueryDefinitie in losse GE's (configuratie-model 23-09-2026) en Initiatief.Aanmeldstatus (CG-model 24-09-2026). De WeergaveDefinitie van Initiatief verwijst ernaar via registraties-replay-correctie-initiatief-tabelconfig-query-2026-09-24.json.",
+  "count": 2,
   "entries": [
     {
       "registratietype": "registratie",
@@ -73,6 +73,82 @@
                 "graphql_document": "query PubliekeInitiatieven($extra: InitiatiefFilter, $limit: Int = 100, $offset: Int = 0) {\n  full_initiatieven_list(\n    filter: { and: [ { aanmeldstatussen: { status: { eq: \"geaccepteerd\" } } }, $extra ] },\n    limit: $limit, offset: $offset\n  ) {\n    id\n    weergavenaam\n    producten { naam omschrijving type CG_laag website }\n    planningen { fase startdatum ready_for_use }\n    initiatief_domeinen { weergavenaam }\n    initiatief_gemeenten { rol weergavenaam }\n  }\n}",
                 "definitie_versie": "0.1",
                 "toelichting": "Eerste versie: alle geaccepteerde initiatieven met product, planning, domeinen en gemeenten; paginering via $limit/$offset (max 100)."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T12:00:01.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "QueryDefinitie publiek-initiatief-detail v0.1",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "QueryDefinitie publiek-initiatief-detail v0.1",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "querydefinitie": {
+                "id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitie_aanvang": {
+                "querydefinitie_id": 2,
+                "datum": "2026-09-24"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitienaam": {
+                "querydefinitie_id": 2,
+                "naam": "publiek-initiatief-detail"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitiebeschrijving": {
+                "querydefinitie_id": 2,
+                "beschrijving": "Eén geaccepteerd initiatief voor de detailpagina van de publicatie/embed, met alle paden die het detail-template gebruikt."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitiestatus": {
+                "querydefinitie_id": 2,
+                "status": "actief"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitietoegankelijkheid": {
+                "querydefinitie_id": 2,
+                "toegankelijkheid": "publiek"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitiedocument": {
+                "querydefinitie_id": 2,
+                "graphql_document": "query PubliekInitiatiefDetail($id: Int!) {\n  full_initiatieven_list(\n    filter: { and: [ { aanmeldstatussen: { status: { eq: \"geaccepteerd\" } } }, { id: { eq: $id } } ] },\n    limit: 1\n  ) {\n    id\n    weergavenaam\n    producten { naam omschrijving type CG_laag pitch website git_repo vervangt_ouder_product }\n    planningen { fase startdatum ready_for_use planningsinfo waar_tegenaan_gelopen obstakels verwacht_ready_datum }\n    bijdragen { type_bijdrage schaal toelichting }\n    initiatief_domeinen { weergavenaam domein { weergavenaam } }\n    andere_domeinen { domein }\n    initiatief_gemeenten { rol weergavenaam gemeente { weergavenaam gemeentegegevens { naam code } } }\n    anders_dan_gemeenten { andersDanGemeente }\n    initiatief_api_standaarden { weergavenaam }\n    andere_api_standaarden { api_standaard }\n    betrokken_organisatie { type }\n    initiatief_organisaties {\n      rol\n      organisatie {\n        weergavenaam\n        organisatienamen { naam }\n        organisatiecontactgegevens { url email telefoonnummer }\n        contactpersonen {\n          rol\n          persoon { weergavenaam persoonnamen { naam } persoonscontactgegevens { email telefoonnummer } }\n        }\n      }\n    }\n  }\n}",
+                "definitie_versie": "0.1",
+                "toelichting": "Eerste versie: dezelfde poortconditie als publieke-initiatieven (aanmeldstatus geaccepteerd) plus $id; selectie dekt detail-template v0.2 van WeergaveDefinitie 2."
               }
             }
           }
