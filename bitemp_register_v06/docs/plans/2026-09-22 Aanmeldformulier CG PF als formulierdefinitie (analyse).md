@@ -448,6 +448,10 @@ onderliggende stringkolommen van de data-tabel, niet op de afgeleide naam.
 ### 7.7 Volgorde
 
 1. **Generiek `filter`-argument** op de lijst-queries, gegenereerd uit de MetaRegistry (7.6).
+   ✅ **Gebouwd** (22-09-2026, branch `feat/graphql-filter-argument`): `dynql/filter.go`, met
+   `peiltijdstip`/`t` op de lijst-queries en een vaste volgorde op `id`. Gebruik en grenzen:
+   `docs/dynamische-graphql-laag.md` § Filteren. Getest met sqlmock én tegen een echte
+   PostgreSQL (`dynql/filter_pg_test.go`), inclusief de valkuil "363 gebruikt, 599 realiseert".
 2. **`QueryDefinitie`** in het configuratie-domein via model + codegen; publicatietabel roept een
    opgeslagen document aan (7.4).
 3. **De poort**: anoniem alleen opgeslagen documenten; REST-GET's en ad-hoc GraphQL achter een rol.

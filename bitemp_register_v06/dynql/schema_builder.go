@@ -68,42 +68,20 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 			Resolve: makeFullEntityResolver(meta),
 		}
 
-		// <padnaam>(limit, offset) — lijst van entiteiten
+		// <padnaam>(filter, peiltijdstip, t, limit, offset) — lijst van entiteiten
 		queryFields[padnaam] = &graphql.Field{
 			Type:        graphql.NewList(objType),
 			Description: fmt.Sprintf("Lijst van %s", meta.Typenaam),
-			Args: graphql.FieldConfigArgument{
-				"limit": &graphql.ArgumentConfig{
-					Type:         graphql.Int,
-					DefaultValue: 20,
-					Description:  "Maximum aantal resultaten (max 100)",
-				},
-				"offset": &graphql.ArgumentConfig{
-					Type:         graphql.Int,
-					DefaultValue: 0,
-					Description:  "Offset voor paginering",
-				},
-			},
-			Resolve: makeListResolver(meta),
+			Args:        lijstArgs(meta),
+			Resolve:     makeListResolver(meta),
 		}
 
-		// full_<padnaam>_list(limit, offset) — lijst met alle onderliggende GE's/relaties (geflattened)
+		// full_<padnaam>_list(filter, peiltijdstip, t, limit, offset) — lijst met alle onderliggende GE's/relaties (geflattened)
 		queryFields[fullName+"_list"] = &graphql.Field{
 			Type:        graphql.NewList(objType),
 			Description: fmt.Sprintf("Lijst van %s met alle onderliggende gegevenselementen en relaties (geflattened)", meta.Typenaam),
-			Args: graphql.FieldConfigArgument{
-				"limit": &graphql.ArgumentConfig{
-					Type:         graphql.Int,
-					DefaultValue: 20,
-					Description:  "Maximum aantal resultaten (max 100)",
-				},
-				"offset": &graphql.ArgumentConfig{
-					Type:         graphql.Int,
-					DefaultValue: 0,
-					Description:  "Offset voor paginering",
-				},
-			},
-			Resolve: makeFullListResolver(meta),
+			Args:        lijstArgs(meta),
+			Resolve:     makeFullListResolver(meta),
 		}
 	}
 
@@ -250,6 +228,39 @@ func inferIDArgType(meta model.TypeMeta) graphql.Input {
 	default:
 		return graphql.String
 	}
+}
+
+// lijstArgs zijn de argumenten van de lijst-queries van een entiteit. Het filter en
+// het peiltijdstip werken samen: het filter toetst of een record op het peilmoment
+// actief was (zie filter.go).
+func lijstArgs(meta model.TypeMeta) graphql.FieldConfigArgument {
+	args := graphql.FieldConfigArgument{
+		"limit": &graphql.ArgumentConfig{
+			Type:         graphql.Int,
+			DefaultValue: 20,
+			Description:  "Maximum aantal resultaten (max 100)",
+		},
+		"offset": &graphql.ArgumentConfig{
+			Type:         graphql.Int,
+			DefaultValue: 0,
+			Description:  "Offset voor paginering (volgorde: op id)",
+		},
+		"peiltijdstip": &graphql.ArgumentConfig{
+			Type:        DateTimeScalar,
+			Description: "Formeel peiltijdstip (ISO 8601). Optioneel; als leeg: actuele situatie.",
+		},
+		"t": &graphql.ArgumentConfig{
+			Type:        graphql.Int,
+			Description: "Shorthand peiltijdstip (zie full_<padnaam>). peiltijdstip heeft voorrang.",
+		},
+	}
+	if filter := filterInputVoorEntiteit(meta); filter != nil {
+		args["filter"] = &graphql.ArgumentConfig{
+			Type:        filter,
+			Description: "Alleen entiteiten die aan dit filter voldoen. Een GE-conditie betekent: er is ten minste één actief record dat aan alle opgegeven condities voldoet.",
+		}
+	}
+	return args
 }
 
 func makeMetaRepresentative(meta model.TypeMeta) interface{} {
