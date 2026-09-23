@@ -67,7 +67,8 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ClosesExistingActiveRecord(t *tes
 	mock.ExpectQuery(`INSERT INTO "wijziging".*RETURNING "id"`).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(11))
 
-	mock.ExpectQuery(`SELECT CAST\(versie AS BIGINT\) FROM "a_u_data".*afvoer IS NULL.*a_id = 1.*rel_id = 5`).
+	// De volgorde van de scope-condities (a_id, rel_id) komt uit een map en wisselt per run.
+	mock.ExpectQuery(`SELECT CAST\(versie AS BIGINT\) FROM "a_u_data".*afvoer IS NULL.*(a_id = 1.*rel_id = 5|rel_id = 5.*a_id = 1)`).
 		WillReturnRows(sqlmock.NewRows([]string{"versie"}).AddRow(3))
 
 	mock.ExpectExec(`UPDATE "a_u_data" SET afvoer = .*versie = 3`).
