@@ -2,7 +2,7 @@
   "version": 1,
   "exported_at": "2026-09-25T12:00:00Z",
   "source": "handmatig (Claude-sessie 25-09-2026)",
-  "description": "QueryDefinitie 'nieuwe-aanmeldingen' (id 3, intern): de modereerlijst van aanmeldingen die nog niet geaccepteerd of afgewezen zijn. Vereist replay 11 (QD-model) en 10 (Aanmeldstatus).",
+  "description": "QueryDefinitie 'nieuwe-aanmeldingen' (id 3, intern): de modereerlijst van aanmeldingen die nog niet geaccepteerd of afgewezen zijn. Vereist replay 11 (QD-model) en 10 (Aanmeldstatus). Aanvang staat een dag vóór aanmaak: de materiële geldigheid telt in UTC op de server.",
   "count": 1,
   "entries": [
     {
@@ -28,7 +28,7 @@
             "opvoer": {
               "querydefinitie_aanvang": {
                 "querydefinitie_id": 3,
-                "datum": "2026-09-25"
+                "datum": "2026-09-24"
               }
             }
           },
