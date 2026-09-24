@@ -201,19 +201,16 @@ func bepaalVerrijkingTargets(entityMeta model.TypeMeta) []verrijkingTarget {
 		if !ok || childMeta.SecondaireEntiteitIDKolom == "" {
 			continue
 		}
-		heeftWeergaveVeld := false
-		for _, av := range childMeta.AfgeleideVelden {
-			if av.IsWeergaveVeld {
-				heeftWeergaveVeld = true
-				break
-			}
-		}
-		if !heeftWeergaveVeld {
-			continue
-		}
 		doelTypenaam := doelEntiteitVanSecondaireKolom(childMeta.SecondaireEntiteitIDKolom)
 		doelMeta, doelOK := model.MetaRegistry.GetTypeMeta(doelTypenaam)
 		if !doelOK || doelMeta.Metatype != model.MetatypeEntiteit {
+			continue
+		}
+		// De weergavenaam wordt berekend met het weergaveveld van de doelentiteit
+		// (berekenWeergavenaamVanEntiteit). Tot 25-09-2026 telde alleen een weergaveveld op
+		// de relatie zelf, waardoor bv. Contactpersoon → Persoon geen naam kreeg terwijl
+		// Persoon er wel een heeft.
+		if !heeftWeergaveVeld(childMeta) && !heeftWeergaveVeld(doelMeta) {
 			continue
 		}
 		fkJSON := jsonNaamVoorBunKolom(childMeta, childMeta.SecondaireEntiteitIDKolom)
@@ -225,6 +222,16 @@ func bepaalVerrijkingTargets(entityMeta model.TypeMeta) []verrijkingTarget {
 		})
 	}
 	return targets
+}
+
+// heeftWeergaveVeld zegt of een type een afgeleid veld met IsWeergaveVeld heeft.
+func heeftWeergaveVeld(meta model.TypeMeta) bool {
+	for _, av := range meta.AfgeleideVelden {
+		if av.IsWeergaveVeld {
+			return true
+		}
+	}
+	return false
 }
 
 // verrijkResponseMetWeergavenamen voegt weergavenaam toe aan relatie-items

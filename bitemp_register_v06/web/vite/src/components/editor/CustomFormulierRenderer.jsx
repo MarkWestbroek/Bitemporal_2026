@@ -72,7 +72,11 @@ export default function CustomFormulierRenderer({
           </div>
         );
 
-      case "groep":
+      case "groep": {
+        // Een groep zonder zichtbare inhoud (bv. alleen velden met vasteWaarde, of een
+        // conditioneel blok dat dicht is) wordt niet getoond.
+        const kinderen = (element.elementen || []).map((child, i) => renderElement(child, i, scope));
+        if (kinderen.every((k) => k == null)) return null;
         return (
           <fieldset
             key={index}
@@ -84,20 +88,24 @@ export default function CustomFormulierRenderer({
                 {element.label}
               </legend>
             )}
-            {(element.elementen || []).map((child, i) => renderElement(child, i, scope))}
+            {kinderen}
           </fieldset>
         );
+      }
 
-      case "rij":
+      case "rij": {
+        const cellen = (element.elementen || []).map((child, i) => ({ child, inhoud: renderElement(child, i, scope) })).filter((c) => c.inhoud != null);
+        if (cellen.length === 0) return null;
         return (
           <div key={index} style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-            {(element.elementen || []).map((child, i) => (
+            {cellen.map(({ child, inhoud }, i) => (
               <div key={i} style={{ flex: child.breedte ? `0 0 ${child.breedte}` : "1 1 0", minWidth: 0 }}>
-                {renderElement(child, i, scope)}
+                {inhoud}
               </div>
             ))}
           </div>
         );
+      }
 
       case "veld": {
         // Vaste waarde: geen invoer. De waarde wordt bij opvoeren (nieuw-modus) of als
