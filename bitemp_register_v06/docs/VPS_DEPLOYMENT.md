@@ -419,6 +419,12 @@ anders optie). Een snapshot is een noodrem, geen backup.
   na een herinstallatie. `cat /etc/resolv.conf` en §4 "Eerst DNS". Containers nemen de
   resolvers van de host over; met de host is ook elke build weer in orde.
 
+  **Derde ronde 24-09-2026 (nacht, `a5fd667`)**: zelfde procedure; daarna replay 16
+  (`replay files/registraties-replay-init-formulierdefinitie-aanmelding-initiatief-2026-09-24.json`,
+  FormulierDefinitie 2 "Aanmelding initiatief"). Het formulier in nieuw-modus staat achter de
+  editor-login op `/viz/react/t/initiatieven/nieuw?formulier=2` (keuzelijst *Invoer via*). Zie plan
+  2026-09-22 §9.
+
 ---
 
 ## 10. Smoke test (vr 11 sep, daarna bevriezen)
