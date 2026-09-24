@@ -204,3 +204,36 @@ test("mapping: meervoudig GE → array onder bron + isMeervoudig", () => {
   assert.equal(arr[0].toelichting, "A");
   assert.equal(veldNaarGE["Initiatief.bijdragen"].isMeervoudig, true);
 });
+
+test("mapping: relatie krijgt de secundaire id-kolom als eerste bronveld (ref of doelEntiteit)", () => {
+  const platSla = (items) => items;
+  const typeMetaByTypenaam = {
+    InitiatiefGemeente: { typenaam: "InitiatiefGemeente", metatype: "relatie", veldnaam: "initiatiefgemeente", entiteitIDKolom: "initiatief_id",
+      secondaireEntiteitIDKolom: "gemeente_id", doelEntiteit: "Gemeente",
+      velden: [{ naam: "initiatief_id", type: "integer" }, { naam: "rel_id", type: "integer" }, { naam: "gemeente_id", type: "integer" }, { naam: "rol", enum: ["Realiseert"] }],
+      onderliggende: [{ doeltype: "InitiatiefGemeente_Data" }] },
+    InitiatiefGemeente_Data: { ge_subtype: "data", velden: [{ naam: "initiatief_id" }, { naam: "rel_id" }, { naam: "versie" }, { naam: "rol", enum: ["Realiseert"] }] },
+    Gemeente: { typenaam: "Gemeente", entiteitSubtype: "referentielijst_item" },
+    InitiatiefOrganisatie: { typenaam: "InitiatiefOrganisatie", metatype: "relatie", veldnaam: "initiatieforganisatie", entiteitIDKolom: "initiatief_id",
+      secondaireEntiteitIDKolom: "organisatie_id", doelEntiteit: "Organisatie",
+      velden: [{ naam: "organisatie_id", type: "integer" }, { naam: "rol" }], onderliggende: [{ doeltype: "InitiatiefOrganisatie_Data" }] },
+    InitiatiefOrganisatie_Data: { ge_subtype: "data", velden: [{ naam: "rol" }] },
+    Organisatie: { typenaam: "Organisatie", metatype: "entiteit" },
+  };
+  const onderliggende = [
+    { doeltype: "InitiatiefGemeente", jsonRolnaam: "initiatief_gemeenten", momentvoorkomen: "meervoudig" },
+    { doeltype: "InitiatiefOrganisatie", jsonRolnaam: "initiatief_organisaties", momentvoorkomen: "meervoudig" },
+  ];
+  const { customVelden, veldNaarGE } = bouwCustomVeldMapping({
+    entity: {}, typeMeta: { typenaam: "Initiatief" }, onderliggende, typeMetaByTypenaam, platSla,
+  });
+  const gem = customVelden.find((v) => v.naam === "Initiatief.initiatief_gemeenten.gemeente_id");
+  assert.equal(gem?.ref, "Gemeente");
+  assert.equal(gem?.verplicht, true);
+  const org = customVelden.find((v) => v.naam === "Initiatief.initiatief_organisaties.organisatie_id");
+  assert.equal(org?.doelEntiteit, "Organisatie");
+  assert.equal(org?.ref, undefined);
+  assert.equal(veldNaarGE["Initiatief.initiatief_gemeenten"].bronVelden[0].naam, "gemeente_id");
+  // Bij een gewoon GE verandert niets.
+  assert.ok(!customVelden.some((v) => v.naam.endsWith(".versie")));
+});

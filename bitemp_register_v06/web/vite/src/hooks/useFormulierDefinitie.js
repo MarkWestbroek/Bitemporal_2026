@@ -89,6 +89,64 @@ export function useFormulierDefinitie(doeltype) {
 }
 
 /**
+ * useFormulierDefinities — alle actieve FormulierDefinities voor een doeltype, met geparsede
+ * layout. Voor de nieuw-modus (een formulier kiezen op de "+ Nieuw"-pagina); de standaard
+ * (is_standaard) staat voorop.
+ *
+ * @returns {{ definities: Array<{id, meta, layout}>, loading, error }}
+ */
+export function useFormulierDefinities(doeltype) {
+  const { baseUrl } = useSchema();
+  const [definities, setDefinities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!doeltype || !baseUrl) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    fetch(`${baseUrl}/full/formulier_definities`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((lijst) => {
+        if (cancelled) return;
+        const uit = [];
+        for (const full of safeArray(lijst?.["formulier definities"])) {
+          if (!full || full.afvoer) continue;
+          const meta = vindActueleData(full, "formulier_definitie_metas");
+          if (meta?.doeltype !== doeltype || meta?.status !== "actief") continue;
+          const layoutData = vindActueleData(full, "formulier_definitie_layouts");
+          let layout = null;
+          try {
+            layout = layoutData?.layout_json ? JSON.parse(layoutData.layout_json) : null;
+          } catch {
+            layout = null;
+          }
+          if (!layout) continue;
+          uit.push({ id: full.id, meta, layout, isStandaard: meta.is_standaard === true || meta.is_standaard === "true" });
+        }
+        uit.sort((a, b) => Number(b.isStandaard) - Number(a.isStandaard) || String(a.meta?.naam || "").localeCompare(String(b.meta?.naam || "")));
+        setDefinities(uit);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err.message);
+          setLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [doeltype, baseUrl]);
+
+  return { definities, loading, error };
+}
+
+/**
  * Vindt de actuele (niet-afgevoerde) _Data record uit een genest GE in een full-entity response.
  * Verwacht de structuur: entity.{geNaam}[0].data[laatsteActuele].
  */

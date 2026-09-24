@@ -23,6 +23,30 @@ export function padVan(...delen) {
 }
 
 /**
+ * bronVeldenVoorChild — de invoervelden van een GE/relatie: de velden van het
+ * _Data-type, en bij een relatie óók de secundaire id-kolom (bv. `gemeente_id`).
+ * Die staat in het schema alleen op de hub; zonder dit veld kan een lijst op een
+ * relatie de doelentiteit niet kiezen of opvoeren. Het veld krijgt `ref` (doel is
+ * een referentielijst-item) of `doelEntiteit` (gewone entiteit) voor de widget-keuze.
+ */
+export function bronVeldenVoorChild(childMeta, dataMeta, typeMetaByTypenaam) {
+  const velden = safeArray(dataMeta?.velden || childMeta?.velden);
+  const secKolom = childMeta?.secondaireEntiteitIDKolom;
+  if (!secKolom || String(childMeta?.metatype || "").toLowerCase() !== "relatie") return velden;
+  if (velden.some((v) => v?.naam === secKolom)) return velden;
+  const hubVeld = safeArray(childMeta?.velden).find((v) => v?.naam === secKolom) || { naam: secKolom, type: "integer" };
+  const doelMeta = childMeta.doelEntiteit ? typeMetaByTypenaam?.[childMeta.doelEntiteit] : null;
+  const isRef = doelMeta?.entiteitSubtype === "referentielijst_item";
+  const secVeld = {
+    ...hubVeld,
+    verplicht: true,
+    ...(isRef ? { ref: childMeta.doelEntiteit } : {}),
+    ...(!isRef && childMeta.doelEntiteit ? { doelEntiteit: childMeta.doelEntiteit } : {}),
+  };
+  return [secVeld, ...velden];
+}
+
+/**
  * bouwCustomVeldMapping — platslaan van de entiteit naar { customVelden, customValues, veldNaarGE }.
  *
  * @param {object} args
@@ -97,7 +121,7 @@ export function bouwCustomVeldMapping({
       (c) => typeMetaByTypenaam?.[c.doeltype]?.ge_subtype === "data"
     );
     const dataMeta = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : null;
-    const bronVelden = safeArray(dataMeta?.velden || childMeta?.velden);
+    const bronVelden = bronVeldenVoorChild(childMeta, dataMeta, typeMetaByTypenaam);
     const rawItems = safeArray(entity?.[child.jsonRolnaam] || entity?.[child.rolnaam]);
     const flat = platSla(rawItems, childMeta, typeMetaByTypenaam);
     const actueel = flat.find((item) => item?.opvoer && !item?.afvoer);

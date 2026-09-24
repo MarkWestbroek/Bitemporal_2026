@@ -9,8 +9,15 @@
  *   - formulier   → root container            { type, elementen[] }
  *   - groep       → sectie met heading        { type, label?, context?, elementen[] }
  *   - rij         → horizontale flexrij        { type, elementen[] }
- *   - veld        → één invoerveld             { type, veld: "ENT.GE.veld", label?, breedte?, widget? }
+ *   - veld        → één invoerveld             { type, veld: "ENT.GE.veld", label?, breedte?, widget?,
+ *                                                readonly?, beschrijving?, vasteWaarde?, kopieerNaar? }
+ *   - lijst       → herhaalbare sectie         { type, bron: "ENT.GE", label?, widget?, min?, max?, elementen[] }
  *   - conditioneel→ conditioneel blok          { type, als?|conditie?, dan[] }
+ *
+ * `vasteWaarde` (niet getoond; vaste waarde bij opvoeren, in een lijst óók het filter
+ * van die lijst), `kopieerNaar` (één invoer, twee doelen) en `widget: "meerkeuze"` op
+ * een lijst komen uit het aanmeldformulier-plan (2026-09-22 §5.5); de runtime staat in
+ * CustomFormulierRenderer en nieuwFormulierMapping.
  *
  * Veld-adressering is **padgebaseerd** (`ENT.GE.veld`), consistent met CEL,
  * afgeleide velden en berichtdefinities. Zie docs/plans/2026-07-16 Formulier-editor.
@@ -245,7 +252,7 @@ export function elementLabel(el) {
     case "formulier": return "Formulier";
     case "groep": return el.label ? `Groep · ${el.label}` : "Groep";
     case "rij": return "Rij";
-    case "lijst": return `Lijst · ${el.label || el.bron || "?"} (meervoudig)`;
+    case "lijst": return `Lijst · ${el.label || el.bron || "?"}${el.widget === "meerkeuze" ? " (meerkeuze)" : Number(el.min) > 0 && el.min === el.max ? " (vaste rij)" : " (meervoudig)"}`;
     case "veld": return el.label ? `${el.label} (${el.veld})` : (el.veld || "veld");
     case "conditioneel": return `Conditioneel · ${el.conditie ? beschrijfConditie(el.conditie) : (el.als || "?")}`;
     default: return el.type;
