@@ -19,6 +19,10 @@ RegistreerRequest is het request format voor POST /registreer/{entiteitnaam}s
 type RegistreerRequest struct {
 	Registratie Registratie        `json:"registratie"`
 	Wijzigingen []WijzigingRequest `json:"wijzigingen"`
+	// RuweWijzigingen is gevuld als de wijzigingen plaatshouder-id's (`"$nieuw.x"`) bevatten:
+	// die worden pas binnen de transactie toegekend en ingevuld, waarna Wijzigingen wordt
+	// gezet (handlers/registration_plaatshouders.go). Niet in JSON.
+	RuweWijzigingen json.RawMessage `json:"-"`
 }
 
 type WijzigingRequest struct {

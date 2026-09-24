@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   bouwNieuwWijzigingen, verzamelVasteWaarden, vasteWaardenVanLijst, lijstenPerBron,
-  rijPastBijLijst, bouwLijstItems, volPadVan,
+  rijPastBijLijst, bouwLijstItems, volPadVan, isPlaatshouder, leeg,
 } from "./nieuwFormulierMapping.js";
 
 // Een uitgeklede Initiatief-meta zoals bouwCustomVeldMapping hem oplevert.
@@ -125,4 +125,48 @@ test("bouwNieuwWijzigingen: verplicht veld leeg in een deels ingevuld GE → ont
 test("bouwNieuwWijzigingen: een GE zonder enige waarde wordt niet opgevoerd", () => {
   const { wijzigingen } = bouwNieuwWijzigingen({ layout: { type: "formulier", elementen: [] }, values: {}, veldNaarGE, typeMeta, id: 1 });
   assert.equal(wijzigingen.length, 1);
+});
+
+test("bouwNieuwWijzigingen: $nieuw-waarde → sub-entiteit met plaatshouder vóór de relatie; hoofd-id als plaatshouder", () => {
+  const orgRel = { typenaam: "InitiatiefOrganisatie", veldnaam: "initiatieforganisatie", entiteitIDKolom: "initiatief_id" };
+  const orgRelVelden = [{ naam: "organisatie_id", type: "integer", doelEntiteit: "Organisatie", verplicht: true }, { naam: "rol" }];
+  const vng = { ...veldNaarGE, "Initiatief.initiatief_organisaties": ge(orgRel, orgRelVelden, "initiatief_organisaties", { isMeervoudig: true }) };
+  const lay = {
+    type: "formulier",
+    elementen: [
+      { type: "veld", veld: "Initiatief.producten.naam" },
+      { type: "lijst", bron: "Initiatief.initiatief_organisaties", min: 1, max: 1, elementen: [
+        { type: "veld", veld: "rol", vasteWaarde: "Contactorganisatie" },
+        { type: "veld", veld: "organisatie_id", nieuwFormulier: "3" },
+      ] },
+    ],
+  };
+  const orgNaam = { typenaam: "Organisatie_Organisatienaam", veldnaam: "organisatienaam", entiteitIDKolom: "organisatie_id" };
+  const subFormulier = (doel, fdId) => (doel === "Organisatie" && fdId === "3" ? {
+    layout: { type: "formulier", elementen: [{ type: "veld", veld: "Organisatie.organisatienamen.naam" }] },
+    veldNaarGE: { "Organisatie.organisatienamen.naam": { childMeta: orgNaam, bronVelden: [{ naam: "naam", verplicht: true }], entTypenaam: "Organisatie", rol: "organisatienamen" } },
+    typeMeta: { typenaam: "Organisatie", veldnaam: "organisatie" },
+    materieel: null,
+  } : null);
+  const values = {
+    "Initiatief.producten.naam": "X",
+    "Initiatief.initiatief_organisaties": [{ rol: "Contactorganisatie", organisatie_id: { $nieuw: { "Organisatie.organisatienamen.naam": "Nieuwe BV" }, $formulier: "3" } }],
+  };
+  const { wijzigingen, ontbrekend } = bouwNieuwWijzigingen({
+    layout: lay, values, veldNaarGE: vng, typeMeta, id: "$nieuw.initiatief", subFormulier,
+    coerce: (raw, veld) => (veld.type === "integer" ? Number(raw) : raw),
+  });
+  assert.deepEqual(ontbrekend, []);
+  const keys = wijzigingen.map((w) => Object.keys(w.opvoer)[0]);
+  assert.deepEqual(keys, ["initiatief", "organisatie", "organisatienaam", "product", "initiatieforganisatie"]);
+  assert.deepEqual(wijzigingen[0].opvoer.initiatief, { id: "$nieuw.initiatief" });
+  assert.deepEqual(wijzigingen[1].opvoer.organisatie, { id: "$nieuw.organisatie_1" });
+  assert.deepEqual(wijzigingen[2].opvoer.organisatienaam, { organisatie_id: "$nieuw.organisatie_1", naam: "Nieuwe BV" });
+  assert.deepEqual(wijzigingen[4].opvoer.initiatieforganisatie, { initiatief_id: "$nieuw.initiatief", organisatie_id: "$nieuw.organisatie_1", rol: "Contactorganisatie" });
+  assert.ok(isPlaatshouder("$nieuw.organisatie_1") && !isPlaatshouder("$nieuw.x y"));
+});
+
+test("leeg: een $nieuw-object zonder ingevulde subwaarden telt als leeg", () => {
+  assert.ok(leeg({ $nieuw: {}, $formulier: "3" }));
+  assert.ok(!leeg({ $nieuw: { "Organisatie.organisatienamen.naam": "x" } }));
 });

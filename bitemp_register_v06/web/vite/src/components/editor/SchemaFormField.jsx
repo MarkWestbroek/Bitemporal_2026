@@ -21,8 +21,10 @@ import CodeEditor, { jsonParseFout } from "./CodeEditor";
  *  - readOnly:  forceer readonly (voor PK/FK/autoincrement)
  *  - widgetOverride: optionele expliciete widget-keuze uit formulier/weergaveconfiguratie
  *                    ("radio" toont een enum als radiogroep; "textarea"/"json"/"markdown")
+ *  - nieuwFormulier, diepte: voor een relatieveld naar een gewone ENT (veld.doelEntiteit):
+ *                    FD-id van een ingebed "nieuw"-formulier en de maak-diepte (EntiteitCombobox)
  */
-export default function SchemaFormField({ veld, value, onChange, error, readOnly, widgetOverride, labelOverride }) {
+export default function SchemaFormField({ veld, value, onChange, error, readOnly, widgetOverride, labelOverride, nieuwFormulier, diepte = 0 }) {
   const fieldId = useId();
   const { datatypeByNaam } = useSchema();
   if (!veld) return null;
@@ -149,6 +151,8 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
           value={value}
           onChange={onChange}
           readOnly={isReadonly}
+          nieuwFormulier={nieuwFormulier}
+          diepte={diepte}
         />
       );
     }

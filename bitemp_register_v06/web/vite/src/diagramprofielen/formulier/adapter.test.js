@@ -122,6 +122,7 @@ test("round-trip: vasteWaarde/kopieerNaar op veld en widget/min/max op lijst bli
     elementen: [
       { type: "veld", veld: "Initiatief.aanmeldstatussen.status", vasteWaarde: "nieuwe_aanmelding" },
       { type: "veld", veld: "Initiatief.planningen.startdatum", kopieerNaar: "Initiatief.aanvang.datum", widget: "radio" },
+      { type: "veld", veld: "Initiatief.initiatief_organisaties.organisatie_id", nieuwFormulier: "3" },
       { type: "lijst", bron: "Initiatief.betrokken_organisatie", widget: "meerkeuze", elementen: [{ type: "veld", veld: "type" }] },
       { type: "lijst", bron: "Initiatief.bijdragen", label: "Regie", min: 1, max: 1, elementen: [{ type: "veld", veld: "type_bijdrage", vasteWaarde: "Regie" }, { type: "veld", veld: "schaal" }] },
     ],

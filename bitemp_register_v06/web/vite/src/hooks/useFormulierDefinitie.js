@@ -93,6 +93,8 @@ export function useFormulierDefinitie(doeltype) {
  * layout. Voor de nieuw-modus (een formulier kiezen op de "+ Nieuw"-pagina); de standaard
  * (is_standaard) staat voorop.
  *
+ * `doeltype = "*"` levert de actieve definities van alle doeltypen (voor subformulieren).
+ *
  * @returns {{ definities: Array<{id, meta, layout}>, loading, error }}
  */
 export function useFormulierDefinities(doeltype) {
@@ -117,7 +119,7 @@ export function useFormulierDefinities(doeltype) {
         for (const full of safeArray(lijst?.["formulier definities"])) {
           if (!full || full.afvoer) continue;
           const meta = vindActueleData(full, "formulier_definitie_metas");
-          if (meta?.doeltype !== doeltype || meta?.status !== "actief") continue;
+          if ((doeltype !== "*" && meta?.doeltype !== doeltype) || meta?.status !== "actief") continue;
           const layoutData = vindActueleData(full, "formulier_definitie_layouts");
           let layout = null;
           try {
@@ -152,12 +154,25 @@ export function useFormulierDefinities(doeltype) {
  */
 function vindActueleData(fullEntity, geJsonNaam) {
   const geItems = safeArray(fullEntity?.[geJsonNaam]);
+  // Actueel = hub én data hebben opvoer en geen afvoer. Zijn er meerdere actieve hubs
+  // (Layout/Meta zijn nog meervoudig in het configuratiemodel), dan wint de laatst
+  // opgevoerde hub — een correctie-replay zonder afvoer van de oude hub telt zo toch.
+  let beste = null;
+  let besteOpvoer = "";
+  for (const hub of geItems) {
+    if (!hub || hub.afvoer) continue;
+    const actueel = safeArray(hub?.data).find((d) => d?.opvoer && !d?.afvoer);
+    if (!actueel) continue;
+    const opvoer = String(hub.opvoer || actueel.opvoer || "");
+    if (!beste || opvoer > besteOpvoer) {
+      beste = actueel;
+      besteOpvoer = opvoer;
+    }
+  }
+  if (beste) return beste;
+  // Fallback: laatste versie van de eerste hub met data
   for (const hub of geItems) {
     const dataItems = safeArray(hub?.data);
-    // Actueel = heeft opvoer, geen afvoer
-    const actueel = dataItems.find((d) => d?.opvoer && !d?.afvoer);
-    if (actueel) return actueel;
-    // Fallback: laatste versie
     if (dataItems.length > 0) return dataItems[dataItems.length - 1];
   }
   return null;

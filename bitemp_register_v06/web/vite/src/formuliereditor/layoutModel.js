@@ -10,14 +10,15 @@
  *   - groep       → sectie met heading        { type, label?, context?, elementen[] }
  *   - rij         → horizontale flexrij        { type, elementen[] }
  *   - veld        → één invoerveld             { type, veld: "ENT.GE.veld", label?, breedte?, widget?,
- *                                                readonly?, beschrijving?, vasteWaarde?, kopieerNaar? }
+ *                                                readonly?, beschrijving?, vasteWaarde?, kopieerNaar?, nieuwFormulier? }
  *   - lijst       → herhaalbare sectie         { type, bron: "ENT.GE", label?, widget?, min?, max?, elementen[] }
  *   - conditioneel→ conditioneel blok          { type, als?|conditie?, dan[] }
  *
  * `vasteWaarde` (niet getoond; vaste waarde bij opvoeren, in een lijst óók het filter
  * van die lijst), `kopieerNaar` (één invoer, twee doelen) en `widget: "meerkeuze"` op
- * een lijst komen uit het aanmeldformulier-plan (2026-09-22 §5.5); de runtime staat in
- * CustomFormulierRenderer en nieuwFormulierMapping.
+ * een lijst komen uit het aanmeldformulier-plan (2026-09-22 §5.5); `nieuwFormulier` (FD-id
+ * voor een ingebedde nieuwe doel-ENT vanuit een relatieveld) uit §5.3. De runtime staat in
+ * CustomFormulierRenderer, NieuwSubFormulier en nieuwFormulierMapping.
  *
  * Veld-adressering is **padgebaseerd** (`ENT.GE.veld`), consistent met CEL,
  * afgeleide velden en berichtdefinities. Zie docs/plans/2026-07-16 Formulier-editor.
