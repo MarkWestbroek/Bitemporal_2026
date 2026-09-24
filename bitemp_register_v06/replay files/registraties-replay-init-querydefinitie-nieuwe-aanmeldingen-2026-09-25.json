@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-25T12:00:00Z",
+  "source": "handmatig (Claude-sessie 25-09-2026)",
+  "description": "QueryDefinitie 'nieuwe-aanmeldingen' (id 3, intern): de modereerlijst van aanmeldingen die nog niet geaccepteerd of afgewezen zijn. Vereist replay 11 (QD-model) en 10 (Aanmeldstatus).",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "QueryDefinitie nieuwe-aanmeldingen v0.1 (intern)",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "QueryDefinitie nieuwe-aanmeldingen v0.1 (modereerlijst, intern)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "querydefinitie": {
+                "id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitie_aanvang": {
+                "querydefinitie_id": 3,
+                "datum": "2026-09-25"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitienaam": {
+                "querydefinitie_id": 3,
+                "naam": "nieuwe-aanmeldingen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitiebeschrijving": {
+                "querydefinitie_id": 3,
+                "beschrijving": "Modereerlijst: initiatieven met aanmeldstatus nieuwe_aanmelding of in_behandeling (via het aanmeldformulier of de Studio opgevoerd), voor het portfolioteam. Niet publiek."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitiestatus": {
+                "querydefinitie_id": 3,
+                "status": "actief"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitietoegankelijkheid": {
+                "querydefinitie_id": 3,
+                "toegankelijkheid": "intern"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "querydefinitiedocument": {
+                "querydefinitie_id": 3,
+                "graphql_document": "query NieuweAanmeldingen($limit: Int = 100, $offset: Int = 0) {\n  full_initiatieven_list(\n    filter: { aanmeldstatussen: { status: { in: [\"nieuwe_aanmelding\", \"in_behandeling\"] } } },\n    limit: $limit, offset: $offset\n  ) {\n    id\n    weergavenaam\n    aanmeldstatussen { status toelichting }\n    producten { naam type CG_laag website }\n    planningen { fase startdatum }\n    initiatief_organisaties { rol weergavenaam }\n    betrokken_organisatie { type }\n  }\n}",
+                "definitie_versie": "0.1",
+                "toelichting": "Eerste versie: status, product, planning, organisaties en betrokken organisatietypen; paginering via $limit/$offset. Later de bron van een DashboardDefinitie-tegel en van de notificatie-inhoud (plan 2026-09-22 §12)."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}
