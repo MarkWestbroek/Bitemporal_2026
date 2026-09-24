@@ -105,6 +105,8 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-ide-bestanden}
       MINIO_USE_SSL: "false"
       AUTH_ENABLED: "true"
+      # Openbare indiening: FormulierDefinitie 2 "Aanmelding initiatief" (POST /aanmelding/2, aanmelden.html?formulier=2)
+      OPENBARE_FORMULIEREN: "2"
       COOKIE_SECURE: "true"
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET ontbreekt in .env}
       JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-24}

@@ -431,6 +431,13 @@ anders optie). Een snapshot is een noodrem, geen backup.
   (`"$nieuw.x"`, `API_REFERENCE.md` §8); het formulier maakt daarmee een nieuwe organisatie in
   dezelfde registratie aan. Plan 2026-09-22 §10.
 
+  **Vijfde ronde 25-09-2026 (stap C)**: zelfde procedure; `docker-compose.pf.yml` zet
+  `OPENBARE_FORMULIEREN: "2"`, zodat `POST /aanmelding/2` anoniem mag. Het standalone formulier
+  staat op `/viz/react/aanmelden.html?formulier=2` (in een iframe automatisch zonder kop;
+  `?embed=1` forceert dat). Let op: de organisatie-keuzelijst leest `/full/organisaties`; met
+  `LEESTOEGANG=documenten` is dat voor anonieme bezoekers dicht — dan is een publieke
+  organisatie-lookup nodig vóór de poort dichtgaat (backlog).
+
 ---
 
 ## 10. Smoke test (vr 11 sep, daarna bevriezen)

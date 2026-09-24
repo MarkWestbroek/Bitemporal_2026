@@ -26,8 +26,10 @@ import { useFormulierDefinities } from "../../hooks/useFormulierDefinitie";
  *  - typeMeta:   meta van de doelentiteit
  *  - definitie:  { id, meta, layout } uit useFormulierDefinities
  *  - onSuccess:  optioneel ({ registratieId, entiteitId }) => void; anders navigatie naar detail
+ *  - openbaar:   true = anonieme indiening via POST /aanmelding/:formulierId (stap C): geen
+ *                id-regel, geen preview; de server dwingt de vaste waarden en de bron af
  */
-export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess }) {
+export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, openbaar = false }) {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
   const navigate = useNavigate();
   const layout = definitie?.layout || null;
@@ -82,12 +84,12 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
 
   // Indicatief volgend id (bij verzenden wordt max-id opnieuw opgehaald).
   useEffect(() => {
-    if (!typeMeta?.typenaam || !baseUrl) return;
+    if (!typeMeta?.typenaam || !baseUrl || openbaar) return;
     fetch(`${baseUrl}/api/viz/entiteit/${encodeURIComponent(typeMeta.typenaam)}/max-id`)
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => setVolgendId(j ? Number(j.nextId || 1) : null))
       .catch(() => setVolgendId(null));
-  }, [baseUrl, typeMeta?.typenaam]);
+  }, [baseUrl, typeMeta?.typenaam, openbaar]);
 
   const bouw = useCallback((id) => bouwNieuwWijzigingen({
     layout, values, veldNaarGE, typeMeta, id, coerce: coercedWaardeVoorVeld, materieel, subFormulier,
@@ -111,13 +113,15 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
         registratietype: "registratie",
         opmerking: `Nieuwe ${typeMeta.klassenaam || typeMeta.typenaam} via formulier "${definitie?.meta?.naam || definitie?.id}"`,
       };
-      const res = await fetch(`${baseUrl}/registratie/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ registratie, wijzigingen }),
-      });
+      const res = openbaar
+        ? await fetch(`${baseUrl}/aanmelding/${encodeURIComponent(definitie.id)}`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ wijzigingen }),
+        })
+        : await fetch(`${baseUrl}/registratie/`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ registratie, wijzigingen }),
+        });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || `HTTP ${res.status}: ${res.statusText}`);
+      if (!res.ok) throw new Error(json.error || json.detail || `HTTP ${res.status}: ${res.statusText}`);
       const registratieId = Number(json?.registratie_id ?? json?.registratieId ?? 0);
       const id = Number(json?.toegekendeIds?.[plaatshouder] || 0);
       if (!id) throw new Error(`Registratie ${registratieId || "-"} is verwerkt, maar de server gaf geen toegekend id terug (backend van vóór stap B?).`);
@@ -132,7 +136,7 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
     } finally {
       setBezig(false);
     }
-  }, [baseUrl, typeMeta, bouw, plaatshouder, definitie, onSuccess, navigate]);
+  }, [baseUrl, typeMeta, bouw, plaatshouder, definitie, onSuccess, navigate, openbaar]);
 
   if (!layout) return <div className="cg-feedback--fout">Formulierdefinitie zonder layout.</div>;
 
@@ -143,10 +147,12 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
     <div className="cg-form-card">
       <div className="cg-form-section__title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap" }}>
         <span>{definitie?.meta?.naam || "Formulier"}</span>
-        <span style={{ fontWeight: 400, fontSize: "0.8125rem", color: "var(--cg-donkergrijs, #666)" }}>
-          volgend id: {volgendId ?? "…"} (definitief bij verzenden)
-          {Object.keys(vasteWaarden).length > 0 && ` · vast: ${Object.entries(vasteWaarden).map(([k, v]) => `${k.split(".").slice(-2).join(".")}=${v}`).join(", ")}`}
-        </span>
+        {!openbaar && (
+          <span style={{ fontWeight: 400, fontSize: "0.8125rem", color: "var(--cg-donkergrijs, #666)" }}>
+            volgend id: {volgendId ?? "…"} (definitief bij verzenden)
+            {Object.keys(vasteWaarden).length > 0 && ` · vast: ${Object.entries(vasteWaarden).map(([k, v]) => `${k.split(".").slice(-2).join(".")}=${v}`).join(", ")}`}
+          </span>
+        )}
       </div>
       {definitie?.meta?.beschrijving && (
         <p style={{ margin: "0 0 0.75rem", color: "var(--cg-donkergrijs, #666)" }}>{definitie.meta.beschrijving}</p>
@@ -190,10 +196,12 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
       )}
       {preview?.fout && <div className="cg-feedback--fout" style={{ marginTop: "0.5rem" }}>{preview.fout}</div>}
 
-      <details style={{ marginTop: "0.75rem" }}>
-        <summary style={{ cursor: "pointer", fontSize: "0.8125rem", color: "var(--cg-donkergrijs, #666)" }}>Registratie-preview</summary>
-        <pre style={{ fontSize: "0.75rem", overflow: "auto", maxHeight: "24rem" }}>{JSON.stringify(preview?.wijzigingen || preview, null, 2)}</pre>
-      </details>
+      {!openbaar && (
+        <details style={{ marginTop: "0.75rem" }}>
+          <summary style={{ cursor: "pointer", fontSize: "0.8125rem", color: "var(--cg-donkergrijs, #666)" }}>Registratie-preview</summary>
+          <pre style={{ fontSize: "0.75rem", overflow: "auto", maxHeight: "24rem" }}>{JSON.stringify(preview?.wijzigingen || preview, null, 2)}</pre>
+        </details>
+      )}
     </div>
   );
 }

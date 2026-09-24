@@ -191,6 +191,16 @@ func NewRouter() *gin.Engine {
 	editor := middleware.RequireRol("editor")
 	admin := middleware.RequireRol("admin")
 
+	// Openbare indiening van een formulier (aanmeldformulier stap C, handlers/aanmelding_handler.go):
+	// anoniem, maar alleen voor de FormulierDefinitie-id's in OPENBARE_FORMULIEREN, alleen
+	// opvoeren op plaatshouder-id's, vaste waarden afgedwongen, bron "aanmeldformulier".
+	router.POST("/aanmelding/:formulierId", handlers.MaakAanmeldingHandler())
+	if of := handlers.OpenbareFormulieren(); len(of) > 0 {
+		fmt.Println("openbare formulieren (POST /aanmelding/:id):", of)
+	} else {
+		fmt.Println("openbare formulieren: geen (zet OPENBARE_FORMULIEREN=<FD-id,…> om een formulier anoniem indienbaar te maken)")
+	}
+
 	// Schema model endpoints (v3-formaat, zie ontwerpkeuzen.md §7)
 	router.GET("/api/schema/model", handlers.MaakGetSchemaModelHandler())
 	router.GET("/api/schema/model/code", handlers.MaakGetSchemaModelCodeHandler())

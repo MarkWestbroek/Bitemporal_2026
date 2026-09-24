@@ -780,3 +780,22 @@ andere PO krijgen. De modelopmerking uit §2 wordt hier concreet: een relatie
 **`InitiatiefPersoon`** (Initiatief → Persoon, `rol` = PO) maakt de PO een gewone relatie van
 het aanmeldformulier met `nieuwFormulier` → FD "Nieuwe persoon" (naam + e-mail), binnen maak-diepte
 1. Dat is B7 (CG-model via V3 + codegen) en een keuze voor Mark.
+
+
+## 11. Stap C gebouwd — openbare indiening en standalone pagina (25-09-2026)
+
+| Onderdeel | Waar | Wat |
+|---|---|---|
+| **B6 openbare deur** | `handlers/aanmelding_handler.go` (+ test), `POST /aanmelding/:formulierId` | anoniem voor FD-id's in `OPENBARE_FORMULIEREN` (§5.4: openbaar maken is een autorisatiebesluit, geen FD-veld). Alleen opvoer; alleen representaties van het doeltype en van de sub-FD-doeltypen; entiteit-id's en entiteit-verwijzingen moeten plaatshouders zijn (nooit schrijven op bestaande records; relatie-secundaire id's mogen kiezen); `vasteWaarde`s worden server-side gezet/overschreven; `bron = aanmeldformulier`; bodylimiet, rate-limit per IP. Zie `API_REFERENCE.md` §8. |
+| **Standalone/iframe** | `web/vite/aanmelden.html` → `src/aanmelden/main.jsx` | alleen het formulier (`?formulier=<id>`), NL Design System + de embed-stijl van de publicatiepagina (in een iframe of `?embed=1` zonder kop), bedankpagina na verzenden. `NieuwFormulierPagina` heeft een `openbaar`-modus (post naar `/aanmelding/:id`, geen id-regel/preview). |
+
+**Getest:** Go-tests (toegestane veldnamen, vaste waarden, validatie: bestaand id, GE op bestaand record,
+afvoer, vreemd type, geen/twee hoofdentiteiten; limiter; env), 584 frontend-tests, build; e2e lokaal:
+FD 3 → 403, bestaand id → 400, afvoer → 400, vreemd type → 400; geldige aanmelding met nieuwe
+organisatie en een *gemanipuleerde* status `geaccepteerd` → 201, status in het register
+`nieuwe_aanmelding`, registratie met `bron=aanmeldformulier`.
+
+**Open (backlog):** de organisatie-keuzelijst leest `/full/organisaties` — met `LEESTOEGANG=documenten`
+dicht voor anoniem; vóór de poort dichtgaat is een publieke organisatie-lookup nodig (bv. een
+QueryDefinitie `organisaties-keuze` of `/aanmelding/:id/opties/:veld`). Captcha/honeypot naast de
+rate-limit als het formulier echt op commonground.nl staat. PO (14/15) wacht op de modelherziening.

@@ -318,6 +318,23 @@ verwijzende entiteiten aan zonder `max-id`-roundtrips:
 - Gebruikt door de FormulierDefinitie in nieuw-modus (`web/vite/src/components/editor/NieuwFormulierPagina.jsx`)
   en `veld.nieuwFormulier` (nieuwe doel-ENT vanuit een relatieveld).
 
+### `POST /aanmelding/:formulierId`
+- **Handler**: `handlers.MaakAanmeldingHandler()` (`aanmelding_handler.go`)
+- **Description**: **Openbare indiening** van een FormulierDefinitie in nieuw-modus (aanmeldformulier,
+  plan 2026-09-22 §4 B6). Anoniem, maar alleen voor de FD-id's in `OPENBARE_FORMULIEREN`
+  (komma-gescheiden; een formulier openbaar maken is een autorisatiebesluit van de instantie, geen
+  FD-veld). De server dwingt af: alleen `opvoer`; alleen representaties van het doeltype van het
+  formulier en van de doeltypen van ingebedde subformulieren (`veld.nieuwFormulier`, één niveau);
+  entiteit-id's en entiteit-verwijzingen zijn plaatshouders (nooit schrijven op bestaande records;
+  secundaire id's van relaties mogen wel naar bestaande records wijzen); de `vasteWaarde`s uit de
+  layout worden gezet/overschreven (bv. `aanmeldstatus.status = nieuwe_aanmelding`); registratie
+  krijgt `bron = "aanmeldformulier"`, `bron_kenmerk = "formulierdefinitie:<id>"`. Bodylimiet 256 KB,
+  rate-limit 10 per 10 minuten per IP (429).
+- **Body**: `{ "wijzigingen": [ { "opvoer": { … } }, … ] }` (zoals `/registratie/`, zonder `registratie`)
+- **Success response** (HTTP 201): `{ "registratieId": N, "toegekendeIds": { "$nieuw.initiatief": 146, … }, "id": 146 }`
+- **Fouten**: 400 (ongeldige inzending, met reden), 403 (formulier niet opengesteld), 404 (formulier bestaat niet of niet actief), 429.
+- **Frontend**: `web/vite/aanmelden.html?formulier=<id>` — standalone pagina zonder navigatie/login, embed-stijl in een iframe (`?embed=1` of automatisch).
+
 #### Veldnaam-disambiguatie bij wijzigingen
 
 Elke opvoer/afvoer in `wijzigingen[]` wordt geparseerd via `RepresentatiePlusNaam.UnmarshalJSON()` (`model/REST request models.go`). De JSON-sleutel (bijv. `"naam"`) wordt opgezocht in de MetaRegistry via `GetByVeldnaamMetPayload()`. Wanneer meerdere types dezelfde `Veldnaam` delen (bijv. `ApiStandaard_Naam` en `NatuurlijkPersoon_Naam` → beide `"naam"`), disambigueert de parser op basis van de inner payload-sleutels: het `EntiteitIDKolom` van het juiste type (bijv. `apistandaard_id`) moet als sleutel voorkomen in de payload. Ontbreekt een onderscheidende sleutel, dan wordt de eerste kandidaat als fallback gebruikt en wordt een waarschuwing naar stderr geschreven.

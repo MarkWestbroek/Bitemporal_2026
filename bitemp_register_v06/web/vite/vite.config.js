@@ -151,6 +151,7 @@ export default defineConfig({
         "bpmn-demo": resolve(__dirname, "bpmn-demo.html"),
         "lineage-demo": resolve(__dirname, "lineage-demo.html"),
         publicatie: resolve(__dirname, "publicatie.html"),
+        aanmelden: resolve(__dirname, "aanmelden.html"),
       },
     },
   },
