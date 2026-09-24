@@ -425,6 +425,12 @@ anders optie). Een snapshot is een noodrem, geen backup.
   editor-login op `/viz/react/t/initiatieven/nieuw?formulier=2` (keuzelijst *Invoer via*). Zie plan
   2026-09-22 §9.
 
+  **Vierde ronde 25-09-2026 (stap B)**: zelfde procedure; daarna replay 17
+  (`registraties-replay-init-formulierdefinitie-nieuwe-organisatie-2026-09-25.json`: FD 3 "Nieuwe
+  organisatie", FD 2 layout v2 met `nieuwFormulier`). De backend kent nu plaatshouder-id's
+  (`"$nieuw.x"`, `API_REFERENCE.md` §8); het formulier maakt daarmee een nieuwe organisatie in
+  dezelfde registratie aan. Plan 2026-09-22 §10.
+
 ---
 
 ## 10. Smoke test (vr 11 sep, daarna bevriezen)
