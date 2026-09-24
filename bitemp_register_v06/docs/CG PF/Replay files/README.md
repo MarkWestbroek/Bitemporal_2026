@@ -24,8 +24,9 @@ maar de volgorde doet ertoe: latere replays verwijzen naar id's uit eerdere.
 | 10 | `registraties-replay-init-aanmeldstatus-geaccepteerd-cgpf-2026.json` | platform | 4, **en een backend met `Initiatief.Aanmeldstatus`** (CG-model 24-09-2026) |
 | 11 | `registraties-replay-init-querydefinitie-publieke-initiatieven.json` | platform | backend met `QueryDefinitie` in losse GE's (23-09-2026) |
 | 12 | `registraties-replay-correctie-initiatief-tabelconfig-query-2026-09-24.json` | platform | 8, 11, en een frontend van na 24-09-2026 |
+| 13 | `registraties-replay-init-intake-aanvulling-2026-09-23.json` | platform | 4, 10 en een backend met `Aanmeldstatus`: de aanmeldingen 130–143 uit de Forms-export van 23-09-2026 (`Extra-data/2026-09-23 Aanmelden portfolio.xlsx`), 9 nieuwe organisaties (id 124–132) en 7 nieuwe personen (67–73), de rest hergebruikt; 143 (testaanmelding) op `in_behandeling`, de rest `geaccepteerd`. Gemaakt met `scripts/maak_cgpf_aanvulling_replay.py` |
 
-Stap 10 vóór 12: zonder aanmeldstatus is de publieke lijst leeg. Stap 10 tegen een backend
+Stap 10 vóór 12: zonder aanmeldstatus is de publieke lijst leeg. Stap 13 na 10 (hergebruikt id's uit 4 en zet zelf de aanmeldstatus). Stap 10 tegen een backend
 zónder het GE `Aanmeldstatus` geeft een fout (`unsupported representatie key 'aanmeldstatus'`)
 — eerst de nieuwe backend starten, dan afspelen.
 
@@ -45,7 +46,7 @@ van `/api/auth/login`). Bestand 5 heeft een UTF-8 BOM; lees het met `utf-8-sig`.
 ## Controle na afloop
 
 ```sh
-# 85 geaccepteerde initiatieven via het opgeslagen document
+# 85 geaccepteerde initiatieven via het opgeslagen document (98 na stap 13)
 curl -s -X POST http://localhost:8082/graphql/query -H 'Content-Type: application/json' \
   -d '{"documentId":"publieke-initiatieven"}'
 # één initiatief, met contactpersoon

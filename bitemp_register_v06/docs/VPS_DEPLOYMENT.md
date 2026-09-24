@@ -398,6 +398,11 @@ anders optie). Een snapshot is een noodrem, geen backup.
   `https://pf.common-ground-lab.nl`**, niet via `http://127.0.0.1:8084`: het login-cookie is
   `Secure` en gaat over http niet mee (401 op alles ná de login). Uitkomst: lijst 85, detail 39
   met contactpersoon, WD 2 tabelconfig v0.2.
+  **Aanvulling intake (stap 13 in `docs/CG PF/Replay files/README.md`)**:
+  `replay files/registraties-replay-init-intake-aanvulling-2026-09-23.json` — de aanmeldingen
+  130–143 uit de Forms-export van 23 september; 143 is een testaanmelding op `in_behandeling` en
+  blijft dus uit de publieke lijst (85 → 98). Nieuwe aanvullingen: exporteer de Forms-antwoorden
+  als .xlsx en draai `scripts/maak_cgpf_aanvulling_replay.py --vanaf <eerste nieuwe id>`.
 - **`$` in wachtwoorden** — compose leest het als variabele. `.env.example` genereert ze zonder.
 - **`minio-init` stopt** — hoort zo; daarom achter `--profile init`.
 - **OpenFTV** — `openftv_adl` database, `package authz` in de rego, bundle-403: zie TrueNAS §2.3–2.6.

@@ -1,0 +1,3662 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-24T17:55:48.883394Z",
+  "source": "xlsx://2026-09-23 Aanmelden portfolio.xlsx",
+  "generator": "scripts/maak_cgpf_aanvulling_replay.py",
+  "description": "Aanvulling op replay 4: intake-aanmeldingen id 130–143 uit de Forms-export van 2026-09-23 Aanmelden portfolio.xlsx. Hergebruikt bestaande organisaties/personen uit replay 4/5 (op naam); nieuwe organisaties vanaf id 124, nieuwe personen vanaf 67. Elk initiatief krijgt een Aanmeldstatus: geaccepteerd, behalve [143] (in_behandeling). Afspelen ná replay 1–7 op een backend met Initiatief.Aanmeldstatus.",
+  "count": 17,
+  "aanvulling": {
+    "initiatieven": [
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143
+    ],
+    "in_behandeling": [
+      143
+    ],
+    "nieuwe_organisaties": {
+      "Anonify B.V.": 124,
+      "BCT": 125,
+      "BNG": 126,
+      "Conneqt BV": 127,
+      "Logius": 128,
+      "Odeva": 129,
+      "Paratmos BV": 130,
+      "Stichting Forus": 131,
+      "Ver.ID": 132
+    },
+    "nieuwe_personen": {
+      "Jorrit Heijn": 67,
+      "L. Hielkema": 68,
+      "Leo Pape": 69,
+      "Mark Westbroek": 70,
+      "Max Salden": 71,
+      "Ramon van Sprundel": 72,
+      "Sietze Soet": 73
+    },
+    "hergebruikte_organisaties": {
+      "ASE Cloud Services": 6,
+      "Bit Datacenter B.V.": 13,
+      "PinkRoccade": 81,
+      "Progresity": 85,
+      "Proxy Managed Services B.V.": 86,
+      "SUSE Software Solutions Germany GmbH": 101
+    }
+  },
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-01T15:29:31Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Aanvulling intake: nieuwe organisaties",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": 124
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 124,
+                "naam": "Anonify B.V."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": 125
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 125,
+                "naam": "BCT"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": 126
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 126,
+                "naam": "BNG"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": 127
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 127,
+                "naam": "Conneqt BV"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": 128
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 128,
+                "naam": "Logius"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": 129
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 129,
+                "naam": "Odeva"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": 130
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 130,
+                "naam": "Paratmos BV"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": 131
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 131,
+                "naam": "Stichting Forus"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": 132
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 132,
+                "naam": "Ver.ID"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-01T15:29:32Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Aanvulling intake: nieuwe personen (PO) met e-mail",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "persoon": {
+                "id": 67
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonnaam": {
+                "persoon_id": 67,
+                "naam": "Jorrit Heijn"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 67,
+                "email": "info@anonify.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoon": {
+                "id": 68
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonnaam": {
+                "persoon_id": 68,
+                "naam": "L. Hielkema"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 68,
+                "email": "linda@forus.io"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoon": {
+                "id": 69
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonnaam": {
+                "persoon_id": 69,
+                "naam": "Leo Pape"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 69,
+                "email": "leo@city.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoon": {
+                "id": 70
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonnaam": {
+                "persoon_id": 70,
+                "naam": "Mark Westbroek"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 70,
+                "email": "mark@paratmos.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoon": {
+                "id": 71
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonnaam": {
+                "persoon_id": 71,
+                "naam": "Max Salden"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 71,
+                "email": "max.salden@bctsoftware.com"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoon": {
+                "id": 72
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonnaam": {
+                "persoon_id": 72,
+                "naam": "Ramon van Sprundel"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 72,
+                "email": "ramon@odeva.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoon": {
+                "id": 73
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonnaam": {
+                "persoon_id": 73,
+                "naam": "Sietze Soet"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 73,
+                "email": "sietze.soet@progresity.com"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-01T15:29:33Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Aanvulling intake: contactpersonen (PO)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "contactpersoon": {
+                "organisatie_id": 131,
+                "persoon_id": 68,
+                "rol": "PO"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "contactpersoon": {
+                "organisatie_id": 124,
+                "persoon_id": 67,
+                "rol": "PO"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "contactpersoon": {
+                "organisatie_id": 127,
+                "persoon_id": 69,
+                "rol": "PO"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "contactpersoon": {
+                "organisatie_id": 129,
+                "persoon_id": 72,
+                "rol": "PO"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "contactpersoon": {
+                "organisatie_id": 125,
+                "persoon_id": 71,
+                "rol": "PO"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "contactpersoon": {
+                "organisatie_id": 130,
+                "persoon_id": 70,
+                "rol": "PO"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-01T15:39:31Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=130 | naam=Platform Forus | contactorganisatie=Stichting Forus | po=L. Hielkema | po_email=linda@forus.io | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde) | bron_lagen=Laag 4: Procesinrichting;Laag 5: Interactie",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 130
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 130,
+                "datum": "2017-04-05"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 130,
+                "planningsinfo": "Deze informatie is nog niet publiek. Wij zijn zoekende hoe wij dit het beste kunnen inrichten binnen onze github, gezien eerder tools nauwelijks werden gebruikt door aangesloten partijen. Doel is om dit binnen onze Github te publiceren: https://github.com/teamforus/",
+                "startdatum": "2017-04-05",
+                "ready_for_use": "2017-11-01",
+                "waar_tegenaan_gelopen": "- eisen en verschillen in beleid per gemeente, waardoor het platform veel verschillende 'smaken' moet kunnen ondersteunen. Maakt het platform ook weer complex. - afhankelijkheid van koplopers voor structurele doorontwikkeling en aanpassing richting standaarden. In veel gevallen zou het kosteneffectiever zijn als er meer in co-creatie wordt ontwikkeld",
+                "fase": "Doorontwikkeling en beheer"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 130,
+                "naam": "Platform Forus",
+                "omschrijving": "Forus is een open-source toepassing voor het aanvragen, toekennen en beheren van inkomensondersteunende regelingen, waaronder een Meedoenplatform of Stadspas | Componenten: Aanvraagmodule; voucherbeheer; CMS en | Parallel gebruik: Ja. Forus kan naast bestaande backoffice‑applicaties draaien.",
+                "pitch": "Forus – het bewezen, open-source platform voor alle inkomens­ondersteunende regelingen Forus helpt gemeenten al negen jaar om regelingen eenvoudig, veilig en schaalbaar uit te voeren. Inwoners vinden via één toegangspoort alle regelingen van gemeente en ketenpartners, met proactieve functies zoals ambtshalve toekenning en vooringevulde formulieren. Dit verkort doorlooptijden en minimaliseert handwerk. Dankzij de directe BNG-koppeling blijven tegoeden altijd op een gemeenterekening, waardoor financiële risico's – zoals bij faillissementen van externe leveranciers – worden uitgesloten. Het platform dekt de volledige keten: regelingencheck, aanvraag & beschikking, activering & gebruik van tegoeden, realtime financiële afhandeling en heldere rapportage. Gemeenten kunnen klein beginnen en stapsgewijs uitbreiden naar één centrale ingang voor alle regelingen, zonder zware IT-trajecten; het systeem past zich aan het gemeentelijke beleid aan, niet andersom. Door co-creatie met gemeenten en hergebruik van bestaande functionaliteit zijn implementatie-, ontwikkel- en beheerkosten laag, mét behoud van flexibiliteit.",
+                "website": "https://forus.io/",
+                "git_repo": "https://github.com/teamforus/",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 130,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 3",
+                "toelichting": "Forus is configurabel per gemeente (beleid, regelingen, bedragen, looptijden, doelgroepen) en ondersteunt verschillende activatieopties (DigiD, ID-wallet, e-mail, activatiecode) en toekenning/uitkeren (stadspas, op bankrekening, declaratie, etc). Nieuwe regelingen of wijzigingen kunnen zonder zware IT-trajecten worden doorgevoerd."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 130,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 3",
+                "toelichting": "Self‑service voor inwoners, duidelijke stappen (aanvraag→toekenning→gebruik), lagere drempels en kortere doorlooptijden. Minder fouten en minder handwerk door vooringevulde formulieren, overzichtelijke processen en proactieve dienstverlening"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 130,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 3",
+                "toelichting": "Dataminimalisatie bij gebruik platform; inwoners kunnen in het eigen klantportaal zien welke gegevens zijn opgeslagen in het dossier en beheren hun eigen tegoeden; waar mogelijk worden gegevens opgehaald uit de bron (w.o. BRP)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 130,
+                "domein_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 130,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1979,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1969,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1731,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 171,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 441,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1859,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 294,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 268,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 252,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1945,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1676,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1924,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 867,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 779,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 873,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 851,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 748,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 777,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1674,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 879,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1709,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 130,
+                "gemeente_id": 1655,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 130,
+                "andersDanGemeente": "Zuidhorn; Oost-Gelre"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 130,
+                "apistandaard_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 130,
+                "organisatie_id": 131,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 130,
+                "organisatie_id": 126,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 130,
+                "organisatie_id": 81,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 130,
+                "organisatie_id": 128,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 130,
+                "organisatie_id": 132,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 130,
+                "type": "Gemeenten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 130,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 130,
+                "type": "Ketenpartners"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 130,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-06T16:19:18Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=131 | naam=BinnenBeter | contactorganisatie=Progresity | po=Steven Voss | po_email=steven.voss@progresity.com | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde) | bron_lagen=Laag 5: Interactie;Laag 4: Procesinrichting;Laag 3: Connectiviteit;Laag 2: Diensten",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 131
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 131,
+                "datum": "2018-01-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 131,
+                "planningsinfo": "https://app.loopedin.io/binnenbeter#/roadmap",
+                "startdatum": "2018-01-01",
+                "ready_for_use": "2018-01-01",
+                "waar_tegenaan_gelopen": "Complexiteit in integraties met bestaande gemeentelijke systemen, Verschillen in werkprocessen tussen gemeenten, Performance en gebruikservaring bij kaartdienstenalternatieven)",
+                "fase": "Doorontwikkeling en beheer"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 131,
+                "naam": "BinnenBeter",
+                "omschrijving": "BinnenBeter is een gemeentelijke applicatie voor het registreren, beheren en afhandelen van meldingen in de openbare ruimte. Het platform ondersteunt volledige werkprocessen, inclusief workflowbeheer, samenwerking met ketenpartners en een besteksintegratie. Daarnaast faciliteert BinnenBeter transparante en efficiënte communicatie met inwoners via de gekoppelde BuitenBeter-app, waardoor meldingen sneller en beter worden afgehandeld. | Componenten: Meldingenregistratie en -afhandeling, Workflow- en procesmanagement, Kaart- en locatiecomponent, API-laag, Rapportage en dashboards, Gebruikers- en rollenbeheer, Koppelingen met ketenpartners en zaaksystemen, Bestek- en uitvoeringsondersteuning | Parallel gebruik: Ja, BinnenBeter kan gefaseerd en parallel naast bestaande systemen worden ingezet. Gemeenten kunnen onderdelen (zoals meldingenbeheer of kaartfunctionaliteit) stapsgewijs migreren en integreren via API's.",
+                "pitch": "BinnenBeter is dé regie- en afhandelapplicatie voor meldingen in de openbare ruimte. Het platform stelt gemeenten in staat om meldingen efficiënt, transparant en datagedreven af te handelen, met ondersteuning voor zowel interne processen als externe ketenpartners. Door gebruik te maken van open standaarden en API-first architectuur sluit BinnenBeter naadloos aan op de Common Ground visie. Gemeenten behouden regie over hun data en processen, terwijl ze flexibel kunnen koppelen met andere systemen en leveranciers. Samenwerking met andere gemeenten versnelt innovatie, verlaagt kosten en zorgt voor een toekomstbestendige inrichting van het meldingenproces.",
+                "website": "https://www.progresity.com/binnenbeter",
+                "git_repo": "n.v.t.",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 131,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 4",
+                "toelichting": "BinnenBeter maakt gebruik van een modulaire en API-first architectuur, waardoor gemeenten flexibel kunnen inspelen op veranderende wetgeving, processen en samenwerkingen. Nieuwe functionaliteiten en koppelingen kunnen snel worden toegevoegd zonder afhankelijk te zijn van één leverancier."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 131,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 4",
+                "toelichting": "Door snellere en transparantere afhandeling van meldingen, betere communicatie met inwoners en integratie met de BuitenBeter app, verbetert de dienstverlening aantoonbaar. Inwoners worden beter geïnformeerd en gemeenten kunnen efficiënter werken."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 131,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 2",
+                "toelichting": "BinnenBeter draagt beperkt direct bij aan regie op gegevens voor inwoners, omdat het primair een interne applicatie is. Via de gekoppelde BuitenBeter-app hebben inwoners wel inzicht in hun meldingen en de status daarvan. Volledige regie op gegevens ligt buiten de scope van BinnenBeter en wordt ingevuld door bredere overheidsvoorzieningen."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 131,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 131,
+                "domein_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 131,
+                "domein_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 131,
+                "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 935,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 772,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 983,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 1931,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 1969,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 935,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 772,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 983,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 1931,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 131,
+                "gemeente_id": 1969,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 131,
+                "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 131,
+                "apistandaard_id": 17
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 131,
+                "apistandaard_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 131,
+                "apistandaard_id": 15
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 131,
+                "api_standaard": "JSON/HTTP standaarden"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 131,
+                "organisatie_id": 85,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 131,
+                "type": "Gemeenten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 131,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 131,
+                "type": "Ketenpartners"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 131,
+                "type": "VNG"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 131,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-18T11:37:36Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=132 | naam=GeoVisia 7 | contactorganisatie=Progresity B.V | po=Sietze Soet | po_email=sietze.soet@progresity.com | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding) | bron_lagen=Laag 4: Procesinrichting;Laag 5: Interactie;Laag 3: Connectiviteit",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 132
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 132,
+                "datum": "2023-07-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 132,
+                "planningsinfo": "De planning/ roadmap is direct vanuit de software te benaderen.",
+                "startdatum": "2023-07-01",
+                "ready_for_use": "2026-04-01",
+                "waar_tegenaan_gelopen": "1. Migratie van bestaande klanten naar de nieuwe architectuur De overgang van eerdere GeoVisia-versies naar GeoVisia 7 vraagt zorgvuldige migratie van data, processen en gebruikers, waarbij continuïteit gewaarborgd moet blijven. 2. Balans tussen standaardisatie en gemeentelijke flexibiliteit Gemeenten hebben verschillende processen en wensen. De uitdaging is om zoveel mogelijk configuratie mogelijk te maken zonder terug te vallen op maatwerk. 3. Verdere Common Ground/Haven-technische doorontwikkeling Hoewel de software architectonisch goed aansluit op Common Ground, vragen containerisatie, Kubernetes-ondersteuning en verdere standaardisatie nog aanvullende investeringen.",
+                "fase": "Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 132,
+                "naam": "GeoVisia 7",
+                "omschrijving": "GeoVisia 7 is een modern, API-first beheersysteem voor de openbare ruimte waarmee gemeenten hun assets, inspecties, meldingen en onderhoud integraal kunnen beheren. Het platform is modulair opgebouwd, ondersteunt landelijke standaarden zoals IMBOR en sluit aan op Common Ground-principes zoals eenmalige vastlegging, meervoudig gebruik van data en scheiding van data, processen en presentatie. | Componenten: GeoVisia 7 omvat een front-end, REST API-laag, businesslogica (servicelaag), datadiensten, SSO/autorisatie, middleware voor integratie, monitoring/beheer en koppelingen met externe standaarden zoals IMBOR. | Parallel gebruik: Ja, GeoVisia 7 ondersteunt gefaseerde migratie en parallel gebruik via een modulaire architectuur en API-versioning.",
+                "pitch": "GeoVisia 7 biedt gemeenten een toekomstbestendig beheersysteem voor de openbare ruimte dat aansluit op de principes van Common Ground: API-first, modulair, configureerbaar en gericht op eenmalige vastlegging en meervoudig gebruik van data. Door deel te nemen aan de ontwikkeling profiteren gemeenten direct van gezamenlijke innovatie, invloed op de roadmap en functionaliteit die aansluit op praktijkbehoeften.",
+                "website": "https://www.progresity.com/geovisia",
+                "git_repo": "-",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 132,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 4",
+                "toelichting": "GeoVisia 7 vergroot de wendbaarheid van gemeenten doordat processen, data en gebruikersinterfaces van elkaar zijn losgekoppeld. Door de modulaire opzet en API-first architectuur kunnen gemeenten nieuwe functionaliteiten, koppelingen of beleidswijzigingen sneller doorvoeren zonder grote systeemwijzigingen. Daarnaast maakt de configureerbare inrichting het mogelijk om lokale processen te ondersteunen zonder maatwerkontwikkeling."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 132,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 4",
+                "toelichting": "GeoVisia 7 zorgt voor betere dienstverlening doordat medewerkers beschikken over actuele, centraal beheerde informatie en processen efficiënter kunnen uitvoeren. Door betere datakwaliteit, integrale informatievoorziening en snellere toegang tot gegevens kunnen gemeenten inwoners sneller en consistenter helpen. Daarnaast maakt de API-architectuur betere digitale dienstverlening via andere gemeentelijke kanalen mogelijk."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 132,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 3",
+                "toelichting": "GeoVisia 7 draagt indirect bij aan regie op gegevens doordat gemeentelijke gegevens centraal, consistent en veilig worden beheerd, waardoor betere transparantie en betrouwbaarheid ontstaat. Via rollen, autorisaties en audit-trails wordt zorgvuldig met gegevens omgegaan. Het platform is primair gericht op gemeentelijke medewerkers en minder direct op actieve burgerregie, waardoor nog verdere ontwikkeling mogelijk is richting expliciete inzage- en regiemogelijkheden voor inwoners."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 132,
+                "domein": "Beheer openbare ruimte"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 132,
+                "gemeente_id": 307,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 132,
+                "gemeente_id": 855,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 132,
+                "gemeente_id": 995,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 132,
+                "gemeente_id": 743,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 132,
+                "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 132,
+                "api_standaard": "OAS3; API-versioning"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 132,
+                "organisatie_id": 85,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefinfo": {
+                "initiatief_id": 132,
+                "informatie": "Leverancier: samen met deelnemende gemeenten en indirect de kennispartners; Leverancier: oa. CROW (IMBOR-standaard); Leverancier: Norminsituut Bomen (Handboek bomen) en Rioned (GWSW)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 132,
+                "type": "Gemeenten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 132,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-27T14:23:56Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=133 | naam=Proxy Platform | contactorganisatie=Proxy Managed Services B.V. | po=Timothy Helsdingen | po_email=timothy.helsdingen@proxy.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Realisatie (gaat binnenkort draaien bij eerste gemeenten) | bron_lagen=Laag 2: Diensten;Laag 1: Databronnen",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 133
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 133,
+                "datum": "2025-06-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 133,
+                "planningsinfo": "Op de website (https://platform.proxy.nl) zijn een aantal aankondigingen beschikbaar. De roadmap wordt bepaald in samenwerking met onze klanten en op basis van ontvangen feedback. Aankondigingen worden geplaatst op platform.proxy.nl en de changelogs van releases worden via de mailinglijst gedeeld.",
+                "startdatum": "2025-06-01",
+                "ready_for_use": "2026-03-01",
+                "waar_tegenaan_gelopen": "Cloud-agnostische uitrol: Elke cloud provider heeft eigen API's, netwerkconfiguraties en beperkingen. Het ontwikkelen van een uniforme aanpak waarmee klantinfrastructuur bij verschillende providers op dezelfde manier uitgerold kan worden, was een grote technische uitdaging. Architectuur voor automatische schaalbaarheid: Het inrichten van een architectuur die het mogelijk maakt om volledige infrastructuur automatisch en schaalbaar binnen minuten uit te rollen bij verschillende cloud providers, ongeacht hun onderliggende verschillen.",
+                "fase": "Realisatie (gaat binnenkort draaien bij eerste gemeenten)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 133,
+                "naam": "Proxy Platform",
+                "omschrijving": "Het Proxy Platform is een Europees, integratieplatform gebaseerd op open source-technieken waarmee organisaties via één plek managed infrastructuur kunnen neerzetten en volledige controle houden over hun infrastructuur en data. Het biedt managed Kubernetes (RKE2), databases en samenwerkingstools, gehost op Europese en binnenkort ook Amerikaanse cloud providers naar keuze. Het platform kan HAVEN-compliant infrastructuur leveren. Zonder vendor lock-in bepalen gebruikers zelf waar hun data staat en kunnen ze workloads verplaatsen tussen providers. | Componenten: Haven (HAVEN-compliant Kubernetes-infrastructuur) | Parallel gebruik: Het initiatief betreft geen software maar een hosting- en infrastructuuroplossing. Het is parallel te gebruiken naast bestaande omgevingen. Het Proxy Platform ondersteunt meerdere hosting providers, waardoor organisaties het naast hun huidige infrastructuur kunnen inzetten zonder direct te hoeven migreren.",
+                "pitch": "Het Proxy Platform biedt gemeenten digitale autonomie over hun infrastructuur. Het Proxy Platform stelt gemeenten en organisaties in staat om via uniforme en open standaarden cloud provider onafhankelijke IT-infrastructuur neer te zetten. Het platform maakt het mogelijk om binnen minuten HAVEN-conforme infrastructuur operationeel te hebben, en is volledig gebaseerd op open standaarden. Daarnaast gelooft Proxy in digitale autonomie en biedt alle klanten contractueel de mogelijkheid om, indien de samenwerking wordt opgezegd, de afgenomen infrastructuur volledig over te nemen. Het platform is gebouwd door Proxy, een Nederlandse partij gevestigd in Rotterdam, gespecialiseerd in Enterprise Open Source-oplossingen. Al sinds 1997 ontwerpt, implementeert en ondersteunt Proxy stabiele en toekomstbestendige IT-infrastructuren op basis van Linux en Open Source-technologie.",
+                "website": "https://platform.proxy.nl/",
+                "git_repo": "Het Proxy Platform is geen zelfstandige softwareapplicatie maar een managed dienst die volledig is opgebouwd uit bestaande open source-componenten zoals Kubernetes (RKE2), Ansible, Linux en PostgreSQL. Er is daarom geen sprake van propriëtaire broncode die gepubliceerd kan worden. De toegevoegde waarde zit in de integratie, het beheer en de operationele expertise waarmee deze open source-technieken worden samengebracht tot een HAVEN-conform platform. Gemeenten zijn daardoor nooit afhankelijk van gesloten technologie en kunnen hun infrastructuur te allen tijde overnemen of bij een andere partij onderbrengen.",
+                "type": "Toepassing",
+                "CG_laag": "Laag 2"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 133,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 3",
+                "toelichting": "Het Proxy Platform vergroot de wendbaarheid van gemeenten doordat zij niet langer vastzitten aan één cloud provider of leverancier. Door multi-cloud support en standaard Kubernetes kunnen gemeenten eenvoudig wisselen van infrastructuur. Omdat het platform geen vendor lock-in kent, behouden gemeenten maximale keuzevrijheid."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 133,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 2",
+                "toelichting": "Het Proxy Platform is primair een infrastructuurplatform en heeft daarmee een indirecte bijdrage aan dienstverlening. Het maakt het wél mogelijk om Common Ground-toepassingen die direct bijdragen aan dienstverlening (zoals OpenZaak, Signalen, Open Formulieren) betrouwbaar, veilig en schaalbaar te hosten."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 133,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 2",
+                "toelichting": "Het Proxy Platform draagt indirect bij aan regie op gegevens door data-soevereiniteit centraal te stellen. Gemeenten bepalen zelf waar hun data wordt opgeslagen (welk land, welke provider) en behouden volledige eigenaarschap. Dit sluit aan bij het Common Ground-principe van data bij de bron houden. Het platform zelf verwerkt geen persoonsgegevens van inwoners, maar biedt de veilige, AVG/GDPR-compliant infrastructuur waarop toepassingen voor regie op gegevens kunnen draaien."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 133,
+                "domein_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 133,
+                "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 133,
+                "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 133,
+                "apistandaard_id": 17
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 133,
+                "apistandaard_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 133,
+                "apistandaard_id": 15
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 133,
+                "organisatie_id": 86,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 133,
+                "organisatie_id": 13,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 133,
+                "organisatie_id": 101,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 133,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 133,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-06-23T12:22:53Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=134 | naam=ASE AI Workspace Assistant (Interne AI-kennisassistent) | contactorganisatie=ASE Cloud Services | po=Alain van Zwol | po_email=info@asecloud.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Initiatie (al een snelle POC) | bron_lagen=Laag 5: Interactie;Laag 2: Diensten",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 134
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 134,
+                "datum": "2024-03-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 134,
+                "planningsinfo": "n.v.t. nog geen aparte planningspagina. Implementatie is mogelijk binnen circa 6 weken; meer info via www.asecloud.nl",
+                "startdatum": "2024-03-01",
+                "ready_for_use": "2026-04-01",
+                "waar_tegenaan_gelopen": "(1) De balans tussen volledig soevereine, lokale open-source modellen en de gewenste outputkwaliteit en rekenkracht (GPU-capaciteit en -kosten). (2) De kwaliteit en structuur van de kennisbank bepalen direct de antwoordkwaliteit; het goed structureren en chunken van diverse interne bronnen voor betrouwbare retrieval en bronvermelding was een aandachtspunt. (3) Lokale open-source modellen missen de ingebouwde safety-guardrails van commerciële providers; we hebben daarom eigen guardrails, een modelregister met herkomst- en integriteitscontrole en periodieke bias-steekproeven ingericht.",
+                "fase": "Initiatie (al een snelle POC)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 134,
+                "naam": "ASE AI Workspace Assistant (Interne AI-kennisassistent)",
+                "omschrijving": "De AI Workspace Assistant is een zelf-gehoste, EU-soevereine interne kennisassistent. Medewerkers stellen in natuurlijke taal vragen en krijgen antwoorden op basis van de eigen kennis- en documentbronnen van de organisatie, met bronvermelding en rolgebaseerde toegang. De oplossing draait volledig op Europese infrastructuur met zelf-gehoste open-source taalmodellen, verwerkt minimale persoonsgegevens en stuurt geen data naar niet-Europese techbedrijven. De assistent is informatief (laagrisico onder de AI Act), met menselijk toezicht en zonder geautomatiseerde besluitvorming. | Componenten: Open WebUI-webinterface (Docker); zelf-gehost open-source taalmodel via compatibele API op EU-GPU; kennisbank-/RAG-indexering met vector database (semantische zoekfunctie en bronvermelding); single sign-on en identiteit via Authentik (OIDC); rolgebaseerde toegang (RBAC); reverse proxy Caddy met automatische HTTPS/TLS. | Parallel gebruik: Ja. De assistent is aanvullend en draait naast bestaande systemen. Deze vervangt geen kernregistratie- of zaaksysteem, maar ontsluit bestaande kennis- en documentbronnen. Parallel gebruik is dus mogelijk zonder bestaande software uit te faseren.",
+                "pitch": "Gemeenten verdrinken in hun eigen kennis: beleid, procedures, regelingen en handboeken zijn versnipperd over systemen. De AI Workspace Assistant ontsluit die kennis via één veilige interface, zodat medewerkers direct en consistent het juiste antwoord vinden, met bronvermelding zodat het controleerbaar blijft. Anders dan generieke AI-tools blijft alle data binnen de EU op zelf-gehoste open-source modellen, AVG- en AI Act-conform, zonder afhankelijkheid van non-EU techgiganten of vendor lock-in. Omdat de oplossing white-label en herbruikbaar is, kunnen gemeenten samen doorontwikkelen aan connectoren en standaarden in plaats van ieder het wiel opnieuw uit te vinden.",
+                "website": "https://www.asecloud.nl",
+                "git_repo": "Codeberg repo voor échte soevereiniteit maken wij gaan gebruik van bovengenoemde. Onze eigen configuratie staat in een private repository op Codeberg, dus n.v.t. voor publieke inzage. Het onderliggende platform is open source: github.com/open-webui/open-webui.",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 134,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 3",
+                "toelichting": "Medewerkers vinden sneller de juiste kennis (beleid, procedures, regelingen) en zijn minder afhankelijk van enkele specialisten. Daardoor kan een gemeente sneller inspelen op nieuwe opgaven en gewijzigde regelgeving. Omdat de oplossing herbruikbaar, open source en leveranciersonafhankelijk is, vergroot ze de wendbaarheid structureel."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 134,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 3",
+                "toelichting": "De bijdrage is indirect: betere interne kennisontsluiting leidt tot snellere, consistentere en correctere antwoorden aan inwoners via medewerkers. In deze interne variant is er geen directe interactie met de inwoner."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 134,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 1",
+                "toelichting": "Dit is een interne medewerkertool en geeft inwoners geen directe regie over hun eigen gegevens. Wel is de oplossing privacy-by-design: minimale persoonsgegevens, lokale verwerking binnen de EU en geen datastromen naar niet-Europese partijen."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 134,
+                "domein_id": 9
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 134,
+                "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 134,
+                "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 134,
+                "apistandaard_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 134,
+                "apistandaard_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 134,
+                "api_standaard": "OpenAI-compatibele API (Ollama-backend); die kunnen via connectoren in co-ontwikkeling worden toegevoegd."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 134,
+                "organisatie_id": 6,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefinfo": {
+                "initiatief_id": 134,
+                "informatie": "Leverancier: ASE Cloud Services BV (hoofdleverancier). Onderliggende technologie: OVHcloud (EU-hosting en GPU); Leverancier: Open WebUI / Ollama (open source) voor de modellen; Leverancier: Authentik (SSO)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 134,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 134,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-06-23T13:01:08Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=135 | naam=ASE Soevereine Werkplek | contactorganisatie=ASE Cloud Services | po=Alain van Zwol | po_email=info@asecloud.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Initiatie (al een snelle POC) | bron_lagen=Hosting- en infrastructuur;Laag 5: Interactie",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 135
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 135,
+                "datum": "2026-02-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 135,
+                "planningsinfo": "n.v.t. nog geen aparte planningspagina. Implementatie is mogelijk binnen circa 6 weken; meer info via www.asecloud.nl",
+                "startdatum": "2026-02-01",
+                "ready_for_use": "2026-06-01",
+                "waar_tegenaan_gelopen": "(1) Functionele pariteit met en migratie vanaf Microsoft 365/Google Workspace: gebruikersverwachtingen, documentcompatibiliteit en adoptie vragen aandacht en goede begeleiding. (2) Het beheren en up-to-date houden van een volledige open-source stack (Nextcloud, Authentik, Collabora, mail) inclusief tijdige beveiligingspatches, als kleine organisatie. (3) De centrale identiteitsprovider (Authentik) is een single point of authentication; dit hebben we afgedekt met verplichte MFA, dagelijkse versleutelde geo-redundante back-ups en herstelplanning.",
+                "fase": "Initiatie (al een snelle POC)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 135,
+                "naam": "ASE Soevereine Werkplek",
+                "omschrijving": "De ASE Soevereine Werkplek is een volledig beheerde samenwerkingsomgeving als alternatief voor Microsoft 365 en Google Workspace. De oplossing heeft een open-source fundament (Nextcloud en Authentik), wordt gehost in de EU, en kent operationeel beheer en datatoegang uitsluitend binnen de EU/EER onder Nederlandse jurisdictie. Ze biedt bestandsopslag en -deling, online office, agenda, contacten, taken, projectborden, videobellen en mail, met single sign-on en verplichte multifactorauthenticatie, zonder afhankelijkheid van niet-Europese techbedrijven. | Componenten: Nextcloud (bestandsopslag en -deling, Collabora Online voor realtime documentbewerking, Agenda, Contacten, Taken, Notities, Deck/Kanban, Talk voor video en chat, Mail); Authentik als SSO/identiteitsprovider (OAuth2/OpenID Connect, verplichte TOTP-MFA); e-mail via OVH Zimbra Pro; nginx reverse proxy met TLS (Let's Encrypt); EU-hosting op OVHcloud. | Parallel gebruik: Ja. De werkplek kan tijdens een gefaseerde migratie parallel naast de bestaande kantooromgeving draaien en is uiteindelijk bedoeld als volwaardig alternatief voor Microsoft 365 of Google Workspace.",
+                "pitch": "Gemeenten zijn voor hun dagelijkse samenwerking grotendeels afhankelijk van non-EU platforms, met alle vragen rond de CLOUD Act en datasoevereiniteit van dien. De ASE Soevereine Werkplek biedt een volwaardig, open-source alternatief voor Microsoft 365 en Google Workspace: bestanden, office, agenda, mail, videobellen en projectborden, volledig gehost in de EU met operationeel beheer en datatoegang uitsluitend binnen de EU/EER onder Nederlandse jurisdictie. Open standaarden en open source betekenen geen vendor lock-in en volledige controle over je eigen gegevens. Omdat de oplossing white-label en herbruikbaar is, kunnen gemeenten samen optrekken in plaats van ieder apart te onderhandelen met de grote techbedrijven.",
+                "website": "https://www.asecloud.nl",
+                "git_repo": "Onze eigen configuratie staat in een private repository op Codeberg, dus n.v.t. voor publieke inzage. De onderliggende componenten zijn open source: Nextcloud (github.com/nextcloud/server) en Authentik (github.com/goauthentik/authentik).",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 135,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 3",
+                "toelichting": "Open source, open standaarden en EU-hosting verminderen leveranciersafhankelijkheid en vendor lock-in. Daardoor houden gemeenten zelf regie en kunnen ze sneller schakelen, zonder vast te zitten aan de voorwaarden en prijsstelling van één grote leverancier."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 135,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 2",
+                "toelichting": "De bijdrage is indirect: veilige, soevereine samenwerking en gegevensbeheer door medewerkers ondersteunt de dienstverlening, maar er is geen directe interactie met de inwoner via dit product."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 135,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 2",
+                "toelichting": "Gegevens van inwoners die door medewerkers worden verwerkt, blijven binnen de EU/EER onder Nederlandse jurisdictie, zonder blootstelling aan de CLOUD Act. Dat versterkt de bescherming en grip op die gegevens aanzienlijk. De inwoner krijgt via dit product echter geen directe regie of inzage in de eigen gegevens."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 9
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 135,
+                "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 135,
+                "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 135,
+                "apistandaard_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 135,
+                "apistandaard_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 135,
+                "apistandaard_id": 23
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 135,
+                "api_standaard": "LDAP en SCIM (Authentik); WebDAV; CalDAV en CardDAV (Nextcloud bestanden, agenda en contacten); IMAP/SMTP (mail); TOTP en WebAuthn/FIDO2 (MFA); koppelingen kunnen via connectoren worden toegevoegd."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 135,
+                "organisatie_id": 6,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefinfo": {
+                "initiatief_id": 135,
+                "informatie": "Leverancier: ASE Cloud Services BV (hoofdleverancier). Onderliggende open source: Nextcloud en Authentik (Goauthentik GmbH, Duitsland). Hosting: OVHcloud (EU, Frankrijk)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 135,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 135,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-06-23T13:25:55Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=136 | naam=AI Adoptie-programma | contactorganisatie=ASE Cloud Services | po=Alain van Zwol | po_email=info@asecloud.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Initiatie (al een snelle POC) | bron_lagen=Laag 4: Procesinrichting;Laag 5: Interactie",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 136
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 136,
+                "datum": "2024-01-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 136,
+                "planningsinfo": "n.v.t. geen aparte planningspagina; nadere informatie via www.asecloud.nl.",
+                "startdatum": "2024-01-01",
+                "ready_for_use": "2026-06-01",
+                "waar_tegenaan_gelopen": "(1) Adoptie en verandermanagement: AI invoeren stuit vooral op koudwatervrees en uiteenlopende AI-geletterdheid binnen organisaties. (2) Het wegnemen van zorgen rond AVG en AI Act bij medewerkers en bestuur, zodat vertrouwen ontstaat. (3) Het aantoonbaar maken van waarde en ROI van AI, zodat een pilot kan doorgroeien naar structurele inzet.",
+                "fase": "Initiatie (al een snelle POC)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 136,
+                "naam": "AI Adoptie-programma",
+                "omschrijving": "Het AI Adoptie-programma is een begeleid veranderprogramma dat AI structureel verankert in de organisatie, van pilotfase tot volledige uitrol. Het combineert inspiratiesessies, workshops en trainingen met begeleiding bij use-case-selectie, AI-governance en naleving van AVG en AI Act, zodat medewerkers AI verantwoord en met vertrouwen leren inzetten. | Componenten: Geen softwarecomponenten. Programmaonderdelen: inspiratiesessies, hands-on workshops, trainingen (AI-geletterdheid), bewustwording rond AVG en AI Act, begeleiding bij use-case-selectie en AI-governance, en stapsgewijze opschaling van pilotfase naar volledige uitrol. | Parallel gebruik: n.v.t. dit is een begeleidingsprogramma en geen software; het vervangt niets en sluit aan op alle bestaande systemen.",
+                "pitch": "AI invoeren mislukt zelden op de techniek en meestal op de mensen: onduidelijke use-cases, koudwatervrees, zorgen over privacy en AI Act, en gebrek aan AI-geletterdheid. Het AI Adoptie-programma verankert AI structureel en verantwoord in de organisatie, van eerste inspiratiesessie tot brede uitrol, met aandacht voor medewerkers, governance en compliance. Zo zetten gemeenten AI in op een manier die past binnen publieke waarden en de AI Act, in plaats van losse, risicovolle experimenten. Het programma is herbruikbaar en deelbaar, zodat gemeenten van elkaars adoptieaanpak kunnen leren.",
+                "website": "https://www.asecloud.nl",
+                "git_repo": "n.v.t. dit is een begeleidingsdienst, geen software.",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 136,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 3",
+                "toelichting": "Het programma bouwt AI-geletterdheid en competentie op binnen de organisatie. Daardoor kunnen medewerkers zelf sneller en verantwoord nieuwe AI-toepassingen oppakken, wat de drempel verlaagt om in te spelen op nieuwe maatschappelijke opgaven."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 136,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 2",
+                "toelichting": "De bijdrage is indirect en faciliterend: door medewerkers AI verantwoord te leren inzetten, kan de dienstverlening aan inwoners sneller en consistenter worden. Het programma zelf heeft geen directe interactie met de inwoner."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 136,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 1",
+                "toelichting": "Het programma geeft inwoners geen directe regie over hun eigen gegevens. Wel besteedt het expliciet aandacht aan AVG- en AI Act-bewustzijn en privacy-by-design, wat verantwoorde omgang met gegevens van inwoners bevordert."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 9
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 136,
+                "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 136,
+                "api_standaard": "n.v.t. dit is een begeleidingsprogramma zonder software of API's."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 136,
+                "organisatie_id": 6,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 136,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 136,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-06-23T13:44:30Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=137 | naam=ASE AI-Consulting Services | contactorganisatie=ASE Cloud Services | po=Alain van Zwol | po_email=info@asecloud.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Initiatie (al een snelle POC) | bron_lagen=Laag 4: Procesinrichting;Laag 5: Interactie;Laag 3: Connectiviteit;Laag 2: Diensten;Laag 1: Databronnen;Hosting- en infrastructuur",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 137
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 137,
+                "datum": "2025-09-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 137,
+                "planningsinfo": "n.v.t. geen aparte planningspagina; trajecten zijn op maat per opdracht. Nadere informatie via www.asecloud.nl.",
+                "startdatum": "2025-09-01",
+                "ready_for_use": "2026-06-01",
+                "waar_tegenaan_gelopen": "(1) De AI Act en bijbehorende richtlijnen zijn nog in ontwikkeling, waardoor advies een bewegend doel is; we houden onze kennis daarom continu actueel. (2) Het in balans brengen van innovatie en compliance bij organisaties, zodat vooruitgang en zekerheid samengaan. (3) Het borgen van onafhankelijkheid in ons advies naast ons eigen productaanbod, wat we oplossen met transparantie over onze rollen.",
+                "fase": "Initiatie (al een snelle POC)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 137,
+                "naam": "ASE AI-Consulting Services",
+                "omschrijving": "AI-Consulting Services biedt onafhankelijk advies voor de hele AI-cyclus: strategie, use-case-discovery, vendor-selectie, AI Act-gereedheid, implementatiebegeleiding en compliance-trajecten. Het advies is op maat per organisatie, met oog voor haalbaarheid en bewijslast, en is gebaseerd op aantoonbare eigen ervaring met AI Act-classificatie, AI Impact Assessment en een ISO/IEC 42001-managementsysteem. | Componenten: Geen softwarecomponenten. Dienstonderdelen: strategie- en visievorming, use-case-discovery, leveranciersonafhankelijke vendor-selectie, AI Act-gereedheid (classificatie en AI Impact Assessment), implementatiebegeleiding en compliance-trajecten (waaronder een ISO/IEC 42001 GAP-assessment), op maat per organisatie. | Parallel gebruik: n.v.t. dit is een adviesdienst en geen software.",
+                "pitch": "Veel gemeenten willen met AI aan de slag, maar lopen vast op onafhankelijk advies: leveranciers adviseren naar hun eigen product toe, en de AI Act maakt keuzes onzeker. ASE biedt onafhankelijk advies voor de hele AI-cyclus, van strategie en use-case-discovery tot vendor-selectie, AI Act-gereedheid, implementatiebegeleiding en compliance. Anders dan adviseurs met alleen PowerPoints bouwen wij zelf, dus advies is praktisch en haalbaar, met oog voor bewijslast. We hebben de AI Act-classificatie, het AI Impact Assessment en een ISO/IEC 42001-managementsysteem voor ons eigen platform zelf doorlopen, dus we adviseren vanuit aantoonbare praktijkervaring.",
+                "website": "https://www.asecloud.nl",
+                "git_repo": "n.v.t. dit is een adviesdienst, geen software.",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 137,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 3",
+                "toelichting": "Onafhankelijk, leveranciersneutraal advies helpt gemeenten sneller en beter onderbouwde AI-keuzes te maken en vendor lock-in te voorkomen. Daardoor kunnen ze wendbaarder inspelen op nieuwe opgaven en op veranderende regelgeving zoals de AI Act."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 137,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 2",
+                "toelichting": "De bijdrage is indirect en faciliterend: betere en compliant AI-keuzes leiden uiteindelijk tot snellere en betrouwbaardere dienstverlening. De dienst zelf heeft geen directe interactie met de inwoner."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 137,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 1",
+                "toelichting": "Het advies geeft inwoners geen directe regie over hun eigen gegevens. Wel versterkt het de naleving van AVG en AI Act en de aandacht voor datasoevereiniteit, waardoor gegevens van inwoners beter beschermd worden."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 9
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 137,
+                "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 137,
+                "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 137,
+                "apistandaard_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 137,
+                "api_standaard": "n.v.t. dit is een adviesdienst zonder eigen software of API's. Bij vendor-selectie- en implementatieadvies wegen we open standaarden wel mee"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 137,
+                "organisatie_id": 6,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 137,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 137,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-07-15T11:06:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=138 | naam=Wmo Assistent | contactorganisatie=ASE Cloud Services | po=Alain van Zwol | po_email=alain.van.zwol@asecloud.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Initiatie (al een snelle POC) | bron_lagen=Laag 5: Interactie;Laag 2: Diensten;Hosting- en infrastructuur",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 138
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 138,
+                "datum": "2026-03-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 138,
+                "planningsinfo": "De planning wordt beheerd in de interne roadmap van ASE Cloud Services en is nog niet publiek ontsloten. Bij het aangaan van een pilot wordt een gezamenlijk implementatieplan opgesteld conform de Ontwerp- en Ontwikkelprocedure van ASE: zeven formele fasen, met design review en een formele acceptatietest door de gemeente.",
+                "startdatum": "2026-03-01",
+                "ready_for_use": "2026-07-15",
+                "waar_tegenaan_gelopen": "1. Gemeentelijke beleidsdocumentatie is niet ingericht op machinale ontsluiting. Verordeningen, beleidsregels, nadere regels en werkinstructies leven verspreid over PDF's, intranetpagina's en Word-documenten, vaak zonder eenduidig versiebeheer en met onderlinge verwijzingen die niet expliciet zijn gemaakt. De kwaliteit van de kennisbank bepaalt direct de kwaliteit van het antwoord. Dit is geen technisch probleem maar een informatiebeheerprobleem, en dat los je alleen samen met de gemeente op. Wij hebben hiervoor kwaliteitseisen voor kennisbankinhoud vastgelegd in ons AI Data Governance Beleid, maar de praktische inrichting per gemeente blijft de grootste implementatie-inspanning. 2. Betrouwbaarheid bij juridische en beleidsmatige teksten. Een taalmodel dat een normtijd of een bepaling \"bijna goed\" weergeeft, is in dit domein schadelijker dan geen antwoord. Onze mitigatie: strikte RAG-begrenzing tot de eigen kennisbank, verplichte bronvermelding bij elk antwoord, guardrails en antwoordfiltering, expliciete weigering bij vragen buiten de kennisbank, en een gevalideerd verbod op juridisch, medisch of financieel advies. Wij hebben hierop LLM/RAG-penetratietests en OWASP LLM Top 10-tests uitgevoerd. Prompt injection blijft een reëel en actief gemonitord restrisico. 3. Marktvalidatie zonder referentiegemeente. Gemeenten kopen van elkaar. Zonder een eerste gemeente met harde cijfers (doorlooptijd, bespaarde voorbereidingstijd, bezwaarpercentage) blijft de propositie een belofte. Dat is voor ons de reden om via Common Ground het gesprek te zoeken in plaats van via een aanbesteding: wij zoeken pilotgemeenten die willen meebouwen aan de meetlat, niet alleen aan het product.",
+                "fase": "Initiatie (al een snelle POC)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 138,
+                "naam": "Wmo Assistent",
+                "omschrijving": "De Wmo Assistent is een interne AI-kennisassistent voor medewerkers in het sociaal domein. Consulenten, klantmanagers en wijkteammedewerkers stellen in gewone taal vragen over de Wmo-regelingen, verordening, beleidsregels en werkprocedures van hún eigen gemeente, en krijgen direct antwoord met bronvermelding naar het onderliggende document. De applicatie wordt per gemeente ingericht op basis van de eigen documentatie. Er wordt geen landelijke standaardinhoud opgelegd. De assistent is uitsluitend informatief: er worden geen besluiten genomen, geen indicaties gesteld en geen cliëntdossiers verwerkt. De verantwoordelijkheid blijft volledig bij de consulent (human-in-the-loop). De Wmo Assistent draait op het IRIS AI-platform van ASE Cloud Services: een RAG-architectuur met een per klant geïsoleerde vector-database. Hosting is naar keuze van de gemeente, door ASE op Europese infrastructuur of on-premise in de eigen omgeving, uitgerold via Infrastructure-as-Code. De chat-interface is WCAG 2.2 niveau AA getoetst en meertalig. Het platform is viervoudig ISO-gecertificeerd (27001, 27701, 9001, 42001) en AI Act-geclassificeerd als laagrisico. | Componenten: Chat-interface (React-widget, WCAG 2.2 AA-conform, integreerbaar in intranet of als standalone webapp) RAG-pipeline (Retrieval Augmented Generation): semantic search over de gemeentelijke kennisbank Vector database per gemeente (Qdrant of ChromaDB), volledig geïsoleerd per organisatie Embedding-model (sentence-transformers, lokaal draaiend, zonder externe API) LLM-laag: Mistral AI (EU, Frankrijk) of een lokaal open-source model via Ollama op eigen GPU-infrastructuur. De keuze ligt bij de gemeente. Prompt- en guardrail-module (antwoordfiltering, verplichte bronvermelding, weigering bij vragen buiten de kennisbank) Kennisbankbeheer en admin panel (documentbeheer, versiebeheer, herindexering) Rolgebaseerde toegang (RBAC) met SSO via OpenID Connect (Authentik) Feedbackwidget en kwaliteitsmonitoring Monitoring- en loggingstack (Prometheus, Grafana, Loki) Deploymentmodule op basis van Infrastructure-as-Code (containers, Docker/Kubernetes) | Parallel gebruik: Ja, volledig. De Wmo Assistent vervangt geen bestaand systeem en grijpt niet in op de vakapplicatie. De applicatie draait naast de bestaande Wmo-suite (Suite4SD, Civision, WIZportaal of vergelijkbaar) en ontsluit uitsluitend beleidsdocumentatie: de gemeentelijke verordening maatschappelijke ondersteuning, beleidsregels, nadere regels, normtijden en werkinstructies. Er is geen koppeling met het zaaksysteem vereist en er worden geen cliëntgegevens verwerkt. De consulent kan de applicatie vanaf dag één naast zijn bestaande werkwijze gebruiken. Bij uitschakeling verandert er niets aan het primaire proces.",
+                "pitch": "De Wmo is landelijk geregeld. De uitvoering is dat niet. Elke gemeenteraad stelt een eigen verordening, eigen beleidsregels, eigen normtijden en een eigen invulling van \"gebruikelijke hulp\" vast. Consulenten moeten die lokale regels dagelijks toepassen, terwijl de documentatie verspreid is over verordening, beleidsregels, werkinstructies en jurisprudentie, en periodiek wijzigt. De Wmo Assistent is een interne AI-kennisassistent voor Wmo-consulenten, klantmanagers en medewerkers van het sociaal wijkteam. Een medewerker stelt een vraag in gewone taal (\"wat zijn onze normtijden voor schoon huis bij een eenpersoonshuishouden?\") en krijgt antwoord op basis van uitsluitend de eigen gemeentelijke documenten, altijd mét bronvermelding naar het artikel of de beleidsregel. De assistent neemt geen besluiten en doet geen indicaties. De output is informatief, de consulent blijft verantwoordelijk. Waarom dit relevant is voor andere gemeenten: Het probleem is universeel, de oplossing lokaal. De pijn (consulententekort, inwerktijd van nieuwe medewerkers, inconsistente toepassing van eigen beleid, oplopende Wmo-uitgaven) is bij vrijwel elke gemeente identiek. De inhoud verschilt volledig. De Wmo Assistent scheidt die twee: het platform is generiek, de kennisbank is 100% van de gemeente. Uw verordening past in de applicatie, niet andersom. Geen lock-in, geen zwarte doos. De applicatie is gecontaineriseerd en volledig via Infrastructure-as-Code uit te rollen. Een gemeente kan kiezen: gehost door ASE op Europese infrastructuur, of on-premise in de eigen omgeving of eigen cloud. Kennisbanken en vector-databases zijn exporteerbaar in standaardformaten. De LLM-laag is vervangbaar, inclusief door een volledig lokaal draaiend open-source model. In dat geval verlaat geen enkele query de gemeentelijke infrastructuur. Compliance is aantoonbaar, niet beloofd. ASE Cloud Services is viervoudig ISO-gecertificeerd: ISO/IEC 27001:2022, ISO 9001:2015 en ISO/IEC 42001:2023 (ENC certificering, 28 april 2026). De chat-interface is WCAG 2.2 niveau AA getoetst door Accessibility.nl en Bartiméus (heronderzoek januari 2026). Bij een doelgroep in het sociaal domein is dat geen vinkje maar een inhoudelijke eis. Het onderliggende platform is AI Act-geclassificeerd als laagrisico, met de transparantieplicht uit artikel 50 geïmplementeerd. Er is een AI Impact Assessment en een DPIA-screening beschikbaar. Meedoen loont voor de kennisbank, niet voor de code. Waar gemeenten samen winst kunnen boeken is niet in de applicatie, maar in de gedeelde vraagpatronen: welke vragen stellen consulenten, welke beleidsteksten blijken structureel onduidelijk, welke formuleringen leiden tot bezwaar. Wij nodigen gemeenten uit om op dat niveau samen te werken, geanonimiseerd en zonder inhoudelijke data te delen. Wij zoeken 2 pilotgemeenten voor Q4 2026",
+                "website": "https://www.asecloud.nl",
+                "git_repo": "Niet openbaar beschikbaar. De broncode wordt beheerd in een private repository op Codeberg (EU-gehost, Forgejo), met Woodpecker CI voor de deploymentketen. De Wmo Assistent is proprietaire software van ASE Cloud Services B.V. ASE onderschrijft de Common Ground-principes op het vlak van open standaarden, dataportabiliteit en het voorkomen van vendor lock-in, en heeft dat contractueel en architectonisch geborgd: containerisatie, Infrastructure-as-Code, exporteerbare kennisbanken en vector-databases in standaardformaten, een vervangbare LLM-laag, en een gedocumenteerde exit-strategie met een migratietermijn van maximaal 90 dagen. Wij zijn bereid het gesprek aan te gaan over gedeeltelijke openstelling van componenten en over broncode-escrow ten behoeve van deelnemende gemeenten.",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 138,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 3",
+                "toelichting": "Wmo-beleid verandert doorlopend: verordeningen worden herzien, normtijden aangepast, en per 1 januari 2027 komt de omslag naar de inkomensafhankelijke eigen bijdrage eraan, een uitvoerings- en communicatie-opgave van formaat. Bij elke wijziging moet de kennis van tientallen consulenten meebewegen. De Wmo Assistent verkort die doorlooptijd: de gemeente actualiseert de kennisbank, en het antwoord dat de consulent krijgt is diezelfde dag actueel, inclusief verwijzing naar de gewijzigde bepaling. De inwerktijd van nieuwe of tijdelijke medewerkers wordt korter, wat direct relevant is bij het huidige consulententekort. Bewust geen 4: de Wmo Assistent verandert de organisatie of het proces zelf niet. Het is een ondersteunende laag op bestaande kennis en verhoogt de wendbaarheid van medewerkers, niet die van de gemeentelijke architectuur. Een 4 zou een claim zijn die wij bij een gemeente niet kunnen waarmaken."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 138,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 3",
+                "toelichting": "De bijdrage is indirect maar concreet: een consulent die het eigen beleid sneller en consistenter vindt, geeft de inwoner een sneller en beter onderbouwd antwoord. Consistente toepassing van de eigen verordening verkleint bovendien de kans op onjuiste of onvoldoende gemotiveerde beschikkingen, de belangrijkste bron van bezwaarschriften in het Wmo-domein. Elke bepaling wordt met bronvermelding teruggegeven, waardoor de consulent de motivering direct kan onderbouwen. Bewust geen 4: de Wmo Assistent heeft geen direct contact met de inwoner. De dienstverleningswinst loopt volledig via de medewerker. Wij hebben deze effecten nog niet bij een gemeente gemeten. Kwantificering (doorlooptijd, bezwaarpercentage, voorbereidingstijd per gesprek) is een expliciet doel van de beoogde pilot."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 138,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 1",
+                "toelichting": "Geen bijdrage, en dat is een bewuste ontwerpkeuze. De Wmo Assistent is een interne kennisassistent en verwerkt geen persoonsgegevens van inwoners: geen cliëntdossiers, geen BSN, geen koppeling met het zaaksysteem of de vakapplicatie. De kennisbank bevat uitsluitend beleidsdocumentatie. De enige gegevens die het systeem vastlegt zijn sessie-identificatoren en de vraag- en antwoordlogs van medewerkers, ten behoeve van kwaliteitsbewaking, met een gedefinieerde retentietermijn. Wij kiezen ervoor dit expliciet op 1 te zetten in plaats van de vraag creatief in te vullen. Regie op gegevens is een reëel en zwaarwegend thema in het sociaal domein. Een instrument dat er niets aan bijdraagt, moet dat gewoon zeggen. De keerzijde is wel relevant: doordat er geen inwonergegevens in het systeem zitten, is het privacy-risicoprofiel navenant laag. De DPIA-screening voor het onderliggende platform concludeert dat een formele DPIA niet vereist is, en de AI Act-classificatie is laagrisico juist omdat er geen sprake is van beoordeling van uitkeringen of voorzieningen."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 138,
+                "domein_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 138,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 138,
+                "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 138,
+                "apistandaard_id": 17
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 138,
+                "apistandaard_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 138,
+                "organisatie_id": 6,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefinfo": {
+                "initiatief_id": 138,
+                "informatie": "Leverancier: ASE Cloud Services B.V. (Zevenhuizen, gemeente Zuidplas): ontwikkelaar en product owner OVHcloud (FR): hostinginfrastructuur bij de door ASE gehoste variant. Niet vereist: bij on-premise deployment wordt geen enkele ASE-leverancier gebruikt. Mistral AI (FR): LLM-API bij de standaardconfiguratie. Vervangbaar door een lokaal open-source model via Ollama; Leverancier: waarmee de afhankelijkheid vervalt. Codeberg e.V. (DE): Git repository hosting voor de ontwikkelketen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 138,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 138,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-07-17T10:48:58Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=139 | naam=Anonify | contactorganisatie=Anonify B.V. | po=Jorrit Heijn | po_email=info@anonify.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding) | bron_lagen=Laag 5: Interactie;Laag 4: Procesinrichting;Laag 2: Diensten;Hosting- en infrastructuur",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 139
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 139,
+                "datum": "2024-01-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 139,
+                "planningsinfo": "Anonify is operationeel en wordt continu doorontwikkeld op basis van wetgeving, gebruikersfeedback en ontwikkelingen op het gebied van AI en informatiebeveiliging. De productroadmap is niet openbaar beschikbaar, maar kan waar relevant met deelnemende gemeenten worden besproken.",
+                "startdatum": "2024-01-01",
+                "ready_for_use": "2024-07-01",
+                "waar_tegenaan_gelopen": "De grote variatie in gemeentelijke documenten, zoals scans, verschillende PDF-structuren, handgeschreven onderdelen en wisselende beeldkwaliteit. Dit stelt hoge eisen aan OCR en automatische herkenning. De vereiste nauwkeurigheid bij privacygevoelige en juridisch relevante documenten. Volledige automatisering is niet verantwoord, waardoor een goede combinatie van AI en menselijke controle noodzakelijk is. Verschillen tussen gemeentelijke informatievoorzieningen, beveiligingseisen en documentprocessen. Integraties met zaak- en documentmanagementsystemen vragen daardoor regelmatig om maatwerk of aanvullende afstemming.",
+                "fase": "Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 139,
+                "naam": "Anonify",
+                "omschrijving": "Anonify is een webapplicatie waarmee gemeenten PDF-documenten met behulp van OCR en AI kunnen controleren en anonimiseren. De toepassing herkent privacygevoelige gegevens, ondersteunt menselijke beoordeling en exporteert documenten die gereed zijn voor Woo- en andere publicatieprocessen. | Componenten: Anonify bestaat uit een webapplicatie voor documentupload, OCR en tekstextractie, automatische herkenning van persoonsgegevens met AI, een controle- en redactiewerkruimte, gebruikers- en rechtenbeheer, documentverwerking, auditlogging, beveiligde opslag, export van geanonimiseerde documenten en een API-laag voor integraties met andere systemen. | Parallel gebruik: Ja. Anonify is een zelfstandige toepassing die parallel kan worden gebruikt naast bestaande documentmanagement-, zaaksystemen en publicatieprocessen. De toepassing hoeft bestaande systemen niet te vervangen, maar voegt een gespecialiseerde anonimiserings- en controlelaag toe.",
+                "pitch": "Gemeenten verwerken grote hoeveelheden documenten die vóór publicatie gecontroleerd en geanonimiseerd moeten worden, bijvoorbeeld binnen Woo- en AVG-processen. Dit is handmatig tijdrovend en foutgevoelig. Anonify herkent met behulp van OCR en AI automatisch privacygevoelige gegevens, zoals namen, contactgegevens en identificerende informatie. Een medewerker houdt altijd de controle en kan de voorgestelde anonimiseringen beoordelen, aanpassen en definitief toepassen. Hierdoor kunnen gemeenten documenten sneller, consistenter en controleerbaar gereedmaken voor publicatie. Anonify is zelfstandig inzetbaar, kan naast bestaande zaaksystemen worden gebruikt en kan via API-koppelingen in bestaande processen worden geïntegreerd.",
+                "website": "https://anonify.nl/",
+                "git_repo": "De broncode van Anonify wordt beheerd in een private GitHub-omgeving en is niet openbaar beschikbaar. Toegang tot technische documentatie en relevante integratie-informatie kan op verzoek worden verstrekt.",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 139,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 3",
+                "toelichting": "Anonify is als zelfstandige toepassing snel naast bestaande systemen inzetbaar. Gemeenten kunnen hierdoor hun anonimiseringscapaciteit opschalen zonder eerst een volledig document- of zaaksysteem te vervangen. De modulaire verwerking en beschikbare API maken verdere integratie in bestaande processen mogelijk."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 139,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 4",
+                "toelichting": "Door persoonsgegevens sneller en consistenter te herkennen en anonimiseren, kunnen gemeenten documenten eerder en met minder handmatig werk publiceren. Dit ondersteunt kortere doorlooptijden van Woo-verzoeken, vermindert de foutkans en helpt medewerkers om meer documenten zorgvuldig af te handelen."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 139,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 2",
+                "toelichting": "Anonify biedt inwoners niet rechtstreeks een omgeving voor regie op hun gegevens. De toepassing draagt hier indirect aan bij door persoonsgegevens in openbaar te maken documenten beter te beschermen en gemeenten te ondersteunen bij zorgvuldige gegevensverwerking en publicatie."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 139,
+                "domein_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 139,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 139,
+                "domein_id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 139,
+                "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 139,
+                "gemeente_id": 1696,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 139,
+                "gemeente_id": 267,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 139,
+                "gemeente_id": 546,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 139,
+                "gemeente_id": 351,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 139,
+                "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 139,
+                "apistandaard_id": 17
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 139,
+                "apistandaard_id": 15
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 139,
+                "organisatie_id": 124,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefinfo": {
+                "initiatief_id": 139,
+                "informatie": "Leverancier: Anonify B.V. is ontwikkelaar en leverancier van de toepassing. Er zijn momenteel geen andere leveranciers structureel betrokken bij de ontwikkeling."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 139,
+                "type": "Gemeenten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 139,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 139,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-08-18T19:20:26Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=140 | naam=conneqt city | contactorganisatie=Conneqt BV | po=Leo Pape | po_email=leo@city.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding) | bron_lagen=Hosting- en infrastructuur;Laag 1: Databronnen;Laag 2: Diensten;Laag 3: Connectiviteit;Laag 4: Procesinrichting;Laag 5: Interactie",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 140
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 140,
+                "datum": "2020-01-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 140,
+                "planningsinfo": "Nu nog intern (JIRA)",
+                "startdatum": "2020-01-01",
+                "ready_for_use": "2026-01-15",
+                "waar_tegenaan_gelopen": "Technisch waren er genoeg uitdagingen, echter het product staat als een huis. Waar we vooral tegenaan lopen is dat wij als kleine partij met een enthousiast team van 4 ontwikkelaars niet sterk zijn in marketing.",
+                "fase": "Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 140,
+                "naam": "conneqt city",
+                "omschrijving": "Een digitaal platform voor het aanvragen, beoordelen, uitgeven en beheren van vergunningen, parkeervergunningen en ontheffingen maar ook andere producten | Componenten: behalve de haal-centraal api's geen andere componenten vanuit het common-ground inititatief (als dat wordt bedoeld) | Parallel gebruik: Ja",
+                "pitch": "Sinds 2020 zijn wij bezig met de ontwikkeling van een uitgiftesysteem voor verkeersontheffingen en parkeervergunningen. Het is een Multitentant SaaS applicatie, ontwikkeld in .NET, en gehost in AKS (Kubernetes) We hebben dit de laatste jaren helemaal volgens de common-ground princiepes ontwikkeld, met o.a. haal-centraal koppeling met de BRP, maar ook me de KvK, een DigiD ClusterAansluiting. Daarnaast een visuele process designer waarmee zowel Business logica kan worden geconfigureerd (als Low Code, klein beetje vergelijkbaar met Node-Red) Maar waarmee ook de UI laag kan worden samengesteld middels Low-Code. Omdat dat configureren van processe zo eenvoudig kan hebben we ook al diverse andere processen ingericht voor een aantal gemeenten.",
+                "website": "city.nl (Deze is echter aan het begin van het initiatief online gezet, en nog niet actueel)",
+                "git_repo": "nog niet open source",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 140,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 4",
+                "toelichting": "Vanwege het Low-Code karakter n de visuele proces-designer is en enkele minuten tijd een nieuw proces ingericht, gepublished en in productie."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 140,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 4",
+                "toelichting": "Individuele processen zijn te delen met andere gemeenten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 140,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 3",
+                "toelichting": "De link in vraag 23 werkt niet! Waar mogelijk slaan wij geen gegevens op in onze eigen applicatie, zo ondersteund onze applicatie dat bij het openen van een persoons dossier de gegevens rechtstreeks uit de BRP worden gelezen. Verder weet ik niet precies wat er met vraag 23 nog meer wordt bedoeld met regie, vandaar een 3 :)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 140,
+                "domein_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 140,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 140,
+                "gemeente_id": 1961,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 140,
+                "gemeente_id": 310,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 140,
+                "gemeente_id": 1961,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 140,
+                "gemeente_id": 310,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 140,
+                "gemeente_id": 796,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 140,
+                "apistandaard_id": 23
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 140,
+                "apistandaard_id": 19
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 140,
+                "apistandaard_id": 21
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 140,
+                "api_standaard": "Haal centraal api standaard"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 140,
+                "organisatie_id": 127,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 140,
+                "type": "Gemeenten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 140,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 140,
+                "type": "Rijk"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 140,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-08-21T00:17:25Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=141 | naam=Openmelding | contactorganisatie=Odeva | po=Ramon van Sprundel | po_email=ramon@odeva.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Realisatie (gaat binnenkort draaien bij eerste gemeenten) | bron_lagen=Laag 5: Interactie",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 141
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 141,
+                "datum": "2026-08-06"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 141,
+                "planningsinfo": "We kunnen binnen codeberg issues bijhouden indien dit nodig gaat zijn.",
+                "startdatum": "2026-08-06",
+                "ready_for_use": "2026-08-17",
+                "waar_tegenaan_gelopen": "Geen betrouwbare bron voor NL-Alert-ingestie. De beschikbare API is ongedocumenteerd en draait op een leveranciersdomein. Ook is Twitter tegenwoordig een lastige integratie, omdat gemeentes nog niet zo snel begrijpen dat dit geld kost. Er zijn al wat gemeentes die een eigen Mastodon instantie hebben.",
+                "fase": "Realisatie (gaat binnenkort draaien bij eerste gemeenten)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 141,
+                "naam": "Openmelding",
+                "omschrijving": "openmelding is een zelf-hostbare open-source alert hub. Een communicatiemedewerker schrijft één melding en publiceert die naar webhook-abonnees (website, app), Mastodon en een publieke RSS/Atom-feed. Elke statuswijziging en elke afleverpoging staat in een append-only auditlogboek. | Componenten: Redactie- en goedkeuringsconsole (vier-ogen bij severe/extreme), kanaal-fan-out (webhooks met HMAC-SHA256, Mastodon, RSS/Atom), REST API met OpenAPI 3, onveranderlijk auditlogboek, achtergrondverwerking met retries en circuit breaker. | Parallel gebruik: Het kan prima naast elkaar gebruikt worden",
+                "pitch": "Er is geen neutrale open-source standaard waarmee een gemeente één melding schrijft en die consistent op website, app en sociale kanalen krijgt. Nu gebeurt dat met de hand (traag, foutgevoelig, niet auditeerbaar) of via gesloten SaaS. Dit soort systemen lijken simpel maar worden altijd door features gerusht, waardoor je met een half-gebakken app zit die ~10x voor elke gemeente wordt gemaakt. Multi-tenacy is het doel hier, en features worden voor de lange termijn uitgedacht ipv even snel in elkaar geflanst te worden. Meedoen is goedkoop omdat het kanaalcontract vaststaat: een nieuw kanaal (Bluesky, CAP, e-mail, SMS) is één adapter.",
+                "website": "https://openmelding.nl (API-documentatie: https://app.openmelding.nl/api/docs)",
+                "git_repo": "https://codeberg.org/odeva/openmelding, alleen staat deze nog niet openbaar",
+                "type": "Toepassing",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 141,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 3",
+                "toelichting": "Een nieuw uitgaand kanaal kost een adapter in plaats van een project, en als de gemeente kiest om dit zelf te hoste, zijn ze niet afhankelijk van een leverancier voor het aanzetten ervan."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 141,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 3",
+                "toelichting": "Bij een storing of incident staat dezelfde tekst tegelijk op alle kanalen, met een goedkeuringsstap bij hoge urgentie en een controleerbaar spoor achteraf. Dat haalt handwerk en tijdverschil tussen kanalen weg."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 141,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 1",
+                "toelichting": "openmelding verwerkt geen persoonsgegevens"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 141,
+                "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 141,
+                "domein_id": 9
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 141,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 141,
+                "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 141,
+                "apistandaard_id": 17
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 141,
+                "apistandaard_id": 15
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 141,
+                "apistandaard_id": 46
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 141,
+                "api_standaard": "RFC 7807 application/problem+json voor fouten; cursorpaginering via Link (RFC 8288); Atom (RFC 4287) en RSS 2.0"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 141,
+                "organisatie_id": 129,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 141,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 141,
+                "type": "Gemeenten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 141,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-08-31T10:25:51Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=142 | naam=Corsa Archiefbeheer | contactorganisatie=BCT | po=Max Salden | po_email=max.salden@bctsoftware.com | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Realisatie (gaat binnenkort draaien bij eerste gemeenten) | bron_lagen=Laag 1: Databronnen;Laag 3: Connectiviteit;Laag 4: Procesinrichting",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 142
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 142,
+                "datum": "2026-09-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 142,
+                "planningsinfo": "Kan gedeeld worden",
+                "startdatum": "2026-09-01",
+                "ready_for_use": "2026-10-01",
+                "waar_tegenaan_gelopen": "Dat elke standaard, zowel nieuw als oud nog steeds vrij geïnterpreteerd wordt door leveranciers. Daarbij zien we ook dat leveranciers bewust functionaliteit uit de standaarden haalt om lijfsbehoud. Zo is het als voorbeeld in een traditioneel zaaksysteem van een grote leverancier in Nederland helemaal niet mogelijk om via de ZGW-API informatie te vernietigen, terwijl ze wel pretenderen de ZGW-API te ondersteunen.",
+                "fase": "Realisatie (gaat binnenkort draaien bij eerste gemeenten)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 142,
+                "naam": "Corsa Archiefbeheer",
+                "omschrijving": "Met Archiefbeheer in Corsa Workspace richt je vernietigen en opschonen centraal en geautomatiseerd in. Geen losse Excel-lijsten, maar één workflow waarin recordmanager en proceseigenaar samenwerken. Volledig digitaal en aantoonbaar compliant. | Componenten: Gene | Parallel gebruik: Ja",
+                "pitch": "Het is eigen gemaakte oplossing om in meerdere bronnen informatie te vernietigen, en overdragen. Het maakt gebruik van zowel nieuwe ZGW-API standaarden als bestaande standaarden, zoals Webservices, Microsoft services en ZSDMS. Gemeenten zijn op dit moment het product aan het implementeren centraal component voor de vernietiging. Op deze manier hoeven ze geen aparte vernietigingsmodules aan te schaffen binnen alle vakapplicaties.",
+                "website": "https://corsa.nl/oplossing/archiefbeheer/",
+                "git_repo": "Betreft geen open source",
+                "type": "Toepassing",
+                "CG_laag": "Laag 4"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 142,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 4",
+                "toelichting": "Het component is volledig los inzetbaar, en op zijn eigen wijze verbonden aan alle bronnen binnen het informatielandschap"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 142,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 4",
+                "toelichting": "Het verbeteren van dienstverlening zit niet alleen in het verbeteren aan de voorkant. Maar vooral ook aan de achterkant. Wij zijn er van overtuigd dat een gemeente niet de juiste dienstverlening kan bieden naar de burger als het gaat om de Woo, en naleving van wetgeving zoals de Archiefwet als het Archief zelf helemaal niet klopt."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 142,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 3",
+                "toelichting": "Het vernietigen en overdragen zorgt ook voor opschoning van duplicaten en vooral ook voor een snellere overbrenging naar een archiefdienst. De plek waar de burger snel bij zijn informatie kan."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 142,
+                "domein_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 142,
+                "domein": "Archief/Informatiebeheer"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 142,
+                "gemeente_id": 882,
+                "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefgemeente": {
+                "initiatief_id": 142,
+                "gemeente_id": 882,
+                "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 142,
+                "andersDanGemeente": "Rijswijk"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 142,
+                "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 142,
+                "organisatie_id": 125,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 142,
+                "type": "Gemeenten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 142,
+                "type": "Ketenpartners"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 142,
+                "status": "geaccepteerd",
+                "toelichting": "Aanmelding via het formulier, geaccepteerd bij het inlezen van de aanvulling."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-22T16:36:22Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=143 | naam=Test Mark (sorry) | contactorganisatie=Paratmos BV | po=Mark Westbroek | po_email=mark@paratmos.nl | bron_producttype=Toepassing (bruikbare oplossing) | bron_fase=Initiatie (al een snelle POC) | bron_lagen=Laag 2: Diensten;Laag 1: Databronnen",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 143
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 143,
+                "datum": "2026-01-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 143,
+                "planningsinfo": "https://github.com/MarkWestbroek/Bitemporal_2026/blob/main/bitemp_register_v06/docs/BACKLOG.md",
+                "startdatum": "2026-01-01",
+                "ready_for_use": "2026-10-15",
+                "waar_tegenaan_gelopen": "Dat het mogelijk is om een gedegen register te bouwen. Dat MDA enorm helpt bij de standaardisatie van de API's.",
+                "fase": "Initiatie (al een snelle POC)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 143,
+                "naam": "Test Mark (sorry)",
+                "omschrijving": "Model driven bitemporeel register + API + admin | Componenten: BitemporalBackend, BitemporalGraphQL, OmniumIDE admin interface, OmniumForms | Parallel gebruik: Op zich wel",
+                "pitch": "Elk nieuw te bouwen of up te graden register kan met dit product echt bitemporeel gemaakt worden. De API volgt automatisch de laatste standaarden door de MDA, model driven architecture, aanpak. Aansluiting van laag 4 applicaties via het canoniek model vergemakkelijkt de configuratie van proces en workflow aanzienlijk.",
+                "website": "omnium-ide.nl",
+                "git_repo": "https://github.com/MarkWestbroek/Bitemporal_2026",
+                "type": "Toepassing",
+                "CG_laag": "Laag 2"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 143,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 4",
+                "toelichting": "Model driven dus zeer snelle 'time to market'"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 143,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 4",
+                "toelichting": "Vaak wordt er om een register/ gegevens-probleem heengewerkt als er nieuwe eisen of wensen zijn, omdat het moeilijk aan te passen is. Flexiblele data leidt tot flexibeler functionaliteit."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 143,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 4",
+                "toelichting": "bitemporeel betekent dat: 1. niets verloren gaat en alles auditable en traceable is. 2. fouten corrigeerbaar zijn, idealiter volledig in de keten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 9
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 143,
+                "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 143,
+                "domein": "wat verder nog ter tafel komt"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 143,
+                "andersDanGemeente": "Common Ground"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 143,
+                "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 143,
+                "api_standaard": "GraphQL; CQRS"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 143,
+                "organisatie_id": 130,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 143,
+                "type": "VNG"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 143,
+                "type": "Gemeenten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 143,
+                "type": "Leveranciers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 143,
+                "type": "Rijk"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 143,
+                "type": "Ketenpartners"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "aanmeldstatus": {
+                "initiatief_id": 143,
+                "status": "in_behandeling",
+                "toelichting": "Aanmelding via het formulier, nog niet beoordeeld."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}
