@@ -186,3 +186,16 @@ Hierdoor gaat er geen data verloren: opgeschoonde namen worden als relatie vastg
 2. ~~Voeg een expliciete relatie `Initiatief` -> `Organisatie` toe.~~ **Gedaan** in v0.5.2 — `InitiatiefOrganisatie` (meervoudig) en `OrganisatieInfo` GE.
 3. ~~Introduceer opgeschoonde referentielijsten of mappingtabellen voor gemeenten, domeinen en API-standaarden.~~ Grotendeels **gedaan** — CBS-gemeenten, vaste domeinen en gerationaliseerde API-standaarden zijn als losse seeds beschikbaar.
 4. Controleer de **4 dubbele bron-ID's** (96–99) in de intake: deze verschijnen elk 2× in `Intake Portfolio Common Ground 1.json` en genereren dus dubbele entries.
+
+## Aanvulling 24 september 2026 — nieuwe aanmeldingen en API-standaarden
+
+- **Nieuwe aanmeldingen uit de Forms-export (.xlsx)**: `scripts/maak_cgpf_aanvulling_replay.py`
+  hergebruikt deze generator, maar hergebruikt bestaande organisaties/personen uit replay 4/5 op
+  naam (met aliassen voor varianten) en geeft nieuwe een id ná het hoogste bestaande; elk
+  initiatief krijgt een `Aanmeldstatus`. Zie `Replay files/README.md` stap 13.
+- **Matchregels API-standaarden uitgebreid** (`API_RULES`): typo `ZWG`, `OAS3`, `Objecttypes api`,
+  `OGC features API`, de URL van de gemma-zaken-standaard, `GraphQL` (lijst-id 49) en kaal
+  `Haal centraal` → Haal Centraal BRP Personen API. `CQRS` wordt genegeerd (architectuurpatroon,
+  geen standaard). Voor de al ingelezen initiatieven is dit met de hand rechtgezet in
+  `replay files/registraties-replay-correctie-apistandaarden-koppeling-2026-09-24.json`.
+

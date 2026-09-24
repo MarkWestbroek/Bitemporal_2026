@@ -25,8 +25,10 @@ maar de volgorde doet ertoe: latere replays verwijzen naar id's uit eerdere.
 | 11 | `registraties-replay-init-querydefinitie-publieke-initiatieven.json` | platform | backend met `QueryDefinitie` in losse GE's (23-09-2026) |
 | 12 | `registraties-replay-correctie-initiatief-tabelconfig-query-2026-09-24.json` | platform | 8, 11, en een frontend van na 24-09-2026 |
 | 13 | `registraties-replay-init-intake-aanvulling-2026-09-23.json` | platform | 4, 10 en een backend met `Aanmeldstatus`: de aanmeldingen 130–143 uit de Forms-export van 23-09-2026 (`Extra-data/2026-09-23 Aanmelden portfolio.xlsx`), 9 nieuwe organisaties (id 124–132) en 7 nieuwe personen (67–73), de rest hergebruikt; 143 (testaanmelding) op `in_behandeling`, de rest `geaccepteerd`. Gemaakt met `scripts/maak_cgpf_aanvulling_replay.py` |
+| 14 | `registraties-replay-init-apistandaarden-aanvulling-2026-09-24.json` | platform | 3: referentielijst ApiStandaard + 49 GraphQL, 50 Besluiten API |
+| 15 | `registraties-replay-correctie-apistandaarden-koppeling-2026-09-24.json` | platform | 4, 13, 14: tien initiatieven (38, 51, 52, 74, 79, 116, 127, 132, 140, 143) krijgen `InitiatiefAPIStandaard`-relaties voor standaarden die in de vrije tekst stonden (typo ZWG, OAS3, Objecttypes, kale 'Zaken; Documenten; …', ZGW-URL, GraphQL, 'Haal centraal' → BRP Personen); volledig gemapte restteksten afgevoerd, deels gemapte gecorrigeerd. Vereist een backend van na 24-09-2026 (GraphQL zonder peiltijdstip = actueel) |
 
-Stap 10 vóór 12: zonder aanmeldstatus is de publieke lijst leeg. Stap 13 na 10 (hergebruikt id's uit 4 en zet zelf de aanmeldstatus). Stap 10 tegen een backend
+Stap 10 vóór 12: zonder aanmeldstatus is de publieke lijst leeg. Stap 13 na 10 (hergebruikt id's uit 4 en zet zelf de aanmeldstatus); 15 na 13 en 14. Stap 10 tegen een backend
 zónder het GE `Aanmeldstatus` geeft een fout (`unsupported representatie key 'aanmeldstatus'`)
 — eerst de nieuwe backend starten, dan afspelen.
 
