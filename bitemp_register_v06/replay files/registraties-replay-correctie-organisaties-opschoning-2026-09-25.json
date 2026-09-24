@@ -1,0 +1,1195 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-25T09:00:00Z",
+  "source": "manual://claude-opschoning-organisaties",
+  "description": "Opschoning van organisaties uit de intake (replay 4): tekstflarden afgevoerd (A), samengestelde/dubbele namen omgehangen naar canonieke organisaties (B, met nieuwe organisaties via $nieuw-plaatshouders), gemeentenamen consistent, PO-contactpersoon bij de juiste organisatie. Vereist replay 4–7 en 13, en een backend met plaatshouder-id's (25-09-2026). Relatie-afvoer op initiatief_id + rel_id: die zijn gelijk op alle instanties die dezelfde replays in dezelfde volgorde hebben gedraaid — controleer vóór afspelen. Entries zijn 'registratie' (nieuwe hubs/afvoer); alleen de twee naamcorrecties zijn 'correctie' (nieuwe versie van bestaande naam): in een correctie-registratie kan geen nieuwe entiteit worden opgevoerd.",
+  "count": 30,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): ''pas toe of leg uit'' (organisatie 1) is geen organisatie — relatie met initiatief 46 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): ''pas toe of leg uit'' (organisatie 1) is geen organisatie — relatie met initiatief 46 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 46,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'beheer en ondersteuning van Atlas.' (organisatie 12) is geen organisatie — relatie met initiatief 81 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'beheer en ondersteuning van Atlas.' (organisatie 12) is geen organisatie — relatie met initiatief 81 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 81,
+                "rel_id": 4
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 12
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'cateraars' (organisatie 15) is geen organisatie — relatie met initiatief 50 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'cateraars' (organisatie 15) is geen organisatie — relatie met initiatief 50 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 50,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 15
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'hosting' (organisatie 53) is geen organisatie — relatie met initiatief 81 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'hosting' (organisatie 53) is geen organisatie — relatie met initiatief 81 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 81,
+                "rel_id": 3
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 53
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'ik hoop straks veel!' (organisatie 57) is geen organisatie — relatie met initiatief 108 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'ik hoop straks veel!' (organisatie 57) is geen organisatie — relatie met initiatief 108 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 108,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 57
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'implementatie' (organisatie 58) is geen organisatie — relatie met initiatief 81 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'implementatie' (organisatie 58) is geen organisatie — relatie met initiatief 81 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 81,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 58
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'professionele dienstverleners (als sprekers of trainers)' (organisatie 84) is geen organisatie — relatie met initiatief 50 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'professionele dienstverleners (als sprekers of trainers)' (organisatie 84) is geen organisatie — relatie met initiatief 50 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 50,
+                "rel_id": 4
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 84
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'technische dienstverleners (als audio visueel leveranciers)' (organisatie 105) is geen organisatie — relatie met initiatief 50 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'technische dienstverleners (als audio visueel leveranciers)' (organisatie 105) is geen organisatie — relatie met initiatief 50 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 50,
+                "rel_id": 3
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 105
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'Diverse DMS leveranciers. Openzaak' (organisatie 30) is geen organisatie — relatie met initiatief 106 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'Diverse DMS leveranciers. Openzaak' (organisatie 30) is geen organisatie — relatie met initiatief 106 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 106,
+                "rel_id": 3
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 30
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'meer-innovatie' (organisatie 69) is geen organisatie — relatie met initiatief 40 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'meer-innovatie' (organisatie 69) is geen organisatie — relatie met initiatief 40 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 40,
+                "rel_id": 4
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 69
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (A): 'Stadsbeheer' (organisatie 99) is geen organisatie — relatie met initiatief 75 en organisatie afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (A): 'Stadsbeheer' (organisatie 99) is geen organisatie — relatie met initiatief 75 en organisatie afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 75,
+                "rel_id": 4
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 99
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Conduction B.V Yard Acato Sim Groep Xxllnc' (organisatie 18) bij initiatief 63 vervangen door Conduction B.V., Yard Digital Agency, SIM Groep, Xxllnc, Acato",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Conduction B.V Yard Acato Sim Groep Xxllnc' (organisatie 18) bij initiatief 63 vervangen door Conduction B.V., Yard Digital Agency, SIM Groep, Xxllnc, Acato"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 63,
+                "organisatie_id": 122,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 63,
+                "organisatie_id": 96,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 63,
+                "organisatie_id": 121,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": "$nieuw.acato"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": "$nieuw.acato",
+                "naam": "Acato"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 63,
+                "organisatie_id": "$nieuw.acato",
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 63,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 18
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Conduction Sim Groep Xxllnc' (organisatie 20) bij initiatief 65 vervangen door Conduction B.V., SIM Groep, Xxllnc",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Conduction Sim Groep Xxllnc' (organisatie 20) bij initiatief 65 vervangen door Conduction B.V., SIM Groep, Xxllnc"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 65,
+                "organisatie_id": 96,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 65,
+                "organisatie_id": 121,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 65,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 20
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Decos etc.' (organisatie 24) bij initiatief 71 vervangen door Decos",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Decos etc.' (organisatie 24) bij initiatief 71 vervangen door Decos"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 71,
+                "organisatie_id": 23,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 71,
+                "rel_id": 6
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 24
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'ICATT en Maykin (beide via DImpact)' (organisatie 55) bij initiatief 109 vervangen door ICATT, Maykin Media",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'ICATT en Maykin (beide via DImpact)' (organisatie 55) bij initiatief 109 vervangen door ICATT, Maykin Media"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 109,
+                "organisatie_id": 54,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 109,
+                "organisatie_id": 68,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 109,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 55
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'MainFields en Nerds&Company' (organisatie 66) bij initiatief 118 vervangen door MainFields, Nerds&Company",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'MainFields en Nerds&Company' (organisatie 66) bij initiatief 118 vervangen door MainFields, Nerds&Company"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": "$nieuw.nerds"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": "$nieuw.nerds",
+                "naam": "Nerds&Company"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 118,
+                "organisatie_id": "$nieuw.nerds",
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 118,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 66
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Micpoint/MyFMS' (organisatie 71) bij initiatief 100 vervangen door Micpoint B.V.",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Micpoint/MyFMS' (organisatie 71) bij initiatief 100 vervangen door Micpoint B.V."
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 100,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 71
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Microsoft (Azure OpenAI)' (organisatie 73) bij initiatief 96 vervangen door Microsoft",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Microsoft (Azure OpenAI)' (organisatie 73) bij initiatief 96 vervangen door Microsoft"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 96,
+                "organisatie_id": 72,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 96,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 73
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'o.a. Conduction' (organisatie 75) bij initiatief 111 vervangen door Conduction B.V.",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'o.a. Conduction' (organisatie 75) bij initiatief 111 vervangen door Conduction B.V."
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 19,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 75
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'PinkRoccade Ritense Roxit' (organisatie 82) bij initiatief 112 vervangen door PinkRoccade, Ritense, Roxit",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'PinkRoccade Ritense Roxit' (organisatie 82) bij initiatief 112 vervangen door PinkRoccade, Ritense, Roxit"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 112,
+                "organisatie_id": 88,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 112,
+                "organisatie_id": 90,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 112,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 82
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Ritense (productontwikkeling )' (organisatie 89) bij initiatief 51 vervangen door Ritense",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Ritense (productontwikkeling )' (organisatie 89) bij initiatief 51 vervangen door Ritense"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 51,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 89
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Roxit en leveranciers waarmee geïntegreerd wordt zoals DataMask' (organisatie 91) bij initiatief 71 vervangen door Roxit",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Roxit en leveranciers waarmee geïntegreerd wordt zoals DataMask' (organisatie 91) bij initiatief 71 vervangen door Roxit"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 71,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 91
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'SWIS (initiatiefnemer / realisatiepartner)' (organisatie 103) bij initiatief 123 vervangen door SWIS",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'SWIS (initiatiefnemer / realisatiepartner)' (organisatie 103) bij initiatief 123 vervangen door SWIS"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 123,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 103
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Vebego Groen en Progresity' (organisatie 111) bij initiatief 125 vervangen door Progresity, Vebego Groen",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Vebego Groen en Progresity' (organisatie 111) bij initiatief 125 vervangen door Progresity, Vebego Groen"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 125,
+                "organisatie_id": 85,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": "$nieuw.vebego"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": "$nieuw.vebego",
+                "naam": "Vebego Groen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 125,
+                "organisatie_id": "$nieuw.vebego",
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 125,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 111
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Worth Systems (implementatie)' (organisatie 119) bij initiatief 51 vervangen door Worth Systems",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Worth Systems (implementatie)' (organisatie 119) bij initiatief 51 vervangen door Worth Systems"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 51,
+                "organisatie_id": 118,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 51,
+                "rel_id": 4
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 119
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Cadac-groep als reseller van de technologie bij gemeenten' (organisatie 14) bij initiatief 57 vervangen door Cadac",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Cadac-groep als reseller van de technologie bij gemeenten' (organisatie 14) bij initiatief 57 vervangen door Cadac"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": "$nieuw.cadac"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": "$nieuw.cadac",
+                "naam": "Cadac"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 57,
+                "organisatie_id": "$nieuw.cadac",
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 57,
+                "rel_id": 3
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 14
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties (B): 'Analyze B.V., in samenwerking met Gemeente Alkmaar' (organisatie 3) → nieuwe organisatie Analyze B.V. als contactorganisatie van initiatief 110; organisatie 3 afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties (B): 'Analyze B.V., in samenwerking met Gemeente Alkmaar' (organisatie 3) → nieuwe organisatie Analyze B.V. als contactorganisatie van initiatief 110; organisatie 3 afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "organisatie": {
+                "id": "$nieuw.analyze"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": "$nieuw.analyze",
+                "naam": "Analyze B.V."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 110,
+                "organisatie_id": "$nieuw.analyze",
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 110,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "organisatie": {
+                "id": 3
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "correctie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties: naam van organisatie 52 'Haarlem' → 'Gemeente Haarlem' (consistent met de andere gemeenten)",
+      "request_body": {
+        "registratie": {
+          "registratietype": "correctie",
+          "opmerking": "Opschoning organisaties: naam van organisatie 52 'Haarlem' → 'Gemeente Haarlem' (consistent met de andere gemeenten)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 52,
+                "naam": "Gemeente Haarlem"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "correctie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties: naam van organisatie 104 'Súdwest-Fryslân' → 'Gemeente Súdwest-Fryslân' (consistent met de andere gemeenten)",
+      "request_body": {
+        "registratie": {
+          "registratietype": "correctie",
+          "opmerking": "Opschoning organisaties: naam van organisatie 104 'Súdwest-Fryslân' → 'Gemeente Súdwest-Fryslân' (consistent met de andere gemeenten)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "organisatienaam": {
+                "organisatie_id": 104,
+                "naam": "Gemeente Súdwest-Fryslân"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Opschoning organisaties: contactpersoon (PO, persoon 62) hoort bij Contezza (21), niet bij Gemeente Utrecht (47) — relatie bij Utrecht afgevoerd",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Opschoning organisaties: contactpersoon (PO, persoon 62) hoort bij Contezza (21), niet bij Gemeente Utrecht (47) — relatie bij Utrecht afgevoerd"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "contactpersoon": {
+                "organisatie_id": 47,
+                "rel_id": 1,
+                "persoon_id": 62
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}
