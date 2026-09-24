@@ -36,9 +36,10 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
   const [bezig, setBezig] = useState(false);
   const [resultaat, setResultaat] = useState(null);
   const [volgendId, setVolgendId] = useState(null);
+  const [verzendPoging, setVerzendPoging] = useState(false); // na een klik op Verzenden: veldmeldingen tonen
 
   // Nieuw formulier gekozen → schone lei.
-  useEffect(() => { setValues({}); setResultaat(null); }, [definitie?.id]);
+  useEffect(() => { setValues({}); setResultaat(null); setVerzendPoging(false); }, [definitie?.id]);
 
   // Onderliggende zonder materiële plumbing (zoals EntiteitFormulier).
   const onderliggende = useMemo(() => safeArray(typeMeta?.onderliggende).filter((child) => {
@@ -98,11 +99,12 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
   }, [layout, bouw, plaatshouder]);
 
   const voerUit = useCallback(async () => {
+    setVerzendPoging(true);
     setBezig(true);
     setResultaat(null);
     try {
       const { wijzigingen, ontbrekend } = bouw(plaatshouder);
-      if (ontbrekend.length > 0) throw new Error(`Verplicht: ${ontbrekend.join(", ")}`);
+      if (ontbrekend.length > 0) throw new Error(`Nog niet ingevuld: ${ontbrekend.map((p) => p.split(".").slice(-2).join(".")).join(", ")}`);
       if (wijzigingen.length < 2) throw new Error("Het formulier is leeg.");
 
       const registratie = {
@@ -157,18 +159,19 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
         onChange={(veldnaam, waarde) => setValues((prev) => ({ ...prev, [veldnaam]: waarde }))}
         readOnly={bezig}
         typeMeta={typeMeta}
+        toonValidatie={verzendPoging}
       />
 
       <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap", marginTop: "0.5rem" }}>
         <button
           type="button"
           className="utrecht-button utrecht-button--primary-action"
-          disabled={bezig || ontbrekend.length > 0 || aantalOpvoeren < 2}
+          disabled={bezig}
           onClick={voerUit}
         >
           {bezig ? "Verzenden…" : "Verzenden"}
         </button>
-        <button type="button" className="utrecht-button utrecht-button--secondary-action" disabled={bezig} onClick={() => { setValues({}); setResultaat(null); }}>
+        <button type="button" className="utrecht-button utrecht-button--secondary-action" disabled={bezig} onClick={() => { setValues({}); setResultaat(null); setVerzendPoging(false); }}>
           Leegmaken
         </button>
         <span style={{ fontSize: "0.8125rem", color: "var(--cg-donkergrijs, #666)" }}>
@@ -180,7 +183,7 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
           </span>
         )}
       </div>
-      {ontbrekend.length > 0 && (
+      {verzendPoging && ontbrekend.length > 0 && (
         <div className="utrecht-form-field-error-message" role="alert" style={{ marginTop: "0.5rem" }}>
           Nog verplicht: {ontbrekend.map((p) => p.split(".").slice(-2).join(".")).join(", ")}
         </div>

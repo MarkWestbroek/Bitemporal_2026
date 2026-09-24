@@ -18,7 +18,7 @@ import CustomFormulierRenderer from "./CustomFormulierRenderer";
  * Props: doelEntiteit, formulierId, values ({ volPad → waarde }), onChange(volPad, waarde),
  *        readOnly, diepte, naam (zoekterm uit de combobox; wordt het eerste tekstveld)
  */
-export default function NieuwSubFormulier({ doelEntiteit, formulierId, values, onChange, readOnly, diepte = 1, naam = "" }) {
+export default function NieuwSubFormulier({ doelEntiteit, formulierId, values, onChange, readOnly, diepte = 1, naam = "", toonValidatie }) {
   const { typeMetaByTypenaam } = useSchema();
   const doelMeta = typeMetaByTypenaam?.[doelEntiteit];
   const { definities, loading, error } = useFormulierDefinities(doelEntiteit);
@@ -73,6 +73,7 @@ export default function NieuwSubFormulier({ doelEntiteit, formulierId, values, o
         readOnly={readOnly}
         typeMeta={doelMeta}
         diepte={diepte}
+        toonValidatie={toonValidatie}
       />
     </div>
   );

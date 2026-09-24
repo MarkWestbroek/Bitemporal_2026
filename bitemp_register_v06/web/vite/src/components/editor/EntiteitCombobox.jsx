@@ -26,7 +26,7 @@ const NIEUW_ID = "$nieuw";
  *
  * Props: doelEntiteit (typenaam), value (id | $nieuw-object), onChange, readOnly, nieuwFormulier, diepte
  */
-export default function EntiteitCombobox({ doelEntiteit, value, onChange, readOnly, nieuwFormulier = null, diepte = 0 }) {
+export default function EntiteitCombobox({ doelEntiteit, value, onChange, readOnly, nieuwFormulier = null, diepte = 0, toonValidatie }) {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
   const doelMeta = typeMetaByTypenaam?.[doelEntiteit];
   const klassenaam = (doelMeta?.klassenaam || doelEntiteit || "").toLowerCase();
@@ -134,6 +134,7 @@ export default function EntiteitCombobox({ doelEntiteit, value, onChange, readOn
           onChange={(pad, w) => onChange({ ...value, $nieuw: { ...(value.$nieuw || {}), [pad]: w } })}
           readOnly={readOnly}
           diepte={diepte + 1}
+          toonValidatie={toonValidatie}
         />
       </div>
     );

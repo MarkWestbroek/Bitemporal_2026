@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import { validatieMeldingVoorVeld } from "../actions/ActionFormParts";
 import RefCombobox from "./RefCombobox";
 import EntiteitCombobox from "./EntiteitCombobox";
@@ -23,15 +23,23 @@ import CodeEditor, { jsonParseFout } from "./CodeEditor";
  *                    ("radio" toont een enum als radiogroep; "textarea"/"json"/"markdown")
  *  - nieuwFormulier, diepte: voor een relatieveld naar een gewone ENT (veld.doelEntiteit):
  *                    FD-id van een ingebed "nieuw"-formulier en de maak-diepte (EntiteitCombobox)
+ *  - toonValidatie: undefined = valideer direct (bewerk-modus); false/true = pas na aanraking
+ *                    van het veld of na een verzendpoging (nieuw-modus)
  */
-export default function SchemaFormField({ veld, value, onChange, error, readOnly, widgetOverride, labelOverride, nieuwFormulier, diepte = 0 }) {
+export default function SchemaFormField({ veld, value, onChange: onChangeProp, error, readOnly, widgetOverride, labelOverride, nieuwFormulier, diepte = 0, toonValidatie }) {
   const fieldId = useId();
   const { datatypeByNaam } = useSchema();
+  // Aangeraakt = de gebruiker heeft het veld gewijzigd of verlaten. Met `toonValidatie`
+  // (boolean, nieuw-modus) verschijnt de verplicht-melding pas daarna of na een
+  // verzendpoging; zonder die prop (bewerk-modus) direct, zoals voorheen.
+  const [aangeraakt, setAangeraakt] = useState(false);
   if (!veld) return null;
+  const onChange = (v) => { setAangeraakt(true); onChangeProp(v); };
 
   const isReadonly = readOnly || veld.autoIncrement;
   const enumOpties = Array.isArray(veld.enum) ? veld.enum.filter(Boolean) : [];
-  const foutmelding = error || (!isReadonly ? validatieMeldingVoorVeld(value, veld) : "");
+  const valideerNu = toonValidatie === undefined || toonValidatie || aangeraakt;
+  const foutmelding = error || (!isReadonly && valideerNu ? validatieMeldingVoorVeld(value, veld) : "");
   const type = String(veld.type || "string");
   const format = String(veld.format || "");
 
@@ -153,6 +161,7 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
           readOnly={isReadonly}
           nieuwFormulier={nieuwFormulier}
           diepte={diepte}
+          toonValidatie={toonValidatie}
         />
       );
     }
@@ -237,7 +246,7 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
   const isFullWidth = effectieveWidget === "json" || effectieveWidget === "markdown";
 
   return (
-    <div className="utrecht-form-field" style={{ marginBottom: "0.75rem", ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }}>
+    <div className="utrecht-form-field" style={{ marginBottom: "0.75rem", ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }} onBlur={() => setAangeraakt(true)}>
       <label htmlFor={fieldId} className="utrecht-form-label" style={{ display: "block", marginBottom: "0.25rem" }}>
         {labelOverride || veld.naam}
         {veld.verplicht && <span style={{ color: "var(--cg-fout)", marginLeft: 4 }}>*</span>}

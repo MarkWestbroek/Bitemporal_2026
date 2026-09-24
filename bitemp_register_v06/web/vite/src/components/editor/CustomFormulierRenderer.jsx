@@ -47,6 +47,7 @@ export default function CustomFormulierRenderer({
   readOnly = false,
   typeMeta = null,
   diepte = 0,
+  toonValidatie,
 }) {
   if (!layout || !velden) return null;
 
@@ -131,6 +132,7 @@ export default function CustomFormulierRenderer({
               labelOverride={element.label}
               nieuwFormulier={element.nieuwFormulier}
               diepte={diepte}
+              toonValidatie={toonValidatie}
             />
           </div>
         );
