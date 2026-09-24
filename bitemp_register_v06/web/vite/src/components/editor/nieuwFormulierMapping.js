@@ -17,6 +17,13 @@
  *   - lijst.widget       — "meerkeuze": de renderer maakt per aangevinkte optie een rij
  *                          { ...vast, [veld]: optie }; de mapping ziet gewone rijen.
  *
+ *   - veld.nieuwFormulier — (stap B) op de secundaire id van een relatie naar een gewone
+ *                          ENT: de waarde mag een object { $nieuw: <subwaarden>, $formulier: <FD-id> }
+ *                          zijn. De mapping voert dan de doel-ENT met een plaatshouder-id
+ *                          ("$nieuw.<naam>") vóór de relatie op en vult de plaatshouder in;
+ *                          de server kent de echte id's toe (B1, registration_plaatshouders.go).
+ *                          Het hoofd-id mag zelf ook een plaatshouder zijn.
+ *
  * Een rij waarin buiten de vaste waarden niets is ingevuld, wordt niet opgevoerd.
  *
  * Adressering: dezelfde als customFormMapping (vol pad = ENT.jsonRolnaam.veld).
@@ -75,7 +82,18 @@ export function rijPastBijLijst(rij, vast) {
 }
 
 export function leeg(v) {
-  return v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0);
+  return v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0)
+    || (isNieuwWaarde(v) && !Object.values(v.$nieuw || {}).some((w) => !leeg(w)));
+}
+
+/** Is dit een "nieuwe doel-ENT"-waarde ({ $nieuw: {...}, $formulier })? */
+export function isNieuwWaarde(v) {
+  return v !== null && typeof v === "object" && !Array.isArray(v) && "$nieuw" in v;
+}
+
+/** Is dit een plaatshouder-id ("$nieuw.x")? */
+export function isPlaatshouder(v) {
+  return typeof v === "string" && /^\$nieuw\.[A-Za-z0-9_-]+$/.test(v);
 }
 
 /**
@@ -104,11 +122,33 @@ const PLUMBING = new Set(["opvoer", "afvoer", "versie", "rel_id"]);
  * @param {object} [args.materieel]   { aanvangVeldnaam, entiteitIDKolom } voor "<ENT>.aanvang.datum"
  * @returns {{ wijzigingen: Array, ontbrekend: string[] }}  ontbrekend = verplichte velden zonder waarde
  */
-export function bouwNieuwWijzigingen({ layout, values, veldNaarGE, typeMeta, id, coerce, materieel = null }) {
+export function bouwNieuwWijzigingen({ layout, values, veldNaarGE, typeMeta, id, coerce, materieel = null, subFormulier = null, teller = { n: 0 } }) {
   const entiteitVeldnaam = typeMeta?.veldnaam || String(typeMeta?.typenaam || "").toLowerCase();
   const wijzigingen = [{ opvoer: { [entiteitVeldnaam]: { id } } }];
+  const vooraf = []; // opvoeren van nieuwe doel-ENT's (komen vóór de relaties die ernaar wijzen)
   const ontbrekend = [];
   const alleWaarden = { ...verzamelVasteWaarden(layout), ...(values || {}) };
+
+  // Een veldwaarde: plaatshouders en $nieuw-objecten niet coërceren; een $nieuw-object
+  // wordt een sub-registratie met een eigen plaatshouder-id.
+  const waardeVoor = (raw, v, naam) => {
+    if (isPlaatshouder(raw)) return raw;
+    if (isNieuwWaarde(raw)) {
+      const doel = v?.doelEntiteit;
+      const sub = subFormulier && doel ? subFormulier(doel, raw.$formulier) : null;
+      if (!sub) {
+        ontbrekend.push(`${naam} (nieuwe ${doel || "entiteit"}: geen subformulier)`);
+        return undefined;
+      }
+      teller.n += 1;
+      const plaatshouder = `$nieuw.${String(sub.typeMeta?.veldnaam || doel).toLowerCase()}_${teller.n}`;
+      const res = bouwNieuwWijzigingen({ ...sub, values: raw.$nieuw, id: plaatshouder, coerce, subFormulier, teller });
+      vooraf.push(...res.wijzigingen);
+      ontbrekend.push(...res.ontbrekend.map((o) => `${naam} → ${o}`));
+      return plaatshouder;
+    }
+    return coerce ? coerce(raw, v, naam) : raw;
+  };
 
   // Materiële aanvang van de entiteit zelf (via kopieerNaar of een eigen veld).
   const aanvangPad = `${typeMeta?.typenaam}.aanvang.datum`;
@@ -144,7 +184,9 @@ export function bouwNieuwWijzigingen({ layout, values, veldNaarGE, typeMeta, id,
         if (v.verplicht && Object.values(waarden).some((w) => !leeg(w))) ontbrekend.push(pad);
         continue;
       }
-      payload[naam] = coerce ? coerce(raw, v, naam) : raw;
+      const w = waardeVoor(raw, v, naam);
+      if (w === undefined) continue;
+      payload[naam] = w;
       iets = true;
     }
     if (iets) wijzigingen.push({ opvoer: { [hubMeta.veldnaam || hubMeta.padnaam]: payload } });
@@ -168,11 +210,14 @@ export function bouwNieuwWijzigingen({ layout, values, veldNaarGE, typeMeta, id,
           if (v.verplicht) ontbrekend.push(`${bron}.${naam}`);
           continue;
         }
-        payload[naam] = coerce ? coerce(raw, v, naam) : raw;
+        const w = waardeVoor(raw, v, naam);
+        if (w !== undefined) payload[naam] = w;
       }
       wijzigingen.push({ opvoer: { [hubMeta.veldnaam || hubMeta.padnaam]: payload } });
     }
   }
 
+  // Nieuwe doel-ENT's direct na de hoofdentiteit, vóór alles wat ernaar verwijst.
+  wijzigingen.splice(1, 0, ...vooraf);
   return { wijzigingen, ontbrekend };
 }

@@ -155,6 +155,9 @@ export default function FormulierInspector() {
           <Regel label="Kopieer naar (vol pad; één invoer, twee doelen)">
             <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.kopieerNaar || ""} onChange={(e) => update(el._id, { kopieerNaar: e.target.value || undefined })} placeholder="bv. Initiatief.aanvang.datum" />
           </Regel>
+          <Regel label="Nieuw-formulier (FD-id; alleen op de secundaire id van een relatie naar een ENT)">
+            <input style={veldStijl} value={el.nieuwFormulier || ""} onChange={(e) => update(el._id, { nieuwFormulier: e.target.value || undefined })} placeholder="bv. 3 (Nieuwe organisatie)" />
+          </Regel>
           {veldInfo[el.veld] && (
             <div style={{ marginTop: 12, fontSize: 11.5, color: "var(--s-fg-muted, #64748b)", lineHeight: 1.6 }}>
               <div>type: <b>{veldInfo[el.veld].type || "string"}</b>{veldInfo[el.veld].format ? ` (${veldInfo[el.veld].format})` : ""}</div>

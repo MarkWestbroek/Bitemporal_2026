@@ -6,6 +6,7 @@ import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 import CustomFormulierRenderer from "./CustomFormulierRenderer";
 import { bouwCustomVeldMapping } from "./customFormMapping";
 import { bouwNieuwWijzigingen, verzamelVasteWaarden } from "./nieuwFormulierMapping";
+import { useFormulierDefinities } from "../../hooks/useFormulierDefinitie";
 
 /**
  * NieuwFormulierPagina — een FormulierDefinitie in **nieuw-modus**: de layout wordt
@@ -15,6 +16,11 @@ import { bouwNieuwWijzigingen, verzamelVasteWaarden } from "./nieuwFormulierMapp
  * Verschil met NieuwEntiteitPagina (de generieke "+ Nieuw"): de layout bepaalt welke
  * velden gevraagd worden, vaste waarden (bv. aanmeldstatus) gaan onzichtbaar mee en
  * lijsten met vaste rijen/meerkeuze vertalen naar losse opvoeren per item.
+ *
+ * Id's zijn plaatshouders (`$nieuw.<veldnaam>`, stap B): de server kent ze binnen de
+ * transactie toe en geeft ze terug als `toegekendeIds`. Zo kan één registratie ook nieuwe
+ * doel-ENT's (organisatie) aanmaken via `veld.nieuwFormulier`; de sub-FD's komen uit
+ * `useFormulierDefinities("*")`.
  *
  * Props:
  *  - typeMeta:   meta van de doelentiteit
@@ -55,6 +61,23 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
   }, [typeMeta, typeMetaByTypenaam]);
 
   const vasteWaarden = useMemo(() => (layout ? verzamelVasteWaarden(layout) : {}), [layout]);
+  const plaatshouder = `$nieuw.${String(typeMeta?.veldnaam || typeMeta?.typenaam || "entiteit").toLowerCase()}`;
+
+  // Subformulieren voor nieuwe doel-ENT's (veld.nieuwFormulier): FD-id → layout + mapping.
+  const { definities: alleDefinities } = useFormulierDefinities("*");
+  const subFormulier = useCallback((doelEntiteit, fdId) => {
+    const def = alleDefinities.find((d) => String(d.id) === String(fdId) && d.meta?.doeltype === doelEntiteit);
+    const doelMeta = typeMetaByTypenaam?.[doelEntiteit];
+    if (!def || !doelMeta) return null;
+    const ond = safeArray(doelMeta.onderliggende).filter((c) => {
+      const m = typeMetaByTypenaam?.[c.doeltype];
+      return m && m.ge_subtype !== "aanvang" && m.ge_subtype !== "einde";
+    });
+    const { veldNaarGE: sub } = bouwCustomVeldMapping({ entity: {}, typeMeta: doelMeta, onderliggende: ond, typeMetaByTypenaam });
+    const aanvangKind = safeArray(doelMeta.onderliggende).find((o) => typeMetaByTypenaam?.[o.doeltype]?.ge_subtype === "aanvang");
+    const am = aanvangKind ? typeMetaByTypenaam?.[aanvangKind.doeltype] : null;
+    return { layout: def.layout, veldNaarGE: sub, typeMeta: doelMeta, materieel: am ? { aanvangVeldnaam: am.veldnaam, entiteitIDKolom: am.entiteitIDKolom || null } : null };
+  }, [alleDefinities, typeMetaByTypenaam]);
 
   // Indicatief volgend id (bij verzenden wordt max-id opnieuw opgehaald).
   useEffect(() => {
@@ -66,30 +89,25 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
   }, [baseUrl, typeMeta?.typenaam]);
 
   const bouw = useCallback((id) => bouwNieuwWijzigingen({
-    layout, values, veldNaarGE, typeMeta, id, coerce: coercedWaardeVoorVeld, materieel,
-  }), [layout, values, veldNaarGE, typeMeta, materieel]);
+    layout, values, veldNaarGE, typeMeta, id, coerce: coercedWaardeVoorVeld, materieel, subFormulier,
+  }), [layout, values, veldNaarGE, typeMeta, materieel, subFormulier]);
 
   const preview = useMemo(() => {
     if (!layout) return null;
-    try { return bouw(volgendId || 0); } catch (err) { return { fout: String(err?.message || err) }; }
-  }, [layout, bouw, volgendId]);
+    try { return bouw(plaatshouder); } catch (err) { return { fout: String(err?.message || err) }; }
+  }, [layout, bouw, plaatshouder]);
 
   const voerUit = useCallback(async () => {
     setBezig(true);
     setResultaat(null);
     try {
-      const idRes = await fetch(`${baseUrl}/api/viz/entiteit/${encodeURIComponent(typeMeta.typenaam)}/max-id`);
-      if (!idRes.ok) throw new Error(`max-id: HTTP ${idRes.status}`);
-      const id = Number((await idRes.json())?.nextId || 0);
-      if (!Number.isInteger(id) || id <= 0) throw new Error("Geen geldig volgend id ontvangen.");
-
-      const { wijzigingen, ontbrekend } = bouw(id);
+      const { wijzigingen, ontbrekend } = bouw(plaatshouder);
       if (ontbrekend.length > 0) throw new Error(`Verplicht: ${ontbrekend.join(", ")}`);
       if (wijzigingen.length < 2) throw new Error("Het formulier is leeg.");
 
       const registratie = {
         registratietype: "registratie",
-        opmerking: `Nieuwe ${typeMeta.klassenaam || typeMeta.typenaam}=${id} via formulier "${definitie?.meta?.naam || definitie?.id}"`,
+        opmerking: `Nieuwe ${typeMeta.klassenaam || typeMeta.typenaam} via formulier "${definitie?.meta?.naam || definitie?.id}"`,
       };
       const res = await fetch(`${baseUrl}/registratie/`, {
         method: "POST",
@@ -99,6 +117,8 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || `HTTP ${res.status}: ${res.statusText}`);
       const registratieId = Number(json?.registratie_id ?? json?.registratieId ?? 0);
+      const id = Number(json?.toegekendeIds?.[plaatshouder] || 0);
+      if (!id) throw new Error(`Registratie ${registratieId || "-"} is verwerkt, maar de server gaf geen toegekend id terug (backend van vóór stap B?).`);
       setResultaat({ ok: true, bericht: `Opvoer geslaagd (${typeMeta.klassenaam || typeMeta.typenaam} ${id}, registratie ${registratieId || "-"})` });
       if (onSuccess) onSuccess({ registratieId, entiteitId: id });
       else {
@@ -110,7 +130,7 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
     } finally {
       setBezig(false);
     }
-  }, [baseUrl, typeMeta, bouw, definitie, onSuccess, navigate]);
+  }, [baseUrl, typeMeta, bouw, plaatshouder, definitie, onSuccess, navigate]);
 
   if (!layout) return <div className="cg-feedback--fout">Formulierdefinitie zonder layout.</div>;
 
@@ -122,7 +142,7 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess })
       <div className="cg-form-section__title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap" }}>
         <span>{definitie?.meta?.naam || "Formulier"}</span>
         <span style={{ fontWeight: 400, fontSize: "0.8125rem", color: "var(--cg-donkergrijs, #666)" }}>
-          nieuw id: {volgendId ?? "…"}
+          volgend id: {volgendId ?? "…"} (definitief bij verzenden)
           {Object.keys(vasteWaarden).length > 0 && ` · vast: ${Object.entries(vasteWaarden).map(([k, v]) => `${k.split(".").slice(-2).join(".")}=${v}`).join(", ")}`}
         </span>
       </div>

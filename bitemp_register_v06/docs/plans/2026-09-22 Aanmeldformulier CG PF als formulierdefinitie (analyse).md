@@ -757,3 +757,26 @@ geeft hem niet terug (niet geaccepteerd). Lokaal staat FD 2 nu in de dev-databas
   wordt gewoon overgeslagen. Formulier-niveau validatie (min-rijen) is een kleine vervolgstap.
 - Het formulier staat achter de editor-login; de openbare indiening (bron = aanmeldformulier,
   server-side `$nieuw.x`-id's) is stap C.
+
+## 10. Stap B gebouwd — nieuwe doel-ENT vanuit een relatieveld (25-09-2026)
+
+| Onderdeel | Waar | Wat |
+|---|---|---|
+| **B1 plaatshouder-id's** | `handlers/registration_plaatshouders.go` (+ test), `RegistreerJSONCore`, `RegistreerCore` | een entiteit-opvoer met `"id": "$nieuw.<naam>"` definieert een plaatshouder; de server kent binnen de transactie max+1 toe (advisory lock per tabel), vult hem overal in vóór het decoderen en geeft `toegekendeIds` terug. Gebruik zonder definitie → 400. Zie `API_REFERENCE.md` §8. Ook bruikbaar in replays. |
+| **`veld.nieuwFormulier`** (§5.3) | profiel, adapter, inspector, `CustomFormulierRenderer` → `SchemaFormField` → `EntiteitCombobox` | op de secundaire id van een relatie naar een gewone ENT: de keuzelijst krijgt onderaan *＋ Nieuwe organisatie…*; de waarde wordt `{ $nieuw: { volPad → waarde }, $formulier: <FD-id> }` en `NieuwSubFormulier` rendert de sub-FD ingebed. |
+| **Maak-diepte 1** (§5.3) | `diepte`-prop door renderer/SchemaFormField/EntiteitCombobox | op diepte ≥ 1 alleen kiezen, geen "nieuw"; een ingebed formulier maakt niet zelf weer aan. |
+| **Mapping** | `nieuwFormulierMapping.bouwNieuwWijzigingen` (`subFormulier`-resolver, `isNieuwWaarde`, `isPlaatshouder`) | een `$nieuw`-waarde wordt een sub-registratie met plaatshouder `$nieuw.<veldnaam>_<n>`, ingevoegd direct na de hoofdentiteit; de relatie krijgt de plaatshouder. Het hoofd-id is nu ook een plaatshouder (`$nieuw.initiatief`); de pagina navigeert op `toegekendeIds`. Plaatshouders worden niet gecoërceerd. |
+| **FD 3 "Nieuwe organisatie"** + **FD 2 layout v2** | replay 17 | naam, website, e-mail, telefoon; FD 2 krijgt `nieuwFormulier: "3"` op vraag 10 en 13. |
+
+**Getest:** Go-tests (`vindPlaatshouders`, `kenPlaatshoudersToe` met sqlmock, `vulPlaatshoudersIn`,
+400 zonder definitie), 584 frontend-unittests, build; e2e tegen de nieuwe backend: aanmelding met
+contactorganisatie `{ $nieuw }` → 201, `toegekendeIds { $nieuw.initiatief: 145, $nieuw.organisatie_1: 133 }`,
+initiatief 145 verwijst naar de nieuwe organisatie 133 (naam + url) én naar bestaande 5.
+
+**PO (vraag 14/15) — voorstel, nog niet gebouwd.** `Contactpersoon` hangt aan *Organisatie*
+(enkelvoudig) en niet aan het initiatief; de PO van een initiatief is dus niet uitdrukbaar als
+veldpad vanuit `Initiatief`, en een bestaande contactorganisatie zou bij elke aanmelding een
+andere PO krijgen. De modelopmerking uit §2 wordt hier concreet: een relatie
+**`InitiatiefPersoon`** (Initiatief → Persoon, `rol` = PO) maakt de PO een gewone relatie van
+het aanmeldformulier met `nieuwFormulier` → FD "Nieuwe persoon" (naam + e-mail), binnen maak-diepte
+1. Dat is B7 (CG-model via V3 + codegen) en een keuze voor Mark.

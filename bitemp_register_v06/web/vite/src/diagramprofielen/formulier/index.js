@@ -36,6 +36,7 @@ const fieldTypes = [
       { key: "readonly", label: "alleen-lezen", datatype: "boolean" },
       { key: "vasteWaarde", label: "vaste waarde (niet getoond; in een lijst óók filter)", datatype: "string" },
       { key: "kopieerNaar", label: "kopieer naar (vol pad)", datatype: "string" },
+      { key: "nieuwFormulier", label: "nieuw-formulier (FD-id, relatie naar ENT)", datatype: "string" },
     ],
   },
 ];

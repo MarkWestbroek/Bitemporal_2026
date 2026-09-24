@@ -23,6 +23,8 @@ import { vasteWaardenVanLijst, rijPastBijLijst } from "./nieuwFormulierMapping";
  *                         boven max geen "toevoegen", op of onder min geen "verwijder".
  *  - lijst.widget       → "meerkeuze": één enum-veld in het sjabloon → checkboxes; per
  *                         aangevinkte optie ontstaat een rij { ...vast, [veld]: optie }.
+ *  - veld.nieuwFormulier→ (stap B) FD-id waarmee vanuit een relatieveld een nieuwe doel-ENT
+ *                         ingebed kan worden aangemaakt (alleen op diepte 0, zie NieuwSubFormulier).
  *
  * Adressering: `veld` verwijst naar een veld-def in `velden` (op `naam`). Binnen
  * een `lijst` zijn veld-verwijzingen RELATIEF aan `bron`: de def-lookup gebruikt
@@ -44,6 +46,7 @@ export default function CustomFormulierRenderer({
   errors = {},
   readOnly = false,
   typeMeta = null,
+  diepte = 0,
 }) {
   if (!layout || !velden) return null;
 
@@ -126,6 +129,8 @@ export default function CustomFormulierRenderer({
               readOnly={readOnly || element.readonly}
               widgetOverride={bepaalWidgetOverride(typeMeta, lookupNaam, element.widget)}
               labelOverride={element.label}
+              nieuwFormulier={element.nieuwFormulier}
+              diepte={diepte}
             />
           </div>
         );

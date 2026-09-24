@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray } from "../../shared/schemaUtils";
 import { berekenWeergaveveld } from "../../shared/celEvaluator";
+import { isNieuwWaarde } from "./nieuwFormulierMapping";
+import NieuwSubFormulier from "./NieuwSubFormulier";
+
+const NIEUW = "$nieuw";
 
 const PAGINA_GROOTTE = 100;
 const MAX_PAGINAS = 20;
@@ -12,12 +16,14 @@ const MAX_PAGINAS = 20;
  * alleen referentielijst-items kent (server-side zoeken). Hier laden we de /full-lijst
  * (gepagineerd, zoals NieuwEntiteitPagina) en berekenen het label met het weergaveveld.
  *
- * Bewust alleen kiezen uit bestaande records: een nieuwe doel-ENT aanmaken vanuit het
- * formulier is stap B (`veld.nieuwFormulier`, plan 2026-09-22 §5.3).
+ * Met `nieuwFormulier` (FD-id) en `diepte` 0 staat onderaan de keuze "＋ Nieuwe …": de waarde
+ * wordt dan `{ $nieuw: { volPad → waarde }, $formulier: <FD-id> }` en het ingebedde formulier
+ * (NieuwSubFormulier) verschijnt eronder; de mapping voert de doel-ENT met een plaatshouder-id
+ * op (plan 2026-09-22 §5.3, stap B). Op diepte ≥ 1 kan alleen gekozen worden (maak-diepte 1).
  *
- * Props: doelEntiteit (typenaam), value (id), onChange(id|""), readOnly
+ * Props: doelEntiteit (typenaam), value (id | $nieuw-object), onChange, readOnly, nieuwFormulier, diepte
  */
-export default function EntiteitCombobox({ doelEntiteit, value, onChange, readOnly }) {
+export default function EntiteitCombobox({ doelEntiteit, value, onChange, readOnly, nieuwFormulier = null, diepte = 0 }) {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
   const doelMeta = typeMetaByTypenaam?.[doelEntiteit];
   const [opties, setOpties] = useState([]);
@@ -73,7 +79,16 @@ export default function EntiteitCombobox({ doelEntiteit, value, onChange, readOn
 
   if (!doelMeta) return <span style={{ color: "var(--cg-fout, red)" }}>Onbekende doelentiteit: {doelEntiteit}</span>;
 
+  const magNieuw = Boolean(nieuwFormulier) && diepte < 1;
+  const isNieuw = isNieuwWaarde(value);
+  const selectWaarde = isNieuw ? NIEUW : String(value ?? "");
+  const kies = (v) => {
+    if (v === NIEUW) onChange({ $nieuw: {}, $formulier: String(nieuwFormulier) });
+    else onChange(v);
+  };
+
   return (
+    <div>
     <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
       <input
         type="search"
@@ -88,15 +103,27 @@ export default function EntiteitCombobox({ doelEntiteit, value, onChange, readOn
       <select
         className="utrecht-select utrecht-select--html-select"
         style={{ flex: "2 1 14rem", minWidth: 0 }}
-        value={String(value ?? "")}
-        onChange={(e) => onChange(e.target.value)}
+        value={selectWaarde}
+        onChange={(e) => kies(e.target.value)}
         disabled={readOnly}
       >
         <option value="">{status === "fout" ? "(laden mislukt)" : "(kies)"}</option>
         {zichtbaar.map((o) => (
           <option key={o.id} value={o.id}>{o.label}</option>
         ))}
+        {magNieuw && <option value={NIEUW}>＋ Nieuwe {(doelMeta.klassenaam || doelEntiteit).toLowerCase()}…</option>}
       </select>
+    </div>
+    {isNieuw && (
+      <NieuwSubFormulier
+        doelEntiteit={doelEntiteit}
+        formulierId={value.$formulier || nieuwFormulier}
+        values={value.$nieuw || {}}
+        onChange={(pad, w) => onChange({ ...value, $nieuw: { ...(value.$nieuw || {}), [pad]: w } })}
+        readOnly={readOnly}
+        diepte={diepte + 1}
+      />
+    )}
     </div>
   );
 }

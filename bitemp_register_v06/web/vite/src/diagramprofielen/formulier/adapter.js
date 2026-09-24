@@ -72,6 +72,7 @@ function naarCompVeld(el, volgorde) {
       ...(el.readonly ? { readonly: true } : {}),
       ...(el.vasteWaarde != null && el.vasteWaarde !== "" ? { vasteWaarde: String(el.vasteWaarde) } : {}),
       ...(el.kopieerNaar ? { kopieerNaar: el.kopieerNaar } : {}),
+      ...(el.nieuwFormulier ? { nieuwFormulier: String(el.nieuwFormulier) } : {}),
       volgorde: String(volgorde),
     },
   };
@@ -196,6 +197,7 @@ export function formulierModelNaarLayout(coreState) {
         ...(v.data?.readonly ? { readonly: true } : {}),
         ...(v.data?.vasteWaarde != null && v.data.vasteWaarde !== "" ? { vasteWaarde: v.data.vasteWaarde } : {}),
         ...(v.data?.kopieerNaar ? { kopieerNaar: v.data.kopieerNaar } : {}),
+        ...(v.data?.nieuwFormulier ? { nieuwFormulier: v.data.nieuwFormulier } : {}),
       },
     }));
 

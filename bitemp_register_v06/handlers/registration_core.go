@@ -79,6 +79,7 @@ type RegistreerResult struct {
 	Tijdstip      time.Time
 	Wijzigingen   []model.WijzigingRequest
 	ResponseBody  json.RawMessage
+	ToegekendeIDs map[string]int // plaatshouder → toegekend id (registration_plaatshouders.go)
 	DurationMs    int64
 	// Validatie bevat de gevonden fouten/waarschuwingen op basis van
 	// V3Datatype-regels (B.A.2). Bij StrengheidStrict en aanwezige fouten
@@ -139,6 +140,16 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 
 	registratieID := req.Registratie.ID
 	registratieTijdstip := req.Registratie.Tijdstip
+
+	// Plaatshouder-id's: nu, binnen de transactie, toekennen en de wijzigingen decoderen.
+	var toegekendeIDs map[string]int
+	if req.RuweWijzigingen != nil {
+		ids, rerr := verwerkPlaatshouders(ctx, tx, &req)
+		if rerr != nil {
+			return RegistreerResult{}, rerr
+		}
+		toegekendeIDs = ids
+	}
 
 	// B.A.2: valideer alle representaties op basis van V3Datatype-regels.
 	// In strict-modus → eerste fout = HTTP 422 + rollback. In lenient/warnings-only
@@ -269,6 +280,7 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 		RegistratieID: registratieID,
 		Tijdstip:      registratieTijdstip,
 		Wijzigingen:   req.Wijzigingen,
+		ToegekendeIDs: toegekendeIDs,
 		ResponseBody:  responseBodyJSON,
 		DurationMs:    elapsedMs,
 		Validatie:     validatieOfNil(validatie),

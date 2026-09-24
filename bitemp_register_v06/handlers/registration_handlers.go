@@ -33,7 +33,24 @@ import (
 // leeg is (zodat GraphQL-resolvers per mutation een default kunnen forceren).
 func RegistreerJSONCore(ctx context.Context, rawBody []byte, defaultRegistratietype model.RegistratietypeEnum, audit AuditMeta) (*RegistreerResult, *RegistreerError) {
 	var request model.RegistreerRequest
-	if err := json.Unmarshal(rawBody, &request); err != nil {
+
+	// Plaatshouder-id's (`"$nieuw.x"`) kunnen niet naar de getypte representaties worden
+	// gedecodeerd; die wijzigingen blijven ruw tot de transactie ze heeft ingevuld.
+	var ruw struct {
+		Registratie model.Registratie `json:"registratie"`
+		Wijzigingen json.RawMessage   `json:"wijzigingen"`
+	}
+	if err := json.Unmarshal(rawBody, &ruw); err != nil {
+		return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: err.Error()}
+	}
+	plaatshouders, perr := vindPlaatshouders(ruw.Wijzigingen)
+	if perr != nil {
+		return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: fmt.Sprintf("plaatshouders: %v", perr)}
+	}
+	if !plaatshouders.Leeg() {
+		request.Registratie = ruw.Registratie
+		request.RuweWijzigingen = ruw.Wijzigingen
+	} else if err := json.Unmarshal(rawBody, &request); err != nil {
 		return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: err.Error()}
 	}
 
@@ -41,11 +58,13 @@ func RegistreerJSONCore(ctx context.Context, rawBody []byte, defaultRegistratiet
 		request.Registratie.Registratietype = defaultRegistratietype
 	}
 
-	genormaliseerd, err := NormaliseerWijzigingen(request.Wijzigingen)
-	if err != nil {
-		return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: fmt.Sprintf("normaliseren van wijzigingen mislukt: %v", err)}
+	if request.RuweWijzigingen == nil {
+		genormaliseerd, err := NormaliseerWijzigingen(request.Wijzigingen)
+		if err != nil {
+			return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: fmt.Sprintf("normaliseren van wijzigingen mislukt: %v", err)}
+		}
+		request.Wijzigingen = genormaliseerd
 	}
-	request.Wijzigingen = genormaliseerd
 
 	if audit.RawBody == nil {
 		audit.RawBody = rawBody
@@ -104,6 +123,9 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			"registratieId":  result.RegistratieID,
 			"tijdstip":       result.Tijdstip,
 			"wijzigingen":    result.Wijzigingen,
+		}
+		if len(result.ToegekendeIDs) > 0 {
+			response["toegekendeIds"] = result.ToegekendeIDs
 		}
 		// B.A.2: bij lenient/warnings-only meegeven; in strict-modus komt
 		// validatie-output alleen bij hard-fail terug (via error).

@@ -292,6 +292,32 @@ For each referentielijst-entiteit with padnaam `{pad}`:
 - **Success response** (HTTP 201): `{ "message": "...", "registratie_id": N, "tijdstip": "...", "wijzigingen": [...] }`
 - **Foutresponse**: `{ "error": "<beschrijving>" }`. Bij fouten in een wijziging bevat de melding het 0-gebaseerde index van de wijziging, de `representatienaam` en de `veldnaam`. Voorbeeld: `"wijziging[3]: opvoer van ApiStandaard_Naam (veldnaam=naam) mislukt: ..."`
 
+#### Plaatshouder-id's (`"$nieuw.<naam>"`)
+
+Een opvoer van een **entiteit** mag als id een plaatshouder gebruiken; de server kent binnen de
+transactie het volgende id toe (max+1 per tabel, onder `pg_advisory_xact_lock`) en vult de
+plaatshouder overal in vóór het decoderen naar de getypte representaties
+(`handlers/registration_plaatshouders.go`). Zo maakt één registratie meerdere nieuwe, naar elkaar
+verwijzende entiteiten aan zonder `max-id`-roundtrips:
+
+```json
+{ "wijzigingen": [
+  { "opvoer": { "initiatief":            { "id": "$nieuw.init" } } },
+  { "opvoer": { "organisatie":           { "id": "$nieuw.org" } } },
+  { "opvoer": { "organisatienaam":       { "organisatie_id": "$nieuw.org", "naam": "Nieuwe BV" } } },
+  { "opvoer": { "initiatieforganisatie": { "initiatief_id": "$nieuw.init", "organisatie_id": "$nieuw.org", "rol": "Contactorganisatie" } } }
+] }
+```
+
+- Vorm: `$nieuw.` + letters/cijfers/`_`/`-`. Alleen een string die daar precies aan voldoet is een
+  plaatshouder; gewone tekst blijft tekst.
+- Een plaatshouder wordt **gedefinieerd** door de entiteit-opvoer waarvan de id-kolom hem draagt;
+  gebruik zonder definitie → HTTP 400 (`plaatshouders: … zonder entiteit-opvoer …`).
+- De response krijgt `"toegekendeIds": { "$nieuw.init": 145, "$nieuw.org": 133 }`. De audittrail
+  (`registratie.request_body`) bewaart de oorspronkelijke body mét plaatshouders.
+- Gebruikt door de FormulierDefinitie in nieuw-modus (`web/vite/src/components/editor/NieuwFormulierPagina.jsx`)
+  en `veld.nieuwFormulier` (nieuwe doel-ENT vanuit een relatieveld).
+
 #### Veldnaam-disambiguatie bij wijzigingen
 
 Elke opvoer/afvoer in `wijzigingen[]` wordt geparseerd via `RepresentatiePlusNaam.UnmarshalJSON()` (`model/REST request models.go`). De JSON-sleutel (bijv. `"naam"`) wordt opgezocht in de MetaRegistry via `GetByVeldnaamMetPayload()`. Wanneer meerdere types dezelfde `Veldnaam` delen (bijv. `ApiStandaard_Naam` en `NatuurlijkPersoon_Naam` → beide `"naam"`), disambigueert de parser op basis van de inner payload-sleutels: het `EntiteitIDKolom` van het juiste type (bijv. `apistandaard_id`) moet als sleutel voorkomen in de payload. Ontbreekt een onderscheidende sleutel, dan wordt de eerste kandidaat als fallback gebruikt en wordt een waarschuwing naar stderr geschreven.
