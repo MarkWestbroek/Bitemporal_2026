@@ -12,6 +12,8 @@ import { bouwReflijstOptieLabel } from "../../shared/celEvaluator";
  *
  * Props:
  *  - refType:   typenaam van het referentielijst_item (bijv. "Gemeente")
+ *  - onSelect:  optioneel (item, label) => void — multi-modus: elke keuze wordt gemeld en het
+ *               veld leeggemaakt (RefMeerkeuze); `value`/`onChange` doen dan niets
  *  - value:     huidige ID-waarde
  *  - onChange:  (nieuweID) => void
  *  - readOnly:  boolean
@@ -20,7 +22,7 @@ import { bouwReflijstOptieLabel } from "../../shared/celEvaluator";
 const DREMPEL_KLEIN = 30;
 const DEBOUNCE_MS = 250;
 
-export default function RefCombobox({ refType, value, onChange, readOnly }) {
+export default function RefCombobox({ refType, value, onChange, readOnly, onSelect = null, placeholder = null }) {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
 
   const refMeta = typeMetaByTypenaam?.[refType];
@@ -170,6 +172,14 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
     },
     onSelectedItemChange: ({ selectedItem }) => {
       userTypingRef.current = false;
+      // Multi-modus (RefMeerkeuze): de keuze gaat naar onSelect en het veld wordt leeg
+      // gemaakt voor de volgende keuze; `value` blijft leeg.
+      if (onSelect) {
+        if (selectedItem) onSelect(selectedItem, maakLabel(selectedItem));
+        setSelectedLabel("");
+        setInputValue("");
+        return;
+      }
       if (selectedItem) {
         onChange(selectedItem.id);
         const label = maakLabel(selectedItem);
@@ -211,7 +221,7 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
         <input
           className="utrecht-textbox utrecht-textbox--html-input"
           style={{ flex: 1 }}
-          placeholder={loading ? "Laden..." : `Zoek ${refMeta?.klassenaam || refType}...`}
+          placeholder={loading ? "Laden..." : placeholder || `Zoek ${refMeta?.klassenaam || refType}...`}
           {...getInputProps()}
         />
         <button

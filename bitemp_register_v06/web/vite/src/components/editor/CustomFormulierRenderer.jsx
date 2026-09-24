@@ -1,6 +1,7 @@
 import SchemaFormField from "./SchemaFormField";
 import { bepaalWidgetOverride } from "./widgetOverrides";
 import { vasteWaardenVanLijst, rijPastBijLijst } from "./nieuwFormulierMapping";
+import RefMeerkeuze from "./RefMeerkeuze";
 
 /**
  * CustomFormulierRenderer — rendert een formulier op basis van een layout-JSON
@@ -21,8 +22,8 @@ import { vasteWaardenVanLijst, rijPastBijLijst } from "./nieuwFormulierMapping";
  *  - veld.kopieerNaar   → bij invoer wordt de waarde ook naar dat (volle) pad geschreven.
  *  - lijst.min / max    → min rijen worden altijd getoond (vaste rij: min = max = 1),
  *                         boven max geen "toevoegen", op of onder min geen "verwijder".
- *  - lijst.widget       → "meerkeuze": één enum-veld in het sjabloon → checkboxes; per
- *                         aangevinkte optie ontstaat een rij { ...vast, [veld]: optie }.
+ *  - lijst.widget       → "meerkeuze": één veld in het sjabloon; enum → checkboxes, referentielijst
+ *                         → chips + zoekveld (RefMeerkeuze); per keuze een rij { ...vast, [veld]: keuze }.
  *  - veld.nieuwFormulier→ (stap B) FD-id waarmee vanuit een relatieveld een nieuwe doel-ENT
  *                         ingebed kan worden aangemaakt (alleen op diepte 0, zie NieuwSubFormulier).
  *
@@ -180,16 +181,33 @@ export default function CustomFormulierRenderer({
           },
         });
 
-        // Meerkeuze: één (enum-)veld in het sjabloon → checkbox per optie.
+        // Meerkeuze: één veld in het sjabloon → enum: checkbox per optie; referentielijst:
+        // chips + zoekveld (RefMeerkeuze). Per keuze ontstaat een rij { ...vast, [veld]: keuze }.
         if (element.widget === "meerkeuze") {
           const keuzeEl = template.find((t) => t.type === "veld" && (t.vasteWaarde === undefined || t.vasteWaarde === null || t.vasteWaarde === ""));
           const keuzeDef = keuzeEl ? veldenByNaam[`${bron}.${keuzeEl.veld}`] : null;
           const opties = Array.isArray(keuzeDef?.enum) ? keuzeDef.enum.filter(Boolean) : [];
           const gekozen = new Set(getoond.filter((g) => g.idx >= 0).map((g) => String(g.rij?.[keuzeEl?.veld] ?? "")));
+          const verwijder = (opt) => zetAlle(alle.filter((r, j) => !(eigenIdx.includes(j) && String(r?.[keuzeEl.veld] ?? "") === String(opt))));
           const toggle = (opt) => {
-            if (gekozen.has(opt)) zetAlle(alle.filter((r, j) => !(eigenIdx.includes(j) && String(r?.[keuzeEl.veld] ?? "") === opt)));
+            if (gekozen.has(opt)) verwijder(opt);
             else zetAlle([...alle, { ...vast, [keuzeEl.veld]: opt }]);
           };
+          if (keuzeDef?.ref) {
+            return (
+              <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
+                <legend className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+                {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
+                <RefMeerkeuze
+                  refType={keuzeDef.ref}
+                  ids={[...gekozen].filter(Boolean)}
+                  onAdd={(id) => zetAlle([...alle, { ...vast, [keuzeEl.veld]: id }])}
+                  onRemove={verwijder}
+                  readOnly={readOnly}
+                />
+              </fieldset>
+            );
+          }
           return (
             <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
               <legend className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>

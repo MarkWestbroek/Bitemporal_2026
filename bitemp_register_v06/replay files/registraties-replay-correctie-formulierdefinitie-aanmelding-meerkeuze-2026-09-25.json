@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-25T10:00:00Z",
+  "source": "manual://claude-aanmeldformulier-meerkeuze",
+  "description": "Layout v3 van FormulierDefinitie 2: domeinen, gemeenten (beide rollen) en API-standaarden als meerkeuze (chips + zoekveld). Vereist replay 17 (layout-hub rel_id 2 wordt afgevoerd; Layout is nog meervoudig).",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T10:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "FormulierDefinitie 2: layout v2 (rel_id 2) afvoeren, layout v3 met meerkeuze op vraag 6, 8, 9 en 27",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Aanmelding initiatief: layout v3 — meerkeuze (chips) voor domeinen, gemeenten en API-standaarden"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "layout": {
+                "formulierdefinitie_id": 2,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "layout": {
+                "formulierdefinitie_id": 2,
+                "layout_json": "{\"type\": \"formulier\", \"elementen\": [{\"type\": \"groep\", \"label\": \"Product\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.producten.naam\", \"label\": \"1. Naam van het initiatief\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.type\", \"widget\": \"radio\", \"label\": \"2. Type product\", \"beschrijving\": \"Component (deel van een toepassing), Toepassing (bruikbare oplossing) of Standaard\"}, {\"type\": \"conditioneel\", \"conditie\": {\"veld\": \"Initiatief.producten.type\", \"op\": \"==\", \"waarde\": \"Toepassing\"}, \"dan\": [{\"type\": \"veld\", \"veld\": \"Initiatief.producten.pitch\", \"widget\": \"textarea\", \"label\": \"5. Pitch\", \"beschrijving\": \"Indien een toepassing: waarom zouden anderen mee moeten doen of jouw product gebruiken?\"}]}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.omschrijving\", \"widget\": \"textarea\", \"label\": \"18. Korte omschrijving\", \"beschrijving\": \"Noem ook of het parallel te gebruiken is naast bestaande software (3) en welke componenten erin zitten (4).\"}, {\"type\": \"rij\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.producten.website\", \"label\": \"16. Website\", \"breedte\": \"50%\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.git_repo\", \"label\": \"17. Git-repository\", \"breedte\": \"50%\"}]}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.CG_laag\", \"label\": \"26. Common Ground-laag\", \"beschrijving\": \"Eén laag (het model kent per product één laag).\"}]}, {\"type\": \"groep\", \"label\": \"Domein en organisaties\", \"elementen\": [{\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_domeinen\", \"label\": \"6. Domein(en)\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"domein_id\", \"label\": \"Domein\"}], \"widget\": \"meerkeuze\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.andere_domeinen.domein\", \"label\": \"6. Overig domein (niet in de lijst)\"}, {\"type\": \"lijst\", \"bron\": \"Initiatief.betrokken_organisatie\", \"label\": \"7. Type betrokken organisaties\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"type\"}], \"widget\": \"meerkeuze\"}, {\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_gemeenten\", \"label\": \"8. Gemeenten die het initiatief realiseren\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"rol\", \"vasteWaarde\": \"Realiseert\"}, {\"type\": \"veld\", \"veld\": \"gemeente_id\", \"label\": \"Gemeente\"}], \"widget\": \"meerkeuze\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.anders_dan_gemeenten.andersDanGemeente\", \"label\": \"8. Realisatie door anderen dan gemeenten\"}, {\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_gemeenten\", \"label\": \"9. Gemeenten die het initiatief gebruiken\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"rol\", \"vasteWaarde\": \"Maakt gebruik van\"}, {\"type\": \"veld\", \"veld\": \"gemeente_id\", \"label\": \"Gemeente\"}], \"widget\": \"meerkeuze\"}, {\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_organisaties\", \"label\": \"10. Leveranciers / betrokken organisaties\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"rol\", \"vasteWaarde\": \"BetrokkenOrganisatie\"}, {\"type\": \"veld\", \"veld\": \"organisatie_id\", \"label\": \"Organisatie\", \"beschrijving\": \"Kies een bestaande organisatie of maak onderaan de lijst een nieuwe aan.\", \"nieuwFormulier\": \"3\"}]}, {\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_organisaties\", \"label\": \"13. Contactorganisatie\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"rol\", \"vasteWaarde\": \"Contactorganisatie\"}, {\"type\": \"veld\", \"veld\": \"organisatie_id\", \"label\": \"Organisatie\", \"nieuwFormulier\": \"3\", \"beschrijving\": \"Kies een bestaande organisatie of maak onderaan de lijst een nieuwe aan.\"}], \"min\": 1, \"max\": 1}]}, {\"type\": \"groep\", \"label\": \"Planning\", \"elementen\": [{\"type\": \"rij\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.planningen.startdatum\", \"label\": \"11. Startdatum\", \"breedte\": \"50%\", \"kopieerNaar\": \"Initiatief.aanvang.datum\", \"beschrijving\": \"Wordt ook de materiële aanvang van het initiatief.\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.planningen.ready_for_use\", \"label\": \"12. Ready for use (verwacht)\", \"breedte\": \"50%\"}]}, {\"type\": \"veld\", \"veld\": \"Initiatief.planningen.fase\", \"label\": \"28. Fase\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.planningen.planningsinfo\", \"widget\": \"textarea\", \"label\": \"25. Waar staat informatie over de planning?\", \"beschrijving\": \"Voeg indien mogelijk de link toe.\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.planningen.waar_tegenaan_gelopen\", \"widget\": \"textarea\", \"label\": \"29. Waar ben je tegenaan gelopen?\"}]}, {\"type\": \"groep\", \"label\": \"Bijdrage aan Common Ground\", \"elementen\": [{\"type\": \"lijst\", \"bron\": \"Initiatief.bijdragen\", \"label\": \"Wendbaarheid\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"type_bijdrage\", \"vasteWaarde\": \"Wendbaarheid\"}, {\"type\": \"veld\", \"veld\": \"schaal\", \"widget\": \"radio\", \"label\": \"19. Schaal\", \"beschrijving\": \"Schaal 1 = klein, Schaal 4 = groot\"}, {\"type\": \"veld\", \"veld\": \"toelichting\", \"widget\": \"textarea\", \"label\": \"20. Toelichting\"}], \"min\": 1, \"max\": 1}, {\"type\": \"lijst\", \"bron\": \"Initiatief.bijdragen\", \"label\": \"Dienstverlening\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"type_bijdrage\", \"vasteWaarde\": \"Dienstverlening\"}, {\"type\": \"veld\", \"veld\": \"schaal\", \"widget\": \"radio\", \"label\": \"21. Schaal\", \"beschrijving\": \"Schaal 1 = klein, Schaal 4 = groot\"}, {\"type\": \"veld\", \"veld\": \"toelichting\", \"widget\": \"textarea\", \"label\": \"22. Toelichting\"}], \"min\": 1, \"max\": 1}, {\"type\": \"lijst\", \"bron\": \"Initiatief.bijdragen\", \"label\": \"Regie\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"type_bijdrage\", \"vasteWaarde\": \"Regie\"}, {\"type\": \"veld\", \"veld\": \"schaal\", \"widget\": \"radio\", \"label\": \"23. Schaal\", \"beschrijving\": \"Schaal 1 = klein, Schaal 4 = groot\"}, {\"type\": \"veld\", \"veld\": \"toelichting\", \"widget\": \"textarea\", \"label\": \"24. Toelichting\"}], \"min\": 1, \"max\": 1}]}, {\"type\": \"groep\", \"label\": \"API-standaarden\", \"elementen\": [{\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_api_standaarden\", \"label\": \"27. Gebruikte API-standaarden\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"apistandaard_id\", \"label\": \"API-standaard\"}], \"widget\": \"meerkeuze\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.andere_api_standaarden.api_standaard\", \"label\": \"27. Andere API-standaard (vrije tekst)\"}]}, {\"type\": \"groep\", \"label\": \"Aanmelding\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.aanmeldstatussen.status\", \"vasteWaarde\": \"nieuwe_aanmelding\"}]}]}"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}
