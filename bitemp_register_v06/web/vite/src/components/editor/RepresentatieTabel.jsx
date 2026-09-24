@@ -99,7 +99,9 @@ export default function RepresentatieTabel({ typeMeta }) {
           header: childMeta?.klassenaam || key,
           cell: ({ getValue }) => {
             const val = getValue();
-            const hubItems = safeArray(val);
+            // Alleen actuele hubs: /full/ levert ook afgevoerde (historische) hubs, en dit
+            // overzicht toont de actuele stand — de historie staat in het detailformulier.
+            const hubItems = safeArray(val).filter((hub) => !hub?.afvoer);
             if (hubItems.length === 0) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
             // Platslaan per hub-item en veldwaarden extraheren
             const regels = hubItems.map((hub, idx) => {
