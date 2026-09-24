@@ -40,6 +40,30 @@ const (
 	QueryDefinitieToegankelijkheidintern  QueryDefinitieToegankelijkheid = "intern"
 )
 
+type NotificatieDefinitieStatus string
+
+const (
+	NotificatieDefinitieStatusconcept  NotificatieDefinitieStatus = "concept"
+	NotificatieDefinitieStatusactief   NotificatieDefinitieStatus = "actief"
+	NotificatieDefinitieStatusinactief NotificatieDefinitieStatus = "inactief"
+)
+
+type NotificatieKanaal string
+
+const (
+	NotificatieKanaalemail   NotificatieKanaal = "email"
+	NotificatieKanaalwebhook NotificatieKanaal = "webhook"
+)
+
+type NotificatieRegistratietype string
+
+const (
+	NotificatieRegistratietyperegistratie    NotificatieRegistratietype = "registratie"
+	NotificatieRegistratietypecorrectie      NotificatieRegistratietype = "correctie"
+	NotificatieRegistratietypeongedaanmaking NotificatieRegistratietype = "ongedaanmaking"
+	NotificatieRegistratietypealle           NotificatieRegistratietype = "alle"
+)
+
 // FormulierDefinitie_Meta — Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.
 type FormulierDefinitie_Meta struct {
 	bun.BaseModel            `bun:"table:formulierdefinitie_meta,alias:formulierdefinitie_meta"`
@@ -159,6 +183,197 @@ type WeergaveDefinitie_DetailTemplate_Data struct {
 	DefinitieVersie      Versie     `json:"definitie_versie" schema:"datatype:Versie"`
 	Opvoer               *time.Time `json:"opvoer,omitempty"`
 	Afvoer               *time.Time `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieNaam — Naam en beschrijving van de notificatiedefinitie (het abonnement in NORA-termen).
+type NotificatieDefinitie_NotificatiedefinitieNaam struct {
+	bun.BaseModel              `bun:"table:notificatiedefinitie_notificatiedefinitienaam,alias:notificatiedefinitie_notificatiedefinitienaam"`
+	NotificatieDefinitie_ID    int                                                  `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk" schema_desc:"ID van de NotificatieDefinitie-entiteit"`
+	Rel_ID                     int                                                  `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentNotificatieDefinitie *NotificatieDefinitie                                `json:"-" bun:"rel:belongs-to,join:notificatiedefinitie_id=id,on_delete:cascade"`
+	Opvoer                     *time.Time                                           `json:"opvoer,omitempty"`
+	Afvoer                     *time.Time                                           `json:"afvoer,omitempty"`
+	Data                       []NotificatieDefinitie_NotificatiedefinitieNaam_Data `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieNaam_Data — geversioned inhoud van NotificatieDefinitie_NotificatiedefinitieNaam.
+type NotificatieDefinitie_NotificatiedefinitieNaam_Data struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitienaam_data,alias:notificatiedefinitie_notificatiedefinitienaam_data"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam                    string     `json:"naam"`
+	Beschrijving            *string    `json:"beschrijving,omitempty"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieGebeurtenis — Op welke gebeurtenis het abonnement reageert: doeltype (entiteit), registratietype (registratie/correctie/ongedaanmaking/alle), optioneel de bron van de registratie (bv. aanmeldformulier) en optioneel een filter in de GraphQL-filtertaal (JSON) dat de geraakte entiteit moet doorstaan. Het CloudEvents-type wordt hieruit afgeleid (nl.<databron>.<entiteit>.<gebeurtenis>). Materieel: te stagen.
+type NotificatieDefinitie_NotificatiedefinitieGebeurtenis struct {
+	bun.BaseModel              `bun:"table:notificatiedefinitie_notificatiedefinitiegebeurtenis,alias:notificatiedefinitie_notificatiedefinitiegebeurtenis"`
+	NotificatieDefinitie_ID    int                                                            `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk" schema_desc:"ID van de NotificatieDefinitie-entiteit"`
+	Rel_ID                     int                                                            `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentNotificatieDefinitie *NotificatieDefinitie                                          `json:"-" bun:"rel:belongs-to,join:notificatiedefinitie_id=id,on_delete:cascade"`
+	Opvoer                     *time.Time                                                     `json:"opvoer,omitempty"`
+	Afvoer                     *time.Time                                                     `json:"afvoer,omitempty"`
+	Data                       []NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data    `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang                    []NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                      []NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde   `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data — geversioned inhoud van NotificatieDefinitie_NotificatiedefinitieGebeurtenis.
+type NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitiegebeurtenis_data,alias:notificatiedefinitie_notificatiedefinitiegebeurtenis_data"`
+	NotificatieDefinitie_ID int                        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int                        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64                      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Doeltype                string                     `json:"doeltype"`
+	Registratietype         NotificatieRegistratietype `json:"registratietype" schema:"enum=NotificatieRegistratietype"`
+	Bron                    *string                    `json:"bron,omitempty"`
+	Filter                  *string                    `json:"filter,omitempty"`
+	Opvoer                  *time.Time                 `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time                 `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang — aanvangdatum van NotificatieDefinitie_NotificatiedefinitieGebeurtenis.
+type NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitiegebeurtenis_aanvang,alias:notificatiedefinitie_notificatiedefinitiegebeurtenis_aanvang"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                   *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde — eindedatum van NotificatieDefinitie_NotificatiedefinitieGebeurtenis.
+type NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitiegebeurtenis_einde,alias:notificatiedefinitie_notificatiedefinitiegebeurtenis_einde"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                   *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieAbonnee — Een ontvanger: kanaal e-mail of webhook, het adres (e-mailadres of URL) en voor webhooks het geheim voor de HMAC-handtekening. Meervoudig: één definitie kan meerdere ontvangers hebben. Materieel.
+type NotificatieDefinitie_NotificatiedefinitieAbonnee struct {
+	bun.BaseModel              `bun:"table:notificatiedefinitie_notificatiedefinitieabonnee,alias:notificatiedefinitie_notificatiedefinitieabonnee"`
+	NotificatieDefinitie_ID    int                                                        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk" schema_desc:"ID van de NotificatieDefinitie-entiteit"`
+	Rel_ID                     int                                                        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentNotificatieDefinitie *NotificatieDefinitie                                      `json:"-" bun:"rel:belongs-to,join:notificatiedefinitie_id=id,on_delete:cascade"`
+	Opvoer                     *time.Time                                                 `json:"opvoer,omitempty"`
+	Afvoer                     *time.Time                                                 `json:"afvoer,omitempty"`
+	Data                       []NotificatieDefinitie_NotificatiedefinitieAbonnee_Data    `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang                    []NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                      []NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde   `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieAbonnee_Data — geversioned inhoud van NotificatieDefinitie_NotificatiedefinitieAbonnee.
+type NotificatieDefinitie_NotificatiedefinitieAbonnee_Data struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitieabonnee_data,alias:notificatiedefinitie_notificatiedefinitieabonnee_data"`
+	NotificatieDefinitie_ID int               `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int               `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64             `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Kanaal                  NotificatieKanaal `json:"kanaal" schema:"enum=NotificatieKanaal"`
+	Adres                   string            `json:"adres"`
+	Geheim                  *string           `json:"geheim,omitempty"`
+	Opvoer                  *time.Time        `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time        `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang — aanvangdatum van NotificatieDefinitie_NotificatiedefinitieAbonnee.
+type NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitieabonnee_aanvang,alias:notificatiedefinitie_notificatiedefinitieabonnee_aanvang"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                   *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde — eindedatum van NotificatieDefinitie_NotificatiedefinitieAbonnee.
+type NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitieabonnee_einde,alias:notificatiedefinitie_notificatiedefinitieabonnee_einde"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                   *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieInhoud — Inhoud van een e-mailnotificatie: onderwerp en tekst met plaatshouders ({{type}}, {{subject}}, {{id}}, {{registratieId}}, {{link}}), en/of de naam van een QueryDefinitie waarvan het resultaat (id + weergavenaam) in het bericht komt. Webhooks krijgen altijd het CloudEvents-bericht.
+type NotificatieDefinitie_NotificatiedefinitieInhoud struct {
+	bun.BaseModel              `bun:"table:notificatiedefinitie_notificatiedefinitieinhoud,alias:notificatiedefinitie_notificatiedefinitieinhoud"`
+	NotificatieDefinitie_ID    int                                                    `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk" schema_desc:"ID van de NotificatieDefinitie-entiteit"`
+	Rel_ID                     int                                                    `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentNotificatieDefinitie *NotificatieDefinitie                                  `json:"-" bun:"rel:belongs-to,join:notificatiedefinitie_id=id,on_delete:cascade"`
+	Opvoer                     *time.Time                                             `json:"opvoer,omitempty"`
+	Afvoer                     *time.Time                                             `json:"afvoer,omitempty"`
+	Data                       []NotificatieDefinitie_NotificatiedefinitieInhoud_Data `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieInhoud_Data — geversioned inhoud van NotificatieDefinitie_NotificatiedefinitieInhoud.
+type NotificatieDefinitie_NotificatiedefinitieInhoud_Data struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitieinhoud_data,alias:notificatiedefinitie_notificatiedefinitieinhoud_data"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Onderwerp               *string    `json:"onderwerp,omitempty"`
+	Tekst                   *string    `json:"tekst,omitempty"`
+	Querydefinitie          *string    `json:"querydefinitie,omitempty"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieStatus — Levenscyclus: concept = klad, niet actief; actief = er wordt genotificeerd; inactief = ingetrokken. Materieel: 'actief vanaf …' is te stagen. `reden` legt uit waarom.
+type NotificatieDefinitie_NotificatiedefinitieStatus struct {
+	bun.BaseModel              `bun:"table:notificatiedefinitie_notificatiedefinitiestatus,alias:notificatiedefinitie_notificatiedefinitiestatus"`
+	NotificatieDefinitie_ID    int                                                       `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk" schema_desc:"ID van de NotificatieDefinitie-entiteit"`
+	Rel_ID                     int                                                       `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentNotificatieDefinitie *NotificatieDefinitie                                     `json:"-" bun:"rel:belongs-to,join:notificatiedefinitie_id=id,on_delete:cascade"`
+	Opvoer                     *time.Time                                                `json:"opvoer,omitempty"`
+	Afvoer                     *time.Time                                                `json:"afvoer,omitempty"`
+	Data                       []NotificatieDefinitie_NotificatiedefinitieStatus_Data    `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang                    []NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                      []NotificatieDefinitie_NotificatiedefinitieStatus_Einde   `bun:"rel:has-many,join:notificatiedefinitie_id=notificatiedefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieStatus_Data — geversioned inhoud van NotificatieDefinitie_NotificatiedefinitieStatus.
+type NotificatieDefinitie_NotificatiedefinitieStatus_Data struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitiestatus_data,alias:notificatiedefinitie_notificatiedefinitiestatus_data"`
+	NotificatieDefinitie_ID int                        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int                        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64                      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Status                  NotificatieDefinitieStatus `json:"status" schema:"enum=NotificatieDefinitieStatus"`
+	Reden                   *string                    `json:"reden,omitempty"`
+	Opvoer                  *time.Time                 `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time                 `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang — aanvangdatum van NotificatieDefinitie_NotificatiedefinitieStatus.
+type NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitiestatus_aanvang,alias:notificatiedefinitie_notificatiedefinitiestatus_aanvang"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                   *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_NotificatiedefinitieStatus_Einde — eindedatum van NotificatieDefinitie_NotificatiedefinitieStatus.
+type NotificatieDefinitie_NotificatiedefinitieStatus_Einde struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_notificatiedefinitiestatus_einde,alias:notificatiedefinitie_notificatiedefinitiestatus_einde"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Rel_ID                  int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                   *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
 }
 
 // QueryDefinitie_QuerydefinitieNaam — De naam waarmee de frontend het document aanroept (documentId). Stabiel: dit is het gepubliceerde contract; hernoemen is een nieuwe hub.

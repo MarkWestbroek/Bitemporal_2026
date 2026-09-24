@@ -79,8 +79,16 @@ func RegistreerJSONCore(ctx context.Context, rawBody []byte, defaultRegistratiet
 	if rerr != nil {
 		return nil, rerr
 	}
+	// Notificaties (notificaties/): gebeurtenissen afleiden uit de zojuist gecommitte registratie.
+	// De hook mag de registratie nooit laten falen; bezorging is asynchroon.
+	if NaRegistratie != nil {
+		NaRegistratie(ctx, res.RegistratieID, res.Registratie)
+	}
 	return &res, nil
 }
+
+// NaRegistratie wordt door main.go gezet (notificaties.Service.NaRegistratie); nil = uit.
+var NaRegistratie func(ctx context.Context, registratieID int64, reg model.Registratie)
 
 func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 	return func(c *gin.Context) {

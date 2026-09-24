@@ -397,6 +397,15 @@ dat niet voor je eigen wijziging aanziet.
    `git diff model/ | grep '^-'` alleen de commentaarregel van punt 6 te tonen. Structureel
    oplossen: backlog §29.3/29.4.
 
+9. **Delta-methode als de nulmeting niet schoon is** (25-09-2026, `NotificatieDefinitie`): de
+   nulmeting gaf 600+ verschilregels (andere sortering van de generator t.o.v. de gecommitte
+   bestanden). Genereer dan het *ongewijzigde* export én het gewijzigde export elk in een eigen
+   tijdelijke map (`--output <map>/`, met een kopie van `metaregistry_plumbing.go` erin), maak
+   `diff -ru gen-a gen-b > delta.patch` — dat is puur je eigen toevoeging — en pas die toe op
+   `model/` (`patch -p1 -d model`); hunks die niet passen zijn per bestand aan het einde (types)
+   of vóór de sluitaccolade van `init` (registries) in te voegen. Daarna `gofmt`, de
+   `schema:`-tags strippen, `go build && go test`. `git diff model/ | grep '^-'` hoort leeg te zijn.
+
 **Databasegevolg**: geen migratie zolang je alleen toevoegt. `dbsetup.CreateTables` maakt bij de
 eerste start van de backend de nieuwe tabellen aan (`CREATE TABLE IF NOT EXISTS`); bestaande data
 blijft onaangeroerd. Maar het voegt **geen kolommen toe** aan een bestaande tabel en verwijdert

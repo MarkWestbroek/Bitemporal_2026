@@ -22,6 +22,7 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/filestore"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/notificaties"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/routes"
 )
 
@@ -255,6 +256,26 @@ func NewRouter() *gin.Engine {
 		// van een QueryDefinitie). Alleen-lezen en zonder data, dus openbaar zoals queries.
 		router.POST("/graphql/valideer", dynql.ValideerDocumentHandler(gqlSchema))
 		fmt.Println("GraphQL endpoint geregistreerd op /graphql/query (+ /graphql/valideer)")
+
+		// Notificaties (NORA/FDS, CloudEvents NL GOV): gebeurtenissen na elke registratie,
+		// abonnementen = NotificatieDefinities in het configuratiedomein. Zie notificaties/.
+		notif := notificaties.Nieuw(handlers.DB, notificaties.ConfigUitEnv(), gqlSchema)
+		handlers.NaRegistratie = notif.NaRegistratie
+		notif.Routes(router, admin)
+		if notif.Cfg.Source == "" {
+			fmt.Println("WARN: NOTIFICATIE_SOURCE niet gezet — CloudEvents source is 'urn:nld:onbekend:omnium'")
+		}
+		if notif.Cfg.SMTP.Host == "" {
+			fmt.Println("notificaties: SMTP niet geconfigureerd — e-mailabonnees komen als 'opgegeven' in het bezorglog")
+		}
+		if defs, err := notificaties.LaadDefinities(context.Background(), time.Now()); err != nil {
+			fmt.Println("WARN: NotificatieDefinities laden mislukt:", err)
+		} else {
+			fmt.Printf("notificaties aan (catalogus /notificaties/gebeurtenistypes); %d NotificatieDefinitie(s)\n", len(defs))
+			for _, d := range defs {
+				fmt.Println("  ", d.Beschrijf())
+			}
+		}
 
 		// Uitvoeren op naam: er wordt niets opgebouwd (de documenten zijn data en worden
 		// per aanroep opgezocht), maar bij het opstarten worden het contract en de actuele

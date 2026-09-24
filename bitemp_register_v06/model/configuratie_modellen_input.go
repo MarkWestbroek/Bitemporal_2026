@@ -82,3 +82,48 @@ type QueryDefinitie_QuerydefinitieDocument_Input struct {
 	Aanvang           *Date   `json:"aanvang,omitempty"`
 	Einde             *Date   `json:"einde,omitempty"`
 }
+
+type NotificatieDefinitie_NotificatiedefinitieNaam_Input struct {
+	NOTIFICATIEDEFINITIE_ID int     `json:"notificatiedefinitie_id"`
+	Rel_ID                  int     `json:"rel_id"`
+	Naam                    string  `json:"naam"`
+	Beschrijving            *string `json:"beschrijving,omitempty"`
+}
+
+type NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input struct {
+	NOTIFICATIEDEFINITIE_ID int                        `json:"notificatiedefinitie_id"`
+	Rel_ID                  int                        `json:"rel_id"`
+	Doeltype                string                     `json:"doeltype"`
+	Registratietype         NotificatieRegistratietype `json:"registratietype"`
+	Bron                    *string                    `json:"bron,omitempty"`
+	Filter                  *string                    `json:"filter,omitempty"`
+	Aanvang                 *Date                      `json:"aanvang,omitempty"`
+	Einde                   *Date                      `json:"einde,omitempty"`
+}
+
+type NotificatieDefinitie_NotificatiedefinitieAbonnee_Input struct {
+	NOTIFICATIEDEFINITIE_ID int               `json:"notificatiedefinitie_id"`
+	Rel_ID                  int               `json:"rel_id"`
+	Kanaal                  NotificatieKanaal `json:"kanaal"`
+	Adres                   string            `json:"adres"`
+	Geheim                  *string           `json:"geheim,omitempty"`
+	Aanvang                 *Date             `json:"aanvang,omitempty"`
+	Einde                   *Date             `json:"einde,omitempty"`
+}
+
+type NotificatieDefinitie_NotificatiedefinitieInhoud_Input struct {
+	NOTIFICATIEDEFINITIE_ID int     `json:"notificatiedefinitie_id"`
+	Rel_ID                  int     `json:"rel_id"`
+	Onderwerp               *string `json:"onderwerp,omitempty"`
+	Tekst                   *string `json:"tekst,omitempty"`
+	Querydefinitie          *string `json:"querydefinitie,omitempty"`
+}
+
+type NotificatieDefinitie_NotificatiedefinitieStatus_Input struct {
+	NOTIFICATIEDEFINITIE_ID int                        `json:"notificatiedefinitie_id"`
+	Rel_ID                  int                        `json:"rel_id"`
+	Status                  NotificatieDefinitieStatus `json:"status"`
+	Reden                   *string                    `json:"reden,omitempty"`
+	Aanvang                 *Date                      `json:"aanvang,omitempty"`
+	Einde                   *Date                      `json:"einde,omitempty"`
+}

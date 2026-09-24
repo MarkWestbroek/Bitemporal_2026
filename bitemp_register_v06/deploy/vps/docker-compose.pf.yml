@@ -107,6 +107,15 @@ services:
       AUTH_ENABLED: "true"
       # Openbare indiening: FormulierDefinitie 2 "Aanmelding initiatief" (POST /aanmelding/2, aanmelden.html?formulier=2)
       OPENBARE_FORMULIEREN: "2"
+      # Notificaties (NORA/FDS, CloudEvents): source-URN en SMTP komen uit /srv/omnium-pf/.env
+      NOTIFICATIE_SOURCE: "${NOTIFICATIE_SOURCE:-}"
+      NOTIFICATIE_TYPE_PREFIX: "nl.commonground-portfolio"
+      NOTIFICATIE_BASIS_URL: "https://pf.common-ground-lab.nl"
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
       COOKIE_SECURE: "true"
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET ontbreekt in .env}
       JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-24}

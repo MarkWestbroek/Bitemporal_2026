@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-25T13:00:00Z",
+  "source": "handmatig (Claude-sessie 25-09-2026)",
+  "description": "NotificatieDefinitie 1 'nieuwe-aanmelding-melden': e-mail aan de moderatoren bij een registratie op Initiatief met bron aanmeldformulier. Het abonnee-adres moderatie@common-ground-lab.nl is een placeholder: pas het aan (correctie op notificatiedefinitieabonnee) vóór of na het afspelen. Vereist een backend met NotificatieDefinitie (configuratie-model 25-09-2026) en SMTP_* in .env; zonder SMTP komt de bezorging als 'opgegeven' in het bezorglog.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T13:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "NotificatieDefinitie nieuwe-aanmelding-melden (e-mail aan moderatoren)",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "NotificatieDefinitie nieuwe-aanmelding-melden (e-mail aan moderatoren bij aanmelding via het formulier)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "notificatiedefinitie": {
+                "id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "notificatiedefinitie_aanvang": {
+                "notificatiedefinitie_id": 1,
+                "datum": "2026-09-24"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "notificatiedefinitienaam": {
+                "notificatiedefinitie_id": 1,
+                "naam": "nieuwe-aanmelding-melden",
+                "beschrijving": "Mail aan de moderatoren bij elke aanmelding via het openbare aanmeldformulier (registratie op Initiatief met bron aanmeldformulier). Informatiearm: onderwerp, id en link; de inhoud staat in het register."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "notificatiedefinitiegebeurtenis": {
+                "notificatiedefinitie_id": 1,
+                "doeltype": "Initiatief",
+                "registratietype": "registratie",
+                "bron": "aanmeldformulier"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "notificatiedefinitieabonnee": {
+                "notificatiedefinitie_id": 1,
+                "kanaal": "email",
+                "adres": "moderatie@common-ground-lab.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "notificatiedefinitieinhoud": {
+                "notificatiedefinitie_id": 1,
+                "onderwerp": "Nieuwe aanmelding in het Common Ground-portfolio ({{entiteit}} {{id}})",
+                "tekst": "Er is een nieuwe aanmelding binnengekomen via het aanmeldformulier.\n\n{{entiteit}} {{id}} — registratie {{registratieId}} op {{tijdstip}}.\n\nBekijk en beoordeel de aanmelding in de Studio:\n{{link}}\n\nDe modereerlijst (alle aanmeldingen met status nieuwe_aanmelding of in_behandeling) staat in QueryDefinitie 'nieuwe-aanmeldingen'.\n\nDit bericht is automatisch verstuurd door het register (gebeurtenis {{type}})."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "notificatiedefinitiestatus": {
+                "notificatiedefinitie_id": 1,
+                "status": "actief"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

@@ -438,6 +438,14 @@ anders optie). Een snapshot is een noodrem, geen backup.
   `LEESTOEGANG=documenten` is dat voor anonieme bezoekers dicht — dan is een publieke
   organisatie-lookup nodig vóór de poort dichtgaat (backlog).
 
+  **Zesde ronde 25-09-2026 (notificaties, fase 1)**: zelfde procedure; de backend maakt de tabellen
+  van `NotificatieDefinitie` en `notificatie_bezorging` zelf aan. `docker-compose.pf.yml` geeft
+  `NOTIFICATIE_SOURCE` en `SMTP_*` door uit `/srv/omnium-pf/.env` — zet daar
+  `NOTIFICATIE_SOURCE=urn:nld:kvknr:<KvK>:omnium-pf` en de Quickhost-SMTP-gegevens van
+  `noreply@common-ground-lab.nl`; herstart de API (`pf.sh deploy`). Daarna replay 22
+  (NotificatieDefinitie `nieuwe-aanmelding-melden`; pas het abonnee-adres aan). Controle:
+  `GET /notificaties/gebeurtenistypes` en, ingelogd als admin, `GET /notificaties/bezorgingen`.
+
 ---
 
 ## 10. Smoke test (vr 11 sep, daarna bevriezen)

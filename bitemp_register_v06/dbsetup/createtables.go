@@ -170,6 +170,12 @@ func CreateTables(db *bun.DB) error {
 		return err
 	}
 
+	// Bezorglog van notificaties (plumbing, zie notificaties/)
+	_, err = db.NewCreateTable().Model((*model.NotificatieBezorging)(nil)).IfNotExists().Exec(ctx)
+	if err != nil {
+		return err
+	}
+
 	//Bitemporal core tables
 	// Wijziging table
 	_, err = db.NewCreateTable().Model((*model.Wijziging)(nil)).IfNotExists().Exec(ctx)

@@ -81,6 +81,7 @@ type RegistreerResult struct {
 	ResponseBody  json.RawMessage
 	ToegekendeIDs map[string]int // plaatshouder → toegekend id (registration_plaatshouders.go)
 	DurationMs    int64
+	Registratie   model.Registratie // de vastgelegde registratie (bron, tijdstip, type) — voor de notificatie-hook
 	// Validatie bevat de gevonden fouten/waarschuwingen op basis van
 	// V3Datatype-regels (B.A.2). Bij StrengheidStrict en aanwezige fouten
 	// wordt RegistreerCore al eerder afgebroken met een RegistreerError;
@@ -281,6 +282,7 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 		Tijdstip:      registratieTijdstip,
 		Wijzigingen:   req.Wijzigingen,
 		ToegekendeIDs: toegekendeIDs,
+		Registratie:   req.Registratie,
 		ResponseBody:  responseBodyJSON,
 		DurationMs:    elapsedMs,
 		Validatie:     validatieOfNil(validatie),

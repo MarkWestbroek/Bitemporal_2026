@@ -18,4 +18,13 @@ func initConfiguratieEnumRegistry() {
 	EnumEditorLayouts["WeergaveDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 3480, Y: -315}}
 	EnumEditorLayouts["QueryDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 4330, Y: -315}}
 	EnumEditorLayouts["QueryDefinitieToegankelijkheid"] = &EditorLayout{Positie: &V3Positie{X: 4580, Y: -315}}
+	EnumWaarden["NotificatieDefinitieStatus"] = []string{"concept", "actief", "inactief"}
+	EnumDomeinen["NotificatieDefinitieStatus"] = "configuratie"
+	EnumWaarden["NotificatieKanaal"] = []string{"email", "webhook"}
+	EnumDomeinen["NotificatieKanaal"] = "configuratie"
+	EnumWaarden["NotificatieRegistratietype"] = []string{"registratie", "correctie", "ongedaanmaking", "alle"}
+	EnumDomeinen["NotificatieRegistratietype"] = "configuratie"
+	EnumEditorLayouts["NotificatieDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 5330, Y: -330}}
+	EnumEditorLayouts["NotificatieKanaal"] = &EditorLayout{Positie: &V3Positie{X: 5530, Y: -330}}
+	EnumEditorLayouts["NotificatieRegistratietype"] = &EditorLayout{Positie: &V3Positie{X: 5730, Y: -330}}
 }

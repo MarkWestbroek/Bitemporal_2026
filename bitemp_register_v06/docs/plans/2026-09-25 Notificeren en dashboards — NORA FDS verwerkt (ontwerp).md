@@ -188,3 +188,22 @@ de moderator-mail.
 Eerste concrete definitie: *"`nl.omnium.cg.initiatief.geregistreerd` met bron `aanmeldformulier` →
 e-mail aan de moderatoren met onderwerp, id en link naar de Studio"*. Vereist: een SMTP-relay dat de
 VPS mag gebruiken (`SMTP_HOST/PORT/USER/PASS/FROM`).
+
+
+## 5. Fase 1 gebouwd (25-09-2026)
+
+| Onderdeel | Waar |
+|---|---|
+| `NotificatieDefinitie` in het configuratiedomein (V3 + codegen, delta-methode CODEGEN §7.5.9): GE's `NotificatiedefinitieNaam`, `…Gebeurtenis` (doeltype, registratietype, bron, filter; materieel), `…Abonnee` (meervoudig, materieel: kanaal, adres, geheim), `…Inhoud` (onderwerp, tekst, querydefinitie), `…Status` (materieel) | `docs/Model files (V3)/configuratie 2026-09-25 NotificatieDefinitie — v3-model.json`, `model/configuratie_*.go` |
+| Gebeurtenis-afleiding na commit (hook `handlers.NaRegistratie`), CloudEvents NL GOV-bericht, catalogus, filter via het GraphQL-filter (`dynql.EntiteitVoldoetAanFilter`), definities lezen zoals opgeslagen documenten (`dynql/configuratie_lezen.go`) | `notificaties/`, `handlers/registration_handlers.go`, `main.go` |
+| Bezorging: webhook (structured CloudEvents, `Idempotency-Key`, HMAC `X-Omnium-Signature`, 2xx = bevestigd), e-mail (SMTP STARTTLS/TLS), 5 pogingen met backoff, bezorglog `notificatie_bezorging` | `notificaties/bezorg.go`, `service.go`, `model/notificatie_bezorging.go` |
+| Endpoints `/notificaties/gebeurtenistypes`, `/notificaties/schema/gebeurtenis-v1.json`, `/notificaties/definities` (admin), `/notificaties/bezorgingen` (admin) | `notificaties/routes.go`, `API_REFERENCE.md` §8a |
+| Eerste definitie: `nieuwe-aanmelding-melden` (e-mail moderatoren bij bron `aanmeldformulier`) | replay 22 |
+
+Getest: unittests (CloudEvent/NLgov-regels, matching, sjabloon, HMAC, webhook met herpoging en
+filter via httptest, e-mail zonder SMTP → opgegeven, catalogus), en e2e lokaal: definitie via
+`$nieuw`-plaatshouder geregistreerd, openbare aanmelding → CloudEvent bij een testwebhook (200,
+handtekening klopt), filter `nieuwe_aanmelding` geëvalueerd, e-mail als *mislukt* in het log.
+
+Nog niet (fase 2): herpogingen overleven een herstart niet (in-memory); pull-endpoint
+`gebeurtenissen?vanaf`; heruitzending vanuit de Studio; 429/Retry-After; out-of-band melding.

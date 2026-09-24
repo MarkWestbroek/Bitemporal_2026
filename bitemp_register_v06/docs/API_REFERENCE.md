@@ -341,6 +341,34 @@ Elke opvoer/afvoer in `wijzigingen[]` wordt geparseerd via `RepresentatiePlusNaa
 
 ---
 
+## 8a. Notificaties (gebeurtenissen, NORA/FDS)
+
+Ontwerp: `docs/plans/2026-09-25 Notificeren en dashboards — NORA FDS verwerkt (ontwerp).md`;
+code: `notificaties/`. Na elke geslaagde `POST /registratie/` (ook `/aanmelding/:id`) leidt de
+backend per geraakte entiteit een gebeurtenis af en bezorgt die aan de abonnees van de actieve
+`NotificatieDefinitie`s (configuratiedomein: naam, gebeurtenis (doeltype × registratietype, bron,
+filter in de GraphQL-filtertaal), abonnees (e-mail/webhook), inhoud, status). Bericht: NL GOV
+profile for CloudEvents, informatiearm (`dataref` naar `/full/...`, geen veldwaarden). Webhook:
+`POST` met `Content-Type: application/cloudevents+json`, `Idempotency-Key: <id>`,
+`X-Omnium-Signature: sha256=<HMAC>` (bij een geheim); at-least-once, 5 pogingen met backoff
+(1 m, 5 m, 30 m, 2 u, 12 u; herpogingen leven in het proces — na een herstart niet hervat, fase 2).
+E-mail via SMTP (`SMTP_*`). Configuratie: `NOTIFICATIE_SOURCE`, `NOTIFICATIE_TYPE_PREFIX`,
+`NOTIFICATIE_BASIS_URL`, `NOTIFICATIE_POGINGEN` (zie `.env.example`).
+
+### `GET /notificaties/gebeurtenistypes`
+- **Description**: catalogus van gebeurtenistypes, afgeleid uit de MetaRegistry: per entiteit `<prefix>.<entiteit>.geregistreerd|gecorrigeerd|ongedaangemaakt`. Openbaar.
+
+### `GET /notificaties/schema/gebeurtenis-v1.json`
+- **Description**: JSON-schema van het `data`-deel van het bericht (de `dataschema`). Openbaar.
+
+### `GET /notificaties/definities` (admin)
+- **Description**: de NotificatieDefinities zoals ze nu gelden (per GE het materieel geldige record).
+
+### `GET /notificaties/bezorgingen?limit=100&status=` (admin)
+- **Description**: bezorglog (`notificatie_bezorging`): per gebeurtenis × abonnee × poging status `bezorgd` / `mislukt` / `opgegeven`, HTTP-status, fout en het bericht.
+
+---
+
 ## 9. Schema Model Endpoints
 
 ### `GET /api/schema/model`

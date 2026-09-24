@@ -108,3 +108,38 @@ type QueryDefinitie_Einde struct {
 	Opvoer            *time.Time `json:"opvoer,omitempty"`
 	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }
+
+// NotificatieDefinitie — Abonnement op gebeurtenissen in het register (NORA/FDS 'Architectuur Notificeren', NL GOV profile for CloudEvents): welke gebeurtenis (doeltype × registratietype, bron, filter), wie (abonnees: e-mail of webhook) en wat (inhoud). Gereserveerd type: de backend leest de actieve definities bij elke registratie. Een gebeurtenis is een afgeleide van de registratie (formele tijd); notificaties zijn informatiearm (id's en verwijzingen, geen veldwaarden). Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.
+type NotificatieDefinitie struct {
+	bun.BaseModel                      `bun:"table:notificatiedefinitie,alias:notificatiedefinitie"`
+	ID                                 int                                                    `json:"id" bun:"id,pk"`
+	Opvoer                             *time.Time                                             `json:"opvoer,omitempty"`
+	Afvoer                             *time.Time                                             `json:"afvoer,omitempty"`
+	NotificatieDefinitieNamen          []NotificatieDefinitie_NotificatiedefinitieNaam        `bun:"rel:has-many,join:id=notificatiedefinitie_id" json:"notificatie_definitie_namen,omitempty"`
+	NotificatieDefinitieGebeurtenissen []NotificatieDefinitie_NotificatiedefinitieGebeurtenis `bun:"rel:has-many,join:id=notificatiedefinitie_id" json:"notificatie_definitie_gebeurtenissen,omitempty"`
+	NotificatieDefinitieAbonnees       []NotificatieDefinitie_NotificatiedefinitieAbonnee     `bun:"rel:has-many,join:id=notificatiedefinitie_id" json:"notificatie_definitie_abonnees,omitempty"`
+	NotificatieDefinitieInhouden       []NotificatieDefinitie_NotificatiedefinitieInhoud      `bun:"rel:has-many,join:id=notificatiedefinitie_id" json:"notificatie_definitie_inhouden,omitempty"`
+	NotificatieDefinitieStatussen      []NotificatieDefinitie_NotificatiedefinitieStatus      `bun:"rel:has-many,join:id=notificatiedefinitie_id" json:"notificatie_definitie_statussen,omitempty"`
+	Aanvang                            []NotificatieDefinitie_Aanvang                         `bun:"rel:has-many,join:id=notificatiedefinitie_id" json:"aanvang,omitempty"`
+	Einde                              []NotificatieDefinitie_Einde                           `bun:"rel:has-many,join:id=notificatiedefinitie_id" json:"einde,omitempty"`
+}
+
+// NotificatieDefinitie_Aanvang — aanvangdatum van entiteit NotificatieDefinitie.
+type NotificatieDefinitie_Aanvang struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_aanvang,alias:notificatiedefinitie_aanvang"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                   *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
+}
+
+// NotificatieDefinitie_Einde — eindedatum van entiteit NotificatieDefinitie.
+type NotificatieDefinitie_Einde struct {
+	bun.BaseModel           `bun:"table:notificatiedefinitie_einde,alias:notificatiedefinitie_einde"`
+	NotificatieDefinitie_ID int        `json:"notificatiedefinitie_id" bun:"notificatiedefinitie_id,pk"`
+	Versie                  int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                   *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                  *time.Time `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time `json:"afvoer,omitempty"`
+}

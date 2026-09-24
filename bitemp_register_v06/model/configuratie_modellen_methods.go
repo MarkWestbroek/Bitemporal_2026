@@ -39,6 +39,16 @@ func (q QueryDefinitie) GetAfvoer() *time.Time   { return q.Afvoer }
 func (q *QueryDefinitie) SetAfvoer(t *time.Time) { q.Afvoer = t }
 func (q QueryDefinitie) String() string          { return RepresentatieToString(q) }
 
+// NotificatieDefinitie
+func (n NotificatieDefinitie) GetID() any              { return n.ID }
+func (n NotificatieDefinitie) Metatype() Metatype      { return MetatypeEntiteit }
+func (n *NotificatieDefinitie) ClearID()               { n.ID = 0 }
+func (n NotificatieDefinitie) GetOpvoer() *time.Time   { return n.Opvoer }
+func (n *NotificatieDefinitie) SetOpvoer(t *time.Time) { n.Opvoer = t }
+func (n NotificatieDefinitie) GetAfvoer() *time.Time   { return n.Afvoer }
+func (n *NotificatieDefinitie) SetAfvoer(t *time.Time) { n.Afvoer = t }
+func (n NotificatieDefinitie) String() string          { return RepresentatieToString(n) }
+
 /* ================================================================
    2. HUBS (GE + REL) — interface-methoden
    ================================================================ */
@@ -148,6 +158,84 @@ func (qq *QueryDefinitie_QuerydefinitieDocument) SetOpvoer(t *time.Time) { qq.Op
 func (qq QueryDefinitie_QuerydefinitieDocument) GetAfvoer() *time.Time   { return qq.Afvoer }
 func (qq *QueryDefinitie_QuerydefinitieDocument) SetAfvoer(t *time.Time) { qq.Afvoer = t }
 func (qq QueryDefinitie_QuerydefinitieDocument) String() string          { return RepresentatieToString(qq) }
+
+// NotificatieDefinitie_NotificatiedefinitieNaam
+func (nn NotificatieDefinitie_NotificatiedefinitieNaam) GetID() any { return nn.Rel_ID }
+func (nn NotificatieDefinitie_NotificatiedefinitieNaam) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (nn *NotificatieDefinitie_NotificatiedefinitieNaam) ClearID()               { nn.Rel_ID = 0 }
+func (nn NotificatieDefinitie_NotificatiedefinitieNaam) GetOpvoer() *time.Time   { return nn.Opvoer }
+func (nn *NotificatieDefinitie_NotificatiedefinitieNaam) SetOpvoer(t *time.Time) { nn.Opvoer = t }
+func (nn NotificatieDefinitie_NotificatiedefinitieNaam) GetAfvoer() *time.Time   { return nn.Afvoer }
+func (nn *NotificatieDefinitie_NotificatiedefinitieNaam) SetAfvoer(t *time.Time) { nn.Afvoer = t }
+func (nn NotificatieDefinitie_NotificatiedefinitieNaam) String() string {
+	return RepresentatieToString(nn)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieGebeurtenis
+func (nn NotificatieDefinitie_NotificatiedefinitieGebeurtenis) GetID() any { return nn.Rel_ID }
+func (nn NotificatieDefinitie_NotificatiedefinitieGebeurtenis) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (nn *NotificatieDefinitie_NotificatiedefinitieGebeurtenis) ClearID() { nn.Rel_ID = 0 }
+func (nn NotificatieDefinitie_NotificatiedefinitieGebeurtenis) GetOpvoer() *time.Time {
+	return nn.Opvoer
+}
+func (nn *NotificatieDefinitie_NotificatiedefinitieGebeurtenis) SetOpvoer(t *time.Time) {
+	nn.Opvoer = t
+}
+func (nn NotificatieDefinitie_NotificatiedefinitieGebeurtenis) GetAfvoer() *time.Time {
+	return nn.Afvoer
+}
+func (nn *NotificatieDefinitie_NotificatiedefinitieGebeurtenis) SetAfvoer(t *time.Time) {
+	nn.Afvoer = t
+}
+func (nn NotificatieDefinitie_NotificatiedefinitieGebeurtenis) String() string {
+	return RepresentatieToString(nn)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieAbonnee
+func (nn NotificatieDefinitie_NotificatiedefinitieAbonnee) GetID() any { return nn.Rel_ID }
+func (nn NotificatieDefinitie_NotificatiedefinitieAbonnee) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (nn *NotificatieDefinitie_NotificatiedefinitieAbonnee) ClearID()               { nn.Rel_ID = 0 }
+func (nn NotificatieDefinitie_NotificatiedefinitieAbonnee) GetOpvoer() *time.Time   { return nn.Opvoer }
+func (nn *NotificatieDefinitie_NotificatiedefinitieAbonnee) SetOpvoer(t *time.Time) { nn.Opvoer = t }
+func (nn NotificatieDefinitie_NotificatiedefinitieAbonnee) GetAfvoer() *time.Time   { return nn.Afvoer }
+func (nn *NotificatieDefinitie_NotificatiedefinitieAbonnee) SetAfvoer(t *time.Time) { nn.Afvoer = t }
+func (nn NotificatieDefinitie_NotificatiedefinitieAbonnee) String() string {
+	return RepresentatieToString(nn)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieInhoud
+func (nn NotificatieDefinitie_NotificatiedefinitieInhoud) GetID() any { return nn.Rel_ID }
+func (nn NotificatieDefinitie_NotificatiedefinitieInhoud) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (nn *NotificatieDefinitie_NotificatiedefinitieInhoud) ClearID()               { nn.Rel_ID = 0 }
+func (nn NotificatieDefinitie_NotificatiedefinitieInhoud) GetOpvoer() *time.Time   { return nn.Opvoer }
+func (nn *NotificatieDefinitie_NotificatiedefinitieInhoud) SetOpvoer(t *time.Time) { nn.Opvoer = t }
+func (nn NotificatieDefinitie_NotificatiedefinitieInhoud) GetAfvoer() *time.Time   { return nn.Afvoer }
+func (nn *NotificatieDefinitie_NotificatiedefinitieInhoud) SetAfvoer(t *time.Time) { nn.Afvoer = t }
+func (nn NotificatieDefinitie_NotificatiedefinitieInhoud) String() string {
+	return RepresentatieToString(nn)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieStatus
+func (nn NotificatieDefinitie_NotificatiedefinitieStatus) GetID() any { return nn.Rel_ID }
+func (nn NotificatieDefinitie_NotificatiedefinitieStatus) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (nn *NotificatieDefinitie_NotificatiedefinitieStatus) ClearID()               { nn.Rel_ID = 0 }
+func (nn NotificatieDefinitie_NotificatiedefinitieStatus) GetOpvoer() *time.Time   { return nn.Opvoer }
+func (nn *NotificatieDefinitie_NotificatiedefinitieStatus) SetOpvoer(t *time.Time) { nn.Opvoer = t }
+func (nn NotificatieDefinitie_NotificatiedefinitieStatus) GetAfvoer() *time.Time   { return nn.Afvoer }
+func (nn *NotificatieDefinitie_NotificatiedefinitieStatus) SetAfvoer(t *time.Time) { nn.Afvoer = t }
+func (nn NotificatieDefinitie_NotificatiedefinitieStatus) String() string {
+	return RepresentatieToString(nn)
+}
 
 /* ================================================================
    3. _DATA — interface-methoden
@@ -263,6 +351,88 @@ func (d QueryDefinitie_QuerydefinitieDocument_Data) GetAfvoer() *time.Time   { r
 func (d *QueryDefinitie_QuerydefinitieDocument_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d QueryDefinitie_QuerydefinitieDocument_Data) String() string          { return RepresentatieToString(d) }
 
+// NotificatieDefinitie_NotificatiedefinitieNaam_Data
+func (d NotificatieDefinitie_NotificatiedefinitieNaam_Data) GetID() any { return d.Versie }
+func (d NotificatieDefinitie_NotificatiedefinitieNaam_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *NotificatieDefinitie_NotificatiedefinitieNaam_Data) ClearID()               { d.Versie = 0 }
+func (d NotificatieDefinitie_NotificatiedefinitieNaam_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *NotificatieDefinitie_NotificatiedefinitieNaam_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d NotificatieDefinitie_NotificatiedefinitieNaam_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *NotificatieDefinitie_NotificatiedefinitieNaam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d NotificatieDefinitie_NotificatiedefinitieNaam_Data) String() string {
+	return RepresentatieToString(d)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data
+func (d NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data) GetID() any { return d.Versie }
+func (d NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data) ClearID() { d.Versie = 0 }
+func (d NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data) GetOpvoer() *time.Time {
+	return d.Opvoer
+}
+func (d *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data) SetOpvoer(t *time.Time) {
+	d.Opvoer = t
+}
+func (d NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data) GetAfvoer() *time.Time {
+	return d.Afvoer
+}
+func (d *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data) SetAfvoer(t *time.Time) {
+	d.Afvoer = t
+}
+func (d NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data) String() string {
+	return RepresentatieToString(d)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieAbonnee_Data
+func (d NotificatieDefinitie_NotificatiedefinitieAbonnee_Data) GetID() any { return d.Versie }
+func (d NotificatieDefinitie_NotificatiedefinitieAbonnee_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *NotificatieDefinitie_NotificatiedefinitieAbonnee_Data) ClearID() { d.Versie = 0 }
+func (d NotificatieDefinitie_NotificatiedefinitieAbonnee_Data) GetOpvoer() *time.Time {
+	return d.Opvoer
+}
+func (d *NotificatieDefinitie_NotificatiedefinitieAbonnee_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d NotificatieDefinitie_NotificatiedefinitieAbonnee_Data) GetAfvoer() *time.Time {
+	return d.Afvoer
+}
+func (d *NotificatieDefinitie_NotificatiedefinitieAbonnee_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d NotificatieDefinitie_NotificatiedefinitieAbonnee_Data) String() string {
+	return RepresentatieToString(d)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieInhoud_Data
+func (d NotificatieDefinitie_NotificatiedefinitieInhoud_Data) GetID() any { return d.Versie }
+func (d NotificatieDefinitie_NotificatiedefinitieInhoud_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *NotificatieDefinitie_NotificatiedefinitieInhoud_Data) ClearID()               { d.Versie = 0 }
+func (d NotificatieDefinitie_NotificatiedefinitieInhoud_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *NotificatieDefinitie_NotificatiedefinitieInhoud_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d NotificatieDefinitie_NotificatiedefinitieInhoud_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *NotificatieDefinitie_NotificatiedefinitieInhoud_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d NotificatieDefinitie_NotificatiedefinitieInhoud_Data) String() string {
+	return RepresentatieToString(d)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieStatus_Data
+func (d NotificatieDefinitie_NotificatiedefinitieStatus_Data) GetID() any { return d.Versie }
+func (d NotificatieDefinitie_NotificatiedefinitieStatus_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *NotificatieDefinitie_NotificatiedefinitieStatus_Data) ClearID()               { d.Versie = 0 }
+func (d NotificatieDefinitie_NotificatiedefinitieStatus_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *NotificatieDefinitie_NotificatiedefinitieStatus_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d NotificatieDefinitie_NotificatiedefinitieStatus_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *NotificatieDefinitie_NotificatiedefinitieStatus_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d NotificatieDefinitie_NotificatiedefinitieStatus_Data) String() string {
+	return RepresentatieToString(d)
+}
+
 /* ================================================================
    4. _AANVANG/_EINDE (entiteits-plumbing) — interface-methoden
    ================================================================ */
@@ -326,6 +496,26 @@ func (q *QueryDefinitie_Einde) SetOpvoer(t *time.Time) { q.Opvoer = t }
 func (q QueryDefinitie_Einde) GetAfvoer() *time.Time   { return q.Afvoer }
 func (q *QueryDefinitie_Einde) SetAfvoer(t *time.Time) { q.Afvoer = t }
 func (q QueryDefinitie_Einde) String() string          { return RepresentatieToString(q) }
+
+// NotificatieDefinitie_Aanvang
+func (n NotificatieDefinitie_Aanvang) GetID() any              { return n.Versie }
+func (n NotificatieDefinitie_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (n *NotificatieDefinitie_Aanvang) ClearID()               { n.Versie = 0 }
+func (n NotificatieDefinitie_Aanvang) GetOpvoer() *time.Time   { return n.Opvoer }
+func (n *NotificatieDefinitie_Aanvang) SetOpvoer(t *time.Time) { n.Opvoer = t }
+func (n NotificatieDefinitie_Aanvang) GetAfvoer() *time.Time   { return n.Afvoer }
+func (n *NotificatieDefinitie_Aanvang) SetAfvoer(t *time.Time) { n.Afvoer = t }
+func (n NotificatieDefinitie_Aanvang) String() string          { return RepresentatieToString(n) }
+
+// NotificatieDefinitie_Einde
+func (n NotificatieDefinitie_Einde) GetID() any              { return n.Versie }
+func (n NotificatieDefinitie_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (n *NotificatieDefinitie_Einde) ClearID()               { n.Versie = 0 }
+func (n NotificatieDefinitie_Einde) GetOpvoer() *time.Time   { return n.Opvoer }
+func (n *NotificatieDefinitie_Einde) SetOpvoer(t *time.Time) { n.Opvoer = t }
+func (n NotificatieDefinitie_Einde) GetAfvoer() *time.Time   { return n.Afvoer }
+func (n *NotificatieDefinitie_Einde) SetAfvoer(t *time.Time) { n.Afvoer = t }
+func (n NotificatieDefinitie_Einde) String() string          { return RepresentatieToString(n) }
 
 /* ================================================================
    5. _AANVANG/_EINDE (hub-level plumbing) — interface-methoden
@@ -412,6 +602,134 @@ func (q *QueryDefinitie_QuerydefinitieDocument_Einde) SetOpvoer(t *time.Time) { 
 func (q QueryDefinitie_QuerydefinitieDocument_Einde) GetAfvoer() *time.Time   { return q.Afvoer }
 func (q *QueryDefinitie_QuerydefinitieDocument_Einde) SetAfvoer(t *time.Time) { q.Afvoer = t }
 func (q QueryDefinitie_QuerydefinitieDocument_Einde) String() string          { return RepresentatieToString(q) }
+
+// NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang) GetID() any { return n.Versie }
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang) ClearID() { n.Versie = 0 }
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang) GetOpvoer() *time.Time {
+	return n.Opvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang) SetOpvoer(t *time.Time) {
+	n.Opvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang) GetAfvoer() *time.Time {
+	return n.Afvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang) SetAfvoer(t *time.Time) {
+	n.Afvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang) String() string {
+	return RepresentatieToString(n)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde) GetID() any { return n.Versie }
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde) ClearID() { n.Versie = 0 }
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde) GetOpvoer() *time.Time {
+	return n.Opvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde) SetOpvoer(t *time.Time) {
+	n.Opvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde) GetAfvoer() *time.Time {
+	return n.Afvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde) SetAfvoer(t *time.Time) {
+	n.Afvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde) String() string {
+	return RepresentatieToString(n)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang) GetID() any { return n.Versie }
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang) ClearID() { n.Versie = 0 }
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang) GetOpvoer() *time.Time {
+	return n.Opvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang) SetOpvoer(t *time.Time) {
+	n.Opvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang) GetAfvoer() *time.Time {
+	return n.Afvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang) SetAfvoer(t *time.Time) {
+	n.Afvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang) String() string {
+	return RepresentatieToString(n)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde) GetID() any { return n.Versie }
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde) ClearID() { n.Versie = 0 }
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde) GetOpvoer() *time.Time {
+	return n.Opvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde) SetOpvoer(t *time.Time) {
+	n.Opvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde) GetAfvoer() *time.Time {
+	return n.Afvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde) SetAfvoer(t *time.Time) {
+	n.Afvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde) String() string {
+	return RepresentatieToString(n)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang) GetID() any { return n.Versie }
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang) ClearID() { n.Versie = 0 }
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang) GetOpvoer() *time.Time {
+	return n.Opvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang) SetOpvoer(t *time.Time) {
+	n.Opvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang) GetAfvoer() *time.Time {
+	return n.Afvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang) SetAfvoer(t *time.Time) {
+	n.Afvoer = t
+}
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang) String() string {
+	return RepresentatieToString(n)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieStatus_Einde
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Einde) GetID() any { return n.Versie }
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Einde) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieStatus_Einde) ClearID() { n.Versie = 0 }
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Einde) GetOpvoer() *time.Time {
+	return n.Opvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieStatus_Einde) SetOpvoer(t *time.Time) { n.Opvoer = t }
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Einde) GetAfvoer() *time.Time {
+	return n.Afvoer
+}
+func (n *NotificatieDefinitie_NotificatiedefinitieStatus_Einde) SetAfvoer(t *time.Time) { n.Afvoer = t }
+func (n NotificatieDefinitie_NotificatiedefinitieStatus_Einde) String() string {
+	return RepresentatieToString(n)
+}
 
 /* ================================================================
    6. _INPUT — interface-methoden (no-op opvoer/afvoer)
@@ -529,6 +847,80 @@ func (i QueryDefinitie_QuerydefinitieDocument_Input) GetAfvoer() *time.Time   { 
 func (i *QueryDefinitie_QuerydefinitieDocument_Input) SetAfvoer(t *time.Time) {}
 func (i QueryDefinitie_QuerydefinitieDocument_Input) String() string          { return RepresentatieToString(i) }
 
+// NotificatieDefinitie_NotificatiedefinitieNaam_Input
+func (i NotificatieDefinitie_NotificatiedefinitieNaam_Input) GetID() any { return i.Rel_ID }
+func (i NotificatieDefinitie_NotificatiedefinitieNaam_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *NotificatieDefinitie_NotificatiedefinitieNaam_Input) ClearID()               { i.Rel_ID = 0 }
+func (i NotificatieDefinitie_NotificatiedefinitieNaam_Input) GetOpvoer() *time.Time   { return nil }
+func (i *NotificatieDefinitie_NotificatiedefinitieNaam_Input) SetOpvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieNaam_Input) GetAfvoer() *time.Time   { return nil }
+func (i *NotificatieDefinitie_NotificatiedefinitieNaam_Input) SetAfvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieNaam_Input) String() string {
+	return RepresentatieToString(i)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input
+func (i NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input) GetID() any { return i.Rel_ID }
+func (i NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input) ClearID() { i.Rel_ID = 0 }
+func (i NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input) GetOpvoer() *time.Time {
+	return nil
+}
+func (i *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input) SetOpvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input) GetAfvoer() *time.Time {
+	return nil
+}
+func (i *NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input) SetAfvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input) String() string {
+	return RepresentatieToString(i)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieAbonnee_Input
+func (i NotificatieDefinitie_NotificatiedefinitieAbonnee_Input) GetID() any { return i.Rel_ID }
+func (i NotificatieDefinitie_NotificatiedefinitieAbonnee_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *NotificatieDefinitie_NotificatiedefinitieAbonnee_Input) ClearID()               { i.Rel_ID = 0 }
+func (i NotificatieDefinitie_NotificatiedefinitieAbonnee_Input) GetOpvoer() *time.Time   { return nil }
+func (i *NotificatieDefinitie_NotificatiedefinitieAbonnee_Input) SetOpvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieAbonnee_Input) GetAfvoer() *time.Time   { return nil }
+func (i *NotificatieDefinitie_NotificatiedefinitieAbonnee_Input) SetAfvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieAbonnee_Input) String() string {
+	return RepresentatieToString(i)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieInhoud_Input
+func (i NotificatieDefinitie_NotificatiedefinitieInhoud_Input) GetID() any { return i.Rel_ID }
+func (i NotificatieDefinitie_NotificatiedefinitieInhoud_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *NotificatieDefinitie_NotificatiedefinitieInhoud_Input) ClearID()               { i.Rel_ID = 0 }
+func (i NotificatieDefinitie_NotificatiedefinitieInhoud_Input) GetOpvoer() *time.Time   { return nil }
+func (i *NotificatieDefinitie_NotificatiedefinitieInhoud_Input) SetOpvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieInhoud_Input) GetAfvoer() *time.Time   { return nil }
+func (i *NotificatieDefinitie_NotificatiedefinitieInhoud_Input) SetAfvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieInhoud_Input) String() string {
+	return RepresentatieToString(i)
+}
+
+// NotificatieDefinitie_NotificatiedefinitieStatus_Input
+func (i NotificatieDefinitie_NotificatiedefinitieStatus_Input) GetID() any { return i.Rel_ID }
+func (i NotificatieDefinitie_NotificatiedefinitieStatus_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *NotificatieDefinitie_NotificatiedefinitieStatus_Input) ClearID()               { i.Rel_ID = 0 }
+func (i NotificatieDefinitie_NotificatiedefinitieStatus_Input) GetOpvoer() *time.Time   { return nil }
+func (i *NotificatieDefinitie_NotificatiedefinitieStatus_Input) SetOpvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieStatus_Input) GetAfvoer() *time.Time   { return nil }
+func (i *NotificatieDefinitie_NotificatiedefinitieStatus_Input) SetAfvoer(t *time.Time) {}
+func (i NotificatieDefinitie_NotificatiedefinitieStatus_Input) String() string {
+	return RepresentatieToString(i)
+}
+
 /* ================================================================
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
    ================================================================ */
@@ -644,6 +1036,53 @@ func (q *QueryDefinitie) GeefOnderliggendeGegevenselementen() []OnderliggendeRep
 	return result
 }
 
+func (n *NotificatieDefinitie) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0)
+	for idx := range n.NotificatieDefinitieNamen {
+		if n.NotificatieDefinitieNamen[idx].NotificatieDefinitie_ID == 0 {
+			n.NotificatieDefinitieNamen[idx].NotificatieDefinitie_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieNaam", Representatie: &n.NotificatieDefinitieNamen[idx]})
+	}
+	for idx := range n.NotificatieDefinitieGebeurtenissen {
+		if n.NotificatieDefinitieGebeurtenissen[idx].NotificatieDefinitie_ID == 0 {
+			n.NotificatieDefinitieGebeurtenissen[idx].NotificatieDefinitie_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieGebeurtenis", Representatie: &n.NotificatieDefinitieGebeurtenissen[idx]})
+	}
+	for idx := range n.NotificatieDefinitieAbonnees {
+		if n.NotificatieDefinitieAbonnees[idx].NotificatieDefinitie_ID == 0 {
+			n.NotificatieDefinitieAbonnees[idx].NotificatieDefinitie_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieAbonnee", Representatie: &n.NotificatieDefinitieAbonnees[idx]})
+	}
+	for idx := range n.NotificatieDefinitieInhouden {
+		if n.NotificatieDefinitieInhouden[idx].NotificatieDefinitie_ID == 0 {
+			n.NotificatieDefinitieInhouden[idx].NotificatieDefinitie_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieInhoud", Representatie: &n.NotificatieDefinitieInhouden[idx]})
+	}
+	for idx := range n.NotificatieDefinitieStatussen {
+		if n.NotificatieDefinitieStatussen[idx].NotificatieDefinitie_ID == 0 {
+			n.NotificatieDefinitieStatussen[idx].NotificatieDefinitie_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieStatus", Representatie: &n.NotificatieDefinitieStatussen[idx]})
+	}
+	for idx := range n.Aanvang {
+		if n.Aanvang[idx].NotificatieDefinitie_ID == 0 {
+			n.Aanvang[idx].NotificatieDefinitie_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_Aanvang", Representatie: &n.Aanvang[idx]})
+	}
+	for idx := range n.Einde {
+		if n.Einde[idx].NotificatieDefinitie_ID == 0 {
+			n.Einde[idx].NotificatieDefinitie_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_Einde", Representatie: &n.Einde[idx]})
+	}
+	return result
+}
+
 /* ================================================================
    8. GeefOnderliggendeGegevenselementen — HUBS
    ================================================================ */
@@ -714,6 +1153,130 @@ func (h *WeergaveDefinitie_DetailTemplate) GeefOnderliggendeGegevenselementen() 
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "WeergaveDefinitie_DetailTemplate_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *NotificatieDefinitie_NotificatiedefinitieNaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].NotificatieDefinitie_ID == 0 {
+			h.Data[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieNaam_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *NotificatieDefinitie_NotificatiedefinitieGebeurtenis) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].NotificatieDefinitie_ID == 0 {
+			h.Data[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].NotificatieDefinitie_ID == 0 {
+			h.Aanvang[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].NotificatieDefinitie_ID == 0 {
+			h.Einde[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Einde", Representatie: &h.Einde[i]})
+	}
+	return result
+}
+
+func (h *NotificatieDefinitie_NotificatiedefinitieAbonnee) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].NotificatieDefinitie_ID == 0 {
+			h.Data[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieAbonnee_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].NotificatieDefinitie_ID == 0 {
+			h.Aanvang[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieAbonnee_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].NotificatieDefinitie_ID == 0 {
+			h.Einde[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieAbonnee_Einde", Representatie: &h.Einde[i]})
+	}
+	return result
+}
+
+func (h *NotificatieDefinitie_NotificatiedefinitieInhoud) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].NotificatieDefinitie_ID == 0 {
+			h.Data[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieInhoud_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *NotificatieDefinitie_NotificatiedefinitieStatus) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].NotificatieDefinitie_ID == 0 {
+			h.Data[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieStatus_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].NotificatieDefinitie_ID == 0 {
+			h.Aanvang[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieStatus_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].NotificatieDefinitie_ID == 0 {
+			h.Einde[i].NotificatieDefinitie_ID = h.NotificatieDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NotificatieDefinitie_NotificatiedefinitieStatus_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }
