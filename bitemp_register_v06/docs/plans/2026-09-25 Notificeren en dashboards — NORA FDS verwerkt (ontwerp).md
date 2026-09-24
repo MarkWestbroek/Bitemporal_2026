@@ -75,31 +75,57 @@ De catalogus (functie 1, aanbeveling 12) wordt **gegenereerd uit de MetaRegistry
 `GET /notificaties/gebeurtenistypes` (en in de OpenAPI). Versie: het model heeft al een versie
 (schema-versies); die gaat mee als `dataschema`.
 
-### 2.2 Het bericht — NL GOV profile for CloudEvents, informatiearm
+### 2.2 Het bericht — NL GOV profile for CloudEvents (Logius, draft mei 2026), informatiearm
+
+De Logius-specificatie (<https://logius-standaarden.github.io/NL-GOV-profile-for-CloudEvents/>)
+scherpt de CloudEvents-attributen aan. Toegepast op het register:
+
+| attribuut | NL GOV-regel | invulling hier |
+|---|---|---|
+| `specversion` | verplicht `1.0` | `1.0` |
+| `id` | verplicht; `source`+`id` uniek; **persistent id boven random UUID**; beperkingen documenteren in het dataschema | `reg-<registratieId>-w<wijzigingIdx>` — afgeleid van het log, dus reproduceerbaar en idempotent |
+| `source` | verplicht; URN met namespace `nld`: organisatie-id (OIN / KvK / eIDAS) + bronsysteem; **niet** voor de datalocatie; duurzaam abstractieniveau | `urn:nld:oin:<OIN>:systeem:<instantie>` of `urn:nld:kvknr:<KvK>:<instantie>`, per instantie geconfigureerd (`NOTIFICATIE_SOURCE`); pf: KvK van de beherende organisatie + `omnium-pf` |
+| `type` | verplicht; reverse-DNS; hiërarchie *databron > domein > wet*; **geen organisatienamen**; versie alleen als `v<n>`-suffix, en bij niet-compatibele wijziging oud én nieuw type produceren | `nl.<databron>.<entiteit>.<gebeurtenis>` met databron uit de instantie/het domein (pf: `nl.commonground-portfolio.initiatief.geregistreerd`); `gebeurtenis` ∈ `geregistreerd` / `gecorrigeerd` / `ongedaangemaakt`; geen productnaam in het type |
+| `time` | optioneel; RFC 3339; **het moment van vastleggen**, niet het moment in de werkelijkheid; betekenis documenteren | het **registratietijdstip** (formele tijd) — precies de NLgov-keuze; de materiële tijd zit in de gegevens zelf |
+| `subject` | optioneel; onderwerp in de context van de producer (NLgov: besluit uitgesteld) | `<entiteit>/<id>` (bv. `initiatief/146`); geen BSN-achtige sleutels in onze domeinen |
+| `dataref` | optioneel; verwijzing naar de payload elders; **het mechanisme voor informatiearm notificeren**; lang genoeg beschikbaar | de REST-URL van de entiteit (`https://…/full/initiatieven/146`); door de bitemporaliteit blijft die ook na correcties opvraagbaar (met `t=`) |
+| `data` | optioneel | minimaal: `registratieId`, `registratietype`, `bron`, `entiteit`, `id`, `wijzigingstypen`, en de GraphQL-verwijzing (`documentId` + variabelen) — geen veldwaarden |
+| `datacontenttype` | JSON aanbevolen | `application/json` |
+| `dataschema` | URI van het schema van `data`; voorkom meerdere schema's voor dezelfde data | `https://<instantie>/notificaties/schema/gebeurtenis-v1.json` (gepubliceerd door de API) |
+| `sequence` | extensie; lexicografisch ordenbaar; monotoon en aaneengesloten aanbevolen; bij `sequencetype: Integer` **moet** hij bij 1 beginnen en met 1 stijgen | het registratie-id, **nul-opgevuld tot 12 cijfers** en zónder `sequencetype`: het id is monotoon maar door teruggedraaide transacties niet gegarandeerd aaneengesloten |
+| grootte | intermediairs ≥ 64 KB doorgeven; consumers ≥ 64 KB accepteren | informatiearm blijft ver daaronder |
+| beveiliging | geen gevoelige data in contextattributen; protocolbeveiliging | geen persoonsgegevens in het bericht; TLS; HMAC-handtekening op de body |
+
+Voorbeeld voor pf:
 
 ```json
 {
   "specversion": "1.0",
   "id": "reg-864-w0",
-  "source": "urn:omnium:pf.common-ground-lab.nl",
-  "type": "nl.omnium.cg.initiatief.geregistreerd",
+  "source": "urn:nld:kvknr:<KvK>:omnium-pf",
+  "type": "nl.commonground-portfolio.initiatief.geregistreerd",
   "subject": "initiatief/146",
   "time": "2026-09-25T00:12:03Z",
+  "sequence": "000000000864",
   "datacontenttype": "application/json",
-  "dataschema": "https://pf.common-ground-lab.nl/openapi/CG",
-  "sequence": "864",
+  "dataschema": "https://pf.common-ground-lab.nl/notificaties/schema/gebeurtenis-v1.json",
+  "dataref": "https://pf.common-ground-lab.nl/full/initiatieven/146",
   "data": {
     "registratieId": 864, "registratietype": "registratie", "bron": "aanmeldformulier",
     "entiteit": "Initiatief", "id": 146, "wijzigingstypen": ["opvoer"],
-    "links": { "rest": "/full/initiatieven/146", "graphql": { "documentId": "publiek-initiatief-detail", "variables": { "id": 146 } } }
+    "graphql": { "documentId": "publiek-initiatief-detail", "variables": { "id": 146 } }
   }
 }
 ```
 
-Informatiearm (aanbeveling 7): id's en verwijzingen, **geen veldwaarden en geen persoonsgegevens**.
-De afnemer haalt de inhoud bij de bron onder zijn eigen autorisatie (de leespoort, publieke of
-interne QueryDefinities) — dataminimalisatie en autorisatie vallen daarmee samen met wat er al is.
-Gestructureerde vorm (`application/cloudevents+json`), dus protocolonafhankelijk.
+Informatiearm (NORA-aanbeveling 7, NLgov `dataref`): id's en verwijzingen, **geen veldwaarden en
+geen persoonsgegevens**. De afnemer haalt de inhoud bij de bron onder zijn eigen autorisatie (de
+leespoort, publieke of interne QueryDefinities) — dataminimalisatie en autorisatie vallen daarmee
+samen met wat er al is. Gestructureerde vorm (`application/cloudevents+json`, JSON event format),
+HTTP-binding en webhook volgens de CloudEvents-specificaties waarnaar het profiel verwijst.
+
+Eén correctie bij een eerdere gedachte: het `type` bevat **geen** productnaam (`nl.omnium…`) — het
+profiel wil databron/domein, geen organisatie- of productnaam; de instantie zit in `source`.
 
 ### 2.3 Abonnement = NotificatieDefinitie (EYODF, configuratiedomein)
 
@@ -127,7 +153,7 @@ afnemer) — dat is toegestaan: "de producer bepaalt welke gebeurtenissen ingewo
 - **Pull/herstel**: `GET /notificaties/gebeurtenissen?vanaf=<registratieId|tijdstip>&type=…` als projectie van `registratie`/`wijziging` (CloudEvents-batch). Dat dekt het pull-patroon én "gemiste gebeurtenissen zelf ophalen".
 - **Beveiliging**: webhook-handtekening `X-Omnium-Signature: sha256=<HMAC(geheim, body)>`; e-mail alleen naar adressen uit de definitie (beheerders); geen persoonsgegevens in het bericht.
 - **Out-of-band**: blijft een abonnee falen (na alle pogingen), dan een e-mail naar het beheeradres van de instantie (richtlijn "alternatieve communicatie").
-- **Versie**: `dataschema` verwijst naar de modelversie; het `type` bevat geen versie (semver via het model).
+- **Versie**: `dataschema` verwijst naar het gepubliceerde schema van `data`; het `type` krijgt pas een `v<n>`-suffix bij een niet-compatibele wijziging, en dan worden oud én nieuw type een tijd naast elkaar geproduceerd (NLgov).
 
 ### 2.5 Waar we van NORA afwijken, bewust
 
