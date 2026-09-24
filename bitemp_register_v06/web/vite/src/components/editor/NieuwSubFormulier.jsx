@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray } from "../../shared/schemaUtils";
 import { useFormulierDefinities } from "../../hooks/useFormulierDefinitie";
@@ -16,9 +16,9 @@ import CustomFormulierRenderer from "./CustomFormulierRenderer";
  * een ingebed formulier kan relaties kiezen maar niet zelf weer aanmaken (§5.3).
  *
  * Props: doelEntiteit, formulierId, values ({ volPad → waarde }), onChange(volPad, waarde),
- *        readOnly, diepte
+ *        readOnly, diepte, naam (zoekterm uit de combobox; wordt het eerste tekstveld)
  */
-export default function NieuwSubFormulier({ doelEntiteit, formulierId, values, onChange, readOnly, diepte = 1 }) {
+export default function NieuwSubFormulier({ doelEntiteit, formulierId, values, onChange, readOnly, diepte = 1, naam = "" }) {
   const { typeMetaByTypenaam } = useSchema();
   const doelMeta = typeMetaByTypenaam?.[doelEntiteit];
   const { definities, loading, error } = useFormulierDefinities(doelEntiteit);
@@ -33,6 +33,27 @@ export default function NieuwSubFormulier({ doelEntiteit, formulierId, values, o
     if (!doelMeta || !definitie) return { customVelden: [] };
     return bouwCustomVeldMapping({ entity: {}, typeMeta: doelMeta, onderliggende, typeMetaByTypenaam });
   }, [doelMeta, definitie, onderliggende, typeMetaByTypenaam]);
+
+  // Zoekterm uit de combobox als eerste tekstveld van het subformulier (bv. de naam),
+  // eenmalig zolang er nog niets is ingevuld.
+  const eersteVeld = useMemo(() => {
+    let pad = null;
+    const wandel = (el, ctx) => {
+      if (pad) return;
+      if (el?.type === "veld" && !el.vasteWaarde && (!ctx)) {
+        const def = customVelden.find((v) => v.naam === el.veld);
+        if (def && (def.type || "string") === "string" && !def.enum?.length && !def.ref && !def.doelEntiteit) pad = el.veld;
+        return;
+      }
+      (el?.elementen || el?.dan || []).forEach((k) => wandel(k, el?.type === "lijst" ? el.bron : ctx));
+    };
+    if (definitie?.layout) wandel(definitie.layout, null);
+    return pad;
+  }, [definitie, customVelden]);
+  useEffect(() => {
+    if (naam && eersteVeld && !Object.values(values || {}).some((w) => w !== "" && w != null)) onChange(eersteVeld, naam);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eersteVeld]);
 
   if (!doelMeta) return <div className="cg-feedback--fout">Onbekende doelentiteit: {doelEntiteit}</div>;
   if (loading) return <div style={{ color: "var(--cg-donkergrijs, #666)", fontSize: "0.875rem" }}>Formulier laden…</div>;
