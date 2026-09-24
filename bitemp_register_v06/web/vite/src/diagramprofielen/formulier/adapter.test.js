@@ -115,3 +115,19 @@ test("reverse: notities genegeerd, geen formulier-root → layout null", () => {
   assert.deepEqual(terug.layout, layout, "notitie verandert de layout niet");
   assert.equal(formulierModelNaarLayout({ elements: {} }).layout, null);
 });
+
+test("round-trip: vasteWaarde/kopieerNaar op veld en widget/min/max op lijst blijven behouden (stap A)", () => {
+  const lay = {
+    type: "formulier",
+    elementen: [
+      { type: "veld", veld: "Initiatief.aanmeldstatussen.status", vasteWaarde: "nieuwe_aanmelding" },
+      { type: "veld", veld: "Initiatief.planningen.startdatum", kopieerNaar: "Initiatief.aanvang.datum", widget: "radio" },
+      { type: "lijst", bron: "Initiatief.betrokken_organisatie", widget: "meerkeuze", elementen: [{ type: "veld", veld: "type" }] },
+      { type: "lijst", bron: "Initiatief.bijdragen", label: "Regie", min: 1, max: 1, elementen: [{ type: "veld", veld: "type_bijdrage", vasteWaarde: "Regie" }, { type: "veld", veld: "schaal" }] },
+    ],
+  };
+  const m = layoutNaarFormulierModel(lay, { naam: "t" });
+  const lijst = Object.values(m.elements).find((e) => e.elementType === "lijst" && e.data.widget === "meerkeuze");
+  assert.ok(lijst, "widget landt in lijst-data");
+  assert.deepEqual(formulierModelNaarLayout(m).layout, lay);
+});

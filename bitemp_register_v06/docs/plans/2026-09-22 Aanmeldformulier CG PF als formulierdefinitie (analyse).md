@@ -720,3 +720,40 @@ Naast de GV (de vorm), van onmisbaar naar later:
 Wat de GV zelf nodig heeft als metamodelelement: benoemde afgeleide representaties (dik of dun),
 «gebruikt» met veldenlijst, aggregatie van hele ENT's, multipliciteit van geneste verzamelingen,
 afgeleide velden in CEL — en een eigen diagramprofiel, naast het formulierprofiel (§5.5).
+
+## 9. Stap A gebouwd — het formulier voor een ingelogde gebruiker (24-09-2026)
+
+Branch `feat/aanmeldformulier-stap-a`. Wat er nu is, tegen de bouwstenen uit §4/§5.5:
+
+| Onderdeel | Waar | Wat |
+|---|---|---|
+| **Nieuw-modus** (B2) | `web/vite/src/components/editor/NieuwFormulierPagina.jsx` | rendert een FormulierDefinitie zonder entiteit; bij *Verzenden* haalt hij `max-id` op en stuurt één registratie: entiteit, `initiatief_aanvang`, enkelvoudige GE's, en per lijstrij een opvoer. Preview van de wijzigingen onderaan. |
+| **Mapping** (B3, gekrompen) | `nieuwFormulierMapping.js` (+ test) | pure logica: `verzamelVasteWaarden`, `lijstenPerBron`, `bouwLijstItems`, `bouwNieuwWijzigingen` → `{ wijzigingen, ontbrekend }`. Een rij waarin buiten de vaste waarden niets is ingevuld, wordt niet opgevoerd; een deels ingevuld GE met een leeg verplicht veld blokkeert het verzenden. |
+| **Ingang** | `NieuwRecordFormulier.jsx` (`/t/:typePad/nieuw?formulier=<id>`) | keuzelijst *Invoer via*: standaard (alle GE's) of een actieve FormulierDefinitie voor het doeltype (`useFormulierDefinities`). |
+| **`veld.vasteWaarde`** (§5.2/5.5) | renderer, mapping, profiel, inspector | niet getoond; buiten een lijst een vaste waarde bij opvoeren (`aanmeldstatussen.status = nieuwe_aanmelding`), **in een lijst óók het filter** van die lijst. |
+| **Vaste rijen** (§5.2) | lijst met `min = max = 1` + `vasteWaarde` | drie lijsten op `Initiatief.bijdragen` (Wendbaarheid/Dienstverlening/Regie) en twee op `initiatief_gemeenten` (rol) delen één array en tonen elk hun eigen rijen. Tot `min` worden virtuele rijen getoond die pas bij invoer in de array komen. |
+| **`lijst.widget = meerkeuze`** (§5.1) | renderer | één enum-veld in het sjabloon → checkbox per optie; per vinkje een rij `{ ...vast, [veld]: optie }`. |
+| **`veld.widget = radio`** | `SchemaFormField` | enum als radiogroep (schaal 1–4, producttype). |
+| **`veld.kopieerNaar`** | renderer | één invoer, twee doelen: `planningen.startdatum` → `Initiatief.aanvang.datum` (materiële aanvang). |
+| **Relaties in lijsten** | `customFormMapping.bronVeldenVoorChild` | de secundaire id (`gemeente_id`, `organisatie_id`) staat in het schema alleen op de hub; hij wordt nu als eerste bronveld toegevoegd met `ref` (referentielijst → `RefCombobox`) of `doelEntiteit` (gewone ENT → nieuw `EntiteitCombobox`, keuze uit bestaande records met zoekfilter). Geldt ook voor de bestaande bewerk-modus. |
+| **Profiel/Studio** | `diagramprofielen/formulier/{index,adapter}.js`, `FormulierInspector.jsx`, `layoutModel.js` | `vasteWaarde`, `kopieerNaar` op *veld*; `widget`, `min`, `max` op *Lijst*; round-trip verliesvrij (test). Boomlabel toont *(vaste rij)* / *(meerkeuze)*. |
+| **FormulierDefinitie 2 "Aanmelding initiatief"** | `replay files/registraties-replay-init-formulierdefinitie-aanmelding-initiatief-2026-09-24.json` (README stap 16) | 36 velden in zes groepen; de 30 vragen op de modelpaden uit §2. Pitch conditioneel op `producten.type == Toepassing` ("Indien een toepassing, pitch je product"). |
+
+**Getest:** 582 frontend-unittests groen, `vite build` ok; e2e zonder browser tegen het lokale
+schema (`scripts` in de sessie): alle 36 veldpaden resolven, een ingevuld formulier geeft
+17 opvoeren, `POST /registratie/` 201 → initiatief 144 met aanvang, product, status
+`nieuwe_aanmelding`, twee bijdragen (de lege vaste rij *Dienstverlening* niet), gemeenten per
+rol, organisaties per rol, meerkeuze-typen, domein en API-standaard; `publiek-initiatief-detail`
+geeft hem niet terug (niet geaccepteerd). Lokaal staat FD 2 nu in de dev-database.
+
+**Bewust niet in stap A** (→ stap B/C):
+
+- Vraag 3/4 (parallel, componenten): geen veld; toelichting bij de omschrijving.
+- Vraag 14/15 (PO en e-mail): andere ENT (`Persoon`), zoek-of-maak; vraag 10/13 kiezen nu uit
+  bestaande organisaties (`EntiteitCombobox`), aanmaken volgt met `veld.nieuwFormulier` (§5.3).
+- Vraag 30 (vragen over het formulier): `Initiatiefinfo` vereist ook `PbiID`; hoort eerder in
+  het logboek van de aanmelding (§6.4) dan in het initiatief.
+- Verplichte lijsten (contactorganisatie *) worden nog niet afgedwongen: een lege vaste rij
+  wordt gewoon overgeslagen. Formulier-niveau validatie (min-rijen) is een kleine vervolgstap.
+- Het formulier staat achter de editor-login; de openbare indiening (bron = aanmeldformulier,
+  server-side `$nieuw.x`-id's) is stap C.

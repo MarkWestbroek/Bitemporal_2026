@@ -34,6 +34,8 @@ const fieldTypes = [
       { key: "breedte", label: "breedte", datatype: "string" },
       { key: "widget", label: "widget", datatype: "string" },
       { key: "readonly", label: "alleen-lezen", datatype: "boolean" },
+      { key: "vasteWaarde", label: "vaste waarde (niet getoond; in een lijst óók filter)", datatype: "string" },
+      { key: "kopieerNaar", label: "kopieer naar (vol pad)", datatype: "string" },
     ],
   },
 ];
@@ -85,6 +87,7 @@ const elementTypes = [
     kleur: "#ccfbf1",
     properties: [
       { key: "bron", label: "bron (ENT.GE, meervoudig)", datatype: "string", verplicht: true },
+      { key: "widget", label: "widget (rijen / meerkeuze)", datatype: "string" },
       { key: "min", label: "min", datatype: "string" },
       { key: "max", label: "max", datatype: "string" },
       KLEUR_VELD,

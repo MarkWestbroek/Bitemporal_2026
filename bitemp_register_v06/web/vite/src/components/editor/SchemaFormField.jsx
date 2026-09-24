@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { validatieMeldingVoorVeld } from "../actions/ActionFormParts";
 import RefCombobox from "./RefCombobox";
+import EntiteitCombobox from "./EntiteitCombobox";
 import { useSchema } from "../../context/SchemaContext";
 import CodeEditor, { jsonParseFout } from "./CodeEditor";
 
@@ -19,6 +20,7 @@ import CodeEditor, { jsonParseFout } from "./CodeEditor";
  *  - error:     optioneel foutmelding override (vanuit react-hook-form)
  *  - readOnly:  forceer readonly (voor PK/FK/autoincrement)
  *  - widgetOverride: optionele expliciete widget-keuze uit formulier/weergaveconfiguratie
+ *                    ("radio" toont een enum als radiogroep; "textarea"/"json"/"markdown")
  */
 export default function SchemaFormField({ veld, value, onChange, error, readOnly, widgetOverride, labelOverride }) {
   const fieldId = useId();
@@ -86,6 +88,27 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
       );
     }
 
+    // Enum als radiogroep (widget "radio"), bv. een schaal 1–4 in een aanmeldformulier.
+    if (enumOpties.length > 0 && effectieveWidget === "radio") {
+      return (
+        <div className="utrecht-form-field__input" style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }} role="radiogroup">
+          {enumOpties.map((opt) => (
+            <label key={opt} style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: isReadonly ? "default" : "pointer" }}>
+              <input
+                type="radio"
+                name={fieldId}
+                value={opt}
+                checked={String(value ?? "") === opt}
+                onChange={() => onChange(opt)}
+                disabled={isReadonly}
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      );
+    }
+
     // Enum → select/dropdown
     if (enumOpties.length > 0) {
       return (
@@ -110,6 +133,19 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
       return (
         <RefCombobox
           refType={veld.ref}
+          value={value}
+          onChange={onChange}
+          readOnly={isReadonly}
+        />
+      );
+    }
+
+    // Secundaire id van een relatie naar een gewone entiteit (bv. organisatie_id) →
+    // keuze uit bestaande records; zie customFormMapping.bronVeldenVoorChild.
+    if (veld.doelEntiteit) {
+      return (
+        <EntiteitCombobox
+          doelEntiteit={veld.doelEntiteit}
           value={value}
           onChange={onChange}
           readOnly={isReadonly}

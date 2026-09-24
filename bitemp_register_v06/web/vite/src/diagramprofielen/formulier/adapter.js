@@ -49,7 +49,7 @@ function containerData(el, meta) {
       };
     case "groep": return { ...(el.context ? { context: el.context } : {}) };
     case "rij": return { ...(el.richting ? { richting: el.richting } : {}) };
-    case "lijst": return { bron: el.bron || "", ...(el.min != null ? { min: String(el.min) } : {}), ...(el.max != null ? { max: String(el.max) } : {}) };
+    case "lijst": return { bron: el.bron || "", ...(el.widget ? { widget: el.widget } : {}), ...(el.min != null ? { min: String(el.min) } : {}), ...(el.max != null ? { max: String(el.max) } : {}) };
     case "conditioneel": {
       const c = el.conditie;
       if (c) return { conditieVeld: c.veld || "", conditieOp: c.op || "nietleeg", ...(c.waarde != null ? { conditieWaarde: String(c.waarde) } : {}) };
@@ -70,6 +70,8 @@ function naarCompVeld(el, volgorde) {
       ...(el.breedte ? { breedte: el.breedte } : {}),
       ...(el.widget ? { widget: el.widget } : {}),
       ...(el.readonly ? { readonly: true } : {}),
+      ...(el.vasteWaarde != null && el.vasteWaarde !== "" ? { vasteWaarde: String(el.vasteWaarde) } : {}),
+      ...(el.kopieerNaar ? { kopieerNaar: el.kopieerNaar } : {}),
       volgorde: String(volgorde),
     },
   };
@@ -192,6 +194,8 @@ export function formulierModelNaarLayout(coreState) {
         ...(v.data?.breedte ? { breedte: v.data.breedte } : {}),
         ...(v.data?.widget ? { widget: v.data.widget } : {}),
         ...(v.data?.readonly ? { readonly: true } : {}),
+        ...(v.data?.vasteWaarde != null && v.data.vasteWaarde !== "" ? { vasteWaarde: v.data.vasteWaarde } : {}),
+        ...(v.data?.kopieerNaar ? { kopieerNaar: v.data.kopieerNaar } : {}),
       },
     }));
 
@@ -219,6 +223,7 @@ export function formulierModelNaarLayout(coreState) {
           type: "lijst",
           bron: d.bron || "",
           ...(el.naam && el.naam !== "Lijst" && el.naam !== d.bron ? { label: el.naam } : {}),
+          ...(d.widget ? { widget: d.widget } : {}),
           ...(d.min != null && d.min !== "" ? { min: Number(d.min) } : {}),
           ...(d.max != null && d.max !== "" ? { max: Number(d.max) } : {}),
           elementen: kinderen,

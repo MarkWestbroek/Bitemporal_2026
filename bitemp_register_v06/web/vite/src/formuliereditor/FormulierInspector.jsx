@@ -23,7 +23,8 @@ function Regel({ label, children }) {
 }
 
 const BREEDTES = ["", "50%", "33%", "25%", "100%"];
-const WIDGETS = ["", "json", "markdown"];
+const WIDGETS = ["", "radio", "textarea", "json", "markdown"];
+const LIJST_WIDGETS = [{ v: "", t: "rijen (default)" }, { v: "meerkeuze", t: "meerkeuze (checkbox per enum-optie)" }];
 const CONDITIE_OPS = [
   { v: "nietleeg", t: "is ingevuld" },
   { v: "leeg", t: "is leeg" },
@@ -145,6 +146,15 @@ export default function FormulierInspector() {
             <input type="checkbox" checked={!!el.readonly} onChange={(e) => update(el._id, { readonly: e.target.checked })} />
             Alleen-lezen (read-only)
           </label>
+          <Regel label="Vaste waarde (niet getoond; in een lijst óók het filter van die lijst)">
+            <input style={veldStijl} list="vaste-waarde-opties" value={el.vasteWaarde ?? ""} onChange={(e) => update(el._id, { vasteWaarde: e.target.value || undefined })} placeholder="bv. nieuwe_aanmelding" />
+            {veldInfo[el.veld]?.enum?.length > 0 && (
+              <datalist id="vaste-waarde-opties">{veldInfo[el.veld].enum.map((w) => <option key={w} value={w} />)}</datalist>
+            )}
+          </Regel>
+          <Regel label="Kopieer naar (vol pad; één invoer, twee doelen)">
+            <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.kopieerNaar || ""} onChange={(e) => update(el._id, { kopieerNaar: e.target.value || undefined })} placeholder="bv. Initiatief.aanvang.datum" />
+          </Regel>
           {veldInfo[el.veld] && (
             <div style={{ marginTop: 12, fontSize: 11.5, color: "var(--s-fg-muted, #64748b)", lineHeight: 1.6 }}>
               <div>type: <b>{veldInfo[el.veld].type || "string"}</b>{veldInfo[el.veld].format ? ` (${veldInfo[el.veld].format})` : ""}</div>
@@ -178,6 +188,23 @@ export default function FormulierInspector() {
           <Regel label="Bron (ENT.GE — meervoudig pad)">
             <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.bron || ""} onChange={(e) => update(el._id, { bron: e.target.value })} placeholder="bv. Initiatief.bijdragen" />
           </Regel>
+          <Regel label="Widget">
+            <select style={veldStijl} value={el.widget || ""} onChange={(e) => update(el._id, { widget: e.target.value || undefined })}>
+              {LIJST_WIDGETS.map((w) => <option key={w.v} value={w.v}>{w.t}</option>)}
+            </select>
+          </Regel>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Regel label="Min rijen">
+              <input style={veldStijl} type="number" min="0" value={el.min ?? ""} onChange={(e) => update(el._id, { min: e.target.value === "" ? undefined : Number(e.target.value) })} />
+            </Regel>
+            <Regel label="Max rijen">
+              <input style={veldStijl} type="number" min="0" value={el.max ?? ""} onChange={(e) => update(el._id, { max: e.target.value === "" ? undefined : Number(e.target.value) })} />
+            </Regel>
+          </div>
+          <p style={{ fontSize: 11.5, color: "var(--s-fg-muted, #94a3b8)", margin: "6px 0 0" }}>
+            Vaste rij: min = max = 1 met een veld met vaste waarde (bv. type_bijdrage). Meerdere lijsten op
+            dezelfde bron delen de items en tonen elk hun eigen rijen.
+          </p>
         </>
       )}
     </div>
