@@ -94,15 +94,14 @@ export default function RepresentatieTabel({ typeMeta }) {
           return !overTeSlaan.has(n) && !v.autoIncrement;
         });
 
-        cols.push({
-          accessorKey: key,
-          header: childMeta?.klassenaam || key,
-          cell: ({ getValue }) => {
-            const val = getValue();
+        // De celtekst wordt in de accessor berekend (niet pas in de cel), zodat de
+        // kolomfilter en de sortering op die tekst werken: op de ruwe hub-array filterde
+        // TanStack op "[object Object]" en vond een meervoudig GE dus nooit.
+        const geKolomTekst = (val) => {
             // Alleen actuele hubs: /full/ levert ook afgevoerde (historische) hubs, en dit
             // overzicht toont de actuele stand — de historie staat in het detailformulier.
             const hubItems = safeArray(val).filter((hub) => !hub?.afvoer);
-            if (hubItems.length === 0) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            if (hubItems.length === 0) return "";
             // Platslaan per hub-item en veldwaarden extraheren
             const regels = hubItems.map((hub, idx) => {
               const plat = platSlaHubItems([hub], childMeta, typeMetaByTypenaam);
@@ -129,22 +128,24 @@ export default function RepresentatieTabel({ typeMeta }) {
                 ? String(item.weergavenaam)
                 : secKolom && item[secKolom] != null ? `${secKolom} ${item[secKolom]}` : "";
               const tekst = [weergave || doel, waarden].filter(Boolean).join(" — ") || doel;
-              const tooltip = weergave && waarden && weergave !== waarden
-                ? `${weergave} — ${waarden}`
-                : tekst;
-              return { label, tekst, tooltip };
+              return { label, tekst };
             }).filter((r) => r.tekst);
-            if (regels.length === 0) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            if (regels.length === 0) return "";
             // Enkelvoudig: toon weergaveveld als aanwezig, anders ruwe inhoud; meervoudig: rel_id: tekst
-            const tekst = regels.length === 1
+            return regels.length === 1
               ? regels[0].tekst
               : regels.map((r) => `${r.label}: ${r.tekst}`).join("; ");
-            const tooltip = regels.length === 1
-              ? regels[0].tooltip
-              : regels.map((r) => `${r.label}: ${r.tooltip}`).join("; ");
+        };
+        cols.push({
+          id: key,
+          accessorFn: (row) => geKolomTekst(row?.[key]),
+          header: childMeta?.klassenaam || key,
+          cell: ({ getValue }) => {
+            const tekst = String(getValue() ?? "");
+            if (!tekst) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
             const MAX = 60;
             return (
-              <span title={tooltip.length > MAX ? tooltip : undefined}>
+              <span title={tekst.length > MAX ? tekst : undefined}>
                 {tekst.length > MAX ? tekst.slice(0, MAX) + "…" : tekst}
               </span>
             );
