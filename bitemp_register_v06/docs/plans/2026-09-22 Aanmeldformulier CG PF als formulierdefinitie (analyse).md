@@ -799,3 +799,11 @@ organisatie en een *gemanipuleerde* status `geaccepteerd` → 201, status in het
 dicht voor anoniem; vóór de poort dichtgaat is een publieke organisatie-lookup nodig (bv. een
 QueryDefinitie `organisaties-keuze` of `/aanmelding/:id/opties/:veld`). Captcha/honeypot naast de
 rate-limit als het formulier echt op commonground.nl staat. PO (14/15) wacht op de modelherziening.
+
+
+## 12. Modereren: notificaties en dashboard (25-09-2026)
+
+Uitgewerkt in een eigen notitie: `2026-09-25 Notificeren en dashboards — NORA FDS verwerkt (ontwerp).md`
+(NORA/FDS-architectuur Notificeren toegepast: event = afgeleide van de registratie, CloudEvents
+NL GOV-profiel informatiearm, `NotificatieDefinitie` en `DashboardDefinitie` als EYODF in het
+configuratiedomein). Eerste stap gezet: QueryDefinitie 3 `nieuwe-aanmeldingen` (intern), replay 21.
