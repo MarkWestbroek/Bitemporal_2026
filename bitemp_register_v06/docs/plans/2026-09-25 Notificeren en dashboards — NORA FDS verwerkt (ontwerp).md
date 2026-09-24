@@ -207,3 +207,16 @@ handtekening klopt), filter `nieuwe_aanmelding` geëvalueerd, e-mail als *misluk
 
 Nog niet (fase 2): herpogingen overleven een herstart niet (in-memory); pull-endpoint
 `gebeurtenissen?vanaf`; heruitzending vanuit de Studio; 429/Retry-After; out-of-band melding.
+
+
+## 6. DashboardDefinitie gebouwd (25-09-2026)
+
+| Onderdeel | Waar |
+|---|---|
+| `DashboardDefinitie` in het configuratiedomein (V3 + codegen, delta-methode): `DashboarddefinitieNaam` (naam = sleutel in de URL, beschrijving), `DashboarddefinitieTegel` (meervoudig, materieel: titel, querydefinitie, weergave `aantal`/`tabel`/`lijst`, kolommen, variabelen (JSON), volgorde), `DashboarddefinitieStatus` (materieel) | `docs/Model files (V3)/configuratie 2026-09-25 DashboardDefinitie — v3-model.json`, `model/configuratie_*.go` |
+| Pagina `dashboard.html?dashboard=<naam>`: leest `/full/dashboard_definities`, voert per tegel het opgeslagen document uit (`documentId` + variabelen), toont aantal / tabel (kolommen = veldpaden via `resolveVeldpad`, eerste kolom linkt naar de Studio) / lijst; ververst elke 60 s; achter login (viewer) via `AuthBeschermd`; embed-stijl in een iframe | `web/vite/dashboard.html`, `src/dashboard/main.jsx` |
+| Eerste dashboard `moderatie`: tellers *Openstaande aanmeldingen* en *Publiek in het portfolio*, tabel *Te beoordelen* (id, weergavenaam, status, producttype, fase, organisaties) | replay 23 |
+
+De modereeractie zelf blijft de bewerking van `aanmeldstatus` op het initiatief (link in de eerste
+kolom). Nog niet: een Studio-activiteit voor dashboards (ze zijn nu via de inhoud-editor te
+bewerken als gewone configuratie-entiteit), en `weergave: grafiek`.

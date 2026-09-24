@@ -143,3 +143,36 @@ type NotificatieDefinitie_Einde struct {
 	Opvoer                  *time.Time `json:"opvoer,omitempty"`
 	Afvoer                  *time.Time `json:"afvoer,omitempty"`
 }
+
+// DashboardDefinitie — Compositie van QueryDefinities tot een dashboard (MVC: selectie = QueryDefinitie, view = weergave per tegel, dashboard = compositie). Gereserveerd type: dashboard.html rendert de tegels via documentId; de toegang volgt de toegankelijkheid van de onderliggende QueryDefinities (intern → login). Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.
+type DashboardDefinitie struct {
+	bun.BaseModel               `bun:"table:dashboarddefinitie,alias:dashboarddefinitie"`
+	ID                          int                                           `json:"id" bun:"id,pk"`
+	Opvoer                      *time.Time                                    `json:"opvoer,omitempty"`
+	Afvoer                      *time.Time                                    `json:"afvoer,omitempty"`
+	DashboardDefinitieNamen     []DashboardDefinitie_DashboarddefinitieNaam   `bun:"rel:has-many,join:id=dashboarddefinitie_id" json:"dashboard_definitie_namen,omitempty"`
+	DashboardDefinitieTegels    []DashboardDefinitie_DashboarddefinitieTegel  `bun:"rel:has-many,join:id=dashboarddefinitie_id" json:"dashboard_definitie_tegels,omitempty"`
+	DashboardDefinitieStatussen []DashboardDefinitie_DashboarddefinitieStatus `bun:"rel:has-many,join:id=dashboarddefinitie_id" json:"dashboard_definitie_statussen,omitempty"`
+	Aanvang                     []DashboardDefinitie_Aanvang                  `bun:"rel:has-many,join:id=dashboarddefinitie_id" json:"aanvang,omitempty"`
+	Einde                       []DashboardDefinitie_Einde                    `bun:"rel:has-many,join:id=dashboarddefinitie_id" json:"einde,omitempty"`
+}
+
+// DashboardDefinitie_Aanvang — aanvangdatum van entiteit DashboardDefinitie.
+type DashboardDefinitie_Aanvang struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_aanvang,alias:dashboarddefinitie_aanvang"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
+}
+
+// DashboardDefinitie_Einde — eindedatum van entiteit DashboardDefinitie.
+type DashboardDefinitie_Einde struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_einde,alias:dashboarddefinitie_einde"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
+}

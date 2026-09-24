@@ -27,4 +27,10 @@ func initConfiguratieEnumRegistry() {
 	EnumEditorLayouts["NotificatieDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 5330, Y: -330}}
 	EnumEditorLayouts["NotificatieKanaal"] = &EditorLayout{Positie: &V3Positie{X: 5530, Y: -330}}
 	EnumEditorLayouts["NotificatieRegistratietype"] = &EditorLayout{Positie: &V3Positie{X: 5730, Y: -330}}
+	EnumWaarden["DashboardDefinitieStatus"] = []string{"concept", "actief", "inactief"}
+	EnumDomeinen["DashboardDefinitieStatus"] = "configuratie"
+	EnumWaarden["DashboardWeergave"] = []string{"aantal", "tabel", "lijst"}
+	EnumDomeinen["DashboardWeergave"] = "configuratie"
+	EnumEditorLayouts["DashboardDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 6130, Y: -330}}
+	EnumEditorLayouts["DashboardWeergave"] = &EditorLayout{Positie: &V3Positie{X: 6330, Y: -330}}
 }

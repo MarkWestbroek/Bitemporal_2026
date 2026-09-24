@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-25T14:00:00Z",
+  "source": "handmatig (Claude-sessie 25-09-2026)",
+  "description": "DashboardDefinitie 1 'moderatie': twee tellers (openstaande aanmeldingen, publiek) en de tabel 'Te beoordelen' op QueryDefinitie nieuwe-aanmeldingen. Vereist replays 11 en 21 en een backend met DashboardDefinitie (configuratie-model 25-09-2026). Openen: dashboard.html?dashboard=moderatie (ingelogd, de QD is intern).",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T14:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "DashboardDefinitie moderatie (tellers + tabel te beoordelen)",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "DashboardDefinitie moderatie v0.1"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "dashboarddefinitie": {
+                "id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "dashboarddefinitie_aanvang": {
+                "dashboarddefinitie_id": 1,
+                "datum": "2026-09-24"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "dashboarddefinitienaam": {
+                "dashboarddefinitie_id": 1,
+                "naam": "moderatie",
+                "beschrijving": "Modereren van aanmeldingen: wat er openstaat en wat er al publiek is. Intern (de tegels gebruiken de interne QueryDefinitie nieuwe-aanmeldingen)."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "dashboarddefinitietegel": {
+                "dashboarddefinitie_id": 1,
+                "titel": "Openstaande aanmeldingen",
+                "querydefinitie": "nieuwe-aanmeldingen",
+                "weergave": "aantal",
+                "variabelen": "{\"limit\": 500}",
+                "volgorde": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "dashboarddefinitietegel": {
+                "dashboarddefinitie_id": 1,
+                "titel": "Publiek in het portfolio",
+                "querydefinitie": "publieke-initiatieven",
+                "weergave": "aantal",
+                "variabelen": "{\"limit\": 500}",
+                "volgorde": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "dashboarddefinitietegel": {
+                "dashboarddefinitie_id": 1,
+                "titel": "Te beoordelen",
+                "querydefinitie": "nieuwe-aanmeldingen",
+                "weergave": "tabel",
+                "kolommen": "id, weergavenaam, aanmeldstatussen.status, producten.type, planningen.fase, initiatief_organisaties.weergavenaam",
+                "variabelen": "{\"limit\": 500}",
+                "volgorde": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "dashboarddefinitiestatus": {
+                "dashboarddefinitie_id": 1,
+                "status": "actief"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

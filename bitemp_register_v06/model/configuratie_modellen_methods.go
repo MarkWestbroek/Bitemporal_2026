@@ -49,6 +49,16 @@ func (n NotificatieDefinitie) GetAfvoer() *time.Time   { return n.Afvoer }
 func (n *NotificatieDefinitie) SetAfvoer(t *time.Time) { n.Afvoer = t }
 func (n NotificatieDefinitie) String() string          { return RepresentatieToString(n) }
 
+// DashboardDefinitie
+func (d DashboardDefinitie) GetID() any              { return d.ID }
+func (d DashboardDefinitie) Metatype() Metatype      { return MetatypeEntiteit }
+func (d *DashboardDefinitie) ClearID()               { d.ID = 0 }
+func (d DashboardDefinitie) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie) String() string          { return RepresentatieToString(d) }
+
 /* ================================================================
    2. HUBS (GE + REL) — interface-methoden
    ================================================================ */
@@ -235,6 +245,46 @@ func (nn NotificatieDefinitie_NotificatiedefinitieStatus) GetAfvoer() *time.Time
 func (nn *NotificatieDefinitie_NotificatiedefinitieStatus) SetAfvoer(t *time.Time) { nn.Afvoer = t }
 func (nn NotificatieDefinitie_NotificatiedefinitieStatus) String() string {
 	return RepresentatieToString(nn)
+}
+
+// DashboardDefinitie_DashboarddefinitieNaam
+func (dd DashboardDefinitie_DashboarddefinitieNaam) GetID() any { return dd.Rel_ID }
+func (dd DashboardDefinitie_DashboarddefinitieNaam) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (dd *DashboardDefinitie_DashboarddefinitieNaam) ClearID()               { dd.Rel_ID = 0 }
+func (dd DashboardDefinitie_DashboarddefinitieNaam) GetOpvoer() *time.Time   { return dd.Opvoer }
+func (dd *DashboardDefinitie_DashboarddefinitieNaam) SetOpvoer(t *time.Time) { dd.Opvoer = t }
+func (dd DashboardDefinitie_DashboarddefinitieNaam) GetAfvoer() *time.Time   { return dd.Afvoer }
+func (dd *DashboardDefinitie_DashboarddefinitieNaam) SetAfvoer(t *time.Time) { dd.Afvoer = t }
+func (dd DashboardDefinitie_DashboarddefinitieNaam) String() string          { return RepresentatieToString(dd) }
+
+// DashboardDefinitie_DashboarddefinitieTegel
+func (dd DashboardDefinitie_DashboarddefinitieTegel) GetID() any { return dd.Rel_ID }
+func (dd DashboardDefinitie_DashboarddefinitieTegel) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (dd *DashboardDefinitie_DashboarddefinitieTegel) ClearID()               { dd.Rel_ID = 0 }
+func (dd DashboardDefinitie_DashboarddefinitieTegel) GetOpvoer() *time.Time   { return dd.Opvoer }
+func (dd *DashboardDefinitie_DashboarddefinitieTegel) SetOpvoer(t *time.Time) { dd.Opvoer = t }
+func (dd DashboardDefinitie_DashboarddefinitieTegel) GetAfvoer() *time.Time   { return dd.Afvoer }
+func (dd *DashboardDefinitie_DashboarddefinitieTegel) SetAfvoer(t *time.Time) { dd.Afvoer = t }
+func (dd DashboardDefinitie_DashboarddefinitieTegel) String() string {
+	return RepresentatieToString(dd)
+}
+
+// DashboardDefinitie_DashboarddefinitieStatus
+func (dd DashboardDefinitie_DashboarddefinitieStatus) GetID() any { return dd.Rel_ID }
+func (dd DashboardDefinitie_DashboarddefinitieStatus) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (dd *DashboardDefinitie_DashboarddefinitieStatus) ClearID()               { dd.Rel_ID = 0 }
+func (dd DashboardDefinitie_DashboarddefinitieStatus) GetOpvoer() *time.Time   { return dd.Opvoer }
+func (dd *DashboardDefinitie_DashboarddefinitieStatus) SetOpvoer(t *time.Time) { dd.Opvoer = t }
+func (dd DashboardDefinitie_DashboarddefinitieStatus) GetAfvoer() *time.Time   { return dd.Afvoer }
+func (dd *DashboardDefinitie_DashboarddefinitieStatus) SetAfvoer(t *time.Time) { dd.Afvoer = t }
+func (dd DashboardDefinitie_DashboarddefinitieStatus) String() string {
+	return RepresentatieToString(dd)
 }
 
 /* ================================================================
@@ -433,6 +483,48 @@ func (d NotificatieDefinitie_NotificatiedefinitieStatus_Data) String() string {
 	return RepresentatieToString(d)
 }
 
+// DashboardDefinitie_DashboarddefinitieNaam_Data
+func (d DashboardDefinitie_DashboarddefinitieNaam_Data) GetID() any { return d.Versie }
+func (d DashboardDefinitie_DashboarddefinitieNaam_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *DashboardDefinitie_DashboarddefinitieNaam_Data) ClearID()               { d.Versie = 0 }
+func (d DashboardDefinitie_DashboarddefinitieNaam_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie_DashboarddefinitieNaam_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieNaam_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie_DashboarddefinitieNaam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieNaam_Data) String() string {
+	return RepresentatieToString(d)
+}
+
+// DashboardDefinitie_DashboarddefinitieTegel_Data
+func (d DashboardDefinitie_DashboarddefinitieTegel_Data) GetID() any { return d.Versie }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *DashboardDefinitie_DashboarddefinitieTegel_Data) ClearID()               { d.Versie = 0 }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie_DashboarddefinitieTegel_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie_DashboarddefinitieTegel_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Data) String() string {
+	return RepresentatieToString(d)
+}
+
+// DashboardDefinitie_DashboarddefinitieStatus_Data
+func (d DashboardDefinitie_DashboarddefinitieStatus_Data) GetID() any { return d.Versie }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Data) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *DashboardDefinitie_DashboarddefinitieStatus_Data) ClearID()               { d.Versie = 0 }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie_DashboarddefinitieStatus_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie_DashboarddefinitieStatus_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Data) String() string {
+	return RepresentatieToString(d)
+}
+
 /* ================================================================
    4. _AANVANG/_EINDE (entiteits-plumbing) — interface-methoden
    ================================================================ */
@@ -516,6 +608,26 @@ func (n *NotificatieDefinitie_Einde) SetOpvoer(t *time.Time) { n.Opvoer = t }
 func (n NotificatieDefinitie_Einde) GetAfvoer() *time.Time   { return n.Afvoer }
 func (n *NotificatieDefinitie_Einde) SetAfvoer(t *time.Time) { n.Afvoer = t }
 func (n NotificatieDefinitie_Einde) String() string          { return RepresentatieToString(n) }
+
+// DashboardDefinitie_Aanvang
+func (d DashboardDefinitie_Aanvang) GetID() any              { return d.Versie }
+func (d DashboardDefinitie_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *DashboardDefinitie_Aanvang) ClearID()               { d.Versie = 0 }
+func (d DashboardDefinitie_Aanvang) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie_Aanvang) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie_Aanvang) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie_Aanvang) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie_Aanvang) String() string          { return RepresentatieToString(d) }
+
+// DashboardDefinitie_Einde
+func (d DashboardDefinitie_Einde) GetID() any              { return d.Versie }
+func (d DashboardDefinitie_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *DashboardDefinitie_Einde) ClearID()               { d.Versie = 0 }
+func (d DashboardDefinitie_Einde) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie_Einde) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie_Einde) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie_Einde) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie_Einde) String() string          { return RepresentatieToString(d) }
 
 /* ================================================================
    5. _AANVANG/_EINDE (hub-level plumbing) — interface-methoden
@@ -731,6 +843,62 @@ func (n NotificatieDefinitie_NotificatiedefinitieStatus_Einde) String() string {
 	return RepresentatieToString(n)
 }
 
+// DashboardDefinitie_DashboarddefinitieTegel_Aanvang
+func (d DashboardDefinitie_DashboarddefinitieTegel_Aanvang) GetID() any { return d.Versie }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Aanvang) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *DashboardDefinitie_DashboarddefinitieTegel_Aanvang) ClearID()               { d.Versie = 0 }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Aanvang) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie_DashboarddefinitieTegel_Aanvang) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Aanvang) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie_DashboarddefinitieTegel_Aanvang) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Aanvang) String() string {
+	return RepresentatieToString(d)
+}
+
+// DashboardDefinitie_DashboarddefinitieTegel_Einde
+func (d DashboardDefinitie_DashboarddefinitieTegel_Einde) GetID() any { return d.Versie }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Einde) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *DashboardDefinitie_DashboarddefinitieTegel_Einde) ClearID()               { d.Versie = 0 }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Einde) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie_DashboarddefinitieTegel_Einde) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Einde) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie_DashboarddefinitieTegel_Einde) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieTegel_Einde) String() string {
+	return RepresentatieToString(d)
+}
+
+// DashboardDefinitie_DashboarddefinitieStatus_Aanvang
+func (d DashboardDefinitie_DashboarddefinitieStatus_Aanvang) GetID() any { return d.Versie }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Aanvang) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *DashboardDefinitie_DashboarddefinitieStatus_Aanvang) ClearID()               { d.Versie = 0 }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Aanvang) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie_DashboarddefinitieStatus_Aanvang) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Aanvang) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie_DashboarddefinitieStatus_Aanvang) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Aanvang) String() string {
+	return RepresentatieToString(d)
+}
+
+// DashboardDefinitie_DashboarddefinitieStatus_Einde
+func (d DashboardDefinitie_DashboarddefinitieStatus_Einde) GetID() any { return d.Versie }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Einde) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (d *DashboardDefinitie_DashboarddefinitieStatus_Einde) ClearID()               { d.Versie = 0 }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Einde) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *DashboardDefinitie_DashboarddefinitieStatus_Einde) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Einde) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *DashboardDefinitie_DashboarddefinitieStatus_Einde) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d DashboardDefinitie_DashboarddefinitieStatus_Einde) String() string {
+	return RepresentatieToString(d)
+}
+
 /* ================================================================
    6. _INPUT — interface-methoden (no-op opvoer/afvoer)
    ================================================================ */
@@ -921,6 +1089,48 @@ func (i NotificatieDefinitie_NotificatiedefinitieStatus_Input) String() string {
 	return RepresentatieToString(i)
 }
 
+// DashboardDefinitie_DashboarddefinitieNaam_Input
+func (i DashboardDefinitie_DashboarddefinitieNaam_Input) GetID() any { return i.Rel_ID }
+func (i DashboardDefinitie_DashboarddefinitieNaam_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *DashboardDefinitie_DashboarddefinitieNaam_Input) ClearID()               { i.Rel_ID = 0 }
+func (i DashboardDefinitie_DashboarddefinitieNaam_Input) GetOpvoer() *time.Time   { return nil }
+func (i *DashboardDefinitie_DashboarddefinitieNaam_Input) SetOpvoer(t *time.Time) {}
+func (i DashboardDefinitie_DashboarddefinitieNaam_Input) GetAfvoer() *time.Time   { return nil }
+func (i *DashboardDefinitie_DashboarddefinitieNaam_Input) SetAfvoer(t *time.Time) {}
+func (i DashboardDefinitie_DashboarddefinitieNaam_Input) String() string {
+	return RepresentatieToString(i)
+}
+
+// DashboardDefinitie_DashboarddefinitieTegel_Input
+func (i DashboardDefinitie_DashboarddefinitieTegel_Input) GetID() any { return i.Rel_ID }
+func (i DashboardDefinitie_DashboarddefinitieTegel_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *DashboardDefinitie_DashboarddefinitieTegel_Input) ClearID()               { i.Rel_ID = 0 }
+func (i DashboardDefinitie_DashboarddefinitieTegel_Input) GetOpvoer() *time.Time   { return nil }
+func (i *DashboardDefinitie_DashboarddefinitieTegel_Input) SetOpvoer(t *time.Time) {}
+func (i DashboardDefinitie_DashboarddefinitieTegel_Input) GetAfvoer() *time.Time   { return nil }
+func (i *DashboardDefinitie_DashboarddefinitieTegel_Input) SetAfvoer(t *time.Time) {}
+func (i DashboardDefinitie_DashboarddefinitieTegel_Input) String() string {
+	return RepresentatieToString(i)
+}
+
+// DashboardDefinitie_DashboarddefinitieStatus_Input
+func (i DashboardDefinitie_DashboarddefinitieStatus_Input) GetID() any { return i.Rel_ID }
+func (i DashboardDefinitie_DashboarddefinitieStatus_Input) Metatype() Metatype {
+	return MetatypeGegevenselement
+}
+func (i *DashboardDefinitie_DashboarddefinitieStatus_Input) ClearID()               { i.Rel_ID = 0 }
+func (i DashboardDefinitie_DashboarddefinitieStatus_Input) GetOpvoer() *time.Time   { return nil }
+func (i *DashboardDefinitie_DashboarddefinitieStatus_Input) SetOpvoer(t *time.Time) {}
+func (i DashboardDefinitie_DashboarddefinitieStatus_Input) GetAfvoer() *time.Time   { return nil }
+func (i *DashboardDefinitie_DashboarddefinitieStatus_Input) SetAfvoer(t *time.Time) {}
+func (i DashboardDefinitie_DashboarddefinitieStatus_Input) String() string {
+	return RepresentatieToString(i)
+}
+
 /* ================================================================
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
    ================================================================ */
@@ -1083,6 +1293,41 @@ func (n *NotificatieDefinitie) GeefOnderliggendeGegevenselementen() []Onderligge
 	return result
 }
 
+func (d *DashboardDefinitie) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0)
+	for idx := range d.DashboardDefinitieNamen {
+		if d.DashboardDefinitieNamen[idx].DashboardDefinitie_ID == 0 {
+			d.DashboardDefinitieNamen[idx].DashboardDefinitie_ID = d.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieNaam", Representatie: &d.DashboardDefinitieNamen[idx]})
+	}
+	for idx := range d.DashboardDefinitieTegels {
+		if d.DashboardDefinitieTegels[idx].DashboardDefinitie_ID == 0 {
+			d.DashboardDefinitieTegels[idx].DashboardDefinitie_ID = d.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel", Representatie: &d.DashboardDefinitieTegels[idx]})
+	}
+	for idx := range d.DashboardDefinitieStatussen {
+		if d.DashboardDefinitieStatussen[idx].DashboardDefinitie_ID == 0 {
+			d.DashboardDefinitieStatussen[idx].DashboardDefinitie_ID = d.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus", Representatie: &d.DashboardDefinitieStatussen[idx]})
+	}
+	for idx := range d.Aanvang {
+		if d.Aanvang[idx].DashboardDefinitie_ID == 0 {
+			d.Aanvang[idx].DashboardDefinitie_ID = d.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_Aanvang", Representatie: &d.Aanvang[idx]})
+	}
+	for idx := range d.Einde {
+		if d.Einde[idx].DashboardDefinitie_ID == 0 {
+			d.Einde[idx].DashboardDefinitie_ID = d.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_Einde", Representatie: &d.Einde[idx]})
+	}
+	return result
+}
+
 /* ================================================================
    8. GeefOnderliggendeGegevenselementen — HUBS
    ================================================================ */
@@ -1153,6 +1398,84 @@ func (h *WeergaveDefinitie_DetailTemplate) GeefOnderliggendeGegevenselementen() 
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "WeergaveDefinitie_DetailTemplate_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *DashboardDefinitie_DashboarddefinitieNaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].DashboardDefinitie_ID == 0 {
+			h.Data[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieNaam_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *DashboardDefinitie_DashboarddefinitieTegel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].DashboardDefinitie_ID == 0 {
+			h.Data[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].DashboardDefinitie_ID == 0 {
+			h.Aanvang[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].DashboardDefinitie_ID == 0 {
+			h.Einde[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel_Einde", Representatie: &h.Einde[i]})
+	}
+	return result
+}
+
+func (h *DashboardDefinitie_DashboarddefinitieStatus) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].DashboardDefinitie_ID == 0 {
+			h.Data[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].DashboardDefinitie_ID == 0 {
+			h.Aanvang[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].DashboardDefinitie_ID == 0 {
+			h.Einde[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }

@@ -446,6 +446,9 @@ anders optie). Een snapshot is een noodrem, geen backup.
   (NotificatieDefinitie `nieuwe-aanmelding-melden`; pas het abonnee-adres aan). Controle:
   `GET /notificaties/gebeurtenistypes` en, ingelogd als admin, `GET /notificaties/bezorgingen`.
 
+  **Zevende ronde 25-09-2026 (DashboardDefinitie)**: zelfde procedure; daarna replay 23
+  (dashboard `moderatie`). Openen, ingelogd: `/viz/react/dashboard.html?dashboard=moderatie`.
+
 ---
 
 ## 10. Smoke test (vr 11 sep, daarna bevriezen)

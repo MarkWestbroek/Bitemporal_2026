@@ -152,6 +152,7 @@ export default defineConfig({
         "lineage-demo": resolve(__dirname, "lineage-demo.html"),
         publicatie: resolve(__dirname, "publicatie.html"),
         aanmelden: resolve(__dirname, "aanmelden.html"),
+        dashboard: resolve(__dirname, "dashboard.html"),
       },
     },
   },

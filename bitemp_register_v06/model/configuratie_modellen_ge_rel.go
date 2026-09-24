@@ -64,6 +64,22 @@ const (
 	NotificatieRegistratietypealle           NotificatieRegistratietype = "alle"
 )
 
+type DashboardDefinitieStatus string
+
+const (
+	DashboardDefinitieStatusconcept  DashboardDefinitieStatus = "concept"
+	DashboardDefinitieStatusactief   DashboardDefinitieStatus = "actief"
+	DashboardDefinitieStatusinactief DashboardDefinitieStatus = "inactief"
+)
+
+type DashboardWeergave string
+
+const (
+	DashboardWeergaveaantal DashboardWeergave = "aantal"
+	DashboardWeergavetabel  DashboardWeergave = "tabel"
+	DashboardWeergavelijst  DashboardWeergave = "lijst"
+)
+
 // FormulierDefinitie_Meta — Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.
 type FormulierDefinitie_Meta struct {
 	bun.BaseModel            `bun:"table:formulierdefinitie_meta,alias:formulierdefinitie_meta"`
@@ -183,6 +199,127 @@ type WeergaveDefinitie_DetailTemplate_Data struct {
 	DefinitieVersie      Versie     `json:"definitie_versie" schema:"datatype:Versie"`
 	Opvoer               *time.Time `json:"opvoer,omitempty"`
 	Afvoer               *time.Time `json:"afvoer,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieNaam — Naam (de sleutel in de URL: dashboard.html?dashboard=<naam>) en beschrijving.
+type DashboardDefinitie_DashboarddefinitieNaam struct {
+	bun.BaseModel            `bun:"table:dashboarddefinitie_dashboarddefinitienaam,alias:dashboarddefinitie_dashboarddefinitienaam"`
+	DashboardDefinitie_ID    int                                              `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk" schema_desc:"ID van de DashboardDefinitie-entiteit"`
+	Rel_ID                   int                                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentDashboardDefinitie *DashboardDefinitie                              `json:"-" bun:"rel:belongs-to,join:dashboarddefinitie_id=id,on_delete:cascade"`
+	Opvoer                   *time.Time                                       `json:"opvoer,omitempty"`
+	Afvoer                   *time.Time                                       `json:"afvoer,omitempty"`
+	Data                     []DashboardDefinitie_DashboarddefinitieNaam_Data `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieNaam_Data — geversioned inhoud van DashboardDefinitie_DashboarddefinitieNaam.
+type DashboardDefinitie_DashboarddefinitieNaam_Data struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitienaam_data,alias:dashboarddefinitie_dashboarddefinitienaam_data"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam                  string     `json:"naam"`
+	Beschrijving          *string    `json:"beschrijving,omitempty"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieTegel — Eén tegel: titel, de QueryDefinitie (naam van het opgeslagen document) die de selectie levert, de weergave (aantal, tabel of lijst), optioneel de kolommen (komma-gescheiden veldpaden uit het documentresultaat; leeg = alle scalaire velden), optioneel variabelen (JSON, bv. {"limit": 500}) en de volgorde. Meervoudig en materieel: tegels zijn te stagen.
+type DashboardDefinitie_DashboarddefinitieTegel struct {
+	bun.BaseModel            `bun:"table:dashboarddefinitie_dashboarddefinitietegel,alias:dashboarddefinitie_dashboarddefinitietegel"`
+	DashboardDefinitie_ID    int                                                  `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk" schema_desc:"ID van de DashboardDefinitie-entiteit"`
+	Rel_ID                   int                                                  `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentDashboardDefinitie *DashboardDefinitie                                  `json:"-" bun:"rel:belongs-to,join:dashboarddefinitie_id=id,on_delete:cascade"`
+	Opvoer                   *time.Time                                           `json:"opvoer,omitempty"`
+	Afvoer                   *time.Time                                           `json:"afvoer,omitempty"`
+	Data                     []DashboardDefinitie_DashboarddefinitieTegel_Data    `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang                  []DashboardDefinitie_DashboarddefinitieTegel_Aanvang `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                    []DashboardDefinitie_DashboarddefinitieTegel_Einde   `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieTegel_Data — geversioned inhoud van DashboardDefinitie_DashboarddefinitieTegel.
+type DashboardDefinitie_DashboarddefinitieTegel_Data struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitietegel_data,alias:dashboarddefinitie_dashboarddefinitietegel_data"`
+	DashboardDefinitie_ID int               `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int               `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64             `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Titel                 string            `json:"titel"`
+	Querydefinitie        string            `json:"querydefinitie"`
+	Weergave              DashboardWeergave `json:"weergave" schema:"enum=DashboardWeergave"`
+	Kolommen              *string           `json:"kolommen,omitempty"`
+	Variabelen            *string           `json:"variabelen,omitempty"`
+	Volgorde              *int              `json:"volgorde,omitempty"`
+	Opvoer                *time.Time        `json:"opvoer,omitempty"`
+	Afvoer                *time.Time        `json:"afvoer,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieTegel_Aanvang — aanvangdatum van DashboardDefinitie_DashboarddefinitieTegel.
+type DashboardDefinitie_DashboarddefinitieTegel_Aanvang struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitietegel_aanvang,alias:dashboarddefinitie_dashboarddefinitietegel_aanvang"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieTegel_Einde — eindedatum van DashboardDefinitie_DashboarddefinitieTegel.
+type DashboardDefinitie_DashboarddefinitieTegel_Einde struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitietegel_einde,alias:dashboarddefinitie_dashboarddefinitietegel_einde"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieStatus — Levenscyclus: concept, actief, inactief; materieel te stagen. `reden` legt uit waarom.
+type DashboardDefinitie_DashboarddefinitieStatus struct {
+	bun.BaseModel            `bun:"table:dashboarddefinitie_dashboarddefinitiestatus,alias:dashboarddefinitie_dashboarddefinitiestatus"`
+	DashboardDefinitie_ID    int                                                   `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk" schema_desc:"ID van de DashboardDefinitie-entiteit"`
+	Rel_ID                   int                                                   `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentDashboardDefinitie *DashboardDefinitie                                   `json:"-" bun:"rel:belongs-to,join:dashboarddefinitie_id=id,on_delete:cascade"`
+	Opvoer                   *time.Time                                            `json:"opvoer,omitempty"`
+	Afvoer                   *time.Time                                            `json:"afvoer,omitempty"`
+	Data                     []DashboardDefinitie_DashboarddefinitieStatus_Data    `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang                  []DashboardDefinitie_DashboarddefinitieStatus_Aanvang `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                    []DashboardDefinitie_DashboarddefinitieStatus_Einde   `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieStatus_Data — geversioned inhoud van DashboardDefinitie_DashboarddefinitieStatus.
+type DashboardDefinitie_DashboarddefinitieStatus_Data struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitiestatus_data,alias:dashboarddefinitie_dashboarddefinitiestatus_data"`
+	DashboardDefinitie_ID int                      `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int                      `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64                    `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Status                DashboardDefinitieStatus `json:"status" schema:"enum=DashboardDefinitieStatus"`
+	Reden                 *string                  `json:"reden,omitempty"`
+	Opvoer                *time.Time               `json:"opvoer,omitempty"`
+	Afvoer                *time.Time               `json:"afvoer,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieStatus_Aanvang — aanvangdatum van DashboardDefinitie_DashboarddefinitieStatus.
+type DashboardDefinitie_DashboarddefinitieStatus_Aanvang struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitiestatus_aanvang,alias:dashboarddefinitie_dashboarddefinitiestatus_aanvang"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
+}
+
+// DashboardDefinitie_DashboarddefinitieStatus_Einde — eindedatum van DashboardDefinitie_DashboarddefinitieStatus.
+type DashboardDefinitie_DashboarddefinitieStatus_Einde struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitiestatus_einde,alias:dashboarddefinitie_dashboarddefinitiestatus_einde"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
 }
 
 // NotificatieDefinitie_NotificatiedefinitieNaam — Naam en beschrijving van de notificatiedefinitie (het abonnement in NORA-termen).

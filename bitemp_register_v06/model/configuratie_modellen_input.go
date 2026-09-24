@@ -127,3 +127,32 @@ type NotificatieDefinitie_NotificatiedefinitieStatus_Input struct {
 	Aanvang                 *Date                      `json:"aanvang,omitempty"`
 	Einde                   *Date                      `json:"einde,omitempty"`
 }
+
+type DashboardDefinitie_DashboarddefinitieNaam_Input struct {
+	DASHBOARDDEFINITIE_ID int     `json:"dashboarddefinitie_id"`
+	Rel_ID                int     `json:"rel_id"`
+	Naam                  string  `json:"naam"`
+	Beschrijving          *string `json:"beschrijving,omitempty"`
+}
+
+type DashboardDefinitie_DashboarddefinitieTegel_Input struct {
+	DASHBOARDDEFINITIE_ID int               `json:"dashboarddefinitie_id"`
+	Rel_ID                int               `json:"rel_id"`
+	Titel                 string            `json:"titel"`
+	Querydefinitie        string            `json:"querydefinitie"`
+	Weergave              DashboardWeergave `json:"weergave"`
+	Kolommen              *string           `json:"kolommen,omitempty"`
+	Variabelen            *string           `json:"variabelen,omitempty"`
+	Volgorde              *int              `json:"volgorde,omitempty"`
+	Aanvang               *Date             `json:"aanvang,omitempty"`
+	Einde                 *Date             `json:"einde,omitempty"`
+}
+
+type DashboardDefinitie_DashboarddefinitieStatus_Input struct {
+	DASHBOARDDEFINITIE_ID int                      `json:"dashboarddefinitie_id"`
+	Rel_ID                int                      `json:"rel_id"`
+	Status                DashboardDefinitieStatus `json:"status"`
+	Reden                 *string                  `json:"reden,omitempty"`
+	Aanvang               *Date                    `json:"aanvang,omitempty"`
+	Einde                 *Date                    `json:"einde,omitempty"`
+}
