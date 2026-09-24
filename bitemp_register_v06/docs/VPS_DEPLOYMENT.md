@@ -398,6 +398,10 @@ anders optie). Een snapshot is een noodrem, geen backup.
   `https://pf.common-ground-lab.nl`**, niet via `http://127.0.0.1:8084`: het login-cookie is
   `Secure` en gaat over http niet mee (401 op alles ná de login). Uitkomst: lijst 85, detail 39
   met contactpersoon, WD 2 tabelconfig v0.2.
+  **Tweede ronde 24-09-2026 (avond, `250a637`)**: zelfde procedure; replays 13 (aanvulling intake
+  130–143), 14 (ApiStandaard 49–50) en 15 (koppeling API-standaarden) afgespeeld, alle 27
+  registraties 201. Publieke lijst 98; 143 (testaanmelding, `in_behandeling`) niet publiek.
+  De poort staat nog open.
   **Aanvulling intake (stap 13 in `docs/CG PF/Replay files/README.md`)**:
   `replay files/registraties-replay-init-intake-aanvulling-2026-09-23.json` — de aanmeldingen
   130–143 uit de Forms-export van 23 september; 143 is een testaanmelding op `in_behandeling` en
