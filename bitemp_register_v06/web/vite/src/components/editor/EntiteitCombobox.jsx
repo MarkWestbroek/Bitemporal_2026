@@ -16,7 +16,9 @@ const MAX_PAGINAS = 20;
  * alleen referentielijst-items kent (server-side zoeken). Hier laden we de /full-lijst
  * (gepagineerd, zoals NieuwEntiteitPagina) en berekenen het label met het weergaveveld.
  *
- * Met `nieuwFormulier` (FD-id) en `diepte` 0 staat onderaan de keuze "＋ Nieuwe …": de waarde
+ * Met `nieuwFormulier` (FD-id) en `diepte` 0 staat naast de keuzelijst een knop "＋ Nieuwe …"
+ * (een losse knop, geen laatste optie: op een telefoon is het einde van een lange lijst
+ * onzichtbaar): de waarde
  * wordt dan `{ $nieuw: { volPad → waarde }, $formulier: <FD-id> }` en het ingebedde formulier
  * (NieuwSubFormulier) verschijnt eronder; de mapping voert de doel-ENT met een plaatshouder-id
  * op (plan 2026-09-22 §5.3, stap B). Op diepte ≥ 1 kan alleen gekozen worden (maak-diepte 1).
@@ -107,12 +109,35 @@ export default function EntiteitCombobox({ doelEntiteit, value, onChange, readOn
         onChange={(e) => kies(e.target.value)}
         disabled={readOnly}
       >
-        <option value="">{status === "fout" ? "(laden mislukt)" : "(kies)"}</option>
+        <option value="">{status === "fout" ? "(laden mislukt)" : isNieuw ? "(nieuwe wordt aangemaakt)" : "(kies)"}</option>
+        {isNieuw && <option value={NIEUW} hidden>＋ Nieuwe {(doelMeta.klassenaam || doelEntiteit).toLowerCase()}</option>}
         {zichtbaar.map((o) => (
           <option key={o.id} value={o.id}>{o.label}</option>
         ))}
-        {magNieuw && <option value={NIEUW}>＋ Nieuwe {(doelMeta.klassenaam || doelEntiteit).toLowerCase()}…</option>}
       </select>
+      {magNieuw && !isNieuw && (
+        <button
+          type="button"
+          className="utrecht-button utrecht-button--secondary-action"
+          style={{ flex: "0 0 auto", fontSize: "0.8125rem", padding: "0.25rem 0.75rem", whiteSpace: "nowrap" }}
+          onClick={() => kies(NIEUW)}
+          disabled={readOnly}
+          title={`Een nieuwe ${(doelMeta.klassenaam || doelEntiteit).toLowerCase()} aanmaken in dit formulier`}
+        >
+          ＋ Nieuwe {(doelMeta.klassenaam || doelEntiteit).toLowerCase()}
+        </button>
+      )}
+      {isNieuw && (
+        <button
+          type="button"
+          className="utrecht-button utrecht-button--subtle"
+          style={{ flex: "0 0 auto", fontSize: "0.8125rem", padding: "0.25rem 0.75rem", whiteSpace: "nowrap" }}
+          onClick={() => kies("")}
+          disabled={readOnly}
+        >
+          Toch bestaande kiezen
+        </button>
+      )}
     </div>
     {isNieuw && (
       <NieuwSubFormulier

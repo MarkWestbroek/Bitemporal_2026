@@ -422,7 +422,7 @@ anders optie). Een snapshot is een noodrem, geen backup.
   **Derde ronde 24-09-2026 (nacht, `a5fd667`)**: zelfde procedure; daarna replay 16
   (`replay files/registraties-replay-init-formulierdefinitie-aanmelding-initiatief-2026-09-24.json`,
   FormulierDefinitie 2 "Aanmelding initiatief"). Het formulier in nieuw-modus staat achter de
-  editor-login op `/viz/react/t/initiatieven/nieuw?formulier=2` (keuzelijst *Invoer via*). Zie plan
+  editor-login op `/viz/react/inhoud.html#/t/initiatieven/nieuw?formulier=2` (hash-route; keuzelijst *Invoer via*). Zie plan
   2026-09-22 §9.
 
   **Vierde ronde 25-09-2026 (stap B)**: zelfde procedure; daarna replay 17
