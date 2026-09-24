@@ -395,9 +395,13 @@ In plaats van de complexe registratielogica te dupliceren in GraphQL resolvers, 
 
 De `JSON` scalar accepteert vrije JSON-payloads. Dit is bewust gekozen zodat het mutation-formaat identiek is aan het REST request-formaat, zonder dat er per representatietype een apart input-type nodig is.
 
-### 5. Formele tijdfilter (vereenvoudigd)
+### 5. Formele tijdfilter (vereenvoudigd) — zonder peiltijdstip is "nu" bedoeld
 
-De query resolvers gebruiken momenteel een vereenvoudigd formeel tijdfilter (`opvoer <= ? AND (afvoer IS NULL OR afvoer > ?)`), vergelijkbaar met de REST handlers. Het geavanceerde filter via de `f_formele_wijziging_op_peil()` functie kan later toegevoegd worden.
+De query resolvers gebruiken een vereenvoudigd formeel tijdfilter (`opvoer <= ? AND (afvoer IS NULL OR afvoer > ?)`), vergelijkbaar met de REST handlers. Het geavanceerde filter via de `f_formele_wijziging_op_peil()` functie kan later toegevoegd worden.
+
+**Sinds 24 september 2026 geldt dat filter ook zónder `peiltijdstip`, met "nu" als peilmoment** — voor de entiteit, de hubs, de `_Data`/aanvang/einde-kinderen en de forward-/reverse-relaties (`actueelOfPeil` in `query_resolvers.go`). Daarvoor werd zonder peiltijdstip níet gefilterd: afgevoerde entiteiten en hubs laadden mee en `flattenHubData` nam `data[0]`, dus mogelijk een oude dataversie. Dat is anders dan REST, dat alle versies teruggeeft en het kiezen aan de client laat; GraphQL slaat plat en móet kiezen. Gevolg: `full_<padnaam>(id)` van een afgevoerde entiteit geeft nu `null`. Test: `TestLijst_ZonderPeiltijdstipIsActueel`.
+
+**Weergavenaam van een relatiedoel.** `verrijkWeergavenamen` berekent de `weergavenaam` van bv. de ApiStandaard achter `initiatief_api_standaarden` uit diens afleidingsregel. Zo'n regel gebruikt de **klassenaam** van een GE (`Naam.naam`), terwijl de padnavigatie tot 24-09-2026 alleen op **rolnaam** matchte (`ApiStandaardNamen`) — ApiStandaard bleef leeg, Gemeente werkte toevallig (`Gemeentegegevens` ≈ `GemeenteGegevens`). De gedeelde `model.PadSegmentMatcht` (rolnaam, JSON-rolnaam, klassenaam, typenaam-suffix) wordt nu door REST én GraphQL gebruikt.
 
 ### 6. Filter als EXISTS per gegevenselement
 

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-24T21:00:00.000Z",
+  "source": "handmatig (Claude-sessie 24-09-2026, besluit Mark)",
+  "description": "Aanvulling op replay 3 (referentielijst ApiStandaard, id 1–48): 49 GraphQL, 50 Besluiten API (onderdeel ZGW, genoemd door 51/52 en al bekend bij de matcher). 'Haal centraal' als antwoord koppelt aan het bestaande Haal Centraal BRP Personen API (4) — geen apart item (Mark, 24-09-2026).",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T21:00:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "ApiStandaard 49–50",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Aanvulling referentielijst ApiStandaard: GraphQL, Besluiten API",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 49
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 49,
+                "naam": "GraphQL"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 50
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 50,
+                "naam": "Besluiten API"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}

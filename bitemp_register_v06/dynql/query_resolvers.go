@@ -43,14 +43,12 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			return nil, fmt.Errorf("id argument is verplicht")
 		}
 
-		peiltijdstip := peiltijdstipUitArgs(p.Args)
+		peil := actueelOfPeil(peiltijdstipUitArgs(p.Args))
+		peiltijdstip := &peil
 
 		entity := meta.Factory()
 		query := db.NewSelect().Model(entity)
-
-		if peiltijdstip != nil {
-			query = applyFormeleTijdFilter(query, meta.Typenaam, *peiltijdstip)
-		}
+		query = applyFormeleTijdFilter(query, meta.Typenaam, peil)
 
 		// Onderliggende relaties laden (zelfde patroon als addOnderliggendeRelations)
 		query = addOnderliggendeRelations(query, meta, peiltijdstip)
@@ -83,6 +81,17 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		verrijkEigenAfgeleideVelden(flat, meta)
 		return flat, nil
 	}
+}
+
+// actueelOfPeil geeft het formele peilmoment: het opgegeven peiltijdstip, of "nu".
+// Zonder peiltijdstip is de actuele situatie bedoeld (zo staat het ook in de
+// argumentbeschrijving). Tot 24-09-2026 werd dan níet gefilterd: afgevoerde hubs en oude
+// dataversies laadden mee, en flattenHubData nam data[0] — dus mogelijk een oude versie.
+func actueelOfPeil(peil *time.Time) time.Time {
+	if peil != nil {
+		return *peil
+	}
+	return time.Now().UTC()
 }
 
 // peiltijdstipUitArgs leest het optionele formele peiltijdstip uit de argumenten.
@@ -123,11 +132,9 @@ func lijstQuery(p graphql.ResolveParams, meta model.TypeMeta, entities interface
 		}
 	}
 
-	query := db.NewSelect().Model(entities)
-	if peil != nil {
-		query = applyFormeleTijdFilter(query, meta.Typenaam, *peil)
-	}
-	query, err := pasFilterToe(query, meta, p.Args["filter"], peil)
+	moment := actueelOfPeil(peil)
+	query := applyFormeleTijdFilter(db.NewSelect().Model(entities), meta.Typenaam, moment)
+	query, err := pasFilterToe(query, meta, p.Args["filter"], &moment)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +179,8 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			return nil, fmt.Errorf("SliceFactory ontbreekt voor type %s", meta.Typenaam)
 		}
 
-		peil := peiltijdstipUitArgs(p.Args)
+		moment := actueelOfPeil(peiltijdstipUitArgs(p.Args))
+		peil := &moment
 		entities := meta.SliceFactory()
 		query, err := lijstQuery(p, meta, entities, peil)
 		if err != nil {
@@ -348,20 +356,21 @@ func makeReverseRelationResolver(rev ReverseRelationInfo) graphql.FieldResolveFn
 			return nil, nil
 		}
 
+		nu := actueelOfPeil(nil)
 		entities := bronMeta.SliceFactory()
-		query := db.NewSelect().
+		query := applyFormeleTijdFilter(db.NewSelect().
 			Model(entities).
-			Where(bronMeta.IDKolom+" IN (?)", bun.In(bronIDs))
+			Where(bronMeta.IDKolom+" IN (?)", bun.In(bronIDs)), bronMeta.Typenaam, nu)
 
-		// Onderliggende relaties laden
-		query = addOnderliggendeRelations(query, bronMeta, nil)
+		// Onderliggende relaties laden (actueel)
+		query = addOnderliggendeRelations(query, bronMeta, &nu)
 
 		if err := query.Scan(p.Context); err != nil {
 			return nil, fmt.Errorf("reverse bron-entiteiten laden (%s) fout: %v", bronMeta.Typenaam, err)
 		}
 
 		// Hub-kinderen laden
-		if err := laadHubKinderenNaQuery(p.Context, entities, bronMeta, nil); err != nil {
+		if err := laadHubKinderenNaQuery(p.Context, entities, bronMeta, &nu); err != nil {
 			return nil, fmt.Errorf("reverse hub-kinderen laden fout: %v", err)
 		}
 
@@ -405,11 +414,12 @@ func makeForwardRelationResolver(fwd ForwardRelationInfo) graphql.FieldResolveFn
 			return nil, nil
 		}
 
+		nu := actueelOfPeil(nil)
 		entity := doelMeta.Factory()
-		query := db.NewSelect().Model(entity)
+		query := applyFormeleTijdFilter(db.NewSelect().Model(entity), doelMeta.Typenaam, nu)
 
-		// Onderliggende relaties laden
-		query = addOnderliggendeRelations(query, doelMeta, nil)
+		// Onderliggende relaties laden (actueel)
+		query = addOnderliggendeRelations(query, doelMeta, &nu)
 
 		err := query.
 			Where(doelMeta.IDKolom+" = ?", fkValue).
@@ -419,7 +429,7 @@ func makeForwardRelationResolver(fwd ForwardRelationInfo) graphql.FieldResolveFn
 		}
 
 		// Hub-kinderen laden
-		if err := laadHubKinderenNaQuery(p.Context, entity, doelMeta, nil); err != nil {
+		if err := laadHubKinderenNaQuery(p.Context, entity, doelMeta, &nu); err != nil {
 			return nil, fmt.Errorf("forward hub-kinderen laden fout: %v", err)
 		}
 
@@ -948,13 +958,15 @@ func laadWeergavenamenBatch(ctx context.Context, doelMeta model.TypeMeta, ids []
 
 	targetEntities := doelMeta.SliceFactory()
 	query := db.NewSelect().Model(targetEntities)
-	query = addOnderliggendeRelations(query, doelMeta, nil)
+	nu := actueelOfPeil(nil)
+	query = applyFormeleTijdFilter(query, doelMeta.Typenaam, nu)
+	query = addOnderliggendeRelations(query, doelMeta, &nu)
 	if err := query.Where(doelMeta.IDKolom+" IN (?)", bun.In(ids)).Scan(ctx); err != nil {
 		return nil
 	}
 
 	// Hub-kinderen laden (Bun workaround)
-	if err := laadHubKinderenNaQuery(ctx, targetEntities, doelMeta, nil); err != nil {
+	if err := laadHubKinderenNaQuery(ctx, targetEntities, doelMeta, &nu); err != nil {
 		return nil
 	}
 
@@ -1087,10 +1099,14 @@ func navigeerAfgeleidPadVlak(entityMap map[string]interface{}, pad string, meta 
 			return ""
 		}
 
-		// Zoek het onderliggende element op Rolnaam
+		// Zoek het onderliggende element op Rolnaam, of op de klassenaam van het doeltype:
+		// een afleidingsregel schrijft "Naam.naam" (klassenaam Naam), terwijl de rolnaam
+		// "ApiStandaardNamen" is. Tot 24-09-2026 matchte alleen de rolnaam, waardoor
+		// ApiStandaard.weergavenaam leeg bleef (Gemeente werkte toevallig: rolnaam
+		// "Gemeentegegevens" ≈ klassenaam "GemeenteGegevens").
 		gevonden := false
 		for _, child := range huidigMeta.OnderliggendeGegevenselementen {
-			if !strings.EqualFold(child.Rolnaam, deel) {
+			if !model.PadSegmentMatcht(child, deel) {
 				continue
 			}
 			childVal := m[child.JSONRolnaam]

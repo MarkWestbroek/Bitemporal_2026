@@ -206,18 +206,18 @@ DOMEIN_RULES = OrderedDict(
 
 API_RULES = OrderedDict(
     {
-        "ZGW API": [r"\bzgw\b", r"zaakgericht\s*werk", r"zaakgerichtwerk"],
+        "ZGW API": [r"\bzgw\b", r"\bzwg\b", r"zaakgericht\s*werk", r"zaakgerichtwerk", r"gemma-zaken/standaard"],
         "REST API": [r"\brest\b", r"restful"],
         "Notificaties API": [r"notificatie(?:s)?\s*api", r"\bnc\b"],
         "StUF-ZKN": [r"stuf[-\s]?zkn", r"zaak- en documentservices", r"regie- en zaakservices"],
         "StUF-FIN": [r"stuf[-\s]?fin"],
         "StUF-DCR": [r"stuf[-\s]?dcr", r"document creatie"],
         "StUF": [r"\bstuf\b"],
-        "Haal Centraal BRP Personen API": [r"haal\s*centraal.*brp.*personen", r"brp personen bevragen api", r"haalcentraal.*brp", r"haal centraal brp"],
+        "Haal Centraal BRP Personen API": [r"haal\s*centraal.*brp.*personen", r"brp personen bevragen api", r"haalcentraal.*brp", r"haal centraal brp", r"haal\s*centraal"],  # kaal "Haal centraal" = BRP Personen (Mark, 24-09-2026)
         "Haal Centraal BRP Bewoning API": [r"brp bewoning api"],
         "Documenten API": [r"documenten api", r"\bdrc\b"],
         "Objecten API": [r"objecten api"],
-        "Objecttypen API": [r"objecttype(?:n)? api"],
+        "Objecttypen API": [r"objecttype(?:n|s)? api"],
         "Catalogi API": [r"catalogi api", r"catalogus opvragen api", r"\bztc\b"],
         "Zaken API": [r"zaken api", r"\bzrc\b"],
         "Besluiten API": [r"besluiten api"],
@@ -226,7 +226,7 @@ API_RULES = OrderedDict(
         "Contactmomenten API": [r"contactmomenten api"],
         "Klantinteracties API": [r"klantinteracties api"],
         "NL API Strategie": [r"nl[-\s]?api strategie"],
-        "OpenAPI": [r"openapi"],
+        "OpenAPI": [r"openapi", r"\boas\s*3?\b"],
         "JSON:API": [r"json:api"],
         "OAuth 2.0": [r"oauth\s*2", r"\boauth\b", r"oidc", r"openid connect"],
         "SAML": [r"\bsaml\b"],
@@ -240,7 +240,7 @@ API_RULES = OrderedDict(
         "OData": [r"\bodata\b"],
         "DROP": [r"\bdrop\b"],
         "PDOK services": [r"\bpdok\b"],
-        "OGC API Features": [r"ogc api.?features", r"ogc-?api"],
+        "OGC API Features": [r"ogc api.?features", r"ogc-?api", r"ogc features api"],
         "SensorThings API": [r"sensorthings"],
         "DCAT-AP NL": [r"dcat-?ap\s*nl"],
         "GeoJSON": [r"geojson"],
@@ -255,6 +255,8 @@ API_RULES = OrderedDict(
         "SDG API / SDG-plus": [r"\bsdg\b"],
         "Webhook": [r"webhook"],
         "Alfresco Public API": [r"alfresco public api"],
+        # Aanvulling 24-09-2026 (lijst-id 49; zie replay …apistandaarden-aanvulling-2026-09-24).
+        "GraphQL": [r"graphql"],
     }
 )
 
@@ -272,6 +274,7 @@ API_IGNORE_PATTERNS = [
     r"forms\\.office\\.com",
     r"wordt nog toegevoegd",
     r"momenteel verkennen",
+    r"^cqrs$",  # architectuurpatroon, geen API-standaard (Mark, 24-09-2026)
 ]
 
 

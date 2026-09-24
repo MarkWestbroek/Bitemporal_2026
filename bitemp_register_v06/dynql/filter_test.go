@@ -376,7 +376,7 @@ func TestFilter_OpgeslagenDocumentAanroeperVersmaltAlleen(t *testing.T) {
 
 	t.Run("variabele weggelaten: alleen het vaste deel", func(t *testing.T) {
 		sql := voer(t, nil)
-		verwachtBevat(t, sql, `WHERE ((("initiatief"."id" = 7)))`)
+		verwachtBevat(t, sql, `((("initiatief"."id" = 7)))`)
 	})
 	t.Run("aanroeper versmalt", func(t *testing.T) {
 		sql := voer(t, map[string]interface{}{"extra": map[string]interface{}{"planningen": map[string]interface{}{}}})
@@ -389,4 +389,40 @@ func TestFilter_OpgeslagenDocumentAanroeperVersmaltAlleen(t *testing.T) {
 		// De or zit binnen de and: id = 7 EN (id = 8) — nooit meer dan het vaste deel.
 		verwachtBevat(t, sql, `("initiatief"."id" = 7) AND ((("initiatief"."id" = 8)))`)
 	})
+}
+
+// Zonder peiltijdstip is "nu" bedoeld: de lijst-query filtert dan óók op formele tijd
+// (afgevoerde entiteiten en hubs blijven weg). Vóór 24-09-2026 laadde alles mee en nam
+// flattenHubData data[0] — mogelijk een oude versie.
+func TestLijst_ZonderPeiltijdstipIsActueel(t *testing.T) {
+	meta := initiatiefMeta(t)
+	var mu sync.Mutex
+	var queries []string
+	sqlDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherFunc(func(_, actual string) error {
+		mu.Lock()
+		queries = append(queries, actual)
+		mu.Unlock()
+		return nil
+	})))
+	if err != nil {
+		t.Fatalf("sqlmock: %v", err)
+	}
+	defer sqlDB.Close()
+	mock.MatchExpectationsInOrder(false)
+	mock.ExpectQuery("").WillReturnRows(sqlmock.NewRows([]string{"id"}))
+	schema, err := BuildSchema(bun.NewDB(sqlDB, pgdialect.New()))
+	if err != nil {
+		t.Fatalf("BuildSchema: %v", err)
+	}
+	defer InitDB(nil)
+
+	res := graphql.Do(graphql.Params{Schema: *schema, Context: context.Background(),
+		RequestString: `{ ` + meta.Padnaam + ` { id } }`})
+	if len(res.Errors) > 0 {
+		t.Fatalf("GraphQL-fouten: %v", res.Errors)
+	}
+	if len(queries) == 0 {
+		t.Fatal("geen query")
+	}
+	verwachtBevat(t, queries[0], `opvoer <= '`, `(afvoer IS NULL OR afvoer > '`)
 }

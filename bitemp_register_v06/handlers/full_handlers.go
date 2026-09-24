@@ -499,7 +499,7 @@ func navigeerAfgeleidPad(entityMap map[string]any, pad string, meta model.TypeMe
 		// Zoek het onderliggende element op Rolnaam
 		gevonden := false
 		for _, child := range huidigMeta.OnderliggendeGegevenselementen {
-			if !strings.EqualFold(child.Rolnaam, deel) {
+			if !model.PadSegmentMatcht(child, deel) {
 				continue
 			}
 			childItems := m[child.JSONRolnaam]

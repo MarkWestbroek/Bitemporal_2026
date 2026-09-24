@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-24T21:00:00.000Z",
+  "source": "handmatig (Claude-sessie 24-09-2026)",
+  "description": "Correctie op replay 4 en 13: tien initiatieven noemden een API-standaard in vrije tekst die de matcher niet herkende (typo ZWG, OAS3, Objecttypes, 'OGC features API', kale namen 'Zaken; Documenten; …', een URL naar de ZGW-standaard, GraphQL, Haal centraal). Die krijgen nu een InitiatiefAPIStandaard-relatie; een volledig gemapte resttekst wordt afgevoerd, een deels gemapte gecorrigeerd tot het restant. Vereist: replay 4, 13 en de lijst-aanvulling (…apistandaarden-aanvulling-2026-09-24). Mapping: 38 → ZGW API; 51 → Zaken API, Documenten API, Objecten API, Besluiten API; 52 → Zaken API, Documenten API, Catalogi API, Besluiten API; 74 → ZGW API; 79 → Haal Centraal BRP Personen API; 116 → OGC API Features; 127 → Objecttypen API; 132 → OpenAPI; 140 → Haal Centraal BRP Personen API; 143 → GraphQL. Niet gemapt (bewust): placeholders, zinnen en geen gemeentelijke API-standaarden (PDF/A, LDAP/SCIM, JSON/HTTP, RFC 7807).",
+  "count": 2,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T21:00:01.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "API-standaarden uit vrije tekst gekoppeld aan de lijst; volledig gemapte restteksten afgevoerd",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "API-standaarden: vrije tekst (AndereAPIStandaard) alsnog gekoppeld aan de referentielijst voor 38, 51, 52, 74, 79, 116, 127, 132, 140, 143",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 38,
+                "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 51,
+                "apistandaard_id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 51,
+                "apistandaard_id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 51,
+                "apistandaard_id": 11
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 51,
+                "apistandaard_id": 50
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 51,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 52,
+                "apistandaard_id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 52,
+                "apistandaard_id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 52,
+                "apistandaard_id": 9
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 52,
+                "apistandaard_id": 50
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 52,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 74,
+                "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 74,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 79,
+                "apistandaard_id": 4
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 79,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 116,
+                "apistandaard_id": 40
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 127,
+                "apistandaard_id": 38
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 127,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 132,
+                "apistandaard_id": 17
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 140,
+                "apistandaard_id": 4
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 140,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefapistandaard": {
+                "initiatief_id": 143,
+                "apistandaard_id": 49
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 143,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "correctie",
+      "tijdstip": "2026-09-24T21:00:02.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Restteksten na het koppelen: alleen wat niet in de lijst past blijft staan",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "AndereAPIStandaard: resttekst na koppeling aan de lijst (38, 116, 132)",
+          "registratietype": "correctie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 38,
+                "rel_id": 1,
+                "api_standaard": "(ZGW API) nog niet operationeel, wel in de code"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 116,
+                "rel_id": 1,
+                "api_standaard": "TMS; TileJSON; 3D tiles"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 132,
+                "rel_id": 1,
+                "api_standaard": "API-versioning"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}
