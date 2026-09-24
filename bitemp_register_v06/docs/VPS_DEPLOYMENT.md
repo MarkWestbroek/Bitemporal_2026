@@ -391,6 +391,13 @@ anders optie). Een snapshot is een noodrem, geen backup.
   `LEESTOEGANG=documenten` in de omgeving van de API (compose) en de API opnieuw starten;
   anoniem lezen van registerdata geeft dan 401, de embed blijft werken via `documentId`.
   Terugdraaien = de variabele weghalen. Zie `docs/AUTH_DEVELOPER_GUIDE.md` §7.
+  **Gedaan op pf op 24-09-2026** (`3b0b27d`, poort nog open): deploy met
+  `bash /srv/omnium-pf/src/bitemp_register_v06/deploy/vps/pf.sh deploy` (het script staat in de
+  checkout, niet los in `/srv/omnium-pf`), daarna de drie replays als admin met een klein
+  Python-lusje over `entries[].request_body` naar `POST /registratie/` — **via
+  `https://pf.common-ground-lab.nl`**, niet via `http://127.0.0.1:8084`: het login-cookie is
+  `Secure` en gaat over http niet mee (401 op alles ná de login). Uitkomst: lijst 85, detail 39
+  met contactpersoon, WD 2 tabelconfig v0.2.
 - **`$` in wachtwoorden** — compose leest het als variabele. `.env.example` genereert ze zonder.
 - **`minio-init` stopt** — hoort zo; daarom achter `--profile init`.
 - **OpenFTV** — `openftv_adl` database, `package authz` in de rego, bundle-403: zie TrueNAS §2.3–2.6.
