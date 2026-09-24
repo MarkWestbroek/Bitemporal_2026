@@ -117,7 +117,16 @@ export default function RepresentatieTabel({ typeMeta }) {
                 .filter(Boolean)
                 .join(" | ");
               const label = item.rel_id ?? hub?.rel_id ?? idx + 1;
-              const tekst = weergave || waarden;
+              // Relatie naar een andere entiteit (bv. InitiatiefAPIStandaard → ApiStandaard):
+              // de afgeleide weergavenaam is een verwijzing die de browser niet kan
+              // evalueren, maar /full/ zet de weergavenaam van het doel al in het item
+              // (full_handlers.go, verrijkResponseMetWeergavenamen). Gebruik die; anders de
+              // secundaire id, zodat een relatie zonder datavelden geen "—" toont.
+              const secKolom = childMeta?.secondaireEntiteitIDKolom;
+              const doel = item.weergavenaam
+                ? String(item.weergavenaam)
+                : secKolom && item[secKolom] != null ? `${secKolom} ${item[secKolom]}` : "";
+              const tekst = [weergave || doel, waarden].filter(Boolean).join(" — ") || doel;
               const tooltip = weergave && waarden && weergave !== waarden
                 ? `${weergave} — ${waarden}`
                 : tekst;
