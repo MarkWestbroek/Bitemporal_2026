@@ -2,15 +2,15 @@
   "version": 1,
   "exported_at": "2026-09-24T21:00:00.000Z",
   "source": "handmatig (Claude-sessie 24-09-2026)",
-  "description": "Correctie op replay 4 en 13: tien initiatieven noemden een API-standaard in vrije tekst die de matcher niet herkende (typo ZWG, OAS3, Objecttypes, 'OGC features API', kale namen 'Zaken; Documenten; …', een URL naar de ZGW-standaard, GraphQL, Haal centraal). Die krijgen nu een InitiatiefAPIStandaard-relatie; een volledig gemapte resttekst wordt afgevoerd, een deels gemapte gecorrigeerd tot het restant. Vereist: replay 4, 13 en de lijst-aanvulling (…apistandaarden-aanvulling-2026-09-24). Mapping: 38 → ZGW API; 51 → Zaken API, Documenten API, Objecten API, Besluiten API; 52 → Zaken API, Documenten API, Catalogi API, Besluiten API; 74 → ZGW API; 79 → Haal Centraal BRP Personen API; 116 → OGC API Features; 127 → Objecttypen API; 132 → OpenAPI; 140 → Haal Centraal BRP Personen API; 143 → GraphQL. Niet gemapt (bewust): placeholders, zinnen en geen gemeentelijke API-standaarden (PDF/A, LDAP/SCIM, JSON/HTTP, RFC 7807).",
-  "count": 2,
+  "description": "Correctie op replay 4 en 13: tien initiatieven noemden een API-standaard in vrije tekst die de matcher niet herkende (typo ZWG, OAS3, Objecttypes, 'OGC features API', kale namen 'Zaken; Documenten; …', een URL naar de ZGW-standaard, GraphQL, Haal centraal). Die krijgen nu een InitiatiefAPIStandaard-relatie; een volledig gemapte resttekst wordt afgevoerd, een deels gemapte gecorrigeerd tot het restant. Vereist: replay 4, 13 en de lijst-aanvulling (…apistandaarden-aanvulling-2026-09-24). Mapping: 38 → ZGW API; 51 → Zaken API, Documenten API, Objecten API, Besluiten API; 52 → Zaken API, Documenten API, Catalogi API, Besluiten API; 74 → ZGW API; 79 → Haal Centraal BRP Personen API; 116 → OGC API Features; 127 → Objecttypen API; 132 → OpenAPI; 140 → Haal Centraal BRP Personen API; 143 → GraphQL. Niet gemapt (bewust): placeholders, zinnen en geen gemeentelijke API-standaarden (PDF/A, LDAP/SCIM, JSON/HTTP, RFC 7807). Opbouw: één entry met alle relaties, per initiatief een aparte entry voor het afvoeren van de resttekst (hub rel_id 1 — mislukt die omdat de hub op een instantie al is afgevoerd, bv. na bewerken in Studio, dan raakt dat de andere entries niet), en één correctie-entry voor de deels gemapte restteksten.",
+  "count": 9,
   "entries": [
     {
       "registratietype": "registratie",
       "tijdstip": "2026-09-24T21:00:01.000Z",
       "request_path": "/registratie/",
       "request_method": "POST",
-      "description": "API-standaarden uit vrije tekst gekoppeld aan de lijst; volledig gemapte restteksten afgevoerd",
+      "description": "API-standaarden uit vrije tekst gekoppeld aan de lijst (relaties)",
       "request_body": {
         "registratie": {
           "id": 0,
@@ -60,14 +60,6 @@
             }
           },
           {
-            "afvoer": {
-              "andereapistandaard": {
-                "initiatief_id": 51,
-                "rel_id": 1
-              }
-            }
-          },
-          {
             "opvoer": {
               "initiatiefapistandaard": {
                 "initiatief_id": 52,
@@ -100,14 +92,6 @@
             }
           },
           {
-            "afvoer": {
-              "andereapistandaard": {
-                "initiatief_id": 52,
-                "rel_id": 1
-              }
-            }
-          },
-          {
             "opvoer": {
               "initiatiefapistandaard": {
                 "initiatief_id": 74,
@@ -116,26 +100,10 @@
             }
           },
           {
-            "afvoer": {
-              "andereapistandaard": {
-                "initiatief_id": 74,
-                "rel_id": 1
-              }
-            }
-          },
-          {
             "opvoer": {
               "initiatiefapistandaard": {
                 "initiatief_id": 79,
                 "apistandaard_id": 4
-              }
-            }
-          },
-          {
-            "afvoer": {
-              "andereapistandaard": {
-                "initiatief_id": 79,
-                "rel_id": 1
               }
             }
           },
@@ -156,14 +124,6 @@
             }
           },
           {
-            "afvoer": {
-              "andereapistandaard": {
-                "initiatief_id": 127,
-                "rel_id": 1
-              }
-            }
-          },
-          {
             "opvoer": {
               "initiatiefapistandaard": {
                 "initiatief_id": 132,
@@ -180,21 +140,187 @@
             }
           },
           {
-            "afvoer": {
-              "andereapistandaard": {
-                "initiatief_id": 140,
-                "rel_id": 1
-              }
-            }
-          },
-          {
             "opvoer": {
               "initiatiefapistandaard": {
                 "initiatief_id": 143,
                 "apistandaard_id": 49
               }
             }
-          },
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T21:00:02.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Resttekst 51 afgevoerd (volledig gemapt)",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "AndereAPIStandaard van initiatief 51 afgevoerd: volledig gekoppeld aan de referentielijst",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 51,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T21:00:03.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Resttekst 52 afgevoerd (volledig gemapt)",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "AndereAPIStandaard van initiatief 52 afgevoerd: volledig gekoppeld aan de referentielijst",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 52,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T21:00:04.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Resttekst 74 afgevoerd (volledig gemapt)",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "AndereAPIStandaard van initiatief 74 afgevoerd: volledig gekoppeld aan de referentielijst",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 74,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T21:00:05.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Resttekst 79 afgevoerd (volledig gemapt)",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "AndereAPIStandaard van initiatief 79 afgevoerd: volledig gekoppeld aan de referentielijst",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 79,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T21:00:06.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Resttekst 127 afgevoerd (volledig gemapt)",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "AndereAPIStandaard van initiatief 127 afgevoerd: volledig gekoppeld aan de referentielijst",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 127,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T21:00:07.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Resttekst 140 afgevoerd (volledig gemapt)",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "AndereAPIStandaard van initiatief 140 afgevoerd: volledig gekoppeld aan de referentielijst",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 140,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-24T21:00:08.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Resttekst 143 afgevoerd (volledig gemapt)",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "AndereAPIStandaard van initiatief 143 afgevoerd: volledig gekoppeld aan de referentielijst",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
           {
             "afvoer": {
               "andereapistandaard": {
@@ -209,7 +335,7 @@
     },
     {
       "registratietype": "correctie",
-      "tijdstip": "2026-09-24T21:00:02.000Z",
+      "tijdstip": "2026-09-24T21:00:09.000Z",
       "request_path": "/registratie/",
       "request_method": "POST",
       "description": "Restteksten na het koppelen: alleen wat niet in de lijst past blijft staan",
