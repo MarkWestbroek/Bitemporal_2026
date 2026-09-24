@@ -132,8 +132,8 @@ func TestOpgeslagenPG_UitvoerenOpNaam(t *testing.T) {
 		return toegang
 	}
 	r := gin.New()
-	r.POST("/graphql/query", GraphQLHandler(schema, nil, guard))
-	r.GET("/graphql/query", GraphQLHandler(schema, nil, guard))
+	r.POST("/graphql/query", GraphQLHandler(schema, nil, guard, nil))
+	r.GET("/graphql/query", GraphQLHandler(schema, nil, guard, nil))
 
 	post := func(t *testing.T, body string) (int, map[string]interface{}) {
 		t.Helper()

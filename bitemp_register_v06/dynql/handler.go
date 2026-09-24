@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +33,13 @@ type MutatieGuard func(c *gin.Context) bool
 // Naast een ad-hoc `query` accepteert de handler een `documentId`: de naam van een opgeslagen
 // QueryDefinitie (persisted query, zie opgeslagen_documenten.go). Een document dat niet
 // publiek is vereist magIntern (nil = geen controle).
-func GraphQLHandler(schema *graphql.Schema, magMuteren, magIntern MutatieGuard) gin.HandlerFunc {
+//
+// magLezen is de leespoort voor ad-hoc queries (middleware.MagLezen): een query die geen
+// documentId en geen introspectie is, leest registerdata en moet erdoor. Introspectie
+// (alleen __schema/__type op rootniveau) blijft vrij: de publicatiepagina heeft het nodig
+// om template-paden op het schema af te stemmen, en het onthult niets dat /api/viz/schema
+// niet ook toont. nil = geen controle.
+func GraphQLHandler(schema *graphql.Schema, magMuteren, magIntern, magLezen MutatieGuard) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var params struct {
 			Query         string                 `json:"query"`
@@ -74,6 +81,9 @@ func GraphQLHandler(schema *graphql.Schema, magMuteren, magIntern MutatieGuard) 
 		}
 
 		if magMuteren != nil && BevatMutatie(params.Query) && !magMuteren(c) {
+			return
+		}
+		if magLezen != nil && !IsIntrospectieDocument(params.Query) && !magLezen(c) {
 			return
 		}
 
@@ -169,6 +179,36 @@ func ValideerDocumentHandler(schema *graphql.Schema) gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK, gin.H{"geldig": len(fouten) == 0, "fouten": fouten})
 	}
+}
+
+// IsIntrospectieDocument meldt of een document uitsluitend introspectie is: alleen
+// query-operaties waarvan elke rootselectie een veld is dat met "__" begint (__schema,
+// __type, __typename). Een fragment-spread op rootniveau of een gewoon veld maakt het een
+// data-query. Een document dat niet te parsen is telt niet als introspectie (en faalt
+// verderop op de parse-fout).
+func IsIntrospectieDocument(query string) bool {
+	doc, err := parser.Parse(parser.ParseParams{Source: query})
+	if err != nil {
+		return false
+	}
+	gezien := false
+	for _, def := range doc.Definitions {
+		op, ok := def.(*ast.OperationDefinition)
+		if !ok {
+			continue // fragmentdefinities: onschuldig zolang ze op rootniveau niet gespread worden
+		}
+		if op.Operation != ast.OperationTypeQuery || op.SelectionSet == nil {
+			return false
+		}
+		for _, sel := range op.SelectionSet.Selections {
+			veld, ok := sel.(*ast.Field)
+			if !ok || veld.Name == nil || !strings.HasPrefix(veld.Name.Value, "__") {
+				return false
+			}
+			gezien = true
+		}
+	}
+	return gezien
 }
 
 // BevatMutatie meldt of een GraphQL-document een mutatie-operatie bevat. Bewust ruim: één

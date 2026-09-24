@@ -82,10 +82,13 @@ func AddRoutes(router *gin.Engine) {
 	// RequireRol is een no-op zolang AUTH_ENABLED=false (dev-default),
 	// dus dit verandert niets aan een omgeving zonder auth.
 	editor := middleware.RequireRol("editor")
+	// Lezen van registerdata: open, of achter minimaal "viewer" als LEESTOEGANG=documenten
+	// (middleware/leestoegang.go). Per type beslist lezer(meta) in addroutes_helper.go.
+	lees := middleware.RequireLezer()
 
 	//Add Tests routes to router
-	router.GET("/tests", handlers.GetTests)
-	router.GET("/tests/:id", handlers.GetTest)
+	router.GET("/tests", lees, handlers.GetTests)
+	router.GET("/tests/:id", lees, handlers.GetTest)
 	router.DELETE("/tests/:id", editor, handlers.RemoveTest)
 	router.POST("/tests", editor, handlers.AddTest)
 	router.PUT("/tests/:id", editor, handlers.UpdateTest)
@@ -103,18 +106,18 @@ func AddRoutes(router *gin.Engine) {
 	// POST /registraties en POST /wijzigingen zijn verwijderd (BE-review §3.5):
 	// clients konden er audit-records mee aanmaken of vervalsen. Registraties
 	// ontstaan uitsluitend via POST /registratie/ (RegistreerCore).
-	router.GET("/registraties", handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
-	router.GET("/registraties/:id", handlers.MakeGetEntityHandler[model.Registratie]("Registratie"))
+	router.GET("/registraties", lees, handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
+	router.GET("/registraties/:id", lees, handlers.MakeGetEntityHandler[model.Registratie]("Registratie"))
 	router.PATCH("/registraties/:id", editor, handlers.PatchRegistratie())
 
 	// Wijziging routes (read-only)
-	router.GET("/wijzigingen", handlers.MakeGetEntitiesHandler[model.Wijziging]("Wijzigingen"))
-	router.GET("/wijzigingen/:id", handlers.MakeGetEntityHandler[model.Wijziging]("Wijziging"))
+	router.GET("/wijzigingen", lees, handlers.MakeGetEntitiesHandler[model.Wijziging]("Wijzigingen"))
+	router.GET("/wijzigingen/:id", lees, handlers.MakeGetEntityHandler[model.Wijziging]("Wijziging"))
 
 	// Get registratie met onderliggende wijzigingen (geen generieke handler gebruikt,
 	// omdat dit een specifiek afhandeling vroeg, en bovendien toch plumbing is)
-	router.GET("/full/registraties", handlers.MakeGetRegistratiesMetWijzigingenHandler())
-	router.GET("/full/registraties/:id", handlers.MakeGetRegistratieMetWijzigingenByIDHandler())
+	router.GET("/full/registraties", lees, handlers.MakeGetRegistratiesMetWijzigingenHandler())
+	router.GET("/full/registraties/:id", lees, handlers.MakeGetRegistratieMetWijzigingenByIDHandler())
 
 	/*
 		=== BELANGRIJKSTE BITEMPORELE REGISTRATIE ENDPOINT ===
@@ -129,8 +132,8 @@ func AddRoutes(router *gin.Engine) {
 
 	// Bestanden (IdeBestand) — upload, download en preview routes
 	router.POST("/api/bestanden/upload", editor, handlers.MaakUploadBestandHandler())
-	router.GET("/api/bestanden/:id/download", handlers.MaakDownloadBestandHandler())
-	router.GET("/api/bestanden/:id/preview", handlers.MaakPreviewBestandHandler())
+	router.GET("/api/bestanden/:id/download", lees, handlers.MaakDownloadBestandHandler())
+	router.GET("/api/bestanden/:id/preview", lees, handlers.MaakPreviewBestandHandler())
 
 	/* IDEE
 	Idee voor een generieke registratie/correctie/ongedaanmaking route,

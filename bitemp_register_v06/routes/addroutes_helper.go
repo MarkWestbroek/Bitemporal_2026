@@ -30,8 +30,10 @@ func addMetaRegistryRoutes(router *gin.Engine) {
 		basePath := "/" + meta.Padnaam
 		// Muterende routes vereisen minimaal rol "editor" (no-op als AUTH_ENABLED=false).
 		editor := middleware.RequireRol("editor")
-		router.GET(basePath, handlers.MakeGetEntitiesByMetaHandler(meta))
-		router.GET(basePath+"/:id", handlers.MakeGetEntityByMetaHandler(meta))
+		// Lezen: open, of achter minimaal "viewer" als LEESTOEGANG=documenten (leestoegang.go).
+		lees := lezer(meta)
+		router.GET(basePath, lees, handlers.MakeGetEntitiesByMetaHandler(meta))
+		router.GET(basePath+"/:id", lees, handlers.MakeGetEntityByMetaHandler(meta))
 		// POST via de registratie-engine (BE-review §3.5): audit + transactie zoals POST /registratie/.
 		router.POST(basePath, editor, handlers.MakeAddEntityViaEngineHandler(meta))
 		// FASE 2 (REST/CRUD-laag, 2026-04-29): DELETE per padnaam.
@@ -62,8 +64,10 @@ func addMetaRegistryFullRoutes(router *gin.Engine) {
 		basePath := "/full/" + meta.Padnaam
 		// Muterende routes vereisen minimaal rol "editor" (no-op als AUTH_ENABLED=false).
 		editor := middleware.RequireRol("editor")
-		router.GET(basePath, handlers.MakeGetFullEntitiesByMetaHandler(meta))
-		router.GET(basePath+"/:id", handlers.MakeGetFullEntityByMetaHandler(meta))
+		// Lezen: open, of achter minimaal "viewer" als LEESTOEGANG=documenten (leestoegang.go).
+		lees := lezer(meta)
+		router.GET(basePath, lees, handlers.MakeGetFullEntitiesByMetaHandler(meta))
+		router.GET(basePath+"/:id", lees, handlers.MakeGetFullEntityByMetaHandler(meta))
 		// POST via de registratie-engine (BE-review §3.5); geneste full-shape wordt genormaliseerd.
 		router.POST(basePath, editor, handlers.MakeAddEntityViaEngineHandler(meta))
 		// FASE 2 (REST/CRUD-laag, 2026-04-29): PATCH op /full/{padnaam}/:id.
@@ -72,7 +76,8 @@ func addMetaRegistryFullRoutes(router *gin.Engine) {
 	}
 }
 
-// addReferentielijstRoutes registreert de /referentielijsten routes:
+// addReferentielijstRoutes registreert de /referentielijsten routes. Lezen blijft hier ook
+// met LEESTOEGANG=documenten open: referentielijsten zijn naslag (zie OpenbaarLeesbaar).
 // - GET /referentielijsten                        → overzicht van alle referentielijsten (systeemtabel)
 // - GET /referentielijsten/{padnaam}              → lijst van entiteiten van een referentielijst
 // - GET /referentielijsten/{padnaam}/:id          → detail van één referentielijst-entiteit

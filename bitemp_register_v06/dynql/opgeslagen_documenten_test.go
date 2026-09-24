@@ -198,7 +198,7 @@ func TestOpgeslagen_QueryEnDocumentIdSluitenElkaarUit(t *testing.T) {
 	schema, sluit := schemaMetSqlmock(t)
 	defer sluit()
 	r := gin.New()
-	r.POST("/graphql/query", GraphQLHandler(schema, nil, nil))
+	r.POST("/graphql/query", GraphQLHandler(schema, nil, nil, nil))
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, "/graphql/query", strings.NewReader(`{"query":"{ initiatieven { id } }","documentId":"x"}`))
 	req.Header.Set("Content-Type", "application/json")
