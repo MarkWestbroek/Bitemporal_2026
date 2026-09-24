@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-25T11:00:00Z",
+  "source": "manual://claude-aanmeldformulier-tekst",
+  "description": "FormulierDefinitie 2: beschrijving voor bezoekers (de eerdere tekst was een ontwikkelnotitie en staat op de openbare pagina). Meta is nog meervoudig: de oude meta-hub (rel_id 1) wordt afgevoerd.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-25T11:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "FormulierDefinitie 2: meta v2 met bezoekersbeschrijving (meta-hub rel_id 1 afvoeren)",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Aanmelding initiatief: beschrijving voor bezoekers"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": 2,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": 2,
+                "naam": "Aanmelding initiatief",
+                "beschrijving": "Meld hier een initiatief aan voor het Common Ground-portfolio. Beantwoord de vragen zo volledig mogelijk; velden met * zijn verplicht. Na verzending beoordeelt het portfolioteam de aanmelding; daarna wordt het initiatief zichtbaar in het portfolio.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

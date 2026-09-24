@@ -84,6 +84,7 @@ function AanmeldPagina() {
           typeMeta={typeMeta}
           definitie={definitie}
           openbaar
+          toonKop={isEmbed}
           onSuccess={(r) => { setResultaat(r); window.scrollTo?.(0, 0); }}
         />
       )}

@@ -28,8 +28,9 @@ import { useFormulierDefinities } from "../../hooks/useFormulierDefinitie";
  *  - onSuccess:  optioneel ({ registratieId, entiteitId }) => void; anders navigatie naar detail
  *  - openbaar:   true = anonieme indiening via POST /aanmelding/:formulierId (stap C): geen
  *                id-regel, geen preview; de server dwingt de vaste waarden en de bron af
+ *  - toonKop:    false = geen naam/beschrijving boven het formulier (de pagina toont die zelf)
  */
-export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, openbaar = false }) {
+export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, openbaar = false, toonKop = true }) {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
   const navigate = useNavigate();
   const layout = definitie?.layout || null;
@@ -145,6 +146,7 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, o
 
   return (
     <div className="cg-form-card">
+      {toonKop && (
       <div className="cg-form-section__title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap" }}>
         <span>{definitie?.meta?.naam || "Formulier"}</span>
         {!openbaar && (
@@ -154,7 +156,8 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, o
           </span>
         )}
       </div>
-      {definitie?.meta?.beschrijving && (
+      )}
+      {toonKop && definitie?.meta?.beschrijving && (
         <p style={{ margin: "0 0 0.75rem", color: "var(--cg-donkergrijs, #666)" }}>{definitie.meta.beschrijving}</p>
       )}
 
