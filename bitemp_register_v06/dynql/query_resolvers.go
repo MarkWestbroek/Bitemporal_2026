@@ -1071,6 +1071,14 @@ func evalueerAfgeleidArgumentVlak(entityMap map[string]interface{}, arg string, 
 func verrijkEigenAfgeleideVelden(entityMap map[string]interface{}, meta model.TypeMeta) {
 	for _, av := range meta.AfgeleideVelden {
 		if av.IsWeergaveVeld {
+			// De eigen weergavenaam van de entiteit (bv. Initiatief.weergavenaam = Product.naam).
+			// Tot 25-09-2026 werd die overgeslagen (alleen relatie-items kregen er een), waardoor
+			// `weergavenaam` op het root-niveau van een lijst altijd null was.
+			if bestaand, ok := entityMap[gqlSafeNaam(av.Naam)].(string); !ok || bestaand == "" {
+				if naam := berekenWeergavenaamVlak(entityMap, meta); naam != "" {
+					entityMap[gqlSafeNaam(av.Naam)] = naam
+				}
+			}
 			continue
 		}
 		var waarde interface{}

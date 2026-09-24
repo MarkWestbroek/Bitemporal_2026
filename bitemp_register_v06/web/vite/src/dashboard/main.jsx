@@ -87,6 +87,19 @@ function parseVariabelen(s) {
   try { const v = JSON.parse(s); return v && typeof v === "object" ? v : {}; } catch { return {}; }
 }
 
+/**
+ * Kolomkop: het laatste padsegment; komt dat vaker voor (twee keer "weergavenaam"), dan
+ * het segment ervoor erbij ("organisaties · weergavenaam").
+ */
+function kolomKop(pad, alle) {
+  const delen = pad.split(".");
+  const laatste = delen[delen.length - 1];
+  const dubbel = alle.filter((k) => k.split(".").pop() === laatste).length > 1;
+  if (!dubbel || delen.length < 2) return laatste;
+  const ouder = delen[delen.length - 2].replace(/^initiatief_/, "").replace(/_/g, " ");
+  return `${ouder} · ${laatste}`;
+}
+
 /** Padnaam van de doelentiteit uit de naam van het lijstveld (full_<padnaam>_list). */
 function padnaamUit(data) {
   const key = Object.keys(data || {}).find((k) => Array.isArray(data[k]));
@@ -150,7 +163,7 @@ function Tegel({ tegel, ronde }) {
       {st.rijen.length === 0 && !st.laden && <div style={{ color: "var(--cg-donkergrijs, #666)" }}>Niets te tonen.</div>}
       {st.rijen.length > 0 && (
         <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
-          <thead><tr>{kolommen.map((k) => <th key={k} style={{ textAlign: "left", padding: "0.375rem 0.5rem", borderBottom: "2px solid var(--cg-rand, #e2e8f0)" }}>{k.split(".").pop()}</th>)}</tr></thead>
+          <thead><tr>{kolommen.map((k) => <th key={k} style={{ textAlign: "left", padding: "0.375rem 0.5rem", borderBottom: "2px solid var(--cg-rand, #e2e8f0)" }}>{kolomKop(k, kolommen)}</th>)}</tr></thead>
           <tbody>
             {st.rijen.map((rij, i) => (
               <tr key={rij.id ?? i}>
