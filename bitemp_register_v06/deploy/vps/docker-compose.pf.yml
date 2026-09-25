@@ -116,6 +116,8 @@ services:
       SMTP_USER: "${SMTP_USER:-}"
       SMTP_PASS: "${SMTP_PASS:-}"
       SMTP_FROM: "${SMTP_FROM:-}"
+      SMTP_FROM_NAAM: "${SMTP_FROM_NAAM:-Common Ground-portfolio}"
+      SMTP_HELO: "${SMTP_HELO:-pf.common-ground-lab.nl}"
       COOKIE_SECURE: "true"
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET ontbreekt in .env}
       JWT_EXPIRY_HOURS: ${JWT_EXPIRY_HOURS:-24}

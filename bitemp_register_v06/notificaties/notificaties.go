@@ -35,6 +35,8 @@ type Config struct {
 // Host = mail.<domein> (certificaat *.<domein>), gebruiker = volledig mailadres van de mailbox.
 type SMTPConfig struct {
 	Host, User, Wachtwoord, Afzender string
+	Naam                             string // weergavenaam van de afzender (SMTP_FROM_NAAM)
+	Helo                             string // EHLO-naam (SMTP_HELO); leeg = domein van de afzender
 	Poort                            int
 }
 
@@ -58,6 +60,8 @@ func ConfigUitEnv() Config {
 			Host: strings.TrimSpace(os.Getenv("SMTP_HOST")), Poort: poort,
 			User: os.Getenv("SMTP_USER"), Wachtwoord: os.Getenv("SMTP_PASS"),
 			Afzender: strings.TrimSpace(os.Getenv("SMTP_FROM")),
+			Naam:     strings.TrimSpace(os.Getenv("SMTP_FROM_NAAM")),
+			Helo:     strings.TrimSpace(os.Getenv("SMTP_HELO")),
 		},
 		Pogingen: pogingen,
 		// NORA "hoog niveau": exponential backoff. Poging 1 direct; daarna 1 m, 5 m, 30 m, 2 u, 12 u.

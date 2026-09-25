@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/hex"
@@ -47,6 +48,13 @@ func VerstuurWebhook(ctx context.Context, client *http.Client, a Abonnee, ce Clo
 	return res.StatusCode, nil
 }
 
+// messageID — <tijd.willekeurig@domein>, uniek per bericht.
+func messageID(domein string) string {
+	b := make([]byte, 8)
+	_, _ = rand.Read(b)
+	return fmt.Sprintf("<%d.%s@%s>", time.Now().UnixNano(), hex.EncodeToString(b), domein)
+}
+
 // Handtekening — hex HMAC-SHA256 over de body.
 func Handtekening(geheim string, body []byte) string {
 	h := hmac.New(sha256.New, []byte(geheim))
@@ -66,9 +74,23 @@ func VerstuurEmail(cfg SMTPConfig, aan, onderwerp, tekst string) error {
 		afzender = cfg.User
 	}
 	adres := net.JoinHostPort(cfg.Host, fmt.Sprint(cfg.Poort))
+	domein := afzender[strings.LastIndex(afzender, "@")+1:]
+	// Spamfilters (Microsoft 365: SCL 5 op een mail met SPF/DKIM/DMARC pass) wegen mee: een
+	// EHLO "localhost", een ontbrekende Message-ID en een From zonder naam. Daarom: EHLO met de
+	// eigen hostnaam (HELO_NAAM of het domein van de afzender), een eigen Message-ID op dat domein,
+	// en een weergavenaam (SMTP_FROM_NAAM).
+	from := afzender
+	if cfg.Naam != "" {
+		from = mime.QEncoding.Encode("utf-8", cfg.Naam) + " <" + afzender + ">"
+	}
+	helo := cfg.Helo
+	if helo == "" {
+		helo = domein
+	}
 	bericht := strings.Join([]string{
-		"From: " + afzender,
+		"From: " + from,
 		"To: " + aan,
+		"Message-ID: " + messageID(domein),
 		"Subject: " + mime.QEncoding.Encode("utf-8", onderwerp),
 		"Date: " + time.Now().UTC().Format(time.RFC1123Z),
 		"MIME-Version: 1.0",
@@ -93,6 +115,9 @@ func VerstuurEmail(cfg SMTPConfig, aan, onderwerp, tekst string) error {
 		return err
 	}
 	defer c.Close()
+	if err := c.Hello(helo); err != nil {
+		return err
+	}
 	if cfg.Poort != 465 {
 		if ok, _ := c.Extension("STARTTLS"); ok {
 			if err := c.StartTLS(&tls.Config{ServerName: cfg.Host}); err != nil {
