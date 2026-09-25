@@ -364,6 +364,9 @@ E-mail via SMTP (`SMTP_*`). Configuratie: `NOTIFICATIE_SOURCE`, `NOTIFICATIE_TYP
 ### `GET /notificaties/definities` (admin)
 - **Description**: de NotificatieDefinities zoals ze nu gelden (per GE het materieel geldige record).
 
+### `POST /notificaties/testmail` (admin)
+- **Body**: `{"aan": "<e-mailadres>"}` — stuurt één testbericht met de huidige `SMTP_*`-instellingen. 200 `{verstuurd: true}`, 502 met de SMTP-fout.
+
 ### `GET /notificaties/bezorgingen?limit=100&status=` (admin)
 - **Description**: bezorglog (`notificatie_bezorging`): per gebeurtenis × abonnee × poging status `bezorgd` / `mislukt` / `opgegeven`, HTTP-status, fout en het bericht.
 

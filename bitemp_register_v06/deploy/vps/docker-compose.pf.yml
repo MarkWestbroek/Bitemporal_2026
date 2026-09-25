@@ -112,7 +112,7 @@ services:
       NOTIFICATIE_TYPE_PREFIX: "nl.commonground-portfolio"
       NOTIFICATIE_BASIS_URL: "https://pf.common-ground-lab.nl"
       SMTP_HOST: "${SMTP_HOST:-}"
-      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_PORT: "${SMTP_PORT:-465}"
       SMTP_USER: "${SMTP_USER:-}"
       SMTP_PASS: "${SMTP_PASS:-}"
       SMTP_FROM: "${SMTP_FROM:-}"

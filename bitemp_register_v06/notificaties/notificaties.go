@@ -31,7 +31,8 @@ type Config struct {
 	Timeout    time.Duration   // per webhook-aanroep
 }
 
-// SMTPConfig — leeg host = e-mail wordt alleen gelogd.
+// SMTPConfig — leeg host = er wordt geen e-mail verstuurd (bezorglog: mislukt/opgegeven).
+// Host = mail.<domein> (certificaat *.<domein>), gebruiker = volledig mailadres van de mailbox.
 type SMTPConfig struct {
 	Host, User, Wachtwoord, Afzender string
 	Poort                            int
@@ -39,9 +40,11 @@ type SMTPConfig struct {
 
 // ConfigUitEnv leest NOTIFICATIE_* en SMTP_*.
 func ConfigUitEnv() Config {
+	// Quickhost (en de meeste Plesk-hosting): poort 465 met TLS vanaf de verbinding; 587 met
+	// STARTTLS geeft daar "454 Temporary authentication failure". Zie docs/VPS_DEPLOYMENT.md §9.
 	poort, _ := strconv.Atoi(strings.TrimSpace(os.Getenv("SMTP_PORT")))
 	if poort == 0 {
-		poort = 587
+		poort = 465
 	}
 	pogingen, _ := strconv.Atoi(strings.TrimSpace(os.Getenv("NOTIFICATIE_POGINGEN")))
 	if pogingen <= 0 {

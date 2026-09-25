@@ -1,8 +1,10 @@
 package notificaties
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/gin-gonic/gin"
@@ -41,6 +43,24 @@ func (s *Service) Routes(router gin.IRouter, admin gin.HandlerFunc) {
 			return
 		}
 		c.JSON(http.StatusOK, defs)
+	})
+	// Testbericht naar één adres, om de SMTP-instellingen te controleren zonder een
+	// registratie te doen (checklist "stuur één testbericht"). Admin.
+	router.POST("/notificaties/testmail", admin, func(c *gin.Context) {
+		var body struct {
+			Aan string `json:"aan"`
+		}
+		if err := c.ShouldBindJSON(&body); err != nil || !strings.Contains(body.Aan, "@") {
+			c.JSON(http.StatusBadRequest, gin.H{"error": `body {"aan": "<e-mailadres>"} verwacht`})
+			return
+		}
+		tekst := fmt.Sprintf("Testbericht van de notificatiedienst van %s.\n\nAfzender: %s\nServer: %s:%d\n\nKomt dit bericht in de inbox (niet in spam), dan werken de SMTP-instellingen.\n",
+			nietLeeg(s.Cfg.BasisURL, "het register"), s.Cfg.SMTP.Afzender, s.Cfg.SMTP.Host, s.Cfg.SMTP.Poort)
+		if err := s.Email(s.Cfg.SMTP, body.Aan, "Testbericht notificaties", tekst); err != nil {
+			c.JSON(http.StatusBadGateway, gin.H{"error": err.Error(), "host": s.Cfg.SMTP.Host, "poort": s.Cfg.SMTP.Poort})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"verstuurd": true, "aan": body.Aan, "host": s.Cfg.SMTP.Host, "poort": s.Cfg.SMTP.Poort})
 	})
 	router.GET("/notificaties/bezorgingen", admin, func(c *gin.Context) {
 		limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))

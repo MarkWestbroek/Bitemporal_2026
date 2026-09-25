@@ -54,7 +54,8 @@ func Handtekening(geheim string, body []byte) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// VerstuurEmail stuurt een platte-tekstmail via SMTP (STARTTLS op 587/25, TLS op 465).
+// VerstuurEmail stuurt een platte-tekstmail via SMTP: TLS vanaf de verbinding op 465 (de
+// Quickhost-instelling, standaard), STARTTLS op andere poorten. Certificaatcontrole staat altijd aan.
 // Zonder SMTP_HOST wordt niets verstuurd (fout), zodat het bezorglog dat laat zien.
 func VerstuurEmail(cfg SMTPConfig, aan, onderwerp, tekst string) error {
 	if cfg.Host == "" {

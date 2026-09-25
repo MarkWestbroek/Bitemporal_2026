@@ -449,6 +449,17 @@ anders optie). Een snapshot is een noodrem, geen backup.
   **Zevende ronde 25-09-2026 (DashboardDefinitie)**: zelfde procedure; daarna replay 23
   (dashboard `moderatie`). Openen, ingelogd: `/viz/react/dashboard.html?dashboard=moderatie`.
 
+  **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
+  (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
+  verbinding** (587/STARTTLS geeft `454 Temporary authentication failure`, ook als de mailbox nog
+  niet bestaat), gebruiker = volledig mailadres, afzender = hetzelfde domein-adres, certificaatcontrole
+  aan. Vanaf de VPS gecontroleerd: `220 … ESMTP`, certificaat `*.common-ground-lab.nl` geldig voor
+  `mail.`, SPF `include:_spf.exsilia.net` aanwezig (DKIM zet Quickhost). In `/srv/omnium-pf/.env`:
+  `SMTP_HOST=mail.common-ground-lab.nl`, `SMTP_PORT=465`, `SMTP_USER=SMTP_FROM=noreply@common-ground-lab.nl`,
+  `SMTP_PASS=…`; daarna `pf.sh deploy` en als admin
+  `POST /notificaties/testmail {"aan":"<adres>"}` — 200 = verstuurd, 502 met de SMTP-fout anders.
+  Snel testen zonder de API: `openssl s_client -connect mail.common-ground-lab.nl:465 -servername mail.common-ground-lab.nl -quiet`.
+
 ---
 
 ## 10. Smoke test (vr 11 sep, daarna bevriezen)
