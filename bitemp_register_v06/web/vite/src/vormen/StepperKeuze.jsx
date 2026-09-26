@@ -15,14 +15,15 @@ export default function StepperKeuze({ items = [], waarde, onChange, readOnly = 
   const accent = config.accentColor || "var(--cg-blauw, #2563eb)";
   const naam = `stepper-${useId().replace(/:/g, "")}`;
   return (
-    <div role={readOnly ? "list" : "radiogroup"} aria-labelledby={labelId} style={{ display: "flex", alignItems: "flex-start", width: "100%", overflowX: "auto" }}>
+    <div role={readOnly ? "list" : "radiogroup"} aria-labelledby={labelId} style={{ display: "flex", alignItems: "flex-start", width: "100%", overflowX: "auto", overflowY: "hidden", padding: "6px 2px" }}>
       {items.map((it, i) => {
         const gehaald = idx >= 0 && i < idx;
         const huidig = i === idx;
         const kleur = huidig || gehaald ? accent : "var(--cg-rand, #cbd5e1)";
         const inhoud = (
           <>
-            <span aria-hidden="true" style={{ display: "flex", alignItems: "center", width: "100%" }}>
+            {/* Vaste hoogte: de grotere huidige stip mag de lijnen ernaast niet verschuiven. */}
+            <span aria-hidden="true" style={{ display: "flex", alignItems: "center", width: "100%", height: 26 }}>
               <span style={{ flex: 1, height: 3, background: i === 0 ? "transparent" : gehaald || huidig ? accent : "var(--cg-rand, #cbd5e1)" }} />
               <span style={{
                 width: huidig ? 22 : 16, height: huidig ? 22 : 16, borderRadius: "50%", flex: "none",

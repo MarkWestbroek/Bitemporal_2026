@@ -1,4 +1,5 @@
 import VormWeergave from "./VormWeergave";
+import WeergaveKiezer from "./WeergaveKiezer";
 import { splitsVormBlokken } from "./vormBlokken";
 import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router";
@@ -207,8 +208,8 @@ export default function PublicatieDetail() {
     );
   }, [types, typePad]);
 
-  const { detailTemplate: ruwTemplate, tabelConfig, loading: wdLoading, error: wdError } =
-    useWeergaveDefinitie(typeMeta?.typenaam);
+  const wd = useWeergaveDefinitie(typeMeta?.typenaam);
+  const { detailTemplate: ruwTemplate, tabelConfig, loading: wdLoading, error: wdError } = wd;
   // Opgeslagen document voor het detail (QueryDefinitie met $id), zie publicatieData.js.
   const detailDocument = tabelConfig?.detailQuery || null;
 
@@ -411,6 +412,7 @@ export default function PublicatieDetail() {
             {typeMeta.klassenaam || typeMeta.typenaam} #{id}
           </h2>
         )}
+        <WeergaveKiezer alternatieven={wd.alternatieven} huidigId={wd.weergaveDefinitie?.id} />
       </div>
 
       <div className="cg-form-card cg-publicatie-detail__inhoud">
