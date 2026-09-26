@@ -9,6 +9,18 @@ import PeriodKeuze from "../../vormen/PeriodKeuze";
 import AddressSearch from "../../vormen/AddressSearch";
 import { matrixAssen, matrixRijen, zetMatrixCel, zetMatrixExtra } from "../../vormen/matrix";
 import { lijstVorm, keuzesNaarRijen, normaliseerVorm, VORMEN } from "../../vormen/vormen";
+import { matchRefId } from "../../vormen/refMatch";
+import { useSchema } from "../../context/SchemaContext";
+
+// Opties per referentielijst, één keer per pagina opgehaald (voor matchRefId).
+const refOptieCache = new Map();
+function refOpties(baseUrl, refType) {
+  if (!refOptieCache.has(refType)) {
+    refOptieCache.set(refType, fetch(`${baseUrl}/api/viz/reflijst/${encodeURIComponent(refType)}/opties?size=1000`)
+      .then((r) => (r.ok ? r.json() : { opties: [] })).then((d) => d?.opties || []).catch(() => []));
+  }
+  return refOptieCache.get(refType);
+}
 
 /**
  * CustomFormulierRenderer — rendert een formulier op basis van een layout-JSON
@@ -61,6 +73,7 @@ export default function CustomFormulierRenderer({
   diepte = 0,
   toonValidatie,
 }) {
+  const { baseUrl = "" } = useSchema() || {};
   if (!layout || !velden) return null;
 
   // Velden lookup op naam voor snelle toegang
@@ -111,7 +124,13 @@ export default function CustomFormulierRenderer({
               ) : (
                 <div style={{ marginBottom: "0.75rem" }}>
                   <AddressSearch waarden={sVal || {}} config={cfg} readOnly={readOnly} labelId={labelId}
-                    onChange={(velden) => Object.entries(velden).forEach(([pad, val]) => zetVeld(pad, val))} />
+                    onChange={(adresVelden) => Object.entries(adresVelden).forEach(([pad, val]) => {
+                      // Een referentielijst-veld (bv. Locatie.adres.gemeente → Gemeente, land →
+                      // LandenlijstLand) krijgt het id van het item: via de CBS-code of de naam.
+                      const ref = veldenByNaam[pad]?.ref;
+                      if (!ref || !val) { zetVeld(pad, val); return; }
+                      refOpties(baseUrl, ref).then((opties) => { const id = matchRefId(val, opties); zetVeld(pad, id == null ? "" : String(id)); });
+                    })} />
                 </div>
               )}
               {/* De overige velden van de groep (bij adres: alle adresvelden, om na te kijken). */}

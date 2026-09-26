@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-27T02:00:00Z",
+  "source": "manual://claude-vormenbibliotheek",
+  "description": "Fictief voorbeeld op het np-loc-domein (doeltype NatuurlijkPersoon): cards (naamgebruik), button-group (aanspreektitel, geslacht), switch (formeel aanspreken). Actief, niet standaard, niet openbaar.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T02:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "FormulierDefinitie 'Voorbeeld: persoon'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "FormulierDefinitie 'Voorbeeld: persoon' (vormenbibliotheek)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "formulierdefinitie": {
+                "id": "$nieuw.fd"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "naam": "Voorbeeld: persoon",
+                "beschrijving": "Proefformulier voor keuzekaarten, knoppenvlak en schakelaar op het np-loc-domein.",
+                "doeltype": "NatuurlijkPersoon",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "layout": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "layout_json": "{\"type\": \"formulier\", \"elementen\": [{\"type\": \"groep\", \"label\": \"Naam\", \"elementen\": [{\"type\": \"rij\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"NatuurlijkPersoon.namen.voorletters\", \"label\": \"Voorletters\", \"breedte\": \"25%\"}, {\"type\": \"veld\", \"veld\": \"NatuurlijkPersoon.namen.roepnaam\", \"label\": \"Roepnaam\", \"breedte\": \"25%\"}, {\"type\": \"veld\", \"veld\": \"NatuurlijkPersoon.namen.tussenvoegsel\", \"label\": \"Tussenvoegsel\", \"breedte\": \"25%\"}, {\"type\": \"veld\", \"veld\": \"NatuurlijkPersoon.namen.achternaam\", \"label\": \"Achternaam\", \"breedte\": \"25%\"}]}, {\"type\": \"veld\", \"veld\": \"NatuurlijkPersoon.naamgebruiken.naamgebruik\", \"label\": \"Welke naam gebruikt u?\", \"vorm\": \"cards\", \"vormConfig\": {\"minWidth\": 150, \"items\": {\"EigenNaam\": {\"icon\": \"🙂\", \"title\": \"Eigen naam\", \"description\": \"Jansen\"}, \"PartnerNaam\": {\"icon\": \"💍\", \"title\": \"Naam partner\", \"description\": \"De Vries\"}, \"EigenNaam-PartnerNaam\": {\"icon\": \"↔️\", \"title\": \"Eigen – partner\", \"description\": \"Jansen-De Vries\"}, \"PartnerNaam-EigenNaam\": {\"icon\": \"↔️\", \"title\": \"Partner – eigen\", \"description\": \"De Vries-Jansen\"}}}}]}, {\"type\": \"groep\", \"label\": \"Aanspreken\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"NatuurlijkPersoon.aanspraak.aanspreektitel\", \"label\": \"Hoe spreken we u aan?\", \"vorm\": \"button-group\", \"vormConfig\": {\"sort\": \"none\", \"minWidth\": 120}}, {\"type\": \"veld\", \"veld\": \"NatuurlijkPersoon.aanspraak.formeelAanspreken\", \"label\": \"Formeel aanspreken (u in plaats van je)\", \"vorm\": \"switch\", \"vormConfig\": {\"onLabel\": \"Formeel (u)\", \"offLabel\": \"Informeel (je)\"}}, {\"type\": \"veld\", \"veld\": \"NatuurlijkPersoon.geslacht.geslacht\", \"label\": \"Geslacht\", \"vorm\": \"button-group\", \"vormConfig\": {\"sort\": \"none\", \"minWidth\": 100}}]}]}"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_aanvang": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}
