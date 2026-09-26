@@ -135,7 +135,7 @@ ontwerp §7e. De oude
 
 | | Bewerken | Nieuw (ingelogd) | Nieuw (openbaar) |
 |---|---|---|---|
-| Waar | `inhoud.html#/t/<padnaam>/<id>` — de FD met `is_standaard` | `inhoud.html#/t/<padnaam>/nieuw?formulier=<id>` (keuzelijst *Invoer via*) | `aanmelden.html?formulier=<id>` |
+| Waar | `inhoud.html#/t/<padnaam>/<id>` — de FD met `is_standaard`, of een andere actieve FD via `?formulier=<id>` (keuzelijst *Bewerken via*) | `inhoud.html#/t/<padnaam>/nieuw?formulier=<id>` (keuzelijst *Invoer via*) | `aanmelden.html?formulier=<id>` |
 | Code | `EntiteitFormulier` + `customFormMapping.bouwCustomWijzigingen` | `NieuwFormulierPagina` + `nieuwFormulierMapping.bouwNieuwWijzigingen` | idem, `openbaar`-modus |
 | Registratie | `POST /registratie/` met de gewijzigde GE's | `POST /registratie/`, één registratie: entiteit, aanvang, GE's, een opvoer per lijstrij | `POST /aanmelding/<id>` |
 | Id | bestaand | plaatshouder `$nieuw.<entiteit>`; de server kent het id toe (`toegekendeIds`) | idem |
