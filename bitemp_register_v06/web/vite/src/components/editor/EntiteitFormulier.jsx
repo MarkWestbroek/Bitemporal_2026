@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useSearchParams } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray, platSlaHubItems, platSlaAlleVersies, tUitRegistratieTijdstip } from "../../shared/schemaUtils";
 import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem, bouwReflijstOptieLabel } from "../../shared/celEvaluator";
 import RepresentatieFormulier from "./RepresentatieFormulier";
-import { useFormulierDefinitie } from "../../hooks/useFormulierDefinitie";
+import { useFormulierDefinitie, useFormulierDefinities } from "../../hooks/useFormulierDefinitie";
 import CustomFormulierRenderer from "./CustomFormulierRenderer";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 import { bouwCustomVeldMapping, bouwCustomWijzigingen } from "./customFormMapping";
@@ -157,8 +157,21 @@ export default function EntiteitFormulier() {
   const [customFeedback, setCustomFeedback] = useState(null); // { type: "succes"|"fout", text }
 
   // Custom FormulierDefinitie ophalen voor dit entiteittype
-  const { layout: customLayout, formulierDefinitie: customFormDef, loading: customLayoutLoading } =
-    useFormulierDefinitie(typeMeta?.typenaam);
+  // Standaard: de FD met is_standaard. Met ?formulier=<id> (keuzelijst "Bewerken via", zoals
+  // "Invoer via" bij nieuw) een andere actieve FD voor dit type, bv. een versie met de nieuwe vormen.
+  const standaardFD = useFormulierDefinitie(typeMeta?.typenaam);
+  const { definities: alleFormulieren } = useFormulierDefinities(typeMeta?.typenaam);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const gekozenFormulierId = searchParams.get("formulier") || "";
+  const gekozenFormulier = alleFormulieren.find((d) => String(d.id) === gekozenFormulierId) || null;
+  const customLayout = gekozenFormulier ? gekozenFormulier.layout : standaardFD.layout;
+  const customFormDef = gekozenFormulier ? { id: gekozenFormulier.id, meta: gekozenFormulier.meta } : standaardFD.formulierDefinitie;
+  const customLayoutLoading = standaardFD.loading;
+  useEffect(() => { if (gekozenFormulier) setCustomWeergave(true); }, [gekozenFormulier]);
+  const kiesFormulier = (fdId) => {
+    setSearchParams((prev) => { const n = new URLSearchParams(prev); if (fdId && fdId !== "__standaard") n.set("formulier", fdId); else n.delete("formulier"); return n; }, { replace: true });
+    setCustomWeergave(Boolean(fdId));
+  };
 
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
@@ -577,23 +590,22 @@ export default function EntiteitFormulier() {
         </div>
       </div>
 
-      {/* Toggle voor custom formulier layout (als er een actieve FormulierDefinitie is) */}
-      {customLayout && !customLayoutLoading && (
-        <div style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <button
-            type="button"
-            className={`utrecht-button ${customWeergave ? "utrecht-button--primary-action" : "utrecht-button--secondary-action"}`}
-            style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}
-            onClick={() => setCustomWeergave(!customWeergave)}
-          >
-            {customWeergave ? "⬦ Standaard weergave" : "⬧ Custom formulier"}
-          </button>
-          {customFormDef?.meta?.naam && (
-            <span style={{ fontSize: "0.75rem", color: "var(--cg-donkergrijs)" }}>
-              Layout: {customFormDef.meta.naam}
-            </span>
-          )}
-        </div>
+      {/* Bewerken via: standaard (alle gegevenselementen) of een actieve FormulierDefinitie. */}
+      {(alleFormulieren.length > 0 || standaardFD.layout) && !customLayoutLoading && (
+        <label className="utrecht-form-field" style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span className="utrecht-form-label">Bewerken via</span>
+          <select className="utrecht-select utrecht-select--html-select"
+            value={!customWeergave ? "" : gekozenFormulier ? String(gekozenFormulier.id) : "__standaard"}
+            onChange={(e) => kiesFormulier(e.target.value)}>
+            <option value="">Standaard (alle gegevenselementen)</option>
+            {standaardFD.layout && !alleFormulieren.some((d) => d.isStandaard) && (
+              <option value="__standaard">{standaardFD.formulierDefinitie?.meta?.naam || "Standaardformulier"}</option>
+            )}
+            {alleFormulieren.map((d) => (
+              <option key={d.id} value={d.isStandaard ? "__standaard" : String(d.id)}>{d.meta?.naam || `Formulier ${d.id}`}{d.isStandaard ? " (standaard)" : ""}</option>
+            ))}
+          </select>
+        </label>
       )}
 
       {/* Custom formulier weergave — editeerbaar, cross-GE save via één registratie */}
