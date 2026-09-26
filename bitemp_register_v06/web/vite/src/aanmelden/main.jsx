@@ -76,18 +76,17 @@ function AanmeldPagina() {
           {definitie.meta?.beschrijving && <p style={{ color: "var(--cg-donkergrijs, #666)" }}>{definitie.meta.beschrijving}</p>}
         </header>
       )}
-      {resultaat ? (
-        <Bedankt resultaat={resultaat} naam={definitie.meta?.naam} opnieuw={() => { setResultaat(null); setRonde((r) => r + 1); }} />
-      ) : (
-        <NieuwFormulierPagina
-          key={ronde}
-          typeMeta={typeMeta}
-          definitie={definitie}
-          openbaar
-          toonKop={isEmbed}
-          onSuccess={(r) => { setResultaat(r); window.scrollTo?.(0, 0); }}
-        />
-      )}
+      {/* Na verzenden: het bedankje, en daaronder wat de indiener heeft ingevuld (zelfde formulier,
+          alleen-lezen: de vormen tonen zich als weergave). "Nog een aanmelding" = nieuwe ronde. */}
+      {resultaat && <Bedankt resultaat={resultaat} naam={definitie.meta?.naam} opnieuw={() => { setResultaat(null); setRonde((r) => r + 1); }} />}
+      <NieuwFormulierPagina
+        key={ronde}
+        typeMeta={typeMeta}
+        definitie={definitie}
+        openbaar
+        toonKop={isEmbed && !resultaat}
+        onSuccess={(r) => { setResultaat(r); window.scrollTo?.(0, 0); }}
+      />
     </div>
   );
 }

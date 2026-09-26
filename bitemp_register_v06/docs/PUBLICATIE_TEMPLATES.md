@@ -92,6 +92,46 @@ regel achter.
 (nog) niet. Wel te combineren door te nesten (`{{#if a}}{{#if b}}…{{/if}}{{/if}}` = a én b). CEL in
 templates vraagt dat de querybouwer de velden uit de expressie haalt; dat is een mogelijke uitbreiding.
 
+## Weergavevormen: `{{#vorm naam pad}}` … `{{/vorm}}`
+
+*Sinds 27 september 2026.* Een blok tussen de tekst toont een waarde als vorm: de lagen als
+plaatje, gemeenten als stippen op de kaart van NL, schaalbalken, een tijdlijn, een stappenbalk,
+labels. Het zijn dezelfde vormen als in de formulieren, alleen-lezen.
+
+```
+{{#vorm image-map producten.CG_laag}}
+{ "image": "/viz/react/voorbeelden/cg-lagen-utility.svg", "units": "px", "width": 600, "height": 420, "areas": [ … ] }
+{{/vorm}}
+{{vorm chips initiatief_api_standaarden.weergavenaam}}
+{{#vorm period}}{ "startPath": "planningen.startdatum", "endPath": "planningen.ready_for_use" }{{/vorm}}
+```
+
+- **Pad en config.** Het pad (optioneel) wijst de waarde aan: lijsten blijven lijsten, en
+  `"a;b"` (EnumLijst) wordt gesplitst. Tussen de tags staat de vormConfig als JSON:
+  - het schema van de vorm;
+  - `…Field` = pad relatief aan de items onder het pad (bv. `codeField`);
+  - `…Path` = pad vanaf het record;
+  - `groups[].filter` = `{ veld: waarde }` voor kleuren per groep.
+- **Paden in de query.** Al die paden gaan mee in de GraphQL-query. Met een `detailQuery`
+  moeten ze in het opgeslagen document staan.
+- **Vormen.** `image-map`, `chips`, `button-group`, `cards`, `stepper`, `switch`, `range`,
+  `rotary`, `period`, `scale-bars`, `rating-grid`, `drag-sort`, `nl-map`. Zie
+  `docs/plans/2026-09-26 Invoersoort en vorm (ontwerp).md` §7e–7f, en `vormen.html` voor
+  voorbeelden.
+- **Fouten.** Kapotte JSON geeft een melding op de plek van het blok; de rest van de pagina
+  blijft staan.
+- **Voor Initiatief.** Een eigen WeergaveDefinitie *Initiatief met vormen* (niet standaard):
+  `replay files/registraties-replay-init-weergavedefinitie-initiatief-met-vormen-2026-09-27.json`.
+
+## Meer weergaven per type: `?weergave=<id>`
+
+Zonder parameter toont de publicatiepagina de actieve **standaard**-WeergaveDefinitie van het
+type. Dat is ook wat de embed op commonground.nl krijgt. Met `?weergave=<id>` (querystring
+vóór de `#`, zoals `embed=1`) gebruikt de pagina die definitie, mits actief en voor hetzelfde
+type. Zijn er meer actieve weergaven, dan staat er op lijst en detail een keuzelijst
+*Weergave*, maar niet in de embed. Zo kan een nieuwe weergave live naast de standaard staan,
+zonder de embed te raken.
+
 ## Markdown die werkt
 
 | Markdown | Opmerking |

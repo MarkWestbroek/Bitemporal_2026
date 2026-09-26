@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-27T02:00:00Z",
+  "source": "manual://claude-vormenbibliotheek",
+  "description": "Fictief voorbeeld op het np-loc-domein (doeltype Locatie): de groep-vorm address-search. PDOK-velden naar Locatie.adressen.*; gemeente en land zijn referentielijst-velden en worden via CBS-code resp. naam naar het item-id vertaald (refMatch). Actief, niet standaard, niet openbaar.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T02:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "FormulierDefinitie 'Voorbeeld: locatie met adreszoeker'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "FormulierDefinitie 'Voorbeeld: locatie met adreszoeker' (vormenbibliotheek)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "formulierdefinitie": {
+                "id": "$nieuw.fd"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "naam": "Voorbeeld: locatie met adreszoeker",
+                "beschrijving": "Proefformulier voor de vorm 'adres zoeken': één zoekveld (PDOK Locatieserver, BAG) vult straat, huisnummer, postcode, plaats, gemeente en land.",
+                "doeltype": "Locatie",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "layout": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "layout_json": "{\"type\": \"formulier\", \"elementen\": [{\"type\": \"groep\", \"label\": \"Adres\", \"vorm\": \"address-search\", \"beschrijving\": \"Zoek het adres op; de velden hieronder worden dan ingevuld en kun je nog nakijken.\", \"vormConfig\": {\"fields\": {\"straatnaam\": \"Locatie.adressen.straatnaam\", \"huis_nlt\": \"Locatie.adressen.huisnummer\", \"postcode\": \"Locatie.adressen.postcode\", \"woonplaatsnaam\": \"Locatie.adressen.plaats\", \"gemeentecode\": \"Locatie.adressen.gemeente\", \"land\": \"Locatie.adressen.land\"}}, \"elementen\": [{\"type\": \"rij\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Locatie.adressen.straatnaam\", \"label\": \"Straat\", \"breedte\": \"50%\"}, {\"type\": \"veld\", \"veld\": \"Locatie.adressen.huisnummer\", \"label\": \"Huisnummer\", \"breedte\": \"25%\"}, {\"type\": \"veld\", \"veld\": \"Locatie.adressen.postcode\", \"label\": \"Postcode\", \"breedte\": \"25%\"}]}, {\"type\": \"rij\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Locatie.adressen.plaats\", \"label\": \"Plaats\", \"breedte\": \"50%\"}, {\"type\": \"veld\", \"veld\": \"Locatie.adressen.gemeente\", \"label\": \"Gemeente\", \"breedte\": \"50%\"}]}, {\"type\": \"veld\", \"veld\": \"Locatie.adressen.land\", \"label\": \"Land\"}]}]}"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_aanvang": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

@@ -5,6 +5,8 @@
 import React from "react";
 import { useFormulierEditorStore } from "./useFormulierEditorStore";
 import { vindElement } from "./layoutModel";
+import VormEditor from "./VormEditor";
+import { INVOERSOORT, invoersoortVanVeld } from "../vormen/vormen";
 
 const veldStijl = {
   width: "100%", boxSizing: "border-box", padding: "4px 6px", fontSize: 13,
@@ -95,6 +97,7 @@ export default function FormulierInspector() {
           <Regel label="Pad-context (shorthand, optioneel)">
             <input style={veldStijl} value={el.context || ""} onChange={(e) => update(el._id, { context: e.target.value })} placeholder="bv. Initiatief.Product" />
           </Regel>
+          <VormEditor el={el} update={update} invoersoorten={[INVOERSOORT.SAMENGESTELD]} veldStijl={veldStijl} labelStijl={labelStijl} />
         </>
       )}
 
@@ -134,7 +137,9 @@ export default function FormulierInspector() {
               {BREEDTES.map((b) => <option key={b} value={b}>{b || "auto (vol)"}</option>)}
             </select>
           </Regel>
-          <Regel label="Widget (override)">
+          <VormEditor el={el} update={update} veldStijl={veldStijl} labelStijl={labelStijl}
+            invoersoorten={veldInfo[el.veld] ? [invoersoortVanVeld(veldInfo[el.veld])] : [INVOERSOORT.TEKST, INVOERSOORT.GETAL, INVOERSOORT.DATUM, INVOERSOORT.JA_NEE, INVOERSOORT.EEN_UIT_LIJST]} />
+          <Regel label="Widget (verouderd; vorm wint)">
             <select style={veldStijl} value={el.widget || ""} onChange={(e) => update(el._id, { widget: e.target.value })}>
               {WIDGETS.map((w) => <option key={w} value={w}>{w || "default (datatype)"}</option>)}
             </select>
@@ -191,7 +196,8 @@ export default function FormulierInspector() {
           <Regel label="Bron (ENT.GE — meervoudig pad)">
             <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.bron || ""} onChange={(e) => update(el._id, { bron: e.target.value })} placeholder="bv. Initiatief.bijdragen" />
           </Regel>
-          <Regel label="Widget">
+          <VormEditor el={el} update={update} invoersoorten={[INVOERSOORT.MEER_UIT_LIJST, INVOERSOORT.EEN_PER_RIJ]} veldStijl={veldStijl} labelStijl={labelStijl} />
+          <Regel label="Widget (verouderd; vorm wint)">
             <select style={veldStijl} value={el.widget || ""} onChange={(e) => update(el._id, { widget: e.target.value || undefined })}>
               {LIJST_WIDGETS.map((w) => <option key={w.v} value={w.v}>{w.t}</option>)}
             </select>

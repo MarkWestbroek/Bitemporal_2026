@@ -6,7 +6,10 @@ import { safeArray } from "../shared/schemaUtils";
  * useWeergaveDefinitie — haalt de actieve WeergaveDefinitie op voor een gegeven doeltype.
  *
  * Laadt alle WeergaveDefinities via de full-lijst-API, vindt degene met status "actief"
- * en is_standaard=true voor het doeltype. Retourneert de geparsede tabelConfig,
+ * en is_standaard=true voor het doeltype. Met `?weergave=<id>` in de URL (querystring vóór de
+ * `#`, zoals `embed=1`) wordt DIE definitie gebruikt, als hij actief is en bij het doeltype hoort:
+ * zo kan een tweede weergave (bv. met weergavevormen) naast de standaard bestaan zonder de
+ * standaard, en dus de embed op commonground.nl, te raken. Retourneert de geparsede tabelConfig,
  * het detailTemplate en de metadata.
  *
  * @param {string} doeltype - Typenaam van de doelentiteit (bijv. "NatuurlijkPersoon")
@@ -19,6 +22,8 @@ export function useWeergaveDefinitie(doeltype) {
   const [detailTemplate, setDetailTemplate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // Alle actieve definities voor het type (voor de keuzelijst "Weergave", WeergaveKiezer).
+  const [alternatieven, setAlternatieven] = useState([]);
 
   useEffect(() => {
     if (!doeltype || !baseUrl) return;
@@ -27,7 +32,7 @@ export function useWeergaveDefinitie(doeltype) {
     setLoading(true);
     setError(null);
 
-    fetch(`${baseUrl}/full/weergave_definities`)
+    fetch(`${baseUrl}/full/weergave_definities?size=1000`) // standaard is een pagina van 20
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -41,16 +46,22 @@ export function useWeergaveDefinitie(doeltype) {
           return;
         }
 
-        // Zoek de actieve standaard-definitie voor dit doeltype.
-        const match = items.find((full) => {
-          if (!full) return false;
-          const metaData = vindActueleData(full, "weergave_definitie_metas");
-          return (
-            metaData?.doeltype === doeltype &&
-            metaData?.status === "actief" &&
-            (metaData?.is_standaard === true || metaData?.is_standaard === "true")
-          );
-        });
+        // ?weergave=<id> kiest een bepaalde actieve definitie voor dit doeltype; anders de standaard.
+        const gekozen = gekozenWeergaveId();
+        const actiefVoorType = (full) => {
+          const metaData = full && vindActueleData(full, "weergave_definitie_metas");
+          return metaData?.doeltype === doeltype && metaData?.status === "actief" ? metaData : null;
+        };
+        const match = (gekozen && items.find((full) => String(full?.id) === gekozen && actiefVoorType(full)))
+          || items.find((full) => {
+            const metaData = actiefVoorType(full);
+            return metaData && (metaData.is_standaard === true || metaData.is_standaard === "true");
+          });
+
+        setAlternatieven(items.map((full) => {
+          const m = actiefVoorType(full);
+          return m ? { id: full.id, naam: m.naam || `Weergave ${full.id}`, isStandaard: m.is_standaard === true || m.is_standaard === "true" } : null;
+        }).filter(Boolean).sort((a, b) => Number(b.isStandaard) - Number(a.isStandaard) || a.naam.localeCompare(b.naam, "nl")));
 
         if (!match) {
           setLoading(false);
@@ -87,7 +98,16 @@ export function useWeergaveDefinitie(doeltype) {
     };
   }, [doeltype, baseUrl]);
 
-  return { weergaveDefinitie, tabelConfig, detailTemplate, loading, error };
+  return { weergaveDefinitie, tabelConfig, detailTemplate, alternatieven, loading, error };
+}
+
+/** `?weergave=<id>` uit de URL (vóór de #), of null. */
+function gekozenWeergaveId() {
+  try {
+    return new URLSearchParams(window.location.search).get("weergave") || null;
+  } catch {
+    return null;
+  }
 }
 
 /**

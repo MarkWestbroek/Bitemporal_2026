@@ -67,7 +67,7 @@ function containerData(el, meta) {
         ...(meta?.isStandaard ? { isStandaard: true } : {}),
         ...(meta?.definitieVersie ? { definitieVersie: meta.definitieVersie } : {}),
       };
-    case "groep": return { ...(el.context ? { context: el.context } : {}) };
+    case "groep": return { ...(el.context ? { context: el.context } : {}), ...vormData(el) };
     case "rij": return { ...(el.richting ? { richting: el.richting } : {}) };
     case "lijst": return { bron: el.bron || "", ...(el.widget ? { widget: el.widget } : {}), ...vormData(el), ...(el.min != null ? { min: String(el.min) } : {}), ...(el.max != null ? { max: String(el.max) } : {}) };
     case "conditioneel": {
@@ -238,6 +238,7 @@ export function formulierModelNaarLayout(coreState) {
           type: "groep",
           ...(el.naam && el.naam !== "Groep" ? { label: el.naam } : {}),
           ...(d.context ? { context: d.context } : {}),
+          ...vormUitData(d),
           elementen: kinderen,
         };
       case "rij":

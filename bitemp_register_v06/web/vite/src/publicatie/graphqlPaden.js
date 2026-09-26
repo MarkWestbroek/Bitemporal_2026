@@ -150,6 +150,14 @@ export function normaliseerTemplatePaden(template, index, rootType) {
   const uit = template.replace(/\{\{([^}]+)\}\}/g, (geheel, inhoud) => {
     const t = inhoud.trim();
     if (t === "else" || t.startsWith("/")) return geheel;
+    // Vormblok ({{#vorm naam pad}} / {{vorm naam pad}}, vormBlokken.js): alleen het pad normaliseren.
+    const vv = /^(#?)vorm\s+(\S+)(?:\s+(.+))?$/.exec(t);
+    if (vv) {
+      if (!vv[3]) return geheel;
+      const echtPad = los(vv[3].trim());
+      if (echtPad == null) { if (!onbekend.includes(vv[3].trim())) onbekend.push(vv[3].trim()); return geheel; }
+      return `{{${vv[1]}vorm ${vv[2]} ${echtPad}}}`;
+    }
     const vw = /^#(if|unless)\s+(.+)$/.exec(t);
     const pad = vw ? vw[2].trim() : t;
     const echt = los(pad);

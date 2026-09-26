@@ -37,6 +37,8 @@ function nieuwId() {
 const CONTAINER_MET_ELEMENTEN = new Set(["formulier", "groep", "rij", "lijst"]);
 
 /** Kan dit elementtype kinderen bevatten? */
+import { VORMEN, normaliseerVorm, valideerVormConfig } from "../vormen/vormen.js";
+
 export function isContainer(el) {
   if (!el) return false;
   return CONTAINER_MET_ELEMENTEN.has(el.type) || el.type === "conditioneel";
@@ -216,6 +218,13 @@ export function verplaats(root, id, richting) {
 
 /**
  * valideer — verzamel waarschuwingen over de layout.
+ *
+ * Velden binnen een `lijst` zijn relatief aan de bron (`type` in `Initiatief.betrokken_organisatie`);
+ * ze worden op hun VOLLE pad gecontroleerd (tot 26-09-2026 op de relatieve naam, wat voor elk
+ * lijstveld "Onbekend veldpad" gaf). Dubbele velden tellen alleen buiten lijsten: meerdere lijsten
+ * op dezelfde bron (per rol, vaste rijen) herhalen hun velden bewust.
+ * Een `vorm` moet bestaan en zijn `vormConfig` voldoen aan het configSchema (src/vormen).
+ *
  * @param {object} root
  * @param {Set<string>} bekendePaden  (optioneel) geldige veldpaden uit het model
  * @returns {Array<{ id, niveau, tekst }>}
@@ -224,19 +233,36 @@ export function valideer(root, bekendePaden = null) {
   const meldingen = [];
   const padTelling = new Map();
 
-  wandel(root, (el) => {
+  const controleerVorm = (el, wat) => {
+    if (!el.vorm) return;
+    const naam = normaliseerVorm(el.vorm);
+    if (!VORMEN[naam]) { meldingen.push({ id: el._id, niveau: "waarschuwing", tekst: `${wat}: onbekende vorm "${el.vorm}"` }); return; }
+    for (const f of valideerVormConfig(naam, el.vormConfig)) {
+      meldingen.push({ id: el._id, niveau: "waarschuwing", tekst: `${wat} (${naam}): ${f}` });
+    }
+  };
+
+  const loop = (el, bron) => {
+    if (!el) return;
     if (el.type === "veld") {
       const pad = el.veld || "";
       if (!pad) {
         meldingen.push({ id: el._id, niveau: "fout", tekst: "Veld zonder pad." });
         return;
       }
-      padTelling.set(pad, (padTelling.get(pad) || 0) + 1);
-      if (bekendePaden && bekendePaden.size > 0 && !bekendePaden.has(pad)) {
-        meldingen.push({ id: el._id, niveau: "waarschuwing", tekst: `Onbekend veldpad: ${pad}` });
+      const vol = bron ? `${bron}.${pad}` : pad;
+      if (!bron) padTelling.set(pad, (padTelling.get(pad) || 0) + 1);
+      if (bekendePaden && bekendePaden.size > 0 && !bekendePaden.has(vol)) {
+        meldingen.push({ id: el._id, niveau: "waarschuwing", tekst: `Onbekend veldpad: ${vol}` });
       }
+      controleerVorm(el, vol);
+      return;
     }
-  });
+    if (el.type === "lijst" || el.type === "groep") controleerVorm(el, el.label || el.bron || el.type);
+    const binnen = el.type === "lijst" ? el.bron || bron : bron;
+    for (const k of [...(el.elementen || []), ...(el.dan || [])]) loop(k, binnen);
+  };
+  loop(root, null);
 
   for (const [pad, n] of padTelling) {
     if (n > 1) {

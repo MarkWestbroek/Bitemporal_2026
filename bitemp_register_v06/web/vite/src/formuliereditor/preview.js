@@ -18,7 +18,9 @@ export function bouwPreviewVelden(veldInfo) {
     enum: Array.isArray(info.enum) ? info.enum : [],
     datatype: info.datatype || "",
     ref: info.ref || "",
-    verplicht: false,
+    ...(info.doelEntiteit ? { doelEntiteit: info.doelEntiteit } : {}),
+    ...(info.lijstScheiding ? { lijstScheiding: info.lijstScheiding } : {}),
+    verplicht: Boolean(info.verplicht),
   }));
 }
 

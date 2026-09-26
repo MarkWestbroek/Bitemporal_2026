@@ -153,6 +153,7 @@ export default defineConfig({
         publicatie: resolve(__dirname, "publicatie.html"),
         aanmelden: resolve(__dirname, "aanmelden.html"),
         dashboard: resolve(__dirname, "dashboard.html"),
+        vormen: resolve(__dirname, "vormen.html"),
       },
     },
   },

@@ -17,6 +17,9 @@
  * Puur (geen React) — testbaar met node --test (vormen.test.js).
  */
 
+import { CONFIG_SCHEMAS } from "./configSchemas.js";
+import { valideerSchema } from "./schemaValidatie.js";
+
 export const INVOERSOORT = Object.freeze({
   TEKST: "tekst",
   GETAL: "getal",
@@ -26,9 +29,11 @@ export const INVOERSOORT = Object.freeze({
   MEER_UIT_LIJST: "meer-uit-lijst",
   /** Een vaste set rijen (bv. de drie bijdragen) met per rij één uit dezelfde lijst (schaal). */
   EEN_PER_RIJ: "een-uit-lijst-per-rij",
+  /** Een groep velden die samen één ding zijn (periode: begin + einde; adres: straat, nummer, …). */
+  SAMENGESTELD: "samengesteld",
 });
 
-const { TEKST, GETAL, DATUM, JA_NEE, EEN_UIT_LIJST, MEER_UIT_LIJST, EEN_PER_RIJ } = INVOERSOORT;
+const { TEKST, GETAL, DATUM, JA_NEE, EEN_UIT_LIJST, MEER_UIT_LIJST, EEN_PER_RIJ, SAMENGESTELD } = INVOERSOORT;
 
 /** XForms-control per invoersoort (voor de documentatie en een eventuele export). */
 export const XFORMS_CONTROL = Object.freeze({
@@ -39,25 +44,60 @@ export const XFORMS_CONTROL = Object.freeze({
   [EEN_UIT_LIJST]: "select1",
   [MEER_UIT_LIJST]: "select",
   [EEN_PER_RIJ]: "repeat + select1",
+  [SAMENGESTELD]: "group",
 });
 
 /**
- * De vormen. `invoersoorten` = welke inhoud de vorm kan bedienen; `xforms` = de
- * dichtstbijzijnde XForms-appearance; `config` = of de vorm een `vormConfig` vraagt.
+ * De vormen (de bibliotheek). Per vorm:
+ *  - invoersoorten: welke inhoud de vorm kan bedienen (de matrix inhoud × vorm);
+ *  - modi: "invoer" en/of "weergave" (een invoervorm in alleen-lezen is ook een weergave);
+ *  - xforms: de dichtstbijzijnde XForms-appearance;
+ *  - version, help: zoals Imprint-widgets;
+ *  - configSchema: het schema van vormConfig (configSchemas.js), of null.
+ * Geordend = de vorm vraagt een lijst met een betekenisvolle volgorde (enum-volgorde of getal).
  */
+const IO = ["invoer", "weergave"];
+const W = ["weergave"];
+const v = (label, invoersoorten, xforms, help, extra = {}) =>
+  Object.freeze({ label, invoersoorten, xforms, help, modi: IO, version: "1.0.0", configSchema: CONFIG_SCHEMAS[extra.naam] || null, ...extra });
+
 export const VORMEN = Object.freeze({
-  "text-input":     { label: "Invoerveld",           invoersoorten: [TEKST, GETAL, DATUM], xforms: "input" },
-  "text-area":      { label: "Tekstvak",             invoersoorten: [TEKST],               xforms: "textarea" },
-  "json":           { label: "JSON-editor",          invoersoorten: [TEKST],               xforms: "textarea (eigen)" },
-  "markdown":       { label: "Markdown-editor",      invoersoorten: [TEKST],               xforms: "textarea (eigen)" },
-  "select":         { label: "Keuzelijst",           invoersoorten: [EEN_UIT_LIJST, JA_NEE], xforms: 'appearance="minimal"' },
-  "radio-group":    { label: "Keuzerondjes",         invoersoorten: [EEN_UIT_LIJST, JA_NEE], xforms: 'appearance="full"' },
-  "checkbox-group": { label: "Vinkjes",              invoersoorten: [MEER_UIT_LIJST],      xforms: 'appearance="full"' },
-  "combobox":       { label: "Zoeken en kiezen",     invoersoorten: [EEN_UIT_LIJST, MEER_UIT_LIJST], xforms: 'appearance="minimal" + zoeken' },
-  "image-map":      { label: "Klikbare afbeelding",  invoersoorten: [EEN_UIT_LIJST, MEER_UIT_LIJST], xforms: "eigen appearance", config: true },
-  "button-group":   { label: "Knoppenvlak",          invoersoorten: [EEN_UIT_LIJST, MEER_UIT_LIJST], xforms: "eigen appearance (knoppen)" },
-  "rating-grid":    { label: "Matrix",               invoersoorten: [EEN_PER_RIJ],         xforms: 'repeat + select1 appearance="full"', config: true },
+  "text-input":     v("Invoerveld", [TEKST, GETAL, DATUM], "input", "Eén regel tekst, een getal of een datum."),
+  "text-area":      v("Tekstvak", [TEKST], "textarea", "Meerdere regels tekst."),
+  "json":           v("JSON-editor", [TEKST], "textarea (eigen)", "Code-editor met JSON-controle."),
+  "markdown":       v("Markdown-editor", [TEKST], "textarea (eigen)", "Code-editor voor markdown."),
+  "select":         v("Keuzelijst", [EEN_UIT_LIJST, JA_NEE], 'appearance="minimal"', "Uitklaplijst."),
+  "radio-group":    v("Keuzerondjes", [EEN_UIT_LIJST, JA_NEE], 'appearance="full"', "Alle opties zichtbaar, één kiezen."),
+  "checkbox-group": v("Vinkjes", [MEER_UIT_LIJST], 'appearance="full"', "Alle opties zichtbaar, meerdere kiezen."),
+  "combobox":       v("Zoeken en kiezen", [EEN_UIT_LIJST, MEER_UIT_LIJST], 'appearance="minimal" + zoeken', "Typen en filteren; voor lange lijsten."),
+  "image-map":      v("Klikbare afbeelding", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance", "Gebieden op een afbeelding aanklikken.", { naam: "image-map" }),
+  "button-group":   v("Knoppenvlak", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance (knoppen)", "Afgeronde knoppen, klik-klik aan en uit.", { naam: "button-group" }),
+  "cards":          v("Keuzekaarten", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance (kaarten)", "Kaarten met icoon, titel en uitleg.", { naam: "cards" }),
+  "nl-map":         v("Kaart van Nederland", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance (kaart)", "Gemeenten als stip op de kaart; aanklikken of tonen.", { naam: "nl-map" }),
+  "switch":         v("Schuifschakelaar", [JA_NEE], 'appearance="full" (toggle)', "Aan/uit, zoals een schakelaar op een module.", { naam: "switch" }),
+  "range":          v("Schuif", [GETAL, EEN_UIT_LIJST], "range", "Schuif over een schaal, eventueel met kleurverloop.", { naam: "range", geordend: true }),
+  "rotary":         v("Draaiknop", [GETAL, EEN_UIT_LIJST], "range (eigen)", "Draaiknop met klikstanden.", { naam: "rotary", geordend: true }),
+  "stepper":        v("Stappenbalk", [EEN_UIT_LIJST], "range (eigen)", "Stappen op een rij; de huidige gemarkeerd.", { naam: "stepper", geordend: true }),
+  "rating-grid":    v("Matrix", [EEN_PER_RIJ], 'repeat + select1 appearance="full"', "Per rij één keuze uit dezelfde schaal.", { naam: "rating-grid" }),
+  "drag-sort":      v("Sorteren in manden", [EEN_PER_RIJ], "repeat + select1 (slepen)", "Dingen uit een voorraad naar manden slepen.", { naam: "drag-sort" }),
+  "period":         v("Periode", [SAMENGESTELD], "group (eigen)", "Begin en einde als balk op een tijdlijn.", { naam: "period" }),
+  "address-search": v("Adres zoeken", [SAMENGESTELD], "group (eigen)", "Eén zoekveld (PDOK) dat alle adresvelden vult.", { naam: "address-search" }),
+  "scale-bars":     v("Schaalbalken", [EEN_PER_RIJ], "output (eigen)", "Per rij een balk op de schaal, met toelichting.", { naam: "scale-bars", modi: W }),
+  "chips":          v("Labels", [MEER_UIT_LIJST, EEN_UIT_LIJST], "output", "De gekozen waarden als labels.", { naam: "chips", modi: W }),
 });
+
+/** Is de vorm (ook) een weergavevorm? */
+export function isWeergaveVorm(naam) {
+  return Boolean(VORMEN[normaliseerVorm(naam)]?.modi.includes("weergave"));
+}
+
+/** Fouten in een vormConfig volgens het configSchema van de vorm ([] = in orde of geen schema). */
+export function valideerVormConfig(naam, config) {
+  const vorm = VORMEN[normaliseerVorm(naam)];
+  if (!vorm) return [`onbekende vorm: ${naam}`];
+  if (!vorm.configSchema || config == null) return [];
+  return valideerSchema(config, vorm.configSchema);
+}
 
 /**
  * Oude `widget`-waarden → vorm. `meerkeuze` op een lijst zegt vooral iets over de
@@ -77,16 +117,16 @@ export function normaliseerVorm(naam) {
   return WIDGET_ALIAS[n] || n;
 }
 
-/** Kan deze vorm deze invoersoort bedienen? Onbekende vormen: nee. */
-export function vormPastBij(vorm, invoersoort) {
+/** Kan deze vorm deze invoersoort bedienen, in deze modus ("invoer" of "weergave")? Onbekende vormen: nee. */
+export function vormPastBij(vorm, invoersoort, modus = "invoer") {
   const v = VORMEN[normaliseerVorm(vorm)];
-  return Boolean(v && v.invoersoorten.includes(invoersoort));
+  return Boolean(v && v.invoersoorten.includes(invoersoort) && v.modi.includes(modus));
 }
 
-/** Vormen die een invoersoort kunnen bedienen (voor de keuzelijst in de Studio-inspector). */
-export function vormenVoor(invoersoort) {
+/** Vormen die een invoersoort kunnen bedienen in een modus (keuzelijst in de Studio-inspector). */
+export function vormenVoor(invoersoort, modus = "invoer") {
   return Object.entries(VORMEN)
-    .filter(([, v]) => v.invoersoorten.includes(invoersoort))
+    .filter(([, v]) => v.invoersoorten.includes(invoersoort) && v.modi.includes(modus))
     .map(([naam, v]) => ({ naam, label: v.label }));
 }
 

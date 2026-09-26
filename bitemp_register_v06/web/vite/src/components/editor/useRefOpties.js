@@ -4,7 +4,8 @@ import { bouwReflijstOptieLabel } from "../../shared/celEvaluator";
 
 /**
  * useRefOpties — de KEUZEBRON voor vormen die alle opties tegelijk tonen (button-group,
- * image-map) op een referentielijst: haalt de items eenmalig op als [{ id, label }].
+ * image-map, nl-map) op een referentielijst: haalt de items eenmalig op als [{ id, label, velden }]
+ * (velden = de ruwe waarden van het item, bv. de CBS-code van een gemeente).
  * De vormen zelf halen niets op (draagbaar naar Imprint); dit is de Omnium-kant.
  * Bedoeld voor kleine lijsten (tot ~500 items); grote lijsten horen bij de combobox.
  */
@@ -20,7 +21,7 @@ export default function useRefOpties(refType, { actief = true } = {}) {
       .then((r) => (r.ok ? r.json() : { opties: [] }))
       .then((data) => {
         if (cancelled) return;
-        setOpties((data?.opties || []).map((o) => ({ id: o.id, label: bouwReflijstOptieLabel(o, refMeta, typeMetaByTypenaam) || String(o.id) })));
+        setOpties((data?.opties || []).map((o) => ({ id: o.id, label: bouwReflijstOptieLabel(o, refMeta, typeMetaByTypenaam) || String(o.id), velden: o.velden || {} })));
       })
       .catch(() => { if (!cancelled) setOpties([]); });
     return () => { cancelled = true; };

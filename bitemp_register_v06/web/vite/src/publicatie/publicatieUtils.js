@@ -4,6 +4,7 @@
  * Afzonderlijk bestand zodat deze functies unit-testbaar zijn via node:test
  * zonder React-context of bundler nodig te hebben.
  */
+import { vormPaden } from "./vormBlokken.js";
 
 // ─── Veldpad-navigatie ───────────────────────────────────────────────────────
 
@@ -151,12 +152,14 @@ function heeftWaarde(w) {
  * zijn geen veldpaden.
  */
 export function extractVeldpaden(template) {
-  const paden = new Set();
+  // Vormblokken ({{#vorm …}}…{{/vorm}}, vormBlokken.js) leveren hun eigen paden (pad + …Field/…Path).
+  const paden = new Set(vormPaden(template || ""));
   const re = /\{\{([^}]+)\}\}/g;
   let match;
   while ((match = re.exec(template)) !== null) {
     const inhoud = match[1].trim();
     if (inhoud === "else" || inhoud.startsWith("/")) continue;
+    if (/^#?vorm\s/.test(inhoud)) continue;
     const voorwaarde = /^#(?:if|unless)\s+(.+)$/.exec(inhoud);
     const pad = voorwaarde ? voorwaarde[1].trim() : inhoud;
     if (pad.startsWith("__")) continue; // __onbekend: pad dat niet in het schema bestaat (graphqlPaden.js)

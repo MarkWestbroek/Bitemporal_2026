@@ -327,6 +327,119 @@ verschilt. Het staat in het model, dus elke vorm, validatie en export ziet het.
   - **Weergaven** tonen de ruwe tekst `Laag 1;Laag 2`.
   - **Hernoemen** naar `CG_lagen` is een aparte migratie (kolom, GraphQL, weergaven, FD 2).
 
+## 7e. De vormenbibliotheek (nacht 26–27 september 2026)
+
+De vormen staan in de registry `VORMEN` (`web/vite/src/vormen/vormen.js`). Elke vorm heeft:
+- `invoersoorten`;
+- `modi`: `invoer` en/of `weergave`;
+- `version` en `help`;
+- een **`configSchema`** (`configSchemas.js`, JSON Schema). `valideerVormConfig` controleert
+  een config met een eigen kleine validator (`schemaValidatie.js`, geen ajv in de publieke
+  bundel).
+
+Dit is het "vormconfiguratietype" uit §9b, voorlopig in code.
+
+| Vorm | Invoersoort(en) | Modi | Bijzonderheden |
+|---|---|---|---|
+| `image-map` | één/meer uit een lijst | invoer + weergave | §7 |
+| `button-group` | één/meer uit een lijst | invoer + weergave | §7c |
+| `cards` | één/meer uit een lijst | invoer + weergave | kaarten met `icon`, `title`, `description`, `image` per optie |
+| `nl-map` | één/meer uit een lijst (Gemeente) | invoer + weergave | stippen op NL; woonplaatsen bij aanwijzen; koppeling via CBS-code; in weergave groepen als kleuren (twee groepen = ring) |
+| `switch` | ja/nee | invoer + weergave | schuifschakelaar (MusicBrain-stijl), `role=switch` |
+| `range` | getal, geordende lijst | invoer + weergave | native range + kleurverloop; weergave = balk met markering |
+| `rotary` | getal, geordende lijst | invoer + weergave | draaiknop, `role=slider`, slepen/scrollen/pijlen |
+| `stepper` | geordende lijst | invoer + weergave | stappenbalk (fase) |
+| `rating-grid` | één uit een lijst per rij | invoer + weergave | §7b |
+| `drag-sort` | één uit een lijst per rij | invoer + weergave | **sorteren in manden** (idee Mark): zelfde inhoud en data als de matrix; slepen, of klik-kaart-klik-mand (toetsenbord, touch) |
+| `period` | samengesteld (groep) | invoer + weergave | begin + einde als tijdlijn; `kopieerNaar` van de velden blijft werken |
+| `address-search` | samengesteld (groep) | invoer + weergave | PDOK Locatieserver (BAG) op downshift `useCombobox`; vult alle adresvelden; referentielijst-velden (gemeente, land) via `refMatch` naar het item-id |
+| `scale-bars` | één uit een lijst per rij | alleen weergave | balken per rij met toelichting |
+| `chips` | één/meer uit een lijst | alleen weergave | labels |
+
+**Opbouw:**
+- **Vormen zonder Omnium-kennis.** Alle vormen staan in `src/vormen/`, zonder SchemaContext
+  of fetch (draagbaar naar Imprint; alleen `address-search` praat met PDOK).
+- **Omnium-kant: keuzebron.** `components/editor/VormInvoer.jsx` haalt de keuzebron op
+  (enum of referentielijst, met `velden`, bijvoorbeeld de CBS-code) en kiest het
+  vormcomponent.
+- **Een vorm op een groep.** Die wordt in `CustomFormulierRenderer` afgehandeld (`period`,
+  `address-search`).
+- **Kaartdata.** `scripts/maak_nl_kaartdata.py` (PDOK/CBS open data) maakt
+  `src/vormen/data/nl-kaart.json`: 12 provincies, 342 gemeenten, 2503 woonplaatsen, 69 kB,
+  pas geladen als de kaart op de pagina staat. Opnieuw draaien na een gemeentelijke
+  herindeling.
+- **Showcase.** **`vormen.html`** toont elke vorm in invoer en weergave, met wat er
+  **opgeslagen** wordt en de vormConfig tegen het schema, plus de matrix inhoud × vorm.
+  Zonder API.
+
+**In de Studio:**
+- **Profiel.** Het formulierprofiel heeft `vorm` (keuze uit de registry) en `vormConfig`
+  (JSON) op veld, groep en lijst; `widget` heet daar "verouderd".
+- **Inspector.** `formuliereditor/VormEditor.jsx` toont alleen de vormen die bij de
+  invoersoort passen, met de help-tekst, een JSON-editor die tegen het schema controleert, en
+  de lijst eigenschappen.
+- **Validatie.** `layoutModel.valideer` controleert nu volle lijstpaden (de valse meldingen
+  "Onbekend veldpad: type/rol/…" zijn weg), en de vorm met zijn config.
+- **Preview.** De preview kent relatie-secundaire id's (`bronVeldenVoorChild`) en
+  `lijstScheiding`.
+
+**Voorbeeldformulieren** (replays met plaatshouder-id, lokaal getest als FD 23–25):
+- `…aanmelding-vormen-v2-2026-09-27.json` — *Aanmelding initiatief (vormen v2)*:
+  keuzekaarten (producttype), schakelaar (vervangt ouder product), stappenbalk (fase),
+  looptijd als periode, gemeenten op de kaart;
+- `…voorbeeld-locatie-adreszoeker-2026-09-27.json` — np-loc, doeltype Locatie;
+- `…voorbeeld-persoon-2026-09-27.json` — np-loc, doeltype NatuurlijkPersoon: cards,
+  button-group, switch.
+
+## 7f. Weergavevormen in een WeergaveDefinitie
+
+Het detail-template (Markdown met `{{veldpad}}` en `{{#if}}`) kent nu ook vormblokken:
+
+```
+{{#vorm image-map producten.CG_laag}}
+{ "image": "/viz/react/voorbeelden/cg-lagen-utility.svg", "areas": [ … ], "maxWidth": "320px" }
+{{/vorm}}
+
+{{#vorm nl-map initiatief_gemeenten}}
+{ "codeField": "gemeente.gemeentegegevens.code", "labelField": "gemeente.gemeentegegevens.naam",
+  "groups": [ { "label": "Realiseert", "color": "#e11d48", "filter": { "rol": "Realiseert" } },
+              { "label": "Maakt gebruik van", "color": "#2563eb", "filter": { "rol": "Maakt gebruik van" } } ] }
+{{/vorm}}
+
+{{vorm chips initiatief_api_standaarden.weergavenaam}}
+```
+
+- **Pad en config.** Het pad wijst de waarde aan (lijsten blijven lijsten). De config is die
+  van de vorm, plus paden: `…Field` relatief aan de items, `…Path` vanaf het record,
+  `groups[].filter`. Die paden gaan mee in de GraphQL-query (`vormPaden`). Kapotte JSON geeft
+  een melding in plaats van een lege pagina.
+- **Code.** `publicatie/vormBlokken.js` (puur, getest), `publicatie/VormWeergave.jsx`, en
+  `PublicatieDetail` rendert het template in stukken. `graphqlPaden` haalt vormtags niet meer
+  weg als onbekend pad.
+- **Replay.** Een **nieuwe WeergaveDefinitie** *Initiatief met vormen* (niet standaard, naast
+  WD 2): `registraties-replay-init-weergavedefinitie-initiatief-met-vormen-2026-09-27.json`.
+  Kiezen met `?weergave=<id>` of met de keuzelijst *Weergave*. De standaard (WD 2) en de embed
+  op commonground.nl blijven zoals ze zijn. Het toont:
+  - de fase als stappenbalk;
+  - de lagen als klein plaatje;
+  - de gemeenten als stippen (wie niet weet waar een gemeente ligt, wijst de stip aan en ziet
+    de woonplaatsen);
+  - de bijdragen als schaalbalken met toelichting;
+  - de looptijd als tijdlijn;
+  - de API-standaarden als labels;
+  - het ecosysteem.
+
+  Het werkt met het bestaande document `publiek-initiatief-detail` (alle paden zitten erin).
+  Let op: een correctie heeft registratietype `correctie`; met `registratie` ontstaat een
+  tweede hub.
+
+## 7g. Na verzenden: "Wat je hebt ingevuld"
+
+Na een geslaagde aanmelding toont `aanmelden.html` het bedankje en daaronder het formulier
+alleen-lezen, met de ingevulde waarden. De vormen tonen zich daar als weergave. Zo ziet de
+indiener netjes wat hij heeft ingevoerd. Een echt dashboard "mijn initiatieven" vraagt
+eerst een antwoord op de vraag hoe een indiener zich laat herkennen (§9c).
+
 ## 8. Architectuur: headless, zoals downshift
 
 ```
@@ -381,6 +494,30 @@ bouw een component op `useKeuze` (of downshift) met als contract
    hangt niet van de vorm af, maar een vorm met eigen `value`s maakt het wel relevanter.
 5. **Migratie van `widget` naar `vorm`** in FD 2 (replays 16/17/19) en in de naslag.
 6. **Imprint:** `x-appearance` in `SchemaForm`, en de map `vormen/` als gedeeld package.
+
+## 9c. Geparkeerde vragen (27-09, voor Mark)
+
+1. **Dashboard voor de initiatiefhouder.** Er is geen eigenaarschap van records. Hoe herkent
+   een indiener zich?
+   - een persoonlijke link per aanmelding (token per mail);
+   - accounts;
+   - of via de contactpersoon.
+
+   Nu gebouwd: "Wat je hebt ingevuld" direct na verzenden (§7g).
+2. **`ai-assist`.** Welke dienst, en waar draait hij (eigen infrastructuur of opt-in, AVG)?
+   Niet gebouwd.
+3. **`ranking` (volgorde uit een lijst).** Er is nog geen GE met een volgnummerveld om
+   tegenaan te bouwen. Niet gebouwd.
+4. **ApiStandaard materieel maken** (modelwijziging). Daarmee kan het knoppenvlak historisch
+   sorteren (§7c).
+5. **`LandenlijstLand`.** Voor `/api/viz/reflijst` is het geen `referentielijst_item`. Daardoor
+   werkt de land-keuzelijst lokaal niet, en kan de adreszoeker het land niet invullen.
+6. ~~WD 2 v0.3 op pf~~ → vervangen door een eigen WD *Initiatief met vormen* naast de
+   standaard (Mark, 27-09).
+7. **FD 2 van `widget` naar `vorm` migreren?** Werkt nu via aliassen.
+8. **Studio-profiel.** De keuzelijst `vorm` in het diagram-eigenschappenpaneel toont alle
+   vormen: het profiel kent het model niet. De formuliereditor filtert wel. Het aparte
+   vormenprofiel (§9b) is nog niet gebouwd.
 
 ## 9b. Formulier 3.0: modelmatig (denkwerk 26-09, nog niet besloten)
 
@@ -443,6 +580,14 @@ datatypen en referentielijsten):
 | `web/vite/src/vormen/matrix.js` (+ `.test.js`) | matrix: assen, cel en extra veld zetten |
 | `web/vite/src/vormen/MatrixKeuze.jsx` | de vorm `rating-grid` |
 | `web/vite/src/vormen/buttonGroup.js` (+ `.test.js`), `ButtonGroupKeuze.jsx` | de vorm `button-group` |
+| `web/vite/src/vormen/configSchemas.js`, `schemaValidatie.js` (+ `configSchemas.test.js`) | configSchema per vorm en de validator |
+| `web/vite/src/vormen/*Keuze.jsx`, `*Weergave.jsx`; `schaal.js`, `periode.js`, `adres.js`, `refMatch.js` (+ tests) | de bibliotheek (§7e) |
+| `web/vite/src/vormen/showcase/`, `web/vite/vormen.html` | de showcase |
+| `web/vite/src/vormen/data/nl-kaart.json`, `scripts/maak_nl_kaartdata.py` | kaartdata (PDOK/CBS) |
+| `components/editor/VormInvoer.jsx` | keuzebron → vorm (Omnium-kant) |
+| `formuliereditor/VormEditor.jsx`, `diagramprofielen/formulier/index.js` | vorm in de Studio |
+| `publicatie/vormBlokken.js` (+ test), `publicatie/VormWeergave.jsx` | weergavevormen in detail-templates (§7f) |
+| `scripts/speel_replay_af.py` | replays als admin afspelen (https, toegekende id's) |
 | `components/editor/useRefOpties.js`, `ButtonGroupVeld.jsx` | keuzebron (enum of referentielijst) → knoppenvlak |
 | `components/editor/SchemaFormField.jsx` | `vorm`/`vormConfig` op een veld; namen genormaliseerd |
 | `components/editor/CustomFormulierRenderer.jsx` | `vorm` op een lijst; `image-map` via `keuzesNaarRijen` |

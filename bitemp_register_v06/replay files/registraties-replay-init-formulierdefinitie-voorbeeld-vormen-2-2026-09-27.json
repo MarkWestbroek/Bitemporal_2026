@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-27T12:00:00Z",
+  "source": "manual://claude-vormenbibliotheek",
+  "description": "Voorbeeld-FD 'Voorbeeld: vormen (2)' (doeltype Initiatief): de bijdragen in vier vormen tegelijk op dezelfde data — drag-sort (sorteren in manden) voor alle drie, en per doel een vaste rij met de schaal als range (schuif), button-group en rotary (draaiknop), plus toelichting. Laat zien dat de vorm de data niet verandert. Actief, niet standaard, niet openbaar; id als plaatshouder.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "FormulierDefinitie 'Voorbeeld: vormen (2)'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "FormulierDefinitie 'Voorbeeld: vormen (2)' (vormenbibliotheek)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "formulierdefinitie": {
+                "id": "$nieuw.fd"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "naam": "Voorbeeld: vormen (2)",
+                "beschrijving": "Proefformulier: dezelfde bijdragen als manden, schuif, knoppenvlak en draaiknop — vier vormen, één set gegevens.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "layout": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "layout_json": "{\"type\": \"formulier\", \"elementen\": [{\"type\": \"lijst\", \"bron\": \"Initiatief.bijdragen\", \"label\": \"Bijdrage: sleep elk doel naar een schaal\", \"vorm\": \"drag-sort\", \"beschrijving\": \"Sleep een doel naar de mand die past (of klik op het doel en dan op een mand). Hieronder zie je dezelfde keuze in drie andere vormen: het is dezelfde data.\", \"vormConfig\": {\"rows\": [\"Wendbaarheid\", \"Dienstverlening\", \"Regie\"], \"columns\": [{\"value\": \"Schaal 1\", \"label\": \"1 · klein\", \"color\": \"#fef3c7\"}, {\"value\": \"Schaal 2\", \"label\": \"2\", \"color\": \"#fde68a\"}, {\"value\": \"Schaal 3\", \"label\": \"3\", \"color\": \"#fcd34d\"}, {\"value\": \"Schaal 4\", \"label\": \"4 · groot\", \"color\": \"#fbbf24\"}], \"stockLabel\": \"Nog in te delen\"}, \"elementen\": [{\"type\": \"veld\", \"veld\": \"type_bijdrage\", \"label\": \"Doel\"}, {\"type\": \"veld\", \"veld\": \"schaal\", \"label\": \"Schaal\"}]}, {\"type\": \"lijst\", \"bron\": \"Initiatief.bijdragen\", \"label\": \"Wendbaarheid — schuif\", \"min\": 1, \"max\": 1, \"elementen\": [{\"type\": \"veld\", \"veld\": \"type_bijdrage\", \"vasteWaarde\": \"Wendbaarheid\"}, {\"type\": \"veld\", \"veld\": \"schaal\", \"label\": \"Schaal\", \"vorm\": \"range\", \"vormConfig\": {\"colors\": [\"#fef3c7\", \"#fbbf24\"]}}, {\"type\": \"veld\", \"veld\": \"toelichting\", \"label\": \"Toelichting\", \"vorm\": \"text-area\"}]}, {\"type\": \"lijst\", \"bron\": \"Initiatief.bijdragen\", \"label\": \"Dienstverlening — knoppenvlak\", \"min\": 1, \"max\": 1, \"elementen\": [{\"type\": \"veld\", \"veld\": \"type_bijdrage\", \"vasteWaarde\": \"Dienstverlening\"}, {\"type\": \"veld\", \"veld\": \"schaal\", \"label\": \"Schaal\", \"vorm\": \"button-group\", \"vormConfig\": {\"sort\": \"none\", \"minWidth\": 90}}, {\"type\": \"veld\", \"veld\": \"toelichting\", \"label\": \"Toelichting\", \"vorm\": \"text-area\"}]}, {\"type\": \"lijst\", \"bron\": \"Initiatief.bijdragen\", \"label\": \"Regie — draaiknop\", \"min\": 1, \"max\": 1, \"elementen\": [{\"type\": \"veld\", \"veld\": \"type_bijdrage\", \"vasteWaarde\": \"Regie\"}, {\"type\": \"veld\", \"veld\": \"schaal\", \"label\": \"Schaal\", \"vorm\": \"rotary\", \"vormConfig\": {\"size\": 96, \"accentColor\": \"#f59e0b\", \"colors\": [\"#fde68a\", \"#f59e0b\"]}}, {\"type\": \"veld\", \"veld\": \"toelichting\", \"label\": \"Toelichting\", \"vorm\": \"text-area\"}]}]}"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_aanvang": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}

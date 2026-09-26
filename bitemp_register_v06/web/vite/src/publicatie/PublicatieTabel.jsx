@@ -13,6 +13,7 @@ import { useWeergaveDefinitie } from "../hooks/useWeergaveDefinitie";
 import { safeArray } from "../shared/schemaUtils";
 import { bouwReflijstOptieLabel } from "../shared/celEvaluator";
 import { isEmbedModus } from "./embed";
+import WeergaveKiezer from "./WeergaveKiezer";
 import { haalLijstViaDocument, resolveVeldpad, sanitizeKolId } from "./publicatieData.js";
 
 /**
@@ -33,8 +34,8 @@ export default function PublicatieTabel() {
     );
   }, [types, typePad]);
 
-  const { tabelConfig, detailTemplate, loading: wdLoading, error: wdError } =
-    useWeergaveDefinitie(typeMeta?.typenaam);
+  const wd = useWeergaveDefinitie(typeMeta?.typenaam);
+  const { tabelConfig, detailTemplate, loading: wdLoading, error: wdError } = wd;
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -297,6 +298,7 @@ export default function PublicatieTabel() {
           <h2 className="utrecht-heading-2" style={{ margin: 0 }}>
             {typeMeta.klassenaam || typeMeta.typenaam}
           </h2>
+          <WeergaveKiezer alternatieven={wd.alternatieven} huidigId={wd.weergaveDefinitie?.id} />
         </div>
       )}
 
