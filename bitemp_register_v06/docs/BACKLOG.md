@@ -1612,3 +1612,20 @@ Verwijzingen (`ref:`) worden evenmin gecontroleerd.
       422 bij ontbrekend veld en bij een dode verwijzing.
 - [ ] **33.6 Overwegen:** `NOT NULL` als vangnet in de database, na een telling van bestaande
       nulwaarden.
+
+## 34. Registratiefouten en oude dataresten (2026-09-27)
+
+- **Correctie op een afgevoerde hub geeft een kale 500.** Voorbeeld: een `correctie` met
+  `opvoer formulierdefinitie_meta { rel_id: 1 }` terwijl hub 1 al is afgevoerd. Weigeren is
+  goed, maar het hoort een 409/422 te zijn met een melding ("hub rel_id 1 is afgevoerd"), in
+  het NL API-foutformaat zoals bij validatiefouten.
+- **Resten van een fout uit juli (lokale database).** FD 3 ("Initiatief test 01") en FD 18
+  ("RAW-v2"), en ook FD 19 (al afgevoerd), hebben een afgevoerde Meta-hub 1 met een nieuwe
+  dataversie van hetzelfde moment die nooit is afgesloten, plus een lege, actieve Meta-hub 2.
+  Ze komen uit de update-in-place-tests van de visuele formuliereditor (Claude-chat
+  2026-07-15). De huidige backend doet het goed: een registratie met `rel_id` op een
+  enkelvoudig GE voert hub én data af en zet de nieuwe versie in een nieuwe hub (getest
+  27-09). De frontend liet deze resten tot 27-09 toch zien, omdat hij terugviel op
+  afgevoerde data (opgelost: `shared/actueleData.js`). Opruimen = de entiteiten afvoeren.
+  FD 15 is een ander geval: een actieve entiteit waarvan de meta netjes is afgevoerd,
+  dus zonder actuele meta.
