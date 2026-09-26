@@ -34,13 +34,16 @@ test("image-map bedient één én meer uit een lijst; vinkjes alleen meer", () =
   assert.ok(!vormPastBij("checkbox-group", INVOERSOORT.EEN_UIT_LIJST));
   assert.ok(vormPastBij("radio", INVOERSOORT.EEN_UIT_LIJST), "alias telt mee");
   const namen = vormenVoor(INVOERSOORT.MEER_UIT_LIJST).map((v) => v.naam);
-  assert.deepEqual(namen.sort(), ["button-group", "checkbox-group", "combobox", "image-map"]);
+  assert.deepEqual(namen.sort(), ["button-group", "cards", "checkbox-group", "combobox", "image-map", "nl-map"]);
+  assert.ok(vormenVoor(INVOERSOORT.MEER_UIT_LIJST, "weergave").some((v) => v.naam === "chips"), "chips alleen als weergave");
 });
 
 test("rating-grid bedient alleen één-per-rij", () => {
   assert.ok(vormPastBij("rating-grid", INVOERSOORT.EEN_PER_RIJ));
   assert.ok(!vormPastBij("rating-grid", INVOERSOORT.MEER_UIT_LIJST));
-  assert.deepEqual(vormenVoor(INVOERSOORT.EEN_PER_RIJ).map((v) => v.naam), ["rating-grid"]);
+  assert.deepEqual(vormenVoor(INVOERSOORT.EEN_PER_RIJ).map((v) => v.naam), ["rating-grid", "drag-sort"]);
+  assert.ok(!vormPastBij("scale-bars", INVOERSOORT.EEN_PER_RIJ), "schaalbalken zijn geen invoer");
+  assert.ok(vormPastBij("scale-bars", INVOERSOORT.EEN_PER_RIJ, "weergave"));
   assert.equal(lijstVorm({ type: "lijst", vorm: "rating-grid" }), "rating-grid");
 });
 
