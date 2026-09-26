@@ -18,10 +18,23 @@
  *     serialisatie (P2) de formulier-volgorde kan reconstrueren.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { VORMEN } from "../../vormen/vormen.js";
 
 export const FORMULIER_ID = "formulier";
 
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
+
+/**
+ * vorm + vormConfig (formulier 3.0, ontwerp "Invoersoort en vorm" §9b): de vorm kiest uit de
+ * vormenbibliotheek (src/vormen/vormen.js, dezelfde bron als renderer en inspector); de
+ * vormConfig is JSON volgens het configSchema van die vorm. `widget` is de oude schrijfwijze.
+ */
+const VORM_OPTIES = [{ waarde: "", label: "standaard (uit het model)" },
+  ...Object.entries(VORMEN).map(([naam, v]) => ({ waarde: naam, label: `${v.label} (${naam})` }))];
+const VORM_VELDEN = [
+  { key: "vorm", label: "vorm", datatype: "keuze", opties: VORM_OPTIES },
+  { key: "vormConfig", label: "vormConfig (JSON)", datatype: "tekst", placeholder: '{ "image": "…", "areas": [ … ] }' },
+];
 
 /** @type {import("../../diagramcore/types/schema.js").FieldType[]} */
 const fieldTypes = [
@@ -32,7 +45,8 @@ const fieldTypes = [
       { key: "veld", label: "veldpad", datatype: "string", verplicht: true },
       { key: "label", label: "label", datatype: "string" },
       { key: "breedte", label: "breedte", datatype: "string" },
-      { key: "widget", label: "widget", datatype: "string" },
+      ...VORM_VELDEN,
+      { key: "widget", label: "widget (verouderd; gebruik vorm)", datatype: "string" },
       { key: "readonly", label: "alleen-lezen", datatype: "boolean" },
       { key: "vasteWaarde", label: "vaste waarde (niet getoond; in een lijst óók filter)", datatype: "string" },
       { key: "kopieerNaar", label: "kopieer naar (vol pad)", datatype: "string" },
@@ -67,7 +81,7 @@ const elementTypes = [
     kort: "GRP",
     shape: "rect",
     kleur: "#e0e7ff",
-    properties: [{ key: "context", label: "pad-context", datatype: "string" }, KLEUR_VELD],
+    properties: [{ key: "context", label: "pad-context", datatype: "string" }, ...VORM_VELDEN, KLEUR_VELD],
     compartments: [{ id: "velden", label: null, fieldType: "veld" }],
   },
   {
@@ -88,7 +102,8 @@ const elementTypes = [
     kleur: "#ccfbf1",
     properties: [
       { key: "bron", label: "bron (ENT.GE, meervoudig)", datatype: "string", verplicht: true },
-      { key: "widget", label: "widget (rijen / meerkeuze)", datatype: "string" },
+      ...VORM_VELDEN,
+      { key: "widget", label: "widget (verouderd: meerkeuze)", datatype: "string" },
       { key: "min", label: "min", datatype: "string" },
       { key: "max", label: "max", datatype: "string" },
       KLEUR_VELD,

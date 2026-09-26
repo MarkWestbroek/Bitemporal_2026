@@ -2,11 +2,13 @@ import SchemaFormField from "./SchemaFormField";
 import { bepaalWidgetOverride } from "./widgetOverrides";
 import { vasteWaardenVanLijst, rijPastBijLijst } from "./nieuwFormulierMapping";
 import RefMeerkeuze from "./RefMeerkeuze";
-import ImageMapKeuze from "../../vormen/ImageMapKeuze";
 import MatrixKeuze from "../../vormen/MatrixKeuze";
-import ButtonGroupVeld from "./ButtonGroupVeld";
+import VormInvoer, { VORMINVOER } from "./VormInvoer";
+import DragSortKeuze from "../../vormen/DragSortKeuze";
+import PeriodKeuze from "../../vormen/PeriodKeuze";
+import AddressSearch from "../../vormen/AddressSearch";
 import { matrixAssen, matrixRijen, zetMatrixCel, zetMatrixExtra } from "../../vormen/matrix";
-import { lijstVorm, keuzesNaarRijen } from "../../vormen/vormen";
+import { lijstVorm, keuzesNaarRijen, normaliseerVorm, VORMEN } from "../../vormen/vormen";
 
 /**
  * CustomFormulierRenderer — rendert een formulier op basis van een layout-JSON
@@ -82,6 +84,41 @@ export default function CustomFormulierRenderer({
         );
 
       case "groep": {
+        // Vorm op een groep (samengestelde invoer): periode (begin + einde als tijdlijn) of adres
+        // zoeken (één zoekveld vult alle adresvelden). De velden blijven de opslag; een
+        // `kopieerNaar` op zo'n veld blijft werken (bv. startdatum → Initiatief.aanvang.datum).
+        const groepVorm = normaliseerVorm(element.vorm);
+        if (groepVorm === "period" || groepVorm === "address-search") {
+          const cfg = element.vormConfig || {};
+          const kinderen = element.elementen || [];
+          const zetVeld = (pad, val) => {
+            sOnChange(pad, val);
+            const el = kinderen.find((k) => k.type === "veld" && k.veld === pad);
+            if (el?.kopieerNaar) onChange(el.kopieerNaar, val);
+          };
+          const labelId = `groep-${index}-label`;
+          const periodeVelden = groepVorm === "period" ? [cfg.startField, cfg.endField] : [];
+          return (
+            <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px solid var(--cg-rand, #ccc)", borderRadius: "6px" }}>
+              {element.label && <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label}</legend>}
+              {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.5rem" }}>{element.beschrijving}</div>}
+              {groepVorm === "period" ? (
+                <PeriodKeuze begin={sVal?.[cfg.startField] ?? ""} einde={sVal?.[cfg.endField] ?? ""} config={cfg} readOnly={readOnly} labelId={labelId}
+                  onChange={({ begin, einde }) => {
+                    if (begin !== (sVal?.[cfg.startField] ?? "")) zetVeld(cfg.startField, begin);
+                    if (einde !== (sVal?.[cfg.endField] ?? "")) zetVeld(cfg.endField, einde);
+                  }} />
+              ) : (
+                <div style={{ marginBottom: "0.75rem" }}>
+                  <AddressSearch waarden={sVal || {}} config={cfg} readOnly={readOnly} labelId={labelId}
+                    onChange={(velden) => Object.entries(velden).forEach(([pad, val]) => zetVeld(pad, val))} />
+                </div>
+              )}
+              {/* De overige velden van de groep (bij adres: alle adresvelden, om na te kijken). */}
+              {kinderen.filter((k) => !(k.type === "veld" && periodeVelden.includes(k.veld))).map((child, i) => renderElement(child, i, scope))}
+            </fieldset>
+          );
+        }
         // Een groep zonder zichtbare inhoud (bv. alleen velden met vasteWaarde, of een
         // conditioneel blok dat dicht is) wordt niet getoond.
         const kinderen = (element.elementen || []).map((child, i) => renderElement(child, i, scope));
@@ -206,6 +243,27 @@ export default function CustomFormulierRenderer({
 
         // Matrix (rating-grid): één lijstrij per rijwaarde (bv. type_bijdrage), per rij één
         // keuze voor het kolomveld (bv. schaal). Zelfde data als losse vaste-rij-lijsten.
+        // Sorteren in manden (drag-sort): zelfde inhoud en data als de matrix, andere vorm.
+        if (vormVanLijst === "drag-sort") {
+          const assen = matrixAssen(element, (n) => veldenByNaam[`${bron}.${n}`]);
+          const { rowField, columnField } = assen;
+          const rijen = rowField ? matrixRijen(alle, eigenIdx, rowField) : {};
+          const waarden = Object.fromEntries(Object.entries(rijen).map(([k, v]) => [k, String(v.rij?.[columnField] ?? "")]));
+          const labelId = `lijst-${index}-${bron.replace(/\W/g, "_")}-label`;
+          return (
+            <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px solid var(--cg-rand, #ccc)", borderRadius: "6px" }}>
+              <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+              {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.5rem" }}>{element.beschrijving}</div>}
+              {assen.fouten.length > 0 && <ul style={{ color: "var(--cg-fout, red)", fontSize: "0.8rem", margin: "0 0 0.5rem", paddingLeft: "1rem" }}>{assen.fouten.map((f) => <li key={f}>{f}</li>)}</ul>}
+              {rowField && columnField && (
+                <DragSortKeuze rows={assen.rows} columns={assen.columns} waarden={waarden} config={element.vormConfig || {}}
+                  onChange={(rij, kolom) => zetAlle(zetMatrixCel(alle, eigenIdx, vast, rowField, columnField, rij, kolom))}
+                  readOnly={readOnly} labelId={labelId} />
+              )}
+            </fieldset>
+          );
+        }
+
         if (vormVanLijst === "rating-grid") {
           const assen = matrixAssen(element, (n) => veldenByNaam[`${bron}.${n}`]);
           const { rowField, columnField } = assen;
@@ -259,41 +317,21 @@ export default function CustomFormulierRenderer({
             if (gekozen.has(opt)) verwijder(opt);
             else zetAlle([...alle, { ...vast, [keuzeEl.veld]: opt }]);
           };
-          // Klikbare afbeelding: zelfde inhoud (meer uit een lijst), andere vorm. De vorm
-          // levert alleen sleutels; keuzesNaarRijen maakt er dezelfde rijen van als de vinkjes.
-          // Knoppenvlak: zelfde inhoud, knoppen als vorm; de opties komen uit enum of referentielijst.
-          if (vormVanLijst === "button-group") {
+          // De vormenbibliotheek op een lijst (image-map, knoppen, kaarten, kaart van NL): zelfde
+          // inhoud (meer uit een lijst), andere vorm. De vorm levert alleen sleutels;
+          // keuzesNaarRijen maakt er dezelfde rijen van als de vinkjes.
+          if (VORMINVOER.has(vormVanLijst)) {
             const labelId = `lijst-${index}-${bron.replace(/\W/g, "_")}-label`;
             return (
               <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
                 <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
                 {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
-                {!keuzeDef && <div style={{ color: "var(--cg-fout, red)" }}>Knoppenvlak zonder keuzeveld: <code>{bron}</code></div>}
+                {!keuzeDef && <div style={{ color: "var(--cg-fout, red)" }}>{VORMEN[vormVanLijst]?.label || vormVanLijst} zonder keuzeveld: <code>{bron}</code></div>}
                 {keuzeDef && (
-                  <ButtonGroupVeld
+                  <VormInvoer
+                    vorm={vormVanLijst}
                     veld={keuzeDef}
                     config={element.vormConfig}
-                    meervoudig
-                    waarde={[...gekozen].filter(Boolean)}
-                    onChange={(sleutels) => zetAlle(keuzesNaarRijen(alle, eigenIdx, keuzeEl.veld, vast, sleutels))}
-                    readOnly={readOnly}
-                    labelId={labelId}
-                  />
-                )}
-              </fieldset>
-            );
-          }
-          if (vormVanLijst === "image-map") {
-            const labelId = `lijst-${index}-${bron.replace(/\W/g, "_")}-label`;
-            return (
-              <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
-                <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
-                {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
-                {!keuzeDef && <div style={{ color: "var(--cg-fout, red)" }}>Klikbare afbeelding zonder keuzeveld: <code>{bron}</code></div>}
-                {keuzeDef && (
-                  <ImageMapKeuze
-                    config={element.vormConfig}
-                    opties={opties.length ? opties : undefined}
                     meervoudig
                     waarde={[...gekozen].filter(Boolean)}
                     onChange={(sleutels) => zetAlle(keuzesNaarRijen(alle, eigenIdx, keuzeEl.veld, vast, sleutels))}

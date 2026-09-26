@@ -8,6 +8,7 @@
  * overgeslagen — er is bewust géén legacy-resolver.
  */
 import { kinderSleutel } from "./layoutModel.js";
+import { bronVeldenVoorChild } from "../components/editor/customFormMapping.js";
 
 /** Bouw veldInfo (map vol-pad → velddef-metadata) uit een layout-boom. */
 export function bouwVeldInfoUitLayout(root, typeMetaByTypenaam) {
@@ -48,7 +49,10 @@ export function resolveVeldpad(volPad, typeMetaByTypenaam) {
     (c) => typeMetaByTypenaam?.[c.doeltype]?.ge_subtype === "data"
   );
   const bronMeta = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : childMeta;
-  const v = safe(bronMeta?.velden).find((x) => x?.naam === veldNaam);
+  // Relaties: het secundaire id (bv. apistandaard_id) staat op de hub, niet in het data-kind;
+  // bronVeldenVoorChild voegt het toe, met `ref` (referentielijst) of `doelEntiteit` (gewone ENT),
+  // precies zoals de inhoud-editor. Anders gaf de Studio "Onbekend veldpad" en geen keuzeveld.
+  const v = bronVeldenVoorChild(childMeta, bronMeta, typeMetaByTypenaam).find((x) => x?.naam === veldNaam);
   return v ? veldInfoUit(v, child.momentvoorkomen) : null;
 }
 
@@ -60,6 +64,9 @@ function veldInfoUit(v, momentvoorkomen) {
     format: v.format || "",
     enum: Array.isArray(v.enum) ? v.enum : [],
     ref: v.ref || "",
+    ...(v.doelEntiteit ? { doelEntiteit: v.doelEntiteit } : {}),
+    ...(v.lijstScheiding ? { lijstScheiding: v.lijstScheiding } : {}),
+    verplicht: Boolean(v.verplicht),
     momentvoorkomen: momentvoorkomen || "",
   };
 }
