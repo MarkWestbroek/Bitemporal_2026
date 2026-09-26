@@ -150,3 +150,5 @@ Een template is data. Wijzig het met een **correctie** op het bestaande `detailt
 - GraphQL gaf tot 22-09-2026 **alle datum- en tijdvelden als `null`** (datum-scalars kenden geen
   tekst; de resolvers zetten entiteiten via JSON om). Opgelost in `dynql/scalars.go`.
 - Enum-waarden kwamen tot 22-09-2026 met underscores (`Laag_5`); zie `graphql-enum-handling.md`.
+
+Zie ook [`FORMULIERDEFINITIES.md`](FORMULIERDEFINITIES.md) voor de invoerkant (FormulierDefinitie, widgets).

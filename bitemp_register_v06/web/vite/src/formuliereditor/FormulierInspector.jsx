@@ -24,7 +24,7 @@ function Regel({ label, children }) {
 
 const BREEDTES = ["", "50%", "33%", "25%", "100%"];
 const WIDGETS = ["", "radio", "textarea", "json", "markdown"];
-const LIJST_WIDGETS = [{ v: "", t: "rijen (default)" }, { v: "meerkeuze", t: "meerkeuze (checkbox per enum-optie)" }];
+const LIJST_WIDGETS = [{ v: "", t: "rijen (default)" }, { v: "meerkeuze", t: "meerkeuze (enum: checkboxes; referentielijst: chips)" }];
 const CONDITIE_OPS = [
   { v: "nietleeg", t: "is ingevuld" },
   { v: "leeg", t: "is leeg" },

@@ -36,7 +36,7 @@ HashRouter is gekozen omdat de Go-server statische bestanden serveert via `route
 |---|---|---|
 | `#/` | Welkomstpagina | Tekst: "Kies een entiteittype in de zijbalk" |
 | `#/t/:typePad` | `InhoudEditorPage` | Tabeloverzicht voor één type |
-| `#/t/:typePad/nieuw` | `NieuwRecordFormulier` | Formulier voor nieuw record |
+| `#/t/:typePad/nieuw` | `NieuwRecordFormulier` | Formulier voor nieuw record; `?formulier=<id>` = een FormulierDefinitie in nieuw-modus (zie `FORMULIERDEFINITIES.md`) |
 | `#/t/:typePad/:id` | `EntiteitFormulier` | Detail/bewerk formulier met geneste GE's |
 
 ### 2.2 Componenthiërarchie
@@ -431,3 +431,7 @@ De volgorde van widget-resolutie is:
    | `ide.html` | Beheerder, desktop | ~212 KB JS | Metamodel-editor, kan zwaardere componenten bevatten |
 
    Een zware dependency zoals CodeMirror kan via `React.lazy()` + dynamic `import()` alleen worden geladen wanneer een JSON/Markdown-veld daadwerkelijk in beeld komt. Hierdoor betaalt de publicatie-pagina er niets voor, en zelfs in de inhoud-editor wordt het pas geladen bij het openen van een configuratie-entiteit. Dit is de standaard Vite-aanpak en vereist geen extra configuratie.
+
+## Formulierdefinities
+
+Eigen layouts, widgets, vaste waarden en het openbare aanmeldformulier: zie [`FORMULIERDEFINITIES.md`](FORMULIERDEFINITIES.md).

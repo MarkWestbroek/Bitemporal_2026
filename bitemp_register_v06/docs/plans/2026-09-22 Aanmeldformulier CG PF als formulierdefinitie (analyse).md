@@ -807,3 +807,7 @@ Uitgewerkt in een eigen notitie: `2026-09-25 Notificeren en dashboards — NORA 
 (NORA/FDS-architectuur Notificeren toegepast: event = afgeleide van de registratie, CloudEvents
 NL GOV-profiel informatiearm, `NotificatieDefinitie` en `DashboardDefinitie` als EYODF in het
 configuratiedomein). Eerste stap gezet: QueryDefinitie 3 `nieuwe-aanmeldingen` (intern), replay 21.
+
+---
+
+*Naslag (hoe maak je een formulier, alle layout-eigenschappen en widgets): `docs/FORMULIERDEFINITIES.md`. Dit plan blijft het ontwerpverslag.*
