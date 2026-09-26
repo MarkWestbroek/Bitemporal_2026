@@ -38,11 +38,14 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, o
   const [values, setValues] = useState({});
   const [bezig, setBezig] = useState(false);
   const [resultaat, setResultaat] = useState(null);
+  // Na een geslaagde verzending: wat er is ontvangen, als weergave (zelfde formulier, alleen-lezen;
+  // de vormen tonen zich dan als weergavevorm). Zo ziet de indiener netjes wat hij heeft ingevoerd.
+  const [ontvangen, setOntvangen] = useState(null);
   const [volgendId, setVolgendId] = useState(null);
   const [verzendPoging, setVerzendPoging] = useState(false); // na een klik op Verzenden: veldmeldingen tonen
 
   // Nieuw formulier gekozen → schone lei.
-  useEffect(() => { setValues({}); setResultaat(null); setVerzendPoging(false); }, [definitie?.id]);
+  useEffect(() => { setValues({}); setResultaat(null); setVerzendPoging(false); setOntvangen(null); }, [definitie?.id]);
 
   // Onderliggende zonder materiële plumbing (zoals EntiteitFormulier).
   const onderliggende = useMemo(() => safeArray(typeMeta?.onderliggende).filter((child) => {
@@ -126,7 +129,7 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, o
       const registratieId = Number(json?.registratie_id ?? json?.registratieId ?? 0);
       const id = Number(json?.toegekendeIds?.[plaatshouder] || 0);
       if (!id) throw new Error(`Registratie ${registratieId || "-"} is verwerkt, maar de server gaf geen toegekend id terug (backend van vóór stap B?).`);
-      setResultaat({ ok: true, bericht: `Opvoer geslaagd (${typeMeta.klassenaam || typeMeta.typenaam} ${id}, registratie ${registratieId || "-"})` });
+      setOntvangen({ ...values }); setResultaat({ ok: true, bericht: `Opvoer geslaagd (${typeMeta.klassenaam || typeMeta.typenaam} ${id}, registratie ${registratieId || "-"})` });
       if (onSuccess) onSuccess({ registratieId, entiteitId: id });
       else {
         const padnaam = typeMeta?.padnaam || typeMeta?.meervoud;
@@ -161,6 +164,25 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, o
         <p style={{ margin: "0 0 0.75rem", color: "var(--cg-donkergrijs, #666)" }}>{definitie.meta.beschrijving}</p>
       )}
 
+      {ontvangen ? (
+        <div>
+          {/* Met onSuccess (aanmelden.html) toont de aanroeper zelf het bedankje en de knop. */}
+          {onSuccess ? (
+            <h3 className="utrecht-heading-3" style={{ margin: "0.5rem 0" }}>Wat je hebt ingevuld</h3>
+          ) : (
+            <div className="cg-feedback--succes" role="status" style={{ padding: "0.6rem 0.8rem", borderRadius: 6, marginBottom: "0.75rem" }}>
+              Ontvangen. Hieronder staat wat er is ingevuld.
+            </div>
+          )}
+          <CustomFormulierRenderer layout={layout} velden={customVelden} values={ontvangen} onChange={() => {}} readOnly typeMeta={typeMeta} toonValidatie={false} />
+          {!onSuccess && (
+            <button type="button" className="utrecht-button utrecht-button--secondary-action" style={{ marginTop: "0.5rem" }}
+              onClick={() => { setValues({}); setResultaat(null); setVerzendPoging(false); setOntvangen(null); }}>
+              Nog een invullen
+            </button>
+          )}
+        </div>
+      ) : (<>
       <CustomFormulierRenderer
         layout={layout}
         velden={customVelden}
@@ -198,6 +220,7 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, o
         </div>
       )}
       {preview?.fout && <div className="cg-feedback--fout" style={{ marginTop: "0.5rem" }}>{preview.fout}</div>}
+      </>)}
 
       {!openbaar && (
         <details style={{ marginTop: "0.75rem" }}>
