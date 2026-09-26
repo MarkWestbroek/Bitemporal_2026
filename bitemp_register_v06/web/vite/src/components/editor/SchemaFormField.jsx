@@ -5,6 +5,7 @@ import EntiteitCombobox from "./EntiteitCombobox";
 import { useSchema } from "../../context/SchemaContext";
 import CodeEditor, { jsonParseFout } from "./CodeEditor";
 import ImageMapKeuze from "../../vormen/ImageMapKeuze";
+import ButtonGroupVeld from "./ButtonGroupVeld";
 import { normaliseerVorm, vormPastBij, invoersoortVanVeld } from "../../vormen/vormen";
 
 /**
@@ -116,6 +117,11 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
           labelId={`${fieldId}-label`}
         />
       );
+    }
+
+    // Knoppenvlak (vorm "button-group") voor één uit een lijst: enum of referentielijst.
+    if (effectieveWidget === "button-group" && vormPastBij("button-group", invoersoortVanVeld(veld))) {
+      return <ButtonGroupVeld veld={veld} config={vormConfig} waarde={value} onChange={onChange} readOnly={isReadonly} labelId={`${fieldId}-label`} />;
     }
 
     // Enum als radiogroep (vorm "radio-group", oud: widget "radio"), bv. een schaal 1–4.

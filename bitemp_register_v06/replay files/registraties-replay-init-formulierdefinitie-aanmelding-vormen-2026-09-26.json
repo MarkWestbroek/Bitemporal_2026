@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-26T21:00:00Z",
+  "source": "manual://claude-aanmelding-vormen",
+  "description": "Tweede versie van het aanmeldformulier: 'Aanmelding initiatief (vormen)', een kopie van FD 2 layout v3 (replay 2026-09-25 meerkeuze) met de nieuwe vormen: knoppenvlak voor het producttype en de API-standaarden, klikbare afbeelding voor de CG-laag en de betrokken organisaties, en één matrix voor de drie bijdragen (was drie lijsten). Zelfde data als FD 2. Status actief maar NIET standaard en niet openbaar (openbaar = het id toevoegen aan OPENBARE_FORMULIEREN). Het FD-id is een plaatshouder ($nieuw.fd); FD 3 is het subformulier 'Nieuwe organisatie' en blijft via nieuwFormulier gebruikt. Vereist de frontend met src/vormen (branch feat/invoer-vorm) en public/voorbeelden.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-26T21:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "FormulierDefinitie 'Aanmelding initiatief (vormen)' (tweede versie van FD 2, voor interne test)",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Aanmeldformulier, tweede versie met de nieuwe vormen (interne test)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "formulierdefinitie": {
+                "id": "$nieuw.fd"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "naam": "Aanmelding initiatief (vormen)",
+                "beschrijving": "Meld hier een initiatief aan voor het Common Ground-portfolio. Beantwoord de vragen zo volledig mogelijk; velden met * zijn verplicht. Na verzending beoordeelt het portfolioteam de aanmelding; daarna wordt het initiatief zichtbaar in het portfolio.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "layout": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "layout_json": "{\"type\": \"formulier\", \"elementen\": [{\"type\": \"groep\", \"label\": \"Product\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.producten.naam\", \"label\": \"1. Naam van het initiatief\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.type\", \"label\": \"2. Type product\", \"beschrijving\": \"Component (deel van een toepassing), Toepassing (bruikbare oplossing) of Standaard\", \"vorm\": \"button-group\", \"vormConfig\": {\"sort\": \"none\", \"minWidth\": 130}}, {\"type\": \"conditioneel\", \"conditie\": {\"veld\": \"Initiatief.producten.type\", \"op\": \"==\", \"waarde\": \"Toepassing\"}, \"dan\": [{\"type\": \"veld\", \"veld\": \"Initiatief.producten.pitch\", \"label\": \"5. Pitch\", \"beschrijving\": \"Indien een toepassing: waarom zouden anderen mee moeten doen of jouw product gebruiken?\", \"vorm\": \"text-area\"}]}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.omschrijving\", \"label\": \"18. Korte omschrijving\", \"beschrijving\": \"Noem ook of het parallel te gebruiken is naast bestaande software (3) en welke componenten erin zitten (4).\", \"vorm\": \"text-area\"}, {\"type\": \"rij\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.producten.website\", \"label\": \"16. Website\", \"breedte\": \"50%\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.git_repo\", \"label\": \"17. Git-repository\", \"breedte\": \"50%\"}]}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.CG_laag\", \"label\": \"26. Common Ground-laag\", \"beschrijving\": \"Klik op de laag waarin het product vooral valt (of gebruik de pijltjestoetsen en Enter).\", \"vorm\": \"image-map\", \"vormConfig\": {\"image\": \"/viz/react/voorbeelden/cg-lagen.svg\", \"alt\": \"Het Common Ground-vijflagenmodel, met hosting eronder\", \"units\": \"px\", \"width\": 600, \"height\": 420, \"areas\": [{\"value\": \"Laag 5\", \"label\": \"Laag 5 · Interactie\", \"shape\": \"rect\", \"coords\": [20, 20, 580, 75]}, {\"value\": \"Laag 4\", \"label\": \"Laag 4 · Proces\", \"shape\": \"rect\", \"coords\": [20, 85, 580, 140]}, {\"value\": \"Laag 3\", \"label\": \"Laag 3 · Integratie\", \"shape\": \"rect\", \"coords\": [20, 150, 580, 205]}, {\"value\": \"Laag 2\", \"label\": \"Laag 2 · Services\", \"shape\": \"rect\", \"coords\": [20, 215, 580, 270]}, {\"value\": \"Laag 1\", \"label\": \"Laag 1 · Data\", \"shape\": \"rect\", \"coords\": [20, 280, 580, 335]}, {\"value\": \"Hosting en infrastructuur\", \"label\": \"Hosting en infrastructuur\", \"shape\": \"rect\", \"coords\": [20, 345, 580, 400]}], \"maxWidth\": \"520px\"}}]}, {\"type\": \"groep\", \"label\": \"Domein en organisaties\", \"elementen\": [{\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_domeinen\", \"label\": \"6. Domein(en)\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"domein_id\", \"label\": \"Domein\"}], \"widget\": \"meerkeuze\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.andere_domeinen.domein\", \"label\": \"6. Overig domein (niet in de lijst)\"}, {\"type\": \"lijst\", \"bron\": \"Initiatief.betrokken_organisatie\", \"label\": \"7. Type betrokken organisaties\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"type\"}], \"vorm\": \"image-map\", \"vormConfig\": {\"image\": \"/viz/react/voorbeelden/cg-ecosysteem.svg\", \"alt\": \"Een initiatief met daaromheen vijf soorten organisaties\", \"units\": \"px\", \"width\": 600, \"height\": 440, \"areas\": [{\"value\": \"Gemeenten\", \"shape\": \"circle\", \"coords\": [300, 60, 58]}, {\"value\": \"Leveranciers\", \"shape\": \"circle\", \"coords\": [452, 171, 58]}, {\"value\": \"VNG\", \"shape\": \"circle\", \"coords\": [394, 349, 58]}, {\"value\": \"Ketenpartners\", \"shape\": \"circle\", \"coords\": [206, 349, 58]}, {\"value\": \"Rijk\", \"shape\": \"circle\", \"coords\": [148, 171, 58]}], \"maxWidth\": \"520px\"}, \"beschrijving\": \"Klik op alle soorten organisaties die meedoen; nog eens klikken haalt ze weg.\"}, {\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_gemeenten\", \"label\": \"8. Gemeenten die het initiatief realiseren\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"rol\", \"vasteWaarde\": \"Realiseert\"}, {\"type\": \"veld\", \"veld\": \"gemeente_id\", \"label\": \"Gemeente\"}], \"widget\": \"meerkeuze\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.anders_dan_gemeenten.andersDanGemeente\", \"label\": \"8. Realisatie door anderen dan gemeenten\"}, {\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_gemeenten\", \"label\": \"9. Gemeenten die het initiatief gebruiken\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"rol\", \"vasteWaarde\": \"Maakt gebruik van\"}, {\"type\": \"veld\", \"veld\": \"gemeente_id\", \"label\": \"Gemeente\"}], \"widget\": \"meerkeuze\"}, {\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_organisaties\", \"label\": \"10. Leveranciers / betrokken organisaties\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"rol\", \"vasteWaarde\": \"BetrokkenOrganisatie\"}, {\"type\": \"veld\", \"veld\": \"organisatie_id\", \"label\": \"Organisatie\", \"beschrijving\": \"Kies een bestaande organisatie of maak onderaan de lijst een nieuwe aan.\", \"nieuwFormulier\": \"3\"}]}, {\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_organisaties\", \"label\": \"13. Contactorganisatie\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"rol\", \"vasteWaarde\": \"Contactorganisatie\"}, {\"type\": \"veld\", \"veld\": \"organisatie_id\", \"label\": \"Organisatie\", \"nieuwFormulier\": \"3\", \"beschrijving\": \"Kies een bestaande organisatie of maak onderaan de lijst een nieuwe aan.\"}], \"min\": 1, \"max\": 1}]}, {\"type\": \"groep\", \"label\": \"Planning\", \"elementen\": [{\"type\": \"rij\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.planningen.startdatum\", \"label\": \"11. Startdatum\", \"breedte\": \"50%\", \"kopieerNaar\": \"Initiatief.aanvang.datum\", \"beschrijving\": \"Wordt ook de materiële aanvang van het initiatief.\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.planningen.ready_for_use\", \"label\": \"12. Ready for use (verwacht)\", \"breedte\": \"50%\"}]}, {\"type\": \"veld\", \"veld\": \"Initiatief.planningen.fase\", \"label\": \"28. Fase\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.planningen.planningsinfo\", \"label\": \"25. Waar staat informatie over de planning?\", \"beschrijving\": \"Voeg indien mogelijk de link toe.\", \"vorm\": \"text-area\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.planningen.waar_tegenaan_gelopen\", \"label\": \"29. Waar ben je tegenaan gelopen?\", \"vorm\": \"text-area\"}]}, {\"type\": \"groep\", \"label\": \"Bijdrage aan Common Ground\", \"elementen\": [{\"type\": \"lijst\", \"bron\": \"Initiatief.bijdragen\", \"label\": \"19–24. Bijdrage aan de Common Ground-doelen\", \"vorm\": \"rating-grid\", \"beschrijving\": \"Hoe groot is de bijdrage aan elk doel? Kies per rij een schaal (1 = klein, 4 = groot) en licht die toe.\", \"vormConfig\": {\"rows\": [{\"value\": \"Wendbaarheid\", \"description\": \"sneller en goedkoper kunnen veranderen\"}, {\"value\": \"Dienstverlening\", \"description\": \"betere dienstverlening aan inwoners en ondernemers\"}, {\"value\": \"Regie\", \"description\": \"meer grip op gegevens en IT\"}], \"columns\": [{\"value\": \"Schaal 1\", \"label\": \"1 · klein\", \"color\": \"#fef3c7\"}, {\"value\": \"Schaal 2\", \"label\": \"2\", \"color\": \"#fde68a\"}, {\"value\": \"Schaal 3\", \"label\": \"3\", \"color\": \"#fcd34d\"}, {\"value\": \"Schaal 4\", \"label\": \"4 · groot\", \"color\": \"#fbbf24\"}]}, \"elementen\": [{\"type\": \"veld\", \"veld\": \"type_bijdrage\", \"label\": \"Doel\"}, {\"type\": \"veld\", \"veld\": \"schaal\", \"label\": \"Schaal\"}, {\"type\": \"veld\", \"veld\": \"toelichting\", \"label\": \"Toelichting\", \"vorm\": \"text-area\"}]}]}, {\"type\": \"groep\", \"label\": \"API-standaarden\", \"elementen\": [{\"type\": \"lijst\", \"bron\": \"Initiatief.initiatief_api_standaarden\", \"label\": \"27. Gebruikte API-standaarden\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"apistandaard_id\", \"label\": \"API-standaard\"}], \"vorm\": \"button-group\", \"vormConfig\": {\"sort\": \"alpha\", \"sortToggle\": true, \"orderLabel\": \"Volgorde van registratie\", \"minWidth\": 110}, \"beschrijving\": \"Klik de standaarden aan die het product gebruikt.\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.andere_api_standaarden.api_standaard\", \"label\": \"27. Andere API-standaard (vrije tekst)\"}]}, {\"type\": \"groep\", \"label\": \"Aanmelding\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.aanmeldstatussen.status\", \"vasteWaarde\": \"nieuwe_aanmelding\"}]}]}"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_aanvang": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "datum": "2026-09-26"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

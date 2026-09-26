@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-26T21:05:00.000Z",
+  "source": "handmatig (Claude-sessie 26-09-2026, Mark: 'SOAP mist nog')",
+  "description": "Aanvulling op replay 3 en de aanvulling van 24-09 (referentielijst ApiStandaard, id 1–50): SOAP. Het id is een plaatshouder ($nieuw.soap); de server kent het volgende vrije id toe (51 als er sinds 24-09 niets is bijgekomen).",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-26T21:05:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "ApiStandaard SOAP",
+      "request_body": {
+        "registratie": {
+          "opmerking": "Aanvulling referentielijst ApiStandaard: SOAP",
+          "registratietype": "registratie"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": "$nieuw.soap"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": "$nieuw.soap",
+                "naam": "SOAP"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}

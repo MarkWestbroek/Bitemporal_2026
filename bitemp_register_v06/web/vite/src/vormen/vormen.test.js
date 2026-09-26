@@ -34,7 +34,14 @@ test("image-map bedient één én meer uit een lijst; vinkjes alleen meer", () =
   assert.ok(!vormPastBij("checkbox-group", INVOERSOORT.EEN_UIT_LIJST));
   assert.ok(vormPastBij("radio", INVOERSOORT.EEN_UIT_LIJST), "alias telt mee");
   const namen = vormenVoor(INVOERSOORT.MEER_UIT_LIJST).map((v) => v.naam);
-  assert.deepEqual(namen.sort(), ["checkbox-group", "combobox", "image-map"]);
+  assert.deepEqual(namen.sort(), ["button-group", "checkbox-group", "combobox", "image-map"]);
+});
+
+test("rating-grid bedient alleen één-per-rij", () => {
+  assert.ok(vormPastBij("rating-grid", INVOERSOORT.EEN_PER_RIJ));
+  assert.ok(!vormPastBij("rating-grid", INVOERSOORT.MEER_UIT_LIJST));
+  assert.deepEqual(vormenVoor(INVOERSOORT.EEN_PER_RIJ).map((v) => v.naam), ["rating-grid"]);
+  assert.equal(lijstVorm({ type: "lijst", vorm: "rating-grid" }), "rating-grid");
 });
 
 test("lijstVorm: vorm wint van widget meerkeuze; zonder beide een rijen-lijst", () => {

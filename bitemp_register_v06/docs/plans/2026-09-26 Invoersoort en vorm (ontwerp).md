@@ -2,7 +2,7 @@
 
 > Status: **voorstel + eerste implementatie** (branch `feat/invoer-vorm`, 26 september 2026).
 > Gebouwd: de begrippen, de vormen-registry, de vorm `image-map` (klikbare afbeelding) op
-> veld en lijst, en de round-trip door de Studio. Nog niet: de Studio-inspector voor
+> veld en lijst, de vorm `rating-grid` (matrix, §7b), de vorm `button-group` (knoppenvlak, §7c), en de round-trip door de Studio. Nog niet: de Studio-inspector voor
 > `vorm`/`vormConfig` (zie §9).
 > Naslag van de layout zelf: `docs/FORMULIERDEFINITIES.md`.
 
@@ -57,6 +57,7 @@ De invoersoort volgt uit het model. De ontwerper vult hem niet in
 | `ja-nee` | boolean | `select1` |
 | `een-uit-lijst` | enum, referentielijst (`ref`), relatie naar een entiteit (`doelEntiteit`) | `select1` |
 | `meer-uit-lijst` | een `lijst` met een vorm (of het oude `widget: "meerkeuze"`) over een meervoudig GE / relatie, met één keuzeveld | `select` |
+| `een-uit-lijst-per-rij` | een `lijst` met vorm `rating-grid`: vaste rijen (waarden van het rijveld) met per rij één uit een lijst | `repeat` + `select1` |
 
 `meer-uit-lijst` wordt opgeslagen als **rijen**: één rij per keuze, met de vaste waarden
 van de lijst. Dat is hetzelfde als nu. XForms bewaart een `select` als een lijst
@@ -78,6 +79,8 @@ ontleend aan NL Design System, ARIA en HTML. Labels in de UI zijn Nederlands.
 | `checkbox-group` | Vinkjes | meer uit lijst | `full` | bestaand (standaard voor enum-meerkeuze) |
 | `combobox` | Zoeken en kiezen | één én meer uit lijst | `minimal` + zoeken | bestaand voor referentielijsten (`RefCombobox`, `RefMeerkeuze`) |
 | `image-map` | Klikbare afbeelding | één én meer uit lijst | eigen | **nieuw** |
+| `rating-grid` | Matrix | één uit lijst per rij | `repeat` + `full` | **nieuw** (§7b) |
+| `button-group` | Knoppenvlak | één én meer uit lijst | eigen | **nieuw** (§7c) |
 
 ### 4.1 Kandidaten (brainstorm 26 september 2026)
 
@@ -88,12 +91,13 @@ ontleend aan NL Design System, ARIA en HTML. Labels in de UI zijn Nederlands.
 | `range` | getal, één uit een geordende lijst | Mark | schuif voor een schaal (1–4, 1–10), eventueel met kleurverloop per stap (`vormConfig.kleuren`); past direct op het enum `Schaal` |
 | `address-search` | een **groep** velden (straat, huisnummer, postcode, plaats) | Mark | één zoekveld dat via een adresdienst (PDOK Locatieserver/BAG) meerdere velden vult; eventueel ook het BAG-id bewaren |
 | `ai-assist` | tekst | Mark | tekstvak met een assistent die voorstelt (herschrijven, inkorten, aanvullen); de invuller beslist altijd zelf |
-| `rating-grid` | een groep **vaste rijen** met dezelfde schaal | Claude | matrix of likert: vragen als rijen, de schaal als kolommen. Precies de drie bijdragen (Wendbaarheid, Dienstverlening, Regie × Schaal 1–4) van FD 2 |
+| `rating-grid` | een groep **vaste rijen** met dezelfde schaal | Claude | **gebouwd** (§7b): vragen als rijen, de schaal als kolommen, zoals de drie bijdragen van FD 2 |
 | `map` | één of meer uit een lijst, locatie | Claude | gebieden op een echte kaart (GeoJSON, zoals Imprints `map`-widget): gemeenten kiezen op de kaart, direct op `initiatief_gemeenten` |
 | `ranking` | **volgorde** uit een lijst | Claude | slepen om te ordenen (prioriteiten); nieuwe invoersoort, opgeslagen als rijen met een volgnummer |
 | `cards` | één of meer uit een lijst | Claude | keuzekaarten met icoon, titel en uitleg (producttype met toelichting) |
 | `period` | een groep van twee datums | Claude | begin en einde als één balk op een tijdlijn; past bij aanvang/einde en materiële geldigheid |
-| `button-group`, `stepper`, `file-drop` | één uit een lijst, getal, bestand | Claude | segmentknoppen, +/−, sleepvak |
+| `button-group` | één of meer uit een lijst | Mark | **gebouwd** (§7c): knoppenvlak zoals de akkoordknoppen van een accordeon; API-standaarden |
+| `stepper`, `file-drop` | getal, bestand | Claude | +/−, sleepvak |
 | `ai-extract` | het hele **formulier** | Claude | plak een tekst of URL; de AI vult velden voor, de invuller controleert en verzendt |
 
 ### 4.2 Wat de brainstorm zegt over het model
@@ -109,7 +113,28 @@ ontleend aan NL Design System, ARIA en HTML. Labels in de UI zijn Nederlands.
    vraagt een geordende lijst. De volgorde van V3-enumwaarden is al vast; een vlag
    `geordend` op het enum maakt dit expliciet, zodat een schuif niet op `Organisatietype`
    belandt.
-4. **AI stelt voor, de mens beslist.** Voor `ai-assist` en `ai-extract` gaat de aanroep via de
+4. **Opslag is de laag ónder de inhoud.** Mark (26-09): de CG-laag van een product is
+   eigenlijk *meer uit een lijst*, maar het model kent één veld `CG_laag`. De inhoud is
+   meer-uit-lijst; wat verschilt is hoe het wordt **opgeslagen**:
+
+   | Opslag | Voorbeeld | Status |
+   |---|---|---|
+   | rijen van een meervoudig GE / relatie | `bijdragen`, `initiatief_api_standaarden` | bestaat |
+   | één veld met scheidingsteken | `CG_lagen = "Laag 1;Laag 2"` | idee |
+   | hermodelleren naar een eigen entiteit/GE | `Initiatief.lagen[]` | "de nette oplossing", later |
+
+   Dit hoort bij het **model** (het datatype van het veld), niet bij het formulier: elke view,
+   filter en export moet weten dat `CG_lagen` een lijst is. Een datatype dat zegt "lijst van
+   enum-waarden, gescheiden door `;`" laat `invoersoortVanVeld` vanzelf *meer uit een lijst*
+   opleveren, en daarmee elke meer-uit-lijst-vorm (image-map, knoppen). XForms doet het ook zo:
+   de waarde van een `select` is één knoop met spatie-gescheiden tokens. De server controleert
+   enum-waarden nu niet bij opslaan, dus technisch past `Laag 1;Laag 2` al; wat ontbreekt
+   is het datatype, zodat GraphQL-filters (`eq "Laag 1"`) en weergaven het ook als lijst zien.
+   Het alternatief, het enum uitbreiden met `Laag 1+2`, `Laag 4+5` en `Utility`, is snel, maar
+   maakt van een combinatie een categorie. Utility staat als kolom naast alle lagen
+   (`public/voorbeelden/cg-lagen-utility.svg`, bv. FTV) en kan als area mee zodra het een waarde
+   van het enum is.
+5. **AI stelt voor, de mens beslist.** Voor `ai-assist` en `ai-extract` gaat de aanroep via de
    server (sleutel, rate-limit, logging). Op een **openbaar** formulier is het versturen van
    ingevulde tekst naar een AI-dienst een gegevensverwerking (AVG): het moet opt-in zijn, of
    het draait lokaal of op eigen infrastructuur.
@@ -207,6 +232,72 @@ een gestippelde omtrek. Elke area heeft een `<title>` (tooltip).
 - Een **legenda** onder de afbeelding noemt de keuze in tekst (`aria-live`), met ✕ om te
   verwijderen, net als de chips van `RefMeerkeuze`.
 
+## 7b. De vorm `rating-grid` (matrix)
+
+Eén `lijst` in plaats van een lijst per vraag. De rijen zijn de waarden van het **rijveld**,
+de kolommen die van het **kolomveld**. Per rij kies je één waarde. Elke matrixrij is één
+lijstrij: dezelfde data als de drie losse vaste-rij-lijsten die FD 2 nu gebruikt
+(`matrix.js`, `MatrixKeuze.jsx`).
+
+```json
+{ "type": "lijst", "bron": "Initiatief.bijdragen", "label": "Bijdrage aan Common Ground", "vorm": "rating-grid",
+  "vormConfig": {
+    "rows":    [ { "value": "Wendbaarheid", "description": "sneller en goedkoper kunnen veranderen" }, "Dienstverlening", "Regie" ],
+    "columns": [ { "value": "Schaal 1", "label": "1 · klein", "color": "#fef3c7" }, { "value": "Schaal 2", "label": "2" },
+                 { "value": "Schaal 3", "label": "3" }, { "value": "Schaal 4", "label": "4 · groot", "color": "#fbbf24" } ] },
+  "elementen": [ { "type": "veld", "veld": "type_bijdrage", "label": "Doel" },
+                 { "type": "veld", "veld": "schaal", "label": "Schaal" },
+                 { "type": "veld", "veld": "toelichting", "label": "Toelichting", "vorm": "text-area" } ] }
+```
+
+| vormConfig | Standaard | Betekenis |
+|---|---|---|
+| `rowField` | eerste sjabloonveld zonder vasteWaarde | het veld dat de rij bepaalt (`type_bijdrage`) |
+| `columnField` | het volgende sjabloonveld | het veld dat per rij gekozen wordt (`schaal`) |
+| `rows` | alle waarden van het rij-enum | subset en volgorde van de rijen, met `label` en `description` |
+| `columns` | alle waarden van het kolom-enum | labels (`1 · klein`) en een `color` per stap (kleurverloop) |
+| `required` | `verplicht` van het kolomveld | elke rij moet een keuze hebben; geen wisknop |
+
+- **Overige sjabloonvelden** (zoals `toelichting`) zijn *extra velden per rij*. Ze staan
+  onder de rij en zijn uitklapbaar, met de gewone veldcomponenten. Is zo'n veld verplicht
+  in het model, of staat er al iets, dan is het standaard open.
+- **Labels:** het label van het rijveld wordt de hoekkop (*Doel*), het label van het
+  kolomveld de kop boven de schaal (*Schaal*).
+- **Data:** een cel kiezen werkt de bestaande lijstrij bij (geen afvoer en opvoer) of voegt
+  een rij toe met de vaste waarden van de lijst. Wissen, alleen als de matrix niet verplicht
+  is, haalt een lege rij weg. Een toelichting blijft staan.
+- **Toegankelijkheid:** een echte `<table>` met `th scope=col/row` en per rij native
+  radioknoppen met dezelfde `name`. Schermlezers noemen zo rij én kolom, en de pijltjes
+  lopen binnen een rij. Bij een verplichte matrix krijgt een rij zonder keuze na
+  *Verzenden* de melding *Kies een waarde* (`role=alert`).
+- **Past op** elke combinatie van een meervoudig GE of relatie met twee enum-velden, of een
+  referentielijst met `rows` in de config.
+- Voor FD 2 is dit een mogelijke vervanging van de drie lijsten onder *Bijdrage aan Common
+  Ground* (vraag 19–24). Dat is nog niet gedaan: het is een wijziging van een formulier dat
+  in gebruik is.
+
+## 7c. De vorm `button-group` (knoppenvlak)
+
+Een vlak van afgeronde knoppen die je aan- en uitklikt: een *ingedrukte* knop is de keuze,
+zoals de akkoordknoppen van een accordeon. Bedient één uit een lijst (los veld, bv. het
+producttype) en meer uit een lijst (lijst, bv. de API-standaarden). Gebouwd op `useKeuze`,
+net als de image-map: dit is het bewijs dat de headless opzet werkt. Alleen het tekenen is nieuw.
+
+| vormConfig | Standaard | Betekenis |
+|---|---|---|
+| `sort` | `"alpha"` | `"alpha"` (A–Z, getallen op waarde), `"order"` (op id = volgorde van registratie), `"none"` |
+| `sortToggle` | `false` | de invuller kan wisselen tussen A–Z en `order` |
+| `orderLabel` | "Volgorde van registratie" | label van de tweede sortering |
+| `minWidth` | 104 | minimale knopbreedte in px (het raster vult de breedte) |
+
+- **Keuzebron:** voor een referentielijst haalt `useRefOpties` (Omnium-kant) de items op; de
+  vorm zelf haalt niets op (draagbaar naar Imprint).
+- **Historisch sorteren** (oudste standaard eerst) kan pas als ApiStandaard **materieel** is:
+  dan heeft elke standaard een aanvang en einde, is `order` de aanvangsdatum, en verdwijnen
+  vervallen standaarden vanzelf uit het vlak. Nu is `IsMaterieel` false (modelwijziging, nog
+  niet gedaan); daarom heet de tweede sortering eerlijk *Volgorde van registratie*.
+- Woordafbreking op Nederlandse lettergrepen (`lang="nl"`, `hyphens: auto`).
+
 ## 8. Architectuur: headless, zoals downshift
 
 ```
@@ -271,19 +362,38 @@ bouw een component op `useKeuze` (of downshift) met als contract
 | `web/vite/src/vormen/useKeuze.js` | de hook |
 | `web/vite/src/vormen/imageMap.js` (+ `.test.js`) | vormConfig → SVG |
 | `web/vite/src/vormen/ImageMapKeuze.jsx` | de vorm `image-map` |
+| `web/vite/src/vormen/matrix.js` (+ `.test.js`) | matrix: assen, cel en extra veld zetten |
+| `web/vite/src/vormen/MatrixKeuze.jsx` | de vorm `rating-grid` |
+| `web/vite/src/vormen/buttonGroup.js` (+ `.test.js`), `ButtonGroupKeuze.jsx` | de vorm `button-group` |
+| `components/editor/useRefOpties.js`, `ButtonGroupVeld.jsx` | keuzebron (enum of referentielijst) → knoppenvlak |
 | `components/editor/SchemaFormField.jsx` | `vorm`/`vormConfig` op een veld; namen genormaliseerd |
 | `components/editor/CustomFormulierRenderer.jsx` | `vorm` op een lijst; `image-map` via `keuzesNaarRijen` |
 | `diagramprofielen/formulier/adapter.js` (+ test) | `vorm`/`vormConfig` door de Studio (vormConfig als JSON-tekst in de node-data) |
 
 `cd web/vite && node --import ./test/register-aliases.mjs --test src/vormen/*.test.js`.
 
+**Tweede versie van het aanmeldformulier (voor online, eerst intern testen):**
+`replay files/registraties-replay-init-formulierdefinitie-aanmelding-vormen-2026-09-26.json`:
+*Aanmelding initiatief (vormen)*. Een kopie van FD 2 layout v3, met:
+- knoppenvlak voor het producttype (vraag 2) en de API-standaarden (27, met sorteerwissel);
+- klikbare afbeelding voor de CG-laag (26) en de soorten betrokken organisaties (7);
+- één matrix voor de bijdragen (19–24, was drie lijsten);
+- `widget` → `vorm` waar dat kan.
+
+Het is actief, maar niet standaard en niet openbaar; openbaar maken = het id toevoegen aan
+`OPENBARE_FORMULIEREN`. Het id is een plaatshouder; FD 3 blijft het subformulier *Nieuwe
+organisatie*. Daarnaast `registraties-replay-init-apistandaarden-soap-2026-09-26.json`: SOAP
+in de referentielijst, ook met een plaatshouder-id. Lokaal getest: alle vormen werken en
+sorteren houdt de keuze vast.
+
 **Voorbeeldformulier:** `replay files/registraties-replay-init-formulierdefinitie-voorbeeld-image-map-2026-09-26.json`
-(*Voorbeeld: klikbare afbeelding*, doeltype Initiatief). Het FD-id is een plaatshouder
+(*Voorbeeld: vormen*, doeltype Initiatief). Het FD-id is een plaatshouder
 (`$nieuw.fd`), dus het botst op geen enkele instantie. Het formulier gebruikt twee
 afbeeldingen uit `web/vite/public/voorbeelden/`:
 - het CG-lagenmodel voor `Initiatief.producten.CG_laag` (één uit een lijst, `rect` in px);
 - het ecosysteem voor `Initiatief.betrokken_organisatie.type` (meer uit een lijst,
-  `circle` in px).
+  `circle` in px);
+- de matrix voor `Initiatief.bijdragen` (drie doelen × Schaal 1–4, met toelichting).
 
 Openen: `inhoud.html#/t/initiatieven/nieuw?formulier=<id>`.
 
@@ -292,6 +402,12 @@ Openen: `inhoud.html#/t/initiatieven/nieuw?formulier=<id>`.
 - de legenda volgt de keuze;
 - de registratie bevat `product.CG_laag = "Laag 1"` en één `betrokkenorganisatie`-rij per
   gekozen soort.
+
+**Matrix getest:**
+- bij een lege verplichte rij verschijnt *Kies een waarde*;
+- de pijltjes lopen binnen een rij;
+- verplichte toelichtingen staan open;
+- de registratie bevat drie `bijdrage`-opvoeren met `type_bijdrage`, `schaal` en `toelichting`.
 
 Bijvangst: `/full/formulier_definities` geeft standaard een pagina van 20. Bij meer
 FD's vielen de nieuwste weg uit *Invoer via*, de formulierindex en

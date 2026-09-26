@@ -24,9 +24,11 @@ export const INVOERSOORT = Object.freeze({
   JA_NEE: "ja-nee",
   EEN_UIT_LIJST: "een-uit-lijst",
   MEER_UIT_LIJST: "meer-uit-lijst",
+  /** Een vaste set rijen (bv. de drie bijdragen) met per rij één uit dezelfde lijst (schaal). */
+  EEN_PER_RIJ: "een-uit-lijst-per-rij",
 });
 
-const { TEKST, GETAL, DATUM, JA_NEE, EEN_UIT_LIJST, MEER_UIT_LIJST } = INVOERSOORT;
+const { TEKST, GETAL, DATUM, JA_NEE, EEN_UIT_LIJST, MEER_UIT_LIJST, EEN_PER_RIJ } = INVOERSOORT;
 
 /** XForms-control per invoersoort (voor de documentatie en een eventuele export). */
 export const XFORMS_CONTROL = Object.freeze({
@@ -36,6 +38,7 @@ export const XFORMS_CONTROL = Object.freeze({
   [JA_NEE]: "select1",
   [EEN_UIT_LIJST]: "select1",
   [MEER_UIT_LIJST]: "select",
+  [EEN_PER_RIJ]: "repeat + select1",
 });
 
 /**
@@ -52,6 +55,8 @@ export const VORMEN = Object.freeze({
   "checkbox-group": { label: "Vinkjes",              invoersoorten: [MEER_UIT_LIJST],      xforms: 'appearance="full"' },
   "combobox":       { label: "Zoeken en kiezen",     invoersoorten: [EEN_UIT_LIJST, MEER_UIT_LIJST], xforms: 'appearance="minimal" + zoeken' },
   "image-map":      { label: "Klikbare afbeelding",  invoersoorten: [EEN_UIT_LIJST, MEER_UIT_LIJST], xforms: "eigen appearance", config: true },
+  "button-group":   { label: "Knoppenvlak",          invoersoorten: [EEN_UIT_LIJST, MEER_UIT_LIJST], xforms: "eigen appearance (knoppen)" },
+  "rating-grid":    { label: "Matrix",               invoersoorten: [EEN_PER_RIJ],         xforms: 'repeat + select1 appearance="full"', config: true },
 });
 
 /**
@@ -102,7 +107,7 @@ export function invoersoortVanVeld(veld, { meervoudig = false } = {}) {
 
 /**
  * De vorm van een lijst-element in de layout: null = gewone lijst met rijen (blokken);
- * anders een meer-uit-lijst-vorm. `vorm` wint van het oude `widget: "meerkeuze"`.
+ * anders een meer-uit-lijst-vorm, of `rating-grid` (één uit een lijst per rij). `vorm` wint van het oude `widget: "meerkeuze"`.
  */
 export function lijstVorm(lijst) {
   if (!lijst) return null;
