@@ -472,6 +472,11 @@ anders optie). Een snapshot is een noodrem, geen backup.
     lagen zijn één waarde, en GraphQL levert `CG_laag` als tekst, niet als enum.
   - **Terug:** `pf.sh deploy c14bb9d` en, als er al data met meerdere lagen of `Utility` is,
     de dump terugzetten.
+  - **Gedaan op 27-09-2026** (`fad1dca`): deploy, alle containers healthy; `CG_laag` heeft
+    datatype `EnumLijst` met `Utility`; de publieke lijst werkt. Replays: SOAP = ApiStandaard
+    **51**, *Aanmelding initiatief (vormen)* = **FD 4**. Bekijken:
+    `/viz/react/aanmelden.html?formulier=4`. Verzenden kan alleen ingelogd
+    (`inhoud.html#/t/initiatieven/nieuw?formulier=4`), want FD 4 is niet openbaar.
 
   **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
   (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
