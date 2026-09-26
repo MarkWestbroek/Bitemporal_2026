@@ -37,6 +37,26 @@ function containerNaam(el, meta) {
   }
 }
 
+/**
+ * vorm + vormConfig (src/vormen/vormen.js) → node-data. De data van een node zijn strings,
+ * dus vormConfig gaat als JSON-tekst mee; vormUitData zet hem terug.
+ */
+function vormData(el) {
+  return {
+    ...(el.vorm ? { vorm: el.vorm } : {}),
+    ...(el.vormConfig != null ? { vormConfig: typeof el.vormConfig === "string" ? el.vormConfig : JSON.stringify(el.vormConfig) } : {}),
+  };
+}
+
+function vormUitData(d) {
+  if (!d) return {};
+  let config;
+  if (d.vormConfig != null && d.vormConfig !== "") {
+    try { config = JSON.parse(d.vormConfig); } catch { config = d.vormConfig; } // ongeldige JSON niet weggooien
+  }
+  return { ...(d.vorm ? { vorm: d.vorm } : {}), ...(config !== undefined ? { vormConfig: config } : {}) };
+}
+
 /** Container-specifieke data-properties. */
 function containerData(el, meta) {
   switch (el.type) {
@@ -49,7 +69,7 @@ function containerData(el, meta) {
       };
     case "groep": return { ...(el.context ? { context: el.context } : {}) };
     case "rij": return { ...(el.richting ? { richting: el.richting } : {}) };
-    case "lijst": return { bron: el.bron || "", ...(el.widget ? { widget: el.widget } : {}), ...(el.min != null ? { min: String(el.min) } : {}), ...(el.max != null ? { max: String(el.max) } : {}) };
+    case "lijst": return { bron: el.bron || "", ...(el.widget ? { widget: el.widget } : {}), ...vormData(el), ...(el.min != null ? { min: String(el.min) } : {}), ...(el.max != null ? { max: String(el.max) } : {}) };
     case "conditioneel": {
       const c = el.conditie;
       if (c) return { conditieVeld: c.veld || "", conditieOp: c.op || "nietleeg", ...(c.waarde != null ? { conditieWaarde: String(c.waarde) } : {}) };
@@ -69,6 +89,7 @@ function naarCompVeld(el, volgorde) {
       ...(el.label ? { label: el.label } : {}),
       ...(el.breedte ? { breedte: el.breedte } : {}),
       ...(el.widget ? { widget: el.widget } : {}),
+      ...vormData(el),
       ...(el.readonly ? { readonly: true } : {}),
       ...(el.vasteWaarde != null && el.vasteWaarde !== "" ? { vasteWaarde: String(el.vasteWaarde) } : {}),
       ...(el.kopieerNaar ? { kopieerNaar: el.kopieerNaar } : {}),
@@ -194,6 +215,7 @@ export function formulierModelNaarLayout(coreState) {
         ...(v.data?.label ? { label: v.data.label } : {}),
         ...(v.data?.breedte ? { breedte: v.data.breedte } : {}),
         ...(v.data?.widget ? { widget: v.data.widget } : {}),
+        ...vormUitData(v.data),
         ...(v.data?.readonly ? { readonly: true } : {}),
         ...(v.data?.vasteWaarde != null && v.data.vasteWaarde !== "" ? { vasteWaarde: v.data.vasteWaarde } : {}),
         ...(v.data?.kopieerNaar ? { kopieerNaar: v.data.kopieerNaar } : {}),
@@ -226,6 +248,7 @@ export function formulierModelNaarLayout(coreState) {
           bron: d.bron || "",
           ...(el.naam && el.naam !== "Lijst" && el.naam !== d.bron ? { label: el.naam } : {}),
           ...(d.widget ? { widget: d.widget } : {}),
+          ...vormUitData(d),
           ...(d.min != null && d.min !== "" ? { min: Number(d.min) } : {}),
           ...(d.max != null && d.max !== "" ? { max: Number(d.max) } : {}),
           elementen: kinderen,

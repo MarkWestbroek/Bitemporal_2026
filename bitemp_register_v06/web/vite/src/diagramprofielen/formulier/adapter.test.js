@@ -132,3 +132,18 @@ test("round-trip: vasteWaarde/kopieerNaar op veld en widget/min/max op lijst bli
   assert.ok(lijst, "widget landt in lijst-data");
   assert.deepEqual(formulierModelNaarLayout(m).layout, lay);
 });
+
+test("round-trip: vorm + vormConfig (image-map) op veld en lijst blijven behouden", () => {
+  const vormConfig = { image: "/plattegrond.svg", areas: [{ value: "zaal-a", shape: "rect", coords: [0, 0, 0.5, 0.5] }] };
+  const lay = {
+    type: "formulier",
+    elementen: [
+      { type: "veld", veld: "Reservering.ruimtes.ruimte", vorm: "image-map", vormConfig },
+      { type: "lijst", bron: "Reservering.voorzieningen", vorm: "image-map", vormConfig, elementen: [{ type: "veld", veld: "voorziening" }] },
+    ],
+  };
+  const m = layoutNaarFormulierModel(lay, { naam: "t" });
+  const lijst = Object.values(m.elements).find((e) => e.elementType === "lijst");
+  assert.equal(typeof lijst.data.vormConfig, "string", "node-data zijn strings");
+  assert.deepEqual(formulierModelNaarLayout(m).layout, lay);
+});

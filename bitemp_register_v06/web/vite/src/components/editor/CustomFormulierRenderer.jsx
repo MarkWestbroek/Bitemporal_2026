@@ -2,6 +2,11 @@ import SchemaFormField from "./SchemaFormField";
 import { bepaalWidgetOverride } from "./widgetOverrides";
 import { vasteWaardenVanLijst, rijPastBijLijst } from "./nieuwFormulierMapping";
 import RefMeerkeuze from "./RefMeerkeuze";
+import ImageMapKeuze from "../../vormen/ImageMapKeuze";
+import MatrixKeuze from "../../vormen/MatrixKeuze";
+import ButtonGroupVeld from "./ButtonGroupVeld";
+import { matrixAssen, matrixRijen, zetMatrixCel, zetMatrixExtra } from "../../vormen/matrix";
+import { lijstVorm, keuzesNaarRijen } from "../../vormen/vormen";
 
 /**
  * CustomFormulierRenderer — rendert een formulier op basis van een layout-JSON
@@ -24,6 +29,10 @@ import RefMeerkeuze from "./RefMeerkeuze";
  *                         boven max geen "toevoegen", op of onder min geen "verwijder".
  *  - lijst.widget       → "meerkeuze": één veld in het sjabloon; enum → checkboxes, referentielijst
  *                         → chips + zoekveld (RefMeerkeuze); per keuze een rij { ...vast, [veld]: keuze }.
+ *  - veld.vorm / lijst.vorm (+ vormConfig) → de VORM van de invoer, los van de inhoud
+ *                         (src/vormen/vormen.js). Een lijst met een vorm is een meer-uit-lijst;
+ *                         `widget: "meerkeuze"` is daarvan de oude schrijfwijze. Nu gebouwd:
+ *                         `image-map` (klikbare afbeelding, ImageMapKeuze) op veld en lijst.
  *  - veld.nieuwFormulier→ (stap B) FD-id waarmee vanuit een relatieveld een nieuwe doel-ENT
  *                         ingebed kan worden aangemaakt (alleen op diepte 0, zie NieuwSubFormulier).
  *
@@ -138,6 +147,8 @@ export default function CustomFormulierRenderer({
               error={errors[lookupNaam]}
               readOnly={readOnly || element.readonly}
               widgetOverride={bepaalWidgetOverride(typeMeta, lookupNaam, element.widget)}
+              vorm={element.vorm}
+              vormConfig={element.vormConfig}
               labelOverride={element.label}
               nieuwFormulier={element.nieuwFormulier}
               diepte={diepte}
@@ -191,7 +202,54 @@ export default function CustomFormulierRenderer({
 
         // Meerkeuze: één veld in het sjabloon → enum: checkbox per optie; referentielijst:
         // chips + zoekveld (RefMeerkeuze). Per keuze ontstaat een rij { ...vast, [veld]: keuze }.
-        if (element.widget === "meerkeuze") {
+        const vormVanLijst = lijstVorm(element);
+
+        // Matrix (rating-grid): één lijstrij per rijwaarde (bv. type_bijdrage), per rij één
+        // keuze voor het kolomveld (bv. schaal). Zelfde data als losse vaste-rij-lijsten.
+        if (vormVanLijst === "rating-grid") {
+          const assen = matrixAssen(element, (n) => veldenByNaam[`${bron}.${n}`]);
+          const { rowField, columnField } = assen;
+          const rijen = rowField ? matrixRijen(alle, eigenIdx, rowField) : {};
+          const waarden = Object.fromEntries(Object.entries(rijen).map(([k, v]) => [k, String(v.rij?.[columnField] ?? "")]));
+          const labelId = `lijst-${index}-${bron.replace(/\W/g, "_")}-label`;
+          const extraScope = (rowValue) => ({
+            values: rijen[rowValue]?.rij || {},
+            padContext: bron,
+            onChange: (leaf, val) => zetAlle(zetMatrixExtra(alle, eigenIdx, vast, rowField, rowValue, leaf, val)),
+          });
+          return (
+            <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px solid var(--cg-rand, #ccc)", borderRadius: "6px" }}>
+              <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+              {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.5rem" }}>{element.beschrijving}</div>}
+              {assen.fouten.length > 0 && (
+                <ul style={{ color: "var(--cg-fout, red)", fontSize: "0.8rem", margin: "0 0 0.5rem", paddingLeft: "1rem" }}>{assen.fouten.map((f) => <li key={f}>{f}</li>)}</ul>
+              )}
+              {rowField && columnField && (
+                <MatrixKeuze
+                  rows={assen.rows}
+                  columns={assen.columns}
+                  waarden={waarden}
+                  onChange={(rij, kolom) => zetAlle(zetMatrixCel(alle, eigenIdx, vast, rowField, columnField, rij, kolom))}
+                  hoekLabel={assen.rowElement?.label || ""}
+                  kolomLabel={assen.columnElement?.label || ""}
+                  required={assen.required}
+                  toonFouten={toonValidatie !== false}
+                  readOnly={readOnly}
+                  labelId={labelId}
+                  extraLabel={assen.extra[0]?.label || assen.extra[0]?.veld || "Toelichting"}
+                  // Inklapbaar extra veld: open als er al iets staat.
+                  heeftExtra={(rij) => assen.extra.some((e) => rijen[rij]?.rij?.[e.veld])}
+                  // Een verplicht extra veld staat altijd open, zonder uitklapknop (anders staat
+                  // "Toelichting" er twee keer en zit een verplicht veld verstopt).
+                  extraInklapbaar={!assen.extra.some((e) => veldenByNaam[`${bron}.${e.veld}`]?.verplicht)}
+                  renderExtra={assen.extra.length ? (rij) => assen.extra.map((e, ci) => renderElement({ ...e, label: e.label || e.veld }, ci, extraScope(rij))) : null}
+                />
+              )}
+            </fieldset>
+          );
+        }
+
+        if (vormVanLijst) {
           const keuzeEl = template.find((t) => t.type === "veld" && (t.vasteWaarde === undefined || t.vasteWaarde === null || t.vasteWaarde === ""));
           const keuzeDef = keuzeEl ? veldenByNaam[`${bron}.${keuzeEl.veld}`] : null;
           const opties = Array.isArray(keuzeDef?.enum) ? keuzeDef.enum.filter(Boolean) : [];
@@ -201,6 +259,51 @@ export default function CustomFormulierRenderer({
             if (gekozen.has(opt)) verwijder(opt);
             else zetAlle([...alle, { ...vast, [keuzeEl.veld]: opt }]);
           };
+          // Klikbare afbeelding: zelfde inhoud (meer uit een lijst), andere vorm. De vorm
+          // levert alleen sleutels; keuzesNaarRijen maakt er dezelfde rijen van als de vinkjes.
+          // Knoppenvlak: zelfde inhoud, knoppen als vorm; de opties komen uit enum of referentielijst.
+          if (vormVanLijst === "button-group") {
+            const labelId = `lijst-${index}-${bron.replace(/\W/g, "_")}-label`;
+            return (
+              <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
+                <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+                {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
+                {!keuzeDef && <div style={{ color: "var(--cg-fout, red)" }}>Knoppenvlak zonder keuzeveld: <code>{bron}</code></div>}
+                {keuzeDef && (
+                  <ButtonGroupVeld
+                    veld={keuzeDef}
+                    config={element.vormConfig}
+                    meervoudig
+                    waarde={[...gekozen].filter(Boolean)}
+                    onChange={(sleutels) => zetAlle(keuzesNaarRijen(alle, eigenIdx, keuzeEl.veld, vast, sleutels))}
+                    readOnly={readOnly}
+                    labelId={labelId}
+                  />
+                )}
+              </fieldset>
+            );
+          }
+          if (vormVanLijst === "image-map") {
+            const labelId = `lijst-${index}-${bron.replace(/\W/g, "_")}-label`;
+            return (
+              <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
+                <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+                {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
+                {!keuzeDef && <div style={{ color: "var(--cg-fout, red)" }}>Klikbare afbeelding zonder keuzeveld: <code>{bron}</code></div>}
+                {keuzeDef && (
+                  <ImageMapKeuze
+                    config={element.vormConfig}
+                    opties={opties.length ? opties : undefined}
+                    meervoudig
+                    waarde={[...gekozen].filter(Boolean)}
+                    onChange={(sleutels) => zetAlle(keuzesNaarRijen(alle, eigenIdx, keuzeEl.veld, vast, sleutels))}
+                    readOnly={readOnly}
+                    labelId={labelId}
+                  />
+                )}
+              </fieldset>
+            );
+          }
           if (keuzeDef?.ref) {
             return (
               <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>

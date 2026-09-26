@@ -9,6 +9,19 @@ package model
 func initExtraDatatypeRegistry() {
 	DatatypeRegistry = append(DatatypeRegistry,
 		V3Datatype{
+			// Voor een enum-veld dat meerdere waarden mag bevatten zonder eigen GE
+			// (bv. CG_laag: "Laag 1;Laag 2"). Het veld houdt zijn enum; elke waarde wordt
+			// daartegen gecontroleerd (validation_walker.go). Tussenoplossing vóór
+			// hermodelleren naar een meervoudig GE; zie docs/plans/2026-09-26 Invoersoort en vorm.
+			Naam:        "EnumLijst",
+			Description: "Meerdere waarden uit het enum van het veld, gescheiden door een puntkomma (bijv. \"Laag 1;Laag 2\").",
+			Basistype:   "string",
+			Domein:      "register",
+			Weergave: &V3Weergave{
+				Scheiding: ";",
+			},
+		},
+		V3Datatype{
 			Naam:        "Kleur",
 			Description: "Hex-kleurcode in CSS-formaat (#RGB, #RRGGBB of #RRGGBBAA).",
 			Basistype:   "string",

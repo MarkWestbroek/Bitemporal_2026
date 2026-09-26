@@ -8,7 +8,7 @@ func initCgEnumRegistry() {
 	EnumDomeinen["Fase"] = "CG"
 	EnumWaarden["Producttype"] = []string{"Component", "Toepassing", "Standaard"}
 	EnumDomeinen["Producttype"] = "CG"
-	EnumWaarden["CGLaag"] = []string{"Laag 5", "Laag 4", "Laag 3", "Laag 2", "Laag 1", "Hosting en infrastructuur"}
+	EnumWaarden["CGLaag"] = []string{"Laag 5", "Laag 4", "Laag 3", "Laag 2", "Laag 1", "Hosting en infrastructuur", "Utility"}
 	EnumDomeinen["CGLaag"] = "CG"
 	EnumWaarden["Bijdragetype"] = []string{"Wendbaarheid", "Dienstverlening", "Regie"}
 	EnumDomeinen["Bijdragetype"] = "CG"

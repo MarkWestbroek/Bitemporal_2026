@@ -44,7 +44,7 @@ export default function FormulierIndex() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch(`${baseUrl}/full/formulier_definities`)
+    fetch(`${baseUrl}/full/formulier_definities?size=1000`) // standaard is een pagina van 20
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((lijst) => {
         if (cancelled) return;

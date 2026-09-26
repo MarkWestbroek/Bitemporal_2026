@@ -42,14 +42,9 @@ func ValideerRepresentatie(rep any, padPrefix string) []ValidatieFout {
 		}
 		// Ondersteunde schema-tags: `datatype:<V3Datatype>` en `enum=<EnumNaam>`
 		// (enum-validatie toegevoegd 2026-09-16 n.a.v. regressietest scenario 13).
-		schemaTag := field.Tag.Get("schema")
-		var datatypeNaam, enumNaam string
-		switch {
-		case strings.HasPrefix(schemaTag, "datatype:"):
-			datatypeNaam = strings.TrimPrefix(schemaTag, "datatype:")
-		case strings.HasPrefix(schemaTag, "enum="), strings.HasPrefix(schemaTag, "enum:"):
-			enumNaam = schemaTag[len("enum="):]
-		}
+		// De tag per komma-deel lezen: codegen schrijft "enum=X,datatype:Y" (ParseSchemaTag).
+		tag := ParseSchemaTag(field.Tag.Get("schema"))
+		datatypeNaam, enumNaam := tag.Datatype, tag.Enum
 		if datatypeNaam == "" && enumNaam == "" {
 			continue
 		}
@@ -85,6 +80,14 @@ func ValideerRepresentatie(rep any, padPrefix string) []ValidatieFout {
 		}
 
 		if enumNaam != "" {
+			// Lijst van enum-waarden in één veld (datatype met Scheiding, bv. EnumLijst):
+			// elke waarde afzonderlijk tegen het enum.
+			if scheiding := LijstScheiding(datatypeNaam); scheiding != "" {
+				for _, w := range SplitsLijstwaarde(s, scheiding) {
+					fouten = append(fouten, valideerEnumWaarde(enumNaam, w, veldPad)...)
+				}
+				continue
+			}
 			fouten = append(fouten, valideerEnumWaarde(enumNaam, s, veldPad)...)
 			continue
 		}

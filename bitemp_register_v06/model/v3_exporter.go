@@ -173,12 +173,10 @@ func extractContentFields(meta TypeMeta) []V3Veld {
 		// Custom schema-referenties uit schema tag:
 		// - schema:"datatype:NLPostcode" → V3Veld.Datatype (custom gegevenstype)
 		// - schema:"ref:LandenlijstLand"  → V3Veld.Ref (referentielijst-items, analoog aan OAS 3.1 $ref)
-		schemaTag := f.Tag.Get("schema")
-		if strings.HasPrefix(schemaTag, "datatype:") {
-			veld.Datatype = strings.TrimPrefix(schemaTag, "datatype:")
-		} else if strings.HasPrefix(schemaTag, "ref:") {
-			veld.Ref = strings.TrimPrefix(schemaTag, "ref:")
-		}
+		// Per komma-deel: een veld kan enum én datatype hebben ("enum=CGLaag,datatype:EnumLijst").
+		schemaTag := ParseSchemaTag(f.Tag.Get("schema"))
+		veld.Datatype = schemaTag.Datatype
+		veld.Ref = schemaTag.Ref
 		desc := strings.TrimSpace(f.Tag.Get("schema_desc"))
 		if desc != "" {
 			veld.Description = desc

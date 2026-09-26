@@ -87,6 +87,7 @@ Zonder `widget` kiest de renderer op basis van het model (`web/vite/src/componen
 | tekst / getal / datum | invoerveld (datum: datumkiezer); prefix/suffix uit het datatype (bv. €) |
 | `LangeTekst`-datatype | tekstvak |
 | enum | keuzelijst |
+| enum met datatype `EnumLijst` (bv. `CG_laag`: `"Laag 1;Laag 2"`) | vinkjes: meer uit een lijst, opgeslagen in één veld (ook `image-map`, `button-group`) |
 | boolean | radio *Ja / Nee / (leeg)* |
 | verwijzing naar een **referentielijst-item** (Gemeente, Domein, ApiStandaard) | zoekende combobox, server-side (`RefCombobox`) |
 | secundaire id van een relatie naar een **gewone entiteit** (Organisatie) | zoekende combobox over de bestaande records (`EntiteitCombobox`), met *＋ Nieuwe …* als `nieuwFormulier` gezet is |
@@ -109,6 +110,16 @@ Op een **lijst**:
 
 Bij `meerkeuze` telt het eerste sjabloonveld zonder vasteWaarde als het keuzeveld; vaste waarden
 van de lijst gaan mee in elke rij (bv. `rol` = *Realiseert* + chips van gemeenten).
+
+### 3.1 Vorm (opvolger van `widget`)
+
+`widget` wordt **`vorm`** (+ `vormConfig`): de scheiding tussen de *inhoud* (invoersoort: één/meer
+uit een lijst, tekst, …, volgt uit het model) en de *vorm* (hoe het eruitziet). Vormnamen zijn een
+met Imprint gedeelde woordenlijst: `radio-group`, `text-area`, `checkbox-group`, `combobox`, en
+nieuw `image-map` (klikbare gebieden op een afbeelding, op een veld én op een lijst) en
+`rating-grid` (matrix: per rij één keuze uit dezelfde schaal, op een lijst) en `button-group`
+(knoppenvlak, één of meer uit een lijst, met sorteerwissel). De oude
+`widget`-waarden blijven als alias werken. Zie `docs/plans/2026-09-26 Invoersoort en vorm (ontwerp).md`.
 
 ## 4. Gebruik: bewerken en nieuw
 
