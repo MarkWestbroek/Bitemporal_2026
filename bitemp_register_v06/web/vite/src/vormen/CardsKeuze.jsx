@@ -33,6 +33,7 @@ export default function CardsKeuze({ items = [], meervoudig = false, waarde, onC
             style={{
               position: "relative", display: "flex", flexDirection: "column", gap: 4, padding: "0.75rem 0.85rem", borderRadius: 12,
               cursor: readOnly ? "default" : "pointer", userSelect: "none",
+              color: "#0f172a", // vaste tekstkleur: de kaart is altijd licht, ook in een donker thema
               background: aan ? "linear-gradient(180deg, #eff6ff, #dbeafe)" : "#ffffff",
               border: `2px solid ${aan ? "#2563eb" : licht ? "#93c5fd" : "var(--cg-rand, #e2e8f0)"}`,
               boxShadow: aan ? "0 4px 10px rgba(37,99,235,0.18)" : "0 1px 2px rgba(15,23,42,0.06)", transition: "all 120ms",
