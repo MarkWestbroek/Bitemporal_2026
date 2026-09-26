@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSchema } from "../context/SchemaContext";
 import { safeArray } from "../shared/schemaUtils";
+import { actueleData as vindActueleData } from "../shared/actueleData";
 
 /**
  * useFormulierDefinitie — haalt de actieve FormulierDefinitie op voor een gegeven doeltype.
@@ -148,32 +149,3 @@ export function useFormulierDefinities(doeltype) {
   return { definities, loading, error };
 }
 
-/**
- * Vindt de actuele (niet-afgevoerde) _Data record uit een genest GE in een full-entity response.
- * Verwacht de structuur: entity.{geNaam}[0].data[laatsteActuele].
- */
-function vindActueleData(fullEntity, geJsonNaam) {
-  const geItems = safeArray(fullEntity?.[geJsonNaam]);
-  // Actueel = hub én data hebben opvoer en geen afvoer. Zijn er meerdere actieve hubs
-  // (Layout/Meta zijn nog meervoudig in het configuratiemodel), dan wint de laatst
-  // opgevoerde hub — een correctie-replay zonder afvoer van de oude hub telt zo toch.
-  let beste = null;
-  let besteOpvoer = "";
-  for (const hub of geItems) {
-    if (!hub || hub.afvoer) continue;
-    const actueel = safeArray(hub?.data).find((d) => d?.opvoer && !d?.afvoer);
-    if (!actueel) continue;
-    const opvoer = String(hub.opvoer || actueel.opvoer || "");
-    if (!beste || opvoer > besteOpvoer) {
-      beste = actueel;
-      besteOpvoer = opvoer;
-    }
-  }
-  if (beste) return beste;
-  // Fallback: laatste versie van de eerste hub met data
-  for (const hub of geItems) {
-    const dataItems = safeArray(hub?.data);
-    if (dataItems.length > 0) return dataItems[dataItems.length - 1];
-  }
-  return null;
-}

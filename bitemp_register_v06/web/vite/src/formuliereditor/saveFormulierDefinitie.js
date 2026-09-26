@@ -14,6 +14,7 @@
  * definitie" (zelfde formulierdefinitie_id, nieuwe Layout-versie) is een follow-up
  * zodra de editor definities uit de DB kan laden.
  */
+import { actueleHubData } from "../shared/actueleData.js";
 
 function vandaagISO() {
   return new Date().toISOString().slice(0, 10);
@@ -88,16 +89,6 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson, gelade
   return { id: doelId, gedegradeerd, bijgewerkt: bijwerken };
 }
 
-/** Actueel (niet-afgevoerd) meta-record + rel_id uit een full-definitie. */
-function actueleMeta(full) {
-  for (const hub of Array.isArray(full?.formulier_definitie_metas) ? full.formulier_definitie_metas : []) {
-    const relId = hub?.rel_id;
-    const data = Array.isArray(hub?.data) ? hub.data : [];
-    const actueel = data.find((d) => d?.opvoer && !d?.afvoer) || data[data.length - 1];
-    if (actueel) return { ...actueel, rel_id: actueel.rel_id ?? relId };
-  }
-  return null;
-}
 
 /**
  * Zet is_standaard=false op alle ANDERE actieve standaard-definities voor
@@ -137,4 +128,10 @@ export async function degradeerAndereStandaarden(baseUrl, doeltype, behoudId) {
     }),
   });
   return post.ok ? wijzigingen.length : 0;
+}
+
+/** Actueel meta-record + rel_id uit een full-definitie (afgevoerde hubs tellen niet). */
+function actueleMeta(full) {
+  const h = actueleHubData(full?.formulier_definitie_metas);
+  return h ? { ...h.data, rel_id: h.relId } : null;
 }

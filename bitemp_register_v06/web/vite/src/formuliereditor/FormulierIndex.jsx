@@ -11,17 +11,8 @@ import { safeArray } from "../shared/schemaUtils";
 import { parseLayout } from "./layoutModel";
 import { bouwVeldInfoUitLayout } from "./schemaResolve";
 import { useFormulierEditorStore } from "./useFormulierEditorStore";
+import { actueleData } from "../shared/actueleData";
 
-/** Actueel (niet-afgevoerd) data-record uit een genest GE in de full-response. */
-function actueleData(fullEntity, geJsonNaam) {
-  for (const hub of safeArray(fullEntity?.[geJsonNaam])) {
-    const items = safeArray(hub?.data);
-    const actueel = items.find((d) => d?.opvoer && !d?.afvoer);
-    if (actueel) return actueel;
-    if (items.length > 0) return items[items.length - 1];
-  }
-  return null;
-}
 
 export default function FormulierIndex() {
   const { baseUrl, typeMetaByTypenaam } = useSchema();

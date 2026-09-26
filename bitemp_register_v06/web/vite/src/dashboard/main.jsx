@@ -13,6 +13,8 @@ import "@utrecht/component-library-css";
 import "@utrecht/design-tokens/dist/index.css";
 import "../styles/common-ground-theme.css";
 import "../publicatie/embed.css";
+import { actueleHubData } from "../shared/actueleData";
+const actueleData = (hubs) => actueleHubData(hubs)?.data ?? null;
 
 /**
  * Dashboard — rendert een DashboardDefinitie (configuratiedomein): tegels die elk een
@@ -34,19 +36,6 @@ function detectBaseUrl() {
   return loc.origin;
 }
 
-/** Actueel record uit een GE-lijst van een /full-respons: laatst opgevoerde actieve hub. */
-function actueleData(hubs) {
-  let beste = null;
-  let besteOpvoer = "";
-  for (const hub of safeArray(hubs)) {
-    if (!hub || hub.afvoer) continue;
-    const d = safeArray(hub.data).find((x) => x?.opvoer && !x?.afvoer);
-    if (!d) continue;
-    const opvoer = String(hub.opvoer || d.opvoer || "");
-    if (!beste || opvoer > besteOpvoer) { beste = d; besteOpvoer = opvoer; }
-  }
-  return beste;
-}
 
 /** Alle actieve records van een meervoudig GE. */
 function actieveData(hubs) {

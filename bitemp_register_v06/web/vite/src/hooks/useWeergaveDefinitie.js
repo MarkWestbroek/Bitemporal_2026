@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSchema } from "../context/SchemaContext";
 import { safeArray } from "../shared/schemaUtils";
+import { actueleData as vindActueleData } from "../shared/actueleData";
 
 /**
  * useWeergaveDefinitie — haalt de actieve WeergaveDefinitie op voor een gegeven doeltype.
@@ -110,16 +111,3 @@ function gekozenWeergaveId() {
   }
 }
 
-/**
- * Vindt de actuele (niet-afgevoerde) _Data record uit een genest GE in een full-entity response.
- */
-function vindActueleData(fullEntity, geJsonNaam) {
-  const geItems = safeArray(fullEntity?.[geJsonNaam]);
-  for (const hub of geItems) {
-    const dataItems = safeArray(hub?.data);
-    const actueel = dataItems.find((d) => d?.opvoer && !d?.afvoer);
-    if (actueel) return actueel;
-    if (dataItems.length > 0) return dataItems[dataItems.length - 1];
-  }
-  return null;
-}
