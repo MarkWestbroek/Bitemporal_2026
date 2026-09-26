@@ -118,7 +118,17 @@ uit een lijst, tekst, …, volgt uit het model) en de *vorm* (hoe het eruitziet)
 met Imprint gedeelde woordenlijst: `radio-group`, `text-area`, `checkbox-group`, `combobox`, en
 nieuw `image-map` (klikbare gebieden op een afbeelding, op een veld én op een lijst) en
 `rating-grid` (matrix: per rij één keuze uit dezelfde schaal, op een lijst) en `button-group`
-(knoppenvlak, één of meer uit een lijst, met sorteerwissel). De oude
+(knoppenvlak, één of meer uit een lijst, met sorteerwissel).
+
+Sinds 27-09 een bibliotheek van 22 vormen, elk met een configSchema:
+- keuzekaarten, kaart van NL, schakelaar, schuif, draaiknop, stappenbalk;
+- sorteren in manden;
+- op een **groep**: `period` en `address-search`;
+- alleen weergave: `scale-bars`, `chips`.
+
+Bekijk ze op `vormen.html`. In de Studio kies je de vorm in de inspector (gefilterd op wat bij
+het veld past), met de vormConfig als JSON die tegen het schema wordt gecontroleerd. Details:
+ontwerp §7e. De oude
 `widget`-waarden blijven als alias werken. Zie `docs/plans/2026-09-26 Invoersoort en vorm (ontwerp).md`.
 
 ## 4. Gebruik: bewerken en nieuw
