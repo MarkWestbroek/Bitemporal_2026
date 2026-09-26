@@ -1,3 +1,5 @@
+import VormWeergave from "./VormWeergave";
+import { splitsVormBlokken } from "./vormBlokken";
 import { useState, useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router";
 import { isEmbedModus } from "./embed";
@@ -168,6 +170,8 @@ function markdownNaarHtml(md) {
 
   // GFM-tabellen
   html = converteerTabellen(html);
+  // Een ge-escapete pipe (renderTemplate, om tabellen heel te houden) buiten een tabel: gewoon "|".
+  html = html.replace(/\\\|/g, "|");
 
   // Paragrafen: dubbele newlines → <p>
   html = html
@@ -367,15 +371,13 @@ export default function PublicatieDetail() {
     return ctx;
   }, [entity, typeMeta, typeMetaByTypenaam, detailTemplate]);
 
-  // Render het template (of fallback)
-  const gerenderdHtml = useMemo(() => {
-    if (!entity) return "";
-    if (detailTemplate) {
-      const gevuld = renderTemplate(detailTemplate, celContext);
-      return markdownNaarHtml(gevuld);
-    }
-    // Fallback: toon alle GE-velden als key-value pairs
-    return fallbackHtml(celContext);
+  // Render het template in stukken: tekst (Markdown met {{…}}) en weergavevormen
+  // ({{#vorm naam pad}}config{{/vorm}}, vormBlokken.js). Zonder template: de fallback.
+  const stukken = useMemo(() => {
+    if (!entity) return [];
+    if (!detailTemplate) return [{ soort: "html", html: fallbackHtml(celContext) }];
+    return splitsVormBlokken(verwerkVoorwaarden(detailTemplate, celContext)).map((s) =>
+      s.soort === "tekst" ? { soort: "html", html: markdownNaarHtml(renderTemplate(s.tekst, celContext)) } : s);
   }, [entity, detailTemplate, celContext]);
 
   if (!typeMeta) {
@@ -411,10 +413,11 @@ export default function PublicatieDetail() {
         )}
       </div>
 
-      <div
-        className="cg-form-card cg-publicatie-detail__inhoud"
-        dangerouslySetInnerHTML={{ __html: gerenderdHtml }}
-      />
+      <div className="cg-form-card cg-publicatie-detail__inhoud">
+        {stukken.map((s, i) => (s.soort === "html"
+          ? <div key={i} dangerouslySetInnerHTML={{ __html: s.html }} />
+          : <VormWeergave key={i} blok={s} ctx={celContext} />))}
+      </div>
     </div>
   );
 }

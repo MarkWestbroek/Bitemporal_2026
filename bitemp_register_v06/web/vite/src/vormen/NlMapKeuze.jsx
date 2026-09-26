@@ -30,7 +30,10 @@ export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onC
   const opKaart = useMemo(() => (kaart ? items.filter((i) => kaart.gemeenten[i.code]) : []), [kaart, items]);
   const nietOpKaart = kaart ? items.filter((i) => !kaart.gemeenten[i.code] && sleutels.includes(String(i.value))) : [];
   const gekozen = opKaart.filter((i) => sleutels.includes(String(i.value)));
-  const kleurVan = (v) => groepen?.find((g) => g.waarden.map(String).includes(String(v)))?.color || accent;
+  const groepenVan = (v) => (groepen || []).filter((g) => g.waarden.map(String).includes(String(v)));
+  const kleurVan = (v) => groepenVan(v)[0]?.color || accent;
+  // In twee groepen (bv. realiseert én gebruikt): ring in de kleur van de tweede groep.
+  const ringVan = (v) => groepenVan(v)[1]?.color || null;
 
   const { getMenuProps, getItemProps, highlightedIndex, isSelected } = useKeuze({
     items: readOnly ? gekozen : opKaart,
@@ -62,7 +65,7 @@ export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onC
           return (
             <circle key={item.value} cx={g.x} cy={g.y} r={r} {...getItemProps({ item, index, onMouseEnter: () => setWijs(item) })}
               fill={aan ? kleurVan(item.value) : licht ? "#1d4ed8" : "#94a3b8"} fillOpacity={aan ? 0.95 : 0.8}
-              stroke={aan || licht ? "#ffffff" : "none"} strokeWidth={1.2} style={{ cursor: readOnly ? "default" : "pointer", transition: "r 100ms" }}>
+              stroke={aan && ringVan(item.value) ? ringVan(item.value) : aan || licht ? "#ffffff" : "none"} strokeWidth={aan && ringVan(item.value) ? 2.4 : 1.2} style={{ cursor: readOnly ? "default" : "pointer", transition: "r 100ms" }}>
               <title>{`${item.label}${g.woonplaatsen.length ? ` — ${g.woonplaatsen.slice(0, 8).join(", ")}${g.woonplaatsen.length > 8 ? ", …" : ""}` : ""}`}</title>
             </circle>
           );
