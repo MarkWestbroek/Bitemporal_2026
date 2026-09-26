@@ -81,6 +81,9 @@ type vizSchemaFieldDTO struct {
 	AutoIncrement bool     `json:"autoIncrement,omitempty"`
 	Ref           string   `json:"ref,omitempty"`      // referentielijst-items verwijzing (bijv. "LandenlijstLand")
 	Datatype      string   `json:"datatype,omitempty"` // custom gegevenstype (bijv. "NLPostcode", "BSN")
+	// LijstScheiding: niet leeg = meerdere waarden in één veld, gescheiden door dit teken
+	// (datatype met weergave.scheiding, bv. EnumLijst). De frontend toont dan "meer uit een lijst".
+	LijstScheiding string `json:"lijstScheiding,omitempty"`
 }
 
 // hasBunOption controleert of een bun-struct-tag een bepaalde optie bevat (bijv. "autoincrement").
@@ -340,24 +343,21 @@ func reflectedVeldenVoorMeta(meta model.TypeMeta) []vizSchemaFieldDTO {
 			(name == meta.IDKolom && meta.RelatieveAutoincrement)
 
 		// Referentielijst-verwijzing of custom datatype uit schema tag.
-		var ref, datatype string
-		schemaTag := f.Tag.Get("schema")
-		if strings.HasPrefix(schemaTag, "ref:") {
-			ref = strings.TrimPrefix(schemaTag, "ref:")
-		} else if strings.HasPrefix(schemaTag, "datatype:") {
-			datatype = strings.TrimPrefix(schemaTag, "datatype:")
-		}
+		// Per komma-deel lezen: "enum=CGLaag,datatype:EnumLijst" heeft beide (ParseSchemaTag).
+		schemaTag := model.ParseSchemaTag(f.Tag.Get("schema"))
+		ref, datatype := schemaTag.Ref, schemaTag.Datatype
 
 		velden = append(velden, vizSchemaFieldDTO{
-			Naam:          name,
-			Description:   description,
-			Type:          veldType,
-			Format:        format,
-			Enum:          enum,
-			Verplicht:     !hasOmitEmpty,
-			AutoIncrement: isAutoInc,
-			Ref:           ref,
-			Datatype:      datatype,
+			Naam:           name,
+			Description:    description,
+			Type:           veldType,
+			Format:         format,
+			Enum:           enum,
+			Verplicht:      !hasOmitEmpty,
+			AutoIncrement:  isAutoInc,
+			Ref:            ref,
+			Datatype:       datatype,
+			LijstScheiding: model.LijstScheiding(datatype),
 		})
 	}
 

@@ -78,3 +78,16 @@ test("keuzesNaarRijen: dezelfde rijen, welke vorm ook kiest", () => {
   assert.deepEqual(keuzesNaarRijen(alle, eigenIdx, "gemeente_id", vast, []), [alle[1]]);
   assert.equal(keuzesNaarRijen([], [], "v", {}, ["a", "a", ""]).length, 1, "dubbel en leeg tellen niet");
 });
+
+test("lijst in één veld: invoersoort meer uit een lijst; splitsen en samenvoegen in enum-volgorde", async () => {
+  const { splitsLijst, voegLijstSamen } = await import("./vormen.js");
+  const lagen = { naam: "CG_laag", enum: ["Laag 5", "Laag 4", "Laag 3", "Laag 2", "Laag 1", "Hosting en infrastructuur", "Utility"], lijstScheiding: ";" };
+  assert.equal(invoersoortVanVeld(lagen), INVOERSOORT.MEER_UIT_LIJST);
+  assert.equal(invoersoortVanVeld({ ...lagen, lijstScheiding: undefined }), INVOERSOORT.EEN_UIT_LIJST);
+  assert.equal(effectieveVorm({ vorm: "image-map" }, lagen), "image-map");
+  assert.equal(effectieveVorm({ widget: "radio" }, lagen), "checkbox-group", "radio past niet bij meer uit een lijst");
+  assert.deepEqual(splitsLijst(" Laag 1; Laag 2;;Laag 1"), ["Laag 1", "Laag 2"]);
+  assert.deepEqual(splitsLijst(""), []);
+  assert.equal(voegLijstSamen(["Utility", "Laag 1", "Laag 2"], ";", lagen.enum), "Laag 2;Laag 1;Utility");
+  assert.equal(voegLijstSamen([], ";", lagen.enum), "");
+});

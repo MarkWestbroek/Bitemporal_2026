@@ -6,7 +6,7 @@ import { useSchema } from "../../context/SchemaContext";
 import CodeEditor, { jsonParseFout } from "./CodeEditor";
 import ImageMapKeuze from "../../vormen/ImageMapKeuze";
 import ButtonGroupVeld from "./ButtonGroupVeld";
-import { normaliseerVorm, vormPastBij, invoersoortVanVeld } from "../../vormen/vormen";
+import { normaliseerVorm, vormPastBij, invoersoortVanVeld, effectieveVorm, splitsLijst, voegLijstSamen, INVOERSOORT } from "../../vormen/vormen";
 
 /**
  * SchemaFormField — generiek formulierveld dat één `veld` uit de schema-API
@@ -99,6 +99,33 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
                 disabled={isReadonly}
               />
               {optie.label}
+            </label>
+          ))}
+        </div>
+      );
+    }
+
+    // Lijst in één veld (datatype met scheiding, bv. EnumLijst): meer uit een lijst, opgeslagen
+    // als "Laag 1;Laag 2" in de volgorde van de enum. De vormen werken met sleutels.
+    if (invoersoortVanVeld(veld) === INVOERSOORT.MEER_UIT_LIJST) {
+      const scheiding = veld.lijstScheiding;
+      const sleutels = splitsLijst(value, scheiding);
+      const zet = (nieuw) => onChange(voegLijstSamen(nieuw, scheiding, enumOpties));
+      const lijstVorm = effectieveVorm({ vorm, widget: widgetOverride, datatypeWidget: weergave.widget }, veld);
+      if (lijstVorm === "image-map") {
+        return <ImageMapKeuze config={vormConfig} opties={enumOpties.length ? enumOpties : undefined} meervoudig waarde={sleutels} onChange={zet} readOnly={isReadonly} labelId={`${fieldId}-label`} />;
+      }
+      if (lijstVorm === "button-group") {
+        return <ButtonGroupVeld veld={veld} config={vormConfig} meervoudig waarde={sleutels} onChange={zet} readOnly={isReadonly} labelId={`${fieldId}-label`} />;
+      }
+      // Standaard: vinkjes (checkbox-group)
+      return (
+        <div className="utrecht-form-field__input" role="group" aria-labelledby={`${fieldId}-label`} style={{ display: "flex", gap: "0.4rem 1.25rem", flexWrap: "wrap" }}>
+          {enumOpties.map((opt) => (
+            <label key={opt} style={{ display: "inline-flex", alignItems: "center", gap: 4, cursor: isReadonly ? "default" : "pointer" }}>
+              <input type="checkbox" checked={sleutels.includes(opt)} disabled={isReadonly}
+                onChange={() => zet(sleutels.includes(opt) ? sleutels.filter((s) => s !== opt) : [...sleutels, opt])} />
+              {opt}
             </label>
           ))}
         </div>

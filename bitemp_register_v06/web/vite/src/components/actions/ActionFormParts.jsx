@@ -77,6 +77,13 @@ export function validatieMeldingVoorVeld(rawValue, veld, veldLabel = null) {
     return veld?.verplicht ? `Veld ${label} is verplicht.` : "";
   }
 
+  // Lijst in één veld (datatype met scheiding, bv. EnumLijst "Laag 1;Laag 2"): elke waarde
+  // afzonderlijk tegen de enum, zoals de backend (model/validation_walker.go).
+  if (enumOpties.length > 0 && veld?.lijstScheiding) {
+    const onbekend = normalized.split(veld.lijstScheiding).map((w) => w.trim()).filter((w) => w && !enumOpties.includes(w));
+    return onbekend.length ? `Veld ${label}: onbekende waarde(n) ${onbekend.join(", ")}; kies uit ${enumOpties.join(", ")}.` : "";
+  }
+
   if (enumOpties.length > 0 && !enumOpties.includes(normalized)) {
     return `Veld ${label} moet een van deze waarden zijn: ${enumOpties.join(", ")}.`;
   }

@@ -17,11 +17,13 @@ import { useId, useState } from "react";
  *  - required:    geen wisknop; `toonFouten` markeert rijen zonder keuze
  *  - renderExtra: (rijwaarde) => ReactNode | null — extra velden per rij (uitklapbaar)
  *  - extraLabel:  tekst van de uitklapknop (bv. "Toelichting"); heeftExtra: (rijwaarde) => boolean (open bij waarde)
+ *  - extraInklapbaar: false = extra velden altijd open en géén uitklapknop (bv. een verplichte
+ *                 toelichting: dan zou de knop alleen het label herhalen)
  *  - readOnly, labelId
  */
 export default function MatrixKeuze({
   rows, columns, waarden = {}, onChange, hoekLabel = "", kolomLabel = "", required = false, toonFouten = false,
-  renderExtra = null, extraLabel = "Toelichting", heeftExtra = () => false, readOnly = false, labelId,
+  renderExtra = null, extraLabel = "Toelichting", heeftExtra = () => false, extraInklapbaar = true, readOnly = false, labelId,
 }) {
   const id = useId().replace(/:/g, "");
   const [open, setOpen] = useState({});
@@ -61,7 +63,7 @@ export default function MatrixKeuze({
             const ontbreekt = required && toonFouten && !gekozen;
             const rijKopId = `${id}-rij-${ri}`;
             const extra = renderExtra ? renderExtra(r.value) : null;
-            const isOpen = open[r.value] ?? heeftExtra(r.value);
+            const isOpen = !extraInklapbaar || (open[r.value] ?? heeftExtra(r.value));
             const zebra = ri % 2 === 0 ? "var(--cg-lichtgrijs-zacht, #f8fafc)" : "transparent";
             return [
               <tr key={r.value} style={{ background: zebra }}>
@@ -69,7 +71,7 @@ export default function MatrixKeuze({
                   <div>{r.label}</div>
                   {r.description && <div style={{ fontWeight: 400, fontSize: "0.8rem", color: "var(--cg-donkergrijs, #64748b)" }}>{r.description}</div>}
                   {ontbreekt && <div role="alert" style={{ fontWeight: 400, fontSize: "0.8rem", color: "var(--cg-fout, #dc2626)" }}>Kies een waarde</div>}
-                  {extra && (
+                  {extra && extraInklapbaar && (
                     <button type="button" onClick={() => setOpen((o) => ({ ...o, [r.value]: !isOpen }))} aria-expanded={isOpen} aria-controls={`${id}-extra-${ri}`}
                       style={{ border: "none", background: "none", padding: 0, marginTop: 2, cursor: "pointer", color: accent, fontSize: "0.8rem" }}>
                       {isOpen ? "▾" : "▸"} {extraLabel}

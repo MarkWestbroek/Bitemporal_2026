@@ -237,9 +237,11 @@ export default function CustomFormulierRenderer({
                   readOnly={readOnly}
                   labelId={labelId}
                   extraLabel={assen.extra[0]?.label || assen.extra[0]?.veld || "Toelichting"}
-                  // Open als er al iets staat, of als een extra veld verplicht is (anders zit
-                  // een verplichte toelichting verstopt achter een dichtgeklapte rij).
-                  heeftExtra={(rij) => assen.extra.some((e) => rijen[rij]?.rij?.[e.veld] || veldenByNaam[`${bron}.${e.veld}`]?.verplicht)}
+                  // Inklapbaar extra veld: open als er al iets staat.
+                  heeftExtra={(rij) => assen.extra.some((e) => rijen[rij]?.rij?.[e.veld])}
+                  // Een verplicht extra veld staat altijd open, zonder uitklapknop (anders staat
+                  // "Toelichting" er twee keer en zit een verplicht veld verstopt).
+                  extraInklapbaar={!assen.extra.some((e) => veldenByNaam[`${bron}.${e.veld}`]?.verplicht)}
                   renderExtra={assen.extra.length ? (rij) => assen.extra.map((e, ci) => renderElement({ ...e, label: e.label || e.veld }, ci, extraScope(rij))) : null}
                 />
               )}

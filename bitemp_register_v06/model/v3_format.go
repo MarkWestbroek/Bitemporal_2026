@@ -95,6 +95,10 @@ type V3Weergave struct {
 	Suffix      string `json:"suffix,omitempty"`    // bijv. "%" voor Percentage
 	Multiline   bool   `json:"multiline,omitempty"` // true voor LangeTekst (rendert als <textarea>)
 	Decimalen   *int   `json:"decimalen,omitempty"` // aantal decimalen voor numerieke waarden
+	// Scheiding: niet leeg = het veld bevat MEERDERE waarden in één tekst, gescheiden door
+	// dit teken (bv. ";" bij datatype EnumLijst: "Laag 1;Laag 2"). Validatie en formulieren
+	// behandelen het veld dan als "meer uit een lijst" (docs/plans/2026-09-26 Invoersoort en vorm).
+	Scheiding string `json:"scheiding,omitempty"`
 }
 
 // V3Enum beschrijft een enum type met zijn waarden.

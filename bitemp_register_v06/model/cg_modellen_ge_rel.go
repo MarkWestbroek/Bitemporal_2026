@@ -37,6 +37,7 @@ const (
 	CGLaagLaag2                   CGLaag = "Laag 2"
 	CGLaagLaag1                   CGLaag = "Laag 1"
 	CGLaagHostingEnInfrastructuur CGLaag = "Hosting en infrastructuur"
+	CGLaagUtility                 CGLaag = "Utility"
 )
 
 type Bijdragetype string
@@ -239,7 +240,7 @@ type Initiatief_Product_Data struct {
 	Naam                 string      `json:"naam"`
 	Omschrijving         *string     `json:"omschrijving,omitempty"`
 	Type                 Producttype `json:"type" schema:"enum=Producttype"`
-	CGLaag               CGLaag      `json:"CG_laag" schema:"enum=CGLaag"`
+	CGLaag               CGLaag      `json:"CG_laag" schema:"enum=CGLaag,datatype:EnumLijst"`
 	Pitch                *string     `json:"pitch,omitempty"`
 	VervangtOuderProduct *bool       `json:"vervangt_ouder_product,omitempty"`
 	Website              *string     `json:"website,omitempty" schema:"datatype:URL"`

@@ -42,7 +42,7 @@ type Initiatief_Product_Input struct {
 	Naam                 string      `json:"naam"`
 	Omschrijving         *string     `json:"omschrijving,omitempty"`
 	Type                 Producttype `json:"type"`
-	CGLaag               CGLaag      `json:"CG_laag"`
+	CGLaag               CGLaag      `json:"CG_laag" schema:"enum=CGLaag,datatype:EnumLijst"`
 	Pitch                *string     `json:"pitch,omitempty"`
 	VervangtOuderProduct *bool       `json:"vervangt_ouder_product,omitempty"`
 	Website              *string     `json:"website,omitempty"`

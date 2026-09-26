@@ -87,6 +87,7 @@ Zonder `widget` kiest de renderer op basis van het model (`web/vite/src/componen
 | tekst / getal / datum | invoerveld (datum: datumkiezer); prefix/suffix uit het datatype (bv. €) |
 | `LangeTekst`-datatype | tekstvak |
 | enum | keuzelijst |
+| enum met datatype `EnumLijst` (bv. `CG_laag`: `"Laag 1;Laag 2"`) | vinkjes: meer uit een lijst, opgeslagen in één veld (ook `image-map`, `button-group`) |
 | boolean | radio *Ja / Nee / (leeg)* |
 | verwijzing naar een **referentielijst-item** (Gemeente, Domein, ApiStandaard) | zoekende combobox, server-side (`RefCombobox`) |
 | secundaire id van een relatie naar een **gewone entiteit** (Organisatie) | zoekende combobox over de bestaande records (`EntiteitCombobox`), met *＋ Nieuwe …* als `nieuwFormulier` gezet is |

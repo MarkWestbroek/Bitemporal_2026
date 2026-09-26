@@ -120,20 +120,16 @@ ontleend aan NL Design System, ARIA en HTML. Labels in de UI zijn Nederlands.
    | Opslag | Voorbeeld | Status |
    |---|---|---|
    | rijen van een meervoudig GE / relatie | `bijdragen`, `initiatief_api_standaarden` | bestaat |
-   | één veld met scheidingsteken | `CG_lagen = "Laag 1;Laag 2"` | idee |
+   | één veld met scheidingsteken | `CG_laag = "Laag 1;Laag 2"` | **gebouwd** (§7d) |
    | hermodelleren naar een eigen entiteit/GE | `Initiatief.lagen[]` | "de nette oplossing", later |
 
    Dit hoort bij het **model** (het datatype van het veld), niet bij het formulier: elke view,
    filter en export moet weten dat `CG_lagen` een lijst is. Een datatype dat zegt "lijst van
    enum-waarden, gescheiden door `;`" laat `invoersoortVanVeld` vanzelf *meer uit een lijst*
    opleveren, en daarmee elke meer-uit-lijst-vorm (image-map, knoppen). XForms doet het ook zo:
-   de waarde van een `select` is één knoop met spatie-gescheiden tokens. De server controleert
-   enum-waarden nu niet bij opslaan, dus technisch past `Laag 1;Laag 2` al; wat ontbreekt
-   is het datatype, zodat GraphQL-filters (`eq "Laag 1"`) en weergaven het ook als lijst zien.
-   Het alternatief, het enum uitbreiden met `Laag 1+2`, `Laag 4+5` en `Utility`, is snel, maar
-   maakt van een combinatie een categorie. Utility staat als kolom naast alle lagen
-   (`public/voorbeelden/cg-lagen-utility.svg`, bv. FTV) en kan als area mee zodra het een waarde
-   van het enum is.
+   de waarde van een `select` is één knoop met spatie-gescheiden tokens. Het alternatief, het
+   enum uitbreiden met `Laag 1+2` en `Laag 4+5`, is sneller, maar maakt van een combinatie een
+   categorie. Gekozen (Mark, 26-09): de `;`-variant, met een datatype (§7d).
 5. **AI stelt voor, de mens beslist.** Voor `ai-assist` en `ai-extract` gaat de aanroep via de
    server (sleutel, rate-limit, logging). Op een **openbaar** formulier is het versturen van
    ingevulde tekst naar een AI-dienst een gegevensverwerking (AVG): het moet opt-in zijn, of
@@ -298,6 +294,39 @@ net als de image-map: dit is het bewijs dat de headless opzet werkt. Alleen het 
   niet gedaan); daarom heet de tweede sortering eerlijk *Volgorde van registratie*.
 - Woordafbreking op Nederlandse lettergrepen (`lang="nl"`, `hyphens: auto`).
 
+## 7d. Lijst in één veld: datatype `EnumLijst` (CG-lagen)
+
+Tussenoplossing vóór hermodelleren naar een meervoudig GE: een enum-veld mag meerdere waarden
+bevatten, gescheiden door `;`. De **inhoud** is meer uit een lijst; alleen de **opslag**
+verschilt. Het staat in het model, dus elke vorm, validatie en export ziet het.
+
+- **Datatype `EnumLijst`** (`model/extra_datatype_registry.go`, handmatig onderhouden, blijft
+  bij codegen staan): basistype string, `weergave.scheiding = ";"` (nieuw veld
+  `V3Weergave.Scheiding`). Het veld houdt zijn enum: `schema:"enum=CGLaag,datatype:EnumLijst"`.
+  Codegen schreef die combinatie al, maar het schema-endpoint, de validatie-walker en de
+  V3-exporter lazen de tag alleen op het begin, waardoor het datatype verdween. Nu leest één
+  parser (`model/schema_tag.go`, `ParseSchemaTag`) de tag per komma-deel.
+- **Validatie (backend):** elke waarde wordt apart tegen het enum gecontroleerd
+  (`validation_walker.go`). `"Laag 1;Laag 9"` geeft 422 op `Laag 9` (NL API-foutformaat).
+  Let op: de walker controleert de `_Input`-structs, en daar stonden in het CG-model nog
+  geen schema-tags (gegenereerd vóór codegen ze daar ging schrijven). De enum-controle gold
+  dus niet voor `CG_laag`; nu wel, per waarde.
+- **Schema-endpoint:** een veld krijgt `lijstScheiding: ";"`. Voor de frontend is het dan
+  *meer uit een lijst* (`invoersoortVanVeld`). Standaardvorm: vinkjes; `image-map` en
+  `button-group` werken ook. Opslaan gebeurt in de volgorde van het enum (`voegLijstSamen`),
+  dus dezelfde keuze geeft altijd dezelfde tekst. De frontend-validatie controleert per waarde.
+- **CG-model:** `Initiatief.producten.CG_laag` krijgt datatype `EnumLijst`; het enum `CGLaag`
+  krijgt `Utility`, een kolom naast alle lagen (bv. FTV, `public/voorbeelden/cg-lagen-utility.svg`).
+  Bestaande waarden (één laag) blijven geldig.
+- **Nog te doen:**
+  - **Model in de Studio.** Zet datatype `EnumLijst` op `CG_laag` en `Utility` in het enum.
+    De Go-bestanden in de repo zijn aangepast zoals codegen ze zou schrijven, maar een rebuild
+    vanuit een oud opgeslagen model zet ze terug.
+  - **GraphQL-filter:** `CG_laag: { eq: "Laag 1" }` mist `"Laag 1;Laag 2"`. Een
+    `contains`-achtig filter of splitsen in de query is nodig.
+  - **Weergaven** tonen de ruwe tekst `Laag 1;Laag 2`.
+  - **Hernoemen** naar `CG_lagen` is een aparte migratie (kolom, GraphQL, weergaven, FD 2).
+
 ## 8. Architectuur: headless, zoals downshift
 
 ```
@@ -352,6 +381,55 @@ bouw een component op `useKeuze` (of downshift) met als contract
    hangt niet van de vorm af, maar een vorm met eigen `value`s maakt het wel relevanter.
 5. **Migratie van `widget` naar `vorm`** in FD 2 (replays 16/17/19) en in de naslag.
 6. **Imprint:** `x-appearance` in `SchemaForm`, en de map `vormen/` als gedeeld package.
+
+## 9b. Formulier 3.0: modelmatig (denkwerk 26-09, nog niet besloten)
+
+Mark, na het bekijken in de Studio: het formulierprofiel loopt achter. Het is in wezen het schema
+van de formuliertaal, maar `vorm`/`vormConfig` ontbreken en `widget` is een vrij tekstveld.
+
+**Wat een veld nu draagt, ingedeeld naar laag:**
+
+| Eigenschap | Laag | Opmerking |
+|---|---|---|
+| `veld` (veldpad) | binding | de link naar de bron; de inhoud heeft geen eigen type, dat volgt uit de bron |
+| `label`, `beschrijving` | tekst (inhoud) | de vraagtekst in dit formulier; standaard de naam uit het model. Kandidaat voor meertaligheid (taalversies op een hub). Groepen hebben ook een label; in het profiel is dat de node-naam |
+| `widget` → `vorm` + `vormConfig` | vorm | `widget` blijft als alias |
+| `breedte` | vorm (lay-out) | |
+| `readonly` | **modus**, geen vormConfig | elke vorm kent invoer en weergave (alleen-lezen); dezelfde modus als de weergavevorm |
+| `vasteWaarde` | **verwerking** (laag 4) | procesregel; hoort in de BFF die het formulier ontvangt, niet in de client. De server dwingt hem nu al af bij openbaar indienen. Het tweede gebruik, als filter van een lijst (vaste rijen), is een ander begrip: selectie |
+| `kopieerNaar` | **verwerking** | één invoer, twee doelen: de startdatum gaat ook naar `Initiatief.aanvang.datum` (materiële aanvang); een afleidingsregel |
+| `nieuwFormulier` | compositie | op `organisatie_id`: "＋ Nieuwe organisatie" opent FD 3 ingebed en maakt een nieuwe Organisatie aan |
+
+**Een tweede universum: de vormtypen**, analoog aan de informatieniveaus in MIM (klassen naast
+datatypen en referentielijsten):
+- **inhoudtype**: naam, verwijst naar een of meer datatypen in het canonieke model
+  (koppeling over modellen heen);
+- **vormtype**: naam, een configuratietype, en *realiseert/toont* 0..* inhoudtypen;
+- **vormconfiguratietype**: het schema van de vormConfig (eigenschappen: naam, type, standaard);
+- de koppelingen inhoud × vorm vormen samen de matrix "wat kan met wat".
+
+**Richting (Claude):**
+- **Apart profiel.** Een eigen *vormenprofiel* naast het formulierprofiel. Het formulierprofiel
+  krijgt alleen `vorm` (een verwijzing naar een vormtype; het profielsysteem kent
+  `referenceTypes`) en `vormConfig` (een eigen datatype). De editor daarvan tekent een formulier
+  uit het configuratietype van het gekozen vormtype. Zo hoeft niet elk vormtype in het
+  formulierprofiel, en kun je de eigenschappen toch in het diagram invullen.
+- **Code en data gescheiden.** Een vormtype heeft altijd code (een component). De
+  *implementatie* staat dus in de code-registry (met configSchema). De *beschrijving en de
+  keuzes* (welke vormen hier zijn toegestaan, de standaardvorm per inhoudtype) kunnen data in de
+  database zijn: bitemporeel, per instantie. Begin met een alleen-lezen vormenmodel dat uit de
+  registry wordt geëxporteerd, zoals `v3_exporter` het canonieke model uit de code haalt. De
+  matrix wordt pas data als er behoefte is aan instellen per instantie.
+- **Verwerking later naar laag 4.** `vasteWaarde` en `kopieerNaar` op termijn naar een
+  verwerkingsdeel dat de BFF uitvoert; het formulier toont alleen.
+
+**Gezien in de Studio (26-09), nog op te lossen:**
+- **Onbekende veldpaden.** De live preview van de formuliereditor kent de relatieve velden van
+  lijsten niet ("Onbekend veldpad: type/rol/gemeente_id"). Daardoor meldt het knoppenvlak
+  "zonder keuzeveld" en valt de matrix/image-map in een lijst terug. In de inhoud-editor werkt
+  het wel.
+- **Geen `lijstScheiding`.** De veldinformatie van de Studio heeft geen `lijstScheiding`, dus
+  `CG_laag` toont daar nog één keuze.
 
 ## 10. Bestanden en tests
 

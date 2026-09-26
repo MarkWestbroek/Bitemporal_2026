@@ -98,6 +98,9 @@ export function invoersoortVanVeld(veld, { meervoudig = false } = {}) {
   if (!veld) return null;
   const isLijstKeuze = (Array.isArray(veld.enum) && veld.enum.length > 0) || Boolean(veld.ref) || Boolean(veld.doelEntiteit);
   if (meervoudig) return isLijstKeuze ? MEER_UIT_LIJST : null;
+  // Opslag als lijst in één veld (datatype met scheiding, bv. EnumLijst: "Laag 1;Laag 2"):
+  // de inhoud is meer uit een lijst, alleen de opslag verschilt van rijen.
+  if (veld.lijstScheiding && isLijstKeuze) return MEER_UIT_LIJST;
   if (String(veld.type) === "boolean") return JA_NEE;
   if (isLijstKeuze) return EEN_UIT_LIJST;
   if (veld.type === "integer" || veld.type === "number") return GETAL;
@@ -141,6 +144,27 @@ export function keuzesNaarRijen(alle, eigenIdx, veld, vast, sleutels) {
   });
   const erbij = nieuw.filter((k) => !huidig.has(k)).map((k) => ({ ...vast, [veld]: k }));
   return [...blijft, ...erbij];
+}
+
+/**
+ * Lijst in één veld (OPSLAG, de laag onder de inhoud): "Laag 1; Laag 2" ↔ ["Laag 1", "Laag 2"].
+ * Spaties rond de delen en lege delen vallen weg, dubbele tellen één keer (zoals
+ * model.SplitsLijstwaarde in Go).
+ */
+export function splitsLijst(waarde, scheiding = ";") {
+  if (Array.isArray(waarde)) return [...new Set(waarde.map((w) => String(w).trim()).filter(Boolean))];
+  if (waarde == null || waarde === "") return [];
+  return [...new Set(String(waarde).split(scheiding).map((w) => w.trim()).filter(Boolean))];
+}
+
+/**
+ * Sleutels → één veldwaarde. In de volgorde van `volgorde` (de enum), zodat dezelfde keuze
+ * altijd dezelfde tekst oplevert, ongeacht de klikvolgorde; onbekende waarden achteraan.
+ */
+export function voegLijstSamen(sleutels, scheiding = ";", volgorde = []) {
+  const set = splitsLijst(sleutels);
+  const pos = (w) => { const i = volgorde.indexOf(w); return i < 0 ? Infinity : i; };
+  return set.map((w, i) => [w, i]).sort((a, b) => pos(a[0]) - pos(b[0]) || a[1] - b[1]).map(([w]) => w).join(scheiding);
 }
 
 /**
