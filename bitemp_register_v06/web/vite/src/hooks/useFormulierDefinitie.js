@@ -27,7 +27,7 @@ export function useFormulierDefinitie(doeltype) {
 
     // Gebruik de full-lijst-API direct. Voor FormulierDefinitie is de full-detailroute
     // niet overal beschikbaar, maar de full-lijstroute levert wel de geneste Meta/Layout.
-    fetch(`${baseUrl}/full/formulier_definities`)
+    fetch(`${baseUrl}/full/formulier_definities?size=1000`) // standaard is een pagina van 20
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -108,7 +108,7 @@ export function useFormulierDefinities(doeltype) {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch(`${baseUrl}/full/formulier_definities`)
+    fetch(`${baseUrl}/full/formulier_definities?size=1000`) // standaard is een pagina van 20
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

@@ -104,7 +104,7 @@ function actueleMeta(full) {
  * hetzelfde doeltype (behalve `behoudId`). Retourneert het aantal gedegradeerd.
  */
 export async function degradeerAndereStandaarden(baseUrl, doeltype, behoudId) {
-  const res = await fetch(`${baseUrl}/full/formulier_definities`);
+  const res = await fetch(`${baseUrl}/full/formulier_definities?size=1000`); // standaard is een pagina van 20
   if (!res.ok) return 0;
   const lijst = await res.json();
   const items = Array.isArray(lijst?.["formulier definities"]) ? lijst["formulier definities"] : [];
