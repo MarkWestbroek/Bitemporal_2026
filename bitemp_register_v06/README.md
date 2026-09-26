@@ -194,6 +194,19 @@ Belangrijkste features:
 
 Zie [`docs/3D_UNIVERSUM.md`](docs/3D_UNIVERSUM.md) voor het volledige ontwerp, de implementatie en de roadmap.
 
+## Formulieren, weergaven en vormen
+
+Formulieren en publicatiepagina's zijn **data** in het configuratiedomein (FormulierDefinitie,
+WeergaveDefinitie), met een vormenbibliotheek voor invoer en weergave (inhoud en vorm gescheiden).
+
+- [`docs/FORMULIERDEFINITIES.md`](docs/FORMULIERDEFINITIES.md): de layout, vorm/vormConfig,
+  nieuw, bewerken ("Bewerken via") en openbaar indienen.
+- [`docs/PUBLICATIE_TEMPLATES.md`](docs/PUBLICATIE_TEMPLATES.md): detail-templates, `{{#vorm}}`-blokken
+  en meerdere weergaven per type (`?weergave=<id>`).
+- [`docs/plans/2026-09-26 Invoersoort en vorm (ontwerp).md`](docs/plans/2026-09-26%20Invoersoort%20en%20vorm%20(ontwerp).md):
+  het ontwerp (invoersoort, vorm, opslag, keuzebron), de 22 vormen, EnumLijst en de open vragen.
+- **Showcase:** `/viz/react/vormen.html`: elke vorm in invoer en weergave, met de opgeslagen inhoud.
+
 ## Afgeleide velden (Derived Fields)
 
 Het metamodel (V3) ondersteunt **afgeleide velden** — velden waarvan de waarde wordt berekend uit andere velden, analoog aan UML derived attributes (`/attribuut`).

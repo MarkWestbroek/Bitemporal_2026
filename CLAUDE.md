@@ -13,6 +13,15 @@ inhoudelijke domein- en architectuurcontext staat in de bestaande instructiebest
 
 Deze CLAUDE.md vult die aan; het herhaalt ze niet.
 
+**Databasestructuur:** staat in `.github/copilot-instructions.md` (§Domein, §Hub + _Data) en
+`bitemp_register_v06/ONTWERP_DATA_PATTERN.md`. Formele tijd leeft alleen in `wijziging` +
+`registratie`, en elke insert (hub, _Data, _Aanvang, _Einde) heeft één eigen wijziging.
+**Hard verwijderen** (alleen lokaal, nooit via een replay) betekent dus: de records, hun
+`wijziging`-rijen en de registraties die dan leeg raken. Controleer eerst op registraties die
+ook iets anders raken, en op verwijzingen (`notificatie_bezorging.registratie_id`,
+`registratie.corrigeert_/maakt_ongedaan_registratie_id`). Lever SQL aan de gebruiker in één
+transactie met controles vooraf en achteraf.
+
 ## Documentatie bijwerken
 
 Documenteer wijzigingen in heldere comments én in markdown. Heb je iets **substantieels**
