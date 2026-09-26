@@ -416,9 +416,10 @@ Het detail-template (Markdown met `{{veldpad}}` en `{{#if}}`) kent nu ook vormbl
 - **Code.** `publicatie/vormBlokken.js` (puur, getest), `publicatie/VormWeergave.jsx`, en
   `PublicatieDetail` rendert het template in stukken. `graphqlPaden` haalt vormtags niet meer
   weg als onbekend pad.
-- **Voorstel-replay** (niet op pf afgespeeld):
-  `registraties-replay-correctie-initiatief-detailtemplate-vormen-2026-09-27.json`, WD 2
-  v0.3. Het toont:
+- **Replay.** Een **nieuwe WeergaveDefinitie** *Initiatief met vormen* (niet standaard, naast
+  WD 2): `registraties-replay-init-weergavedefinitie-initiatief-met-vormen-2026-09-27.json`.
+  Kiezen met `?weergave=<id>` of met de keuzelijst *Weergave*. De standaard (WD 2) en de embed
+  op commonground.nl blijven zoals ze zijn. Het toont:
   - de fase als stappenbalk;
   - de lagen als klein plaatje;
   - de gemeenten als stippen (wie niet weet waar een gemeente ligt, wijst de stip aan en ziet
@@ -511,7 +512,8 @@ bouw een component op `useKeuze` (of downshift) met als contract
    sorteren (§7c).
 5. **`LandenlijstLand`.** Voor `/api/viz/reflijst` is het geen `referentielijst_item`. Daardoor
    werkt de land-keuzelijst lokaal niet, en kan de adreszoeker het land niet invullen.
-6. **WD 2 v0.3 op pf.** Afspelen na het uitrollen van de frontend? (§7f)
+6. ~~WD 2 v0.3 op pf~~ → vervangen door een eigen WD *Initiatief met vormen* naast de
+   standaard (Mark, 27-09).
 7. **FD 2 van `widget` naar `vorm` migreren?** Werkt nu via aliassen.
 8. **Studio-profiel.** De keuzelijst `vorm` in het diagram-eigenschappenpaneel toont alle
    vormen: het profiel kent het model niet. De formuliereditor filtert wel. Het aparte

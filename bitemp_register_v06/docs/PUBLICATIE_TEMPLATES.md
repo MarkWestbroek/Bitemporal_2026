@@ -120,7 +120,17 @@ labels. Het zijn dezelfde vormen als in de formulieren, alleen-lezen.
   voorbeelden.
 - **Fouten.** Kapotte JSON geeft een melding op de plek van het blok; de rest van de pagina
   blijft staan.
-- **Voorstel voor Initiatief.** `replay files/registraties-replay-correctie-initiatief-detailtemplate-vormen-2026-09-27.json`.
+- **Voor Initiatief.** Een eigen WeergaveDefinitie *Initiatief met vormen* (niet standaard):
+  `replay files/registraties-replay-init-weergavedefinitie-initiatief-met-vormen-2026-09-27.json`.
+
+## Meer weergaven per type: `?weergave=<id>`
+
+Zonder parameter toont de publicatiepagina de actieve **standaard**-WeergaveDefinitie van het
+type. Dat is ook wat de embed op commonground.nl krijgt. Met `?weergave=<id>` (querystring
+vóór de `#`, zoals `embed=1`) gebruikt de pagina die definitie, mits actief en voor hetzelfde
+type. Zijn er meer actieve weergaven, dan staat er op lijst en detail een keuzelijst
+*Weergave*, maar niet in de embed. Zo kan een nieuwe weergave live naast de standaard staan,
+zonder de embed te raken.
 
 ## Markdown die werkt
 
