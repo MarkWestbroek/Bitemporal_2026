@@ -449,6 +449,30 @@ anders optie). Een snapshot is een noodrem, geen backup.
   **Zevende ronde 25-09-2026 (DashboardDefinitie)**: zelfde procedure; daarna replay 23
   (dashboard `moderatie`). Openen, ingelogd: `/viz/react/dashboard.html?dashboard=moderatie`.
 
+  **Achtste ronde 26-09-2026 (invoersoort en vorm, `4b9abd92`)**: vóór de deploy een dump
+  gemaakt: `/srv/omnium-pf/predeploy-20260926T204944Z.sql.gz` (de nachtelijke `backup.sh` dekt
+  pf niet). Dan `bash /srv/omnium-pf/src/bitemp_register_v06/deploy/vps/pf.sh deploy`, en daarna
+  de twee replays met het nieuwe afspeelscript (logt in met `ADMIN_USERNAME`/`ADMIN_PASSWORD` uit
+  de `.env`, toont nooit het wachtwoord, meldt toegekende id's):
+  ```
+  cd /srv/omnium-pf/src/bitemp_register_v06
+  python3 scripts/speel_replay_af.py --host https://pf.common-ground-lab.nl --env-file /srv/omnium-pf/.env \
+    "replay files/registraties-replay-init-apistandaarden-soap-2026-09-26.json" \
+    "replay files/registraties-replay-init-formulierdefinitie-aanmelding-vormen-2026-09-26.json"
+  ```
+  - **Wat er verandert:**
+    - `CG_laag` is een lijst in één veld (datatype `EnumLijst`), met `Utility` in het enum. Ook
+      FD 2 toont de laag nu als vinkjes.
+    - Er komen nieuwe vormen bij.
+    - Het nieuwe formulier *Aanmelding initiatief (vormen)* is actief, maar **niet** standaard
+      en **niet** openbaar. Bekijken ingelogd:
+      `inhoud.html#/t/initiatieven/nieuw?formulier=<toegekend id>`, of zonder verzenden
+      `aanmelden.html?formulier=<id>`.
+  - **De publieke weergave** (iframe op commonground.nl) blijft zoals hij was. Bestaande
+    lagen zijn één waarde, en GraphQL levert `CG_laag` als tekst, niet als enum.
+  - **Terug:** `pf.sh deploy c14bb9d` en, als er al data met meerdere lagen of `Utility` is,
+    de dump terugzetten.
+
   **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
   (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
   verbinding** (587/STARTTLS geeft `454 Temporary authentication failure`, ook als de mailbox nog
