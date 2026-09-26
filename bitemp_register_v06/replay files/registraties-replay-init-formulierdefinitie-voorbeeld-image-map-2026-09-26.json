@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-26T18:30:00Z",
+  "source": "manual://claude-invoer-vorm-image-map",
+  "description": "Voorbeeld-FormulierDefinitie 'Voorbeeld: klikbare afbeelding' (doeltype Initiatief) om de vorm image-map te testen: één uit een lijst (CG-laag van het product, lagenmodel) en meer uit een lijst (soorten betrokken organisaties, ecosysteem). Het FD-id is een plaatshouder ($nieuw.fd); de server kent het toe (toegekendeIds in de response). Afbeeldingen: web/vite/public/voorbeelden/. Zie docs/plans/2026-09-26 Invoersoort en vorm (ontwerp).md.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-26T18:30:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "FormulierDefinitie 'Voorbeeld: klikbare afbeelding' (vorm image-map)",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Voorbeeld-FormulierDefinitie voor de vorm image-map (klikbare afbeelding)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "formulierdefinitie": {
+                "id": "$nieuw.fd"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "naam": "Voorbeeld: klikbare afbeelding",
+                "beschrijving": "Proefformulier voor de vorm 'klikbare afbeelding': kies de Common Ground-laag van het product in het lagenmodel, en de soorten betrokken organisaties in het ecosysteem.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "layout": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "layout_json": "{\"type\": \"formulier\", \"elementen\": [{\"type\": \"groep\", \"label\": \"Product\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.producten.naam\", \"label\": \"Naam van het product\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.type\", \"label\": \"Soort product\", \"vorm\": \"radio-group\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.CG_laag\", \"label\": \"In welke Common Ground-laag valt het product?\", \"beschrijving\": \"Klik op één laag (of gebruik de pijltjestoetsen en Enter).\", \"vorm\": \"image-map\", \"vormConfig\": {\"image\": \"/viz/react/voorbeelden/cg-lagen.svg\", \"alt\": \"Het Common Ground-vijflagenmodel, met hosting eronder\", \"units\": \"px\", \"width\": 600, \"height\": 420, \"areas\": [{\"value\": \"Laag 5\", \"label\": \"Laag 5 · Interactie\", \"shape\": \"rect\", \"coords\": [20, 20, 580, 75]}, {\"value\": \"Laag 4\", \"label\": \"Laag 4 · Proces\", \"shape\": \"rect\", \"coords\": [20, 85, 580, 140]}, {\"value\": \"Laag 3\", \"label\": \"Laag 3 · Integratie\", \"shape\": \"rect\", \"coords\": [20, 150, 580, 205]}, {\"value\": \"Laag 2\", \"label\": \"Laag 2 · Services\", \"shape\": \"rect\", \"coords\": [20, 215, 580, 270]}, {\"value\": \"Laag 1\", \"label\": \"Laag 1 · Data\", \"shape\": \"rect\", \"coords\": [20, 280, 580, 335]}, {\"value\": \"Hosting en infrastructuur\", \"label\": \"Hosting en infrastructuur\", \"shape\": \"rect\", \"coords\": [20, 345, 580, 400]}], \"maxWidth\": \"520px\"}}]}, {\"type\": \"lijst\", \"bron\": \"Initiatief.betrokken_organisatie\", \"label\": \"Welke soorten organisaties zijn betrokken?\", \"beschrijving\": \"Klik op alle partijen die meedoen; nog eens klikken haalt ze weg.\", \"vorm\": \"image-map\", \"vormConfig\": {\"image\": \"/viz/react/voorbeelden/cg-ecosysteem.svg\", \"alt\": \"Een initiatief met daaromheen vijf soorten organisaties\", \"units\": \"px\", \"width\": 600, \"height\": 440, \"areas\": [{\"value\": \"Gemeenten\", \"shape\": \"circle\", \"coords\": [300, 60, 58]}, {\"value\": \"Leveranciers\", \"shape\": \"circle\", \"coords\": [452, 171, 58]}, {\"value\": \"VNG\", \"shape\": \"circle\", \"coords\": [394, 349, 58]}, {\"value\": \"Ketenpartners\", \"shape\": \"circle\", \"coords\": [206, 349, 58]}, {\"value\": \"Rijk\", \"shape\": \"circle\", \"coords\": [148, 171, 58]}], \"maxWidth\": \"520px\"}, \"elementen\": [{\"type\": \"veld\", \"veld\": \"type\"}]}]}"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_aanvang": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "datum": "2026-09-26"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

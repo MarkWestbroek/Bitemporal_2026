@@ -110,6 +110,14 @@ Op een **lijst**:
 Bij `meerkeuze` telt het eerste sjabloonveld zonder vasteWaarde als het keuzeveld; vaste waarden
 van de lijst gaan mee in elke rij (bv. `rol` = *Realiseert* + chips van gemeenten).
 
+### 3.1 Vorm (opvolger van `widget`)
+
+`widget` wordt **`vorm`** (+ `vormConfig`): de scheiding tussen de *inhoud* (invoersoort: één/meer
+uit een lijst, tekst, …, volgt uit het model) en de *vorm* (hoe het eruitziet). Vormnamen zijn een
+met Imprint gedeelde woordenlijst: `radio-group`, `text-area`, `checkbox-group`, `combobox`, en
+nieuw `image-map` (klikbare gebieden op een afbeelding, op een veld én op een lijst). De oude
+`widget`-waarden blijven als alias werken. Zie `docs/plans/2026-09-26 Invoersoort en vorm (ontwerp).md`.
+
 ## 4. Gebruik: bewerken en nieuw
 
 | | Bewerken | Nieuw (ingelogd) | Nieuw (openbaar) |

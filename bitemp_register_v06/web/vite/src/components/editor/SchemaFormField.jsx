@@ -4,6 +4,8 @@ import RefCombobox from "./RefCombobox";
 import EntiteitCombobox from "./EntiteitCombobox";
 import { useSchema } from "../../context/SchemaContext";
 import CodeEditor, { jsonParseFout } from "./CodeEditor";
+import ImageMapKeuze from "../../vormen/ImageMapKeuze";
+import { normaliseerVorm, vormPastBij, invoersoortVanVeld } from "../../vormen/vormen";
 
 /**
  * SchemaFormField — generiek formulierveld dat één `veld` uit de schema-API
@@ -21,12 +23,15 @@ import CodeEditor, { jsonParseFout } from "./CodeEditor";
  *  - readOnly:  forceer readonly (voor PK/FK/autoincrement)
  *  - widgetOverride: optionele expliciete widget-keuze uit formulier/weergaveconfiguratie
  *                    ("radio" toont een enum als radiogroep; "textarea"/"json"/"markdown")
+ *  - vorm, vormConfig: de vorm uit de layout (src/vormen/vormen.js); wint van widgetOverride.
+ *                    Oude widget-namen worden genormaliseerd (radio → radio-group,
+ *                    textarea → text-area). `image-map` = klikbare afbeelding (ImageMapKeuze).
  *  - nieuwFormulier, diepte: voor een relatieveld naar een gewone ENT (veld.doelEntiteit):
  *                    FD-id van een ingebed "nieuw"-formulier en de maak-diepte (EntiteitCombobox)
  *  - toonValidatie: undefined = valideer direct (bewerk-modus); false/true = pas na aanraking
  *                    van het veld of na een verzendpoging (nieuw-modus)
  */
-export default function SchemaFormField({ veld, value, onChange: onChangeProp, error, readOnly, widgetOverride, labelOverride, nieuwFormulier, diepte = 0, toonValidatie }) {
+export default function SchemaFormField({ veld, value, onChange: onChangeProp, error, readOnly, widgetOverride, vorm, vormConfig, labelOverride, nieuwFormulier, diepte = 0, toonValidatie }) {
   const fieldId = useId();
   const { datatypeByNaam } = useSchema();
   // Aangeraakt = de gebruiker heeft het veld gewijzigd of verlaten. Met `toonValidatie`
@@ -46,7 +51,8 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
   // Weergave-hints uit DatatypeRegistry ophalen (widget, prefix, suffix, multiline, decimalen)
   const datatypeMeta = veld.datatype ? datatypeByNaam?.[veld.datatype] : null;
   const weergave = datatypeMeta?.weergave || {};
-  const effectieveWidget = widgetOverride || weergave.widget || "";
+  // Vorm (nieuw) wint van widget (oud) wint van de datatype-hint; namen genormaliseerd.
+  const effectieveWidget = normaliseerVorm(vorm) || normaliseerVorm(widgetOverride) || normaliseerVorm(weergave.widget) || "";
 
   function inputType() {
     if (type === "string" && format === "date") return "date";
@@ -98,8 +104,22 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
       );
     }
 
-    // Enum als radiogroep (widget "radio"), bv. een schaal 1–4 in een aanmeldformulier.
-    if (enumOpties.length > 0 && effectieveWidget === "radio") {
+    // Klikbare afbeelding (vorm "image-map") voor één uit een lijst: enum of referentielijst.
+    if (effectieveWidget === "image-map" && vormPastBij("image-map", invoersoortVanVeld(veld))) {
+      return (
+        <ImageMapKeuze
+          config={vormConfig}
+          opties={enumOpties.length ? enumOpties : undefined}
+          waarde={value}
+          onChange={onChange}
+          readOnly={isReadonly}
+          labelId={`${fieldId}-label`}
+        />
+      );
+    }
+
+    // Enum als radiogroep (vorm "radio-group", oud: widget "radio"), bv. een schaal 1–4.
+    if (enumOpties.length > 0 && effectieveWidget === "radio-group") {
       return (
         <div className="utrecht-form-field__input" style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }} role="radiogroup">
           {enumOpties.map((opt) => (
@@ -194,7 +214,7 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
     }
 
     // Multiline / textarea widget (bijv. LangeTekst)
-    if (weergave.multiline || effectieveWidget === "textarea") {
+    if (weergave.multiline || effectieveWidget === "text-area") {
       return (
         <textarea
           id={fieldId}
@@ -247,7 +267,7 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
 
   return (
     <div className="utrecht-form-field" style={{ marginBottom: "0.75rem", ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }} onBlur={() => setAangeraakt(true)}>
-      <label htmlFor={fieldId} className="utrecht-form-label" style={{ display: "block", marginBottom: "0.25rem" }}>
+      <label id={`${fieldId}-label`} htmlFor={fieldId} className="utrecht-form-label" style={{ display: "block", marginBottom: "0.25rem" }}>
         {labelOverride || veld.naam}
         {veld.verplicht && <span style={{ color: "var(--cg-fout)", marginLeft: 4 }}>*</span>}
       </label>

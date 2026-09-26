@@ -2,6 +2,8 @@ import SchemaFormField from "./SchemaFormField";
 import { bepaalWidgetOverride } from "./widgetOverrides";
 import { vasteWaardenVanLijst, rijPastBijLijst } from "./nieuwFormulierMapping";
 import RefMeerkeuze from "./RefMeerkeuze";
+import ImageMapKeuze from "../../vormen/ImageMapKeuze";
+import { lijstVorm, keuzesNaarRijen } from "../../vormen/vormen";
 
 /**
  * CustomFormulierRenderer — rendert een formulier op basis van een layout-JSON
@@ -24,6 +26,10 @@ import RefMeerkeuze from "./RefMeerkeuze";
  *                         boven max geen "toevoegen", op of onder min geen "verwijder".
  *  - lijst.widget       → "meerkeuze": één veld in het sjabloon; enum → checkboxes, referentielijst
  *                         → chips + zoekveld (RefMeerkeuze); per keuze een rij { ...vast, [veld]: keuze }.
+ *  - veld.vorm / lijst.vorm (+ vormConfig) → de VORM van de invoer, los van de inhoud
+ *                         (src/vormen/vormen.js). Een lijst met een vorm is een meer-uit-lijst;
+ *                         `widget: "meerkeuze"` is daarvan de oude schrijfwijze. Nu gebouwd:
+ *                         `image-map` (klikbare afbeelding, ImageMapKeuze) op veld en lijst.
  *  - veld.nieuwFormulier→ (stap B) FD-id waarmee vanuit een relatieveld een nieuwe doel-ENT
  *                         ingebed kan worden aangemaakt (alleen op diepte 0, zie NieuwSubFormulier).
  *
@@ -138,6 +144,8 @@ export default function CustomFormulierRenderer({
               error={errors[lookupNaam]}
               readOnly={readOnly || element.readonly}
               widgetOverride={bepaalWidgetOverride(typeMeta, lookupNaam, element.widget)}
+              vorm={element.vorm}
+              vormConfig={element.vormConfig}
               labelOverride={element.label}
               nieuwFormulier={element.nieuwFormulier}
               diepte={diepte}
@@ -191,7 +199,8 @@ export default function CustomFormulierRenderer({
 
         // Meerkeuze: één veld in het sjabloon → enum: checkbox per optie; referentielijst:
         // chips + zoekveld (RefMeerkeuze). Per keuze ontstaat een rij { ...vast, [veld]: keuze }.
-        if (element.widget === "meerkeuze") {
+        const vormVanLijst = lijstVorm(element);
+        if (vormVanLijst) {
           const keuzeEl = template.find((t) => t.type === "veld" && (t.vasteWaarde === undefined || t.vasteWaarde === null || t.vasteWaarde === ""));
           const keuzeDef = keuzeEl ? veldenByNaam[`${bron}.${keuzeEl.veld}`] : null;
           const opties = Array.isArray(keuzeDef?.enum) ? keuzeDef.enum.filter(Boolean) : [];
@@ -201,6 +210,29 @@ export default function CustomFormulierRenderer({
             if (gekozen.has(opt)) verwijder(opt);
             else zetAlle([...alle, { ...vast, [keuzeEl.veld]: opt }]);
           };
+          // Klikbare afbeelding: zelfde inhoud (meer uit een lijst), andere vorm. De vorm
+          // levert alleen sleutels; keuzesNaarRijen maakt er dezelfde rijen van als de vinkjes.
+          if (vormVanLijst === "image-map") {
+            const labelId = `lijst-${index}-${bron.replace(/\W/g, "_")}-label`;
+            return (
+              <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
+                <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+                {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
+                {!keuzeDef && <div style={{ color: "var(--cg-fout, red)" }}>Klikbare afbeelding zonder keuzeveld: <code>{bron}</code></div>}
+                {keuzeDef && (
+                  <ImageMapKeuze
+                    config={element.vormConfig}
+                    opties={opties.length ? opties : undefined}
+                    meervoudig
+                    waarde={[...gekozen].filter(Boolean)}
+                    onChange={(sleutels) => zetAlle(keuzesNaarRijen(alle, eigenIdx, keuzeEl.veld, vast, sleutels))}
+                    readOnly={readOnly}
+                    labelId={labelId}
+                  />
+                )}
+              </fieldset>
+            );
+          }
           if (keuzeDef?.ref) {
             return (
               <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
