@@ -80,6 +80,14 @@ const (
 	DashboardWeergavelijst  DashboardWeergave = "lijst"
 )
 
+type LijstDefinitieStatus string
+
+const (
+	LijstDefinitieStatusconcept  LijstDefinitieStatus = "concept"
+	LijstDefinitieStatusactief   LijstDefinitieStatus = "actief"
+	LijstDefinitieStatusinactief LijstDefinitieStatus = "inactief"
+)
+
 // FormulierDefinitie_Meta — Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.
 type FormulierDefinitie_Meta struct {
 	bun.BaseModel            `bun:"table:formulierdefinitie_meta,alias:formulierdefinitie_meta"`
@@ -698,4 +706,56 @@ type DashboardDefinitie_DashboarddefinitieStatus_Einde struct {
 	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer                *time.Time `json:"opvoer,omitempty"`
 	Afvoer                *time.Time `json:"afvoer,omitempty"`
+}
+
+// LijstDefinitie_Meta — Metadata van de lijstdefinitie: naam, code, beschrijving, doeltype en status.
+type LijstDefinitie_Meta struct {
+	bun.BaseModel        `bun:"table:lijstdefinitie_meta,alias:lijstdefinitie_meta"`
+	LijstDefinitie_ID    int                        `json:"lijstdefinitie_id" bun:"lijstdefinitie_id,pk" schema_desc:"ID van de LijstDefinitie-entiteit"`
+	Rel_ID               int                        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentLijstDefinitie *LijstDefinitie            `json:"-" bun:"rel:belongs-to,join:lijstdefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                 `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                 `json:"afvoer,omitempty"`
+	Data                 []LijstDefinitie_Meta_Data `bun:"rel:has-many,join:lijstdefinitie_id=lijstdefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// LijstDefinitie_Meta_Data — geversioned inhoud van LijstDefinitie_Meta.
+type LijstDefinitie_Meta_Data struct {
+	bun.BaseModel     `bun:"table:lijstdefinitie_meta_data,alias:lijstdefinitie_meta_data"`
+	LijstDefinitie_ID int                  `json:"lijstdefinitie_id" bun:"lijstdefinitie_id,pk"`
+	Rel_ID            int                  `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64                `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam              string               `json:"naam"`
+	Code              *string              `json:"code,omitempty"`
+	Beschrijving      string               `json:"beschrijving"`
+	Doeltype          string               `json:"doeltype"`
+	Status            LijstDefinitieStatus `json:"status" schema:"enum=LijstDefinitieStatus"`
+	IsStandaard       *bool                `json:"is_standaard,omitempty"`
+	Opvoer            *time.Time           `json:"opvoer,omitempty"`
+	Afvoer            *time.Time           `json:"afvoer,omitempty"`
+}
+
+// LijstDefinitie_Lijstconfig — De lijst: kolommen (veldpad, label, breedte, sorteerbaar, filterbaar), standaardsortering en rijen per pagina, in hetzelfde formaat als de tabelconfig van een WeergaveDefinitie. Plus het formulier waar een rij naartoe klikt.
+type LijstDefinitie_Lijstconfig struct {
+	bun.BaseModel        `bun:"table:lijstdefinitie_lijstconfig,alias:lijstdefinitie_lijstconfig"`
+	LijstDefinitie_ID    int                               `json:"lijstdefinitie_id" bun:"lijstdefinitie_id,pk" schema_desc:"ID van de LijstDefinitie-entiteit"`
+	Rel_ID               int                               `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentLijstDefinitie *LijstDefinitie                   `json:"-" bun:"rel:belongs-to,join:lijstdefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                        `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                        `json:"afvoer,omitempty"`
+	Data                 []LijstDefinitie_Lijstconfig_Data `bun:"rel:has-many,join:lijstdefinitie_id=lijstdefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// LijstDefinitie_Lijstconfig_Data — geversioned inhoud van LijstDefinitie_Lijstconfig.
+type LijstDefinitie_Lijstconfig_Data struct {
+	bun.BaseModel     `bun:"table:lijstdefinitie_lijstconfig_data,alias:lijstdefinitie_lijstconfig_data"`
+	LijstDefinitie_ID int        `json:"lijstdefinitie_id" bun:"lijstdefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	LijstConfigJson   string     `json:"lijst_config_json"`
+	Formulier         *string    `json:"formulier,omitempty"`
+	FormulierKiesbaar *bool      `json:"formulier_kiesbaar,omitempty"`
+	DefinitieVersie   Versie     `json:"definitie_versie" schema:"datatype:Versie"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }

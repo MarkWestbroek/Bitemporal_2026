@@ -158,3 +158,23 @@ type DashboardDefinitie_DashboarddefinitieStatus_Input struct {
 	Aanvang               *Date                    `json:"aanvang,omitempty"`
 	Einde                 *Date                    `json:"einde,omitempty"`
 }
+
+type LijstDefinitie_Meta_Input struct {
+	LIJSTDEFINITIE_ID int                  `json:"lijstdefinitie_id"`
+	Rel_ID            int                  `json:"rel_id"`
+	Naam              string               `json:"naam"`
+	Code              *string              `json:"code,omitempty"`
+	Beschrijving      string               `json:"beschrijving"`
+	Doeltype          string               `json:"doeltype"`
+	Status            LijstDefinitieStatus `json:"status" schema:"enum=LijstDefinitieStatus"`
+	IsStandaard       *bool                `json:"is_standaard,omitempty"`
+}
+
+type LijstDefinitie_Lijstconfig_Input struct {
+	LIJSTDEFINITIE_ID int     `json:"lijstdefinitie_id"`
+	Rel_ID            int     `json:"rel_id"`
+	LijstConfigJson   string  `json:"lijst_config_json"`
+	Formulier         *string `json:"formulier,omitempty"`
+	FormulierKiesbaar *bool   `json:"formulier_kiesbaar,omitempty"`
+	DefinitieVersie   Versie  `json:"definitie_versie" schema:"datatype:Versie"`
+}

@@ -1,0 +1,226 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-27T20:00:00Z",
+  "source": "manual://claude-lijstdefinitie",
+  "description": "Eerste LijstDefinities (nieuwe entiteit in het configuratiedomein, 2026-09-27): standaardoverzichten in de inhoud-editor voor FormulierDefinitie, WeergaveDefinitie en LijstDefinitie (naam, code, doeltype, status, standaard; zonder de JSON), en voor Organisatie (opent met het formulier 'nieuwe-organisatie', ander formulier kiezen mag). Vereist een API met LijstDefinitie in het model en de frontend met hooks/useLijstDefinitie.js. Id's als plaatshouder.",
+  "count": 4,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T20:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "LijstDefinitie 'Formulierdefinities'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "LijstDefinitie 'Formulierdefinities'"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "lijstdefinitie": {
+                "id": "$nieuw.ldfd"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstdefinitie_meta": {
+                "lijstdefinitie_id": "$nieuw.ldfd",
+                "naam": "Formulierdefinities",
+                "code": "formulierdefinities",
+                "beschrijving": "Overzicht van de formulierdefinities: naam, code, doeltype, status en standaard (zonder de layout).",
+                "doeltype": "FormulierDefinitie",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstconfig": {
+                "lijstdefinitie_id": "$nieuw.ldfd",
+                "lijst_config_json": "{\"kolommen\": [{\"veldpad\": \"id\", \"label\": \"ID\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 70}, {\"veldpad\": \"formulier_definitie_metas.data.naam\", \"label\": \"Naam\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 260}, {\"veldpad\": \"formulier_definitie_metas.data.code\", \"label\": \"Code\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 220}, {\"veldpad\": \"formulier_definitie_metas.data.doeltype\", \"label\": \"Doeltype\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 160}, {\"veldpad\": \"formulier_definitie_metas.data.status\", \"label\": \"Status\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 100}, {\"veldpad\": \"formulier_definitie_metas.data.is_standaard\", \"label\": \"Standaard\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 90}, {\"veldpad\": \"aanvang.datum\", \"label\": \"Aanvang\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 110}], \"standaardSortering\": {\"veld\": \"formulier_definitie_metas.data.naam\", \"richting\": \"asc\"}, \"rijenPerPagina\": 25}",
+                "formulier_kiesbaar": true,
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstdefinitie_aanvang": {
+                "lijstdefinitie_id": "$nieuw.ldfd",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T20:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "LijstDefinitie 'Weergavedefinities'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "LijstDefinitie 'Weergavedefinities'"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "lijstdefinitie": {
+                "id": "$nieuw.ldwd"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstdefinitie_meta": {
+                "lijstdefinitie_id": "$nieuw.ldwd",
+                "naam": "Weergavedefinities",
+                "code": "weergavedefinities",
+                "beschrijving": "Overzicht van de weergavedefinities: naam, code, doeltype, status en standaard.",
+                "doeltype": "WeergaveDefinitie",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstconfig": {
+                "lijstdefinitie_id": "$nieuw.ldwd",
+                "lijst_config_json": "{\"kolommen\": [{\"veldpad\": \"id\", \"label\": \"ID\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 70}, {\"veldpad\": \"weergave_definitie_metas.data.naam\", \"label\": \"Naam\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 260}, {\"veldpad\": \"weergave_definitie_metas.data.code\", \"label\": \"Code\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 220}, {\"veldpad\": \"weergave_definitie_metas.data.doeltype\", \"label\": \"Doeltype\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 160}, {\"veldpad\": \"weergave_definitie_metas.data.status\", \"label\": \"Status\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 100}, {\"veldpad\": \"weergave_definitie_metas.data.is_standaard\", \"label\": \"Standaard\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 90}, {\"veldpad\": \"aanvang.datum\", \"label\": \"Aanvang\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 110}], \"standaardSortering\": {\"veld\": \"weergave_definitie_metas.data.naam\", \"richting\": \"asc\"}, \"rijenPerPagina\": 25}",
+                "formulier_kiesbaar": true,
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstdefinitie_aanvang": {
+                "lijstdefinitie_id": "$nieuw.ldwd",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T20:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "LijstDefinitie 'Lijstdefinities'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "LijstDefinitie 'Lijstdefinities'"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "lijstdefinitie": {
+                "id": "$nieuw.ldld"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstdefinitie_meta": {
+                "lijstdefinitie_id": "$nieuw.ldld",
+                "naam": "Lijstdefinities",
+                "code": "lijstdefinities",
+                "beschrijving": "Overzicht van de lijstdefinities zelf.",
+                "doeltype": "LijstDefinitie",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstconfig": {
+                "lijstdefinitie_id": "$nieuw.ldld",
+                "lijst_config_json": "{\"kolommen\": [{\"veldpad\": \"id\", \"label\": \"ID\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 70}, {\"veldpad\": \"lijst_definitie_metas.data.naam\", \"label\": \"Naam\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 260}, {\"veldpad\": \"lijst_definitie_metas.data.code\", \"label\": \"Code\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 220}, {\"veldpad\": \"lijst_definitie_metas.data.doeltype\", \"label\": \"Doeltype\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 160}, {\"veldpad\": \"lijst_definitie_metas.data.status\", \"label\": \"Status\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 100}, {\"veldpad\": \"lijst_definitie_metas.data.is_standaard\", \"label\": \"Standaard\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 90}, {\"veldpad\": \"aanvang.datum\", \"label\": \"Aanvang\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 110}, {\"veldpad\": \"lijst_definitie_lijstconfigs.data.formulier\", \"label\": \"Opent met\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 180}], \"standaardSortering\": {\"veld\": \"lijst_definitie_metas.data.naam\", \"richting\": \"asc\"}, \"rijenPerPagina\": 25}",
+                "formulier_kiesbaar": true,
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstdefinitie_aanvang": {
+                "lijstdefinitie_id": "$nieuw.ldld",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T20:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "LijstDefinitie 'Organisaties'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "LijstDefinitie 'Organisaties'"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "lijstdefinitie": {
+                "id": "$nieuw.ldorg"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstdefinitie_meta": {
+                "lijstdefinitie_id": "$nieuw.ldorg",
+                "naam": "Organisaties",
+                "code": "organisaties",
+                "beschrijving": "Organisaties met naam en contactgegevens; een rij opent met het formulier 'Nieuwe organisatie' (een ander formulier kiezen mag).",
+                "doeltype": "Organisatie",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstconfig": {
+                "lijstdefinitie_id": "$nieuw.ldorg",
+                "lijst_config_json": "{\"kolommen\": [{\"veldpad\": \"id\", \"label\": \"ID\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 70}, {\"veldpad\": \"organisatienamen.data.naam\", \"label\": \"Naam\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 260}, {\"veldpad\": \"organisatiecontactgegevens.data.url\", \"label\": \"Website\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 240}, {\"veldpad\": \"organisatiecontactgegevens.data.email\", \"label\": \"E-mail\", \"sorteerbaar\": true, \"filterbaar\": true, \"breedte\": 220}, {\"veldpad\": \"contactpersonen.weergavenaam\", \"label\": \"Contactpersonen\", \"sorteerbaar\": false, \"filterbaar\": true, \"breedte\": 200}], \"standaardSortering\": {\"veld\": \"organisatienamen.data.naam\", \"richting\": \"asc\"}, \"rijenPerPagina\": 25}",
+                "formulier_kiesbaar": true,
+                "definitie_versie": "0.1",
+                "formulier": "nieuwe-organisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "lijstdefinitie_aanvang": {
+                "lijstdefinitie_id": "$nieuw.ldorg",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}

@@ -59,6 +59,16 @@ func (d DashboardDefinitie) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *DashboardDefinitie) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d DashboardDefinitie) String() string          { return RepresentatieToString(d) }
 
+// LijstDefinitie
+func (l LijstDefinitie) GetID() any              { return l.ID }
+func (l LijstDefinitie) Metatype() Metatype      { return MetatypeEntiteit }
+func (l *LijstDefinitie) ClearID()               { l.ID = 0 }
+func (l LijstDefinitie) GetOpvoer() *time.Time   { return l.Opvoer }
+func (l *LijstDefinitie) SetOpvoer(t *time.Time) { l.Opvoer = t }
+func (l LijstDefinitie) GetAfvoer() *time.Time   { return l.Afvoer }
+func (l *LijstDefinitie) SetAfvoer(t *time.Time) { l.Afvoer = t }
+func (l LijstDefinitie) String() string          { return RepresentatieToString(l) }
+
 /* ================================================================
    2. HUBS (GE + REL) — interface-methoden
    ================================================================ */
@@ -286,6 +296,26 @@ func (dd *DashboardDefinitie_DashboarddefinitieStatus) SetAfvoer(t *time.Time) {
 func (dd DashboardDefinitie_DashboarddefinitieStatus) String() string {
 	return RepresentatieToString(dd)
 }
+
+// LijstDefinitie_Meta
+func (lm LijstDefinitie_Meta) GetID() any              { return lm.Rel_ID }
+func (lm LijstDefinitie_Meta) Metatype() Metatype      { return MetatypeGegevenselement }
+func (lm *LijstDefinitie_Meta) ClearID()               { lm.Rel_ID = 0 }
+func (lm LijstDefinitie_Meta) GetOpvoer() *time.Time   { return lm.Opvoer }
+func (lm *LijstDefinitie_Meta) SetOpvoer(t *time.Time) { lm.Opvoer = t }
+func (lm LijstDefinitie_Meta) GetAfvoer() *time.Time   { return lm.Afvoer }
+func (lm *LijstDefinitie_Meta) SetAfvoer(t *time.Time) { lm.Afvoer = t }
+func (lm LijstDefinitie_Meta) String() string          { return RepresentatieToString(lm) }
+
+// LijstDefinitie_Lijstconfig
+func (ll LijstDefinitie_Lijstconfig) GetID() any              { return ll.Rel_ID }
+func (ll LijstDefinitie_Lijstconfig) Metatype() Metatype      { return MetatypeGegevenselement }
+func (ll *LijstDefinitie_Lijstconfig) ClearID()               { ll.Rel_ID = 0 }
+func (ll LijstDefinitie_Lijstconfig) GetOpvoer() *time.Time   { return ll.Opvoer }
+func (ll *LijstDefinitie_Lijstconfig) SetOpvoer(t *time.Time) { ll.Opvoer = t }
+func (ll LijstDefinitie_Lijstconfig) GetAfvoer() *time.Time   { return ll.Afvoer }
+func (ll *LijstDefinitie_Lijstconfig) SetAfvoer(t *time.Time) { ll.Afvoer = t }
+func (ll LijstDefinitie_Lijstconfig) String() string          { return RepresentatieToString(ll) }
 
 /* ================================================================
    3. _DATA — interface-methoden
@@ -525,6 +555,26 @@ func (d DashboardDefinitie_DashboarddefinitieStatus_Data) String() string {
 	return RepresentatieToString(d)
 }
 
+// LijstDefinitie_Meta_Data
+func (d LijstDefinitie_Meta_Data) GetID() any              { return d.Versie }
+func (d LijstDefinitie_Meta_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *LijstDefinitie_Meta_Data) ClearID()               { d.Versie = 0 }
+func (d LijstDefinitie_Meta_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *LijstDefinitie_Meta_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d LijstDefinitie_Meta_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *LijstDefinitie_Meta_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d LijstDefinitie_Meta_Data) String() string          { return RepresentatieToString(d) }
+
+// LijstDefinitie_Lijstconfig_Data
+func (d LijstDefinitie_Lijstconfig_Data) GetID() any              { return d.Versie }
+func (d LijstDefinitie_Lijstconfig_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *LijstDefinitie_Lijstconfig_Data) ClearID()               { d.Versie = 0 }
+func (d LijstDefinitie_Lijstconfig_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *LijstDefinitie_Lijstconfig_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d LijstDefinitie_Lijstconfig_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *LijstDefinitie_Lijstconfig_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d LijstDefinitie_Lijstconfig_Data) String() string          { return RepresentatieToString(d) }
+
 /* ================================================================
    4. _AANVANG/_EINDE (entiteits-plumbing) — interface-methoden
    ================================================================ */
@@ -628,6 +678,26 @@ func (d *DashboardDefinitie_Einde) SetOpvoer(t *time.Time) { d.Opvoer = t }
 func (d DashboardDefinitie_Einde) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *DashboardDefinitie_Einde) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d DashboardDefinitie_Einde) String() string          { return RepresentatieToString(d) }
+
+// LijstDefinitie_Aanvang
+func (l LijstDefinitie_Aanvang) GetID() any              { return l.Versie }
+func (l LijstDefinitie_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (l *LijstDefinitie_Aanvang) ClearID()               { l.Versie = 0 }
+func (l LijstDefinitie_Aanvang) GetOpvoer() *time.Time   { return l.Opvoer }
+func (l *LijstDefinitie_Aanvang) SetOpvoer(t *time.Time) { l.Opvoer = t }
+func (l LijstDefinitie_Aanvang) GetAfvoer() *time.Time   { return l.Afvoer }
+func (l *LijstDefinitie_Aanvang) SetAfvoer(t *time.Time) { l.Afvoer = t }
+func (l LijstDefinitie_Aanvang) String() string          { return RepresentatieToString(l) }
+
+// LijstDefinitie_Einde
+func (l LijstDefinitie_Einde) GetID() any              { return l.Versie }
+func (l LijstDefinitie_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (l *LijstDefinitie_Einde) ClearID()               { l.Versie = 0 }
+func (l LijstDefinitie_Einde) GetOpvoer() *time.Time   { return l.Opvoer }
+func (l *LijstDefinitie_Einde) SetOpvoer(t *time.Time) { l.Opvoer = t }
+func (l LijstDefinitie_Einde) GetAfvoer() *time.Time   { return l.Afvoer }
+func (l *LijstDefinitie_Einde) SetAfvoer(t *time.Time) { l.Afvoer = t }
+func (l LijstDefinitie_Einde) String() string          { return RepresentatieToString(l) }
 
 /* ================================================================
    5. _AANVANG/_EINDE (hub-level plumbing) — interface-methoden
@@ -1131,6 +1201,26 @@ func (i DashboardDefinitie_DashboarddefinitieStatus_Input) String() string {
 	return RepresentatieToString(i)
 }
 
+// LijstDefinitie_Meta_Input
+func (i LijstDefinitie_Meta_Input) GetID() any              { return i.Rel_ID }
+func (i LijstDefinitie_Meta_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *LijstDefinitie_Meta_Input) ClearID()               { i.Rel_ID = 0 }
+func (i LijstDefinitie_Meta_Input) GetOpvoer() *time.Time   { return nil }
+func (i *LijstDefinitie_Meta_Input) SetOpvoer(t *time.Time) {}
+func (i LijstDefinitie_Meta_Input) GetAfvoer() *time.Time   { return nil }
+func (i *LijstDefinitie_Meta_Input) SetAfvoer(t *time.Time) {}
+func (i LijstDefinitie_Meta_Input) String() string          { return RepresentatieToString(i) }
+
+// LijstDefinitie_Lijstconfig_Input
+func (i LijstDefinitie_Lijstconfig_Input) GetID() any              { return i.Rel_ID }
+func (i LijstDefinitie_Lijstconfig_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *LijstDefinitie_Lijstconfig_Input) ClearID()               { i.Rel_ID = 0 }
+func (i LijstDefinitie_Lijstconfig_Input) GetOpvoer() *time.Time   { return nil }
+func (i *LijstDefinitie_Lijstconfig_Input) SetOpvoer(t *time.Time) {}
+func (i LijstDefinitie_Lijstconfig_Input) GetAfvoer() *time.Time   { return nil }
+func (i *LijstDefinitie_Lijstconfig_Input) SetAfvoer(t *time.Time) {}
+func (i LijstDefinitie_Lijstconfig_Input) String() string          { return RepresentatieToString(i) }
+
 /* ================================================================
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
    ================================================================ */
@@ -1324,6 +1414,35 @@ func (d *DashboardDefinitie) GeefOnderliggendeGegevenselementen() []Onderliggend
 			d.Einde[idx].DashboardDefinitie_ID = d.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_Einde", Representatie: &d.Einde[idx]})
+	}
+	return result
+}
+
+func (l *LijstDefinitie) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0)
+	for idx := range l.LijstDefinitieMetas {
+		if l.LijstDefinitieMetas[idx].LijstDefinitie_ID == 0 {
+			l.LijstDefinitieMetas[idx].LijstDefinitie_ID = l.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "LijstDefinitie_Meta", Representatie: &l.LijstDefinitieMetas[idx]})
+	}
+	for idx := range l.LijstDefinitieLijstconfigs {
+		if l.LijstDefinitieLijstconfigs[idx].LijstDefinitie_ID == 0 {
+			l.LijstDefinitieLijstconfigs[idx].LijstDefinitie_ID = l.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "LijstDefinitie_Lijstconfig", Representatie: &l.LijstDefinitieLijstconfigs[idx]})
+	}
+	for idx := range l.Aanvang {
+		if l.Aanvang[idx].LijstDefinitie_ID == 0 {
+			l.Aanvang[idx].LijstDefinitie_ID = l.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "LijstDefinitie_Aanvang", Representatie: &l.Aanvang[idx]})
+	}
+	for idx := range l.Einde {
+		if l.Einde[idx].LijstDefinitie_ID == 0 {
+			l.Einde[idx].LijstDefinitie_ID = l.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "LijstDefinitie_Einde", Representatie: &l.Einde[idx]})
 	}
 	return result
 }
@@ -1724,6 +1843,34 @@ func (h *DashboardDefinitie_DashboarddefinitieStatus) GeefOnderliggendeGegevense
 			h.Einde[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Einde", Representatie: &h.Einde[i]})
+	}
+	return result
+}
+
+func (h *LijstDefinitie_Meta) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].LijstDefinitie_ID == 0 {
+			h.Data[i].LijstDefinitie_ID = h.LijstDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "LijstDefinitie_Meta_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *LijstDefinitie_Lijstconfig) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].LijstDefinitie_ID == 0 {
+			h.Data[i].LijstDefinitie_ID = h.LijstDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "LijstDefinitie_Lijstconfig_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }

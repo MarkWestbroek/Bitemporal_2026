@@ -669,6 +669,34 @@ Nog open:
   worden.
 - De JS-evaluator gebruikt nog `new Function` (punt 1).
 
+### Expressietalen vergeleken (27-09)
+
+Voor regels in het model: validatie, afgeleide velden, en later misschien autorisatie. De
+implementaties zijn naar mijn kennis en nog niet geverifieerd.
+
+| | **CEL** | **JSONata** | **FEEL** | **OCL** | **JSON Logic** |
+|---|---|---|---|---|---|
+| Herkomst | Google; Kubernetes, Firebase, Envoy | IBM; Node-RED, mappingtools | OMG, onderdeel van DMN | OMG, onderdeel van UML | open source, klein |
+| Gemaakt voor | policy- en validatie-expressies | JSON bevragen en **omvormen** | beslisregels en -tabellen | **invarianten op een model** | regels als data uitwisselen |
+| Percentage 0–100 | `value >= 0 && value <= 100` | `value >= 0 and value <= 100` | `value in [0..100]` | `inv: self.waarde >= 0 and self.waarde <= 100` | `{"<=":[0,{"var":"value"},100]}` |
+| Typering | statisch, vooraf gecontroleerd | dynamisch | dynamisch, met datum/duur als typen | statisch, tegen het UML-model | dynamisch |
+| Eindigt altijd? | ja, niet Turing-compleet, met kostenlimiet | nee, functies en recursie | vrijwel, alleen iteratie over lijsten | ja, geen neveneffecten | ja |
+| Implementaties | Go, Java, C++ officieel; JS, Python, .NET community | JS (referentie); Go, Java, Python, .NET als ports | Java (Camunda, Drools); JS (feelin); elders beperkt | vooral Java (Eclipse OCL) en modelleertools | JS, PHP, Python, Java, .NET, Go, Ruby |
+| Sterk in | snelle, voorspelbare ja/nee-regels; autorisatie | paden en transformaties in JSON | leesbaar voor de business; datums en duur | constraints die bíj de klasse in het model staan | overdraagbaarheid |
+| Zwak in | omvormen van data | voorspelbaarheid en veiligheid bij regels | breedte van implementaties | runtime-ondersteuning buiten Java | leesbaarheid voor een modelleur |
+
+Mijn lezing:
+- **CEL** voor regels (validatie, afgeleide velden, autorisatie).
+- **JSONata** voor mappings, dus bron → formulier in Imprint. Dat is een ander probleem dan
+  validatie.
+- **FEEL** voor beslistabellen, als DMN verder komt.
+- **OCL** is begripsmatig het zuiverst: een regel is een invariant op het model (`context BSN
+  inv: …`), en ook `{unique}` hoort daar thuis. Maar er is weinig runtime buiten Java.
+  Denkbaar als notatie in de Studio, vertaald naar CEL.
+- **JSON Logic** als uitwisselformaat voor omgevingen zonder CEL-bibliotheek.
+
+De testset (`testdata/validatie`) is de maatstaf: welke taal haalt hem in de meeste omgevingen.
+
 ### Uniekheid
 
 UML `{unique}` als eigenschap van het veld, met een bereik: binnen de entiteit, binnen het

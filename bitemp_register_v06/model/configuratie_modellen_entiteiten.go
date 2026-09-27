@@ -176,3 +176,35 @@ type DashboardDefinitie_Einde struct {
 	Opvoer                *time.Time `json:"opvoer,omitempty"`
 	Afvoer                *time.Time `json:"afvoer,omitempty"`
 }
+
+// LijstDefinitie — Lijstdefinitie voor het overzicht van een entiteitstype in de inhoud-editor: welke kolommen, sortering en filters, en met welk formulier een rij opent. De lijstkant van wat een FormulierDefinitie voor het detail is. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.
+type LijstDefinitie struct {
+	bun.BaseModel              `bun:"table:lijstdefinitie,alias:lijstdefinitie"`
+	ID                         int                          `json:"id" bun:"id,pk"`
+	Opvoer                     *time.Time                   `json:"opvoer,omitempty"`
+	Afvoer                     *time.Time                   `json:"afvoer,omitempty"`
+	LijstDefinitieMetas        []LijstDefinitie_Meta        `bun:"rel:has-many,join:id=lijstdefinitie_id" json:"lijst_definitie_metas,omitempty"`
+	LijstDefinitieLijstconfigs []LijstDefinitie_Lijstconfig `bun:"rel:has-many,join:id=lijstdefinitie_id" json:"lijst_definitie_lijstconfigs,omitempty"`
+	Aanvang                    []LijstDefinitie_Aanvang     `bun:"rel:has-many,join:id=lijstdefinitie_id" json:"aanvang,omitempty"`
+	Einde                      []LijstDefinitie_Einde       `bun:"rel:has-many,join:id=lijstdefinitie_id" json:"einde,omitempty"`
+}
+
+// LijstDefinitie_Aanvang — aanvangdatum van entiteit LijstDefinitie.
+type LijstDefinitie_Aanvang struct {
+	bun.BaseModel     `bun:"table:lijstdefinitie_aanvang,alias:lijstdefinitie_aanvang"`
+	LijstDefinitie_ID int        `json:"lijstdefinitie_id" bun:"lijstdefinitie_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// LijstDefinitie_Einde — eindedatum van entiteit LijstDefinitie.
+type LijstDefinitie_Einde struct {
+	bun.BaseModel     `bun:"table:lijstdefinitie_einde,alias:lijstdefinitie_einde"`
+	LijstDefinitie_ID int        `json:"lijstdefinitie_id" bun:"lijstdefinitie_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}

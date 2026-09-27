@@ -196,8 +196,10 @@ Zie [`docs/3D_UNIVERSUM.md`](docs/3D_UNIVERSUM.md) voor het volledige ontwerp, d
 
 ## Formulieren, weergaven en vormen
 
-Formulieren en publicatiepagina's zijn **data** in het configuratiedomein (FormulierDefinitie,
-WeergaveDefinitie), met een vormenbibliotheek voor invoer en weergave (inhoud en vorm gescheiden).
+Formulieren, overzichten en publicatiepagina's zijn **data** in het configuratiedomein
+(FormulierDefinitie, LijstDefinitie, WeergaveDefinitie), met een vormenbibliotheek voor invoer en
+weergave (inhoud en vorm gescheiden). Invoervelden controleren de regels van hun datatype uit het
+model (bv. de 11-proef van een BSN).
 
 - [`docs/FORMULIERDEFINITIES.md`](docs/FORMULIERDEFINITIES.md): de layout, vorm/vormConfig,
   nieuw, bewerken ("Bewerken via") en openbaar indienen. Een definitie wijs je aan met haar

@@ -201,6 +201,43 @@ doeltypen van subformulieren, de `vasteWaarde`s uit de layout (een gemanipuleerd
 overschreven), bron `aanmeldformulier`, rate-limit per IP. In een iframe (of met `&embed=1`)
 verdwijnt de kop.
 
+## 4a. LijstDefinitie: het overzicht vóór het formulier
+
+Een FormulierDefinitie is het detail. Een **LijstDefinitie** (configuratiedomein, sinds 27-09)
+is het overzicht in de inhoud-editor: welke kolommen, welke sortering, en met welk formulier een
+rij opent. Zonder lijstdefinitie blijft het overzicht automatisch: ID, het weergaveveld per GE,
+en aanvang/einde.
+
+| GE | Velden | Betekenis |
+|---|---|---|
+| `Meta` | `naam`, `code`, `beschrijving`, `doeltype`, `status`, `is_standaard` | zoals bij de FormulierDefinitie; de actieve standaard wordt het overzicht van dat doeltype |
+| `Lijstconfig` (enkelvoudig) | `lijst_config_json`, `formulier`, `formulier_kiesbaar`, `definitie_versie` | zie hieronder |
+
+- **`lijst_config_json`** heeft hetzelfde formaat als de tabelconfig van een WeergaveDefinitie:
+  `{ kolommen: [{ veldpad, label, breedte, sorteerbaar, filterbaar }], standaardSortering: { veld, richting }, rijenPerPagina }`.
+  De veldpaden worden ook op dezelfde manier opgelost (`publicatie/publicatieData.js`
+  `resolveVeldpad`).
+- **`formulier`** is de code (of het id) van de FormulierDefinitie waarmee een rij opent, via
+  `?formulier=`. Leeg betekent de standaard van het doeltype.
+- **`formulier_kiesbaar`** (boolean) bepaalt of de gebruiker daarna via *Bewerken via* een ander
+  actief formulier mag kiezen. Het formulier hierboven is dan alleen de standaardkeuze. Staat hij
+  uit, dan verdwijnt de keuzelijst.
+- **In de inhoud-editor** staat boven het overzicht een keuzelijst *Lijst*:
+  - `?lijst=<code of id>` kiest een lijst;
+  - `?lijst=automatisch` geeft het automatische overzicht;
+  - een rij opent met `?formulier=<code>&lijst=<code>`.
+- **Code:** `hooks/useLijstDefinitie.js`, `shared/lijstDefinities.js` (puur, getest),
+  `RepresentatieTabel.jsx`, `EntiteitFormulier.jsx`.
+- **Voorbeelden** in `replay files/registraties-replay-init-lijstdefinities-2026-09-27.json`:
+  - Formulierdefinities, Weergavedefinities en Lijstdefinities: naam, code, doeltype, status en
+    standaard, zonder de JSON;
+  - Organisaties: opent met `nieuwe-organisatie`.
+- **Model:** `docs/Model files (V3)/configuratie 2026-09-27 LijstDefinitie — v3-model.json`. De
+  Studio haalt hem op via de API.
+- **Later:** een WeergaveDefinitie kan naar een LijstDefinitie verwijzen in plaats van een eigen
+  tabelconfig te hebben; het formaat is al gelijk.
+- **Nog niet:** *+ Nieuw* vanuit een lijst gebruikt het formulier van de lijst nog niet.
+
 ## 5. Nieuwe doelentiteit vanuit een relatie (`nieuwFormulier`)
 
 Op de secundaire id van een relatie naar een gewone entiteit, bv. `organisatie_id` in
