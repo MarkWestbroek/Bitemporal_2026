@@ -90,6 +90,7 @@ export const VORMEN = Object.freeze({
   "partial-date":   v("Onvolledige datum", [TEKST, DATUM], "group (eigen)", "Jaar, maand en dag; maand en dag mogen onbekend zijn (DatumIncompleet).", { naam: "partial-date" }),
   "duration":       v("Tijdsduur", [TEKST], "group (eigen)", "Jaren, maanden, dagen … als losse getallen; opgeslagen als ISO 8601 (P1Y2M).", { naam: "duration" }),
   "color":          v("Kleur", [TEKST], "input (kleur)", "Kleurkiezer met hexcode en eventueel vaste stalen; vanzelf voor datatype Kleur.", { naam: "color" }),
+  "ai-assist":      v("Tekst met AI-assistent", [TEKST], "textarea + assistent", "Tekstvak met ✨: inkorten, herschrijven, aanvullen of een eigen opdracht; de invuller neemt een voorstel over of niet.", { naam: "ai-assist" }),
   "ranking":        v("Rangorde", [MEER_UIT_LIJST], "select (geordend)", "Een volgorde uit een lijst: toevoegen, slepen of ↑↓. De opslag bewaart de volgorde.", { naam: "ranking" }),
   "tag-input":      v("Labels invoeren", [MEER_UIT_LIJST, TEKST], 'appearance="minimal" + labels', "Gekozen waarden als labels in het veld; typen om aan te vullen. Zonder lijst: vrije labels.", { naam: "tag-input" }),
   "number-stepper": v("Plus-min", [GETAL], "range (knoppen)", "Een getal met − en + knoppen, binnen min en max.", { naam: "number-stepper" }),

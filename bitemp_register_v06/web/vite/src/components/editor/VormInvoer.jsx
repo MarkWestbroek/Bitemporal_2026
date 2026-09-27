@@ -15,6 +15,7 @@ import ColorInvoer from "../../vormen/ColorInvoer";
 import TagInvoer from "../../vormen/TagInvoer";
 import RankingKeuze from "../../vormen/RankingKeuze";
 import CodeVeld from "./CodeVeld";
+import AiAssistVeld from "./AiAssistVeld";
 import { knoppenUitOpties } from "../../vormen/buttonGroup";
 import useRefOpties from "./useRefOpties";
 
@@ -30,7 +31,7 @@ import useRefOpties from "./useRefOpties";
  *        meervoudig, readOnly, labelId
  */
 export const VORMINVOER = new Set(["image-map", "button-group", "cards", "nl-map", "switch", "range", "rotary", "stepper", "chips",
-  "masked", "partial-date", "duration", "number-stepper", "color", "tag-input", "code", "markdown", "ranking"]);
+  "masked", "partial-date", "duration", "number-stepper", "color", "tag-input", "code", "markdown", "ranking", "ai-assist"]);
 
 /** Vormen zonder keuzebron: ze bedienen tekst, een getal of een datum (uit het datatype). */
 const ZONDER_KEUZEBRON = { "masked": MaskedInvoer, "partial-date": PartialDateInvoer, "duration": DurationInvoer, "number-stepper": NumberStepper, "color": ColorInvoer };
@@ -39,6 +40,9 @@ export default function VormInvoer({ vorm, veld, config = {}, waarde, onChange, 
   if (ZONDER_KEUZEBRON[vorm]) {
     const C = ZONDER_KEUZEBRON[vorm];
     return <C waarde={waarde} onChange={onChange} readOnly={readOnly} labelId={labelId} config={config || {}} />;
+  }
+  if (vorm === "ai-assist") {
+    return <AiAssistVeld waarde={waarde} onChange={onChange} readOnly={readOnly} labelId={labelId} config={config || {}} veld={veld} />;
   }
   if (vorm === "code" || vorm === "markdown") {
     return <CodeVeld vorm={vorm} waarde={waarde} onChange={onChange} readOnly={readOnly} labelId={labelId} config={config || {}} />;

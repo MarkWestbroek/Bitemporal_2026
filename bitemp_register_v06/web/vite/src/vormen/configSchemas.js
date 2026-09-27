@@ -207,6 +207,14 @@ export const CONFIG_SCHEMAS = {
     type: "object",
     properties: { swatches: { type: "array", items: kleur, "x-omschrijving": "vaste kleuren om uit te kiezen" } },
   },
+  "ai-assist": {
+    type: "object",
+    properties: {
+      acties: { type: "array", items: { enum: ["korter", "helder", "zakelijk", "aanvullen", "spelling"] }, "x-omschrijving": "welke vaste acties (standaard alle)" },
+      formulier: { type: "string", "x-omschrijving": "naam van het formulier, als context voor de assistent" },
+      rows: { type: "number", minimum: 2 },
+    },
+  },
   ranking: {
     type: "object",
     properties: {

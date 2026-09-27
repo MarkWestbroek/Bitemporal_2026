@@ -106,7 +106,7 @@ Nog open uit de brainstorm hierboven:
 
 | Vorm | Idee van | Wacht op |
 |---|---|---|
-| `ai-assist` (tekst herschrijven, inkorten, aanvullen) | Mark | keuze AI-dienst en AVG (§9c vraag 2) |
+| `ai-assist` (tekst herschrijven, inkorten, aanvullen) | Mark | **gebouwd** (27-09): eigen sleutel (Claude, DeepSeek) of toegangscode via de Go-proxy; niet op openbare formulieren. Zie `docs/AI_ASSISTENT.md` |
 | `ai-extract` (plak tekst of URL, AI vult het formulier voor) | Claude | idem |
 | `ranking` (volgorde uit een lijst) | Claude | **gebouwd** (27-09) als vorm: toevoegen, slepen, ↑↓; opslag in één veld in de gekozen volgorde (`voegLijstSamen` zonder hersortering). Een GE met een volgnummerveld voor rijen is er nog niet |
 | `map` (gebieden op een echte kaart, GeoJSON) | Claude | deels gedekt door `nl-map` (gemeenten als stip) |

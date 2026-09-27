@@ -209,6 +209,7 @@ model (bv. de 11-proef van een BSN).
 - [`docs/plans/2026-09-26 Invoersoort en vorm (ontwerp).md`](docs/plans/2026-09-26%20Invoersoort%20en%20vorm%20(ontwerp).md):
   het ontwerp (invoersoort, vorm, opslag, keuzebron), de 22 vormen, EnumLijst en de open vragen.
 - **Showcase:** `/viz/react/vormen.html`: elke vorm in invoer en weergave, met de opgeslagen inhoud.
+- [`docs/AI_ASSISTENT.md`](docs/AI_ASSISTENT.md): de vorm `ai-assist` (voorstel, de mens beslist), eigen sleutel of toegangscode, en de AI-proxy.
 
 ## Afgeleide velden (Derived Fields)
 

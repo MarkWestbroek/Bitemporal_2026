@@ -11,6 +11,7 @@ import "@utrecht/component-library-css";
 import "@utrecht/design-tokens/dist/index.css";
 import "../styles/common-ground-theme.css";
 import { vindDefinitie } from "../shared/definitieSleutel";
+import { AiToegestaan } from "../shared/ai/AiContext";
 import "../publicatie/embed.css"; // alleen actief onder .cg-embed
 
 /**
@@ -95,9 +96,12 @@ function AanmeldPagina() {
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <SchemaProvider baseUrl={detectBaseUrl()}>
-      <HashRouter>
-        <AanmeldPagina />
-      </HashRouter>
+      {/* Openbaar formulier: geen AI (tekst van een onbekende invuller niet naar een AI-dienst). */}
+      <AiToegestaan.Provider value={false}>
+        <HashRouter>
+          <AanmeldPagina />
+        </HashRouter>
+      </AiToegestaan.Provider>
     </SchemaProvider>
   </React.StrictMode>
 );

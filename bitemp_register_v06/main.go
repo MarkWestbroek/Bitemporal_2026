@@ -195,6 +195,13 @@ func NewRouter() *gin.Engine {
 	editor := middleware.RequireRol("editor")
 	admin := middleware.RequireRol("admin")
 
+	// AI-proxy (handlers/ai_proxy.go): toegangscodes voor proberen met de sleutel van de eigenaar.
+	// Uit zolang AI_UPSTREAM_KEY leeg is. Codes beheren: alleen admin.
+	router.POST("/ai/v1/chat/completions", handlers.MaakAIProxyHandler())
+	router.GET("/api/ai/codes", admin, handlers.MaakAICodesLijstHandler())
+	router.POST("/api/ai/codes", admin, handlers.MaakAICodeAanmakenHandler())
+	router.DELETE("/api/ai/codes/:naam", admin, handlers.MaakAICodeIntrekkenHandler())
+
 	// Openbare indiening van een formulier (aanmeldformulier stap C, handlers/aanmelding_handler.go):
 	// anoniem, maar alleen voor de FormulierDefinities (id of code) in OPENBARE_FORMULIEREN, alleen
 	// opvoeren op plaatshouder-id's, vaste waarden afgedwongen, bron "aanmeldformulier".
