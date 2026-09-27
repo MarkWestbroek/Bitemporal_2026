@@ -29,6 +29,7 @@
               "weergavedefinitie_meta": {
                 "weergavedefinitie_id": "$nieuw.wd",
                 "naam": "Initiatief met vormen",
+                "code": "initiatief-met-vormen",
                 "beschrijving": "Detailweergave van een initiatief met weergavevormen (lagen, kaart, schaalbalken, tijdlijn). Naast de standaardweergave; kies met ?weergave=<id>.",
                 "doeltype": "Initiatief",
                 "status": "actief",

@@ -91,9 +91,76 @@ function iban_mod97_check(waarde) {
  *   2. Registreer hem hieronder
  *   3. Voeg het Go-equivalent toe in de backend
  */
+/** Letters → cijfers (A=10 … Z=35) en de rest bij deling door 97 (ISO 7064), stapsgewijs. */
+function mod97(tekens) {
+  let rest = 0;
+  for (const ch of tekens) {
+    const code = ch.charCodeAt(0);
+    const deel = code >= 65 && code <= 90 ? String(code - 55) : ch;
+    for (const c of deel) {
+      if (c < "0" || c > "9") return -1;
+      rest = (rest * 10 + Number(c)) % 97;
+    }
+  }
+  return rest;
+}
+
+/** LEI (ISO 17442): 20 tekens, als geheel mod 97 == 1 (geen herschikking, anders dan IBAN). */
+function lei_mod97(waarde) {
+  const clean = String(waarde).trim().toUpperCase();
+  return clean.length === 20 && mod97(clean) === 1;
+}
+
+/** ISBN-10: (10*d1 + 9*d2 + … + d10) % 11 == 0; het laatste teken mag X (=10) zijn. */
+function isbn10_mod11(waarde) {
+  const clean = String(waarde).trim().replace(/-/g, "").toUpperCase();
+  if (!/^\d{9}[\dX]$/.test(clean)) return false;
+  let som = 0;
+  for (let i = 0; i < 9; i++) som += Number(clean[i]) * (10 - i);
+  som += clean[9] === "X" ? 10 : Number(clean[9]);
+  return som % 11 === 0;
+}
+
+/** "lat,lng" met lat in [-90, 90] en lng in [-180, 180]. */
+function geo_range(waarde) {
+  const delen = String(waarde).trim().split(",");
+  if (delen.length !== 2) return false;
+  const [lat, lng] = delen.map((d) => Number(d.trim()));
+  return delen.every((d) => d.trim() !== "") && !Number.isNaN(lat) && !Number.isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+}
+
+function leesGeoJson(waarde) {
+  try { return JSON.parse(String(waarde).trim()); } catch { return null; }
+}
+
+/** GeoJSON LineString met minstens 2 coördinaten (RFC 7946). */
+function geolijn_geojson(waarde) {
+  const g = leesGeoJson(waarde);
+  return Boolean(g && g.type === "LineString" && Array.isArray(g.coordinates) && g.coordinates.length >= 2);
+}
+
+/** GeoJSON Polygon: eerste ring minstens 4 punten en gesloten (eerste == laatste). */
+function geovlak_geojson(waarde) {
+  const g = leesGeoJson(waarde);
+  const ring = g && g.type === "Polygon" && Array.isArray(g.coordinates) ? g.coordinates[0] : null;
+  if (!Array.isArray(ring) || ring.length < 4) return false;
+  const [a, z] = [ring[0], ring[ring.length - 1]];
+  return Array.isArray(a) && Array.isArray(z) && a.length >= 2 && a[0] === z[0] && a[1] === z[1];
+}
+
+/**
+ * Dezelfde namen als de Go-kant (model/regels_eval.go, validatieFuncties) en als het model
+ * (V3Regel.expressie). Houd beide lijsten gelijk; regels.test.js controleert de namen.
+ */
 const FUNCTION_REGISTRY = {
   bsn_11proef,
-  iban_mod97_check,
+  iban_mod97: iban_mod97_check,
+  iban_mod97_check, // oude naam
+  geo_range,
+  isbn10_mod11,
+  lei_mod97,
+  geolijn_geojson,
+  geovlak_geojson,
 };
 
 // ============================================================================
@@ -119,9 +186,12 @@ function evalueerChecksum(waarde, expressie) {
   if (digits.length === 0) return false;
 
   // Bouw context object: d1, d2, ..., dN
+  // Ook de cijfers die de expressie noemt maar de waarde niet heeft (te kort) bestaan, als NaN:
+  // dan faalt de regel stil in plaats van met een ReferenceError.
+  const hoogste = Math.max(digits.length, ...[...String(expressie).matchAll(/\bd(\d+)\b/g)].map((m) => Number(m[1])));
   const context = {};
-  for (let i = 0; i < digits.length; i++) {
-    context[`d${i + 1}`] = Number(digits[i]);
+  for (let i = 0; i < hoogste; i++) {
+    context[`d${i + 1}`] = i < digits.length ? Number(digits[i]) : NaN;
   }
 
   try {
@@ -148,10 +218,13 @@ function evalueerChecksum(waarde, expressie) {
  */
 function evalueerFormula(waarde, expressie) {
   try {
-    const numVal = typeof waarde === "number" ? waarde : Number(waarde);
-    if (Number.isNaN(numVal)) return false;
-    const fn = new Function("value", `return (${expressie});`);
-    return Boolean(fn(numVal));
+    // Zelfde variabelen als de Go-kant (evalueerFormula): value, en als de waarde een getal is
+    // ook valueNum en valueInt. `value` is een getal als dat kan (achterwaarts compatibel).
+    const tekst = String(waarde).trim();
+    const num = tekst !== "" && !Number.isNaN(Number(tekst)) ? Number(tekst) : undefined;
+    const int = num !== undefined && /^-?\d+$/.test(tekst) ? num : undefined;
+    const fn = new Function("value", "valueNum", "valueInt", `return (${expressie});`);
+    return Boolean(fn(num ?? tekst, num, int));
   } catch {
     console.warn(`[regels] Formula-expressie evaluatie mislukt: "${expressie}"`);
     return false;
@@ -180,9 +253,10 @@ export function voerRegelUit(waarde, regel) {
     case "function": {
       const fn = FUNCTION_REGISTRY[regel.expressie];
       if (!fn) {
-        console.warn(`[regels] Onbekende validatiefunctie: "${regel.expressie}"`);
-        result.geldig = false;
-        result.melding = `Onbekende validatiefunctie: ${regel.expressie}`;
+        // Deze client kent de functie niet: niet afkeuren. De server (model/regels_eval.go)
+        // controleert hem wel; een onterechte rode melding tijdens het invullen is erger.
+        console.warn(`[regels] Onbekende validatiefunctie: "${regel.expressie}" — overgelaten aan de server`);
+        result.onbekend = true;
         return result;
       }
       result.geldig = fn(String(waarde));

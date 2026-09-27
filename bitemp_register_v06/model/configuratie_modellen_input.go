@@ -7,9 +7,10 @@ type FormulierDefinitie_Meta_Input struct {
 	FORMULIERDEFINITIE_ID int                      `json:"formulierdefinitie_id"`
 	Rel_ID                int                      `json:"rel_id"`
 	Naam                  string                   `json:"naam"`
+	Code                  *string                  `json:"code,omitempty"`
 	Beschrijving          string                   `json:"beschrijving"`
 	Doeltype              string                   `json:"doeltype"`
-	Status                FormulierDefinitieStatus `json:"status"`
+	Status                FormulierDefinitieStatus `json:"status" schema:"enum=FormulierDefinitieStatus"`
 	IsStandaard           *bool                    `json:"is_standaard,omitempty"`
 }
 
@@ -17,16 +18,17 @@ type FormulierDefinitie_Layout_Input struct {
 	FORMULIERDEFINITIE_ID int    `json:"formulierdefinitie_id"`
 	Rel_ID                int    `json:"rel_id"`
 	LayoutJson            string `json:"layout_json"`
-	DefinitieVersie       Versie `json:"definitie_versie"`
+	DefinitieVersie       Versie `json:"definitie_versie" schema:"datatype:Versie"`
 }
 
 type WeergaveDefinitie_Meta_Input struct {
 	WEERGAVEDEFINITIE_ID int                     `json:"weergavedefinitie_id"`
 	Rel_ID               int                     `json:"rel_id"`
 	Naam                 string                  `json:"naam"`
+	Code                 *string                 `json:"code,omitempty"`
 	Beschrijving         string                  `json:"beschrijving"`
 	Doeltype             string                  `json:"doeltype"`
-	Status               WeergaveDefinitieStatus `json:"status"`
+	Status               WeergaveDefinitieStatus `json:"status" schema:"enum=WeergaveDefinitieStatus"`
 	IsStandaard          *bool                   `json:"is_standaard,omitempty"`
 }
 
@@ -34,14 +36,14 @@ type WeergaveDefinitie_TabelConfig_Input struct {
 	WEERGAVEDEFINITIE_ID int    `json:"weergavedefinitie_id"`
 	Rel_ID               int    `json:"rel_id"`
 	TabelConfigJson      string `json:"tabel_config_json"`
-	DefinitieVersie      Versie `json:"definitie_versie"`
+	DefinitieVersie      Versie `json:"definitie_versie" schema:"datatype:Versie"`
 }
 
 type WeergaveDefinitie_DetailTemplate_Input struct {
 	WEERGAVEDEFINITIE_ID int    `json:"weergavedefinitie_id"`
 	Rel_ID               int    `json:"rel_id"`
 	TemplateTekst        string `json:"template_tekst"`
-	DefinitieVersie      Versie `json:"definitie_versie"`
+	DefinitieVersie      Versie `json:"definitie_versie" schema:"datatype:Versie"`
 }
 
 type QueryDefinitie_QuerydefinitieNaam_Input struct {
@@ -59,7 +61,7 @@ type QueryDefinitie_QuerydefinitieBeschrijving_Input struct {
 type QueryDefinitie_QuerydefinitieStatus_Input struct {
 	QUERYDEFINITIE_ID int                  `json:"querydefinitie_id"`
 	Rel_ID            int                  `json:"rel_id"`
-	Status            QueryDefinitieStatus `json:"status"`
+	Status            QueryDefinitieStatus `json:"status" schema:"enum=QueryDefinitieStatus"`
 	Reden             *string              `json:"reden,omitempty"`
 	Aanvang           *Date                `json:"aanvang,omitempty"`
 	Einde             *Date                `json:"einde,omitempty"`
@@ -68,7 +70,7 @@ type QueryDefinitie_QuerydefinitieStatus_Input struct {
 type QueryDefinitie_QuerydefinitieToegankelijkheid_Input struct {
 	QUERYDEFINITIE_ID int                            `json:"querydefinitie_id"`
 	Rel_ID            int                            `json:"rel_id"`
-	Toegankelijkheid  QueryDefinitieToegankelijkheid `json:"toegankelijkheid"`
+	Toegankelijkheid  QueryDefinitieToegankelijkheid `json:"toegankelijkheid" schema:"enum=QueryDefinitieToegankelijkheid"`
 	Aanvang           *Date                          `json:"aanvang,omitempty"`
 	Einde             *Date                          `json:"einde,omitempty"`
 }
@@ -77,7 +79,7 @@ type QueryDefinitie_QuerydefinitieDocument_Input struct {
 	QUERYDEFINITIE_ID int     `json:"querydefinitie_id"`
 	Rel_ID            int     `json:"rel_id"`
 	GraphqlDocument   string  `json:"graphql_document"`
-	DefinitieVersie   Versie  `json:"definitie_versie"`
+	DefinitieVersie   Versie  `json:"definitie_versie" schema:"datatype:Versie"`
 	Toelichting       *string `json:"toelichting,omitempty"`
 	Aanvang           *Date   `json:"aanvang,omitempty"`
 	Einde             *Date   `json:"einde,omitempty"`
@@ -94,7 +96,7 @@ type NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input struct {
 	NOTIFICATIEDEFINITIE_ID int                        `json:"notificatiedefinitie_id"`
 	Rel_ID                  int                        `json:"rel_id"`
 	Doeltype                string                     `json:"doeltype"`
-	Registratietype         NotificatieRegistratietype `json:"registratietype"`
+	Registratietype         NotificatieRegistratietype `json:"registratietype" schema:"enum=NotificatieRegistratietype"`
 	Bron                    *string                    `json:"bron,omitempty"`
 	Filter                  *string                    `json:"filter,omitempty"`
 	Aanvang                 *Date                      `json:"aanvang,omitempty"`
@@ -104,7 +106,7 @@ type NotificatieDefinitie_NotificatiedefinitieGebeurtenis_Input struct {
 type NotificatieDefinitie_NotificatiedefinitieAbonnee_Input struct {
 	NOTIFICATIEDEFINITIE_ID int               `json:"notificatiedefinitie_id"`
 	Rel_ID                  int               `json:"rel_id"`
-	Kanaal                  NotificatieKanaal `json:"kanaal"`
+	Kanaal                  NotificatieKanaal `json:"kanaal" schema:"enum=NotificatieKanaal"`
 	Adres                   string            `json:"adres"`
 	Geheim                  *string           `json:"geheim,omitempty"`
 	Aanvang                 *Date             `json:"aanvang,omitempty"`
@@ -122,7 +124,7 @@ type NotificatieDefinitie_NotificatiedefinitieInhoud_Input struct {
 type NotificatieDefinitie_NotificatiedefinitieStatus_Input struct {
 	NOTIFICATIEDEFINITIE_ID int                        `json:"notificatiedefinitie_id"`
 	Rel_ID                  int                        `json:"rel_id"`
-	Status                  NotificatieDefinitieStatus `json:"status"`
+	Status                  NotificatieDefinitieStatus `json:"status" schema:"enum=NotificatieDefinitieStatus"`
 	Reden                   *string                    `json:"reden,omitempty"`
 	Aanvang                 *Date                      `json:"aanvang,omitempty"`
 	Einde                   *Date                      `json:"einde,omitempty"`
@@ -140,7 +142,7 @@ type DashboardDefinitie_DashboarddefinitieTegel_Input struct {
 	Rel_ID                int               `json:"rel_id"`
 	Titel                 string            `json:"titel"`
 	Querydefinitie        string            `json:"querydefinitie"`
-	Weergave              DashboardWeergave `json:"weergave"`
+	Weergave              DashboardWeergave `json:"weergave" schema:"enum=DashboardWeergave"`
 	Kolommen              *string           `json:"kolommen,omitempty"`
 	Variabelen            *string           `json:"variabelen,omitempty"`
 	Volgorde              *int              `json:"volgorde,omitempty"`
@@ -151,7 +153,7 @@ type DashboardDefinitie_DashboarddefinitieTegel_Input struct {
 type DashboardDefinitie_DashboarddefinitieStatus_Input struct {
 	DASHBOARDDEFINITIE_ID int                      `json:"dashboarddefinitie_id"`
 	Rel_ID                int                      `json:"rel_id"`
-	Status                DashboardDefinitieStatus `json:"status"`
+	Status                DashboardDefinitieStatus `json:"status" schema:"enum=DashboardDefinitieStatus"`
 	Reden                 *string                  `json:"reden,omitempty"`
 	Aanvang               *Date                    `json:"aanvang,omitempty"`
 	Einde                 *Date                    `json:"einde,omitempty"`

@@ -24,3 +24,9 @@ test("duur en datum in het Nederlands", () => {
   assert.equal(duurTekst("2026-02-01", "2026-01-01"), "");
   assert.equal(datumNL("2026-09-26"), "26 september 2026");
 });
+
+test("as: lange periode (levensloop) — jaartallen uitgedund, hooguit 8", () => {
+  const a = periodeAs("1988-04-12", "", new Date(Date.UTC(2026, 8, 27)));
+  assert.ok(a.jaren.length <= 8 && a.jaren.length >= 4, `aantal ${a.jaren.length}`);
+  assert.ok(a.jaren.every((j) => j.jaar % 5 === 0), a.jaren.map((j) => j.jaar).join(","));
+});

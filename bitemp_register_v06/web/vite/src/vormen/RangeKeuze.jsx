@@ -1,4 +1,9 @@
+import React from "react";
 import { maakSchaal, stapKleur } from "./schaal";
+
+// Breedte van de knop van de native schuif (Chromium/Firefox ≈ 16–18 px); bepaalt waar het
+// midden van de knop bij min en max staat, en dus waar kleurbaan en stapnamen beginnen.
+const DUIM = 18;
 
 /**
  * RangeKeuze — de vorm `range`: een schuif over een schaal. Bedient een getal (min/max/step)
@@ -37,9 +42,10 @@ export default function RangeKeuze({ items, waarde, onChange, readOnly = false, 
 
   return (
     <div style={{ maxWidth: 520 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ position: "relative", flex: 1, height: 36 }}>
-          <div aria-hidden="true" style={{ position: "absolute", left: 9, right: 9, top: 14, height: 8, borderRadius: 4, background: verloop, opacity: leeg ? 0.5 : 1 }} />
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ position: "relative", height: 36 }}>
+          <div aria-hidden="true" style={{ position: "absolute", left: DUIM / 2, right: DUIM / 2, top: 14, height: 8, borderRadius: 4, background: verloop, opacity: leeg ? 0.5 : 1 }} />
           <input
             type="range"
             aria-labelledby={labelId}
@@ -55,20 +61,33 @@ export default function RangeKeuze({ items, waarde, onChange, readOnly = false, 
             style={{ position: "absolute", inset: 0, width: "100%", margin: 0, background: "transparent", opacity: leeg ? 0.55 : 1, accentColor: huidigeKleur || "#1d4ed8", cursor: readOnly ? "default" : "pointer" }}
           />
         </div>
+        {toonTicks && (
+          // Stapnamen precies onder de knopposities: het midden van de knop loopt van DUIM/2 tot
+          // 100% − DUIM/2 (zoals de kleurbaan). De buitenste namen lijnen uit op de rand, zodat
+          // ze niet buiten het veld vallen; een streepje markeert de exacte plek.
+          <div aria-hidden="true" style={{ position: "relative", height: 26, fontSize: "0.75rem", color: "var(--cg-donkergrijs, #64748b)" }}>
+            {Array.from({ length: s.n }, (_, i) => {
+              const plek = `calc(${DUIM / 2}px + (100% - ${DUIM}px) * ${pct(i) / 100})`;
+              const eerste = i === 0, laatste = i === s.n - 1 && s.n > 1;
+              return (
+                <React.Fragment key={i}>
+                  <span style={{ position: "absolute", top: 0, left: plek, width: 1, height: 5, background: "currentColor", opacity: 0.5 }} />
+                  <span style={{ position: "absolute", top: 7, left: eerste ? 0 : laatste ? undefined : plek, right: laatste ? 0 : undefined,
+                    transform: eerste || laatste ? "none" : "translateX(-50%)", whiteSpace: "nowrap",
+                    fontWeight: i === idx ? 700 : 400, color: i === idx ? "#0f172a" : undefined }}>{s.label(i)}</span>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        )}
+        </div>
         {config.showValue !== false && (
-          <span style={{ minWidth: 72, fontWeight: 700, fontSize: "0.95rem", padding: "0.15rem 0.5rem", borderRadius: 6, textAlign: "center",
+          <span style={{ marginTop: 5, minWidth: 72, fontWeight: 700, fontSize: "0.95rem", padding: "0.15rem 0.5rem", borderRadius: 6, textAlign: "center",
             background: huidigeKleur || "var(--cg-lichtgrijs, #e2e8f0)", color: "#0f172a" }}>
             {leeg ? "—" : s.label(idx)}
           </span>
         )}
       </div>
-      {toonTicks && (
-        <div aria-hidden="true" style={{ display: "flex", justifyContent: "space-between", padding: "0 2px", fontSize: "0.75rem", color: "var(--cg-donkergrijs, #64748b)" }}>
-          {Array.from({ length: s.n }, (_, i) => (
-            <span key={i} style={{ width: 0, display: "flex", justifyContent: i === 0 ? "flex-start" : i === s.n - 1 ? "flex-end" : "center", whiteSpace: "nowrap", fontWeight: i === idx ? 700 : 400, color: i === idx ? "#0f172a" : undefined }}>{s.label(i)}</span>
-          ))}
-        </div>
-      )}
       {!leeg && !readOnly && (
         <button type="button" onClick={() => onChange("")} style={{ border: "none", background: "none", padding: 0, marginTop: 4, cursor: "pointer", color: "var(--cg-donkergrijs, #64748b)", fontSize: "0.75rem" }}>
           wissen

@@ -11,7 +11,7 @@ import SwitchKeuze from "../vormen/SwitchKeuze";
 import RangeKeuze from "../vormen/RangeKeuze";
 import RotaryKeuze from "../vormen/RotaryKeuze";
 import NlMapKeuze from "../vormen/NlMapKeuze";
-import { ruweWaarde, alsSleutels } from "./vormBlokken";
+import { ruweWaarde, alsSleutels, cbsGemeentecode, telSleutels } from "./vormBlokken";
 
 /**
  * VormWeergave — één vormblok uit een detail-template ({{#vorm naam pad}}config{{/vorm}},
@@ -35,7 +35,9 @@ export default function VormWeergave({ blok, ctx }) {
     case "image-map":
       return <div style={stijl}><ImageMapKeuze config={{ legend: false, ...config }} meervoudig waarde={sleutels} readOnly onChange={niets} /></div>;
     case "chips":
-      return <div style={stijl}><ChipsWeergave items={sleutels.map((s) => ({ value: s, label: config.labels?.[s] || s }))} config={config} /></div>;
+      // Over een lijst (bv. de fasen van alle initiatieven van een organisatie) komen waarden
+      // vaker voor: één chip per waarde, met `count: true` het aantal erachter.
+      return <div style={stijl}><ChipsWeergave items={telSleutels(sleutels).map(({ sleutel, n }) => ({ value: sleutel, label: `${config.labels?.[sleutel] || sleutel}${config.count && n > 1 ? ` · ${n}` : ""}` }))} config={config} /></div>;
     case "button-group": {
       const items = config.options ? opties(config.options) : sleutels.map((s) => ({ value: s, label: s }));
       return <div style={stijl}><ButtonGroupKeuze items={items} config={config} meervoudig waarde={sleutels} readOnly onChange={niets} /></div>;
@@ -80,7 +82,7 @@ export default function VormWeergave({ blok, ctx }) {
       // Items onder het pad (bv. initiatief_gemeenten), elk met een CBS-code en een naam; groepen
       // (bv. Realiseert / Maakt gebruik van) als kleuren.
       const items = Array.isArray(waarde) ? waarde : waarde ? [waarde] : [];
-      const codeVan = (it) => (typeof it === "object" ? ruweWaarde(it, config.codeField || "code") : it);
+      const codeVan = (it) => [].concat((typeof it === "object" ? ruweWaarde(it, config.codeField || "code") : it) ?? []).map(cbsGemeentecode).filter(Boolean);
       const naamVan = (it) => (typeof it === "object" ? ruweWaarde(it, config.labelField || "naam") : it);
       const uniek = new Map();
       for (const it of items) {

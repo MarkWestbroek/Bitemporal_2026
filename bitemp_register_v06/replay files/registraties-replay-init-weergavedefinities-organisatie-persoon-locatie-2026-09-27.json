@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-27T18:00:00Z",
+  "source": "manual://claude-weergavevormen",
+  "description": "Drie WeergaveDefinities in de stijl van de formulieren (weergavevormen): 'Organisatie met vormen' (standaard voor Organisatie), 'Persoon met vormen' (naast de standaard voor NatuurlijkPersoon) en 'Locatie met vormen' (standaard voor Locatie). Codes organisatie-met-vormen, persoon-met-vormen, locatie-met-vormen; id's als plaatshouder. Vereist de frontend met chips `count` en nl-map met de CBS-code als getal (publicatie/vormBlokken.js). LET OP voor pf: de organisatiepagina toont via gerelateerde_initiatieven ook initiatieven die nog niet geaccepteerd zijn; niet openbaar zetten zonder een opgeslagen query die filtert.",
+  "count": 3,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T18:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie 'Organisatie met vormen'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "WeergaveDefinitie 'Organisatie met vormen' (weergavevormen)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": {
+                "id": "$nieuw.wdorg"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": "$nieuw.wdorg",
+                "naam": "Organisatie met vormen",
+                "code": "organisatie-met-vormen",
+                "beschrijving": "Organisatie met haar initiatieven (omgekeerde relatie gerelateerde_initiatieven): contactpersonen, initiatieven, hun CG-lagen als plaatje, hun gemeenten op de kaart, fasen met aantallen.",
+                "doeltype": "Organisatie",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": "$nieuw.wdorg",
+                "tabel_config_json": "{\"kolommen\": [{\"veldpad\": \"id\", \"label\": \"ID\", \"breedte\": 80, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"organisatienamen.data.naam\", \"label\": \"Naam\", \"breedte\": 240, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"organisatiecontactgegevens.data.url\", \"label\": \"Website\", \"breedte\": 220, \"filterbaar\": true}, {\"veldpad\": \"organisatiecontactgegevens.data.email\", \"label\": \"E-mail\", \"breedte\": 200}, {\"veldpad\": \"contactpersonen.weergavenaam\", \"label\": \"Contactpersonen\", \"breedte\": 180}], \"standaardSortering\": {\"veld\": \"id\", \"richting\": \"asc\"}, \"rijenPerPagina\": 25}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": "$nieuw.wdorg",
+                "template_tekst": "# {{organisatienamen.naam}}\n\n{{#if organisatiecontactgegevens.url}}- **Website:** [{{organisatiecontactgegevens.url}}]({{organisatiecontactgegevens.url}})\n{{/if}}{{#if organisatiecontactgegevens.email}}- **E-mail:** [{{organisatiecontactgegevens.email}}](mailto:{{organisatiecontactgegevens.email}})\n{{/if}}{{#if organisatiecontactgegevens.telefoonnummer}}- **Telefoon:** {{organisatiecontactgegevens.telefoonnummer}}\n{{/if}}\n{{#if contactpersonen.persoon.persoonnamen.naam}}\n### Contactpersonen\n{{vorm chips contactpersonen.persoon.persoonnamen.naam}}\n{{/if}}\n{{#if gerelateerde_initiatieven.producten.naam}}\n### Initiatieven\n{{vorm chips gerelateerde_initiatieven.producten.naam}}\n{{/if}}\n{{#if gerelateerde_initiatieven.producten.CG_laag}}\n### In welke lagen\nDe lagen van alle initiatieven waar de organisatie bij betrokken is.\n{{#vorm image-map gerelateerde_initiatieven.producten.CG_laag}}\n{\"image\": \"/viz/react/voorbeelden/cg-lagen-utility.svg\", \"alt\": \"Het Common Ground-vijflagenmodel met Utility\", \"units\": \"px\", \"width\": 600, \"height\": 420, \"maxWidth\": \"320px\", \"legend\": true, \"areas\": [{\"value\": \"Laag 5\", \"label\": \"Laag 5 · Interactie\", \"shape\": \"rect\", \"coords\": [20, 20, 470, 75]}, {\"value\": \"Laag 4\", \"label\": \"Laag 4 · Proces\", \"shape\": \"rect\", \"coords\": [20, 85, 470, 140]}, {\"value\": \"Laag 3\", \"label\": \"Laag 3 · Integratie\", \"shape\": \"rect\", \"coords\": [20, 150, 470, 205]}, {\"value\": \"Laag 2\", \"label\": \"Laag 2 · Services\", \"shape\": \"rect\", \"coords\": [20, 215, 470, 270]}, {\"value\": \"Laag 1\", \"label\": \"Laag 1 · Data\", \"shape\": \"rect\", \"coords\": [20, 280, 470, 335]}, {\"value\": \"Hosting en infrastructuur\", \"label\": \"Hosting en infrastructuur\", \"shape\": \"rect\", \"coords\": [20, 345, 470, 400]}, {\"value\": \"Utility\", \"label\": \"Utility\", \"shape\": \"rect\", \"coords\": [480, 20, 580, 400]}]}\n{{/vorm}}\n{{/if}}\n{{#if gerelateerde_initiatieven.initiatief_gemeenten.gemeente.gemeentegegevens.code}}\n### Gemeenten\nWaar die initiatieven worden gerealiseerd of gebruikt.\n{{#vorm nl-map gerelateerde_initiatieven.initiatief_gemeenten}}\n{\"codeField\": \"gemeente.gemeentegegevens.code\", \"labelField\": \"gemeente.gemeentegegevens.naam\", \"maxWidth\": 260, \"groups\": [{\"label\": \"Realiseert\", \"color\": \"#e11d48\", \"filter\": {\"rol\": \"Realiseert\"}}, {\"label\": \"Maakt gebruik van\", \"color\": \"#2563eb\", \"filter\": {\"rol\": \"Maakt gebruik van\"}}]}\n{{/vorm}}\n{{/if}}\n{{#if gerelateerde_initiatieven.planningen.fase}}\n### Fasen\n{{#vorm chips gerelateerde_initiatieven.planningen.fase}}\n{\"labels\": {\"Idee (nog geen concrete opbrengsten)\": \"Idee\", \"Initiatie (al een snelle POC)\": \"Initiatie\", \"Realisatie (gaat binnenkort draaien bij eerste gemeenten)\": \"Realisatie\", \"Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)\": \"Opschaling\", \"Doorontwikkeling en beheer\": \"Beheer\", \"Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde)\": \"Gevestigd\"}, \"count\": true, \"accentColor\": \"#b45309\"}\n{{/vorm}}\n{{/if}}\n{{#if aanvang.datum}}\n### In het register\n{{#vorm period}}\n{\"startPath\": \"aanvang.datum\", \"endPath\": \"einde.datum\", \"startLabel\": \"Sinds\", \"endLabel\": \"Tot\"}\n{{/vorm}}\n{{/if}}\n",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": "$nieuw.wdorg",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T18:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie 'Persoon met vormen'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "WeergaveDefinitie 'Persoon met vormen' (weergavevormen)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": {
+                "id": "$nieuw.wdnp"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": "$nieuw.wdnp",
+                "naam": "Persoon met vormen",
+                "code": "persoon-met-vormen",
+                "beschrijving": "Natuurlijk persoon in de vormen van het formulier 'Voorbeeld: persoon': naamgebruik als kaarten, aanspreken als knoppen en schakelaar, woonadres op de kaart, levensloop als tijdlijn. Zonder BSN. Naast de standaardweergave.",
+                "doeltype": "NatuurlijkPersoon",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": "$nieuw.wdnp",
+                "tabel_config_json": "{\"kolommen\": [{\"veldpad\": \"id\", \"label\": \"ID\", \"breedte\": 80, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"namen.data.roepnaam\", \"label\": \"Roepnaam\", \"breedte\": 130, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"namen.data.tussenvoegsel\", \"label\": \"Tussenvoegsel\", \"breedte\": 100}, {\"veldpad\": \"namen.data.achternaam\", \"label\": \"Achternaam\", \"breedte\": 160, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"aanspraak.data.aanspreektitel\", \"label\": \"Aanspreken\", \"breedte\": 110, \"filterbaar\": true}, {\"veldpad\": \"burgerschappen.data.nationaliteit\", \"label\": \"Nationaliteit\", \"breedte\": 130}], \"standaardSortering\": {\"veld\": \"id\", \"richting\": \"asc\"}, \"rijenPerPagina\": 25}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": "$nieuw.wdnp",
+                "template_tekst": "# {{namen.roepnaam}} {{namen.tussenvoegsel}} {{namen.achternaam}}\n\n{{#if namen.voorletters}}- **Voorletters:** {{namen.voorletters}}\n{{/if}}{{#if partnernamen.achternaam}}- **Achternaam partner:** {{partnernamen.achternaam}}\n{{/if}}{{#if burgerschappen.nationaliteit}}- **Nationaliteit:** {{burgerschappen.nationaliteit}}\n{{/if}}\n{{#if naamgebruiken.naamgebruik}}\n### Naamgebruik\n{{#vorm cards naamgebruiken.naamgebruik}}\n{\"minWidth\": 150, \"options\": [\"EigenNaam\", \"PartnerNaam\", \"EigenNaam-PartnerNaam\", \"PartnerNaam-EigenNaam\"], \"items\": {\"EigenNaam\": {\"icon\": \"🙂\", \"title\": \"Eigen naam\", \"description\": \"Jansen\"}, \"PartnerNaam\": {\"icon\": \"💍\", \"title\": \"Naam partner\", \"description\": \"De Vries\"}, \"EigenNaam-PartnerNaam\": {\"icon\": \"↔️\", \"title\": \"Eigen – partner\", \"description\": \"Jansen-De Vries\"}, \"PartnerNaam-EigenNaam\": {\"icon\": \"↔️\", \"title\": \"Partner – eigen\", \"description\": \"De Vries-Jansen\"}}}\n{{/vorm}}\n{{/if}}\n{{#if aanspraak.aanspreektitel}}\n### Aanspreken\n{{#vorm button-group aanspraak.aanspreektitel}}\n{\"sort\": \"none\", \"minWidth\": 110, \"options\": [\"meneer\", \"mevrouw\", \"hen\"]}\n{{/vorm}}\n{{#vorm switch aanspraak.formeelAanspreken}}\n{\"onLabel\": \"Formeel (u)\", \"offLabel\": \"Informeel (je)\"}\n{{/vorm}}\n{{/if}}\n{{#if geslacht.geslacht}}\n### Geslacht\n{{#vorm button-group geslacht.geslacht}}\n{\"sort\": \"none\", \"minWidth\": 90, \"options\": [\"man\", \"vrouw\", \"X\"]}\n{{/vorm}}\n{{/if}}\n{{#if woonlocatie.locatie.adressen.straatnaam}}\n### Woonadres\n{{woonlocatie.locatie.adressen.straatnaam}} {{woonlocatie.locatie.adressen.huisnummer}}, {{woonlocatie.locatie.adressen.postcode}} {{woonlocatie.locatie.adressen.plaats}}\n{{#vorm nl-map woonlocatie.locatie.adressen}}\n{\"codeField\": \"gemeente\", \"labelField\": \"plaats\", \"maxWidth\": 200}\n{{/vorm}}\n{{/if}}\n{{#if bereikbaarheden.soort}}\n### Bereikbaar op\n{{#vorm chips bereikbaarheden.soort}}\n{}\n{{/vorm}}\n{{/if}}\n{{#if aanvang.datum}}\n### Levensloop\n{{#vorm period}}\n{\"startPath\": \"aanvang.datum\", \"endPath\": \"einde.datum\", \"startLabel\": \"Geboren\", \"endLabel\": \"Overleden\"}\n{{/vorm}}\n{{/if}}\n",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": "$nieuw.wdnp",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-27T18:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie 'Locatie met vormen'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "WeergaveDefinitie 'Locatie met vormen' (weergavevormen)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": {
+                "id": "$nieuw.wdloc"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": "$nieuw.wdloc",
+                "naam": "Locatie met vormen",
+                "code": "locatie-met-vormen",
+                "beschrijving": "Locatie met het adres, de gemeente op de kaart (CBS-code uit adres.gemeente) en de looptijd als tijdlijn.",
+                "doeltype": "Locatie",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": "$nieuw.wdloc",
+                "tabel_config_json": "{\"kolommen\": [{\"veldpad\": \"id\", \"label\": \"ID\", \"breedte\": 80, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"adressen.data.straatnaam\", \"label\": \"Straat\", \"breedte\": 180, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"adressen.data.huisnummer\", \"label\": \"Nr.\", \"breedte\": 70}, {\"veldpad\": \"adressen.data.postcode\", \"label\": \"Postcode\", \"breedte\": 100, \"filterbaar\": true}, {\"veldpad\": \"adressen.data.plaats\", \"label\": \"Plaats\", \"breedte\": 160, \"sorteerbaar\": true, \"filterbaar\": true}], \"standaardSortering\": {\"veld\": \"id\", \"richting\": \"asc\"}, \"rijenPerPagina\": 25}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": "$nieuw.wdloc",
+                "template_tekst": "# {{adressen.straatnaam}} {{adressen.huisnummer}}\n\n{{adressen.postcode}} {{adressen.plaats}}\n\n{{#if baglocaties.adresaanduiding}}- **BAG-adresaanduiding:** {{baglocaties.adresaanduiding}}\n{{/if}}\n{{#if adressen.gemeente}}\n### Gemeente\n{{#vorm nl-map adressen}}\n{\"codeField\": \"gemeente\", \"labelField\": \"plaats\", \"maxWidth\": 240}\n{{/vorm}}\n{{/if}}\n{{#if gebiedsligging.gemeentedeel.wijkaanduiding.wijk}}\n### Ligt in\n{{#vorm chips gebiedsligging.gemeentedeel.wijkaanduiding.wijk}}\n{\"accentColor\": \"#047857\"}\n{{/vorm}}\n{{/if}}\n{{#if aanvang.datum}}\n### Bestaat\n{{#vorm period}}\n{\"startPath\": \"aanvang.datum\", \"endPath\": \"einde.datum\", \"startLabel\": \"Sinds\", \"endLabel\": \"Tot\"}\n{{/vorm}}\n{{/if}}\n",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": "$nieuw.wdloc",
+                "datum": "2026-09-27"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}

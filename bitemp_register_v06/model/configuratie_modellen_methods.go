@@ -1402,80 +1402,126 @@ func (h *WeergaveDefinitie_DetailTemplate) GeefOnderliggendeGegevenselementen() 
 	return result
 }
 
-func (h *DashboardDefinitie_DashboarddefinitieNaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *QueryDefinitie_QuerydefinitieNaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
-		if h.Data[i].DashboardDefinitie_ID == 0 {
-			h.Data[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		if h.Data[i].QueryDefinitie_ID == 0 {
+			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
 		}
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieNaam_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieNaam_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
 
-func (h *DashboardDefinitie_DashboarddefinitieTegel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
-	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+func (h *QueryDefinitie_QuerydefinitieBeschrijving) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
-		if h.Data[i].DashboardDefinitie_ID == 0 {
-			h.Data[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		if h.Data[i].QueryDefinitie_ID == 0 {
+			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
 		}
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel_Data", Representatie: &h.Data[i]})
-	}
-	for i := range h.Aanvang {
-		if h.Aanvang[i].DashboardDefinitie_ID == 0 {
-			h.Aanvang[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
-		}
-		if h.Aanvang[i].Rel_ID == 0 {
-			h.Aanvang[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel_Aanvang", Representatie: &h.Aanvang[i]})
-	}
-	for i := range h.Einde {
-		if h.Einde[i].DashboardDefinitie_ID == 0 {
-			h.Einde[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
-		}
-		if h.Einde[i].Rel_ID == 0 {
-			h.Einde[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel_Einde", Representatie: &h.Einde[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieBeschrijving_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
 
-func (h *DashboardDefinitie_DashboarddefinitieStatus) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *QueryDefinitie_QuerydefinitieStatus) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
 	for i := range h.Data {
-		if h.Data[i].DashboardDefinitie_ID == 0 {
-			h.Data[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		if h.Data[i].QueryDefinitie_ID == 0 {
+			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
 		}
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus_Data", Representatie: &h.Data[i]})
 	}
 	for i := range h.Aanvang {
-		if h.Aanvang[i].DashboardDefinitie_ID == 0 {
-			h.Aanvang[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		if h.Aanvang[i].QueryDefinitie_ID == 0 {
+			h.Aanvang[i].QueryDefinitie_ID = h.QueryDefinitie_ID
 		}
 		if h.Aanvang[i].Rel_ID == 0 {
 			h.Aanvang[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Aanvang", Representatie: &h.Aanvang[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus_Aanvang", Representatie: &h.Aanvang[i]})
 	}
 	for i := range h.Einde {
-		if h.Einde[i].DashboardDefinitie_ID == 0 {
-			h.Einde[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
+		if h.Einde[i].QueryDefinitie_ID == 0 {
+			h.Einde[i].QueryDefinitie_ID = h.QueryDefinitie_ID
 		}
 		if h.Einde[i].Rel_ID == 0 {
 			h.Einde[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Einde", Representatie: &h.Einde[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus_Einde", Representatie: &h.Einde[i]})
+	}
+	return result
+}
+
+func (h *QueryDefinitie_QuerydefinitieToegankelijkheid) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].QueryDefinitie_ID == 0 {
+			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].QueryDefinitie_ID == 0 {
+			h.Aanvang[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].QueryDefinitie_ID == 0 {
+			h.Einde[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid_Einde", Representatie: &h.Einde[i]})
+	}
+	return result
+}
+
+func (h *QueryDefinitie_QuerydefinitieDocument) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].QueryDefinitie_ID == 0 {
+			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].QueryDefinitie_ID == 0 {
+			h.Aanvang[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].QueryDefinitie_ID == 0 {
+			h.Einde[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }
@@ -1604,126 +1650,80 @@ func (h *NotificatieDefinitie_NotificatiedefinitieStatus) GeefOnderliggendeGegev
 	return result
 }
 
-func (h *QueryDefinitie_QuerydefinitieNaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *DashboardDefinitie_DashboarddefinitieNaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
-		if h.Data[i].QueryDefinitie_ID == 0 {
-			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		if h.Data[i].DashboardDefinitie_ID == 0 {
+			h.Data[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
 		}
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieNaam_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieNaam_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
 
-func (h *QueryDefinitie_QuerydefinitieBeschrijving) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
-	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
-	for i := range h.Data {
-		if h.Data[i].QueryDefinitie_ID == 0 {
-			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
-		}
-		if h.Data[i].Rel_ID == 0 {
-			h.Data[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieBeschrijving_Data", Representatie: &h.Data[i]})
-	}
-	return result
-}
-
-func (h *QueryDefinitie_QuerydefinitieStatus) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *DashboardDefinitie_DashboarddefinitieTegel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
 	for i := range h.Data {
-		if h.Data[i].QueryDefinitie_ID == 0 {
-			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		if h.Data[i].DashboardDefinitie_ID == 0 {
+			h.Data[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
 		}
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel_Data", Representatie: &h.Data[i]})
 	}
 	for i := range h.Aanvang {
-		if h.Aanvang[i].QueryDefinitie_ID == 0 {
-			h.Aanvang[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		if h.Aanvang[i].DashboardDefinitie_ID == 0 {
+			h.Aanvang[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
 		}
 		if h.Aanvang[i].Rel_ID == 0 {
 			h.Aanvang[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus_Aanvang", Representatie: &h.Aanvang[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel_Aanvang", Representatie: &h.Aanvang[i]})
 	}
 	for i := range h.Einde {
-		if h.Einde[i].QueryDefinitie_ID == 0 {
-			h.Einde[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		if h.Einde[i].DashboardDefinitie_ID == 0 {
+			h.Einde[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
 		}
 		if h.Einde[i].Rel_ID == 0 {
 			h.Einde[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieStatus_Einde", Representatie: &h.Einde[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieTegel_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }
 
-func (h *QueryDefinitie_QuerydefinitieToegankelijkheid) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *DashboardDefinitie_DashboarddefinitieStatus) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
 	for i := range h.Data {
-		if h.Data[i].QueryDefinitie_ID == 0 {
-			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		if h.Data[i].DashboardDefinitie_ID == 0 {
+			h.Data[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
 		}
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Data", Representatie: &h.Data[i]})
 	}
 	for i := range h.Aanvang {
-		if h.Aanvang[i].QueryDefinitie_ID == 0 {
-			h.Aanvang[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		if h.Aanvang[i].DashboardDefinitie_ID == 0 {
+			h.Aanvang[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
 		}
 		if h.Aanvang[i].Rel_ID == 0 {
 			h.Aanvang[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang", Representatie: &h.Aanvang[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Aanvang", Representatie: &h.Aanvang[i]})
 	}
 	for i := range h.Einde {
-		if h.Einde[i].QueryDefinitie_ID == 0 {
-			h.Einde[i].QueryDefinitie_ID = h.QueryDefinitie_ID
+		if h.Einde[i].DashboardDefinitie_ID == 0 {
+			h.Einde[i].DashboardDefinitie_ID = h.DashboardDefinitie_ID
 		}
 		if h.Einde[i].Rel_ID == 0 {
 			h.Einde[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieToegankelijkheid_Einde", Representatie: &h.Einde[i]})
-	}
-	return result
-}
-
-func (h *QueryDefinitie_QuerydefinitieDocument) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
-	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
-	for i := range h.Data {
-		if h.Data[i].QueryDefinitie_ID == 0 {
-			h.Data[i].QueryDefinitie_ID = h.QueryDefinitie_ID
-		}
-		if h.Data[i].Rel_ID == 0 {
-			h.Data[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument_Data", Representatie: &h.Data[i]})
-	}
-	for i := range h.Aanvang {
-		if h.Aanvang[i].QueryDefinitie_ID == 0 {
-			h.Aanvang[i].QueryDefinitie_ID = h.QueryDefinitie_ID
-		}
-		if h.Aanvang[i].Rel_ID == 0 {
-			h.Aanvang[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument_Aanvang", Representatie: &h.Aanvang[i]})
-	}
-	for i := range h.Einde {
-		if h.Einde[i].QueryDefinitie_ID == 0 {
-			h.Einde[i].QueryDefinitie_ID = h.QueryDefinitie_ID
-		}
-		if h.Einde[i].Rel_ID == 0 {
-			h.Einde[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "QueryDefinitie_QuerydefinitieDocument_Einde", Representatie: &h.Einde[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "DashboardDefinitie_DashboarddefinitieStatus_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }

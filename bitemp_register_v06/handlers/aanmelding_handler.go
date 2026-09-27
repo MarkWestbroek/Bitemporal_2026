@@ -3,10 +3,13 @@ package handlers
 // aanmelding_handler.go — openbare indiening van een FormulierDefinitie in nieuw-modus
 // (stap C van het aanmeldformulier-plan, docs/plans/2026-09-22 §4 B6).
 //
-//	POST /aanmelding/:formulierId   body: { "wijzigingen": [ { "opvoer": { … } }, … ] }
+//	POST /aanmelding/:formulier   body: { "wijzigingen": [ { "opvoer": { … } }, … ] }
+//
+// `:formulier` is het id óf de code (FormulierDefinitie_Meta.code, bv. "aanmelding-initiatief")
+// van de FormulierDefinitie; zo ook in OPENBARE_FORMULIEREN en `veld.nieuwFormulier`.
 //
 // Anoniem toegankelijk, maar alleen voor formulierdefinities die in de omgevingsvariabele
-// OPENBARE_FORMULIEREN staan (komma-gescheiden id's). Dat is bewust géén veld op de
+// OPENBARE_FORMULIEREN staan (komma-gescheiden id's en/of codes). Dat is bewust géén veld op de
 // FormulierDefinitie: een formulier openbaar maken is een autorisatiebesluit van de
 // beheerder van de instantie, niet iets wat een FD-wijziging mag regelen (plan §5.4).
 //
@@ -50,21 +53,60 @@ const (
 	aanmeldingBron          = "aanmeldformulier"
 )
 
-// OpenbareFormulieren leest OPENBARE_FORMULIEREN (bv. "2,5") — de FormulierDefinitie-id's
-// die anoniem ingediend mogen worden.
-func OpenbareFormulieren() map[int]bool {
-	uit := map[int]bool{}
+// OpenbareFormulieren leest OPENBARE_FORMULIEREN (bv. "2,aanmelding-initiatief") — de
+// sleutels (id of code) van de FormulierDefinities die anoniem ingediend mogen worden.
+func OpenbareFormulieren() map[string]bool {
+	uit := map[string]bool{}
 	for _, deel := range strings.Split(os.Getenv("OPENBARE_FORMULIEREN"), ",") {
-		if id, err := strconv.Atoi(strings.TrimSpace(deel)); err == nil && id > 0 {
-			uit[id] = true
+		if d := strings.TrimSpace(deel); d != "" {
+			uit[d] = true
 		}
 	}
 	return uit
 }
 
+// isOpenbaar: staat de FD met zijn id of zijn code in OPENBARE_FORMULIEREN?
+func isOpenbaar(fd *formulierDefinitie) bool {
+	of := OpenbareFormulieren()
+	return of[strconv.Itoa(fd.ID)] || (fd.Code != "" && of[fd.Code])
+}
+
+// zoekFormulierDefinitie vindt een FD op sleutel: een getal is het id, anders de code
+// (actuele meta, niet afgevoerd; bij dubbele codes de laatst opgevoerde). nil = niet gevonden.
+func zoekFormulierDefinitie(ctx context.Context, db bun.IDB, sleutel string) (*formulierDefinitie, error) {
+	sleutel = strings.TrimSpace(sleutel)
+	if sleutel == "" {
+		return nil, nil
+	}
+	if id, err := strconv.Atoi(sleutel); err == nil {
+		if id <= 0 {
+			return nil, nil
+		}
+		return laadFormulierDefinitie(ctx, db, id)
+	}
+	var ids []int
+	if err := db.NewRaw(`SELECT h.formulierdefinitie_id
+		FROM formulierdefinitie_meta h JOIN formulierdefinitie_meta_data d
+		  ON d.formulierdefinitie_id = h.formulierdefinitie_id AND d.rel_id = h.rel_id
+		JOIN formulierdefinitie f ON f.id = h.formulierdefinitie_id
+		WHERE d.code = ? AND h.afvoer IS NULL AND d.afvoer IS NULL AND f.afvoer IS NULL
+		ORDER BY h.opvoer DESC LIMIT 1`, sleutel).Scan(ctx, &ids); err != nil {
+		return nil, err
+	}
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	fd, err := laadFormulierDefinitie(ctx, db, ids[0])
+	if fd != nil && fd.Code != sleutel {
+		return nil, nil // de code hoort bij een oudere meta-hub; de actuele heeft een andere
+	}
+	return fd, err
+}
+
 // formulierDefinitie is wat de handler van een FD nodig heeft.
 type formulierDefinitie struct {
 	ID       int
+	Code     string
 	Naam     string
 	Doeltype string
 	Status   string
@@ -83,11 +125,12 @@ func laadFormulierDefinitie(ctx context.Context, db bun.IDB, id int) (*formulier
 	}
 	fd := &formulierDefinitie{ID: id}
 	var meta struct {
-		Naam     string `bun:"naam"`
-		Doeltype string `bun:"doeltype"`
-		Status   string `bun:"status"`
+		Naam     string  `bun:"naam"`
+		Code     *string `bun:"code"`
+		Doeltype string  `bun:"doeltype"`
+		Status   string  `bun:"status"`
 	}
-	if err := db.NewRaw(`SELECT d.naam, d.doeltype, d.status
+	if err := db.NewRaw(`SELECT d.naam, d.code, d.doeltype, d.status
 		FROM formulierdefinitie_meta h JOIN formulierdefinitie_meta_data d
 		  ON d.formulierdefinitie_id = h.formulierdefinitie_id AND d.rel_id = h.rel_id
 		WHERE h.formulierdefinitie_id = ? AND h.afvoer IS NULL AND d.afvoer IS NULL
@@ -95,6 +138,9 @@ func laadFormulierDefinitie(ctx context.Context, db bun.IDB, id int) (*formulier
 		return nil, err
 	}
 	fd.Naam, fd.Doeltype, fd.Status = meta.Naam, meta.Doeltype, meta.Status
+	if meta.Code != nil {
+		fd.Code = strings.TrimSpace(*meta.Code)
+	}
 	var layoutJSON string
 	if err := db.NewRaw(`SELECT d.layout_json
 		FROM formulierdefinitie_layout h JOIN formulierdefinitie_layout_data d
@@ -133,19 +179,24 @@ func wandelLayout(el map[string]any, ctx string, fn func(el map[string]any, ctx 
 	}
 }
 
-// subFormulierIDs levert de FD-id's uit `veld.nieuwFormulier` in een layout.
-func subFormulierIDs(layout map[string]any) []int {
-	gezien := map[int]bool{}
-	uit := []int{}
+// subFormulierSleutels levert de FD-sleutels (id of code) uit `veld.nieuwFormulier` in een layout.
+func subFormulierSleutels(layout map[string]any) []string {
+	gezien := map[string]bool{}
+	uit := []string{}
 	wandelLayout(layout, "", func(el map[string]any, _ string) {
 		if el["type"] != "veld" {
 			return
 		}
-		if s, ok := el["nieuwFormulier"].(string); ok {
-			if id, err := strconv.Atoi(strings.TrimSpace(s)); err == nil && !gezien[id] {
-				gezien[id] = true
-				uit = append(uit, id)
-			}
+		var s string
+		switch v := el["nieuwFormulier"].(type) {
+		case string:
+			s = strings.TrimSpace(v)
+		case float64:
+			s = strconv.Itoa(int(v))
+		}
+		if s != "" && !gezien[s] {
+			gezien[s] = true
+			uit = append(uit, s)
 		}
 	})
 	return uit
@@ -308,16 +359,12 @@ func (l *aanmeldingLimiter) toestaan(ip string, nu time.Time) bool {
 	return true
 }
 
-// MaakAanmeldingHandler — POST /aanmelding/:formulierId.
+// MaakAanmeldingHandler — POST /aanmelding/:formulierId (id of code).
 func MaakAanmeldingHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id, err := strconv.Atoi(strings.TrimSpace(c.Param("formulierId")))
-		if err != nil || id <= 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "ongeldig formulier-id"})
-			return
-		}
-		if !OpenbareFormulieren()[id] {
-			c.JSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("formulier %d is niet opengesteld voor openbare indiening (OPENBARE_FORMULIEREN)", id)})
+		sleutel := strings.TrimSpace(c.Param("formulierId"))
+		if sleutel == "" || len(sleutel) > 100 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ongeldig formulier (id of code)"})
 			return
 		}
 		if !aanmeldLimiter.toestaan(c.ClientIP(), time.Now()) {
@@ -328,13 +375,22 @@ func MaakAanmeldingHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "database not initialized"})
 			return
 		}
-		fd, err := laadFormulierDefinitie(c.Request.Context(), DB, id)
+		fd, err := zoekFormulierDefinitie(c.Request.Context(), DB, sleutel)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "formulierdefinitie laden mislukt: " + err.Error()})
 			return
 		}
-		if fd == nil || fd.Status != "actief" {
-			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("formulier %d bestaat niet of is niet actief", id)})
+		// Openbaar is een besluit over id óf code (OPENBARE_FORMULIEREN); onbekend = niet opengesteld.
+		if fd == nil || !isOpenbaar(fd) {
+			if fd == nil && OpenbareFormulieren()[sleutel] {
+				c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("formulier %s bestaat niet of is niet actief", sleutel)})
+				return
+			}
+			c.JSON(http.StatusForbidden, gin.H{"error": fmt.Sprintf("formulier %s is niet opengesteld voor openbare indiening (OPENBARE_FORMULIEREN)", sleutel)})
+			return
+		}
+		if fd.Status != "actief" {
+			c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("formulier %s bestaat niet of is niet actief", sleutel)})
 			return
 		}
 
@@ -344,8 +400,8 @@ func MaakAanmeldingHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		for _, subID := range subFormulierIDs(fd.Layout) {
-			sub, err := laadFormulierDefinitie(c.Request.Context(), DB, subID)
+		for _, subSleutel := range subFormulierSleutels(fd.Layout) {
+			sub, err := zoekFormulierDefinitie(c.Request.Context(), DB, subSleutel)
 			if err != nil || sub == nil || sub.Status != "actief" {
 				continue
 			}

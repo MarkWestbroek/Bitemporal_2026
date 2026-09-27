@@ -98,6 +98,7 @@ type FormulierDefinitie_Meta_Data struct {
 	Rel_ID                int                      `json:"rel_id" bun:"rel_id,pk"`
 	Versie                int64                    `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam                  string                   `json:"naam"`
+	Code                  *string                  `json:"code,omitempty"`
 	Beschrijving          string                   `json:"beschrijving"`
 	Doeltype              string                   `json:"doeltype"`
 	Status                FormulierDefinitieStatus `json:"status" schema:"enum=FormulierDefinitieStatus"`
@@ -147,6 +148,7 @@ type WeergaveDefinitie_Meta_Data struct {
 	Rel_ID               int                     `json:"rel_id" bun:"rel_id,pk"`
 	Versie               int64                   `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam                 string                  `json:"naam"`
+	Code                 *string                 `json:"code,omitempty"`
 	Beschrijving         string                  `json:"beschrijving"`
 	Doeltype             string                  `json:"doeltype"`
 	Status               WeergaveDefinitieStatus `json:"status" schema:"enum=WeergaveDefinitieStatus"`
@@ -201,125 +203,189 @@ type WeergaveDefinitie_DetailTemplate_Data struct {
 	Afvoer               *time.Time `json:"afvoer,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieNaam — Naam (de sleutel in de URL: dashboard.html?dashboard=<naam>) en beschrijving.
-type DashboardDefinitie_DashboarddefinitieNaam struct {
-	bun.BaseModel            `bun:"table:dashboarddefinitie_dashboarddefinitienaam,alias:dashboarddefinitie_dashboarddefinitienaam"`
-	DashboardDefinitie_ID    int                                              `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk" schema_desc:"ID van de DashboardDefinitie-entiteit"`
-	Rel_ID                   int                                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentDashboardDefinitie *DashboardDefinitie                              `json:"-" bun:"rel:belongs-to,join:dashboarddefinitie_id=id,on_delete:cascade"`
-	Opvoer                   *time.Time                                       `json:"opvoer,omitempty"`
-	Afvoer                   *time.Time                                       `json:"afvoer,omitempty"`
-	Data                     []DashboardDefinitie_DashboarddefinitieNaam_Data `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+// QueryDefinitie_QuerydefinitieNaam — De naam waarmee de frontend het document aanroept (documentId). Stabiel: dit is het gepubliceerde contract; hernoemen is een nieuwe hub.
+type QueryDefinitie_QuerydefinitieNaam struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitienaam,alias:querydefinitie_querydefinitienaam"`
+	QueryDefinitie_ID    int                                      `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                      `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                          `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                               `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                               `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieNaam_Data `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieNaam_Data — geversioned inhoud van DashboardDefinitie_DashboarddefinitieNaam.
-type DashboardDefinitie_DashboarddefinitieNaam_Data struct {
-	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitienaam_data,alias:dashboarddefinitie_dashboarddefinitienaam_data"`
-	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
-	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Naam                  string     `json:"naam"`
-	Beschrijving          *string    `json:"beschrijving,omitempty"`
-	Opvoer                *time.Time `json:"opvoer,omitempty"`
-	Afvoer                *time.Time `json:"afvoer,omitempty"`
+// QueryDefinitie_QuerydefinitieNaam_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieNaam.
+type QueryDefinitie_QuerydefinitieNaam_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitienaam_data,alias:querydefinitie_querydefinitienaam_data"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam              string     `json:"naam"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieTegel — Eén tegel: titel, de QueryDefinitie (naam van het opgeslagen document) die de selectie levert, de weergave (aantal, tabel of lijst), optioneel de kolommen (komma-gescheiden veldpaden uit het documentresultaat; leeg = alle scalaire velden), optioneel variabelen (JSON, bv. {"limit": 500}) en de volgorde. Meervoudig en materieel: tegels zijn te stagen.
-type DashboardDefinitie_DashboarddefinitieTegel struct {
-	bun.BaseModel            `bun:"table:dashboarddefinitie_dashboarddefinitietegel,alias:dashboarddefinitie_dashboarddefinitietegel"`
-	DashboardDefinitie_ID    int                                                  `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk" schema_desc:"ID van de DashboardDefinitie-entiteit"`
-	Rel_ID                   int                                                  `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentDashboardDefinitie *DashboardDefinitie                                  `json:"-" bun:"rel:belongs-to,join:dashboarddefinitie_id=id,on_delete:cascade"`
-	Opvoer                   *time.Time                                           `json:"opvoer,omitempty"`
-	Afvoer                   *time.Time                                           `json:"afvoer,omitempty"`
-	Data                     []DashboardDefinitie_DashboarddefinitieTegel_Data    `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
-	Aanvang                  []DashboardDefinitie_DashboarddefinitieTegel_Aanvang `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
-	Einde                    []DashboardDefinitie_DashboarddefinitieTegel_Einde   `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+// QueryDefinitie_QuerydefinitieBeschrijving — Hoog-over beschrijving van de definitie (wat levert deze query, voor wie).
+type QueryDefinitie_QuerydefinitieBeschrijving struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitiebeschrijving,alias:querydefinitie_querydefinitiebeschrijving"`
+	QueryDefinitie_ID    int                                              `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                                  `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                                       `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                                       `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieBeschrijving_Data `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieTegel_Data — geversioned inhoud van DashboardDefinitie_DashboarddefinitieTegel.
-type DashboardDefinitie_DashboarddefinitieTegel_Data struct {
-	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitietegel_data,alias:dashboarddefinitie_dashboarddefinitietegel_data"`
-	DashboardDefinitie_ID int               `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
-	Rel_ID                int               `json:"rel_id" bun:"rel_id,pk"`
-	Versie                int64             `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Titel                 string            `json:"titel"`
-	Querydefinitie        string            `json:"querydefinitie"`
-	Weergave              DashboardWeergave `json:"weergave" schema:"enum=DashboardWeergave"`
-	Kolommen              *string           `json:"kolommen,omitempty"`
-	Variabelen            *string           `json:"variabelen,omitempty"`
-	Volgorde              *int              `json:"volgorde,omitempty"`
-	Opvoer                *time.Time        `json:"opvoer,omitempty"`
-	Afvoer                *time.Time        `json:"afvoer,omitempty"`
+// QueryDefinitie_QuerydefinitieBeschrijving_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieBeschrijving.
+type QueryDefinitie_QuerydefinitieBeschrijving_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiebeschrijving_data,alias:querydefinitie_querydefinitiebeschrijving_data"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Beschrijving      string     `json:"beschrijving"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieTegel_Aanvang — aanvangdatum van DashboardDefinitie_DashboarddefinitieTegel.
-type DashboardDefinitie_DashboarddefinitieTegel_Aanvang struct {
-	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitietegel_aanvang,alias:dashboarddefinitie_dashboarddefinitietegel_aanvang"`
-	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
-	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer                *time.Time `json:"opvoer,omitempty"`
-	Afvoer                *time.Time `json:"afvoer,omitempty"`
+// QueryDefinitie_QuerydefinitieStatus — Levenscyclus: concept = klad, niet opvraagbaar; actief = opvraagbaar; inactief = ingetrokken, niet meer opvraagbaar (een aanroep krijgt 'ingetrokken' i.p.v. 'onbekend'). Materieel: 'actief vanaf …' is te stagen. `reden` legt uit waarom, vanuit het oogpunt van de afnemer.
+type QueryDefinitie_QuerydefinitieStatus struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitiestatus,alias:querydefinitie_querydefinitiestatus"`
+	QueryDefinitie_ID    int                                           `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                           `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                               `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                                    `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                                    `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieStatus_Data    `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang              []QueryDefinitie_QuerydefinitieStatus_Aanvang `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                []QueryDefinitie_QuerydefinitieStatus_Einde   `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieTegel_Einde — eindedatum van DashboardDefinitie_DashboarddefinitieTegel.
-type DashboardDefinitie_DashboarddefinitieTegel_Einde struct {
-	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitietegel_einde,alias:dashboarddefinitie_dashboarddefinitietegel_einde"`
-	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
-	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer                *time.Time `json:"opvoer,omitempty"`
-	Afvoer                *time.Time `json:"afvoer,omitempty"`
+// QueryDefinitie_QuerydefinitieStatus_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieStatus.
+type QueryDefinitie_QuerydefinitieStatus_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiestatus_data,alias:querydefinitie_querydefinitiestatus_data"`
+	QueryDefinitie_ID int                  `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int                  `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64                `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Status            QueryDefinitieStatus `json:"status" schema:"enum=QueryDefinitieStatus"`
+	Reden             *string              `json:"reden,omitempty"`
+	Opvoer            *time.Time           `json:"opvoer,omitempty"`
+	Afvoer            *time.Time           `json:"afvoer,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieStatus — Levenscyclus: concept, actief, inactief; materieel te stagen. `reden` legt uit waarom.
-type DashboardDefinitie_DashboarddefinitieStatus struct {
-	bun.BaseModel            `bun:"table:dashboarddefinitie_dashboarddefinitiestatus,alias:dashboarddefinitie_dashboarddefinitiestatus"`
-	DashboardDefinitie_ID    int                                                   `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk" schema_desc:"ID van de DashboardDefinitie-entiteit"`
-	Rel_ID                   int                                                   `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentDashboardDefinitie *DashboardDefinitie                                   `json:"-" bun:"rel:belongs-to,join:dashboarddefinitie_id=id,on_delete:cascade"`
-	Opvoer                   *time.Time                                            `json:"opvoer,omitempty"`
-	Afvoer                   *time.Time                                            `json:"afvoer,omitempty"`
-	Data                     []DashboardDefinitie_DashboarddefinitieStatus_Data    `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
-	Aanvang                  []DashboardDefinitie_DashboarddefinitieStatus_Aanvang `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
-	Einde                    []DashboardDefinitie_DashboarddefinitieStatus_Einde   `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+// QueryDefinitie_QuerydefinitieStatus_Aanvang — aanvangdatum van QueryDefinitie_QuerydefinitieStatus.
+type QueryDefinitie_QuerydefinitieStatus_Aanvang struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiestatus_aanvang,alias:querydefinitie_querydefinitiestatus_aanvang"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieStatus_Data — geversioned inhoud van DashboardDefinitie_DashboarddefinitieStatus.
-type DashboardDefinitie_DashboarddefinitieStatus_Data struct {
-	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitiestatus_data,alias:dashboarddefinitie_dashboarddefinitiestatus_data"`
-	DashboardDefinitie_ID int                      `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
-	Rel_ID                int                      `json:"rel_id" bun:"rel_id,pk"`
-	Versie                int64                    `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Status                DashboardDefinitieStatus `json:"status" schema:"enum=DashboardDefinitieStatus"`
-	Reden                 *string                  `json:"reden,omitempty"`
-	Opvoer                *time.Time               `json:"opvoer,omitempty"`
-	Afvoer                *time.Time               `json:"afvoer,omitempty"`
+// QueryDefinitie_QuerydefinitieStatus_Einde — eindedatum van QueryDefinitie_QuerydefinitieStatus.
+type QueryDefinitie_QuerydefinitieStatus_Einde struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiestatus_einde,alias:querydefinitie_querydefinitiestatus_einde"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieStatus_Aanvang — aanvangdatum van DashboardDefinitie_DashboarddefinitieStatus.
-type DashboardDefinitie_DashboarddefinitieStatus_Aanvang struct {
-	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitiestatus_aanvang,alias:dashboarddefinitie_dashboarddefinitiestatus_aanvang"`
-	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
-	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer                *time.Time `json:"opvoer,omitempty"`
-	Afvoer                *time.Time `json:"afvoer,omitempty"`
+// QueryDefinitie_QuerydefinitieToegankelijkheid — Wie het document mag uitvoeren: publiek (ook anoniem) of intern (alleen met een rol). Later vervangbaar door een verwijzing naar een FTV-policy. Ontbreekt dit GE, dan geldt intern.
+type QueryDefinitie_QuerydefinitieToegankelijkheid struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitietoegankelijkheid,alias:querydefinitie_querydefinitietoegankelijkheid"`
+	QueryDefinitie_ID    int                                                     `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                                     `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                                         `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                                              `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                                              `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieToegankelijkheid_Data    `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang              []QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                []QueryDefinitie_QuerydefinitieToegankelijkheid_Einde   `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
 }
 
-// DashboardDefinitie_DashboarddefinitieStatus_Einde — eindedatum van DashboardDefinitie_DashboarddefinitieStatus.
-type DashboardDefinitie_DashboarddefinitieStatus_Einde struct {
-	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitiestatus_einde,alias:dashboarddefinitie_dashboarddefinitiestatus_einde"`
-	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
-	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer                *time.Time `json:"opvoer,omitempty"`
-	Afvoer                *time.Time `json:"afvoer,omitempty"`
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieToegankelijkheid.
+type QueryDefinitie_QuerydefinitieToegankelijkheid_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitietoegankelijkheid_data,alias:querydefinitie_querydefinitietoegankelijkheid_data"`
+	QueryDefinitie_ID int                            `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int                            `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64                          `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Toegankelijkheid  QueryDefinitieToegankelijkheid `json:"toegankelijkheid" schema:"enum=QueryDefinitieToegankelijkheid"`
+	Opvoer            *time.Time                     `json:"opvoer,omitempty"`
+	Afvoer            *time.Time                     `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang — aanvangdatum van QueryDefinitie_QuerydefinitieToegankelijkheid.
+type QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitietoegankelijkheid_aanvang,alias:querydefinitie_querydefinitietoegankelijkheid_aanvang"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieToegankelijkheid_Einde — eindedatum van QueryDefinitie_QuerydefinitieToegankelijkheid.
+type QueryDefinitie_QuerydefinitieToegankelijkheid_Einde struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitietoegankelijkheid_einde,alias:querydefinitie_querydefinitietoegankelijkheid_einde"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieDocument — Het opgeslagen GraphQL-document. Enkelvoudig: altijd precies één geldig document per naam; een oude versie is via het peiltijdstip te zien, niet via het versienummer. Materieel: een nieuwe versie is te stagen. `toelichting` beschrijft deze versie.
+type QueryDefinitie_QuerydefinitieDocument struct {
+	bun.BaseModel        `bun:"table:querydefinitie_querydefinitiedocument,alias:querydefinitie_querydefinitiedocument"`
+	QueryDefinitie_ID    int                                             `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
+	Rel_ID               int                                             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentQueryDefinitie *QueryDefinitie                                 `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                                      `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                                      `json:"afvoer,omitempty"`
+	Data                 []QueryDefinitie_QuerydefinitieDocument_Data    `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang              []QueryDefinitie_QuerydefinitieDocument_Aanvang `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                []QueryDefinitie_QuerydefinitieDocument_Einde   `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieDocument.
+type QueryDefinitie_QuerydefinitieDocument_Data struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiedocument_data,alias:querydefinitie_querydefinitiedocument_data"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	GraphqlDocument   string     `json:"graphql_document"`
+	DefinitieVersie   Versie     `json:"definitie_versie" schema:"datatype:Versie"`
+	Toelichting       *string    `json:"toelichting,omitempty"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Aanvang — aanvangdatum van QueryDefinitie_QuerydefinitieDocument.
+type QueryDefinitie_QuerydefinitieDocument_Aanvang struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiedocument_aanvang,alias:querydefinitie_querydefinitiedocument_aanvang"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// QueryDefinitie_QuerydefinitieDocument_Einde — eindedatum van QueryDefinitie_QuerydefinitieDocument.
+type QueryDefinitie_QuerydefinitieDocument_Einde struct {
+	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiedocument_einde,alias:querydefinitie_querydefinitiedocument_einde"`
+	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }
 
 // NotificatieDefinitie_NotificatiedefinitieNaam — Naam en beschrijving van de notificatiedefinitie (het abonnement in NORA-termen).
@@ -513,187 +579,123 @@ type NotificatieDefinitie_NotificatiedefinitieStatus_Einde struct {
 	Afvoer                  *time.Time `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieNaam — De naam waarmee de frontend het document aanroept (documentId). Stabiel: dit is het gepubliceerde contract; hernoemen is een nieuwe hub.
-type QueryDefinitie_QuerydefinitieNaam struct {
-	bun.BaseModel        `bun:"table:querydefinitie_querydefinitienaam,alias:querydefinitie_querydefinitienaam"`
-	QueryDefinitie_ID    int                                      `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
-	Rel_ID               int                                      `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentQueryDefinitie *QueryDefinitie                          `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
-	Opvoer               *time.Time                               `json:"opvoer,omitempty"`
-	Afvoer               *time.Time                               `json:"afvoer,omitempty"`
-	Data                 []QueryDefinitie_QuerydefinitieNaam_Data `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+// DashboardDefinitie_DashboarddefinitieNaam — Naam (de sleutel in de URL: dashboard.html?dashboard=<naam>) en beschrijving.
+type DashboardDefinitie_DashboarddefinitieNaam struct {
+	bun.BaseModel            `bun:"table:dashboarddefinitie_dashboarddefinitienaam,alias:dashboarddefinitie_dashboarddefinitienaam"`
+	DashboardDefinitie_ID    int                                              `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk" schema_desc:"ID van de DashboardDefinitie-entiteit"`
+	Rel_ID                   int                                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentDashboardDefinitie *DashboardDefinitie                              `json:"-" bun:"rel:belongs-to,join:dashboarddefinitie_id=id,on_delete:cascade"`
+	Opvoer                   *time.Time                                       `json:"opvoer,omitempty"`
+	Afvoer                   *time.Time                                       `json:"afvoer,omitempty"`
+	Data                     []DashboardDefinitie_DashboarddefinitieNaam_Data `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieNaam_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieNaam.
-type QueryDefinitie_QuerydefinitieNaam_Data struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitienaam_data,alias:querydefinitie_querydefinitienaam_data"`
-	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Naam              string     `json:"naam"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
+// DashboardDefinitie_DashboarddefinitieNaam_Data — geversioned inhoud van DashboardDefinitie_DashboarddefinitieNaam.
+type DashboardDefinitie_DashboarddefinitieNaam_Data struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitienaam_data,alias:dashboarddefinitie_dashboarddefinitienaam_data"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam                  string     `json:"naam"`
+	Beschrijving          *string    `json:"beschrijving,omitempty"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieBeschrijving — Hoog-over beschrijving van de definitie (wat levert deze query, voor wie).
-type QueryDefinitie_QuerydefinitieBeschrijving struct {
-	bun.BaseModel        `bun:"table:querydefinitie_querydefinitiebeschrijving,alias:querydefinitie_querydefinitiebeschrijving"`
-	QueryDefinitie_ID    int                                              `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
-	Rel_ID               int                                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentQueryDefinitie *QueryDefinitie                                  `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
-	Opvoer               *time.Time                                       `json:"opvoer,omitempty"`
-	Afvoer               *time.Time                                       `json:"afvoer,omitempty"`
-	Data                 []QueryDefinitie_QuerydefinitieBeschrijving_Data `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+// DashboardDefinitie_DashboarddefinitieTegel — Eén tegel: titel, de QueryDefinitie (naam van het opgeslagen document) die de selectie levert, de weergave (aantal, tabel of lijst), optioneel de kolommen (komma-gescheiden veldpaden uit het documentresultaat; leeg = alle scalaire velden), optioneel variabelen (JSON, bv. {"limit": 500}) en de volgorde. Meervoudig en materieel: tegels zijn te stagen.
+type DashboardDefinitie_DashboarddefinitieTegel struct {
+	bun.BaseModel            `bun:"table:dashboarddefinitie_dashboarddefinitietegel,alias:dashboarddefinitie_dashboarddefinitietegel"`
+	DashboardDefinitie_ID    int                                                  `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk" schema_desc:"ID van de DashboardDefinitie-entiteit"`
+	Rel_ID                   int                                                  `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentDashboardDefinitie *DashboardDefinitie                                  `json:"-" bun:"rel:belongs-to,join:dashboarddefinitie_id=id,on_delete:cascade"`
+	Opvoer                   *time.Time                                           `json:"opvoer,omitempty"`
+	Afvoer                   *time.Time                                           `json:"afvoer,omitempty"`
+	Data                     []DashboardDefinitie_DashboarddefinitieTegel_Data    `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang                  []DashboardDefinitie_DashboarddefinitieTegel_Aanvang `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                    []DashboardDefinitie_DashboarddefinitieTegel_Einde   `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieBeschrijving_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieBeschrijving.
-type QueryDefinitie_QuerydefinitieBeschrijving_Data struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiebeschrijving_data,alias:querydefinitie_querydefinitiebeschrijving_data"`
-	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Beschrijving      string     `json:"beschrijving"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
+// DashboardDefinitie_DashboarddefinitieTegel_Data — geversioned inhoud van DashboardDefinitie_DashboarddefinitieTegel.
+type DashboardDefinitie_DashboarddefinitieTegel_Data struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitietegel_data,alias:dashboarddefinitie_dashboarddefinitietegel_data"`
+	DashboardDefinitie_ID int               `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int               `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64             `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Titel                 string            `json:"titel"`
+	Querydefinitie        string            `json:"querydefinitie"`
+	Weergave              DashboardWeergave `json:"weergave" schema:"enum=DashboardWeergave"`
+	Kolommen              *string           `json:"kolommen,omitempty"`
+	Variabelen            *string           `json:"variabelen,omitempty"`
+	Volgorde              *int              `json:"volgorde,omitempty"`
+	Opvoer                *time.Time        `json:"opvoer,omitempty"`
+	Afvoer                *time.Time        `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieStatus — Levenscyclus: concept = klad, niet opvraagbaar; actief = opvraagbaar; inactief = ingetrokken, niet meer opvraagbaar (een aanroep krijgt 'ingetrokken' i.p.v. 'onbekend'). Materieel: 'actief vanaf …' is te stagen. `reden` legt uit waarom, vanuit het oogpunt van de afnemer.
-type QueryDefinitie_QuerydefinitieStatus struct {
-	bun.BaseModel        `bun:"table:querydefinitie_querydefinitiestatus,alias:querydefinitie_querydefinitiestatus"`
-	QueryDefinitie_ID    int                                           `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
-	Rel_ID               int                                           `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentQueryDefinitie *QueryDefinitie                               `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
-	Opvoer               *time.Time                                    `json:"opvoer,omitempty"`
-	Afvoer               *time.Time                                    `json:"afvoer,omitempty"`
-	Data                 []QueryDefinitie_QuerydefinitieStatus_Data    `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
-	Aanvang              []QueryDefinitie_QuerydefinitieStatus_Aanvang `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
-	Einde                []QueryDefinitie_QuerydefinitieStatus_Einde   `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+// DashboardDefinitie_DashboarddefinitieTegel_Aanvang — aanvangdatum van DashboardDefinitie_DashboarddefinitieTegel.
+type DashboardDefinitie_DashboarddefinitieTegel_Aanvang struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitietegel_aanvang,alias:dashboarddefinitie_dashboarddefinitietegel_aanvang"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieStatus_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieStatus.
-type QueryDefinitie_QuerydefinitieStatus_Data struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiestatus_data,alias:querydefinitie_querydefinitiestatus_data"`
-	QueryDefinitie_ID int                  `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int                  `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64                `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Status            QueryDefinitieStatus `json:"status" schema:"enum=QueryDefinitieStatus"`
-	Reden             *string              `json:"reden,omitempty"`
-	Opvoer            *time.Time           `json:"opvoer,omitempty"`
-	Afvoer            *time.Time           `json:"afvoer,omitempty"`
+// DashboardDefinitie_DashboarddefinitieTegel_Einde — eindedatum van DashboardDefinitie_DashboarddefinitieTegel.
+type DashboardDefinitie_DashboarddefinitieTegel_Einde struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitietegel_einde,alias:dashboarddefinitie_dashboarddefinitietegel_einde"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieStatus_Aanvang — aanvangdatum van QueryDefinitie_QuerydefinitieStatus.
-type QueryDefinitie_QuerydefinitieStatus_Aanvang struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiestatus_aanvang,alias:querydefinitie_querydefinitiestatus_aanvang"`
-	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
+// DashboardDefinitie_DashboarddefinitieStatus — Levenscyclus: concept, actief, inactief; materieel te stagen. `reden` legt uit waarom.
+type DashboardDefinitie_DashboarddefinitieStatus struct {
+	bun.BaseModel            `bun:"table:dashboarddefinitie_dashboarddefinitiestatus,alias:dashboarddefinitie_dashboarddefinitiestatus"`
+	DashboardDefinitie_ID    int                                                   `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk" schema_desc:"ID van de DashboardDefinitie-entiteit"`
+	Rel_ID                   int                                                   `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentDashboardDefinitie *DashboardDefinitie                                   `json:"-" bun:"rel:belongs-to,join:dashboarddefinitie_id=id,on_delete:cascade"`
+	Opvoer                   *time.Time                                            `json:"opvoer,omitempty"`
+	Afvoer                   *time.Time                                            `json:"afvoer,omitempty"`
+	Data                     []DashboardDefinitie_DashboarddefinitieStatus_Data    `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang                  []DashboardDefinitie_DashboarddefinitieStatus_Aanvang `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde                    []DashboardDefinitie_DashboarddefinitieStatus_Einde   `bun:"rel:has-many,join:dashboarddefinitie_id=dashboarddefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieStatus_Einde — eindedatum van QueryDefinitie_QuerydefinitieStatus.
-type QueryDefinitie_QuerydefinitieStatus_Einde struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiestatus_einde,alias:querydefinitie_querydefinitiestatus_einde"`
-	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
+// DashboardDefinitie_DashboarddefinitieStatus_Data — geversioned inhoud van DashboardDefinitie_DashboarddefinitieStatus.
+type DashboardDefinitie_DashboarddefinitieStatus_Data struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitiestatus_data,alias:dashboarddefinitie_dashboarddefinitiestatus_data"`
+	DashboardDefinitie_ID int                      `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int                      `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64                    `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Status                DashboardDefinitieStatus `json:"status" schema:"enum=DashboardDefinitieStatus"`
+	Reden                 *string                  `json:"reden,omitempty"`
+	Opvoer                *time.Time               `json:"opvoer,omitempty"`
+	Afvoer                *time.Time               `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieToegankelijkheid — Wie het document mag uitvoeren: publiek (ook anoniem) of intern (alleen met een rol). Later vervangbaar door een verwijzing naar een FTV-policy. Ontbreekt dit GE, dan geldt intern.
-type QueryDefinitie_QuerydefinitieToegankelijkheid struct {
-	bun.BaseModel        `bun:"table:querydefinitie_querydefinitietoegankelijkheid,alias:querydefinitie_querydefinitietoegankelijkheid"`
-	QueryDefinitie_ID    int                                                     `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
-	Rel_ID               int                                                     `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentQueryDefinitie *QueryDefinitie                                         `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
-	Opvoer               *time.Time                                              `json:"opvoer,omitempty"`
-	Afvoer               *time.Time                                              `json:"afvoer,omitempty"`
-	Data                 []QueryDefinitie_QuerydefinitieToegankelijkheid_Data    `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
-	Aanvang              []QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
-	Einde                []QueryDefinitie_QuerydefinitieToegankelijkheid_Einde   `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
+// DashboardDefinitie_DashboarddefinitieStatus_Aanvang — aanvangdatum van DashboardDefinitie_DashboarddefinitieStatus.
+type DashboardDefinitie_DashboarddefinitieStatus_Aanvang struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitiestatus_aanvang,alias:dashboarddefinitie_dashboarddefinitiestatus_aanvang"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
 }
 
-// QueryDefinitie_QuerydefinitieToegankelijkheid_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieToegankelijkheid.
-type QueryDefinitie_QuerydefinitieToegankelijkheid_Data struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitietoegankelijkheid_data,alias:querydefinitie_querydefinitietoegankelijkheid_data"`
-	QueryDefinitie_ID int                            `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int                            `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64                          `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Toegankelijkheid  QueryDefinitieToegankelijkheid `json:"toegankelijkheid" schema:"enum=QueryDefinitieToegankelijkheid"`
-	Opvoer            *time.Time                     `json:"opvoer,omitempty"`
-	Afvoer            *time.Time                     `json:"afvoer,omitempty"`
-}
-
-// QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang — aanvangdatum van QueryDefinitie_QuerydefinitieToegankelijkheid.
-type QueryDefinitie_QuerydefinitieToegankelijkheid_Aanvang struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitietoegankelijkheid_aanvang,alias:querydefinitie_querydefinitietoegankelijkheid_aanvang"`
-	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
-}
-
-// QueryDefinitie_QuerydefinitieToegankelijkheid_Einde — eindedatum van QueryDefinitie_QuerydefinitieToegankelijkheid.
-type QueryDefinitie_QuerydefinitieToegankelijkheid_Einde struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitietoegankelijkheid_einde,alias:querydefinitie_querydefinitietoegankelijkheid_einde"`
-	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
-}
-
-// QueryDefinitie_QuerydefinitieDocument — Het opgeslagen GraphQL-document. Enkelvoudig: altijd precies één geldig document per naam; een oude versie is via het peiltijdstip te zien, niet via het versienummer. Materieel: een nieuwe versie is te stagen. `toelichting` beschrijft deze versie.
-type QueryDefinitie_QuerydefinitieDocument struct {
-	bun.BaseModel        `bun:"table:querydefinitie_querydefinitiedocument,alias:querydefinitie_querydefinitiedocument"`
-	QueryDefinitie_ID    int                                             `json:"querydefinitie_id" bun:"querydefinitie_id,pk" schema_desc:"ID van de QueryDefinitie-entiteit"`
-	Rel_ID               int                                             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentQueryDefinitie *QueryDefinitie                                 `json:"-" bun:"rel:belongs-to,join:querydefinitie_id=id,on_delete:cascade"`
-	Opvoer               *time.Time                                      `json:"opvoer,omitempty"`
-	Afvoer               *time.Time                                      `json:"afvoer,omitempty"`
-	Data                 []QueryDefinitie_QuerydefinitieDocument_Data    `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"data,omitempty"`
-	Aanvang              []QueryDefinitie_QuerydefinitieDocument_Aanvang `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
-	Einde                []QueryDefinitie_QuerydefinitieDocument_Einde   `bun:"rel:has-many,join:querydefinitie_id=querydefinitie_id,join:rel_id=rel_id" json:"einde,omitempty"`
-}
-
-// QueryDefinitie_QuerydefinitieDocument_Data — geversioned inhoud van QueryDefinitie_QuerydefinitieDocument.
-type QueryDefinitie_QuerydefinitieDocument_Data struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiedocument_data,alias:querydefinitie_querydefinitiedocument_data"`
-	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	GraphqlDocument   string     `json:"graphql_document"`
-	DefinitieVersie   Versie     `json:"definitie_versie" schema:"datatype:Versie"`
-	Toelichting       *string    `json:"toelichting,omitempty"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
-}
-
-// QueryDefinitie_QuerydefinitieDocument_Aanvang — aanvangdatum van QueryDefinitie_QuerydefinitieDocument.
-type QueryDefinitie_QuerydefinitieDocument_Aanvang struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiedocument_aanvang,alias:querydefinitie_querydefinitiedocument_aanvang"`
-	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
-}
-
-// QueryDefinitie_QuerydefinitieDocument_Einde — eindedatum van QueryDefinitie_QuerydefinitieDocument.
-type QueryDefinitie_QuerydefinitieDocument_Einde struct {
-	bun.BaseModel     `bun:"table:querydefinitie_querydefinitiedocument_einde,alias:querydefinitie_querydefinitiedocument_einde"`
-	QueryDefinitie_ID int        `json:"querydefinitie_id" bun:"querydefinitie_id,pk"`
-	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum             *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
+// DashboardDefinitie_DashboarddefinitieStatus_Einde — eindedatum van DashboardDefinitie_DashboarddefinitieStatus.
+type DashboardDefinitie_DashboarddefinitieStatus_Einde struct {
+	bun.BaseModel         `bun:"table:dashboarddefinitie_dashboarddefinitiestatus_einde,alias:dashboarddefinitie_dashboarddefinitiestatus_einde"`
+	DashboardDefinitie_ID int        `json:"dashboarddefinitie_id" bun:"dashboarddefinitie_id,pk"`
+	Rel_ID                int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie                int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum                 *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer                *time.Time `json:"opvoer,omitempty"`
+	Afvoer                *time.Time `json:"afvoer,omitempty"`
 }

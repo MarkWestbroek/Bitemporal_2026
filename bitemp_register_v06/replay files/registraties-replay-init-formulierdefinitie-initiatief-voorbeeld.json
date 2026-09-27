@@ -29,6 +29,7 @@
               "formulierdefinitie_meta": {
                 "formulierdefinitie_id": 1,
                 "naam": "Initiatief voorbeeldformulier",
+                "code": "initiatief-voorbeeld",
                 "beschrijving": "Voorbeeld van een custom formulierlayout voor ENT Initiatief, over meerdere GE's heen.",
                 "doeltype": "Initiatief",
                 "status": "actief",

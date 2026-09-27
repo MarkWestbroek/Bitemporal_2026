@@ -10,6 +10,7 @@ import { isEmbedModus } from "../publicatie/embed";
 import "@utrecht/component-library-css";
 import "@utrecht/design-tokens/dist/index.css";
 import "../styles/common-ground-theme.css";
+import { vindDefinitie } from "../shared/definitieSleutel";
 import "../publicatie/embed.css"; // alleen actief onder .cg-embed
 
 /**
@@ -18,7 +19,7 @@ import "../publicatie/embed.css"; // alleen actief onder .cg-embed
  * `POST /aanmelding/:formulierId`, dat alleen openstaat voor formulieren in
  * OPENBARE_FORMULIEREN en zelf de vaste waarden afdwingt.
  *
- * URL: aanmelden.html?formulier=<FD-id>[&embed=1]   (querystring vóór een eventuele hash)
+ * URL: aanmelden.html?formulier=<FD-id of code>[&embed=1]   (querystring vóór een eventuele hash)
  * In een iframe (of met ?embed=1) verdwijnt de kop; zie publicatie/embed.js.
  */
 
@@ -61,9 +62,9 @@ function AanmeldPagina() {
   if (loading || fdLoading) return <div style={{ padding: "1.5rem" }}>Formulier laden…</div>;
   if (error) return <div className="cg-feedback--fout" style={{ margin: "1.5rem" }}>Schema laden mislukt: {error}</div>;
   if (fdError) return <div className="cg-feedback--fout" style={{ margin: "1.5rem" }}>Formulier laden mislukt: {fdError}</div>;
-  if (!formulierId) return <div className="cg-feedback--fout" style={{ margin: "1.5rem" }}>Geen formulier opgegeven (<code>?formulier=&lt;id&gt;</code>).</div>;
+  if (!formulierId) return <div className="cg-feedback--fout" style={{ margin: "1.5rem" }}>Geen formulier opgegeven (<code>?formulier=&lt;id of code&gt;</code>).</div>;
 
-  const definitie = definities.find((d) => String(d.id) === formulierId) || null;
+  const definitie = vindDefinitie(definities, formulierId);
   if (!definitie) return <div className="cg-feedback--fout" style={{ margin: "1.5rem" }}>Formulier {formulierId} bestaat niet of is niet actief.</div>;
   const typeMeta = typeMetaByTypenaam?.[definitie.meta?.doeltype];
   if (!typeMeta) return <div className="cg-feedback--fout" style={{ margin: "1.5rem" }}>Onbekend doeltype: {definitie.meta?.doeltype}</div>;

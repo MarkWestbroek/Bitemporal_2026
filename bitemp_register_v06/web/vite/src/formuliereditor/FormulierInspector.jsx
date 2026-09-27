@@ -7,6 +7,7 @@ import { useFormulierEditorStore } from "./useFormulierEditorStore";
 import { vindElement } from "./layoutModel";
 import VormEditor from "./VormEditor";
 import { INVOERSOORT, invoersoortVanVeld } from "../vormen/vormen";
+import { isGeldigeCode } from "../shared/definitieSleutel";
 
 const veldStijl = {
   width: "100%", boxSizing: "border-box", padding: "4px 6px", fontSize: 13,
@@ -52,6 +53,10 @@ export default function FormulierInspector() {
         <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>Formulierdefinitie</h3>
         <Regel label="Naam">
           <input style={veldStijl} value={meta.naam} onChange={(e) => setMeta({ naam: e.target.value })} placeholder="bv. Initiatief voorbeeldformulier" />
+        </Regel>
+        <Regel label="Code">
+          <input style={{ ...veldStijl, borderColor: isGeldigeCode(meta.code) ? undefined : "#dc2626" }} value={meta.code || ""} onChange={(e) => setMeta({ code: e.target.value })} placeholder="bv. nieuwe-organisatie" title="Leesbare sleutel, gelijk op elke instantie: te gebruiken in plaats van het id in nieuwFormulier, ?formulier= en OPENBARE_FORMULIEREN." />
+          {!isGeldigeCode(meta.code) && <div style={{ color: "#dc2626", fontSize: 11 }}>Kleine letters, cijfers en koppeltekens; niet alleen cijfers.</div>}
         </Regel>
         <Regel label="Doeltype (ENT)">
           <input style={veldStijl} value={meta.doeltype} onChange={(e) => setMeta({ doeltype: e.target.value })} placeholder="bv. Initiatief" />
@@ -161,7 +166,7 @@ export default function FormulierInspector() {
             <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.kopieerNaar || ""} onChange={(e) => update(el._id, { kopieerNaar: e.target.value || undefined })} placeholder="bv. Initiatief.aanvang.datum" />
           </Regel>
           <Regel label="Nieuw-formulier (FD-id; alleen op de secundaire id van een relatie naar een ENT)">
-            <input style={veldStijl} value={el.nieuwFormulier || ""} onChange={(e) => update(el._id, { nieuwFormulier: e.target.value || undefined })} placeholder="bv. 3 (Nieuwe organisatie)" />
+            <input style={veldStijl} value={el.nieuwFormulier || ""} onChange={(e) => update(el._id, { nieuwFormulier: e.target.value || undefined })} placeholder="code of id, bv. nieuwe-organisatie" />
           </Regel>
           {veldInfo[el.veld] && (
             <div style={{ marginTop: 12, fontSize: 11.5, color: "var(--s-fg-muted, #64748b)", lineHeight: 1.6 }}>

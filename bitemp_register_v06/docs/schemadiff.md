@@ -143,6 +143,22 @@ Elke wijziging krijgt een van vier ernst-niveaus:
 | Verplicht gemaakt | `ALTER COLUMN SET NOT NULL` | Nee |
 | Optioneel gemaakt | `ALTER COLUMN DROP NOT NULL` | Nee |
 
+### Automatisch bij opstarten: nieuwe kolommen
+
+Het additieve geval *veld toegevoegd* hoeft niet meer met de hand. Bun maakt ontbrekende
+tabellen (`CREATE TABLE IF NOT EXISTS`), maar voegt geen kolom toe aan een tabel die al bestaat.
+Daarom loopt `ensureNieuweKolommen` (`dbsetup/createmodeltables.go`, sinds 27-09-2026) bij elke
+start over alle modeltabellen. Staat een kolom wel in het Go-model maar niet in de tabel, dan
+voert hij `ALTER TABLE … ADD COLUMN IF NOT EXISTS <kolom> <type>` uit, met hetzelfde type en
+zonder `NOT NULL`, net als bij CREATE TABLE. Bestaande rijen krijgen NULL.
+
+- Overgeslagen en gelogd: PK- en `notnull`-kolommen. Die vragen een migratie met een
+  standaardwaarde, bijvoorbeeld uit `schemadiff`.
+- Een mislukte ALTER is niet fataal: hij wordt gelogd en de API start gewoon.
+
+Zo kwam `code` op `FormulierDefinitie_Meta`/`WeergaveDefinitie_Meta` in de bestaande databases
+(lokaal en pf) zonder handwerk. Verwijderen, hernoemen en typewijzigingen blijven handwerk.
+
 ## Exit codes
 
 | Code | Betekenis |

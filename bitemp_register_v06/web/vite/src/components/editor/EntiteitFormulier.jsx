@@ -8,6 +8,7 @@ import { useFormulierDefinitie, useFormulierDefinities } from "../../hooks/useFo
 import CustomFormulierRenderer from "./CustomFormulierRenderer";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 import { bouwCustomVeldMapping, bouwCustomWijzigingen } from "./customFormMapping";
+import { vindDefinitie, sleutelVan } from "../../shared/definitieSleutel";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -157,13 +158,13 @@ export default function EntiteitFormulier() {
   const [customFeedback, setCustomFeedback] = useState(null); // { type: "succes"|"fout", text }
 
   // Custom FormulierDefinitie ophalen voor dit entiteittype
-  // Standaard: de FD met is_standaard. Met ?formulier=<id> (keuzelijst "Bewerken via", zoals
+  // Standaard: de FD met is_standaard. Met ?formulier=<id of code> (keuzelijst "Bewerken via", zoals
   // "Invoer via" bij nieuw) een andere actieve FD voor dit type, bv. een versie met de nieuwe vormen.
   const standaardFD = useFormulierDefinitie(typeMeta?.typenaam);
   const { definities: alleFormulieren } = useFormulierDefinities(typeMeta?.typenaam);
   const [searchParams, setSearchParams] = useSearchParams();
   const gekozenFormulierId = searchParams.get("formulier") || "";
-  const gekozenFormulier = alleFormulieren.find((d) => String(d.id) === gekozenFormulierId) || null;
+  const gekozenFormulier = vindDefinitie(alleFormulieren, gekozenFormulierId);
   const customLayout = gekozenFormulier ? gekozenFormulier.layout : standaardFD.layout;
   const customFormDef = gekozenFormulier ? { id: gekozenFormulier.id, meta: gekozenFormulier.meta } : standaardFD.formulierDefinitie;
   const customLayoutLoading = standaardFD.loading;
@@ -595,14 +596,14 @@ export default function EntiteitFormulier() {
         <label className="utrecht-form-field" style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <span className="utrecht-form-label">Bewerken via</span>
           <select className="utrecht-select utrecht-select--html-select"
-            value={!customWeergave ? "" : gekozenFormulier ? String(gekozenFormulier.id) : "__standaard"}
+            value={!customWeergave ? "" : gekozenFormulier ? sleutelVan(gekozenFormulier) : "__standaard"}
             onChange={(e) => kiesFormulier(e.target.value)}>
             <option value="">Standaard (alle gegevenselementen)</option>
             {standaardFD.layout && !alleFormulieren.some((d) => d.isStandaard) && (
               <option value="__standaard">{standaardFD.formulierDefinitie?.meta?.naam || "Standaardformulier"}</option>
             )}
             {alleFormulieren.map((d) => (
-              <option key={d.id} value={d.isStandaard ? "__standaard" : String(d.id)}>{d.meta?.naam || `Formulier ${d.id}`}{d.isStandaard ? " (standaard)" : ""}</option>
+              <option key={d.id} value={d.isStandaard ? "__standaard" : sleutelVan(d)}>{d.meta?.naam || `Formulier ${d.id}`}{d.isStandaard ? " (standaard)" : ""}</option>
             ))}
           </select>
         </label>

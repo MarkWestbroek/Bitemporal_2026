@@ -321,8 +321,9 @@ verwijzende entiteiten aan zonder `max-id`-roundtrips:
 ### `POST /aanmelding/:formulierId`
 - **Handler**: `handlers.MaakAanmeldingHandler()` (`aanmelding_handler.go`)
 - **Description**: **Openbare indiening** van een FormulierDefinitie in nieuw-modus (aanmeldformulier,
-  plan 2026-09-22 §4 B6). Anoniem, maar alleen voor de FD-id's in `OPENBARE_FORMULIEREN`
-  (komma-gescheiden; een formulier openbaar maken is een autorisatiebesluit van de instantie, geen
+  plan 2026-09-22 §4 B6). `:formulierId` is het id óf de `code` van de FD
+  (`FORMULIERDEFINITIES.md` §1.1). Anoniem, maar alleen voor de FD's waarvan het id of de code in
+  `OPENBARE_FORMULIEREN` staat (komma-gescheiden; een formulier openbaar maken is een autorisatiebesluit van de instantie, geen
   FD-veld). De server dwingt af: alleen `opvoer`; alleen representaties van het doeltype van het
   formulier en van de doeltypen van ingebedde subformulieren (`veld.nieuwFormulier`, één niveau);
   entiteit-id's en entiteit-verwijzingen zijn plaatshouders (nooit schrijven op bestaande records;

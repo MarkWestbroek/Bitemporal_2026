@@ -369,7 +369,7 @@ func gegevenstypen() []V3Datatype {
 			Validatie: &V3Validatie{
 				Pattern:   `^[0-9]{9}$`,
 				MinLength: intPtr(9), MaxLength: intPtr(9),
-				Voorbeelden: []string{"123456782", "807729217"},
+				Voorbeelden: []string{"123456782", "807729218"},
 				Foutmelding: "Voer een geldig RSIN in (9 cijfers, 11-proef)",
 				Regels: []V3Regel{
 					{Naam: "11-proef", Type: "checksum",

@@ -1,5 +1,6 @@
 import { useId } from "react";
 import RefCombobox from "../editor/RefCombobox";
+import { datatypeMelding } from "../../shared/datatypeValidatie";
 import "../../styles/action-form.css";
 
 function isNumeriekSchemaType(type) {
@@ -87,6 +88,11 @@ export function validatieMeldingVoorVeld(rawValue, veld, veldLabel = null) {
   if (enumOpties.length > 0 && !enumOpties.includes(normalized)) {
     return `Veld ${label} moet een van deze waarden zijn: ${enumOpties.join(", ")}.`;
   }
+
+  // Het datatype uit het model (bv. BSN: 9 cijfers + 11-proef) en de eigen validatie van het
+  // veld (layout); zie shared/datatypeValidatie.js. De server controleert hetzelfde.
+  const dtMelding = datatypeMelding(normalized, veld);
+  if (dtMelding) return `Veld ${label}: ${dtMelding}`;
 
   if (type === "integer") {
     if (!/^-?\d+$/.test(normalized)) {

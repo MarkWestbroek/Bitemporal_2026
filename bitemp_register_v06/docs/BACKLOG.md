@@ -1629,3 +1629,6 @@ Verwijzingen (`ref:`) worden evenmin gecontroleerd.
   afgevoerde data (opgelost: `shared/actueleData.js`). Opruimen = de entiteiten afvoeren.
   FD 15 is een ander geval: een actieve entiteit waarvan de meta netjes is afgevoerd,
   dus zonder actuele meta.
+- **`code` op definities is niet uniek afgedwongen** (sinds 27-09, `FORMULIERDEFINITIES.md` §1.1).
+  Bij een dubbele code wint de laatst opgevoerde. Een uniekheidscontrole in de registratie
+  (per soort definitie, alleen actuele meta) zou een dubbele code bij opslaan weigeren.

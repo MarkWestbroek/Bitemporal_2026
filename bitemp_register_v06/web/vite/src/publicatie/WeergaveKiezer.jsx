@@ -1,12 +1,14 @@
 import { isEmbedModus } from "./embed";
+import { sleutelVan } from "../shared/definitieSleutel";
 
 /**
  * WeergaveKiezer — kies welke WeergaveDefinitie de publicatiepagina gebruikt, als er voor het
  * type meer dan één actief is (zoals "Invoer via" bij formulieren). De keuze gaat via
- * `?weergave=<id>` in de URL (querystring vóór de #), dus een link naar een weergave is te
- * delen; de standaard = zonder parameter. In de embed (iframe) nooit: die toont de standaard.
+ * `?weergave=<code>` in de URL (of het id als de definitie geen code heeft; querystring vóór
+ * de #), dus een link naar een weergave is te delen; de standaard = zonder parameter. In de
+ * embed (iframe) nooit: die toont de standaard.
  *
- * Props: alternatieven [{ id, naam, isStandaard }], huidigId
+ * Props: alternatieven [{ id, code, naam, isStandaard }], huidigId
  */
 export default function WeergaveKiezer({ alternatieven = [], huidigId }) {
   if (isEmbedModus() || alternatieven.length < 2) return null;
@@ -14,7 +16,7 @@ export default function WeergaveKiezer({ alternatieven = [], huidigId }) {
     const url = new URL(window.location.href);
     const gekozen = alternatieven.find((a) => String(a.id) === String(id));
     if (!gekozen || gekozen.isStandaard) url.searchParams.delete("weergave");
-    else url.searchParams.set("weergave", String(id));
+    else url.searchParams.set("weergave", sleutelVan(gekozen));
     window.location.assign(url.toString());
   };
   return (

@@ -518,6 +518,14 @@ bouw een component op `useKeuze` (of downshift) met als contract
 8. **Studio-profiel.** De keuzelijst `vorm` in het diagram-eigenschappenpaneel toont alle
    vormen: het profiel kent het model niet. De formuliereditor filtert wel. Het aparte
    vormenprofiel (§9b) is nog niet gebouwd.
+9. **`code` op Formulier-/WeergaveDefinitie (27-09, gebouwd).** Mark koos de naam `code`
+   ("dat is meteen ook Engels, net als id"). Het is een leesbare sleutel in plaats van het id, in
+   `nieuwFormulier`, `?formulier=`, `?weergave=` en `OPENBARE_FORMULIEREN`; zie
+   `FORMULIERDEFINITIES.md` §1.1. Nog open:
+   - uniekheid wordt niet afgedwongen;
+   - het configuratiemodel in de Studio moet `code` ook krijgen. De bron is nu
+     `docs/Model files (V3)/configuratie 2026-09-27 code — v3-model.json` (uit de code
+     geëxporteerd). Genereer je vanuit een ouder modelbestand, dan verdwijnt het veld weer.
 
 ## 9b. Formulier 3.0: modelmatig (denkwerk 26-09, nog niet besloten)
 
@@ -567,6 +575,145 @@ datatypen en referentielijsten):
   het wel.
 - **Geen `lijstScheiding`.** De veldinformatie van de Studio heeft geen `lijstScheiding`, dus
   `CG_laag` toont daar nog één keuze.
+
+## 9d. Validatie, registratie-acties en materiële tijd in formulieren (27-09, richting Mark)
+
+Dit is richting, nog geen besluit en nog niet gebouwd.
+
+### Validatie hoort bij de inhoud
+
+Validatie is een eigenschap van het **datatype**, de onderste laag van *data – inhoud – vorm*.
+De inhoud voert haar uit, generiek en modelgedreven. De vorm doet dat niet. Idealiter gebeurt
+dat twee keer: in laag 4–5 (formulier, direct voor de invuller) én in laag 1–2 (de server, de
+waarheid). Dat geldt ook voor andere regels, zoals autorisatie.
+
+Een formulier (en later Imprint) haalt zijn velden niet altijd uit het canonieke model. Een
+andere bron kan wel of geen validatie hebben. Daarom kan het formulier de validatie ook **zelf
+opgeven** als de bron niets zegt.
+
+Stand van zaken (27-09):
+- **Server:** `model/validation.go` controleert `V3Datatype.Validatie` (pattern, min-/maxLength,
+  regels) op de `_Input`-structs. Dat is laag 1–2 en werkt.
+- **Frontend:** `validatieMeldingVoorVeld` (`components/actions/ActionFormParts.jsx`) kent
+  verplicht, enum, integer en date/date-time, maar **geen datatype-pattern**. Het schema dat de
+  frontend krijgt (`viz_schema_handler.go`) geeft de validatie van het datatype niet mee. Laag 4–5
+  mist dus de regels uit het model.
+
+Voorstel:
+1. Het schema geeft per veld de validatie van het datatype mee, in JSON Schema-termen
+   (`pattern`, `minLength`, `maxLength`, `format`) plus een melding. Dan is het uitwisselbaar
+   met Imprint en met de validator die de vormen al hebben (`vormen/schemaValidatie.js`).
+2. Eén generieke validator in de frontend gebruikt dat, overal: inhoud, custom formulier,
+   aanmelden.
+3. De layout krijgt `veld.validatie` (dezelfde sleutels) voor bronnen zonder validatie.
+   Open vraag: mag een formulier de regels van het model alleen strenger maken, of ook
+   vervangen?
+4. Eerste gebruiker: een datatype `Code` met patroon
+   `^(?:[a-z][a-z0-9-]*|[0-9][a-z0-9-]*[a-z-][a-z0-9-]*)$` op `FormulierDefinitie_Meta.code` en
+   `WeergaveDefinitie_Meta.code`. De losse check in de formuliereditor kan dan weg.
+
+### Validatie uitvoeren: interpreteren, niet genereren (voorstel 27-09)
+
+Validatie is meer dan een regex. `V3Validatie.regels` kent drie soorten:
+- `checksum`: een expressie over `d1..dN`, bijvoorbeeld de BSN-11-proef;
+- `formula`: een expressie over `value`;
+- `function`: een benoemde functie, zoals `iban_mod97`.
+
+Stand van zaken (27-09):
+
+| Waar | Wat |
+|---|---|
+| Server | `model/regels_eval.go` voert alle drie uit (eigen AST-walker op `go/parser`, veilig). |
+| JS-bibliotheek | `web/vite/src/umleditor/validatie/` (`valideer`, `normaliseer`, `voerRegelUit`) doet hetzelfde. |
+| Gebruikt door | alleen het paneel *🧪 Test invoer* in de oude metamodel-editor (`editor.html`, `TestInvoerPanel`). |
+| Inhoud en formulieren | gebruiken de bibliotheek niet. |
+
+De JS-kant evalueert expressies met `new Function`. Dat kan alleen zolang de expressie van een
+vertrouwde modelleur komt, niet uit een willekeurige bron (Imprint).
+
+Daarnaast is er een derde, eigen expressie-evaluator: de CEL-subset voor weergavevelden en
+afgeleide velden (`shared/celEvaluator.js`, alleen JS).
+
+Keuze tussen de twee opties van Mark:
+- **Genereren** (per register een JS-bibliotheek, en later PHP/Java/.NET): elke modelwijziging
+  vraagt een build en een uitrol. Het werkt ook niet voor bronnen die hun regels pas tijdens het
+  invullen meebrengen.
+- **Interpreteren** (de regels zijn data, elk platform heeft één kleine evaluator): dat is wat er
+  al is, aan twee kanten. Aanbevolen.
+
+Voorstel:
+1. **Eén expressietaal** voor validatie én afgeleide velden. CEL ligt voor de hand: het project
+   gebruikt het al, en het is gemaakt om veilig en overdraagbaar te zijn (officiële versies voor
+   Go en Java, daarnaast JS en andere). Expressies blijven in het model. `d1..dN` en `value`
+   blijven de afgesproken variabelen, en `function` blijft het ontsnappingsluik voor benoemde
+   functies.
+2. **Eén gedeelde testset** (JSON: datatype, waarde, verwacht resultaat). Elke evaluator, in
+   Go, JS en later PHP of Java, moet hem halen. Daarmee is "dezelfde regel overal" toetsbaar.
+3. **De JS-bibliotheek aansluiten.** Het schema geeft per veld `validatie` mee. Inhoud,
+   formulier en aanmelden gebruiken `valideer()`, met een formulier-override als de bron niets
+   zegt.
+4. **Een validatie-API** (`POST /api/valideer`) alleen als vangnet: voor een `function` die de
+   client niet kent, en dan bij het verlaten van het veld, niet per toetsaanslag.
+
+**Gebouwd (27-09): punt 3 en een eerste versie van punt 2.** Zie `FORMULIERDEFINITIES.md` §2.4.
+De testset vond meteen drie afwijkingen:
+- JS kende 2 van de 7 benoemde functies, en `iban_mod97` onder een andere naam. Nu zijn alle 7
+  geport.
+- Een `formula` kreeg in JS alleen `value`, terwijl het model `valueNum` gebruikt (Percentage).
+  Nu gelden dezelfde variabelen als in Go.
+- Het RSIN-voorbeeld `807729217` in het model haalt de 11-proef niet (de som is 210, dat is
+  1 mod 11). Vervangen door `807729218`.
+
+Nog open:
+- Go normaliseert niet, JS wel. De testset vermijdt dat verschil, maar het hoort gelijk te
+  worden.
+- De JS-evaluator gebruikt nog `new Function` (punt 1).
+
+### Uniekheid
+
+UML `{unique}` als eigenschap van het veld, met een bereik: binnen de entiteit, binnen het
+domein, of globaal. Bitemporeel is er nog een as: uniek op elk formeel moment, of alleen in de
+actuele stand. Zie BACKLOG §34.
+
+### Verplichte velden die niet in het formulier staan
+
+Een custom formulier kan een verplicht veld van een GE weglaten. Dan kan de registratie nooit
+lukken. Nu controleert de nieuw-modus alleen de velden die in het formulier staan
+(`nieuwFormulierMapping`, `ontbrekend`).
+
+Voorstel:
+- De formuliereditor meldt modelgedreven: "GE X wordt gevuld, maar het verplichte veld Y staat
+  er niet in". Oplossen kan met het veld zelf, met een `vasteWaarde`, of door de GE weg te
+  laten.
+- Zie ook BACKLOG §33 (verplichte velden en verwijzingen afdwingen op de server).
+
+### Registreren, corrigeren, ongedaan maken, afvoeren
+
+Een custom formulier stuurt nu altijd `registratietype: "registratie"`. De generieke editor
+kent ook correctie, ongedaan maken en afvoeren (het einde van de formele geldigheid).
+
+Voorstel: in de bewerk-modus van een formulier dezelfde keuze als in de generieke editor. De
+formulierdefinitie kan beperken welke acties er zijn (bv. een aanmeldformulier: alleen
+registreren).
+
+### Materiële tijd (aanvang/einde) als generiek formulierconcept
+
+Aanvang en einde zijn plumbing in het canonieke model, dus generiek.
+
+Stand van zaken:
+- **Nieuw-modus:** alleen de aanvang van de entiteit, via het pad `<ENT>.aanvang.datum` of
+  via `kopieerNaar` (bv. startdatum → `Initiatief.aanvang.datum`).
+- Het **einde** van de entiteit en aanvang/einde van een **GE** kan een formulier niet vullen.
+- **Bewerk-modus:** `customFormMapping` filtert aanvang/einde er helemaal uit.
+
+Voorstel (Mark):
+- Op formulier-, groep- of lijstniveau `materieel: { toon: true, vorm, labels: { aanvang, einde } }`.
+  Mogelijke vormen:
+  - een kleine popover (mini-modal) als het niet zo belangrijk is maar wel ingevuld moet kunnen
+    worden;
+  - opvallend in het formulier als het er wél toe doet.
+- Daarnaast `ENT.aanvang/einde` en `GE.aanvang/einde` gewoon als veldpad in de layout, zoals
+  `<ENT>.aanvang.datum` nu al voor nieuw.
 
 ## 10. Bestanden en tests
 

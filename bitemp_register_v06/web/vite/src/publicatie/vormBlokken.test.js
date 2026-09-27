@@ -58,3 +58,16 @@ test("ruweWaarde: lijsten blijven lijsten, filters, data overslaan; alsSleutels"
   assert.deepEqual(alsSleutels(["a", "b;c"]), ["a", "b", "c"]);
   assert.deepEqual(alsSleutels("Opschaling (draait bij enkele gemeenten, nu op zoek)"), ["Opschaling (draait bij enkele gemeenten, nu op zoek)"], "komma splitst niet");
 });
+
+test("cbsGemeentecode: getal, cijfers en GM-code", async () => {
+  const { cbsGemeentecode } = await import("./vormBlokken.js");
+  assert.equal(cbsGemeentecode(1680), "GM1680");
+  assert.equal(cbsGemeentecode("344"), "GM0344");
+  assert.equal(cbsGemeentecode("gm0014"), "GM0014");
+  assert.equal(cbsGemeentecode(""), null);
+});
+
+test("telSleutels: uniek, in volgorde, met aantal", async () => {
+  const { telSleutels } = await import("./vormBlokken.js");
+  assert.deepEqual(telSleutels(["b", "a", "b"]), [{ sleutel: "b", n: 2 }, { sleutel: "a", n: 1 }]);
+});

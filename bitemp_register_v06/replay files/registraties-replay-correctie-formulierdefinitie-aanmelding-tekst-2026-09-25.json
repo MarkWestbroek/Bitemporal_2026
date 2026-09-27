@@ -30,6 +30,7 @@
               "formulierdefinitie_meta": {
                 "formulierdefinitie_id": 2,
                 "naam": "Aanmelding initiatief",
+                "code": "aanmelding-initiatief",
                 "beschrijving": "Meld hier een initiatief aan voor het Common Ground-portfolio. Beantwoord de vragen zo volledig mogelijk; velden met * zijn verplicht. Na verzending beoordeelt het portfolioteam de aanmelding; daarna wordt het initiatief zichtbaar in het portfolio.",
                 "doeltype": "Initiatief",
                 "status": "actief",

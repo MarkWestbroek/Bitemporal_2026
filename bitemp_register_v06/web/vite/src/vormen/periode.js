@@ -2,6 +2,7 @@
  * periode.js — de rekenkant van de vorm `period` (begin + einde als balk op een tijdlijn). Puur.
  */
 const DAG = 86400000;
+const MAX_STREPEN = 8;
 const naarDatum = (s) => { if (!s) return null; const d = new Date(`${String(s).slice(0, 10)}T00:00:00Z`); return Number.isNaN(d.getTime()) ? null : d; };
 
 /**
@@ -17,8 +18,12 @@ export function periodeAs(begin, einde, vandaag = new Date()) {
   const marge = Math.max(30 * DAG, (hi - lo) * 0.12);
   lo -= marge; hi += marge;
   const pos = (d) => (d ? (d.getTime() - lo) / (hi - lo) : null);
+  // Maatstreepjes per jaar; over een lange periode (een levensloop) alleen elke 2, 5, 10, …
+  // jaar, zodat er hooguit MAX_STREPEN zijn en de jaartallen niet over elkaar vallen.
+  const van = new Date(lo).getUTCFullYear() + 1, tot = new Date(hi).getUTCFullYear();
+  const stap = [1, 2, 5, 10, 20, 25, 50, 100].find((s) => (tot - van + 1) / s <= MAX_STREPEN) || 100;
   const jaren = [];
-  for (let j = new Date(lo).getUTCFullYear() + 1; j <= new Date(hi).getUTCFullYear(); j++) {
+  for (let j = Math.ceil(van / stap) * stap; j <= tot; j += stap) {
     jaren.push({ jaar: j, pos: (Date.UTC(j, 0, 1) - lo) / (hi - lo) });
   }
   return { begin: pos(b), einde: pos(e), vandaag: pos(v), open: Boolean(b && !e), omgekeerd: Boolean(b && e && e < b), jaren };

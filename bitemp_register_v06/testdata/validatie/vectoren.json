@@ -1,0 +1,23 @@
+{
+  "beschrijving": "Gedeelde testset voor datatype-validatie: elke evaluator (Go: model/validatie_vectoren_test.go, JS: web/vite/src/shared/validatieVectoren.test.js, later PHP/Java/…) moet hem halen. Geldige gevallen komen daarnaast automatisch uit validatie.voorbeelden van elk datatype (datatypes.json). Houd waarden onafhankelijk van normalisatie: Go normaliseert niet, JS wel.",
+  "ongeldig": [
+    { "datatype": "BSN", "waarde": "123456789", "waarom": "11-proef (checksum)" },
+    { "datatype": "BSN", "waarde": "12345678", "waarom": "8 cijfers" },
+    { "datatype": "RSIN", "waarde": "123456789", "waarom": "11-proef (checksum)" },
+    { "datatype": "ISBN13", "waarde": "9780306406158", "waarom": "checksum" },
+    { "datatype": "ISBN10", "waarde": "0306406153", "waarom": "mod-11 (function)" },
+    { "datatype": "IBAN", "waarde": "NL91ABNA0417164301", "waarom": "mod-97 (function)" },
+    { "datatype": "LEI", "waarde": "AAAAAAAAAAAAAAAAAA27", "waarom": "mod-97 (function)" },
+    { "datatype": "GeoPunt", "waarde": "91,4.9", "waarom": "lat buiten bereik (function)" },
+    { "datatype": "GeoLijn", "waarde": "{\"type\":\"LineString\",\"coordinates\":[[4.9,52.3]]}", "waarom": "één punt (function)" },
+    { "datatype": "GeoVlak", "waarde": "{\"type\":\"Polygon\",\"coordinates\":[[[4.9,52.3],[5.1,52.3],[5.1,52.5],[4.9,52.4]]]}", "waarom": "ring niet gesloten (function)" },
+    { "datatype": "Percentage", "waarde": "101", "waarom": "formula valueNum <= 100" },
+    { "datatype": "Kleur", "waarde": "#ggg", "waarom": "patroon" },
+    { "datatype": "Versie", "waarde": "1", "waarom": "patroon m.n" }
+  ],
+  "geldig": [
+    { "datatype": "Percentage", "waarde": "50" },
+    { "datatype": "Percentage", "waarde": "0" },
+    { "datatype": "Versie", "waarde": "2.1.3" }
+  ]
+}

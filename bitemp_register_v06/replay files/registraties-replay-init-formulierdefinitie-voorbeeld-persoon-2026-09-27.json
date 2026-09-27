@@ -29,6 +29,7 @@
               "formulierdefinitie_meta": {
                 "formulierdefinitie_id": "$nieuw.fd",
                 "naam": "Voorbeeld: persoon",
+                "code": "voorbeeld-persoon",
                 "beschrijving": "Proefformulier voor keuzekaarten, knoppenvlak en schakelaar op het np-loc-domein.",
                 "doeltype": "NatuurlijkPersoon",
                 "status": "actief",
