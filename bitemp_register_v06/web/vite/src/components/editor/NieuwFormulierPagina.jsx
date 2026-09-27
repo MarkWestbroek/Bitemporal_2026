@@ -4,6 +4,7 @@ import { useSchema } from "../../context/SchemaContext";
 import { safeArray } from "../../shared/schemaUtils";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 import CustomFormulierRenderer from "./CustomFormulierRenderer";
+import AiInvulhulp from "./AiInvulhulp";
 import { bouwCustomVeldMapping } from "./customFormMapping";
 import { bouwNieuwWijzigingen, verzamelVasteWaarden } from "./nieuwFormulierMapping";
 import { useFormulierDefinities } from "../../hooks/useFormulierDefinitie";
@@ -184,6 +185,11 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, o
           )}
         </div>
       ) : (<>
+      {/* AI-invulhulp: voorstellen uit een tekst of webpagina (niet op het openbare formulier). */}
+      {!openbaar && (
+        <AiInvulhulp layout={layout} velden={customVelden} values={values} formulier={definitie?.meta?.naam || ""}
+          onToepassen={(nieuw) => setValues((prev) => ({ ...prev, ...nieuw }))} />
+      )}
       <CustomFormulierRenderer
         layout={layout}
         velden={customVelden}

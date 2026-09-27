@@ -4,7 +4,7 @@ import { useAiToegestaan } from "../../shared/ai/AiContext";
 import { ACTIES, bouwVraag, voegVoorstelIn } from "../../shared/ai/aiAssist";
 import { PRESETS, zetProfiel, actiefProfiel } from "../../shared/ai/aiProfielen";
 import { useAiInstellingen } from "../../shared/ai/useAiInstellingen";
-import { vraagAi, AiFout } from "../../shared/ai/vraagAi";
+import { vraagAi, AiFout, haalModellen } from "../../shared/ai/vraagAi";
 
 /**
  * AiAssistVeld — de vorm `ai-assist`: een tekstvak met een assistent (✨) die een VOORSTEL doet.
@@ -23,7 +23,8 @@ export default function AiAssistVeld({ waarde, onChange, readOnly = false, label
   const [open, setOpen] = useState(false);
   const [instellen, setInstellen] = useState(false);
   const [eigen, setEigen] = useState("");
-  const [voorstel, setVoorstel] = useState(null); // { tekst, model }
+  const [voorstel, setVoorstel] = useState(null); // { tekst, model, systeem, gesprek }
+  const [bijsturing, setBijsturing] = useState("");
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
   const afbreken = useRef(null);
@@ -40,15 +41,22 @@ export default function AiAssistVeld({ waarde, onChange, readOnly = false, label
 
   const acties = Array.isArray(config.acties) && config.acties.length ? ACTIES.filter((a) => config.acties.includes(a.id)) : ACTIES;
 
-  async function vraag(actie) {
-    const v = bouwVraag({ actie, eigenOpdracht: actie ? "" : eigen, tekst, veldLabel: veld?.label || veld?.naam || "", beschrijving: veld?.description || "", formulier: config.formulier || "" });
+  async function vraag(actie, bijsturen = null) {
+    // Bijsturen: dezelfde systeemtekst, het gesprek tot nu toe, en de opmerking als nieuwe beurt.
+    const v = bijsturen
+      ? { systeem: voorstel.systeem, vraag: `${bijsturen}
+
+Geef opnieuw ALLEEN de nieuwe tekst voor het veld.`, geschiedenis: voorstel.gesprek }
+      : bouwVraag({ actie, eigenOpdracht: actie ? "" : eigen, tekst, veldLabel: veld?.label || veld?.naam || "", beschrijving: veld?.description || "", formulier: config.formulier || "" });
     if (!v) return;
     afbreken.current?.abort();
     const ctrl = new AbortController();
     afbreken.current = ctrl;
-    setBezig(true); setFout(""); setVoorstel(null);
+    setBezig(true); setFout(""); if (!bijsturen) setVoorstel(null);
     try {
-      setVoorstel(await vraagAi(profiel, { ...v, signal: ctrl.signal, baseUrl }));
+      const a = await vraagAi(profiel, { ...v, signal: ctrl.signal, baseUrl });
+      setVoorstel({ ...a, systeem: v.systeem, gesprek: [...(v.geschiedenis || []), { role: "user", content: v.vraag }, { role: "assistant", content: a.tekst }] });
+      if (bijsturen) setBijsturing("");
     } catch (e) {
       if (e?.name !== "AbortError") setFout(e instanceof AiFout ? e.message : `Onverwachte fout: ${e?.message || e}`);
     } finally {
@@ -98,6 +106,11 @@ export default function AiAssistVeld({ waarde, onChange, readOnly = false, label
                     <button type="button" className="utrecht-button utrecht-button--secondary-action" onClick={() => { onChange(voegVoorstelIn(tekst, voorstel.tekst)); setVoorstel(null); }}>Invoegen</button>
                     <button type="button" className="utrecht-button utrecht-button--subtle" onClick={() => setVoorstel(null)}>Weggooien</button>
                   </div>
+                  <form onSubmit={(e) => { e.preventDefault(); if (bijsturing.trim()) vraag(null, bijsturing.trim()); }} style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                    <input type="text" aria-label="Bijsturen" className="utrecht-textbox utrecht-textbox--html-input" value={bijsturing}
+                      onChange={(e) => setBijsturing(e.target.value)} placeholder="Bijsturen, bv. “nog korter” of “noem ook de gemeenten”" style={{ flex: 1 }} />
+                    <button type="submit" className="utrecht-button utrecht-button--secondary-action" disabled={bezig || !bijsturing.trim()}>Opnieuw</button>
+                  </form>
                 </div>
               )}
               <p style={{ margin: "8px 0 0", fontSize: "0.72rem", color: "#94a3b8" }}>
@@ -112,20 +125,35 @@ export default function AiAssistVeld({ waarde, onChange, readOnly = false, label
 }
 
 /** Kies de dienst en geef een sleutel of toegangscode (bewaard in deze browser). */
-function AiInstellingen({ inst, onOpslaan, onAnnuleer }) {
+export function AiInstellingen({ inst, onOpslaan, onAnnuleer }) {
   const [preset, setPreset] = useState(inst.actief || "claude");
   const huidig = inst.profielen.find((p) => p.id === preset);
   const def = PRESETS.find((p) => p.id === preset);
   const [sleutel, setSleutel] = useState(huidig?.sleutel || "");
   const [model, setModel] = useState(huidig?.model || def.model);
   const [endpoint, setEndpoint] = useState(huidig?.endpoint || "");
+  const [modellen, setModellen] = useState(null); // [{ id, naam }] van de dienst zelf
+  const [modellenFout, setModellenFout] = useState("");
+  const [modellenBezig, setModellenBezig] = useState(false);
+  const { baseUrl } = useSchema();
   const id = useId();
+  async function laadModellen() {
+    setModellenBezig(true); setModellenFout("");
+    try {
+      setModellen(await haalModellen({ ...def, sleutel: sleutel.trim(), endpoint: def.endpointInvullen ? endpoint.trim() : def.endpoint }, { baseUrl }));
+    } catch (e) {
+      setModellenFout(e instanceof AiFout ? e.message : String(e?.message || e));
+    } finally {
+      setModellenBezig(false);
+    }
+  }
   const kies = (id) => {
     setPreset(id);
     const p = inst.profielen.find((x) => x.id === id);
     setSleutel(p?.sleutel || "");
     setModel(p?.model || PRESETS.find((x) => x.id === id).model);
     setEndpoint(p?.endpoint || "");
+    setModellen(null); setModellenFout("");
   };
   const endpointGoed = !def.endpointInvullen || /^https:\/\//.test(endpoint.trim());
   return (
@@ -155,7 +183,19 @@ function AiInstellingen({ inst, onOpslaan, onAnnuleer }) {
       {preset !== "server" && (
         <div style={{ display: "grid", gap: 2 }}>
           <label htmlFor={`${id}-model`}>Model</label>
-          <input id={`${id}-model`} type="text" className="utrecht-textbox utrecht-textbox--html-input" value={model} onChange={(e) => setModel(e.target.value)} />
+          <div style={{ display: "flex", gap: 6 }}>
+            <input id={`${id}-model`} type="text" list={`${id}-modellen`} className="utrecht-textbox utrecht-textbox--html-input" value={model}
+              onChange={(e) => setModel(e.target.value)} style={{ flex: 1 }} />
+            <button type="button" className="utrecht-button utrecht-button--secondary-action" onClick={laadModellen}
+              disabled={modellenBezig || !sleutel.trim() || (def.endpointInvullen && !/^https:\/\//.test(endpoint.trim()))}>
+              {modellenBezig ? "Ophalen…" : "Modellen ophalen"}
+            </button>
+          </div>
+          <datalist id={`${id}-modellen`}>
+            {(modellen || []).map((m) => <option key={m.id} value={m.id}>{m.naam !== m.id ? m.naam : undefined}</option>)}
+          </datalist>
+          {modellen && <span style={{ fontSize: "0.72rem", color: "#64748b" }}>{modellen.length} modellen van de dienst; klik in het veld om te kiezen.</span>}
+          {modellenFout && <span role="alert" style={{ fontSize: "0.75rem", color: "#b91c1c" }}>{modellenFout}</span>}
         </div>
       )}
       <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>

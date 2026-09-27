@@ -201,6 +201,8 @@ func NewRouter() *gin.Engine {
 	router.GET("/api/ai/codes", admin, handlers.MaakAICodesLijstHandler())
 	router.POST("/api/ai/codes", admin, handlers.MaakAICodeAanmakenHandler())
 	router.DELETE("/api/ai/codes/:naam", admin, handlers.MaakAICodeIntrekkenHandler())
+	// AI-invulhulp: een webpagina als tekst ophalen (SSRF-veilig; handlers/ai_lees_url.go). Alleen editors.
+	router.POST("/api/ai/lees-url", editor, handlers.MaakAILeesURLHandler())
 
 	// Openbare indiening van een formulier (aanmeldformulier stap C, handlers/aanmelding_handler.go):
 	// anoniem, maar alleen voor de FormulierDefinities (id of code) in OPENBARE_FORMULIEREN, alleen
