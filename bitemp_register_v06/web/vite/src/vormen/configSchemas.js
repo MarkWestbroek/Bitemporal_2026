@@ -177,4 +177,82 @@ export const CONFIG_SCHEMAS = {
     type: "object",
     properties: { accentColor: kleur },
   },
+  // Vormen die uit een datatype volgen (27-09).
+  masked: {
+    type: "object",
+    properties: {
+      mask: { type: "string", minLength: 1, "x-omschrijving": "0 = cijfer, A = letter (hoofdletter), a = letter, * = letter of cijfer, \ = volgende teken letterlijk; de rest letterlijk. Leeg = weergave.inputMask van het datatype" },
+      keepLiterals: { type: "boolean", default: false, "x-omschrijving": "letterlijke tekens (spatie, koppelteken) mee opslaan" },
+    },
+  },
+  "partial-date": {
+    type: "object",
+    properties: {
+      unknownStyle: { enum: ["kort", "nullen"], default: "kort", "x-omschrijving": "onbekend weglaten (1975-06) of als 00 (1975-06-00)" },
+      minYear: { type: "number" },
+      maxYear: { type: "number" },
+    },
+  },
+  duration: {
+    type: "object",
+    properties: {
+      units: {
+        type: "array", minItems: 1,
+        items: { enum: ["jaren", "maanden", "weken", "dagen", "uren", "minuten", "seconden"] },
+        "x-omschrijving": "welke eenheden als invoerveld (standaard jaren, maanden, dagen)",
+      },
+    },
+  },
+  color: {
+    type: "object",
+    properties: { swatches: { type: "array", items: kleur, "x-omschrijving": "vaste kleuren om uit te kiezen" } },
+  },
+  "ai-assist": {
+    type: "object",
+    properties: {
+      acties: { type: "array", items: { enum: ["korter", "helder", "zakelijk", "aanvullen", "spelling"] }, "x-omschrijving": "welke vaste acties (standaard alle)" },
+      formulier: { type: "string", "x-omschrijving": "naam van het formulier, als context voor de assistent" },
+      rows: { type: "number", minimum: 2 },
+    },
+  },
+  ranking: {
+    type: "object",
+    properties: {
+      max: { type: "number", minimum: 1, "x-omschrijving": "hoeveel er gerangschikt mogen worden (top-N)" },
+      poolLabel: { type: "string" },
+      rankLabel: { type: "string" },
+    },
+  },
+  "tag-input": {
+    type: "object",
+    properties: {
+      placeholder: { type: "string" },
+      max: { type: "number", minimum: 1, "x-omschrijving": "maximaal aantal labels" },
+      separator: { type: "string", minLength: 1, default: ";", "x-omschrijving": "scheidingsteken bij vrije labels in één tekstveld" },
+      accentColor: kleur,
+    },
+  },
+  code: {
+    type: "object",
+    properties: {
+      language: { enum: ["json", "markdown", "yaml", "xml", "sql", "go_code", "tekst"], default: "tekst" },
+      minHeight: { type: "number", minimum: 40 },
+    },
+  },
+  markdown: {
+    type: "object",
+    properties: {
+      preview: { enum: ["tabs", "naast"], default: "tabs", "x-omschrijving": "voorbeeld als tab, of naast de editor" },
+      minHeight: { type: "number", minimum: 40 },
+    },
+  },
+  "number-stepper": {
+    type: "object",
+    properties: {
+      min: { type: "number" },
+      max: { type: "number" },
+      step: { type: "number", exclusiveMinimum: 0, default: 1 },
+      unit: { type: "string", "x-omschrijving": "eenheid achter het getal, bv. 'personen'" },
+    },
+  },
 };

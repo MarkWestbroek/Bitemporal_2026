@@ -187,8 +187,10 @@ export default function CustomFormulierRenderer({
             </div>
           );
         }
-        const veldMetOverride = element.beschrijving
-          ? { ...veldDef, description: element.beschrijving }
+        // Layout-overrides op het schema-veld: beschrijving, en eigen validatie (aanvullend op
+        // het datatype, shared/datatypeValidatie.js).
+        const veldMetOverride = element.beschrijving || element.validatie
+          ? { ...veldDef, ...(element.beschrijving ? { description: element.beschrijving } : {}), ...(element.validatie ? { validatie: element.validatie } : {}) }
           : veldDef;
         return (
           <div key={index} style={element.breedte ? {} : undefined}>

@@ -10,6 +10,8 @@ waarbij de tabellen automatisch worden gemaakt op basis van
 import (
 	"context"
 	"fmt"
+	"log"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -68,6 +70,12 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 				IfNotExists().Exec(ctx)
 			if err != nil {
 				return fmt.Errorf("create table mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+			}
+
+			// Nieuwe, optionele kolommen in het model (bv. code op FormulierDefinitie_Meta_Data)
+			// bestaan nog niet in een bestaande tabel: CREATE TABLE IF NOT EXISTS voegt ze niet toe.
+			if err := ensureNieuweKolommen(ctx, db, dbModel, meta.Tabelnaam); err != nil {
+				return fmt.Errorf("kolommen aanvullen mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
 			}
 
 			// Compatibiliteit met oudere schema's:
@@ -586,4 +594,42 @@ END $$;
 
 	_, err := db.ExecContext(ctx, sql)
 	return err
+}
+
+// ensureNieuweKolommen voegt kolommen toe die wél in het Go-model staan maar nog niet in
+// de (al bestaande) tabel — precies zoals CREATE TABLE ze zou maken: zonder NOT NULL (bun
+// zet NOT NULL alleen bij PK of de tag `notnull`). Bestaande rijen krijgen NULL; bun leest
+// NULL als nulwaarde, ook in een niet-pointer veld. Een ontbrekende PK- of notnull-kolom
+// wordt gelogd en overgeslagen: die vraagt een eigen migratie (met een standaardwaarde).
+func ensureNieuweKolommen(ctx context.Context, db *bun.DB, dbModel any, tabel string) error {
+	var bestaand []string
+	if err := db.NewRaw(`SELECT column_name FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = ?`, tabel).Scan(ctx, &bestaand); err != nil {
+		return err
+	}
+	if len(bestaand) == 0 {
+		return nil // tabel bestaat (nog) niet; CREATE TABLE heeft alles al gedaan
+	}
+	heeft := make(map[string]bool, len(bestaand))
+	for _, k := range bestaand {
+		heeft[k] = true
+	}
+	t := db.Table(reflect.TypeOf(dbModel))
+	for _, f := range t.Fields {
+		if heeft[f.Name] || f.CreateTableSQLType == "" {
+			continue
+		}
+		if f.IsPK || f.NotNull {
+			log.Printf("[dbsetup] kolom %s.%s ontbreekt maar is PK/notnull; niet automatisch toegevoegd", tabel, f.Name)
+			continue
+		}
+		if _, err := db.ExecContext(ctx, fmt.Sprintf(`ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s`,
+			string(t.SQLName), string(f.SQLName), f.CreateTableSQLType)); err != nil {
+			// Niet fataal: de API moet blijven starten; de kolom ontbreekt dan zoals voorheen.
+			log.Printf("[dbsetup] kolom %s.%s (%s) toevoegen mislukt: %v", tabel, f.Name, f.CreateTableSQLType, err)
+			continue
+		}
+		log.Printf("[dbsetup] kolom %s.%s (%s) toegevoegd", tabel, f.Name, f.CreateTableSQLType)
+	}
+	return nil
 }

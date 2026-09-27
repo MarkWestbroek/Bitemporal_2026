@@ -29,6 +29,7 @@
               "formulierdefinitie_meta": {
                 "formulierdefinitie_id": "$nieuw.fd",
                 "naam": "Voorbeeld: locatie met adreszoeker",
+                "code": "voorbeeld-adreszoeker",
                 "beschrijving": "Proefformulier voor de vorm 'adres zoeken': één zoekveld (PDOK Locatieserver, BAG) vult straat, huisnummer, postcode, plaats, gemeente en land.",
                 "doeltype": "Locatie",
                 "status": "actief",

@@ -39,8 +39,12 @@ func TestVasteWaardenVanLayout_TopLevelAlleen(t *testing.T) {
 	if len(vaste) != 1 || vaste[0].GEVeldnaam != "aanmeldstatus" || vaste[0].Kolom != "status" || vaste[0].Waarde != "nieuwe_aanmelding" {
 		t.Fatalf("vaste = %+v", vaste)
 	}
-	if ids := subFormulierIDs(map[string]any{"type": "formulier", "elementen": []any{map[string]any{"type": "veld", "veld": "x", "nieuwFormulier": "3"}}}); len(ids) != 1 || ids[0] != 3 {
-		t.Fatalf("subFormulierIDs = %v", ids)
+	if ids := subFormulierSleutels(map[string]any{"type": "formulier", "elementen": []any{
+		map[string]any{"type": "veld", "veld": "x", "nieuwFormulier": "3"},
+		map[string]any{"type": "veld", "veld": "y", "nieuwFormulier": " nieuwe-organisatie "},
+		map[string]any{"type": "veld", "veld": "z", "nieuwFormulier": "3"},
+	}}); len(ids) != 2 || ids[0] != "3" || ids[1] != "nieuwe-organisatie" {
+		t.Fatalf("subFormulierSleutels = %v", ids)
 	}
 }
 
@@ -109,10 +113,13 @@ func TestAanmeldingLimiter(t *testing.T) {
 }
 
 func TestOpenbareFormulieren(t *testing.T) {
-	t.Setenv("OPENBARE_FORMULIEREN", " 2, 5 ,x")
+	t.Setenv("OPENBARE_FORMULIEREN", " 2, 5 ,aanmelding-initiatief,")
 	m := OpenbareFormulieren()
-	if !m[2] || !m[5] || len(m) != 2 {
+	if !m["2"] || !m["5"] || !m["aanmelding-initiatief"] || len(m) != 3 {
 		t.Fatalf("m = %v", m)
+	}
+	if !isOpenbaar(&formulierDefinitie{ID: 9, Code: "aanmelding-initiatief"}) || !isOpenbaar(&formulierDefinitie{ID: 5}) || isOpenbaar(&formulierDefinitie{ID: 9, Code: "anders"}) {
+		t.Fatal("isOpenbaar klopt niet")
 	}
 	if got := strings.Join(aanmeldingVeldnamenGesorteerd(map[string]bool{"b": true, "a": true}), ","); got != "a,b" {
 		t.Fatal(got)

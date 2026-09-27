@@ -1,5 +1,8 @@
 import { useId } from "react";
 import RefCombobox from "../editor/RefCombobox";
+import { datatypeMelding, datatypeVanVeld } from "../../shared/datatypeValidatie";
+import VormInvoer, { VORMINVOER } from "../editor/VormInvoer";
+import { vormUitDatatype, vormPastBij, invoersoortVanVeld } from "../../vormen/vormen";
 import "../../styles/action-form.css";
 
 function isNumeriekSchemaType(type) {
@@ -87,6 +90,11 @@ export function validatieMeldingVoorVeld(rawValue, veld, veldLabel = null) {
   if (enumOpties.length > 0 && !enumOpties.includes(normalized)) {
     return `Veld ${label} moet een van deze waarden zijn: ${enumOpties.join(", ")}.`;
   }
+
+  // Het datatype uit het model (bv. BSN: 9 cijfers + 11-proef) en de eigen validatie van het
+  // veld (layout); zie shared/datatypeValidatie.js. De server controleert hetzelfde.
+  const dtMelding = datatypeMelding(normalized, veld);
+  if (dtMelding) return `Veld ${label}: ${dtMelding}`;
 
   if (type === "integer") {
     if (!/^-?\d+$/.test(normalized)) {
@@ -296,6 +304,18 @@ export function ActionFieldControl({ veld, value, onChange, secondaireInfo, seco
     );
   }
 
+  // De vorm die het datatype meebrengt (DatumIncompleet → partial-date, Duur → duration),
+  // net als in SchemaFormField; zo krijgt zo'n veld overal dezelfde vorm.
+  const datatypeVorm = !isSecondaireVeld ? vormUitDatatype(datatypeVanVeld(veld)) : null;
+  if (datatypeVorm && VORMINVOER.has(datatypeVorm) && vormPastBij(datatypeVorm, invoersoortVanVeld(veld))) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 0 }}>
+        <VormInvoer vorm={datatypeVorm} veld={veld} waarde={value ?? ""} onChange={onChange} />
+        {foutmelding ? <span style={{ fontSize: 11, color: "#dc2626" }}>{foutmelding}</span> : null}
+      </div>
+    );
+  }
+
   if (isSecondaireVeld) {
     if (secondaireInfo?.loading) {
       return <input style={controlStyle} value="Laden..." readOnly />;
@@ -386,15 +406,22 @@ export function ActionFieldControl({ veld, value, onChange, secondaireInfo, seco
   );
 }
 
-export function ActionLabeledEditorField({ veldnaam, beschrijving = "", children }) {
+/** Vormen met meer dan één besturingselement (dag/maand/jaar, eenheden): die horen niet in een <label>. */
+const SAMENGESTELDE_VORMEN = new Set(["partial-date", "duration"]);
+
+export function ActionLabeledEditorField({ veldnaam, beschrijving = "", veld = null, children }) {
+  // Een <label> hoort bij precies één besturingselement; een samengestelde vorm (uit het
+  // datatype) wordt een benoemde groep, anders wijst het label naar het eerste deelveld.
+  const samengesteld = SAMENGESTELDE_VORMEN.has(vormUitDatatype(datatypeVanVeld(veld)));
+  const Omhulsel = samengesteld ? "div" : "label";
   return (
-    <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6, minWidth: 0 }}>
+    <Omhulsel {...(samengesteld ? { role: "group", "aria-label": veldnaam } : {})} style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6, minWidth: 0 }}>
       <span className="action-field-label" style={{ whiteSpace: "nowrap" }}>
         <span>{veldnaam}</span>
         <ActionTooltip text={beschrijving} />
       </span>
       {children}
-    </label>
+    </Omhulsel>
   );
 }
 
@@ -454,6 +481,7 @@ export function ActionGroupedSections({
                     return (
                       <ActionLabeledEditorField
                         key={`${row.id}-${veld.naam}`}
+                        veld={veld}
                         veldnaam={isSecondair ? optie.secondaireLabel : veld.naam}
                         beschrijving={isSecondair ? `${beschrijving}${beschrijving ? " " : ""}(kolom: ${veld.naam})` : beschrijving}
                       >
@@ -474,7 +502,7 @@ export function ActionGroupedSections({
                     <div style={{ marginBottom: 6, fontSize: 11, fontWeight: 600, color: "#0369a1" }}>Materiële tijd voor deze regel</div>
                     <ActionFieldsGrid>
                       {materieleVelden.map((veld) => (
-                        <ActionLabeledEditorField key={`${row.id}-${veld.naam}`} veldnaam={veld.naam} beschrijving={String(veld?.description || "")}>
+                        <ActionLabeledEditorField key={`${row.id}-${veld.naam}`} veldnaam={veld.naam} veld={veld} beschrijving={String(veld?.description || "")}>
                           <ActionFieldControl
                             veld={veld}
                             value={row?.values?.[veld.naam] ?? ""}

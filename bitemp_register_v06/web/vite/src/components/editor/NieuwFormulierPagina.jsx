@@ -7,6 +7,7 @@ import CustomFormulierRenderer from "./CustomFormulierRenderer";
 import { bouwCustomVeldMapping } from "./customFormMapping";
 import { bouwNieuwWijzigingen, verzamelVasteWaarden } from "./nieuwFormulierMapping";
 import { useFormulierDefinities } from "../../hooks/useFormulierDefinitie";
+import { pastBijSleutel } from "../../shared/definitieSleutel";
 
 /**
  * NieuwFormulierPagina — een FormulierDefinitie in **nieuw-modus**: de layout wordt
@@ -73,7 +74,7 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, o
   // Subformulieren voor nieuwe doel-ENT's (veld.nieuwFormulier): FD-id → layout + mapping.
   const { definities: alleDefinities } = useFormulierDefinities("*");
   const subFormulier = useCallback((doelEntiteit, fdId) => {
-    const def = alleDefinities.find((d) => String(d.id) === String(fdId) && d.meta?.doeltype === doelEntiteit);
+    const def = alleDefinities.find((d) => pastBijSleutel(d, fdId) && d.meta?.doeltype === doelEntiteit);
     const doelMeta = typeMetaByTypenaam?.[doelEntiteit];
     if (!def || !doelMeta) return null;
     const ond = safeArray(doelMeta.onderliggende).filter((c) => {

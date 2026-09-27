@@ -248,6 +248,11 @@ type V3Veld struct {
 	Enum                string `json:"enum,omitempty"`      // ref naar V3Enum.GoType als dit een enum-veld is
 	Datatype            string `json:"datatype,omitempty"`  // ref naar V3Datatype.Naam als dit een custom datatype-veld is (bijv. "NLPostcode", "BSN")
 	Ref                 string `json:"$ref,omitempty"`      // ref naar een referentielijst-items type (bijv. "LandenlijstLand"), analoog aan OAS 3.1 $ref
+	// Uniek (UML {unique}): de waarde komt in de ACTUELE stand maar één keer voor, binnen een
+	// bereik: "entiteit" (onder alle exemplaren van dit type), "domein" (over alle velden met
+	// uniek=domein in het domein) of "register" (over alle velden met uniek=register). Leeg = niet
+	// uniek. Gecontroleerd bij registratie (handlers/registration_uniek.go).
+	Uniek string `json:"uniek,omitempty"`
 	Description         string `json:"description,omitempty"`
 	Afgeleid            bool   `json:"afgeleid,omitempty"`
 	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`

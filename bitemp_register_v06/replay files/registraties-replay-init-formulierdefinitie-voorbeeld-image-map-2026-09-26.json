@@ -29,6 +29,7 @@
               "formulierdefinitie_meta": {
                 "formulierdefinitie_id": "$nieuw.fd",
                 "naam": "Voorbeeld: vormen",
+                "code": "voorbeeld-image-map",
                 "beschrijving": "Proefformulier voor de vormen: kies de Common Ground-laag van het product in het lagenmodel en de soorten betrokken organisaties in het ecosysteem (klikbare afbeelding), en geef per doel de bijdrage aan (matrix).",
                 "doeltype": "Initiatief",
                 "status": "actief",

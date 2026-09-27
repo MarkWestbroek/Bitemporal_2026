@@ -318,11 +318,23 @@ verwijzende entiteiten aan zonder `max-id`-roundtrips:
 - Gebruikt door de FormulierDefinitie in nieuw-modus (`web/vite/src/components/editor/NieuwFormulierPagina.jsx`)
   en `veld.nieuwFormulier` (nieuwe doel-ENT vanuit een relatieveld).
 
+### `POST /api/valideer` en `GET /api/valideer/functies`
+- **Handler**: `handlers.MaakValideerHandler()` / `MaakValideerFunctiesHandler()` (`validatie_api_handler.go`)
+- **Description**: normaliseert en controleert een waarde volgens een V3Datatype, met dezelfde code
+  als een registratie (`model.NormaliseerWaarde`, `model.ValideerWaarde`). Er wordt niets
+  geregistreerd; anoniem toegankelijk.
+- **Body**: `{ "datatype": "BSN", "waarde": "123456789" }`, of `{ "items": [ { "datatype", "waarde", "veld" }, … ] }` (maximaal 200)
+- **Response**: `{ datatype, bekend, geldig, genormaliseerd, fouten: [ { code, bericht, … } ] }`; bij
+  `items`: `{ geldig, items: [ … ] }`. Een onbekend datatype geeft `bekend: false` en is geldig.
+- **`/functies`**: de benoemde validatiefuncties, de normalisaties en de regeltypen die deze
+  server kent.
+
 ### `POST /aanmelding/:formulierId`
 - **Handler**: `handlers.MaakAanmeldingHandler()` (`aanmelding_handler.go`)
 - **Description**: **Openbare indiening** van een FormulierDefinitie in nieuw-modus (aanmeldformulier,
-  plan 2026-09-22 §4 B6). Anoniem, maar alleen voor de FD-id's in `OPENBARE_FORMULIEREN`
-  (komma-gescheiden; een formulier openbaar maken is een autorisatiebesluit van de instantie, geen
+  plan 2026-09-22 §4 B6). `:formulierId` is het id óf de `code` van de FD
+  (`FORMULIERDEFINITIES.md` §1.1). Anoniem, maar alleen voor de FD's waarvan het id of de code in
+  `OPENBARE_FORMULIEREN` staat (komma-gescheiden; een formulier openbaar maken is een autorisatiebesluit van de instantie, geen
   FD-veld). De server dwingt af: alleen `opvoer`; alleen representaties van het doeltype van het
   formulier en van de doeltypen van ingebedde subformulieren (`veld.nieuwFormulier`, één niveau);
   entiteit-id's en entiteit-verwijzingen zijn plaatshouders (nooit schrijven op bestaande records;

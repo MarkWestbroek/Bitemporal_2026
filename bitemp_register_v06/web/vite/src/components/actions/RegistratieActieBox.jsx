@@ -110,6 +110,7 @@ export default function RegistratieActieBox({
                                 <ActionLabeledEditorField
                                   key={k}
                                   veldnaam={k}
+                                  veld={Array.isArray(typeMeta?.velden) ? typeMeta.velden.find((veld) => veld.naam === k) : null}
                                   beschrijving={String((Array.isArray(typeMeta?.velden) ? typeMeta.velden.find((veld) => veld.naam === k)?.description : "") || "")}
                                 >
                                   <ActionFieldControl

@@ -34,7 +34,7 @@ test("image-map bedient één én meer uit een lijst; vinkjes alleen meer", () =
   assert.ok(!vormPastBij("checkbox-group", INVOERSOORT.EEN_UIT_LIJST));
   assert.ok(vormPastBij("radio", INVOERSOORT.EEN_UIT_LIJST), "alias telt mee");
   const namen = vormenVoor(INVOERSOORT.MEER_UIT_LIJST).map((v) => v.naam);
-  assert.deepEqual(namen.sort(), ["button-group", "cards", "checkbox-group", "combobox", "image-map", "nl-map"]);
+  assert.deepEqual(namen.sort(), ["button-group", "cards", "checkbox-group", "combobox", "image-map", "nl-map", "ranking", "tag-input"]);
   assert.ok(vormenVoor(INVOERSOORT.MEER_UIT_LIJST, "weergave").some((v) => v.naam === "chips"), "chips alleen als weergave");
 });
 

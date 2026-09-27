@@ -11,7 +11,14 @@ import SwitchKeuze from "../vormen/SwitchKeuze";
 import RangeKeuze from "../vormen/RangeKeuze";
 import RotaryKeuze from "../vormen/RotaryKeuze";
 import NlMapKeuze from "../vormen/NlMapKeuze";
-import { ruweWaarde, alsSleutels } from "./vormBlokken";
+import MaskedInvoer from "../vormen/MaskedInvoer";
+import PartialDateInvoer from "../vormen/PartialDateInvoer";
+import DurationInvoer from "../vormen/DurationInvoer";
+import NumberStepper from "../vormen/NumberStepper";
+import ColorInvoer from "../vormen/ColorInvoer";
+import RankingKeuze from "../vormen/RankingKeuze";
+import { markdownNaarHtml } from "./markdown.js";
+import { ruweWaarde, alsSleutels, cbsGemeentecode, telSleutels } from "./vormBlokken";
 
 /**
  * VormWeergave — één vormblok uit een detail-template ({{#vorm naam pad}}config{{/vorm}},
@@ -35,7 +42,9 @@ export default function VormWeergave({ blok, ctx }) {
     case "image-map":
       return <div style={stijl}><ImageMapKeuze config={{ legend: false, ...config }} meervoudig waarde={sleutels} readOnly onChange={niets} /></div>;
     case "chips":
-      return <div style={stijl}><ChipsWeergave items={sleutels.map((s) => ({ value: s, label: config.labels?.[s] || s }))} config={config} /></div>;
+      // Over een lijst (bv. de fasen van alle initiatieven van een organisatie) komen waarden
+      // vaker voor: één chip per waarde, met `count: true` het aantal erachter.
+      return <div style={stijl}><ChipsWeergave items={telSleutels(sleutels).map(({ sleutel, n }) => ({ value: sleutel, label: `${config.labels?.[sleutel] || sleutel}${config.count && n > 1 ? ` · ${n}` : ""}` }))} config={config} /></div>;
     case "button-group": {
       const items = config.options ? opties(config.options) : sleutels.map((s) => ({ value: s, label: s }));
       return <div style={stijl}><ButtonGroupKeuze items={items} config={config} meervoudig waarde={sleutels} readOnly onChange={niets} /></div>;
@@ -55,6 +64,25 @@ export default function VormWeergave({ blok, ctx }) {
       const C = naam === "range" ? RangeKeuze : RotaryKeuze;
       const items = config.options ? opties(config.options) : undefined;
       return <div style={stijl}><C items={items} config={config} waarde={sleutels[0] ?? ""} readOnly onChange={niets} /></div>;
+    }
+    case "color":
+      return <div style={stijl}><ColorInvoer waarde={sleutels[0] ?? ""} readOnly onChange={niets} /></div>;
+    case "ranking":
+      return <div style={stijl}><RankingKeuze items={sleutels.map((s) => ({ value: s, label: config.labels?.[s] || s }))} waarde={sleutels} readOnly /></div>;
+    case "tag-input":
+      return <div style={stijl}><ChipsWeergave items={telSleutels(sleutels).map(({ sleutel }) => ({ value: sleutel, label: config.labels?.[sleutel] || sleutel }))} config={config} /></div>;
+    case "markdown":
+      // Markdown uit een veld (bv. een toelichting) als opgemaakte tekst, met dezelfde renderer.
+      return <div style={stijl} dangerouslySetInnerHTML={{ __html: markdownNaarHtml(String(Array.isArray(waarde) ? waarde.join("\n\n") : waarde ?? "")) }} />;
+    case "code":
+      return <pre style={{ ...stijl, padding: "0.5rem 0.75rem", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6, overflowX: "auto" }}>{String(waarde ?? "")}</pre>;
+    case "masked":
+    case "partial-date":
+    case "duration":
+    case "number-stepper": {
+      // Eén waarde, als leesbare tekst: "1234 AB", "juni 1975", "1 jaar en 2 maanden", "3 personen".
+      const C = { masked: MaskedInvoer, "partial-date": PartialDateInvoer, duration: DurationInvoer, "number-stepper": NumberStepper }[naam];
+      return <div style={stijl}><C waarde={Array.isArray(waarde) ? waarde[0] ?? "" : waarde ?? ""} readOnly onChange={niets} config={config} /></div>;
     }
     case "period":
       return <div style={stijl}><PeriodKeuze begin={ruweWaarde(ctx, config.startPath) ?? ""} einde={ruweWaarde(ctx, config.endPath) ?? ""} readOnly config={config} /></div>;
@@ -80,7 +108,7 @@ export default function VormWeergave({ blok, ctx }) {
       // Items onder het pad (bv. initiatief_gemeenten), elk met een CBS-code en een naam; groepen
       // (bv. Realiseert / Maakt gebruik van) als kleuren.
       const items = Array.isArray(waarde) ? waarde : waarde ? [waarde] : [];
-      const codeVan = (it) => (typeof it === "object" ? ruweWaarde(it, config.codeField || "code") : it);
+      const codeVan = (it) => [].concat((typeof it === "object" ? ruweWaarde(it, config.codeField || "code") : it) ?? []).map(cbsGemeentecode).filter(Boolean);
       const naamVan = (it) => (typeof it === "object" ? ruweWaarde(it, config.labelField || "naam") : it);
       const uniek = new Map();
       for (const it of items) {

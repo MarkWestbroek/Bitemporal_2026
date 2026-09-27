@@ -106,6 +106,24 @@ export function ruweWaarde(ctx, pad) {
  * (EnumLijst) wordt gesplitst. NIET op ", ": een enkele waarde kan een komma bevatten
  * (fase "Opschaling (…, nu op zoek naar verbreding)").
  */
+/**
+ * Een gemeentecode zoals de kaart (nl-kaart.json) hem kent: "GM0344". Accepteert ook de CBS-code
+ * als getal of cijfers (344, "0344"), zoals `Locatie.adres.gemeente` hem opslaat.
+ */
+export function cbsGemeentecode(c) {
+  if (c == null || c === "") return null;
+  const s = String(c).trim();
+  if (/^\d{1,4}$/.test(s)) return `GM${s.padStart(4, "0")}`;
+  return /^gm\d{4}$/i.test(s) ? s.toUpperCase() : s;
+}
+
+/** Unieke sleutels in volgorde van eerste voorkomen, met hun aantal (voor chips over een lijst). */
+export function telSleutels(sleutels) {
+  const aantal = new Map();
+  for (const s of sleutels) aantal.set(s, (aantal.get(s) || 0) + 1);
+  return [...aantal].map(([sleutel, n]) => ({ sleutel, n }));
+}
+
 export function alsSleutels(w) {
   if (w == null || w === "") return [];
   if (Array.isArray(w)) return w.flatMap(alsSleutels);

@@ -16,7 +16,7 @@
  *
  * `vasteWaarde` (niet getoond; vaste waarde bij opvoeren, in een lijst óók het filter
  * van die lijst), `kopieerNaar` (één invoer, twee doelen) en `widget: "meerkeuze"` op
- * een lijst komen uit het aanmeldformulier-plan (2026-09-22 §5.5); `nieuwFormulier` (FD-id
+ * een lijst komen uit het aanmeldformulier-plan (2026-09-22 §5.5); `nieuwFormulier` (code of id van een FD
  * voor een ingebedde nieuwe doel-ENT vanuit een relatieveld) uit §5.3. De runtime staat in
  * CustomFormulierRenderer, NieuwSubFormulier en nieuwFormulierMapping.
  *

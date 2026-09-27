@@ -29,6 +29,7 @@
               "formulierdefinitie_meta": {
                 "formulierdefinitie_id": "$nieuw.fd",
                 "naam": "Voorbeeld: vormen (2)",
+                "code": "voorbeeld-vormen-2",
                 "beschrijving": "Proefformulier: dezelfde bijdragen als manden, schuif, knoppenvlak en draaiknop — vier vormen, één set gegevens.",
                 "doeltype": "Initiatief",
                 "status": "actief",

@@ -21,6 +21,7 @@ type SchemaTag struct {
 	Enum     string
 	Datatype string
 	Ref      string
+	Uniek    string // "entiteit" | "domein" | "register" (V3Veld.Uniek)
 }
 
 // ParseSchemaTag leest een schema-tag per komma-deel; de volgorde van de delen doet er niet toe.
@@ -37,6 +38,8 @@ func ParseSchemaTag(tag string) SchemaTag {
 			uit.Datatype = strings.TrimSpace(strings.TrimPrefix(d, "datatype:"))
 		case strings.HasPrefix(d, "ref:"):
 			uit.Ref = strings.TrimSpace(strings.TrimPrefix(d, "ref:"))
+		case strings.HasPrefix(d, "uniek="):
+			uit.Uniek = strings.TrimSpace(strings.TrimPrefix(d, "uniek="))
 		}
 	}
 	return uit

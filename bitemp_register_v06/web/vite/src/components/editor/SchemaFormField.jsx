@@ -4,8 +4,9 @@ import RefCombobox from "./RefCombobox";
 import EntiteitCombobox from "./EntiteitCombobox";
 import { useSchema } from "../../context/SchemaContext";
 import CodeEditor, { jsonParseFout } from "./CodeEditor";
+import { normaliseer } from "../../umleditor/validatie/normaliseer.js";
 import VormInvoer, { VORMINVOER } from "./VormInvoer";
-import { normaliseerVorm, vormPastBij, invoersoortVanVeld, effectieveVorm, splitsLijst, voegLijstSamen, INVOERSOORT } from "../../vormen/vormen";
+import { normaliseerVorm, vormPastBij, invoersoortVanVeld, effectieveVorm, vormUitDatatype, splitsLijst, voegLijstSamen, INVOERSOORT } from "../../vormen/vormen";
 
 /**
  * SchemaFormField — generiek formulierveld dat één `veld` uit de schema-API
@@ -51,8 +52,13 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
   // Weergave-hints uit DatatypeRegistry ophalen (widget, prefix, suffix, multiline, decimalen)
   const datatypeMeta = veld.datatype ? datatypeByNaam?.[veld.datatype] : null;
   const weergave = datatypeMeta?.weergave || {};
-  // Vorm (nieuw) wint van widget (oud) wint van de datatype-hint; namen genormaliseerd.
-  const effectieveWidget = normaliseerVorm(vorm) || normaliseerVorm(widgetOverride) || normaliseerVorm(weergave.widget) || "";
+  // Vorm (nieuw) wint van widget (oud) wint van de vorm van het datatype (DatumIncompleet →
+  // partial-date, Duur → duration, anders de weergave-hint); namen genormaliseerd.
+  const effectieveWidget = normaliseerVorm(vorm) || normaliseerVorm(widgetOverride) || normaliseerVorm(vormUitDatatype(datatypeMeta)) || "";
+  // Een invoermasker komt uit het datatype, tenzij de layout er een geeft.
+  const effectieveConfig = effectieveWidget === "masked" && weergave.inputMask
+    ? { mask: weergave.inputMask, placeholder: weergave.placeholder, ...(vormConfig || {}) }
+    : vormConfig;
 
   function inputType() {
     if (type === "string" && format === "date") return "date";
@@ -88,8 +94,9 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
     if (soort === INVOERSOORT.MEER_UIT_LIJST) {
       const scheiding = veld.lijstScheiding;
       const sleutels = splitsLijst(value, scheiding);
-      const zet = (nieuw) => onChange(voegLijstSamen(nieuw, scheiding, enumOpties));
       const lijstVorm = effectieveVorm({ vorm, widget: widgetOverride, datatypeWidget: weergave.widget }, veld);
+      // Een rangorde bewaart de gekozen volgorde; anders in de volgorde van het enum.
+      const zet = (nieuw) => onChange(voegLijstSamen(nieuw, scheiding, lijstVorm === "ranking" ? [] : enumOpties));
       if (VORMINVOER.has(lijstVorm)) {
         return <VormInvoer vorm={lijstVorm} veld={veld} config={vormConfig} meervoudig waarde={sleutels} onChange={zet} readOnly={isReadonly} labelId={labelId} />;
       }
@@ -110,7 +117,7 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
     // De vormenbibliotheek (image-map, knoppen, kaarten, kaart, schakelaar, schuif, draaiknop,
     // stappen): alleen als de vorm deze invoersoort bedient; anders de standaardvorm hieronder.
     if (VORMINVOER.has(effectieveWidget) && vormPastBij(effectieveWidget, soort)) {
-      return <VormInvoer vorm={effectieveWidget} veld={veld} config={vormConfig} waarde={value} onChange={onChange} readOnly={isReadonly} labelId={labelId} />;
+      return <VormInvoer vorm={effectieveWidget} veld={veld} config={effectieveConfig} waarde={value} onChange={onChange} readOnly={isReadonly} labelId={labelId} />;
     }
 
     // Boolean → radio group
@@ -260,6 +267,13 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
         step={step()}
         value={String(value ?? "")}
         onChange={(e) => onChange(e.target.value)}
+        // Bij het verlaten: de genormaliseerde vorm van het datatype tonen ("1234 ab" → "1234 AB"),
+        // zoals de server hem ook opslaat (model/normalisatie.go).
+        onBlur={(e) => {
+          if (!datatypeMeta?.normalisatie || isReadonly) return;
+          const genormaliseerd = normaliseer(e.target.value, datatypeMeta.normalisatie);
+          if (genormaliseerd !== e.target.value) onChange(genormaliseerd);
+        }}
         readOnly={isReadonly}
         disabled={isReadonly}
         aria-invalid={foutmelding ? "true" : undefined}

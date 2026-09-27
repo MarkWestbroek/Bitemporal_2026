@@ -161,6 +161,9 @@ func NewRouter() *gin.Engine {
 	router.GET("/docs/*filepath", handlers.DocsPage)
 	router.GET("/api/viz/schema", handlers.MaakVizSchemaHandler())
 	router.GET("/api/viz/schema/datatypes", handlers.MaakVizSchemaDatatypesHandler())
+	// Validatie-API (handlers/validatie_api_handler.go): normaliseren + controleren volgens een datatype.
+	router.POST("/api/valideer", handlers.MaakValideerHandler())
+	router.GET("/api/valideer/functies", handlers.MaakValideerFunctiesHandler())
 	// max-id en secondaire-ids lezen registerdata: achter de leesguard (LEESTOEGANG, zie
 	// middleware/leestoegang.go). Schema en reflijst-opties zijn metadata/naslag en blijven open.
 	router.GET("/api/viz/entiteit/:typenaam/max-id", middleware.RequireLezer(), handlers.MaakVizEntiteitMaxIDHandler())
@@ -192,14 +195,21 @@ func NewRouter() *gin.Engine {
 	editor := middleware.RequireRol("editor")
 	admin := middleware.RequireRol("admin")
 
+	// AI-proxy (handlers/ai_proxy.go): toegangscodes voor proberen met de sleutel van de eigenaar.
+	// Uit zolang AI_UPSTREAM_KEY leeg is. Codes beheren: alleen admin.
+	router.POST("/ai/v1/chat/completions", handlers.MaakAIProxyHandler())
+	router.GET("/api/ai/codes", admin, handlers.MaakAICodesLijstHandler())
+	router.POST("/api/ai/codes", admin, handlers.MaakAICodeAanmakenHandler())
+	router.DELETE("/api/ai/codes/:naam", admin, handlers.MaakAICodeIntrekkenHandler())
+
 	// Openbare indiening van een formulier (aanmeldformulier stap C, handlers/aanmelding_handler.go):
-	// anoniem, maar alleen voor de FormulierDefinitie-id's in OPENBARE_FORMULIEREN, alleen
+	// anoniem, maar alleen voor de FormulierDefinities (id of code) in OPENBARE_FORMULIEREN, alleen
 	// opvoeren op plaatshouder-id's, vaste waarden afgedwongen, bron "aanmeldformulier".
 	router.POST("/aanmelding/:formulierId", handlers.MaakAanmeldingHandler())
 	if of := handlers.OpenbareFormulieren(); len(of) > 0 {
 		fmt.Println("openbare formulieren (POST /aanmelding/:id):", of)
 	} else {
-		fmt.Println("openbare formulieren: geen (zet OPENBARE_FORMULIEREN=<FD-id,…> om een formulier anoniem indienbaar te maken)")
+		fmt.Println("openbare formulieren: geen (zet OPENBARE_FORMULIEREN=<FD-id of code,…> om een formulier anoniem indienbaar te maken)")
 	}
 
 	// Schema model endpoints (v3-formaat, zie ontwerpkeuzen.md §7)

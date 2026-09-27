@@ -16,6 +16,7 @@
     "test:e2e:install": "playwright install chromium"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@tanstack/react-table": "^8.21.3",
     "@utrecht/component-library-css": "^9.0.2",
     "@utrecht/component-library-react": "^13.0.3",

@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useSchema } from "../context/SchemaContext";
 import { safeArray } from "../shared/schemaUtils";
 import { actueleData as vindActueleData } from "../shared/actueleData";
+import { pastBijSleutel } from "../shared/definitieSleutel";
 
 /**
  * useWeergaveDefinitie — haalt de actieve WeergaveDefinitie op voor een gegeven doeltype.
  *
  * Laadt alle WeergaveDefinities via de full-lijst-API, vindt degene met status "actief"
- * en is_standaard=true voor het doeltype. Met `?weergave=<id>` in de URL (querystring vóór de
+ * en is_standaard=true voor het doeltype. Met `?weergave=<id of code>` in de URL (querystring vóór de
  * `#`, zoals `embed=1`) wordt DIE definitie gebruikt, als hij actief is en bij het doeltype hoort:
  * zo kan een tweede weergave (bv. met weergavevormen) naast de standaard bestaan zonder de
  * standaard, en dus de embed op commonground.nl, te raken. Retourneert de geparsede tabelConfig,
@@ -47,13 +48,13 @@ export function useWeergaveDefinitie(doeltype) {
           return;
         }
 
-        // ?weergave=<id> kiest een bepaalde actieve definitie voor dit doeltype; anders de standaard.
+        // ?weergave=<id of code> kiest een bepaalde actieve definitie voor dit doeltype; anders de standaard.
         const gekozen = gekozenWeergaveId();
         const actiefVoorType = (full) => {
           const metaData = full && vindActueleData(full, "weergave_definitie_metas");
           return metaData?.doeltype === doeltype && metaData?.status === "actief" ? metaData : null;
         };
-        const match = (gekozen && items.find((full) => String(full?.id) === gekozen && actiefVoorType(full)))
+        const match = (gekozen && items.find((full) => { const m = actiefVoorType(full); return m && pastBijSleutel({ id: full.id, meta: m }, gekozen); }))
           || items.find((full) => {
             const metaData = actiefVoorType(full);
             return metaData && (metaData.is_standaard === true || metaData.is_standaard === "true");
@@ -61,7 +62,7 @@ export function useWeergaveDefinitie(doeltype) {
 
         setAlternatieven(items.map((full) => {
           const m = actiefVoorType(full);
-          return m ? { id: full.id, naam: m.naam || `Weergave ${full.id}`, isStandaard: m.is_standaard === true || m.is_standaard === "true" } : null;
+          return m ? { id: full.id, code: m.code || "", naam: m.naam || `Weergave ${full.id}`, isStandaard: m.is_standaard === true || m.is_standaard === "true" } : null;
         }).filter(Boolean).sort((a, b) => Number(b.isStandaard) - Number(a.isStandaard) || a.naam.localeCompare(b.naam, "nl")));
 
         if (!match) {
@@ -102,7 +103,7 @@ export function useWeergaveDefinitie(doeltype) {
   return { weergaveDefinitie, tabelConfig, detailTemplate, alternatieven, loading, error };
 }
 
-/** `?weergave=<id>` uit de URL (vóór de #), of null. */
+/** `?weergave=<id of code>` uit de URL (vóór de #), of null. */
 function gekozenWeergaveId() {
   try {
     return new URLSearchParams(window.location.search).get("weergave") || null;

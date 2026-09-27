@@ -47,6 +47,7 @@ export default function FormulierIndex() {
           return {
             id: full.id,
             naam: meta.naam || `#${full.id}`,
+            code: meta.code || "",
             doeltype: meta.doeltype || "(onbekend)",
             status: meta.status || "",
             isStandaard: meta.is_standaard === true || meta.is_standaard === "true",
@@ -93,7 +94,7 @@ export default function FormulierIndex() {
     const veldInfo = bouwVeldInfoUitLayout(root, typeMetaByTypenaam);
     laadDefinitie({
       layoutJson: it.layoutJson,
-      meta: { naam: it.naam, doeltype: it.doeltype, beschrijving: it.beschrijving, definitieVersie: it.versie, status: it.status, isStandaard: it.isStandaard },
+      meta: { naam: it.naam, code: it.code, doeltype: it.doeltype, beschrijving: it.beschrijving, definitieVersie: it.versie, status: it.status, isStandaard: it.isStandaard },
       veldInfo,
       id: it.id,
       metaRelId: it.metaRelId,

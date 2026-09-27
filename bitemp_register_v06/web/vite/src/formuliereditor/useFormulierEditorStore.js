@@ -33,7 +33,7 @@ export const useFormulierEditorStore = create((set, get) => ({
   /** map veldpad → FieldRef-achtige metadata { veldnaam, datatype, type, format, enum, ref, entiteit } */
   veldInfo: {},
   /** metadata van de definitie zelf */
-  meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1", status: "concept", isStandaard: false },
+  meta: { naam: "", code: "", doeltype: "", beschrijving: "", definitieVersie: "0.1", status: "concept", isStandaard: false },
   geladenId: null, // id van een geladen bestaande definitie (null = nieuw)
   geladenMetaRelId: null,
   geladenLayoutRelId: null,
@@ -81,6 +81,7 @@ export const useFormulierEditorStore = create((set, get) => ({
       veldInfo,
       meta: {
         naam: meta.naam || "",
+        code: meta.code || "",
         doeltype: meta.doeltype || "",
         beschrijving: meta.beschrijving || "",
         definitieVersie: meta.definitieVersie || meta.definitie_versie || "0.1",
@@ -231,7 +232,7 @@ export const useFormulierEditorStore = create((set, get) => ({
   },
 
   reset() {
-    set({ root: nieuwFormulier(), selectieId: null, geladenId: null, geladenMetaRelId: null, geladenLayoutRelId: null, veldInfo: {}, meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1", status: "concept", isStandaard: false }, historie: [], toekomst: [], saveResultaat: null, melding: null });
+    set({ root: nieuwFormulier(), selectieId: null, geladenId: null, geladenMetaRelId: null, geladenLayoutRelId: null, veldInfo: {}, meta: { naam: "", code: "", doeltype: "", beschrijving: "", definitieVersie: "0.1", status: "concept", isStandaard: false }, historie: [], toekomst: [], saveResultaat: null, melding: null });
   },
 
   /** Sla de definitie op als nieuwe FormulierDefinitie in het register. */

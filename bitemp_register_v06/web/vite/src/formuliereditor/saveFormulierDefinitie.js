@@ -15,6 +15,7 @@
  * zodra de editor definities uit de DB kan laden.
  */
 import { actueleHubData } from "../shared/actueleData.js";
+import { isGeldigeCode } from "../shared/definitieSleutel.js";
 
 function vandaagISO() {
   return new Date().toISOString().slice(0, 10);
@@ -32,6 +33,11 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson, gelade
   const status = String(meta?.status || "concept");
   const isStandaard = meta?.isStandaard === true;
   const versie = String(meta?.definitieVersie || "0.1");
+  // code: leesbare sleutel (id of code in nieuwFormulier, ?formulier=, OPENBARE_FORMULIEREN).
+  // Altijd meesturen, anders verdwijnt hij bij een nieuwe versie van de meta.
+  const code = String(meta?.code || "").trim();
+  if (!isGeldigeCode(code)) throw new Error(`Ongeldige code «${code}»: kleine letters, cijfers en koppeltekens, niet alleen cijfers.`);
+  const codeVeld = code ? { code } : {};
   // Update-in-place: is er een geladen definitie, werk die bij (nieuwe versie van
   // meta + layout op hetzelfde id/rel_id) i.p.v. een kopie te maken. De GE-idKolom
   // is rel_id, dus opvoer met { formulierdefinitie_id, rel_id, … } versioneert het
@@ -45,7 +51,7 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson, gelade
   if (bijwerken) {
     // Bestaande definitie bijwerken → nieuwe versie van meta + layout (zelfde id).
     doelId = geladen.id;
-    const metaPayload = { formulierdefinitie_id: doelId, naam, beschrijving: String(meta?.beschrijving || ""), doeltype, status, is_standaard: isStandaard };
+    const metaPayload = { formulierdefinitie_id: doelId, naam, ...codeVeld, beschrijving: String(meta?.beschrijving || ""), doeltype, status, is_standaard: isStandaard };
     if (geladen.metaRelId != null) metaPayload.rel_id = geladen.metaRelId;
     const layoutPayload = { formulierdefinitie_id: doelId, layout_json: layoutJson, definitie_versie: versie };
     if (geladen.layoutRelId != null) layoutPayload.rel_id = geladen.layoutRelId;
@@ -62,7 +68,7 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson, gelade
     doelId = nextId;
     wijzigingen = [
       { opvoer: { formulierdefinitie: { id: doelId } } },
-      { opvoer: { formulierdefinitie_meta: { formulierdefinitie_id: doelId, naam, beschrijving: String(meta?.beschrijving || ""), doeltype, status, is_standaard: isStandaard } } },
+      { opvoer: { formulierdefinitie_meta: { formulierdefinitie_id: doelId, naam, ...codeVeld, beschrijving: String(meta?.beschrijving || ""), doeltype, status, is_standaard: isStandaard } } },
       { opvoer: { layout: { formulierdefinitie_id: doelId, layout_json: layoutJson, definitie_versie: versie } } },
       { opvoer: { formulierdefinitie_aanvang: { formulierdefinitie_id: doelId, datum: vandaagISO() } } },
     ];
@@ -109,6 +115,7 @@ export async function degradeerAndereStandaarden(baseUrl, doeltype, behoudId) {
       const payload = {
         formulierdefinitie_id: full.id,
         naam: m.naam,
+        ...(m.code ? { code: m.code } : {}),
         beschrijving: m.beschrijving || "",
         doeltype: m.doeltype,
         status: m.status,

@@ -196,16 +196,20 @@ Zie [`docs/3D_UNIVERSUM.md`](docs/3D_UNIVERSUM.md) voor het volledige ontwerp, d
 
 ## Formulieren, weergaven en vormen
 
-Formulieren en publicatiepagina's zijn **data** in het configuratiedomein (FormulierDefinitie,
-WeergaveDefinitie), met een vormenbibliotheek voor invoer en weergave (inhoud en vorm gescheiden).
+Formulieren, overzichten en publicatiepagina's zijn **data** in het configuratiedomein
+(FormulierDefinitie, LijstDefinitie, WeergaveDefinitie), met een vormenbibliotheek voor invoer en
+weergave (inhoud en vorm gescheiden). Invoervelden controleren de regels van hun datatype uit het
+model (bv. de 11-proef van een BSN).
 
 - [`docs/FORMULIERDEFINITIES.md`](docs/FORMULIERDEFINITIES.md): de layout, vorm/vormConfig,
-  nieuw, bewerken ("Bewerken via") en openbaar indienen.
+  nieuw, bewerken ("Bewerken via") en openbaar indienen. Een definitie wijs je aan met haar
+  leesbare **`code`** (bv. `nieuwe-organisatie`) of met haar id (§1.1).
 - [`docs/PUBLICATIE_TEMPLATES.md`](docs/PUBLICATIE_TEMPLATES.md): detail-templates, `{{#vorm}}`-blokken
-  en meerdere weergaven per type (`?weergave=<id>`).
+  en meerdere weergaven per type (`?weergave=<code of id>`).
 - [`docs/plans/2026-09-26 Invoersoort en vorm (ontwerp).md`](docs/plans/2026-09-26%20Invoersoort%20en%20vorm%20(ontwerp).md):
   het ontwerp (invoersoort, vorm, opslag, keuzebron), de 22 vormen, EnumLijst en de open vragen.
 - **Showcase:** `/viz/react/vormen.html`: elke vorm in invoer en weergave, met de opgeslagen inhoud.
+- [`docs/AI_ASSISTENT.md`](docs/AI_ASSISTENT.md): de vorm `ai-assist` (voorstel, de mens beslist), eigen sleutel of toegangscode, en de AI-proxy.
 
 ## Afgeleide velden (Derived Fields)
 

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { safeArray } from "../shared/schemaUtils";
+import { zetDatatypes } from "../shared/datatypeValidatie";
 
 const SchemaContext = createContext(null);
 
@@ -54,6 +55,7 @@ export function SchemaProvider({ baseUrl, children }) {
           setTypes(safeArray(schemaData?.types));
           setV3Model(schemaData?.model || null);
           setDatatypes(safeArray(dtData?.datatypes));
+          zetDatatypes(safeArray(dtData?.datatypes)); // voor de veldvalidatie (shared/datatypeValidatie.js)
           setLoading(false);
         }
       })

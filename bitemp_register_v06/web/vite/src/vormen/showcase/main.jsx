@@ -15,6 +15,14 @@ import ScaleBarsWeergave from "../ScaleBarsWeergave";
 import PeriodKeuze from "../PeriodKeuze";
 import AddressSearch from "../AddressSearch";
 import NlMapKeuze from "../NlMapKeuze";
+import MaskedInvoer from "../MaskedInvoer";
+import PartialDateInvoer from "../PartialDateInvoer";
+import DurationInvoer from "../DurationInvoer";
+import NumberStepper from "../NumberStepper";
+import ColorInvoer from "../ColorInvoer";
+import TagInvoer from "../TagInvoer";
+import RankingKeuze from "../RankingKeuze";
+import { markdownNaarHtml } from "../../publicatie/markdown.js";
 import * as D from "./voorbeelddata";
 
 import "@utrecht/component-library-css";
@@ -75,6 +83,15 @@ function Showcase() {
   const [periode, setPeriode] = useState({ begin: "2026-03-01", einde: "2027-06-30" });
   const [adres, setAdres] = useState({});
   const [gemeenten, setGemeenten] = useState(["GM0344", "GM1959", "GM1900"]);
+  const [postcode, setPostcode] = useState("3512JE");
+  const [geboren, setGeboren] = useState("1975-06");
+  const [duur, setDuur] = useState("P1Y6M");
+  const [aantalGem, setAantalGem] = useState("3");
+  const [kleurW, setKleurW] = useState("#6366f1");
+  const [rangorde, setRangorde] = useState(["Regie", "Wendbaarheid"]);
+  const [tagsApi, setTagsApi] = useState(["2", "5"]);
+  const [trefwoorden, setTrefwoorden] = useState("zaakgericht;open source");
+  const [toelichting, setToelichting] = useState("## Wat het doet\n\nKoppelt **zaken** aan documenten.\n\n- snel\n- open source");
 
   const lagenItems = D.LAGEN.map((v) => ({ value: v, label: v }));
   const sorteerRijen = D.API_STANDAARDEN.slice(0, 8);
@@ -140,6 +157,50 @@ function Showcase() {
       weergave={() => <NlMapKeuze items={D.GEMEENTEN.filter((g) => gemeenten.includes(g.value))} meervoudig waarde={gemeenten} readOnly config={{ maxWidth: 260 }}
         groepen={[{ label: "Realiseert", color: "#e11d48", waarden: gemeenten.slice(0, 1) }, { label: "Maakt gebruik van", color: "#2563eb", waarden: gemeenten.slice(1) }]} />}
       noot="Wijs een stip aan: de woonplaatsen van die gemeente." />,
+    <Kaart key="mk" naam="masked" invoersoort="tekst (datatype NLPostcode)" config={{ mask: "0000 AA" }}
+      opgeslagen={{ "adres.postcode": postcode }}
+      invoer={(l) => <MaskedInvoer waarde={postcode} onChange={setPostcode} labelId={l} config={{ mask: "0000 AA" }} />}
+      weergave={() => <MaskedInvoer waarde={postcode} readOnly config={{ mask: "0000 AA" }} />}
+      noot="Het masker komt uit het datatype (weergave.inputMask). Typ of plak 1234ab: de spatie verschijnt vanzelf, opgeslagen zonder spatie." />,
+    <Kaart key="pd" naam="partial-date" invoersoort="tekst (datatype DatumIncompleet)" config={{ unknownStyle: "kort", minYear: 1900 }}
+      opgeslagen={{ "geboorte.datum": geboren }}
+      invoer={(l) => <PartialDateInvoer waarde={geboren} onChange={setGeboren} labelId={l} config={{ unknownStyle: "kort", minYear: 1900 }} />}
+      weergave={() => <PartialDateInvoer waarde={geboren} readOnly />}
+      noot="Maand en dag mogen onbekend zijn, zoals in de BRP. Voor een veld met datatype DatumIncompleet is dit de vorm vanzelf." />,
+    <Kaart key="du" naam="duration" invoersoort="tekst (datatype Duur, ISO 8601)" config={{ units: ["jaren", "maanden", "weken"] }}
+      opgeslagen={{ "planning.doorlooptijd": duur }}
+      invoer={(l) => <DurationInvoer waarde={duur} onChange={setDuur} labelId={l} config={{ units: ["jaren", "maanden", "weken"] }} />}
+      weergave={() => <DurationInvoer waarde={duur} readOnly />}
+      noot="Voor een veld met datatype Duur is dit de vorm vanzelf." />,
+    <Kaart key="ns" naam="number-stepper" invoersoort="getal" config={{ min: 1, max: 12, step: 1, unit: "gemeenten" }}
+      opgeslagen={{ aantal_gemeenten: aantalGem }}
+      invoer={(l) => <NumberStepper waarde={aantalGem} onChange={setAantalGem} labelId={l} config={{ min: 1, max: 12, step: 1, unit: "gemeenten" }} />}
+      weergave={() => <NumberStepper waarde={aantalGem} readOnly config={{ unit: "gemeenten" }} />} />,
+    <Kaart key="rk" naam="ranking" invoersoort="meer uit een lijst, in volgorde" config={{ max: 3, rankLabel: "Wat levert het meest op?" }}
+      opgeslagen={{ bijdrage_volgorde: rangorde.join(";") }}
+      invoer={(l) => <RankingKeuze items={D.BIJDRAGEN} waarde={rangorde} onChange={setRangorde} labelId={l} config={{ max: 3, rankLabel: "Wat levert het meest op?" }} />}
+      weergave={() => <RankingKeuze items={D.BIJDRAGEN} waarde={rangorde} readOnly />}
+      noot="Slepen, of ↑ ↓ met het toetsenbord. Opgeslagen in de gekozen volgorde (niet op enumvolgorde)." />,
+    <Kaart key="co" naam="color" invoersoort="tekst (datatype Kleur)" config={{ swatches: ["#60a5fa", "#6366f1", "#22d3ee", "#f59e0b"] }}
+      opgeslagen={{ "domein.kleur": kleurW }}
+      invoer={(l) => <ColorInvoer waarde={kleurW} onChange={setKleurW} labelId={l} config={{ swatches: ["#60a5fa", "#6366f1", "#22d3ee", "#f59e0b"] }} />}
+      weergave={() => <ColorInvoer waarde={kleurW} readOnly />}
+      noot="Voor een veld met datatype Kleur is dit de vorm vanzelf." />,
+    <Kaart key="ti" naam="tag-input" invoersoort="meer uit een lijst (rijen)" config={{ max: 6 }}
+      opgeslagen={{ initiatief_api_standaarden: tagsApi.map((a) => ({ apistandaard: a })) }}
+      invoer={(l) => <TagInvoer items={D.API_STANDAARDEN} waarde={tagsApi} onChange={setTagsApi} labelId={l} config={{ max: 6 }} />}
+      weergave={() => <TagInvoer items={D.API_STANDAARDEN} waarde={tagsApi} readOnly />}
+      noot="Typ om te zoeken; Backspace in een leeg veld haalt het laatste label weg." />,
+    <Kaart key="tv" naam="tag-input" invoersoort="tekst (vrije labels, ;-gescheiden)" config={{ separator: ";" }}
+      opgeslagen={{ trefwoorden }}
+      invoer={(l) => <TagInvoer waarde={trefwoorden.split(";").filter(Boolean)} onChange={(t) => setTrefwoorden(t.join(";"))} labelId={l} />}
+      weergave={() => <TagInvoer waarde={trefwoorden.split(";").filter(Boolean)} readOnly />}
+      noot="Zonder keuzelijst: elke getypte waarde wordt een label (Enter of komma)." />,
+    <Kaart key="md" naam="markdown" invoersoort="tekst" config={{ preview: "naast" }}
+      opgeslagen={{ toelichting }}
+      invoer={(l) => <textarea aria-labelledby={l} value={toelichting} onChange={(e) => setToelichting(e.target.value)} rows={7} style={{ width: "100%", fontFamily: "ui-monospace, monospace" }} />}
+      weergave={() => <div dangerouslySetInnerHTML={{ __html: markdownNaarHtml(toelichting) }} />}
+      noot="In Omnium: de code-editor met syntaxkleuring en een tab Voorbeeld (CodeVeld). Hier, zonder Omnium, een gewoon tekstvak; de weergave is dezelfde renderer als de publicatiepagina." />,
   ];
 
   const aantal = Object.keys(VORMEN).length;

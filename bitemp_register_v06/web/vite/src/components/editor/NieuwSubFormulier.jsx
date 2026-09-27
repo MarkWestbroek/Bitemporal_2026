@@ -4,6 +4,7 @@ import { safeArray } from "../../shared/schemaUtils";
 import { useFormulierDefinities } from "../../hooks/useFormulierDefinitie";
 import { bouwCustomVeldMapping } from "./customFormMapping";
 import CustomFormulierRenderer from "./CustomFormulierRenderer";
+import { vindDefinitie } from "../../shared/definitieSleutel";
 
 /**
  * NieuwSubFormulier — een ingebedde FormulierDefinitie voor een nieuwe doel-ENT vanuit een
@@ -22,7 +23,7 @@ export default function NieuwSubFormulier({ doelEntiteit, formulierId, values, o
   const { typeMetaByTypenaam } = useSchema();
   const doelMeta = typeMetaByTypenaam?.[doelEntiteit];
   const { definities, loading, error } = useFormulierDefinities(doelEntiteit);
-  const definitie = definities.find((d) => String(d.id) === String(formulierId)) || null;
+  const definitie = vindDefinitie(definities, formulierId);
 
   const onderliggende = useMemo(() => safeArray(doelMeta?.onderliggende).filter((child) => {
     const m = typeMetaByTypenaam?.[child.doeltype];

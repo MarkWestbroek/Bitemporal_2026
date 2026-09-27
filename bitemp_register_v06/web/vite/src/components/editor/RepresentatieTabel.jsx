@@ -7,10 +7,13 @@ import {
   getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray, platSlaHubItems } from "../../shared/schemaUtils";
 import { bouwReflijstOptieLabel, evalueerWeergaveVeldenVoorItem, berekenWeergaveveld } from "../../shared/celEvaluator";
+import { useLijstDefinities, gekozenLijst } from "../../hooks/useLijstDefinitie";
+import { sleutelVan } from "../../shared/definitieSleutel";
+import { resolveVeldpad, sanitizeKolId } from "../../publicatie/publicatieData.js";
 
 const PAGE_SIZE = 20;
 
@@ -42,8 +45,35 @@ export default function RepresentatieTabel({ typeMeta }) {
   // API-pad: padnaam is het URL-pad, meervoud is de weergavenaam
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
+  // LijstDefinitie (configuratie): de kolommen van dit overzicht en het formulier waarmee een
+  // rij opent. `?lijst=<code of id>` kiest er een, anders de standaard; zonder lijstdefinitie
+  // (of met ?lijst=automatisch) het automatische overzicht uit het schema hieronder.
+  const { definities: lijsten } = useLijstDefinities(isEntiteit ? typeMeta?.typenaam : null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const lijst = gekozenLijst(lijsten, searchParams.get("lijst"));
+  const lijstKolommen = lijst?.config?.kolommen?.length ? lijst.config.kolommen : null;
+
   // Velden → kolommen: entiteiten tonen id + weergaveveld + tellerkolommen per GE
   const columns = useMemo(() => {
+    // Kolommen uit de LijstDefinitie: zelfde formaat en veldpad-resolver als de tabelconfig
+    // van een WeergaveDefinitie (publicatie/PublicatieTabel.jsx).
+    if (lijstKolommen) {
+      return lijstKolommen.map((kol) => ({
+        id: sanitizeKolId(kol.veldpad),
+        header: kol.label || kol.veldpad,
+        accessorFn: (row) => resolveVeldpad(row, kol.veldpad, typeMeta, typeMetaByTypenaam) ?? null,
+        cell: ({ getValue }) => {
+          const val = getValue();
+          if (val == null || val === "") return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+          if (val === true || val === "true") return "ja";
+          if (val === false || val === "false") return "nee";
+          return String(val);
+        },
+        enableSorting: kol.sorteerbaar !== false,
+        enableColumnFilter: kol.filterbaar !== false,
+        size: kol.breedte,
+      }));
+    }
     const cols = [];
 
     if (isEntiteit) {
@@ -208,7 +238,7 @@ export default function RepresentatieTabel({ typeMeta }) {
     }
 
     return cols;
-  }, [typeMeta, isEntiteit, typeMetaByTypenaam, refNaamCache]);
+  }, [typeMeta, isEntiteit, typeMetaByTypenaam, refNaamCache, lijstKolommen]);
 
   // Data ophalen — entiteiten via /full/ (met geneste GE's), overig via flat endpoint
   // Bij een zoekterm (q) wordt server-side ILIKE search gebruikt op alle string-kolommen.
@@ -311,13 +341,36 @@ export default function RepresentatieTabel({ typeMeta }) {
     initialState: { pagination: { pageSize: PAGE_SIZE } },
   });
 
+  // Standaardsortering en rijen per pagina van de gekozen lijst.
+  const lijstSleutel = lijst ? sleutelVan(lijst) : "";
+  useEffect(() => {
+    const s = lijst?.config?.standaardSortering;
+    const vp = s?.veldpad || s?.veld;
+    setSorting(vp && lijstKolommen?.some((k) => k.veldpad === vp) ? [{ id: sanitizeKolId(vp), desc: s.richting === "desc" }] : []);
+    table.setPageSize(Number(lijst?.config?.rijenPerPagina) || PAGE_SIZE);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lijstSleutel]);
+
   function handleRijKlik(row) {
     const idKolom = typeMeta.idKolom || "id";
     const idWaarde = row.original[idKolom];
     if (idWaarde != null) {
-      navigate(`/t/${typeMeta.padnaam || typeMeta.meervoud || typeMeta.veldnaam}/${idWaarde}`);
+      // Met een lijst: open met het formulier van de lijst, en geef de lijst mee (daar staat
+      // of de gebruiker een ander formulier mag kiezen; EntiteitFormulier).
+      const q = new URLSearchParams();
+      if (lijst?.formulier) q.set("formulier", lijst.formulier);
+      if (lijst) q.set("lijst", lijstSleutel);
+      navigate(`/t/${typeMeta.padnaam || typeMeta.meervoud || typeMeta.veldnaam}/${idWaarde}${q.toString() ? `?${q}` : ""}`);
     }
   }
+
+  const kiesLijst = (waarde) => setSearchParams((prev) => {
+    const n = new URLSearchParams(prev);
+    const std = lijsten.find((d) => d.isStandaard);
+    if (!waarde || (std && waarde === sleutelVan(std)) || (!std && waarde === "automatisch")) n.delete("lijst");
+    else n.set("lijst", waarde);
+    return n;
+  }, { replace: true });
 
   if (error) {
     return <div className="cg-feedback--fout">Fout bij laden: {error}</div>;
@@ -325,6 +378,17 @@ export default function RepresentatieTabel({ typeMeta }) {
 
   return (
     <div>
+      {lijsten.length > 0 && (
+        <label className="utrecht-form-field" style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+          <span className="utrecht-form-label">Lijst</span>
+          <select className="utrecht-select utrecht-select--html-select" value={lijst ? lijstSleutel : "automatisch"} onChange={(e) => kiesLijst(e.target.value)}>
+            {lijsten.map((d) => (
+              <option key={d.id} value={sleutelVan(d)}>{d.meta?.naam || `Lijst ${d.id}`}{d.isStandaard ? " (standaard)" : ""}</option>
+            ))}
+            <option value="automatisch">Automatisch (alle gegevenselementen)</option>
+          </select>
+        </label>
+      )}
       {loading && <div style={{ padding: "0.5rem 0", color: "var(--cg-donkergrijs)" }}>Laden…</div>}
 
       <div style={{ overflowX: "auto" }}>

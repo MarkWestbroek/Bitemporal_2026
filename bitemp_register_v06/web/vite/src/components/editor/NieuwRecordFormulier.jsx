@@ -5,10 +5,11 @@ import { useFormulierDefinities } from "../../hooks/useFormulierDefinitie";
 import RepresentatieFormulier from "./RepresentatieFormulier";
 import NieuwEntiteitPagina from "./NieuwEntiteitPagina";
 import NieuwFormulierPagina from "./NieuwFormulierPagina";
+import { vindDefinitie, sleutelVan } from "../../shared/definitieSleutel";
 
 /**
  * NieuwRecordFormulier — formulier voor het aanmaken van een nieuwe entiteit/representatie.
- * Gerouteerd via /t/:typePad/nieuw (optioneel ?formulier=<FormulierDefinitie-id>).
+ * Gerouteerd via /t/:typePad/nieuw (optioneel ?formulier=<FormulierDefinitie-id of -code>).
  *
  * - Voor entiteiten met onderliggende GEs/relaties: NieuwEntiteitPagina
  *   (één registratie met entiteit + alle onderliggende GEs, net als IndexSchemaPage),
@@ -35,7 +36,7 @@ export default function NieuwRecordFormulier() {
     }).length > 0;
 
   const gekozenId = searchParams.get("formulier") || "";
-  const gekozen = definities.find((d) => String(d.id) === gekozenId) || null;
+  const gekozen = vindDefinitie(definities, gekozenId);
   const kies = (id) => setSearchParams((prev) => {
     const next = new URLSearchParams(prev);
     if (id) next.set("formulier", id); else next.delete("formulier");
@@ -50,10 +51,10 @@ export default function NieuwRecordFormulier() {
       {heeftOnderliggende && definities.length > 0 && (
         <label className="utrecht-form-field" style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "1rem" }}>
           <span className="utrecht-form-label">Invoer via</span>
-          <select className="utrecht-select utrecht-select--html-select" value={gekozen ? String(gekozen.id) : ""} onChange={(e) => kies(e.target.value)}>
+          <select className="utrecht-select utrecht-select--html-select" value={gekozen ? sleutelVan(gekozen) : ""} onChange={(e) => kies(e.target.value)}>
             <option value="">Standaard (alle gegevenselementen)</option>
             {definities.map((d) => (
-              <option key={d.id} value={String(d.id)}>{d.meta?.naam || `Formulier ${d.id}`}{d.isStandaard ? " (standaard)" : ""}</option>
+              <option key={d.id} value={sleutelVan(d)}>{d.meta?.naam || `Formulier ${d.id}`}{d.isStandaard ? " (standaard)" : ""}</option>
             ))}
           </select>
         </label>

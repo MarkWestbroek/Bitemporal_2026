@@ -29,6 +29,7 @@
               "formulierdefinitie_meta": {
                 "formulierdefinitie_id": 2,
                 "naam": "Aanmelding initiatief",
+                "code": "aanmelding-initiatief",
                 "beschrijving": "Aanmeldformulier Common Ground Portfolio (MS Forms, 30 vragen) als formulierdefinitie in nieuw-modus: één registratie voert het initiatief en al zijn gegevens op met aanmeldstatus 'nieuwe_aanmelding'. Vraag 3/4 (parallel, componenten) gaan in de omschrijving; 14/15 (PO en e-mail) en 30 (vragen over het formulier) volgen in stap B.",
                 "doeltype": "Initiatief",
                 "status": "actief",

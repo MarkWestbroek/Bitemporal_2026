@@ -122,15 +122,37 @@ labels. Het zijn dezelfde vormen als in de formulieren, alleen-lezen.
   blijft staan.
 - **Voor Initiatief.** Een eigen WeergaveDefinitie *Initiatief met vormen* (niet standaard):
   `replay files/registraties-replay-init-weergavedefinitie-initiatief-met-vormen-2026-09-27.json`.
+- **Over een lijst heen.** Een pad mag door lijsten lopen; de waarden worden samengevoegd. Zo
+  toont *Organisatie met vormen* via de omgekeerde relatie `gerelateerde_initiatieven` de lagen,
+  gemeenten en fasen van álle initiatieven van de organisatie. `chips` toont elke waarde één keer;
+  met `"count": true` staat het aantal erachter (*Beheer · 4*).
+- **Gemeente als getal.** `nl-map` accepteert de CBS-code ook als getal of cijfers (`344`, `"0344"`
+  → `GM0344`), zoals `Locatie.adres.gemeente` hem opslaat.
+- **Voor Organisatie, NatuurlijkPersoon en Locatie** (27-09), in de stijl van de formulieren:
+  `replay files/registraties-replay-init-weergavedefinities-organisatie-persoon-locatie-2026-09-27.json`.
 
-## Meer weergaven per type: `?weergave=<id>`
+  | Definitie (code) | Standaard | Vormen |
+  |---|---|---|
+  | *Organisatie met vormen* (`organisatie-met-vormen`) | ja | contactpersonen en initiatieven als chips, lagen als plaatje, gemeenten op de kaart, fasen met aantallen, looptijd |
+  | *Persoon met vormen* (`persoon-met-vormen`) | nee, naast WD 1 | naamgebruik als kaarten, aanspreken als knoppen en schakelaar, geslacht, woonadres op de kaart, levensloop als tijdlijn; zonder BSN |
+  | *Locatie met vormen* (`locatie-met-vormen`) | ja | adres, gemeente op de kaart, looptijd |
+
+  **Let op (pf):** `gerelateerde_initiatieven` bevat ook initiatieven die nog niet geaccepteerd
+  zijn. Zet de organisatiepagina niet openbaar zonder een opgeslagen `detailQuery` die filtert.
+
+## Meer weergaven per type: `?weergave=<code of id>`
 
 Zonder parameter toont de publicatiepagina de actieve **standaard**-WeergaveDefinitie van het
-type. Dat is ook wat de embed op commonground.nl krijgt. Met `?weergave=<id>` (querystring
+type. Dat is ook wat de embed op commonground.nl krijgt. Met `?weergave=<code of id>` (querystring
 vóór de `#`, zoals `embed=1`) gebruikt de pagina die definitie, mits actief en voor hetzelfde
 type. Zijn er meer actieve weergaven, dan staat er op lijst en detail een keuzelijst
 *Weergave*, maar niet in de embed. Zo kan een nieuwe weergave live naast de standaard staan,
 zonder de embed te raken.
+
+Gebruik liever de **code** (`WeergaveDefinitie_Meta.code`, bv.
+`publicatie.html?weergave=initiatief-met-vormen#/t/initiatieven/39`) dan het id: de code is op
+elke instantie gelijk, het id niet. De keuzelijst zet de code in de URL als de definitie er een
+heeft; een link met een id blijft werken. Regels en achtergrond: `FORMULIERDEFINITIES.md` §1.1.
 
 ## Markdown die werkt
 
