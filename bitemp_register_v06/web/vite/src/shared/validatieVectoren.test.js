@@ -10,6 +10,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { zetDatatypes, datatypeMelding } from "./datatypeValidatie.js";
 import { beschikbareFuncties } from "../umleditor/validatie/regels.js";
+import { normaliseer } from "../umleditor/validatie/normaliseer.js";
 
 const map = new URL("../../../../testdata/validatie/", import.meta.url);
 const lees = (naam) => JSON.parse(readFileSync(fileURLToPath(new URL(naam, map)), "utf-8"));
@@ -30,6 +31,16 @@ test(`geldig: de voorbeelden uit het model en de vaste gevallen (${geldig.length
 test(`ongeldig (${vectoren.ongeldig.length})`, () => {
   const doorgelaten = vectoren.ongeldig.filter((o) => !datatypeMelding(o.waarde, { datatype: o.datatype }));
   assert.deepEqual(doorgelaten.map((o) => `${o.datatype} ${o.waarde} (${o.waarom})`), []);
+});
+
+test("normalisatie: zelfde uitkomst als de Go-kant (model/normalisatie.go)", () => {
+  const perNaam = Object.fromEntries(datatypes.map((d) => [d.naam, d]));
+  const fout = (vectoren.normalisatie || []).map((n) => {
+    const spec = n.datatype ? perNaam[n.datatype]?.normalisatie : n.spec;
+    const uit = normaliseer(n.waarde, spec || "");
+    return uit === n.verwacht ? null : `${n.spec || n.datatype} ${JSON.stringify(n.waarde)} → ${JSON.stringify(uit)}, verwacht ${JSON.stringify(n.verwacht)}`;
+  }).filter(Boolean);
+  assert.deepEqual(fout, []);
 });
 
 test("elke function-regel uit het model is ook in JS bekend (anders alleen op de server)", () => {

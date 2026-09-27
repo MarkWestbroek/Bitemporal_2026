@@ -7,7 +7,7 @@ type FormulierDefinitie_Meta_Input struct {
 	FORMULIERDEFINITIE_ID int                      `json:"formulierdefinitie_id"`
 	Rel_ID                int                      `json:"rel_id"`
 	Naam                  string                   `json:"naam"`
-	Code                  *string                  `json:"code,omitempty"`
+	Code                  *string                  `json:"code,omitempty" schema:"uniek=entiteit"`
 	Beschrijving          string                   `json:"beschrijving"`
 	Doeltype              string                   `json:"doeltype"`
 	Status                FormulierDefinitieStatus `json:"status" schema:"enum=FormulierDefinitieStatus"`
@@ -25,7 +25,7 @@ type WeergaveDefinitie_Meta_Input struct {
 	WEERGAVEDEFINITIE_ID int                     `json:"weergavedefinitie_id"`
 	Rel_ID               int                     `json:"rel_id"`
 	Naam                 string                  `json:"naam"`
-	Code                 *string                 `json:"code,omitempty"`
+	Code                 *string                 `json:"code,omitempty" schema:"uniek=entiteit"`
 	Beschrijving         string                  `json:"beschrijving"`
 	Doeltype             string                  `json:"doeltype"`
 	Status               WeergaveDefinitieStatus `json:"status" schema:"enum=WeergaveDefinitieStatus"`
@@ -163,7 +163,7 @@ type LijstDefinitie_Meta_Input struct {
 	LIJSTDEFINITIE_ID int                  `json:"lijstdefinitie_id"`
 	Rel_ID            int                  `json:"rel_id"`
 	Naam              string               `json:"naam"`
-	Code              *string              `json:"code,omitempty"`
+	Code              *string              `json:"code,omitempty" schema:"uniek=entiteit"`
 	Beschrijving      string               `json:"beschrijving"`
 	Doeltype          string               `json:"doeltype"`
 	Status            LijstDefinitieStatus `json:"status" schema:"enum=LijstDefinitieStatus"`

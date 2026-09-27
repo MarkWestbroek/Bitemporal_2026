@@ -156,6 +156,8 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 	// In strict-modus → eerste fout = HTTP 422 + rollback. In lenient/warnings-only
 	// → fouten verzamelen en doorgeven via RegistreerResult.Validatie.
 	validatie := valideerWijzigingen(req.Wijzigingen)
+	// Uniekheid (V3Veld.Uniek, registration_uniek.go): dezelfde route als de datatype-validatie.
+	validatie.Fouten = append(validatie.Fouten, controleerUniekheid(ctx, tx, req.Wijzigingen)...)
 	strengheid := audit.Strengheid
 	if strengheid == "" {
 		strengheid = model.StrengheidStrict
@@ -303,6 +305,10 @@ func valideerWijzigingen(wijzigingen []model.WijzigingRequest) model.ValidatieRe
 			continue
 		}
 		pad := fmt.Sprintf("wijzigingen[%d].%s", idx, rep.Veldnaam)
+		// Eerst normaliseren (in plaats): de genormaliseerde vorm wordt gevalideerd én opgeslagen.
+		if w.Opvoer != nil {
+			model.NormaliseerRepresentatie(rep.Representatie)
+		}
 		fouten := model.ValideerRepresentatie(rep.Representatie, pad)
 		for _, f := range fouten {
 			if f.Severity == model.SeverityWarning {

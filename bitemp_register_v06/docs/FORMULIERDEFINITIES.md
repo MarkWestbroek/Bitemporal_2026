@@ -129,6 +129,17 @@ aanmelden. De server controleert hetzelfde (`model/validation.go`, `model/regels
   gevallen. Elk voorbeeld (`validatie.voorbeelden`) in het model telt als geldig geval.
   `testdata/validatie/datatypes.json` is een momentopname van de datatypes voor de JS-test;
   bijwerken met `UPDATE_GOLDEN=1 go test ./model -run TestValidatieDatatypesMomentopname`.
+- **Normaliseren op de server** (sinds 27-09). De normalisatie van het datatype (bv.
+  `uppercase_letters` bij NLPostcode) gebeurt ook op de server, vóór het controleren. De waarde
+  wordt dan zo **opgeslagen**: `1234 ab` → `1234 AB` (`model/normalisatie.go`,
+  `NormaliseerRepresentatie`). De browser toont de genormaliseerde vorm zodra je het veld verlaat.
+  De testset bevat ook normalisatiegevallen.
+- **Validatie-API.** `POST /api/valideer` normaliseert en controleert een waarde (of tot 200
+  tegelijk) volgens een datatype, zonder te registreren. Dat is een vangnet voor clients die een
+  regel niet zelf kunnen uitvoeren; zie `API_REFERENCE.md`.
+- **Uniekheid.** Een veld kan in het model `uniek` zijn: `entiteit`, `domein` of `register`,
+  gecontroleerd tegen de actuele stand. De `code` van formulier-, weergave- en lijstdefinities is
+  uniek binnen de entiteit. Een botsing geeft een 422 met code `uniek`.
 
 ## 3. Widgets
 

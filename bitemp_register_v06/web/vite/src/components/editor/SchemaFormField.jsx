@@ -4,6 +4,7 @@ import RefCombobox from "./RefCombobox";
 import EntiteitCombobox from "./EntiteitCombobox";
 import { useSchema } from "../../context/SchemaContext";
 import CodeEditor, { jsonParseFout } from "./CodeEditor";
+import { normaliseer } from "../../umleditor/validatie/normaliseer.js";
 import VormInvoer, { VORMINVOER } from "./VormInvoer";
 import { normaliseerVorm, vormPastBij, invoersoortVanVeld, effectieveVorm, vormUitDatatype, splitsLijst, voegLijstSamen, INVOERSOORT } from "../../vormen/vormen";
 
@@ -93,8 +94,9 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
     if (soort === INVOERSOORT.MEER_UIT_LIJST) {
       const scheiding = veld.lijstScheiding;
       const sleutels = splitsLijst(value, scheiding);
-      const zet = (nieuw) => onChange(voegLijstSamen(nieuw, scheiding, enumOpties));
       const lijstVorm = effectieveVorm({ vorm, widget: widgetOverride, datatypeWidget: weergave.widget }, veld);
+      // Een rangorde bewaart de gekozen volgorde; anders in de volgorde van het enum.
+      const zet = (nieuw) => onChange(voegLijstSamen(nieuw, scheiding, lijstVorm === "ranking" ? [] : enumOpties));
       if (VORMINVOER.has(lijstVorm)) {
         return <VormInvoer vorm={lijstVorm} veld={veld} config={vormConfig} meervoudig waarde={sleutels} onChange={zet} readOnly={isReadonly} labelId={labelId} />;
       }
@@ -265,6 +267,13 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
         step={step()}
         value={String(value ?? "")}
         onChange={(e) => onChange(e.target.value)}
+        // Bij het verlaten: de genormaliseerde vorm van het datatype tonen ("1234 ab" → "1234 AB"),
+        // zoals de server hem ook opslaat (model/normalisatie.go).
+        onBlur={(e) => {
+          if (!datatypeMeta?.normalisatie || isReadonly) return;
+          const genormaliseerd = normaliseer(e.target.value, datatypeMeta.normalisatie);
+          if (genormaliseerd !== e.target.value) onChange(genormaliseerd);
+        }}
         readOnly={isReadonly}
         disabled={isReadonly}
         aria-invalid={foutmelding ? "true" : undefined}

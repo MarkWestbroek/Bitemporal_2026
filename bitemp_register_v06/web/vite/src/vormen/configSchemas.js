@@ -203,6 +203,41 @@ export const CONFIG_SCHEMAS = {
       },
     },
   },
+  color: {
+    type: "object",
+    properties: { swatches: { type: "array", items: kleur, "x-omschrijving": "vaste kleuren om uit te kiezen" } },
+  },
+  ranking: {
+    type: "object",
+    properties: {
+      max: { type: "number", minimum: 1, "x-omschrijving": "hoeveel er gerangschikt mogen worden (top-N)" },
+      poolLabel: { type: "string" },
+      rankLabel: { type: "string" },
+    },
+  },
+  "tag-input": {
+    type: "object",
+    properties: {
+      placeholder: { type: "string" },
+      max: { type: "number", minimum: 1, "x-omschrijving": "maximaal aantal labels" },
+      separator: { type: "string", minLength: 1, default: ";", "x-omschrijving": "scheidingsteken bij vrije labels in één tekstveld" },
+      accentColor: kleur,
+    },
+  },
+  code: {
+    type: "object",
+    properties: {
+      language: { enum: ["json", "markdown", "yaml", "xml", "sql", "go_code", "tekst"], default: "tekst" },
+      minHeight: { type: "number", minimum: 40 },
+    },
+  },
+  markdown: {
+    type: "object",
+    properties: {
+      preview: { enum: ["tabs", "naast"], default: "tabs", "x-omschrijving": "voorbeeld als tab, of naast de editor" },
+      minHeight: { type: "number", minimum: 40 },
+    },
+  },
   "number-stepper": {
     type: "object",
     properties: {

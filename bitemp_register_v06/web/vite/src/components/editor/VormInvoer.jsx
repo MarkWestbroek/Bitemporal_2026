@@ -11,6 +11,10 @@ import MaskedInvoer from "../../vormen/MaskedInvoer";
 import PartialDateInvoer from "../../vormen/PartialDateInvoer";
 import DurationInvoer from "../../vormen/DurationInvoer";
 import NumberStepper from "../../vormen/NumberStepper";
+import ColorInvoer from "../../vormen/ColorInvoer";
+import TagInvoer from "../../vormen/TagInvoer";
+import RankingKeuze from "../../vormen/RankingKeuze";
+import CodeVeld from "./CodeVeld";
 import { knoppenUitOpties } from "../../vormen/buttonGroup";
 import useRefOpties from "./useRefOpties";
 
@@ -26,15 +30,26 @@ import useRefOpties from "./useRefOpties";
  *        meervoudig, readOnly, labelId
  */
 export const VORMINVOER = new Set(["image-map", "button-group", "cards", "nl-map", "switch", "range", "rotary", "stepper", "chips",
-  "masked", "partial-date", "duration", "number-stepper"]);
+  "masked", "partial-date", "duration", "number-stepper", "color", "tag-input", "code", "markdown", "ranking"]);
 
 /** Vormen zonder keuzebron: ze bedienen tekst, een getal of een datum (uit het datatype). */
-const ZONDER_KEUZEBRON = { "masked": MaskedInvoer, "partial-date": PartialDateInvoer, "duration": DurationInvoer, "number-stepper": NumberStepper };
+const ZONDER_KEUZEBRON = { "masked": MaskedInvoer, "partial-date": PartialDateInvoer, "duration": DurationInvoer, "number-stepper": NumberStepper, "color": ColorInvoer };
 
 export default function VormInvoer({ vorm, veld, config = {}, waarde, onChange, meervoudig = false, readOnly = false, labelId }) {
   if (ZONDER_KEUZEBRON[vorm]) {
     const C = ZONDER_KEUZEBRON[vorm];
     return <C waarde={waarde} onChange={onChange} readOnly={readOnly} labelId={labelId} config={config || {}} />;
+  }
+  if (vorm === "code" || vorm === "markdown") {
+    return <CodeVeld vorm={vorm} waarde={waarde} onChange={onChange} readOnly={readOnly} labelId={labelId} config={config || {}} />;
+  }
+  // tag-input zonder keuzebron: vrije labels. In één tekstveld opgeslagen met een
+  // scheidingsteken (standaard ";"); als lijst (meervoudig) gewoon de sleutels.
+  const heeftBron = (Array.isArray(veld?.enum) && veld.enum.length > 0) || Boolean(veld?.ref);
+  if (vorm === "tag-input" && !heeftBron) {
+    const sep = config?.separator || ";";
+    const lijst = meervoudig ? [].concat(waarde ?? []) : String(waarde ?? "").split(sep).map((s) => s.trim()).filter(Boolean);
+    return <TagInvoer waarde={lijst} onChange={(nieuw) => onChange(meervoudig ? nieuw : nieuw.join(sep))} readOnly={readOnly} labelId={labelId} config={config || {}} />;
   }
   return <VormMetKeuzebron vorm={vorm} veld={veld} config={config} waarde={waarde} onChange={onChange} meervoudig={meervoudig} readOnly={readOnly} labelId={labelId} />;
 }
@@ -71,6 +86,10 @@ function VormMetKeuzebron({ vorm, veld, config = {}, waarde, onChange, meervoudi
       return <CardsKeuze items={items} config={cfg} {...gemeenschappelijk} />;
     case "nl-map":
       return <NlMapKeuze items={readOnly ? items.filter((i) => [].concat(waarde ?? []).map(String).includes(i.value)) : items} config={cfg} {...gemeenschappelijk} />;
+    case "ranking":
+      return <RankingKeuze items={items} config={cfg} waarde={[].concat(waarde ?? [])} onChange={onChange} readOnly={readOnly} labelId={labelId} />;
+    case "tag-input":
+      return <TagInvoer items={items} config={cfg} waarde={[].concat(waarde ?? [])} onChange={onChange} readOnly={readOnly} labelId={labelId} />;
     case "stepper":
       return <StepperKeuze items={items} config={cfg} waarde={waarde} onChange={onChange} readOnly={readOnly} labelId={labelId} />;
     case "chips": {

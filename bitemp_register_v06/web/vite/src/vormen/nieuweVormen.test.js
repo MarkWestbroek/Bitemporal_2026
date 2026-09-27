@@ -82,3 +82,31 @@ test("vorm uit het datatype: DatumIncompleet en Duur krijgen hun vorm vanzelf; e
   assert.equal(vormUitDatatype({ naam: "X", weergave: { widget: "color" } }), "color");
   assert.equal(vormUitDatatype(null), null);
 });
+
+test("color, tag-input, code en markdown: register en config", async () => {
+  const { naarNativeKleur } = await import("./kleur.js");
+  assert.equal(naarNativeKleur("#abc"), "#aabbcc");
+  assert.equal(naarNativeKleur("#11223344"), "#112233");
+  assert.equal(naarNativeKleur("rood"), null);
+  assert.ok(vormPastBij("color", INVOERSOORT.TEKST));
+  assert.ok(vormPastBij("tag-input", INVOERSOORT.MEER_UIT_LIJST));
+  assert.ok(vormPastBij("tag-input", INVOERSOORT.TEKST));
+  assert.ok(vormPastBij("code", INVOERSOORT.TEKST));
+  assert.deepEqual(valideerVormConfig("color", { swatches: ["#60a5fa", "#6366f1", "#22d3ee"] }), []);
+  assert.notDeepEqual(valideerVormConfig("color", { swatches: ["blauw"] }), []);
+  assert.deepEqual(valideerVormConfig("tag-input", { max: 5, separator: ";" }), []);
+  assert.deepEqual(valideerVormConfig("code", { language: "yaml" }), []);
+  assert.notDeepEqual(valideerVormConfig("code", { language: "cobol" }), []);
+  assert.deepEqual(valideerVormConfig("markdown", { preview: "naast" }), []);
+  assert.equal(vormUitDatatype({ naam: "Kleur", weergave: { widget: "color" } }), "color");
+});
+
+test("ranking bewaart de volgorde in één veld; colour is een alias van color", async () => {
+  const { voegLijstSamen, normaliseerVorm } = await import("./vormen.js");
+  assert.ok(vormPastBij("ranking", INVOERSOORT.MEER_UIT_LIJST));
+  assert.equal(voegLijstSamen(["Regie", "Wendbaarheid"], ";", []), "Regie;Wendbaarheid"); // rangorde: volgorde blijft
+  assert.equal(voegLijstSamen(["Regie", "Wendbaarheid"], ";", ["Wendbaarheid", "Regie"]), "Wendbaarheid;Regie"); // gewoon: enumvolgorde
+  assert.equal(normaliseerVorm("colour"), "color");
+  assert.ok(vormPastBij("colour", INVOERSOORT.TEKST));
+  assert.deepEqual(valideerVormConfig("ranking", { max: 3 }), []);
+});

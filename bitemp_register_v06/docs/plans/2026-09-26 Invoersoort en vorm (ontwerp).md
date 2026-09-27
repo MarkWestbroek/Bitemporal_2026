@@ -108,7 +108,7 @@ Nog open uit de brainstorm hierboven:
 |---|---|---|
 | `ai-assist` (tekst herschrijven, inkorten, aanvullen) | Mark | keuze AI-dienst en AVG (§9c vraag 2) |
 | `ai-extract` (plak tekst of URL, AI vult het formulier voor) | Claude | idem |
-| `ranking` (volgorde uit een lijst) | Claude | een GE met een volgnummerveld (§9c vraag 3) |
+| `ranking` (volgorde uit een lijst) | Claude | **gebouwd** (27-09) als vorm: toevoegen, slepen, ↑↓; opslag in één veld in de gekozen volgorde (`voegLijstSamen` zonder hersortering). Een GE met een volgnummerveld voor rijen is er nog niet |
 | `map` (gebieden op een echte kaart, GeoJSON) | Claude | deels gedekt door `nl-map` (gemeenten als stip) |
 | `file-drop` (sleepvak voor bestanden) | Claude | datatype `Bestand` bestaat al (uuid); upload-endpoint nodig |
 | ~~getal-stepper (+/−)~~ | Claude | **gebouwd** als `number-stepper` (27-09); `stepper` blijft de stappenbalk |
@@ -119,13 +119,13 @@ inhoud):
 | Vorm | Datatype | Idee |
 |---|---|---|
 | `masked` | `weergave.inputMask` (NLPostcode `0000 AA`, BSN) | **gebouwd** (27-09): invoermasker uit het datatype |
-| `color` | `Kleur` | kleurkiezer met hex-invoer |
+| `color` | `Kleur` | **gebouwd** (27-09): kleurkiezer met hex-invoer en stalen |
 | `duration` | `Duur` (ISO 8601) | **gebouwd** (27-09): jaren, maanden, dagen, uren als losse velden, opgeslagen als `P1Y2M` |
 | `partial-date` | `DatumIncompleet` (`1975`, `1975-06`) | **gebouwd** (27-09): jaar, maand en dag, elk "onbekend" mogelijk |
 | `geo-point` | `GeoPunt` | punt kiezen op een kaart |
 | `geo-draw` | `GeoLijn`, `GeoVlak` | lijn of vlak tekenen |
-| `tag-input` | referentielijst (Trefwoord) | vrije chips met aanvullen, eventueel nieuw item aanmaken |
-| `markdown` / `code` | tekst (`template_tekst`, `layout_json`) | editor met voorbeeld; bestaat als widget, nog niet als vorm |
+| `tag-input` | referentielijst (Trefwoord) | **gebouwd** (27-09): labels met aanvullen; vrije labels in een tekstveld; een nieuw referentielijst-item aanmaken nog niet |
+| `markdown` / `code` | tekst (`template_tekst`, `layout_json`) | **gebouwd** (27-09): vormen, markdown met tab *Voorbeeld* |
 
 ### 4.2 Wat de brainstorm zegt over het model
 
@@ -386,6 +386,10 @@ Dit is het "vormconfiguratietype" uit §9b, voorlopig in code.
 | `partial-date` | tekst, datum | invoer + weergave | onvolledige datum (`datumIncompleet.js`); dag, maand, jaar met "onbekend"; opslag `1975-06` of met `unknownStyle: "nullen"` `1975-06-00`; **vanzelf** voor datatype `DatumIncompleet` |
 | `duration` | tekst | invoer + weergave | tijdsduur (`duur.js`); losse getallen per eenheid (`units`), opslag ISO 8601; **vanzelf** voor datatype `Duur` |
 | `number-stepper` | getal | invoer + weergave | − en + binnen `min`/`max`, met `step` en `unit` |
+| `color` | tekst | invoer + weergave | native kleurkiezer + hexveld + `swatches`; **vanzelf** voor datatype `Kleur` (weergave-hint `color`); `kleur.js` |
+| `tag-input` | meer uit een lijst, tekst | invoer + weergave | labels in het veld op downshift (`useMultipleSelection` + `useCombobox`); met keuzebron kiezen, zonder vrije labels (`separator`, standaard `;`); `max` |
+| `markdown` | tekst | invoer + weergave | code-editor (Prism) met tabs *Bewerken* / *Voorbeeld*, of `preview: "naast"`; het voorbeeld gebruikt dezelfde renderer als de publicatiepagina (`publicatie/markdown.js`, verhuisd uit PublicatieDetail); Omnium-kant: `components/editor/CodeVeld.jsx` |
+| `code` | tekst | invoer + weergave | code-editor met `language` (json, yaml, xml, sql, go_code, tekst) |
 
 **Opbouw:**
 - **Vormen zonder Omnium-kennis.** Alle vormen staan in `src/vormen/`, zonder SchemaContext
@@ -732,11 +736,29 @@ Mijn lezing:
 
 De testset (`testdata/validatie`) is de maatstaf: welke taal haalt hem in de meeste omgevingen.
 
+**Gebouwd (27-09, tweede ronde):**
+- **Normaliseren op de server** (`model/normalisatie.go`): vóór het controleren, en zo opgeslagen.
+- **Validatie-API** (`POST /api/valideer`).
+- **Uniekheid** (hieronder). CEL (punt 1) volgt.
+
 ### Uniekheid
 
-UML `{unique}` als eigenschap van het veld, met een bereik: binnen de entiteit, binnen het
-domein, of globaal. Bitemporeel is er nog een as: uniek op elk formeel moment, of alleen in de
-actuele stand. Zie BACKLOG §34.
+UML `{unique}` als eigenschap van het veld: **`V3Veld.uniek`** (gebouwd 27-09). Drie bereiken:
+- `entiteit`: onder alle exemplaren van het type, bv. de `code` van een FormulierDefinitie;
+- `domein`: over alle velden met `uniek=domein` in het domein;
+- `register`: over alle velden met `uniek=register`.
+
+Gecontroleerd bij registratie tegen de **actuele stand** (data, hub en entiteit niet afgevoerd).
+Een nieuwe versie van hetzelfde record botst niet met zichzelf, en waarden binnen één
+registratie worden ook onderling vergeleken. Code: `handlers/registration_uniek.go`. Codegen
+schrijft `schema:"uniek=…"`, de V3-exporter leest het terug, en codegen weigert een onbekend
+bereik.
+
+Nog niet:
+- de tweede tijdas: uniek op elk formeel moment;
+- uniek **over registers heen**. Mark (27-09): als er een centraal formulierregister komt voor
+  de uitwisseling tussen klanten, blijft "uniek binnen dit register" gelden, en komt de centrale
+  uniekheid daar.
 
 ### Verplichte velden die niet in het formulier staan
 

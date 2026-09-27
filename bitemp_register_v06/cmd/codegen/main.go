@@ -643,6 +643,9 @@ func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 				if !isIdentifierLike(veld.Naam) {
 					errs = append(errs, fmt.Sprintf("%s.naam '%s' is ongeldig; gebruik letters/cijfers/underscore (bijv. voorletters)", vctx, veld.Naam))
 				}
+				if veld.Uniek != "" && veld.Uniek != "entiteit" && veld.Uniek != "domein" && veld.Uniek != "register" {
+					errs = append(errs, fmt.Sprintf("%s.uniek '%s' is ongeldig; gebruik 'entiteit', 'domein' of 'register'", vctx, veld.Uniek))
+				}
 			}
 		}
 
@@ -664,6 +667,9 @@ func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 				vctx := fmt.Sprintf("%s.velden[%d]", rctx, k)
 				if !isIdentifierLike(veld.Naam) {
 					errs = append(errs, fmt.Sprintf("%s.naam '%s' is ongeldig; gebruik letters/cijfers/underscore", vctx, veld.Naam))
+				}
+				if veld.Uniek != "" && veld.Uniek != "entiteit" && veld.Uniek != "domein" && veld.Uniek != "register" {
+					errs = append(errs, fmt.Sprintf("%s.uniek '%s' is ongeldig; gebruik 'entiteit', 'domein' of 'register'", vctx, veld.Uniek))
 				}
 			}
 		}

@@ -106,7 +106,7 @@ type FormulierDefinitie_Meta_Data struct {
 	Rel_ID                int                      `json:"rel_id" bun:"rel_id,pk"`
 	Versie                int64                    `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam                  string                   `json:"naam"`
-	Code                  *string                  `json:"code,omitempty"`
+	Code                  *string                  `json:"code,omitempty" schema:"uniek=entiteit"`
 	Beschrijving          string                   `json:"beschrijving"`
 	Doeltype              string                   `json:"doeltype"`
 	Status                FormulierDefinitieStatus `json:"status" schema:"enum=FormulierDefinitieStatus"`
@@ -156,7 +156,7 @@ type WeergaveDefinitie_Meta_Data struct {
 	Rel_ID               int                     `json:"rel_id" bun:"rel_id,pk"`
 	Versie               int64                   `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam                 string                  `json:"naam"`
-	Code                 *string                 `json:"code,omitempty"`
+	Code                 *string                 `json:"code,omitempty" schema:"uniek=entiteit"`
 	Beschrijving         string                  `json:"beschrijving"`
 	Doeltype             string                  `json:"doeltype"`
 	Status               WeergaveDefinitieStatus `json:"status" schema:"enum=WeergaveDefinitieStatus"`
@@ -726,7 +726,7 @@ type LijstDefinitie_Meta_Data struct {
 	Rel_ID            int                  `json:"rel_id" bun:"rel_id,pk"`
 	Versie            int64                `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam              string               `json:"naam"`
-	Code              *string              `json:"code,omitempty"`
+	Code              *string              `json:"code,omitempty" schema:"uniek=entiteit"`
 	Beschrijving      string               `json:"beschrijving"`
 	Doeltype          string               `json:"doeltype"`
 	Status            LijstDefinitieStatus `json:"status" schema:"enum=LijstDefinitieStatus"`

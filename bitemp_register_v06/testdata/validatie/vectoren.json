@@ -15,7 +15,16 @@
     { "datatype": "Kleur", "waarde": "#ggg", "waarom": "patroon" },
     { "datatype": "Versie", "waarde": "1", "waarom": "patroon m.n" }
   ],
+  "normalisatie": [
+    { "spec": "uppercase_letters", "waarde": "1234 ab", "verwacht": "1234 AB" },
+    { "spec": "trim,uppercase", "waarde": "  nl91abna0417164300 ", "verwacht": "NL91ABNA0417164300" },
+    { "spec": "strip_spaces,strip_dashes", "waarde": "AB - 12 - 34", "verwacht": "AB1234" },
+    { "spec": "lowercase", "waarde": "Naam@Example.COM", "verwacht": "naam@example.com" },
+    { "spec": "onbekend,trim", "waarde": " x ", "verwacht": "x" },
+    { "datatype": "NLPostcode", "waarde": "1234 ab", "verwacht": "1234 AB" }
+  ],
   "geldig": [
+    { "datatype": "NLPostcode", "waarde": "1234 ab", "waarom": "geldig na normalisatie" },
     { "datatype": "Percentage", "waarde": "50" },
     { "datatype": "Percentage", "waarde": "0" },
     { "datatype": "Versie", "waarde": "2.1.3" }

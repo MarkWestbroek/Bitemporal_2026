@@ -318,6 +318,17 @@ verwijzende entiteiten aan zonder `max-id`-roundtrips:
 - Gebruikt door de FormulierDefinitie in nieuw-modus (`web/vite/src/components/editor/NieuwFormulierPagina.jsx`)
   en `veld.nieuwFormulier` (nieuwe doel-ENT vanuit een relatieveld).
 
+### `POST /api/valideer` en `GET /api/valideer/functies`
+- **Handler**: `handlers.MaakValideerHandler()` / `MaakValideerFunctiesHandler()` (`validatie_api_handler.go`)
+- **Description**: normaliseert en controleert een waarde volgens een V3Datatype, met dezelfde code
+  als een registratie (`model.NormaliseerWaarde`, `model.ValideerWaarde`). Er wordt niets
+  geregistreerd; anoniem toegankelijk.
+- **Body**: `{ "datatype": "BSN", "waarde": "123456789" }`, of `{ "items": [ { "datatype", "waarde", "veld" }, … ] }` (maximaal 200)
+- **Response**: `{ datatype, bekend, geldig, genormaliseerd, fouten: [ { code, bericht, … } ] }`; bij
+  `items`: `{ geldig, items: [ … ] }`. Een onbekend datatype geeft `bekend: false` en is geldig.
+- **`/functies`**: de benoemde validatiefuncties, de normalisaties en de regeltypen die deze
+  server kent.
+
 ### `POST /aanmelding/:formulierId`
 - **Handler**: `handlers.MaakAanmeldingHandler()` (`aanmelding_handler.go`)
 - **Description**: **Openbare indiening** van een FormulierDefinitie in nieuw-modus (aanmeldformulier,

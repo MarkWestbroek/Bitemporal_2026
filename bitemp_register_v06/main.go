@@ -161,6 +161,9 @@ func NewRouter() *gin.Engine {
 	router.GET("/docs/*filepath", handlers.DocsPage)
 	router.GET("/api/viz/schema", handlers.MaakVizSchemaHandler())
 	router.GET("/api/viz/schema/datatypes", handlers.MaakVizSchemaDatatypesHandler())
+	// Validatie-API (handlers/validatie_api_handler.go): normaliseren + controleren volgens een datatype.
+	router.POST("/api/valideer", handlers.MaakValideerHandler())
+	router.GET("/api/valideer/functies", handlers.MaakValideerFunctiesHandler())
 	// max-id en secondaire-ids lezen registerdata: achter de leesguard (LEESTOEGANG, zie
 	// middleware/leestoegang.go). Schema en reflijst-opties zijn metadata/naslag en blijven open.
 	router.GET("/api/viz/entiteit/:typenaam/max-id", middleware.RequireLezer(), handlers.MaakVizEntiteitMaxIDHandler())

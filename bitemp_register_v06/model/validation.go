@@ -142,7 +142,8 @@ func ValideerWaarde(datatypeNaam string, waarde any, pad string) []ValidatieFout
 	if !ok {
 		return nil // onbekend datatype = best effort, geen fout
 	}
-	str := waardeAlsString(waarde)
+	// Eerst normaliseren (V3Datatype.Normalisatie), zoals de browser: "1234 ab" → "1234 AB".
+	str := Normaliseer(waardeAlsString(waarde), dt.Normalisatie)
 	if str == "" {
 		return nil
 	}
@@ -196,6 +197,9 @@ func ValideerWaarde(datatypeNaam string, waarde any, pad string) []ValidatieFout
 
 	return fouten
 }
+
+// WaardeAlsString: exporteerbare variant van waardeAlsString (voor de validatie-API).
+func WaardeAlsString(waarde any) string { return waardeAlsString(waarde) }
 
 // waardeAlsString converteert een any naar een geschikte string-representatie
 // voor validatie. Pointer-types worden gederefereerd.

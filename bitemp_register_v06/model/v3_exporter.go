@@ -177,6 +177,7 @@ func extractContentFields(meta TypeMeta) []V3Veld {
 		schemaTag := ParseSchemaTag(f.Tag.Get("schema"))
 		veld.Datatype = schemaTag.Datatype
 		veld.Ref = schemaTag.Ref
+		veld.Uniek = schemaTag.Uniek
 		desc := strings.TrimSpace(f.Tag.Get("schema_desc"))
 		if desc != "" {
 			veld.Description = desc

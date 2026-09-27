@@ -214,6 +214,9 @@ func contentField(v model.V3Veld) StructField {
 	if v.Datatype != "" {
 		schemaParts = append(schemaParts, fmt.Sprintf("datatype:%s", v.Datatype))
 	}
+	if v.Uniek != "" {
+		schemaParts = append(schemaParts, fmt.Sprintf("uniek=%s", v.Uniek))
+	}
 	if v.Ref != "" {
 		schemaParts = append(schemaParts, fmt.Sprintf("ref:%s", v.Ref))
 	}
@@ -298,6 +301,9 @@ func inputContentField(v model.V3Veld) StructField {
 	}
 	if v.Datatype != "" {
 		schemaParts = append(schemaParts, fmt.Sprintf("datatype:%s", v.Datatype))
+	}
+	if v.Uniek != "" {
+		schemaParts = append(schemaParts, fmt.Sprintf("uniek=%s", v.Uniek))
 	}
 	if len(schemaParts) > 0 {
 		tags += fmt.Sprintf(` schema:"%s"`, strings.Join(schemaParts, ","))

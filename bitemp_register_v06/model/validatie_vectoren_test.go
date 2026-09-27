@@ -27,9 +27,17 @@ type validatieVector struct {
 	Waarom   string `json:"waarom,omitempty"`
 }
 
+type normalisatieVector struct {
+	Spec     string `json:"spec"`
+	Datatype string `json:"datatype"`
+	Waarde   string `json:"waarde"`
+	Verwacht string `json:"verwacht"`
+}
+
 type validatieVectoren struct {
-	Ongeldig []validatieVector `json:"ongeldig"`
-	Geldig   []validatieVector `json:"geldig"`
+	Ongeldig     []validatieVector    `json:"ongeldig"`
+	Geldig       []validatieVector    `json:"geldig"`
+	Normalisatie []normalisatieVector `json:"normalisatie"`
 }
 
 // datatypeMomentopname: alleen wat een evaluator nodig heeft.
@@ -113,5 +121,14 @@ func TestValidatieVectoren(t *testing.T) {
 			t.Errorf("%s %q hoort ongeldig te zijn (%s)", o.Datatype, o.Waarde, o.Waarom)
 		}
 	}
-	t.Logf("%d geldige en %d ongeldige gevallen", len(geldig), len(v.Ongeldig))
+	for _, n := range v.Normalisatie {
+		got := Normaliseer(n.Waarde, n.Spec)
+		if n.Datatype != "" {
+			got = NormaliseerWaarde(n.Datatype, n.Waarde)
+		}
+		if got != n.Verwacht {
+			t.Errorf("normalisatie %q/%q van %q = %q, verwacht %q", n.Spec, n.Datatype, n.Waarde, got, n.Verwacht)
+		}
+	}
+	t.Logf("%d geldige, %d ongeldige en %d normalisatiegevallen", len(geldig), len(v.Ongeldig), len(v.Normalisatie))
 }

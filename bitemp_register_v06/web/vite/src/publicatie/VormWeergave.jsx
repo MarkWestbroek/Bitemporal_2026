@@ -15,6 +15,9 @@ import MaskedInvoer from "../vormen/MaskedInvoer";
 import PartialDateInvoer from "../vormen/PartialDateInvoer";
 import DurationInvoer from "../vormen/DurationInvoer";
 import NumberStepper from "../vormen/NumberStepper";
+import ColorInvoer from "../vormen/ColorInvoer";
+import RankingKeuze from "../vormen/RankingKeuze";
+import { markdownNaarHtml } from "./markdown.js";
 import { ruweWaarde, alsSleutels, cbsGemeentecode, telSleutels } from "./vormBlokken";
 
 /**
@@ -62,6 +65,17 @@ export default function VormWeergave({ blok, ctx }) {
       const items = config.options ? opties(config.options) : undefined;
       return <div style={stijl}><C items={items} config={config} waarde={sleutels[0] ?? ""} readOnly onChange={niets} /></div>;
     }
+    case "color":
+      return <div style={stijl}><ColorInvoer waarde={sleutels[0] ?? ""} readOnly onChange={niets} /></div>;
+    case "ranking":
+      return <div style={stijl}><RankingKeuze items={sleutels.map((s) => ({ value: s, label: config.labels?.[s] || s }))} waarde={sleutels} readOnly /></div>;
+    case "tag-input":
+      return <div style={stijl}><ChipsWeergave items={telSleutels(sleutels).map(({ sleutel }) => ({ value: sleutel, label: config.labels?.[sleutel] || sleutel }))} config={config} /></div>;
+    case "markdown":
+      // Markdown uit een veld (bv. een toelichting) als opgemaakte tekst, met dezelfde renderer.
+      return <div style={stijl} dangerouslySetInnerHTML={{ __html: markdownNaarHtml(String(Array.isArray(waarde) ? waarde.join("\n\n") : waarde ?? "")) }} />;
+    case "code":
+      return <pre style={{ ...stijl, padding: "0.5rem 0.75rem", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 6, overflowX: "auto" }}>{String(waarde ?? "")}</pre>;
     case "masked":
     case "partial-date":
     case "duration":

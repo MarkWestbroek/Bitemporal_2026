@@ -65,7 +65,8 @@ export const VORMEN = Object.freeze({
   "text-input":     v("Invoerveld", [TEKST, GETAL, DATUM], "input", "Eén regel tekst, een getal of een datum."),
   "text-area":      v("Tekstvak", [TEKST], "textarea", "Meerdere regels tekst."),
   "json":           v("JSON-editor", [TEKST], "textarea (eigen)", "Code-editor met JSON-controle."),
-  "markdown":       v("Markdown-editor", [TEKST], "textarea (eigen)", "Code-editor voor markdown."),
+  "markdown":       v("Markdown-editor", [TEKST], "textarea (eigen)", "Code-editor voor markdown, met een voorbeeld (zelfde weergave als de publicatiepagina).", { naam: "markdown" }),
+  "code":           v("Code-editor", [TEKST], "textarea (eigen)", "Code met syntaxkleuring; de taal via language (json, yaml, xml, sql, …).", { naam: "code" }),
   "select":         v("Keuzelijst", [EEN_UIT_LIJST, JA_NEE], 'appearance="minimal"', "Uitklaplijst."),
   "radio-group":    v("Keuzerondjes", [EEN_UIT_LIJST, JA_NEE], 'appearance="full"', "Alle opties zichtbaar, één kiezen."),
   "checkbox-group": v("Vinkjes", [MEER_UIT_LIJST], 'appearance="full"', "Alle opties zichtbaar, meerdere kiezen."),
@@ -88,6 +89,9 @@ export const VORMEN = Object.freeze({
   "masked":         v("Invoermasker", [TEKST], "input (masker)", "Invoer volgens een masker (postcode 0000 AA); letterlijke tekens verschijnen vanzelf.", { naam: "masked" }),
   "partial-date":   v("Onvolledige datum", [TEKST, DATUM], "group (eigen)", "Jaar, maand en dag; maand en dag mogen onbekend zijn (DatumIncompleet).", { naam: "partial-date" }),
   "duration":       v("Tijdsduur", [TEKST], "group (eigen)", "Jaren, maanden, dagen … als losse getallen; opgeslagen als ISO 8601 (P1Y2M).", { naam: "duration" }),
+  "color":          v("Kleur", [TEKST], "input (kleur)", "Kleurkiezer met hexcode en eventueel vaste stalen; vanzelf voor datatype Kleur.", { naam: "color" }),
+  "ranking":        v("Rangorde", [MEER_UIT_LIJST], "select (geordend)", "Een volgorde uit een lijst: toevoegen, slepen of ↑↓. De opslag bewaart de volgorde.", { naam: "ranking" }),
+  "tag-input":      v("Labels invoeren", [MEER_UIT_LIJST, TEKST], 'appearance="minimal" + labels', "Gekozen waarden als labels in het veld; typen om aan te vullen. Zonder lijst: vrije labels.", { naam: "tag-input" }),
   "number-stepper": v("Plus-min", [GETAL], "range (knoppen)", "Een getal met − en + knoppen, binnen min en max.", { naam: "number-stepper" }),
 });
 
@@ -126,6 +130,7 @@ const WIDGET_ALIAS = Object.freeze({
   textarea: "text-area",
   json: "json",
   markdown: "markdown",
+  colour: "color", // Brits Engels mag ook; de vormnaam volgt HTML/CSS (input type="color")
 });
 
 /** Vormnaam normaliseren: oude widget-namen worden vormnamen; onbekend blijft onbekend. */
