@@ -20,6 +20,18 @@ modelleer-assistentie in de Studio.
   - **Toegangscode**: de browser praat met de proxy op deze server, die de sleutel van de
     eigenaar gebruikt. Zo kan de eigenaar anderen laten proberen zonder zijn sleutel weg te
     geven.
+- **Diensten in het paneel:**
+  - Claude, DeepSeek;
+  - **Alibaba Model Studio** (OpenAI-compatibel; het endpoint hangt af van regio en workspace,
+    bv. `https://<WorkspaceId>.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions`,
+    en een sleutel werkt alleen in zijn eigen regio);
+  - **"andere OpenAI-compatibele dienst"** met een eigen endpoint (alleen https);
+  - de Omnium-server (toegangscode).
+
+  Weigert een dienst aanroepen vanuit de browser (CORS), dan meldt het paneel dat. De oplossing
+  is die dienst achter de proxy te zetten (`AI_UPSTREAM_URL`) en een toegangscode te gebruiken.
+  **GitHub Models** kan niet: GitHub heeft die dienst per 30 juli 2026 stopgezet, en een
+  Copilot-abonnement heeft geen API-sleutel voor eigen apps.
 - **Productie later anders.** Voor het officiële domein komt er een lokale LLM, of een
   Nederlands of Europees initiatief als de voorwaarden in orde zijn.
 
@@ -44,6 +56,9 @@ modelleer-assistentie in de Studio.
 
 ## De vorm in een formulier
 
+**Proberen:** replay `registraties-replay-init-formulierdefinitie-voorbeeld-ai-assist-2026-09-28.json`
+(code `voorbeeld-ai-assist`), dan `inhoud.html#/t/initiatieven/nieuw?formulier=voorbeeld-ai-assist`.
+
 ```json
 { "type": "veld", "veld": "toelichting", "label": "Toelichting", "vorm": "ai-assist",
   "vormConfig": { "formulier": "Aanmelding initiatief", "acties": ["korter", "helder", "spelling"] } }
@@ -64,7 +79,10 @@ modelleer-assistentie in de Studio.
 
 De nginx van de frontend stuurt `/ai/…` al door naar de API; Caddy hoeft niet te veranderen.
 
-**Codes beheren (als admin, bv. met curl en een admin-sessie):**
+**Codes beheren** kan in Omnium Studio, activiteit **AI-toegang** onder *beheer*
+(`studio/activities/aiToegangActivity.jsx`): aanmaken met naam, looptijd en daglimieten, de code
+één keer zien en kopiëren, het verbruik van vandaag bekijken, en intrekken. Onder water zijn dat
+de volgende admin-endpoints:
 
 ```text
 POST   /api/ai/codes           {"naam": "Collega X", "dagen": 14, "perDag": 100, "maxTokensPerDag": 200000}
@@ -94,4 +112,3 @@ DELETE /api/ai/codes/Collega%20X   intrekken (werkt meteen)
 - **Claude via de proxy.** Die komt met de Go-SDK, niet via een OpenAI-compatibele omweg.
 - **`ai-extract`:** een formulier voorinvullen uit een tekst of URL.
 - **Modelleer-assistentie** in de Studio.
-- **Een beheerscherm voor codes.** Nu gaat dat via de API.

@@ -45,3 +45,18 @@ test("profielen: bewaren, actief, endpoint; zonder sleutel niet actief", () => {
   assert.deepEqual(leesInstellingen(opslag), { actief: "", profielen: [] });
   assert.deepEqual(leesInstellingen({ getItem: () => { throw new Error("geblokkeerd"); } }), { actief: "", profielen: [] });
 });
+
+test("profielen met een eigen endpoint (Alibaba, andere OpenAI-compatibele dienst)", () => {
+  let inst = { actief: "", profielen: [] };
+  inst = zetProfiel(inst, "alibaba", { sleutel: "sk-ali" });
+  assert.equal(actiefProfiel(inst), null, "zonder endpoint niet ingesteld");
+  inst = zetProfiel(inst, "alibaba", { sleutel: "sk-ali", endpoint: "http://onveilig/v1/chat/completions" });
+  assert.equal(actiefProfiel(inst), null, "alleen https");
+  inst = zetProfiel(inst, "alibaba", { sleutel: "sk-ali", endpoint: "https://ws1.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions" });
+  const p = actiefProfiel(inst);
+  assert.equal(p.model, "qwen-plus");
+  assert.equal(endpointVoor(p, "http://localhost:8082"), "https://ws1.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions");
+  // een vast endpoint (DeepSeek) is niet te overschrijven
+  const ds = actiefProfiel(zetProfiel(inst, "deepseek", { sleutel: "sk-ds", endpoint: "https://elders.example/x" }));
+  assert.equal(ds.endpoint, "https://api.deepseek.com/chat/completions");
+});

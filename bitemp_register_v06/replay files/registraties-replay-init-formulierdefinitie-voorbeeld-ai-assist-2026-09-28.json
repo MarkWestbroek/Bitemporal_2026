@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-28T09:00:00Z",
+  "source": "manual://claude-ai-assist",
+  "description": "Voorbeeld-FD 'Voorbeeld: AI-assistent' (code voorbeeld-ai-assist, doeltype Initiatief): productnaam, type, lagen, en omschrijving en pitch met de vorm ai-assist. Actief, niet standaard, niet openbaar (op het aanmeldformulier staat AI uit). Id als plaatshouder. Proberen: inhoud.html#/t/initiatieven/nieuw?formulier=voorbeeld-ai-assist. Zie docs/AI_ASSISTENT.md.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-28T09:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "FormulierDefinitie 'Voorbeeld: AI-assistent'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "FormulierDefinitie 'Voorbeeld: AI-assistent'"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "formulierdefinitie": {
+                "id": "$nieuw.fd"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "naam": "Voorbeeld: AI-assistent",
+                "code": "voorbeeld-ai-assist",
+                "beschrijving": "Proefformulier voor de vorm ai-assist: omschrijving en pitch met ✨ AI (voorstel, de invuller beslist).",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "layout": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "layout_json": "{\"type\": \"formulier\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.producten.naam\", \"label\": \"Naam van het product\"}, {\"type\": \"rij\", \"elementen\": [{\"type\": \"veld\", \"veld\": \"Initiatief.producten.type\", \"label\": \"Type\", \"breedte\": \"50%\"}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.CG_laag\", \"label\": \"Common Ground-lagen\", \"breedte\": \"50%\"}]}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.omschrijving\", \"label\": \"Korte omschrijving\", \"vorm\": \"ai-assist\", \"beschrijving\": \"Probeer ✨ AI: Korter, Helderder, of een eigen opdracht.\", \"vormConfig\": {\"formulier\": \"Voorbeeld: AI-assistent\", \"rows\": 5}}, {\"type\": \"veld\", \"veld\": \"Initiatief.producten.pitch\", \"label\": \"Pitch (één alinea)\", \"vorm\": \"ai-assist\", \"vormConfig\": {\"formulier\": \"Voorbeeld: AI-assistent\", \"acties\": [\"korter\", \"zakelijk\", \"spelling\"], \"rows\": 4}}]}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_aanvang": {
+                "formulierdefinitie_id": "$nieuw.fd",
+                "datum": "2026-09-28"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}

@@ -478,6 +478,30 @@ anders optie). Een snapshot is een noodrem, geen backup.
     `/viz/react/aanmelden.html?formulier=4`. Verzenden kan alleen ingelogd
     (`inhoud.html#/t/initiatieven/nieuw?formulier=4`), want FD 4 is niet openbaar.
 
+
+  **Negende ronde 27-09-2026 (code, validatie, LijstDefinitie, vormen, AI; `c02aba39`)**:
+  - **Dump** vooraf: `/srv/omnium-pf/predeploy-20260927-2152.sql.gz`. Daarna `pf.sh deploy`.
+  - **Resultaat:** alle containers healthy.
+    - De API voegde bij het opstarten zelf de kolommen `code` toe
+      (`formulierdefinitie_meta_data`, `weergavedefinitie_meta_data`; `ensureNieuweKolommen`), en
+      maakte de tabellen voor LijstDefinitie.
+    - Nieuwe endpoints: `POST /api/valideer`, `/full/lijst_definities`.
+    - De AI-proxy staat uit (503) zolang `AI_UPSTREAM_KEY` leeg is.
+  - **De iframe** (standaardweergave WD 2) is ongewijzigd: de lijst met 25 rijen zonder
+    keuzelijst, en detail 38 met tabel en links (gecontroleerd met Playwright).
+  - **Nog niet afgespeeld** op pf:
+    - de codes voor bestaande definities (`scripts/geef_definities_code.py --bron
+      https://pf.common-ground-lab.nl`, daarna `speel_replay_af.py`);
+    - de lijstdefinities;
+    - de weergaven voor Organisatie, Persoon en Locatie. De organisatiepagina toont via
+      `gerelateerde_initiatieven` ook niet-geaccepteerde aanmeldingen; niet openbaar zetten
+      zonder filter.
+  - **AI aanzetten:** `AI_UPSTREAM_KEY` (en eventueel `AI_UPSTREAM_MODEL`) in
+    `/srv/omnium-pf/.env`, en de api-container opnieuw aanmaken (`pf.sh deploy`; een
+    `docker restart` leest de env-file niet opnieuw). Zie `docs/AI_ASSISTENT.md`.
+  - **Terug:** `pf.sh deploy 2719f096`. De nieuwe kolommen en tabellen kunnen blijven staan:
+    ze mogen leeg zijn.
+
   **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
   (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
   verbinding** (587/STARTTLS geeft `454 Temporary authentication failure`, ook als de mailbox nog

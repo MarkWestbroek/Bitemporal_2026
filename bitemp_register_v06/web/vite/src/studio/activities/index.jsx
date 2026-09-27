@@ -41,6 +41,7 @@ import cmmnActivity from "./cmmnActivity";
 import "./vormenRegistratie.js";
 import "./iconenRegistratie.js";
 import studioInstellingenActivity from "./studioInstellingenActivity";
+import aiToegangActivity from "./aiToegangActivity";
 import mimActivity from "./mimActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
@@ -121,6 +122,7 @@ registreerActiviteiten([
   // beheer (onderaan de balk)
   profielActivity, // "Profiel-editor" — meta-editor trede 1 (JSON, §8.9)
   profielOntwerpActivity, // "Profiel-ontwerp" — meta-editor trede 2 (tekenen, §8.9)
+  aiToegangActivity, // "AI-toegang" — toegangscodes voor de AI-proxy (docs/AI_ASSISTENT.md)
   studioInstellingenActivity, // globale vorm-/icoon-galerij (P07-vervolg)
 ]);
 

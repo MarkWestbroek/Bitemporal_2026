@@ -5,6 +5,10 @@
  * Drie soorten profielen:
  *  - Claude       eigen sleutel ("bring your own key"), rechtstreeks vanuit de browser (SDK);
  *  - DeepSeek     eigen sleutel, OpenAI-compatibel, rechtstreeks vanuit de browser;
+ *  - Alibaba Model Studio en "andere OpenAI-compatibele dienst": eigen sleutel én eigen
+ *                 endpoint (bij Alibaba hangt dat af van regio en workspace; een sleutel werkt
+ *                 alleen in zijn eigen regio). Staat de dienst geen browseraanroepen toe (CORS),
+ *                 zet hem dan achter de proxy (AI_UPSTREAM_URL) en gebruik een toegangscode;
  *  - Omnium-server  een TOEGANGSCODE voor de proxy op deze server (handlers/ai_proxy.go), die de
  *                 sleutel van de eigenaar gebruikt. De code gaat in hetzelfde veld als een sleutel.
  *
@@ -17,6 +21,10 @@ export const OPSLAGSLEUTEL = "omnium.ai.v1";
 export const PRESETS = [
   { id: "claude", label: "Claude (eigen sleutel)", provider: "anthropic", endpoint: "", model: "claude-opus-5", sleutelLabel: "Anthropic API-sleutel" },
   { id: "deepseek", label: "DeepSeek (eigen sleutel)", provider: "openai", endpoint: "https://api.deepseek.com/chat/completions", model: "deepseek-chat", sleutelLabel: "DeepSeek API-sleutel" },
+  { id: "alibaba", label: "Alibaba Model Studio (eigen sleutel)", provider: "openai", endpoint: "", model: "qwen-plus", sleutelLabel: "Model Studio API-sleutel",
+    endpointInvullen: true, endpointVoorbeeld: "https://<WorkspaceId>.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions" },
+  { id: "openai-compatibel", label: "Andere OpenAI-compatibele dienst", provider: "openai", endpoint: "", model: "", sleutelLabel: "API-sleutel",
+    endpointInvullen: true, endpointVoorbeeld: "https://…/v1/chat/completions" },
   { id: "server", label: "Omnium-server (toegangscode)", provider: "openai", endpoint: "/ai/v1/chat/completions", model: "deepseek-chat", sleutelLabel: "Toegangscode" },
 ];
 
@@ -44,18 +52,22 @@ export function bewaarInstellingen(opslag, instellingen) {
 }
 
 /** Een profiel bijwerken of toevoegen (op preset-id) en actief maken. */
-export function zetProfiel(instellingen, presetId, { sleutel, model } = {}) {
+export function zetProfiel(instellingen, presetId, { sleutel, model, endpoint } = {}) {
   const preset = PRESETS.find((p) => p.id === presetId);
   if (!preset) return instellingen;
   const bestaand = instellingen.profielen.find((p) => p.id === presetId) || {};
-  const profiel = { ...preset, ...bestaand, sleutel: sleutel ?? bestaand.sleutel ?? "", model: model || bestaand.model || preset.model };
+  const profiel = { ...preset, ...bestaand, sleutel: sleutel ?? bestaand.sleutel ?? "", model: model || bestaand.model || preset.model,
+    // Een vast endpoint komt altijd uit de preset; alleen bij endpointInvullen telt wat de gebruiker gaf.
+    endpoint: preset.endpointInvullen ? String(endpoint ?? bestaand.endpoint ?? "").trim() : preset.endpoint };
   return { actief: presetId, profielen: [...instellingen.profielen.filter((p) => p.id !== presetId), profiel] };
 }
 
 /** Het actieve profiel met een sleutel, of null (dan is AI nog niet ingesteld). */
 export function actiefProfiel(instellingen) {
   const p = instellingen.profielen.find((x) => x.id === instellingen.actief);
-  return p && String(p.sleutel || "").trim() ? p : null;
+  if (!p || !String(p.sleutel || "").trim()) return null;
+  if (PRESETS.find((x) => x.id === p.id)?.endpointInvullen && !/^https:\/\//.test(String(p.endpoint || ""))) return null;
+  return p;
 }
 
 /** Het endpoint als volle URL: een pad (de proxy) hangt aan de API-basis. */

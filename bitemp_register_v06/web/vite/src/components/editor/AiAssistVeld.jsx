@@ -2,7 +2,8 @@ import { useState, useRef, useId } from "react";
 import { useSchema } from "../../context/SchemaContext";
 import { useAiToegestaan } from "../../shared/ai/AiContext";
 import { ACTIES, bouwVraag, voegVoorstelIn } from "../../shared/ai/aiAssist";
-import { PRESETS, leesInstellingen, bewaarInstellingen, zetProfiel, actiefProfiel } from "../../shared/ai/aiProfielen";
+import { PRESETS, zetProfiel, actiefProfiel } from "../../shared/ai/aiProfielen";
+import { useAiInstellingen } from "../../shared/ai/useAiInstellingen";
 import { vraagAi, AiFout } from "../../shared/ai/vraagAi";
 
 /**
@@ -26,8 +27,8 @@ export default function AiAssistVeld({ waarde, onChange, readOnly = false, label
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState("");
   const afbreken = useRef(null);
-  const opslag = typeof window !== "undefined" ? window.localStorage : null;
-  const [inst, setInst] = useState(() => leesInstellingen(opslag));
+  // Eén gedeelde bron voor alle AI-velden: sleutel één keer invoeren, overal ingesteld.
+  const [inst, bewaarInst] = useAiInstellingen();
   const profiel = actiefProfiel(inst);
   const tekst = String(waarde ?? "");
 
@@ -71,7 +72,7 @@ export default function AiAssistVeld({ waarde, onChange, readOnly = false, label
       {open && (
         <div role="region" aria-label="AI-assistent" style={{ marginTop: 6, border: "1px solid #c7d2fe", borderRadius: 10, padding: "0.6rem 0.75rem", background: "#f8fafc" }}>
           {(!profiel || instellen) ? (
-            <AiInstellingen inst={inst} onOpslaan={(nieuw) => { setInst(nieuw); bewaarInstellingen(opslag, nieuw); setInstellen(false); }} onAnnuleer={profiel ? () => setInstellen(false) : null} />
+            <AiInstellingen inst={inst} onOpslaan={(nieuw) => { bewaarInst(nieuw); setInstellen(false); }} onAnnuleer={profiel ? () => setInstellen(false) : null} />
           ) : (
             <>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
@@ -117,15 +118,18 @@ function AiInstellingen({ inst, onOpslaan, onAnnuleer }) {
   const def = PRESETS.find((p) => p.id === preset);
   const [sleutel, setSleutel] = useState(huidig?.sleutel || "");
   const [model, setModel] = useState(huidig?.model || def.model);
+  const [endpoint, setEndpoint] = useState(huidig?.endpoint || "");
   const id = useId();
   const kies = (id) => {
     setPreset(id);
     const p = inst.profielen.find((x) => x.id === id);
     setSleutel(p?.sleutel || "");
     setModel(p?.model || PRESETS.find((x) => x.id === id).model);
+    setEndpoint(p?.endpoint || "");
   };
+  const endpointGoed = !def.endpointInvullen || /^https:\/\//.test(endpoint.trim());
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onOpslaan(zetProfiel(inst, preset, { sleutel: sleutel.trim(), model: model.trim() })); }}
+    <form onSubmit={(e) => { e.preventDefault(); onOpslaan(zetProfiel(inst, preset, { sleutel: sleutel.trim(), model: model.trim(), endpoint: endpoint.trim() })); }}
       style={{ display: "grid", gap: 8 }}>
       <strong style={{ fontSize: "0.9rem" }}>AI instellen</strong>
       <div style={{ display: "grid", gap: 2 }}>
@@ -138,6 +142,16 @@ function AiInstellingen({ inst, onOpslaan, onAnnuleer }) {
         <label htmlFor={`${id}-sleutel`}>{def.sleutelLabel}</label>
         <input id={`${id}-sleutel`} type="password" autoComplete="off" className="utrecht-textbox utrecht-textbox--html-input" value={sleutel} onChange={(e) => setSleutel(e.target.value)} />
       </div>
+      {def.endpointInvullen && (
+        <div style={{ display: "grid", gap: 2 }}>
+          <label htmlFor={`${id}-endpoint`}>Endpoint (chat/completions)</label>
+          <input id={`${id}-endpoint`} type="url" className="utrecht-textbox utrecht-textbox--html-input" value={endpoint}
+            onChange={(e) => setEndpoint(e.target.value)} placeholder={def.endpointVoorbeeld} />
+          {preset === "alibaba" && (
+            <span style={{ fontSize: "0.72rem", color: "#64748b" }}>Regio en workspace-id staan in de Model Studio-console; een sleutel werkt alleen in zijn eigen regio.</span>
+          )}
+        </div>
+      )}
       {preset !== "server" && (
         <div style={{ display: "grid", gap: 2 }}>
           <label htmlFor={`${id}-model`}>Model</label>
@@ -150,7 +164,7 @@ function AiInstellingen({ inst, onOpslaan, onAnnuleer }) {
           : "Je eigen sleutel blijft in deze browser en gaat alleen naar de gekozen dienst. Gebruik dit niet op een gedeelde computer."}
       </p>
       <div style={{ display: "flex", gap: 6 }}>
-        <button type="submit" className="utrecht-button utrecht-button--primary-action" disabled={!sleutel.trim()}>Opslaan</button>
+        <button type="submit" className="utrecht-button utrecht-button--primary-action" disabled={!sleutel.trim() || !endpointGoed || (def.endpointInvullen && !model.trim())}>Opslaan</button>
         {onAnnuleer && <button type="button" className="utrecht-button utrecht-button--subtle" onClick={onAnnuleer}>Annuleren</button>}
       </div>
     </form>

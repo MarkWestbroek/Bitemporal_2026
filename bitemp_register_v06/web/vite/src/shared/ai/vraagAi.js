@@ -59,7 +59,10 @@ async function vraagOpenAI(profiel, { systeem, vraag, signal, baseUrl }) {
     });
   } catch (e) {
     if (e?.name === "AbortError") throw e;
-    throw new AiFout("De AI-dienst is niet bereikbaar.");
+    // Een netwerkfout zonder status is vaak CORS: de dienst staat geen aanroepen vanuit de browser toe.
+    throw new AiFout(profiel.id === "server"
+      ? "De AI-proxy van deze server is niet bereikbaar."
+      : "De AI-dienst is niet bereikbaar vanuit de browser. Klopt het endpoint? Staat de dienst geen browseraanroepen toe (CORS), zet hem dan achter de Omnium-proxy (AI_UPSTREAM_URL) en gebruik een toegangscode.");
   }
   const d = await res.json().catch(() => ({}));
   if (!res.ok) {
