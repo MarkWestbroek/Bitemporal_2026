@@ -11,6 +11,10 @@ import SwitchKeuze from "../vormen/SwitchKeuze";
 import RangeKeuze from "../vormen/RangeKeuze";
 import RotaryKeuze from "../vormen/RotaryKeuze";
 import NlMapKeuze from "../vormen/NlMapKeuze";
+import MaskedInvoer from "../vormen/MaskedInvoer";
+import PartialDateInvoer from "../vormen/PartialDateInvoer";
+import DurationInvoer from "../vormen/DurationInvoer";
+import NumberStepper from "../vormen/NumberStepper";
 import { ruweWaarde, alsSleutels, cbsGemeentecode, telSleutels } from "./vormBlokken";
 
 /**
@@ -57,6 +61,14 @@ export default function VormWeergave({ blok, ctx }) {
       const C = naam === "range" ? RangeKeuze : RotaryKeuze;
       const items = config.options ? opties(config.options) : undefined;
       return <div style={stijl}><C items={items} config={config} waarde={sleutels[0] ?? ""} readOnly onChange={niets} /></div>;
+    }
+    case "masked":
+    case "partial-date":
+    case "duration":
+    case "number-stepper": {
+      // Eén waarde, als leesbare tekst: "1234 AB", "juni 1975", "1 jaar en 2 maanden", "3 personen".
+      const C = { masked: MaskedInvoer, "partial-date": PartialDateInvoer, duration: DurationInvoer, "number-stepper": NumberStepper }[naam];
+      return <div style={stijl}><C waarde={Array.isArray(waarde) ? waarde[0] ?? "" : waarde ?? ""} readOnly onChange={niets} config={config} /></div>;
     }
     case "period":
       return <div style={stijl}><PeriodKeuze begin={ruweWaarde(ctx, config.startPath) ?? ""} einde={ruweWaarde(ctx, config.endPath) ?? ""} readOnly config={config} /></div>;

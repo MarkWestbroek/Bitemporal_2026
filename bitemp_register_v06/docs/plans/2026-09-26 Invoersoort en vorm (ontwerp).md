@@ -100,6 +100,33 @@ ontleend aan NL Design System, ARIA en HTML. Labels in de UI zijn Nederlands.
 | `stepper`, `file-drop` | getal, bestand | Claude | +/−, sleepvak |
 | `ai-extract` | het hele **formulier** | Claude | plak een tekst of URL; de AI vult velden voor, de invuller controleert en verzendt |
 
+### 4.1a Stand 27-09: wat er nog over is
+
+Nog open uit de brainstorm hierboven:
+
+| Vorm | Idee van | Wacht op |
+|---|---|---|
+| `ai-assist` (tekst herschrijven, inkorten, aanvullen) | Mark | keuze AI-dienst en AVG (§9c vraag 2) |
+| `ai-extract` (plak tekst of URL, AI vult het formulier voor) | Claude | idem |
+| `ranking` (volgorde uit een lijst) | Claude | een GE met een volgnummerveld (§9c vraag 3) |
+| `map` (gebieden op een echte kaart, GeoJSON) | Claude | deels gedekt door `nl-map` (gemeenten als stip) |
+| `file-drop` (sleepvak voor bestanden) | Claude | datatype `Bestand` bestaat al (uuid); upload-endpoint nodig |
+| ~~getal-stepper (+/−)~~ | Claude | **gebouwd** als `number-stepper` (27-09); `stepper` blijft de stappenbalk |
+
+Nieuwe kandidaten, afgeleid uit datatypes die al in het model staan (de vorm volgt uit de
+inhoud):
+
+| Vorm | Datatype | Idee |
+|---|---|---|
+| `masked` | `weergave.inputMask` (NLPostcode `0000 AA`, BSN) | **gebouwd** (27-09): invoermasker uit het datatype |
+| `color` | `Kleur` | kleurkiezer met hex-invoer |
+| `duration` | `Duur` (ISO 8601) | **gebouwd** (27-09): jaren, maanden, dagen, uren als losse velden, opgeslagen als `P1Y2M` |
+| `partial-date` | `DatumIncompleet` (`1975`, `1975-06`) | **gebouwd** (27-09): jaar, maand en dag, elk "onbekend" mogelijk |
+| `geo-point` | `GeoPunt` | punt kiezen op een kaart |
+| `geo-draw` | `GeoLijn`, `GeoVlak` | lijn of vlak tekenen |
+| `tag-input` | referentielijst (Trefwoord) | vrije chips met aanvullen, eventueel nieuw item aanmaken |
+| `markdown` / `code` | tekst (`template_tekst`, `layout_json`) | editor met voorbeeld; bestaat als widget, nog niet als vorm |
+
 ### 4.2 Wat de brainstorm zegt over het model
 
 1. **Drie assen, niet twee.** Naast *invoersoort* en *vorm* is er de **keuzebron**:
@@ -354,7 +381,11 @@ Dit is het "vormconfiguratietype" uit §9b, voorlopig in code.
 | `period` | samengesteld (groep) | invoer + weergave | begin + einde als tijdlijn; `kopieerNaar` van de velden blijft werken |
 | `address-search` | samengesteld (groep) | invoer + weergave | PDOK Locatieserver (BAG) op downshift `useCombobox`; vult alle adresvelden; referentielijst-velden (gemeente, land) via `refMatch` naar het item-id |
 | `scale-bars` | één uit een lijst per rij | alleen weergave | balken per rij met toelichting |
-| `chips` | één/meer uit een lijst | alleen weergave | labels |
+| `chips` | één/meer uit een lijst | alleen weergave | labels; `count` telt dubbele waarden (27-09) |
+| `masked` | tekst | invoer + weergave | invoermasker (`masker.js`: `0` cijfer, `A` letter → hoofdletter, `a` letter, `*` letter of cijfer); het masker komt uit `weergave.inputMask` van het datatype; opslag standaard zonder letterlijke tekens (`keepLiterals` = mét). **Opt-in**: het masker van IBAN is Nederlands, dus niet automatisch |
+| `partial-date` | tekst, datum | invoer + weergave | onvolledige datum (`datumIncompleet.js`); dag, maand, jaar met "onbekend"; opslag `1975-06` of met `unknownStyle: "nullen"` `1975-06-00`; **vanzelf** voor datatype `DatumIncompleet` |
+| `duration` | tekst | invoer + weergave | tijdsduur (`duur.js`); losse getallen per eenheid (`units`), opslag ISO 8601; **vanzelf** voor datatype `Duur` |
+| `number-stepper` | getal | invoer + weergave | − en + binnen `min`/`max`, met `step` en `unit` |
 
 **Opbouw:**
 - **Vormen zonder Omnium-kennis.** Alle vormen staan in `src/vormen/`, zonder SchemaContext
@@ -362,6 +393,10 @@ Dit is het "vormconfiguratietype" uit §9b, voorlopig in code.
 - **Omnium-kant: keuzebron.** `components/editor/VormInvoer.jsx` haalt de keuzebron op
   (enum of referentielijst, met `velden`, bijvoorbeeld de CBS-code) en kiest het
   vormcomponent.
+- **Vorm uit het datatype.** `vormUitDatatype` (vormen.js): `DatumIncompleet` → `partial-date`,
+  `Duur` → `duration`, anders de weergave-hint. Werkt in `SchemaFormField` en in de oudere
+  opvoer- en correctievelden (`ActionFieldControl`). Een samengestelde vorm staat daar in een
+  `role="group"` in plaats van een `<label>`, want een label hoort bij één besturingselement.
 - **Een vorm op een groep.** Die wordt in `CustomFormulierRenderer` afgehandeld (`period`,
   `address-search`).
 - **Kaartdata.** `scripts/maak_nl_kaartdata.py` (PDOK/CBS open data) maakt

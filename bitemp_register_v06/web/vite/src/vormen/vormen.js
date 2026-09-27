@@ -84,7 +84,25 @@ export const VORMEN = Object.freeze({
   "address-search": v("Adres zoeken", [SAMENGESTELD], "group (eigen)", "Eén zoekveld (PDOK) dat alle adresvelden vult.", { naam: "address-search" }),
   "scale-bars":     v("Schaalbalken", [EEN_PER_RIJ], "output (eigen)", "Per rij een balk op de schaal, met toelichting.", { naam: "scale-bars", modi: W }),
   "chips":          v("Labels", [MEER_UIT_LIJST, EEN_UIT_LIJST], "output", "De gekozen waarden als labels.", { naam: "chips", modi: W }),
+  // Vormen die uit een datatype volgen (27-09): het datatype zegt wat de inhoud is, de vorm hoe.
+  "masked":         v("Invoermasker", [TEKST], "input (masker)", "Invoer volgens een masker (postcode 0000 AA); letterlijke tekens verschijnen vanzelf.", { naam: "masked" }),
+  "partial-date":   v("Onvolledige datum", [TEKST, DATUM], "group (eigen)", "Jaar, maand en dag; maand en dag mogen onbekend zijn (DatumIncompleet).", { naam: "partial-date" }),
+  "duration":       v("Tijdsduur", [TEKST], "group (eigen)", "Jaren, maanden, dagen … als losse getallen; opgeslagen als ISO 8601 (P1Y2M).", { naam: "duration" }),
+  "number-stepper": v("Plus-min", [GETAL], "range (knoppen)", "Een getal met − en + knoppen, binnen min en max.", { naam: "number-stepper" }),
 });
+
+/**
+ * De vorm die een DATATYPE zelf meebrengt, als de ontwerper niets kiest: het datatype zegt
+ * wat de inhoud is, en voor sommige inhoud ligt de vorm vast (DatumIncompleet → partial-date,
+ * Duur → duration). Een invoermasker niet: dat is een hulp, geen keuze (en een masker als
+ * dat van IBAN is land-specifiek). Anders de weergave-hint van het datatype, of null.
+ */
+export function vormUitDatatype(datatype) {
+  if (!datatype) return null;
+  if (datatype.format === "date-incomplete" || datatype.naam === "DatumIncompleet") return "partial-date";
+  if (datatype.format === "duration" || datatype.naam === "Duur") return "duration";
+  return datatype.weergave?.widget || null;
+}
 
 /** Is de vorm (ook) een weergavevorm? */
 export function isWeergaveVorm(naam) {

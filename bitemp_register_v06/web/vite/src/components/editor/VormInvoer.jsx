@@ -7,6 +7,10 @@ import RangeKeuze from "../../vormen/RangeKeuze";
 import RotaryKeuze from "../../vormen/RotaryKeuze";
 import StepperKeuze from "../../vormen/StepperKeuze";
 import ChipsWeergave from "../../vormen/ChipsWeergave";
+import MaskedInvoer from "../../vormen/MaskedInvoer";
+import PartialDateInvoer from "../../vormen/PartialDateInvoer";
+import DurationInvoer from "../../vormen/DurationInvoer";
+import NumberStepper from "../../vormen/NumberStepper";
 import { knoppenUitOpties } from "../../vormen/buttonGroup";
 import useRefOpties from "./useRefOpties";
 
@@ -21,9 +25,22 @@ import useRefOpties from "./useRefOpties";
  * Props: vorm, veld (velddefinitie uit het schema), config (vormConfig), waarde, onChange,
  *        meervoudig, readOnly, labelId
  */
-export const VORMINVOER = new Set(["image-map", "button-group", "cards", "nl-map", "switch", "range", "rotary", "stepper", "chips"]);
+export const VORMINVOER = new Set(["image-map", "button-group", "cards", "nl-map", "switch", "range", "rotary", "stepper", "chips",
+  "masked", "partial-date", "duration", "number-stepper"]);
+
+/** Vormen zonder keuzebron: ze bedienen tekst, een getal of een datum (uit het datatype). */
+const ZONDER_KEUZEBRON = { "masked": MaskedInvoer, "partial-date": PartialDateInvoer, "duration": DurationInvoer, "number-stepper": NumberStepper };
 
 export default function VormInvoer({ vorm, veld, config = {}, waarde, onChange, meervoudig = false, readOnly = false, labelId }) {
+  if (ZONDER_KEUZEBRON[vorm]) {
+    const C = ZONDER_KEUZEBRON[vorm];
+    return <C waarde={waarde} onChange={onChange} readOnly={readOnly} labelId={labelId} config={config || {}} />;
+  }
+  return <VormMetKeuzebron vorm={vorm} veld={veld} config={config} waarde={waarde} onChange={onChange} meervoudig={meervoudig} readOnly={readOnly} labelId={labelId} />;
+}
+
+/** De vormen met een keuzebron (enum of referentielijst); eigen component vanwege de hook. */
+function VormMetKeuzebron({ vorm, veld, config = {}, waarde, onChange, meervoudig = false, readOnly = false, labelId }) {
   const enumOpties = Array.isArray(veld?.enum) ? veld.enum.filter(Boolean) : [];
   const refOpties = useRefOpties(veld?.ref, { actief: enumOpties.length === 0 && Boolean(veld?.ref) });
   const bron = enumOpties.length ? enumOpties : refOpties;

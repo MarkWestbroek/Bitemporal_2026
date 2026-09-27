@@ -177,4 +177,39 @@ export const CONFIG_SCHEMAS = {
     type: "object",
     properties: { accentColor: kleur },
   },
+  // Vormen die uit een datatype volgen (27-09).
+  masked: {
+    type: "object",
+    properties: {
+      mask: { type: "string", minLength: 1, "x-omschrijving": "0 = cijfer, A = letter (hoofdletter), a = letter, * = letter of cijfer, \ = volgende teken letterlijk; de rest letterlijk. Leeg = weergave.inputMask van het datatype" },
+      keepLiterals: { type: "boolean", default: false, "x-omschrijving": "letterlijke tekens (spatie, koppelteken) mee opslaan" },
+    },
+  },
+  "partial-date": {
+    type: "object",
+    properties: {
+      unknownStyle: { enum: ["kort", "nullen"], default: "kort", "x-omschrijving": "onbekend weglaten (1975-06) of als 00 (1975-06-00)" },
+      minYear: { type: "number" },
+      maxYear: { type: "number" },
+    },
+  },
+  duration: {
+    type: "object",
+    properties: {
+      units: {
+        type: "array", minItems: 1,
+        items: { enum: ["jaren", "maanden", "weken", "dagen", "uren", "minuten", "seconden"] },
+        "x-omschrijving": "welke eenheden als invoerveld (standaard jaren, maanden, dagen)",
+      },
+    },
+  },
+  "number-stepper": {
+    type: "object",
+    properties: {
+      min: { type: "number" },
+      max: { type: "number" },
+      step: { type: "number", exclusiveMinimum: 0, default: 1 },
+      unit: { type: "string", "x-omschrijving": "eenheid achter het getal, bv. 'personen'" },
+    },
+  },
 };

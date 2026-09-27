@@ -5,7 +5,7 @@ import EntiteitCombobox from "./EntiteitCombobox";
 import { useSchema } from "../../context/SchemaContext";
 import CodeEditor, { jsonParseFout } from "./CodeEditor";
 import VormInvoer, { VORMINVOER } from "./VormInvoer";
-import { normaliseerVorm, vormPastBij, invoersoortVanVeld, effectieveVorm, splitsLijst, voegLijstSamen, INVOERSOORT } from "../../vormen/vormen";
+import { normaliseerVorm, vormPastBij, invoersoortVanVeld, effectieveVorm, vormUitDatatype, splitsLijst, voegLijstSamen, INVOERSOORT } from "../../vormen/vormen";
 
 /**
  * SchemaFormField — generiek formulierveld dat één `veld` uit de schema-API
@@ -51,8 +51,13 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
   // Weergave-hints uit DatatypeRegistry ophalen (widget, prefix, suffix, multiline, decimalen)
   const datatypeMeta = veld.datatype ? datatypeByNaam?.[veld.datatype] : null;
   const weergave = datatypeMeta?.weergave || {};
-  // Vorm (nieuw) wint van widget (oud) wint van de datatype-hint; namen genormaliseerd.
-  const effectieveWidget = normaliseerVorm(vorm) || normaliseerVorm(widgetOverride) || normaliseerVorm(weergave.widget) || "";
+  // Vorm (nieuw) wint van widget (oud) wint van de vorm van het datatype (DatumIncompleet →
+  // partial-date, Duur → duration, anders de weergave-hint); namen genormaliseerd.
+  const effectieveWidget = normaliseerVorm(vorm) || normaliseerVorm(widgetOverride) || normaliseerVorm(vormUitDatatype(datatypeMeta)) || "";
+  // Een invoermasker komt uit het datatype, tenzij de layout er een geeft.
+  const effectieveConfig = effectieveWidget === "masked" && weergave.inputMask
+    ? { mask: weergave.inputMask, placeholder: weergave.placeholder, ...(vormConfig || {}) }
+    : vormConfig;
 
   function inputType() {
     if (type === "string" && format === "date") return "date";
@@ -110,7 +115,7 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
     // De vormenbibliotheek (image-map, knoppen, kaarten, kaart, schakelaar, schuif, draaiknop,
     // stappen): alleen als de vorm deze invoersoort bedient; anders de standaardvorm hieronder.
     if (VORMINVOER.has(effectieveWidget) && vormPastBij(effectieveWidget, soort)) {
-      return <VormInvoer vorm={effectieveWidget} veld={veld} config={vormConfig} waarde={value} onChange={onChange} readOnly={isReadonly} labelId={labelId} />;
+      return <VormInvoer vorm={effectieveWidget} veld={veld} config={effectieveConfig} waarde={value} onChange={onChange} readOnly={isReadonly} labelId={labelId} />;
     }
 
     // Boolean → radio group
