@@ -151,6 +151,12 @@ zonder de embed te raken.
 
 ### Initiatief v2 en omschakelen (28-09-2026)
 
+> **Stand op pf (28-09-2026, avond):** *Initiatief v2* is de standaard, en dus de iframe op
+> commonground.nl. De minimale WD 2 heeft de code `initiatief-minimaal` gekregen en blijft actief
+> (`?weergave=initiatief-minimaal`). Replay:
+> `registraties-replay-correctie-standaardweergave-initiatief-v2-pf-2026-09-28.json` (beide
+> wijzigingen in één registratie).
+
 Naast de minimale standaard (WD 2, *Initiatief standaardweergave*) staat **Initiatief v2**
 (code `initiatief-v2`). Replay:
 `replay files/registraties-replay-init-weergavedefinitie-initiatief-v2-2026-09-28.json`.
@@ -175,8 +181,9 @@ WD 2). Alleen v2 aanzetten is dus niet genoeg.
 1. Zet `is_standaard` aan op *Initiatief v2*.
 2. Zet `is_standaard` uit op WD 2.
 
-**Terugschakelen:** andersom. De minimale WD 2 blijft actief, en blijft bereikbaar via
-`?weergave=2`.
+**Terugschakelen:** andersom. Doe het in één registratie, met de dan actuele `rel_id`'s van
+beide meta's, zoals in de replay hierboven. De minimale WD 2 blijft actief en bereikbaar via
+`?weergave=initiatief-minimaal` (of `?weergave=2`).
 
 Gebruik liever de **code** (`WeergaveDefinitie_Meta.code`, bv.
 `publicatie.html?weergave=initiatief-met-vormen#/t/initiatieven/39`) dan het id: de code is op

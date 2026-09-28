@@ -567,6 +567,17 @@ anders optie). Een snapshot is een noodrem, geen backup.
     - het zoekveld zit in de bundel;
     - de iframe werkt (100 records).
 
+  **Iframe naar Initiatief v2 (28-09-2026, avond, op verzoek van Mark)**: geen deploy, alleen data.
+  - **Replay:** `registraties-replay-correctie-standaardweergave-initiatief-v2-pf-2026-09-28.json`
+    (HTTP 201), in één registratie:
+    - WD 6 (`initiatief-v2`) wordt de standaard;
+    - WD 2 staat niet meer standaard en krijgt de code `initiatief-minimaal`.
+  - **Gecontroleerd:**
+    - de iframe-lijst is ongewijzigd (100 records, geen keuzelijst);
+    - detail 39 in de iframe toont v2 (Gemeenten, Bijdrage, Planning, Organisaties);
+    - `?weergave=initiatief-minimaal` toont nog de minimale weergave.
+  - **Terug:** dezelfde wissel andersom (`PUBLICATIE_TEMPLATES.md`).
+
   **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
   (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
   verbinding** (587/STARTTLS geeft `454 Temporary authentication failure`, ook als de mailbox nog
