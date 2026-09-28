@@ -555,6 +555,18 @@ anders optie). Een snapshot is een noodrem, geen backup.
   - **Gecontroleerd:** de geladen `nl-kaart-*.js` bevat Urk op het dorp (x=142,22, y=93,62), en
     de iframe werkt (100 records).
 
+  **Dertiende ronde 28-09-2026 (kaart: toetsenbord en zoeken; `e5f8453f`)**:
+  - **Dump** vooraf: `/srv/omnium-pf/predeploy-20260928-2058.sql.gz`, daarna `pf.sh deploy`.
+  - **Afgespeeld:** `registraties-replay-correctie-uitleg-vorm-nl-map-pf-2026-09-28.json` (gemaakt
+    met `scripts/maak_uitleg_correctie.py --bron https://pf.common-ground-lab.nl`), HTTP 201. De
+    oude teksten van `vorm-nl-map` zijn afgevoerd en blijven in de historie; de nieuwe (nl, en)
+    zijn actueel.
+  - **Gecontroleerd:**
+    - de alleen-lezen kaart in *Initiatief met vormen* (detail 40): ← naar de buurstip,
+      Shift+→ alfabetisch;
+    - het zoekveld zit in de bundel;
+    - de iframe werkt (100 records).
+
   **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
   (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
   verbinding** (587/STARTTLS geeft `454 Temporary authentication failure`, ook als de mailbox nog
