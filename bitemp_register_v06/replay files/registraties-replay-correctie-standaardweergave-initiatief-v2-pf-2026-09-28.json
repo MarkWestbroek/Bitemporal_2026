@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-28T21:30:00.000Z",
+  "source": "handmatig (Claude-sessie 28-09-2026)",
+  "description": "Initiatief v2 (WD 6) wordt de standaardweergave, en daarmee de iframe op commonground.nl; de minimale WD 2 blijft actief met de code initiatief-minimaal (?weergave=initiatief-minimaal). Beide in één registratie, zodat er geen moment met twee of geen standaard is. Nieuwe versies van de meta (rel_id erbij, alle velden). Met de id's van pf; alleen daar afspelen. Terug: dezelfde wissel andersom, met de dan actuele rel_id's (zie PUBLICATIE_TEMPLATES.md).",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-28T21:30:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Standaardweergave Initiatief: v2 aan, minimaal (WD 2) uit",
+      "expected_response_code": 201,
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Initiatief v2 wordt de standaardweergave (iframe); WD 2 krijgt code initiatief-minimaal"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 6,
+                "rel_id": 1,
+                "naam": "Initiatief v2",
+                "code": "initiatief-v2",
+                "beschrijving": "Completere detailweergave van een initiatief: domeinen, gemeenten (met kaart), API-standaarden, bijdragen, planning en organisaties. Standaard (en dus de iframe op commonground.nl) sinds 28-09-2026; de minimale weergave blijft beschikbaar via ?weergave=initiatief-minimaal.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 2,
+                "rel_id": 1,
+                "naam": "Initiatief standaardweergave",
+                "code": "initiatief-minimaal",
+                "beschrijving": "Minimale tabel- en detailweergave voor Initiatief (tot 28-09-2026 de standaard en de iframe). Terugschakelen: is_standaard hier aan en op initiatief-v2 uit, in één registratie.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
