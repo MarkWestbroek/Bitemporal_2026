@@ -549,6 +549,12 @@ anders optie). Een snapshot is een noodrem, geen backup.
   - **Terug:** `pf.sh deploy c2a753ce`. De uitleg-tabellen en de drie gemeenten mogen blijven
     staan.
 
+  **Twaalfde ronde 28-09-2026 (kaart: Urk en Medemblik; `2e23d53c`)**:
+  - **Dump** vooraf: `/srv/omnium-pf/predeploy-20260928-2038.sql.gz`, daarna `pf.sh deploy`.
+  - **Alleen de kaartdata** in de frontend is veranderd. Geen replays.
+  - **Gecontroleerd:** de geladen `nl-kaart-*.js` bevat Urk op het dorp (x=142,22, y=93,62), en
+    de iframe werkt (100 records).
+
   **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
   (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
   verbinding** (587/STARTTLS geeft `454 Temporary authentication failure`, ook als de mailbox nog
