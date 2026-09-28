@@ -7,7 +7,45 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+
+## [studio/v0.10.0] — 2026-09-28
+Het werk voor het Common Ground-portfolio (pf.common-ground-lab.nl), 22–28 september. Backend:
+api 0.8.0 in [`RELEASE.md`](../../RELEASE.md).
+
 ### Toegevoegd
+- **Publicatie en embed.**
+  - Een kale embed-modus voor de iframe op commonground.nl, in de opmaak daarvan (Rijksoverheid
+    Sans).
+  - Een detailpagina in de commonground-opmaak, met `{{#if}}`-blokken, template-paden die op
+    het GraphQL-schema worden afgestemd, en weergavevormen in detail-templates
+    (`{{#vorm naam pad}}…{{/vorm}}`).
+  - Lijst en detail lezen via opgeslagen documenten (QueryDefinitie).
+  - Een tweede weergave naast de standaard (`?weergave=<code of id>`), met de weergaven
+    *Initiatief met vormen* en *Initiatief v2*.
+- **Formulieren.**
+  - Een nieuw-modus voor FormulierDefinities, het openbare `aanmelden.html` (met "Wat je hebt
+    ingevuld" na het verzenden), en een nieuwe doelentiteit vanuit een relatieveld
+    (`nieuwFormulier`).
+  - Meerkeuze op referentielijsten (chips + zoekveld), en *Bewerken via*: een record bewerken met
+    een gekozen formulier.
+  - `code` op definities (`?formulier=`, `?lijst=`, `?weergave=` met code).
+- **Invoersoort en vorm gescheiden, met een vormenbibliotheek:**
+  - `image-map`, `button-group`, `cards`, `nl-map`, `switch`, `range`, `rotary`, `stepper`,
+    `rating-grid`, `drag-sort`, `period`, `address-search`;
+  - `masked`, `partial-date`, `duration`, `number-stepper`, `color`, `tag-input`, `markdown`,
+    `code`, `ranking`;
+  - de weergavevormen `scale-bars` en `chips`;
+  - configSchema's per vorm, de vorm in het formulierprofiel, en de showcase `vormen.html`.
+- **Validatie bij het invullen** volgens het datatype (patroon, 11-proef, mod-97, …), met een
+  gedeelde testset met de backend.
+- **LijstDefinitie**: de kolommen van het overzicht als data, en het formulier waarmee een rij
+  opent.
+- **Dashboard** (`dashboard.html`): tegels op QueryDefinities.
+- **AI-assistent.**
+  - De vorm `ai-assist`: een voorstel doen en bijsturen, waarna de mens beslist.
+  - De invulhulp: een formulier voorinvullen uit een tekst of webpagina.
+  - Een eigen sleutel (Claude, DeepSeek, Alibaba, OpenAI-compatibel) of een toegangscode, het
+    kiezen van een model, en de Studio-activiteit *AI-toegang*.
 - **Uitleg bij een vraag: het (i)-rondje** (28-09). Een losse, vertaalbare uitleglijst
   (entiteit `Uitleg`, code + taal, soort `inhoud` of `vorm`) met `uitleg`/`uitlegTekst` op veld,
   groep en lijst, plus de bediening van de vorm (uit de lijst als `vorm-<naam>`, anders het
@@ -17,6 +55,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   (GM9001–GM9003) in kaders linksboven, zodra ze in de referentielijst staan.
 
 ### Opgelost
+- **Actuele data:** een afgevoerde hub telt niet meer mee, ook niet als terugval
+  (`shared/actueleData.js`). De inhoud-tabel toont alleen actuele hubs.
+- **Inhoud:** kolomfilter en sortering werken op GE- en relatiekolommen, en relaties zonder
+  datavelden tonen hun doel.
+- **Formulieren:**
+  - verplicht-meldingen verschijnen in de nieuw-modus pas na aanraking of een verzendpoging;
+  - de EntiteitCombobox is een echte combobox;
+  - FormulierDefinities worden met `size=1000` opgehaald (de standaardpagina was 20).
+- **Vormen:** de keuzekaarten waren onleesbaar in het donkere Studio-thema.
 - **Kaart van Nederland: stippen in het water** (28-09). Bij 12 gemeenten met veel water (Urk,
   Hoorn, Vlissingen, Waddeneilanden, …) lag de stip in zee; nu op de eigen woonplaats, op land.
   Met een test op de kaartdata.

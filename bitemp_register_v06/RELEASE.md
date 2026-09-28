@@ -8,6 +8,107 @@
 
 ---
 
+## Formulieren, publicatie en de tweede instantie: api 0.8.0 / studio 0.10.0 (2026-09-28)
+
+Het werk voor het Common Ground-portfolio op pf.common-ground-lab.nl (22–28 september). Alles
+is daar al uitgerold (`docs/VPS_DEPLOYMENT.md`, rondes 2–11). Deze release bevat
+**gedragswijzigingen** (vóór 1.0 toegestaan in een minor). Lees *Gewijzigd* vóór het uitrollen.
+
+### Backend (api 0.8.0)
+
+#### Toegevoegd
+- **Opgeslagen documenten (QueryDefinitie).** GraphQL-queries op naam uitvoeren
+  (`documentId` + variabelen), met materiële status en toegang (`publiek`/intern). Plus een
+  generiek `filter`-argument op de lijst-queries. De publicatiepagina en de embed lezen
+  hiermee alleen geaccepteerde initiatieven.
+- **Openbaar indienen van een formulier.** `POST /aanmelding/:formulier` (id of code) voor de
+  formulieren in `OPENBARE_FORMULIEREN`:
+  - vaste waarden worden afgedwongen, bron `aanmeldformulier`;
+  - een nieuwe doelentiteit kan vanuit een relatieveld, met plaatshouder-id's op de server.
+- **Notificaties** (NORA/FDS, CloudEvents NL GOV), fase 1:
+  - `NotificatieDefinitie`, en bezorging per e-mail of webhook;
+  - SMTP (standaard poort 465), met `POST /notificaties/testmail` (admin).
+- **DashboardDefinitie**: tegels op QueryDefinities (`dashboard.html`).
+- **LijstDefinitie**: het overzicht in de inhoud-editor als data.
+- **Uitleg**: de uitleg bij een vraag, per taal, met soort inhoud of vorm (§2.5 in
+  `FORMULIERDEFINITIES.md`).
+- **`code` op definities**: formulier-, weergave- en lijstdefinities hebben een leesbare sleutel
+  die op elke instantie gelijk is. Te gebruiken in plaats van het id, ook in
+  `OPENBARE_FORMULIEREN`.
+- **Validatie en uniekheid:**
+  - **Normaliseren** volgens het datatype op de server (`model/normalisatie.go`).
+  - **Validatie-API** `POST /api/valideer` en `/api/valideer/functies`.
+  - **Uniekheid** in het model (`uniek`: entiteit, domein of register): een botsing geeft een
+    422 met code `uniek`.
+  - **Gedeelde testset** voor Go en JS (`testdata/validatie/`).
+- **Datatype `EnumLijst`**: meer enum-waarden in één veld. Gebruikt voor `CG_laag`, dat meervoudig
+  is geworden, met Utility erbij.
+- **AI:**
+  - een proxy met tijdelijke toegangscodes (`/ai/v1/chat/completions`, beheer via
+    `/api/ai/codes`): hash-opslag, verloop, daglimieten, IP-limiet;
+  - `POST /api/ai/lees-url` (SSRF-veilig). Zie `docs/AI_ASSISTENT.md` en
+    `docs/AI_PROXY_MODEL.md`.
+- **Leespoort** `LEESTOEGANG=documenten` (standaard uit).
+- **Kolommigratie bij het opstarten** (`ensureNieuweKolommen`): ontbrekende, niet-verplichte
+  kolommen worden toegevoegd. Mislukt dat, dan wordt het alleen gelogd.
+
+#### Gewijzigd
+- **GraphQL:**
+  - queries zijn openbaar; **mutaties vereisen de rol `editor`**;
+  - zonder peiltijdstip is het "nu";
+  - de weergavenaam wordt ook op rootniveau en voor relaties zonder eigen weergaveveld
+    berekend;
+  - datums en enums komen als echte waarden terug.
+- **Waarden worden bij het opslaan genormaliseerd**, bv. `1234 ab` → `1234 AB`. Een client die
+  exact dezelfde tekst terugverwacht, krijgt de genormaliseerde vorm.
+- **Een dubbele `code`** op een formulier-, weergave-, lijstdefinitie of uitleg wordt geweigerd
+  (422 `uniek`). Een replay met dubbele codes faalt dus.
+- **`APIVersion`** (OpenAPI en de header `API-Version`) staat nu op 0.8.0. Hij stond nog op 0.6.0.
+
+#### Gerepareerd
+- GraphQL: `or` zonder alternatieven is nooit waar, `null` in `and`/`or` wordt overgeslagen, en
+  de weergavenaam volgt de klassenaam.
+- Notificaties: een EHLO met de eigen hostnaam, een eigen Message-ID en een afzendernaam.
+  Microsoft 365 zette de mail eerst in quarantaine.
+
+#### Databasegevolg bij uitrol
+Bij het opstarten worden de nieuwe tabellen aangemaakt: QueryDefinitie-GE's,
+NotificatieDefinitie en `notificatie_bezorging`, DashboardDefinitie, LijstDefinitie en Uitleg.
+Ook worden ontbrekende kolommen toegevoegd (`code`, `soort`); zie `[dbsetup]` in de log. Verder
+is er geen migratie nodig.
+
+#### Nieuwe instellingen
+`OPENBARE_FORMULIEREN`, `SMTP_*`, `LEESTOEGANG`, `AI_UPSTREAM_KEY`, `AI_UPSTREAM_URL`,
+`AI_UPSTREAM_MODEL` en `AI_DATA_DIR`. Allemaal optioneel: leeg betekent dat de functie uit staat.
+
+#### Bekend en open
+- Een correctie op een afgevoerde hub geeft een kale 500 (BACKLOG §34).
+- De codegen neemt veldbeschrijvingen uit de V3 niet mee (BACKLOG §35).
+- Uniekheid in het canonieke profiel: nog geen besluit.
+
+### Frontend (studio 0.10.0)
+
+Onder meer:
+- **Formulieren:** nieuw-modus, openbaar aanmelden en de invoersoort gescheiden van de vorm, met
+  een vormenbibliotheek van ruim dertig vormen en de showcase `vormen.html`.
+- **Publicatie:** de kale embed voor commonground.nl, weergavevormen in detail-templates, en een
+  tweede weergave naast de standaard.
+- **Verder:** dashboards, LijstDefinities, datatype-validatie bij het invullen, de AI-assistent
+  met de invulhulp, de uitleg bij een vraag, en de kaart van NL met Caribisch Nederland.
+
+Zie [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+
+### Uitrol
+
+- **Voor pf** is dit de huidige stand, met de API gebouwd uit de git-checkout. Na de uitrol speel
+  je de replays af die bij de release horen (`replay files/…-2026-09-2*.json`, zie
+  `VPS_DEPLOYMENT.md`).
+- **Voor app.omnium-ide.nl** geldt hetzelfde voorbehoud als bij 0.7.0: wordt `/admin/*`
+  gebruikt, dan is een devtools-image nodig.
+- **Na het uitrollen:** kijk in de log naar `[dbsetup]` (nieuwe tabellen en kolommen).
+
+---
+
 ## Backend-review, hardening en testsuite: api 0.7.0 / studio 0.9.0 (2026-09-22)
 
 Uitkomst van de backend-review van 7 juli (`docs/reviews/2026-07-07-backend-code-review.md`),
