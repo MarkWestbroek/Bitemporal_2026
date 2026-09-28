@@ -10,3 +10,7 @@
 .env.*
 !.env.example
 !.env.*.example
+
+# Python-bytecode: wordt door Python zelf (opnieuw) aangemaakt, per versie en machine.
+__pycache__/
+*.pyc
