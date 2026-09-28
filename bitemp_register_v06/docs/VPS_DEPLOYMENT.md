@@ -578,6 +578,16 @@ anders optie). Een snapshot is een noodrem, geen backup.
     - `?weergave=initiatief-minimaal` toont nog de minimale weergave.
   - **Terug:** dezelfde wissel andersom (`PUBLICATIE_TEMPLATES.md`).
 
+  **Veertiende ronde 28/29-09-2026 (kaart; `f3aa1a78`)**:
+  - **Dump** vooraf: `/srv/omnium-pf/predeploy-20260928-2326.sql.gz`, daarna `pf.sh deploy`. Geen
+    replays.
+  - **Wat er veranderde:**
+    - elke stip op de mediaan van de adressen (Rotterdam stond op de Maasvlakte);
+    - de kaders met Caribisch Nederland staan er altijd;
+    - de toetsenhulp is in de weergave alleen voor schermlezers.
+  - **Gecontroleerd:** in de iframe, detail 40, staat Rotterdam in de stad (x=72,66) en zijn de
+    kaders zichtbaar.
+
   **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
   (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
   verbinding** (587/STARTTLS geeft `454 Temporary authentication failure`, ook als de mailbox nog
