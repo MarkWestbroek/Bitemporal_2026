@@ -68,6 +68,65 @@ modelleer-assistentie in de Studio.
   een vrij veld voor een eigen opdracht, bv. "schrijf een korte samenvatting van onze
   doelstellingen".
 - **De eerste keer** vraagt het paneel welke dienst je wilt gebruiken, en de sleutel of code.
+- **Welk model:** onder ⚙ haalt *Modellen ophalen* de lijst bij de dienst zelf op (Claude:
+  `models.list()` via de SDK; OpenAI-compatibel: `GET …/models`). Kies er een of typ een naam. De
+  naam die de dienst terugmeldt, bv. *deepseek-flash* voor `deepseek-chat`, staat bij het
+  voorstel.
+
+## De invulhulp: een heel formulier voorinvullen (sinds 28-09)
+
+Boven een formulier in de nieuw-modus staat **✨ Invullen met AI** (niet op het openbare
+aanmeldformulier).
+
+**Hoe het werkt:**
+1. **Bron:** plak een tekst, of geef een webadres.
+2. **Voorstellen:** de AI-dienst krijgt de bron en een beschrijving van de velden (naam, uitleg,
+   keuzelijst), en geeft per veld een voorstel of `null`.
+3. **Kiezen:** in een tabel staan veld, huidige waarde en voorstel naast elkaar. Lege velden
+   staan standaard aangevinkt, gevulde niet. *Overnemen* zet alleen wat is aangevinkt.
+
+**Webadressen:** de meeste AI-diensten (DeepSeek, Qwen) kunnen zelf geen URL openen, want hun
+chat-API heeft geen web-tool. Daarom haalt de **server** de pagina op en krijgt het model de
+tekst (`POST /api/ai/lees-url`, `handlers/ai_lees_url.go`).
+- Een GitHub-repo-URL wordt de README, een blob-URL het ruwe bestand.
+- Uit HTML komt alleen de zichtbare tekst.
+- Maximaal 2 MB en 60.000 tekens voor het model.
+- Alleen voor editors.
+- Tegen SSRF: alleen http(s) op poort 80/443, en elk IP wordt bij het verbinden gecontroleerd
+  (geen loopback, privé, link-local of metadata-adressen, ook niet na een redirect), met hooguit
+  5 redirects in 10 s.
+
+**Het antwoord is JSON:**
+- Claude krijgt het schema via structured outputs (`output_config.format`, `json_schema`,
+  effort `medium`).
+- DeepSeek, Alibaba en de proxy krijgen `response_format: json_object`.
+
+  Daarna controleert `naarVoorstellen` streng: alleen de gevraagde velden, waarden uit de
+  keuzelijst, de juiste soort, en een datum als `JJJJ-MM-DD`.
+
+**Wat niet wordt ingevuld:**
+- lijsten (rijen);
+- verwijzingen naar andere records (organisatie, gemeente);
+- vaste waarden en alleen-lezen velden.
+
+**Wat er naar de dienst gaat:** de bron en de veldnamen, niet wat al is ingevuld. De bron wordt
+als data gemarkeerd, en het model krijgt de opdracht geen instructies uit de bron te volgen.
+
+**Bijsturen (dialoog):** na de voorstellen kun je bijsturen ("maak de omschrijving korter",
+"het type is Standaard"). Het gesprek gaat mee (vraag, antwoord, jouw opmerking), en het model
+geeft een nieuw, volledig voorstel. In het AI-veld (`ai-assist`) werkt dat net zo: "nog korter",
+"noem ook de gemeenten".
+
+**Transparantie:**
+- *Niet overgenomen (n)* toont per veld waarom iets niet is overgenomen: *geen antwoord*, of
+  *staat niet in de keuzelijst*.
+- *Ruw antwoord (JSON)* toont wat het model precies gaf.
+- Een antwoord op een keuzelijst krijgt wat speling: hoofdletters, leestekens, en het begin van
+  de optie (`laag 5 (interactie)` → *Laag 5*). Bij twijfel wordt er niets gekozen.
+- Het model mag voor keuzelijsten de best passende optie afleiden als de bron het duidelijk
+  beschrijft; voor namen, cijfers en feiten blijft het streng.
+
+**Code:** `shared/ai/aiInvulhulp.js` (puur, getest) en `components/editor/AiInvulhulp.jsx`.
 
 ## De proxy aanzetten en codes uitgeven
 
@@ -110,5 +169,5 @@ DELETE /api/ai/codes/Collega%20X   intrekken (werkt meteen)
 ## Nog niet
 
 - **Claude via de proxy.** Die komt met de Go-SDK, niet via een OpenAI-compatibele omweg.
-- **`ai-extract`:** een formulier voorinvullen uit een tekst of URL.
+- **Invulhulp ook bij bewerken** en voor lijsten en verwijzingen (zoek-en-koppel).
 - **Modelleer-assistentie** in de Studio.
