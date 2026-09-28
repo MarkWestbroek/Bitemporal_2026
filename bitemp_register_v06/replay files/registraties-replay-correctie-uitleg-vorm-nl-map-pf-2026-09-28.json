@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "source": "scripts/maak_uitleg_correctie.py",
+  "description": "Bediening nl-map: zoekveld en pijltjes als richting. Met de id's van https://pf.common-ground-lab.nl; alleen daar afspelen.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Uitleg 'vorm-nl-map': tekst (nl, en)",
+      "expected_response_code": 201,
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Bediening nl-map: zoekveld en pijltjes als richting: vorm-nl-map"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "tekst": {
+                "uitleg_id": 8,
+                "rel_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tekst": {
+                "uitleg_id": 8,
+                "taal": "nl",
+                "titel": "",
+                "tekst": "Klik op een stip, of typ een gemeente of woonplaats in het zoekveld (Enter kiest). Op de kaart: pijltjes naar de buurstip, Shift+↑↓ per letter, Shift+←→ alfabetisch, spatie kiest."
+              }
+            }
+          },
+          {
+            "afvoer": {
+              "tekst": {
+                "uitleg_id": 8,
+                "rel_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tekst": {
+                "uitleg_id": 8,
+                "taal": "en",
+                "titel": "",
+                "tekst": "Click a dot, or type a municipality or town in the search box (Enter selects). On the map: arrow keys to the neighbouring dot, Shift+↑↓ by letter, Shift+←→ alphabetically, space selects."
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
