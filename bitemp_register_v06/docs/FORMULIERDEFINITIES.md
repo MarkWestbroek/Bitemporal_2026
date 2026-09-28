@@ -178,7 +178,9 @@ vertaalbaar, en **bitemporeel**: je ziet welke uitleg er stond toen iemand het f
 
 **Een tekst wijzigen:** `Tekst` is meervoudig. Voer de oude tekst-rij af en een nieuwe op, in één
 registratie. De oude versie blijft in de historie staan. Een `rel_id` op het opvoeren maakt bij
-een meervoudig GE géén nieuwe versie van dezelfde rij, maar een extra rij (getest 28-09).
+een meervoudig GE géén nieuwe versie van dezelfde rij, maar een extra rij (getest 28-09). Het script `scripts/maak_uitleg_correctie.py` doet dit in één stap. Het zoekt per code + taal
+de actuele rij op bij een instantie, en maakt een replay met de afvoer en de opvoer (zie
+`--help`).
 
 **Toegankelijk:** een echte knop met `aria-expanded` en `aria-controls`, met een label *Uitleg
 bij <vraag>*. Het paneel staat in de gewone leesvolgorde. Het werkt op mobiel en in de iframe,

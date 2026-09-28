@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import useKeuze from "./useKeuze";
+import { naarRichting, middelste, naarAlfabet, naarLetter, zoekOpKaart } from "./kaartNavigatie";
 
 /**
  * NlMapKeuze — de vorm `nl-map`: gemeenten als stip op de kaart van Nederland. Hybride:
@@ -8,6 +9,12 @@ import useKeuze from "./useKeuze";
  *  - weergave (readOnly): alleen de gekozen gemeenten, groot, met naam.
  * Bij aanwijzen of focus: de gemeente en haar woonplaatsen. Na fusies en hernoemingen ken je
  * de gemeentenaam vaak niet, de plaatsen erin meestal wel.
+ *
+ * Toetsenbord (28-09, kaartNavigatie.js): een kaart is geen lijst.
+ *  - pijltjes: naar de buurstip in die richting (grafisch wandelen), niet de volgende in het alfabet;
+ *  - Shift+↑/↓: vorige/volgende beginletter; Shift+←/→: vorige/volgende in het alfabet;
+ *  - typen: springt naar het zoekveld, dat zoekt op gemeente én woonplaats; Enter kiest.
+ * Waar het druk is (Randstad, Zuid-Limburg) is zoeken sneller dan klikken.
  *
  * Kaartdata: src/vormen/data/nl-kaart.json (scripts/maak_nl_kaartdata.py, PDOK/CBS open data),
  * pas geladen als de vorm op de pagina staat. De koppeling loopt via de CBS-code (GM0344).
@@ -25,6 +32,10 @@ const laadKaart = () => (kaartBelofte ||= import("./data/nl-kaart.json").then((m
 export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onChange = () => {}, readOnly = false, labelId, groepen = null, config = {} }) {
   const [kaart, setKaart] = useState(null);
   const [wijs, setWijs] = useState(null);
+  const [zoek, setZoek] = useState("");
+  const zoekRef = useRef(null);
+  const resultatenRef = useRef(null);
+  const hulpId = `nl-map-hulp-${useId().replace(/:/g, "")}`;
   useEffect(() => { let weg = false; laadKaart().then((k) => { if (!weg) setKaart(k); }); return () => { weg = true; }; }, []);
 
   const accent = config.accentColor || "#e11d48";
@@ -36,8 +47,11 @@ export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onC
   const kleurVan = (v) => groepenVan(v)[0]?.color || accent;
   // In twee groepen (bv. realiseert én gebruikt): ring in de kleur van de tweede groep.
   const ringVan = (v) => groepenVan(v)[1]?.color || null;
+  // De stippen waarover je met het toetsenbord loopt (dezelfde volgorde als de items van useKeuze).
+  const navLijst = readOnly ? gekozen : opKaart;
+  const punten = kaart ? navLijst.map((i) => kaart.gemeenten[i.code]) : [];
 
-  const { getMenuProps, getItemProps, highlightedIndex, isSelected } = useKeuze({
+  const { getMenuProps, getItemProps, highlightedIndex, isSelected, selectItem, setHighlightedIndex } = useKeuze({
     items: readOnly ? gekozen : opKaart,
     itemToKey: (i) => (i ? String(i.value) : null), itemToString: (i) => i?.label ?? "",
     multiple: meervoudig, readOnly,
@@ -45,17 +59,61 @@ export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onC
     onSelectedItemChange: ({ selectedItem }) => onChange(selectedItem ? String(selectedItem.value) : ""),
     onSelectedItemsChange: ({ selectedItems }) => onChange(selectedItems.map((i) => String(i.value))),
     onHighlightedIndexChange: ({ highlightedIndex: h }) => setWijs((readOnly ? gekozen : opKaart)[h] || null),
+    // Focus op de kaart zonder keuze: begin in het midden, niet bij de eerste in het alfabet.
+    stateReducer: (_s, { type, changes }) => (type === useKeuze.stateChangeTypes.MenuFocus && gekozen.length === 0 && punten.length
+      ? { ...changes, highlightedIndex: middelste(punten) } : changes),
   });
+
+  const kaartToets = (e) => {
+    if (!punten.length) return;
+    if (e.key.startsWith("Arrow")) {
+      e.preventDefault();
+      if (highlightedIndex < 0) { setHighlightedIndex(middelste(punten)); return; }
+      const labels = navLijst.map((i) => i.label);
+      const verticaal = e.key === "ArrowUp" || e.key === "ArrowDown";
+      const vooruit = e.key === "ArrowDown" || e.key === "ArrowRight";
+      setHighlightedIndex(e.shiftKey
+        ? (verticaal ? naarLetter(labels, highlightedIndex, vooruit ? 1 : -1) : naarAlfabet(labels, highlightedIndex, vooruit ? 1 : -1))
+        : naarRichting(punten, highlightedIndex, e.key));
+      return;
+    }
+    // Typen op de kaart: verder in het zoekveld.
+    if (!readOnly && e.key.length === 1 && e.key !== " " && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      setZoek(e.key);
+      zoekRef.current?.focus();
+    }
+  };
+
+  const kandidaten = kaart ? opKaart.map((i) => ({ label: i.label, woonplaatsen: kaart.gemeenten[i.code]?.woonplaatsen })) : [];
+  const resultaten = !readOnly && zoek ? zoekOpKaart(kandidaten, zoek) : [];
+  const zoekWijzigt = (tekst) => {
+    setZoek(tekst);
+    const r = zoekOpKaart(kandidaten, tekst);
+    setHighlightedIndex(r[0]?.index ?? -1);
+  };
+  const zoekToets = (e) => {
+    if (e.key === "Enter" && resultaten[0]) { e.preventDefault(); selectItem(opKaart[resultaten[0].index]); setZoek(""); }
+    else if (e.key === "ArrowDown" && resultaten.length) { e.preventDefault(); resultatenRef.current?.querySelector("button")?.focus(); }
+    else if (e.key === "Escape") { setZoek(""); setHighlightedIndex(-1); }
+  };
+  const resultaatToets = (e) => {
+    const knop = e.currentTarget;
+    if (e.key === "ArrowDown") { e.preventDefault(); knop.nextElementSibling?.focus(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); (knop.previousElementSibling || zoekRef.current)?.focus(); }
+    else if (e.key === "Escape") { setZoek(""); zoekRef.current?.focus(); }
+  };
 
   if (!kaart) return <div style={{ height: 120, color: "var(--cg-donkergrijs, #64748b)" }}>Kaart laden…</div>;
   const [, , vbB, vbH] = kaart.viewBox;
-  const lijst = readOnly ? gekozen : opKaart;
+  const lijst = navLijst;
   const info = wijs && kaart.gemeenten[wijs.code];
 
   return (
     <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
       <svg viewBox={`0 0 ${vbB} ${vbH}`} style={{ width: "100%", maxWidth: config.maxWidth || 360, height: "auto", flex: "0 1 auto" }}
-        {...getMenuProps({ ...(labelId ? { "aria-labelledby": labelId } : { "aria-label": "Kaart van Nederland" }), onMouseLeave: () => setWijs(null) })}>
+        {...getMenuProps({ ...(labelId ? { "aria-labelledby": labelId } : { "aria-label": "Kaart van Nederland" }), onMouseLeave: () => setWijs(null), onKeyDown: kaartToets,
+          "aria-describedby": hulpId })}>
         {config.provinces !== false && kaart.provincies.map((p) => (
           <path key={p.naam} d={p.pad} fill="#eef2f7" stroke="#cbd5e1" strokeWidth={0.5} vectorEffect="non-scaling-stroke" aria-hidden="true" />
         ))}
@@ -93,6 +151,31 @@ export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onC
       </svg>
 
       <div style={{ flex: "1 1 200px", minWidth: 180, fontSize: "0.85rem" }}>
+        {!readOnly && (
+          <div style={{ marginBottom: 10 }}>
+            <input ref={zoekRef} type="search" value={zoek} onChange={(e) => zoekWijzigt(e.target.value)} onKeyDown={zoekToets}
+              placeholder="Zoek gemeente of plaats…" aria-label="Zoek een gemeente of woonplaats op de kaart" autoComplete="off"
+              className="utrecht-textbox utrecht-textbox--html-input" style={{ width: "100%", boxSizing: "border-box", padding: "0.3rem 0.5rem", fontSize: "0.85rem" }} />
+            {zoek && (
+              <div ref={resultatenRef} role="group" aria-label="Gevonden gemeenten" style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 4 }}>
+                {resultaten.length === 0 && <span style={{ color: "var(--cg-donkergrijs, #64748b)" }}>Niets gevonden.</span>}
+                {resultaten.map(({ index, via }) => {
+                  const item = opKaart[index];
+                  const aan = isSelected(item);
+                  return (
+                    <button key={item.value} type="button" aria-pressed={aan} onKeyDown={resultaatToets}
+                      onClick={() => { selectItem(item); setZoek(""); zoekRef.current?.focus(); }}
+                      onMouseEnter={() => setHighlightedIndex(index)} onFocus={() => setHighlightedIndex(index)}
+                      style={{ textAlign: "left", border: "1px solid var(--cg-rand, #e2e8f0)", borderRadius: 6, padding: "0.2rem 0.5rem", cursor: "pointer",
+                        background: aan ? "#ffe4e6" : "var(--cg-wit, #fff)", color: "inherit", font: "inherit" }}>
+                      {aan ? "✓ " : ""}<strong>{item.label}</strong>{via && <span style={{ color: "var(--cg-donkergrijs, #64748b)" }}> · via {via}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         {info ? (
           <div aria-live="polite">
             <strong style={{ fontSize: "0.95rem" }}>{wijs.label}</strong>
@@ -104,9 +187,12 @@ export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onC
           </div>
         ) : (
           <div style={{ color: "var(--cg-donkergrijs, #64748b)" }}>
-            {readOnly ? "Wijs een stip aan voor de woonplaatsen." : meervoudig ? "Klik op de gemeenten (pijltjes en spatie werken ook)." : "Klik op een gemeente."}
+            {readOnly ? "Wijs een stip aan voor de woonplaatsen." : meervoudig ? "Klik op de gemeenten, of zoek hierboven." : "Klik op een gemeente, of zoek hierboven."}
           </div>
         )}
+        <div id={hulpId} style={{ marginTop: 8, color: "var(--cg-donkergrijs, #64748b)", fontSize: "0.75rem", lineHeight: 1.4 }}>
+          Toetsen op de kaart: pijltjes naar de buurstip, Shift+↑↓ per letter, Shift+←→ alfabetisch{readOnly ? "" : ", spatie kiest, typen zoekt"}.
+        </div>
         {groepen && (
           <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
             {groepen.map((g) => (

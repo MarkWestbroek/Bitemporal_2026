@@ -85,6 +85,9 @@ export default function useKeuze(props) {
     "aria-activedescendant": state.highlightedIndex >= 0 ? itemId(state.highlightedIndex) : undefined,
     onKeyDown: (e) => {
       onKeyDown?.(e);
+      // Heeft de vorm de toets zelf afgehandeld (preventDefault), dan niet nog eens: zo kan de
+      // kaart pijltjes als richting gebruiken in plaats van als volgende in de lijst.
+      if (e.defaultPrevented) return;
       const type = toetsNaarActie(e.key);
       if (!type) return;
       e.preventDefault();

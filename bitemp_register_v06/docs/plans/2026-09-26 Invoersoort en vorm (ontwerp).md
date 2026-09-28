@@ -419,6 +419,19 @@ Dit is het "vormconfiguratietype" uit §9b, voorlopig in code.
     - De kust is ook fijner vereenvoudigd (tolerantie 0,3 in plaats van 0,6).
     - Test: `src/vormen/nlKaart.test.js`: elke stip op land, én de twaalf gemeenten met veel
       water dicht bij hun hoofdplaats. Die laatste faalt op beide oude versies.
+  - **Toetsenbord en zoeken (28-09, `vormen/kaartNavigatie.js`, getest).** Een kaart is geen
+    lijst:
+    - **pijltjes** lopen naar de buurstip in die richting (een kegel van ±60°, de afwijking
+      telt dubbel);
+    - **Shift+↑/↓** springt naar de vorige/volgende beginletter ('s-Gravenhage telt onder de
+      S), **Shift+←/→** naar de vorige/volgende in het alfabet;
+    - **focus** zonder keuze begint in het midden van de kaart.
+
+    **Zoeken:** een zoekveld naast de kaart zoekt op gemeente én woonplaats ("Wervershoof" →
+    Medemblik). Het eerste resultaat licht op de kaart op, en Enter kiest. Typen terwijl de
+    kaart de focus heeft, gaat verder in het zoekveld. Waar het druk is (Randstad,
+    Zuid-Limburg), is zoeken sneller dan klikken. `useKeuze` slaat een toets over die de vorm
+    zelf al heeft afgehandeld (`preventDefault`).
   - **Caribisch Nederland (28-09).** Bonaire, Saba en Sint Eustatius staan elk in een kader
     linksboven in zee, met een eigen schaal. De omtrek komt uit Natural Earth (publiek
     domein).
