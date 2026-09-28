@@ -7,6 +7,14 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+### Gewijzigd
+- **Kaart van Nederland** (29-09):
+  - elke stip staat op de mediaan van de adressen van de gemeente, niet op het middelpunt van
+    het vlak (Rotterdam stond op de Maasvlakte);
+  - de kaders met Caribisch Nederland staan er altijd (`caribbean: false` om ze te verbergen);
+  - in de weergave is de toetsenhulp alleen voor schermlezers;
+  - een lege groep verdwijnt uit de legenda.
+
 ### Toegevoegd
 - **Kaart van Nederland: toetsenbord en zoeken** (28-09).
   - Pijltjes lopen naar de buurstip in die richting, niet meer alfabetisch.

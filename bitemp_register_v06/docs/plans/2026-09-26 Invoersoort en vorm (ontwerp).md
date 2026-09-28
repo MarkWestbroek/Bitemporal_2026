@@ -410,8 +410,9 @@ Dit is het "vormconfiguratietype" uit §9b, voorlopig in code.
   - **Stip op land (28-09).** Het middelpunt uit de Locatieserver is dat van het hele
     gemeentevlak, water inbegrepen. Bij 12 gemeenten (Urk, Hoorn, Vlissingen, de
     Waddeneilanden, …) lag de stip daardoor in zee of in het IJsselmeer.
-    - Nu: de **mediaan van de adressen** van de gemeente (Locatieserver, type adres), dus waar
-      de mensen wonen. Niet het middelpunt van de woonplaats: ook dat vlak bevat water. Zo
+    - Nu, voor **elke** gemeente (29-09): de **mediaan van de adressen** (Locatieserver, type
+      adres), dus waar de mensen wonen. Eerst alleen voor de twaalf in het water, maar hetzelfde
+      speelde elders: Rotterdam stond op de Maasvlakte (haven), 14 km van de stad. Niet het middelpunt van de woonplaats: ook dat vlak bevat water. Zo
       kwamen Urk en Medemblik in eerste instantie op een dijk terecht (de Houtribdijk hoort bij
       het vlak van Flevoland).
     - Valt het punt door de vereenvoudigde kust net buiten land, dan het dichtstbijzijnde
@@ -433,7 +434,8 @@ Dit is het "vormconfiguratietype" uit §9b, voorlopig in code.
     Zuid-Limburg), is zoeken sneller dan klikken. `useKeuze` slaat een toets over die de vorm
     zelf al heeft afgehandeld (`preventDefault`).
   - **Caribisch Nederland (28-09).** Bonaire, Saba en Sint Eustatius staan elk in een kader
-    linksboven in zee, met een eigen schaal. De omtrek komt uit Natural Earth (publiek
+    linksboven in zee, met een eigen schaal. De kaders staan er altijd, ook zonder stip (uit met
+    `caribbean: false`). De omtrek komt uit Natural Earth (publiek
     domein).
     - Codes: de fictieve CBS-gemeentecodes 9001–9003 (`GM9001` Bonaire, `GM9002` Sint
       Eustatius, `GM9003` Saba).

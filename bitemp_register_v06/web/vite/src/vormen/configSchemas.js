@@ -152,6 +152,7 @@ export const CONFIG_SCHEMAS = {
       codeField: { type: "string", default: "code", "x-omschrijving": "veld van het referentielijst-item met de CBS-code (GM0344)" },
       provinces: { type: "boolean", default: true },
       places: { type: "boolean", default: true, "x-omschrijving": "woonplaatsen van de gemeente tonen" },
+      caribbean: { type: "boolean", default: true, "x-omschrijving": "Caribisch Nederland (Bonaire, Saba, Sint Eustatius) in kaders linksboven tonen" },
       maxWidth: { type: ["string", "number"] },
       accentColor: kleur,
     },
