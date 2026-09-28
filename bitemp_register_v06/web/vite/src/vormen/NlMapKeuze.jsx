@@ -19,7 +19,7 @@ import { naarRichting, middelste, naarAlfabet, naarLetter, zoekOpKaart } from ".
  * Kaartdata: src/vormen/data/nl-kaart.json (scripts/maak_nl_kaartdata.py, PDOK/CBS open data),
  * pas geladen als de vorm op de pagina staat. De koppeling loopt via de CBS-code (GM0344).
  * Caribisch Nederland (Bonaire GM9001, Sint Eustatius GM9002, Saba GM9003: de fictieve
- * CBS-codes) staat in kaders linksboven, zodra de lijst die codes bevat.
+ * CBS-codes) staat altijd in kaders linksboven; een stip alleen als de lijst die codes bevat.
  *
  * Props: items [{ value, label, code }], meervoudig, waarde, onChange, readOnly, labelId,
  *        groepen?: [{ label, color, waarden: [...] }] — alleen weergave: meerdere kleuren
@@ -27,6 +27,7 @@ import { naarRichting, middelste, naarAlfabet, naarLetter, zoekOpKaart } from ".
  *        config { provinces, places, maxWidth, accentColor }
  */
 let kaartBelofte = null;
+const ALLEEN_SCHERMLEZER = { position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap", border: 0 };
 const laadKaart = () => (kaartBelofte ||= import("./data/nl-kaart.json").then((m) => m.default || m));
 
 export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onChange = () => {}, readOnly = false, labelId, groepen = null, config = {} }) {
@@ -117,9 +118,9 @@ export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onC
         {config.provinces !== false && kaart.provincies.map((p) => (
           <path key={p.naam} d={p.pad} fill="#eef2f7" stroke="#cbd5e1" strokeWidth={0.5} vectorEffect="non-scaling-stroke" aria-hidden="true" />
         ))}
-        {/* Caribisch Nederland in kaders linksboven (eigen schaal per kader), alleen als de
-            keuzelijst eilanden bevat (GM9001–GM9003 in de referentielijst). */}
-        {(kaart.kaders || []).filter((k) => opKaart.some((i) => kaart.gemeenten[i.code]?.kader === k.titel)).map((k) => {
+        {/* Caribisch Nederland in kaders linksboven (eigen schaal per kader). Altijd, ook zonder
+            stip: ze horen bij Nederland. Uit met config.caribbean = false. */}
+        {config.caribbean !== false && (kaart.kaders || []).map((k) => {
           const [x, y, b, h] = k.kader;
           return (
             <g key={k.titel} aria-hidden="true">
@@ -190,12 +191,13 @@ export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onC
             {readOnly ? "Wijs een stip aan voor de woonplaatsen." : meervoudig ? "Klik op de gemeenten, of zoek hierboven." : "Klik op een gemeente, of zoek hierboven."}
           </div>
         )}
-        <div id={hulpId} style={{ marginTop: 8, color: "var(--cg-donkergrijs, #64748b)", fontSize: "0.75rem", lineHeight: 1.4 }}>
+        {/* In de weergave (bv. de iframe) alleen voor schermlezers: voor bezoekers is het ruis. */}
+        <div id={hulpId} style={readOnly ? ALLEEN_SCHERMLEZER : { marginTop: 8, color: "var(--cg-donkergrijs, #64748b)", fontSize: "0.75rem", lineHeight: 1.4 }}>
           Toetsen op de kaart: pijltjes naar de buurstip, Shift+↑↓ per letter, Shift+←→ alfabetisch{readOnly ? "" : ", spatie kiest, typen zoekt"}.
         </div>
         {groepen && (
           <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 10 }}>
-            {groepen.map((g) => (
+            {groepen.filter((g) => g.waarden.length > 0).map((g) => (
               <span key={g.label} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                 <span style={{ width: 10, height: 10, borderRadius: "50%", background: g.color }} />{g.label} ({g.waarden.length})
               </span>

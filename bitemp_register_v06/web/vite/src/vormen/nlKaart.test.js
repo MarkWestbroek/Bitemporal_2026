@@ -25,7 +25,7 @@ test("elke gemeentestip ligt op land", () => {
 // Op land is niet genoeg: na de eerste reparatie lag Urk op de Houtribdijk (die hoort bij het
 // vlak van Flevoland) en Medemblik op een dijk. Gemeenten met veel water moeten dicht bij hun
 // hoofdplaats liggen (lon/lat van het dorp of de stad; marge in km, voor gemeenten met meer kernen).
-test("gemeenten met veel water liggen bij hun hoofdplaats, niet op een dijk", () => {
+test("gemeenten met veel water of een haven liggen bij hun hoofdplaats", () => {
   const { lon0, lat0, latMid, schaal } = kaart.projectie;
   const proj = (lon, lat) => [(lon - lon0) * Math.cos((latMid * Math.PI) / 180) * schaal, (lat0 - lat) * schaal];
   const km = 111 / schaal; // 1 eenheid ≈ 1,1 km
@@ -33,6 +33,8 @@ test("gemeenten met veel water liggen bij hun hoofdplaats, niet op een dijk", ()
     Urk: [5.604, 52.663, 3], Medemblik: [5.105, 52.771, 7], Hoorn: [5.06, 52.642, 3], Enkhuizen: [5.29, 52.703, 3],
     Harlingen: [5.42, 53.175, 3], Lelystad: [5.471, 52.518, 3], Vlissingen: [3.573, 51.443, 4], Waterland: [5.037, 52.456, 4],
     Terschelling: [5.28, 53.39, 6], Vlieland: [5.07, 53.3, 4], Ameland: [5.77, 53.45, 8], Schiermonnikoog: [6.2, 53.48, 4],
+    // Een haven trekt het middelpunt weg (Rotterdam stond op de Maasvlakte, 14 km van de stad).
+    Rotterdam: [4.479, 51.922, 3], Amsterdam: [4.9, 52.373, 3], Velsen: [4.61, 52.46, 4], Moerdijk: [4.63, 51.65, 8],
   };
   const te_ver = Object.entries(hoofdplaats).map(([naam, [lon, lat, marge]]) => {
     const g = Object.values(kaart.gemeenten).find((x) => x.naam === naam);

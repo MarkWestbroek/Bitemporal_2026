@@ -10,11 +10,12 @@ en schrijft één JSON (standaard web/vite/src/vormen/data/nl-kaart.json) in een
 x/y in de viewBox, met een eenvoudige projectie (lengtegraad × cos 52,2°). Nauwkeurig genoeg voor
 een stip op een kaartje; geen GIS.
 
-Stip op land (28-09): het middelpunt van een gemeente is dat van het hele vlak, water inbegrepen,
-en valt bij gemeenten met veel water in zee of het IJsselmeer (Terschelling, Urk, Hoorn,
-Vlissingen, …). Dan de mediaan van de adressen van de gemeente: waar de mensen wonen. Niet het
-middelpunt van de woonplaats: ook dat vlak bevat water (Urk kwam zo op de Noord-Hollandse kust).
-Valt het punt door de vereenvoudigde kust net buiten land, dan het dichtstbijzijnde punt op land.
+Stip waar de mensen wonen (28-09/29-09): het middelpunt van een gemeente is dat van het hele vlak,
+water en haven inbegrepen. Het valt bij gemeenten met veel water in zee of het IJsselmeer
+(Terschelling, Urk, …) of ver van de kern (Rotterdam op de Maasvlakte). Daarom voor élke gemeente
+de mediaan van haar adressen (Locatieserver, type adres). Niet het middelpunt van de woonplaats:
+ook dat vlak bevat water (Urk kwam zo op de Houtribdijk). Zonder adressen: het middelpunt. Valt het
+punt door de vereenvoudigde kust net buiten land, dan het dichtstbijzijnde punt op land.
 
 Caribisch Nederland (28-09): Bonaire, Sint Eustatius en Saba in kaders linksboven in zee (zoals
 op de meeste kaarten van NL), elk kader met een eigen schaal. Omtrek: Natural Earth (10m, map
@@ -268,39 +269,32 @@ def main():
         gemeenten[code] = {"naam": d["gemeentenaam"], "x": x, "y": y, "woonplaatsen": []}
     print(f"gemeenten: {len(gemeenten)}")
 
-    plaatspunten = {}  # gemeentecode → [(naam, x, y)]
-    for d in locatieserver("type:woonplaats", "woonplaatsnaam,gemeentecode,centroide_ll"):
+    for d in locatieserver("type:woonplaats", "woonplaatsnaam,gemeentecode"):
         code = "GM" + str(d.get("gemeentecode", "")).zfill(4)
         if code in gemeenten and d.get("woonplaatsnaam"):
             gemeenten[code]["woonplaatsen"].append(d["woonplaatsnaam"])
-            p = punt(d.get("centroide_ll"))
-            if p:
-                plaatspunten.setdefault(code, []).append((d["woonplaatsnaam"], *projecteer(*p)))
     for g in gemeenten.values():
         g["woonplaatsen"] = sorted(set(g["woonplaatsen"]))
     print(f"woonplaatsen: {sum(len(g['woonplaatsen']) for g in gemeenten.values())}")
 
-    # Stip op land: zie de uitleg bovenaan.
+    # Stip waar de mensen wonen: zie de uitleg bovenaan. Voor alle gemeenten (±1400 verzoeken).
     land = [r for p in provincies for r in ringen_van_pad(p["pad"])]
     verplaatst = []
-    for code, g in gemeenten.items():
-        if op_land(g["x"], g["y"], land):
-            continue
-        # Doel: de mediaan van de adressen; zonder adressen de woonplaats met de naam van de
-        # gemeente, anders de woonplaats die het dichtst bij het middelpunt ligt.
-        mediaan = adres_mediaan(code[2:])  # 4 cijfers, met voorloopnullen (0184)
-        plaatsen = plaatspunten.get(code, [])
-        zelfde = [p for p in plaatsen if p[0].lower() == g["naam"].lower()]
-        dichtst = sorted(plaatsen, key=lambda p: (p[1] - g["x"]) ** 2 + (p[2] - g["y"]) ** 2)
-        keus = None if mediaan else (zelfde or dichtst or [None])[0]
-        doel = projecteer(*mediaan) if mediaan else (keus[1], keus[2]) if keus else (g["x"], g["y"])
+    for n, (code, g) in enumerate(gemeenten.items(), 1):
+        mediaan = adres_mediaan(code[2:], monsters=4)  # 4 cijfers, met voorloopnullen (0184)
+        oud = (g["x"], g["y"])
+        doel = projecteer(*mediaan) if mediaan else oud
         x, y = doel if op_land(*doel, land) else naar_land(*doel, land)
         x, y = round(x, 2), round(y, 2)
         if not op_land(x, y, land):  # op de rand: na afronden net in het water
             x, y = (round(v, 2) for v in naar_land(x, y, land))
         g["x"], g["y"] = x, y
-        verplaatst.append(f"{g['naam']} → {'adressen' if mediaan else keus[0] if keus else 'de kust'}")
-    print(f"stip naar land verplaatst: {len(verplaatst)}: " + "; ".join(verplaatst))
+        km = math.dist(oud, (x, y)) * 1.11
+        if km > 3:
+            verplaatst.append(f"{g['naam']} {km:.0f} km")
+        if n % 50 == 0:
+            print(f"  … {n} gemeenten", flush=True)
+    print(f"stip meer dan 3 km verplaatst: {len(verplaatst)}: " + "; ".join(verplaatst))
 
     alle_x = [g["x"] for g in gemeenten.values()]
     alle_y = [g["y"] for g in gemeenten.values()]
