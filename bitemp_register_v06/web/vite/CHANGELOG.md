@@ -7,6 +7,16 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+### Toegevoegd
+- **Kaart van Nederland: toetsenbord en zoeken** (28-09).
+  - Pijltjes lopen naar de buurstip in die richting, niet meer alfabetisch.
+  - Shift+↑/↓ gaat per beginletter, Shift+←/→ alfabetisch.
+  - Een zoekveld zoekt op gemeente en woonplaats; typen op de kaart gaat erheen. Zo is kiezen ook
+    te doen waar het druk is.
+  - De bedieningstekst is aangepast (vormenregister en `vorm-nl-map`).
+- **`scripts/maak_uitleg_correctie.py`**: de tekst van een uitleg wijzigen in één replay (afvoer +
+  opvoer).
+
 ### Opgelost
 - **Kaart van Nederland: Urk en Medemblik op een dijk** (28-09). De eerste reparatie gebruikte het
   middelpunt van de woonplaats, en ook dat vlak bevat water. Urk kwam zo op de Houtribdijk. Nu de

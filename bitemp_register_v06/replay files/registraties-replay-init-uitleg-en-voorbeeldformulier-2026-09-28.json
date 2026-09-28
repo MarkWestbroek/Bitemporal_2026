@@ -434,7 +434,7 @@
                 "uitleg_id": "$nieuw.u8",
                 "taal": "nl",
                 "titel": "",
-                "tekst": "Klik op een stip om een gemeente te kiezen; wijs een stip aan om de naam en woonplaatsen te zien. Met het toetsenbord: pijltjes en spatie."
+                "tekst": "Klik op een stip, of typ een gemeente of woonplaats in het zoekveld (Enter kiest). Op de kaart: pijltjes naar de buurstip, Shift+↑↓ per letter, Shift+←→ alfabetisch, spatie kiest."
               }
             }
           },
@@ -444,7 +444,7 @@
                 "uitleg_id": "$nieuw.u8",
                 "taal": "en",
                 "titel": "",
-                "tekst": "Click a dot to choose a municipality; point at a dot to see its name and towns. With the keyboard: arrow keys and space."
+                "tekst": "Click a dot, or type a municipality or town in the search box (Enter selects). On the map: arrow keys to the neighbouring dot, Shift+↑↓ by letter, Shift+←→ alphabetically, space selects."
               }
             }
           },

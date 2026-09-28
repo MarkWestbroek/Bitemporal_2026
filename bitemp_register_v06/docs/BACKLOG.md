@@ -1658,8 +1658,9 @@ Ook een vorm kan uitleg hebben (de kleurkiezer), naast de inhoud ("de kleur van 
   - **Taal kiezen:** nu volgt de uitleg `<html lang>`. Een `?taal=` of een taalkeuze op het
     formulier ontbreekt nog, net als vertaalde labels.
   - **Uitleg in de publicatie** (bij een kop in een WeergaveDefinitie) en in de Studio.
-  - **Een eigen LijstDefinitie voor Uitleg** (code, titel, talen), en tekst wijzigen in één stap:
-    nu moet je de oude tekst-rij afvoeren en een nieuwe opvoeren.
+  - **Een eigen LijstDefinitie voor Uitleg** (code, titel, talen). ✅ Een tekst wijzigen in één
+    stap kan sinds 28-09 met `scripts/maak_uitleg_correctie.py` (een replay met afvoer + opvoer).
+    In de inhoud-editor gaat het nog in twee stappen.
   - **Codegen neemt veldbeschrijvingen niet mee.** `description` op een veld in de V3 komt niet in
     de Go-code, en dus ook niet terug in een export. Gezien bij Uitleg en LijstDefinitie.
     Mogelijke oplossing: een `schema_desc`-tag per veld, zoals bij de id-velden.
