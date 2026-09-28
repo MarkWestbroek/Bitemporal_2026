@@ -208,3 +208,35 @@ type LijstDefinitie_Einde struct {
 	Opvoer            *time.Time `json:"opvoer,omitempty"`
 	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }
+
+// Uitleg — Uitleg bij een vraag in een formulier (het (i)-rondje): een losse, herbruikbare tekst met een code, zodat hetzelfde begrip (bv. een postcode) op elk formulier dezelfde uitleg krijgt. Per taal een tekst; code + taal is het adres. Inhoudelijke uitleg voor de invuller, dus bewust los van de (technischere) beschrijving van het attribuut in het model. Bitemporeel: je ziet welke uitleg er stond toen iemand het formulier invulde.
+type Uitleg struct {
+	bun.BaseModel `bun:"table:uitleg,alias:uitleg"`
+	ID            int              `json:"id" bun:"id,pk"`
+	Opvoer        *time.Time       `json:"opvoer,omitempty"`
+	Afvoer        *time.Time       `json:"afvoer,omitempty"`
+	UitlegMetas   []Uitleg_Meta    `bun:"rel:has-many,join:id=uitleg_id" json:"uitleg_metas,omitempty"`
+	UitlegTeksten []Uitleg_Tekst   `bun:"rel:has-many,join:id=uitleg_id" json:"uitleg_teksten,omitempty"`
+	Aanvang       []Uitleg_Aanvang `bun:"rel:has-many,join:id=uitleg_id" json:"aanvang,omitempty"`
+	Einde         []Uitleg_Einde   `bun:"rel:has-many,join:id=uitleg_id" json:"einde,omitempty"`
+}
+
+// Uitleg_Aanvang — aanvangdatum van entiteit Uitleg.
+type Uitleg_Aanvang struct {
+	bun.BaseModel `bun:"table:uitleg_aanvang,alias:uitleg_aanvang"`
+	Uitleg_ID     int        `json:"uitleg_id" bun:"uitleg_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// Uitleg_Einde — eindedatum van entiteit Uitleg.
+type Uitleg_Einde struct {
+	bun.BaseModel `bun:"table:uitleg_einde,alias:uitleg_einde"`
+	Uitleg_ID     int        `json:"uitleg_id" bun:"uitleg_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}

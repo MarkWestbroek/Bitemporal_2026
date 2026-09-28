@@ -178,3 +178,21 @@ type LijstDefinitie_Lijstconfig_Input struct {
 	FormulierKiesbaar *bool   `json:"formulier_kiesbaar,omitempty"`
 	DefinitieVersie   Versie  `json:"definitie_versie" schema:"datatype:Versie"`
 }
+
+type Uitleg_Meta_Input struct {
+	UITLEG_ID    int          `json:"uitleg_id"`
+	Rel_ID       int          `json:"rel_id"`
+	Code         string       `json:"code" schema:"uniek=entiteit"`
+	Naam         string       `json:"naam"`
+	Beschrijving *string      `json:"beschrijving,omitempty"`
+	Soort        *UitlegSoort `json:"soort,omitempty" schema:"enum=UitlegSoort"`
+	Status       UitlegStatus `json:"status" schema:"enum=UitlegStatus"`
+}
+
+type Uitleg_Tekst_Input struct {
+	UITLEG_ID int        `json:"uitleg_id"`
+	Rel_ID    int        `json:"rel_id"`
+	Taal      UitlegTaal `json:"taal" schema:"enum=UitlegTaal"`
+	Titel     *string    `json:"titel,omitempty"`
+	Tekst     string     `json:"tekst"`
+}

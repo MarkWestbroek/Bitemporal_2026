@@ -6,6 +6,7 @@ import { useSchema } from "../../context/SchemaContext";
 import CodeEditor, { jsonParseFout } from "./CodeEditor";
 import { normaliseer } from "../../umleditor/validatie/normaliseer.js";
 import VormInvoer, { VORMINVOER } from "./VormInvoer";
+import Uitleg from "./Uitleg";
 import { normaliseerVorm, vormPastBij, invoersoortVanVeld, effectieveVorm, vormUitDatatype, splitsLijst, voegLijstSamen, INVOERSOORT } from "../../vormen/vormen";
 
 /**
@@ -31,8 +32,11 @@ import { normaliseerVorm, vormPastBij, invoersoortVanVeld, effectieveVorm, vormU
  *                    FD-id van een ingebed "nieuw"-formulier en de maak-diepte (EntiteitCombobox)
  *  - toonValidatie: undefined = valideer direct (bewerk-modus); false/true = pas na aanraking
  *                    van het veld of na een verzendpoging (nieuw-modus)
+ *  - uitlegElement: het layout-element (uitleg / uitlegTekst / vormUitleg) voor het (i)-rondje
+ *                    naast het label (Uitleg.jsx); ook zonder element toont een vorm met
+ *                    `bediening` (VORMEN) het rondje.
  */
-export default function SchemaFormField({ veld, value, onChange: onChangeProp, error, readOnly, widgetOverride, vorm, vormConfig, labelOverride, nieuwFormulier, diepte = 0, toonValidatie }) {
+export default function SchemaFormField({ veld, value, onChange: onChangeProp, error, readOnly, widgetOverride, vorm, vormConfig, labelOverride, nieuwFormulier, diepte = 0, toonValidatie, uitlegElement }) {
   const fieldId = useId();
   const { datatypeByNaam } = useSchema();
   // Aangeraakt = de gebruiker heeft het veld gewijzigd of verlaten. Met `toonValidatie`
@@ -299,11 +303,21 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
   const isFullWidth = effectieveWidget === "json" || effectieveWidget === "markdown";
 
   return (
-    <div className="utrecht-form-field" style={{ marginBottom: "0.75rem", ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }} onBlur={() => setAangeraakt(true)}>
-      <label id={`${fieldId}-label`} htmlFor={fieldId} className="utrecht-form-label" style={{ display: "block", marginBottom: "0.25rem" }}>
-        {labelOverride || veld.naam}
-        {veld.verplicht && <span style={{ color: "var(--cg-fout)", marginLeft: 4 }}>*</span>}
-      </label>
+    <div className="utrecht-form-field" style={{ marginBottom: "0.75rem", ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }} onBlur={(e) => { if (!e.target.closest?.("[data-uitleg]")) setAangeraakt(true); }}>
+      <Uitleg element={uitlegElement} vorm={effectieveWidget} label={labelOverride || veld.naam}>
+        {({ knop, paneel }) => (
+          <>
+            <div style={{ marginBottom: "0.25rem" }}>
+              <label id={`${fieldId}-label`} htmlFor={fieldId} className="utrecht-form-label">
+                {labelOverride || veld.naam}
+                {veld.verplicht && <span style={{ color: "var(--cg-fout)", marginLeft: 4 }}>*</span>}
+              </label>
+              {knop}
+            </div>
+            {paneel}
+          </>
+        )}
+      </Uitleg>
       {veld.description && (
         <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>
           {veld.description}

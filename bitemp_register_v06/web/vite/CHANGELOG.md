@@ -7,6 +7,20 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+### Toegevoegd
+- **Uitleg bij een vraag: het (i)-rondje** (28-09). Een losse, vertaalbare uitleglijst
+  (entiteit `Uitleg`, code + taal, soort `inhoud` of `vorm`) met `uitleg`/`uitlegTekst` op veld,
+  groep en lijst, plus de bediening van de vorm (uit de lijst als `vorm-<naam>`, anders het
+  vormenregister). Toegankelijk als disclosure, in te stellen in de
+  formuliereditor. Zie `docs/FORMULIERDEFINITIES.md` §2.5.
+- **Kaart van Nederland (`nl-map`): Caribisch Nederland** (28-09). Bonaire, Saba en Sint Eustatius
+  (GM9001–GM9003) in kaders linksboven, zodra ze in de referentielijst staan.
+
+### Opgelost
+- **Kaart van Nederland: stippen in het water** (28-09). Bij 12 gemeenten met veel water (Urk,
+  Hoorn, Vlissingen, Waddeneilanden, …) lag de stip in zee; nu op de eigen woonplaats, op land.
+  Met een test op de kaartdata.
+- **(i)-uitleg:** openen markeerde het veld als aangeraakt, waardoor *verplicht* verscheen.
 
 ## [studio/v0.9.0] — 2026-09-22
 ### Toegevoegd

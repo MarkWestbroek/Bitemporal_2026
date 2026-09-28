@@ -24,6 +24,12 @@ func initConfiguratieEnumRegistry() {
 	EnumDomeinen["DashboardWeergave"] = "configuratie"
 	EnumWaarden["LijstDefinitieStatus"] = []string{"concept", "actief", "inactief"}
 	EnumDomeinen["LijstDefinitieStatus"] = "configuratie"
+	EnumWaarden["UitlegStatus"] = []string{"concept", "actief", "inactief"}
+	EnumDomeinen["UitlegStatus"] = "configuratie"
+	EnumWaarden["UitlegTaal"] = []string{"nl", "en", "de", "fr", "fy"}
+	EnumDomeinen["UitlegTaal"] = "configuratie"
+	EnumWaarden["UitlegSoort"] = []string{"inhoud", "vorm"}
+	EnumDomeinen["UitlegSoort"] = "configuratie"
 
 	// Enum editor-layout (positie + lock)
 	EnumEditorLayouts["FormulierDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 2895, Y: -330}}
@@ -36,4 +42,7 @@ func initConfiguratieEnumRegistry() {
 	EnumEditorLayouts["DashboardDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 6130, Y: -330}}
 	EnumEditorLayouts["DashboardWeergave"] = &EditorLayout{Positie: &V3Positie{X: 6330, Y: -330}}
 	EnumEditorLayouts["LijstDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 4280, Y: -315}}
+	EnumEditorLayouts["UitlegStatus"] = &EditorLayout{Positie: &V3Positie{X: 5130, Y: -315}}
+	EnumEditorLayouts["UitlegTaal"] = &EditorLayout{Positie: &V3Positie{X: 5380, Y: -315}}
+	EnumEditorLayouts["UitlegSoort"] = &EditorLayout{Positie: &V3Positie{X: 5630, Y: -315}}
 }

@@ -8,6 +8,8 @@ import { vindElement } from "./layoutModel";
 import VormEditor from "./VormEditor";
 import { INVOERSOORT, invoersoortVanVeld } from "../vormen/vormen";
 import { isGeldigeCode } from "../shared/definitieSleutel";
+import { useSchema } from "../context/SchemaContext";
+import { haalUitleggen } from "../hooks/useUitleggen";
 
 const veldStijl = {
   width: "100%", boxSizing: "border-box", padding: "4px 6px", fontSize: 13,
@@ -102,6 +104,7 @@ export default function FormulierInspector() {
           <Regel label="Pad-context (shorthand, optioneel)">
             <input style={veldStijl} value={el.context || ""} onChange={(e) => update(el._id, { context: e.target.value })} placeholder="bv. Initiatief.Product" />
           </Regel>
+          <UitlegEditor el={el} update={update} />
           <VormEditor el={el} update={update} invoersoorten={[INVOERSOORT.SAMENGESTELD]} veldStijl={veldStijl} labelStijl={labelStijl} />
         </>
       )}
@@ -152,6 +155,7 @@ export default function FormulierInspector() {
           <Regel label="Beschrijving (helptekst)">
             <input style={veldStijl} value={el.beschrijving || ""} onChange={(e) => update(el._id, { beschrijving: e.target.value })} />
           </Regel>
+          <UitlegEditor el={el} update={update} />
           <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: 12.5, cursor: "pointer" }}>
             <input type="checkbox" checked={!!el.readonly} onChange={(e) => update(el._id, { readonly: e.target.checked })} />
             Alleen-lezen (read-only)
@@ -198,6 +202,7 @@ export default function FormulierInspector() {
           <Regel label="Label">
             <input style={veldStijl} value={el.label || ""} onChange={(e) => update(el._id, { label: e.target.value })} />
           </Regel>
+          <UitlegEditor el={el} update={update} />
           <Regel label="Bron (ENT.GE — meervoudig pad)">
             <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.bron || ""} onChange={(e) => update(el._id, { bron: e.target.value })} placeholder="bv. Initiatief.bijdragen" />
           </Regel>
@@ -251,6 +256,41 @@ function ConditieEditor({ el, update, veldInfo }) {
           <input style={veldStijl} value={conditie.waarde || ""} onChange={(e) => zet({ waarde: e.target.value })} />
         </Regel>
       )}
+    </>
+  );
+}
+
+/**
+ * Het (i)-rondje bij een vraag (docs/FORMULIERDEFINITIES.md §2.5): een code uit de uitleglijst
+ * (entiteit Uitleg, herbruikbaar en vertaalbaar), of een eigen tekst voor alleen deze vraag, en of
+ * de bediening-uitleg van de vorm mee mag.
+ */
+function UitlegEditor({ el, update }) {
+  const { baseUrl = "" } = useSchema() || {};
+  const [codes, setCodes] = React.useState([]);
+  React.useEffect(() => {
+    let weg = false;
+    haalUitleggen(baseUrl).then((index) => { if (!weg) setCodes(Object.entries(index).map(([code, u]) => ({ code, titel: u.teksten?.nl?.titel || "" }))); });
+    return () => { weg = true; };
+  }, [baseUrl]);
+  const lijstId = `uitleg-codes-${el._id}`;
+  const onbekend = el.uitleg && codes.length > 0 && !codes.some((c) => c.code === el.uitleg);
+  return (
+    <>
+      <Regel label="Uitleg (code uit de uitleglijst) — het (i)-rondje">
+        <input style={{ ...veldStijl, fontFamily: "monospace", borderColor: onbekend ? "#d97706" : undefined }} list={lijstId} value={el.uitleg || ""}
+          onChange={(e) => update(el._id, { uitleg: e.target.value.trim() || undefined })} placeholder="bv. adres-postcode" />
+        <datalist id={lijstId}>{codes.map((c) => <option key={c.code} value={c.code}>{c.titel}</option>)}</datalist>
+        {onbekend && <div style={{ color: "#b45309", fontSize: 11 }}>Geen actieve uitleg met deze code (nog niet aangemaakt, of concept).</div>}
+      </Regel>
+      <Regel label="Uitleg (eigen tekst, alleen hier; gaat vóór de code)">
+        <textarea style={{ ...veldStijl, minHeight: 44 }} value={el.uitlegTekst || ""} onChange={(e) => update(el._id, { uitlegTekst: e.target.value || undefined })}
+          placeholder="Eenvoudige markdown: **vet**, [link](https://…), - opsomming" />
+      </Regel>
+      <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, fontSize: 12.5, cursor: "pointer" }}>
+        <input type="checkbox" checked={el.vormUitleg !== false} onChange={(e) => update(el._id, { vormUitleg: e.target.checked ? undefined : false })} />
+        Bediening van de vorm tonen (bv. „klik op een stip")
+      </label>
     </>
   );
 }

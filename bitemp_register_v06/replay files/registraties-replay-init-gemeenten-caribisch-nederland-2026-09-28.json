@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-28T22:00:00.000Z",
+  "source": "handmatig (Claude-sessie 28-09-2026)",
+  "description": "Caribisch Nederland in de referentielijst Gemeente: de openbare lichamen Bonaire, Sint Eustatius en Saba met de fictieve CBS-gemeentecodes 9001, 9002 en 9003 (alleen voor statistiek; zie nl.wikipedia.org/wiki/Gemeentenummer). Id = de numerieke code, zoals bij registraties-replay-init-gemeenten-cbs-2026.json. De kaart (vorm nl-map) toont ze in kaders linksboven zodra ze in de lijst staan. LET OP pf: ze worden dan ook kiesbaar in het aanmeldformulier.",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-28T22:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "Caribisch Nederland (GM9001–GM9003) in de referentielijst Gemeente",
+      "expected_response_code": 201,
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "Caribisch Nederland: Bonaire, Sint Eustatius, Saba (GM9001–GM9003)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "gemeente": {
+                "id": 9001
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "gemeentegegevens": {
+                "gemeente_id": 9001,
+                "naam": "Bonaire",
+                "code": "GM9001"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "gemeente": {
+                "id": 9002
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "gemeentegegevens": {
+                "gemeente_id": 9002,
+                "naam": "Sint Eustatius",
+                "code": "GM9002"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "gemeente": {
+                "id": 9003
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "gemeentegegevens": {
+                "gemeente_id": 9003,
+                "naam": "Saba",
+                "code": "GM9003"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
