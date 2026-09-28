@@ -533,6 +533,22 @@ anders optie). Een snapshot is een noodrem, geen backup.
     - `?weergave=initiatief-v2`.
   - **Terug:** `pf.sh deploy c02aba39`.
 
+  **Elfde ronde 28-09-2026 (release studio 0.10.0 / api 0.8.0; `7cb91aec`)**:
+  - **Dump** vooraf: `/srv/omnium-pf/predeploy-20260928-2016.sql.gz`. Daarna `pf.sh deploy`;
+    alle containers healthy, header `API-Version: 0.8.0`.
+  - **Afgespeeld** (alles HTTP 201):
+    - `registraties-replay-init-uitleg-en-voorbeeldformulier-2026-09-28.json`: 6 inhoud- en
+      13 vorm-uitleggen, plus FD `voorbeeld-uitleg`;
+    - `registraties-replay-init-gemeenten-caribisch-nederland-2026-09-28.json`: Bonaire, Sint
+      Eustatius en Saba (GM9001–GM9003) in de referentielijst Gemeente, met akkoord van Mark.
+      Ze zijn nu ook kiesbaar in het aanmeldformulier.
+  - **Gecontroleerd met Playwright:**
+    - de iframe: 100 records, geen keuzelijst, detail 38 minimaal;
+    - de kaart in *Initiatief met vormen* (detail 40);
+    - Bonaire kiesbaar in `aanmelden.html`.
+  - **Terug:** `pf.sh deploy c2a753ce`. De uitleg-tabellen en de drie gemeenten mogen blijven
+    staan.
+
   **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
   (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
   verbinding** (587/STARTTLS geeft `454 Temporary authentication failure`, ook als de mailbox nog
