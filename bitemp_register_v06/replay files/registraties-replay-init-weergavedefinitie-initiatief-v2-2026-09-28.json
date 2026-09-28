@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "exported_at": "2026-09-28T20:00:00.000Z",
+  "source": "handmatig (Claude-sessie 28-09-2026)",
+  "description": "Nieuwe WeergaveDefinitie 'Initiatief v2' (code initiatief-v2, doeltype Initiatief, actief, NIET standaard): een completere detailweergave naast de minimale standaard (WD 2). Zelfde tabelconfig als WD 2 (query publieke-initiatieven / detailQuery publiek-initiatief-detail, dus alleen geaccepteerde initiatieven). Detail: samenvattingstabel zoals WD 2, domeinen en API-standaarden als labels (plus andere API-standaarden), gemeenten per rol in twee kolommen met een kaart, realisatie door anderen, bijdragen als schaalbalken, planning, organisaties en contact. Bekijken: publicatie.html?weergave=initiatief-v2#/t/initiatieven/<id>. Standaard maken = is_standaard aan op v2 en uit op WD 2 (meta); terugschakelen = andersom. Id als plaatshouder ($nieuw.wd).",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-09-28T20:00:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie 'Initiatief v2'",
+      "request_body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "WeergaveDefinitie Initiatief v2 (completere detailweergave, niet standaard)"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": {
+                "id": "$nieuw.wd"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": "$nieuw.wd",
+                "naam": "Initiatief v2",
+                "code": "initiatief-v2",
+                "beschrijving": "Completere detailweergave van een initiatief: domeinen, gemeenten (met kaart), API-standaarden, bijdragen, planning en organisaties. Naast de minimale standaardweergave; kies met ?weergave=initiatief-v2, of maak hem standaard via is_standaard.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": false
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": "$nieuw.wd",
+                "tabel_config_json": "{\"kolommen\": [{\"veldpad\": \"id\", \"label\": \"ID\", \"breedte\": 80, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"producten.data.naam\", \"label\": \"Productnaam\", \"breedte\": 180, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"producten.data.type\", \"label\": \"Type\", \"breedte\": 120, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"producten.data.CG_laag\", \"label\": \"CG-laag\", \"breedte\": 120}, {\"veldpad\": \"initiatief_domeinen.weergavenaam\", \"label\": \"Domeinen\", \"breedte\": 180, \"sorteerbaar\": false, \"filterbaar\": true}, {\"veldpad\": \"planningen.data.fase\", \"label\": \"Fase\", \"breedte\": 120, \"sorteerbaar\": true, \"filterbaar\": true}, {\"veldpad\": \"planningen.data.startdatum\", \"label\": \"Startdatum\", \"breedte\": 120, \"sorteerbaar\": true}], \"standaardSortering\": {\"veld\": \"id\", \"richting\": \"asc\"}, \"rijenPerPagina\": 25, \"query\": \"publieke-initiatieven\", \"detailQuery\": \"publiek-initiatief-detail\"}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": "$nieuw.wd",
+                "template_tekst": "# {{producten.naam}}\n## {{producten.type}}\n\n| **Korte omschrijving** | **Fase initiatief** | **Common Ground La(a)g(en)** |\n| --- | --- | --- |\n| {{producten.omschrijving}} | {{planningen.fase}} | {{producten.CG_laag}} |\n\n{{#if initiatief_domeinen.weergavenaam}}\n### Domeinen\n{{vorm chips initiatief_domeinen.weergavenaam}}\n{{/if}}\n{{#if initiatief_gemeenten.weergavenaam}}\n### Gemeenten\n\n| Realiserende gemeenten | Gebruik makende gemeenten |\n| --- | --- |\n| {{initiatief_gemeenten[rol=Realiseert].gemeente.gemeentegegevens.naam}} | {{initiatief_gemeenten[rol=Maakt gebruik van].gemeente.gemeentegegevens.naam}} |\n\n{{#vorm nl-map initiatief_gemeenten}}\n{\"codeField\": \"gemeente.gemeentegegevens.code\", \"labelField\": \"gemeente.gemeentegegevens.naam\", \"maxWidth\": 240, \"groups\": [{\"label\": \"Realiseert\", \"color\": \"#e11d48\", \"filter\": {\"rol\": \"Realiseert\"}}, {\"label\": \"Maakt gebruik van\", \"color\": \"#2563eb\", \"filter\": {\"rol\": \"Maakt gebruik van\"}}]}\n{{/vorm}}\n{{/if}}\n{{#if anders_dan_gemeenten.andersDanGemeente}}- **Realisatie door anderen dan gemeenten:** {{anders_dan_gemeenten.andersDanGemeente}}\n{{/if}}\n{{#if initiatief_api_standaarden.weergavenaam}}\n### API-standaarden\n{{vorm chips initiatief_api_standaarden.weergavenaam}}\n{{/if}}\n{{#if andere_api_standaarden.api_standaard}}- **Andere API-standaarden:** {{andere_api_standaarden.api_standaard}}\n{{/if}}\n{{#if bijdragen.schaal}}\n### Bijdrage aan Common Ground\n{{#vorm scale-bars bijdragen}}\n{\"rowField\": \"type_bijdrage\", \"columnField\": \"schaal\", \"noteField\": \"toelichting\", \"rows\": [\"Wendbaarheid\", \"Dienstverlening\", \"Regie\"], \"columns\": [{\"value\": \"Schaal 1\", \"label\": \"klein\", \"color\": \"#dbeafe\"}, {\"value\": \"Schaal 2\", \"label\": \"2\", \"color\": \"#93c5fd\"}, {\"value\": \"Schaal 3\", \"label\": \"3\", \"color\": \"#60a5fa\"}, {\"value\": \"Schaal 4\", \"label\": \"groot\", \"color\": \"#2563eb\"}]}\n{{/vorm}}\n{{/if}}\n\n### Planning\n{{#if planningen.startdatum}}- **Startdatum:** {{planningen.startdatum}}\n{{/if}}{{#if planningen.ready_for_use}}- **Ready for use:** {{planningen.ready_for_use}}\n{{/if}}{{#if planningen.planningsinfo}}- **Meer over de planning:** {{planningen.planningsinfo}}\n{{/if}}\n\n### Organisaties\n{{#if initiatief_organisaties[rol=Contactorganisatie].organisatie.organisatienamen.naam}}- **Contactorganisatie:** {{initiatief_organisaties[rol=Contactorganisatie].organisatie.organisatienamen.naam}}\n{{/if}}{{#if initiatief_organisaties[rol=Contactorganisatie].organisatie.contactpersonen.persoon.persoonnamen.naam}}- **Contactpersoon:** {{initiatief_organisaties[rol=Contactorganisatie].organisatie.contactpersonen.persoon.persoonnamen.naam}}\n{{/if}}{{#if initiatief_organisaties[rol=Contactorganisatie].organisatie.contactpersonen.persoon.persoonscontactgegevens.email}}- **E-mail:** [{{initiatief_organisaties[rol=Contactorganisatie].organisatie.contactpersonen.persoon.persoonscontactgegevens.email}}](mailto:{{initiatief_organisaties[rol=Contactorganisatie].organisatie.contactpersonen.persoon.persoonscontactgegevens.email}})\n{{/if}}{{#if initiatief_organisaties[rol=BetrokkenOrganisatie].organisatie.organisatienamen.naam}}- **Betrokken leveranciers:** {{initiatief_organisaties[rol=BetrokkenOrganisatie].organisatie.organisatienamen.naam}}\n{{/if}}{{#if betrokken_organisatie.type}}- **Soorten betrokken organisaties:** {{betrokken_organisatie.type}}\n{{/if}}{{#if producten.website}}- **Website:** [{{producten.website}}]({{producten.website}})\n{{/if}}{{#if producten.git_repo}}- **Git:** [{{producten.git_repo}}]({{producten.git_repo}})\n{{/if}}\n",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": "$nieuw.wd",
+                "datum": "2026-09-28"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}
