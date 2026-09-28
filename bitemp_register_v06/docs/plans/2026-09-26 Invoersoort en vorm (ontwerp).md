@@ -410,12 +410,15 @@ Dit is het "vormconfiguratietype" uit §9b, voorlopig in code.
   - **Stip op land (28-09).** Het middelpunt uit de Locatieserver is dat van het hele
     gemeentevlak, water inbegrepen. Bij 12 gemeenten (Urk, Hoorn, Vlissingen, de
     Waddeneilanden, …) lag de stip daardoor in zee of in het IJsselmeer.
-    - Nu: de woonplaats met de naam van de gemeente, anders de dichtstbijzijnde woonplaats van
-      die gemeente. Terschelling komt dus op het eiland, niet op de vaste wal.
-    - Valt dat punt door de vereenvoudigde kust nog in het water, dan schuift de stip naar het
-      dichtstbijzijnde punt op land.
+    - Nu: de **mediaan van de adressen** van de gemeente (Locatieserver, type adres), dus waar
+      de mensen wonen. Niet het middelpunt van de woonplaats: ook dat vlak bevat water. Zo
+      kwamen Urk en Medemblik in eerste instantie op een dijk terecht (de Houtribdijk hoort bij
+      het vlak van Flevoland).
+    - Valt het punt door de vereenvoudigde kust net buiten land, dan het dichtstbijzijnde
+      punt op land.
     - De kust is ook fijner vereenvoudigd (tolerantie 0,3 in plaats van 0,6).
-    - Test: `src/vormen/nlKaart.test.js` (elke stip op land; faalt op de oude data).
+    - Test: `src/vormen/nlKaart.test.js`: elke stip op land, én de twaalf gemeenten met veel
+      water dicht bij hun hoofdplaats. Die laatste faalt op beide oude versies.
   - **Caribisch Nederland (28-09).** Bonaire, Saba en Sint Eustatius staan elk in een kader
     linksboven in zee, met een eigen schaal. De omtrek komt uit Natural Earth (publiek
     domein).

@@ -12,9 +12,9 @@ een stip op een kaartje; geen GIS.
 
 Stip op land (28-09): het middelpunt van een gemeente is dat van het hele vlak, water inbegrepen,
 en valt bij gemeenten met veel water in zee of het IJsselmeer (Terschelling, Urk, Hoorn,
-Vlissingen, …). Ligt de stip niet op land, dan het middelpunt van de woonplaats met dezelfde naam,
-anders van de woonplaats die het dichtst bij het middelpunt ligt; valt dat punt (door de vereenvoudigde kust) buiten land, dan het
-dichtstbijzijnde punt net binnen de kust.
+Vlissingen, …). Dan de mediaan van de adressen van de gemeente: waar de mensen wonen. Niet het
+middelpunt van de woonplaats: ook dat vlak bevat water (Urk kwam zo op de Noord-Hollandse kust).
+Valt het punt door de vereenvoudigde kust net buiten land, dan het dichtstbijzijnde punt op land.
 
 Caribisch Nederland (28-09): Bonaire, Sint Eustatius en Saba in kaders linksboven in zee (zoals
 op de meeste kaarten van NL), elk kader met een eigen schaal. Omtrek: Natural Earth (10m, map
@@ -77,6 +77,26 @@ def locatieserver(fq, fl):
         start += 100
         if start >= r["numFound"] or not r["docs"]:
             return docs
+
+
+def adres_mediaan(gemeentecode, monsters=5):
+    """Mediaan van de adrespunten van een gemeente (Locatieserver, type adres): het punt waar de
+    mensen wonen. Een paar pagina's verspreid over de lijst; de Locatieserver staat geen start
+    boven 10.000 toe."""
+    def pagina(start):
+        q = urllib.parse.urlencode({"q": "*:*", "fq": ["type:adres", f"gemeentecode:{gemeentecode}"],
+                                    "fl": "centroide_ll", "rows": 100, "start": start}, doseq=True)
+        return haal(f"{LS}?{q}")["response"]
+    eerste = pagina(0)
+    bereik = min(eerste["numFound"], 9900)
+    docs = list(eerste["docs"])
+    for k in range(1, monsters):
+        docs += pagina(bereik * k // monsters)["docs"]
+    pts = [p for p in (punt(d.get("centroide_ll")) for d in docs) if p]
+    if not pts:
+        return None
+    xs, ys = sorted(p[0] for p in pts), sorted(p[1] for p in pts)
+    return xs[len(xs) // 2], ys[len(ys) // 2]
 
 
 def punt(wkt):
@@ -266,21 +286,20 @@ def main():
     for code, g in gemeenten.items():
         if op_land(g["x"], g["y"], land):
             continue
-        # Doel: de woonplaats met de naam van de gemeente, anders de woonplaats die het dichtst
-        # bij het middelpunt ligt (bij een eiland ligt die op het eiland, niet op de vaste wal).
+        # Doel: de mediaan van de adressen; zonder adressen de woonplaats met de naam van de
+        # gemeente, anders de woonplaats die het dichtst bij het middelpunt ligt.
+        mediaan = adres_mediaan(code[2:])  # 4 cijfers, met voorloopnullen (0184)
         plaatsen = plaatspunten.get(code, [])
         zelfde = [p for p in plaatsen if p[0].lower() == g["naam"].lower()]
         dichtst = sorted(plaatsen, key=lambda p: (p[1] - g["x"]) ** 2 + (p[2] - g["y"]) ** 2)
-        keus = (zelfde or dichtst or [None])[0]
-        doel = (keus[1], keus[2]) if keus else (g["x"], g["y"])
-        # De kust is vereenvoudigd: ook een kustplaats kan er net buiten vallen. Dan naar het
-        # dichtstbijzijnde punt net binnen de kust.
+        keus = None if mediaan else (zelfde or dichtst or [None])[0]
+        doel = projecteer(*mediaan) if mediaan else (keus[1], keus[2]) if keus else (g["x"], g["y"])
         x, y = doel if op_land(*doel, land) else naar_land(*doel, land)
         x, y = round(x, 2), round(y, 2)
         if not op_land(x, y, land):  # op de rand: na afronden net in het water
             x, y = (round(v, 2) for v in naar_land(x, y, land))
         g["x"], g["y"] = x, y
-        verplaatst.append(f"{g['naam']} → {keus[0] if keus else 'de kust'}")
+        verplaatst.append(f"{g['naam']} → {'adressen' if mediaan else keus[0] if keus else 'de kust'}")
     print(f"stip naar land verplaatst: {len(verplaatst)}: " + "; ".join(verplaatst))
 
     alle_x = [g["x"] for g in gemeenten.values()]
