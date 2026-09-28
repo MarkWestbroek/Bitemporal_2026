@@ -404,9 +404,27 @@ Dit is het "vormconfiguratietype" uit §9b, voorlopig in code.
 - **Een vorm op een groep.** Die wordt in `CustomFormulierRenderer` afgehandeld (`period`,
   `address-search`).
 - **Kaartdata.** `scripts/maak_nl_kaartdata.py` (PDOK/CBS open data) maakt
-  `src/vormen/data/nl-kaart.json`: 12 provincies, 342 gemeenten, 2503 woonplaatsen, 69 kB,
+  `src/vormen/data/nl-kaart.json`: 12 provincies, 342 gemeenten, 2503 woonplaatsen, 83 kB,
   pas geladen als de kaart op de pagina staat. Opnieuw draaien na een gemeentelijke
   herindeling.
+  - **Stip op land (28-09).** Het middelpunt uit de Locatieserver is dat van het hele
+    gemeentevlak, water inbegrepen. Bij 12 gemeenten (Urk, Hoorn, Vlissingen, de
+    Waddeneilanden, …) lag de stip daardoor in zee of in het IJsselmeer.
+    - Nu: de woonplaats met de naam van de gemeente, anders de dichtstbijzijnde woonplaats van
+      die gemeente. Terschelling komt dus op het eiland, niet op de vaste wal.
+    - Valt dat punt door de vereenvoudigde kust nog in het water, dan schuift de stip naar het
+      dichtstbijzijnde punt op land.
+    - De kust is ook fijner vereenvoudigd (tolerantie 0,3 in plaats van 0,6).
+    - Test: `src/vormen/nlKaart.test.js` (elke stip op land; faalt op de oude data).
+  - **Caribisch Nederland (28-09).** Bonaire, Saba en Sint Eustatius staan elk in een kader
+    linksboven in zee, met een eigen schaal. De omtrek komt uit Natural Earth (publiek
+    domein).
+    - Codes: de fictieve CBS-gemeentecodes 9001–9003 (`GM9001` Bonaire, `GM9002` Sint
+      Eustatius, `GM9003` Saba).
+    - De kaders verschijnen alleen als de keuzelijst die codes bevat. Replay voor de
+      referentielijst Gemeente:
+      `registraties-replay-init-gemeenten-caribisch-nederland-2026-09-28.json`. Lokaal
+      afgespeeld, op pf niet: daar worden de eilanden dan ook kiesbaar in het aanmeldformulier.
 - **Showcase.** **`vormen.html`** toont elke vorm in invoer en weergave, met wat er
   **opgeslagen** wordt en de vormConfig tegen het schema, plus de matrix inhoud × vorm.
   Zonder API.

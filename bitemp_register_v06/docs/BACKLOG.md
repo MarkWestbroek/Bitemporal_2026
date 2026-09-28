@@ -1629,6 +1629,37 @@ Verwijzingen (`ref:`) worden evenmin gecontroleerd.
   afgevoerde data (opgelost: `shared/actueleData.js`). Opruimen = de entiteiten afvoeren.
   FD 15 is een ander geval: een actieve entiteit waarvan de meta netjes is afgevoerd,
   dus zonder actuele meta.
-- **`code` op definities is niet uniek afgedwongen** (sinds 27-09, `FORMULIERDEFINITIES.md` §1.1).
+- ✅ **Opgelost 27-09** (`uniek=entiteit` op de code-velden, 422 `uniek`). Was: **`code` op definities is niet uniek afgedwongen** (sinds 27-09, `FORMULIERDEFINITIES.md` §1.1).
   Bij een dubbele code wint de laatst opgevoerde. Een uniekheidscontrole in de registratie
   (per soort definitie, alleen actuele meta) zou een dubbele code bij opslaan weigeren.
+
+## 35. Uitleg bij een vraag: het (i)-rondje (2026-09-28)
+
+**Vraag (Mark, 28-09):** een info-rondje bij elke vraag in een formulier. Liefst een losse,
+vertaalbare lijst met uitleg die je aan een veld koppelt (een adres staat op veel formulieren).
+Ook een vorm kan uitleg hebben (de kleurkiezer), naast de inhoud ("de kleur van de bekleding").
+
+- ✅ **Gebouwd 28-09** (`feat/uitleg`). Zie `FORMULIERDEFINITIES.md` §2.5.
+  - Entiteit `Uitleg` in het configuratiedomein, via de V3 en de codegen (additief). Code + taal
+    is het adres, per taal een tekst, en de `code` is uniek.
+  - `uitleg` en `uitlegTekst` op veld, groep en lijst, en de bediening uit het vormenregister
+    (uit te zetten met `vormUitleg: false`).
+  - Een toegankelijk (i)-rondje (disclosure, geen tooltip), en velden in de formuliereditor.
+  - Een enum `soort` met de waarden `inhoud` en `vorm` (idee van Mark, 28-09). Ook de bediening
+    van een vorm staat nu in de lijst (`vorm-<naam>`), vertaalbaar; het register is de terugval.
+  - Replay met zes inhoud-uitleggen, dertien vorm-uitleggen en het formulier `voorbeeld-uitleg`.
+  - Opgelost: een klik op (i) markeerde het veld als aangeraakt, waardoor *verplicht* verscheen
+    (`data-uitleg`).
+  - Getest: unittests, Playwright (muis, Tab, Enter, Escape) en de uniekheid (422).
+- **Open:**
+  - **Uitleg koppelen aan een attribuut in het model** (`Adres.postcode` → standaard op elk
+    formulier). Dat raakt het profiel, dus pas na een besluit. De modelbeschrijving blijft dan de
+    technische onderlaag, en de uitleg de vertaling ervan.
+  - **Taal kiezen:** nu volgt de uitleg `<html lang>`. Een `?taal=` of een taalkeuze op het
+    formulier ontbreekt nog, net als vertaalde labels.
+  - **Uitleg in de publicatie** (bij een kop in een WeergaveDefinitie) en in de Studio.
+  - **Een eigen LijstDefinitie voor Uitleg** (code, titel, talen), en tekst wijzigen in één stap:
+    nu moet je de oude tekst-rij afvoeren en een nieuwe opvoeren.
+  - **Codegen neemt veldbeschrijvingen niet mee.** `description` op een veld in de V3 komt niet in
+    de Go-code, en dus ook niet terug in een export. Gezien bij Uitleg en LijstDefinitie.
+    Mogelijke oplossing: een `schema_desc`-tag per veld, zoals bij de id-velden.

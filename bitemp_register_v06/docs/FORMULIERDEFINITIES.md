@@ -82,6 +82,7 @@ editor-model `web/vite/src/formuliereditor/layoutModel.js`, profiel `web/vite/sr
 | `veld` | **veldpad** `ENT.rol.veld`, bv. `Initiatief.producten.naam` (rol = JSON-rolnaam). Binnen een `lijst` relatief: alleen de veldnaam (`schaal`). |
 | `label` | eigen label; leeg = de veldnaam uit het model. Vraagnummers horen hier (`"1. Naam van het initiatief"`). |
 | `beschrijving` | helptekst onder het label |
+| `uitleg`, `uitlegTekst`, `vormUitleg` | het (i)-rondje naast het label: een code uit de uitleglijst, een eigen tekst, en of de bediening van de vorm meekomt (§2.5). Ook op `groep` en `lijst`. |
 | `breedte` | `50%`, `33%`, `25%`, `100%` (binnen een `rij`) |
 | `widget` | zie §3; leeg = afgeleid uit het model |
 | `readonly` | alleen lezen |
@@ -140,6 +141,68 @@ aanmelden. De server controleert hetzelfde (`model/validation.go`, `model/regels
 - **Uniekheid.** Een veld kan in het model `uniek` zijn: `entiteit`, `domein` of `register`,
   gecontroleerd tegen de actuele stand. De `code` van formulier-, weergave- en lijstdefinities is
   uniek binnen de entiteit. Een botsing geeft een 422 met code `uniek`.
+
+### 2.5 Uitleg bij een vraag: het (i)-rondje (sinds 28-09)
+
+Naast het label van een vraag kan een **(i)** staan. Een klik (of Tab en Enter) toont de uitleg
+eronder, en nog een klik (of Escape) sluit hem. De `beschrijving` is kort en altijd zichtbaar; de
+uitleg is langer en verschijnt alleen op verzoek.
+
+**Drie soorten uitleg, van drie eigenaren:**
+
+| Soort | Waar | Voorbeeld |
+|---|---|---|
+| **Inhoud, herbruikbaar** | de **uitleglijst**: entiteit `Uitleg` (configuratiedomein). Het veld verwijst ernaar met `"uitleg": "<code>"`. | *Postcode: vier cijfers en twee letters.* Op elk formulier met een adres. |
+| **Inhoud, alleen hier** | `"uitlegTekst": "…"` op het veld zelf. Gaat vóór de code. | *Alleen gemeenten die zelf meebouwen of meebetalen.* |
+| **Bediening van de vorm** | ook de **uitleglijst**, als uitleg van **soort `vorm`** met code `vorm-<naam>` (bv. `vorm-nl-map`). Komt vanzelf mee bij elke vraag met die vorm; uitzetten met `"vormUitleg": false`. Ontbreekt hij in de lijst, dan de standaardtekst uit het vormenregister (`VORMEN[vorm].bediening`). | *Klik op een stip; pijltjes en spatie werken ook.* |
+
+**De uitleglijst** (`/full/uitleggen`):
+- **Meta:** `code` (uniek binnen de entiteit), `soort` (`inhoud` of `vorm`; leeg = inhoud), een
+  interne `naam`, `beschrijving` en `status`. Alleen `actief` telt.
+- **Soort `vorm`:** zo is ook de bediening content. Je kunt hem vertalen en aanpassen zonder de
+  code te wijzigen, en hij heeft historie. De lijst wordt opgehaald zodra de layout een `uitleg`
+  of een `vorm` bevat. Een vorm die alleen uit het datatype volgt (bv. `masked`) krijgt de
+  standaardtekst.
+- **Tekst**, één per taal: `taal` (nl, en, de, fr, fy), `titel` en `tekst`.
+
+**Het adres is code + taal.**
+- **Welke taal:** die van de pagina (`<html lang>`). Anders Nederlands, anders de eerste die er is.
+- **Tekst:** eenvoudige markdown (vet, cursief, links, opsomming), veilig weergegeven
+  (`publicatie/markdown.js`).
+- **Schrijf voor de invuller (B1).**
+
+**Waarom een losse lijst, en niet de beschrijving uit het model?** De beschrijving van een
+attribuut in het model is de onderste laag (data), en vaak technisch. De uitleg is de vertaling
+daarvan voor de invuller (inhoud). De lijst is herbruikbaar (hetzelfde adres op tien formulieren),
+vertaalbaar, en **bitemporeel**: je ziet welke uitleg er stond toen iemand het formulier invulde.
+
+**Een tekst wijzigen:** `Tekst` is meervoudig. Voer de oude tekst-rij af en een nieuwe op, in één
+registratie. De oude versie blijft in de historie staan. Een `rel_id` op het opvoeren maakt bij
+een meervoudig GE géén nieuwe versie van dezelfde rij, maar een extra rij (getest 28-09).
+
+**Toegankelijk:** een echte knop met `aria-expanded` en `aria-controls`, met een label *Uitleg
+bij <vraag>*. Het paneel staat in de gewone leesvolgorde. Het werkt op mobiel en in de iframe,
+dus het is geen tooltip die alleen bij aanwijzen verschijnt.
+
+**Beheren:**
+- **In de formuliereditor:** een code (met suggesties uit de lijst en een waarschuwing bij een
+  onbekende code), een eigen tekst, en het vinkje *Bediening van de vorm tonen*.
+- **De lijst zelf:** in de inhoud-editor onder *configuratie → Uitleg*.
+
+**Code:**
+- `shared/uitleg.js` (puur, getest);
+- `hooks/useUitleggen.js` (haalt de lijst één keer per pagina op, en alleen als de layout ernaar
+  verwijst);
+- `components/editor/Uitleg.jsx`;
+- `CustomFormulierRenderer` (legendes van groep en lijst) en `SchemaFormField` (velden).
+
+**Model:** `docs/Model files (V3)/configuratie 2026-09-28 Uitleg — v3-model.json`.
+
+**Proberen:**
+1. Speel de replay `registraties-replay-init-uitleg-en-voorbeeldformulier-2026-09-28.json` af:
+   zes van soort inhoud en dertien van soort vorm (eerst gelijk aan het register; `vorm-nl-map`
+   en twee inhoud-uitleggen ook in het Engels), plus het formulier `voorbeeld-uitleg`.
+2. Open `inhoud.html#/t/initiatieven/nieuw?formulier=voorbeeld-uitleg`.
 
 ## 3. Widgets
 

@@ -11,6 +11,9 @@ import { matrixAssen, matrixRijen, zetMatrixCel, zetMatrixExtra } from "../../vo
 import { lijstVorm, keuzesNaarRijen, normaliseerVorm, VORMEN } from "../../vormen/vormen";
 import { matchRefId } from "../../vormen/refMatch";
 import { useSchema } from "../../context/SchemaContext";
+import Uitleg, { UitlegContext } from "./Uitleg";
+import useUitleggen from "../../hooks/useUitleggen";
+import { layoutGebruiktUitleg, STANDAARD_TAAL } from "../../shared/uitleg";
 
 // Opties per referentielijst, één keer per pagina opgehaald (voor matchRefId).
 const refOptieCache = new Map();
@@ -20,6 +23,22 @@ function refOpties(baseUrl, refType) {
       .then((r) => (r.ok ? r.json() : { opties: [] })).then((d) => d?.opties || []).catch(() => []));
   }
   return refOptieCache.get(refType);
+}
+
+const LEGENDE_STIJL = { fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" };
+
+/** De legend van een fieldset (groep, lijst) met het (i)-rondje erin en de uitleg eronder. */
+function Legende({ element, id, vorm, label, children }) {
+  return (
+    <Uitleg element={element} vorm={vorm} label={label}>
+      {({ knop, paneel }) => (
+        <>
+          <legend id={id} className="utrecht-heading-3" style={LEGENDE_STIJL}>{children}{knop}</legend>
+          {paneel}
+        </>
+      )}
+    </Uitleg>
+  );
 }
 
 /**
@@ -47,6 +66,9 @@ function refOpties(baseUrl, refType) {
  *                         (src/vormen/vormen.js). Een lijst met een vorm is een meer-uit-lijst;
  *                         `widget: "meerkeuze"` is daarvan de oude schrijfwijze. Nu gebouwd:
  *                         `image-map` (klikbare afbeelding, ImageMapKeuze) op veld en lijst.
+ *  - uitleg / uitlegTekst / vormUitleg (veld, groep, lijst) → het (i)-rondje (Uitleg.jsx,
+ *                         shared/uitleg.js): een code uit de uitleglijst, een eigen tekst, en
+ *                         `vormUitleg: false` om de bediening-uitleg van de vorm weg te laten.
  *  - veld.nieuwFormulier→ (stap B) FD-id waarmee vanuit een relatieveld een nieuwe doel-ENT
  *                         ingebed kan worden aangemaakt (alleen op diepte 0, zie NieuwSubFormulier).
  *
@@ -74,6 +96,8 @@ export default function CustomFormulierRenderer({
   toonValidatie,
 }) {
   const { baseUrl = "" } = useSchema() || {};
+  // De uitleglijst alleen ophalen als de layout ernaar verwijst (één keer per pagina, gedeeld).
+  const uitlegIndex = useUitleggen(baseUrl, diepte === 0 && layoutGebruiktUitleg(layout));
   if (!layout || !velden) return null;
 
   // Velden lookup op naam voor snelle toegang
@@ -113,7 +137,7 @@ export default function CustomFormulierRenderer({
           const periodeVelden = groepVorm === "period" ? [cfg.startField, cfg.endField] : [];
           return (
             <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px solid var(--cg-rand, #ccc)", borderRadius: "6px" }}>
-              {element.label && <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label}</legend>}
+              {element.label && <Legende element={element} id={labelId} vorm={groepVorm} label={element.label}>{element.label}</Legende>}
               {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.5rem" }}>{element.beschrijving}</div>}
               {groepVorm === "period" ? (
                 <PeriodKeuze begin={sVal?.[cfg.startField] ?? ""} einde={sVal?.[cfg.endField] ?? ""} config={cfg} readOnly={readOnly} labelId={labelId}
@@ -148,11 +172,7 @@ export default function CustomFormulierRenderer({
             className="cg-form-section"
             style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px solid var(--cg-rand, #ccc)", borderRadius: "6px" }}
           >
-            {element.label && (
-              <legend className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>
-                {element.label}
-              </legend>
-            )}
+            {element.label && <Legende element={element} vorm={element.vorm} label={element.label}>{element.label}</Legende>}
             {kinderen}
           </fieldset>
         );
@@ -208,6 +228,7 @@ export default function CustomFormulierRenderer({
               vorm={element.vorm}
               vormConfig={element.vormConfig}
               labelOverride={element.label}
+              uitlegElement={element}
               nieuwFormulier={element.nieuwFormulier}
               diepte={diepte}
               toonValidatie={toonValidatie}
@@ -273,7 +294,7 @@ export default function CustomFormulierRenderer({
           const labelId = `lijst-${index}-${bron.replace(/\W/g, "_")}-label`;
           return (
             <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px solid var(--cg-rand, #ccc)", borderRadius: "6px" }}>
-              <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+              <Legende element={element} id={labelId} vorm={vormVanLijst} label={element.label || bron}>{element.label || bron}</Legende>
               {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.5rem" }}>{element.beschrijving}</div>}
               {assen.fouten.length > 0 && <ul style={{ color: "var(--cg-fout, red)", fontSize: "0.8rem", margin: "0 0 0.5rem", paddingLeft: "1rem" }}>{assen.fouten.map((f) => <li key={f}>{f}</li>)}</ul>}
               {rowField && columnField && (
@@ -298,7 +319,7 @@ export default function CustomFormulierRenderer({
           });
           return (
             <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px solid var(--cg-rand, #ccc)", borderRadius: "6px" }}>
-              <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+              <Legende element={element} id={labelId} vorm={vormVanLijst} label={element.label || bron}>{element.label || bron}</Legende>
               {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.5rem" }}>{element.beschrijving}</div>}
               {assen.fouten.length > 0 && (
                 <ul style={{ color: "var(--cg-fout, red)", fontSize: "0.8rem", margin: "0 0 0.5rem", paddingLeft: "1rem" }}>{assen.fouten.map((f) => <li key={f}>{f}</li>)}</ul>
@@ -345,7 +366,7 @@ export default function CustomFormulierRenderer({
             const labelId = `lijst-${index}-${bron.replace(/\W/g, "_")}-label`;
             return (
               <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
-                <legend id={labelId} className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+              <Legende element={element} id={labelId} vorm={vormVanLijst} label={element.label || bron}>{element.label || bron}</Legende>
                 {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
                 {!keuzeDef && <div style={{ color: "var(--cg-fout, red)" }}>{VORMEN[vormVanLijst]?.label || vormVanLijst} zonder keuzeveld: <code>{bron}</code></div>}
                 {keuzeDef && (
@@ -366,7 +387,7 @@ export default function CustomFormulierRenderer({
           if (keuzeDef?.ref) {
             return (
               <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
-                <legend className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>{element.label || bron}</legend>
+              <Legende element={element} vorm={vormVanLijst} label={element.label || bron}>{element.label || bron}</Legende>
                 {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
                 <RefMeerkeuze
                   refType={keuzeDef.ref}
@@ -380,9 +401,7 @@ export default function CustomFormulierRenderer({
           }
           return (
             <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
-              <legend className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>
-                {element.label || bron}
-              </legend>
+              <Legende element={element} vorm={vormVanLijst} label={element.label || bron}>{element.label || bron}</Legende>
               {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
               {!keuzeDef && <div style={{ color: "var(--cg-fout, red)" }}>Meerkeuze zonder (enum-)veld: <code>{bron}</code></div>}
               {opties.length === 0 && keuzeDef && <div style={{ color: "var(--cg-fout, red)" }}>Meerkeuze vraagt een enum-veld: <code>{keuzeDef.naam}</code></div>}
@@ -400,9 +419,7 @@ export default function CustomFormulierRenderer({
 
         return (
           <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
-            <legend className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>
-              {element.label || bron} {legendaSuffix && <span style={{ fontWeight: 400, fontSize: "0.8em", color: "var(--cg-donkergrijs, #666)" }}>{legendaSuffix}</span>}
-            </legend>
+              <Legende element={element} vorm={vormVanLijst} label={element.label || bron}>{element.label || bron} {legendaSuffix && <span style={{ fontWeight: 400, fontSize: "0.8em", color: "var(--cg-donkergrijs, #666)" }}>{legendaSuffix}</span>}</Legende>
             {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.25rem" }}>{element.beschrijving}</div>}
             {getoond.length === 0 && (
               <div style={{ color: "var(--cg-donkergrijs, #666)", fontSize: "0.875rem", marginBottom: "0.5rem" }}>Nog geen items.</div>
@@ -437,7 +454,15 @@ export default function CustomFormulierRenderer({
     }
   }
 
-  return renderElement(layout, 0, { values, onChange, padContext: null });
+  const inhoud = renderElement(layout, 0, { values, onChange, padContext: null });
+  if (diepte > 0) return inhoud; // een ingebed sub-formulier deelt de context van het hoofdformulier
+  return <UitlegContext.Provider value={{ index: uitlegIndex, taal: documentTaal() }}>{inhoud}</UitlegContext.Provider>;
+}
+
+/** De taal van de pagina (<html lang>), anders Nederlands. */
+function documentTaal() {
+  const lang = typeof document !== "undefined" ? document.documentElement.lang : "";
+  return (lang || STANDAARD_TAAL).slice(0, 2).toLowerCase();
 }
 
 /**

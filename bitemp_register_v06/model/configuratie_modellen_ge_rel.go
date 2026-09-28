@@ -88,6 +88,31 @@ const (
 	LijstDefinitieStatusinactief LijstDefinitieStatus = "inactief"
 )
 
+type UitlegStatus string
+
+const (
+	UitlegStatusconcept  UitlegStatus = "concept"
+	UitlegStatusactief   UitlegStatus = "actief"
+	UitlegStatusinactief UitlegStatus = "inactief"
+)
+
+type UitlegTaal string
+
+const (
+	UitlegTaalnl UitlegTaal = "nl"
+	UitlegTaalen UitlegTaal = "en"
+	UitlegTaalde UitlegTaal = "de"
+	UitlegTaalfr UitlegTaal = "fr"
+	UitlegTaalfy UitlegTaal = "fy"
+)
+
+type UitlegSoort string
+
+const (
+	UitlegSoortinhoud UitlegSoort = "inhoud"
+	UitlegSoortvorm   UitlegSoort = "vorm"
+)
+
 // FormulierDefinitie_Meta — Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.
 type FormulierDefinitie_Meta struct {
 	bun.BaseModel            `bun:"table:formulierdefinitie_meta,alias:formulierdefinitie_meta"`
@@ -758,4 +783,54 @@ type LijstDefinitie_Lijstconfig_Data struct {
 	DefinitieVersie   Versie     `json:"definitie_versie" schema:"datatype:Versie"`
 	Opvoer            *time.Time `json:"opvoer,omitempty"`
 	Afvoer            *time.Time `json:"afvoer,omitempty"`
+}
+
+// Uitleg_Meta — Metadata van de uitleg: code (het adres), soort (inhoud of vorm), een interne naam en beschrijving, en de status.
+type Uitleg_Meta struct {
+	bun.BaseModel `bun:"table:uitleg_meta,alias:uitleg_meta"`
+	Uitleg_ID     int                `json:"uitleg_id" bun:"uitleg_id,pk" schema_desc:"ID van de Uitleg-entiteit"`
+	Rel_ID        int                `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentUitleg  *Uitleg            `json:"-" bun:"rel:belongs-to,join:uitleg_id=id,on_delete:cascade"`
+	Opvoer        *time.Time         `json:"opvoer,omitempty"`
+	Afvoer        *time.Time         `json:"afvoer,omitempty"`
+	Data          []Uitleg_Meta_Data `bun:"rel:has-many,join:uitleg_id=uitleg_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Uitleg_Meta_Data — geversioned inhoud van Uitleg_Meta.
+type Uitleg_Meta_Data struct {
+	bun.BaseModel `bun:"table:uitleg_meta_data,alias:uitleg_meta_data"`
+	Uitleg_ID     int          `json:"uitleg_id" bun:"uitleg_id,pk"`
+	Rel_ID        int          `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64        `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Code          string       `json:"code" schema:"uniek=entiteit"`
+	Naam          string       `json:"naam"`
+	Beschrijving  *string      `json:"beschrijving,omitempty"`
+	Soort         *UitlegSoort `json:"soort,omitempty" schema:"enum=UitlegSoort"`
+	Status        UitlegStatus `json:"status" schema:"enum=UitlegStatus"`
+	Opvoer        *time.Time   `json:"opvoer,omitempty"`
+	Afvoer        *time.Time   `json:"afvoer,omitempty"`
+}
+
+// Uitleg_Tekst — De uitleg in één taal: een korte titel en de tekst (eenvoudige markdown). Eén rij per taal.
+type Uitleg_Tekst struct {
+	bun.BaseModel `bun:"table:uitleg_tekst,alias:uitleg_tekst"`
+	Uitleg_ID     int                 `json:"uitleg_id" bun:"uitleg_id,pk" schema_desc:"ID van de Uitleg-entiteit"`
+	Rel_ID        int                 `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentUitleg  *Uitleg             `json:"-" bun:"rel:belongs-to,join:uitleg_id=id,on_delete:cascade"`
+	Opvoer        *time.Time          `json:"opvoer,omitempty"`
+	Afvoer        *time.Time          `json:"afvoer,omitempty"`
+	Data          []Uitleg_Tekst_Data `bun:"rel:has-many,join:uitleg_id=uitleg_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Uitleg_Tekst_Data — geversioned inhoud van Uitleg_Tekst.
+type Uitleg_Tekst_Data struct {
+	bun.BaseModel `bun:"table:uitleg_tekst_data,alias:uitleg_tekst_data"`
+	Uitleg_ID     int        `json:"uitleg_id" bun:"uitleg_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Taal          UitlegTaal `json:"taal" schema:"enum=UitlegTaal"`
+	Titel         *string    `json:"titel,omitempty"`
+	Tekst         string     `json:"tekst"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }

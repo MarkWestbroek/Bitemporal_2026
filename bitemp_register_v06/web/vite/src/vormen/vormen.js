@@ -61,6 +61,9 @@ const W = ["weergave"];
 const v = (label, invoersoorten, xforms, help, extra = {}) =>
   Object.freeze({ label, invoersoorten, xforms, help, modi: IO, version: "1.0.0", configSchema: CONFIG_SCHEMAS[extra.naam] || null, ...extra });
 
+// `bediening` (optioneel): hoe de INVULLER de vorm gebruikt, in B1, met toetsenbord. Verschijnt in
+// het (i)-rondje bij de vraag (components/editor/Uitleg.jsx), onder de inhoudelijke uitleg; uit te
+// zetten per veld met `vormUitleg: false`. Alleen voor vormen waarvan de bediening niet vanzelf spreekt.
 export const VORMEN = Object.freeze({
   "text-input":     v("Invoerveld", [TEKST, GETAL, DATUM], "input", "Eén regel tekst, een getal of een datum."),
   "text-area":      v("Tekstvak", [TEKST], "textarea", "Meerdere regels tekst."),
@@ -71,28 +74,28 @@ export const VORMEN = Object.freeze({
   "radio-group":    v("Keuzerondjes", [EEN_UIT_LIJST, JA_NEE], 'appearance="full"', "Alle opties zichtbaar, één kiezen."),
   "checkbox-group": v("Vinkjes", [MEER_UIT_LIJST], 'appearance="full"', "Alle opties zichtbaar, meerdere kiezen."),
   "combobox":       v("Zoeken en kiezen", [EEN_UIT_LIJST, MEER_UIT_LIJST], 'appearance="minimal" + zoeken', "Typen en filteren; voor lange lijsten."),
-  "image-map":      v("Klikbare afbeelding", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance", "Gebieden op een afbeelding aanklikken.", { naam: "image-map" }),
+  "image-map":      v("Klikbare afbeelding", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance", "Gebieden op een afbeelding aanklikken.", { bediening: "Klik op een vlak in de afbeelding om het te kiezen. Met het toetsenbord: Tab naar de afbeelding, pijltjes om te wisselen, spatie om te kiezen.", naam: "image-map" }),
   "button-group":   v("Knoppenvlak", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance (knoppen)", "Afgeronde knoppen, klik-klik aan en uit.", { naam: "button-group" }),
   "cards":          v("Keuzekaarten", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance (kaarten)", "Kaarten met icoon, titel en uitleg.", { naam: "cards" }),
-  "nl-map":         v("Kaart van Nederland", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance (kaart)", "Gemeenten als stip op de kaart; aanklikken of tonen.", { naam: "nl-map" }),
+  "nl-map":         v("Kaart van Nederland", [EEN_UIT_LIJST, MEER_UIT_LIJST], "eigen appearance (kaart)", "Gemeenten als stip op de kaart; aanklikken of tonen.", { bediening: "Klik op een stip om een gemeente te kiezen; wijs een stip aan om de naam en woonplaatsen te zien. Met het toetsenbord: pijltjes en spatie.", naam: "nl-map" }),
   "switch":         v("Schuifschakelaar", [JA_NEE], 'appearance="full" (toggle)', "Aan/uit, zoals een schakelaar op een module.", { naam: "switch" }),
-  "range":          v("Schuif", [GETAL, EEN_UIT_LIJST], "range", "Schuif over een schaal, eventueel met kleurverloop.", { naam: "range", geordend: true }),
-  "rotary":         v("Draaiknop", [GETAL, EEN_UIT_LIJST], "range (eigen)", "Draaiknop met klikstanden.", { naam: "rotary", geordend: true }),
+  "range":          v("Schuif", [GETAL, EEN_UIT_LIJST], "range", "Schuif over een schaal, eventueel met kleurverloop.", { bediening: "Sleep de schuif, of gebruik de pijltjes.", naam: "range", geordend: true }),
+  "rotary":         v("Draaiknop", [GETAL, EEN_UIT_LIJST], "range (eigen)", "Draaiknop met klikstanden.", { bediening: "Draai de knop door te slepen, of gebruik de pijltjes.", naam: "rotary", geordend: true }),
   "stepper":        v("Stappenbalk", [EEN_UIT_LIJST], "range (eigen)", "Stappen op een rij; de huidige gemarkeerd.", { naam: "stepper", geordend: true }),
   "rating-grid":    v("Matrix", [EEN_PER_RIJ], 'repeat + select1 appearance="full"', "Per rij één keuze uit dezelfde schaal.", { naam: "rating-grid" }),
-  "drag-sort":      v("Sorteren in manden", [EEN_PER_RIJ], "repeat + select1 (slepen)", "Dingen uit een voorraad naar manden slepen.", { naam: "drag-sort" }),
-  "period":         v("Periode", [SAMENGESTELD], "group (eigen)", "Begin en einde als balk op een tijdlijn.", { naam: "period" }),
-  "address-search": v("Adres zoeken", [SAMENGESTELD], "group (eigen)", "Eén zoekveld (PDOK) dat alle adresvelden vult.", { naam: "address-search" }),
+  "drag-sort":      v("Sorteren in manden", [EEN_PER_RIJ], "repeat + select1 (slepen)", "Dingen uit een voorraad naar manden slepen.", { bediening: "Sleep elk item naar een mand. Met het toetsenbord: pak een item op met Enter, kies dan de mand; Escape laat het los.", naam: "drag-sort" }),
+  "period":         v("Periode", [SAMENGESTELD], "group (eigen)", "Begin en einde als balk op een tijdlijn.", { bediening: "Vul het begin en het einde in; de balk laat de periode op de tijdlijn zien.", naam: "period" }),
+  "address-search": v("Adres zoeken", [SAMENGESTELD], "group (eigen)", "Eén zoekveld (PDOK) dat alle adresvelden vult.", { bediening: "Typ een deel van het adres en kies het juiste adres uit de lijst; de adresvelden worden dan ingevuld. Klopt er iets niet, pas dan het veld zelf aan.", naam: "address-search" }),
   "scale-bars":     v("Schaalbalken", [EEN_PER_RIJ], "output (eigen)", "Per rij een balk op de schaal, met toelichting.", { naam: "scale-bars", modi: W }),
   "chips":          v("Labels", [MEER_UIT_LIJST, EEN_UIT_LIJST], "output", "De gekozen waarden als labels.", { naam: "chips", modi: W }),
   // Vormen die uit een datatype volgen (27-09): het datatype zegt wat de inhoud is, de vorm hoe.
-  "masked":         v("Invoermasker", [TEKST], "input (masker)", "Invoer volgens een masker (postcode 0000 AA); letterlijke tekens verschijnen vanzelf.", { naam: "masked" }),
-  "partial-date":   v("Onvolledige datum", [TEKST, DATUM], "group (eigen)", "Jaar, maand en dag; maand en dag mogen onbekend zijn (DatumIncompleet).", { naam: "partial-date" }),
-  "duration":       v("Tijdsduur", [TEKST], "group (eigen)", "Jaren, maanden, dagen … als losse getallen; opgeslagen als ISO 8601 (P1Y2M).", { naam: "duration" }),
-  "color":          v("Kleur", [TEKST], "input (kleur)", "Kleurkiezer met hexcode en eventueel vaste stalen; vanzelf voor datatype Kleur.", { naam: "color" }),
+  "masked":         v("Invoermasker", [TEKST], "input (masker)", "Invoer volgens een masker (postcode 0000 AA); letterlijke tekens verschijnen vanzelf.", { bediening: "Typ alleen de cijfers en letters; spaties en streepjes komen er vanzelf bij.", naam: "masked" }),
+  "partial-date":   v("Onvolledige datum", [TEKST, DATUM], "group (eigen)", "Jaar, maand en dag; maand en dag mogen onbekend zijn (DatumIncompleet).", { bediening: "Weet je de dag of de maand niet, laat die dan leeg; alleen het jaar is genoeg.", naam: "partial-date" }),
+  "duration":       v("Tijdsduur", [TEKST], "group (eigen)", "Jaren, maanden, dagen … als losse getallen; opgeslagen als ISO 8601 (P1Y2M).", { bediening: "Vul per eenheid een getal in (bv. 1 jaar en 6 maanden); lege vakjes tellen als 0.", naam: "duration" }),
+  "color":          v("Kleur", [TEKST], "input (kleur)", "Kleurkiezer met hexcode en eventueel vaste stalen; vanzelf voor datatype Kleur.", { bediening: "Kies een kleur met de kiezer of een staal, of typ een hexcode zoals #1D4ED8.", naam: "color" }),
   "ai-assist":      v("Tekst met AI-assistent", [TEKST], "textarea + assistent", "Tekstvak met ✨: inkorten, herschrijven, aanvullen of een eigen opdracht; de invuller neemt een voorstel over of niet.", { naam: "ai-assist" }),
-  "ranking":        v("Rangorde", [MEER_UIT_LIJST], "select (geordend)", "Een volgorde uit een lijst: toevoegen, slepen of ↑↓. De opslag bewaart de volgorde.", { naam: "ranking" }),
-  "tag-input":      v("Labels invoeren", [MEER_UIT_LIJST, TEKST], 'appearance="minimal" + labels', "Gekozen waarden als labels in het veld; typen om aan te vullen. Zonder lijst: vrije labels.", { naam: "tag-input" }),
+  "ranking":        v("Rangorde", [MEER_UIT_LIJST], "select (geordend)", "Een volgorde uit een lijst: toevoegen, slepen of ↑↓. De opslag bewaart de volgorde.", { bediening: "Voeg toe wat je kiest en zet het in volgorde: slepen, of met de knoppen ↑ en ↓. Bovenaan is het belangrijkst.", naam: "ranking" }),
+  "tag-input":      v("Labels invoeren", [MEER_UIT_LIJST, TEKST], 'appearance="minimal" + labels', "Gekozen waarden als labels in het veld; typen om aan te vullen. Zonder lijst: vrije labels.", { bediening: "Typ en kies uit de lijst (↓ en Enter). Backspace in een leeg veld haalt het laatste label weg.", naam: "tag-input" }),
   "number-stepper": v("Plus-min", [GETAL], "range (knoppen)", "Een getal met − en + knoppen, binnen min en max.", { naam: "number-stepper" }),
 });
 

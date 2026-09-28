@@ -311,6 +311,18 @@
   margin-bottom: 1.5rem;
 }
 
+/* Uitleg bij een vraag (het (i)-rondje, components/editor/Uitleg.jsx): markdown zonder extra wit. */
+.cg-uitleg-tekst p,
+.cg-uitleg-tekst ul {
+  margin: 0 0 0.4em;
+}
+.cg-uitleg-tekst ul {
+  padding-left: 1.2em;
+}
+.cg-uitleg-tekst > :last-child {
+  margin-bottom: 0;
+}
+
 .cg-form-section__title {
   font-size: 1.0625rem;
   font-weight: 600;

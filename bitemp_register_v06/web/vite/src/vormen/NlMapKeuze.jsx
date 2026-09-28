@@ -11,6 +11,8 @@ import useKeuze from "./useKeuze";
  *
  * Kaartdata: src/vormen/data/nl-kaart.json (scripts/maak_nl_kaartdata.py, PDOK/CBS open data),
  * pas geladen als de vorm op de pagina staat. De koppeling loopt via de CBS-code (GM0344).
+ * Caribisch Nederland (Bonaire GM9001, Sint Eustatius GM9002, Saba GM9003: de fictieve
+ * CBS-codes) staat in kaders linksboven, zodra de lijst die codes bevat.
  *
  * Props: items [{ value, label, code }], meervoudig, waarde, onChange, readOnly, labelId,
  *        groepen?: [{ label, color, waarden: [...] }] — alleen weergave: meerdere kleuren
@@ -57,6 +59,20 @@ export default function NlMapKeuze({ items = [], meervoudig = false, waarde, onC
         {config.provinces !== false && kaart.provincies.map((p) => (
           <path key={p.naam} d={p.pad} fill="#eef2f7" stroke="#cbd5e1" strokeWidth={0.5} vectorEffect="non-scaling-stroke" aria-hidden="true" />
         ))}
+        {/* Caribisch Nederland in kaders linksboven (eigen schaal per kader), alleen als de
+            keuzelijst eilanden bevat (GM9001–GM9003 in de referentielijst). */}
+        {(kaart.kaders || []).filter((k) => opKaart.some((i) => kaart.gemeenten[i.code]?.kader === k.titel)).map((k) => {
+          const [x, y, b, h] = k.kader;
+          return (
+            <g key={k.titel} aria-hidden="true">
+              <rect x={x} y={y} width={b} height={h} rx={2} fill="#f8fafc" stroke="#cbd5e1" strokeWidth={0.5} vectorEffect="non-scaling-stroke" />
+              <text x={x + 3} y={y + 7} fontSize={6} fill="#64748b">
+                {(k.regels || [k.titel]).map((r, i) => <tspan key={r} x={x + 3} dy={i ? 6.5 : 0}>{r}</tspan>)}
+              </text>
+              <path d={k.pad} fill="#eef2f7" stroke="#cbd5e1" strokeWidth={0.5} vectorEffect="non-scaling-stroke" />
+            </g>
+          );
+        })}
         {lijst.map((item, index) => {
           const g = kaart.gemeenten[item.code];
           const aan = isSelected(item) || readOnly;

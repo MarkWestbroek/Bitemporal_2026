@@ -69,6 +69,16 @@ func (l LijstDefinitie) GetAfvoer() *time.Time   { return l.Afvoer }
 func (l *LijstDefinitie) SetAfvoer(t *time.Time) { l.Afvoer = t }
 func (l LijstDefinitie) String() string          { return RepresentatieToString(l) }
 
+// Uitleg
+func (u Uitleg) GetID() any              { return u.ID }
+func (u Uitleg) Metatype() Metatype      { return MetatypeEntiteit }
+func (u *Uitleg) ClearID()               { u.ID = 0 }
+func (u Uitleg) GetOpvoer() *time.Time   { return u.Opvoer }
+func (u *Uitleg) SetOpvoer(t *time.Time) { u.Opvoer = t }
+func (u Uitleg) GetAfvoer() *time.Time   { return u.Afvoer }
+func (u *Uitleg) SetAfvoer(t *time.Time) { u.Afvoer = t }
+func (u Uitleg) String() string          { return RepresentatieToString(u) }
+
 /* ================================================================
    2. HUBS (GE + REL) — interface-methoden
    ================================================================ */
@@ -316,6 +326,26 @@ func (ll *LijstDefinitie_Lijstconfig) SetOpvoer(t *time.Time) { ll.Opvoer = t }
 func (ll LijstDefinitie_Lijstconfig) GetAfvoer() *time.Time   { return ll.Afvoer }
 func (ll *LijstDefinitie_Lijstconfig) SetAfvoer(t *time.Time) { ll.Afvoer = t }
 func (ll LijstDefinitie_Lijstconfig) String() string          { return RepresentatieToString(ll) }
+
+// Uitleg_Meta
+func (um Uitleg_Meta) GetID() any              { return um.Rel_ID }
+func (um Uitleg_Meta) Metatype() Metatype      { return MetatypeGegevenselement }
+func (um *Uitleg_Meta) ClearID()               { um.Rel_ID = 0 }
+func (um Uitleg_Meta) GetOpvoer() *time.Time   { return um.Opvoer }
+func (um *Uitleg_Meta) SetOpvoer(t *time.Time) { um.Opvoer = t }
+func (um Uitleg_Meta) GetAfvoer() *time.Time   { return um.Afvoer }
+func (um *Uitleg_Meta) SetAfvoer(t *time.Time) { um.Afvoer = t }
+func (um Uitleg_Meta) String() string          { return RepresentatieToString(um) }
+
+// Uitleg_Tekst
+func (ut Uitleg_Tekst) GetID() any              { return ut.Rel_ID }
+func (ut Uitleg_Tekst) Metatype() Metatype      { return MetatypeGegevenselement }
+func (ut *Uitleg_Tekst) ClearID()               { ut.Rel_ID = 0 }
+func (ut Uitleg_Tekst) GetOpvoer() *time.Time   { return ut.Opvoer }
+func (ut *Uitleg_Tekst) SetOpvoer(t *time.Time) { ut.Opvoer = t }
+func (ut Uitleg_Tekst) GetAfvoer() *time.Time   { return ut.Afvoer }
+func (ut *Uitleg_Tekst) SetAfvoer(t *time.Time) { ut.Afvoer = t }
+func (ut Uitleg_Tekst) String() string          { return RepresentatieToString(ut) }
 
 /* ================================================================
    3. _DATA — interface-methoden
@@ -575,6 +605,26 @@ func (d LijstDefinitie_Lijstconfig_Data) GetAfvoer() *time.Time   { return d.Afv
 func (d *LijstDefinitie_Lijstconfig_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d LijstDefinitie_Lijstconfig_Data) String() string          { return RepresentatieToString(d) }
 
+// Uitleg_Meta_Data
+func (d Uitleg_Meta_Data) GetID() any              { return d.Versie }
+func (d Uitleg_Meta_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *Uitleg_Meta_Data) ClearID()               { d.Versie = 0 }
+func (d Uitleg_Meta_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *Uitleg_Meta_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d Uitleg_Meta_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *Uitleg_Meta_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d Uitleg_Meta_Data) String() string          { return RepresentatieToString(d) }
+
+// Uitleg_Tekst_Data
+func (d Uitleg_Tekst_Data) GetID() any              { return d.Versie }
+func (d Uitleg_Tekst_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *Uitleg_Tekst_Data) ClearID()               { d.Versie = 0 }
+func (d Uitleg_Tekst_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *Uitleg_Tekst_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d Uitleg_Tekst_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *Uitleg_Tekst_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d Uitleg_Tekst_Data) String() string          { return RepresentatieToString(d) }
+
 /* ================================================================
    4. _AANVANG/_EINDE (entiteits-plumbing) — interface-methoden
    ================================================================ */
@@ -698,6 +748,26 @@ func (l *LijstDefinitie_Einde) SetOpvoer(t *time.Time) { l.Opvoer = t }
 func (l LijstDefinitie_Einde) GetAfvoer() *time.Time   { return l.Afvoer }
 func (l *LijstDefinitie_Einde) SetAfvoer(t *time.Time) { l.Afvoer = t }
 func (l LijstDefinitie_Einde) String() string          { return RepresentatieToString(l) }
+
+// Uitleg_Aanvang
+func (u Uitleg_Aanvang) GetID() any              { return u.Versie }
+func (u Uitleg_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (u *Uitleg_Aanvang) ClearID()               { u.Versie = 0 }
+func (u Uitleg_Aanvang) GetOpvoer() *time.Time   { return u.Opvoer }
+func (u *Uitleg_Aanvang) SetOpvoer(t *time.Time) { u.Opvoer = t }
+func (u Uitleg_Aanvang) GetAfvoer() *time.Time   { return u.Afvoer }
+func (u *Uitleg_Aanvang) SetAfvoer(t *time.Time) { u.Afvoer = t }
+func (u Uitleg_Aanvang) String() string          { return RepresentatieToString(u) }
+
+// Uitleg_Einde
+func (u Uitleg_Einde) GetID() any              { return u.Versie }
+func (u Uitleg_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (u *Uitleg_Einde) ClearID()               { u.Versie = 0 }
+func (u Uitleg_Einde) GetOpvoer() *time.Time   { return u.Opvoer }
+func (u *Uitleg_Einde) SetOpvoer(t *time.Time) { u.Opvoer = t }
+func (u Uitleg_Einde) GetAfvoer() *time.Time   { return u.Afvoer }
+func (u *Uitleg_Einde) SetAfvoer(t *time.Time) { u.Afvoer = t }
+func (u Uitleg_Einde) String() string          { return RepresentatieToString(u) }
 
 /* ================================================================
    5. _AANVANG/_EINDE (hub-level plumbing) — interface-methoden
@@ -1221,6 +1291,26 @@ func (i LijstDefinitie_Lijstconfig_Input) GetAfvoer() *time.Time   { return nil 
 func (i *LijstDefinitie_Lijstconfig_Input) SetAfvoer(t *time.Time) {}
 func (i LijstDefinitie_Lijstconfig_Input) String() string          { return RepresentatieToString(i) }
 
+// Uitleg_Meta_Input
+func (i Uitleg_Meta_Input) GetID() any              { return i.Rel_ID }
+func (i Uitleg_Meta_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *Uitleg_Meta_Input) ClearID()               { i.Rel_ID = 0 }
+func (i Uitleg_Meta_Input) GetOpvoer() *time.Time   { return nil }
+func (i *Uitleg_Meta_Input) SetOpvoer(t *time.Time) {}
+func (i Uitleg_Meta_Input) GetAfvoer() *time.Time   { return nil }
+func (i *Uitleg_Meta_Input) SetAfvoer(t *time.Time) {}
+func (i Uitleg_Meta_Input) String() string          { return RepresentatieToString(i) }
+
+// Uitleg_Tekst_Input
+func (i Uitleg_Tekst_Input) GetID() any              { return i.Rel_ID }
+func (i Uitleg_Tekst_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *Uitleg_Tekst_Input) ClearID()               { i.Rel_ID = 0 }
+func (i Uitleg_Tekst_Input) GetOpvoer() *time.Time   { return nil }
+func (i *Uitleg_Tekst_Input) SetOpvoer(t *time.Time) {}
+func (i Uitleg_Tekst_Input) GetAfvoer() *time.Time   { return nil }
+func (i *Uitleg_Tekst_Input) SetAfvoer(t *time.Time) {}
+func (i Uitleg_Tekst_Input) String() string          { return RepresentatieToString(i) }
+
 /* ================================================================
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
    ================================================================ */
@@ -1443,6 +1533,35 @@ func (l *LijstDefinitie) GeefOnderliggendeGegevenselementen() []OnderliggendeRep
 			l.Einde[idx].LijstDefinitie_ID = l.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "LijstDefinitie_Einde", Representatie: &l.Einde[idx]})
+	}
+	return result
+}
+
+func (u *Uitleg) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0)
+	for idx := range u.UitlegMetas {
+		if u.UitlegMetas[idx].Uitleg_ID == 0 {
+			u.UitlegMetas[idx].Uitleg_ID = u.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Uitleg_Meta", Representatie: &u.UitlegMetas[idx]})
+	}
+	for idx := range u.UitlegTeksten {
+		if u.UitlegTeksten[idx].Uitleg_ID == 0 {
+			u.UitlegTeksten[idx].Uitleg_ID = u.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Uitleg_Tekst", Representatie: &u.UitlegTeksten[idx]})
+	}
+	for idx := range u.Aanvang {
+		if u.Aanvang[idx].Uitleg_ID == 0 {
+			u.Aanvang[idx].Uitleg_ID = u.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Uitleg_Aanvang", Representatie: &u.Aanvang[idx]})
+	}
+	for idx := range u.Einde {
+		if u.Einde[idx].Uitleg_ID == 0 {
+			u.Einde[idx].Uitleg_ID = u.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Uitleg_Einde", Representatie: &u.Einde[idx]})
 	}
 	return result
 }
@@ -1871,6 +1990,34 @@ func (h *LijstDefinitie_Lijstconfig) GeefOnderliggendeGegevenselementen() []Onde
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "LijstDefinitie_Lijstconfig_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *Uitleg_Meta) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].Uitleg_ID == 0 {
+			h.Data[i].Uitleg_ID = h.Uitleg_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Uitleg_Meta_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *Uitleg_Tekst) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].Uitleg_ID == 0 {
+			h.Data[i].Uitleg_ID = h.Uitleg_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Uitleg_Tekst_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }

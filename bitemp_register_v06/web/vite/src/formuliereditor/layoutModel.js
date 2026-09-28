@@ -19,6 +19,8 @@
  * een lijst komen uit het aanmeldformulier-plan (2026-09-22 §5.5); `nieuwFormulier` (code of id van een FD
  * voor een ingebedde nieuwe doel-ENT vanuit een relatieveld) uit §5.3. De runtime staat in
  * CustomFormulierRenderer, NieuwSubFormulier en nieuwFormulierMapping.
+ * Op veld, groep en lijst (28-09): `uitleg` (code uit de uitleglijst), `uitlegTekst` (eigen
+ * tekst) en `vormUitleg: false` — het (i)-rondje, zie shared/uitleg.js.
  *
  * Veld-adressering is **padgebaseerd** (`ENT.GE.veld`), consistent met CEL,
  * afgeleide velden en berichtdefinities. Zie docs/plans/2026-07-16 Formulier-editor.
