@@ -502,6 +502,37 @@ anders optie). Een snapshot is een noodrem, geen backup.
   - **Terug:** `pf.sh deploy 2719f096`. De nieuwe kolommen en tabellen kunnen blijven staan:
     ze mogen leeg zijn.
 
+  **Tiende ronde 28-09-2026 (AI-invulhulp; `dba982d7`)**:
+  - **Dump** vooraf: `/srv/omnium-pf/predeploy-20260928-1812.sql.gz`. Daarna `pf.sh deploy`;
+    alle containers healthy.
+  - **AI-proxy aan:**
+    - `AI_UPSTREAM_KEY` (DeepSeek) en `AI_UPSTREAM_MODEL=deepseek-chat` staan in
+      `/srv/omnium-pf/.env`. De sleutel ging via stdin, niet via de opdrachtregel; de backup
+      staat in `.env.bak-*`.
+    - Daarna `docker compose … up -d --no-deps --force-recreate api`.
+    - Rooktest via https: een tijdelijke code aangemaakt (201), een aanroep gedaan (200,
+      `deepseek-flash`), en de code weer ingetrokken.
+    - Let op: de admin-login geeft een cookie die alleen over https werkt, dus test de
+      `/api/ai/codes`-endpoints via het domein en niet via `localhost:8084`.
+  - **Afgespeeld** (alles HTTP 201):
+    - `registraties-replay-codes-definities-pf-2026-09-28.json` (gemaakt met
+      `geef_definities_code.py --bron https://pf.common-ground-lab.nl`; op Windows met
+      `PYTHONIOENCODING=utf-8`). Codes op FD 1–8 en WD 5; de layouts van FD 2, 4 en 5 verwijzen
+      nu naar `nieuwe-organisatie` in plaats van `"3"`. De standaardweergaven (o.a. WD 2) zijn
+      overgeslagen.
+    - de lijstdefinities (LD 1–4);
+    - `voorbeeld-ai-assist` (FD 9);
+    - `registraties-replay-init-weergavedefinitie-initiatief-v2-2026-09-28.json` (WD 6, code
+      `initiatief-v2`, niet standaard; zie `PUBLICATIE_TEMPLATES.md`).
+  - **Niet afgespeeld:** de weergaven voor Organisatie, Persoon en Locatie (zie de negende
+    ronde).
+  - **Gecontroleerd met Playwright:**
+    - de iframe: 100 records, 25 rijen, en detail 38 met de minimale WD 2, zonder keuzelijst;
+    - `aanmelden.html?formulier=2` en `?formulier=aanmelding-initiatief`: geen AI-knop, en
+      "＋ Nieuwe organisatie" werkt (3 opvoeren in één registratie);
+    - `?weergave=initiatief-v2`.
+  - **Terug:** `pf.sh deploy c02aba39`.
+
   **SMTP voor notificaties (Quickhost, 25-09-2026)**: werkend patroon uit het volksgebouw-project
   (notitie *SMTP op Quickhost*): host `mail.common-ground-lab.nl`, **poort 465 met TLS vanaf de
   verbinding** (587/STARTTLS geeft `454 Temporary authentication failure`, ook als de mailbox nog

@@ -149,6 +149,35 @@ type. Zijn er meer actieve weergaven, dan staat er op lijst en detail een keuzel
 *Weergave*, maar niet in de embed. Zo kan een nieuwe weergave live naast de standaard staan,
 zonder de embed te raken.
 
+### Initiatief v2 en omschakelen (28-09-2026)
+
+Naast de minimale standaard (WD 2, *Initiatief standaardweergave*) staat **Initiatief v2**
+(code `initiatief-v2`). Replay:
+`replay files/registraties-replay-init-weergavedefinitie-initiatief-v2-2026-09-28.json`.
+
+- **Tabelconfig:** dezelfde als WD 2 (`publieke-initiatieven` / `publiek-initiatief-detail`,
+  dus alleen geaccepteerde initiatieven). Alle paden van v2 staan al in dat opgeslagen document.
+- **Detail:**
+  - de samenvattingstabel van WD 2;
+  - domeinen en API-standaarden als labels (`chips`), plus de andere API-standaarden (vrije
+    tekst);
+  - gemeenten per rol in twee kolommen, met de kaart (`nl-map`), plus realisatie door anderen;
+  - bijdragen als schaalbalken;
+  - planning, organisaties en contact.
+- **Rustiger dan *Initiatief met vormen*:** geen lagenplaatje, stappenbalk of ecosysteem.
+- **Bekijken:** `publicatie.html?weergave=initiatief-v2#/t/initiatieven/39`. Dit werkt ook met
+  `embed=1`.
+
+**Omschakelen** doe je in de meta van de WeergaveDefinitie (inhoud-editor, of een
+correctie-replay). De embed volgt altijd de actieve standaard. Zijn er twee standaarden tegelijk,
+dan wint de eerste in de lijst (`useWeergaveDefinitie`, in de praktijk het laagste id, dus
+WD 2). Alleen v2 aanzetten is dus niet genoeg.
+1. Zet `is_standaard` aan op *Initiatief v2*.
+2. Zet `is_standaard` uit op WD 2.
+
+**Terugschakelen:** andersom. De minimale WD 2 blijft actief, en blijft bereikbaar via
+`?weergave=2`.
+
 Gebruik liever de **code** (`WeergaveDefinitie_Meta.code`, bv.
 `publicatie.html?weergave=initiatief-met-vormen#/t/initiatieven/39`) dan het id: de code is op
 elke instantie gelijk, het id niet. De keuzelijst zet de code in de URL als de definitie er een

@@ -138,6 +138,9 @@ geeft een nieuw, volledig voorstel. In het AI-veld (`ai-assist`) werkt dat net z
 
 De nginx van de frontend stuurt `/ai/…` al door naar de API; Caddy hoeft niet te veranderen.
 
+**Een ander model of een andere dienst** achter de proxy, bijvoorbeeld Claude in plaats van
+DeepSeek: zie [`AI_PROXY_MODEL.md`](AI_PROXY_MODEL.md).
+
 **Codes beheren** kan in Omnium Studio, activiteit **AI-toegang** onder *beheer*
 (`studio/activities/aiToegangActivity.jsx`): aanmaken met naam, looptijd en daglimieten, de code
 één keer zien en kopiëren, het verbruik van vandaag bekijken, en intrekken. Onder water zijn dat
