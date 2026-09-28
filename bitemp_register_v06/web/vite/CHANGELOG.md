@@ -7,6 +7,10 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+### Opgelost
+- **Kaart van Nederland: Urk en Medemblik op een dijk** (28-09). De eerste reparatie gebruikte het
+  middelpunt van de woonplaats, en ook dat vlak bevat water. Urk kwam zo op de Houtribdijk. Nu de
+  mediaan van de adressen van de gemeente. De test controleert de afstand tot de hoofdplaats.
 
 ## [studio/v0.10.0] — 2026-09-28
 Het werk voor het Common Ground-portfolio (pf.common-ground-lab.nl), 22–28 september. Backend:
