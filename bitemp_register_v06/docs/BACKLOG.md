@@ -1664,3 +1664,29 @@ Ook een vorm kan uitleg hebben (de kleurkiezer), naast de inhoud ("de kleur van 
   - **Codegen neemt veldbeschrijvingen niet mee.** `description` op een veld in de V3 komt niet in
     de Go-code, en dus ook niet terug in een export. Gezien bij Uitleg en LijstDefinitie.
     Mogelijke oplossing: een `schema_desc`-tag per veld, zoals bij de id-velden.
+
+## 36. Render-API voor modeldiagrammen — opdracht van Imprint (2026-09-29)
+
+**Vraag (Imprint, 25-09, aangevuld 29-09):** een HTTP-API die een modeldiagram als SVG
+teruggeeft, zodat Imprint niet zelf tekent (`v3-diagram.tsx` vervalt). Contract, eisen en
+tekenkeuzes: `docs/RENDER_API.md`.
+
+- ✅ **Stap a+b gebouwd 29/30-09** (`feat/render-api-svg`).
+  - Pure SVG-tekenaar `web/vite/src/diagramsvg`, zonder DOM. Hij hergebruikt de mapping en
+    autoLayout van de UML-editor en is byte-gelijk, ook over platforms.
+  - Node-sidecar `render-svc` (besluit Mark 29-09) met `Dockerfile.render` en een service in
+    `docker-compose.yml`.
+  - Go-route `POST /api/render/svg`: ETag/304, problem+json en 502 als de sidecar weg is.
+  - Kleine fix in `v3ModelNaarEditor`: `goType` `integer`, `number` en `boolean` (JSON-Schema-namen
+    uit Imprints `/api/meta?format=v3`) werden `string`.
+  - Getest: 19 unittests plus golden (MusicBrain-model), 3 sidecar-tests, 3 Go-handlertests en de
+    PEP-test.
+- ✅ **Stap c gebouwd 30-09:** `GET /api/models/{naam}/diagram.svg` en `…/views.json` met
+  `versie` en `asOf`, uit `schema_versies`. Besluit Mark: adres = naam + versie + tijdstip.
+  Getest met mock-opslag én tegen de lokale DB (np-loc + register 1.5).
+- **Open:**
+  - **API-sleutel** voor niet-publieke modellen (`Authorization: Bearer`, opdracht §5).
+  - **VPS-deploy** van de sidecar (`deploy/vps`).
+  - **Studio-export overzetten op `diagramsvg`**, zodat Studio en Imprint één tekenaar delen.
+  - **Andere talen/profielen** (ArchiMate, BPMN, …), één voor één.
+  - **Lijnen die door kaarten lopen** (rechte lijnen). Eventueel orthogonaal routeren.

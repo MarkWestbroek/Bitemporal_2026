@@ -20,11 +20,15 @@ function goTypeNaarVeldType(goType) {
     case "int":
     case "int32":
     case "int64":
+    case "integer": // JSON-Schema-typenamen, bv. uit Imprints /api/meta?format=v3
       return { type: "integer", format: "" };
     case "float32":
     case "float64":
       return { type: "number", format: "float64" };
+    case "number":
+      return { type: "number", format: "" };
     case "bool":
+    case "boolean":
       return { type: "boolean", format: "" };
     case "Date":
       return { type: "string", format: "date" };

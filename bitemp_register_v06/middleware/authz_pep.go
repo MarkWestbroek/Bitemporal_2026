@@ -270,6 +270,12 @@ func isPubliekPad(path, method string) bool {
 		return true
 	}
 
+	// Render-API (handlers/render_svg.go): rendert alleen wat de aanroeper zelf
+	// meestuurt en leest geen registerdata — een pure functie, dus publiek.
+	if lowerPath == "/api/render/svg" {
+		return true
+	}
+
 	// OpenAPI endpoints (documentatie)
 	if lowerPath == "/openapi.json" || lowerPath == "/openapi.yaml" ||
 		strings.HasPrefix(lowerPath, "/openapi") ||

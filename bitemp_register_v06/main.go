@@ -214,6 +214,13 @@ func NewRouter() *gin.Engine {
 		fmt.Println("openbare formulieren: geen (zet OPENBARE_FORMULIEREN=<FD-id of code,…> om een formulier anoniem indienbaar te maken)")
 	}
 
+	// Render-API voor modeldiagrammen (handlers/render_svg.go, docs/RENDER_API.md): Imprint
+	// stuurt een V3-model en krijgt SVG terug. Tekenen gebeurt in de sidecar render-svc.
+	router.POST("/api/render/svg", handlers.MaakRenderSvgHandler())
+	// Model-link: naam + versie + asOf, uit schema_versies. Open, net als /api/schema/*.
+	router.GET("/api/models/:naam/diagram.svg", handlers.MaakModelDiagramSvgHandler())
+	router.GET("/api/models/:naam/views.json", handlers.MaakModelViewsHandler())
+
 	// Schema model endpoints (v3-formaat, zie ontwerpkeuzen.md §7)
 	router.GET("/api/schema/model", handlers.MaakGetSchemaModelHandler())
 	router.GET("/api/schema/model/code", handlers.MaakGetSchemaModelCodeHandler())
