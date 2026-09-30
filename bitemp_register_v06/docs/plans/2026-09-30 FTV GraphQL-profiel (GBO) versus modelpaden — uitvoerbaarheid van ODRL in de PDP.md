@@ -331,6 +331,46 @@ schema en bundel); fase 2 = waarde-afhankelijke voorwaarden als residu naar de r
 De GBO-mapper blijft nuttig als generieke poort voor bronnen die je niet beheert, en als
 vangnet vóór een gateway; voor onze eigen bron is hij niet de kern.
 
+## 10. Toestemming: data in de bundel, PIP, of tweede beleidslaag? (2026-10-01)
+
+Opmerking van Mark bij het voorbeeld: "er is een toestemming voor de betrokkene" is een
+generieke term en lijkt een lus — een toestemming is zelf beleid (een ODRL *Agreement* met
+de betrokkene als assigner en de afnemer als assignee). Een rolvoorwaarde zou losser zijn.
+
+**Hoe GBO het doet.** In het voorbeeld (slide 15, profiel §8.6) is toestemming **data in de
+PDP**: `bsn in data.toestemming[subject.id]`, met de tabel in dezelfde bundel als de regels.
+Geen PIP-aanroep, geen tweede beleidslaag. De *Toestemmingsvoorziening* uit de GBO-opleverlijst
+(intro-slide 21, "verkenning") is niet aan het profiel gekoppeld.
+
+**Drie lezingen, oplopend in zwaarte:**
+
+| Lezing | Wat de voorziening teruggeeft | Wie beslist | Toegangsspraak |
+|---|---|---|---|
+| Data in de bundel (GBO nu) | een tabel, meegeleverd door de PAP | de bronhouder-regel | `er is een toestemming` = lidmaatschapstest |
+| **PIP** | een feit per vraag: "heeft subject X toestemming voor BSN Y (doel, geldigheid, omvang)?" | de bronhouder-regel; `PIP_UNAVAILABLE` bij uitval | zelfde zin; de compiler vertaalt `nlgov:bestaat:toestemming` naar een PIP-aanroep |
+| Tweede PDP / beleidslaag | een **besluit**: de burger heeft eigen ODRL-Agreements met voorwaarden, de voorziening evalueert ze | beide; combinatie met deny-overrides | de zin verwijst naar *ander beleid*; editor markeert dat |
+
+Zodra toestemming eigen voorwaarden krijgt ("alleen mijn inkomen, alleen dit jaar, alleen voor
+schuldhulp") schuift de PIP naar een PDP. Een rolvoorwaarde ("de aanvrager heeft rol x") is
+losser en statisch, maar toestemming is een *relatie* subject–betrokkene en past daarom niet in
+een subjectkenmerk (tenzij via mandaat/delegatie, een apart onderwerp in het ODRL-plan).
+
+**De bundel is een push-cache.** De PAP duwt beleid én data naar de PDP; de PDP beslist lokaal.
+Dat haalt de afhankelijkheid uit het request-pad, ten koste van versheid — en toestemming is het
+schoolvoorbeeld van iets dat direct intrekbaar moet zijn. OPA kent drie standen:
+
+| Stand | Hoe | Versheid | Afhankelijkheid in het request-pad |
+|---|---|---|---|
+| Databundel | aparte bundel met eigen pollinterval (ODRL-PAP: methoden / beleid / data), delta-bundels | interval | geen |
+| PIP-aanroep met cache | `http.send` met cache en TTL | TTL | alleen bij cache-miss |
+| PIP-aanroep live | zonder cache, fail-closed | per request | elke beslissing |
+
+Conclusie: de vernieuwingstermijn hoort bij het **attribuut**, niet bij de bundel. Rol en
+autorisatie kunnen in de bundel; toestemming hoort in de snelste stand die de voorziening
+aankan. Het profiel kent nu één stand voor alles. Vragen voor GBO: geeft de
+Toestemmingsvoorziening een attribuut of een besluit terug, en welke vernieuwingstermijn
+hoort daarbij? Het open punt "Consent/betrokkene" in het ODRL-plan verwijst hierheen.
+
 ## Bronnen
 
 - FTV GraphQL-profiel draft-01 — <https://vng-realisatie.github.io/ftv/documents/20260928-ftv-graphql-profile.html>

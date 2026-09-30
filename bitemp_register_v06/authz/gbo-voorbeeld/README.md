@@ -141,6 +141,11 @@ allow if {
   als operatoren; geen `isAnyOf`, geen target-matching, geen assignee. Uitbreiding kan via de
   prefix-mapping en functies in de interpreter-namespace (zie `pdp_odre.py`) — dat is legitiem
   ODRE-gebruik, maar de "PDP" is dan grotendeels de schil eromheen.
+- **Toestemming is hier data in de bundel, zoals in GBO's voorbeeld** (`PIP_DATA` in
+  `compiler.py`, `data.toestemming` in beide bundels). Dat is een push-cache met de deploycyclus
+  van het beleid; voor intrekbare toestemming hoort het een PIP-aanroep of een aparte databundel
+  met kort interval te zijn. De Toegangsspraak-zin en de ODRL veranderen daar niet van, alleen
+  de vertaling van `nlgov:bestaat:toestemming` in de compiler. Zie de analyse, §10.
 - **`Persoon.naam` als edge** laat het type-versus-pad-punt zien: de regel op `Naam` geldt voor
   élke `Naam` in het schema, niet alleen voor die van Persoon. In dit model is dat hetzelfde; in
   een model met gedeelde GE-typen niet (zie de analyse, §2.1).

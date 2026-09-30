@@ -371,7 +371,7 @@ Een schuldhulpverlener mag inkomensgegevens inzien van een burger, mits er een l
 | **Vertaallaag naar runtime** | Hoe wordt een ODRL-policy vertaald naar OPA Rego / Cedar / XACML? Handmatig? Geautomatiseerd? **Analyse 2026-09-30:** compileren naar Rego-data (patroon ODRL-PAP), gemeten ± 17 µs per veldrecord in OPA; aansluiting op het FTV GraphQL-profiel (GBO) via registerpad → `ParentType.field`. Zie `2026-09-30 FTV GraphQL-profiel (GBO) versus modelpaden — uitvoerbaarheid van ODRL in de PDP.md`. | Hoog |
 | **Cross-register policies** | Policies die over meerdere registers gaan (bijv. BRP + Kadaster) — hoe verwijzen Assets cross-register? | Midden |
 | **AuthZEN-koppeling** | Hoe leest de PDP het ODRL-register? Als JSON-LD API? Als PIP? | Midden |
-| **Consent/betrokkene** | AVG-consent als ODRL Duty of als apart mechanisme? | Midden |
+| **Consent/betrokkene** | AVG-consent als ODRL Duty of als apart mechanisme? **Analyse 2026-10-01:** drie lezingen (data in de bundel zoals GBO, PIP-feit, tweede beleidslaag met eigen Agreements); vernieuwingstermijn hoort bij het attribuut. Zie `2026-09-30 FTV GraphQL-profiel (GBO) versus modelpaden …` §10. | Midden |
 | **Delegatie** | Mandaatverlening (organisatie A delegeert recht aan organisatie B) — mogelijk via Policy Inheritance in v2 | Laag |
 | **Temporal constraints** | ODRL heeft `dateTime` leftOperand; maar hoe koppel je dat aan de materiële tijd van het register? Opgewaardeerd na de W3C-workshop van juli 2026: ODRL 2.2 kent maar één evaluatiemoment, en 3.0-voorstellen (o.a. JP Morgan) vragen om een expliciete temporele laag. | Midden |
 
