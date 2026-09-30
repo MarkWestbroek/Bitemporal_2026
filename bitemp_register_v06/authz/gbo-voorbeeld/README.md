@@ -64,7 +64,7 @@ Beleid "GBO persoon".
 
   Regel "persoon op bsn".
     Een afnemer mag alle gegevens van een persoon bekijken
-    als er is een toestemming voor de betrokkene.
+    als er een toestemming voor de betrokkene is.
 
   Regel "naam en adres".
     Een geautoriseerde afnemer mag de naam van een persoon bekijken.
@@ -74,7 +74,7 @@ Beleid "GBO persoon".
 
   Regel "inkomens tot en met 2024".
     Een afnemer mag de inkomens van een persoon bekijken
-    als het jaar van de aanvraag is ten hoogste 2024.
+    als het jaar van de aanvraag ten hoogste 2024 is.
 
   Regel "inkomen velden".
     Een geautoriseerde afnemer mag de inkomensgegevens bekijken.
