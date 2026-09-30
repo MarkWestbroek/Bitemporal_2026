@@ -1,0 +1,53 @@
+[
+  {
+    "query": "alias-en-fragment",
+    "odre": true,
+    "denied": [],
+    "ms": 6.4
+  },
+  {
+    "query": "geen-toestemming",
+    "odre": false,
+    "denied": [
+      "persoon"
+    ],
+    "ms": 4.8
+  },
+  {
+    "query": "inkomens-2024",
+    "odre": true,
+    "denied": [],
+    "ms": 11.3
+  },
+  {
+    "query": "inkomens-2025",
+    "odre": false,
+    "denied": [
+      "persoon.inkomens"
+    ],
+    "ms": 10.0
+  },
+  {
+    "query": "inkomens-zonder-jaren",
+    "odre": false,
+    "denied": [
+      "persoon.inkomens"
+    ],
+    "ms": 9.3
+  },
+  {
+    "query": "toegestaan",
+    "odre": true,
+    "denied": [],
+    "ms": 7.8
+  },
+  {
+    "query": "zonder-autorisatie",
+    "odre": false,
+    "denied": [
+      "persoon.naam",
+      "persoon.naam.naam"
+    ],
+    "ms": 5.5
+  }
+]

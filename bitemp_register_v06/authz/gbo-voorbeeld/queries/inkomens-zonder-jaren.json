@@ -1,0 +1,1 @@
+{"_uitleg":"PJ slide 14: inkomens zonder jaren -> deny (argument ontbreekt).","subject":{"id":"00000001000000000001","properties":{"role":"afnemer"}},"body":{"query":"query { persoon(bsn: \"999990019\") { inkomens { jaar } } }"}}

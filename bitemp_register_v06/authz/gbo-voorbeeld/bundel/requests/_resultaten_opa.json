@@ -1,0 +1,77 @@
+[
+  {
+    "query": "alias-en-fragment",
+    "records": 3,
+    "pj": true,
+    "data": true,
+    "gelijk": true
+  },
+  {
+    "query": "geen-toestemming",
+    "records": 3,
+    "pj": false,
+    "pj_denied": [
+      "persoon"
+    ],
+    "data": false,
+    "data_denied": [
+      "persoon"
+    ],
+    "gelijk": true
+  },
+  {
+    "query": "inkomens-2024",
+    "records": 6,
+    "pj": true,
+    "data": true,
+    "gelijk": true
+  },
+  {
+    "query": "inkomens-2025",
+    "records": 4,
+    "pj": false,
+    "pj_denied": [
+      "persoon.inkomens"
+    ],
+    "data": false,
+    "data_denied": [
+      "persoon.inkomens"
+    ],
+    "gelijk": true
+  },
+  {
+    "query": "inkomens-zonder-jaren",
+    "records": 3,
+    "pj": false,
+    "pj_denied": [
+      "persoon.inkomens"
+    ],
+    "data": false,
+    "data_denied": [
+      "persoon.inkomens"
+    ],
+    "gelijk": true
+  },
+  {
+    "query": "toegestaan",
+    "records": 6,
+    "pj": true,
+    "data": true,
+    "gelijk": true
+  },
+  {
+    "query": "zonder-autorisatie",
+    "records": 3,
+    "pj": false,
+    "pj_denied": [
+      "persoon.naam",
+      "persoon.naam.naam"
+    ],
+    "data": false,
+    "data_denied": [
+      "persoon.naam",
+      "persoon.naam.naam"
+    ],
+    "gelijk": true
+  }
+]

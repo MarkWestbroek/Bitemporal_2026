@@ -1,0 +1,64 @@
+{
+  "versie": "v3",
+  "naam": "GBO persoon",
+  "beschrijving": "Het voorbeeld uit het FTV GraphQL-profiel (Peter-Jan Karens, draft-01, september 2026) als canoniek model: Persoon met naam, adres en inkomens. Elke eigenschap leeft in een gegevenselement (hub + _Data-patroon); het GraphQL-schema en de policybundel worden hieruit gegenereerd.",
+  "datatypes": [
+    { "naam": "BSN", "basisType": "string", "description": "Burgerservicenummer, 9 cijfers met elfproef." }
+  ],
+  "enums": [],
+  "referentielijstInstanties": [],
+  "domeinen": [
+    { "naam": "gbo", "kleur": "#bfdbfe", "description": "Gemeenschappelijke Bronontsluiting — voorbeelddomein" }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "Persoon",
+      "description": "Natuurlijk persoon zoals de bron hem ontsluit. Identificatie via BSN (argument van het root-veld persoon(bsn)).",
+      "domein": "gbo",
+      "isMaterieel": true,
+      "kleur": "#bfdbfe",
+      "meervoud": "personen",
+      "runtime": { "veldnaam": "persoon", "padnaam": "personen", "tabelnaam": "persoon", "idKolom": "id", "klassenaam": "Persoon" },
+      "gegevenselementen": [
+        {
+          "naam": "Naam",
+          "description": "Naam van de persoon. In PJ's schema is dit het scalaire veld Persoon.naam; in het canoniek model is elke eigenschap een gegevenselement.",
+          "domein": "gbo",
+          "meervoud": "namen",
+          "momentvoorkomen": "enkelvoudig",
+          "runtime": { "veldnaam": "naam", "padnaam": "namen", "tabelnaam": "persoon_naam", "idKolom": "rel_id", "heeftPFK": true, "entiteitIDKolom": "persoon_id", "klassenaam": "Naam" },
+          "velden": [
+            { "naam": "naam", "goType": "*string", "type": "string" }
+          ]
+        },
+        {
+          "naam": "Adres",
+          "description": "Woonadres.",
+          "domein": "gbo",
+          "meervoud": "adressen",
+          "momentvoorkomen": "enkelvoudig",
+          "runtime": { "veldnaam": "adres", "padnaam": "adressen", "tabelnaam": "persoon_adres", "idKolom": "rel_id", "heeftPFK": true, "entiteitIDKolom": "persoon_id", "klassenaam": "Adres" },
+          "velden": [
+            { "naam": "straat", "goType": "*string", "type": "string" },
+            { "naam": "huisnummer", "goType": "*int", "type": "integer" },
+            { "naam": "postcode", "goType": "*string", "type": "string" },
+            { "naam": "plaats", "goType": "*string", "type": "string" }
+          ]
+        },
+        {
+          "naam": "Inkomen",
+          "description": "Inkomen per jaar. Meervoudig: één record per jaar.",
+          "domein": "gbo",
+          "meervoud": "inkomens",
+          "momentvoorkomen": "meervoudig",
+          "runtime": { "veldnaam": "inkomen", "padnaam": "inkomens", "tabelnaam": "persoon_inkomen", "idKolom": "rel_id", "heeftPFK": true, "entiteitIDKolom": "persoon_id", "klassenaam": "Inkomen" },
+          "velden": [
+            { "naam": "jaar", "goType": "int", "type": "integer", "verplicht": true },
+            { "naam": "bedrag", "goType": "*float64", "type": "number" }
+          ]
+        }
+      ],
+      "relaties": []
+    }
+  ]
+}

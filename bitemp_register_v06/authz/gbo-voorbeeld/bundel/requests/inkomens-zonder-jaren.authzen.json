@@ -1,0 +1,67 @@
+{
+  "subject": {
+    "id": "00000001000000000001",
+    "properties": {
+      "role": "afnemer"
+    }
+  },
+  "action": {
+    "name": "POST",
+    "properties": {
+      "body": "{\"query\": \"query { persoon(bsn: \\\"999990019\\\") { inkomens { jaar } } }\"}"
+    }
+  },
+  "resource": {
+    "type": "http",
+    "id": "/graphql",
+    "properties": {
+      "graphql": {
+        "profile": "ftv-graphql/0.1",
+        "operation": {
+          "type": "query",
+          "name": null
+        },
+        "schema": {
+          "digest": "sha256:e56173ecd80510503ea654b7b3bac6f3f9c3d8d5a04b9b0729a4d74568ef29e6"
+        },
+        "fields": [
+          {
+            "path": [
+              "persoon"
+            ],
+            "parentType": "Query",
+            "field": "persoon",
+            "leaf": false,
+            "args": {
+              "bsn": {
+                "value": "999990019",
+                "origin": "literal"
+              }
+            }
+          },
+          {
+            "path": [
+              "persoon",
+              "inkomens"
+            ],
+            "parentType": "Persoon",
+            "field": "inkomens",
+            "leaf": false
+          },
+          {
+            "path": [
+              "persoon",
+              "inkomens",
+              "jaar"
+            ],
+            "parentType": "Inkomen",
+            "field": "jaar",
+            "leaf": true
+          }
+        ],
+        "unverifiable": null
+      }
+    }
+  },
+  "context": {}
+}

@@ -1,0 +1,1 @@
+{"_uitleg":"Afnemer zonder autorisatie naam-en-adres -> deny op Persoon.naam (toestemming is er wel).","subject":{"id":"00000002000000000002","properties":{"role":"afnemer"}},"body":{"query":"query { persoon(bsn: \"999990019\") { naam { naam } } }"}}

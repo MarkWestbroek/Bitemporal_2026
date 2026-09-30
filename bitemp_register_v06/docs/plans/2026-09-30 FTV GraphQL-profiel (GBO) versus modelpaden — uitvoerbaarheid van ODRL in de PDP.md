@@ -271,6 +271,66 @@ de bundel + digest + drift-check, gesloten wereld met AND-aggregatie, de foutcod
 | 4 | Mapper-keuze: de referentie-mapper van de werkgroep afwachten of een kleine Go-middleware vóór de OpenFTV-PDP (parse + validate met `graphql-go`, SDL uit de bundel) | middel/groot |
 | 5 | Editor: markeer veldwaarde-condities als "afdwinging in de bron"; tab Doorrekenen op de ODRL-Evaluator (plan 2026-08-18 §4.1) | middel |
 
+## 8. Uitgewerkt voorbeeld: PJ's casus door onze keten (2026-09-30, avond)
+
+`authz/gbo-voorbeeld/` bouwt PJ's voorbeeld na vanuit het canoniek model: V3-model
+(Persoon met Naam, Adres, Inkomen; getekend met de render-API-tekenaar), `api-profiel.json`
+voor root-veld/argumenten, het beleid in **Toegangsspraak** → **ODRL** (echte parser +
+`odrl.js`), een compiler naar (a) regels-als-data met index en (b) **PJ-stijl Rego-modules**,
+een mapper op graphql-core, en drie PDP-runs op zeven queries (PJ's slides 12, 14, 15, 19).
+
+| PDP | Beslissingen | Per evaluatie |
+|---|---|---|
+| OPA, PJ's vaste Rego + gegenereerde `rules/*.rego` (roundtrip ODRL → Rego) | 7/7 zoals PJ | 179 µs |
+| OPA, data-gedreven (`data.json` + `nlgov/cond.rego`) | 7/7 gelijk | 158 µs |
+| pyodre (native ODRL, ODRE) met NLGov-uitbreiding | 7/7 gelijk | 5–11 ms per query |
+
+Bevindingen: de roundtrip klopt (het profiel-regelformaat is een goed compilatiedoel, ODRL
+de bron); pyodre is ± 2 ms per veldrecord en doet zelf geen binding/assignee/PIP; `odrl.js`
+exporteert "alle gegevens van X" alleen als AssetCollection wanneer het een begrip is — als
+directe selectie is het niet van "X" te onderscheiden (voorstel: altijd AssetCollection).
+Details en de resultatentabel: `authz/gbo-voorbeeld/README.md`.
+
+## 9. Zonder mapper? Twee fasen en PQ-sets per afnemer
+
+Vraag (Mark): kan het ook zonder de mapper — gewoon policy + canoniek model + GraphQL-schema —
+in twee fasen: (1) de *vraag* beperken bij de bron, feitelijk een custom subschema per
+afnemer, en (2) het *antwoord* beperken in of naast de resolvers? En: geef elke afnemer een
+eigen set persisted queries (PQ's), gegenereerd.
+
+Antwoord: **ja, en het is een zuiverder indeling dan die van het profiel**, met drie kanttekeningen.
+
+1. **Fase 1 is precies GBO's "vóór het endpoint", maar statisch in plaats van per request.**
+   Het profiel beoordeelt per request N veldrecords. Als beleid en model bekend zijn, is de
+   verzameling toegestane veldsleutels per afnemer(rol) vooraf te berekenen: dat *is* het
+   subschema. Iets moet de query nog steeds tegen het schema valideren (parsen met
+   type-informatie) — dat is "een mapper", maar als je de bron zelf beheert (GBO-optie 2/3)
+   doe je het in de GraphQL-server, waar type-informatie gratis is. De mapper van het profiel
+   is dus nodig voor het geval dat je de bron *niet* beheert; wij beheren hem wel.
+2. **PQ-set per afnemer = het subschema in operationele vorm, en hij is te genereren.**
+   Uit model + beleid volgt per afnemer welke velden mogen; daaruit volgen de documenten
+   (of: bestaande documenten worden bij registratie tegen het beleid gevalideerd — dan is
+   registratie het beslismoment, niet het request). Per request rest alleen
+   `(documentId, variabelen, subject)`: geen parse, geen veldloop, en de argumenten-condities
+   (bsn-toestemming, jaren ≤ 2024) zijn de enige runtime-check. Dit is goedkoper én veiliger
+   dan vrije query's, en het neemt de "waanideeën" weg: de afnemer ziet alleen wat hij mag.
+   Het profiel verbiedt `documentId` nu (H1); dat is het punt om in te brengen.
+   "Onderhouden" wordt dan "regenereren bij een beleids- of modelwijziging" — dezelfde
+   codegen-pijplijn die schema en bundel maakt.
+3. **Fase 2 hoort in of naast de resolvers, ja — en heeft twee smaken.** (a) *Filteren op
+   waarde* ("achternaam begint met A", "alleen eigen gemeente"): pas beslisbaar met de data in
+   handen; dat doe je als PDP-vraag per record/veld naast de resolver, óf beter als **partial
+   evaluation**: de PDP geeft de residu-voorwaarde terug en de resolver vertaalt die naar een
+   SQL-filter (OPA's `compile`-API / data filtering doet precies dit). (b) *Maskeren/weglaten*
+   van velden in het antwoord: alleen nodig als fase 1 niet alles-of-niets is; met een
+   PQ-set per afnemer is dat overbodig. Let op de valkuil die ook het profiel noemt (§15.2):
+   partiële antwoorden raken H1 (bron voert uit wat de PDP zag).
+
+Samengevat: fase 1 = beleid × model → subschema/PQ-set (compile-time, uit dezelfde bron als
+schema en bundel); fase 2 = waarde-afhankelijke voorwaarden als residu naar de resolver/SQL.
+De GBO-mapper blijft nuttig als generieke poort voor bronnen die je niet beheert, en als
+vangnet vóór een gateway; voor onze eigen bron is hij niet de kern.
+
 ## Bronnen
 
 - FTV GraphQL-profiel draft-01 — <https://vng-realisatie.github.io/ftv/documents/20260928-ftv-graphql-profile.html>

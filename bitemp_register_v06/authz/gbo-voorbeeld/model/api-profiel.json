@@ -1,0 +1,14 @@
+{
+  "_toelichting": "API-ontwerp dat níet in het canoniek model thuishoort maar wél nodig is om het GraphQL-schema en de policybundel te genereren: root-velden met hun argumenten, argumenten op gegevenselementen, en de vertaling van beleidsbegrippen ('het jaar van de aanvraag') naar argumentnamen.",
+  "typenaamStijl": "kort",
+  "_typenaamStijl": "'kort' = GE-typen heten naar hun klassenaam (Adres), zoals in PJ's schema; 'dynql' = <Entiteit>_<Klassenaam> (Persoon_Adres), zoals onze dynamische GraphQL-laag doet.",
+  "root": [
+    { "veld": "persoon", "entiteit": "Persoon", "args": { "bsn": "String!" }, "betrokkene": "bsn" }
+  ],
+  "argumenten": {
+    "Persoon.Inkomen": { "jaren": "[Int!]" }
+  },
+  "aliassen": {
+    "aanvraag:jaar": { "arg": "jaren", "kwantor": "elk" }
+  }
+}

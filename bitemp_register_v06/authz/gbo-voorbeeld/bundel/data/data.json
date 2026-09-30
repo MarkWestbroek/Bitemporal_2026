@@ -1,0 +1,130 @@
+{
+  "rules": {
+    "persoon-op-bsn": {
+      "regelnaam": "persoon op bsn",
+      "covers_fields": [
+        "Query.persoon"
+      ],
+      "covers_types": [],
+      "conditions": [
+        {
+          "leftOperand": "nlgov:rol",
+          "operator": "eq",
+          "rightOperand": "afnemer"
+        },
+        {
+          "leftOperand": "nlgov:bestaat:toestemming",
+          "operator": "eq",
+          "rightOperand": true,
+          "voor": "nlgov:betrokkene",
+          "arg": "bsn"
+        }
+      ]
+    },
+    "naam-en-adres": {
+      "regelnaam": "naam en adres",
+      "covers_fields": [
+        "Persoon.naam"
+      ],
+      "covers_types": [
+        "Naam"
+      ],
+      "conditions": [
+        {
+          "leftOperand": "nlgov:autorisatie",
+          "operator": "eq",
+          "rightOperand": "naam-en-adres"
+        }
+      ]
+    },
+    "adres": {
+      "regelnaam": "adres",
+      "covers_fields": [
+        "Persoon.adres"
+      ],
+      "covers_types": [
+        "Adres"
+      ],
+      "conditions": [
+        {
+          "leftOperand": "nlgov:autorisatie",
+          "operator": "eq",
+          "rightOperand": "naam-en-adres"
+        }
+      ]
+    },
+    "inkomens-tot-en-met-2024": {
+      "regelnaam": "inkomens tot en met 2024",
+      "covers_fields": [
+        "Persoon.inkomens"
+      ],
+      "covers_types": [],
+      "conditions": [
+        {
+          "leftOperand": "nlgov:rol",
+          "operator": "eq",
+          "rightOperand": "afnemer"
+        },
+        {
+          "leftOperand": "nlgov:aanvraag:jaar",
+          "operator": "lteq",
+          "rightOperand": 2024,
+          "arg": "jaren",
+          "kwantor": "elk"
+        }
+      ]
+    },
+    "inkomen-velden": {
+      "regelnaam": "inkomen velden",
+      "covers_fields": [],
+      "covers_types": [
+        "Inkomen"
+      ],
+      "conditions": [
+        {
+          "leftOperand": "nlgov:autorisatie",
+          "operator": "eq",
+          "rightOperand": "naam-en-adres"
+        }
+      ]
+    }
+  },
+  "by_field": {
+    "Query.persoon": [
+      "persoon-op-bsn"
+    ],
+    "Persoon.naam": [
+      "naam-en-adres"
+    ],
+    "Persoon.adres": [
+      "adres"
+    ],
+    "Persoon.inkomens": [
+      "inkomens-tot-en-met-2024"
+    ]
+  },
+  "by_type": {
+    "Naam": [
+      "naam-en-adres"
+    ],
+    "Adres": [
+      "adres"
+    ],
+    "Inkomen": [
+      "inkomen-velden"
+    ]
+  },
+  "toestemming": {
+    "00000001000000000001": [
+      "999990019"
+    ],
+    "00000002000000000002": [
+      "999990019"
+    ]
+  },
+  "autorisaties": {
+    "naam-en-adres": [
+      "00000001000000000001"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+type Query {
+  persoon(bsn: String!): Persoon
+}
+
+type Persoon {
+  naam: Naam
+  adres: Adres
+  inkomens(jaren: [Int!]): [Inkomen!]
+}
+
+type Naam {
+  naam: String
+}
+
+type Adres {
+  straat: String
+  huisnummer: Int
+  postcode: String
+  plaats: String
+}
+
+type Inkomen {
+  jaar: Int!
+  bedrag: Float
+}

@@ -1,0 +1,75 @@
+{
+  "Persoon": {
+    "soort": "entiteit",
+    "root": "Query.persoon",
+    "betrokkeneArg": "bsn"
+  },
+  "Persoon.Naam": {
+    "soort": "gegevenselement",
+    "edge": "Persoon.naam",
+    "type": "Naam",
+    "leaves": [
+      "Naam.naam"
+    ],
+    "args": []
+  },
+  "Persoon.Naam.naam": {
+    "soort": "veld",
+    "leaf": "Naam.naam",
+    "parent": "Persoon.Naam"
+  },
+  "Persoon.Adres": {
+    "soort": "gegevenselement",
+    "edge": "Persoon.adres",
+    "type": "Adres",
+    "leaves": [
+      "Adres.straat",
+      "Adres.huisnummer",
+      "Adres.postcode",
+      "Adres.plaats"
+    ],
+    "args": []
+  },
+  "Persoon.Adres.straat": {
+    "soort": "veld",
+    "leaf": "Adres.straat",
+    "parent": "Persoon.Adres"
+  },
+  "Persoon.Adres.huisnummer": {
+    "soort": "veld",
+    "leaf": "Adres.huisnummer",
+    "parent": "Persoon.Adres"
+  },
+  "Persoon.Adres.postcode": {
+    "soort": "veld",
+    "leaf": "Adres.postcode",
+    "parent": "Persoon.Adres"
+  },
+  "Persoon.Adres.plaats": {
+    "soort": "veld",
+    "leaf": "Adres.plaats",
+    "parent": "Persoon.Adres"
+  },
+  "Persoon.Inkomen": {
+    "soort": "gegevenselement",
+    "edge": "Persoon.inkomens",
+    "type": "Inkomen",
+    "leaves": [
+      "Inkomen.jaar",
+      "Inkomen.bedrag"
+    ],
+    "args": [
+      "jaren"
+    ]
+  },
+  "Persoon.Inkomen.jaar": {
+    "soort": "veld",
+    "leaf": "Inkomen.jaar",
+    "parent": "Persoon.Inkomen"
+  },
+  "Persoon.Inkomen.bedrag": {
+    "soort": "veld",
+    "leaf": "Inkomen.bedrag",
+    "parent": "Persoon.Inkomen"
+  }
+}

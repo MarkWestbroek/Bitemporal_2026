@@ -1,0 +1,68 @@
+{
+  "subject": {
+    "id": "00000001000000000001",
+    "properties": {
+      "role": "afnemer"
+    }
+  },
+  "action": {
+    "name": "POST",
+    "properties": {
+      "body": "{\"query\": \"query { p: persoon(bsn: \\\"999990019\\\") { ...Adres } } fragment Adres on Persoon { adres { plaats } }\"}"
+    }
+  },
+  "resource": {
+    "type": "http",
+    "id": "/graphql",
+    "properties": {
+      "graphql": {
+        "profile": "ftv-graphql/0.1",
+        "operation": {
+          "type": "query",
+          "name": null
+        },
+        "schema": {
+          "digest": "sha256:e56173ecd80510503ea654b7b3bac6f3f9c3d8d5a04b9b0729a4d74568ef29e6"
+        },
+        "fields": [
+          {
+            "path": [
+              "p"
+            ],
+            "parentType": "Query",
+            "field": "persoon",
+            "leaf": false,
+            "args": {
+              "bsn": {
+                "value": "999990019",
+                "origin": "literal"
+              }
+            }
+          },
+          {
+            "path": [
+              "p",
+              "adres"
+            ],
+            "parentType": "Persoon",
+            "field": "adres",
+            "leaf": false,
+            "on": "Persoon"
+          },
+          {
+            "path": [
+              "p",
+              "adres",
+              "plaats"
+            ],
+            "parentType": "Adres",
+            "field": "plaats",
+            "leaf": true
+          }
+        ],
+        "unverifiable": null
+      }
+    }
+  },
+  "context": {}
+}

@@ -1,0 +1,1 @@
+{"_uitleg":"PJ slide 14: inkomens(jaren: [2024]) -> allow.","subject":{"id":"00000001000000000001","properties":{"role":"afnemer"}},"body":{"query":"query Inkomen($bsn: String!, $jaren: [Int!]) { persoon(bsn: $bsn) { naam { naam } inkomens(jaren: $jaren) { jaar bedrag } } }","variables":{"bsn":"999990019","jaren":[2024]}}}

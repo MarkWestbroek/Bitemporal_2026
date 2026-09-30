@@ -1,0 +1,1 @@
+{"_uitleg":"Randgevallen (PJ slide 19): alias en fragment; binding negeert de alias, fragment voegt geen padsegment toe.","subject":{"id":"00000001000000000001","properties":{"role":"afnemer"}},"body":{"query":"query { p: persoon(bsn: \"999990019\") { ...Adres } } fragment Adres on Persoon { adres { plaats } }"}}

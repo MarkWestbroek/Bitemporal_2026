@@ -1,0 +1,1 @@
+{"_uitleg":"PJ slide 15: BSN zonder toestemming voor deze afnemer -> deny op Query.persoon.","subject":{"id":"00000001000000000001","properties":{"role":"afnemer"}},"body":{"query":"query { persoon(bsn: \"123456782\") { naam { naam } } }"}}

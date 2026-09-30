@@ -111,3 +111,10 @@ Zie [`docs/AUTH_DEVELOPER_GUIDE.md`](../docs/AUTH_DEVELOPER_GUIDE.md) voor:
 - Sequence-diagrammen van alle login/auth-scenario's
 - Stap-voor-stap uitleg van de code en de middleware-keten
 - Veelgestelde vragen
+
+## GBO-voorbeeld (FTV GraphQL-profiel)
+
+`gbo-voorbeeld/` bouwt het voorbeeld uit het FTV GraphQL-profiel (GBO, sept. 2026) na vanuit het
+canoniek model: V3-model → SDL + policybundel, beleid in Toegangsspraak → ODRL → Rego (PJ's stijl
+én data-gedreven) én een native ODRL-evaluator (pyodre), met dezelfde beslissingen. Zie de
+`README.md` daar en `docs/plans/2026-09-30 FTV GraphQL-profiel (GBO) versus modelpaden …`.

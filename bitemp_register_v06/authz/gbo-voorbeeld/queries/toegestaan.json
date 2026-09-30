@@ -1,0 +1,1 @@
+{"_uitleg":"PJ slide 12 links: naam en adres, met toestemming voor het BSN en autorisatie naam-en-adres.","subject":{"id":"00000001000000000001","properties":{"role":"afnemer"}},"body":{"query":"query { persoon(bsn: \"999990019\") { naam { naam } adres { straat plaats } } }"}}
