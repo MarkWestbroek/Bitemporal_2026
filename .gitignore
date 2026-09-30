@@ -14,3 +14,7 @@
 # Python-bytecode: wordt door Python zelf (opnieuw) aangemaakt, per versie en machine.
 __pycache__/
 *.pyc
+
+# VS Code-workspace-instellingen: persoonlijk en per machine (zoom, Copilot-goedkeuringen,
+# lokale databaseverbinding). launch.json en tasks.json blijven wel getrackt.
+.vscode/settings.json
