@@ -1684,6 +1684,10 @@ tekenkeuzes: `docs/RENDER_API.md`.
 - ✅ **Stap c gebouwd 30-09:** `GET /api/models/{naam}/diagram.svg` en `…/views.json` met
   `versie` en `asOf`, uit `schema_versies`. Besluit Mark: adres = naam + versie + tijdstip.
   Getest met mock-opslag én tegen de lokale DB (np-loc + register 1.5).
+- ✅ **End-to-end geaccepteerd door Imprint (30-09)** tegen de lokale keten (API :8083 + sidecar):
+  - views.json en diagram.svg werken, met diagram, domein, versie, asOf en LR.
+  - De 400- en 404-meldingen verschijnen goed in de widget.
+  - De SVG's, ook Overzicht van 110 kB, komen byte-gelijk door Imprints sanitizer.
 - **Open:**
   - **API-sleutel** voor niet-publieke modellen (`Authorization: Bearer`, opdracht §5).
   - **VPS-deploy** van de sidecar (`deploy/vps`).
