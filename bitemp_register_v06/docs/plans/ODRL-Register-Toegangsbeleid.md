@@ -368,7 +368,7 @@ Een schuldhulpverlener mag inkomensgegevens inzien van een burger, mits er een l
 | Gap | Toelichting | Prio |
 |---|---|---|
 | **NLGov ODRL Profiel formaliseren** | RDF/OWL definitie van nlgov: termen; dit is het werkgroep-deliverable | Hoog |
-| **Vertaallaag naar runtime** | Hoe wordt een ODRL-policy vertaald naar OPA Rego / Cedar / XACML? Handmatig? Geautomatiseerd? | Hoog |
+| **Vertaallaag naar runtime** | Hoe wordt een ODRL-policy vertaald naar OPA Rego / Cedar / XACML? Handmatig? Geautomatiseerd? **Analyse 2026-09-30:** compileren naar Rego-data (patroon ODRL-PAP), gemeten ± 17 µs per veldrecord in OPA; aansluiting op het FTV GraphQL-profiel (GBO) via registerpad → `ParentType.field`. Zie `2026-09-30 FTV GraphQL-profiel (GBO) versus modelpaden — uitvoerbaarheid van ODRL in de PDP.md`. | Hoog |
 | **Cross-register policies** | Policies die over meerdere registers gaan (bijv. BRP + Kadaster) — hoe verwijzen Assets cross-register? | Midden |
 | **AuthZEN-koppeling** | Hoe leest de PDP het ODRL-register? Als JSON-LD API? Als PIP? | Midden |
 | **Consent/betrokkene** | AVG-consent als ODRL Duty of als apart mechanisme? | Midden |

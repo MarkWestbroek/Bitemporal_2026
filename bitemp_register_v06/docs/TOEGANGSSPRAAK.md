@@ -11,6 +11,10 @@ Chrome headless (`--headless=new --no-pdf-header-footer --print-to-pdf=…`).
 **Vooruitblik:** `docs/plans/2026-08-18 ODRL 3.0 — W3C-workshop en gevolgen voor
 Toegangsspraak.md` — wat de voorgestelde ODRL 3.0 (o.a. FORCE-evaluatie, DPV-brug,
 policy-templates) betekent voor de exporter en de editor.
+**Uitvoerbaarheid in de PDP / GBO:** `docs/plans/2026-09-30 FTV GraphQL-profiel (GBO)
+versus modelpaden — uitvoerbaarheid van ODRL in de PDP.md` — registerpad versus GBO-veldsleutel,
+ODRL compileren naar Rego (meting), en welke voorwaarden niet vóór het endpoint beslisbaar zijn
+(veldwaarde-condities).
 
 ---
 
