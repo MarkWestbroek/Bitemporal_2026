@@ -1,0 +1,411 @@
+{
+  "info": {
+    "name": "Render-API (SVG voor Imprint)",
+    "description": "Render-API voor modeldiagrammen, zie docs/RENDER_API.md.\n\nBekijk het resultaat in de tab **Visualize**. Daar staat de SVG als plaatje, of de foutmelding.\n\n1. Map *Sidecar*: werkt zonder database. Start `node render-svc/server.mjs` (in bitemp_register_v06) → {{svcUrl}}.\n2. Map *Via Go-API*: de sidecar plus de Go-API ({{baseUrl}}). De GET-requests lezen gepubliceerde modellen uit schema_versies.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "svcUrl",
+      "value": "http://127.0.0.1:8095"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "modelNaam",
+      "value": "np-loc + register"
+    },
+    {
+      "key": "modelVersie",
+      "value": "1.5"
+    },
+    {
+      "key": "domein",
+      "value": "np-loc"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Sidecar (zonder DB)",
+      "item": [
+        {
+          "name": "Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Draait de sidecar?",
+            "header": [],
+            "url": "{{svcUrl}}/health"
+          }
+        },
+        {
+          "name": "SVG: domein winkel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Klant en Order. Zending komt uit het domein logistiek en verschijnt daarom als gestippelde stomp.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taal\": \"v3\",\n  \"domein\": \"winkel\",\n  \"model\": {\n    \"versie\": \"1\",\n    \"naam\": \"Winkel\",\n    \"domeinen\": [\n      {\n        \"naam\": \"winkel\",\n        \"kleur\": \"#bfdbfe\"\n      },\n      {\n        \"naam\": \"logistiek\",\n        \"kleur\": \"#fde68a\"\n      }\n    ],\n    \"enums\": [\n      {\n        \"goType\": \"Status\",\n        \"waarden\": [\n          {\n            \"waarde\": \"open\"\n          },\n          {\n            \"waarde\": \"dicht\"\n          }\n        ]\n      }\n    ],\n    \"entiteiten\": [\n      {\n        \"typenaam\": \"Klant\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"naam\",\n                \"goType\": \"string\",\n                \"verplicht\": true\n              },\n              {\n                \"naam\": \"status\",\n                \"goType\": \"Status\",\n                \"enum\": \"Status\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Klant_Order\",\n            \"doelEntiteit\": \"Order\",\n            \"doelKardinaliteit\": \"0..*\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Order\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"nummer\",\n                \"goType\": \"int\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Order_Zending\",\n            \"doelEntiteit\": \"Zending\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Zending\",\n        \"domein\": \"logistiek\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"trackcode\",\n                \"goType\": \"string\"\n              }\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{svcUrl}}/api/render/svg"
+          }
+        },
+        {
+          "name": "SVG: donker thema, LR, zonder velden",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taal\": \"v3\",\n  \"domein\": \"winkel\",\n  \"theme\": \"dark\",\n  \"richting\": \"LR\",\n  \"velden\": false,\n  \"model\": {\n    \"versie\": \"1\",\n    \"naam\": \"Winkel\",\n    \"domeinen\": [\n      {\n        \"naam\": \"winkel\",\n        \"kleur\": \"#bfdbfe\"\n      },\n      {\n        \"naam\": \"logistiek\",\n        \"kleur\": \"#fde68a\"\n      }\n    ],\n    \"enums\": [\n      {\n        \"goType\": \"Status\",\n        \"waarden\": [\n          {\n            \"waarde\": \"open\"\n          },\n          {\n            \"waarde\": \"dicht\"\n          }\n        ]\n      }\n    ],\n    \"entiteiten\": [\n      {\n        \"typenaam\": \"Klant\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"naam\",\n                \"goType\": \"string\",\n                \"verplicht\": true\n              },\n              {\n                \"naam\": \"status\",\n                \"goType\": \"Status\",\n                \"enum\": \"Status\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Klant_Order\",\n            \"doelEntiteit\": \"Order\",\n            \"doelKardinaliteit\": \"0..*\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Order\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"nummer\",\n                \"goType\": \"int\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Order_Zending\",\n            \"doelEntiteit\": \"Zending\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Zending\",\n        \"domein\": \"logistiek\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"trackcode\",\n                \"goType\": \"string\"\n              }\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{svcUrl}}/api/render/svg"
+          }
+        },
+        {
+          "name": "400: geen weergave gekozen",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Het model heeft twee domeinen en geen diagrammen. Het antwoord somt de keuzes op.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taal\": \"v3\",\n  \"model\": {\n    \"versie\": \"1\",\n    \"naam\": \"Winkel\",\n    \"domeinen\": [\n      {\n        \"naam\": \"winkel\",\n        \"kleur\": \"#bfdbfe\"\n      },\n      {\n        \"naam\": \"logistiek\",\n        \"kleur\": \"#fde68a\"\n      }\n    ],\n    \"enums\": [\n      {\n        \"goType\": \"Status\",\n        \"waarden\": [\n          {\n            \"waarde\": \"open\"\n          },\n          {\n            \"waarde\": \"dicht\"\n          }\n        ]\n      }\n    ],\n    \"entiteiten\": [\n      {\n        \"typenaam\": \"Klant\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"naam\",\n                \"goType\": \"string\",\n                \"verplicht\": true\n              },\n              {\n                \"naam\": \"status\",\n                \"goType\": \"Status\",\n                \"enum\": \"Status\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Klant_Order\",\n            \"doelEntiteit\": \"Order\",\n            \"doelKardinaliteit\": \"0..*\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Order\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"nummer\",\n                \"goType\": \"int\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Order_Zending\",\n            \"doelEntiteit\": \"Zending\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Zending\",\n        \"domein\": \"logistiek\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"trackcode\",\n                \"goType\": \"string\"\n              }\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{svcUrl}}/api/render/svg"
+          }
+        },
+        {
+          "name": "422: relatie naar onbekende entiteit",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 422', () => pm.response.to.have.status(422));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Het antwoord noemt element en pad.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taal\": \"v3\",\n  \"domein\": \"winkel\",\n  \"model\": {\n    \"versie\": \"1\",\n    \"naam\": \"Winkel\",\n    \"domeinen\": [\n      {\n        \"naam\": \"winkel\",\n        \"kleur\": \"#bfdbfe\"\n      },\n      {\n        \"naam\": \"logistiek\",\n        \"kleur\": \"#fde68a\"\n      }\n    ],\n    \"enums\": [\n      {\n        \"goType\": \"Status\",\n        \"waarden\": [\n          {\n            \"waarde\": \"open\"\n          },\n          {\n            \"waarde\": \"dicht\"\n          }\n        ]\n      }\n    ],\n    \"entiteiten\": [\n      {\n        \"typenaam\": \"Klant\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"naam\",\n                \"goType\": \"string\",\n                \"verplicht\": true\n              },\n              {\n                \"naam\": \"status\",\n                \"goType\": \"Status\",\n                \"enum\": \"Status\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Klant_Order\",\n            \"doelEntiteit\": \"Bestaatniet\",\n            \"doelKardinaliteit\": \"0..*\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Order\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"nummer\",\n                \"goType\": \"int\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Order_Zending\",\n            \"doelEntiteit\": \"Zending\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Zending\",\n        \"domein\": \"logistiek\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"trackcode\",\n                \"goType\": \"string\"\n              }\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{svcUrl}}/api/render/svg"
+          }
+        },
+        {
+          "name": "422: JSON-fout in code (regel/kolom)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 422', () => pm.response.to.have.status(422));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taal\": \"v3\",\n  \"code\": \"{\\n  \\\"entiteiten\\\": [,]\\n}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{svcUrl}}/api/render/svg"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Via Go-API",
+      "item": [
+        {
+          "name": "POST /api/render/svg",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "description": "Zelfde als de sidecar, maar met ETag. Stuur hem nog eens met If-None-Match voor een 304.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taal\": \"v3\",\n  \"domein\": \"winkel\",\n  \"model\": {\n    \"versie\": \"1\",\n    \"naam\": \"Winkel\",\n    \"domeinen\": [\n      {\n        \"naam\": \"winkel\",\n        \"kleur\": \"#bfdbfe\"\n      },\n      {\n        \"naam\": \"logistiek\",\n        \"kleur\": \"#fde68a\"\n      }\n    ],\n    \"enums\": [\n      {\n        \"goType\": \"Status\",\n        \"waarden\": [\n          {\n            \"waarde\": \"open\"\n          },\n          {\n            \"waarde\": \"dicht\"\n          }\n        ]\n      }\n    ],\n    \"entiteiten\": [\n      {\n        \"typenaam\": \"Klant\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"naam\",\n                \"goType\": \"string\",\n                \"verplicht\": true\n              },\n              {\n                \"naam\": \"status\",\n                \"goType\": \"Status\",\n                \"enum\": \"Status\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Klant_Order\",\n            \"doelEntiteit\": \"Order\",\n            \"doelKardinaliteit\": \"0..*\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Order\",\n        \"domein\": \"winkel\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"nummer\",\n                \"goType\": \"int\"\n              }\n            ]\n          }\n        ],\n        \"relaties\": [\n          {\n            \"naam\": \"Rel_Order_Zending\",\n            \"doelEntiteit\": \"Zending\"\n          }\n        ]\n      },\n      {\n        \"typenaam\": \"Zending\",\n        \"domein\": \"logistiek\",\n        \"gegevenselementen\": [\n          {\n            \"naam\": \"Kern\",\n            \"velden\": [\n              {\n                \"naam\": \"trackcode\",\n                \"goType\": \"string\"\n              }\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/render/svg"
+          }
+        },
+        {
+          "name": "GET views.json (nieuwste versie)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "Welke diagrammen en domeinen heeft het model, en welke versie en welk tijdstip zijn gebruikt?",
+            "header": [],
+            "url": "{{baseUrl}}/api/models/{{modelNaam}}/views.json"
+          }
+        },
+        {
+          "name": "GET diagram.svg (versie + domein)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "",
+            "header": [],
+            "url": "{{baseUrl}}/api/models/{{modelNaam}}/diagram.svg?versie={{modelVersie}}&domein={{domein}}"
+          }
+        },
+        {
+          "name": "GET diagram.svg met asOf",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "De nieuwste publicatie tot en met asOf.",
+            "header": [],
+            "url": "{{baseUrl}}/api/models/{{modelNaam}}/diagram.svg?asOf=2026-06-01T00:00:00Z&domein={{domein}}"
+          }
+        },
+        {
+          "name": "404: onbekend model",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 404', () => pm.response.to.have.status(404));",
+                  "const ct = pm.response.headers.get('Content-Type') || '';",
+                  "if (ct.startsWith('image/svg+xml')) {",
+                  "  pm.visualizer.set('<div style=\"background:#f3f4f6;padding:12px\">' + pm.response.text() + '</div>');",
+                  "} else {",
+                  "  pm.visualizer.set('<pre style=\"white-space:pre-wrap\">{{t}}</pre>', { t: JSON.stringify(pm.response.json(), null, 2) });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "description": "",
+            "header": [],
+            "url": "{{baseUrl}}/api/models/bestaatniet/diagram.svg"
+          }
+        }
+      ]
+    }
+  ]
+}

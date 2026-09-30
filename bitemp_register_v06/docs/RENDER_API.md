@@ -149,6 +149,9 @@ entiteiten, een ontbrekende of dubbele typenaam, een relatie naar een onbekende 
 
 ## Draaien en testen
 
+**Postman:** `postman/render-api.postman_collection.json`. De map *Sidecar* werkt zonder DB;
+de map *Via Go-API* test ook de GET. Het resultaat staat als plaatje in de tab **Visualize**.
+
 ```bash
 # tekenaar (unit + golden): in web/vite
 node --import ./test/register-aliases.mjs --test src/diagramsvg/diagramsvg.test.js
