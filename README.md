@@ -15,8 +15,12 @@ worden verbonden heet **Omnium Studio**.
 > **Status:** dit is een breed proof of concept en een onderzoeksomgeving, geen
 > productieplatform. Het bitemporele register, het V3-modelformaat, de
 > MetaRegistry, REST/GraphQL-generatie en verschillende editors werken. Een
-> aantal modelprofielen en koppelingen is nog preview; standaarduitwisseling
-> voor onder meer ArchiMate en volledige XMI-roundtrip staat nog op de roadmap.
+> aantal modelprofielen en koppelingen is nog preview. ArchiMate Exchange-import
+> bestaat; export en volledige Archi-/XMI-roundtrips staan nog op de roadmap.
+
+Begin als nieuwe lezer met de [walkthrough](bitemp_register_v06/docs/OMNIUM_WALKTHROUGH.md).
+De [integrale review van 30 september 2026](bitemp_register_v06/docs/reviews/2026-09-30-omnium-integrale-review.md)
+beschrijft de huidige beperkingen, testresultaten en voorgestelde prioriteiten.
 
 ## Van register-POC naar modelleeromgeving
 
@@ -29,10 +33,11 @@ tijdsdimensies:
 - **materiële tijd**: vanaf en tot wanneer geldt het gegeven in de werkelijkheid.
 
 Commando's leggen registraties en wijzigingen vast; query's reconstrueren de
-gewenste toestand op een formeel en/of materieel tijdstip. Dat sluit aan op een
+gewenste toestand op een formeel tijdstip. Dat sluit aan op een
 CQRS-benadering: schrijven bewaart de betekenisvolle registratiehandeling en
-lezen levert een daarvan afgeleide momentopname. Correcties en
-ongedaanmakingen blijven daardoor onderdeel van de audit trail.
+lezen levert een daarvan afgeleide toestand. Generiek materieel queryen is nog
+vervolgwerk; ook consistente samengestelde reads staan op de hardeningbacklog.
+Correcties en ongedaanmakingen blijven onderdeel van de audit trail.
 
 De gegevensdefinitie kwam aanvankelijk uit een aangevuld UML-klassediagram: een
 dun profiel boven op UML met concretere concepten voor **entiteit**,
@@ -90,7 +95,7 @@ anker, geversioneerde inhoud en afzonderlijke materiële aanvang/einde-plumbing.
 
 | Gebied | Mogelijkheden | Stand |
 |---|---|---|
-| Bitemporeel register | registreren, corrigeren, ongedaan maken, formeel en materieel tijdreizen | werkend POC |
+| Bitemporeel register | registreren, corrigeren, ongedaan maken, formeel tijdreizen en materiële aanvang/einde | werkend POC; generiek materieel queryen en read-consistentie nog open |
 | Canoniek model | entiteiten, gegevenselementen, relaties, referentielijsten, afleidingen en validatie | werkend |
 | Modelgedreven API | dynamische REST-routes, GraphQL en OpenAPI 3.1 vanuit de MetaRegistry | werkend |
 | Omnium Studio | projectbrowser, diagramtabs, inspectors, activiteiten, import/export en publicatie | werkend/doorontwikkeld |
@@ -128,9 +133,9 @@ De architectuur is in meerdere, bewust overlappende vormen vastgelegd:
 - [Mermaid-architectuurdiagrammen](bitemp_register_v06/docs/diagrammen/omnium-studio-architectuur.mmd), bruikbaar als documentatie en invoer voor de Mermaid-import;
 - [PlantUML UML-diagrammen](bitemp_register_v06/docs/diagrammen/omnium-studio-architectuur.puml), met component-, deployment- en sequencediagrammen.
 
-De eigen ArchiMate-profielactiviteit kan ArchiMate al modelleren, maar leest het
-standaard ArchiMate Exchange-formaat nog niet in. Dat importpad is gepland. De
-XML is daarom nu bedoeld voor Archi en als toekomstig roundtrip-testmodel. XMI
+De eigen ArchiMate-profielactiviteit kan ArchiMate modelleren en de geïntegreerde
+modelleeromgeving heeft inmiddels een ArchiMate Exchange-import met adaptertests.
+Exchange-export en de volledige terugreis via Archi zijn nog vervolgwerk. XMI
 import/export is eveneens nog niet compleet; voor UML zijn Mermaid en PlantUML
 op dit moment de transparantere bronformaten.
 
@@ -161,7 +166,7 @@ ook meerdere Docker Compose-profielen.
 ```sh
 # API, standaard op http://localhost:8082
 cd bitemp_register_v06
-go run main.go
+go run .
 
 # frontend, in een tweede terminal
 cd bitemp_register_v06/web/vite

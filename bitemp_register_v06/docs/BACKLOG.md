@@ -1,4 +1,30 @@
-﻿`# Backlog — Bitemporeel Register v06
+﻿# Backlog — Bitemporeel Register v06
+
+## Actuele triage: integrale review 2026-09-30
+
+De [integrale review](reviews/2026-09-30-omnium-integrale-review.md) bevat
+bewijs, bronverwijzingen en acceptatiecriteria. Dit zijn **open voorstellen**;
+de review heeft geen applicatiefixes uitgevoerd. Onderstaande triage gaat voor
+de historische volgorde verderop in dit document.
+
+| Prioriteit | Items | Eerstvolgende uitkomst |
+|---|---|---|
+| P0 | SEC-01, SEC-02 | SVG-sanitization en geen GraphQL-mutaties via GET |
+| P1 | READ-01, TIME-01, VAL-01 | consistente reads, doorgegeven peilmomenten, presence/ref-validatie |
+| P1 | ST-01, ST-02 | betrouwbare dirty/opslagstatus en atomaire imports met conflicten |
+| P1 | QA-01, QA-02, LIMIT-01, REL-01 | echte cross-platform tests, Omnium-E2E, resourcebudgetten en releasebeleid |
+| P1 | PERF-01, DOC-01, BIZ-01 | reproduceerbare nulmeting, actuele onboarding, licentie-/pilotkeuze |
+| P1/P2 | TIME-02, RT-01/02/03, MM-01/02/03 | materiele queries en gefaseerde model-/toolroundtrips; volgorde op klantbehoefte |
+| P2 | READ-02, UX-01 | historische paginering en toetsenbordbediening |
+
+Review uitgevoerd: normale Go-tests groen; 718 frontendtests groen bij expliciete
+testdiscovery. Let op: `npm test` zelf draaide op Windows nul tests (QA-01).
+Aanwezig maar nog geen volledige roundtrip: MIM-profielimport, ArchiMate Exchange-
+import, OAS naar canoniek en ERD-notatie. Zie de capabilitymatrix in het rapport.
+
+[Walkthrough voor nieuwe lezers](OMNIUM_WALKTHROUGH.md).
+
+## Historisch overzicht
 
 > **Samengesteld**: 2026-04-07 (laatst bijgewerkt 2026-04-28)
 > **Bron**: alle `.md` bestanden, Go-code TODOs, planbestanden, ontwerpgedachten en frontend-code in de v06 codebase.

@@ -5,6 +5,13 @@
 > **Code review (2026-06-30):** zie [`STUDIO-code-review-2026-06-30.md`](STUDIO-code-review-2026-06-30.md)
 > voor bevindingen over onderhoudbaarheid, dubbelingen, veiligheid en toegankelijkheid.
 >
+> **Actuele integrale review (2026-09-30):** zie
+> [rapport en roadmap](reviews/2026-09-30-omnium-integrale-review.md) voor de huidige
+> backend-/Studio-bevindingen, roundtrips, performance en positionering. De normale
+> Go-suite en 718 expliciet gestarte frontendtests slagen; SVG-veiligheid,
+> dirty/undo, opslagconflicten, map-import en toetsenbordmenu's vragen vervolgwerk.
+> Voor nieuwe lezers: [Omnium walkthrough](OMNIUM_WALKTHROUGH.md).
+>
 > **Verslag Studio 0.5 (2026-07-04):** zie [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md)
 > voor het complete overzicht van fase 0 t/m de meta-editor (architectuur,
 > screenshots, stand van zaken).

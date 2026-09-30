@@ -1,49 +1,45 @@
-# Bitemporeel register met quasi-REST API v0.6.01.01
+# Bitemporeel register v06 en Omnium Studio
 
-This project showcases the implementation of a **Bitemporal Register API** using Go Bun. It provides CR (Create, Read) functionality for managing configurable data, with data persistence in a PostgreSQL database.
-In addition it allows to correct data (in fact correct registrations and the registered data) and to undo registrations.
+De actieve versie van het modelgedreven register en de modelwerkbank.
+Lees eerst het [productoverzicht](../README.md) en de
+[walkthrough](docs/OMNIUM_WALKTHROUGH.md). De
+[integrale review van 2026-09-30](docs/reviews/2026-09-30-omnium-integrale-review.md)
+beschrijft de huidige mogelijkheden, beperkingen en voorgestelde prioriteiten.
+Dit is een proof of concept, geen productieverklaring.
 
 ## Features
 
-- Create, read configurable data
-- Store data in a PostgreSQL database using Go Bun ORM
-- API endpoints for interacting with data
-- Error handling and TODO validation of input data
-- Integration with Gin web framework for HTTP routing
+- Registreren, corrigeren en ongedaan maken met audit trail.
+- Hub + Data-opslag in PostgreSQL via Bun; formeel tijdreizen en materiele plumbing.
+- MetaRegistry-gedreven REST, GraphQL, OpenAPI en codegen.
+- Omnium Studio met profielgedreven modelleren en import/export.
+- Generiek materieel queryen, volledige presence/ref-validatie en consistente
+  samengestelde reads zijn nog open verbeterpunten; zie de review.
 
 ## Requirements
 
-- Go 1.16 or higher
-- PostgreSQL database
+- Go volgens [go.mod](go.mod), momenteel 1.25.0.
+- PostgreSQL voor de registerruntime.
+- Een ondersteunde Node-versie voor Vite 8, bijvoorbeeld Node 22.12 of hoger
+  binnen een ondersteunde release, voor frontendontwikkeling.
 
 ## Getting Started
 
-1. Clone the repository:
+Werk vanuit `bitemp_register_v06/`. Gebruik een eigen ontwikkel-/testdatabase:
+startup voert database-setup uit. Neem [.env.example](.env.example) als basis voor
+lokale configuratie, zonder bestaande instellingen te overschrijven. Credentials
+horen niet in broncode of git. De stapsgewijze PowerShell-instructies staan in de
+[walkthrough](docs/OMNIUM_WALKTHROUGH.md).
 
-   ```shell
-  git clone https://github.com/MarkWestbroek/Bitemporal_2026
-   ```
+```powershell
+$env:PORT = '8082'
+go run .
+```
 
-2. Install the dependencies:
-
-   ```shell
-   go mod tidy
-   ```
-
-3. Configure the PostgreSQL database connection in the `main.go` file:
-
-   ```go
-   // Replace the connection string with your own PostgreSQL database credentials
-   dsn := "postgres://your-username:your-password@localhost:5432/your-database?sslmode=disable"
-   ```
-
-4. Run the application:
-
-   ```shell
-   go run main.go
-   ```
-
-5. Access the API at `http://localhost:8080` and start managing your tasks!
+De API luistert dan lokaal op `http://localhost:8082`. Gebruik het hele package
+(`go run .`), niet alleen het hoofdbestand. Frontend en eventuele devtools hebben
+een afzonderlijke startprocedure; zie de walkthrough en [DEVLOOP](docs/DEVLOOP.md).
+Een clean-clone-installatie is in de review nog niet uitgevoerd.
 
 ## Tests and Coverage (VS Code Tasks)
 

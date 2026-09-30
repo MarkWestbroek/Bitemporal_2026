@@ -39,9 +39,10 @@ detailontwerp.
 - Het ArchiMate-bestand gebruikt het Open Group Exchange File Format met vaste
   coördinaten. Het is bedoeld voor import in Archi en als toekomstig
   roundtrip-testmodel.
-- De ArchiMate-profielactiviteit van Omnium Studio ondersteunt de notatie al,
-  maar heeft nog geen importer voor dit XML-formaat. Dat werk staat expliciet
-  op de roadmap.
+- Omnium Studio ondersteunt de notatie en heeft inmiddels een ArchiMate Exchange-
+  import in de modelleeromgeving, met parser-/mapping-/importtests. Exchange-export
+  en een bewezen terugreis via Archi staan nog op de roadmap. Zie de
+  [integrale review van 2026-09-30](../reviews/2026-09-30-omnium-integrale-review.md).
 - De Mermaid-bron is de eenvoudigste invoer voor de bestaande raw
   Mermaid-import. Na import kan de plaatsing in de editor verder worden
   aangepast.
@@ -72,6 +73,6 @@ dezelfde componentverdeling.
 ## Bijwerken
 
 Houd bij architectuurwijzigingen de betekenis van de drie bronformaten gelijk.
-Vormdetails mogen verschillen per notatie. Zodra de ArchiMate Exchange-import
-in Omnium Studio bestaat, hoort dit model bij de regressietests voor import,
-positiebehoud en export.
+Vormdetails mogen verschillen per notatie. De ArchiMate Exchange-import bestaat;
+neem dit architectuurmodel op in de regressies voor import en positiebehoud.
+Voeg export- en desktoproundtripcontroles toe zodra die keten beschikbaar is.
