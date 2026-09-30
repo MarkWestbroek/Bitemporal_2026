@@ -76,6 +76,7 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
       MINIO_BUCKET: ${MINIO_BUCKET:-ide-bestanden}
       MINIO_USE_SSL: "false"
+      RENDER_SVC_URL: http://render-svc:8095
     ports:
       - "${API_PORT:-8082}:8080"
     depends_on:
@@ -83,6 +84,16 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+    networks:
+      - task_manager_network
+
+  # Render-sidecar voor POST /api/render/svg (docs/RENDER_API.md). Alleen intern
+  # bereikbaar voor de API; geen gepubliceerde poort.
+  render-svc:
+    build:
+      context: .
+      dockerfile: Dockerfile.render
+    container_name: bitemp-render-svc-v06
     networks:
       - task_manager_network
 

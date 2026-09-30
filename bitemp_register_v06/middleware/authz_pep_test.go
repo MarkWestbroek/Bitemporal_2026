@@ -113,6 +113,7 @@ func TestIsPubliekPad(t *testing.T) {
 		{"/swagger", http.MethodGet},
 		{"/redoc", http.MethodGet},
 		{"/graphql/playground", http.MethodGet},
+		{"/api/render/svg", http.MethodPost},
 		// OPTIONS altijd publiek
 		{"/as", http.MethodOptions},
 		{"/admin/rebuild/secret", http.MethodOptions},
