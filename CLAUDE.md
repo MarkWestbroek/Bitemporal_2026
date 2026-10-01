@@ -22,6 +22,24 @@ ook iets anders raken, en op verwijzingen (`notificatie_bezorging.registratie_id
 `registratie.corrigeert_/maakt_ongedaan_registratie_id`). Lever SQL aan de gebruiker in één
 transactie met controles vooraf en achteraf.
 
+## Metaniveaus (M0–M3) — de basis van het project
+
+Omnium is **modelgedreven op vier niveaus**; gebruik deze termen consequent (tabel in
+`bitemp_register_v06/docs/OMNIUM_WALKTHROUGH.md` §1):
+
+| Niveau | Hier | Waar het leeft |
+|---|---|---|
+| **M3** (metametamodel) | de regels waarmee modeltalen/profielen beschreven worden: `ElementType`, `ConnectorType`, `FieldType`, `CompartmentType`, verbindingsregels, resolvers, hooks | `web/vite/src/diagramcore/types/schema.js` (typecontract) en de profiel-ontwerper in Studio; eigen implementatie, niet bewezen MOF-conform |
+| **M2** (profiel / modeltaal) | een descriptor op de motor: canoniek-uml, puur-uml, MIM, OAS 3.1, ArchiMate, DMN, BPMN, toegangsregel, … (zestien+) | `web/vite/src/diagramprofielen/<profiel>/index.js` (+ adapter) |
+| **M1** (model) | een concreet model in zo'n taal: np-loc, het register-configuratiedomein, een OAS-document, een toegangsbeleid | V3 JSON (canoniek), SDL/YAML/… (andere profielen), de projectboom |
+| **M0** (data) | geregistreerde instanties in een register dat een M1-model uitvoert | database (hub + `_Data`), API, GraphQL |
+
+Vuistregels: een nieuwe notatie is een **M2-descriptor plus adapter, geen motorwerk** (zie
+`docs/plans/2026-07-29 Overdracht Notaties`); transformaties tussen profielen (OAS → canoniek,
+canoniek → GraphQL) zijn M2→M2-afbeeldingen met **kruisverbanden** in de koppelingen-matrix; de
+MetaRegistry en codegen zijn de runtime-projectie van het canonieke M1-model naar M0. Laat de
+niveaus niet door elkaar lopen in docs en code (een "profiel" is hier breder dan een UML Profile).
+
 ## Documentatie bijwerken
 
 Documenteer wijzigingen in heldere comments én in markdown. Heb je iets **substantieels**
