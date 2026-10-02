@@ -23,6 +23,7 @@ import koppelingenActivity from "./koppelingenActivity";
 import diagramActivity from "./diagramActivity";
 import puurUmlActivity from "./puurUmlActivity";
 import oasActivity from "./oasActivity";
+import graphqlActivity from "./graphqlActivity";
 import profielActivity from "./profielActivity";
 import profielOntwerpActivity from "./profielOntwerpActivity";
 import dmnActivity from "./dmnActivity";
@@ -95,6 +96,7 @@ registreerActiviteiten([
   diagramActivity, // "Canoniek model" — canoniek-uml op de generieke motor (preview)
   puurUmlActivity, // "UML" — tweede profiel (preview)
   oasActivity, // "OAS" — derde profiel, OAS 3.0/3.1 (preview)
+  graphqlActivity, // "GraphQL" — schema-profiel (M2): typesysteem, SDL in en uit (preview)
   mimActivity, // "MIM" — vijfde profiel, MIM 1.2 (preview)
   statemachineActivity, // "State machine" — gedragsdiagram-verkenning (preview)
   usecaseActivity, // "Use case" — actoren/use cases/systeemkader (preview)

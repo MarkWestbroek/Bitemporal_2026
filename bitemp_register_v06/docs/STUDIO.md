@@ -312,6 +312,7 @@ te wijzigen.
 | modelleren   | BPMN               | preview  | `diagramcore` + `diagramprofielen/bpmn` (eigen motor: events incl. boundary, gateways, lanes; naast de bpmn.io-activiteit) — **niet in de balk** |
 | modelleren   | ArchiMate          | preview  | `diagramcore` + `diagramprofielen/archimate` (v0: vier lagen, elf relaties; tweede notatie "Iconen als vorm" via **Beeld → Shape-set**) — **niet in de balk** |
 | modelleren   | Sequence           | preview  | `diagramcore` + `diagramprofielen/sequence` (v0: levenslijnen; punten/activaties op het rand-primitief) — **niet in de balk** |
+| modelleren   | GraphQL            | preview  | `diagramcore` + `diagramprofielen/graphql` (schema-profiel/M2: typen, interfaces, unions, enums, inputs, directives; eigen SDL-parser, import/export `.graphql`; veldlijnen afgeleid uit de velden) — **niet in de balk** |
 | modelleren   | ERD                | preview  | `diagramcore` + `diagramprofielen/erd` (kraaienpoten; kardinaliteit per uiteinde, sleutel-compartiment) — **niet in de balk** |
 | modelleren   | SysML              | preview  | `diagramcore` + `diagramprofielen/sysml` (bdd, ibd met poorten op de rand, requirements + traceerrelaties) — **niet in de balk** |
 | modelleren   | CMMN               | preview  | `diagramcore` + `diagramprofielen/cmmn` (casusmodel; sentries op het rand-primitief) — **niet in de balk** |

@@ -1,7 +1,7 @@
 # GraphQL-schema-profiel (M2) op de diagram-motor — voorstel
 
 **Datum:** 2026-10-01
-**Status:** voorstel, niets gebouwd
+**Status:** stap 1 en het SDL-deel van stap 2 gebouwd (02-10-2026, branch `feat/graphql-profiel`); zie §12
 **Bouwt op:** `diagramprofielen/oas31/` (dichtstbijzijnde analogie: een schemataal als
 notatie, met adapter heen en terug), `canoniek-uml/oasNaarV3.js` (precedent voor
 schemataal → canoniek), `docs/plans/2026-09-30 FTV GraphQL-profiel (GBO) versus modelpaden …`
@@ -180,8 +180,8 @@ element- en veldverwijzingen zodat de inspector erheen springt.
 
 | # | Stap | Omvang | Oplevert |
 |---|---|---|---|
-| 1 | Descriptor `diagramprofielen/graphql/index.js` (elementtypen, veldtypen, connectoren, resolvers, `typeExpressie.js`) + unit-tests op het typecontract | 1–2 dagen | tekenbaar schema in Studio (via `maakDiagramActiviteit`, groep "modelleren") |
-| 2 | Adapter import/export SDL + introspectie, roundtrip-tests op `gbo-persoon` en op een `dynql`-introspectie | 2 dagen | SDL-bestand ↔ diagram, menu Importeer/Exporteer |
+| 1 ✅ | Descriptor `diagramprofielen/graphql/index.js` (elementtypen, veldtypen, connectoren, resolvers, `typeExpressie.js`) + unit-tests op het typecontract | 1–2 dagen | tekenbaar schema in Studio (via `maakDiagramActiviteit`, groep "modelleren") |
+| 2 🔶 | (SDL ✅, introspectie open) Adapter import/export SDL + introspectie, roundtrip-tests op `gbo-persoon` en op een `dynql`-introspectie | 2 dagen | SDL-bestand ↔ diagram, menu Importeer/Exporteer |
 | 3 | `v3NaarGraphql.js` + kruisverbanden naar de koppelingen-matrix; menu "Projecteer canoniek model" | 1–2 dagen | de GBO-projectie als knop, padtabel als koppelingen |
 | 4 | Drift-check: introspectie vs. projectie, meldingen in de inspector; digest op het schema-element | 1 dag | H3 vóór deployment |
 | 5 | Toegangsregel: Gegevensselectie mag naar het GraphQL-profiel wijzen; bundel-compiler (`authz/gbo-voorbeeld`) leest koppelingen | 1 dag | regels → `covers_fields` zonder Python-padtabel |
@@ -190,13 +190,50 @@ element- en veldverwijzingen zodat de inspector erheen springt.
 Stap 1–2 is het profiel; 3–5 is waar het de GBO-discussie raakt. Na stap 3 kan het slide-plaatje
 "registerpad → veldsleutels" uit de presentatie live uit Studio komen.
 
-## 11. Open vragen
+## 11. Open vragen — besluiten 02-10-2026
 
-- **Naamgeving default**: `kort` (zoals GBO's voorbeeld) of `dynql` (`Persoon_Adres`)? Voorstel:
-  `dynql` als default zodra de projectie ons eigen schema moet reproduceren; `kort` als optie.
-- **Argumenten op GE-velden** (`inkomens(jaren)`): die zitten niet in het V3-model. Nu in een
-  api-profiel naast het model; later misschien een `api`-blok in het V3 zelf, zoals
-  `runtime` nu al een projectie-blok is.
-- **Eén diagram of meer**: OAS maakt één diagram "componenten"; GraphQL-schema's worden groot
-  (`dynql` heeft honderden typen). Voorstel: één diagram per domein, met de voorkomens-
-  mechaniek (`nodeId`) voor overlap, net als bij de canoniek-domeinen.
+| Vraag | Besluit (Mark) |
+|---|---|
+| Naamgeving default: `kort` of `dynql`? | **`kort`.** Typenamen zijn uniek binnen één domein; dat is de eis, en meer is niet af te dwingen. De prefix-vorm (`Persoon_Adres`) is geen default. Gevolg voor de projectie canoniek → GraphQL (stap 3): GE-namen moeten binnen het domein uniek zijn, en de validatie meldt een botsing in plaats van hem weg te prefixen |
+| Waar leven argumenten en filters? | **In het GraphQL-model zelf** (optie d). De transformatie is roundtrip maar niet onveranderlijk: logisch model en GraphQL zijn niet één-op-één hetzelfde, in elke laag maak je keuzes. Filters zijn aanvullingen op het model. Wáár ze precies bewaard worden (naast de projectie, bij herprojectie samenvoegen) is nog open |
+| Eén diagram of meer? | nog open; v1 maakt één diagram "Schema" |
+
+## 12. Wat er gebouwd is (02-10-2026)
+
+`web/vite/src/diagramprofielen/graphql/` — vier modules, plain JS, geen dependencies, 24 unit-tests
+(`graphql.test.js`):
+
+| Module | Rol |
+|---|---|
+| `index.js` | de descriptor: acht elementtypen op `class-box`, vier veldtypen, vijf connectoren, drie resolvers, rijen-layout met rijhoogte naar het langste type, `maakElement` |
+| `typeExpressie.js` | `[Inkomen!]!` ontleden, terugschrijven, basisnaam, kardinaliteit |
+| `sdl.js` | eigen SDL-parser en -serializer voor het typesysteem; fouten met regel en kolom; deterministische uitvoer |
+| `adapter.js` | schema-document ↔ diagram-model, `leidVeldConnectorenAf`, `valideerSchema` |
+
+Plus de activiteit `studio/activities/graphqlActivity.jsx` (preview, via Modelleren) met
+*Importeer/Exporteer GraphQL-schema (SDL)*.
+
+**Afwijkingen van het voorstel hierboven, met reden:**
+
+- **Eigen parser in plaats van `graphql-js`** (§6). De SDL-grammatica van het typesysteem is klein;
+  een eigen parser houdt het profiel zonder dependency en in node testbaar, zoals de
+  Toegangsspraak-parser. `extend …` wordt nog niet ondersteund (heldere fout). Introspectie-import
+  is daarmee nog niet gebouwd.
+- **Argumenten als SDL-tekst op het veld**, niet als `sub-vak` (§3). De `sub-vak`-viewer blijkt het
+  opname-mechanisme (deel in geheel), geen generieke geneste lijst. De node toont een veld met
+  argumenten als weergave-regel `inkomens(jaren: [Int!])`; de inspector bewerkt de tekst.
+- **Kardinaliteit: een lijst is altijd `0..*`** (§4), ook `[T!]!`. GraphQL kent geen "minstens één";
+  `1..*` zou meer beloven dan het typesysteem zegt.
+- **De typekiezer is een keuzelijst zonder vrije invoer**; het profiel biedt per type de vier
+  gangbare vormen aan (`T`, `T!`, `[T!]`, `[T!]!`). Andere vormen komen via import en blijven staan.
+- **Geen lijn naar enums en scalars** als veldtype (de expressie staat in de regel); een argument
+  krijgt alleen een lijn naar een input-type.
+- **`implements`, `lid` en `root` zijn getekende connectoren** (de bron voor de SDL); `veldtype` en
+  `argumenttype` zijn afgeleid. Het afleiden gebeurt bij import; de export leest alleen de velden,
+  dus een verouderde lijn kan de SDL niet bederven. Automatisch herafleiden bij elke
+  veldwijziging in de editor is nog niet aangesloten (er is geen profielhook voor).
+- **Validatie** zit in `valideerSchema` en komt bij de export als commentaar bovenaan; een eigen
+  paneel in de inspector is er nog niet.
+
+**Geverifieerd:** het GBO-schema (`authz/gbo-voorbeeld/bundel/schema.graphql`) en een schema met
+alle taalonderdelen gaan byte-gelijk heen en terug door SDL → diagram → SDL.
