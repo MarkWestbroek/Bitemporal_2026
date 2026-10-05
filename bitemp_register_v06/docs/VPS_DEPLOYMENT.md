@@ -624,16 +624,21 @@ Na deze lijst: **niets meer deployen tot na dinsdag 15.**
 
 ## 11. Volgende versie / later
 
-**Updaten** (zelfde als TrueNAS §3):
+**Updaten** (zelfde als TrueNAS §3). Sinds 6 oktober 2026 als script, `deploy/vps/update.sh`
+(kopieer het samen met de compose naar `/srv/omnium`): backup via `backup.sh`, pull, herstart van
+`api`, `render-svc` en `frontend`, smoke-test (`/version`, `API-Version`-header, één render) en de
+`[dbsetup]`-regels uit de log. Met de hand is het:
 
 ```bash
 cd /srv/omnium
-docker compose -f docker-compose.vps.yml pull
-docker compose -f docker-compose.vps.yml up -d --force-recreate api frontend
+./backup.sh
+docker compose -f docker-compose.vps.yml pull api render-svc frontend
+docker compose -f docker-compose.vps.yml up -d --force-recreate api render-svc frontend
 docker logs bitemp-go-api-06 --tail 10
 ```
 
-Rollback: `FRONTEND_IMAGE=markwestbroek/bitemp-viz-frontend:0.6.0` in `.env`, zelfde commando.
+Rollback: `FRONTEND_IMAGE=markwestbroek/bitemp-viz-frontend:0.6.0` (en zo nodig `API_IMAGE`,
+`RENDER_IMAGE`) in `.env`, zelfde commando.
 
 **Vijf sites naast Omnium** (stand 21 september 2026), elk met een eigen map onder
 `/srv` en hetzelfde patroon (git-checkout → `deploy/vps/deploy.sh` → container op een
