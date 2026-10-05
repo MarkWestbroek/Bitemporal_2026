@@ -114,3 +114,35 @@ test("een ongeldige regelset wordt geweigerd met leesbare fouten", () => {
   assert.throws(() => pasRegelsToe(graaf, { id: "leeg", regels: [] }), /Ongeldige regelset/);
   assert.deepEqual(valideerRegelset(regelset), []);
 });
+
+test("vul: één kale placeholder geeft een getypeerde waarde ongemoeid door", () => {
+  const view = { getal: 2024, waar: false, object: { letterlijk: 'met "quotes" en #' }, lijst: [1, { iri: "x:y" }], tekst: "kaal", leeg: undefined };
+  assert.equal(vul("{getal}", view), 2024);
+  assert.equal(vul("{waar}", view), false);
+  assert.deepEqual(vul("{object}", view), { letterlijk: 'met "quotes" en #' });
+  assert.deepEqual(vul("{lijst}", view), [1, { iri: "x:y" }]);
+  // Strings en ontbrekende waarden blijven tekst; met tekst eromheen of een filter ook.
+  assert.equal(vul("{tekst}", view), "kaal");
+  assert.equal(vul("{leeg}", view), "");
+  assert.equal(vul("jaar {getal}", view), "jaar 2024");
+  assert.equal(vul("{getal|eenregel}", view), "2024");
+  assert.equal(vul("{lijst} ", { lijst: ["a", "b"] }), "a, b ");
+  // Door de hele toepasser heen: data draagt de ruwe waarde.
+  const plan = pasRegelsToe(
+    { knopen: [{ id: "v", tekst: "v", waarde: { datum: "2026-05-01" } }], groepen: [], verbindingen: [] },
+    { id: "t", regels: [{ naam: "V", bij: "knoop", maak: { type: "x", data: { rechts: "{waarde}", vast: { iri: "a:b" }, tekst: "{tekst}" } } }] }
+  );
+  assert.deepEqual(plan.elementen[0].data, { rechts: { datum: "2026-05-01" }, vast: { iri: "a:b" }, tekst: "v" });
+});
+
+test("pasRegelsToe: connectoren staan in de volgorde van de verbindingen", () => {
+  // Een schrijver mag hierop bouwen (bv. een RDF-lijst in tekstvolgorde).
+  const knopen = ["g", "c", "a", "b"].map((id) => ({ id, tekst: id }));
+  const verbindingen = ["c", "a", "b", "a"].map((doel, i) => ({ id: `v${i}`, bron: "g", doel, label: "lid" }));
+  const plan = pasRegelsToe(
+    { knopen, groepen: [], verbindingen },
+    { id: "t", regels: [{ naam: "K", bij: "knoop", maak: { type: "k" } }, { naam: "L", bij: "verbinding", maak: { type: "lid" } }] }
+  );
+  assert.deepEqual(plan.connectoren.map((c) => c.doel), ["c", "a", "b", "a"], "niet gesorteerd en niet ontdubbeld");
+  assert.deepEqual(plan.connectoren.map((c) => c.sleutel), ["v0", "v1", "v2", "v3"]);
+});

@@ -22,6 +22,8 @@
  * Toets: een waarde (gelijk, hoofdletterongevoelig), een lijst (één van),
  * `true`/`false`, `{patroon: "regex"}`, `{leeg: true|false}` of `{niet: toets}`.
  * Sjabloon: `"{tekst}"`, `"{doel.romp}"`, met filter `"{tekst|eenregel}"`.
+ * Eén kale placeholder geeft een getypeerde waarde (getal, boolean, object)
+ * ongemoeid door; zie `vul`.
  *
  * Volgorde van uitvoering: eerst knopen en groepen (die krijgen daarmee een
  * doel-`type`), dan verbindingen — zodat een verbindingsregel kan toetsen op
@@ -106,9 +108,20 @@ export function past(view, als) {
   return true;
 }
 
-/** Vul een sjabloon; niet-teksten (getal, boolean, object) gaan ongewijzigd door. */
+/**
+ * Vul een sjabloon; niet-teksten (getal, boolean, object) gaan ongewijzigd door.
+ * Bestaat het sjabloon uit precies één placeholder zonder filter (`"{waarde}"`)
+ * en is die waarde een getal, boolean of object, dan komt de ruwe waarde terug —
+ * zo kan een lezer een getypeerde waarde aanleveren en een schrijver hem lezen.
+ * Strings en ontbrekende waarden blijven tekst (ontbreekt → "").
+ */
 export function vul(sjabloon, view) {
   if (typeof sjabloon !== "string") return sjabloon;
+  const enkel = /^\{([\w.]+)\}$/.exec(sjabloon);
+  if (enkel) {
+    const ruw = lees(view, enkel[1]);
+    if (typeof ruw === "number" || typeof ruw === "boolean" || (ruw !== null && typeof ruw === "object")) return ruw;
+  }
   return sjabloon.replace(/\{([\w.]+)(?:\|(\w+))?\}/g, (_, pad, filter) => {
     const waarde = lees(view, pad);
     const tekst = Array.isArray(waarde) ? waarde.join(", ") : String(waarde ?? "");

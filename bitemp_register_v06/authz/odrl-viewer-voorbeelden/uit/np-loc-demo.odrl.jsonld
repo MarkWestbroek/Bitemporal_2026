@@ -1,0 +1,161 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/odrl.jsonld",
+    {
+      "nlgov": "https://standaarden.overheid.nl/odrl/terms/"
+    }
+  ],
+  "@type": "Set",
+  "uid": "urn:nlgov:beleid:persoonsgegevens-np-loc-demo",
+  "profile": "https://standaarden.overheid.nl/odrl/profile/toegangsbeleid",
+  "conflict": "prohibit",
+  "dc:description": "Persoonsgegevens np-loc demo",
+  "nlgov:geldigVanaf": "2026-09-15",
+  "nlgov:grondslag": "de Gemeentewet",
+  "nlgov:doelbinding": "dienstverlening",
+  "permission": [
+    {
+      "nlgov:regelnaam": "inzage eigen stadsdeel",
+      "target": {
+        "@type": "AssetCollection",
+        "uid": "urn:nlgov:gegevens:persoonsgegevens",
+        "source": "nlgov:register:NatuurlijkPersoon"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:medewerker-west",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:rol"
+            },
+            "operator": "eq",
+            "rightOperand": "medewerker"
+          },
+          {
+            "leftOperand": {
+              "@id": "nlgov:afdeling"
+            },
+            "operator": "eq",
+            "rightOperand": "West"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      },
+      "constraint": [
+        {
+          "leftOperand": {
+            "@id": "nlgov:betrokkene:woonlocatie.wijk"
+          },
+          "operator": "eq",
+          "rightOperand": "Stadsdeel West"
+        }
+      ]
+    },
+    {
+      "nlgov:regelnaam": "avonddienst gemeentebreed",
+      "target": {
+        "@type": "AssetCollection",
+        "uid": "urn:nlgov:gegevens:persoonsgegevens",
+        "source": "nlgov:register:NatuurlijkPersoon"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:medewerker",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:rol"
+            },
+            "operator": "eq",
+            "rightOperand": "medewerker"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      },
+      "constraint": [
+        {
+          "leftOperand": {
+            "@id": "nlgov:aanvrager:dienst"
+          },
+          "operator": "eq",
+          "rightOperand": "avond"
+        }
+      ]
+    },
+    {
+      "nlgov:regelnaam": "aanspreken zonder geslacht",
+      "target": {
+        "@type": "Asset",
+        "uid": "nlgov:register:NatuurlijkPersoon.Aanspraak.aanspreektitel"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:telefoonmedewerker",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:rol"
+            },
+            "operator": "eq",
+            "rightOperand": "medewerker"
+          },
+          {
+            "leftOperand": {
+              "@id": "nlgov:kanaal"
+            },
+            "operator": "eq",
+            "rightOperand": "telefoon"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      },
+      "constraint": [
+        {
+          "leftOperand": {
+            "@id": "nlgov:betrokkene:aanspraak.aanspreektitel"
+          },
+          "operator": "nlgov:isBekend"
+        }
+      ]
+    }
+  ],
+  "prohibition": [
+    {
+      "nlgov:regelnaam": "geen geslacht aan de telefoon",
+      "target": {
+        "@type": "Asset",
+        "uid": "nlgov:register:NatuurlijkPersoon.geslacht"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:telefoonmedewerker",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:rol"
+            },
+            "operator": "eq",
+            "rightOperand": "medewerker"
+          },
+          {
+            "leftOperand": {
+              "@id": "nlgov:kanaal"
+            },
+            "operator": "eq",
+            "rightOperand": "telefoon"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      }
+    }
+  ]
+}

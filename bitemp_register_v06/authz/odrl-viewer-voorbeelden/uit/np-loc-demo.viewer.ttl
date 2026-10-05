@@ -1,0 +1,241 @@
+# Persoonsgegevens np-loc demo — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v1.
+# Gegenereerd; niet met de hand wijzigen. Bron in klare taal: beleid/np-loc-demo.toegangsspraak
+#
+#   Beleid "Persoonsgegevens np-loc demo".
+#     Geldig vanaf 15 september 2026.
+#     Grondslag: de Gemeentewet.
+#     Doel: "dienstverlening".
+#
+#     Begrippen.
+#       Een medewerker is: iemand met rol "medewerker".
+#       Een medewerker West is: iemand met rol "medewerker" en afdeling "West".
+#       Een telefoonmedewerker is: iemand met rol "medewerker" en kanaal "telefoon".
+#       De persoonsgegevens zijn: alle gegevens van een natuurlijk persoon.
+#
+#     Regel "inzage eigen stadsdeel".
+#       Een medewerker West mag de persoonsgegevens bekijken
+#       als de wijk van de woonlocatie van de betrokkene "Stadsdeel West" is.
+#
+#     Regel "avonddienst gemeentebreed".
+#       Een medewerker mag de persoonsgegevens bekijken
+#       als de dienst van de aanvrager "avond" is.
+#
+#     Regel "geen geslacht aan de telefoon".
+#       Een telefoonmedewerker mag het geslacht van een natuurlijk persoon niet bekijken.
+#
+#     Regel "aanspreken zonder geslacht".
+#       Een telefoonmedewerker mag de aanspreektitel van de aanspraak van een natuurlijk persoon bekijken
+#       als de aanspreektitel van de aanspraak van de betrokkene bekend is.
+
+@prefix odrl:   <http://www.w3.org/ns/odrl/2/> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct:    <http://purl.org/dc/terms/> .
+@prefix prov:   <http://www.w3.org/ns/prov#> .
+@prefix dpv:    <https://w3id.org/dpv#> .
+@prefix schema: <https://schema.org/> .
+@prefix apnl:   <https://standaarden.overheid.nl/odrl-ap-nl/> .
+@prefix ts:     <https://omnium.example/toegangsspraak/> .
+@prefix reg:    <https://omnium.example/register/np-loc/> .
+@prefix b:      <https://omnium.example/toegangsbeleid/persoonsgegevens-np-loc-demo/> .
+
+# ── Het beleid ────────────────────────────────────────────────────────────────
+
+b:beleid a odrl:Set ;
+    dct:title "Persoonsgegevens np-loc demo"@nl ;
+    odrl:uid b:beleid ;
+    odrl:profile apnl:profiel , ts:profiel ;
+    dct:description "Geschreven in Toegangsspraak (klare taal) en daaruit vertaald naar ODRL. Elke regel draagt zijn oorspronkelijke zin als beschrijving. Doel: dienstverlening. Grondslag: de Gemeentewet."@nl ;
+    dct:issued "2026-10-05"^^xsd:date ;
+    schema:validFrom "2026-09-15"^^xsd:date ;
+    odrl:conflict odrl:prohibit ;
+    dpv:hasLegalBasis b:grondslag ;
+    odrl:permission b:regel-inzage-eigen-stadsdeel , b:regel-avonddienst-gemeentebreed , b:regel-aanspreken-zonder-geslacht ;
+    odrl:prohibition b:regel-geen-geslacht-aan-de-telefoon .
+
+# ── Regels en plichten ────────────────────────────────────────────────────────
+
+b:regel-inzage-eigen-stadsdeel a odrl:Permission ;
+    dct:title "inzage eigen stadsdeel"@nl ;
+    odrl:uid b:regel-inzage-eigen-stadsdeel ;
+    dct:description "Een medewerker West mag de persoonsgegevens bekijken als de wijk van de woonlocatie van de betrokkene \"Stadsdeel West\" is."@nl ;
+    odrl:action b:handeling-inzage-eigen-stadsdeel ;
+    odrl:assignee b:groep-medewerker-west ;
+    odrl:target b:gegevens-persoonsgegevens ;
+    odrl:constraint b:vw-de-wijk-van-de-woonlocatie-van-de-betrokkene-is-stadsdeel-west .
+
+b:handeling-inzage-eigen-stadsdeel a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-rol-medewerker , b:vw-aanvrager-afdeling-west , b:vw-doel-dienstverlening .
+
+b:regel-avonddienst-gemeentebreed a odrl:Permission ;
+    dct:title "avonddienst gemeentebreed"@nl ;
+    odrl:uid b:regel-avonddienst-gemeentebreed ;
+    dct:description "Een medewerker mag de persoonsgegevens bekijken als de dienst van de aanvrager \"avond\" is."@nl ;
+    odrl:action b:handeling-avonddienst-gemeentebreed ;
+    odrl:assignee b:groep-medewerker ;
+    odrl:target b:gegevens-persoonsgegevens .
+
+b:handeling-avonddienst-gemeentebreed a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-rol-medewerker , b:vw-de-dienst-van-de-aanvrager-is-avond , b:vw-doel-dienstverlening .
+
+b:regel-geen-geslacht-aan-de-telefoon a odrl:Prohibition ;
+    dct:title "geen geslacht aan de telefoon"@nl ;
+    odrl:uid b:regel-geen-geslacht-aan-de-telefoon ;
+    dct:description "Een telefoonmedewerker mag het geslacht van een natuurlijk persoon niet bekijken."@nl ;
+    odrl:action b:handeling-geen-geslacht-aan-de-telefoon ;
+    odrl:assignee b:groep-telefoonmedewerker ;
+    odrl:target reg:NatuurlijkPersoon.geslacht .
+
+b:handeling-geen-geslacht-aan-de-telefoon a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-rol-medewerker , b:vw-aanvrager-kanaal-telefoon .
+
+b:regel-aanspreken-zonder-geslacht a odrl:Permission ;
+    dct:title "aanspreken zonder geslacht"@nl ;
+    odrl:uid b:regel-aanspreken-zonder-geslacht ;
+    dct:description "Een telefoonmedewerker mag de aanspreektitel van de aanspraak van een natuurlijk persoon bekijken als de aanspreektitel van de aanspraak van de betrokkene bekend is."@nl ;
+    odrl:action b:handeling-aanspreken-zonder-geslacht ;
+    odrl:assignee b:groep-telefoonmedewerker ;
+    odrl:target reg:NatuurlijkPersoon.Aanspraak.aanspreektitel ;
+    odrl:constraint b:vw-de-aanspreektitel-van-de-aanspraak-van-de-betrokkene-is-bekend .
+
+b:handeling-aanspreken-zonder-geslacht a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-rol-medewerker , b:vw-aanvrager-kanaal-telefoon , b:vw-doel-dienstverlening .
+
+# ── Voorwaarden (benoemd, dus herbruikbaar en realiseerbaar) ──────────────────
+
+b:vw-doel-dienstverlening a odrl:Constraint ;
+    rdfs:label "het doel van de aanvraag is \"dienstverlening\""@nl ;
+    odrl:leftOperand odrl:purpose ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand b:doel-dienstverlening .
+
+b:vw-aanvrager-rol-medewerker a odrl:Constraint ;
+    rdfs:label "de rol van de aanvrager is \"medewerker\""@nl ;
+    odrl:leftOperand apnl:rolAanvrager ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "medewerker" .
+
+b:vw-aanvrager-afdeling-west a odrl:Constraint ;
+    rdfs:label "de afdeling van de aanvrager is \"West\""@nl ;
+    odrl:leftOperand ts:aanvrager.afdeling ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "West" .
+
+b:vw-de-wijk-van-de-woonlocatie-van-de-betrokkene-is-stadsdeel-west a odrl:Constraint ;
+    rdfs:label "de wijk van de woonlocatie van de betrokkene is \"Stadsdeel West\""@nl ;
+    odrl:leftOperand ts:betrokkene.woonlocatie.wijk ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "Stadsdeel West" .
+
+b:vw-de-dienst-van-de-aanvrager-is-avond a odrl:Constraint ;
+    rdfs:label "de dienst van de aanvrager is \"avond\""@nl ;
+    odrl:leftOperand ts:aanvrager.dienst ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "avond" .
+
+b:vw-aanvrager-kanaal-telefoon a odrl:Constraint ;
+    rdfs:label "het kanaal van de aanvrager is \"telefoon\""@nl ;
+    odrl:leftOperand ts:aanvrager.kanaal ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "telefoon" .
+
+b:vw-de-aanspreektitel-van-de-aanspraak-van-de-betrokkene-is-bekend a odrl:Constraint ;
+    rdfs:label "de aanspreektitel van de aanspraak van de betrokkene is bekend"@nl ;
+    odrl:leftOperand ts:betrokkene.aanspraak.aanspreektitel ;
+    odrl:operator ts:isBekend ;
+    odrl:rightOperand true .
+
+# ── Wie en wat: begrippen uit de beleidstekst ─────────────────────────────────
+
+b:grondslag a dct:LegalResource ;
+    rdfs:label "de Gemeentewet"@nl ;
+    skos:note "Grondslag zoals in de beleidstekst genoemd; nog geen verwijzing naar wetten.overheid.nl."@nl .
+
+b:doel-dienstverlening a skos:Concept ;
+    rdfs:label "dienstverlening"@nl ;
+    skos:definition "Doelbinding \"dienstverlening\" zoals genoemd in het beleid."@nl .
+
+b:groep-medewerker-west a odrl:PartyCollection ;
+    rdfs:label "medewerker West"@nl ;
+    skos:definition "iemand met rol \"medewerker\" en afdeling \"West\""@nl ;
+    odrl:refinement b:vw-aanvrager-rol-medewerker , b:vw-aanvrager-afdeling-west .
+
+b:gegevens-persoonsgegevens a odrl:AssetCollection ;
+    rdfs:label "persoonsgegevens"@nl ;
+    skos:definition "alle gegevens van een natuurlijk persoon"@nl .
+
+b:groep-medewerker a odrl:PartyCollection ;
+    rdfs:label "medewerker"@nl ;
+    skos:definition "iemand met rol \"medewerker\""@nl ;
+    odrl:refinement b:vw-aanvrager-rol-medewerker .
+
+b:groep-telefoonmedewerker a odrl:PartyCollection ;
+    rdfs:label "telefoonmedewerker"@nl ;
+    skos:definition "iemand met rol \"medewerker\" en kanaal \"telefoon\""@nl ;
+    odrl:refinement b:vw-aanvrager-rol-medewerker , b:vw-aanvrager-kanaal-telefoon .
+
+# ── Het register: paden als assets met partOf ─────────────────────────────────
+
+reg:NatuurlijkPersoon a odrl:Asset , ts:Entiteit ;
+    rdfs:label "een natuurlijk persoon"@nl ;
+    dct:identifier "NatuurlijkPersoon" ;
+    odrl:partOf b:gegevens-persoonsgegevens .
+
+reg:NatuurlijkPersoon.geslacht a odrl:Asset , ts:Gegevenselement ;
+    rdfs:label "het geslacht van een natuurlijk persoon"@nl ;
+    dct:identifier "NatuurlijkPersoon.geslacht" ;
+    odrl:partOf reg:NatuurlijkPersoon .
+
+reg:NatuurlijkPersoon.Aanspraak a odrl:Asset , ts:Gegevenselement ;
+    rdfs:label "aanspraak"@nl ;
+    dct:identifier "NatuurlijkPersoon.Aanspraak" ;
+    odrl:partOf reg:NatuurlijkPersoon .
+
+reg:NatuurlijkPersoon.Aanspraak.aanspreektitel a odrl:Asset , ts:Veld ;
+    rdfs:label "de aanspreektitel van de aanspraak van een natuurlijk persoon"@nl ;
+    dct:identifier "NatuurlijkPersoon.Aanspraak.aanspreektitel" ;
+    odrl:partOf reg:NatuurlijkPersoon.Aanspraak .
+
+# ── Woordenschat van Toegangsspraak (labels komen uit de klare taal) ──────────
+
+ts:aanvrager.afdeling a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "de afdeling van de aanvrager"@nl ;
+    skos:definition "Kenmerk van degene die het verzoek doet; te toetsen voordat de bron iets ophaalt."@nl .
+
+ts:Entiteit a rdfs:Class , skos:Concept ;
+    rdfs:label "entiteit"@nl .
+
+ts:betrokkene.woonlocatie.wijk a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "de wijk van de woonlocatie van de betrokkene"@nl ;
+    skos:definition "Gegeven van de persoon over wie de gegevens gaan; pas te toetsen met de gegevens in handen."@nl .
+
+ts:aanvrager.dienst a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "de dienst van de aanvrager"@nl ;
+    skos:definition "Kenmerk van degene die het verzoek doet; te toetsen voordat de bron iets ophaalt."@nl .
+
+ts:aanvrager.kanaal a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "het kanaal van de aanvrager"@nl ;
+    skos:definition "Kenmerk van degene die het verzoek doet; te toetsen voordat de bron iets ophaalt."@nl .
+
+ts:Gegevenselement a rdfs:Class , skos:Concept ;
+    rdfs:label "gegevenselement"@nl .
+
+ts:Veld a rdfs:Class , skos:Concept ;
+    rdfs:label "veld"@nl .
+
+ts:betrokkene.aanspraak.aanspreektitel a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "de aanspreektitel van de aanspraak van de betrokkene"@nl ;
+    skos:definition "Gegeven van de persoon over wie de gegevens gaan; pas te toetsen met de gegevens in handen."@nl .
+
+ts:isBekend a odrl:Operator , skos:Concept ;
+    rdfs:label "is bekend"@nl .
+
+ts:profiel a odrl:Profile ;
+    dct:title "Toegangsspraak-woordenschat (Omnium Studio, werkversie)"@nl ;
+    dct:description "De termen die Toegangsspraak nodig heeft bovenop ODRL 2.2 en ODRL-AP-NL: operanden uit de van-vorm, een paar vergelijkingen en handelingen. Elk label is de zinsnede uit de klare taal."@nl .

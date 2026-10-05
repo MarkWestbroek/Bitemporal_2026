@@ -56,6 +56,9 @@ bron- en doelelement.
   `ide/transformations.js`, zie [EDITOR_BEWERKINGEN.md](EDITOR_BEWERKINGEN.md).
 - Codegen (canoniek model → code en API-schema's): eigen pijplijn, zie
   [CODEGEN.md](CODEGEN.md).
+- **Toegangsspraak → ODRL (ODRL-AP-NL)**, een export in de vorm van §3 mét
+  schrijver (§8). Nog niet in de registry: een beleid leeft in de
+  Toegangverlening-activiteit, niet in een Modelleren-map.
 
 **Wat ontbreekt:** tot nu toe was elke transformatie specifieke code achter één
 `run()`. Er was geen gedeelde, leesbare vorm voor de afbeelding zelf; het bereik
@@ -76,7 +79,7 @@ model (bereik) ─────────────────────�
 | **Lezer** | de *syntax* van een extern formaat | code (een parser) | `transformatie/mermaidFlowchart.js` |
 | **Regelset** | de *betekenis*: welk bron-patroon wordt wat in het doel | **data** — geordende `als … maak …`-regels | `diagramprofielen/<profiel>/…Regels.js` |
 | **Toepasser** | niets van bron of doel; voert regels uit | generieke code | `transformatie/regels.js` |
-| **Schrijver** | de syntax van het doelformaat | code of een tekstsjabloon | (nog niet gebouwd) |
+| **Schrijver** | de syntax van het doelformaat | code of een tekstsjabloon | `transformatie/turtleSchrijver.js` (RDF/Turtle) |
 
 Alles wat een model is — een Mermaid-tekening, een OAS-document, een Studio-model
 — is hier een **graaf**: knopen met eigenschappen, groepen (containers) en
@@ -105,11 +108,55 @@ regelset matcht op die graaf en beschrijft de doelgraaf; syntax blijft erbuiten.
   - `negeer: true` — bewust niets.
 - `meld: true` — de toepassing verschijnt als melding (voor regels die een
   interpretatie zijn).
-- Waarden zijn sjablonen: `"{tekst|eenregel}"`, `"{doel.romp}"`.
+- Waarden zijn sjablonen: `"{tekst|eenregel}"`, `"{doel.romp}"`. Een sjabloon dat
+  uit precies één placeholder zonder filter bestaat (`"{waarde}"`) geeft een
+  **getypeerde waarde** — getal, boolean of object — ongemoeid door; strings en
+  ontbrekende waarden blijven tekst. Constanten die geen tekst zijn
+  (`{ iri: "odrl:purpose" }`) gaan altijd ongemoeid door.
 
 De **eerste** regel die past wint. Past er geen, dan komt er een waarschuwing en
 wordt het item niet overgenomen — de toepasser raadt nooit. Het resultaat bevat
 naast het plan een **trace** (per bron-item: welke regel, welk doel) en meldingen.
+
+### Gereserveerde namen in de brongraaf
+
+De toepasser legt een *view* over elk bron-item en zet daarin zelf een paar
+eigenschappen. Een lezer die dezelfde naam gebruikt wordt overschreven:
+
+| Op | Naam | Betekenis |
+|---|---|---|
+| knoop, groep | `soort` | `knoop` of `groep` — gebruik voor het eigen brontype dus een andere naam (`aard`, `vorm`, `klasse`) |
+| knoop, groep | `type` | begint leeg en wordt het doel-type; daarop toetsen verbindingsregels |
+| knoop, groep | `klasse`, `romp`, `inGroep` | ← `klassen`, ← `romp ?? tekst`, ← `groep != null` |
+| verbinding | `soort` | `verbinding` |
+| verbinding | `bron`, `doel` | worden vervangen door de view van het uiteinde; het id is dus `{bron.id}`. In `als` zijn `bron` en `doel` altijd deelvoorwaarden op een uiteinde |
+
+Verder leest de toepasser `id` (uniek over knopen én groepen), `groep`, `regel`
+(bronregelnummer, voor meldingen), `tekst` (standaard voor de naam) en `vorm`
+(alleen in de tekst van de geen-regel-melding). Eén knoop geeft hoogstens één
+element; een connector vereist dat beide uiteinden een element zijn. De
+connectoren in het plan staan in de **volgorde van de verbindingen** in de graaf
+(getest) — een schrijver mag daarop bouwen. Meerwaardige eigenschappen horen in
+connectoren, niet in `zet` (dat plakt twee teksten aan elkaar). Meldingen van
+de toepasser beginnen met `TRF-`; een lezer of aansluiting neemt een eigen
+voorvoegsel (`MMD-`, `TS-`, `TTL-`).
+
+### De schrijver (RDF)
+
+`transformatie/turtleSchrijver.js` zet een plan om naar RDF, in twee stappen:
+`planNaarTriples` (context-gedreven) en `triplesNaarTurtle`. Voor RDF is de keuze
+van de regelset letterlijk: het doel-`type` van een element is een klasse, dat van
+een connector een predicaat, en de sleutels van `data` zijn predicaten.
+
+De **vorm van een waarde** staat niet in de regelset maar in een contexttabel,
+hetzelfde idee als een JSON-LD-`@context`: prefixes, het naam-predicaat per type,
+en per predicaat `tekst` (met taal), `iri`, `datum` of `lijst` (de connectoren van
+één bron worden één RDF-lijst, in planvolgorde). Waar één predicaat per keer een
+ander soort waarde draagt, levert de lezer een getypeerde waarde: een getal, een
+boolean, of `{ iri }`, `{ tekst, taal }`, `{ letterlijk }`, `{ datum }`,
+`{ zelf: true }`. Er is bewust géén ingebedde notatie in strings: dan is er ook
+niets te ontsnappen. De uitvoer is deterministisch, zodat een vaste verwachte
+tekst per voorbeeld als test kan dienen.
 
 ### Verwantschap met wat je kent
 
@@ -160,8 +207,10 @@ al doet). Dit is nog **niet gebouwd**.
 
 1. **Lezer** (alleen bij een nieuw extern formaat): tekst → `{knopen, groepen,
    verbindingen, waarschuwingen}`. Geen kennis van het doelprofiel.
-2. **Regelset** in `diagramprofielen/<doelprofiel>/`: de regels als data;
-   `valideerRegelset` in een test.
+2. **Regelset**: de regels als data; `valideerRegelset` in een test. De regelset
+   staat bij de kant die een Studio-taal is — bij een import dus bij het
+   doelprofiel (`diagramprofielen/<doelprofiel>/`), bij een export bij de brontaal
+   (`toegangsspraak/`). Zijn beide kanten een Studio-taal, dan bij het doel.
 3. **Aansluiting**: een module die `pasRegelsToe` aanroept, het plan omzet naar
    een core-model (ids, hergebruik, verbindingsregels van het profiel, layout) en
    zich registreert met `registreerTransformatie`. Stores worden geïnjecteerd
@@ -216,4 +265,42 @@ actor, use case en systeemkader, en mag een systeemkader een systeemkader bevatt
 4. **Proefdraaien**: het plan en de meldingen tonen vóór het toepassen.
 5. **Regelsets als bestand** in het project (JSON), bewerkbaar in de Studio; de
    validatie (`valideerRegelset`) is daar al op voorbereid.
-6. **Schrijver** voor export met tekstsjablonen, en dezelfde runner in een CLI.
+6. **Schrijver** voor export met tekstsjablonen (vrije tekst: code, DDL), en
+   dezelfde runner in een CLI. De RDF-schrijver bestaat (§3, §8); een
+   JSON-LD-serialisatie hoeft alleen `triplesNaarTurtle` te vervangen.
+
+## 8. Toegangsspraak → ODRL (ODRL-AP-NL)
+
+De eerste **export** in deze vorm, en de eerste met een schrijver. Aanleiding: de
+ODRL-viewer van de werkgroep FTV, die elk ODRL-beleid als leesbaar document toont
+mits het de *ODRL Visualisation Note* volgt (labels bij elke IRI, regels en
+voorwaarden met een eigen IRI, `partOf`-hiërarchie, geldigheid, realisatielinks).
+
+| Deel | Waar | Wat |
+|---|---|---|
+| graafbeeld (de rol van de lezer) | `toegangsspraak/graaf.js` | het beleid uit elkaar gelegd in de begrippen van de taal: regel, handeling, partij, voorwaarde, registerdeel, term … met `aard` en de zinsnede als `tekst` |
+| regelset | `toegangsspraak/odrlApNlRegels.js` | wat elk onderdeel in ODRL wordt; ODRL wint waar het een woord al kent (bekijken = `odrl:read`, doel = `odrl:purpose`, rol = `apnl:rolAanvrager`) |
+| toepasser | `transformatie/regels.js` | ongewijzigd, op de getypeerde waarde in `vul` na |
+| schrijver | `transformatie/turtleSchrijver.js` | plan → Turtle |
+| aansluiting | `toegangsspraak/odrlExport.js` | de context van de schrijver; geeft Turtle, trace en meldingen terug |
+
+Het graafbeeld leest geen syntax (dat doet de parser); het is de pijl "model
+(bereik)" in het schema van §3. Eén keuze zit daar en niet in de regelset: een
+voorwaarde over het verzoek (aanvraag, aanvrager) hangt aan de **handeling**, een
+voorwaarde over de gegevens of een bestaansvraag aan de **regel**. De regelset
+maakt daar `odrl:refinement` respectievelijk `odrl:constraint` van, zoals
+ODRL-AP-NL voorschrijft.
+
+Een **aanvulling** uit een tweede bron kan knopen en eigen regels toevoegen. Het
+GBO-voorbeeld gebruikt dat voor de realisatie: de uit dezelfde ODRL gegenereerde
+Rego-modules als `apnl:RegoModule`, met een anker dat de regel en de werkelijk
+getoetste voorwaarden realiseert (`prov:wasDerivedFrom`).
+
+De **trace** is het verliesrapport: wat `geen-regel` of `overgeslagen` is, zit niet
+in de ODRL. De tests eisen dat op alle voorbeelden niets verloren gaat, en leggen
+de Turtle van het voorbeeldbeleid vast als gouden bestand.
+
+Voorbeelden, de runner en hoe je ze in de viewer bekijkt:
+`authz/odrl-viewer-voorbeelden/`. De bestaande JSON-LD-export uit de editor
+(`toegangsspraak/odrl.js`) blijft ernaast bestaan; het verschil staat in
+[TOEGANGSSPRAAK.md](TOEGANGSSPRAAK.md).

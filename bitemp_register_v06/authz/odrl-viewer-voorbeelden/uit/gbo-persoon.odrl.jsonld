@@ -1,0 +1,153 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/odrl.jsonld",
+    {
+      "nlgov": "https://standaarden.overheid.nl/odrl/terms/"
+    }
+  ],
+  "@type": "Set",
+  "uid": "urn:nlgov:beleid:gbo-persoon",
+  "profile": "https://standaarden.overheid.nl/odrl/profile/toegangsbeleid",
+  "conflict": "prohibit",
+  "dc:description": "GBO persoon",
+  "nlgov:doelbinding": "inkomensverstrekking",
+  "permission": [
+    {
+      "nlgov:regelnaam": "persoon op bsn",
+      "target": {
+        "@type": "Asset",
+        "uid": "nlgov:register:Persoon"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:afnemer",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:rol"
+            },
+            "operator": "eq",
+            "rightOperand": "afnemer"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      },
+      "constraint": [
+        {
+          "leftOperand": {
+            "@id": "nlgov:bestaat:toestemming"
+          },
+          "operator": "eq",
+          "rightOperand": true,
+          "nlgov:voor": {
+            "@id": "nlgov:betrokkene"
+          }
+        }
+      ]
+    },
+    {
+      "nlgov:regelnaam": "naam en adres",
+      "target": {
+        "@type": "Asset",
+        "uid": "nlgov:register:Persoon.naam"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:geautoriseerde-afnemer",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:autorisatie"
+            },
+            "operator": "eq",
+            "rightOperand": "naam-en-adres"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      }
+    },
+    {
+      "nlgov:regelnaam": "adres",
+      "target": {
+        "@type": "Asset",
+        "uid": "nlgov:register:Persoon.adres"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:geautoriseerde-afnemer",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:autorisatie"
+            },
+            "operator": "eq",
+            "rightOperand": "naam-en-adres"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      }
+    },
+    {
+      "nlgov:regelnaam": "inkomens tot en met 2024",
+      "target": {
+        "@type": "Asset",
+        "uid": "nlgov:register:Persoon.inkomens"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:afnemer",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:rol"
+            },
+            "operator": "eq",
+            "rightOperand": "afnemer"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      },
+      "constraint": [
+        {
+          "leftOperand": {
+            "@id": "nlgov:aanvraag:jaar"
+          },
+          "operator": "lteq",
+          "rightOperand": 2024
+        }
+      ]
+    },
+    {
+      "nlgov:regelnaam": "inkomen velden",
+      "target": {
+        "@type": "AssetCollection",
+        "uid": "urn:nlgov:gegevens:inkomensgegevens",
+        "source": "nlgov:register:Persoon.Inkomen"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:geautoriseerde-afnemer",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:autorisatie"
+            },
+            "operator": "eq",
+            "rightOperand": "naam-en-adres"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      }
+    }
+  ]
+}
