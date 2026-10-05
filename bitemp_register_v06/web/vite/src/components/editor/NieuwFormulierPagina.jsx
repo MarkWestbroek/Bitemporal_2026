@@ -212,9 +212,13 @@ export default function NieuwFormulierPagina({ typeMeta, definitie, onSuccess, o
         <button type="button" className="utrecht-button utrecht-button--secondary-action" disabled={bezig} onClick={() => { setValues({}); setResultaat(null); setVerzendPoging(false); }}>
           Leegmaken
         </button>
-        <span style={{ fontSize: "0.8125rem", color: "var(--cg-donkergrijs, #666)" }}>
-          {aantalOpvoeren > 0 ? `${aantalOpvoeren} opvoer${aantalOpvoeren === 1 ? "" : "en"} in één registratie` : ""}
-        </span>
+        {/* Technische teller voor beheerders (hoeveel records één registratie aanmaakt); niet op
+            een openbaar formulier, daar zegt hij de invuller niets. */}
+        {!openbaar && (
+          <span style={{ fontSize: "0.8125rem", color: "var(--cg-donkergrijs, #666)" }}>
+            {aantalOpvoeren > 0 ? `${aantalOpvoeren} opvoer${aantalOpvoeren === 1 ? "" : "en"} in één registratie` : ""}
+          </span>
+        )}
         {resultaat && (
           <span className={resultaat.ok ? "cg-feedback--succes" : "cg-feedback--fout"} style={{ fontSize: "0.8125rem", padding: "0.125rem 0.5rem", borderRadius: 4 }}>
             {resultaat.bericht}
