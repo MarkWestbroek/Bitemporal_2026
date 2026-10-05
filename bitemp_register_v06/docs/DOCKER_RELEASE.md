@@ -11,13 +11,14 @@
 
 ## 1. Wat publiceren we?
 
-De stack bestaat uit vier componenten; **twee daarvan bouwen we zelf** en publiceren we op
+De stack bestaat uit vijf componenten; **drie daarvan bouwen we zelf** en publiceren we op
 Docker Hub onder het account `markwestbroek`:
 
 | Component | Image | Dockerfile | Bouwen wij? |
 |-----------|-------|------------|-------------|
 | Backend (Go API) | `markwestbroek/bitemp-go-api` | `Dockerfile.api` | **ja** |
 | Frontend (Omnium Studio) | `markwestbroek/bitemp-viz-frontend` | `Dockerfile.frontend` | **ja** |
+| Render-sidecar (sinds api 0.9.0) | `markwestbroek/bitemp-render-svc` | `Dockerfile.render` | **ja** |
 | Database | `postgres:16-alpine` | — | nee (upstream) |
 | Filestore | `minio/minio` | — | nee (upstream) |
 
@@ -129,6 +130,27 @@ De Vite-build zit ín de Dockerfile; een lokale `npm run build` vooraf is niet n
 Laat `VITE_API_BASE_URL` leeg tenzij de frontend een API op een *andere* origin moet aanspreken —
 standaard proxiet nginx in dezelfde image door naar de API-container.
 
+### 4.2a Render-sidecar
+
+Nodig voor de render-API (`POST /api/render/svg`, zie [`RENDER_API.md`](RENDER_API.md)). De
+sidecar tekent met de code uit `web/vite/src/diagramsvg` en heeft een eigen nummer, begonnen bij
+`0.1.0`. Hij krijgt een nieuw nummer wanneer `render-svc/` of de tekenaar verandert; er is nog
+geen eigen git-tag-prefix voor.
+
+```bash
+RENDER_VERSIE=0.1.0
+
+docker build -f Dockerfile.render --platform linux/amd64 \
+  -t markwestbroek/bitemp-render-svc:$RENDER_VERSIE \
+  -t markwestbroek/bitemp-render-svc:latest .
+
+docker push markwestbroek/bitemp-render-svc:$RENDER_VERSIE
+docker push markwestbroek/bitemp-render-svc:latest
+```
+
+De API vindt hem via `RENDER_SVC_URL` (standaard `http://127.0.0.1:8095`); zonder sidecar geven
+de render-routes 502 en werkt de rest van de API gewoon.
+
 ### 4.3 Uitrollen op de NAS
 
 Zie [`TRUENAS_DEPLOYMENT.md`](TRUENAS_DEPLOYMENT.md) §3. Kort:
@@ -157,8 +179,9 @@ FRONTEND_IMAGE=markwestbroek/bitemp-viz-frontend:0.5.0
 3. [ ] Backend gewijzigd? → bepaal het nieuwe `api/`-nummer en werk `RELEASE.md` bij.
        Brekende wijzigingen staan onder een eigen kopje *Brekend*.
 3a. [ ] Per omgeving vastgesteld of daar de standaard-image of een devtools-image hoort (§4.1)?
-4. [ ] Bouw beide images met versie-tag **én** `latest`; controleer `linux/amd64`.
-5. [ ] Push beide tags.
+3b. [ ] `render-svc/` of `web/vite/src/diagramsvg` gewijzigd? → nieuw nummer voor de render-sidecar (§4.2a).
+4. [ ] Bouw de images met versie-tag **én** `latest`; controleer `linux/amd64`.
+5. [ ] Push alle tags.
 6. [ ] Zet de annotated git-tag(s): `git tag -a studio/v0.6.0 -m "…"` / `api/v0.5.1`, en push die.
 7. [ ] Rol uit op de NAS en doe de smoke-test (§6).
 8. [ ] Ruim oude tags op volgens §6 van [`docker.md`](../docker.md) §11 (laatste ~10 bewaren).

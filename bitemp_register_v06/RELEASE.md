@@ -8,6 +8,83 @@
 
 ---
 
+## Render-API, GraphQL-profiel en transformaties: api 0.9.0 / studio 0.11.0 (2026-10-06)
+
+Het werk van 28 september tot en met 6 oktober: de render-API voor Imprint, het GraphQL-schema
+als profiel, transformaties in een vaste vorm en het voorbereidende werk voor toegangsbeleid
+(FTV, ODRL). **Geen brekende wijzigingen en geen databasegevolg** ten opzichte van api 0.8.0.
+
+### Backend (api 0.9.0)
+
+#### Toegevoegd
+- **Render-API voor modeldiagrammen** (`docs/RENDER_API.md`), gevraagd door Imprint:
+  - `POST /api/render/svg`: een V3-model in de body, SVG terug. Openbaar: de route tekent alleen
+    wat de aanroeper meestuurt en leest geen registerdata.
+  - `GET /api/models/{naam}/diagram.svg` en `…/views.json`: een gepubliceerd model op naam,
+    versie en tijdstip (`asOf`), uit `schema_versies`.
+  - `ETag` over de SVG en `304` op `If-None-Match`; fouten als `application/problem+json`; `502`
+    als de sidecar niet bereikbaar is.
+- **Sidecar `render-svc`** (Node, zonder dependencies; `Dockerfile.render`): tekent met dezelfde
+  code als de Studio (`web/vite/src/diagramsvg`). Alleen intern bereikbaar. Eerste image:
+  `markwestbroek/bitemp-render-svc:0.1.0`. Opgenomen in `docker-compose.yml` en in
+  `deploy/vps/docker-compose.vps.yml`.
+- **Scripts:**
+  - `maak_uitleg_correctie.py`: de tekst van een uitleg wijzigen in één replay;
+  - `maak_nl_kaartdata.py` zet elke stip op de mediaan van de adressen van de gemeente;
+  - `geef_definities_code.py` voert bij een meervoudige layout de oude rij af en de nieuwe op.
+- **Replays voor pf** (`replay files/`): standaardweergave Initiatief v2, de correctie van de
+  uitleg bij `vorm-nl-map`, en de correctie van het AI-voorbeeld en de dubbele layouts (05-10).
+- **Toegangsbeleid, voorbeelden** (`authz/`, geen onderdeel van de draaiende API):
+  - `gbo-voorbeeld/`: de casus uit het FTV GraphQL-profiel vanuit het canoniek model, met SDL,
+    ODRL, Rego en een native ODRL-evaluator;
+  - `odrl-viewer-voorbeelden/`: drie stukken beleid als ODRL voor de viewer van de werkgroep FTV.
+- **Deploy (VPS):** toegangslogs voor de Imprint-sites in de `Caddyfile`; de render-sidecar staat
+  klaar in `docker-compose.vps.yml` (nog niet uitgerold).
+
+#### Gewijzigd
+- **`APIVersion`** (OpenAPI en de header `API-Version`) staat op 0.9.0.
+
+#### Databasegevolg bij uitrol
+Geen ten opzichte van 0.8.0. Komt een omgeving van een oudere versie, dan gelden de gevolgen van
+de tussenliggende releases; zie *Uitrol*.
+
+#### Nieuwe instellingen
+- `RENDER_SVC_URL` op de API: het interne adres van de sidecar (standaard `http://127.0.0.1:8095`).
+- `RENDER_IMAGE` in de `.env` van de VPS-compose (standaard `markwestbroek/bitemp-render-svc:latest`).
+- Op de sidecar zelf: `RENDER_SVC_PORT` (8095), `RENDER_SVC_HOST` en `RENDER_SVC_MAX_BYTES` (5 MB).
+
+#### Bekend en open
+- Zonder sidecar geven de render-routes 502; de rest van de API merkt er niets van.
+- De tweede instantie (`docker-compose.pf.yml`) heeft de sidecar nog niet.
+- `/full`-reads zijn niet snapshot-consistent op het formele leesmoment (BACKLOG §32).
+- Een correctie op een afgevoerde hub geeft een kale 500 (BACKLOG §34).
+- De codegen neemt veldbeschrijvingen uit de V3 niet mee (BACKLOG §35).
+
+### Frontend (studio 0.11.0)
+
+- **GraphQL-schema-profiel**: het typesysteem van GraphQL als diagramprofiel, met SDL in en uit.
+- **Transformaties in een vaste vorm** (lezer → regelset → toepasser → schrijver), met de import
+  "Mermaid flowchart → use case-model" en de export "Toegangsspraak → ODRL (ODRL-AP-NL)".
+- **SVG-tekenaar** voor modeldiagrammen, de basis van de render-API.
+- **Kaart van Nederland**: stippen op de mediaan van de adressen, toetsenbord en zoeken.
+
+Zie [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+
+### Uitrol
+
+- **Drie images**: `bitemp-go-api:0.9.0`, `bitemp-viz-frontend:0.11.0` en, nieuw,
+  `bitemp-render-svc:0.1.0` (`docs/DOCKER_RELEASE.md` §4, `docs/VPS_DEPLOYMENT.md`).
+- **app.omnium-ide.nl draait nog de API van 16 september.** Een uitrol daar neemt dus ook api
+  0.7.0 en 0.8.0 mee. Lees daarvan *Brekend* en *Gewijzigd* hieronder, maak eerst een backup en
+  test op de pf-instantie of lokaal. De nieuwe tabellen en kolommen van 0.8.0 worden bij het
+  opstarten aangemaakt (`[dbsetup]` in de log).
+- **pf** bouwt de API uit de git-checkout; de render-routes geven daar 502 zolang de sidecar
+  ontbreekt.
+- **Na het uitrollen:** controleer `/version`, de header `API-Version: 0.9.0` en één
+  `POST /api/render/svg` (voorbeeld in `VPS_DEPLOYMENT.md`).
+
+---
+
 ## Formulieren, publicatie en de tweede instantie: api 0.8.0 / studio 0.10.0 (2026-09-28)
 
 Het werk voor het Common Ground-portfolio op pf.common-ground-lab.nl (22–28 september). Alles

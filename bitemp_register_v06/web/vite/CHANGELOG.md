@@ -7,6 +7,12 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+
+## [studio/v0.11.0] — 2026-10-06
+Modelleren en uitwisselen: het GraphQL-schema als profiel, transformaties in een vaste vorm, de
+ODRL-export voor de viewer van de werkgroep FTV en modeldiagrammen als SVG voor Imprint. Backend:
+api 0.9.0 in [`RELEASE.md`](../../RELEASE.md).
+
 ### Gewijzigd
 - **Kaart van Nederland** (29-09):
   - elke stip staat op de mediaan van de adressen van de gemeente, niet op het middelpunt van
@@ -42,6 +48,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   - Veld- en argumentlijnen worden afgeleid uit de velden; de kardinaliteit volgt uit `!` en `[ ]`.
   - Schema-validatie: onbekende typen, typen op de verkeerde positie, ontbrekende interface-velden,
     lege unions en enums, en de query-root.
+- **SVG-tekenaar voor modeldiagrammen** (30-09): `src/diagramsvg` tekent een V3-model als pure SVG,
+  zonder DOM en zonder `<foreignObject>`, met dezelfde mapping en auto-layout als de Studio.
+  - De render-API van de backend gebruikt hem via de sidecar `render-svc`; zie
+    [`docs/RENDER_API.md`](../docs/RENDER_API.md).
+  - Keuze van de weergave: een opgeslagen diagram, één domein of een lijst entiteiten; licht,
+    donker of meebewegend met de site via CSS-variabelen. Dezelfde invoer geeft byte-gelijke SVG.
 - **Kaart van Nederland: toetsenbord en zoeken** (28-09).
   - Pijltjes lopen naar de buurstip in die richting, niet meer alfabetisch.
   - Shift+↑/↓ gaat per beginletter, Shift+←/→ alfabetisch.
@@ -55,6 +67,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Kaart van Nederland: Urk en Medemblik op een dijk** (28-09). De eerste reparatie gebruikte het
   middelpunt van de woonplaats, en ook dat vlak bevat water. Urk kwam zo op de Houtribdijk. Nu de
   mediaan van de adressen van de gemeente. De test controleert de afstand tot de hoofdplaats.
+- **Aanmelden** (05-10): de technische teller "n opvoeren in één registratie" staat niet meer op
+  openbare formulieren.
+- **V3-import**: velden met `goType` `integer`, `number` of `boolean` (de JSON-Schema-namen uit
+  Imprint) werden `string`; ze houden nu hun type.
 
 ## [studio/v0.10.0] — 2026-09-28
 Het werk voor het Common Ground-portfolio (pf.common-ground-lab.nl), 22–28 september. Backend:

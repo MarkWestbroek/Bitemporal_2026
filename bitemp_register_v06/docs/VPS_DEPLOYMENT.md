@@ -670,7 +670,7 @@ render-routes voor Imprint (`POST /api/render/svg`, `GET /api/models/{naam}/diag
 (`Dockerfile.render`). `docker-compose.vps.yml` heeft sinds 5 oktober de service `render-svc`
 (geen gepubliceerde poort) en `RENDER_SVC_URL: http://render-svc:8095` op de API.
 
-Uitrollen vraagt twee images. De routes zitten pas in `main` ná `api/v0.8.0`, dus ook de API
+Uitrollen vraagt twee images. De routes zitten in `api/v0.9.0` (release van 6 oktober), dus ook de API
 moet opnieuw. **Let op (05-10):** de VPS draait nog de API van 16 september (`b1fe996`). Een
 nieuwe API-image neemt dus ~224 commits mee, met modelwijzigingen en een `dbsetup`-wijziging die
 bij het opstarten op de productiedatabase draait. Behandel het als release (api 0.9.0, mét een
@@ -680,7 +680,7 @@ Mark 05-10: config wel, uitrol later.
 ```bash
 # lokaal, in bitemp_register_v06 — altijd linux/amd64
 docker build -f Dockerfile.render --platform linux/amd64   -t markwestbroek/bitemp-render-svc:0.1.0 -t markwestbroek/bitemp-render-svc:latest .
-docker build -f Dockerfile.api --platform linux/amd64   -t markwestbroek/bitemp-go-api:<versie> -t markwestbroek/bitemp-go-api:latest .
+docker build -f Dockerfile.api --platform linux/amd64   -t markwestbroek/bitemp-go-api:0.9.0 -t markwestbroek/bitemp-go-api:latest .
 docker push …   # alle vier de tags
 
 # compose naar de VPS en daar:
