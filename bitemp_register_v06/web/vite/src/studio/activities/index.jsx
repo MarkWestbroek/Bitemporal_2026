@@ -86,6 +86,7 @@ import { registreerActiviteitAlsProfieltype } from "./activiteitAlsProfieltype.j
 import "./transformaties.js";
 import "./archimateTransformaties.js";
 import "./oasCanoniekTransformatie.js";
+import "./usecaseTransformaties.js";
 
 registreerActiviteiten([
   // modelleren
