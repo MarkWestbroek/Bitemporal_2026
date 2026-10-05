@@ -664,13 +664,36 @@ Caddy-blokken staan hierboven in `deploy/vps/Caddyfile`. (Het eerdere plan hier 
 `/srv/musicbrain`, MariaDB, Next.js als systemd-service — is vervallen: Imprint
 draait alleen nog op Postgres.)
 
-**Render-API (nog niet op de VPS).** Sinds 30 september 2026 heeft de API de render-routes
-voor Imprint (`POST /api/render/svg`, `GET /api/models/{naam}/diagram.svg`; zie
-`docs/RENDER_API.md`). Die tekenen via de Node-sidecar `render-svc` (`Dockerfile.render`).
-`docker-compose.vps.yml` heeft die service nog niet, dus op de VPS geven de routes een 502.
-Toevoegen: een image `bitemp-render-svc` bouwen en pushen (linux/amd64), een service
-`render-svc` zonder gepubliceerde poort op het netwerk van de API, en `RENDER_SVC_URL:
-http://render-svc:8095` bij de API. Caddy hoeft niets: de routes lopen via de API.
+**Render-API (config klaar, nog niet uitgerold).** Sinds 30 september 2026 heeft de API de
+render-routes voor Imprint (`POST /api/render/svg`, `GET /api/models/{naam}/diagram.svg` en
+`…/views.json`; zie `docs/RENDER_API.md`). Ze tekenen via de Node-sidecar `render-svc`
+(`Dockerfile.render`). `docker-compose.vps.yml` heeft sinds 5 oktober de service `render-svc`
+(geen gepubliceerde poort) en `RENDER_SVC_URL: http://render-svc:8095` op de API.
+
+Uitrollen vraagt twee images. De routes zitten pas in `main` ná `api/v0.8.0`, dus ook de API
+moet opnieuw. **Let op (05-10):** de VPS draait nog de API van 16 september (`b1fe996`). Een
+nieuwe API-image neemt dus ~224 commits mee, met modelwijzigingen en een `dbsetup`-wijziging die
+bij het opstarten op de productiedatabase draait. Behandel het als release (api 0.9.0, mét een
+nieuwe frontend), en maak eerst een backup (§8) en test op de pf-instantie of lokaal. Besluit
+Mark 05-10: config wel, uitrol later.
+
+```bash
+# lokaal, in bitemp_register_v06 — altijd linux/amd64
+docker build -f Dockerfile.render --platform linux/amd64   -t markwestbroek/bitemp-render-svc:0.1.0 -t markwestbroek/bitemp-render-svc:latest .
+docker build -f Dockerfile.api --platform linux/amd64   -t markwestbroek/bitemp-go-api:<versie> -t markwestbroek/bitemp-go-api:latest .
+docker push …   # alle vier de tags
+
+# compose naar de VPS en daar:
+scp deploy/vps/docker-compose.vps.yml <gebruiker>@<VPS-IP>:/srv/omnium/
+cd /srv/omnium
+docker compose -f docker-compose.vps.yml pull api render-svc
+docker compose -f docker-compose.vps.yml up -d api render-svc
+curl -s -X POST http://127.0.0.1:8083/api/render/svg -H 'Content-Type: application/json'   -d '{"taal":"v3","model":{"versie":"1","entiteiten":[{"typenaam":"A"}]}}' | head -c 80
+```
+
+`RENDER_IMAGE` in `.env` is optioneel (standaard `:latest`). Caddy hoeft niets: de routes lopen
+via nginx (`location /`) naar de API, dus ze zijn bereikbaar op `127.0.0.1:8083` en
+`https://app.omnium-ide.nl`. De tweede instantie (`docker-compose.pf.yml`) heeft de sidecar nog niet.
 
 **Plan B (NAS)** blijft `docker-compose.truenas.yml` + `TRUENAS_DEPLOYMENT.md` §4.
 **Plan C** is `docker compose -f docker-compose.split.yml up` op de laptop.

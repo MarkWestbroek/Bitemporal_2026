@@ -178,8 +178,8 @@ docker build -f Dockerfile.render -t bitemp-render-svc .
 ```
 
 `docker-compose.yml` start `render-svc` naast de API, zonder gepubliceerde poort, en zet
-`RENDER_SVC_URL` op de API. **De VPS-deploy (`deploy/vps/docker-compose.vps.yml`) heeft de sidecar
-nog niet**: daar geven de render-routes een 502 tot hij is toegevoegd (zie VPS_DEPLOYMENT §11).
+`RENDER_SVC_URL` op de API. `deploy/vps/docker-compose.vps.yml` heeft de sidecar sinds 05-10 ook, maar is **nog niet
+uitgerold**: daarvoor zijn een render-image en een nieuwe API-image nodig (VPS_DEPLOYMENT §11).
 
 `POST /api/render/svg` is publiek, ook in de PEP (`middleware/authz_pep.go`, `isPubliekPad`).
 Hij rendert alleen wat de aanroeper meestuurt en leest geen registerdata.

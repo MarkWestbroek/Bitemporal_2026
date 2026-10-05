@@ -14,7 +14,7 @@
 # Starten:   docker compose -f docker-compose.vps.yml up -d
 # Bucket:    docker compose -f docker-compose.vps.yml --profile init up minio-init   (eenmalig)
 # Updaten:   docker compose -f docker-compose.vps.yml pull && \
-#            docker compose -f docker-compose.vps.yml up -d --force-recreate api frontend
+#            docker compose -f docker-compose.vps.yml up -d --force-recreate api frontend render-svc
 #            (Met een frontend-image van na 2026-09-21 zoekt nginx de API per verzoek op en is
 #             mee-recreaten van de frontend niet meer nodig; bij een oudere image wel: die
 #             onthoudt het oude API-IP → 502.)
@@ -112,6 +112,8 @@ services:
       # OpenFTV alleen als het authz-profile draait.
       AUTHZ_PDP_ENABLED: ${AUTHZ_PDP_ENABLED:-false}
       OPENFTV_PDP_URL: http://openftv-pdp:8443
+      # Render-API (docs/RENDER_API.md): de SVG wordt getekend door de sidecar hieronder.
+      RENDER_SVC_URL: http://render-svc:8095
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,6 +122,16 @@ services:
     networks:
       - bitemp_net
       - bitemp_auth_net
+
+  # Render-sidecar voor POST /api/render/svg en GET /api/models/{naam}/diagram.svg
+  # (docs/RENDER_API.md). Alleen intern bereikbaar voor de API: geen gepubliceerde poort.
+  # Zonder deze container geven die routes een 502; de rest van Omnium merkt er niets van.
+  render-svc:
+    image: ${RENDER_IMAGE:-markwestbroek/bitemp-render-svc:latest}
+    container_name: bitemp-render-svc
+    restart: unless-stopped
+    networks:
+      - bitemp_net
 
   frontend:
     image: ${FRONTEND_IMAGE:-markwestbroek/bitemp-viz-frontend:latest}

@@ -1719,8 +1719,11 @@ tekenkeuzes: `docs/RENDER_API.md`.
   README en VPS_DEPLOYMENT §11 noemen de render-API en `RENDER_SVC_URL`.
 - **Open:**
   - **API-sleutel** voor niet-publieke modellen (`Authorization: Bearer`, opdracht §5).
-  - **VPS-deploy** van de sidecar: service in `deploy/vps/docker-compose.vps.yml` + `RENDER_SVC_URL`
-    (stappen in VPS_DEPLOYMENT §11). Tot dan geven de render-routes op de VPS een 502.
+  - **VPS-uitrol:** config klaar (05-10: `render-svc` + `RENDER_SVC_URL` in `docker-compose.vps.yml`).
+    Wacht op Marks akkoord: render-image én een nieuwe API-image (routes zitten pas ná `api/v0.8.0`),
+    stappen in VPS_DEPLOYMENT §11. De pf-instantie heeft de sidecar nog niet.
+    **05-10:** de VPS-API is nog van 16-09 (`b1fe996`), dus de uitrol is een release van ~224
+    commits (model + `dbsetup`). Besluit Mark: uitrol later, als release met backup vooraf.
   - **Studio-export overzetten op `diagramsvg`**, zodat Studio en Imprint één tekenaar delen.
   - **Andere talen/profielen** (ArchiMate, BPMN, …), één voor één.
   - **Lijnen die door kaarten lopen** (rechte lijnen). Eventueel orthogonaal routeren.
