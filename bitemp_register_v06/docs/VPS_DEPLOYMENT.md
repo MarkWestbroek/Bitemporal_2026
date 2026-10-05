@@ -664,6 +664,14 @@ Caddy-blokken staan hierboven in `deploy/vps/Caddyfile`. (Het eerdere plan hier 
 `/srv/musicbrain`, MariaDB, Next.js als systemd-service — is vervallen: Imprint
 draait alleen nog op Postgres.)
 
+**Render-API (nog niet op de VPS).** Sinds 30 september 2026 heeft de API de render-routes
+voor Imprint (`POST /api/render/svg`, `GET /api/models/{naam}/diagram.svg`; zie
+`docs/RENDER_API.md`). Die tekenen via de Node-sidecar `render-svc` (`Dockerfile.render`).
+`docker-compose.vps.yml` heeft die service nog niet, dus op de VPS geven de routes een 502.
+Toevoegen: een image `bitemp-render-svc` bouwen en pushen (linux/amd64), een service
+`render-svc` zonder gepubliceerde poort op het netwerk van de API, en `RENDER_SVC_URL:
+http://render-svc:8095` bij de API. Caddy hoeft niets: de routes lopen via de API.
+
 **Plan B (NAS)** blijft `docker-compose.truenas.yml` + `TRUENAS_DEPLOYMENT.md` §4.
 **Plan C** is `docker compose -f docker-compose.split.yml up` op de laptop.
 

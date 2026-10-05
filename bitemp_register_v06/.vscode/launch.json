@@ -13,6 +13,14 @@
             "cwd": "${workspaceFolder}"
         },
         {
+            // Render-sidecar (docs/RENDER_API.md) op 127.0.0.1:8095; start naast de Go API.
+            "name": "Render-svc v06",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/render-svc/server.mjs",
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "Codegen v06: from code endpoint",
             "type": "go",
             "request": "launch",

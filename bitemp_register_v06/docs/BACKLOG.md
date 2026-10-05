@@ -1714,9 +1714,13 @@ tekenkeuzes: `docs/RENDER_API.md`.
   - views.json en diagram.svg werken, met diagram, domein, versie, asOf en LR.
   - De 400- en 404-meldingen verschijnen goed in de widget.
   - De SVG's, ook Overzicht van 110 kB, komen byte-gelijk door Imprints sanitizer.
+- ✅ **Gemerged naar `main` 30-09** (`cf017099`). **05-10:** *Render-svc v06* zit in de F5-compound
+  *Start frontend and debug API v06* (root-`launch.json`), zodat de sidecar niet meer wegvalt;
+  README en VPS_DEPLOYMENT §11 noemen de render-API en `RENDER_SVC_URL`.
 - **Open:**
   - **API-sleutel** voor niet-publieke modellen (`Authorization: Bearer`, opdracht §5).
-  - **VPS-deploy** van de sidecar (`deploy/vps`).
+  - **VPS-deploy** van de sidecar: service in `deploy/vps/docker-compose.vps.yml` + `RENDER_SVC_URL`
+    (stappen in VPS_DEPLOYMENT §11). Tot dan geven de render-routes op de VPS een 502.
   - **Studio-export overzetten op `diagramsvg`**, zodat Studio en Imprint één tekenaar delen.
   - **Andere talen/profielen** (ArchiMate, BPMN, …), één voor één.
   - **Lijnen die door kaarten lopen** (rechte lijnen). Eventueel orthogonaal routeren.

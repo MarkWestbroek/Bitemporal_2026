@@ -39,6 +39,13 @@ go run .
 De API luistert dan lokaal op `http://localhost:8082`. Gebruik het hele package
 (`go run .`), niet alleen het hoofdbestand. Frontend en eventuele devtools hebben
 een afzonderlijke startprocedure; zie de walkthrough en [DEVLOOP](docs/DEVLOOP.md).
+
+**Render-API (SVG van modeldiagrammen, voor Imprint).** `POST /api/render/svg` en
+`GET /api/models/{naam}/diagram.svg` / `…/views.json` (naam + `versie` + `asOf`) tekenen via een
+Node-sidecar. Start die naast de API met `node render-svc/server.mjs` (luistert op
+`127.0.0.1:8095`, de standaard van `RENDER_SVC_URL`), of via F5 met de compound
+*Start frontend and debug API v06*. Zonder sidecar geven deze routes een 502. Contract en
+tekenkeuzes: [RENDER_API](docs/RENDER_API.md).
 Een clean-clone-installatie is in de review nog niet uitgevoerd.
 
 ## Tests and Coverage (VS Code Tasks)
@@ -380,6 +387,7 @@ Codegen valideert nu vooraf en geeft concrete foutregels, onder andere voor:
 In `bitemp_register_v06/.vscode/launch.json` staan launch-configs voor:
 
 - `Go API v06: debug`
+- `Render-svc v06` (render-sidecar voor de render-API, zie [RENDER_API](docs/RENDER_API.md))
 - `Codegen v06: from code endpoint`
 - `Codegen v06: from DB model id`
 - `Codegen v06: from file`

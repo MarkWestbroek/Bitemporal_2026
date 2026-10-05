@@ -102,6 +102,16 @@
             "cwd": "${workspaceFolder}/bitemp_register_v06"
         },
         {
+            // Render-sidecar voor de render-API (docs/RENDER_API.md): tekent de SVG voor
+            // GET /api/models/…/diagram.svg en POST /api/render/svg. Luistert op 127.0.0.1:8095,
+            // de standaard van RENDER_SVC_URL in de Go-API. Breakpoints werken in web/vite/src/diagramsvg.
+            "name": "Render-svc v06",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/bitemp_register_v06/render-svc/server.mjs",
+            "cwd": "${workspaceFolder}/bitemp_register_v06"
+        },
+        {
             "name": "Codegen v06: from code endpoint",
             "type": "go",
             "request": "launch",
@@ -157,7 +167,8 @@
             "name": "Start frontend and debug API v06",
             "configurations": [
                 "Frontend v06: Vite dev server (clean)",
-                "Go API v06: debug"
+                "Go API v06: debug",
+                "Render-svc v06"
             ],
             "stopAll": true
         }

@@ -2,7 +2,8 @@
 
 > Opdracht van Imprint (25-09-2026, `Imprint-engine/docs/design/opdracht-omnium-render-api.md`),
 > met aanvullingen van 29-09. Imprint toont modellen uit Omnium op webpagina's en wil niet
-> zelf tekenen: layout, kleur en notatie horen bij de bron. Status: zie BACKLOG §36.
+> zelf tekenen: layout, kleur en notatie horen bij de bron. Status: gebouwd, door Imprint
+> end-to-end geaccepteerd en op 30-09 gemerged naar `main` (`cf017099`); open punten in BACKLOG §36.
 
 ## Architectuur: één tekenaar
 
@@ -149,6 +150,13 @@ entiteiten, een ontbrekende of dubbele typenaam, een relatie naar een onbekende 
 
 ## Draaien en testen
 
+**Lokaal met F5:** de compound *Start frontend and debug API v06* (in `.vscode/launch.json` in de
+repo-root) start de Vite-devserver, de Go-API (`:8082`, uit `.env`) én de sidecar
+(*Render-svc v06*, `type: node`, dus breakpoints werken in `diagramsvg`). De Go-API vindt de
+sidecar via `RENDER_SVC_URL`, standaard `http://127.0.0.1:8095`; zet die alleen als de sidecar
+elders draait (in Docker: `http://render-svc:8095`). Zonder sidecar geven de render-routes een 502.
+`bitemp_register_v06/.vscode/launch.json` heeft *Render-svc v06* als losse configuratie.
+
 **Postman:** `postman/render-api.postman_collection.json`. De map *Sidecar* werkt zonder DB;
 de map *Via Go-API* test ook de GET. Het resultaat staat als plaatje in de tab **Visualize**.
 
@@ -170,7 +178,8 @@ docker build -f Dockerfile.render -t bitemp-render-svc .
 ```
 
 `docker-compose.yml` start `render-svc` naast de API, zonder gepubliceerde poort, en zet
-`RENDER_SVC_URL` op de API. De VPS-deploy (`deploy/vps`) heeft de sidecar nog niet.
+`RENDER_SVC_URL` op de API. **De VPS-deploy (`deploy/vps/docker-compose.vps.yml`) heeft de sidecar
+nog niet**: daar geven de render-routes een 502 tot hij is toegevoegd (zie VPS_DEPLOYMENT §11).
 
 `POST /api/render/svg` is publiek, ook in de PEP (`middleware/authz_pep.go`, `isPubliekPad`).
 Hij rendert alleen wat de aanroeper meestuurt en leest geen registerdata.
