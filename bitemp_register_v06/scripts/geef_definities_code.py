@@ -9,7 +9,8 @@ waar de definities er al staan:
   - per definitie uit CODES (op naam) zonder die code: een nieuwe versie van de meta mét code
     (alle andere velden ongewijzigd, rel_id erbij — zoals de formuliereditor opslaat);
   - per FormulierDefinitie waarvan de layout `"nieuwFormulier": "<id>"` bevat en die FD een
-    code heeft (of krijgt): een nieuwe versie van de layout met de code i.p.v. het id.
+    code heeft (of krijgt): de oude layout-rij afvoeren en een nieuwe opvoeren met de code i.p.v.
+    het id (de layout is meervoudig: een rel_id alleen maakt een extra rij, niet een nieuwe versie).
 
 Standaardweergaven (is_standaard) worden overgeslagen: WeergaveDefinitie 2 staat live in de
 iframe op commonground.nl en blijft ongemoeid. De replay bevat de echte id's/rel_id's van
@@ -110,9 +111,12 @@ def main():
         nieuw = re.sub(r'("nieuwFormulier"\s*:\s*)"(\d+)"',
                        lambda m: m.group(1) + json.dumps(fd_code.get(m.group(2), m.group(2))), layout["layout_json"])
         if nieuw != layout["layout_json"]:
-            payload = {k: v for k, v in layout.items() if k not in WEG}
+            # De layout is een MEERVOUDIG GE: een opvoer met rel_id maakt geen nieuwe versie maar een
+            # extra rij (gezien op pf 05-10: FD 2/4/5 hadden twee actieve layouts). Dus de oude rij
+            # afvoeren en de nieuwe opvoeren, in dezelfde registratie (zoals de formuliereditor doet).
+            payload = {k: v for k, v in layout.items() if k not in WEG and k != "rel_id"}
             payload["layout_json"] = nieuw
-            payload["rel_id"] = rel_id
+            wijzigingen.append({"afvoer": {"layout": {"formulierdefinitie_id": full["id"], "rel_id": rel_id}}})
             wijzigingen.append({"opvoer": {"layout": payload}})
             beschrijving.append(f"formulier {full['id']}: nieuwFormulier-id → code in de layout")
 

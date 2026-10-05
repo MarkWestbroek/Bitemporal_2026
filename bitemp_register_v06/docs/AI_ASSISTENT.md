@@ -58,6 +58,9 @@ modelleer-assistentie in de Studio.
 
 **Proberen:** replay `registraties-replay-init-formulierdefinitie-voorbeeld-ai-assist-2026-09-28.json`
 (code `voorbeeld-ai-assist`), dan `inhoud.html#/t/initiatieven/nieuw?formulier=voorbeeld-ai-assist`.
+Sinds 05-10 is dat het **volledige aanmeldformulier** (de layout van `aanmelding-portfolio`), met ✨ AI
+bij de vrije tekstvelden (pitch, omschrijving, planning, knelpunten) en de invulhulp bovenaan. Niet
+openbaar: alleen in de inhoud-editor (AVG, zie de uitgangspunten).
 
 ```json
 { "type": "veld", "veld": "toelichting", "label": "Toelichting", "vorm": "ai-assist",
@@ -125,6 +128,25 @@ geeft een nieuw, volledig voorstel. In het AI-veld (`ai-assist`) werkt dat net z
   de optie (`laag 5 (interactie)` → *Laag 5*). Bij twijfel wordt er niets gekozen.
 - Het model mag voor keuzelijsten de best passende optie afleiden als de bron het duidelijk
   beschrijft; voor namen, cijfers en feiten blijft het streng.
+
+**Hoe het werkt (geen vorm, maar een paneel op formulierniveau):** `NieuwFormulierPagina` zet
+`AiInvulhulp` boven elk niet-openbaar formulier in de nieuw-modus, met de layout en de velddefinities
+van het schema.
+1. `invulbareVelden` loopt de layout af. Per veld neemt hij het label, de beschrijving (die van het
+   formulier, anders die uit het model), het type en de opties van een keuzelijst mee. Een
+   enum-lijst (`CG_laag`, `EnumLijst`) wordt een lijst met keuzes.
+2. `antwoordSchema` maakt daar een JSON-schema van (`veld_1` … `veld_n`, elk een waarde of `null`),
+   en `bouwInvulVraag` maakt de vraag: de veldbeschrijvingen plus de bron, gemarkeerd als data.
+3. Het model antwoordt met JSON. `naarVoorstellen` toetst dat en zet het om naar voorstellen; jij
+   kiest per veld.
+
+Het formulier hoeft daarvoor niets te weten. Elk formulier krijgt de invulhulp zonder extra
+instellingen, en de beschrijvingen en keuzelijsten die er al zijn, sturen het model.
+
+**Nog niet:** lijsten en verwijzingen. Domeinen, gemeenten, API-standaarden, organisaties en de
+bijdragen (matrix) vult de invuller zelf in. Een mogelijke uitbreiding: voor referentielijsten (domein,
+gemeente, API-standaard) de namen als opties meegeven en het antwoord terugzetten naar id's, en
+voor de matrix per rij een keuze.
 
 **Code:** `shared/ai/aiInvulhulp.js` (puur, getest) en `components/editor/AiInvulhulp.jsx`.
 

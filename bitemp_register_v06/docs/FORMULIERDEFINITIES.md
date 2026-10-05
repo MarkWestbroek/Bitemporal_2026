@@ -201,10 +201,13 @@ dus het is geen tooltip die alleen bij aanwijzen verschijnt.
 **Model:** `docs/Model files (V3)/configuratie 2026-09-28 Uitleg — v3-model.json`.
 
 **Proberen:**
-1. Speel de replay `registraties-replay-init-uitleg-en-voorbeeldformulier-2026-09-28.json` af:
+1. Speel de replay `registraties-replay-init-uitleg-en-voorbeeldformulier-2026-09-28.json` af. Het
+   formulier daarin heet sinds 05-10 *Aanmelding portfolio Common Ground* (code
+   `aanmelding-portfolio`; op pf FD 10, het openbare aanmeldformulier):
    zes van soort inhoud en dertien van soort vorm (eerst gelijk aan het register; `vorm-nl-map`
-   en twee inhoud-uitleggen ook in het Engels), plus het formulier `voorbeeld-uitleg`.
-2. Open `inhoud.html#/t/initiatieven/nieuw?formulier=voorbeeld-uitleg`.
+   en twee inhoud-uitleggen ook in het Engels), plus het formulier.
+2. Open `inhoud.html#/t/initiatieven/nieuw?formulier=aanmelding-portfolio`, of
+   `aanmelden.html?formulier=aanmelding-portfolio` als het in `OPENBARE_FORMULIEREN` staat.
 
 ## 3. Widgets
 

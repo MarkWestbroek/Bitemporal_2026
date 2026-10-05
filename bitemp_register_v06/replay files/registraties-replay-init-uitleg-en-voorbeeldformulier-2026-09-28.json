@@ -2,7 +2,7 @@
   "version": 1,
   "exported_at": "2026-09-28T21:00:00Z",
   "source": "handmatig (Claude-sessie 28-09-2026)",
-  "description": "Eerste uitleglijst (entiteit Uitleg, configuratie-model 28-09-2026; code + taal is het adres): zes van soort inhoud, dertien van soort vorm (vorm-<naam>, de bediening van de vormen, eerst gelijk aan het vormenregister), en het voorbeeldformulier 'voorbeeld-uitleg' dat ze gebruikt: code uit de lijst op type, CG-laag, fase, bijdragen en API-standaarden; een eigen tekst op planningsinfo en de realiserende gemeenten; de bediening komt van de vormen (lagenplaatje, kaart, periode), nu uit de lijst. Vereist de backend met Uitleg. Proberen: inhoud.html#/t/initiatieven/nieuw?formulier=voorbeeld-uitleg. Id's als plaatshouder.",
+  "description": "Eerste uitleglijst (entiteit Uitleg, configuratie-model 28-09-2026; code + taal is het adres): zes van soort inhoud, dertien van soort vorm (vorm-<naam>, de bediening van de vormen, eerst gelijk aan het vormenregister), en het formulier 'Aanmelding portfolio Common Ground' (code aanmelding-portfolio, op pf FD 10 en openbaar) dat ze gebruikt: code uit de lijst op type, CG-laag, fase, bijdragen en API-standaarden; een eigen tekst op planningsinfo en de realiserende gemeenten; de bediening komt van de vormen (lagenplaatje, kaart, periode), nu uit de lijst. Vereist de backend met Uitleg. Proberen: aanmelden.html?formulier=aanmelding-portfolio (als openbaar) of inhoud.html#/t/initiatieven/nieuw?formulier=aanmelding-portfolio. Id's als plaatshouder.",
   "count": 20,
   "entries": [
     {
@@ -1047,11 +1047,11 @@
       "tijdstip": "2026-09-28T21:00:00Z",
       "request_path": "/registratie/",
       "request_method": "POST",
-      "description": "FormulierDefinitie 'Voorbeeld: uitleg bij vragen' (code voorbeeld-uitleg)",
+      "description": "FormulierDefinitie 'Aanmelding portfolio Common Ground' (code aanmelding-portfolio)",
       "request_body": {
         "registratie": {
           "registratietype": "registratie",
-          "opmerking": "FormulierDefinitie 'Voorbeeld: uitleg bij vragen'"
+          "opmerking": "FormulierDefinitie 'Aanmelding portfolio Common Ground' (code aanmelding-portfolio)"
         },
         "wijzigingen": [
           {
@@ -1065,9 +1065,9 @@
             "opvoer": {
               "formulierdefinitie_meta": {
                 "formulierdefinitie_id": "$nieuw.fd",
-                "naam": "Voorbeeld: uitleg bij vragen",
-                "code": "voorbeeld-uitleg",
-                "beschrijving": "Voorbeeld van het (i)-rondje: uitleg uit de uitleglijst (code + taal), een eigen tekst bij één vraag, en de bediening van de vorm. Zelfde vragen als 'Aanmelding initiatief (vormen v2)'.",
+                "naam": "Aanmelding portfolio Common Ground",
+                "code": "aanmelding-portfolio",
+                "beschrijving": "Meld hier een initiatief aan voor het Common Ground-portfolio. Beantwoord de vragen zo volledig mogelijk; velden met * zijn verplicht. Na verzending beoordeelt het portfolioteam de aanmelding; daarna wordt het initiatief zichtbaar in het portfolio.",
                 "doeltype": "Initiatief",
                 "status": "actief",
                 "is_standaard": false
