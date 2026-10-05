@@ -67,8 +67,8 @@ dat, en forceert `git branch -D` het (met opzet).
 - Backend: **`api/v0.9.0`** (2026-10-06: render-API voor modeldiagrammen met de sidecar
   `render-svc`; geen brekende wijzigingen); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: image **`bitemp-render-svc:0.1.0`** (eerste uitgave, 2026-10-06); nog zonder
-  eigen tag-prefix, zie [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md) §4.2a.
+- Render-sidecar: **`render/v0.1.0`** (eerste uitgave, 2026-10-06; image
+  `bitemp-render-svc:0.1.0`), zie [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md) §4.2a.
 - Deze nummers zijn óók de Docker-image-tags (zonder `v`): zie
   [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md).
 
@@ -89,6 +89,7 @@ welk component het nummer slaat.
 | Frontend / **Studio** | `web/vite/` (Studio + inhoud-editor + publicatie + IDE) | `package.json` `"version"` | `studio/` |
 | **Backend** (Go API) | Go-code buiten `web/` (`model/`, `handlers/`, `dynql/`, `dbsetup/`, …) | git-tag (evt. later een `VERSION`-bestand) | `api/` |
 | **Generator** (codegen) | `cmd/codegen/` | git-tag | `codegen/` |
+| **Render-sidecar** | `render-svc/` (+ de tekenaar `web/vite/src/diagramsvg`) | git-tag | `render/` |
 
 **Slash, geen hyphen.** We schrijven `studio/v0.4.0`, niet `studio-v0.4.0`. Redenen:
 - Git behandelt `/` als ref-hiërarchie (`refs/tags/studio/…`), dus `git tag -l 'studio/*'`

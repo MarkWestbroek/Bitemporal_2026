@@ -73,13 +73,16 @@ Zie [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
 ### Uitrol
 
 - **Drie images**: `bitemp-go-api:0.9.0`, `bitemp-viz-frontend:0.11.0` en, nieuw,
-  `bitemp-render-svc:0.1.0` (`docs/DOCKER_RELEASE.md` §4, `docs/VPS_DEPLOYMENT.md`).
+  `bitemp-render-svc:0.1.0` (git-tag `render/v0.1.0`; `docs/DOCKER_RELEASE.md` §4,
+  `docs/VPS_DEPLOYMENT.md`).
 - **app.omnium-ide.nl draait nog de API van 16 september.** Een uitrol daar neemt dus ook api
   0.7.0 en 0.8.0 mee. Lees daarvan *Brekend* en *Gewijzigd* hieronder, maak eerst een backup en
   test op de pf-instantie of lokaal. De nieuwe tabellen en kolommen van 0.8.0 worden bij het
   opstarten aangemaakt (`[dbsetup]` in de log).
-- **pf** bouwt de API uit de git-checkout; de render-routes geven daar 502 zolang de sidecar
-  ontbreekt.
+- **pf.common-ground-lab.nl is bij:** `/version` gaf op 6 oktober commit `d2340e69` (5 oktober),
+  dus api 0.8.0 plus de render-routes. Deze release heeft daar geen databasegevolg; de data
+  blijft onaangeroerd. pf bouwt de API uit de git-checkout (`deploy/vps/pf.sh`); de render-routes
+  geven er 502 zolang de sidecar niet in `docker-compose.pf.yml` staat.
 - **Na het uitrollen:** controleer `/version`, de header `API-Version: 0.9.0` en één
   `POST /api/render/svg` (voorbeeld in `VPS_DEPLOYMENT.md`).
 

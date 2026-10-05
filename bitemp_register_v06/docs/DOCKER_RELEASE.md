@@ -134,8 +134,9 @@ standaard proxiet nginx in dezelfde image door naar de API-container.
 
 Nodig voor de render-API (`POST /api/render/svg`, zie [`RENDER_API.md`](RENDER_API.md)). De
 sidecar tekent met de code uit `web/vite/src/diagramsvg` en heeft een eigen nummer, begonnen bij
-`0.1.0`. Hij krijgt een nieuw nummer wanneer `render-svc/` of de tekenaar verandert; er is nog
-geen eigen git-tag-prefix voor.
+`0.1.0`. Hij krijgt een nieuw nummer wanneer `render-svc/` of de tekenaar verandert. De git-tag
+heeft prefix `render/` (`render/v0.1.0`, zie `versiebeheer.md` §7); de render-*routes* in de Go-API
+vallen gewoon onder `api/`.
 
 ```bash
 RENDER_VERSIE=0.1.0
@@ -182,7 +183,7 @@ FRONTEND_IMAGE=markwestbroek/bitemp-viz-frontend:0.5.0
 3b. [ ] `render-svc/` of `web/vite/src/diagramsvg` gewijzigd? → nieuw nummer voor de render-sidecar (§4.2a).
 4. [ ] Bouw de images met versie-tag **én** `latest`; controleer `linux/amd64`.
 5. [ ] Push alle tags.
-6. [ ] Zet de annotated git-tag(s): `git tag -a studio/v0.6.0 -m "…"` / `api/v0.5.1`, en push die.
+6. [ ] Zet de annotated git-tag(s): `git tag -a studio/v0.6.0 -m "…"` / `api/v0.5.1` / `render/v0.1.0`, en push die.
 7. [ ] Rol uit op de NAS en doe de smoke-test (§6).
 8. [ ] Ruim oude tags op volgens §6 van [`docker.md`](../docker.md) §11 (laatste ~10 bewaren).
 
