@@ -243,6 +243,18 @@ export const IconCMMN05 = (p) => (
   </svg>
 );
 
+/* GraphQL (0.5): een zeshoek van typen met de query-driehoek erin — de
+   graaf waar een query doorheen loopt. Knopen gevuld, als de OAS-bolletjes. */
+export const IconGraphQL05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M12 3 19.8 7.5v9L12 21l-7.8-4.5v-9Z" />
+    <path d="M12 3 4.2 16.5h15.6Z" />
+    <circle cx="12" cy="3" r="1.3" {...vul} />
+    <circle cx="4.2" cy="16.5" r="1.3" {...vul} />
+    <circle cx="19.8" cy="16.5" r="1.3" {...vul} />
+  </svg>
+);
+
 /* ERD (0.5): twee entiteitsdozen, verbonden door de kraaienpoot zelf —
    het symbool dat deze notatie herkenbaar maakt. */
 export const IconERD05 = (p) => (

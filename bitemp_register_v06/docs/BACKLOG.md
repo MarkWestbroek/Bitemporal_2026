@@ -1727,3 +1727,22 @@ tekenkeuzes: `docs/RENDER_API.md`.
   - **Studio-export overzetten op `diagramsvg`**, zodat Studio en Imprint één tekenaar delen.
   - **Andere talen/profielen** (ArchiMate, BPMN, …), één voor één.
   - **Lijnen die door kaarten lopen** (rechte lijnen). Eventueel orthogonaal routeren.
+
+## 37. GraphQL-schema-profiel (M2) op de diagram-motor (2026-10-02)
+
+**Aanleiding:** de GBO-discussie over GraphQL en FTV (analyse 30-09). Ontwerp, besluiten en wat er
+gebouwd is: `docs/plans/2026-10-01 GraphQL-schema-profiel (M2) op de diagram-motor (voorstel).md`.
+
+- ✅ **Stap 1 + SDL gebouwd 02-10** (`feat/graphql-profiel`): descriptor, type-expressies, eigen
+  SDL-parser en -serializer, adapter met afgeleide veldlijnen, schema-validatie, activiteit "GraphQL"
+  (preview via Modelleren). 24 unit-tests; GBO-schema byte-gelijk heen en terug.
+- Besluiten Mark 02-10: naamgeving `kort` (uniek binnen een domein); argumenten en filters leven
+  in het GraphQL-model, als aanvulling op het logisch model.
+- Open:
+  - **Introspectie-import** (het draaiende `dynql`-schema tekenen) en `extend …`.
+  - **Projectie canoniek → GraphQL** met de padtabel als kruisverbanden (stap 3), en waar de
+    aanvullingen (argumenten, filters) bij herprojectie blijven.
+  - **Drift-check** introspectie versus projectie, digest op het schema-element (stap 4).
+  - **Toegangsregel → veldsleutels** via koppelingen, bundel-compiler leest die (stap 5).
+  - **Herafleiden van veldlijnen bij elke veldwijziging** in de editor, en een meldingenpaneel
+    voor `valideerSchema`.

@@ -34,6 +34,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   - Use case-profiel: eigenschap *Toelichting* op actor, use case en systeemkader; een
     systeemkader mag een systeemkader bevatten; een lange actornaam breekt niet meer op de
     breedte van de strekfiguur.
+- **GraphQL-schema-profiel** (02-10): het typesysteem van GraphQL als diagramprofiel (M2) op de
+  generieke motor (`diagramprofielen/graphql`, activiteit "GraphQL", preview via Modelleren).
+  - Elementtypen: schema, type, interface, union, enum, input, scalar en directive, alle op `class-box`.
+  - Importeer en exporteer SDL (`.graphql`) met een eigen parser, zonder dependency. De export is
+    deterministisch; schema-meldingen komen als commentaar bovenaan.
+  - Veld- en argumentlijnen worden afgeleid uit de velden; de kardinaliteit volgt uit `!` en `[ ]`.
+  - Schema-validatie: onbekende typen, typen op de verkeerde positie, ontbrekende interface-velden,
+    lege unions en enums, en de query-root.
 - **Kaart van Nederland: toetsenbord en zoeken** (28-09).
   - Pijltjes lopen naar de buurstip in die richting, niet meer alfabetisch.
   - Shift+↑/↓ gaat per beginletter, Shift+←/→ alfabetisch.
