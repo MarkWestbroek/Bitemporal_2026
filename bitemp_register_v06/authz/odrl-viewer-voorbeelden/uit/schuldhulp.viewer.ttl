@@ -1,0 +1,158 @@
+# Inzage inkomen bij schuldhulp — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v1.
+# Gegenereerd; niet met de hand wijzigen. Bron in klare taal: beleid/schuldhulp.toegangsspraak
+#
+#   Beleid "Inzage inkomen bij schuldhulp".
+#     Geldig vanaf 1 mei 2026.
+#     Grondslag: de Wet gemeentelijke schuldhulpverlening.
+#     Doel: "schuldhulpverlening".
+#
+#     Begrippen.
+#       Een schuldhulpverlener is: iemand met rol "schuldhulpverlener".
+#       Inkomensgegevens zijn: alle gegevens van het inkomen van een natuurlijk persoon.
+#
+#     Regel "inzage bij lopend dossier".
+#       Een schuldhulpverlener mag de inkomensgegevens bekijken
+#       als aan alle volgende voorwaarden is voldaan:
+#         - het doel van de aanvraag is "schuldhulpverlening";
+#         - de achternaam van de naam van de betrokkene begint met "A";
+#       waarbij: elke raadpleging wordt vastgelegd in het logboek.
+#
+#     Regel "geen export".
+#       Een schuldhulpverlener mag de inkomensgegevens niet exporteren.
+
+@prefix odrl:   <http://www.w3.org/ns/odrl/2/> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct:    <http://purl.org/dc/terms/> .
+@prefix prov:   <http://www.w3.org/ns/prov#> .
+@prefix dpv:    <https://w3id.org/dpv#> .
+@prefix schema: <https://schema.org/> .
+@prefix apnl:   <https://standaarden.overheid.nl/odrl-ap-nl/> .
+@prefix ts:     <https://omnium.example/toegangsspraak/> .
+@prefix reg:    <https://omnium.example/register/voorbeeld/> .
+@prefix b:      <https://omnium.example/toegangsbeleid/inzage-inkomen-bij-schuldhulp/> .
+
+# ── Het beleid ────────────────────────────────────────────────────────────────
+
+b:beleid a odrl:Set ;
+    dct:title "Inzage inkomen bij schuldhulp"@nl ;
+    odrl:uid b:beleid ;
+    odrl:profile apnl:profiel , ts:profiel ;
+    dct:description "Geschreven in Toegangsspraak (klare taal) en daaruit vertaald naar ODRL. Elke regel draagt zijn oorspronkelijke zin als beschrijving. Doel: schuldhulpverlening. Grondslag: de Wet gemeentelijke schuldhulpverlening."@nl ;
+    dct:issued "2026-10-05"^^xsd:date ;
+    schema:validFrom "2026-05-01"^^xsd:date ;
+    odrl:conflict odrl:prohibit ;
+    dpv:hasLegalBasis b:grondslag ;
+    odrl:permission b:regel-inzage-bij-lopend-dossier ;
+    odrl:prohibition b:regel-geen-export .
+
+# ── Regels en plichten ────────────────────────────────────────────────────────
+
+b:regel-inzage-bij-lopend-dossier a odrl:Permission ;
+    dct:title "inzage bij lopend dossier"@nl ;
+    odrl:uid b:regel-inzage-bij-lopend-dossier ;
+    dct:description "Een schuldhulpverlener mag de inkomensgegevens bekijken als aan alle volgende voorwaarden is voldaan: - het doel van de aanvraag is \"schuldhulpverlening\"; - de achternaam van de naam van de betrokkene begint met \"A\"; waarbij: elke raadpleging wordt vastgelegd in het logboek."@nl ;
+    odrl:action b:handeling-inzage-bij-lopend-dossier ;
+    odrl:assignee b:groep-schuldhulpverlener ;
+    odrl:target b:gegevens-inkomensgegevens ;
+    odrl:constraint b:vw-de-achternaam-van-de-naam-van-de-betrokkene-begint-met-a ;
+    odrl:duty b:plicht-elke-raadpleging-wordt-vastgelegd-in-het-logboek .
+
+b:handeling-inzage-bij-lopend-dossier a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-rol-schuldhulpverlener , b:vw-doel-schuldhulpverlening .
+
+b:plicht-elke-raadpleging-wordt-vastgelegd-in-het-logboek a odrl:Duty ;
+    dct:title "elke raadpleging wordt vastgelegd in het logboek"@nl ;
+    odrl:uid b:plicht-elke-raadpleging-wordt-vastgelegd-in-het-logboek ;
+    odrl:action ts:log .
+
+b:regel-geen-export a odrl:Prohibition ;
+    dct:title "geen export"@nl ;
+    odrl:uid b:regel-geen-export ;
+    dct:description "Een schuldhulpverlener mag de inkomensgegevens niet exporteren."@nl ;
+    odrl:action b:handeling-geen-export ;
+    odrl:assignee b:groep-schuldhulpverlener ;
+    odrl:target b:gegevens-inkomensgegevens .
+
+b:handeling-geen-export a odrl:Action ;
+    rdf:value ts:exporteren ;
+    odrl:refinement b:vw-aanvrager-rol-schuldhulpverlener .
+
+# ── Voorwaarden (benoemd, dus herbruikbaar en realiseerbaar) ──────────────────
+
+b:vw-doel-schuldhulpverlening a odrl:Constraint ;
+    rdfs:label "het doel van de aanvraag is \"schuldhulpverlening\""@nl ;
+    odrl:leftOperand odrl:purpose ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand b:doel-schuldhulpverlening .
+
+b:vw-aanvrager-rol-schuldhulpverlener a odrl:Constraint ;
+    rdfs:label "de rol van de aanvrager is \"schuldhulpverlener\""@nl ;
+    odrl:leftOperand apnl:rolAanvrager ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "schuldhulpverlener" .
+
+b:vw-de-achternaam-van-de-naam-van-de-betrokkene-begint-met-a a odrl:Constraint ;
+    rdfs:label "de achternaam van de naam van de betrokkene begint met \"A\""@nl ;
+    odrl:leftOperand ts:betrokkene.naam.achternaam ;
+    odrl:operator ts:begintMet ;
+    odrl:rightOperand "A" .
+
+# ── Wie en wat: begrippen uit de beleidstekst ─────────────────────────────────
+
+b:grondslag a dct:LegalResource ;
+    rdfs:label "de Wet gemeentelijke schuldhulpverlening"@nl ;
+    skos:note "Grondslag zoals in de beleidstekst genoemd; nog geen verwijzing naar wetten.overheid.nl."@nl .
+
+b:doel-schuldhulpverlening a skos:Concept ;
+    rdfs:label "schuldhulpverlening"@nl ;
+    skos:definition "Doelbinding \"schuldhulpverlening\" zoals genoemd in het beleid."@nl .
+
+b:groep-schuldhulpverlener a odrl:PartyCollection ;
+    rdfs:label "schuldhulpverlener"@nl ;
+    skos:definition "iemand met rol \"schuldhulpverlener\""@nl ;
+    odrl:refinement b:vw-aanvrager-rol-schuldhulpverlener .
+
+b:gegevens-inkomensgegevens a odrl:AssetCollection ;
+    rdfs:label "inkomensgegevens"@nl ;
+    skos:definition "alle gegevens van het inkomen van een natuurlijk persoon"@nl .
+
+# ── Het register: paden als assets met partOf ─────────────────────────────────
+
+reg:NatuurlijkPersoon a odrl:Asset , ts:Entiteit ;
+    rdfs:label "natuurlijk persoon"@nl ;
+    dct:identifier "NatuurlijkPersoon" .
+
+reg:NatuurlijkPersoon.Inkomen a odrl:Asset , ts:Gegevenselement ;
+    rdfs:label "het inkomen van een natuurlijk persoon"@nl ;
+    dct:identifier "NatuurlijkPersoon.Inkomen" ;
+    odrl:partOf reg:NatuurlijkPersoon , b:gegevens-inkomensgegevens .
+
+# ── Woordenschat van Toegangsspraak (labels komen uit de klare taal) ──────────
+
+ts:Entiteit a rdfs:Class , skos:Concept ;
+    rdfs:label "entiteit"@nl .
+
+ts:Gegevenselement a rdfs:Class , skos:Concept ;
+    rdfs:label "gegevenselement"@nl .
+
+ts:betrokkene.naam.achternaam a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "de achternaam van de naam van de betrokkene"@nl ;
+    skos:definition "Gegeven van de persoon over wie de gegevens gaan; pas te toetsen met de gegevens in handen."@nl .
+
+ts:begintMet a odrl:Operator , skos:Concept ;
+    rdfs:label "begint met"@nl .
+
+ts:log a odrl:Action , skos:Concept ;
+    rdfs:label "elke raadpleging wordt vastgelegd in het logboek"@nl .
+
+ts:exporteren a odrl:Action , skos:Concept ;
+    rdfs:label "exporteren"@nl ;
+    odrl:includedIn odrl:use .
+
+ts:profiel a odrl:Profile ;
+    dct:title "Toegangsspraak-woordenschat (Omnium Studio, werkversie)"@nl ;
+    dct:description "De termen die Toegangsspraak nodig heeft bovenop ODRL 2.2 en ODRL-AP-NL: operanden uit de van-vorm, een paar vergelijkingen en handelingen. Elk label is de zinsnede uit de klare taal."@nl .

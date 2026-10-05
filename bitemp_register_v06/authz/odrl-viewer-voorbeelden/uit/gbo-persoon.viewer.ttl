@@ -1,0 +1,335 @@
+# GBO persoon — Toegangsspraak → ODRL (ODRL-AP-NL), regelset toegangsspraak-naar-odrl-ap-nl v1.
+# Gegenereerd; niet met de hand wijzigen. Bron in klare taal: beleid/gbo-persoon.toegangsspraak
+#
+#   Beleid "GBO persoon".
+#     Doel: "inkomensverstrekking".
+#
+#     Begrippen.
+#       Een afnemer is: iemand met rol "afnemer".
+#       Een geautoriseerde afnemer is: iemand met autorisatie "naam-en-adres".
+#       Inkomensgegevens zijn: alle gegevens van het inkomen van een persoon.
+#
+#     Regel "persoon op bsn".
+#       Een afnemer mag alle gegevens van een persoon bekijken
+#       als er een toestemming voor de betrokkene is.
+#
+#     Regel "naam en adres".
+#       Een geautoriseerde afnemer mag de naam van een persoon bekijken.
+#
+#     Regel "adres".
+#       Een geautoriseerde afnemer mag het adres van een persoon bekijken.
+#
+#     Regel "inkomens tot en met 2024".
+#       Een afnemer mag de inkomens van een persoon bekijken
+#       als het jaar van de aanvraag ten hoogste 2024 is.
+#
+#     Regel "inkomen velden".
+#       Een geautoriseerde afnemer mag de inkomensgegevens bekijken.
+
+@prefix odrl:   <http://www.w3.org/ns/odrl/2/> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct:    <http://purl.org/dc/terms/> .
+@prefix prov:   <http://www.w3.org/ns/prov#> .
+@prefix dpv:    <https://w3id.org/dpv#> .
+@prefix schema: <https://schema.org/> .
+@prefix apnl:   <https://standaarden.overheid.nl/odrl-ap-nl/> .
+@prefix ts:     <https://omnium.example/toegangsspraak/> .
+@prefix reg:    <https://omnium.example/register/gbo/> .
+@prefix b:      <https://omnium.example/toegangsbeleid/gbo-persoon/> .
+
+# ── Het beleid ────────────────────────────────────────────────────────────────
+
+b:beleid a odrl:Set ;
+    dct:title "GBO persoon"@nl ;
+    odrl:uid b:beleid ;
+    odrl:profile apnl:profiel , ts:profiel ;
+    dct:description "Geschreven in Toegangsspraak (klare taal) en daaruit vertaald naar ODRL. Elke regel draagt zijn oorspronkelijke zin als beschrijving. Doel: inkomensverstrekking."@nl ;
+    dct:issued "2026-10-05"^^xsd:date ;
+    odrl:conflict odrl:prohibit ;
+    odrl:permission b:regel-persoon-op-bsn , b:regel-naam-en-adres , b:regel-adres , b:regel-inkomens-tot-en-met-2024 , b:regel-inkomen-velden .
+
+# ── Regels en plichten ────────────────────────────────────────────────────────
+
+b:regel-persoon-op-bsn a odrl:Permission ;
+    dct:title "persoon op bsn"@nl ;
+    odrl:uid b:regel-persoon-op-bsn ;
+    dct:description "Een afnemer mag alle gegevens van een persoon bekijken als er een toestemming voor de betrokkene is."@nl ;
+    odrl:action b:handeling-persoon-op-bsn ;
+    odrl:assignee b:groep-afnemer ;
+    odrl:target reg:Persoon ;
+    odrl:constraint b:vw-er-is-een-toestemming-voor-de-betrokkene .
+
+b:handeling-persoon-op-bsn a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-rol-afnemer , b:vw-doel-inkomensverstrekking , b:anker-persoon-op-bsn .
+
+b:regel-naam-en-adres a odrl:Permission ;
+    dct:title "naam en adres"@nl ;
+    odrl:uid b:regel-naam-en-adres ;
+    dct:description "Een geautoriseerde afnemer mag de naam van een persoon bekijken."@nl ;
+    odrl:action b:handeling-naam-en-adres ;
+    odrl:assignee b:groep-geautoriseerde-afnemer ;
+    odrl:target reg:Persoon.Naam .
+
+b:handeling-naam-en-adres a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-autorisatie-naam-en-adres , b:vw-doel-inkomensverstrekking , b:anker-naam-en-adres .
+
+b:regel-adres a odrl:Permission ;
+    dct:title "adres"@nl ;
+    odrl:uid b:regel-adres ;
+    dct:description "Een geautoriseerde afnemer mag het adres van een persoon bekijken."@nl ;
+    odrl:action b:handeling-adres ;
+    odrl:assignee b:groep-geautoriseerde-afnemer ;
+    odrl:target reg:Persoon.Adres .
+
+b:handeling-adres a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-autorisatie-naam-en-adres , b:vw-doel-inkomensverstrekking , b:anker-adres .
+
+b:regel-inkomens-tot-en-met-2024 a odrl:Permission ;
+    dct:title "inkomens tot en met 2024"@nl ;
+    odrl:uid b:regel-inkomens-tot-en-met-2024 ;
+    dct:description "Een afnemer mag de inkomens van een persoon bekijken als het jaar van de aanvraag ten hoogste 2024 is."@nl ;
+    odrl:action b:handeling-inkomens-tot-en-met-2024 ;
+    odrl:assignee b:groep-afnemer ;
+    odrl:target reg:Persoon.Inkomen .
+
+b:handeling-inkomens-tot-en-met-2024 a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-rol-afnemer , b:vw-het-jaar-van-de-aanvraag-is-ten-hoogste-2024 , b:vw-doel-inkomensverstrekking , b:anker-inkomens-tot-en-met-2024 .
+
+b:regel-inkomen-velden a odrl:Permission ;
+    dct:title "inkomen velden"@nl ;
+    odrl:uid b:regel-inkomen-velden ;
+    dct:description "Een geautoriseerde afnemer mag de inkomensgegevens bekijken."@nl ;
+    odrl:action b:handeling-inkomen-velden ;
+    odrl:assignee b:groep-geautoriseerde-afnemer ;
+    odrl:target b:gegevens-inkomensgegevens .
+
+b:handeling-inkomen-velden a odrl:Action ;
+    rdf:value odrl:read ;
+    odrl:refinement b:vw-aanvrager-autorisatie-naam-en-adres , b:vw-doel-inkomensverstrekking , b:anker-inkomen-velden .
+
+# ── Voorwaarden (benoemd, dus herbruikbaar en realiseerbaar) ──────────────────
+
+b:vw-doel-inkomensverstrekking a odrl:Constraint ;
+    rdfs:label "het doel van de aanvraag is \"inkomensverstrekking\""@nl ;
+    odrl:leftOperand odrl:purpose ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand b:doel-inkomensverstrekking .
+
+b:vw-aanvrager-rol-afnemer a odrl:Constraint ;
+    rdfs:label "de rol van de aanvrager is \"afnemer\""@nl ;
+    odrl:leftOperand apnl:rolAanvrager ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "afnemer" .
+
+b:vw-er-is-een-toestemming-voor-de-betrokkene a odrl:Constraint ;
+    rdfs:label "er is een toestemming voor de betrokkene"@nl ;
+    odrl:leftOperand ts:bestaat.toestemming ;
+    odrl:operator ts:bestaat ;
+    odrl:rightOperand true .
+
+b:vw-aanvrager-autorisatie-naam-en-adres a odrl:Constraint ;
+    rdfs:label "de autorisatie van de aanvrager is \"naam-en-adres\""@nl ;
+    odrl:leftOperand ts:aanvrager.autorisatie ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand "naam-en-adres" .
+
+b:vw-het-jaar-van-de-aanvraag-is-ten-hoogste-2024 a odrl:Constraint ;
+    rdfs:label "het jaar van de aanvraag is ten hoogste 2024"@nl ;
+    odrl:leftOperand ts:aanvraag.jaar ;
+    odrl:operator odrl:lteq ;
+    odrl:rightOperand 2024 .
+
+b:anker-persoon-op-bsn a odrl:Constraint , dpv:TechnicalMeasure ;
+    rdfs:label "het verzoek voldoet aan de Rego-module \"persoon op bsn\""@nl ;
+    odrl:leftOperand apnl:verwerkingsverzoek ;
+    odrl:operator apnl:conformsToPolicy ;
+    odrl:rightOperand b:rego-persoon-op-bsn ;
+    prov:wasDerivedFrom b:regel-persoon-op-bsn , b:vw-aanvrager-rol-afnemer , b:vw-er-is-een-toestemming-voor-de-betrokkene .
+
+b:anker-naam-en-adres a odrl:Constraint , dpv:TechnicalMeasure ;
+    rdfs:label "het verzoek voldoet aan de Rego-module \"naam en adres\""@nl ;
+    odrl:leftOperand apnl:verwerkingsverzoek ;
+    odrl:operator apnl:conformsToPolicy ;
+    odrl:rightOperand b:rego-naam-en-adres ;
+    prov:wasDerivedFrom b:regel-naam-en-adres , b:vw-aanvrager-autorisatie-naam-en-adres .
+
+b:anker-adres a odrl:Constraint , dpv:TechnicalMeasure ;
+    rdfs:label "het verzoek voldoet aan de Rego-module \"adres\""@nl ;
+    odrl:leftOperand apnl:verwerkingsverzoek ;
+    odrl:operator apnl:conformsToPolicy ;
+    odrl:rightOperand b:rego-adres ;
+    prov:wasDerivedFrom b:regel-adres , b:vw-aanvrager-autorisatie-naam-en-adres .
+
+b:anker-inkomens-tot-en-met-2024 a odrl:Constraint , dpv:TechnicalMeasure ;
+    rdfs:label "het verzoek voldoet aan de Rego-module \"inkomens tot en met 2024\""@nl ;
+    odrl:leftOperand apnl:verwerkingsverzoek ;
+    odrl:operator apnl:conformsToPolicy ;
+    odrl:rightOperand b:rego-inkomens-tot-en-met-2024 ;
+    prov:wasDerivedFrom b:regel-inkomens-tot-en-met-2024 , b:vw-aanvrager-rol-afnemer , b:vw-het-jaar-van-de-aanvraag-is-ten-hoogste-2024 .
+
+b:anker-inkomen-velden a odrl:Constraint , dpv:TechnicalMeasure ;
+    rdfs:label "het verzoek voldoet aan de Rego-module \"inkomen velden\""@nl ;
+    odrl:leftOperand apnl:verwerkingsverzoek ;
+    odrl:operator apnl:conformsToPolicy ;
+    odrl:rightOperand b:rego-inkomen-velden ;
+    prov:wasDerivedFrom b:regel-inkomen-velden , b:vw-aanvrager-autorisatie-naam-en-adres .
+
+# ── Wie en wat: begrippen uit de beleidstekst ─────────────────────────────────
+
+b:doel-inkomensverstrekking a skos:Concept ;
+    rdfs:label "inkomensverstrekking"@nl ;
+    skos:definition "Doelbinding \"inkomensverstrekking\" zoals genoemd in het beleid."@nl .
+
+b:groep-afnemer a odrl:PartyCollection ;
+    rdfs:label "afnemer"@nl ;
+    skos:definition "iemand met rol \"afnemer\""@nl ;
+    odrl:refinement b:vw-aanvrager-rol-afnemer .
+
+b:groep-geautoriseerde-afnemer a odrl:PartyCollection ;
+    rdfs:label "geautoriseerde afnemer"@nl ;
+    skos:definition "iemand met autorisatie \"naam-en-adres\""@nl ;
+    odrl:refinement b:vw-aanvrager-autorisatie-naam-en-adres .
+
+b:gegevens-inkomensgegevens a odrl:AssetCollection ;
+    rdfs:label "inkomensgegevens"@nl ;
+    skos:definition "alle gegevens van het inkomen van een persoon"@nl .
+
+# ── Het register: paden als assets met partOf ─────────────────────────────────
+
+reg:Persoon a odrl:Asset , ts:Entiteit ;
+    rdfs:label "een persoon"@nl ;
+    dct:identifier "Persoon" .
+
+reg:Persoon.Naam a odrl:Asset , ts:Gegevenselement ;
+    rdfs:label "naam"@nl ;
+    dct:identifier "Persoon.Naam" ;
+    odrl:partOf reg:Persoon .
+
+reg:Persoon.Naam.naam a odrl:Asset , ts:Veld ;
+    rdfs:label "naam"@nl ;
+    dct:identifier "Persoon.Naam.naam" ;
+    odrl:partOf reg:Persoon.Naam .
+
+reg:Persoon.Adres a odrl:Asset , ts:Gegevenselement ;
+    rdfs:label "adres"@nl ;
+    dct:identifier "Persoon.Adres" ;
+    odrl:partOf reg:Persoon .
+
+reg:Persoon.Adres.straat a odrl:Asset , ts:Veld ;
+    rdfs:label "straat"@nl ;
+    dct:identifier "Persoon.Adres.straat" ;
+    odrl:partOf reg:Persoon.Adres .
+
+reg:Persoon.Adres.huisnummer a odrl:Asset , ts:Veld ;
+    rdfs:label "huisnummer"@nl ;
+    dct:identifier "Persoon.Adres.huisnummer" ;
+    odrl:partOf reg:Persoon.Adres .
+
+reg:Persoon.Adres.postcode a odrl:Asset , ts:Veld ;
+    rdfs:label "postcode"@nl ;
+    dct:identifier "Persoon.Adres.postcode" ;
+    odrl:partOf reg:Persoon.Adres .
+
+reg:Persoon.Adres.plaats a odrl:Asset , ts:Veld ;
+    rdfs:label "plaats"@nl ;
+    dct:identifier "Persoon.Adres.plaats" ;
+    odrl:partOf reg:Persoon.Adres .
+
+reg:Persoon.Inkomen a odrl:Asset , ts:Gegevenselement ;
+    rdfs:label "inkomen"@nl ;
+    dct:identifier "Persoon.Inkomen" ;
+    odrl:partOf reg:Persoon , b:gegevens-inkomensgegevens .
+
+reg:Persoon.Inkomen.jaar a odrl:Asset , ts:Veld ;
+    rdfs:label "jaar"@nl ;
+    dct:identifier "Persoon.Inkomen.jaar" ;
+    odrl:partOf reg:Persoon.Inkomen .
+
+reg:Persoon.Inkomen.bedrag a odrl:Asset , ts:Veld ;
+    rdfs:label "bedrag"@nl ;
+    dct:identifier "Persoon.Inkomen.bedrag" ;
+    odrl:partOf reg:Persoon.Inkomen .
+
+# ── Realisatie: wat de regels uitvoert ────────────────────────────────────────
+
+b:rego-persoon-op-bsn a apnl:RegoModule , schema:SoftwareSourceCode ;
+    rdfs:label "Rego-module \"persoon op bsn\" (gegenereerd uit dit beleid)"@nl ;
+    dct:identifier "rules/persoon-op-bsn.rego" ;
+    schema:programmingLanguage "Rego" ;
+    dct:format "application/vnd.rego" ;
+    apnl:entrypoint "data.rules[\"persoon-op-bsn\"].allow" ;
+    apnl:sha256 "17f1b2bc29ec4fdc5d3ded1bfbba6f862a423a7f00b961e8c8d42271bbcc312c" ;
+    rdfs:comment "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel."@nl .
+
+b:rego-naam-en-adres a apnl:RegoModule , schema:SoftwareSourceCode ;
+    rdfs:label "Rego-module \"naam en adres\" (gegenereerd uit dit beleid)"@nl ;
+    dct:identifier "rules/naam-en-adres.rego" ;
+    schema:programmingLanguage "Rego" ;
+    dct:format "application/vnd.rego" ;
+    apnl:entrypoint "data.rules[\"naam-en-adres\"].allow" ;
+    apnl:sha256 "aa58d2ecdc65fff022ae64dbc155004f84fc225017dd00c150bd98e0698994a8" ;
+    rdfs:comment "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel."@nl .
+
+b:rego-adres a apnl:RegoModule , schema:SoftwareSourceCode ;
+    rdfs:label "Rego-module \"adres\" (gegenereerd uit dit beleid)"@nl ;
+    dct:identifier "rules/adres.rego" ;
+    schema:programmingLanguage "Rego" ;
+    dct:format "application/vnd.rego" ;
+    apnl:entrypoint "data.rules[\"adres\"].allow" ;
+    apnl:sha256 "3c8499fafc67d2caeea775af5fd1a46d75494d0e0c08212390eb40374528fd9d" ;
+    rdfs:comment "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel."@nl .
+
+b:rego-inkomens-tot-en-met-2024 a apnl:RegoModule , schema:SoftwareSourceCode ;
+    rdfs:label "Rego-module \"inkomens tot en met 2024\" (gegenereerd uit dit beleid)"@nl ;
+    dct:identifier "rules/inkomens-tot-en-met-2024.rego" ;
+    schema:programmingLanguage "Rego" ;
+    dct:format "application/vnd.rego" ;
+    apnl:entrypoint "data.rules[\"inkomens-tot-en-met-2024\"].allow" ;
+    apnl:sha256 "8e01fc64872283cecdb2cae3f0dc0fb8fd736821db75be427cf0da635380d6fc" ;
+    rdfs:comment "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel."@nl .
+
+b:rego-inkomen-velden a apnl:RegoModule , schema:SoftwareSourceCode ;
+    rdfs:label "Rego-module \"inkomen velden\" (gegenereerd uit dit beleid)"@nl ;
+    dct:identifier "rules/inkomen-velden.rego" ;
+    schema:programmingLanguage "Rego" ;
+    dct:format "application/vnd.rego" ;
+    apnl:entrypoint "data.rules[\"inkomen-velden\"].allow" ;
+    apnl:sha256 "544fd012b66bb51754f93aee4d9bcf2effa6740447a4a6896ef28596a908a93b" ;
+    rdfs:comment "Gegenereerd door authz/gbo-voorbeeld/scripts/compiler.py uit dezelfde ODRL; draait op het vaste ftv/graphql.rego van het FTV GraphQL-profiel. De doelbinding van het beleid zit er niet in: het voorbeeldverzoek draagt geen doel."@nl .
+
+# ── Woordenschat van Toegangsspraak (labels komen uit de klare taal) ──────────
+
+ts:Entiteit a rdfs:Class , skos:Concept ;
+    rdfs:label "entiteit"@nl .
+
+ts:Gegevenselement a rdfs:Class , skos:Concept ;
+    rdfs:label "gegevenselement"@nl .
+
+ts:Veld a rdfs:Class , skos:Concept ;
+    rdfs:label "veld"@nl .
+
+ts:bestaat.toestemming a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "toestemming voor de betrokkene"@nl ;
+    skos:definition "Bestaansvraag aan een informatiepunt: het beleid zegt wát er moet bestaan en voor wie, de uitvoering beantwoordt de vraag."@nl .
+
+ts:bestaat a odrl:Operator , skos:Concept ;
+    rdfs:label "bestaat"@nl .
+
+ts:aanvrager.autorisatie a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "de autorisatie van de aanvrager"@nl ;
+    skos:definition "Kenmerk van degene die het verzoek doet; te toetsen voordat de bron iets ophaalt."@nl .
+
+ts:aanvraag.jaar a odrl:LeftOperand , skos:Concept ;
+    rdfs:label "het jaar van de aanvraag"@nl ;
+    skos:definition "Kenmerk van het verwerkingsverzoek zelf (argument of context); te toetsen voordat de bron iets ophaalt."@nl .
+
+ts:profiel a odrl:Profile ;
+    dct:title "Toegangsspraak-woordenschat (Omnium Studio, werkversie)"@nl ;
+    dct:description "De termen die Toegangsspraak nodig heeft bovenop ODRL 2.2 en ODRL-AP-NL: operanden uit de van-vorm, een paar vergelijkingen en handelingen. Elk label is de zinsnede uit de klare taal."@nl .

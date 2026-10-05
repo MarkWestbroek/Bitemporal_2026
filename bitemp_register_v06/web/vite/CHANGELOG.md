@@ -16,6 +16,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   - een lege groep verdwijnt uit de legenda.
 
 ### Toegevoegd
+- **Toegangsspraak → ODRL (ODRL-AP-NL) als Turtle** (05-10): een tweede export naast de
+  JSON-LD uit de editor, in de transformatievorm graafbeeld → regelset → schrijver.
+  - `toegangsspraak/graaf.js`, `odrlApNlRegels.js` en `odrlExport.js`; de uitvoer volgt de ODRL
+    Visualisation Note, zodat de ODRL-viewer van de werkgroep FTV het beleid als document toont.
+  - **Eerste schrijver**: `transformatie/turtleSchrijver.js` (plan → triples → Turtle, met een
+    contexttabel zoals een JSON-LD-context).
+  - De toepasser geeft een getypeerde waarde uit één kale placeholder ongemoeid door.
+  - Nog geen menu-ingang; voorbeelden en runner in `authz/odrl-viewer-voorbeelden/`.
 - **Transformatie "Mermaid flowchart → use case-model"** (05-10). Importeert een Mermaid
   flowchart (bestand of geplakte tekst) als use case-model: actoren, use cases, geneste
   systeemkaders, include/extend/generalisatie; notities worden de toelichting van hun element.

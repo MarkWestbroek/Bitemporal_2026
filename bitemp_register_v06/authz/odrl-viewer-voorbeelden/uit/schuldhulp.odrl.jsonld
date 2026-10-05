@@ -1,0 +1,91 @@
+{
+  "@context": [
+    "http://www.w3.org/ns/odrl.jsonld",
+    {
+      "nlgov": "https://standaarden.overheid.nl/odrl/terms/"
+    }
+  ],
+  "@type": "Set",
+  "uid": "urn:nlgov:beleid:inzage-inkomen-bij-schuldhulp",
+  "profile": "https://standaarden.overheid.nl/odrl/profile/toegangsbeleid",
+  "conflict": "prohibit",
+  "dc:description": "Inzage inkomen bij schuldhulp",
+  "nlgov:geldigVanaf": "2026-05-01",
+  "nlgov:grondslag": "de Wet gemeentelijke schuldhulpverlening",
+  "nlgov:doelbinding": "schuldhulpverlening",
+  "permission": [
+    {
+      "nlgov:regelnaam": "inzage bij lopend dossier",
+      "target": {
+        "@type": "AssetCollection",
+        "uid": "urn:nlgov:gegevens:inkomensgegevens",
+        "source": "nlgov:register:NatuurlijkPersoon.Inkomen"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:schuldhulpverlener",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:rol"
+            },
+            "operator": "eq",
+            "rightOperand": "schuldhulpverlener"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:view"
+      },
+      "constraint": [
+        {
+          "leftOperand": {
+            "@id": "nlgov:doelbinding"
+          },
+          "operator": "eq",
+          "rightOperand": "schuldhulpverlening"
+        },
+        {
+          "leftOperand": {
+            "@id": "nlgov:betrokkene:naam.achternaam"
+          },
+          "operator": "nlgov:begintMet",
+          "rightOperand": "A"
+        }
+      ],
+      "duty": [
+        {
+          "action": {
+            "@id": "nlgov:log"
+          }
+        }
+      ]
+    }
+  ],
+  "prohibition": [
+    {
+      "nlgov:regelnaam": "geen export",
+      "target": {
+        "@type": "AssetCollection",
+        "uid": "urn:nlgov:gegevens:inkomensgegevens",
+        "source": "nlgov:register:NatuurlijkPersoon.Inkomen"
+      },
+      "assignee": {
+        "@type": "PartyCollection",
+        "uid": "urn:nlgov:rolgroep:schuldhulpverlener",
+        "refinement": [
+          {
+            "leftOperand": {
+              "@id": "nlgov:rol"
+            },
+            "operator": "eq",
+            "rightOperand": "schuldhulpverlener"
+          }
+        ]
+      },
+      "action": {
+        "@id": "nlgov:export"
+      }
+    }
+  ]
+}
