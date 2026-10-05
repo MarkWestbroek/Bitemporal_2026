@@ -79,6 +79,26 @@ omnide.nl, www.omnide.nl {
 # editor.musicbrain.nl: zie het blok hieronder.
 musicbrain.nl {
 	import veilig
+	# Toegangslog voor de bezoekstatistiek (imprint-engine deploy/vps/stats.sh,
+	# GoAccess): IP's ingekort, zonder cookies, Authorization en token-parameters.
+	log {
+		output file /var/log/caddy/musicbrain.log {
+			roll_size 50MiB
+			roll_keep 5
+			roll_keep_for 720h
+			mode 0644
+		}
+		format filter {
+			request>remote_ip ip_mask 24 48
+			request>client_ip ip_mask 24 48
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			resp_headers>Set-Cookie delete
+			request>uri query {
+				delete token
+			}
+		}
+	}
 	# Uploads via de admin en /api/ingest (board-renders, 3D-modellen).
 	request_body {
 		max_size 50MB
@@ -122,11 +142,59 @@ editor.musicbrain.nl {
 # DNS bij mijn.host. imprint.musicbrain.nl was het tijdelijke adres.
 imprint-engine.nl {
 	import veilig
+	# Toegangslog voor de bezoekstatistiek (imprint-engine deploy/vps/stats.sh,
+	# GoAccess): IP's ingekort, zonder cookies, Authorization en token-parameters.
+	log {
+		output file /var/log/caddy/imprint.log {
+			roll_size 50MiB
+			roll_keep 5
+			roll_keep_for 720h
+			mode 0644
+		}
+		format filter {
+			request>remote_ip ip_mask 24 48
+			request>client_ip ip_mask 24 48
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			resp_headers>Set-Cookie delete
+			request>uri query {
+				delete token
+			}
+		}
+	}
 	reverse_proxy 127.0.0.1:3100
 }
 
 www.imprint-engine.nl, imprint.musicbrain.nl {
 	redir https://imprint-engine.nl{uri} permanent
+}
+
+# Showcase Common Ground op Imprint (imprint-engine sites/commonground,
+# design/communities.md): stack in /srv/imprint/deploy/vps, container op
+# 127.0.0.1:3400. Live sinds 30 september 2026; DNS bij mijn.host.
+commonground.imprint-engine.nl {
+	import veilig
+	# Toegangslog voor de bezoekstatistiek (imprint-engine deploy/vps/stats.sh,
+	# GoAccess): IP's ingekort, zonder cookies, Authorization en token-parameters.
+	log {
+		output file /var/log/caddy/commonground.log {
+			roll_size 50MiB
+			roll_keep 5
+			roll_keep_for 720h
+			mode 0644
+		}
+		format filter {
+			request>remote_ip ip_mask 24 48
+			request>client_ip ip_mask 24 48
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			resp_headers>Set-Cookie delete
+			request>uri query {
+				delete token
+			}
+		}
+	}
+	reverse_proxy 127.0.0.1:3400
 }
 
 # ── Psycholoog (Ewa) ──────────────────────────────────────────────────────
