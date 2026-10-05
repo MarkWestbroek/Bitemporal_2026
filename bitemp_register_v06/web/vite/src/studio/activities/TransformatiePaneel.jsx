@@ -139,6 +139,16 @@ export default function TransformatiePaneel() {
     inp.click();
   };
 
+  // Geplakte tekst is dezelfde bron als een bestand, alleen zonder naam.
+  const plakTekst = (tekst) => {
+    setBestandTekst(tekst.trim() ? tekst : null);
+    setBestandNaam(tekst.trim() ? "geplakte tekst" : null);
+    if (!gekozen && tekst.trim()) {
+      const herkend = detecteerTransformatie(generatoren, { naam: "", tekst });
+      if (herkend) setGeneratorId(herkend.id);
+    }
+  };
+
   const doelGekozen = !!(doelMapId || doelNieuweNaam.trim());
   const kanUitvoeren =
     gekozen &&
@@ -230,6 +240,16 @@ export default function TransformatiePaneel() {
           <div style={{ fontSize: 13 }}>
             <button type="button" style={knop} onClick={kiesBestand}>Kies bestand…</button>
             {bestandNaam && <span style={{ marginLeft: 8, color: "var(--s-fg-muted)" }}>{bestandNaam}</span>}
+            <details style={{ marginTop: 6 }}>
+              <summary style={{ cursor: "pointer", fontSize: 12, color: "var(--s-fg-muted)" }}>of plak tekst</summary>
+              <textarea
+                value={bestandNaam === "geplakte tekst" ? bestandTekst || "" : ""}
+                onChange={(e) => plakTekst(e.target.value)}
+                placeholder="Plak hier de bron (bv. Mermaid, YAML of JSON)"
+                spellCheck={false}
+                style={{ ...veld, width: "100%", height: 120, marginTop: 4, fontFamily: "ui-monospace, monospace", fontSize: 12, resize: "vertical", boxSizing: "border-box" }}
+              />
+            </details>
             <label style={{ display: "block", marginTop: 4, color: "var(--s-fg-muted)", fontSize: 12 }}>
               <input type="radio" disabled /> API (binnenkort)
             </label>

@@ -41,9 +41,13 @@ function ActorShape({ element, selected, children }) {
           fontWeight: 600,
           color: "var(--s-fg, #0f172a)",
           textAlign: "center",
+          // De naam mag breder zijn dan de strekfiguur (64) en steekt dan aan
+          // beide kanten evenveel uit; zonder eigen breedte brak hij al op 64
+          // ("Zaakbehan-delaar").
+          width: "max-content",
           maxWidth: 120,
           lineHeight: 1.25,
-          overflowWrap: "anywhere",
+          overflowWrap: "break-word",
         }}
       >
         {element?.naam || "(actor)"}

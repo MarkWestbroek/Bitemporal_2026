@@ -1,0 +1,228 @@
+actor model:
+flowchart LR
+
+    %% =========================
+    %% Medewerkers
+    %% =========================
+
+    M(("Medewerker"))
+    ZB(("Zaakbehandelaar"))
+    KCC(("KCC-medewerker"))
+    IB(("Informatiebeheerder"))
+    GM(("Geautomatiseerde<br/>medewerker"))
+
+    ZB -.->|specialisatie| M
+    KCC -.->|specialisatie| M
+    IB -.->|specialisatie| M
+    GM -.->|specialisatie| M
+
+    %% =========================
+    %% Beheerders
+    %% =========================
+
+    B(("Beheerder"))
+    TB(("Technisch<br/>beheerder"))
+    FB(("Functioneel<br/>beheerder"))
+
+    B -.->|specialisatie| M
+    TB -.->|specialisatie| B
+    FB -.->|specialisatie| B
+
+    %% =========================
+    %% Klanten
+    %% =========================
+
+    K(("Klant"))
+    I(("Inwoner"))
+    O(("Onderneming"))
+    V(("Vertegenwoordiger"))
+
+    I -.->|specialisatie| K
+    O -.->|specialisatie| K
+    V -.->|specialisatie| K
+
+    %% =========================
+    %% Serviceorganisatie
+    %% =========================
+
+    MSO(("Medewerker<br/>serviceorganisatie"))
+
+    %% =========================
+    %% Notes
+    %% =========================
+
+    N_M["<b>Medewerker</b><br/>Algemene actor voor personen die werkzaamheden uitvoeren binnen de gemeentelijke dienstverlening."]
+    N_ZB["<b>Zaakbehandelaar</b><br/>Behandelt zaken, verzoeken, meldingen en aanvragen."]
+    N_KCC["<b>KCC-medewerker</b><br/>Beantwoordt vragen en ondersteunt klanten via verschillende kanalen."]
+    N_IB["<b>Informatiebeheerder</b><br/>Voorheen: DIV-medewerker.<br/>Beheert, archiveert, draagt over en vernietigt informatie."]
+    N_GM["<b>Geautomatiseerde medewerker</b><br/>Geautomatiseerde specialisatie van Medewerker.<br/>Voert zelfstandig of ondersteunend werkzaamheden uit."]
+
+    N_B["<b>Beheerder</b><br/>Algemene beheerrol."]
+    N_TB["<b>Technisch beheerder</b><br/>Beheert technische infrastructuur, systemen, koppelingen en configuraties."]
+    N_FB["<b>Functioneel beheerder</b><br/>Beheert functionaliteit, inrichting en gebruik van informatiesystemen."]
+
+    N_K["<b>Klant</b><br/>Algemene actor voor een partij die gebruikmaakt van gemeentelijke dienstverlening."]
+    N_I["<b>Inwoner</b><br/>Natuurlijk persoon die gebruikmaakt van gemeentelijke dienstverlening."]
+    N_O["<b>Onderneming</b><br/>Organisatie of bedrijf dat gebruikmaakt van gemeentelijke dienstverlening."]
+    N_V["<b>Vertegenwoordiger</b><br/>Handelt namens een andere klant.<br/><br/>Mogelijke specialisaties:<br/>- gemachtigde<br/>- bewindvoerder<br/>- curator<br/>- ouder of voogd"]
+
+    N_MSO["<b>Medewerker serviceorganisatie</b><br/>Behandelt bijvoorbeeld meldingen, incidenten of ondersteuningsverzoeken namens een serviceorganisatie."]
+
+    %% Verbindingen naar notes
+    M -.-> N_M
+    ZB -.-> N_ZB
+    KCC -.-> N_KCC
+    IB -.-> N_IB
+    GM -.-> N_GM
+
+    B -.-> N_B
+    TB -.-> N_TB
+    FB -.-> N_FB
+
+    K -.-> N_K
+    I -.-> N_I
+    O -.-> N_O
+    V -.-> N_V
+
+    MSO -.-> N_MSO
+
+    %% =========================
+    %% Styling
+    %% =========================
+
+    classDef actor fill:#ffffff,stroke:#333333,stroke-width:1.5px,color:#111111;
+    classDef general fill:#eaf3ff,stroke:#356a9a,stroke-width:2px,color:#111111;
+    classDef specialized fill:#f8fbff,stroke:#356a9a,stroke-width:1.5px,color:#111111;
+    classDef external fill:#fff7e6,stroke:#b87900,stroke-width:1.5px,color:#111111;
+    classDef note fill:#fffde7,stroke:#999933,stroke-width:1px,color:#333333;
+
+    class M,K actor;
+    class B general;
+    class ZB,KCC,IB,GM,TB,FB,I,O,V specialized;
+    class MSO external;
+
+    class N_M,N_ZB,N_KCC,N_IB,N_GM,N_B,N_TB,N_FB,N_K,N_I,N_O,N_V,N_MSO note;
+
+use case model klant:
+flowchart LR
+
+    %% =========================
+    %% Actoren
+    %% =========================
+
+    K(("Klant"))
+    I(("Inwoner"))
+    O(("Onderneming"))
+    V(("Vertegenwoordiger"))
+
+    I -.->|specialisatie| K
+    O -.->|specialisatie| K
+    V -.->|specialisatie| K
+
+    %% =========================
+    %% Systeemgrens
+    %% =========================
+
+    subgraph S["Gemeentelijke dienstverlening"]
+
+        subgraph VM["Verzoeken en meldingen"]
+            UC_Verzoek(["Dien verzoek in"])
+            UC_Melding(["Dien melding in"])
+            UC_Voortgang(["Bekijk voortgang"])
+            UC_Afspraak(["Maak een afspraak"])
+        end
+
+        subgraph VI["Vragen en informatie"]
+            UC_Vraag(["Stel een vraag"])
+            UC_ZoekInfo(["Zoek informatie over<br/>producten en diensten"])
+            UC_Gesprek(["Voer gesprek"])
+            UC_Chat(["Voer chatgesprek"])
+            UC_Contact(["Vul contactformulier in"])
+            UC_Bellen(["Bel op"])
+            UC_Email(["Stuur een e-mail"])
+        end
+
+        subgraph VT["Taken uitvoeren"]
+            UC_Taak(["Voer taak uit"])
+            UC_Betaling(["Voer betaling uit"])
+            UC_Formulier(["Vul formulier in"])
+            UC_Informatie(["Lever informatie aan"])
+        end
+
+        subgraph VG["Persoonsgegevens"]
+            UC_Gegevensgebruik(["Bekijk gegevensgebruik<br/>in het kader van de AVG"])
+        end
+    end
+
+    %% =========================
+    %% Actorrelaties
+    %% =========================
+
+    K --> UC_Verzoek
+    K --> UC_Melding
+    K --> UC_Vraag
+    K --> UC_ZoekInfo
+    K --> UC_Gesprek
+    K --> UC_Taak
+    K --> UC_Gegevensgebruik
+
+    %% =========================
+    %% Relaties verzoeken en meldingen
+    %% =========================
+
+    UC_Voortgang -.->|&lt;&lt;extend&gt;&gt;| UC_Verzoek
+    UC_Voortgang -.->|&lt;&lt;extend&gt;&gt;| UC_Melding
+
+    UC_Afspraak -.->|&lt;&lt;extend&gt;&gt;| UC_Verzoek
+    UC_Afspraak -.->|&lt;&lt;extend&gt;&gt;| UC_ZoekInfo
+
+    %% =========================
+    %% Relaties vragen en gesprek
+    %% =========================
+
+    UC_Gesprek -.->|&lt;&lt;include&gt;&gt;| UC_Vraag
+
+    UC_Chat -.->|gespreksvorm| UC_Gesprek
+    UC_Contact -.->|gespreksvorm| UC_Gesprek
+    UC_Bellen -.->|gespreksvorm| UC_Gesprek
+    UC_Email -.->|gespreksvorm| UC_Gesprek
+
+    %% =========================
+    %% Relaties taken
+    %% =========================
+
+    UC_Betaling -.->|specialisatie| UC_Taak
+    UC_Formulier -.->|specialisatie| UC_Taak
+    UC_Informatie -.->|specialisatie| UC_Taak
+
+    %% =========================
+    %% Notes
+    %% =========================
+
+    N_Verzoek["<b>Dien verzoek in</b><br/>De klant dient een verzoek in voor een product, dienst of handeling van de gemeente.<br/><br/>De verdere behandeling gebeurt door een medewerker."]
+    N_Melding["<b>Dien melding in</b><br/>De klant meldt een probleem, gebeurtenis of situatie."]
+    N_Voortgang["<b>Bekijk voortgang</b><br/>Optionele functionaliteit voor een bestaand verzoek of een bestaande melding."]
+    N_Afspraak["<b>Maak een afspraak</b><br/>De klant plant een afspraak wanneer dit nodig of gewenst is."]
+    N_Gesprek["<b>Voer gesprek</b><br/>Een gesprek kan plaatsvinden via chat, contactformulier, telefoon of e-mail."]
+    N_Taak["<b>Voer taak uit</b><br/>Algemene use case voor taken die de klant in het kader van een dienst uitvoert."]
+    N_Gegevens["<b>Bekijk gegevensgebruik</b><br/>De klant bekijkt welke persoonsgegevens worden gebruikt, voor welk doel en op welke grondslag."]
+
+    UC_Verzoek -.-> N_Verzoek
+    UC_Melding -.-> N_Melding
+    UC_Voortgang -.-> N_Voortgang
+    UC_Afspraak -.-> N_Afspraak
+    UC_Gesprek -.-> N_Gesprek
+    UC_Taak -.-> N_Taak
+    UC_Gegevensgebruik -.-> N_Gegevens
+
+    %% =========================
+    %% Styling
+    %% =========================
+
+    classDef actor fill:#ffffff,stroke:#333333,stroke-width:1.5px,color:#111111;
+    classDef usecase fill:#f8fbff,stroke:#356a9a,stroke-width:1.5px,color:#111111;
+    classDef note fill:#fffde7,stroke:#999933,stroke-width:1px,color:#333333;
+
+    class K,I,O,V actor;
+    class UC_Verzoek,UC_Melding,UC_Voortgang,UC_Afspraak,UC_Vraag,UC_ZoekInfo,UC_Gesprek,UC_Chat,UC_Contact,UC_Bellen,UC_Email,UC_Taak,UC_Betaling,UC_Formulier,UC_Informatie,UC_Gegevensgebruik usecase;
+    class N_Verzoek,N_Melding,N_Voortgang,N_Afspraak,N_Gesprek,N_Taak,N_Gegevens note;

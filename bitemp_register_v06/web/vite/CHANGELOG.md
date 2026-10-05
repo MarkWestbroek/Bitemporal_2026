@@ -16,6 +16,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   - een lege groep verdwijnt uit de legenda.
 
 ### Toegevoegd
+- **Transformatie "Mermaid flowchart → use case-model"** (05-10). Importeert een Mermaid
+  flowchart (bestand of geplakte tekst) als use case-model: actoren, use cases, geneste
+  systeemkaders, include/extend/generalisatie; notities worden de toelichting van hun element.
+  - Eerste transformatie in de vorm lezer → regelset → toepasser (`src/transformatie/`); de
+    afbeelding staat als leesbare regels in `diagramprofielen/usecase/mermaidRegels.js`. Zie
+    [`docs/TRANSFORMATIES.md`](../docs/TRANSFORMATIES.md).
+  - Transformatiepaneel: bij importeren kan de bron ook geplakt worden.
+  - Use case-profiel: eigenschap *Toelichting* op actor, use case en systeemkader; een
+    systeemkader mag een systeemkader bevatten; een lange actornaam breekt niet meer op de
+    breedte van de strekfiguur.
 - **Kaart van Nederland: toetsenbord en zoeken** (28-09).
   - Pijltjes lopen naar de buurstip in die richting, niet meer alfabetisch.
   - Shift+↑/↓ gaat per beginletter, Shift+←/→ alfabetisch.

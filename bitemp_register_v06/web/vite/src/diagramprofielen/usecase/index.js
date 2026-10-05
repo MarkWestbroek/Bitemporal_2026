@@ -24,6 +24,9 @@ import { registreerUseCaseShapes } from "./shapes.jsx";
 export const USECASE_ID = "usecase";
 
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
+// Vrije beschrijving van het element zelf (UML: documentatie/ownedComment) —
+// los van een notitie, die alleen op één diagram staat.
+const TOELICHTING_VELD = { key: "toelichting", label: "Toelichting", datatype: "tekst" };
 
 /** Vast stereotype-label («include»/«extend») midden op de lijn. */
 const stereotypeLabel = (tekst) => ({
@@ -40,7 +43,7 @@ const elementTypes = [
     icoon: "uc-actor",
     shape: "uc-actor",
     resizebaar: false,
-    properties: [],
+    properties: [TOELICHTING_VELD],
   },
   {
     id: "usecase",
@@ -50,7 +53,7 @@ const elementTypes = [
     icoon: "uc-usecase",
     shape: "uc-ellips",
     kleur: "#e0f2fe",
-    properties: [KLEUR_VELD],
+    properties: [TOELICHTING_VELD, KLEUR_VELD],
   },
   {
     id: "systeem",
@@ -62,7 +65,7 @@ const elementTypes = [
     // Container zoals een package: use cases erin slepen legt "bevat".
     containerVoor: "bevat",
     achtergrond: true,
-    properties: [KLEUR_VELD],
+    properties: [TOELICHTING_VELD, KLEUR_VELD],
   },
   {
     id: "notitie",
@@ -133,7 +136,8 @@ const elementTypes = [
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["systeem"] },
-    doel: { elementTypes: ["usecase", "notitie"] },
+    // Ook een systeemkader zelf: een deelsysteem (of groepering) binnen het systeem.
+    doel: { elementTypes: ["usecase", "notitie", "systeem"] },
     edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1", verbergBijNesting: true },
   },
 ];

@@ -782,6 +782,20 @@ verzint niets — maar het betekent wel dat er ná de import handwerk zit.
 Buiten scope: `paths`/operations, security en de terugweg naar OAS (die heeft het
 `oas31`-profiel al voor zijn eigen notatie).
 
+### Mermaid flowchart → use case-model (transformatie)
+
+*Transformeren → importeren →* **"Mermaid flowchart → use case-model"** leest een
+Mermaid flowchart (bestand of geplakte tekst) als use case-model in het
+`usecase05`-profiel: cirkels worden actoren, stadions use cases, subgraphs
+(geneste) systeemkaders, en een notitie aan een element wordt de toelichting van
+dat element.
+
+Dit is de eerste transformatie in de vorm **lezer → regelset → toepasser**: de
+afbeelding zelf staat als leesbare `als … maak …`-regels in
+`diagramprofielen/usecase/mermaidRegels.js`, niet in code. De vorm, de stand van
+alle transformaties en de regeltabel staan in
+[TRANSFORMATIES.md](TRANSFORMATIES.md).
+
 
 ## Diagram exporteren als afbeelding
 
