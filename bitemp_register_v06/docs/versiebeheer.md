@@ -61,12 +61,14 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.9.0`**
-  (2026-09-22: GE-opname, bewerkbare velden in canoniek-uml, magic link, containers en
-  pools, instelbare frontend-image); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.7.0`** (2026-09-22: backend-review en hardening, regressie- en
-  loadsuite, hub-fix; **met brekende wijzigingen**); zie `RELEASE.md`.
-- Generator: **`codegen/v0.1.0`**; sindsdien alleen documentatie.
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.11.0`**
+  (2026-10-06: GraphQL-schema-profiel, transformaties in een vaste vorm, ODRL-export,
+  SVG-tekenaar, kaart van Nederland); zie `web/vite/CHANGELOG.md`.
+- Backend: **`api/v0.9.0`** (2026-10-06: render-API voor modeldiagrammen met de sidecar
+  `render-svc`; geen brekende wijzigingen); zie `RELEASE.md`.
+- Generator: **`codegen/v0.1.0`**; sindsdien geen release.
+- Render-sidecar: **`render/v0.1.0`** (eerste uitgave, 2026-10-06; image
+  `bitemp-render-svc:0.1.0`), zie [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md) §4.2a.
 - Deze nummers zijn óók de Docker-image-tags (zonder `v`): zie
   [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md).
 
@@ -87,6 +89,7 @@ welk component het nummer slaat.
 | Frontend / **Studio** | `web/vite/` (Studio + inhoud-editor + publicatie + IDE) | `package.json` `"version"` | `studio/` |
 | **Backend** (Go API) | Go-code buiten `web/` (`model/`, `handlers/`, `dynql/`, `dbsetup/`, …) | git-tag (evt. later een `VERSION`-bestand) | `api/` |
 | **Generator** (codegen) | `cmd/codegen/` | git-tag | `codegen/` |
+| **Render-sidecar** | `render-svc/` (+ de tekenaar `web/vite/src/diagramsvg`) | git-tag | `render/` |
 
 **Slash, geen hyphen.** We schrijven `studio/v0.4.0`, niet `studio-v0.4.0`. Redenen:
 - Git behandelt `/` als ref-hiërarchie (`refs/tags/studio/…`), dus `git tag -l 'studio/*'`
