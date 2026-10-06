@@ -11,10 +11,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ### Toegevoegd
 - **Activiteit *Gebruikers*** (groep beheer, 06-10): accounts, rollen en wachtwoorden op het
   nieuwe gebruikersbeheer (domein `beheer`, `docs/AUTH_DEVELOPER_GUIDE.md` §11). Iedereen die is
-  ingelogd wijzigt er zijn eigen wachtwoord (met herhaalveld en oogje); admins maken gebruikers aan
+  ingelogd wijzigt er zijn eigen wachtwoord (lijn-oogje per veld zoals in Imprint; zodra de
+  herhaling afwijkt staat er meteen een melding onder en kan het formulier niet weg); admins maken gebruikers aan
   (de server maakt een wachtwoord dat je één keer ziet), voegen rollen toe met een optionele
   einddatum, trekken rollen in, blokkeren, deblokkeren en beëindigen accounts. Elke wijziging is een
   registratie. Je eigen admin-rol, blokkeren en beëindigen staan voor je eigen account uit.
+- **Uitloggen in de Studio** (06-10): rechts in de menubalk staan je naam en rol en een knop
+  *Uitloggen* (`StudioGebruiker.jsx`); klik op je naam opent *Gebruikers* (eigen wachtwoord). Na het
+  uitloggen toont de Studio het inlogscherm. De inhoud-editor, publicatie en het dashboard hadden
+  dit al (`GebruikerBadge`).
 
 ## [studio/v0.11.0] — 2026-10-06
 Modelleren en uitwisselen: het GraphQL-schema als profiel, transformaties in een vaste vorm, de

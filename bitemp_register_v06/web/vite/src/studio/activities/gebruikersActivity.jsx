@@ -45,27 +45,53 @@ const invoer = { padding: "4px 6px", border: "1px solid var(--s-border, #cbd5e1)
 const kader = { padding: 10, border: "1px solid var(--s-border, #e2e8f0)", borderRadius: 8 };
 const gedempt = { color: "var(--s-fg-muted, #64748b)" };
 
-/** Wachtwoordveld met een oogje. */
-function WachtwoordInvoer({ value, onChange, placeholder, autoComplete, zichtbaar }) {
+const ONGELIJK = "De twee nieuwe wachtwoorden zijn niet gelijk.";
+
+/** Lijn-oogje (zelfde als Imprint, password-fields.tsx); doorgestreept = wachtwoord zichtbaar. */
+function Oog({ doorgestreept }) {
   return (
-    <input style={invoer} type={zichtbaar ? "text" : "password"} value={value} onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder} autoComplete={autoComplete} />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+      {doorgestreept && <path d="M3 3l18 18" />}
+    </svg>
+  );
+}
+
+/** Wachtwoordveld met een oogje in het veld, per veld te tonen of te verbergen. */
+function WachtwoordInvoer({ value, onChange, autoComplete, ongeldig, beschrijving }) {
+  const [zichtbaar, setZichtbaar] = useState(false);
+  return (
+    <span style={{ position: "relative", display: "block" }}>
+      <input style={{ ...invoer, width: "100%", paddingRight: 30, boxSizing: "border-box", ...(ongeldig ? { borderColor: "#dc2626" } : {}) }}
+        type={zichtbaar ? "text" : "password"} value={value} onChange={(e) => onChange(e.target.value)}
+        autoComplete={autoComplete} aria-invalid={ongeldig || undefined} aria-describedby={beschrijving} />
+      <button type="button" onClick={() => setZichtbaar((z) => !z)} aria-pressed={zichtbaar}
+        aria-label={zichtbaar ? "Wachtwoord verbergen" : "Wachtwoord tonen"} title={zichtbaar ? "Verbergen" : "Tonen"}
+        style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", display: "grid", placeItems: "center",
+          width: 24, height: 24, border: 0, background: "transparent", color: "inherit", opacity: 0.65, cursor: "pointer", padding: 0 }}>
+        <Oog doorgestreept={zichtbaar} />
+      </button>
+    </span>
   );
 }
 
 /** Eigen wachtwoord wijzigen (elke ingelogde gebruiker). */
 function MijnWachtwoord({ ik }) {
   const [w, setW] = useState({ huidig: "", nieuw: "", herhaal: "" });
-  const [zichtbaar, setZichtbaar] = useState(false);
   const [melding, setMelding] = useState(null); // { ok, tekst }
+  const foutId = "mijn-wachtwoord-ongelijk";
 
   if (!ik) {
     return <p style={{ ...gedempt, fontSize: 13 }}>Log in om je wachtwoord te wijzigen.</p>;
   }
+  // Zodra het herhaalveld iets bevat en afwijkt: meteen melden (net als Imprint).
+  const ongelijk = w.herhaal !== "" && w.nieuw !== w.herhaal;
+  const teKort = w.nieuw !== "" && w.nieuw.length < MIN_LENGTE;
+
   async function opslaan(e) {
     e.preventDefault();
-    if (w.nieuw.length < MIN_LENGTE) return setMelding({ ok: false, tekst: `Het nieuwe wachtwoord moet minstens ${MIN_LENGTE} tekens hebben.` });
-    if (w.nieuw !== w.herhaal) return setMelding({ ok: false, tekst: "De twee nieuwe wachtwoorden zijn niet gelijk." });
+    if (teKort || ongelijk) return;
     try {
       await api("/api/auth/wachtwoord", { method: "PUT", body: JSON.stringify({ huidig: w.huidig, nieuw: w.nieuw }) });
       setW({ huidig: "", nieuw: "", herhaal: "" });
@@ -74,23 +100,27 @@ function MijnWachtwoord({ ik }) {
       setMelding({ ok: false, tekst: err.message });
     }
   }
+  const zet = (veldnaam) => (v) => { setW({ ...w, [veldnaam]: v }); setMelding(null); };
+  const klein = { fontSize: 12, minHeight: 16 };
   return (
-    <form onSubmit={opslaan} style={{ ...kader, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
+    <form onSubmit={opslaan} style={{ ...kader, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-start" }}>
       <div style={{ flex: "1 1 100%", fontSize: 13 }}>
         Mijn wachtwoord — ingelogd als <strong>{ik.gebruikersnaam}</strong> ({ik.rol})
       </div>
-      <label style={veld}>Huidig
-        <WachtwoordInvoer value={w.huidig} onChange={(v) => setW({ ...w, huidig: v })} autoComplete="current-password" zichtbaar={zichtbaar} />
+      <label style={{ ...veld, width: 170 }}>Huidig
+        <WachtwoordInvoer value={w.huidig} onChange={zet("huidig")} autoComplete="current-password" />
+        <span style={klein} />
       </label>
-      <label style={veld}>Nieuw (min. {MIN_LENGTE})
-        <WachtwoordInvoer value={w.nieuw} onChange={(v) => setW({ ...w, nieuw: v })} autoComplete="new-password" zichtbaar={zichtbaar} />
+      <label style={{ ...veld, width: 170 }}>Nieuw
+        <WachtwoordInvoer value={w.nieuw} onChange={zet("nieuw")} autoComplete="new-password" ongeldig={teKort} />
+        <span style={{ ...klein, color: teKort ? "#dc2626" : "var(--s-fg-muted, #64748b)" }}>minstens {MIN_LENGTE} tekens</span>
       </label>
-      <label style={veld}>Herhaal nieuw
-        <WachtwoordInvoer value={w.herhaal} onChange={(v) => setW({ ...w, herhaal: v })} autoComplete="new-password" zichtbaar={zichtbaar} />
+      <label style={{ ...veld, width: 170 }}>Herhaal nieuw
+        <WachtwoordInvoer value={w.herhaal} onChange={zet("herhaal")} autoComplete="new-password" ongeldig={ongelijk} beschrijving={ongelijk ? foutId : undefined} />
+        <span id={foutId} role={ongelijk ? "alert" : undefined} style={{ ...klein, color: "#dc2626" }}>{ongelijk ? ONGELIJK : ""}</span>
       </label>
-      <button type="button" className="studio-btn" onClick={() => setZichtbaar((z) => !z)} aria-pressed={zichtbaar}
-        title={zichtbaar ? "Verberg wachtwoorden" : "Toon wachtwoorden"}>{zichtbaar ? "🙈" : "👁"}</button>
-      <button type="submit" className="studio-btn studio-btn--primary" disabled={!w.huidig || !w.nieuw}>Wijzigen</button>
+      <button type="submit" className="studio-btn studio-btn--primary" style={{ marginTop: 17 }}
+        disabled={!w.huidig || !w.nieuw || !w.herhaal || ongelijk || teKort}>Wijzigen</button>
       {melding && <div role={melding.ok ? "status" : "alert"} style={{ flex: "1 1 100%", fontSize: 13, color: melding.ok ? "#15803d" : "#b91c1c" }}>{melding.tekst}</div>}
     </form>
   );
