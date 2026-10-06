@@ -492,6 +492,11 @@ func init() {
 	initOrgGeoDatatypeRegistry()
 	initOrgGeoMetaRegistry()
 
+	// beheer — domein-specifieke uitbreiding
+	initBeheerEnumRegistry()
+	initBeheerDatatypeRegistry()
+	initBeheerMetaRegistry()
+
 	propageerDomeinNaarOnderliggende()
 }
 

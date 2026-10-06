@@ -18,6 +18,7 @@ import { getActiviteiten, abonneerOpActiviteiten, activiteitenVersie } from "./a
 import useStudioStore from "./useStudioStore";
 import useUIStore from "../store/useUIStore";
 import ActivityBar from "./ActivityBar";
+import StudioGebruiker from "./StudioGebruiker";
 import SidePanel from "./SidePanel";
 import MenuBar from "./MenuBar";
 import CommandPalette from "./CommandPalette";
@@ -118,12 +119,15 @@ export default function StudioShell() {
         </span>
       }
       links={
-        <span className="studio-menubar__brand">
-          {actief.label}
-          {actief.status && (
-            <span className="studio-topbar__status" style={{ marginLeft: 8 }}>{actief.status}</span>
-          )}
-        </span>
+        <>
+          <span className="studio-menubar__brand">
+            {actief.label}
+            {actief.status && (
+              <span className="studio-topbar__status" style={{ marginLeft: 8 }}>{actief.status}</span>
+            )}
+          </span>
+          <StudioGebruiker />
+        </>
       }
     />
   );

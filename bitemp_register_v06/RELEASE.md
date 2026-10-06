@@ -8,6 +8,53 @@
 
 ---
 
+## Gebruikersbeheer: api 0.10.0 / studio 0.12.0 (2026-10-06)
+
+Gebruikers worden niet meer met SQL in een platte tabel gezet: een gebruiker is nu een
+bitemporele entiteit (domein `beheer`, gegenereerd uit een V3-model), met een beheerscherm in de
+Studio. Ontwerp en besluiten: `docs/plans/gebruikersbeheer/`; gebruik: `docs/AUTH_DEVELOPER_GUIDE.md`
+§3.5a, §6 en §11.
+
+### Backend (api 0.10.0)
+
+#### Brekend / databasegevolg
+- **De tabel `gebruiker` wordt bij de eerste opstart omgezet.** De oude platte tabel heet daarna
+  `gebruiker_oud`; elke rij wordt een registratie (identiteit, status, roltoewijzing) en de
+  wachtwoord-hash gaat naar `gebruiker_inlog`. **Bestaande wachtwoorden blijven werken.**
+  `gebruiker_oud` blijft staan; verwijder hem met de hand als alles klopt. Idempotent.
+- **`handlers.LoginHandler` en `handlers.SeedAdminGebruiker` zijn verhuisd** naar package
+  `gebruikers`. De routes en antwoorden van `/api/auth/*` zijn gelijk gebleven.
+
+#### Toegevoegd
+- Entiteit **Gebruiker** (domein `beheer`): `GebruikerIdentiteit`, `GebruikerStatus` (materieel,
+  actief/geblokkeerd), `GebruikerRoltoewijzing` (meervoudig, materieel; een rol met een einde
+  verloopt vanzelf). Hash en laatste login in de plumbing-tabel `gebruiker_inlog`, nooit in een
+  registratie.
+- `GET /api/gebruikers`, `PUT /api/gebruikers/:id/wachtwoord` (admin), `PUT /api/auth/wachtwoord`
+  (eigen wachtwoord, met het huidige ter controle; minstens 10 tekens).
+- **Rol en status per verzoek** uit het register (cache 30 s): een blokkade of een verlopen rol
+  werkt binnen een halve minuut, niet pas als het token na 24 uur verloopt.
+
+#### Gewijzigd
+- **Domein `beheer` is alleen voor admins**, ook lezen en ook met `LEESTOEGANG=open`: op de
+  gegenereerde routes, in de registratie-engine (dus ook via `/registratie/`, PATCH en GraphQL)
+  en het staat niet in het GraphQL-schema.
+
+### Frontend (studio 0.12.0)
+
+Zie [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md): activiteit *Gebruikers* en uitloggen in de
+menubalk.
+
+### Uitrol
+
+- **Twee images**: `bitemp-go-api:0.10.0` en `bitemp-viz-frontend:0.12.0`; render-svc blijft 0.1.0.
+- **Backup vooraf** (de tabel `gebruiker` wordt omgezet). `update.sh` doet dat voor app; pf.sh
+  niet, maak daar met de hand een dump.
+- **Na het uitrollen** in de API-log: `gebruikersbeheer: N gebruiker(s) uit gebruiker_oud
+  overgezet`. Log in met je bestaande wachtwoord en open *Gebruikers* in de Studio.
+
+---
+
 ## Render-API, GraphQL-profiel en transformaties: api 0.9.0 / studio 0.11.0 (2026-10-06)
 
 Het werk van 28 september tot en met 6 oktober: de render-API voor Imprint, het GraphQL-schema

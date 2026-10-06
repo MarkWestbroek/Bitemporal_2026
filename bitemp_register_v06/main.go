@@ -20,6 +20,7 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/dbsetup"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/dynql"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/filestore"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/gebruikers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/notificaties"
@@ -95,9 +96,8 @@ func main() {
 			fmt.Println("FATAL:", err)
 			return
 		}
-		if err := handlers.SeedAdminGebruiker(context.Background()); err != nil {
-			fmt.Println("WARN: Admin-seed mislukt:", err)
-		}
+		// De admin-seed draait ná NewRouter: hij gaat via de registratie-engine en leest het
+		// register via dynql, dat pas na BuildSchema klaar is (zie hieronder).
 	}
 
 	// Initialiseer MinIO filestore (optioneel — graceful degradation als niet geconfigureerd)
@@ -108,6 +108,20 @@ func main() {
 
 	// Create router and register routes
 	router := NewRouter()
+
+	// Gebruikersbeheer (docs/plans/gebruikersbeheer/): de gebruiker is een bitemporele entiteit
+	// (domein beheer). Eerst de oude platte tabel overzetten, dan de eerste admin, en vanaf nu
+	// leest de middleware rol en status per verzoek uit het register.
+	if middleware.IsAuthEnabled() {
+		sysCtx := context.Background()
+		if err := gebruikers.MigreerOudeGebruikers(sysCtx); err != nil {
+			fmt.Println("WARN: overzetten van de oude gebruikers mislukt:", err)
+		}
+		if err := gebruikers.SeedAdmin(sysCtx); err != nil {
+			fmt.Println("WARN: Admin-seed mislukt:", err)
+		}
+		middleware.ZetGebruikerResolver(gebruikers.Resolver)
+	}
 
 	//run the server
 	router.Run()
@@ -148,7 +162,9 @@ func NewRouter() *gin.Engine {
 	// === Authenticatie routes (publiek, geen auth vereist) ===
 	auth := router.Group("/api/auth")
 	{
-		auth.POST("/login", handlers.LoginHandler())
+		auth.POST("/login", gebruikers.LoginHandler())
+		// Eigen wachtwoord wijzigen (met het huidige ter controle).
+		auth.PUT("/wachtwoord", middleware.RequireAuth(), gebruikers.EigenWachtwoordHandler())
 		auth.POST("/logout", handlers.LogoutHandler())
 		auth.GET("/me", handlers.MeHandler())
 		auth.GET("/status", handlers.AuthStatusHandler())
@@ -194,6 +210,12 @@ func NewRouter() *gin.Engine {
 	// AUTH_ENABLED=false, dus dev-omgevingen zonder auth merken hier niets van.
 	editor := middleware.RequireRol("editor")
 	admin := middleware.RequireRol("admin")
+
+	// Gebruikersbeheer (package gebruikers): overzicht met de stand "nu" en wachtwoorden zetten.
+	// Aanmaken, rollen en blokkeren gaan via de gegenereerde routes van domein beheer
+	// (/gebruikers, /full/gebruikers), die ook admin vragen (routes/leestoegang.go).
+	router.GET("/api/gebruikers", admin, gebruikers.LijstHandler())
+	router.PUT("/api/gebruikers/:id/wachtwoord", admin, gebruikers.ZetWachtwoordHandler())
 
 	// AI-proxy (handlers/ai_proxy.go): toegangscodes voor proberen met de sleutel van de eigenaar.
 	// Uit zolang AI_UPSTREAM_KEY leeg is. Codes beheren: alleen admin.

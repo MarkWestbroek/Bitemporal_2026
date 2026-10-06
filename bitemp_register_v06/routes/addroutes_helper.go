@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +28,7 @@ func addMetaRegistryRoutes(router *gin.Engine) {
 
 		basePath := "/" + meta.Padnaam
 		// Muterende routes vereisen minimaal rol "editor" (no-op als AUTH_ENABLED=false).
-		editor := middleware.RequireRol("editor")
+		editor := schrijver(meta) // admin voor het beheerdomein (leestoegang.go)
 		// Lezen: open, of achter minimaal "viewer" als LEESTOEGANG=documenten (leestoegang.go).
 		lees := lezer(meta)
 		router.GET(basePath, lees, handlers.MakeGetEntitiesByMetaHandler(meta))
@@ -63,7 +62,7 @@ func addMetaRegistryFullRoutes(router *gin.Engine) {
 
 		basePath := "/full/" + meta.Padnaam
 		// Muterende routes vereisen minimaal rol "editor" (no-op als AUTH_ENABLED=false).
-		editor := middleware.RequireRol("editor")
+		editor := schrijver(meta) // admin voor het beheerdomein (leestoegang.go)
 		// Lezen: open, of achter minimaal "viewer" als LEESTOEGANG=documenten (leestoegang.go).
 		lees := lezer(meta)
 		router.GET(basePath, lees, handlers.MakeGetFullEntitiesByMetaHandler(meta))
@@ -109,7 +108,7 @@ func addReferentielijstRoutes(router *gin.Engine) {
 
 		basePath := "/referentielijsten/" + meta.Padnaam
 		// Muterende routes vereisen minimaal rol "editor" (no-op als AUTH_ENABLED=false).
-		editor := middleware.RequireRol("editor")
+		editor := schrijver(meta) // admin voor het beheerdomein (leestoegang.go)
 		router.GET(basePath, handlers.MakeGetEntitiesByMetaHandler(meta))
 		router.GET(basePath+"/:id", handlers.MakeGetEntityByMetaHandler(meta))
 		// POST via de registratie-engine (BE-review §3.5): audit + transactie zoals POST /registratie/.

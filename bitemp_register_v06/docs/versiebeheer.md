@@ -61,10 +61,13 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.11.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.12.0`**
+  (2026-10-06: activiteit Gebruikers, uitloggen in de menubalk). Daarvoor **`studio/v0.11.0`**
   (2026-10-06: GraphQL-schema-profiel, transformaties in een vaste vorm, ODRL-export,
   SVG-tekenaar, kaart van Nederland); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.9.0`** (2026-10-06: render-API voor modeldiagrammen met de sidecar
+- Backend: **`api/v0.10.0`** (2026-10-06: gebruikersbeheer — Gebruiker als bitemporele entiteit
+  in domein `beheer`, met een migratie van de oude tabel bij de eerste opstart). Daarvoor
+  **`api/v0.9.0`** (2026-10-06: render-API voor modeldiagrammen met de sidecar
   `render-svc`; geen brekende wijzigingen); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
 - Render-sidecar: **`render/v0.1.0`** (eerste uitgave, 2026-10-06; image

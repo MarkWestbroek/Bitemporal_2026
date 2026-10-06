@@ -55,6 +55,7 @@ Het model is opgedeeld in **domeinen**. Elk domein heeft een eigen set gegeneree
 | `register` | `register_` | Basisregistratie: Referentielijst, Land, etc. |
 | `np-loc` | `np_loc_` | Natuurlijke personen en locaties |
 | `org-geo` | `org_geo_` | Afdeling, Medewerker, Gemeentedeel (demo-model, zie `docs/demo-model-np-loc-org-geo.md`) |
+| `beheer` | `beheer_` | Gebruiker (identiteit, status, roltoewijzing) — gebruikersbeheer; alleen voor admins, niet in GraphQL. Model: `docs/plans/gebruikersbeheer/` |
 
 (Plus de domeinen die los van dit document zijn gegroeid: `abuvwxy`, `CG`,
 `configuratie`, `financieel`, `ide-bestanden`, `kennis2`, `gegevenstypen`. De

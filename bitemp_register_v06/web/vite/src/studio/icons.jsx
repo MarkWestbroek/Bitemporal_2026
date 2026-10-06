@@ -136,6 +136,16 @@ export const IconAI = (p) => (
   </svg>
 );
 
+/** Gebruikers: persoon met sleutel (accounts, rollen, wachtwoorden). */
+export const IconGebruikers = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="9" cy="8" r="3.2" />
+    <path d="M3 20a6 6 0 0 1 9.5-4.9" />
+    <circle cx="17" cy="15" r="2.2" />
+    <path d="M18.6 16.6L21.5 19.5M20.2 18.2l-1 1" />
+  </svg>
+);
+
 export const IconRollen = (p) => (
   <svg {...base} {...p}>
     <circle cx="9" cy="8" r="3" />

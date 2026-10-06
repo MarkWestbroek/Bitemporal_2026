@@ -1746,3 +1746,33 @@ gebouwd is: `docs/plans/2026-10-01 GraphQL-schema-profiel (M2) op de diagram-mot
   - **Toegangsregel → veldsleutels** via koppelingen, bundel-compiler leest die (stap 5).
   - **Herafleiden van veldlijnen bij elke veldwijziging** in de editor, en een meldingenpaneel
     voor `valideerSchema`.
+
+## 38. Gebruikersbeheer als bitemporeel model (2026-10-06)
+
+**Aanleiding:** er is geen gebruikersbeheer-UI; accounts gaan met de hand in de tabel `gebruiker`
+(`AUTH_DEVELOPER_GUIDE.md` §11). Voorstel, model en open besluiten:
+`docs/plans/gebruikersbeheer/2026-10-06 Gebruikersbeheer als bitemporeel model (voorstel).md`.
+
+- Aanpak: dogfooding. `Gebruiker` als V3-model (domein `beheer`: GebruikerIdentiteit,
+  GebruikerStatus, GebruikerRoltoewijzing), backend uit codegen. De wachtwoord-hash en laatste
+  login blijven in de plumbing-tabel `gebruiker_inlog`.
+- ✅ **06-10:** model als V3-JSON (`docs/plans/gebruikersbeheer/gebruiker — v3-model.json`),
+  codegen-proefrun geslaagd.
+- Besluiten Mark 06-10: bestaande tabel `gebruiker` migreren naar `gebruiker_inlog` + hub
+  (typenaam blijft `Gebruiker`); login en middleware lezen status en rol "nu" uit het register
+  **per request** (blokkade en verlopen rol werken direct); admin-only rechten zijn een
+  autorisatiespoor, geen codegen.
+- ✅ **06-10 backend:** codegen domein `beheer`, migratie van de oude tabel bij de opstart,
+  login/seed/wachtwoorden in package `gebruikers`, rol en status per verzoek (cache 30 s),
+  admin-eis voor `beheer` in de routes én de registratie-engine, `beheer` niet in GraphQL.
+  Gebruik: `AUTH_DEVELOPER_GUIDE.md` §11.
+- Open:
+  - ✅ **06-10 Studio-activiteit *Gebruikers*** (`gebruikersActivity.jsx`).
+  - **PATCH /full laat `aanvang`/`einde` van een nieuw meervoudig item vallen** (algemeen; het
+    scherm gebruikt daarom `/registratie/`). Uitzoeken in `wijziging_builder.go`.
+  - **Zelfbescherming in de API**: een admin kan zichzelf via de API nog blokkeren of de
+    admin-rol afnemen (het scherm verhindert het); herstel kan dan alleen met SQL.
+  - **Actor op de registratie** (wie registreerde wat); nu alleen bron `gebruikersbeheer` voor
+    seed en migratie.
+  - Rollen per domein laten meetellen (autorisatiespoor, FTV/PIP).
+  - Later: uitnodiging en wachtwoordherstel per e-mail.
