@@ -255,11 +255,13 @@ actor, use case en systeemkader, en mag een systeemkader een systeemkader bevatt
 
 ## 7. Vervolg (voorstel, in volgorde van opbrengst)
 
-1. **Tweede regelset op dezelfde toepasser**, bij voorkeur een `transform`
-   (model → model), zodat de vorm aan twee echte afbeeldingen getoetst is — de
-   aanbeveling uit de review. Kandidaat: use case → activity/BPMN-proceslijst, of
-   de Mermaid-klassediagram-import overzetten van RawUML-code naar een regelset.
+1. **Tweede regelset op dezelfde toepasser** — gedaan met de ODRL-export (§8),
+   al is dat een `export` en geen `transform`. Een model → model-afbeelding
+   blijft de ontbrekende toets. Kandidaat: use case → activity/BPMN-proceslijst,
+   of de Mermaid-klassediagram-import overzetten van RawUML-code naar een regelset.
 2. **Bereik** in het contract (§4): selectie, diagram en profiel naast map.
+   Hoort samen met punt 7: een map met meerdere profielen is een samengestelde
+   bron.
 3. **Trace bewaren**: bij `transform` als kruisverband; bij import als herkomst
    op het element, zodat een tweede import kan bijwerken in plaats van toevoegen.
 4. **Proefdraaien**: het plan en de meldingen tonen vóór het toepassen.
@@ -268,6 +270,44 @@ actor, use case en systeemkader, en mag een systeemkader een systeemkader bevatt
 6. **Schrijver** voor export met tekstsjablonen (vrije tekst: code, DDL), en
    dezelfde runner in een CLI. De RDF-schrijver bestaat (§3, §8); een
    JSON-LD-serialisatie hoeft alleen `triplesNaarTurtle` te vervangen.
+7. **Bronnen samenvoegen en regelsets stapelen.** Een transformatie heeft vaak
+   méér dan één bron, en dan is één regelset niet genoeg. Het speelt nu op drie
+   plekken, telkens anders opgelost:
+
+   | Plek | Wat samenkomt | Hoe nu |
+   |---|---|---|
+   | ODRL-export (§8) | het beleid + wat het uitvoert, aan de **invoerkant** | `aanvulling` (extra knopen/verbindingen op de graaf) en `extraRegels` vóór de regelset, als opties van de aansluiting |
+   | Mermaid-import (§6) | het geïmporteerde model + wat er al in de store staat, aan de **uitvoerkant** | hergebruik op type + naam in de aansluiting |
+   | bereik `map` (§4, te bouwen) | de modellen van **meerdere profielen** in één map, met kruisverbanden ertussen | `collectMapModel` levert ze per profiel, als los setje |
+
+   De keuzes die nu impliciet zijn en in het contract van de toepasser horen:
+
+   - **Identiteit over bronnen heen.** Uiteinden worden op `id` opgelost, uniek
+     over alle knopen. Dus: een naamruimte per bron (`beleid:regel-1`,
+     `uitvoering:module-1`) met expliciete koppelingen ertussen, of gedeelde
+     id's op afspraak. Een botsend id is een fout, geen stille overschrijving
+     (nu wint de laatste, ongemerkt).
+   - **Herkomst.** Elke knoop en verbinding draagt zijn bron mee, en het trace
+     ook; anders is geen verliesrapport per bron mogelijk.
+   - **Koppelingen tussen bronnen** zijn gewone verbindingen met een eigen
+     `aard`, zodat een regel erop kan matchen. Hier komen de kruisverbanden uit
+     de koppelingen-matrix de graaf in.
+   - **Stapelen = overschrijven kunnen.** Omdat volgorde prioriteit is, kan een
+     laag erbóven de basisregels overschaduwen (vergelijk `xsl:import` en de
+     CSS-cascade). Dat is nuttig voor een projectspecifieke laag op een
+     standaardregelset, maar moet zichtbaar zijn: melden, of een regel expliciet
+     als `overschrijft` markeren.
+   - **Identiteit van de stapel.** Elke laag is een volwaardige regelset met id
+     en versie; de samengestelde set krijgt een afgeleide id, zodat de kopregel
+     van de uitvoer ("gemaakt met regelset … v…") blijft kloppen. Nu zegt die
+     kopregel bij extra regels iets wat niet waar is.
+
+   Beoogde vorm: `voegSamen([{bron, graaf}, …], {koppelingen})` en
+   `stapel([basis, aanvulling])` in `transformatie/`, in plaats van opties per
+   aansluiting. **Nog niet bouwen**: de ODRL-export is het eerste geval en
+   werkt; het bereik `map` met meerdere profielen wordt het tweede en bepaalt
+   pas de vorm (vooral hoe kruisverbanden binnenkomen). Bouw het dan samen met
+   punt 2.
 
 ## 8. Toegangsspraak → ODRL (ODRL-AP-NL)
 
