@@ -1,0 +1,213 @@
+{
+ "versie": "v3",
+ "naam": "beheer — Gebruiker",
+ "beschrijving": "Gebruikersbeheer als bitemporeel model (voorstel 2026-10-06, docs/plans/gebruikersbeheer/). Het wachtwoord staat bewust NIET in dit model maar in de plumbing-tabel gebruiker_inlog.",
+ "datatypes": [
+  {
+   "naam": "KorteTekst",
+   "description": "Alfanumerieke tekst, max 255 tekens (MIM: AN255).",
+   "basistype": "string",
+   "domein": "gegevenstypen",
+   "positie": {
+    "x": 2955,
+    "y": 330
+   },
+   "validatie": {
+    "maxLength": 255
+   },
+   "weergave": {}
+  },
+  {
+   "naam": "LangeTekst",
+   "description": "Onbeperkte tekst, meerdere regels (MIM: CharacterString).",
+   "basistype": "string",
+   "domein": "gegevenstypen",
+   "positie": {
+    "x": 2940,
+    "y": 165
+   },
+   "validatie": {},
+   "weergave": {}
+  },
+  {
+   "naam": "Emailadres",
+   "description": "E-mailadres conform RFC 5322 (vereenvoudigd).",
+   "basistype": "string",
+   "format": "email",
+   "domein": "gegevenstypen",
+   "positie": {
+    "x": -390,
+    "y": -2250
+   },
+   "validatie": {
+    "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+    "voorbeelden": [
+     "naam@example.com"
+    ],
+    "foutmelding": "Voer een geldig e-mailadres in"
+   },
+   "weergave": {
+    "placeholder": "naam@example.com"
+   }
+  }
+ ],
+ "enums": [
+  {
+   "goType": "Gebruikersstatus",
+   "baseType": "string",
+   "domein": "beheer",
+   "positie": {
+    "x": 300,
+    "y": 500
+   },
+   "waarden": [
+    {
+     "constNaam": "Gebruikersstatusactief",
+     "waarde": "actief"
+    },
+    {
+     "constNaam": "Gebruikersstatusgeblokkeerd",
+     "waarde": "geblokkeerd"
+    }
+   ]
+  },
+  {
+   "goType": "Gebruikersrol",
+   "baseType": "string",
+   "domein": "beheer",
+   "positie": {
+    "x": 600,
+    "y": 500
+   },
+   "waarden": [
+    {
+     "constNaam": "Gebruikersrolviewer",
+     "waarde": "viewer"
+    },
+    {
+     "constNaam": "Gebruikersroleditor",
+     "waarde": "editor"
+    },
+    {
+     "constNaam": "Gebruikersroladmin",
+     "waarde": "admin"
+    }
+   ]
+  }
+ ],
+ "referentielijstInstanties": [],
+ "entiteiten": [
+  {
+   "typenaam": "Gebruiker",
+   "description": "Een persoon die kan inloggen op Omnium (Studio, register, publicatie). Bitemporeel: je ziet wie wanneer welke rol had en sinds wanneer een account geblokkeerd is. De levensduur van de entiteit is die van het account: afvoer = account beëindigd (geen hard delete). Wachtwoord-hash en laatste login staan NIET hier maar in de plumbing-tabel gebruiker_inlog, zodat ze nooit in de geschiedenis of de gegenereerde API belanden.",
+   "domein": "beheer",
+   "isMaterieel": true,
+   "kleur": "#bae6fd",
+   "meervoud": "gebruikers",
+   "positie": {
+    "x": 450,
+    "y": 0
+   },
+   "gegevenselementen": [
+    {
+     "naam": "GebruikerIdentiteit",
+     "description": "Wie het account is: de inlognaam en hoe iemand getoond wordt. Formeel: een correctie (typfout in de e-mail) heeft geen materiële betekenis. Bewust weinig persoonsgegevens (AVG).",
+     "domein": "beheer",
+     "meervoud": "gebruiker_identiteiten",
+     "momentvoorkomen": "enkelvoudig",
+     "positie": {
+      "x": 0,
+      "y": 250
+     },
+     "velden": [
+      {
+       "naam": "gebruikersnaam",
+       "goType": "string",
+       "type": "string",
+       "verplicht": true,
+       "uniek": "entiteit",
+       "description": "Inlognaam. Uniek over alle gebruikers; hernoemen kan, de login volgt de actuele waarde."
+      },
+      {
+       "naam": "weergavenaam",
+       "goType": "KorteTekst",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "description": "Naam zoals getoond in de Studio (badge, wie-registreerde-wat)."
+      },
+      {
+       "naam": "email",
+       "goType": "Emailadres",
+       "type": "string",
+       "datatype": "Emailadres",
+       "description": "Voor uitnodiging, wachtwoordherstel en notificaties. Optioneel."
+      }
+     ]
+    },
+    {
+     "naam": "GebruikerStatus",
+     "description": "Of het account mag inloggen. Materieel: 'geblokkeerd vanaf …' is vooruit in te plannen en weer op te heffen. Ontbreekt dit GE, dan geldt actief.",
+     "domein": "beheer",
+     "meervoud": "gebruiker_statussen",
+     "momentvoorkomen": "enkelvoudig",
+     "isMaterieel": true,
+     "positie": {
+      "x": 300,
+      "y": 250
+     },
+     "velden": [
+      {
+       "naam": "status",
+       "goType": "Gebruikersstatus",
+       "type": "string",
+       "verplicht": true,
+       "enum": "Gebruikersstatus"
+      },
+      {
+       "naam": "toelichting",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "LangeTekst",
+       "description": "Waarom geblokkeerd (of weer actief)."
+      }
+     ]
+    },
+    {
+     "naam": "GebruikerRoltoewijzing",
+     "description": "Een rol die de gebruiker heeft. Meervoudig en materieel: met een geldigheidsperiode verloopt een proefaccount vanzelf ('editor tot 15-10'), en je kunt terugvragen wie op een datum admin was. Zonder geldige toewijzing heeft de gebruiker geen rechten.",
+     "domein": "beheer",
+     "meervoud": "gebruiker_roltoewijzingen",
+     "momentvoorkomen": "meervoudig",
+     "isMaterieel": true,
+     "positie": {
+      "x": 600,
+      "y": 250
+     },
+     "velden": [
+      {
+       "naam": "rol",
+       "goType": "Gebruikersrol",
+       "type": "string",
+       "verplicht": true,
+       "enum": "Gebruikersrol"
+      },
+      {
+       "naam": "domein",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "description": "Optioneel: het domein of de omgeving waarvoor de rol geldt (bv. configuratie, CG). Leeg = alle domeinen. Voorbereiding op PIP-gegevens voor Toegangsspraak/OpenFTV."
+      },
+      {
+       "naam": "toelichting",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "LangeTekst",
+       "description": "Waarom deze rol (bv. 'proefaccount demo FTV')."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

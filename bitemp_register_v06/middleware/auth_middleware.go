@@ -144,7 +144,15 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
+		// Rol en status komen uit het register, niet uit het token (gebruiker_stand.go).
+		claims = actueleClaims(c.Request.Context(), claims)
+		if claims == nil {
+			c.Next()
+			return
+		}
+
 		c.Set(ContextKeyGebruiker, claims)
+		c.Request = c.Request.WithContext(MetClaims(c.Request.Context(), claims))
 		c.Next()
 	}
 }

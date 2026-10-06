@@ -156,6 +156,12 @@ func CreateTables(db *bun.DB) error {
 		- model/metamodel.go (map)
 		- model/modellen_ge_rel.go en model/modellen_entiteiten.go (structs)
 	*/
+	// De oude platte tabel `gebruiker` moet uit de weg vóór de hub van Gebruiker (domein beheer)
+	// wordt aangemaakt; zie gebruiker_tabellen.go.
+	if err = hernoemOudeGebruikerTabel(ctx, db); err != nil {
+		return err
+	}
+
 	err = createModelTables(ctx, db)
 	if err != nil {
 		return err
@@ -164,9 +170,8 @@ func CreateTables(db *bun.DB) error {
 	// Referentielijst-instanties worden nu via registratie of replay-bestanden aangemaakt.
 	// De tabel wordt al aangemaakt door createModelTables via de MetaRegistry-entry "Referentielijst".
 
-	// Gebruiker tabel (authenticatie + autorisatie, plumbing)
-	_, err = db.NewCreateTable().Model((*model.Gebruiker)(nil)).IfNotExists().Exec(ctx)
-	if err != nil {
+	// Inloggegevens van een Gebruiker (hash, laatste login; plumbing naast de bitemporele entiteit)
+	if err = maakGebruikerInlogTabel(ctx, db); err != nil {
 		return err
 	}
 

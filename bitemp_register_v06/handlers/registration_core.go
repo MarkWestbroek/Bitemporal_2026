@@ -152,6 +152,12 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 		toegekendeIDs = ids
 	}
 
+	// Het beheerdomein (Gebruiker, rollen) is alleen voor admins — ook via /registratie/ en
+	// GraphQL, die verder alleen editor vragen. Anders kan een editor zichzelf admin maken.
+	if rerr := controleerBeheerdomein(ctx, req.Wijzigingen); rerr != nil {
+		return RegistreerResult{}, rerr
+	}
+
 	// B.A.2: valideer alle representaties op basis van V3Datatype-regels.
 	// In strict-modus → eerste fout = HTTP 422 + rollback. In lenient/warnings-only
 	// → fouten verzamelen en doorgeven via RegistreerResult.Validatie.

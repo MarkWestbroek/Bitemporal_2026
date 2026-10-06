@@ -1,0 +1,54 @@
+classDiagram
+  direction LR
+
+  class Gebruiker {
+    <<entiteit · domein beheer · materieel>>
+  }
+
+  class GebruikerIdentiteit {
+    <<GE · enkelvoudig · formeel>>
+    gebruikersnaam : string [verplicht, uniek]
+    weergavenaam : KorteTekst
+    email : Emailadres
+  }
+
+  class GebruikerStatus {
+    <<GE · enkelvoudig · materieel>>
+    status : Gebruikersstatus [verplicht]
+    toelichting : LangeTekst
+  }
+
+  class GebruikerRoltoewijzing {
+    <<GE · meervoudig · materieel>>
+    rol : Gebruikersrol [verplicht]
+    domein : KorteTekst «leeg = alle»
+    toelichting : LangeTekst
+  }
+
+  class Gebruikersstatus {
+    <<enum>>
+    actief
+    geblokkeerd
+  }
+
+  class Gebruikersrol {
+    <<enum>>
+    viewer
+    editor
+    admin
+  }
+
+  class gebruiker_inlog {
+    <<plumbing · niet gegenereerd>>
+    gebruiker_id : bigint
+    wachtwoord_hash : text
+    laatste_login_op : timestamptz
+    wachtwoord_gewijzigd_op : timestamptz
+  }
+
+  Gebruiker "1" *-- "1" GebruikerIdentiteit
+  Gebruiker "1" *-- "1" GebruikerStatus
+  Gebruiker "1" *-- "0..*" GebruikerRoltoewijzing
+  GebruikerStatus ..> Gebruikersstatus
+  GebruikerRoltoewijzing ..> Gebruikersrol
+  gebruiker_inlog "0..1" --> "1" Gebruiker : hoort bij

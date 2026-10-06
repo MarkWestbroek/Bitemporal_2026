@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/graphql-go/graphql"
 	"github.com/uptrace/bun"
@@ -32,6 +33,11 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 			continue
 		}
 		if meta.Factory == nil || meta.SliceFactory == nil {
+			continue
+		}
+		// Het beheerdomein (Gebruiker, rollen) staat niet in GraphQL: lezen gaat daar per
+		// document, niet per type, en gebruikers zijn alleen voor admins (REST, leestoegang.go).
+		if meta.Domein == middleware.DomeinBeheer {
 			continue
 		}
 
@@ -175,6 +181,9 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 	// BuildPatchInputTypes vult patchInputTypeCache; getPatchInputType leest er uit.
 	BuildPatchInputTypes()
 	for _, meta := range model.MetaRegistry {
+		if meta.Domein == middleware.DomeinBeheer {
+			continue // zie de query-velden hierboven
+		}
 		AddTypedMutationsForEntiteit(mutationFields, meta)
 	}
 
