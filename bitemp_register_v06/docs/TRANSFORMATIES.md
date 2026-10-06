@@ -45,6 +45,7 @@ bron- en doelelement.
 | import | **Mermaid flowchart → use case-model** | **lezer + regelset + toepasser** (§3, §6) |
 | transform | Kopieer map-inhoud naar een map | code |
 | export | Map → JSON, Map → Markdown-overzicht | code |
+| export | **Use case-model → Mermaid flowchart** | **graafbeeld + regelset + toepasser + schrijver** (§3, §6) — de terugweg van de import, roundtrip getest |
 
 **Buiten de registry** (ouder, eigen ingang):
 
@@ -77,9 +78,10 @@ model (bereik) ─────────────────────�
 | Deel | Wat het weet | Vorm | Waar |
 |---|---|---|---|
 | **Lezer** | de *syntax* van een extern formaat | code (een parser) | `transformatie/mermaidFlowchart.js` |
+| **Graafbeeld** (de lezer voor de modelkant) | niets van een profiel: element → knoop, connector → verbinding, `containerVoor` → `groep` | generieke code | `transformatie/modelNaarGraaf.js` |
 | **Regelset** | de *betekenis*: welk bron-patroon wordt wat in het doel | **data** — geordende `als … maak …`-regels | `diagramprofielen/<profiel>/…Regels.js` |
 | **Toepasser** | niets van bron of doel; voert regels uit | generieke code | `transformatie/regels.js` |
-| **Schrijver** | de syntax van het doelformaat | code of een tekstsjabloon | `transformatie/turtleSchrijver.js` (RDF/Turtle) |
+| **Schrijver** | de syntax van het doelformaat | code of een tekstsjabloon | `transformatie/turtleSchrijver.js` (RDF/Turtle), `transformatie/mermaidSchrijver.js` (Mermaid flowchart) |
 
 Alles wat een model is — een Mermaid-tekening, een OAS-document, een Studio-model
 — is hier een **graaf**: knopen met eigenschappen, groepen (containers) en
@@ -253,6 +255,33 @@ de gangbare flowchart-conventie:
 Voor deze import kreeg het use case-profiel een eigenschap **Toelichting** op
 actor, use case en systeemkader, en mag een systeemkader een systeemkader bevatten.
 
+### De terugweg: use case-model → Mermaid flowchart
+
+*Transformeren → Exporteren →* **"Use case-model → Mermaid flowchart"** schrijft
+de use case-diagrammen van een map als `.mmd`, één flowchart per diagram met de
+diagramnaam als titelregel (elementen op geen enkel diagram komen in een laatste
+flowchart "overige elementen"). Route:
+
+```
+model ──modelNaarGraaf──▶ graaf ──mermaidExportRegels──▶ plan ──mermaidSchrijver──▶ tekst
+```
+
+De regelset (`diagramprofielen/usecase/mermaidExportRegels.js`) is het
+spiegelbeeld van de importregels: actor → cirkel, use case → stadion,
+systeemkader → subgraph, toelichting → notitie aan een stippellijn, include/
+extend → `<<include>>`/`<<extend>>`, generalisatie → `specialisatie` (of de eigen
+naam als die er is), associatie → doorgetrokken pijl; `bevat` zit in de nesting.
+De schrijver kent alleen Mermaid: vormen, ontsnapping (`#quot;`, `#60;`, …),
+subgraphs, `class`-regels.
+
+**Roundtrip** (`mermaidExport.test.js`): import → export → import geeft hetzelfde
+model (elementen, relaties, toelichtingen, diagrammen), de lezer leest de
+geschreven tekst zonder waarschuwingen, en een tweede rondgang schrijft letterlijk
+dezelfde tekst. Wat níet terugkomt is wat het model niet kent: opmaak
+(`classDef`-kleuren uit de bron) en de precieze volgorde en bewoording van de
+oorspronkelijke tekst — de export schrijft in zijn eigen vaste volgorde, met
+element-id's als Mermaid-id's.
+
 ## 7. Vervolg (voorstel, in volgorde van opbrengst)
 
 1. **Tweede regelset op dezelfde toepasser** — gedaan met de ODRL-export (§8),
@@ -268,8 +297,9 @@ actor, use case en systeemkader, en mag een systeemkader een systeemkader bevatt
 5. **Regelsets als bestand** in het project (JSON), bewerkbaar in de Studio; de
    validatie (`valideerRegelset`) is daar al op voorbereid.
 6. **Schrijver** voor export met tekstsjablonen (vrije tekst: code, DDL), en
-   dezelfde runner in een CLI. De RDF-schrijver bestaat (§3, §8); een
-   JSON-LD-serialisatie hoeft alleen `triplesNaarTurtle` te vervangen.
+   dezelfde runner in een CLI. De RDF-schrijver (§3, §8) en de Mermaid-schrijver
+   (§6) bestaan; een JSON-LD-serialisatie hoeft alleen `triplesNaarTurtle` te
+   vervangen.
 7. **Bronnen samenvoegen en regelsets stapelen.** Een transformatie heeft vaak
    méér dan één bron, en dan is één regelset niet genoeg. Het speelt nu op drie
    plekken, telkens anders opgelost:
