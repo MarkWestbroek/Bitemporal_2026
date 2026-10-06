@@ -256,32 +256,35 @@ vóór het kopiëren, dan worden ze herschreven.
 
 ## 7. Proefaccounts
 
-Er is geen gebruikersbeheer-UI ([`AUTH_DEVELOPER_GUIDE.md`](AUTH_DEVELOPER_GUIDE.md) §11);
-gebruikers gaan rechtstreeks de tabel `gebruiker` in. Bcrypt-hash maken zonder iets te
-installeren:
+Sinds het gebruikersbeheer (oktober 2026, [`AUTH_DEVELOPER_GUIDE.md`](AUTH_DEVELOPER_GUIDE.md) §11)
+is een gebruiker een bitemporele entiteit; accounts gaan **niet meer met SQL** in een tabel, maar
+via de API (alleen admin). Een beheerscherm in de Studio volgt. Inloggen als admin:
 
 ```bash
-docker run --rm httpd:2.4-alpine htpasswd -nbBC 10 "" 'Proef-2026-A' | tr -d ':\n'; echo
+H=https://<studio-host>
+curl -c admin.jar -X POST $H/api/auth/login -H 'Content-Type: application/json' \
+  -d '{"gebruikersnaam":"<admin>","wachtwoord":"<wachtwoord>"}'
 ```
 
-Dan op de VPS (`docker compose -f docker-compose.vps.yml exec postgres psql -U bitemp -d bitemp_go_db_v06`):
+Proefaccount met een rol die vanzelf verloopt, en een door de server gemaakt wachtwoord:
 
-```sql
-INSERT INTO gebruiker (gebruikersnaam, wachtwoord_hash, email, rol, actief) VALUES
-  ('demo1', '$2y$10$...', NULL, 'editor', true),
-  ('demo2', '$2y$10$...', NULL, 'editor', true),
-  ('demo3', '$2y$10$...', NULL, 'editor', true),
-  ('demo4', '$2y$10$...', NULL, 'editor', true),
-  ('demo5', '$2y$10$...', NULL, 'editor', true)
-ON CONFLICT (gebruikersnaam) DO NOTHING;
+```bash
+curl -b admin.jar -X POST $H/full/gebruikers -H 'Content-Type: application/json' -d '{
+  "id": "$nieuw.g",
+  "gebruiker_identiteiten":    [{"gebruikersnaam": "demo1"}],
+  "gebruiker_roltoewijzingen": [{"rol": "editor", "toelichting": "demo", "einde": "2026-10-31"}]}'
+curl -b admin.jar $H/api/gebruikers                          # id van demo1 opzoeken
+curl -b admin.jar -X PUT $H/api/gebruikers/<id>/wachtwoord   # antwoord bevat het wachtwoord, één keer
 ```
 
-Rollen: `viewer` kijkt, `editor` modelleert, `admin` alles. Proefaccounts = `editor`.
-Eén wachtwoord per account, op een kaartje bij de demo; **na afloop** allemaal uit:
+Rollen: `viewer` kijkt, `editor` modelleert, `admin` alles. Proefaccounts = `editor`. Na de
+einddatum kan het account niet meer inloggen; opruimen is niet nodig.
 
-```sql
-UPDATE gebruiker SET actief = false WHERE gebruikersnaam LIKE 'demo%';
-```
+**Eerste uitrol van deze versie.** Bij de eerste opstart wordt de oude tabel `gebruiker` hernoemd
+naar `gebruiker_oud` en overgezet naar het register; iedereen houdt zijn wachtwoord. Maak vooraf
+een backup (`update.sh` doet dat). Controleer daarna in het log
+`gebruikersbeheer: N gebruiker(s) uit gebruiker_oud overgezet` en of inloggen werkt; verwijder
+`gebruiker_oud` pas daarna met de hand. Dit geldt per instantie (ook pf).
 
 Misbruik beperken zit niet in de app (geen signup, geen quota) — met alleen handmatig
 aangemaakte accounts is dat voor een demo voldoende. Wil je later open aanmelden, dan

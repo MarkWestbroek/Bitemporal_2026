@@ -1,7 +1,8 @@
 # Gebruikersbeheer als bitemporeel model (voorstel)
 
-> **Stand:** 6 oktober 2026. Model als V3-JSON uitgewerkt en met codegen geproefd; nog niets
-> in de repo gegenereerd of gemigreerd.
+> **Stand:** 6 oktober 2026. Backend gebouwd (stap 2 en een minimale 2b): codegen in de repo,
+> migratie, login, seed, middleware per verzoek, admin-eis voor domein `beheer`. Het
+> beheerscherm (stap 3) volgt. Gebruik en details: `AUTH_DEVELOPER_GUIDE.md` §3.5a, §6, §11.
 > **Aanleiding:** er is geen gebruikersbeheer-UI. Accounts gaan nu met de hand in de tabel
 > `gebruiker` ([`AUTH_DEVELOPER_GUIDE.md`](../../AUTH_DEVELOPER_GUIDE.md) §11,
 > [`VPS_DEPLOYMENT.md`](../../VPS_DEPLOYMENT.md) §7). Backlog: [§38](../../BACKLOG.md).
@@ -144,11 +145,39 @@ slaagt en geeft de tabellen `gebruiker`, `gebruiker_aanvang`, `gebruiker_einde` 
    komt in de middleware of het FTV-beleid, niet in het V3-model. Tot dat er is: de
    gegenereerde routes van `beheer` niet aanzetten op een publieke omgeving.
 
+## Gebouwd (6 oktober 2026)
+
+| Onderdeel | Waar |
+|---|---|
+| Gegenereerde entiteit, domein `beheer` | `model/beheer_*.go` (codegen `--mode additive --domein beheer --prefix beheer`) |
+| Plumbing `gebruiker_inlog`, oude tabel als `GebruikerOud` | `model/gebruiker.go` |
+| Oude tabel hernoemen vóór de hub, `gebruiker_inlog` + FK | `dbsetup/gebruiker_tabellen.go` |
+| Stand "nu", aanmaken via de engine, seed, migratie, login, wachtwoorden | `gebruikers/` |
+| Rol en status per verzoek (cache 30 s), claims in de request-context | `middleware/gebruiker_stand.go` |
+| Engine weigert domein `beheer` zonder admin (ook `/registratie/`, GraphQL) | `handlers/registration_beheer.go` |
+| Gegenereerde routes van `beheer`: lezen en schrijven admin | `routes/leestoegang.go` |
+| `beheer` niet in het GraphQL-schema | `dynql/schema_builder.go` |
+
+**Waarom toch een stukje autorisatie (2b).** Zonder ingreep waren de gegenereerde routes
+anoniem leesbaar (gebruikersnamen en e-mail openbaar zolang `LEESTOEGANG=open`) en kon een editor
+zichzelf via `/registratie/` admin maken. De minimale regel "domein `beheer` = admin" zit daarom
+in deze stap; fijnmazige autorisatie (rollen per domein, FTV) blijft een apart spoor.
+
+**Getest** tegen een lege Postgres met een oude tabel: migratie (wachtwoorden blijven werken,
+`actief=false` → geblokkeerd), seed, idempotente herstart, login (fout wachtwoord 401,
+geblokkeerd 403), blokkade werkt na ≤ 30 s, verlopen proefrol → 403, een editor die zichzelf
+admin wil maken via `/registratie/`, GraphQL of PATCH → 403, wachtwoord zetten/genereren/zelf
+wijzigen, geen hash in de registratiegeschiedenis. Unit-tests: `gebruikers/stand_test.go`,
+`middleware/gebruiker_stand_test.go`, `handlers/registration_beheer_test.go`.
+
+**Nog niet:** registraties hebben geen actor-veld (wie registreerde wat); rollen met een domein
+tellen nog niet mee; een devloop-rebuild zonder domein `beheer` gooit de gegenereerde bestanden
+weg (AUTH-gids §11).
+
 ## Vervolg
 
 - Stap 1: ✅ model als V3-JSON, codegen-proefrun geslaagd, besluiten genomen.
-- Stap 2: model laden in het register en codegen draaien, `gebruiker_inlog` en de migratie
-  van de bestaande accounts, login, seed en middleware omzetten.
-- Stap 2b (autorisatie): `beheer` alleen voor `admin`, ook lezen.
+- Stap 2: ✅ codegen, `gebruiker_inlog`, migratie, login, seed, middleware.
+- Stap 2b: ✅ minimaal: `beheer` alleen voor `admin`, ook lezen. Fijnmazig (per domein, FTV): open.
 - Stap 3: Studio-activiteit *Gebruikers*.
 - Later: uitnodiging en wachtwoordherstel per e-mail (SMTP draait al voor de pf-notificaties).

@@ -33,11 +33,25 @@ func OpenbaarLeesbaar(meta model.TypeMeta) bool {
 	return false
 }
 
-// lezer geeft de leesguard voor een type: geen guard voor openbaar leesbare typen,
-// anders RequireLezer (no-op zolang LEESTOEGANG=open of AUTH_ENABLED=false).
+// lezer geeft de leesguard voor een type: admin voor het beheerdomein (gebruikers), geen guard
+// voor openbaar leesbare typen, anders RequireLezer (no-op zolang LEESTOEGANG=open of
+// AUTH_ENABLED=false).
 func lezer(meta model.TypeMeta) gin.HandlerFunc {
+	if meta.Domein == middleware.DomeinBeheer {
+		return middleware.RequireRol("admin")
+	}
 	if OpenbaarLeesbaar(meta) {
 		return func(c *gin.Context) { c.Next() }
 	}
 	return middleware.RequireLezer()
+}
+
+// schrijver geeft de guard voor muterende routes: editor, behalve voor het beheerdomein
+// (Gebruiker en rollen, docs/plans/gebruikersbeheer/) — daar admin. De registratie-engine
+// controleert dat ook zelf (handlers/registration_beheer.go), voor /registratie/ en GraphQL.
+func schrijver(meta model.TypeMeta) gin.HandlerFunc {
+	if meta.Domein == middleware.DomeinBeheer {
+		return middleware.RequireRol("admin")
+	}
+	return middleware.RequireRol("editor")
 }

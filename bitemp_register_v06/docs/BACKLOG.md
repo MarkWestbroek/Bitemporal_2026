@@ -1762,8 +1762,14 @@ gebouwd is: `docs/plans/2026-10-01 GraphQL-schema-profiel (M2) op de diagram-mot
   (typenaam blijft `Gebruiker`); login en middleware lezen status en rol "nu" uit het register
   **per request** (blokkade en verlopen rol werken direct); admin-only rechten zijn een
   autorisatiespoor, geen codegen.
+- ✅ **06-10 backend:** codegen domein `beheer`, migratie van de oude tabel bij de opstart,
+  login/seed/wachtwoorden in package `gebruikers`, rol en status per verzoek (cache 30 s),
+  admin-eis voor `beheer` in de routes én de registratie-engine, `beheer` niet in GraphQL.
+  Gebruik: `AUTH_DEVELOPER_GUIDE.md` §11.
 - Open:
-  - **Codegen in de repo, migratie** van bestaande accounts naar hub + `gebruiker_inlog`,
-    login/middleware omzetten, admin-seed via de registratie-engine.
-  - **Admin-only routes** voor domein `beheer`, ook voor lezen (autorisatie).
-  - Studio-activiteit *Gebruikers*; later uitnodiging en herstel per e-mail.
+  - **Studio-activiteit *Gebruikers*** op `GET /api/gebruikers`, `POST /full/gebruikers`,
+    registraties op status/rol en `PUT /api/gebruikers/:id/wachtwoord`.
+  - **Actor op de registratie** (wie registreerde wat); nu alleen bron `gebruikersbeheer` voor
+    seed en migratie.
+  - Rollen per domein laten meetellen (autorisatiespoor, FTV/PIP).
+  - Later: uitnodiging en wachtwoordherstel per e-mail.

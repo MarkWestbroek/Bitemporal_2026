@@ -44,7 +44,7 @@
 | **Bundle** | Een pakket van policies + data dat de OpenFTV Manager distribueert naar de PDP. De PDP haalt periodiek de nieuwste bundle op van de Manager, zodat beleidswijzigingen automatisch worden doorgepropt. |
 | **bcrypt** | Een wachtwoord-hashalgoritme dat bewust traag is (om brute-force aanvallen moeilijker te maken). Wachtwoorden worden nooit als leesbare tekst opgeslagen; alleen de hash staat in de database. |
 | **Feature flag** | Een aan/uit-schakelaar (bij ons `AUTH_ENABLED` environment variable) waarmee je een feature kunt in- of uitschakelen zonder code te wijzigen. Default is `false` (auth uit), zodat bestaande workflows niet breken. |
-| **Seed** | Het automatisch aanmaken van initiële data bij het starten van de applicatie. Bij ons: `SeedAdminGebruiker()` maakt een admin-gebruiker aan als `ADMIN_USERNAME` en `ADMIN_PASSWORD` zijn ingesteld. |
+| **Seed** | Het automatisch aanmaken van initiële data bij het starten van de applicatie. Bij ons: `gebruikers.SeedAdmin()` maakt een admin-gebruiker aan (via de registratie-engine) als `ADMIN_USERNAME` en `ADMIN_PASSWORD` zijn ingesteld. |
 | **Gin** | Het Go web-framework dat we gebruiken voor HTTP routing en middleware. Vergelijkbaar met Express.js (Node) of Flask (Python). |
 | **Bun** | De Go ORM (Object-Relational Mapper) die we gebruiken voor database-interactie met PostgreSQL. Vertaalt Go structs naar SQL en terug. |
 
@@ -113,7 +113,13 @@
 
 ### 3.1 Gebruiker-tabel in de database
 
-De `Gebruiker` struct in `model/gebruiker.go` is een **plumbing-tabel** — geen bitemporele representatie. Dat betekent:
+> **Gewijzigd in oktober 2026.** `Gebruiker` is nu een **bitemporele entiteit** (domein
+> `beheer`, gegenereerd uit een V3-model); alleen de wachtwoord-hash en de laatste login staan
+> nog in een plumbing-tabel, `gebruiker_inlog`. Zie [§6](#6-database-gebruiker-tabel) en
+> [§11](#11-gebruikersbeheer); ontwerp en besluiten in [`plans/gebruikersbeheer/`](plans/gebruikersbeheer/). De tekst hieronder
+> beschrijft de oorspronkelijke platte tabel en is historisch.
+
+De `Gebruiker` struct in `model/gebruiker.go` was een **plumbing-tabel** — geen bitemporele representatie. Dat betekende:
 
 - Geen `opvoer`/`afvoer` (formele tijd)
 - Geen `aanvang`/`einde` (materiële tijd)
@@ -209,17 +215,29 @@ Request binnenkomst
 
 ### 3.5 Admin seed bij opstarten
 
-In `main.go`, na database-connectie:
+In `main.go`, ná `NewRouter()` (de seed leest het register via dynql, dat pas na `BuildSchema` klaar is):
 
 ```go
 if middleware.IsAuthEnabled() {
-    if err := handlers.SeedAdminGebruiker(context.Background()); err != nil {
-        fmt.Println("WARN: Admin-seed mislukt:", err)
-    }
+    gebruikers.MigreerOudeGebruikers(sysCtx) // eenmalig: oude platte tabel → register
+    gebruikers.SeedAdmin(sysCtx)             // eerste admin, via de registratie-engine
+    middleware.ZetGebruikerResolver(gebruikers.Resolver) // rol en status per verzoek
 }
 ```
 
-Dit leest `ADMIN_USERNAME` en `ADMIN_PASSWORD` uit de environment en maakt (eenmalig) een admin-gebruiker aan als die nog niet bestaat.
+`SeedAdmin` leest `ADMIN_USERNAME` en `ADMIN_PASSWORD` uit de environment en maakt (eenmalig) een admin-gebruiker aan als die nog niet bestaat.
+
+### 3.5a Rol en status per verzoek (oktober 2026)
+
+Het JWT zegt alleen *wie* er is ingelogd. `JWTAuthMiddleware` zoekt bij elk verzoek de actuele
+stand op in het register (`middleware/gebruiker_stand.go` → `gebruikers.Resolver`): de hoogste
+geldige roltoewijzing zonder domein, en of het account geblokkeerd is. Geblokkeerd of geen rol
+→ het verzoek is anoniem. De uitkomst wordt 30 seconden gecachet (`StandCacheDuur`), dus een
+blokkade of een verlopen proefrol werkt binnen een halve minuut, niet pas als het token na
+24 uur verloopt. Bij een databasefout blijven de claims uit het token gelden.
+
+De middleware zet de claims ook in de request-context (`middleware.MetClaims`), zodat de
+registratie-engine kan controleren wie er registreert (§11, admin-eis voor domein `beheer`).
 
 
 ### 3.6 GraphQL: queries openbaar (tenzij `LEESTOEGANG=documenten`, §7), mutaties vereisen `editor`
@@ -490,11 +508,15 @@ sequenceDiagram
 
 | Bestand | Verantwoordelijkheid |
 |---------|---------------------|
-| `model/gebruiker.go` | **Struct definitie**: `Gebruiker` met Bun-tags voor DB-mapping en JSON-tags voor API-serialisatie. Definieert `Rol` type (admin/editor/viewer). Bevat `json:"-"` op `WachtwoordHash` zodat het wachtwoord nooit in een response verschijnt. |
+| `model/gebruiker.go` | **Plumbing**: `GebruikerInlog` (tabel `gebruiker_inlog`: hash, laatste login; `json:"-"` op de hash) en `GebruikerOud` (de oude platte tabel, voor de migratie). De entiteit `Gebruiker` zelf is gegenereerd: `model/beheer_*.go`. |
+| `gebruikers/` | **Gebruikersbeheer**: stand "nu" lezen (`stand.go`), aanmaken via de engine (`aanmaken.go`), seed, migratie van de oude tabel, login en wachtwoord-endpoints (`handlers.go`). |
+| `middleware/gebruiker_stand.go` | Rol en status per verzoek uit het register (met cache), claims in de request-context, `MagBeheren`. |
+| `handlers/registration_beheer.go` | De engine weigert wijzigingen in domein `beheer` zonder admin (ook via `/registratie/` en GraphQL). |
+| `dbsetup/gebruiker_tabellen.go` | Hernoemt de oude tabel `gebruiker` naar `gebruiker_oud` vóór de hub wordt aangemaakt; maakt `gebruiker_inlog`. |
 | `dbsetup/createtables.go` | **Tabel-aanmaak**: Bun leest de `Gebruiker` struct-tags en genereert `CREATE TABLE IF NOT EXISTS gebruiker (…)`. Wordt aangeroepen bij elke startup → idempotent. |
 | `middleware/auth_middleware.go` | **JWT-logica + middleware**: `GenereerJWT()` (maakt tokens), `ValideerJWT()` (parseert + verifieert), `JWTAuthMiddleware()` (extraheert cookie → context), `RequireAuth()` (401 als niet ingelogd), `RequireRol()` (403 als onvoldoende rol), `IsAuthEnabled()` (feature flag check). |
-| `handlers/auth_handler.go` | **HTTP handlers**: `LoginHandler()` (credentials → JWT cookie), `LogoutHandler()` (verwijder cookie), `MeHandler()` (huidige gebruiker), `AuthStatusHandler()` (auth-status voor frontend), `SeedAdminGebruiker()` (initiële admin bij startup). |
-| `main.go` | **Wiring**: registreert `/api/auth/*` routes en roept `SeedAdminGebruiker()` aan bij startup als auth is ingeschakeld. |
+| `handlers/auth_handler.go` | **HTTP handlers**: `LogoutHandler()` (verwijder cookie), `MeHandler()` (huidige gebruiker), `AuthStatusHandler()` (auth-status voor frontend). Inloggen en de seed staan sinds oktober 2026 in `gebruikers/`. |
+| `main.go` | **Wiring**: registreert `/api/auth/*` en `/api/gebruikers*`, en draait na `NewRouter()` de migratie, de seed en `ZetGebruikerResolver` als auth is ingeschakeld. |
 | `routes/addroutes.go` | **Middleware-registratie**: `SetupMiddleware()` registreert CORS, RequestBodyLogger en JWTAuthMiddleware op de Gin engine. |
 | `.env.example` | **Configuratie-template**: documenteert alle auth-gerelateerde environment variables. |
 
@@ -535,33 +557,41 @@ sequenceDiagram
 
 ## 6. Database: Gebruiker-tabel
 
+Sinds oktober 2026 is `Gebruiker` een **bitemporele entiteit** in domein `beheer`, gegenereerd
+uit [`plans/gebruikersbeheer/gebruiker — v3-model.json`](plans/gebruikersbeheer/) met
+`go run ./cmd/codegen --mode additive --domein beheer --prefix beheer`:
+
+| GE | Momentvoorkomen | Tijd | Velden |
+|---|---|---|---|
+| `GebruikerIdentiteit` | enkelvoudig | formeel | `gebruikersnaam` (uniek), `weergavenaam`, `email` |
+| `GebruikerStatus` | enkelvoudig | materieel | `status` (`actief`/`geblokkeerd`), `toelichting` |
+| `GebruikerRoltoewijzing` | meervoudig | materieel | `rol` (`viewer`/`editor`/`admin`), `domein` (leeg = alle), `toelichting` |
+
+Zonder status-GE geldt *actief*. Afvoer of een einde op de entiteit = account beëindigd. Met een
+einde op een roltoewijzing verloopt een proefaccount vanzelf. Rollen mét domein tellen nog niet
+mee voor de rol in de middleware; die zijn bedoeld voor de autorisatielaag (FTV/PIP).
+
+**Bewust niet bitemporeel:** de wachtwoord-hash en de laatste login. Registraties worden nooit
+gewist (een oude hash zou eeuwig blijven), de gegenereerde API zou ze tonen, en elke login zou
+een registratie opleveren. Die staan in de plumbing-tabel:
+
 ```sql
-CREATE TABLE IF NOT EXISTS gebruiker (
-    id               BIGSERIAL    PRIMARY KEY,
-    gebruikersnaam   TEXT         NOT NULL UNIQUE,
-    wachtwoord_hash  TEXT         NOT NULL,       -- bcrypt hash, NOOIT leesbare tekst
-    email            TEXT,
-    rol              TEXT         NOT NULL DEFAULT 'viewer',
-    actief           BOOLEAN      NOT NULL DEFAULT TRUE,
-    aangemaakt_op    TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    laatste_login_op TIMESTAMPTZ
+CREATE TABLE IF NOT EXISTS gebruiker_inlog (
+    gebruiker_id            BIGINT      PRIMARY KEY REFERENCES gebruiker(id),
+    wachtwoord_hash         TEXT        NOT NULL,   -- bcrypt, NOOIT leesbare tekst
+    wachtwoord_gewijzigd_op TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    laatste_login_op        TIMESTAMPTZ
 );
 ```
 
-> **Let op**: deze tabel wordt automatisch aangemaakt door Bun op basis van de Go struct-tags. Je hoeft geen handmatige DDL uit te voeren.
-
-### Is Gebruiker bitemporeel?
-
-**Nee, bewust niet.** De `Gebruiker` is een plumbing-tabel (net als `Registratie` en `Wijziging`). Authenticatie is infrastructuur, geen domeindata.
-
-Als in de toekomst blijkt dat je een audittrail wilt bijhouden van wie wanneer welke rol had, of wanneer een account is geactiveerd/gedeactiveerd, dan kan `Gebruiker` worden omgezet naar een volwaardige bitemporele representatie via de MetaRegistry. De refactoring is:
-
-1. Maak een `Gebruiker` entry in de MetaRegistry (metatype: `entiteit`)
-2. Voeg `opvoer`/`afvoer` toe (afgeleid uit registratie/wijziging)
-3. Optioneel: Hub+_Data patroon voor versioned content
-4. Routes worden automatisch gegenereerd
-
-Dit is een relatief kleine refactoring die op elk moment kan worden gedaan.
+**Migratie van de oude platte tabel.** Bij de eerste opstart van deze versie hernoemt
+`dbsetup` de oude tabel `gebruiker` (herkenbaar aan kolom `wachtwoord_hash`) naar
+`gebruiker_oud`, vóór de hub wordt aangemaakt. Na `NewRouter()` zet
+`gebruikers.MigreerOudeGebruikers` elke rij om in een registratie (bron `gebruikersbeheer`):
+identiteit, status (`actief=false` → `geblokkeerd`) en één roltoewijzing; de hash en de laatste
+login gaan ongewijzigd naar `gebruiker_inlog`, dus iedereen houdt zijn wachtwoord. Idempotent
+(een gebruikersnaam die al bestaat wordt overgeslagen). `gebruiker_oud` blijft staan; verwijder
+hem met de hand als alles klopt (`DROP TABLE gebruiker_oud;`).
 
 ---
 
@@ -740,76 +770,96 @@ main.jsx (7 pagina's)           editor/main.jsx (inhoud)     publicatie/main.jsx
 
 ## 11. Gebruikersbeheer
 
-Er is nog geen gebruikersbeheer-UI. Gebruikers worden aangemaakt via twee wegen:
+Ontwerp en besluiten: [`plans/gebruikersbeheer/`](plans/gebruikersbeheer/). Een beheerscherm in de Studio volgt (backlog §38); tot die
+er is, gaat alles via de API. **Alle routes hieronder vragen de rol admin**, behalve het eigen
+wachtwoord.
 
-### A. Admin-seed via `.env` (aanbevolen voor eerste gebruik)
+### Eerste admin
 
-Voeg toe aan `.env`:
+Via `.env`, zoals voorheen:
 
 ```env
 AUTH_ENABLED=true
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD=geheim123
+ADMIN_PASSWORD=een-lang-wachtwoord
 ADMIN_EMAIL=admin@example.com   # optioneel
 ```
 
-Bij elke start roept `main.go` `SeedAdminGebruiker()` aan. Die maakt de gebruiker **alleen aan als die nog niet bestaat** — bestaande gebruikers worden nooit overschreven. Na de eerste keer is het veilig om `ADMIN_PASSWORD` uit de `.env` te verwijderen.
+`gebruikers.SeedAdmin()` maakt deze gebruiker bij de opstart aan als hij nog niet bestaat
+(registratie via de engine + wachtwoord in `gebruiker_inlog`). Bestaande gebruikers worden nooit
+overschreven; na de eerste keer mag `ADMIN_PASSWORD` uit de `.env`.
 
-```go
-// handlers/auth_handler.go
-func SeedAdminGebruiker(ctx context.Context) error {
-    username := os.Getenv("ADMIN_USERNAME")
-    password := os.Getenv("ADMIN_PASSWORD")
-    // ... bcrypt + INSERT ... ON CONFLICT DO NOTHING
-}
-```
+### Overzicht
 
-### B. Extra gebruikers direct in de database
+`GET /api/gebruikers` geeft de stand "nu": per gebruiker id, gebruikersnaam, weergavenaam,
+e-mail, status, geldige rollen, laatste login, `heeft_wachtwoord` en `mag_inloggen`.
 
-Bcrypt-hash genereren kan via Go (of een online bcrypt tool op cost 10):
+### Gebruiker aanmaken
+
+Via de gegenereerde route, in één registratie (een plaatshouder als id):
 
 ```bash
-# Via htpasswd (Apache utils):
-htpasswd -bnBC 10 "" geheim123 | tr -d ':\n'
+curl -b admin.jar -X POST https://<host>/full/gebruikers -H 'Content-Type: application/json' -d '{
+  "id": "$nieuw.g",
+  "gebruiker_identiteiten":    [{"gebruikersnaam": "jan", "weergavenaam": "Jan", "email": "jan@example.org"}],
+  "gebruiker_roltoewijzingen": [{"rol": "editor", "toelichting": "proefaccount", "einde": "2026-12-31"}]
+}'
 ```
 
-Insert:
+Zonder `gebruiker_statussen` is de gebruiker actief. `einde` (en `aanvang`) op de roltoewijzing
+is optioneel: met een einde verloopt de rol vanzelf.
 
-```sql
-INSERT INTO gebruiker (gebruikersnaam, wachtwoord_hash, email, rol, actief)
-VALUES
-  ('jan',    '$2a$10$...hash...', 'jan@example.com',    'editor', true),
-  ('marjan', '$2a$10$...hash...', 'marjan@example.com', 'viewer', true);
+### Wachtwoord zetten of resetten
+
+```bash
+# Zelf een wachtwoord kiezen (minstens 10 tekens):
+curl -b admin.jar -X PUT https://<host>/api/gebruikers/<id>/wachtwoord -H 'Content-Type: application/json' -d '{"wachtwoord":"..."}'
+# Of de server er een laten maken; het antwoord bevat het één keer:
+curl -b admin.jar -X PUT https://<host>/api/gebruikers/<id>/wachtwoord
 ```
 
-Wachtwoord resetten:
+Het eigen wachtwoord wijzigen (ingelogd, elke rol):
+`PUT /api/auth/wachtwoord` met `{"huidig": "...", "nieuw": "..."}`.
 
-```sql
-UPDATE gebruiker
-SET wachtwoord_hash = '$2a$10$...nieuwehash...'
-WHERE gebruikersnaam = 'jan';
+### Rol wijzigen, blokkeren, beëindigen
+
+Gewone registraties op de GE's, via `/registratie/` of `PATCH /full/gebruikers/:id`:
+
+```json
+{"registratie": {"registratietype": "registratie", "opmerking": "Jan geblokkeerd"},
+ "wijzigingen": [{"opvoer": {"gebruikerstatus": {"gebruiker_id": 5, "status": "geblokkeerd", "toelichting": "..."}}}]}
 ```
 
-Gebruiker deactiveren (kan niet meer inloggen, wordt niet verwijderd):
+- **Blokkeren / deblokkeren:** een nieuwe `gebruikerstatus` (enkelvoudig; de vorige sluit vanzelf af).
+- **Rol erbij:** opvoer van een `gebruikerroltoewijzing`; **rol eraf:** afvoer van die toewijzing,
+  of een einde op de toewijzing.
+- **Account beëindigen:** afvoer van de entiteit (`DELETE /gebruikers/:id`) of een einde op de
+  entiteit. Niets wordt hard verwijderd; de geschiedenis blijft.
 
-```sql
-UPDATE gebruiker SET actief = false WHERE gebruikersnaam = 'jan';
-```
+Een wijziging werkt binnen 30 seconden (cache in de middleware, §3.5a).
 
-### Tabelstructuur (referentie)
+### Wie mag wat
 
-| Kolom | Type | Toelichting |
-|-------|------|-------------|
-| `id` | bigint PK autoincrement | intern |
-| `gebruikersnaam` | text UNIQUE NOT NULL | login-naam |
-| `wachtwoord_hash` | text NOT NULL | bcrypt (cost 10), nooit plaintext |
-| `email` | text | optioneel |
-| `rol` | text NOT NULL default 'viewer' | `admin` / `editor` / `viewer` |
-| `actief` | bool NOT NULL default true | false = geblokkeerd |
-| `aangemaakt_op` | timestamptz | automatisch |
-| `laatste_login_op` | timestamptz nullable | bijgewerkt bij elke succesvolle login |
+- De gegenereerde routes van domein `beheer` (`/gebruikers`, `/full/gebruikers`, de GE-routes)
+  vragen admin, ook voor lezen en ook met `LEESTOEGANG=open` (`routes/leestoegang.go`).
+- De registratie-engine weigert elke wijziging in domein `beheer` zonder admin, dus ook via
+  `/registratie/`, PATCH, DELETE en GraphQL (`handlers/registration_beheer.go`). Anders kon een
+  editor zichzelf admin maken.
+- Domein `beheer` staat niet in het GraphQL-schema (lezen gaat daar per document, niet per type).
+- Seed en migratie registreren als systeemaanroep (`middleware.AlsSysteem`).
+- Registraties hebben (nog) geen actor-veld; bron `gebruikersbeheer` markeert seed en migratie.
 
-> **Roadmap**: gebruikersbeheer als bitemporeel model met gegenereerde API en een Studio-activiteit — voorstel in [`plans/gebruikersbeheer/2026-10-06 Gebruikersbeheer als bitemporeel model (voorstel).md`](plans/gebruikersbeheer/2026-10-06%20Gebruikersbeheer%20als%20bitemporeel%20model%20(voorstel).md), backlog §38.
+### Inloggen
+
+`POST /api/auth/login` zoekt de gebruikersnaam in het register, controleert het wachtwoord uit
+`gebruiker_inlog` en weigert met 403 als het account geblokkeerd is of nu geen rol heeft (pas
+ná een juist wachtwoord, om user enumeration te voorkomen).
+
+### Let op bij een devloop-rebuild
+
+Een volledige rebuild (`/admin/rebuild`, alleen met `-tags devtools`) uit een V3-model zónder
+domein `beheer` verwijdert `model/beheer_*.go`. De API bouwt dan nog wel, maar niemand kan meer
+inloggen. Neem het gebruikersmodel mee in het model of rebuild per domein.
 
 ---
 
@@ -819,16 +869,16 @@ UPDATE gebruiker SET actief = false WHERE gebruikersnaam = 'jan';
 A: Een httpOnly cookie is veiliger tegen XSS (JavaScript kan het token niet lezen). De browser stuurt de cookie automatisch mee; de frontend hoeft het token niet op te slaan of te beheren.
 
 **Q: Wat gebeurt er als de database niet bereikbaar is bij login?**
-A: Bun retourneert een fout bij de SELECT query; de `LoginHandler` geeft een generiek "Ongeldige gebruikersnaam of wachtwoord" terug (om user enumeration te voorkomen).
+A: Het opzoeken in het register mislukt; `gebruikers.LoginHandler` geeft 500 ("Kon de gebruiker niet opzoeken") en logt de fout. Voor al ingelogde gebruikers blijven de claims uit het token gelden zolang de database weg is.
 
 **Q: Kan ik lokaal ontwikkelen zonder auth?**
 A: Ja — laat `AUTH_ENABLED` weg uit je `.env` (of zet op `false`). Alle endpoints zijn dan publiek, net als vóór de auth-implementatie.
 
 **Q: Hoe maak ik een nieuwe gebruiker aan?**
-A: Zie [sectie 11 — Gebruikersbeheer](#11-gebruikersbeheer): via de admin-seed in `.env` (voor de eerste admin) of direct via SQL in de database (voor extra gebruikers).
+A: Zie [sectie 11 — Gebruikersbeheer](#11-gebruikersbeheer): de eerste admin via de seed in `.env`, verdere gebruikers via `POST /full/gebruikers` en `PUT /api/gebruikers/:id/wachtwoord` (admin).
 
 **Q: Wat als ik mijn wachtwoord vergeet?**
-A: Reset via de database (zie [sectie 11](#11-gebruikersbeheer)): `UPDATE gebruiker SET wachtwoord_hash = '<nieuwe bcrypt hash>' WHERE gebruikersnaam = '...'`. Een self-service password reset komt in een latere fase.
+A: Een admin reset het met `PUT /api/gebruikers/:id/wachtwoord` (zie [sectie 11](#11-gebruikersbeheer)). Herstel per e-mail komt in een latere fase.
 
 **Q: Hoe test ik authenticatie handmatig?**
 A:
