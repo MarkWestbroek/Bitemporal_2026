@@ -45,6 +45,7 @@ bron- en doelelement.
 | import | **Mermaid flowchart → use case-model** | **lezer + regelset + toepasser** (§3, §6) |
 | transform | Kopieer map-inhoud naar een map | code |
 | export | Map → JSON, Map → Markdown-overzicht | code |
+| export | **Use case-model → Mermaid flowchart** | **graafbeeld + regelset + toepasser + schrijver** (§3, §6) — de terugweg van de import, roundtrip getest |
 
 **Buiten de registry** (ouder, eigen ingang):
 
@@ -77,9 +78,10 @@ model (bereik) ─────────────────────�
 | Deel | Wat het weet | Vorm | Waar |
 |---|---|---|---|
 | **Lezer** | de *syntax* van een extern formaat | code (een parser) | `transformatie/mermaidFlowchart.js` |
+| **Graafbeeld** (de lezer voor de modelkant) | niets van een profiel: element → knoop, connector → verbinding, `containerVoor` → `groep` | generieke code | `transformatie/modelNaarGraaf.js` |
 | **Regelset** | de *betekenis*: welk bron-patroon wordt wat in het doel | **data** — geordende `als … maak …`-regels | `diagramprofielen/<profiel>/…Regels.js` |
 | **Toepasser** | niets van bron of doel; voert regels uit | generieke code | `transformatie/regels.js` |
-| **Schrijver** | de syntax van het doelformaat | code of een tekstsjabloon | `transformatie/turtleSchrijver.js` (RDF/Turtle) |
+| **Schrijver** | de syntax van het doelformaat | code of een tekstsjabloon | `transformatie/turtleSchrijver.js` (RDF/Turtle), `transformatie/mermaidSchrijver.js` (Mermaid flowchart) |
 
 Alles wat een model is — een Mermaid-tekening, een OAS-document, een Studio-model
 — is hier een **graaf**: knopen met eigenschappen, groepen (containers) en
@@ -253,6 +255,33 @@ de gangbare flowchart-conventie:
 Voor deze import kreeg het use case-profiel een eigenschap **Toelichting** op
 actor, use case en systeemkader, en mag een systeemkader een systeemkader bevatten.
 
+### De terugweg: use case-model → Mermaid flowchart
+
+*Transformeren → Exporteren →* **"Use case-model → Mermaid flowchart"** schrijft
+de use case-diagrammen van een map als `.mmd`, één flowchart per diagram met de
+diagramnaam als titelregel (elementen op geen enkel diagram komen in een laatste
+flowchart "overige elementen"). Route:
+
+```
+model ──modelNaarGraaf──▶ graaf ──mermaidExportRegels──▶ plan ──mermaidSchrijver──▶ tekst
+```
+
+De regelset (`diagramprofielen/usecase/mermaidExportRegels.js`) is het
+spiegelbeeld van de importregels: actor → cirkel, use case → stadion,
+systeemkader → subgraph, toelichting → notitie aan een stippellijn, include/
+extend → `<<include>>`/`<<extend>>`, generalisatie → `specialisatie` (of de eigen
+naam als die er is), associatie → doorgetrokken pijl; `bevat` zit in de nesting.
+De schrijver kent alleen Mermaid: vormen, ontsnapping (`#quot;`, `#60;`, …),
+subgraphs, `class`-regels.
+
+**Roundtrip** (`mermaidExport.test.js`): import → export → import geeft hetzelfde
+model (elementen, relaties, toelichtingen, diagrammen), de lezer leest de
+geschreven tekst zonder waarschuwingen, en een tweede rondgang schrijft letterlijk
+dezelfde tekst. Wat níet terugkomt is wat het model niet kent: opmaak
+(`classDef`-kleuren uit de bron) en de precieze volgorde en bewoording van de
+oorspronkelijke tekst — de export schrijft in zijn eigen vaste volgorde, met
+element-id's als Mermaid-id's.
+
 ## 7. Vervolg (voorstel, in volgorde van opbrengst)
 
 1. **Tweede regelset op dezelfde toepasser** — gedaan met de ODRL-export (§8),
@@ -268,8 +297,9 @@ actor, use case en systeemkader, en mag een systeemkader een systeemkader bevatt
 5. **Regelsets als bestand** in het project (JSON), bewerkbaar in de Studio; de
    validatie (`valideerRegelset`) is daar al op voorbereid.
 6. **Schrijver** voor export met tekstsjablonen (vrije tekst: code, DDL), en
-   dezelfde runner in een CLI. De RDF-schrijver bestaat (§3, §8); een
-   JSON-LD-serialisatie hoeft alleen `triplesNaarTurtle` te vervangen.
+   dezelfde runner in een CLI. De RDF-schrijver (§3, §8) en de Mermaid-schrijver
+   (§6) bestaan; een JSON-LD-serialisatie hoeft alleen `triplesNaarTurtle` te
+   vervangen.
 7. **Bronnen samenvoegen en regelsets stapelen.** Een transformatie heeft vaak
    méér dan één bron, en dan is één regelset niet genoeg. Het speelt nu op drie
    plekken, telkens anders opgelost:
@@ -344,3 +374,98 @@ Voorbeelden, de runner en hoe je ze in de viewer bekijkt:
 `authz/odrl-viewer-voorbeelden/`. De bestaande JSON-LD-export uit de editor
 (`toegangsspraak/odrl.js`) blijft ernaast bestaan; het verschil staat in
 [TOEGANGSSPRAAK.md](TOEGANGSSPRAAK.md).
+
+## 9. Viewer, editor en de Transformatie-entiteit (ontwerp, 2026-10-06)
+
+Regelsets zijn nu `.js`-bestanden in de broncode. Dit is het ontwerp om ze te
+bekijken, te testen en te bewerken — en om ze, *eat your own dogfood*, als
+geregistreerde gegevens in het register te brengen. Het zijn **twee
+verschillende dingen** die elkaar op één punt raken.
+
+### 9.1 De regelset als gegevens: entiteit `Transformatie`
+
+Zoals de andere definities in het configuratiedomein (FormulierDefinitie,
+QueryDefinitie, NotificatieDefinitie): één entiteit, de inhoud in GE's. Daarmee
+komt gratis mee: bitemporele historie (welke regel gold op het moment van die
+export, wie veranderde wat), correctie via registraties, replay naar een andere
+instantie, API en GraphQL, en het entiteitsformulier als bewerker.
+
+```
+ENT Transformatie                      domein configuratie, isMaterieel
+  GE Meta       enkelvoudig            naam, code (= regelset-id), versie, bron, doel,
+                                       beschrijving, status
+  GE Regels     enkelvoudig            regels_json — de regels als JSON, in volgorde
+```
+
+- **De regels blijven JSON in één veld**, zoals `layout_json` van de
+  FormulierDefinitie. Er zijn (nog) geen sub-GE's; en de JSON-vorm is toch al de
+  uitwisselvorm. Een formulier-widget maakt het veld toonbaar; `valideerRegelset`
+  is de controle bij registratie, dezelfde als in de Studio.
+- **Een regel is geen eigen entiteit.** Een regel betekent niets zonder zijn
+  plaats in de volgorde (volgorde = prioriteit), en een gedeelde regel die in
+  twee regelsets verandert is het overschaduw-probleem van §7.7 in het verborgene.
+  Dezelfde regel in twee regelsets is een kopie, zoals een template bij zijn
+  stylesheet hoort en een rule bij zijn ATL-module.
+- **Hergebruik is een relatie tussen regelsets**: `Transformatie bouwt voort op
+  Transformatie` — het stapelen van §7.7, met de laag als eigen entiteit met eigen
+  `code`, en het samengestelde id in de kop van de uitvoer.
+- **`bron` en `doel` zijn tekstsleutels** (`usecase`, `mermaid-flowchart`) met een
+  versie, geen relaties: profielen (M2) leven niet in het register.
+
+**Drie vindplaatsen, één vorm.** Dezelfde JSON leeft ingebouwd in de code (de
+standaardregelsets), in de projectboom (lokaal, zonder register) en in het
+register (gedeeld en gepubliceerd). De Studio laadt ze in die volgorde van
+voorkeur: register als het er is, anders project, anders ingebouwd; wie wat
+overschrijft wordt getoond, niet verzwegen. Deze laadroute is het eerste
+bouwwerk; de entiteit komt daarna.
+
+### 9.2 De formulier-editor
+
+De kale ingang: het entiteitsformulier van `Transformatie`, met een widget op
+`regels_json` die de regels als tabel toont (volgorde, naam, `bij`, `als`, actie)
+en bewerkt. Geen zicht op het effect — dat is niet erg, want elke wijziging
+wordt gevalideerd en is te proberen in 9.3.
+
+### 9.3 De live view (werkbank, geen formulier)
+
+Een Studio-activiteit "Transformaties". In M-termen:
+
+| Wat erin gaat | Niveau | Vorm |
+|---|---|---|
+| de regelset | een afbeelding tussen twee M2's (profiel ↔ profiel) of tussen een M2 en een extern formaat | uit het register, de projectboom of ingebouwd (9.1) |
+| de proefbron | M1 | een bestand, geplakte tekst, of een bereik uit het interne model: map, diagram, selectie (§4) |
+| de twee talen | M2 | het profiel (elementtypen, verbindingsregels, containers) en de lezer/schrijver van het formaat |
+
+Wat eruit komt:
+
+- **het plan en de trace, per regel**: welke bron-items elke regel pakte, welke
+  items nergens landden (`geen-regel`, `overgeslagen`) en welke in een ander
+  opgingen — regels die niets raken zijn net zo zichtbaar als items zonder regel;
+- **de meldingen**, gebundeld zoals in het transformatiepaneel;
+- **een voorvertoning van het resultaat**: een diagram als het doel een profiel
+  is (het core-model op een tijdelijk canvas, niets in de store), tekst als het
+  doel een formaat is (de Turtle, de Mermaid).
+
+Testen gebeurt dus altijd tegen een echt model, nooit tegen de regels alleen;
+daarom kan dit geen formulier zijn. Het is tegelijk de ontwikkelomgeving voor
+nieuwe regelsets (de ODRL-export heeft nu alleen een CLI) en het "proefdraaien"
+van §7.4: dezelfde functie, vóór het toepassen.
+
+### 9.4 Waar de twee elkaar raken
+
+De live view opent een regelset en toont per regel het effect. Bewerken in de
+live view is **dezelfde JSON met dezelfde validator**; "bewaren" is een
+registratie op de Transformatie-entiteit (of schrijven naar de projectboom als
+er geen register is). Zo blijft er één waarheid en één bewerkpad: het formulier
+is de kale ingang, de live view de ingang met zicht op het effect.
+
+### 9.5 Volgorde
+
+1. **Live view als lezer** over de ingebouwde regelsets, met de proefbron als
+   geplakte tekst of gekozen map. Dwingt de laadroute (9.1, drie vindplaatsen) en
+   het bereik (§4) uit.
+2. **Entiteit `Transformatie`** in het configuratiedomein, met de formulier-widget
+   voor `regels_json`; de Studio leest uit het register.
+3. **Bewerken in de live view** met bewaren als registratie.
+4. **Stapelen** als relatie tussen regelsets (§7.7), zodra het bereik `map` met
+   meerdere profielen er is.

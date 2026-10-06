@@ -7,6 +7,13 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+### Toegevoegd
+- **Transformatie "Use case-model → Mermaid flowchart"** (06-10): de terugweg van de import.
+  Schrijft de use case-diagrammen van een map als `.mmd`, één flowchart per diagram, met
+  toelichtingen als notities. Roundtrip getest: import → export → import geeft hetzelfde model en
+  een tweede export dezelfde tekst. Nieuw in `src/transformatie/`: `modelNaarGraaf.js` (graafbeeld
+  van een model als bron voor een regelset) en `mermaidSchrijver.js` (de Mermaid-schrijver). Zie
+  [`docs/TRANSFORMATIES.md`](../docs/TRANSFORMATIES.md) §6.
 
 ## [studio/v0.12.0] — 2026-10-06
 Gebruikersbeheer in de Studio: accounts, rollen en wachtwoorden als activiteit, en uitloggen in de

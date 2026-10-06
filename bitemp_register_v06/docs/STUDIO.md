@@ -793,8 +793,11 @@ dat element.
 
 Dit is de eerste transformatie in de vorm **lezer → regelset → toepasser**: de
 afbeelding zelf staat als leesbare `als … maak …`-regels in
-`diagramprofielen/usecase/mermaidRegels.js`, niet in code. De vorm, de stand van
-alle transformaties en de regeltabel staan in
+`diagramprofielen/usecase/mermaidRegels.js`, niet in code. De terugweg bestaat
+ook: *Transformeren → exporteren →* **"Use case-model → Mermaid flowchart"**
+schrijft de diagrammen van een map als `.mmd` (één flowchart per diagram), en
+leest via de import weer terug als hetzelfde model (roundtrip getest). De vorm, de
+stand van alle transformaties en de regeltabel staan in
 [TRANSFORMATIES.md](TRANSFORMATIES.md).
 
 
