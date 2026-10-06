@@ -809,7 +809,7 @@ UPDATE gebruiker SET actief = false WHERE gebruikersnaam = 'jan';
 | `aangemaakt_op` | timestamptz | automatisch |
 | `laatste_login_op` | timestamptz nullable | bijgewerkt bij elke succesvolle login |
 
-> **Roadmap**: een gebruikersbeheer-API + UI (lijst, aanmaken, wachtwoord wijzigen, roltoewijzing) staat in de backlog.
+> **Roadmap**: gebruikersbeheer als bitemporeel model met gegenereerde API en een Studio-activiteit — voorstel in [`plans/gebruikersbeheer/2026-10-06 Gebruikersbeheer als bitemporeel model (voorstel).md`](plans/gebruikersbeheer/2026-10-06%20Gebruikersbeheer%20als%20bitemporeel%20model%20(voorstel).md), backlog §38.
 
 ---
 

@@ -1746,3 +1746,24 @@ gebouwd is: `docs/plans/2026-10-01 GraphQL-schema-profiel (M2) op de diagram-mot
   - **Toegangsregel → veldsleutels** via koppelingen, bundel-compiler leest die (stap 5).
   - **Herafleiden van veldlijnen bij elke veldwijziging** in de editor, en een meldingenpaneel
     voor `valideerSchema`.
+
+## 38. Gebruikersbeheer als bitemporeel model (2026-10-06)
+
+**Aanleiding:** er is geen gebruikersbeheer-UI; accounts gaan met de hand in de tabel `gebruiker`
+(`AUTH_DEVELOPER_GUIDE.md` §11). Voorstel, model en open besluiten:
+`docs/plans/gebruikersbeheer/2026-10-06 Gebruikersbeheer als bitemporeel model (voorstel).md`.
+
+- Aanpak: dogfooding. `Gebruiker` als V3-model (domein `beheer`: GebruikerIdentiteit,
+  GebruikerStatus, GebruikerRoltoewijzing), backend uit codegen. De wachtwoord-hash en laatste
+  login blijven in de plumbing-tabel `gebruiker_inlog`.
+- ✅ **06-10:** model als V3-JSON (`docs/plans/gebruikersbeheer/gebruiker — v3-model.json`),
+  codegen-proefrun geslaagd.
+- Besluiten Mark 06-10: bestaande tabel `gebruiker` migreren naar `gebruiker_inlog` + hub
+  (typenaam blijft `Gebruiker`); login en middleware lezen status en rol "nu" uit het register
+  **per request** (blokkade en verlopen rol werken direct); admin-only rechten zijn een
+  autorisatiespoor, geen codegen.
+- Open:
+  - **Codegen in de repo, migratie** van bestaande accounts naar hub + `gebruiker_inlog`,
+    login/middleware omzetten, admin-seed via de registratie-engine.
+  - **Admin-only routes** voor domein `beheer`, ook voor lezen (autorisatie).
+  - Studio-activiteit *Gebruikers*; later uitnodiging en herstel per e-mail.
