@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.12.0] — 2026-10-06
+Gebruikersbeheer in de Studio: accounts, rollen en wachtwoorden als activiteit, en uitloggen in de
+menubalk. Backend: api 0.10.0 in [`RELEASE.md`](../../RELEASE.md).
+
 ### Toegevoegd
 - **Activiteit *Gebruikers*** (groep beheer, 06-10): accounts, rollen en wachtwoorden op het
   nieuwe gebruikersbeheer (domein `beheer`, `docs/AUTH_DEVELOPER_GUIDE.md` §11). Iedereen die is
