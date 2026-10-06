@@ -770,9 +770,15 @@ main.jsx (7 pagina's)           editor/main.jsx (inhoud)     publicatie/main.jsx
 
 ## 11. Gebruikersbeheer
 
-Ontwerp en besluiten: [`plans/gebruikersbeheer/`](plans/gebruikersbeheer/). Een beheerscherm in de Studio volgt (backlog §38); tot die
-er is, gaat alles via de API. **Alle routes hieronder vragen de rol admin**, behalve het eigen
-wachtwoord.
+Ontwerp en besluiten: [`plans/gebruikersbeheer/`](plans/gebruikersbeheer/). **In de Studio: activiteit *Gebruikers*** (groep
+beheer, `web/vite/src/studio/activities/gebruikersActivity.jsx`) doet alles hieronder met
+knoppen; daar wijzigt ook iedereen zijn eigen wachtwoord. De rest van deze sectie beschrijft de
+API eronder. **Alle routes hieronder vragen de rol admin**, behalve het eigen wachtwoord.
+
+> **Rol erbij met een einddatum:** gebruik `/registratie/` (zoals hieronder), niet
+> `PATCH /full/gebruikers/:id`. De PATCH voegt het nieuwe item wel toe, maar laat `aanvang` en
+> `einde` ervan stilzwijgend vallen (gezien 06-10-2026; algemeen PATCH-gedrag, niet specifiek
+> voor gebruikers).
 
 ### Eerste admin
 
@@ -831,8 +837,9 @@ Gewone registraties op de GE's, via `/registratie/` of `PATCH /full/gebruikers/:
 ```
 
 - **Blokkeren / deblokkeren:** een nieuwe `gebruikerstatus` (enkelvoudig; de vorige sluit vanzelf af).
-- **Rol erbij:** opvoer van een `gebruikerroltoewijzing`; **rol eraf:** afvoer van die toewijzing,
-  of een einde op de toewijzing.
+- **Rol erbij:** opvoer van een `gebruikerroltoewijzing`, eventueel met `"einde": "2026-12-31"`
+  (de engine koppelt het einde aan de nieuwe hub); **rol eraf:** afvoer met de `rel_id` uit
+  `GET /api/gebruikers` (`{"afvoer": {"gebruikerroltoewijzing": {"gebruiker_id": 5, "rel_id": 2}}}`).
 - **Account beëindigen:** afvoer van de entiteit (`DELETE /gebruikers/:id`) of een einde op de
   entiteit. Niets wordt hard verwijderd; de geschiedenis blijft.
 

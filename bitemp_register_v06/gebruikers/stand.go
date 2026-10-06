@@ -38,18 +38,22 @@ const (
 
 // Rol is één geldige roltoewijzing.
 type Rol struct {
-	Rol    string `json:"rol"`
-	Domein string `json:"domein,omitempty"` // leeg = alle domeinen
+	Rol     string `json:"rol"`
+	Domein  string `json:"domein,omitempty"`  // leeg = alle domeinen
+	RelID   int    `json:"rel_id,omitempty"`  // hub-id van de toewijzing (voor afvoer)
+	Aanvang string `json:"aanvang,omitempty"` // YYYY-MM-DD, leeg = open
+	Einde   string `json:"einde,omitempty"`   // YYYY-MM-DD, leeg = open
 }
 
 // Stand is een gebruiker zoals die op een moment in het register staat.
 type Stand struct {
-	ID             int    `json:"id"`
-	Gebruikersnaam string `json:"gebruikersnaam"`
-	Weergavenaam   string `json:"weergavenaam,omitempty"`
-	Email          string `json:"email,omitempty"`
-	Status         string `json:"status"` // actief of geblokkeerd; zonder status-GE: actief
-	Rollen         []Rol  `json:"rollen"`
+	ID                int    `json:"id"`
+	Gebruikersnaam    string `json:"gebruikersnaam"`
+	Weergavenaam      string `json:"weergavenaam,omitempty"`
+	Email             string `json:"email,omitempty"`
+	Status            string `json:"status"` // actief of geblokkeerd; zonder status-GE: actief
+	StatusToelichting string `json:"status_toelichting,omitempty"`
+	Rollen            []Rol  `json:"rollen"`
 }
 
 var rolNiveau = map[string]int{"viewer": 1, "editor": 2, "admin": 3}
@@ -90,10 +94,12 @@ func LaadAlle(ctx context.Context, nu time.Time) ([]Stand, error) {
 		}
 		if st := dynql.GeldigeHub(m[rolStatussen], typeStatus, nu); st != nil && tekst(st["status"]) != "" {
 			s.Status = tekst(st["status"])
+			s.StatusToelichting = tekst(st["toelichting"])
 		}
 		for _, r := range dynql.GeldigeHubs(m[rolRoltoewijzingen], typeRoltoewijzing, nu) {
 			if rol := tekst(r["rol"]); rol != "" {
-				s.Rollen = append(s.Rollen, Rol{Rol: rol, Domein: tekst(r["domein"])})
+				s.Rollen = append(s.Rollen, Rol{Rol: rol, Domein: tekst(r["domein"]), RelID: geheel(r["rel_id"]),
+					Aanvang: datum(r["aanvang"]), Einde: datum(r["einde"])})
 			}
 		}
 		if s.Gebruikersnaam != "" {
@@ -157,4 +163,23 @@ func geheel(v interface{}) int {
 	default:
 		return 0
 	}
+}
+
+// datum leest "datum" uit een aanvang-/einde-record (map, of lijst met één map); "" als er geen is.
+func datum(v interface{}) string {
+	if l, ok := v.([]interface{}); ok {
+		if len(l) == 0 {
+			return ""
+		}
+		v = l[0]
+	}
+	m, ok := v.(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	d := tekst(m["datum"])
+	if len(d) >= 10 {
+		return d[:10]
+	}
+	return d
 }

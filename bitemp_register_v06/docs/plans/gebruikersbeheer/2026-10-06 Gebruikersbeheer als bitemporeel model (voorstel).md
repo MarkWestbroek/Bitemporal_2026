@@ -2,7 +2,7 @@
 
 > **Stand:** 6 oktober 2026. Backend gebouwd (stap 2 en een minimale 2b): codegen in de repo,
 > migratie, login, seed, middleware per verzoek, admin-eis voor domein `beheer`. Het
-> beheerscherm (stap 3) volgt. Gebruik en details: `AUTH_DEVELOPER_GUIDE.md` §3.5a, §6, §11.
+> beheerscherm (stap 3) staat in de Studio: activiteit *Gebruikers*. Gebruik en details: `AUTH_DEVELOPER_GUIDE.md` §3.5a, §6, §11.
 > **Aanleiding:** er is geen gebruikersbeheer-UI. Accounts gaan nu met de hand in de tabel
 > `gebruiker` ([`AUTH_DEVELOPER_GUIDE.md`](../../AUTH_DEVELOPER_GUIDE.md) §11,
 > [`VPS_DEPLOYMENT.md`](../../VPS_DEPLOYMENT.md) §7). Backlog: [§38](../../BACKLOG.md).
@@ -179,5 +179,6 @@ weg (AUTH-gids §11).
 - Stap 1: ✅ model als V3-JSON, codegen-proefrun geslaagd, besluiten genomen.
 - Stap 2: ✅ codegen, `gebruiker_inlog`, migratie, login, seed, middleware.
 - Stap 2b: ✅ minimaal: `beheer` alleen voor `admin`, ook lezen. Fijnmazig (per domein, FTV): open.
-- Stap 3: Studio-activiteit *Gebruikers*.
+- Stap 3: ✅ Studio-activiteit *Gebruikers* (`gebruikersActivity.jsx`), met Playwright doorgelopen
+  tegen een testdatabase: aanmaken, rol erbij/eraf, (de)blokkeren, eigen wachtwoord.
 - Later: uitnodiging en wachtwoordherstel per e-mail (SMTP draait al voor de pf-notificaties).

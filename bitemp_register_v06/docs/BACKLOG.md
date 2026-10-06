@@ -1767,8 +1767,11 @@ gebouwd is: `docs/plans/2026-10-01 GraphQL-schema-profiel (M2) op de diagram-mot
   admin-eis voor `beheer` in de routes én de registratie-engine, `beheer` niet in GraphQL.
   Gebruik: `AUTH_DEVELOPER_GUIDE.md` §11.
 - Open:
-  - **Studio-activiteit *Gebruikers*** op `GET /api/gebruikers`, `POST /full/gebruikers`,
-    registraties op status/rol en `PUT /api/gebruikers/:id/wachtwoord`.
+  - ✅ **06-10 Studio-activiteit *Gebruikers*** (`gebruikersActivity.jsx`).
+  - **PATCH /full laat `aanvang`/`einde` van een nieuw meervoudig item vallen** (algemeen; het
+    scherm gebruikt daarom `/registratie/`). Uitzoeken in `wijziging_builder.go`.
+  - **Zelfbescherming in de API**: een admin kan zichzelf via de API nog blokkeren of de
+    admin-rol afnemen (het scherm verhindert het); herstel kan dan alleen met SQL.
   - **Actor op de registratie** (wie registreerde wat); nu alleen bron `gebruikersbeheer` voor
     seed en migratie.
   - Rollen per domein laten meetellen (autorisatiespoor, FTV/PIP).

@@ -8,6 +8,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Activiteit *Gebruikers*** (groep beheer, 06-10): accounts, rollen en wachtwoorden op het
+  nieuwe gebruikersbeheer (domein `beheer`, `docs/AUTH_DEVELOPER_GUIDE.md` §11). Iedereen die is
+  ingelogd wijzigt er zijn eigen wachtwoord (met herhaalveld en oogje); admins maken gebruikers aan
+  (de server maakt een wachtwoord dat je één keer ziet), voegen rollen toe met een optionele
+  einddatum, trekken rollen in, blokkeren, deblokkeren en beëindigen accounts. Elke wijziging is een
+  registratie. Je eigen admin-rol, blokkeren en beëindigen staan voor je eigen account uit.
+
 ## [studio/v0.11.0] — 2026-10-06
 Modelleren en uitwisselen: het GraphQL-schema als profiel, transformaties in een vaste vorm, de
 ODRL-export voor de viewer van de werkgroep FTV en modeldiagrammen als SVG voor Imprint. Backend:
