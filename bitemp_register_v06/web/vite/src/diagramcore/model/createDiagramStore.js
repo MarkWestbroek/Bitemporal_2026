@@ -514,6 +514,40 @@ export function createDiagramStore({ persistKey } = {}) {
         return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: rest } };
       }),
 
+    // === Patch-operaties (projectsync-vangnet, studio/sync/operaties.js) ===
+    // Upsert/wis per id, zonder cascade: de afzender heeft de cascade al in
+    // zijn diff zitten. Eén set = één undo-stap (maar bij remote toepassen
+    // staat de undo gepauzeerd).
+
+    /** @param {{zet?: Record<string, Element>, wis?: string[]}} patch */
+    patchElementen: ({ zet = {}, wis = [] } = {}) =>
+      set((state) => {
+        const elements = { ...state.elements, ...zet };
+        for (const id of wis) delete elements[id];
+        return { isDirty: true, elements };
+      }),
+
+    /** @param {{zet?: Record<string, Diagram>, wis?: string[]}} patch */
+    patchDiagrammen: ({ zet = {}, wis = [] } = {}) =>
+      set((state) => {
+        const { kaal, viewports: nieuweViewports } = splitsViewports(zet);
+        const diagrams = { ...state.diagrams, ...kaal };
+        const viewports = { ...state.viewports, ...nieuweViewports };
+        for (const id of wis) {
+          delete diagrams[id];
+          delete viewports[id];
+        }
+        return {
+          isDirty: true,
+          diagrams,
+          viewports,
+          actiefDiagramId:
+            state.actiefDiagramId && diagrams[state.actiefDiagramId]
+              ? state.actiefDiagramId
+              : Object.keys(diagrams)[0] || null,
+        };
+      }),
+
     /** Viewport: apart van de diagrammen, geen isDirty en geen undo-entry. */
     updateDiagramViewport: (diagramId, viewport) =>
       set((state) => ({ viewports: { ...state.viewports, [diagramId]: viewport } })),

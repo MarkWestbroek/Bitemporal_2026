@@ -22,6 +22,7 @@
  */
 import React, { useSyncExternalStore } from "react";
 import { create } from "zustand";
+import { koppelStore, kruisNet, KRUIS_VELDEN } from "../sync/operaties.js";
 import {
   getProfieltypen,
   getProfieltype,
@@ -221,6 +222,20 @@ export const useKruisStore = create((set) => ({
       return { links };
     }),
 
+  /**
+   * Patch-operatie (projectsync-vangnet): links van een ander upserten/wissen.
+   * @param {{zet?: any[], wis?: string[]}} patch
+   */
+  patchLinks: ({ zet = [], wis = [] } = {}) =>
+    set((s) => {
+      const weg = new Set(wis);
+      const bij = new Map(zet.map(normaliseerLink).filter(Boolean).map((l) => [l.id, l]));
+      const links = s.links.filter((l) => !weg.has(l.id) && !bij.has(l.id)).concat([...bij.values()]);
+      const next = { ...s, links };
+      bewaar(next);
+      return { links };
+    }),
+
   /** Project-werkbestand-import: vervang alle links (migreert oud formaat). */
   laadLinks: (links) =>
     set((s) => {
@@ -287,6 +302,10 @@ export const useKruisStore = create((set) => ({
       return { posities };
     }),
 }));
+
+// Projectsync (plan 2026-10-07, stap 2): de netto wijziging van de links is de
+// operatie (toggleLink/zetSoort hangen van de actieve soort af).
+koppelStore("kruis", useKruisStore, { velden: KRUIS_VELDEN, net: kruisNet });
 
 // ── Helpers ─────────────────────────────────────────────────────────
 /** Traceerbare profieltypen: eigen store met echte elementen. */

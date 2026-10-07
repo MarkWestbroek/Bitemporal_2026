@@ -58,6 +58,7 @@ const leesExportOpties = () => {
   const s = useExportInstellingen.getState();
   return { achtergrondModus: s.achtergrond, schaal: s.schaal, marge: s.marge };
 };
+import { koppelModelStore } from "../sync/operaties.js";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
 import { ANKER_PREFIX } from "../../diagramcore/canvas/materialiseerConnectoren.js";
@@ -134,6 +135,9 @@ export function maakDiagramActiviteit(opties) {
   const diagramTermMv = diagramTerm === "diagram" ? "diagrammen" : `${diagramTerm}en`;
 
   const useStore = createDiagramStore({ persistKey });
+  // Projectsync (plan 2026-10-07, stap 2): elke modelactie wordt een benoemde
+  // operatie in de outbox; undo/redo en migraties vangt het diff-vangnet.
+  koppelModelStore(id, useStore);
   // Model-migratie (DiagramType.hooks.migreerModel): een persistente sandbox
   // bewaart de vorm van het moment van inladen. Breng hem bij — direct na het
   // hydrateren én na elke latere laad (project-import, herlaad). Buiten de
@@ -875,7 +879,12 @@ export function maakDiagramActiviteit(opties) {
    * in dezelfde look als het canvas-contextmenu (dc-contextmenu) maar
    * fixed-positioned, met viewport-klem.
    */
+  // Een item mag `items: [...]` dragen: klikken opent die lijst in hetzelfde
+  // menu (drill-down met ‹ terug) — vgl. het ContextMenu van de projectboom;
+  // gebruikt voor "Verplaats naar map ▸".
   function ZijContextMenu({ menu, sluit }) {
+    const [sub, setSub] = useState(null);
+    useEffect(() => setSub(null), [menu]);
     useEffect(() => {
       if (!menu) return undefined;
       const dicht = (e) => {
@@ -890,17 +899,32 @@ export function maakDiagramActiviteit(opties) {
       };
     }, [menu, sluit]);
     if (!menu) return null;
+    const items = sub ? sub.items : menu.items;
     const links = Math.max(8, Math.min(menu.x, window.innerWidth - 250));
-    const boven = Math.max(8, Math.min(menu.y, window.innerHeight - 16 - menu.items.length * 28));
+    const boven = Math.max(8, Math.min(menu.y, window.innerHeight - 16 - (items.length + (sub ? 1 : 0)) * 28));
     return (
       <div
         className="dc-contextmenu"
-        style={{ position: "fixed", left: links, top: boven, zIndex: 400 }}
+        style={{ position: "fixed", left: links, top: boven, zIndex: 400, maxHeight: "70vh", overflowY: "auto" }}
         onContextMenu={(e) => e.preventDefault()}
       >
-        {menu.items.map((item, i) =>
+        {sub && (
+          <button className="dc-contextmenu-item" onClick={() => setSub(null)}>
+            ‹ {sub.label}
+          </button>
+        )}
+        {items.length === 0 && (
+          <div className="dc-contextmenu-item" style={{ opacity: 0.6, cursor: "default" }}>
+            geen opties
+          </div>
+        )}
+        {items.map((item, i) =>
           item.sep ? (
             <div key={i} className="dc-contextmenu-sep" />
+          ) : item.items ? (
+            <button key={item.id || i} className="dc-contextmenu-item" onClick={() => setSub(item)}>
+              {item.label} <span style={{ float: "right", opacity: 0.6 }}>▸</span>
+            </button>
           ) : (
             <button
               key={item.id || i}
@@ -925,7 +949,13 @@ export function maakDiagramActiviteit(opties) {
    * het actieve diagram (in het zichtbare viewport-midden); rechtsklik =
    * acties (toevoegen/losmaken/verwijderen — vgl. de IDE-ProjectBrowser).
    */
-  function ElementenBrowser({ verbergIds } = {}) {
+  /**
+   * @param {{verbergIds?: Set<string>, naarMapItems?: (ids: string[], opts?: {voorstel?: string}) => Object[]}} props
+   *   `naarMapItems` (Modelleren-host): bouwt het submenu "Verplaats naar
+   *   map ▸" voor een bundel element-ids — zonder host is er geen mappenboom
+   *   en blijft dat menupunt weg.
+   */
+  function ElementenBrowser({ verbergIds, naarMapItems } = {}) {
     const elements = useStore((s) => s.elements);
     const diagrams = useStore((s) => s.diagrams);
     const actiefDiagram = useStore((s) => s.actiefDiagramId);
@@ -985,6 +1015,15 @@ export function maakDiagramActiviteit(opties) {
         items.push({ label: `Toevoegen aan dit ${diagramTerm}`, onClick: () => voegToe(el) });
       }
       items.push({ label: "Toon details", onClick: () => setSelectieId(el.id) });
+      // Naar een map van de projectboom: de multiselectie als bundel als
+      // de aangeklikte regel erin zit, anders alleen deze regel.
+      if (naarMapItems) {
+        const bundel = multiIds.has(el.id) ? [...multiIds] : [el.id];
+        items.push({
+          label: bundel.length > 1 ? `Verplaats ${bundel.length} geselecteerde naar map` : "Verplaats naar map",
+          items: naarMapItems(bundel),
+        });
+      }
       items.push({
         label: "Hernoemen…",
         onClick: () => {
@@ -1036,6 +1075,28 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     // container (package) slepen = verhangen; op de achtergrond = losmaken.
     const [sleepDoel, setSleepDoel] = useState(null);
     const SLEEP_MIME = "application/studio05-element";
+    // Rechtsklik op een typekop ("Actor 13"): de hele groep in één keer
+    // selecteren of naar een map verplaatsen (bv. alle actoren → map Actoren).
+    const openGroepMenu = (e, et, items) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const ids = items.map((el) => el.id);
+      const menu = [
+        {
+          label: `Selecteer alle ${ids.length}`,
+          onClick: () => setMultiIds(new Set(ids)),
+        },
+        { label: dicht[et.id] ? "Uitklappen" : "Inklappen", onClick: () => setDicht((v) => ({ ...v, [et.id]: !v[et.id] })) },
+      ];
+      if (naarMapItems) {
+        menu.push({ sep: true });
+        menu.push({
+          label: `Verplaats alle ${ids.length} naar map`,
+          items: naarMapItems(ids, { voorstel: et.label || et.id }),
+        });
+      }
+      setZijMenu({ x: e.clientX, y: e.clientY, items: menu });
+    };
     const sleepProps = (el, et) => ({
       // Ook connectoren (associatie, ASOC) zijn versleepbaar — naar de
       // Modelleren-projectboom; binnen de browser landen ze nergens.
@@ -1351,6 +1412,8 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             <div key={et.id} style={{ marginBottom: 2 }}>
               <div
                 onClick={() => setDicht((v) => ({ ...v, [et.id]: !v[et.id] }))}
+                onContextMenu={(e) => openGroepMenu(e, et, items)}
+                title="Rechtsklik: alles selecteren of naar een map verplaatsen"
                 style={{
                   display: "flex",
                   alignItems: "center",
