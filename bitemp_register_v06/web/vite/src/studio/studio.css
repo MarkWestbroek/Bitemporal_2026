@@ -256,6 +256,13 @@
 .studio-project__grote-knop:hover { background: var(--s-hover); border-style: solid; }
 
 /* Elementen-boom van het actieve tab-profiel, onder de mappenboom. */
+.studio-project__splitter {
+  flex: 0 0 7px;
+  cursor: row-resize;
+  border-top: 1px solid var(--s-border);
+  background: transparent;
+}
+.studio-project__splitter:hover { background: var(--s-hover); }
 .studio-project__elementen {
   flex: 0 0 45%;
   min-height: 0;

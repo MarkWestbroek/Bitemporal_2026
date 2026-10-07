@@ -9,6 +9,7 @@
 import React, { useEffect } from "react";
 import { create } from "zustand";
 import { lijstProjecten, verwijderProject } from "./projectSync.js";
+import { vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 
 export const useProjectServerStore = create((set, get) => ({
   open: false,
@@ -68,12 +69,12 @@ export default function ProjectServerDialoog() {
   };
 
   const verwijder = async (meta) => {
-    if (!window.confirm(`Project "${meta.naam}" van de server verwijderen?\n\nDit kan niet ongedaan gemaakt worden. Lokale kopieën blijven bestaan.`)) return;
+    if (!(await vraagBevestiging({ titel: "Project van de server verwijderen", tekst: `Project "${meta.naam}" van de server verwijderen?\n\nDit kan niet ongedaan gemaakt worden. Lokale kopieën blijven bestaan.`, bevestig: "Verwijder", gevaar: true }))) return;
     try {
       await verwijderProject(meta.id);
       ververs();
     } catch (e) {
-      window.alert(`Verwijderen mislukt: ${e?.message || e}`);
+      toonMelding({ tekst: `Verwijderen mislukt: ${e?.message || e}` });
     }
   };
 

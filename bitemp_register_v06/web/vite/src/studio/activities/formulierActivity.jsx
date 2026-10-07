@@ -19,6 +19,7 @@ import { serializeLayout } from "../../formuliereditor/layoutModel";
 import FormulierCanvas from "../../formuliereditor/FormulierCanvas";
 import FormulierInspector from "../../formuliereditor/FormulierInspector";
 import FormulierIndex from "../../formuliereditor/FormulierIndex";
+import { vraagNaam, toonMelding } from "../naamDialog.jsx";
 
 function FormulierProvider({ children }) {
   // Menubalk-acties via de menuBus (de store is een module-singleton).
@@ -35,11 +36,11 @@ function FormulierProvider({ children }) {
         const st = useFormulierEditorStore.getState();
         try { await navigator.clipboard.writeText(st.json(true)); } catch { /* clipboard geweigerd */ }
       }),
-      menuBus.on("formulier:importeer", () => {
-        const tekst = window.prompt("Plak een layout-JSON:");
+      menuBus.on("formulier:importeer", async () => {
+        const tekst = await vraagNaam({ titel: "Layout importeren", label: "Plak een layout-JSON", meerregelig: true, bevestig: "Importeer" });
         if (tekst == null) return;
         const { fout } = useFormulierEditorStore.getState().laadLayout(tekst);
-        if (fout) window.alert(fout);
+        if (fout) toonMelding({ titel: "Importeren mislukt", tekst: fout });
       }),
     ];
     return () => af.forEach((off) => off());

@@ -7,6 +7,25 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+### Gewijzigd
+- **Geen browser-popups meer** (07-10): alle prompt/confirm/alert-vensters zijn vervangen door
+  de eigen dialoogservice (`naamDialog.jsx`), die bij de muisklik verschijnt. *Nieuwe map* en
+  *Nieuwe submap* vragen geen naam meer: de map staat er meteen en je typt de naam inline in de
+  boom; submappen kunnen willekeurig diep. Zie `docs/STUDIO.md`.
+### Toegevoegd
+- **Sorteren in de projectboom** (07-10): Ctrl+↑/↓ of *Omhoog*/*Omlaag* in het contextmenu voor
+  mappen, diagrammen en elementen. **Pijltjes** lopen door de boom: ↑/↓ regels, ← sluit een map of
+  gaat naar de ouder, → opent een map of gaat naar het eerste kind, Enter opent een diagram. De scheiding tussen Mappen en Elementen is een versleepbare
+  splitter (per browser bewaard).
+- **Velden herordenen** (attributen, operaties, …): ↑/↓ en Ctrl+↑/↓ in de inspector, Ctrl+↑/↓ in
+  het inline-veld op het canvas.
+- **Zelfde breedte / hoogte / maat** in de Uitlijnen-balk en het contextmenu: naar de laatst
+  geselecteerde (dus ook kleiner maken kan).
+- **Sneltoetsen**, instelbaar in Studio-instellingen → Sneltoetsen, met EA-achtige standaarden
+  (Ctrl+Alt+pijlen uitlijnen, Alt+V verticaal centreren = boven elkaar, Alt+H horizontaal = naast
+  elkaar zoals in EA, Alt+-/= verdelen, Alt+W/E/R zelfde maat, Alt+Z
+  maat aan inhoud, Ctrl+Delete verwijderen uit model, Alt+G zoek in projectboom).
+- Graaf (demo), SP en de Profiel-editor staan standaard niet meer in de activity bar.
 
 ## [studio/v0.14.0] — 2026-10-07
 Samenwerken aan een project, eerste trede: het Studio-project krijgt een naam en een id en kan

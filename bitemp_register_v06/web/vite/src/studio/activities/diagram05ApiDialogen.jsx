@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 import { menuBus } from "../menuBus";
 import { apiBase } from "../../shared/apiBase.js";
 import { exporteerV3, importeerV3 } from "../../diagramprofielen/canoniek-uml/serialisatie.js";
+import { vraagBevestiging } from "../naamDialog.jsx";
 
 const OVERLAY = {
   position: "fixed",
@@ -124,9 +125,12 @@ function LadenDialoog({ store, onSluit, onGeladen }) {
 
       const s = store.getState();
       if (Object.keys(s.elements).length > 0) {
-        const ok = window.confirm(
-          "Laden vervangt de hele 0.5-sandbox door het gekozen model.\nJe lokale wijzigingen gaan verloren. Doorgaan?"
-        );
+        const ok = await vraagBevestiging({
+          titel: "Sandbox vervangen",
+          tekst: "Laden vervangt de hele 0.5-sandbox door het gekozen model.\nJe lokale wijzigingen gaan verloren. Doorgaan?",
+          bevestig: "Laad",
+          gevaar: true,
+        });
         if (!ok) {
           setBezig(false);
           return;
@@ -195,9 +199,11 @@ function PubliceerDialoog({ store, onSluit }) {
   /** Nieuwe versie activeren (register gaat hem gebruiken) — aparte, bewuste stap. */
   const activeer = useCallback(async () => {
     if (!resultaat?.id) return;
-    const ok = window.confirm(
-      `Versie #${resultaat.id} activeren?\nHet register gaat deze schema-versie dan gebruiken.`
-    );
+    const ok = await vraagBevestiging({
+      titel: "Versie activeren",
+      tekst: `Versie #${resultaat.id} activeren?\nHet register gaat deze schema-versie dan gebruiken.`,
+      bevestig: "Activeer",
+    });
     if (!ok) return;
     setFout(null);
     try {

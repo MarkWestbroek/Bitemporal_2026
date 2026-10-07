@@ -10,6 +10,7 @@ import { registreerTransformatie } from "./transformatieRegistry.js";
 import { getProfieltype } from "../profieltypeRegistry";
 import { useModellerenStore } from "./modellerenActivity.jsx";
 import { useKruisStore, refKey, vanNaar } from "./koppelingenActivity.jsx";
+import { toonMelding } from "../naamDialog.jsx";
 
 let _teller = 0;
 const versId = (voor) => `${voor}__t${Date.now()}_${_teller++}`;
@@ -202,11 +203,11 @@ registreerTransformatie({
     try {
       data = JSON.parse(tekst);
     } catch {
-      window.alert("Geen geldig JSON-bestand.");
+      toonMelding({ tekst: "Geen geldig JSON-bestand." });
       return;
     }
     if (data?.formaat !== "studio-map-export") {
-      window.alert("Dit is geen map-export (formaat 'studio-map-export' ontbreekt).");
+      toonMelding({ tekst: "Dit is geen map-export (formaat 'studio-map-export' ontbreekt)." });
       return;
     }
     const ms = useModellerenStore.getState();

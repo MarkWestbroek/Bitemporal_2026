@@ -27,6 +27,7 @@ import { extraheerSilhouet } from "./silhouetExtractie.js";
 import ActiviteitenInstellingen from "../ActiviteitenInstellingen.jsx";
 import ProfieltypenInstellingen from "../ProfieltypenInstellingen.jsx";
 import ExportInstellingen from "../ExportInstellingen.jsx";
+import SneltoetsenInstellingen from "../SneltoetsenInstellingen.jsx";
 import useStudioStore from "../useStudioStore";
 
 /** Taakbalk-voorkeuren: eigen tooltips (naam + uitleg) aan/uit. */
@@ -46,6 +47,7 @@ function TaakbalkInstellingen() {
   );
 }
 import { TRACE_TYPEN, TraceGlyph } from "./koppelingenActivity.jsx";
+import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
 
 /** Legenda van de trace-relatiesymbolen (beide richtingen). Nu vast; later bewerkbaar. */
 function KruisverbandSymbolen() {
@@ -443,8 +445,8 @@ function Main() {
   const shapeIds = alleShapeIds().filter((id) => id !== "anker" && !eigenIds.has(id));
   const icoonIds = alleIcoonIds().filter((id) => !eigenIcoonIds.has(id));
 
-  const nieuwIcoon = () => {
-    const naam = window.prompt("Naam van het nieuwe icoon:", "Mijn icoon");
+  const nieuwIcoon = async () => {
+    const naam = await vraagNaam({ titel: "Nieuw icoon", label: "Naam", waarde: "Mijn icoon", bevestig: "Maak" });
     if (!naam) return;
     const id = naam.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "icoon";
     setIcoonBewerk({ id, label: naam, monochroom: true, svg: "" });
@@ -454,15 +456,15 @@ function Main() {
     setIcoonBewerk(null);
     ververs();
   };
-  const verwijderenIcoon = (def) => {
-    if (!window.confirm(`Icoon "${def.label || def.id}" verwijderen?`)) return;
+  const verwijderenIcoon = async (def) => {
+    if (!(await vraagBevestiging({ titel: "Icoon verwijderen", tekst: `Icoon "${def.label || def.id}" verwijderen?`, bevestig: "Verwijder", gevaar: true }))) return;
     verwijderIcoon(def.id);
     setIcoonBewerk(null);
     ververs();
   };
 
-  const nieuweVorm = () => {
-    const naam = window.prompt("Naam van de nieuwe vorm:", "Mijn vorm");
+  const nieuweVorm = async () => {
+    const naam = await vraagNaam({ titel: "Nieuwe vorm", label: "Naam", waarde: "Mijn vorm", bevestig: "Maak" });
     if (!naam) return;
     const id = naam.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "vorm";
     setBewerk({ id, label: naam, grondvorm: "afgerond", randDikte: 2, vulling: "#e2e8f0" });
@@ -472,8 +474,8 @@ function Main() {
     setBewerk(null);
     ververs();
   };
-  const verwijderen = (def) => {
-    if (!window.confirm(`Vorm "${def.label || def.id}" verwijderen?`)) return;
+  const verwijderen = async (def) => {
+    if (!(await vraagBevestiging({ titel: "Vorm verwijderen", tekst: `Vorm "${def.label || def.id}" verwijderen?`, bevestig: "Verwijder", gevaar: true }))) return;
     verwijderVorm(def.id);
     setBewerk(null);
     ververs();
@@ -512,6 +514,17 @@ function Main() {
       </div>
       <div style={sectie}>
         <KruisverbandSymbolen />
+      </div>
+
+      <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
+        <h2 style={{ margin: "0 0 2px" }}>Sneltoetsen</h2>
+        <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
+          Toetsen voor uitlijnen, maat en bewerken op het canvas (standaard naar Enterprise Architect) — per
+          browser bewaard. Klik op <em>Wijzig</em> en druk de combinatie.
+        </p>
+      </div>
+      <div style={sectie}>
+        <SneltoetsenInstellingen />
       </div>
 
       <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>

@@ -830,6 +830,66 @@ fase 2 een **bewerkbare sandbox**:
 - **Het veldeditor-veld** blijft binnen de node (links uitgelijnd op links
   uitgelijnde tekst, gecentreerd op gecentreerde tekst; een uitstekende
   actornaam mag wél buiten de figuur).
+- **Geen browser-popups meer** (2026-10-07): alle `window.prompt`/`confirm`/
+  `alert` in de Studio zijn vervangen door de eigen dialoogservice
+  (`studio/naamDialog.jsx`: `vraagNaam`, `vraagBevestiging`, `toonMelding`),
+  die bij de laatste muisklik verschijnt in plaats van midden op het scherm
+  (gemeld: "ze staan meestal ver van waar je klikte"). Waar een naam alleen
+  nodig was om iets aan te maken is er geen dialoog meer: **Nieuwe map** en
+  **Nieuwe submap** maken de map direct aan en zetten de regel in inline
+  hernoemen (`vraagHernoem`); de ouder gaat daarbij open. Bevestigingen
+  hebben een rode knop (`gevaar`) bij verwijderen/vervangen; een
+  bestands-`verwerk` van een profiel mag async zijn (OAS vraagt het dialect
+  via de dialoog). Submappen kunnen willekeurig diep.
+- **Sorteren in de projectboom** (2026-10-07): **Ctrl+↑/↓** verplaatst de
+  geselecteerde map, het geselecteerde diagram of element een plek tussen
+  zijn broers; het contextmenu heeft *Omhoog*/*Omlaag*. Mappen hadden al
+  `volgorde`; voor geplaatste regels ís de sleutelvolgorde van `plaatsing`
+  de volgorde (`schuifPlaatsing`, één structuur-undo-stap).
+- **Pijltjes in de projectboom**: ↑/↓ lopen door de zichtbare regels (mappen,
+  diagrammen, elementen, in DOM-volgorde via `data-boomsleutel`), ← sluit een
+  map of springt naar de ouder, → opent een map of gaat naar het eerste
+  kind, Enter opent een diagram. Bijvangst: twee mappen die in dezelfde
+  milliseconde ontstonden kregen hetzelfde id (`map_<tijd>`), de tweede
+  overschreef de eerste — nu met een teller.
+- **Scheiding Mappen/Elementen** is een versleepbare splitter
+  (`.studio-project__splitter`); de hoogte van de elementenlijst wordt per
+  browser bewaard (`studio05-project-elementen-hoogte`, default 260 px) —
+  de vaste 45% liet de boom te krap.
+- **Velden herordenen** (attributen, operaties, enum-waarden, …): in de
+  inspector met ↑/↓ naast het veld of **Ctrl+↑/↓** met de focus in de regel;
+  op het canvas met **Ctrl+↑/↓** in het inline-veld van een attribuut (de
+  getypte naam gaat mee, het veld opent op de nieuwe plek — pas ná de
+  rebuild: de node-data loopt via de React Flow-store één render achter op
+  onze nodes-state, en te vroeg heropenen toonde de naam van de buur en
+  schreef die bij bevestigen over het verplaatste veld). In de inspector
+  volgt de focus het verplaatste veld (`focusPlek`/`focusNaarRij`), zodat je
+  in een lange lijst door kunt drukken. Pure helper
+  `schuifVeld()` in `diagramcore/model/velden.js` (getest); één
+  `updateElement` = één undo.
+- **Zelfde breedte / hoogte / maat** in de Uitlijnen-balk en het
+  contextmenu (`berekenMaten()` in `layout/uitlijnen.js`): de selectie
+  krijgt de maat van de **laatst geselecteerde** node (zoals EA; de canvas
+  houdt de selectievolgorde bij in `selectieVolgordeRef`), zodat je ook
+  kleiner kunt maken; store-actie `updateNodeSizes` (één stap). Volgorde in
+  balk en menu: links / verticaal centreren / rechts, boven / horizontaal
+  centreren / onder, verdelen, maat.
+- **Sneltoetsen** (`studio/sneltoetsen.js`, instelscherm Studio-instellingen
+  → Sneltoetsen): instelbaar per browser, standaard naar Enterprise
+  Architect — Ctrl+Alt+←/→/↑/↓ randen uitlijnen, Alt+V verticaal centreren
+  (= boven elkaar, zelfde x-midden; mode `center-h`), Alt+H horizontaal
+  centreren (= naast elkaar; mode `center-v`) — de EA-benaming, Mark zag
+  het andersom dan de oude labels,
+  Alt+-/Alt+= verdelen, Alt+W/Alt+E/Alt+R zelfde breedte/hoogte/maat, Alt+Z
+  maat aanpassen aan inhoud, Ctrl+Delete verwijderen uit model, Alt+G zoek in
+  projectboom. Een binding is Ctrl/Alt + toets of een F-toets (kale letters
+  botsen met typen); een dubbele binding verhuist. Vast: F2, Delete,
+  Ctrl+Z/Y, pijltjes verplaatsen, Shift+slepen, Ctrl+↑/↓. De uitlijn-knoppen
+  tonen de toets in hun tooltip, het contextmenu rechts in de regel.
+- **Activity bar standaard**: dynamische profielen (de gebundelde demo's
+  Graaf en SP, eigen profielen) en de tekstuele Profiel-editor staan
+  standaard niet in de balk (`standaardVerborgen`); via Modelleren, *Ga
+  naar* en Studio-instellingen → Activiteiten blijven ze bereikbaar.
 - **Taakbalken op een rij bovenin** (2026-10-07): balken met `auto: true`
   in hun voorkeur (de standaard, en balken zonder voorkeur) worden na elke
   render op gemeten breedte links→rechts op één rij bovenin gelegd; past

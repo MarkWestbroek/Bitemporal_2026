@@ -11,6 +11,7 @@
 
 import { groepLabel } from "./activityRegistry";
 import { menuBus } from "./menuBus";
+import { toonMelding } from "./naamDialog.jsx";
 
 /**
  * Items van het Ga naar-menu: het opdrachtenpalet bovenaan, daarna per groep
@@ -152,7 +153,7 @@ function standaardMenus(ctx) {
       label: "Help",
       items: [
         { id: "docs", label: "Documentatie (STUDIO.md)…", onClick: openDocs },
-        { id: "about", label: `Over Omnium Studio (v${versie})`, onClick: () => window.alert(overTekst) },
+        { id: "about", label: `Over Omnium Studio (v${versie})`, onClick: () => toonMelding({ titel: "Over Omnium Studio", tekst: overTekst }) },
       ],
     },
   ];

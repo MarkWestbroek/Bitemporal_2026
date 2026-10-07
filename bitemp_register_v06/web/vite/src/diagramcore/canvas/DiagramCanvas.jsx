@@ -26,6 +26,10 @@
  *   onNodeDoubleClick? — (element) => void — gedragsverwijzing openen (alleen
  *                        bij een gevulde verwijzing; anders start dubbelklik
  *                        het inline hernoemen)
+ *   onSchuifVeld?      — (elementId, veldSleutel, "omhoog"|"omlaag") => nieuweSleutel|null —
+ *                        veld (attribuut) herordenen vanuit het inline-veld (Ctrl+↑/↓)
+ *   onNodeMaten?       — ({voorkomenId → {width,height}}) => void — zelfde
+ *                        breedte/hoogte/maat op de selectie (één stap)
  *   onHernoem?         — (elementId, naam, veldSleutel|null) => void — inline
  *                        hernoemd (F2, dubbelklik of klik op de naam); met
  *                        veldSleutel "<compartmentType>:<index>" is het de
@@ -74,7 +78,7 @@ const ANKER_ELEMENT_TYPE = {
   handleStijl: "onzichtbaar",
   resizebaar: false,
 };
-import { berekenUitlijning, berekenRasterSnap } from "../layout/uitlijnen.js";
+import { berekenUitlijning, berekenRasterSnap, berekenMaten, MAAT_MODES } from "../layout/uitlijnen.js";
 
 const nodeTypes = { element: ElementNode };
 const edgeTypes = { connector: ConnectorEdge };
@@ -164,6 +168,8 @@ function CanvasBinnenkant({
   onRandAanhechting,
   onNodeDoubleClick,
   onHernoem,
+  onSchuifVeld,
+  onNodeMaten,
   onExternDrop,
   shapeSet,
   layoutApiRef,
@@ -250,6 +256,11 @@ function CanvasBinnenkant({
   // selectie en slepen via node-changes lopen; de store blijft de waarheid
   // (posities gaan bij dragstop via onNodePositie terug).
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  // Inline bewerken: { nodeId, veld: sleutel|null } | null — en een wachtend
+  // verzoek dat het nodes-effect ná de eerstvolgende rebuild toepast (zie
+  // InlineNaamContext.schuifVeld).
+  const [hernoem, setHernoem] = useState(null);
+  const wachtendHernoemRef = useRef(null);
 
   // Programmatische selectie (bv. klik in een projectboom) vs. canvas-echo:
   // selectiePropRef ziet wanneer de selectieId-prop wijzigt; gemeldeSelectieRef
@@ -561,7 +572,22 @@ function CanvasBinnenkant({
         hd.some((e) => e.selected) ? hd.map((e) => (e.selected ? { ...e, selected: false } : e)) : hd
       );
     }
+    // Wachtend heropenen (schuifVeld): markeren zodra dit element écht
+    // vernieuwd is; het heropenen zelf gebeurt in het effect op `nodes`
+    // hieronder — de node-data bereikt ElementNode via de React Flow-store,
+    // en die loopt één render achter op onze nodes-state.
+    const w = wachtendHernoemRef.current;
+    if (w && elements[w.elementId] !== w.vorige) w.klaar = true;
   }, [diagram, elements, lookups, gematerialiseerd, opnames, nesting, altTilt, verrijk, setNodes, bewerkbaar, handleNodeResize, selectieId]);
+  useEffect(() => {
+    const w = wachtendHernoemRef.current;
+    if (!w?.klaar) return;
+    wachtendHernoemRef.current = null;
+    // Nog één tik: de StoreUpdater van React Flow (kind) heeft de nieuwe
+    // nodes nu in zijn store; ElementNode leest daaruit bij de volgende render.
+    const t = setTimeout(() => setHernoem({ nodeId: w.nodeId, veld: w.veld }), 0);
+    return () => clearTimeout(t);
+  }, [nodes]);
 
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
   // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —
@@ -694,6 +720,8 @@ function CanvasBinnenkant({
       // (`data-dc-veld`) = inline bewerken, zoals in de oude IDE. De handles
       // liggen in de DOM bovenop de tekst en winnen dus van deze klik.
       if (!bewerkbaar || !onHernoem || isAnker) return;
+      // Ctrl/Shift-klik = (multi)selectie, geen bewerken.
+      if (e.ctrlKey || e.metaKey || e.shiftKey) return;
       const start = klikStartRef.current;
       if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4) return;
       const doel = e.target?.closest?.("[data-dc-veld], [data-dc-naam], .dc-naam");
@@ -735,8 +763,18 @@ function CanvasBinnenkant({
     return () => window.removeEventListener("keydown", esc);
   }, [contextMenu, getNodes, rfStoreApi, setNodes, setEdges, onSelectElement]);
 
+  // Selectievolgorde (laatst geselecteerde achteraan): de maat-modi nemen
+  // de maat van de laatst geselecteerde node over (zoals EA), zodat je ook
+  // kleiner kunt maken.
+  const selectieVolgordeRef = useRef([]);
   const handleSelectionChange = useCallback(
     ({ nodes: sel, edges: selEdges }) => {
+      {
+        const ids = new Set((sel || []).map((n) => n.id));
+        const oud = selectieVolgordeRef.current.filter((id) => ids.has(id));
+        const nieuw = [...ids].filter((id) => !oud.includes(id));
+        selectieVolgordeRef.current = [...oud, ...nieuw];
+      }
       if (!onSelectElement) return;
       // Echo-demping: React Flow meldt de selectie ook na node-rebuilds
       // (nieuwe objecten, zelfde selectie). Alleen échte wijzigingen
@@ -1038,7 +1076,7 @@ function CanvasBinnenkant({
   // Zonder gevulde verwijzing start dubbelklik het inline hernoemen (F2 doet
   // dat ook, zie onKeyDown op de ReactFlow-wrapper). De toestand gaat via
   // InlineNaamContext naar ElementNode — geen node-rebuild voor één veldje.
-  const [hernoem, setHernoem] = useState(null); // { nodeId, veld: sleutel|null } | null
+  // (hernoem-state staat bovenaan bij de nodes-state: het nodes-effect gebruikt hem.)
   const handleNodeDoubleClick = useCallback(
     (_ev, node) => {
       const isAnker = node.id.startsWith(ANKER_PREFIX);
@@ -1071,8 +1109,26 @@ function CanvasBinnenkant({
         const elementId = node?.data?.element?.id || edge?.data?.connectorId || nodeId;
         onHernoem(elementId, naam, veld || null);
       },
+      // Ctrl+↑/↓ in het inline-veld van een attribuut: eerst de getypte naam
+      // bewaren, dan het veld verplaatsen en het veld op de nieuwe plek
+      // opnieuw openen.
+      schuifVeld: (nodeId, veldSleutel, richting, waarde) => {
+        if (!onSchuifVeld || !veldSleutel) return;
+        const node = getNodes().find((n) => n.id === nodeId);
+        const elementId = node?.data?.element?.id || nodeId;
+        if (waarde != null && onHernoem) onHernoem(elementId, waarde, veldSleutel);
+        const nieuw = onSchuifVeld(elementId, veldSleutel, richting);
+        // Niet meteen heropenen: de node draagt nog de oude volgorde tot de
+        // rebuild (store → nodes-effect). Het veld opende dan met de naam van
+        // de buur en schreef die bij bevestigen over het verplaatste veld
+        // (gemeld 2026-10-07). Het nodes-effect opent hem na de rebuild.
+        setHernoem(null);
+        // `vorige` = het element vóór de wijziging: het effect wacht tot de
+        // elements-prop een ander object voor dit element draagt.
+        wachtendHernoemRef.current = nieuw ? { nodeId, veld: nieuw, elementId, vorige: elements[elementId] } : null;
+      },
     }),
-    [hernoem, onHernoem, bewerkbaar, getNodes, rfStoreApi]
+    [hernoem, onHernoem, onSchuifVeld, bewerkbaar, getNodes, rfStoreApi, elements]
   );
   // F2 op precies één geselecteerde node (de node heeft focus na een klik,
   // dus de toets bubbelt naar de ReactFlow-wrapper). Niet tijdens typen.
@@ -1537,8 +1593,20 @@ function CanvasBinnenkant({
               !(n.parentId && n.data?.elementType?.randElement) &&
               !n.id.startsWith(ANKER_PREFIX)
           );
+          if (MAAT_MODES.has(mode)) {
+            const volgorde = selectieVolgordeRef.current;
+            const referentie = [...volgorde].reverse().find((id) => selectie.some((n) => n.id === id)) || null;
+            const maten = berekenMaten(mode, naarItems(selectie), referentie);
+            if (Object.keys(maten).length && onNodeMaten) onNodeMaten(maten);
+            return;
+          }
           pasToe(berekenUitlijning(mode, naarItems(selectie)));
         },
+        /** Geselecteerde nodes (zonder ankers): {nodeId, elementId}[] — voor sneltoetsen in de activiteit. */
+        selectieIds: () =>
+          getNodes()
+            .filter((n) => n.selected && !n.id.startsWith(ANKER_PREFIX))
+            .map((n) => ({ nodeId: n.id, elementId: n.data?.element?.id || n.id })),
         /**
          * Selecteer een node op het canvas (tree-klik). Alleen als hij
          * (deels) buiten beeld valt wordt het beeld minimaal bijgeschoven —
@@ -1687,7 +1755,7 @@ function CanvasBinnenkant({
         },
       };
     },
-    [getNodes, screenToFlowPosition, edges, elements, diagram, onNodePosities, rfStoreApi, absVan, containerOpPunt]
+    [getNodes, screenToFlowPosition, edges, elements, diagram, onNodePosities, onNodeMaten, rfStoreApi, absVan, containerOpPunt]
   );
 
   return (
@@ -1811,6 +1879,7 @@ function CanvasBinnenkant({
               >
                 {item.icoon ? <span className="dc-contextmenu-icoon">{item.icoon}</span> : null}
                 {item.label}
+                {item.shortcut ? <span className="dc-contextmenu-sneltoets">{item.shortcut}</span> : null}
               </button>
             )
           )}

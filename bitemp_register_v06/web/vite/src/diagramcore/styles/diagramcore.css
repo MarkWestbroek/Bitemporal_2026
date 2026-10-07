@@ -900,3 +900,11 @@
   gap: 5px;
   white-space: nowrap;
 }
+
+/* Sneltoets rechts in een contextmenu-regel (uitlijnen/maat). */
+.dc-contextmenu-item .dc-contextmenu-sneltoets {
+  float: right;
+  margin-left: 14px;
+  font-size: 11px;
+  opacity: 0.65;
+}

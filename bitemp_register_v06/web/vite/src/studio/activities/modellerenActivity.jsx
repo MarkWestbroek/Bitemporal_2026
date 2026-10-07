@@ -18,7 +18,7 @@
 import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
-import { vraagNaam } from "../naamDialog.jsx";
+import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
@@ -51,6 +51,23 @@ import ProfielIcoon from "../ProfielIcoon.jsx";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
 import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
+
+const ELEMENTEN_HOOGTE_SLEUTEL = "studio05-project-elementen-hoogte";
+function leesElementenHoogte() {
+  try {
+    const v = Number(window.localStorage.getItem(ELEMENTEN_HOOGTE_SLEUTEL));
+    return v > 40 ? v : 260;
+  } catch {
+    return 260;
+  }
+}
+function bewaarElementenHoogte(h) {
+  try {
+    window.localStorage.setItem(ELEMENTEN_HOOGTE_SLEUTEL, String(Math.round(h)));
+  } catch {
+    /* opslag uit */
+  }
+}
 
 // Drag-and-drop MIME-types in de projectboom.
 // PLAATSING draagt een plaatsing-sleutel (diagram- of element-regel die al
@@ -164,6 +181,8 @@ const legStructuurVast = (s) => {
   _structuurToekomst.length = 0;
 };
 
+let _mapTeller = 0;
+
 export const useModellerenStore = create((set, get) => ({
   /** @type {{id:string, profielId:string, diagramId:string}[]} — werkruimte-laag */
   tabs: werkruimteBegin.tabs,
@@ -264,7 +283,9 @@ export const useModellerenStore = create((set, get) => ({
   nieuweMap: (naam, ouderId = null, mapId = null) => {
     // `mapId` komt mee als de operatie van een ander wordt toegepast
     // (projectsync): dezelfde map, hetzelfde id, op elke client.
-    const id = mapId || `map_${Date.now()}`;
+    // Uniek ook binnen dezelfde milliseconde (twee mappen in één batch kregen
+    // hetzelfde id en de tweede overschreef de eerste — 2026-10-07).
+    const id = mapId || `map_${Date.now()}_${(_mapTeller += 1)}`;
     set((s) => {
       legStructuurVast(s);
       // volgorde = handmatige sortering per niveau; nieuw komt achteraan.
@@ -451,6 +472,33 @@ export const useModellerenStore = create((set, get) => ({
 
   /** Plaats (of ont-plaats met mapId null) een diagram in een map. */
   plaatsDiagram: (key, mapId) => get().plaatsMeerdere([key], mapId),
+
+  /**
+   * Verplaats een geplaatste regel (diagram/element) één plek omhoog of
+   * omlaag binnen zijn map. De sleutelvolgorde van `plaatsing` ís de
+   * volgorde in de boom (JSON bewaart die), dus wisselen = sleutels
+   * herschikken. Eén structuur-undo-stap.
+   */
+  schuifPlaatsing: (key, richting) =>
+    set((s) => {
+      const mapId = s.plaatsing[key];
+      if (!mapId) return {};
+      const sleutels = Object.keys(s.plaatsing);
+      const broers = sleutels.filter((k) => s.plaatsing[k] === mapId);
+      const idx = broers.indexOf(key);
+      const buur = broers[idx + (richting === "omhoog" ? -1 : 1)];
+      if (!buur) return {};
+      legStructuurVast(s);
+      const volgorde = sleutels.slice();
+      const a = volgorde.indexOf(key);
+      const b = volgorde.indexOf(buur);
+      [volgorde[a], volgorde[b]] = [volgorde[b], volgorde[a]];
+      const plaatsing = {};
+      for (const k of volgorde) plaatsing[k] = s.plaatsing[k];
+      const next = { ...s, plaatsing };
+      schrijfOpslag(next);
+      return { plaatsing };
+    }),
 
   /**
    * Plaats meerdere sleutels (diagrammen/elementen) tegelijk in een map —
@@ -661,6 +709,12 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
       { label: "Openen", onClick: () => openTab(profiel.id, diagram.id) },
       { label: "Eigenschappen", onClick: () => selecteerDiagram(profiel.id, diagram.id) },
       { label: "Hernoemen", onClick: () => setBewerk(true) },
+      ...(inMap
+        ? [
+            { label: "Omhoog", onClick: () => useModellerenStore.getState().schuifPlaatsing(id, "omhoog") },
+            { label: "Omlaag", onClick: () => useModellerenStore.getState().schuifPlaatsing(id, "omlaag") },
+          ]
+        : []),
       {
         label: "Verplaats naar",
         items: verplaatsNaarItems(verplaats, {
@@ -675,11 +729,11 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
       { sep: true },
       {
         label: "Verwijderen…",
-        onClick: () => {
+        onClick: async () => {
           const vraag = profiel.documentenBeheer
             ? `"${diagram.naam}" verwijderen? De inhoud van dit document gaat verloren.`
             : `Diagram "${diagram.naam}" verwijderen? (Elementen blijven in het model.)`;
-          if (!window.confirm(vraag)) return;
+          if (!(await vraagBevestiging({ titel: "Diagram verwijderen", tekst: vraag, bevestig: "Verwijder", gevaar: true }))) return;
           const st = profiel.useStore.getState();
           if (profiel.documentenBeheer) st.verwijderDiagram(diagram.id);
           else st.deleteDiagram(diagram.id);
@@ -709,6 +763,7 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
   return (
     <button
       type="button"
+      data-boomsleutel={"diag:" + id}
       className={
         "studio-project__diagram" +
         (id === actieveTab ? " is-actief" : "") +
@@ -1000,12 +1055,14 @@ function naarMapItemsVoor(profiel) {
     ...verplaatsNaarItems((mapId) => plaatsElementenInMap(profiel, elementIds, mapId)),
     ...(Object.keys(useModellerenStore.getState().mappen).length ? [{ sep: true }] : []),
     {
-      label: "Nieuwe map…",
+      // Direct aanmaken met een voorstelnaam en meteen inline hernoemen —
+      // geen prompt-popup (2026-10-07).
+      label: "Nieuwe map",
       onClick: () => {
-        const naam = window.prompt("Naam van de nieuwe map:", voorstel);
-        if (!naam) return;
-        const mapId = useModellerenStore.getState().nieuweMap(naam.trim() || voorstel);
+        const ms = useModellerenStore.getState();
+        const mapId = ms.nieuweMap(voorstel);
         plaatsElementenInMap(profiel, elementIds, mapId);
+        ms.vraagHernoem("map:" + mapId);
       },
     },
   ];
@@ -1086,15 +1143,16 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
    * heen moeten?); wel verwijderen uit het model — achter een bevestiging,
    * met Ctrl+Z als vangnet (zundo).
    */
-  const verwijderUitModel = () => {
-    if (
-      !window.confirm(
+  const verwijderUitModel = async () => {
+    const ok = await vraagBevestiging({
+      titel: "Uit het model verwijderen",
+      tekst:
         `"${element.naam || elementId}" uit het model verwijderen?\n` +
-          "Dit haalt het element (en zijn connectoren) ook van alle diagrammen. Ctrl+Z maakt het ongedaan."
-      )
-    ) {
-      return;
-    }
+        "Dit haalt het element (en zijn connectoren) ook van alle diagrammen. Ctrl+Z maakt het ongedaan.",
+      bevestig: "Verwijder",
+      gevaar: true,
+    });
+    if (!ok) return;
     profiel.useStore.getState().deleteElement(elementId);
     if (sleutel) plaatsDiagram(sleutel, null);
   };
@@ -1105,6 +1163,8 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
       { label: "Hernoemen", onClick: () => setBewerk(true) },
       ...(sleutel
         ? [
+            { label: "Omhoog", onClick: () => useModellerenStore.getState().schuifPlaatsing(sleutel, "omhoog") },
+            { label: "Omlaag", onClick: () => useModellerenStore.getState().schuifPlaatsing(sleutel, "omlaag") },
             {
               label: "Verplaats naar",
               items: verplaatsNaarItems((mapId) => {
@@ -1157,6 +1217,7 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
         ) : (
           <button
             type="button"
+            data-boomsleutel={"el:" + elementKey(profiel.id, elementId)}
             className={
               "studio-project__diagram studio-project__element" +
               (inMulti ? " is-multi" : "") +
@@ -1278,14 +1339,22 @@ function Map_({ map, diepte }) {
     },
   });
 
+  // Nieuwe submap: meteen aanmaken en inline hernoemen (geen prompt); de
+  // ouder gaat open zodat je de nieuwe regel ziet.
   const nieuweSubmap = () => {
-    const naam = window.prompt("Naam van de nieuwe submap:", "Nieuwe map");
-    if (naam) nieuweMap(naam, map.id);
+    const ms = useModellerenStore.getState();
+    const id = ms.nieuweMap("Nieuwe map", map.id);
+    if (!open) toggleMap(map.id);
+    ms.vraagHernoem("map:" + id);
   };
-  const verwijder = () => {
-    if (window.confirm(`Map "${map.naam}" verwijderen? De inhoud valt terug naar het niveau erboven.`)) {
-      verwijderMap(map.id);
-    }
+  const verwijder = async () => {
+    const ok = await vraagBevestiging({
+      titel: "Map verwijderen",
+      tekst: `Map "${map.naam}" verwijderen? De inhoud valt terug naar het niveau erboven.`,
+      bevestig: "Verwijder",
+      gevaar: true,
+    });
+    if (ok) verwijderMap(map.id);
   };
   const schuifMap = useModellerenStore((s) => s.schuifMap);
   const ctx = (e) =>
@@ -1326,6 +1395,7 @@ function Map_({ map, diepte }) {
   return (
     <div className="studio-project__map" style={{ marginLeft: diepte ? 12 : 0 }}>
       <div
+        data-boomsleutel={"map:" + map.id}
         className={
           "studio-project__mapkop" +
           (drop.over ? " is-dropdoel" : "") +
@@ -1523,10 +1593,32 @@ function Sidebar() {
   const tab = tabs.find((t) => t.id === actieveTab) || null;
   const profiel = tab ? getProfieltype(tab.profielId) : null;
   const Browser = profiel?.ElementenBrowser;
+  // Hoogte van de elementenlijst onder de boom: versleepbaar (splitter) en
+  // per browser bewaard — de vaste 45% liet de boom te krap (2026-10-07).
+  const [elementenHoogte, setElementenHoogte] = React.useState(leesElementenHoogte);
+  const startSplitter = (e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = elementenHoogte;
+    const ouder = e.currentTarget.parentElement;
+    const maxH = Math.max(120, (ouder?.clientHeight || 600) - 120);
+    const beweeg = (m) => setElementenHoogte(Math.max(80, Math.min(maxH, startH - (m.clientY - startY))));
+    const klaar = () => {
+      window.removeEventListener("pointermove", beweeg);
+      window.removeEventListener("pointerup", klaar);
+      setElementenHoogte((h) => {
+        bewaarElementenHoogte(h);
+        return h;
+      });
+    };
+    window.addEventListener("pointermove", beweeg);
+    window.addEventListener("pointerup", klaar);
+  };
 
   const maakMap = () => {
-    const naam = window.prompt("Naam van de nieuwe map:", "Nieuwe map");
-    if (naam) nieuweMap(naam);
+    const ms = useModellerenStore.getState();
+    const id = ms.nieuweMap("Nieuwe map");
+    ms.vraagHernoem("map:" + id);
   };
 
   // Ctrl+Z / Ctrl+Y met de focus in de boom = structuur-undo/redo.
@@ -1552,6 +1644,80 @@ function Sidebar() {
       e.preventDefault();
       e.stopPropagation();
       s.vraagHernoem(sleutel);
+      return;
+    }
+    // Pijltjes zonder modifier: door de zichtbare regels lopen (↑/↓), een
+    // map sluiten of naar de ouder (←), een map openen of naar het eerste
+    // kind (→) — zoals een verkenner. De zichtbare volgorde is de DOM-
+    // volgorde van de regels met data-boomsleutel (dichte mappen renderen
+    // hun inhoud niet). Enter opent een diagram.
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.key)) {
+      const s = useModellerenStore.getState();
+      const huidig = s.mapSelectie
+        ? "map:" + s.mapSelectie
+        : s.diagramSelectie
+          ? "diag:" + tabId(s.diagramSelectie.profielId, s.diagramSelectie.diagramId)
+          : s.elementSelectie
+            ? "el:" + elementKey(s.elementSelectie.profielId, s.elementSelectie.elementId)
+            : null;
+      const regels = [...e.currentTarget.querySelectorAll("[data-boomsleutel]")];
+      if (!regels.length) return;
+      const idx = regels.findIndex((r) => r.dataset.boomsleutel === huidig);
+      const selecteer = (regel) => {
+        const sl = regel?.dataset.boomsleutel;
+        if (!sl) return;
+        if (sl.startsWith("map:")) s.selecteerMap(sl.slice(4));
+        else if (sl.startsWith("diag:")) {
+          const [pid, did] = sl.slice(5).split("::");
+          s.selecteerDiagram(pid, did);
+        } else if (sl.startsWith("el:")) {
+          const [, pid, eid] = sl.slice(3).split("::");
+          s.selecteerElement(pid, eid);
+        }
+        regel.scrollIntoView({ block: "nearest" });
+      };
+      const mapOpenVan = (id) => s.mapOpen[id] ?? true;
+      let doel = null;
+      if (e.key === "ArrowDown") doel = regels[idx < 0 ? 0 : Math.min(idx + 1, regels.length - 1)];
+      else if (e.key === "ArrowUp") doel = regels[idx < 0 ? 0 : Math.max(idx - 1, 0)];
+      else if (e.key === "ArrowRight") {
+        if (idx < 0) doel = regels[0];
+        else if (huidig.startsWith("map:") && !mapOpenVan(huidig.slice(4))) s.toggleMap(huidig.slice(4));
+        else doel = regels[Math.min(idx + 1, regels.length - 1)];
+      } else if (e.key === "ArrowLeft") {
+        if (idx < 0) return;
+        const regel = regels[idx];
+        if (huidig.startsWith("map:") && mapOpenVan(huidig.slice(4))) s.toggleMap(huidig.slice(4));
+        else {
+          // Naar de ouder-map: de dichtstbijzijnde map-regel vóór deze regel
+          // die deze regel omsluit (.studio-project__map bevat zijn inhoud).
+          const ouderMap = regel.closest(".studio-project__map")?.parentElement?.closest(".studio-project__map");
+          const eigenMap = regel.classList.contains("studio-project__mapkop") ? ouderMap : regel.closest(".studio-project__map");
+          doel = eigenMap?.querySelector(":scope > .studio-project__mapkop[data-boomsleutel]") || null;
+        }
+      } else if (e.key === "Enter") {
+        if (huidig?.startsWith("diag:")) {
+          const [pid, did] = huidig.slice(5).split("::");
+          s.openTab(pid, did);
+        } else if (huidig?.startsWith("map:")) s.toggleMap(huidig.slice(4));
+        else return;
+      }
+      if (doel) selecteer(doel);
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    // Ctrl+↑/↓ = de geselecteerde regel (map, diagram, element) een plek
+    // omhoog/omlaag tussen zijn broers (ook via het contextmenu).
+    if ((e.ctrlKey || e.metaKey) && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+      const s = useModellerenStore.getState();
+      const richting = e.key === "ArrowUp" ? "omhoog" : "omlaag";
+      if (s.mapSelectie) s.schuifMap(s.mapSelectie, richting);
+      else if (s.diagramSelectie) s.schuifPlaatsing(tabId(s.diagramSelectie.profielId, s.diagramSelectie.diagramId), richting);
+      else if (s.elementSelectie) s.schuifPlaatsing(elementKey(s.elementSelectie.profielId, s.elementSelectie.elementId), richting);
+      else return;
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
     if (!(e.ctrlKey || e.metaKey)) return;
@@ -1615,7 +1781,10 @@ function Sidebar() {
       </div>
 
       {Browser && (
-        <div className="studio-project__elementen">
+        <div className="studio-project__splitter" title="Sleep om de verdeling boom/elementen te wijzigen" onPointerDown={startSplitter} />
+      )}
+      {Browser && (
+        <div className="studio-project__elementen" style={{ flex: `0 0 ${elementenHoogte}px` }}>
           <div className="studio-project__elementen-kop">
             <span
               className="studio-project__stip"
@@ -2119,29 +2288,31 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
   useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null });
 }
 
-function importeerProjectTekst(tekst, bestandsnaam = "") {
+async function importeerProjectTekst(tekst, bestandsnaam = "") {
   let ruw;
   try {
     ruw = JSON.parse(tekst);
   } catch {
-    window.alert("Dit is geen geldig JSON-bestand.");
+    toonMelding({ tekst: "Dit is geen geldig JSON-bestand." });
     return;
   }
   const uit = normaliseerProjectData(ruw, { bestandsnaam });
   if (!uit.ok) {
-    window.alert(uit.fout);
+    toonMelding({ tekst: uit.fout });
     return;
   }
   const data = uit.data;
   const profielIds = Object.keys(data.profielen || {});
   const onbekend = profielIds.filter((pid) => !getProfieltype(pid));
-  if (
-    !window.confirm(
+  const ok = await vraagBevestiging({
+    titel: "Project importeren",
+    tekst:
       `Project "${data.project.naam}" importeren?\n\nDit vervangt de projectstructuur (mappen, plaatsingen, tabs) én de inhoud van deze profielen:\n` +
-        `  ${profielIds.filter((pid) => getProfieltype(pid)).join(", ") || "(geen)"}` +
-        (onbekend.length ? `\n\nOnbekend hier (overgeslagen): ${onbekend.join(", ")}` : "")
-    )
-  ) {
+      `  ${profielIds.filter((pid) => getProfieltype(pid)).join(", ") || "(geen)"}` +
+      (onbekend.length ? `\n\nOnbekend hier (overgeslagen): ${onbekend.join(", ")}` : ""),
+    bevestig: "Importeer",
+  });
+  if (!ok) {
     return;
   }
   pasProjectToe(data);
@@ -2156,7 +2327,7 @@ function kiesEnImporteerProject() {
     if (!f) return;
     f.text()
       .then((tekst) => importeerProjectTekst(tekst, f.name))
-      .catch((e) => window.alert(`Lezen mislukt: ${e}`));
+      .catch((e) => toonMelding({ tekst: `Lezen mislukt: ${e}` }));
   };
   inp.click();
 }
@@ -2178,12 +2349,22 @@ async function nieuwProject() {
     return Object.keys(st.elements).length || Object.keys(st.diagrams).length;
   });
   if (heeftInhoud) {
-    const bewaar = window.confirm(
-      `Het huidige project "${project.naam}" eerst als JSON-bestand bewaren?\n\n` +
-        "OK = exporteren en daarna leeg beginnen.\nAnnuleren = niet exporteren (het project is dan alleen nog op de server als je het daarheen hebt gestuurd)."
-    );
+    const bewaar = await vraagBevestiging({
+      titel: "Eerst bewaren?",
+      tekst:
+        `Het huidige project "${project.naam}" eerst als JSON-bestand bewaren?\n\n` +
+        "Exporteren = bestand bewaren en daarna leeg beginnen.\nNiet exporteren = het project is dan alleen nog op de server als je het daarheen hebt gestuurd.",
+      bevestig: "Exporteren",
+      annuleer: "Niet exporteren",
+    });
     if (bewaar) exporteerProject();
-    if (!window.confirm(`Leeg beginnen? Alle lokale inhoud van "${project.naam}" wordt uit deze browser verwijderd.`)) return;
+    const leeg = await vraagBevestiging({
+      titel: "Leeg beginnen",
+      tekst: `Leeg beginnen? Alle lokale inhoud van "${project.naam}" wordt uit deze browser verwijderd.`,
+      bevestig: "Leeg beginnen",
+      gevaar: true,
+    });
+    if (!leeg) return;
   }
   const naam = await vraagNaam({ titel: "Nieuw project", label: "Projectnaam", waarde: STANDAARD_PROJECTNAAM, bevestig: "Maak" });
   if (naam === null) return;
@@ -2203,11 +2384,15 @@ async function stuurNaarServer() {
   const inhoud = bouwProjectData();
   const basis = { naam: project.naam, inhoud, tot_volgnummer: project.laatsteVolgnummer || 0 };
   const bevestigOverschrijven = (server) =>
-    window.confirm(
-      `Op de server staat al versie ${server.versie} van "${server.naam}"` +
+    vraagBevestiging({
+      titel: "Overschrijven op de server?",
+      tekst:
+        `Op de server staat al versie ${server.versie} van "${server.naam}"` +
         (server.bijgewerkt_door ? ` (laatst opgeslagen door ${server.bijgewerkt_door})` : "") +
-        `, nieuwer dan wat deze browser kent.\n\nOverschrijven met jouw versie?\n(Annuleren = niets doen; haal eerst op als je hun werk wilt zien.)`
-    );
+        `, nieuwer dan wat deze browser kent.\n\nOverschrijven met jouw versie?\n(Annuleren = niets doen; haal eerst op als je hun werk wilt zien.)`,
+      bevestig: "Overschrijf",
+      gevaar: true,
+    });
   try {
     let meta;
     if (project.serverVersie == null) {
@@ -2217,7 +2402,7 @@ async function stuurNaarServer() {
         if (e.status !== 409) throw e;
         // Zelfde id al op de server (bv. een collega stuurde dezelfde JSON-import op).
         const bestaand = await haalProjectOp(project.id);
-        if (!bevestigOverschrijven(bestaand)) return;
+        if (!(await bevestigOverschrijven(bestaand))) return;
         meta = await slaProjectOp(project.id, { ...basis, versie: bestaand.versie });
       }
     } else {
@@ -2225,7 +2410,7 @@ async function stuurNaarServer() {
         meta = await slaProjectOp(project.id, { ...basis, versie: project.serverVersie });
       } catch (e) {
         if (e.status === 409 && e.server) {
-          if (!bevestigOverschrijven(e.server)) return;
+          if (!(await bevestigOverschrijven(e.server))) return;
           meta = await slaProjectOp(project.id, { ...basis, versie: e.server.versie });
         } else if (e.status === 404) {
           // Op de server verwijderd: opnieuw aanmaken.
@@ -2243,7 +2428,7 @@ async function stuurNaarServer() {
       laatsteSync: new Date().toISOString(),
     });
   } catch (e) {
-    window.alert(`Naar server sturen mislukt: ${e?.message || e}`);
+    toonMelding({ tekst: `Naar server sturen mislukt: ${e?.message || e}` });
   }
 }
 
@@ -2300,33 +2485,34 @@ function haalVanServer() {
     huidigId: project.id,
     onKies: async (meta) => {
       const zelfde = meta.id === project.id;
-      if (
-        !window.confirm(
-          zelfde
-            ? `"${meta.naam}" (versie ${meta.versie}) van de server ophalen?\n\nJe lokale wijzigingen sinds de laatste sync worden overschreven.`
-            : `"${meta.naam}" ophalen?\n\nDit vervangt je huidige project "${project.naam}" in deze browser. Annuleer en parkeer het eerst (Nieuw project… / Exporteer project…) als je het wilt bewaren.`
-        )
-      ) {
+      const ok = await vraagBevestiging({
+        titel: "Van de server ophalen",
+        tekst: zelfde
+          ? `"${meta.naam}" (versie ${meta.versie}) van de server ophalen?\n\nJe lokale wijzigingen sinds de laatste sync worden overschreven.`
+          : `"${meta.naam}" ophalen?\n\nDit vervangt je huidige project "${project.naam}" in deze browser. Annuleer en parkeer het eerst (Nieuw project… / Exporteer project…) als je het wilt bewaren.`,
+        bevestig: "Ophalen",
+      });
+      if (!ok) {
         return;
       }
       try {
         const rec = await haalProjectOp(meta.id);
         const uit = normaliseerProjectData(rec.inhoud);
         if (!uit.ok) {
-          window.alert(`Serverproject onbruikbaar: ${uit.fout}`);
+          toonMelding({ tekst: `Serverproject onbruikbaar: ${uit.fout}` });
           return;
         }
         // Naam en id van de server zijn leidend (hernoemd op de server telt).
         const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
         const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
-        if (onbekend.length) window.alert(`Profielen onbekend in deze Studio (overgeslagen): ${onbekend.join(", ")}`);
+        if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio (overgeslagen): ${onbekend.join(", ")}` });
         pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0 });
         // Snapshot + wat er daarna in het operatielog kwam (ook eigen oude operaties).
         const n = await haalBinnen({ inclusiefEigen: true });
         useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
         if (n) menuBus.emit("menu:ververs");
       } catch (e) {
-        window.alert(`Ophalen mislukt: ${e?.message || e}`);
+        toonMelding({ tekst: `Ophalen mislukt: ${e?.message || e}` });
       }
     },
   });
@@ -2383,7 +2569,7 @@ function menus(ctx) {
           await verzend();
           const n = await haalBinnen();
           const st = useSyncStore.getState();
-          if (st.stand === "offline" || st.stand === "fout" || st.stand === "nietOpServer") window.alert(`Verversen: ${st.fout || st.stand}`);
+          if (st.stand === "offline" || st.stand === "fout" || st.stand === "nietOpServer") toonMelding({ titel: "Verversen", tekst: `${st.fout || st.stand}` });
           else if (n) menuBus.emit("menu:ververs");
         },
       },
