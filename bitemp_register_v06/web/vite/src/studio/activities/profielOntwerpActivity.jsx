@@ -20,6 +20,7 @@ import { vervangDiagramType, getDiagramType, alleDiagramTypes } from "../../diag
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 import ShapeSetPaneel from "./shapeSetPaneel.jsx";
 import { vertaalHooks, maakGeneriekeMaakElement } from "./profielGereedschap.js";
+import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 import {
   profielOntwerpKern,
   PROFIEL_ONTWERP_ID,
@@ -45,13 +46,15 @@ vervangDiagramType(descriptor);
  * Vertaal het áctieve diagram (= profiel) naar een descriptor en registreer
  * hem als activiteit; een bestaand profiel met dezelfde id wordt ververst.
  */
-function activeerProfiel(useStore) {
-  const id = window.prompt("Profiel-id (kleine letters en koppeltekens):", "mijn-profiel");
+async function activeerProfiel(useStore) {
+  const id = await vraagNaam({ titel: "Profiel activeren", label: "Profiel-id (kleine letters en koppeltekens)", waarde: "mijn-profiel", bevestig: "Volgende" });
   if (!id) return;
-  const label = window.prompt("Naam in de activity bar:", id) || id;
+  const label = (await vraagNaam({ titel: "Profiel activeren", label: "Naam in de activity bar", waarde: id, bevestig: "Volgende" })) || id;
   // P05: eigen embleem in de activity bar (1-2 tekens); git-persistent via
   // de kern. Leeg = het standaard profiel-icoon.
-  const embleem = (window.prompt("Embleem voor de activity bar (1-2 tekens, leeg = standaard):", "") || "")
+  const embleem = (
+    (await vraagNaam({ titel: "Profiel activeren", label: "Embleem voor de activity bar (1-2 tekens, leeg = standaard)", waarde: "", bevestig: "Activeer", leegToegestaan: true })) || ""
+  )
     .trim()
     .slice(0, 2);
   try {
@@ -74,20 +77,20 @@ function activeerProfiel(useStore) {
     bewaarProfiel(kern);
     useStudioStore.getState().setActief(activiteitId);
   } catch (e) {
-    window.alert(`Activeren mislukt: ${e?.message || e}`);
+    toonMelding({ tekst: `Activeren mislukt: ${e?.message || e}` });
   }
 }
 
 /** Laad een geregistreerd profiel als éxtra ontwerp-diagram in de sandbox. */
-function bekijkBestaandProfiel(useStore) {
+async function bekijkBestaandProfiel(useStore) {
   const ids = alleDiagramTypes()
     .map((dt) => dt.id)
     .filter((dtId) => dtId !== PROFIEL_ONTWERP_ID);
-  const keuze = window.prompt(`Welk profiel?\nBeschikbaar: ${ids.join(", ")}`, ids[0] || "");
+  const keuze = await vraagNaam({ titel: "Profiel laden", label: `Welk profiel? (beschikbaar: ${ids.join(", ")})`, waarde: ids[0] || "", bevestig: "Laad" });
   if (!keuze) return;
   const gekozen = getDiagramType(keuze.trim());
   if (!gekozen) {
-    window.alert(`Onbekend profiel "${keuze}".`);
+    toonMelding({ tekst: `Onbekend profiel "${keuze}".` });
     return;
   }
   // P01: elk bekeken profiel wordt een éigen diagram in de sandbox,
@@ -126,10 +129,12 @@ function bewaarLayoutAlsStandaard(useStore) {
   if (!d) return;
   const m = /^ontw_(.+?)(?:_\d{10,})?$/.exec(d.id);
   if (!m) {
-    window.alert(
-      "Dit ontwerp is niet uit een geregistreerd profiel geladen.\n" +
-        "Activeer het eerst (dan krijgt het een profiel-id) en laad het opnieuw."
-    );
+    toonMelding({
+      titel: "Geen geregistreerd profiel",
+      tekst:
+        "Dit ontwerp is niet uit een geregistreerd profiel geladen.\n" +
+        "Activeer het eerst (dan krijgt het een profiel-id) en laad het opnieuw.",
+    });
     return;
   }
   const layout = {};
@@ -137,14 +142,14 @@ function bewaarLayoutAlsStandaard(useStore) {
     layout[sleutel] = { x: Math.round(node.position.x), y: Math.round(node.position.y) };
   }
   bewaarProfielLayout(m[1], layout);
-  window.alert(`Layout bewaard als standaard voor profiel "${m[1]}".`);
+  toonMelding({ tekst: `Layout bewaard als standaard voor profiel "${m[1]}".` });
 }
 
 /** Voorbeeld-ontwerp (Ster ◆ Planeet) laden — vervangt de sandbox. */
-function laadVoorbeeld(useStore) {
+async function laadVoorbeeld(useStore) {
   if (
     Object.keys(useStore.getState().elements).length &&
-    !window.confirm("Voorbeeld-ontwerp laden? De huidige sandbox wordt vervangen.")
+    !(await vraagBevestiging({ titel: "Voorbeeld laden", tekst: "Voorbeeld-ontwerp laden? De huidige sandbox wordt vervangen.", bevestig: "Laad voorbeeld", gevaar: true }))
   ) {
     return;
   }

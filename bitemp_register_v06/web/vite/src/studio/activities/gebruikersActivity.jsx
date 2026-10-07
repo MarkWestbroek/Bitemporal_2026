@@ -18,6 +18,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { IconGebruikers } from "../icons";
 import { apiBase } from "../studioUtils";
+import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
 
 const ROLLEN = ["viewer", "editor", "admin"];
 const MIN_LENGTE = 10; // gelijk aan gebruikers.MinWachtwoordLengte
@@ -211,16 +212,19 @@ function Main() {
     });
   }
 
-  function resetWachtwoord(g) {
-    if (!window.confirm(`Nieuw wachtwoord maken voor ${g.gebruikersnaam}? Het oude werkt dan niet meer.`)) return;
+  async function resetWachtwoord(g) {
+    if (!(await vraagBevestiging({ titel: "Nieuw wachtwoord", tekst: `Nieuw wachtwoord maken voor ${g.gebruikersnaam}? Het oude werkt dan niet meer.`, bevestig: "Maak nieuw wachtwoord" }))) return;
     doe(async () => {
       const d = await api(`/api/gebruikers/${g.id}/wachtwoord`, { method: "PUT" });
       setEenmalig({ naam: g.gebruikersnaam, wachtwoord: d.wachtwoord });
     });
   }
 
-  function zetStatus(g, status) {
-    const toelichting = status === "geblokkeerd" ? window.prompt(`Waarom ${g.gebruikersnaam} blokkeren? (optioneel)`, "") : "";
+  async function zetStatus(g, status) {
+    const toelichting =
+      status === "geblokkeerd"
+        ? await vraagNaam({ titel: `${g.gebruikersnaam} blokkeren`, label: "Toelichting (optioneel)", waarde: "", bevestig: "Blokkeer", leegToegestaan: true })
+        : "";
     if (toelichting === null) return; // geannuleerd
     const opvoer = { gebruiker_id: g.id, status };
     if (toelichting) opvoer.toelichting = toelichting;
@@ -234,13 +238,13 @@ function Main() {
     doe(() => registreer(`${g.gebruikersnaam}: rol ${rol}${tot ? ` tot ${tot}` : ""}`, [{ opvoer: { gebruikerroltoewijzing: opvoer } }]));
   }
 
-  function rolEraf(g, r) {
-    if (!window.confirm(`Rol ${r.rol} van ${g.gebruikersnaam} intrekken?`)) return;
+  async function rolEraf(g, r) {
+    if (!(await vraagBevestiging({ titel: "Rol intrekken", tekst: `Rol ${r.rol} van ${g.gebruikersnaam} intrekken?`, bevestig: "Intrekken", gevaar: true }))) return;
     doe(() => registreer(`${g.gebruikersnaam}: rol ${r.rol} ingetrokken`, [{ afvoer: { gebruikerroltoewijzing: { gebruiker_id: g.id, rel_id: r.rel_id } } }]));
   }
 
-  function beeindig(g) {
-    if (!window.confirm(`Account ${g.gebruikersnaam} beëindigen? Inloggen kan dan niet meer. De geschiedenis blijft bewaard.`)) return;
+  async function beeindig(g) {
+    if (!(await vraagBevestiging({ titel: "Account beëindigen", tekst: `Account ${g.gebruikersnaam} beëindigen? Inloggen kan dan niet meer. De geschiedenis blijft bewaard.`, bevestig: "Beëindig", gevaar: true }))) return;
     doe(() => api(`/gebruikers/${g.id}`, { method: "DELETE" }));
   }
 

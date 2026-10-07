@@ -811,6 +811,17 @@ fase 2 een **bewerkbare sandbox**:
 - **Het veldeditor-veld** blijft binnen de node (links uitgelijnd op links
   uitgelijnde tekst, gecentreerd op gecentreerde tekst; een uitstekende
   actornaam mag wél buiten de figuur).
+- **Geen browser-popups meer** (2026-10-07): alle `window.prompt`/`confirm`/
+  `alert` in de Studio zijn vervangen door de eigen dialoogservice
+  (`studio/naamDialog.jsx`: `vraagNaam`, `vraagBevestiging`, `toonMelding`),
+  die bij de laatste muisklik verschijnt in plaats van midden op het scherm
+  (gemeld: "ze staan meestal ver van waar je klikte"). Waar een naam alleen
+  nodig was om iets aan te maken is er geen dialoog meer: **Nieuwe map** en
+  **Nieuwe submap** maken de map direct aan en zetten de regel in inline
+  hernoemen (`vraagHernoem`); de ouder gaat daarbij open. Bevestigingen
+  hebben een rode knop (`gevaar`) bij verwijderen/vervangen; een
+  bestands-`verwerk` van een profiel mag async zijn (OAS vraagt het dialect
+  via de dialoog). Submappen kunnen willekeurig diep.
 - **Taakbalken op een rij bovenin** (2026-10-07): balken met `auto: true`
   in hun voorkeur (de standaard, en balken zonder voorkeur) worden na elke
   render op gemeten breedte links→rechts op één rij bovenin gelegd; past

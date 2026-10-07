@@ -18,7 +18,7 @@
 import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
-import { vraagNaam } from "../naamDialog.jsx";
+import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
@@ -625,11 +625,11 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
       { sep: true },
       {
         label: "Verwijderen…",
-        onClick: () => {
+        onClick: async () => {
           const vraag = profiel.documentenBeheer
             ? `"${diagram.naam}" verwijderen? De inhoud van dit document gaat verloren.`
             : `Diagram "${diagram.naam}" verwijderen? (Elementen blijven in het model.)`;
-          if (!window.confirm(vraag)) return;
+          if (!(await vraagBevestiging({ titel: "Diagram verwijderen", tekst: vraag, bevestig: "Verwijder", gevaar: true }))) return;
           const st = profiel.useStore.getState();
           if (profiel.documentenBeheer) st.verwijderDiagram(diagram.id);
           else st.deleteDiagram(diagram.id);
@@ -950,12 +950,14 @@ function naarMapItemsVoor(profiel) {
     ...verplaatsNaarItems((mapId) => plaatsElementenInMap(profiel, elementIds, mapId)),
     ...(Object.keys(useModellerenStore.getState().mappen).length ? [{ sep: true }] : []),
     {
-      label: "Nieuwe map…",
+      // Direct aanmaken met een voorstelnaam en meteen inline hernoemen —
+      // geen prompt-popup (2026-10-07).
+      label: "Nieuwe map",
       onClick: () => {
-        const naam = window.prompt("Naam van de nieuwe map:", voorstel);
-        if (!naam) return;
-        const mapId = useModellerenStore.getState().nieuweMap(naam.trim() || voorstel);
+        const ms = useModellerenStore.getState();
+        const mapId = ms.nieuweMap(voorstel);
         plaatsElementenInMap(profiel, elementIds, mapId);
+        ms.vraagHernoem("map:" + mapId);
       },
     },
   ];
@@ -1036,15 +1038,16 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
    * heen moeten?); wel verwijderen uit het model — achter een bevestiging,
    * met Ctrl+Z als vangnet (zundo).
    */
-  const verwijderUitModel = () => {
-    if (
-      !window.confirm(
+  const verwijderUitModel = async () => {
+    const ok = await vraagBevestiging({
+      titel: "Uit het model verwijderen",
+      tekst:
         `"${element.naam || elementId}" uit het model verwijderen?\n` +
-          "Dit haalt het element (en zijn connectoren) ook van alle diagrammen. Ctrl+Z maakt het ongedaan."
-      )
-    ) {
-      return;
-    }
+        "Dit haalt het element (en zijn connectoren) ook van alle diagrammen. Ctrl+Z maakt het ongedaan.",
+      bevestig: "Verwijder",
+      gevaar: true,
+    });
+    if (!ok) return;
     profiel.useStore.getState().deleteElement(elementId);
     if (sleutel) plaatsDiagram(sleutel, null);
   };
@@ -1228,14 +1231,22 @@ function Map_({ map, diepte }) {
     },
   });
 
+  // Nieuwe submap: meteen aanmaken en inline hernoemen (geen prompt); de
+  // ouder gaat open zodat je de nieuwe regel ziet.
   const nieuweSubmap = () => {
-    const naam = window.prompt("Naam van de nieuwe submap:", "Nieuwe map");
-    if (naam) nieuweMap(naam, map.id);
+    const ms = useModellerenStore.getState();
+    const id = ms.nieuweMap("Nieuwe map", map.id);
+    if (!open) toggleMap(map.id);
+    ms.vraagHernoem("map:" + id);
   };
-  const verwijder = () => {
-    if (window.confirm(`Map "${map.naam}" verwijderen? De inhoud valt terug naar het niveau erboven.`)) {
-      verwijderMap(map.id);
-    }
+  const verwijder = async () => {
+    const ok = await vraagBevestiging({
+      titel: "Map verwijderen",
+      tekst: `Map "${map.naam}" verwijderen? De inhoud valt terug naar het niveau erboven.`,
+      bevestig: "Verwijder",
+      gevaar: true,
+    });
+    if (ok) verwijderMap(map.id);
   };
   const schuifMap = useModellerenStore((s) => s.schuifMap);
   const ctx = (e) =>
@@ -1475,8 +1486,9 @@ function Sidebar() {
   const Browser = profiel?.ElementenBrowser;
 
   const maakMap = () => {
-    const naam = window.prompt("Naam van de nieuwe map:", "Nieuwe map");
-    if (naam) nieuweMap(naam);
+    const ms = useModellerenStore.getState();
+    const id = ms.nieuweMap("Nieuwe map");
+    ms.vraagHernoem("map:" + id);
   };
 
   // Ctrl+Z / Ctrl+Y met de focus in de boom = structuur-undo/redo.
@@ -2009,29 +2021,31 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
   useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteSync: null });
 }
 
-function importeerProjectTekst(tekst, bestandsnaam = "") {
+async function importeerProjectTekst(tekst, bestandsnaam = "") {
   let ruw;
   try {
     ruw = JSON.parse(tekst);
   } catch {
-    window.alert("Dit is geen geldig JSON-bestand.");
+    toonMelding({ tekst: "Dit is geen geldig JSON-bestand." });
     return;
   }
   const uit = normaliseerProjectData(ruw, { bestandsnaam });
   if (!uit.ok) {
-    window.alert(uit.fout);
+    toonMelding({ tekst: uit.fout });
     return;
   }
   const data = uit.data;
   const profielIds = Object.keys(data.profielen || {});
   const onbekend = profielIds.filter((pid) => !getProfieltype(pid));
-  if (
-    !window.confirm(
+  const ok = await vraagBevestiging({
+    titel: "Project importeren",
+    tekst:
       `Project "${data.project.naam}" importeren?\n\nDit vervangt de projectstructuur (mappen, plaatsingen, tabs) én de inhoud van deze profielen:\n` +
-        `  ${profielIds.filter((pid) => getProfieltype(pid)).join(", ") || "(geen)"}` +
-        (onbekend.length ? `\n\nOnbekend hier (overgeslagen): ${onbekend.join(", ")}` : "")
-    )
-  ) {
+      `  ${profielIds.filter((pid) => getProfieltype(pid)).join(", ") || "(geen)"}` +
+      (onbekend.length ? `\n\nOnbekend hier (overgeslagen): ${onbekend.join(", ")}` : ""),
+    bevestig: "Importeer",
+  });
+  if (!ok) {
     return;
   }
   pasProjectToe(data);
@@ -2046,7 +2060,7 @@ function kiesEnImporteerProject() {
     if (!f) return;
     f.text()
       .then((tekst) => importeerProjectTekst(tekst, f.name))
-      .catch((e) => window.alert(`Lezen mislukt: ${e}`));
+      .catch((e) => toonMelding({ tekst: `Lezen mislukt: ${e}` }));
   };
   inp.click();
 }
@@ -2068,12 +2082,22 @@ async function nieuwProject() {
     return Object.keys(st.elements).length || Object.keys(st.diagrams).length;
   });
   if (heeftInhoud) {
-    const bewaar = window.confirm(
-      `Het huidige project "${project.naam}" eerst als JSON-bestand bewaren?\n\n` +
-        "OK = exporteren en daarna leeg beginnen.\nAnnuleren = niet exporteren (het project is dan alleen nog op de server als je het daarheen hebt gestuurd)."
-    );
+    const bewaar = await vraagBevestiging({
+      titel: "Eerst bewaren?",
+      tekst:
+        `Het huidige project "${project.naam}" eerst als JSON-bestand bewaren?\n\n` +
+        "Exporteren = bestand bewaren en daarna leeg beginnen.\nNiet exporteren = het project is dan alleen nog op de server als je het daarheen hebt gestuurd.",
+      bevestig: "Exporteren",
+      annuleer: "Niet exporteren",
+    });
     if (bewaar) exporteerProject();
-    if (!window.confirm(`Leeg beginnen? Alle lokale inhoud van "${project.naam}" wordt uit deze browser verwijderd.`)) return;
+    const leeg = await vraagBevestiging({
+      titel: "Leeg beginnen",
+      tekst: `Leeg beginnen? Alle lokale inhoud van "${project.naam}" wordt uit deze browser verwijderd.`,
+      bevestig: "Leeg beginnen",
+      gevaar: true,
+    });
+    if (!leeg) return;
   }
   const naam = await vraagNaam({ titel: "Nieuw project", label: "Projectnaam", waarde: STANDAARD_PROJECTNAAM, bevestig: "Maak" });
   if (naam === null) return;
@@ -2090,11 +2114,15 @@ async function stuurNaarServer() {
   const inhoud = bouwProjectData();
   const basis = { naam: project.naam, inhoud };
   const bevestigOverschrijven = (server) =>
-    window.confirm(
-      `Op de server staat al versie ${server.versie} van "${server.naam}"` +
+    vraagBevestiging({
+      titel: "Overschrijven op de server?",
+      tekst:
+        `Op de server staat al versie ${server.versie} van "${server.naam}"` +
         (server.bijgewerkt_door ? ` (laatst opgeslagen door ${server.bijgewerkt_door})` : "") +
-        `, nieuwer dan wat deze browser kent.\n\nOverschrijven met jouw versie?\n(Annuleren = niets doen; haal eerst op als je hun werk wilt zien.)`
-    );
+        `, nieuwer dan wat deze browser kent.\n\nOverschrijven met jouw versie?\n(Annuleren = niets doen; haal eerst op als je hun werk wilt zien.)`,
+      bevestig: "Overschrijf",
+      gevaar: true,
+    });
   try {
     let meta;
     if (project.serverVersie == null) {
@@ -2104,7 +2132,7 @@ async function stuurNaarServer() {
         if (e.status !== 409) throw e;
         // Zelfde id al op de server (bv. een collega stuurde dezelfde JSON-import op).
         const bestaand = await haalProjectOp(project.id);
-        if (!bevestigOverschrijven(bestaand)) return;
+        if (!(await bevestigOverschrijven(bestaand))) return;
         meta = await slaProjectOp(project.id, { ...basis, versie: bestaand.versie });
       }
     } else {
@@ -2112,7 +2140,7 @@ async function stuurNaarServer() {
         meta = await slaProjectOp(project.id, { ...basis, versie: project.serverVersie });
       } catch (e) {
         if (e.status === 409 && e.server) {
-          if (!bevestigOverschrijven(e.server)) return;
+          if (!(await bevestigOverschrijven(e.server))) return;
           meta = await slaProjectOp(project.id, { ...basis, versie: e.server.versie });
         } else if (e.status === 404) {
           // Op de server verwijderd: opnieuw aanmaken.
@@ -2124,7 +2152,7 @@ async function stuurNaarServer() {
     }
     zetProject({ serverVersie: meta.versie, laatsteSync: new Date().toISOString() });
   } catch (e) {
-    window.alert(`Naar server sturen mislukt: ${e?.message || e}`);
+    toonMelding({ tekst: `Naar server sturen mislukt: ${e?.message || e}` });
   }
 }
 
@@ -2135,30 +2163,31 @@ function haalVanServer() {
     huidigId: project.id,
     onKies: async (meta) => {
       const zelfde = meta.id === project.id;
-      if (
-        !window.confirm(
-          zelfde
-            ? `"${meta.naam}" (versie ${meta.versie}) van de server ophalen?\n\nJe lokale wijzigingen sinds de laatste sync worden overschreven.`
-            : `"${meta.naam}" ophalen?\n\nDit vervangt je huidige project "${project.naam}" in deze browser. Annuleer en parkeer het eerst (Nieuw project… / Exporteer project…) als je het wilt bewaren.`
-        )
-      ) {
+      const ok = await vraagBevestiging({
+        titel: "Van de server ophalen",
+        tekst: zelfde
+          ? `"${meta.naam}" (versie ${meta.versie}) van de server ophalen?\n\nJe lokale wijzigingen sinds de laatste sync worden overschreven.`
+          : `"${meta.naam}" ophalen?\n\nDit vervangt je huidige project "${project.naam}" in deze browser. Annuleer en parkeer het eerst (Nieuw project… / Exporteer project…) als je het wilt bewaren.`,
+        bevestig: "Ophalen",
+      });
+      if (!ok) {
         return;
       }
       try {
         const rec = await haalProjectOp(meta.id);
         const uit = normaliseerProjectData(rec.inhoud);
         if (!uit.ok) {
-          window.alert(`Serverproject onbruikbaar: ${uit.fout}`);
+          toonMelding({ tekst: `Serverproject onbruikbaar: ${uit.fout}` });
           return;
         }
         // Naam en id van de server zijn leidend (hernoemd op de server telt).
         const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
         const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
-        if (onbekend.length) window.alert(`Profielen onbekend in deze Studio (overgeslagen): ${onbekend.join(", ")}`);
+        if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio (overgeslagen): ${onbekend.join(", ")}` });
         pasProjectToe(data, { serverVersie: rec.versie });
         useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
       } catch (e) {
-        window.alert(`Ophalen mislukt: ${e?.message || e}`);
+        toonMelding({ tekst: `Ophalen mislukt: ${e?.message || e}` });
       }
     },
   });

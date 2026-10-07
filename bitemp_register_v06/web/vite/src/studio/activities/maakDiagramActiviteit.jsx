@@ -41,7 +41,7 @@ import React, {
 } from "react";
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
-import { vraagNaam } from "../naamDialog.jsx";
+import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 // Side-effect: registreert de datatypes "element-verwijzing" en
 // "operatie-keuze" (instantie-van-concept) op het core-koppelvlak.
 import "../elementVerwijzing.jsx";
@@ -301,14 +301,17 @@ export function maakDiagramActiviteit(opties) {
     const layoutApiRef = useRef(null);
 
     /** Spiegel het gekoppelde model in de sandbox (vervangt alles). */
-    const herlaad = useCallback((vraagBevestiging = true) => {
+    const herlaad = useCallback(async (metBevestiging = true) => {
       if (!koppeling?.herlaadUitModel) return;
       const s = useStore.getState();
       const heeftInhoud = Object.keys(s.elements).length > 0;
-      if (vraagBevestiging && heeftInhoud && s.isDirty) {
-        const ok = window.confirm(
-          "Herladen vervangt de hele sandbox door het actuele model.\nJe lokale wijzigingen gaan verloren. Doorgaan?"
-        );
+      if (metBevestiging && heeftInhoud && s.isDirty) {
+        const ok = await vraagBevestiging({
+          titel: "Herladen",
+          tekst: "Herladen vervangt de hele sandbox door het actuele model.\nJe lokale wijzigingen gaan verloren. Doorgaan?",
+          bevestig: "Herlaad",
+          gevaar: true,
+        });
         if (!ok) return;
       }
       s.laadModel(koppeling.herlaadUitModel());
@@ -379,18 +382,23 @@ export function maakDiagramActiviteit(opties) {
       // Fase 4B: terugschrijven — de sandbox vervangt het gekoppelde model.
       if (koppeling?.zetTerugNaarModel) {
         af.push(
-          menuBus.on(ev("zet-terug"), () => {
-            const ok = window.confirm(
-              koppeling.zetTerugBevestiging ||
+          menuBus.on(ev("zet-terug"), async () => {
+            const ok = await vraagBevestiging({
+              titel: "Terugschrijven naar het model",
+              tekst:
+                koppeling.zetTerugBevestiging ||
                 "Dit vervangt het model in de klassieke UML-activiteit door de sandbox.\n" +
-                  "Het oude model in die activiteit gaat verloren (de API blijft onaangeroerd). Doorgaan?"
-            );
+                  "Het oude model in die activiteit gaat verloren (de API blijft onaangeroerd). Doorgaan?",
+              bevestig: "Terugschrijven",
+              gevaar: true,
+            });
             if (!ok) return;
             const overgeslagen = koppeling.zetTerugNaarModel(useStore.getState());
             if (overgeslagen?.length) {
-              window.alert(
-                `Niet meegenomen (geen tegenhanger in het oude model):\n• ${overgeslagen.join("\n• ")}`
-              );
+              toonMelding({
+                titel: "Niet alles meegenomen",
+                tekst: `Niet meegenomen (geen tegenhanger in het oude model):\n• ${overgeslagen.join("\n• ")}`,
+              });
             }
           })
         );
@@ -409,9 +417,10 @@ export function maakDiagramActiviteit(opties) {
             a.click();
             URL.revokeObjectURL(url);
             if (overgeslagen.length) {
-              window.alert(
-                `Niet meegenomen in de V3-export (geen V3-tegenhanger):\n• ${overgeslagen.join("\n• ")}`
-              );
+              toonMelding({
+                titel: "Niet alles meegenomen",
+                tekst: `Niet meegenomen in de V3-export (geen V3-tegenhanger):\n• ${overgeslagen.join("\n• ")}`,
+              });
             }
           })
         );
@@ -425,25 +434,28 @@ export function maakDiagramActiviteit(opties) {
             input.onchange = () => {
               const file = input.files?.[0];
               if (!file) return;
-              file.text().then((tekst) => {
+              file.text().then(async (tekst) => {
                 let v3;
                 try {
                   v3 = JSON.parse(tekst);
                 } catch {
-                  window.alert("Dit bestand is geen geldige JSON.");
+                  toonMelding({ tekst: "Dit bestand is geen geldige JSON." });
                   return;
                 }
                 const s = useStore.getState();
                 if (Object.keys(s.elements).length > 0) {
-                  const ok = window.confirm(
-                    "Importeren vervangt de hele sandbox door het gekozen V3-model.\nJe lokale wijzigingen gaan verloren. Doorgaan?"
-                  );
+                  const ok = await vraagBevestiging({
+                    titel: "Sandbox vervangen",
+                    tekst: "Importeren vervangt de hele sandbox door het gekozen V3-model.\nJe lokale wijzigingen gaan verloren. Doorgaan?",
+                    bevestig: "Importeer",
+                    gevaar: true,
+                  });
                   if (!ok) return;
                 }
                 try {
                   s.laadModel(koppeling.importeerV3(v3));
                 } catch (e) {
-                  window.alert(`Import mislukt: ${e?.message || e}`);
+                  toonMelding({ tekst: `Import mislukt: ${e?.message || e}` });
                   return;
                 }
                 useStore.temporal.getState().clear();
@@ -479,17 +491,18 @@ export function maakDiagramActiviteit(opties) {
               try {
                 inhoud = JSON.parse(tekst);
               } catch {
-                window.alert("Dit bestand is geen geldige JSON.");
+                toonMelding({ tekst: "Dit bestand is geen geldige JSON." });
                 return;
               }
               if (inhoud?.formaat !== "studio05-diagram") {
-                window.alert("Dit is geen 0.5-werkbestand (formaat-veld ontbreekt).");
+                toonMelding({ tekst: "Dit is geen 0.5-werkbestand (formaat-veld ontbreekt)." });
                 return;
               }
               if (inhoud.diagramType !== descriptor.id) {
-                window.alert(
-                  `Dit werkbestand hoort bij het profiel "${inhoud.diagramType}" — open het in die activiteit.`
-                );
+                toonMelding({
+                  titel: "Ander profiel",
+                  tekst: `Dit werkbestand hoort bij het profiel "${inhoud.diagramType}" — open het in die activiteit.`,
+                });
                 return;
               }
               const s = useStore.getState();
@@ -521,7 +534,7 @@ export function maakDiagramActiviteit(opties) {
             try {
               tekst = koppeling.exportBestand.maak(staat);
             } catch (e) {
-              window.alert(`Export mislukt: ${e?.message || e}`);
+              toonMelding({ tekst: `Export mislukt: ${e?.message || e}` });
               return;
             }
             const blob = new Blob([tekst], { type: "text/plain;charset=utf-8" });
@@ -544,19 +557,23 @@ export function maakDiagramActiviteit(opties) {
             input.onchange = () => {
               const file = input.files?.[0];
               if (!file) return;
-              file.text().then((tekst) => {
+              file.text().then(async (tekst) => {
                 let model;
                 try {
-                  model = koppeling.importBestand.verwerk(tekst, file.name);
+                  // `verwerk` mag async zijn (bv. een dialectkeuze via een dialoog).
+                  model = await koppeling.importBestand.verwerk(tekst, file.name);
                 } catch (e) {
-                  window.alert(`Import mislukt: ${e?.message || e}`);
+                  toonMelding({ tekst: `Import mislukt: ${e?.message || e}` });
                   return;
                 }
                 const s = useStore.getState();
                 if (Object.keys(s.elements).length > 0) {
-                  const ok = window.confirm(
-                    "Importeren vervangt de hele sandbox door het gekozen bestand.\nJe lokale wijzigingen gaan verloren. Doorgaan?"
-                  );
+                  const ok = await vraagBevestiging({
+                    titel: "Sandbox vervangen",
+                    tekst: "Importeren vervangt de hele sandbox door het gekozen bestand.\nJe lokale wijzigingen gaan verloren. Doorgaan?",
+                    bevestig: "Importeer",
+                    gevaar: true,
+                  });
                   if (!ok) return;
                 }
                 s.laadModel(model);
@@ -632,7 +649,7 @@ export function maakDiagramActiviteit(opties) {
       const bronDiag =
         (inhoud.diagrams || {})[actief] || Object.values(inhoud.diagrams || {})[0];
       if (!bronDiag) {
-        window.alert("Het werkbestand bevat geen diagram.");
+        toonMelding({ tekst: "Het werkbestand bevat geen diagram." });
         return;
       }
       const elements = { ...s.elements };
@@ -837,8 +854,14 @@ export function maakDiagramActiviteit(opties) {
               </button>
               <button
                 className="dc-mini-knop is-gevaar"
-                onClick={() => {
-                  if (window.confirm("Alles vervangen? Je huidige sandbox gaat verloren.")) {
+                onClick={async () => {
+                  const ok = await vraagBevestiging({
+                    titel: "Alles vervangen?",
+                    tekst: "Je huidige sandbox gaat verloren.",
+                    bevestig: "Vervang alles",
+                    gevaar: true,
+                  });
+                  if (ok) {
                     importVervangAlles(importWacht);
                     setImportWacht(null);
                   }
@@ -1103,14 +1126,18 @@ export function maakDiagramActiviteit(opties) {
       if (containers.length && !et?.isConnector) {
         items.push({
           label: "Verplaats naar package…",
-          onClick: () => {
+          onClick: async () => {
             const namen = containers.map((c) => c.naam || c.id);
-            const keuze = window.prompt(`Naar welk package?
-Beschikbaar: ${namen.join(", ")}`, namen[0]);
+            const keuze = await vraagNaam({
+              titel: "Verplaats naar package",
+              label: `Package (beschikbaar: ${namen.join(", ")})`,
+              waarde: namen[0],
+              bevestig: "Verplaats",
+            });
             if (!keuze) return;
             const doel = containers.find((c) => (c.naam || c.id) === keuze.trim());
             if (doel) verhangNaarContainer(useStore, el.id, doel.id);
-            else window.alert(`Onbekend package "${keuze}".`);
+            else toonMelding({ tekst: `Onbekend package "${keuze}".` });
           },
         });
       }
@@ -1126,10 +1153,14 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       items.push({ sep: true });
       items.push({
         label: "Verwijderen uit model…",
-        onClick: () => {
-          if (window.confirm(`"${el.naam || el.id}" uit het model verwijderen?`)) {
-            useStore.getState().deleteElement(el.id);
-          }
+        onClick: async () => {
+          const ok = await vraagBevestiging({
+            titel: "Uit het model verwijderen",
+            tekst: `"${el.naam || el.id}" uit het model verwijderen?`,
+            bevestig: "Verwijder",
+            gevaar: true,
+          });
+          if (ok) useStore.getState().deleteElement(el.id);
         },
       });
       setZijMenu({ x: e.clientX, y: e.clientY, items });
@@ -1638,10 +1669,14 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       ];
       setZijMenu({ x: e.clientX, y: e.clientY, items });
     };
-    const verwijder = (d) => {
-      if (window.confirm(`Diagram "${d.naam}" verwijderen? (Elementen blijven in het model.)`)) {
-        useStore.getState().deleteDiagram(d.id);
-      }
+    const verwijder = async (d) => {
+      const ok = await vraagBevestiging({
+        titel: "Diagram verwijderen",
+        tekst: `Diagram "${d.naam}" verwijderen? (Elementen blijven in het model.)`,
+        bevestig: "Verwijder",
+        gevaar: true,
+      });
+      if (ok) useStore.getState().deleteDiagram(d.id);
     };
 
     return (
@@ -1977,7 +2012,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           icoon: "📋",
           onClick: async () => {
             const r = await layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1, doel: "clipboard", ...leesExportOpties() });
-            if (r && !r.ok) window.alert(`Kopiëren mislukt: ${r.reden}. Gebruik anders "Download PNG".`);
+            if (r && !r.ok) toonMelding({ tekst: `Kopiëren mislukt: ${r.reden}. Gebruik anders "Download PNG".` });
           },
         },
         { id: "exp-png", label: "Download PNG", icoon: "🖼", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1, ...leesExportOpties() }) },
@@ -2851,8 +2886,14 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             if (actief) useStore.getState().removeElementFromDiagram(actief, selectieVoorkomenId || element.id);
             setSelectieId(null);
           }}
-          onVerwijderUitModel={() => {
-            if (window.confirm(`"${element.naam || element.id}" uit het hele model verwijderen?`)) {
+          onVerwijderUitModel={async () => {
+            const ok = await vraagBevestiging({
+              titel: "Uit het model verwijderen",
+              tekst: `"${element.naam || element.id}" uit het hele model verwijderen?`,
+              bevestig: "Verwijder",
+              gevaar: true,
+            });
+            if (ok) {
               useStore.getState().deleteElement(element.id);
               setSelectieId(null);
             }

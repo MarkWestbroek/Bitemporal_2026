@@ -16,6 +16,7 @@ import { IconProfiel05 } from "../icons";
 import useStudioStore from "../useStudioStore";
 import { valideerDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { HOOK_CATALOGUS, vertaalHooks, LEEG_SJABLOON, GRAAF_DEMO } from "./profielGereedschap.js";
+import { vraagBevestiging } from "../naamDialog.jsx";
 import {
   leesProfielen,
   bewaarProfielen,
@@ -51,8 +52,8 @@ function ProfielProvider({ children }) {
   }, []);
 
   const verwijder = useCallback(
-    (id) => {
-      if (!window.confirm(`Profiel "${id}" uit de opslag verwijderen?\n(De activiteit verdwijnt na een pagina-herlaad.)`)) return;
+    async (id) => {
+      if (!(await vraagBevestiging({ titel: "Profiel verwijderen", tekst: `Profiel "${id}" uit de opslag verwijderen?\n(De activiteit verdwijnt na een pagina-herlaad.)`, bevestig: "Verwijder", gevaar: true }))) return;
       const volgende = { ...leesProfielen() };
       delete volgende[id];
       bewaarProfielen(volgende);
