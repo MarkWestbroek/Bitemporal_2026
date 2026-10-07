@@ -17,5 +17,8 @@ web/vite/.vite
 *.tar
 *.log
 
+# dlv-tijdelijken van VS Code-debugsessies (tot 40 MB per stuk; zie README "Debuggen in VS Code")
+__debug_bin*
+
 Dockerfile*
 !Dockerfile
