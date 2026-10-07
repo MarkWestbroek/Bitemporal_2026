@@ -8,6 +8,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.15.2] — 2026-10-08
+Patch: de snapshot-grens ging niet mee naar de server. Alleen frontend; api blijft 0.12.0.
+
+### Gefixt
+- **Snapshot-grens (`tot_volgnummer`) reist mee** (08-10): de opslag-aanroep liet het veld weg,
+  waardoor de grens op de server 0 bleef, de compactie nooit iets deed en een client na *Van server
+  ophalen* álle operaties nogmaals afspeelde bovenop de snapshot. Voor posities onschadelijk, maar
+  een *Omhoog*/*Omlaag* van vóór de snapshot werd zo tweemaal toegepast (één wissel verschil tussen
+  twee browsers). Test op de aanroep; `apiBase()` is node-veilig.
+
 ## [studio/v0.15.1] — 2026-10-08
 Patch: de volgorde in de projectboom synct nu en overleeft de snapshot. Alleen frontend; api
 blijft 0.12.0.
