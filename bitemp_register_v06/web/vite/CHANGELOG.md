@@ -21,7 +21,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   het inline-veld op het canvas.
 - **Zelfde breedte / hoogte / maat** in de Uitlijnen-balk en het contextmenu.
 - **Sneltoetsen**, instelbaar in Studio-instellingen → Sneltoetsen, met EA-achtige standaarden
-  (Ctrl+Alt+pijlen uitlijnen, Alt+H/V centreren, Alt+-/= verdelen, Alt+W/E/R zelfde maat, Alt+Z
+  (Ctrl+Alt+pijlen uitlijnen, Alt+V verticaal centreren = boven elkaar, Alt+H horizontaal = naast
+  elkaar zoals in EA, Alt+-/= verdelen, Alt+W/E/R zelfde maat, Alt+Z
   maat aan inhoud, Ctrl+Delete verwijderen uit model, Alt+G zoek in projectboom).
 - Graaf (demo), SP en de Profiel-editor staan standaard niet meer in de activity bar.
 

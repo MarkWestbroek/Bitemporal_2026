@@ -22,8 +22,9 @@ export const SNELTOETS_ACTIES = [
   { id: "uitlijnen:right", groep: "Uitlijnen", label: "Rechts uitlijnen", standaard: "Ctrl+Alt+ArrowRight" },
   { id: "uitlijnen:top", groep: "Uitlijnen", label: "Boven uitlijnen", standaard: "Ctrl+Alt+ArrowUp" },
   { id: "uitlijnen:bottom", groep: "Uitlijnen", label: "Onder uitlijnen", standaard: "Ctrl+Alt+ArrowDown" },
-  { id: "uitlijnen:center-h", groep: "Uitlijnen", label: "Horizontaal centreren", standaard: "Alt+H" },
-  { id: "uitlijnen:center-v", groep: "Uitlijnen", label: "Verticaal centreren", standaard: "Alt+V" },
+  // EA-benaming: verticaal centreren = boven elkaar (Alt+V), horizontaal = naast elkaar (Alt+H).
+  { id: "uitlijnen:center-h", groep: "Uitlijnen", label: "Verticaal centreren (boven elkaar)", standaard: "Alt+V" },
+  { id: "uitlijnen:center-v", groep: "Uitlijnen", label: "Horizontaal centreren (naast elkaar)", standaard: "Alt+H" },
   { id: "uitlijnen:distribute-h", groep: "Uitlijnen", label: "Horizontaal verdelen", standaard: "Alt+-" },
   { id: "uitlijnen:distribute-v", groep: "Uitlijnen", label: "Verticaal verdelen", standaard: "Alt+=" },
   { id: "uitlijnen:same-width", groep: "Maat", label: "Zelfde breedte", standaard: "Alt+W" },
