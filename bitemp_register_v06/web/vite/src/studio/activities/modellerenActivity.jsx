@@ -24,7 +24,7 @@ import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
-import { koppelStore, zonderVastleggen, rebaseStand, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
+import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
 import { useOutboxStore } from "../sync/outbox.js";
 import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
 import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore, aanwezigSamengevat } from "../sync/verzender.js";
@@ -565,13 +565,16 @@ export const useModellerenStore = create((set, get) => ({
    * Patch-operatie (projectsync-vangnet): mappen/plaatsingen van een ander
    * upserten of wissen. Buiten de structuur-undo (die staat dan uit).
    */
-  patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [] } = {}) =>
+  patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [], volgordePlaatsing = null } = {}) =>
     set((s) => {
       legStructuurVast(s);
       const mappen = { ...s.mappen, ...zetMappen };
       for (const id of wisMappen) delete mappen[id];
-      const plaatsing = { ...s.plaatsing, ...zetPlaatsing };
+      let plaatsing = { ...s.plaatsing, ...zetPlaatsing };
       for (const key of wisPlaatsing) delete plaatsing[key];
+      // Volgorde in de boom = sleutelvolgorde: herschik naar de gegeven lijst,
+      // onbekende sleutels (nog niet bij de ander) blijven achteraan.
+      plaatsing = herschikOpVolgorde(plaatsing, volgordePlaatsing);
       const next = { ...s, mappen, plaatsing };
       schrijfOpslag(next);
       return { mappen, plaatsing };
@@ -2240,7 +2243,9 @@ function bouwProjectData() {
     versie: PROJECT_FORMAAT_VERSIE,
     geexporteerd: new Date().toISOString(),
     project: { id: s.project.id, naam: s.project.naam },
-    structuur: { mappen: s.mappen, plaatsing: s.plaatsing },
+    // plaatsingVolgorde: de boomvolgorde expliciet — jsonb op de server bewaart
+    // de sleutelvolgorde van `plaatsing` niet (gemeld 2026-10-08).
+    structuur: { mappen: s.mappen, plaatsing: s.plaatsing, plaatsingVolgorde: Object.keys(s.plaatsing) },
     kruisverbanden: useKruisStore.getState().links,
     profielen,
   };
@@ -2306,7 +2311,7 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}
     const gewenstActief = wrBestond ? ms.actieveTab : data.actieveTab;
     ms.laadStructuur({
       mappen: data.structuur?.mappen,
-      plaatsing: data.structuur?.plaatsing,
+      plaatsing: herschikOpVolgorde(data.structuur?.plaatsing || {}, data.structuur?.plaatsingVolgorde),
       tabs,
       actieveTab: tabs.some((t) => t.id === gewenstActief) ? gewenstActief : tabs[0]?.id || null,
     });

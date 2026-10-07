@@ -7,6 +7,15 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+### Gefixt
+- **Boomvolgorde synct** (08-10): *Omhoog*/*Omlaag* (Ctrl+↑/↓) in de projectboom kwam niet bij
+  collega's aan — `schuifPlaatsing` ontbrak in het operatievocabulaire en het vangnet zag alleen
+  waarden, niet de sleutelvolgorde van `plaatsing`. Nu een benoemde operatie; het vangnet meldt een
+  volgorde-wissel (ook bij undo) als `volgordePlaatsing` in `patchStructuur`.
+- **Boomvolgorde overleeft de snapshot** (08-10): de volgorde zat alleen in de sleutelvolgorde van
+  `plaatsing`, en `jsonb` op de server herschikt objectsleutels — wie ophaalde kreeg een andere
+  volgorde dan wie stuurde. Het werkbestand draagt nu `structuur.plaatsingVolgorde` expliciet mee;
+  laden herstelt die volgorde (`herschikOpVolgorde`).
 
 ## [studio/v0.15.0] — 2026-10-08
 Samenwerken wordt live (projectsync stap 2, api 0.12.0) en het vervolg van de canvas-bediening:
