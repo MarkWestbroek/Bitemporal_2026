@@ -100,11 +100,16 @@ export function createDiagramStore({ persistKey } = {}) {
     laadModel: ({ diagramTypeId, elements, diagrams, actiefDiagramId, meta }) =>
       set((state) => {
         const { kaal, viewports } = splitsViewports(diagrams);
+        // Een werkbestand v3 draagt geen viewports (kijkstand = werkruimte,
+        // geen project): houd dan de lokale pan/zoom van diagrammen die blijven.
+        const viewportsNieuw = Object.keys(viewports).length
+          ? viewports
+          : Object.fromEntries(Object.entries(state.viewports || {}).filter(([id]) => kaal[id]));
         return {
           diagramTypeId: diagramTypeId ?? state.diagramTypeId,
           elements: elements || {},
           diagrams: kaal,
-          viewports,
+          viewports: viewportsNieuw,
           meta: meta ?? state.meta,
           isDirty: false,
           actiefDiagramId:

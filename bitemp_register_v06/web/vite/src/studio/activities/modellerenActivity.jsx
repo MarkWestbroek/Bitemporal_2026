@@ -26,6 +26,7 @@ import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.js
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import { koppelStore, zonderVastleggen, rebaseStand, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
 import { useOutboxStore } from "../sync/outbox.js";
+import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore } from "../sync/verzender.js";
 import {
   PROJECT_FORMAAT,
   PROJECT_FORMAAT_VERSIE,
@@ -36,6 +37,7 @@ import {
   haalProjectOp,
   maakProjectAan,
   slaProjectOp,
+  haalStudioInstellingenOp,
 } from "./projectSync.js";
 import { IconModelleren } from "../icons";
 import {
@@ -63,7 +65,14 @@ const elementKey = (profielId, elementId) => `el::${profielId}::${elementId}`;
 const isElementKey = (key) => key.startsWith("el::");
 
 // ── Tab-store (shell-state, los van de profiel-stores) ──────────────
+// Twee lagen in localStorage (2026-10-07, "werkruimte"):
+//  - `studio-modelleren`: de project-laag (mappen, plaatsing, projectidentiteit);
+//    gedeeld, gaat als operaties/snapshot naar de server;
+//  - `studio-werkruimte:<projectId>`: de werkruimte-laag (open tabs, actieve tab,
+//    open/dicht mappen) — van jou, per project; wisselen van project bewaart hem.
+// Apparaat-instellingen (paneelbreedtes, taakbalken) staan in studio-shell e.d.
 const LS_KEY = "studio-modelleren";
+const werkruimteSleutel = (projectId) => `studio-werkruimte:${projectId}`;
 
 function leesOpslag() {
   try {
@@ -73,19 +82,34 @@ function leesOpslag() {
   return {};
 }
 
+/** Werkruimte van een project; `bestaat` = er is al iets bewaard. */
+function leesWerkruimte(projectId) {
+  try {
+    const raw = projectId ? localStorage.getItem(werkruimteSleutel(projectId)) : null;
+    if (raw) {
+      const d = JSON.parse(raw);
+      return { bestaat: true, tabs: d.tabs || [], actieveTab: d.actieveTab || null, mapOpen: d.mapOpen || {} };
+    }
+  } catch { /* ignore */ }
+  return { bestaat: false, tabs: [], actieveTab: null, mapOpen: {} };
+}
+
 function schrijfOpslag(state) {
   try {
     localStorage.setItem(
       LS_KEY,
       JSON.stringify({
-        tabs: state.tabs,
-        actieveTab: state.actieveTab,
         mappen: state.mappen,
-        mapOpen: state.mapOpen,
         plaatsing: state.plaatsing,
         project: state.project,
       })
     );
+    if (state.project?.id) {
+      localStorage.setItem(
+        werkruimteSleutel(state.project.id),
+        JSON.stringify({ tabs: state.tabs, actieveTab: state.actieveTab, mapOpen: state.mapOpen })
+      );
+    }
   } catch { /* ignore */ }
 }
 
@@ -111,6 +135,16 @@ function rijenInLijst(el) {
 }
 
 const opgeslagen = leesOpslag();
+const projectBegin = opgeslagen.project?.id
+  ? { serverVersie: null, ...opgeslagen.project }
+  : { id: nieuwProjectId(), naam: STANDAARD_PROJECTNAAM, serverVersie: null };
+// Werkruimte van dit project; een oude `studio-modelleren` met tabs erin
+// (vóór 2026-10-07) wordt eenmalig als werkruimte overgenomen.
+const werkruimteBegin = (() => {
+  const wr = leesWerkruimte(projectBegin.id);
+  if (wr.bestaat || !opgeslagen.tabs) return wr;
+  return { bestaat: false, tabs: opgeslagen.tabs || [], actieveTab: opgeslagen.actieveTab || null, mapOpen: opgeslagen.mapOpen || {} };
+})();
 
 // ── Undo/redo voor de projectstructuur (mappen + plaatsingen) ───────
 // Eigen stapel, los van de model-undo per profiel: Ctrl+Z met de focus in
@@ -131,10 +165,10 @@ const legStructuurVast = (s) => {
 };
 
 export const useModellerenStore = create((set, get) => ({
-  /** @type {{id:string, profielId:string, diagramId:string}[]} */
-  tabs: opgeslagen.tabs || [],
-  /** id van de actieve tab, of null */
-  actieveTab: opgeslagen.actieveTab || null,
+  /** @type {{id:string, profielId:string, diagramId:string}[]} — werkruimte-laag */
+  tabs: werkruimteBegin.tabs,
+  /** id van de actieve tab, of null — werkruimte-laag */
+  actieveTab: werkruimteBegin.actieveTab,
 
   /**
    * Identiteit van het project in deze browser (plan 2026-10-07 Projectsync):
@@ -142,17 +176,24 @@ export const useModellerenStore = create((set, get) => ({
    * versie die we het laatst met de server hebben uitgewisseld (null = alleen
    * lokaal). Een bestaande browser zonder project krijgt er hier één.
    */
-  project: opgeslagen.project?.id
-    ? { serverVersie: null, ...opgeslagen.project }
-    : { id: nieuwProjectId(), naam: STANDAARD_PROJECTNAAM, serverVersie: null },
+  project: projectBegin,
 
-  /** Werk project-identiteit bij (naam, serverVersie, of alles bij ophalen/nieuw). */
+  /**
+   * Werk project-identiteit bij (naam, serverVersie, laatsteVolgnummer, liveSync,
+   * of alles bij ophalen/nieuw). Een ander id = projectwissel: de werkruimte
+   * (tabs, open mappen) van dat project komt mee uit zijn eigen sleutel.
+   */
   zetProject: (patch) =>
     set((s) => {
       const project = { ...s.project, ...patch };
-      schrijfOpslag({ ...s, project });
+      const wissel = patch.id && patch.id !== s.project.id;
+      const wr = wissel ? leesWerkruimte(project.id) : null;
+      const next = wissel
+        ? { ...s, project, tabs: wr.tabs, actieveTab: wr.actieveTab, mapOpen: wr.mapOpen, mapSelectie: null, diagramSelectie: null, elementSelectie: null, multiSelectie: [] }
+        : { ...s, project };
+      schrijfOpslag(next);
       menuBus.emit("menu:ververs");
-      return { project };
+      return wissel ? { project, tabs: next.tabs, actieveTab: next.actieveTab, mapOpen: next.mapOpen, mapSelectie: null, diagramSelectie: null, elementSelectie: null, multiSelectie: [] } : { project };
     }),
 
   openTab: (profielId, diagramId) => {
@@ -215,8 +256,8 @@ export const useModellerenStore = create((set, get) => ({
   // staat onder "Niet ingedeeld" (per profieltype).
   /** @type {Record<string,{id:string,naam:string,ouderId:string|null}>} */
   mappen: opgeslagen.mappen || {},
-  /** open/dicht per map (default open) */
-  mapOpen: opgeslagen.mapOpen || {},
+  /** open/dicht per map (default open) — werkruimte-laag */
+  mapOpen: werkruimteBegin.mapOpen,
   /** { [tabId(profielId,diagramId)]: mapId } — plaatsing van diagrammen */
   plaatsing: opgeslagen.plaatsing || {},
 
@@ -516,6 +557,15 @@ menuBus.on("studio:open-diagram", ({ profielId, diagramId } = {}) => {
   if (!profielId || !diagramId) return;
   useModellerenStore.getState().openTab(profielId, diagramId);
 });
+
+/** Studio-instellingen van de instantie, eenmalig opgehaald (gedeeld door alle Providers). */
+let _studioInstellingen = null;
+function studioInstellingen() {
+  if (!_studioInstellingen) {
+    _studioInstellingen = haalStudioInstellingenOp().catch(() => null);
+  }
+  return _studioInstellingen;
+}
 
 /** Actieve tab + bijbehorend profieltype (of nulls). */
 function actieveTabInfo() {
@@ -1895,6 +1945,56 @@ function Provider({ children }) {
       }),
     []
   );
+  // Projectsync (stap 2, onderdeel 4): de verzender volgt het project (id,
+  // live-sync, laatst bekende volgnummer) en pollt zolang de tab zichtbaar is
+  // (SSE komt in onderdeel 5 in de plaats van de poll).
+  const projectId = useModellerenStore((s) => s.project.id);
+  const opServer = useModellerenStore((s) => s.project.serverVersie != null);
+  const liveSync = useModellerenStore((s) => s.project.liveSync ?? true);
+  useEffect(() => {
+    let actueel = true;
+    configureerVerzender({
+      projectId: () => useModellerenStore.getState().project.id,
+      actief: () => {
+        const p = useModellerenStore.getState().project;
+        return p.serverVersie != null && (p.liveSync ?? true);
+      },
+      laatsteVolgnummer: () => useModellerenStore.getState().project.laatsteVolgnummer || 0,
+      zetLaatsteVolgnummer: (n) => {
+        const s = useModellerenStore.getState();
+        if ((s.project.laatsteVolgnummer || 0) !== n) s.zetProject({ laatsteVolgnummer: n });
+      },
+      totVolgnummer: () => useModellerenStore.getState().project.totVolgnummer || 0,
+      maakSnapshot: maakSnapshotStil,
+      herlaadSnapshot: herlaadSnapshotStil,
+    });
+    // Poll-interval is een admin-instelling van de instantie (STUDIO_SYNC_POLL_MS);
+    // eerst ophalen, dan (her)starten. Zonder antwoord geldt de standaard.
+    studioInstellingen().then((inst) => {
+      if (!actueel) return;
+      if (inst?.poll_ms) configureerVerzender({ pollMs: inst.poll_ms });
+      if (opServer && liveSync) {
+        startKanaal(); // SSE: live; de poll blijft als terugval en voor het verzenden
+        startPoll();
+      } else {
+        stopKanaal();
+        stopPoll();
+      }
+    });
+    return () => {
+      actueel = false;
+      stopKanaal();
+      stopPoll();
+    };
+  }, [projectId, opServer, liveSync]);
+  // Menu-kop (sync-stand) volgt de verzender, met een kleine rem.
+  useEffect(() => {
+    let timer = null;
+    return useSyncStore.subscribe(() => {
+      clearTimeout(timer);
+      timer = setTimeout(() => menuBus.emit("menu:ververs"), 250);
+    });
+  }, []);
   return <P key={profiel?.id || "leeg"}>{children}</P>;
 }
 
@@ -1902,9 +2002,10 @@ function Provider({ children }) {
 // Eerste trede van "projectstructuur voorbij localStorage" (fase 3.3):
 // deelbaar, back-upbaar — en sinds plan 2026-10-07 (Projectsync, stap 1) ook
 // de blob die als geheel naar /api/studio/projecten gaat en terugkomt.
-// Formaat "studio-project" v2 = v1 + `project: {id, naam}`.
+// Formaat "studio-project" v2 = v1 + `project: {id, naam}`; v3 (2026-10-07) =
+// zonder tabs/actieveTab en zonder viewports: dat is werkruimte, geen project.
 
-/** Bouw het werkbestand (v2) uit de stores. Gedeeld door export en server-sync. */
+/** Bouw het werkbestand (v3) uit de stores. Gedeeld door export en server-sync. */
 function bouwProjectData() {
   const s = useModellerenStore.getState();
   const profielen = {};
@@ -1917,13 +2018,8 @@ function bouwProjectData() {
     profielen[p.id] = {
       diagramTypeId: st.diagramTypeId,
       elements: st.elements,
-      // Viewports terug in de diagram-entries: laadModel splitst ze weer af.
-      diagrams: Object.fromEntries(
-        Object.entries(st.diagrams).map(([id, d]) => [
-          id,
-          st.viewports?.[id] ? { ...d, viewport: st.viewports[id] } : d,
-        ])
-      ),
+      // Zonder viewports (v3): pan/zoom is kijkstand van de gebruiker.
+      diagrams: st.diagrams,
       actiefDiagramId: st.actiefDiagramId,
       meta: st.meta,
     };
@@ -1934,8 +2030,6 @@ function bouwProjectData() {
     geexporteerd: new Date().toISOString(),
     project: { id: s.project.id, naam: s.project.naam },
     structuur: { mappen: s.mappen, plaatsing: s.plaatsing },
-    tabs: s.tabs,
-    actieveTab: s.actieveTab,
     kruisverbanden: useKruisStore.getState().links,
     profielen,
   };
@@ -1958,7 +2052,20 @@ function exporteerProject() {
  * Gedeeld door JSON-import en "Van server ophalen". Onbekende profielen worden
  * overgeslagen (de aanroeper heeft dat al gemeld).
  */
-function pasProjectToe(data, { serverVersie = null } = {}) {
+function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}) {
+  // Projectwissel eerst: zetProject laadt de werkruimte (tabs, open mappen) van
+  // dit project uit zijn eigen sleutel. Bestaat die nog niet, dan zijn de tabs
+  // uit een v1/v2-werkbestand de eerste werkruimte.
+  const wrBestond = leesWerkruimte(data.project.id).bestaat;
+  useModellerenStore.getState().zetProject({
+    id: data.project.id,
+    naam: data.project.naam,
+    serverVersie,
+    laatsteVolgnummer,
+    totVolgnummer: laatsteVolgnummer,
+    liveSync: true,
+    laatsteSync: null,
+  });
   // Een snapshot laden is geen reeks handelingen: niets in de outbox, en de
   // outbox van het vorige project vervalt (de snapshot is de nieuwe basis).
   zonderVastleggen(() => {
@@ -1977,21 +2084,24 @@ function pasProjectToe(data, { serverVersie = null } = {}) {
         p.useStore.temporal?.getState().clear();
       }
     }
-    // Tabs alleen behouden als hun profiel + diagram na de import bestaan.
-    const tabs = (data.tabs || []).filter((t) => {
+    // Tabs: de lokale werkruimte van dit project, anders die uit het
+    // werkbestand (v1/v2); alleen als profiel + diagram na de import bestaan.
+    const ms = useModellerenStore.getState();
+    const bron = wrBestond ? ms.tabs : data.tabs || [];
+    const tabs = bron.filter((t) => {
       const p = getProfieltype(t.profielId);
       return p && !!p.useStore.getState().diagrams[t.diagramId];
     });
-    useModellerenStore.getState().laadStructuur({
+    const gewenstActief = wrBestond ? ms.actieveTab : data.actieveTab;
+    ms.laadStructuur({
       mappen: data.structuur?.mappen,
       plaatsing: data.structuur?.plaatsing,
       tabs,
-      actieveTab: tabs.some((t) => t.id === data.actieveTab) ? data.actieveTab : tabs[0]?.id || null,
+      actieveTab: tabs.some((t) => t.id === gewenstActief) ? gewenstActief : tabs[0]?.id || null,
     });
     useKruisStore.getState().laadLinks(Array.isArray(data.kruisverbanden) ? data.kruisverbanden : []);
   });
   useOutboxStore.getState().wis();
-  useModellerenStore.getState().zetProject({ id: data.project.id, naam: data.project.naam, serverVersie });
 }
 
 /** Alles leeg en een nieuwe projectidentiteit (na "parkeren"). */
@@ -2006,7 +2116,7 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
     useKruisStore.getState().laadLinks([]);
   });
   useOutboxStore.getState().wis();
-  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteSync: null });
+  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null });
 }
 
 function importeerProjectTekst(tekst, bestandsnaam = "") {
@@ -2086,9 +2196,12 @@ async function nieuwProject() {
  * opgeslagen) kiest de gebruiker: overschrijven of afbreken.
  */
 async function stuurNaarServer() {
+  // Eerst de outbox leeg (de snapshot hoort alles te bevatten wat al als
+  // operatie onderweg is), dan de blob met de grens `tot_volgnummer`.
+  if (useModellerenStore.getState().project.serverVersie != null) await verzend();
   const { project, zetProject } = useModellerenStore.getState();
   const inhoud = bouwProjectData();
-  const basis = { naam: project.naam, inhoud };
+  const basis = { naam: project.naam, inhoud, tot_volgnummer: project.laatsteVolgnummer || 0 };
   const bevestigOverschrijven = (server) =>
     window.confirm(
       `Op de server staat al versie ${server.versie} van "${server.naam}"` +
@@ -2122,9 +2235,61 @@ async function stuurNaarServer() {
         }
       }
     }
-    zetProject({ serverVersie: meta.versie, laatsteSync: new Date().toISOString() });
+    zetProject({
+      serverVersie: meta.versie,
+      laatsteVolgnummer: Math.max(project.laatsteVolgnummer || 0, meta.laatste_volgnummer || 0),
+      totVolgnummer: meta.tot_volgnummer || 0,
+      liveSync: project.liveSync ?? true,
+      laatsteSync: new Date().toISOString(),
+    });
   } catch (e) {
     window.alert(`Naar server sturen mislukt: ${e?.message || e}`);
+  }
+}
+
+/**
+ * Stille snapshot (compactie, onderdeel 6): zoals "Naar server sturen", maar
+ * zonder dialogen. 409 = een ander was eerder: neem de servergrens over.
+ * Aangeroepen door de verzender als het log ver genoeg voorbij de grens staat.
+ */
+async function maakSnapshotStil() {
+  const { project, zetProject } = useModellerenStore.getState();
+  if (project.serverVersie == null) return;
+  const inhoud = bouwProjectData();
+  try {
+    const meta = await slaProjectOp(project.id, {
+      naam: project.naam,
+      inhoud,
+      versie: project.serverVersie,
+      tot_volgnummer: project.laatsteVolgnummer || 0,
+    });
+    zetProject({ serverVersie: meta.versie, totVolgnummer: meta.tot_volgnummer || 0, laatsteSync: new Date().toISOString() });
+  } catch (e) {
+    if (e?.status === 409 && e.server) {
+      zetProject({ serverVersie: e.server.versie, totVolgnummer: e.server.tot_volgnummer || 0 });
+    }
+    // 404/offline: de verzender meldt dat al; niets te doen.
+  }
+}
+
+/**
+ * Snapshot opnieuw laden zonder dialogen (de server zei: te oud om bij te
+ * praten). De werkruimte (tabs) blijft; daarna de operaties ná de grens.
+ */
+async function herlaadSnapshotStil() {
+  const { project } = useModellerenStore.getState();
+  if (project.serverVersie == null) return;
+  try {
+    const rec = await haalProjectOp(project.id);
+    const uit = normaliseerProjectData(rec.inhoud);
+    if (!uit.ok) return;
+    const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
+    pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0 });
+    await haalBinnen({ inclusiefEigen: true });
+    useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
+    menuBus.emit("menu:ververs");
+  } catch {
+    /* offline: de verzender meldt dat al */
   }
 }
 
@@ -2155,8 +2320,11 @@ function haalVanServer() {
         const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
         const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
         if (onbekend.length) window.alert(`Profielen onbekend in deze Studio (overgeslagen): ${onbekend.join(", ")}`);
-        pasProjectToe(data, { serverVersie: rec.versie });
+        pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0 });
+        // Snapshot + wat er daarna in het operatielog kwam (ook eigen oude operaties).
+        const n = await haalBinnen({ inclusiefEigen: true });
         useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
+        if (n) menuBus.emit("menu:ververs");
       } catch (e) {
         window.alert(`Ophalen mislukt: ${e?.message || e}`);
       }
@@ -2167,11 +2335,29 @@ function haalVanServer() {
 /** Menubalk = eigen Project-menu + de menu's van het profiel van de actieve tab. */
 function menus(ctx) {
   const { project } = useModellerenStore.getState();
+  const sync = useSyncStore.getState();
+  const liveAan = project.serverVersie != null && (project.liveSync ?? true);
   const syncStand =
     project.serverVersie == null
       ? "alleen lokaal"
       : `server v${project.serverVersie}` +
-        (project.laatsteSync ? ` · ${new Date(project.laatsteSync).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}` : "");
+        (!liveAan
+          ? " · live-sync uit"
+          : sync.stand === "ok"
+            ? sync.teVerzenden
+              ? ` · ${sync.teVerzenden} te verzenden`
+              : sync.kanaal === "verbonden"
+                ? " · live"
+                : " · gesynchroniseerd (poll)"
+            : sync.stand === "bezig"
+              ? " · verzenden…"
+              : sync.stand === "offline"
+                ? ` · offline (${sync.teVerzenden} wachten)`
+                : sync.stand === "nietOpServer"
+                  ? " · niet (meer) op de server"
+                  : sync.stand === "fout"
+                    ? " · fout bij verzenden"
+                    : "");
   const projectMenu = {
     id: "project",
     label: "Project",
@@ -2180,8 +2366,27 @@ function menus(ctx) {
       { id: "proj-hernoem", label: "Hernoem project…", onClick: hernoemProject },
       { id: "proj-nieuw", label: "Nieuw project… (huidige parkeren)", onClick: nieuwProject },
       { type: "separator" },
-      { id: "proj-push", label: "Naar server sturen", onClick: stuurNaarServer },
+      { id: "proj-push", label: "Naar server sturen (snapshot)", onClick: stuurNaarServer },
       { id: "proj-pull", label: "Van server ophalen…", onClick: haalVanServer },
+      {
+        id: "proj-live",
+        label: "Live synchroniseren (wijzigingen heen en terug)",
+        checked: liveAan,
+        disabled: project.serverVersie == null,
+        onClick: () => useModellerenStore.getState().zetProject({ liveSync: !(project.liveSync ?? true) }),
+      },
+      {
+        id: "proj-ververs",
+        label: "Nu verversen (wijzigingen van anderen)",
+        disabled: !liveAan,
+        onClick: async () => {
+          await verzend();
+          const n = await haalBinnen();
+          const st = useSyncStore.getState();
+          if (st.stand === "offline" || st.stand === "fout" || st.stand === "nietOpServer") window.alert(`Verversen: ${st.fout || st.stand}`);
+          else if (n) menuBus.emit("menu:ververs");
+        },
+      },
       { type: "separator" },
       { id: "proj-export", label: "Exporteer project (structuur + modellen)…", onClick: exporteerProject },
       { id: "proj-import", label: "Importeer project…", onClick: kiesEnImporteerProject },

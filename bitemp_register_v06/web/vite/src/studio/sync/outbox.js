@@ -14,11 +14,12 @@ import { abonneer } from "./operaties.js";
 const LS_SLEUTEL = "studio-outbox";
 const SS_SLEUTEL = "studio-client-id";
 const MAX_OPS = 5000; // noodrem: daarna gaat het oudste eruit (snapshot herstelt de rest)
-// Persisteren in localStorage pas als de verzender (stap 2, onderdeel 4) bestaat:
-// tot die tijd zou de outbox alleen maar groeien (grote operaties zoals een
+// Persisteren in localStorage alleen zolang het project op de server staat en
+// live-sync aan is (de verzender zet dit, zie verzender.js `configureer`):
+// anders zou de outbox alleen maar groeien (grote operaties zoals een
 // modelimport komen er volledig in) en de ~5 MB-quota van de origin opeten.
-// Aanzetten voor ontwikkeling: localStorage.setItem("studio-outbox-persist", "1").
-const PERSISTEER = (() => {
+// Forceren voor ontwikkeling: localStorage.setItem("studio-outbox-persist", "1").
+let persisteren = (() => {
   try {
     return globalThis.localStorage?.getItem("studio-outbox-persist") === "1";
   } catch {
@@ -27,23 +28,24 @@ const PERSISTEER = (() => {
 })();
 
 function leesOpslag() {
-  if (!PERSISTEER) return { ops: [], volgende: 1 };
   try {
     const raw = globalThis.localStorage?.getItem(LS_SLEUTEL);
     if (raw) {
       const d = JSON.parse(raw);
-      if (Array.isArray(d.ops)) return { ops: d.ops, volgende: Number(d.volgende) || d.ops.length + 1 };
+      if (Array.isArray(d.ops)) {
+        return { ops: d.ops, volgende: Number(d.volgende) || d.ops.length + 1, projectId: d.projectId || null };
+      }
     }
   } catch {
     /* geen opslag */
   }
-  return { ops: [], volgende: 1 };
+  return { ops: [], volgende: 1, projectId: null };
 }
 
-function schrijfOpslag({ ops, volgende }) {
-  if (!PERSISTEER) return;
+function schrijfOpslag({ ops, volgende, projectId }) {
+  if (!persisteren) return;
   try {
-    globalThis.localStorage?.setItem(LS_SLEUTEL, JSON.stringify({ ops, volgende }));
+    globalThis.localStorage?.setItem(LS_SLEUTEL, JSON.stringify({ ops, volgende, projectId }));
   } catch {
     /* geen opslag of vol — de snapshot-sync vangt dat op */
   }
@@ -74,13 +76,15 @@ export const useOutboxStore = create((set, get) => ({
   /** @type {Array<{lokaalNr:number, tijd:string, store:string, op:string, args:any[]}>} */
   ops: begin.ops,
   volgende: begin.volgende,
+  /** project waar de bewaarde operaties bij horen (guard bij herlaad/projectwissel) */
+  projectId: begin.projectId,
 
   voegToe: (op) =>
     set((s) => {
       const rij = { lokaalNr: s.volgende, tijd: new Date().toISOString(), ...op };
       let ops = [...s.ops, rij];
       if (ops.length > MAX_OPS) ops = ops.slice(ops.length - MAX_OPS);
-      const next = { ops, volgende: s.volgende + 1 };
+      const next = { ops, volgende: s.volgende + 1, projectId: s.projectId };
       schrijfOpslag(next);
       return next;
     }),
@@ -90,16 +94,39 @@ export const useOutboxStore = create((set, get) => ({
     set((s) => {
       const ops = s.ops.filter((o) => o.lokaalNr > lokaalNr);
       if (ops.length === s.ops.length) return {};
-      const next = { ops, volgende: s.volgende };
-      schrijfOpslag(next);
+      schrijfOpslag({ ops, volgende: s.volgende, projectId: s.projectId });
       return { ops };
     }),
 
   /** Leeg (nieuw project, snapshot geladen). */
   wis: () => {
-    const next = { ops: [], volgende: get().volgende };
+    const next = { ops: [], volgende: get().volgende, projectId: get().projectId };
     schrijfOpslag(next);
     set(next);
+  },
+
+  /** Hoort de bewaarde outbox bij een ander project? Dan weg ermee. */
+  zetProject: (projectId) => {
+    const s = get();
+    if (s.projectId && projectId && s.projectId !== projectId && s.ops.length) {
+      set({ ops: [], projectId });
+    } else {
+      set({ projectId });
+    }
+    schrijfOpslag(get());
+  },
+
+  /** Persistentie aan/uit (aan = direct de huidige stand wegschrijven). */
+  zetPersisteren: (aan) => {
+    persisteren = !!aan;
+    if (aan) schrijfOpslag(get());
+    else {
+      try {
+        globalThis.localStorage?.removeItem(LS_SLEUTEL);
+      } catch {
+        /* geen opslag */
+      }
+    }
   },
 }));
 
