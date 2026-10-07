@@ -1571,6 +1571,49 @@ en afwegingen: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20c
       -data-object, -pool en -lane zweven. Echte extra handles zijn er nooit
       geweest. Zie `docs/STUDIO.md`. Bevalt het niet: terugdraaien is één
       commit.
+- [x] **31.11 Inline hernoemen en lijnen vanaf het hele vlak.** *(gebouwd
+      2026-10-07, ter beoordeling)* Gemeld door Mark: werkt F2/enkelklik om
+      een naam inline te wijzigen? (nee — alleen via inspector of
+      boom-contextmenu) en "lijnen trekken vanaf een use case gaat moeilijk,
+      hij grijpt slechts op één punt" (ja, door de vorm: de stippen liggen
+      op de omsluitende rechthoek, niet op de ellipsrand). Gebouwd: F2 en
+      dubbelklik openen een naamveld op de node; Shift+slepen vanaf élke
+      plek op een vorm begint een lijn, en tijdens het slepen is élke plek op
+      een doelvorm losplek (vlak-handle, zijde automatisch); loose-modus +
+      vangstraal 24. Zie STUDIO.md "Inline hernoemen" en "Verbind-modus".
+      Vervolg (zelfde dag, feedback Mark): het naamveld lag bij de actor
+      midden op de figuur i.p.v. op de naam → het veld volgt nu het
+      naam-element van de shape (`data-dc-naam`/`.dc-naam`). Inline
+      hernoemen ook in de projectboom en de elementen-/diagramlijst (F2,
+      klik op de al geselecteerde regel, contextmenu), zonder prompt-popup.
+      Vervolg 2 (zelfde dag): enkelklik op de naam of op een attribuut-regel
+      = inline bewerken (ook veldnamen); hernoemen trekt naam-verwijzingen
+      door (`hernoemen.js`, melding "NieuweDatatype → NieuwDatatype ververst
+      niet in de klasse"); naamloze begin/eind tonen "(Begin)" i.p.v. de id;
+      diagram verwijderen via projectboom-contextmenu voor elk profiel;
+      slepen uit boom/lijst naar canvas en in containers; boomstijl één
+      undo-stap; taakbalken starten bovenin, compacte chips even groot.
+      Vervolg 3: relatienaam inline (klik op label / F2 op lijn); lijn wordt
+      bij selectie niet dikker (pijlpunt groeide mee) maar krijgt een gloed;
+      veldeditor binnen de node; `minBreedte` stuurt ook de shape (actie 100).
+      Vervolg 4: taakbalken automatisch op een rij bovenin (auto-vlag,
+      menu-item om te herstellen), breedte alleen bewaard bij de hoekgreep,
+      compacte knoppen 30×30; informeel kader in het use case-profiel.
+      Vervolg 5: kader sleept inhoud mee (`sleeptInhoudMee`), kader inline
+      hernoemen, resize-positie bewaard (links/boven trekken), resizer nooit
+      onder het shape-minimum (mp4 "trekken aan de randen is raar").
+      Restpunt: rolnamen/kardinaliteiten op lijnen inline bewerken.
+- [ ] **31.12 Attribuuttype als referentie i.p.v. naam-string.** Mark (07-10):
+      "verbaasd dat het type geen referentie is naar het datatype". Nu: een
+      PropertyType met `referenceTypes` (bv. `typeLabel` in canoniek-uml) slaat
+      de **naam** op; de adapter (`parseTypeLabel`) zoekt bij export op naam,
+      en basistypen (String, Boolean) zijn geen elementen. Hernoemen trekt de
+      naam nu door (`hernoemen.js`), maar een echte verwijzing is robuuster
+      (dubbele namen, verplaatsen, verwijderen → dangling). Voorstel: de
+      kiezer bewaart `{ elementId }` náást het label (`typeRef`), de node en
+      de adapter lossen op via id met naam als fallback; migratie: bestaande
+      labels bij eerste bewerking of via "normaliseer verwijzingen" aan een id
+      koppelen. Raakt M1-opslag (V3 JSON) en de canoniek-uml-adapter.
 - [ ] **31.9 Restpunten containers en afbakening.**
       (a) De begrenzing laat een lid over de **kopregel/naamband** van de
       container schuiven — de binnenruimte zou de kop moeten uitsluiten.

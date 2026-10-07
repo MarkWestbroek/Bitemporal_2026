@@ -49,6 +49,7 @@ function ActorShape({ element, selected, children }) {
           lineHeight: 1.25,
           overflowWrap: "break-word",
         }}
+        data-dc-naam=""
       >
         {element?.naam || "(actor)"}
       </div>
@@ -100,6 +101,7 @@ function EllipsShape({ element, elementType, selected, children }) {
           lineHeight: 1.3,
           overflowWrap: "anywhere",
         }}
+        data-dc-naam=""
       >
         {element?.naam || "(use case)"}
       </div>
@@ -136,6 +138,7 @@ function SysteemShape({ element, selected, children }) {
           textAlign: "center",
           borderBottom: "1px solid #cbd5e1",
         }}
+        data-dc-naam=""
       >
         {element?.naam || "(systeem)"}
       </div>

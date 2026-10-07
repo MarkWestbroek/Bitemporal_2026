@@ -34,7 +34,7 @@
  *   labels: [ { zijde: "bron"|"doel"|"midden", offset?: {x,y},
  *               delen: [ { tekst, soort: "rolnaam"|"kardinaliteit"|"constraint"|"naam", kleur? } ] } ]
  */
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, useContext } from "react";
 import {
   getBezierPath,
   getSmoothStepPath,
@@ -45,6 +45,8 @@ import {
   useInternalNode,
 } from "@xyflow/react";
 import { zwevendeUiteinden, nodeRechthoek } from "./zwevendeRand.js";
+import { InlineNaamContext } from "./inlineNaam.js";
+import NaamEditor from "./NaamEditor.jsx";
 
 const DASHES = {
   "dash-6-3": "6 3",
@@ -124,6 +126,11 @@ function ConnectorEdge({
   selected,
 }) {
   const p = data?.presentatie || {};
+  // Inline bewerken van de relatienaam (klik op het naamlabel, of F2 op de
+  // geselecteerde lijn): dezelfde context als de nodes, gesleuteld op edge-id.
+  const inlineNaam = useContext(InlineNaamContext);
+  const bewerktNaam = inlineNaam.nodeId === id;
+  const klikStartRef = useRef(null);
   // Zwevende aanhechting (zie zwevendeRand.js): in plaats van de vaste
   // handle-coördinaten die React Flow aanlevert, hecht de lijn aan het punt
   // waar hij de omtrek van de node snijdt. Per uiteinde apart aan/uit; de
@@ -598,6 +605,18 @@ function ConnectorEdge({
         <KraaienpootMarker id={kraaiDoelId} soort={p.markerEnd} kleur={kleur} kant="doel" />
       </defs>
 
+      {selected && (
+        <path
+          d={edgePath}
+          fill="none"
+          stroke={kleur}
+          strokeWidth={(p.dikte || 1.5) + 5}
+          strokeOpacity={0.22}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ pointerEvents: "none" }}
+        />
+      )}
       <BaseEdge
         id={id}
         path={edgePath}
@@ -620,7 +639,10 @@ function ConnectorEdge({
         }
         style={{
           stroke: kleur,
-          strokeWidth: selected ? 2.5 : p.dikte || 1.5,
+          // Vaste dikte, ook geselecteerd: de markers (markerUnits
+          // "strokeWidth") schalen anders mee en de pijlpunt werd bijna
+          // dubbel zo groot. De selectie zit in de kleur + gloed hierboven.
+          strokeWidth: p.dikte || 1.5,
           strokeDasharray: DASHES[p.lijn] || undefined,
           strokeLinejoin: "round",
           opacity: p.opacity,
@@ -668,7 +690,19 @@ function ConnectorEdge({
               // De label-laag staat los van de edges in de DOM; dit koppelt hem
               // terug aan zijn lijn voor de afbeeldings-export (exportFilter.js).
               data-edge-id={id}
-              onPointerDown={(e) => startLabelSleep(e, i, label)}
+              onPointerDown={(e) => {
+                klikStartRef.current = { x: e.clientX, y: e.clientY };
+                startLabelSleep(e, i, label);
+              }}
+              // Klik (geen sleep) op het naamlabel = relatienaam inline
+              // bewerken; andere labels (rolnaam, kardinaliteit) nog niet.
+              onClick={(e) => {
+                if (!inlineNaam.start || !label.delen?.some((d) => d.veld === "naam")) return;
+                const st = klikStartRef.current;
+                if (st && Math.hypot(e.clientX - st.x, e.clientY - st.y) > 4) return;
+                e.stopPropagation();
+                inlineNaam.start(id, null);
+              }}
               title={magSlepen ? "Sleep om het label te verplaatsen" : undefined}
               style={{
                 position: "absolute",
@@ -679,7 +713,12 @@ function ConnectorEdge({
               }}
             >
               {label.delen.map((deel, j) => (
-                <span key={j} className={SOORT_KLASSE[deel.soort] || undefined} style={deel.kleur ? { color: deel.kleur } : undefined}>
+                <span
+                  key={j}
+                  className={SOORT_KLASSE[deel.soort] || undefined}
+                  data-dc-naam={deel.veld === "naam" ? "" : undefined}
+                  style={deel.kleur ? { color: deel.kleur } : undefined}
+                >
                   {deel.tekst}
                 </span>
               ))}
@@ -687,6 +726,33 @@ function ConnectorEdge({
           </EdgeLabelRenderer>
         );
         });
+      })()}
+      {bewerktNaam && (() => {
+        // Op de plek van het naamlabel (incl. gesleepte offset), anders op
+        // het midden van de lijn (naamloze relatie: F2 op de selectie).
+        const naamLabel = (p.labels || []).find((l) => l.delen?.some((d) => d.veld === "naam")) || null;
+        const basis = posities[naamLabel?.zijde || "midden"] || posities.midden;
+        const off = naamLabel?.offset || { x: 0, y: 0 };
+        const huidig = naamLabel?.delen?.find((d) => d.veld === "naam")?.tekst || "";
+        return (
+          <EdgeLabelRenderer>
+            <div
+              className="nodrag nopan"
+              style={{
+                position: "absolute",
+                transform: `translate(-50%, -50%) translate(${basis.x + (off.x || 0)}px, ${basis.y + (off.y || 0)}px)`,
+                pointerEvents: "all",
+                zIndex: 30,
+              }}
+            >
+              <NaamEditor
+                waarde={huidig}
+                stijl={{ position: "relative", width: Math.max(120, huidig.length * 7 + 30), fontSize: 11, fontWeight: 500, textAlign: "center" }}
+                klaar={(nieuw) => inlineNaam.klaar(id, nieuw, null)}
+              />
+            </div>
+          </EdgeLabelRenderer>
+        );
       })()}
 
       {/* Breed onzichtbaar klikpad voor ctrl-klik (knikpunt toevoegen);

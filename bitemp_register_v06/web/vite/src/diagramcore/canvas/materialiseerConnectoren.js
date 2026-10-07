@@ -281,7 +281,9 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       // ── Kale gedaante: één edge ──────────────────────────────────────────
       const kaalLabels = [...(basisPresentatie.labels || []), ...(labels.kaal || [])];
       if (el.naam) {
-        kaalLabels.push({ zijde: "midden", delen: [{ tekst: el.naam, soort: "rolnaam" }] });
+        // `veld: "naam"`: dit deel toont de connector-naam en is op de canvas
+        // inline te bewerken (klik op het label, zie ConnectorEdge.jsx).
+        kaalLabels.push({ zijde: "midden", delen: [{ tekst: el.naam, soort: "rolnaam", veld: "naam" }] });
       }
       // Zelf-lus (oortje): standaard hoekig en van boven naar rechts —
       // de kortste weg is bij één punt betekenisloos.
