@@ -61,15 +61,15 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.13.0`**
-  (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders, taakbalken op een rij).
-  Daarvoor **`studio/v0.12.0`** (2026-10-06: activiteit Gebruikers, uitloggen in de menubalk) en
-  **`studio/v0.11.0`** (2026-10-06: GraphQL-schema-profiel, transformaties in een vaste vorm,
-  ODRL-export, SVG-tekenaar, kaart van Nederland); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.10.0`** (2026-10-06: gebruikersbeheer — Gebruiker als bitemporele entiteit
-  in domein `beheer`, met een migratie van de oude tabel bij de eerste opstart). Daarvoor
-  **`api/v0.9.0`** (2026-10-06: render-API voor modeldiagrammen met de sidecar
-  `render-svc`; geen brekende wijzigingen); zie `RELEASE.md`.
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.14.0`**
+  (2026-10-07: project op de server, operatielaag, projectboom-fixes). Daarvoor
+  **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
+  taakbalken op een rij) en **`studio/v0.12.0`** (2026-10-06: activiteit Gebruikers, uitloggen in
+  de menubalk); zie `web/vite/CHANGELOG.md`.
+- Backend: **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server, tabel `studio_projecten`;
+  geen brekende wijzigingen). Daarvoor **`api/v0.10.0`** (2026-10-06: gebruikersbeheer — Gebruiker
+  als bitemporele entiteit in domein `beheer`, met een migratie van de oude tabel bij de eerste
+  opstart); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
 - Render-sidecar: **`render/v0.1.0`** (eerste uitgave, 2026-10-06; image
   `bitemp-render-svc:0.1.0`), zie [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md) §4.2a.
