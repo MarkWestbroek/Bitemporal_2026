@@ -8,6 +8,16 @@
 
 ---
 
+## Snapshot-grens: studio 0.15.2 (2026-10-08)
+
+Alleen frontend (patch). De opslag-aanroep stuurde `tot_volgnummer` niet mee: de snapshot-grens
+bleef 0, compactie deed niets en na *Van server ophalen* werden alle operaties nogmaals afgespeeld
+(een *Omhoog* van vóór de snapshot dus tweemaal). Zie [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+Uitrol: één image `bitemp-viz-frontend:0.15.2`; geen databasegevolg. Daarna één keer *Naar server
+sturen* (zet de grens en ruimt het log op) en bij de anderen *Van server ophalen*.
+
+---
+
 ## Boomvolgorde in de sync: studio 0.15.1 (2026-10-08)
 
 Alleen frontend (patch). *Omhoog*/*Omlaag* in de projectboom reist nu als operatie naar collega's,
