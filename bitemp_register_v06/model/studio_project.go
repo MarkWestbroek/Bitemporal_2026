@@ -24,4 +24,7 @@ type StudioProject struct {
 	Aangemaakt     time.Time       `json:"aangemaakt" bun:"aangemaakt,default:current_timestamp"`
 	Bijgewerkt     time.Time       `json:"bijgewerkt" bun:"bijgewerkt,default:current_timestamp"`
 	BijgewerktDoor string          `json:"bijgewerkt_door" bun:"bijgewerkt_door"`
+	// Snapshot-compactie (stap 2, onderdeel 6): de blob geldt tot en met dit volgnummer
+	// in studio_project_ops; een client laadt de blob en haalt de operaties daarna op.
+	TotVolgnummer int64 `json:"tot_volgnummer" bun:"tot_volgnummer,notnull"`
 }

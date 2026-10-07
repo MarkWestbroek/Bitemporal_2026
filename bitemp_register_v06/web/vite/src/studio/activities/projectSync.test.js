@@ -17,7 +17,7 @@ test("v1-bestand krijgt een id en een naam uit de bestandsnaam", () => {
     { bestandsnaam: "np-loc 2026.json" }
   );
   assert.equal(uit.ok, true);
-  assert.equal(uit.data.versie, 2);
+  assert.equal(uit.data.versie, 3);
   assert.equal(uit.data.project.naam, "np-loc 2026");
   assert.match(uit.data.project.id, /^[A-Za-z0-9_-]{8,64}$/);
   assert.deepEqual(uit.data.profielen, {});

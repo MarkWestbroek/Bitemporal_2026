@@ -598,7 +598,58 @@ gezet. → `200` met de nieuwe meta. `409 {error, server: {…meta}}` als de ser
 niet (meer) bestaat.
 
 ### `DELETE /api/studio/projecten/:id`
-Alleen de eigenaar of een `admin` (zonder auth: iedereen). → `204`.
+Alleen de eigenaar of een `admin` (zonder auth: iedereen). → `204`. Verwijdert ook het operatielog.
+
+### Operatielog (stap 2, onderdeel 3)
+
+Elke modelwijziging in de Studio is een operatie `{store, op, args}` (zie
+`web/vite/src/studio/sync/operaties.js`). De server is een logboek: hij kent per project een
+oplopend `volgnummer` toe en kijkt niet in de operatie. Handlers:
+`handlers/studio_project_ops_handler.go`. De meta van een project bevat `tot_volgnummer` (de
+snapshot-blob geldt tot en met dit nummer; te zetten via `PUT … {tot_volgnummer}`) en
+`laatste_volgnummer` (hoogste nummer in het log). Ophalen = blob laden, dan `GET …/ops?vanaf=<tot_volgnummer>`.
+
+#### `POST /api/studio/projecten/:id/ops`
+Rol `editor`. Body `{clientId, ops: [{lokaalNr?, store, op, args: [...]}]}`, max 500 operaties en
+8 MB per batch; `args` moet een JSON-array zijn. In één transactie (projectrij `FOR UPDATE`) krijgen
+de operaties opeenvolgende volgnummers. → `201 {van, tot, laatsteLokaalNr}`. `404` als het project
+niet bestaat.
+
+#### `GET /api/studio/projecten/:id/events`
+Ingelogd. **SSE-kanaal** (`text/event-stream`): elke bevestigde operatie als event `op`
+(`id` = volgnummer, `data` = dezelfde vorm als in de ops-lijst). Bij verbinden speelt de server
+eerst na vanaf `Last-Event-ID` (zet de browser zelf bij een herverbinding) of `?vanaf=N`, en
+stuurt dan `event: stand` met `{laatste}`. Keepalive-commentaar elke 15 s;
+`X-Accel-Buffering: no` tegen bufferen door nginx. **Presence:** `?client=<clientId>` meldt de
+browsertab aan; bij elke aan- of afmelding krijgt iedereen `event: presence` met
+`{aanwezig: [{clientId, actor}]}` (actor = gebruikersnaam, leeg zonder auth). Eén in-memory hub per proces
+(`handlers/studio_project_sse.go`); de Studio gebruikt `EventSource` met `withCredentials` en
+valt terug op de poll zolang het kanaal verbroken is.
+
+#### `GET` / `PUT /api/studio/projecten/:id/werkruimte`
+Ingelogd. De werkruimte van de ingelogde gebruiker in dit project (tabs, actieve tab, open/dicht
+mappen; `handlers/studio_werkruimte_handler.go`, tabel `studio_werkruimtes` met sleutel
+project + gebruiker). `GET` → `{inhoud, bijgewerkt}` of `404` (nog geen). `PUT {inhoud, bijgewerkt?}`
+→ upsert, laatste schrijver wint op `bijgewerkt` (een oudere wordt genegeerd); antwoord
+`{bijgewerkt, overgenomen}`. Zonder auth is de gebruiker leeg (één werkruimte per project).
+
+#### `GET /api/studio/instellingen`
+Open. Instellingen van de instantie voor de Studio: `{poll_ms}` — het poll-interval van de
+projectsync (env `STUDIO_SYNC_POLL_MS`, standaard 5000, begrensd 500–120000). Een lokale
+override voor ontwikkeling: `localStorage["studio-sync-poll-ms"]`.
+
+#### `GET /api/studio/projecten/:id/ops?vanaf=N&limiet=M`
+Ingelogd. Operaties met `volgnummer > N` (standaard 0), oudste eerst, max `M` (standaard 1000,
+maximaal 5000). → `{ops: [{volgnummer, clientId, actor, lokaalNr, tijd, store, op, args}], laatste, meer}`;
+`meer` = er zijn nog operaties na `laatste`. Ligt `N` vóór `tot_volgnummer` van het project
+(compactie heeft die operaties opgeruimd), dan komt `{ops: [], snapshotNodig: true, totVolgnummer}`:
+de client laadt de snapshot opnieuw en gaat verder vanaf die grens. Het SSE-kanaal stuurt in dat
+geval één `event: snapshot` met `{totVolgnummer}` en sluit.
+
+**Compactie:** een `PUT` met `tot_volgnummer` verwijdert de operaties t/m die grens (de grens gaat
+nooit terug en nooit voorbij het log). De Studio zet zelf een snapshot zodra het log 200 operaties
+voorbij de grens staat en de client bij is; bij gelijktijdige pogingen wint de eerste (409 voor de
+rest). Volgnummers tellen na compactie door vanaf de grens.
 
 ---
 

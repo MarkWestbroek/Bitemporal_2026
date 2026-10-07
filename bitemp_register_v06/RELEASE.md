@@ -26,7 +26,32 @@ onder *Unreleased* en in `docs/STUDIO.md` (canvas-bediening). Samengevat:
 - **Sneltoetsen** instelbaar (Studio-instellingen → Sneltoetsen) met EA-achtige standaarden.
 - Graaf (demo), SP en de Profiel-editor staan standaard niet meer in de activity bar.
 
-### Uitrol
+### Projectsync, stap 2 (branch `feat/projectsync-ops`, 2026-10-07/08) — backend én frontend
+
+Samenwerken wordt live: elke modelwijziging is een benoemde operatie die naar de server gaat en
+bij collega's binnenkomt (plan `docs/plans/2026-10-07 Projectsync …`, `docs/API_REFERENCE.md` §15).
+
+- **Backend (volgende api-nummer):** tabel `studio_project_ops` (operatielog per project, volgnummer),
+  kolom `studio_projecten.tot_volgnummer` (snapshot-grens), tabel `studio_werkruimtes` (tabs/open
+  mappen per gebruiker per project). Endpoints: `POST/GET …/ops`, `GET …/events` (SSE, met
+  presence), `GET/PUT …/werkruimte`, `GET /api/studio/instellingen`. Compactie: een snapshot-`PUT`
+  ruimt operaties t/m de grens op. Nieuwe instelling `STUDIO_SYNC_POLL_MS` (standaard 5000).
+- **Frontend:** operatielaag met outbox en verzender (SSE, poll als terugval), undo-rebase bij
+  remote operaties, werkruimte los van het project (werkbestand **v3**, zonder tabs/viewports;
+  localStorage `studio-werkruimte:<projectId>`), menu *Project* met sync-stand, *Live synchroniseren*,
+  *Nu verversen*; "N anderen online" in de menubalk; Studio-instellingen → *Samenwerken*.
+
+#### Uitrol
+
+- Twee images (api + frontend); render-svc ongewijzigd. Databasegevolg: twee nieuwe tabellen en één
+  kolom, bij het opstarten aangemaakt; geen migratie van bestaande gegevens.
+- nginx in de frontend-image hoeft niet aangepast: het SSE-kanaal zet `X-Accel-Buffering: no` en
+  stuurt elke 15 s een keepalive (nginx `proxy_read_timeout` 60 s). Caddy streamt `text/event-stream`
+  zonder bufferen.
+- Na het uitrollen: in twee browsers hetzelfde project openen; de menu-kop toont "live" en een
+  verplaatsing in de ene verschijnt direct in de andere.
+
+### Uitrol (canvas-bediening vervolg)
 
 - Eén image bij de volgende frontend-release (`bitemp-viz-frontend`); api en render-svc ongewijzigd.
 - Geen databasegevolg. Nieuwe localStorage-sleutels: `studio05-sneltoetsen`,

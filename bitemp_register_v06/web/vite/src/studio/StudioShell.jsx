@@ -19,6 +19,7 @@ import useStudioStore from "./useStudioStore";
 import useUIStore from "../store/useUIStore";
 import ActivityBar from "./ActivityBar";
 import StudioGebruiker from "./StudioGebruiker";
+import StudioAanwezig from "./StudioAanwezig.jsx";
 import SidePanel from "./SidePanel";
 import MenuBar from "./MenuBar";
 import CommandPalette from "./CommandPalette";
@@ -126,6 +127,7 @@ export default function StudioShell() {
               <span className="studio-topbar__status" style={{ marginLeft: 8 }}>{actief.status}</span>
             )}
           </span>
+          <StudioAanwezig />
           <StudioGebruiker />
         </>
       }

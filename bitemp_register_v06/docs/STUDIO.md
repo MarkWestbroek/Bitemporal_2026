@@ -311,8 +311,36 @@ te wijzigen.
 > een diff-vangnet meldt wat buiten de acties om verandert (undo/redo,
 > migraties) als `patch…`-operaties. `pasOperatieToe` voert een operatie van
 > een ander uit via dezelfde actie, met de undo gepauzeerd **en gerebased**
-> (anders zou je eigen Ctrl+Z andermans werk wissen). Verzenden en ontvangen
-> (SSE) zijn nog niet gebouwd; de outbox vult zich al wel.
+> (anders zou je eigen Ctrl+Z andermans werk wissen).
+>
+> **Werkruimte en live-sync (2026-10-07, onderdeel 3–4):** de projectboom-store
+> is in twee lagen gesplitst: project (mappen, plaatsing, identiteit; sleutel
+> `studio-modelleren`) en werkruimte (tabs, actieve tab, open/dicht mappen;
+> sleutel `studio-werkruimte:<projectId>`, per project bewaard). Het werkbestand
+> is v3, zonder tabs en viewports. Staat het project op de server en is
+> *Project → Live synchroniseren* aan, dan stuurt `sync/verzender.js` de outbox
+> in batches naar `POST /api/studio/projecten/:id/ops` en haalt hij elke 5 s (en direct na elke eigen verzending)
+> de operaties van anderen op (`GET …/ops?vanaf=`), toegepast via
+> `pasOperatieToe`. *Naar server sturen* maakt eerst de outbox leeg en zet de
+> snapshot met `tot_volgnummer`; *Van server ophalen* laadt de snapshot en
+> daarna de operaties erna. De menu-kop toont de stand (gesynchroniseerd, N te
+> verzenden, offline, niet op de server). **SSE (onderdeel 5):** `startKanaal()`
+> opent een `EventSource` op `GET …/events`; operaties komen dan direct binnen
+> ("live" in de menu-kop), de poll blijft als terugval zolang het kanaal
+> verbroken is en voor het verzenden zelf. **Compactie (onderdeel 6):** staat het
+> log 200 operaties voorbij de snapshot-grens en is de client bij, dan zet hij
+> stil een nieuwe snapshot; de server ruimt de operaties t/m de grens op. Wie
+> met een ouder volgnummer binnenkomt krijgt "snapshot nodig" en laadt de
+> snapshot opnieuw (tabs blijven), daarna de operaties ná de grens.
+> **Wie is online (onderdeel 7):** het SSE-kanaal meldt aan- en afmeldingen
+> (`event: presence`); rechts in de menubalk staat "N anderen online" met de
+> namen in de tooltip (`StudioAanwezig.jsx`), en het Project-menu toont
+> "Online: …". Zonder auth heet iedereen "anoniem".
+> **Werkruimte op de server (2026-10-08):** tabs, actieve tab en open/dicht
+> mappen gaan per gebruiker per project naar `…/werkruimte` (laatste schrijver
+> wint, `sync/werkruimte.js`); bij het openen van een project neemt de Studio
+> de serverwerkruimte over als die nieuwer is dan de lokale, zodat je op een
+> andere computer verdergaat waar je was.
 >
 > **Hele groepen naar een map (2026-10-06):** in de elementen-browser is
 > rechtsklik op een typekop ("Actor 13") → *Selecteer alle N* of *Verplaats

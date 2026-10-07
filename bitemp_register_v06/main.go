@@ -264,6 +264,17 @@ func NewRouter() *gin.Engine {
 	router.POST("/api/studio/projecten", editor, handlers.MaakStudioProjectAanmakenHandler())
 	router.PUT("/api/studio/projecten/:id", editor, handlers.MaakStudioProjectOpslaanHandler())
 	router.DELETE("/api/studio/projecten/:id", ingelogd, handlers.MaakStudioProjectVerwijderenHandler())
+	// Operatielog (stap 2, onderdeel 3): batches aannemen en nalezen; SSE volgt in onderdeel 5.
+	router.POST("/api/studio/projecten/:id/ops", editor, handlers.MaakStudioProjectOpsToevoegenHandler())
+	router.GET("/api/studio/projecten/:id/ops", ingelogd, handlers.MaakStudioProjectOpsLijstHandler())
+	// SSE-kanaal (stap 2, onderdeel 5): live operaties van anderen; de hub hangt aan het log.
+	handlers.KoppelStudioSSE()
+	router.GET("/api/studio/projecten/:id/events", ingelogd, handlers.MaakStudioProjectEventsHandler())
+	// Werkruimte (tabs, open mappen) per gebruiker per project: van jou, laatste schrijver wint.
+	router.GET("/api/studio/projecten/:id/werkruimte", ingelogd, handlers.MaakStudioWerkruimteOphalenHandler())
+	router.PUT("/api/studio/projecten/:id/werkruimte", ingelogd, handlers.MaakStudioWerkruimteOpslaanHandler())
+	// Instellingen van de instantie voor de Studio (admin via env, bv. STUDIO_SYNC_POLL_MS).
+	router.GET("/api/studio/instellingen", handlers.MaakStudioInstellingenHandler())
 
 	// Version endpoint
 	router.GET("/version", func(c *gin.Context) {

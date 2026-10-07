@@ -1,6 +1,6 @@
 # Projectsync — eenmalig naar de server, daarna operaties als events (plan)
 
-Datum: 2026-10-07 · Status: **plan; stap 1 gebouwd, nog niet gemerged** (branch `feat/projectsync`) ·
+Datum: 2026-10-07 · Status: **stap 1 live (07-10), stap 2 onderdeel 1–2 gebouwd** ·
 Claude-sessie met Mark. Hoort bij BACKLOG §27.2 ("Modellen bitemporeel opslaan") en is
 een **tussenstap** naar `2026-10-06 Modelregister — het model in het register
 (ontwerpvoorstel).md`.
@@ -218,8 +218,9 @@ modelregister elk één registratie worden.
   HTTP-roundtrip handmatig gecontroleerd tegen de dev-database.
 - [x] Stap 1 Studio (2026-10-07): `project` in `useModellerenStore`, werkbestand v2,
   `activities/projectSync.js` (+ test), `activities/ProjectServerDialoog.jsx`, menu
-  *Project*; STUDIO.md bijgewerkt. Vite-build slaagt; de menu-flow in de browser is nog
-  niet handmatig doorlopen (de dev-API op 8082 moet daarvoor herbouwd zijn).
+  *Project*; STUDIO.md bijgewerkt. **Live sinds 07-10** (studio 0.14.0 / api 0.11.0 op app en
+  pf) en door Mark getest: desktop → server → laptop, kleine wijziging, terug naar de server,
+  op de desktop opgehaald — goed.
 - [x] Stap 2, onderdeel 1 en 2 (2026-10-07): `web/vite/src/studio/sync/operaties.js`
   (koppelStore met omwikkelde acties + diff-vangnet, `pasOperatieToe` met undo-pauze én
   undo-rebase, vocabulaire `MODEL_OPS`/`STRUCTUUR_OPS`/patch-ops), `sync/outbox.js`
@@ -229,5 +230,70 @@ modelregister elk één registratie worden.
   `modellerenActivity.jsx`, `koppelingenActivity.jsx`; snapshot laden/leegmaken gedempt
   en wist de outbox. Tests: `sync/operaties.test.js` (naspelen, vangnet, undo-rebase,
   geen echo, demping, voorkomen-id). Nog niet in de browser doorlopen.
-- [ ] Stap 2, onderdeel 3–7: ops-tabel + endpoints (Go), verzender, SSE-hub en
-  EventSource, snapshot-compactie met `tot_volgnummer`, presence/indicator.
+- [x] Stap 2, onderdeel 3 (2026-10-07, branch `feat/projectsync-ops`): tabel
+  `studio_project_ops` (`model.StudioProjectOp`, pk project_id+volgnummer), kolom
+  `studio_projecten.tot_volgnummer`, `POST/GET /api/studio/projecten/:id/ops`
+  (`handlers/studio_project_ops_handler.go`; volgnummers in één transactie met FOR UPDATE op de
+  projectrij; hook `NaStudioProjectOps` voor de SSE-hub), `laatste_volgnummer` in de projectmeta,
+  DELETE ruimt het log op. API_REFERENCE §15. Test: `TestStudioProjectOps_Roundtrip` (pg).
+- [x] Werkruimte gescheiden van project (2026-10-07, na Marks analyse): `studio-modelleren`
+  houdt alleen mappen, plaatsing en projectidentiteit; tabs, actieve tab en open/dicht mappen
+  staan in `studio-werkruimte:<projectId>` (per project bewaard, eenmalige migratie uit de oude
+  sleutel). Werkbestand **v3**: zonder tabs/actieveTab en zonder viewports (`laadModel` houdt
+  de lokale pan/zoom als de blob er geen draagt). Apparaat-laag (paneelbreedtes, taakbalken)
+  blijft waar hij was. Later: werkruimte naar de server (tabel project+gebruiker, LWW),
+  diagramsets privé/gedeeld, taakbalkvoorkeuren per gebruiker.
+- [x] Stap 2, onderdeel 4 (2026-10-07): `studio/sync/verzender.js` — outbox in batches van 200
+  naar `POST …/ops` (debounce 300 ms, backoff 1–30 s bij netwerkfout, 404 = niet op de server,
+  afgekeurde batch wordt overgeslagen), `haalBinnen()` past operaties van anderen toe (eigen
+  client-id overgeslagen; na een snapshot `inclusiefEigen`), **poll elke 5 s** zolang de tab
+  zichtbaar is én direct na elke eigen verzending (SSE vervangt dit in onderdeel 5).
+  Het interval is een **admin-instelling per instantie**: env `STUDIO_SYNC_POLL_MS`
+  (standaard 5000, begrensd 500–120000), door de Studio gelezen via
+  `GET /api/studio/instellingen`; lokale override `localStorage["studio-sync-poll-ms"]`.
+  Een lege poll kost ~1 kB en ~1 ms serverwerk (gemeten: 27 ms rondreis naar de VPS).
+  **Bug gevonden bij Marks test (twee browsers simultaan):** de verzender zette na een POST het
+  laatst bekende volgnummer op het nummer van de eigen batch en sprong zo over operaties heen
+  die de ander net daarvoor had gekregen — die kwamen nooit meer. Fix: het volgnummer schuift
+  alleen op via `haalBinnen`, die eigen operaties op client-id overslaat. Regressietest in
+  `verzender.test.js`; plus `web/vite/test/sim-client.mjs`: twee node-processen als "Chrome en
+  Edge" tegen de echte API (25 + 25 elementen simultaan) eindigen met hetzelfde model. Project-state: `laatsteVolgnummer`,
+  `liveSync` (menu *Live synchroniseren*), outbox persisteert alleen zolang live-sync aan is en
+  wist zich bij een ander project. *Naar server sturen* = eerst outbox leeg, dan snapshot met
+  `tot_volgnummer`; *Van server ophalen* = snapshot + operaties daarna. Menu-kop toont de stand.
+  Tests: `sync/verzender.test.js` (batch/bevestig, offline, 404/400, inactief, haalBinnen).
+- [x] Stap 2, onderdeel 5 (2026-10-07): `handlers/studio_project_sse.go` — in-memory hub per
+  proces aan de hook `NaStudioProjectOps`, `GET /api/studio/projecten/:id/events`
+  (naspelen vanaf `Last-Event-ID`/`?vanaf`, dan `event: stand`, daarna live `event: op` met
+  id = volgnummer; keepalive 15 s; `X-Accel-Buffering: no` voor nginx; volle abonnee wordt
+  afgekoppeld en herverbindt met naspelen). Studio: `startKanaal()` in `sync/verzender.js`
+  (EventSource met withCredentials, zelfde `verwerkOp` als de poll, idempotent op volgnummer);
+  de poll blijft als terugval en slaat het ophalen over zolang het kanaal verbonden is.
+  Menu-kop toont "live" of "gesynchroniseerd (poll)". Tests: `TestStudioProjectSSE_NaspelenEnLive`
+  (pg, echte HTTP-stream), `verwerkOp`-idempotentie in `verzender.test.js`.
+- [x] Stap 2, onderdeel 6 (2026-10-07): snapshot-compactie. Server: `PUT` met `tot_volgnummer`
+  verwijdert de operaties t/m de grens (grens nooit terug, afgekapt op het log; volgnummers
+  tellen door vanaf de grens via `laatsteVolgnummerVan`); `GET …/ops` antwoordt
+  `snapshotNodig` en het SSE-kanaal `event: snapshot` als een client vóór de grens staat.
+  Studio: `overweegSnapshot()` in de poll-tik zet via `maakSnapshotStil` een stille snapshot
+  zodra het log ≥ 200 (`SNAPSHOT_NA`) voorbij de grens staat én de client bij is (outbox leeg,
+  stand ok); 409 = een ander was eerder, grens overnemen. `herlaadSnapshotStil` laadt de
+  snapshot opnieuw (werkruimte blijft) en haalt daarna de operaties ná de grens binnen; het
+  SSE-kanaal sluit en herverbindt daarvoor. Tests: pg-roundtrip (compactie, grens, nummering),
+  SSE-snapshot-event, verzender (drempel, snapshotNodig).
+- [x] Stap 2, onderdeel 7 (2026-10-08): presence over het SSE-kanaal. De hub kent per
+  verbinding client-id (`?client=`) en actor; bij aan-/afmelden gaat `event: presence` met de
+  lijst naar alle abonnees van het project. Studio: `useSyncStore.aanwezig`,
+  `aanwezigSamengevat()` (per persoon, aantal tabs, "jij"), `StudioAanwezig.jsx` rechts in de
+  menubalk ("2 anderen online", namen in de tooltip) en een kop "Online: …" in het Project-menu.
+  Zonder auth heet iedereen "anoniem".
+- [x] Poll-interval in de Studio-UI (2026-10-08): sectie *Samenwerken* in Studio-instellingen
+  (`SamenwerkenInstellingen.jsx`): standaard van de instantie of 1/2/5/15/30 s per browser
+  (`studio-sync-poll-ms`), met de actuele stand; `herstartPoll()` past het direct toe.
+  Instantiebreed blijft `STUDIO_SYNC_POLL_MS` (een instellingen-opslag op de server is er niet).
+- [x] Werkruimte naar de server (2026-10-08): tabel `studio_werkruimtes` (project + gebruiker),
+  `GET/PUT …/werkruimte`, laatste schrijver wint op `bijgewerkt`. Studio: `sync/werkruimte.js`
+  (debounce 1,5 s naar PUT, alleen bij echte wijzigingen en alleen als het project op de server
+  staat; `haalWerkruimteBinnen` neemt de serverwerkruimte over als die nieuwer is dan de lokale,
+  bij het openen van het project). Test: `TestStudioWerkruimte_LaatsteSchrijverWint` (pg).
+- [ ] Diagramsets privé (werkruimte) en gedeeld (project).

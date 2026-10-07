@@ -27,6 +27,7 @@ import { extraheerSilhouet } from "./silhouetExtractie.js";
 import ActiviteitenInstellingen from "../ActiviteitenInstellingen.jsx";
 import ProfieltypenInstellingen from "../ProfieltypenInstellingen.jsx";
 import ExportInstellingen from "../ExportInstellingen.jsx";
+import SamenwerkenInstellingen from "../SamenwerkenInstellingen.jsx";
 import SneltoetsenInstellingen from "../SneltoetsenInstellingen.jsx";
 import useStudioStore from "../useStudioStore";
 
@@ -545,6 +546,16 @@ function Main() {
       </div>
       <div style={sectie}>
         <ExportInstellingen />
+      </div>
+
+      <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
+        <h2 style={{ margin: "0 0 2px" }}>Samenwerken</h2>
+        <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
+          Projectsync met collega's: hoe vaak deze browser om wijzigingen vraagt als het live-kanaal er niet is.
+        </p>
+      </div>
+      <div style={sectie}>
+        <SamenwerkenInstellingen />
       </div>
 
       <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
