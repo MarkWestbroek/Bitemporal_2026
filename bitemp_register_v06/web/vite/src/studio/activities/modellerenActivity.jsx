@@ -565,13 +565,21 @@ export const useModellerenStore = create((set, get) => ({
    * Patch-operatie (projectsync-vangnet): mappen/plaatsingen van een ander
    * upserten of wissen. Buiten de structuur-undo (die staat dan uit).
    */
-  patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [] } = {}) =>
+  patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [], volgordePlaatsing = null } = {}) =>
     set((s) => {
       legStructuurVast(s);
       const mappen = { ...s.mappen, ...zetMappen };
       for (const id of wisMappen) delete mappen[id];
-      const plaatsing = { ...s.plaatsing, ...zetPlaatsing };
+      let plaatsing = { ...s.plaatsing, ...zetPlaatsing };
       for (const key of wisPlaatsing) delete plaatsing[key];
+      // Volgorde in de boom = sleutelvolgorde: herschik naar de gegeven lijst,
+      // onbekende sleutels (nog niet bij de ander) blijven achteraan.
+      if (Array.isArray(volgordePlaatsing)) {
+        const herschikt = {};
+        for (const k of volgordePlaatsing) if (k in plaatsing) herschikt[k] = plaatsing[k];
+        for (const k of Object.keys(plaatsing)) if (!(k in herschikt)) herschikt[k] = plaatsing[k];
+        plaatsing = herschikt;
+      }
       const next = { ...s, mappen, plaatsing };
       schrijfOpslag(next);
       return { mappen, plaatsing };

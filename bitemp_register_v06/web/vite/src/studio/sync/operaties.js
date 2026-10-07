@@ -323,22 +323,27 @@ export const STRUCTUUR_OPS = {
   verplaatsMap: null,
   plaatsDiagram: null,
   plaatsMeerdere: null,
+  /** Omhoog/omlaag in de boom (studio 0.15.0): wisselt twee sleutels van `plaatsing`. */
+  schuifPlaatsing: null,
 };
 
 export const STRUCTUUR_VELDEN = ["mappen", "plaatsing"];
 
-/** Vangnet structuur: structuur-undo/redo en laadStructuur. */
+/**
+ * Vangnet structuur: structuur-undo/redo en laadStructuur. De volgorde in de
+ * boom ís de sleutelvolgorde van `plaatsing`; is alleen die veranderd (undo van
+ * omhoog/omlaag), dan reist de hele volgorde mee als `volgordePlaatsing`.
+ */
 export function structuurNet(voor, na) {
   const m = diffMap(voor.mappen, na.mappen);
   const p = diffMap(voor.plaatsing, na.plaatsing);
-  if (m.leeg && p.leeg) return [];
-  return [
-    {
-      store: "structuur",
-      op: "patchStructuur",
-      args: [{ zetMappen: m.zet, wisMappen: m.wis, zetPlaatsing: p.zet, wisPlaatsing: p.wis }],
-    },
-  ];
+  const volgordeVoor = Object.keys(voor.plaatsing || {}).join(" ");
+  const volgordeNa = Object.keys(na.plaatsing || {}).join(" ");
+  const volgordeAnders = volgordeVoor !== volgordeNa;
+  if (m.leeg && p.leeg && !volgordeAnders) return [];
+  const patch = { zetMappen: m.zet, wisMappen: m.wis, zetPlaatsing: p.zet, wisPlaatsing: p.wis };
+  if (volgordeAnders) patch.volgordePlaatsing = Object.keys(na.plaatsing || {});
+  return [{ store: "structuur", op: "patchStructuur", args: [patch] }];
 }
 
 // ── Kruisverbanden ────────────────────────────────────────────────────
