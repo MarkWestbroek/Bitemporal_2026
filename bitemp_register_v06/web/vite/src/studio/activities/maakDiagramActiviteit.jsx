@@ -1987,7 +1987,7 @@ export function maakDiagramActiviteit(opties) {
             disabled: selectieAantal < 2,
             onClick: () => layoutApiRef.current?.lijnUit(m.mode),
           };
-          return i === 3 || i === 6 || i === 8 ? [{ sep: true }, item] : [item];
+          return i === 4 || i === 6 || i === 8 ? [{ sep: true }, item] : [item];
         }),
         { sep: true },
         ...(descriptor.layouts?.length
@@ -2537,7 +2537,7 @@ export function maakDiagramActiviteit(opties) {
           titel: `${m.titel}${toets ? ` — ${toets}` : ""} (selectie: Shift+sleep een kader)`,
           onClick: () => layoutApiRef.current?.lijnUit(m.mode),
         };
-        return i === 3 || i === 6 || i === 8 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
+        return i === 4 || i === 6 || i === 8 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
       }).concat([
         { id: "snap", label: "▦", icoon: UITLIJN_ICONEN.snap, titel: "Alles op raster", onClick: () => layoutApiRef.current?.snapRaster() },
         { id: "sep-norm", sep: true },
@@ -3052,8 +3052,8 @@ export function maakDiagramActiviteit(opties) {
             { id: `${menuPrefix}-align-top`, label: "Boven", onClick: () => menuBus.emit(ev("layout"), "top") },
             { id: `${menuPrefix}-align-bottom`, label: "Onder", onClick: () => menuBus.emit(ev("layout"), "bottom") },
             { type: "separator" },
-            { id: `${menuPrefix}-align-ch`, label: "Horizontaal centreren", onClick: () => menuBus.emit(ev("layout"), "center-h") },
-            { id: `${menuPrefix}-align-cv`, label: "Verticaal centreren", onClick: () => menuBus.emit(ev("layout"), "center-v") },
+            { id: `${menuPrefix}-align-ch`, label: "Verticaal centreren (boven elkaar)", shortcut: toonBinding(bindingVoor("uitlijnen:center-h")) || undefined, onClick: () => menuBus.emit(ev("layout"), "center-h") },
+            { id: `${menuPrefix}-align-cv`, label: "Horizontaal centreren (naast elkaar)", shortcut: toonBinding(bindingVoor("uitlijnen:center-v")) || undefined, onClick: () => menuBus.emit(ev("layout"), "center-v") },
             { type: "separator" },
             { id: `${menuPrefix}-dist-h`, label: "Horizontaal verdelen", onClick: () => menuBus.emit(ev("layout"), "distribute-h") },
             { id: `${menuPrefix}-dist-v`, label: "Verticaal verdelen", onClick: () => menuBus.emit(ev("layout"), "distribute-v") },

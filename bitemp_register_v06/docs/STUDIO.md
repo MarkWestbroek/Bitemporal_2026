@@ -853,7 +853,10 @@ fase 2 een **bewerkbare sandbox**:
   grootste maat, nooit knippen); store-actie `updateNodeSizes` (één stap).
 - **Sneltoetsen** (`studio/sneltoetsen.js`, instelscherm Studio-instellingen
   → Sneltoetsen): instelbaar per browser, standaard naar Enterprise
-  Architect — Ctrl+Alt+←/→/↑/↓ randen uitlijnen, Alt+H/Alt+V centreren,
+  Architect — Ctrl+Alt+←/→/↑/↓ randen uitlijnen, Alt+V verticaal centreren
+  (= boven elkaar, zelfde x-midden; mode `center-h`), Alt+H horizontaal
+  centreren (= naast elkaar; mode `center-v`) — de EA-benaming, Mark zag
+  het andersom dan de oude labels,
   Alt+-/Alt+= verdelen, Alt+W/Alt+E/Alt+R zelfde breedte/hoogte/maat, Alt+Z
   maat aanpassen aan inhoud, Ctrl+Delete verwijderen uit model, Alt+G zoek in
   projectboom. Een binding is Ctrl/Alt + toets of een F-toets (kale letters

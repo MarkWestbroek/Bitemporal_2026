@@ -13,13 +13,20 @@
 
 /** @typedef {{id: string, x: number, y: number, width: number, height: number}} LayoutItem */
 
+// Volgorde = groepen in balk en menu (scheidingen vóór index 4, 6 en 8):
+// randen | centreren | verdelen | maat. Centreren heet zoals in Enterprise
+// Architect: "verticaal centreren" = centreren op een verticale as, de
+// elementen komen bóven elkaar (zelfde x-midden, mode center-h);
+// "horizontaal centreren" = naast elkaar (zelfde y-midden, mode center-v).
+// De mode-ids blijven (opslag, tests); alleen de benaming is omgedraaid
+// (Mark, 2026-10-07: "V = boven elkaar, H = naast elkaar").
 export const UITLIJN_MODES = [
   { mode: "left", label: "⇤", titel: "Links uitlijnen" },
-  { mode: "center-h", label: "⇹", titel: "Horizontaal centreren" },
   { mode: "right", label: "⇥", titel: "Rechts uitlijnen" },
   { mode: "top", label: "⤒", titel: "Boven uitlijnen" },
-  { mode: "center-v", label: "⇳", titel: "Verticaal centreren" },
   { mode: "bottom", label: "⤓", titel: "Onder uitlijnen" },
+  { mode: "center-h", label: "⇹", titel: "Verticaal centreren (boven elkaar)" },
+  { mode: "center-v", label: "⇳", titel: "Horizontaal centreren (naast elkaar)" },
   { mode: "distribute-h", label: "⋯", titel: "Horizontaal verdelen" },
   { mode: "distribute-v", label: "⋮", titel: "Verticaal verdelen" },
   // Maat-modi (EA "Make same width/height/size"): de selectie krijgt de
