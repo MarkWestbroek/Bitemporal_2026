@@ -48,7 +48,7 @@ function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor, edit
  * type, kardinaliteit) staan inline; de rest — vinkjes, definities — zit
  * achter de ⋯-knop in een detailpaneel met eigen labeltjes.
  */
-function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorContext, onChange, onVerwijder }) {
+function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorContext, onChange, onVerwijder, onSchuif, eerste, laatste }) {
   const regels = fieldType?.properties || [{ key: "naam", datatype: "string" }];
   const [detailOpen, setDetailOpen] = useState(false);
   const inline = [];
@@ -81,7 +81,16 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorC
   }).length;
   return (
     <div>
-      <div className="dc-inspector-rij">
+      <div
+        className="dc-inspector-rij"
+        // Ctrl+↑/↓ met de focus in een veld van deze regel: herordenen.
+        onKeyDown={(e) => {
+          if (!onSchuif || !(e.ctrlKey || e.metaKey) || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+          e.preventDefault();
+          e.stopPropagation();
+          onSchuif(e.key === "ArrowUp" ? "omhoog" : "omlaag");
+        }}
+      >
         {inline.map(widget)}
         {detail.length > 0 && (
           <button
@@ -92,6 +101,16 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorC
           >
             {detailOpen ? "▾" : "⋯"}
           </button>
+        )}
+        {bewerkbaar && onSchuif && (
+          <>
+            <button className="dc-mini-knop" title="Omhoog (Ctrl+↑)" disabled={eerste} onClick={() => onSchuif("omhoog")}>
+              ↑
+            </button>
+            <button className="dc-mini-knop" title="Omlaag (Ctrl+↓)" disabled={laatste} onClick={() => onSchuif("omlaag")}>
+              ↓
+            </button>
+          </>
         )}
         {bewerkbaar && (
           <button className="dc-mini-knop is-gevaar" title="Veld verwijderen" onClick={onVerwijder}>
@@ -246,6 +265,16 @@ export default function ElementInspector({
                 editorContext={editorContext}
                 onChange={(nieuw) => zetCompartiment(def.id, velden.map((v, j) => (j === i ? nieuw : v)))}
                 onVerwijder={() => zetCompartiment(def.id, velden.filter((_, j) => j !== i))}
+                // Herordenen (↑/↓, Ctrl+↑/↓): wissel met de buur, één stap.
+                onSchuif={(richting) => {
+                  const j = i + (richting === "omhoog" ? -1 : 1);
+                  if (j < 0 || j >= velden.length) return;
+                  const nieuw = velden.slice();
+                  [nieuw[i], nieuw[j]] = [nieuw[j], nieuw[i]];
+                  zetCompartiment(def.id, nieuw);
+                }}
+                eerste={i === 0}
+                laatste={i === velden.length - 1}
               />
             ))}
             {bewerkbaar && !def.alleenWeergave && (

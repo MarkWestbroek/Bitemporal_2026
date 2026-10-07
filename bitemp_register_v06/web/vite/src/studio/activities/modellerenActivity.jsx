@@ -50,6 +50,23 @@ import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
 import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
 
+const ELEMENTEN_HOOGTE_SLEUTEL = "studio05-project-elementen-hoogte";
+function leesElementenHoogte() {
+  try {
+    const v = Number(window.localStorage.getItem(ELEMENTEN_HOOGTE_SLEUTEL));
+    return v > 40 ? v : 260;
+  } catch {
+    return 260;
+  }
+}
+function bewaarElementenHoogte(h) {
+  try {
+    window.localStorage.setItem(ELEMENTEN_HOOGTE_SLEUTEL, String(Math.round(h)));
+  } catch {
+    /* opslag uit */
+  }
+}
+
 // Drag-and-drop MIME-types in de projectboom.
 // PLAATSING draagt een plaatsing-sleutel (diagram- of element-regel die al
 // in de boom staat); MAP draagt een map-id; ELEMENT is de bestaande sleep
@@ -412,6 +429,33 @@ export const useModellerenStore = create((set, get) => ({
   plaatsDiagram: (key, mapId) => get().plaatsMeerdere([key], mapId),
 
   /**
+   * Verplaats een geplaatste regel (diagram/element) één plek omhoog of
+   * omlaag binnen zijn map. De sleutelvolgorde van `plaatsing` ís de
+   * volgorde in de boom (JSON bewaart die), dus wisselen = sleutels
+   * herschikken. Eén structuur-undo-stap.
+   */
+  schuifPlaatsing: (key, richting) =>
+    set((s) => {
+      const mapId = s.plaatsing[key];
+      if (!mapId) return {};
+      const sleutels = Object.keys(s.plaatsing);
+      const broers = sleutels.filter((k) => s.plaatsing[k] === mapId);
+      const idx = broers.indexOf(key);
+      const buur = broers[idx + (richting === "omhoog" ? -1 : 1)];
+      if (!buur) return {};
+      legStructuurVast(s);
+      const volgorde = sleutels.slice();
+      const a = volgorde.indexOf(key);
+      const b = volgorde.indexOf(buur);
+      [volgorde[a], volgorde[b]] = [volgorde[b], volgorde[a]];
+      const plaatsing = {};
+      for (const k of volgorde) plaatsing[k] = s.plaatsing[k];
+      const next = { ...s, plaatsing };
+      schrijfOpslag(next);
+      return { plaatsing };
+    }),
+
+  /**
    * Plaats meerdere sleutels (diagrammen/elementen) tegelijk in een map —
    * één structuur-undo-stap voor de hele bundel (bv. "alle 13 actoren naar
    * map Actoren"), in plaats van één stap per regel.
@@ -611,6 +655,12 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
       { label: "Openen", onClick: () => openTab(profiel.id, diagram.id) },
       { label: "Eigenschappen", onClick: () => selecteerDiagram(profiel.id, diagram.id) },
       { label: "Hernoemen", onClick: () => setBewerk(true) },
+      ...(inMap
+        ? [
+            { label: "Omhoog", onClick: () => useModellerenStore.getState().schuifPlaatsing(id, "omhoog") },
+            { label: "Omlaag", onClick: () => useModellerenStore.getState().schuifPlaatsing(id, "omlaag") },
+          ]
+        : []),
       {
         label: "Verplaats naar",
         items: verplaatsNaarItems(verplaats, {
@@ -1058,6 +1108,8 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
       { label: "Hernoemen", onClick: () => setBewerk(true) },
       ...(sleutel
         ? [
+            { label: "Omhoog", onClick: () => useModellerenStore.getState().schuifPlaatsing(sleutel, "omhoog") },
+            { label: "Omlaag", onClick: () => useModellerenStore.getState().schuifPlaatsing(sleutel, "omlaag") },
             {
               label: "Verplaats naar",
               items: verplaatsNaarItems((mapId) => {
@@ -1484,6 +1536,27 @@ function Sidebar() {
   const tab = tabs.find((t) => t.id === actieveTab) || null;
   const profiel = tab ? getProfieltype(tab.profielId) : null;
   const Browser = profiel?.ElementenBrowser;
+  // Hoogte van de elementenlijst onder de boom: versleepbaar (splitter) en
+  // per browser bewaard — de vaste 45% liet de boom te krap (2026-10-07).
+  const [elementenHoogte, setElementenHoogte] = React.useState(leesElementenHoogte);
+  const startSplitter = (e) => {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = elementenHoogte;
+    const ouder = e.currentTarget.parentElement;
+    const maxH = Math.max(120, (ouder?.clientHeight || 600) - 120);
+    const beweeg = (m) => setElementenHoogte(Math.max(80, Math.min(maxH, startH - (m.clientY - startY))));
+    const klaar = () => {
+      window.removeEventListener("pointermove", beweeg);
+      window.removeEventListener("pointerup", klaar);
+      setElementenHoogte((h) => {
+        bewaarElementenHoogte(h);
+        return h;
+      });
+    };
+    window.addEventListener("pointermove", beweeg);
+    window.addEventListener("pointerup", klaar);
+  };
 
   const maakMap = () => {
     const ms = useModellerenStore.getState();
@@ -1514,6 +1587,19 @@ function Sidebar() {
       e.preventDefault();
       e.stopPropagation();
       s.vraagHernoem(sleutel);
+      return;
+    }
+    // Ctrl+↑/↓ = de geselecteerde regel (map, diagram, element) een plek
+    // omhoog/omlaag tussen zijn broers (ook via het contextmenu).
+    if ((e.ctrlKey || e.metaKey) && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+      const s = useModellerenStore.getState();
+      const richting = e.key === "ArrowUp" ? "omhoog" : "omlaag";
+      if (s.mapSelectie) s.schuifMap(s.mapSelectie, richting);
+      else if (s.diagramSelectie) s.schuifPlaatsing(tabId(s.diagramSelectie.profielId, s.diagramSelectie.diagramId), richting);
+      else if (s.elementSelectie) s.schuifPlaatsing(elementKey(s.elementSelectie.profielId, s.elementSelectie.elementId), richting);
+      else return;
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
     if (!(e.ctrlKey || e.metaKey)) return;
@@ -1577,7 +1663,10 @@ function Sidebar() {
       </div>
 
       {Browser && (
-        <div className="studio-project__elementen">
+        <div className="studio-project__splitter" title="Sleep om de verdeling boom/elementen te wijzigen" onPointerDown={startSplitter} />
+      )}
+      {Browser && (
+        <div className="studio-project__elementen" style={{ flex: `0 0 ${elementenHoogte}px` }}>
           <div className="studio-project__elementen-kop">
             <span
               className="studio-project__stip"

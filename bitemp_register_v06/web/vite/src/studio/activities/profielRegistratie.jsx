@@ -119,6 +119,10 @@ export function registreerProfielAlsActiviteit(kern) {
       taakbalkSleutel: `studio05-taakbalken-dyn-${kern.id}`,
       menuPrefix: `dyn-${kern.id}`,
       menuLabel: kern.label || kern.id,
+      // Dynamische profielen (gebundelde demo's zoals Graaf en SP, en eigen
+      // profielen) staan standaard niet in de activity bar: bereikbaar via
+      // Modelleren, "Ga naar" en Studio-instellingen (Mark, 07-10).
+      standaardVerborgen: true,
       previewTekst: `Eigen profiel "${kern.label || kern.id}" — gemaakt met de meta-editor.`,
       devHookNaam: `__dyn_${kern.id.replace(/[^a-zA-Z0-9]/g, "_")}Store`,
     })

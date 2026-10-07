@@ -72,6 +72,8 @@ import { registreerIconenVocabulaire } from "../../diagramcore/shapes/iconenVoca
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
 import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
 import { splitsVeldSleutel } from "../../diagramcore/canvas/inlineNaam.js";
+import { actieVoorEvent, bindingVoor, toonBinding } from "../sneltoetsen.js";
+import { schuifVeld } from "../../diagramcore/model/velden.js";
 
 /**
  * Inline naamveld voor lijstregels (elementenbrowser, diagramlijst): Enter
@@ -1980,11 +1982,12 @@ export function maakDiagramActiviteit(opties) {
           const item = {
             id: m.mode,
             label: m.titel,
-            icoon: UITLIJN_ICONEN[m.mode],
+            icoon: UITLIJN_ICONEN[m.mode] || m.label,
+            shortcut: toonBinding(bindingVoor(`uitlijnen:${m.mode}`)) || undefined,
             disabled: selectieAantal < 2,
             onClick: () => layoutApiRef.current?.lijnUit(m.mode),
           };
-          return i === 3 || i === 6 ? [{ sep: true }, item] : [item];
+          return i === 3 || i === 6 || i === 8 ? [{ sep: true }, item] : [item];
         }),
         { sep: true },
         ...(descriptor.layouts?.length
@@ -2422,6 +2425,37 @@ export function maakDiagramActiviteit(opties) {
         } else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.key.toLowerCase() === "z" && e.shiftKey))) {
           e.preventDefault();
           useStore.temporal.getState().redo();
+        } else {
+          // Instelbare sneltoetsen (Studio-instellingen → Sneltoetsen,
+          // EA-achtige standaarden): uitlijnen, maat, verwijderen, zoeken.
+          const actie = actieVoorEvent(e);
+          if (!actie) return;
+          const api = layoutApiRef.current;
+          e.preventDefault();
+          if (actie.startsWith("uitlijnen:")) api?.lijnUit(actie.slice("uitlijnen:".length));
+          else if (actie === "canvas:snap") api?.snapRaster();
+          else if (actie === "canvas:normaliseer") menuBus.emit(ev("normaliseer"));
+          else if (actie === "canvas:maat-inhoud") {
+            const s = useStore.getState();
+            if (s.actiefDiagramId) for (const { nodeId } of api?.selectieIds?.() || []) s.wisNodeMaten(s.actiefDiagramId, nodeId);
+          } else if (actie === "canvas:zoek-in-boom") {
+            const sel = api?.selectieIds?.() || [];
+            if (sel.length === 1) menuBus.emit("studio:zoek-in-boom", { profielId: id, elementId: sel[0].elementId });
+          } else if (actie === "canvas:verwijder-uit-model") {
+            const sel = api?.selectieIds?.() || [];
+            if (!sel.length) return;
+            const naam = useStore.getState().elements[sel[0].elementId]?.naam || sel[0].elementId;
+            vraagBevestiging({
+              titel: "Uit het model verwijderen",
+              tekst: sel.length === 1 ? `"${naam}" uit het model verwijderen?` : `${sel.length} elementen uit het model verwijderen?`,
+              bevestig: "Verwijder",
+              gevaar: true,
+            }).then((ok) => {
+              if (!ok) return;
+              const s = useStore.getState();
+              for (const { elementId } of sel) s.deleteElement(elementId);
+            });
+          }
         }
       };
       window.addEventListener("keydown", onKey);
@@ -2495,14 +2529,15 @@ export function maakDiagramActiviteit(opties) {
       id: "uitlijnen",
       label: "Uitlijnen",
       actieLijst: UITLIJN_MODES.flatMap((m, i) => {
+        const toets = toonBinding(bindingVoor(`uitlijnen:${m.mode}`));
         const knop = {
           id: m.mode,
           label: m.label,
           icoon: UITLIJN_ICONEN[m.mode],
-          titel: `${m.titel} (selectie: Shift+sleep een kader)`,
+          titel: `${m.titel}${toets ? ` — ${toets}` : ""} (selectie: Shift+sleep een kader)`,
           onClick: () => layoutApiRef.current?.lijnUit(m.mode),
         };
-        return i === 3 || i === 6 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
+        return i === 3 || i === 6 || i === 8 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
       }).concat([
         { id: "snap", label: "▦", icoon: UITLIJN_ICONEN.snap, titel: "Alles op raster", onClick: () => layoutApiRef.current?.snapRaster() },
         { id: "sep-norm", sep: true },
@@ -2679,6 +2714,17 @@ export function maakDiagramActiviteit(opties) {
                         : c
                     );
                     s.updateElement(elementId, { compartimenten });
+                  }}
+                  // Zelfde breedte/hoogte/maat (uitlijn-balk, sneltoetsen): één stap.
+                  onNodeMaten={(maten) => useStore.getState().updateNodeSizes(diagram.id, maten)}
+                  // Ctrl+↑/↓ in het inline-veld van een attribuut.
+                  onSchuifVeld={(elementId, veldSleutel, richting) => {
+                    const s = useStore.getState();
+                    const { compartmentType, index } = splitsVeldSleutel(veldSleutel);
+                    const uit = schuifVeld(s.elements[elementId], compartmentType, index, richting);
+                    if (!uit) return null;
+                    s.updateElement(elementId, { compartimenten: uit.compartimenten });
+                    return `${compartmentType}:${uit.nieuweIndex}`;
                   }}
                   onExternDrop={(nodeId, ref, positie) => {
                     const s = useStore.getState();
