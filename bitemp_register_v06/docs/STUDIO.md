@@ -275,6 +275,21 @@ te wijzigen.
 > sleep), contextmenu's met "Verplaats naar ▸", handmatige mapvolgorde,
 > auto-scroll bij slepen en "Zoek in projectboom" vanaf de canvas.
 >
+> **Elementregels in de boom (2026-10-07, na 0.13.0):** hernoemen werkt nu
+> ook voor elementen zoals voor mappen en diagrammen (klik = selectie,
+> nog eens klikken of F2 = hernoemen, dubbelklik, contextmenu);
+> `elementSelectie` in de modelleren-store. Slepen van een element uit de
+> boom op het canvas gaf een verbodsbord: de boom sleept met
+> `effectAllowed "copyMove"` en de canvas zette `dropEffect "link"`, wat de
+> browser weigert; de canvas kiest nu een dropEffect binnen wat de bron
+> toestaat (`DiagramCanvas.jsx`, handleExternDragOver). Multiselectie in de
+> boom: **Shift+klik** selecteert een bereik binnen dezelfde lijst
+> (map-inhoud of profielsectie, `data-lijst`/`data-sleutel`, volgorde uit de
+> DOM, anker = laatst geklikte regel); de eerste **Ctrl+klik** neemt de al
+> geselecteerde regel mee (Explorer-gedrag), anders sleepte die ene niet
+> mee met de bundel. Slepen van een regel buiten de bundel verplaatst
+> alleen die regel.
+>
 > **Project op de server (2026-10-07, plan *Projectsync* stap 1):** het
 > project heeft nu een naam en een id (`project` in `studio-modelleren`; het
 > werkbestand is daarmee "studio-project" **v2**, v1 wordt bij import

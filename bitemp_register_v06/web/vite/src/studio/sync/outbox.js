@@ -14,8 +14,20 @@ import { abonneer } from "./operaties.js";
 const LS_SLEUTEL = "studio-outbox";
 const SS_SLEUTEL = "studio-client-id";
 const MAX_OPS = 5000; // noodrem: daarna gaat het oudste eruit (snapshot herstelt de rest)
+// Persisteren in localStorage pas als de verzender (stap 2, onderdeel 4) bestaat:
+// tot die tijd zou de outbox alleen maar groeien (grote operaties zoals een
+// modelimport komen er volledig in) en de ~5 MB-quota van de origin opeten.
+// Aanzetten voor ontwikkeling: localStorage.setItem("studio-outbox-persist", "1").
+const PERSISTEER = (() => {
+  try {
+    return globalThis.localStorage?.getItem("studio-outbox-persist") === "1";
+  } catch {
+    return false;
+  }
+})();
 
 function leesOpslag() {
+  if (!PERSISTEER) return { ops: [], volgende: 1 };
   try {
     const raw = globalThis.localStorage?.getItem(LS_SLEUTEL);
     if (raw) {
@@ -29,6 +41,7 @@ function leesOpslag() {
 }
 
 function schrijfOpslag({ ops, volgende }) {
+  if (!PERSISTEER) return;
   try {
     globalThis.localStorage?.setItem(LS_SLEUTEL, JSON.stringify({ ops, volgende }));
   } catch {
