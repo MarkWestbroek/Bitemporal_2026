@@ -7,6 +7,11 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+
+## [studio/v0.15.1] — 2026-10-08
+Patch: de volgorde in de projectboom synct nu en overleeft de snapshot. Alleen frontend; api
+blijft 0.12.0.
+
 ### Gefixt
 - **Boomvolgorde synct** (08-10): *Omhoog*/*Omlaag* (Ctrl+↑/↓) in de projectboom kwam niet bij
   collega's aan — `schuifPlaatsing` ontbrak in het operatievocabulaire en het vangnet zag alleen
