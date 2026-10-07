@@ -1987,7 +1987,7 @@ export function maakDiagramActiviteit(opties) {
             disabled: selectieAantal < 2,
             onClick: () => layoutApiRef.current?.lijnUit(m.mode),
           };
-          return i === 4 || i === 6 || i === 8 ? [{ sep: true }, item] : [item];
+          return i === 3 || i === 6 || i === 8 ? [{ sep: true }, item] : [item];
         }),
         { sep: true },
         ...(descriptor.layouts?.length
@@ -2537,7 +2537,7 @@ export function maakDiagramActiviteit(opties) {
           titel: `${m.titel}${toets ? ` — ${toets}` : ""} (selectie: Shift+sleep een kader)`,
           onClick: () => layoutApiRef.current?.lijnUit(m.mode),
         };
-        return i === 4 || i === 6 || i === 8 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
+        return i === 3 || i === 6 || i === 8 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
       }).concat([
         { id: "snap", label: "▦", icoon: UITLIJN_ICONEN.snap, titel: "Alles op raster", onClick: () => layoutApiRef.current?.snapRaster() },
         { id: "sep-norm", sep: true },

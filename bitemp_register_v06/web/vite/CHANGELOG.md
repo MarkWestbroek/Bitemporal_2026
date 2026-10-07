@@ -19,7 +19,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   splitter (per browser bewaard).
 - **Velden herordenen** (attributen, operaties, …): ↑/↓ en Ctrl+↑/↓ in de inspector, Ctrl+↑/↓ in
   het inline-veld op het canvas.
-- **Zelfde breedte / hoogte / maat** in de Uitlijnen-balk en het contextmenu.
+- **Zelfde breedte / hoogte / maat** in de Uitlijnen-balk en het contextmenu: naar de laatst
+  geselecteerde (dus ook kleiner maken kan).
 - **Sneltoetsen**, instelbaar in Studio-instellingen → Sneltoetsen, met EA-achtige standaarden
   (Ctrl+Alt+pijlen uitlijnen, Alt+V verticaal centreren = boven elkaar, Alt+H horizontaal = naast
   elkaar zoals in EA, Alt+-/= verdelen, Alt+W/E/R zelfde maat, Alt+Z

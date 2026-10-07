@@ -763,8 +763,18 @@ function CanvasBinnenkant({
     return () => window.removeEventListener("keydown", esc);
   }, [contextMenu, getNodes, rfStoreApi, setNodes, setEdges, onSelectElement]);
 
+  // Selectievolgorde (laatst geselecteerde achteraan): de maat-modi nemen
+  // de maat van de laatst geselecteerde node over (zoals EA), zodat je ook
+  // kleiner kunt maken.
+  const selectieVolgordeRef = useRef([]);
   const handleSelectionChange = useCallback(
     ({ nodes: sel, edges: selEdges }) => {
+      {
+        const ids = new Set((sel || []).map((n) => n.id));
+        const oud = selectieVolgordeRef.current.filter((id) => ids.has(id));
+        const nieuw = [...ids].filter((id) => !oud.includes(id));
+        selectieVolgordeRef.current = [...oud, ...nieuw];
+      }
       if (!onSelectElement) return;
       // Echo-demping: React Flow meldt de selectie ook na node-rebuilds
       // (nieuwe objecten, zelfde selectie). Alleen échte wijzigingen
@@ -1584,7 +1594,9 @@ function CanvasBinnenkant({
               !n.id.startsWith(ANKER_PREFIX)
           );
           if (MAAT_MODES.has(mode)) {
-            const maten = berekenMaten(mode, naarItems(selectie));
+            const volgorde = selectieVolgordeRef.current;
+            const referentie = [...volgorde].reverse().find((id) => selectie.some((n) => n.id === id)) || null;
+            const maten = berekenMaten(mode, naarItems(selectie), referentie);
             if (Object.keys(maten).length && onNodeMaten) onNodeMaten(maten);
             return;
           }
