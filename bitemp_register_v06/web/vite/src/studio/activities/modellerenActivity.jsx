@@ -23,6 +23,20 @@ import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
+import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
+import { koppelStore, zonderVastleggen, rebaseStand, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
+import { useOutboxStore } from "../sync/outbox.js";
+import {
+  PROJECT_FORMAAT,
+  PROJECT_FORMAAT_VERSIE,
+  STANDAARD_PROJECTNAAM,
+  nieuwProjectId,
+  normaliseerProjectData,
+  bestandsstamVoor,
+  haalProjectOp,
+  maakProjectAan,
+  slaProjectOp,
+} from "./projectSync.js";
 import { IconModelleren } from "../icons";
 import {
   getProfieltypen,
@@ -69,12 +83,32 @@ function schrijfOpslag(state) {
         mappen: state.mappen,
         mapOpen: state.mapOpen,
         plaatsing: state.plaatsing,
+        project: state.project,
       })
     );
   } catch { /* ignore */ }
 }
 
 const tabId = (profielId, diagramId) => `${profielId}::${diagramId}`;
+
+/** Plaatsing-sleutel van de enkelvoudige boomselectie (diagram of element), of null. */
+const selectieSleutel = (s) =>
+  s.diagramSelectie
+    ? tabId(s.diagramSelectie.profielId, s.diagramSelectie.diagramId)
+    : s.elementSelectie
+      ? elementKey(s.elementSelectie.profielId, s.elementSelectie.elementId)
+      : null;
+
+/**
+ * Sleutels van alle boomregels in dezelfde lijst (map-inhoud of profielsectie,
+ * `data-lijst`) in schermvolgorde — voor Shift+klik (bereik). De DOM is hier de
+ * eenvoudigste waarheid: de volgorde is precies wat de gebruiker ziet.
+ */
+function rijenInLijst(el) {
+  const lijst = el.closest?.("[data-lijst]");
+  const rijen = lijst ? [...lijst.querySelectorAll("[data-sleutel]")] : [el];
+  return rijen.map((x) => x.dataset.sleutel).filter(Boolean);
+}
 
 const opgeslagen = leesOpslag();
 
@@ -85,8 +119,12 @@ const opgeslagen = leesOpslag();
 const _structuurVerleden = [];
 const _structuurToekomst = [];
 const structuurFoto = (s) => ({ mappen: s.mappen, plaatsing: s.plaatsing });
+// Tijdens het toepassen van een operatie van een ander (projectsync) hoort
+// de wijziging niet in de eigen undo-stapel.
+let _structuurUndoUit = false;
 /** Vastleggen vóór een structuur-wijziging (wist de redo-stapel). */
 const legStructuurVast = (s) => {
+  if (_structuurUndoUit) return;
   _structuurVerleden.push(structuurFoto(s));
   if (_structuurVerleden.length > 60) _structuurVerleden.shift();
   _structuurToekomst.length = 0;
@@ -98,6 +136,25 @@ export const useModellerenStore = create((set, get) => ({
   /** id van de actieve tab, of null */
   actieveTab: opgeslagen.actieveTab || null,
 
+  /**
+   * Identiteit van het project in deze browser (plan 2026-10-07 Projectsync):
+   * `id` (UUID, ook de sleutel op de server), `naam`, en `serverVersie` = de
+   * versie die we het laatst met de server hebben uitgewisseld (null = alleen
+   * lokaal). Een bestaande browser zonder project krijgt er hier één.
+   */
+  project: opgeslagen.project?.id
+    ? { serverVersie: null, ...opgeslagen.project }
+    : { id: nieuwProjectId(), naam: STANDAARD_PROJECTNAAM, serverVersie: null },
+
+  /** Werk project-identiteit bij (naam, serverVersie, of alles bij ophalen/nieuw). */
+  zetProject: (patch) =>
+    set((s) => {
+      const project = { ...s.project, ...patch };
+      schrijfOpslag({ ...s, project });
+      menuBus.emit("menu:ververs");
+      return { project };
+    }),
+
   openTab: (profielId, diagramId) => {
     const id = tabId(profielId, diagramId);
     set((s) => {
@@ -108,7 +165,7 @@ export const useModellerenStore = create((set, get) => ({
       schrijfOpslag(next);
       // Een diagram openen haalt de focus van een eventueel geselecteerde
       // map of diagram-eigenschap — de inspector toont dan weer het profiel.
-      return { tabs, actieveTab: id, mapSelectie: null, diagramSelectie: null };
+      return { tabs, actieveTab: id, mapSelectie: null, diagramSelectie: null, elementSelectie: null };
     });
     get().activeer(id);
   },
@@ -163,8 +220,10 @@ export const useModellerenStore = create((set, get) => ({
   /** { [tabId(profielId,diagramId)]: mapId } — plaatsing van diagrammen */
   plaatsing: opgeslagen.plaatsing || {},
 
-  nieuweMap: (naam, ouderId = null) => {
-    const id = `map_${Date.now()}`;
+  nieuweMap: (naam, ouderId = null, mapId = null) => {
+    // `mapId` komt mee als de operatie van een ander wordt toegepast
+    // (projectsync): dezelfde map, hetzelfde id, op elke client.
+    const id = mapId || `map_${Date.now()}`;
     set((s) => {
       legStructuurVast(s);
       // volgorde = handmatige sortering per niveau; nieuw komt achteraan.
@@ -224,29 +283,68 @@ export const useModellerenStore = create((set, get) => ({
 
   /** Geselecteerde map (voor het eigenschappen-paneel), of null. */
   mapSelectie: null,
-  selecteerMap: (id) => set({ mapSelectie: id, diagramSelectie: null }),
+  selecteerMap: (id) => set({ mapSelectie: id, diagramSelectie: null, elementSelectie: null }),
 
   /** Geselecteerd diagram (eigenschappen-paneel): {profielId, diagramId}|null. */
   diagramSelectie: null,
   selecteerDiagram: (profielId, diagramId) =>
-    set({ diagramSelectie: profielId ? { profielId, diagramId } : null, mapSelectie: null }),
+    set({
+      diagramSelectie: profielId ? { profielId, diagramId } : null,
+      mapSelectie: null,
+      elementSelectie: null,
+      ankerSleutel: profielId ? tabId(profielId, diagramId) : null,
+    }),
 
   /**
-   * Hernoem-verzoek voor een boomregel (F2 op de selectie): "map:<id>" of
-   * "diag:<tabId>". De regel die hem herkent zet zijn invoerveld aan en
-   * wist het verzoek weer.
+   * Geselecteerde elementregel in de boom: {profielId, elementId}|null. Nodig
+   * voor "nog eens klikken of F2 = hernoemen" op elementen (de inspector
+   * volgt het element al via de profiel-store, dit is alleen de boomselectie).
+   */
+  elementSelectie: null,
+  selecteerElement: (profielId, elementId) =>
+    set({
+      elementSelectie: profielId ? { profielId, elementId } : null,
+      mapSelectie: null,
+      diagramSelectie: null,
+      ankerSleutel: profielId ? elementKey(profielId, elementId) : null,
+    }),
+
+  /**
+   * Hernoem-verzoek voor een boomregel (F2 op de selectie): "map:<id>",
+   * "diag:<tabId>" of "el:<profielId>::<elementId>". De regel die hem herkent
+   * zet zijn invoerveld aan en wist het verzoek weer.
    */
   hernoemDoel: null,
   vraagHernoem: (sleutel) => set({ hernoemDoel: sleutel }),
 
   /** Ctrl-klik multiselect in de boom: set van plaatsing-sleutels. */
   multiSelectie: [],
+  /** Anker voor Shift+klik: de laatst (enkel- of Ctrl-)geklikte regel. */
+  ankerSleutel: null,
   toggleMulti: (key) =>
-    set((s) => ({
-      multiSelectie: s.multiSelectie.includes(key)
-        ? s.multiSelectie.filter((k) => k !== key)
-        : [...s.multiSelectie, key],
-    })),
+    set((s) => {
+      // Explorer-gedrag: de eerste Ctrl+klik neemt de al geselecteerde regel
+      // mee, anders sleept die ene straks niet mee met de bundel.
+      let basis = s.multiSelectie;
+      if (!basis.length) {
+        const huidig = selectieSleutel(s);
+        if (huidig && huidig !== key) basis = [huidig];
+      }
+      return {
+        ankerSleutel: key,
+        multiSelectie: basis.includes(key) ? basis.filter((k) => k !== key) : [...basis, key],
+      };
+    }),
+  /** Shift+klik: alles tussen het anker en `key` binnen dezelfde lijst (`rijen`). */
+  selecteerBereik: (key, rijen) =>
+    set((s) => {
+      const kandidaat = s.ankerSleutel || selectieSleutel(s);
+      const anker = kandidaat && rijen.includes(kandidaat) ? kandidaat : key;
+      const a = rijen.indexOf(anker);
+      const b = rijen.indexOf(key);
+      if (a < 0 || b < 0) return { multiSelectie: [key], ankerSleutel: key };
+      return { multiSelectie: rijen.slice(Math.min(a, b), Math.max(a, b) + 1), ankerSleutel: anker };
+    }),
   wisMulti: () => set((s) => (s.multiSelectie.length ? { multiSelectie: [] } : {})),
 
   /** Kort oplichtende boomregel ("Zoek in projectboom"). */
@@ -311,16 +409,43 @@ export const useModellerenStore = create((set, get) => ({
     }),
 
   /** Plaats (of ont-plaats met mapId null) een diagram in een map. */
-  plaatsDiagram: (key, mapId) =>
+  plaatsDiagram: (key, mapId) => get().plaatsMeerdere([key], mapId),
+
+  /**
+   * Plaats meerdere sleutels (diagrammen/elementen) tegelijk in een map —
+   * één structuur-undo-stap voor de hele bundel (bv. "alle 13 actoren naar
+   * map Actoren"), in plaats van één stap per regel.
+   */
+  plaatsMeerdere: (keys, mapId) =>
     set((s) => {
-      if ((s.plaatsing[key] || null) === (mapId || null)) return {};
+      const doel = mapId || null;
+      const teDoen = keys.filter((key) => (s.plaatsing[key] || null) !== doel);
+      if (!teDoen.length) return {};
       legStructuurVast(s);
       const plaatsing = { ...s.plaatsing };
-      if (mapId) plaatsing[key] = mapId;
-      else delete plaatsing[key];
+      for (const key of teDoen) {
+        if (doel) plaatsing[key] = doel;
+        else delete plaatsing[key];
+      }
       const next = { ...s, plaatsing };
       schrijfOpslag(next);
       return { plaatsing };
+    }),
+
+  /**
+   * Patch-operatie (projectsync-vangnet): mappen/plaatsingen van een ander
+   * upserten of wissen. Buiten de structuur-undo (die staat dan uit).
+   */
+  patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [] } = {}) =>
+    set((s) => {
+      legStructuurVast(s);
+      const mappen = { ...s.mappen, ...zetMappen };
+      for (const id of wisMappen) delete mappen[id];
+      const plaatsing = { ...s.plaatsing, ...zetPlaatsing };
+      for (const key of wisPlaatsing) delete plaatsing[key];
+      const next = { ...s, mappen, plaatsing };
+      schrijfOpslag(next);
+      return { mappen, plaatsing };
     }),
 
   /** Vervang de projectstructuur (project-werkbestand-import). */
@@ -362,6 +487,24 @@ export const useModellerenStore = create((set, get) => ({
       return volgende;
     }),
 }));
+
+// Projectsync (plan 2026-10-07, stap 2): structuuracties als operaties; de
+// structuur-undo/redo en laadStructuur vangt het diff-vangnet.
+koppelStore("structuur", useModellerenStore, {
+  ops: STRUCTUUR_OPS,
+  velden: STRUCTUUR_VELDEN,
+  net: structuurNet,
+  undoPauze: (aan) => {
+    _structuurUndoUit = aan;
+  },
+  // Een eigen Ctrl+Z mag andermans map/plaatsing niet terugdraaien: verwerk
+  // de remote wijziging in elke bewaarde stand (zie pasOperatieToe).
+  naRemote: (voor, na) => {
+    const rb = (stand) => rebaseStand(stand, voor, na, STRUCTUUR_VELDEN);
+    _structuurVerleden.splice(0, _structuurVerleden.length, ..._structuurVerleden.map(rb));
+    _structuurToekomst.splice(0, _structuurToekomst.length, ..._structuurToekomst.map(rb));
+  },
+});
 
 // Gedragsverwijzing (gedragsdiagram-primitief §3.2): dubbelklik op bv. een
 // submachine state of call-activity opent het gekoppelde diagram. De canvas-
@@ -522,8 +665,13 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
         (isSelectie ? " is-selectie" : "") +
         (inMulti ? " is-multi" : "")
       }
+      data-sleutel={id}
+      onMouseDown={(e) => {
+        if (e.shiftKey) e.preventDefault(); // geen tekstselectie bij Shift+klik
+      }}
       onClick={(e) => {
-        if (e.ctrlKey || e.metaKey) toggleMulti(id);
+        if (e.shiftKey) useModellerenStore.getState().selecteerBereik(id, rijenInLijst(e.currentTarget));
+        else if (e.ctrlKey || e.metaKey) toggleMulti(id);
         else if (isSelectie && !inMulti) klikHernoem.plan();
         else {
           wisMulti();
@@ -777,6 +925,43 @@ function meeTeNemen(sleutel) {
 }
 
 /**
+ * Plaats elementen van een profiel in een map (drop op een map, of
+ * "Verplaats naar map" in de ElementenBrowser). Een hiërarchie-kind (GE)
+ * kan niet los geplaatst worden: we plaatsen zijn top-voorouder (ENT) — de
+ * kinderen reizen als boomregels vanzelf mee. Eén undo-stap voor de bundel.
+ */
+function plaatsElementenInMap(profiel, elementIds, mapId) {
+  if (!elementIds?.length || !mapId) return;
+  const { ouderVan } = bepaalHierarchie(profiel, profiel.useStore.getState().elements);
+  const keys = [...new Set(elementIds.map((eid) => topVoorouder(ouderVan, eid)))].map((id) =>
+    elementKey(profiel.id, id)
+  );
+  useModellerenStore.getState().plaatsMeerdere(keys, mapId);
+}
+
+/**
+ * Submenu "Verplaats naar map ▸" voor de ElementenBrowser van een profiel:
+ * alle bestaande mappen, plus "Nieuwe map…" (met een voorgestelde naam, bv.
+ * het typelabel bij "alle actoren naar een map Actoren"). Wordt als
+ * `naarMapItems(ids, {voorstel})` aan de browser gegeven.
+ */
+function naarMapItemsVoor(profiel) {
+  return (elementIds, { voorstel = "Nieuwe map" } = {}) => [
+    ...verplaatsNaarItems((mapId) => plaatsElementenInMap(profiel, elementIds, mapId)),
+    ...(Object.keys(useModellerenStore.getState().mappen).length ? [{ sep: true }] : []),
+    {
+      label: "Nieuwe map…",
+      onClick: () => {
+        const naam = window.prompt("Naam van de nieuwe map:", voorstel);
+        if (!naam) return;
+        const mapId = useModellerenStore.getState().nieuweMap(naam.trim() || voorstel);
+        plaatsElementenInMap(profiel, elementIds, mapId);
+      },
+    },
+  ];
+}
+
+/**
  * Element-regel in een map (eigendom-plek; het element woont hier éénmaal).
  * Hiërarchie-kinderen (GE's onder hun ENT, compositie) reizen automatisch
  * mee als geneste regels; `standaardDichtInBoom` van het elementtype bepaalt
@@ -789,6 +974,9 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const wisMulti = useModellerenStore((s) => s.wisMulti);
   const inMulti = useModellerenStore((s) => !!sleutel && s.multiSelectie.includes(sleutel));
   const flitst = useModellerenStore((s) => !!sleutel && s.flitsSleutel === sleutel);
+  const isSelectie = useModellerenStore(
+    (s) => !!s.elementSelectie && s.elementSelectie.profielId === profiel.id && s.elementSelectie.elementId === elementId
+  );
   const rijRef = React.useRef(null);
   useEffect(() => {
     if (flitst) rijRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -799,6 +987,10 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
     : null;
   const [dicht, setDicht] = React.useState(null); // null = volg profiel-default
   const [bewerk, setBewerk] = React.useState(false);
+  // Inline hernoemen zoals mappen en diagrammen (0.13.0): F2 op de selectie,
+  // nog eens klikken op de al geselecteerde regel, dubbelklik, of het contextmenu.
+  useHernoemDoel("el:" + elementKey(profiel.id, elementId), () => setBewerk(true));
+  const klikHernoem = useKlikHernoem(() => setBewerk(true));
   if (!element) return null;
 
   const { kinderenVan } = bepaalHierarchie(profiel, elements);
@@ -815,6 +1007,7 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
    */
   const selecteer = () => {
     const ms = useModellerenStore.getState();
+    ms.selecteerElement(profiel.id, elementId);
     const st = profiel.useStore.getState();
     const openTabsVanProfiel = ms.tabs.filter((t) => t.profielId === profiel.id);
     const tabMetElement = openTabsVanProfiel.find((t) =>
@@ -889,33 +1082,55 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
           <span className="studio-project__caret" />
         )}
         {bewerk ? (
-          <input
-            className="studio-project__mapnaam-invoer"
-            defaultValue={element.naam || ""}
-            autoFocus
-            onFocus={(e) => e.target.select()}
-            onBlur={(e) => commitNaam(e.target.value)}
-            onKeyDown={(e) => {
-              e.stopPropagation();
-              if (e.key === "Enter" || e.key === "Escape") focusTerug(e);
-              if (e.key === "Enter") commitNaam(e.target.value);
-              else if (e.key === "Escape") setBewerk(false);
-            }}
-          />
+          // Zelfde "regel" als de knop (klasse, padding, icoon), zodat het
+          // invoerveld precies op de plek van de naam staat en meeloopt met
+          // de diepte in de boom.
+          <span className="studio-project__diagram studio-project__element" style={{ display: "flex", alignItems: "center" }}>
+            <span className="studio-project__regel-profiel" style={{ color: stijl.kleur || "inherit" }}>
+              {et ? <TypeIcoon elementType={et} maat={13} /> : <ProfielIcoon profiel={profiel} />}
+            </span>
+            <input
+              className="studio-project__mapnaam-invoer"
+              style={{ flex: 1, minWidth: 0, font: "inherit" }}
+              defaultValue={element.naam || ""}
+              autoFocus
+              onFocus={(e) => e.target.select()}
+              onBlur={(e) => commitNaam(e.target.value)}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                if (e.key === "Enter" || e.key === "Escape") focusTerug(e);
+                if (e.key === "Enter") commitNaam(e.target.value);
+                else if (e.key === "Escape") setBewerk(false);
+              }}
+            />
+          </span>
         ) : (
           <button
             type="button"
-            className={"studio-project__diagram studio-project__element" + (inMulti ? " is-multi" : "")}
+            className={
+              "studio-project__diagram studio-project__element" +
+              (inMulti ? " is-multi" : "") +
+              (isSelectie && !inMulti ? " is-selectie" : "")
+            }
+            data-sleutel={sleutel || undefined}
+            onMouseDown={(e) => {
+              if (e.shiftKey) e.preventDefault();
+            }}
             onClick={(e) => {
-              if (sleutel && (e.ctrlKey || e.metaKey)) toggleMulti(sleutel);
+              if (sleutel && e.shiftKey) useModellerenStore.getState().selecteerBereik(sleutel, rijenInLijst(e.currentTarget));
+              else if (sleutel && (e.ctrlKey || e.metaKey)) toggleMulti(sleutel);
+              else if (isSelectie && !inMulti) klikHernoem.plan();
               else {
                 wisMulti();
                 selecteer();
               }
             }}
-            onDoubleClick={() => setBewerk(true)}
+            onDoubleClick={() => {
+              klikHernoem.annuleer();
+              setBewerk(true);
+            }}
             onContextMenu={ctx}
-            title={`${element.naam || elementId} — ${et?.label || "element"} (${profiel.label})`}
+            title={`${element.naam || elementId} — ${et?.label || "element"} (${profiel.label}; klik = eigenschappen, nog eens klikken of F2 = hernoemen)`}
             draggable={!!sleutel}
             onDragStart={(e) => {
               if (!sleutel) return;
@@ -1008,11 +1223,7 @@ function Map_({ map, diepte }) {
         const { profiel } = actieveTabInfo();
         if (!profiel) return;
         const ids = elementIds?.length ? elementIds : elementId ? [elementId] : [];
-        if (!ids.length) return;
-        const { ouderVan } = bepaalHierarchie(profiel, profiel.useStore.getState().elements);
-        for (const id of new Set(ids.map((eid) => topVoorouder(ouderVan, eid)))) {
-          plaatsDiagram(elementKey(profiel.id, id), map.id);
-        }
+        plaatsElementenInMap(profiel, ids, map.id);
       } catch { /* ignore */ }
     },
   });
@@ -1128,7 +1339,7 @@ function Map_({ map, diepte }) {
         </button>
       </div>
       {open && (
-        <div>
+        <div data-lijst>
           {kinderen.map((m) => (
             <Map_ key={m.id} map={m} diepte={diepte + 1} />
           ))}
@@ -1165,7 +1376,7 @@ function ProfielSectie({ profiel }) {
 
   const stijl = effectieveStijl(profiel);
   return (
-    <div className="studio-project__sectie">
+    <div className="studio-project__sectie" data-lijst>
       <div className="studio-project__kop">
         <span className="studio-project__stip" style={{ background: stijl.kleur || "var(--s-fg-muted)" }} />
         <span className="studio-project__icoon"><ProfielIcoon profiel={profiel} /></span>
@@ -1276,15 +1487,17 @@ function Sidebar() {
   const onKey = (e) => {
     const doel = e.target;
     if (doel && (doel.tagName === "INPUT" || doel.tagName === "TEXTAREA" || doel.isContentEditable)) return;
-    // F2 = hernoem de geselecteerde map of het geselecteerde diagram (de
-    // regel zelf toont het invoerveld, zie useHernoemDoel).
+    // F2 = hernoem de geselecteerde map, het geselecteerde diagram of het
+    // geselecteerde element (de regel zelf toont het invoerveld, zie useHernoemDoel).
     if (e.key === "F2") {
       const s = useModellerenStore.getState();
       const sleutel = s.mapSelectie
         ? "map:" + s.mapSelectie
         : s.diagramSelectie
           ? "diag:" + tabId(s.diagramSelectie.profielId, s.diagramSelectie.diagramId)
-          : null;
+          : s.elementSelectie
+            ? "el:" + elementKey(s.elementSelectie.profielId, s.elementSelectie.elementId)
+            : null;
       if (!sleutel) return;
       e.preventDefault();
       e.stopPropagation();
@@ -1393,7 +1606,10 @@ function ElementenBrowserMetFilter({ profiel, Browser }) {
     }
     return set;
   }, [profiel, elements, plaatsing]);
-  return <Browser verbergIds={verbergIds} />;
+  // "Verplaats naar map ▸" in de browser (per regel, per multiselectie en
+  // per typegroep "alle N …") — de boom is de eigenaar van de mappen.
+  const naarMapItems = React.useMemo(() => naarMapItemsVoor(profiel), [profiel]);
+  return <Browser verbergIds={verbergIds} naarMapItems={naarMapItems} />;
 }
 
 function BoomContextMenu() {
@@ -1551,6 +1767,7 @@ function Main() {
         {ProfielMain ? <ProfielMain /> : <LegeStaat />}
       </div>
       <TransformatiePaneel />
+      <ProjectServerDialoog />
     </div>
   );
 }
@@ -1683,9 +1900,12 @@ function Provider({ children }) {
 
 // ── Project-werkbestand: de hele boom + alle profiel-sandboxes als JSON ──
 // Eerste trede van "projectstructuur voorbij localStorage" (fase 3.3):
-// deelbaar, back-upbaar, en de vorm die straks naar de API kan.
+// deelbaar, back-upbaar — en sinds plan 2026-10-07 (Projectsync, stap 1) ook
+// de blob die als geheel naar /api/studio/projecten gaat en terugkomt.
+// Formaat "studio-project" v2 = v1 + `project: {id, naam}`.
 
-function exporteerProject() {
+/** Bouw het werkbestand (v2) uit de stores. Gedeeld door export en server-sync. */
+function bouwProjectData() {
   const s = useModellerenStore.getState();
   const profielen = {};
   for (const p of getProfieltypen()) {
@@ -1708,68 +1928,113 @@ function exporteerProject() {
       meta: st.meta,
     };
   }
-  const data = {
-    formaat: "studio-project",
-    versie: 1,
+  return {
+    formaat: PROJECT_FORMAAT,
+    versie: PROJECT_FORMAAT_VERSIE,
     geexporteerd: new Date().toISOString(),
+    project: { id: s.project.id, naam: s.project.naam },
     structuur: { mappen: s.mappen, plaatsing: s.plaatsing },
     tabs: s.tabs,
     actieveTab: s.actieveTab,
     kruisverbanden: useKruisStore.getState().links,
     profielen,
   };
+}
+
+function exporteerProject() {
+  const data = bouwProjectData();
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `studio-project-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = `${bestandsstamVoor(data.project.naam)}-${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-function importeerProjectTekst(tekst) {
-  let data;
+/**
+ * Zet een genormaliseerd werkbestand (v2) in de stores: vervangt de inhoud van
+ * de genoemde profielen, de structuur, de kruisverbanden én de projectidentiteit.
+ * Gedeeld door JSON-import en "Van server ophalen". Onbekende profielen worden
+ * overgeslagen (de aanroeper heeft dat al gemeld).
+ */
+function pasProjectToe(data, { serverVersie = null } = {}) {
+  // Een snapshot laden is geen reeks handelingen: niets in de outbox, en de
+  // outbox van het vorige project vervalt (de snapshot is de nieuwe basis).
+  zonderVastleggen(() => {
+    for (const [pid, inhoud] of Object.entries(data.profielen || {})) {
+      const p = getProfieltype(pid);
+      if (!p) continue;
+      p.useStore.getState().laadModel(inhoud);
+      p.useStore.temporal?.getState().clear();
+    }
+    // Profielen die in de snapshot ontbreken maar hier nog inhoud hebben: leeg.
+    for (const p of getProfieltypen()) {
+      if (p.klassiek || data.profielen?.[p.id]) continue;
+      const st = p.useStore.getState();
+      if (Object.keys(st.elements).length || Object.keys(st.diagrams).length) {
+        st.clear();
+        p.useStore.temporal?.getState().clear();
+      }
+    }
+    // Tabs alleen behouden als hun profiel + diagram na de import bestaan.
+    const tabs = (data.tabs || []).filter((t) => {
+      const p = getProfieltype(t.profielId);
+      return p && !!p.useStore.getState().diagrams[t.diagramId];
+    });
+    useModellerenStore.getState().laadStructuur({
+      mappen: data.structuur?.mappen,
+      plaatsing: data.structuur?.plaatsing,
+      tabs,
+      actieveTab: tabs.some((t) => t.id === data.actieveTab) ? data.actieveTab : tabs[0]?.id || null,
+    });
+    useKruisStore.getState().laadLinks(Array.isArray(data.kruisverbanden) ? data.kruisverbanden : []);
+  });
+  useOutboxStore.getState().wis();
+  useModellerenStore.getState().zetProject({ id: data.project.id, naam: data.project.naam, serverVersie });
+}
+
+/** Alles leeg en een nieuwe projectidentiteit (na "parkeren"). */
+function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
+  zonderVastleggen(() => {
+    for (const p of getProfieltypen()) {
+      if (p.klassiek) continue;
+      p.useStore.getState().clear();
+      p.useStore.temporal?.getState().clear();
+    }
+    useModellerenStore.getState().laadStructuur({});
+    useKruisStore.getState().laadLinks([]);
+  });
+  useOutboxStore.getState().wis();
+  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteSync: null });
+}
+
+function importeerProjectTekst(tekst, bestandsnaam = "") {
+  let ruw;
   try {
-    data = JSON.parse(tekst);
+    ruw = JSON.parse(tekst);
   } catch {
     window.alert("Dit is geen geldig JSON-bestand.");
     return;
   }
-  if (data?.formaat !== "studio-project") {
-    window.alert("Dit is geen project-werkbestand (formaat 'studio-project' ontbreekt).");
+  const uit = normaliseerProjectData(ruw, { bestandsnaam });
+  if (!uit.ok) {
+    window.alert(uit.fout);
     return;
   }
+  const data = uit.data;
   const profielIds = Object.keys(data.profielen || {});
   const onbekend = profielIds.filter((pid) => !getProfieltype(pid));
   if (
     !window.confirm(
-      "Project importeren?\n\nDit vervangt de projectstructuur (mappen, plaatsingen, tabs) én de inhoud van deze profielen:\n" +
+      `Project "${data.project.naam}" importeren?\n\nDit vervangt de projectstructuur (mappen, plaatsingen, tabs) én de inhoud van deze profielen:\n` +
         `  ${profielIds.filter((pid) => getProfieltype(pid)).join(", ") || "(geen)"}` +
         (onbekend.length ? `\n\nOnbekend hier (overgeslagen): ${onbekend.join(", ")}` : "")
     )
   ) {
     return;
   }
-  for (const [pid, inhoud] of Object.entries(data.profielen || {})) {
-    const p = getProfieltype(pid);
-    if (!p) continue;
-    p.useStore.getState().laadModel(inhoud);
-    p.useStore.temporal?.getState().clear();
-  }
-  // Tabs alleen behouden als hun profiel + diagram na de import bestaan.
-  const tabs = (data.tabs || []).filter((t) => {
-    const p = getProfieltype(t.profielId);
-    return p && !!p.useStore.getState().diagrams[t.diagramId];
-  });
-  useModellerenStore.getState().laadStructuur({
-    mappen: data.structuur?.mappen,
-    plaatsing: data.structuur?.plaatsing,
-    tabs,
-    actieveTab: tabs.some((t) => t.id === data.actieveTab) ? data.actieveTab : tabs[0]?.id || null,
-  });
-  if (Array.isArray(data.kruisverbanden)) {
-    useKruisStore.getState().laadLinks(data.kruisverbanden);
-  }
+  pasProjectToe(data);
 }
 
 function kiesEnImporteerProject() {
@@ -1779,17 +2044,145 @@ function kiesEnImporteerProject() {
   inp.onchange = () => {
     const f = inp.files?.[0];
     if (!f) return;
-    f.text().then(importeerProjectTekst).catch((e) => window.alert(`Lezen mislukt: ${e}`));
+    f.text()
+      .then((tekst) => importeerProjectTekst(tekst, f.name))
+      .catch((e) => window.alert(`Lezen mislukt: ${e}`));
   };
   inp.click();
 }
 
+// ── Projectacties in het menu ─────────────────────────────────────────
+
+async function hernoemProject() {
+  const { project, zetProject } = useModellerenStore.getState();
+  const naam = await vraagNaam({ titel: "Hernoem project", label: "Projectnaam", waarde: project.naam, bevestig: "Hernoem" });
+  if (naam && naam.trim() && naam.trim() !== project.naam) zetProject({ naam: naam.trim() });
+}
+
+/** "Nieuw project…": het huidige parkeren (optioneel als JSON) en leeg beginnen. */
+async function nieuwProject() {
+  const { project } = useModellerenStore.getState();
+  const heeftInhoud = getProfieltypen().some((p) => {
+    if (p.klassiek) return false;
+    const st = p.useStore.getState();
+    return Object.keys(st.elements).length || Object.keys(st.diagrams).length;
+  });
+  if (heeftInhoud) {
+    const bewaar = window.confirm(
+      `Het huidige project "${project.naam}" eerst als JSON-bestand bewaren?\n\n` +
+        "OK = exporteren en daarna leeg beginnen.\nAnnuleren = niet exporteren (het project is dan alleen nog op de server als je het daarheen hebt gestuurd)."
+    );
+    if (bewaar) exporteerProject();
+    if (!window.confirm(`Leeg beginnen? Alle lokale inhoud van "${project.naam}" wordt uit deze browser verwijderd.`)) return;
+  }
+  const naam = await vraagNaam({ titel: "Nieuw project", label: "Projectnaam", waarde: STANDAARD_PROJECTNAAM, bevestig: "Maak" });
+  if (naam === null) return;
+  leegProject({ naam: naam.trim() || STANDAARD_PROJECTNAAM });
+}
+
+/**
+ * "Naar server sturen": POST als dit project de server nog nooit zag, anders
+ * PUT met de bekende versie. Bij een conflict (iemand anders heeft intussen
+ * opgeslagen) kiest de gebruiker: overschrijven of afbreken.
+ */
+async function stuurNaarServer() {
+  const { project, zetProject } = useModellerenStore.getState();
+  const inhoud = bouwProjectData();
+  const basis = { naam: project.naam, inhoud };
+  const bevestigOverschrijven = (server) =>
+    window.confirm(
+      `Op de server staat al versie ${server.versie} van "${server.naam}"` +
+        (server.bijgewerkt_door ? ` (laatst opgeslagen door ${server.bijgewerkt_door})` : "") +
+        `, nieuwer dan wat deze browser kent.\n\nOverschrijven met jouw versie?\n(Annuleren = niets doen; haal eerst op als je hun werk wilt zien.)`
+    );
+  try {
+    let meta;
+    if (project.serverVersie == null) {
+      try {
+        meta = await maakProjectAan({ id: project.id, ...basis });
+      } catch (e) {
+        if (e.status !== 409) throw e;
+        // Zelfde id al op de server (bv. een collega stuurde dezelfde JSON-import op).
+        const bestaand = await haalProjectOp(project.id);
+        if (!bevestigOverschrijven(bestaand)) return;
+        meta = await slaProjectOp(project.id, { ...basis, versie: bestaand.versie });
+      }
+    } else {
+      try {
+        meta = await slaProjectOp(project.id, { ...basis, versie: project.serverVersie });
+      } catch (e) {
+        if (e.status === 409 && e.server) {
+          if (!bevestigOverschrijven(e.server)) return;
+          meta = await slaProjectOp(project.id, { ...basis, versie: e.server.versie });
+        } else if (e.status === 404) {
+          // Op de server verwijderd: opnieuw aanmaken.
+          meta = await maakProjectAan({ id: project.id, ...basis });
+        } else {
+          throw e;
+        }
+      }
+    }
+    zetProject({ serverVersie: meta.versie, laatsteSync: new Date().toISOString() });
+  } catch (e) {
+    window.alert(`Naar server sturen mislukt: ${e?.message || e}`);
+  }
+}
+
+/** "Van server ophalen…": kies uit de lijst; vervangt het huidige project. */
+function haalVanServer() {
+  const { project } = useModellerenStore.getState();
+  useProjectServerStore.getState().openen({
+    huidigId: project.id,
+    onKies: async (meta) => {
+      const zelfde = meta.id === project.id;
+      if (
+        !window.confirm(
+          zelfde
+            ? `"${meta.naam}" (versie ${meta.versie}) van de server ophalen?\n\nJe lokale wijzigingen sinds de laatste sync worden overschreven.`
+            : `"${meta.naam}" ophalen?\n\nDit vervangt je huidige project "${project.naam}" in deze browser. Annuleer en parkeer het eerst (Nieuw project… / Exporteer project…) als je het wilt bewaren.`
+        )
+      ) {
+        return;
+      }
+      try {
+        const rec = await haalProjectOp(meta.id);
+        const uit = normaliseerProjectData(rec.inhoud);
+        if (!uit.ok) {
+          window.alert(`Serverproject onbruikbaar: ${uit.fout}`);
+          return;
+        }
+        // Naam en id van de server zijn leidend (hernoemd op de server telt).
+        const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
+        const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
+        if (onbekend.length) window.alert(`Profielen onbekend in deze Studio (overgeslagen): ${onbekend.join(", ")}`);
+        pasProjectToe(data, { serverVersie: rec.versie });
+        useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
+      } catch (e) {
+        window.alert(`Ophalen mislukt: ${e?.message || e}`);
+      }
+    },
+  });
+}
+
 /** Menubalk = eigen Project-menu + de menu's van het profiel van de actieve tab. */
 function menus(ctx) {
+  const { project } = useModellerenStore.getState();
+  const syncStand =
+    project.serverVersie == null
+      ? "alleen lokaal"
+      : `server v${project.serverVersie}` +
+        (project.laatsteSync ? ` · ${new Date(project.laatsteSync).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}` : "");
   const projectMenu = {
     id: "project",
     label: "Project",
     items: [
+      { type: "kop", label: `${project.naam} — ${syncStand}` },
+      { id: "proj-hernoem", label: "Hernoem project…", onClick: hernoemProject },
+      { id: "proj-nieuw", label: "Nieuw project… (huidige parkeren)", onClick: nieuwProject },
+      { type: "separator" },
+      { id: "proj-push", label: "Naar server sturen", onClick: stuurNaarServer },
+      { id: "proj-pull", label: "Van server ophalen…", onClick: haalVanServer },
+      { type: "separator" },
       { id: "proj-export", label: "Exporteer project (structuur + modellen)…", onClick: exporteerProject },
       { id: "proj-import", label: "Importeer project…", onClick: kiesEnImporteerProject },
       { type: "separator" },

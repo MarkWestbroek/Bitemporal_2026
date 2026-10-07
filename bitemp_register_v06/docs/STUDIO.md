@@ -275,6 +275,53 @@ te wijzigen.
 > sleep), contextmenu's met "Verplaats naar ▸", handmatige mapvolgorde,
 > auto-scroll bij slepen en "Zoek in projectboom" vanaf de canvas.
 >
+> **Elementregels in de boom (2026-10-07, na 0.13.0):** hernoemen werkt nu
+> ook voor elementen zoals voor mappen en diagrammen (klik = selectie,
+> nog eens klikken of F2 = hernoemen, dubbelklik, contextmenu);
+> `elementSelectie` in de modelleren-store. Slepen van een element uit de
+> boom op het canvas gaf een verbodsbord: de boom sleept met
+> `effectAllowed "copyMove"` en de canvas zette `dropEffect "link"`, wat de
+> browser weigert; de canvas kiest nu een dropEffect binnen wat de bron
+> toestaat (`DiagramCanvas.jsx`, handleExternDragOver). Multiselectie in de
+> boom: **Shift+klik** selecteert een bereik binnen dezelfde lijst
+> (map-inhoud of profielsectie, `data-lijst`/`data-sleutel`, volgorde uit de
+> DOM, anker = laatst geklikte regel); de eerste **Ctrl+klik** neemt de al
+> geselecteerde regel mee (Explorer-gedrag), anders sleepte die ene niet
+> mee met de bundel. Slepen van een regel buiten de bundel verplaatst
+> alleen die regel.
+>
+> **Project op de server (2026-10-07, plan *Projectsync* stap 1):** het
+> project heeft nu een naam en een id (`project` in `studio-modelleren`; het
+> werkbestand is daarmee "studio-project" **v2**, v1 wordt bij import
+> opgewaardeerd). Menu **Project** toont de naam en de sync-stand ("alleen
+> lokaal" / "server v3 · 12:04") en heeft *Hernoem project…*, *Nieuw project…
+> (huidige parkeren)* (optioneel eerst als JSON exporteren, dan alle stores
+> leeg), *Naar server sturen* (POST/PUT op `/api/studio/projecten`, met
+> versiecontrole: bij een conflict kies je overschrijven of afbreken) en *Van
+> server ophalen…* (dialoog `activities/ProjectServerDialoog.jsx` met alle
+> projecten van ingelogde gebruikers; ophalen vervangt het huidige project).
+> API-laag en formaat-normalisatie: `activities/projectSync.js`. Samenwerken
+> is hiermee "om de beurt"; live operaties volgen in stap 2 van het plan.
+> Eigen profielen/vormen/iconen (M2) en klassieke editors reizen niet mee.
+>
+> **Operatielaag (2026-10-07, plan *Projectsync* stap 2, onderdeel 1–2):**
+> `studio/sync/operaties.js` wikkelt de model-, structuur- en kruisverband-
+> acties om tot benoemde operaties `{store, op, args}` die in een
+> gepersisteerde outbox (`sync/outbox.js`, sleutel `studio-outbox`) landen;
+> een diff-vangnet meldt wat buiten de acties om verandert (undo/redo,
+> migraties) als `patch…`-operaties. `pasOperatieToe` voert een operatie van
+> een ander uit via dezelfde actie, met de undo gepauzeerd **en gerebased**
+> (anders zou je eigen Ctrl+Z andermans werk wissen). Verzenden en ontvangen
+> (SSE) zijn nog niet gebouwd; de outbox vult zich al wel.
+>
+> **Hele groepen naar een map (2026-10-06):** in de elementen-browser is
+> rechtsklik op een typekop ("Actor 13") → *Selecteer alle N* of *Verplaats
+> alle N naar map ▸* (bestaande mappen of *Nieuwe map…*, voorgesteld met het
+> typelabel), en op een regel *Verplaats naar map ▸* (de Ctrl-klik-
+> multiselectie gaat als bundel mee). Eén structuur-undo-stap per bundel
+> (`plaatsMeerdere`), zodat Ctrl+Z "alle actoren naar Actoren" in één keer
+> terugdraait.
+>
 > **ArchiMate Model Exchange-import (2026-09-01):** via **Project →
 > Transformeren → Importeren** leest Studio standaard Exchange XML
 > (`.xml`/`.archimate`) in een gekozen projectmap. De import neemt ondersteunde

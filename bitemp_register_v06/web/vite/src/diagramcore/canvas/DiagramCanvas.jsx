@@ -988,7 +988,16 @@ function CanvasBinnenkant({
       if (!onExternDrop) return;
       if (![...(ev.dataTransfer?.types || [])].includes(ELEMENT_REF_MIME)) return;
       ev.preventDefault();
-      ev.dataTransfer.dropEffect = "link";
+      // dropEffect moet binnen effectAllowed van de bron vallen, anders
+      // weigert de browser de drop (verbodsbord). De projectboom en de
+      // elementen-browser slepen met "copyMove"; "link" is dan niet toegestaan
+      // (gemeld 2026-10-07: elementen uit de boom landden niet op het canvas).
+      const toegestaan = ev.dataTransfer.effectAllowed || "all";
+      ev.dataTransfer.dropEffect = /all|link|uninitialized/i.test(toegestaan)
+        ? "link"
+        : /copy/i.test(toegestaan)
+          ? "copy"
+          : "move";
     },
     [onExternDrop]
   );

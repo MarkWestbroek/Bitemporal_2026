@@ -1355,6 +1355,21 @@ server staan, niet in de map waaruit hij toevallig gestart wordt.**
   voor onopgeslagen werk. Dezelfde beweging als de `BitempContentStore` voor
   Imprint (zie imprint-engine `docs/backlog.md`); ontwerp eerst de
   `ContentStore`-achtige laag, dan pas de UI.
+- **Ontwerpvoorstel (2026-10-06):** `plans/2026-10-06 Modelregister — het
+  model in het register (ontwerpvoorstel).md` — eigen register-instantie op
+  dezelfde motor met domein `omnium` (Project, Map met soort `domein`,
+  Diagram, Element, Veld, REL `Voorkomen` als plaatsing, Publicatie), M2 als
+  JSON-ENT's in een tweede stap, delta van het M3 t.o.v. het EA-metamodel,
+  `--tabelprefix` in codegen tegen naamsbotsingen. Randvoorwaarden: §32
+  (snapshot-consistente reads), bulk-lezen op `t`, actor op registratie.
+- **Tussenstap gedaan (2026-10-07, branch `feat/projectsync`):** `plans/2026-10-07
+  Projectsync — eenmalig naar de server, daarna operaties als events (plan).md`.
+  Stap 1 staat: projectnaam + id in de Studio, werkbestand v2, tabel
+  `studio_projecten` (één JSONB-blob, versiecontrole) met
+  `/api/studio/projecten`, menu *Naar server sturen* / *Van server ophalen…*.
+  Samenwerken "om de beurt". Stap 2 (operaties als events via SSE + POST, het
+  operatievocabulaire = de latere registraties) is in het plan uitgewerkt, nog
+  niet gebouwd.
 
 ### 27.3 Help als Imprint-site in plaats van markdown (idee)
 

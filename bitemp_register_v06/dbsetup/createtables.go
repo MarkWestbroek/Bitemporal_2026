@@ -227,6 +227,12 @@ func CreateTables(db *bun.DB) error {
 		return err
 	}
 
+	// Studio-projecten: één JSONB-blob per project (plan 2026-10-07 Projectsync, stap 1)
+	_, err = db.NewCreateTable().Model((*model.StudioProject)(nil)).IfNotExists().Exec(ctx)
+	if err != nil {
+		return err
+	}
+
 	// Seed: "register" als standaard domein
 	_, err = db.NewInsert().
 		Model(&model.SchemaDomein{
