@@ -256,6 +256,11 @@ function CanvasBinnenkant({
   // selectie en slepen via node-changes lopen; de store blijft de waarheid
   // (posities gaan bij dragstop via onNodePositie terug).
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  // Inline bewerken: { nodeId, veld: sleutel|null } | null — en een wachtend
+  // verzoek dat het nodes-effect ná de eerstvolgende rebuild toepast (zie
+  // InlineNaamContext.schuifVeld).
+  const [hernoem, setHernoem] = useState(null);
+  const wachtendHernoemRef = useRef(null);
 
   // Programmatische selectie (bv. klik in een projectboom) vs. canvas-echo:
   // selectiePropRef ziet wanneer de selectieId-prop wijzigt; gemeldeSelectieRef
@@ -567,7 +572,22 @@ function CanvasBinnenkant({
         hd.some((e) => e.selected) ? hd.map((e) => (e.selected ? { ...e, selected: false } : e)) : hd
       );
     }
+    // Wachtend heropenen (schuifVeld): markeren zodra dit element écht
+    // vernieuwd is; het heropenen zelf gebeurt in het effect op `nodes`
+    // hieronder — de node-data bereikt ElementNode via de React Flow-store,
+    // en die loopt één render achter op onze nodes-state.
+    const w = wachtendHernoemRef.current;
+    if (w && elements[w.elementId] !== w.vorige) w.klaar = true;
   }, [diagram, elements, lookups, gematerialiseerd, opnames, nesting, altTilt, verrijk, setNodes, bewerkbaar, handleNodeResize, selectieId]);
+  useEffect(() => {
+    const w = wachtendHernoemRef.current;
+    if (!w?.klaar) return;
+    wachtendHernoemRef.current = null;
+    // Nog één tik: de StoreUpdater van React Flow (kind) heeft de nieuwe
+    // nodes nu in zijn store; ElementNode leest daaruit bij de volgende render.
+    const t = setTimeout(() => setHernoem({ nodeId: w.nodeId, veld: w.veld }), 0);
+    return () => clearTimeout(t);
+  }, [nodes]);
 
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
   // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —
@@ -1046,7 +1066,7 @@ function CanvasBinnenkant({
   // Zonder gevulde verwijzing start dubbelklik het inline hernoemen (F2 doet
   // dat ook, zie onKeyDown op de ReactFlow-wrapper). De toestand gaat via
   // InlineNaamContext naar ElementNode — geen node-rebuild voor één veldje.
-  const [hernoem, setHernoem] = useState(null); // { nodeId, veld: sleutel|null } | null
+  // (hernoem-state staat bovenaan bij de nodes-state: het nodes-effect gebruikt hem.)
   const handleNodeDoubleClick = useCallback(
     (_ev, node) => {
       const isAnker = node.id.startsWith(ANKER_PREFIX);
@@ -1088,10 +1108,17 @@ function CanvasBinnenkant({
         const elementId = node?.data?.element?.id || nodeId;
         if (waarde != null && onHernoem) onHernoem(elementId, waarde, veldSleutel);
         const nieuw = onSchuifVeld(elementId, veldSleutel, richting);
-        setHernoem(nieuw ? { nodeId, veld: nieuw } : null);
+        // Niet meteen heropenen: de node draagt nog de oude volgorde tot de
+        // rebuild (store → nodes-effect). Het veld opende dan met de naam van
+        // de buur en schreef die bij bevestigen over het verplaatste veld
+        // (gemeld 2026-10-07). Het nodes-effect opent hem na de rebuild.
+        setHernoem(null);
+        // `vorige` = het element vóór de wijziging: het effect wacht tot de
+        // elements-prop een ander object voor dit element draagt.
+        wachtendHernoemRef.current = nieuw ? { nodeId, veld: nieuw, elementId, vorige: elements[elementId] } : null;
       },
     }),
-    [hernoem, onHernoem, onSchuifVeld, bewerkbaar, getNodes, rfStoreApi]
+    [hernoem, onHernoem, onSchuifVeld, bewerkbaar, getNodes, rfStoreApi, elements]
   );
   // F2 op precies één geselecteerde node (de node heeft focus na een klik,
   // dus de toets bubbelt naar de ReactFlow-wrapper). Niet tijdens typen.

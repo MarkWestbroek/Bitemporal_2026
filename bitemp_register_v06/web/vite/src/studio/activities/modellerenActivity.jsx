@@ -147,6 +147,8 @@ const legStructuurVast = (s) => {
   _structuurToekomst.length = 0;
 };
 
+let _mapTeller = 0;
+
 export const useModellerenStore = create((set, get) => ({
   /** @type {{id:string, profielId:string, diagramId:string}[]} */
   tabs: opgeslagen.tabs || [],
@@ -240,7 +242,9 @@ export const useModellerenStore = create((set, get) => ({
   nieuweMap: (naam, ouderId = null, mapId = null) => {
     // `mapId` komt mee als de operatie van een ander wordt toegepast
     // (projectsync): dezelfde map, hetzelfde id, op elke client.
-    const id = mapId || `map_${Date.now()}`;
+    // Uniek ook binnen dezelfde milliseconde (twee mappen in één batch kregen
+    // hetzelfde id en de tweede overschreef de eerste — 2026-10-07).
+    const id = mapId || `map_${Date.now()}_${(_mapTeller += 1)}`;
     set((s) => {
       legStructuurVast(s);
       // volgorde = handmatige sortering per niveau; nieuw komt achteraan.
@@ -709,6 +713,7 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
   return (
     <button
       type="button"
+      data-boomsleutel={"diag:" + id}
       className={
         "studio-project__diagram" +
         (id === actieveTab ? " is-actief" : "") +
@@ -1162,6 +1167,7 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
         ) : (
           <button
             type="button"
+            data-boomsleutel={"el:" + elementKey(profiel.id, elementId)}
             className={
               "studio-project__diagram studio-project__element" +
               (inMulti ? " is-multi" : "") +
@@ -1339,6 +1345,7 @@ function Map_({ map, diepte }) {
   return (
     <div className="studio-project__map" style={{ marginLeft: diepte ? 12 : 0 }}>
       <div
+        data-boomsleutel={"map:" + map.id}
         className={
           "studio-project__mapkop" +
           (drop.over ? " is-dropdoel" : "") +
@@ -1587,6 +1594,67 @@ function Sidebar() {
       e.preventDefault();
       e.stopPropagation();
       s.vraagHernoem(sleutel);
+      return;
+    }
+    // Pijltjes zonder modifier: door de zichtbare regels lopen (↑/↓), een
+    // map sluiten of naar de ouder (←), een map openen of naar het eerste
+    // kind (→) — zoals een verkenner. De zichtbare volgorde is de DOM-
+    // volgorde van de regels met data-boomsleutel (dichte mappen renderen
+    // hun inhoud niet). Enter opent een diagram.
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"].includes(e.key)) {
+      const s = useModellerenStore.getState();
+      const huidig = s.mapSelectie
+        ? "map:" + s.mapSelectie
+        : s.diagramSelectie
+          ? "diag:" + tabId(s.diagramSelectie.profielId, s.diagramSelectie.diagramId)
+          : s.elementSelectie
+            ? "el:" + elementKey(s.elementSelectie.profielId, s.elementSelectie.elementId)
+            : null;
+      const regels = [...e.currentTarget.querySelectorAll("[data-boomsleutel]")];
+      if (!regels.length) return;
+      const idx = regels.findIndex((r) => r.dataset.boomsleutel === huidig);
+      const selecteer = (regel) => {
+        const sl = regel?.dataset.boomsleutel;
+        if (!sl) return;
+        if (sl.startsWith("map:")) s.selecteerMap(sl.slice(4));
+        else if (sl.startsWith("diag:")) {
+          const [pid, did] = sl.slice(5).split("::");
+          s.selecteerDiagram(pid, did);
+        } else if (sl.startsWith("el:")) {
+          const [, pid, eid] = sl.slice(3).split("::");
+          s.selecteerElement(pid, eid);
+        }
+        regel.scrollIntoView({ block: "nearest" });
+      };
+      const mapOpenVan = (id) => s.mapOpen[id] ?? true;
+      let doel = null;
+      if (e.key === "ArrowDown") doel = regels[idx < 0 ? 0 : Math.min(idx + 1, regels.length - 1)];
+      else if (e.key === "ArrowUp") doel = regels[idx < 0 ? 0 : Math.max(idx - 1, 0)];
+      else if (e.key === "ArrowRight") {
+        if (idx < 0) doel = regels[0];
+        else if (huidig.startsWith("map:") && !mapOpenVan(huidig.slice(4))) s.toggleMap(huidig.slice(4));
+        else doel = regels[Math.min(idx + 1, regels.length - 1)];
+      } else if (e.key === "ArrowLeft") {
+        if (idx < 0) return;
+        const regel = regels[idx];
+        if (huidig.startsWith("map:") && mapOpenVan(huidig.slice(4))) s.toggleMap(huidig.slice(4));
+        else {
+          // Naar de ouder-map: de dichtstbijzijnde map-regel vóór deze regel
+          // die deze regel omsluit (.studio-project__map bevat zijn inhoud).
+          const ouderMap = regel.closest(".studio-project__map")?.parentElement?.closest(".studio-project__map");
+          const eigenMap = regel.classList.contains("studio-project__mapkop") ? ouderMap : regel.closest(".studio-project__map");
+          doel = eigenMap?.querySelector(":scope > .studio-project__mapkop[data-boomsleutel]") || null;
+        }
+      } else if (e.key === "Enter") {
+        if (huidig?.startsWith("diag:")) {
+          const [pid, did] = huidig.slice(5).split("::");
+          s.openTab(pid, did);
+        } else if (huidig?.startsWith("map:")) s.toggleMap(huidig.slice(4));
+        else return;
+      }
+      if (doel) selecteer(doel);
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
     // Ctrl+↑/↓ = de geselecteerde regel (map, diagram, element) een plek

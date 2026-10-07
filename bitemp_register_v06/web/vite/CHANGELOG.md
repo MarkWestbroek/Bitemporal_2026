@@ -14,7 +14,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   boom; submappen kunnen willekeurig diep. Zie `docs/STUDIO.md`.
 ### Toegevoegd
 - **Sorteren in de projectboom** (07-10): Ctrl+↑/↓ of *Omhoog*/*Omlaag* in het contextmenu voor
-  mappen, diagrammen en elementen. De scheiding tussen Mappen en Elementen is een versleepbare
+  mappen, diagrammen en elementen. **Pijltjes** lopen door de boom: ↑/↓ regels, ← sluit een map of
+  gaat naar de ouder, → opent een map of gaat naar het eerste kind, Enter opent een diagram. De scheiding tussen Mappen en Elementen is een versleepbare
   splitter (per browser bewaard).
 - **Velden herordenen** (attributen, operaties, …): ↑/↓ en Ctrl+↑/↓ in de inspector, Ctrl+↑/↓ in
   het inline-veld op het canvas.
