@@ -232,6 +232,15 @@ func CreateTables(db *bun.DB) error {
 	if err != nil {
 		return err
 	}
+	// Stap 2 (onderdeel 3/6): operatielog per project en de snapshot-grens op het project.
+	_, err = db.ExecContext(ctx, `ALTER TABLE studio_projecten ADD COLUMN IF NOT EXISTS tot_volgnummer BIGINT NOT NULL DEFAULT 0`)
+	if err != nil {
+		return err
+	}
+	_, err = db.NewCreateTable().Model((*model.StudioProjectOp)(nil)).IfNotExists().Exec(ctx)
+	if err != nil {
+		return err
+	}
 
 	// Seed: "register" als standaard domein
 	_, err = db.NewInsert().
