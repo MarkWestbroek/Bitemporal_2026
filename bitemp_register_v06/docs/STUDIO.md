@@ -827,6 +827,12 @@ fase 2 een **bewerkbare sandbox**:
   zijn broers; het contextmenu heeft *Omhoog*/*Omlaag*. Mappen hadden al
   `volgorde`; voor geplaatste regels ís de sleutelvolgorde van `plaatsing`
   de volgorde (`schuifPlaatsing`, één structuur-undo-stap).
+- **Pijltjes in de projectboom**: ↑/↓ lopen door de zichtbare regels (mappen,
+  diagrammen, elementen, in DOM-volgorde via `data-boomsleutel`), ← sluit een
+  map of springt naar de ouder, → opent een map of gaat naar het eerste
+  kind, Enter opent een diagram. Bijvangst: twee mappen die in dezelfde
+  milliseconde ontstonden kregen hetzelfde id (`map_<tijd>`), de tweede
+  overschreef de eerste — nu met een teller.
 - **Scheiding Mappen/Elementen** is een versleepbare splitter
   (`.studio-project__splitter`); de hoogte van de elementenlijst wordt per
   browser bewaard (`studio05-project-elementen-hoogte`, default 260 px) —
@@ -834,7 +840,12 @@ fase 2 een **bewerkbare sandbox**:
 - **Velden herordenen** (attributen, operaties, enum-waarden, …): in de
   inspector met ↑/↓ naast het veld of **Ctrl+↑/↓** met de focus in de regel;
   op het canvas met **Ctrl+↑/↓** in het inline-veld van een attribuut (de
-  getypte naam gaat mee, het veld opent op de nieuwe plek). Pure helper
+  getypte naam gaat mee, het veld opent op de nieuwe plek — pas ná de
+  rebuild: de node-data loopt via de React Flow-store één render achter op
+  onze nodes-state, en te vroeg heropenen toonde de naam van de buur en
+  schreef die bij bevestigen over het verplaatste veld). In de inspector
+  volgt de focus het verplaatste veld (`focusPlek`/`focusNaarRij`), zodat je
+  in een lange lijst door kunt drukken. Pure helper
   `schuifVeld()` in `diagramcore/model/velden.js` (getest); één
   `updateElement` = één undo.
 - **Zelfde breedte / hoogte / maat** in de Uitlijnen-balk en het

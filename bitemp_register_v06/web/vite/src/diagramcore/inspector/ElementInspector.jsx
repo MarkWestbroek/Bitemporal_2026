@@ -48,6 +48,31 @@ function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor, edit
  * type, kardinaliteit) staan inline; de rest — vinkjes, definities — zit
  * achter de ⋯-knop in een detailpaneel met eigen labeltjes.
  */
+/**
+ * Welk focusbaar element in een veldregel heeft de focus (index), plus de
+ * omringende lijst — zodat de focus na herordenen met het veld meegaat
+ * (gemeld 2026-10-07: "de focus moet hem volgen, anders kun je in een lange
+ * lijst niet verder omhoog").
+ */
+function focusPlek(rij) {
+  if (!rij) return null;
+  const focusbaar = [...rij.querySelectorAll("input, select, textarea, button")];
+  const idx = focusbaar.indexOf(document.activeElement);
+  // De regel zit in de VeldRij-wrapper (<div>), die in de compartimentlijst.
+  return { lijst: rij.parentElement?.parentElement || null, index: idx };
+}
+
+/** Zet de focus op hetzelfde focusbare element in veldregel `rijIndex` van `lijst`. */
+function focusNaarRij(plek, rijIndex) {
+  if (!plek?.lijst || plek.index < 0) return;
+  requestAnimationFrame(() => {
+    const rijen = plek.lijst.querySelectorAll("[data-veld-rij]");
+    const doel = rijen[rijIndex];
+    const focusbaar = doel ? [...doel.querySelectorAll("input, select, textarea, button")] : [];
+    focusbaar[plek.index]?.focus();
+  });
+}
+
 function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorContext, onChange, onVerwijder, onSchuif, eerste, laatste }) {
   const regels = fieldType?.properties || [{ key: "naam", datatype: "string" }];
   const [detailOpen, setDetailOpen] = useState(false);
@@ -84,11 +109,12 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorC
       <div
         className="dc-inspector-rij"
         // Ctrl+↑/↓ met de focus in een veld van deze regel: herordenen.
+        data-veld-rij=""
         onKeyDown={(e) => {
           if (!onSchuif || !(e.ctrlKey || e.metaKey) || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
           e.preventDefault();
           e.stopPropagation();
-          onSchuif(e.key === "ArrowUp" ? "omhoog" : "omlaag");
+          onSchuif(e.key === "ArrowUp" ? "omhoog" : "omlaag", focusPlek(e.currentTarget));
         }}
       >
         {inline.map(widget)}
@@ -104,10 +130,10 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorC
         )}
         {bewerkbaar && onSchuif && (
           <>
-            <button className="dc-mini-knop" title="Omhoog (Ctrl+↑)" disabled={eerste} onClick={() => onSchuif("omhoog")}>
+            <button className="dc-mini-knop" title="Omhoog (Ctrl+↑)" disabled={eerste} onClick={(e) => onSchuif("omhoog", focusPlek(e.currentTarget.closest("[data-veld-rij]")))}>
               ↑
             </button>
-            <button className="dc-mini-knop" title="Omlaag (Ctrl+↓)" disabled={laatste} onClick={() => onSchuif("omlaag")}>
+            <button className="dc-mini-knop" title="Omlaag (Ctrl+↓)" disabled={laatste} onClick={(e) => onSchuif("omlaag", focusPlek(e.currentTarget.closest("[data-veld-rij]")))}>
               ↓
             </button>
           </>
@@ -266,12 +292,13 @@ export default function ElementInspector({
                 onChange={(nieuw) => zetCompartiment(def.id, velden.map((v, j) => (j === i ? nieuw : v)))}
                 onVerwijder={() => zetCompartiment(def.id, velden.filter((_, j) => j !== i))}
                 // Herordenen (↑/↓, Ctrl+↑/↓): wissel met de buur, één stap.
-                onSchuif={(richting) => {
+                onSchuif={(richting, plek) => {
                   const j = i + (richting === "omhoog" ? -1 : 1);
                   if (j < 0 || j >= velden.length) return;
                   const nieuw = velden.slice();
                   [nieuw[i], nieuw[j]] = [nieuw[j], nieuw[i]];
                   zetCompartiment(def.id, nieuw);
+                  focusNaarRij(plek, j);
                 }}
                 eerste={i === 0}
                 laatste={i === velden.length - 1}
