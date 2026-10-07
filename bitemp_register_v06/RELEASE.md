@@ -8,6 +8,32 @@
 
 ---
 
+## Nog niet uitgebracht — canvas-bediening vervolg (na studio 0.14.0, 2026-10-07/08)
+
+Alleen frontend, nog zonder versienummer; staat in [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md)
+onder *Unreleased* en in `docs/STUDIO.md` (canvas-bediening). Samengevat:
+
+- **Geen browser-popups meer**: alle prompt/confirm/alert-vensters lopen via de eigen dialoogservice
+  (`naamDialog.jsx`), die bij de muisklik verschijnt; *Nieuwe map*/*Nieuwe submap* maken de map
+  direct aan en hernoemen inline.
+- **Projectboom**: sorteren met Ctrl+↑/↓ en *Omhoog*/*Omlaag*, pijltjesnavigatie (↑/↓/←/→/Enter),
+  versleepbare splitter tussen Mappen en Elementen; map-ids uniek binnen een milliseconde (fix).
+- **Velden herordenen** (attributen, operaties): ↑/↓ en Ctrl+↑/↓ in de inspector (focus volgt),
+  Ctrl+↑/↓ in het inline-veld op het canvas (heropent pas na de rebuild — fix voor overschreven
+  namen).
+- **Uitlijnen**: zelfde breedte/hoogte/maat naar de laatst geselecteerde; centreren benoemd zoals
+  EA (verticaal = boven elkaar, Alt+V; horizontaal = naast elkaar, Alt+H).
+- **Sneltoetsen** instelbaar (Studio-instellingen → Sneltoetsen) met EA-achtige standaarden.
+- Graaf (demo), SP en de Profiel-editor staan standaard niet meer in de activity bar.
+
+### Uitrol
+
+- Eén image bij de volgende frontend-release (`bitemp-viz-frontend`); api en render-svc ongewijzigd.
+- Geen databasegevolg. Nieuwe localStorage-sleutels: `studio05-sneltoetsen`,
+  `studio05-project-elementen-hoogte`; bestaande taakbalk-voorkeuren blijven geldig.
+
+---
+
 ## Projectsync, stap 1: api 0.11.0 / studio 0.14.0 (2026-10-07)
 
 Samenwerken aan een Studio-project, eerste trede: het project gaat als geheel naar de server en
