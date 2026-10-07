@@ -22,7 +22,36 @@ export const UITLIJN_MODES = [
   { mode: "bottom", label: "⤓", titel: "Onder uitlijnen" },
   { mode: "distribute-h", label: "⋯", titel: "Horizontaal verdelen" },
   { mode: "distribute-v", label: "⋮", titel: "Verticaal verdelen" },
+  // Maat-modi (EA "Make same width/height/size"): de selectie krijgt de
+  // breedte/hoogte van de grootste — nooit knippen, alleen groeien.
+  { mode: "same-width", label: "⇔", titel: "Zelfde breedte (de breedste)" },
+  { mode: "same-height", label: "⇕", titel: "Zelfde hoogte (de hoogste)" },
+  { mode: "same-size", label: "⤢", titel: "Zelfde maat (de grootste)" },
 ];
+
+/** Modi die maten i.p.v. posities wijzigen (zie berekenMaten). */
+export const MAAT_MODES = new Set(["same-width", "same-height", "same-size"]);
+
+/**
+ * Bereken nieuwe maten voor een maat-modus: ieder item krijgt de grootste
+ * breedte en/of hoogte van de selectie.
+ * @param {string} mode - "same-width" | "same-height" | "same-size"
+ * @param {LayoutItem[]} items - de selectie (minimaal 2)
+ * @returns {Record<string, {width: number, height: number}>} gewijzigde maten
+ */
+export function berekenMaten(mode, items) {
+  /** @type {Record<string, {width: number, height: number}>} */
+  const maten = {};
+  if (!items || items.length < 2 || !MAAT_MODES.has(mode)) return maten;
+  const maxB = Math.max(...items.map((i) => i.width));
+  const maxH = Math.max(...items.map((i) => i.height));
+  for (const i of items) {
+    const width = mode === "same-height" ? i.width : maxB;
+    const height = mode === "same-width" ? i.height : maxH;
+    if (width !== i.width || height !== i.height) maten[i.id] = { width: Math.round(width), height: Math.round(height) };
+  }
+  return maten;
+}
 
 /**
  * Bereken nieuwe posities voor een uitlijn-/verdeel-modus.

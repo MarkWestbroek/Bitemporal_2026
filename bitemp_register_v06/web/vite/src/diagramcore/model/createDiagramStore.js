@@ -442,6 +442,26 @@ export function createDiagramStore({ persistKey } = {}) {
       }),
 
     /** Grootte van een element op één diagram (metamodel: Position.elementSize). */
+    /** Maten van meerdere voorkomens in één stap (zelfde breedte/hoogte/maat): één undo. */
+    updateNodeSizes: (diagramId, maten) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !maten || !Object.keys(maten).length) return state;
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              nodes: d.nodes.map((n) => {
+                const m = maten[voorkomenId(n)];
+                return m ? { ...n, size: { ...(n.size || {}), ...m } } : n;
+              }),
+            },
+          },
+        };
+      }),
+
     /** Maat (en, bij trekken aan de linker-/bovenrand, de positie) van een voorkomen — één stap. */
     updateNodeSize: (diagramId, voorkomenSleutel, size, position = null) =>
       set((state) => {

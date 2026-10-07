@@ -18,7 +18,7 @@
  */
 import { useLayoutEffect, useRef, useState } from "react";
 
-export default function NaamEditor({ waarde: begin, vindDoel, plaats = "midden", stijl, klaar }) {
+export default function NaamEditor({ waarde: begin, vindDoel, plaats = "midden", stijl, klaar, onSchuif }) {
   const [waarde, setWaarde] = useState(begin || "");
   const [pos, setPos] = useState(null);
   const ref = useRef(null);
@@ -89,6 +89,15 @@ export default function NaamEditor({ waarde: begin, vindDoel, plaats = "midden",
       // reageren op toetsen in dit veld.
       onKeyDown={(e) => {
         e.stopPropagation();
+        // Ctrl+↑/↓: dit veld (attribuut) een plek omhoog/omlaag; de getypte
+        // naam gaat mee (null = ongewijzigd).
+        if ((e.ctrlKey || e.metaKey) && (e.key === "ArrowUp" || e.key === "ArrowDown") && onSchuif) {
+          e.preventDefault();
+          afgerondRef.current = true;
+          const schoon = waarde.trim();
+          onSchuif(e.key === "ArrowUp" ? "omhoog" : "omlaag", schoon && schoon !== (begin || "") ? schoon : null);
+          return;
+        }
         if (e.key !== "Enter" && e.key !== "Escape") return;
         e.preventDefault();
         // Focus terug naar de node (of het canvas-vlak bij een lijn), zodat

@@ -12,6 +12,17 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   de eigen dialoogservice (`naamDialog.jsx`), die bij de muisklik verschijnt. *Nieuwe map* en
   *Nieuwe submap* vragen geen naam meer: de map staat er meteen en je typt de naam inline in de
   boom; submappen kunnen willekeurig diep. Zie `docs/STUDIO.md`.
+### Toegevoegd
+- **Sorteren in de projectboom** (07-10): Ctrl+↑/↓ of *Omhoog*/*Omlaag* in het contextmenu voor
+  mappen, diagrammen en elementen. De scheiding tussen Mappen en Elementen is een versleepbare
+  splitter (per browser bewaard).
+- **Velden herordenen** (attributen, operaties, …): ↑/↓ en Ctrl+↑/↓ in de inspector, Ctrl+↑/↓ in
+  het inline-veld op het canvas.
+- **Zelfde breedte / hoogte / maat** in de Uitlijnen-balk en het contextmenu.
+- **Sneltoetsen**, instelbaar in Studio-instellingen → Sneltoetsen, met EA-achtige standaarden
+  (Ctrl+Alt+pijlen uitlijnen, Alt+H/V centreren, Alt+-/= verdelen, Alt+W/E/R zelfde maat, Alt+Z
+  maat aan inhoud, Ctrl+Delete verwijderen uit model, Alt+G zoek in projectboom).
+- Graaf (demo), SP en de Profiel-editor staan standaard niet meer in de activity bar.
 
 ## [studio/v0.14.0] — 2026-10-07
 Samenwerken aan een project, eerste trede: het Studio-project krijgt een naam en een id en kan

@@ -26,6 +26,10 @@
  *   onNodeDoubleClick? — (element) => void — gedragsverwijzing openen (alleen
  *                        bij een gevulde verwijzing; anders start dubbelklik
  *                        het inline hernoemen)
+ *   onSchuifVeld?      — (elementId, veldSleutel, "omhoog"|"omlaag") => nieuweSleutel|null —
+ *                        veld (attribuut) herordenen vanuit het inline-veld (Ctrl+↑/↓)
+ *   onNodeMaten?       — ({voorkomenId → {width,height}}) => void — zelfde
+ *                        breedte/hoogte/maat op de selectie (één stap)
  *   onHernoem?         — (elementId, naam, veldSleutel|null) => void — inline
  *                        hernoemd (F2, dubbelklik of klik op de naam); met
  *                        veldSleutel "<compartmentType>:<index>" is het de
@@ -74,7 +78,7 @@ const ANKER_ELEMENT_TYPE = {
   handleStijl: "onzichtbaar",
   resizebaar: false,
 };
-import { berekenUitlijning, berekenRasterSnap } from "../layout/uitlijnen.js";
+import { berekenUitlijning, berekenRasterSnap, berekenMaten, MAAT_MODES } from "../layout/uitlijnen.js";
 
 const nodeTypes = { element: ElementNode };
 const edgeTypes = { connector: ConnectorEdge };
@@ -164,6 +168,8 @@ function CanvasBinnenkant({
   onRandAanhechting,
   onNodeDoubleClick,
   onHernoem,
+  onSchuifVeld,
+  onNodeMaten,
   onExternDrop,
   shapeSet,
   layoutApiRef,
@@ -694,6 +700,8 @@ function CanvasBinnenkant({
       // (`data-dc-veld`) = inline bewerken, zoals in de oude IDE. De handles
       // liggen in de DOM bovenop de tekst en winnen dus van deze klik.
       if (!bewerkbaar || !onHernoem || isAnker) return;
+      // Ctrl/Shift-klik = (multi)selectie, geen bewerken.
+      if (e.ctrlKey || e.metaKey || e.shiftKey) return;
       const start = klikStartRef.current;
       if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4) return;
       const doel = e.target?.closest?.("[data-dc-veld], [data-dc-naam], .dc-naam");
@@ -1071,8 +1079,19 @@ function CanvasBinnenkant({
         const elementId = node?.data?.element?.id || edge?.data?.connectorId || nodeId;
         onHernoem(elementId, naam, veld || null);
       },
+      // Ctrl+↑/↓ in het inline-veld van een attribuut: eerst de getypte naam
+      // bewaren, dan het veld verplaatsen en het veld op de nieuwe plek
+      // opnieuw openen.
+      schuifVeld: (nodeId, veldSleutel, richting, waarde) => {
+        if (!onSchuifVeld || !veldSleutel) return;
+        const node = getNodes().find((n) => n.id === nodeId);
+        const elementId = node?.data?.element?.id || nodeId;
+        if (waarde != null && onHernoem) onHernoem(elementId, waarde, veldSleutel);
+        const nieuw = onSchuifVeld(elementId, veldSleutel, richting);
+        setHernoem(nieuw ? { nodeId, veld: nieuw } : null);
+      },
     }),
-    [hernoem, onHernoem, bewerkbaar, getNodes, rfStoreApi]
+    [hernoem, onHernoem, onSchuifVeld, bewerkbaar, getNodes, rfStoreApi]
   );
   // F2 op precies één geselecteerde node (de node heeft focus na een klik,
   // dus de toets bubbelt naar de ReactFlow-wrapper). Niet tijdens typen.
@@ -1537,8 +1556,18 @@ function CanvasBinnenkant({
               !(n.parentId && n.data?.elementType?.randElement) &&
               !n.id.startsWith(ANKER_PREFIX)
           );
+          if (MAAT_MODES.has(mode)) {
+            const maten = berekenMaten(mode, naarItems(selectie));
+            if (Object.keys(maten).length && onNodeMaten) onNodeMaten(maten);
+            return;
+          }
           pasToe(berekenUitlijning(mode, naarItems(selectie)));
         },
+        /** Geselecteerde nodes (zonder ankers): {nodeId, elementId}[] — voor sneltoetsen in de activiteit. */
+        selectieIds: () =>
+          getNodes()
+            .filter((n) => n.selected && !n.id.startsWith(ANKER_PREFIX))
+            .map((n) => ({ nodeId: n.id, elementId: n.data?.element?.id || n.id })),
         /**
          * Selecteer een node op het canvas (tree-klik). Alleen als hij
          * (deels) buiten beeld valt wordt het beeld minimaal bijgeschoven —
@@ -1687,7 +1716,7 @@ function CanvasBinnenkant({
         },
       };
     },
-    [getNodes, screenToFlowPosition, edges, elements, diagram, onNodePosities, rfStoreApi, absVan, containerOpPunt]
+    [getNodes, screenToFlowPosition, edges, elements, diagram, onNodePosities, onNodeMaten, rfStoreApi, absVan, containerOpPunt]
   );
 
   return (
@@ -1811,6 +1840,7 @@ function CanvasBinnenkant({
               >
                 {item.icoon ? <span className="dc-contextmenu-icoon">{item.icoon}</span> : null}
                 {item.label}
+                {item.shortcut ? <span className="dc-contextmenu-sneltoets">{item.shortcut}</span> : null}
               </button>
             )
           )}

@@ -288,6 +288,7 @@ function ProfielInspector() {
 export default {
   id: "profiel05",
   label: "Profiel-editor",
+  standaardVerborgen: true, // demo/tekstuele editor: standaard uit de balk (Mark, 07-10)
   icon: <IconProfiel05 />,
   // Gereedschap, geen modelleeractiviteit: hoort bij beheer/instellingen
   // (consolidatieplan 2026-07-11, §2 — Instellingen bevat de profiel-editors).

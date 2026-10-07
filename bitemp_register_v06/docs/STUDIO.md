@@ -822,6 +822,37 @@ fase 2 een **bewerkbare sandbox**:
   hebben een rode knop (`gevaar`) bij verwijderen/vervangen; een
   bestands-`verwerk` van een profiel mag async zijn (OAS vraagt het dialect
   via de dialoog). Submappen kunnen willekeurig diep.
+- **Sorteren in de projectboom** (2026-10-07): **Ctrl+↑/↓** verplaatst de
+  geselecteerde map, het geselecteerde diagram of element een plek tussen
+  zijn broers; het contextmenu heeft *Omhoog*/*Omlaag*. Mappen hadden al
+  `volgorde`; voor geplaatste regels ís de sleutelvolgorde van `plaatsing`
+  de volgorde (`schuifPlaatsing`, één structuur-undo-stap).
+- **Scheiding Mappen/Elementen** is een versleepbare splitter
+  (`.studio-project__splitter`); de hoogte van de elementenlijst wordt per
+  browser bewaard (`studio05-project-elementen-hoogte`, default 260 px) —
+  de vaste 45% liet de boom te krap.
+- **Velden herordenen** (attributen, operaties, enum-waarden, …): in de
+  inspector met ↑/↓ naast het veld of **Ctrl+↑/↓** met de focus in de regel;
+  op het canvas met **Ctrl+↑/↓** in het inline-veld van een attribuut (de
+  getypte naam gaat mee, het veld opent op de nieuwe plek). Pure helper
+  `schuifVeld()` in `diagramcore/model/velden.js` (getest); één
+  `updateElement` = één undo.
+- **Zelfde breedte / hoogte / maat** in de Uitlijnen-balk en het
+  contextmenu (`berekenMaten()` in `layout/uitlijnen.js`: ieder krijgt de
+  grootste maat, nooit knippen); store-actie `updateNodeSizes` (één stap).
+- **Sneltoetsen** (`studio/sneltoetsen.js`, instelscherm Studio-instellingen
+  → Sneltoetsen): instelbaar per browser, standaard naar Enterprise
+  Architect — Ctrl+Alt+←/→/↑/↓ randen uitlijnen, Alt+H/Alt+V centreren,
+  Alt+-/Alt+= verdelen, Alt+W/Alt+E/Alt+R zelfde breedte/hoogte/maat, Alt+Z
+  maat aanpassen aan inhoud, Ctrl+Delete verwijderen uit model, Alt+G zoek in
+  projectboom. Een binding is Ctrl/Alt + toets of een F-toets (kale letters
+  botsen met typen); een dubbele binding verhuist. Vast: F2, Delete,
+  Ctrl+Z/Y, pijltjes verplaatsen, Shift+slepen, Ctrl+↑/↓. De uitlijn-knoppen
+  tonen de toets in hun tooltip, het contextmenu rechts in de regel.
+- **Activity bar standaard**: dynamische profielen (de gebundelde demo's
+  Graaf en SP, eigen profielen) en de tekstuele Profiel-editor staan
+  standaard niet in de balk (`standaardVerborgen`); via Modelleren, *Ga
+  naar* en Studio-instellingen → Activiteiten blijven ze bereikbaar.
 - **Taakbalken op een rij bovenin** (2026-10-07): balken met `auto: true`
   in hun voorkeur (de standaard, en balken zonder voorkeur) worden na elke
   render op gemeten breedte links→rechts op één rij bovenin gelegd; past

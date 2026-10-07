@@ -136,6 +136,11 @@ function ElementNode({ id, data, selected }) {
       }
       plaats={elementType.naamLabel === "buiten" || data.gedaante === "bol" ? "buiten" : elementType.compartments?.length ? "boven" : "midden"}
       klaar={(nieuw) => inlineNaam.klaar(id, nieuw, veldSleutel)}
+      onSchuif={
+        veldSleutel && inlineNaam.schuifVeld
+          ? (richting, waarde) => inlineNaam.schuifVeld(id, veldSleutel, richting, waarde)
+          : undefined
+      }
     />
   );
 
