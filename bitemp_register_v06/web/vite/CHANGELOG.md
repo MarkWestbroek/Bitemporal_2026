@@ -7,6 +7,29 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+
+## [studio/v0.15.0] — 2026-10-08
+Samenwerken wordt live (projectsync stap 2, api 0.12.0) en het vervolg van de canvas-bediening:
+geen browser-popups meer, sorteren en navigeren in de projectboom, velden herordenen, zelfde
+maat, instelbare sneltoetsen. Zie `docs/plans/2026-10-07 Projectsync …`, `docs/STUDIO.md` en
+`RELEASE.md`.
+
+### Toegevoegd (projectsync stap 2)
+- **Live synchroniseren** (07/08-10): elke modelwijziging is een benoemde operatie
+  (`studio/sync/operaties.js`) die via een outbox naar `POST …/ops` gaat; wijzigingen van anderen
+  komen direct binnen over een SSE-kanaal (`EventSource`, `startKanaal`) en anders via een poll als
+  terugval (interval van de instantie of per browser in Studio-instellingen → *Samenwerken*).
+  Operaties van anderen gaan niet in je undo, en je eigen Ctrl+Z wist hun werk niet (undo-rebase).
+  Menu *Project*: sync-stand in de kop (live / poll / N te verzenden / offline), *Live
+  synchroniseren*, *Nu verversen*.
+- **Snapshot-compactie**: na 200 operaties zet een client stil een nieuwe snapshot en ruimt de server
+  het log op; wie te ver achterloopt laadt de snapshot opnieuw (tabs blijven).
+- **Wie is online**: "N anderen online" rechts in de menubalk (namen in de tooltip) en "Online: …"
+  in het Project-menu.
+- **Werkruimte los van het project**: tabs, actieve tab en open/dicht mappen per project
+  (`studio-werkruimte:<projectId>`) én per gebruiker op de server, zodat je op een andere computer
+  verdergaat waar je was. Het werkbestand is **v3**, zonder tabs en viewports.
+
 ### Gewijzigd
 - **Geen browser-popups meer** (07-10): alle prompt/confirm/alert-vensters zijn vervangen door
   de eigen dialoogservice (`naamDialog.jsx`), die bij de muisklik verschijnt. *Nieuwe map* en
