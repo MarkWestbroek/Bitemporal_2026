@@ -61,7 +61,8 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.15.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.15.1`**
+  (2026-10-08: patch — boomvolgorde synct en overleeft de snapshot), na **`studio/v0.15.0`**
   (2026-10-08: live samenwerken — projectsync stap 2 — en canvas-bediening vervolg). Daarvoor
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
