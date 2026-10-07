@@ -392,6 +392,21 @@ In `bitemp_register_v06/.vscode/launch.json` staan launch-configs voor:
 - `Codegen v06: from DB model id`
 - `Codegen v06: from file`
 
+**Stop/Herstart in de debug-toolbar reageert niet (2026-10-07):** dan hangt meestal een
+oude dlv-sessie die poort 8082 nog bezet houdt; elke nieuwe start van `Go API v06: debug`
+kan dan niet binden en valt stil, terwijl de toolbar de oude sessie blijft tonen.
+Controleren en opruimen (PowerShell):
+
+```powershell
+netstat -ano | Select-String ":8082 .*LISTENING"     # PID van het __debug_bin-proces
+Get-CimInstance Win32_Process | Where-Object Name -like 'dlv*' |
+  Select-Object ProcessId, ParentProcessId, CreationDate, CommandLine
+taskkill /PID <pid van dlv.exe dap> /T /F             # stopt dlv én de debug-binary
+```
+
+Daarna gewoon weer F5. De achtergebleven `__debug_bin.exe*`-bestanden in deze map zijn
+dlv-tijdelijken (gitignored) en kunnen weg.
+
 ### Model publiceren vanuit editor (POST)
 
 In Editor v2 is er een toolbar-knop `Publiceer schema-model`.

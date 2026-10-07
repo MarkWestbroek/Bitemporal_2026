@@ -21,6 +21,7 @@
 12. [Admin Endpoints](#12-admin-endpoints)
 13. [Version Endpoint](#13-version-endpoint)
 14. [Query Parameter Reference](#14-query-parameter-reference)
+15. [Studio-projecten](#15-studio-projecten)
 
 ---
 
@@ -563,6 +564,41 @@ Consolidated lookup of all query parameters used across the API.
 | `:typenaam` | string | `/api/viz/entiteit/:typenaam/*`, `/api/viz/relatie/:typenaam/*` | MetaRegistry type name |
 | `:password` | string | `DELETE /admin/db/droptables/:password` | Admin password for destructive operation |
 | `*filepath` | string | `GET /docs/*filepath` | Relative path to markdown file |
+
+---
+
+## 15. Studio-projecten
+
+Parkeerplaats voor een Omnium Studio-project op de server (plan
+`docs/plans/2026-10-07 Projectsync — eenmalig naar de server, daarna operaties als events (plan).md`,
+stap 1). Eén JSONB-blob per project in `studio_projecten`: het project-werkbestand
+(formaat `studio-project` v2) gaat als geheel heen en terug. Geen bitemporele
+entiteit — tussenstap tot het modelregister. Handlers: `handlers/studio_project_handler.go`.
+
+Lezen vereist een ingelogde gebruiker (`RequireAuth`), schrijven de rol `editor`;
+beide zijn no-ops bij `AUTH_ENABLED=false`. Iedereen die is ingelogd ziet alle projecten.
+
+### `GET /api/studio/projecten`
+Lijst zonder inhoud, nieuwste bovenaan:
+`[{id, naam, eigenaar, versie, aangemaakt, bijgewerkt, bijgewerkt_door, grootte}]` (`grootte` = bytes JSON).
+
+### `GET /api/studio/projecten/:id`
+Volledig record inclusief `inhoud` (het werkbestand). 404 als onbekend.
+
+### `POST /api/studio/projecten`
+Body `{id?, naam, inhoud}`. `id` is optioneel (8–64 tekens `[A-Za-z0-9_-]`, de Studio stuurt
+zijn eigen UUID); `inhoud` moet een object zijn met `formaat: "studio-project"` (max 20 MB).
+→ `201` met de meta (versie 1). `409` als het id al bestaat.
+
+### `PUT /api/studio/projecten/:id`
+Body `{naam?, inhoud, versie}`. Optimistische vergrendeling: `versie` moet gelijk zijn aan de
+versie op de server; dan wordt de inhoud vervangen, `versie` opgehoogd en `bijgewerkt_door`
+gezet. → `200` met de nieuwe meta. `409 {error, server: {…meta}}` als de server verder is
+(de Studio vraagt dan "overschrijven?" en herhaalt met `server.versie`). `404` als het project
+niet (meer) bestaat.
+
+### `DELETE /api/studio/projecten/:id`
+Alleen de eigenaar of een `admin` (zonder auth: iedereen). → `204`.
 
 ---
 

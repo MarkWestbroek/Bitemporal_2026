@@ -255,6 +255,16 @@ func NewRouter() *gin.Engine {
 	router.GET("/api/schema/domeinen", handlers.MaakGetSchemaDomeinenHandler())
 	router.POST("/api/schema/domeinen", editor, handlers.MaakPostSchemaDomeinHandler())
 
+	// Studio-projecten op de server (handlers/studio_project_handler.go; plan 2026-10-07
+	// Projectsync, stap 1): één JSONB-blob per project, lezen voor iedereen die is
+	// ingelogd, schrijven voor editors, verwijderen door eigenaar of admin.
+	ingelogd := middleware.RequireAuth()
+	router.GET("/api/studio/projecten", ingelogd, handlers.MaakStudioProjectenLijstHandler())
+	router.GET("/api/studio/projecten/:id", ingelogd, handlers.MaakStudioProjectOphalenHandler())
+	router.POST("/api/studio/projecten", editor, handlers.MaakStudioProjectAanmakenHandler())
+	router.PUT("/api/studio/projecten/:id", editor, handlers.MaakStudioProjectOpslaanHandler())
+	router.DELETE("/api/studio/projecten/:id", ingelogd, handlers.MaakStudioProjectVerwijderenHandler())
+
 	// Version endpoint
 	router.GET("/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
