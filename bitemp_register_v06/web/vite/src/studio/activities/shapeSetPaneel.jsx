@@ -18,6 +18,7 @@
 import { getShape, alleShapeIds } from "../../diagramcore/shapes/shapeRegistry.js";
 import { TypeIcoon, alleIcoonIds } from "../../diagramcore/shapes/typeIconen.jsx";
 import { slug } from "./profielOntwerp.js";
+import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
 
 /** Alle bruikbare shape-ids — bij render (de registry vult zich bij import). */
 const shapeOpties = () => alleShapeIds().filter((id) => !["anker", "edge"].includes(id));
@@ -243,21 +244,21 @@ export default function ShapeSetPaneel({ useStore }) {
     useStore.getState().updateDiagramStijl(actief, { shapeSets: next });
   };
 
-  const nieuweSet = () => {
-    const label = window.prompt("Naam van de nieuwe gedaante (shape-set):", `Stijl ${sets.length + 1}`);
+  const nieuweSet = async () => {
+    const label = await vraagNaam({ titel: "Nieuwe gedaante (shape-set)", label: "Naam", waarde: `Stijl ${sets.length + 1}`, bevestig: "Maak" });
     if (!label) return;
     useStore.getState().updateDiagramStijl(actief, {
       shapeSets: [...sets, { id: slug(label), label, shapes: {} }],
     });
   };
-  const hernoemSet = (i) => {
-    const label = window.prompt("Nieuwe naam:", sets[i].label || sets[i].id);
+  const hernoemSet = async (i) => {
+    const label = await vraagNaam({ titel: "Gedaante hernoemen", label: "Nieuwe naam", waarde: sets[i].label || sets[i].id, bevestig: "Hernoem" });
     if (!label) return;
     const next = sets.map((set, j) => (j === i ? { ...set, label } : set));
     useStore.getState().updateDiagramStijl(actief, { shapeSets: next });
   };
-  const verwijderSet = (i) => {
-    if (!window.confirm(`Gedaante "${sets[i].label || sets[i].id}" verwijderen?`)) return;
+  const verwijderSet = async (i) => {
+    if (!(await vraagBevestiging({ titel: "Gedaante verwijderen", tekst: `Gedaante "${sets[i].label || sets[i].id}" verwijderen?`, bevestig: "Verwijder", gevaar: true }))) return;
     useStore.getState().updateDiagramStijl(actief, { shapeSets: sets.filter((_, j) => j !== i) });
   };
 

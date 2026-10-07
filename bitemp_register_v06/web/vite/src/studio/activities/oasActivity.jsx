@@ -8,6 +8,7 @@ import { IconOAS05 } from "../icons";
 import { registreerOas31, oas31DiagramType, maakElement, operatiesVan } from "../../diagramprofielen/oas31/index.js";
 import { vanOasDocument, naarOasDocument } from "../../diagramprofielen/oas31/adapter.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import { vraagNaam } from "../naamDialog.jsx";
 
 registreerOas31();
 
@@ -37,18 +38,19 @@ export default maakDiagramActiviteit({
     importBestand: {
       label: "Importeer OAS 3.0/3.1 (YAML/JSON)…",
       accept: ".yaml,.yml,.json",
-      verwerk: (tekst) => {
+      verwerk: async (tekst) => {
         const doc = parseYaml(tekst);
         if (!doc || typeof doc !== "object" || (!doc.openapi && !doc.swagger)) {
           throw new Error("Dit lijkt geen OpenAPI-document (openapi-veld ontbreekt).");
         }
         const gedetecteerd = doc.openapi ? `openapi ${doc.openapi}` : "geen openapi-veld";
         const keuze = (
-          window.prompt(
-            `OAS-versie voor de import (gedetecteerd: ${gedetecteerd}).\n` +
-              `Typ "auto" (volg het document), "3.0" of "3.1":`,
-            "auto"
-          ) || "auto"
+          (await vraagNaam({
+            titel: "OAS-versie voor de import",
+            label: `Gedetecteerd: ${gedetecteerd}. Typ "auto" (volg het document), "3.0" of "3.1"`,
+            waarde: "auto",
+            bevestig: "Importeer",
+          })) || "auto"
         )
           .trim()
           .toLowerCase();

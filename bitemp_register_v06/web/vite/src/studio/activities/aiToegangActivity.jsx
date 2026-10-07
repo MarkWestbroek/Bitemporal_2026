@@ -9,6 +9,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { IconAI } from "../icons";
 import { apiBase } from "../studioUtils";
+import { vraagBevestiging } from "../naamDialog.jsx";
 
 async function api(pad, opties = {}) {
   const res = await fetch(`${apiBase()}${pad}`, { credentials: "include", headers: { "Content-Type": "application/json" }, ...opties });
@@ -44,7 +45,7 @@ function Main() {
     }
   }
   async function trekIn(naam) {
-    if (!window.confirm(`Code van “${naam}” intrekken? Die werkt dan meteen niet meer.`)) return;
+    if (!(await vraagBevestiging({ titel: "Code intrekken", tekst: `Code van “${naam}” intrekken? Die werkt dan meteen niet meer.`, bevestig: "Intrekken", gevaar: true }))) return;
     try {
       await api(`/api/ai/codes/${encodeURIComponent(naam)}`, { method: "DELETE" });
       laad();
