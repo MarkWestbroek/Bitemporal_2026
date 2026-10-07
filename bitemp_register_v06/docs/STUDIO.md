@@ -849,8 +849,12 @@ fase 2 een **bewerkbare sandbox**:
   `schuifVeld()` in `diagramcore/model/velden.js` (getest); één
   `updateElement` = één undo.
 - **Zelfde breedte / hoogte / maat** in de Uitlijnen-balk en het
-  contextmenu (`berekenMaten()` in `layout/uitlijnen.js`: ieder krijgt de
-  grootste maat, nooit knippen); store-actie `updateNodeSizes` (één stap).
+  contextmenu (`berekenMaten()` in `layout/uitlijnen.js`): de selectie
+  krijgt de maat van de **laatst geselecteerde** node (zoals EA; de canvas
+  houdt de selectievolgorde bij in `selectieVolgordeRef`), zodat je ook
+  kleiner kunt maken; store-actie `updateNodeSizes` (één stap). Volgorde in
+  balk en menu: links / verticaal centreren / rechts, boven / horizontaal
+  centreren / onder, verdelen, maat.
 - **Sneltoetsen** (`studio/sneltoetsen.js`, instelscherm Studio-instellingen
   → Sneltoetsen): instelbaar per browser, standaard naar Enterprise
   Architect — Ctrl+Alt+←/→/↑/↓ randen uitlijnen, Alt+V verticaal centreren
