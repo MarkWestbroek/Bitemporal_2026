@@ -18,6 +18,7 @@ import {
   kruisNet,
   MODEL_OPS,
   STRUCTUUR_OPS,
+  herschikOpVolgorde,
 } from "./operaties.js";
 
 let teller = 0;
@@ -208,4 +209,14 @@ test("boomvolgorde: schuifPlaatsing is een operatie en het vangnet meldt een sle
   assert.deepEqual(ops[0].args[0].volgordePlaatsing, ["b", "a", "c"]);
   assert.deepEqual(ops[0].args[0].zetPlaatsing, {});
   assert.deepEqual(structuurNet(voor, { mappen: {}, plaatsing: { ...voor.plaatsing } }), [], "zelfde volgorde = niets");
+});
+
+test("herschikOpVolgorde: expliciete volgorde wint, onbekende sleutels achteraan, zonder lijst ongewijzigd", () => {
+  const obj = { a: 1, b: 2, c: 3 };
+  assert.deepEqual(Object.keys(herschikOpVolgorde(obj, ["c", "a"])), ["c", "a", "b"]);
+  assert.deepEqual(Object.keys(herschikOpVolgorde(obj, ["x", "b"])), ["b", "a", "c"]);
+  assert.equal(herschikOpVolgorde(obj, null), obj);
+  // De jsonb-herschikking (korte sleutels eerst) wordt ongedaan gemaakt door de meegereisde lijst.
+  const uitJsonb = { "k::1": "m", "el::p::lang": "m", "k::22": "m" };
+  assert.deepEqual(Object.keys(herschikOpVolgorde(uitJsonb, ["el::p::lang", "k::22", "k::1"])), ["el::p::lang", "k::22", "k::1"]);
 });

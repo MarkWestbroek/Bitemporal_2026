@@ -202,6 +202,21 @@ export function diffMap(voor = {}, na = {}) {
   return { zet, wis, leeg: !wis.length && !Object.keys(zet).length };
 }
 
+/**
+ * Herschik een id-map naar een expliciete sleutelvolgorde; sleutels die niet
+ * in de lijst staan komen achteraan (in hun huidige volgorde). De boomvolgorde
+ * is de sleutelvolgorde van `plaatsing`; omdat jsonb die niet bewaart, reist
+ * de volgorde als aparte lijst mee (werkbestand `plaatsingVolgorde`, patch
+ * `volgordePlaatsing`).
+ */
+export function herschikOpVolgorde(obj, volgorde) {
+  if (!Array.isArray(volgorde)) return obj;
+  const uit = {};
+  for (const k of volgorde) if (k in (obj || {})) uit[k] = obj[k];
+  for (const k of Object.keys(obj || {})) if (!(k in uit)) uit[k] = obj[k];
+  return uit;
+}
+
 /** Zelfde voor lijsten met een `id`-veld (kruisverbanden). */
 export function diffLijst(voor = [], na = []) {
   const voorBij = new Map((voor || []).map((x) => [x.id, x]));
