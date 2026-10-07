@@ -134,6 +134,9 @@
  * @property {number} [minBreedte]          - resize-minimum (default 180) — bv. smalle balken
  * @property {number} [minHoogte]           - resize-minimum (default 56)
  * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
+ * @property {boolean} [sleeptInhoudMee]    - true → versleep je dit element, dan schuiven de nodes die
+ *   geometrisch binnen zijn vlak liggen mee (informeel kader: géén lidmaatschap in het model, alleen
+ *   het gebaar; vgl. containerVoor voor formele leden)
  * @property {boolean} [meerdereVoorkomens] - overschrijft de DiagramType-default voor dit elementtype
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
  * @property {string} [taakbalkGroep]       - groep in de afgeleide Maken-/

@@ -145,6 +145,11 @@ const elementTypes = [
   {
     id: "boundary",
     label: "Kader",
+    // Informeel: geen lidmaatschap, maar wat erin ligt sleept wel mee.
+    sleeptInhoudMee: true,
+    // Een kader mag klein (één element omlijsten).
+    minBreedte: 140,
+    minHoogte: 90,
     kort: "KADER",
     shape: "boundary",
     icoon: "kader",

@@ -52,9 +52,19 @@ export function useTaakbalkVoorkeuren(opslagSleutel, defaults) {
       setVoorkeuren((v) => ({ ...v, [balkId]: { ...v[balkId], zichtbaar } })),
     []
   );
+  // Zelf gesleept = geen automatische rij-indeling meer (auto: false); de
+  // defaults mogen `auto: true` dragen, zie maakDiagramActiviteit.
   const zetPositie = useCallback(
     (balkId, positie) =>
-      setVoorkeuren((v) => ({ ...v, [balkId]: { ...v[balkId], positie } })),
+      setVoorkeuren((v) => ({ ...v, [balkId]: { ...v[balkId], positie, auto: false } })),
+    []
+  );
+  /** Alle balken terug in de automatische rij bovenin (Beeld-menu). */
+  const zetAllesAuto = useCallback(
+    () =>
+      setVoorkeuren((v) =>
+        Object.fromEntries(Object.entries(v).map(([k, w]) => [k, { ...w, auto: true }]))
+      ),
     []
   );
   const zetBreedte = useCallback(
@@ -63,10 +73,10 @@ export function useTaakbalkVoorkeuren(opslagSleutel, defaults) {
     []
   );
 
-  return { voorkeuren, zetZichtbaar, zetPositie, zetBreedte };
+  return { voorkeuren, zetZichtbaar, zetPositie, zetBreedte, zetAllesAuto };
 }
 
-export function Taskbar({ label, acties, positie, breedte, onPositie, onBreedte, tooltips = true }) {
+export function Taskbar({ balkId, label, acties, positie, breedte, onPositie, onBreedte, tooltips = true, compact = false }) {
   const ref = useRef(null);
 
   // Eigen tooltip: {titel, uitleg, x, y} na een korte hover (250ms).
@@ -123,26 +133,49 @@ export function Taskbar({ label, acties, positie, breedte, onPositie, onBreedte,
     [positie, onPositie]
   );
 
-  // Native CSS-resize (rechtsonder) → breedte persistent maken.
+  // Native CSS-resize (rechtsonder) → breedte persistent maken. Alleen als
+  // de gebruiker zélf aan de hoekgreep trekt (pointer ingedrukt op de balk):
+  // de ResizeObserver vuurt ook bij inhoudswijzigingen (compacte stand,
+  // andere acties), en bewaarde dan een toevallige breedte als vaste maat —
+  // waarna de knoppen in de balk gingen wikkelen (gemeld 2026-10-07).
+  const trektRef = useRef(false);
   useEffect(() => {
     const el = ref.current;
     if (!el || !onBreedte) return;
+    const omlaag = (e) => {
+      // Hoekgreep: rechtsonder in de balk (native resize-handle ~16px).
+      const r = el.getBoundingClientRect();
+      trektRef.current = e.clientX > r.right - 20 && e.clientY > r.bottom - 20;
+    };
+    const omhoog = () => {
+      trektRef.current = false;
+    };
+    el.addEventListener("pointerdown", omlaag);
+    window.addEventListener("pointerup", omhoog);
     let laatste = el.offsetWidth;
     const ro = new ResizeObserver(() => {
-      const b = el.offsetWidth;
-      if (Math.abs(b - laatste) >= 2) {
+      if (!trektRef.current) return;
+      const b = Math.round(el.offsetWidth);
+      if (b && b !== laatste) {
         laatste = b;
         if (breedte === undefined || Math.abs(b - breedte) >= 2) onBreedte(b);
       }
     });
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("pointerdown", omlaag);
+      window.removeEventListener("pointerup", omhoog);
+    };
   }, [onBreedte, breedte]);
 
   return (
     <div
       ref={ref}
-      className="dc-taakbalk"
+      // is-compact: alle knoppen even hoog (chips én uitlijn-iconen), zie
+      // diagramcore.css; data-balk-id: voor de automatische rij-indeling.
+      className={"dc-taakbalk" + (compact ? " is-compact" : "")}
+      data-balk-id={balkId || undefined}
       style={{ left: positie.x, top: positie.y, ...(breedte ? { width: breedte } : {}) }}
     >
       <div className="dc-taakbalk-kop" onPointerDown={startDrag} title="Sleep om te verplaatsen; hoekgreep om te vervormen">

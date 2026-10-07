@@ -33,6 +33,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useLayoutEffect,
   useCallback,
   useRef,
   lazy,
@@ -68,6 +69,51 @@ import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../di
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { registreerIconenVocabulaire } from "../../diagramcore/shapes/iconenVocabulaire.jsx";
+import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
+import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
+import { splitsVeldSleutel } from "../../diagramcore/canvas/inlineNaam.js";
+
+/**
+ * Inline naamveld voor lijstregels (elementenbrowser, diagramlijst): Enter
+ * of focus verliezen bevestigt, Escape annuleert (onKlaar(null)). Vervangt
+ * de window.prompt-popup; dezelfde stijl als in de projectboom.
+ */
+function NaamInvoer({ waarde, onKlaar, stijl }) {
+  const klaarRef = useRef(false);
+  const klaar = (v) => {
+    if (klaarRef.current) return;
+    klaarRef.current = true;
+    onKlaar(v);
+  };
+  return (
+    <input
+      className="studio-project__mapnaam-invoer"
+      style={{ flex: 1, minWidth: 0, font: "inherit", ...stijl }}
+      defaultValue={waarde || ""}
+      autoFocus
+      onFocus={(e) => e.target.select()}
+      onBlur={(e) => klaar(e.target.value)}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.key === "Enter" || e.key === "Escape") {
+          // Focus terug naar de lijst (voor een volgende F2); niet bij blur.
+          const blok = e.currentTarget.closest("[tabindex]");
+          if (blok) setTimeout(() => blok.focus(), 0);
+        }
+        if (e.key === "Enter") klaar(e.target.value);
+        else if (e.key === "Escape") klaar(null);
+      }}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onDragStart={(e) => e.preventDefault()}
+    />
+  );
+}
+
+/** Focus op een lijstcontainer leggen bij een klik erin (voor F2). */
+function focusLijst(e) {
+  if (!e.target.closest?.("input, textarea, select")) e.currentTarget.focus();
+}
 
 const DiagramCanvas = lazy(() => import("../../diagramcore/canvas/DiagramCanvas.jsx"));
 
@@ -77,10 +123,18 @@ const DiagramCanvas = lazy(() => import("../../diagramcore/canvas/DiagramCanvas.
 registreerIconenVocabulaire();
 
 const STANDAARD_TAAKBALK_DEFAULTS = {
-  maken: { zichtbaar: true, positie: { x: 12, y: 12 } },
-  verbinding: { zichtbaar: true, positie: { x: 12, y: 300 } },
-  "auto-layout": { zichtbaar: true, positie: { x: 150, y: 12 } },
-  uitlijnen: { zichtbaar: true, positie: { x: 12, y: 430 } },
+  // Startposities: een stapel bovenin links (Maken, Verbinding, Uitlijnen,
+  // Auto-layout) — niet meer verspreid tot halverwege het canvas, waar de
+  // balken over het diagram heen vielen (gemeld 2026-10-07). De gebruiker
+  // sleept ze zelf verder; de posities worden per balk bewaard.
+  // `auto: true`: op één rij bovenin, links→rechts in deze volgorde, en
+  // doorlopend naar een tweede rij als de rij vol is (gemeten breedtes, zie
+  // de rij-indeling in de activiteit). Zelf slepen zet auto uit; Beeld →
+  // "Taakbalken op een rij bovenin" zet alles weer op auto.
+  maken: { zichtbaar: true, auto: true, positie: { x: 12, y: 12 } },
+  verbinding: { zichtbaar: true, auto: true, positie: { x: 12, y: 66 } },
+  uitlijnen: { zichtbaar: true, auto: true, positie: { x: 12, y: 120 } },
+  "auto-layout": { zichtbaar: true, auto: true, positie: { x: 12, y: 174 } },
 };
 
 export function maakDiagramActiviteit(opties) {
@@ -964,6 +1018,15 @@ export function maakDiagramActiviteit(opties) {
     const [dicht, setDicht] = useState({});
     // Ctrl-klik multiselect: samen (als bundel) naar de projectboom slepen.
     const [multiIds, setMultiIds] = useState(() => new Set());
+    // Inline hernoemen (element-id in bewerking): via F2 op de selectie, een
+    // klik op de al geselecteerde regel, of het contextmenu.
+    const [hernoemId, setHernoemId] = useState(null);
+    const commitNaam = (elId, naam) => {
+      setHernoemId(null);
+      const schoon = (naam || "").trim();
+      const el = useStore.getState().elements[elId];
+      if (el && schoon && schoon !== el.naam) hernoemElement(useStore, descriptor, elId, schoon);
+    };
     // Gedeelde multiselect-handlers (tree-rijen én connector-groep-items).
     const multiDragStart = (el) => (e) => {
       const ids = multiIds.has(el.id) ? [...multiIds] : [el.id];
@@ -985,6 +1048,11 @@ export function maakDiagramActiviteit(opties) {
         return;
       }
       if (multiIds.size) setMultiIds(new Set());
+      // Klik op de al geselecteerde regel = hernoemen (Verkenner).
+      if (el.id === selectieId && hernoemId !== el.id) {
+        setHernoemId(el.id);
+        return;
+      }
       setSelectieId(el.id);
       if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
     };
@@ -1024,13 +1092,8 @@ export function maakDiagramActiviteit(opties) {
           items: naarMapItems(bundel),
         });
       }
-      items.push({
-        label: "Hernoemen…",
-        onClick: () => {
-          const naam = window.prompt("Nieuwe naam:", el.naam || "");
-          if (naam) useStore.getState().updateElement(el.id, { naam });
-        },
-      });
+      // Hernoemen inline (studio 0.13.0), geen window.prompt meer.
+      items.push({ label: "Hernoemen", onClick: () => setHernoemId(el.id) });
       items.push({ sep: true });
       items.push({ label: "Kopieer ID", onClick: () => navigator.clipboard?.writeText(el.id) });
       // Verplaatsen/losmaken (vgl. "Verplaats naar domein…" in de IDE).
@@ -1258,6 +1321,11 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               // blijft compatibel via elementId.
               const ids = multiIds.has(el.id) ? [...multiIds] : [el.id];
               e.dataTransfer.setData(SLEEP_MIME, JSON.stringify({ elementId: el.id, elementIds: ids }));
+              // Ook de element-referentie (mét profiel-id): die leest de canvas
+              // bij een drop op het diagram. Deze handler overschrijft die van
+              // sleepProps, en liet hem weg — slepen uit de boom naar het
+              // diagram deed daardoor niets (gemeld 2026-10-07).
+              e.dataTransfer.setData(REF_MIME, JSON.stringify({ profielId: id, elementId: el.id }));
               e.dataTransfer.setData("text/plain", el.naam || el.id);
               e.dataTransfer.effectAllowed = "copyMove";
             }}
@@ -1272,6 +1340,11 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 return;
               }
               if (multiIds.size) setMultiIds(new Set());
+              // Klik op de al geselecteerde regel = hernoemen (Verkenner).
+              if (el.id === selectieId && hernoemId !== el.id) {
+                setHernoemId(el.id);
+                return;
+              }
               setSelectieId(el.id);
               if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
             }}
@@ -1321,17 +1394,21 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               {kinderen.length ? (dichtgeklapt ? "▸" : "▾") : ""}
             </span>
             <TypeIcoon elementType={et} maat={11} />
-            <span
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontStyle: zichtbaar ? undefined : "italic",
-              }}
-            >
-              {el.naam || `(${el.id})`}
-            </span>
+            {hernoemId === el.id ? (
+              <NaamInvoer waarde={el.naam} onKlaar={(v) => commitNaam(el.id, v)} />
+            ) : (
+              <span
+                style={{
+                  flex: 1,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  fontStyle: zichtbaar ? undefined : "italic",
+                }}
+              >
+                {weergaveNaam(el, et)}
+              </span>
+            )}
             {(!zichtbaar || meerdereVoorkomens) && !et?.isConnector && actiefDiagram && (
               <button
                 className="dc-mini-knop"
@@ -1351,7 +1428,19 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     };
 
     return (
-      <div style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: 1 }}>
+      <div
+        style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: 1, outline: "none" }}
+        // F2 = hernoem het geselecteerde element; de klik legt de focus hier.
+        tabIndex={-1}
+        onMouseDown={focusLijst}
+        onKeyDown={(e) => {
+          if (e.key !== "F2" || !selectieId || hernoemId) return;
+          if (e.target.closest?.("input, textarea, select")) return;
+          e.preventDefault();
+          e.stopPropagation();
+          setHernoemId(selectieId);
+        }}
+      >
         <div
           style={{
             padding: "6px 8px",
@@ -1464,17 +1553,21 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                         outlineOffset: -1.5,
                       }}
                     >
-                      <span
-                        style={{
-                          flex: 1,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          fontStyle: zichtbaar ? undefined : "italic",
-                        }}
-                      >
-                        {el.naam || `(${el.id})`}
-                      </span>
+                      {hernoemId === el.id ? (
+                        <NaamInvoer waarde={el.naam} onKlaar={(v) => commitNaam(el.id, v)} />
+                      ) : (
+                        <span
+                          style={{
+                            flex: 1,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            fontStyle: zichtbaar ? undefined : "italic",
+                          }}
+                        >
+                          {weergaveNaam(el, et)}
+                        </span>
+                      )}
                       {!zichtbaar && !et.isConnector && actiefDiagram && (
                         <button
                           className="dc-mini-knop"
@@ -1507,16 +1600,21 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     const lijst = Object.values(diagrams);
 
     const [zijMenu, setZijMenu] = useState(null);
-    const hernoem = (d) => {
-      const naam = window.prompt("Nieuwe naam:", d.naam);
-      if (naam) useStore.getState().renameDiagram(d.id, naam);
+    // Inline hernoemen van een diagramregel (F2 op het actieve diagram, klik
+    // op de al actieve regel, ✎ of het contextmenu) — geen prompt-popup.
+    const [hernoemDiagramId, setHernoemDiagramId] = useState(null);
+    const hernoem = (d) => setHernoemDiagramId(d.id);
+    const commitDiagramNaam = (d, naam) => {
+      setHernoemDiagramId(null);
+      const schoon = (naam || "").trim();
+      if (schoon && schoon !== d.naam) useStore.getState().renameDiagram(d.id, schoon);
     };
     /** Rechtsklik op een diagram-/profielrij: dezelfde acties als de knopjes
      *  plus exporteren en de activiteit-eigen acties (bv. Activeer profiel). */
     const openDiagramMenu = (e, d) => {
       e.preventDefault();
       const items = [
-        { label: "Hernoemen…", onClick: () => hernoem(d) },
+        { label: "Hernoemen", onClick: () => hernoem(d) },
         {
           label: `Exporteer dit ${diagramTerm}…`,
           onClick: () => {
@@ -1557,7 +1655,18 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             ＋ Nieuw {diagramTerm}
           </button>
         </div>
-        <div style={{ maxHeight: "40%", overflow: "auto", padding: 6, flexShrink: 0 }}>
+        <div
+          style={{ maxHeight: "40%", overflow: "auto", padding: 6, flexShrink: 0, outline: "none" }}
+          tabIndex={-1}
+          onMouseDown={focusLijst}
+          onKeyDown={(e) => {
+            if (e.key !== "F2" || !actief || hernoemDiagramId) return;
+            if (e.target.closest?.("input, textarea, select")) return;
+            e.preventDefault();
+            e.stopPropagation();
+            setHernoemDiagramId(actief);
+          }}
+        >
           {lijst.length === 0 && (
             <p style={{ margin: 8, color: "var(--s-fg-muted)" }}>
               Nog geen diagrammen — maak er een met ＋{heeftKoppeling ? ", of haal het UML-model op via ⟳" : ""}.
@@ -1566,7 +1675,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           {lijst.map((d) => (
             <div
               key={d.id}
-              onClick={() => setActief(d.id)}
+              onClick={() => (d.id === actief && hernoemDiagramId !== d.id ? hernoem(d) : setActief(d.id))}
               onContextMenu={(e) => openDiagramMenu(e, d)}
               style={{
                 display: "flex",
@@ -1581,9 +1690,13 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 border: `1px solid ${d.id === actief ? "var(--s-border)" : "transparent"}`,
               }}
             >
-              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                📐 {d.naam}
-              </span>
+              {hernoemDiagramId === d.id ? (
+                <NaamInvoer waarde={d.naam} onKlaar={(v) => commitDiagramNaam(d, v)} />
+              ) : (
+                <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  📐 {d.naam}
+                </span>
+              )}
               <span style={{ color: "var(--s-fg-muted)", fontSize: 11 }}>{d.nodes.length}</span>
               {d.id === actief && (
                 <>
@@ -1746,10 +1859,44 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     // Fallback: na undo van "nieuw diagram" kan het actieve id verdwenen zijn.
     const diagram = (actief && diagrams[actief]) || Object.values(diagrams)[0] || null;
 
-    const { voorkeuren, zetZichtbaar, zetPositie, zetBreedte } = useTaakbalkVoorkeuren(
+    const { voorkeuren, zetZichtbaar, zetPositie, zetBreedte, zetAllesAuto } = useTaakbalkVoorkeuren(
       taakbalkSleutel,
       taakbalkDefaults
     );
+    // Automatische rij-indeling: balken met `auto` (of zonder voorkeur) komen
+    // op één rij bovenin, links→rechts in renderyvolgorde, met gemeten
+    // breedtes; loopt de rij vol, dan een tweede rij. Herberekend bij
+    // wijziging van voorkeuren/compact-stand/diagram en bij venster-resize.
+    const [autoPos, setAutoPos] = useState({});
+    const [vensterTik, setVensterTik] = useState(0);
+    useEffect(() => {
+      const f = () => setVensterTik((t) => t + 1);
+      window.addEventListener("resize", f);
+      return () => window.removeEventListener("resize", f);
+    }, []);
+    const isAutoBalk = (balkId) => voorkeuren[balkId]?.auto ?? !voorkeuren[balkId];
+    const autoSig = JSON.stringify(
+      Object.entries(voorkeuren).map(([k, v]) => [k, !!v?.auto, v?.zichtbaar !== false, v?.breedte || 0])
+    );
+    useLayoutEffect(() => {
+      const balken = [...document.querySelectorAll(`.dc-canvasvlak[data-activiteit="${id}"] .dc-taakbalk[data-balk-id]`)];
+      if (!balken.length) return;
+      const vlak = balken[0].closest(".dc-canvasvlak");
+      const breedteVlak = vlak?.clientWidth || window.innerWidth;
+      let x = 12, y = 12, rijHoogte = 0;
+      const nieuw = {};
+      for (const el of balken) {
+        const bid = el.dataset.balkId;
+        if (!isAutoBalk(bid)) continue;
+        const w = el.offsetWidth, h = el.offsetHeight;
+        if (x > 12 && x + w > breedteVlak - 12) { x = 12; y += rijHoogte + 8; rijHoogte = 0; }
+        nieuw[bid] = { x, y };
+        x += w + 10;
+        rijHoogte = Math.max(rijHoogte, h);
+      }
+      setAutoPos((oud) => (JSON.stringify(oud) === JSON.stringify(nieuw) ? oud : nieuw));
+    }); // elke render: goedkoop (paar balken), en de breedte volgt de inhoud
+    useEffect(() => menuBus.on(ev("taakbalk-rij"), () => zetAllesAuto()), [zetAllesAuto]);
     // Eigen taakbalk-tooltips (naam + uitleg) — toggle in Studio-instellingen.
     const tooltipsAan = useStudioStore((s) => s.tooltipsAan);
 
@@ -2160,15 +2307,13 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   elementTypesById[c.elementType]?.isConnector
               );
               if (uitgaand.length > 0) {
+                // Eén store-stap voor alle kinderen (één Ctrl+Z).
                 const zetBoomstijl = (richting) => {
-                  for (const c of uitgaand) {
-                    s.updateElement(c.id, {
-                      data:
-                        richting === "verticaal"
-                          ? { vorm: "boom", sourceHandle: "source-bottom", targetHandle: "target-top" }
-                          : { vorm: "boom", sourceHandle: "source-right", targetHandle: "target-left" },
-                    });
-                  }
+                  const data =
+                    richting === "verticaal"
+                      ? { vorm: "boom", sourceHandle: "source-bottom", targetHandle: "target-top" }
+                      : { vorm: "boom", sourceHandle: "source-right", targetHandle: "target-left" };
+                  s.updateElementen(Object.fromEntries(uitgaand.map((c) => [c.id, { data }])));
                 };
                 items.push(
                   { sep: true },
@@ -2344,6 +2489,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             studio-thema via dc-canvasvlak, i.p.v. het vaste witte papier. */}
         <div
           className="dc-canvasvlak"
+          data-activiteit={id}
           data-dc-typering={typering}
           data-dc-labels={buitenlabels}
           style={{ flex: 1, minHeight: 0, position: "relative" }}
@@ -2391,8 +2537,8 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     if (Object.keys(rest).length) s.updateNodePositions(diagram.id, rest);
                   }}
                   layoutApiRef={layoutApiRef}
-                  onNodeSize={(voorkomenId, size) =>
-                    useStore.getState().updateNodeSize(diagram.id, voorkomenId, size)
+                  onNodeSize={(voorkomenId, size, positie) =>
+                    useStore.getState().updateNodeSize(diagram.id, voorkomenId, size, positie)
                   }
                   onVerbind={verbind}
                   onVerwijder={(ids) => {
@@ -2479,18 +2625,47 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     useStore.getState().setActiefDiagram(doelId);
                     menuBus.emit("studio:open-diagram", { profielId: id, diagramId: doelId });
                   }}
+                  // Inline bewerken op het canvas (F2 / klik op de naam / klik
+                  // op een veld). Naam: via hernoemElement, zodat velden die
+                  // bij naam naar dit element verwijzen (attribuuttype) mee
+                  // veranderen. Veld: de naam van dat veld in het compartiment.
+                  onHernoem={(elementId, naam, veldSleutel) => {
+                    const s = useStore.getState();
+                    if (!veldSleutel) {
+                      hernoemElement(useStore, descriptor, elementId, naam);
+                      return;
+                    }
+                    const { compartmentType, index } = splitsVeldSleutel(veldSleutel);
+                    const el = s.elements[elementId];
+                    if (!el) return;
+                    const compartimenten = (el.compartimenten || []).map((c) =>
+                      c.compartmentType === compartmentType
+                        ? { ...c, velden: (c.velden || []).map((v, j) => (j === index ? { ...v, naam } : v)) }
+                        : c
+                    );
+                    s.updateElement(elementId, { compartimenten });
+                  }}
                   onExternDrop={(nodeId, ref, positie) => {
                     const s = useStore.getState();
-                    // Een element uit de eigen elementen-/projectboom op lege
-                    // canvasruimte plaatsen. Alleen profielen/typen met de
-                    // voorkomen-vlag laten een tweede plaatsing toe.
-                    if (!nodeId && ref?.profielId === id && s.elements[ref.elementId]) {
-                      const el = s.elements[ref.elementId];
-                      const et = elementTypesById[el.elementType];
-                      const meerdereVoorkomens = staatMeerdereVoorkomensToe(descriptor, et);
-                      s.addElementToDiagram(diagram.id, el.id, positie, { meerdereVoorkomens });
-                      selecteerVoorkomen(el.id, null);
-                      return;
+                    // Een element uit de eigen elementen-/projectboom op het
+                    // canvas plaatsen: op lege ruimte, of óp een container
+                    // (systeemkader, package, pool) — dan wordt het meteen lid,
+                    // zoals bij slepen van een bestaande node (gemeld
+                    // 2026-10-07: droppen in een kader deed niets). Alleen
+                    // profielen/typen met de voorkomen-vlag laten een tweede
+                    // plaatsing toe.
+                    if (ref?.profielId === id && s.elements[ref.elementId]) {
+                      const doelEl = nodeId ? s.elements[nodeId] : null;
+                      const doelEt = doelEl ? elementTypesById[doelEl.elementType] : null;
+                      if (!nodeId || (doelEt?.containerVoor && doelEl.id !== ref.elementId)) {
+                        const el = s.elements[ref.elementId];
+                        const et = elementTypesById[el.elementType];
+                        const meerdereVoorkomens = staatMeerdereVoorkomensToe(descriptor, et);
+                        s.addElementToDiagram(diagram.id, el.id, positie, { meerdereVoorkomens });
+                        if (doelEt?.containerVoor) verhangNaarContainer(useStore, el.id, doelEl.id);
+                        selecteerVoorkomen(el.id, null);
+                        return;
+                      }
                     }
                     // Cross-profiel drop (instantie-van-concept): het
                     // elementtype van de geraakte node beslist via zijn
@@ -2516,10 +2691,14 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 .map((b) => (
                   <Taskbar
                     key={b.id}
+                    balkId={b.id}
                     label={b.label || b.id}
                     acties={b.actieLijst}
-                    positie={voorkeuren[b.id]?.positie || { x: 12, y: 12 }}
+                    positie={
+                      (isAutoBalk(b.id) ? autoPos[b.id] : null) || voorkeuren[b.id]?.positie || { x: 12, y: 12 }
+                    }
                     breedte={voorkeuren[b.id]?.breedte}
+                    compact={compacteBalk}
                     onPositie={(p) => zetPositie(b.id, p)}
                     onBreedte={(breedte) => zetBreedte(b.id, breedte)}
                     tooltips={tooltipsAan}
@@ -2661,7 +2840,13 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           kandidatenVoor={kandidatenVoor}
           editorContext={editorContext}
           bewerkbaar
-          onUpdate={(patch) => useStore.getState().updateElement(element.id, patch)}
+          onUpdate={(patch) => {
+            // Een naamwijziging loopt via hernoemElement (verwijzingen bij
+            // naam volgen mee); lukt dat niet (leeg/gelijk), dan gewoon opslaan.
+            const alleenNaam = patch.naam !== undefined && Object.keys(patch).length === 1;
+            if (alleenNaam && hernoemElement(useStore, descriptor, element.id, patch.naam)) return;
+            useStore.getState().updateElement(element.id, patch);
+          }}
           onVerwijderVanDiagram={() => {
             if (actief) useStore.getState().removeElementFromDiagram(actief, selectieVoorkomenId || element.id);
             setSelectieId(null);
@@ -2845,6 +3030,11 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           label: "Compacte taakbalken",
           checked: leesCompact(),
           onClick: () => menuBus.emit(ev("taakbalk-compact"), !leesCompact()),
+        },
+        {
+          id: `${menuPrefix}-taakbalk-rij`,
+          label: "Taakbalken op een rij bovenin",
+          onClick: () => menuBus.emit(ev("taakbalk-rij")),
         },
         {
           id: `${menuPrefix}-buitenlabels`,

@@ -47,6 +47,8 @@ import {
 } from "../profieltypeRegistry";
 import ProfielIcoon from "../ProfielIcoon.jsx";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
+import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
+import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
 
 // Drag-and-drop MIME-types in de projectboom.
 // PLAATSING draagt een plaatsing-sleutel (diagram- of element-regel die al
@@ -269,6 +271,14 @@ export const useModellerenStore = create((set, get) => ({
   selecteerDiagram: (profielId, diagramId) =>
     set({ diagramSelectie: profielId ? { profielId, diagramId } : null, mapSelectie: null }),
 
+  /**
+   * Hernoem-verzoek voor een boomregel (F2 op de selectie): "map:<id>" of
+   * "diag:<tabId>". De regel die hem herkent zet zijn invoerveld aan en
+   * wist het verzoek weer.
+   */
+  hernoemDoel: null,
+  vraagHernoem: (sleutel) => set({ hernoemDoel: sleutel }),
+
   /** Ctrl-klik multiselect in de boom: set van plaatsing-sleutels. */
   multiSelectie: [],
   toggleMulti: (key) =>
@@ -463,6 +473,48 @@ function actieveTabInfo() {
  * klik = eigenschappen in de inspector, dubbelklik = openen (tab) — zoals
  * in Sparx EA. Rechtsklik biedt beide expliciet.
  */
+/**
+ * Klik op een al geselecteerde regel = hernoemen (Verkenner-gedrag; zo
+ * werkte het ook in de oude IDE), met uitstel zodat een dubbelklik (openen)
+ * hem nog kan afbreken.
+ */
+function useKlikHernoem(start) {
+  const timer = React.useRef(null);
+  const annuleer = () => {
+    clearTimeout(timer.current);
+    timer.current = null;
+  };
+  const plan = () => {
+    annuleer();
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      start();
+    }, 320);
+  };
+  return { plan, annuleer };
+}
+
+/**
+ * Na Enter/Escape in een naamveld de toetsenbordfocus teruggeven aan de
+ * boom (het dichtstbijzijnde focusbare blok), zodat een volgende F2 landt.
+ * Niet bij blur: dan klikte de gebruiker bewust ergens anders.
+ */
+function focusTerug(e) {
+  const blok = e.currentTarget.closest("[tabindex]");
+  if (blok) setTimeout(() => blok.focus(), 0);
+}
+
+/** Reageert op een F2-hernoemverzoek uit de sidebar (store.hernoemDoel). */
+function useHernoemDoel(sleutel, start) {
+  const hernoemDoel = useModellerenStore((s) => s.hernoemDoel);
+  useEffect(() => {
+    if (hernoemDoel && hernoemDoel === sleutel) {
+      start();
+      useModellerenStore.getState().vraagHernoem(null);
+    }
+  }, [hernoemDoel, sleutel]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 function DiagramRegel({ profiel, diagram, inMap = false }) {
   const actieveTab = useModellerenStore((s) => s.actieveTab);
   const openTab = useModellerenStore((s) => s.openTab);
@@ -486,10 +538,21 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
     meeTeNemen(id).forEach((k) => {
       if (mapId || !isElementKey(k)) plaatsDiagram(k, mapId);
     });
+  // Inline hernoemen: F2 (via hernoemDoel), klik op de al geselecteerde
+  // regel, of het contextmenu — geen prompt-popup meer.
+  const [bewerk, setBewerk] = React.useState(false);
+  useHernoemDoel("diag:" + id, () => setBewerk(true));
+  const klikHernoem = useKlikHernoem(() => setBewerk(true));
+  const commitNaam = (naam) => {
+    setBewerk(false);
+    const schoon = (naam || "").trim();
+    if (schoon && schoon !== diagram.naam) profiel.useStore.getState().renameDiagram(diagram.id, schoon);
+  };
   const ctx = (e) =>
     openCtxMenu(e, [
       { label: "Openen", onClick: () => openTab(profiel.id, diagram.id) },
       { label: "Eigenschappen", onClick: () => selecteerDiagram(profiel.id, diagram.id) },
+      { label: "Hernoemen", onClick: () => setBewerk(true) },
       {
         label: "Verplaats naar",
         items: verplaatsNaarItems(verplaats, {
@@ -497,22 +560,44 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
         }),
       },
       ...(inMap ? [{ sep: true }, { label: "Uit de map halen", onClick: () => verplaats(null) }] : []),
-      // Klassieke editors met documentenbeheer (BPMN/DMN): document weggooien.
-      ...(profiel.documentenBeheer
-        ? [
-            { sep: true },
-            {
-              label: "Verwijderen…",
-              onClick: () => {
-                if (window.confirm(`"${diagram.naam}" verwijderen? De inhoud van dit document gaat verloren.`)) {
-                  profiel.useStore.getState().verwijderDiagram(diagram.id);
-                  plaatsDiagram(id, null);
-                }
-              },
-            },
-          ]
-        : []),
+      // Diagram weggooien — voor elk profiel (gemeld 2026-10-07: in de
+      // Modelleren-host was er buiten documentenbeheer-editors geen weg).
+      // Elementen blijven in het model; bij documentenbeheer (BPMN/DMN) gaat
+      // de documentinhoud mee. Open tab sluit, boomplaatsing vervalt.
+      { sep: true },
+      {
+        label: "Verwijderen…",
+        onClick: () => {
+          const vraag = profiel.documentenBeheer
+            ? `"${diagram.naam}" verwijderen? De inhoud van dit document gaat verloren.`
+            : `Diagram "${diagram.naam}" verwijderen? (Elementen blijven in het model.)`;
+          if (!window.confirm(vraag)) return;
+          const st = profiel.useStore.getState();
+          if (profiel.documentenBeheer) st.verwijderDiagram(diagram.id);
+          else st.deleteDiagram(diagram.id);
+          useModellerenStore.getState().sluitTab(id);
+          plaatsDiagram(id, null);
+        },
+      },
     ]);
+  if (bewerk) {
+    return (
+      <input
+        className="studio-project__mapnaam-invoer"
+        style={{ display: "block", width: "100%", boxSizing: "border-box", font: "inherit" }}
+        defaultValue={diagram.naam}
+        autoFocus
+        onFocus={(e) => e.target.select()}
+        onBlur={(e) => commitNaam(e.target.value)}
+        onKeyDown={(e) => {
+          e.stopPropagation();
+          if (e.key === "Enter" || e.key === "Escape") focusTerug(e);
+          if (e.key === "Enter") commitNaam(e.target.value);
+          else if (e.key === "Escape") setBewerk(false);
+        }}
+      />
+    );
+  }
   return (
     <button
       type="button"
@@ -524,14 +609,18 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
       }
       onClick={(e) => {
         if (e.ctrlKey || e.metaKey) toggleMulti(id);
+        else if (isSelectie && !inMulti) klikHernoem.plan();
         else {
           wisMulti();
           selecteerDiagram(profiel.id, diagram.id);
         }
       }}
-      onDoubleClick={() => openTab(profiel.id, diagram.id)}
+      onDoubleClick={() => {
+        klikHernoem.annuleer();
+        openTab(profiel.id, diagram.id);
+      }}
       onContextMenu={ctx}
-      title={`${diagram.naam} — ${profiel.label} (klik = eigenschappen, dubbelklik = openen, Ctrl+klik = meervoudig)`}
+      title={`${diagram.naam} — ${profiel.label} (klik = eigenschappen, nog eens klikken of F2 = hernoemen, dubbelklik = openen, Ctrl+klik = meervoudig)`}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData(PLAATSING_MIME, meeTeNemen(id).join("\n"));
@@ -867,7 +956,7 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
     setBewerk(false);
     const schoon = (naam || "").trim();
     if (schoon && schoon !== element.naam) {
-      profiel.useStore.getState().updateElement(elementId, { naam: schoon });
+      hernoemElement(profiel.useStore, profiel.descriptor, elementId, schoon);
     }
   };
 
@@ -929,6 +1018,8 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
             onFocus={(e) => e.target.select()}
             onBlur={(e) => commitNaam(e.target.value)}
             onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === "Enter" || e.key === "Escape") focusTerug(e);
               if (e.key === "Enter") commitNaam(e.target.value);
               else if (e.key === "Escape") setBewerk(false);
             }}
@@ -960,7 +1051,7 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
             <span className="studio-project__regel-profiel" style={{ color: stijl.kleur || "inherit" }}>
               {et ? <TypeIcoon elementType={et} maat={13} /> : <ProfielIcoon profiel={profiel} />}
             </span>
-            {element.naam || elementId}
+            {weergaveNaam(element, et)}
           </button>
         )}
       </div>
@@ -1022,6 +1113,8 @@ function Map_({ map, diepte }) {
   const selecteerMap = useModellerenStore((s) => s.selecteerMap);
   const mapSelectie = useModellerenStore((s) => s.mapSelectie);
   const [bewerk, setBewerk] = React.useState(false);
+  useHernoemDoel("map:" + map.id, () => setBewerk(true));
+  const klikHernoem = useKlikHernoem(() => setBewerk(true));
   const drop = useDrop({
     // Boomregel(s): één sleutel, of de hele multiselectie (regel per regel).
     [PLAATSING_MIME]: (data) => data.split("\n").forEach((key) => plaatsDiagram(key, map.id)),
@@ -1115,6 +1208,8 @@ function Map_({ map, diepte }) {
             onFocus={(e) => e.target.select()}
             onBlur={(e) => commitNaam(e.target.value)}
             onKeyDown={(e) => {
+              e.stopPropagation();
+              if (e.key === "Enter" || e.key === "Escape") focusTerug(e);
               if (e.key === "Enter") commitNaam(e.target.value);
               else if (e.key === "Escape") setBewerk(false);
             }}
@@ -1122,9 +1217,15 @@ function Map_({ map, diepte }) {
         ) : (
           <span
             className="studio-project__mapnaam"
-            onClick={() => selecteerMap(map.id)}
-            onDoubleClick={() => setBewerk(true)}
-            title="Klik = eigenschappen; dubbelklik of ✎ = hernoemen; sleep = verplaatsen; rechtsklik = menu"
+            onClick={() => {
+              if (mapSelectie === map.id) klikHernoem.plan();
+              else selecteerMap(map.id);
+            }}
+            onDoubleClick={() => {
+              klikHernoem.annuleer();
+              setBewerk(true);
+            }}
+            title="Klik = eigenschappen; nog eens klikken, F2, dubbelklik of ✎ = hernoemen; sleep = verplaatsen; rechtsklik = menu"
           >
             {map.naam}
           </span>
@@ -1291,9 +1392,24 @@ function Sidebar() {
   const structuurUndo = useModellerenStore((s) => s.structuurUndo);
   const structuurRedo = useModellerenStore((s) => s.structuurRedo);
   const onKey = (e) => {
-    if (!(e.ctrlKey || e.metaKey)) return;
     const doel = e.target;
     if (doel && (doel.tagName === "INPUT" || doel.tagName === "TEXTAREA" || doel.isContentEditable)) return;
+    // F2 = hernoem de geselecteerde map of het geselecteerde diagram (de
+    // regel zelf toont het invoerveld, zie useHernoemDoel).
+    if (e.key === "F2") {
+      const s = useModellerenStore.getState();
+      const sleutel = s.mapSelectie
+        ? "map:" + s.mapSelectie
+        : s.diagramSelectie
+          ? "diag:" + tabId(s.diagramSelectie.profielId, s.diagramSelectie.diagramId)
+          : null;
+      if (!sleutel) return;
+      e.preventDefault();
+      e.stopPropagation();
+      s.vraagHernoem(sleutel);
+      return;
+    }
+    if (!(e.ctrlKey || e.metaKey)) return;
     const k = e.key.toLowerCase();
     if (k === "z" && !e.shiftKey) {
       e.preventDefault();

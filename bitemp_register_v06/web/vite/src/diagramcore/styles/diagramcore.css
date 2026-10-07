@@ -57,7 +57,9 @@
 /* === Nodes === */
 
 .dc-node {
-  min-width: 180px;
+  /* Minimumbreedte per elementtype (ElementType.minBreedte → --dc-node-min
+     op de wrapper, zie DiagramCanvas); default de klassieke box-minimum. */
+  min-width: var(--dc-node-min, 180px);
   width: 100%;
   height: 100%;
   /* Breedtegrens voor niet-geresizede nodes. Een React Flow-node zonder
@@ -384,6 +386,64 @@
   opacity: 1;
 }
 
+/* Vlak-handle (verbind-modus, zie canvas/inlineNaam.js): een onzichtbare
+   source-handle ter grootte van de hele node. Buiten de verbind-modus vangt
+   hij niets (de node sleept en selecteert als altijd); met Shift ingedrukt
+   (.dc-verbindmodus) of zolang er een lijn gesleept wordt (.dc-verbindt) is
+   de hele vorm grijp- en losplek. De aanhechtzijde wordt dan automatisch
+   gekozen (besteZijde). `!important` wint van React Flow's eigen
+   .connectionindicator-regel. */
+.dc-canvas .react-flow__handle.dc-handle-vlak {
+  pointer-events: none !important;
+  opacity: 0 !important;
+  cursor: crosshair;
+}
+.dc-canvas.dc-verbindmodus .react-flow__handle.dc-handle-vlak,
+.dc-canvas.dc-verbindt .react-flow__handle.dc-handle-vlak {
+  pointer-events: all !important;
+}
+.dc-canvas.dc-verbindmodus .react-flow__node {
+  cursor: crosshair;
+}
+
+/* Inline-naamveld (F2 / dubbelklik op een node, zie ElementNode.jsx). Een
+   overlay in het referentiekader van de node-wrapper; de plaats volgt waar
+   de shape de naam zet. */
+.dc-canvas .dc-naam-editor {
+  position: absolute;
+  left: 8px;
+  width: calc(100% - 16px);
+  z-index: 20;
+  box-sizing: border-box;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--s-fg, #0f172a);
+  background: var(--s-bg, #ffffff);
+  border: 1.5px solid var(--dc-selectie, #2563eb);
+  border-radius: 4px;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+}
+.dc-canvas .dc-naam-editor.is-midden {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.dc-canvas .dc-naam-editor.is-boven {
+  top: 3px;
+  text-align: left;
+}
+.dc-canvas .dc-naam-editor.is-buiten {
+  top: 100%;
+  left: 50%;
+  width: 132px;
+  margin-top: 3px;
+  transform: translateX(-50%);
+  font-size: 11px;
+}
+
 /* Punt-vormige nodes (begin/eind, en straks junction/keuze): een mini-vorm
    van ~22px. De acht standaard-handles (10px op elke rand) overwoekeren zo'n
    bolletje volledig — de vorm zelf verdwijnt en de handles steken ver buiten
@@ -414,8 +474,29 @@
 /* Compacte taakbalkknop (Beeld → Compacte taakbalken): alleen het icoon op
    een chip in de elementkleur; de tekst zit in de tooltip. De donkere
    icoonkleur blijft leesbaar omdat elementkleuren pastels zijn. */
+/* Compacte balk: élke knop dezelfde maat (30×30) — elementchips (24px),
+   connectorpijlen én de uitlijn-iconen (15px) vielen anders ongelijk uit
+   (gemeld 2026-10-07, tweede keer). */
+.dc-taakbalk.is-compact .dc-taakbalk-knop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  min-width: 30px;
+  padding: 0 3px;
+  box-sizing: border-box;
+}
 .dc-taakbalk-icoonlabel.is-compact {
-  padding: 3px 5px;
+  /* Vaste maat: element- en connectoriconen verschillen in hoogte (18px
+     vormicoon vs. een lage pijl), waardoor de compacte balken ongelijk
+     uitvielen (gemeld 2026-10-07). */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  min-width: 24px;
+  box-sizing: border-box;
+  padding: 0 4px;
   border-radius: 5px;
   color: #334155;
   line-height: 0;

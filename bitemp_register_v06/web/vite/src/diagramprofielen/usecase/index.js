@@ -76,6 +76,29 @@ const elementTypes = [
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
+  {
+    // Informeel kader (zoals in puur-uml): gestippeld, achter de rest, geen
+    // lidmaatschap — om het even wat mag er visueel in liggen (actoren,
+    // use cases, een systeemkader). Het systeemkader blijft de formele
+    // grens met "bevat".
+    id: "boundary",
+    label: "Kader",
+    // Informeel: geen lidmaatschap, maar wat erin ligt sleept wel mee.
+    sleeptInhoudMee: true,
+    // Een kader mag klein (één element omlijsten).
+    minBreedte: 140,
+    minHoogte: 90,
+    omschrijving: "Informeel kader: groepeert visueel, zonder betekenis in het model.",
+    kort: "KADER",
+    shape: "boundary",
+    icoon: "kader",
+    achtergrond: true,
+    handleStijl: "onzichtbaar",
+    properties: [
+      { key: "kleur", label: "rand", datatype: "colour" },
+      { key: "achtergrondKleur", label: "achtergrond", datatype: "colour" },
+    ],
+  },
 
   // ── Connectoren ────────────────────────────────────────────────────────
   {

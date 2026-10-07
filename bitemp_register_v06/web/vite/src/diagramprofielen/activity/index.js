@@ -60,6 +60,10 @@ const elementTypes = [
     icoon: "gedrag-toestand",
     shape: "rounded",
     kleur: "#dbeafe",
+    // Een actie mag smal: korte stappen naast elkaar (default-minimum 180
+    // was voor klasse-achtige boxen bedoeld).
+    minBreedte: 100,
+    minHoogte: 40,
     properties: [KLEUR_VELD],
   },
   {
