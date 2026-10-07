@@ -12,6 +12,7 @@
  */
 import { registreerShape } from "./shapeRegistry.js";
 import { TypeIcoon } from "./typeIconen.jsx";
+import { maakVeldSleutel } from "../canvas/inlineNaam.js";
 
 /**
  * Typering-regel in de node-kop (vormgevingssessie 2026-07-07, MIM-besluit):
@@ -42,7 +43,10 @@ const isDashed = (element, elementType) =>
   (element.data?.randStijl || elementType.randStijl) === "dashed";
 
 /** Eén veld-regel, gerenderd volgens de FieldTypeViewer (fieldType.viewer). */
-function VeldRegel({ veld, fieldType, fieldTypesById, compartmentTypesById }) {
+function VeldRegel({ veld, fieldType, fieldTypesById, compartmentTypesById, veldSleutel = null }) {
+  // `data-dc-veld` = sleutel voor inline bewerken van dit veld (klik op de
+  // regel in de canvas, zie ElementNode.jsx); alleen eigen velden dragen hem.
+  const sleutel = veldSleutel || undefined;
   const viewer = fieldType?.viewer || fieldType?.render || "naam-type";
   const d = veld.data || {};
 
@@ -65,6 +69,7 @@ function VeldRegel({ veld, fieldType, fieldTypesById, compartmentTypesById }) {
         <CompartimentLijst
           element={{ compartimenten: d.compartimenten || [] }}
           elementType={null}
+          veldSleutels={false}
           fieldTypesById={fieldTypesById}
           compartmentTypesById={compartmentTypesById}
         />
@@ -72,14 +77,14 @@ function VeldRegel({ veld, fieldType, fieldTypesById, compartmentTypesById }) {
     );
   }
   if (viewer === "waarde") {
-    return <div className="dc-veld is-waarde">{veld.naam}</div>;
+    return <div className="dc-veld is-waarde" data-dc-veld={sleutel}>{veld.naam}</div>;
   }
   if (viewer === "tekst") {
-    return <div className="dc-veld is-tekst">{veld.naam}</div>;
+    return <div className="dc-veld is-tekst" data-dc-veld={sleutel}>{veld.naam}</div>;
   }
   // "naam-type": naam links (vet indien verplicht), typeLabel rechts
   return (
-    <div className={"dc-veld" + (d.cursief ? " is-cursief" : "")}>
+    <div className={"dc-veld" + (d.cursief ? " is-cursief" : "")} data-dc-veld={sleutel}>
       <span className="dc-veld-naam">
         {d.afgeleid && <span className="dc-veld-afgeleid">/</span>}
         {d.verplicht ? <strong>{veld.naam}</strong> : <span>{veld.naam}</span>}
@@ -90,7 +95,7 @@ function VeldRegel({ veld, fieldType, fieldTypesById, compartmentTypesById }) {
 }
 
 /** Compartimenten-stapel: divider + (optioneel label) + veld-regels. */
-export function CompartimentLijst({ element, elementType, fieldTypesById, compartmentTypesById }) {
+export function CompartimentLijst({ element, elementType, fieldTypesById, compartmentTypesById, veldSleutels = true }) {
   const compartimenten = element.compartimenten || [];
   // De inspector vult compartimenten in aanmaakvolgorde (append per
   // compartmentType); de node hoort ze in de descriptor-volgorde van het
@@ -116,6 +121,9 @@ export function CompartimentLijst({ element, elementType, fieldTypesById, compar
                   <VeldRegel
                     key={j}
                     veld={v}
+                    // Extra compartimenten (overgeërfd, opname) zijn geen eigen
+                    // velden: niet inline te bewerken.
+                    veldSleutel={veldSleutels && c.compartmentType && !c.extra ? maakVeldSleutel(c.compartmentType, j) : null}
                     fieldType={fieldTypesById?.[v.fieldType]}
                     fieldTypesById={fieldTypesById}
                     compartmentTypesById={compartmentTypesById}
@@ -357,8 +365,10 @@ function BoundaryShape({ element, selected, children }) {
     <div
       className="dc-node"
       style={{
-        minWidth: 240,
-        minHeight: 160,
+        // Minima volgen het elementtype (minBreedte/minHoogte → --dc-node-min*),
+        // zodat de resizer en de vorm dezelfde grens hanteren.
+        minWidth: "var(--dc-node-min, 240px)",
+        minHeight: "var(--dc-node-min-h, 160px)",
         border: `2px dashed ${rand}`,
         borderRadius: 10,
         background: achtergrond,
@@ -375,8 +385,11 @@ function BoundaryShape({ element, selected, children }) {
           fontWeight: 700,
           letterSpacing: "0.03em",
           color: rand,
-          pointerEvents: "none",
+          // Klikbaar: klik op de naam = inline hernoemen (ElementNode/NaamEditor).
+          pointerEvents: "auto",
+          cursor: "text",
         }}
+        data-dc-naam=""
       >
         {element.naam || "(kader)"}
       </div>
@@ -481,6 +494,7 @@ function BolShape({ element, elementType, selected, children }) {
           overflow: "hidden",
           pointerEvents: "none",
         }}
+        data-dc-naam=""
       >
         {element.naam || "(naamloos)"}
       </div>
@@ -559,6 +573,7 @@ function PackageShape({ element, elementType, selected, children }) {
           zIndex: 1,
           marginBottom: -2,
         }}
+        data-dc-naam=""
       >
         {element.naam || "(naamloos)"}
       </div>

@@ -117,6 +117,13 @@ export function createDiagramStore({ persistKey } = {}) {
 
     clear: () => set({ ...leeg }),
 
+    /**
+     * Vervang de hele elementen-map in één stap (bv. hernoemen mét
+     * doorgetrokken verwijzingen, zie model/hernoemen.js). Via `set`, zodat
+     * de undo-historie (temporal) en de persist-laag hem gewoon zien.
+     */
+    zetElementen: (elements) => set({ elements, isDirty: true }),
+
     /** @param {string} id */
     setActiefDiagram: (id) => set({ actiefDiagramId: id }),
 
@@ -179,6 +186,32 @@ export function createDiagramStore({ persistKey } = {}) {
             },
           },
         };
+      }),
+
+    /**
+     * Meerdere elementen in één stap bijwerken (zelfde patch-vorm als
+     * updateElement): één undo-stap i.p.v. één per element — bv. "kinderen
+     * in boomstijl" op acht connectoren gaf acht Ctrl+Z's (gemeld 2026-10-07).
+     * @param {Record<string, Object>} patches  element-id → patch
+     */
+    updateElementen: (patches) =>
+      set((state) => {
+        let elements = state.elements;
+        for (const [id, patch] of Object.entries(patches || {})) {
+          const el = elements[id];
+          if (!el || !patch) continue;
+          const { data: dataPatch, compartimenten, ...top } = patch;
+          elements = {
+            ...elements,
+            [id]: {
+              ...el,
+              ...top,
+              ...(compartimenten !== undefined ? { compartimenten } : {}),
+              data: dataPatch !== undefined ? { ...el.data, ...dataPatch } : el.data,
+            },
+          };
+        }
+        return elements === state.elements ? state : { isDirty: true, elements };
       }),
 
     /**
@@ -409,7 +442,8 @@ export function createDiagramStore({ persistKey } = {}) {
       }),
 
     /** Grootte van een element op één diagram (metamodel: Position.elementSize). */
-    updateNodeSize: (diagramId, voorkomenSleutel, size) =>
+    /** Maat (en, bij trekken aan de linker-/bovenrand, de positie) van een voorkomen — één stap. */
+    updateNodeSize: (diagramId, voorkomenSleutel, size, position = null) =>
       set((state) => {
         const d = state.diagrams[diagramId];
         if (!d) return state;
@@ -422,7 +456,9 @@ export function createDiagramStore({ persistKey } = {}) {
             ...state.diagrams,
             [diagramId]: {
               ...d,
-              nodes: d.nodes.map((n) => (voorkomenId(n) === sleutel ? { ...n, size } : n)),
+              nodes: d.nodes.map((n) =>
+                voorkomenId(n) === sleutel ? { ...n, size, ...(position ? { position } : {}) } : n
+              ),
             },
           },
         };

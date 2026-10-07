@@ -8,6 +8,23 @@
 
 ---
 
+## Canvas-bediening: studio 0.13.0 (2026-10-07)
+
+Alleen frontend. Inline hernoemen op canvas, in projectboom en lijsten (ook velden en
+relatienamen), verbind-modus vanaf het hele vlak (Shift), kaders die hun inhoud meeslepen, taakbalken
+automatisch op een rij bovenin, en een reeks fixes uit gebruik (resizen vanaf links/boven,
+datatype-hernoeming trekt door naar attribuuttypen, diagram verwijderen in de projectboom, slepen
+uit boom/lijst naar het diagram). Zie [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) en
+`docs/STUDIO.md` (canvas-bediening, 2026-10-07).
+
+### Uitrol
+
+- **Eén image**: `bitemp-viz-frontend:0.13.0`; api blijft 0.10.0, render-svc 0.1.0.
+- Geen databasegevolg, geen migratie. Taakbalk-voorkeuren in localStorage blijven geldig; wie zijn
+  balken al had verplaatst zet ze met *Beeld → Taakbalken op een rij bovenin* terug.
+
+---
+
 ## Gebruikersbeheer: api 0.10.0 / studio 0.12.0 (2026-10-06)
 
 Gebruikers worden niet meer met SQL in een platte tabel gezet: een gebruiker is nu een

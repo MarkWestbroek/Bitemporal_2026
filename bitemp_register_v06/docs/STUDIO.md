@@ -696,6 +696,126 @@ fase 2 een **bewerkbare sandbox**:
   segment duwen/trekken. Werkt op de directe (kale) gedaante; opslag in
   `data.knikken` op de connector (`ConnectorEdge.jsx`). Eindpunten lostrekken
   en elders aanhechten kan nog niet — backlog §31.5/§31.6.
+- **Inline hernoemen** (2026-10-07): **F2** op de geselecteerde node, of
+  **dubbelklik** op een node zonder gedragsverwijzing, opent een naamveld óp
+  de vorm (bovenaan bij compartiment-vormen, gecentreerd bij de rest, onder
+  de vorm bij een buitenlabel). Enter of focus verliezen bevestigt, Escape
+  annuleert. Dubbelklik op een node mét gevulde gedragsverwijzing opent nog
+  steeds het gekoppelde diagram. Het veld ligt óp het naam-element van de
+  shape (`data-dc-naam` of `.dc-naam`: onder de strekfiguur van een actor,
+  in de kop van een klasse, midden in een ellips) en neemt maat en letter
+  daarvan over; zonder zo'n element valt het terug op midden/boven/buiten.
+  Motor: `InlineNaamContext` in `canvas/inlineNaam.js`, het veld in
+  `ElementNode.jsx`, de activiteit koppelt `onHernoem` aan `updateElement`.
+  **Ook in de lijsten** (projectboom: mappen en diagrammen; elementenlijst
+  en diagramlijst van de activiteit) hernoem je inline, zoals in de oude
+  IDE: **F2** op de geselecteerde regel, **nog eens klikken** op een al
+  geselecteerde regel (Verkenner-gedrag; in de projectboom met 320 ms
+  uitstel zodat dubbelklik = openen blijft), dubbelklik/✎ waar dat al was,
+  of het contextmenu. De `window.prompt`-popup "Nieuwe naam" is weg. Na
+  Enter/Escape keert de focus terug naar de lijst, zodat een volgende F2
+  meteen landt. Code: `hernoemDoel`/`vraagHernoem` + `useKlikHernoem` in
+  `modellerenActivity.jsx`, `NaamInvoer` + `hernoemId` in
+  `maakDiagramActiviteit.jsx`.
+  **Klik op de tekst** (vervolg, zelfde dag): op het canvas start een
+  enkele klik op de naam van een node (`data-dc-naam`/`.dc-naam`) of op een
+  veldregel (`data-dc-veld`, bv. een attribuut van een klasse) meteen het
+  tekstveld — niet na een sleep (pointer verplaatst > 4 px), en de handles
+  liggen in de DOM bovenop de tekst en winnen dus. Een veldsleutel is
+  `<compartmentType>:<index>`; alleen eigen velden (niet overgeërfd/opname,
+  gemarkeerd met `extra: true` door `verrijk()`) zijn zo te bewerken.
+- **Hernoemen trekt naam-verwijzingen door** (2026-10-07): velden verwijzen
+  bij **naam** naar andere elementen (PropertyType met `referenceTypes`, bv.
+  het attribuuttype `typeLabel` in canoniek-uml). Een hernoeming van zo'n
+  element — canvas, lijst, projectboom of inspector — vervangt in één
+  store-stap (één Ctrl+Z) ook alle verwijzende veldwaarden, met behoud van
+  een `{…}`-suffix. Kern: `elementenNaHernoeming()` in
+  `diagramcore/model/hernoemen.js` (getest), store-actie `zetElementen`.
+- **Naamloze kleine vormen** (begin/eind, gateway: `naamLabel` "buiten" of
+  "geen") heten in lijsten naar hun type, "(Begin)", niet naar hun id —
+  `weergaveNaam()` in `diagramcore/model/weergaveNaam.js`.
+- **Diagram verwijderen** kan nu voor elk profiel via het contextmenu van de
+  diagramregel in de projectboom (elementen blijven in het model; bij
+  documentenbeheer-editors gaat de inhoud mee); de open tab sluit.
+- **Slepen naar het diagram**: een element uit de elementenlijst of de
+  projectboom op het canvas slepen plaatst het; op een **container**
+  (systeemkader, package, pool) geplaatst wordt het meteen lid. De
+  boomrijen van de elementenlijst gaven de element-referentie niet mee
+  (bug, 2026-10-07) — nu wel.
+- **Eén undo-stap** voor "Kinderen in boomstijl" (store-actie
+  `updateElementen`, één `set` voor alle connectoren); **taakbalken**
+  starten gestapeld bovenin links i.p.v. verspreid over het canvas, en de
+  compacte chips hebben een vaste maat (24 px) zodat Maken en Verbinding
+  even hoog zijn.
+- **Relatienaam inline** (2026-10-07): klik op het naamlabel van een lijn, of
+  **F2** op de geselecteerde lijn (ook zonder label: het veld komt op het
+  midden), bewerkt de connector-naam — zelfde `NaamEditor.jsx` als de nodes,
+  via `InlineNaamContext.start()`; de naam-deel van het label draagt
+  `veld: "naam"` (materialiseerConnectoren) en `data-dc-naam`. Rolnamen en
+  kardinaliteiten nog niet.
+- **Selectie van een lijn** maakt hem niet meer dikker (de SVG-markers met
+  `markerUnits="strokeWidth"` groeiden mee: de pijlpunt werd bijna dubbel zo
+  groot), maar kleurt hem en legt een zachte gloed (brede, transparante
+  path) eronder.
+- **Minimumbreedte per elementtype**: `ElementType.minBreedte` stuurt naast
+  de resizer nu ook de CSS-minimumbreedte van de shape (`--dc-node-min` op
+  de node-wrapper, `.dc-node { min-width: var(--dc-node-min, 180px) }`); een
+  activity-actie (100 px) kan daardoor smal.
+- **Het veldeditor-veld** blijft binnen de node (links uitgelijnd op links
+  uitgelijnde tekst, gecentreerd op gecentreerde tekst; een uitstekende
+  actornaam mag wél buiten de figuur).
+- **Taakbalken op een rij bovenin** (2026-10-07): balken met `auto: true`
+  in hun voorkeur (de standaard, en balken zonder voorkeur) worden na elke
+  render op gemeten breedte links→rechts op één rij bovenin gelegd; past
+  de rij niet in het canvas, dan loopt hij door op een tweede rij. Zelf
+  slepen zet `auto` uit (de positie wordt dan bewaard); **Beeld →
+  Taakbalken op een rij bovenin** zet alles terug. De balkbreedte wordt
+  alleen nog bewaard als je zélf aan de hoekgreep trekt — de
+  ResizeObserver vuurde ook bij inhoudswijzigingen (compacte stand) en
+  legde dan een toevallige breedte vast. **Compacte balken**: elke knop
+  30×30 (`.dc-taakbalk.is-compact .dc-taakbalk-knop`), dus Maken,
+  Verbinding en Uitlijnen even hoog.
+- **Use case-profiel: informeel kader** (`boundary`, zoals in puur-uml):
+  gestippeld, achter de rest, zonder lidmaatschap — alles mag er visueel in
+  liggen. Het systeemkader blijft de formele grens met "bevat" (actoren
+  horen daar per UML buiten).
+  **Een kader sleept zijn inhoud mee** (`ElementType.sleeptInhoudMee`, M3):
+  bij dragstart bepaalt de canvas welke losse nodes met hun middelpunt in
+  het kader liggen, die schuiven tijdens de sleep visueel mee en gaan bij
+  loslaten in dezelfde store-stap mee (ook hun geneste leden) — geen
+  modelrelatie, alleen het gebaar. Het kader is ook inline te hernoemen
+  (klik op het label, F2); het label had `pointer-events: none`.
+- **Resizen** (2026-10-07, mp4 van Mark): trekken aan de linker-/bovenrand
+  verschuift de node; die positie wordt nu samen met de maat bewaard
+  (`updateNodeSize(…, size, position)`, één stap) — eerder sprong de node
+  na de rebuild terug naar zijn oude plek met de nieuwe maat. Ook tíjdens
+  het trekken bleef de positie hangen (resizen hermeet de node → rebuild →
+  store-positie), zodat de bovenrand omlaag trekken de onderrand omhoog
+  haalde: de rebuild laat nu bij `resizing` (net als bij `dragging`) de
+  live positie winnen. En de
+  resizer gaat niet meer onder het minimum van de shape zelf
+  (`ShapeResizer` leest de computed min-width/height van de shape-root):
+  het blauwe resize-kader en de vorm vallen nu altijd samen; eerder kromp
+  het kader terwijl de gestippelde vorm rechts/onder bleef uitsteken. Het
+  kader (`boundary`) heeft `minBreedte: 140, minHoogte: 90`; de shape leest
+  die via `--dc-node-min`/`--dc-node-min-h`.
+- **Verbind-modus — lijnen vanaf en naar het hele vlak** (2026-10-07).
+  Gemeld door Mark: vanaf een use case (ellips) greep een lijn slecht — de
+  vier stippen liggen op de omsluitende rechthoek, bij een ellips raakt
+  alleen links/rechts de rand. Nu draagt elke gewone node een onzichtbare
+  **vlak-handle** ter grootte van de hele vorm (`source-vlak`). Met **Shift**
+  ingedrukt begint een sleep vanaf élke plek op de vorm een lijn (cursor
+  wordt een kruis); zolang er een lijn gesleept wordt is ook zonder Shift
+  élke plek op een doelvorm losplek. De aanhechtzijde wordt dan automatisch
+  gekozen (`besteZijde`); de vier stippen blijven werken voor wie een zijde
+  wil kiezen. Containers (pool, lane, package, systeemkader) hebben geen
+  vlak-handle: loslaten op hun vlak blijft de magic link "nieuw element
+  hierbinnen". Daarnaast staat React Flow nu in `connectionMode="loose"`
+  (een lijn mag op een source-stip eindigen; `handleVoorOpslag` normaliseert
+  de soort) met `connectionRadius` 24 (loslaten vlak náást een stip telt).
+  Let op: React Flow's Shift = kader-selectie slikt pointerdowns in; de
+  handles dragen daarom de klasse `nokey`, anders start Shift+slepen vanaf
+  een handle nooit een lijn.
 - **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
   Escape is nodig binnen een container (lane, package, stage): daar is geen
   leeg vlak — elke klik selecteert de container — en ook een kader-selectie

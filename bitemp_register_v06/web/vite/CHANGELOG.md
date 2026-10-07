@@ -7,13 +7,56 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+
+## [studio/v0.13.0] — 2026-10-07
+Canvas-bediening in Omnium Studio: inline hernoemen (ook van velden en relatienamen), een
+verbind-modus vanaf het hele vlak, kaders die hun inhoud meeslepen, en een reeks kleine ergernissen
+uit gebruik. Alleen frontend; api blijft 0.10.0, render-svc 0.1.0. Details per onderdeel in
+[`docs/STUDIO.md`](../docs/STUDIO.md) (canvas-bediening, 2026-10-07) en BACKLOG §31.11.
+
 ### Toegevoegd
+- **Inline hernoemen** (07-10): op het canvas met **F2**, dubbelklik, of een klik op de naam, op een
+  veldregel (attribuut van een klasse) of op een relatienaam — het veld ligt óp de tekst en neemt
+  maat en letter over (`NaamEditor.jsx`, `InlineNaamContext`). In de projectboom en de
+  elementen-/diagramlijst met F2 of een klik op de al geselecteerde regel; de `window.prompt`-popup
+  is weg. Hernoemen trekt naam-verwijzingen door (attribuuttype `typeLabel`; `model/hernoemen.js`,
+  één undo-stap).
+- **Verbind-modus** (07-10): met **Shift** begint een sleep vanaf élke plek op een vorm een lijn
+  (vlak-handle), en tijdens het slepen is élke plek op een doelvorm losplek; React Flow in
+  `loose`-modus met vangstraal 24. Gemeld: vanaf een use case (ellips) greep een lijn slechts op één
+  punt.
+- **Informeel kader** in het use case-profiel (zoals puur-uml), en kaders slepen hun inhoud mee
+  (`ElementType.sleeptInhoudMee`, M3) — zonder modelrelatie; het systeemkader blijft de formele grens.
+- **Beeld → Taakbalken op een rij bovenin**: balken liggen standaard automatisch op één rij bovenin
+  (doorlopend naar een tweede rij als het canvas te smal is); zelf slepen zet dat per balk uit.
+- **Diagram verwijderen** via het contextmenu van de diagramregel in de projectboom, voor elk profiel.
+- **Slepen uit boom of lijst naar het diagram**, ook óp een container (systeemkader, package, pool):
+  het element wordt dan meteen lid.
 - **Transformatie "Use case-model → Mermaid flowchart"** (06-10): de terugweg van de import.
   Schrijft de use case-diagrammen van een map als `.mmd`, één flowchart per diagram, met
   toelichtingen als notities. Roundtrip getest: import → export → import geeft hetzelfde model en
   een tweede export dezelfde tekst. Nieuw in `src/transformatie/`: `modelNaarGraaf.js` (graafbeeld
   van een model als bron voor een regelset) en `mermaidSchrijver.js` (de Mermaid-schrijver). Zie
   [`docs/TRANSFORMATIES.md`](../docs/TRANSFORMATIES.md) §6.
+
+### Gewijzigd
+- Naamloze kleine vormen (begin/eind, gateway) heten in lijsten naar hun type, "(Begin)", niet naar
+  hun id (`weergaveNaam.js`).
+- Een geselecteerde lijn wordt niet meer dikker (de pijlpunt schaalde mee) maar gekleurd met een
+  zachte gloed eronder.
+- `ElementType.minBreedte`/`minHoogte` sturen ook de CSS-minima van de shape (activity-actie kan
+  nu 100 px smal); de resizer gaat nooit onder het minimum van de shape zelf (`ShapeResizer`).
+- Compacte taakbalkknoppen zijn 30×30, zodat Maken, Verbinding en Uitlijnen even hoog zijn; de
+  balkbreedte wordt alleen nog bewaard als je zelf aan de hoekgreep trekt.
+- "Kinderen in boomstijl" is één undo-stap (store-actie `updateElementen`).
+
+### Opgelost
+- Resizen vanaf de linker-/bovenrand: de positie wordt samen met de maat bewaard en blijft tijdens
+  het trekken live (eerder haalde de bovenrand omlaag trekken de onderrand omhoog en sprong de node
+  daarna terug).
+- Hernoemen van een datatype ververste het attribuuttype in de klasse niet.
+- Boomrijen van de elementenlijst gaven bij slepen de element-referentie niet mee, zodat een drop op
+  het diagram niets deed.
 
 ## [studio/v0.12.0] — 2026-10-06
 Gebruikersbeheer in de Studio: accounts, rollen en wachtwoorden als activiteit, en uitloggen in de

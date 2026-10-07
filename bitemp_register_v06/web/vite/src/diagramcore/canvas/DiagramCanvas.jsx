@@ -11,6 +11,9 @@
  *                        "Verbinding"); null → automatisch afleiden uit de regels
  *   onSelectElement?   — (element|null) => void
  *   onNodePositie?     — (elementId, {x,y}) => void          (na slepen)
+ *   onNodeSize?        — (voorkomenId, {width,height}, positie|null) => void — na
+ *                        resizen; `positie` (absoluut) als de node daarbij
+ *                        verschoof (linker-/bovenrand getrokken)
  *   onVerbind?         — ({connectorType, source, target, sourceHandle, targetHandle}) => void
  *   onVerwijder?       — (elementIds: string[]) => void      (Delete op selectie)
  *   onViewport?        — ({x,y,zoom}) => void                (na pannen/zoomen)
@@ -20,7 +23,13 @@
  *                        — magic link op het lege vlak: nieuw element + verbinding (§31.8)
  *   onRandAanhechting? — (elementId, ouderId|null, {x,y}) => void — rand-element
  *                        aangehecht (positie relatief) of losgemaakt (absoluut)
- *   onNodeDoubleClick? — (element) => void — bv. gedragsverwijzing openen
+ *   onNodeDoubleClick? — (element) => void — gedragsverwijzing openen (alleen
+ *                        bij een gevulde verwijzing; anders start dubbelklik
+ *                        het inline hernoemen)
+ *   onHernoem?         — (elementId, naam, veldSleutel|null) => void — inline
+ *                        hernoemd (F2, dubbelklik of klik op de naam); met
+ *                        veldSleutel "<compartmentType>:<index>" is het de
+ *                        naam van dat veld (klik op een attribuut). Zie inlineNaam.js
  *
  * Edges = geïmporteerde presentatie-edges (diagram.edges, fase 1-adapter)
  *       + gematerialiseerde connector-elementen (materialiseerConnectoren).
@@ -47,6 +56,7 @@ import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
+import { InlineNaamContext } from "./inlineNaam.js";
 import ConnectorEdge from "./ConnectorEdge.jsx";
 import { weigeringTekst } from "./afbakening.js";
 import { materialiseerConnectoren, vindConnectorType, vindConnectorTypes, geweigerdDoorAfbakening, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante, normaliseerHandle } from "./materialiseerConnectoren.js";
@@ -153,6 +163,7 @@ function CanvasBinnenkant({
   onContainerDrop,
   onRandAanhechting,
   onNodeDoubleClick,
+  onHernoem,
   onExternDrop,
   shapeSet,
   layoutApiRef,
@@ -229,7 +240,8 @@ function CanvasBinnenkant({
       const opgenomen = opnameCompartiment(element, opnames.delenVan.get(element.id), lookups.elementTypesById, elements);
       if (opgenomen) extra.push(opgenomen);
       if (!extra.length) return element;
-      return { ...element, compartimenten: [...(element.compartimenten || []), ...extra] };
+      // `extra: true` markeert ze als niet-eigen (niet inline te bewerken).
+      return { ...element, compartimenten: [...(element.compartimenten || []), ...extra.map((c) => ({ ...c, extra: true }))] };
     },
     [elements, opnames, lookups]
   );
@@ -288,13 +300,21 @@ function CanvasBinnenkant({
   // Shift bij het loslaten van een lijn = aanhechting vastzetten (zie
   // handleVoorOpslag). Een ref: onConnect krijgt zelf geen event mee.
   const shiftRef = useRef(false);
+  // Shift ingedrukt = verbind-modus: de hele vorm is grijpplek voor een lijn
+  // (vlak-handle, zie inlineNaam.js) — als state, want het stuurt een
+  // CSS-klasse op de canvas. Zolang er een lijn gesleept wordt (`verbindt`)
+  // is ook zonder Shift élke plek op een doelvorm losplek.
+  const [shiftVast, setShiftVast] = useState(false);
+  const verbindt = useRFStore((s) => !!s.connection?.inProgress);
   useEffect(() => {
     const zet = (e) => {
       setAltTilt(!!e.altKey);
+      setShiftVast(!!e.shiftKey);
       shiftRef.current = !!e.shiftKey;
     };
     const uit = () => {
       setAltTilt(false);
+      setShiftVast(false);
       shiftRef.current = false;
     };
     window.addEventListener("keydown", zet);
@@ -310,6 +330,21 @@ function CanvasBinnenkant({
   const absVan = useCallback(
     (n) => getInternalNode(n.id)?.internals?.positionAbsolute || n.position,
     [getInternalNode]
+  );
+  // Resize-einde vanuit ElementNode: maat + (absolute) positie in één melding,
+  // zodat de activiteit ze in één store-stap kan opslaan.
+  const handleNodeResize = useCallback(
+    (nodeId, size, relPositie) => {
+      if (!onNodeSize) return;
+      const intern = getInternalNode(nodeId);
+      const ouder = intern?.parentId ? getInternalNode(intern.parentId) : null;
+      const positie =
+        relPositie && ouder?.internals?.positionAbsolute
+          ? { x: ouder.internals.positionAbsolute.x + relPositie.x, y: ouder.internals.positionAbsolute.y + relPositie.y }
+          : relPositie || null;
+      onNodeSize(nodeId, size, positie ? { x: Math.round(positie.x), y: Math.round(positie.y) } : null);
+    },
+    [onNodeSize, getInternalNode]
   );
 
   useEffect(() => {
@@ -366,9 +401,16 @@ function CanvasBinnenkant({
           // Een ingeklapt voorkomen (gedaante, bv. lollipop-bolletje) negeert
           // de bewaarde maat: die hoort bij de volledige gedaante en komt
           // terug zodra het voorkomen weer wordt uitgeklapt.
-          ...(ref.size && !ref.gedaante
-            ? { style: { width: ref.size.width, height: ref.size.height, "--dc-node-max": "none" } }
-            : {}),
+          // --dc-node-min: ElementType.minBreedte stuurt ook de CSS-minimum-
+          // breedte van de shape (.dc-node), niet alleen de resizer — anders
+          // kon bv. een activity-actie niet smaller dan 180px (2026-10-07).
+          style: {
+            ...(ref.size && !ref.gedaante
+              ? { width: ref.size.width, height: ref.size.height, "--dc-node-max": "none" }
+              : {}),
+            ...(elementType.minBreedte ? { "--dc-node-min": `${elementType.minBreedte}px` } : {}),
+            ...(elementType.minHoogte ? { "--dc-node-min-h": `${elementType.minHoogte}px` } : {}),
+          },
           // Achtergrond-elementen (kaders) starten diep onder de rest (-10);
           // de handmatige z-order (contextmenu) telt daar bovenop, zodat ook
           // kaders onderling naar voren/achteren kunnen.
@@ -379,7 +421,7 @@ function CanvasBinnenkant({
             element: verrijk(element, elementType),
             elementType,
             bewerkbaar,
-            onResize: onNodeSize,
+            onResize: handleNodeResize,
             // Voorkomen-gedaante (samentrekking): ElementNode rendert bv. het
             // lollipop-bolletje in plaats van de volledige shape.
             gedaante: ref.gedaante || null,
@@ -425,7 +467,7 @@ function CanvasBinnenkant({
             element: verrijk(element, elementType),
             elementType,
             bewerkbaar,
-            onResize: onNodeSize,
+            onResize: handleNodeResize,
             fieldTypesById: lookups.fieldTypesById,
             compartmentTypesById: lookups.compartmentTypesById,
           },
@@ -491,9 +533,13 @@ function CanvasBinnenkant({
         if (!oud) return selected ? { ...n, selected: true } : n;
         return {
           ...oud,
-          // Tijdens een actieve drag wint de sleep-positie; de store volgt
-          // pas bij dragstop (onNodePositie/onNodePosities).
-          position: oud.dragging ? oud.position : n.position,
+          // Tijdens een actieve drag óf resize wint de live positie; de store
+          // volgt pas bij dragstop/resize-einde. Resizen hermeet de node →
+          // `maten` → deze rebuild; zonder `resizing` hier sprong de node bij
+          // trekken aan de boven-/linkerrand elke muisstap terug naar zijn
+          // store-positie en kromp hij dus vanaf de onder-/rechterkant
+          // (gemeld 2026-10-07: "bovenrand omlaag haalt de onderrand omhoog").
+          position: oud.dragging || oud.resizing ? oud.position : n.position,
           style: n.style,
           zIndex: n.zIndex,
           data: n.data,
@@ -515,7 +561,7 @@ function CanvasBinnenkant({
         hd.some((e) => e.selected) ? hd.map((e) => (e.selected ? { ...e, selected: false } : e)) : hd
       );
     }
-  }, [diagram, elements, lookups, gematerialiseerd, opnames, nesting, altTilt, verrijk, setNodes, bewerkbaar, onNodeSize, selectieId]);
+  }, [diagram, elements, lookups, gematerialiseerd, opnames, nesting, altTilt, verrijk, setNodes, bewerkbaar, handleNodeResize, selectieId]);
 
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
   // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —
@@ -632,16 +678,29 @@ function CanvasBinnenkant({
   // Directe kliks altijd melden, óók als React Flow geen selectie-wijziging
   // ziet (node stond intern nog geselecteerd terwijl de inspector inmiddels
   // iets anders toonde via de projectboom — de klik leek dan "dood").
+  // Pointer-startpunt van de laatste klik (capture op de wrapper): een klik
+  // ná een sleep mag geen inline bewerking starten.
+  const klikStartRef = useRef(null);
   const handleNodeClick = useCallback(
-    (_e, node) => {
-      if (!onSelectElement || !node) return;
-      const id = node.id.startsWith(ANKER_PREFIX)
-        ? node.id.slice(ANKER_PREFIX.length)
-        : node.data?.element?.id;
-      gemeldeSelectieRef.current = selectieSig([node.id]);
-      onSelectElement(elements[id] || null, node.id);
+    (e, node) => {
+      if (!node) return;
+      const isAnker = node.id.startsWith(ANKER_PREFIX);
+      const id = isAnker ? node.id.slice(ANKER_PREFIX.length) : node.data?.element?.id;
+      if (onSelectElement) {
+        gemeldeSelectieRef.current = selectieSig([node.id]);
+        onSelectElement(elements[id] || null, node.id);
+      }
+      // Klik op de naam (`data-dc-naam`/.dc-naam) of op een veldregel
+      // (`data-dc-veld`) = inline bewerken, zoals in de oude IDE. De handles
+      // liggen in de DOM bovenop de tekst en winnen dus van deze klik.
+      if (!bewerkbaar || !onHernoem || isAnker) return;
+      const start = klikStartRef.current;
+      if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4) return;
+      const doel = e.target?.closest?.("[data-dc-veld], [data-dc-naam], .dc-naam");
+      if (!doel) return;
+      setHernoem({ nodeId: node.id, veld: doel.getAttribute("data-dc-veld") || null });
     },
-    [onSelectElement, elements]
+    [onSelectElement, elements, bewerkbaar, onHernoem]
   );
   const handleEdgeClick = useCallback(
     (_e, edge) => {
@@ -779,12 +838,62 @@ function CanvasBinnenkant({
     [onRandAanhechting, getNodes, getInternalNode, absVan]
   );
 
+  // Informeel kader (ElementType.sleeptInhoudMee): bij het begin van een
+  // sleep bepalen we welke losse (niet-geneste) nodes met hun middelpunt in
+  // het kader liggen; tijdens de sleep schuiven die visueel mee, en bij het
+  // loslaten gaan hun posities in één store-stap mee. Geen modelrelatie —
+  // alleen het gebaar, anders dan containerVoor (formeel lidmaatschap).
+  const meesleepRef = useRef(null);
+  const handleNodeDragStart = useCallback(
+    (_ev, node, nodes) => {
+      meesleepRef.current = null;
+      if (!bewerkbaar || !node) return;
+      const et = lookups.elementTypesById[node.data?.element?.elementType];
+      if (!et?.sleeptInhoudMee) return;
+      const gesleept = new Set((nodes?.length ? nodes : [node]).map((n) => n.id));
+      const kp = absVan(node);
+      const kw = node.measured?.width ?? node.width ?? 0;
+      const kh = node.measured?.height ?? node.height ?? 0;
+      if (!kw || !kh) return;
+      const leden = new Map();
+      for (const n of getNodes()) {
+        if (n.id === node.id || gesleept.has(n.id) || n.parentId || n.id.startsWith(ANKER_PREFIX)) continue;
+        const nEt = lookups.elementTypesById[n.data?.element?.elementType];
+        if (nEt?.achtergrond) continue;
+        const p = absVan(n);
+        const mx = p.x + (n.measured?.width ?? 0) / 2;
+        const my = p.y + (n.measured?.height ?? 0) / 2;
+        if (mx >= kp.x && mx <= kp.x + kw && my >= kp.y && my <= kp.y + kh) leden.set(n.id, { ...n.position });
+      }
+      if (leden.size) meesleepRef.current = { kaderId: node.id, start: kp, leden };
+    },
+    [bewerkbaar, lookups, absVan, getNodes]
+  );
+  const handleNodeDrag = useCallback(
+    (_ev, node) => {
+      const m = meesleepRef.current;
+      if (!m || node?.id !== m.kaderId) return;
+      const kp = absVan(node);
+      const dx = kp.x - m.start.x;
+      const dy = kp.y - m.start.y;
+      setNodes((hd) =>
+        hd.map((n) => {
+          const st = m.leden.get(n.id);
+          return st ? { ...n, position: { x: st.x + dx, y: st.y + dy } } : n;
+        })
+      );
+    },
+    [absVan, setNodes]
+  );
+
   const handleNodeDragStop = useCallback(
     (_ev, node, nodes) => {
       if (!bewerkbaar) return;
       // Bij multi-drag geeft React Flow álle meegesleepte nodes als derde
       // argument — alleen `node` persisteren liet de rest terugspringen.
       const gesleept = nodes?.length ? nodes : node ? [node] : [];
+      const meesleep = meesleepRef.current;
+      meesleepRef.current = null;
       // Rand-element (enkel gesleept): aanhechten/losmaken persisteert zelf.
       if (gesleept.length === 1 && verwerkRandAanhechting(gesleept[0])) return;
       // De store voert absolute posities; een genest lid meldt React Flow
@@ -808,6 +917,22 @@ function CanvasBinnenkant({
         for (const kindId of nakomelingenVan(nesting, n.id)) {
           const kp = opgeslagen.get(kindId)?.position;
           if (kp && !record[kindId]) record[kindId] = { x: kp.x + dx, y: kp.y + dy };
+        }
+      }
+      // Inhoud van een informeel kader (sleeptInhoudMee): dezelfde
+      // eindverschuiving als het kader (niet de laatste tussenstand van de
+      // sleep — die loopt een muisstap achter), inclusief geneste leden;
+      // zelfde record, dus één store-stap.
+      if (meesleep && record[meesleep.kaderId]) {
+        const dx = record[meesleep.kaderId].x - meesleep.start.x;
+        const dy = record[meesleep.kaderId].y - meesleep.start.y;
+        for (const [lidId, st] of meesleep.leden) {
+          if (record[lidId]) continue;
+          record[lidId] = { x: st.x + dx, y: st.y + dy };
+          for (const kindId of nakomelingenVan(nesting, lidId)) {
+            const kp = opgeslagen.get(kindId)?.position;
+            if (kp && !record[kindId]) record[kindId] = { x: kp.x + dx, y: kp.y + dy };
+          }
         }
       }
       const ids = Object.keys(record);
@@ -852,6 +977,7 @@ function CanvasBinnenkant({
     },
     [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups, verwerkRandAanhechting, absVan, nesting, diagram]
   );
+  // (handleNodeDragStart/handleNodeDrag hierboven: informeel kader.)
 
   // Externe drop (ELEMENT_REF_MIME uit de elementen-/projectbrowser): zoek
   // de node onder de cursor en meld {nodeId|null, ref, positie} — de
@@ -900,14 +1026,67 @@ function CanvasBinnenkant({
   // Dubbelklik op een node: gedragsverwijzing (§3.2) — de activiteit opent
   // het gerefereerde diagram (data.gedragDiagramId). Generiek doorgegeven;
   // de activiteit beslist wat "openen" betekent (tab, actief diagram, …).
+  // Zonder gevulde verwijzing start dubbelklik het inline hernoemen (F2 doet
+  // dat ook, zie onKeyDown op de ReactFlow-wrapper). De toestand gaat via
+  // InlineNaamContext naar ElementNode — geen node-rebuild voor één veldje.
+  const [hernoem, setHernoem] = useState(null); // { nodeId, veld: sleutel|null } | null
   const handleNodeDoubleClick = useCallback(
     (_ev, node) => {
-      if (!onNodeDoubleClick) return;
-      const id = node.id.startsWith(ANKER_PREFIX) ? node.id.slice(ANKER_PREFIX.length) : node.data?.element?.id;
+      const isAnker = node.id.startsWith(ANKER_PREFIX);
+      const id = isAnker ? node.id.slice(ANKER_PREFIX.length) : node.data?.element?.id;
       const element = elements[id];
-      if (element) onNodeDoubleClick(element);
+      if (!element) return;
+      const et = lookups.elementTypesById[element.elementType];
+      if (onNodeDoubleClick && et?.gedragsVerwijzing && element.data?.gedragDiagramId) {
+        onNodeDoubleClick(element);
+        return;
+      }
+      if (bewerkbaar && onHernoem && !isAnker) setHernoem({ nodeId: node.id, veld: null });
+      else onNodeDoubleClick?.(element);
     },
-    [onNodeDoubleClick, elements]
+    [onNodeDoubleClick, onHernoem, bewerkbaar, elements, lookups]
+  );
+  const inlineNaamWaarde = useMemo(
+    () => ({
+      nodeId: hernoem?.nodeId ?? null,
+      veld: hernoem?.veld ?? null,
+      // Een node of edge (ConnectorEdge: klik op het naamlabel) start zelf
+      // het bewerken; alleen beschikbaar als de canvas bewerkbaar is.
+      start: bewerkbaar && onHernoem ? (nodeId, veld) => setHernoem({ nodeId, veld: veld || null }) : null,
+      klaar: (nodeId, naam, veld) => {
+        setHernoem((huidig) => (huidig?.nodeId === nodeId ? null : huidig));
+        if (naam == null || !onHernoem) return;
+        // Node-id → element-id; een edge-id → zijn connector-element.
+        const node = getNodes().find((n) => n.id === nodeId);
+        const edge = node ? null : rfStoreApi.getState().edges.find((ed) => ed.id === nodeId);
+        const elementId = node?.data?.element?.id || edge?.data?.connectorId || nodeId;
+        onHernoem(elementId, naam, veld || null);
+      },
+    }),
+    [hernoem, onHernoem, bewerkbaar, getNodes, rfStoreApi]
+  );
+  // F2 op precies één geselecteerde node (de node heeft focus na een klik,
+  // dus de toets bubbelt naar de ReactFlow-wrapper). Niet tijdens typen.
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key !== "F2" || !bewerkbaar || !onHernoem || hernoem) return;
+      if (e.target?.closest?.("input, textarea, select, [contenteditable='true']")) return;
+      const sel = getNodes().filter((n) => n.selected && !n.id.startsWith(ANKER_PREFIX));
+      if (sel.length === 1) {
+        e.preventDefault();
+        setHernoem({ nodeId: sel[0].id, veld: null });
+        return;
+      }
+      // Geen node maar precies één connector-lijn geselecteerd: relatienaam.
+      if (sel.length === 0) {
+        const lijnen = rfStoreApi.getState().edges.filter((ed) => ed.selected && ed.data?.connectorId);
+        if (lijnen.length === 1) {
+          e.preventDefault();
+          setHernoem({ nodeId: lijnen[0].id, veld: null });
+        }
+      }
+    },
+    [bewerkbaar, onHernoem, hernoem, getNodes, rfStoreApi]
   );
 
   // De edge die op dit moment aan een uiteinde versleept wordt (§31.5).
@@ -958,7 +1137,12 @@ function CanvasBinnenkant({
    * gewoon bewaard.
    */
   const handleVoorOpslag = useCallback(
-    (elementId, handleId) => {
+    (elementId, handleId, soort = "source") => {
+      // Eerst normaliseren naar `<soort>-<zijde>`: in de losse verbindmodus
+      // (connectionMode "loose") kan een lijn op een source-stip eindigen, en
+      // de vlak-handle (`source-vlak`, verbind-modus) is geen zijde — die
+      // wordt null, dus automatisch de beste zijde (besteZijde).
+      handleId = normaliseerHandle(handleId, soort);
       if (!handleId) return null;
       if (shiftRef.current) return handleId;
       const et = lookups.elementTypesById[elements[elementId]?.elementType];
@@ -1003,7 +1187,7 @@ function CanvasBinnenkant({
           source: bronId,
           target: doelId,
           sourceHandle: handleVoorOpslag(bronId, verbinding.sourceHandle),
-          targetHandle: handleVoorOpslag(doelId, verbinding.targetHandle),
+          targetHandle: handleVoorOpslag(doelId, verbinding.targetHandle, "target"),
         });
       if (passend.length === 1) {
         leg(passend[0]);
@@ -1110,7 +1294,7 @@ function CanvasBinnenkant({
                   positie,
                   connectorType: ct,
                   bronId: vast.id,
-                  bronHandle: handleVoorOpslag(vast.id, toestand.fromHandle?.id || null),
+                  bronHandle: handleVoorOpslag(vast.id, toestand.fromHandle?.id || null, andersom ? "target" : "source"),
                   omgekeerd: andersom,
                   containerId,
                 }),
@@ -1498,9 +1682,21 @@ function CanvasBinnenkant({
   );
 
   return (
+    <InlineNaamContext.Provider value={inlineNaamWaarde}>
     <ReactFlow
       key={diagram?.id || "leeg"}
-      className="dc-canvas"
+      // dc-verbindmodus (Shift) / dc-verbindt (lijn in sleep): dan vangt de
+      // vlak-handle van elke node muis-input — zie diagramcore.css.
+      className={"dc-canvas" + (shiftVast && bewerkbaar ? " dc-verbindmodus" : "") + (verbindt ? " dc-verbindt" : "")}
+      onKeyDown={handleKeyDown}
+      onPointerDownCapture={(e) => {
+        klikStartRef.current = { x: e.clientX, y: e.clientY };
+      }}
+      // "loose": een lijn mag ook op een source-stip (of de vlak-handle)
+      // eindigen; handleVoorOpslag normaliseert de zijde bij opslag. De
+      // vangstraal maakt loslaten vlak náást een stip vergevingsgezind.
+      connectionMode="loose"
+      connectionRadius={24}
       nodes={nodes}
       edges={edges}
       nodeTypes={nodeTypes}
@@ -1516,6 +1712,8 @@ function CanvasBinnenkant({
       onSelectionEnd={handleSelectionEnd}
       onNodeClick={handleNodeClick}
       onEdgeClick={handleEdgeClick}
+      onNodeDragStart={handleNodeDragStart}
+      onNodeDrag={handleNodeDrag}
       onNodeDragStop={handleNodeDragStop}
       onConnect={handleConnect}
       onConnectEnd={handleConnectEnd}
@@ -1612,6 +1810,7 @@ function CanvasBinnenkant({
       )}
       <MiniMap pannable zoomable nodeComponent={MiniMapNode} />
     </ReactFlow>
+    </InlineNaamContext.Provider>
   );
 }
 

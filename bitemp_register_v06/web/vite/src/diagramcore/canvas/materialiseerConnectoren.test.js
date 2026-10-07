@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { materialiseerConnectoren, vindConnectorType, vindConnectorTypes, ANKER_PREFIX, normaliseerHandle } from "./materialiseerConnectoren.js";
+import { isVlakHandle, VLAK_HANDLE } from "./inlineNaam.js";
 
 const diagramType = {
   id: "test",
@@ -547,4 +548,17 @@ test("connector met kale oude handles krijgt geldige handle-ids (de lijn verdwij
   assert.equal(edges[0].sourceHandle, "source-left");
   assert.equal(edges[0].targetHandle, "target-top");
   assert.equal(edges[0].data.presentatie.markerStart, "ruit");
+});
+
+test("vlak-handle (verbind-modus) is geen zijde: normaliseert naar null, loose-modus wisselt soort", () => {
+  // Een lijn die op het vlak van een node begint of eindigt krijgt geen
+  // vaste zijde; de materialisatie kiest dan besteZijde().
+  assert.equal(isVlakHandle(VLAK_HANDLE), true);
+  assert.equal(isVlakHandle("target-vlak"), true);
+  assert.equal(isVlakHandle("source-left"), false);
+  assert.equal(normaliseerHandle(VLAK_HANDLE, "source"), null);
+  assert.equal(normaliseerHandle(VLAK_HANDLE, "target"), null);
+  // connectionMode "loose": een lijn mag op een source-stip eindigen — de
+  // opgeslagen handle draagt dan tóch de doel-soort.
+  assert.equal(normaliseerHandle("source-left", "target"), "target-left");
 });
