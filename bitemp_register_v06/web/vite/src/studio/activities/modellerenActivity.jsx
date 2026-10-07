@@ -26,6 +26,7 @@ import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.js
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import { koppelStore, zonderVastleggen, rebaseStand, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
 import { useOutboxStore } from "../sync/outbox.js";
+import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
 import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore, aanwezigSamengevat } from "../sync/verzender.js";
 import {
   PROJECT_FORMAAT,
@@ -99,17 +100,21 @@ function leesOpslag() {
   return {};
 }
 
-/** Werkruimte van een project; `bestaat` = er is al iets bewaard. */
+/** Werkruimte van een project; `bestaat` = er is al iets bewaard; `bijgewerkt` = ISO (LWW met de server). */
 function leesWerkruimte(projectId) {
   try {
     const raw = projectId ? localStorage.getItem(werkruimteSleutel(projectId)) : null;
     if (raw) {
       const d = JSON.parse(raw);
-      return { bestaat: true, tabs: d.tabs || [], actieveTab: d.actieveTab || null, mapOpen: d.mapOpen || {} };
+      return { bestaat: true, tabs: d.tabs || [], actieveTab: d.actieveTab || null, mapOpen: d.mapOpen || {}, bijgewerkt: d.bijgewerkt || null };
     }
   } catch { /* ignore */ }
-  return { bestaat: false, tabs: [], actieveTab: null, mapOpen: {} };
+  return { bestaat: false, tabs: [], actieveTab: null, mapOpen: {}, bijgewerkt: null };
 }
+
+// Wat de werkruimte-sleutel het laatst bevatte, om alleen echte wijzigingen
+// een nieuw tijdstip (en een PUT naar de server) te geven.
+let _werkruimteLaatst = "";
 
 function schrijfOpslag(state) {
   try {
@@ -122,12 +127,47 @@ function schrijfOpslag(state) {
       })
     );
     if (state.project?.id) {
-      localStorage.setItem(
-        werkruimteSleutel(state.project.id),
-        JSON.stringify({ tabs: state.tabs, actieveTab: state.actieveTab, mapOpen: state.mapOpen })
-      );
+      const inhoud = { tabs: state.tabs, actieveTab: state.actieveTab, mapOpen: state.mapOpen };
+      const tekst = JSON.stringify(inhoud);
+      const sleutel = werkruimteSleutel(state.project.id);
+      if (tekst !== _werkruimteLaatst) {
+        _werkruimteLaatst = tekst;
+        const bijgewerkt = new Date().toISOString();
+        localStorage.setItem(sleutel, JSON.stringify({ ...inhoud, bijgewerkt }));
+        // Naar de server (als het project daar staat), met debounce — zie sync/werkruimte.js.
+        werkruimteGewijzigd(state.project.id, inhoud, bijgewerkt);
+      }
     }
   } catch { /* ignore */ }
+}
+
+/**
+ * Werkruimte van de server overnemen als die nieuwer is dan de lokale (bv. op
+ * een andere computer verder). Tabs alleen als profiel + diagram bestaan.
+ */
+async function haalWerkruimteBinnen() {
+  const s = useModellerenStore.getState();
+  const projectId = s.project.id;
+  const server = await haalWerkruimteVanServer(projectId);
+  if (!server) return false;
+  if (useModellerenStore.getState().project.id !== projectId) return false; // intussen gewisseld
+  const lokaal = leesWerkruimte(projectId);
+  if (lokaal.bestaat && nieuwsteWerkruimte(lokaal, server) === "lokaal") return false;
+  const inhoud = server.inhoud || {};
+  const tabs = (inhoud.tabs || []).filter((t) => {
+    const p = getProfieltype(t.profielId);
+    return p && !!p.useStore.getState().diagrams[t.diagramId];
+  });
+  const actieveTab = tabs.some((t) => t.id === inhoud.actieveTab) ? inhoud.actieveTab : tabs[0]?.id || null;
+  // Overnemen zonder nieuwe PUT: wat we schrijven is precies wat de server heeft.
+  _werkruimteLaatst = JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {} });
+  try {
+    localStorage.setItem(werkruimteSleutel(projectId), JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, bijgewerkt: server.bijgewerkt }));
+  } catch { /* ignore */ }
+  useModellerenStore.setState({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {} });
+  if (actieveTab) useModellerenStore.getState().activeer(actieveTab);
+  menuBus.emit("menu:ververs");
+  return true;
 }
 
 const tabId = (profielId, diagramId) => `${profielId}::${diagramId}`;
@@ -2122,6 +2162,8 @@ function Provider({ children }) {
   const liveSync = useModellerenStore((s) => s.project.liveSync ?? true);
   useEffect(() => {
     let actueel = true;
+    configureerWerkruimte({ actief: () => useModellerenStore.getState().project.serverVersie != null });
+    if (opServer) haalWerkruimteBinnen();
     configureerVerzender({
       projectId: () => useModellerenStore.getState().project.id,
       actief: () => {

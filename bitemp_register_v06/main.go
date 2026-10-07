@@ -270,6 +270,9 @@ func NewRouter() *gin.Engine {
 	// SSE-kanaal (stap 2, onderdeel 5): live operaties van anderen; de hub hangt aan het log.
 	handlers.KoppelStudioSSE()
 	router.GET("/api/studio/projecten/:id/events", ingelogd, handlers.MaakStudioProjectEventsHandler())
+	// Werkruimte (tabs, open mappen) per gebruiker per project: van jou, laatste schrijver wint.
+	router.GET("/api/studio/projecten/:id/werkruimte", ingelogd, handlers.MaakStudioWerkruimteOphalenHandler())
+	router.PUT("/api/studio/projecten/:id/werkruimte", ingelogd, handlers.MaakStudioWerkruimteOpslaanHandler())
 	// Instellingen van de instantie voor de Studio (admin via env, bv. STUDIO_SYNC_POLL_MS).
 	router.GET("/api/studio/instellingen", handlers.MaakStudioInstellingenHandler())
 

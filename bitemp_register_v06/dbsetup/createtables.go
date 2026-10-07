@@ -241,6 +241,11 @@ func CreateTables(db *bun.DB) error {
 	if err != nil {
 		return err
 	}
+	// Werkruimte per gebruiker per project (tabs, open mappen): van jou, laatste schrijver wint.
+	_, err = db.NewCreateTable().Model((*model.StudioWerkruimte)(nil)).IfNotExists().Exec(ctx)
+	if err != nil {
+		return err
+	}
 
 	// Seed: "register" als standaard domein
 	_, err = db.NewInsert().

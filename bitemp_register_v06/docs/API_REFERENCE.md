@@ -626,6 +626,13 @@ browsertab aan; bij elke aan- of afmelding krijgt iedereen `event: presence` met
 (`handlers/studio_project_sse.go`); de Studio gebruikt `EventSource` met `withCredentials` en
 valt terug op de poll zolang het kanaal verbroken is.
 
+#### `GET` / `PUT /api/studio/projecten/:id/werkruimte`
+Ingelogd. De werkruimte van de ingelogde gebruiker in dit project (tabs, actieve tab, open/dicht
+mappen; `handlers/studio_werkruimte_handler.go`, tabel `studio_werkruimtes` met sleutel
+project + gebruiker). `GET` → `{inhoud, bijgewerkt}` of `404` (nog geen). `PUT {inhoud, bijgewerkt?}`
+→ upsert, laatste schrijver wint op `bijgewerkt` (een oudere wordt genegeerd); antwoord
+`{bijgewerkt, overgenomen}`. Zonder auth is de gebruiker leeg (één werkruimte per project).
+
 #### `GET /api/studio/instellingen`
 Open. Instellingen van de instantie voor de Studio: `{poll_ms}` — het poll-interval van de
 projectsync (env `STUDIO_SYNC_POLL_MS`, standaard 5000, begrensd 500–120000). Een lokale

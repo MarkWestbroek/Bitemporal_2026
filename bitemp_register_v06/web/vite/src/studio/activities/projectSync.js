@@ -164,3 +164,10 @@ export const haalStudioInstellingenOp = () => roep("/api/studio/instellingen");
 export const eventsUrl = (id, vanaf = 0, clientId = "") =>
   `${apiBase()}/api/studio/projecten/${encodeURIComponent(id)}/events?vanaf=${Number(vanaf) || 0}` +
   (clientId ? `&client=${encodeURIComponent(clientId)}` : "");
+
+// ── Werkruimte (tabs, open mappen) per gebruiker per project ──────────
+/** → {inhoud, bijgewerkt}; 404 als er nog geen is. */
+export const haalWerkruimteOp = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}/werkruimte`);
+/** Laatste schrijver wint op `bijgewerkt` (ISO). → {bijgewerkt, overgenomen} */
+export const slaWerkruimteOp = (id, { inhoud, bijgewerkt }) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/werkruimte`, { methode: "PUT", body: { inhoud, bijgewerkt } });

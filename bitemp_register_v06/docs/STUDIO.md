@@ -336,6 +336,11 @@ te wijzigen.
 > (`event: presence`); rechts in de menubalk staat "N anderen online" met de
 > namen in de tooltip (`StudioAanwezig.jsx`), en het Project-menu toont
 > "Online: …". Zonder auth heet iedereen "anoniem".
+> **Werkruimte op de server (2026-10-08):** tabs, actieve tab en open/dicht
+> mappen gaan per gebruiker per project naar `…/werkruimte` (laatste schrijver
+> wint, `sync/werkruimte.js`); bij het openen van een project neemt de Studio
+> de serverwerkruimte over als die nieuwer is dan de lokale, zodat je op een
+> andere computer verdergaat waar je was.
 >
 > **Hele groepen naar een map (2026-10-06):** in de elementen-browser is
 > rechtsklik op een typekop ("Actor 13") → *Selecteer alle N* of *Verplaats

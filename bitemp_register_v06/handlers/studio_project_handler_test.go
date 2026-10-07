@@ -67,7 +67,11 @@ func studioTestDB(t *testing.T) *bun.DB {
 	if _, err := db.NewCreateTable().Model((*model.StudioProjectOp)(nil)).IfNotExists().Exec(ctx); err != nil {
 		t.Fatalf("ops-tabel aanmaken: %v", err)
 	}
+	if _, err := db.NewCreateTable().Model((*model.StudioWerkruimte)(nil)).IfNotExists().Exec(ctx); err != nil {
+		t.Fatalf("werkruimte-tabel aanmaken: %v", err)
+	}
 	t.Cleanup(func() {
+		_, _ = db.NewDelete().Model((*model.StudioWerkruimte)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
 		_, _ = db.NewDelete().Model((*model.StudioProjectOp)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
 		_, _ = db.NewDelete().Model((*model.StudioProject)(nil)).Where("id LIKE 'test-%'").Exec(ctx)
 		_ = db.Close()
@@ -309,5 +313,53 @@ func TestStudioPollMs(t *testing.T) {
 		if uit := StudioPollMs(); uit != wil {
 			t.Errorf("STUDIO_SYNC_POLL_MS=%q: %d, verwacht %d", in, uit, wil)
 		}
+	}
+}
+
+func TestStudioWerkruimte_LaatsteSchrijverWint(t *testing.T) {
+	db := studioTestDB(t)
+	oud := DB
+	DB = db
+	defer func() { DB = oud }()
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.POST("/api/studio/projecten", MaakStudioProjectAanmakenHandler())
+	r.GET("/api/studio/projecten/:id/werkruimte", MaakStudioWerkruimteOphalenHandler())
+	r.PUT("/api/studio/projecten/:id/werkruimte", MaakStudioWerkruimteOpslaanHandler())
+
+	const pid = "test-wr-00001"
+	rec := studioDoe(r, http.MethodPost, "/api/studio/projecten", map[string]any{"id": pid, "naam": "WR", "inhoud": map[string]any{"formaat": "studio-project", "versie": 3}})
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("project: %d %s", rec.Code, rec.Body.String())
+	}
+	// Nog geen werkruimte → 404
+	if rec = studioDoe(r, http.MethodGet, "/api/studio/projecten/"+pid+"/werkruimte", nil); rec.Code != http.StatusNotFound {
+		t.Fatalf("GET leeg: %d", rec.Code)
+	}
+	// Onbekend project → 404 bij PUT
+	if rec = studioDoe(r, http.MethodPut, "/api/studio/projecten/test-wr-nope/werkruimte", map[string]any{"inhoud": map[string]any{"tabs": []any{}}}); rec.Code != http.StatusNotFound {
+		t.Fatalf("PUT onbekend: %d %s", rec.Code, rec.Body.String())
+	}
+	// Opslaan met tijd t2, daarna een oudere t1 → genegeerd, nieuwere t3 → overgenomen
+	t1 := "2026-10-08T10:00:00Z"
+	t2 := "2026-10-08T10:05:00Z"
+	t3 := "2026-10-08T10:10:00Z"
+	put := func(tabs string, tijd string) {
+		rec = studioDoe(r, http.MethodPut, "/api/studio/projecten/"+pid+"/werkruimte", map[string]any{"inhoud": map[string]any{"tabs": []any{tabs}}, "bijgewerkt": tijd})
+		if rec.Code != http.StatusOK {
+			t.Fatalf("PUT %s: %d %s", tabs, rec.Code, rec.Body.String())
+		}
+	}
+	put("t2", t2)
+	put("t1", t1)
+	rec = studioDoe(r, http.MethodGet, "/api/studio/projecten/"+pid+"/werkruimte", nil)
+	if rec.Code != http.StatusOK || !bytes.Contains(rec.Body.Bytes(), []byte(`"t2"`)) {
+		t.Fatalf("oudere schrijver mocht niet winnen: %d %s", rec.Code, rec.Body.String())
+	}
+	put("t3", t3)
+	rec = studioDoe(r, http.MethodGet, "/api/studio/projecten/"+pid+"/werkruimte", nil)
+	if !bytes.Contains(rec.Body.Bytes(), []byte(`"t3"`)) {
+		t.Fatalf("nieuwere schrijver moest winnen: %s", rec.Body.String())
 	}
 }

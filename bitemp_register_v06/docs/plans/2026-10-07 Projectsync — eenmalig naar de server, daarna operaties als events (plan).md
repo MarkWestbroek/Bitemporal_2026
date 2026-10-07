@@ -291,4 +291,9 @@ modelregister elk één registratie worden.
   (`SamenwerkenInstellingen.jsx`): standaard van de instantie of 1/2/5/15/30 s per browser
   (`studio-sync-poll-ms`), met de actuele stand; `herstartPoll()` past het direct toe.
   Instantiebreed blijft `STUDIO_SYNC_POLL_MS` (een instellingen-opslag op de server is er niet).
-- [ ] Werkruimte naar de server (tabel project+gebruiker, LWW), diagramsets privé/gedeeld.
+- [x] Werkruimte naar de server (2026-10-08): tabel `studio_werkruimtes` (project + gebruiker),
+  `GET/PUT …/werkruimte`, laatste schrijver wint op `bijgewerkt`. Studio: `sync/werkruimte.js`
+  (debounce 1,5 s naar PUT, alleen bij echte wijzigingen en alleen als het project op de server
+  staat; `haalWerkruimteBinnen` neemt de serverwerkruimte over als die nieuwer is dan de lokale,
+  bij het openen van het project). Test: `TestStudioWerkruimte_LaatsteSchrijverWint` (pg).
+- [ ] Diagramsets privé (werkruimte) en gedeeld (project).
