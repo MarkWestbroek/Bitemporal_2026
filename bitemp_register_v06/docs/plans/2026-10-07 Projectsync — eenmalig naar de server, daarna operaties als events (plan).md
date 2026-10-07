@@ -287,6 +287,8 @@ modelregister elk één registratie worden.
   `aanwezigSamengevat()` (per persoon, aantal tabs, "jij"), `StudioAanwezig.jsx` rechts in de
   menubalk ("2 anderen online", namen in de tooltip) en een kop "Online: …" in het Project-menu.
   Zonder auth heet iedereen "anoniem".
-- [ ] Poll-interval als instelling in de Studio-UI (Mark, 07-10; per browser in het
-  instellingenpaneel; instantiebreed vraagt een instellingen-opslag op de server).
+- [x] Poll-interval in de Studio-UI (2026-10-08): sectie *Samenwerken* in Studio-instellingen
+  (`SamenwerkenInstellingen.jsx`): standaard van de instantie of 1/2/5/15/30 s per browser
+  (`studio-sync-poll-ms`), met de actuele stand; `herstartPoll()` past het direct toe.
+  Instantiebreed blijft `STUDIO_SYNC_POLL_MS` (een instellingen-opslag op de server is er niet).
 - [ ] Werkruimte naar de server (tabel project+gebruiker, LWW), diagramsets privé/gedeeld.

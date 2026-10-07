@@ -254,6 +254,11 @@ export function stopPoll() {
   pollTimer = null;
 }
 
+/** Herstart de poll met het (gewijzigde) interval, alleen als hij draait. */
+export function herstartPoll() {
+  if (pollTimer) startPoll();
+}
+
 /**
  * Snapshot-compactie (onderdeel 6): staat het log ver genoeg voorbij de grens
  * en zijn we zelf bij (outbox leeg, stand ok), zet dan een nieuwe snapshot.
