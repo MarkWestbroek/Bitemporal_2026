@@ -8,6 +8,38 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.14.0] — 2026-10-07
+Samenwerken aan een project, eerste trede: het Studio-project krijgt een naam en een id en kan
+als geheel naar de server en terug (api 0.11.0). Daaronder ligt de operatielaag die elke
+modelwijziging als benoemde operatie vastlegt (nog niet verzonden). Plus projectboom-fixes uit
+gebruik. Zie `docs/plans/2026-10-07 Projectsync — eenmalig naar de server, daarna operaties als
+events (plan).md` en [`docs/STUDIO.md`](../docs/STUDIO.md) (project op de server, 2026-10-07).
+
+### Toegevoegd
+- **Project op de server** (07-10): menu *Project* toont de projectnaam en de sync-stand en heeft
+  *Hernoem project…*, *Nieuw project… (huidige parkeren)*, *Naar server sturen* (met
+  versiecontrole: bij een conflict kies je overschrijven of afbreken) en *Van server ophalen…*
+  (`activities/ProjectServerDialoog.jsx`, lijst van alle projecten van ingelogde gebruikers).
+  Het werkbestand "studio-project" is nu **v2** met `project: {id, naam}`; v1 wordt bij import
+  opgewaardeerd. Samenwerken is hiermee "om de beurt". Eigen profielen/vormen/iconen (M2) en
+  klassieke editors reizen niet mee.
+- **Operatielaag** (07-10, `studio/sync/operaties.js`, `sync/outbox.js`): model-, structuur- en
+  kruisverband-acties worden benoemde operaties `{store, op, args}`; een diff-vangnet meldt wat
+  buiten de acties om verandert (undo/redo, migraties). Operaties van een ander worden toegepast
+  met de undo gepauzeerd én gerebased. De outbox blijft in het geheugen tot de verzender er is
+  (`studio-outbox-persist=1` zet persistentie aan voor ontwikkeling).
+- **Hele groepen naar een map** (06-10): rechtsklik op een typekop in de elementen-browser →
+  *Selecteer alle N* of *Verplaats alle N naar map ▸* (bestaande map of *Nieuwe map…*); het
+  contextmenu van een element heeft *Verplaats naar map ▸*. Eén undo-stap per bundel.
+- **Projectboom** (07-10): elementregels hernoemen inline (F2, nog eens klikken, dubbelklik);
+  **Shift+klik** selecteert een bereik binnen dezelfde lijst; de eerste **Ctrl+klik** neemt de al
+  geselecteerde regel mee, zodat de bundel als geheel sleept.
+
+### Gefixt
+- **Slepen uit de projectboom naar het canvas** gaf een verbodsbord (ook in 0.13.0): de canvas
+  zette `dropEffect "link"` terwijl de bron `"copyMove"` toestaat; de canvas kiest nu een
+  toegestaan dropEffect. Droppen op een kader maakt het element lid.
+
 ## [studio/v0.13.0] — 2026-10-07
 Canvas-bediening in Omnium Studio: inline hernoemen (ook van velden en relatienamen), een
 verbind-modus vanaf het hele vlak, kaders die hun inhoud meeslepen, en een reeks kleine ergernissen

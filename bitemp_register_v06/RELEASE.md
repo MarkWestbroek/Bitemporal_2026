@@ -8,6 +8,38 @@
 
 ---
 
+## Projectsync, stap 1: api 0.11.0 / studio 0.14.0 (2026-10-07)
+
+Samenwerken aan een Studio-project, eerste trede: het project gaat als geheel naar de server en
+terug. Zie `docs/plans/2026-10-07 Projectsync — eenmalig naar de server, daarna operaties als
+events (plan).md` en `docs/API_REFERENCE.md` §15. Frontend: zie
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (0.14.0; neemt ook 0.13.0 mee, dat nooit is
+uitgerold).
+
+### Backend (api 0.11.0)
+
+#### Toegevoegd
+- **Studio-projecten op de server**: tabel `studio_projecten` (`model.StudioProject`; één
+  JSONB-blob per project, versieteller) en `GET/POST/PUT/DELETE /api/studio/projecten[/:id]`
+  (`handlers/studio_project_handler.go`). Lezen voor iedereen die is ingelogd, schrijven voor
+  `editor`, verwijderen door eigenaar of `admin`; `PUT` weigert met 409 (plus servermeta) als de
+  versie op de server verder is. Bewust geen bitemporele entiteit: tussenstap tot het modelregister.
+- **`APIVersion`** staat op 0.11.0.
+
+#### Databasegevolg bij uitrol
+- `studio_projecten` wordt bij het opstarten aangemaakt (`IfNotExists`); geen migratie van
+  bestaande tabellen.
+
+### Uitrol
+
+- **Twee images**: `bitemp-go-api:0.11.0` en `bitemp-viz-frontend:0.14.0`; render-svc blijft 0.1.0.
+- Live (app en pf) draaide op 7 oktober api 0.10.0 / studio 0.12.0; deze uitrol neemt dus ook
+  studio 0.13.0 (canvas-bediening) mee.
+- **Na het uitrollen:** `/version`, header `API-Version: 0.11.0`, en in de Studio
+  *Project → Naar server sturen* gevolgd door *Van server ophalen…* in een tweede browser.
+
+---
+
 ## Canvas-bediening: studio 0.13.0 (2026-10-07)
 
 Alleen frontend. Inline hernoemen op canvas, in projectboom en lijsten (ook velden en
