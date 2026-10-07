@@ -43,6 +43,8 @@ export const useSyncStore = create(() => ({
   stand: "uit",
   /** SSE-kanaal: "uit" | "verbindt" | "verbonden" | "verbroken" */
   kanaal: "uit",
+  /** presence (onderdeel 7): open verbindingen in dit project, incl. deze tab: [{clientId, actor}] */
+  aanwezig: [],
   teVerzenden: 0,
   fout: null,
   opnieuwOm: null,
@@ -283,7 +285,7 @@ let bron = null;
 export function startKanaal() {
   stopKanaal();
   if (typeof EventSource === "undefined" || !cfg.actief() || !cfg.projectId()) return;
-  const url = cfg.eventsUrl(cfg.projectId(), cfg.laatsteVolgnummer());
+  const url = cfg.eventsUrl(cfg.projectId(), cfg.laatsteVolgnummer(), clientId);
   zet({ kanaal: "verbindt" });
   try {
     bron = new EventSource(url, { withCredentials: true });
@@ -311,6 +313,14 @@ export function startKanaal() {
     await cfg.herlaadSnapshot();
     startKanaal();
   });
+  bron.addEventListener("presence", (e) => {
+    try {
+      const { aanwezig } = JSON.parse(e.data);
+      if (Array.isArray(aanwezig)) zet({ aanwezig });
+    } catch {
+      /* negeren */
+    }
+  });
   bron.addEventListener("stand", (e) => {
     try {
       const { laatste } = JSON.parse(e.data);
@@ -330,7 +340,7 @@ export function stopKanaal() {
     }
   }
   bron = null;
-  if (useSyncStore.getState().kanaal !== "uit") zet({ kanaal: "uit" });
+  if (useSyncStore.getState().kanaal !== "uit") zet({ kanaal: "uit", aanwezig: [] });
 }
 
 /** Voor tests: interne stand terugzetten. */
@@ -342,5 +352,24 @@ export function _resetVoorTest() {
   retryTimer = null;
   backoff = BACKOFF_START;
   stopPoll();
-  zet({ stand: "uit", kanaal: "uit", teVerzenden: 0, fout: null, opnieuwOm: null, laatsteContact: null, ontvangen: 0 });
+  zet({ stand: "uit", kanaal: "uit", aanwezig: [], teVerzenden: 0, fout: null, opnieuwOm: null, laatsteContact: null, ontvangen: 0 });
+}
+
+/**
+ * Presence samengevat voor de UI: per persoon één regel, met het aantal tabs;
+ * zonder auth heet iedereen "anoniem" en telt alleen het aantal.
+ * @returns {{personen: Array<{naam: string, tabs: number, ik: boolean}>, totaal: number, anderen: number}}
+ */
+export function aanwezigSamengevat() {
+  const lijst = useSyncStore.getState().aanwezig || [];
+  const per = new Map();
+  for (const a of lijst) {
+    const naam = a.actor || "anoniem";
+    const rij = per.get(naam) || { naam, tabs: 0, ik: false };
+    rij.tabs++;
+    if (a.clientId === clientId) rij.ik = true;
+    per.set(naam, rij);
+  }
+  const personen = [...per.values()].sort((x, y) => (x.ik === y.ik ? x.naam.localeCompare(y.naam) : x.ik ? -1 : 1));
+  return { personen, totaal: lijst.length, anderen: lijst.filter((a) => a.clientId !== clientId).length };
 }

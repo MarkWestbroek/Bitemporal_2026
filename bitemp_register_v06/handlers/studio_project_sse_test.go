@@ -90,7 +90,7 @@ func TestStudioProjectSSE_NaspelenEnLive(t *testing.T) {
 	// Verbinden met Last-Event-ID: 1 → naspelen 2 en 3.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+"/api/studio/projecten/"+pid+"/events", nil)
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+"/api/studio/projecten/"+pid+"/events?client=tab-a", nil)
 	req.Header.Set("Last-Event-ID", "1")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -116,6 +116,10 @@ func TestStudioProjectSSE_NaspelenEnLive(t *testing.T) {
 	}
 	if AantalSSEAbonnees(pid) != 1 {
 		t.Fatalf("abonnees: %d", AantalSSEAbonnees(pid))
+	}
+	// Presence (onderdeel 7): de lijst kent onze client-id.
+	if aw := Aanwezigen(pid); len(aw) != 1 || aw[0].ClientID != "tab-a" {
+		t.Fatalf("aanwezigen: %+v", aw)
 	}
 	if rec = studioDoe(r, http.MethodPost, "/api/studio/projecten/"+pid+"/ops", batch("live", 2)); rec.Code != http.StatusCreated {
 		t.Fatalf("ops live: %d %s", rec.Code, rec.Body.String())

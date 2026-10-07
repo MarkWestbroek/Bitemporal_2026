@@ -26,7 +26,7 @@ import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.js
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import { koppelStore, zonderVastleggen, rebaseStand, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
 import { useOutboxStore } from "../sync/outbox.js";
-import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore } from "../sync/verzender.js";
+import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore, aanwezigSamengevat } from "../sync/verzender.js";
 import {
   PROJECT_FORMAAT,
   PROJECT_FORMAAT_VERSIE,
@@ -2549,6 +2549,18 @@ function menus(ctx) {
     label: "Project",
     items: [
       { type: "kop", label: `${project.naam} — ${syncStand}` },
+      ...(liveAan && sync.kanaal === "verbonden" && aanwezigSamengevat().anderen
+        ? [
+            {
+              type: "kop",
+              label:
+                "Online: " +
+                aanwezigSamengevat()
+                  .personen.map((p) => `${p.naam}${p.ik ? " (jij)" : ""}${p.tabs > 1 ? ` ×${p.tabs}` : ""}`)
+                  .join(", "),
+            },
+          ]
+        : []),
       { id: "proj-hernoem", label: "Hernoem project…", onClick: hernoemProject },
       { id: "proj-nieuw", label: "Nieuw project… (huidige parkeren)", onClick: nieuwProject },
       { type: "separator" },

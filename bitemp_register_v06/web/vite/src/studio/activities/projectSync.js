@@ -161,5 +161,6 @@ export const haalOpsOp = (id, vanaf = 0, limiet = 1000) =>
 export const haalStudioInstellingenOp = () => roep("/api/studio/instellingen");
 
 /** URL van het SSE-kanaal (EventSource met withCredentials; Last-Event-ID regelt de browser). */
-export const eventsUrl = (id, vanaf = 0) =>
-  `${apiBase()}/api/studio/projecten/${encodeURIComponent(id)}/events?vanaf=${Number(vanaf) || 0}`;
+export const eventsUrl = (id, vanaf = 0, clientId = "") =>
+  `${apiBase()}/api/studio/projecten/${encodeURIComponent(id)}/events?vanaf=${Number(vanaf) || 0}` +
+  (clientId ? `&client=${encodeURIComponent(clientId)}` : "");

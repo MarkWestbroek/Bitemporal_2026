@@ -332,6 +332,10 @@ te wijzigen.
 > stil een nieuwe snapshot; de server ruimt de operaties t/m de grens op. Wie
 > met een ouder volgnummer binnenkomt krijgt "snapshot nodig" en laadt de
 > snapshot opnieuw (tabs blijven), daarna de operaties ná de grens.
+> **Wie is online (onderdeel 7):** het SSE-kanaal meldt aan- en afmeldingen
+> (`event: presence`); rechts in de menubalk staat "N anderen online" met de
+> namen in de tooltip (`StudioAanwezig.jsx`), en het Project-menu toont
+> "Online: …". Zonder auth heet iedereen "anoniem".
 >
 > **Hele groepen naar een map (2026-10-06):** in de elementen-browser is
 > rechtsklik op een typekop ("Actor 13") → *Selecteer alle N* of *Verplaats

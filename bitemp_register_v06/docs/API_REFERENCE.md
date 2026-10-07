@@ -620,7 +620,9 @@ Ingelogd. **SSE-kanaal** (`text/event-stream`): elke bevestigde operatie als eve
 (`id` = volgnummer, `data` = dezelfde vorm als in de ops-lijst). Bij verbinden speelt de server
 eerst na vanaf `Last-Event-ID` (zet de browser zelf bij een herverbinding) of `?vanaf=N`, en
 stuurt dan `event: stand` met `{laatste}`. Keepalive-commentaar elke 15 s;
-`X-Accel-Buffering: no` tegen bufferen door nginx. Eén in-memory hub per proces
+`X-Accel-Buffering: no` tegen bufferen door nginx. **Presence:** `?client=<clientId>` meldt de
+browsertab aan; bij elke aan- of afmelding krijgt iedereen `event: presence` met
+`{aanwezig: [{clientId, actor}]}` (actor = gebruikersnaam, leeg zonder auth). Eén in-memory hub per proces
 (`handlers/studio_project_sse.go`); de Studio gebruikt `EventSource` met `withCredentials` en
 valt terug op de poll zolang het kanaal verbroken is.
 

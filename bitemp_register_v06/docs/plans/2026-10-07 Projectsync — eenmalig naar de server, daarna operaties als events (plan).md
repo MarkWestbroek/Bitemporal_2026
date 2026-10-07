@@ -281,6 +281,12 @@ modelregister elk één registratie worden.
   snapshot opnieuw (werkruimte blijft) en haalt daarna de operaties ná de grens binnen; het
   SSE-kanaal sluit en herverbindt daarvoor. Tests: pg-roundtrip (compactie, grens, nummering),
   SSE-snapshot-event, verzender (drempel, snapshotNodig).
-- [ ] Stap 2, onderdeel 7: presence/indicator (wie is online, over het SSE-kanaal). Plus:
-  poll-interval als instelling in de Studio-UI (Mark, 07-10; instantiebreed vraagt een
-  instellingen-opslag op de server).
+- [x] Stap 2, onderdeel 7 (2026-10-08): presence over het SSE-kanaal. De hub kent per
+  verbinding client-id (`?client=`) en actor; bij aan-/afmelden gaat `event: presence` met de
+  lijst naar alle abonnees van het project. Studio: `useSyncStore.aanwezig`,
+  `aanwezigSamengevat()` (per persoon, aantal tabs, "jij"), `StudioAanwezig.jsx` rechts in de
+  menubalk ("2 anderen online", namen in de tooltip) en een kop "Online: …" in het Project-menu.
+  Zonder auth heet iedereen "anoniem".
+- [ ] Poll-interval als instelling in de Studio-UI (Mark, 07-10; per browser in het
+  instellingenpaneel; instantiebreed vraagt een instellingen-opslag op de server).
+- [ ] Werkruimte naar de server (tabel project+gebruiker, LWW), diagramsets privé/gedeeld.

@@ -38,8 +38,23 @@ const (
 	sseNaspeelLimiet = 1000
 )
 
+// sseEvent is één regelgroep op de stream: naam ("op" | "presence"), id (volgnummer bij "op") en data.
+type sseEvent struct {
+	naam string
+	id   int64
+	data []byte
+}
+
 type sseAbonnee struct {
-	ch chan model.StudioProjectOp
+	ch       chan sseEvent
+	clientID string // browsertab (uit ?client=), voor presence en echo-filter
+	actor    string // gebruikersnaam (leeg zonder auth)
+}
+
+// StudioAanwezige is één open verbinding in de presence-lijst (onderdeel 7).
+type StudioAanwezige struct {
+	ClientID string `json:"clientId"`
+	Actor    string `json:"actor"`
 }
 
 // studioHub verdeelt bevestigde operaties over de open SSE-verbindingen per project.
@@ -50,14 +65,15 @@ type studioHub struct {
 
 var hub = &studioHub{perProject: map[string]map[*sseAbonnee]struct{}{}}
 
-func (h *studioHub) abonneer(projectID string) *sseAbonnee {
-	a := &sseAbonnee{ch: make(chan model.StudioProjectOp, sseBuffer)}
+func (h *studioHub) abonneer(projectID, clientID, actor string) *sseAbonnee {
+	a := &sseAbonnee{ch: make(chan sseEvent, sseBuffer), clientID: clientID, actor: actor}
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if h.perProject[projectID] == nil {
 		h.perProject[projectID] = map[*sseAbonnee]struct{}{}
 	}
 	h.perProject[projectID][a] = struct{}{}
+	h.zendPresence(projectID)
 	return a
 }
 
@@ -65,11 +81,47 @@ func (h *studioHub) afmelden(projectID string, a *sseAbonnee) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if m := h.perProject[projectID]; m != nil {
+		if _, was := m[a]; !was {
+			return
+		}
 		delete(m, a)
 		if len(m) == 0 {
 			delete(h.perProject, projectID)
+			return
+		}
+		h.zendPresence(projectID)
+	}
+}
+
+// aanwezigen geeft de open verbindingen van een project (lock moet vast zijn).
+func (h *studioHub) aanwezigen(projectID string) []StudioAanwezige {
+	uit := make([]StudioAanwezige, 0, len(h.perProject[projectID]))
+	for a := range h.perProject[projectID] {
+		uit = append(uit, StudioAanwezige{ClientID: a.clientID, Actor: a.actor})
+	}
+	return uit
+}
+
+// zendPresence stuurt de actuele lijst naar alle abonnees van het project (lock moet vast zijn).
+// Wie dit niet bijhoudt wordt niet afgekoppeld: presence is bijzaak.
+func (h *studioHub) zendPresence(projectID string) {
+	data, err := json.Marshal(gin.H{"aanwezig": h.aanwezigen(projectID)})
+	if err != nil {
+		return
+	}
+	for a := range h.perProject[projectID] {
+		select {
+		case a.ch <- sseEvent{naam: "presence", data: data}:
+		default:
 		}
 	}
+}
+
+// Aanwezigen — diagnose/tests: de presence-lijst van een project.
+func Aanwezigen(projectID string) []StudioAanwezige {
+	hub.mu.Lock()
+	defer hub.mu.Unlock()
+	return hub.aanwezigen(projectID)
 }
 
 // publiceer levert de operaties aan alle abonnees; een volle abonnee wordt
@@ -89,8 +141,12 @@ func (h *studioHub) publiceer(projectID string, ops []model.StudioProjectOp) {
 // leverAan zet de operaties in het kanaal van één abonnee; false = kanaal vol.
 func leverAan(a *sseAbonnee, ops []model.StudioProjectOp) bool {
 	for _, op := range ops {
+		data, err := json.Marshal(studioOpUit(op))
+		if err != nil {
+			continue
+		}
 		select {
-		case a.ch <- op:
+		case a.ch <- sseEvent{naam: "op", id: op.Volgnummer, data: data}:
 		default:
 			return false
 		}
@@ -116,6 +172,17 @@ func schrijfSSEOp(w gin.ResponseWriter, op model.StudioProjectOp) error {
 		return err
 	}
 	_, err = fmt.Fprintf(w, "id: %d\nevent: op\ndata: %s\n\n", op.Volgnummer, data)
+	return err
+}
+
+// schrijfSSEEvent schrijft één event uit het kanaal; "op" met id, andere zonder.
+func schrijfSSEEvent(w gin.ResponseWriter, ev sseEvent) error {
+	var err error
+	if ev.naam == "op" {
+		_, err = fmt.Fprintf(w, "id: %d\nevent: op\ndata: %s\n\n", ev.id, ev.data)
+	} else {
+		_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", ev.naam, ev.data)
+	}
 	return err
 }
 
@@ -165,8 +232,9 @@ func MaakStudioProjectEventsHandler() gin.HandlerFunc {
 		w.Header().Set("X-Accel-Buffering", "no") // nginx: niet bufferen
 		w.WriteHeader(http.StatusOK)
 		// Eerst abonneren, dan naspelen: wat tussendoor binnenkomt zit in het
-		// kanaal en wordt op volgnummer ontdubbeld.
-		ab := hub.abonneer(id)
+		// kanaal en wordt op volgnummer ontdubbeld. Presence (onderdeel 7): de
+		// client-id uit ?client= en de ingelogde gebruiker.
+		ab := hub.abonneer(id, strings.TrimSpace(c.Query("client")), studioActor(c))
 		defer hub.afmelden(id, ab)
 
 		laatste := vanaf
@@ -198,33 +266,37 @@ func MaakStudioProjectEventsHandler() gin.HandlerFunc {
 			select {
 			case <-ctx.Done():
 				return
-			case op, open := <-ab.ch:
+			case ev, open := <-ab.ch:
 				if !open {
 					return // vol geweest: de browser herverbindt en speelt na
 				}
-				if op.Volgnummer <= laatste {
+				if ev.naam == "op" && ev.id <= laatste {
 					continue // al nagespeeld
 				}
-				if err := schrijfSSEOp(w, op); err != nil {
+				if err := schrijfSSEEvent(w, ev); err != nil {
 					return
 				}
-				laatste = op.Volgnummer
+				if ev.naam == "op" {
+					laatste = ev.id
+				}
 				// Wat nog klaarstaat meteen mee, dan één flush.
 			leeg:
 				for {
 					select {
-					case op2, open2 := <-ab.ch:
+					case ev2, open2 := <-ab.ch:
 						if !open2 {
 							w.Flush()
 							return
 						}
-						if op2.Volgnummer <= laatste {
+						if ev2.naam == "op" && ev2.id <= laatste {
 							continue
 						}
-						if err := schrijfSSEOp(w, op2); err != nil {
+						if err := schrijfSSEEvent(w, ev2); err != nil {
 							return
 						}
-						laatste = op2.Volgnummer
+						if ev2.naam == "op" {
+							laatste = ev2.id
+						}
 					default:
 						break leeg
 					}
