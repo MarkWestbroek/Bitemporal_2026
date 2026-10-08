@@ -80,12 +80,17 @@ export function leesBron(db, packageId) {
   const pakketten = leesPakketten(db);
   const ids = deelboomPakketten(pakketten, packageId);
   const q = ids.map(() => "?").join(",") || "0";
+  // Objecten in de pakketten, plus objecten van elders die op een diagram van
+  // deze pakketten staan (EA tekent gerust klassen uit zes andere pakketten
+  // op één diagram) — die komen mee als element zonder package-lidmaatschap.
+  const OBJECT_KOLOMMEN = `Object_ID, Object_Type, Name, Alias, Note, Package_ID, Stereotype, NType, Abstract, Classifier, ParentID,
+            ea_guid, Style, Backcolor, BorderWidth, PDATA1, PDATA2, PDATA3, PDATA4, PDATA5, Multiplicity`;
   const t_object = rijen(
     db,
-    `SELECT Object_ID, Object_Type, Name, Alias, Note, Package_ID, Stereotype, NType, Abstract, Classifier, ParentID,
-            ea_guid, Style, Backcolor, BorderWidth, PDATA1, PDATA2, PDATA3, PDATA4, PDATA5, Multiplicity
-       FROM t_object WHERE Package_ID IN (${q})`,
-    ids
+    `SELECT ${OBJECT_KOLOMMEN} FROM t_object
+       WHERE Package_ID IN (${q})
+          OR Object_ID IN (SELECT o.Object_ID FROM t_diagramobjects o JOIN t_diagram d ON d.Diagram_ID = o.Diagram_ID WHERE d.Package_ID IN (${q}))`,
+    [...ids, ...ids]
   );
   const objectIds = t_object.map((o) => o.Object_ID);
   const oq = objectIds.map(() => "?").join(",") || "0";
@@ -110,6 +115,10 @@ export function leesBron(db, packageId) {
        FROM t_connector WHERE Start_Object_ID IN (${oq}) AND End_Object_ID IN (${oq})`,
     [...objectIds, ...objectIds]
   );
+  const klassifiers = [...new Set(t_object.map((o) => o.Classifier).filter((c) => c && c !== 0 && c !== "0"))];
+  const classifiers = klassifiers.length
+    ? rijen(db, `SELECT Object_ID, Name, Object_Type, Package_ID, ea_guid FROM t_object WHERE Object_ID IN (${klassifiers.map(() => "?").join(",")})`, klassifiers)
+    : [];
   const guids = [...t_object.map((o) => o.ea_guid), ...t_connector.map((c) => c.ea_guid)];
   const t_xref = [];
   // In porties: SQLite kent een grens op het aantal parameters.
@@ -143,6 +152,7 @@ export function leesBron(db, packageId) {
   return {
     t_package: pakketten,
     t_object,
+    classifiers,
     t_attribute,
     t_operation,
     t_connector,

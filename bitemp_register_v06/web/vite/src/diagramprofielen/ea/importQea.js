@@ -6,6 +6,7 @@
  */
 import { openQea, leesPakketten, leesBron } from "./qeaLezer.js";
 import { qeaNaarPuurUml } from "./qeaNaarPuurUml.js";
+import { qeaNaarActivity } from "./qeaNaarActivity.js";
 import { pakketPad } from "./qeaHulp.js";
 import { vraagKeuze, toonMelding } from "../../studio/naamDialog.jsx";
 
@@ -14,7 +15,22 @@ import { vraagKeuze, toonMelding } from "../../studio/naamDialog.jsx";
  * @param {string} [bestandsnaam]
  * @returns {Promise<{diagramTypeId:string, elements:Record<string,any>, diagrams:Record<string,any>}|null>}
  */
-export async function importeerQeaAlsPuurUml(bytes, bestandsnaam = "") {
+export function importeerQeaAlsPuurUml(bytes, bestandsnaam = "") {
+  return importeerQea(bytes, bestandsnaam, qeaNaarPuurUml, "puur-uml");
+}
+
+/** Zelfde, maar alleen de activiteitendiagrammen → activity-profiel. */
+export function importeerQeaAlsActivity(bytes, bestandsnaam = "") {
+  return importeerQea(bytes, bestandsnaam, qeaNaarActivity, "activity");
+}
+
+/**
+ * @param {ArrayBuffer} bytes
+ * @param {string} bestandsnaam
+ * @param {(bron: any, opties: {packageId: number}) => {diagramTypeId: string, elements: any, diagrams: any, verslag: any}} vertaal
+ * @param {string} profielLabel
+ */
+async function importeerQea(bytes, bestandsnaam, vertaal, profielLabel) {
   const db = await openQea(bytes);
   try {
     const pakketten = leesPakketten(db);
@@ -32,7 +48,7 @@ export async function importeerQeaAlsPuurUml(bytes, bestandsnaam = "") {
     if (!keuze) return null;
     const packageId = Number(keuze);
     const bron = leesBron(db, packageId);
-    const model = qeaNaarPuurUml(bron, { packageId });
+    const model = vertaal(bron, { packageId });
     const v = model.verslag;
     const overgeslagen = Object.entries(v.overgeslagen);
     if (overgeslagen.length) {
@@ -40,7 +56,7 @@ export async function importeerQeaAlsPuurUml(bytes, bestandsnaam = "") {
         titel: "Import met weglatingen",
         tekst:
           `${v.elementen} elementen, ${v.connectoren} connectoren, ${v.diagrammen} diagrammen gelezen.\n` +
-          `Niet in puur-uml, overgeslagen:\n` +
+          `Niet in ${profielLabel}, overgeslagen:\n` +
           overgeslagen.map(([soort, n]) => `  • ${soort}: ${n}`).join("\n"),
       });
     }

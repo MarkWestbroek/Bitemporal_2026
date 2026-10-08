@@ -528,7 +528,9 @@ Branch `feat/ea-qea-lezer` (worktree `D:\Git\Bitemporal_2026_ea`), niet gecommit
 |---|---|
 | `web/vite/src/diagramprofielen/ea/qeaHulp.js` | pure parsers: `t_xref`-stereotypen en CustomProperties, `Path` → knikpunten (y gespiegeld), rechthoek → positie/maat, BGR-kleur, GUID → id, kardinaliteit uit grenzen, deelboom van pakketten |
 | `…/ea/qeaNaarPuurUml.js` | pure vertaler: rijen (EA-kolomnamen) → `{elements, diagrams, verslag}`; Class/Interface/Enumeration/DataType/Note/Text/Boundary; Association/Aggregation (ruit aan het geheel; `SubType Strong` = compositie)/Generalization/Realisation/Dependency; packages + `bevat`; diagrammen met nodes (positie, maat, z-volgorde), `verborgenConnectoren`, knikpunten van het eerste diagram waarop de lijn staat |
-| `…/ea/qeaLezer.js` | sql.js (lui geladen, wasm via `?url`): `openQea(bytes)`, `leesPakketten(db)`, `leesBron(db, packageId)` |
+| `…/ea/qeaKern.js` | gedeeld: hulptabellen, `extraData`, knikpunten (incl. OS), `bouwDiagram`, `maakConnectorElement` |
+| `…/ea/qeaNaarActivity.js` | activity-lezer (§7.1 punt 8) |
+| `…/ea/qeaLezer.js` | sql.js (lui geladen, wasm via `?url`): `openQea(bytes)`, `leesPakketten(db)`, `leesBron(db, packageId)` — haalt ook elementen van elders op die op een diagram van het pakket staan |
 | `…/ea/importQea.js` | Studio-kant: pakketkeuze (`vraagKeuze`, nieuw in `naamDialog.jsx`) → model; verslag bij weglatingen |
 | `…/ea/fixtures/metametamodel.qea.json` | de rijen van *Zandbak MW / Metametamodel* (+ *Examples*) uit het echte bestand, als testfixture (100 kB) |
 | `…/ea/qeaNaarPuurUml.test.js` | 15 tests op die fixture: aantallen, identiteit, attributen (`abstract: boolean`), zelf-generalisatie, aggregatierichting, rolnamen, realisatie-fallback, posities/maten/z-volgorde, kaders, notities, knikpunten, parsers |
@@ -581,9 +583,15 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
 
 **Lezer, stap 2 en verder**
 
-8. **Activity-lezer**: partitie, aanroep (`CallBehavior` → `gedragDiagramId`), pins, guards
-   (`PDATA2`), begin/eind (`NType` 100/101/102), fork/join, object; nieuw in Omnium:
-   activity-parameters, action-soort (CreateObject/RaiseException), boundary in activity.
+8. ~~**Activity-lezer**~~ ✅ 08-10 (`qeaNaarActivity.js`, *Bestand → Importeer Sparx EA* in de
+   Activity-activiteit): alleen de Activity-diagrammen van het pakket; knopen via `ParentID`
+   onder het frame; aanroep (`CallBehavior`, naam van de classifier, `gedragDiagramId` als het
+   aangeroepen diagram meekomt), pins als rand-element (`randVan`, positie relatief; ook pins
+   die EA niet tekent), guards uit `PDATA2`, begin/eind/flow-eind uit `NType`, fork/join,
+   object, partitie (`bevat`), notitie + notitielijn; action-soort op `data.soort`.
+   Getest op UC.NPA.REG.0010 (22 knopen, 17 stromen, 2 aanroepen, 2 pins).
+   **Nog open**: activity-parameters (4 overgeslagen), action-soort zichtbaar maken,
+   boundary in activity, EA-auto-routing (rechte lijnen).
 9. **Use case-lezer**: use case, actor, include/extend, **collaboratie** (gestippelde ellips,
    UML 2 Collaboration — EA's "use case realization") + `realiseert`.
 10. **Ontbrekende profielen**: Component, Object, Deployment, InteractionOverview, Package,

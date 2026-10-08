@@ -7,6 +7,7 @@
 import { IconActivity } from "../icons";
 import { registreerActivity, activityDiagramType, maakElement } from "../../diagramprofielen/activity/index.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import { importeerQeaAlsActivity } from "../../diagramprofielen/ea/importQea.js";
 
 registreerActivity();
 
@@ -24,4 +25,13 @@ export default maakDiagramActiviteit({
   standaardVerborgen: true, // preview-profiel; via Modelleren + instellingen bereikbaar
   previewTekst: "UML activity — acties, beslissingen, fork/join, pins en partities (gedragsdiagram-verkenning).",
   devHookNaam: "__activity05Store",
+  koppeling: {
+    /** Sparx EA-repository (.qea) → de activiteitendiagrammen van één pakket. */
+    importBestand: {
+      label: "Importeer Sparx EA (.qea)…",
+      accept: ".qea,.qeax",
+      binair: true,
+      verwerk: (bytes, bestandsnaam) => importeerQeaAlsActivity(bytes, bestandsnaam),
+    },
+  },
 });

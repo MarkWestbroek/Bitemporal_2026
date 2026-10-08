@@ -205,6 +205,18 @@ const elementTypes = [
     properties: [],
   },
   {
+    // Notitie-lijn (UML note attachment, EA NoteLink): stippel zonder pijl.
+    id: "notitielijn",
+    label: "Notitie-lijn",
+    omschrijving: "Koppelt een notitie aan het element waar hij over gaat; geen modelrelatie.",
+    kort: "not",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["notitie"] },
+    doel: { elementTypes: ["begin", "actie", "aanroep", "beslissing", "fork", "object", "pin", "partitie", "eind", "flow-eind"] },
+    edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#94a3b8" },
+  },
+  {
     // Partitie-lidmaatschap ("uitgevoerd door") — subtiele stippellijn;
     // het lid ligt visueel al ín de lane.
     id: "bevat",

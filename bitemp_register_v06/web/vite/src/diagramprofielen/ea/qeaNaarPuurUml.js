@@ -1,47 +1,23 @@
 // @ts-check
 /**
  * qeaNaarPuurUml — lezer: rijen uit een Sparx EA-repository (één pakket met
- * deelpakketten) → een puur-uml-model ({elements, diagrams}) mét diagrammen,
- * posities, maten, knikpunten en verborgen lijnen.
+ * deelpakketten, plus wat van elders op zijn diagrammen staat) → een
+ * puur-uml-model ({elements, diagrams}) mét diagrammen, posities, maten,
+ * knikpunten en verborgen lijnen.
  *
  * Principe (onderzoek §6.8): de lezer gooit niets weg. Wat puur-uml niet
  * kent reist mee op `data`: `eaGuid` (externe identiteit), `stereotypen`
  * (volledige namen uit t_xref), `tags` (tagged values), `notes`, `alias`.
  * Elementtypen die puur-uml niet heeft (Activity, UseCase, …) worden
  * overgeslagen en geteld in het verslag — die zijn voor de activity-/use
- * case-lezer (volgende stap).
+ * case-lezer (`qeaNaarActivity.js`).
  *
  * Pure functie, geen sql.js: de rijen komen uit `qeaLezer.js` (browser) of
- * uit een JSON-fixture (test). Kolomnamen = EA-kolomnamen.
+ * uit een JSON-fixture (test). Kolomnamen = EA-kolomnamen. Gedeelde delen
+ * (hulptabellen, knikpunten, diagrammen) staan in `qeaKern.js`.
  */
-import {
-  stereotypenUitXref,
-  customPropertiesUitXref,
-  knikkenUitPath,
-  rechthoekNaarNode,
-  kleurUitBgr,
-  idUitGuid,
-  kardinaliteitUitGrenzen,
-  deelboomPakketten,
-  sleutelWaarden,
-  EA_SCHAAL,
-  haaksAanhechtpunt,
-  maakHaaks,
-} from "./qeaHulp.js";
-
-/**
- * @typedef {Object} QeaBron
- * @property {any[]} t_package
- * @property {any[]} t_object
- * @property {any[]} t_attribute
- * @property {any[]} [t_operation]
- * @property {any[]} t_connector
- * @property {any[]} [t_xref]
- * @property {any[]} [t_objectproperties]
- * @property {any[]} [t_diagram]
- * @property {any[]} [t_diagramobjects]
- * @property {any[]} [t_diagramlinks]
- */
+import { kleurUitBgr, idUitGuid, kardinaliteitUitGrenzen, deelboomPakketten, EA_SCHAAL } from "./qeaHulp.js";
+import { maakHulptabellen, maakVerslag, sla, extraData, maakConnectorElement, maakBevat, bouwDiagram } from "./qeaKern.js";
 
 export const PUUR_UML_DIAGRAMTYPE = "puur-uml";
 
@@ -58,41 +34,14 @@ const OBJECTTYPE_NAAR_ELEMENTTYPE = {
 };
 
 /**
- * @param {QeaBron} bron
+ * @param {import("./qeaKern.js").QeaBron} bron
  * @param {{packageId:number, diagramTypeId?:string, schaal?:number}} opties
  *   `schaal` vergroot posities, maten en knikpunten (standaard `EA_SCHAAL`).
  */
 export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGRAMTYPE, schaal = EA_SCHAAL }) {
   const pakketIds = new Set(deelboomPakketten(bron.t_package || [], packageId));
-  const verslag = {
-    elementen: 0,
-    connectoren: 0,
-    diagrammen: 0,
-    /** @type {Record<string, number>} EA-typen zonder plek in puur-uml */
-    overgeslagen: {},
-    /** @type {string[]} */
-    meldingen: [],
-  };
-  const sla = (soort) => {
-    verslag.overgeslagen[soort] = (verslag.overgeslagen[soort] || 0) + 1;
-  };
-
-  // ── Hulptabellen ──────────────────────────────────────────────────────
-  const stereoPerGuid = new Map();
-  const customPerGuid = new Map();
-  for (const x of bron.t_xref || []) {
-    if (x.Name === "Stereotypes") stereoPerGuid.set(x.Client, stereotypenUitXref(x.Description));
-    else if (x.Name === "CustomProperties") customPerGuid.set(x.Client, customPropertiesUitXref(x.Description));
-  }
-  const tagsPerObject = new Map();
-  for (const t of bron.t_objectproperties || []) {
-    const m = tagsPerObject.get(t.Object_ID) || {};
-    const vorig = m[t.Property];
-    m[t.Property] = vorig === undefined ? t.Value ?? "" : [].concat(vorig, t.Value ?? "");
-    tagsPerObject.set(t.Object_ID, m);
-  }
-  const attrsPerObject = groepeer(bron.t_attribute || [], (a) => a.Object_ID, (a) => a.Pos);
-  const opsPerObject = groepeer(bron.t_operation || [], (o) => o.Object_ID, (o) => o.Pos);
+  const verslag = maakVerslag();
+  const h = maakHulptabellen(bron, schaal);
 
   /** @type {Record<string, any>} */
   const elements = {};
@@ -100,18 +49,6 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
   const idVanObject = new Map();
   /** EA Package_ID → element-id van het package-element. */
   const idVanPakket = new Map();
-
-  const extraData = (guid, objectId) => {
-    const st = stereoPerGuid.get(guid);
-    const cu = customPerGuid.get(guid);
-    const tags = tagsPerObject.get(objectId);
-    return {
-      eaGuid: guid,
-      ...(st?.length ? { stereotypen: st } : {}),
-      ...(cu && Object.keys(cu).length ? { custom: cu } : {}),
-      ...(tags ? { tags } : {}),
-    };
-  };
 
   // ── Packages (t_package; het bijbehorende t_object van type Package slaan we over) ──
   const pakketten = (bron.t_package || []).filter((p) => pakketIds.has(p.Package_ID));
@@ -132,19 +69,18 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
     if (ouder) maakBevat(elements, ouder, idVanPakket.get(p.Package_ID));
   }
 
-  // ── Elementen ─────────────────────────────────────────────────────────
-  const objecten = (bron.t_object || []).filter((o) => pakketIds.has(o.Package_ID));
-  for (const o of objecten) {
+  // ── Elementen (in de pakketten, of van elders op een diagram hier) ─────
+  for (const o of bron.t_object || []) {
     if (o.Object_Type === "Package") continue; // dubbel met t_package
     const elementType = OBJECTTYPE_NAAR_ELEMENTTYPE[o.Object_Type];
     if (!elementType) {
-      sla(o.Object_Type);
+      sla(verslag, o.Object_Type);
       continue;
     }
     const id = idUitGuid(o.ea_guid);
     idVanObject.set(o.Object_ID, id);
     const data = {
-      ...extraData(o.ea_guid, o.Object_ID),
+      ...extraData(h, o.ea_guid, o.Object_ID),
       ...(o.Alias ? { alias: o.Alias } : {}),
       ...(o.Note && elementType !== "notitie" ? { notes: o.Note } : {}),
       ...(String(o.Abstract) === "1" ? { abstract: true } : {}),
@@ -162,7 +98,7 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
     if (elementType === "notitie") {
       element.data.tekst = o.Note || o.Name || "";
     } else {
-      element.compartimenten = compartimentenVoor(o, elementType, attrsPerObject, opsPerObject);
+      element.compartimenten = compartimentenVoor(o, elementType, h);
     }
     elements[id] = element;
     verslag.elementen += 1;
@@ -171,96 +107,32 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
   }
 
   // ── Connectoren ───────────────────────────────────────────────────────
-  /** Eerste diagram-link per connector (knikken, verborgen). */
-  const linkPerConnector = new Map();
-  for (const l of bron.t_diagramlinks || []) {
-    if (!linkPerConnector.has(l.ConnectorID)) linkPerConnector.set(l.ConnectorID, l);
-  }
-  /** Diagram_ID → (Object_ID → geschaalde rechthoek) voor de aanhechtpunten. */
-  const rectPerDiagram = new Map();
-  for (const dobj of bron.t_diagramobjects || []) {
-    if (!rectPerDiagram.has(dobj.Diagram_ID)) rectPerDiagram.set(dobj.Diagram_ID, new Map());
-    const { position, size } = rechthoekNaarNode(dobj, schaal);
-    rectPerDiagram.get(dobj.Diagram_ID).set(dobj.Object_ID, { ...position, ...size });
-  }
   /** EA Connector_ID → element-id. */
   const idVanConnector = new Map();
   for (const c of bron.t_connector || []) {
     const bronId = idVanObject.get(c.Start_Object_ID);
     const doelId = idVanObject.get(c.End_Object_ID);
     if (!bronId || !doelId) {
-      if (c.Connector_Type !== "NoteLink") sla(`connector buiten bereik (${c.Connector_Type})`);
+      if (c.Connector_Type !== "NoteLink") sla(verslag, `connector buiten bereik (${c.Connector_Type})`);
       continue;
     }
     const vertaald = vertaalConnector(c, bronId, doelId, elements);
     if (!vertaald) {
-      sla(`connector ${c.Connector_Type}`);
+      sla(verslag, `connector ${c.Connector_Type}`);
       continue;
     }
-    const id = idUitGuid(c.ea_guid);
-    idVanConnector.set(c.Connector_ID, id);
-    const link = linkPerConnector.get(c.Connector_ID);
-    const stijl = sleutelWaarden(link?.Style);
-    let knikken = stijl.Mode === "1" ? [] : knikkenUitPath(link?.Path, schaal);
-    if (knikken.length && stijl.TREE === "OS") {
-      // EA "Orthogonal - Square": alleen de hoekpunten staan in Path; het
-      // eerste en laatste stuk staan haaks op de rand en de stukken ertussen
-      // zijn haaks. Zet de aanhechtpunten erbij (anders mikt de motor op het
-      // middelpunt van de andere doos en loopt het eerste stuk schuin).
-      const rects = rectPerDiagram.get(link.DiagramID);
-      const rb = rects?.get(c.Start_Object_ID), rd = rects?.get(c.End_Object_ID);
-      const begin = rb ? haaksAanhechtpunt(rb, knikken[0]) : null;
-      const eind = rd ? haaksAanhechtpunt(rd, knikken[knikken.length - 1]) : null;
-      knikken = maakHaaks([...(begin ? [begin] : []), ...knikken, ...(eind ? [eind] : [])]);
-    }
-    elements[id] = {
-      id,
-      naam: vertaald.naam,
-      elementType: vertaald.elementType,
-      source: vertaald.source,
-      target: vertaald.target,
-      compartimenten: [],
-      data: {
-        ...extraData(c.ea_guid, null),
-        ...(c.Notes ? { notes: c.Notes } : {}),
-        ...vertaald.data,
-        ...(knikken.length ? { knikken } : {}),
-      },
-    };
+    const el = maakConnectorElement(h, c, vertaald);
+    idVanConnector.set(c.Connector_ID, el.id);
+    elements[el.id] = el;
     verslag.connectoren += 1;
   }
 
   // ── Diagrammen ────────────────────────────────────────────────────────
   /** @type {Record<string, any>} */
   const diagrams = {};
-  const objectenPerDiagram = groepeer(bron.t_diagramobjects || [], (d) => d.Diagram_ID, (d) => d.Sequence);
-  const linksPerDiagram = groepeer(bron.t_diagramlinks || [], (l) => l.DiagramID, () => 0);
   for (const d of (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID))) {
-    const id = "ead-" + String(d.ea_guid || d.Diagram_ID).replace(/[{}]/g, "").toLowerCase();
-    const gezien = new Set();
-    const nodes = [];
-    // Sequence laag = bovenop in EA; in de node-lijst tekent de laatste bovenop.
-    for (const dobj of [...(objectenPerDiagram.get(d.Diagram_ID) || [])].reverse()) {
-      const elementId = idVanObject.get(dobj.Object_ID);
-      if (!elementId) continue;
-      const { position, size } = rechthoekNaarNode(dobj, schaal);
-      const node = { elementId, position, size };
-      if (gezien.has(elementId)) node.nodeId = `${elementId}#${dobj.Instance_ID}`;
-      gezien.add(elementId);
-      nodes.push(node);
-    }
-    const verborgen = (linksPerDiagram.get(d.Diagram_ID) || [])
-      .filter((l) => Number(l.Hidden) === 1)
-      .map((l) => idVanConnector.get(l.ConnectorID))
-      .filter(Boolean);
-    diagrams[id] = {
-      id,
-      naam: d.Name || `Diagram ${d.Diagram_ID}`,
-      diagramType: diagramTypeId,
-      nodes,
-      edges: [],
-      ...(verborgen.length ? { verborgenConnectoren: verborgen } : {}),
-    };
+    const diagram = bouwDiagram(h, d, { idVanObject, idVanConnector, diagramTypeId, elements });
+    diagrams[diagram.id] = diagram;
     verslag.diagrammen += 1;
   }
 
@@ -269,43 +141,10 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
 
 // ── Hulpfuncties ────────────────────────────────────────────────────────
 
-/**
- * Groepeer rijen per sleutel, gesorteerd op een volgorde-kolom.
- * @template T
- * @param {T[]} rijen
- * @param {(r:T)=>any} sleutel
- * @param {(r:T)=>any} volgorde
- * @returns {Map<any, T[]>}
- */
-function groepeer(rijen, sleutel, volgorde) {
-  const m = new Map();
-  for (const r of rijen) {
-    const k = sleutel(r);
-    if (!m.has(k)) m.set(k, []);
-    m.get(k).push(r);
-  }
-  for (const lijst of m.values()) lijst.sort((a, b) => (Number(volgorde(a)) || 0) - (Number(volgorde(b)) || 0));
-  return m;
-}
-
-function maakBevat(elements, ouderId, kindId) {
-  if (!ouderId || !kindId || ouderId === kindId) return;
-  const id = `${ouderId}~bevat~${kindId}`;
-  elements[id] = {
-    id,
-    naam: "",
-    elementType: "bevat",
-    source: ouderId,
-    target: kindId,
-    compartimenten: [],
-    data: {},
-  };
-}
-
 /** Attributen/operaties/literals als compartimenten van puur-uml. */
-function compartimentenVoor(o, elementType, attrsPerObject, opsPerObject) {
-  const attrs = attrsPerObject.get(o.Object_ID) || [];
-  const ops = opsPerObject.get(o.Object_ID) || [];
+function compartimentenVoor(o, elementType, h) {
+  const attrs = h.attrsPerObject.get(o.Object_ID) || [];
+  const ops = h.opsPerObject.get(o.Object_ID) || [];
   const comps = [];
   if (elementType === "enumeratie") {
     if (attrs.length) {
@@ -359,8 +198,8 @@ function veldData(rij) {
 /**
  * EA-connector → puur-uml-connector. Let op de richting van aggregaties: in
  * EA is Start het deel en End het geheel (ruit aan End); puur-uml tekent de
- * ruit aan de bron, dus bron = geheel.
- * @returns {{elementType:string, naam:string, source:string, target:string, data:Record<string,any>}|null}
+ * ruit aan de bron, dus bron = geheel (`omgedraaid` draait de knikken mee).
+ * @returns {{elementType:string, naam:string, source:string, target:string, data:Record<string,any>, omgedraaid?:boolean}|null}
  */
 function vertaalConnector(c, bronId, doelId, elements) {
   const naam = c.Name || "";
@@ -385,6 +224,7 @@ function vertaalConnector(c, bronId, doelId, elements) {
         source: bronIsNotitie ? bronId : doelId,
         target: bronIsNotitie ? doelId : bronId,
         data: {},
+        omgedraaid: !bronIsNotitie,
       };
     }
     case "Association": {
@@ -436,6 +276,7 @@ function aggregatie(c, bronId, doelId, naam, geheelAanDoel) {
     naam,
     source: geheel,
     target: deel,
+    omgedraaid: geheelAanDoel,
     data: {
       ...(geheelCard ? { bronKardinaliteit: geheelCard } : {}),
       ...(deelCard ? { doelKardinaliteit: deelCard } : {}),

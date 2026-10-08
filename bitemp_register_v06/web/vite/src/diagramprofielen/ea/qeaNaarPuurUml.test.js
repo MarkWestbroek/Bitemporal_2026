@@ -165,13 +165,13 @@ test("TREE=OS: aanhechtpunten haaks op de rand erbij, stukken haaks (Element ◆
   const map = opNaam("ProjectFolder");
   const agg = els.find((e) => ["aggregatie", "compositie"].includes(e.elementType) && e.source === map.id && e.target === element.id);
   assert.ok(agg, "ProjectFolder ◆— Element");
-  // Bron is het geheel (ProjectFolder); EA's Path liep van Element naar ProjectFolder.
-  // De knikken staan in EA-volgorde (start-object → end-object) met de aanhechtpunten erbij.
+  // Bron is het geheel (ProjectFolder); EA's Path liep van Element naar ProjectFolder
+  // en is daarom omgedraaid, mét de haakse aanhechtpunten erbij.
   assert.deepEqual(agg.data.knikken, [
-    { x: 408, y: 507 }, // bovenrand Element, recht boven het eerste hoekpunt
-    { x: 408, y: 350 },
+    { x: 85, y: 323 }, // onderrand ProjectFolder, recht boven het hoekpunt
     { x: 85, y: 350 },
-    { x: 85, y: 323 }, // onderrand ProjectFolder
+    { x: 408, y: 350 },
+    { x: 408, y: 507 }, // bovenrand Element
   ]);
 });
 
