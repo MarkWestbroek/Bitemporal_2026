@@ -622,8 +622,9 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
     {Gegevenselement} (geen broer; de backend heeft die overerving diep ingebouwd), met
     bron/doel naar {Representatie} en als grens dat een bron of doel nooit zelf een relatie
     is → `isConnector` mag omslaan en een abstract knoop-type expandeert niet naar
-    connectoren. **Nog open**: Metamodel v2026 zelf in canoniek-uml, meervoudige
-    overerving, abstract elementtype in een
+    connectoren. ✅ 09-10 canoniek-uml op het patroon: abstracte `representatie`, entiteit en
+    gegevenselement eronder, relatie onder gegevenselement (STUDIO.md §Canoniek model).
+    **Nog open**: meervoudige overerving, abstract elementtype in een
     model als validatiefout, en een duidelijke melding als een ouder `verbindingsregels` (volle
     vorm) gebruikt en het kind `bron`/`doel` (nu: "doel verplicht"; M3-MOF-review 08-10).
 

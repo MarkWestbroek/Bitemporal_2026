@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { vertaalbareVelden, EIGEN_VERTALING } from "./mappingV3Canoniek.js";
+import { vertaalbareVelden, EIGEN_VERTALING, NIET_1_OP_1 } from "./mappingV3Canoniek.js";
 import { canoniekUmlDiagramType } from "./index.js";
 import { vanCanoniekModel, naarCanoniekModel } from "./adapter.js";
 import { exporteerV3, importeerV3 } from "./serialisatie.js";
@@ -42,7 +42,10 @@ function proefwaarde(typeId, regel) {
  * toetst de test stilletjes niets zodra een type uit GENERIEKE_TYPES valt.
  */
 function proefwaarden(typeId) {
-  const regels = typeVan(typeId).properties.filter((p) => !EIGEN_VERTALING.has(p.key));
+  // NIET_1_OP_1: geërfde properties die voor dit type een eigen vertaling
+  // hebben (relatie.typenaam = naam, sinds relatie van gegevenselement erft).
+  const nietVoorType = NIET_1_OP_1[typeId] || new Set();
+  const regels = typeVan(typeId).properties.filter((p) => !EIGEN_VERTALING.has(p.key) && !nietVoorType.has(p.key));
   assert.ok(regels.length > 0, `${typeId} heeft te toetsen properties`);
   return Object.fromEntries(regels.map((p) => [p.key, proefwaarde(typeId, p)]));
 }
