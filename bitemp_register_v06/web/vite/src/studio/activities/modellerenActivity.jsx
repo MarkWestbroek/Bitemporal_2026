@@ -18,7 +18,7 @@
 import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
-import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
+import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
@@ -51,6 +51,7 @@ import {
 import ProfielIcoon from "../ProfielIcoon.jsx";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
+import { importeerQeaInProject } from "../../diagramprofielen/ea/importQeaProject.js";
 import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
 
 const ELEMENTEN_HOOGTE_SLEUTEL = "studio05-project-elementen-hoogte";
@@ -2379,6 +2380,146 @@ function kiesEnImporteerProject() {
   inp.click();
 }
 
+// ── Sparx EA-import: de EA-boom als mappen ──────────────────────────────
+
+/**
+ * Zet wat de EA-import in een profiel heeft gezet op zijn plek in de
+ * projectboom, zoals EA het toont (Mark, 09-10): pakketten als mappen, en
+ * daarbinnen de elementen die diagrammen "bezitten" (use case → activity)
+ * óók als map — het diagram staat erin, met de knopen (acties, beslissingen)
+ * ernaast. Elementen zonder zo'n eigenaar staan in de map van hun pakket.
+ * Mappen worden hergebruikt (zelfde naam onder dezelfde ouder), dus een
+ * tweede import maakt geen dubbele boom.
+ *
+ * @param {string} profielId
+ * @param {{elements: Record<string, any>, diagrams: Record<string, any>}} model - de ingevoegde delen (definitieve ids)
+ * @param {{bron: any, packageId: number, geheugen: Map<any, any>}} ctx
+ */
+/**
+ * Waar de EA-boom in het project komt: een bestaande map (op pad gekozen) of
+ * de wortel. `undefined` = afgebroken. De bron bepaalt wát het is, de
+ * gebruiker wáár het komt (Mark, 09-10).
+ */
+async function kiesDoelmapVoorEa(pakketLabel) {
+  const { mappen } = useModellerenStore.getState();
+  const pad = (id) => {
+    const uit = [];
+    let c = mappen[id];
+    let n = 0;
+    while (c && n++ < 30) {
+      uit.unshift(c.naam);
+      c = c.ouderId ? mappen[c.ouderId] : null;
+    }
+    return uit.join(" / ");
+  };
+  const opties = [
+    { waarde: "__wortel__", label: "(wortel van het project)" },
+    ...Object.values(mappen)
+      .map((m) => ({ waarde: m.id, label: pad(m.id) }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+  ];
+  const keuze = await vraagKeuze({
+    titel: "Waar in het project?",
+    label: `Map voor "${(pakketLabel || "").split(" / ").pop() || "het pakket"}" (het EA-pakket wordt daarin een map)`,
+    opties,
+    bevestig: "Importeer",
+    zoekbaar: opties.length > 8,
+  });
+  if (!keuze) return undefined;
+  return keuze === "__wortel__" ? null : keuze;
+}
+
+function plaatsEaInProjectboom(profielId, model, ctx) {
+  const { bron, packageId, geheugen, doel } = ctx;
+  const st = useModellerenStore.getState();
+  const pakketPerId = new Map((bron.t_package || []).map((p) => [p.Package_ID, p]));
+  const objectPerId = new Map((bron.t_object || []).map((o) => [o.Object_ID, o]));
+  const objectPerGuid = new Map((bron.t_object || []).map((o) => [o.ea_guid, o]));
+  const diagramPerGuid = new Map((bron.t_diagram || []).map((d) => [String(d.ea_guid || "").replace(/[{}]/g, "").toLowerCase(), d]));
+  const inBereik = new Set();
+  const stapel = [packageId];
+  while (stapel.length) {
+    const id = stapel.pop();
+    inBereik.add(id);
+    for (const p of pakketPerId.values()) if (p.Parent_ID === id) stapel.push(p.Package_ID);
+  }
+
+  /** Map zoeken of maken: zelfde naam onder dezelfde ouder = dezelfde map. */
+  const mapVoor = (naam, ouderId) => {
+    const sleutel = `map|${ouderId || ""}|${naam}`;
+    if (geheugen.has(sleutel)) return geheugen.get(sleutel);
+    const bestaand = Object.values(useModellerenStore.getState().mappen).find(
+      (m) => m.naam === naam && (m.ouderId || null) === (ouderId || null)
+    );
+    const id = bestaand ? bestaand.id : st.nieuweMap(naam, ouderId || null);
+    geheugen.set(sleutel, id);
+    return id;
+  };
+  /** Map van een EA-pakket (recursief tot het gekozen pakket; daarbuiten = wortel). */
+  const mapVanPakket = (pid) => {
+    if (!inBereik.has(pid)) return null;
+    const sleutel = `pkg|${pid}`;
+    if (geheugen.has(sleutel)) return geheugen.get(sleutel);
+    const p = pakketPerId.get(pid);
+    // Het gekozen pakket komt in de gekozen doelmap (of de wortel).
+    const ouder = p && pid !== packageId ? mapVanPakket(p.Parent_ID) : doel || null;
+    const id = mapVoor(p?.Name || `Pakket ${pid}`, ouder);
+    geheugen.set(sleutel, id);
+    return id;
+  };
+  // Alleen elementen die een diagram "bezitten" (t_diagram.ParentID: de
+  // activity, en via ParentID de use case erboven) worden een map — niet elke
+  // actie met een pin eraan.
+  const eigenaars = new Set();
+  for (const d of bron.t_diagram || []) {
+    let cursor = d.ParentID, n = 0;
+    while (cursor && objectPerId.has(cursor) && n++ < 20) {
+      eigenaars.add(cursor);
+      cursor = objectPerId.get(cursor).ParentID;
+    }
+  }
+  /** Map van een "eigenaar"-element (use case, activity): via ParentID omhoog tot het pakket. */
+  const mapVanEigenaar = (objectId, diepte = 0) => {
+    const o = objectPerId.get(objectId);
+    if (!o || diepte > 20) return null;
+    // Geen eigenaar van een diagram: de dichtstbijzijnde eigenaar erboven, anders het pakket.
+    if (!eigenaars.has(objectId)) return o.ParentID ? mapVanEigenaar(o.ParentID, diepte + 1) : mapVanPakket(o.Package_ID);
+    const sleutel = `obj|${objectId}`;
+    if (geheugen.has(sleutel)) return geheugen.get(sleutel);
+    const ouder = o.ParentID ? mapVanEigenaar(o.ParentID, diepte + 1) : mapVanPakket(o.Package_ID);
+    const stereo = o.Stereotype ? `«${o.Stereotype}» ` : "";
+    const id = mapVoor(`${stereo}${o.Name || o.Object_Type}`, ouder);
+    geheugen.set(sleutel, id);
+    return id;
+  };
+
+  const keys = new Map(); // mapId → keys
+  const zet = (key, mapId) => {
+    if (!mapId) return;
+    if (!keys.has(mapId)) keys.set(mapId, []);
+    keys.get(mapId).push(key);
+  };
+  // Diagrammen: in de map van hun eigenaar-element, anders van hun pakket.
+  for (const d of Object.values(model.diagrams)) {
+    const guid = (String(d.id).match(/ead-([0-9a-f-]{36})/) || [])[1];
+    const rij = guid ? diagramPerGuid.get(guid) : null;
+    if (!rij) continue;
+    const mapId = rij.ParentID ? mapVanEigenaar(rij.ParentID) : mapVanPakket(rij.Package_ID);
+    zet(tabId(profielId, d.id), mapId);
+  }
+  // Elementen (geen connectoren, geen naamloze notities/teksten): bij hun
+  // eigenaar (ParentID) of in hun pakket.
+  for (const el of Object.values(model.elements)) {
+    if (el.source || el.target || !el.data?.eaGuid) continue;
+    if (!el.naam && el.elementType !== "begin") continue;
+    const o = objectPerGuid.get(el.data.eaGuid);
+    if (!o || o.Object_Type === "Package") continue;
+    const mapId = o.ParentID && objectPerId.has(o.ParentID) ? mapVanEigenaar(o.ParentID) : mapVanPakket(o.Package_ID);
+    zet(elementKey(profielId, el.id), mapId);
+  }
+  for (const [mapId, lijst] of keys) useModellerenStore.getState().plaatsMeerdere(lijst, mapId);
+}
+
 // ── Projectacties in het menu ─────────────────────────────────────────
 
 async function hernoemProject() {
@@ -2645,7 +2786,31 @@ function menus(ctx) {
       ? profiel.menus(ctx)
       : profiel.menus
     : [];
-  return [projectMenu, ...(Array.isArray(ruw) ? ruw : [])];
+  const profielMenus = Array.isArray(ruw) ? ruw : [];
+  // Bestand → Importeer Sparx EA: één pakket, elk diagram naar zijn eigen
+  // profiel (UML/MIM, Activity, Use case) — los van het actieve tabblad, zie
+  // diagramprofielen/ea/importQeaProject.js. Komt onder het Bestand-menu van
+  // het actieve profiel als dat er een heeft, anders onder het standaard-Bestand.
+  // Bovenaan in Bestand, vóór de profiel-eigen import ("… alleen dit
+  // profiel …"): dit is de import die je in Modelleren wilt (Mark, 09-10
+  // pakte de profiel-variant en kreeg alleen het use case-diagram).
+  const eaItem = {
+    id: "proj-import-ea",
+    label: "Importeer Sparx EA (.qea)…",
+    onClick: () => importeerQeaInProject({ kiesDoel: kiesDoelmapVoorEa, naImport: plaatsEaInProjectboom }),
+  };
+  // In Modelleren is er maar één EA-import, en die doet altijd hetzelfde,
+  // welk tabblad ook actief is (Mark, 09-10): de profiel-eigen varianten
+  // ("… alleen dit profiel …") verdwijnen hier uit het Bestand-menu; ze
+  // blijven bestaan in de losse profiel-activiteiten.
+  const zonderProfielEa = (items) =>
+    (items || []).filter((it) => !(typeof it?.label === "string" && /Sparx EA/.test(it.label) && /alleen dit profiel/.test(it.label)));
+  const bestandIdx = profielMenus.findIndex((m) => m?.id === "bestand");
+  const metEa =
+    bestandIdx >= 0
+      ? profielMenus.map((m, i) => (i === bestandIdx ? { ...m, items: [eaItem, { type: "separator" }, ...zonderProfielEa(m.items)] } : m))
+      : [...profielMenus, { id: "bestand", aanvullen: true, items: [eaItem] }];
+  return [projectMenu, ...metEa];
 }
 
 export default {

@@ -18,6 +18,7 @@
  */
 import { vouwOudeComposities } from "./migratie.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { normaliseerErfenis } from "../../diagramcore/types/erfenis.js";
 import { berekenAutoLayout } from "../../umleditor/metamodel/autoLayout.js";
 
 export const CANONIEK_UML_ID = "canoniek-uml";
@@ -131,27 +132,40 @@ const MATERIEEL_VELD = { key: "materieel", label: "materieel (tijdlijn)", dataty
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
   {
-    id: "entiteit",
-    label: "Entiteit",
-    kort: "ENT",
-    stereotype: "«entiteit»",
+    // Metamodel v2026 (Mark, EA: Zandbak MW / Bitemporeel CG 2026): de
+    // abstracte {Representatie} boven {Entiteit}, {Gegevenselement} en — via
+    // {Gegevenselement} — {Relatie}. Wat ze delen staat één keer hier:
+    // beschrijving, meervoud, tijdlijn, kleur en de velden-compartimenten.
+    // Niet instantieerbaar (geen knop); als bereik staat "representatie" voor
+    // entiteit + gegevenselement (nooit relatie: de recursie-grens, zie
+    // types/erfenis.js). Zelfde naam als de Go-interface in de backend.
+    id: "representatie",
+    label: "Representatie",
+    omschrijving: "Abstracte wortel: wat entiteit, gegevenselement en relatie delen.",
+    isAbstract: true,
     shape: "class-box",
-    kleur: "#bfdbfe",
-    icoon: "klasse",
     // Velden als "Details" in de oude IDE. Typenaam = naam (de oude IDE houdt
     // ze gelijk; de terugreis zet typenaam := naam) en domein = het package
     // waar de entiteit in staat — daarom geen aparte properties.
     // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
-    properties: [
-      BESCHRIJVING_VELD,
-      MEERVOUD_VELD,
-      MATERIEEL_VELD,
-      KLEUR_VELD,
-      { key: "entiteitSubtype", label: "subtype", datatype: "keuze", opties: opties(ENTITEIT_SUBTYPES) },
-    ],
+    properties: [BESCHRIJVING_VELD, MEERVOUD_VELD, MATERIEEL_VELD, KLEUR_VELD],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
+    ],
+  },
+  {
+    id: "entiteit",
+    label: "Entiteit",
+    kort: "ENT",
+    erft: "representatie",
+    stereotype: "«entiteit»",
+    kleur: "#bfdbfe",
+    icoon: "klasse",
+    properties: [
+      { key: "entiteitSubtype", label: "subtype", datatype: "keuze", opties: opties(ENTITEIT_SUBTYPES) },
+    ],
+    compartments: [
       // Opgenomen gegevenselementen (per diagram gekozen, zie opname op GE).
       {
         id: "gegevenselementen",
@@ -205,8 +219,8 @@ const elementTypes = [
     id: "gegevenselement",
     label: "Gegevenselement",
     kort: "GE",
+    erft: "representatie",
     stereotype: "«gegevenselement»",
-    shape: "class-box",
     kleur: "#bbf7d0",
     icoon: "veld",
     // Opname (gedaanten van een samenstel): per diagram kan een GE-voorkomen
@@ -224,19 +238,15 @@ const elementTypes = [
     // oude datavorm. Het profiel is de bron: heenreis, terugreis en migratie
     // lezen de veldnamen hieruit (mappingV3Canoniek.js).
     // Label heen/terug tekent de compositie (edgeLabels leest ze van de GE).
+    // Beschrijving/meervoud/tijdlijn/kleur en de velden-compartimenten komen
+    // van representatie; hier alleen het eigen deel (meervoud-placeholder
+    // overschrijft de geërfde op key).
     properties: [
       { key: "typenaam", label: "typenaam", datatype: "string", placeholder: "bijv. NatuurlijkPersoon_Naam" },
       { key: "domein", label: "domein", datatype: "string" },
-      BESCHRIJVING_VELD,
       { ...MEERVOUD_VELD, placeholder: "bijv. namen" },
-      MATERIEEL_VELD,
-      KLEUR_VELD,
       { key: "naamLabelHeen", label: "label heen", datatype: "string", placeholder: "bijv. heeft" },
       { key: "naamLabelTerug", label: "label terug", datatype: "string", placeholder: "bijv. behoort bij" },
-    ],
-    compartments: [
-      { id: "velden", label: null, fieldType: "attribuut" },
-      { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
     ],
   },
   {
@@ -249,23 +259,25 @@ const elementTypes = [
     id: "relatie",
     label: "Relatie",
     kort: "REL",
+    // Metamodel v2026: een relatie ís een gegevenselement (met bron en doel);
+    // de connector-kant zet het kind zelf. Geërfd: typenaam, domein,
+    // beschrijving, meervoud, tijdlijn, kleur, label heen/terug en de
+    // velden-compartimenten (relatie mét velden = het ASOC-patroon).
+    erft: "gegevenselement",
     stereotype: "«relatie»",
-    shape: "class-box",
     kleur: "#ede9fe",
     icoon: "relatie-box",
     isConnector: true,
+    // Een relatie is geen onderdeel van een entiteit: de opname-gedaante van
+    // het gegevenselement geldt hier niet.
+    opname: null,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["entiteit"] },
     edgePresentatie: { lijn: "solid", kleur: "#64748b" },
-    // Velden als "Details" in de oude IDE, plus de kardinaliteiten en
-    // gericht (die de oude IDE via de lijnen bewerkte). Typenaam = naam (de
-    // terugreis zet typenaam := naam); doel-entiteit = het doel van de lijn.
+    // Kardinaliteiten en gericht (die de oude IDE via de lijnen bewerkte).
+    // Typenaam = naam (de terugreis zet typenaam := naam); doel-entiteit = het
+    // doel van de lijn.
     properties: [
-      { key: "domein", label: "domein", datatype: "string" },
-      BESCHRIJVING_VELD,
-      MEERVOUD_VELD,
-      MATERIEEL_VELD,
-      KLEUR_VELD,
       { key: "relatieSubtype", label: "subtype", datatype: "keuze", opties: opties(RELATIE_SUBTYPES) },
       { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "keuze", opties: opties(KARDINALITEITEN) },
       { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "keuze", opties: opties(KARDINALITEITEN) },
@@ -273,10 +285,6 @@ const elementTypes = [
       { key: "naamLabelTerug", label: "label terug", datatype: "string", placeholder: "bijv. is woonadres van" },
       { key: "directioneel", label: "gericht (→ doel)", datatype: "boolean" },
       { key: "geordend", label: "geordend {ordered}", datatype: "boolean" },
-    ],
-    compartments: [
-      { id: "velden", label: null, fieldType: "attribuut" },
-      { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
     ],
     hooks: {
       stereotype: stereotypeUitSubtype("relatieSubtype"),
@@ -690,6 +698,11 @@ export const canoniekUmlDiagramType = {
     },
   ],
 };
+
+// Overerving (representatie → entiteit/gegevenselement → relatie) meteen
+// uitvlakken: adapters, mapping en tests lezen dít object, niet het register.
+// Registratie normaliseert nog eens (idempotent).
+normaliseerErfenis(canoniekUmlDiagramType);
 
 let _teller = 0;
 

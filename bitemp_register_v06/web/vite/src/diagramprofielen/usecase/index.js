@@ -47,6 +47,7 @@ const elementTypes = [
   },
   {
     id: "usecase",
+    omtrek: "ellips",
     label: "Use case",
     omschrijving: "Samenhangend stuk functionaliteit met waarde voor een actor.",
     kort: "UC",
@@ -65,6 +66,33 @@ const elementTypes = [
     // Container zoals een package: use cases erin slepen legt "bevat".
     containerVoor: "bevat",
     achtergrond: true,
+    properties: [TOELICHTING_VELD, KLEUR_VELD],
+  },
+  {
+    // UML 2 Collaboration (§11.7): gestippelde ellips — EA's "use case
+    // realization". Realiseert een use case; in EA ook een map voor de
+    // uitwerking (diagrammen eronder), dat doet hier de projectmap.
+    id: "collaboratie",
+    omtrek: "ellips",
+    label: "Collaboratie",
+    omschrijving: "Use case-realisatie: de samenwerking die een use case uitwerkt (gestippelde ellips).",
+    kort: "Collab",
+    icoon: "uc-usecase",
+    shape: "uc-ellips",
+    randStijl: "dashed",
+    kleur: "#f8fafc",
+    properties: [TOELICHTING_VELD, KLEUR_VELD],
+  },
+  {
+    // Klassen die EA op een use case-diagram zet (de registraties die een use
+    // case «legt vast»): alleen de naam, het echte klassediagram leeft in puur-uml.
+    id: "klasse",
+    label: "Klasse",
+    omschrijving: "Klasse of interface uit het klassemodel, op dit diagram alleen als verwijzing.",
+    kort: "KL",
+    icoon: "klasse",
+    shape: "class-box",
+    kleur: "#fef9c3",
     properties: [TOELICHTING_VELD, KLEUR_VELD],
   },
   {
@@ -108,8 +136,8 @@ const elementTypes = [
     kort: "—",
     shape: "edge",
     isConnector: true,
-    bron: { elementTypes: ["actor", "usecase"] },
-    doel: { elementTypes: ["actor", "usecase"] },
+    bron: { elementTypes: ["actor", "usecase", "klasse"] },
+    doel: { elementTypes: ["actor", "usecase", "klasse"] },
     edgePresentatie: { lijn: "solid", vorm: "recht", kleur: "#475569" },
   },
   {
@@ -121,6 +149,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["usecase"] },
     doel: { elementTypes: ["usecase"] },
+    properties: [{ key: "voorwaarde", label: "voorwaarde", datatype: "string" }],
     edgePresentatie: { lijn: "dash-4-3", vorm: "recht", kleur: "#475569", markerEnd: "pijl-open" },
     hooks: stereotypeLabel("«include»"),
   },
@@ -133,6 +162,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["usecase"] },
     doel: { elementTypes: ["usecase"] },
+    properties: [{ key: "voorwaarde", label: "voorwaarde", datatype: "string" }],
     edgePresentatie: { lijn: "dash-4-3", vorm: "recht", kleur: "#475569", markerEnd: "pijl-open" },
     hooks: stereotypeLabel("«extend»"),
   },
@@ -147,8 +177,45 @@ const elementTypes = [
     verbindingsregels: [
       { bron: { elementTypes: ["actor"] }, doel: { elementTypes: ["actor"] } },
       { bron: { elementTypes: ["usecase"] }, doel: { elementTypes: ["usecase"] } },
+      { bron: { elementTypes: ["klasse"] }, doel: { elementTypes: ["klasse"] } },
     ],
     edgePresentatie: { lijn: "solid", vorm: "recht", kleur: "#475569", markerEnd: "driehoek" },
+  },
+  {
+    id: "realiseert",
+    label: "Realiseert",
+    omschrijving: "Collaboratie realiseert een use case (gestippeld, driehoek).",
+    kort: "⊳┄",
+    shape: "edge",
+    icoon: "realisatie",
+    isConnector: true,
+    bron: { elementTypes: ["collaboratie", "klasse"] },
+    doel: { elementTypes: ["usecase"] },
+    edgePresentatie: { lijn: "dash-6-3", vorm: "recht", kleur: "#475569", markerEnd: "driehoek" },
+  },
+  {
+    id: "dependency",
+    label: "Dependency",
+    omschrijving: "Afhankelijkheid (bv. «legt vast» van een use case naar een registratie).",
+    kort: "use",
+    shape: "edge",
+    icoon: "dependency",
+    isConnector: true,
+    bron: { elementTypes: ["actor", "usecase", "klasse", "collaboratie"] },
+    doel: { elementTypes: ["actor", "usecase", "klasse", "collaboratie"] },
+    edgePresentatie: { lijn: "dash-6-3", vorm: "recht", kleur: "#64748b", markerEnd: "pijl-open" },
+    properties: [{ key: "voorwaarde", label: "voorwaarde", datatype: "string" }],
+  },
+  {
+    id: "notitielijn",
+    label: "Notitie-lijn",
+    omschrijving: "Koppelt een notitie aan het element waar hij over gaat; geen modelrelatie.",
+    kort: "not",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["notitie"] },
+    doel: { elementTypes: ["actor", "usecase", "systeem", "klasse", "collaboratie", "boundary"] },
+    edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#94a3b8" },
   },
   {
     // Lidmaatschap van het systeemkader — subtiel; het kind ligt er visueel al in.

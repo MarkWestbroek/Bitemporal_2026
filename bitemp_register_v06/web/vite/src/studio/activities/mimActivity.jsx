@@ -14,6 +14,7 @@ import { registreerMim12, mim12DiagramType, maakElement } from "../../diagrampro
 import { vanCanoniekCoreNaarMim, vanMimXmi } from "../../diagramprofielen/mim12/adapter.js";
 import { vanCanoniekModel } from "../../diagramprofielen/canoniek-uml/adapter.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import { importeerQeaAlsMim, isQeaBestand } from "../../diagramprofielen/ea/importQea.js";
 
 registreerMim12();
 
@@ -37,9 +38,13 @@ export default maakDiagramActiviteit({
     herlaadLabel: "Zet canoniek model om naar MIM…",
     /** XMI-import (MIM-UML-profiel, gangbare EA-vorm). */
     importBestand: {
-      label: "Importeer MIM XMI/XML…",
-      accept: ".xml,.xmi",
-      verwerk: (tekst) => vanMimXmi(tekst),
+      label: "Importeer MIM (XMI/XML of Sparx EA .qea) — alleen dit profiel, zonder projectboom…",
+      accept: ".xml,.xmi,.qea,.qeax",
+      binair: true,
+      // Eén keuze, twee formaten: een EA-repository gaat door de .qea-lezer,
+      // de rest is XMI-tekst voor de bestaande adapter.
+      verwerk: (bytes, naam) =>
+        isQeaBestand(bytes, naam) ? importeerQeaAlsMim(bytes, naam) : vanMimXmi(new TextDecoder().decode(bytes)),
     },
   },
 });

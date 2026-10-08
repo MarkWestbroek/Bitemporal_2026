@@ -14,7 +14,7 @@ import {
   elementenVanDiagram,
 } from "./profielOntwerp.js";
 import { vertaalHooks } from "./profielGereedschap.js";
-import { valideerDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { valideerDiagramType, vervangDiagramType } from "../../diagramcore/types/typeRegistry.js";
 
 test("het ontwerp-profiel zelf is een geldige descriptor", () => {
   assert.deepEqual(valideerDiagramType(vertaalHooks(profielOntwerpKern)), []);
@@ -356,4 +356,44 @@ test("shape-sets + typering zijn Style-data op het diagram (geen canvas-node) en
   );
   assert.equal(kern.typeWeergave, "geen", "typering-default terug in de kern");
   assert.deepEqual(kern.shapeSets, skinSet, "volledige skin (shape+icoon+kleur) pass-through");
+});
+
+test("erft/isAbstract: ontwerp ⇄ descriptor roundtrip, geërfde delen niet dubbel getekend", () => {
+  const ontwerp = {
+    elements: {
+      R: { id: "R", naam: "Representatie", elementType: "elementDef", compartimenten: [
+        { compartmentType: "eigenschappen", velden: [{ naam: "alias", fieldType: "eigenschapDef", data: { typeLabel: "string" } }] },
+      ], data: { shape: "class-box", abstract: true } },
+      E: { id: "E", naam: "Entiteit", elementType: "elementDef", compartimenten: [], data: { shape: "class-box", kort: "ENT" } },
+      G: { id: "G", naam: "Gegevenselement", elementType: "elementDef", compartimenten: [], data: { shape: "class-box", kort: "GE" } },
+      e1: { id: "e1", naam: "", elementType: "erft", source: "E", target: "R", compartimenten: [], data: {} },
+      e2: { id: "e2", naam: "", elementType: "erft", source: "G", target: "R", compartimenten: [], data: {} },
+      rel: { id: "rel", naam: "Relatie", elementType: "verbindingsregel", source: "R", target: "R", compartimenten: [], data: { lijn: "solid" } },
+    },
+    diagrams: { ontwerp: { id: "ontwerp", naam: "x", nodes: [], edges: [] } },
+  };
+  const kern = bouwProfielUitOntwerp(ontwerp, { id: "mini", label: "Mini" });
+  const rep = kern.elementTypes.find((et) => et.id === "representatie");
+  const ent = kern.elementTypes.find((et) => et.id === "entiteit");
+  assert.equal(rep.isAbstract, true);
+  assert.equal(ent.erft, "representatie");
+  const rel = kern.elementTypes.find((et) => et.id === "relatie");
+  assert.deepEqual(rel.bron.elementTypes, ["representatie"], "getekend naar het abstracte type");
+  // Geldig én uitvlakbaar: na registratie staat de regel op de concrete typen.
+  const descriptor = vertaalHooks(kern);
+  assert.deepEqual(valideerDiagramType(descriptor), []);
+  vervangDiagramType(descriptor);
+  assert.deepEqual(rel.bron.elementTypes, ["entiteit", "gegevenselement"]);
+  assert.equal(ent.properties.some((p) => p.key === "alias"), true, "alias geërfd");
+  // Terug naar een ontwerp: één ▷-pijl per kind, alias niet dubbel op Entiteit, abstract-vlag terug.
+  const terug = ontwerpUitProfiel(descriptor);
+  const pijlen = Object.values(terug.elements).filter((el) => el.elementType === "erft");
+  assert.equal(pijlen.length, 2);
+  const entNode = Object.values(terug.elements).find((el) => el.elementType === "elementDef" && el.naam === "Entiteit");
+  const repNode = Object.values(terug.elements).find((el) => el.elementType === "elementDef" && el.naam === "Representatie");
+  assert.equal(repNode.data.abstract, true);
+  const entVelden = entNode.compartimenten[0].velden.map((v) => v.naam);
+  assert.ok(!entVelden.includes("alias"), "geërfde eigenschap niet nog eens op het kind");
+  const regels = Object.values(terug.elements).filter((el) => el.elementType === "verbindingsregel");
+  assert.equal(regels.length, 1, "één regel naar het abstracte type, niet vier");
 });

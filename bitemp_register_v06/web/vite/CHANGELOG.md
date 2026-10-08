@@ -7,6 +7,37 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+Sparx EA-import en overerving in het M3 (branch `feat/ea-qea-lezer`, 07–09 oktober; alleen
+frontend, api blijft 0.12.0). Onderzoek en EA-schema: `docs/plans/2026-10-07 Sparx EA-sync — vier
+routes vergeleken (onderzoek).md`.
+
+### Toegevoegd
+- **Sparx EA importeren uit een `.qea`** (SQLite, client-side met sql.js): in Modelleren *Bestand →
+  Importeer Sparx EA (.qea)…* leest één pakket (keuzelijst met zoekveld) en zet elk diagram in zijn
+  eigen profiel — klassediagrammen naar UML of, bij MIM-/MIG-stereotypen, naar MIM (tagged values →
+  mim12-eigenschappen), activiteitendiagrammen naar Activity (aanroepen, pins, guards, partities),
+  use case-diagrammen naar Use case (incl. collaboratie en «legt vast»). Posities, maten, knikpunten,
+  verborgen lijnen en kleuren komen mee (schaal 1,5); stabiele ids uit de EA-GUID; stereotypen,
+  tagged values en notities reizen mee op `data`. De EA-boom wordt de projectboom: pakketten,
+  use cases en activities als mappen, het diagram bij zijn eigenaar met de knopen ernaast; je kiest
+  de doelmap of de wortel. Toevoegen met undo per profiel. Per profiel bestaat ook een import
+  "alleen dit profiel". `scripts/inspecteer-qea.py` doorlicht een `.qea`.
+- **M3: overerving en abstracte elementtypen** — `ElementType.erft` en `isAbstract` (EMOF
+  superClass/isAbstract), uitgevlakt bij registratie (`types/erfenis.js`); een abstract type staat in
+  elk bereik voor zijn concrete afstammelingen (een abstract knoop-type nooit voor connectoren);
+  profiel-ontwerper tekent *Erft van* (▷) en kent een vinkje *abstract*. **Canoniek-uml** staat op
+  Marks Metamodel v2026: abstracte `representatie`, entiteit en gegevenselement eronder, relatie
+  onder gegevenselement.
+- **Profielen**: notitie-lijn in puur-uml, activity, use case en MIM; collaboratie, klasse,
+  realiseert en dependency in use case; `ElementType.omtrek` (ruit/ellips) zodat lijnen de echte
+  vorm raken — activity hecht nu zwevend.
+- **Studio**: bestandsimport in een niet-lege sandbox vraagt *toevoegen (undo)* of *vervangen*;
+  keuzedialoog `vraagKeuze` met zoekveld; `importBestand.binair`.
+
+### Gefixt
+- Zwevende lijnuiteinden mikken op hun dichtstbijzijnde knikpunt (niet op de andere doos); een
+  knikpunt óp de rand is het uiteinde.
+
 
 ## [studio/v0.15.2] — 2026-10-08
 Patch: de snapshot-grens ging niet mee naar de server. Alleen frontend; api blijft 0.12.0.
