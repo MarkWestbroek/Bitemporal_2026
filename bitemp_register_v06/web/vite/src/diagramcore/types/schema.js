@@ -247,6 +247,12 @@
 /**
  * DiagramType — één "profiel": de volledige configuratie van een diagramsoort.
  *
+ * N.B. motor-interne velden beginnen met `_` (`_erfenisGenormaliseerd`,
+ * `_hierarchieVoorExpansie`; op ElementType `_geerfd`, op eindpunten
+ * `_voorExpansie`): gezet door types/erfenis.js bij registratie, nooit
+ * serialiseren of in een profiel-kern opslaan — registreer daarom een
+ * bewaarde kern altijd via `kopieVoorNormalisatie` (zie profielRegistratie).
+ *
  * @typedef {Object} DiagramType
  * @property {string} id                    - bv. "canoniek-uml", "puur-uml", "oas31"
  * @property {string} label

@@ -94,9 +94,6 @@ export function valideerDiagramType(dtRauw) {
       if (gezien.has(et.id)) fouten.push(`DiagramType "${dt.id}": dubbel ElementType-id "${et.id}"`);
       gezien.add(et.id);
     }
-    if (et?.isAbstract && et?.isConnector && !et?.erft) {
-      // Een abstracte connector is prima als ouder, maar niemand kan hem leggen.
-    }
   }
   // Hiërarchie (P02): optioneel connectortype-id — of een lijstje, bv.
   // ["bevat", "compositie"] — dat de bevat-relatie(s) vormt; de

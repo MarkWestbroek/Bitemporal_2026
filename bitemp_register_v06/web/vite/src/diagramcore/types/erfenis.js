@@ -30,7 +30,7 @@
  */
 
 /** Sleutels die een kind nooit van zijn ouder overneemt. */
-const NIET_ERVEN = new Set(["id", "label", "kort", "omschrijving", "erft", "isAbstract", "samentrekking"]);
+const NIET_ERVEN = new Set(["id", "label", "kort", "omschrijving", "erft", "isAbstract"]);
 
 /**
  * @param {import("./schema.js").DiagramType} dt
@@ -135,6 +135,32 @@ export function normaliseerErfenis(dt) {
       et[sleutel] = expandeer(bron);
     }
   }
+  // Connectortype-lijsten die de motor met === tegen el.elementType legt:
+  // DiagramType.hierarchie, samentrekking.relatieTypes, opname.relatieTypes.
+  if (dt.hierarchie != null) {
+    const bron = dt._hierarchieVoorExpansie ?? dt.hierarchie;
+    dt._hierarchieVoorExpansie = bron;
+    const uit = [];
+    for (const h of [].concat(bron)) {
+      if (typeof h === "string") uit.push(...expandeer([h]));
+      else if (h && typeof h === "object" && h.type) for (const c of expandeer([h.type])) uit.push({ ...h, type: c });
+      else uit.push(h);
+    }
+    dt.hierarchie = typeof bron === "string" && uit.length === 1 && typeof uit[0] === "string" ? uit[0] : uit;
+  }
+  for (const et of types) {
+    for (const sleutel of ["samentrekking", "opname"]) {
+      const obj = et[sleutel];
+      if (!obj || !Array.isArray(obj.relatieTypes)) continue;
+      const bron = obj._relatieTypesVoorExpansie || obj.relatieTypes;
+      obj._relatieTypesVoorExpansie = bron;
+      obj.relatieTypes = expandeer(bron);
+    }
+    // Eén id, geen lijst: een container-relatie moet een concreet connectortype zijn.
+    if (et.containerVoor && perId.get(et.containerVoor)?.isAbstract) {
+      fouten.push(`${ctx(et)}: containerVoor "${et.containerVoor}" is abstract; kies een concreet connectortype`);
+    }
+  }
   // Shape-sets: een gedaante voor een abstract type geldt voor zijn afstammelingen.
   for (const set of dt.shapeSets || []) {
     const shapes = set?.shapes || {};
@@ -150,8 +176,10 @@ export function normaliseerErfenis(dt) {
 /** Vlak één kind uit met zijn (al uitgevlakte) ouder. */
 function erfVan(kind, ouder) {
   const geerfd = { compartments: [], properties: [] };
-  // Verbindingsregels erven als geheel: alleen als het kind er zélf geen heeft.
-  const erftRegels = kind.bron == null && kind.doel == null && kind.verbindingsregels == null;
+  // Verbindingsregels: `bron` en `doel` erven per kant (een kind mag alleen
+  // zijn bron vernauwen); `verbindingsregels` als geheel, en alleen als het
+  // kind zelf geen bron/doel/regels heeft.
+  const heeftEigenRegels = kind.verbindingsregels != null;
   for (const [k, v] of Object.entries(ouder)) {
     if (NIET_ERVEN.has(k) || k.startsWith("_")) continue;
     if (k === "compartments" || k === "properties") continue;
@@ -159,8 +187,12 @@ function erfVan(kind, ouder) {
       kind[k] = { ...(v || {}), ...(kind[k] || {}) };
       continue;
     }
-    if (k === "bron" || k === "doel" || k === "verbindingsregels") {
-      if (erftRegels) kind[k] = kloon(v);
+    if (k === "bron" || k === "doel") {
+      if (!heeftEigenRegels && kind[k] == null) kind[k] = kloon(v);
+      continue;
+    }
+    if (k === "verbindingsregels") {
+      if (!heeftEigenRegels && kind.bron == null && kind.doel == null) kind[k] = kloon(v);
       continue;
     }
     if (kind[k] === undefined) kind[k] = kloon(v);
@@ -179,10 +211,16 @@ function erfVan(kind, ouder) {
   kind._geerfd = geerfd;
 }
 
-/** Diepe kopie voor gewone data (geen functies — hooks worden apart samengevoegd). */
+/**
+ * Diepe kopie voor gewone data (geen functies — hooks worden apart
+ * samengevoegd). Motor-interne `_`-sleutels (`_voorExpansie`, `_geerfd`)
+ * gaan niet mee: een al geëxpandeerde ouder kopieert ze zo nooit in een kind.
+ */
 function kloon(v) {
   if (Array.isArray(v)) return v.map(kloon);
-  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, kloon(x)]));
+  if (v && typeof v === "object") {
+    return Object.fromEntries(Object.entries(v).filter(([k]) => !k.startsWith("_")).map(([k, x]) => [k, kloon(x)]));
+  }
   return v;
 }
 
@@ -194,14 +232,14 @@ function kloon(v) {
  */
 export function kopieVoorNormalisatie(dt) {
   if (!dt || typeof dt !== "object") return dt;
-  const { _erfenisGenormaliseerd, ...rest } = dt;
+  const { _erfenisGenormaliseerd, _hierarchieVoorExpansie, ...rest } = dt;
   return {
     ...rest,
     elementTypes: Array.isArray(dt.elementTypes)
       ? dt.elementTypes.map((et) => {
           if (!et || typeof et !== "object") return et;
           const k = { ...et };
-          for (const s of ["bron", "doel", "verbindingsregels", "randElement", "afbakeningVoor", "overbrugt", "compartments", "properties", "edgePresentatie"]) {
+          for (const s of ["bron", "doel", "verbindingsregels", "randElement", "afbakeningVoor", "overbrugt", "compartments", "properties", "edgePresentatie", "samentrekking", "opname"]) {
             if (k[s] !== undefined) k[s] = kloon(k[s]);
           }
           if (k.hooks) k.hooks = { ...k.hooks };
@@ -210,6 +248,7 @@ export function kopieVoorNormalisatie(dt) {
         })
       : dt.elementTypes,
     ...(Array.isArray(dt.shapeSets) ? { shapeSets: kloon(dt.shapeSets) } : {}),
+    ...(dt.hierarchie != null ? { hierarchie: kloon(dt.hierarchie) } : {}),
   };
 }
 

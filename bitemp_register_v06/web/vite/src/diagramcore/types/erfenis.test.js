@@ -145,3 +145,49 @@ test("kopieVoorNormalisatie deelt hooks maar niet de data-delen", () => {
   assert.equal(k.elementTypes[0].hooks.a, dt.elementTypes[0].hooks.a);
   assert.equal(dt.elementTypes[1].compartments.length, 1, "origineel onaangeroerd");
 });
+
+test("bron en doel erven per kant: een kind dat alleen zijn bron vernauwt houdt het doel van de ouder", () => {
+  const dt = maakProfiel();
+  dt.elementTypes.push({ id: "relatie-smal", label: "RSm", shape: "edge", isConnector: true, erft: "relatie", bron: { elementTypes: ["entiteit"] } });
+  assert.deepEqual(valideerDiagramType(dt), []);
+  normaliseerErfenis(dt);
+  const rs = dt.elementTypes.find((e) => e.id === "relatie-smal");
+  assert.deepEqual(rs.bron.elementTypes, ["entiteit"]);
+  assert.deepEqual(rs.doel.elementTypes, ["entiteit", "gegevenselement", "notitie"], "doel geërfd");
+});
+
+test("hierarchie, samentrekking.relatieTypes en opname.relatieTypes expanderen; containerVoor naar abstract is fout", () => {
+  const dt = maakProfiel();
+  dt.elementTypes.find((e) => e.id === "relatie").isAbstract = true;
+  dt.elementTypes.push({ id: "bevat", label: "Bevat", shape: "edge", isConnector: true, erft: "relatie" });
+  dt.elementTypes.push({ id: "gebruikt", label: "Gebruikt", shape: "edge", isConnector: true, erft: "relatie" });
+  dt.hierarchie = ["relatie", { type: "relatie", omgekeerd: true }];
+  const ent = dt.elementTypes.find((e) => e.id === "entiteit");
+  ent.samentrekking = { gedaante: "bol", relatieTypes: ["relatie"] };
+  ent.opname = { relatieTypes: ["relatie"] };
+  assert.deepEqual(normaliseerErfenis(dt), []);
+  assert.deepEqual(dt.hierarchie, ["bevat", "gebruikt", { type: "bevat", omgekeerd: true }, { type: "gebruikt", omgekeerd: true }]);
+  assert.deepEqual(dt._hierarchieVoorExpansie, ["relatie", { type: "relatie", omgekeerd: true }]);
+  assert.deepEqual(ent.samentrekking.relatieTypes, ["bevat", "gebruikt"]);
+  assert.deepEqual(ent.opname.relatieTypes, ["bevat", "gebruikt"]);
+  // Kind erft de gedaante-definitie van de ouder (geen `_`-sleutels mee).
+  const ge = dt.elementTypes.find((e) => e.id === "gegevenselement");
+  assert.equal(ge.samentrekking, undefined, "representatie had er geen");
+  normaliseerErfenis(dt); // idempotent, ook voor de hiërarchie
+  assert.deepEqual(dt.hierarchie.length, 4);
+
+  const fout = maakProfiel();
+  fout.elementTypes.find((e) => e.id === "relatie").isAbstract = true;
+  fout.elementTypes.find((e) => e.id === "entiteit").containerVoor = "relatie";
+  assert.ok(normaliseerErfenis(fout).some((f) => /containerVoor "relatie" is abstract/.test(f)));
+});
+
+test("een bewaarde profiel-kern blijft rauw als je op een kopie registreert", () => {
+  _resetVoorTests();
+  const kern = maakProfiel();
+  const voor = JSON.stringify(kern, (k, v) => (typeof v === "function" ? "fn" : v));
+  vervangDiagramType(kopieVoorNormalisatie(kern));
+  assert.equal(JSON.stringify(kern, (k, v) => (typeof v === "function" ? "fn" : v)), voor);
+  assert.deepEqual(getDiagramType("mini-canoniek").elementTypes.find((e) => e.id === "relatie").bron.elementTypes, ["entiteit", "gegevenselement"]);
+  _resetVoorTests();
+});
