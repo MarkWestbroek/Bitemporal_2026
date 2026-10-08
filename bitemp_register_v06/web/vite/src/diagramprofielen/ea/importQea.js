@@ -76,7 +76,10 @@ async function importeerQea(bytes, bestandsnaam, vertaal, profielLabel) {
         tekst:
           `${v.elementen} elementen, ${v.connectoren} connectoren, ${v.diagrammen} diagrammen gelezen.\n` +
           `Niet in ${profielLabel}, overgeslagen:\n` +
-          overgeslagen.map(([soort, n]) => `  • ${soort}: ${n}`).join("\n"),
+          overgeslagen.map(([soort, n]) => `  • ${soort}: ${n}`).join("\n") +
+          `
+
+Alle diagramsoorten tegelijk, met de EA-boom als mappen: in Modelleren via Bestand → Importeer Sparx EA (.qea)…`,
       });
     }
     return { diagramTypeId: model.diagramTypeId, elements: model.elements, diagrams: model.diagrams };
