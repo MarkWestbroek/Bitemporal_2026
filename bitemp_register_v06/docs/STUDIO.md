@@ -410,6 +410,13 @@ UML-activiteit (zelfde IDE), zoals gewenst.
 
 ### Canoniek model — de generieke diagram-motor (bewerkbare sandbox)
 
+> **Sparx EA importeren (2026-10-09).** *Bestand → Importeer Sparx EA (.qea)…* in
+> Modelleren leest één EA-pakket en zet elk diagram in zijn eigen profiel (UML of MIM,
+> Activity, Use case), als "toevoegen" met undo per profiel. De EA-boom komt mee als
+> mappen: pakketten, en de use cases/activities die diagrammen bezitten; het diagram
+> staat in de map van zijn eigenaar met de knopen ernaast. Details en EA-schema:
+> `docs/plans/2026-10-07 Sparx EA-sync — vier routes vergeleken (onderzoek).md` §7.
+>
 > **Metamodel v2026 in het profiel (2026-10-09).** Het canonieke profiel heeft een
 > abstracte wortel `representatie` (niet instantieerbaar, geen knop) met wat
 > entiteit, gegevenselement en relatie delen: beschrijving, meervoud, tijdlijn

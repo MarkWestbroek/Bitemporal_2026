@@ -38,8 +38,14 @@ const ELDERS_GELEZEN = new Set([
 /** Profieltype-ids (= activiteit-ids) waar de lezers op landen. */
 const PROFIEL = { puurUml: "puurUml05", mim: "mim05", activity: "activity05", usecase: "usecase05" };
 
-/** Kies een .qea en importeer één pakket in alle passende profielen. */
-export function importeerQeaInProject() {
+/**
+ * Kies een .qea en importeer één pakket in alle passende profielen.
+ * @param {{naImport?: (profielId: string, model: {elements: Record<string, any>, diagrams: Record<string, any>}, ctx: {bron: any, packageId: number, geheugen: Map<any, any>}) => void}} [opties]
+ *   `naImport` wordt per profiel aangeroepen ná een geslaagde import, met de
+ *   definitieve (eventueel hernoemde) element-/diagram-ids — bv. om de
+ *   EA-boom (pakketten, use case, activity) als mappen in het project te zetten.
+ */
+export function importeerQeaInProject(opties = {}) {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = ".qea,.qeax";
@@ -48,7 +54,7 @@ export function importeerQeaInProject() {
     if (!file) return;
     file
       .arrayBuffer()
-      .then((bytes) => importeerQeaBytesInProject(bytes, file.name))
+      .then((bytes) => importeerQeaBytesInProject(bytes, file.name, opties))
       .catch((e) => toonMelding({ titel: "Import mislukt", tekst: String(e?.message || e) }));
   };
   input.click();
@@ -59,7 +65,7 @@ export function importeerQeaInProject() {
  * @param {string} [bestandsnaam]
  * @returns {Promise<null|{profielen: Record<string, {elementen:number, diagrammen:number}>, overgeslagen: Record<string, number>}>}
  */
-export async function importeerQeaBytesInProject(bytes, bestandsnaam = "") {
+export async function importeerQeaBytesInProject(bytes, bestandsnaam = "", opties = {}) {
   const db = await openQea(bytes);
   let bron;
   let pakketLabel = "";
@@ -83,7 +89,7 @@ export async function importeerQeaBytesInProject(bytes, bestandsnaam = "") {
   } finally {
     db.close();
   }
-  return verdeelOverProfielen(bron, packageId, pakketLabel);
+  return verdeelOverProfielen(bron, packageId, pakketLabel, opties);
 }
 
 /**
@@ -93,7 +99,7 @@ export async function importeerQeaBytesInProject(bytes, bestandsnaam = "") {
  * @param {number} packageId
  * @param {string} [pakketLabel]
  */
-export async function verdeelOverProfielen(bron, packageId, pakketLabel = "") {
+export async function verdeelOverProfielen(bron, packageId, pakketLabel = "", { naImport = null } = {}) {
   if (!packageId) {
     // De wortel van het gelezen bereik: het pakket dat geen ouder binnen de bron heeft.
     const ids = new Set((bron.t_package || []).map((p) => p.Package_ID));
@@ -117,6 +123,8 @@ export async function verdeelOverProfielen(bron, packageId, pakketLabel = "") {
   /** @type {Record<string, number>} */
   const overgeslagen = {};
   const meldingen = [];
+  /** Run-context voor `naImport`: één geheugen voor alle profielen van deze import. */
+  const ctx = { bron, packageId, geheugen: new Map() };
   for (const { profiel, vertaal, naam } of lezers) {
     const model = vertaal(bron, { packageId });
     const aantalDiagrammen = Object.keys(model.diagrams).length;
@@ -140,6 +148,13 @@ export async function verdeelOverProfielen(bron, packageId, pakketLabel = "") {
       continue;
     }
     profielen[naam] = { elementen: aantalElementen, diagrammen: aantalDiagrammen };
+    if (naImport) {
+      try {
+        naImport(profiel, { elements, diagrams }, ctx);
+      } catch (e) {
+        meldingen.push(`${naam}: in de projectboom zetten mislukte — ${e?.message || e}`);
+      }
+    }
     // Wat géén enkele lezer kent, telt in het verslag: diagramsoorten die
     // een lezer bewust aan een andere laat ("diagram Use Case" bij de
     // activity-lezer) en EA-typen die een ándere lezer wél kent, horen daar
@@ -155,7 +170,10 @@ export async function verdeelOverProfielen(bron, packageId, pakketLabel = "") {
     titel: regels.length ? "EA-pakket geïmporteerd" : "Niets te importeren",
     tekst:
       (pakketLabel ? `${pakketLabel}\n\n` : "") +
-      (regels.length ? `Toegevoegd (Ctrl+Z per profiel maakt het ongedaan):\n${regels.join("\n")}\n\nDe diagrammen staan onder "Niet ingedeeld" bij hun profiel.` : "Geen diagrammen of elementen gevonden die een profiel kent.") +
+      (regels.length
+        ? `Toegevoegd (Ctrl+Z per profiel maakt het ongedaan):\n${regels.join("\n")}\n\n` +
+          (naImport ? "De EA-boom (pakketten, use cases, activities) staat als mappen in het project." : `De diagrammen staan onder "Niet ingedeeld" bij hun profiel.`)
+        : "Geen diagrammen of elementen gevonden die een profiel kent.") +
       (rest.length ? `\n\nNiet in een profiel: ${rest.map(([s, n]) => `${s} (${n})`).join(", ")}` : "") +
       (meldingen.length ? `\n\n${meldingen.join("\n")}` : ""),
   });

@@ -566,9 +566,19 @@ diagramsoort. Daarom in Modelleren *Bestand → Importeer Sparx EA (.qea)…*
 hetzelfde pakket. Klassediagrammen (alles behalve Activity/Use Case) → puur-uml, of mim12
 als het pakket `MIM::`/`MIG::`-stereotypen draagt; Activity → activity; Use Case → use case.
 Elke uitkomst gaat als "toevoegen" (undo per profiel) in de store van dat profiel; de
-diagrammen verschijnen onder *Niet ingedeeld* bij hun profiel. Het verslag telt alleen
-EA-typen die géén lezer kent (bij UC.NPA.REG.0010: ActivityParameter). De
-profiel-imports heten nu "… — alleen dit profiel…".
+verslag telt alleen EA-typen die géén lezer kent (bij UC.NPA.REG.0010:
+ActivityParameter). De profiel-imports heten nu "… — alleen dit profiel…".
+
+**De EA-boom als projectboom (09-10, Marks vraag "kan dat?").** EA toont het diagram in
+de activity, die in de use case zit, die in het pakket zit; onder het diagram de acties en
+beslissingen. De project-import bouwt dat na (`plaatsEaInProjectboom` in
+modellerenActivity.jsx): pakketten worden mappen; elementen die een diagram "bezitten"
+(`t_diagram.ParentID`, en via `ParentID` hun eigenaars — de activity en de use case
+erboven) worden óók mappen, met «stereotype» in de naam; het diagram staat in de map van
+zijn eigenaar, de knopen (acties, beslissingen, pins, einden) ernaast, de rest in de map van
+zijn pakket. Naamloze notities blijven uit de boom. Mappen worden hergebruikt (zelfde naam
+onder dezelfde ouder), dus een tweede import geeft geen dubbele boom. Elementen van buiten
+het gekozen pakket (klassen van elders op een diagram) krijgen geen map.
 
 ### 7.1 Openstaand — de lijst uit het gesprek (08-10)
 
