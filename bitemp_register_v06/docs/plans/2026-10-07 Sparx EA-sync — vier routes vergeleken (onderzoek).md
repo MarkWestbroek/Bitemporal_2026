@@ -578,7 +578,18 @@ erboven) worden óók mappen, met «stereotype» in de naam; het diagram staat i
 zijn eigenaar, de knopen (acties, beslissingen, pins, einden) ernaast, de rest in de map van
 zijn pakket. Naamloze notities blijven uit de boom. Mappen worden hergebruikt (zelfde naam
 onder dezelfde ouder), dus een tweede import geeft geen dubbele boom. Elementen van buiten
-het gekozen pakket (klassen van elders op een diagram) krijgen geen map.
+het gekozen pakket (klassen van elders op een diagram) krijgen geen map. Na de pakketkeuze
+vraagt de import **waar** in het project (een bestaande map of de wortel; `kiesDoel`): de
+bron bepaalt wát het is, de gebruiker wáár het komt. In Modelleren is dit de enige EA-import
+onder Bestand (de profiel-varianten "alleen dit profiel" staan alleen in de losse
+activiteiten).
+
+**Volgende stap (Marks wens, 09-10): merge op GUID.** Kies je een bestaande map waar het
+pakket al in staat, dan zou de import moeten *synchroniseren* in plaats van toevoegen: per
+`data.eaGuid` het bestaande element/diagram bijwerken als het anders is (naam, velden,
+positie), nieuwe toevoegen, en melden wat er veranderde — zonder nieuwe ids, zodat
+kruisverbanden en plaatsingen blijven staan. De bouwstenen zijn er (stabiele ids uit de GUID,
+`importeerModel` als één undo-stap, de mappen worden al hergebruikt).
 
 ### 7.1 Openstaand — de lijst uit het gesprek (08-10)
 

@@ -18,7 +18,7 @@
 import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
-import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
+import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
@@ -2390,8 +2390,42 @@ function kiesEnImporteerProject() {
  * @param {{elements: Record<string, any>, diagrams: Record<string, any>}} model - de ingevoegde delen (definitieve ids)
  * @param {{bron: any, packageId: number, geheugen: Map<any, any>}} ctx
  */
+/**
+ * Waar de EA-boom in het project komt: een bestaande map (op pad gekozen) of
+ * de wortel. `undefined` = afgebroken. De bron bepaalt wát het is, de
+ * gebruiker wáár het komt (Mark, 09-10).
+ */
+async function kiesDoelmapVoorEa(pakketLabel) {
+  const { mappen } = useModellerenStore.getState();
+  const pad = (id) => {
+    const uit = [];
+    let c = mappen[id];
+    let n = 0;
+    while (c && n++ < 30) {
+      uit.unshift(c.naam);
+      c = c.ouderId ? mappen[c.ouderId] : null;
+    }
+    return uit.join(" / ");
+  };
+  const opties = [
+    { waarde: "__wortel__", label: "(wortel van het project)" },
+    ...Object.values(mappen)
+      .map((m) => ({ waarde: m.id, label: pad(m.id) }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+  ];
+  const keuze = await vraagKeuze({
+    titel: "Waar in het project?",
+    label: `Map voor "${(pakketLabel || "").split(" / ").pop() || "het pakket"}" (het EA-pakket wordt daarin een map)`,
+    opties,
+    bevestig: "Importeer",
+    zoekbaar: opties.length > 8,
+  });
+  if (!keuze) return undefined;
+  return keuze === "__wortel__" ? null : keuze;
+}
+
 function plaatsEaInProjectboom(profielId, model, ctx) {
-  const { bron, packageId, geheugen } = ctx;
+  const { bron, packageId, geheugen, doel } = ctx;
   const st = useModellerenStore.getState();
   const pakketPerId = new Map((bron.t_package || []).map((p) => [p.Package_ID, p]));
   const objectPerId = new Map((bron.t_object || []).map((o) => [o.Object_ID, o]));
@@ -2422,7 +2456,8 @@ function plaatsEaInProjectboom(profielId, model, ctx) {
     const sleutel = `pkg|${pid}`;
     if (geheugen.has(sleutel)) return geheugen.get(sleutel);
     const p = pakketPerId.get(pid);
-    const ouder = p && pid !== packageId ? mapVanPakket(p.Parent_ID) : null;
+    // Het gekozen pakket komt in de gekozen doelmap (of de wortel).
+    const ouder = p && pid !== packageId ? mapVanPakket(p.Parent_ID) : doel || null;
     const id = mapVoor(p?.Name || `Pakket ${pid}`, ouder);
     geheugen.set(sleutel, id);
     return id;
@@ -2757,7 +2792,7 @@ function menus(ctx) {
   const eaItem = {
     id: "proj-import-ea",
     label: "Importeer Sparx EA (.qea)…",
-    onClick: () => importeerQeaInProject({ naImport: plaatsEaInProjectboom }),
+    onClick: () => importeerQeaInProject({ kiesDoel: kiesDoelmapVoorEa, naImport: plaatsEaInProjectboom }),
   };
   // In Modelleren is er maar één EA-import, en die doet altijd hetzelfde,
   // welk tabblad ook actief is (Mark, 09-10): de profiel-eigen varianten

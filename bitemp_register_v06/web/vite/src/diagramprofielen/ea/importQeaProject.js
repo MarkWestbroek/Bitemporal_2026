@@ -40,10 +40,13 @@ const PROFIEL = { puurUml: "puurUml05", mim: "mim05", activity: "activity05", us
 
 /**
  * Kies een .qea en importeer één pakket in alle passende profielen.
- * @param {{naImport?: (profielId: string, model: {elements: Record<string, any>, diagrams: Record<string, any>}, ctx: {bron: any, packageId: number, geheugen: Map<any, any>}) => void}} [opties]
- *   `naImport` wordt per profiel aangeroepen ná een geslaagde import, met de
- *   definitieve (eventueel hernoemde) element-/diagram-ids — bv. om de
- *   EA-boom (pakketten, use case, activity) als mappen in het project te zetten.
+ * @param {{naImport?: (profielId: string, model: {elements: Record<string, any>, diagrams: Record<string, any>}, ctx: {bron: any, packageId: number, geheugen: Map<any, any>, doel: any}) => void,
+ *          kiesDoel?: (pakketLabel: string) => Promise<any>}} [opties]
+ *   `kiesDoel` wordt na de pakketkeuze aangeroepen (bv. "welke map?"); `undefined`
+ *   terug = afbreken, anders komt de waarde als `ctx.doel` mee. `naImport` wordt
+ *   per profiel aangeroepen ná een geslaagde import, met de definitieve
+ *   (eventueel hernoemde) element-/diagram-ids — bv. om de EA-boom (pakketten,
+ *   use case, activity) als mappen in het project te zetten.
  */
 export function importeerQeaInProject(opties = {}) {
   const input = document.createElement("input");
@@ -99,7 +102,7 @@ export async function importeerQeaBytesInProject(bytes, bestandsnaam = "", optie
  * @param {number} packageId
  * @param {string} [pakketLabel]
  */
-export async function verdeelOverProfielen(bron, packageId, pakketLabel = "", { naImport = null } = {}) {
+export async function verdeelOverProfielen(bron, packageId, pakketLabel = "", { naImport = null, kiesDoel = null } = {}) {
   if (!packageId) {
     // De wortel van het gelezen bereik: het pakket dat geen ouder binnen de bron heeft.
     const ids = new Set((bron.t_package || []).map((p) => p.Package_ID));
@@ -124,7 +127,13 @@ export async function verdeelOverProfielen(bron, packageId, pakketLabel = "", { 
   const overgeslagen = {};
   const meldingen = [];
   /** Run-context voor `naImport`: één geheugen voor alle profielen van deze import. */
-  const ctx = { bron, packageId, geheugen: new Map() };
+  const ctx = { bron, packageId, geheugen: new Map(), doel: null };
+  // Waar in het project (bv. welke map): de host kiest, vóór er iets wordt ingevoegd.
+  if (kiesDoel) {
+    const doel = await kiesDoel(pakketLabel);
+    if (doel === undefined) return null; // afgebroken
+    ctx.doel = doel;
+  }
   for (const { profiel, vertaal, naam } of lezers) {
     const model = vertaal(bron, { packageId });
     const aantalDiagrammen = Object.keys(model.diagrams).length;
