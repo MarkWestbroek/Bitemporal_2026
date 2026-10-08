@@ -30,7 +30,7 @@ export default maakDiagramActiviteit({
   koppeling: {
     /** Sparx EA-repository (.qea = SQLite) → puur-uml, één pakket met deelpakketten. */
     importBestand: {
-      label: "Importeer Sparx EA (.qea) — alleen dit profiel…",
+      label: "Importeer Sparx EA (.qea) — alleen dit profiel, zonder projectboom…",
       accept: ".qea,.qeax",
       binair: true,
       verwerk: (bytes, bestandsnaam) => importeerQeaAlsPuurUml(bytes, bestandsnaam),

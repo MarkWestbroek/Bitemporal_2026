@@ -28,7 +28,7 @@ export default maakDiagramActiviteit({
   koppeling: {
     /** Sparx EA-repository (.qea) → de activiteitendiagrammen van één pakket. */
     importBestand: {
-      label: "Importeer Sparx EA (.qea) — alleen dit profiel…",
+      label: "Importeer Sparx EA (.qea) — alleen dit profiel, zonder projectboom…",
       accept: ".qea,.qeax",
       binair: true,
       verwerk: (bytes, bestandsnaam) => importeerQeaAlsActivity(bytes, bestandsnaam),

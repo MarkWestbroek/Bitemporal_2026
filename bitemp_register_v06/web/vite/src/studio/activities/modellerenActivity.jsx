@@ -2751,11 +2751,18 @@ function menus(ctx) {
   // profiel (UML/MIM, Activity, Use case) — los van het actieve tabblad, zie
   // diagramprofielen/ea/importQeaProject.js. Komt onder het Bestand-menu van
   // het actieve profiel als dat er een heeft, anders onder het standaard-Bestand.
-  const eaItem = { id: "proj-import-ea", label: "Importeer Sparx EA (.qea)…", onClick: () => importeerQeaInProject({ naImport: plaatsEaInProjectboom }) };
+  // Bovenaan in Bestand, vóór de profiel-eigen import ("… alleen dit
+  // profiel …"): dit is de import die je in Modelleren wilt (Mark, 09-10
+  // pakte de profiel-variant en kreeg alleen het use case-diagram).
+  const eaItem = {
+    id: "proj-import-ea",
+    label: "Importeer Sparx EA (.qea) in het project — alle diagramsoorten…",
+    onClick: () => importeerQeaInProject({ naImport: plaatsEaInProjectboom }),
+  };
   const bestandIdx = profielMenus.findIndex((m) => m?.id === "bestand");
   const metEa =
     bestandIdx >= 0
-      ? profielMenus.map((m, i) => (i === bestandIdx ? { ...m, items: [...(m.items || []), { type: "separator" }, eaItem] } : m))
+      ? profielMenus.map((m, i) => (i === bestandIdx ? { ...m, items: [eaItem, { type: "separator" }, ...(m.items || [])] } : m))
       : [...profielMenus, { id: "bestand", aanvullen: true, items: [eaItem] }];
   return [projectMenu, ...metEa];
 }
