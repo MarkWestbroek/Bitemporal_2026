@@ -27,6 +27,7 @@ export async function importeerQeaAlsPuurUml(bytes, bestandsnaam = "") {
       label: `Pakket (met deelpakketten) — ${pakketten.length} pakketten in het bestand`,
       opties,
       bevestig: "Importeer",
+      zoekbaar: true,
     });
     if (!keuze) return null;
     const packageId = Number(keuze);

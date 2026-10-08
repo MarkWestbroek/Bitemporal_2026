@@ -68,8 +68,6 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
     elementen: 0,
     connectoren: 0,
     diagrammen: 0,
-    /** NoteLinks (notitie ↔ element) — puur-uml tekent die (nog) niet. */
-    notitieLijnen: 0,
     /** @type {Record<string, number>} EA-typen zonder plek in puur-uml */
     overgeslagen: {},
     /** @type {string[]} */
@@ -192,11 +190,6 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
     const doelId = idVanObject.get(c.End_Object_ID);
     if (!bronId || !doelId) {
       if (c.Connector_Type !== "NoteLink") sla(`connector buiten bereik (${c.Connector_Type})`);
-      continue;
-    }
-    if (c.Connector_Type === "NoteLink") {
-      // puur-uml kent geen notitie-lijn; de notitie zelf komt wel mee.
-      verslag.notitieLijnen += 1;
       continue;
     }
     const vertaald = vertaalConnector(c, bronId, doelId, elements);
@@ -380,6 +373,20 @@ function vertaalConnector(c, bronId, doelId, elements) {
     ...(c.DestRole ? { doelRolNaam: c.DestRole } : {}),
   };
   switch (type) {
+    case "NoteLink": {
+      // EA legt een NoteLink in willekeurige richting; puur-uml wil de
+      // notitie als bron. Beide kanten notitie (of geen): overslaan.
+      const bronIsNotitie = elements[bronId]?.elementType === "notitie";
+      const doelIsNotitie = elements[doelId]?.elementType === "notitie";
+      if (bronIsNotitie === doelIsNotitie) return null;
+      return {
+        elementType: "notitielijn",
+        naam: "",
+        source: bronIsNotitie ? bronId : doelId,
+        target: bronIsNotitie ? doelId : bronId,
+        data: {},
+      };
+    }
     case "Association": {
       const geheelAanDoel = Number(c.DestIsAggregate) > 0;
       const geheelAanBron = Number(c.SourceIsAggregate) > 0;

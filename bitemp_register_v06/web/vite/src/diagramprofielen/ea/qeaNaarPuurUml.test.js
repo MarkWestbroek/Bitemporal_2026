@@ -46,7 +46,6 @@ test("alle 43 klassen, 4 kaders en 5 notities komen mee; niets overgeslagen", ()
   assert.equal(els.filter((e) => e.elementType === "boundary").length, 4);
   assert.equal(els.filter((e) => e.elementType === "notitie").length, 5);
   assert.deepEqual(model.verslag.overgeslagen, {});
-  assert.equal(model.verslag.notitieLijnen, 7);
   assert.equal(model.verslag.diagrammen, 2);
 });
 
@@ -124,6 +123,17 @@ test("kaders krijgen hun maat van het diagram en liggen als achtergrond", () => 
   const kader = opNaam("Definition", "boundary");
   const node = editor.nodes.find((n) => n.elementId === kader.id);
   assert.ok(node.size.width > 200 && node.size.height > 100);
+});
+
+test("notitie-lijnen: alle 7 NoteLinks, met de notitie als bron", () => {
+  const lijnen = els.filter((e) => e.elementType === "notitielijn");
+  assert.equal(lijnen.length, 7);
+  for (const l of lijnen) {
+    assert.equal(model.elements[l.source].elementType, "notitie");
+    assert.notEqual(model.elements[l.target].elementType, "notitie");
+  }
+  // Elke lijn eindigt op een klasse (de notities in dit pakket wijzen naar klassen).
+  assert.ok(lijnen.every((l) => model.elements[l.target].elementType === "klasse"));
 });
 
 test("notities dragen hun tekst, zonder naam", () => {

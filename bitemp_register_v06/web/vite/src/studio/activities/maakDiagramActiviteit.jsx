@@ -43,7 +43,8 @@ import React, {
 } from "react";
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
-import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
+import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
+import { hernoemBotsendeIds } from "../../diagramcore/model/hernoemBotsendeIds.js";
 // Side-effect: registreert de datatypes "element-verwijzing" en
 // "operatie-keuze" (instantie-van-concept) op het core-koppelvlak.
 import "../elementVerwijzing.jsx";
@@ -573,17 +574,35 @@ export function maakDiagramActiviteit(opties) {
                 }
                 if (!model) return; // afgebroken in een keuzedialoog
                 const s = useStore.getState();
+                // Niet-lege sandbox: toevoegen (één undo-stap) of vervangen
+                // (geen undo). Toevoegen is de veilige standaard: de UML-
+                // sandbox is ook het puur-uml-model van het Modelleren-project.
+                let modus = "toevoegen";
                 if (Object.keys(s.elements).length > 0) {
-                  const ok = await vraagBevestiging({
-                    titel: "Sandbox vervangen",
-                    tekst: "Importeren vervangt de hele sandbox door het gekozen bestand.\nJe lokale wijzigingen gaan verloren. Doorgaan?",
+                  modus = await vraagKeuze({
+                    titel: "Importeren",
+                    label: "Wat moet er met wat er al staat gebeuren?",
+                    opties: [
+                      { waarde: "toevoegen", label: "Toevoegen naast wat er is (Ctrl+Z maakt het ongedaan)" },
+                      { waarde: "vervangen", label: "Alles vervangen door het bestand (geen undo)" },
+                    ],
                     bevestig: "Importeer",
-                    gevaar: true,
                   });
-                  if (!ok) return;
+                  if (!modus) return;
                 }
-                s.laadModel(model);
-                useStore.temporal.getState().clear();
+                if (modus === "vervangen") {
+                  s.laadModel(model);
+                  useStore.temporal.getState().clear();
+                } else {
+                  const { elements, diagrams, eersteDiagramId } = hernoemBotsendeIds(model, s);
+                  try {
+                    s.importeerModel({ diagramTypeId: model.diagramTypeId ?? descriptor.id, elements, diagrams }, { modus: "toevoegen" });
+                  } catch (e) {
+                    toonMelding({ tekst: `Import geweigerd: ${e?.message || e}` });
+                    return;
+                  }
+                  if (eersteDiagramId) useStore.getState().setActiefDiagram(eersteDiagramId);
+                }
                 setSelectieId(null);
               });
             };

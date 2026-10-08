@@ -75,13 +75,26 @@ export function vraagBevestiging({ titel = "Weet je het zeker?", tekst = "", bev
  * Keuze uit een lijst (`<select>`); de gekozen `waarde` of `null` bij annuleren.
  * @param {{titel?:string, label?:string, opties:{waarde:string,label:string}[], waarde?:string, bevestig?:string}} cfg
  */
-export function vraagKeuze({ titel = "Kies", label = "Keuze", opties = [], waarde = "", bevestig = "OK" } = {}) {
-  return open({ soort: "keuze", titel, label, opties, waarde: waarde || opties[0]?.waarde || "", bevestig });
+export function vraagKeuze({ titel = "Kies", label = "Keuze", opties = [], waarde = "", bevestig = "OK", zoekbaar = false } = {}) {
+  // zoekbaar: een zoekveld boven een scrollbare lijst (lange lijsten, bv. de
+  // 2000 pakketten van een EA-repository); het filter kijkt naar elk stukje
+  // van het label, los van hoofdletters.
+  return open({ soort: "keuze", titel, label, opties, waarde: waarde || opties[0]?.waarde || "", bevestig, zoekbaar });
 }
 
 /** Mededeling met alleen een OK-knop (vervangt window.alert). */
 export function toonMelding({ titel = "Melding", tekst = "", bevestig = "OK" } = {}) {
   return open({ soort: "melding", titel, tekst, bevestig });
+}
+
+/** Opties waarvan het label alle (spatie-gescheiden) zoekwoorden bevat, hoofdletterongevoelig. */
+function filterOpties(opties, filter) {
+  const woorden = String(filter || "").toLowerCase().split(/\s+/).filter(Boolean);
+  if (!woorden.length) return opties || [];
+  return (opties || []).filter((o) => {
+    const l = String(o.label || "").toLowerCase();
+    return woorden.every((w) => l.includes(w));
+  });
 }
 
 function beeindig(waarde) {
@@ -94,6 +107,7 @@ function beeindig(waarde) {
 export function NaamDialogHost() {
   const [, hertik] = useState(0);
   const [waarde, setWaarde] = useState("");
+  const [filter, setFilter] = useState("");
   const inputRef = useRef(null);
   const vakRef = useRef(null);
   const [plek, setPlek] = useState(null);
@@ -119,7 +133,10 @@ export function NaamDialogHost() {
   useEffect(() => {
     const fn = () => {
       hertik((v) => v + 1);
-      if (_actief) setWaarde(_actief.waarde || "");
+      if (_actief) {
+        setWaarde(_actief.waarde || "");
+        setFilter("");
+      }
     };
     luisteraars.add(fn);
     return () => luisteraars.delete(fn);
@@ -223,21 +240,48 @@ export function NaamDialogHost() {
         ) : isKeuze ? (
           <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
             {cfg.label}
+            {cfg.zoekbaar && (
+              <input
+                type="search"
+                autoFocus
+                placeholder="Zoek (meerdere woorden mag)"
+                value={filter}
+                onChange={(e) => {
+                  const f = e.target.value;
+                  setFilter(f);
+                  // Houd een geldige keuze: valt de huidige buiten het filter,
+                  // spring naar de eerste die er wél in zit.
+                  const gefilterd = filterOpties(cfg.opties, f);
+                  if (gefilterd.length && !gefilterd.some((o) => o.waarde === waarde)) setWaarde(gefilterd[0].waarde);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") bevestigen();
+                }}
+                style={veldStijl}
+              />
+            )}
             <select
-              autoFocus
+              autoFocus={!cfg.zoekbaar}
+              size={cfg.zoekbaar ? 12 : undefined}
               value={waarde}
               onChange={(e) => setWaarde(e.target.value)}
+              onDoubleClick={() => bevestigen()}
               onKeyDown={(e) => {
                 if (e.key === "Enter") bevestigen();
               }}
-              style={{ ...veldStijl, maxWidth: "100%" }}
+              style={{ ...veldStijl, maxWidth: "100%", ...(cfg.zoekbaar ? { fontFamily: "ui-monospace, monospace", fontSize: 12 } : {}) }}
             >
-              {(cfg.opties || []).map((o) => (
+              {filterOpties(cfg.opties, cfg.zoekbaar ? filter : "").map((o) => (
                 <option key={o.waarde} value={o.waarde}>
                   {o.label}
                 </option>
               ))}
             </select>
+            {cfg.zoekbaar && (
+              <span style={{ opacity: 0.7 }}>
+                {filterOpties(cfg.opties, filter).length} van {(cfg.opties || []).length}
+              </span>
+            )}
           </label>
         ) : (
           <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.45 }}>{cfg.tekst}</div>

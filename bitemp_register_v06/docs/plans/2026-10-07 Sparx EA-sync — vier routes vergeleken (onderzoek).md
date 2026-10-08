@@ -561,8 +561,9 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
 
 **Lezer, klassediagrammen**
 
-1. **Notitie-lijnen** (NoteLink, 874 in het bestand): puur-uml heeft geen notitie-connector;
-   toevoegen als `notitielijn` (stippel, geen pijl) in puur-uml/canoniek/activity en in de lezer meenemen.
+1. ~~**Notitie-lijnen** (NoteLink, 874 in het bestand)~~ ✅ 08-10: `notitielijn` in puur-uml
+   (stippel, geen pijl, notitie als bron) en de lezer zet NoteLinks erop om. Nog niet in
+   canoniek/activity.
 2. Realisatie naar een **klasse** wordt dependency «realize» (puur-uml staat realisatie
    alleen naar een interface toe) — of de verbindingsregel verruimen.
 3. **Kleur per diagramobject** (`ObjectStyle BCol/LWth`), nu alleen `t_object.Backcolor`
@@ -572,9 +573,11 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
    een rechte lijn.
 6. **Operatieparameters** (`t_operationparams`); constraint als kind-element in puur-uml;
    Text-element als notitie zonder rand.
-7. Import-modus **"ernaast" met undo** i.p.v. "sandbox vervangen" (de UML-activiteit deelt
-   zijn opslag met het Modelleren-project; een import vervangt alles van dat profiel en wist
-   de undo-geschiedenis).
+7. ~~Import-modus **"ernaast" met undo**~~ ✅ 08-10: bij een niet-lege sandbox kiest de
+   gebruiker *Toevoegen naast wat er is (Ctrl+Z maakt het ongedaan)* of *Alles vervangen*.
+   Toevoegen = `hernoemBotsendeIds` (botsende element-/diagram-ids hernoemd mét verwijzingen)
+   + `importeerModel` (één undo-stap). Geldt voor élke profiel-bestandsimport (MIM, OAS, …).
+   De pakketkeuze heeft een zoekveld (`vraagKeuze({zoekbaar: true})`, meerdere woorden).
 
 **Lezer, stap 2 en verder**
 
