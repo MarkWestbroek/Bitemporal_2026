@@ -62,6 +62,7 @@ export function qeaNaarActivity(bron, { packageId, diagramTypeId = ACTIVITY_DIAG
     idVanObject.set(o.Object_ID, id);
     const data = {
       ...extraData(h, o.ea_guid, o.Object_ID),
+      eaPakket: o.Package_ID,
       ...(o.Alias ? { alias: o.Alias } : {}),
       ...(o.Note && vertaald.elementType !== "notitie" ? { notes: o.Note } : {}),
       ...vertaald.data,

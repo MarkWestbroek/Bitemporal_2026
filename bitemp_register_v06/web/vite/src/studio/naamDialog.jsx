@@ -82,6 +82,18 @@ export function vraagKeuze({ titel = "Kies", label = "Keuze", opties = [], waard
   return open({ soort: "keuze", titel, label, opties, waarde: waarde || opties[0]?.waarde || "", bevestig, zoekbaar });
 }
 
+/**
+ * Review met aan-/uitvinken: groepen regels met een status en detail; de
+ * uitkomst is de Set van aangevinkte sleutels, of `null` bij annuleren.
+ * @param {{titel?:string, tekst?:string, groepen:{kop:string, regels:{sleutel:string, label:string, status?:string, detail?:string, aan?:boolean}[]}[], bevestig?:string}} cfg
+ * @returns {Promise<Set<string>|null>}
+ */
+export function vraagReview({ titel = "Review", tekst = "", groepen = [], bevestig = "Toepassen" } = {}) {
+  const aan = new Set();
+  for (const g of groepen) for (const r of g.regels || []) if (r.aan !== false) aan.add(r.sleutel);
+  return open({ soort: "review", titel, tekst, groepen, aan, bevestig });
+}
+
 /** Mededeling met alleen een OK-knop (vervangt window.alert). */
 export function toonMelding({ titel = "Melding", tekst = "", bevestig = "OK" } = {}) {
   return open({ soort: "melding", titel, tekst, bevestig });
@@ -108,6 +120,7 @@ export function NaamDialogHost() {
   const [, hertik] = useState(0);
   const [waarde, setWaarde] = useState("");
   const [filter, setFilter] = useState("");
+  const [vinken, setVinken] = useState(() => new Set());
   const inputRef = useRef(null);
   const vakRef = useRef(null);
   const [plek, setPlek] = useState(null);
@@ -136,6 +149,7 @@ export function NaamDialogHost() {
       if (_actief) {
         setWaarde(_actief.waarde || "");
         setFilter("");
+        setVinken(new Set(_actief.aan || []));
       }
     };
     luisteraars.add(fn);
@@ -146,6 +160,7 @@ export function NaamDialogHost() {
   const cfg = _actief;
   const isNaam = cfg.soort === "naam";
   const isKeuze = cfg.soort === "keuze";
+  const isReview = cfg.soort === "review";
   const isBevestiging = cfg.soort === "bevestiging";
   const annuleerWaarde = isBevestiging ? false : null;
   const bevestigen = () => {
@@ -154,8 +169,16 @@ export function NaamDialogHost() {
       if (schoon || cfg.leegToegestaan) beeindig(schoon);
     } else if (isKeuze) {
       if (waarde) beeindig(waarde);
+    } else if (isReview) {
+      beeindig(new Set(vinken));
     } else beeindig(isBevestiging ? true : undefined);
   };
+  const zetVink = (sleutels, aan) =>
+    setVinken((v) => {
+      const n = new Set(v);
+      for (const k of sleutels) (aan ? n.add(k) : n.delete(k));
+      return n;
+    });
   const veldStijl = {
     font: "inherit",
     fontSize: 13,
@@ -184,7 +207,7 @@ export function NaamDialogHost() {
       // Escape sluit ook zonder focus in het veld (bevestiging/melding).
       onKeyDown={(e) => {
         if (e.key === "Escape") beeindig(annuleerWaarde);
-        else if (e.key === "Enter" && !isNaam && !isKeuze) bevestigen();
+        else if (e.key === "Enter" && !isNaam && !isKeuze && !isReview) bevestigen();
       }}
     >
       <div
@@ -197,7 +220,8 @@ export function NaamDialogHost() {
           border: "1px solid var(--s-border, #cbd5e1)",
           borderRadius: 10,
           boxShadow: "0 12px 40px rgba(15, 23, 42, 0.25)",
-          width: cfg.meerregelig || isKeuze ? 520 : 400,
+          width: isReview ? 640 : cfg.meerregelig || isKeuze ? 520 : 400,
+          ...(isReview ? { maxHeight: "86vh" } : {}),
           maxWidth: "92vw",
           padding: "14px 16px",
           fontSize: 13,
@@ -283,6 +307,50 @@ export function NaamDialogHost() {
               </span>
             )}
           </label>
+        ) : isReview ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+            {cfg.tekst && <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.45, fontSize: 12, opacity: 0.85 }}>{cfg.tekst}</div>}
+            <div style={{ overflow: "auto", maxHeight: "58vh", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, padding: "4px 8px" }}>
+              {(cfg.groepen || []).map((g) => {
+                const sleutels = (g.regels || []).map((r) => r.sleutel);
+                const alles = sleutels.length > 0 && sleutels.every((k) => vinken.has(k));
+                return (
+                  <div key={g.kop} style={{ marginBottom: 8 }}>
+                    <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6, fontWeight: 600, padding: "4px 0" }}>
+                      <input type="checkbox" checked={alles} onChange={(e) => zetVink(sleutels, e.target.checked)} />
+                      {g.kop} <span style={{ opacity: 0.6, fontWeight: 400 }}>({sleutels.length})</span>
+                    </label>
+                    {(g.regels || []).map((r) => (
+                      <label key={r.sleutel} style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 6, padding: "2px 0 2px 18px", fontSize: 12 }}>
+                        <input type="checkbox" checked={vinken.has(r.sleutel)} onChange={(e) => zetVink([r.sleutel], e.target.checked)} />
+                        {r.status && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              padding: "0 6px",
+                              borderRadius: 8,
+                              background: r.status === "nieuw" ? "#dcfce7" : r.status === "gewijzigd" ? "#fef3c7" : r.status === "verdwenen" ? "#fee2e2" : "#f1f5f9",
+                              color: "#1e293b",
+                              flex: "0 0 auto",
+                            }}
+                          >
+                            {r.status}
+                          </span>
+                        )}
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</span>
+                        {r.detail && <span style={{ opacity: 0.65, whiteSpace: "nowrap" }}>— {r.detail}</span>}
+                      </label>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", gap: 8, fontSize: 12 }}>
+              <button className="dc-mini-knop" onClick={() => zetVink((cfg.groepen || []).flatMap((g) => (g.regels || []).map((r) => r.sleutel)), true)}>Alles</button>
+              <button className="dc-mini-knop" onClick={() => setVinken(new Set())}>Niets</button>
+              <span style={{ opacity: 0.7, alignSelf: "center" }}>{vinken.size} aangevinkt</span>
+            </div>
+          </div>
         ) : (
           <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.45 }}>{cfg.tekst}</div>
         )}
@@ -294,7 +362,7 @@ export function NaamDialogHost() {
           )}
           <button
             className={"dc-mini-knop" + (cfg.gevaar ? " is-gevaar" : "")}
-            autoFocus={!isNaam && !isKeuze}
+            autoFocus={!isNaam && !isKeuze && !isReview}
             disabled={(isNaam && !waarde.trim() && !cfg.leegToegestaan) || (isKeuze && !waarde)}
             onClick={bevestigen}
           >

@@ -265,6 +265,19 @@ export function createDiagramStore({ persistKey } = {}) {
         return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: { ...d, naam } } };
       }),
 
+    /**
+     * Vervang velden van een bestaand diagram in één stap (naam, nodes,
+     * verborgenConnectoren, …) — voor een merge die bestaande ids houdt
+     * (EA-import op GUID, 2026-10-09). Viewport blijft buiten het diagram.
+     */
+    zetDiagram: (diagramId, patch) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !patch) return state;
+        const { id: _id, viewport: _vp, ...rest } = patch;
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: { ...d, ...rest } } };
+      }),
+
     /** Verwijder een diagram (niet de elementen). */
     deleteDiagram: (diagramId) =>
       set((state) => {

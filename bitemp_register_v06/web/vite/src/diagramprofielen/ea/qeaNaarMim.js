@@ -129,6 +129,7 @@ export function qeaNaarMim(bron, { packageId, diagramTypeId = MIM_DIAGRAMTYPE, s
     const { eigenschappen, rest } = verdeelTags(h.tagsPerObject.get(o.Object_ID), ELEMENT_TAGS);
     const data = {
       ...extraData(h, o.ea_guid, o.Object_ID),
+      eaPakket: o.Package_ID,
       ...(Object.keys(rest).length ? { tags: rest } : {}),
       ...(o.Alias ? { alias: o.Alias } : {}),
       ...(o.Note && elementType !== "notitie" ? { definitie: o.Note } : {}),

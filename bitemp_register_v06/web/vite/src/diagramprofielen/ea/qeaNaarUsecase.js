@@ -68,6 +68,7 @@ export function qeaNaarUsecase(bron, { packageId, diagramTypeId = USECASE_DIAGRA
     idVanObject.set(o.Object_ID, id);
     const data = {
       ...extraData(h, o.ea_guid, o.Object_ID),
+      eaPakket: o.Package_ID,
       ...(o.Alias ? { alias: o.Alias } : {}),
       ...(o.Note && elementType !== "notitie" ? { toelichting: o.Note } : {}),
       ...(elementType === "klasse" && o.Object_Type !== "Class" ? { eaType: o.Object_Type } : {}),

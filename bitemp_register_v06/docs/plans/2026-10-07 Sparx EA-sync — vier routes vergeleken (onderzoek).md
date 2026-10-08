@@ -584,19 +584,24 @@ bron bepaalt wát het is, de gebruiker wáár het komt. In Modelleren is dit de 
 onder Bestand (de profiel-varianten "alleen dit profiel" staan alleen in de losse
 activiteiten).
 
-**Volgende stap (Marks wens, 09-10): merge op GUID.** Kies je een bestaande map waar het
-pakket al in staat, dan zou de import moeten *synchroniseren* in plaats van toevoegen: per
-`data.eaGuid` het bestaande element/diagram bijwerken als het anders is (naam, velden,
-positie), nieuwe toevoegen, en melden wat er veranderde — zonder nieuwe ids, zodat
-kruisverbanden en plaatsingen blijven staan. De bouwstenen zijn er (stabiele ids uit de GUID,
-`importeerModel` als één undo-stap, de mappen worden al hergebruikt).
-
-**Daarbij hoort een review-stap met aan-/uitvinken** (Mark, 09-10; het "proefdraaien met
-een verschil-overzicht" uit TRANSFORMATIES.md §2/§7 dat de transformatielaag nog mist): vóór
-het invoegen een overzicht per diagram en element — nieuw / gewijzigd (met wat er verschilt)
-/ ongewijzigd / in EA verdwenen — waarin je per regel kiest wat mee mag. Dezelfde dialoog
-voor de eerste import (alles aangevinkt) en voor de merge; het verschil-overzicht is ook de
-plek voor de trace.
+**Merge op GUID met review (09-10, gebouwd op `feat/ea-merge-review`).** De projectimport
+voegt niet meer blind toe maar *synchroniseert*: `vergelijkImport.js` vergelijkt de gelezen
+elementen en diagrammen op `data.eaGuid` (diagrammen op de GUID in hun id) met de profielstore
+en maakt een **plan** — nieuw / gewijzigd (met wat er verschilt: naam, velden, bron, doel,
+data.…, plaatsing, verborgen lijnen) / ongewijzigd / verdwenen (bestaand, uit hetzelfde
+EA-pakket via `data.eaPakket`, niet meer in de import). Daarna de **review-dialoog**
+(`vraagReview` in naamDialog.jsx): per profiel een groep met per regel een vinkje en een
+status-badge; nieuw en gewijzigd staan aan, verdwenen staat uit (weghalen is een bewuste
+vink); knoppen *Alles*/*Niets*. Toepassen (`pasPlanToe`) houdt bestaande ids: nieuw via
+`importeerModel`, gewijzigd via `updateElementen` en de nieuwe store-actie `zetDiagram`
+(ook in MODEL_OPS voor de projectsync), verdwenen via `deleteElement`/`deleteDiagram`;
+lokale data (lijnvorm, labelposities, z-volgorde) blijft staan. Bevat-lijnen volgen hun
+lid stilzwijgend. Een tweede import van hetzelfde pakket meldt "59 ongewijzigd" en verandert
+niets; mappen worden hergebruikt. Dit is het "proefdraaien met een verschil-overzicht" uit
+TRANSFORMATIES.md §2/§7, voor de EA-import. Tests: `vergelijkImport.test.js` (eerste
+import, ongewijzigd, gewijzigd met behoud van lokale lijnvorm, verdwenen alleen als
+aangevinkt, nieuw element naast bestaande). Nog open: de trace bewaren; elementen van vóór
+deze versie (zonder `eaPakket`) worden niet als verdwenen herkend.
 
 **Lijnen en kleine vormen (09-10, Marks test).** (1) Elke lijn met hoekpunten krijgt nu
 zijn aanhechtpunten erbij (niet alleen TREE=OS), met tolerantie; bij kleine vaste vormen

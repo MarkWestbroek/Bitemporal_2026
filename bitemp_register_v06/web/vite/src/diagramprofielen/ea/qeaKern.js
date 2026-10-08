@@ -269,6 +269,8 @@ export function bouwDiagram(h, d, { idVanObject, idVanConnector, diagramTypeId, 
     id: diagramId(d),
     naam: d.Name || `Diagram ${d.Diagram_ID}`,
     diagramType: diagramTypeId,
+    // EA-pakket van het diagram: nodig om bij een merge "verdwenen" te zien.
+    eaPakket: d.Package_ID,
     nodes,
     edges: [],
     ...(verborgen.length ? { verborgenConnectoren: verborgen } : {}),

@@ -256,6 +256,8 @@ export const MODEL_OPS = {
   addDiagram: null,
   renameDiagram: null,
   deleteDiagram: null,
+  /** Merge (EA-import op GUID): velden van een bestaand diagram in één stap. */
+  zetDiagram: null,
   /** Een gegenereerd voorkomen-id (meerdere voorkomens) reist mee in de opties. */
   addElementToDiagram: (args, { voor, na }) => {
     const [diagramId, elementId, position, opties = {}] = args;

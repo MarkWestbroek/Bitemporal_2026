@@ -89,6 +89,7 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
     idVanObject.set(o.Object_ID, id);
     const data = {
       ...extraData(h, o.ea_guid, o.Object_ID),
+      eaPakket: o.Package_ID,
       ...(o.Alias ? { alias: o.Alias } : {}),
       ...(o.Note && elementType !== "notitie" ? { notes: o.Note } : {}),
       ...(String(o.Abstract) === "1" ? { abstract: true } : {}),
