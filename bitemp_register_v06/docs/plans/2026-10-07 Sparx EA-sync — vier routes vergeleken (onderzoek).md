@@ -591,6 +591,13 @@ positie), nieuwe toevoegen, en melden wat er veranderde — zonder nieuwe ids, z
 kruisverbanden en plaatsingen blijven staan. De bouwstenen zijn er (stabiele ids uit de GUID,
 `importeerModel` als één undo-stap, de mappen worden al hergebruikt).
 
+**Daarbij hoort een review-stap met aan-/uitvinken** (Mark, 09-10; het "proefdraaien met
+een verschil-overzicht" uit TRANSFORMATIES.md §2/§7 dat de transformatielaag nog mist): vóór
+het invoegen een overzicht per diagram en element — nieuw / gewijzigd (met wat er verschilt)
+/ ongewijzigd / in EA verdwenen — waarin je per regel kiest wat mee mag. Dezelfde dialoog
+voor de eerste import (alles aangevinkt) en voor de merge; het verschil-overzicht is ook de
+plek voor de trace.
+
 ### 7.1 Openstaand — de lijst uit het gesprek (08-10)
 
 **Lezer, klassediagrammen**
