@@ -108,9 +108,40 @@ test("fouten: onbekende ouder, cyclus, zelf, isConnector slaat om", () => {
   zelf.elementTypes.find((e) => e.id === "entiteit").erft = "entiteit";
   assert.ok(normaliseerErfenis(zelf).some((f) => /van zichzelf/.test(f)));
 
-  const flip = maakProfiel();
-  flip.elementTypes.push({ id: "lijnkind", label: "L", shape: "edge", isConnector: true, erft: "representatie", bron: { elementTypes: ["entiteit"] }, doel: { elementTypes: ["entiteit"] } });
-  assert.ok(normaliseerErfenis(flip).some((f) => /isConnector mag niet omslaan/.test(f)));
+});
+
+test("Metamodel v2026: relatie erft van gegevenselement (connector onder knoop), representatie-bereik sluit relaties uit", () => {
+  // Mark (09-10): {Relatie} is een soort {Gegevenselement}, met bron/doel naar
+  // {Representatie}; een bron of doel is nooit zelf een relatie.
+  const dt = maakProfiel();
+  dt.elementTypes = dt.elementTypes.filter((e) => e.id !== "relatie");
+  dt.elementTypes.push({
+    id: "relatie",
+    label: "Relatie",
+    kort: "REL",
+    erft: "gegevenselement",
+    isConnector: true,
+    shape: "edge",
+    bron: { elementTypes: ["representatie"] },
+    doel: { elementTypes: ["representatie"] },
+    properties: [{ key: "tijdlijn", datatype: "string" }],
+  });
+  assert.deepEqual(valideerDiagramType(dt), []);
+  normaliseerErfenis(dt);
+  const rel = dt.elementTypes.find((e) => e.id === "relatie");
+  assert.equal(rel.isConnector, true);
+  assert.equal(rel.shape, "edge", "eigen shape wint van de geërfde class-box");
+  assert.deepEqual(rel.compartments.map((c) => c.id), ["regels"], "compartimenten van gegevenselement/representatie komen mee (relatieklasse)");
+  assert.deepEqual(rel.properties.map((p) => p.key), ["alias", "beschrijving", "tijdlijn"]);
+  assert.deepEqual(rel.bron.elementTypes, ["entiteit", "gegevenselement"], "geen relatie in het bereik van representatie");
+  assert.deepEqual(rel.doel.elementTypes, ["entiteit", "gegevenselement"]);
+  // Expliciet genoemd mag een connector wél bron/doel zijn.
+  const pin = dt.elementTypes.find((e) => e.id === "pin");
+  pin.randElement = { ouderTypes: ["relatie"] };
+  delete pin.randElement._ouderTypesVoorExpansie;
+  normaliseerErfenis(dt);
+  assert.deepEqual(pin.randElement.ouderTypes, ["relatie"]);
+  assert.deepEqual(concreteTypenVan(dt, "representatie"), ["entiteit", "gegevenselement", "relatie"], "concreteTypenVan telt wél alles");
 });
 
 test("registry: valideren raakt de rauwe descriptor niet; registreren vlakt in place uit", () => {

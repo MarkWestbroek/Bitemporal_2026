@@ -18,11 +18,20 @@
  *   overschrijft dezelfde id/key en voegt de rest toe;
  * - `hooks` en `edgePresentatie`: per sleutel, kind wint;
  * - `bron`/`doel`/`verbindingsregels`: geërfd als het kind er geen heeft;
- * - `isConnector` erft mee en mag niet omslaan;
+ * - `isConnector` erft mee als het kind er niets over zegt, en mág omslaan:
+ *   in Marks Metamodel v2026 erft {Relatie} (een connector) van
+ *   {Gegevenselement} (een knoop) — de backend heeft die overerving diep
+ *   ingebouwd (Mark, 09-10). Het kind zet dan zelf `isConnector: true`,
+ *   `shape: "edge"` en zijn bron/doel; compartimenten en eigenschappen van
+ *   de ouder komen gewoon mee (een relatie mét gegevens = relatieklasse);
  * - bereik-expansie: elke lijst van elementtype-ids (bron/doel, regels,
  *   randElement.ouderTypes, afbakeningVoor, overbrugt, shapeSets) wordt de
  *   lijst van **concrete** afstammelingen van elk genoemd type (een abstract
- *   type telt niet zelf mee). Daarna hoeft niemand meer te weten dat
+ *   type telt niet zelf mee). Een abstract knoop-type levert daarbij géén
+ *   connector-afstammelingen op: "relatie: Representatie → Representatie"
+ *   betekent entiteit of gegevenselement, nooit weer een relatie — de
+ *   recursie-grens uit het metamodel. Een connector wil je als bron/doel
+ *   altijd expliciet noemen. Daarna hoeft niemand meer te weten dat
  *   {Representatie} bestond.
  *
  * Werkt in place (de activiteiten houden het descriptor-object zelf vast) en
@@ -61,12 +70,6 @@ export function normaliseerErfenis(dt) {
       cursor = perId.get(cursor.erft);
     }
   }
-  for (const et of types) {
-    const ouder = et.erft != null ? perId.get(et.erft) : null;
-    if (ouder && et.isConnector != null && !!et.isConnector !== !!ouder.isConnector) {
-      fouten.push(`${ctx(et)}: isConnector mag niet omslaan t.o.v. ouder "${ouder.id}"`);
-    }
-  }
   if (fouten.length) return fouten;
 
   // ── Uitvlakken (ouder vóór kind), eenmalig ───────────────────────────
@@ -90,13 +93,17 @@ export function normaliseerErfenis(dt) {
     if (!kinderen.has(et.erft)) kinderen.set(et.erft, []);
     kinderen.get(et.erft).push(et.id);
   }
-  const concreet = (id, gezien = new Set()) => {
+  const concreet = (id, gezien = new Set(), wortelIsConnector = null) => {
     if (gezien.has(id)) return [];
     gezien.add(id);
     const et = perId.get(id);
     if (!et) return [id]; // onbekend: laat de validatie het melden
+    const wortelConn = wortelIsConnector ?? !!et.isConnector;
+    // Een abstract knoop-type expandeert niet naar connector-afstammelingen
+    // (de recursie-grens: een relatie is geen bron/doel van een relatie).
+    if (!wortelConn && et.isConnector && gezien.size > 1) return [];
     const uit = et.isAbstract ? [] : [id];
-    for (const kind of kinderen.get(id) || []) uit.push(...concreet(kind, gezien));
+    for (const kind of kinderen.get(id) || []) uit.push(...concreet(kind, gezien, wortelConn));
     return uit;
   };
   const expandeer = (lijst) => {

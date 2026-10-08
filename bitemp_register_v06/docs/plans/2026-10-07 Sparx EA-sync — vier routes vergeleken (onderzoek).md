@@ -618,9 +618,12 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
     (namen van V3; afgestemd met M3-MOF): `types/erfenis.js` vlakt uit bij registratie,
     expandeert abstracte typen naar hun concrete afstammelingen in elk bereik, bewaart de
     hiërarchie voor de profiel-ontwerper (▷-pijl *Erft van*, vinkje *abstract*); zie
-    STUDIO-05-diagramcore-plan.md §4.2b. **Nog open**: Metamodel v2026 zelf in
-    canoniek-uml (wacht op Marks keuze: {Relatie} naast of onder {Gegevenselement} —
-    `isConnector` mag niet omslaan), meervoudige overerving, abstract elementtype in een
+    STUDIO-05-diagramcore-plan.md §4.2b. **Marks keuze (09-10)**: {Relatie} erft van
+    {Gegevenselement} (geen broer; de backend heeft die overerving diep ingebouwd), met
+    bron/doel naar {Representatie} en als grens dat een bron of doel nooit zelf een relatie
+    is → `isConnector` mag omslaan en een abstract knoop-type expandeert niet naar
+    connectoren. **Nog open**: Metamodel v2026 zelf in canoniek-uml, meervoudige
+    overerving, abstract elementtype in een
     model als validatiefout, en een duidelijke melding als een ouder `verbindingsregels` (volle
     vorm) gebruikt en het kind `bron`/`doel` (nu: "doel verplicht"; M3-MOF-review 08-10).
 

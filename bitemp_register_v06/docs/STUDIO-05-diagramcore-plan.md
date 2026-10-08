@@ -951,12 +951,21 @@ daarna alleen volledige, concrete ElementTypes.
 - *Uitvlakken*: scalars en objecten — kind wint, de rest komt van de ouder
   (niet: id, label, kort, omschrijving); `compartments` op id en `properties`
   op key — ouder eerst, kind overschrijft/voegt toe; `hooks` en
-  `edgePresentatie` per sleutel; `bron`/`doel`/`verbindingsregels` als het kind
-  er geen heeft; `isConnector` erft mee en mag niet omslaan (fout).
+  `edgePresentatie` per sleutel; `bron` en `doel` per kant, `verbindingsregels`
+  als geheel als het kind geen bron/doel heeft; `isConnector` erft mee als het
+  kind er niets over zegt en **mag omslaan**: in Marks Metamodel v2026 erft
+  `{Relatie}` (connector) van `{Gegevenselement}` (knoop) — zo zit het ook in de
+  backend. Het kind zet dan `isConnector: true`, `shape: "edge"` en eigen
+  bron/doel; de compartimenten en eigenschappen van de ouder komen mee
+  (relatie mét gegevens = relatieklasse).
 - *Bereik-expansie*: elke lijst van elementtype-ids (bron/doel, regels,
   `randElement.ouderTypes`, `afbakeningVoor`, `overbrugt`, shapeSets) wordt de
   lijst **concrete afstammelingen** van elk genoemd type; een abstract type
-  telt zelf niet mee. Zo is `relatie: Representatie → Representatie` één regel.
+  telt zelf niet mee, en een abstract knoop-type levert géén
+  connector-afstammelingen op (de recursie-grens uit het metamodel: een bron of
+  doel van een relatie is nooit zelf een relatie). Zo is
+  `relatie: Representatie → Representatie` één regel die entiteit of
+  gegevenselement betekent. Een connector als bron/doel noem je expliciet.
 - *Bewaard voor de profiel-ontwerper*: `erft`/`isAbstract` blijven staan;
   `_geerfd` (welke compartimenten/eigenschappen van de ouder kwamen) en
   `_voorExpansie` (de regel zoals getekend) — de ontwerper tekent alleen het
