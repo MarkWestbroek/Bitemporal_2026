@@ -140,8 +140,13 @@ export const maakProjectAan = ({ id, naam, inhoud }) =>
   roep("/api/studio/projecten", { methode: "POST", body: { id, naam, inhoud } });
 
 /** Opslaan met versiecontrole. 409 (met `server`-meta) als de server verder is; 404 als het daar niet (meer) staat. */
-export const slaProjectOp = (id, { naam, inhoud, versie }) =>
-  roep(`/api/studio/projecten/${encodeURIComponent(id)}`, { methode: "PUT", body: { naam, inhoud, versie } });
+export const slaProjectOp = (id, { naam, inhoud, versie, tot_volgnummer }) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}`, {
+    methode: "PUT",
+    // tot_volgnummer = snapshot-grens (compactie): zonder dit veld bleef de grens 0 en
+    // speelde een client na het ophalen álle operaties nogmaals af (gemeld 2026-10-08).
+    body: { naam, inhoud, versie, ...(tot_volgnummer != null ? { tot_volgnummer } : {}) },
+  });
 
 /** Verwijderen (eigenaar of admin). */
 export const verwijderProject = (id) =>

@@ -8,6 +8,27 @@
 
 ---
 
+## Snapshot-grens: studio 0.15.2 (2026-10-08)
+
+Alleen frontend (patch). De opslag-aanroep stuurde `tot_volgnummer` niet mee: de snapshot-grens
+bleef 0, compactie deed niets en na *Van server ophalen* werden alle operaties nogmaals afgespeeld
+(een *Omhoog* van vóór de snapshot dus tweemaal). Zie [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+Uitrol: één image `bitemp-viz-frontend:0.15.2`; geen databasegevolg. Daarna één keer *Naar server
+sturen* (zet de grens en ruimt het log op) en bij de anderen *Van server ophalen*.
+
+---
+
+## Boomvolgorde in de sync: studio 0.15.1 (2026-10-08)
+
+Alleen frontend (patch). *Omhoog*/*Omlaag* in de projectboom reist nu als operatie naar collega's,
+en de snapshot draagt de boomvolgorde expliciet mee (`structuur.plaatsingVolgorde`): `jsonb`
+herschikt objectsleutels, waardoor wie ophaalde een andere volgorde kreeg dan wie stuurde. Zie
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md). Uitrol: één image `bitemp-viz-frontend:0.15.1`;
+api 0.12.0 en render-svc 0.1.0 ongewijzigd; geen databasegevolg. Bestaande projecten: één keer
+*Naar server sturen* (de ene) en *Van server ophalen* (de andere) om gelijk te komen.
+
+---
+
 ## Projectsync stap 2 en canvas-bediening vervolg: api 0.12.0 / studio 0.15.0 (2026-10-08)
 
 Samenwerken wordt live: operatielog, SSE-kanaal, compactie, wie is online en de werkruimte per

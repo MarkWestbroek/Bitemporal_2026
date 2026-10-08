@@ -8,6 +8,30 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.15.2] — 2026-10-08
+Patch: de snapshot-grens ging niet mee naar de server. Alleen frontend; api blijft 0.12.0.
+
+### Gefixt
+- **Snapshot-grens (`tot_volgnummer`) reist mee** (08-10): de opslag-aanroep liet het veld weg,
+  waardoor de grens op de server 0 bleef, de compactie nooit iets deed en een client na *Van server
+  ophalen* álle operaties nogmaals afspeelde bovenop de snapshot. Voor posities onschadelijk, maar
+  een *Omhoog*/*Omlaag* van vóór de snapshot werd zo tweemaal toegepast (één wissel verschil tussen
+  twee browsers). Test op de aanroep; `apiBase()` is node-veilig.
+
+## [studio/v0.15.1] — 2026-10-08
+Patch: de volgorde in de projectboom synct nu en overleeft de snapshot. Alleen frontend; api
+blijft 0.12.0.
+
+### Gefixt
+- **Boomvolgorde synct** (08-10): *Omhoog*/*Omlaag* (Ctrl+↑/↓) in de projectboom kwam niet bij
+  collega's aan — `schuifPlaatsing` ontbrak in het operatievocabulaire en het vangnet zag alleen
+  waarden, niet de sleutelvolgorde van `plaatsing`. Nu een benoemde operatie; het vangnet meldt een
+  volgorde-wissel (ook bij undo) als `volgordePlaatsing` in `patchStructuur`.
+- **Boomvolgorde overleeft de snapshot** (08-10): de volgorde zat alleen in de sleutelvolgorde van
+  `plaatsing`, en `jsonb` op de server herschikt objectsleutels — wie ophaalde kreeg een andere
+  volgorde dan wie stuurde. Het werkbestand draagt nu `structuur.plaatsingVolgorde` expliciet mee;
+  laden herstelt die volgorde (`herschikOpVolgorde`).
+
 ## [studio/v0.15.0] — 2026-10-08
 Samenwerken wordt live (projectsync stap 2, api 0.12.0) en het vervolg van de canvas-bediening:
 geen browser-popups meer, sorteren en navigeren in de projectboom, velden herordenen, zelfde
