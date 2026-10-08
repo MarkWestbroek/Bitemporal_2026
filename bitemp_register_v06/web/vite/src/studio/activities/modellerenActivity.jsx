@@ -1391,11 +1391,15 @@ function Map_({ map, diepte }) {
     if (!open) toggleMap(map.id);
     ms.vraagHernoem("map:" + id);
   };
-  const verwijder = async () => {
+  // Verwijderen = de map mét alles erin (diagrammen, elementen, submappen),
+  // achter een dubbele bevestiging; "opheffen" laat de inhoud naar het niveau
+  // erboven vallen (dat gaf chaos als standaard — Mark, 09-10).
+  const verwijder = () => verwijderMapMetInhoud(map);
+  const opheffen = async () => {
     const ok = await vraagBevestiging({
-      titel: "Map verwijderen",
-      tekst: `Map "${map.naam}" verwijderen? De inhoud valt terug naar het niveau erboven.`,
-      bevestig: "Verwijder",
+      titel: "Map opheffen",
+      tekst: `Map "${map.naam}" opheffen? De inhoud valt terug naar het niveau erboven.`,
+      bevestig: "Opheffen",
       gevaar: true,
     });
     if (ok) verwijderMap(map.id);
@@ -1427,7 +1431,8 @@ function Map_({ map, diepte }) {
         }),
       },
       { sep: true },
-      { label: "Verwijderen…", onClick: verwijder },
+      { label: "Opheffen (inhoud naar het niveau erboven)…", onClick: opheffen },
+      { label: "Verwijderen met inhoud…", onClick: verwijder },
     ]);
 
   const commitNaam = (naam) => {
@@ -1496,7 +1501,7 @@ function Map_({ map, diepte }) {
         <button
           type="button"
           className="studio-project__nieuw"
-          title="Map verwijderen (inhoud valt terug naar de ouder)"
+          title="Map verwijderen, met inhoud (dubbele bevestiging)"
           onClick={verwijder}
         >
           ×
@@ -2518,6 +2523,72 @@ function plaatsEaInProjectboom(profielId, model, ctx) {
     zet(elementKey(profielId, el.id), mapId);
   }
   for (const [mapId, lijst] of keys) useModellerenStore.getState().plaatsMeerdere(lijst, mapId);
+}
+
+// ── Map met inhoud verwijderen ──────────────────────────────────────────
+
+/** Alle submappen (recursief) van een map, diepste laatst. */
+function submappenVan(mappen, mapId) {
+  const uit = [];
+  const loop = (id) => {
+    for (const m of Object.values(mappen)) if (m.ouderId === id) { uit.push(m.id); loop(m.id); }
+  };
+  loop(mapId);
+  return uit;
+}
+
+/**
+ * Verwijder een map én alles erin: de geplaatste diagrammen en elementen (uit
+ * hun profielstore, per profiel één undo-stap per soort) en de submappen.
+ * Vraagt eerst om een bevestiging met een verplicht vinkje.
+ */
+async function verwijderMapMetInhoud(map) {
+  const ms = useModellerenStore.getState();
+  const mapIds = new Set([map.id, ...submappenVan(ms.mappen, map.id)]);
+  // Inhoud per profiel: diagram-keys `profiel::diagram`, element-keys `el::profiel::element`.
+  const perProfiel = new Map();
+  for (const [key, mapId] of Object.entries(ms.plaatsing)) {
+    if (!mapIds.has(mapId)) continue;
+    const isEl = isElementKey(key);
+    const rest = isEl ? key.slice(4) : key;
+    const i = rest.indexOf("::");
+    if (i < 0) continue;
+    const profielId = rest.slice(0, i), id = rest.slice(i + 2);
+    if (!perProfiel.has(profielId)) perProfiel.set(profielId, { diagrammen: [], elementen: [], keys: [] });
+    const p = perProfiel.get(profielId);
+    (isEl ? p.elementen : p.diagrammen).push(id);
+    p.keys.push(key);
+  }
+  let nDia = 0, nEl = 0;
+  for (const p of perProfiel.values()) { nDia += p.diagrammen.length; nEl += p.elementen.length; }
+  const nSub = mapIds.size - 1;
+  const ok = await vraagBevestiging({
+    titel: "Map met inhoud verwijderen",
+    tekst:
+      `Map "${map.naam}" verwijderen, inclusief alles erin?\n` +
+      `  • ${nDia} diagram${nDia === 1 ? "" : "men"}\n  • ${nEl} element${nEl === 1 ? "" : "en"} (uit het model, ook van andere diagrammen)\n  • ${nSub} submap${nSub === 1 ? "" : "pen"}\n\n` +
+      `Ctrl+Z maakt het per profiel ongedaan.`,
+    vinkje: "Ja, verwijder de map én de inhoud",
+    vinkjeVerplicht: true,
+    bevestig: "Verwijder alles",
+    gevaar: true,
+  });
+  if (!ok) return;
+  for (const [profielId, p] of perProfiel) {
+    const profiel = getProfieltype(profielId);
+    const st = profiel?.useStore?.getState();
+    if (!st) continue;
+    for (const id of p.diagrammen) (profiel.documentenBeheer ? st.verwijderDiagram(id) : st.deleteDiagram(id));
+    for (const id of p.elementen) if (st.elements[id]) st.deleteElement(id);
+    // Tabs van verwijderde diagrammen dicht.
+    for (const t of useModellerenStore.getState().tabs) {
+      if (t.profielId === profielId && p.diagrammen.includes(t.diagramId)) useModellerenStore.getState().sluitTab(t.id);
+    }
+  }
+  // Plaatsingen weg en de mappen (diepste eerst, zodat niets promoveert).
+  const alleKeys = [...perProfiel.values()].flatMap((p) => p.keys);
+  if (alleKeys.length) useModellerenStore.getState().plaatsMeerdere(alleKeys, null);
+  for (const id of [...mapIds].reverse()) useModellerenStore.getState().verwijderMap(id);
 }
 
 // ── Projectacties in het menu ─────────────────────────────────────────

@@ -417,6 +417,13 @@ UML-activiteit (zelfde IDE), zoals gewenst.
 > staat in de map van zijn eigenaar met de knopen ernaast. Details en EA-schema:
 > `docs/plans/2026-10-07 Sparx EA-sync — vier routes vergeleken (onderzoek).md` §7.
 >
+> **Map verwijderen mét inhoud (2026-10-09).** Het kruisje en *Verwijderen met inhoud…* op een
+> map halen de map, haar submappen en alle erin geplaatste diagrammen en elementen weg
+> (elementen uit het model, dus ook van andere diagrammen), achter een dialoog met de
+> aantallen en een verplicht vinkje. *Opheffen (inhoud naar het niveau erboven)…* is het oude
+> gedrag, nu een aparte keuze in het contextmenu. Wat niet in de map geplaatst was (bv.
+> naamloze notities) blijft in het model. Ctrl+Z werkt per profiel.
+>
 > **Metamodel v2026 in het profiel (2026-10-09).** Het canonieke profiel heeft een
 > abstracte wortel `representatie` (niet instantieerbaar, geen knop) met wat
 > entiteit, gegevenselement en relatie delen: beschrijving, meervoud, tijdlijn

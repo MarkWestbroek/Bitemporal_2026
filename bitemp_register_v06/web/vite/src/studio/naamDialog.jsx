@@ -67,8 +67,11 @@ export function vraagNaam({ titel = "Naam", label = "Naam", waarde = "", bevesti
 }
 
 /** Ja/nee-vraag; `true` bij bevestigen. `gevaar` kleurt de knop rood (verwijderen e.d.). */
-export function vraagBevestiging({ titel = "Weet je het zeker?", tekst = "", bevestig = "OK", annuleer = "Annuleren", gevaar = false } = {}) {
-  return open({ soort: "bevestiging", titel, tekst, bevestig, annuleer, gevaar });
+export function vraagBevestiging({ titel = "Weet je het zeker?", tekst = "", bevestig = "OK", annuleer = "Annuleren", gevaar = false, vinkje = null, vinkjeVerplicht = false } = {}) {
+  // `vinkje`: tekst van een extra bevestigingsvinkje (dubbele bevestiging bij
+  // iets destructiefs, bv. een map mét inhoud weg). Met `vinkjeVerplicht` kan
+  // de knop pas als het vinkje aan staat. Uitkomst blijft een boolean.
+  return open({ soort: "bevestiging", titel, tekst, bevestig, annuleer, gevaar, vinkje, vinkjeVerplicht });
 }
 
 /**
@@ -121,6 +124,7 @@ export function NaamDialogHost() {
   const [waarde, setWaarde] = useState("");
   const [filter, setFilter] = useState("");
   const [vinken, setVinken] = useState(() => new Set());
+  const [vink, setVink] = useState(false);
   const inputRef = useRef(null);
   const vakRef = useRef(null);
   const [plek, setPlek] = useState(null);
@@ -150,6 +154,7 @@ export function NaamDialogHost() {
         setWaarde(_actief.waarde || "");
         setFilter("");
         setVinken(new Set(_actief.aan || []));
+        setVink(false);
       }
     };
     luisteraars.add(fn);
@@ -352,7 +357,15 @@ export function NaamDialogHost() {
             </div>
           </div>
         ) : (
-          <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.45 }}>{cfg.tekst}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.45 }}>{cfg.tekst}</div>
+            {isBevestiging && cfg.vinkje && (
+              <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600 }}>
+                <input type="checkbox" checked={vink} onChange={(e) => setVink(e.target.checked)} />
+                {cfg.vinkje}
+              </label>
+            )}
+          </div>
         )}
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
           {cfg.soort !== "melding" && (
@@ -363,7 +376,7 @@ export function NaamDialogHost() {
           <button
             className={"dc-mini-knop" + (cfg.gevaar ? " is-gevaar" : "")}
             autoFocus={!isNaam && !isKeuze && !isReview}
-            disabled={(isNaam && !waarde.trim() && !cfg.leegToegestaan) || (isKeuze && !waarde)}
+            disabled={(isNaam && !waarde.trim() && !cfg.leegToegestaan) || (isKeuze && !waarde) || (isBevestiging && cfg.vinkjeVerplicht && !vink)}
             onClick={bevestigen}
           >
             {cfg.bevestig}
