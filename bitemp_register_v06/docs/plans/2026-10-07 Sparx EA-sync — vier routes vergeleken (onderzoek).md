@@ -624,7 +624,8 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
     is → `isConnector` mag omslaan en een abstract knoop-type expandeert niet naar
     connectoren. ✅ 09-10 canoniek-uml op het patroon: abstracte `representatie`, entiteit en
     gegevenselement eronder, relatie onder gegevenselement (STUDIO.md §Canoniek model).
-    **Nog open**: meervoudige overerving, abstract elementtype in een
+    **Nog open**: `typenaam` op relatie is geërfd maar afgeleid (terugreis: naam) — een
+    `verborgen`-vlag op PropertyType of alleen-lezen tonen (M3-MOF, 09-10); meervoudige overerving, abstract elementtype in een
     model als validatiefout, en een duidelijke melding als een ouder `verbindingsregels` (volle
     vorm) gebruikt en het kind `bron`/`doel` (nu: "doel verplicht"; M3-MOF-review 08-10).
 
