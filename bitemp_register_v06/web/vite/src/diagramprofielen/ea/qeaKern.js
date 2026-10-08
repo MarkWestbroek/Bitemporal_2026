@@ -77,7 +77,7 @@ export function sla(verslag, soort) {
  * @param {QeaBron} bron
  * @param {number} schaal
  */
-export function maakHulptabellen(bron, schaal) {
+export function maakHulptabellen(bron, schaal, { vasteMaat = null } = {}) {
   const stereoPerGuid = new Map();
   const customPerGuid = new Map();
   for (const x of bron.t_xref || []) {
@@ -104,11 +104,19 @@ export function maakHulptabellen(bron, schaal) {
   const objectPerId = new Map((bron.t_object || []).map((o) => [o.Object_ID, o]));
   const classifierPerId = new Map((bron.classifiers || []).map((c) => [c.Object_ID, c]));
   for (const o of bron.t_object || []) if (!classifierPerId.has(o.Object_ID)) classifierPerId.set(o.Object_ID, o);
+  // Rechthoek per diagramobject. Een vorm met een vaste maat in Omnium (ruit,
+  // begin-/eindstip, pin) krijgt niet de EA-maat maar wordt gecentreerd in de
+  // EA-rechthoek — anders liggen de handles buiten de vorm (Mark, 09-10).
+  const objectPerIdVoorMaat = new Map((bron.t_object || []).map((o) => [o.Object_ID, o]));
   const rectPerDiagram = new Map();
   for (const dobj of bron.t_diagramobjects || []) {
     if (!rectPerDiagram.has(dobj.Diagram_ID)) rectPerDiagram.set(dobj.Diagram_ID, new Map());
     const { position, size } = rechthoekNaarNode(dobj, schaal);
-    rectPerDiagram.get(dobj.Diagram_ID).set(dobj.Object_ID, { ...position, ...size });
+    const vast = vasteMaat ? vasteMaat(objectPerIdVoorMaat.get(dobj.Object_ID)) : null;
+    const rect = vast
+      ? { x: Math.round(position.x + size.width / 2 - vast.width / 2), y: Math.round(position.y + size.height / 2 - vast.height / 2), width: vast.width, height: vast.height, vast: true }
+      : { ...position, ...size, vast: false };
+    rectPerDiagram.get(dobj.Diagram_ID).set(dobj.Object_ID, rect);
   }
   const linkPerConnector = new Map();
   for (const l of bron.t_diagramlinks || []) {
@@ -165,12 +173,17 @@ export function knikkenVoor(h, c) {
   const link = h.linkPerConnector.get(c.Connector_ID);
   const stijl = sleutelWaarden(link?.Style);
   let knikken = stijl.Mode === "1" ? [] : knikkenUitPath(link?.Path, h.schaal);
-  if (knikken.length && stijl.TREE === "OS") {
+  if (knikken.length) {
+    // EA tekent het eerste en laatste stuk haaks op de rand (bij elke lijn
+    // met hoekpunten, niet alleen "Orthogonal - Square"): zet de aanhechtpunten
+    // erbij, met wat tolerantie voor vormen die in Omnium anders gemeten zijn.
     const rects = h.rectPerDiagram.get(link.DiagramID);
     const rb = rects?.get(c.Start_Object_ID), rd = rects?.get(c.End_Object_ID);
-    const begin = rb ? haaksAanhechtpunt(rb, knikken[0]) : null;
-    const eind = rd ? haaksAanhechtpunt(rd, knikken[knikken.length - 1]) : null;
-    knikken = maakHaaks([...(begin ? [begin] : []), ...knikken, ...(eind ? [eind] : [])]);
+    const tol = 12 * h.schaal;
+    const begin = rb ? haaksAanhechtpunt(rb, knikken[0], tol) : null;
+    const eind = rd ? haaksAanhechtpunt(rd, knikken[knikken.length - 1], tol) : null;
+    knikken = [...(begin ? [begin] : []), ...knikken, ...(eind ? [eind] : [])];
+    if (stijl.TREE === "OS") knikken = maakHaaks(knikken);
   }
   return knikken;
 }
@@ -224,8 +237,11 @@ export function bouwDiagram(h, d, { idVanObject, idVanConnector, diagramTypeId, 
   for (const dobj of [...(h.objectenPerDiagram.get(d.Diagram_ID) || [])].reverse()) {
     const elementId = idVanObject.get(dobj.Object_ID);
     if (!elementId) continue;
-    const { position, size } = rechthoekNaarNode(dobj, h.schaal);
-    const node = { elementId, position, size };
+    const rect = rects.get(dobj.Object_ID) || { ...rechthoekNaarNode(dobj, h.schaal).position, ...rechthoekNaarNode(dobj, h.schaal).size, vast: false };
+    const position = { x: rect.x, y: rect.y };
+    const size = { width: rect.width, height: rect.height };
+    // Vaste maat: geen size op de node (de vorm bepaalt hem), wel gecentreerd.
+    const node = rect.vast ? { elementId, position } : { elementId, position, size };
     // Rand-element (pin): positie relatief aan de gastheer op dit diagram
     // (React Flow-kind), zoals de motor hem bewaart.
     const randVan = elements[elementId]?.data?.randVan;

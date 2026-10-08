@@ -134,6 +134,10 @@
  * @property {"dashed"} [randStijl]         - vormgrammatica: gestippeld = inhoud elders beheerd
  *   (ook per element via data.randStijl); geldt voor class-box, chip en package
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
+ * @property {"rechthoek"|"ruit"|"ellips"} [omtrek] - de echte omtrek voor
+ *   zwevende aanhechting: een lijn raakt een ruit (beslissing) op zijn punt of
+ *   zijde en een ellips (use case, begin/eind) op de boog, niet op de
+ *   onzichtbare rechthoek eromheen. Default rechthoek. Zie canvas/zwevendeRand.js
  * @property {"zijden"|"zwevend"} [randAanhechting] - waar een connector aan dit
  *   element vastpakt. `"zijden"` = de vier handles (midden van elke zijde);
  *   `"zwevend"` = het punt waar de lijn de omtrek snijdt, zodat lijnen naar

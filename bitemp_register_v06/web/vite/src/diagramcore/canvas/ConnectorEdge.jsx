@@ -150,6 +150,8 @@ function ConnectorEdge({
       zwevendDoel: !!p.zwevendDoel && source !== target,
       bronRicht: knikkenRand ? knikkenRand[0] : null,
       doelRicht: knikkenRand ? knikkenRand[knikkenRand.length - 1] : null,
+      bronOmtrek: p.bronOmtrek || "rechthoek",
+      doelOmtrek: p.doelOmtrek || "rechthoek",
       vast: {
         sourceX: sourceXVast,
         sourceY: sourceYVast,

@@ -598,6 +598,17 @@ het invoegen een overzicht per diagram en element — nieuw / gewijzigd (met wat
 voor de eerste import (alles aangevinkt) en voor de merge; het verschil-overzicht is ook de
 plek voor de trace.
 
+**Lijnen en kleine vormen (09-10, Marks test).** (1) Elke lijn met hoekpunten krijgt nu
+zijn aanhechtpunten erbij (niet alleen TREE=OS), met tolerantie; bij kleine vaste vormen
+(ruit, stip) snapt het punt naar het midden van de zijde — de punt van de ruit. (2) Vormen
+met een vaste maat in Omnium (ruit 28, begin 22, eind 24, flow-eind 20, pin 12) krijgen
+niet de EA-maat maar worden gecentreerd in de EA-rechthoek (`vasteMaat` in de
+hulptabellen); anders lagen de handles buiten de vorm. (3) Motor: `ElementType.omtrek`
+(`ruit`/`ellips`) — zwevende aanhechting snijdt nu de echte vorm in plaats van de
+rechthoek eromheen (`zwevendeRand.aanhechtpunt`); gezet op beslissing/begin/eind in
+activity en statemachine en op use case/collaboratie. Het activity-profiel hecht nu
+zwevend (`randAanhechting`), zoals puur-uml en use case.
+
 ### 7.1 Openstaand — de lijst uit het gesprek (08-10)
 
 **Lezer, klassediagrammen**

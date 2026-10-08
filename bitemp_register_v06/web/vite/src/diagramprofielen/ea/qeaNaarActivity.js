@@ -29,7 +29,7 @@ const KNOPEN = new Set(["begin", "actie", "aanroep", "beslissing", "fork", "obje
 export function qeaNaarActivity(bron, { packageId, diagramTypeId = ACTIVITY_DIAGRAMTYPE, schaal = EA_SCHAAL }) {
   const pakketIds = new Set(deelboomPakketten(bron.t_package || [], packageId));
   const verslag = maakVerslag();
-  const h = maakHulptabellen(bron, schaal);
+  const h = maakHulptabellen(bron, schaal, { vasteMaat: vasteMaatVoor });
 
   const activityDiagrammen = (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && d.Diagram_Type === "Activity");
   for (const d of (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && d.Diagram_Type !== "Activity")) {
@@ -117,6 +117,29 @@ export function qeaNaarActivity(bron, { packageId, diagramTypeId = ACTIVITY_DIAG
   }
 
   return { diagramTypeId, elements, diagrams, verslag };
+}
+
+/**
+ * Vaste maten van de activity-vormen (activity/shapes.jsx): ruit 28, begin 22,
+ * eind 24, flow-eind 20, pin 12. Zulke vormen krijgen niet de EA-maat maar
+ * worden gecentreerd in de EA-rechthoek.
+ */
+export function vasteMaatVoor(o) {
+  if (!o) return null;
+  switch (o.Object_Type) {
+    case "Decision":
+    case "MergeNode":
+      return { width: 28, height: 28 };
+    case "StateNode":
+      if (Number(o.NType) === 100) return { width: 22, height: 22 };
+      if (Number(o.NType) === 101) return { width: 24, height: 24 };
+      if (Number(o.NType) === 102) return { width: 20, height: 20 };
+      return null;
+    case "ActionPin":
+      return { width: 12, height: 12 };
+    default:
+      return null;
+  }
 }
 
 /**

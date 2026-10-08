@@ -325,6 +325,9 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
             vorm: el.data?.vorm || (isLus ? "hoekig" : basisPresentatie.vorm),
             zwevendBron,
             zwevendDoel,
+            // Echte omtrek (ruit/ellips) voor het aanhechtpunt — zie zwevendeRand.
+            ...(elementTypesById[elements[el.source]?.elementType]?.omtrek ? { bronOmtrek: elementTypesById[elements[el.source].elementType].omtrek } : {}),
+            ...(elementTypesById[elements[el.target]?.elementType]?.omtrek ? { doelOmtrek: elementTypesById[elements[el.target].elementType].omtrek } : {}),
             labels: metOffsets(kaalLabels),
           },
         },

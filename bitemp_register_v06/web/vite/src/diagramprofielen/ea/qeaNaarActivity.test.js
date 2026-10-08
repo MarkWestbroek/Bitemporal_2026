@@ -111,3 +111,32 @@ test("puur-uml-lezer op hetzelfde pakket: klassen van elders op het klassediagra
   // Activity-knopen telt puur-uml als overgeslagen.
   assert.ok(uml.verslag.overgeslagen.Action >= 8);
 });
+
+test("vaste vormen (ruit, begin, eind, pin) krijgen geen EA-maat maar staan gecentreerd in de EA-rechthoek", () => {
+  const d = Object.values(model.diagrams)[0];
+  const bekend = opNaam("bekende bereikbaarheid?", "beslissing");
+  const node = d.nodes.find((n) => n.elementId === bekend.id);
+  assert.equal(node.size, undefined, "geen size → de vorm (28px) bepaalt de maat");
+  // EA: (290,-221)-(316,-255) → midden (303, 238) → linksboven van 28x28 = (289, 224).
+  assert.deepEqual(node.position, { x: 289, y: 224 });
+  const begin = van("begin")[0];
+  const bn = d.nodes.find((n) => n.elementId === begin.id);
+  assert.equal(bn.size, undefined);
+  const actie = d.nodes.find((n) => n.elementId === opNaam("Controleren bereikbaarheid", "actie").id);
+  assert.ok(actie.size, "acties houden hun EA-maat");
+});
+
+test("elke lijn met hoekpunten begint en eindigt haaks op de rand (aanhechtpunt erbij)", () => {
+  const cs = van("controlestroom").filter((c) => c.data.knikken);
+  assert.ok(cs.length >= 2);
+  // De lus "[vertrokken onbekend waarheen]": ruit → links om → actie.
+  const bekend = opNaam("bekende bereikbaarheid?", "beslissing");
+  const lus = cs.find((c) => c.source === bekend.id && c.data.guard === "vertrokken onbekend waarheen");
+  assert.ok(lus, "lus gevonden");
+  const k = lus.data.knikken;
+  // Eerste punt: op de linkerrand van de ruit (x = 289), op de hoogte van het middelpunt (y = 238).
+  assert.deepEqual(k[0], { x: 289, y: 238 });
+  // Laatste punt: op de linkerrand van de doel-actie, op de hoogte van het laatste EA-hoekpunt.
+  const doel = Object.values(model.diagrams)[0].nodes.find((n) => n.elementId === lus.target);
+  assert.equal(k[k.length - 1].x, doel.position.x);
+});

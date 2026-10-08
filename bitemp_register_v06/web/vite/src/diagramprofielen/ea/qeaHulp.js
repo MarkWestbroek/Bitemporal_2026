@@ -187,15 +187,18 @@ export function pakketPad(pakketten, id) {
  * @param {{x:number,y:number}} wp
  * @returns {{x:number,y:number}|null}
  */
-export function haaksAanhechtpunt(rect, wp) {
+export function haaksAanhechtpunt(rect, wp, tolerantie = 0) {
   const links = rect.x, rechts = rect.x + rect.width, boven = rect.y, onder = rect.y + rect.height;
-  if (wp.x >= links && wp.x <= rechts) {
-    if (wp.y < boven) return { x: wp.x, y: boven };
-    if (wp.y > onder) return { x: wp.x, y: onder };
-    return null; // binnen de doos
+  const klem = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+  // Kleine vaste vormen (ruit, stip): EA hecht in het midden van een zijde —
+  // dat is de punt van de ruit. Snap dan naar het midden van de as.
+  const klein = rect.width <= 40 || rect.height <= 40;
+  const midX = rect.x + rect.width / 2, midY = rect.y + rect.height / 2;
+  if (wp.x >= links - tolerantie && wp.x <= rechts + tolerantie && (wp.y < boven || wp.y > onder)) {
+    return { x: klein ? midX : klem(wp.x, links, rechts), y: wp.y < boven ? boven : onder };
   }
-  if (wp.y >= boven && wp.y <= onder) {
-    return { x: wp.x < links ? links : rechts, y: wp.y };
+  if (wp.y >= boven - tolerantie && wp.y <= onder + tolerantie && (wp.x < links || wp.x > rechts)) {
+    return { x: wp.x < links ? links : rechts, y: klein ? midY : klem(wp.y, boven, onder) };
   }
   return null;
 }

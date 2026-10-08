@@ -47,6 +47,7 @@ const elementTypes = [
   },
   {
     id: "usecase",
+    omtrek: "ellips",
     label: "Use case",
     omschrijving: "Samenhangend stuk functionaliteit met waarde voor een actor.",
     kort: "UC",
@@ -72,6 +73,7 @@ const elementTypes = [
     // realization". Realiseert een use case; in EA ook een map voor de
     // uitwerking (diagrammen eronder), dat doet hier de projectmap.
     id: "collaboratie",
+    omtrek: "ellips",
     label: "Collaboratie",
     omschrijving: "Use case-realisatie: de samenwerking die een use case uitwerkt (gestippelde ellips).",
     kort: "Collab",

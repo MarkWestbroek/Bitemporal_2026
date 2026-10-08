@@ -43,6 +43,7 @@ const CONTROLE_DOELEN = [...CONTROLE_TUSSEN, "eind", "flow-eind"];
 const elementTypes = [
   {
     id: "begin",
+    omtrek: "ellips",
     label: "Begin",
     omschrijving: "Startpunt van de flow — alleen uitgaande controlestromen.",
     kort: "Begin",
@@ -83,6 +84,7 @@ const elementTypes = [
   },
   {
     id: "beslissing",
+    omtrek: "ruit",
     label: "Beslissing/samenvoeging",
     omschrijving: "Beslissing (guards op de uitgaande stromen) of samenvoeging.",
     kort: "Keuze",
@@ -141,6 +143,7 @@ const elementTypes = [
   },
   {
     id: "eind",
+    omtrek: "ellips",
     label: "Eind",
     omschrijving: "Einde van de hele activity.",
     kort: "Eind",
@@ -152,6 +155,7 @@ const elementTypes = [
   },
   {
     id: "flow-eind",
+    omtrek: "ellips",
     label: "Flow-eind",
     omschrijving: "Beëindigt alleen deze stroom, niet de hele activity.",
     kort: "Flow",
@@ -237,6 +241,10 @@ export const activityDiagramType = {
   id: ACTIVITY_ID,
   label: "Activity",
   style: "uml-klassiek",
+  // Lijnen hechten aan de echte omtrek (ruit, stip: `omtrek` per type) in
+  // plaats van aan vier handles — zoals EA; nodig voor geïmporteerde
+  // EA-lijnen die op hun hoekpunten mikken (2026-10-09).
+  randAanhechting: "zwevend",
   fieldTypes: [],
   elementTypes,
   taakbalken: [
