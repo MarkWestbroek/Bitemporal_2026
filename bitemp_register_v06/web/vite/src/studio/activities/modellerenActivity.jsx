@@ -2756,13 +2756,19 @@ function menus(ctx) {
   // pakte de profiel-variant en kreeg alleen het use case-diagram).
   const eaItem = {
     id: "proj-import-ea",
-    label: "Importeer Sparx EA (.qea) in het project — alle diagramsoorten…",
+    label: "Importeer Sparx EA (.qea)…",
     onClick: () => importeerQeaInProject({ naImport: plaatsEaInProjectboom }),
   };
+  // In Modelleren is er maar één EA-import, en die doet altijd hetzelfde,
+  // welk tabblad ook actief is (Mark, 09-10): de profiel-eigen varianten
+  // ("… alleen dit profiel …") verdwijnen hier uit het Bestand-menu; ze
+  // blijven bestaan in de losse profiel-activiteiten.
+  const zonderProfielEa = (items) =>
+    (items || []).filter((it) => !(typeof it?.label === "string" && /Sparx EA/.test(it.label) && /alleen dit profiel/.test(it.label)));
   const bestandIdx = profielMenus.findIndex((m) => m?.id === "bestand");
   const metEa =
     bestandIdx >= 0
-      ? profielMenus.map((m, i) => (i === bestandIdx ? { ...m, items: [eaItem, { type: "separator" }, ...(m.items || [])] } : m))
+      ? profielMenus.map((m, i) => (i === bestandIdx ? { ...m, items: [eaItem, { type: "separator" }, ...zonderProfielEa(m.items)] } : m))
       : [...profielMenus, { id: "bestand", aanvullen: true, items: [eaItem] }];
   return [projectMenu, ...metEa];
 }
