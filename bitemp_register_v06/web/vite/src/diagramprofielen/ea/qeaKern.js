@@ -29,6 +29,8 @@ import {
  * @property {any[]} t_connector
  * @property {any[]} [t_xref]
  * @property {any[]} [t_objectproperties]
+ * @property {any[]} [t_attributetag]
+ * @property {any[]} [t_connectortag]
  * @property {any[]} [t_diagram]
  * @property {any[]} [t_diagramobjects]
  * @property {any[]} [t_diagramlinks]
@@ -82,13 +84,23 @@ export function maakHulptabellen(bron, schaal) {
     if (x.Name === "Stereotypes") stereoPerGuid.set(x.Client, stereotypenUitXref(x.Description));
     else if (x.Name === "CustomProperties") customPerGuid.set(x.Client, customPropertiesUitXref(x.Description));
   }
-  const tagsPerObject = new Map();
-  for (const t of bron.t_objectproperties || []) {
-    const m = tagsPerObject.get(t.Object_ID) || {};
-    const vorig = m[t.Property];
-    m[t.Property] = vorig === undefined ? t.Value ?? "" : [].concat(vorig, t.Value ?? "");
-    tagsPerObject.set(t.Object_ID, m);
-  }
+  // Tagged values: EA zet lange waarden als `<memo>` in VALUE en de tekst in
+  // NOTES; dubbele namen worden een lijst.
+  const tagsVan = (rijen, sleutelKolom, waardeKolom, notesKolom) => {
+    const uit = new Map();
+    for (const t of rijen || []) {
+      const m = uit.get(t[sleutelKolom]) || {};
+      const ruw = t[waardeKolom];
+      const waarde = ruw === "<memo>" ? t[notesKolom] ?? "" : ruw ?? "";
+      const vorig = m[t.Property];
+      m[t.Property] = vorig === undefined ? waarde : [].concat(vorig, waarde);
+      uit.set(t[sleutelKolom], m);
+    }
+    return uit;
+  };
+  const tagsPerObject = tagsVan(bron.t_objectproperties, "Object_ID", "Value", "Notes");
+  const tagsPerAttribuut = tagsVan(bron.t_attributetag, "ElementID", "VALUE", "NOTES");
+  const tagsPerConnector = tagsVan(bron.t_connectortag, "ElementID", "VALUE", "NOTES");
   const objectPerId = new Map((bron.t_object || []).map((o) => [o.Object_ID, o]));
   const classifierPerId = new Map((bron.classifiers || []).map((c) => [c.Object_ID, c]));
   for (const o of bron.t_object || []) if (!classifierPerId.has(o.Object_ID)) classifierPerId.set(o.Object_ID, o);
@@ -107,6 +119,8 @@ export function maakHulptabellen(bron, schaal) {
     stereoPerGuid,
     customPerGuid,
     tagsPerObject,
+    tagsPerAttribuut,
+    tagsPerConnector,
     objectPerId,
     classifierPerId,
     attrsPerObject: groepeer(bron.t_attribute || [], (a) => a.Object_ID, (a) => a.Pos),

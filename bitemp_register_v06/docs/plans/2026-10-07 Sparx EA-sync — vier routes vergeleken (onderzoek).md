@@ -600,9 +600,17 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
    UC.NPA.REG.0010 (12 voorkomens, 4 use cases uit vier pakketten, 3 includes met voorwaarde).
 10. **Ontbrekende profielen**: Component, Object, Deployment, InteractionOverview, Package,
     Requirements (152 diagrammen).
-11. **Stereotypen en tagged values generiek**: `data.stereotypen`/`data.tags` komen al mee,
-    maar de inspector heeft geen "Overig"-vak; MIM-standaardtags → mim12-properties via een
-    naamtabel (ook voor `MIG::`); testen op *Model Kern RSGB* en een zwaar extern MIM-model.
+11. ~~**MIM-lezer**~~ ✅ 08-10 (`qeaNaarMim.js`; *Bestand → Importeer MIM (XMI/XML of Sparx EA
+    .qea)…* in de MIM-activiteit, één keuze voor beide formaten): stereotypen `MIM::`/`MIG::`/kaal
+    → mim12-typen, tagged values via een naamtabel naar de mim12-properties — met normalisatie
+    van EA's oude MDG-namen (`Datum opname attribuutsoort`, `Toelichting relatiesoort`, dubbele
+    spaties, trema) en EA's `<memo>` uit NOTES; een MIM-tag mét metaklasse-suffix wint van een
+    kale naamgenoot (GEMMA's `herkomst`); Ja/Nee → boolean; de rest blijft in `data.tags`
+    (GEMMA-*, domein-*, Waardenverzameling, …). Ook tags op attributen (`t_attributetag`) en
+    connectoren (`t_connectortag`). Getest op vier objecttypen uit *Model Kern RSGB* (67
+    attribuutsoorten); browserproef op *RSGB Model* (635 elementen, 123 objecttypen, 73
+    enumeraties, 75 relatiesoorten). **Nog open**: een "Overig"-vak in de inspector voor
+    `data.tags`/`data.stereotypen`; een zwaar extern MIM-model van Mark.
 
 **M3 en metamodel**
 
@@ -613,7 +621,8 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
     STUDIO-05-diagramcore-plan.md §4.2b. **Nog open**: Metamodel v2026 zelf in
     canoniek-uml (wacht op Marks keuze: {Relatie} naast of onder {Gegevenselement} —
     `isConnector` mag niet omslaan), meervoudige overerving, abstract elementtype in een
-    model als validatiefout.
+    model als validatiefout, en een duidelijke melding als een ouder `verbindingsregels` (volle
+    vorm) gebruikt en het kind `bron`/`doel` (nu: "doel verplicht"; M3-MOF-review 08-10).
 
 **Terugweg**
 

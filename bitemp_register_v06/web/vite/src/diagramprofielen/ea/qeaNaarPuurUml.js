@@ -68,6 +68,13 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
     const ouder = idVanPakket.get(p.Parent_ID);
     if (ouder) maakBevat(elements, ouder, idVanPakket.get(p.Package_ID));
   }
+  // Een package staat ook op diagrammen — via zijn t_object (type Package,
+  // PDATA1 = Package_ID). Koppel dat object aan het package-element.
+  for (const o of bron.t_object || []) {
+    if (o.Object_Type !== "Package") continue;
+    const id = idVanPakket.get(Number(o.PDATA1));
+    if (id) idVanObject.set(o.Object_ID, id);
+  }
 
   // ── Elementen (in de pakketten, of van elders op een diagram hier) ─────
   for (const o of bron.t_object || []) {

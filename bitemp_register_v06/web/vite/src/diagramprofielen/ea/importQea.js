@@ -8,6 +8,7 @@ import { openQea, leesPakketten, leesBron } from "./qeaLezer.js";
 import { qeaNaarPuurUml } from "./qeaNaarPuurUml.js";
 import { qeaNaarActivity } from "./qeaNaarActivity.js";
 import { qeaNaarUsecase } from "./qeaNaarUsecase.js";
+import { qeaNaarMim } from "./qeaNaarMim.js";
 import { pakketPad } from "./qeaHulp.js";
 import { vraagKeuze, toonMelding } from "../../studio/naamDialog.jsx";
 
@@ -28,6 +29,18 @@ export function importeerQeaAlsActivity(bytes, bestandsnaam = "") {
 /** Zelfde, maar alleen de use case-diagrammen → use case-profiel. */
 export function importeerQeaAlsUsecase(bytes, bestandsnaam = "") {
   return importeerQea(bytes, bestandsnaam, qeaNaarUsecase, "use case");
+}
+
+/** Zelfde, naar het MIM-profiel (stereotypen MIM::/MIG::, tagged values → properties). */
+export function importeerQeaAlsMim(bytes, bestandsnaam = "") {
+  return importeerQea(bytes, bestandsnaam, qeaNaarMim, "MIM");
+}
+
+/** Is dit een EA-repository (op naam of op de SQLite-kop)? */
+export function isQeaBestand(bytes, bestandsnaam = "") {
+  if (/\.qeax?$/i.test(bestandsnaam)) return true;
+  const kop = new Uint8Array(bytes).subarray(0, 15);
+  return new TextDecoder().decode(kop) === "SQLite format 3";
 }
 
 /**

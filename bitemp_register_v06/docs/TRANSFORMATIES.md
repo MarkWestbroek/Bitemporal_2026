@@ -55,14 +55,15 @@ bron- en doelelement.
 - IDE-bewerkingen binnen het model (entiteit → gegevenselement, entiteit
   splitsen, relatie → associatieklasse): pure functies met een patch-contract in
   `ide/transformations.js`, zie [EDITOR_BEWERKINGEN.md](EDITOR_BEWERKINGEN.md).
-- **Sparx EA `.qea` → puur-uml / activity / use case** (2026-10-08): lezer op de SQLite-repository
+- **Sparx EA `.qea` → puur-uml / activity / use case / MIM** (2026-10-08): lezer op de SQLite-repository
   van EA, client-side met sql.js, via *Bestand → Importeer Sparx EA (.qea)…* in
   de UML-activiteit. Eén pakket met deelpakketten, mét diagrammen (posities,
   maten, knikpunten, verborgen lijnen) en stabiele ids uit de EA-GUID;
   stereotypen/tagged values reizen mee op `data`. `diagramprofielen/ea/`
   (`qeaLezer.js` sql.js → rijen, `qeaNaarPuurUml.js` rijen → model, puur;
   `qeaHulp.js` parsers, `qeaKern.js` gedeeld, `qeaNaarActivity.js` en
-  `qeaNaarUsecase.js` via de Activity- en Use case-activiteit), getest op de pakketten
+  `qeaNaarUsecase.js` via de Activity- en Use case-activiteit, `qeaNaarMim.js`
+  via de MIM-activiteit met tagged values → mim12-properties), getest op de pakketten
   *Metametamodel* en *UC.NPA.REG.0010* uit het Gemeentelijk Gegevensmodel. Ontwerp en EA-schema: `plans/2026-10-07 Sparx
   EA-sync — vier routes vergeleken (onderzoek).md` §5–§7.
 - Codegen (canoniek model → code en API-schema's): eigen pijplijn, zie

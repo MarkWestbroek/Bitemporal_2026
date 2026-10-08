@@ -130,6 +130,14 @@ export function leesBron(db, packageId) {
     );
   }
   const t_objectproperties = rijen(db, `SELECT Object_ID, Property, Value, Notes FROM t_objectproperties WHERE Object_ID IN (${oq})`, objectIds);
+  const attribuutIds = t_attribute.map((a) => a.ID);
+  const t_attributetag = attribuutIds.length
+    ? rijen(db, `SELECT ElementID, Property, VALUE, NOTES FROM t_attributetag WHERE ElementID IN (${attribuutIds.map(() => "?").join(",")})`, attribuutIds)
+    : [];
+  const connectorIds = t_connector.map((c) => c.Connector_ID);
+  const t_connectortag = connectorIds.length
+    ? rijen(db, `SELECT ElementID, Property, VALUE, NOTES FROM t_connectortag WHERE ElementID IN (${connectorIds.map(() => "?").join(",")})`, connectorIds)
+    : [];
   const t_diagram = rijen(
     db,
     `SELECT Diagram_ID, Package_ID, ParentID, Diagram_Type, Name, Notes, Stereotype, cx, cy, Scale, PDATA, ea_guid, StyleEx
@@ -158,6 +166,8 @@ export function leesBron(db, packageId) {
     t_connector,
     t_xref,
     t_objectproperties,
+    t_attributetag,
+    t_connectortag,
     t_diagram,
     t_diagramobjects,
     t_diagramlinks,
