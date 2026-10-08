@@ -25,7 +25,9 @@
  *   {herlaadUitModel?, zetTerugNaarModel?, exporteerV3?, importeerV3?,
  *    DialogenComponent?, importBestand?} — zonder koppeling start de
  *   activiteit leeg en ontbreken de bijbehorende Bestand-menu-items.
- *   importBestand = {label, accept, verwerk(tekst, bestandsnaam) → coreModel}
+ *   importBestand = {label, accept, binair?, verwerk(inhoud, bestandsnaam) → coreModel | null}
+ *     (binair: true → `inhoud` is een ArrayBuffer i.p.v. tekst, bv. een EA .qea;
+ *      null terug = de gebruiker brak af, bv. in een keuzedialoog)
  *   voor profiel-eigen bestandsformaten (bv. OAS 3.1 YAML).
  */
 import React, {
@@ -559,7 +561,8 @@ export function maakDiagramActiviteit(opties) {
             input.onchange = () => {
               const file = input.files?.[0];
               if (!file) return;
-              file.text().then(async (tekst) => {
+              const inhoud = koppeling.importBestand.binair ? file.arrayBuffer() : file.text();
+              inhoud.then(async (tekst) => {
                 let model;
                 try {
                   // `verwerk` mag async zijn (bv. een dialectkeuze via een dialoog).
@@ -568,6 +571,7 @@ export function maakDiagramActiviteit(opties) {
                   toonMelding({ tekst: `Import mislukt: ${e?.message || e}` });
                   return;
                 }
+                if (!model) return; // afgebroken in een keuzedialoog
                 const s = useStore.getState();
                 if (Object.keys(s.elements).length > 0) {
                   const ok = await vraagBevestiging({

@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden } from "./zwevendeRand.js";
+import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden, richtpuntOfAanhechtpunt } from "./zwevendeRand.js";
 import { besteZijde } from "./materialiseerConnectoren.js";
 
 // Een doos van 200x100 met middelpunt (100, 50).
@@ -111,4 +111,22 @@ test("beide kanten zwevend: de lijn loopt van omtrek naar omtrek", () => {
   });
   assert.deepEqual([uit.sourceX, uit.sourceY, uit.sourcePosition], [200, 50, "right"]);
   assert.deepEqual([uit.targetX, uit.targetY, uit.targetPosition], [500, 50, "left"]);
+});
+
+test("knikpunten sturen het uiteinde: richtpunt óp de rand wordt exact het uiteinde, op die zijde", () => {
+  // Doos 200x100; een geïmporteerd aanhechtpunt op de bovenrand bij x=30
+  // (schuin t.o.v. het middelpunt → aanhechtpunt zou 'left' kiezen).
+  const s = richtpuntOfAanhechtpunt(DOOS, { x: 30, y: 0 });
+  assert.deepEqual([s.x, s.y, s.zijde], [30, 0, "top"]);
+  const t = richtpuntOfAanhechtpunt(DOOS, { x: 200, y: 90 });
+  assert.deepEqual([t.x, t.y, t.zijde], [200, 90, "right"]);
+  // Niet op de rand: gewoon het snijpunt richting dat punt (niet richting de andere doos).
+  const doel = { x: 1000, y: 0, width: 200, height: 100 };
+  const uit = zwevendeUiteinden({
+    bronRect: DOOS, doelRect: doel, zwevendBron: true, zwevendDoel: true,
+    vast: { sourceX: 0, sourceY: 0, targetX: 0, targetY: 0, sourcePosition: "right", targetPosition: "left" },
+    bronRicht: { x: 100, y: 400 }, doelRicht: { x: 1100, y: 400 },
+  });
+  assert.equal(uit.sourcePosition, "bottom");
+  assert.equal(uit.targetPosition, "bottom");
 });

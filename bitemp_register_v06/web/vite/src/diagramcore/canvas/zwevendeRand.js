@@ -117,22 +117,42 @@ export function nodeRechthoek(node) {
  * @param {{sourceX: number, sourceY: number, targetX: number, targetY: number,
  *          sourcePosition: string, targetPosition: string}} args.vast
  */
-export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel, vast }) {
+export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel, vast, bronRicht = null, doelRicht = null }) {
   if ((!zwevendBron && !zwevendDoel) || !bronRect || !doelRect) return vast;
   const bronMid = middelpunt(bronRect);
   const doelMid = middelpunt(doelRect);
   const uit = { ...vast };
   if (zwevendBron) {
-    const s = aanhechtpunt(bronRect, doelMid);
+    const s = richtpuntOfAanhechtpunt(bronRect, bronRicht || doelMid);
     uit.sourceX = s.x;
     uit.sourceY = s.y;
     uit.sourcePosition = s.zijde;
   }
   if (zwevendDoel) {
-    const t = aanhechtpunt(doelRect, bronMid);
+    const t = richtpuntOfAanhechtpunt(doelRect, doelRicht || bronMid);
     uit.targetX = t.x;
     uit.targetY = t.y;
     uit.targetPosition = t.zijde;
   }
   return uit;
+}
+
+/**
+ * Met knikpunten (data.knikken) mikt een zwevend uiteinde op het eerste/laatste
+ * knikpunt in plaats van op het middelpunt van de andere doos — anders springt
+ * de lijn eerst schuin naar de knik (EA-import, 2026-10-08). Ligt dat
+ * knikpunt precies óp de rand (een geïmporteerd aanhechtpunt), dan is dát het
+ * uiteinde, op die zijde.
+ * @param {Rechthoek} rect
+ * @param {Punt} punt
+ */
+export function richtpuntOfAanhechtpunt(rect, punt, tolerantie = 1.5) {
+  const links = rect.x, rechts = rect.x + rect.width, boven = rect.y, onder = rect.y + rect.height;
+  const binnenX = punt.x >= links - tolerantie && punt.x <= rechts + tolerantie;
+  const binnenY = punt.y >= boven - tolerantie && punt.y <= onder + tolerantie;
+  if (binnenX && Math.abs(punt.y - boven) <= tolerantie) return { x: punt.x, y: boven, zijde: "top" };
+  if (binnenX && Math.abs(punt.y - onder) <= tolerantie) return { x: punt.x, y: onder, zijde: "bottom" };
+  if (binnenY && Math.abs(punt.x - links) <= tolerantie) return { x: links, y: punt.y, zijde: "left" };
+  if (binnenY && Math.abs(punt.x - rechts) <= tolerantie) return { x: rechts, y: punt.y, zijde: "right" };
+  return aanhechtpunt(rect, punt);
 }

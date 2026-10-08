@@ -71,6 +71,14 @@ export function vraagBevestiging({ titel = "Weet je het zeker?", tekst = "", bev
   return open({ soort: "bevestiging", titel, tekst, bevestig, annuleer, gevaar });
 }
 
+/**
+ * Keuze uit een lijst (`<select>`); de gekozen `waarde` of `null` bij annuleren.
+ * @param {{titel?:string, label?:string, opties:{waarde:string,label:string}[], waarde?:string, bevestig?:string}} cfg
+ */
+export function vraagKeuze({ titel = "Kies", label = "Keuze", opties = [], waarde = "", bevestig = "OK" } = {}) {
+  return open({ soort: "keuze", titel, label, opties, waarde: waarde || opties[0]?.waarde || "", bevestig });
+}
+
 /** Mededeling met alleen een OK-knop (vervangt window.alert). */
 export function toonMelding({ titel = "Melding", tekst = "", bevestig = "OK" } = {}) {
   return open({ soort: "melding", titel, tekst, bevestig });
@@ -120,12 +128,15 @@ export function NaamDialogHost() {
   if (!_actief) return null;
   const cfg = _actief;
   const isNaam = cfg.soort === "naam";
+  const isKeuze = cfg.soort === "keuze";
   const isBevestiging = cfg.soort === "bevestiging";
   const annuleerWaarde = isBevestiging ? false : null;
   const bevestigen = () => {
     if (isNaam) {
       const schoon = waarde.trim();
       if (schoon || cfg.leegToegestaan) beeindig(schoon);
+    } else if (isKeuze) {
+      if (waarde) beeindig(waarde);
     } else beeindig(isBevestiging ? true : undefined);
   };
   const veldStijl = {
@@ -156,7 +167,7 @@ export function NaamDialogHost() {
       // Escape sluit ook zonder focus in het veld (bevestiging/melding).
       onKeyDown={(e) => {
         if (e.key === "Escape") beeindig(annuleerWaarde);
-        else if (e.key === "Enter" && !isNaam) bevestigen();
+        else if (e.key === "Enter" && !isNaam && !isKeuze) bevestigen();
       }}
     >
       <div
@@ -169,7 +180,7 @@ export function NaamDialogHost() {
           border: "1px solid var(--s-border, #cbd5e1)",
           borderRadius: 10,
           boxShadow: "0 12px 40px rgba(15, 23, 42, 0.25)",
-          width: cfg.meerregelig ? 520 : 400,
+          width: cfg.meerregelig || isKeuze ? 520 : 400,
           maxWidth: "92vw",
           padding: "14px 16px",
           fontSize: 13,
@@ -209,6 +220,25 @@ export function NaamDialogHost() {
               />
             )}
           </label>
+        ) : isKeuze ? (
+          <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
+            {cfg.label}
+            <select
+              autoFocus
+              value={waarde}
+              onChange={(e) => setWaarde(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") bevestigen();
+              }}
+              style={{ ...veldStijl, maxWidth: "100%" }}
+            >
+              {(cfg.opties || []).map((o) => (
+                <option key={o.waarde} value={o.waarde}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
         ) : (
           <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.45 }}>{cfg.tekst}</div>
         )}
@@ -220,8 +250,8 @@ export function NaamDialogHost() {
           )}
           <button
             className={"dc-mini-knop" + (cfg.gevaar ? " is-gevaar" : "")}
-            autoFocus={!isNaam}
-            disabled={isNaam && !waarde.trim() && !cfg.leegToegestaan}
+            autoFocus={!isNaam && !isKeuze}
+            disabled={(isNaam && !waarde.trim() && !cfg.leegToegestaan) || (isKeuze && !waarde)}
             onClick={bevestigen}
           >
             {cfg.bevestig}

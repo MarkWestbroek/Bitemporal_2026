@@ -137,6 +137,9 @@ function ConnectorEdge({
   // hooks draaien altijd (regels van hooks), het rekenwerk alleen als het mag.
   const bronNode = useInternalNode(source);
   const doelNode = useInternalNode(target);
+  // Met knikpunten mikt elk uiteinde op zijn dichtstbijzijnde knik (zie
+  // zwevendeRand.richtpuntOfAanhechtpunt), niet op de andere doos.
+  const knikkenRand = Array.isArray(data?.knikken) && data.knikken.length ? data.knikken : null;
   const { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition } =
     zwevendeUiteinden({
       bronRect: nodeRechthoek(bronNode),
@@ -145,6 +148,8 @@ function ConnectorEdge({
       // handles, want daar bepalen ze juist de vorm van het oortje.
       zwevendBron: !!p.zwevendBron && source !== target,
       zwevendDoel: !!p.zwevendDoel && source !== target,
+      bronRicht: knikkenRand ? knikkenRand[0] : null,
+      doelRicht: knikkenRand ? knikkenRand[knikkenRand.length - 1] : null,
       vast: {
         sourceX: sourceXVast,
         sourceY: sourceYVast,
