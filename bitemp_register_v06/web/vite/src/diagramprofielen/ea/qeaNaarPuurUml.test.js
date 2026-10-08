@@ -153,6 +153,14 @@ test("standaardschaal 1,5 vergroot posities, maten en knikpunten gelijk op", () 
   assert.equal(k15.data.knikken[0].x, Math.round(k1.data.knikken[0].x * 1.5));
 });
 
+test("rechte EA-lijn (geen hoekpunten, geen auto-routing) → vorm recht", () => {
+  const recht = els.filter((e) => e.data?.vorm === "recht");
+  const hoekig = els.filter((e) => (e.source || e.target) && !e.data?.vorm && !e.data?.knikken);
+  assert.ok(recht.length > 0, "Mode=1/3 zonder Path → recht");
+  assert.ok(hoekig.length > 0, "Mode=2 (auto-routing) → profiel-default (hoekig)");
+  assert.ok(recht.every((e) => !e.data.knikken));
+});
+
 test("knikpunten uit Path (Mode 2/3), niet bij Mode 1", () => {
   const metPad = els.filter((e) => e.data?.knikken);
   assert.ok(metPad.length > 0, "minstens één lijn met knikpunten");

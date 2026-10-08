@@ -198,6 +198,12 @@ export function maakConnectorElement(h, c, vertaald) {
   // het geheel), dan draaien de knikken mee.
   let knikken = knikkenVoor(h, c);
   if (vertaald.omgedraaid) knikken = knikken.slice().reverse();
+  // Lijnvorm: een EA-lijn zonder hoekpunten is een rechte lijn (Direct, of
+  // Custom zonder waypoints) — tenzij EA hem zelf routeert (Mode=2, Auto
+  // Routing: orthogonaal). Dan volgt Omnium's "hoekig" dat het dichtst.
+  const link = h.linkPerConnector.get(c.Connector_ID);
+  const mode = sleutelWaarden(link?.Style).Mode;
+  const vorm = !knikken.length && link && mode !== "2" ? "recht" : null;
   return {
     id,
     naam: vertaald.naam,
@@ -210,6 +216,7 @@ export function maakConnectorElement(h, c, vertaald) {
       ...(c.Notes ? { notes: c.Notes } : {}),
       ...vertaald.data,
       ...(knikken.length ? { knikken } : {}),
+      ...(vorm ? { vorm } : {}),
     },
   };
 }
