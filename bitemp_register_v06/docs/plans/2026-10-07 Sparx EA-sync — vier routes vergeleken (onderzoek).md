@@ -592,8 +592,12 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
    Getest op UC.NPA.REG.0010 (22 knopen, 17 stromen, 2 aanroepen, 2 pins).
    **Nog open**: activity-parameters (4 overgeslagen), action-soort zichtbaar maken,
    boundary in activity, EA-auto-routing (rechte lijnen).
-9. **Use case-lezer**: use case, actor, include/extend, **collaboratie** (gestippelde ellips,
-   UML 2 Collaboration — EA's "use case realization") + `realiseert`.
+9. ~~**Use case-lezer**~~ ✅ 08-10 (`qeaNaarUsecase.js`, *Bestand → Importeer Sparx EA* in de
+   Use case-activiteit): use case, actor, kader, notitie, **collaboratie** (gestippelde ellips)
+   + `realiseert`, klassen van elders als `klasse` (alleen naam), include/extend met
+   voorwaarde (`PDATA4`), associatie (ook klasse-relaties, stereotype als label),
+   generalisatie, dependency (naam of «stereotype»), notitielijn. Getest op
+   UC.NPA.REG.0010 (12 voorkomens, 4 use cases uit vier pakketten, 3 includes met voorwaarde).
 10. **Ontbrekende profielen**: Component, Object, Deployment, InteractionOverview, Package,
     Requirements (152 diagrammen).
 11. **Stereotypen en tagged values generiek**: `data.stereotypen`/`data.tags` komen al mee,
