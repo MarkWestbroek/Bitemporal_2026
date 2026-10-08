@@ -75,7 +75,7 @@ const BOOLEAN_KEYS = new Set(["indicatieMaterieleHistorie", "indicatieFormeleHis
  * @param {import("./qeaKern.js").QeaBron} bron
  * @param {{packageId:number, diagramTypeId?:string, schaal?:number}} opties
  */
-export function qeaNaarMim(bron, { packageId, diagramTypeId = MIM_DIAGRAMTYPE, schaal = EA_SCHAAL }) {
+export function qeaNaarMim(bron, { packageId, diagramTypeId = MIM_DIAGRAMTYPE, schaal = EA_SCHAAL , diagramFilter = null}) {
   const pakketIds = new Set(deelboomPakketten(bron.t_package || [], packageId));
   const verslag = maakVerslag();
   const h = maakHulptabellen(bron, schaal);
@@ -170,7 +170,9 @@ export function qeaNaarMim(bron, { packageId, diagramTypeId = MIM_DIAGRAMTYPE, s
 
   /** @type {Record<string, any>} */
   const diagrams = {};
-  for (const d of (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID))) {
+  // diagramFilter (optioneel): bv. de project-import houdt hier de
+  // activity-/use case-diagrammen buiten, die hebben hun eigen lezer.
+  for (const d of (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && (!diagramFilter || diagramFilter(d)))) {
     const diagram = bouwDiagram(h, d, { idVanObject, idVanConnector, diagramTypeId, elements });
     diagrams[diagram.id] = diagram;
     verslag.diagrammen += 1;

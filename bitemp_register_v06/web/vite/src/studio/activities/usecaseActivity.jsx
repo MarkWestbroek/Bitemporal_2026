@@ -28,7 +28,7 @@ export default maakDiagramActiviteit({
   koppeling: {
     /** Sparx EA-repository (.qea) → de use case-diagrammen van één pakket. */
     importBestand: {
-      label: "Importeer Sparx EA (.qea)…",
+      label: "Importeer Sparx EA (.qea) — alleen dit profiel…",
       accept: ".qea,.qeax",
       binair: true,
       verwerk: (bytes, bestandsnaam) => importeerQeaAlsUsecase(bytes, bestandsnaam),

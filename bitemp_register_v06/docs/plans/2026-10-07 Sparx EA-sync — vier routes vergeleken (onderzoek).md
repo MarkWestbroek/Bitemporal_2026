@@ -559,6 +559,17 @@ dichtstbijzijnde knikpunt in plaats van op de andere doos, en een knikpunt dat p
 op de rand ligt ís het uiteinde (`zwevendeRand.richtpuntOfAanhechtpunt`) — anders sprong
 elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
 
+**Eén import voor het hele project (09-10).** Mark importeerde UC.NPA.REG.0010 in de
+UML-activiteit en kreeg geen use case-model: elke profiel-import leest alleen zijn eigen
+diagramsoort. Daarom in Modelleren *Bestand → Importeer Sparx EA (.qea)…*
+(`diagramprofielen/ea/importQeaProject.js`): bestand → pakketkeuze → alle lezers over
+hetzelfde pakket. Klassediagrammen (alles behalve Activity/Use Case) → puur-uml, of mim12
+als het pakket `MIM::`/`MIG::`-stereotypen draagt; Activity → activity; Use Case → use case.
+Elke uitkomst gaat als "toevoegen" (undo per profiel) in de store van dat profiel; de
+diagrammen verschijnen onder *Niet ingedeeld* bij hun profiel. Het verslag telt alleen
+EA-typen die géén lezer kent (bij UC.NPA.REG.0010: ActivityParameter). De
+profiel-imports heten nu "… — alleen dit profiel…".
+
 ### 7.1 Openstaand — de lijst uit het gesprek (08-10)
 
 **Lezer, klassediagrammen**

@@ -38,7 +38,7 @@ export default maakDiagramActiviteit({
     herlaadLabel: "Zet canoniek model om naar MIM…",
     /** XMI-import (MIM-UML-profiel, gangbare EA-vorm). */
     importBestand: {
-      label: "Importeer MIM (XMI/XML of Sparx EA .qea)…",
+      label: "Importeer MIM (XMI/XML of Sparx EA .qea) — alleen dit profiel…",
       accept: ".xml,.xmi,.qea,.qeax",
       binair: true,
       // Eén keuze, twee formaten: een EA-repository gaat door de .qea-lezer,

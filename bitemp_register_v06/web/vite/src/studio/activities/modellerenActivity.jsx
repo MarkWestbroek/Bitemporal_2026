@@ -51,6 +51,7 @@ import {
 import ProfielIcoon from "../ProfielIcoon.jsx";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
+import { importeerQeaInProject } from "../../diagramprofielen/ea/importQeaProject.js";
 import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
 
 const ELEMENTEN_HOOGTE_SLEUTEL = "studio05-project-elementen-hoogte";
@@ -2640,7 +2641,18 @@ function menus(ctx) {
       ? profiel.menus(ctx)
       : profiel.menus
     : [];
-  return [projectMenu, ...(Array.isArray(ruw) ? ruw : [])];
+  const profielMenus = Array.isArray(ruw) ? ruw : [];
+  // Bestand → Importeer Sparx EA: één pakket, elk diagram naar zijn eigen
+  // profiel (UML/MIM, Activity, Use case) — los van het actieve tabblad, zie
+  // diagramprofielen/ea/importQeaProject.js. Komt onder het Bestand-menu van
+  // het actieve profiel als dat er een heeft, anders onder het standaard-Bestand.
+  const eaItem = { id: "proj-import-ea", label: "Importeer Sparx EA (.qea)…", onClick: importeerQeaInProject };
+  const bestandIdx = profielMenus.findIndex((m) => m?.id === "bestand");
+  const metEa =
+    bestandIdx >= 0
+      ? profielMenus.map((m, i) => (i === bestandIdx ? { ...m, items: [...(m.items || []), { type: "separator" }, eaItem] } : m))
+      : [...profielMenus, { id: "bestand", aanvullen: true, items: [eaItem] }];
+  return [projectMenu, ...metEa];
 }
 
 export default {

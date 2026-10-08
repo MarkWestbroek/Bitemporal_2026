@@ -63,7 +63,9 @@ bron- en doelelement.
   (`qeaLezer.js` sql.js → rijen, `qeaNaarPuurUml.js` rijen → model, puur;
   `qeaHulp.js` parsers, `qeaKern.js` gedeeld, `qeaNaarActivity.js` en
   `qeaNaarUsecase.js` via de Activity- en Use case-activiteit, `qeaNaarMim.js`
-  via de MIM-activiteit met tagged values → mim12-properties), getest op de pakketten
+  via de MIM-activiteit met tagged values → mim12-properties; in Modelleren
+  *Bestand → Importeer Sparx EA (.qea)…* voor alle diagramsoorten tegelijk,
+  `importQeaProject.js`), getest op de pakketten
   *Metametamodel* en *UC.NPA.REG.0010* uit het Gemeentelijk Gegevensmodel. Ontwerp en EA-schema: `plans/2026-10-07 Sparx
   EA-sync — vier routes vergeleken (onderzoek).md` §5–§7.
 - Codegen (canoniek model → code en API-schema's): eigen pijplijn, zie
