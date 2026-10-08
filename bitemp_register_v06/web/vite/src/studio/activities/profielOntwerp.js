@@ -76,6 +76,9 @@ export const profielOntwerpKern = {
         // bevat-verbindingsregel), standaard dicht = ingeklapt beginnen.
         { key: "container", label: "container (drop-doel, package)", datatype: "boolean" },
         { key: "standaardDichtInBoom", label: "standaard dicht in boom", datatype: "boolean" },
+        // M3: abstract type (EMOF isAbstract) — niet instantieerbaar, wel bereik;
+        // de naam toont cursief (ClassBox leest data.abstract).
+        { key: "abstract", label: "abstract (niet instantieerbaar)", datatype: "boolean" },
       ],
       compartments: [
         { id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" },
@@ -117,6 +120,19 @@ export const profielOntwerpKern = {
       bron: { elementTypes: ["elementDef", "compartimentDef"] },
       doel: { elementTypes: ["compartimentDef", "fieldDef"] },
       edgePresentatie: { lijn: "solid", kleur: "#7c3aed", markerStart: "ruit" },
+    },
+    {
+      // M3: ElementType erft van ElementType (EMOF superClass) — UML-pijl.
+      id: "erft",
+      label: "Erft van (▷)",
+      omschrijving: "Overerving tussen elementtypen: het kind neemt shape, eigenschappen en compartimenten over.",
+      kort: "▷",
+      shape: "edge",
+      icoon: "generalisatie",
+      isConnector: true,
+      bron: { elementTypes: ["elementDef"] },
+      doel: { elementTypes: ["elementDef"] },
+      edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569", markerEnd: "driehoek" },
     },
     {
       id: "verbindingsregel",
@@ -226,6 +242,13 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
 
   const doelIdVoor = new Map();
   for (const def of defs) doelIdVoor.set(def.id, slug(def.naam));
+  // Overerving: ▷-pijl kind → ouder (één ouder; de laatste getekende wint).
+  const erftVan = new Map();
+  for (const pijl of perSoort("erft")) {
+    if (pijl.source && pijl.target && doelIdVoor.has(pijl.source) && doelIdVoor.has(pijl.target)) {
+      erftVan.set(pijl.source, doelIdVoor.get(pijl.target));
+    }
+  }
 
   // Veldtypen (FieldTypes) van het doelprofiel: één per fieldDef-node.
   const fieldTypes = [];
@@ -283,6 +306,8 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       ...(d.icoon ? { icoon: d.icoon } : {}),
       ...(d.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
       ...(d.container ? { _containerWens: true } : {}),
+      ...(erftVan.has(def.id) ? { erft: erftVan.get(def.id) } : {}),
+      ...(d.abstract ? { isAbstract: true } : {}),
       properties: [{ key: "kleur", datatype: "colour" }, ...eigenschappenVan(def)],
       compartments,
     });
@@ -437,6 +462,16 @@ function eigenschapVelden(properties) {
  * @param {Object} descriptor
  * @returns {{elements: Record<string, Object>, diagrams: Record<string, Object>}}
  */
+/** Eigen (niet-geërfde) compartimenten/eigenschappen van een uitgevlakt type. */
+function eigenCompartments(et) {
+  const geerfd = new Set(et._geerfd?.compartments || []);
+  return (et.compartments || []).filter((ct) => !geerfd.has(ct.id));
+}
+function eigenProperties(et) {
+  const geerfd = new Set(et._geerfd?.properties || []);
+  return (et.properties || []).filter((pr) => !geerfd.has(pr.key));
+}
+
 export function ontwerpUitProfiel(descriptor) {
   _ontwerpTeller += 1;
   const prefix = `ow${_ontwerpTeller}`;
@@ -483,7 +518,7 @@ export function ontwerpUitProfiel(descriptor) {
       naam: et.label || et.id,
       elementType: "elementDef",
       compartimenten: [
-        { compartmentType: "eigenschappen", velden: eigenschapVelden(et.properties) },
+        { compartmentType: "eigenschappen", velden: eigenschapVelden(eigenProperties(et)) },
         ...(implementatieRegels.length
           ? [{ compartmentType: "implementatie", velden: implementatieRegels }]
           : []),
@@ -496,12 +531,13 @@ export function ontwerpUitProfiel(descriptor) {
         ...(et.stereotype ? { doelStereotype: et.stereotype } : {}),
         ...(et.containerVoor ? { container: true } : {}),
         ...(et.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
+        ...(et.isAbstract ? { abstract: true } : {}),
       },
     };
     const x = 60 + kolom * 340;
     nodes.push({ elementId: etNodeId, position: { x, y: 60 } });
 
-    (et.compartments || []).forEach((ct, rij) => {
+    eigenCompartments(et).forEach((ct, rij) => {
       const ctNodeId = `${prefix}_ct_${et.id}_${ct.id}`;
       elements[ctNodeId] = {
         id: ctNodeId,
@@ -553,6 +589,21 @@ export function ontwerpUitProfiel(descriptor) {
     });
   });
 
+  // Overerving (M3): één ▷-pijl per kind → ouder.
+  for (const et of nietConnectoren) {
+    if (!et.erft || !nodeIdVoorElementType.has(et.erft)) continue;
+    const id = `${prefix}_erft_${et.id}`;
+    elements[id] = {
+      id,
+      naam: "",
+      elementType: "erft",
+      source: nodeIdVoorElementType.get(et.id),
+      target: nodeIdVoorElementType.get(et.erft),
+      compartimenten: [],
+      data: {},
+    };
+  }
+
   connectoren.forEach((et, i) => {
     const p = et.edgePresentatie || {};
     const props = et.properties || [];
@@ -561,11 +612,13 @@ export function ontwerpUitProfiel(descriptor) {
     const regels =
       Array.isArray(et.verbindingsregels) && et.verbindingsregels.length
         ? et.verbindingsregels
-        : [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
+        : [{ bron: et.bron || [], doel: et.doel || [] }];
     let volgnr = 0;
     for (const regel of regels) {
-      const bronnen = regel.bron?.elementTypes || regel.bron || [];
-      const doelen = regel.doel?.elementTypes || regel.doel || [];
+      // Vóór de bereik-expansie: de regel zoals getekend (naar een abstract
+      // type), niet de uitgeschreven lijst concrete afstammelingen.
+      const bronnen = regel._bronVoorExpansie || regel.bron?._voorExpansie || regel.bron?.elementTypes || regel.bron || [];
+      const doelen = regel._doelVoorExpansie || regel.doel?._voorExpansie || regel.doel?.elementTypes || regel.doel || [];
       for (const bronType of bronnen) {
         for (const doelType of doelen) {
           const bron = nodeIdVoorElementType.get(bronType);

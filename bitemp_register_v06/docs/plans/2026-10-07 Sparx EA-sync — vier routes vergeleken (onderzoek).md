@@ -602,10 +602,14 @@ elke geïmporteerde lijn eerst schuin naar zijn eerste knik.
 
 **M3 en metamodel**
 
-12. **`erftVan` en `abstract` op ElementType** (schema.js + profiel-ontwerper; abstract =
-    cursief, niet instantieerbaar, wel bereik), daarna **Metamodel v2026** met abstracte
-    `{Representatie}` boven entiteit/gegevenselement/relatie (relatie erft in EA van
-    gegevenselement); meervoudige overerving (Referentielijstelement) later.
+12. ~~**`erftVan` en `abstract` op ElementType**~~ ✅ 08-10 als **`erft`/`isAbstract`**
+    (namen van V3; afgestemd met M3-MOF): `types/erfenis.js` vlakt uit bij registratie,
+    expandeert abstracte typen naar hun concrete afstammelingen in elk bereik, bewaart de
+    hiërarchie voor de profiel-ontwerper (▷-pijl *Erft van*, vinkje *abstract*); zie
+    STUDIO-05-diagramcore-plan.md §4.2b. **Nog open**: Metamodel v2026 zelf in
+    canoniek-uml (wacht op Marks keuze: {Relatie} naast of onder {Gegevenselement} —
+    `isConnector` mag niet omslaan), meervoudige overerving, abstract elementtype in een
+    model als validatiefout.
 
 **Terugweg**
 

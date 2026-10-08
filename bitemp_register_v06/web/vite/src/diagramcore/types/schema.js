@@ -105,6 +105,17 @@
  * @typedef {Object} ElementType
  * @property {string} id
  * @property {string} label
+ * @property {string} [erft]                - id van het ouder-ElementType (EMOF
+ *   Class.superClass, één ouder). Bij registratie vlakt `types/erfenis.js` uit:
+ *   shape, kleur, compartments, properties, hooks, bron/doel, randElement … van
+ *   de ouder komen mee, het kind overschrijft per sleutel/id. In de
+ *   profiel-ontwerper is dit de generalisatie-pijl tussen twee elementtypen.
+ * @property {boolean} [isAbstract]         - niet instantieerbaar (geen knop in de
+ *   Maken-balk, geen drop-doel, naam cursief), wél bruikbaar als **bereik**: in
+ *   elke lijst van elementtype-ids (bron/doel, verbindingsregels,
+ *   randElement.ouderTypes, afbakeningVoor, overbrugt, shapeSets) staat een
+ *   abstract type voor al zijn concrete afstammelingen. Zo wordt
+ *   "relatie: Representatie → Representatie" één regel.
  * @property {string} [omschrijving]        - één-regel-uitleg (taakbalk-tooltip)
  * @property {string} shape                 - ShapeType-id (bv. "class-box", "chip", "knip-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"

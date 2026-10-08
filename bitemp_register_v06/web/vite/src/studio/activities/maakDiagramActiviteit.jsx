@@ -2505,7 +2505,7 @@ export function maakDiagramActiviteit(opties) {
           </span>
         );
       if (balk.acties === "elementTypes") {
-        const types = descriptor.elementTypes.filter((et) => !et.isConnector && et.kort);
+        const types = descriptor.elementTypes.filter((et) => !et.isConnector && et.kort && !et.isAbstract);
         acties = types
           .map((et) => ({
             id: et.id,
@@ -2517,7 +2517,7 @@ export function maakDiagramActiviteit(opties) {
           }));
         acties = metGroepScheidingen(acties, (i) => types[i].taakbalkGroep);
       } else if (balk.acties === "connectorTypes") {
-        const types = descriptor.elementTypes.filter((et) => et.isConnector);
+        const types = descriptor.elementTypes.filter((et) => et.isConnector && !et.isAbstract);
         // "Compositie Compositie" (ArchiMate: kort is afgeleid van het label)
         // is ruis — als het label al met de korte naam begint, volstaat het
         // label; het kort-glyph (◆, ▷, |<) blijft wél als voorvoegsel nuttig.
