@@ -80,6 +80,28 @@ const KRAAIENPOTEN = {
  * toe**; aan de bronzijde wijst de marker-as juist van de entiteit áf, dus
  * daar spiegelen we de inhoud (en verschuift het referentiepunt mee).
  */
+
+/**
+ * Profielen geven lijnen vaak een vaste neutrale slate-tint (#475569 e.a.,
+ * gekozen voor een wit canvas). Op het donkere thema verdwenen die bijna
+ * (gemeld 2026-10-09). Deze tinten lopen daarom via thema-variabelen: in
+ * licht met exact de oude kleur als fallback, in donker lichter
+ * (diagramcore.css, --dc-lijn-slate-*). Echte kleuren (paars, groen, …) en
+ * eigen keuzes buiten deze reeks blijven ongemoeid.
+ */
+const SLATE_LIJN = {
+  "#1f2937": "var(--dc-lijn-slate-800, #1f2937)",
+  "#334155": "var(--dc-lijn-slate-700, #334155)",
+  "#475569": "var(--dc-lijn-slate-600, #475569)",
+  "#64748b": "var(--dc-lijn-slate-500, #64748b)",
+  "#94a3b8": "var(--dc-lijn-slate-400, #94a3b8)",
+  "#cbd5e1": "var(--dc-lijn-slate-300, #cbd5e1)",
+};
+export function themaLijnKleur(kleur) {
+  if (!kleur) return kleur;
+  return SLATE_LIJN[String(kleur).toLowerCase()] || kleur;
+}
+
 function KraaienpootMarker({ id, soort, kleur, kant }) {
   const k = KRAAIENPOTEN[soort];
   if (!k) return null;
@@ -287,7 +309,7 @@ function ConnectorEdge({
 
   const kleur = selected && !p.vasteKleur
     ? "var(--dc-selectie, #2563eb)"
-    : p.kleur || "var(--dc-lijn, #64748b)";
+    : themaLijnKleur(p.kleur) || "var(--dc-lijn, #64748b)";
   const pijlId = `dc-pijl-${id}`;
   const pijlStartId = `dc-pijl-start-${id}`;
   const driehoekId = `dc-driehoek-${id}`;

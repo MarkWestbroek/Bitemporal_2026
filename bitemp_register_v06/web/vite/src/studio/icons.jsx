@@ -318,15 +318,13 @@ export const OmniumMark = ({ size = 22, ...p }) => (
   </svg>
 );
 
-// Tandwiel: kern + ring + korte dikke tanden op de ring (dunne lange
-// spaken lazen als zon).
+// Tandwiel als één gesloten contour met brede tanden (vorm zoals Lucide
+// "settings", ISC). Losse streepjes rond een ring — ook korte dikke — lazen
+// op 20px nog steeds als een zon, naast de ☀-themaknop (gemeld 2026-10-09).
 export const IconInstellingen = (p) => (
   <svg {...base} {...p}>
-    <circle cx="12" cy="12" r="2.6" />
-    <circle cx="12" cy="12" r="5.8" />
-    <g strokeWidth="3.2">
-      <path d="M12 3.4v1.4M12 19.2v1.4M3.4 12h1.4M19.2 12h1.4M5.9 5.9l1 1M17.1 17.1l1 1M5.9 18.1l1-1M17.1 6.9l1-1" />
-    </g>
+    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+    <circle cx="12" cy="12" r="3" />
   </svg>
 );
 

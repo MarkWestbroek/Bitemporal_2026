@@ -2802,7 +2802,13 @@ export function maakDiagramActiviteit(opties) {
                     if (ref?.profielId === id && s.elements[ref.elementId]) {
                       const doelEl = nodeId ? s.elements[nodeId] : null;
                       const doelEt = doelEl ? elementTypesById[doelEl.elementType] : null;
-                      if (!nodeId || (doelEt?.containerVoor && doelEl.id !== ref.elementId)) {
+                      // Een achtergrondkader zonder lidmaatschap (los kader,
+                      // ArchiMate Grouping) geldt als lege ruimte: plaatsen
+                      // zonder verhangen (gemeld 2026-10-09).
+                      if (
+                        !nodeId ||
+                        ((doelEt?.containerVoor || doelEt?.achtergrond) && doelEl.id !== ref.elementId)
+                      ) {
                         const el = s.elements[ref.elementId];
                         const et = elementTypesById[el.elementType];
                         const meerdereVoorkomens = staatMeerdereVoorkomensToe(descriptor, et);

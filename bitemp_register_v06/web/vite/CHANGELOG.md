@@ -235,6 +235,21 @@ maat, instelbare sneltoetsen. Zie `docs/plans/2026-10-07 Projectsync …`, `docs
   standaardnotatie een gestippeld kader achter de inhoud. Afbeelding-exports bevatten geen
   selectie meer (tijdelijk opgeheven en daarna hersteld). De shape-set is nu **per diagram** bewaard en gegenereerde
   documenten volgen hem.
+- **Deselecteren binnen kaders** (09-10): een klik op het lege binnenvlak van een systeemkader,
+  Kader, Grouping of laagkader gaat door naar het canvas en deselecteert. Het kader zelf pak je
+  bij de naam of de rand. Droppen uit de boom op een Kader of Grouping plaatst het element nu ook.
+  Na een selectie met Shift+slepen verschijnt geen blauw groepskader meer; dat ving elke klik
+  tussen de geselecteerde elementen, zodat deselecteren daar niet werkte. Samen slepen werkt nog.
+- **Klik op leeg deselecteert weer betrouwbaar** (09-10, Mark: "ik klik toch echt op leeg"). Een
+  echte muisklik beweegt vaak een paar pixels. d3-zoom maakte daar een pan van en slikte de klik
+  in, en het pan-einde liet de canvas de oude selectie terugzetten. Nu telt alles tot 8px als
+  klik op leeg, en de canvas zet een selectie alleen nog terug voor een element dat net
+  geplaatst is.
+- Het **Instellingen-icoon** is een echt tandwiel; het oude leek naast de ☀-themaknop op een zon.
+- **Donker thema beter leesbaar** (10-10): de vaste slate-grijzen uit de profielen (lijnen, actor,
+  start/eind, fork-balken, levenslijnen, BPMN-events) lopen via thema-variabelen
+  (`--dc-lijn-slate-*`); licht blijft exact gelijk, donker wordt lichter. Zoomknoppen en minimap
+  volgen het donkere thema.
 - Projectsync: de volgorde van regels in de boom (Ctrl+↑/↓) en de mapomschrijving gaan nu mee
   (`schuifPlaatsing`, `zetMapOmschrijving` in `STRUCTUUR_OPS`); een volgordewijziging bleef eerder
   lokaal.

@@ -246,6 +246,10 @@ function CanvasBinnenkant({
   // (dat hield elke nieuwe boomselectie op de eerste geselecteerde vast).
   const selectiePropRef = useRef(selectieId);
   const gemeldeSelectieRef = useRef("");
+  // Programmatische selectie van een element dat (nog) niet op de canvas
+  // staat — bv. net aangemaakt: de prop wijzigt vóór de node bestaat. Zodra
+  // de node verschijnt, wordt hij alsnog geselecteerd (zie nodes-effect).
+  const wachtendeSelectieRef = useRef(null);
   const selectieSig = (nodeIds, edgeIds = []) =>
     nodeIds.slice().sort().join("|") + "//" + edgeIds.slice().sort().join("|");
 
@@ -414,6 +418,11 @@ function CanvasBinnenkant({
           ...(elementType.achtergrond || element.data?.zOrde
             ? { zIndex: (elementType.achtergrond ? -10 : 0) + (element.data?.zOrde || 0) }
             : {}),
+          // Achtergrondkaders (systeemkader, kader, groepering, laag): het lege
+          // binnenvlak is "canvas" — klikken deselecteert, slepen maakt
+          // een kader-selectie. Het kader pak je bij naam of rand (zie
+          // ElementNode en diagramcore.css .dc-achtergrond-node).
+          ...(elementType.achtergrond ? { className: "dc-achtergrond-node" } : {}),
           data: {
             element: verrijk(element, elementType),
             elementType,
@@ -508,6 +517,7 @@ function CanvasBinnenkant({
     // "sterft" een klik op de nog geselecteerde node (React Flow meldt geen
     // wijziging). Edges blijven met rust (zie flipper-les hierboven).
     const programmatischElders = selectiePropGewijzigd && !!selectieId && !opDitDiagram && !gedekt;
+    if (selectiePropGewijzigd) wachtendeSelectieRef.current = selectieId && !opDitDiagram ? selectieId : null;
     setNodes((huidige) => {
       const perIdHuidig = new Map(huidige.map((n) => [n.id, n]));
       let geselecteerd = new Set(huidige.filter((n) => n.selected).map((n) => n.id));
@@ -520,14 +530,19 @@ function CanvasBinnenkant({
       } else if (programmatischElders && geselecteerd.size) {
         geselecteerd = new Set();
         gemeldeSelectieRef.current = selectieSig([]);
-      } else {
-        // Programmatische selectie (bv. net geplaatst element) ook markeren,
-        // anders "verliest" de inspector het element bij de eerstvolgende rebuild.
-        if (doelVoorkomen && !huidige.length) geselecteerd.add(doelVoorkomen);
-        if (doelVoorkomen && geselecteerd.size === 0) {
-          geselecteerd.add(doelVoorkomen);
-        }
+      } else if (doelVoorkomen && (!huidige.length || wachtendeSelectieRef.current === selectieId)) {
+        // Eerste opbouw, of een programmatische selectie (bv. net geplaatst
+        // element) waarvan de node nu pas verschijnt: alsnog markeren, anders
+        // "verliest" de inspector het element bij de eerstvolgende rebuild.
+        // NIET bij elke rebuild met een lege selectie: een klik op leeg met
+        // een paar pixels muisbeweging levert een pan-einde → viewport naar
+        // de store → rebuild, terwijl de selectieId-prop nog de oude is. De
+        // oude vangregel ("niets geselecteerd → selecteer selectieId") zette
+        // de selectie dan terug (gemeld 2026-10-09: "deselect werkt niet").
+        geselecteerd = new Set([doelVoorkomen]);
+        gemeldeSelectieRef.current = selectieSig([doelVoorkomen]);
       }
+      if (doelVoorkomen) wachtendeSelectieRef.current = null;
       return flowNodes.map((n) => {
         const oud = perIdHuidig.get(n.id);
         const selected = geselecteerd.has(n.id);
@@ -623,6 +638,22 @@ function CanvasBinnenkant({
       return veranderd ? volgende : es;
     });
   }, [setEdges, heelInSelectie]);
+  // Geen groepskader na een selectie-rechthoek (Shift+slepen, Ctrl+A).
+  // React Flow tekent dan een blauw kader (NodesSelection) om alle
+  // geselecteerde nodes, en dat kader vangt élke klik erbinnen — ook op het
+  // lege vlak tussen de elementen. Deselecteren "naast een element" werkte
+  // daar dus niet (gemeld 2026-10-09). Zonder dat kader blijven de nodes
+  // gewoon geselecteerd: slepen aan één ervan verplaatst ze allemaal,
+  // rechtsklik geeft het node-menu, en een klik op leeg deselecteert.
+  // onSelectionEnd komt vóór React Flow het kader aanzet, vandaar een
+  // abonnement op de store.
+  useEffect(
+    () =>
+      rfStoreApi.subscribe((st) => {
+        if (st.nodesSelectionActive) rfStoreApi.setState({ nodesSelectionActive: false });
+      }),
+    [rfStoreApi]
+  );
   useEffect(() => {
     // Kortste-weg-handles voor presentatie-edges zonder expliciete handles
     // (na "normaliseer relaties" zijn ze gewist).
@@ -1779,7 +1810,32 @@ function CanvasBinnenkant({
       className={"dc-canvas" + (shiftVast && bewerkbaar ? " dc-verbindmodus" : "") + (verbindt ? " dc-verbindt" : "")}
       onKeyDown={handleKeyDown}
       onPointerDownCapture={(e) => {
-        klikStartRef.current = { x: e.clientX, y: e.clientY };
+        klikStartRef.current = {
+          x: e.clientX,
+          y: e.clientY,
+          // Begon de klik op het lege vlak (zonder modifier, linkerknop)?
+          leeg:
+            e.button === 0 &&
+            !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey &&
+            !!e.target?.classList?.contains("react-flow__pane"),
+        };
+      }}
+      onPointerUpCapture={(e) => {
+        // Klik op leeg = deselecteren, óók als de muis een paar pixels
+        // bewoog. d3-zoom maakt daar een pan van en slikt dan het click-event
+        // in, zodat React Flow niet deselecteert (gemeld 2026-10-09: "ik klik
+        // toch echt op leeg"). Wie verder sleept, pant gewoon.
+        const start = klikStartRef.current;
+        if (!start?.leeg || e.button !== 0) return;
+        if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) return;
+        if (Date.now() - magicMenuTijdRef.current < 400) return;
+        const ietsGeselecteerd =
+          getNodes().some((n) => n.selected) || rfStoreApi.getState().edges.some((ed) => ed.selected);
+        if (!ietsGeselecteerd) return;
+        setNodes((hd) => hd.map((n) => (n.selected ? { ...n, selected: false } : n)));
+        setEdges((hd) => hd.map((ed) => (ed.selected ? { ...ed, selected: false } : ed)));
+        gemeldeSelectieRef.current = selectieSig([]);
+        onSelectElement?.(null);
       }}
       // "loose": een lijn mag ook op een source-stip (of de vlak-handle)
       // eindigen; handleVoorOpslag normaliseert de zijde bij opslag. De
@@ -1828,6 +1884,11 @@ function CanvasBinnenkant({
         setContextMenu(null);
       }}
       onMoveEnd={handleMoveEnd}
+      // Een echte muisklik beweegt vaak een paar pixels tussen indrukken en
+      // loslaten. Met React Flow's standaard (1px) maakt d3-zoom daar een pan
+      // van en komt er geen paneelklik, dus ook geen deselectie. Tot 6px is
+      // het een klik; verder slepen pant gewoon (gemeld 2026-10-09).
+      paneClickDistance={6}
       nodesDraggable={bewerkbaar}
       nodesConnectable={bewerkbaar}
       elementsSelectable
