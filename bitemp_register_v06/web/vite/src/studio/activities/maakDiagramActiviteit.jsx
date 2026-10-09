@@ -2335,7 +2335,10 @@ export function maakDiagramActiviteit(opties) {
                   label: vormLabel + (huidig === vorm ? "  ✓" : ""),
                   icoon,
                   // Expliciet (ook "bezier"): de keuze geldt voor dít diagram.
-                  onClick: () => useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, { vorm }),
+                  // Knikpunten gaan weg: die winnen anders van de vorm, en een
+                  // EA-import brengt ze mee — "Hoekig" deed dan niets (Mark,
+                  // 10-10; zoals Boomstijl hieronder). Ctrl+Z zet ze terug.
+                  onClick: () => useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, { vorm, knikken: [] }),
                 })),
                 // Boomstijl in één klik: haakse vorm + uiteinden vastgezet
                 // (EA "tree style") — verticaal = ouder boven de kinderen,

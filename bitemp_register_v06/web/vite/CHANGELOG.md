@@ -83,6 +83,8 @@ routes vergeleken (onderzoek).md`.
   laadde in 176 s en bevroor bij elke hertekening; nu < 1 s. De hiërarchie wordt één keer per
   modelstand berekend (was: per elementregel), mappen gebruiken een index op submappen en inhoud,
   en mappen dieper dan twee niveaus staan standaard dicht.
+- **Lijnvorm kiezen wist de knikpunten** (contextmenu → Lijnvorm): knikpunten winnen van de vorm, dus
+  "Hoekig" op een uit EA geïmporteerde lijn deed niets; nu zoals Boomstijl, Ctrl+Z zet ze terug.
 - **"Verwijder uit model" haalt overal de boomplek weg**: de knop in de inspector en Ctrl+Delete op het
   canvas ruimen nu ook de plaatsing in de projectboom op, net als het boommenu (één structuur-undo-stap).
 - **Wees-plaatsingen niet meer in export en snapshot**: een element of diagram dat buiten het
