@@ -43,6 +43,8 @@ bron- en doelelement.
 | import | ArchiMate Model Exchange → ArchiMate-model | code: parser → IR → core-model (`archimate/exchange/`) |
 | import | OpenAPI → canoniek model | code: `oasNaarV3` → V3 → core-model |
 | import | **Mermaid flowchart → use case-model** | **lezer + regelset + toepasser** (§3, §6) |
+| import | **BPMN 2.0 XML → BPMN-model** (bpmn-motor) | **lezer + regelset + toepasser** (§7) — mét BPMNDI-diagramlaag |
+| import | **DMN XML → DMN DRD-model** | **lezer + regelset + toepasser** (§7) — mét DMNDI |
 | transform | Kopieer map-inhoud naar een map | code |
 | export | Map → JSON, Map → Markdown-overzicht | code |
 | export | **Use case-model → Mermaid flowchart** | **graafbeeld + regelset + toepasser + schrijver** (§3, §6) — de terugweg van de import, roundtrip getest |
@@ -488,3 +490,32 @@ is de kale ingang, de live view de ingang met zicht op het effect.
 3. **Bewerken in de live view** met bewaren als registratie.
 4. **Stapelen** als relatie tussen regelsets (§7.7), zodra het bereik `map` met
    meerdere profielen er is.
+
+## 7. BPMN 2.0 XML en DMN XML → eigen model (2026-10-10)
+
+Opdracht Mark (via EA-SYNC): de native uitwisselformaten van BPMN en DMN naar
+onze profielen `bpmn-motor` en `dmn-drd`, in de vorm van §3; de EA-smaak
+(uit een `.qea`) loopt via de generieke EA-lezer op `eaMapping.js` van die
+profielen.
+
+| Deel | Bestand |
+|---|---|
+| XML-hulpjes (namespace-onverschillig, DOMParser geïnjecteerd) | `transformatie/xmlBoom.js` |
+| Lezer BPMN: process/collaboration/participant/laneSet/lane, flow nodes met event-definities, boundary (`randVan`, `cancelActivity`), `default`-flow, data-associaties, text annotations; **BPMNDI** (Bounds, waypoints) als `diagrammen` | `transformatie/bpmnXml.js` |
+| Lezer DMN: decision (question/description), inputData, BKM, knowledgeSource, textAnnotation; requirements in DRD-richting (vereiste → vereiser); **DMNDI** | `transformatie/dmnXml.js` |
+| Regelsets (data) | `diagramprofielen/bpmn/bpmnXmlRegels.js`, `diagramprofielen/dmn-drd/dmnXmlRegels.js` |
+| **Generieke aansluiting** plan → core-model: ids, lidmaatschap (`containerVoor`), verbindingsregels van het profiel, rand-elementen (positie relatief aan de gastheer, geen containerlid), posities/maten uit de diagramlaag, waypoints → `data.knikken`, uitgeklapt subproces → eigen diagram + `gedragDiagramId`; zonder diagramlaag een automatische opstelling (`kolommenLayout`) | `transformatie/planNaarCoreModel.js` |
+| Aansluiting + registratie (stores geïnjecteerd) | `diagramprofielen/bpmn/bpmnXmlImport.js`, `diagramprofielen/dmn-drd/dmnXmlImport.js`; wiring `studio/activities/bpmnDmnTransformaties.js` |
+| Tests met fixtures (`bestelling.bpmn`, `kredietbeoordeling.dmn`) | `bpmnXmlImport.test.js`, `dmnXmlImport.test.js` |
+
+Regelset-bijzonderheden: de event-*soort* (bericht/timer/fout/signaal) is een
+vaste vertaling van `eventDefinitie` — één regel per (event, definitie)-paar,
+gegenereerd uit twee tabelletjes maar nog steeds data. Event-based en complex
+gateways hebben geen eigen type en worden exclusief/inclusief, gemeld. Een
+annotatie-associatie wordt altijd een notitie-lijn mét de notitie als bron
+(`omgekeerd` waar nodig); beide profielen kregen daarvoor een `notitielijn`.
+
+Knikpunten landen op `element.data.knikken` (de plek op main). De branch van
+EA-SYNC verhuist lijndata naar `diagram.lijnen[connectorId]` en migreert
+`data.knikken`; de aansluiting hoeft dan alleen daar te schrijven.
+

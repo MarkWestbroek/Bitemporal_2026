@@ -38,9 +38,18 @@
  * **Aanhechting (2026-09-18):** de rechthoekige vormen — taak, subproces,
  * data-object, pool en lane — hechten **zwevend** aan (`randAanhechting`,
  * zie diagramcore/canvas/zwevendeRand.js): lijnen waaieren uit over de rand
- * en glijden mee bij het slepen. Events en gateways zijn klein en rond of
- * ruitvormig; daar dekken de vier punten de vorm al, en een rechthoekige
- * omtrek-benadering zou naast de rand vallen — die houden hun handles.
+ * en glijden mee bij het slepen. Sinds 2026-10-10 ook events (`omtrek:
+ * "ellips"`) en gateways (`omtrek: "ruit"`): de motor hecht dan op de echte
+ * omtrek aan. Met vaste handles maakte elke lijn naar een iets hoger of lager
+ * liggende taak een trapje (EA-import, Mark).
+ *
+ * **EA-aanvulling (2026-10-10, Marks GGM naast EA gelegd):** taaktype
+ * (`data.taakSoort`: user/service/send/receive/manual/script/businessRule,
+ * icoon linksboven in `bpmn-taak`), gateways `complex` (✱) en `event-gateway`
+ * (ring in de ruit), event-soorten escalatie/compensatie/conditioneel/link/
+ * annulering/terminate, `data-store` (cilinder), `data.verzameling` (drie
+ * streepjes onder een data-object), message flow met open rondje + open
+ * driehoek, en een `stereotype` op de data-associatie (EA «toekomst»).
  *
  * Events en gateways dragen hun naam via het motor-primitief
  * `naamLabel: "buiten"` (ElementNode zet hem ónder de vorm) — een ring of ruit
@@ -63,13 +72,32 @@ const SOORT_OPTIES = [
   { waarde: "timer", label: "timer ⏱" },
   { waarde: "fout", label: "fout ⚡" },
   { waarde: "signaal", label: "signaal △" },
+  { waarde: "escalatie", label: "escalatie ⤴" },
+  { waarde: "compensatie", label: "compensatie ◀◀" },
+  { waarde: "conditioneel", label: "conditioneel ☰" },
+  { waarde: "link", label: "link ➜" },
+  { waarde: "annulering", label: "annulering ✕" },
+  { waarde: "terminate", label: "terminate ●" },
+];
+/** Taaktypen (BPMN 2.0 §10.3; EA tagged value `taskType`). */
+const TAAK_SOORT_OPTIES = [
+  { waarde: "", label: "(abstract)" },
+  { waarde: "user", label: "user (persoon)" },
+  { waarde: "service", label: "service (tandwiel)" },
+  { waarde: "send", label: "send (envelop dicht)" },
+  { waarde: "receive", label: "receive (envelop open)" },
+  { waarde: "manual", label: "manual (hand)" },
+  { waarde: "script", label: "script" },
+  { waarde: "businessRule", label: "business rule (tabel)" },
 ];
 const SOORT_VELD = { key: "soort", label: "soort", datatype: "keuze", opties: SOORT_OPTIES };
 
 // Sequence flow: wat kan hem verlaten/bereiken. Start alleen bron, eind
 // alleen doel; een boundary event alleen bron (het uitzonderingspad).
 const ACTIVITEITEN = ["taak", "subproces"];
-const GATEWAYS = ["exclusief", "parallel", "inclusief"];
+const GATEWAYS = ["exclusief", "parallel", "inclusief", "complex", "event-gateway"];
+/** Gegevens die een data-associatie kan verbinden met een activiteit. */
+const DATA_DRAGERS = ["data-object", "data-store"];
 const SEQ_BRONNEN = ["start-event", "tussen-event", "boundary-event", ...ACTIVITEITEN, ...GATEWAYS];
 const SEQ_DOELEN = [...ACTIVITEITEN, ...GATEWAYS, "tussen-event", "eind-event"];
 
@@ -77,6 +105,8 @@ const SEQ_DOELEN = [...ACTIVITEITEN, ...GATEWAYS, "tussen-event", "eind-event"];
 const elementTypes = [
   {
     id: "start-event",
+    randAanhechting: "zwevend",
+    omtrek: "ellips",
     label: "Start event",
     omschrijving: "Waar het proces begint; soort bepaalt de trigger (bericht, timer, …).",
     kort: "Start",
@@ -90,12 +120,12 @@ const elementTypes = [
     id: "taak",
     randAanhechting: "zwevend",
     label: "Task",
-    omschrijving: "Eén stap werk in het proces.",
+    omschrijving: "Eén stap werk in het proces; het taaktype tekent een icoontje linksboven.",
     kort: "Task",
     icoon: "gedrag-toestand",
-    shape: "rounded",
+    shape: "bpmn-taak",
     kleur: "#e0f2fe",
-    properties: [KLEUR_VELD],
+    properties: [{ key: "taakSoort", label: "taaktype", datatype: "keuze", opties: TAAK_SOORT_OPTIES }, KLEUR_VELD],
   },
   {
     id: "subproces",
@@ -114,6 +144,8 @@ const elementTypes = [
   },
   {
     id: "boundary-event",
+    randAanhechting: "zwevend",
+    omtrek: "ellips",
     label: "Boundary event",
     omschrijving: "Sleep hem op de rand van een taak/subproces: vangt daar een gebeurtenis af. Vinkje 'onderbrekend' uit = gestippeld.",
     kort: "Bound",
@@ -127,6 +159,8 @@ const elementTypes = [
   },
   {
     id: "tussen-event",
+    randAanhechting: "zwevend",
+    omtrek: "ellips",
     label: "Intermediate event",
     omschrijving: "Gebeurtenis midden in de flow (wachten op bericht, timer, …).",
     kort: "Interm",
@@ -138,6 +172,8 @@ const elementTypes = [
   },
   {
     id: "exclusief",
+    randAanhechting: "zwevend",
+    omtrek: "ruit",
     label: "Exclusive gateway (XOR)",
     omschrijving: "Kies precies één uitgaande pad (condities op de flows).",
     kort: "XOR",
@@ -149,6 +185,8 @@ const elementTypes = [
   },
   {
     id: "parallel",
+    randAanhechting: "zwevend",
+    omtrek: "ruit",
     label: "Parallel gateway (AND)",
     omschrijving: "Splitst naar álle paden of wacht tot ze allemaal binnen zijn.",
     kort: "AND",
@@ -160,6 +198,8 @@ const elementTypes = [
   },
   {
     id: "inclusief",
+    randAanhechting: "zwevend",
+    omtrek: "ruit",
     label: "Inclusive gateway (OR)",
     omschrijving: "Eén of méér paden, op basis van condities (join-semantiek: alleen notatie).",
     kort: "OR",
@@ -170,13 +210,50 @@ const elementTypes = [
     properties: [],
   },
   {
+    id: "complex",
+    randAanhechting: "zwevend",
+    omtrek: "ruit",
+    label: "Complex gateway",
+    omschrijving: "Samengestelde splits-/samenvoegregel (✱); de regel zelf is alleen notatie.",
+    kort: "CPX",
+    icoon: "gedrag-ruit",
+    shape: "bpmn-gateway",
+    naamLabel: "buiten",
+    resizebaar: false,
+    properties: [],
+  },
+  {
+    id: "event-gateway",
+    randAanhechting: "zwevend",
+    omtrek: "ruit",
+    label: "Event-based gateway",
+    omschrijving: "Het eerstvolgende event bepaalt het pad (ring in de ruit).",
+    kort: "EVT",
+    icoon: "gedrag-ruit",
+    shape: "bpmn-gateway",
+    naamLabel: "buiten",
+    resizebaar: false,
+    properties: [],
+  },
+  {
     id: "data-object",
     randAanhechting: "zwevend",
     label: "Data object",
-    omschrijving: "Gegevens die het proces in- of uitgaan (koppel met een data-associatie).",
+    omschrijving: "Gegevens die het proces in- of uitgaan (koppel met een data-associatie). Verzameling = drie streepjes.",
     kort: "Data",
     icoon: "gedrag-object",
     shape: "bpmn-data",
+    resizebaar: false,
+    properties: [{ key: "verzameling", label: "verzameling (collection)", datatype: "boolean" }],
+  },
+  {
+    id: "data-store",
+    randAanhechting: "zwevend",
+    label: "Data store",
+    omschrijving: "Register, database of archief dat het proces overleeft (cilinder).",
+    kort: "Store",
+    icoon: "gedrag-object",
+    shape: "bpmn-datastore",
     resizebaar: false,
     properties: [],
   },
@@ -209,6 +286,8 @@ const elementTypes = [
   },
   {
     id: "eind-event",
+    randAanhechting: "zwevend",
+    omtrek: "ellips",
     label: "End event",
     omschrijving: "Waar dit pad van het proces eindigt (dikke ring).",
     kort: "End",
@@ -259,7 +338,9 @@ const elementTypes = [
     overbrugt: ["pool"],
     bron: { elementTypes: [...ACTIVITEITEN, "start-event", "tussen-event", "eind-event", "boundary-event", "pool"] },
     doel: { elementTypes: [...ACTIVITEITEN, "start-event", "tussen-event", "pool"] },
-    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#64748b", markerStart: "bol", markerEnd: "pijl-open" },
+    // BPMN-notatie: open rondje aan de bron, open driehoek aan het doel.
+    // "cirkel-open": bron-marker in ConnectorEdge (EA-SYNC, feat/ea-merge-review).
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#64748b", markerStart: "cirkel-open", markerEnd: "driehoek" },
   },
   {
     id: "data-associatie",
@@ -269,10 +350,30 @@ const elementTypes = [
     shape: "edge",
     isConnector: true,
     verbindingsregels: [
-      { bron: { elementTypes: ["data-object"] }, doel: { elementTypes: ACTIVITEITEN } },
-      { bron: { elementTypes: ACTIVITEITEN }, doel: { elementTypes: ["data-object"] } },
+      { bron: { elementTypes: DATA_DRAGERS }, doel: { elementTypes: ACTIVITEITEN } },
+      { bron: { elementTypes: ACTIVITEITEN }, doel: { elementTypes: DATA_DRAGERS } },
     ],
+    // EA: een Dependency/Association met eigen stereotype («toekomst») tussen
+    // activiteit en gegevens komt hier binnen; het stereotype staat op de lijn.
+    properties: [{ key: "stereotype", label: "stereotype", datatype: "string", placeholder: "bijv. toekomst" }],
     edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#94a3b8", markerEnd: "pijl-open" },
+    hooks: {
+      edgeLabels: (conn) =>
+        conn?.data?.stereotype ? { kaal: [{ zijde: "midden", delen: [{ tekst: `«${conn.data.stereotype}»`, soort: "constraint" }] }] } : {},
+    },
+  },
+  {
+    // Notitie-lijn (BPMN association naar een text annotation): stippellijn
+    // zonder pijl van de annotatie naar het element waar hij over gaat.
+    id: "notitielijn",
+    label: "Notitie-lijn",
+    omschrijving: "Koppelt een text annotation aan het element waar hij over gaat; geen modelrelatie.",
+    kort: "not",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["notitie"] },
+    doel: { elementTypes: [...SEQ_BRONNEN, "eind-event", ...DATA_DRAGERS, "pool", "lane"] },
+    edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#94a3b8" },
   },
   {
     id: "bevat",
@@ -285,7 +386,7 @@ const elementTypes = [
     // pool ligt nooit ín iets.
     bron: { elementTypes: ["pool", "lane"] },
     doel: {
-      elementTypes: ["start-event", "tussen-event", "eind-event", ...ACTIVITEITEN, ...GATEWAYS, "data-object", "lane", "notitie"],
+      elementTypes: ["start-event", "tussen-event", "eind-event", ...ACTIVITEITEN, ...GATEWAYS, ...DATA_DRAGERS, "lane", "notitie"],
     },
     edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1", verbergBijNesting: true },
   },
