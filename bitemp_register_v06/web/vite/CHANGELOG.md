@@ -20,8 +20,91 @@ routes vergeleken (onderzoek).md`.
   verborgen lijnen en kleuren komen mee (schaal 1,5); stabiele ids uit de EA-GUID; stereotypen,
   tagged values en notities reizen mee op `data`. De EA-boom wordt de projectboom: pakketten,
   use cases en activities als mappen, het diagram bij zijn eigenaar met de knopen ernaast; je kiest
-  de doelmap of de wortel. Toevoegen met undo per profiel. Per profiel bestaat ook een import
-  "alleen dit profiel". `scripts/inspecteer-qea.py` doorlicht een `.qea`.
+  de doelmap of de wortel (of een nieuwe map daarin). Toevoegen met undo per profiel. Per profiel bestaat ook een import
+  "alleen dit profiel". `scripts/inspecteer-qea.py` doorlicht een `.qea`. Opnieuw importeren is
+  een **merge op EA-GUID** met een **review als boom** (profiel → pakket → regels; nieuw,
+  gewijzigd, verdwenen; een tak uitvinken haalt alles eronder uit de import).
+- **Studio**: een map **verwijderen mét inhoud** (submappen, diagrammen en elementen) achter
+  een dubbele bevestiging; *Opheffen* is het oude gedrag (inhoud naar het niveau erboven).
+- **Lijndata per diagram** (`diagram.lijnen`, de "Position" van een connector op een diagram in
+  het M3): pad, lijnvorm, vastgezette uiteinden en labelposities horen bij het diagram, zoals in
+  EA; dezelfde relatie ligt op elk diagram anders. Alle lijn-bewerkingen op de canvas (knikken,
+  lijnvorm, boomstijl, uiteinden, normaliseren, verhangen, labels) schrijven naar het actieve
+  diagram (`zetLijn`/`zetLijnen`, één undo-stap); het element blijft de standaard voor oude
+  modellen. De EA-import zet per diagram EA's pad en Line Style.
+- **Profielstores in IndexedDB** (`diagramcore/model/opslag.js`): de modellen van alle
+  profielen worden in IndexedDB bewaard in plaats van localStorage — geen plafond van ±5 MB
+  meer (de Zandbak MW met 25.800 elementen past), bewaren gebundeld en asynchroon buiten de
+  hoofddraad, als object in plaats van JSON-tekst. Eenmalige migratie uit localStorage bij het
+  eerste laden; zonder IndexedDB blijft localStorage. Mislukt bewaren, dan werkt het model in het
+  geheugen en meldt de EA-import dat.
+- **EA-boom in één stap**: mappen en plaatsingen van een import komen in twee store-stappen in
+  het project (`nieuweMappen`, `plaatsPerMap`), ook via projectsync.
+- **Sequence-diagrammen uit EA** naar het sequence-profiel: levenslijnen, berichten (synchroon,
+  asynchroon, retour, zelf-bericht) op hun hoogte, notities; `notitielijn` in het profiel.
+- **Export naar Sparx EA (XMI 2.1)** uit UML en MIM: EA's eigen XMI-vorm met pakketten,
+  klassen, attributen, associaties, generalisaties, notities, tags, kleuren én diagrammen
+  (posities, lijnpaden), met de bewaarde EA-GUIDs — EA werkt bestaande elementen bij in plaats
+  van ze te verdubbelen.
+- **EA-import via de server** (*Project → EA-import via de server (uit git)…*): kies repo (met de
+  uitgecheckte branch) → `.qea` in die repo → pakket → mappad, met vinkjes voor "eerst git pull" en
+  "ook verwijderen"; de api start de sidecar, de Studio volgt de taak en haalt de operaties binnen.
+  Api: `handlers/studio_ea_import_handler.go`, env `STUDIO_EA_IMPORT_MAPPEN` e.a. (zie `docs/API_REFERENCE.md`).
+- **Projectboom snel bij grote projecten**: de Zandbak-snapshot (25.000 MIM-elementen, 1.900 mappen)
+  laadde in 176 s en bevroor bij elke hertekening; nu < 1 s. De hiërarchie wordt één keer per
+  modelstand berekend (was: per elementregel), mappen gebruiken een index op submappen en inhoud,
+  en mappen dieper dan twee niveaus staan standaard dicht.
+- **"Verwijder uit model" haalt overal de boomplek weg**: de knop in de inspector en Ctrl+Delete op het
+  canvas ruimen nu ook de plaatsing in de projectboom op, net als het boommenu (één structuur-undo-stap).
+- **Wees-plaatsingen niet meer in export en snapshot**: een element of diagram dat buiten het
+  boommenu om verwijderd is (canvas, inspector, browser) liet zijn boomplaatsing staan; die reisde mee
+  in het werkbestand en kwam terug als het id weer opdook. Het werkbestand (Studio én sidecar) laat ze
+  nu weg; live blijven ze staan, zodat Ctrl+Z het element mét plaatsing terugzet.
+- **BPMN-events en -gateways vullen hun node**: een bewaarde maat (EA: 30/42 pt × 1,5) is nu ook de
+  getekende ring/ruit; eerst stond een vaste ruit van 34px linksboven en hechtten de lijnen met een gat
+  op de grotere omtrek.
+- **Bron-marker `cirkel-open`** in de motor (ConnectorEdge + typeicoon): een open, canvas-gevuld
+  rondje net buiten de bron, voor de BPMN message flow (verzoek van het profielwerk).
+- **EA-lijnen en BPMN zoals in EA** (Marks vergelijking van twee GGM-procesplaten): knikpunten alleen
+  bij EA's Custom-stijl (bij Direct en Auto Routing zijn opgeslagen paden verouderd: zigzaglijnen);
+  BPMN-events en -gateways hechten zwevend op hun echte omtrek (cirkel/ruit; geen trapjes meer) en
+  de "zo recht mogelijk"-routering werkt ook voor die vormen; taken in een subproces hangen in de
+  pool erboven (het subproces bedekte ze), het subproces toont dan zijn naam linksboven; een
+  bewaarde maat kleiner dan het minimum (180px) wint; labels van data-objecten breken niet meer
+  per letter af. Taaktypes, complexe/event-gateways, escalatie-events, datastores en de
+  pijlpunten van berichtstromen liggen bij M3-MOF (BPMN-profiel).
+- **Projectboom in EA-volgorde**: binnen een map eerst de diagrammen, dan de submappen, dan de elementen
+  (diagrammen verdwenen eerder onder lange submappen, zoals de pools van een BPMN-proces).
+- **Onbekende profielen blijven bewaard**: een werkbestand met profielen die deze Studio niet kent,
+  gaat bij "Naar server sturen" en de automatische snapshot ongewijzigd mee terug (werd gewist).
+- **Sidecar maakt na een import zelf een snapshot** (`--geen-snapshot` om over te slaan;
+  `--alleen-snapshot` compacteert een bestaand project); servergrens werkbestand 20 → 100 MB.
+- **Worktree-poorten 5176–5179** praten nu met de lokale api (api-basis, inloggen, CORS).
+- **Node-sidecar voor de EA-import** (`npm run importeer-qea`, `scripts/importeer-qea-uit-git.sh`):
+  een `.qea`-pakket zonder browser in een serverproject zetten — zelfde lezers, zelfde merge op
+  GUID, zelfde projectboom; stand van de server (snapshot + operatielog) nagespeeld in node, het
+  verschil als operaties naar het log, dus open Studio's zien het meteen. `--droog`, `--map`,
+  `--verdwenen-verwijderen`, `--lijst-pakketten`. Nog niet tegen een draaiende api getest.
+- **IndexedDB-opslag: dataverlies bij herladen verholpen** (10-10, vóór release): een store-stand
+  van vóór de hydratatie werd ná het inladen alsnog weggeschreven en wiste de bewaarde store; de
+  volgende herlaad was leeg (alleen de mappen, uit localStorage, bleven). Nu wordt zo'n stand
+  genegeerd; regressietest in `opslag.test.js`.
+- **Dialogen verplaatsbaar** (slepen aan de titel), geklemd op het venster (een uitklappende
+  review-boom scrolt) en een reeks dialogen blijft bij de menukeuze staan in plaats van steeds verder
+  naar rechtsonder te schuiven.
+- **Compartimenten verbergen per diagram** (*Beeld → Compartimenten verbergen op dit diagram*,
+  per voorkomen te overrulen via het contextmenu): EA's "Hide attributes"; de EA-import neemt het
+  over, de XMI-export schrijft het terug.
+- **EA-import voor de nieuwe profielen** van M3-MOF (component/deployment, object, requirements,
+  business, xsd, wsdl, composite-structure, communication) via één gegevensgestuurde lezer op hun
+  `eaMapping.js`-tabellen; interaction overview landt in activity als `interactiegebruik`.
+- **BPMN en DMN uit EA** via dezelfde lezer en M3-MOF's tabellen: EA's "Analysis"-diagrammen
+  worden op stereotype verdeeld over BPMN, DMN en Eriksson-Penker; events, gateways, boundary-
+  events en condities uit EA's tagged values; DMN-eisen in DRD-richting.
+- **Hoekige lijnen zo recht als het kan**: een hoekige lijn zonder knikken loopt recht als de
+  dozen elkaar in x of y overlappen, anders met één hoek (zoals EA's Auto Routing).
+- **Boomstijl** op een lijn wist eerdere knikpunten; een EA-import bracht die mee en dan
+  "deed" de boomstijl niets.
 - **M3: overerving en abstracte elementtypen** — `ElementType.erft` en `isAbstract` (EMOF
   superClass/isAbstract), uitgevlakt bij registratie (`types/erfenis.js`); een abstract type staat in
   elk bereik voor zijn concrete afstammelingen (een abstract knoop-type nooit voor connectoren);
@@ -37,6 +120,13 @@ routes vergeleken (onderzoek).md`.
 ### Gefixt
 - Zwevende lijnuiteinden mikken op hun dichtstbijzijnde knikpunt (niet op de andere doos); een
   knikpunt óp de rand is het uiteinde.
+- EA-import: het lijnpad kwam van het eerste diagram in de bron, niet van het geïmporteerde
+  (Metamodel v2026 lag met zijn generalisaties ver naast de dozen); nu per diagram. EA's Auto
+  Routing en Orthogonal - Square worden *Hoekig* (waren rechte lijnen of krommen). Kleuren per
+  diagramobject komen mee. Een her-import ruimt pad en vorm van een oude import op.
+- Bestand-menu in Modelleren toonde twee scheidingslijnen onder elkaar.
+- Een model dat niet in de lokale opslag van de browser past (localStorage ±5 MB) laat de
+  import niet meer "weigeren": het blijft in het geheugen werken en het verslag meldt het.
 
 
 ## [studio/v0.15.2] — 2026-10-08

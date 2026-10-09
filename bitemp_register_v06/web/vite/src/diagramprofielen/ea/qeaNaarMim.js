@@ -78,7 +78,10 @@ const BOOLEAN_KEYS = new Set(["indicatieMaterieleHistorie", "indicatieFormeleHis
 export function qeaNaarMim(bron, { packageId, diagramTypeId = MIM_DIAGRAMTYPE, schaal = EA_SCHAAL , diagramFilter = null}) {
   const pakketIds = new Set(deelboomPakketten(bron.t_package || [], packageId));
   const verslag = maakVerslag();
-  const h = maakHulptabellen(bron, schaal);
+  // diagramFilter (optioneel): bv. de project-import houdt hier de
+  // activity-/use case-diagrammen buiten, die hebben hun eigen lezer.
+  const diagrammen = (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && (!diagramFilter || diagramFilter(d)));
+  const h = maakHulptabellen(bron, schaal, { diagramVoorkeur: diagrammen.map((d) => d.Diagram_ID) });
 
   /** @type {Record<string, any>} */
   const elements = {};
@@ -137,7 +140,8 @@ export function qeaNaarMim(bron, { packageId, diagramTypeId = MIM_DIAGRAMTYPE, s
       ...(String(o.Abstract) === "1" ? { indicatieAbstract: true } : {}),
     };
     if (!Object.keys(rest).length) delete data.tags;
-    const kleur = kleurUitBgr(o.Backcolor);
+    // Elementkleur, anders de kleur van het diagramobject (zie maakHulptabellen).
+    const kleur = kleurUitBgr(o.Backcolor) || h.kleurPerObject.get(o.Object_ID);
     if (kleur) data.kleur = kleur;
     const element = { id, naam: elementType === "notitie" ? "" : o.Name || "", elementType, compartimenten: [], data };
     if (elementType === "notitie") element.data.tekst = o.Note || o.Name || "";
@@ -171,9 +175,7 @@ export function qeaNaarMim(bron, { packageId, diagramTypeId = MIM_DIAGRAMTYPE, s
 
   /** @type {Record<string, any>} */
   const diagrams = {};
-  // diagramFilter (optioneel): bv. de project-import houdt hier de
-  // activity-/use case-diagrammen buiten, die hebben hun eigen lezer.
-  for (const d of (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && (!diagramFilter || diagramFilter(d)))) {
+  for (const d of diagrammen) {
     const diagram = bouwDiagram(h, d, { idVanObject, idVanConnector, diagramTypeId, elements });
     diagrams[diagram.id] = diagram;
     verslag.diagrammen += 1;

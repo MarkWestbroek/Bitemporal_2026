@@ -19,7 +19,11 @@
  */
 
 /** Sleutels op `data` die lokaal zijn en niet uit EA komen: die tellen niet als verschil. */
-const LOKALE_DATA = new Set(["vorm", "labelOffsets", "zOrde", "gedaante"]);
+// Lokale data: wat Omnium zelf bijhoudt en EA niet levert. `vorm` hoort er
+// níet bij: de lijnvorm komt uit EA's Line Style (recht/hoekig), en bij een
+// her-import wint EA (de bron) — anders bleef de vorm van een oude import
+// staan (Mark, 10-10). Een handmatig gekozen vorm gaat dus mee bij her-import.
+const LOKALE_DATA = new Set(["labelOffsets", "zOrde", "gedaante"]);
 
 /** GUID uit een diagram-id (`ead-<guid>` of een hernoemde `imp…_ead-<guid>`). */
 export function diagramGuid(id) {
@@ -69,6 +73,16 @@ function verschillenDiagram(nieuw, bestaand, idVanImport) {
   if (!gelijk(norm(nieuw, idVanImport), norm(bestaand, (x) => x))) uit.push("plaatsing");
   const verb = (d, map) => [...(d.verborgenConnectoren || [])].map(map).sort();
   if (!gelijk(verb(nieuw, idVanImport), verb(bestaand, (x) => x))) uit.push("verborgen lijnen");
+  // Lijndata per diagram (knikken, vorm, handles); labelposities zijn lokaal.
+  const lijn = (d, map) =>
+    Object.fromEntries(
+      Object.entries(d.lijnen || {})
+        .map(([cid, l]) => [map(cid), zonderLokaal(l)])
+        .filter(([, l]) => Object.keys(l).length)
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    );
+  if (!gelijk(lijn(nieuw, idVanImport), lijn(bestaand, (x) => x))) uit.push("lijnen");
+  if (!!nieuw.verbergCompartimenten !== !!bestaand.verbergCompartimenten) uit.push("compartimenten");
   return uit;
 }
 
@@ -185,6 +199,8 @@ export function herschrijfOpBestaandeIds(model, idMap) {
       nodes: (d.nodes || []).map((n) => ({ ...n, elementId: her(n.elementId), ...(n.nodeId ? { nodeId: her(n.nodeId) } : {}) })),
       edges: (d.edges || []).map((e) => ({ ...e, source: her(e.source), target: her(e.target) })),
       ...(d.verborgenConnectoren ? { verborgenConnectoren: d.verborgenConnectoren.map(her) } : {}),
+      ...(d.lijnen ? { lijnen: Object.fromEntries(Object.entries(d.lijnen).map(([cid, l]) => [her(cid), l])) } : {}),
+      ...(d.gedaanteOverrides ? { gedaanteOverrides: Object.fromEntries(Object.entries(d.gedaanteOverrides).map(([cid, v]) => [her(cid), v])) } : {}),
     };
   }
   return { ...model, elements, diagrams };
@@ -235,9 +251,11 @@ export function pasPlanToe(st, model, plan, keuzes) {
     const el = her.elements[r.bestaandId];
     if (!el) continue;
     const bestaand = st.elements?.[r.bestaandId] || {};
-    // Lokale data (lijnvorm, labelposities, z-volgorde) blijft staan.
+    // Lokale data (labelposities, z-volgorde, gedaante) blijft staan; wat EA
+    // niet meer levert (bv. knikken die weg zijn, een tag) gaat weg — de
+    // store merget data per sleutel, dus expliciet op undefined zetten.
     const data = { ...(el.data || {}) };
-    for (const k of LOKALE_DATA) if (bestaand.data?.[k] !== undefined && data[k] === undefined) data[k] = bestaand.data[k];
+    for (const k of Object.keys(bestaand.data || {})) if (!(k in data)) data[k] = LOKALE_DATA.has(k) ? bestaand.data[k] : undefined;
     patches[r.bestaandId] = {
       naam: el.naam,
       elementType: el.elementType,
@@ -255,10 +273,22 @@ export function pasPlanToe(st, model, plan, keuzes) {
     if (!aan.has(`di:${r.id}`)) continue;
     const d = her.diagrams[r.bestaandId];
     if (!d) continue;
+    // Lijndata per diagram uit EA; lokale labelposities op dit diagram blijven.
+    const bestaandeLijnen = st.diagrams?.[r.bestaandId]?.lijnen || {};
+    const lijnen = {};
+    for (const cid of new Set([...Object.keys(d.lijnen || {}), ...Object.keys(bestaandeLijnen)])) {
+      const uitEa = d.lijnen?.[cid] || {};
+      const lokaal = {};
+      for (const k of LOKALE_DATA) if (bestaandeLijnen[cid]?.[k] !== undefined) lokaal[k] = bestaandeLijnen[cid][k];
+      const samen = { ...uitEa, ...lokaal };
+      if (Object.keys(samen).length) lijnen[cid] = samen;
+    }
     st.zetDiagram(r.bestaandId, {
       naam: d.naam,
       nodes: d.nodes.filter((n) => st.elements?.[n.elementId] || elements[n.elementId]),
       verborgenConnectoren: d.verborgenConnectoren || [],
+      lijnen,
+      verbergCompartimenten: !!d.verbergCompartimenten,
     });
     uit.diagrammenBijgewerkt += 1;
   }

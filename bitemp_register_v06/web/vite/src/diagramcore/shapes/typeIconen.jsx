@@ -106,6 +106,7 @@ const MARKER_START = {
     </>
   ),
   "schuine-streep": <path d="M3.2 4.8 L1.8 9.2" />,
+  "cirkel-open": <circle cx="2.8" cy="7" r="1.6" />,
 };
 const MARKER_EIND = {
   "pijl-open": <path d="M9.6 4.6 L13 7 L9.6 9.4" />,
@@ -114,7 +115,7 @@ const MARKER_EIND = {
   bol: <circle cx="11.4" cy="7" r="1.5" fill="currentColor" />,
 };
 // De lijn stopt vóór een marker, zodat open figuren niet doorkruist worden.
-const LIJN_START_X = { ruit: 5.8, "ruit-open": 5.8, bol: 4.1, "kruis-cirkel": 5 };
+const LIJN_START_X = { ruit: 5.8, "ruit-open": 5.8, bol: 4.1, "kruis-cirkel": 5, "cirkel-open": 4.4 };
 const LIJN_EIND_X = { "pijl-open": 12.6, driehoek: 9.2, "pijl-dicht": 9.2, bol: 9.9 };
 
 const IcoonEdgePresentatie = ({ maat = 14, presentatie = {} }) => {

@@ -12,5 +12,8 @@
  */
 export function apiBase() {
   if (typeof window === "undefined") return ""; // node (tests)
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
+  // Elke Vite-devserver (5173–5179: hoofdcheckout, worktrees, e2e) praat met de
+  // lokale Go-API; voorheen alleen 5174, waardoor een worktree op 5176 zijn
+  // eigen origin aanriep en elke /api-aanroep 404 gaf (10-10).
+  return /^517[3-9]$/.test(window.location.port) ? "http://localhost:8082" : "";
 }

@@ -228,7 +228,11 @@ een eigen node-identifier. Diagramcore vereenzelvigde die twee voorheen.
 - boomknop en canvasdrop bieden alleen dan een tweede voorkomen aan;
 - connectoren groeperen voorkomens per element en kiezen standaard het paar
    met de kortste afstand. `diagram.connectorVoorkomens` kan per connector een
-   expliciet `{bronNodeId, doelNodeId}` vastleggen;
+   expliciet `{bronNodeId, doelNodeId}` vastleggen; `diagram.lijnen[connectorId]`
+   bewaart per diagram het pad (knikken), de lijnvorm, de vastgezette uiteinden en
+   de labelposities — de "Position" van een connector op een diagram (M3), die
+   wint van dezelfde sleutels op `element.data` (2026-10-10, zie
+   `createDiagramStore.zetLijnen`);
 - `diagram.verborgenConnectoren` is een view-eigen hide-list. Een edge kan via
    het contextmenu worden verborgen; **Beeld → Toon verborgen relaties** maakt
    ze weer zichtbaar;

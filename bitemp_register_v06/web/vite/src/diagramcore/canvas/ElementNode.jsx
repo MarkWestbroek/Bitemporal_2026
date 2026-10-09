@@ -162,6 +162,11 @@ function ElementNode({ id, data, selected }) {
 
   const Shape = getShape(elementType.shape) || getShape("class-box");
   if (!Shape) return null;
+  // Compartimenten verborgen op dit diagram/voorkomen: de shape krijgt een
+  // type zonder compartimenten en een element zonder inhoud — alleen de kop.
+  const verborgen = !!data.compartimentenVerborgen && (elementType.compartments?.length || element.compartimenten?.length);
+  const shapeType = verborgen ? { ...elementType, compartments: [] } : elementType;
+  const shapeElement = verborgen ? { ...element, compartimenten: [] } : element;
 
   const magResizen = bewerkbaar && elementType.resizebaar !== false;
   // Gedragsverwijzing (§3.2): een gevulde verwijzing toont een ⧉-badge in de
@@ -183,8 +188,8 @@ function ElementNode({ id, data, selected }) {
   return (
     <>
       <Shape
-        element={element}
-        elementType={elementType}
+        element={shapeElement}
+        elementType={shapeType}
         selected={!!selected}
         fieldTypesById={fieldTypesById}
         compartmentTypesById={compartmentTypesById}

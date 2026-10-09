@@ -141,6 +141,10 @@ test("notities dragen hun tekst, zonder naam", () => {
   assert.ok(not.every((n) => n.naam === "" && typeof n.data.tekst === "string" && n.data.tekst.length > 0));
 });
 
+/** Lijndata (knikken, vorm) van een connector, van het eerste diagram waar hij die heeft. */
+const lijnVan = (m, id) => Object.values(m.diagrams).map((d) => d.lijnen?.[id]).find(Boolean) || null;
+const alleLijnen = (m) => Object.values(m.diagrams).flatMap((d) => Object.entries(d.lijnen || {}).map(([id, l]) => ({ id, ...l })));
+
 test("standaardschaal 1,5 vergroot posities, maten en knikpunten gelijk op", () => {
   const geschaald = qeaNaarPuurUml(bron, { packageId: METAMETAMODEL });
   const editor1 = Object.values(model.diagrams).find((d) => d.naam === "Editor");
@@ -148,23 +152,25 @@ test("standaardschaal 1,5 vergroot posities, maten en knikpunten gelijk op", () 
   const n1 = editor1.nodes[0], n15 = editor15.nodes[0];
   assert.equal(n15.position.x, Math.round(n1.position.x * 1.5));
   assert.equal(n15.size.width, Math.round(n1.size.width * 1.5));
-  const k1 = Object.values(model.elements).find((e) => e.data?.knikken);
-  const k15 = geschaald.elements[k1.id];
-  assert.equal(k15.data.knikken[0].x, Math.round(k1.data.knikken[0].x * 1.5));
+  const k1 = alleLijnen(model).find((l) => l.knikken);
+  const k15 = lijnVan(geschaald, k1.id);
+  assert.equal(k15.knikken[0].x, Math.round(k1.knikken[0].x * 1.5));
 });
 
-test("rechte EA-lijn (geen hoekpunten, geen auto-routing) → vorm recht", () => {
-  const recht = els.filter((e) => e.data?.vorm === "recht");
-  const hoekig = els.filter((e) => (e.source || e.target) && !e.data?.vorm && !e.data?.knikken);
+test("lijndata staat per diagram (diagram.lijnen), niet op het element; rechte EA-lijn → vorm recht", () => {
+  assert.ok(els.every((e) => e.data?.knikken === undefined && e.data?.vorm === undefined), "element draagt geen pad of vorm");
+  const lijnen = alleLijnen(model);
+  const recht = lijnen.filter((l) => l.vorm === "recht");
+  const hoekig = lijnen.filter((l) => l.vorm === "hoekig");
   assert.ok(recht.length > 0, "Mode=1/3 zonder Path → recht");
-  assert.ok(hoekig.length > 0, "Mode=2 (auto-routing) → profiel-default (hoekig)");
-  assert.ok(recht.every((e) => !e.data.knikken));
+  assert.ok(hoekig.length > 0, "Mode=2 (auto-routing) → hoekig");
+  assert.ok(recht.every((l) => !l.knikken));
 });
 
 test("knikpunten uit Path (Mode 2/3), niet bij Mode 1", () => {
-  const metPad = els.filter((e) => e.data?.knikken);
+  const metPad = alleLijnen(model).filter((l) => l.knikken);
   assert.ok(metPad.length > 0, "minstens één lijn met knikpunten");
-  assert.ok(metPad.every((e) => e.data.knikken.every((k) => Number.isFinite(k.x) && k.y >= 0)));
+  assert.ok(metPad.every((l) => l.knikken.every((k) => Number.isFinite(k.x) && k.y >= 0)));
 });
 
 test("TREE=OS: aanhechtpunten haaks op de rand erbij, stukken haaks (Element ◆— ProjectFolder)", () => {
@@ -175,7 +181,7 @@ test("TREE=OS: aanhechtpunten haaks op de rand erbij, stukken haaks (Element ◆
   assert.ok(agg, "ProjectFolder ◆— Element");
   // Bron is het geheel (ProjectFolder); EA's Path liep van Element naar ProjectFolder
   // en is daarom omgedraaid, mét de haakse aanhechtpunten erbij.
-  assert.deepEqual(agg.data.knikken, [
+  assert.deepEqual(lijnVan(model, agg.id).knikken, [
     { x: 85, y: 323 }, // onderrand ProjectFolder, recht boven het hoekpunt
     { x: 85, y: 350 },
     { x: 408, y: 350 },

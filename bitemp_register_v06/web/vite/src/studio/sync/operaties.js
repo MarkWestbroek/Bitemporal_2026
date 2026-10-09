@@ -277,6 +277,8 @@ export const MODEL_OPS = {
   wisNodeMaten: null,
   zetNodeGedaante: null,
   zetConnectorGedaante: null,
+  zetLijnen: null,
+  zetLijn: null,
   verbergConnectorOpDiagram: null,
   toonVerborgenConnectoren: null,
   updateDiagramStijl: null,
@@ -333,6 +335,9 @@ export function koppelModelStore(profielId, api) {
 export const STRUCTUUR_OPS = {
   /** Het gegenereerde map-id reist mee als derde argument. */
   nieuweMap: (args, { resultaat }) => [args[0], args[1] ?? null, resultaat],
+  /** Batch (EA-import): de gemaakte ids reizen mee in de lijst. */
+  nieuweMappen: (args, { resultaat }) => [(args[0] || []).map((m, i) => ({ ...m, mapId: resultaat?.[i] || m.mapId }))],
+  plaatsPerMap: null,
   schuifMap: null,
   hernoemMap: null,
   zetMapKleur: null,
@@ -354,8 +359,8 @@ export const STRUCTUUR_VELDEN = ["mappen", "plaatsing"];
 export function structuurNet(voor, na) {
   const m = diffMap(voor.mappen, na.mappen);
   const p = diffMap(voor.plaatsing, na.plaatsing);
-  const volgordeVoor = Object.keys(voor.plaatsing || {}).join(" ");
-  const volgordeNa = Object.keys(na.plaatsing || {}).join(" ");
+  const volgordeVoor = Object.keys(voor.plaatsing || {}).join("\u0000");
+  const volgordeNa = Object.keys(na.plaatsing || {}).join("\u0000");
   const volgordeAnders = volgordeVoor !== volgordeNa;
   if (m.leeg && p.leeg && !volgordeAnders) return [];
   const patch = { zetMappen: m.zet, wisMappen: m.wis, zetPlaatsing: p.zet, wisPlaatsing: p.wis };

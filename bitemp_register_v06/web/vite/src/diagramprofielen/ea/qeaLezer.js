@@ -15,6 +15,12 @@ let _sqlPromise = null;
 async function sqlJs() {
   if (!_sqlPromise) {
     _sqlPromise = (async () => {
+      // Node (de sidecar, tests): sql.js vindt zijn wasm zelf naast sql-wasm.js;
+      // Vite's `?url`-import bestaat daar niet.
+      if (typeof window === "undefined" && typeof process !== "undefined" && process.versions?.node) {
+        const { default: initSqlJs } = await import("sql.js");
+        return initSqlJs();
+      }
       const [{ default: initSqlJs }, { default: wasmUrl }] = await Promise.all([
         import("sql.js"),
         import("sql.js/dist/sql-wasm.wasm?url"),
@@ -84,7 +90,7 @@ export function leesBron(db, packageId) {
   // deze pakketten staan (EA tekent gerust klassen uit zes andere pakketten
   // op één diagram) — die komen mee als element zonder package-lidmaatschap.
   const OBJECT_KOLOMMEN = `Object_ID, Object_Type, Name, Alias, Note, Package_ID, Stereotype, NType, Abstract, Classifier, ParentID,
-            ea_guid, Style, Backcolor, BorderWidth, PDATA1, PDATA2, PDATA3, PDATA4, PDATA5, Multiplicity`;
+            ea_guid, Style, Backcolor, BorderWidth, PDATA1, PDATA2, PDATA3, PDATA4, PDATA5, Multiplicity, Status, RunState`;
   const t_object = rijen(
     db,
     `SELECT ${OBJECT_KOLOMMEN} FROM t_object
@@ -111,7 +117,8 @@ export function leesBron(db, packageId) {
     db,
     `SELECT Connector_ID, Name, Direction, Notes, Connector_Type, SubType, SourceCard, DestCard, SourceRole, DestRole,
             SourceIsAggregate, DestIsAggregate, SourceIsNavigable, DestIsNavigable, Start_Object_ID, End_Object_ID,
-            Stereotype, LineStyle, PDATA1, PDATA2, PDATA3, PDATA4, ea_guid
+            Stereotype, LineStyle, PDATA1, PDATA2, PDATA3, PDATA4, ea_guid,
+            SeqNo, PtStartX, PtStartY, PtEndX, PtEndY, DiagramID
        FROM t_connector WHERE Start_Object_ID IN (${oq}) AND End_Object_ID IN (${oq})`,
     [...objectIds, ...objectIds]
   );

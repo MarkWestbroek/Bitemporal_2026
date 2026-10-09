@@ -34,15 +34,39 @@ let _actief = null;
 
 // Laatste muisklik: de dialoog verschijnt dáár in de buurt i.p.v. midden op
 // het scherm (gemeld 2026-10-07: "ze staan meestal ver van waar je klikte").
+// Klikken ín een dialoog tellen niet mee: anders opent de volgende dialoog
+// van een reeks (pakket → map → review) steeds bij de OK-knop van de vorige,
+// dus elke keer verder naar rechtsonder (Mark, 10-10). Zo blijft de reeks bij
+// de menukeuze waarmee hij begon.
 let _laatsteKlik = null;
 if (typeof document !== "undefined") {
   document.addEventListener(
     "pointerdown",
     (e) => {
+      if (e.target instanceof Element && e.target.closest(".studio-dialoog-achtergrond")) return;
       _laatsteKlik = { x: e.clientX, y: e.clientY };
     },
     true
   );
+}
+
+// Maat die de gebruiker de dialoog gaf (rechtsonder slepen), per soort; geldt
+// voor de volgende dialogen van die soort en blijft bewaard in deze browser
+// (Mark, 10-10: "lange lijsten en lange paden").
+const MAAT_SLEUTEL = "studio-dialoog-maat";
+let _maten = {};
+try {
+  _maten = JSON.parse(globalThis.localStorage?.getItem(MAAT_SLEUTEL) || "{}") || {};
+} catch {
+  _maten = {};
+}
+function bewaarMaat(soort, maat) {
+  _maten = { ..._maten, [soort]: maat };
+  try {
+    globalThis.localStorage?.setItem(MAAT_SLEUTEL, JSON.stringify(_maten));
+  } catch {
+    /* privémodus */
+  }
 }
 
 function signaleer() {
@@ -67,34 +91,149 @@ export function vraagNaam({ titel = "Naam", label = "Naam", waarde = "", bevesti
 }
 
 /** Ja/nee-vraag; `true` bij bevestigen. `gevaar` kleurt de knop rood (verwijderen e.d.). */
-export function vraagBevestiging({ titel = "Weet je het zeker?", tekst = "", bevestig = "OK", annuleer = "Annuleren", gevaar = false, vinkje = null, vinkjeVerplicht = false } = {}) {
+export function vraagBevestiging({ titel = "Weet je het zeker?", tekst = "", bevestig = "OK", annuleer = "Annuleren", gevaar = false, vinkje = null, vinkjeVerplicht = false, opties = null } = {}) {
+  // opties: losse keuzevinkjes `[{sleutel, label, aan?}]` onder de tekst; de
+  // uitkomst is dan `{ok: true, opties: {sleutel: boolean}}` (of false bij
+  // annuleren) i.p.v. een boolean (EA-import: "eerst git pull", "ook verwijderen").
   // `vinkje`: tekst van een extra bevestigingsvinkje (dubbele bevestiging bij
   // iets destructiefs, bv. een map mét inhoud weg). Met `vinkjeVerplicht` kan
   // de knop pas als het vinkje aan staat. Uitkomst blijft een boolean.
-  return open({ soort: "bevestiging", titel, tekst, bevestig, annuleer, gevaar, vinkje, vinkjeVerplicht });
+  return open({ soort: "bevestiging", titel, tekst, bevestig, annuleer, gevaar, vinkje, vinkjeVerplicht, opties });
 }
 
 /**
  * Keuze uit een lijst (`<select>`); de gekozen `waarde` of `null` bij annuleren.
  * @param {{titel?:string, label?:string, opties:{waarde:string,label:string}[], waarde?:string, bevestig?:string}} cfg
  */
-export function vraagKeuze({ titel = "Kies", label = "Keuze", opties = [], waarde = "", bevestig = "OK", zoekbaar = false } = {}) {
+export function vraagKeuze({ titel = "Kies", label = "Keuze", opties = [], waarde = "", bevestig = "OK", zoekbaar = false, nieuw = null } = {}) {
   // zoekbaar: een zoekveld boven een scrollbare lijst (lange lijsten, bv. de
   // 2000 pakketten van een EA-repository); het filter kijkt naar elk stukje
   // van het label, los van hoofdletters.
-  return open({ soort: "keuze", titel, label, opties, waarde: waarde || opties[0]?.waarde || "", bevestig, zoekbaar });
+  // nieuw: `{ label, placeholder? }` zet een tekstveld onder de lijst ("nieuwe
+  // map in de gekozen map"); de uitkomst is dan `{ waarde, nieuw }` met `nieuw`
+  // de ingevulde tekst (leeg = niets nieuws) i.p.v. alleen de waarde.
+  return open({ soort: "keuze", titel, label, opties, waarde: waarde || opties[0]?.waarde || "", bevestig, zoekbaar, nieuw });
 }
 
 /**
- * Review met aan-/uitvinken: groepen regels met een status en detail; de
- * uitkomst is de Set van aangevinkte sleutels, of `null` bij annuleren.
- * @param {{titel?:string, tekst?:string, groepen:{kop:string, regels:{sleutel:string, label:string, status?:string, detail?:string, aan?:boolean}[]}[], bevestig?:string}} cfg
+ * Review met aan-/uitvinken, als boom: takken (bv. profiel → EA-pakket) met
+ * bladeren (regels met een sleutel, status en detail). Een tak aan-/uitvinken
+ * zet alle bladeren eronder; takken klappen in/uit, dus een review van
+ * 20.000 regels blijft te overzien (Mark, 09-10: "alles of niets en dan
+ * uitvinken"). De uitkomst is de Set van aangevinkte sleutels, of `null` bij
+ * annuleren. `groepen` (plat: kop + regels) blijft werken als één laag takken.
+ * @param {{titel?:string, tekst?:string, boom?: ReviewKnoop[],
+ *   groepen?: {kop:string, regels:{sleutel:string, label:string, status?:string, detail?:string, aan?:boolean}[]}[], bevestig?:string}} cfg
+ * @typedef {{sleutel?:string, label:string, status?:string, detail?:string, aan?:boolean, kinderen?:ReviewKnoop[]}} ReviewKnoop
  * @returns {Promise<Set<string>|null>}
  */
-export function vraagReview({ titel = "Review", tekst = "", groepen = [], bevestig = "Toepassen" } = {}) {
+export function vraagReview({ titel = "Review", tekst = "", groepen = [], boom = null, bevestig = "Toepassen" } = {}) {
+  const knopen = boom || groepen.map((g) => ({ label: g.kop, kinderen: g.regels || [] }));
   const aan = new Set();
-  for (const g of groepen) for (const r of g.regels || []) if (r.aan !== false) aan.add(r.sleutel);
-  return open({ soort: "review", titel, tekst, groepen, aan, bevestig });
+  const loop = (k) => {
+    if (k.kinderen) k.kinderen.forEach(loop);
+    else if (k.sleutel && k.aan !== false) aan.add(k.sleutel);
+  };
+  knopen.forEach(loop);
+  return open({ soort: "review", titel, tekst, knopen, aan, bevestig });
+}
+
+/**
+ * Alle bladsleutels onder een review-knoop — één keer berekend en op de knoop
+ * bewaard (`_sleutels`): een boom van 20.000 regels rendert anders elke tak
+ * opnieuw over zijn hele deelboom bij elk vinkje.
+ */
+function reviewBladeren(knoop) {
+  if (!knoop.kinderen) return knoop.sleutel ? [knoop.sleutel] : [];
+  if (!knoop._sleutels) {
+    const uit = [];
+    for (const k of knoop.kinderen) uit.push(...reviewBladeren(k));
+    knoop._sleutels = uit;
+  }
+  return knoop._sleutels;
+}
+
+/** Aantallen per status onder een knoop (gecached als `_tel`). */
+function reviewTelling(knoop) {
+  if (knoop._tel) return knoop._tel;
+  const tel = { nieuw: 0, gewijzigd: 0, verdwenen: 0 };
+  const loop = (k) => {
+    if (k.kinderen) k.kinderen.forEach(loop);
+    else if (k.status in tel) tel[k.status] += 1;
+  };
+  loop(knoop);
+  knoop._tel = tel;
+  return tel;
+}
+
+/** Standaard open: de bovenste laag, en álles als de boom klein is. */
+function reviewStandaardOpen(knopen) {
+  const open = new Set();
+  const totaal = knopen.reduce((n, k) => n + reviewBladeren(k).length, 0);
+  const loop = (k, pad, diepte) => {
+    if (!k.kinderen) return;
+    if (diepte === 0 || totaal <= 300) open.add(pad);
+    k.kinderen.forEach((c, i) => loop(c, `${pad}/${i}`, diepte + 1));
+  };
+  knopen.forEach((k, i) => loop(k, String(i), 0));
+  return open;
+}
+
+const STATUS_KLEUR = { nieuw: "#dcfce7", gewijzigd: "#fef3c7", verdwenen: "#fee2e2" };
+
+/** Eén tak of blad van de review-boom (recursief). */
+function ReviewTak({ knoop, pad, diepte, vinken, zetVink, open, toggleOpen }) {
+  const vakRef = useRef(null);
+  const isTak = Array.isArray(knoop.kinderen);
+  const sleutels = isTak ? reviewBladeren(knoop) : [knoop.sleutel];
+  const aantalAan = sleutels.reduce((n, k) => n + (vinken.has(k) ? 1 : 0), 0);
+  const alles = sleutels.length > 0 && aantalAan === sleutels.length;
+  const deels = aantalAan > 0 && !alles;
+  useEffect(() => {
+    if (vakRef.current) vakRef.current.indeterminate = deels;
+  }, [deels]);
+  const inspring = 18 * diepte;
+  if (!isTak) {
+    return (
+      <label style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 6, padding: `2px 0 2px ${inspring + 18}px`, fontSize: 12 }}>
+        <input type="checkbox" checked={vinken.has(knoop.sleutel)} onChange={(e) => zetVink([knoop.sleutel], e.target.checked)} />
+        {knoop.status && (
+          <span style={{ fontSize: 10, padding: "0 6px", borderRadius: 8, background: STATUS_KLEUR[knoop.status] || "#f1f5f9", color: "#1e293b", flex: "0 0 auto" }}>
+            {knoop.status}
+          </span>
+        )}
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{knoop.label}</span>
+        {knoop.detail && <span style={{ opacity: 0.65, whiteSpace: "nowrap" }}>— {knoop.detail}</span>}
+      </label>
+    );
+  }
+  const isOpen = open.has(pad);
+  // Samenvatting per status, zodat een dichte tak ook iets zegt.
+  const tel = reviewTelling(knoop);
+  const samenvatting = Object.entries(tel).filter(([, n]) => n).map(([st, n]) => `${n} ${st}`).join(" · ");
+  return (
+    <div>
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6, padding: `3px 0 3px ${inspring}px`, fontWeight: diepte === 0 ? 600 : 500, fontSize: diepte === 0 ? 13 : 12 }}>
+        <button
+          type="button"
+          onClick={() => toggleOpen(pad)}
+          title={isOpen ? "Inklappen" : "Uitklappen"}
+          style={{ width: 16, height: 16, padding: 0, border: 0, background: "transparent", color: "inherit", cursor: "pointer", font: "inherit", lineHeight: 1 }}
+        >
+          {isOpen ? "▾" : "▸"}
+        </button>
+        <input ref={vakRef} type="checkbox" checked={alles} onChange={(e) => zetVink(sleutels, e.target.checked)} />
+        <span style={{ cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} onClick={() => toggleOpen(pad)}>{knoop.label}</span>
+        <span style={{ opacity: 0.6, fontWeight: 400, fontSize: 11, whiteSpace: "nowrap" }}>
+          ({aantalAan}/{sleutels.length}{samenvatting ? ` — ${samenvatting}` : ""})
+        </span>
+      </div>
+      {isOpen &&
+        knoop.kinderen.map((k, i) => (
+          <ReviewTak key={k.sleutel || `${pad}/${i}`} knoop={k} pad={`${pad}/${i}`} diepte={diepte + 1} vinken={vinken} zetVink={zetVink} open={open} toggleOpen={toggleOpen} />
+        ))}
+    </div>
+  );
 }
 
 /** Mededeling met alleen een OK-knop (vervangt window.alert). */
@@ -125,10 +264,16 @@ export function NaamDialogHost() {
   const [filter, setFilter] = useState("");
   const [vinken, setVinken] = useState(() => new Set());
   const [vink, setVink] = useState(false);
+  const [optieWaarden, setOptieWaarden] = useState({});
+  const [nieuwTekst, setNieuwTekst] = useState("");
+  const [open, setOpen] = useState(() => new Set()); // open takken van de review-boom (pad)
   const inputRef = useRef(null);
   const vakRef = useRef(null);
   const [plek, setPlek] = useState(null);
   // Bij de klik neerzetten, binnen het venster geklemd; zonder klik gecentreerd.
+  // Een boom die later uitklapt mag niet onder de rand verdwijnen: de hoogte
+  // wordt geklemd op wat er onder `top` nog aan venster is (Mark, 10-10:
+  // "de tree klapt open buiten het scherm"); de review-lijst scrollt dan.
   useLayoutEffect(() => {
     const vak = vakRef.current;
     if (!vak || !_actief) {
@@ -147,6 +292,29 @@ export function NaamDialogHost() {
     setPlek({ left, top });
   }, [_actief]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Verslepen aan de titelbalk (pointer capture; binnen het venster geklemd).
+  const _sleep = useRef(null);
+  const sleepStart = (e) => {
+    if (e.button !== 0) return;
+    const r = vakRef.current?.getBoundingClientRect();
+    if (!r) return;
+    _sleep.current = { dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: r.height };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  };
+  const sleepBeweeg = (e) => {
+    const g = _sleep.current;
+    if (!g) return;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    setPlek({
+      left: Math.max(8, Math.min(e.clientX - g.dx, vw - g.w - 8)),
+      top: Math.max(8, Math.min(e.clientY - g.dy, vh - 40)),
+    });
+  };
+  const sleepStop = () => {
+    _sleep.current = null;
+  };
+
   useEffect(() => {
     const fn = () => {
       hertik((v) => v + 1);
@@ -155,6 +323,9 @@ export function NaamDialogHost() {
         setFilter("");
         setVinken(new Set(_actief.aan || []));
         setVink(false);
+        setOptieWaarden(Object.fromEntries((_actief.opties || []).map((o) => [o.sleutel, !!o.aan])));
+        setNieuwTekst("");
+        setOpen(_actief.knopen ? reviewStandaardOpen(_actief.knopen) : new Set());
       }
     };
     luisteraars.add(fn);
@@ -167,16 +338,17 @@ export function NaamDialogHost() {
   const isKeuze = cfg.soort === "keuze";
   const isReview = cfg.soort === "review";
   const isBevestiging = cfg.soort === "bevestiging";
+  const maatSoort = cfg.soort === "keuze" && cfg.zoekbaar ? "lijst" : cfg.soort;
   const annuleerWaarde = isBevestiging ? false : null;
   const bevestigen = () => {
     if (isNaam) {
       const schoon = waarde.trim();
       if (schoon || cfg.leegToegestaan) beeindig(schoon);
     } else if (isKeuze) {
-      if (waarde) beeindig(waarde);
+      if (waarde) beeindig(cfg.nieuw ? { waarde, nieuw: nieuwTekst.trim() } : waarde);
     } else if (isReview) {
       beeindig(new Set(vinken));
-    } else beeindig(isBevestiging ? true : undefined);
+    } else beeindig(isBevestiging ? (cfg.opties ? { ok: true, opties: { ...optieWaarden } } : true) : undefined);
   };
   const zetVink = (sleutels, aan) =>
     setVinken((v) => {
@@ -218,16 +390,29 @@ export function NaamDialogHost() {
       <div
         ref={vakRef}
         className="studio-dialoog"
+        onPointerUp={() => {
+          // De browser zet width/height inline zodra je de hoek versleept.
+          const el = vakRef.current;
+          if (el?.style.height) bewaarMaat(maatSoort, { w: el.offsetWidth, h: el.offsetHeight });
+        }}
         style={{
           ...(plek ? { position: "absolute", left: plek.left, top: plek.top } : {}),
+          // Nooit onder de onderrand: de inhoud (review-boom, lange lijst) scrollt.
+          maxHeight: plek ? `calc(100vh - ${plek.top}px - 8px)` : "92vh",
+          boxSizing: "border-box",
           background: "var(--s-panel, #fff)",
           color: "var(--s-fg, #1e293b)",
           border: "1px solid var(--s-border, #cbd5e1)",
           borderRadius: 10,
           boxShadow: "0 12px 40px rgba(15, 23, 42, 0.25)",
-          width: isReview ? 640 : cfg.meerregelig || isKeuze ? 520 : 400,
-          ...(isReview ? { maxHeight: "86vh" } : {}),
-          maxWidth: "92vw",
+          width: _maten[maatSoort]?.w || (isReview ? 640 : cfg.meerregelig || isKeuze ? 520 : 400),
+          ...(_maten[maatSoort]?.h ? { height: _maten[maatSoort].h } : {}),
+          maxWidth: "calc(100vw - 16px)",
+          minWidth: 320,
+          minHeight: 140,
+          // Rechtsonder te vergroten; de inhoud (lijst, review-boom) groeit mee.
+          resize: "both",
+          overflow: "hidden",
           padding: "14px 16px",
           fontSize: 13,
           display: "flex",
@@ -235,7 +420,16 @@ export function NaamDialogHost() {
           gap: 12,
         }}
       >
-        <strong>{cfg.titel}</strong>
+        <strong
+          style={{ cursor: "move", userSelect: "none", touchAction: "none" }}
+          title="Sleep om de dialoog te verplaatsen"
+          onPointerDown={sleepStart}
+          onPointerMove={sleepBeweeg}
+          onPointerUp={sleepStop}
+          onPointerCancel={sleepStop}
+        >
+          {cfg.titel}
+        </strong>
         {isNaam ? (
           <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
             {cfg.label}
@@ -267,7 +461,7 @@ export function NaamDialogHost() {
             )}
           </label>
         ) : isKeuze ? (
-          <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12, minHeight: 0, flex: 1 }}>
             {cfg.label}
             {cfg.zoekbaar && (
               <input
@@ -298,7 +492,7 @@ export function NaamDialogHost() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") bevestigen();
               }}
-              style={{ ...veldStijl, maxWidth: "100%", ...(cfg.zoekbaar ? { fontFamily: "ui-monospace, monospace", fontSize: 12 } : {}) }}
+              style={{ ...veldStijl, maxWidth: "100%", ...(cfg.zoekbaar ? { fontFamily: "ui-monospace, monospace", fontSize: 12, flex: "1 1 auto", minHeight: 96 } : {}) }}
             >
               {filterOpties(cfg.opties, cfg.zoekbaar ? filter : "").map((o) => (
                 <option key={o.waarde} value={o.waarde}>
@@ -311,47 +505,47 @@ export function NaamDialogHost() {
                 {filterOpties(cfg.opties, filter).length} van {(cfg.opties || []).length}
               </span>
             )}
+            {cfg.nieuw && (
+              <span style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
+                {cfg.nieuw.label}
+                <input
+                  type="text"
+                  value={nieuwTekst}
+                  placeholder={cfg.nieuw.placeholder || ""}
+                  onChange={(e) => setNieuwTekst(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") bevestigen();
+                  }}
+                  style={veldStijl}
+                />
+              </span>
+            )}
           </label>
         ) : isReview ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 0 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 0, flex: 1 }}>
             {cfg.tekst && <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.45, fontSize: 12, opacity: 0.85 }}>{cfg.tekst}</div>}
-            <div style={{ overflow: "auto", maxHeight: "58vh", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, padding: "4px 8px" }}>
-              {(cfg.groepen || []).map((g) => {
-                const sleutels = (g.regels || []).map((r) => r.sleutel);
-                const alles = sleutels.length > 0 && sleutels.every((k) => vinken.has(k));
-                return (
-                  <div key={g.kop} style={{ marginBottom: 8 }}>
-                    <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6, fontWeight: 600, padding: "4px 0" }}>
-                      <input type="checkbox" checked={alles} onChange={(e) => zetVink(sleutels, e.target.checked)} />
-                      {g.kop} <span style={{ opacity: 0.6, fontWeight: 400 }}>({sleutels.length})</span>
-                    </label>
-                    {(g.regels || []).map((r) => (
-                      <label key={r.sleutel} style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 6, padding: "2px 0 2px 18px", fontSize: 12 }}>
-                        <input type="checkbox" checked={vinken.has(r.sleutel)} onChange={(e) => zetVink([r.sleutel], e.target.checked)} />
-                        {r.status && (
-                          <span
-                            style={{
-                              fontSize: 10,
-                              padding: "0 6px",
-                              borderRadius: 8,
-                              background: r.status === "nieuw" ? "#dcfce7" : r.status === "gewijzigd" ? "#fef3c7" : r.status === "verdwenen" ? "#fee2e2" : "#f1f5f9",
-                              color: "#1e293b",
-                              flex: "0 0 auto",
-                            }}
-                          >
-                            {r.status}
-                          </span>
-                        )}
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</span>
-                        {r.detail && <span style={{ opacity: 0.65, whiteSpace: "nowrap" }}>— {r.detail}</span>}
-                      </label>
-                    ))}
-                  </div>
-                );
-              })}
+            <div style={{ overflow: "auto", flex: 1, minHeight: 80, border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, padding: "4px 8px" }}>
+              {(cfg.knopen || []).map((k, i) => (
+                <ReviewTak
+                  key={String(i)}
+                  knoop={k}
+                  pad={String(i)}
+                  diepte={0}
+                  vinken={vinken}
+                  zetVink={zetVink}
+                  open={open}
+                  toggleOpen={(pad) =>
+                    setOpen((o) => {
+                      const n = new Set(o);
+                      n.has(pad) ? n.delete(pad) : n.add(pad);
+                      return n;
+                    })
+                  }
+                />
+              ))}
             </div>
             <div style={{ display: "flex", gap: 8, fontSize: 12 }}>
-              <button className="dc-mini-knop" onClick={() => zetVink((cfg.groepen || []).flatMap((g) => (g.regels || []).map((r) => r.sleutel)), true)}>Alles</button>
+              <button className="dc-mini-knop" onClick={() => zetVink((cfg.knopen || []).flatMap((k) => reviewBladeren(k)), true)}>Alles</button>
               <button className="dc-mini-knop" onClick={() => setVinken(new Set())}>Niets</button>
               <span style={{ opacity: 0.7, alignSelf: "center" }}>{vinken.size} aangevinkt</span>
             </div>
@@ -365,6 +559,13 @@ export function NaamDialogHost() {
                 {cfg.vinkje}
               </label>
             )}
+            {isBevestiging &&
+              (cfg.opties || []).map((o) => (
+                <label key={o.sleutel} style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, fontSize: 12 }}>
+                  <input type="checkbox" checked={!!optieWaarden[o.sleutel]} onChange={(e) => setOptieWaarden((w) => ({ ...w, [o.sleutel]: e.target.checked }))} />
+                  {o.label}
+                </label>
+              ))}
           </div>
         )}
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>

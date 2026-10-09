@@ -623,11 +623,16 @@ zwevend (`randAanhechting`), zoals puur-uml en use case.
    canoniek/activity.
 2. Realisatie naar een **klasse** wordt dependency «realize» (puur-uml staat realisatie
    alleen naar een interface toe) — of de verbindingsregel verruimen.
-3. **Kleur per diagramobject** (`ObjectStyle BCol/LWth`), nu alleen `t_object.Backcolor`
-   (Domain grijs, ProjectFolder geel komen níet mee).
+3. ~~**Kleur per diagramobject** (`ObjectStyle BCol`)~~ ✅ 09-10: EA kleurt meestal het
+   diagramobject, niet het element; de lezer neemt `BCol` van het eerste geïmporteerde
+   diagram als `t_object.Backcolor` = -1 (§7.2). `LWth` (lijndikte) en legenda-/themakleuren
+   die EA pas bij het tekenen toepast komen níet mee.
 4. **Labelposities** per lijn (`LLB/LMT/…`) → `labelOffsets`.
-5. **Routing per diagram**: eerste diagram wint; `Mode=2` (EA auto-routing, geen Path) wordt
-   een rechte lijn.
+5. ~~**Routing per diagram**: eerste diagram wint; `Mode=2` wordt een rechte lijn~~ ✅/⚠ 09-10:
+   het lijnpad komt nu van het diagram dat deze lezer importeert, Auto Routing en Orthogonal
+   worden `hoekig`; staat een lijn op méér geïmporteerde diagrammen, dan krijgt hij géén pad
+   (§7.2). ✅ 10-10: **lijngeometrie per diagram** in de motor (`diagram.lijnen`, §7.2) — elk
+   diagram zijn eigen pad en lijnvorm, zoals in EA.
 6. **Operatieparameters** (`t_operationparams`); constraint als kind-element in puur-uml;
    Text-element als notitie zonder rand.
 7. ~~Import-modus **"ernaast" met undo**~~ ✅ 08-10: bij een niet-lege sandbox kiest de
@@ -694,6 +699,336 @@ labelposities per lijn, kleur per diagramobject (alleen `t_object.Backcolor`),
 operatieparameters (`t_operationparams`), routing per diagram (eerste diagram wint,
 §6.9), andere elementtypen dan klasse-achtigen (verslag telt ze; activity/use case
 is stap 2), export terug naar EA (XMI 2.1 met de bewaarde GUIDs, §3).
+
+### 7.2 Lijnpaden, kleuren en grote imports (09-10, na Marks test op het Metamodel v2026)
+
+**Wat er misging.** `maakHulptabellen` hield per connector één `t_diagramlinks`-rij over — de
+eerste uit de bron, van welk diagram dan ook. De generalisaties van het Metamodel v2026 staan
+op vijf diagrammen, elk met een eigen "Tree Style - Vertical"-pad; Omnium kreeg het pad van
+`META - {Gegeven}` op het diagram `META - {Representatie}` en de lijnen lagen ver naast de
+dozen. De boomstijl achteraf (*Kinderen in boomstijl → Verticaal*) "deed niets", omdat
+knikken op het element winnen van de lijnvorm.
+
+**Gedaan.**
+
+- `maakHulptabellen(bron, schaal, { diagramVoorkeur })`: de lezers geven hun diagrammen mee
+  (in volgorde); per connector wint de rij van het eerste geïmporteerde diagram. Fixture
+  `fixtures/metamodel-v2026.qea.json` (diagrammen 2630 en 2633) en `qeaKern.test.js`.
+- ~~Op meer dan één geïmporteerd diagram → geen knikken~~ — vervangen door lijngeometrie per
+  diagram (hieronder): de lussen op Zaak liggen nu op elk diagram zoals in EA.
+- **Lijnvorm zonder pad** (`lijnvormVoor`): Direct en Custom zonder waypoints → `recht`;
+  Auto Routing (`Mode=2`) en Orthogonal - Square/Rounded (`TREE=OS/OR`) → `hoekig` (Omnium's
+  orthogonale router, het dichtst bij EA's "Orthogonal - Square" — Marks vraag of we dat hebben:
+  ja, dat is *Hoekig*). Tree Style/Lateral hebben in EA altijd een pad.
+- **Boomstijl wist de knikken** (`knikken: null`) — anders won het geïmporteerde pad.
+- **Kleur**: `ObjectStyle BCol` per diagramobject (zelfde voorkeursvolgorde) als het element
+  geen `Backcolor` heeft; Medewerker (`BCol=16772795` → `#bbeeff`) komt nu cyaan over.
+- **Review als boom** (`reviewBoom.js`, `vraagReview({ boom })`): profiel → EA-pakket
+  (genest) → diagrammen en elementen; een tak aan-/uitvinken zet alles eronder, takken
+  klappen in (standaard alleen de profielen open; alles open onder 300 regels). Zandbak MW
+  geeft 21.000 regels: Marks "alles of niets en dan uitvinken".
+- **localStorage vol** (`opslagFouten`): Zandbak MW (25.800 MIM-elementen) past niet in
+  het quotum van ±5 MB; de persist-laag gooit niet meer, het model blijft in het geheugen
+  werken en het verslag meldt het.
+- **IndexedDB als bewaarplaats (gebouwd 10-10, `diagramcore/model/opslag.js`)**: de
+  profielstores (`studio05-*`) staan nu in IndexedDB (database `omnium-studio`, store
+  `profielstores`, sleutel = persistKey) als object `{ state, version }` — geen JSON-tekst van
+  megabytes, geen quotum van 5 MB, en het schrijven is gebundeld (150 ms, laatste stand
+  wint) en asynchroon, dus van de hoofddraad af. Eenmalige migratie: staat een sleutel nog
+  als JSON in localStorage, dan wordt die gelezen, in IndexedDB gezet en uit localStorage
+  gehaald. Een stand van vóór de hydratatie kan de bewaarde nooit overschrijven (schrijven
+  wacht op het inladen). Zonder IndexedDB (oude browser, node-tests) blijft localStorage.
+  Projectsync wachtte al op de hydratatie (`koppelModelStore`). Browserproef: alle negentien
+  stores in IndexedDB, Dienstverlening na herladen terug (87 elementen, 6 diagrammen), de
+  Zandbak MW bewaard zonder quotumfout. Volgende stap als het nodig is: per element of per
+  diagram bewaren in plaats van de hele store per wijziging.
+- **Mappen in één stap** (`nieuweMappen`, `plaatsPerMap` in de Modelleren-store, met
+  STRUCTUUR_OPS voor projectsync): de EA-boom (Zandbak: 1.860 mappen, 8.786 plaatsingen)
+  komt in twee store-stappen in het project in plaats van duizenden.
+
+- **Her-import wint op lijndata** (`vergelijkImport.js`): `vorm` is geen lokale data meer
+  (EA's Line Style is de bron), en data die EA niet meer levert (oude knikken, een tag) gaat
+  bij een "gewijzigd"-regel weg — de store merget per sleutel, dus expliciet `undefined`.
+  Zonder dit bleef een her-import na een lezer-fix de oude krommen en paden tonen (Mark,
+  10-10). Lokaal blijven: `labelOffsets`, `zOrde`, `gedaante`.
+- **Nog zichtbaar verschil** op *Entiteiten Dienstverlening*: EA verbergt daar de
+  attributen (`t_diagram.PDATA` `HideAtts=1;HideOps=1`), Omnium toont ze in dozen met EA's
+  maat, dus de tekst loopt onderuit de doos. Optie: `HideAtts` per diagram vertalen naar een
+  ingeklapte gedaante per node, of de doos hoger maken.
+
+**Gebouwd — lijngeometrie per diagram (10-10, Marks keuze 1).** In Marks M3 is *Position*
+de associatieklasse op Diagram–Element; omdat Connector een Element is, heeft een connector
+op een diagram ook een Position. EA bewaart pad, aanhechting en labels per diagram; Omnium
+had ze op het element (`data.knikken`, `sourceHandle`/`targetHandle`, `labelOffsets`, `vorm`),
+waardoor een lijn op twee diagrammen maar op één goed kon liggen.
+
+- **Model**: `diagram.lijnen[connectorId] = { knikken, vorm, sourceHandle, targetHandle,
+  labelOffsets }` — de Position van een connector op dít diagram, naast `nodes` (de Position
+  van elementen: positie, maat, gedaante, z-volgorde), `connectorVoorkomens` en
+  `gedaanteOverrides`. Wat op het diagram staat wint van dezelfde sleutel op `element.data`;
+  het element-niveau blijft als standaard voor elk diagram en voor oude modellen. Per sleutel:
+  `undefined` = terug naar het element, `null`/`[]` = expliciet leeg op dit diagram.
+- **Motor**: `createDiagramStore.zetLijnen(diagramId, patches, elementPatches?)` en `zetLijn`
+  (één undo-stap, ook samen met een elementpatch — bv. een verhangen lijn); `deleteElement`
+  ruimt de lijndata op; `materialiseerConnectoren` legt `diagram.lijnen` over `element.data`;
+  `hernoemBotsendeIds` en de merge (`herschrijfOpBestaandeIds`) hernoemen de sleutels mee;
+  MODEL_OPS kent `zetLijn`/`zetLijnen` (projectsync).
+- **Canvas**: ctrl-klik-knikken, segment-slepen, labels slepen, lijnvorm, boomstijl (per
+  lijn en *Kinderen in boomstijl*), uiteinden vastzetten, normaliseren en verhangen schrijven
+  allemaal naar het actieve diagram.
+- **EA-lezer**: `bouwDiagram` zet per diagram het pad (`knikken`, haakse aanhechtpunten,
+  omgedraaid bij een ruit aan het geheel) en de lijnvorm (`lijnvormVoor`) uit de
+  `t_diagramlinks`-rij van dát diagram; het element krijgt geen pad of vorm meer. De merge
+  vergelijkt `lijnen` per diagram ("lijnen" in de review), neemt EA's pad en vorm over en
+  houdt lokale `labelOffsets` per diagram vast; oude element-knikken/vorm van een eerdere
+  import gaan bij "gewijzigd" weg.
+- **Voor Marks M3 (EA)**: op *Position* horen dan, naast `elementposition`, `elementSize`,
+  `sourceHandle` en `targetHandle`, nog `path` (hoekpunten), `lineShape` (recht, hoekig,
+  kromme, boom) en `labelOffsets` (per zijde). `gedaante` en `zOrde` zijn de Omnium-eigen
+  Position-attributen van een element-voorkomen.
+- Browserproef op Metamodel v2026: dezelfde generalisatie op acht diagrammen met elk een
+  eigen pad; `zetLijn` op één diagram tekent alleen daar anders, Ctrl+Z zet het terug.
+
+**Nog niet gebouwd:** BPMN- en DMN-lezers (BPMN/DMN zijn in EA MDG-profielen op `t_object`
+met eigen stereotypen) — zie punt 10 en §7.3.
+
+### 7.3 Nacht van 10 oktober — Marks antwoorden en wat er gebouwd is
+
+Mark (10-10, vóór het slapen): IndexedDB uitleggen → gebouwd; grote imports via batch óf
+backend+git ("complete import") → batch gebouwd, backend-route open; XMI-terugweg → gebouwd;
+profielen → uitgezet bij M3-MOF (volgorde: Component/Deployment, Object, Requirements,
+Eriksson-Penker, XSD/WSDL; Composite/Communication/Interaction Overview/Timing voor de
+volledigheid met de vraag of ze in het M3 passen; Profile/Metamodel = onze profiel-ontwerper).
+
+- **Hoekig zo recht als het kan** (`zwevendeRand.orthogonaleUiteinden`, Marks melding "Auto
+  Routing maakt zo recht als het maar kan"): overlappen twee dozen in x, dan één verticale lijn
+  midden in de overlap tussen de naar elkaar gekeerde zijden; overlappen ze in y, één
+  horizontale; anders een L met één hoek. Geldt voor een hoekige lijn zonder knikken met beide
+  uiteinden vrij (`ConnectorEdge` geeft `orthogonaal` mee). *Entiteiten Dienstverlening* ligt
+  nu als in EA. Een lus met knikken mikt op zijn knikken (zweefde eerst nooit).
+- **Sequence-lezer** (`qeaNaarSequence.js`, profiel `sequence05`): EA bewaart berichten niet in
+  `t_diagramlinks` maar als `t_connector` met `Connector_Type = "Sequence"` en `DiagramID`,
+  `SeqNo`, `PtStartX/Y`–`PtEndX/Y` (y negatief), `PDATA1` Synchronous/Asynchronous, `PDATA3`
+  Call/Return, `PDATA2` retval/params. Levenslijnen zijn de diagramobjecten (Object met
+  Classifier, Sequence, Actor, Class, Component, …) als smalle hoge node; elk bericht wordt
+  een punt op de bron- en doel-lijn (rand-element, klem "as") plus synchroon/asynchroon/retour;
+  een zelf-bericht is één punt met een lus. `leesBron` leest de extra kolommen; `notitielijn`
+  toegevoegd aan het sequence-profiel. Getest op "JS" (14 levenslijnen, 35 berichten); in de
+  browser staan de berichten horizontaal op hun hoogte. **Open**: activaties, fragmenten
+  (`InteractionFragment`), de kop van een levenslijn hangt boven de node (EA tekent hem erin).
+- **XMI 2.1 terug naar EA** (`schrijfXmi.js`; *Bestand → Exporteer naar Sparx EA (XMI 2.1)…*
+  in UML en MIM): EA's eigen XMI-vorm (afgekeken van de GGM-export): `uml:Model` met
+  pakketten, klassen/interfaces/enumeraties/datatypes (attributen met type en multipliciteit,
+  operaties, literals, generalization), associaties (memberEnd/ownedEnd met rol, multipliciteit,
+  aggregation aan het geheel), dependencies/realizations, notities als `ownedComment`; de
+  `xmi:Extension` met elementen (stereotype — MIM-typen als MIM-stereotype —, documentatie,
+  tags, kleur), connectoren (labels, richting) en **diagrammen** (geometry Left/Top/Right/
+  Bottom in EA-eenheden = Omnium ÷ 1,5; lijnen met `Path` uit `diagram.lijnen` en Mode/TREE uit
+  de lijnvorm). Identiteit: `EAID_`/`EAPK_` + GUID zonder accolades (zoals EA); elementen
+  zonder GUID krijgen er een die op `data.eaGuid` wordt bewaard. **Te testen door Mark**: in EA
+  een leeg project, *Import Model from XMI* met "Strip GUIDs" uit; daarna die `.qea` weer
+  inlezen om de rondreis te zien. Attribuuttypen die geen element in het model zijn gaan als
+  `EAJava_<naam>` (EA's primitieve-typeverwijzing).
+- **Metingen Zandbak MW** (headless, met IndexedDB en gebundelde mappen): review 4 s; toepassen
+  26 s; de studio opnieuw getekend na *OK* 52 s (eerder 24 s — mogelijk omdat M3-MOF tegelijk
+  draaide; nog te profileren). Totaal ±80 s, geen quotumfout meer.
+
+### 7.4 De acht profielen van M3-MOF, één gegevensgestuurde lezer (10-10, later die nacht)
+
+M3-MOF leverde de acht profielen uit Marks opdracht (ongecommit, worktree
+`D:\Git\Bitemporal_2026_m2`, branch `feat/m2-ea-profielen`): `component-deployment`, `object`,
+`requirements`, `business` (Eriksson-Penker), `xsd`, `wsdl`, `composite-structure`,
+`communication`; interaction overview als elementtype in `activity`, Timing bewust niet
+(past niet in het M3). Per profiel een vertaaltabel `<profiel>/eaMapping.js` (OBJECTEN,
+CONNECTOREN, RAND_ELEMENTEN, CONTAINERS, EA_DIAGRAM_TYPES) en de notitie
+`docs/PROFIELEN-EA-AANVULLING.md`.
+
+- **`qeaNaarProfiel.js`**: één lezer voor al die profielen, gestuurd door de tabel: objecten op
+  het diagram (plus kinderen via ParentID) → elementtype (specifieke rij met stereotype vóór de
+  algemene), rand-elementen (`data.randVan`), containers (`bevat`), connectoren via de tabel
+  (stereotype dat de tabel niet opsnoept → `data.stereotype` als label), ruit-omdraaiing waar
+  het profiel de ruit aan de bron tekent, lijndata per diagram via `bouwDiagram`.
+- **`eaProfielen.js`**: de registratie plus wat niet in een tabel past — compartimenten uit
+  `t_attribute`/`t_operation` (component-eigenschappen, interface-operaties, XSD elementen/
+  attributen/facets/waarden, WSDL ports/operations/parts), RunState → slots (object),
+  requirement-velden (Alias → reqId, Note → tekst, Status, **PDATA2 = Priority, PDATA3 =
+  Difficulty**, stereotype → soort), tagged values (xsd/wsdl), ObjectFlow → invoer/uitvoer
+  (business), Association alleen communicatiepad tussen node-typen, Aggregation zonder Strong
+  = link (object), EA's **ProvidedInterface/RequiredInterface** (kind van een poort) →
+  interface + realisatie/gebruikt vanaf de poort, en **communication**: EA's één-connector-
+  per-bericht gevouwen tot links met een berichten-compartiment (`vouwBerichtenTotLinks`).
+- Diagramkeuze: Requirements staan in het GGM als `Custom` met `MDGDgm=Extended::Requirements`;
+  XSD/WSDL als `Logical` met MDG; de klasse-lezer laat zulke diagrammen nu met rust.
+- De acht `eaMapping.js` staan letterlijk gekopieerd in deze worktree (identiek aan M3-MOF's
+  bestanden, zodat beide branches zonder conflict samenkomen); de profielen zelf (descriptors,
+  activiteiten) zitten alleen op M3-MOF's branch — tot de merge meldt de project-import
+  "profiel niet geregistreerd, overgeslagen" voor die diagrammen.
+- Getest op GGM-fixtures: component "[GEB/Functie] Juridische gebeurtenissen" (15
+  componenten, 7 poorten, 9 assembly's, 3 ProvidedInterfaces), object "[objectmodel] Rol
+  voorbeelden (NP)" (slots uit RunState, 12 composities), requirements "Validaties opvoeren
+  natuurlijk persoon" (75 requirements met status/prioriteit/moeilijkheid, 75 realisaties naar
+  de use case); communication en xsd synthetisch. In het GGM staan geen Deployment-,
+  CompositeStructure-, Collaboration-, XSD- of WSDL-diagrammen; "Analysis" (38) zijn daar
+  BPMN-op-Analysis (Activity«Activity», Event«StartEvent», Pool/Lane, ControlFlow«SequenceFlow»)
+  — die vallen onder de BPMN-lezer, niet onder business.
+- **Interaction overview**: `activity` kent nu `interactiegebruik` (gedragsverwijzing naar een
+  sequence-diagram); de activity-lezer neemt `InteractionOverview`-diagrammen mee en zet EA's
+  Interaction/InteractionUse-objecten erop.
+- **Object-profiel** mist `generalisatie` (GGM-objectdiagrammen hebben er 48); gemeld aan M3-MOF.
+
+**Compartimenten verbergen per diagram** (Marks vraag, belangrijk): `diagram.verbergCompartimenten`
+(Position-default op het diagram) met per voorkomen een override via de gedaante (`"kop"` =
+verbergen, `"vol"` = tonen) — *Beeld → Compartimenten verbergen op dit diagram* en in het
+contextmenu van een voorkomen *Compartimenten tonen/verbergen (dit voorkomen)*. De shape
+krijgt dan een type zonder compartimenten (alleen de kop); de bewaarde maat blijft gelden. De
+EA-lezer zet de vlag uit `t_diagram.PDATA HideAtts=1`, de merge vergelijkt hem
+("compartimenten"), de XMI-export schrijft `<style1 value="HideAtts=1;HideOps=1;"/>`.
+*Entiteiten Dienstverlening* toont nu, zoals in EA, alleen de koppen.
+
+**BPMN en DMN** (Marks vraag, uitgezet bij M3-MOF): twee smaken naar ons eigen model — uit het
+native uitwisselformaat (BPMN 2.0 XML met BPMNDI, DMN 1.3+ XML met DMNDI; M3-MOF, als lezer →
+regelset → toepasser, met de diagramlaag naar `diagram.lijnen`) en uit EA (EA-SYNC, via de
+generieke lezer zodra M3-MOF `eaMapping.js` voor `bpmn` en `dmn-drd` levert; EA zet BPMN in
+het GGM op "Analysis"-diagrammen met BPMN-stereotypen).
+
+**Backend-route "complete import via git"** (Marks vraag): de lezers zijn pure JavaScript
+(sql.js + JSON) en draaien al in node (de tests). De api is Go; een port naar Go zou de hele
+vertaallaag dubbel maken. Voorstel: een node-sidecar (`scripts/importeer-qea.mjs`) die
+dezelfde lezers draait op een `.qea` uit de git-checkout en het resultaat via projectsync (de
+MODEL_OPS/STRUCTUUR_OPS) in een project zet — door de Go-api aangeroepen als taak (webhook
+na een push, of handmatig). Eerst de frontend-lezers stabiel krijgen (dat loopt nu), dan de
+sidecar; geen Go-port.
+
+**Sequence compleet** (Marks vraag): geen M3-aanvulling nodig; het zijn M2-aanvullingen op het
+sequence-profiel: fragment-operanden (compartiment op `fragment`), activaties uit EA's
+berichtduur, gates/found-lost als rand-element — en in de lezer EA's
+`InteractionFragment`-objecten.
+
+### 7.5 BPMN en DMN uit EA (10-10, ochtend)
+
+M3-MOF leverde de native lezers (BPMN 2.0 XML, DMN XML; `transformatie/bpmnXml.js`,
+`dmnXml.js`, `planNaarCoreModel.js`, Modelleren → Transformeren → Importeren) én
+`bpmn/eaMapping.js` en `dmn-drd/eaMapping.js`; de EA-kant loopt door de generieke lezer:
+
+- **Wildcard** `"*"` als Object_Type/Connector_Type in een tabel (DMN: het stereotype is
+  leidend, EA wisselt het Object_Type per versie — in het GGM Activity«Decision»/
+  «BusinessKnowledgeModel», Class«InputData»/«KnowledgeSource»); een exacte typematch wint.
+- **"Analysis" uit elkaar**: EA zet Eriksson-Penker, BPMN én DMN op Diagram_Type "Analysis";
+  de stereotypen op het diagram beslissen (`isBpmnDiagram`/`isDmnDiagram`, ook via
+  `MDGDgm=BPMN…`/`DMN1.1::DMNDiagram`), business krijgt de rest.
+- **BPMN-hooks** (`kiesObject`): tagged value `activityType` Sub-Process → `subproces`,
+  `gatewayType` → parallel/inclusief, `eventDefinition`/`trigger` → `soort` (bericht, timer,
+  fout, signaal); een IntermediateEvent is alleen een **boundary-event** als zijn ouder een
+  activiteit is — in het GGM hangen de tussen-events aan de **pool** (ParentID), dus dat zijn
+  gewone tussen-events in hun pool; `cancelActivity` → `onderbrekend`; sequence-flow:
+  `conditionExpression` → conditie, `isDefault`/`conditionType default` → standaard;
+  Dependency«Association» alleen een notitielijn als een uiteinde een annotatie is.
+- **DMN-hooks**: `question` → vraag, Note → toelichting; EA tekent een eis als Dependency van
+  de **beslissing** naar wat ze nodig heeft, in een DRD loopt de pijl andersom → de lezer
+  draait Dependency/Abstraction-eisen om (`draaiOm`, het pad draait mee).
+- Fixtures: "[HR] Opgave verwerkingsproces - happy flow zonder betalen" (10 pools, 9 taken,
+  6 subprocessen, 5 start-/4 eind-/6 tussen-events, 2 exclusieve + 2 parallelle gateways, 11
+  data-objecten, 29 sequence- en 11 message-flows) en DMN "Statussen" (13 beslissingen, 5
+  invoergegevens, 17 informatie-eisen). Browserproef: het HR-proces staat in het BPMN-profiel
+  met pools, taken, events, gateways en flows; de EA-boom (BusinessProcess → Pool → Activity)
+  als mappen.
+
+### 7.6 De node-sidecar: complete import zonder browser (10-10, overdag)
+
+Gebouwd terwijl Mark niet kon testen; de browserroute is ongewijzigd (zelfde lezers).
+
+- **`web/vite/scripts/importeer-qea.mjs`** (`npm run importeer-qea -- …`): leest een `.qea` met
+  sql.js in node (geen Vite-`?url` nodig: `qeaLezer.js` kiest in node `initSqlJs()` kaal), kiest
+  het pakket op id of pad (`--pakket "Model / Zandbak MW"`, `--lijst-pakketten`), logt in op de
+  api (cookie `bitemp_token` via `/api/auth/login`, of `--token`/`OMNIUM_TOKEN`; zonder auth
+  lokaal niets), haalt het serverproject op (snapshot = werkbestand v3, `tot_volgnummer`) en de
+  operaties erna, en stuurt het verschil als batches naar `POST …/ops` (clientId `sidecar-<pid>`).
+  `--droog` rekent alles uit zonder te versturen, `--verslag uit.json` bewaart het verslag,
+  `--map "Import / GGM"` is de doelmap (ontbrekende schakels worden gemaakt),
+  `--verdwenen-verwijderen` haalt weg wat in EA weg is (standaard: laten staan, zoals de review).
+- **`src/diagramprofielen/ea/sidecarImport.js`** (getest, `sidecarImport.test.js`): de kern als
+  zuivere functies. `maakStand(werkbestand)` maakt per profiel een echte `createDiagramStore`
+  (zonder persist) en een kale structuurstore (`studio/sync/structuurKern.js`: dezelfde
+  STRUCTUUR_OPS-acties als modellerenActivity, zonder UI/opslag/undo), gekoppeld aan de
+  operatielaag; `speelOpsNa` speelt het operatielog na met `pasOperatieToe` (precies wat een
+  Studio-client doet; kruisverbanden overgeslagen); `importeerInStand` leest (eaLezers.js),
+  vergelijkt op GUID (vergelijkImport.js), past toe en geeft het verschil als
+  `patchElementen`/`patchDiagrammen` (gesplitst: ≤ 1 MB en ≤ 2000 sleutels per operatie) en
+  `nieuweMappen`/`plaatsPerMap`; `bouwBatches` maakt batches ≤ 500 operaties en ≤ 7 MB (de api
+  neemt 8 MB). Idempotent: dezelfde import op de stand ná de operaties geeft nul operaties.
+- **Gedeeld met de browser**: `eaLezers.js` (lezerslijst, PROFIEL, MIM-detectie, wortelpakket,
+  overgeslagen-telling — `importQeaProject.js` gebruikt het nu ook) en `eaProjectboom.js`
+  (`plaatsEaInProjectboomPlan`: de EA-boom als mappen, puur; modellerenActivity voert alleen
+  `nieuweMappen`/`plaatsPerMap` uit; `mapPadPlan` voor een doelmap-pad).
+- **`scripts/importeer-qea-uit-git.sh`**: `git pull --ff-only` op een checkout met het EA-bestand
+  en dan de sidecar — de "complete import via git". De Go-kant (webhook/cron die dit aanroept,
+  bv. na een push van het `.qea`) is nog niet gebouwd: eerst de sidecar handmatig draaien tegen
+  een lokale api, dan die aanroep (een `exec` van dit script met `OMNIUM_TOKEN` in de omgeving,
+  of een node-container naast de api-container — Dockerfile.api heeft geen node).
+- Nog niet gedaan: einde-tot-einde tegen een draaiende api (geen lokale api tijdens het bouwen);
+  de CLI is alleen tegen het GGM-bestand gedraaid (`--lijst-pakketten`, lezen met sql.js in
+  node werkt). Een Studio die openstaat krijgt de operaties via SSE/poll en past ze toe; na
+  200 operaties maakt die client een snapshot — de sidecar zelf maakt er geen.
+
+### 7.7 De UI bedient de sidecar: MVC over git (10-10, middag)
+
+Marks beeld: het model staat op git, de sidecar is de besturing, de UI stuurt de sidecar; daarna
+is het EA-model ons eigen model. Gebouwd:
+
+- **Go-api** (`handlers/studio_ea_import_handler.go`, routes in `main.go`): bronnen uit
+  `STUDIO_EA_IMPORT_BRONNEN` (allow-list van git-checkouts met een `.qea`, dus de UI kan geen
+  willekeurig pad laten uitvoeren), pakketlijst via de sidecar (`--lijst-pakketten --json`,
+  gecachet), taak starten (`git pull --ff-only`, dan `node … importeer-qea.mjs` met
+  `OMNIUM_API`/`OMNIUM_TOKEN` in de omgeving — een JWT met de claims van de aanvrager, zodat de
+  operaties zijn naam dragen), taakstand opvragen. Eén taak tegelijk per project; taken in het
+  geheugen van het proces. Tests: parser, validatie, levensloop met een neprunner, en de echte
+  sidecar (`--bron` fixture) als node aanwezig is.
+- **Studio**: *Project → EA-import via de server (uit git)…* (alleen voor een serverproject):
+  bron → pakket (zoekbare lijst van de server) → mappad → bevestiging met vinkje "ook
+  verwijderen wat in EA verdwenen is" → de taak wordt gevolgd (poll 2 s) → verslag in een
+  melding, en `haalBinnen()` zodat de operaties meteen zichtbaar zijn (live sync doet dat anders
+  bij de volgende poll). `vraagBevestiging` kent `vinkjeTerug` (→ `{ok, vink}`).
+- **Uitrol**: de api-container heeft geen node; op de VPS draait de sidecar dus op de host naast
+  de api (`STUDIO_EA_IMPORT_DIR` naar een checkout van `web/vite` met `npm ci`), of in een
+  node-container die de api via `exec` aanroept — nog te kiezen. Lokaal: api met
+  `STUDIO_EA_IMPORT_BRONNEN=ggm=D:/Git/Gemeentelijk-Gegevensmodel|v2.3.0/gemeentelijk gegevensmodel EA16.qea`
+  en `STUDIO_EA_IMPORT_DIR=<repo>/bitemp_register_v06/web/vite`.
+- Nog niet gedaan: einde-tot-einde met een draaiende api (geen lokale api tijdens het bouwen);
+  de Go-tests dekken de handler met een neprunner, de node-tests de sidecar tegen een nep-api.
+
+### 7.8 Repo en bestand kiezen in de UI (10-10, middag)
+
+Marks vraag: in de GGM-repo staan zeventien `.qea`'s (v2.0.0–v3.0.0, vertalingen) en hij werkt op een
+werkbranch; een vaste bron per bestand in de env is te star. Nu: de env noemt alleen **mappen**
+(`STUDIO_EA_IMPORT_MAPPEN`, bv. `D:/Git`); de server biedt de git-checkouts daarin aan (met branch,
+commit en het aantal lokale wijzigingen), zoekt per repo de `.qea`/`.qeax`, en de Studio kiest repo →
+bestand (nieuwste eerst, onthouden per browser) → pakket → mappad. Veiligheid: de UI geeft alleen
+namen en relatieve paden die de server zelf heeft gevonden; een pad dat niet in de zoekresultaten
+staat wordt geweigerd. **Git pull is een vinkje** (standaard uit): de server leest wat er is
+uitgecheckt, ook niet-gecommitte wijzigingen. `vraagBevestiging` kent daarvoor `opties`
+(meerdere vinkjes, uitkomst `{ok, opties}`). Vervangt `STUDIO_EA_IMPORT_BRONNEN` uit §7.7.
+
+Bijvangst: de Studio op een worktree-poort (5176–5179) praatte niet met de api — `apiBase()` en zeven
+kopieën van een poortlijst (inloggen, aanmelden, dashboard, …) kenden alleen 5173–5175, en de CORS-lijst
+van de api ook. Allemaal aangevuld; die acht kopieën horen ooit één functie te worden.
+
+### 7.9 Zandbak via de server: snapshot en snelle boom (10-10, eind middag)
+
+- **Probleem 1**: de sidecar zette 60 operaties in het log; elke open én elke later ladende Studio
+  speelde ze een voor een na (minutenlang "Page Unresponsive"). **Opgelost**: de sidecar maakt na
+  de import zelf een snapshot (werkbestand t/m het laatste volgnummer, eerst de operaties van
+  anderen erbij, 409 = opnieuw); `--alleen-snapshot` compacteert een bestaand project. Servergrens
+  werkbestand 20 → 100 MB (Zandbak = 19,7 MB).
+- **Probleem 2**: ook één snapshot laden duurde 176 s (CPU-profiel: 190 s in `bepaalHierarchie`,
+  aangeroepen per elementregel over alle 25.000 elementen, plus `Map_` die per map alle mappen en
+  plaatsingen doorliep, en alle 1.900 mappen standaard open = 100.000 DOM-knopen). **Opgelost**:
+  cache per modelstand, boomindex, mappen dieper dan twee niveaus standaard dicht → 0,8 s laden,
+  47 ms per klik.
+- **Probleem 3**: een Studio zonder M3-MOF's profielen sloeg die bij laden over én liet ze weg uit
+  de volgende snapshot (dataverlies op de server). **Opgelost**: onbekende profielen reizen
+  ongewijzigd mee.
+- Nog te doen: de aankondiging naar ingelogde clients (SSE-bericht bij een snapshot van een ander,
+  melding + stil herladen).
 
 ## Bronnen
 

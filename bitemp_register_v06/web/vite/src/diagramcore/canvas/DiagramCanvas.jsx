@@ -416,11 +416,20 @@ function CanvasBinnenkant({
           // breedte van de shape (.dc-node), niet alleen de resizer — anders
           // kon bv. een activity-actie niet smaller dan 180px (2026-10-07).
           style: {
-            ...(ref.size && !ref.gedaante
+            ...(ref.size && (!ref.gedaante || ref.gedaante === "kop" || ref.gedaante === "vol")
               ? { width: ref.size.width, height: ref.size.height, "--dc-node-max": "none" }
               : {}),
             ...(elementType.minBreedte ? { "--dc-node-min": `${elementType.minBreedte}px` } : {}),
             ...(elementType.minHoogte ? { "--dc-node-min-h": `${elementType.minHoogte}px` } : {}),
+            // Een bewaarde maat kleiner dan het minimum wint (EA-import: een
+            // BPMN-taak van 70 punten in een subproces werd 180px breed en
+            // overlapte zijn buurman — Mark, 10-10).
+            ...(ref.size && (!ref.gedaante || ref.gedaante === "kop" || ref.gedaante === "vol") && ref.size.width < (elementType.minBreedte || 180)
+              ? { "--dc-node-min": `${ref.size.width}px` }
+              : {}),
+            ...(ref.size && (!ref.gedaante || ref.gedaante === "kop" || ref.gedaante === "vol") && elementType.minHoogte && ref.size.height < elementType.minHoogte
+              ? { "--dc-node-min-h": `${ref.size.height}px` }
+              : {}),
           },
           // Achtergrond-elementen (kaders) starten diep onder de rest (-10);
           // de handmatige z-order (contextmenu) telt daar bovenop, zodat ook
@@ -436,6 +445,10 @@ function CanvasBinnenkant({
             // Voorkomen-gedaante (samentrekking): ElementNode rendert bv. het
             // lollipop-bolletje in plaats van de volledige shape.
             gedaante: ref.gedaante || null,
+            // Compartimenten verbergen (EA "HideAtts", Mark 10-10): per diagram
+            // (`diagram.verbergCompartimenten`, Position-default) met per
+            // voorkomen een override: gedaante "kop" = verbergen, "vol" = tonen.
+            compartimentenVerborgen: ref.gedaante === "kop" || (!!diagram?.verbergCompartimenten && ref.gedaante !== "vol"),
             fieldTypesById: lookups.fieldTypesById,
             compartmentTypesById: lookups.compartmentTypesById,
           },

@@ -26,6 +26,7 @@ import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.js
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
 import { useOutboxStore } from "../sync/outbox.js";
+import { zonderWeesPlaatsingen } from "../sync/structuurKern.js";
 import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
 import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore, aanwezigSamengevat } from "../sync/verzender.js";
 import {
@@ -39,6 +40,11 @@ import {
   maakProjectAan,
   slaProjectOp,
   haalStudioInstellingenOp,
+  eaImportRepos,
+  eaImportBestanden,
+  eaImportPakketten,
+  startEaImport,
+  eaImportTaak,
 } from "./projectSync.js";
 import { IconModelleren } from "../icons";
 import {
@@ -52,6 +58,7 @@ import ProfielIcoon from "../ProfielIcoon.jsx";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
 import { importeerQeaInProject } from "../../diagramprofielen/ea/importQeaProject.js";
+import { plaatsEaInProjectboomPlan } from "../../diagramprofielen/ea/eaProjectboom.js";
 import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
 
 const ELEMENTEN_HOOGTE_SLEUTEL = "studio05-project-elementen-hoogte";
@@ -223,6 +230,23 @@ const legStructuurVast = (s) => {
 };
 
 let _mapTeller = 0;
+/** Nieuw map-id: uniek ook binnen dezelfde milliseconde. */
+/**
+ * Open/dicht van een map: wat de gebruiker koos, anders de standaard: open
+ * tot twee niveaus diep, dieper dicht (een EA-import maakt honderden geneste
+ * mappen; alles open tekende bij de Zandbak 100.000 DOM-knopen, 10-10).
+ */
+const standaardMapOpen = (diepte) => diepte < 2;
+function mapDiepte(mappen, id) {
+  let d = 0;
+  for (let c = mappen[id]; c?.ouderId && d < 64; c = mappen[c.ouderId]) d++;
+  return d;
+}
+function isMapOpen(s, id) {
+  return s.mapOpen?.[id] ?? standaardMapOpen(mapDiepte(s.mappen || {}, id));
+}
+
+const nieuwMapId = () => `map_${Date.now()}_${(_mapTeller += 1)}`;
 
 export const useModellerenStore = create((set, get) => ({
   /** @type {{id:string, profielId:string, diagramId:string}[]} — werkruimte-laag */
@@ -326,7 +350,7 @@ export const useModellerenStore = create((set, get) => ({
     // (projectsync): dezelfde map, hetzelfde id, op elke client.
     // Uniek ook binnen dezelfde milliseconde (twee mappen in één batch kregen
     // hetzelfde id en de tweede overschreef de eerste — 2026-10-07).
-    const id = mapId || `map_${Date.now()}_${(_mapTeller += 1)}`;
+    const id = mapId || nieuwMapId();
     set((s) => {
       legStructuurVast(s);
       // volgorde = handmatige sortering per niveau; nieuw komt achteraan.
@@ -336,6 +360,32 @@ export const useModellerenStore = create((set, get) => ({
       return { mappen };
     });
     return id;
+  },
+
+  /**
+   * Meerdere mappen in één stap (één structuur-undo, één keer bewaren, één
+   * render) — een EA-import van de Zandbak maakt er 1.860; los kostte dat
+   * tientallen seconden (10-10). `mapId` mag meekomen (projectsync: dezelfde
+   * ids op elke client); anders wordt hij hier gemaakt. Geeft de ids terug.
+   * Een ouder mag in dezelfde lijst zitten (eerder in de volgorde).
+   * @param {{naam:string, ouderId?:string|null, mapId?:string}[]} lijst
+   * @returns {string[]}
+   */
+  nieuweMappen: (lijst) => {
+    const ids = (lijst || []).map((m) => m.mapId || nieuwMapId());
+    if (!ids.length) return ids;
+    set((s) => {
+      legStructuurVast(s);
+      const mappen = { ...s.mappen };
+      const basis = Date.now();
+      (lijst || []).forEach((m, i) => {
+        mappen[ids[i]] = { id: ids[i], naam: m.naam, ouderId: m.ouderId || null, volgorde: basis + i };
+      });
+      const next = { ...s, mappen };
+      schrijfOpslag(next);
+      return { mappen };
+    });
+    return ids;
   },
 
   /** Schuif een map één plek omhoog/omlaag tussen zijn broertjes. */
@@ -485,7 +535,7 @@ export const useModellerenStore = create((set, get) => ({
 
   toggleMap: (id) =>
     set((s) => {
-      const mapOpen = { ...s.mapOpen, [id]: !(s.mapOpen[id] ?? true) };
+      const mapOpen = { ...s.mapOpen, [id]: !isMapOpen(s, id) };
       const next = { ...s, mapOpen };
       schrijfOpslag(next);
       return { mapOpen };
@@ -557,6 +607,31 @@ export const useModellerenStore = create((set, get) => ({
         if (doel) plaatsing[key] = doel;
         else delete plaatsing[key];
       }
+      const next = { ...s, plaatsing };
+      schrijfOpslag(next);
+      return { plaatsing };
+    }),
+
+  /**
+   * Plaatsingen voor meerdere mappen in één stap: { mapId: keys[] } — zelfde
+   * semantiek als plaatsMeerdere, maar één undo-stap en één keer bewaren.
+   * @param {Record<string, string[]>} keysPerMap
+   */
+  plaatsPerMap: (keysPerMap) =>
+    set((s) => {
+      const plaatsing = { ...s.plaatsing };
+      let veranderd = false;
+      for (const [mapId, keys] of Object.entries(keysPerMap || {})) {
+        const doel = mapId && mapId !== "null" ? mapId : null;
+        for (const key of keys || []) {
+          if ((plaatsing[key] || null) === doel) continue;
+          if (doel) plaatsing[key] = doel;
+          else delete plaatsing[key];
+          veranderd = true;
+        }
+      }
+      if (!veranderd) return {};
+      legStructuurVast(s);
       const next = { ...s, plaatsing };
       schrijfOpslag(next);
       return { plaatsing };
@@ -888,21 +963,48 @@ function useDrop(handlers) {
  * hierarchie-connectortypen van de descriptor (incl. `omgekeerd`) plus de
  * hierarchieParen-hook — dezelfde regels als de 0.5-ElementenBrowser.
  */
+// Eén berekening per modelstand: elke elementregel in de boom vroeg de hele
+// hiërarchie opnieuw op — bij de Zandbak (25.000 MIM-elementen, duizenden
+// regels) kostte dat minuten en bevroor de pagina bij elke hertekening, ook bij
+// het openen van een diagram (gemeten 10-10: 190 van 210 s). De store is
+// immutable, dus `elements` (en `diagrams`, die de hierarchieParen-hook leest)
+// wisselt van referentie bij elke wijziging: dat is de cachesleutel.
+const _hierarchieCache = new WeakMap(); // elements → Map(profielId → {diagrams, uit})
 function bepaalHierarchie(profiel, elements) {
+  const diagrams = profiel.useStore.getState().diagrams;
+  let perProfiel = _hierarchieCache.get(elements);
+  if (!perProfiel) {
+    perProfiel = new Map();
+    _hierarchieCache.set(elements, perProfiel);
+  }
+  const hit = perProfiel.get(profiel.id);
+  if (hit && hit.diagrams === diagrams) return hit.uit;
+  const uit = berekenHierarchie(profiel, elements);
+  perProfiel.set(profiel.id, { diagrams, uit });
+  return uit;
+}
+
+function berekenHierarchie(profiel, elements) {
   const regels = [].concat(profiel.descriptor.hierarchie || [])
     .map((h) => (typeof h === "string" ? { type: h } : h))
     .filter((h) => h?.type);
   const kinderenVan = new Map();
   const ouderVan = new Map();
   if (!regels.length) return { kinderenVan, ouderVan };
+  const gezien = new Set(); // "ouder\u0000kind": dubbele paren zonder includes() (kwadratisch bij veel kinderen)
   const voeg = (ouder, kind) => {
     if (ouder === kind || !elements[ouder] || !elements[kind]) return;
+    const sleutel = ouder + "\u0000" + kind;
+    if (gezien.has(sleutel)) return;
+    gezien.add(sleutel);
     if (!kinderenVan.has(ouder)) kinderenVan.set(ouder, []);
-    if (!kinderenVan.get(ouder).includes(kind)) kinderenVan.get(ouder).push(kind);
+    kinderenVan.get(ouder).push(kind);
     ouderVan.set(kind, ouder);
   };
+  const regelPerType = new Map();
+  for (const h of regels) if (!regelPerType.has(h.type)) regelPerType.set(h.type, h);
   for (const el of Object.values(elements)) {
-    const regel = regels.find((h) => h.type === el.elementType);
+    const regel = regelPerType.get(el.elementType);
     if (!regel || !el.source || !el.target) continue;
     if (regel.omgekeerd) voeg(el.target, el.source);
     else voeg(el.source, el.target);
@@ -1342,6 +1444,32 @@ function GeplaatstDiagram({ profiel, diagramId }) {
   );
 }
 
+// Index van de boom: submappen per ouder en inhoud per map, één keer per
+// stand van `mappen`/`plaatsing` (beide immutable, dus de referentie is de
+// sleutel). Zonder index liep elke map álle mappen en plaatsingen door — bij
+// de Zandbak 1.900 × 12.000 per hertekening (gemeten 10-10).
+const _boomIndexCache = new WeakMap(); // mappen → {plaatsing, kinderen, inhoud}
+function boomIndex(mappen, plaatsing) {
+  const hit = _boomIndexCache.get(mappen);
+  if (hit && hit.plaatsing === plaatsing) return hit;
+  const kinderen = new Map();
+  for (const m of Object.values(mappen)) {
+    const k = m.ouderId || null;
+    if (!kinderen.has(k)) kinderen.set(k, []);
+    kinderen.get(k).push(m);
+  }
+  for (const lijst of kinderen.values()) lijst.sort(opVolgorde);
+  const inhoud = new Map();
+  for (const [key, mapId] of Object.entries(plaatsing)) {
+    if (!inhoud.has(mapId)) inhoud.set(mapId, []);
+    inhoud.get(mapId).push(key);
+  }
+  const uit = { plaatsing, kinderen, inhoud };
+  _boomIndexCache.set(mappen, uit);
+  return uit;
+}
+const GEEN = [];
+
 function Map_({ map, diepte }) {
   const mappen = useModellerenStore((s) => s.mappen);
   const mapOpen = useModellerenStore((s) => s.mapOpen);
@@ -1353,11 +1481,12 @@ function Map_({ map, diepte }) {
   const plaatsDiagram = useModellerenStore((s) => s.plaatsDiagram);
   const verplaatsMap = useModellerenStore((s) => s.verplaatsMap);
 
-  const open = mapOpen[map.id] ?? true;
-  const kinderen = Object.values(mappen).filter((m) => m.ouderId === map.id).sort(opVolgorde);
-  const inhoud = Object.entries(plaatsing)
-    .filter(([, mapId]) => mapId === map.id)
-    .map(([k]) => k);
+  // Standaard open tot twee niveaus diep; dieper standaard dicht (een EA-import
+  // maakt honderden geneste mappen; alles open tekende 100.000 DOM-knopen).
+  const open = mapOpen[map.id] ?? standaardMapOpen(diepte);
+  const index = boomIndex(mappen, plaatsing);
+  const kinderen = index.kinderen.get(map.id) || GEEN;
+  const inhoud = index.inhoud.get(map.id) || GEEN;
   const selecteerMap = useModellerenStore((s) => s.selecteerMap);
   const mapSelectie = useModellerenStore((s) => s.mapSelectie);
   const [bewerk, setBewerk] = React.useState(false);
@@ -1509,10 +1638,15 @@ function Map_({ map, diepte }) {
       </div>
       {open && (
         <div data-lijst>
+          {/* Volgorde zoals EA: eerst de diagrammen, dan de submappen, dan de
+              elementen (Mark, 10-10: diagrammen verdwenen onder lange pools). */}
+          {inhoud.filter((k) => !isElementKey(k)).map((k) => (
+            <GeplaatstItem key={k} sleutel={k} />
+          ))}
           {kinderen.map((m) => (
             <Map_ key={m.id} map={m} diepte={diepte + 1} />
           ))}
-          {inhoud.map((k) => (
+          {inhoud.filter(isElementKey).map((k) => (
             <GeplaatstItem key={k} sleutel={k} />
           ))}
           {kinderen.length === 0 && inhoud.length === 0 && (
@@ -1612,6 +1746,19 @@ function Sidebar() {
     if (e.clientY < r.top + 40) el.scrollTop -= 14;
     else if (e.clientY > r.bottom - 40) el.scrollTop += 14;
   };
+
+  // "Verwijder uit model" vanaf het canvas (Ctrl+Delete) of de inspector: de
+  // plek in de boom gaat mee weg, net als bij het boommenu. Eén structuur-
+  // undo-stap voor de hele selectie.
+  useEffect(
+    () =>
+      menuBus.on("studio:uit-model-verwijderd", ({ profielId, elementIds = [] } = {}) => {
+        const s = useModellerenStore.getState();
+        const keys = elementIds.map((eid) => elementKey(profielId, eid)).filter((k) => s.plaatsing[k]);
+        if (keys.length) s.plaatsMeerdere(keys, null);
+      }),
+    []
+  );
 
   // "Zoek in projectboom" (rechtsklik op een canvas-element): klap de
   // map-keten open en laat de regel even oplichten.
@@ -1725,7 +1872,7 @@ function Sidebar() {
         }
         regel.scrollIntoView({ block: "nearest" });
       };
-      const mapOpenVan = (id) => s.mapOpen[id] ?? true;
+      const mapOpenVan = (id) => isMapOpen(s, id);
       let doel = null;
       if (e.key === "ArrowDown") doel = regels[idx < 0 ? 0 : Math.min(idx + 1, regels.length - 1)];
       else if (e.key === "ArrowUp") doel = regels[idx < 0 ? 0 : Math.max(idx - 1, 0)];
@@ -2226,9 +2373,17 @@ function Provider({ children }) {
 // zonder tabs/actieveTab en zonder viewports: dat is werkruimte, geen project.
 
 /** Bouw het werkbestand (v3) uit de stores. Gedeeld door export en server-sync. */
+/**
+ * Profielen uit het laatst geladen werkbestand die deze Studio niet kent
+ * (bv. de EA-profielen van een andere branch). Ze gaan ongewijzigd mee terug
+ * in elke snapshot; anders wiste "Naar server sturen" (of de automatische
+ * snapshot na 200 operaties) hun inhoud op de server (10-10).
+ */
+let _onbekendeProfielen = {};
+
 function bouwProjectData() {
   const s = useModellerenStore.getState();
-  const profielen = {};
+  const profielen = { ..._onbekendeProfielen };
   for (const p of getProfieltypen()) {
     // Klassieke editors (shim) hebben hun inhoud in eigen stores/opslag —
     // niets te exporteren hier (BPMN/DMN-documentinhoud volgt later).
@@ -2244,6 +2399,10 @@ function bouwProjectData() {
       meta: st.meta,
     };
   }
+  // Wees-plaatsingen (element/diagram verwijderd buiten het boommenu om) niet
+  // meenemen in export en snapshot; live blijven ze staan voor Ctrl+Z.
+  const bekend = new Set(getProfieltypen().filter((p) => !p.klassiek).map((p) => p.id));
+  const { plaatsing } = zonderWeesPlaatsingen(s.plaatsing, profielen, bekend);
   return {
     formaat: PROJECT_FORMAAT,
     versie: PROJECT_FORMAAT_VERSIE,
@@ -2251,7 +2410,7 @@ function bouwProjectData() {
     project: { id: s.project.id, naam: s.project.naam },
     // plaatsingVolgorde: de boomvolgorde expliciet — jsonb op de server bewaart
     // de sleutelvolgorde van `plaatsing` niet (gemeld 2026-10-08).
-    structuur: { mappen: s.mappen, plaatsing: s.plaatsing, plaatsingVolgorde: Object.keys(s.plaatsing) },
+    structuur: { mappen: s.mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing) },
     kruisverbanden: useKruisStore.getState().links,
     profielen,
   };
@@ -2290,6 +2449,7 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}
   });
   // Een snapshot laden is geen reeks handelingen: niets in de outbox, en de
   // outbox van het vorige project vervalt (de snapshot is de nieuwe basis).
+  _onbekendeProfielen = Object.fromEntries(Object.entries(data.profielen || {}).filter(([pid]) => !getProfieltype(pid)));
   zonderVastleggen(() => {
     for (const [pid, inhoud] of Object.entries(data.profielen || {})) {
       const p = getProfieltype(pid);
@@ -2328,6 +2488,7 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}
 
 /** Alles leeg en een nieuwe projectidentiteit (na "parkeren"). */
 function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
+  _onbekendeProfielen = {}; // nieuw project: niets van het vorige mee
   zonderVastleggen(() => {
     for (const p of getProfieltypen()) {
       if (p.klassiek) continue;
@@ -2429,100 +2590,22 @@ async function kiesDoelmapVoorEa(pakketLabel) {
     opties,
     bevestig: "Importeer",
     zoekbaar: opties.length > 8,
+    // Nieuwe map maken in de gekozen map (Mark, 10-10); leeg = de gekozen map zelf.
+    nieuw: { label: "Of een nieuwe map in de gekozen map:", placeholder: "naam van de nieuwe map (leeg = niet)" },
   });
   if (!keuze) return undefined;
-  return keuze === "__wortel__" ? null : keuze;
+  const ouder = keuze.waarde === "__wortel__" ? null : keuze.waarde;
+  if (keuze.nieuw) return useModellerenStore.getState().nieuweMap(keuze.nieuw, ouder);
+  return ouder;
 }
 
 function plaatsEaInProjectboom(profielId, model, ctx) {
-  const { bron, packageId, geheugen, doel } = ctx;
+  // Het plan is puur (eaProjectboom.js, gedeeld met de node-sidecar); hier
+  // alleen de store: nieuwe mappen in één stap, plaatsingen in één stap.
   const st = useModellerenStore.getState();
-  const pakketPerId = new Map((bron.t_package || []).map((p) => [p.Package_ID, p]));
-  const objectPerId = new Map((bron.t_object || []).map((o) => [o.Object_ID, o]));
-  const objectPerGuid = new Map((bron.t_object || []).map((o) => [o.ea_guid, o]));
-  const diagramPerGuid = new Map((bron.t_diagram || []).map((d) => [String(d.ea_guid || "").replace(/[{}]/g, "").toLowerCase(), d]));
-  const inBereik = new Set();
-  const stapel = [packageId];
-  while (stapel.length) {
-    const id = stapel.pop();
-    inBereik.add(id);
-    for (const p of pakketPerId.values()) if (p.Parent_ID === id) stapel.push(p.Package_ID);
-  }
-
-  /** Map zoeken of maken: zelfde naam onder dezelfde ouder = dezelfde map. */
-  const mapVoor = (naam, ouderId) => {
-    const sleutel = `map|${ouderId || ""}|${naam}`;
-    if (geheugen.has(sleutel)) return geheugen.get(sleutel);
-    const bestaand = Object.values(useModellerenStore.getState().mappen).find(
-      (m) => m.naam === naam && (m.ouderId || null) === (ouderId || null)
-    );
-    const id = bestaand ? bestaand.id : st.nieuweMap(naam, ouderId || null);
-    geheugen.set(sleutel, id);
-    return id;
-  };
-  /** Map van een EA-pakket (recursief tot het gekozen pakket; daarbuiten = wortel). */
-  const mapVanPakket = (pid) => {
-    if (!inBereik.has(pid)) return null;
-    const sleutel = `pkg|${pid}`;
-    if (geheugen.has(sleutel)) return geheugen.get(sleutel);
-    const p = pakketPerId.get(pid);
-    // Het gekozen pakket komt in de gekozen doelmap (of de wortel).
-    const ouder = p && pid !== packageId ? mapVanPakket(p.Parent_ID) : doel || null;
-    const id = mapVoor(p?.Name || `Pakket ${pid}`, ouder);
-    geheugen.set(sleutel, id);
-    return id;
-  };
-  // Alleen elementen die een diagram "bezitten" (t_diagram.ParentID: de
-  // activity, en via ParentID de use case erboven) worden een map — niet elke
-  // actie met een pin eraan.
-  const eigenaars = new Set();
-  for (const d of bron.t_diagram || []) {
-    let cursor = d.ParentID, n = 0;
-    while (cursor && objectPerId.has(cursor) && n++ < 20) {
-      eigenaars.add(cursor);
-      cursor = objectPerId.get(cursor).ParentID;
-    }
-  }
-  /** Map van een "eigenaar"-element (use case, activity): via ParentID omhoog tot het pakket. */
-  const mapVanEigenaar = (objectId, diepte = 0) => {
-    const o = objectPerId.get(objectId);
-    if (!o || diepte > 20) return null;
-    // Geen eigenaar van een diagram: de dichtstbijzijnde eigenaar erboven, anders het pakket.
-    if (!eigenaars.has(objectId)) return o.ParentID ? mapVanEigenaar(o.ParentID, diepte + 1) : mapVanPakket(o.Package_ID);
-    const sleutel = `obj|${objectId}`;
-    if (geheugen.has(sleutel)) return geheugen.get(sleutel);
-    const ouder = o.ParentID ? mapVanEigenaar(o.ParentID, diepte + 1) : mapVanPakket(o.Package_ID);
-    const stereo = o.Stereotype ? `«${o.Stereotype}» ` : "";
-    const id = mapVoor(`${stereo}${o.Name || o.Object_Type}`, ouder);
-    geheugen.set(sleutel, id);
-    return id;
-  };
-
-  const keys = new Map(); // mapId → keys
-  const zet = (key, mapId) => {
-    if (!mapId) return;
-    if (!keys.has(mapId)) keys.set(mapId, []);
-    keys.get(mapId).push(key);
-  };
-  // Diagrammen: in de map van hun eigenaar-element, anders van hun pakket.
-  for (const d of Object.values(model.diagrams)) {
-    const guid = (String(d.id).match(/ead-([0-9a-f-]{36})/) || [])[1];
-    const rij = guid ? diagramPerGuid.get(guid) : null;
-    if (!rij) continue;
-    const mapId = rij.ParentID ? mapVanEigenaar(rij.ParentID) : mapVanPakket(rij.Package_ID);
-    zet(tabId(profielId, d.id), mapId);
-  }
-  // Elementen (geen connectoren, geen naamloze notities/teksten): bij hun
-  // eigenaar (ParentID) of in hun pakket.
-  for (const el of Object.values(model.elements)) {
-    if (el.source || el.target || !el.data?.eaGuid) continue;
-    if (!el.naam && el.elementType !== "begin") continue;
-    const o = objectPerGuid.get(el.data.eaGuid);
-    if (!o || o.Object_Type === "Package") continue;
-    const mapId = o.ParentID && objectPerId.has(o.ParentID) ? mapVanEigenaar(o.ParentID) : mapVanPakket(o.Package_ID);
-    zet(elementKey(profielId, el.id), mapId);
-  }
-  for (const [mapId, lijst] of keys) useModellerenStore.getState().plaatsMeerdere(lijst, mapId);
+  const { teMaken, keysPerMap } = plaatsEaInProjectboomPlan(profielId, model, { ...ctx, mappen: st.mappen, nieuwMapId });
+  if (teMaken.length) useModellerenStore.getState().nieuweMappen(teMaken);
+  if (Object.keys(keysPerMap).length) useModellerenStore.getState().plaatsPerMap(keysPerMap);
 }
 
 // ── Map met inhoud verwijderen ──────────────────────────────────────────
@@ -2691,6 +2774,161 @@ async function stuurNaarServer() {
   }
 }
 
+/** Laatste keuze (repo + bestand) van deze browser: de volgende import begint daar. */
+const EA_IMPORT_LAATSTE = "studio-ea-import-laatste";
+function leesEaImportLaatste() {
+  try {
+    return JSON.parse(localStorage.getItem(EA_IMPORT_LAATSTE) || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+function bewaarEaImportLaatste(v) {
+  try {
+    localStorage.setItem(EA_IMPORT_LAATSTE, JSON.stringify(v));
+  } catch {
+    /* privémodus: niet erg */
+  }
+}
+const mb = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} kB`);
+
+/**
+ * EA-import via de server (onderzoeksdoc 2026-10-07 §7.6–7.8): de api start de
+ * node-sidecar, die een EA-bestand uit een git-checkout leest en het verschil
+ * als operaties in het log van dít project zet. De server biedt de repo's en
+ * de .qea's aan; wij kiezen repo → bestand → pakket → doelmap, volgen de taak
+ * en halen daarna de operaties binnen. Het project moet op de server staan.
+ */
+async function eaImportViaServer() {
+  const { project } = useModellerenStore.getState();
+  if (project.serverVersie == null) {
+    toonMelding({ tekst: "Stuur het project eerst naar de server; de import landt in het operatielog daar." });
+    return;
+  }
+  try {
+    const { repos = [], pull: pullStandaard = false, ingericht = false } = (await eaImportRepos()) || {};
+    if (!repos.length) {
+      toonMelding({
+        titel: "Geen repo's",
+        tekst: ingericht
+          ? "De server vond geen git-checkouts in de ingestelde mappen (STUDIO_EA_IMPORT_MAPPEN)."
+          : "Deze server heeft de EA-import niet ingericht (STUDIO_EA_IMPORT_MAPPEN). Vraag de beheerder, of importeer lokaal via Bestand → Importeer Sparx EA.",
+      });
+      return;
+    }
+    const laatste = leesEaImportLaatste();
+    // 1. Repo — met de branch die er nu is uitgecheckt (dáár leest de server uit).
+    const repoLabel = (r) =>
+      `${r.naam}${r.branch ? ` — ${r.branch}` : ""}${r.commit ? ` @ ${r.commit}` : ""}${r.wijzigingen ? ` (${r.wijzigingen} lokale wijziging${r.wijzigingen === 1 ? "" : "en"})` : ""}`;
+    const repoNaam = await vraagKeuze({
+      titel: "EA-import via de server — repo",
+      label: "Git-checkout op de server; gelezen wordt wat daar nu is uitgecheckt",
+      opties: repos.map((r) => ({ waarde: r.naam, label: repoLabel(r) })),
+      waarde: repos.some((r) => r.naam === laatste.repo) ? laatste.repo : repos[0].naam,
+      bevestig: "Verder",
+      zoekbaar: repos.length > 8,
+    });
+    if (!repoNaam) return;
+    const repo = repos.find((r) => r.naam === repoNaam);
+    // 2. Bestand — de server zoekt de .qea's (nieuwste eerst).
+    const bestanden = await eaImportBestanden(repoNaam);
+    if (!bestanden.length) {
+      toonMelding({ titel: "Geen EA-bestanden", tekst: `In ${repoNaam} staan geen .qea- of .qeax-bestanden.` });
+      return;
+    }
+    const bestand = await vraagKeuze({
+      titel: `EA-import — ${repoNaam}`,
+      label: `EA-bestand — ${bestanden.length} gevonden, nieuwste eerst`,
+      opties: bestanden.map((b) => ({
+        waarde: b.pad,
+        label: `${b.pad}  (${mb(b.grootte)}, ${new Date(b.gewijzigd).toLocaleDateString("nl-NL")})`,
+      })),
+      waarde: laatste.repo === repoNaam && bestanden.some((b) => b.pad === laatste.bestand) ? laatste.bestand : bestanden[0].pad,
+      bevestig: "Verder",
+      zoekbaar: true,
+    });
+    if (!bestand) return;
+    bewaarEaImportLaatste({ repo: repoNaam, bestand });
+    // 3. Pakket.
+    const pakketten = await eaImportPakketten(repoNaam, bestand);
+    const pakket = await vraagKeuze({
+      titel: `EA-import — ${bestand.split("/").pop()}`,
+      label: `Pakket (met deelpakketten) — ${pakketten.length} pakketten; elk diagram gaat naar zijn eigen profiel`,
+      opties: pakketten.map((p) => ({ waarde: String(p.id), label: p.pad })),
+      bevestig: "Verder",
+      zoekbaar: true,
+    });
+    if (!pakket) return;
+    const pad = pakketten.find((p) => String(p.id) === pakket)?.pad || pakket;
+    // 4. Waar in het project.
+    const map = await vraagNaam({
+      titel: "Waar in het project?",
+      label: `Mappad voor "${pad.split(" / ").pop()}" (leeg = wortel; "A / B" maakt wat ontbreekt)`,
+      waarde: "",
+      bevestig: "Verder",
+      leegToegestaan: true,
+    });
+    if (map === null) return;
+    // 5. Bevestigen, met de twee keuzes die ertoe doen.
+    const antwoord = await vraagBevestiging({
+      titel: "EA-import starten?",
+      tekst:
+        `${repoNaam}${repo?.branch ? ` (${repo.branch})` : ""} / ${bestand}\n${pad}\n→ project "${project.naam}"${map ? `, map "${map}"` : ""}\n\n` +
+        "Het verschil gaat als operaties in het log. Nieuw en gewijzigd komt mee; wat in EA weg is blijft staan, tenzij je dat hieronder aanvinkt.",
+      bevestig: "Start",
+      opties: [
+        { sleutel: "pull", label: "Eerst git pull (fast-forward) op de checkout", aan: pullStandaard },
+        { sleutel: "verwijderen", label: "Ook verwijderen wat in EA verdwenen is", aan: false },
+      ],
+    });
+    if (!antwoord) return;
+    const { taak } = await startEaImport(project.id, {
+      repo: repoNaam,
+      bestand,
+      pakket,
+      map,
+      pull: !!antwoord.opties.pull,
+      verdwenenVerwijderen: !!antwoord.opties.verwijderen,
+    });
+    // Volgen tot klaar/fout (de api houdt de taak in het geheugen).
+    let stand;
+    for (let n = 0; n < 900; n++) {
+      await new Promise((r) => setTimeout(r, 2000));
+      stand = await eaImportTaak(project.id, taak);
+      if (stand.status !== "bezig") break;
+    }
+    if (!stand || stand.status === "bezig") {
+      toonMelding({ titel: "EA-import loopt nog", tekst: "De taak is nog bezig op de server; de operaties komen vanzelf binnen via live synchroniseren." });
+      return;
+    }
+    if (stand.status === "fout") {
+      toonMelding({ titel: "EA-import mislukt", tekst: `${stand.fout || "onbekende fout"}\n\n${(stand.log || "").slice(-1500)}` });
+      return;
+    }
+    const v = stand.verslag || {};
+    const regels = Object.entries(v.profielen || {}).map(([naam, t]) => {
+      const delen = [];
+      if (t.diagrammen || t.elementen) delen.push(`${t.diagrammen} diagram${t.diagrammen === 1 ? "" : "men"} en ${t.elementen} elementen nieuw`);
+      if (t.bijgewerkt) delen.push(`${t.bijgewerkt} bijgewerkt`);
+      if (t.verwijderd) delen.push(`${t.verwijderd} verwijderd`);
+      if (t.ongewijzigd) delen.push(`${t.ongewijzigd} ongewijzigd`);
+      return `  • ${naam}: ${delen.join(", ") || "niets"}`;
+    });
+    // Direct binnenhalen (live sync doet het anders bij de volgende poll).
+    if (useModellerenStore.getState().project.liveSync ?? true) await haalBinnen();
+    toonMelding({
+      titel: v.operaties ? "EA-import klaar" : "Niets te importeren",
+      tekst:
+        `${repoNaam} / ${bestand}${stand.branch ? `\n${stand.branch}${stand.commit ? ` @ ${stand.commit}` : ""}` : ""}\n${pad}\n\n` +
+        (regels.length ? `Verwerkt via het operatielog (${v.operaties} operaties):\n${regels.join("\n")}` : "Geen verschil met wat er al stond.") +
+        (v.mappenNieuw ? `\n${v.mappenNieuw} nieuwe mappen, ${v.plaatsingen} plaatsingen.` : "") +
+        (v.meldingen?.length ? `\n\n${v.meldingen.join("\n")}` : ""),
+    });
+  } catch (e) {
+    toonMelding({ titel: "EA-import via de server", tekst: e?.message || String(e) });
+  }
+}
+
 /**
  * Stille snapshot (compactie, onderdeel 6): zoals "Naar server sturen", maar
  * zonder dialogen. 409 = een ander was eerder: neem de servergrens over.
@@ -2764,7 +3002,8 @@ function haalVanServer() {
         // Naam en id van de server zijn leidend (hernoemd op de server telt).
         const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
         const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
-        if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio (overgeslagen): ${onbekend.join(", ")}` });
+        if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio: ${onbekend.join(", ")}.
+Niet te zien of te bewerken hier, maar ze blijven bewaard en gaan ongewijzigd mee terug naar de server.` });
         pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0 });
         // Snapshot + wat er daarna in het operatielog kwam (ook eigen oude operaties).
         const n = await haalBinnen({ inclusiefEigen: true });
@@ -2826,6 +3065,12 @@ function menus(ctx) {
       { id: "proj-push", label: "Naar server sturen (snapshot)", onClick: stuurNaarServer },
       { id: "proj-pull", label: "Van server ophalen…", onClick: haalVanServer },
       {
+        id: "proj-ea-import",
+        label: "EA-import via de server (uit git)…",
+        disabled: project.serverVersie == null,
+        onClick: eaImportViaServer,
+      },
+      {
         id: "proj-live",
         label: "Live synchroniseren (wijzigingen heen en terug)",
         checked: liveAan,
@@ -2874,8 +3119,14 @@ function menus(ctx) {
   // welk tabblad ook actief is (Mark, 09-10): de profiel-eigen varianten
   // ("… alleen dit profiel …") verdwijnen hier uit het Bestand-menu; ze
   // blijven bestaan in de losse profiel-activiteiten.
-  const zonderProfielEa = (items) =>
-    (items || []).filter((it) => !(typeof it?.label === "string" && /Sparx EA/.test(it.label) && /alleen dit profiel/.test(it.label)));
+  const isSep = (it) => it?.type === "separator" || it?.sep === true;
+  const zonderProfielEa = (items) => {
+    const uit = (items || []).filter((it) => !(typeof it?.label === "string" && /Sparx EA/.test(it.label) && /alleen dit profiel/.test(it.label)));
+    // De profiel-import stond vooraan met een scheidingslijn erachter; zonder
+    // dat item blijft de lijn over en staan er twee onder elkaar (Mark, 10-10).
+    while (uit.length && isSep(uit[0])) uit.shift();
+    return uit.filter((it, i) => !(isSep(it) && isSep(uit[i - 1])));
+  };
   const bestandIdx = profielMenus.findIndex((m) => m?.id === "bestand");
   const metEa =
     bestandIdx >= 0

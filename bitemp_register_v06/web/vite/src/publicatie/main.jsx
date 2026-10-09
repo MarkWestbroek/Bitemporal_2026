@@ -20,7 +20,7 @@ const logoUrl = import.meta.env.BASE_URL + "common-ground-logo.svg";
 function detectBaseUrl() {
   if (typeof window === "undefined") return "";
   const loc = window.location;
-  if (["5173", "5174", "5175"].includes(loc.port)) {
+  if (["5173", "5174", "5175", "5176", "5177", "5178", "5179"].includes(loc.port)) {
     return `${loc.protocol}//${loc.hostname}:8082`;
   }
   return loc.origin;

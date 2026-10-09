@@ -39,7 +39,7 @@ var studioProjectIDPatroon = regexp.MustCompile(`^[A-Za-z0-9_-]{8,64}$`)
 
 const (
 	studioProjectNaamMax   = 200
-	studioProjectInhoudMax = 20 << 20 // 20 MB; de blob van een flink project blijft daar ver onder
+	studioProjectInhoudMax = 100 << 20 // 100 MB; de Zandbak MW als werkbestand is al 19,5 MB (EA-import, 10-10)
 )
 
 // StudioProjectMeta is de lijstweergave: alles behalve de inhoud.
@@ -79,7 +79,7 @@ func valideerStudioProjectInvoer(naam string, inhoud json.RawMessage, naamVerpli
 		return "Veld 'inhoud' is verplicht (het studio-project-JSON)."
 	}
 	if len(inhoud) > studioProjectInhoudMax {
-		return "Veld 'inhoud' is te groot (max 20 MB)."
+		return "Veld 'inhoud' is te groot (max 100 MB)."
 	}
 	var kop struct {
 		Formaat string `json:"formaat"`

@@ -646,6 +646,50 @@ maximaal 5000). → `{ops: [{volgnummer, clientId, actor, lokaalNr, tijd, store,
 de client laadt de snapshot opnieuw en gaat verder vanaf die grens. Het SSE-kanaal stuurt in dat
 geval één `event: snapshot` met `{totVolgnummer}` en sluit.
 
+### EA-import via de server (sidecar uit git)
+
+De Studio bedient de node-sidecar (`web/vite/scripts/importeer-qea.mjs`) die een Sparx EA-bestand
+(`.qea`/`.qeax`) uit een git-checkout leest en het verschil als operaties in het log van een project
+zet (`handlers/studio_ea_import_handler.go`; ontwerp: `docs/plans/2026-10-07 Sparx EA-sync …` §7.6–7.8).
+In de Studio kies je repo → bestand → pakket; de server zoekt repo's en bestanden, de UI kan alleen
+daaruit kiezen (geen eigen paden). Gelezen wordt wat er in de checkout staat, dus de uitgecheckte
+branch inclusief lokale wijzigingen.
+
+Env: `STUDIO_EA_IMPORT_MAPPEN` (`D:/Git;E:/Modellen` — een map die zelf een git-checkout is telt als
+één repo, anders tellen de checkouts direct eronder; leeg = functie uit), `STUDIO_EA_IMPORT_DIR`
+(de `web/vite`-map met de sidecar, standaard `<APP_DIR>/web/vite`; node en de npm-afhankelijkheden
+moeten er staan), `STUDIO_EA_IMPORT_NODE` (standaard `node`), `STUDIO_EA_IMPORT_API` (basis-URL
+waarop de sidecar deze api bereikt, standaard `http://localhost:<PORT>`), `STUDIO_EA_IMPORT_PULL=true`
+(het vinkje "eerst git pull" staat dan standaard aan; standaard uit, want een werkbranch met lokale
+wijzigingen laat je liever met rust). De sidecar logt in als de gebruiker die de taak start (de api
+maakt een JWT met dezelfde claims), dus de operaties dragen diens naam.
+
+#### `GET /api/studio/ea-import/repos`
+Ingelogd. → `{repos: [{naam, branch, commit, wijzigingen}], pull, ingericht}`. `naam` is de mapnaam
+(bij dubbele namen met `-2`, `-3`); het pad blijft binnen. `wijzigingen` = regels in `git status --porcelain`.
+
+#### `GET /api/studio/ea-import/repos/:repo/bestanden`
+Ingelogd. → `[{pad, grootte, gewijzigd}]`: de `.qea`/`.qeax` in de repo (niet in `.git`/`node_modules`,
+tot 8 mappen diep, max 500), nieuwste eerst; `pad` relatief met `/`.
+
+#### `GET /api/studio/ea-import/repos/:repo/pakketten?bestand=<pad>`
+Ingelogd. → `[{id, pad}]`: de pakketten in dat bestand (sidecar `--lijst-pakketten --json`; gecachet op
+mtime/grootte). `404` als de repo onbekend is of het bestand niet in de zoekresultaten staat.
+
+#### `POST /api/studio/projecten/:id/ea-import`
+Rol `editor`. Body `{repo, bestand, pakket, map?, pull?, verdwenenVerwijderen?, droog?}` — `pakket`
+is een Package_ID of (het einde van) een pad `"Model / Zandbak MW"`, `map` een mappad in het project
+(`"Import / GGM"`, ontbrekende schakels worden gemaakt), `pull` overschrijft de serverstandaard.
+Start een taak (eventueel `git pull --ff-only`, dan de sidecar) → `202 {taak, status}`. `400` bij een
+onbekende repo of een bestand dat niet in de repo staat, `404` als het project niet op de server
+staat, `409` als er al een taak loopt voor dit project, `501` als de functie niet is ingericht.
+
+#### `GET /api/studio/projecten/:id/ea-import[/:taak]`
+Ingelogd. Zonder taak-id de laatste taak van dit project. → `{id, projectId, status: bezig|klaar|fout,
+repo, bestand, pakket, map, pull, droog, actor, gestart, klaar?, branch?, commit?, verslag?, fout?, log?}`;
+`verslag` is het JSON-verslag van de sidecar (per profiel nieuw/bijgewerkt/verwijderd/ongewijzigd,
+operaties, batches). Taken leven in het geheugen van het api-proces.
+
 **Compactie:** een `PUT` met `tot_volgnummer` verwijdert de operaties t/m die grens (de grens gaat
 nooit terug en nooit voorbij het log). De Studio zet zelf een snapshot zodra het log 200 operaties
 voorbij de grens staat en de client bij is; bij gelijktijdige pogingen wint de eerste (409 voor de

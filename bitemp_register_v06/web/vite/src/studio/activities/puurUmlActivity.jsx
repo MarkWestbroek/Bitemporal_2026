@@ -7,6 +7,7 @@
 import { IconUML05 } from "../icons";
 import { registreerPuurUml, puurUmlDiagramType, maakElement, operatiesVan } from "../../diagramprofielen/puur-uml/index.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import { schrijfXmi } from "../../diagramprofielen/ea/schrijfXmi.js";
 import { importeerQeaAlsPuurUml } from "../../diagramprofielen/ea/importQea.js";
 
 registreerPuurUml();
@@ -28,6 +29,19 @@ export default maakDiagramActiviteit({
   // OperatieResolver: operaties-compartiment van klassen/interfaces.
   operatiesVan,
   koppeling: {
+    /** Terugweg naar EA: XMI 2.1 in EA's vorm, met de bewaarde GUIDs (schrijfXmi.js). */
+    exportBestand: {
+      label: "Exporteer naar Sparx EA (XMI 2.1)…",
+      maak: (staat) => {
+        const { xml, nieuweGuids } = schrijfXmi({ elements: staat.elements, diagrams: staat.diagrams }, { naam: "omnium-uml" });
+        // Nieuwe GUIDs op de elementen bewaren: de volgende export houdt dezelfde identiteit.
+        const patches = {};
+        for (const [id, guid] of nieuweGuids) if (staat.elements[id]) patches[id] = { data: { eaGuid: guid } };
+        if (Object.keys(patches).length) staat.updateElementen(patches);
+        return xml;
+      },
+      bestandsnaam: () => `${"omnium-uml"}.xmi`,
+    },
     /** Sparx EA-repository (.qea = SQLite) → puur-uml, één pakket met deelpakketten. */
     importBestand: {
       label: "Importeer Sparx EA (.qea) — alleen dit profiel, zonder projectboom…",

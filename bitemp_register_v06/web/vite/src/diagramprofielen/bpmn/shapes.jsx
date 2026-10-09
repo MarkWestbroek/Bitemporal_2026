@@ -61,8 +61,11 @@ function EventShape({ element, elementType, selected, children }) {
   const dik = soortEvent === "eind-event";
   const maat = soortEvent === "boundary-event" ? 26 : 30;
   return (
-    <div className="dc-punt-node" style={{ width: maat, height: maat, position: "relative", boxSizing: "border-box" }}>
-      <svg width={maat} height={maat} viewBox="0 0 20 20" style={{ display: "block", pointerEvents: "none" }}>
+    // Vult de node: een bewaarde maat (EA-import: 30 pt × 1,5 = 45px) is de
+    // omtrek waar de lijnen op aanhechten; een vaste ring linksboven liet een
+    // gat tussen lijn en ring (Mark, 10-10). Zonder maat: `maat` als minimum.
+    <div className="dc-punt-node" style={{ width: "100%", height: "100%", minWidth: maat, minHeight: maat, position: "relative", boxSizing: "border-box" }}>
+      <svg width="100%" height="100%" viewBox="0 0 20 20" style={{ display: "block", pointerEvents: "none" }}>
         <circle cx="10" cy="10" r="9" fill="var(--s-panel, #fff)" stroke={kleur} strokeWidth={dik ? 2.6 : 1.3} {...stippel} />
         {dubbel && <circle cx="10" cy="10" r="7.1" fill="none" stroke={kleur} strokeWidth="1.1" {...stippel} />}
         <SoortIcoon soort={d.soort} kleur={kleur} />
@@ -78,8 +81,9 @@ function GatewayShape({ element, selected, children }) {
   const soort = element?.elementType || "";
   const sym = { stroke: kleur, strokeWidth: 1.7, fill: "none", strokeLinecap: "round" };
   return (
-    <div className="dc-punt-node" style={{ width: 34, height: 34, position: "relative", boxSizing: "border-box" }}>
-      <svg width="34" height="34" viewBox="0 0 34 34" style={{ display: "block", pointerEvents: "none" }}>
+    // Vult de node (zie EventShape): EA-gateways zijn 42 pt × 1,5 = 63px.
+    <div className="dc-punt-node" style={{ width: "100%", height: "100%", minWidth: 34, minHeight: 34, position: "relative", boxSizing: "border-box" }}>
+      <svg width="100%" height="100%" viewBox="0 0 34 34" style={{ display: "block", pointerEvents: "none" }}>
         <path d="M17 2 L32 17 L17 32 L2 17 Z" fill="var(--s-panel, #fff)" stroke={kleur} strokeWidth={selected ? 2.2 : 1.5} />
         {soort === "exclusief" && <path {...sym} d="M12.5 12.5 L21.5 21.5 M21.5 12.5 L12.5 21.5" />}
         {soort === "parallel" && <path {...sym} d="M17 10.5 V23.5 M10.5 17 H23.5" />}
@@ -102,11 +106,13 @@ function SubprocesShape({ element, elementType, selected, children }) {
         backgroundColor: element?.data?.kleur || elementType?.kleur || "#e0f2fe",
         padding: "6px 12px 14px",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        // Uitgeklapt (met taken erin, `data.uitgeklapt`): naam linksboven, zoals
+        // EA en bpmn.io; ingeklapt: gecentreerd.
+        alignItems: element?.data?.uitgeklapt ? "flex-start" : "center",
+        justifyContent: element?.data?.uitgeklapt ? "flex-start" : "center",
       }}
     >
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", textAlign: "center" }}>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", textAlign: element?.data?.uitgeklapt ? "left" : "center" }}>
         {element?.naam || "(subproces)"}
       </div>
       {/* ⊞-markering (BPMN sub-process marker), gecentreerd onderaan. */}
@@ -130,7 +136,10 @@ function DataObjectShape({ element, selected, children }) {
       </svg>
       {/* Lange namen wrappen (geen ellipsis meer): een afgekapte naam is in een
           procesplaat onbruikbaar, een tweede regel kost niets. */}
-      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--s-fg, #0f172a)", textAlign: "center", maxWidth: 110, lineHeight: 1.25, overflowWrap: "anywhere" }}>
+      {/* width: max-content — anders krijgt het label de 46px van het dokje en
+          breekt het per letter af ("Brondoc/ument", Mark 10-10); het steekt
+          gecentreerd aan beide kanten uit. */}
+      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--s-fg, #0f172a)", textAlign: "center", width: "max-content", maxWidth: 120, lineHeight: 1.25, overflowWrap: "break-word" }}>
         {element?.naam || ""}
       </div>
       {children}

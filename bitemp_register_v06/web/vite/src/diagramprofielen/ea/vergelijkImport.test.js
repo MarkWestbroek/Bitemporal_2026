@@ -88,9 +88,9 @@ test("gewijzigd in EA: naam en positie worden bijgewerkt op het bestaande id; lo
   et.Name = "Elementtype (v2)";
   const dobj = bron2.t_diagramobjects.find((d) => d.Object_ID === et.Object_ID);
   dobj.RectLeft += 100; dobj.RectRight += 100;
-  // Lokale aanpassing in Omnium die moet blijven: lijnvorm op een connector.
+  // Lokale aanpassing in Omnium die moet blijven: labelpositie op een connector.
   const eenLijn = Object.values(st.elements).find((e) => e.elementType === "generalisatie");
-  st.elements[eenLijn.id].data.vorm = "bezier";
+  st.elements[eenLijn.id].data.labelOffsets = { midden: { x: 3, y: 4 } };
 
   const model2 = qeaNaarPuurUml(bron2, { packageId: PAKKET, schaal: 1 });
   const plan2 = vergelijkMetStore(model2, st, { pakketIds });
@@ -103,12 +103,13 @@ test("gewijzigd in EA: naam en positie worden bijgewerkt op het bestaande id; lo
 
   const bestaandId = gew.bestaandId;
   const uit = pasPlanToe(st, model2, plan2, standaardKeuzes(plan2));
-  // ElementType zelf, plus lijnen waarvan de haakse aanhechtpunten meeschoven.
-  assert.ok(uit.bijgewerkt >= 1);
-  assert.ok(plan2.elementen.gewijzigd.every((r) => r.id === gew.id || r.verschillen.includes("data.knikken")));
+  // Alleen ElementType zelf: het pad staat per diagram, dus de meeschuivende
+  // aanhechtpunten zijn een diagramverschil ("lijnen"), geen elementverschil.
+  assert.equal(uit.bijgewerkt, 1);
+  assert.ok(dgew.verschillen.includes("lijnen"));
   assert.equal(uit.diagrammenBijgewerkt, 1);
   assert.equal(st.elements[bestaandId].naam, "Elementtype (v2)", "zelfde id, nieuwe naam");
-  assert.equal(st.elements[eenLijn.id].data.vorm, "bezier", "lokale lijnvorm blijft");
+  assert.deepEqual(st.elements[eenLijn.id].data.labelOffsets, { midden: { x: 3, y: 4 } }, "lokale labelpositie blijft");
   const node = st.diagrams[dgew.bestaandId].nodes.find((n) => n.elementId === bestaandId);
   assert.equal(node.position.x, dobj.RectLeft);
 });
@@ -153,4 +154,31 @@ test("nieuw element in EA naast bestaande: connector wijst naar het bestaande id
   assert.equal(st.elements[gen.target].naam, "ElementType", "doel is het bestaande element");
   const her = herschrijfOpBestaandeIds(model2, plan2.idMap);
   assert.ok(her.elements[gen.target], "herschreven model gebruikt bestaande ids");
+});
+
+test("her-import: oude knikken/vorm op het element (oude lezer) gaan weg; lijndata komt per diagram, lokale labelpositie blijft", () => {
+  const st = maakStore();
+  const model = qeaNaarPuurUml(bron, { packageId: PAKKET, schaal: 1 });
+  pasPlanToe(st, model, vergelijkMetStore(model, st, { pakketIds }), standaardKeuzes(vergelijkMetStore(model, st, { pakketIds })));
+  // Simuleer de oude lezer: pad en vorm op het element.
+  const lijn = Object.values(st.elements).find((e) => e.elementType === "generalisatie");
+  st.elements[lijn.id].data = { ...st.elements[lijn.id].data, knikken: [{ x: 1, y: 1 }, { x: 2, y: 2 }], vorm: "recht" };
+  // Lokale labelpositie op een diagram, en een verschoven doos in EA.
+  const editor = Object.values(st.diagrams).find((d) => d.naam === "Editor");
+  const metPad = Object.keys(editor.lijnen)[0];
+  editor.lijnen[metPad] = { ...editor.lijnen[metPad], labelOffsets: { midden: { x: 5, y: 6 } } };
+  const bron2 = JSON.parse(JSON.stringify(bron));
+  const et = bron2.t_object.find((o) => o.Name === "ElementType");
+  const dobj = bron2.t_diagramobjects.find((d) => d.Object_ID === et.Object_ID);
+  dobj.RectLeft += 100; dobj.RectRight += 100;
+  const model2 = qeaNaarPuurUml(bron2, { packageId: PAKKET, schaal: 1 });
+  const plan2 = vergelijkMetStore(model2, st, { pakketIds });
+  const gew = plan2.elementen.gewijzigd.find((r) => r.bestaandId === lijn.id);
+  assert.ok(gew && gew.verschillen.includes("data.knikken") && gew.verschillen.includes("data.vorm"), JSON.stringify(gew?.verschillen));
+  pasPlanToe(st, model2, plan2, standaardKeuzes(plan2));
+  assert.equal(st.elements[lijn.id].data.knikken, undefined, "oude knikken van het element weg");
+  assert.equal(st.elements[lijn.id].data.vorm, undefined, "oude vorm van het element weg");
+  const editor2 = st.diagrams[editor.id];
+  assert.deepEqual(editor2.lijnen[metPad].labelOffsets, { midden: { x: 5, y: 6 } }, "lokale labelpositie op het diagram blijft");
+  assert.ok(editor2.lijnen[metPad].knikken || editor2.lijnen[metPad].vorm, "lijndata uit EA op het diagram");
 });

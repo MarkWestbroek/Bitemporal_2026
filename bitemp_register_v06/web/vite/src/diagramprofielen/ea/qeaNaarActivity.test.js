@@ -127,13 +127,14 @@ test("vaste vormen (ruit, begin, eind, pin) krijgen geen EA-maat maar staan gece
 });
 
 test("elke lijn met hoekpunten begint en eindigt haaks op de rand (aanhechtpunt erbij)", () => {
-  const cs = van("controlestroom").filter((c) => c.data.knikken);
+  const diagram = Object.values(model.diagrams)[0];
+  const cs = van("controlestroom").filter((c) => diagram.lijnen?.[c.id]?.knikken);
   assert.ok(cs.length >= 2);
   // De lus "[vertrokken onbekend waarheen]": ruit → links om → actie.
   const bekend = opNaam("bekende bereikbaarheid?", "beslissing");
   const lus = cs.find((c) => c.source === bekend.id && c.data.guard === "vertrokken onbekend waarheen");
   assert.ok(lus, "lus gevonden");
-  const k = lus.data.knikken;
+  const k = diagram.lijnen[lus.id].knikken;
   // Eerste punt: op de linkerrand van de ruit (x = 289), op de hoogte van het middelpunt (y = 238).
   assert.deepEqual(k[0], { x: 289, y: 238 });
   // Laatste punt: op de linkerrand van de doel-actie, op de hoogte van het laatste EA-hoekpunt.

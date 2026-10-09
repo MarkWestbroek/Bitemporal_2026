@@ -83,6 +83,24 @@ const elementTypes = [
     ],
   },
   {
+    // Interaction overview (UML): een knoop die een interactie (sequence-
+    // diagram) gebruikt — hetzelfde verwijs-primitief als de aanroep, maar
+    // naar een sequence-diagram. EA: Object_Type "Interaction"/"InteractionUse"
+    // op een InteractionOverview-diagram (M3-MOF, 10-10: geen eigen profiel).
+    id: "interactiegebruik",
+    label: "Interactiegebruik",
+    omschrijving: "Gebruikt een interactie (sequence-diagram); dubbelklik opent het.",
+    kort: "Interactie",
+    icoon: "gedrag-submachine",
+    shape: "rounded",
+    kleur: "#ede9fe",
+    gedragsVerwijzing: true,
+    properties: [
+      { key: "gedragDiagramId", label: "verwijst naar (sequence)", datatype: "diagram-verwijzing" },
+      KLEUR_VELD,
+    ],
+  },
+  {
     id: "beslissing",
     omtrek: "ruit",
     label: "Beslissing/samenvoeging",

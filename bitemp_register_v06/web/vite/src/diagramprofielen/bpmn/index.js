@@ -38,9 +38,10 @@
  * **Aanhechting (2026-09-18):** de rechthoekige vormen — taak, subproces,
  * data-object, pool en lane — hechten **zwevend** aan (`randAanhechting`,
  * zie diagramcore/canvas/zwevendeRand.js): lijnen waaieren uit over de rand
- * en glijden mee bij het slepen. Events en gateways zijn klein en rond of
- * ruitvormig; daar dekken de vier punten de vorm al, en een rechthoekige
- * omtrek-benadering zou naast de rand vallen — die houden hun handles.
+ * en glijden mee bij het slepen. Sinds 2026-10-10 ook events (`omtrek:
+ * "ellips"`) en gateways (`omtrek: "ruit"`): de motor hecht dan op de echte
+ * omtrek aan. Met vaste handles maakte elke lijn naar een iets hoger of lager
+ * liggende taak een trapje (EA-import, Mark).
  *
  * Events en gateways dragen hun naam via het motor-primitief
  * `naamLabel: "buiten"` (ElementNode zet hem ónder de vorm) — een ring of ruit
@@ -77,6 +78,8 @@ const SEQ_DOELEN = [...ACTIVITEITEN, ...GATEWAYS, "tussen-event", "eind-event"];
 const elementTypes = [
   {
     id: "start-event",
+    randAanhechting: "zwevend",
+    omtrek: "ellips",
     label: "Start event",
     omschrijving: "Waar het proces begint; soort bepaalt de trigger (bericht, timer, …).",
     kort: "Start",
@@ -114,6 +117,8 @@ const elementTypes = [
   },
   {
     id: "boundary-event",
+    randAanhechting: "zwevend",
+    omtrek: "ellips",
     label: "Boundary event",
     omschrijving: "Sleep hem op de rand van een taak/subproces: vangt daar een gebeurtenis af. Vinkje 'onderbrekend' uit = gestippeld.",
     kort: "Bound",
@@ -127,6 +132,8 @@ const elementTypes = [
   },
   {
     id: "tussen-event",
+    randAanhechting: "zwevend",
+    omtrek: "ellips",
     label: "Intermediate event",
     omschrijving: "Gebeurtenis midden in de flow (wachten op bericht, timer, …).",
     kort: "Interm",
@@ -138,6 +145,8 @@ const elementTypes = [
   },
   {
     id: "exclusief",
+    randAanhechting: "zwevend",
+    omtrek: "ruit",
     label: "Exclusive gateway (XOR)",
     omschrijving: "Kies precies één uitgaande pad (condities op de flows).",
     kort: "XOR",
@@ -149,6 +158,8 @@ const elementTypes = [
   },
   {
     id: "parallel",
+    randAanhechting: "zwevend",
+    omtrek: "ruit",
     label: "Parallel gateway (AND)",
     omschrijving: "Splitst naar álle paden of wacht tot ze allemaal binnen zijn.",
     kort: "AND",
@@ -160,6 +171,8 @@ const elementTypes = [
   },
   {
     id: "inclusief",
+    randAanhechting: "zwevend",
+    omtrek: "ruit",
     label: "Inclusive gateway (OR)",
     omschrijving: "Eén of méér paden, op basis van condities (join-semantiek: alleen notatie).",
     kort: "OR",
@@ -209,6 +222,8 @@ const elementTypes = [
   },
   {
     id: "eind-event",
+    randAanhechting: "zwevend",
+    omtrek: "ellips",
     label: "End event",
     omschrijving: "Waar dit pad van het proces eindigt (dikke ring).",
     kort: "End",

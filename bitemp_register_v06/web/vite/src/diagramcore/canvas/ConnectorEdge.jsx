@@ -22,6 +22,7 @@
  *                aan de bronzijde (polygon: buigt met de curve mee)
  *              | "schuine-streep" — BPMN default flow (streepje ná de bron)
  *              | "kruis-cirkel" — SysML containment (⊕ aan de ouderkant)
+ *              | "cirkel-open" — BPMN message flow (open rondje net buiten de bron)
  *              | "kraai-…" — kraaienpoot, zie markerEnd
  *              | null
  *   markerEnd:   "pijl-open" | "driehoek" | "pijl-dicht" | "bol" | null
@@ -145,11 +146,14 @@ function ConnectorEdge({
       bronRect: nodeRechthoek(bronNode),
       doelRect: nodeRechthoek(doelNode),
       // Een zelf-lus heeft geen richting om mee te snijden — die houdt zijn
-      // handles, want daar bepalen ze juist de vorm van het oortje.
-      zwevendBron: !!p.zwevendBron && source !== target,
-      zwevendDoel: !!p.zwevendDoel && source !== target,
+      // handles, want daar bepalen ze juist de vorm van het oortje. Behalve
+      // met knikken (EA-import): dan mikt elk uiteinde op zijn knik.
+      zwevendBron: !!p.zwevendBron && (source !== target || !!knikkenRand),
+      zwevendDoel: !!p.zwevendDoel && (source !== target || !!knikkenRand),
       bronRicht: knikkenRand ? knikkenRand[0] : null,
       doelRicht: knikkenRand ? knikkenRand[knikkenRand.length - 1] : null,
+      // Hoekig zonder knikken: zo recht mogelijk (EA Auto Routing).
+      orthogonaal: p.vorm === "hoekig" && !knikkenRand,
       bronOmtrek: p.bronOmtrek || "rechthoek",
       doelOmtrek: p.doelOmtrek || "rechthoek",
       vast: {
@@ -290,6 +294,7 @@ function ConnectorEdge({
   const bolId = `dc-bol-${id}`;
   const streepId = `dc-streep-${id}`;
   const kruisId = `dc-kruis-${id}`;
+  const cirkelOpenId = `dc-cirkel-open-${id}`;
   const kraaiBronId = `dc-kraai-bron-${id}`;
   const kraaiDoelId = `dc-kraai-doel-${id}`;
 
@@ -600,6 +605,14 @@ function ConnectorEdge({
             <path d="M8 2.6 V13.4 M2.6 8 H13.4" stroke={kleur} strokeWidth="1.2" strokeLinecap="round" />
           </marker>
         )}
+        {/* BPMN message flow: een open rondje (canvas-gevuld, zoals ⊕ maar
+            zonder kruis). refX ligt net vóór het rondje, zodat het buiten de
+            bronvorm staat en de lijn er aan de overkant uit vertrekt. */}
+        {p.markerStart === "cirkel-open" && (
+          <marker id={cirkelOpenId} markerWidth="10" markerHeight="10" refX="1" refY="5" orient="auto" markerUnits="strokeWidth">
+            <circle cx="5" cy="5" r="3.4" fill="var(--dc-marker-vulling, #ffffff)" stroke={kleur} strokeWidth="1" />
+          </marker>
+        )}
         {/* BPMN default flow: een schuin streepje vlak ná de bron. Bewust géén
             pijlpunt-vervanger — het streepje kruist de lijn, de pijl aan het
             doel blijft gewoon staan. */}
@@ -641,6 +654,7 @@ function ConnectorEdge({
         markerStart={
           p.markerStart === "schuine-streep" ? `url(#${streepId})`
           : p.markerStart === "kruis-cirkel" ? `url(#${kruisId})`
+          : p.markerStart === "cirkel-open" ? `url(#${cirkelOpenId})`
           : KRAAIENPOTEN[p.markerStart] ? `url(#${kraaiBronId})`
           : undefined
         }
