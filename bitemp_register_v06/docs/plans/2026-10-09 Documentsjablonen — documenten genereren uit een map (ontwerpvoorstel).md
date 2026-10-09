@@ -2,7 +2,9 @@
 
 *Datum: 2026-10-09. Aanleiding: Mark, "zoiets als document templates, waarbij je uit een map met
 diagrammen en use cases een use case-overzichtsdocument genereert — een soort van
-template-mechanisme is dan nodig". Status: voorstel, nog niets gebouwd.*
+template-mechanisme is dan nodig". Status 2026-10-09: stappen 1–4 gebouwd (renderer, contextbouwer,
+schets-SVG, drie ingebouwde sjablonen, voorbeeldvenster) — gebruik en taal in
+`docs/DOCUMENTEN.md`; stappen 5–7 (tweede toets, eigen sjablonen, DOCX/Imprint) open.*
 
 ## 1. Wat we willen
 
