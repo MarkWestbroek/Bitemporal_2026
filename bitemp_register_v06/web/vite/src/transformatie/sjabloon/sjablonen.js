@@ -102,7 +102,48 @@ titel: Gegevenswoordenboek {{map.naam}}
 {{/if}}{{/elk}}
 `;
 
+/**
+ * Projectdocument: de mappenboom is de hoofdstukindeling. Per map de kop
+ * (diepte = niveau), de omschrijving van de map als tekst, de diagrammen als
+ * tekening, en de use cases in die map met toelichting en relaties; dan
+ * recursief de submappen. Zo is een document als het CGV use case-model
+ * volledig gegenereerd: inleiding = omschrijving van de bovenste map, de
+ * lagenplaat = een diagram in die map.
+ */
+export const DEEL_PROJECTMAP = `{{kop}} {{naam}}
+
+{{#if omschrijving}}{{omschrijving}}
+
+{{/if}}{{#elk diagrammen sorteer=naam}}{{svg}}
+
+*{{naam}}*
+
+{{/elk}}{{#elk elementen type=usecase sorteer=naam}}{{subkop}} {{naam}}
+
+{{#if toelichting}}{{toelichting}}
+
+{{/if}}{{#if verbindingen}}| | |
+|---|---|
+| Actoren | {{#elk verbindingen type=associatie}}{{ander.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+| Bevat (include) | {{#elk verbindingen type=include richting=uit}}{{doel.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+| Uitgebreid door (extend) | {{#elk verbindingen type=extend richting=in}}{{bron.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+
+{{/if}}{{/elk}}{{#elk kinderen}}{{> projectmap}}{{/elk}}`;
+
+export const SJABLOON_PROJECTDOCUMENT = `---
+titel: {{map.naam}}
+---
+{{> projectmap}}`;
+
 export const INGEBOUWDE_SJABLONEN = [
+  {
+    id: "projectdocument",
+    label: "Projectdocument (volgt de mappen)",
+    profielTypes: "*",
+    toelichting: "Hoofdstukken = (sub)mappen; per map de omschrijving, de diagrammen en de use cases. Voor documenten als het CGV use case-model.",
+    tekst: SJABLOON_PROJECTDOCUMENT,
+    partials: { projectmap: DEEL_PROJECTMAP },
+  },
   {
     id: "use-case-overzicht",
     label: "Use case-overzicht",

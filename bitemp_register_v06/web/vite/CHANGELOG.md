@@ -29,7 +29,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Documenten uit sjablonen** (09-10): rechtsklik op een map → *Document maken…*: use
   case-overzicht, gegevenswoordenboek of generiek map-overzicht, met de diagrammen als tekening;
   voorbeeldvenster, Markdown/HTML-download en afdrukken. Sjabloontaal en context:
-  `docs/DOCUMENTEN.md`.
+  `docs/DOCUMENTEN.md`. Plus het sjabloon **Projectdocument (volgt de mappen)**: hoofdstukken =
+  submappen, tekst = de nieuwe **omschrijving van een map** (eigenschappenpaneel), platen = de
+  diagrammen in de map.
+- Projectsync: de volgorde van regels in de boom (Ctrl+↑/↓) en de mapomschrijving gaan nu mee
+  (`schuifPlaatsing`, `zetMapOmschrijving` in `STRUCTUUR_OPS`); een volgordewijziging bleef eerder
+  lokaal.
 
 ## [studio/v0.14.0] — 2026-10-07
 Samenwerken aan een project, eerste trede: het Studio-project krijgt een naam en een id en kan

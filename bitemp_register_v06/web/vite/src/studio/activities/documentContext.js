@@ -5,6 +5,7 @@
  * rendert en het voorbeeldvenster opent.
  */
 import { collectMapModel } from "./transformaties.js";
+import { useModellerenStore } from "./modellerenActivity.jsx";
 import { getProfieltype } from "../profieltypeRegistry";
 import { maakDocumentContext } from "../../transformatie/sjabloon/context.js";
 import { schetsDiagramSvg } from "../../transformatie/sjabloon/schets.js";
@@ -12,8 +13,8 @@ import { renderSjabloon } from "../../transformatie/sjabloon/renderer.js";
 import { markdownNaarHtml, htmlDocument } from "../../transformatie/sjabloon/markdownNaarHtml.js";
 import { useDocumentStore } from "./documentVoorbeeld.jsx";
 
-/** Context voor een map: alle profielen erin, met lui getekende diagrammen. */
-export function bouwDocumentContext(mapId, mapNaam) {
+/** Profielen met hun elementen en diagrammen die in één map geplaatst zijn. */
+function profielenVanMap(mapId) {
   const model = collectMapModel(mapId);
   const profielen = [];
   for (const [profielId, inhoud] of Object.entries(model)) {
@@ -21,10 +22,30 @@ export function bouwDocumentContext(mapId, mapNaam) {
     if (!p) continue;
     profielen.push({ id: profielId, label: p.label || profielId, descriptor: p.descriptor, elements: inhoud.elements || {}, diagrams: inhoud.diagrams || {} });
   }
+  return profielen;
+}
+
+/** Invoer voor maakDocumentContext: deze map + (recursief) zijn submappen, in boomvolgorde. */
+function mapInvoer(mapId, mappen, diepteGrens = 8) {
+  const m = mappen[mapId] || {};
+  const kinderen =
+    diepteGrens > 0
+      ? Object.values(mappen)
+          .filter((k) => k.ouderId === mapId)
+          .sort((a, b) => (a.volgorde || 0) - (b.volgorde || 0))
+          .map((k) => mapInvoer(k.id, mappen, diepteGrens - 1))
+      : [];
+  return { naam: m.naam || "", omschrijving: m.omschrijving || "", profielen: profielenVanMap(mapId), kinderen };
+}
+
+/** Context voor een map: alle profielen erin, de submappen, met lui getekende diagrammen. */
+export function bouwDocumentContext(mapId, mapNaam) {
+  const { mappen } = useModellerenStore.getState();
+  const invoer = mapInvoer(mapId, mappen);
   let teller = 0;
   return maakDocumentContext({
-    naam: mapNaam || "",
-    profielen,
+    ...invoer,
+    naam: mapNaam || invoer.naam,
     svgVan: (diagram, { elements, descriptor }) =>
       schetsDiagramSvg({ diagram, elements, descriptor, idPrefix: `d${(teller += 1)}` }),
   });
@@ -36,7 +57,7 @@ export function bouwDocumentContext(mapId, mapNaam) {
  */
 export function maakDocumentVanMap({ sjabloon, mapId, mapNaam, partials }) {
   const context = bouwDocumentContext(mapId, mapNaam);
-  const { tekst, meta } = renderSjabloon(sjabloon.tekst, context, { partials });
+  const { tekst, meta } = renderSjabloon(sjabloon.tekst, context, { partials: { ...(sjabloon.partials || {}), ...(partials || {}) } });
   const titel = meta.titel || `${sjabloon.label} — ${mapNaam || ""}`;
   const html = htmlDocument({ titel, fragment: markdownNaarHtml(tekst) });
   useDocumentStore.getState().toon({ titel, bestandsnaam: titel, markdown: tekst, html });

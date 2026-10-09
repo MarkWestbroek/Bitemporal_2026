@@ -6,7 +6,8 @@
  *
  * Vorm (zie het ontwerpvoorstel §3.3):
  *
- *   { map: {naam}, titel,
+ *   { map: {naam, omschrijving}, titel, omschrijving, diepte, kop,
+ *     kinderen:   [ …submappen in dezelfde vorm, diepte + 1… ],
  *     profielen:  [{ id, label, elementen, diagrammen, verbindingen }],
  *     elementen:  [{ id, naam, type:{id,label}, data, toelichting, velden, diagrammen, verbindingen, profiel }],
  *     diagrammen: [{ id, naam, type, beschrijving, elementen, aantal, svg(), profiel }],
@@ -25,8 +26,22 @@ const naamOf = (el) => el?.naam || "";
  *                      elements: Record<string, Object>, diagrams: Record<string, Object> }>,
  *   svgVan?: (diagram: Object, profielCtx: Object) => string }} invoer
  */
-export function maakDocumentContext({ naam, profielen = [], svgVan = null }) {
-  const ctx = { map: { naam: naam || "" }, titel: naam || "", profielen: [], elementen: [], diagrammen: [], verbindingen: [] };
+export function maakDocumentContext({ naam, omschrijving = "", profielen = [], svgVan = null, kinderen = [], diepte = 1 }) {
+  const ctx = {
+    map: { naam: naam || "", omschrijving: omschrijving || "" },
+    naam: naam || "",
+    titel: naam || "",
+    omschrijving: omschrijving || "",
+    diepte,
+    // Markdown-kop voor deze map: "#" op niveau 1, "##" op 2, … (max 6).
+    kop: "#".repeat(Math.min(6, Math.max(1, diepte))),
+    subkop: "#".repeat(Math.min(6, Math.max(1, diepte + 1))),
+    kinderen: [],
+    profielen: [],
+    elementen: [],
+    diagrammen: [],
+    verbindingen: [],
+  };
   for (const p of profielen) {
     const typen = Object.fromEntries((p.descriptor?.elementTypes || []).map((t) => [t.id, t]));
     const typeVan = (el) => {
@@ -107,6 +122,11 @@ export function maakDocumentContext({ naam, profielen = [], svgVan = null }) {
     ctx.elementen.push(...profielCtx.elementen);
     ctx.diagrammen.push(...profielCtx.diagrammen);
     ctx.verbindingen.push(...profielCtx.verbindingen);
+  }
+  // Submappen: dezelfde vorm, één niveau dieper (de mappenboom = de
+  // hoofdstukindeling van een projectdocument).
+  for (const kind of kinderen) {
+    ctx.kinderen.push(maakDocumentContext({ svgVan, ...kind, diepte: diepte + 1 }));
   }
   return ctx;
 }

@@ -319,10 +319,15 @@ export const STRUCTUUR_OPS = {
   schuifMap: null,
   hernoemMap: null,
   zetMapKleur: null,
+  zetMapOmschrijving: null,
   verwijderMap: null,
   verplaatsMap: null,
   plaatsDiagram: null,
   plaatsMeerdere: null,
+  // Volgorde van geplaatste regels (Ctrl+↑/↓ in de boom): de sleutelvolgorde
+  // van `plaatsing` verandert, de waarden niet — het diff-vangnet ziet dat
+  // niet, dus de actie zelf moet mee.
+  schuifPlaatsing: null,
 };
 
 export const STRUCTUUR_VELDEN = ["mappen", "plaatsing"];

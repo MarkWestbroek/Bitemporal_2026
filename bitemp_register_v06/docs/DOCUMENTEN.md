@@ -17,9 +17,17 @@ Ingebouwd (`transformatie/sjabloon/sjablonen.js`):
 
 | Sjabloon | Profielen | Inhoud |
 |---|---|---|
+| **Projectdocument (volgt de mappen)** | alle | de mappenboom is de hoofdstukindeling: per (sub)map een kop op het juiste niveau, de **omschrijving van de map** als tekst, de diagrammen als tekening en de use cases met toelichting en relaties — zo is een document als het CGV use case-model volledig gegenereerd |
 | Use case-overzicht | use case | per diagram de tekening; actoren met hun use cases; per use case een tabel met actoren, include, extend, specialisatie en de diagrammen |
 | Gegevenswoordenboek | canoniek, UML, MIM, ERD, GraphQL, OAS | per element met velden een tabel veld/type/compartiment; diagrammen als tekening |
 | Map-overzicht (generiek) | alle | per profiel de diagrammen en alle elementen met hun velden |
+
+**Volledig gegenereerd uit het model:** [`voorbeelden/documenten/CGV_Use_case_model-gegenereerd.md`](voorbeelden/documenten/CGV_Use_case_model-gegenereerd.md)
+(script `web/vite/scripts/genereer-cgv-voorbeeld.mjs`) naast het handgeschreven origineel
+[`CGV_Use_case_model.md`](voorbeelden/documenten/CGV_Use_case_model.md). De inleiding is de
+omschrijving van de bovenste map, de lagenplaat een gewoon diagram in die map, de hoofdstukken
+Actoren en Use cases zijn submappen. Een map krijgt zijn omschrijving in de Studio via het
+eigenschappenpaneel (klik op de map in de projectboom).
 
 **Voorbeeld:** [`voorbeelden/documenten/use-case-overzicht-klant.md`](voorbeelden/documenten/use-case-overzicht-klant.md)
 — gegenereerd met `web/vite/scripts/genereer-voorbeelddocument.mjs` (zelfde renderer, context en
@@ -49,7 +57,9 @@ Een blok-tag die alleen op een regel staat neemt zijn regel mee (geen lege regel
 `transformatie/sjabloon/context.js` → `maakDocumentContext({ naam, profielen, svgVan })`:
 
 ```
-map {naam}  ·  profielen [{id,label,elementen,diagrammen,verbindingen}]
+map {naam, omschrijving}  ·  naam, omschrijving, diepte, kop ("#"…), subkop
+kinderen    [ …submappen in dezelfde vorm, diepte + 1… ]
+profielen   [{id,label,elementen,diagrammen,verbindingen}]
 elementen   [{ id, naam, type{id,label}, data, toelichting, velden[{naam,type,compartiment}],
                diagrammen[{id,naam}], verbindingen[{type, richting:"uit"|"in", bron, doel, ander, naam}] }]
 diagrammen  [{ id, naam, type, beschrijving, elementen, aantal, svg() }]

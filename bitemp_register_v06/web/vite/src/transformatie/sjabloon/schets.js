@@ -176,10 +176,15 @@ export function schetsDiagramSvg({ diagram, elements, descriptor, idPrefix = "s"
     if (!a || !b) continue;
     const p = et.edgePresentatie || {};
     if (p.verbergBijNesting) continue; // lidmaatschap: het kind ligt al in het kader
-    const ca = { x: a.x + a.w / 2, y: a.y + a.h / 2 };
-    const cb = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
-    const van = a === b ? { x: ca.x, y: a.y } : randPunt(a, cb.x, cb.y);
-    const naar = a === b ? { x: cb.x + 20, y: b.y } : randPunt(b, ca.x, ca.y);
+    // Lijnen gaan om het naamlabel onder een actor/punt heen (anders landt
+    // een pijlpunt precies op de naam).
+    const metLabel = (bx) => (bx.fam === "actor" || bx.fam === "punt" ? { ...bx, h: bx.h + 24 } : bx);
+    const ra = metLabel(a);
+    const rb = metLabel(b);
+    const ca = { x: ra.x + ra.w / 2, y: ra.y + ra.h / 2 };
+    const cb = { x: rb.x + rb.w / 2, y: rb.y + rb.h / 2 };
+    const van = a === b ? { x: ca.x, y: a.y } : randPunt(ra, cb.x, cb.y);
+    const naar = a === b ? { x: cb.x + 20, y: b.y } : randPunt(rb, ca.x, ca.y);
     const marker = p.markerEnd && ["pijl-open", "driehoek", "pijl-dicht"].includes(p.markerEnd) ? p.markerEnd : null;
     if (marker) markers.add(marker);
     delen.push(
