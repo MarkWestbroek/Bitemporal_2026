@@ -6,6 +6,7 @@
 import { IconProfiel05 } from "../icons";
 import { registreerActiviteit } from "../activityRegistry";
 import { vervangDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { kopieVoorNormalisatie } from "../../diagramcore/types/erfenis.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 import { vertaalHooks, maakGeneriekeMaakElement } from "./profielGereedschap.js";
 
@@ -96,7 +97,11 @@ export function bewaarProfielLayout(profielId, layout) {
  * het activiteit-id. Gooit bij validatie-/hookfouten.
  */
 export function registreerProfielAlsActiviteit(kern) {
-  const descriptor = vertaalHooks(kern);
+  // Op een kopie: `vervangDiagramType` normaliseert overerving in place
+  // (erft/isAbstract → uitgevlakt, `_`-velden). De kern wordt daarna bewaard
+  // (localStorage, profielen/<id>.json) en moet rauw blijven — de hiërarchie
+  // is de bedoeling, niet de uitgevlakte vorm (review M3-MOF, 08-10).
+  const descriptor = kopieVoorNormalisatie(vertaalHooks(kern));
   vervangDiagramType(descriptor);
   const activiteitId = `dyn-${kern.id}`;
   // P05: eigen embleem (1-2 tekens) in de activity bar, anders het

@@ -924,6 +924,58 @@ register zelf op te slaan (§8), terwijl we nu volle expressiekracht houden.
 }
 ```
 
+### 4.2b Overerving en abstracte typen (`erft`, `isAbstract`) — 2026-10-08
+
+Het ene structurele MOF-concept dat ontbrak (MOF_VERGELIJKING §5.1; EMOF
+`Class.superClass` + `Class.isAbstract`): een ElementType kan **erven** van één
+ander ElementType en kan **abstract** zijn. Aanleiding: Marks EA-Metametamodel
+(generalisatie ElementType → ElementType, attribuut `abstract`) en het
+Metamodel v2026 met een abstracte `{Representatie}` boven entiteit,
+gegevenselement en relatie. Namen volgen V3 (`erft`, `isAbstract`), zodat M1
+en M2 hetzelfde woord gebruiken.
+
+```js
+{ id: "representatie", label: "Representatie", isAbstract: true, shape: "class-box",
+  properties: [{ key: "alias", datatype: "string" }, { key: "beschrijving", datatype: "tekst" }] },
+{ id: "entiteit", label: "Entiteit", kort: "ENT", erft: "representatie", kleur: "#bfdbfe",
+  compartments: [{ id: "attributen", label: null, fieldType: "attribuut" }] },
+{ id: "relatie", isConnector: true, bron: { elementTypes: ["representatie"] }, doel: { elementTypes: ["representatie"] } },
+```
+
+**Eén plek vlakt uit**: `types/erfenis.js` → `normaliseerErfenis(dt)`, aangeroepen
+door `registreerDiagramType`/`vervangDiagramType` (in place, want de activiteiten
+houden het descriptor-object zelf vast) en door `valideerDiagramType` (op een
+kopie). Alle consumenten — canvas, inspector, taakbalk, browser, adapters — zien
+daarna alleen volledige, concrete ElementTypes.
+
+- *Uitvlakken*: scalars en objecten — kind wint, de rest komt van de ouder
+  (niet: id, label, kort, omschrijving); `compartments` op id en `properties`
+  op key — ouder eerst, kind overschrijft/voegt toe; `hooks` en
+  `edgePresentatie` per sleutel; `bron` en `doel` per kant, `verbindingsregels`
+  als geheel als het kind geen bron/doel heeft; `isConnector` erft mee als het
+  kind er niets over zegt en **mag omslaan**: in Marks Metamodel v2026 erft
+  `{Relatie}` (connector) van `{Gegevenselement}` (knoop) — zo zit het ook in de
+  backend. Het kind zet dan `isConnector: true`, `shape: "edge"` en eigen
+  bron/doel; de compartimenten en eigenschappen van de ouder komen mee
+  (relatie mét gegevens = relatieklasse).
+- *Bereik-expansie*: elke lijst van elementtype-ids (bron/doel, regels,
+  `randElement.ouderTypes`, `afbakeningVoor`, `overbrugt`, shapeSets) wordt de
+  lijst **concrete afstammelingen** van elk genoemd type; een abstract type
+  telt zelf niet mee, en een abstract knoop-type levert géén
+  connector-afstammelingen op (de recursie-grens uit het metamodel: een bron of
+  doel van een relatie is nooit zelf een relatie). Zo is
+  `relatie: Representatie → Representatie` één regel die entiteit of
+  gegevenselement betekent. Een connector als bron/doel noem je expliciet.
+- *Bewaard voor de profiel-ontwerper*: `erft`/`isAbstract` blijven staan;
+  `_geerfd` (welke compartimenten/eigenschappen van de ouder kwamen) en
+  `_voorExpansie` (de regel zoals getekend) — de ontwerper tekent alleen het
+  eigen deel en één ▷-pijl per kind, en bouwt `erft`/`isAbstract` weer terug
+  uit het ontwerp (`profielOntwerp.js`: connector `erft`, vinkje *abstract*).
+- *Abstract in de UI*: niet in de Maken-/Verbinding-balk, naam cursief
+  (ClassBox leest `data.abstract` op de ontwerp-node). Nog open: een model
+  met `element.elementType` = abstract type als validatiefout afvangen;
+  meervoudige overerving (EMOF `superClass 0..*`) als het nodig wordt.
+
 ### 4.3 De generieke node
 
 Eén `ElementNode` vervangt de negen huidige node-componenten. Hij rendert:

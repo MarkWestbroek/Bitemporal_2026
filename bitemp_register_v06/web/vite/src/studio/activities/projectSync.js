@@ -15,7 +15,7 @@
 import { apiBase } from "../../shared/apiBase.js";
 
 export const PROJECT_FORMAAT = "studio-project";
-export const PROJECT_FORMAAT_VERSIE = 2;
+export const PROJECT_FORMAAT_VERSIE = 3; // v3: zonder tabs/actieveTab en zonder viewports (werkruimte-laag)
 export const STANDAARD_PROJECTNAAM = "Naamloos project";
 
 /** Nieuw project-id: UUID (de server accepteert 8–64 tekens uit [A-Za-z0-9_-]). */
@@ -47,11 +47,15 @@ export function bestandsstamVoor(naam) {
 }
 
 /**
- * Controleer en normaliseer een werkbestand naar formaat v2.
+ * Controleer en normaliseer een werkbestand naar het huidige formaat.
  *
  * - v1 (zonder `project`): krijgt een nieuw id en een naam uit de
  *   bestandsnaam (of de standaardnaam);
- * - v2: `project.id`/`project.naam` worden aangevuld als ze ontbreken.
+ * - v2: `project.id`/`project.naam` worden aangevuld als ze ontbreken; de
+ *   tabs uit v1/v2 blijven in `data.tabs` staan en dienen als eerste
+ *   werkruimte als die lokaal nog niet bestaat;
+ * - v3 (2026-10-07): tabs, actieve tab en viewports zitten niet meer in het
+ *   werkbestand — dat is werkruimte (per gebruiker), geen project.
  *
  * @param {any} data
  * @param {{bestandsnaam?: string}} [opties]
@@ -136,9 +140,39 @@ export const maakProjectAan = ({ id, naam, inhoud }) =>
   roep("/api/studio/projecten", { methode: "POST", body: { id, naam, inhoud } });
 
 /** Opslaan met versiecontrole. 409 (met `server`-meta) als de server verder is; 404 als het daar niet (meer) staat. */
-export const slaProjectOp = (id, { naam, inhoud, versie }) =>
-  roep(`/api/studio/projecten/${encodeURIComponent(id)}`, { methode: "PUT", body: { naam, inhoud, versie } });
+export const slaProjectOp = (id, { naam, inhoud, versie, tot_volgnummer }) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}`, {
+    methode: "PUT",
+    // tot_volgnummer = snapshot-grens (compactie): zonder dit veld bleef de grens 0 en
+    // speelde een client na het ophalen álle operaties nogmaals af (gemeld 2026-10-08).
+    body: { naam, inhoud, versie, ...(tot_volgnummer != null ? { tot_volgnummer } : {}) },
+  });
 
 /** Verwijderen (eigenaar of admin). */
 export const verwijderProject = (id) =>
   roep(`/api/studio/projecten/${encodeURIComponent(id)}`, { methode: "DELETE" });
+
+// ── Operatielog (stap 2, onderdeel 3/4) ───────────────────────────────
+
+/** Batch naar het operatielog. → {van, tot, laatsteLokaalNr}; 404 als het project er niet is. */
+export const stuurOps = (id, { clientId, ops }) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/ops`, { methode: "POST", body: { clientId, ops } });
+
+/** Operaties ná `vanaf`. → {ops: [{volgnummer, clientId, actor, store, op, args, …}], laatste, meer} */
+export const haalOpsOp = (id, vanaf = 0, limiet = 1000) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/ops?vanaf=${Number(vanaf) || 0}&limiet=${limiet}`);
+
+/** Studio-instellingen van de instantie (admin, via omgevingsvariabelen): {poll_ms}. */
+export const haalStudioInstellingenOp = () => roep("/api/studio/instellingen");
+
+/** URL van het SSE-kanaal (EventSource met withCredentials; Last-Event-ID regelt de browser). */
+export const eventsUrl = (id, vanaf = 0, clientId = "") =>
+  `${apiBase()}/api/studio/projecten/${encodeURIComponent(id)}/events?vanaf=${Number(vanaf) || 0}` +
+  (clientId ? `&client=${encodeURIComponent(clientId)}` : "");
+
+// ── Werkruimte (tabs, open mappen) per gebruiker per project ──────────
+/** → {inhoud, bijgewerkt}; 404 als er nog geen is. */
+export const haalWerkruimteOp = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}/werkruimte`);
+/** Laatste schrijver wint op `bijgewerkt` (ISO). → {bijgewerkt, overgenomen} */
+export const slaWerkruimteOp = (id, { inhoud, bijgewerkt }) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/werkruimte`, { methode: "PUT", body: { inhoud, bijgewerkt } });

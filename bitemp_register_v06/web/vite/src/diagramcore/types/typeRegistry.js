@@ -11,6 +11,8 @@
  * (compartimenten-maximum).
  */
 
+import { normaliseerErfenis, kopieVoorNormalisatie } from "./erfenis.js";
+
 /** @typedef {import("./schema.js").DiagramType} DiagramType */
 /** @typedef {import("./schema.js").ElementType} ElementType */
 
@@ -71,8 +73,13 @@ function valideerElementType(diagramTypeId, et) {
  * @param {DiagramType} dt
  * @returns {string[]} foutmeldingen (leeg = geldig)
  */
-export function valideerDiagramType(dt) {
+export function valideerDiagramType(dtRauw) {
   const fouten = [];
+  // Overerving (erft/isAbstract) eerst uitvlakken op een kopie, zodat de
+  // regels hieronder volledige, concrete ElementTypes zien en de rauwe
+  // descriptor onaangeroerd blijft.
+  const dt = kopieVoorNormalisatie(dtRauw);
+  if (dt && typeof dt === "object") fouten.push(...normaliseerErfenis(dt));
   if (!dt?.id) fouten.push("DiagramType: id ontbreekt");
   if (!dt?.label) fouten.push(`DiagramType "${dt?.id ?? "?"}": label ontbreekt`);
   if (!dt?.style) fouten.push(`DiagramType "${dt?.id ?? "?"}": style (StyleType-id) ontbreekt`);
@@ -139,6 +146,8 @@ export function registreerDiagramType(descriptor) {
   if (_diagramTypes.has(descriptor.id)) {
     throw new Error(`DiagramType "${descriptor.id}" is al geregistreerd`);
   }
+  // In place: de activiteiten houden ditzelfde object vast (descriptor-prop).
+  normaliseerErfenis(descriptor);
   _diagramTypes.set(descriptor.id, descriptor);
 }
 
@@ -153,6 +162,7 @@ export function vervangDiagramType(descriptor) {
   if (fouten.length > 0) {
     throw new Error(`Ongeldig DiagramType:\n- ${fouten.join("\n- ")}`);
   }
+  normaliseerErfenis(descriptor);
   _diagramTypes.set(descriptor.id, descriptor);
 }
 

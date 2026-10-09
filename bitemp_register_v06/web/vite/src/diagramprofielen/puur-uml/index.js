@@ -268,6 +268,20 @@ const elementTypes = [
     },
   },
   {
+    // Notitie-lijn (UML "note attachment", EA NoteLink): stippellijn zonder
+    // pijl van een notitie naar het element waar hij over gaat. Geen
+    // modelrelatie, alleen tekening.
+    id: "notitielijn",
+    label: "Notitie-lijn",
+    kort: "not",
+    shape: "edge",
+    icoon: "notitie",
+    isConnector: true,
+    bron: { elementTypes: ["notitie"] },
+    doel: { elementTypes: [...MET_DATATYPE, "package", "boundary"] },
+    edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#94a3b8" },
+  },
+  {
     // Package-lidmaatschap: getekend als subtiele stippellijn, maar meestal
     // alleen aanwezig als model-feit (boomordening in de browser).
     id: "bevat",

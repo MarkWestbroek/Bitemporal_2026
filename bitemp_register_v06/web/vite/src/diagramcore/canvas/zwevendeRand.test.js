@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden } from "./zwevendeRand.js";
+import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden, richtpuntOfAanhechtpunt } from "./zwevendeRand.js";
 import { besteZijde } from "./materialiseerConnectoren.js";
 
 // Een doos van 200x100 met middelpunt (100, 50).
@@ -111,4 +111,40 @@ test("beide kanten zwevend: de lijn loopt van omtrek naar omtrek", () => {
   });
   assert.deepEqual([uit.sourceX, uit.sourceY, uit.sourcePosition], [200, 50, "right"]);
   assert.deepEqual([uit.targetX, uit.targetY, uit.targetPosition], [500, 50, "left"]);
+});
+
+test("knikpunten sturen het uiteinde: richtpunt óp de rand wordt exact het uiteinde, op die zijde", () => {
+  // Doos 200x100; een geïmporteerd aanhechtpunt op de bovenrand bij x=30
+  // (schuin t.o.v. het middelpunt → aanhechtpunt zou 'left' kiezen).
+  const s = richtpuntOfAanhechtpunt(DOOS, { x: 30, y: 0 });
+  assert.deepEqual([s.x, s.y, s.zijde], [30, 0, "top"]);
+  const t = richtpuntOfAanhechtpunt(DOOS, { x: 200, y: 90 });
+  assert.deepEqual([t.x, t.y, t.zijde], [200, 90, "right"]);
+  // Niet op de rand: gewoon het snijpunt richting dat punt (niet richting de andere doos).
+  const doel = { x: 1000, y: 0, width: 200, height: 100 };
+  const uit = zwevendeUiteinden({
+    bronRect: DOOS, doelRect: doel, zwevendBron: true, zwevendDoel: true,
+    vast: { sourceX: 0, sourceY: 0, targetX: 0, targetY: 0, sourcePosition: "right", targetPosition: "left" },
+    bronRicht: { x: 100, y: 400 }, doelRicht: { x: 1100, y: 400 },
+  });
+  assert.equal(uit.sourcePosition, "bottom");
+  assert.equal(uit.targetPosition, "bottom");
+});
+
+test("omtrek ruit en ellips: het snijpunt ligt op de vorm, niet op de rechthoek", () => {
+  const ruit = { x: 0, y: 0, width: 28, height: 28 }; // middelpunt (14,14)
+  const r = aanhechtpunt(ruit, { x: 200, y: 14 }, 8, "ruit");
+  assert.deepEqual([Math.round(r.x), Math.round(r.y), r.zijde], [28, 14, "right"], "rechter punt van de ruit");
+  const s45 = aanhechtpunt(ruit, { x: 100, y: 100 }, 8, "ruit");
+  assert.ok(Math.abs(s45.x - 21) < 0.01 && Math.abs(s45.y - 21) < 0.01, "diagonaal: midden van de zijde");
+  const el = { x: 0, y: 0, width: 100, height: 40 };
+  const e = aanhechtpunt(el, { x: 50, y: 300 }, 8, "ellips");
+  assert.deepEqual([Math.round(e.x), Math.round(e.y), e.zijde], [50, 40, "bottom"]);
+  const e45 = aanhechtpunt(el, { x: 150, y: 120 }, 8, "ellips");
+  // op de ellips: (x/50)² + (y/20)² = 1
+  const nx = (e45.x - 50) / 50, ny = (e45.y - 20) / 20;
+  assert.ok(Math.abs(nx * nx + ny * ny - 1) < 1e-9);
+  // Richtpunt op de omhullende rechthoek van een ruit wordt op de ruit gezet.
+  const rp = richtpuntOfAanhechtpunt(ruit, { x: 0, y: 14 }, 1.5, "ruit");
+  assert.deepEqual([Math.round(rp.x), Math.round(rp.y)], [0, 14]);
 });

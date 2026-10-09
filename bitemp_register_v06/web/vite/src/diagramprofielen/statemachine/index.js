@@ -54,6 +54,7 @@ const RAND_OUDERS = ["toestand", "composiet", "submachine"];
 const elementTypes = [
   {
     id: "begin",
+    omtrek: "ellips",
     label: "Begin",
     omschrijving: "Startpunt van de machine — alleen uitgaande transities.",
     kort: "Begin",
@@ -77,6 +78,7 @@ const elementTypes = [
   },
   {
     id: "eind",
+    omtrek: "ellips",
     label: "Eind",
     omschrijving: "Eindtoestand: de machine is klaar — alleen inkomende transities.",
     kort: "Eind",
@@ -116,6 +118,7 @@ const elementTypes = [
   },
   {
     id: "keuze",
+    omtrek: "ruit",
     label: "Keuze",
     omschrijving: "Dynamische keuze: guards bepalen welke uitgaande transitie volgt.",
     kort: "Keuze",

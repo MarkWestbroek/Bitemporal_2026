@@ -7,6 +7,7 @@
 import { IconUML05 } from "../icons";
 import { registreerPuurUml, puurUmlDiagramType, maakElement, operatiesVan } from "../../diagramprofielen/puur-uml/index.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import { importeerQeaAlsPuurUml } from "../../diagramprofielen/ea/importQea.js";
 
 registreerPuurUml();
 
@@ -26,4 +27,13 @@ export default maakDiagramActiviteit({
   devHookNaam: "__puurUml05Store",
   // OperatieResolver: operaties-compartiment van klassen/interfaces.
   operatiesVan,
+  koppeling: {
+    /** Sparx EA-repository (.qea = SQLite) → puur-uml, één pakket met deelpakketten. */
+    importBestand: {
+      label: "Importeer Sparx EA (.qea) — alleen dit profiel, zonder projectboom…",
+      accept: ".qea,.qeax",
+      binair: true,
+      verwerk: (bytes, bestandsnaam) => importeerQeaAlsPuurUml(bytes, bestandsnaam),
+    },
+  },
 });

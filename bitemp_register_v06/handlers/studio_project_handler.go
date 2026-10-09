@@ -44,22 +44,25 @@ const (
 
 // StudioProjectMeta is de lijstweergave: alles behalve de inhoud.
 type StudioProjectMeta struct {
-	ID             string    `json:"id" bun:"id"`
-	Naam           string    `json:"naam" bun:"naam"`
-	Eigenaar       string    `json:"eigenaar" bun:"eigenaar"`
-	Versie         int64     `json:"versie" bun:"versie"`
-	Aangemaakt     time.Time `json:"aangemaakt" bun:"aangemaakt"`
-	Bijgewerkt     time.Time `json:"bijgewerkt" bun:"bijgewerkt"`
-	BijgewerktDoor string    `json:"bijgewerkt_door" bun:"bijgewerkt_door"`
-	Grootte        int64     `json:"grootte" bun:"grootte"` // bytes van de JSON-inhoud
+	ID                string    `json:"id" bun:"id"`
+	Naam              string    `json:"naam" bun:"naam"`
+	Eigenaar          string    `json:"eigenaar" bun:"eigenaar"`
+	Versie            int64     `json:"versie" bun:"versie"`
+	Aangemaakt        time.Time `json:"aangemaakt" bun:"aangemaakt"`
+	Bijgewerkt        time.Time `json:"bijgewerkt" bun:"bijgewerkt"`
+	BijgewerktDoor    string    `json:"bijgewerkt_door" bun:"bijgewerkt_door"`
+	Grootte           int64     `json:"grootte" bun:"grootte"`                       // bytes van de JSON-inhoud
+	TotVolgnummer     int64     `json:"tot_volgnummer" bun:"tot_volgnummer"`         // snapshot geldt t/m dit volgnummer
+	LaatsteVolgnummer int64     `json:"laatste_volgnummer" bun:"laatste_volgnummer"` // hoogste volgnummer in het operatielog
 }
 
 // studioProjectInvoer is het verzoek voor POST en PUT.
 type studioProjectInvoer struct {
-	ID     string          `json:"id"`
-	Naam   string          `json:"naam"`
-	Inhoud json.RawMessage `json:"inhoud"`
-	Versie *int64          `json:"versie"`
+	ID            string          `json:"id"`
+	Naam          string          `json:"naam"`
+	Inhoud        json.RawMessage `json:"inhoud"`
+	Versie        *int64          `json:"versie"`
+	TotVolgnummer *int64          `json:"tot_volgnummer"` // PUT: snapshot-grens (onderdeel 6)
 }
 
 // valideerStudioProjectInvoer controleert naam en inhoud; geeft een lege string als
@@ -107,8 +110,24 @@ func studioProjectMeta(p *model.StudioProject) StudioProjectMeta {
 	return StudioProjectMeta{
 		ID: p.ID, Naam: p.Naam, Eigenaar: p.Eigenaar, Versie: p.Versie,
 		Aangemaakt: p.Aangemaakt, Bijgewerkt: p.Bijgewerkt, BijgewerktDoor: p.BijgewerktDoor,
-		Grootte: int64(len(p.Inhoud)),
+		Grootte: int64(len(p.Inhoud)), TotVolgnummer: p.TotVolgnummer,
 	}
+}
+
+// laatsteVolgnummerVan geeft het hoogste toegekende volgnummer van een project: het
+// hoogste in het operatielog, of de snapshot-grens als het log (na compactie) leeg is.
+// Nieuwe operaties tellen hier vanaf door, dus nummers komen nooit opnieuw voor.
+func laatsteVolgnummerVan(ctx context.Context, db bun.IDB, projectID string) int64 {
+	var n int64
+	_ = db.NewSelect().Model((*model.StudioProjectOp)(nil)).
+		ColumnExpr("COALESCE(MAX(volgnummer), 0)").Where("project_id = ?", projectID).Scan(ctx, &n)
+	var grens int64
+	_ = db.NewSelect().Model((*model.StudioProject)(nil)).
+		ColumnExpr("COALESCE(tot_volgnummer, 0)").Where("id = ?", projectID).Scan(ctx, &grens)
+	if grens > n {
+		return grens
+	}
+	return n
 }
 
 // MaakStudioProjectenLijstHandler — GET /api/studio/projecten
@@ -117,7 +136,8 @@ func MaakStudioProjectenLijstHandler() gin.HandlerFunc {
 		var lijst []StudioProjectMeta
 		err := DB.NewSelect().
 			TableExpr("studio_projecten").
-			ColumnExpr("id, naam, eigenaar, versie, aangemaakt, bijgewerkt, bijgewerkt_door, length(inhoud::text) AS grootte").
+			ColumnExpr("id, naam, eigenaar, versie, aangemaakt, bijgewerkt, bijgewerkt_door, length(inhoud::text) AS grootte, tot_volgnummer").
+			ColumnExpr("GREATEST(tot_volgnummer, (SELECT COALESCE(MAX(o.volgnummer), 0) FROM studio_project_ops o WHERE o.project_id = studio_projecten.id)) AS laatste_volgnummer").
 			OrderExpr("bijgewerkt DESC").
 			Scan(c.Request.Context(), &lijst)
 		if err != nil {
@@ -157,7 +177,11 @@ func MaakStudioProjectOphalenHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project lezen mislukt: " + err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, p)
+		c.JSON(http.StatusOK, gin.H{
+			"id": p.ID, "naam": p.Naam, "eigenaar": p.Eigenaar, "versie": p.Versie, "inhoud": p.Inhoud,
+			"aangemaakt": p.Aangemaakt, "bijgewerkt": p.Bijgewerkt, "bijgewerkt_door": p.BijgewerktDoor,
+			"tot_volgnummer": p.TotVolgnummer, "laatste_volgnummer": laatsteVolgnummerVan(c.Request.Context(), DB, p.ID),
+		})
 	}
 }
 
@@ -257,8 +281,23 @@ func MaakStudioProjectOpslaanHandler() gin.HandlerFunc {
 		if naam := strings.TrimSpace(in.Naam); naam != "" {
 			huidig.Naam = naam
 		}
+		// Snapshot-grens (stap 2, onderdeel 6): nooit terug, en nooit voorbij het log.
+		// Alles t/m de grens zit in de blob en gaat uit het operatielog (compactie);
+		// een client die met een ouder volgnummer binnenkomt krijgt "snapshot nodig".
+		if in.TotVolgnummer != nil && *in.TotVolgnummer > huidig.TotVolgnummer {
+			grens := *in.TotVolgnummer
+			if max := laatsteVolgnummerVan(ctx, tx, id); grens > max {
+				grens = max
+			}
+			huidig.TotVolgnummer = grens
+			if _, err := tx.NewDelete().Model((*model.StudioProjectOp)(nil)).
+				Where("project_id = ? AND volgnummer <= ?", id, grens).Exec(ctx); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Operatielog opruimen mislukt: " + err.Error()})
+				return
+			}
+		}
 		_, err = tx.NewUpdate().Model(huidig).
-			Column("naam", "versie", "inhoud", "bijgewerkt", "bijgewerkt_door").
+			Column("naam", "versie", "inhoud", "bijgewerkt", "bijgewerkt_door", "tot_volgnummer").
 			WherePK().Exec(ctx)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project opslaan mislukt: " + err.Error()})
@@ -268,7 +307,9 @@ func MaakStudioProjectOpslaanHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Commit mislukt: " + err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, studioProjectMeta(huidig))
+		meta := studioProjectMeta(huidig)
+		meta.LaatsteVolgnummer = laatsteVolgnummerVan(ctx, DB, huidig.ID)
+		c.JSON(http.StatusOK, meta)
 	}
 }
 
@@ -295,8 +336,22 @@ func MaakStudioProjectVerwijderenHandler() gin.HandlerFunc {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Alleen de eigenaar of een admin kan dit project verwijderen."})
 			return
 		}
-		if _, err := DB.NewDelete().Model(p).WherePK().Exec(ctx); err != nil {
+		tx, err := DB.BeginTx(ctx, nil)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Transactie starten mislukt: " + err.Error()})
+			return
+		}
+		defer tx.Rollback() //nolint:errcheck
+		if _, err := tx.NewDelete().Model((*model.StudioProjectOp)(nil)).Where("project_id = ?", id).Exec(ctx); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Operatielog verwijderen mislukt: " + err.Error()})
+			return
+		}
+		if _, err := tx.NewDelete().Model(p).WherePK().Exec(ctx); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project verwijderen mislukt: " + err.Error()})
+			return
+		}
+		if err := tx.Commit(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Commit mislukt: " + err.Error()})
 			return
 		}
 		c.Status(http.StatusNoContent)

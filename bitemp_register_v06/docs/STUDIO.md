@@ -311,8 +311,36 @@ te wijzigen.
 > een diff-vangnet meldt wat buiten de acties om verandert (undo/redo,
 > migraties) als `patch…`-operaties. `pasOperatieToe` voert een operatie van
 > een ander uit via dezelfde actie, met de undo gepauzeerd **en gerebased**
-> (anders zou je eigen Ctrl+Z andermans werk wissen). Verzenden en ontvangen
-> (SSE) zijn nog niet gebouwd; de outbox vult zich al wel.
+> (anders zou je eigen Ctrl+Z andermans werk wissen).
+>
+> **Werkruimte en live-sync (2026-10-07, onderdeel 3–4):** de projectboom-store
+> is in twee lagen gesplitst: project (mappen, plaatsing, identiteit; sleutel
+> `studio-modelleren`) en werkruimte (tabs, actieve tab, open/dicht mappen;
+> sleutel `studio-werkruimte:<projectId>`, per project bewaard). Het werkbestand
+> is v3, zonder tabs en viewports. Staat het project op de server en is
+> *Project → Live synchroniseren* aan, dan stuurt `sync/verzender.js` de outbox
+> in batches naar `POST /api/studio/projecten/:id/ops` en haalt hij elke 5 s (en direct na elke eigen verzending)
+> de operaties van anderen op (`GET …/ops?vanaf=`), toegepast via
+> `pasOperatieToe`. *Naar server sturen* maakt eerst de outbox leeg en zet de
+> snapshot met `tot_volgnummer`; *Van server ophalen* laadt de snapshot en
+> daarna de operaties erna. De menu-kop toont de stand (gesynchroniseerd, N te
+> verzenden, offline, niet op de server). **SSE (onderdeel 5):** `startKanaal()`
+> opent een `EventSource` op `GET …/events`; operaties komen dan direct binnen
+> ("live" in de menu-kop), de poll blijft als terugval zolang het kanaal
+> verbroken is en voor het verzenden zelf. **Compactie (onderdeel 6):** staat het
+> log 200 operaties voorbij de snapshot-grens en is de client bij, dan zet hij
+> stil een nieuwe snapshot; de server ruimt de operaties t/m de grens op. Wie
+> met een ouder volgnummer binnenkomt krijgt "snapshot nodig" en laadt de
+> snapshot opnieuw (tabs blijven), daarna de operaties ná de grens.
+> **Wie is online (onderdeel 7):** het SSE-kanaal meldt aan- en afmeldingen
+> (`event: presence`); rechts in de menubalk staat "N anderen online" met de
+> namen in de tooltip (`StudioAanwezig.jsx`), en het Project-menu toont
+> "Online: …". Zonder auth heet iedereen "anoniem".
+> **Werkruimte op de server (2026-10-08):** tabs, actieve tab en open/dicht
+> mappen gaan per gebruiker per project naar `…/werkruimte` (laatste schrijver
+> wint, `sync/werkruimte.js`); bij het openen van een project neemt de Studio
+> de serverwerkruimte over als die nieuwer is dan de lokale, zodat je op een
+> andere computer verdergaat waar je was.
 >
 > **Hele groepen naar een map (2026-10-06):** in de elementen-browser is
 > rechtsklik op een typekop ("Actor 13") → *Selecteer alle N* of *Verplaats
@@ -381,6 +409,26 @@ preview-activiteit in de modelleren-groep. DMN-modellering komt later bij de
 UML-activiteit (zelfde IDE), zoals gewenst.
 
 ### Canoniek model — de generieke diagram-motor (bewerkbare sandbox)
+
+> **Sparx EA importeren (2026-10-09).** *Bestand → Importeer Sparx EA (.qea)…* in
+> Modelleren leest één EA-pakket en zet elk diagram in zijn eigen profiel (UML of MIM,
+> Activity, Use case), als "toevoegen" met undo per profiel. De EA-boom komt mee als
+> mappen: pakketten, en de use cases/activities die diagrammen bezitten; het diagram
+> staat in de map van zijn eigenaar met de knopen ernaast. Details en EA-schema:
+> `docs/plans/2026-10-07 Sparx EA-sync — vier routes vergeleken (onderzoek).md` §7.
+>
+> **Metamodel v2026 in het profiel (2026-10-09).** Het canonieke profiel heeft een
+> abstracte wortel `representatie` (niet instantieerbaar, geen knop) met wat
+> entiteit, gegevenselement en relatie delen: beschrijving, meervoud, tijdlijn
+> (materieel), kleur en de velden-compartimenten. `entiteit` en
+> `gegevenselement` erven ervan; `relatie` erft van `gegevenselement` — een
+> relatie ís een gegevenselement met bron en doel, zoals in de backend
+> (`Representatie`-interface) en in Marks EA-metamodel. De motor vlakt dat bij
+> registratie uit (`types/erfenis.js`, `ElementType.erft`/`isAbstract`, zie
+> STUDIO-05-diagramcore-plan.md §4.2b); een bron of doel van een relatie is
+> nooit zelf een relatie. Zichtbaar gevolg: de inspector van een relatie toont
+> ook de geërfde velden (o.a. `typenaam`); in V3 is dat de naam.
+
 
 > Toegevoegd: 2026-07-03 (fase 1+2 van [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)).
 

@@ -29,10 +29,10 @@
  * huidige situatie is daarmee precies één ding: dezelfde zijde, een betere
  * plek erop.
  *
- * De rand is verder een **rechthoek**, ook voor een ellips of een ruit — een
- * bewuste benadering (React Flow's eigen floating-edge-voorbeeld doet het net
- * zo). Vormen waar dat zou opvallen zetten `randAanhechting: "zijden"` en
- * houden hun handles.
+ * De rand is standaard een **rechthoek**. Een elementtype met `omtrek: "ruit"`
+ * of `"ellips"` (beslissing, begin/eind, use case) krijgt het echte snijpunt
+ * met die vorm — sinds 2026-10-09; daarvoor was het altijd de rechthoek
+ * (zoals React Flow's floating-edge-voorbeeld).
  */
 
 /** @typedef {{x: number, y: number, width: number, height: number}} Rechthoek */
@@ -58,8 +58,26 @@ const klem = (waarde, min, max) => Math.min(Math.max(waarde, min), max);
  * @param {number} [inzet] - marge tot de hoeken, in px
  * @returns {{x: number, y: number, zijde: "left"|"right"|"top"|"bottom"}}
  */
-export function aanhechtpunt(rect, doel, inzet = 8) {
+export function aanhechtpunt(rect, doel, inzet = 8, omtrek = "rechthoek") {
   const c = middelpunt(rect);
+  // Ruit en ellips: het echte snijpunt van de straal middelpunt → doel met de
+  // vorm, zodat een lijn de ruit op zijn punt of zijde raakt en niet op de
+  // onzichtbare rechthoek eromheen (Mark, 09-10: "lijnen raken de ruit niet").
+  if (omtrek === "ruit" || omtrek === "ellips") {
+    const dx = doel.x - c.x, dy = doel.y - c.y;
+    if (dx === 0 && dy === 0) return { x: c.x + rect.width / 2, y: c.y, zijde: "right" };
+    const hw = rect.width / 2, hh = rect.height / 2;
+    const zijde = Math.abs(dx) * hh >= Math.abs(dy) * hw ? (dx >= 0 ? "right" : "left") : dy >= 0 ? "bottom" : "top";
+    let t;
+    if (omtrek === "ruit") {
+      // |x|/hw + |y|/hh = 1 langs de straal (x,y) = t·(dx,dy)
+      t = 1 / (Math.abs(dx) / hw + Math.abs(dy) / hh);
+    } else {
+      // (x/hw)² + (y/hh)² = 1
+      t = 1 / Math.sqrt((dx * dx) / (hw * hw) + (dy * dy) / (hh * hh));
+    }
+    return { x: c.x + dx * t, y: c.y + dy * t, zijde };
+  }
   const dx = doel.x - c.x;
   const dy = doel.y - c.y;
   const hw = rect.width / 2;
@@ -117,22 +135,45 @@ export function nodeRechthoek(node) {
  * @param {{sourceX: number, sourceY: number, targetX: number, targetY: number,
  *          sourcePosition: string, targetPosition: string}} args.vast
  */
-export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel, vast }) {
+export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel, vast, bronRicht = null, doelRicht = null, bronOmtrek = "rechthoek", doelOmtrek = "rechthoek" }) {
   if ((!zwevendBron && !zwevendDoel) || !bronRect || !doelRect) return vast;
   const bronMid = middelpunt(bronRect);
   const doelMid = middelpunt(doelRect);
   const uit = { ...vast };
   if (zwevendBron) {
-    const s = aanhechtpunt(bronRect, doelMid);
+    const s = richtpuntOfAanhechtpunt(bronRect, bronRicht || doelMid, 1.5, bronOmtrek);
     uit.sourceX = s.x;
     uit.sourceY = s.y;
     uit.sourcePosition = s.zijde;
   }
   if (zwevendDoel) {
-    const t = aanhechtpunt(doelRect, bronMid);
+    const t = richtpuntOfAanhechtpunt(doelRect, doelRicht || bronMid, 1.5, doelOmtrek);
     uit.targetX = t.x;
     uit.targetY = t.y;
     uit.targetPosition = t.zijde;
   }
   return uit;
+}
+
+/**
+ * Met knikpunten (data.knikken) mikt een zwevend uiteinde op het eerste/laatste
+ * knikpunt in plaats van op het middelpunt van de andere doos — anders springt
+ * de lijn eerst schuin naar de knik (EA-import, 2026-10-08). Ligt dat
+ * knikpunt precies óp de rand (een geïmporteerd aanhechtpunt), dan is dát het
+ * uiteinde, op die zijde.
+ * @param {Rechthoek} rect
+ * @param {Punt} punt
+ */
+export function richtpuntOfAanhechtpunt(rect, punt, tolerantie = 1.5, omtrek = "rechthoek") {
+  // Ruit/ellips: een punt op de omhullende rechthoek ligt niet op de vorm;
+  // neem het snijpunt van de straal naar dat punt met de echte omtrek.
+  if (omtrek === "ruit" || omtrek === "ellips") return aanhechtpunt(rect, punt, 8, omtrek);
+  const links = rect.x, rechts = rect.x + rect.width, boven = rect.y, onder = rect.y + rect.height;
+  const binnenX = punt.x >= links - tolerantie && punt.x <= rechts + tolerantie;
+  const binnenY = punt.y >= boven - tolerantie && punt.y <= onder + tolerantie;
+  if (binnenX && Math.abs(punt.y - boven) <= tolerantie) return { x: punt.x, y: boven, zijde: "top" };
+  if (binnenX && Math.abs(punt.y - onder) <= tolerantie) return { x: punt.x, y: onder, zijde: "bottom" };
+  if (binnenY && Math.abs(punt.x - links) <= tolerantie) return { x: links, y: punt.y, zijde: "left" };
+  if (binnenY && Math.abs(punt.x - rechts) <= tolerantie) return { x: rechts, y: punt.y, zijde: "right" };
+  return aanhechtpunt(rect, punt);
 }

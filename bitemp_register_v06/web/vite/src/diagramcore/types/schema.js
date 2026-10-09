@@ -105,6 +105,17 @@
  * @typedef {Object} ElementType
  * @property {string} id
  * @property {string} label
+ * @property {string} [erft]                - id van het ouder-ElementType (EMOF
+ *   Class.superClass, één ouder). Bij registratie vlakt `types/erfenis.js` uit:
+ *   shape, kleur, compartments, properties, hooks, bron/doel, randElement … van
+ *   de ouder komen mee, het kind overschrijft per sleutel/id. In de
+ *   profiel-ontwerper is dit de generalisatie-pijl tussen twee elementtypen.
+ * @property {boolean} [isAbstract]         - niet instantieerbaar (geen knop in de
+ *   Maken-balk, geen drop-doel, naam cursief), wél bruikbaar als **bereik**: in
+ *   elke lijst van elementtype-ids (bron/doel, verbindingsregels,
+ *   randElement.ouderTypes, afbakeningVoor, overbrugt, shapeSets) staat een
+ *   abstract type voor al zijn concrete afstammelingen. Zo wordt
+ *   "relatie: Representatie → Representatie" één regel.
  * @property {string} [omschrijving]        - één-regel-uitleg (taakbalk-tooltip)
  * @property {string} shape                 - ShapeType-id (bv. "class-box", "chip", "knip-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
@@ -123,6 +134,10 @@
  * @property {"dashed"} [randStijl]         - vormgrammatica: gestippeld = inhoud elders beheerd
  *   (ook per element via data.randStijl); geldt voor class-box, chip en package
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
+ * @property {"rechthoek"|"ruit"|"ellips"} [omtrek] - de echte omtrek voor
+ *   zwevende aanhechting: een lijn raakt een ruit (beslissing) op zijn punt of
+ *   zijde en een ellips (use case, begin/eind) op de boog, niet op de
+ *   onzichtbare rechthoek eromheen. Default rechthoek. Zie canvas/zwevendeRand.js
  * @property {"zijden"|"zwevend"} [randAanhechting] - waar een connector aan dit
  *   element vastpakt. `"zijden"` = de vier handles (midden van elke zijde);
  *   `"zwevend"` = het punt waar de lijn de omtrek snijdt, zodat lijnen naar
@@ -235,6 +250,12 @@
 
 /**
  * DiagramType — één "profiel": de volledige configuratie van een diagramsoort.
+ *
+ * N.B. motor-interne velden beginnen met `_` (`_erfenisGenormaliseerd`,
+ * `_hierarchieVoorExpansie`; op ElementType `_geerfd`, op eindpunten
+ * `_voorExpansie`): gezet door types/erfenis.js bij registratie, nooit
+ * serialiseren of in een profiel-kern opslaan — registreer daarom een
+ * bewaarde kern altijd via `kopieVoorNormalisatie` (zie profielRegistratie).
  *
  * @typedef {Object} DiagramType
  * @property {string} id                    - bv. "canoniek-uml", "puur-uml", "oas31"

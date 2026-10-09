@@ -1,0 +1,6090 @@
+{
+"t_package": [
+{
+"Package_ID": 169,
+"Name": "RSGB Model",
+"Parent_ID": 167,
+"ea_guid": "{FB67A77D-70A0-40fe-B6D0-86C7FEAB38EF}",
+"Notes": null
+},
+{
+"Package_ID": 177,
+"Name": "Model Kern RSGB",
+"Parent_ID": 169,
+"ea_guid": "{2833C85B-BA94-4b59-80C0-2F665B589FBF}",
+"Notes": null
+}
+],
+"t_object": [
+{
+"Object_ID": 1238,
+"Object_Type": "Class",
+"Name": "Huishouden",
+"Alias": null,
+"Note": "Een duurzame samenlevingsvorm van een of meer natuurlijke personen binnen een VERBLIJFSOBJECT, STANDPLAATS of LIGPLAATS.",
+"Package_ID": 177,
+"Stereotype": "Objecttype",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{6FB0A5B7-7B5F-437f-A462-4B1EADB964E4}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null
+},
+{
+"Object_ID": 1245,
+"Object_Type": "Class",
+"Name": "IngeschrevenPersoon",
+"Alias": null,
+"Note": "Een INGEZETENE of NIET-INGEZETENE",
+"Package_ID": 177,
+"Stereotype": "Objecttype",
+"NType": 0,
+"Abstract": "1",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{AF9534B0-7CBD-4061-9276-A7B6698B383A}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": 1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null
+},
+{
+"Object_ID": 1255,
+"Object_Type": "Class",
+"Name": "NatuurlijkPersoon",
+"Alias": null,
+"Note": "Een INGESCHREVEN PERSOON of ANDER NATUURLIJK PERSOON",
+"Package_ID": 177,
+"Stereotype": "Objecttype",
+"NType": 0,
+"Abstract": "1",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{9F4E12E4-B228-4931-AC83-1B1F60958A89}",
+"Style": "MDoc=1;",
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null
+},
+{
+"Object_ID": 1265,
+"Object_Type": "Class",
+"Name": "Persoon",
+"Alias": null,
+"Note": "Een NATUURLIJK PERSOON of een NIET-NATUURLIJK PERSOON",
+"Package_ID": 177,
+"Stereotype": "Objecttype",
+"NType": 0,
+"Abstract": "1",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{9DF5AC43-3673-4b9a-BB5E-6DCA7BE28835}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": "Java",
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null
+},
+{
+"Object_ID": 1197,
+"Object_Type": "Package",
+"Name": "Model Kern RSGB",
+"Alias": null,
+"Note": "Het subdomein dat gegevens omvat over gemeentelijke basisgegevens, gebaseerd op het Referentiemodel Stelsel van Gemeentelijke Basisgegevens (RSGB) v2.0.2, aangevuld met specifieke uitbreidingen voor lokaal gebruik en aanvullingen uit RSGB v3.0.",
+"Package_ID": 169,
+"Stereotype": null,
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{2833C85B-BA94-4b59-80C0-2F665B589FBF}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": "177",
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null
+}
+],
+"classifiers": [],
+"t_attribute": [
+{
+"Object_ID": 1238,
+"Name": "huishoudensoort",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Typering van het huishouden naar grootte en verbondenheid.",
+"Derived": "0",
+"ID": 6003,
+"Pos": 0,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "N2",
+"ea_guid": "{472F9A4F-5811-4380-88C7-56AD9D858001}"
+},
+{
+"Object_ID": 1238,
+"Name": "relatie",
+"Scope": "Private",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "*",
+"Notes": null,
+"Derived": "0",
+"ID": 6004,
+"Pos": 0,
+"Const": 0,
+"Classifier": "1245",
+"Default": null,
+"Type": "IngeschrevenPersoon",
+"ea_guid": "{dst375AE5-3CB2-4803-A247-061E39A8D5DE}"
+},
+{
+"Object_ID": 1238,
+"Name": "huishoudennummer",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Uniek identificerend administratienummer van een huishouden zoals toegekend door de gemeente waarin het huishouden woonachtig is.",
+"Derived": "0",
+"ID": 6002,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "N12",
+"ea_guid": "{D8CD1BFF-AEB9-437f-AD25-FCABF951E474}"
+},
+{
+"Object_ID": 1238,
+"Name": "huishoudengrootte",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Het aantal personen waaruit het huishouden bestaat.",
+"Derived": "0",
+"ID": 6001,
+"Pos": 2,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "N2",
+"ea_guid": "{65A9E802-5D5D-4fe4-BD7D-B5F1E9547ACC}"
+},
+{
+"Object_ID": 1238,
+"Name": "datumBeginGeldigheidHuishouden",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De datum waarop het HUISHOUDEN is ontstaan.",
+"Derived": "0",
+"ID": 5999,
+"Pos": 3,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "OnvolledigeDatum",
+"ea_guid": "{C456265E-173C-4e16-9343-5CF689C8A7D2}"
+},
+{
+"Object_ID": 1238,
+"Name": "datumEindeGeldigheidHuishouden",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "De datum waarop het HUISHOUDEN is komen te vervallen.",
+"Derived": "0",
+"ID": 6000,
+"Pos": 4,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "OnvolledigeDatum",
+"ea_guid": "{121412F6-8BB9-43d7-A84E-88A74F2DA361}"
+},
+{
+"Object_ID": 1245,
+"Name": "adresHerkomst",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Aanduiding welk adres van de INGESCHREVEN PERSOON ontleend is aan de GBA: het woonadres of het correspondentie-adres",
+"Derived": "0",
+"ID": 6040,
+"Pos": 0,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN1",
+"ea_guid": "{F7859D97-A691-4cab-A9E4-FBA0ADC78810}"
+},
+{
+"Object_ID": 1245,
+"Name": "anummer",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Het administratienummer, bedoeld in artikel 50 van de Wet GBA.",
+"Derived": "0",
+"ID": 6041,
+"Pos": 0,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "an20",
+"ea_guid": "{2A9F861C-7833-42c9-8931-CFD6C67ACC92}"
+},
+{
+"Object_ID": 1245,
+"Name": "beschrijvingLocatie",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Een geheel of gedeeltelijke omschrijving van de ligging van een object.",
+"Derived": "0",
+"ID": 6042,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{D97E0BA7-5609-4cc6-83D4-BA4809414E42}"
+},
+{
+"Object_ID": 1245,
+"Name": "burgerlijkeStaat",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Aanduiding van de burgerlijke staat van de INGESCHREVEN PERSOON",
+"Derived": "1",
+"ID": 6044,
+"Pos": 2,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "N1",
+"ea_guid": "{9CBC68D6-E082-4de0-B303-1B9E6682F13F}"
+},
+{
+"Object_ID": 1245,
+"Name": "indicatieGeheim",
+"Scope": "Public",
+"Stereotype": "enum",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Een aanduiding die aangeeft dat gegevens wel of niet verstrekt mogen worden.",
+"Derived": "0",
+"ID": 6053,
+"Pos": 3,
+"Const": 0,
+"Classifier": "1368",
+"Default": null,
+"Type": "Boolean",
+"ea_guid": "{D6FC9878-9865-4090-94C4-9FA4BA55E120}"
+},
+{
+"Object_ID": 1245,
+"Name": "gemeenteVanInschrijving",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Een code die aangeeft in welke gemeente de PL zich bevindt of de gemeente waarnaar de PL is uitgeschreven of de gemeente waar de PL voor de eerste keer is opgenomen.",
+"Derived": "0",
+"ID": 6051,
+"Pos": 6,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN80",
+"ea_guid": "{F6C0936C-C0AB-40a5-A82A-6E28EEFE823D}"
+},
+{
+"Object_ID": 1245,
+"Name": "landWaarvandaanIngeschreven",
+"Scope": "Public",
+"Stereotype": "list",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Het LAND waar de INGESCHREVEN PERSOON verblijf hield voor (her)vestiging in Nederland.",
+"Derived": "0",
+"ID": 6056,
+"Pos": 7,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "LAND",
+"ea_guid": "{93DE9D62-6142-41f6-81C9-D450EDFF659C}"
+},
+{
+"Object_ID": 1245,
+"Name": "landWaarnaarVertrokken",
+"Scope": "Public",
+"Stereotype": "list",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Het LAND dat de INGESCHREVEN PERSOON opgeeft bij vertrek naar het buitenland",
+"Derived": "0",
+"ID": 6055,
+"Pos": 8,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "LAND",
+"ea_guid": "{44ABA3AD-94FB-4a0e-B37E-DEB4595DEC4F}"
+},
+{
+"Object_ID": 1245,
+"Name": "datumInschrijvingGemeente",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Bij inschrijving op grond van een aangifte door de burger van zijn vestiging in een (volgende) gemeente is dit de aangiftedatum. Bij inschrijving op grond van een geboorte-akte is dit de geboortedatum",
+"Derived": "1",
+"ID": 6047,
+"Pos": 9,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "datum",
+"ea_guid": "{B20D796D-FDA1-4662-903D-CC474265AFE8}"
+},
+{
+"Object_ID": 1245,
+"Name": "datumBeginGeldigheidVerblijfplaats",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De datum waarop de INGESCHREVEN PERSOON is ingeschreven op zijn of haar laatst bekende verblijfsplaats",
+"Derived": "1",
+"ID": 6045,
+"Pos": 13,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "datum",
+"ea_guid": "{2218C126-7753-42ad-BE72-A1CD8A32AE58}"
+},
+{
+"Object_ID": 1245,
+"Name": "signaleringReisdocument",
+"Scope": "Public",
+"Stereotype": "enum",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Een aanduiding dat aan de ingeschrevene geen reisdocument mag worden verstrekt.",
+"Derived": "0",
+"ID": 6062,
+"Pos": 14,
+"Const": 0,
+"Classifier": "1368",
+"Default": null,
+"Type": "Boolean",
+"ea_guid": "{A8141D41-5EA9-4e14-BC51-77DBC8738968}"
+},
+{
+"Object_ID": 1245,
+"Name": "buitenlandsReisdocument",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Een aanduiding dat de ingeschrevene beschikt over één of meer buitenlandse reisdocumenten of is bijgeschreven in een buitenlands reisdocument.",
+"Derived": "0",
+"ID": 6043,
+"Pos": 15,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "an80",
+"ea_guid": "{F803BD3E-CEC8-46be-B0B8-62946333D5D5}"
+},
+{
+"Object_ID": 1245,
+"Name": "datumVestigingNederland",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Zogenaamd afleidbaar gegeven (zie regels attribuutsoort). Bij ambtshalve inschrijving is dit de datum waarop de betrokkene schriftelijk van het voornemen tot ambtshalve inschrijving mededeling is geda",
+"Derived": "1",
+"ID": 6050,
+"Pos": 16,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "OnvolledigeDatum",
+"ea_guid": "{F3AD379D-6560-4b00-9080-60745C8FBD8E}"
+},
+{
+"Object_ID": 1245,
+"Name": "datumVertrekUitNederland",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De datum van het vertrek naar het buitenland.",
+"Derived": "1",
+"ID": 6049,
+"Pos": 17,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "OnvolledigeDatum",
+"ea_guid": "{59DA0302-3037-4f14-A5E7-6933204877F6}"
+},
+{
+"Object_ID": 1245,
+"Name": "redenOpschortingBijhouding",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Een aanduiding van de reden waarom de bijhouding van de PL is opgeschort.",
+"Derived": "0",
+"ID": 6061,
+"Pos": 18,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{82D9A897-3DB8-4e3c-8FD2-09FB485C748A}"
+},
+{
+"Object_ID": 1245,
+"Name": "datumOpschortingBijhouding",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "De datum waarop de bijhouding van de persoonslijst is gestaakt.",
+"Derived": "1",
+"ID": 6048,
+"Pos": 19,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "datum",
+"ea_guid": "{A2AB06A7-7C58-4871-BBBC-BA74D16BE98F}"
+},
+{
+"Object_ID": 1245,
+"Name": "ingezetene",
+"Scope": "Public",
+"Stereotype": "enum",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6054,
+"Pos": 24,
+"Const": 0,
+"Classifier": "1368",
+"Default": null,
+"Type": "Boolean",
+"ea_guid": "{0DBB807F-62ED-4c66-B535-0B9B9ECD7CFC}"
+},
+{
+"Object_ID": 1245,
+"Name": "datumEindeGeldigheidVerblijfsplaats",
+"Scope": "Public",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6046,
+"Pos": 28,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "Date",
+"ea_guid": "{2784810A-7180-41cd-9140-B09128C90A59}"
+},
+{
+"Object_ID": 1245,
+"Name": "redenEindeBewoning",
+"Scope": "Public",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6060,
+"Pos": 28,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{75897184-E706-47e1-91C2-4BCFDCF879F0}"
+},
+{
+"Object_ID": 1245,
+"Name": "verblijfstitel",
+"Scope": "Public",
+"Stereotype": "referentiegegeven",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6063,
+"Pos": 29,
+"Const": 0,
+"Classifier": "1331",
+"Default": null,
+"Type": "Verblijfstitel",
+"ea_guid": "{E56A3434-E1DB-46dc-BDC1-2B59C13ACE06}"
+},
+{
+"Object_ID": 1245,
+"Name": "ouder1",
+"Scope": "Public",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6057,
+"Pos": 30,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN40",
+"ea_guid": "{D8BDFF5B-8940-4efb-80F4-F24499007C31}"
+},
+{
+"Object_ID": 1245,
+"Name": "gezinsrelatie",
+"Scope": "Public",
+"Stereotype": "enum",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6052,
+"Pos": 31,
+"Const": 0,
+"Classifier": "1369",
+"Default": null,
+"Type": "Gezinsrelatie",
+"ea_guid": "{3F731B82-EB3A-41f9-B730-765599798863}"
+},
+{
+"Object_ID": 1245,
+"Name": "ouder2",
+"Scope": "Public",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6058,
+"Pos": 31,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN40",
+"ea_guid": "{5D92DD93-3A2D-4c70-AD03-1971F1B8AE08}"
+},
+{
+"Object_ID": 1245,
+"Name": "partnerID",
+"Scope": "Public",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6059,
+"Pos": 31,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN40",
+"ea_guid": "{8455102F-087E-46ae-AADC-3827C15ECD63}"
+},
+{
+"Object_ID": 1255,
+"Name": "aanduidingNaamgebruik",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Een aanduiding voor de wijze van aanschrijving van de ingeschrevene.",
+"Derived": "0",
+"ID": 6142,
+"Pos": 0,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN50",
+"ea_guid": "{A4B50421-E428-4def-96B7-3639F0BA8F33}"
+},
+{
+"Object_ID": 1255,
+"Name": "attribute",
+"Scope": "Private",
+"Stereotype": null,
+"LowerBound": "0",
+"UpperBound": "*",
+"Notes": null,
+"Derived": "0",
+"ID": 6148,
+"Pos": 0,
+"Const": 0,
+"Classifier": "1249",
+"Default": null,
+"Type": "MaatschappelijkeActiviteit",
+"ea_guid": "{src70BFBF-5A15-4283-BD78-48CB364D4E88}"
+},
+{
+"Object_ID": 1255,
+"Name": "geslachtsnaamAanschrijving",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De geslachtsnaam waarmee de persoon aangeschreven wil worden.",
+"Derived": "0",
+"ID": 6156,
+"Pos": 0,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{A86FDD6B-4A48-4a8a-9847-E2A3D08E96AA}"
+},
+{
+"Object_ID": 1255,
+"Name": "voornamen",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "De verzameling namen die, gescheiden door spaties, aan de\r\ngeslachtsnaam voorafgaat..",
+"Derived": "0",
+"ID": 6164,
+"Pos": 0,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{9C21549F-71E7-4ae3-8994-FAA7F0E8F0CE}"
+},
+{
+"Object_ID": 1255,
+"Name": "academischeTitel",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "*",
+"Notes": "De ACADEMISCHE TITELs van een NATUURLIJK PERSOON.",
+"Derived": "0",
+"ID": 6144,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN80",
+"ea_guid": "{F361C95F-53F8-4625-9D3D-030CD1EA48BA}"
+},
+{
+"Object_ID": 1255,
+"Name": "datumGeboorte",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "De datum waarop de ander natuurljjk persoon is geboren.",
+"Derived": "0",
+"ID": 6150,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN22",
+"ea_guid": "{E1EB6152-0130-4649-A547-DFE890DDB884}"
+},
+{
+"Object_ID": 1255,
+"Name": "geboorteplaats",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De naam van de Nederlandse gemeente of een buitenlandse plaats of een plaatsbepaling, die aangeeft waar de ingeschreven persoon is geboren.",
+"Derived": "0",
+"ID": 6153,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{E486F2A3-7B55-4ea9-8E76-E5D220B6D941}"
+},
+{
+"Object_ID": 1255,
+"Name": "geslachtsnaam",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De (geslachts)naam waarvan de eventueel aanwezige voorvoegsels en adellijke titel/predikaat zijn afgesplitst.",
+"Derived": "0",
+"ID": 6155,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{4A6908C9-7E08-4b71-A64F-266AFD891312}"
+},
+{
+"Object_ID": 1255,
+"Name": "overlijdensplaats",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De naam van de Nederlandse gemeente of een buitenlandse plaats of een plaatsbepaling, die aangeeft waar de persoon is overleden",
+"Derived": "0",
+"ID": 6162,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{023ECDE1-3AB6-4651-BBA4-50EDED6CCFA1}"
+},
+{
+"Object_ID": 1255,
+"Name": "voorlettersAanschrijving",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De voorletters waarmee een persoon aangeschreven wil worden.",
+"Derived": "0",
+"ID": 6163,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN20",
+"ea_guid": "{A382AFC3-D788-4fe3-B113-B30741AD4C64}"
+},
+{
+"Object_ID": 1255,
+"Name": "datumOverlijden",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "De datum van overlijden van een ANDER NATUURLIJK PERSOON",
+"Derived": "0",
+"ID": 6151,
+"Pos": 2,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN22",
+"ea_guid": "{0C911D2A-0457-4a6e-9178-1089A4632DB1}"
+},
+{
+"Object_ID": 1255,
+"Name": "geboorteland",
+"Scope": "Public",
+"Stereotype": "list",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Het LAND waar de INGESCHREVEN PERSOON is geboren.",
+"Derived": "0",
+"ID": 6152,
+"Pos": 2,
+"Const": 0,
+"Classifier": "1351",
+"Default": null,
+"Type": "Land",
+"ea_guid": "{708A75AE-B2FD-4238-88D3-FA9DBBAED68F}"
+},
+{
+"Object_ID": 1255,
+"Name": "geslachtsaanduiding",
+"Scope": "Public",
+"Stereotype": "enum",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Een aanduiding die aangeeft dat de ingeschrevene een man of een vrouw is, of dat het geslacht (nog) onbekend is.",
+"Derived": "0",
+"ID": 6154,
+"Pos": 2,
+"Const": 0,
+"Classifier": "1393",
+"Default": null,
+"Type": "geslacht",
+"ea_guid": "{F29526BB-3DEC-44f4-A715-9E5F9D4B2100}"
+},
+{
+"Object_ID": 1255,
+"Name": "landOverlijden",
+"Scope": "Public",
+"Stereotype": "list",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Het LAND waar de INGESCHREVEN PERSOON is overleden.",
+"Derived": "0",
+"ID": 6160,
+"Pos": 2,
+"Const": 0,
+"Classifier": "1351",
+"Default": null,
+"Type": "Land",
+"ea_guid": "{EAB0BBFA-3CE5-4266-9796-8C723D9A4E26}"
+},
+{
+"Object_ID": 1255,
+"Name": "voornamenAanschrijving",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "De voornamen waarmee een persoon aangeschreven wil worden.",
+"Derived": "0",
+"ID": 6165,
+"Pos": 2,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{8F033F41-25A8-4aaa-B0E9-73A0D9B46BC5}"
+},
+{
+"Object_ID": 1255,
+"Name": "voorvoegselGeslachtsnaam",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Dat deel van de geslachtsnaam dat voorkomt in GBA Tabel 36, Voorvoegseltabel en, gescheiden door een spatie, vooraf gaat aan de rest van de geslachtsnaam.",
+"Derived": "0",
+"ID": 6166,
+"Pos": 2,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN80",
+"ea_guid": "{B5EA0A95-1308-40a1-ADC8-ADFB148FFE87}"
+},
+{
+"Object_ID": 1255,
+"Name": "aanhefAanschrijving",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De aanhef waarmee de persoon aangeschreven wil worden.",
+"Derived": "0",
+"ID": 6143,
+"Pos": 3,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN50",
+"ea_guid": "{B491C4DA-C2E1-4b77-93A7-938116B72F22}"
+},
+{
+"Object_ID": 1255,
+"Name": "adellijkeTitelOfPredikaat",
+"Scope": "Public",
+"Stereotype": "enum",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Een omschrijving die aangeeft welke titel of welk predikaat behoort tot de naam (bij adellijke titel geslachtsnaam, bij predikaat voornaam).",
+"Derived": "0",
+"ID": 6146,
+"Pos": 3,
+"Const": 0,
+"Classifier": "1375",
+"Default": null,
+"Type": "adelijkeTitel",
+"ea_guid": "{5CB3C6B2-826C-4645-AC21-6E4F8A103B29}"
+},
+{
+"Object_ID": 1255,
+"Name": "burgerservicenummer",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6149,
+"Pos": 17,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN9",
+"ea_guid": "{D0D31A65-6ADD-4d9e-94E4-F232D261A053}"
+},
+{
+"Object_ID": 1255,
+"Name": "handlichting",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Geeft aan of de rechter handlichting heeft verleend aan: - De Natuurlijk Persoon als eigenaar van een MaatschappelijkeActiviteit - De Natuurlijk Persoon als aansprakelijke",
+"Derived": "0",
+"ID": 6157,
+"Pos": 18,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN50",
+"ea_guid": "{48FEE9C7-1102-4b53-92B3-F5E6B9EE2A26}"
+},
+{
+"Object_ID": 1255,
+"Name": "achternaam",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6145,
+"Pos": 19,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN100",
+"ea_guid": "{AA122FC9-8F67-4178-9D72-BF098EA63E92}"
+},
+{
+"Object_ID": 1255,
+"Name": "nationaliteit",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6161,
+"Pos": 20,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN100",
+"ea_guid": "{CF70E207-96C2-4e3d-8CD9-5AC73411F894}"
+},
+{
+"Object_ID": 1255,
+"Name": "aanduidingBijzonderNederlanderschapPersoon",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6141,
+"Pos": 21,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN50",
+"ea_guid": "{91D5A910-8573-42d9-81FF-0745067097A3}"
+},
+{
+"Object_ID": 1255,
+"Name": "anummer",
+"Scope": "Public",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Het administratienummer van het kind, bedoeld in de Wet BRP.",
+"Derived": "0",
+"ID": 6147,
+"Pos": 22,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN20",
+"ea_guid": "{7F6A767D-6AA4-4ada-8935-8A4A052FEF5D}"
+},
+{
+"Object_ID": 1255,
+"Name": "indicatieOverleden",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Indicatie Overleden is een indicatie of de persoon al dan niet overleden is.\r\n\r\nDeze indicatie is enkel van belang als de gegevens uit de BRP niet beschikbaar zijn De datum van overlijden is soms niet",
+"Derived": "0",
+"ID": 6159,
+"Pos": 23,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "boolean",
+"ea_guid": "{36DFE2DA-EF18-4895-8568-9353F5A00D13}"
+},
+{
+"Object_ID": 1255,
+"Name": "IndicatieAfschermingPersoonsgegevens",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Indicatie Afscherming Persoonsgegevens is een indicatie om aan te geven dat de gegevens van een persoon zijn afgeschermd.",
+"Derived": "0",
+"ID": 6158,
+"Pos": 24,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "boolean",
+"ea_guid": "{62B6A074-CBC7-4f2a-9623-C83252FBBB0E}"
+},
+{
+"Object_ID": 1265,
+"Name": "adresBinnenland",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De aanduiding van het adres waar het SUBJECT verblijft dan wel bereikbaar is.",
+"Derived": "1",
+"ID": 6231,
+"Pos": 0,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN257",
+"ea_guid": "{0F55857A-1582-46f5-9621-0E93F8C13310}"
+},
+{
+"Object_ID": 1265,
+"Name": "adresBuitenland",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "De aanduiding van het adres waar het SUBJECT verblijft dan wel bereikbaar is in het buitenland.",
+"Derived": "1",
+"ID": 6232,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN149",
+"ea_guid": "{F6185DF1-173C-47b0-A94A-55D055A89104}"
+},
+{
+"Object_ID": 1265,
+"Name": "rekeningnummer",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Het nummer van een Nederlandse bank/girorekening, zoals dat door een bankinstelling als identificator aan een overeenkomst tussen de bank en een of meer subjecten wordt toegekend, op basis waarvan het",
+"Derived": "0",
+"ID": 6240,
+"Pos": 2,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "IBAN",
+"ea_guid": "{6BB892F7-1C6E-4aeb-8BFA-3012FEB03B78}"
+},
+{
+"Object_ID": 1265,
+"Name": "emailadres",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Elektronisch postadres waaronder het subject in de regel bereikbaar is.",
+"Derived": "0",
+"ID": 6234,
+"Pos": 3,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN80",
+"ea_guid": "{D003FAB1-3C25-4b00-9247-B6D6CA5155F9}"
+},
+{
+"Object_ID": 1265,
+"Name": "faxnummer",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Faxnummer waaronder het subject in de regel bereikbaar is.",
+"Derived": "0",
+"ID": 6235,
+"Pos": 4,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN20",
+"ea_guid": "{6E61DBA6-E0F0-47bd-9BA5-1D8A04C0EAA6}"
+},
+{
+"Object_ID": 1265,
+"Name": "identificatie",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De unieke identificatie van het SUBJECT",
+"Derived": "1",
+"ID": 6236,
+"Pos": 5,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN17",
+"ea_guid": "{5581C29C-3143-42f6-970E-CFB7282258C9}"
+},
+{
+"Object_ID": 1265,
+"Name": "naam",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "De benaming van het SUBJECT",
+"Derived": "1",
+"ID": 6238,
+"Pos": 7,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN200",
+"ea_guid": "{0BBB4DB3-7F02-4dda-82D4-38976334D948}"
+},
+{
+"Object_ID": 1265,
+"Name": "KVKnummer",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": null,
+"Derived": "0",
+"ID": 6237,
+"Pos": 8,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN20",
+"ea_guid": "{C43F0DE4-C49D-442f-B7F6-157CF378EBE8}"
+},
+{
+"Object_ID": 1265,
+"Name": "rechtsvorm",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Bron: Handelsregister",
+"Derived": "0",
+"ID": 6239,
+"Pos": 9,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN100",
+"ea_guid": "{9FB55106-DB14-4192-B325-75B7272FDE36}"
+},
+{
+"Object_ID": 1265,
+"Name": "telefoonnummer",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "0",
+"UpperBound": "1",
+"Notes": "Telefoonnummer waaronder het subject in de regel bereikbaar is.",
+"Derived": "0",
+"ID": 6241,
+"Pos": 10,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN20",
+"ea_guid": "{6B41E997-26A2-4f32-AE3B-A46BA0E3BE20}"
+},
+{
+"Object_ID": 1265,
+"Name": "adresCorrespondentie",
+"Scope": "Public",
+"Stereotype": "Attribuutsoort",
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "postbus of antwoordnummer",
+"Derived": "0",
+"ID": 6233,
+"Pos": 11,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "AN100",
+"ea_guid": "{3A5CEB3F-40E2-4890-92D1-61133EE48E9D}"
+}
+],
+"t_attributetag": [
+{
+"ElementID": 5999,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 5999,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "-"
+},
+{
+"ElementID": 5999,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Code attribuutsoort",
+"VALUE": "-",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 5999,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Code attribuutsoort",
+"VALUE": "-",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6000,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6000,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Alleen een datum die gelijk is aan of die gelegen is na de datum zoals opgenomen onder 'Datum begin geldigheid …’ kan in de registratie worden opgenomen."
+},
+{
+"ElementID": 6001,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6001,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6001,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6001,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "-"
+},
+{
+"ElementID": 6001,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "-"
+},
+{
+"ElementID": 6001,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6001,
+"Property": "Code attribuutsoort",
+"VALUE": "96.07",
+"NOTES": null
+},
+{
+"ElementID": 6001,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6001,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6001,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "1 - 99"
+},
+{
+"ElementID": 6001,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6001,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6001,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6001,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Code attribuutsoort",
+"VALUE": "96.28",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO GB",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "Combinatie van de viercijferige 'gemeentecode' (volgens GBA tabel 33) en een binnen een gemeente uniek achtcijferig objectvolgnummer."
+},
+{
+"ElementID": 6002,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6002,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "-"
+},
+{
+"ElementID": 6002,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6002,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "<te groot voor dit veld! Zie aparte gelijknamige enumeratie>"
+},
+{
+"ElementID": 6003,
+"Property": "Aanduiding brondocument",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Voor de definities van institutioneel huishouden en particulier huishouden: zie de toelichting bij het objecttype Huishouden. Onder Thuiswonende kinderen wordt verstaan: alle in het huishouden van hun"
+},
+{
+"ElementID": 6003,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Code attribuutsoort",
+"VALUE": "94.69",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6003,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6003,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Landelijk basisgegeven"
+},
+{
+"ElementID": 6040,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Aanduiding brondocument",
+"VALUE": "{89538C6C-016D-41ec-AF65-B1E351D7E37B}",
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "De attribuutsoort is ontleend aan het GBA-attribuut ‘Functie adres’. Daarmee wordt aangegeven of het verblijfsadres in de GBA de functie heeft van woonadres of van briefadres. Een briefadres wordt in "
+},
+{
+"ElementID": 6040,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "B (=brief- cq. correspondentie-adres is ontleend aan de GBA), W (=woonadres cq. woonadreslocatie is ontleend aan de GBA)"
+},
+{
+"ElementID": 6040,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 november 2008",
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6040,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6041,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2C9F70CA-0405-4c27-B98C-664A15780C07},{47F69426-2AE8-4418-9C38-57944C7131B6},{51F95309-A6CE-4bd2-8196-042442DEBFA0},{0E275EBB-F09C-4f81-9439-E1AA8D1BD29A},{7159BA1E-428A-4341-9FF1-DD2300AED339}",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Code attribuutsoort",
+"VALUE": "01.01.10",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Zie de toelichting in de GBA."
+},
+{
+"ElementID": 6041,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6041,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het attribuutsoort maakt deel uit van het groepattribuutsoort Verblijfadres/\r\nZie verder de toelichting in de GBA."
+},
+{
+"ElementID": 6042,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2136A30E-2E6E-4271-8C4C-20E8DD60477D}",
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Indien het attribuutsoort Locatiebeschrijving niet van een waarde is voorzien of er geen relatie \"verblijft op locatie in \" aanwezig is dan is één van de relaties INGESCHREVEN PERSOON verblijft in VER"
+},
+{
+"ElementID": 6042,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Authentiek gegeven"
+},
+{
+"ElementID": 6042,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Code attribuutsoort",
+"VALUE": "08.12.10",
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6042,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6043,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6043,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 mei 2008",
+"NOTES": null
+},
+{
+"ElementID": 6043,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Zie verder de toelichting in de GBA."
+},
+{
+"ElementID": 6043,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\n"
+},
+{
+"ElementID": 6043,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6043,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6043,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6043,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6043,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\n"
+},
+{
+"ElementID": 6043,
+"Property": "Aanduiding brondocument",
+"VALUE": "{47F69426-2AE8-4418-9C38-57944C7131B6},{51F95309-A6CE-4bd2-8196-042442DEBFA0},{7159BA1E-428A-4341-9FF1-DD2300AED339}",
+"NOTES": null
+},
+{
+"ElementID": 6043,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6043,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6043,
+"Property": "Code attribuutsoort",
+"VALUE": "12.37.10",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6044,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Gegeven is af te leiden uit de relatie ‘INGESCHREVEN PERSOON is partner in HUWELIJK/GEREGISTREERD PARTNERSCHAPpen’ en de gegevens van het desbetreffende huwelijk of partnerschap."
+},
+{
+"ElementID": 6044,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Zogenaamd afleidbaar gegeven (zie regels attribuutsoort). De gehanteerde domeinwaarden zijn ontleend aan NEN 1888, p.10 en aangepast vanwege introductie geregistreerd partnerschap."
+},
+{
+"ElementID": 6044,
+"Property": "Code attribuutsoort",
+"VALUE": "94.98",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 november 2008",
+"NOTES": null
+},
+{
+"ElementID": 6044,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "0 = Onbekend, 1 = Ongehuwd en nooit gehuwd geweest, 2 = Gehuwd, 3 = Gescheiden, 4 = Weduwe/weduwnaar, 5 = Partnerschap, 6 = Partnerschap beëindigd, 7 = Achtergebleven partner"
+},
+{
+"ElementID": 6044,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "30 maart 2009",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6045,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6045,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar uit de datum begin geldigheid van het laatst bekende voorkomen van het groepattribuut Verblijfsplaats"
+},
+{
+"ElementID": 6045,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO-BG",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO-BG",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Code attribuutsoort",
+"VALUE": "09.20",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "2 februari 2009",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar uit de datum begin geldigheid van het attribuut Gemeente van inschrijving"
+},
+{
+"ElementID": 6047,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6047,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6048,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "LO GBA",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Code attribuutsoort",
+"VALUE": "67.10",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "LO GBA",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "2 februari 2009",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6048,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar uit de datum begin geldigheid van het attribuut Omschrijving reden opschorting"
+},
+{
+"ElementID": 6048,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6048,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6049,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Zogenaamd afleidbaar gegeven (zie regels attribuutsoort). Bij ambtshalve uitschrijving is dit de datum waarop betrokkene schriftelijk van het voornemen tot ambtshalve uitschrijving mededeling is gedaa"
+},
+{
+"ElementID": 6049,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Code attribuutsoort",
+"VALUE": "13.20",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het gegeven is afleidbaar uit de materiele historie van het eerste van een ononderbroken reeks buitenlandse adressen."
+},
+{
+"ElementID": 6049,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 november 2008",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6049,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6050,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het gegeven is afleidbaar uit de materiele historie van het eerste woonadres, woonadreslocatie of correspondentieadres van een ononderbroken reeks binnenlandse adressen."
+},
+{
+"ElementID": 6050,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Code attribuutsoort",
+"VALUE": "14.20",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 november 2008",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6050,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Zie de toelichting in de GBA"
+},
+{
+"ElementID": 6051,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Code attribuutsoort",
+"VALUE": "08.09.10",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6051,
+"Property": "Aanduiding brondocument",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6051,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6053,
+"Property": "Aanduiding brondocument",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Zie verder de toelichting in de GBA."
+},
+{
+"ElementID": 6053,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Code attribuutsoort",
+"VALUE": "07.70.10",
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6053,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Code attribuutsoort",
+"VALUE": "08.13.10",
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING op basis van GBA",
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "2 februari 2008",
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In afwijking van het corresponderende GBA-attribuutsoort ‘Land waarnaar vertrokken’ wordt niet de landcode vastgelegd maar de de relatie naar de referentielijst  LAND. In het GFO BG betreft dit relati"
+},
+{
+"ElementID": 6055,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\n"
+},
+{
+"ElementID": 6055,
+"Property": "Aanduiding brondocument",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6055,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6055,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Code attribuutsoort",
+"VALUE": "08.14.10",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING op basis van GBA",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In afwijking van het corresponderende GBA-attribuutsoort ‘Land vanwaar ingeschreven’ wordt niet de landcode vastgelegd maar de de relatie naar de referentielijst LAND. In het GFO BG betreft dit relati"
+},
+{
+"ElementID": 6056,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Aanduiding brondocument",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6056,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 november 2008",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6056,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6061,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\n"
+},
+{
+"ElementID": 6061,
+"Property": "Aanduiding brondocument",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Zie verder de toelichting in de GBA."
+},
+{
+"ElementID": 6061,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Code attribuutsoort",
+"VALUE": "07.67.20",
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6061,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6062,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\n"
+},
+{
+"ElementID": 6062,
+"Property": "Aanduiding brondocument",
+"VALUE": "{47F69426-2AE8-4418-9C38-57944C7131B6},{51F95309-A6CE-4bd2-8196-042442DEBFA0},{7159BA1E-428A-4341-9FF1-DD2300AED339}",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 mei 2008",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Code attribuutsoort",
+"VALUE": "12.36.10",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6062,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 mei 2008",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Zie de toelichting in de GBA"
+},
+{
+"ElementID": 6142,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Ja indien het een INGESCHREVEN PERSOON betreft, anders: Nee",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet Authentiek landelijk basisgegeven indien het een ingeschreven persoon betreft, anders een gemeentelijk basisgegeven."
+},
+{
+"ElementID": 6142,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Aanduiding brondocument",
+"VALUE": "<memo>",
+"NOTES": "Ja: AkteGemeente, Documentidentificatie, Documentgemeente,\r\nDocumentdatum, Documentbeschrijving indien het een INGESCHREVEN\r\nPERSOON betreft, anders: Nee"
+},
+{
+"ElementID": 6142,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja indien het een INGESCHREVEN PERSOON betreft, anders: Nee",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Ja indien het een INGESCHREVEN PERSOON betreft, anders: Nee",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Code attribuutsoort",
+"VALUE": "01.61.10",
+"NOTES": null
+},
+{
+"ElementID": 6142,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6143,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6143,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6143,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6143,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6143,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6143,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het attribuutsoort maakt deel uit van het groepattribuutsoort Naam aanschrijving."
+},
+{
+"ElementID": 6143,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "Indien de burger terzake geen opgave gedaan heeft dan, afhankelijk van de Geslachtsaanduiding ‘Mijnheer’, ‘Mevrouw’ of ‘Mevrouw/Mijnheer’."
+},
+{
+"ElementID": 6143,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6143,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6143,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6143,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6143,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven indien de natuurlijk persoon terzake geen opgave heeft gedaan. Afleidbaar uit de Geslachtsaanduiding"
+},
+{
+"ElementID": 6143,
+"Property": "Aanduiding brondocument",
+"VALUE": "{89538C6C-016D-41ec-AF65-B1E351D7E37B}",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 november 2008",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\n"
+},
+{
+"ElementID": 6144,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Code attribuutsoort",
+"VALUE": "94.00",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6144,
+"Property": "Aanduiding brondocument",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6144,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven indien het een ingeschreven persoon betreft, anders een gemeentelijk basisgegeven."
+},
+{
+"ElementID": 6146,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2136A30E-2E6E-4271-8C4C-20E8DD60477D}",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING op basis van GBA.",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6146,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het betreft de omschrijving van de adellijke titel/predikaat zoals deze voorkomt in de desbetreffende GBA-tabel, dus niet de code. Het attribuutsoort maakt deel uit van het groepattribuutsoort Naam.NA"
+},
+{
+"ElementID": 6146,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "GBA Tabel 38 Tabel Adellijke titel/predikaat:\r\n\r\nBaron (titel), Barones (titel), Graaf (titel), Gravin (titel), Hertog (titel), Hertogin (titel), Jonkheer (predikaat), Jonkvrouw (predikaat), Markies ("
+},
+{
+"ElementID": 6146,
+"Property": "Code attribuutsoort",
+"VALUE": "01.02.20",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Gemeentelijkbasisgegeven"
+},
+{
+"ElementID": 6150,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2C9F70CA-0405-4c27-B98C-664A15780C07},{47F69426-2AE8-4418-9C38-57944C7131B6},{51F95309-A6CE-4bd2-8196-042442DEBFA0},{0E275EBB-F09C-4f81-9439-E1AA8D1BD29A},{7159BA1E-428A-4341-9FF1-DD2300AED339}",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Code attribuutsoort",
+"VALUE": "01.03.06",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING o.b.v. GBA",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6150,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING o.b.v. GBA",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING o.b.v. GBA",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Code attribuutsoort",
+"VALUE": "06.08.10",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING o.b.v GBA",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2C9F70CA-0405-4c27-B98C-664A15780C07},{47F69426-2AE8-4418-9C38-57944C7131B6},{51F95309-A6CE-4bd2-8196-042442DEBFA0},{0E275EBB-F09C-4f81-9439-E1AA8D1BD29A},{7159BA1E-428A-4341-9FF1-DD2300AED339}",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6151,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6151,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 november 2008",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In afwijking van het corresponderende GBA-attribuutsoort wordt niet de landcode vastgelegd maar de relatie naar de referentielijst LAND. In het GFO BG betreft dit relatiesoort 03.30. Het relatiesoort "
+},
+{
+"ElementID": 6152,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Authentiek gegeven"
+},
+{
+"ElementID": 6152,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2136A30E-2E6E-4271-8C4C-20E8DD60477D}",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Code attribuutsoort",
+"VALUE": "01.03.30",
+"NOTES": null
+},
+{
+"ElementID": 6152,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING op basis van GBA",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Code attribuutsoort",
+"VALUE": "01.03.20",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING op basis van GBA",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2136A30E-2E6E-4271-8C4C-20E8DD60477D}",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6153,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6153,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In afwijking van het corresponderende GBA-attribuutsoort wordt voor Nederlandse gemeenten niet de code vastgelegd maar de gemeentenaam. Het attribuutsoort maakt deel uit van het groepattribuutsoort Na"
+},
+{
+"ElementID": 6154,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet Authentiek landelijk basisgegeven indien het een ingeschreven\r\npersoon betreft, anders een gemeentelijk basisgegeven."
+},
+{
+"ElementID": 6154,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Ja indien het een INGESCHREVEN PERSOON betreft, anders: Nee",
+"NOTES": null
+},
+{
+"ElementID": 6154,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Ja indien het een INGESCHREVEN PERSOON betreft, anders: Nee",
+"NOTES": null
+},
+{
+"ElementID": 6154,
+"Property": "Indicatie materiële historie",
+"VALUE": "Ja indien het een INGESCHREVEN PERSOON betreft, anders: Nee",
+"NOTES": null
+},
+{
+"ElementID": 6154,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6154,
+"Property": "Aanduiding brondocument",
+"VALUE": "<memo>",
+"NOTES": "Ja: AkteGemeente, Documentidentificatie, Documentgemeente,\r\nDocumentdatum, Documentbeschrijving indien het een INGESCHREVEN\r\nPERSOON betreft, anders: Nee"
+},
+{
+"ElementID": 6154,
+"Property": "Code attribuutsoort",
+"VALUE": "01.04.10",
+"NOTES": null
+},
+{
+"ElementID": 6154,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6154,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": ".Zie de toelichting in de GBA."
+},
+{
+"ElementID": 6154,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6154,
+"Property": "Indicatie formele historie",
+"VALUE": "Ja",
+"NOTES": null
+},
+{
+"ElementID": 6154,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6154,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2136A30E-2E6E-4271-8C4C-20E8DD60477D}",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Code attribuutsoort",
+"VALUE": "01.02.40",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het attribuutsoort maakt deel uit van het groepattribuutsoort Naam. Zie de toelichting in de GBA."
+},
+{
+"ElementID": 6155,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6155,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Authentiek gegeven"
+},
+{
+"ElementID": 6156,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het attribuutsoort maakt deel uit van het groepattribuutsoort Naam\r\naanschrijving."
+},
+{
+"ElementID": 6156,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Aanduiding brondocument",
+"VALUE": "{89538C6C-016D-41ec-AF65-B1E351D7E37B}",
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6156,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Authentiek gegeven"
+},
+{
+"ElementID": 6156,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven uit de Geslachtsnaam (G) en de Voorvoegsels (V)\r\nvan de natuurlijk persoon en de Geslachtsnaam (GP) en Voorvoegsels\r\n(VP) van de laatst ingeschreven actuele partner van de natuurlij"
+},
+{
+"ElementID": 6160,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING op basis van GBA",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6160,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2136A30E-2E6E-4271-8C4C-20E8DD60477D}",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Code attribuutsoort",
+"VALUE": "06.08.30",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "1 november 2008",
+"NOTES": null
+},
+{
+"ElementID": 6160,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In afwijking van het corresponderende GBA-attribuutsoort wordt niet de landcode vastgelegd maar de de relatie naar de referentielijst LAND. In het GFO BG betreft dit relatiesoort 08.30. Het attribuuts"
+},
+{
+"ElementID": 6160,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In afwijking van het corresponderende GBA-attribuutsoort wordt voor\r\nNederlandse gemeenten niet de code vastgelegd maar de\r\ngemeentenaam.\r\nHet attribuutsoort maakt deel uit van het groepattribuutsoort"
+},
+{
+"ElementID": 6162,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven"
+},
+{
+"ElementID": 6162,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Code attribuutsoort",
+"VALUE": "06.08.20",
+"NOTES": null
+},
+{
+"ElementID": 6162,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2136A30E-2E6E-4271-8C4C-20E8DD60477D}",
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het attribuutsoort biedt de mogelijkheid de natuurlijk persoon zelf te laten bepalen hoe hij aangeschreven wil worden indien in de aanschrijving gebruik gemaakt wordt van voorletters. Bijvoorbeeld “A."
+},
+{
+"ElementID": 6163,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6163,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven indien de natuurlijk persoon terzake geen opgave heeft gedaan. Afleidbaar uit de voornamen van de natuurlijk persoon"
+},
+{
+"ElementID": 6163,
+"Property": "Aanduiding brondocument",
+"VALUE": "{89538C6C-016D-41ec-AF65-B1E351D7E37B}",
+"NOTES": null
+},
+{
+"ElementID": 6163,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Authentiek gegeven"
+},
+{
+"ElementID": 6164,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2136A30E-2E6E-4271-8C4C-20E8DD60477D}",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Code attribuutsoort",
+"VALUE": "01.02.10",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het attribuutsoort maakt deel uit van het groepattribuutsoort Naam.NATUURLIJK PERSOON\r\nZie verder de toelichting in de GBA."
+},
+{
+"ElementID": 6164,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6164,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6165,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven indien de natuurlijk persoon terzake geen opgave heeft gedaan. Afleidbaar uit de voornamen van de persoon (kopie)"
+},
+{
+"ElementID": 6165,
+"Property": "Aanduiding brondocument",
+"VALUE": "{4FCF1C7E-014C-4a74-8D92-D4B44FB04B7B}",
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het attribuutsoort maakt deel uit van het groepattribuutsoort Naam aanschrijving."
+},
+{
+"ElementID": 6165,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6165,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Code attribuutsoort",
+"VALUE": "01.02.30",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het attribuutsoort maakt deel uit van het groepattribuutsoort Naam.NATUURLIJK PERSOON. Zie verder de toelichting in de GBA."
+},
+{
+"ElementID": 6166,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Indicatie materiële historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Indicatie formele historie",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Indicatie in onderzoek",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "zie groep",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Niet authentiek landelijk basisgegeven indien het een ingeschreven persoon betreft, anders een gemeentelijk basisgegeven."
+},
+{
+"ElementID": 6166,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Aanduiding brondocument",
+"VALUE": "{2136A30E-2E6E-4271-8C4C-20E8DD60477D}",
+"NOTES": null
+},
+{
+"ElementID": 6166,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GBA",
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6231,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "alle alfanumerieke tekens"
+},
+{
+"ElementID": 6231,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het betreft een afleidbaar groepattribuutsoort met de volgende afleidbare gegevens van of bij een ADRESSEERBAAR OBJECT AANDUIDING:\r\n\r\n• Adresseerbaar object aanduiding typering;\r\n• WOONPLAATS.Woonplaa"
+},
+{
+"ElementID": 6231,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het betreft een afleidbaar gegeven dat is opgenomen om subjecten te kunnen zoeken op hun binnenlandse adres. Per subject kan dit immers verschillen (verblijfsadres, vestigingslocatie, bezoekadres, cor"
+},
+{
+"ElementID": 6231,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "27-04-09",
+"NOTES": null
+},
+{
+"ElementID": 6231,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6232,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het betreft een afleidbaar groepattribuutsoort met de volgende afleidbare gegevens van het SUBJECT:\r\n• LAND.Landcode (van het LAND bij het SUBJECT)\r\n• LAND.Landnaam (van het LAND bij het SUBJECT)\r\n• A"
+},
+{
+"ElementID": 6232,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het betreft een afleidbaar gegeven dat is opgenomen om subjecten te kunnen zoeken op hun eventuele buitenlandse adres."
+},
+{
+"ElementID": 6232,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "27-04-09",
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "alle alfanumerieke tekens"
+},
+{
+"ElementID": 6232,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6232,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Code attribuutsoort",
+"VALUE": "95.16",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "alle bestaande alfanumerieke tekens waarin zich, aan het begin noch aan het eind, een ‘@’ moet bevinden."
+},
+{
+"ElementID": 6234,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6234,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6234,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "-"
+},
+{
+"ElementID": 6234,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In tegenstelling tot het GFO BG is hier alleen sprake van één emailadres dat het subject beschouwd als zijn ‘primaire’ emailadres."
+},
+{
+"ElementID": 6234,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6235,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "-"
+},
+{
+"ElementID": 6235,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In tegenstelling tot het GFO BG is hier alleen sprake van één faxnummer dat het subject beschouwd als zijn ‘primaire’ faxnummer."
+},
+{
+"ElementID": 6235,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Code attribuutsoort",
+"VALUE": "95.27",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "alle bestaande alfanumerieke tekens."
+},
+{
+"ElementID": 6235,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6235,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6236,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Voor een Ingeschreven persoon: de Subjecttypering gevolgd door het Burgerservicenummer.\r\nVoor een Ander natuurlijk persoon: de Subjecttypering gevolgd door het Nummer ander natuurlijk persoon.\r\nVoor e"
+},
+{
+"ElementID": 6236,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het betreft een afleidbaar gegeven dat is opgenomen om subjecten te kunnen zoeken op hun identificatie. Deze is immers voor de verschillende specificaties (Natuurlijk persoon, Niet-natuurlijk persoon "
+},
+{
+"ElementID": 6236,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "27-04-09",
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "alle cijfers en letters"
+},
+{
+"ElementID": 6236,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6236,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Afleidbaar gegeven"
+},
+{
+"ElementID": 6238,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Code attribuutsoort",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Het betreft een afleidbaar gegeven dat is opgenomen om subjecten te kunnen zoeken op naam. Deze is immers voor de verschillende specificaties (Natuurlijk persoon, Niet-natuurlijk persoon en Vestiging)"
+},
+{
+"ElementID": 6238,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "27-04-09",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "alle alfanumerieke tekens"
+},
+{
+"ElementID": 6238,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6238,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "Voor een Natuurlijk persoon samengesteld uit de Geslachtsnaam, de eerste voorletter uit Voorletters aanschrijving en de Voorvoegsels geslachtsnaam. Voor een Niet-natuurlijk persoon is dit de Statutair"
+},
+{
+"ElementID": 6240,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "KING op basis van GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Code attribuutsoort",
+"VALUE": "94.87",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "alle gehele natuurlijke getallen, m.u.v. nul"
+},
+{
+"ElementID": 6240,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In tegenstelling tot het GFO BG is hier alleen sprake van één rekeningnummer dat het subject beschouwd als zijn ‘primaire’ rekeningnummer."
+},
+{
+"ElementID": 6240,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6240,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 6240,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Herkomst attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Code attribuutsoort",
+"VALUE": "95.80",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Herkomst definitie attribuutsoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Datum opname attribuutsoort",
+"VALUE": "9 april 2007",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Waardenverzameling",
+"VALUE": "<memo>",
+"NOTES": "alle bestaande alfanumerieke tekens."
+},
+{
+"ElementID": 6241,
+"Property": "Aanduiding brondocument",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 6241,
+"Property": "Regels attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "-"
+},
+{
+"ElementID": 6241,
+"Property": "Toelichting attribuutsoort",
+"VALUE": "<memo>",
+"NOTES": "In tegenstelling tot het GFO BG is hier alleen sprake van één telefoonnummer dat het subject beschouwd als zijn ‘primaire’ telefoonnummer."
+},
+{
+"ElementID": 6241,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 6241,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+}
+],
+"t_operation": [],
+"t_connector": [
+{
+"Connector_ID": 185,
+"Name": "heeft",
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Association",
+"SubType": "Class",
+"SourceCard": "0..1",
+"DestCard": "1..*",
+"SourceRole": null,
+"DestRole": "relatie",
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 0,
+"Start_Object_ID": 1238,
+"End_Object_ID": 1245,
+"Stereotype": null,
+"LineStyle": 0,
+"PDATA1": "0",
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{9A375AE5-3CB2-4803-A247-061E39A8D5DE}"
+},
+{
+"Connector_ID": 170,
+"Name": "Ouder 1",
+"Direction": "Unspecified",
+"Notes": null,
+"Connector_Type": "Association",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 0,
+"Start_Object_ID": 1245,
+"End_Object_ID": 1245,
+"Stereotype": null,
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{367BFE15-E9E7-47f9-B5A2-92BFDDCF00FA}"
+},
+{
+"Connector_ID": 171,
+"Name": "Ouder 2",
+"Direction": "Unspecified",
+"Notes": null,
+"Connector_Type": "Association",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 0,
+"Start_Object_ID": 1245,
+"End_Object_ID": 1245,
+"Stereotype": null,
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{2CA328BA-49A9-4cc3-9193-8C8C8DE722A0}"
+},
+{
+"Connector_ID": 172,
+"Name": "is specialisatie van",
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Generalization",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 1245,
+"End_Object_ID": 1255,
+"Stereotype": "Generalisatie",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{EA27F33E-463D-4208-85C8-E9FF4B687175}"
+},
+{
+"Connector_ID": 153,
+"Name": "is specialisatie van",
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Generalization",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 1255,
+"End_Object_ID": 1265,
+"Stereotype": "Generalisatie",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{F4C0BE46-9707-4980-8BE3-083B83DA78A6}"
+}
+],
+"t_connectortag": [
+{
+"ElementID": 153,
+"Property": "GEMMA-toelichting",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 153,
+"Property": "GEMMA-source-guid",
+"VALUE": "cd27cd50-1721-4870-a292-ea0f24d1ada4",
+"NOTES": null
+},
+{
+"ElementID": 153,
+"Property": "toelichting",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 153,
+"Property": "GEMMA-definitie",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 153,
+"Property": "GEMMA-naam",
+"VALUE": "is specialisatie van",
+"NOTES": null
+},
+{
+"ElementID": 153,
+"Property": "datum-tijd-export",
+"VALUE": "22112024-11:45:45",
+"NOTES": null
+},
+{
+"ElementID": 153,
+"Property": "GEMMA-type",
+"VALUE": "specialization-relationship",
+"NOTES": null
+},
+{
+"ElementID": 153,
+"Property": "GEMMA-guid",
+"VALUE": "badf1cb6-a6de-44e6-906c-7a649ca8faf5",
+"NOTES": null
+},
+{
+"ElementID": 153,
+"Property": "GEMMA-target-guid",
+"VALUE": "cad45b80-14d3-4a0c-a906-0c1614dc9570",
+"NOTES": null
+},
+{
+"ElementID": 170,
+"Property": "GEMMA-toelichting",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 170,
+"Property": "datum-tijd-export",
+"VALUE": "22112024-11:45:45",
+"NOTES": null
+},
+{
+"ElementID": 170,
+"Property": "GEMMA-type",
+"VALUE": "association-relationship",
+"NOTES": null
+},
+{
+"ElementID": 170,
+"Property": "GEMMA-definitie",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 170,
+"Property": "GEMMA-naam",
+"VALUE": "Ouder 1",
+"NOTES": null
+},
+{
+"ElementID": 170,
+"Property": "GEMMA-source-guid",
+"VALUE": "e1371e07-969e-4a34-be81-0a23ffd541dd",
+"NOTES": null
+},
+{
+"ElementID": 170,
+"Property": "GEMMA-target-guid",
+"VALUE": "e1371e07-969e-4a34-be81-0a23ffd541dd",
+"NOTES": null
+},
+{
+"ElementID": 170,
+"Property": "toelichting",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 170,
+"Property": "GEMMA-guid",
+"VALUE": "2ac165c9-1d0d-4ab0-981e-45ba57d306ee",
+"NOTES": null
+},
+{
+"ElementID": 171,
+"Property": "GEMMA-naam",
+"VALUE": "Ouder 2",
+"NOTES": null
+},
+{
+"ElementID": 171,
+"Property": "GEMMA-type",
+"VALUE": "association-relationship",
+"NOTES": null
+},
+{
+"ElementID": 171,
+"Property": "datum-tijd-export",
+"VALUE": "22112024-11:45:45",
+"NOTES": null
+},
+{
+"ElementID": 171,
+"Property": "GEMMA-target-guid",
+"VALUE": "e1371e07-969e-4a34-be81-0a23ffd541dd",
+"NOTES": null
+},
+{
+"ElementID": 171,
+"Property": "GEMMA-guid",
+"VALUE": "941e56fe-2a62-4e5e-bd9f-7179a9433c1b",
+"NOTES": null
+},
+{
+"ElementID": 171,
+"Property": "GEMMA-source-guid",
+"VALUE": "e1371e07-969e-4a34-be81-0a23ffd541dd",
+"NOTES": null
+},
+{
+"ElementID": 171,
+"Property": "GEMMA-definitie",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 171,
+"Property": "GEMMA-toelichting",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 171,
+"Property": "toelichting",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 172,
+"Property": "datum-tijd-export",
+"VALUE": "22112024-11:45:45",
+"NOTES": null
+},
+{
+"ElementID": 172,
+"Property": "GEMMA-guid",
+"VALUE": "03190979-0d08-4dfa-b5e7-722e5a282244",
+"NOTES": null
+},
+{
+"ElementID": 172,
+"Property": "GEMMA-target-guid",
+"VALUE": "cd27cd50-1721-4870-a292-ea0f24d1ada4",
+"NOTES": null
+},
+{
+"ElementID": 172,
+"Property": "toelichting",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 172,
+"Property": "GEMMA-definitie",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 172,
+"Property": "GEMMA-naam",
+"VALUE": "is specialisatie van",
+"NOTES": null
+},
+{
+"ElementID": 172,
+"Property": "GEMMA-toelichting",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 172,
+"Property": "GEMMA-type",
+"VALUE": "specialization-relationship",
+"NOTES": null
+},
+{
+"ElementID": 172,
+"Property": "GEMMA-source-guid",
+"VALUE": "e1371e07-969e-4a34-be81-0a23ffd541dd",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Datum opname relatiesoort",
+"VALUE": "1 november 2008",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Herkomst definitie relatiesoort",
+"VALUE": "GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Toelichting relatiesoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Aanduiding brondocument",
+"VALUE": null,
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "datum-tijd-export",
+"VALUE": "22112024-11:45:45",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "GEMMA-definitie",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "GEMMA-type",
+"VALUE": "association-relationship",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "GEMMA-toelichting",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "toelichting",
+"VALUE": "nan",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "GEMMA-source-guid",
+"VALUE": "2515abf4-dea2-44eb-8886-c90c1ab42069",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "GEMMA-target-guid",
+"VALUE": "e1371e07-969e-4a34-be81-0a23ffd541dd",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "GEMMA-guid",
+"VALUE": "aa0087b5-b435-4fdd-bfa0-1f5644c2a6a7",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Indicatie materiële historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Herkomst relatiesoort",
+"VALUE": "KING op basis van GFO BG",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Aanduiding gebeurtenis",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Indicatie in onderzoek",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "GEMMA-naam",
+"VALUE": "heeft",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Indicatie formele historie",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Regels relatiesoort",
+"VALUE": "<memo>",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Naam terugrelatie",
+"VALUE": "hoort bij",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Aanduiding  strijdigheid/nietigheid",
+"VALUE": "Nee",
+"NOTES": null
+},
+{
+"ElementID": 185,
+"Property": "Indicatie authentiek",
+"VALUE": "<memo>",
+"NOTES": "Default: <memo>\r\nDescription:Gemeentelijk basisgegeven"
+},
+{
+"ElementID": 185,
+"Property": "Code relatiesoort",
+"VALUE": "94.40",
+"NOTES": null
+}
+],
+"t_xref": [
+{
+"Client": "{6FB0A5B7-7B5F-437f-A462-4B1EADB964E4}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Objecttype;FQName=MIM::Objecttype;@ENDSTEREO;"
+},
+{
+"Client": "{9A375AE5-3CB2-4803-A247-061E39A8D5DE}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=Relatiesoort;GUID={5A5FED89-F679-4700-ABFA-D25E0C7FFC95};@ENDSTEREO;"
+},
+{
+"Client": "{9DF5AC43-3673-4b9a-BB5E-6DCA7BE28835}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Objecttype;FQName=MIM::Objecttype;@ENDSTEREO;"
+},
+{
+"Client": "{9F4E12E4-B228-4931-AC83-1B1F60958A89}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Objecttype;FQName=MIM::Objecttype;@ENDSTEREO;"
+},
+{
+"Client": "{AF9534B0-7CBD-4061-9276-A7B6698B383A}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Objecttype;FQName=MIM::Objecttype;@ENDSTEREO;"
+},
+{
+"Client": "{EA27F33E-463D-4208-85C8-E9FF4B687175}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=Generalisatie;GUID={93E07441-5718-46a3-AE76-48C6C08D5BAC};@ENDSTEREO;"
+},
+{
+"Client": "{F4C0BE46-9707-4980-8BE3-083B83DA78A6}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=Generalisatie;GUID={93E07441-5718-46a3-AE76-48C6C08D5BAC};@ENDSTEREO;"
+}
+],
+"t_objectproperties": [
+{
+"Object_ID": 1238,
+"Property": "Code objecttype",
+"Value": "<niet gespecificeerd>",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "Datum opname objecttype",
+"Value": "9 april 2007",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "datum-tijd-export",
+"Value": "20-11-2024 15:32:03",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "domein-dcat",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "domein-gemma",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "domein-iv3",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "GEMMA-alternate-name",
+"Value": "Huishouden (RSGB Model)",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "GEMMA-bron",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "GEMMA-definitie",
+"Value": "Een duurzame samenlevingsvorm van een of meer natuurlijke personen binnen een VERBLIJFSOBJECT, STANDPLAATS of LIGPLAATS.",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "GEMMA-guid",
+"Value": "2515abf4-dea2-44eb-8886-c90c1ab42069",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "GEMMA-naam",
+"Value": "Huishouden",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "GEMMA-synoniemen",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "GEMMA-toelichting",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "GEMMA-type",
+"Value": "business-object",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "GEMMA-URL",
+"Value": "https://gemmaonline.nl/index.php/GEMMA/id-2515abf4-dea2-44eb-8886-c90c1ab42069",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "herkomst",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "Herkomst definitie objecttype",
+"Value": "o.b.v. GFO-BG",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "Herkomst objecttype",
+"Value": "Door KING toegevoegd objecttype, ontleend aan het GFO BG (maakt geen deel uit van enige basisregistratie).",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "Kwaliteitsbegrip objecttype",
+"Value": "<niet gespecificeerd>",
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "Populatie objecttype",
+"Value": "<memo>",
+"Notes": "<niet gespecificeerd>"
+},
+{
+"Object_ID": 1238,
+"Property": "synoniemen",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "toelichting",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1238,
+"Property": "Toelichting objecttype",
+"Value": "<memo>",
+"Notes": "(overgenomen uit het GFO-BG)\r\nHet gaat om de feitelijke leefvorm. Globaal zijn huishoudens in twee groepen te verdelen: de institutionele bevolking en particuliere huishoudens. Een institutioneel huis"
+},
+{
+"Object_ID": 1238,
+"Property": "Unieke aanduiding objecttype",
+"Value": "<memo>",
+"Notes": "Huishoudennummer"
+},
+{
+"Object_ID": 1245,
+"Property": "Code objecttype",
+"Value": "<niet gespecificeerd>",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "Datum opname objecttype",
+"Value": "9 april 2007",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "datum-tijd-export",
+"Value": "20-11-2024 15:32:03",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "domein-dcat",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "domein-gemma",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "domein-iv3",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "GEMMA-alternate-name",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "GEMMA-bron",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "GEMMA-definitie",
+"Value": "Een INGEZETENE of NIET-INGEZETENE",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "GEMMA-guid",
+"Value": "e1371e07-969e-4a34-be81-0a23ffd541dd",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "GEMMA-naam",
+"Value": "IngeschrevenPersoon",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "GEMMA-synoniemen",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "GEMMA-toelichting",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "GEMMA-type",
+"Value": "business-object",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "GEMMA-URL",
+"Value": "https://gemmaonline.nl/index.php/GEMMA/id-e1371e07-969e-4a34-be81-0a23ffd541dd",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "herkomst",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "Herkomst definitie objecttype",
+"Value": "KING",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "Herkomst objecttype",
+"Value": "Door KING toegevoegd objecttype.",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "Kwaliteitsbegrip objecttype",
+"Value": "<niet gespecificeerd>",
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "Populatie objecttype",
+"Value": "<memo>",
+"Notes": "<niet gespecificeerd>"
+},
+{
+"Object_ID": 1245,
+"Property": "synoniemen",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "toelichting",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1245,
+"Property": "Toelichting objecttype",
+"Value": "<memo>",
+"Notes": "Het betreft de verzameling van personen, ingeschreven in de GBA (ingezetenen) en het RNI (niet-ingezetene), woonachtig in de gemeente dan wel elders en van belang voor de gemeentelijke taakuitoefening"
+},
+{
+"Object_ID": 1245,
+"Property": "Unieke aanduiding objecttype",
+"Value": "<memo>",
+"Notes": "Burgerservicenummer\r\n"
+},
+{
+"Object_ID": 1245,
+"Property": "URL Stelselcatalogus",
+"Value": "http://opendata.stelselcatalogus.nl/brk/id/begrip/geregistreerdpersoon",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "Code objecttype",
+"Value": "<niet gespecificeerd>",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "Datum opname objecttype",
+"Value": "9 april 2007",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "datum-tijd-export",
+"Value": "20-11-2024 15:32:03",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "domein-dcat",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "domein-gemma",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "domein-iv3",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "GEMMA-alternate-name",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "GEMMA-bron",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "GEMMA-definitie",
+"Value": "Een INGESCHREVEN PERSOON of ANDER NATUURLIJK PERSOON",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "GEMMA-guid",
+"Value": "cd27cd50-1721-4870-a292-ea0f24d1ada4",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "GEMMA-naam",
+"Value": "NatuurlijkPersoon",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "GEMMA-synoniemen",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "GEMMA-toelichting",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "GEMMA-type",
+"Value": "business-object",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "GEMMA-URL",
+"Value": "https://gemmaonline.nl/index.php/GEMMA/id-cd27cd50-1721-4870-a292-ea0f24d1ada4",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "herkomst",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "Herkomst definitie objecttype",
+"Value": "KING",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "Herkomst objecttype",
+"Value": "Door KING toegevoegd objecttype, ontleend aan het GFO BG.",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "Kwaliteitsbegrip objecttype",
+"Value": "<niet gespecificeerd>",
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "Populatie objecttype",
+"Value": "<memo>",
+"Notes": "<niet gespecificeerd>"
+},
+{
+"Object_ID": 1255,
+"Property": "synoniemen",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "toelichting",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1255,
+"Property": "Toelichting objecttype",
+"Value": "<memo>",
+"Notes": "Het betreft de verzameling van personen, ingeschreven in de BasisRegistratie Personen (GBA en RNI), woonachtig in de gemeente dan wel elders en van belang voor de gemeentelijke taakuitoefening (ingeze"
+},
+{
+"Object_ID": 1255,
+"Property": "Unieke aanduiding objecttype",
+"Value": "<memo>",
+"Notes": "Zie SUBJECT"
+},
+{
+"Object_ID": 1265,
+"Property": "Code objecttype",
+"Value": "<niet gespecificeerd>",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "Datum opname objecttype",
+"Value": "1 mei 2008",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "datum-tijd-export",
+"Value": "20-11-2024 15:32:03",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "domein-dcat",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "domein-gemma",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "domein-iv3",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "GEMMA-alternate-name",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "GEMMA-bron",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "GEMMA-definitie",
+"Value": "Een NATUURLIJK PERSOON of een NIET-NATUURLIJK PERSOON",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "GEMMA-guid",
+"Value": "cad45b80-14d3-4a0c-a906-0c1614dc9570",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "GEMMA-naam",
+"Value": "Rechtspersoon",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "GEMMA-synoniemen",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "GEMMA-toelichting",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "GEMMA-type",
+"Value": "business-object",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "GEMMA-URL",
+"Value": "https://gemmaonline.nl/index.php/GEMMA/id-cad45b80-14d3-4a0c-a906-0c1614dc9570",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "Herkomst definitie objecttype",
+"Value": "KING",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "Herkomst objecttype",
+"Value": "Door KING toegevoegd objecttype",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "Kwaliteitsbegrip objecttype",
+"Value": "<niet gespecificeerd>",
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "Populatie objecttype",
+"Value": "<memo>",
+"Notes": "De minimale verzameling betreft de ingezetenen zijnde de inwoners van de gemeente en de in de gemeente gevestigde niet-natuurlijke personen."
+},
+{
+"Object_ID": 1265,
+"Property": "synoniemen",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "toelichting",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 1265,
+"Property": "Toelichting objecttype",
+"Value": "<memo>",
+"Notes": "Het betreft de verzameling van alle natuurlijke en niet-natuurlijke personen waarvan het gegevensbeheer van essentieel belang is voor de uitoefening van de gemeentelijke taken. Overigens beschouwd het"
+},
+{
+"Object_ID": 1265,
+"Property": "Unieke aanduiding objecttype",
+"Value": "<memo>",
+"Notes": "Zie SUBJECT."
+}
+],
+"t_diagram": [],
+"t_diagramobjects": [],
+"t_diagramlinks": []
+}

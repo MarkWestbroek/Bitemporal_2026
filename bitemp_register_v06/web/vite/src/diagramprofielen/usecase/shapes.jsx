@@ -88,7 +88,18 @@ function EllipsShape({ element, elementType, selected, children }) {
         preserveAspectRatio="none"
         style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       >
-        <ellipse cx="50" cy="20" rx="49" ry="19" fill={vulling} stroke={lijn} strokeWidth={selected ? 1.6 : 1} vectorEffect="non-scaling-stroke" />
+        <ellipse
+          cx="50"
+          cy="20"
+          rx="49"
+          ry="19"
+          fill={vulling}
+          stroke={lijn}
+          strokeWidth={selected ? 1.6 : 1}
+          vectorEffect="non-scaling-stroke"
+          // Collaboratie (UML 2 §11.7, EA "use case realization"): gestippelde ellips.
+          {...((element?.data?.randStijl || elementType?.randStijl) === "dashed" ? { strokeDasharray: "6 4" } : {})}
+        />
       </svg>
       <div
         style={{

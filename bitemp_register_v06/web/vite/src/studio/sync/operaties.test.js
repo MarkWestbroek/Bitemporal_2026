@@ -17,6 +17,8 @@ import {
   structuurNet,
   kruisNet,
   MODEL_OPS,
+  STRUCTUUR_OPS,
+  herschikOpVolgorde,
 } from "./operaties.js";
 
 let teller = 0;
@@ -196,4 +198,25 @@ test("zetElementen (hele map vervangen) wordt als patch gemeld, niet als vervang
   assert.deepEqual(Object.keys(uit.args[0].zet), ["B", "C"]);
   assert.deepEqual(uit.args[0].wis, []);
   assert.equal(MODEL_OPS.zetElementen([voor.elements], { voor, na: voor, resultaat: undefined }), null);
+});
+
+test("boomvolgorde: schuifPlaatsing is een operatie en het vangnet meldt een sleutelvolgorde-wissel", () => {
+  assert.ok("schuifPlaatsing" in STRUCTUUR_OPS, "schuifPlaatsing hoort in het vocabulaire");
+  const voor = { mappen: {}, plaatsing: { a: "m1", b: "m1", c: "m1" } };
+  const na = { mappen: {}, plaatsing: { b: "m1", a: "m1", c: "m1" } }; // zelfde waarden, andere volgorde
+  const ops = structuurNet(voor, na);
+  assert.equal(ops.length, 1);
+  assert.deepEqual(ops[0].args[0].volgordePlaatsing, ["b", "a", "c"]);
+  assert.deepEqual(ops[0].args[0].zetPlaatsing, {});
+  assert.deepEqual(structuurNet(voor, { mappen: {}, plaatsing: { ...voor.plaatsing } }), [], "zelfde volgorde = niets");
+});
+
+test("herschikOpVolgorde: expliciete volgorde wint, onbekende sleutels achteraan, zonder lijst ongewijzigd", () => {
+  const obj = { a: 1, b: 2, c: 3 };
+  assert.deepEqual(Object.keys(herschikOpVolgorde(obj, ["c", "a"])), ["c", "a", "b"]);
+  assert.deepEqual(Object.keys(herschikOpVolgorde(obj, ["x", "b"])), ["b", "a", "c"]);
+  assert.equal(herschikOpVolgorde(obj, null), obj);
+  // De jsonb-herschikking (korte sleutels eerst) wordt ongedaan gemaakt door de meegereisde lijst.
+  const uitJsonb = { "k::1": "m", "el::p::lang": "m", "k::22": "m" };
+  assert.deepEqual(Object.keys(herschikOpVolgorde(uitJsonb, ["el::p::lang", "k::22", "k::1"])), ["el::p::lang", "k::22", "k::1"]);
 });

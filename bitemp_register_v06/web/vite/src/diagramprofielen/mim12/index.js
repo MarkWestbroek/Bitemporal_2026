@@ -401,6 +401,17 @@ const elementTypes = [
     edgePresentatie: { lijn: "dash-4-4", kleur: "#d946ef", markerEnd: "pijl-open" },
   },
   {
+    id: "notitielijn",
+    label: "Notitie-lijn",
+    omschrijving: "Koppelt een notitie aan het element waar hij over gaat; geen modelrelatie.",
+    kort: "not",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["notitie"] },
+    doel: { elementTypes: [...OBJECTACHTIG, ...DATATYPEN, "keuze", "constraint", "package", "boundary"] },
+    edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#94a3b8" },
+  },
+  {
     // Package-lidmaatschap ("plaatsing in"), zelfde patroon als puur-uml.
     id: "bevat",
     label: "Bevat (package)",

@@ -8,10 +8,33 @@
 
 ---
 
-## Nog niet uitgebracht — canvas-bediening vervolg (na studio 0.14.0, 2026-10-07/08)
+## Snapshot-grens: studio 0.15.2 (2026-10-08)
 
-Alleen frontend, nog zonder versienummer; staat in [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md)
-onder *Unreleased* en in `docs/STUDIO.md` (canvas-bediening). Samengevat:
+Alleen frontend (patch). De opslag-aanroep stuurde `tot_volgnummer` niet mee: de snapshot-grens
+bleef 0, compactie deed niets en na *Van server ophalen* werden alle operaties nogmaals afgespeeld
+(een *Omhoog* van vóór de snapshot dus tweemaal). Zie [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+Uitrol: één image `bitemp-viz-frontend:0.15.2`; geen databasegevolg. Daarna één keer *Naar server
+sturen* (zet de grens en ruimt het log op) en bij de anderen *Van server ophalen*.
+
+---
+
+## Boomvolgorde in de sync: studio 0.15.1 (2026-10-08)
+
+Alleen frontend (patch). *Omhoog*/*Omlaag* in de projectboom reist nu als operatie naar collega's,
+en de snapshot draagt de boomvolgorde expliciet mee (`structuur.plaatsingVolgorde`): `jsonb`
+herschikt objectsleutels, waardoor wie ophaalde een andere volgorde kreeg dan wie stuurde. Zie
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md). Uitrol: één image `bitemp-viz-frontend:0.15.1`;
+api 0.12.0 en render-svc 0.1.0 ongewijzigd; geen databasegevolg. Bestaande projecten: één keer
+*Naar server sturen* (de ene) en *Van server ophalen* (de andere) om gelijk te komen.
+
+---
+
+## Projectsync stap 2 en canvas-bediening vervolg: api 0.12.0 / studio 0.15.0 (2026-10-08)
+
+Samenwerken wordt live: operatielog, SSE-kanaal, compactie, wie is online en de werkruimte per
+gebruiker op de server (backend, zie de projectsync-sectie hieronder). Plus het vervolg van de
+canvas-bediening (alleen frontend; details in [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md)
+onder 0.15.0 en in `docs/STUDIO.md`). Canvas-bediening samengevat:
 
 - **Geen browser-popups meer**: alle prompt/confirm/alert-vensters lopen via de eigen dialoogservice
   (`naamDialog.jsx`), die bij de muisklik verschijnt; *Nieuwe map*/*Nieuwe submap* maken de map
@@ -26,11 +49,37 @@ onder *Unreleased* en in `docs/STUDIO.md` (canvas-bediening). Samengevat:
 - **Sneltoetsen** instelbaar (Studio-instellingen → Sneltoetsen) met EA-achtige standaarden.
 - Graaf (demo), SP en de Profiel-editor staan standaard niet meer in de activity bar.
 
-### Uitrol
+### Projectsync, stap 2 (api 0.12.0) — backend én frontend
 
-- Eén image bij de volgende frontend-release (`bitemp-viz-frontend`); api en render-svc ongewijzigd.
-- Geen databasegevolg. Nieuwe localStorage-sleutels: `studio05-sneltoetsen`,
-  `studio05-project-elementen-hoogte`; bestaande taakbalk-voorkeuren blijven geldig.
+Samenwerken wordt live: elke modelwijziging is een benoemde operatie die naar de server gaat en
+bij collega's binnenkomt (plan `docs/plans/2026-10-07 Projectsync …`, `docs/API_REFERENCE.md` §15).
+
+- **Backend (api 0.12.0, `APIVersion` 0.12.0):** tabel `studio_project_ops` (operatielog per project, volgnummer),
+  kolom `studio_projecten.tot_volgnummer` (snapshot-grens), tabel `studio_werkruimtes` (tabs/open
+  mappen per gebruiker per project). Endpoints: `POST/GET …/ops`, `GET …/events` (SSE, met
+  presence), `GET/PUT …/werkruimte`, `GET /api/studio/instellingen`. Compactie: een snapshot-`PUT`
+  ruimt operaties t/m de grens op. Nieuwe instelling `STUDIO_SYNC_POLL_MS` (standaard 5000).
+- **Frontend:** operatielaag met outbox en verzender (SSE, poll als terugval), undo-rebase bij
+  remote operaties, werkruimte los van het project (werkbestand **v3**, zonder tabs/viewports;
+  localStorage `studio-werkruimte:<projectId>`), menu *Project* met sync-stand, *Live synchroniseren*,
+  *Nu verversen*; "N anderen online" in de menubalk; Studio-instellingen → *Samenwerken*.
+
+#### Uitrol
+
+- **Twee images**: `bitemp-go-api:0.12.0` en `bitemp-viz-frontend:0.15.0`; render-svc blijft 0.1.0.
+  Databasegevolg: twee nieuwe tabellen en één kolom, bij het opstarten aangemaakt; geen migratie
+  van bestaande gegevens.
+- nginx in de frontend-image hoeft niet aangepast: het SSE-kanaal zet `X-Accel-Buffering: no` en
+  stuurt elke 15 s een keepalive (nginx `proxy_read_timeout` 60 s). Caddy streamt `text/event-stream`
+  zonder bufferen.
+- Na het uitrollen: in twee browsers hetzelfde project openen; de menu-kop toont "live" en een
+  verplaatsing in de ene verschijnt direct in de andere.
+
+### Uitrol (canvas-bediening vervolg)
+
+- Zit in dezelfde frontend-image 0.15.0. Geen databasegevolg. Nieuwe localStorage-sleutels:
+  `studio05-sneltoetsen`, `studio05-project-elementen-hoogte`, `studio-werkruimte:<projectId>`;
+  bestaande taakbalk-voorkeuren blijven geldig.
 
 ---
 

@@ -61,15 +61,17 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.14.0`**
-  (2026-10-07: project op de server, operatielaag, projectboom-fixes). Daarvoor
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.15.2`**
+  (2026-10-08: patch — snapshot-grens reist mee), na **`studio/v0.15.1`**
+  (2026-10-08: patch — boomvolgorde synct en overleeft de snapshot) en **`studio/v0.15.0`**
+  (2026-10-08: live samenwerken — projectsync stap 2 — en canvas-bediening vervolg). Daarvoor
+  **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
-  taakbalken op een rij) en **`studio/v0.12.0`** (2026-10-06: activiteit Gebruikers, uitloggen in
-  de menubalk); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server, tabel `studio_projecten`;
-  geen brekende wijzigingen). Daarvoor **`api/v0.10.0`** (2026-10-06: gebruikersbeheer — Gebruiker
-  als bitemporele entiteit in domein `beheer`, met een migratie van de oude tabel bij de eerste
-  opstart); zie `RELEASE.md`.
+  taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
+- Backend: **`api/v0.12.0`** (2026-10-08: operatielog, SSE-kanaal, compactie, presence en
+  werkruimte voor Studio-projecten; tabellen `studio_project_ops`, `studio_werkruimtes`; geen
+  brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
+  tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
 - Render-sidecar: **`render/v0.1.0`** (eerste uitgave, 2026-10-06; image
   `bitemp-render-svc:0.1.0`), zie [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md) §4.2a.

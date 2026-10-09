@@ -7,6 +7,7 @@
 import { IconUseCase } from "../icons";
 import { registreerUseCase, usecaseDiagramType, maakElement } from "../../diagramprofielen/usecase/index.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import { importeerQeaAlsUsecase } from "../../diagramprofielen/ea/importQea.js";
 
 registreerUseCase();
 
@@ -24,4 +25,13 @@ export default maakDiagramActiviteit({
   standaardVerborgen: true, // preview-profiel; via Modelleren + instellingen bereikbaar
   previewTekst: "UML use case — actoren, use cases en systeemkader (gedragsdiagram-verkenning).",
   devHookNaam: "__usecase05Store",
+  koppeling: {
+    /** Sparx EA-repository (.qea) → de use case-diagrammen van één pakket. */
+    importBestand: {
+      label: "Importeer Sparx EA (.qea) — alleen dit profiel, zonder projectboom…",
+      accept: ".qea,.qeax",
+      binair: true,
+      verwerk: (bytes, bestandsnaam) => importeerQeaAlsUsecase(bytes, bestandsnaam),
+    },
+  },
 });

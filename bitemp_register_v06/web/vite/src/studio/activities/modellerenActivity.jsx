@@ -18,14 +18,16 @@
 import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
-import { vraagNaam, vraagBevestiging, toonMelding } from "../naamDialog.jsx";
+import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
-import { koppelStore, zonderVastleggen, rebaseStand, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
+import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
 import { useOutboxStore } from "../sync/outbox.js";
+import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
+import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore, aanwezigSamengevat } from "../sync/verzender.js";
 import {
   PROJECT_FORMAAT,
   PROJECT_FORMAAT_VERSIE,
@@ -36,6 +38,7 @@ import {
   haalProjectOp,
   maakProjectAan,
   slaProjectOp,
+  haalStudioInstellingenOp,
 } from "./projectSync.js";
 import { IconModelleren } from "../icons";
 import {
@@ -48,6 +51,7 @@ import {
 import ProfielIcoon from "../ProfielIcoon.jsx";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
+import { importeerQeaInProject } from "../../diagramprofielen/ea/importQeaProject.js";
 import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
 
 const ELEMENTEN_HOOGTE_SLEUTEL = "studio05-project-elementen-hoogte";
@@ -80,7 +84,14 @@ const elementKey = (profielId, elementId) => `el::${profielId}::${elementId}`;
 const isElementKey = (key) => key.startsWith("el::");
 
 // ── Tab-store (shell-state, los van de profiel-stores) ──────────────
+// Twee lagen in localStorage (2026-10-07, "werkruimte"):
+//  - `studio-modelleren`: de project-laag (mappen, plaatsing, projectidentiteit);
+//    gedeeld, gaat als operaties/snapshot naar de server;
+//  - `studio-werkruimte:<projectId>`: de werkruimte-laag (open tabs, actieve tab,
+//    open/dicht mappen) — van jou, per project; wisselen van project bewaart hem.
+// Apparaat-instellingen (paneelbreedtes, taakbalken) staan in studio-shell e.d.
 const LS_KEY = "studio-modelleren";
+const werkruimteSleutel = (projectId) => `studio-werkruimte:${projectId}`;
 
 function leesOpslag() {
   try {
@@ -90,20 +101,74 @@ function leesOpslag() {
   return {};
 }
 
+/** Werkruimte van een project; `bestaat` = er is al iets bewaard; `bijgewerkt` = ISO (LWW met de server). */
+function leesWerkruimte(projectId) {
+  try {
+    const raw = projectId ? localStorage.getItem(werkruimteSleutel(projectId)) : null;
+    if (raw) {
+      const d = JSON.parse(raw);
+      return { bestaat: true, tabs: d.tabs || [], actieveTab: d.actieveTab || null, mapOpen: d.mapOpen || {}, bijgewerkt: d.bijgewerkt || null };
+    }
+  } catch { /* ignore */ }
+  return { bestaat: false, tabs: [], actieveTab: null, mapOpen: {}, bijgewerkt: null };
+}
+
+// Wat de werkruimte-sleutel het laatst bevatte, om alleen echte wijzigingen
+// een nieuw tijdstip (en een PUT naar de server) te geven.
+let _werkruimteLaatst = "";
+
 function schrijfOpslag(state) {
   try {
     localStorage.setItem(
       LS_KEY,
       JSON.stringify({
-        tabs: state.tabs,
-        actieveTab: state.actieveTab,
         mappen: state.mappen,
-        mapOpen: state.mapOpen,
         plaatsing: state.plaatsing,
         project: state.project,
       })
     );
+    if (state.project?.id) {
+      const inhoud = { tabs: state.tabs, actieveTab: state.actieveTab, mapOpen: state.mapOpen };
+      const tekst = JSON.stringify(inhoud);
+      const sleutel = werkruimteSleutel(state.project.id);
+      if (tekst !== _werkruimteLaatst) {
+        _werkruimteLaatst = tekst;
+        const bijgewerkt = new Date().toISOString();
+        localStorage.setItem(sleutel, JSON.stringify({ ...inhoud, bijgewerkt }));
+        // Naar de server (als het project daar staat), met debounce — zie sync/werkruimte.js.
+        werkruimteGewijzigd(state.project.id, inhoud, bijgewerkt);
+      }
+    }
   } catch { /* ignore */ }
+}
+
+/**
+ * Werkruimte van de server overnemen als die nieuwer is dan de lokale (bv. op
+ * een andere computer verder). Tabs alleen als profiel + diagram bestaan.
+ */
+async function haalWerkruimteBinnen() {
+  const s = useModellerenStore.getState();
+  const projectId = s.project.id;
+  const server = await haalWerkruimteVanServer(projectId);
+  if (!server) return false;
+  if (useModellerenStore.getState().project.id !== projectId) return false; // intussen gewisseld
+  const lokaal = leesWerkruimte(projectId);
+  if (lokaal.bestaat && nieuwsteWerkruimte(lokaal, server) === "lokaal") return false;
+  const inhoud = server.inhoud || {};
+  const tabs = (inhoud.tabs || []).filter((t) => {
+    const p = getProfieltype(t.profielId);
+    return p && !!p.useStore.getState().diagrams[t.diagramId];
+  });
+  const actieveTab = tabs.some((t) => t.id === inhoud.actieveTab) ? inhoud.actieveTab : tabs[0]?.id || null;
+  // Overnemen zonder nieuwe PUT: wat we schrijven is precies wat de server heeft.
+  _werkruimteLaatst = JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {} });
+  try {
+    localStorage.setItem(werkruimteSleutel(projectId), JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, bijgewerkt: server.bijgewerkt }));
+  } catch { /* ignore */ }
+  useModellerenStore.setState({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {} });
+  if (actieveTab) useModellerenStore.getState().activeer(actieveTab);
+  menuBus.emit("menu:ververs");
+  return true;
 }
 
 const tabId = (profielId, diagramId) => `${profielId}::${diagramId}`;
@@ -128,6 +193,16 @@ function rijenInLijst(el) {
 }
 
 const opgeslagen = leesOpslag();
+const projectBegin = opgeslagen.project?.id
+  ? { serverVersie: null, ...opgeslagen.project }
+  : { id: nieuwProjectId(), naam: STANDAARD_PROJECTNAAM, serverVersie: null };
+// Werkruimte van dit project; een oude `studio-modelleren` met tabs erin
+// (vóór 2026-10-07) wordt eenmalig als werkruimte overgenomen.
+const werkruimteBegin = (() => {
+  const wr = leesWerkruimte(projectBegin.id);
+  if (wr.bestaat || !opgeslagen.tabs) return wr;
+  return { bestaat: false, tabs: opgeslagen.tabs || [], actieveTab: opgeslagen.actieveTab || null, mapOpen: opgeslagen.mapOpen || {} };
+})();
 
 // ── Undo/redo voor de projectstructuur (mappen + plaatsingen) ───────
 // Eigen stapel, los van de model-undo per profiel: Ctrl+Z met de focus in
@@ -150,10 +225,10 @@ const legStructuurVast = (s) => {
 let _mapTeller = 0;
 
 export const useModellerenStore = create((set, get) => ({
-  /** @type {{id:string, profielId:string, diagramId:string}[]} */
-  tabs: opgeslagen.tabs || [],
-  /** id van de actieve tab, of null */
-  actieveTab: opgeslagen.actieveTab || null,
+  /** @type {{id:string, profielId:string, diagramId:string}[]} — werkruimte-laag */
+  tabs: werkruimteBegin.tabs,
+  /** id van de actieve tab, of null — werkruimte-laag */
+  actieveTab: werkruimteBegin.actieveTab,
 
   /**
    * Identiteit van het project in deze browser (plan 2026-10-07 Projectsync):
@@ -161,17 +236,24 @@ export const useModellerenStore = create((set, get) => ({
    * versie die we het laatst met de server hebben uitgewisseld (null = alleen
    * lokaal). Een bestaande browser zonder project krijgt er hier één.
    */
-  project: opgeslagen.project?.id
-    ? { serverVersie: null, ...opgeslagen.project }
-    : { id: nieuwProjectId(), naam: STANDAARD_PROJECTNAAM, serverVersie: null },
+  project: projectBegin,
 
-  /** Werk project-identiteit bij (naam, serverVersie, of alles bij ophalen/nieuw). */
+  /**
+   * Werk project-identiteit bij (naam, serverVersie, laatsteVolgnummer, liveSync,
+   * of alles bij ophalen/nieuw). Een ander id = projectwissel: de werkruimte
+   * (tabs, open mappen) van dat project komt mee uit zijn eigen sleutel.
+   */
   zetProject: (patch) =>
     set((s) => {
       const project = { ...s.project, ...patch };
-      schrijfOpslag({ ...s, project });
+      const wissel = patch.id && patch.id !== s.project.id;
+      const wr = wissel ? leesWerkruimte(project.id) : null;
+      const next = wissel
+        ? { ...s, project, tabs: wr.tabs, actieveTab: wr.actieveTab, mapOpen: wr.mapOpen, mapSelectie: null, diagramSelectie: null, elementSelectie: null, multiSelectie: [] }
+        : { ...s, project };
+      schrijfOpslag(next);
       menuBus.emit("menu:ververs");
-      return { project };
+      return wissel ? { project, tabs: next.tabs, actieveTab: next.actieveTab, mapOpen: next.mapOpen, mapSelectie: null, diagramSelectie: null, elementSelectie: null, multiSelectie: [] } : { project };
     }),
 
   openTab: (profielId, diagramId) => {
@@ -234,8 +316,8 @@ export const useModellerenStore = create((set, get) => ({
   // staat onder "Niet ingedeeld" (per profieltype).
   /** @type {Record<string,{id:string,naam:string,ouderId:string|null}>} */
   mappen: opgeslagen.mappen || {},
-  /** open/dicht per map (default open) */
-  mapOpen: opgeslagen.mapOpen || {},
+  /** open/dicht per map (default open) — werkruimte-laag */
+  mapOpen: werkruimteBegin.mapOpen,
   /** { [tabId(profielId,diagramId)]: mapId } — plaatsing van diagrammen */
   plaatsing: opgeslagen.plaatsing || {},
 
@@ -499,13 +581,16 @@ export const useModellerenStore = create((set, get) => ({
    * Patch-operatie (projectsync-vangnet): mappen/plaatsingen van een ander
    * upserten of wissen. Buiten de structuur-undo (die staat dan uit).
    */
-  patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [] } = {}) =>
+  patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [], volgordePlaatsing = null } = {}) =>
     set((s) => {
       legStructuurVast(s);
       const mappen = { ...s.mappen, ...zetMappen };
       for (const id of wisMappen) delete mappen[id];
-      const plaatsing = { ...s.plaatsing, ...zetPlaatsing };
+      let plaatsing = { ...s.plaatsing, ...zetPlaatsing };
       for (const key of wisPlaatsing) delete plaatsing[key];
+      // Volgorde in de boom = sleutelvolgorde: herschik naar de gegeven lijst,
+      // onbekende sleutels (nog niet bij de ander) blijven achteraan.
+      plaatsing = herschikOpVolgorde(plaatsing, volgordePlaatsing);
       const next = { ...s, mappen, plaatsing };
       schrijfOpslag(next);
       return { mappen, plaatsing };
@@ -579,6 +664,15 @@ menuBus.on("studio:open-diagram", ({ profielId, diagramId } = {}) => {
   if (!profielId || !diagramId) return;
   useModellerenStore.getState().openTab(profielId, diagramId);
 });
+
+/** Studio-instellingen van de instantie, eenmalig opgehaald (gedeeld door alle Providers). */
+let _studioInstellingen = null;
+function studioInstellingen() {
+  if (!_studioInstellingen) {
+    _studioInstellingen = haalStudioInstellingenOp().catch(() => null);
+  }
+  return _studioInstellingen;
+}
 
 /** Actieve tab + bijbehorend profieltype (of nulls). */
 function actieveTabInfo() {
@@ -2094,6 +2188,58 @@ function Provider({ children }) {
       }),
     []
   );
+  // Projectsync (stap 2, onderdeel 4): de verzender volgt het project (id,
+  // live-sync, laatst bekende volgnummer) en pollt zolang de tab zichtbaar is
+  // (SSE komt in onderdeel 5 in de plaats van de poll).
+  const projectId = useModellerenStore((s) => s.project.id);
+  const opServer = useModellerenStore((s) => s.project.serverVersie != null);
+  const liveSync = useModellerenStore((s) => s.project.liveSync ?? true);
+  useEffect(() => {
+    let actueel = true;
+    configureerWerkruimte({ actief: () => useModellerenStore.getState().project.serverVersie != null });
+    if (opServer) haalWerkruimteBinnen();
+    configureerVerzender({
+      projectId: () => useModellerenStore.getState().project.id,
+      actief: () => {
+        const p = useModellerenStore.getState().project;
+        return p.serverVersie != null && (p.liveSync ?? true);
+      },
+      laatsteVolgnummer: () => useModellerenStore.getState().project.laatsteVolgnummer || 0,
+      zetLaatsteVolgnummer: (n) => {
+        const s = useModellerenStore.getState();
+        if ((s.project.laatsteVolgnummer || 0) !== n) s.zetProject({ laatsteVolgnummer: n });
+      },
+      totVolgnummer: () => useModellerenStore.getState().project.totVolgnummer || 0,
+      maakSnapshot: maakSnapshotStil,
+      herlaadSnapshot: herlaadSnapshotStil,
+    });
+    // Poll-interval is een admin-instelling van de instantie (STUDIO_SYNC_POLL_MS);
+    // eerst ophalen, dan (her)starten. Zonder antwoord geldt de standaard.
+    studioInstellingen().then((inst) => {
+      if (!actueel) return;
+      if (inst?.poll_ms) configureerVerzender({ pollMs: inst.poll_ms });
+      if (opServer && liveSync) {
+        startKanaal(); // SSE: live; de poll blijft als terugval en voor het verzenden
+        startPoll();
+      } else {
+        stopKanaal();
+        stopPoll();
+      }
+    });
+    return () => {
+      actueel = false;
+      stopKanaal();
+      stopPoll();
+    };
+  }, [projectId, opServer, liveSync]);
+  // Menu-kop (sync-stand) volgt de verzender, met een kleine rem.
+  useEffect(() => {
+    let timer = null;
+    return useSyncStore.subscribe(() => {
+      clearTimeout(timer);
+      timer = setTimeout(() => menuBus.emit("menu:ververs"), 250);
+    });
+  }, []);
   return <P key={profiel?.id || "leeg"}>{children}</P>;
 }
 
@@ -2101,9 +2247,10 @@ function Provider({ children }) {
 // Eerste trede van "projectstructuur voorbij localStorage" (fase 3.3):
 // deelbaar, back-upbaar — en sinds plan 2026-10-07 (Projectsync, stap 1) ook
 // de blob die als geheel naar /api/studio/projecten gaat en terugkomt.
-// Formaat "studio-project" v2 = v1 + `project: {id, naam}`.
+// Formaat "studio-project" v2 = v1 + `project: {id, naam}`; v3 (2026-10-07) =
+// zonder tabs/actieveTab en zonder viewports: dat is werkruimte, geen project.
 
-/** Bouw het werkbestand (v2) uit de stores. Gedeeld door export en server-sync. */
+/** Bouw het werkbestand (v3) uit de stores. Gedeeld door export en server-sync. */
 function bouwProjectData() {
   const s = useModellerenStore.getState();
   const profielen = {};
@@ -2116,13 +2263,8 @@ function bouwProjectData() {
     profielen[p.id] = {
       diagramTypeId: st.diagramTypeId,
       elements: st.elements,
-      // Viewports terug in de diagram-entries: laadModel splitst ze weer af.
-      diagrams: Object.fromEntries(
-        Object.entries(st.diagrams).map(([id, d]) => [
-          id,
-          st.viewports?.[id] ? { ...d, viewport: st.viewports[id] } : d,
-        ])
-      ),
+      // Zonder viewports (v3): pan/zoom is kijkstand van de gebruiker.
+      diagrams: st.diagrams,
       actiefDiagramId: st.actiefDiagramId,
       meta: st.meta,
     };
@@ -2132,9 +2274,9 @@ function bouwProjectData() {
     versie: PROJECT_FORMAAT_VERSIE,
     geexporteerd: new Date().toISOString(),
     project: { id: s.project.id, naam: s.project.naam },
-    structuur: { mappen: s.mappen, plaatsing: s.plaatsing },
-    tabs: s.tabs,
-    actieveTab: s.actieveTab,
+    // plaatsingVolgorde: de boomvolgorde expliciet — jsonb op de server bewaart
+    // de sleutelvolgorde van `plaatsing` niet (gemeld 2026-10-08).
+    structuur: { mappen: s.mappen, plaatsing: s.plaatsing, plaatsingVolgorde: Object.keys(s.plaatsing) },
     kruisverbanden: useKruisStore.getState().links,
     profielen,
   };
@@ -2157,7 +2299,20 @@ function exporteerProject() {
  * Gedeeld door JSON-import en "Van server ophalen". Onbekende profielen worden
  * overgeslagen (de aanroeper heeft dat al gemeld).
  */
-function pasProjectToe(data, { serverVersie = null } = {}) {
+function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}) {
+  // Projectwissel eerst: zetProject laadt de werkruimte (tabs, open mappen) van
+  // dit project uit zijn eigen sleutel. Bestaat die nog niet, dan zijn de tabs
+  // uit een v1/v2-werkbestand de eerste werkruimte.
+  const wrBestond = leesWerkruimte(data.project.id).bestaat;
+  useModellerenStore.getState().zetProject({
+    id: data.project.id,
+    naam: data.project.naam,
+    serverVersie,
+    laatsteVolgnummer,
+    totVolgnummer: laatsteVolgnummer,
+    liveSync: true,
+    laatsteSync: null,
+  });
   // Een snapshot laden is geen reeks handelingen: niets in de outbox, en de
   // outbox van het vorige project vervalt (de snapshot is de nieuwe basis).
   zonderVastleggen(() => {
@@ -2176,21 +2331,24 @@ function pasProjectToe(data, { serverVersie = null } = {}) {
         p.useStore.temporal?.getState().clear();
       }
     }
-    // Tabs alleen behouden als hun profiel + diagram na de import bestaan.
-    const tabs = (data.tabs || []).filter((t) => {
+    // Tabs: de lokale werkruimte van dit project, anders die uit het
+    // werkbestand (v1/v2); alleen als profiel + diagram na de import bestaan.
+    const ms = useModellerenStore.getState();
+    const bron = wrBestond ? ms.tabs : data.tabs || [];
+    const tabs = bron.filter((t) => {
       const p = getProfieltype(t.profielId);
       return p && !!p.useStore.getState().diagrams[t.diagramId];
     });
-    useModellerenStore.getState().laadStructuur({
+    const gewenstActief = wrBestond ? ms.actieveTab : data.actieveTab;
+    ms.laadStructuur({
       mappen: data.structuur?.mappen,
-      plaatsing: data.structuur?.plaatsing,
+      plaatsing: herschikOpVolgorde(data.structuur?.plaatsing || {}, data.structuur?.plaatsingVolgorde),
       tabs,
-      actieveTab: tabs.some((t) => t.id === data.actieveTab) ? data.actieveTab : tabs[0]?.id || null,
+      actieveTab: tabs.some((t) => t.id === gewenstActief) ? gewenstActief : tabs[0]?.id || null,
     });
     useKruisStore.getState().laadLinks(Array.isArray(data.kruisverbanden) ? data.kruisverbanden : []);
   });
   useOutboxStore.getState().wis();
-  useModellerenStore.getState().zetProject({ id: data.project.id, naam: data.project.naam, serverVersie });
 }
 
 /** Alles leeg en een nieuwe projectidentiteit (na "parkeren"). */
@@ -2205,7 +2363,7 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
     useKruisStore.getState().laadLinks([]);
   });
   useOutboxStore.getState().wis();
-  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteSync: null });
+  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null });
 }
 
 async function importeerProjectTekst(tekst, bestandsnaam = "") {
@@ -2250,6 +2408,146 @@ function kiesEnImporteerProject() {
       .catch((e) => toonMelding({ tekst: `Lezen mislukt: ${e}` }));
   };
   inp.click();
+}
+
+// ── Sparx EA-import: de EA-boom als mappen ──────────────────────────────
+
+/**
+ * Zet wat de EA-import in een profiel heeft gezet op zijn plek in de
+ * projectboom, zoals EA het toont (Mark, 09-10): pakketten als mappen, en
+ * daarbinnen de elementen die diagrammen "bezitten" (use case → activity)
+ * óók als map — het diagram staat erin, met de knopen (acties, beslissingen)
+ * ernaast. Elementen zonder zo'n eigenaar staan in de map van hun pakket.
+ * Mappen worden hergebruikt (zelfde naam onder dezelfde ouder), dus een
+ * tweede import maakt geen dubbele boom.
+ *
+ * @param {string} profielId
+ * @param {{elements: Record<string, any>, diagrams: Record<string, any>}} model - de ingevoegde delen (definitieve ids)
+ * @param {{bron: any, packageId: number, geheugen: Map<any, any>}} ctx
+ */
+/**
+ * Waar de EA-boom in het project komt: een bestaande map (op pad gekozen) of
+ * de wortel. `undefined` = afgebroken. De bron bepaalt wát het is, de
+ * gebruiker wáár het komt (Mark, 09-10).
+ */
+async function kiesDoelmapVoorEa(pakketLabel) {
+  const { mappen } = useModellerenStore.getState();
+  const pad = (id) => {
+    const uit = [];
+    let c = mappen[id];
+    let n = 0;
+    while (c && n++ < 30) {
+      uit.unshift(c.naam);
+      c = c.ouderId ? mappen[c.ouderId] : null;
+    }
+    return uit.join(" / ");
+  };
+  const opties = [
+    { waarde: "__wortel__", label: "(wortel van het project)" },
+    ...Object.values(mappen)
+      .map((m) => ({ waarde: m.id, label: pad(m.id) }))
+      .sort((a, b) => a.label.localeCompare(b.label)),
+  ];
+  const keuze = await vraagKeuze({
+    titel: "Waar in het project?",
+    label: `Map voor "${(pakketLabel || "").split(" / ").pop() || "het pakket"}" (het EA-pakket wordt daarin een map)`,
+    opties,
+    bevestig: "Importeer",
+    zoekbaar: opties.length > 8,
+  });
+  if (!keuze) return undefined;
+  return keuze === "__wortel__" ? null : keuze;
+}
+
+function plaatsEaInProjectboom(profielId, model, ctx) {
+  const { bron, packageId, geheugen, doel } = ctx;
+  const st = useModellerenStore.getState();
+  const pakketPerId = new Map((bron.t_package || []).map((p) => [p.Package_ID, p]));
+  const objectPerId = new Map((bron.t_object || []).map((o) => [o.Object_ID, o]));
+  const objectPerGuid = new Map((bron.t_object || []).map((o) => [o.ea_guid, o]));
+  const diagramPerGuid = new Map((bron.t_diagram || []).map((d) => [String(d.ea_guid || "").replace(/[{}]/g, "").toLowerCase(), d]));
+  const inBereik = new Set();
+  const stapel = [packageId];
+  while (stapel.length) {
+    const id = stapel.pop();
+    inBereik.add(id);
+    for (const p of pakketPerId.values()) if (p.Parent_ID === id) stapel.push(p.Package_ID);
+  }
+
+  /** Map zoeken of maken: zelfde naam onder dezelfde ouder = dezelfde map. */
+  const mapVoor = (naam, ouderId) => {
+    const sleutel = `map|${ouderId || ""}|${naam}`;
+    if (geheugen.has(sleutel)) return geheugen.get(sleutel);
+    const bestaand = Object.values(useModellerenStore.getState().mappen).find(
+      (m) => m.naam === naam && (m.ouderId || null) === (ouderId || null)
+    );
+    const id = bestaand ? bestaand.id : st.nieuweMap(naam, ouderId || null);
+    geheugen.set(sleutel, id);
+    return id;
+  };
+  /** Map van een EA-pakket (recursief tot het gekozen pakket; daarbuiten = wortel). */
+  const mapVanPakket = (pid) => {
+    if (!inBereik.has(pid)) return null;
+    const sleutel = `pkg|${pid}`;
+    if (geheugen.has(sleutel)) return geheugen.get(sleutel);
+    const p = pakketPerId.get(pid);
+    // Het gekozen pakket komt in de gekozen doelmap (of de wortel).
+    const ouder = p && pid !== packageId ? mapVanPakket(p.Parent_ID) : doel || null;
+    const id = mapVoor(p?.Name || `Pakket ${pid}`, ouder);
+    geheugen.set(sleutel, id);
+    return id;
+  };
+  // Alleen elementen die een diagram "bezitten" (t_diagram.ParentID: de
+  // activity, en via ParentID de use case erboven) worden een map — niet elke
+  // actie met een pin eraan.
+  const eigenaars = new Set();
+  for (const d of bron.t_diagram || []) {
+    let cursor = d.ParentID, n = 0;
+    while (cursor && objectPerId.has(cursor) && n++ < 20) {
+      eigenaars.add(cursor);
+      cursor = objectPerId.get(cursor).ParentID;
+    }
+  }
+  /** Map van een "eigenaar"-element (use case, activity): via ParentID omhoog tot het pakket. */
+  const mapVanEigenaar = (objectId, diepte = 0) => {
+    const o = objectPerId.get(objectId);
+    if (!o || diepte > 20) return null;
+    // Geen eigenaar van een diagram: de dichtstbijzijnde eigenaar erboven, anders het pakket.
+    if (!eigenaars.has(objectId)) return o.ParentID ? mapVanEigenaar(o.ParentID, diepte + 1) : mapVanPakket(o.Package_ID);
+    const sleutel = `obj|${objectId}`;
+    if (geheugen.has(sleutel)) return geheugen.get(sleutel);
+    const ouder = o.ParentID ? mapVanEigenaar(o.ParentID, diepte + 1) : mapVanPakket(o.Package_ID);
+    const stereo = o.Stereotype ? `«${o.Stereotype}» ` : "";
+    const id = mapVoor(`${stereo}${o.Name || o.Object_Type}`, ouder);
+    geheugen.set(sleutel, id);
+    return id;
+  };
+
+  const keys = new Map(); // mapId → keys
+  const zet = (key, mapId) => {
+    if (!mapId) return;
+    if (!keys.has(mapId)) keys.set(mapId, []);
+    keys.get(mapId).push(key);
+  };
+  // Diagrammen: in de map van hun eigenaar-element, anders van hun pakket.
+  for (const d of Object.values(model.diagrams)) {
+    const guid = (String(d.id).match(/ead-([0-9a-f-]{36})/) || [])[1];
+    const rij = guid ? diagramPerGuid.get(guid) : null;
+    if (!rij) continue;
+    const mapId = rij.ParentID ? mapVanEigenaar(rij.ParentID) : mapVanPakket(rij.Package_ID);
+    zet(tabId(profielId, d.id), mapId);
+  }
+  // Elementen (geen connectoren, geen naamloze notities/teksten): bij hun
+  // eigenaar (ParentID) of in hun pakket.
+  for (const el of Object.values(model.elements)) {
+    if (el.source || el.target || !el.data?.eaGuid) continue;
+    if (!el.naam && el.elementType !== "begin") continue;
+    const o = objectPerGuid.get(el.data.eaGuid);
+    if (!o || o.Object_Type === "Package") continue;
+    const mapId = o.ParentID && objectPerId.has(o.ParentID) ? mapVanEigenaar(o.ParentID) : mapVanPakket(o.Package_ID);
+    zet(elementKey(profielId, el.id), mapId);
+  }
+  for (const [mapId, lijst] of keys) useModellerenStore.getState().plaatsMeerdere(lijst, mapId);
 }
 
 // ── Projectacties in het menu ─────────────────────────────────────────
@@ -2297,9 +2595,12 @@ async function nieuwProject() {
  * opgeslagen) kiest de gebruiker: overschrijven of afbreken.
  */
 async function stuurNaarServer() {
+  // Eerst de outbox leeg (de snapshot hoort alles te bevatten wat al als
+  // operatie onderweg is), dan de blob met de grens `tot_volgnummer`.
+  if (useModellerenStore.getState().project.serverVersie != null) await verzend();
   const { project, zetProject } = useModellerenStore.getState();
   const inhoud = bouwProjectData();
-  const basis = { naam: project.naam, inhoud };
+  const basis = { naam: project.naam, inhoud, tot_volgnummer: project.laatsteVolgnummer || 0 };
   const bevestigOverschrijven = (server) =>
     vraagBevestiging({
       titel: "Overschrijven op de server?",
@@ -2337,9 +2638,61 @@ async function stuurNaarServer() {
         }
       }
     }
-    zetProject({ serverVersie: meta.versie, laatsteSync: new Date().toISOString() });
+    zetProject({
+      serverVersie: meta.versie,
+      laatsteVolgnummer: Math.max(project.laatsteVolgnummer || 0, meta.laatste_volgnummer || 0),
+      totVolgnummer: meta.tot_volgnummer || 0,
+      liveSync: project.liveSync ?? true,
+      laatsteSync: new Date().toISOString(),
+    });
   } catch (e) {
     toonMelding({ tekst: `Naar server sturen mislukt: ${e?.message || e}` });
+  }
+}
+
+/**
+ * Stille snapshot (compactie, onderdeel 6): zoals "Naar server sturen", maar
+ * zonder dialogen. 409 = een ander was eerder: neem de servergrens over.
+ * Aangeroepen door de verzender als het log ver genoeg voorbij de grens staat.
+ */
+async function maakSnapshotStil() {
+  const { project, zetProject } = useModellerenStore.getState();
+  if (project.serverVersie == null) return;
+  const inhoud = bouwProjectData();
+  try {
+    const meta = await slaProjectOp(project.id, {
+      naam: project.naam,
+      inhoud,
+      versie: project.serverVersie,
+      tot_volgnummer: project.laatsteVolgnummer || 0,
+    });
+    zetProject({ serverVersie: meta.versie, totVolgnummer: meta.tot_volgnummer || 0, laatsteSync: new Date().toISOString() });
+  } catch (e) {
+    if (e?.status === 409 && e.server) {
+      zetProject({ serverVersie: e.server.versie, totVolgnummer: e.server.tot_volgnummer || 0 });
+    }
+    // 404/offline: de verzender meldt dat al; niets te doen.
+  }
+}
+
+/**
+ * Snapshot opnieuw laden zonder dialogen (de server zei: te oud om bij te
+ * praten). De werkruimte (tabs) blijft; daarna de operaties ná de grens.
+ */
+async function herlaadSnapshotStil() {
+  const { project } = useModellerenStore.getState();
+  if (project.serverVersie == null) return;
+  try {
+    const rec = await haalProjectOp(project.id);
+    const uit = normaliseerProjectData(rec.inhoud);
+    if (!uit.ok) return;
+    const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
+    pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0 });
+    await haalBinnen({ inclusiefEigen: true });
+    useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
+    menuBus.emit("menu:ververs");
+  } catch {
+    /* offline: de verzender meldt dat al */
   }
 }
 
@@ -2371,8 +2724,11 @@ function haalVanServer() {
         const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
         const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
         if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio (overgeslagen): ${onbekend.join(", ")}` });
-        pasProjectToe(data, { serverVersie: rec.versie });
+        pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0 });
+        // Snapshot + wat er daarna in het operatielog kwam (ook eigen oude operaties).
+        const n = await haalBinnen({ inclusiefEigen: true });
         useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
+        if (n) menuBus.emit("menu:ververs");
       } catch (e) {
         toonMelding({ tekst: `Ophalen mislukt: ${e?.message || e}` });
       }
@@ -2383,21 +2739,70 @@ function haalVanServer() {
 /** Menubalk = eigen Project-menu + de menu's van het profiel van de actieve tab. */
 function menus(ctx) {
   const { project } = useModellerenStore.getState();
+  const sync = useSyncStore.getState();
+  const liveAan = project.serverVersie != null && (project.liveSync ?? true);
   const syncStand =
     project.serverVersie == null
       ? "alleen lokaal"
       : `server v${project.serverVersie}` +
-        (project.laatsteSync ? ` · ${new Date(project.laatsteSync).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}` : "");
+        (!liveAan
+          ? " · live-sync uit"
+          : sync.stand === "ok"
+            ? sync.teVerzenden
+              ? ` · ${sync.teVerzenden} te verzenden`
+              : sync.kanaal === "verbonden"
+                ? " · live"
+                : " · gesynchroniseerd (poll)"
+            : sync.stand === "bezig"
+              ? " · verzenden…"
+              : sync.stand === "offline"
+                ? ` · offline (${sync.teVerzenden} wachten)`
+                : sync.stand === "nietOpServer"
+                  ? " · niet (meer) op de server"
+                  : sync.stand === "fout"
+                    ? " · fout bij verzenden"
+                    : "");
   const projectMenu = {
     id: "project",
     label: "Project",
     items: [
       { type: "kop", label: `${project.naam} — ${syncStand}` },
+      ...(liveAan && sync.kanaal === "verbonden" && aanwezigSamengevat().anderen
+        ? [
+            {
+              type: "kop",
+              label:
+                "Online: " +
+                aanwezigSamengevat()
+                  .personen.map((p) => `${p.naam}${p.ik ? " (jij)" : ""}${p.tabs > 1 ? ` ×${p.tabs}` : ""}`)
+                  .join(", "),
+            },
+          ]
+        : []),
       { id: "proj-hernoem", label: "Hernoem project…", onClick: hernoemProject },
       { id: "proj-nieuw", label: "Nieuw project… (huidige parkeren)", onClick: nieuwProject },
       { type: "separator" },
-      { id: "proj-push", label: "Naar server sturen", onClick: stuurNaarServer },
+      { id: "proj-push", label: "Naar server sturen (snapshot)", onClick: stuurNaarServer },
       { id: "proj-pull", label: "Van server ophalen…", onClick: haalVanServer },
+      {
+        id: "proj-live",
+        label: "Live synchroniseren (wijzigingen heen en terug)",
+        checked: liveAan,
+        disabled: project.serverVersie == null,
+        onClick: () => useModellerenStore.getState().zetProject({ liveSync: !(project.liveSync ?? true) }),
+      },
+      {
+        id: "proj-ververs",
+        label: "Nu verversen (wijzigingen van anderen)",
+        disabled: !liveAan,
+        onClick: async () => {
+          await verzend();
+          const n = await haalBinnen();
+          const st = useSyncStore.getState();
+          if (st.stand === "offline" || st.stand === "fout" || st.stand === "nietOpServer") toonMelding({ titel: "Verversen", tekst: `${st.fout || st.stand}` });
+          else if (n) menuBus.emit("menu:ververs");
+        },
+      },
       { type: "separator" },
       { id: "proj-export", label: "Exporteer project (structuur + modellen)…", onClick: exporteerProject },
       { id: "proj-import", label: "Importeer project…", onClick: kiesEnImporteerProject },
@@ -2411,7 +2816,31 @@ function menus(ctx) {
       ? profiel.menus(ctx)
       : profiel.menus
     : [];
-  return [projectMenu, ...(Array.isArray(ruw) ? ruw : [])];
+  const profielMenus = Array.isArray(ruw) ? ruw : [];
+  // Bestand → Importeer Sparx EA: één pakket, elk diagram naar zijn eigen
+  // profiel (UML/MIM, Activity, Use case) — los van het actieve tabblad, zie
+  // diagramprofielen/ea/importQeaProject.js. Komt onder het Bestand-menu van
+  // het actieve profiel als dat er een heeft, anders onder het standaard-Bestand.
+  // Bovenaan in Bestand, vóór de profiel-eigen import ("… alleen dit
+  // profiel …"): dit is de import die je in Modelleren wilt (Mark, 09-10
+  // pakte de profiel-variant en kreeg alleen het use case-diagram).
+  const eaItem = {
+    id: "proj-import-ea",
+    label: "Importeer Sparx EA (.qea)…",
+    onClick: () => importeerQeaInProject({ kiesDoel: kiesDoelmapVoorEa, naImport: plaatsEaInProjectboom }),
+  };
+  // In Modelleren is er maar één EA-import, en die doet altijd hetzelfde,
+  // welk tabblad ook actief is (Mark, 09-10): de profiel-eigen varianten
+  // ("… alleen dit profiel …") verdwijnen hier uit het Bestand-menu; ze
+  // blijven bestaan in de losse profiel-activiteiten.
+  const zonderProfielEa = (items) =>
+    (items || []).filter((it) => !(typeof it?.label === "string" && /Sparx EA/.test(it.label) && /alleen dit profiel/.test(it.label)));
+  const bestandIdx = profielMenus.findIndex((m) => m?.id === "bestand");
+  const metEa =
+    bestandIdx >= 0
+      ? profielMenus.map((m, i) => (i === bestandIdx ? { ...m, items: [eaItem, { type: "separator" }, ...zonderProfielEa(m.items)] } : m))
+      : [...profielMenus, { id: "bestand", aanvullen: true, items: [eaItem] }];
+  return [projectMenu, ...metEa];
 }
 
 export default {

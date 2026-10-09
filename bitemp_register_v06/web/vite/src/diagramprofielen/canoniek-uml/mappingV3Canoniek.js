@@ -28,6 +28,14 @@
 /** Properties met een eigen vertaling in de adapter (niet 1-op-1 in data). */
 export const EIGEN_VERTALING = new Set(["kleur", "materieel", "domein"]);
 
+/**
+ * Per elementtype: geërfde properties die voor dát type níet 1-op-1 meegaan.
+ * Sinds Metamodel v2026 erft `relatie` van `gegevenselement` en draagt dus
+ * `typenaam`; voor een relatie is de typenaam altijd de naam (de terugreis
+ * zet typenaam := naam), dus die reist niet als los veld.
+ */
+export const NIET_1_OP_1 = { relatie: new Set(["typenaam"]) };
+
 /** Elementtypen waarvan de properties 1-op-1 tussen sandbox en oude vorm gaan. */
 export const GENERIEKE_TYPES = new Set(["entiteit", "gegevenselement", "relatie", "compositie"]);
 
@@ -37,9 +45,10 @@ export const GENERIEKE_TYPES = new Set(["entiteit", "gegevenselement", "relatie"
  */
 export function vertaalbareVelden(elementType) {
   if (!elementType || !GENERIEKE_TYPES.has(elementType.id)) return [];
+  const nietVoorType = NIET_1_OP_1[elementType.id] || new Set();
   return (elementType.properties || [])
     .map((p) => p.key)
-    .filter((k) => k && !EIGEN_VERTALING.has(k));
+    .filter((k) => k && !EIGEN_VERTALING.has(k) && !nietVoorType.has(k));
 }
 
 /**

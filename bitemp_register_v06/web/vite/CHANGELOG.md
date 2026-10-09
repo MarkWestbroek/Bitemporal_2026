@@ -7,6 +7,84 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+Sparx EA-import en overerving in het M3 (branch `feat/ea-qea-lezer`, 07–09 oktober; alleen
+frontend, api blijft 0.12.0). Onderzoek en EA-schema: `docs/plans/2026-10-07 Sparx EA-sync — vier
+routes vergeleken (onderzoek).md`.
+
+### Toegevoegd
+- **Sparx EA importeren uit een `.qea`** (SQLite, client-side met sql.js): in Modelleren *Bestand →
+  Importeer Sparx EA (.qea)…* leest één pakket (keuzelijst met zoekveld) en zet elk diagram in zijn
+  eigen profiel — klassediagrammen naar UML of, bij MIM-/MIG-stereotypen, naar MIM (tagged values →
+  mim12-eigenschappen), activiteitendiagrammen naar Activity (aanroepen, pins, guards, partities),
+  use case-diagrammen naar Use case (incl. collaboratie en «legt vast»). Posities, maten, knikpunten,
+  verborgen lijnen en kleuren komen mee (schaal 1,5); stabiele ids uit de EA-GUID; stereotypen,
+  tagged values en notities reizen mee op `data`. De EA-boom wordt de projectboom: pakketten,
+  use cases en activities als mappen, het diagram bij zijn eigenaar met de knopen ernaast; je kiest
+  de doelmap of de wortel. Toevoegen met undo per profiel. Per profiel bestaat ook een import
+  "alleen dit profiel". `scripts/inspecteer-qea.py` doorlicht een `.qea`.
+- **M3: overerving en abstracte elementtypen** — `ElementType.erft` en `isAbstract` (EMOF
+  superClass/isAbstract), uitgevlakt bij registratie (`types/erfenis.js`); een abstract type staat in
+  elk bereik voor zijn concrete afstammelingen (een abstract knoop-type nooit voor connectoren);
+  profiel-ontwerper tekent *Erft van* (▷) en kent een vinkje *abstract*. **Canoniek-uml** staat op
+  Marks Metamodel v2026: abstracte `representatie`, entiteit en gegevenselement eronder, relatie
+  onder gegevenselement.
+- **Profielen**: notitie-lijn in puur-uml, activity, use case en MIM; collaboratie, klasse,
+  realiseert en dependency in use case; `ElementType.omtrek` (ruit/ellips) zodat lijnen de echte
+  vorm raken — activity hecht nu zwevend.
+- **Studio**: bestandsimport in een niet-lege sandbox vraagt *toevoegen (undo)* of *vervangen*;
+  keuzedialoog `vraagKeuze` met zoekveld; `importBestand.binair`.
+
+### Gefixt
+- Zwevende lijnuiteinden mikken op hun dichtstbijzijnde knikpunt (niet op de andere doos); een
+  knikpunt óp de rand is het uiteinde.
+
+
+## [studio/v0.15.2] — 2026-10-08
+Patch: de snapshot-grens ging niet mee naar de server. Alleen frontend; api blijft 0.12.0.
+
+### Gefixt
+- **Snapshot-grens (`tot_volgnummer`) reist mee** (08-10): de opslag-aanroep liet het veld weg,
+  waardoor de grens op de server 0 bleef, de compactie nooit iets deed en een client na *Van server
+  ophalen* álle operaties nogmaals afspeelde bovenop de snapshot. Voor posities onschadelijk, maar
+  een *Omhoog*/*Omlaag* van vóór de snapshot werd zo tweemaal toegepast (één wissel verschil tussen
+  twee browsers). Test op de aanroep; `apiBase()` is node-veilig.
+
+## [studio/v0.15.1] — 2026-10-08
+Patch: de volgorde in de projectboom synct nu en overleeft de snapshot. Alleen frontend; api
+blijft 0.12.0.
+
+### Gefixt
+- **Boomvolgorde synct** (08-10): *Omhoog*/*Omlaag* (Ctrl+↑/↓) in de projectboom kwam niet bij
+  collega's aan — `schuifPlaatsing` ontbrak in het operatievocabulaire en het vangnet zag alleen
+  waarden, niet de sleutelvolgorde van `plaatsing`. Nu een benoemde operatie; het vangnet meldt een
+  volgorde-wissel (ook bij undo) als `volgordePlaatsing` in `patchStructuur`.
+- **Boomvolgorde overleeft de snapshot** (08-10): de volgorde zat alleen in de sleutelvolgorde van
+  `plaatsing`, en `jsonb` op de server herschikt objectsleutels — wie ophaalde kreeg een andere
+  volgorde dan wie stuurde. Het werkbestand draagt nu `structuur.plaatsingVolgorde` expliciet mee;
+  laden herstelt die volgorde (`herschikOpVolgorde`).
+
+## [studio/v0.15.0] — 2026-10-08
+Samenwerken wordt live (projectsync stap 2, api 0.12.0) en het vervolg van de canvas-bediening:
+geen browser-popups meer, sorteren en navigeren in de projectboom, velden herordenen, zelfde
+maat, instelbare sneltoetsen. Zie `docs/plans/2026-10-07 Projectsync …`, `docs/STUDIO.md` en
+`RELEASE.md`.
+
+### Toegevoegd (projectsync stap 2)
+- **Live synchroniseren** (07/08-10): elke modelwijziging is een benoemde operatie
+  (`studio/sync/operaties.js`) die via een outbox naar `POST …/ops` gaat; wijzigingen van anderen
+  komen direct binnen over een SSE-kanaal (`EventSource`, `startKanaal`) en anders via een poll als
+  terugval (interval van de instantie of per browser in Studio-instellingen → *Samenwerken*).
+  Operaties van anderen gaan niet in je undo, en je eigen Ctrl+Z wist hun werk niet (undo-rebase).
+  Menu *Project*: sync-stand in de kop (live / poll / N te verzenden / offline), *Live
+  synchroniseren*, *Nu verversen*.
+- **Snapshot-compactie**: na 200 operaties zet een client stil een nieuwe snapshot en ruimt de server
+  het log op; wie te ver achterloopt laadt de snapshot opnieuw (tabs blijven).
+- **Wie is online**: "N anderen online" rechts in de menubalk (namen in de tooltip) en "Online: …"
+  in het Project-menu.
+- **Werkruimte los van het project**: tabs, actieve tab en open/dicht mappen per project
+  (`studio-werkruimte:<projectId>`) én per gebruiker op de server, zodat je op een andere computer
+  verdergaat waar je was. Het werkbestand is **v3**, zonder tabs en viewports.
+
 ### Gewijzigd
 - **Geen browser-popups meer** (07-10): alle prompt/confirm/alert-vensters zijn vervangen door
   de eigen dialoogservice (`naamDialog.jsx`), die bij de muisklik verschijnt. *Nieuwe map* en

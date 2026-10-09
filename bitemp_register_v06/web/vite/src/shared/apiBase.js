@@ -11,5 +11,6 @@
  * zonder de aanroepers te raken.
  */
 export function apiBase() {
+  if (typeof window === "undefined") return ""; // node (tests)
   return window.location.port === "5174" ? "http://localhost:8082" : "";
 }
