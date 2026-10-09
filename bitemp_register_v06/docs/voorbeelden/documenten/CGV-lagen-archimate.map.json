@@ -1,0 +1,335 @@
+{
+  "formaat": "studio-map-export",
+  "versie": 1,
+  "map": "CGV — lagen",
+  "geexporteerd": "2026-10-09T00:00:00.000Z",
+  "profielen": {
+    "archimate05": {
+      "diagramTypeId": "archimate",
+      "elements": {
+        "cgv_lagen_l1": {
+          "id": "cgv_lagen_l1",
+          "naam": "Actoren",
+          "elementType": "grouping",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_l2": {
+          "id": "cgv_lagen_l2",
+          "naam": "Applicaties (buiten scope)",
+          "elementType": "grouping",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_l3": {
+          "id": "cgv_lagen_l3",
+          "naam": "Integratievoorzieningen",
+          "elementType": "grouping",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_l4": {
+          "id": "cgv_lagen_l4",
+          "naam": "Gegevens",
+          "elementType": "grouping",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_klant": {
+          "id": "cgv_lagen_klant",
+          "naam": "Klant",
+          "elementType": "business-actor",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_mw": {
+          "id": "cgv_lagen_mw",
+          "naam": "Medewerker",
+          "elementType": "business-actor",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_of": {
+          "id": "cgv_lagen_of",
+          "naam": "OpenFormulieren",
+          "elementType": "app-component",
+          "data": {
+            "kleur": "#e5e7eb"
+          },
+          "compartimenten": []
+        },
+        "cgv_lagen_nlp": {
+          "id": "cgv_lagen_nlp",
+          "naam": "NLPortal",
+          "elementType": "app-component",
+          "data": {
+            "kleur": "#e5e7eb"
+          },
+          "compartimenten": []
+        },
+        "cgv_lagen_kiss": {
+          "id": "cgv_lagen_kiss",
+          "naam": "KISS",
+          "elementType": "app-component",
+          "data": {
+            "kleur": "#e5e7eb"
+          },
+          "compartimenten": []
+        },
+        "cgv_lagen_gzac": {
+          "id": "cgv_lagen_gzac",
+          "naam": "GZAC",
+          "elementType": "app-component",
+          "data": {
+            "kleur": "#e5e7eb"
+          },
+          "compartimenten": []
+        },
+        "cgv_lagen_fsc": {
+          "id": "cgv_lagen_fsc",
+          "naam": "OpenFSC",
+          "elementType": "app-component",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_ftv": {
+          "id": "cgv_lagen_ftv",
+          "naam": "OpenFTV",
+          "elementType": "app-component",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_oz": {
+          "id": "cgv_lagen_oz",
+          "naam": "OpenZaak",
+          "elementType": "app-component",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_ok": {
+          "id": "cgv_lagen_ok",
+          "naam": "OpenKlant",
+          "elementType": "app-component",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_oo": {
+          "id": "cgv_lagen_oo",
+          "naam": "OpenObject",
+          "elementType": "app-component",
+          "data": {},
+          "compartimenten": []
+        },
+        "cgv_lagen_c1": {
+          "id": "cgv_lagen_c1",
+          "naam": "",
+          "elementType": "bediening",
+          "source": "cgv_lagen_ok",
+          "target": "cgv_lagen_klant",
+          "data": {}
+        },
+        "cgv_lagen_c2": {
+          "id": "cgv_lagen_c2",
+          "naam": "",
+          "elementType": "bediening",
+          "source": "cgv_lagen_oz",
+          "target": "cgv_lagen_mw",
+          "data": {}
+        },
+        "cgv_lagen_c3": {
+          "id": "cgv_lagen_c3",
+          "naam": "",
+          "elementType": "bediening",
+          "source": "cgv_lagen_ok",
+          "target": "cgv_lagen_mw",
+          "data": {}
+        },
+        "cgv_lagen_c4": {
+          "id": "cgv_lagen_c4",
+          "naam": "",
+          "elementType": "bediening",
+          "source": "cgv_lagen_oo",
+          "target": "cgv_lagen_mw",
+          "data": {}
+        }
+      },
+      "diagrams": {
+        "cgv_lagen_diagram": {
+          "id": "cgv_lagen_diagram",
+          "naam": "Lagen van de CGV",
+          "diagramType": "archimate",
+          "shapeSetId": "blokken",
+          "nodes": [
+            {
+              "elementId": "cgv_lagen_l1",
+              "position": {
+                "x": 0,
+                "y": 0
+              },
+              "size": {
+                "width": 760,
+                "height": 150
+              }
+            },
+            {
+              "elementId": "cgv_lagen_klant",
+              "position": {
+                "x": 210,
+                "y": 50
+              },
+              "size": {
+                "width": 140,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_mw",
+              "position": {
+                "x": 410,
+                "y": 50
+              },
+              "size": {
+                "width": 140,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_l2",
+              "position": {
+                "x": 0,
+                "y": 170
+              },
+              "size": {
+                "width": 760,
+                "height": 100
+              }
+            },
+            {
+              "elementId": "cgv_lagen_of",
+              "position": {
+                "x": 20,
+                "y": 210
+              },
+              "size": {
+                "width": 170,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_nlp",
+              "position": {
+                "x": 205,
+                "y": 210
+              },
+              "size": {
+                "width": 170,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_kiss",
+              "position": {
+                "x": 390,
+                "y": 210
+              },
+              "size": {
+                "width": 170,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_gzac",
+              "position": {
+                "x": 575,
+                "y": 210
+              },
+              "size": {
+                "width": 170,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_l3",
+              "position": {
+                "x": 0,
+                "y": 290
+              },
+              "size": {
+                "width": 760,
+                "height": 100
+              }
+            },
+            {
+              "elementId": "cgv_lagen_fsc",
+              "position": {
+                "x": 150,
+                "y": 330
+              },
+              "size": {
+                "width": 200,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_ftv",
+              "position": {
+                "x": 410,
+                "y": 330
+              },
+              "size": {
+                "width": 200,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_l4",
+              "position": {
+                "x": 0,
+                "y": 410
+              },
+              "size": {
+                "width": 760,
+                "height": 100
+              }
+            },
+            {
+              "elementId": "cgv_lagen_oz",
+              "position": {
+                "x": 60,
+                "y": 450
+              },
+              "size": {
+                "width": 190,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_ok",
+              "position": {
+                "x": 285,
+                "y": 450
+              },
+              "size": {
+                "width": 190,
+                "height": 44
+              }
+            },
+            {
+              "elementId": "cgv_lagen_oo",
+              "position": {
+                "x": 510,
+                "y": 450
+              },
+              "size": {
+                "width": 190,
+                "height": 44
+              }
+            }
+          ]
+        }
+      },
+      "viewports": {},
+      "meta": null
+    }
+  }
+}

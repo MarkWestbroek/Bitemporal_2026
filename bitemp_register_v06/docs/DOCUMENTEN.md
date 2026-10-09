@@ -37,6 +37,19 @@ SVG in Markdown niet toont). Opnieuw maken: `node scripts/genereer-voorbeelddocu
 `web/vite`. Bekend in de schets: pijlpunten stoppen op de omsluitende rechthoek van een ellips, niet
 op de ellipsrand.
 
+## Volgorde en indeling
+
+- **Diagrammen** staan in de volgorde van de projectboom (Ctrl+↑/↓ of *Omhoog*/*Omlaag* in de
+  boom), ook als een map diagrammen van verschillende profielen bevat.
+- **Elementen** (actoren, use cases) staan op naam.
+- **Projectdocument**: per map eerst de **omschrijving** (eigenschappenpaneel van de map), dan de
+  diagrammen van die map, dan de use cases op die diagrammen, en daarna de submappen als
+  subhoofdstukken. Zet dus de inleiding in de omschrijving van de bovenste map, de overzichtsplaat
+  (bv. het lagenschema) als eerste diagram in die map, en de rest in submappen (Actoren, Use cases,
+  per actor een submap …).
+- **Use case-overzicht** is plat: alle diagrammen van de map, dan alle actoren, dan alle use cases;
+  submappen en omschrijvingen doen daar niet mee.
+
 ## De sjabloontaal
 
 Dezelfde notatie als de publicatie-templates waar het overlapt (veld- en lijstpatroon), maar een

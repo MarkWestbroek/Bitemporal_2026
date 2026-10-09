@@ -967,6 +967,33 @@ fase 2 een **bewerkbare sandbox**:
   met de naam linksboven — voor overzichtsplaten voor een breder publiek
   (zoals de CGV-lagenplaat). Het model blijft ArchiMate. Buiten scope: geef
   het element een eigen kleur (grijs). `archimate/blokSet.js` + `blokShapes.jsx`.
+  Ook de **leesrichting**: een bedieningsrelatie (serving) krijgt in deze
+  gedaante de pijlpunt aan de bron, zodat "OpenKlant bedient Klant" leest als
+  "Klant gebruikt OpenKlant" (van boven naar beneden). Daarvoor kent de
+  canvas nu `markerStart: "pijl-open" | "pijl-dicht"` (SVG
+  `orient="auto-start-reverse"`), net als de documenttekenaar.
+  **Grouping in de standaardnotatie** is nu een gestippeld kader met de naam
+  linksboven, áchter de inhoud (`archimate-grouping`, `achtergrond`); als
+  gewoon blok bedekte hij de lijnen en zat de naam tussen de elementen.
+- **Exporteren zonder selectie** (2026-10-09): *Download PNG/SVG* en *Kopieer
+  als afbeelding* heffen de selectie tijdelijk op (geen selectiekleur,
+  resize-hoekjes of handles in het plaatje) en zetten hem daarna terug. In een
+  diagram vol kaders/groeperingen deselecteert een klik op het lege binnenvlak
+  van een kader (zie *Klik-door in achtergrondkaders* hieronder), en altijd met
+  **Escape**.
+- **Klik-door in achtergrondkaders** (2026-10-09, Mark: "ik klik toch echt op
+  leeg, naast een element"): het binnenvlak van elk elementtype met
+  `achtergrond` (systeemkader, Kader, ArchiMate-Grouping, laagkader in
+  "Blokken") laat de muis door naar het canvas. Een klik daar deselecteert en
+  slepen trekt een selectiekader in plaats van het kader te verschuiven. Het
+  kader pak je bij de **naam** (`[data-dc-naam]`) of de **rand** (8px
+  grijpstrook, `.dc-kaderrand` in ElementNode); resize-hoekjes, contextmenu en
+  hernoemen werken daar zoals altijd. Techniek: node-klasse
+  `dc-achtergrond-node` met `pointer-events: none`, en `auto` op de
+  grijpzones (`diagramcore.css`). Lidmaatschap bij slepen en droppen uit de
+  boom blijft geometrisch en werkt dus ook in het binnenvlak; een drop op een
+  kader zonder lidmaatschap (Kader, Grouping) plaatst het element nu ook
+  (voorheen gebeurde er niets).
   **De gekozen shape-set is nu per diagram** (`diagram.shapeSetId`, via
   `updateDiagramStijl`); de browser-voorkeur geldt alleen nog voor diagrammen
   zonder eigen keuze. De skin-logica staat gedeeld in
@@ -1028,9 +1055,39 @@ fase 2 een **bewerkbare sandbox**:
   Let op: React Flow's Shift = kader-selectie slikt pointerdowns in; de
   handles dragen daarom de klasse `nokey`, anders start Shift+slepen vanaf
   een handle nooit een lijn.
+- **Donker thema: vaste grijzen via thema-variabelen** (2026-10-10). Profielen
+  kozen lijnkleuren en `DONKER`-constantes (`#334155`, `#475569`, …) voor een
+  wit canvas; op donker verdwenen lijnen, actoren en startknopen bijna.
+  ConnectorEdge zet die slate-tinten om met `themaLijnKleur()` naar
+  `var(--dc-lijn-slate-NNN, <oude kleur>)`, en de `DONKER`-constantes in
+  activity/archimate/bpmn/sequence/statemachine/usecase zijn
+  `var(--dc-lijn-slate-700, #334155)`. Alleen het donkere thema definieert die
+  variabelen (diagramcore.css), dus licht is ongewijzigd. Uitzondering: iconen
+  óp een lichte vulling (BPMN-taaktype, subproces-plus) houden `DONKER_INKT`.
+  Zoomknoppen en minimap krijgen donkere `--xy-*`-variabelen.
 - **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
-  Escape is nodig binnen een container (lane, package, stage): daar is geen
-  leeg vlak — elke klik selecteert de container — en ook een kader-selectie
+  Escape is nodig binnen een container zonder `achtergrond` (lane, package,
+  stage): daar is geen leeg vlak — elke klik selecteert de container. In
+  achtergrondkaders gaat een klik wél door (zie hierboven).
+  **Geen groepskader meer** na een selectie-rechthoek (Shift+slepen) of
+  Ctrl+A (2026-10-09): React Flow tekende een blauw kader om de hele
+  selectie, en dat ving elke klik erbinnen, ook op de lege plekken tussen de
+  elementen. DiagramCanvas zet `nodesSelectionActive` daarom meteen terug
+  (store-abonnement; `onSelectionEnd` komt te vroeg). De nodes blijven
+  geselecteerd, slepen aan één ervan verplaatst ze allemaal, en een klik op
+  leeg deselecteert.
+  **Klik met een paar pixels beweging** (2026-10-09): een echte muis beweegt
+  vaak tussen indrukken en loslaten. d3-zoom (React Flow's pan) maakte daar
+  een pan van en slikte het click-event in; het pan-einde schreef de viewport
+  naar de store, en de daaropvolgende rebuild selecteerde de node uit de nog
+  oude `selectieId`-prop opnieuw (vangregel "niets geselecteerd → selecteer
+  selectieId"). Nu: (1) DiagramCanvas deselecteert zelf op `pointerup` als de
+  klik op `.react-flow__pane` begon en minder dan 8px bewoog;
+  (2) `paneClickDistance={6}`; (3) de vangregel is vervangen door een
+  *wachtende selectie* (`wachtendeSelectieRef`), alleen voor een element dat
+  programmatisch geselecteerd werd vóór zijn node bestond (net geplaatst).
+  Playwright-kliks bewegen niet; test deselecteren daarom ook met
+  `mouse.down` → `move(+3px)` → `up`. Ook een kader-selectie
   (Shift+slepen) ging met Escape niet weg. Escape wordt genegeerd tijdens
   typen en zolang een contextmenu open is (dat sluit eerst zichzelf).
   Verder is er een **Kader**-element (boundary, §8.6b): gestippeld resizebaar

@@ -20,7 +20,12 @@
 import React from "react";
 import { registreerShape } from "../../diagramcore/shapes/shapeRegistry.js";
 
-const DONKER = "#334155";
+// Lijn/vulling voor vormen die direct op het canvas staan (start/eind,
+// balken, levenslijnen, randen): thema-variabele, in donker lichter
+// (diagramcore.css --dc-lijn-slate-700; gemeld 2026-10-10).
+const DONKER = "var(--dc-lijn-slate-700, #334155)";
+// Iconen óp een lichte taakvulling blijven donker, ook in donker thema.
+const DONKER_INKT = "#334155";
 
 /** Soort-icoontje ín een event (viewBox 0 0 20 20, currentColor = ring-kleur). */
 function SoortIcoon({ soort, kleur }) {
@@ -144,8 +149,8 @@ function SubprocesShape({ element, elementType, selected, children }) {
       </div>
       {/* ⊞-markering (BPMN sub-process marker), gecentreerd onderaan. */}
       <svg width="12" height="12" viewBox="0 0 12 12" style={{ position: "absolute", bottom: 2, left: "50%", transform: "translateX(-50%)", pointerEvents: "none" }}>
-        <rect x="0.8" y="0.8" width="10.4" height="10.4" rx="1.5" fill="none" stroke={DONKER} strokeWidth="1.1" />
-        <path d="M6 3.2 V8.8 M3.2 6 H8.8" stroke={DONKER} strokeWidth="1.1" strokeLinecap="round" />
+        <rect x="0.8" y="0.8" width="10.4" height="10.4" rx="1.5" fill="none" stroke={DONKER_INKT} strokeWidth="1.1" />
+        <path d="M6 3.2 V8.8 M3.2 6 H8.8" stroke={DONKER_INKT} strokeWidth="1.1" strokeLinecap="round" />
       </svg>
       {children}
     </div>
@@ -205,7 +210,7 @@ function TaakIcoon({ soort, kleur }) {
 function TaakShape({ element, elementType, selected, children }) {
   const d = element?.data || {};
   const rand = selected ? "var(--dc-selectie, #2563eb)" : "#7dd3fc";
-  const icoon = d.taakSoort ? <TaakIcoon soort={d.taakSoort} kleur={DONKER} /> : null;
+  const icoon = d.taakSoort ? <TaakIcoon soort={d.taakSoort} kleur={DONKER_INKT} /> : null;
   return (
     <div
       className="dc-node"

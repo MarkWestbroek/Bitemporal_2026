@@ -189,12 +189,16 @@ export function schetsDiagramSvg({ diagram, elements, descriptor, idPrefix = "s"
     const naar = a === b ? { x: cb.x + 20, y: b.y } : randPunt(rb, ca.x, ca.y);
     const marker = p.markerEnd && ["pijl-open", "driehoek", "pijl-dicht"].includes(p.markerEnd) ? p.markerEnd : null;
     if (marker) markers.add(marker);
+    // Pijl aan het begin, naar de bron gericht (gedaante die de leesrichting omdraait).
+    const startMarker = ["pijl-open", "pijl-dicht"].includes(p.markerStart) ? `${p.markerStart}-start` : null;
+    if (startMarker) markers.add(startMarker);
     delen.push(
       svgEl("line", {
         x1: van.x, y1: van.y, x2: naar.x, y2: naar.y,
         stroke: p.kleur || "#475569", "stroke-width": p.dikte || 1.3,
         "stroke-dasharray": DASHES[p.lijn] || null,
         "marker-end": marker ? `url(#${idPrefix}-${marker})` : null,
+        "marker-start": startMarker ? `url(#${idPrefix}-${startMarker})` : null,
       })
     );
     const label = c.naam || (et.stereotype ? et.stereotype : /include|extend/.test(et.id) ? `«${et.id}»` : "");
@@ -203,6 +207,8 @@ export function schetsDiagramSvg({ diagram, elements, descriptor, idPrefix = "s"
 
   const defs = [...markers].map((m) => {
     const id = `${idPrefix}-${m}`;
+    if (m === "pijl-open-start") return svgEl("marker", { id, markerWidth: 12, markerHeight: 10, refX: 10, refY: 5, orient: "auto-start-reverse", markerUnits: "userSpaceOnUse" }, svgEl("path", { d: "M 1 1 L 10 5 L 1 9", fill: "none", stroke: "#475569", "stroke-width": 1.2 }));
+    if (m === "pijl-dicht-start") return svgEl("marker", { id, markerWidth: 12, markerHeight: 12, refX: 11, refY: 6, orient: "auto-start-reverse", markerUnits: "userSpaceOnUse" }, svgEl("path", { d: "M 1 1.5 L 11 6 L 1 10.5 Z", fill: "#475569" }));
     if (m === "pijl-open") return svgEl("marker", { id, markerWidth: 12, markerHeight: 10, refX: 10, refY: 5, orient: "auto", markerUnits: "userSpaceOnUse" }, svgEl("path", { d: "M 1 1 L 10 5 L 1 9", fill: "none", stroke: "#475569", "stroke-width": 1.2 }));
     if (m === "driehoek") return svgEl("marker", { id, markerWidth: 14, markerHeight: 14, refX: 13, refY: 7, orient: "auto", markerUnits: "userSpaceOnUse" }, svgEl("path", { d: "M 1 1 L 13 7 L 1 13 Z", fill: "#ffffff", stroke: "#475569", "stroke-width": 1.2 }));
     return svgEl("marker", { id, markerWidth: 12, markerHeight: 12, refX: 11, refY: 6, orient: "auto", markerUnits: "userSpaceOnUse" }, svgEl("path", { d: "M 1 1.5 L 11 6 L 1 10.5 Z", fill: "#475569" }));

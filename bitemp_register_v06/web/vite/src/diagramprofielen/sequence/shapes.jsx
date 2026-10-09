@@ -20,7 +20,10 @@ import React from "react";
 import { registreerShape } from "../../diagramcore/shapes/shapeRegistry.js";
 import { resolveerElementRef } from "../../studio/elementVerwijzing.jsx";
 
-const DONKER = "#334155";
+// Lijn/vulling voor vormen die direct op het canvas staan (start/eind,
+// balken, levenslijnen, randen): thema-variabele, in donker lichter
+// (diagramcore.css --dc-lijn-slate-700; gemeld 2026-10-10).
+const DONKER = "var(--dc-lijn-slate-700, #334155)";
 const KOP_BREED = 148;
 
 /** Levenslijn: smalle hoge node (de lijn), met de naam-kop erbovenop. */

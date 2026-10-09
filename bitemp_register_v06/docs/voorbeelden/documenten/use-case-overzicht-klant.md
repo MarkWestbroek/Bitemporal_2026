@@ -2,17 +2,17 @@
 
 # Use case-overzicht — Klantcontact
 
-## Diagram: Gespreksvormen
-
-![Gespreksvormen](use-case-overzicht-klant-d2.svg)
-
-Op dit diagram: KCC-medewerker, Voer gesprek, Bel op, Voer chatgesprek, Stuur een e-mail.
-
 ## Diagram: Klantcontact
 
 ![Klantcontact](use-case-overzicht-klant-d1.svg)
 
 Op dit diagram: Gemeentelijke dienstverlening, Inwoner, Onderneming, Klant, Zoek informatie over producten en diensten, Stel een vraag, Vraag product of dienst aan, Maak een afspraak, Bekijk voortgang.
+
+## Diagram: Gespreksvormen
+
+![Gespreksvormen](use-case-overzicht-klant-d2.svg)
+
+Op dit diagram: KCC-medewerker, Voer gesprek, Bel op, Voer chatgesprek, Stuur een e-mail.
 
 # Actoren
 
