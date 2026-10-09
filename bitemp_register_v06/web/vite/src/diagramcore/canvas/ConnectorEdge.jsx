@@ -289,6 +289,7 @@ function ConnectorEdge({
     ? "var(--dc-selectie, #2563eb)"
     : p.kleur || "var(--dc-lijn, #64748b)";
   const pijlId = `dc-pijl-${id}`;
+  const pijlStartId = `dc-pijl-start-${id}`;
   const driehoekId = `dc-driehoek-${id}`;
   const pijlDichtId = `dc-pijl-dicht-${id}`;
   const bolId = `dc-bol-${id}`;
@@ -577,6 +578,18 @@ function ConnectorEdge({
   return (
     <>
       <defs>
+        {/* Pijlpunt aan het begin, naar de bron gericht (auto-start-reverse):
+            een gedaante kan zo de leesrichting omdraaien zonder het model te
+            wijzigen (bv. ArchiMate "Blokken": bediening leest als "gebruikt"). */}
+        {(p.markerStart === "pijl-open" || p.markerStart === "pijl-dicht") && (
+          <marker id={pijlStartId} markerWidth="12" markerHeight="12" refX={p.markerStart === "pijl-open" ? 9 : 10} refY={p.markerStart === "pijl-open" ? 5 : 6} orient="auto-start-reverse" markerUnits="strokeWidth">
+            {p.markerStart === "pijl-open" ? (
+              <path d="M 1 2 L 9 5 L 1 8" fill="none" stroke={kleur} strokeWidth="1.0" strokeLinecap="round" strokeLinejoin="round" />
+            ) : (
+              <path d="M 1 1.5 L 10.5 6 L 1 10.5 Z" fill={kleur} stroke="none" />
+            )}
+          </marker>
+        )}
         {p.markerEnd === "pijl-open" && (
           <marker id={pijlId} markerWidth="12" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
             <path d="M 1 2 L 9 5 L 1 8" fill="none" stroke={kleur} strokeWidth="1.0" strokeLinecap="round" strokeLinejoin="round" />
@@ -652,7 +665,8 @@ function ConnectorEdge({
         // dat met de curve meebuigt — zie hieronder; de overige bron-markers
         // zijn wél gewone markers.
         markerStart={
-          p.markerStart === "schuine-streep" ? `url(#${streepId})`
+          p.markerStart === "pijl-open" || p.markerStart === "pijl-dicht" ? `url(#${pijlStartId})`
+          : p.markerStart === "schuine-streep" ? `url(#${streepId})`
           : p.markerStart === "kruis-cirkel" ? `url(#${kruisId})`
           : p.markerStart === "cirkel-open" ? `url(#${cirkelOpenId})`
           : KRAAIENPOTEN[p.markerStart] ? `url(#${kraaiBronId})`

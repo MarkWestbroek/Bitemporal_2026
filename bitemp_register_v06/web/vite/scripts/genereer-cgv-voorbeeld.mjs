@@ -136,4 +136,25 @@ const { tekst } = renderSjabloon(sj.tekst, ctx, { partials: sj.partials });
 for (const [bestand, svg] of files) writeFileSync(join(uitMap, bestand), svg + "\n");
 const kop = "<!-- Gegenereerd met scripts/genereer-cgv-voorbeeld.mjs (sjabloon: Projectdocument). Niet met de hand bewerken; vergelijk met CGV_Use_case_model.md (handgeschreven). -->\n\n";
 writeFileSync(join(uitMap, `${STAM}.md`), kop + tekst);
-console.log("geschreven:", [...files.keys(), `${STAM}.md`].join(", "));
+
+// ── Map-export van de lagenplaat (ArchiMate, gedaante "Blokken") ──
+// Importeerbaar in de Studio: map → Transformeren → Importeren →
+// "JSON-map-export → in deze map". Ids krijgen een voorvoegsel zodat ze niet
+// botsen met bestaande elementen (de import behoudt element-ids).
+const VOOR = "cgv_lagen_";
+const hernoem = (id) => VOOR + id;
+const exportElements = Object.fromEntries(
+  Object.values(lagen).map((e) => [hernoem(e.id), { ...e, id: hernoem(e.id), ...(e.source ? { source: hernoem(e.source), target: hernoem(e.target) } : {}) }])
+);
+const d0 = lagenDiagram.d0;
+const exportDiagram = { ...d0, id: VOOR + "diagram", nodes: d0.nodes.map((nd) => ({ ...nd, elementId: hernoem(nd.elementId) })) };
+const mapExport = {
+  formaat: "studio-map-export",
+  versie: 1,
+  map: "CGV — lagen",
+  geexporteerd: "2026-10-09T00:00:00.000Z",
+  profielen: { archimate05: { diagramTypeId: "archimate", elements: exportElements, diagrams: { [exportDiagram.id]: exportDiagram }, viewports: {}, meta: null } },
+};
+writeFileSync(join(uitMap, "CGV-lagen-archimate.map.json"), JSON.stringify(mapExport, null, 2) + "\n");
+
+console.log("geschreven:", [...files.keys(), `${STAM}.md`, "CGV-lagen-archimate.map.json"].join(", "));

@@ -36,7 +36,13 @@ function mapInvoer(mapId, mappen, diepteGrens = 8) {
           .sort((a, b) => (a.volgorde || 0) - (b.volgorde || 0))
           .map((k) => mapInvoer(k.id, mappen, diepteGrens - 1))
       : [];
-  return { naam: m.naam || "", omschrijving: m.omschrijving || "", profielen: profielenVanMap(mapId), kinderen };
+  // Volgorde van de diagrammen = volgorde in de boom (sleutelvolgorde van
+  // `plaatsing`, die Ctrl+↑/↓ en Omhoog/Omlaag bepalen).
+  const { plaatsing } = useModellerenStore.getState();
+  const diagramVolgorde = {};
+  let i = 0;
+  for (const [sleutel, mid] of Object.entries(plaatsing)) if (mid === mapId && !sleutel.startsWith("el::")) diagramVolgorde[sleutel] = i++;
+  return { naam: m.naam || "", omschrijving: m.omschrijving || "", profielen: profielenVanMap(mapId), kinderen, diagramVolgorde };
 }
 
 /** Context voor een map: alle profielen erin, de submappen, met lui getekende diagrammen. */
