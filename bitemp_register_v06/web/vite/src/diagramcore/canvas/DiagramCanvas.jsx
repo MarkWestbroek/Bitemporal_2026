@@ -1731,17 +1731,39 @@ function CanvasBinnenkant({
             tekenBounds({ wortels, oorsprong: viewportEl.getBoundingClientRect(), zoom, neemMee }) ||
             // Terugval als er (nog) niets gemeten kan worden: het modelkader.
             getNodesBounds(nodes);
-          return exporteerViewport({
-            viewportEl,
-            bounds,
-            beperkTot,
-            formaat,
-            doel,
-            achtergrond,
-            naam,
-            schaal,
-            marge,
-          });
+          // Selectie tijdelijk opheffen: selectiekleur, resize-hoekjes en
+          // handles horen niet in een afbeelding. In een diagram dat vol
+          // kaders/groeperingen ligt is er geen leeg vlak om op te klikken,
+          // dus deselecteren vóór het exporteren was lastig (gemeld
+          // 2026-10-09). Na de export komt de selectie terug.
+          const geselecteerdeNodes = getNodes().filter((n) => n.selected).map((n) => n.id);
+          const geselecteerdeEdges = rfStoreApi.getState().edges.filter((e) => e.selected).map((e) => e.id);
+          const hadSelectie = geselecteerdeNodes.length + geselecteerdeEdges.length > 0;
+          if (hadSelectie) {
+            setNodes((hd) => hd.map((n) => (n.selected ? { ...n, selected: false } : n)));
+            setEdges((hd) => hd.map((e) => (e.selected ? { ...e, selected: false } : e)));
+            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+          }
+          try {
+            return await exporteerViewport({
+              viewportEl,
+              bounds,
+              beperkTot,
+              formaat,
+              doel,
+              achtergrond,
+              naam,
+              schaal,
+              marge,
+            });
+          } finally {
+            if (hadSelectie) {
+              const nIds = new Set(geselecteerdeNodes);
+              const eIds = new Set(geselecteerdeEdges);
+              setNodes((hd) => hd.map((n) => (nIds.has(n.id) ? { ...n, selected: true } : n)));
+              setEdges((hd) => hd.map((e) => (eIds.has(e.id) ? { ...e, selected: true } : e)));
+            }
+          }
         },
       };
     },

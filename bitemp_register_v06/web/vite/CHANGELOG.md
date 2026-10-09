@@ -231,7 +231,9 @@ maat, instelbare sneltoetsen. Zie `docs/plans/2026-10-07 Projectsync …`, `docs
   diagrammen in de map.
 - **ArchiMate-gedaante "Blokken (informeel)"** (09-10): effen blokken zonder icoon, Grouping als
   laagkader, bediening getekend als "gebruikt" (pijlpunt aan de bron) — voor overzichtsplaten.
-  In documenten volgen diagrammen de volgorde van de projectboom. De shape-set is nu **per diagram** bewaard en gegenereerde
+  In documenten volgen diagrammen de volgorde van de projectboom. ArchiMate-Grouping is in de
+  standaardnotatie een gestippeld kader achter de inhoud. Afbeelding-exports bevatten geen
+  selectie meer (tijdelijk opgeheven en daarna hersteld). De shape-set is nu **per diagram** bewaard en gegenereerde
   documenten volgen hem.
 - Projectsync: de volgorde van regels in de boom (Ctrl+↑/↓) en de mapomschrijving gaan nu mee
   (`schuifPlaatsing`, `zetMapOmschrijving` in `STRUCTUUR_OPS`); een volgordewijziging bleef eerder
