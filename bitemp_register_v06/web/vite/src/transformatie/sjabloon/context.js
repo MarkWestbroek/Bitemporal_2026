@@ -26,7 +26,7 @@ const naamOf = (el) => el?.naam || "";
  *                      elements: Record<string, Object>, diagrams: Record<string, Object> }>,
  *   svgVan?: (diagram: Object, profielCtx: Object) => string }} invoer
  */
-export function maakDocumentContext({ naam, omschrijving = "", profielen = [], svgVan = null, kinderen = [], diepte = 1 }) {
+export function maakDocumentContext({ naam, omschrijving = "", profielen = [], svgVan = null, kinderen = [], diepte = 1, diagramVolgorde = null }) {
   const ctx = {
     map: { naam: naam || "", omschrijving: omschrijving || "" },
     naam: naam || "",
@@ -122,6 +122,14 @@ export function maakDocumentContext({ naam, omschrijving = "", profielen = [], s
     ctx.elementen.push(...profielCtx.elementen);
     ctx.diagrammen.push(...profielCtx.diagrammen);
     ctx.verbindingen.push(...profielCtx.verbindingen);
+  }
+  // Diagrammen in de volgorde van de projectboom (over profielen heen):
+  // `diagramVolgorde` = { "<profielId>::<diagramId>": index }. Zonder
+  // volgorde blijft de invoervolgorde staan.
+  if (diagramVolgorde) {
+    const pos = (d) => diagramVolgorde[`${d.profiel.id}::${d.id}`] ?? Number.MAX_SAFE_INTEGER;
+    ctx.diagrammen.sort((a, b) => pos(a) - pos(b));
+    for (const pc of ctx.profielen) pc.diagrammen.sort((a, b) => pos(a) - pos(b));
   }
   // Submappen: dezelfde vorm, één niveau dieper (de mappenboom = de
   // hoofdstukindeling van een projectdocument).

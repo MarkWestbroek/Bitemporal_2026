@@ -15,12 +15,19 @@ import { ELEMENTEN } from "./elementen.js";
 export const BLOK_KLEUR = "#eef2ff";
 
 /** elementTypeId → skin. Grouping wordt het laagkader (achtergrond). */
-export const BLOK_SHAPES = Object.fromEntries(
-  ELEMENTEN.map(([id]) => [
-    id,
-    id === "grouping" ? { shape: "am-blok-laag", achtergrond: true } : { shape: "am-blok", kleur: BLOK_KLEUR },
-  ])
-);
+export const BLOK_SHAPES = {
+  ...Object.fromEntries(
+    ELEMENTEN.map(([id]) => [
+      id,
+      id === "grouping" ? { shape: "am-blok-laag", achtergrond: true } : { shape: "am-blok", kleur: BLOK_KLEUR },
+    ])
+  ),
+  // Leesrichting voor niet-ArchiMate-lezers: "A bedient B" wordt getekend als
+  // "B gebruikt A" — de pijlpunt verhuist naar de bron (het model blijft
+  // serving). Zo lezen lagenplaten van boven naar beneden, zoals in de
+  // gangbare informele schetsen (2026-10-09, Mark: "lijnen andersom").
+  bediening: { markerStart: "pijl-open", markerEnd: null },
+};
 
 export const BLOK_SET = {
   id: "blokken",

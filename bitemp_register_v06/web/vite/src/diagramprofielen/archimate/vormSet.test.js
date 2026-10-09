@@ -82,7 +82,9 @@ test("het profiel declareert de set en registreert de vormshapes", () => {
 test("blokken-set: elk element een blok, Grouping het laagkader; beide shapes geregistreerd", async () => {
   const { BLOK_SET } = await import("./blokSet.js");
   const { ELEMENTEN } = await import("./elementen.js");
-  assert.equal(Object.keys(BLOK_SET.shapes).length, ELEMENTEN.length);
+  for (const [id] of ELEMENTEN) assert.ok(BLOK_SET.shapes[id], `geen blok-skin voor ${id}`);
+  // Leesrichting: bediening krijgt de pijl aan de bron (getekend als "gebruikt").
+  assert.deepEqual(BLOK_SET.shapes.bediening, { markerStart: "pijl-open", markerEnd: null });
   assert.deepEqual(BLOK_SET.shapes.grouping, { shape: "am-blok-laag", achtergrond: true });
   assert.equal(BLOK_SET.shapes["app-component"].shape, "am-blok");
   const bron = lees("blokShapes.jsx");

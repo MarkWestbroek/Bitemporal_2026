@@ -12,7 +12,7 @@ titel: Use case-overzicht {{map.naam}}
 ---
 # Use case-overzicht — {{map.naam}}
 
-{{#elk diagrammen sorteer=naam}}
+{{#elk diagrammen}}
 ## Diagram: {{naam}}
 
 {{svg}}
@@ -61,7 +61,7 @@ titel: Overzicht {{map.naam}}
 {{#elk profielen}}
 ## {{label}}
 
-{{#elk diagrammen sorteer=naam}}
+{{#elk diagrammen}}
 ### Diagram: {{naam}}
 
 {{svg}}
@@ -83,7 +83,7 @@ titel: Gegevenswoordenboek {{map.naam}}
 ---
 # Gegevenswoordenboek — {{map.naam}}
 
-{{#elk diagrammen sorteer=naam}}
+{{#elk diagrammen}}
 ## Diagram: {{naam}}
 
 {{svg}}
@@ -114,7 +114,7 @@ export const DEEL_PROJECTMAP = `{{kop}} {{naam}}
 
 {{#if omschrijving}}{{omschrijving}}
 
-{{/if}}{{#elk diagrammen sorteer=naam}}{{svg}}
+{{/if}}{{#elk diagrammen}}{{svg}}
 
 *{{naam}}*
 

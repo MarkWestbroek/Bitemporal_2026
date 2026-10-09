@@ -967,6 +967,11 @@ fase 2 een **bewerkbare sandbox**:
   met de naam linksboven — voor overzichtsplaten voor een breder publiek
   (zoals de CGV-lagenplaat). Het model blijft ArchiMate. Buiten scope: geef
   het element een eigen kleur (grijs). `archimate/blokSet.js` + `blokShapes.jsx`.
+  Ook de **leesrichting**: een bedieningsrelatie (serving) krijgt in deze
+  gedaante de pijlpunt aan de bron, zodat "OpenKlant bedient Klant" leest als
+  "Klant gebruikt OpenKlant" (van boven naar beneden). Daarvoor kent de
+  canvas nu `markerStart: "pijl-open" | "pijl-dicht"` (SVG
+  `orient="auto-start-reverse"`), net als de documenttekenaar.
   **De gekozen shape-set is nu per diagram** (`diagram.shapeSetId`, via
   `updateDiagramStijl`); de browser-voorkeur geldt alleen nog voor diagrammen
   zonder eigen keuze. De skin-logica staat gedeeld in

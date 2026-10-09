@@ -90,3 +90,24 @@ test("ingebouwd use case-overzicht rendert op de context", () => {
   assert.match(tekst, /## Bel op\n\n\| \| \|\n\|---\|---\|\n\| Actoren \| Klant \|\n\| Bevat \(include\) \| Voer gesprek \|/);
   assert.match(tekst, /\| Op diagram \| Overzicht \|/);
 });
+
+test("diagramvolgorde volgt de boom over profielen heen; start-pijl in de schets", () => {
+  const desc2 = { elementTypes: [{ id: "x", label: "X", shape: "rounded" }, { id: "rel", label: "Rel", isConnector: true, edgePresentatie: { lijn: "solid", markerStart: "pijl-open", markerEnd: null } }] };
+  const ctx = maakDocumentContext({
+    naam: "M",
+    profielen: [
+      { id: "usecase05", label: "UC", descriptor, elements, diagrams: { d1: { ...diagrams.d1, naam: "Actor model" } } },
+      { id: "archimate05", label: "AM", descriptor: desc2, elements: {}, diagrams: { c: { id: "c", naam: "Context", nodes: [] } } },
+    ],
+    diagramVolgorde: { "archimate05::c": 0, "usecase05::d1": 1 },
+  });
+  assert.deepEqual(ctx.diagrammen.map((d) => d.naam), ["Context", "Actor model"]);
+  const svg = schetsDiagramSvg({
+    diagram: { nodes: [{ elementId: "a", position: { x: 0, y: 0 } }, { elementId: "b", position: { x: 0, y: 200 } }] },
+    elements: { a: { id: "a", naam: "A", elementType: "x" }, b: { id: "b", naam: "B", elementType: "x" }, r: { id: "r", elementType: "rel", source: "b", target: "a" } },
+    descriptor: desc2,
+  });
+  assert.match(svg, /marker-start="url\(#s-pijl-open-start\)"/);
+  assert.match(svg, /orient="auto-start-reverse"/);
+  assert.doesNotMatch(svg, /marker-end=/);
+});
