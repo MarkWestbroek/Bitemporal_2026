@@ -223,6 +223,16 @@ function ElementNode({ id, data, selected }) {
           </span>
         )}
         <StandaardHandles stijl={elementType.handleStijl} vlak={vlakHandle} />
+        {/* Achtergrondkader: grijprand rondom (het binnenvlak laat klikken door
+            naar het canvas, zie diagramcore.css). */}
+        {elementType.achtergrond && (
+          <>
+            <span className="dc-kaderrand is-boven" aria-hidden="true" />
+            <span className="dc-kaderrand is-onder" aria-hidden="true" />
+            <span className="dc-kaderrand is-links" aria-hidden="true" />
+            <span className="dc-kaderrand is-rechts" aria-hidden="true" />
+          </>
+        )}
       </Shape>
       {toonBuitenlabel && !(hernoemt && !veldSleutel) && (
         <span className="dc-buitenlabel" data-dc-naam="">{element.naam}</span>

@@ -908,3 +908,29 @@
   font-size: 11px;
   opacity: 0.65;
 }
+
+/* Achtergrondkaders (ElementType.achtergrond: systeemkader, kader, Grouping,
+   laag): het binnenvlak laat muis-input door naar het canvas, zodat een klik
+   "naast een element" binnen een kader deselecteert in plaats van het kader
+   te selecteren (gemeld 2026-10-09). Het kader zelf pak je bij de naam
+   ([data-dc-naam]) of de rand (.dc-kaderrand, 8px); handles en de
+   resizer blijven bedienbaar. pointer-events erft, vandaar de expliciete
+   'auto' op de grijpzones. !important wint van React Flow's inline
+   pointerEvents op de node-wrapper. */
+.dc-canvas .react-flow__node.dc-achtergrond-node {
+  pointer-events: none !important;
+}
+.dc-canvas .react-flow__node.dc-achtergrond-node [data-dc-naam],
+.dc-canvas .react-flow__node.dc-achtergrond-node .dc-kaderrand,
+.dc-canvas .react-flow__node.dc-achtergrond-node .react-flow__resize-control {
+  pointer-events: auto;
+}
+.dc-kaderrand {
+  position: absolute;
+  z-index: 1;
+  cursor: move;
+}
+.dc-kaderrand.is-boven { top: -4px; left: -4px; right: -4px; height: 9px; }
+.dc-kaderrand.is-onder { bottom: -4px; left: -4px; right: -4px; height: 9px; }
+.dc-kaderrand.is-links { top: -4px; bottom: -4px; left: -4px; width: 9px; }
+.dc-kaderrand.is-rechts { top: -4px; bottom: -4px; right: -4px; width: 9px; }
