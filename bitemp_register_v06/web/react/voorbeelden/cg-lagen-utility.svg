@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 420" width="600" height="420" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <!-- Common Ground vijflagenmodel + hosting, met Utility als kolom rechts naast alle lagen
+       (bv. FTV). Banden: x 20..470, y = 20 + i*65, hoogte 55. Utility: x 480..580, y 20..400.
+       De area voor Utility werkt pas als "Utility" een waarde van het enum CGLaag is. -->
+  <rect width="600" height="420" fill="#f8fafc"/>
+  <g font-size="17" font-weight="600" fill="#ffffff">
+    <rect x="20" y="20"  width="450" height="55" rx="8" fill="#1e3a8a"/><text x="40" y="54">Laag 5 · Interactie</text>
+    <rect x="20" y="85"  width="450" height="55" rx="8" fill="#1d4ed8"/><text x="40" y="119">Laag 4 · Proces</text>
+    <rect x="20" y="150" width="450" height="55" rx="8" fill="#2563eb"/><text x="40" y="184">Laag 3 · Integratie</text>
+    <rect x="20" y="215" width="450" height="55" rx="8" fill="#0891b2"/><text x="40" y="249">Laag 2 · Services</text>
+    <rect x="20" y="280" width="450" height="55" rx="8" fill="#0e7490"/><text x="40" y="314">Laag 1 · Data</text>
+    <rect x="20" y="345" width="450" height="55" rx="8" fill="#475569"/><text x="40" y="379">Hosting en infrastructuur</text>
+  </g>
+  <g font-size="12.5" fill="#e0f2fe" text-anchor="end">
+    <text x="455" y="53">apps, portalen</text>
+    <text x="455" y="118">zaakgericht werken</text>
+    <text x="455" y="183">API-gateway, notificaties</text>
+    <text x="455" y="248">API's op bronnen</text>
+    <text x="455" y="313">bronregistraties</text>
+    <text x="455" y="378">haven, cloud</text>
+  </g>
+  <rect x="480" y="20" width="100" height="380" rx="8" fill="#6366f1"/>
+  <g fill="#ffffff" text-anchor="middle">
+    <text x="530" y="196" font-size="17" font-weight="700">Utility</text>
+    <text x="530" y="218" font-size="12.5" fill="#e0e7ff">dwars door</text>
+    <text x="530" y="234" font-size="12.5" fill="#e0e7ff">alle lagen</text>
+    <text x="530" y="262" font-size="12.5" fill="#e0e7ff">bijv. FTV</text>
+  </g>
+</svg>
