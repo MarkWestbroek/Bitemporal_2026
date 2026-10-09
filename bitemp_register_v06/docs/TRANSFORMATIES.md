@@ -339,6 +339,12 @@ element-id's als Mermaid-id's.
    pas de vorm (vooral hoe kruisverbanden binnenkomen). Bouw het dan samen met
    punt 2.
 
+8. **Documentsjablonen**: een document (use case-overzicht, gegevenswoordenboek) als
+   *schrijver* op het graafbeeld van een bereik, met de publicatie-placeholdertaal plus lussen
+   (`{{#elk …}}`) en `{{svg}}` voor diagrammen; ingebouwde sjablonen per profiel, eigen sjablonen
+   in het project. Ontwerp: `docs/plans/2026-10-09 Documentsjablonen — documenten genereren uit
+   een map (ontwerpvoorstel).md`.
+
 ## 8. Toegangsspraak → ODRL (ODRL-AP-NL)
 
 De eerste **export** in deze vorm, en de eerste met een schrijver. Aanleiding: de
