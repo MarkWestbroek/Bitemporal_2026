@@ -64,7 +64,7 @@ function ArchimateBoxShape({ element, elementType, selected, children }) {
           <path d={achthoek} fill={vulling} stroke={rand} strokeWidth="1.5" strokeLinejoin="round" />
         </svg>
       )}
-      <div style={{ position: "relative", fontSize: 12, fontWeight: 600, color: "#0f172a", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis" }}>
+      <div data-dc-naam="" style={{ position: "relative", fontSize: 12, fontWeight: 600, color: "#0f172a", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis" }}>
         {element?.naam || `(${elementType?.label || "?"})`}
       </div>
       {/* Type-icoon rechtsboven — de kern van de ArchiMate-vormgrammatica.

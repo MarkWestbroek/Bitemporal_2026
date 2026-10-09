@@ -74,8 +74,19 @@ test("elk gemapt elementtype bestaat in het profiel", () => {
 
 test("het profiel declareert de set en registreert de vormshapes", () => {
   const bron = lees("index.js");
-  assert.match(bron, /shapeSets:\s*\[VORMEN_SET\]/);
+  assert.match(bron, /shapeSets:\s*\[VORMEN_SET, BLOK_SET\]/);
   assert.match(bron, /registreerArchimateVormShapes\(\);/);
+  assert.match(bron, /registreerArchimateBlokShapes\(\);/);
+});
+
+test("blokken-set: elk element een blok, Grouping het laagkader; beide shapes geregistreerd", async () => {
+  const { BLOK_SET } = await import("./blokSet.js");
+  const { ELEMENTEN } = await import("./elementen.js");
+  assert.equal(Object.keys(BLOK_SET.shapes).length, ELEMENTEN.length);
+  assert.deepEqual(BLOK_SET.shapes.grouping, { shape: "am-blok-laag", achtergrond: true });
+  assert.equal(BLOK_SET.shapes["app-component"].shape, "am-blok");
+  const bron = lees("blokShapes.jsx");
+  assert.ok(bron.includes('"am-blok"') && bron.includes('"am-blok-laag"'));
 });
 
 test("elke vorm-shape is ook daadwerkelijk geregistreerd (drift-check op vormShapes.jsx)", () => {

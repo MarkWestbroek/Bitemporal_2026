@@ -1618,6 +1618,13 @@ en afwegingen: [ontwerpnotitie](plans/2026-09-18%20Diagrameditor%20%E2%80%94%20c
       hernoemen, resize-positie bewaard (links/boven trekken), resizer nooit
       onder het shape-minimum (mp4 "trekken aan de randen is raar").
       Restpunt: rolnamen/kardinaliteiten op lijnen inline bewerken.
+- [ ] **31.13 Documentsjablonen — documenten genereren uit een map.** Mark (09-10):
+      "uit een map met diagrammen en use cases een use case-overzichtsdocument
+      genereren; een template-mechanisme". Ontwerpvoorstel met stappenplan:
+      `docs/plans/2026-10-09 Documentsjablonen …`. Kern: sjabloon-renderer
+      (publicatie-syntax + `#elk` + `svg`), contextbouwer op `collectMapModel`
+      + graafbeeld, ingebouwde sjablonen per profiel, Markdown/HTML-uitvoer,
+      later DOCX en Imprint.
 - [ ] **31.12 Attribuuttype als referentie i.p.v. naam-string.** Mark (07-10):
       "verbaasd dat het type geen referentie is naar het datatype". Nu: een
       PropertyType met `referenceTypes` (bv. `typeLabel` in canoniek-uml) slaat
