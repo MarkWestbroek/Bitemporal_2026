@@ -35,6 +35,26 @@
   --dc-selectie: #818cf8;
   --dc-canvas-achtergrond: var(--s-canvas, #1b1b1f);
   --dc-label-achtergrond: rgba(24, 24, 28, 0.92);
+  /* Vaste slate-lijnkleuren uit de profielen (ConnectorEdge themaLijnKleur):
+     omgekeerde helderheid, zodat "donker = nadrukkelijk" ook op donker
+     canvas nadrukkelijk blijft (gemeld 2026-10-09: lijnen bijna onzichtbaar). */
+  --dc-lijn-slate-800: #e2e8f0;
+  --dc-lijn-slate-700: #d5dde8;
+  --dc-lijn-slate-600: #c3cdda;
+  --dc-lijn-slate-500: #a7b3c4;
+  --dc-lijn-slate-400: #8794a8;
+  --dc-lijn-slate-300: #64748b;
+  /* React Flow's zoomknoppen (+ − ⛶) en minimap staan op colorMode "light"
+     en bleven wit op het donkere canvas (gemeld 2026-10-10). */
+  --xy-controls-button-background-color: #26262c;
+  --xy-controls-button-background-color-hover: #34343c;
+  --xy-controls-button-color: #cbd5e1;
+  --xy-controls-button-color-hover: #f1f5f9;
+  --xy-controls-button-border-color: #3a3a44;
+  --xy-controls-box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.5);
+  --xy-minimap-background-color: #141418;
+  --xy-minimap-mask-background-color: rgba(70, 70, 82, 0.55);
+  --xy-minimap-node-background-color: #3a3a44;
 }
 
 /* Het canvasvlak van de 0.5-activiteiten (wrapper om DiagramCanvas én de

@@ -1055,6 +1055,16 @@ fase 2 een **bewerkbare sandbox**:
   Let op: React Flow's Shift = kader-selectie slikt pointerdowns in; de
   handles dragen daarom de klasse `nokey`, anders start Shift+slepen vanaf
   een handle nooit een lijn.
+- **Donker thema: vaste grijzen via thema-variabelen** (2026-10-10). Profielen
+  kozen lijnkleuren en `DONKER`-constantes (`#334155`, `#475569`, …) voor een
+  wit canvas; op donker verdwenen lijnen, actoren en startknopen bijna.
+  ConnectorEdge zet die slate-tinten om met `themaLijnKleur()` naar
+  `var(--dc-lijn-slate-NNN, <oude kleur>)`, en de `DONKER`-constantes in
+  activity/archimate/bpmn/sequence/statemachine/usecase zijn
+  `var(--dc-lijn-slate-700, #334155)`. Alleen het donkere thema definieert die
+  variabelen (diagramcore.css), dus licht is ongewijzigd. Uitzondering: iconen
+  óp een lichte vulling (BPMN-taaktype, subproces-plus) houden `DONKER_INKT`.
+  Zoomknoppen en minimap krijgen donkere `--xy-*`-variabelen.
 - **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
   Escape is nodig binnen een container zonder `achtergrond` (lane, package,
   stage): daar is geen leeg vlak — elke klik selecteert de container. In

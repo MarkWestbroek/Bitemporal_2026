@@ -246,6 +246,10 @@ maat, instelbare sneltoetsen. Zie `docs/plans/2026-10-07 Projectsync …`, `docs
   klik op leeg, en de canvas zet een selectie alleen nog terug voor een element dat net
   geplaatst is.
 - Het **Instellingen-icoon** is een echt tandwiel; het oude leek naast de ☀-themaknop op een zon.
+- **Donker thema beter leesbaar** (10-10): de vaste slate-grijzen uit de profielen (lijnen, actor,
+  start/eind, fork-balken, levenslijnen, BPMN-events) lopen via thema-variabelen
+  (`--dc-lijn-slate-*`); licht blijft exact gelijk, donker wordt lichter. Zoomknoppen en minimap
+  volgen het donkere thema.
 - Projectsync: de volgorde van regels in de boom (Ctrl+↑/↓) en de mapomschrijving gaan nu mee
   (`schuifPlaatsing`, `zetMapOmschrijving` in `STRUCTUUR_OPS`); een volgordewijziging bleef eerder
   lokaal.
