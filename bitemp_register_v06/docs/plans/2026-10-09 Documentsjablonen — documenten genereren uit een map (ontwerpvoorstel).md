@@ -149,7 +149,7 @@ transformaties (§4 daar).
 | Onderdeel | Plek | Opmerking |
 |---|---|---|
 | Renderer (puur) | `transformatie/sjabloon/renderer.js` + tests | placeholders, if/unless/else, elk met filters/sortering, partials, `svg`; geen DOM |
-| Publicatie-syntax delen | de publicatie-renderer en deze renderer delen de tokenizer (`{{…}}`-parser) | één parser, twee evaluatoren (GraphQL-paden op M0 vs. objectpaden op de context) |
+| Publicatie-syntax | eigen parser in `transformatie/sjabloon/`, zelfde notatie als de publicatie waar het overlapt | besluit §5: apart houden, principes delen (veld- en lijstpatroon) |
 | Contextbouwer | `transformatie/sjabloon/context.js` | op `collectMapModel` + `modelNaarGraaf`; `svg()` via `diagramsvg` |
 | Ingebouwde sjablonen | `diagramprofielen/<profiel>/sjablonen/*.md`, `studio/sjablonen/*.md` | `?raw`-import in Vite; profiel-descriptor krijgt `sjablonen: [{id, label, bestand}]` |
 | Eigen sjablonen | Studio-project (`modellerenStore.sjablonen`), projectsync-operatie `sjabloon.zet/wis` | `MODEL_OPS` bijwerken (zie projectsync) |
@@ -170,13 +170,19 @@ transformaties (§4 daar).
 6. **Eigen sjablonen** in het project, beheer-scherm, projectsync-operaties (1–2 dagen).
 7. **DOCX** en **Imprint-pagina** (later, apart plannen).
 
-## 5. Open punten
+## 5. Besluiten en open punten
 
-- **Syntax-deling met de publicatie**: één parser is netjes, maar de publicatie-renderer leeft
-  in de publicatie-entry; de parser moet naar `diagramcore` of een gedeelde `tekst/`-map. Anders
-  twee parsers die uit elkaar lopen.
-- **Lussen in de publicatie**: zodra `#elk` bestaat, wil de publicatie hem ook (lijsten van
-  gerelateerde GE's). Dan is het dezelfde taal op M0 en M1 — mooi, maar afstemmen.
+**Besluit (Mark, 2026-10-09): HTML-publicatie en document blijven apart.** Ze zijn verschillende
+dingen (een pagina met live registerdata op M0 versus een document uit het model op M1). Geen
+gedeelde parser of renderer; wél dezelfde **principes en patronen** hergebruiken: de
+placeholder-vorm `{{pad}}`, het **veldpatroon** (een veld = naam + type + waarde, met
+voorwaardelijke blokken voor lege velden) en het **lijstpatroon** (meervoud → opsomming,
+filteren en sorteren als data, `laatste`/`eerste` in een lus). De document-renderer krijgt dus
+een eigen, kleine implementatie in `transformatie/sjabloon/`, met dezelfde notatie waar het
+overlapt zodat de kennis overdraagbaar blijft. Mocht de publicatie later lussen willen, dan is
+dat een eigen stap daar — niet via een gedeelde module.
+
+Open:
 - **Sortering en filters als data**: genoeg voor overzichten; voor "alleen use cases met een
   include" is een voorwaarde op een lus nodig (`{{#elk elementen type=usecase als=verbindingen.type=include}}`)
   — pas toevoegen als iemand het mist.
