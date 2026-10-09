@@ -21,6 +21,13 @@ Ingebouwd (`transformatie/sjabloon/sjablonen.js`):
 | Gegevenswoordenboek | canoniek, UML, MIM, ERD, GraphQL, OAS | per element met velden een tabel veld/type/compartiment; diagrammen als tekening |
 | Map-overzicht (generiek) | alle | per profiel de diagrammen en alle elementen met hun velden |
 
+**Voorbeeld:** [`voorbeelden/documenten/use-case-overzicht-klant.md`](voorbeelden/documenten/use-case-overzicht-klant.md)
+— gegenereerd met `web/vite/scripts/genereer-voorbeelddocument.mjs` (zelfde renderer, context en
+schets-tekenaar als de Studio; diagrammen als losse `.svg` naast het document, omdat GitHub inline
+SVG in Markdown niet toont). Opnieuw maken: `node scripts/genereer-voorbeelddocument.mjs` vanuit
+`web/vite`. Bekend in de schets: pijlpunten stoppen op de omsluitende rechthoek van een ellips, niet
+op de ellipsrand.
+
 ## De sjabloontaal
 
 Dezelfde notatie als de publicatie-templates waar het overlapt (veld- en lijstpatroon), maar een

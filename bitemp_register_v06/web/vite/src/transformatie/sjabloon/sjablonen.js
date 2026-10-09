@@ -29,8 +29,11 @@ titel: Use case-overzicht {{map.naam}}
 
 {{#if toelichting}}{{toelichting}}
 
-{{/if}}{{#elk verbindingen type=associatie}}- {{ander.naam}}
+{{/if}}{{#elk verbindingen type=generalisatie richting=uit}}Is een {{doel.naam}}.
+
+{{/elk}}{{#elk verbindingen type=associatie}}- {{ander.naam}}
 {{/elk}}
+
 {{/elk}}
 # Use cases
 
