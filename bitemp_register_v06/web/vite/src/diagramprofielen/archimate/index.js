@@ -29,6 +29,8 @@ import { registreerArchimateIconen } from "./iconen.jsx";
 import { registreerArchimateShapes } from "./shapes.jsx";
 import { registreerArchimateVormShapes } from "./vormShapes.jsx";
 import { VORMEN_SET } from "./vormSet.js";
+import { BLOK_SET } from "./blokSet.js";
+import { registreerArchimateBlokShapes } from "./blokShapes.jsx";
 import { ELEMENTEN, LAAG_GROEP, MOTIVATION } from "./elementen.js";
 
 export const ARCHIMATE_ID = "archimate";
@@ -214,7 +216,9 @@ export const archimateDiagramType = {
   typeWeergave: "geen", // het hoek-icoon zit al in de shape
   // Tweede officiële notatie (P07): het symbool *als* vorm i.p.v. de box met
   // hoek-icoon — menu Beeld → Shape-set. Mapping en motivatie: `vormSet.js`.
-  shapeSets: [VORMEN_SET],
+  // Gedaanten (Beeld → Shape-set, per diagram bewaard): de formele ArchiMate-
+  // notatie is de standaard; "Iconen als vorm" en "Blokken (informeel)".
+  shapeSets: [VORMEN_SET, BLOK_SET],
   fieldTypes: [],
   elementTypes,
   taakbalken: [
@@ -248,6 +252,7 @@ export function registreerArchimate() {
   registreerArchimateIconen();
   registreerArchimateShapes();
   registreerArchimateVormShapes();
+  registreerArchimateBlokShapes();
   if (!getDiagramType(ARCHIMATE_ID)) {
     registreerDiagramType(archimateDiagramType);
   }

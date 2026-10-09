@@ -32,6 +32,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   `docs/DOCUMENTEN.md`. Plus het sjabloon **Projectdocument (volgt de mappen)**: hoofdstukken =
   submappen, tekst = de nieuwe **omschrijving van een map** (eigenschappenpaneel), platen = de
   diagrammen in de map.
+- **ArchiMate-gedaante "Blokken (informeel)"** (09-10): effen blokken zonder icoon, Grouping als
+  laagkader — voor overzichtsplaten. De shape-set is nu **per diagram** bewaard en gegenereerde
+  documenten volgen hem.
 - Projectsync: de volgorde van regels in de boom (Ctrl+↑/↓) en de mapomschrijving gaan nu mee
   (`schuifPlaatsing`, `zetMapOmschrijving` in `STRUCTUUR_OPS`); een volgordewijziging bleef eerder
   lokaal.

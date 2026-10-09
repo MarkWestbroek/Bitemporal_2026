@@ -13,6 +13,9 @@ import { maakDocumentContext } from "../src/transformatie/sjabloon/context.js";
 import { schetsDiagramSvg } from "../src/transformatie/sjabloon/schets.js";
 import { renderSjabloon } from "../src/transformatie/sjabloon/renderer.js";
 import { INGEBOUWDE_SJABLONEN } from "../src/transformatie/sjabloon/sjablonen.js";
+import { ELEMENTEN } from "../src/diagramprofielen/archimate/elementen.js";
+import { BLOK_SET } from "../src/diagramprofielen/archimate/blokSet.js";
+import { vindShapeSet, descriptorMetShapeSet } from "../src/diagramcore/model/shapeSet.js";
 
 const hier = dirname(fileURLToPath(import.meta.url));
 const uitMap = join(hier, "../../../docs/voorbeelden/documenten");
@@ -28,12 +31,15 @@ const ucDescriptor = { elementTypes: [
   { id: "extend", label: "Extend", isConnector: true, edgePresentatie: { lijn: "dash-4-3", markerEnd: "pijl-open" } },
   { id: "generalisatie", label: "Generalisatie", isConnector: true, edgePresentatie: { lijn: "solid", markerEnd: "driehoek" } },
 ] };
-const lagenDescriptor = { elementTypes: [
-  { id: "laag", label: "Laag", shape: "package", achtergrond: true },
-  { id: "component", label: "Component", shape: "rounded", kleur: "#ede9fe" },
-  { id: "actor", label: "Actor", shape: "uc-actor" },
-  { id: "gebruikt", label: "Gebruikt", isConnector: true, edgePresentatie: { lijn: "solid", markerEnd: "pijl-dicht" } },
-] };
+// De lagenplaat is een ArchiMate-diagram (applicatiecomponenten in groeperingen,
+// relatie "bediening"), getoond in de gedaante "Blokken (informeel)".
+const archimateDescriptor = {
+  shapeSets: [BLOK_SET],
+  elementTypes: [
+    ...ELEMENTEN.map(([id, label, kleur]) => ({ id, label, shape: "archimate-box", kleur })),
+    { id: "bediening", label: "Bediening (serving)", isConnector: true, edgePresentatie: { lijn: "solid", markerEnd: "pijl-open" } },
+  ],
+};
 
 const el = (id, naam, elementType, data = {}) => ({ id, naam, elementType, data, compartimenten: [] });
 const con = (id, elementType, source, target, naam = "") => ({ id, naam, elementType, source, target, data: {} });
@@ -43,15 +49,16 @@ const grijs = { kleur: "#e5e7eb" };
 
 // ── Map 1: CGV — inleiding + lagenplaat ──
 const lagen = per([
-  el("l1", "Actoren", "laag"), el("l2", "Applicaties (buiten scope)", "laag"), el("l3", "Integratievoorzieningen", "laag"), el("l4", "Gegevens", "laag"),
-  el("klant", "Klant", "actor"), el("mw", "Medewerker", "actor"),
-  el("of", "OpenFormulieren", "component", grijs), el("nlp", "NLPortal", "component", grijs), el("kiss", "KISS", "component", grijs), el("gzac", "GZAC", "component", grijs),
-  el("fsc", "OpenFSC", "component"), el("ftv", "OpenFTV", "component"),
-  el("oz", "OpenZaak", "component"), el("ok", "OpenKlant", "component"), el("oo", "OpenObject", "component"),
-  con("c1", "gebruikt", "klant", "ok"), con("c2", "gebruikt", "mw", "oz"), con("c3", "gebruikt", "mw", "ok"), con("c4", "gebruikt", "mw", "oo"),
+  el("l1", "Actoren", "grouping"), el("l2", "Applicaties (buiten scope)", "grouping"), el("l3", "Integratievoorzieningen", "grouping"), el("l4", "Gegevens", "grouping"),
+  el("klant", "Klant", "business-actor"), el("mw", "Medewerker", "business-actor"),
+  el("of", "OpenFormulieren", "app-component", grijs), el("nlp", "NLPortal", "app-component", grijs), el("kiss", "KISS", "app-component", grijs), el("gzac", "GZAC", "app-component", grijs),
+  el("fsc", "OpenFSC", "app-component"), el("ftv", "OpenFTV", "app-component"),
+  el("oz", "OpenZaak", "app-component"), el("ok", "OpenKlant", "app-component"), el("oo", "OpenObject", "app-component"),
+  // ArchiMate-richting: het gegevenscomponent bedient de actor (pijl bij de actor).
+  con("c1", "bediening", "ok", "klant"), con("c2", "bediening", "oz", "mw"), con("c3", "bediening", "ok", "mw"), con("c4", "bediening", "oo", "mw"),
 ]);
-const lagenDiagram = { d0: { id: "d0", naam: "Lagen van de CGV", diagramType: "lagen", nodes: [
-  n("l1", 0, 0, { width: 760, height: 150 }), n("klant", 230, 30), n("mw", 450, 30),
+const lagenDiagram = { d0: { id: "d0", naam: "Lagen van de CGV", diagramType: "archimate", shapeSetId: "blokken", nodes: [
+  n("l1", 0, 0, { width: 760, height: 150 }), n("klant", 210, 50, { width: 140, height: 44 }), n("mw", 410, 50, { width: 140, height: 44 }),
   n("l2", 0, 170, { width: 760, height: 100 }), n("of", 20, 210, { width: 170, height: 44 }), n("nlp", 205, 210, { width: 170, height: 44 }), n("kiss", 390, 210, { width: 170, height: 44 }), n("gzac", 575, 210, { width: 170, height: 44 }),
   n("l3", 0, 290, { width: 760, height: 100 }), n("fsc", 150, 330, { width: 200, height: 44 }), n("ftv", 410, 330, { width: 200, height: 44 }),
   n("l4", 0, 410, { width: 760, height: 100 }), n("oz", 60, 450, { width: 190, height: 44 }), n("ok", 285, 450, { width: 190, height: 44 }), n("oo", 510, 450, { width: 190, height: 44 }),
@@ -106,13 +113,15 @@ const files = new Map();
 let i = 0;
 const svgVan = (diagram, { elements, descriptor }) => {
   const bestand = `${STAM}-${diagram.id}.svg`;
-  files.set(bestand, schetsDiagramSvg({ diagram, elements, descriptor, idPrefix: `d${++i}` }));
+  // Zoals de Studio: de tekening volgt de gedaante die het diagram bewaart.
+  const metSet = descriptorMetShapeSet(descriptor, vindShapeSet(descriptor, diagram.shapeSetId, diagram));
+  files.set(bestand, schetsDiagramSvg({ diagram, elements, descriptor: metSet, idPrefix: `d${++i}` }));
   return `![${diagram.naam}](${bestand})`;
 };
 const ctx = maakDocumentContext({
   naam: "CGV Use case model",
   omschrijving: INLEIDING,
-  profielen: [{ id: "lagen", label: "Lagen", descriptor: lagenDescriptor, elements: lagen, diagrams: lagenDiagram }],
+  profielen: [{ id: "archimate05", label: "ArchiMate", descriptor: archimateDescriptor, elements: lagen, diagrams: lagenDiagram }],
   svgVan,
   kinderen: [
     { naam: "Actoren", omschrijving: ACTOREN, profielen: [{ id: "usecase05", label: "Use case", descriptor: ucDescriptor, elements: actoren, diagrams: actorDiagram }] },

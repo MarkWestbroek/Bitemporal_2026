@@ -871,6 +871,17 @@ fase 2 een **bewerkbare sandbox**:
   Graaf en SP, eigen profielen) en de tekstuele Profiel-editor staan
   standaard niet in de balk (`standaardVerborgen`); via Modelleren, *Ga
   naar* en Studio-instellingen → Activiteiten blijven ze bereikbaar.
+- **ArchiMate: gedaante "Blokken (informeel)"** (2026-10-09): Beeld →
+  Shape-set → *Blokken (informeel)* tekent dezelfde ArchiMate-elementen als
+  effen afgeronde blokken zonder type-icoon, en Grouping als licht laagkader
+  met de naam linksboven — voor overzichtsplaten voor een breder publiek
+  (zoals de CGV-lagenplaat). Het model blijft ArchiMate. Buiten scope: geef
+  het element een eigen kleur (grijs). `archimate/blokSet.js` + `blokShapes.jsx`.
+  **De gekozen shape-set is nu per diagram** (`diagram.shapeSetId`, via
+  `updateDiagramStijl`); de browser-voorkeur geldt alleen nog voor diagrammen
+  zonder eigen keuze. De skin-logica staat gedeeld in
+  `diagramcore/model/shapeSet.js` (canvas én documenttekenaar), zodat een
+  gegenereerd document de gedaante van het diagram volgt.
 - **Documenten uit sjablonen** (2026-10-09): rechtsklik op een map →
   *Document maken…* → "Document: Use case-overzicht / Gegevenswoordenboek /
   Map-overzicht" → voorbeeldvenster met de diagrammen als schets-SVG,

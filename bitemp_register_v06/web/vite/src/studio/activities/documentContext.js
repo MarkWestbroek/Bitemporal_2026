@@ -9,6 +9,7 @@ import { useModellerenStore } from "./modellerenActivity.jsx";
 import { getProfieltype } from "../profieltypeRegistry";
 import { maakDocumentContext } from "../../transformatie/sjabloon/context.js";
 import { schetsDiagramSvg } from "../../transformatie/sjabloon/schets.js";
+import { vindShapeSet, descriptorMetShapeSet } from "../../diagramcore/model/shapeSet.js";
 import { renderSjabloon } from "../../transformatie/sjabloon/renderer.js";
 import { markdownNaarHtml, htmlDocument } from "../../transformatie/sjabloon/markdownNaarHtml.js";
 import { useDocumentStore } from "./documentVoorbeeld.jsx";
@@ -46,8 +47,14 @@ export function bouwDocumentContext(mapId, mapNaam) {
   return maakDocumentContext({
     ...invoer,
     naam: mapNaam || invoer.naam,
+    // De tekening volgt de gedaante (shape-set) die het diagram bewaart.
     svgVan: (diagram, { elements, descriptor }) =>
-      schetsDiagramSvg({ diagram, elements, descriptor, idPrefix: `d${(teller += 1)}` }),
+      schetsDiagramSvg({
+        diagram,
+        elements,
+        descriptor: descriptorMetShapeSet(descriptor, vindShapeSet(descriptor, diagram.shapeSetId, diagram)),
+        idPrefix: `d${(teller += 1)}`,
+      }),
   });
 }
 

@@ -25,7 +25,8 @@ Ingebouwd (`transformatie/sjabloon/sjablonen.js`):
 **Volledig gegenereerd uit het model:** [`voorbeelden/documenten/CGV_Use_case_model-gegenereerd.md`](voorbeelden/documenten/CGV_Use_case_model-gegenereerd.md)
 (script `web/vite/scripts/genereer-cgv-voorbeeld.mjs`) naast het handgeschreven origineel
 [`CGV_Use_case_model.md`](voorbeelden/documenten/CGV_Use_case_model.md). De inleiding is de
-omschrijving van de bovenste map, de lagenplaat een gewoon diagram in die map, de hoofdstukken
+omschrijving van de bovenste map, de lagenplaat een ArchiMate-diagram in die map (gedaante
+"Blokken (informeel)": de tekening volgt de shape-set die het diagram bewaart), de hoofdstukken
 Actoren en Use cases zijn submappen. Een map krijgt zijn omschrijving in de Studio via het
 eigenschappenpaneel (klik op de map in de projectboom).
 

@@ -18,10 +18,10 @@ const DASHES = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4" };
 export function vormFamilie(shape = "") {
   if (/ellips|^bol$|cmmn-mijlpaal/.test(shape)) return "ellips";
   if (/actor/.test(shape)) return "actor";
-  if (/boundary|systeem|package|partitie|pool|lane|stage|caseplan|fragment|composiet|archimate-box/.test(shape)) return "kader";
+  if (/boundary|systeem|package|partitie|pool|lane|stage|caseplan|fragment|composiet|laag/.test(shape)) return "kader";
   if (/note|notitie/.test(shape)) return "notitie";
   if (/begin|eind|event|junction|historie|punt|gateway|keuze|beslissing|fork|^anker$/.test(shape)) return "punt";
-  if (/rounded|taak|bpmn-subproces|chip/.test(shape)) return "afgerond";
+  if (/rounded|taak|bpmn-subproces|chip|am-blok/.test(shape)) return "afgerond";
   return "vak";
 }
 
@@ -37,7 +37,8 @@ const STANDAARD_MAAT = {
 
 /** Maat van een voorkomen: opgeslagen maat, anders standaard per familie (+ velden bij een vak). */
 export function schetsMaat(node, element, elementType) {
-  const fam = vormFamilie(elementType?.shape);
+  // Achtergrond-typen (kaders, groeperingen, lagen) zijn altijd een kader.
+  const fam = elementType?.achtergrond ? "kader" : vormFamilie(elementType?.shape);
   const [bw, bh] = STANDAARD_MAAT[fam] || STANDAARD_MAAT.vak;
   let w = node?.size?.width || elementType?.minBreedte || bw;
   let h = node?.size?.height || bh;
@@ -102,7 +103,8 @@ function tekenNode(box, element, elementType) {
     delen.push(svgEl("path", { d: `M ${num(cx)} ${num(nek)} V ${num(heup)} M ${num(cx - w * 0.3)} ${num(nek + 8)} H ${num(cx + w * 0.3)} M ${num(cx)} ${num(heup)} L ${num(cx - w * 0.28)} ${num(heup + h * 0.3)} M ${num(cx)} ${num(heup)} L ${num(cx + w * 0.28)} ${num(heup + h * 0.3)}`, fill: "none", stroke: rand, "stroke-width": 1.4, "stroke-linecap": "round" }));
     delen.push(tekstBlok(cx, y + h + 10, regelsVanTekst(naam, 16), { gewicht: 600, grootte: 11 }));
   } else if (fam === "kader") {
-    delen.push(svgEl("rect", { x, y, width: w, height: h, rx: 8, fill: element?.data?.achtergrondKleur || "none", stroke: element?.data?.kleur || "#94a3b8", "stroke-width": 1.5, "stroke-dasharray": /boundary/.test(elementType?.shape || "") ? "6 4" : null }));
+    const laag = /laag/.test(elementType?.shape || "");
+    delen.push(svgEl("rect", { x, y, width: w, height: h, rx: 8, fill: element?.data?.achtergrondKleur || (laag ? "#f8fafc" : "none"), stroke: element?.data?.kleur || (laag ? "#cbd5e1" : "#94a3b8"), "stroke-width": 1.5, "stroke-dasharray": /boundary/.test(elementType?.shape || "") ? "6 4" : null }));
     delen.push(tekstBlok(x + 10, y + 14, [naam], { anker: "start", gewicht: 700, grootte: 11, kleur: "#475569" }));
   } else if (fam === "notitie") {
     const v = 10;
