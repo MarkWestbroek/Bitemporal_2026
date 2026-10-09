@@ -7,9 +7,13 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
-Sparx EA-import en overerving in het M3 (branch `feat/ea-qea-lezer`, 07–09 oktober; alleen
-frontend, api blijft 0.12.0). Onderzoek en EA-schema: `docs/plans/2026-10-07 Sparx EA-sync — vier
-routes vergeleken (onderzoek).md`.
+
+## [studio/v0.16.0] — 2026-10-10
+Sparx EA ↔ Omnium: EA-modellen uit een `.qea` lezen (in de browser, of via de server rechtstreeks
+uit git), terugschrijven als XMI 2.1, acht nieuwe profielen voor de EA-diagramsoorten en BPMN/DMN
+op EA-niveau; overerving en abstracte elementtypen in het M3. Daarnaast documenten uit sjablonen,
+ArchiMate-blokken en canvas-fixes. Samen met api 0.13.0 (EA-import via de server). Onderzoek en
+EA-schema: `docs/plans/2026-10-07 Sparx EA-sync — vier routes vergeleken (onderzoek).md`.
 
 ### Toegevoegd
 - **Acht profielen voor de EA-import** (09-10, opdracht Mark; `docs/PROFIELEN-EA-AANVULLING.md`):
@@ -83,6 +87,8 @@ routes vergeleken (onderzoek).md`.
   laadde in 176 s en bevroor bij elke hertekening; nu < 1 s. De hiërarchie wordt één keer per
   modelstand berekend (was: per elementregel), mappen gebruiken een index op submappen en inhoud,
   en mappen dieper dan twee niveaus staan standaard dicht.
+- **Lijnvorm kiezen wist de knikpunten** (contextmenu → Lijnvorm): knikpunten winnen van de vorm, dus
+  "Hoekig" op een uit EA geïmporteerde lijn deed niets; nu zoals Boomstijl, Ctrl+Z zet ze terug.
 - **"Verwijder uit model" haalt overal de boomplek weg**: de knop in de inspector en Ctrl+Delete op het
   canvas ruimen nu ook de plaatsing in de projectboom op, net als het boommenu (één structuur-undo-stap).
 - **Wees-plaatsingen niet meer in export en snapshot**: een element of diagram dat buiten het
@@ -145,6 +151,38 @@ routes vergeleken (onderzoek).md`.
   vorm raken — activity hecht nu zwevend.
 - **Studio**: bestandsimport in een niet-lege sandbox vraagt *toevoegen (undo)* of *vervangen*;
   keuzedialoog `vraagKeuze` met zoekveld; `importBestand.binair`.
+
+### Toegevoegd (documenten en canvas, 09/10-10)
+- **Documenten uit sjablonen** (09-10): rechtsklik op een map → *Document maken…*: use
+  case-overzicht, gegevenswoordenboek of generiek map-overzicht, met de diagrammen als tekening;
+  voorbeeldvenster, Markdown/HTML-download en afdrukken. Sjabloontaal en context:
+  `docs/DOCUMENTEN.md`. Plus het sjabloon **Projectdocument (volgt de mappen)**: hoofdstukken =
+  submappen, tekst = de nieuwe **omschrijving van een map** (eigenschappenpaneel), platen = de
+  diagrammen in de map.
+- **ArchiMate-gedaante "Blokken (informeel)"** (09-10): effen blokken zonder icoon, Grouping als
+  laagkader, bediening getekend als "gebruikt" (pijlpunt aan de bron) — voor overzichtsplaten.
+  In documenten volgen diagrammen de volgorde van de projectboom. ArchiMate-Grouping is in de
+  standaardnotatie een gestippeld kader achter de inhoud. Afbeelding-exports bevatten geen
+  selectie meer (tijdelijk opgeheven en daarna hersteld). De shape-set is nu **per diagram** bewaard en gegenereerde
+  documenten volgen hem.
+- **Deselecteren binnen kaders** (09-10): een klik op het lege binnenvlak van een systeemkader,
+  Kader, Grouping of laagkader gaat door naar het canvas en deselecteert. Het kader zelf pak je
+  bij de naam of de rand. Droppen uit de boom op een Kader of Grouping plaatst het element nu ook.
+  Na een selectie met Shift+slepen verschijnt geen blauw groepskader meer; dat ving elke klik
+  tussen de geselecteerde elementen, zodat deselecteren daar niet werkte. Samen slepen werkt nog.
+- **Klik op leeg deselecteert weer betrouwbaar** (09-10, Mark: "ik klik toch echt op leeg"). Een
+  echte muisklik beweegt vaak een paar pixels. d3-zoom maakte daar een pan van en slikte de klik
+  in, en het pan-einde liet de canvas de oude selectie terugzetten. Nu telt alles tot 8px als
+  klik op leeg, en de canvas zet een selectie alleen nog terug voor een element dat net
+  geplaatst is.
+- Het **Instellingen-icoon** is een echt tandwiel; het oude leek naast de ☀-themaknop op een zon.
+- **Donker thema beter leesbaar** (10-10): de vaste slate-grijzen uit de profielen (lijnen, actor,
+  start/eind, fork-balken, levenslijnen, BPMN-events) lopen via thema-variabelen
+  (`--dc-lijn-slate-*`); licht blijft exact gelijk, donker wordt lichter. Zoomknoppen en minimap
+  volgen het donkere thema.
+- Projectsync: de volgorde van regels in de boom (Ctrl+↑/↓) en de mapomschrijving gaan nu mee
+  (`schuifPlaatsing`, `zetMapOmschrijving` in `STRUCTUUR_OPS`); een volgordewijziging bleef eerder
+  lokaal.
 
 ### Gefixt
 - Zwevende lijnuiteinden mikken op hun dichtstbijzijnde knikpunt (niet op de andere doos); een
@@ -223,36 +261,6 @@ maat, instelbare sneltoetsen. Zie `docs/plans/2026-10-07 Projectsync …`, `docs
   elkaar zoals in EA, Alt+-/= verdelen, Alt+W/E/R zelfde maat, Alt+Z
   maat aan inhoud, Ctrl+Delete verwijderen uit model, Alt+G zoek in projectboom).
 - Graaf (demo), SP en de Profiel-editor staan standaard niet meer in de activity bar.
-- **Documenten uit sjablonen** (09-10): rechtsklik op een map → *Document maken…*: use
-  case-overzicht, gegevenswoordenboek of generiek map-overzicht, met de diagrammen als tekening;
-  voorbeeldvenster, Markdown/HTML-download en afdrukken. Sjabloontaal en context:
-  `docs/DOCUMENTEN.md`. Plus het sjabloon **Projectdocument (volgt de mappen)**: hoofdstukken =
-  submappen, tekst = de nieuwe **omschrijving van een map** (eigenschappenpaneel), platen = de
-  diagrammen in de map.
-- **ArchiMate-gedaante "Blokken (informeel)"** (09-10): effen blokken zonder icoon, Grouping als
-  laagkader, bediening getekend als "gebruikt" (pijlpunt aan de bron) — voor overzichtsplaten.
-  In documenten volgen diagrammen de volgorde van de projectboom. ArchiMate-Grouping is in de
-  standaardnotatie een gestippeld kader achter de inhoud. Afbeelding-exports bevatten geen
-  selectie meer (tijdelijk opgeheven en daarna hersteld). De shape-set is nu **per diagram** bewaard en gegenereerde
-  documenten volgen hem.
-- **Deselecteren binnen kaders** (09-10): een klik op het lege binnenvlak van een systeemkader,
-  Kader, Grouping of laagkader gaat door naar het canvas en deselecteert. Het kader zelf pak je
-  bij de naam of de rand. Droppen uit de boom op een Kader of Grouping plaatst het element nu ook.
-  Na een selectie met Shift+slepen verschijnt geen blauw groepskader meer; dat ving elke klik
-  tussen de geselecteerde elementen, zodat deselecteren daar niet werkte. Samen slepen werkt nog.
-- **Klik op leeg deselecteert weer betrouwbaar** (09-10, Mark: "ik klik toch echt op leeg"). Een
-  echte muisklik beweegt vaak een paar pixels. d3-zoom maakte daar een pan van en slikte de klik
-  in, en het pan-einde liet de canvas de oude selectie terugzetten. Nu telt alles tot 8px als
-  klik op leeg, en de canvas zet een selectie alleen nog terug voor een element dat net
-  geplaatst is.
-- Het **Instellingen-icoon** is een echt tandwiel; het oude leek naast de ☀-themaknop op een zon.
-- **Donker thema beter leesbaar** (10-10): de vaste slate-grijzen uit de profielen (lijnen, actor,
-  start/eind, fork-balken, levenslijnen, BPMN-events) lopen via thema-variabelen
-  (`--dc-lijn-slate-*`); licht blijft exact gelijk, donker wordt lichter. Zoomknoppen en minimap
-  volgen het donkere thema.
-- Projectsync: de volgorde van regels in de boom (Ctrl+↑/↓) en de mapomschrijving gaan nu mee
-  (`schuifPlaatsing`, `zetMapOmschrijving` in `STRUCTUUR_OPS`); een volgordewijziging bleef eerder
-  lokaal.
 
 ## [studio/v0.14.0] — 2026-10-07
 Samenwerken aan een project, eerste trede: het Studio-project krijgt een naam en een id en kan
