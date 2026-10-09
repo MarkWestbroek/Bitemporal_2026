@@ -11,6 +11,7 @@ import { getProfieltype } from "../profieltypeRegistry";
 import { useModellerenStore } from "./modellerenActivity.jsx";
 import { useKruisStore, refKey, vanNaar } from "./koppelingenActivity.jsx";
 import { toonMelding } from "../naamDialog.jsx";
+import { INGEBOUWDE_SJABLONEN } from "../../transformatie/sjabloon/sjablonen.js";
 
 let _teller = 0;
 const versId = (voor) => `${voor}__t${Date.now()}_${_teller++}`;
@@ -188,6 +189,26 @@ registreerTransformatie({
     URL.revokeObjectURL(url);
   },
 });
+
+// Documenten uit sjablonen (docs/plans/2026-10-09 Documentsjablonen): per
+// ingebouwd sjabloon een export-actie "Document: …" op een map. Het sjabloon
+// rendert op de map-context (elementen, velden, verbindingen, diagrammen als
+// schets-SVG) en opent het voorbeeldvenster met Markdown/HTML-download.
+// De generator wordt lui geladen (documentContext → documentVoorbeeld) om geen
+// importcirkel met modellerenActivity te maken.
+for (const sj of INGEBOUWDE_SJABLONEN) {
+  registreerTransformatie({
+    id: `document-${sj.id}`,
+    label: `Document: ${sj.label}`,
+    richting: "export",
+    profielTypes: sj.profielTypes,
+    toelichting: sj.toelichting,
+    run: async ({ bronMap, mapNaam }) => {
+      const { maakDocumentVanMap } = await import("./documentContext.js");
+      return maakDocumentVanMap({ sjabloon: sj, mapId: bronMap, mapNaam });
+    },
+  });
+}
 
 // Import: een JSON-map-export terug in de huidige map plaatsen.
 registreerTransformatie({

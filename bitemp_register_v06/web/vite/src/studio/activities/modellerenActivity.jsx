@@ -1322,6 +1322,9 @@ function Map_({ map, diepte }) {
           { label: "Exporteren…", onClick: () => useTransformStore.getState().openen(map.id, "export") },
         ],
       },
+      // Documentsjablonen: een document uit deze map (use case-overzicht,
+      // gegevenswoordenboek, …) — de "Document: …"-generatoren onder Exporteren.
+      { label: "Document maken…", onClick: () => useTransformStore.getState().openen(map.id, "export") },
       { sep: true },
       { label: "Omhoog", onClick: () => schuifMap(map.id, "omhoog") },
       { label: "Omlaag", onClick: () => schuifMap(map.id, "omlaag") },

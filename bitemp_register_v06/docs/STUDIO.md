@@ -871,6 +871,10 @@ fase 2 een **bewerkbare sandbox**:
   Graaf en SP, eigen profielen) en de tekstuele Profiel-editor staan
   standaard niet in de balk (`standaardVerborgen`); via Modelleren, *Ga
   naar* en Studio-instellingen → Activiteiten blijven ze bereikbaar.
+- **Documenten uit sjablonen** (2026-10-09): rechtsklik op een map →
+  *Document maken…* → "Document: Use case-overzicht / Gegevenswoordenboek /
+  Map-overzicht" → voorbeeldvenster met de diagrammen als schets-SVG,
+  download als Markdown of HTML, afdrukken naar PDF. Zie `docs/DOCUMENTEN.md`.
 - **Taakbalken op een rij bovenin** (2026-10-07): balken met `auto: true`
   in hun voorkeur (de standaard, en balken zonder voorkeur) worden na elke
   render op gemeten breedte links→rechts op één rij bovenin gelegd; past
