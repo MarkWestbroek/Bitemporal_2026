@@ -334,6 +334,7 @@ export const STRUCTUUR_OPS = {
   schuifMap: null,
   hernoemMap: null,
   zetMapKleur: null,
+  zetMapOmschrijving: null,
   verwijderMap: null,
   verplaatsMap: null,
   plaatsDiagram: null,
@@ -352,8 +353,8 @@ export const STRUCTUUR_VELDEN = ["mappen", "plaatsing"];
 export function structuurNet(voor, na) {
   const m = diffMap(voor.mappen, na.mappen);
   const p = diffMap(voor.plaatsing, na.plaatsing);
-  const volgordeVoor = Object.keys(voor.plaatsing || {}).join(" ");
-  const volgordeNa = Object.keys(na.plaatsing || {}).join(" ");
+  const volgordeVoor = Object.keys(voor.plaatsing || {}).join("\u0000");
+  const volgordeNa = Object.keys(na.plaatsing || {}).join("\u0000");
   const volgordeAnders = volgordeVoor !== volgordeNa;
   if (m.leeg && p.leeg && !volgordeAnders) return [];
   const patch = { zetMappen: m.zet, wisMappen: m.wis, zetPlaatsing: p.zet, wisPlaatsing: p.wis };

@@ -104,6 +104,18 @@ maat, instelbare sneltoetsen. Zie `docs/plans/2026-10-07 Projectsync …`, `docs
   elkaar zoals in EA, Alt+-/= verdelen, Alt+W/E/R zelfde maat, Alt+Z
   maat aan inhoud, Ctrl+Delete verwijderen uit model, Alt+G zoek in projectboom).
 - Graaf (demo), SP en de Profiel-editor staan standaard niet meer in de activity bar.
+- **Documenten uit sjablonen** (09-10): rechtsklik op een map → *Document maken…*: use
+  case-overzicht, gegevenswoordenboek of generiek map-overzicht, met de diagrammen als tekening;
+  voorbeeldvenster, Markdown/HTML-download en afdrukken. Sjabloontaal en context:
+  `docs/DOCUMENTEN.md`. Plus het sjabloon **Projectdocument (volgt de mappen)**: hoofdstukken =
+  submappen, tekst = de nieuwe **omschrijving van een map** (eigenschappenpaneel), platen = de
+  diagrammen in de map.
+- **ArchiMate-gedaante "Blokken (informeel)"** (09-10): effen blokken zonder icoon, Grouping als
+  laagkader — voor overzichtsplaten. De shape-set is nu **per diagram** bewaard en gegenereerde
+  documenten volgen hem.
+- Projectsync: de volgorde van regels in de boom (Ctrl+↑/↓) en de mapomschrijving gaan nu mee
+  (`schuifPlaatsing`, `zetMapOmschrijving` in `STRUCTUUR_OPS`); een volgordewijziging bleef eerder
+  lokaal.
 
 ## [studio/v0.14.0] — 2026-10-07
 Samenwerken aan een project, eerste trede: het Studio-project krijgt een naam en een id en kan
