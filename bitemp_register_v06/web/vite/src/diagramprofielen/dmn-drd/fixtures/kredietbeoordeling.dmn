@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/"
+             xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/"
+             id="Definitions_krediet" name="Kredietbeoordeling" namespace="http://omnium.example/dmn">
+  <inputData id="Input_inkomen" name="Inkomen">
+    <description>Bruto jaarinkomen van de aanvrager</description>
+  </inputData>
+  <inputData id="Input_schulden" name="Bestaande schulden" />
+  <decision id="Decision_risico" name="Risicoklasse">
+    <question>In welke risicoklasse valt de aanvrager?</question>
+    <informationRequirement id="IR_1"><requiredInput href="#Input_inkomen" /></informationRequirement>
+    <informationRequirement id="IR_2"><requiredInput href="#Input_schulden" /></informationRequirement>
+    <knowledgeRequirement id="KR_1"><requiredKnowledge href="#BKM_score" /></knowledgeRequirement>
+  </decision>
+  <decision id="Decision_toekennen" name="Krediet toekennen?">
+    <description>Eindbeslissing</description>
+    <informationRequirement id="IR_3"><requiredDecision href="#Decision_risico" /></informationRequirement>
+    <authorityRequirement id="AR_1"><requiredAuthority href="#KS_beleid" /></authorityRequirement>
+  </decision>
+  <businessKnowledgeModel id="BKM_score" name="Scoremodel" />
+  <knowledgeSource id="KS_beleid" name="Kredietbeleid 2026" />
+  <textAnnotation id="TA_1"><text>Herzien per kwartaal</text></textAnnotation>
+  <association id="Assoc_1" sourceRef="TA_1" targetRef="KS_beleid" />
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DRD_1" name="Kredietbeoordeling">
+      <dmndi:DMNShape id="S_toekennen" dmnElementRef="Decision_toekennen"><dc:Bounds x="300" y="40" width="180" height="80" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="S_risico" dmnElementRef="Decision_risico"><dc:Bounds x="300" y="200" width="180" height="80" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="S_inkomen" dmnElementRef="Input_inkomen"><dc:Bounds x="100" y="360" width="160" height="60" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="S_schulden" dmnElementRef="Input_schulden"><dc:Bounds x="320" y="360" width="160" height="60" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="S_bkm" dmnElementRef="BKM_score"><dc:Bounds x="560" y="200" width="160" height="60" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="S_ks" dmnElementRef="KS_beleid"><dc:Bounds x="560" y="40" width="160" height="60" /></dmndi:DMNShape>
+      <dmndi:DMNShape id="S_ta" dmnElementRef="TA_1"><dc:Bounds x="780" y="40" width="140" height="40" /></dmndi:DMNShape>
+      <dmndi:DMNEdge id="E_IR_1" dmnElementRef="IR_1"><di:waypoint x="180" y="360" /><di:waypoint x="180" y="320" /><di:waypoint x="360" y="320" /><di:waypoint x="360" y="280" /></dmndi:DMNEdge>
+      <dmndi:DMNEdge id="E_IR_3" dmnElementRef="IR_3"><di:waypoint x="390" y="200" /><di:waypoint x="390" y="120" /></dmndi:DMNEdge>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

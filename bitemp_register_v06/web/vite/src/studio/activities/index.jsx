@@ -37,6 +37,15 @@ import sequenceActivity from "./sequenceActivity";
 import erdActivity from "./erdActivity";
 import sysmlActivity from "./sysmlActivity";
 import cmmnActivity from "./cmmnActivity";
+// EA-aanvulling (2026-10-09): de UML 2-/EA-diagramsoorten die de Sparx EA-import nog miste.
+import componentDeploymentActivity from "./componentDeploymentActivity";
+import objectActivity from "./objectActivity";
+import requirementsActivity from "./requirementsActivity";
+import businessActivity from "./businessActivity";
+import xsdActivity from "./xsdActivity";
+import wsdlActivity from "./wsdlActivity";
+import compositeStructureActivity from "./compositeStructureActivity";
+import communicationActivity from "./communicationActivity";
 // Data-shapes globaal registreren bij startup (side-effect), zodat ze in
 // elk profiel beschikbaar zijn.
 import "./vormenRegistratie.js";
@@ -89,6 +98,7 @@ import "./transformaties.js";
 import "./archimateTransformaties.js";
 import "./oasCanoniekTransformatie.js";
 import "./usecaseTransformaties.js";
+import "./bpmnDmnTransformaties.js"; // BPMN 2.0 XML → BPMN, DMN XML → DRD (lezer → regelset → toepasser)
 
 registreerActiviteiten([
   // modelleren
@@ -109,6 +119,14 @@ registreerActiviteiten([
   erdActivity, // "ERD" — kraaienpoten, kardinaliteit per uiteinde (preview)
   sysmlActivity, // "SysML" — bdd + ibd (poorten op de rand) + requirements (preview)
   cmmnActivity, // "CMMN" — casusmodel; sentries op het rand-primitief (preview)
+  componentDeploymentActivity, // "Component & deployment" — UML 2 component-/deploymentdiagrammen (preview, niet in de balk)
+  objectActivity, // "Object" — instantiediagram: objecten met slots, links (preview, niet in de balk)
+  requirementsActivity, // "Requirements" — EA-stijl: requirement/feature/issue/change (preview, niet in de balk)
+  businessActivity, // "Business (EP)" — Eriksson-Penker (preview, niet in de balk)
+  xsdActivity, // "XML Schema" — XSD-stereotypen (preview, niet in de balk)
+  wsdlActivity, // "WSDL" — WSDL-stereotypen (preview, niet in de balk)
+  compositeStructureActivity, // "Composite structure" — parts/poorten/connectoren (preview, niet in de balk)
+  communicationActivity, // "Communication" — objecten, links, genummerde berichten (preview, niet in de balk)
   formulierDiagramActivity, // "Formulier (diagram)" — formulier-profiel, dogfood (F48 P1; niet in de balk)
   toegangsregelsActivity, // "Toegangsregels" — toegangsregel-profiel op de motor (via Modelleren-host)
   dmnActivity,

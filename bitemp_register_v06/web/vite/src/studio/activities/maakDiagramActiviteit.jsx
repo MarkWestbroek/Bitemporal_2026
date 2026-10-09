@@ -87,6 +87,7 @@ import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
 import { splitsVeldSleutel } from "../../diagramcore/canvas/inlineNaam.js";
 import { actieVoorEvent, bindingVoor, toonBinding } from "../sneltoetsen.js";
 import { schuifVeld } from "../../diagramcore/model/velden.js";
+import { vindShapeSet } from "../../diagramcore/model/shapeSet.js";
 
 /**
  * Inline naamveld voor lijstregels (elementenbrowser, diagramlijst): Enter
@@ -1821,6 +1822,17 @@ export function maakDiagramActiviteit(opties) {
   // Shape-set (P07): welke van de descriptor.shapeSets actief is ("" =
   // standaard, d.w.z. de shapes van de elementtypen zelf).
   const shapeSetSleutel = `${taakbalkSleutel}-shapeset`;
+  /** Gedaante van het actieve diagram (eigen keuze), anders de voorkeur. */
+  const effectieveShapeSet = () => {
+    const st = useStore.getState();
+    const d = st.diagrams?.[st.actiefDiagramId];
+    if (d && d.shapeSetId !== undefined) return d.shapeSetId || "";
+    try {
+      return window.localStorage.getItem(shapeSetSleutel) || "";
+    } catch {
+      return "";
+    }
+  };
   const leesShapeSet = () => {
     try {
       return window.localStorage.getItem(shapeSetSleutel) || "";
@@ -1880,6 +1892,11 @@ export function maakDiagramActiviteit(opties) {
           } catch {
             /* opslag vol — niet kritisch */
           }
+          // De gedaante hoort bij het diagram (ook voor gegenereerde
+          // documenten); de localStorage-waarde is de voorkeur voor diagrammen
+          // zonder eigen keuze.
+          const st = useStore.getState();
+          if (st.actiefDiagramId) st.updateDiagramStijl(st.actiefDiagramId, { shapeSetId: setId || "" });
           setShapeSetId(setId || "");
           setTimeout(() => menuBus.emit("menu:ververs"), 0);
         }),
@@ -2807,9 +2824,7 @@ export function maakDiagramActiviteit(opties) {
                       });
                     }
                   }}
-                  shapeSet={
-                    (descriptor.shapeSets || []).find((set) => set.id === shapeSetId)?.shapes || null
-                  }
+                  shapeSet={vindShapeSet(descriptor, diagram.shapeSetId ?? shapeSetId, diagram)}
                   bouwContextMenu={bouwContextMenu}
                   onViewport={(vp) => useStore.getState().updateDiagramViewport(diagram.id, vp)}
                 />
@@ -3153,11 +3168,11 @@ export function maakDiagramActiviteit(opties) {
                 id: `${menuPrefix}-shapesets`,
                 label: "Shape-set",
                 items: [
-                  { id: `${menuPrefix}-ss-standaard`, label: "Standaard", checked: !leesShapeSet(), onClick: () => menuBus.emit(ev("shape-set"), "") },
+                  { id: `${menuPrefix}-ss-standaard`, label: "Standaard", checked: !effectieveShapeSet(), onClick: () => menuBus.emit(ev("shape-set"), "") },
                   ...descriptor.shapeSets.map((set) => ({
                     id: `${menuPrefix}-ss-${set.id}`,
                     label: set.label || set.id,
-                    checked: leesShapeSet() === set.id,
+                    checked: effectieveShapeSet() === set.id,
                     onClick: () => menuBus.emit(ev("shape-set"), set.id),
                   })),
                 ],

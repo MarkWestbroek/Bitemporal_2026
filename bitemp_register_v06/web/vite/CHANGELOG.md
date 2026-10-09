@@ -12,6 +12,35 @@ frontend, api blijft 0.12.0). Onderzoek en EA-schema: `docs/plans/2026-10-07 Spa
 routes vergeleken (onderzoek).md`.
 
 ### Toegevoegd
+- **Acht profielen voor de EA-import** (09-10, opdracht Mark; `docs/PROFIELEN-EA-AANVULLING.md`):
+  **Component & deployment** (component, interface/lollipop, poort op de rand, artifact,
+  node/device/execution environment; realisatie, «use», assembly, «deploy», «manifest»,
+  communicatiepad), **Object** (instanties naam : Klasse met slots en links; klasse via
+  cross-profiel verwijzing), **Requirements** (EA-stijl: requirement/feature/issue/change met
+  status/prioriteit; trace/derive/verify/refine, realisatie, aggregatie), **Business (EP)**
+  (Eriksson-Penker: proces-pijl, doel, fysieke/mensen-/informatie-resources, gebeurtenis,
+  bedrijfsobject; «input»/«output»/«control»/«supply»), **XML Schema** en **WSDL** (eigen
+  schema-profielen met XSD-/WSDL-stereotypen, geen laag op puur-uml), **Composite structure**
+  (parts, poorten, connectoren, collaboraties) en **Communication** (links met genummerde
+  berichten als compartiment). Elk met `eaMapping.js` (EA Object_Type/Connector_Type/stereotype →
+  stabiele elementtype-id's) voor de lezers, abstracte wortels via `erft`/`isAbstract`, notitie +
+  notitie-lijn, en tests. Interaction overview = uitbreiding van activity (`interactiegebruik`),
+  timing past niet in het M3 (tijdas) — toegelicht in de notitie. Gedeeld: `uml2Basis.js`,
+  `uml2Iconen.jsx`.
+- **BPMN-profiel naar EA-niveau** (10-10, Mark legde GGM-diagrammen naast EA): taaktype op `taak`
+  (`data.taakSoort`: user/service/send/receive/manual/script/businessRule, icoon linksboven in de
+  nieuwe `bpmn-taak`-vorm), gateways `complex` (✱) en `event-gateway` (ring in de ruit), event-soorten
+  escalatie/compensatie/conditioneel/link/annulering/terminate, `data-store` (cilinder),
+  `data.verzameling` op een data-object (drie streepjes), message flow met open rondje + open
+  driehoek (bron-marker `cirkel-open`, motor-kant bij EA-SYNC), en een `stereotype` op de
+  data-associatie (EA «toekomst» als label). De XML-lezer en `eaMapping.js` (`TAAK_SOORT`,
+  `GATEWAY_TYPE`, `EVENT_SOORT`) volgen.
+- **BPMN 2.0 XML → BPMN-model en DMN XML → DMN DRD-model** (10-10, opdracht Mark; `docs/TRANSFORMATIES.md`
+  §7): native imports in de vorm lezer → regelset → toepasser, mét de BPMNDI-/DMNDI-diagramlaag (posities,
+  maten, waypoints als knikpunten; een uitgeklapt subproces krijgt een eigen diagram). Generieke aansluiting
+  `transformatie/planNaarCoreModel.js`; XML-lezers `transformatie/bpmnXml.js`, `dmnXml.js`, `xmlBoom.js`.
+  In Modelleren: *Transformeren → Importeren*. `bpmn` en `dmn-drd` kregen een notitie-lijn en een
+  `eaMapping.js`; `object` een generalisatie.
 - **Sparx EA importeren uit een `.qea`** (SQLite, client-side met sql.js): in Modelleren *Bestand →
   Importeer Sparx EA (.qea)…* leest één pakket (keuzelijst met zoekveld) en zet elk diagram in zijn
   eigen profiel — klassediagrammen naar UML of, bij MIM-/MIG-stereotypen, naar MIM (tagged values →
@@ -194,6 +223,18 @@ maat, instelbare sneltoetsen. Zie `docs/plans/2026-10-07 Projectsync …`, `docs
   elkaar zoals in EA, Alt+-/= verdelen, Alt+W/E/R zelfde maat, Alt+Z
   maat aan inhoud, Ctrl+Delete verwijderen uit model, Alt+G zoek in projectboom).
 - Graaf (demo), SP en de Profiel-editor staan standaard niet meer in de activity bar.
+- **Documenten uit sjablonen** (09-10): rechtsklik op een map → *Document maken…*: use
+  case-overzicht, gegevenswoordenboek of generiek map-overzicht, met de diagrammen als tekening;
+  voorbeeldvenster, Markdown/HTML-download en afdrukken. Sjabloontaal en context:
+  `docs/DOCUMENTEN.md`. Plus het sjabloon **Projectdocument (volgt de mappen)**: hoofdstukken =
+  submappen, tekst = de nieuwe **omschrijving van een map** (eigenschappenpaneel), platen = de
+  diagrammen in de map.
+- **ArchiMate-gedaante "Blokken (informeel)"** (09-10): effen blokken zonder icoon, Grouping als
+  laagkader — voor overzichtsplaten. De shape-set is nu **per diagram** bewaard en gegenereerde
+  documenten volgen hem.
+- Projectsync: de volgorde van regels in de boom (Ctrl+↑/↓) en de mapomschrijving gaan nu mee
+  (`schuifPlaatsing`, `zetMapOmschrijving` in `STRUCTUUR_OPS`); een volgordewijziging bleef eerder
+  lokaal.
 
 ## [studio/v0.14.0] — 2026-10-07
 Samenwerken aan een project, eerste trede: het Studio-project krijgt een naam en een id en kan

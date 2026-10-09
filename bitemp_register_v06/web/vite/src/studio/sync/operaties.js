@@ -341,6 +341,7 @@ export const STRUCTUUR_OPS = {
   schuifMap: null,
   hernoemMap: null,
   zetMapKleur: null,
+  zetMapOmschrijving: null,
   verwijderMap: null,
   verplaatsMap: null,
   plaatsDiagram: null,

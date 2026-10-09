@@ -423,6 +423,21 @@ export const useModellerenStore = create((set, get) => ({
     }),
 
   /** Eigenschap van een map (kleur van het map-icoon). */
+  /**
+   * Omschrijving van een map (vrije tekst, Markdown). Wordt in gegenereerde
+   * documenten de tekst onder de kop van die map (docs/DOCUMENTEN.md).
+   */
+  zetMapOmschrijving: (id, omschrijving) =>
+    set((s) => {
+      const m = s.mappen[id];
+      if (!m || (m.omschrijving || "") === (omschrijving || "")) return {};
+      legStructuurVast(s);
+      const mappen = { ...s.mappen, [id]: { ...m, omschrijving: omschrijving || undefined } };
+      const next = { ...s, mappen };
+      schrijfOpslag(next);
+      return { mappen };
+    }),
+
   zetMapKleur: (id, kleur) =>
     set((s) => {
       const m = s.mappen[id];
@@ -1549,6 +1564,9 @@ function Map_({ map, diepte }) {
           { label: "Exporteren…", onClick: () => useTransformStore.getState().openen(map.id, "export") },
         ],
       },
+      // Documentsjablonen: een document uit deze map (use case-overzicht,
+      // gegevenswoordenboek, …) — de "Document: …"-generatoren onder Exporteren.
+      { label: "Document maken…", onClick: () => useTransformStore.getState().openen(map.id, "export") },
       { sep: true },
       { label: "Omhoog", onClick: () => schuifMap(map.id, "omhoog") },
       { label: "Omlaag", onClick: () => schuifMap(map.id, "omlaag") },
@@ -2037,6 +2055,7 @@ function MapEigenschappen({ mapId }) {
   const map = useModellerenStore((s) => s.mappen[mapId]);
   const hernoemMap = useModellerenStore((s) => s.hernoemMap);
   const zetMapKleur = useModellerenStore((s) => s.zetMapKleur);
+  const zetMapOmschrijving = useModellerenStore((s) => s.zetMapOmschrijving);
   const selecteerMap = useModellerenStore((s) => s.selecteerMap);
   if (!map) return null;
   const rij = { display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: "4px 0", fontSize: 13 };
@@ -2075,6 +2094,17 @@ function MapEigenschappen({ mapId }) {
             herstel
           </button>
         )}
+      </label>
+      <label style={{ display: "flex", flexDirection: "column", gap: 4, padding: "6px 0", fontSize: 13 }}>
+        <span style={{ color: "var(--s-fg-muted)" }}>omschrijving</span>
+        <textarea
+          key={map.id}
+          defaultValue={map.omschrijving || ""}
+          rows={8}
+          placeholder="Tekst voor dit hoofdstuk in een gegenereerd document (Markdown)"
+          onBlur={(e) => zetMapOmschrijving(map.id, e.target.value.trim())}
+          style={{ font: "inherit", fontSize: 13, padding: "4px 6px", border: "1px solid var(--s-border)", borderRadius: 5, background: "transparent", color: "var(--s-fg)", resize: "vertical" }}
+        />
       </label>
       <button
         type="button"

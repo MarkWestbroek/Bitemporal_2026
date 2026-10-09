@@ -79,6 +79,7 @@ const ANKER_ELEMENT_TYPE = {
   resizebaar: false,
 };
 import { berekenUitlijning, berekenRasterSnap, berekenMaten, MAAT_MODES } from "../layout/uitlijnen.js";
+import { skinElementType } from "../model/shapeSet.js";
 
 const nodeTypes = { element: ElementNode };
 const edgeTypes = { connector: ConnectorEdge };
@@ -184,31 +185,7 @@ function CanvasBinnenkant({
     if (!shapeSet) return basis;
     const overlay = { ...basis.elementTypesById };
     for (const [etId, waarde] of Object.entries(shapeSet)) {
-      const et = overlay[etId];
-      if (!et || !waarde) continue;
-      const skin = typeof waarde === "string" ? { shape: waarde } : waarde;
-      if (et.isConnector) {
-        // Connectortype: de skin overschrijft de edgePresentatie (lijnstijl).
-        overlay[etId] = {
-          ...et,
-          edgePresentatie: {
-            ...(et.edgePresentatie || {}),
-            ...(skin.lijn ? { lijn: skin.lijn } : {}),
-            ...(skin.vorm ? { vorm: skin.vorm } : {}),
-            ...("markerStart" in skin ? { markerStart: skin.markerStart || null } : {}),
-            ...("markerEnd" in skin ? { markerEnd: skin.markerEnd || null } : {}),
-            ...(skin.kleur ? { kleur: skin.kleur } : {}),
-          },
-        };
-      } else {
-        // Node-type: shape + icoon + kleur.
-        overlay[etId] = {
-          ...et,
-          ...(skin.shape ? { shape: skin.shape } : {}),
-          ...(skin.icoon ? { icoon: skin.icoon } : {}),
-          ...(skin.kleur ? { kleur: skin.kleur } : {}),
-        };
-      }
+      if (overlay[etId] && waarde) overlay[etId] = skinElementType(overlay[etId], waarde);
     }
     return { ...basis, elementTypesById: overlay };
   }, [diagramType, shapeSet]);
