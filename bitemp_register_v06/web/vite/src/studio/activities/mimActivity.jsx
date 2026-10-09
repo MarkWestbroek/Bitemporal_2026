@@ -11,6 +11,7 @@
 import { IconMIM05 } from "../icons";
 import useModelStore from "../../store/useModelStore";
 import { registreerMim12, mim12DiagramType, maakElement } from "../../diagramprofielen/mim12/index.js";
+import { schrijfXmi } from "../../diagramprofielen/ea/schrijfXmi.js";
 import { vanCanoniekCoreNaarMim, vanMimXmi } from "../../diagramprofielen/mim12/adapter.js";
 import { vanCanoniekModel } from "../../diagramprofielen/canoniek-uml/adapter.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
@@ -36,6 +37,19 @@ export default maakDiagramActiviteit({
     /** Transformatie: canoniek model → MIM (PTOLU-mapping in actie). */
     herlaadUitModel: () => vanCanoniekCoreNaarMim(vanCanoniekModel(useModelStore.getState())),
     herlaadLabel: "Zet canoniek model om naar MIM…",
+    /** Terugweg naar EA: XMI 2.1 in EA's vorm, met de bewaarde GUIDs (schrijfXmi.js). */
+    exportBestand: {
+      label: "Exporteer naar Sparx EA (XMI 2.1)…",
+      maak: (staat) => {
+        const { xml, nieuweGuids } = schrijfXmi({ elements: staat.elements, diagrams: staat.diagrams }, { naam: "omnium-mim" });
+        // Nieuwe GUIDs op de elementen bewaren: de volgende export houdt dezelfde identiteit.
+        const patches = {};
+        for (const [id, guid] of nieuweGuids) if (staat.elements[id]) patches[id] = { data: { eaGuid: guid } };
+        if (Object.keys(patches).length) staat.updateElementen(patches);
+        return xml;
+      },
+      bestandsnaam: () => `${"omnium-mim"}.xmi`,
+    },
     /** XMI-import (MIM-UML-profiel, gangbare EA-vorm). */
     importBestand: {
       label: "Importeer MIM (XMI/XML of Sparx EA .qea) — alleen dit profiel, zonder projectboom…",

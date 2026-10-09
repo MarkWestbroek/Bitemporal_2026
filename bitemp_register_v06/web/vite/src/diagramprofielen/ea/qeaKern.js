@@ -17,6 +17,7 @@ import {
   idUitGuid,
   haaksAanhechtpunt,
   maakHaaks,
+  kleurUitBgr,
 } from "./qeaHulp.js";
 
 /**
@@ -76,8 +77,11 @@ export function sla(verslag, soort) {
  * Hulptabellen over de bron, eenmalig opgebouwd.
  * @param {QeaBron} bron
  * @param {number} schaal
+ * @param {{vasteMaat?: ((o:any)=>({width:number,height:number}|null))|null, diagramVoorkeur?: number[]|null}} [opties]
+ *   `diagramVoorkeur`: de Diagram_ID's die deze lezer gaat importeren, in
+ *   volgorde — bepaalt van welk diagram het lijnpad (knikken) komt.
  */
-export function maakHulptabellen(bron, schaal, { vasteMaat = null } = {}) {
+export function maakHulptabellen(bron, schaal, { vasteMaat = null, diagramVoorkeur = null } = {}) {
   const stereoPerGuid = new Map();
   const customPerGuid = new Map();
   for (const x of bron.t_xref || []) {
@@ -118,10 +122,43 @@ export function maakHulptabellen(bron, schaal, { vasteMaat = null } = {}) {
       : { ...position, ...size, vast: false };
     rectPerDiagram.get(dobj.Diagram_ID).set(dobj.Object_ID, rect);
   }
-  const linkPerConnector = new Map();
+  // Per connector één t_diagramlinks-rij: de knikken staan op het element,
+  // niet per diagram. Eén connector staat vaak op méér diagrammen, elk met
+  // een eigen pad. Neem de rij van het eerste diagram (in `diagramVoorkeur`)
+  // dat deze lezer importeert, anders de eerste rij uit de bron. Zonder die
+  // voorkeur kreeg het Metamodel v2026 het boompad van een ánder diagram,
+  // en lagen de generalisaties ver naast de vormen (Mark, 09-10).
+  // Staat de connector op méér dan één geïmporteerd diagram, dan kan geen
+  // van die paden "het" pad zijn (Omnium bewaart knikken op het element, EA
+  // per diagram): zo'n lijn krijgt geen knikken en wordt per vorm gerouteerd
+  // (`diagrammenPerConnector`, zie knikkenVoor).
+  const rang = new Map((diagramVoorkeur || []).map((id, i) => [id, i]));
+  const linkKeuze = new Map();
+  const diagrammenPerConnector = new Map();
   for (const l of bron.t_diagramlinks || []) {
-    if (!linkPerConnector.has(l.ConnectorID)) linkPerConnector.set(l.ConnectorID, l);
+    const r = rang.has(l.DiagramID) ? rang.get(l.DiagramID) : Infinity;
+    const best = linkKeuze.get(l.ConnectorID);
+    if (!best || r < best.rang) linkKeuze.set(l.ConnectorID, { rang: r, link: l });
+    if (r !== Infinity || !diagramVoorkeur) {
+      if (!diagrammenPerConnector.has(l.ConnectorID)) diagrammenPerConnector.set(l.ConnectorID, new Set());
+      diagrammenPerConnector.get(l.ConnectorID).add(l.DiagramID);
+    }
   }
+  const linkPerConnector = new Map([...linkKeuze].map(([id, k]) => [id, k.link]));
+  // Kleur per object: EA kleurt meestal niet het element (t_object.Backcolor
+  // = -1) maar het diagramobject (ObjectStyle `BCol=…`, BGR). Omnium kent
+  // kleur op het element, dus: de kleur op het eerste geïmporteerde diagram
+  // (zelfde voorkeursvolgorde als de lijnpaden). Legenda-/themakleuren die EA
+  // pas bij het tekenen toepast, zitten hier niet in.
+  const kleurKeuze = new Map();
+  for (const dobj of bron.t_diagramobjects || []) {
+    const kleur = kleurUitBgr(sleutelWaarden(dobj.ObjectStyle).BCol);
+    if (!kleur) continue;
+    const r = rang.has(dobj.Diagram_ID) ? rang.get(dobj.Diagram_ID) : Infinity;
+    const best = kleurKeuze.get(dobj.Object_ID);
+    if (!best || r < best.rang) kleurKeuze.set(dobj.Object_ID, { rang: r, kleur });
+  }
+  const kleurPerObject = new Map([...kleurKeuze].map(([id, k]) => [id, k.kleur]));
   return {
     schaal,
     stereoPerGuid,
@@ -134,7 +171,12 @@ export function maakHulptabellen(bron, schaal, { vasteMaat = null } = {}) {
     attrsPerObject: groepeer(bron.t_attribute || [], (a) => a.Object_ID, (a) => a.Pos),
     opsPerObject: groepeer(bron.t_operation || [], (o) => o.Object_ID, (o) => o.Pos),
     rectPerDiagram,
+    connectoren: bron.t_connector || [],
     linkPerConnector,
+    diagrammenPerConnector,
+    kleurPerObject,
+    /** Connector_ID's waarvan de vertaling bron en doel omdraait (ruit aan het geheel). */
+    omgedraaid: new Set(),
     objectenPerDiagram: groepeer(bron.t_diagramobjects || [], (d) => d.Diagram_ID, (d) => d.Sequence),
     linksPerDiagram: groepeer(bron.t_diagramlinks || [], (l) => l.DiagramID, () => 0),
     /** Activity-/use case-frames: Object_ID → Diagram_ID van het diagram dat erin tekent. */
@@ -169,10 +211,13 @@ export function diagramId(d) {
  * Bij EA's "Orthogonal - Square" (TREE=OS) komen de haakse aanhechtpunten erbij.
  * @param {ReturnType<typeof maakHulptabellen>} h
  */
-export function knikkenVoor(h, c) {
-  const link = h.linkPerConnector.get(c.Connector_ID);
+export function knikkenVoor(h, c, link = h.linkPerConnector.get(c.Connector_ID)) {
   const stijl = sleutelWaarden(link?.Style);
-  let knikken = stijl.Mode === "1" ? [] : knikkenUitPath(link?.Path, h.schaal);
+  // Alleen "Custom" (Mode=3, ook de Tree- en Orthogonal-stijlen) tekent EA
+  // langs het opgeslagen pad. Bij Direct (1) en Auto Routing (2) laat EA een
+  // oud pad gewoon staan, maar tekent het niet: zulke knikken zijn verouderd
+  // (GGM-BPMN, 10-10: punten links van het beginpunt gaven zigzaglijnen).
+  let knikken = stijl.Mode === "3" ? knikkenUitPath(link?.Path, h.schaal) : [];
   if (knikken.length) {
     // EA tekent het eerste en laatste stuk haaks op de rand (bij elke lijn
     // met hoekpunten, niet alleen "Orthogonal - Square"): zet de aanhechtpunten
@@ -189,21 +234,39 @@ export function knikkenVoor(h, c) {
 }
 
 /**
+ * Omnium-lijnvorm voor een EA-lijn zónder hoekpunten (mét hoekpunten volgt
+ * de lijn de knikken en is de vorm niet van belang). EA's "Line Style":
+ *   - Direct (Mode=1) en Custom zonder waypoints (Mode=3, geen TREE): een
+ *     rechte lijn → "recht";
+ *   - Auto Routing (Mode=2): EA routeert zelf orthogonaal → "hoekig";
+ *   - Orthogonal - Square / Rounded (TREE=OS/OR) zonder waypoints: EA zet
+ *     de hoeken zelf → "hoekig" (Omnium's orthogonale router, met afgeronde
+ *     hoekjes — het dichtst bij beide);
+ *   - Tree Style / Lateral (TREE=V/H/LV/LH) hebben in EA altijd een pad.
+ * Geen t_diagramlinks-rij (connector staat op geen enkel gelezen diagram):
+ * geen vaste vorm, het profiel bepaalt het.
+ * @param {any} link  t_diagramlinks-rij of undefined
+ * @returns {"recht"|"hoekig"|null}
+ */
+export function lijnvormVoor(link) {
+  if (!link) return null;
+  const stijl = sleutelWaarden(link.Style);
+  if (stijl.Mode === "2") return "hoekig";
+  if (stijl.TREE === "OS" || stijl.TREE === "OR") return "hoekig";
+  return "recht";
+}
+
+/**
  * Connector-element in de standaardvorm.
  * @param {ReturnType<typeof maakHulptabellen>} h
  */
 export function maakConnectorElement(h, c, vertaald) {
   const id = idUitGuid(c.ea_guid);
-  // EA's Path loopt van Start naar End; is de vertaling omgedraaid (ruit aan
-  // het geheel), dan draaien de knikken mee.
-  let knikken = knikkenVoor(h, c);
-  if (vertaald.omgedraaid) knikken = knikken.slice().reverse();
-  // Lijnvorm: een EA-lijn zonder hoekpunten is een rechte lijn (Direct, of
-  // Custom zonder waypoints) — tenzij EA hem zelf routeert (Mode=2, Auto
-  // Routing: orthogonaal). Dan volgt Omnium's "hoekig" dat het dichtst.
-  const link = h.linkPerConnector.get(c.Connector_ID);
-  const mode = sleutelWaarden(link?.Style).Mode;
-  const vorm = !knikken.length && link && mode !== "2" ? "recht" : null;
+  // Pad en lijnvorm staan per diagram (diagram.lijnen, zie bouwDiagram) —
+  // EA bewaart ze per diagram, en zo ligt een lijn op elk diagram goed.
+  // Hier alleen onthouden of de vertaling omgedraaid is (ruit aan het geheel):
+  // dan draaien de knikken van elk diagram mee.
+  if (vertaald.omgedraaid) h.omgedraaid.add(c.Connector_ID);
   return {
     id,
     naam: vertaald.naam,
@@ -215,8 +278,6 @@ export function maakConnectorElement(h, c, vertaald) {
       ...extraData(h, c.ea_guid, null),
       ...(c.Notes ? { notes: c.Notes } : {}),
       ...vertaald.data,
-      ...(knikken.length ? { knikken } : {}),
-      ...(vorm ? { vorm } : {}),
     },
   };
 }
@@ -265,12 +326,31 @@ export function bouwDiagram(h, d, { idVanObject, idVanConnector, diagramTypeId, 
     .filter((l) => Number(l.Hidden) === 1)
     .map((l) => idVanConnector.get(l.ConnectorID))
     .filter(Boolean);
+  // Lijndata per diagram (diagram.lijnen[connectorId] = { knikken, vorm }):
+  // EA's pad en Line Style van déze t_diagramlinks-rij — de "Position" van
+  // een connector op een diagram. Alleen voor connectoren die vertaald zijn.
+  const lijnen = {};
+  const connectorPerId = new Map((h.connectoren || []).map((c) => [c.Connector_ID, c]));
+  for (const l of h.linksPerDiagram.get(d.Diagram_ID) || []) {
+    const id = idVanConnector.get(l.ConnectorID);
+    const c = connectorPerId.get(l.ConnectorID);
+    if (!id || !c || Number(l.Hidden) === 1) continue;
+    let knikken = knikkenVoor(h, c, l);
+    if (h.omgedraaid.has(c.Connector_ID)) knikken = knikken.slice().reverse();
+    const vorm = knikken.length ? null : lijnvormVoor(l);
+    if (knikken.length || vorm) lijnen[id] = { ...(knikken.length ? { knikken } : {}), ...(vorm ? { vorm } : {}) };
+  }
   return {
     id: diagramId(d),
     naam: d.Name || `Diagram ${d.Diagram_ID}`,
     diagramType: diagramTypeId,
+    // EA-pakket van het diagram: nodig om bij een merge "verdwenen" te zien.
+    eaPakket: d.Package_ID,
     nodes,
     edges: [],
     ...(verborgen.length ? { verborgenConnectoren: verborgen } : {}),
+    ...(Object.keys(lijnen).length ? { lijnen } : {}),
+    // EA "Hide attributes/operations" op dit diagram (t_diagram.PDATA HideAtts=1).
+    ...(/HideAtts=1/.test(String(d.PDATA || "")) ? { verbergCompartimenten: true } : {}),
   };
 }

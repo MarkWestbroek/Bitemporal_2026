@@ -44,6 +44,16 @@ import React, {
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
+/**
+ * Lijndata van een connector zoals hij op het actieve diagram ligt: de
+ * per-diagram override (diagram.lijnen) over de element-standaard. Alle
+ * lijn-bewerkingen op de canvas (knikken, lijnvorm, boomstijl, uiteinden,
+ * labels) schrijven naar het diagram — zie createDiagramStore.zetLijnen.
+ */
+function effectieveLijn(s, connectorId) {
+  return { ...(s.elements[connectorId]?.data || {}), ...(s.diagrams[s.actiefDiagramId]?.lijnen?.[connectorId] || {}) };
+}
+
 import { hernoemBotsendeIds } from "../../diagramcore/model/hernoemBotsendeIds.js";
 // Side-effect: registreert de datatypes "element-verwijzing" en
 // "operatie-keuze" (instantie-van-concept) op het core-koppelvlak.
@@ -2000,9 +2010,12 @@ export function maakDiagramActiviteit(opties) {
             Object.values(s.elements)
               .filter((el) => el.source && el.target && elementTypesById[el.elementType]?.isConnector)
               .map((el) => el.id);
-          for (const cid of doelwit) {
-            s.updateElement(cid, { data: { sourceHandle: null, targetHandle: null } });
-          }
+          // Eén stap: element-standaard én de override op dit diagram op "auto".
+          s.zetLijnen(
+            s.actiefDiagramId,
+            Object.fromEntries(doelwit.map((cid) => [cid, { sourceHandle: null, targetHandle: null }])),
+            Object.fromEntries(doelwit.map((cid) => [cid, { data: { sourceHandle: null, targetHandle: null } }]))
+          );
           s.resetAnkerPositions(s.actiefDiagramId, connectorIds);
           if (!connectorIds) s.resetEdgeHandles(s.actiefDiagramId);
         }),
@@ -2067,9 +2080,25 @@ export function maakDiagramActiviteit(opties) {
               const s = useStore.getState();
               const zOrdes = Object.values(s.elements)
                 .map((el) => el.data?.zOrde || 0);
+              const voorkomenRef = (s.diagrams[s.actiefDiagramId]?.nodes || []).find((n) => (n.nodeId || n.elementId) === nodeId);
+              const diagramVerbergt = !!s.diagrams[s.actiefDiagramId]?.verbergCompartimenten;
+              const nuVerborgen = voorkomenRef?.gedaante === "kop" || (diagramVerbergt && voorkomenRef?.gedaante !== "vol");
               const items = [
                 { sep: true },
                 { kop: true, label: "Element" },
+                // Compartimenten per voorkomen: override op de diagramvlag (gedaante "kop"/"vol").
+                ...(voorkomenRef && (elementTypesById[s.elements[voorkomenRef.elementId]?.elementType]?.compartments?.length || 0) > 0
+                  ? [
+                      {
+                        id: "compartimenten-toggle",
+                        label: nuVerborgen ? "Compartimenten tonen (dit voorkomen)" : "Compartimenten verbergen (dit voorkomen)",
+                        onClick: () => {
+                          const doel = nuVerborgen ? (diagramVerbergt ? "vol" : null) : diagramVerbergt ? null : "kop";
+                          useStore.getState().zetNodeGedaante(s.actiefDiagramId, nodeId, doel);
+                        },
+                      },
+                    ]
+                  : []),
                 {
                   id: "zoek-in-boom",
                   label: "Zoek in projectboom",
@@ -2284,14 +2313,13 @@ export function maakDiagramActiviteit(opties) {
                 // Knikpunten: toevoegen gaat met ctrl-klik óp de lijn; hier
                 // alleen het wissen.
                 ...(() => {
-                  const knikken = useStore.getState().elements[connectorId]?.data?.knikken || [];
+                  const knikken = effectieveLijn(useStore.getState(), connectorId).knikken || [];
                   return knikken.length
                     ? [
                         {
                           id: "knikken-wissen",
                           label: `Knikpunten wissen (${knikken.length})`,
-                          onClick: () =>
-                            useStore.getState().updateElement(connectorId, { data: { knikken: [] } }),
+                          onClick: () => useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, { knikken: [] }),
                         },
                       ]
                     : [];
@@ -2306,35 +2334,31 @@ export function maakDiagramActiviteit(opties) {
                   id: `vorm-${vorm}`,
                   label: vormLabel + (huidig === vorm ? "  ✓" : ""),
                   icoon,
-                  onClick: () =>
-                    useStore.getState().updateElement(connectorId, {
-                      data: { vorm: vorm === "bezier" ? null : vorm },
-                    }),
+                  // Expliciet (ook "bezier"): de keuze geldt voor dít diagram.
+                  onClick: () => useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, { vorm }),
                 })),
                 // Boomstijl in één klik: haakse vorm + uiteinden vastgezet
                 // (EA "tree style") — verticaal = ouder boven de kinderen,
-                // horizontaal = ouder links van de kinderen.
+                // horizontaal = ouder links van de kinderen. Knikken gaan
+                // weg: die winnen anders van de vorm (een EA-import brengt
+                // ze mee, en dan "deed" de boomstijl niets — Mark, 09-10).
                 { kop: true, label: "Boomstijl" },
                 {
                   id: "boom-verticaal",
                   label: "Verticaal (ouder boven)",
                   onClick: () =>
-                    useStore.getState().updateElement(connectorId, {
-                      data: { vorm: "boom", sourceHandle: "source-bottom", targetHandle: "target-top" },
-                    }),
+                    useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, { vorm: "boom", knikken: [], sourceHandle: "source-bottom", targetHandle: "target-top" }),
                 },
                 {
                   id: "boom-horizontaal",
                   label: "Horizontaal (ouder links)",
                   onClick: () =>
-                    useStore.getState().updateElement(connectorId, {
-                      data: { vorm: "boom", sourceHandle: "source-right", targetHandle: "target-left" },
-                    }),
+                    useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, { vorm: "boom", knikken: [], sourceHandle: "source-right", targetHandle: "target-left" }),
                 },
                 // L03: uiteinden vastzetten (wint van de kortste weg; "auto"
                 // geeft het uiteinde weer vrij — normaliseren doet dat ook).
                 ...(() => {
-                  const conn = useStore.getState().elements[connectorId];
+                  const conn = { data: effectieveLijn(useStore.getState(), connectorId) };
                   const zijden = [
                     ["top", "boven"],
                     ["bottom", "onder"],
@@ -2350,10 +2374,7 @@ export function maakDiagramActiviteit(opties) {
                       return {
                         id: `${veld}-${zijde || "auto"}`,
                         label: zijdeLabel + (actief ? "  ✓" : ""),
-                        onClick: () =>
-                          useStore.getState().updateElement(connectorId, {
-                            data: { [veld]: waarde },
-                          }),
+                        onClick: () => useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, { [veld]: waarde }),
                       };
                     }),
                   ];
@@ -2387,11 +2408,11 @@ export function maakDiagramActiviteit(opties) {
               if (uitgaand.length > 0) {
                 // Eén store-stap voor alle kinderen (één Ctrl+Z).
                 const zetBoomstijl = (richting) => {
-                  const data =
+                  const lijn =
                     richting === "verticaal"
-                      ? { vorm: "boom", sourceHandle: "source-bottom", targetHandle: "target-top" }
-                      : { vorm: "boom", sourceHandle: "source-right", targetHandle: "target-left" };
-                  s.updateElementen(Object.fromEntries(uitgaand.map((c) => [c.id, { data }])));
+                      ? { vorm: "boom", knikken: [], sourceHandle: "source-bottom", targetHandle: "target-top" }
+                      : { vorm: "boom", knikken: [], sourceHandle: "source-right", targetHandle: "target-left" };
+                  s.zetLijnen(s.actiefDiagramId, Object.fromEntries(uitgaand.map((c) => [c.id, lijn])));
                 };
                 items.push(
                   { sep: true },
@@ -2494,6 +2515,8 @@ export function maakDiagramActiviteit(opties) {
               if (!ok) return;
               const s = useStore.getState();
               for (const { elementId } of sel) s.deleteElement(elementId);
+              // Ook de plek in de projectboom weg, zoals het boommenu (Mark, 10-10).
+              menuBus.emit("studio:uit-model-verwijderd", { profielId: id, elementIds: sel.map((x) => x.elementId) });
             });
           }
         }
@@ -2672,15 +2695,15 @@ export function maakDiagramActiviteit(opties) {
                   onNormaliseer={(connectorIds) => menuBus.emit(ev("normaliseer"), connectorIds)}
                   onLabelOffset={(connectorId, zijde, offset) => {
                     const s = useStore.getState();
-                    const el = s.elements[connectorId];
-                    if (!el) return;
-                    s.updateElement(connectorId, {
-                      data: { labelOffsets: { ...(el.data?.labelOffsets || {}), [zijde]: offset } },
+                    if (!s.elements[connectorId] || !s.actiefDiagramId) return;
+                    s.zetLijn(s.actiefDiagramId, connectorId, {
+                      labelOffsets: { ...(effectieveLijn(s, connectorId).labelOffsets || {}), [zijde]: offset },
                     });
                   }}
-                  onKnikken={(connectorId, lijst) =>
-                    useStore.getState().updateElement(connectorId, { data: { knikken: lijst } })
-                  }
+                  onKnikken={(connectorId, lijst) => {
+                    const s = useStore.getState();
+                    if (s.actiefDiagramId) s.zetLijn(s.actiefDiagramId, connectorId, { knikken: lijst || [] });
+                  }}
                   // Magic link op het lege vlak (§31.8): nieuw element,
                   // gecentreerd op de losplek, plus de verbinding — samen.
                   onMaakEnVerbind={({ elementTypeId, positie, connectorType, bronId, bronHandle, omgekeerd, containerId }) => {
@@ -2706,13 +2729,14 @@ export function maakDiagramActiviteit(opties) {
                   }}
                   // Uiteinde van een lijn elders aangehecht (§31.5): zelfde
                   // connector, nieuw paar; knikpunten vervallen.
-                  onVerhangConnector={(connectorId, { source, target, sourceHandle, targetHandle }) =>
-                    useStore.getState().updateElement(connectorId, {
-                      source,
-                      target,
-                      data: { sourceHandle, targetHandle, knikken: null },
-                    })
-                  }
+                  onVerhangConnector={(connectorId, { source, target, sourceHandle, targetHandle }) => {
+                    const s = useStore.getState();
+                    s.zetLijnen(
+                      s.actiefDiagramId,
+                      { [connectorId]: { sourceHandle, targetHandle, knikken: [] } },
+                      { [connectorId]: { source, target, data: { sourceHandle: null, targetHandle: null, knikken: null } } }
+                    );
+                  }}
                   onContainerDrop={(elementId, containerId) =>
                     verhangNaarContainer(useStore, elementId, containerId)
                   }
@@ -2979,6 +3003,7 @@ export function maakDiagramActiviteit(opties) {
             });
             if (ok) {
               useStore.getState().deleteElement(element.id);
+              menuBus.emit("studio:uit-model-verwijderd", { profielId: id, elementIds: [element.id] });
               setSelectieId(null);
             }
           }}
@@ -3106,6 +3131,24 @@ export function maakDiagramActiviteit(opties) {
       id: "beeld",
       aanvullen: true,
       items: [
+        // Compartimenten (attributen, operaties, velden) verbergen op dít
+        // diagram — EA's "Hide attributes"; per voorkomen te overrulen via het
+        // contextmenu (gedaante "kop"/"vol"). Bewaard op het diagram.
+        ...(() => {
+          const st = useStore.getState();
+          const d = st.diagrams?.[st.actiefDiagramId];
+          return d
+            ? [
+                {
+                  id: `${menuPrefix}-verberg-compartimenten`,
+                  label: "Compartimenten verbergen op dit diagram",
+                  checked: !!d.verbergCompartimenten,
+                  onClick: () => useStore.getState().updateDiagramStijl(d.id, { verbergCompartimenten: !d.verbergCompartimenten }),
+                },
+                { type: "separator" },
+              ]
+            : [];
+        })(),
         {
           id: `${menuPrefix}-taakbalken`,
           label: "Taakbalken",

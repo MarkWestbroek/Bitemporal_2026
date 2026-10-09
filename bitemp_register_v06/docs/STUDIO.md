@@ -422,8 +422,34 @@ UML-activiteit (zelfde IDE), zoals gewenst.
 > Modelleren leest één EA-pakket en zet elk diagram in zijn eigen profiel (UML of MIM,
 > Activity, Use case), als "toevoegen" met undo per profiel. De EA-boom komt mee als
 > mappen: pakketten, en de use cases/activities die diagrammen bezitten; het diagram
-> staat in de map van zijn eigenaar met de knopen ernaast. Details en EA-schema:
-> `docs/plans/2026-10-07 Sparx EA-sync — vier routes vergeleken (onderzoek).md` §7.
+> staat in de map van zijn eigenaar met de knopen ernaast. **Review als boom**: profiel →
+> EA-pakket → diagrammen/elementen, standaard alles aan; een tak uitvinken haalt alles eronder
+> uit de import (nieuw/gewijzigd/verdwenen per regel). **Lijndata per diagram** (2026-10-10):
+> pad, lijnvorm, vastgezette uiteinden en labelposities van een lijn horen bij het diagram
+> (`diagram.lijnen`), zoals in EA — dezelfde relatie ligt op elk diagram anders, en alles wat je
+> op de canvas aan een lijn doet (knikken, lijnvorm, boomstijl, uiteinden, labels) geldt voor
+> het diagram waarop je werkt. EA's Auto Routing en Orthogonal worden *Hoekig*. Kleuren
+> komen van het diagramobject. De profielstores staan sinds 10-10 in **IndexedDB**
+> (`diagramcore/model/opslag.js`): geen plafond van 5 MB meer, bewaren gebundeld en buiten de
+> hoofddraad, met een eenmalige migratie uit localStorage; mislukt bewaren toch, dan werkt het
+> model in het geheugen en meldt het verslag dat. Sequence-diagrammen landen in het
+> sequence-profiel. **Terugweg**: *Bestand → Exporteer naar Sparx EA (XMI 2.1)…* in UML en MIM
+> schrijft het model mét diagrammen en de bewaarde EA-GUIDs in EA's XMI-vorm. *Beeld →
+> Compartimenten verbergen op dit diagram* (en per voorkomen in het contextmenu) toont alleen de
+> koppen, zoals EA's "Hide attributes"; de import neemt EA's instelling over. Zonder browser:
+> `npm run importeer-qea -- --qea … --pakket … --project <server-id>` (node-sidecar, zelfde
+> lezers, verschil als operaties naar het operatielog; `scripts/importeer-qea-uit-git.sh` haalt
+> eerst de git-checkout bij). Vanuit de Studio: *Project → EA-import via de server (uit git)…*
+> laat de api diezelfde sidecar draaien: repo → `.qea` → pakket (`STUDIO_EA_IMPORT_MAPPEN`)
+> en volgt de taak. Details en EA-schema:
+> `docs/plans/2026-10-07 Sparx EA-sync — vier routes vergeleken (onderzoek).md` §7–7.2.
+>
+> **Map verwijderen mét inhoud (2026-10-09).** Het kruisje en *Verwijderen met inhoud…* op een
+> map halen de map, haar submappen en alle erin geplaatste diagrammen en elementen weg
+> (elementen uit het model, dus ook van andere diagrammen), achter een dialoog met de
+> aantallen en een verplicht vinkje. *Opheffen (inhoud naar het niveau erboven)…* is het oude
+> gedrag, nu een aparte keuze in het contextmenu. Wat niet in de map geplaatst was (bv.
+> naamloze notities) blijft in het model. Ctrl+Z werkt per profiel.
 >
 > **Metamodel v2026 in het profiel (2026-10-09).** Het canonieke profiel heeft een
 > abstracte wortel `representatie` (niet instantieerbaar, geen knop) met wat
@@ -877,7 +903,15 @@ fase 2 een **bewerkbare sandbox**:
   hernoemen (`vraagHernoem`); de ouder gaat daarbij open. Bevestigingen
   hebben een rode knop (`gevaar`) bij verwijderen/vervangen; een
   bestands-`verwerk` van een profiel mag async zijn (OAS vraagt het dialect
-  via de dialoog). Submappen kunnen willekeurig diep.
+  via de dialoog). Submappen kunnen willekeurig diep. Sinds 2026-10-10 zijn de
+  dialogen **verplaatsbaar** (slepen aan de titel), tellen klikken ín een
+  dialoog niet als "laatste klik" (een reeks pakket → map → review blijft bij
+  de menukeuze staan in plaats van steeds verder naar rechtsonder te schuiven)
+  en wordt de hoogte geklemd op het venster, zodat een uitklappende
+  review-boom scrolt in plaats van onder de rand te verdwijnen. `vraagKeuze`
+  kent een optioneel tekstveld `nieuw` (uitkomst `{waarde, nieuw}`); de
+  mapkeuze van de EA-import gebruikt het voor **een nieuwe map in de gekozen
+  map**.
 - **Sorteren in de projectboom** (2026-10-07): **Ctrl+↑/↓** verplaatst de
   geselecteerde map, het geselecteerde diagram of element een plek tussen
   zijn broers; het contextmenu heeft *Omhoog*/*Omlaag*. Mappen hadden al

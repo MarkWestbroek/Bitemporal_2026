@@ -13,6 +13,7 @@
  */
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { maakStoreOpslag, heeftIndexedDb, opslagFouten } from "./opslag.js";
 import { temporal } from "zundo";
 import { nieuwVoorkomenId, voorkomenId, vindVoorkomen } from "./voorkomens.js";
 
@@ -80,6 +81,32 @@ export function valideerImportModel(state, model, { modus = "toevoegen" } = {}) 
 /**
  * @param {{ persistKey?: string }} [opts]
  */
+/**
+ * Bewaarplaats van de store (zie opslag.js): IndexedDB — groot, asynchroon,
+ * objecten i.p.v. JSON-tekst — met een eenmalige migratie uit localStorage.
+ * Zonder IndexedDB (oude browser, node-tests): localStorage als JSON, maar een
+ * vol quotum gooit niet (de store werkt dan in het geheugen door).
+ * Opslagfouten per persistKey staan in `opslagFouten` (her-export uit opslag.js).
+ */
+export { opslagFouten };
+
+function veiligeLocalStorage(persistKey) {
+  return {
+    getItem: (k) => localStorage.getItem(k),
+    removeItem: (k) => localStorage.removeItem(k),
+    setItem: (k, v) => {
+      try {
+        localStorage.setItem(k, v);
+        opslagFouten.delete(persistKey);
+      } catch (e) {
+        if (!opslagFouten.has(persistKey)) console.warn(`[diagramcore] "${persistKey}" niet bewaard in localStorage (${e?.name || "fout"}): ${e?.message || e}`);
+        opslagFouten.set(persistKey, e);
+        if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("studio:opslag-vol", { detail: { persistKey, fout: e } }));
+      }
+    },
+  };
+}
+
 export function createDiagramStore({ persistKey } = {}) {
   const leeg = {
     diagramTypeId: null,
@@ -241,6 +268,13 @@ export function createDiagramStore({ persistKey } = {}) {
             nodes: (d.nodes || []).filter((n) => !weg.has(n.elementId)),
             edges: (d.edges || []).filter((e) => !weg.has(e.source) && !weg.has(e.target)),
           };
+          // Lijndata per diagram van verdwenen connectoren mee opruimen.
+          if (d.lijnen && [...weg].some((k) => k in d.lijnen)) {
+            const lijnen = { ...d.lijnen };
+            for (const k of weg) delete lijnen[k];
+            if (Object.keys(lijnen).length) diagrams[dId].lijnen = lijnen;
+            else delete diagrams[dId].lijnen;
+          }
         }
         return { isDirty: true, elements, diagrams };
       }),
@@ -264,6 +298,76 @@ export function createDiagramStore({ persistKey } = {}) {
         if (!d) return state;
         return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: { ...d, naam } } };
       }),
+
+    /**
+     * Vervang velden van een bestaand diagram in één stap (naam, nodes,
+     * verborgenConnectoren, …) — voor een merge die bestaande ids houdt
+     * (EA-import op GUID, 2026-10-09). Viewport blijft buiten het diagram.
+     */
+    zetDiagram: (diagramId, patch) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !patch) return state;
+        const { id: _id, viewport: _vp, ...rest } = patch;
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: { ...d, ...rest } } };
+      }),
+
+    /**
+     * Lijndata van een connector op dít diagram — de "Position" van een
+     * connector in Marks M3 (associatieklasse op Diagram–Element; Connector
+     * is een Element): `diagram.lijnen[connectorId] = { knikken, vorm,
+     * sourceHandle, targetHandle, labelOffsets }`. Wat hier staat wint van
+     * dezelfde sleutels op `element.data` (die blijven als standaard voor
+     * elk diagram en voor oude modellen). Per sleutel: `undefined` haalt de
+     * override weg (terug naar het element), `null` of `[]` is expliciet
+     * leeg op dit diagram (bv. handle automatisch, geen knikken).
+     * Reden: EA en elk UML-gereedschap bewaren pad, aanhechting en labels per
+     * diagram; op het element kon een lijn op twee diagrammen maar op één
+     * goed liggen (Mark, 10-10).
+     * `elementPatches` (optioneel, zelfde vorm als updateElementen) gaat in
+     * dezelfde stap mee — één Ctrl+Z voor bv. een verhangen lijn.
+     * @param {string} diagramId
+     * @param {Record<string, Record<string, any>>} patches  connectorId → patch
+     * @param {Record<string, Object>|null} [elementPatches]
+     */
+    zetLijnen: (diagramId, patches, elementPatches = null) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !patches) return state;
+        const lijnen = { ...(d.lijnen || {}) };
+        for (const [cid, patch] of Object.entries(patches)) {
+          if (!patch) continue;
+          const lijn = { ...(lijnen[cid] || {}) };
+          for (const [k, v] of Object.entries(patch)) {
+            if (v === undefined) delete lijn[k];
+            else lijn[k] = v;
+          }
+          if (Object.keys(lijn).length) lijnen[cid] = lijn;
+          else delete lijnen[cid];
+        }
+        const rest = { ...d };
+        if (Object.keys(lijnen).length) rest.lijnen = lijnen;
+        else delete rest.lijnen;
+        let elements = state.elements;
+        for (const [id, patch] of Object.entries(elementPatches || {})) {
+          const el = elements[id];
+          if (!el || !patch) continue;
+          const { data: dataPatch, compartimenten, ...top } = patch;
+          elements = {
+            ...elements,
+            [id]: {
+              ...el,
+              ...top,
+              ...(compartimenten !== undefined ? { compartimenten } : {}),
+              data: dataPatch !== undefined ? { ...el.data, ...dataPatch } : el.data,
+            },
+          };
+        }
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: rest }, ...(elements !== state.elements ? { elements } : {}) };
+      }),
+
+    /** Eén connector: zie zetLijnen. */
+    zetLijn: (diagramId, connectorId, patch) => useStoreState().zetLijnen(diagramId, { [connectorId]: patch }),
 
     /** Verwijder een diagram (niet de elementen). */
     deleteDiagram: (diagramId) =>
@@ -652,7 +756,10 @@ export function createDiagramStore({ persistKey } = {}) {
   storeApi = create(
     persist(metUndo, {
       name: persistKey,
-      storage: createJSONStorage(() => localStorage),
+      // IndexedDB bewaart het persist-object zelf ({ state, version }); de
+      // hydratatie is dan asynchroon — projectsync wacht erop (koppelModelStore),
+      // de UI rendert even leeg en vult zich als de store geladen is.
+      storage: heeftIndexedDb() ? maakStoreOpslag(persistKey) : createJSONStorage(() => veiligeLocalStorage(persistKey)),
       partialize: (state) => ({
         diagramTypeId: state.diagramTypeId,
         elements: state.elements,

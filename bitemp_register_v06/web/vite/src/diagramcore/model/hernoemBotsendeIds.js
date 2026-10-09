@@ -52,6 +52,10 @@ export function hernoemBotsendeIds(model, state, stempel = String(Date.now())) {
       edges: (d.edges || []).map((e) => ({ ...e, source: her(e.source), target: her(e.target) })),
       ...(d.verborgenConnectoren ? { verborgenConnectoren: d.verborgenConnectoren.map(her) } : {}),
       ...(voorkomens ? { connectorVoorkomens: voorkomens } : {}),
+      ...(d.lijnen ? { lijnen: Object.fromEntries(Object.entries(d.lijnen).map(([cid, l]) => [her(cid), l])) } : {}),
+      ...(d.gedaanteOverrides ? { gedaanteOverrides: Object.fromEntries(Object.entries(d.gedaanteOverrides).map(([cid, v]) => [her(cid), v])) } : {}),
+      ...(d.lijnen ? { lijnen: Object.fromEntries(Object.entries(d.lijnen).map(([cid, l]) => [her(cid), l])) } : {}),
+      ...(d.gedaanteOverrides ? { gedaanteOverrides: Object.fromEntries(Object.entries(d.gedaanteOverrides).map(([cid, v]) => [her(cid), v])) } : {}),
     };
   }
 

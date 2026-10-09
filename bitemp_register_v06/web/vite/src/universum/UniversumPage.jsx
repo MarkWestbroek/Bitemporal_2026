@@ -313,7 +313,7 @@ function clearCSSLabels() {
 }
 
 const API_BASE = () =>
-  window.location.port === "5174" ? "http://localhost:8082" : "";
+  /^517[3-9]$/.test(window.location.port) ? "http://localhost:8082" : "";
 
 /* ── Perkamentrol tracking ─────────────────────────────────────────── */
 /** Set van { css2d, radius, phase } objecten voor 3D orbit animatie */

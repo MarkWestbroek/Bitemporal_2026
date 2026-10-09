@@ -23,7 +23,7 @@ function detectBaseUrl() {
   const loc = window.location;
 
   // Tijdens lokaal Vite-dev blijft de Go API op :8082 draaien.
-  if (["5173", "5174", "5175"].includes(loc.port)) {
+  if (["5173", "5174", "5175", "5176", "5177", "5178", "5179"].includes(loc.port)) {
     return `${loc.protocol}//${loc.hostname}:8082`;
   }
 

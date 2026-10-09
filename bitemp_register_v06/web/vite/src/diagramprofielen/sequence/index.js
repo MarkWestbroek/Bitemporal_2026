@@ -111,6 +111,19 @@ const elementTypes = [
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
 
+  {
+    // Notitie-lijn (EA NoteLink): stippel van een notitie naar wat hij toelicht.
+    id: "notitielijn",
+    label: "Notitie-lijn",
+    kort: "not",
+    shape: "edge",
+    icoon: "notitie",
+    isConnector: true,
+    bron: { elementTypes: ["notitie"] },
+    doel: { elementTypes: ["levenslijn", "fragment", "punt", "activatie"] },
+    edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#94a3b8" },
+  },
+
   // ── Berichten ──────────────────────────────────────────────────────────
   ...[
     ["synchroon", "Synchroon bericht", "Aanroep die op antwoord wacht (dichte pijlpunt).",

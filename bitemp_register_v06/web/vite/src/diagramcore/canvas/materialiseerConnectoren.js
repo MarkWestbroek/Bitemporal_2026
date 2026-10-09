@@ -245,8 +245,14 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     // gelegde aanhechting blijft waar hij ligt. Een zelf-lus zweeft nooit; de
     // ConnectorEdge vangt dat op, want daar is het pas te zien.
     // Handles genormaliseerd: een kale oude waarde ("left") telt als geen keuze.
-    const bronHandle = normaliseerHandle(el.data?.sourceHandle, "source");
-    const doelHandle = normaliseerHandle(el.data?.targetHandle, "target");
+    // Lijndata van dít diagram (diagram.lijnen[connectorId]: knikken, vorm,
+    // handles, labelposities) wint van dezelfde sleutels op element.data —
+    // de "Position" van een connector op een diagram (M3), zie
+    // createDiagramStore.zetLijnen. Een sleutel die op het diagram ontbreekt
+    // valt terug op het element (standaard voor elk diagram, oude modellen).
+    const lijn = { ...(el.data || {}), ...(diagram?.lijnen?.[el.id] || {}) };
+    const bronHandle = normaliseerHandle(lijn.sourceHandle, "source");
+    const doelHandle = normaliseerHandle(lijn.targetHandle, "target");
     const zwevendKant = (elementId, handle) =>
       elementTypesById[elements[elementId]?.elementType]?.randAanhechting === "zwevend" && !handle;
     const zwevendBron = zwevendKant(el.source, bronHandle);
@@ -254,7 +260,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
 
     const labels = et.hooks?.edgeLabels?.(el, { elements }) || {};
     // Handmatig versleepte label-posities (data.labelOffsets, per zijde).
-    const offsets = el.data?.labelOffsets || null;
+    const offsets = lijn.labelOffsets || null;
     const metOffsets = (lijst) =>
       offsets
         ? lijst.map((l) => (offsets[l.zijde] ? { ...l, offset: offsets[l.zijde] } : l))
@@ -317,12 +323,12 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
           // Handmatige knikpunten (ctrl-klik; alleen in deze directe gedaante —
           // de gematerialiseerde gedaante heeft het anker al als handvat).
           knikken:
-            Array.isArray(el.data?.knikken) && el.data.knikken.length ? el.data.knikken : null,
+            Array.isArray(lijn.knikken) && lijn.knikken.length ? lijn.knikken : null,
           presentatie: {
             ...basisPresentatie,
             // Per-connector lijnvorm (contextmenu) wint van het type-default;
             // een lus is standaard hoekig (het nette EA-oortje).
-            vorm: el.data?.vorm || (isLus ? "hoekig" : basisPresentatie.vorm),
+            vorm: lijn.vorm || (isLus ? "hoekig" : basisPresentatie.vorm),
             zwevendBron,
             zwevendDoel,
             // Echte omtrek (ruit/ellips) voor het aanhechtpunt — zie zwevendeRand.
@@ -373,7 +379,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
         // zichtbaar aan de bronzijde.
         presentatie: {
           lijn: "solid",
-          vorm: el.data?.vorm || basisPresentatie.vorm,
+          vorm: lijn.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerStart: basisPresentatie.markerStart,
           zwevendBron,
@@ -391,7 +397,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
         connectorId: el.id,
         presentatie: {
           lijn: "solid",
-          vorm: el.data?.vorm || basisPresentatie.vorm,
+          vorm: lijn.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerEnd: basisPresentatie.markerEnd ?? (el.data?.directioneel ? "pijl-open" : null),
           zwevendDoel,

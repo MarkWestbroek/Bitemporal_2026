@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden, richtpuntOfAanhechtpunt } from "./zwevendeRand.js";
+import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden, richtpuntOfAanhechtpunt, orthogonaleUiteinden, naarOmtrek } from "./zwevendeRand.js";
 import { besteZijde } from "./materialiseerConnectoren.js";
 
 // Een doos van 200x100 met middelpunt (100, 50).
@@ -147,4 +147,49 @@ test("omtrek ruit en ellips: het snijpunt ligt op de vorm, niet op de rechthoek"
   // Richtpunt op de omhullende rechthoek van een ruit wordt op de ruit gezet.
   const rp = richtpuntOfAanhechtpunt(ruit, { x: 0, y: 14 }, 1.5, "ruit");
   assert.deepEqual([Math.round(rp.x), Math.round(rp.y)], [0, 14]);
+});
+
+test("orthogonaleUiteinden: boven elkaar → één verticale lijn midden in de x-overlap", () => {
+  const u = orthogonaleUiteinden({ x: 0, y: 0, width: 200, height: 60 }, { x: 100, y: 200, width: 200, height: 60 });
+  assert.deepEqual(u, { sourceX: 150, sourceY: 60, sourcePosition: "bottom", targetX: 150, targetY: 200, targetPosition: "top" });
+});
+
+test("orthogonaleUiteinden: naast elkaar → één horizontale lijn; diagonaal → één hoek", () => {
+  const h = orthogonaleUiteinden({ x: 0, y: 0, width: 100, height: 100 }, { x: 300, y: 40, width: 100, height: 100 });
+  assert.deepEqual(h, { sourceX: 100, sourceY: 70, sourcePosition: "right", targetX: 300, targetY: 70, targetPosition: "left" });
+  const l = orthogonaleUiteinden({ x: 0, y: 0, width: 100, height: 100 }, { x: 400, y: 300, width: 100, height: 100 });
+  assert.equal(l.sourcePosition, "right");
+  assert.equal(l.targetPosition, "top");
+  assert.deepEqual([l.sourceX, l.sourceY, l.targetX, l.targetY], [100, 50, 450, 300]);
+});
+
+test("zwevendeUiteinden met orthogonaal: alleen als beide kanten vrij zijn en er geen knikken zijn", () => {
+  const bron = { x: 0, y: 0, width: 200, height: 60 }, doel = { x: 100, y: 200, width: 200, height: 60 };
+  const vast = { sourceX: 1, sourceY: 1, targetX: 2, targetY: 2, sourcePosition: "left", targetPosition: "left" };
+  const recht = zwevendeUiteinden({ bronRect: bron, doelRect: doel, zwevendBron: true, zwevendDoel: true, vast, orthogonaal: true });
+  assert.equal(recht.sourceX, recht.targetX);
+  const metKnik = zwevendeUiteinden({ bronRect: bron, doelRect: doel, zwevendBron: true, zwevendDoel: true, vast, orthogonaal: true, bronRicht: { x: 10, y: 100 }, doelRicht: { x: 10, y: 100 } });
+  assert.notEqual(metKnik.sourceX, metKnik.targetX, "met knikken mikt elk uiteinde op zijn knik");
+});
+
+test("naarOmtrek: haaks naar binnen tot de cirkel of ruit; rechthoek blijft", () => {
+  const r = { x: 0, y: 0, width: 40, height: 40 }; // middelpunt (20,20), straal 20
+  assert.deepEqual(naarOmtrek(r, { x: 40, y: 20 }, "right", "rechthoek"), { x: 40, y: 20 });
+  assert.deepEqual(naarOmtrek(r, { x: 40, y: 20 }, "right", "ellips"), { x: 40, y: 20 }, "op de as: de rand zelf");
+  const p = naarOmtrek(r, { x: 40, y: 32 }, "right", "ellips");
+  assert.equal(p.y, 32);
+  assert.ok(Math.abs(p.x - (20 + 16)) < 1e-9, "12 onder het midden: x = 20 + sqrt(400-144)");
+  const q = naarOmtrek(r, { x: 30, y: 0 }, "top", "ruit");
+  assert.deepEqual(q, { x: 30, y: 10 }, "ruit: lineair naar binnen");
+  assert.deepEqual(naarOmtrek(r, { x: 0, y: 99 }, "left", "ellips"), { x: 0, y: 20 }, "buiten bereik: midden van de zijde");
+});
+
+test("hoekig zonder knikken, event naar taak: rechte lijn ook met een ronde bron (BPMN, 10-10)", () => {
+  const event = { x: 0, y: 30, width: 30, height: 30 }; // midden y=45
+  const taak = { x: 100, y: 20, width: 110, height: 60 }; // y 20..80
+  const u = zwevendeUiteinden({ bronRect: event, doelRect: taak, zwevendBron: true, zwevendDoel: true, vast: {}, orthogonaal: true, bronOmtrek: "ellips" });
+  assert.equal(u.sourceY, u.targetY, "horizontaal");
+  assert.equal(u.targetX, 100);
+  const afstand = Math.hypot(u.sourceX - 15, u.sourceY - 45);
+  assert.ok(Math.abs(afstand - 15) < 1e-6, "het beginpunt ligt op de cirkel");
 });

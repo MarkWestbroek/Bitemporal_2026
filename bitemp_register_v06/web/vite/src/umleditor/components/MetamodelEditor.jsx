@@ -2179,7 +2179,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   // Bepaal de standaard API-basis. Bij lokaal Vite-deven wijzen we standaard
   // naar de devloop-container op :8182 zodat deze naast de gewone app op :8082 kan draaien.
   const getDefaultApiBase = useCallback(() => {
-    if (["5173", "5174", "5175"].includes(window.location.port)) {
+    if (["5173", "5174", "5175", "5176", "5177", "5178", "5179"].includes(window.location.port)) {
       return "http://localhost:8182";
     }
     return window.location.origin;

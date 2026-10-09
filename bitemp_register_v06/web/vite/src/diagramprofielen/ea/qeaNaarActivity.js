@@ -29,10 +29,12 @@ const KNOPEN = new Set(["begin", "actie", "aanroep", "beslissing", "fork", "obje
 export function qeaNaarActivity(bron, { packageId, diagramTypeId = ACTIVITY_DIAGRAMTYPE, schaal = EA_SCHAAL }) {
   const pakketIds = new Set(deelboomPakketten(bron.t_package || [], packageId));
   const verslag = maakVerslag();
-  const h = maakHulptabellen(bron, schaal, { vasteMaat: vasteMaatVoor });
+  // Interaction overview (UML) is een activity-diagram met interactie-knopen (M3-MOF, 10-10).
+  const isActivity = (d) => d.Diagram_Type === "Activity" || d.Diagram_Type === "InteractionOverview";
+  const activityDiagrammen = (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && isActivity(d));
+  const h = maakHulptabellen(bron, schaal, { vasteMaat: vasteMaatVoor, diagramVoorkeur: activityDiagrammen.map((d) => d.Diagram_ID) });
 
-  const activityDiagrammen = (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && d.Diagram_Type === "Activity");
-  for (const d of (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && d.Diagram_Type !== "Activity")) {
+  for (const d of (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && !isActivity(d))) {
     sla(verslag, `diagram ${d.Diagram_Type}`);
   }
   /** Object_IDs die op een activity-diagram staan. */
@@ -62,6 +64,7 @@ export function qeaNaarActivity(bron, { packageId, diagramTypeId = ACTIVITY_DIAG
     idVanObject.set(o.Object_ID, id);
     const data = {
       ...extraData(h, o.ea_guid, o.Object_ID),
+      eaPakket: o.Package_ID,
       ...(o.Alias ? { alias: o.Alias } : {}),
       ...(o.Note && vertaald.elementType !== "notitie" ? { notes: o.Note } : {}),
       ...vertaald.data,
@@ -160,6 +163,13 @@ function vertaalObject(o, h) {
     case "Activity":
       // Een geneste/geplaatste Activity (niet het frame) tekent als actie.
       return { elementType: "actie", naam, data: { eaType: "Activity" } };
+    case "Interaction":
+    case "InteractionUse":
+    case "InteractionOccurrence": {
+      // Interaction overview: verwijzing naar een interactie (sequence-diagram).
+      const doel = o.Classifier ? h.classifierPerId.get(o.Classifier) : null;
+      return { elementType: "interactiegebruik", naam: naam || doel?.Name || "", data: { ...(doel ? { aanroept: doel.Name } : {}) } };
+    }
     case "ActionPin": {
       const type = o.Classifier ? h.classifierPerId.get(o.Classifier)?.Name : null;
       const richting = h.customPerGuid.get(o.ea_guid)?.kind;

@@ -256,6 +256,8 @@ export const MODEL_OPS = {
   addDiagram: null,
   renameDiagram: null,
   deleteDiagram: null,
+  /** Merge (EA-import op GUID): velden van een bestaand diagram in één stap. */
+  zetDiagram: null,
   /** Een gegenereerd voorkomen-id (meerdere voorkomens) reist mee in de opties. */
   addElementToDiagram: (args, { voor, na }) => {
     const [diagramId, elementId, position, opties = {}] = args;
@@ -275,6 +277,8 @@ export const MODEL_OPS = {
   wisNodeMaten: null,
   zetNodeGedaante: null,
   zetConnectorGedaante: null,
+  zetLijnen: null,
+  zetLijn: null,
   verbergConnectorOpDiagram: null,
   toonVerborgenConnectoren: null,
   updateDiagramStijl: null,
@@ -331,6 +335,9 @@ export function koppelModelStore(profielId, api) {
 export const STRUCTUUR_OPS = {
   /** Het gegenereerde map-id reist mee als derde argument. */
   nieuweMap: (args, { resultaat }) => [args[0], args[1] ?? null, resultaat],
+  /** Batch (EA-import): de gemaakte ids reizen mee in de lijst. */
+  nieuweMappen: (args, { resultaat }) => [(args[0] || []).map((m, i) => ({ ...m, mapId: resultaat?.[i] || m.mapId }))],
+  plaatsPerMap: null,
   schuifMap: null,
   hernoemMap: null,
   zetMapKleur: null,

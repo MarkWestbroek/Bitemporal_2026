@@ -170,6 +170,22 @@ export const eventsUrl = (id, vanaf = 0, clientId = "") =>
   `${apiBase()}/api/studio/projecten/${encodeURIComponent(id)}/events?vanaf=${Number(vanaf) || 0}` +
   (clientId ? `&client=${encodeURIComponent(clientId)}` : "");
 
+// ── EA-import via de server (onderzoeksdoc 2026-10-07 §7.6–7.8) ──────
+// De server biedt repo's en bestanden aan; de Studio kiest alleen daaruit.
+/** → {repos: [{naam, branch, commit, wijzigingen}], pull, ingericht}. */
+export const eaImportRepos = () => roep("/api/studio/ea-import/repos");
+/** → [{pad, grootte, gewijzigd}] — de .qea/.qeax in die repo, nieuwste eerst. */
+export const eaImportBestanden = (repo) => roep(`/api/studio/ea-import/repos/${encodeURIComponent(repo)}/bestanden`);
+/** → [{id, pad}] — de pakketten in dat EA-bestand. */
+export const eaImportPakketten = (repo, bestand) =>
+  roep(`/api/studio/ea-import/repos/${encodeURIComponent(repo)}/pakketten?bestand=${encodeURIComponent(bestand)}`);
+/** Taak starten → {taak, status}; 409 als er al een loopt, 501 als het niet is ingericht. */
+export const startEaImport = (id, { repo, bestand, pakket, map = "", pull = false, verdwenenVerwijderen = false, droog = false }) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/ea-import`, { methode: "POST", body: { repo, bestand, pakket, map, pull, verdwenenVerwijderen, droog } });
+/** Stand van een taak (zonder taak-id: de laatste van dit project) → {id, status, verslag?, fout?, log?, branch?, commit?}. */
+export const eaImportTaak = (id, taak = "") =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/ea-import${taak ? `/${encodeURIComponent(taak)}` : ""}`);
+
 // ── Werkruimte (tabs, open mappen) per gebruiker per project ──────────
 /** → {inhoud, bijgewerkt}; 404 als er nog geen is. */
 export const haalWerkruimteOp = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}/werkruimte`);

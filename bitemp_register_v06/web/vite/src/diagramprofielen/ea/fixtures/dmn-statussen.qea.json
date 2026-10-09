@@ -1,0 +1,2910 @@
+{
+"t_package": [
+{
+"Package_ID": 2015,
+"Name": "Handelsregister",
+"Parent_ID": 486,
+"ea_guid": "{B54A35F3-F99A-6593-B1C4-93A92C5E781E}"
+},
+{
+"Package_ID": 2243,
+"Name": "Statussen",
+"Parent_ID": 2015,
+"ea_guid": "{9E1D99B8-3ABD-D1FB-BE19-5BFE7DB5AA78}"
+}
+],
+"t_object": [
+{
+"Object_ID": 16381,
+"Object_Type": "Class",
+"Name": "MaatschappelijkeActiviteit",
+"Alias": "Maatschappelijke Activiteit",
+"Note": "De entiteit die de ´inschrijving in het handelsregister´ ver",
+"Package_ID": 2211,
+"Stereotype": null,
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{A4DE8B07-AF22-C080-8758-5EF7DA96C37E}",
+"Style": null,
+"Backcolor": 16636574,
+"BorderWidth": 1,
+"PDATA1": null,
+"PDATA2": "Java",
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16434,
+"Object_Type": "Class",
+"Name": "Vestiging",
+"Alias": null,
+"Note": "Een gebouw of complex van gebouwen waar duurzame uitoefening",
+"Package_ID": 2222,
+"Stereotype": null,
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{8E517535-F20E-C1CF-B891-61BCD0D05A38}",
+"Style": null,
+"Backcolor": 12972951,
+"BorderWidth": 1,
+"PDATA1": null,
+"PDATA2": "Java",
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16561,
+"Object_Type": "Activity",
+"Name": "Ambtshalve opgeheven",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{B1603622-B436-4EDF-A734-2BC4F99FB92A}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16562,
+"Object_Type": "Activity",
+"Name": "beëindigd",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{A653B0B7-9841-ECF3-A1C1-C93B2E25AC4B}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16563,
+"Object_Type": "Activity",
+"Name": "faillissement of surseance van betaling",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{ADEEFEDE-A64E-5C76-9249-A07968B34227}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16565,
+"Object_Type": "Activity",
+"Name": "fusie splitsing",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{A1A9D867-6881-79CC-9078-5772D8E3CFC6}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16566,
+"Object_Type": "Activity",
+"Name": "Ingeschreven door grensoverschrijdende omzetting",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{B6DF4617-CED5-EEF1-A57F-DCD6246CE702}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16567,
+"Object_Type": "Class",
+"Name": "Maatschappelijke activiteit",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "InputData",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{B4924EE0-CE29-FD44-980B-4A652D551FE0}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16568,
+"Object_Type": "Class",
+"Name": "Natuurlijk persoon",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "InputData",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{AAAF3A42-7FBB-1E6D-9EF2-B7908309606B}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16569,
+"Object_Type": "Class",
+"Name": "Niet natuurlijk persoon",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "InputData",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{B3535151-3A2E-FBDA-BFA0-7031A76F01FE}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16570,
+"Object_Type": "Activity",
+"Name": "ontbonden",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{A680511B-E2AF-FC07-8415-D262FEC4D31F}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16571,
+"Object_Type": "Activity",
+"Name": "onterecht ingeschreven ",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{9A232FF0-120F-4E02-BA3A-40005668D9DA}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16572,
+"Object_Type": "Activity",
+"Name": "Overgedragen",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{83F4E9EA-2C69-98B1-BF39-82C64C294391}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16573,
+"Object_Type": "Activity",
+"Name": "rechtsvorm/zetel wijziging",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{859A5FC5-C600-19E7-84EC-6CFA770742D7}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16574,
+"Object_Type": "Class",
+"Name": "Rol",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "InputData",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{896C1D64-0CA2-8110-9D6D-72E16F572043}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16575,
+"Object_Type": "Activity",
+"Name": "schuldsanering",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{AC0107E6-E1B6-85D5-9953-7ED240C54C73}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16576,
+"Object_Type": "Activity",
+"Name": "uitgeschreven",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{810E5CDE-16FD-6A07-983E-AE9390B65C86}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16577,
+"Object_Type": "Activity",
+"Name": "Uitgeschreven door grensoverschrijdende omzetting",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{94DEC8EC-6B34-AF15-99DE-4C62F32C89AE}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16578,
+"Object_Type": "Activity",
+"Name": "Uitgeschreven/ Beëindigd",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "Decision",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{B73B9C25-8CE5-00F3-8E51-3D98F7C5DBB4}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+},
+{
+"Object_ID": 16579,
+"Object_Type": "Class",
+"Name": "Vestiging",
+"Alias": null,
+"Note": null,
+"Package_ID": 2243,
+"Stereotype": "InputData",
+"NType": 0,
+"Abstract": "0",
+"Classifier": 0,
+"ParentID": 0,
+"ea_guid": "{A92D39E9-902B-99AF-91BB-469DB3CBF34B}",
+"Style": null,
+"Backcolor": -1,
+"BorderWidth": -1,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": "0",
+"PDATA5": null,
+"Multiplicity": null,
+"Status": "Proposed",
+"RunState": null
+}
+],
+"classifiers": [],
+"t_attribute": [
+{
+"Object_ID": 16381,
+"Name": "kvkNummer",
+"Scope": "Private",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Het door de Kamer van Koophandel aan de maatschappelijke activiteit toegekende unieke 8-cijferige nummer.",
+"Derived": "0",
+"ID": 20864,
+"Pos": 0,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "Numeriek8",
+"ea_guid": "{A381087F-ACFB-7860-A6C9-47BF4D5A8211}"
+},
+{
+"Object_ID": 16381,
+"Name": "naam",
+"Scope": "Private",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "<i>Afgeleid.</i>\r\nDe naam van de maatschappelijke activiteit:\r\n<ul>\r\n <li>Indien degene aan wie de maatschappelijke activiteit (onderneming) toebehoort een natuurlijke persoon of een niet-natuurlijke persoon van het type, rechtspersoon i.o. of eenmaszaak met meerdere eigenaren is dan is de <i>naam </i>van de maatschappelijke activiteit de eerste <i>handelsnaam</i> van de onderneming</li>\r\n <li>Indien degene aan wie de maatschappelijke activiteit toebehoort een niet-natuurlijke persoon dan is de <i>naam</i> van de maatschappelijke activiteit de <i>naam</i> van de niet-natuurlijke persoon</li>\r\n</ul>",
+"Derived": "1",
+"ID": 20865,
+"Pos": 1,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "Tekst200",
+"ea_guid": "{AC3AE30D-424E-4245-9B4F-A3B7E1743159}"
+},
+{
+"Object_ID": 16434,
+"Name": "vestigingsnummer",
+"Scope": "Private",
+"Stereotype": null,
+"LowerBound": "1",
+"UpperBound": "1",
+"Notes": "Het door de Kamer van Koophandel uitgedeelde vestigingsnummer.",
+"Derived": "0",
+"ID": 20882,
+"Pos": 0,
+"Const": 0,
+"Classifier": "0",
+"Default": null,
+"Type": "Numeriek12",
+"ea_guid": "{B8845F45-C826-A064-85FC-B4690C372F66}"
+}
+],
+"t_operation": [],
+"t_connector": [
+{
+"Connector_ID": 13567,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Association",
+"SubType": null,
+"SourceCard": null,
+"DestCard": "0..*",
+"SourceRole": null,
+"DestRole": "hoofdvestiging",
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 0,
+"Start_Object_ID": 16381,
+"End_Object_ID": 16434,
+"Stereotype": "materieel",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{9FD5081D-7902-D6AE-8C04-C6B66F205D3D}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13561,
+"Name": null,
+"Direction": "Unspecified",
+"Notes": null,
+"Connector_Type": "Aggregation",
+"SubType": "Strong",
+"SourceCard": "0..*",
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 2,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 0,
+"Start_Object_ID": 16434,
+"End_Object_ID": 16381,
+"Stereotype": "materieel",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{98E282AF-60D8-EC8A-AE95-7ADFAFE84ABC}",
+"SeqNo": 0,
+"PtStartX": 1059,
+"PtStartY": -182,
+"PtEndX": 1059,
+"PtEndY": -338,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13374,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16561,
+"End_Object_ID": 16579,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{883351FB-DA03-F500-8724-B48B7A4A6426}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13375,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16561,
+"End_Object_ID": 16567,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{B0D83E3E-4538-2502-826A-A0904BB098A9}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13373,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16562,
+"End_Object_ID": 16570,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{991C0F19-5AEC-AD14-8FEB-D363E6C1F082}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13372,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16563,
+"End_Object_ID": 16569,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{A24691BD-ED5D-FE53-A265-FABB8446A960}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13370,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16565,
+"End_Object_ID": 16569,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{9BA9D5F9-3FF9-F6B9-8358-D96276F48BA8}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13369,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16566,
+"End_Object_ID": 16569,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{A717F7B0-F1E5-ECEC-BC2D-9E86BCCB6CC5}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13367,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Abstraction",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16567,
+"End_Object_ID": 16381,
+"Stereotype": "trace",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{B9236788-AA74-7EE3-BDC4-9395F08C3D25}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13361,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16570,
+"End_Object_ID": 16569,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{8CCFD163-9796-705C-86B1-F3A83050B5A8}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13354,
+"Name": null,
+"Direction": "Destination -> Source",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16571,
+"End_Object_ID": 16574,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{9770C4F5-6F8D-827B-9496-BD4E9605ED01}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13359,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16571,
+"End_Object_ID": 16567,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{A9777D25-45BB-7256-A0B8-4A277493B877}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13360,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16571,
+"End_Object_ID": 16569,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{B5835CF0-E408-723D-9DC6-8C5873108301}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13358,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16572,
+"End_Object_ID": 16579,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{A8574522-02B7-19BC-8766-FF8D16396C66}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13357,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16573,
+"End_Object_ID": 16569,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{AAEC6D86-97BA-15F0-9088-AB27231139A9}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13353,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16575,
+"End_Object_ID": 16568,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{A4F4A672-8771-D389-A00A-6E03248F7839}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13352,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16576,
+"End_Object_ID": 16569,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{A5CD38E3-A108-915B-9863-E987DF1FFF62}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13351,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16577,
+"End_Object_ID": 16569,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{A3B77FEC-CB5A-B79A-8016-958116034B9A}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13349,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16578,
+"End_Object_ID": 16567,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{9787B66C-69D0-0AFE-A7B6-6D2D09B18234}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13350,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Dependency",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16578,
+"End_Object_ID": 16569,
+"Stereotype": "InformationRequirement",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{ABE03B86-3D04-AE4F-A3F9-E42BC1BC9F6F}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+},
+{
+"Connector_ID": 13347,
+"Name": null,
+"Direction": "Source -> Destination",
+"Notes": null,
+"Connector_Type": "Abstraction",
+"SubType": null,
+"SourceCard": null,
+"DestCard": null,
+"SourceRole": null,
+"DestRole": null,
+"SourceIsAggregate": 0,
+"DestIsAggregate": 0,
+"SourceIsNavigable": 0,
+"DestIsNavigable": 1,
+"Start_Object_ID": 16579,
+"End_Object_ID": 16434,
+"Stereotype": "trace",
+"LineStyle": 0,
+"PDATA1": null,
+"PDATA2": null,
+"PDATA3": null,
+"PDATA4": null,
+"ea_guid": "{81B1DB9F-FE5C-C5F7-AAD1-99079392FBF8}",
+"SeqNo": 0,
+"PtStartX": 0,
+"PtStartY": 0,
+"PtEndX": 0,
+"PtEndY": 0,
+"DiagramID": 0
+}
+],
+"t_xref": [
+{
+"Client": "{810E5CDE-16FD-6A07-983E-AE9390B65C86}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{810E5CDE-16FD-6A07-983E-AE9390B65C86}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{81B1DB9F-FE5C-C5F7-AAD1-99079392FBF8}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=trace;FQName=EAUML::trace;@ENDSTEREO;"
+},
+{
+"Client": "{83F4E9EA-2C69-98B1-BF39-82C64C294391}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{83F4E9EA-2C69-98B1-BF39-82C64C294391}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{859A5FC5-C600-19E7-84EC-6CFA770742D7}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{859A5FC5-C600-19E7-84EC-6CFA770742D7}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{883351FB-DA03-F500-8724-B48B7A4A6426}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{896C1D64-0CA2-8110-9D6D-72E16F572043}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=InputData;FQName=DMN1.1::InputData;@ENDSTEREO;"
+},
+{
+"Client": "{8CCFD163-9796-705C-86B1-F3A83050B5A8}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{94DEC8EC-6B34-AF15-99DE-4C62F32C89AE}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{94DEC8EC-6B34-AF15-99DE-4C62F32C89AE}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{9770C4F5-6F8D-827B-9496-BD4E9605ED01}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{9787B66C-69D0-0AFE-A7B6-6D2D09B18234}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{98E282AF-60D8-EC8A-AE95-7ADFAFE84ABC}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=materieel;GUID={9E708D9D-9B9D-4b85-8E27-2165F0803D27};@ENDSTEREO;"
+},
+{
+"Client": "{991C0F19-5AEC-AD14-8FEB-D363E6C1F082}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{9A232FF0-120F-4E02-BA3A-40005668D9DA}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{9A232FF0-120F-4E02-BA3A-40005668D9DA}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{9BA9D5F9-3FF9-F6B9-8358-D96276F48BA8}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{9FD5081D-7902-D6AE-8C04-C6B66F205D3D}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=materieel;GUID={9E708D9D-9B9D-4b85-8E27-2165F0803D27};@ENDSTEREO;"
+},
+{
+"Client": "{A1A9D867-6881-79CC-9078-5772D8E3CFC6}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{A1A9D867-6881-79CC-9078-5772D8E3CFC6}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{A24691BD-ED5D-FE53-A265-FABB8446A960}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{A3B77FEC-CB5A-B79A-8016-958116034B9A}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{A4F4A672-8771-D389-A00A-6E03248F7839}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{A5CD38E3-A108-915B-9863-E987DF1FFF62}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{A653B0B7-9841-ECF3-A1C1-C93B2E25AC4B}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{A653B0B7-9841-ECF3-A1C1-C93B2E25AC4B}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{A680511B-E2AF-FC07-8415-D262FEC4D31F}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{A680511B-E2AF-FC07-8415-D262FEC4D31F}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{A717F7B0-F1E5-ECEC-BC2D-9E86BCCB6CC5}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{A8574522-02B7-19BC-8766-FF8D16396C66}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{A92D39E9-902B-99AF-91BB-469DB3CBF34B}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=InputData;FQName=DMN1.1::InputData;@ENDSTEREO;"
+},
+{
+"Client": "{A9777D25-45BB-7256-A0B8-4A277493B877}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{AAAF3A42-7FBB-1E6D-9EF2-B7908309606B}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=InputData;FQName=DMN1.1::InputData;@ENDSTEREO;"
+},
+{
+"Client": "{AAEC6D86-97BA-15F0-9088-AB27231139A9}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{ABE03B86-3D04-AE4F-A3F9-E42BC1BC9F6F}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{AC0107E6-E1B6-85D5-9953-7ED240C54C73}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{AC0107E6-E1B6-85D5-9953-7ED240C54C73}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{ADEEFEDE-A64E-5C76-9249-A07968B34227}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{ADEEFEDE-A64E-5C76-9249-A07968B34227}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{B0D83E3E-4538-2502-826A-A0904BB098A9}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{B1603622-B436-4EDF-A734-2BC4F99FB92A}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{B1603622-B436-4EDF-A734-2BC4F99FB92A}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{B3535151-3A2E-FBDA-BFA0-7031A76F01FE}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=InputData;FQName=DMN1.1::InputData;@ENDSTEREO;"
+},
+{
+"Client": "{B4924EE0-CE29-FD44-980B-4A652D551FE0}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=InputData;FQName=DMN1.1::InputData;@ENDSTEREO;"
+},
+{
+"Client": "{B5835CF0-E408-723D-9DC6-8C5873108301}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=InformationRequirement;FQName=DMN1.1::InformationRequirement;@ENDSTEREO;"
+},
+{
+"Client": "{B6DF4617-CED5-EEF1-A57F-DCD6246CE702}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{B6DF4617-CED5-EEF1-A57F-DCD6246CE702}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{B73B9C25-8CE5-00F3-8E51-3D98F7C5DBB4}",
+"Name": "CustomProperties",
+"Type": "element property",
+"Description": "@PROP=@NAME=_subtypeProperty@ENDNAME;@TYPE=string@ENDTYPE;@VALU=DMN1.1::Decision::expressionType@ENDVALU;@PRMT=@ENDPRMT;@ENDPROP;"
+},
+{
+"Client": "{B73B9C25-8CE5-00F3-8E51-3D98F7C5DBB4}",
+"Name": "Stereotypes",
+"Type": "element property",
+"Description": "@STEREO;Name=Decision;FQName=DMN1.1::Decision;@ENDSTEREO;"
+},
+{
+"Client": "{B9236788-AA74-7EE3-BDC4-9395F08C3D25}",
+"Name": "Stereotypes",
+"Type": "connector property",
+"Description": "@STEREO;Name=trace;FQName=EAUML::trace;@ENDSTEREO;"
+}
+],
+"t_objectproperties": [
+{
+"Object_ID": 16381,
+"Property": "LogischModel::Entiteit",
+"Value": "T",
+"Notes": null
+},
+{
+"Object_ID": 16434,
+"Property": "LogischModel::Entiteit",
+"Value": "T",
+"Notes": null
+},
+{
+"Object_ID": 16434,
+"Property": "SM::Begrip",
+"Value": "BEGRIP-HRW-0040",
+"Notes": null
+},
+{
+"Object_ID": 16561,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16561,
+"Property": "decisionLogic",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16561,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16561,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16561,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16561,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16561,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16561,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16561,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16561,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16561,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16562,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16562,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input label=\"Input 1\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>Status Ontbonden</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\" label=\"Input 2\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 2</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp datum einde bestaat</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\" label=\"Input 3\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 3</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp ontbinding liquidatie bestaat</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input label=\"Input 4\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 4</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp ontbinding liquidatie datum einde bestaat</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input label=\"Input 5\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 5</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp ontbinding aanleiding</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:output name=\"Output 1\" typeRef=\"number\">\n  <dmn:outputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:outputValues>\n </dmn:output>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>nvt</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Beëindigd na liquidatie</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>false</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>nvt</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>is niet ontbinding door Kamer van Koophandel</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Beëindigd na turbo liquidatie</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16562,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16562,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16562,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16562,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16562,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16562,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16562,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16562,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16562,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16563,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16563,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp insolventie type</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input label=\"Input 3\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 3</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>insolventie datumEinde bestaat</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:output name=\"Output 1\" typeRef=\"number\">\n  <dmn:outputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:outputValues>\n </dmn:output>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>faillissement</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>false</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Faillissement</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>surseance van betaling</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>false</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Surseance van betaling</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16563,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16563,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16563,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16563,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16563,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16563,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16563,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16563,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16563,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16565,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16565,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input eaTypeRef=\"number\" label=\"Input 1\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp datum einde bestaat</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\" label=\"Input 2\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 2</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>type vermogensoverdracht van nnp</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input label=\"Input 3\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 3</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>vermogensoverdracht datum aanvang = nnp datum einde</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:output name=\"Output 1\" typeRef=\"number\">\n  <dmn:outputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:outputValues>\n </dmn:output>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>fusie</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Beëindigd door fusie</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>splitsing</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Beëindigd door splitsing</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16565,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16565,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16565,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16565,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16565,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16565,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16565,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16565,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16565,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16566,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16566,
+"Property": "decisionLogic",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16566,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16566,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16566,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16566,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16566,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16566,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16566,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16566,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16566,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16567,
+"Property": "data",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16567,
+"Property": "typeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16568,
+"Property": "data",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16568,
+"Property": "typeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16569,
+"Property": "data",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16569,
+"Property": "typeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16570,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16570,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp ontbinding bestaat</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 2</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp ontbinding datumEinde bestaat</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input label=\"Input 3\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\">Input 3</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>RedenOntbinding = OntbindingDoorDeKVK</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:output name=\"Output 1\" typeRef=\"number\">\n  <dmn:outputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:outputValues>\n </dmn:output>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>false</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>false</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Ontbonden</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>false</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\">Ontbonden, indicatie door de kamer = ja</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16570,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16570,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16570,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16570,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16570,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16570,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16570,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16570,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16570,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16571,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16571,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\">Input 1</dmn:text>\n  </dmn:inputExpression>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\">Input 2</dmn:text>\n  </dmn:inputExpression>\n </dmn:input>\n <dmn:output name=\"Output 1\" typeRef=\"number\">\n  <dmn:outputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:outputValues>\n </dmn:output>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\">Inschrijving onterecht</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16571,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16571,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16571,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16571,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16571,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16571,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16571,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16571,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16571,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16572,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16572,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>Vestiging is beëindigd</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\" label=\"Input 2\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 2</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>registratietijdstip opvoer beëindiging en registratietijdstip opvoer van overdracht zijn gelijk</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:output name=\"Output 1\" typeRef=\"number\">\n  <dmn:outputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:outputValues>\n </dmn:output>\n <dmn:output typeRef=\"string\"/>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\">Overgedragen</dmn:text>\n  </dmn:outputEntry>\n  <dmn:outputEntry/>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16572,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16572,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16572,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16572,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16572,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16572,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16572,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16572,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16572,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16573,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16573,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>persoon is buitenlandse NNP</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 2</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>persoon is grensoverschrijdend omgezet vanuit persoon</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input label=\"Input 3\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 3</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>persoon heeft MA</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input label=\"Input 4\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 4</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>datum aanvang van MA is voor of op de datum van de grensoverschrijdende omzetting vanuit</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input label=\"Input 5\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 5</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>persoon is uitgeschreven</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input label=\"Input 6\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 6</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>MA heeft zetelverplaatsing naar buitenland gebeurtenis</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:output name=\"Output 1\" typeRef=\"number\">\n  <dmn:outputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:outputValues>\n </dmn:output>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>false</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Rechtsvorm gewijzigd</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\">Zetelverplaatsing buitenland</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\">Zetelverplaatsing Nederland</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16573,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16573,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16573,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16573,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16573,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16573,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16573,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16573,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16573,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16574,
+"Property": "data",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16574,
+"Property": "typeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16575,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16575,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>Insolventie='Schuldsanering'</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 2</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>RedenEindeSchuldsanering=leeg</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:output name=\"Output 1\" typeRef=\"number\">\n  <dmn:outputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:outputValues>\n </dmn:output>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Schuldsanering</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16575,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16575,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16575,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16575,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16575,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16575,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16575,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16575,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16575,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16576,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16576,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp datum uitschrijving bestaat</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 2</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>nnp is samenwerkingsverband</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:output name=\"Output 1\" typeRef=\"number\">\n  <dmn:outputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:outputValues>\n </dmn:output>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Uitgeschreven</dmn:text>\n  </dmn:outputEntry>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16576,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16576,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16576,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16576,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16576,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16576,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16576,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16576,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16576,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16577,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16577,
+"Property": "decisionLogic",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16577,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16577,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16577,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16577,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16577,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16577,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16577,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16577,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16577,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16578,
+"Property": "allowedAnswers",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16578,
+"Property": "decisionLogic",
+"Value": "<memo>",
+"Notes": "<dmn:decisionTable xmlns:dmn=\"http://www.omg.org/spec/DMN/20151101/dmn.xsd\" aggregation=\"NONE\" hitPolicy=\"UNIQUE\" preferredOrientation=\"Rule-as-Row\" mergeOption=\"unmerge\">\n <dmn:input eaTypeRef=\"number\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Input 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>Maatschappelijke activiteit is beëindigd</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:input eaTypeRef=\"number\" label=\"Output 1\">\n  <dmn:inputExpression>\n   <dmn:text language=\"FEEL\" linesNumber=\"0\">Output 1</dmn:text>\n  </dmn:inputExpression>\n  <dmn:inputValues>\n   <dmn:text>Status</dmn:text>\n  </dmn:inputValues>\n </dmn:input>\n <dmn:output typeRef=\"number\">\n  <dmn:outputValues/>\n </dmn:output>\n <dmn:rule>\n  <dmn:inputEntry>\n   <dmn:text>true</dmn:text>\n  </dmn:inputEntry>\n  <dmn:inputEntry>\n   <dmn:text>Beëindigd</dmn:text>\n  </dmn:inputEntry>\n  <dmn:outputEntry/>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n <dmn:rule>\n  <dmn:inputEntry/>\n  <dmn:inputEntry/>\n  <dmn:outputEntry/>\n </dmn:rule>\n</dmn:decisionTable>"
+},
+{
+"Object_ID": 16578,
+"Property": "decisionMaker",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16578,
+"Property": "decisionOwner",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16578,
+"Property": "decisionService",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16578,
+"Property": "expressionType",
+"Value": "DecisionTable",
+"Notes": "Values: DecisionTable,Invocation,Context,LiteralExpression\r\nDefault: DecisionTable\r\n"
+},
+{
+"Object_ID": 16578,
+"Property": "impactedPerformanceIndicator",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16578,
+"Property": "isUsingLibrary",
+"Value": "false",
+"Notes": "Values: true,false\r\nDefault: false\r\n"
+},
+{
+"Object_ID": 16578,
+"Property": "question",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16578,
+"Property": "variableType",
+"Value": "number",
+"Notes": "Values: number,string,boolean,time,date,date-time,duration,custom\r\nDefault: number\r\n"
+},
+{
+"Object_ID": 16578,
+"Property": "variableTypeRef",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16579,
+"Property": "data",
+"Value": null,
+"Notes": null
+},
+{
+"Object_ID": 16579,
+"Property": "typeRef",
+"Value": null,
+"Notes": null
+}
+],
+"t_attributetag": [],
+"t_connectortag": [],
+"t_diagram": [
+{
+"Diagram_ID": 2513,
+"Package_ID": 2243,
+"ParentID": 0,
+"Diagram_Type": "Analysis",
+"Name": "Statussen",
+"Notes": null,
+"Stereotype": null,
+"cx": 791,
+"cy": 1134,
+"Scale": 100,
+"PDATA": "HideRel=0;ShowTags=0;ShowReqs=0;ShowCons=0;OpParams=1;ShowSN=0;ScalePI=0;PPgs.cx=0;PPgs.cy=0;PSize=9;ShowIcons=1;SuppCN=0;HideProps=0;HideParents=0;UseAlias=0;HideAtts=0;HideOps=0;HideStereo=0;HideEStereo=0;ShowRec=1;ShowRes=0;ShowShape=1;FormName=;",
+"ea_guid": "{81C2D195-38F1-3756-A253-1ECE7D90613D}",
+"StyleEx": "SaveTag=D3734FFD;ExcludeRTF=0;DocAll=0;HideQuals=0;AttPkg=1;ShowTests=0;ShowMaint=0;SuppressFOC=1;MatrixActive=0;SwimlanesActive=1;KanbanActive=0;MatrixLineWidth=1;MatrixLineClr=0;MatrixLocked=0;TConnectorNotation=UML 2.1;TExplicitNavigability=0;AdvancedElementProps=1;AdvancedFeatureProps=1;AdvancedConnectorProps=1;m_bElementClassifier=1;SPT=1;MDGDgm=DMN1.1::DMNDiagram;STBLDgm=;ShowNotes=0;VisibleAttributeDetail=0;ShowOpRetType=1;SuppressBrackets=0;SuppConnectorLabels=0;PrintPageHeadFoot=0;ShowAsList=0;SuppressedCompartments=;Theme=:119;"
+}
+],
+"t_diagramobjects": [
+{
+"Diagram_ID": 2513,
+"Object_ID": 16572,
+"RectTop": -715,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -760,
+"Sequence": 1,
+"ObjectStyle": "NSL=0;BCol=-1;BFol=-1;LCol=-1;LWth=-1;fontsz=0;bold=0;black=0;italic=0;ul=0;charset=0;pitch=0;HideIcon=0;DUID=FB21B970;",
+"Instance_ID": 24178
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16574,
+"RectTop": -790,
+"RectLeft": 384,
+"RectRight": 474,
+"RectBottom": -835,
+"Sequence": 2,
+"ObjectStyle": "NSL=0;BCol=-1;BFol=-1;LCol=-1;LWth=-1;fontsz=0;bold=0;black=0;italic=0;ul=0;charset=0;pitch=0;HideIcon=0;DUID=94C2B94D;",
+"Instance_ID": 24179
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16579,
+"RectTop": -1198,
+"RectLeft": 814,
+"RectRight": 904,
+"RectBottom": -1243,
+"Sequence": 3,
+"ObjectStyle": "HideIcon=0;DUID=8E667982;",
+"Instance_ID": 24180
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16434,
+"RectTop": -1185,
+"RectLeft": 1036,
+"RectRight": 1206,
+"RectBottom": -1255,
+"Sequence": 4,
+"ObjectStyle": "NSL=0;BCol=-1;BFol=-1;LCol=-1;fontsz=0;bold=0;black=0;italic=0;ul=0;charset=0;pitch=0;LWth=0;DUID=912770E8;",
+"Instance_ID": 24181
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16561,
+"RectTop": -1198,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -1243,
+"Sequence": 5,
+"ObjectStyle": "HideIcon=0;DUID=E18D7186;",
+"Instance_ID": 24182
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16577,
+"RectTop": -981,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -1026,
+"Sequence": 6,
+"ObjectStyle": "HideIcon=0;DUID=3E95C36E;",
+"Instance_ID": 24183
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16575,
+"RectTop": -1093,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -1138,
+"Sequence": 7,
+"ObjectStyle": "NSL=0;BCol=-1;BFol=-1;LCol=-1;LWth=-1;fontsz=0;bold=0;black=0;italic=0;ul=0;charset=0;pitch=0;HideIcon=0;DUID=463772FD;",
+"Instance_ID": 24184
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16568,
+"RectTop": -1093,
+"RectLeft": 384,
+"RectRight": 474,
+"RectBottom": -1138,
+"Sequence": 8,
+"ObjectStyle": "NSL=0;BCol=-1;BFol=-1;LCol=-1;LWth=-1;fontsz=0;bold=0;black=0;italic=0;ul=0;charset=0;pitch=0;HideIcon=0;DUID=294CA721;",
+"Instance_ID": 24185
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16571,
+"RectTop": -803,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -848,
+"Sequence": 9,
+"ObjectStyle": "HideIcon=0;LWth=0;DUID=380840D7;",
+"Instance_ID": 24186
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16578,
+"RectTop": -636,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -681,
+"Sequence": 10,
+"ObjectStyle": "HideIcon=0;DUID=72550B88;",
+"Instance_ID": 24187
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16381,
+"RectTop": -257,
+"RectLeft": 1004,
+"RectRight": 1243,
+"RectBottom": -349,
+"Sequence": 11,
+"ObjectStyle": "NSL=0;BCol=-1;BFol=-1;LCol=-1;fontsz=0;bold=0;black=0;italic=0;ul=0;charset=0;pitch=0;LWth=2;DUID=1237CE6F;",
+"Instance_ID": 24188
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16567,
+"RectTop": -281,
+"RectLeft": 814,
+"RectRight": 904,
+"RectBottom": -326,
+"Sequence": 12,
+"ObjectStyle": "HideIcon=0;LWth=0;DUID=AA6E699C;",
+"Instance_ID": 24189
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16565,
+"RectTop": -384,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -429,
+"Sequence": 13,
+"ObjectStyle": "HideIcon=0;DUID=82F65443;",
+"Instance_ID": 24190
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16573,
+"RectTop": -552,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -597,
+"Sequence": 14,
+"ObjectStyle": "HideIcon=0;DUID=6CE98A05;",
+"Instance_ID": 24191
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16569,
+"RectTop": -280,
+"RectLeft": 384,
+"RectRight": 474,
+"RectBottom": -325,
+"Sequence": 15,
+"ObjectStyle": "HideIcon=0;DUID=EC89EDC5;",
+"Instance_ID": 24192
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16570,
+"RectTop": -216,
+"RectLeft": 599,
+"RectRight": 689,
+"RectBottom": -261,
+"Sequence": 16,
+"ObjectStyle": "HideIcon=0;DUID=7B906A98;",
+"Instance_ID": 24193
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16562,
+"RectTop": -132,
+"RectLeft": 599,
+"RectRight": 689,
+"RectBottom": -177,
+"Sequence": 17,
+"ObjectStyle": "HideIcon=0;DUID=89DEE074;",
+"Instance_ID": 24194
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16576,
+"RectTop": -468,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -513,
+"Sequence": 18,
+"ObjectStyle": "HideIcon=0;DUID=32C4FAEB;",
+"Instance_ID": 24195
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16566,
+"RectTop": -892,
+"RectLeft": 600,
+"RectRight": 690,
+"RectBottom": -937,
+"Sequence": 19,
+"ObjectStyle": "HideIcon=0;DUID=7A7FA322;",
+"Instance_ID": 24196
+},
+{
+"Diagram_ID": 2513,
+"Object_ID": 16563,
+"RectTop": -300,
+"RectLeft": 599,
+"RectRight": 689,
+"RectBottom": -345,
+"Sequence": 20,
+"ObjectStyle": "HideIcon=0;DUID=6241CDEA;",
+"Instance_ID": 24197
+}
+],
+"t_diagramlinks": [
+{
+"DiagramID": 2513,
+"ConnectorID": 13354,
+"Geometry": "SX=2;SY=12;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=B6AE21DE;SOID=64654011;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-812;524:-812;",
+"Instance_ID": 22197
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13358,
+"Geometry": "SX=45;SY=1;EX=0;EY=0;EDGE=2;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=3F3D07A7;SOID=E3F424E5;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "764:-736;764:-1220;",
+"Instance_ID": 22198
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13374,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=2;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=3F3D07A7;SOID=E92A1E4C;Color=-1;LWidth=0;",
+"Hidden": 0,
+"Path": null,
+"Instance_ID": 22199
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13347,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=2;$LLB=;LLT=;LMT=;LMB=CX=30:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=4E1CBFD6;SOID=3F3D07A7;Color=-1;LWidth=0;",
+"Hidden": 0,
+"Path": null,
+"Instance_ID": 22200
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13567,
+"Geometry": "EDGE=3;$LLB=;LLT=;LMT=;LMB=CX=48:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=CX=64:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRB=CX=55:CY=26:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=4E1CBFD6;SOID=ACBAC7D8;Color=-1;LWidth=0;",
+"Hidden": 0,
+"Path": null,
+"Instance_ID": 22201
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13353,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=B6EBA278;SOID=743E26B7;Color=-1;LWidth=0;",
+"Hidden": 0,
+"Path": null,
+"Instance_ID": 22202
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13367,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=2;$LLB=;LLT=;LMT=;LMB=CX=30:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=ACBAC7D8;SOID=757E52FA;Color=-1;LWidth=0;",
+"Hidden": 0,
+"Path": null,
+"Instance_ID": 22203
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13561,
+"Geometry": "EDGE=1;$LLB=CX=54:CY=26:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LLT=;LMT=;LMB=CX=48:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=ACBAC7D8;SOID=4E1CBFD6;Color=-1;LWidth=0;",
+"Hidden": 0,
+"Path": null,
+"Instance_ID": 22204
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13349,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=2;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=757E52FA;SOID=752C3197;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "764:-658;764:-303;",
+"Instance_ID": 22205
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13359,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=2;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=757E52FA;SOID=64654011;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "764:-824;764:-303;",
+"Instance_ID": 22206
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13375,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=2;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=757E52FA;SOID=E92A1E4C;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "764:-1219;764:-303;",
+"Instance_ID": 22207
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13350,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=A6BB4F52;SOID=752C3197;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-658;524:-302;",
+"Instance_ID": 22208
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13351,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=A6BB4F52;SOID=A3722AB0;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-1002;524:-302;",
+"Instance_ID": 22209
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13352,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=A6BB4F52;SOID=480B8204;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-490;524:-302;",
+"Instance_ID": 22210
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13357,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=A6BB4F52;SOID=82668EA1;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-574;524:-302;",
+"Instance_ID": 22211
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13360,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=A6BB4F52;SOID=64654011;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-824;524:-302;",
+"Instance_ID": 22212
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13361,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=A6BB4F52;SOID=7D66A779;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-238;524:-302;",
+"Instance_ID": 22213
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13369,
+"Geometry": "SX=0;SY=0;EX=0;EY=1;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=A6BB4F52;SOID=1C6B0442;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-913;524:-302;",
+"Instance_ID": 22214
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13370,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=A6BB4F52;SOID=931FBD22;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-406;524:-302;",
+"Instance_ID": 22215
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13372,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=4;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=A6BB4F52;SOID=70A63B43;Color=-1;LWidth=0;TREE=H;",
+"Hidden": 0,
+"Path": "524:-322;524:-302;",
+"Instance_ID": 22216
+},
+{
+"DiagramID": 2513,
+"ConnectorID": 13373,
+"Geometry": "SX=0;SY=0;EX=0;EY=0;EDGE=3;$LLB=;LLT=;LMT=;LMB=CX=102:CY=13:OX=0:OY=0:HDN=0:BLD=0:ITA=0:UND=0:CLR=-1:ALN=1:DIR=0:ROT=0;LRT=;LRB=;IRHS=;ILHS=;",
+"Style": "Mode=3;EOID=7D66A779;SOID=0EC3B92E;Color=-1;LWidth=0;",
+"Hidden": 0,
+"Path": null,
+"Instance_ID": 22217
+}
+]
+}

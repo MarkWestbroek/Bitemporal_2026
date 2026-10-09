@@ -273,6 +273,15 @@ func NewRouter() *gin.Engine {
 	// Werkruimte (tabs, open mappen) per gebruiker per project: van jou, laatste schrijver wint.
 	router.GET("/api/studio/projecten/:id/werkruimte", ingelogd, handlers.MaakStudioWerkruimteOphalenHandler())
 	router.PUT("/api/studio/projecten/:id/werkruimte", ingelogd, handlers.MaakStudioWerkruimteOpslaanHandler())
+	// EA-import via de server (handlers/studio_ea_import_handler.go): de Studio bedient de
+	// node-sidecar die een .qea uit een git-checkout in het operatielog zet. Uit zolang
+	// STUDIO_EA_IMPORT_MAPPEN leeg is.
+	router.GET("/api/studio/ea-import/repos", ingelogd, handlers.MaakStudioEaImportReposHandler())
+	router.GET("/api/studio/ea-import/repos/:repo/bestanden", ingelogd, handlers.MaakStudioEaImportBestandenHandler())
+	router.GET("/api/studio/ea-import/repos/:repo/pakketten", ingelogd, handlers.MaakStudioEaImportPakkettenHandler())
+	router.POST("/api/studio/projecten/:id/ea-import", editor, handlers.MaakStudioEaImportStartHandler())
+	router.GET("/api/studio/projecten/:id/ea-import", ingelogd, handlers.MaakStudioEaImportTaakHandler())
+	router.GET("/api/studio/projecten/:id/ea-import/:taak", ingelogd, handlers.MaakStudioEaImportTaakHandler())
 	// Instellingen van de instantie voor de Studio (admin via env, bv. STUDIO_SYNC_POLL_MS).
 	router.GET("/api/studio/instellingen", handlers.MaakStudioInstellingenHandler())
 

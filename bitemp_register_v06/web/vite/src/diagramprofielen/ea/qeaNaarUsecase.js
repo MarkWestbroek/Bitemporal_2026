@@ -41,9 +41,9 @@ const OBJECTTYPE_NAAR_ELEMENTTYPE = {
 export function qeaNaarUsecase(bron, { packageId, diagramTypeId = USECASE_DIAGRAMTYPE, schaal = EA_SCHAAL }) {
   const pakketIds = new Set(deelboomPakketten(bron.t_package || [], packageId));
   const verslag = maakVerslag();
-  const h = maakHulptabellen(bron, schaal);
-
   const ucDiagrammen = (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && d.Diagram_Type === "Use Case");
+  const h = maakHulptabellen(bron, schaal, { diagramVoorkeur: ucDiagrammen.map((d) => d.Diagram_ID) });
+
   for (const d of (bron.t_diagram || []).filter((d) => pakketIds.has(d.Package_ID) && d.Diagram_Type !== "Use Case")) {
     sla(verslag, `diagram ${d.Diagram_Type}`);
   }
@@ -68,6 +68,7 @@ export function qeaNaarUsecase(bron, { packageId, diagramTypeId = USECASE_DIAGRA
     idVanObject.set(o.Object_ID, id);
     const data = {
       ...extraData(h, o.ea_guid, o.Object_ID),
+      eaPakket: o.Package_ID,
       ...(o.Alias ? { alias: o.Alias } : {}),
       ...(o.Note && elementType !== "notitie" ? { toelichting: o.Note } : {}),
       ...(elementType === "klasse" && o.Object_Type !== "Class" ? { eaType: o.Object_Type } : {}),

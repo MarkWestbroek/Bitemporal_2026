@@ -135,8 +135,19 @@ export function nodeRechthoek(node) {
  * @param {{sourceX: number, sourceY: number, targetX: number, targetY: number,
  *          sourcePosition: string, targetPosition: string}} args.vast
  */
-export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel, vast, bronRicht = null, doelRicht = null, bronOmtrek = "rechthoek", doelOmtrek = "rechthoek" }) {
+export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel, vast, bronRicht = null, doelRicht = null, bronOmtrek = "rechthoek", doelOmtrek = "rechthoek", orthogonaal = false }) {
   if ((!zwevendBron && !zwevendDoel) || !bronRect || !doelRect) return vast;
+  // Hoekige lijn zonder knikken, beide uiteinden vrij: zo recht mogelijk, zoals
+  // EA's Auto Routing (zie orthogonaleUiteinden). Met een vaste handle aan één
+  // kant, of met knikken, geldt het gewone mikken hieronder.
+  if (orthogonaal && zwevendBron && zwevendDoel && !bronRicht && !doelRicht) {
+    // Ook voor ronde en ruitvormige vormen (BPMN-events, gateways): eerst op de
+    // omhullende rechthoek, dan haaks naar binnen tot de echte omtrek.
+    const o = orthogonaleUiteinden(bronRect, doelRect);
+    const s = naarOmtrek(bronRect, { x: o.sourceX, y: o.sourceY }, o.sourcePosition, bronOmtrek);
+    const t = naarOmtrek(doelRect, { x: o.targetX, y: o.targetY }, o.targetPosition, doelOmtrek);
+    return { ...vast, ...o, sourceX: s.x, sourceY: s.y, targetX: t.x, targetY: t.y };
+  }
   const bronMid = middelpunt(bronRect);
   const doelMid = middelpunt(doelRect);
   const uit = { ...vast };
@@ -156,6 +167,84 @@ export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel
 }
 
 /**
+ * Uiteinden voor een hoekige lijn "zo recht als het kan" (EA Auto Routing,
+ * Mark 10-10): overlappen de dozen in x, dan één verticale lijn midden in de
+ * overlap tussen de naar elkaar toe gekeerde zijden; overlappen ze in y, dan
+ * één horizontale; anders een L — uit de zijde waar de grootste afstand zit,
+ * naar het midden van de tegenoverliggende zijde van de ander, zodat de
+ * hoekige router (smoothstep) precies één hoek maakt.
+ * @param {Rechthoek} bron
+ * @param {Rechthoek} doel
+ * @param {number} [minOverlap] - minimale overlap (px) voor een rechte lijn
+ * @returns {{sourceX:number, sourceY:number, sourcePosition:string, targetX:number, targetY:number, targetPosition:string}}
+ */
+export function orthogonaleUiteinden(bron, doel, minOverlap = 12) {
+  const bl = bron.x, br = bron.x + bron.width, bb = bron.y, bo = bron.y + bron.height;
+  const dl = doel.x, dr = doel.x + doel.width, db = doel.y, dO = doel.y + doel.height;
+  const overlapX = Math.min(br, dr) - Math.max(bl, dl);
+  const overlapY = Math.min(bo, dO) - Math.max(bb, db);
+  if (overlapX >= minOverlap && overlapY < 0) {
+    // Boven elkaar: rechte verticale lijn.
+    const x = (Math.max(bl, dl) + Math.min(br, dr)) / 2;
+    return bo <= db
+      ? { sourceX: x, sourceY: bo, sourcePosition: "bottom", targetX: x, targetY: db, targetPosition: "top" }
+      : { sourceX: x, sourceY: bb, sourcePosition: "top", targetX: x, targetY: dO, targetPosition: "bottom" };
+  }
+  if (overlapY >= minOverlap && overlapX < 0) {
+    // Naast elkaar: rechte horizontale lijn.
+    const y = (Math.max(bb, db) + Math.min(bo, dO)) / 2;
+    return br <= dl
+      ? { sourceX: br, sourceY: y, sourcePosition: "right", targetX: dl, targetY: y, targetPosition: "left" }
+      : { sourceX: bl, sourceY: y, sourcePosition: "left", targetX: dr, targetY: y, targetPosition: "right" };
+  }
+  // Diagonaal (of overlappend): één hoek. De langste afstand bepaalt de
+  // zijde waar de bron uitgaat; de doelzijde is de tegenovergestelde as.
+  const bm = { x: (bl + br) / 2, y: (bb + bo) / 2 };
+  const dm = { x: (dl + dr) / 2, y: (db + dO) / 2 };
+  const dx = dm.x - bm.x, dy = dm.y - bm.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    const uitRechts = dx >= 0;
+    return {
+      sourceX: uitRechts ? br : bl, sourceY: bm.y, sourcePosition: uitRechts ? "right" : "left",
+      targetX: dm.x, targetY: dy >= 0 ? db : dO, targetPosition: dy >= 0 ? "top" : "bottom",
+    };
+  }
+  const uitOnder = dy >= 0;
+  return {
+    sourceX: bm.x, sourceY: uitOnder ? bo : bb, sourcePosition: uitOnder ? "bottom" : "top",
+    targetX: dx >= 0 ? dl : dr, targetY: dm.y, targetPosition: dx >= 0 ? "left" : "right",
+  };
+}
+
+/**
+ * Schuif een punt op de omhullende rechthoek haaks naar binnen tot de echte
+ * omtrek (ellips of ruit); een rechthoek blijft zoals hij is. `zijde` is de
+ * zijde van de rechthoek waar het punt op ligt. Buiten het bereik van de vorm
+ * (bv. een y boven de ellips) valt het punt terug op het midden van die zijde.
+ * @param {Rechthoek} rect
+ * @param {Punt} punt
+ * @param {string} zijde - "left" | "right" | "top" | "bottom"
+ * @param {string} [omtrek]
+ * @returns {Punt}
+ */
+export function naarOmtrek(rect, punt, zijde, omtrek = "rechthoek") {
+  if (omtrek !== "ellips" && omtrek !== "ruit") return { x: punt.x, y: punt.y };
+  const a = rect.width / 2, b = rect.height / 2;
+  const cx = rect.x + a, cy = rect.y + b;
+  if (!a || !b) return { x: punt.x, y: punt.y };
+  if (zijde === "left" || zijde === "right") {
+    const t = Math.min(1, Math.abs(punt.y - cy) / b);
+    const breedte = omtrek === "ellips" ? a * Math.sqrt(1 - t * t) : a * (1 - t);
+    const y = t >= 1 ? cy : punt.y;
+    return { x: zijde === "left" ? cx - (t >= 1 ? a : breedte) : cx + (t >= 1 ? a : breedte), y };
+  }
+  const t = Math.min(1, Math.abs(punt.x - cx) / a);
+  const hoogte = omtrek === "ellips" ? b * Math.sqrt(1 - t * t) : b * (1 - t);
+  const x = t >= 1 ? cx : punt.x;
+  return { x, y: zijde === "top" ? cy - (t >= 1 ? b : hoogte) : cy + (t >= 1 ? b : hoogte) };
+}
+
+/**
  * Met knikpunten (data.knikken) mikt een zwevend uiteinde op het eerste/laatste
  * knikpunt in plaats van op het middelpunt van de andere doos — anders springt
  * de lijn eerst schuin naar de knik (EA-import, 2026-10-08). Ligt dat
@@ -165,9 +254,21 @@ export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel
  * @param {Punt} punt
  */
 export function richtpuntOfAanhechtpunt(rect, punt, tolerantie = 1.5, omtrek = "rechthoek") {
-  // Ruit/ellips: een punt op de omhullende rechthoek ligt niet op de vorm;
-  // neem het snijpunt van de straal naar dat punt met de echte omtrek.
-  if (omtrek === "ruit" || omtrek === "ellips") return aanhechtpunt(rect, punt, 8, omtrek);
+  if (omtrek === "ruit" || omtrek === "ellips") {
+    // Ligt het richtpunt recht naast of boven/onder de vorm, dan haaks
+    // aanhechten (het eerste stuk van een hoekige lijn blijft recht); anders
+    // het snijpunt van de straal naar dat punt met de echte omtrek.
+    const links = rect.x, rechts = rect.x + rect.width, boven = rect.y, onder = rect.y + rect.height;
+    if (punt.y >= boven && punt.y <= onder && (punt.x < links || punt.x > rechts)) {
+      const zijde = punt.x < links ? "left" : "right";
+      return { ...naarOmtrek(rect, { x: zijde === "left" ? links : rechts, y: punt.y }, zijde, omtrek), zijde };
+    }
+    if (punt.x >= links && punt.x <= rechts && (punt.y < boven || punt.y > onder)) {
+      const zijde = punt.y < boven ? "top" : "bottom";
+      return { ...naarOmtrek(rect, { x: punt.x, y: zijde === "top" ? boven : onder }, zijde, omtrek), zijde };
+    }
+    return aanhechtpunt(rect, punt, 8, omtrek);
+  }
   const links = rect.x, rechts = rect.x + rect.width, boven = rect.y, onder = rect.y + rect.height;
   const binnenX = punt.x >= links - tolerantie && punt.x <= rechts + tolerantie;
   const binnenY = punt.y >= boven - tolerantie && punt.y <= onder + tolerantie;

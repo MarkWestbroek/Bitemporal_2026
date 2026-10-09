@@ -562,3 +562,29 @@ test("vlak-handle (verbind-modus) is geen zijde: normaliseert naar null, loose-m
   // opgeslagen handle draagt dan tóch de doel-soort.
   assert.equal(normaliseerHandle("source-left", "target"), "target-left");
 });
+
+test("diagram.lijnen wint van element.data: knikken, vorm, handles en labelposities per diagram", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "rel", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: { vorm: "recht", knikken: [{ x: 9, y: 9 }], sourceHandle: "source-top" } },
+  };
+  const nodes = [
+    { elementId: "A", position: { x: 0, y: 0 } },
+    { elementId: "B", position: { x: 400, y: 0 } },
+  ];
+  const zonder = materialiseerConnectoren(elements, { nodes, gedaanteOverrides: { r1: "lijn" } }, elementTypesById).edges[0];
+  assert.equal(zonder.data.presentatie.vorm, "recht");
+  assert.deepEqual(zonder.data.knikken, [{ x: 9, y: 9 }]);
+  assert.equal(zonder.sourceHandle, "source-top");
+  const met = materialiseerConnectoren(
+    elements,
+    { nodes, gedaanteOverrides: { r1: "lijn" }, lijnen: { r1: { vorm: "hoekig", knikken: [], sourceHandle: null, labelOffsets: { midden: { x: 3, y: 4 } } } } },
+    elementTypesById
+  ).edges[0];
+  assert.equal(met.data.presentatie.vorm, "hoekig", "vorm van het diagram");
+  assert.equal(met.data.knikken, null, "lege knikken op het diagram = geen knikken");
+  assert.notEqual(met.sourceHandle, "source-top", "handle op het diagram op automatisch");
+  const label = met.data.presentatie.labels.find((l) => l.zijde === "midden");
+  assert.deepEqual(label.offset, { x: 3, y: 4 });
+});

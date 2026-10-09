@@ -232,3 +232,22 @@ test("hide-list is per diagram en kan zonder leeg veld worden hersteld", () => {
   store.getState().toonVerborgenConnectoren("d1");
   assert.equal("verborgenConnectoren" in store.getState().diagrams.d1, false);
 });
+
+test("zetLijnen/zetLijn: lijndata per diagram; undefined haalt een sleutel weg, lege lijn verdwijnt; elementPatches in dezelfde stap", () => {
+  const store = createDiagramStore();
+  const st = () => store.getState();
+  st().addDiagram({ id: "d1", naam: "D1" });
+  st().addElement({ id: "A", naam: "A", elementType: "klasse", compartimenten: [], data: {} });
+  st().addElement({ id: "B", naam: "B", elementType: "klasse", compartimenten: [], data: {} });
+  st().addElement({ id: "r", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: { vorm: "recht" } });
+  st().zetLijn("d1", "r", { knikken: [{ x: 1, y: 2 }], vorm: "hoekig" });
+  assert.deepEqual(st().diagrams.d1.lijnen.r, { knikken: [{ x: 1, y: 2 }], vorm: "hoekig" });
+  st().zetLijn("d1", "r", { vorm: undefined, sourceHandle: null });
+  assert.deepEqual(st().diagrams.d1.lijnen.r, { knikken: [{ x: 1, y: 2 }], sourceHandle: null });
+  st().zetLijnen("d1", { r: { knikken: undefined, sourceHandle: undefined } }, { r: { data: { vorm: null } } });
+  assert.equal(st().diagrams.d1.lijnen, undefined, "lege lijn en lege lijnen-map verdwijnen");
+  assert.equal(st().elements.r.data.vorm, null, "elementPatch in dezelfde stap");
+  st().zetLijn("d1", "r", { labelOffsets: { midden: { x: 1, y: 1 } } });
+  st().deleteElement("A");
+  assert.equal(st().diagrams.d1.lijnen, undefined, "lijndata van een verdwenen connector is opgeruimd");
+});
