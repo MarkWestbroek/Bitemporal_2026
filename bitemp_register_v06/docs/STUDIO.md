@@ -391,6 +391,14 @@ te wijzigen.
 | modelleren   | ERD                | preview  | `diagramcore` + `diagramprofielen/erd` (kraaienpoten; kardinaliteit per uiteinde, sleutel-compartiment) — **niet in de balk** |
 | modelleren   | SysML              | preview  | `diagramcore` + `diagramprofielen/sysml` (bdd, ibd met poorten op de rand, requirements + traceerrelaties) — **niet in de balk** |
 | modelleren   | CMMN               | preview  | `diagramcore` + `diagramprofielen/cmmn` (casusmodel; sentries op het rand-primitief) — **niet in de balk** |
+| modelleren   | Component & deployment | preview | `diagramcore` + `diagramprofielen/component-deployment` (UML 2: component, interface/lollipop, poort op de rand, artifact, node/device/execution environment; assembly, «deploy», «manifest») — **niet in de balk**; zie `docs/PROFIELEN-EA-AANVULLING.md` |
+| modelleren   | Object             | preview  | `diagramcore` + `diagramprofielen/object` (instanties naam : Klasse met slots, links; klasse via cross-profiel verwijzing) — **niet in de balk** |
+| modelleren   | Requirements       | preview  | `diagramcore` + `diagramprofielen/requirements` (EA-stijl: requirement/feature/issue/change, trace/derive/verify/refine, aggregatie) — **niet in de balk** |
+| modelleren   | Business (EP)      | preview  | `diagramcore` + `diagramprofielen/business` (Eriksson-Penker: proces-pijl, doel, resources, gebeurtenis; «input»/«output»/«control»/«supply») — **niet in de balk** |
+| modelleren   | XML Schema         | preview  | `diagramcore` + `diagramprofielen/xsd` (schema, complex-/simpleType, element, attribute, group, enumeration; extension/restriction) — **niet in de balk** |
+| modelleren   | WSDL               | preview  | `diagramcore` + `diagramprofielen/wsdl` (service, portType, binding, message, types) — **niet in de balk** |
+| modelleren   | Composite structure | preview | `diagramcore` + `diagramprofielen/composite-structure` (parts, poorten op de rand, connectoren; collaboraties, collaboration use + rolbinding) — **niet in de balk** |
+| modelleren   | Communication      | preview  | `diagramcore` + `diagramprofielen/communication` (objecten, links met genummerde berichten; sequence-zus via transformatie) — **niet in de balk** |
 | modelleren   | DMN-beslissingen   | actief   | `dmn/DmnTableEditor` + dmn-js DRD + ModelPicker (heette "DMN-tabellen") |
 | modelleren   | DMN DRD            | preview  | `diagramcore` + `diagramprofielen/dmn-drd` — **niet in de balk** (één DMN-ingang; via Ga naar) |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |

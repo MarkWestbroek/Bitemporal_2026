@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_bestelling" name="Bestelling" targetNamespace="http://omnium.example/bpmn">
+  <bpmn:collaboration id="Collab_1">
+    <bpmn:participant id="Pool_klant" name="Klant" processRef="Proces_klant" />
+    <bpmn:participant id="Pool_winkel" name="Webwinkel" processRef="Proces_winkel" />
+    <bpmn:messageFlow id="MF_bestelling" name="bestelling" sourceRef="Taak_bestellen" targetRef="Start_ontvangen" />
+    <bpmn:textAnnotation id="Ann_1">
+      <bpmn:text>Betaling via iDEAL</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Assoc_1" sourceRef="Ann_1" targetRef="Taak_betalen" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proces_klant" isExecutable="false">
+    <bpmn:startEvent id="Start_klant" name="Wil bestellen" />
+    <bpmn:task id="Taak_bestellen" name="Bestelling plaatsen" />
+    <bpmn:userTask id="Taak_betalen" name="Betalen" />
+    <bpmn:endEvent id="Eind_klant" name="Besteld" />
+    <bpmn:sequenceFlow id="SF_k1" sourceRef="Start_klant" targetRef="Taak_bestellen" />
+    <bpmn:sequenceFlow id="SF_k2" sourceRef="Taak_bestellen" targetRef="Taak_betalen" />
+    <bpmn:sequenceFlow id="SF_k3" sourceRef="Taak_betalen" targetRef="Eind_klant" />
+  </bpmn:process>
+  <bpmn:process id="Proces_winkel" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_verkoop" name="Verkoop">
+        <bpmn:flowNodeRef>Start_ontvangen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_voorraad</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Taak_afwijzen</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eind_afgewezen</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_magazijn" name="Magazijn">
+        <bpmn:flowNodeRef>Sub_verzenden</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eind_verzonden</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_ontvangen" name="Bestelling ontvangen">
+      <bpmn:messageEventDefinition id="MED_1" />
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gateway_voorraad" name="Op voorraad?" default="SF_w3" />
+    <bpmn:serviceTask id="Taak_afwijzen" name="Afwijzen" />
+    <bpmn:subProcess id="Sub_verzenden" name="Verzenden">
+      <bpmn:startEvent id="Start_sub" />
+      <bpmn:task id="Taak_inpakken" name="Inpakken" />
+      <bpmn:endEvent id="Eind_sub" />
+      <bpmn:sequenceFlow id="SF_s1" sourceRef="Start_sub" targetRef="Taak_inpakken" />
+      <bpmn:sequenceFlow id="SF_s2" sourceRef="Taak_inpakken" targetRef="Eind_sub" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="Boundary_timer" name="Na 2 dagen" attachedToRef="Sub_verzenden" cancelActivity="false">
+      <bpmn:timerEventDefinition id="TED_1" />
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="Eind_afgewezen" name="Afgewezen" />
+    <bpmn:endEvent id="Eind_verzonden" name="Verzonden" />
+    <bpmn:dataObjectReference id="Data_order" name="Order" dataObjectRef="DO_order" />
+    <bpmn:dataObject id="DO_order" isCollection="true" />
+    <bpmn:dataStoreReference id="Store_hr" name="Handelsregister" dataStoreRef="DS_hr" />
+    <bpmn:eventBasedGateway id="Gateway_wachten" name="Wachten op klant" />
+    <bpmn:intermediateThrowEvent id="Event_escalatie" name="Escalatie">
+      <bpmn:escalationEventDefinition id="EED_1" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SF_w1" sourceRef="Start_ontvangen" targetRef="Gateway_voorraad" />
+    <bpmn:sequenceFlow id="SF_w2" name="nee" sourceRef="Gateway_voorraad" targetRef="Taak_afwijzen">
+      <bpmn:conditionExpression>voorraad = 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SF_w3" name="ja" sourceRef="Gateway_voorraad" targetRef="Sub_verzenden" />
+    <bpmn:sequenceFlow id="SF_w4" sourceRef="Taak_afwijzen" targetRef="Eind_afgewezen" />
+    <bpmn:sequenceFlow id="SF_w5" sourceRef="Sub_verzenden" targetRef="Eind_verzonden" />
+    <bpmn:task id="Taak_registreren" name="Order registreren">
+      <bpmn:dataOutputAssociation id="DOA_1">
+        <bpmn:targetRef>Data_order</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="SF_w6" sourceRef="Taak_registreren" targetRef="Eind_verzonden" />
+  </bpmn:process>
+  <bpmn:dataStore id="DS_hr" name="Handelsregister" />
+  <bpmndi:BPMNDiagram id="Diagram_1" name="Bestelling">
+    <bpmndi:BPMNPlane id="Plane_1" bpmnElement="Collab_1">
+      <bpmndi:BPMNShape id="Pool_klant_di" bpmnElement="Pool_klant" isHorizontal="true"><dc:Bounds x="100" y="60" width="700" height="160" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_klant_di" bpmnElement="Start_klant"><dc:Bounds x="160" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Taak_bestellen_di" bpmnElement="Taak_bestellen"><dc:Bounds x="260" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Taak_betalen_di" bpmnElement="Taak_betalen"><dc:Bounds x="420" y="100" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eind_klant_di" bpmnElement="Eind_klant"><dc:Bounds x="600" y="122" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Ann_1_di" bpmnElement="Ann_1"><dc:Bounds x="420" y="20" width="140" height="40" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Pool_winkel_di" bpmnElement="Pool_winkel" isHorizontal="true"><dc:Bounds x="100" y="300" width="700" height="300" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_verkoop_di" bpmnElement="Lane_verkoop" isHorizontal="true"><dc:Bounds x="130" y="300" width="670" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_magazijn_di" bpmnElement="Lane_magazijn" isHorizontal="true"><dc:Bounds x="130" y="450" width="670" height="150" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_ontvangen_di" bpmnElement="Start_ontvangen"><dc:Bounds x="160" y="357" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_voorraad_di" bpmnElement="Gateway_voorraad" isMarkerVisible="true"><dc:Bounds x="250" y="350" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Taak_afwijzen_di" bpmnElement="Taak_afwijzen"><dc:Bounds x="380" y="335" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eind_afgewezen_di" bpmnElement="Eind_afgewezen"><dc:Bounds x="560" y="357" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Sub_verzenden_di" bpmnElement="Sub_verzenden" isExpanded="false"><dc:Bounds x="380" y="485" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Boundary_timer_di" bpmnElement="Boundary_timer"><dc:Bounds x="442" y="547" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eind_verzonden_di" bpmnElement="Eind_verzonden"><dc:Bounds x="620" y="507" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Data_order_di" bpmnElement="Data_order"><dc:Bounds x="700" y="470" width="36" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Taak_registreren_di" bpmnElement="Taak_registreren"><dc:Bounds x="620" y="420" width="100" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Store_hr_di" bpmnElement="Store_hr"><dc:Bounds x="740" y="340" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_wachten_di" bpmnElement="Gateway_wachten"><dc:Bounds x="500" y="350" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_escalatie_di" bpmnElement="Event_escalatie"><dc:Bounds x="700" y="507" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_sub_di" bpmnElement="Start_sub"><dc:Bounds x="900" y="100" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Taak_inpakken_di" bpmnElement="Taak_inpakken"><dc:Bounds x="980" y="78" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eind_sub_di" bpmnElement="Eind_sub"><dc:Bounds x="1120" y="100" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SF_w2_di" bpmnElement="SF_w2"><di:waypoint x="300" y="375" /><di:waypoint x="340" y="375" /><di:waypoint x="340" y="360" /><di:waypoint x="380" y="360" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SF_w3_di" bpmnElement="SF_w3"><di:waypoint x="275" y="400" /><di:waypoint x="275" y="525" /><di:waypoint x="380" y="525" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MF_bestelling_di" bpmnElement="MF_bestelling"><di:waypoint x="310" y="180" /><di:waypoint x="310" y="300" /><di:waypoint x="178" y="300" /><di:waypoint x="178" y="357" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

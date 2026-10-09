@@ -349,3 +349,79 @@ export const IconChevronRight = (p) => (
     <path d="m9 18 6-6-6-6" />
   </svg>
 );
+
+// ── EA-aanvulling-profielen (2026-10-09): component/deployment, object,
+// requirements, business (EP), XSD, WSDL, composite structure, communication ──
+
+/** Component & deployment: component-doos met stekkertjes op een kubus. */
+export const IconComponent05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M4 9h11v11H4z" />
+    <path d="M4 9l3-3h11v11l-3 3M15 9l3-3" />
+    <path d="M2 12h4M2 16h4" strokeWidth="2.2" />
+  </svg>
+);
+
+/** Object: doos met onderstreepte instantienaam en slots. */
+export const IconObject05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="4" y="4" width="16" height="16" rx="1" />
+    <path d="M7 8.5h10" strokeWidth="2.2" />
+    <path d="M7 13h7M7 16.5h5" />
+  </svg>
+);
+
+/** Requirements: doos met gevulde kop en vinkregels. */
+export const IconRequirements05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="4" y="4" width="16" height="16" rx="1" />
+    <path d="M4 8h16" />
+    <path d="M7 12.5l1.5 1.5 3-3M7 17l1.5 1.5 3-3M13.5 13h3.5M13.5 17.5h3.5" />
+  </svg>
+);
+
+/** Business (Eriksson-Penker): de proces-pijl. */
+export const IconBusiness05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M3 6h12l6 6-6 6H3l4-6z" />
+    <circle cx="10" cy="12" r="1.6" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+/** XSD: document met <>. */
+export const IconXsd05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M6 3h8l5 5v13H6z" />
+    <path d="M14 3v5h5" />
+    <path d="M10 12l-2.5 2.5L10 17M14 12l2.5 2.5L14 17" />
+  </svg>
+);
+
+/** WSDL: wolk met stekker. */
+export const IconWsdl05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6.6A3.7 3.7 0 0 1 17 18z" />
+    <path d="M9.5 13h5v3h-5z" />
+  </svg>
+);
+
+/** Composite structure: doos met part en poort op de rand. */
+export const IconCompositeStructure05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="4" width="18" height="16" rx="1" />
+    <rect x="8" y="9" width="8" height="6" />
+    <rect x="1.5" y="10.5" width="3" height="3" fill="currentColor" stroke="none" />
+    <path d="M4.5 12H8" />
+  </svg>
+);
+
+/** Communication: drie objecten in een graaf met een genummerd bericht. */
+export const IconCommunication05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="4" width="7" height="5" rx="1" />
+    <rect x="14" y="4" width="7" height="5" rx="1" />
+    <rect x="8.5" y="15" width="7" height="5" rx="1" />
+    <path d="M10 6.5h4M12 9l-1 6" />
+    <path d="M12 2.5l0.5 0 0 1" strokeWidth="1" />
+  </svg>
+);
