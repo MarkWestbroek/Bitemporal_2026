@@ -42,6 +42,8 @@ block-beta
   medewerker --> objecten
 ```
 
+![Lagen van de CGV (gerenderd uit het Mermaid-blok hierboven, voor viewers zonder block-beta)](cgv-lagen.svg)
+
 # Actoren
 De belangrijkste actoren van het use case model zijn Klant en Medewerker. Echter we onderscheiden meer specifieke klanten en medewerkers. Klanten kunnen bijv. inwoners of bedrijven zijn, en medewerkers kunnen bij de gemeente werken of bij de regie-organisatie. Medewerkers kunnen ook nog specifieker worden uitgesplitst naar bijv. beheerders en zaakbehandels. Bij iedere actor kunnen verschillende use cases worden gedefinieerd.
 
