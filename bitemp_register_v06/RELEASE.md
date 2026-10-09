@@ -8,6 +8,36 @@
 
 ---
 
+## Sparx EA ↔ Omnium: api 0.13.0 / studio 0.16.0 (2026-10-10)
+
+Backend (minor, niet brekend; geen databasegevolg):
+
+- **EA-import via de server** (`handlers/studio_ea_import_handler.go`): de Studio kiest een
+  git-repo en een `.qea` die de server zelf vindt, plus pakket en doelmap; de api start de
+  node-sidecar (`web/vite/scripts/importeer-qea.mjs`, dezelfde EA-lezers als de browser) met een
+  JWT van de aanvrager. De sidecar schrijft operaties naar het projectlog en zet daarna zelf een
+  snapshot. Routes: `GET /api/studio/ea-import/repos`, `…/repos/:repo/bestanden`,
+  `…/repos/:repo/pakketten?bestand=`, `POST /api/studio/projecten/:id/ea-import`,
+  `GET …/ea-import[/:taak]` (taken in geheugen). Inrichting met `STUDIO_EA_IMPORT_MAPPEN`
+  (zonder: **501**, dus uit op app en pf), `_DIR`, `_NODE`, `_API`, `_PULL`; zie
+  `docs/API_REFERENCE.md` en `.env.example`. Vereist node op de host of in de container.
+- **Projectinhoud tot 100 MB** (`studioProjectInhoudMax`, was 20 MB): de Zandbak MW als werkbestand
+  is al 19,5 MB. Let op: Caddy en nginx op de VPS laten requests tot **20 MB** door, dus op app en
+  pf blijft 20 MB de feitelijke grens tot die mee omhoog gaan.
+- CORS staat ook de worktree-dev-poorten 5176–5179 toe.
+
+Frontend 0.16.0: Sparx EA-import uit `.qea` (merge op GUID met review, lijnen per diagram,
+sequence), XMI 2.1-export, acht nieuwe profielen en BPMN/DMN op EA-niveau (ook native BPMN/DMN-XML),
+overerving en abstracte elementtypen in het M3, profielstores in IndexedDB, documenten uit
+sjablonen, ArchiMate-blokken, verplaatsbare dialogen en canvas-fixes. Zie
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+
+Uitrol: images `bitemp-go-api:0.13.0` en `bitemp-viz-frontend:0.16.0`; render-svc 0.1.0
+ongewijzigd. Na de uitrol laden bestaande gebruikers hun lokale modellen één keer over naar
+IndexedDB (automatisch).
+
+---
+
 ## Snapshot-grens: studio 0.15.2 (2026-10-08)
 
 Alleen frontend (patch). De opslag-aanroep stuurde `tot_volgnummer` niet mee: de snapshot-grens

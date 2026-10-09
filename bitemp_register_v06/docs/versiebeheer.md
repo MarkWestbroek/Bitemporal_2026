@@ -61,14 +61,16 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.15.2`**
-  (2026-10-08: patch — snapshot-grens reist mee), na **`studio/v0.15.1`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.16.0`**
+  (2026-10-10: Sparx EA ↔ Omnium, acht nieuwe profielen, M3-overerving, documenten uit sjablonen),
+  na **`studio/v0.15.2`** (2026-10-08: patch — snapshot-grens reist mee), na **`studio/v0.15.1`**
   (2026-10-08: patch — boomvolgorde synct en overleeft de snapshot) en **`studio/v0.15.0`**
   (2026-10-08: live samenwerken — projectsync stap 2 — en canvas-bediening vervolg). Daarvoor
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.12.0`** (2026-10-08: operatielog, SSE-kanaal, compactie, presence en
+- Backend: **`api/v0.13.0`** (2026-10-10: EA-import via de server — node-sidecar uit git —
+  en projectinhoud tot 100 MB; geen databasegevolg). Daarvoor **`api/v0.12.0`** (2026-10-08: operatielog, SSE-kanaal, compactie, presence en
   werkruimte voor Studio-projecten; tabellen `studio_project_ops`, `studio_werkruimtes`; geen
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
