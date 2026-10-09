@@ -62,7 +62,9 @@ const elementTypes = [
       label.replace(/^(Business|Applicatie-?|Technology-?|Data-|Systeem)\s?/i, "").slice(0, 12) ||
       label.slice(0, 12),
     icoon,
-    shape: "archimate-box",
+    // Grouping: eigen kaderverm, áchter de inhoud (zie GroupingShape).
+    shape: id === "grouping" ? "archimate-grouping" : "archimate-box",
+    ...(id === "grouping" ? { achtergrond: true, minBreedte: 200, minHoogte: 90 } : {}),
     kleur,
     // Laag als taakbalkgroep: de Maken-balk krijgt een scheidingsteken op
     // elke laaggrens (business | application | technology | motivation).

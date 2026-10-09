@@ -77,6 +77,42 @@ function ArchimateBoxShape({ element, elementType, selected, children }) {
   );
 }
 
+/**
+ * Grouping (ArchiMate-notatie): gestippeld kader met de naam linksboven en
+ * het groep-icoon rechtsboven. Een groepering ligt áchter zijn inhoud
+ * (elementType.achtergrond) — als gewoon blok bedekte hij de lijnen en zat
+ * zijn naam midden tussen de elementen (gemeld 2026-10-09).
+ */
+function GroupingShape({ element, elementType, selected, children }) {
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : element?.data?.kleur || "#64748b";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 200,
+        minHeight: 90,
+        border: `1.5px dashed ${rand}`,
+        borderRadius: 4,
+        background: element?.data?.achtergrondKleur || "rgba(241, 245, 249, 0.55)",
+        boxSizing: "border-box",
+        position: "relative",
+      }}
+    >
+      <div
+        data-dc-naam=""
+        style={{ position: "absolute", top: 5, left: 10, fontSize: 12, fontWeight: 700, color: "#334155", cursor: "text" }}
+      >
+        {element?.naam || "(groepering)"}
+      </div>
+      <span style={{ position: "absolute", top: 4, right: 6, color: "#475569", pointerEvents: "none" }}>
+        <TypeIcoon elementType={elementType} maat={13} />
+      </span>
+      {children}
+    </div>
+  );
+}
+
 /** Junction: stip — `data.soort` "of" tekent hem open (or-junction). */
 function JunctionShape({ element, selected, children }) {
   const rand = selected ? "var(--dc-selectie, #2563eb)" : DONKER;
@@ -104,5 +140,6 @@ export function registreerArchimateShapes() {
   if (_geregistreerd) return;
   registreerShape("archimate-box", ArchimateBoxShape);
   registreerShape("archimate-junction", JunctionShape);
+  registreerShape("archimate-grouping", GroupingShape);
   _geregistreerd = true;
 }

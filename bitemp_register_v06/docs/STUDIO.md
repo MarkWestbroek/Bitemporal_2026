@@ -972,6 +972,14 @@ fase 2 een **bewerkbare sandbox**:
   "Klant gebruikt OpenKlant" (van boven naar beneden). Daarvoor kent de
   canvas nu `markerStart: "pijl-open" | "pijl-dicht"` (SVG
   `orient="auto-start-reverse"`), net als de documenttekenaar.
+  **Grouping in de standaardnotatie** is nu een gestippeld kader met de naam
+  linksboven, áchter de inhoud (`archimate-grouping`, `achtergrond`); als
+  gewoon blok bedekte hij de lijnen en zat de naam tussen de elementen.
+- **Exporteren zonder selectie** (2026-10-09): *Download PNG/SVG* en *Kopieer
+  als afbeelding* heffen de selectie tijdelijk op (geen selectiekleur,
+  resize-hoekjes of handles in het plaatje) en zetten hem daarna terug. In een
+  diagram vol kaders/groeperingen is er geen leeg vlak om op te klikken;
+  deselecteren kan daar met **Escape**.
   **De gekozen shape-set is nu per diagram** (`diagram.shapeSetId`, via
   `updateDiagramStijl`); de browser-voorkeur geldt alleen nog voor diagrammen
   zonder eigen keuze. De skin-logica staat gedeeld in
