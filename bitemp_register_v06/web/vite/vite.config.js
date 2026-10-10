@@ -122,6 +122,13 @@ export default defineConfig({
     __GIT_SHA__: JSON.stringify(GIT_SHA),
   },
   resolve: {
+    // Git-worktrees delen node_modules via een junction/symlink naar de
+    // hoofdclone. Vite volgt die standaard naar het echte pad (buiten de
+    // root) en serveert dan `?url`-imports — de sql.js-wasm van de EA-import —
+    // als ruwe bytes via /@fs, waardoor de dynamische import faalt (10-10).
+    // Opt-in: VITE_PRESERVE_SYMLINKS=1 bij het starten van zo'n dev-server.
+    // De hoofdclone en de build merken er niets van.
+    preserveSymlinks: process.env.VITE_PRESERVE_SYMLINKS === "1",
     alias: {
       // Alias naar de UML-editor module binnen web/vite/src/umleditor
       "@umleditor": resolve(__dirname, "src/umleditor"),

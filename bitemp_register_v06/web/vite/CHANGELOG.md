@@ -8,6 +8,18 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Document als "Markdown + afbeeldingen (.zip)"** (10-10, Mark): het voorbeeldvenster levert
+  naast de losse Markdown een zip met het `.md`-bestand en de diagrammen als losse `.svg`'s. GitHub
+  toont inline SVG in Markdown niet; zo wel. Eigen ZIP-schrijver zonder afhankelijkheden.
+
+### Gewijzigd
+- **Ovalen en ruiten hechten aan op hun toppen** (10-10, Mark): een lijn naar een use case, een
+  begin/eind-stip, een beslissing of een BPMN-event/gateway raakt de vorm nu op het dichtstbijzijnde
+  uiterste punt (links, rechts, boven, onder) in plaats van schuin op de boog richting het
+  middelpunt. Generiek via het nieuwe M3-attribuut `ElementType.aanhechtpunten`, met als default
+  wat uit `omtrek` volgt; geen profielcode.
+
 ## [studio/v0.16.0] — 2026-10-10
 Sparx EA ↔ Omnium: EA-modellen uit een `.qea` lezen (in de browser, of via de server rechtstreeks
 uit git), terugschrijven als XMI 2.1, acht nieuwe profielen voor de EA-diagramsoorten en BPMN/DMN

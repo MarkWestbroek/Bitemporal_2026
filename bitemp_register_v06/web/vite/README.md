@@ -53,6 +53,12 @@ Volledige uitleg: `../../docs/STUDIO.md`.
 
    `npm run dev`
 
+**In een git-worktree met gedeelde `node_modules`** (junction/symlink naar de hoofdclone):
+start met `VITE_PRESERVE_SYMLINKS=1`, bv. `VITE_PRESERVE_SYMLINKS=1 npx vite --port 5175`
+(PowerShell: `$env:VITE_PRESERVE_SYMLINKS="1"; npx vite --port 5175`). Zonder die vlag volgt Vite
+de junction naar een pad buiten de root en faalt de EA-import ("Failed to fetch dynamically
+imported module … sql-wasm.wasm?import&url"). Zie `resolve.preserveSymlinks` in `vite.config.js`.
+
 ## Builden naar door Gin geserveerde map
 
 - `npm run build`

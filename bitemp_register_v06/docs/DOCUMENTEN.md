@@ -13,6 +13,22 @@ bewaren of te kopiëren, en HTML in een voorbeeldvenster dat je als PDF afdrukt.
 erin als **schets-SVG**: een deterministische tekening uit het model (posities en maten van het
 diagram, vorm uit `elementType.shape`, lijnen uit `edgePresentatie`), zonder canvas.
 
+**Downloaden** (voorbeeldvenster, 2026-10-10):
+
+| Knop | Resultaat | Waar het werkt |
+|---|---|---|
+| Download Markdown | één `.md`, diagrammen als inline `<svg>` | VS Code-preview, browsers |
+| **Markdown + afbeeldingen (.zip)** | `.md` met `![titel](stam-dN.svg)` + de losse `.svg`'s | overal, ook **GitHub** (dat stript inline SVG) |
+| Download HTML / Afdrukken | HTML, of PDF via de printdialoog | browsers |
+
+De zip-variant vervangt elk `<svg>…</svg>`-blok door een afbeeldingslink; de alt-tekst is de kop
+erboven ("Diagram: Overzicht" → "Overzicht"). Code: `transformatie/sjabloon/markdownMetAfbeeldingen.js`
+en een eigen ZIP-schrijver zonder afhankelijkheden (`zip.js`, methode STORE). Pak de zip uit naast
+elkaar in één map, bv. `docs/voorbeelden/documenten/`.
+
+**Een map als JSON** (ons eigen formaat `studio-map-export`): rechtsklik op de map → *Exporteren…*
+→ *Map → JSON-bestand*; terug via *Importeren…* → *JSON-map-export*.
+
 Ingebouwd (`transformatie/sjabloon/sjablonen.js`):
 
 | Sjabloon | Profielen | Inhoud |
