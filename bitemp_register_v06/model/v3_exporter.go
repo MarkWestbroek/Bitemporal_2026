@@ -178,6 +178,12 @@ func extractContentFields(meta TypeMeta) []V3Veld {
 		veld.Datatype = schemaTag.Datatype
 		veld.Ref = schemaTag.Ref
 		veld.Uniek = schemaTag.Uniek
+		// Afgeleid veld: codegen schrijft de regel als afleiding:"…" (cmd/codegen/conventions.go).
+		if regel, ok := f.Tag.Lookup("afleiding"); ok {
+			veld.Afgeleid = true
+			veld.AfleidingsregelTaal = "cel"
+			veld.Afleidingsregel = regel
+		}
 		desc := strings.TrimSpace(f.Tag.Get("schema_desc"))
 		if desc != "" {
 			veld.Description = desc
@@ -364,6 +370,10 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 				ent.Gegevenselementen = append(ent.Gegevenselementen, ge)
 			}
 		}
+		// Afgeleide relaties hebben geen hub-type; ze staan op de entiteit zelf.
+		for _, ar := range meta.AfgeleideRelaties {
+			ent.Relaties = append(ent.Relaties, v3RelatieVanAfgeleide(ar))
+		}
 
 		model.Entiteiten = append(model.Entiteiten, ent)
 	}
@@ -497,6 +507,7 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 		IsMaterieel:              meta.IsMaterieel,
 		DoelEntiteit:             doelEntiteitVanRelatie(meta),
 		Directioneel:             meta.Directioneel,
+		Geordend:                 meta.Geordend,
 		Velden:                   extractContentFields(meta),
 		Runtime:                  runtimeVanMeta(meta),
 		AfgeleideVelden:          convertAfgeleideVelden(meta.AfgeleideVelden),
@@ -516,6 +527,46 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 		rel.ClassLinkSourceHandle = meta.Layout.ClassLinkSourceHandle
 		rel.ClassLinkTargetHandle = meta.Layout.ClassLinkTargetHandle
 		rel.UseEdges = meta.Layout.UseEdges
+	}
+	return rel
+}
+
+// v3RelatieVanAfgeleide zet een afgeleide relatie uit TypeMeta.AfgeleideRelaties terug naar
+// V3 (Afgeleid: true), inclusief editor-layout. Zonder dit verdwijnt ze via
+// /api/schema/model/code en de rebuild. Zie docs/plans/2026-10-11 Afgeleide relaties backend — ontwerp.md.
+func v3RelatieVanAfgeleide(ar AfgeleideRelatie) V3Relatie {
+	rel := V3Relatie{
+		Naam:                ar.Naam,
+		Description:         ar.Description,
+		Domein:              ar.Domein,
+		Meervoud:            ar.Meervoud,
+		Momentvoorkomen:     momentvoorkomenString(ar.Momentvoorkomen),
+		DoelEntiteit:        ar.DoelEntiteit,
+		Directioneel:        ar.Directioneel,
+		Geordend:            ar.Geordend,
+		NaamLabelHeen:       ar.NaamLabelHeen,
+		NaamLabelTerug:      ar.NaamLabelTerug,
+		BronKardinaliteit:   ar.BronKardinaliteit,
+		DoelKardinaliteit:   ar.DoelKardinaliteit,
+		Afgeleid:            true,
+		AfleidingsregelTaal: ar.AfleidingsregelTaal,
+		Afleidingsregel:     ar.Afleidingsregel,
+	}
+	if l := ar.Layout; l != nil {
+		rel.Positie = l.Positie
+		rel.LayoutLocked = l.LayoutLocked
+		rel.AnkerPositie = l.AnkerPositie
+		rel.AnkerLayoutLocked = l.AnkerLayoutLocked
+		rel.ID = l.EdgeID
+		rel.SourceHandle = l.SourceHandle
+		rel.TargetHandle = l.TargetHandle
+		rel.DoelID = l.DoelEdgeID
+		rel.DoelSourceHandle = l.DoelSourceHandle
+		rel.DoelTargetHandle = l.DoelTargetHandle
+		rel.ClassLinkID = l.ClassLinkEdgeID
+		rel.ClassLinkSourceHandle = l.ClassLinkSourceHandle
+		rel.ClassLinkTargetHandle = l.ClassLinkTargetHandle
+		rel.UseEdges = l.UseEdges
 	}
 	return rel
 }

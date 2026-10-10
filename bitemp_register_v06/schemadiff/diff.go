@@ -392,6 +392,11 @@ func vergelijkRelaties(rapport *DeltaRapport, entPad string, oud, nieuw model.V3
 
 	for naam, oudRel := range oudMap {
 		if _, exists := nieuwMap[naam]; !exists {
+			if oudRel.Afgeleid {
+				rapport.Items = append(rapport.Items, afgeleideRelatieItem(entPad, naam, ActieVerwijderd,
+					fmt.Sprintf("Afgeleide relatie '%s' verwijderd uit '%s' (geen tabel)", naam, entPad)))
+				continue
+			}
 			hub := naamgeving.DeriveHub(oud.Typenaam, naam, "relatie", oudRel.IsMaterieel, oudRel.Meervoud, "")
 			rapport.Items = append(rapport.Items, DeltaItem{
 				Ernst:        Destructief,
@@ -407,6 +412,11 @@ func vergelijkRelaties(rapport *DeltaRapport, entPad string, oud, nieuw model.V3
 
 	for naam, nieuwRel := range nieuwMap {
 		if _, exists := oudMap[naam]; !exists {
+			if nieuwRel.Afgeleid {
+				rapport.Items = append(rapport.Items, afgeleideRelatieItem(entPad, naam, ActieToeGevoegd,
+					fmt.Sprintf("Afgeleide relatie '%s' toegevoegd aan '%s' (geen tabel)", naam, entPad)))
+				continue
+			}
 			hub := naamgeving.DeriveHub(nieuw.Typenaam, naam, "relatie", nieuwRel.IsMaterieel, nieuwRel.Meervoud, "")
 			rapport.Items = append(rapport.Items, DeltaItem{
 				Ernst:        Additief,
@@ -429,6 +439,41 @@ func vergelijkRelaties(rapport *DeltaRapport, entPad string, oud, nieuw model.V3
 
 func vergelijkRelatie(rapport *DeltaRapport, entPad string, oudEnt model.V3Entiteit, oud, nieuw model.V3Relatie) {
 	pad := entPad + " > " + oud.Naam
+
+	// Afgeleid ↔ opgeslagen: de tabel verdwijnt of komt erbij. Hergebruik de DDL-paden van een
+	// verwijderde/toegevoegde relatie; verdere vergelijking is dan zinloos.
+	if oud.Afgeleid != nieuw.Afgeleid {
+		if nieuw.Afgeleid {
+			hub := naamgeving.DeriveHub(oudEnt.Typenaam, oud.Naam, "relatie", oud.IsMaterieel, oud.Meervoud, "")
+			rapport.Items = append(rapport.Items, DeltaItem{
+				Ernst:        Destructief,
+				Categorie:    CategorieRelatie,
+				Actie:        ActieVerwijderd,
+				Pad:          pad,
+				OudeWaarde:   "afgeleid=false",
+				NieuweWaarde: "afgeleid=true",
+				Omschrijving: fmt.Sprintf("Relatie '%s' wordt afgeleid — de relatietabel vervalt", pad),
+				Tabelnaam:    hub.Tabelnaam,
+			})
+		} else {
+			hub := naamgeving.DeriveHub(oudEnt.Typenaam, nieuw.Naam, "relatie", nieuw.IsMaterieel, nieuw.Meervoud, "")
+			rapport.Items = append(rapport.Items, DeltaItem{
+				Ernst:        Additief,
+				Categorie:    CategorieRelatie,
+				Actie:        ActieToeGevoegd,
+				Pad:          pad,
+				OudeWaarde:   "afgeleid=true",
+				NieuweWaarde: "afgeleid=false",
+				Omschrijving: fmt.Sprintf("Relatie '%s' is niet langer afgeleid — er komt een relatietabel", pad),
+				Tabelnaam:    hub.Tabelnaam,
+			})
+		}
+		return
+	}
+	if nieuw.Afgeleid {
+		vergelijkAfgeleideRelatie(rapport, pad, oud, nieuw)
+		return
+	}
 
 	// doelEntiteit: bij wijziging is FK gebroken → destructief
 	if oud.DoelEntiteit != nieuw.DoelEntiteit {
@@ -799,6 +844,9 @@ func voegVerwijderdeOnderliggendenToe(rapport *DeltaRapport, ent model.V3Entitei
 		})
 	}
 	for _, rel := range ent.Relaties {
+		if rel.Afgeleid {
+			continue // geen tabel
+		}
 		hub := naamgeving.DeriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, "")
 		rapport.Items = append(rapport.Items, DeltaItem{
 			Ernst:        Destructief,
@@ -827,6 +875,9 @@ func voegToegevoegdeOnderliggendenToe(rapport *DeltaRapport, ent model.V3Entitei
 		})
 	}
 	for _, rel := range ent.Relaties {
+		if rel.Afgeleid {
+			continue // geen tabel
+		}
 		hub := naamgeving.DeriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, "")
 		rapport.Items = append(rapport.Items, DeltaItem{
 			Ernst:        Additief,
@@ -888,4 +939,46 @@ func indexeerDatatypes(datatypes []model.V3Datatype) map[string]model.V3Datatype
 		m[d.Naam] = d
 	}
 	return m
+}
+
+// ---- Afgeleide relaties ----
+
+// afgeleideRelatieItem maakt een informatief delta-item voor een afgeleide relatie (geen DDL).
+func afgeleideRelatieItem(entPad, naam, actie, omschrijving string) DeltaItem {
+	item := DeltaItem{
+		Ernst:        Informatief,
+		Categorie:    CategorieAfgeleideRelatie,
+		Actie:        actie,
+		Pad:          entPad + " > " + naam,
+		Omschrijving: omschrijving,
+	}
+	if actie == ActieVerwijderd {
+		item.OudeWaarde = naam
+	} else {
+		item.NieuweWaarde = naam
+	}
+	return item
+}
+
+// vergelijkAfgeleideRelatie vergelijkt twee versies van een afgeleide relatie. Alles is
+// metadata: er is geen tabel, dus ook geen migratie.
+func vergelijkAfgeleideRelatie(rapport *DeltaRapport, pad string, oud, nieuw model.V3Relatie) {
+	vergelijk := func(eigenschap, o, n string) {
+		if o == n {
+			return
+		}
+		rapport.Items = append(rapport.Items, DeltaItem{
+			Ernst:        Informatief,
+			Categorie:    CategorieAfgeleideRelatie,
+			Actie:        ActieGewijzigd,
+			Pad:          pad,
+			OudeWaarde:   o,
+			NieuweWaarde: n,
+			Omschrijving: fmt.Sprintf("%s van afgeleide relatie '%s' gewijzigd", eigenschap, pad),
+		})
+	}
+	vergelijk("Afleidingsregel", oud.Afleidingsregel, nieuw.Afleidingsregel)
+	vergelijk("DoelEntiteit", oud.DoelEntiteit, nieuw.DoelEntiteit)
+	vergelijk("Momentvoorkomen", oud.Momentvoorkomen, nieuw.Momentvoorkomen)
+	vergelijk("Beschrijving", oud.Description, nieuw.Description)
 }

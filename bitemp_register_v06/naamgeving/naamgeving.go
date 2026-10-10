@@ -267,8 +267,11 @@ func AlleDerivedTypes(v3 model.V3Model) []DerivedType {
 			}
 		}
 
-		// Relaties
+		// Relaties (een afgeleide relatie heeft geen hub, _Data of tabel)
 		for _, rel := range ent.Relaties {
+			if rel.Afgeleid {
+				continue
+			}
 			secIDKolom := ""
 			if rel.DoelEntiteit != "" {
 				secIDKolom = strings.ToLower(rel.DoelEntiteit) + "_id"

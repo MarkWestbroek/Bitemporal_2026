@@ -25,36 +25,37 @@ type vizSchemaChildDTO struct {
 }
 
 type vizSchemaTypeDTO struct {
-	Typenaam                  string                     `json:"typenaam"`
-	Klassenaam                string                     `json:"klassenaam"`
-	Description               string                     `json:"description,omitempty"`
-	Metatype                  model.Metatype             `json:"metatype"`
-	GESubtype                 string                     `json:"ge_subtype,omitempty"`               // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
-	IsMaterieel               bool                       `json:"isMaterieel,omitempty"`              // of dit type een materiële tijdlijn heeft
-	IsAbstract                bool                       `json:"isAbstract,omitempty"`               // UML: abstracte klasse (niet-instantieerbaar)
-	ParentTypenaam            string                     `json:"parentTypenaam,omitempty"`           // typenaam van de parent-entiteit bij generalisatie
-	GeerfdeVelden             []vizSchemaFieldDTO        `json:"geerfdeVelden,omitempty"`            // velden geërfd van de parent-entiteit (recursief)
-	EntiteitSubtype           string                     `json:"entiteitSubtype,omitempty"`          // bijv. "referentielijst", "referentielijst_item"
-	RelatieSubtype            string                     `json:"relatieSubtype,omitempty"`           // bijv. "referentielijst_items"
-	ReferentielijstInstantie  string                     `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie
-	DoelEntiteit              string                     `json:"doelEntiteit,omitempty"`             // voor relaties: de doel-entiteit typenaam
-	Domein                    string                     `json:"domein,omitempty"`                   // domeingroep (bijv. "np-loc")
-	Kleur                     string                     `json:"kleur,omitempty"`
-	Veldnaam                  string                     `json:"veldnaam"`
-	Padnaam                   string                     `json:"padnaam,omitempty"`
-	Meervoud                  string                     `json:"meervoud,omitempty"`
-	Velden                    []vizSchemaFieldDTO        `json:"velden,omitempty"`
-	Tabelnaam                 string                     `json:"tabelnaam"`
-	IDKolom                   string                     `json:"idKolom"`
-	IDAutoIncrement           bool                       `json:"idAutoIncrement,omitempty"`
-	HeeftPFK                  bool                       `json:"heeftPFK"`
-	EntiteitIDKolom           string                     `json:"entiteitIDKolom,omitempty"`
-	SecondaireEntiteitIDKolom string                     `json:"secondaireEntiteitIDKolom,omitempty"`
-	BovenliggendTypenaam      string                     `json:"bovenliggendTypenaam,omitempty"` // voor plumbing-types: de entiteit waar dit type bij hoort
-	Momentvoorkomen           string                     `json:"momentvoorkomen,omitempty"`
-	Onderliggende             []vizSchemaChildDTO        `json:"onderliggende,omitempty"`
-	AfgeleideVelden           []vizSchemaAfgeleidVeldDTO `json:"afgeleideVelden,omitempty"`
-	ItemCount                 *int                       `json:"itemCount,omitempty"` // aantal actieve items (alleen voor referentielijst_item entiteiten)
+	Typenaam                  string                         `json:"typenaam"`
+	Klassenaam                string                         `json:"klassenaam"`
+	Description               string                         `json:"description,omitempty"`
+	Metatype                  model.Metatype                 `json:"metatype"`
+	GESubtype                 string                         `json:"ge_subtype,omitempty"`               // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
+	IsMaterieel               bool                           `json:"isMaterieel,omitempty"`              // of dit type een materiële tijdlijn heeft
+	IsAbstract                bool                           `json:"isAbstract,omitempty"`               // UML: abstracte klasse (niet-instantieerbaar)
+	ParentTypenaam            string                         `json:"parentTypenaam,omitempty"`           // typenaam van de parent-entiteit bij generalisatie
+	GeerfdeVelden             []vizSchemaFieldDTO            `json:"geerfdeVelden,omitempty"`            // velden geërfd van de parent-entiteit (recursief)
+	EntiteitSubtype           string                         `json:"entiteitSubtype,omitempty"`          // bijv. "referentielijst", "referentielijst_item"
+	RelatieSubtype            string                         `json:"relatieSubtype,omitempty"`           // bijv. "referentielijst_items"
+	ReferentielijstInstantie  string                         `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie
+	DoelEntiteit              string                         `json:"doelEntiteit,omitempty"`             // voor relaties: de doel-entiteit typenaam
+	Domein                    string                         `json:"domein,omitempty"`                   // domeingroep (bijv. "np-loc")
+	Kleur                     string                         `json:"kleur,omitempty"`
+	Veldnaam                  string                         `json:"veldnaam"`
+	Padnaam                   string                         `json:"padnaam,omitempty"`
+	Meervoud                  string                         `json:"meervoud,omitempty"`
+	Velden                    []vizSchemaFieldDTO            `json:"velden,omitempty"`
+	Tabelnaam                 string                         `json:"tabelnaam"`
+	IDKolom                   string                         `json:"idKolom"`
+	IDAutoIncrement           bool                           `json:"idAutoIncrement,omitempty"`
+	HeeftPFK                  bool                           `json:"heeftPFK"`
+	EntiteitIDKolom           string                         `json:"entiteitIDKolom,omitempty"`
+	SecondaireEntiteitIDKolom string                         `json:"secondaireEntiteitIDKolom,omitempty"`
+	BovenliggendTypenaam      string                         `json:"bovenliggendTypenaam,omitempty"` // voor plumbing-types: de entiteit waar dit type bij hoort
+	Momentvoorkomen           string                         `json:"momentvoorkomen,omitempty"`
+	Onderliggende             []vizSchemaChildDTO            `json:"onderliggende,omitempty"`
+	AfgeleideVelden           []vizSchemaAfgeleidVeldDTO     `json:"afgeleideVelden,omitempty"`
+	AfgeleideRelaties         []vizSchemaAfgeleideRelatieDTO `json:"afgeleideRelaties,omitempty"` // alleen entiteiten: alleen-lezen relaties, berekend uit een afleidingsregel
+	ItemCount                 *int                           `json:"itemCount,omitempty"`         // aantal actieve items (alleen voor referentielijst_item entiteiten)
 }
 
 type vizSchemaResponse struct {
@@ -69,6 +70,22 @@ type vizSchemaAfgeleidVeldDTO struct {
 	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`
 	Afleidingsregel     string `json:"afleidingsregel,omitempty"`
 	IsWeergaveVeld      bool   `json:"isWeergaveVeld,omitempty"`
+}
+
+// vizSchemaAfgeleideRelatieDTO beschrijft een afgeleide relatie (UML isDerived) van een entiteit.
+// In /full staan haar voorkomens onder JSONRolnaam als [{<doelIDSleutel>: id, weergavenaam}].
+type vizSchemaAfgeleideRelatieDTO struct {
+	Naam                string `json:"naam"`
+	Description         string `json:"description,omitempty"`
+	Rolnaam             string `json:"rolnaam"`
+	JSONRolnaam         string `json:"jsonRolnaam"`
+	DoelEntiteit        string `json:"doelEntiteit"`
+	DoelIDSleutel       string `json:"doelIDSleutel"` // bijv. "gemeentedeel_id"
+	Momentvoorkomen     string `json:"momentvoorkomen"`
+	Geordend            bool   `json:"geordend,omitempty"`
+	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`
+	Afleidingsregel     string `json:"afleidingsregel"`
+	AlleenLezen         bool   `json:"alleenLezen"` // altijd true; expliciet voor clients
 }
 
 type vizSchemaFieldDTO struct {
@@ -466,6 +483,22 @@ func vizSchemaTypeDTOVanMeta(meta model.TypeMeta) vizSchemaTypeDTO {
 			})
 		}
 		item.AfgeleideVelden = avs
+	}
+
+	for _, ar := range meta.AfgeleideRelaties {
+		item.AfgeleideRelaties = append(item.AfgeleideRelaties, vizSchemaAfgeleideRelatieDTO{
+			Naam:                ar.Naam,
+			Description:         ar.Description,
+			Rolnaam:             ar.Rolnaam,
+			JSONRolnaam:         ar.JSONRolnaam,
+			DoelEntiteit:        ar.DoelEntiteit,
+			DoelIDSleutel:       ar.DoelIDSleutel(),
+			Momentvoorkomen:     momentvoorkomenNaarString(ar.Momentvoorkomen),
+			Geordend:            ar.Geordend,
+			AfleidingsregelTaal: ar.AfleidingsregelTaal,
+			Afleidingsregel:     ar.Afleidingsregel,
+			AlleenLezen:         true,
+		})
 	}
 
 	return item

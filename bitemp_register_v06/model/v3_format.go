@@ -161,37 +161,44 @@ type V3Gegevenselement struct {
 
 // V3Relatie beschrijft een relatie onder een entiteit.
 type V3Relatie struct {
-	Naam                     string           `json:"naam"` // bijv. "Rel_A_B"
-	Description              string           `json:"description,omitempty"`
-	Domein                   string           `json:"domein,omitempty"`                   // domein waartoe deze relatie behoort (optioneel, erft normaal van parent-entiteit)
-	RelatieSubtype           string           `json:"relatieSubtype,omitempty"`           // bijv. "referentielijst_items"
-	ReferentielijstInstantie string           `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie (alleen voor relatieSubtype == "referentielijst_items")
-	Meervoud                 string           `json:"meervoud"`                           // URL-padnaam, bijv. "rel-a-bs"
-	Momentvoorkomen          string           `json:"momentvoorkomen"`                    // "enkelvoudig" of "meervoudig"
-	IsMaterieel              bool             `json:"isMaterieel,omitempty"`
-	DoelEntiteit             string           `json:"doelEntiteit"`                    // typenaam van de doel-entiteit
-	Directioneel             bool             `json:"directioneel,omitempty"`          // true = gerichte associatie (pijl naar doel-entiteit)
-	NaamLabelHeen            string           `json:"naamLabelHeen,omitempty"`         // UML-label op de heen-richting van de associatie (bijv. "woont op")
-	NaamLabelTerug           string           `json:"naamLabelTerug,omitempty"`        // UML-label op de terug-richting van de associatie (bijv. "is woonadres van")
-	BronKardinaliteit        string           `json:"bronKardinaliteit,omitempty"`     // kardinaliteit aan de bronkant (bijv. "0..*"); default afgeleid uit momentvoorkomen
-	DoelKardinaliteit        string           `json:"doelKardinaliteit,omitempty"`     // kardinaliteit aan de doel-entiteitkant (bijv. "0..*")
-	Positie                  *V3Positie       `json:"positie,omitempty"`               // editor-layout positie van het relatieblok (genegeerd door codegen)
-	LayoutLocked             bool             `json:"layoutLocked,omitempty"`          // editor-lock op de relatie-positie (auto-layout slaat 'm over)
-	AnkerPositie             *V3Positie       `json:"ankerPositie,omitempty"`          // editor-layout positie van het associatie-anker (genegeerd door codegen)
-	AnkerLayoutLocked        bool             `json:"ankerLayoutLocked,omitempty"`     // editor-lock op de anker-positie (auto-layout slaat 'm over)
-	ID                       string           `json:"id,omitempty"`                    // persistente edge-id van entiteit→anker voor stabiele editor round-trips
-	SourceHandle             string           `json:"sourceHandle,omitempty"`          // verbindingspunt op de entiteit→anker edge (genegeerd door codegen)
-	TargetHandle             string           `json:"targetHandle,omitempty"`          // verbindingspunt op het anker (inkomend vanuit entiteit, genegeerd door codegen)
-	DoelID                   string           `json:"doelId,omitempty"`                // persistente edge-id van anker→doel-entiteit voor stabiele editor round-trips
-	DoelSourceHandle         string           `json:"doelSourceHandle,omitempty"`      // verbindingspunt op het anker (uitgaand naar doel, genegeerd door codegen)
-	DoelTargetHandle         string           `json:"doelTargetHandle,omitempty"`      // verbindingspunt op de doel-entiteit (genegeerd door codegen)
-	ClassLinkID              string           `json:"classLinkId,omitempty"`           // persistente edge-id van anker→relatieblok (genegeerd door codegen)
-	ClassLinkSourceHandle    string           `json:"classLinkSourceHandle,omitempty"` // verbindingspunt op het anker (naar relatieblok, genegeerd door codegen)
-	ClassLinkTargetHandle    string           `json:"classLinkTargetHandle,omitempty"` // verbindingspunt op het relatieblok (inkomend van anker, genegeerd door codegen)
-	Runtime                  *V3Runtime       `json:"runtime,omitempty"`               // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
-	AfgeleideVelden          []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
-	Velden                   []V3Veld         `json:"velden,omitempty"`
-	UseEdges                 []V3UseEdge      `json:"useEdges,omitempty"` // optionele layout/visibility metadata voor «use»-dependency-edges
+	Naam                     string `json:"naam"` // bijv. "Rel_A_B"
+	Description              string `json:"description,omitempty"`
+	Domein                   string `json:"domein,omitempty"`                   // domein waartoe deze relatie behoort (optioneel, erft normaal van parent-entiteit)
+	RelatieSubtype           string `json:"relatieSubtype,omitempty"`           // bijv. "referentielijst_items"
+	ReferentielijstInstantie string `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie (alleen voor relatieSubtype == "referentielijst_items")
+	Meervoud                 string `json:"meervoud"`                           // URL-padnaam, bijv. "rel-a-bs"
+	Momentvoorkomen          string `json:"momentvoorkomen"`                    // "enkelvoudig" of "meervoudig"
+	IsMaterieel              bool   `json:"isMaterieel,omitempty"`
+	DoelEntiteit             string `json:"doelEntiteit"`                // typenaam van de doel-entiteit
+	Directioneel             bool   `json:"directioneel,omitempty"`      // true = gerichte associatie (pijl naar doel-entiteit)
+	NaamLabelHeen            string `json:"naamLabelHeen,omitempty"`     // UML-label op de heen-richting van de associatie (bijv. "woont op")
+	NaamLabelTerug           string `json:"naamLabelTerug,omitempty"`    // UML-label op de terug-richting van de associatie (bijv. "is woonadres van")
+	BronKardinaliteit        string `json:"bronKardinaliteit,omitempty"` // kardinaliteit aan de bronkant (bijv. "0..*"); default afgeleid uit momentvoorkomen
+	DoelKardinaliteit        string `json:"doelKardinaliteit,omitempty"` // kardinaliteit aan de doel-entiteitkant (bijv. "0..*")
+	Geordend                 bool   `json:"geordend,omitempty"`          // UML isOrdered: de voorkomens hebben een betekenisvolle volgorde
+	// Afgeleid (UML isDerived, "/" voor de naam): de relatie wordt niet geregistreerd maar bij
+	// het lezen berekend uit Afleidingsregel. Geen tabel, geen schrijfroutes; codegen zet haar in
+	// TypeMeta.AfgeleideRelaties van de bronentiteit. Zie docs/plans/2026-10-11 Afgeleide relaties backend — ontwerp.md.
+	Afgeleid              bool             `json:"afgeleid,omitempty"`
+	AfleidingsregelTaal   string           `json:"afleidingsregelTaal,omitempty"`   // leeg = "cel"
+	Afleidingsregel       string           `json:"afleidingsregel,omitempty"`       // navigatie-expressie die naar exemplaren van DoelEntiteit wijst
+	Positie               *V3Positie       `json:"positie,omitempty"`               // editor-layout positie van het relatieblok (genegeerd door codegen)
+	LayoutLocked          bool             `json:"layoutLocked,omitempty"`          // editor-lock op de relatie-positie (auto-layout slaat 'm over)
+	AnkerPositie          *V3Positie       `json:"ankerPositie,omitempty"`          // editor-layout positie van het associatie-anker (genegeerd door codegen)
+	AnkerLayoutLocked     bool             `json:"ankerLayoutLocked,omitempty"`     // editor-lock op de anker-positie (auto-layout slaat 'm over)
+	ID                    string           `json:"id,omitempty"`                    // persistente edge-id van entiteit→anker voor stabiele editor round-trips
+	SourceHandle          string           `json:"sourceHandle,omitempty"`          // verbindingspunt op de entiteit→anker edge (genegeerd door codegen)
+	TargetHandle          string           `json:"targetHandle,omitempty"`          // verbindingspunt op het anker (inkomend vanuit entiteit, genegeerd door codegen)
+	DoelID                string           `json:"doelId,omitempty"`                // persistente edge-id van anker→doel-entiteit voor stabiele editor round-trips
+	DoelSourceHandle      string           `json:"doelSourceHandle,omitempty"`      // verbindingspunt op het anker (uitgaand naar doel, genegeerd door codegen)
+	DoelTargetHandle      string           `json:"doelTargetHandle,omitempty"`      // verbindingspunt op de doel-entiteit (genegeerd door codegen)
+	ClassLinkID           string           `json:"classLinkId,omitempty"`           // persistente edge-id van anker→relatieblok (genegeerd door codegen)
+	ClassLinkSourceHandle string           `json:"classLinkSourceHandle,omitempty"` // verbindingspunt op het anker (naar relatieblok, genegeerd door codegen)
+	ClassLinkTargetHandle string           `json:"classLinkTargetHandle,omitempty"` // verbindingspunt op het relatieblok (inkomend van anker, genegeerd door codegen)
+	Runtime               *V3Runtime       `json:"runtime,omitempty"`               // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
+	AfgeleideVelden       []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
+	Velden                []V3Veld         `json:"velden,omitempty"`
+	UseEdges              []V3UseEdge      `json:"useEdges,omitempty"` // optionele layout/visibility metadata voor «use»-dependency-edges
 }
 
 // V3Positie beschrijft de positie van een element in de UML-editor.
@@ -240,19 +247,19 @@ type V3Runtime struct {
 
 // V3Veld beschrijft een inhoudsveld (geen plumbing) in een GE of relatie.
 type V3Veld struct {
-	Naam                string `json:"naam"`
-	GoType              string `json:"goType"`              // bijv. "string", "*bool", "float64", "RelABSoort"
-	Type                string `json:"type,omitempty"`      // V3.1: OAS 3.1 type ("string", "integer", "number", "boolean")
-	Format              string `json:"format,omitempty"`    // V3.1: OAS 3.1 format ("date", "date-time", "float32", "float64", ...)
-	Verplicht           bool   `json:"verplicht,omitempty"` // V3.1: true als het veld niet optioneel is (geen pointer-type)
-	Enum                string `json:"enum,omitempty"`      // ref naar V3Enum.GoType als dit een enum-veld is
-	Datatype            string `json:"datatype,omitempty"`  // ref naar V3Datatype.Naam als dit een custom datatype-veld is (bijv. "NLPostcode", "BSN")
-	Ref                 string `json:"$ref,omitempty"`      // ref naar een referentielijst-items type (bijv. "LandenlijstLand"), analoog aan OAS 3.1 $ref
+	Naam      string `json:"naam"`
+	GoType    string `json:"goType"`              // bijv. "string", "*bool", "float64", "RelABSoort"
+	Type      string `json:"type,omitempty"`      // V3.1: OAS 3.1 type ("string", "integer", "number", "boolean")
+	Format    string `json:"format,omitempty"`    // V3.1: OAS 3.1 format ("date", "date-time", "float32", "float64", ...)
+	Verplicht bool   `json:"verplicht,omitempty"` // V3.1: true als het veld niet optioneel is (geen pointer-type)
+	Enum      string `json:"enum,omitempty"`      // ref naar V3Enum.GoType als dit een enum-veld is
+	Datatype  string `json:"datatype,omitempty"`  // ref naar V3Datatype.Naam als dit een custom datatype-veld is (bijv. "NLPostcode", "BSN")
+	Ref       string `json:"$ref,omitempty"`      // ref naar een referentielijst-items type (bijv. "LandenlijstLand"), analoog aan OAS 3.1 $ref
 	// Uniek (UML {unique}): de waarde komt in de ACTUELE stand maar één keer voor, binnen een
 	// bereik: "entiteit" (onder alle exemplaren van dit type), "domein" (over alle velden met
 	// uniek=domein in het domein) of "register" (over alle velden met uniek=register). Leeg = niet
 	// uniek. Gecontroleerd bij registratie (handlers/registration_uniek.go).
-	Uniek string `json:"uniek,omitempty"`
+	Uniek               string `json:"uniek,omitempty"`
 	Description         string `json:"description,omitempty"`
 	Afgeleid            bool   `json:"afgeleid,omitempty"`
 	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`

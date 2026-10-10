@@ -44,6 +44,9 @@ const (
 	CategorieEnum            = "enum"
 	CategorieDatatype        = "datatype"
 	CategorieReferentielijst = "referentielijst"
+	// CategorieAfgeleideRelatie: een afgeleide relatie (alleen lezen, geen tabel). Wijzigingen
+	// zijn metadata en leveren bewust geen DDL op (genereerStatements kent de categorie niet).
+	CategorieAfgeleideRelatie = "afgeleide_relatie"
 )
 
 // ---- Acties ----

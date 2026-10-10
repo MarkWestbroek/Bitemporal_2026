@@ -188,11 +188,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Afgeleide relaties krijgen geen tabel, _Data, Input of routes: haal ze uit het model
+	// vóór de generators het zien (ná de delta-analyse, die ze wél moet kennen).
+	afgeleideRelaties := splitsAfgeleideRelaties(&v3)
+	for typenaam, rels := range afgeleideRelaties {
+		for _, rel := range rels {
+			fmt.Printf("  Afgeleide relatie (alleen lezen, geen tabel): %s.%s → %s\n", typenaam, rel.Naam, rel.DoelEntiteit)
+		}
+	}
+
 	// Bouw codegen-opties op
 	opts := codegenOptions{
-		domein:   *domein,
-		prefix:   *prefix,
-		additive: additive,
+		domein:            *domein,
+		prefix:            *prefix,
+		additive:          additive,
+		afgeleideRelaties: afgeleideRelaties,
 	}
 
 	if *prefix != "" {
@@ -662,6 +672,9 @@ func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 			}
 			if rel.DoelEntiteit == "" {
 				errs = append(errs, fmt.Sprintf("%s.doelEntiteit is verplicht", rctx))
+			}
+			if rel.Afgeleid {
+				errs = append(errs, validateAfgeleideRelatie(rctx, rel)...)
 			}
 			for k, veld := range rel.Velden {
 				vctx := fmt.Sprintf("%s.velden[%d]", rctx, k)

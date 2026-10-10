@@ -195,6 +195,7 @@ Inventarisatie van een batch vragen en bugs over editor-v2 én IDE. Ge­ordend o
    - Visuele markering in UML (oranje + cursief, analoog aan afgeleide velden, maar dan op edge/node-niveau)
    - Round-trip via V3 JSON + MetaRegistry
    - Ontwerpdocument apart maken voordat er code geschreven wordt
+   - **Relaties: ontwerp + structuur 2026-10-11** (branch `feat/afgeleide-relaties-backend`): live berekend bij lezen, geen tabel; V3/codegen/MetaRegistry/rondreis/schemadiff/schema-API gebouwd, evaluator volgt. Zie `docs/plans/2026-10-11 Afgeleide relaties backend — ontwerp.md`. GE's nog open.
 10. **Taal als fundamenteel aspect (i18n / meertaligheid).** Discussie­stuk in `docs/2026-04-29 taal aspect.md`: moet meertaligheid een **core-aspect** worden van representaties (à la `materieel` → optioneel `aanvang/einde`; analoog `talig` → optioneel `taal`-veld op _Data, met multipliciteit "enkelvoudig per taal"), of blijft het een per-register modellerings­keuze (zoals nu de `Taalvariant`-cluster in het kennis-domein)? Onderzoek nodig naar:
     - Bestaande patronen / standaarden in CMS-, API- en register-wereld (Drupal/Magnolia/Adobe AEM, OData, JSON-LD `@language`, IETF BCP 47, ICU, INSPIRE, ISA²)
     - Impact op MetaRegistry, codegen, schema-API, querystring (`?taal=nl`), GraphQL en frontend-rendering
