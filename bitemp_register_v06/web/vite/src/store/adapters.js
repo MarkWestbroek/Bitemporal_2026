@@ -339,6 +339,8 @@ export function v3ModelNaarStore(v3Full) {
             velden,
             afgeleideVelden: afgeleideVeldenConvert(rel.afgeleideVelden),
             doelEntiteit: rel.doelEntiteit || "",
+            // Afgeleide relatie (2026-10-10), zoals v3ModelNaarEditor.
+            ...(rel.afgeleid ? { afgeleid: true, afleidingsregelTaal: rel.afleidingsregelTaal || "cel", afleidingsregel: rel.afleidingsregel || "" } : {}),
             naamLabelHeen: rel.naamLabelHeen || "",
             naamLabelTerug: rel.naamLabelTerug || "",
           },
@@ -1253,6 +1255,12 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
   if (cd.isMaterieel) v3Rel.isMaterieel = true;
   if (cd.naamLabelHeen) v3Rel.naamLabelHeen = cd.naamLabelHeen;
   if (cd.naamLabelTerug) v3Rel.naamLabelTerug = cd.naamLabelTerug;
+  // Afgeleide relatie (2026-10-10): geen tabel, leesbaar via de regel (codegen).
+  if (cd.afgeleid) {
+    v3Rel.afgeleid = true;
+    v3Rel.afleidingsregelTaal = cd.afleidingsregelTaal || "cel";
+    if (cd.afleidingsregel) v3Rel.afleidingsregel = cd.afleidingsregel;
+  }
 
   const relPos = elementPositie(diagrams, child.id);
   if (relPos) v3Rel.positie = relPos;

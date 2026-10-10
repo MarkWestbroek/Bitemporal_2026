@@ -14,6 +14,7 @@
  * property, auto-layout-strategie, eigen StyleType-tokens (§8.5b).
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { AFGELEID, AFLEIDINGSREGEL } from "../umlEigenschappen.js";
 
 export const PUUR_UML_ID = "puur-uml";
 
@@ -33,6 +34,7 @@ const fieldTypes = [
     properties: [
       { key: "naam", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
+      AFGELEID,
     ],
   },
   {
@@ -181,6 +183,9 @@ const elementTypes = [
       { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "string" },
       { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "string" },
       { key: "directioneel", label: "gericht (→ doel)", datatype: "boolean" },
+      // UML 2.5.1 §11.5: een afgeleide associatie, "/" voor de naam.
+      AFGELEID,
+      AFLEIDINGSREGEL,
     ],
     compartments: [{ id: "attributen", label: null, fieldType: "attribuut" }],
     hooks: {

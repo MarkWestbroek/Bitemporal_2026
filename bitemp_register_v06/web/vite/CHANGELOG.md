@@ -9,6 +9,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Afgeleide relaties** (10-10, Mark): `afgeleid` (UML isDerived) op relaties in UML, canoniek, MIM
+  (`indicatieAfleidbaar`) en SysML, met "/" voor de naam; ook op SysML-waarden en -delen. M3:
+  `PropertyType.betekenis: "afgeleid"` laat de motor het "/" tekenen ongeacht de naam van de
+  eigenschap. V3-rondreis (`afgeleid`, `afleidingsregel`, `afleidingsregelTaal` op een relatie),
+  EA-import ("/" in de naam of een rol met Derived=1) en XMI-export (`isDerived`). Register-kant
+  (geen tabel, alleen lezen) volgt in de backend; zie `docs/plans/2026-10-10 UML Property en
+  afgeleide relaties.md`.
 - **Document als "Markdown + afbeeldingen (.zip)"** (10-10, Mark): het voorbeeldvenster levert
   naast de losse Markdown een zip met het `.md`-bestand en de diagrammen als losse `.svg`'s. GitHub
   toont inline SVG in Markdown niet; zo wel. Eigen ZIP-schrijver zonder afhankelijkheden.

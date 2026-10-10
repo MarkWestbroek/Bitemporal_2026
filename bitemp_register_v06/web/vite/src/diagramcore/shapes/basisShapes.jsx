@@ -13,6 +13,7 @@
 import { registreerShape } from "./shapeRegistry.js";
 import { TypeIcoon } from "./typeIconen.jsx";
 import { maakVeldSleutel } from "../canvas/inlineNaam.js";
+import { isAfgeleid } from "../model/afgeleid.js";
 
 /**
  * Typering-regel in de node-kop (vormgevingssessie 2026-07-07, MIM-besluit):
@@ -86,7 +87,7 @@ function VeldRegel({ veld, fieldType, fieldTypesById, compartmentTypesById, veld
   return (
     <div className={"dc-veld" + (d.cursief ? " is-cursief" : "")} data-dc-veld={sleutel}>
       <span className="dc-veld-naam">
-        {d.afgeleid && <span className="dc-veld-afgeleid">/</span>}
+        {isAfgeleid(d, fieldType) && <span className="dc-veld-afgeleid">/</span>}
         {d.verplicht ? <strong>{veld.naam}</strong> : <span>{veld.naam}</span>}
       </span>
       {d.typeLabel ? <span className="dc-veld-type">{d.typeLabel}</span> : null}
@@ -160,6 +161,8 @@ function ClassBoxShape({ element, elementType, selected, fieldTypesById, compart
       <div className="dc-node-header">
         <NodeTypering element={element} elementType={elementType} />
         <div className={"dc-naam" + (d.abstract ? " is-abstract" : "")}>
+          {/* Afgeleide relatie in de box-gedaante (associatieklasse): "/" voor de naam. */}
+          {elementType.isConnector && isAfgeleid(d, elementType) && <span className="dc-veld-afgeleid">/</span>}
           {element.naam || "(naamloos)"}
         </div>
         {d.materieel && <div className="dc-badge">materieel</div>}

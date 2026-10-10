@@ -22,6 +22,7 @@
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerHandlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
+import { MIM_AFLEIDBAAR } from "../umlEigenschappen.js";
 
 // P02: benoem de MIM-resolvers voor de handler-catalogus (PE-weergave).
 registreerHandlerInfo("resolver", "mim-primitief", {
@@ -65,7 +66,7 @@ const ATTRIBUUTSOORT_VELDEN = [
   { key: "indicatieFormeleHistorie", label: "formele historie", datatype: "boolean" },
   { key: "mogelijkGeenWaarde", label: "mogelijk geen waarde", datatype: "boolean" },
   { key: "identificerend", label: "identificerend", datatype: "boolean" },
-  { key: "indicatieAfleidbaar", label: "afleidbaar", datatype: "boolean" },
+  MIM_AFLEIDBAAR,
 ];
 
 /** @type {import("../../diagramcore/types/schema.js").FieldType[]} */
@@ -303,6 +304,8 @@ const elementTypes = [
       { key: "doelRolNaam", label: "relatierol doel (naam)", datatype: "string" },
       { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "string" },
       { key: "unidirectioneel", label: "unidirectioneel (→ doel)", datatype: "boolean" },
+      // MIM 1.2 relatiesoort: indicatie afleidbaar — "/" voor de naam.
+      MIM_AFLEIDBAAR,
       { key: "indicatieMaterieleHistorie", label: "materiële historie", datatype: "boolean" },
       { key: "indicatieFormeleHistorie", label: "formele historie", datatype: "boolean" },
       { key: "authentiek", label: "authentiek", datatype: "string" },

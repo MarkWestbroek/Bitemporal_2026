@@ -588,3 +588,27 @@ test("diagram.lijnen wint van element.data: knikken, vorm, handles en labelposit
   const label = met.data.presentatie.labels.find((l) => l.zijde === "midden");
   assert.deepEqual(label.offset, { x: 3, y: 4 });
 });
+
+test("afgeleide relatie: '/' als eigen deel vóór de naam (data.afgeleid of property-betekenis)", () => {
+  const diagram = {
+    id: "d",
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+    ],
+  };
+  const naamDelen = (data, naam = "grootouder", typeExtra = {}) => {
+    const typen = { ...elementTypesById, relatie: { ...elementTypesById.relatie, ...typeExtra } };
+    const elements = { A, B, r1: { id: "r1", naam, elementType: "relatie", source: "A", target: "B", compartimenten: [], data } };
+    const { edges } = materialiseerConnectoren(elements, diagram, typen);
+    return (edges[0].data.presentatie.labels || []).find((l) => l.zijde === "midden")?.delen || [];
+  };
+  assert.deepEqual(naamDelen({ afgeleid: true }).map((d) => d.tekst), ["/", "grootouder"]);
+  assert.equal(naamDelen({ afgeleid: true })[1].veld, "naam", "de naam blijft inline bewerkbaar, de '/' niet");
+  assert.deepEqual(naamDelen({}).map((d) => d.tekst), ["grootouder"]);
+  // MIM-stijl: de eigenschap heet anders, de betekenis maakt hem 'afgeleid'.
+  const mim = { properties: [{ key: "indicatieAfleidbaar", betekenis: "afgeleid" }] };
+  assert.deepEqual(naamDelen({ indicatieAfleidbaar: true }, "x", mim).map((d) => d.tekst), ["/", "x"]);
+  // Ook zonder naam is een afgeleide relatie herkenbaar.
+  assert.deepEqual(naamDelen({ afgeleid: true }, "").map((d) => d.tekst), ["/"]);
+});

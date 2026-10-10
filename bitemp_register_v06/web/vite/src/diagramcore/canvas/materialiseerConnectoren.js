@@ -31,6 +31,7 @@
 import { toetsAfbakening } from "./afbakening.js";
 import { kortsteVoorkomenPaar, voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
 import { bepaalOpnames } from "./opname.js";
+import { isAfgeleid } from "../model/afgeleid.js";
 
 export const ANKER_PREFIX = "anker:";
 
@@ -298,10 +299,14 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     if (effectieveConnectorGedaante(el, diagram) !== "box") {
       // ── Kale gedaante: één edge ──────────────────────────────────────────
       const kaalLabels = [...(basisPresentatie.labels || []), ...(labels.kaal || [])];
-      if (el.naam) {
+      if (el.naam || isAfgeleid(el.data, et)) {
         // `veld: "naam"`: dit deel toont de connector-naam en is op de canvas
         // inline te bewerken (klik op het label, zie ConnectorEdge.jsx).
-        kaalLabels.push({ zijde: "midden", delen: [{ tekst: el.naam, soort: "rolnaam", veld: "naam" }] });
+        // Afgeleide relatie (UML 2.5.1 §11.5.4): "/" vóór de naam, als eigen
+        // deel zodat het niet in de naam belandt bij inline bewerken.
+        const delen = el.naam ? [{ tekst: el.naam, soort: "rolnaam", veld: "naam" }] : [];
+        if (isAfgeleid(el.data, et)) delen.unshift({ tekst: "/", soort: "rolnaam" });
+        kaalLabels.push({ zijde: "midden", delen });
       }
       // Zelf-lus (oortje): standaard hoekig en van boven naar rechts —
       // de kortste weg is bij één punt betekenisloos.

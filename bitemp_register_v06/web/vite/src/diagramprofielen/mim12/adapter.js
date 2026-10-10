@@ -532,6 +532,8 @@ export function vanMimXmi(xmlTekst) {
         ...(b.kard ? { doelKardinaliteit: b.kard } : {}),
         ...(a.rol ? { bronRolNaam: a.rol } : {}),
         ...(b.rol ? { doelRolNaam: b.rol } : {}),
+        // UML isDerived op de associatie (of een afgeleid uiteinde) = MIM indicatie afleidbaar.
+        ...(assoc.getAttribute("isDerived") === "true" || ends.some((e) => e.getAttribute("isDerived") === "true") ? { indicatieAfleidbaar: true } : {}),
       },
     };
   }

@@ -16,7 +16,7 @@
  * uit een JSON-fixture (test). Kolomnamen = EA-kolomnamen. Gedeelde delen
  * (hulptabellen, knikpunten, diagrammen) staan in `qeaKern.js`.
  */
-import { kleurUitBgr, idUitGuid, kardinaliteitUitGrenzen, deelboomPakketten, EA_SCHAAL } from "./qeaHulp.js";
+import { kleurUitBgr, idUitGuid, kardinaliteitUitGrenzen, deelboomPakketten, EA_SCHAAL, afgeleidUitConnector } from "./qeaHulp.js";
 import { maakHulptabellen, maakVerslag, sla, extraData, maakConnectorElement, maakBevat, bouwDiagram } from "./qeaKern.js";
 
 export const PUUR_UML_DIAGRAMTYPE = "puur-uml";
@@ -215,7 +215,9 @@ function veldData(rij) {
  * @returns {{elementType:string, naam:string, source:string, target:string, data:Record<string,any>, omgedraaid?:boolean}|null}
  */
 function vertaalConnector(c, bronId, doelId, elements) {
-  const naam = c.Name || "";
+  // Afgeleide associatie (UML isDerived): "/" in de EA-naam of een rol met
+  // Derived=1 → data.afgeleid; de "/" tekent de motor zelf.
+  const { afgeleid, naam } = afgeleidUitConnector(c);
   const type = c.Connector_Type;
   const gericht = c.Direction === "Source -> Destination";
   const kanten = {
@@ -223,6 +225,7 @@ function vertaalConnector(c, bronId, doelId, elements) {
     ...(c.DestCard ? { doelKardinaliteit: c.DestCard } : {}),
     ...(c.SourceRole ? { bronRolNaam: c.SourceRole } : {}),
     ...(c.DestRole ? { doelRolNaam: c.DestRole } : {}),
+    ...(afgeleid && type === "Association" ? { afgeleid: true } : {}),
   };
   switch (type) {
     case "NoteLink": {

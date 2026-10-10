@@ -229,3 +229,18 @@ export function maakHaaks(punten, eersteRichting = null) {
   }
   return uit;
 }
+
+/**
+ * Is een EA-associatie **afgeleid** (UML isDerived, "/" voor de naam)? EA heeft
+ * geen kolom voor de associatie zelf; modelleurs zetten de "/" in de naam, of
+ * vinken "Derived" aan op een rol (`SourceStyle`/`DestStyle`: `Derived=1`).
+ * Geeft ook de naam zonder de "/" terug — die tekent de motor zelf.
+ * @param {{Name?: string, SourceStyle?: string, DestStyle?: string}} c - rij uit t_connector
+ * @returns {{afgeleid: boolean, naam: string}}
+ */
+export function afgeleidUitConnector(c) {
+  const ruw = String(c?.Name || "");
+  const metStreep = /^\s*\//.test(ruw);
+  const rolAfgeleid = [c?.SourceStyle, c?.DestStyle].some((s) => sleutelWaarden(s).Derived === "1");
+  return { afgeleid: metStreep || rolAfgeleid, naam: metStreep ? ruw.replace(/^\s*\/\s*/, "") : ruw };
+}

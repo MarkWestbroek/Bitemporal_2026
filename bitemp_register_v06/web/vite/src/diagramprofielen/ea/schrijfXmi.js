@@ -174,7 +174,7 @@ export function schrijfXmi(model, { naam = "Omnium", schaal = EA_SCHAAL, exporte
           const g = grenzen(veld.data?.kardinaliteit);
           const lu = g ? `<lowerValue xmi:type="uml:LiteralInteger" xmi:id="${vid}_lo" value="${g[0]}"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="${vid}_hi" value="${g[1]}"/>` : "";
           delen.push(
-            `${inspr}\t<ownedAttribute xmi:type="uml:Property" xmi:id="${vid}" name="${esc(veld.naam)}" visibility="${veld.data?.zichtbaarheid === "Private" ? "private" : "public"}" isDerived="${veld.data?.afgeleid ? "true" : "false"}">${typeRef(veld.data?.typeLabel)}${lu}</ownedAttribute>`
+            `${inspr}\t<ownedAttribute xmi:type="uml:Property" xmi:id="${vid}" name="${esc(veld.naam)}" visibility="${veld.data?.zichtbaarheid === "Private" ? "private" : "public"}" isDerived="${veld.data?.afgeleid || veld.data?.indicatieAfleidbaar ? "true" : "false"}">${typeRef(veld.data?.typeLabel)}${lu}</ownedAttribute>`
           );
         }
       }
@@ -206,7 +206,9 @@ export function schrijfXmi(model, { naam = "Omnium", schaal = EA_SCHAAL, exporte
       // Bron = het geheel (ruit aan de bron): dat uiteinde draagt de aggregatie.
       const d = c.data || {};
       return (
-        `${inspr}<packagedElement xmi:type="uml:Association" xmi:id="${id}" name="${esc(c.naam)}" visibility="public">\n` +
+        // isDerived op de associatie zelf (UML 2.5.1 §11.5): puur-uml/SysML
+        // `afgeleid`, MIM `indicatieAfleidbaar`.
+        `${inspr}<packagedElement xmi:type="uml:Association" xmi:id="${id}" name="${esc(c.naam)}" visibility="public"${d.afgeleid || d.indicatieAfleidbaar ? ` isDerived="true"` : ""}>\n` +
         `${einde("dst", doel, d.doelKardinaliteit ?? d.kardinaliteit, d.doelRolNaam, "none")}\n` +
         `${einde("src", bron, d.bronKardinaliteit, d.bronRolNaam, agg)}\n${inspr}</packagedElement>\n`
       );

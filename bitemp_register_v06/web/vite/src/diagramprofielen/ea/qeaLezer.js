@@ -52,6 +52,17 @@ export async function openQea(bytes) {
 }
 
 /**
+ * Welke van de gevraagde kolommen heeft deze tabel (EA-versies verschillen)?
+ * @param {any} db
+ * @param {string} tabel
+ * @param {string[]} kolommen
+ */
+function bestaandeKolommen(db, tabel, kolommen) {
+  const aanwezig = new Set(rijen(db, `PRAGMA table_info(${tabel})`).map((r) => String(r.name).toLowerCase()));
+  return kolommen.filter((k) => aanwezig.has(k.toLowerCase()));
+}
+
+/**
  * Voer een query uit en geef rijen als objecten (kolomnaam → waarde).
  * @param {any} db
  * @param {string} sql
@@ -113,12 +124,18 @@ export function leesBron(db, packageId) {
        FROM t_operation WHERE Object_ID IN (${oq}) ORDER BY Object_ID, Pos`,
     objectIds
   );
+  // Rol-eigenschappen per uiteinde (UML Property): `SourceStyle`/`DestStyle`
+  // ("Union=0;Derived=0;AllowDuplicates=0;Owned=0;Navigable=…;"), geordend en
+  // wijzigbaarheid. Niet elke EA-versie heeft alle kolommen: alleen wat bestaat.
+  const rolKolommen = bestaandeKolommen(db, "t_connector", [
+    "SourceStyle", "DestStyle", "SourceIsOrdered", "DestIsOrdered", "SourceChangeable", "DestChangeable",
+  ]);
   const t_connector = rijen(
     db,
     `SELECT Connector_ID, Name, Direction, Notes, Connector_Type, SubType, SourceCard, DestCard, SourceRole, DestRole,
             SourceIsAggregate, DestIsAggregate, SourceIsNavigable, DestIsNavigable, Start_Object_ID, End_Object_ID,
             Stereotype, LineStyle, PDATA1, PDATA2, PDATA3, PDATA4, ea_guid,
-            SeqNo, PtStartX, PtStartY, PtEndX, PtEndY, DiagramID
+            SeqNo, PtStartX, PtStartY, PtEndX, PtEndY, DiagramID${rolKolommen.map((k) => `, ${k}`).join("")}
        FROM t_connector WHERE Start_Object_ID IN (${oq}) AND End_Object_ID IN (${oq})`,
     [...objectIds, ...objectIds]
   );

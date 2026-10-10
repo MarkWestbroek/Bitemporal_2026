@@ -34,6 +34,7 @@
  * bij een tekening. Dit profiel tekent ze; de matrix-kant is vervolgwerk.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { AFGELEID, AFLEIDINGSREGEL } from "../umlEigenschappen.js";
 import { registreerSysmlShapes } from "./shapes.jsx";
 import { registreerSysmlIconen } from "./iconen.jsx";
 import { TRACE_OPTIES, traceLabels } from "./traces.js";
@@ -58,6 +59,8 @@ const fieldTypes = [
     properties: [
       { key: "naam", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
+      // SysML erft UML isDerived: een afgeleide value property ("/" ervoor).
+      AFGELEID,
     ],
   },
   {
@@ -66,6 +69,7 @@ const fieldTypes = [
     properties: [
       { key: "naam", label: "rolnaam", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type", referenceTypes: ["blok"] },
+      AFGELEID,
     ],
   },
   {
@@ -285,6 +289,8 @@ const elementTypes = [
     properties: [
       { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "string" },
       { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "string" },
+      AFGELEID,
+      AFLEIDINGSREGEL,
     ],
     hooks: {
       edgeLabels: (conn) => {

@@ -127,3 +127,21 @@ test("een property die alleen in het profiel wordt toegevoegd, gaat vanzelf mee"
     ge.properties.splice(ge.properties.indexOf(extra), 1);
   }
 });
+
+test("afgeleide relatie: afgeleid + afleidingsregel overleven de V3-rondreis", () => {
+  const core = vanCanoniekModel(bronState({}, {}, { R: { afgeleid: true, afleidingsregel: "E.ouder.ouder" } }));
+  assert.equal(core.elements.R.data.afgeleid, true, "heenreis naar de sandbox");
+  const { v3 } = exporteerV3(core);
+  const model = v3.model || v3;
+  const rel = model.entiteiten.flatMap((e) => e.relaties || []).find((r) => r.naam === "R");
+  assert.equal(rel.afgeleid, true);
+  assert.equal(rel.afleidingsregel, "E.ouder.ouder");
+  assert.equal(rel.afleidingsregelTaal, "cel");
+  const weer = importeerV3(v3);
+  assert.equal(weer.elements.R.data.afgeleid, true, "terug uit V3");
+  assert.equal(weer.elements.R.data.afleidingsregel, "E.ouder.ouder");
+  // Niet-afgeleid: geen velden in V3.
+  const gewoon = exporteerV3(vanCanoniekModel(bronState()));
+  const relGewoon = (gewoon.v3.model || gewoon.v3).entiteiten.flatMap((e) => e.relaties || []).find((r) => r.naam === "R");
+  assert.equal(relGewoon.afgeleid, undefined);
+});
