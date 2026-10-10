@@ -805,6 +805,21 @@ fase 2 een **bewerkbare sandbox**:
   een gewone verbinding naar die pool. Alle canvasmenu's zijn met het
   **toetsenbord** te bedienen: eerste optie voorgeselecteerd, ↑/↓, Enter,
   Escape.
+- **Ovalen en ruiten hechten aan op hun toppen (2026-10-10).** Mark: "de
+  kortste lijn leidt bij use cases niet tot het gewenste resultaat". Zwevend
+  aanhechten mikte middelpunt op middelpunt, dus een lijn raakte een brede
+  ovaal schuin ergens op de boog, en pijlpunten landden onder rare hoeken.
+  Nu kiest de motor bij een vorm met `omtrek: "ellips"` of `"ruit"` een van de
+  vier **toppen** (links, rechts, boven, onder): het paar met de kortste
+  afstand, bij bijna gelijkspel links/rechts. Een rechthoek aan de andere
+  kant mikt zwevend op die top. Dit is generiek M3: het nieuwe
+  ElementType-attribuut `aanhechtpunten` ("toppen" | "snijpunt") heeft als
+  default de waarde die uit `omtrek` volgt, dus use case, activiteit en BPMN
+  doen mee zonder profielcode. Hoekige lijnen houden hun eigen route
+  (`orthogonaleUiteinden`), en een uiteinde met knik mikt op zijn knik. Code:
+  `kortsteToppen()`/`toppenVan()` in `zwevendeRand.js`,
+  `aanhechtpuntenVan()` in `materialiseerConnectoren.js`. *Normaliseer
+  relaties* (↔) wist de vaste handles; daarna geldt deze regel.
 - **Tekenen zet de aanhechting niet meer vast (2026-09-18).** Bij een
   elementtype met `randAanhechting: "zwevend"` bewaart de canvas bij tekenen,
   verhangen en de magic link **geen** handle meer. Je sleept nu eenmaal altijd

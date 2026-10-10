@@ -5,7 +5,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden, richtpuntOfAanhechtpunt, orthogonaleUiteinden, naarOmtrek } from "./zwevendeRand.js";
-import { besteZijde } from "./materialiseerConnectoren.js";
+import { besteZijde, aanhechtpuntenVan } from "./materialiseerConnectoren.js";
+import { kortsteToppen, toppenVan } from "./zwevendeRand.js";
 
 // Een doos van 200x100 met middelpunt (100, 50).
 const DOOS = { x: 0, y: 0, width: 200, height: 100 };
@@ -192,4 +193,40 @@ test("hoekig zonder knikken, event naar taak: rechte lijn ook met een ronde bron
   assert.equal(u.targetX, 100);
   const afstand = Math.hypot(u.sourceX - 15, u.sourceY - 45);
   assert.ok(Math.abs(afstand - 15) < 1e-6, "het beginpunt ligt op de cirkel");
+});
+
+// ── Toppen (ElementType.aanhechtpunten, 2026-10-10) ──────────────────────
+const r = (x, y, width, height) => ({ x, y, width, height });
+const VAST_T = { sourceX: 0, sourceY: 0, targetX: 0, targetY: 0, sourcePosition: "right", targetPosition: "left" };
+const zijden = (u) => u && `${u.sourcePosition}->${u.targetPosition}`;
+
+test("aanhechtpuntenVan: default uit de omtrek, expliciet wint", () => {
+  assert.equal(aanhechtpuntenVan({ omtrek: "ellips" }), "toppen");
+  assert.equal(aanhechtpuntenVan({ omtrek: "ruit" }), "toppen");
+  assert.equal(aanhechtpuntenVan({}), "snijpunt");
+  assert.equal(aanhechtpuntenVan({ omtrek: "ellips", aanhechtpunten: "snijpunt" }), "snijpunt");
+  assert.equal(aanhechtpuntenVan(undefined), "snijpunt");
+});
+
+test("toppenVan: vier uiterste punten midden op de zijden", () => {
+  assert.deepEqual(toppenVan(r(0, 0, 200, 100)).map((t) => [t.zijde, t.x, t.y]), [
+    ["left", 0, 50], ["right", 200, 50], ["top", 100, 0], ["bottom", 100, 100],
+  ]);
+});
+
+test("kortsteToppen: naast elkaar links/rechts, boven elkaar boven/onder (Marks use cases)", () => {
+  // Bekijk voortgang (rechtsonder) -> Vraag product/dienst aan (linksboven).
+  assert.equal(zijden(kortsteToppen({ bronRect: r(1104, 1116, 236, 76), doelRect: r(626, 1039, 236, 76), vast: VAST_T, bron: "toppen", doel: "toppen" })), "left->right");
+  // Maak een afspraak recht boven Vraag product/dienst aan.
+  assert.equal(zijden(kortsteToppen({ bronRect: r(628, 808, 236, 76), doelRect: r(626, 1039, 236, 76), vast: VAST_T, bron: "toppen", doel: "toppen" })), "bottom->top");
+  // Actor (rechthoek, zwevend) links van een use case: naar de linkertop.
+  assert.equal(kortsteToppen({ bronRect: r(340, 880, 40, 60), doelRect: r(844, 897, 186, 72), vast: VAST_T, bron: "zwevend", doel: "toppen" }).targetPosition, "left");
+});
+
+test("kortsteToppen: overlappende vormen -> null; zwevendeUiteinden zonder toppen ongewijzigd", () => {
+  assert.equal(kortsteToppen({ bronRect: r(0, 0, 100, 50), doelRect: r(50, 20, 100, 50), vast: VAST_T, bron: "toppen", doel: "toppen" }), null);
+  const zonder = zwevendeUiteinden({ bronRect: r(0, 0, 200, 100), doelRect: r(400, 300, 200, 100), zwevendBron: true, zwevendDoel: true, vast: VAST_T, bronOmtrek: "ellips", doelOmtrek: "ellips" });
+  const met = zwevendeUiteinden({ bronRect: r(0, 0, 200, 100), doelRect: r(400, 300, 200, 100), zwevendBron: true, zwevendDoel: true, vast: VAST_T, bronOmtrek: "ellips", doelOmtrek: "ellips", bronToppen: true, doelToppen: true });
+  assert.notDeepEqual(zonder, met);
+  assert.ok(toppenVan(r(0, 0, 200, 100)).some((t) => t.x === met.sourceX && t.y === met.sourceY), "bron op een top");
 });

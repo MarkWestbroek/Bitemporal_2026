@@ -177,6 +177,18 @@ function midden(ref, maat) {
  * Gebruikt wanneer een connector geen expliciete handles heeft — en dat is
  * precies wat "normaliseer relaties" afdwingt door de handles te wissen.
  */
+/**
+ * Aanhechtpunten van een elementtype (M3: ElementType.aanhechtpunten). Zonder
+ * expliciete waarde volgt het uit de vorm: een ellips of ruit hecht aan op
+ * zijn toppen, een rechthoek op het snijpunt langs de zijde. Zo werkt het voor
+ * elk profiel zonder profielspecifieke code (Mark, 10-10).
+ * @returns {"toppen"|"snijpunt"}
+ */
+export function aanhechtpuntenVan(et) {
+  if (et?.aanhechtpunten === "toppen" || et?.aanhechtpunten === "snijpunt") return et.aanhechtpunten;
+  return et?.omtrek === "ellips" || et?.omtrek === "ruit" ? "toppen" : "snijpunt";
+}
+
 export function besteZijde(van, naar) {
   const dx = naar.x - van.x;
   const dy = naar.y - van.y;
@@ -334,6 +346,9 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
             // Echte omtrek (ruit/ellips) voor het aanhechtpunt — zie zwevendeRand.
             ...(elementTypesById[elements[el.source]?.elementType]?.omtrek ? { bronOmtrek: elementTypesById[elements[el.source].elementType].omtrek } : {}),
             ...(elementTypesById[elements[el.target]?.elementType]?.omtrek ? { doelOmtrek: elementTypesById[elements[el.target].elementType].omtrek } : {}),
+            // Toppen of snijpunt (ElementType.aanhechtpunten, default uit de omtrek).
+            ...(aanhechtpuntenVan(elementTypesById[elements[el.source]?.elementType]) === "toppen" ? { bronToppen: true } : {}),
+            ...(aanhechtpuntenVan(elementTypesById[elements[el.target]?.elementType]) === "toppen" ? { doelToppen: true } : {}),
             labels: metOffsets(kaalLabels),
           },
         },

@@ -138,6 +138,12 @@
  *   zwevende aanhechting: een lijn raakt een ruit (beslissing) op zijn punt of
  *   zijde en een ellips (use case, begin/eind) op de boog, niet op de
  *   onzichtbare rechthoek eromheen. Default rechthoek. Zie canvas/zwevendeRand.js
+ * @property {"toppen"|"snijpunt"} [aanhechtpunten] - waar een zwevende lijn
+ *   een ellips of ruit raakt. `"toppen"` = op een van de vier uiterste punten
+ *   (links, rechts, boven, onder), het paar met de kortste afstand: rustig,
+ *   zoals EA bij use cases en BPMN bij gateways. `"snijpunt"` = waar de
+ *   middellijn de omtrek snijdt (uitwaaieren). Default afgeleid van `omtrek`:
+ *   ellips/ruit -> "toppen", rechthoek -> "snijpunt". Geen profielcode nodig.
  * @property {"zijden"|"zwevend"} [randAanhechting] - waar een connector aan dit
  *   element vastpakt. `"zijden"` = de vier handles (midden van elke zijde);
  *   `"zwevend"` = het punt waar de lijn de omtrek snijdt, zodat lijnen naar
