@@ -178,6 +178,8 @@ function ConnectorEdge({
       orthogonaal: p.vorm === "hoekig" && !knikkenRand,
       bronOmtrek: p.bronOmtrek || "rechthoek",
       doelOmtrek: p.doelOmtrek || "rechthoek",
+      bronToppen: !!p.bronToppen,
+      doelToppen: !!p.doelToppen,
       vast: {
         sourceX: sourceXVast,
         sourceY: sourceYVast,

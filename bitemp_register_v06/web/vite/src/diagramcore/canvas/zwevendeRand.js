@@ -135,7 +135,7 @@ export function nodeRechthoek(node) {
  * @param {{sourceX: number, sourceY: number, targetX: number, targetY: number,
  *          sourcePosition: string, targetPosition: string}} args.vast
  */
-export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel, vast, bronRicht = null, doelRicht = null, bronOmtrek = "rechthoek", doelOmtrek = "rechthoek", orthogonaal = false }) {
+export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel, vast, bronRicht = null, doelRicht = null, bronOmtrek = "rechthoek", doelOmtrek = "rechthoek", orthogonaal = false, bronToppen = false, doelToppen = false }) {
   if ((!zwevendBron && !zwevendDoel) || !bronRect || !doelRect) return vast;
   // Hoekige lijn zonder knikken, beide uiteinden vrij: zo recht mogelijk, zoals
   // EA's Auto Routing (zie orthogonaleUiteinden). Met een vaste handle aan één
@@ -147,6 +147,20 @@ export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel
     const s = naarOmtrek(bronRect, { x: o.sourceX, y: o.sourceY }, o.sourcePosition, bronOmtrek);
     const t = naarOmtrek(doelRect, { x: o.targetX, y: o.targetY }, o.targetPosition, doelOmtrek);
     return { ...vast, ...o, sourceX: s.x, sourceY: s.y, targetX: t.x, targetY: t.y };
+  }
+  // Toppen (ellips/ruit): het dichtstbijzijnde paar uiterste punten, zie
+  // kortsteToppen. Alleen voor uiteinden zonder knik; een uiteinde met knik
+  // mikt op zijn knik (hieronder, via richtpuntOfAanhechtpunt).
+  const bronT = zwevendBron && bronToppen && !bronRicht;
+  const doelT = zwevendDoel && doelToppen && !doelRicht;
+  if ((bronT || doelT) && !bronRicht && !doelRicht) {
+    const k = kortsteToppen({
+      bronRect, doelRect, vast,
+      bron: bronT ? "toppen" : zwevendBron ? "zwevend" : "vast",
+      doel: doelT ? "toppen" : zwevendDoel ? "zwevend" : "vast",
+      bronOmtrek, doelOmtrek,
+    });
+    if (k) return { ...vast, ...k };
   }
   const bronMid = middelpunt(bronRect);
   const doelMid = middelpunt(doelRect);
@@ -277,4 +291,64 @@ export function richtpuntOfAanhechtpunt(rect, punt, tolerantie = 1.5, omtrek = "
   if (binnenY && Math.abs(punt.x - links) <= tolerantie) return { x: links, y: punt.y, zijde: "left" };
   if (binnenY && Math.abs(punt.x - rechts) <= tolerantie) return { x: rechts, y: punt.y, zijde: "right" };
   return aanhechtpunt(rect, punt);
+}
+
+/**
+ * De vier toppen (uiterste punten) van een vorm: links, rechts, boven, onder.
+ * Voor een ellips en een ruit liggen die precies midden op de zijden van de
+ * omhullende rechthoek, dus dit geldt voor elke vorm.
+ * @param {Rechthoek} rect
+ * @returns {Array<Punt & {zijde: string}>}
+ */
+export function toppenVan(rect) {
+  const cx = rect.x + rect.width / 2, cy = rect.y + rect.height / 2;
+  return [
+    { x: rect.x, y: cy, zijde: "left" },
+    { x: rect.x + rect.width, y: cy, zijde: "right" },
+    { x: cx, y: rect.y, zijde: "top" },
+    { x: cx, y: rect.y + rect.height, zijde: "bottom" },
+  ];
+}
+
+/**
+ * Kortste verbinding via toppen (ElementType.aanhechtpunten = "toppen";
+ * Mark 10-10: "de kortste lijn leidt bij use cases niet tot het gewenste
+ * resultaat"). Per uiteinde:
+ *   - "toppen":  een van de vier uiterste punten;
+ *   - "zwevend": het gewone aanhechtpunt op de rand, gericht op het gekozen
+ *                punt aan de andere kant;
+ *   - "vast":    de handle-coordinaten uit `vast`.
+ * Uit alle combinaties wint de kortste. Bij (bijna) gelijke lengte gaan
+ * links/rechts voor boven/onder: dat leest rustiger bij brede ovalen.
+ * Twee overlappende vormen: null (de aanroeper valt terug).
+ * @returns {{sourceX:number, sourceY:number, sourcePosition:string, targetX:number, targetY:number, targetPosition:string}|null}
+ */
+export function kortsteToppen({ bronRect, doelRect, vast, bron, doel, bronOmtrek = "rechthoek", doelOmtrek = "rechthoek" }) {
+  const overlap =
+    bronRect.x < doelRect.x + doelRect.width && doelRect.x < bronRect.x + bronRect.width &&
+    bronRect.y < doelRect.y + doelRect.height && doelRect.y < bronRect.y + bronRect.height;
+  if (overlap) return null;
+  const vastBron = { x: vast.sourceX, y: vast.sourceY, zijde: vast.sourcePosition };
+  const vastDoel = { x: vast.targetX, y: vast.targetY, zijde: vast.targetPosition };
+  const kandidaten = (soort, rect, vastPunt) =>
+    soort === "toppen" ? toppenVan(rect) : soort === "vast" ? [vastPunt] : null;
+  const bronK = kandidaten(bron, bronRect, vastBron);
+  const doelK = kandidaten(doel, doelRect, vastDoel);
+  const horizontaal = (z) => z === "left" || z === "right";
+  /** @type {any} */
+  let beste = null;
+  const overweeg = (s, t) => {
+    const d = Math.hypot(t.x - s.x, t.y - s.y);
+    // Horizontale toppen krijgen 4% voordeel: bijna gelijk -> links/rechts.
+    const gewicht = d * (horizontaal(s.zijde) || horizontaal(t.zijde) ? 0.96 : 1);
+    if (!beste || gewicht < beste.gewicht) beste = { gewicht, s, t };
+  };
+  if (bronK && doelK) for (const s of bronK) for (const t of doelK) overweeg(s, t);
+  else if (bronK) for (const s of bronK) overweeg(s, richtpuntOfAanhechtpunt(doelRect, s, 1.5, doelOmtrek));
+  else if (doelK) for (const t of doelK) overweeg(richtpuntOfAanhechtpunt(bronRect, t, 1.5, bronOmtrek), t);
+  if (!beste) return null;
+  return {
+    sourceX: beste.s.x, sourceY: beste.s.y, sourcePosition: beste.s.zijde,
+    targetX: beste.t.x, targetY: beste.t.y, targetPosition: beste.t.zijde,
+  };
 }

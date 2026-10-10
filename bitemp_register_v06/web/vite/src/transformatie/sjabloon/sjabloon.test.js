@@ -111,3 +111,28 @@ test("diagramvolgorde volgt de boom over profielen heen; start-pijl in de schets
   assert.match(svg, /orient="auto-start-reverse"/);
   assert.doesNotMatch(svg, /marker-end=/);
 });
+
+test("markdown met afbeeldingen: inline svg wordt een link naar een los bestand, alt uit de kop", async () => {
+  const { markdownMetAfbeeldingen } = await import("./markdownMetAfbeeldingen.js");
+  const md = "# Doc\n\n## Diagram: Actor model\n\n<svg viewBox=\"0 0 1 1\"><rect/></svg>\n\ntekst\n\n<svg xmlns=\"http://www.w3.org/2000/svg\"><g/></svg>\n";
+  const uit = markdownMetAfbeeldingen(md, "Mijn doc");
+  assert.equal(uit.bestanden.length, 2);
+  assert.deepEqual(uit.bestanden.map((b) => b.naam), ["Mijn_doc-d1.svg", "Mijn_doc-d2.svg"]);
+  assert.match(uit.markdown, /!\[Actor model\]\(Mijn_doc-d1\.svg\)/);
+  assert.match(uit.markdown, /!\[Actor model\]\(Mijn_doc-d2\.svg\)/, "dichtstbijzijnde kop erboven");
+  assert.doesNotMatch(uit.markdown, /<svg/);
+  assert.match(uit.bestanden[0].inhoud, /^<\?xml[^>]*>\n<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox/);
+});
+
+test("zip: geldig STORE-archief met UTF-8-namen en juiste CRC", async () => {
+  const { maakZip, crc32 } = await import("./zip.js");
+  assert.equal(crc32(new TextEncoder().encode("123456789")), 0xcbf43926);
+  const zip = maakZip([{ naam: "a.md", inhoud: "# hoi" }, { naam: "één.svg", inhoud: "<svg/>" }], new Date(2026, 9, 10, 12, 0, 0));
+  const dv = new DataView(zip.buffer);
+  assert.equal(dv.getUint32(0, true), 0x04034b50);
+  const eind = zip.length - 22;
+  assert.equal(dv.getUint32(eind, true), 0x06054b50);
+  assert.equal(dv.getUint16(eind + 10, true), 2);
+  const cdStart = dv.getUint32(eind + 16, true);
+  assert.equal(dv.getUint32(cdStart, true), 0x02014b50);
+});

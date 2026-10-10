@@ -6,9 +6,14 @@
  * roept `useDocumentStore.getState().toon({...})` aan; de host (in de
  * StudioShell) toont de HTML in een sandbox-iframe met knoppen voor
  * Markdown/HTML downloaden, Markdown kopiëren en afdrukken (→ PDF).
+ * "Markdown + afbeeldingen" levert een zip met het .md-bestand en de
+ * diagrammen als losse .svg-bestanden: GitHub toont inline <svg> in markdown
+ * niet (Mark, 10-10). Zie transformatie/sjabloon/markdownMetAfbeeldingen.js.
  */
 import React from "react";
 import { create } from "zustand";
+import { markdownMetAfbeeldingen } from "../../transformatie/sjabloon/markdownMetAfbeeldingen.js";
+import { maakZip } from "../../transformatie/sjabloon/zip.js";
 
 export const useDocumentStore = create((set) => ({
   open: false,
@@ -59,7 +64,22 @@ export function DocumentVoorbeeldHost() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "var(--s-panel, #fff)", color: "var(--s-fg)", border: "1px solid var(--s-border)", borderRadius: 10, boxShadow: "0 12px 40px rgba(15,23,42,.3)", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderBottom: "1px solid var(--s-border)" }}>
           <strong style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{titel}</strong>
-          <button style={knop} onClick={() => download(`${veilig}.md`, markdown, "text/markdown")}>Download Markdown</button>
+          <button style={knop} onClick={() => download(`${veilig}.md`, markdown, "text/markdown")} title="Eén bestand; de diagrammen staan er als inline SVG in (VS Code, browsers)">
+            Download Markdown
+          </button>
+          <button
+            style={knop}
+            title="Zip met het .md-bestand en de diagrammen als losse .svg-bestanden — werkt ook op GitHub"
+            onClick={() => {
+              const uit = markdownMetAfbeeldingen(markdown, veilig);
+              const zip = maakZip([{ naam: `${veilig}.md`, inhoud: uit.markdown }, ...uit.bestanden]);
+              download(`${veilig}.zip`, zip, "application/zip");
+              setMelding(`Zip met ${uit.bestanden.length} afbeelding${uit.bestanden.length === 1 ? "" : "en"} gedownload.`);
+              setTimeout(() => setMelding(""), 3000);
+            }}
+          >
+            Markdown + afbeeldingen (.zip)
+          </button>
           <button style={knop} onClick={() => download(`${veilig}.html`, html, "text/html")}>Download HTML</button>
           <button
             style={knop}
