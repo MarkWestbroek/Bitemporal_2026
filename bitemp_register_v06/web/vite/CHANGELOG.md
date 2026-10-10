@@ -14,6 +14,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   toont inline SVG in Markdown niet; zo wel. Eigen ZIP-schrijver zonder afhankelijkheden.
 
 ### Gewijzigd
+- **Canoniek: afgeleide velden boven de gewone, met "/"** (10-10, Mark): bij entiteit,
+  gegevenselement (ook opgenomen in een entiteit) en relatie staat het afgeleid-compartiment nu
+  bovenaan, en elk veld daarin krijgt de UML-"/" — generiek via het nieuwe M3-attribuut
+  `FieldType.afgeleid`. De render-API (diagramsvg) volgt dezelfde volgorde.
+- **Vergroten grijpt beter** (10-10, Mark): de hoekpunten van de resizer zijn 9px (was 5) en de
+  zijkanten hebben een klikvlak van 10px (was 1). Bij een geselecteerd kader wint de resizer van de
+  verplaatsrand, die sinds de klik-door-fix het trekken aan de zijkant afving. De
+  verbindingshandles liggen boven de verbrede zijlijnen, zodat relaties trekken blijft werken.
 - **Ovalen en ruiten hechten aan op hun toppen** (10-10, Mark): een lijn naar een use case, een
   begin/eind-stip, een beslissing of een BPMN-event/gateway raakt de vorm nu op het dichtstbijzijnde
   uiterste punt (links, rechts, boven, onder) in plaats van schuin op de boog richting het

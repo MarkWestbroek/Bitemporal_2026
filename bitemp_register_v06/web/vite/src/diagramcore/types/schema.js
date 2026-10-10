@@ -65,6 +65,9 @@
  *   compacte rij-weergave op de node (componeert de property-weergaven).
  *   "sub-vak" = een opgenomen deel als vak in het vak (zie ElementType.opname)
  * @property {PropertyType[]} [properties]
+ * @property {boolean} [afgeleid] - elk veld van dit type is afgeleid (berekend,
+ *   niet vastgelegd): de weergave zet er de UML-"/" voor, net als bij een
+ *   veld met `data.afgeleid`. Bv. canoniek `afgeleidVeld` (2026-10-10).
  */
 
 /**

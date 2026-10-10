@@ -45,6 +45,8 @@ const fieldTypes = [
   {
     id: "afgeleidVeld",
     viewer: "naam-type",
+    // Elk veld hier is afgeleid: "/" voor de naam (M3 FieldType.afgeleid).
+    afgeleid: true,
     properties: [
       { key: "naam", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
@@ -149,9 +151,11 @@ const elementTypes = [
     // waar de entiteit in staat — daarom geen aparte properties.
     // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
     properties: [BESCHRIJVING_VELD, MEERVOUD_VELD, MATERIEEL_VELD, KLEUR_VELD],
+    // Afgeleid boven de gewone velden (Mark, 10-10): voor ENT, GE en relatie,
+    // ook in een opgenomen GE (opname.js volgt deze volgorde).
     compartments: [
-      { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
+      { id: "velden", label: null, fieldType: "attribuut" },
     ],
   },
   {

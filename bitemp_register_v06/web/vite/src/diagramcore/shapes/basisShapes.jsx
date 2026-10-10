@@ -86,7 +86,7 @@ function VeldRegel({ veld, fieldType, fieldTypesById, compartmentTypesById, veld
   return (
     <div className={"dc-veld" + (d.cursief ? " is-cursief" : "")} data-dc-veld={sleutel}>
       <span className="dc-veld-naam">
-        {d.afgeleid && <span className="dc-veld-afgeleid">/</span>}
+        {(d.afgeleid || fieldType?.afgeleid) && <span className="dc-veld-afgeleid">/</span>}
         {d.verplicht ? <strong>{veld.naam}</strong> : <span>{veld.naam}</span>}
       </span>
       {d.typeLabel ? <span className="dc-veld-type">{d.typeLabel}</span> : null}
