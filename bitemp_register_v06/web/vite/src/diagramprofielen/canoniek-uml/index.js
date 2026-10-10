@@ -39,7 +39,7 @@ const fieldTypes = [
       { key: "naam", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
       { key: "verplicht", datatype: "boolean" },
-      { key: "afgeleid", datatype: "boolean" },
+      { key: "afgeleid", datatype: "boolean", betekenis: "afgeleid" },
     ],
   },
   {
@@ -289,6 +289,11 @@ const elementTypes = [
       { key: "naamLabelTerug", label: "label terug", datatype: "string", placeholder: "bijv. is woonadres van" },
       { key: "directioneel", label: "gericht (→ doel)", datatype: "boolean" },
       { key: "geordend", label: "geordend {ordered}", datatype: "boolean" },
+      // Afgeleide relatie (UML 2.5.1 §11.5, "/" voor de naam). In het register:
+      // geen tabel, alleen leesbaar via de afleidingsregel (V3Relatie.afgeleid,
+      // codegen bij de backend). Taal: CEL, zoals bij afgeleide velden.
+      { key: "afgeleid", label: "afgeleid (/)", datatype: "boolean", betekenis: "afgeleid" },
+      { key: "afleidingsregel", label: "afleidingsregel (CEL)", datatype: "cel-expressie" },
     ],
     hooks: {
       stereotype: stereotypeUitSubtype("relatieSubtype"),

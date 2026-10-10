@@ -107,12 +107,14 @@ const MARKER_START = {
   ),
   "schuine-streep": <path d="M3.2 4.8 L1.8 9.2" />,
   "cirkel-open": <circle cx="2.8" cy="7" r="1.6" />,
+  kruisje: <path d="M2.2 5.6 L4.6 8.4 M4.6 5.6 L2.2 8.4" />,
 };
 const MARKER_EIND = {
   "pijl-open": <path d="M9.6 4.6 L13 7 L9.6 9.4" />,
   driehoek: <path d="M9.2 4.4 L13 7 L9.2 9.6 Z" />,
   "pijl-dicht": <path d="M9.2 4.4 L13 7 L9.2 9.6 Z" fill="currentColor" />,
   bol: <circle cx="11.4" cy="7" r="1.5" fill="currentColor" />,
+  kruisje: <path d="M9.4 5.6 L11.8 8.4 M11.8 5.6 L9.4 8.4" />,
 };
 // De lijn stopt vóór een marker, zodat open figuren niet doorkruist worden.
 const LIJN_START_X = { ruit: 5.8, "ruit-open": 5.8, bol: 4.1, "kruis-cirkel": 5, "cirkel-open": 4.4 };

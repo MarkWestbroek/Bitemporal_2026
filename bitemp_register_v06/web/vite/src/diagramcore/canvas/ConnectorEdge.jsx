@@ -23,6 +23,9 @@
  *              | "schuine-streep" — BPMN default flow (streepje ná de bron)
  *              | "kruis-cirkel" — SysML containment (⊕ aan de ouderkant)
  *              | "cirkel-open" — BPMN message flow (open rondje net buiten de bron)
+ *              | "pijl-open" | "pijl-dicht" — pijlpunt naar de bron (UML: bron navigeerbaar)
+ *              | "kruisje" — × vlak bij het uiteinde: UML "niet navigeerbaar"
+ *                (ook als markerEnd)
  *              | "kraai-…" — kraaienpoot, zie markerEnd
  *              | null
  *   markerEnd:   "pijl-open" | "driehoek" | "pijl-dicht" | "bol" | null
@@ -319,6 +322,7 @@ function ConnectorEdge({
   const bolId = `dc-bol-${id}`;
   const streepId = `dc-streep-${id}`;
   const kruisId = `dc-kruis-${id}`;
+  const kruisjeId = `dc-kruisje-${id}`;
   const cirkelOpenId = `dc-cirkel-open-${id}`;
   const kraaiBronId = `dc-kraai-bron-${id}`;
   const kraaiDoelId = `dc-kraai-doel-${id}`;
@@ -658,6 +662,14 @@ function ConnectorEdge({
             <path d="M 5 11.5 L 11 2.5" fill="none" stroke={kleur} strokeWidth="1.3" strokeLinecap="round" />
           </marker>
         )}
+        {/* UML niet-navigeerbaar uiteinde (2.5.1 §11.5.4): een × vlak bij het
+            uiteinde. Eén marker voor beide kanten: auto-start-reverse legt hem
+            aan het begin net zo goed binnen de lijn als aan het eind. */}
+        {(p.markerStart === "kruisje" || p.markerEnd === "kruisje") && (
+          <marker id={kruisjeId} markerWidth="20" markerHeight="10" refX="15" refY="5" orient="auto-start-reverse" markerUnits="strokeWidth">
+            <path d="M 4 1.5 L 11 8.5 M 11 1.5 L 4 8.5" fill="none" stroke={kleur} strokeWidth="1.1" strokeLinecap="round" />
+          </marker>
+        )}
         <KraaienpootMarker id={kraaiBronId} soort={p.markerStart} kleur={kleur} kant="bron" />
         <KraaienpootMarker id={kraaiDoelId} soort={p.markerEnd} kleur={kleur} kant="doel" />
       </defs>
@@ -682,6 +694,7 @@ function ConnectorEdge({
           : p.markerEnd === "driehoek" ? `url(#${driehoekId})`
           : p.markerEnd === "pijl-dicht" ? `url(#${pijlDichtId})`
           : p.markerEnd === "bol" ? `url(#${bolId})`
+          : p.markerEnd === "kruisje" ? `url(#${kruisjeId})`
           : KRAAIENPOTEN[p.markerEnd] ? `url(#${kraaiDoelId})`
           : undefined
         }
@@ -693,6 +706,7 @@ function ConnectorEdge({
           : p.markerStart === "schuine-streep" ? `url(#${streepId})`
           : p.markerStart === "kruis-cirkel" ? `url(#${kruisId})`
           : p.markerStart === "cirkel-open" ? `url(#${cirkelOpenId})`
+          : p.markerStart === "kruisje" ? `url(#${kruisjeId})`
           : KRAAIENPOTEN[p.markerStart] ? `url(#${kraaiBronId})`
           : undefined
         }

@@ -7,7 +7,7 @@
  * blijft in `data.tags`. Stereotypen `MIM::`, `MIG::` en kaal (`Objecttype`)
  * worden hetzelfde behandeld.
  */
-import { kleurUitBgr, idUitGuid, kardinaliteitUitGrenzen, deelboomPakketten, EA_SCHAAL } from "./qeaHulp.js";
+import { kleurUitBgr, idUitGuid, kardinaliteitUitGrenzen, deelboomPakketten, EA_SCHAAL, afgeleidUitConnector } from "./qeaHulp.js";
 import { maakHulptabellen, maakVerslag, sla, extraData, maakConnectorElement, maakBevat, bouwDiagram } from "./qeaKern.js";
 
 export const MIM_DIAGRAMTYPE = "mim12";
@@ -320,9 +320,11 @@ function vertaalConnector(c, bronId, doelId, elements, h) {
         return { elementType: "externeKoppeling", naam: c.Name || "", source: bronId, target: doelId, data: extra };
       }
       if (bron !== "objecttype" || doel !== "objecttype") return null;
+      // "/" in de naam of een afgeleide rol → MIM indicatie afleidbaar.
+      const { afgeleid, naam } = afgeleidUitConnector(c);
       return {
         elementType: "relatiesoort",
-        naam: c.Name || "",
+        naam,
         source: bronId,
         target: doelId,
         data: {
@@ -332,6 +334,7 @@ function vertaalConnector(c, bronId, doelId, elements, h) {
           ...(c.DestCard ? { doelKardinaliteit: c.DestCard } : {}),
           ...(c.Direction === "Source -> Destination" ? { unidirectioneel: true } : {}),
           ...(c.Connector_Type === "Aggregation" ? { eaConnectorType: "Aggregation" } : {}),
+          ...(afgeleid ? { indicatieAfleidbaar: true } : {}),
           ...extra,
         },
       };

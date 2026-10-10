@@ -993,3 +993,15 @@
   height: 10px;
   background: linear-gradient(to bottom, transparent 4.5px, var(--dc-resize-lijn) 4.5px, var(--dc-resize-lijn) 5.5px, transparent 5.5px);
 }
+
+/* UML-aanvulling van een veld (2026-10-10): zichtbaarheid vóór de naam,
+   [kardinaliteit] = standaard {eigenschappen} achter het type, gedempt. */
+.dc-veld-zichtbaarheid {
+  margin-right: 2px;
+  opacity: 0.7;
+  font-family: ui-monospace, monospace;
+}
+.dc-veld-uml {
+  opacity: 0.75;
+  white-space: nowrap;
+}

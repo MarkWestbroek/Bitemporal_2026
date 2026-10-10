@@ -65,3 +65,20 @@ test("puur-uml: attribuuttypen zijn primitieven en enumeraties — geen klassen"
   const typeProp = attribuut.properties.find((p) => p.key === "typeLabel");
   assert.deepEqual(typeProp.referenceTypes, ["primitief", "datatype", "enumeratie"]);
 });
+
+import { navigeerbaar, navigatiePresentatie, uiteindeLabels } from "../umlEigenschappen.js";
+
+test("navigeerbaarheid per uiteinde, met migratie van directioneel", () => {
+  assert.equal(navigeerbaar({ directioneel: true }, "doel"), "ja");
+  assert.equal(navigeerbaar({ directioneel: true }, "bron"), "");
+  assert.equal(navigeerbaar({ directioneel: true, doelNavigeerbaar: "nee" }, "doel"), "nee", "expliciet wint");
+  assert.deepEqual(navigatiePresentatie({ data: { doelNavigeerbaar: "ja", bronNavigeerbaar: "nee" } }), { markerEnd: "pijl-open", markerStart: "kruisje" });
+  // De ruit van een aggregatie gaat voor aan de bron.
+  assert.deepEqual(navigatiePresentatie({ data: { bronNavigeerbaar: "ja" } }, { markerStart: "ruit-open" }), {});
+  assert.deepEqual(navigatiePresentatie({ data: {} }), {});
+});
+
+test("uiteindeLabels: rolnaam, kardinaliteit en {ordered, nonunique, readOnly} per kant", () => {
+  const { kaal } = uiteindeLabels({ data: { doelRolNaam: "adres", doelKardinaliteit: "0..*", doelGeordend: true, doelAlleenLezen: true } });
+  assert.deepEqual(kaal, [{ zijde: "doel", delen: [{ tekst: "adres", soort: "rolnaam" }, { tekst: "0..*", soort: "kardinaliteit" }, { tekst: "{ordered, readOnly}", soort: "constraint" }] }]);
+});

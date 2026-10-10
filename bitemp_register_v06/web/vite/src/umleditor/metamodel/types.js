@@ -867,6 +867,10 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         relatieSubtype: relNode.data.relatieSubtype || undefined,
         referentielijstInstantie: instantieBinding.naam || undefined,
         directioneel: relNode.data.directioneel || undefined,
+        // Afgeleide relatie (2026-10-10): geen tabel, leesbaar via de regel.
+        afgeleid: relNode.data.afgeleid || undefined,
+        afleidingsregelTaal: relNode.data.afgeleid ? relNode.data.afleidingsregelTaal || "cel" : undefined,
+        afleidingsregel: relNode.data.afgeleid ? relNode.data.afleidingsregel || undefined : undefined,
         naamLabelHeen: relNode.data.naamLabelHeen || undefined,
         naamLabelTerug: relNode.data.naamLabelTerug || undefined,
         doelEntiteit: doelEntiteitNaam,

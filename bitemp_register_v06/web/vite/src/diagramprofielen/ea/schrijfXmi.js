@@ -96,6 +96,36 @@ function grenzen(kard) {
   return [lo, hi === "*" ? "-1" : hi];
 }
 
+/** Zichtbaarheid zoals EA/Omnium hem bewaart (Public/Private/…) → UML (public/private/…). */
+function zichtbaarheidXmi(z) {
+  const v = String(z || "").toLowerCase();
+  return ["private", "protected", "package"].includes(v) ? v : "public";
+}
+
+/**
+ * UML 2.5.1 Property-vlaggen als XMI-attributen (2026-10-10). `kant` is "" voor
+ * een attribuut (sleutels `geordend`, `nietUniek`, …) of "bron"/"doel" voor een
+ * associatie-uiteinde (`bronGeordend`, …). Alleen afwijkingen van de default.
+ * @param {Record<string, any>|undefined} data
+ * @param {""|"bron"|"doel"} kant
+ */
+function propertyVlaggen(data, kant) {
+  const d = data || {};
+  const k = (naam) => (kant ? `${kant}${naam[0].toUpperCase()}${naam.slice(1)}` : naam);
+  return [
+    d[k("geordend")] ? ' isOrdered="true"' : "",
+    d[k("nietUniek")] ? ' isUnique="false"' : "",
+    d[k("alleenLezen")] ? ' isReadOnly="true"' : "",
+    !kant && (d.isId || d.identificerend) ? ' isID="true"' : "",
+  ].join("");
+}
+
+/** defaultValue van een attribuut (als LiteralString), of niets. */
+function standaardXmi(vid, waarde) {
+  if (waarde === undefined || waarde === null || !String(waarde).trim()) return "";
+  return `<defaultValue xmi:type="uml:LiteralString" xmi:id="${vid}_def" value="${esc(waarde)}"/>`;
+}
+
 /**
  * @param {{elements: Record<string, any>, diagrams?: Record<string, any>}} model
  * @param {{naam?: string, schaal?: number, exporter?: string}} [opties]
@@ -174,7 +204,7 @@ export function schrijfXmi(model, { naam = "Omnium", schaal = EA_SCHAAL, exporte
           const g = grenzen(veld.data?.kardinaliteit);
           const lu = g ? `<lowerValue xmi:type="uml:LiteralInteger" xmi:id="${vid}_lo" value="${g[0]}"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="${vid}_hi" value="${g[1]}"/>` : "";
           delen.push(
-            `${inspr}\t<ownedAttribute xmi:type="uml:Property" xmi:id="${vid}" name="${esc(veld.naam)}" visibility="${veld.data?.zichtbaarheid === "Private" ? "private" : "public"}" isDerived="${veld.data?.afgeleid ? "true" : "false"}">${typeRef(veld.data?.typeLabel)}${lu}</ownedAttribute>`
+            `${inspr}\t<ownedAttribute xmi:type="uml:Property" xmi:id="${vid}" name="${esc(veld.naam)}" visibility="${zichtbaarheidXmi(veld.data?.zichtbaarheid)}" isDerived="${veld.data?.afgeleid || veld.data?.indicatieAfleidbaar ? "true" : "false"}"${propertyVlaggen(veld.data, "")}>${typeRef(veld.data?.typeLabel)}${lu}${standaardXmi(vid, veld.data?.standaardwaarde)}</ownedAttribute>`
           );
         }
       }
@@ -196,19 +226,26 @@ export function schrijfXmi(model, { naam = "Omnium", schaal = EA_SCHAAL, exporte
     const staart = guidStaart(guidVan(c)).slice(2);
     if (ASSOCIATIE_TYPEN.has(c.elementType)) {
       verslag.connectoren += 1;
-      const einde = (prefix, typeEl, kard, rol, aggregatie) => {
+      const d = c.data || {};
+      const einde = (prefix, typeEl, kard, rol, aggregatie, kant) => {
         const eid = `EAID_${prefix}${staart}`;
         const g = grenzen(kard);
         const lu = g ? `<lowerValue xmi:type="uml:LiteralInteger" xmi:id="${eid}_lo" value="${g[0]}"/><upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="${eid}_hi" value="${g[1]}"/>` : "";
-        return `${inspr}\t<memberEnd xmi:idref="${eid}"/>\n${inspr}\t<ownedEnd xmi:type="uml:Property" xmi:id="${eid}"${rol ? ` name="${esc(rol)}"` : ""} visibility="public" association="${id}" aggregation="${aggregatie}"><type xmi:idref="${xmiId(typeEl)}"/>${lu}</ownedEnd>`;
+        return `${inspr}\t<memberEnd xmi:idref="${eid}"/>\n${inspr}\t<ownedEnd xmi:type="uml:Property" xmi:id="${eid}"${rol ? ` name="${esc(rol)}"` : ""} visibility="public" association="${id}" aggregation="${aggregatie}"${propertyVlaggen(d, kant)}><type xmi:idref="${xmiId(typeEl)}"/>${lu}</ownedEnd>`;
       };
       const agg = GEHEEL_AAN_BRON[c.elementType] || "none";
       // Bron = het geheel (ruit aan de bron): dat uiteinde draagt de aggregatie.
-      const d = c.data || {};
+      // Navigeerbare uiteinden (UML 2.5.1 §11.5): eigendom van de associatie,
+      // dus via navigableOwnedEnd; "doel" leest ook het oude directioneel.
+      const navigeerbaar = (kant) =>
+        d[`${kant}Navigeerbaar`] === "ja" || (kant === "doel" && !d.doelNavigeerbaar && (d.directioneel || d.unidirectioneel));
+      const navEnds = [["dst", "doel"], ["src", "bron"]].filter(([, kant]) => navigeerbaar(kant)).map(([p]) => `EAID_${p}${staart}`);
       return (
-        `${inspr}<packagedElement xmi:type="uml:Association" xmi:id="${id}" name="${esc(c.naam)}" visibility="public">\n` +
-        `${einde("dst", doel, d.doelKardinaliteit ?? d.kardinaliteit, d.doelRolNaam, "none")}\n` +
-        `${einde("src", bron, d.bronKardinaliteit, d.bronRolNaam, agg)}\n${inspr}</packagedElement>\n`
+        // isDerived op de associatie zelf (UML 2.5.1 §11.5): puur-uml/SysML
+        // `afgeleid`, MIM `indicatieAfleidbaar`.
+        `${inspr}<packagedElement xmi:type="uml:Association" xmi:id="${id}" name="${esc(c.naam)}" visibility="public"${d.afgeleid || d.indicatieAfleidbaar ? ` isDerived="true"` : ""}${navEnds.length ? ` navigableOwnedEnd="${navEnds.join(" ")}"` : ""}>\n` +
+        `${einde("dst", doel, d.doelKardinaliteit ?? d.kardinaliteit, d.doelRolNaam, "none", "doel")}\n` +
+        `${einde("src", bron, d.bronKardinaliteit, d.bronRolNaam, agg, "bron")}\n${inspr}</packagedElement>\n`
       );
     }
     if (c.elementType === "dependency" || c.elementType === "realisatie" || c.elementType === "realiseert") {
