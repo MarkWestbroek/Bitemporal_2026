@@ -47,10 +47,11 @@ function veldType(v) {
 
 function veldRijen(data) {
   const secties = [];
-  const velden = (data.velden || []).map((v) => ({ naam: `${v.afgeleid ? "/" : ""}${v.naam}`, type: veldType(v), vet: !!v.verplicht }));
-  if (velden.length) secties.push(velden);
+  // Afgeleide velden boven de gewone, zoals in de Studio (Mark, 10-10).
   const afgeleid = (data.afgeleideVelden || []).map((av) => ({ naam: `/${av.naam}`, type: av.goType || "string", cursief: true }));
   if (afgeleid.length) secties.push(afgeleid);
+  const velden = (data.velden || []).map((v) => ({ naam: `${v.afgeleid ? "/" : ""}${v.naam}`, type: veldType(v), vet: !!v.verplicht }));
+  if (velden.length) secties.push(velden);
   return secties;
 }
 

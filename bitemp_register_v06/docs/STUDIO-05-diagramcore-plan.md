@@ -747,7 +747,10 @@ Lezing:
 - **`FieldTypeViewer`** (veld-weergave op de node): naast de
   inspector-weergave (alle PropertyTypes) heeft elk veld een compacte
   rij-weergave in het compartiment (bv. `postcode  NLPostcode`, vet bij
-  verplicht, "/" bij afgeleid). De FieldTypeViewer is de veld-tegenhanger van
+  verplicht, "/" bij afgeleid: `data.afgeleid` op het veld, of `FieldType.afgeleid`
+  voor een veldtype dat altijd afgeleid is, zoals canoniek `afgeleidVeld` — sinds
+  2026-10-10; het afgeleid-compartiment staat in canoniek boven de gewone velden).
+  De FieldTypeViewer is de veld-tegenhanger van
   `ElementType → ShapeType` en **componeert de PropertyTypeViewers** (uses):
   hij bepaalt welke properties zichtbaar zijn en hoe ze de regel beïnvloeden,
   het tonen zelf hergebruikt dezelfde viewers als de inspector. In de code

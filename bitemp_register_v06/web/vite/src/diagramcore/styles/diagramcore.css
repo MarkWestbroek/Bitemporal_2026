@@ -950,10 +950,49 @@
   z-index: 1;
   cursor: move;
 }
-.dc-kaderrand.is-boven { top: -4px; left: -4px; right: -4px; height: 9px; }
-.dc-kaderrand.is-onder { bottom: -4px; left: -4px; right: -4px; height: 9px; }
-.dc-kaderrand.is-links { top: -4px; bottom: -4px; left: -4px; width: 9px; }
-.dc-kaderrand.is-rechts { top: -4px; bottom: -4px; right: -4px; width: 9px; }
+/* Verplaats-strook van net buiten tot 13px binnen de rand. Bij een
+   geselecteerd kader ligt de resizer (z-index 3, ±5px rond de rand)
+   erbovenop: dan vergroot de rand en verplaatst alleen het binnenste deel.
+   Eerder ving deze strook het vergroten aan de zijkant af (gemeld
+   2026-10-10). */
+.dc-kaderrand.is-boven { top: -4px; left: -4px; right: -4px; height: 17px; }
+.dc-kaderrand.is-onder { bottom: -4px; left: -4px; right: -4px; height: 17px; }
+.dc-kaderrand.is-links { top: -4px; bottom: -4px; left: -4px; width: 17px; }
+.dc-kaderrand.is-rechts { top: -4px; bottom: -4px; right: -4px; width: 17px; }
+
+/* Resizer (React Flow NodeResizer) beter grijpbaar, voor alle vormen
+   (gemeld 2026-10-10: "zijkant trekken gaat niet, het hoekpunt is erg
+   klein"). React Flow tekent hoekpunten van 5px en zijlijnen van 1px — ook
+   het klikvlak. Nu: hoekpunten 9px, zijlijnen een klikvlak van 10px met
+   in het midden nog steeds een lijn van 1px. Boven de kaderranden. */
+.dc-canvas .react-flow__resize-control {
+  z-index: 3;
+}
+/* Verbindingshandles (midden van elke zijde) boven de verbrede zijlijnen
+   van de resizer, anders vingen die het trekken van een relatie af (gemeld
+   2026-10-10). Niet de vlak-handle: die beslaat de hele node. */
+.dc-canvas .react-flow__handle:not(.dc-handle-vlak) {
+  z-index: 4;
+}
+.dc-canvas .react-flow__resize-control.handle {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+.dc-canvas .react-flow__resize-control.line {
+  border-width: 0;
+  --dc-resize-lijn: var(--xy-resize-background-color, var(--xy-resize-background-color-default));
+}
+.dc-canvas .react-flow__resize-control.line.left,
+.dc-canvas .react-flow__resize-control.line.right {
+  width: 10px;
+  background: linear-gradient(to right, transparent 4.5px, var(--dc-resize-lijn) 4.5px, var(--dc-resize-lijn) 5.5px, transparent 5.5px);
+}
+.dc-canvas .react-flow__resize-control.line.top,
+.dc-canvas .react-flow__resize-control.line.bottom {
+  height: 10px;
+  background: linear-gradient(to bottom, transparent 4.5px, var(--dc-resize-lijn) 4.5px, var(--dc-resize-lijn) 5.5px, transparent 5.5px);
+}
 
 /* UML-aanvulling van een veld (2026-10-10): zichtbaarheid vóór de naam,
    [kardinaliteit] = standaard {eigenschappen} achter het type, gedempt. */
