@@ -1008,7 +1008,15 @@ fase 2 een **bewerkbare sandbox**:
   grijpzones (`diagramcore.css`). Lidmaatschap bij slepen en droppen uit de
   boom blijft geometrisch en werkt dus ook in het binnenvlak; een drop op een
   kader zonder lidmaatschap (Kader, Grouping) plaatst het element nu ook
-  (voorheen gebeurde er niets).
+  (voorheen gebeurde er niets). **Rand: verplaatsen óf vergroten**
+  (2026-10-10): de verplaatsstrook loopt van net buiten tot 13px binnen de
+  rand; bij een geselecteerd kader ligt de resizer (z-index 3, ±5px) erboven,
+  dus de rand vergroot en het binnenste deel verplaatst. De resizer is voor
+  alle vormen beter grijpbaar: hoekpunten 9px, zijlijnen 10px klikvlak met
+  een zichtbare lijn van 1px (React Flow: 5px en 1px). De verbindingshandles
+  (midden van elke zijde) liggen daarboven (z-index 4), anders ving de
+  verbrede zijlijn het trekken van een relatie af. Op het midden van een zijde
+  trek je dus een relatie; ernaast vergroot je.
   **De gekozen shape-set is nu per diagram** (`diagram.shapeSetId`, via
   `updateDiagramStijl`); de browser-voorkeur geldt alleen nog voor diagrammen
   zonder eigen keuze. De skin-logica staat gedeeld in
