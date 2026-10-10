@@ -25,3 +25,26 @@ test("FieldType/ElementType.afgeleid: elk voorkomen is afgeleid", () => {
   assert.equal(isAfgeleid({}, { afgeleid: true }), true);
   assert.equal(isAfgeleid(null, { afgeleid: true }), true);
 });
+
+import { veldAanvulling } from "./afgeleid.js";
+
+test("veldAanvulling: UML-notatie volgens de betekenis van de properties", () => {
+  const type = {
+    properties: [
+      { key: "kardinaliteit", betekenis: "kardinaliteit" },
+      { key: "standaardwaarde", betekenis: "standaardwaarde" },
+      { key: "zichtbaarheid", betekenis: "zichtbaarheid" },
+      { key: "geordend", betekenis: "geordend" },
+      { key: "nietUniek", betekenis: "nietUniek" },
+      { key: "alleenLezen", betekenis: "alleenLezen" },
+      { key: "identificerend", betekenis: "id" },
+    ],
+  };
+  assert.deepEqual(
+    veldAanvulling({ kardinaliteit: "0..*", standaardwaarde: "5", zichtbaarheid: "Private", geordend: true, alleenLezen: true, identificerend: true }, type),
+    { zichtbaarheid: "-", kardinaliteit: "0..*", standaardwaarde: "5", eigenschappen: ["ordered", "readOnly", "id"] }
+  );
+  // Zonder betekenis: niets (bestaande profielen veranderen niet).
+  assert.deepEqual(veldAanvulling({ kardinaliteit: "1" }, { properties: [{ key: "kardinaliteit" }] }), { zichtbaarheid: "", kardinaliteit: "", standaardwaarde: "", eigenschappen: [] });
+  assert.deepEqual(veldAanvulling(null, type).eigenschappen, []);
+});

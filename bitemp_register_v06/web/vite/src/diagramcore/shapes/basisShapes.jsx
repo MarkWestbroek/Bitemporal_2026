@@ -13,7 +13,7 @@
 import { registreerShape } from "./shapeRegistry.js";
 import { TypeIcoon } from "./typeIconen.jsx";
 import { maakVeldSleutel } from "../canvas/inlineNaam.js";
-import { isAfgeleid } from "../model/afgeleid.js";
+import { isAfgeleid, veldAanvulling } from "../model/afgeleid.js";
 
 /**
  * Typering-regel in de node-kop (vormgevingssessie 2026-07-07, MIM-besluit):
@@ -83,14 +83,29 @@ function VeldRegel({ veld, fieldType, fieldTypesById, compartmentTypesById, veld
   if (viewer === "tekst") {
     return <div className="dc-veld is-tekst" data-dc-veld={sleutel}>{veld.naam}</div>;
   }
-  // "naam-type": naam links (vet indien verplicht), typeLabel rechts
+  // "naam-type": naam links (vet indien verplicht), typeLabel rechts. De
+  // UML-aanvulling (zichtbaarheid, [kardinaliteit], = standaard, {…}) komt uit
+  // de `betekenis` van de properties van het veldtype — zonder die
+  // betekenissen ziet een veld er precies uit als voorheen.
+  const uml = veldAanvulling(d, fieldType);
+  const achter = [
+    uml.kardinaliteit ? `[${uml.kardinaliteit}]` : "",
+    uml.standaardwaarde ? `= ${uml.standaardwaarde}` : "",
+    uml.eigenschappen.length ? `{${uml.eigenschappen.join(", ")}}` : "",
+  ].filter(Boolean).join(" ");
   return (
     <div className={"dc-veld" + (d.cursief ? " is-cursief" : "")} data-dc-veld={sleutel}>
       <span className="dc-veld-naam">
+        {uml.zichtbaarheid && <span className="dc-veld-zichtbaarheid">{uml.zichtbaarheid}</span>}
         {isAfgeleid(d, fieldType) && <span className="dc-veld-afgeleid">/</span>}
         {d.verplicht ? <strong>{veld.naam}</strong> : <span>{veld.naam}</span>}
       </span>
-      {d.typeLabel ? <span className="dc-veld-type">{d.typeLabel}</span> : null}
+      {d.typeLabel || achter ? (
+        <span className="dc-veld-type">
+          {d.typeLabel}
+          {achter ? <span className="dc-veld-uml">{d.typeLabel ? " " : ""}{achter}</span> : null}
+        </span>
+      ) : null}
     </div>
   );
 }

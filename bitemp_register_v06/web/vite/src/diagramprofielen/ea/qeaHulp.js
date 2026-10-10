@@ -244,3 +244,27 @@ export function afgeleidUitConnector(c) {
   const rolAfgeleid = [c?.SourceStyle, c?.DestStyle].some((s) => sleutelWaarden(s).Derived === "1");
   return { afgeleid: metStreep || rolAfgeleid, naam: metStreep ? ruw.replace(/^\s*\/\s*/, "") : ruw };
 }
+
+/**
+ * UML-eigenschappen van één associatie-uiteinde uit een EA-connector
+ * (2026-10-10): navigeerbaar uit `…Style` (`Navigable=Navigable|Non-Navigable|
+ * Unspecified`) of anders `…IsNavigable`, geordend uit `…IsOrdered`, niet-uniek
+ * uit `AllowDuplicates=1`, alleen-lezen uit `…Changeable = frozen`. Kolommen die
+ * de EA-versie niet heeft, leveren niets.
+ * @param {Record<string, any>} c - rij uit t_connector
+ * @param {"Source"|"Dest"} eaKant
+ * @param {"bron"|"doel"} onzeKant
+ * @returns {Record<string, any>}
+ */
+export function rolEigenschappen(c, eaKant, onzeKant) {
+  const stijl = sleutelWaarden(c?.[`${eaKant}Style`]);
+  const uit = {};
+  const nav = String(stijl.Navigable || "").toLowerCase();
+  if (nav === "navigable") uit[`${onzeKant}Navigeerbaar`] = "ja";
+  else if (nav === "non-navigable") uit[`${onzeKant}Navigeerbaar`] = "nee";
+  else if (!nav && Number(c?.[`${eaKant}IsNavigable`]) === 1) uit[`${onzeKant}Navigeerbaar`] = "ja";
+  if (Number(c?.[`${eaKant}IsOrdered`]) === 1) uit[`${onzeKant}Geordend`] = true;
+  if (stijl.AllowDuplicates === "1") uit[`${onzeKant}NietUniek`] = true;
+  if (String(c?.[`${eaKant}Changeable`] || "").toLowerCase() === "frozen") uit[`${onzeKant}AlleenLezen`] = true;
+  return uit;
+}

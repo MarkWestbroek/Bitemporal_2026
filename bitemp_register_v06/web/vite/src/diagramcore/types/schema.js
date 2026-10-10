@@ -53,11 +53,16 @@
  * @property {boolean} [verplicht]
  * @property {string} [placeholder]        - voorbeeldtekst in een leeg invoerveld
  * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
- * @property {"afgeleid"} [betekenis]       - wat deze eigenschap *betekent* voor de
- *   motor, los van haar naam. `"afgeleid"`: is de (boolean) waarde waar, dan is
- *   het veld/element afgeleid en zet de weergave er de UML-"/" voor — zo telt
- *   MIM's `indicatieAfleidbaar` net zo als `afgeleid` (2026-10-10, zie
- *   diagramcore/model/afgeleid.js).
+ * @property {"afgeleid"|"kardinaliteit"|"standaardwaarde"|"geordend"|"nietUniek"|"alleenLezen"|"id"|"zichtbaarheid"} [betekenis]
+ *   - wat deze eigenschap *betekent* voor de motor, los van haar naam
+ *   (2026-10-10, UML 2.5.1 Property; zie diagramcore/model/afgeleid.js):
+ *   `"afgeleid"` (boolean) → "/" vóór de naam, ook bij een relatie — zo telt
+ *   MIM's `indicatieAfleidbaar` net zo als `afgeleid`;
+ *   `"kardinaliteit"` → `[0..*]`, `"standaardwaarde"` → `= waarde`,
+ *   `"zichtbaarheid"` (Public/Private/Protected/Package) → `+ - # ~` vóór de naam,
+ *   `"geordend"`/`"nietUniek"`/`"alleenLezen"`/`"id"` (boolean) →
+ *   `{ordered}`/`{nonunique}`/`{readOnly}`/`{id}` achter het type.
+ *   Een veld toont zo `+/naam : Type [0..*] = 5 {ordered, readOnly}`.
  */
 
 /**

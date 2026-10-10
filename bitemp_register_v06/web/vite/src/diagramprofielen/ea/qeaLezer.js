@@ -111,10 +111,12 @@ export function leesBron(db, packageId) {
   );
   const objectIds = t_object.map((o) => o.Object_ID);
   const oq = objectIds.map(() => "?").join(",") || "0";
+  // UML-kernset van attributen (geordend, niet-uniek): alleen als de kolom bestaat.
+  const attrKolommen = bestaandeKolommen(db, "t_attribute", ["IsOrdered", "AllowDuplicates"]);
   const t_attribute = rijen(
     db,
     `SELECT Object_ID, Name, Scope, Stereotype, LowerBound, UpperBound, Notes, Derived, ID, Pos, Const, Classifier,
-            "Default" AS "Default", Type, ea_guid
+            "Default" AS "Default", Type, ea_guid${attrKolommen.map((k) => `, ${k}`).join("")}
        FROM t_attribute WHERE Object_ID IN (${oq}) ORDER BY Object_ID, Pos`,
     objectIds
   );

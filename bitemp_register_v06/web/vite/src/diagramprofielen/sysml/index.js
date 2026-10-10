@@ -34,7 +34,7 @@
  * bij een tekening. Dit profiel tekent ze; de matrix-kant is vervolgwerk.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
-import { AFGELEID, AFLEIDINGSREGEL } from "../umlEigenschappen.js";
+import { AFGELEID, AFLEIDINGSREGEL, ATTRIBUUT_KERNSET, uiteinde, navigatiePresentatie, uiteindeLabels } from "../umlEigenschappen.js";
 import { registreerSysmlShapes } from "./shapes.jsx";
 import { registreerSysmlIconen } from "./iconen.jsx";
 import { TRACE_OPTIES, traceLabels } from "./traces.js";
@@ -59,8 +59,9 @@ const fieldTypes = [
     properties: [
       { key: "naam", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
-      // SysML erft UML isDerived: een afgeleide value property ("/" ervoor).
-      AFGELEID,
+      // SysML erft UML Property: kardinaliteit, standaard, {ordered, readOnly, id}
+      // en isDerived — een afgeleide value property ("/" ervoor).
+      ...ATTRIBUUT_KERNSET,
     ],
   },
   {
@@ -286,20 +287,12 @@ const elementTypes = [
     bron: { elementTypes: BLOKKEN },
     doel: { elementTypes: BLOKKEN },
     edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569" },
-    properties: [
-      { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "string" },
-      { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "string" },
-      AFGELEID,
-      AFLEIDINGSREGEL,
-    ],
+    // Zoals UML (§11.5): uiteinden met rol, kardinaliteit, navigeerbaarheid en
+    // {ordered, nonunique, readOnly}; de associatie zelf kan afgeleid zijn.
+    properties: [...uiteinde("bron"), ...uiteinde("doel"), AFGELEID, AFLEIDINGSREGEL],
     hooks: {
-      edgeLabels: (conn) => {
-        const d = conn.data || {};
-        const kaal = [];
-        if (d.bronKardinaliteit) kaal.push({ zijde: "bron", delen: [{ tekst: d.bronKardinaliteit, soort: "kardinaliteit" }] });
-        if (d.doelKardinaliteit) kaal.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
-        return { kaal };
-      },
+      edgePresentatie: (conn) => navigatiePresentatie(conn),
+      edgeLabels: (conn) => uiteindeLabels(conn),
     },
   },
   {

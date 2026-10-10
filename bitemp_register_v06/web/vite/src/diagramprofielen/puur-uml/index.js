@@ -14,7 +14,7 @@
  * property, auto-layout-strategie, eigen StyleType-tokens (§8.5b).
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
-import { AFGELEID, AFLEIDINGSREGEL } from "../umlEigenschappen.js";
+import { AFGELEID, AFLEIDINGSREGEL, ATTRIBUUT_KERNSET, uiteinde, navigatiePresentatie, uiteindeLabels } from "../umlEigenschappen.js";
 
 export const PUUR_UML_ID = "puur-uml";
 
@@ -34,7 +34,9 @@ const fieldTypes = [
     properties: [
       { key: "naam", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
-      AFGELEID,
+      // UML 2.5.1 Property-kernset: [kardinaliteit], = standaard, zichtbaarheid,
+      // {ordered, nonunique, readOnly, id}, afgeleid (/).
+      ...ATTRIBUUT_KERNSET,
     ],
   },
   {
@@ -178,37 +180,15 @@ const elementTypes = [
     bron: { elementTypes: KLASSIFIERS },
     doel: { elementTypes: KLASSIFIERS },
     edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569" },
-    properties: [
-      KLEUR_VELD,
-      { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "string" },
-      { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "string" },
-      { key: "directioneel", label: "gericht (→ doel)", datatype: "boolean" },
-      // UML 2.5.1 §11.5: een afgeleide associatie, "/" voor de naam.
-      AFGELEID,
-      AFLEIDINGSREGEL,
-    ],
+    // UML 2.5.1 §11.5: per uiteinde rolnaam, kardinaliteit, navigeerbaarheid
+    // (pijl / ×; het oude `directioneel` leest als doel navigeerbaar) en
+    // {ordered, nonunique, readOnly}; op de associatie zelf afgeleid (/).
+    properties: [KLEUR_VELD, ...uiteinde("bron"), ...uiteinde("doel"), AFGELEID, AFLEIDINGSREGEL],
     compartments: [{ id: "attributen", label: null, fieldType: "attribuut" }],
     hooks: {
-      /** Richting (navigeerbaarheid): open pijl aan de doelzijde. */
-      edgePresentatie: (conn) =>
-        conn.data?.directioneel ? { markerEnd: "pijl-open" } : {},
-      /** UML-kardinaliteiten en rolnamen aan de uiteinden. */
-      edgeLabels: (conn) => {
-        const d = conn.data || {};
-        const bron = [];
-        const doel = [];
-        const kaal = [];
-        if (d.bronKardinaliteit) {
-          bron.push({ zijde: "bron", delen: [{ tekst: d.bronKardinaliteit, soort: "kardinaliteit" }] });
-          kaal.push({ zijde: "bron", delen: [{ tekst: d.bronKardinaliteit, soort: "kardinaliteit" }] });
-        }
-        if (d.doelKardinaliteit) {
-          doel.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
-          kaal.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
-        }
-        // Geen naam-label hier: de core voegt de connector-naam al toe.
-        return { bron, doel, kaal };
-      },
+      edgePresentatie: (conn) => navigatiePresentatie(conn),
+      // Geen naam-label hier: de core voegt de connector-naam (en de "/") al toe.
+      edgeLabels: (conn) => uiteindeLabels(conn),
     },
   },
   {
@@ -221,6 +201,12 @@ const elementTypes = [
     bron: { elementTypes: ["klasse"] },
     doel: { elementTypes: ["klasse"] },
     edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569", markerStart: "ruit-open" },
+    // Aggregatie is een associatie: dezelfde uiteinden (bron = geheel, de ruit).
+    properties: [...uiteinde("bron"), ...uiteinde("doel")],
+    hooks: {
+      edgePresentatie: (conn) => navigatiePresentatie(conn, { markerStart: "ruit-open" }),
+      edgeLabels: (conn) => uiteindeLabels(conn),
+    },
   },
   {
     id: "compositie",
@@ -232,6 +218,11 @@ const elementTypes = [
     bron: { elementTypes: ["klasse"] },
     doel: { elementTypes: ["klasse"] },
     edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569", markerStart: "ruit" },
+    properties: [...uiteinde("bron"), ...uiteinde("doel")],
+    hooks: {
+      edgePresentatie: (conn) => navigatiePresentatie(conn, { markerStart: "ruit" }),
+      edgeLabels: (conn) => uiteindeLabels(conn),
+    },
   },
   {
     id: "generalisatie",

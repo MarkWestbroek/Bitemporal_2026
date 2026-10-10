@@ -60,15 +60,38 @@ ook in SysML niet. SysML erft het wel op value properties, parts en references.
 - **XMI-export**: `isDerived="true"` op de Association en op attributen (ook MIM).
 - **MIM-XMI-import**: `isDerived` op de associatie of een uiteinde → `indicatieAfleidbaar`.
 
-## 3. Te bouwen — commit 2: de kernset
+## 3. Gebouwd — commit 2: de kernset
 
-Per attribuut (puur-uml, SysML waarde; MIM en canoniek waar ze ontbreken): kardinaliteit,
-geordend, niet-uniek, alleen-lezen, id, standaardwaarde, zichtbaarheid — en de weergave
-`/naam : Type [0..*] = waarde {ordered, readOnly, id}`.
-Per associatie-uiteinde (puur-uml, SysML): rolnaam, kardinaliteit, **navigeerbaar
-(ja/nee/niet gespecificeerd)**, geordend, niet-uniek, alleen-lezen; `directioneel: true` leest
-als doel navigeerbaar, bron niet gespecificeerd. EA-import (`SourceIsNavigable`,
-`SourceIsOrdered`, `SourceStyle.AllowDuplicates`, `SourceChangeable`) en XMI-export volgen.
+- **M3**: `PropertyType.betekenis` kent nu ook `kardinaliteit`, `standaardwaarde`,
+  `zichtbaarheid`, `geordend`, `nietUniek`, `alleenLezen` en `id`. De motor
+  (`veldAanvulling` in `diagramcore/model/afgeleid.js`, `VeldRegel`) toont een veld dan als
+  `+/naam : Type [0..*] = 5 {ordered, nonunique, readOnly, id}`. Zonder die betekenissen ziet
+  een veld er exact uit als voorheen.
+- **Motor**: marker `kruisje` (×, UML "niet navigeerbaar") aan beide uiteinden; de open pijl aan
+  de bron bestond al.
+- **Profielen** (`umlEigenschappen.js`: `ATTRIBUUT_KERNSET`, `uiteinde(kant)`,
+  `navigeerbaar`, `navigatiePresentatie`, `uiteindeLabels`):
+  - **puur-uml**: attribuut met de hele kernset; associatie, aggregatie en compositie met per
+    uiteinde rolnaam, kardinaliteit, navigeerbaar (ja/nee/niet gespecificeerd), geordend,
+    niet-uniek, alleen-lezen. De rolnamen die de EA-import al op `data` zette, zijn nu zichtbaar
+    en bewerkbaar. Bij aggregatie/compositie gaat de ruit vóór een bron-pijl;
+  - **SysML**: value property met de kernset, associatie met de uiteinden;
+  - **MIM**: `kardinaliteit` en `identificerend` kregen hun betekenis (`[0..1]`, `{id}`), verder
+    blijft MIM zijn eigen metamodel (`unidirectioneel` telt mee als doel navigeerbaar);
+  - **canoniek**: ongewijzigd behalve afgeleid (commit 1); zijn relatie hangt aan V3
+    (`directioneel`, `geordend`) — per-uiteinde-navigatie daar pas na de backend.
+- **Migratie**: `directioneel: true` (en MIM `unidirectioneel`) leest als doel navigeerbaar,
+  bron niet gespecificeerd; een expliciete waarde wint. Data wordt niet herschreven.
+- **EA-import**: attributen `IsOrdered`, `AllowDuplicates`, `Const` (readOnly), `Default`;
+  uiteinden `…Style` (Navigable, AllowDuplicates), `…IsNavigable`, `…IsOrdered`,
+  `…Changeable=frozen` (`rolEigenschappen`), met de aggregatie-oriëntatie goed.
+- **XMI-export**: `isOrdered`, `isUnique="false"`, `isReadOnly`, `isID`, `defaultValue` en de
+  echte zichtbaarheid op attributen; dezelfde vlaggen op uiteinden; `navigableOwnedEnd` op de
+  Association.
+
+**Bekend, niet aangepast:** de XMI-export zet `aggregation` op het uiteinde van het *geheel*
+(zoals EA het verwacht); UML 2.5.1 zet het op het uiteinde dat naar het *deel* wijst. Eerst met
+een echte EA-import toetsen voordat we het omdraaien.
 
 ## 4. Opdracht voor de backend-chat: afgeleide relatie = geen tabel, alleen lezen
 

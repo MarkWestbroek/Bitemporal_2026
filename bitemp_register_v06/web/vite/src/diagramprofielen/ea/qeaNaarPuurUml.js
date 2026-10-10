@@ -16,7 +16,7 @@
  * uit een JSON-fixture (test). Kolomnamen = EA-kolomnamen. Gedeelde delen
  * (hulptabellen, knikpunten, diagrammen) staan in `qeaKern.js`.
  */
-import { kleurUitBgr, idUitGuid, kardinaliteitUitGrenzen, deelboomPakketten, EA_SCHAAL, afgeleidUitConnector } from "./qeaHulp.js";
+import { kleurUitBgr, idUitGuid, kardinaliteitUitGrenzen, deelboomPakketten, EA_SCHAAL, afgeleidUitConnector, rolEigenschappen } from "./qeaHulp.js";
 import { maakHulptabellen, maakVerslag, sla, extraData, maakConnectorElement, maakBevat, bouwDiagram } from "./qeaKern.js";
 
 export const PUUR_UML_DIAGRAMTYPE = "puur-uml";
@@ -182,6 +182,11 @@ function compartimentenVoor(o, elementType, h) {
             ...(kard ? { kardinaliteit: kard } : {}),
             ...(a.Scope ? { zichtbaarheid: a.Scope } : {}),
             ...(String(a.Derived) === "1" ? { afgeleid: true } : {}),
+            // UML-kernset (2026-10-10): kolommen die deze EA-versie niet heeft, blijven leeg.
+            ...(Number(a.IsOrdered) === 1 ? { geordend: true } : {}),
+            ...(Number(a.AllowDuplicates) === 1 ? { nietUniek: true } : {}),
+            ...(Number(a.Const) === 1 ? { alleenLezen: true } : {}),
+            ...(a.Default !== undefined && a.Default !== null && String(a.Default).trim() ? { standaardwaarde: String(a.Default) } : {}),
           },
         };
       }),
@@ -226,6 +231,8 @@ function vertaalConnector(c, bronId, doelId, elements) {
     ...(c.SourceRole ? { bronRolNaam: c.SourceRole } : {}),
     ...(c.DestRole ? { doelRolNaam: c.DestRole } : {}),
     ...(afgeleid && type === "Association" ? { afgeleid: true } : {}),
+    ...rolEigenschappen(c, "Source", "bron"),
+    ...rolEigenschappen(c, "Dest", "doel"),
   };
   switch (type) {
     case "NoteLink": {
@@ -298,6 +305,9 @@ function aggregatie(c, bronId, doelId, naam, geheelAanDoel) {
       ...(deelCard ? { doelKardinaliteit: deelCard } : {}),
       ...(geheelRol ? { bronRolNaam: geheelRol } : {}),
       ...(deelRol ? { doelRolNaam: deelRol } : {}),
+      // Bron = geheel: haal de rol-eigenschappen van de juiste EA-kant.
+      ...rolEigenschappen(c, geheelAanDoel ? "Dest" : "Source", "bron"),
+      ...rolEigenschappen(c, geheelAanDoel ? "Source" : "Dest", "doel"),
     },
   };
 }

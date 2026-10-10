@@ -59,13 +59,14 @@ const KLEUR_VELD = { key: "kleur", datatype: "colour" };
 const ATTRIBUUTSOORT_VELDEN = [
   { key: "naam", datatype: "string", verplicht: true },
   { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
-  { key: "kardinaliteit", label: "kardinaliteit", datatype: "string" },
+  // UML-notatie (2026-10-10): kardinaliteit als [0..1], identificerend als {id}.
+  { key: "kardinaliteit", label: "kardinaliteit", datatype: "string", betekenis: "kardinaliteit" },
   { key: "definitie", label: "definitie", datatype: "tekst" },
   { key: "authentiek", label: "authentiek", datatype: "string" },
   { key: "indicatieMaterieleHistorie", label: "materiële historie", datatype: "boolean" },
   { key: "indicatieFormeleHistorie", label: "formele historie", datatype: "boolean" },
   { key: "mogelijkGeenWaarde", label: "mogelijk geen waarde", datatype: "boolean" },
-  { key: "identificerend", label: "identificerend", datatype: "boolean" },
+  { key: "identificerend", label: "identificerend", datatype: "boolean", betekenis: "id" },
   MIM_AFLEIDBAAR,
 ];
 
