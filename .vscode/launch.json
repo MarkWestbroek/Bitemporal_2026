@@ -164,7 +164,7 @@
         //     "stopAll": true
         // },
         {
-            "name": "Start frontend and debug API v06",
+            "name": "Start frontend, debug API v06 and Render-svc",
             "configurations": [
                 "Frontend v06: Vite dev server (clean)",
                 "Go API v06: debug",
