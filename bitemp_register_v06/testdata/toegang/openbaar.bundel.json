@@ -1,0 +1,91 @@
+{
+  "formaat": "omnium-toegangsbundel/1",
+  "beleid": {
+    "naam": "Openbaar np-loc",
+    "geldigVanaf": null,
+    "geldigTot": null,
+    "grondslag": null,
+    "doel": "dienstverlening"
+  },
+  "standaard": "weigeren",
+  "conflict": "verbod-wint",
+  "regels": [
+    {
+      "id": "namen-openbaar",
+      "naam": "namen openbaar",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": null,
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon.namen"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "medewerker-ziet-persoon",
+      "naam": "medewerker ziet persoon",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "medewerker"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "bsn-niet-voor-medewerkers",
+      "naam": "bsn niet voor medewerkers",
+      "effect": "verbieden",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "medewerker"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "beheerder-ziet-alles",
+      "naam": "beheerder ziet alles",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "admin"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    }
+  ]
+}

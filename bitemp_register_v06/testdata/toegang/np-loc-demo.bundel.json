@@ -1,0 +1,136 @@
+{
+  "formaat": "omnium-toegangsbundel/1",
+  "beleid": {
+    "naam": "Persoonsgegevens np-loc demo",
+    "geldigVanaf": "2026-09-15",
+    "geldigTot": null,
+    "grondslag": "de Gemeentewet",
+    "doel": "dienstverlening"
+  },
+  "standaard": "weigeren",
+  "conflict": "verbod-wint",
+  "regels": [
+    {
+      "id": "inzage-eigen-stadsdeel",
+      "naam": "inzage eigen stadsdeel",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "medewerker"
+          },
+          {
+            "kenmerk": "afdeling",
+            "waarde": "West"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon"
+        }
+      ],
+      "voorwaarden": {
+        "links": {
+          "anker": "betrokkene",
+          "pad": "NatuurlijkPersoon.woonlocatie.gebiedsligging.wijkaanduiding.wijk"
+        },
+        "op": "eq",
+        "rechts": {
+          "waarde": "Stadsdeel West",
+          "type": "tekst"
+        }
+      },
+      "plichten": []
+    },
+    {
+      "id": "avonddienst-gemeentebreed",
+      "naam": "avonddienst gemeentebreed",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "medewerker"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon"
+        }
+      ],
+      "voorwaarden": {
+        "links": {
+          "anker": "aanvrager",
+          "pad": "dienst"
+        },
+        "op": "eq",
+        "rechts": {
+          "waarde": "avond",
+          "type": "tekst"
+        }
+      },
+      "plichten": []
+    },
+    {
+      "id": "geen-geslacht-aan-de-telefoon",
+      "naam": "geen geslacht aan de telefoon",
+      "effect": "verbieden",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "medewerker"
+          },
+          {
+            "kenmerk": "kanaal",
+            "waarde": "telefoon"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon.geslacht.geslacht"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "aanspreken-zonder-geslacht",
+      "naam": "aanspreken zonder geslacht",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "medewerker"
+          },
+          {
+            "kenmerk": "kanaal",
+            "waarde": "telefoon"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon.aanspraak.aanspreektitel"
+        }
+      ],
+      "voorwaarden": {
+        "links": {
+          "anker": "betrokkene",
+          "pad": "NatuurlijkPersoon.aanspraak.aanspreektitel"
+        },
+        "op": "isBekend"
+      },
+      "plichten": []
+    }
+  ]
+}

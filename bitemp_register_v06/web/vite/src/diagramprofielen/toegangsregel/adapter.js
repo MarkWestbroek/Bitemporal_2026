@@ -25,6 +25,7 @@ export const PROFIELTYPE_TOEGANGSREGELS = "toegangsregels";
 // ── Teksthulpen (gedeeld met de diagram-weergave) ────────────────────────────
 
 export function wieTekst(wie) {
+  if (wie.soort === "iedereen") return "iedereen";
   if (wie.soort === "iemand") {
     return `iemand met ${wie.kenmerken.map((k) => `${k.kenmerk} "${k.waarde}"`).join(" en ")}`;
   }
@@ -154,7 +155,7 @@ export function beleidNaarDiagramModel(beleid) {
 
     const subject = nieuw(`${basisId}:wie`, "subject", wieTekst(regel.wie), regel.wie.soort === "iemand"
       ? { kenmerken: regel.wie.kenmerken.map((k) => `${k.kenmerk}="${k.waarde}"`).join(", ") }
-      : { rol: regel.wie.naam });
+      : regel.wie.soort === "iedereen" ? {} : { rol: regel.wie.naam });
     verbind("wie", kaart, subject);
     const wieBegrip = regel.wie.soort === "begrip" && begripPerNaam.get(regel.wie.naam.toLowerCase());
     if (wieBegrip) verbind("verwijst-naar", subject, wieBegrip);

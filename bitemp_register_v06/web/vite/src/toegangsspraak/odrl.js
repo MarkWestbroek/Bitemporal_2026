@@ -190,9 +190,10 @@ export function naarOdrl(beleid) {
     const entry = {
       "nlgov:regelnaam": regel.naam,
       target: watNaarTarget(regel.wat, watBegrippen),
-      assignee: wieNaarAssignee(regel.wie, wieBegrippen),
       action: { "@id": vindActie(regel.actie)?.nlgov || `nlgov:${regel.actie}` },
     };
+    // "Iedereen": geen assignee — in ODRL geldt de regel dan voor iedere partij.
+    if (regel.wie.soort !== "iedereen") entry.assignee = wieNaarAssignee(regel.wie, wieBegrippen);
     const constraints = voorwaardenNaarConstraints(regel.voorwaarden);
     if (constraints.length) entry.constraint = constraints;
     if (regel.plichten.length) {

@@ -1,0 +1,303 @@
+[
+ {
+  "veldpad": "NatuurlijkPersoon.weergavenaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.persoonsidentificaties.bsn",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.persoonsidentificaties.ingezetene",
+  "type": "boolean",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.persoonsidentificaties.bsnEnIngezeten",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.namen.voorletters",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.namen.roepnaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.namen.tussenvoegsel",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.namen.achternaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.namen.weergavenaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.partnernamen.achternaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.naamgebruiken.naamgebruik",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "EigenNaam",
+   "PartnerNaam",
+   "EigenNaam-PartnerNaam",
+   "PartnerNaam-EigenNaam"
+  ]
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.burgerschappen.landcode",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.burgerschappen.nationaliteit",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.burgerschappen.landreferentie",
+  "type": "integer",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.geslacht.geslacht",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "man",
+   "vrouw",
+   "X"
+  ]
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.aanspraak.aanspreektitel",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "meneer",
+   "mevrouw",
+   "hen"
+  ]
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.aanspraak.formeelAanspreken",
+  "type": "boolean",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.soort",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Woonadres",
+   "Briefadres",
+   "Correspondentieadres"
+  ]
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.adressen.straatnaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.adressen.huisnummer",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.adressen.postcode",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.adressen.gemeente",
+  "type": "integer",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.adressen.plaats",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.adressen.land",
+  "type": "integer",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.baglocaties.adresaanduiding",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.gebiedsligging.wijkaanduiding.wijk",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.gebiedsligging.wijkaanduiding.soort",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Stadsdeel",
+   "Wijk",
+   "Buurt"
+  ]
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.gebiedsligging.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.gebiedsligging.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.bereikbaarheden.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.adressen.straatnaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.adressen.huisnummer",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.adressen.postcode",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.adressen.gemeente",
+  "type": "integer",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.adressen.plaats",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.adressen.land",
+  "type": "integer",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.baglocaties.adresaanduiding",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.gebiedsligging.wijkaanduiding.wijk",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.gebiedsligging.wijkaanduiding.soort",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Stadsdeel",
+   "Wijk",
+   "Buurt"
+  ]
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.gebiedsligging.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.gebiedsligging.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.woonlocatie.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "NatuurlijkPersoon.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ }
+]

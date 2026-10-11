@@ -40,6 +40,7 @@ function renderKenmerken(kenmerken) {
 }
 
 function renderWie(wie) {
+  if (wie.soort === "iedereen") return "iedereen";
   if (wie.soort === "iemand") return `iemand met ${renderKenmerken(wie.kenmerken)}`;
   return `${wie.lidwoord} ${wie.naam}`;
 }

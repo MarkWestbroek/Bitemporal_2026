@@ -418,11 +418,17 @@ class Parser {
   }
 
   parseWie() {
+    // "Iedereen" = elk subject, ook een onbekend (anoniem, openbaar). In ODRL een
+    // regel zonder assignee; in de beleidsbundel een regel zonder subject-eisen.
+    if (this.isWoord(this.kijk(), "iedereen")) {
+      this.pak();
+      return { soort: "iedereen" };
+    }
     if (this.isWoord(this.kijk(), "iemand")) {
       this.pak();
       return { soort: "iemand", kenmerken: this.parseKenmerken() };
     }
-    const lidwoord = this.pakWoord("Het subject begint met Een, De, Het of Iemand.", ...LIDWOORDEN).toLowerCase();
+    const lidwoord = this.pakWoord("Het subject begint met Een, De, Het, Iemand of Iedereen.", ...LIDWOORDEN).toLowerCase();
     const woorden = [];
     while (this.kijk() && this.kijk().soort === "woord" && !this.isWoord(this.kijk(), "mag")) {
       woorden.push(this.pak().waarde);
