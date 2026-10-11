@@ -55,6 +55,31 @@ type AfgeleidVeld struct {
 	IsWeergaveVeld      bool   // true = dit veld wordt als samenvattende weergave op kaarten getoond
 }
 
+// AfgeleideRelatie beschrijft een afgeleide relatie (UML isDerived) onder een entiteit.
+// Ze heeft geen tabel, geen _Data en geen schrijfroutes: bij het lezen wordt Afleidingsregel
+// geëvalueerd op de bronentiteit en levert die de exemplaren van DoelEntiteit op.
+// Codegen haalt afgeleide relaties uit V3Entiteit.Relaties en schrijft ze hier, zodat de
+// hub-/_Data-generatie ze niet ziet. Zie docs/plans/2026-10-11 Afgeleide relaties backend — ontwerp.md.
+type AfgeleideRelatie struct {
+	Naam                string // V3-naam van de relatie (bijv. "Woonwijk")
+	Description         string
+	Domein              string
+	Meervoud            string // V3-meervoud (bijv. "woonwijk")
+	Rolnaam             string // zoals bij een gewone relatie (bijv. "Woonwijk")
+	JSONRolnaam         string // sleutel in /full en GraphQL (bijv. "woonwijk")
+	DoelEntiteit        string // typenaam van de doelentiteit (bijv. "Gemeentedeel")
+	Momentvoorkomen     Momentvoorkomen
+	Directioneel        bool
+	Geordend            bool
+	NaamLabelHeen       string
+	NaamLabelTerug      string
+	BronKardinaliteit   string
+	DoelKardinaliteit   string
+	AfleidingsregelTaal string // "cel"
+	Afleidingsregel     string
+	Layout              *EditorLayout // editor-layout voor de V3-rondreis (genegeerd door de runtime)
+}
+
 // OnderliggendeRepresentatie koppelt een typenaam aan een concrete FormeleRepresentatie.
 // IsDataSubtype is true voor _Data/_Aanvang/_Einde subtypes (geversioneerde
 // inhoud/materiële plumbing onder een hub of entiteit).
@@ -190,6 +215,10 @@ type TypeMeta struct {
 	// te vinden zijn (bijv. A_Aanvang, A_Einde). Geeft de naam van de bovenliggende entiteit (bijv. "A").
 	BovenliggendTypenaam string
 
+	// Geordend (UML isOrdered) geeft aan dat de voorkomens van deze relatie een betekenisvolle
+	// volgorde hebben. Alleen metadata (rondreis/schema-API); de opslag verandert niet.
+	Geordend bool
+
 	// Directioneel geeft aan of de relatie een directionele associatie is.
 	// Bij directionele relaties wordt een open pijl weergegeven aan de doelzijde (B)
 	// en wordt de kardinaliteit aan de bronzijde (A) niet getoond.
@@ -209,6 +238,10 @@ type TypeMeta struct {
 	// AfgeleideVelden beschrijft afgeleide velden (bijv. weergavenaam).
 	// Ondersteund op entiteiten, GE-hubs en relatie-hubs. De waarden worden berekend uit onderliggende velden.
 	AfgeleideVelden []AfgeleidVeld
+
+	// AfgeleideRelaties beschrijft de afgeleide relaties van een entiteit (alleen lezen,
+	// berekend uit een afleidingsregel; geen tabel). Alleen op entiteiten.
+	AfgeleideRelaties []AfgeleideRelatie
 
 	// ==== Editor layout (round-trip) ====
 	// Layout bevat UML-editor positie en edge-metadata voor stabiele round-trips.

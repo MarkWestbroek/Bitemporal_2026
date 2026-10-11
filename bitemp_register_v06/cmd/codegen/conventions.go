@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
@@ -13,6 +14,11 @@ type codegenOptions struct {
 	domein   string // TypeMeta.Domein waarde (bijv. "np-loc", "register")
 	prefix   string // bestandsprefix → bepaalt init-functienaam (bijv. "np_loc" → initNpLocMetaRegistry)
 	additive bool   // standalone of additive modus
+
+	// afgeleideRelaties: de afgeleide relaties per typenaam van de bronentiteit, vóór de
+	// generatie uit V3Entiteit.Relaties gehaald (splitsAfgeleideRelaties). Alleen de
+	// entiteit-entry in de MetaRegistry gebruikt ze.
+	afgeleideRelaties map[string][]model.V3Relatie
 }
 
 // initFuncName leidt de init-functienaam af uit prefix en suffix.
@@ -222,6 +228,13 @@ func contentField(v model.V3Veld) StructField {
 	}
 	if len(schemaParts) > 0 {
 		tags += fmt.Sprintf(` schema:"%s"`, strings.Join(schemaParts, ","))
+	}
+	// Afgeleid veld (V3Veld.Afgeleid): de regel gaat als eigen tag mee, zodat de exporter
+	// (model/v3_exporter.go) hem bij de rondreis kan teruggeven. Het veld blijft voorlopig
+	// een gewone kolom; alleen-lezen maken is een aparte stap (ontwerp afgeleide relaties §4).
+	// Een backquote kan niet in een struct tag; zo'n regel valt af (CEL gebruikt ' en ").
+	if v.Afgeleid && !strings.Contains(v.Afleidingsregel, "`") {
+		tags += " afleiding:" + strconv.Quote(v.Afleidingsregel)
 	}
 
 	tags += "`"

@@ -1,0 +1,74 @@
+{
+  "beschrijving": "Pariteitsgevallen voor de CEL-subset van afgeleide velden en afgeleide relaties. Eén bron voor de Go-evaluator (celexpr/celexpr_test.go) en de frontend (web/vite/src/shared/celEvaluator.test.js). Per geval: expressie, context (JSON), verwacht (JSON-uitkomst). parseFout=true: de expressie parset niet; de Go-parser geeft een fout, de frontend geeft null. kenmerk noemt nieuw gedrag van 2026-10-11 (ontwerp afgeleide relaties §3): 'collect' (pad over een lijst) en 'strikt' (tekst na de expressie is een fout). Zie docs/plans/2026-10-11 Afgeleide relaties backend — ontwerp.md.",
+  "gevallen": [
+    { "naam": "string-literal enkel", "expressie": "'abc'", "context": {}, "verwacht": "abc" },
+    { "naam": "string-literal dubbel met escape", "expressie": "\"a\\\"b\"", "context": {}, "verwacht": "a\"b" },
+    { "naam": "getal", "expressie": "42", "context": {}, "verwacht": 42 },
+    { "naam": "negatief getal", "expressie": "-1.5", "context": {}, "verwacht": -1.5 },
+    { "naam": "null true false", "expressie": "true && !false && null == null", "context": {}, "verwacht": true },
+
+    { "naam": "ident", "expressie": "naam", "context": { "naam": "Jan" }, "verwacht": "Jan" },
+    { "naam": "ident hoofdletterongevoelig", "expressie": "NAAM", "context": { "naam": "Jan" }, "verwacht": "Jan" },
+    { "naam": "exacte treffer gaat voor", "expressie": "Naam", "context": { "naam": "klein", "Naam": "groot" }, "verwacht": "groot" },
+    { "naam": "onbekend ident is null", "expressie": "bestaatNiet", "context": {}, "verwacht": null },
+    { "naam": "pad", "expressie": "Naam.achternaam", "context": { "Naam": { "achternaam": "Berg" } }, "verwacht": "Berg" },
+    { "naam": "pad op null is null", "expressie": "Naam.achternaam", "context": {}, "verwacht": null },
+
+    { "naam": "plus voegt tekst samen", "expressie": "a + ' ' + b", "context": { "a": "Jan", "b": "Berg" }, "verwacht": "Jan Berg" },
+    { "naam": "plus met getallen is ook tekst", "expressie": "1 + 2", "context": {}, "verwacht": "12" },
+    { "naam": "plus met null telt als leeg", "expressie": "a + b + 'x'", "context": { "a": "Jan" }, "verwacht": "Janx" },
+    { "naam": "plus met bool", "expressie": "'is ' + true", "context": {}, "verwacht": "is true" },
+
+    { "naam": "== tekst", "expressie": "a == 'x'", "context": { "a": "x" }, "verwacht": true },
+    { "naam": "== getal en tekst is onwaar", "expressie": "a == '1'", "context": { "a": 1 }, "verwacht": false },
+    { "naam": "!= null", "expressie": "a != null", "context": { "a": "" }, "verwacht": true },
+    { "naam": "> getallen", "expressie": "a > 9", "context": { "a": 10 }, "verwacht": true },
+    { "naam": "> teksten lexicografisch", "expressie": "a > b", "context": { "a": "10", "b": "9" }, "verwacht": false },
+    { "naam": "<= gemengd numeriek", "expressie": "a <= 10", "context": { "a": "9" }, "verwacht": true },
+
+    { "naam": "ternary", "expressie": "r != null ? r : v", "context": { "v": "J." }, "verwacht": "J." },
+    { "naam": "geneste ternary", "expressie": "s == 'a' ? 1 : s == 'b' ? 2 : 3", "context": { "s": "b" }, "verwacht": 2 },
+    { "naam": "haakjes", "expressie": "(a || b) && c", "context": { "b": "x", "c": 1 }, "verwacht": true },
+    { "naam": "truthiness leeg en nul", "expressie": "!'' && !0", "context": {}, "verwacht": true },
+
+    { "naam": "size van lijst", "expressie": "l.size()", "context": { "l": [1, 2, 3] }, "verwacht": 3 },
+    { "naam": "size() functie op tekst", "expressie": "size(t)", "context": { "t": "abcd" }, "verwacht": 4 },
+    { "naam": "size van null", "expressie": "size(x)", "context": {}, "verwacht": 0 },
+    { "naam": "index", "expressie": "l[1]", "context": { "l": ["a", "b"] }, "verwacht": "b" },
+    { "naam": "index buiten bereik", "expressie": "l[5]", "context": { "l": ["a"] }, "verwacht": null },
+    { "naam": "filter", "expressie": "l.filter(x, x.t == 'nl')", "context": { "l": [{ "t": "nl", "w": "huis" }, { "t": "en", "w": "house" }] }, "verwacht": [{ "t": "nl", "w": "huis" }] },
+    { "naam": "filter dan index dan veld", "expressie": "l.filter(x, x.t == 'en')[0].w", "context": { "l": [{ "t": "nl", "w": "huis" }, { "t": "en", "w": "house" }] }, "verwacht": "house" },
+    { "naam": "map", "expressie": "l.map(x, x.w + '!')", "context": { "l": [{ "w": "a" }, { "w": "b" }] }, "verwacht": ["a!", "b!"] },
+    { "naam": "exists", "expressie": "l.exists(x, x > 2)", "context": { "l": [1, 3] }, "verwacht": true },
+    { "naam": "all op lege lijst", "expressie": "l.all(x, x > 2)", "context": { "l": [] }, "verwacht": true },
+    { "naam": "filter op geen lijst", "expressie": "o.filter(x, true)", "context": { "o": { "a": 1 } }, "verwacht": [] },
+    { "naam": "lambda-variabele schaduwt context", "expressie": "l.map(a, a)", "context": { "a": "buiten", "l": ["binnen"] }, "verwacht": ["binnen"] },
+
+    { "naam": "string() van null", "expressie": "string(x)", "context": {}, "verwacht": "" },
+    { "naam": "string() van getal", "expressie": "string(2.50)", "context": {}, "verwacht": "2.5" },
+    { "naam": "string() van lijst", "expressie": "string(l)", "context": { "l": ["a", null, 3] }, "verwacht": "a,,3" },
+    { "naam": "int() van tekst", "expressie": "int('42abc')", "context": {}, "verwacht": 42 },
+    { "naam": "int() van null", "expressie": "int(x)", "context": {}, "verwacht": 0 },
+    { "naam": "onbekende functie", "expressie": "onbekend(1)", "context": {}, "verwacht": null },
+
+    { "naam": "leeftijd hele jaren", "expressie": "leeftijd(np.geb, '2026-06-14')", "context": { "np": { "geb": "1990-06-15" } }, "verwacht": 35 },
+    { "naam": "leeftijd op verjaardag", "expressie": "leeftijd(np.geb, '2026-06-15')", "context": { "np": { "geb": "1990-06-15" } }, "verwacht": 36 },
+    { "naam": "leeftijd alleen jaar → 1 juli", "expressie": "leeftijd(g, '2026-06-30')", "context": { "g": "1990-00-00" }, "verwacht": 35 },
+    { "naam": "leeftijd jaar+maand → 15e", "expressie": "leeftijd(g, '2026-06-14')", "context": { "g": "1990-06-00" }, "verwacht": 35 },
+    { "naam": "leeftijd onbekend", "expressie": "leeftijd(g, '2026-07-09')", "context": { "g": "0000-00-00" }, "verwacht": null },
+    { "naam": "leeftijd uit date-time in samenvoeging", "expressie": "n + ' (' + string(leeftijd(g, '2026-07-09')) + ')'", "context": { "n": "Jansen", "g": "2000-01-01T12:00:00Z" }, "verwacht": "Jansen (26)" },
+
+    { "naam": "collect: veld over lijst", "kenmerk": "collect", "expressie": "ouders.naam", "context": { "ouders": [{ "naam": "A" }, { "naam": "B" }] }, "verwacht": ["A", "B"] },
+    { "naam": "collect: null valt weg", "kenmerk": "collect", "expressie": "ouders.naam", "context": { "ouders": [{ "naam": "A" }, {}] }, "verwacht": ["A"] },
+    { "naam": "collect: geneste lijsten worden plat", "kenmerk": "collect", "expressie": "ouders.ouders", "context": { "ouders": [{ "ouders": [{ "id": 1 }, { "id": 2 }] }, { "ouders": [{ "id": 3 }] }] }, "verwacht": [{ "id": 1 }, { "id": 2 }, { "id": 3 }] },
+    { "naam": "collect: twee stappen", "kenmerk": "collect", "expressie": "ouders.ouders.id", "context": { "ouders": [{ "ouders": [{ "id": 1 }, { "id": 2 }] }, { "ouders": [{ "id": 3 }] }] }, "verwacht": [1, 2, 3] },
+    { "naam": "collect: lege lijst", "kenmerk": "collect", "expressie": "ouders.naam", "context": { "ouders": [] }, "verwacht": [] },
+    { "naam": "collect: na filter", "kenmerk": "collect", "expressie": "b.filter(x, x.soort == 'w').wijk", "context": { "b": [{ "soort": "w", "wijk": 7 }, { "soort": "p", "wijk": 8 }] }, "verwacht": [7] },
+    { "naam": "collect: size na collect", "kenmerk": "collect", "expressie": "ouders.ouders.size()", "context": { "ouders": [{ "ouders": [{ "id": 1 }] }, { "ouders": [{ "id": 3 }] }] }, "verwacht": 2 },
+    { "naam": "self als contextvariabele", "kenmerk": "collect", "expressie": "self.id", "context": { "self": { "id": 5 } }, "verwacht": 5 },
+
+    { "naam": "parsefout: ontbrekend haakje", "expressie": "(a + b", "context": {}, "verwacht": null, "parseFout": true },
+    { "naam": "parsefout: lege expressie", "expressie": "", "context": {}, "verwacht": null, "parseFout": true },
+    { "naam": "parsefout: tekst na de expressie", "kenmerk": "strikt", "expressie": "a b", "context": { "a": 1 }, "verwacht": null, "parseFout": true }
+  ]
+}

@@ -206,6 +206,29 @@ De codegen valideert het V3 model voordat er code wordt gegenereerd. Bij fouten 
 
 > **Tip:** Numerieke enum-waarden (bijv. schaal 1–4) vereisen unieke `constNaam`-waarden. Gebruik een suffix per waarde: `SchaalWaarde1`, `SchaalWaarde2`, etc. — niet vier keer `SchaalWaarde`.
 
+### Afgeleide relaties (alleen lezen, geen tabel)
+
+Een relatie met `afgeleid: true` (UML isDerived, "/" voor de naam) wordt **niet** geregistreerd
+maar bij het lezen berekend uit `afleidingsregel` (CEL-subset met navigatie). Codegen haalt zulke
+relaties vóór de generatie uit `entiteiten[].relaties` (`splitsAfgeleideRelaties` in
+`cmd/codegen/gen_afgeleid.go`, ná de delta-analyse). Ze krijgen dus geen hub-, `_Data`-, Input-
+of methode-code, geen regel in `OnderliggendeGegevenselementen`, geen tabel en geen routes.
+De entiteit-entry krijgt wel een blok `AfgeleideRelaties: []AfgeleideRelatie{...}` met rolnaam,
+doelentiteit, regel en editor-layout. De exporter zet het blok terug als
+`V3Relatie{afgeleid: true}`, zodat de rebuild de relatie niet kwijtraakt.
+
+Extra validatie bij `afgeleid: true`: `afleidingsregel` verplicht, `afleidingsregelTaal` leeg of
+`cel`, geen `velden`, `afgeleideVelden` of `relatieSubtype`. `isMaterieel` wordt genegeerd.
+Schemadiff meldt een afgeleide relatie erbij/eraf als informatief (categorie
+`afgeleide_relatie`, geen SQL); omzetten van opgeslagen naar afgeleid is destructief (tabel
+vervalt), andersom additief (tabel erbij).
+
+Verder (V3-rondreis): `geordend` (UML isOrdered) op een relatie gaat naar `TypeMeta.Geordend`, en een afgeleid
+veld (`velden[].afgeleid`) krijgt de struct tag `afleiding:"<regel>"` die de exporter weer leest
+(het veld zelf blijft voorlopig een gewone kolom).
+
+Ontwerp, navigatiesyntaxis en de leeskant: `docs/plans/2026-10-11 Afgeleide relaties backend — ontwerp.md`.
+
 ---
 
 ## 5. Roundtrip-verificatie

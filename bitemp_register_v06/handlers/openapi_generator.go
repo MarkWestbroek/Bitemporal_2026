@@ -610,6 +610,28 @@ func genereerFullSchemaVoorEntiteit(meta model.TypeMeta) oasMap {
 		}
 	}
 
+	// Afgeleide relaties: alleen lezen (readOnly), berekend uit de afleidingsregel; geen tabel.
+	for _, ar := range meta.AfgeleideRelaties {
+		items := oasMap{
+			"type": "object",
+			"properties": oasMap{
+				ar.DoelIDSleutel(): oasMap{"type": "integer", "description": "ID van de doelentiteit " + ar.DoelEntiteit},
+				"weergavenaam":     oasMap{"type": "string"},
+			},
+			"required": []string{ar.DoelIDSleutel()},
+		}
+		prop := oasMap{
+			"type":        "array",
+			"items":       items,
+			"readOnly":    true,
+			"description": "Afgeleide relatie (alleen lezen) naar " + ar.DoelEntiteit + "; afleidingsregel: " + ar.Afleidingsregel,
+		}
+		if ar.Momentvoorkomen != model.Meervoudig {
+			prop["maxItems"] = 1
+		}
+		extraProperties[ar.JSONRolnaam] = prop
+	}
+
 	return oasMap{
 		"allOf": []oasMap{
 			basisRef,

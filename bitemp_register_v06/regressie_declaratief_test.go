@@ -64,7 +64,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/gebruikers"
 )
 
 const declaratieveScenarioMap = "regressie/scenarios"
@@ -532,7 +532,7 @@ func bereidStapVoor(stap declStap, vars *declVars) (overslaan bool) {
 func voerActieUit(actie string) error {
 	switch actie {
 	case "seed_admin":
-		return handlers.SeedAdminGebruiker(context.Background())
+		return gebruikers.SeedAdmin(context.Background()) // sinds api 0.10.0 in package gebruikers
 	}
 	return fmt.Errorf("onbekende actie %q (bekend: seed_admin)", actie)
 }

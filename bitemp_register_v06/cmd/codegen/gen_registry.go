@@ -100,7 +100,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 		// ---- Entiteit ----
 		d := deriveEntiteit(ent)
 		entLayout := &layoutInfo{Positie: ent.Positie, LayoutLocked: ent.LayoutLocked}
-		writeEntiteitEntry(b, ent, d, entIDKolom, opts.domein, entLayout)
+		writeEntiteitEntry(b, ent, d, entIDKolom, opts.domein, entLayout, opts.afgeleideRelaties[ent.Typenaam])
 
 		// ---- GE hubs ----
 		for _, ge := range ent.Gegevenselementen {
@@ -174,7 +174,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 }
 
 // writeEntiteitEntry schrijft de MetaRegistry entry voor een entiteit.
-func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType, _ string, domein string, li *layoutInfo) {
+func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType, _ string, domein string, li *layoutInfo, afgeleideRelaties []model.V3Relatie) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:    %q,\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:  %q,\n", d.Klassenaam))
@@ -250,6 +250,7 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 	}
 	b.WriteString("\t\t},\n")
 	writeAfgeleideVelden(b, ent.AfgeleideVelden)
+	writeAfgeleideRelaties(b, afgeleideRelaties, domein)
 	b.WriteString("\t},\n")
 }
 
@@ -332,14 +333,10 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie, do
 	if rel.Directioneel {
 		b.WriteString("\t\tDirectioneel: true,\n")
 	}
-	relLayout := &layoutInfo{
-		Positie: rel.Positie, LayoutLocked: rel.LayoutLocked, EdgeID: rel.ID, SourceHandle: rel.SourceHandle, TargetHandle: rel.TargetHandle,
-		DoelEdgeID: rel.DoelID, DoelSourceHandle: rel.DoelSourceHandle, DoelTargetHandle: rel.DoelTargetHandle,
-		AnkerPositie: rel.AnkerPositie, AnkerLayoutLocked: rel.AnkerLayoutLocked, ClassLinkEdgeID: rel.ClassLinkID,
-		ClassLinkSourceHandle: rel.ClassLinkSourceHandle, ClassLinkTargetHandle: rel.ClassLinkTargetHandle,
-		UseEdges: rel.UseEdges,
+	if rel.Geordend {
+		b.WriteString("\t\tGeordend: true,\n")
 	}
-	writeLayoutLine(b, relLayout)
+	writeLayoutLine(b, relatieLayoutInfo(rel))
 
 	// OnderliggendeGegevenselementen
 	b.WriteString("\t\tOnderliggendeGegevenselementen: []OnderliggendGegevenselement{\n")
