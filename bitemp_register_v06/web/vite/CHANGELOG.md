@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Afgeleide relaties: de Studio rekent mee** (11-10, bij de backend van BACKEND-GEN): de
+  CEL-evaluator kent **collect** (`ouders.ouders`) en parset strikt, gelijk met de Go-evaluator
+  (gedeeld `testdata/cel-pariteit.json`, 60/60). De inspector controleert de afleidingsregel van
+  een afgeleide relatie tegen het model (✓/⚠/✗: rolnamen, doorkijk naar het doel, het doeltype
+  aan het eind). `geordend` gaat mee naar V3; een afgeleide relatie stuurt geen velden mee.
 - **Afgeleide relaties** (10-10, Mark): `afgeleid` (UML isDerived) op relaties in UML, canoniek, MIM
   (`indicatieAfleidbaar`) en SysML, met "/" voor de naam; ook op SysML-waarden en -delen. M3:
   `PropertyType.betekenis: "afgeleid"` laat de motor het "/" tekenen ongeacht de naam van de

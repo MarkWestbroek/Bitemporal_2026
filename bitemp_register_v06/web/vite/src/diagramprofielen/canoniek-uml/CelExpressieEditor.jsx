@@ -13,6 +13,10 @@
  */
 import { lazy, Suspense, useMemo, useState } from "react";
 import { berekenCelContextVelden } from "./celContext.js";
+import { controleerAfleidingsregel, veldenBijAfgeleid } from "./afleidingsregelControle.js";
+
+const KLEUR = { ok: "#15803d", waarschuwing: "#b45309", fout: "#b91c1c" };
+const TEKEN = { ok: "✓", waarschuwing: "⚠", fout: "✗" };
 
 // De modal-styling (backdrop, kolommen, tokenkleuren + licht-thema-overrides)
 // leeft in umleditor/styles/editor.css. Die is normaal pas geladen zodra de
@@ -45,8 +49,18 @@ export default function CelExpressieEditor({ regel, waarde, onChange, element, c
     return velden;
   }, [context, element]);
 
+  // Afgeleide relatie (2026-10-11): de regel statisch nalopen tegen het
+  // model — dezelfde opzoekregels als de backend (afleidingsregelControle.js).
+  // Met de getypte waarde, zodat de uitslag meeloopt met het invoeren.
+  const uitslag = useMemo(() => {
+    if (regel.key !== "afleidingsregel" || !element?.data?.afgeleid || !context?.elements || !element?.id) return null;
+    const elements = { ...context.elements, [element.id]: { ...element, data: { ...element.data, afleidingsregel: waarde || "" } } };
+    return { regel: controleerAfleidingsregel(elements, element.id), velden: veldenBijAfgeleid(elements, element.id) };
+  }, [regel.key, element, context, waarde]);
+
   return (
-    <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 3, alignItems: "center" }}>
+    <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+    <div style={{ display: "flex", gap: 3, alignItems: "center" }}>
       <input
         type="text"
         value={waarde || ""}
@@ -68,6 +82,13 @@ export default function CelExpressieEditor({ regel, waarde, onChange, element, c
           />
         </Suspense>
       )}
+    </div>
+    {uitslag?.regel?.melding ? (
+      <div style={{ fontSize: 10.5, lineHeight: 1.3, color: KLEUR[uitslag.regel.niveau] }} title="Statische controle tegen het model">
+        {TEKEN[uitslag.regel.niveau]} {uitslag.regel.melding}
+      </div>
+    ) : null}
+    {uitslag?.velden ? <div style={{ fontSize: 10.5, lineHeight: 1.3, color: KLEUR.waarschuwing }}>⚠ {uitslag.velden}</div> : null}
     </div>
   );
 }

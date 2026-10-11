@@ -341,6 +341,7 @@ export function v3ModelNaarStore(v3Full) {
             doelEntiteit: rel.doelEntiteit || "",
             // Afgeleide relatie (2026-10-10), zoals v3ModelNaarEditor.
             ...(rel.afgeleid ? { afgeleid: true, afleidingsregelTaal: rel.afleidingsregelTaal || "cel", afleidingsregel: rel.afleidingsregel || "" } : {}),
+            ...(rel.geordend ? { geordend: true } : {}),
             naamLabelHeen: rel.naamLabelHeen || "",
             naamLabelTerug: rel.naamLabelTerug || "",
           },
@@ -1255,6 +1256,8 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
   if (cd.isMaterieel) v3Rel.isMaterieel = true;
   if (cd.naamLabelHeen) v3Rel.naamLabelHeen = cd.naamLabelHeen;
   if (cd.naamLabelTerug) v3Rel.naamLabelTerug = cd.naamLabelTerug;
+  // {ordered} (V3Relatie.geordend sinds de backend van 2026-10-11).
+  if (cd.geordend) v3Rel.geordend = true;
   // Afgeleide relatie (2026-10-10): geen tabel, leesbaar via de regel (codegen).
   if (cd.afgeleid) {
     v3Rel.afgeleid = true;
@@ -1265,11 +1268,16 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
   const relPos = elementPositie(diagrams, child.id);
   if (relPos) v3Rel.positie = relPos;
 
-  const velden = (cd.velden || []).map(veldNaarV3);
-  if (velden.length) v3Rel.velden = velden;
+  // Een afgeleide relatie heeft geen eigen velden: de backend weigert ze
+  // (validateV3Model). De Studio laat het compartiment wel bestaan (geërfd van
+  // gegevenselement); bij export blijven de velden dus achter.
+  if (!cd.afgeleid) {
+    const velden = (cd.velden || []).map(veldNaarV3);
+    if (velden.length) v3Rel.velden = velden;
 
-  const afgeleid = afgeleideVeldenNaarV3(cd.afgeleideVelden);
-  if (afgeleid.length) v3Rel.afgeleideVelden = afgeleid;
+    const afgeleid = afgeleideVeldenNaarV3(cd.afgeleideVelden);
+    if (afgeleid.length) v3Rel.afgeleideVelden = afgeleid;
+  }
 
   // Edge handles voor roundtrip
   if (diagEdge.sourceHandle) v3Rel.sourceHandle = diagEdge.sourceHandle;

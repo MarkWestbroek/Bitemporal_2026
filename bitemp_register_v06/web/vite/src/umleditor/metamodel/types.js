@@ -871,6 +871,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         afgeleid: relNode.data.afgeleid || undefined,
         afleidingsregelTaal: relNode.data.afgeleid ? relNode.data.afleidingsregelTaal || "cel" : undefined,
         afleidingsregel: relNode.data.afgeleid ? relNode.data.afleidingsregel || undefined : undefined,
+        geordend: relNode.data.geordend || undefined,
         naamLabelHeen: relNode.data.naamLabelHeen || undefined,
         naamLabelTerug: relNode.data.naamLabelTerug || undefined,
         doelEntiteit: doelEntiteitNaam,

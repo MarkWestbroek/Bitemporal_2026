@@ -145,3 +145,22 @@ test("afgeleide relatie: afgeleid + afleidingsregel overleven de V3-rondreis", (
   const relGewoon = (gewoon.v3.model || gewoon.v3).entiteiten.flatMap((e) => e.relaties || []).find((r) => r.naam === "R");
   assert.equal(relGewoon.afgeleid, undefined);
 });
+
+test("geordend op een relatie gaat mee naar V3 en terug (V3Relatie.geordend)", () => {
+  const core = vanCanoniekModel(bronState({}, {}, { R: { geordend: true } }));
+  const { v3 } = exporteerV3(core);
+  const rel = (v3.model || v3).entiteiten.flatMap((e) => e.relaties || []).find((r) => r.naam === "R");
+  assert.equal(rel.geordend, true);
+  assert.equal(importeerV3(v3).elements.R.data.geordend, true);
+});
+
+test("afgeleide relatie: velden blijven achter bij de V3-export (de backend weigert ze)", () => {
+  const veld = { naam: "x", goType: "string" };
+  const core = vanCanoniekModel(bronState({}, {}, { R: { afgeleid: true, afleidingsregel: "self.id", velden: [veld] } }));
+  const rel = (exporteerV3(core).v3.model || exporteerV3(core).v3).entiteiten.flatMap((e) => e.relaties || []).find((r) => r.naam === "R");
+  assert.equal(rel.afgeleid, true);
+  assert.equal(rel.velden, undefined);
+  const gewoon = vanCanoniekModel(bronState({}, {}, { R: { velden: [veld] } }));
+  const relGewoon = (exporteerV3(gewoon).v3.model || exporteerV3(gewoon).v3).entiteiten.flatMap((e) => e.relaties || []).find((r) => r.naam === "R");
+  assert.equal(relGewoon.velden?.length, 1, "een gewone relatie houdt haar velden");
+});

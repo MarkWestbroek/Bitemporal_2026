@@ -357,10 +357,33 @@ function createParser(tokens) {
   // Alias voor backward-compat (parseUnary roept nu parsePostfix aan)
   function parsePrimary() { return parsePostfix(); }
 
-  return { parseExpr };
+  // positie(): index van het volgende token — voor de strikte EOF-controle.
+  return { parseExpr, positie: () => pos };
 }
 
 // ── Evaluator ──────────────────────────────────────────────────────────
+
+/**
+ * Collect: `lijst.veld` → het veld van elk element, één niveau plat gemaakt,
+ * null-waarden weg; een lege lijst geeft []. Een element dat zelf een lijst
+ * is, wordt eerst zelf gecollect.
+ * @param {any[]} lijst
+ * @param {string} veld
+ */
+function collect(lijst, veld) {
+  const uit = [];
+  for (const el of lijst) {
+    if (el == null) continue;
+    const v = Array.isArray(el) ? collect(el, veld) : leesWaardeCaseOngevoelig(el, veld);
+    if (v == null) continue;
+    if (Array.isArray(v)) {
+      for (const x of v) if (x != null) uit.push(x);
+    } else {
+      uit.push(v);
+    }
+  }
+  return uit;
+}
 
 function leesWaardeCaseOngevoelig(bron, sleutel) {
   if (bron == null) return undefined;
@@ -383,10 +406,14 @@ function evaluate(node, ctx) {
       return val !== undefined ? val : null;
     }
 
-    // Veldtoegang: evalueer obj, haal daarna het veld op
+    // Veldtoegang: evalueer obj, haal daarna het veld op. Op een lijst is dit
+    // **collect** (OCL-stijl, 2026-10-11, pariteit met de Go-evaluator
+    // `celexpr`): het veld op elk element, plat gemaakt, zonder null —
+    // zo werkt `ouders.ouders` en `woonlocatie.gebiedsligging.gemeente`.
     case "field": {
       const obj = evaluate(node.obj, ctx);
-      if (obj == null || Array.isArray(obj)) return null;
+      if (obj == null) return null;
+      if (Array.isArray(obj)) return collect(obj, node.field);
       const val = leesWaardeCaseOngevoelig(obj, node.field);
       return val !== undefined ? val : null;
     }
@@ -513,6 +540,24 @@ function evaluate(node, ctx) {
 // ── Public API ─────────────────────────────────────────────────────────
 
 /**
+ * Parse een CEL-expressie tot een AST. **Strikt** (2026-10-11, pariteit met
+ * de Go-parser): na de expressie moet de invoer op zijn, dus `a b` is een
+ * fout in plaats van stilletjes `a`. Gooit een Error bij een parsefout.
+ *
+ * @param {string} expressie
+ * @returns {Object} AST
+ */
+export function parseCelExpressie(expressie) {
+  const tokens = tokenize(expressie);
+  const parser = createParser(tokens);
+  const ast = parser.parseExpr();
+  if (tokens.length && tokens[tokens.length - 1].type === TokenType.EOF && parser.positie() !== tokens.length - 1) {
+    throw new Error("Onverwachte tekst na de expressie");
+  }
+  return ast;
+}
+
+/**
  * Evalueer een CEL-expressie met de gegeven context.
  *
  * @param {string} expressie - De CEL-expressie (bijv. "Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters")
@@ -521,9 +566,7 @@ function evaluate(node, ctx) {
  */
 export function evalueerCelExpressie(expressie, ctx) {
   try {
-    const tokens = tokenize(expressie);
-    const parser = createParser(tokens);
-    const ast = parser.parseExpr();
+    const ast = parseCelExpressie(expressie);
     return evaluate(ast, ctx);
   } catch (e) {
     console.warn("[celEvaluator] Fout bij evaluatie:", e.message, { expressie });
