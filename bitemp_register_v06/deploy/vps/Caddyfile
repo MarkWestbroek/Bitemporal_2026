@@ -217,3 +217,31 @@ psycholog.pi-utrecht.nl {
 # omnium-ide.com, www.omnium-ide.com {
 # 	redir https://omnium-ide.nl{uri} permanent
 # }
+
+# Informatiesite over Omnium (imprint-engine sites/omnium; Nederlands, noindex
+# zolang de teksten concept zijn): stack in /srv/imprint/deploy/vps, container
+# op 127.0.0.1:3500. Sinds 11 oktober 2026; DNS bij mijn.host.
+omnium.imprint-engine.nl {
+	import veilig
+	# Toegangslog voor de bezoekstatistiek (imprint-engine deploy/vps/stats.sh,
+	# GoAccess): IP's ingekort, zonder cookies, Authorization en token-parameters.
+	log {
+		output file /var/log/caddy/omnium.log {
+			roll_size 50MiB
+			roll_keep 5
+			roll_keep_for 720h
+			mode 0644
+		}
+		format filter {
+			request>remote_ip ip_mask 24 48
+			request>client_ip ip_mask 24 48
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+			resp_headers>Set-Cookie delete
+			request>uri query {
+				delete token
+			}
+		}
+	}
+	reverse_proxy 127.0.0.1:3500
+}
