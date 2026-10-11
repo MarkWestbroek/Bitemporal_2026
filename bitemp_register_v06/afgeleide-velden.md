@@ -489,6 +489,16 @@ Checklist bij troubleshooting:
 | `uml-editor/src/components/nodes/GegevensElementNode.jsx` | Oranje `/` prefix bij afgeleide velden in GE-nodes |
 | `uml-editor/src/components/nodes/RelatieNode.jsx` | Oranje `/` prefix bij afgeleide velden in relatie-nodes |
 
+### Backend-evaluatie (sinds 11-10-2026)
+
+| Bestand | Rol |
+|---------|-----|
+| `celexpr/celexpr.go` | De CEL-subset in Go, één-op-één met `web/vite/src/shared/celEvaluator.js` (plus `lijst.veld` als collect). Vervangt de twee eigen evaluators die op `+` splitsten. |
+| `afleiding/` | Entiteit-context (klassenaam → actief voorkomen, rolnaam → lijst, doorkijk via relaties), afgeleide velden (`AfgeleidVeld`, `Weergavenaam`) en afgeleide relaties. Gebruikt door `/full` en GraphQL. |
+| `testdata/cel-pariteit.json` | Gedeelde pariteitsgevallen voor de Go- en de JS-evaluator. |
+
+Zie `docs/plans/2026-10-11 Afgeleide relaties backend — ontwerp.md` (§3 syntaxis, §8 stand).
+
 ---
 
 ## ExpressieEditor breakout-modal

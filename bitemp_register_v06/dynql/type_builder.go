@@ -256,6 +256,9 @@ func buildObjectType(typenaam string, meta model.TypeMeta) *graphql.Object {
 				}
 			}
 
+			// Afgeleide relaties (alleen lezen, geen tabel)
+			voegAfgeleideRelatieVeldenToe(fields, meta)
+
 			// Reverse relaties: als andere entiteiten via een relatie naar dit type wijzen,
 			// voeg dan een "gerelateerde_<padnaam>" veld toe dat die bron-entiteiten ophaalt.
 			if meta.Metatype == model.MetatypeEntiteit {

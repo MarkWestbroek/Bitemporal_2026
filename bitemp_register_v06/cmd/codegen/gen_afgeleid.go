@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/celexpr"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 )
 
@@ -38,11 +39,14 @@ func splitsAfgeleideRelaties(v3 *model.V3Model) map[string][]model.V3Relatie {
 
 // validateAfgeleideRelatie controleert de regels die alleen voor een afgeleide relatie
 // gelden (ontwerp §2). rctx is het pad voor de foutmelding (bijv. "entiteiten[0].relaties[1]").
-// Of de afleidingsregel parset, controleert de evaluator; hier alleen dat hij er is.
+// De regel moet parsen in de CEL-subset (pakket celexpr); of het pad in het model klopt,
+// blijkt pas bij het lezen.
 func validateAfgeleideRelatie(rctx string, rel model.V3Relatie) []string {
 	var errs []string
 	if strings.TrimSpace(rel.Afleidingsregel) == "" {
 		errs = append(errs, fmt.Sprintf("%s is afgeleid maar heeft geen afleidingsregel", rctx))
+	} else if _, err := celexpr.Parse(rel.Afleidingsregel); err != nil {
+		errs = append(errs, fmt.Sprintf("%s.afleidingsregel parset niet: %v", rctx, err))
 	}
 	if taal := strings.TrimSpace(rel.AfleidingsregelTaal); taal != "" && taal != "cel" {
 		errs = append(errs, fmt.Sprintf("%s.afleidingsregelTaal '%s' wordt niet ondersteund voor afgeleide relaties; gebruik 'cel'", rctx, rel.AfleidingsregelTaal))

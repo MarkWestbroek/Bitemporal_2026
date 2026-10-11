@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/afleiding"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/gin-gonic/gin"
 	"github.com/uptrace/bun"
@@ -240,7 +242,7 @@ func heeftWeergaveVeld(meta model.TypeMeta) bool {
 func verrijkResponseMetWeergavenamen(c *gin.Context, entities any, entityMeta model.TypeMeta) (any, error) {
 	targets := bepaalVerrijkingTargets(entityMeta)
 	eigenAfgeleiden := nietWeergaveAfgeleideVelden(entityMeta)
-	if len(targets) == 0 && len(eigenAfgeleiden) == 0 {
+	if len(targets) == 0 && len(eigenAfgeleiden) == 0 && len(entityMeta.AfgeleideRelaties) == 0 {
 		return entities, nil
 	}
 
@@ -328,6 +330,9 @@ func verrijkResponseMetWeergavenamen(c *gin.Context, entities any, entityMeta mo
 		}
 	}
 
+	// Afgeleide relaties (alleen lezen, geen tabel): berekend uit hun afleidingsregel.
+	voegAfgeleideRelatiesToe(c, maps, entityMeta)
+
 	if isSlice {
 		return maps, nil
 	}
@@ -377,105 +382,18 @@ func laadWeergavenamenVoorEntiteiten(c *gin.Context, doelMeta model.TypeMeta, id
 	return result, nil
 }
 
-// berekenWeergavenaamVanEntiteit berekent de weergavenaam uit een entity-map
-// door het AfgeleidVeld-pad te navigeren door de hub→data structuur.
-// Ondersteunt CEL-concatenatie-expressies met + (bijv. "GE.naam + \" (\" + GE.code + \")\"").
+// berekenWeergavenaamVanEntiteit berekent de weergavenaam (het afgeleide veld met
+// IsWeergaveVeld) uit een entity-map. Sinds 11-10-2026 via de gedeelde CEL-evaluator
+// (pakket afleiding/celexpr, gelijk aan de frontend); daarvoor stond hier een eigen
+// evaluator die op '+' splitste en geen ?: kende.
 func berekenWeergavenaamVanEntiteit(entityMap map[string]any, meta model.TypeMeta) string {
-	for _, av := range meta.AfgeleideVelden {
-		if !av.IsWeergaveVeld {
-			continue
-		}
-		return evalueerCELConcatenatie(entityMap, av.Afleidingsregel, meta)
-	}
-	return ""
+	return afleiding.Weergavenaam(meta, entityMap)
 }
 
-// evalueerCELConcatenatie evalueert een (beperkte) CEL-expressie die bestaat uit
-// pad-navigaties en string-literals verbonden met +.
-// Voorbeelden:
-//   - "DomeinGegevens.naam"                                        → eenvoudig pad
-//   - "GemeenteGegevens.naam + \" (\" + GemeenteGegevens.code + \")\""  → concatenatie
-func evalueerCELConcatenatie(entityMap map[string]any, expressie string, meta model.TypeMeta) string {
-	// Snelle check: als er geen + in zit, is het één segment (pad of functie-aanroep)
-	if !strings.Contains(expressie, "+") {
-		return evalueerCELSegment(entityMap, strings.TrimSpace(expressie), meta)
-	}
-
-	// Splits op + en evalueer elk segment
-	segmenten := strings.Split(expressie, "+")
-	var resultaat strings.Builder
-	for _, segment := range segmenten {
-		segment = strings.TrimSpace(segment)
-		if segment == "" {
-			continue
-		}
-		// String-literal: begint en eindigt met "
-		if len(segment) >= 2 && segment[0] == '"' && segment[len(segment)-1] == '"' {
-			// Verwijder quotes en unescape basis-escapes
-			literal := segment[1 : len(segment)-1]
-			literal = strings.ReplaceAll(literal, `\"`, `"`)
-			literal = strings.ReplaceAll(literal, `\\`, `\`)
-			resultaat.WriteString(literal)
-		} else {
-			resultaat.WriteString(evalueerCELSegment(entityMap, segment, meta))
-		}
-	}
-	return resultaat.String()
-}
-
-// evalueerCELSegment evalueert één segment van een afgeleide-veld-expressie:
-// een functie-aanroep (nu: leeftijd(...)) of anders een pad-navigatie.
-// De string-representatie wordt teruggegeven; leeftijd wordt als geheel getal
-// geformatteerd en een niet-bepaalbare leeftijd (nil) als lege string.
-func evalueerCELSegment(entityMap map[string]any, segment string, meta model.TypeMeta) string {
-	if lft, ok := evalueerLeeftijdCall(entityMap, segment, meta); ok {
-		if lft == nil {
-			return ""
-		}
-		return strconv.Itoa(*lft)
-	}
-	return navigeerAfgeleidPad(entityMap, segment, meta)
-}
-
-// evalueerLeeftijdCall herkent en evalueert een leeftijd(geboortedatum[, peildatum])
-// aanroep. ok is true als het segment zo'n aanroep is (ook al is de uitkomst nil).
-func evalueerLeeftijdCall(entityMap map[string]any, segment string, meta model.TypeMeta) (*int, bool) {
-	naam, args, ok := model.ParseAfgeleideFunctieAanroep(segment)
-	if !ok || naam != "leeftijd" || len(args) == 0 {
-		return nil, false
-	}
-	geboorte := evalueerAfgeleidArgument(entityMap, args[0], meta)
-	peil := ""
-	if len(args) > 1 {
-		peil = evalueerAfgeleidArgument(entityMap, args[1], meta)
-	}
-	return model.BerekenLeeftijdVanArgs(geboorte, peil), true
-}
-
-// evalueerAfgeleidArgument evalueert één functie-argument: een string-literal
-// wordt ont-quote, anders wordt het als pad genavigeerd.
-func evalueerAfgeleidArgument(entityMap map[string]any, arg string, meta model.TypeMeta) string {
-	arg = strings.TrimSpace(arg)
-	if len(arg) >= 2 && arg[0] == '"' && arg[len(arg)-1] == '"' {
-		lit := arg[1 : len(arg)-1]
-		lit = strings.ReplaceAll(lit, `\"`, `"`)
-		lit = strings.ReplaceAll(lit, `\\`, `\`)
-		return lit
-	}
-	return navigeerAfgeleidPad(entityMap, arg, meta)
-}
-
-// evalueerAfgeleidVeldWaarde evalueert een afgeleid veld en behoudt het type:
-// een leeftijd(...)-expressie levert een *int (nil = niet bepaalbaar), overige
-// expressies leveren de string uit de concatenatie-evaluator.
+// evalueerAfgeleidVeldWaarde evalueert een afgeleid veld: tekst voor een string-veld ("" bij
+// null), anders de waarde zelf (bijv. int voor leeftijd).
 func evalueerAfgeleidVeldWaarde(entityMap map[string]any, av model.AfgeleidVeld, meta model.TypeMeta) any {
-	if lft, ok := evalueerLeeftijdCall(entityMap, strings.TrimSpace(av.Afleidingsregel), meta); ok {
-		if lft == nil {
-			return nil
-		}
-		return *lft
-	}
-	return evalueerCELConcatenatie(entityMap, av.Afleidingsregel, meta)
+	return afleiding.AfgeleidVeld(meta, entityMap, av)
 }
 
 // nietWeergaveAfgeleideVelden geeft de afgeleide velden terug die géén
@@ -488,127 +406,6 @@ func nietWeergaveAfgeleideVelden(meta model.TypeMeta) []model.AfgeleidVeld {
 		}
 	}
 	return out
-}
-
-// navigeerAfgeleidPad navigeert een punt-gescheiden pad (bijv. "DomeinGegevens.naam")
-// door een entity-map, gebruikmakend van MetaRegistry voor hub→data navigatie.
-func navigeerAfgeleidPad(entityMap map[string]any, pad string, meta model.TypeMeta) string {
-	delen := strings.Split(pad, ".")
-	var huidig any = entityMap
-	huidigMeta := meta
-
-	for i, deel := range delen {
-		m, ok := huidig.(map[string]any)
-		if !ok {
-			return ""
-		}
-
-		// Zoek het onderliggende element op Rolnaam
-		gevonden := false
-		for _, child := range huidigMeta.OnderliggendeGegevenselementen {
-			if !model.PadSegmentMatcht(child, deel) {
-				continue
-			}
-			childItems := m[child.JSONRolnaam]
-			if childItems == nil {
-				return ""
-			}
-			childMeta, childOK := model.MetaRegistry.GetTypeMeta(child.Doeltype)
-
-			// Als het een array is, neem het eerste actieve item
-			if arr, arrOK := childItems.([]any); arrOK {
-				actiefItem := eersteActieveMapItem(arr)
-				if actiefItem == nil {
-					return ""
-				}
-				// Als het een hub is, merge data-velden erin
-				if childOK && childMeta.GESubtype == model.GESubtypeHub {
-					actiefItem = slaMapHubItemPlat(actiefItem, childMeta)
-				}
-				huidig = actiefItem
-			} else if subMap, subOK := childItems.(map[string]any); subOK {
-				huidig = subMap
-			} else {
-				return ""
-			}
-
-			if childOK {
-				huidigMeta = childMeta
-			}
-			gevonden = true
-			break
-		}
-
-		if !gevonden {
-			// Probeer als direct veld
-			lowerDeel := strings.ToLower(deel)
-			if val, ok := m[lowerDeel]; ok {
-				if i == len(delen)-1 {
-					return fmt.Sprint(val)
-				}
-				huidig = val
-			} else if val, ok := m[deel]; ok {
-				if i == len(delen)-1 {
-					return fmt.Sprint(val)
-				}
-				huidig = val
-			} else {
-				return ""
-			}
-		}
-	}
-
-	if huidig == nil {
-		return ""
-	}
-	return fmt.Sprint(huidig)
-}
-
-// eersteActieveMapItem retourneert het eerste item zonder afvoer uit een JSON-array.
-func eersteActieveMapItem(arr []any) map[string]any {
-	for _, item := range arr {
-		m, ok := item.(map[string]any)
-		if !ok {
-			continue
-		}
-		if m["afvoer"] == nil {
-			return m
-		}
-	}
-	if len(arr) > 0 {
-		if m, ok := arr[0].(map[string]any); ok {
-			return m
-		}
-	}
-	return nil
-}
-
-// slaMapHubItemPlat mergt de actieve data-velden in een hub-item map.
-func slaMapHubItemPlat(hubItem map[string]any, hubMeta model.TypeMeta) map[string]any {
-	merged := make(map[string]any, len(hubItem))
-	for k, v := range hubItem {
-		merged[k] = v
-	}
-	for _, child := range hubMeta.OnderliggendeGegevenselementen {
-		childMeta, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
-		if !ok || childMeta.GESubtype != model.GESubtypeData {
-			continue
-		}
-		arr, ok := merged[child.JSONRolnaam].([]any)
-		if !ok {
-			continue
-		}
-		actief := eersteActieveMapItem(arr)
-		if actief == nil {
-			continue
-		}
-		for k, v := range actief {
-			if _, exists := merged[k]; !exists {
-				merged[k] = v
-			}
-		}
-	}
-	return merged
 }
 
 func sanitizeResponseWithoutAfvoer(payload any) (any, error) {
@@ -859,7 +656,7 @@ func (cache *formeleTijdCache) laatste(entiteitID, representatienaam, representa
 
 // laadFormeleTijdCache haalt in één query alle wijzigingen-op-peil op voor de
 // gegeven entiteit-IDs (van één entiteitstype) en bouwt de lookup-cache.
-func laadFormeleTijdCache(c *gin.Context, entiteitnaam string, entiteitIDs []string, peiltijdstip time.Time) (*formeleTijdCache, error) {
+func laadFormeleTijdCache(ctx context.Context, entiteitnaam string, entiteitIDs []string, peiltijdstip time.Time) (*formeleTijdCache, error) {
 	cache := &formeleTijdCache{
 		metVersie:    make(map[formeleTijdKey]formeleWijzigingRij),
 		zonderVersie: make(map[formeleTijdKey]formeleWijzigingRij),
@@ -880,7 +677,7 @@ func laadFormeleTijdCache(c *gin.Context, entiteitnaam string, entiteitIDs []str
 		ColumnExpr("v.versie").
 		Where("v.entiteitnaam = ?", entiteitnaam).
 		Where("v.entiteit_id IN (?)", bun.In(entiteitIDs)).
-		Scan(c.Request.Context(), &rijen)
+		Scan(verzoekContext(ctx), &rijen)
 	if err != nil && !isNoRows(err) {
 		return nil, err
 	}
@@ -956,7 +753,7 @@ func bepaalRepIDVersieVoorFormeleTijd(typenaam string, rep model.FormeleRepresen
 // vulAfgeleideFormeleTijdVoorFullSlice verwerkt een volledige lijst van full
 // entiteiten set-based: één cache-query voor alle entiteit-IDs, daarna een
 // pure in-memory walk per entiteit.
-func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijdstip time.Time) error {
+func vulAfgeleideFormeleTijdVoorFullSlice(ctx context.Context, entities any, peiltijdstip time.Time) error {
 	v := reflect.ValueOf(entities)
 	if !v.IsValid() || v.Kind() != reflect.Ptr || v.IsNil() {
 		return fmt.Errorf("entities moet een niet-nil pointer naar slice zijn")
@@ -985,7 +782,7 @@ func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijd
 		entiteitIDs = append(entiteitIDs, fmt.Sprint(hasID.GetID()))
 	}
 
-	cache, err := laadFormeleTijdCache(c, meta.Typenaam, entiteitIDs, peiltijdstip)
+	cache, err := laadFormeleTijdCache(ctx, meta.Typenaam, entiteitIDs, peiltijdstip)
 	if err != nil {
 		return err
 	}
@@ -1304,7 +1101,7 @@ func addOnderliggendeRelations(query *bun.SelectQuery, meta model.TypeMeta, peil
 // hoofd-query niet genest werden geladen (Bun v1.1.14 workaround: geneste has-many
 // relaties met callbacks veroorzaken een panic). Per child-type wordt één batch-query
 // gedaan, ongeacht het aantal entiteiten.
-func laadHubKinderenNaQuery(c *gin.Context, entitiesOrEntity any, entityMeta model.TypeMeta, peiltijdstip *time.Time) error {
+func laadHubKinderenNaQuery(ctx context.Context, entitiesOrEntity any, entityMeta model.TypeMeta, peiltijdstip *time.Time) error {
 	val := reflect.ValueOf(entitiesOrEntity)
 	if val.Kind() == reflect.Ptr {
 		val = val.Elem()
@@ -1361,7 +1158,7 @@ func laadHubKinderenNaQuery(c *gin.Context, entitiesOrEntity any, entityMeta mod
 				query = applyFormeleTijdFilterVoorModel(query, childRel.Doeltype, *peiltijdstip)
 			}
 
-			if err := query.Scan(c.Request.Context()); err != nil {
+			if err := query.Scan(verzoekContext(ctx)); err != nil {
 				return fmt.Errorf("laadHubKinderen %s: %v", childRel.Doeltype, err)
 			}
 
@@ -1422,7 +1219,7 @@ func laadHubKinderenNaQuery(c *gin.Context, entitiesOrEntity any, entityMeta mod
 					continue
 				}
 				parentEntity := pField.Interface()
-				if err := laadHubKinderenNaQuery(c, parentEntity, parentMeta, peiltijdstip); err != nil {
+				if err := laadHubKinderenNaQuery(ctx, parentEntity, parentMeta, peiltijdstip); err != nil {
 					return fmt.Errorf("laadHubKinderen voor parent %s: %v", entityMeta.ParentTypenaam, err)
 				}
 			}

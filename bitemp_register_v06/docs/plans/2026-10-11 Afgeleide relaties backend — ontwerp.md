@@ -198,9 +198,9 @@ De sleutel `<doelentiteit>_id` volgt de conventie van `SecondaireEntiteitIDKolom
 frontend het voorkomen net zo kan tonen als een gewone relatie. `weergavenaam` wordt alleen
 gevuld als het doel een weergaveveld heeft. De schema-API vertelt dat de relatie afgeleid is.
 
-**GraphQL** (`dynql`): op het entiteittype een veld `<rolnaam>: [AfgeleideVerwijzing!]!` met
+**GraphQL** (`dynql`): op het entiteittype een veld `<rolnaam>: [AfgeleideVerwijzing!]` met
 `AfgeleideVerwijzing { id: Int!, weergavenaam: String }`. De volledige doelobjecten
-(geneste selectie) kunnen later.
+(geneste selectie) kunnen later. (Gebouwd als *nullable* lijst, zie §8.)
 
 **Lijst-endpoints** zonder `/full` berekenen niets; de doelen staan alleen in `/full` en
 GraphQL.
@@ -224,3 +224,49 @@ GraphQL.
 - `celEvaluator.js`: §3.3 (collect over lijsten) en `self`. De doorkijk (§3.2) kan in de Studio
   alleen met geladen doelen; voor een voorvertoning is het genoeg om de regel te parsen en
   het pad tegen het model te controleren (rolnamen, doeltype aan het eind).
+
+## 8. Stand na commit 2 (gebouwd 11-10)
+
+Wat er staat, en waar het van het ontwerp hierboven afwijkt of het preciseert:
+
+- **`celexpr`** (taal, geen MetaRegistry): één-op-één met `celEvaluator.js` plus collect (§3.3).
+  `Parse` is **strikt**: tekst na een volledige expressie is een fout; de frontend negeert die nu.
+- **`afleiding`** (navigatie, geen database): `Entiteit`/`Voorkomen` als `celexpr.Object`,
+  `Omgeving` met rondes en batch-laden, `BerekenAfgeleideRelaties`, en `Weergavenaam`/`AfgeleidVeld`
+  voor de afgeleide velden. De entiteit-context leest zowel de `/full`-vorm (lijst, hub met `data`)
+  als de platte GraphQL-vorm (enkelvoudig als object, data al samengevoegd).
+- **De twee oude Go-evaluators zijn vervangen** (`handlers/full_handlers.go`,
+  `dynql/query_resolvers.go`). Gevolg: afgeleide velden kennen in de backend nu ook `?:`, `==`,
+  `filter` enz.; de NP-weergavenaam uit `metamodel_v3.json` (BRP-naamgebruik met geneste `?:`)
+  wordt nu goed berekend, waar de oude evaluator op `+` splitste. Tekstvelden blijven tekst
+  (`""` voor null), `leeftijd` op een int-veld blijft een `int`.
+- **Lader** (`handlers.NieuweAfleidingLader`): dezelfde query als `/full` (formele-tijdfilter op
+  entiteit en voorkomens, hub-kinderen, afgeleide opvoer/afvoer), op één peilmoment. De
+  laadhelpers nemen daarvoor een `context.Context` (een `*gin.Context` blijft werken).
+- **Peilmoment zonder `?t=`/`peiltijdstip`**: `/full` filtert dan zelf niet op formele tijd (de
+  response bevat ook beëindigde voorkomens). De afgeleide relaties gebruiken dan "nu" en laden
+  de bron daarvoor opnieuw (één extra batch per hop-niveau). Met een peiltijdstip wordt de
+  response als bron hergebruikt. GraphQL filtert altijd (actueelOfPeil) en hergebruikt altijd.
+- **Uitkomst**: een id `0` (lege int-verwijzing, bv. een niet ingevulde `$ref`) is geen doel en
+  geen fout. Een verkeerd type of een parsefout geeft een lege relatie en een logregel
+  (`AFLEIDING: …`), nooit een 500.
+- **GraphQL**: het veld is een *nullable* lijst. De full-resolvers (`full_<padnaam>`,
+  `full_<padnaam>_list`) rekenen het per lijst in één keer uit en alleen als het veld gevraagd
+  is; op andere plekken (gewone lijst, genest via een forward-relatie) is het `null`.
+- **Codegen-validatie** parset de regel nu ook (`celexpr.Parse`).
+- **Materiële tijd** telt bij de navigatie (nog) niet mee: "actief" is formeel actief, net als
+  bij afgeleide velden. Een woonlocatie met een einde in het verleden telt dus nog mee. Open punt:
+  een materieel peilmoment (`?m=`) voor afgeleide relaties en velden.
+
+**Pariteit met de frontend**: `testdata/cel-pariteit.json` (60 gevallen) is de gedeelde bron
+voor `celexpr/celexpr_test.go` en (door M3-MOF) `web/vite/src/shared/celEvaluator.test.js`.
+De huidige frontend haalt alle gevallen zonder `kenmerk`; de gevallen met `kenmerk: "collect"`
+en `"strikt"` zijn het nieuwe gedrag.
+
+**Tests**: `celexpr` (pariteit + NP-weergavenaam), `afleiding` (twee hops met batch-telling,
+uitkomstregels, ontdubbelen, afgeleide velden), handlers/dynql (bestaande weergavenaam- en
+leeftijd-gevallen via de nieuwe evaluator), en end-to-end
+`regressie_afgeleide_relaties_test.go` (`-tags integration`: `/full` detail en lijst met
+N+1-bewaking, doorkijk via Locatie.Adres, GraphQL). De volledige np-loc-regressie blijft groen.
+Daarvoor is `regressie_declaratief_test.go` hersteld: `handlers.SeedAdminGebruiker` heet sinds
+api 0.10.0 `gebruikers.SeedAdmin` (de integratietests compileerden op main niet meer).

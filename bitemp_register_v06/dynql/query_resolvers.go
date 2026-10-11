@@ -9,10 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"strconv"
-	"strings"
 	"time"
 
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/afleiding"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/graphql-go/graphql"
 	"github.com/uptrace/bun"
@@ -79,6 +78,7 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		flat := flattenEntityMap(result, meta)
 		verrijkWeergavenamen(p.Context, flat, meta)
 		verrijkEigenAfgeleideVelden(flat, meta)
+		voegAfgeleideRelatiesToe(p.Context, p, []map[string]interface{}{flat}, meta, peil)
 		return flat, nil
 	}
 }
@@ -210,6 +210,7 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			verrijkEigenAfgeleideVelden(flat, meta)
 			maps[i] = flat
 		}
+		voegAfgeleideRelatiesToe(p.Context, p, maps, meta, moment)
 		return maps, nil
 	}
 }
@@ -990,84 +991,15 @@ func laadWeergavenamenBatch(ctx context.Context, doelMeta model.TypeMeta, ids []
 	return result
 }
 
-// berekenWeergavenaamVlak berekent de weergavenaam uit een geflattende entity-map.
+// berekenWeergavenaamVlak berekent de weergavenaam uit een geflattende entity-map. Sinds
+// 11-10-2026 via de gedeelde CEL-evaluator (pakket afleiding/celexpr, gelijk aan de frontend
+// en aan /full); de Entiteit-context daar kent zowel de /full-vorm als deze platte vorm.
 func berekenWeergavenaamVlak(entityMap map[string]interface{}, meta model.TypeMeta) string {
-	for _, av := range meta.AfgeleideVelden {
-		if !av.IsWeergaveVeld {
-			continue
-		}
-		return evalueerCELConcatenatieVlak(entityMap, av.Afleidingsregel, meta)
-	}
-	return ""
-}
-
-// evalueerCELConcatenatieVlak evalueert een (beperkte) CEL-expressie op een geflattende map.
-// Zelfde logica als handlers.evalueerCELConcatenatie maar werkt met geflattende data.
-func evalueerCELConcatenatieVlak(entityMap map[string]interface{}, expressie string, meta model.TypeMeta) string {
-	if !strings.Contains(expressie, "+") {
-		return evalueerCELSegmentVlak(entityMap, strings.TrimSpace(expressie), meta)
-	}
-
-	segmenten := strings.Split(expressie, "+")
-	var resultaat strings.Builder
-	for _, segment := range segmenten {
-		segment = strings.TrimSpace(segment)
-		if segment == "" {
-			continue
-		}
-		if len(segment) >= 2 && segment[0] == '"' && segment[len(segment)-1] == '"' {
-			literal := segment[1 : len(segment)-1]
-			literal = strings.ReplaceAll(literal, `\"`, `"`)
-			literal = strings.ReplaceAll(literal, `\\`, `\`)
-			resultaat.WriteString(literal)
-		} else {
-			resultaat.WriteString(evalueerCELSegmentVlak(entityMap, segment, meta))
-		}
-	}
-	return resultaat.String()
-}
-
-// evalueerCELSegmentVlak evalueert één segment (functie-aanroep of pad) op een
-// geflattende map. Parallel aan handlers.evalueerCELSegment.
-func evalueerCELSegmentVlak(entityMap map[string]interface{}, segment string, meta model.TypeMeta) string {
-	if lft, ok := evalueerLeeftijdCallVlak(entityMap, segment, meta); ok {
-		if lft == nil {
-			return ""
-		}
-		return strconv.Itoa(*lft)
-	}
-	return navigeerAfgeleidPadVlak(entityMap, segment, meta)
-}
-
-// evalueerLeeftijdCallVlak herkent en evalueert leeftijd(geboortedatum[, peildatum]).
-func evalueerLeeftijdCallVlak(entityMap map[string]interface{}, segment string, meta model.TypeMeta) (*int, bool) {
-	naam, args, ok := model.ParseAfgeleideFunctieAanroep(segment)
-	if !ok || naam != "leeftijd" || len(args) == 0 {
-		return nil, false
-	}
-	geboorte := evalueerAfgeleidArgumentVlak(entityMap, args[0], meta)
-	peil := ""
-	if len(args) > 1 {
-		peil = evalueerAfgeleidArgumentVlak(entityMap, args[1], meta)
-	}
-	return model.BerekenLeeftijdVanArgs(geboorte, peil), true
-}
-
-// evalueerAfgeleidArgumentVlak evalueert één functie-argument: string-literal of pad.
-func evalueerAfgeleidArgumentVlak(entityMap map[string]interface{}, arg string, meta model.TypeMeta) string {
-	arg = strings.TrimSpace(arg)
-	if len(arg) >= 2 && arg[0] == '"' && arg[len(arg)-1] == '"' {
-		lit := arg[1 : len(arg)-1]
-		lit = strings.ReplaceAll(lit, `\"`, `"`)
-		lit = strings.ReplaceAll(lit, `\\`, `\`)
-		return lit
-	}
-	return navigeerAfgeleidPadVlak(entityMap, arg, meta)
+	return afleiding.Weergavenaam(meta, entityMap)
 }
 
 // verrijkEigenAfgeleideVelden injecteert de entiteit-eigen afgeleide velden
 // (bijv. leeftijd) op de geflattende result-map, onder hun GraphQL-veldnaam.
-// Weergavenaam-velden worden hier overgeslagen; die worden per relatie verrijkt.
 func verrijkEigenAfgeleideVelden(entityMap map[string]interface{}, meta model.TypeMeta) {
 	for _, av := range meta.AfgeleideVelden {
 		if av.IsWeergaveVeld {
@@ -1081,92 +1013,6 @@ func verrijkEigenAfgeleideVelden(entityMap map[string]interface{}, meta model.Ty
 			}
 			continue
 		}
-		var waarde interface{}
-		if lft, ok := evalueerLeeftijdCallVlak(entityMap, strings.TrimSpace(av.Afleidingsregel), meta); ok {
-			if lft != nil {
-				waarde = *lft
-			}
-		} else {
-			waarde = evalueerCELConcatenatieVlak(entityMap, av.Afleidingsregel, meta)
-		}
-		entityMap[gqlSafeNaam(av.Naam)] = waarde
+		entityMap[gqlSafeNaam(av.Naam)] = afleiding.AfgeleidVeld(meta, entityMap, av)
 	}
-}
-
-// navigeerAfgeleidPadVlak navigeert een punt-gescheiden pad door een geflattende entity-map.
-// Gebruikt MetaRegistry voor Rolnaam→JSONRolnaam vertaling, maar verwacht
-// hub→data al geflattend (door flattenEntityMap).
-func navigeerAfgeleidPadVlak(entityMap map[string]interface{}, pad string, meta model.TypeMeta) string {
-	delen := strings.Split(pad, ".")
-	var huidig interface{} = entityMap
-	huidigMeta := meta
-
-	for i, deel := range delen {
-		m, ok := huidig.(map[string]interface{})
-		if !ok {
-			return ""
-		}
-
-		// Zoek het onderliggende element op Rolnaam, of op de klassenaam van het doeltype:
-		// een afleidingsregel schrijft "Naam.naam" (klassenaam Naam), terwijl de rolnaam
-		// "ApiStandaardNamen" is. Tot 24-09-2026 matchte alleen de rolnaam, waardoor
-		// ApiStandaard.weergavenaam leeg bleef (Gemeente werkte toevallig: rolnaam
-		// "Gemeentegegevens" ≈ klassenaam "GemeenteGegevens").
-		gevonden := false
-		for _, child := range huidigMeta.OnderliggendeGegevenselementen {
-			if !model.PadSegmentMatcht(child, deel) {
-				continue
-			}
-			childVal := m[child.JSONRolnaam]
-			if childVal == nil {
-				return ""
-			}
-			childMeta, childOK := model.MetaRegistry.GetTypeMeta(child.Doeltype)
-
-			// In geflattende map: enkelvoudig = single object, meervoudig = array
-			if arr, arrOK := childVal.([]interface{}); arrOK {
-				if len(arr) == 0 {
-					return ""
-				}
-				if itemMap, imOK := arr[0].(map[string]interface{}); imOK {
-					huidig = itemMap
-				} else {
-					return ""
-				}
-			} else if subMap, subOK := childVal.(map[string]interface{}); subOK {
-				huidig = subMap
-			} else {
-				return ""
-			}
-
-			if childOK {
-				huidigMeta = childMeta
-			}
-			gevonden = true
-			break
-		}
-
-		if !gevonden {
-			// Probeer als direct veld
-			lowerDeel := strings.ToLower(deel)
-			if val, ok := m[lowerDeel]; ok {
-				if i == len(delen)-1 {
-					return fmt.Sprint(val)
-				}
-				huidig = val
-			} else if val, ok := m[deel]; ok {
-				if i == len(delen)-1 {
-					return fmt.Sprint(val)
-				}
-				huidig = val
-			} else {
-				return ""
-			}
-		}
-	}
-
-	if huidig == nil {
-		return ""
-	}
-	return fmt.Sprint(huidig)
 }

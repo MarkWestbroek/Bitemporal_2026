@@ -53,7 +53,9 @@ func TestValidateV3Model_AfgeleideRelatieRegels(t *testing.T) {
 	rel.RelatieSubtype = "referentielijst_items"
 
 	errs := strings.Join(validateV3Model(v3, ""), "\n")
-	for _, want := range []string{"geen afleidingsregel", "afleidingsregelTaal 'ocl'", "mag geen velden", "mag geen relatieSubtype"} {
+	rel.Afleidingsregel = "(woonadres"
+	errs += "\n" + strings.Join(validateV3Model(v3, ""), "\n")
+	for _, want := range []string{"geen afleidingsregel", "afleidingsregelTaal 'ocl'", "mag geen velden", "mag geen relatieSubtype", "parset niet"} {
 		if !strings.Contains(errs, want) {
 			t.Errorf("verwacht fout met %q, kreeg:\n%s", want, errs)
 		}

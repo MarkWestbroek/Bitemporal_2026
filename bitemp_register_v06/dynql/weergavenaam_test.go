@@ -8,18 +8,20 @@ import (
 
 // De afleidingsregel van ApiStandaard.weergavenaam is "Naam.naam": het segment "Naam" is
 // de klassenaam van het GE, niet de rolnaam ("ApiStandaardNamen"). Vóór 24-09-2026 bleef
-// de weergavenaam daardoor leeg.
+// de weergavenaam daardoor leeg. Sinds 11-10-2026 rekent de gedeelde evaluator (afleiding)
+// dit uit; deze test bewaakt dat hij de platte GraphQL-vorm net zo leest.
 func TestWeergavenaam_PadSegmentOpKlassenaam(t *testing.T) {
 	meta, ok := model.MetaRegistry.GetTypeMeta("ApiStandaard")
 	if !ok {
 		t.Skip("CG-model niet geregistreerd")
 	}
 	flat := map[string]interface{}{"id": float64(2), "api_standaard_namen": map[string]interface{}{"naam": "REST API"}}
-	if got := navigeerAfgeleidPadVlak(flat, "Naam.naam", meta); got != "REST API" {
-		t.Errorf("Naam.naam via klassenaam: kreeg %q", got)
-	}
-	if got := navigeerAfgeleidPadVlak(flat, "ApiStandaardNamen.naam", meta); got != "REST API" {
-		t.Errorf("via rolnaam: kreeg %q", got)
+	for _, regel := range []string{"Naam.naam", "ApiStandaardNamen.naam"} {
+		meta2 := meta
+		meta2.AfgeleideVelden = []model.AfgeleidVeld{{Naam: "x", IsWeergaveVeld: true, Afleidingsregel: regel}}
+		if got := berekenWeergavenaamVlak(flat, meta2); got != "REST API" {
+			t.Errorf("%s: kreeg %q", regel, got)
+		}
 	}
 	if got := berekenWeergavenaamVlak(flat, meta); got != "REST API" {
 		t.Errorf("berekenWeergavenaamVlak: kreeg %q", got)
