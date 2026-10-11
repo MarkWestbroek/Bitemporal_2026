@@ -96,3 +96,35 @@ test("leeftijd() zonder peildatum gebruikt vandaag (wandklok)", () => {
   const lft = evalueerCelExpressie("leeftijd(np.geb)", ctx);
   assert.ok(lft >= 20 && lft <= 120, `onwaarschijnlijke leeftijd: ${lft}`);
 });
+
+// ── Pariteit met de Go-evaluator (celexpr) — afgeleide relaties, 2026-10-11 ──
+// Eén gedeeld bestand met gevallen, gelezen door de Go-test én door deze test
+// (backend: BACKEND-GEN, `testdata/cel-pariteit.json`). Zolang dat bestand er
+// nog niet is (backend-branch niet gemerged), slaat deze test zich over.
+import { existsSync, readFileSync } from "node:fs";
+import { parseCelExpressie } from "./celEvaluator.js";
+
+const pariteitPath = path.resolve(__dirname, "../../../../testdata/cel-pariteit.json");
+
+test("pariteit met de Go-evaluator: alle gevallen uit testdata/cel-pariteit.json", { skip: !existsSync(pariteitPath) && "testdata/cel-pariteit.json nog niet aanwezig" }, () => {
+  const { gevallen } = JSON.parse(readFileSync(pariteitPath, "utf8"));
+  assert.ok(gevallen.length > 0);
+  for (const g of gevallen) {
+    const verwacht = g.parseFout ? null : g.verwacht;
+    assert.deepStrictEqual(evalueerCelExpressie(g.expressie, g.context) ?? null, verwacht, `${g.naam}: ${g.expressie}`);
+  }
+});
+
+test("collect: lijst.veld werkt op elk element, plat, zonder null", () => {
+  const ctx = { ouders: [{ naam: "A", ouders: [{ id: 1 }, { id: 2 }] }, { naam: null, ouders: [{ id: 3 }] }, null] };
+  assert.deepStrictEqual(evalueerCelExpressie("ouders.naam", ctx), ["A"]);
+  assert.deepStrictEqual(evalueerCelExpressie("ouders.ouders.id", ctx), [1, 2, 3]);
+  assert.equal(evalueerCelExpressie("ouders.ouders.size()", ctx), 3);
+  assert.deepStrictEqual(evalueerCelExpressie("leeg.naam", { leeg: [] }), []);
+});
+
+test("strikt: tekst na de expressie is een parsefout", () => {
+  assert.throws(() => parseCelExpressie("a b"), /Onverwachte tekst/);
+  assert.equal(evalueerCelExpressie("a b", { a: 1, b: 2 }), null);
+  assert.doesNotThrow(() => parseCelExpressie("self.id"));
+});

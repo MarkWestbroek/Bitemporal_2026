@@ -136,3 +136,23 @@ Verkend op main `b6bd2810` (bestand:regel; zie de verkenning in deze sessie).
 Tests om mee te nemen: `model/v3_exporter_test.go`, `schemadiff/diff_test.go`,
 `handlers/full_handlers_test.go`, `dynql/handler_test.go`, `routes/addroutes_test.go`. Codegen
 heeft geen golden files; `_baseline/model/` en `_pre_rebuild/model/` zijn rebuild-kopieën.
+
+## 5. Frontend bij de backend (2026-10-11, branch `feat/afgeleid-frontend`)
+
+De backend (BACKEND-GEN, merge `4bb00de7`; ontwerp `2026-10-11 Afgeleide relaties backend —
+ontwerp.md`) rekent afgeleide relaties live uit. Wat de Studio daarvoor kreeg:
+
+- **Evaluator gelijk met de backend** (`shared/celEvaluator.js`): **collect** (`lijst.veld` op elk
+  element, plat, zonder null; een lege lijst geeft `[]`) en een **strikte parse** (tekst na de
+  expressie is een fout; `parseCelExpressie` is nu exporteerbaar). Het gedeelde bestand
+  `testdata/cel-pariteit.json` (60 gevallen) wordt gelezen door de Go-test én door
+  `celEvaluator.test.js`: beide halen 60/60.
+- **Voorvertoning in de inspector** (`canoniek-uml/afleidingsregelControle.js`, getoond in
+  `CelExpressieEditor`): de regel van een afgeleide relatie wordt geparst en statisch nagelopen
+  tegen het model met dezelfde opzoekregels als de backend (klassenaam/rolnaam, `self`, doorkijk
+  door een relatie naar haar doel). Uitslag ✓ (levert het doel), ⚠ (een id, of `map` en andere
+  vormen die niet statisch te volgen zijn) of ✗ (parsefout, onbekende naam, verkeerd doel, een
+  waarde). Echte uitkomsten vragen data; die levert het register zelf.
+- **V3**: `geordend` gaat nu mee (V3Relatie heeft het veld); een afgeleide relatie stuurt geen
+  velden mee (de backend weigert ze) en de inspector waarschuwt als ze er toch zijn.
+

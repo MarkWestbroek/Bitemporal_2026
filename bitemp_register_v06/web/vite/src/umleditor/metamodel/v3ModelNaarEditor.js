@@ -372,6 +372,7 @@ export function v3ModelNaarEditor(v3Model) {
             directioneel: rel.directioneel || false,
             // Afgeleide relatie (2026-10-10); alleen gezet als het V3-model het zegt.
             ...(rel.afgeleid ? { afgeleid: true, afleidingsregelTaal: rel.afleidingsregelTaal || "cel", afleidingsregel: rel.afleidingsregel || "" } : {}),
+            ...(rel.geordend ? { geordend: true } : {}),
             naamLabelHeen: rel.naamLabelHeen || "",
             naamLabelTerug: rel.naamLabelTerug || "",
           },
