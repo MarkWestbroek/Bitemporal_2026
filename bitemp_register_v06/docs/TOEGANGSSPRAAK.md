@@ -75,8 +75,13 @@ Beleid "Inzage inkomen bij schuldhulp".
   persoon bekijken." geldt voor elk subject, ook een onbekend (anoniem,
   openbaar). In ODRL een regel zonder assignee; in de beleidsbundel een regel
   zonder subject-eisen.
-- **Vaste conflictregel**: wat niet uitdrukkelijk is toegestaan, mag niet;
-  een verbod gaat altijd vóór een toestemming.
+- **Superpolicy** (sinds 12-10-2026): twee optionele kopregels bepalen hoe de
+  regels samen uitpakken. `Standaard: weigeren.` (zonder kopregel ook zo) of
+  `Standaard: toestaan.` — alles dicht tenzij, of alles open tenzij.
+  `Bij conflict: verbod gaat voor.` (zonder kopregel ook zo),
+  `… toestemming gaat voor.` of `… de eerste regel geldt.` — bij die laatste is
+  de volgorde van de regels de prioriteit. Vergelijkbaar met de *combining
+  algorithms* van XACML (deny-overrides, permit-overrides, first-applicable).
 - **Uitbreidbaar per domein**: vergelijkingen ("valt geheel binnen"),
   handelingen en plichten komen uit registers, niet uit de grammatica.
 
@@ -172,15 +177,15 @@ Toegangsspraak maar evalueert de bundel. ODRL blijft het uitwisselformaat.
 
 | Semantiek | |
 |---|---|
-| standaard | weigeren (deny-by-default) |
-| conflict | verbod wint van toestemming |
+| standaard | `weigeren` (default) of `toestaan` — kopregel `Standaard:` |
+| conflict | `verbod-wint` (default), `toestemming-wint` of `eerste-geldt` (volgorde = prioriteit) — kopregel `Bij conflict:`. ODRL JSON-LD: `prohibit`, `perm`, `nlgov:eersteRegel`; standaard-toestaan als `nlgov:standaard`. De Turtle-export (ODRL-AP-NL) schrijft nog vast `odrl:prohibit` |
 | dekking | een regel dekt zijn registerpad en alles eronder, per padsegment; `*` dekt alles |
 | subject | `null` = iedereen (ook anoniem); anders moeten alle kenmerken aanwezig zijn (hoofdletterongevoelig) |
 | voorwaarden | drieweg: waar / onwaar / onbepaald. Kenmerken van de **aanvrager** zijn een gesloten wereld (ontbreken = leeg). Gegevens van de **betrokkene** en PIP-vragen (`bestaat`) zijn onbepaald zolang de PDP ze niet kent. Fail-closed: een toestemming met een onbepaalde voorwaarde geldt níet (staat dan in `Voorwaardelijk`), een verbod met een onbepaalde voorwaarde geldt wél |
 | geldigheid | `geldigVanaf` (inclusief) en `geldigTot` (exclusief) van het beleid tegen het peilmoment |
 
 Tests: `node --test src/toegangsspraak/bundel.test.js` (compiler; `BIJWERKEN=1` schrijft de
-bundels opnieuw) en `go test ./toegang/` (18 vectoren + benchmark, ± 0,4 µs per veldbeslissing).
+bundels opnieuw) en `go test ./toegang/` (24 vectoren + benchmark, ± 0,4 µs per veldbeslissing).
 Nog niet: PEP op het leespad (fase 1b) en de bundel als bitemporeel register (fase 1c).
 
 ### Studio-activiteit — `web/vite/src/studio/activities/toegangActivity.jsx`

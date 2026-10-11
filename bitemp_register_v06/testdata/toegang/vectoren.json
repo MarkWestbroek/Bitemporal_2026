@@ -58,6 +58,25 @@
       "verwacht": { "toegestaan": false, "regel": "" } },
     { "naam": "anoniem ziet in het np-loc-beleid niets", "bundel": "np-loc-demo",
       "subject": { "anoniem": true }, "handeling": "bekijken", "pad": "NatuurlijkPersoon.namen.achternaam",
+      "verwacht": { "toegestaan": false, "regel": "" } },
+
+    { "naam": "open tenzij: zonder regel toegestaan (standaard)", "bundel": "open-tenzij",
+      "subject": { "anoniem": true }, "handeling": "bekijken", "pad": "NatuurlijkPersoon.namen.achternaam",
+      "verwacht": { "toegestaan": true, "regel": "" } },
+    { "naam": "open tenzij: bsn afgeschermd voor iedereen", "bundel": "open-tenzij",
+      "subject": { "anoniem": true }, "handeling": "bekijken", "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn",
+      "verwacht": { "toegestaan": false, "regel": "bsn-afgeschermd" } },
+    { "naam": "open tenzij: beheerder ziet bsn (eerste regel geldt)", "bundel": "open-tenzij",
+      "subject": { "kenmerken": { "rol": ["admin"] } }, "handeling": "bekijken", "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn",
+      "verwacht": { "toegestaan": true, "regel": "beheerder-ziet-bsn" } },
+    { "naam": "toestemming gaat voor: beheerder én medewerker ziet bsn", "bundel": "toestemming-wint",
+      "subject": { "kenmerken": { "rol": ["admin", "medewerker"] } }, "handeling": "bekijken", "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn",
+      "verwacht": { "toegestaan": true, "regel": "beheerder-bsn" } },
+    { "naam": "toestemming gaat voor: alleen medewerker ziet bsn niet", "bundel": "toestemming-wint",
+      "subject": { "kenmerken": { "rol": ["medewerker"] } }, "handeling": "bekijken", "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn",
+      "verwacht": { "toegestaan": false, "regel": "medewerker-geen-bsn" } },
+    { "naam": "toestemming gaat voor: anoniem valt terug op standaard weigeren", "bundel": "toestemming-wint",
+      "subject": { "anoniem": true }, "handeling": "bekijken", "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn",
       "verwacht": { "toegestaan": false, "regel": "" } }
   ]
 }

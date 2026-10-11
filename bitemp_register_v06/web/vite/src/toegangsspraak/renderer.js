@@ -8,6 +8,7 @@
  */
 import { vindOperator } from "./operatoren.js";
 import { isoNaarNlDatum } from "./woorden.js";
+import { CONFLICTZINNEN } from "./parser.js";
 
 const KWANTOR_KOP = {
   en: "aan alle volgende voorwaarden is voldaan:",
@@ -158,6 +159,11 @@ export function renderBeleid(beleid) {
   }
   if (beleid.grondslag) kop.push(`  Grondslag: ${beleid.grondslag}.`);
   if (beleid.doel) kop.push(`  Doel: "${beleid.doel}".`);
+  if (beleid.standaard) kop.push(`  Standaard: ${beleid.standaard}.`);
+  if (beleid.conflict) {
+    const zin = Object.keys(CONFLICTZINNEN).find((k) => CONFLICTZINNEN[k] === beleid.conflict);
+    if (zin) kop.push(`  Bij conflict: ${zin}.`);
+  }
   blokken.push(kop.join("\n"));
 
   if (beleid.begrippen.length) {

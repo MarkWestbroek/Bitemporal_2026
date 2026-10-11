@@ -29,7 +29,7 @@ function compileer(naam) {
   return { ...compileerBundel(r.beleid, { index }), beleid: r.beleid };
 }
 
-for (const naam of ["np-loc-demo", "openbaar"]) {
+for (const naam of ["np-loc-demo", "openbaar", "open-tenzij", "toestemming-wint"]) {
   test(`bundel ${naam} = testdata/toegang/${naam}.bundel.json`, () => {
     const { bundel, meldingen } = compileer(naam);
     assert.deepEqual(meldingen, []);
@@ -78,4 +78,26 @@ test("verbod en niet-gedefinieerd begrip", () => {
   const { bundel: b, meldingen } = compileerBundel(resolveerBeleid(p.beleid, index).beleid, { index });
   assert.deepEqual(b.regels[0].subject, { kenmerken: [{ kenmerk: "rol", waarde: "kassier" }] });
   assert.equal(meldingen.length, 1);
+});
+
+test("superpolicy: Standaard en Bij conflict — bundel, ODRL en round-trip", () => {
+  const { bundel, beleid } = compileer("open-tenzij");
+  assert.equal(bundel.standaard, "toestaan");
+  assert.equal(bundel.conflict, "eerste-geldt");
+  const odrl = naarOdrl(beleid);
+  assert.equal(odrl.conflict, "nlgov:eersteRegel");
+  assert.equal(odrl["nlgov:standaard"], "toestaan");
+  assert.equal(naarOdrl(compileer("toestemming-wint").beleid).conflict, "perm");
+  assert.equal(naarOdrl(compileer("openbaar").beleid).conflict, "prohibit");
+
+  const tekst = renderBeleid(beleid);
+  assert.match(tekst, /Standaard: toestaan\./);
+  assert.match(tekst, /Bij conflict: de eerste regel geldt\./);
+  const opnieuw = parseBeleid(tekst);
+  assert.ok(opnieuw.ok, JSON.stringify(opnieuw.fouten));
+  assert.equal(opnieuw.beleid.conflict, "eerste-geldt");
+
+  const fout = parseBeleid('Beleid "x".\n  Bij conflict: wie het eerst komt.\n');
+  assert.equal(fout.ok, false);
+  assert.match(fout.fouten[0].bericht, /Onbekende conflictregel/);
 });

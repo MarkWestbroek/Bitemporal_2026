@@ -9,8 +9,9 @@
  * Vorm (formaat "omnium-toegangsbundel/1"):
  *   {
  *     formaat, beleid: { naam, geldigVanaf, geldigTot, grondslag, doel },
- *     standaard: "weigeren",            // deny-by-default
- *     conflict: "verbod-wint",          // ODRL conflict: prohibit
+ *     standaard: "weigeren"|"toestaan", // superpolicy: wat geldt zonder passende regel
+ *     conflict: "verbod-wint"|"toestemming-wint"|"eerste-geldt", // afweging bij tegenspraak;
+ *                                       // eerste-geldt = de volgorde van de regels is de prioriteit
  *     regels: [{
  *       id, naam, effect: "toestaan"|"verbieden", handeling: "bekijken"|…,
  *       subject: null | { kenmerken: [{ kenmerk, waarde }] },   // null = iedereen (ook anoniem)
@@ -164,8 +165,8 @@ export function compileerBundel(beleid, { index = null } = {}) {
         grondslag: beleid.grondslag || null,
         doel: beleid.doel || null,
       },
-      standaard: "weigeren",
-      conflict: "verbod-wint",
+      standaard: beleid.standaard || "weigeren",
+      conflict: beleid.conflict || "verbod-wint",
       regels,
     },
     meldingen,

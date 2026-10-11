@@ -7,8 +7,10 @@
 // Dit package parseert geen Toegangsspraak; het evalueert alleen die data.
 //
 // Semantiek:
-//   - standaard weigeren (deny-by-default);
-//   - verbod wint van toestemming (ODRL conflict: prohibit);
+//   - superpolicy: `standaard` (weigeren | toestaan) geldt als geen regel beslist, en
+//     `conflict` weegt regels die elkaar tegenspreken: verbod-wint (standaard; XACML
+//     deny-overrides, ODRL prohibit), toestemming-wint (permit-overrides, ODRL perm) of
+//     eerste-geldt (first-applicable: de volgorde van de regels is de prioriteit);
 //   - een regel dekt zijn registerpad en alles eronder ("NatuurlijkPersoon" dekt
 //     "NatuurlijkPersoon.namen.achternaam"); pad "*" dekt alles;
 //   - voorwaarden zijn drieweg (waar / onwaar / onbepaald). Onbepaald = de PDP heeft de
@@ -20,6 +22,7 @@ package toegang
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -57,6 +60,8 @@ type Regel struct {
 	Gegevens    []Gegeven   `json:"gegevens"`
 	Voorwaarden *Voorwaarde `json:"voorwaarden"`
 	Plichten    []string    `json:"plichten"`
+
+	volgorde int // positie in de bundel, voor eerste-geldt
 }
 
 // SubjectEis: alle kenmerken moeten bij het subject aanwezig zijn.
@@ -116,16 +121,25 @@ func LaadBundel(data []byte) (*Bundel, error) {
 	if b.Formaat != BundelFormaat {
 		return nil, fmt.Errorf("onbekend bundelformaat %q (verwacht %q)", b.Formaat, BundelFormaat)
 	}
-	if b.Standaard != "" && b.Standaard != "weigeren" {
-		return nil, fmt.Errorf("standaard %q wordt niet ondersteund (alleen \"weigeren\")", b.Standaard)
+	switch b.Standaard {
+	case "":
+		b.Standaard = "weigeren"
+	case "weigeren", "toestaan":
+	default:
+		return nil, fmt.Errorf("standaard %q is geen \"weigeren\" of \"toestaan\"", b.Standaard)
 	}
-	if b.Conflict != "" && b.Conflict != "verbod-wint" {
-		return nil, fmt.Errorf("conflictregel %q wordt niet ondersteund (alleen \"verbod-wint\")", b.Conflict)
+	switch b.Conflict {
+	case "":
+		b.Conflict = "verbod-wint"
+	case "verbod-wint", "toestemming-wint", "eerste-geldt":
+	default:
+		return nil, fmt.Errorf("conflictregel %q is geen \"verbod-wint\", \"toestemming-wint\" of \"eerste-geldt\"", b.Conflict)
 	}
 	ids := map[string]bool{}
 	b.index = map[string]map[string][]*Regel{}
 	for i := range b.Regels {
 		r := &b.Regels[i]
+		r.volgorde = i
 		if r.ID == "" {
 			return nil, fmt.Errorf("regel %d heeft geen id", i+1)
 		}
@@ -168,6 +182,8 @@ func (b *Bundel) regelsVoor(handeling, pad string) []*Regel {
 			uit = append(uit, perPad[pad[:i]]...)
 		}
 	}
+	// In de volgorde van het beleid (nodig voor eerste-geldt; voor de andere regels neutraal).
+	sort.SliceStable(uit, func(i, j int) bool { return uit[i].volgorde < uit[j].volgorde })
 	return uit
 }
 

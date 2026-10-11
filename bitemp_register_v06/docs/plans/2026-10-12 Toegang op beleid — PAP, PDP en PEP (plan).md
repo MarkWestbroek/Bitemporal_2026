@@ -125,8 +125,12 @@ Uitvoering in drie stappen per verzoek (fasering uit §9 van de analyse van 30-0
   hard-gecodeerd op twee waarden).
 - **Opslag van de bundel: meteen bitemporeel** — het beleid als register in de eigen
   architectuur (ODRL-registerplan §5), zodat "welk beleid gold op t?" te beantwoorden is.
-- Nog open: exacte JSON van de bundel; anoniem subject bij openbare formulieren als beleidsregel;
-  demodomeinen op app opschonen (los van dit plan).
+- **Superpolicy (Mark, 12-10)**: per beleid instelbaar of alles dicht/open is tenzij, en hoe
+  tegenstrijdige regels worden afgewogen. Gebouwd als kopregels `Standaard:` en `Bij conflict:`
+  (verbod gaat voor / toestemming gaat voor / de eerste regel geldt = volgorde als prioriteit).
+- Nog open: **meerdere beleiden combineren** op één instantie (bv. een openbaarheidsbeleid naast
+  een privacybeleid) — een beleidsset met een eigen combinatieregel; anoniem subject bij openbare
+  formulieren als beleidsregel; demodomeinen op app opschonen (los van dit plan).
 
 ### Volgorde fase 1
 

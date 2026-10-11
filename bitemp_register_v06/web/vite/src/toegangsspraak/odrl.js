@@ -176,9 +176,12 @@ export function naarOdrl(beleid) {
     "@type": "Set",
     uid: `urn:nlgov:beleid:${slug(beleid.naam)}`,
     profile: PROFIEL,
-    conflict: "prohibit",
+    // Superpolicy: ODRL kent "prohibit" en "perm"; "de eerste regel geldt" en een
+    // standaard-toestaan zijn NLGov-profieltermen (ODRL zelf weigert zonder toestemming).
+    conflict: { "toestemming-wint": "perm", "eerste-geldt": "nlgov:eersteRegel" }[beleid.conflict] || "prohibit",
     "dc:description": beleid.naam,
   };
+  if (beleid.standaard === "toestaan") doc["nlgov:standaard"] = "toestaan";
   if (beleid.geldigVanaf) doc["nlgov:geldigVanaf"] = beleid.geldigVanaf;
   if (beleid.geldigTot) doc["nlgov:geldigTot"] = beleid.geldigTot;
   if (beleid.grondslag) doc["nlgov:grondslag"] = beleid.grondslag;

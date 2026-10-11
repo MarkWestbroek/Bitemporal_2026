@@ -44,9 +44,11 @@ func (b *Bundel) Beslis(v Verzoek, pad string) Besluit {
 		moment = time.Now()
 	}
 	if !b.isGeldigOp(moment.Format("2006-01-02")) {
+		// Buiten de geldigheid geldt het beleid niet: dan geldt ook de standaard niet, en
+		// weigert de PDP (fail-closed).
 		return Besluit{}
 	}
-	var toe *Regel
+	var toe, verbod *Regel
 	var voorwaardelijk []string
 	for _, r := range b.regelsVoor(v.Handeling, pad) {
 		if !subjectVoldoet(r.Subject, v.Subject) {
@@ -57,24 +59,41 @@ func (b *Bundel) Beslis(v Verzoek, pad string) Besluit {
 			uitkomst = evalueer(*r.Voorwaarden, v)
 		}
 		if r.Effect == "verbieden" {
-			if uitkomst != onwaar { // fail-closed: onbepaald verbod geldt
-				return Besluit{Regel: r.ID}
+			// Fail-closed: een verbod met een onbepaalde voorwaarde geldt.
+			if uitkomst != onwaar {
+				if b.Conflict == "eerste-geldt" {
+					return Besluit{Regel: r.ID}
+				}
+				if verbod == nil {
+					verbod = r
+				}
 			}
 			continue
 		}
 		switch uitkomst {
 		case waar:
+			if b.Conflict == "eerste-geldt" {
+				return Besluit{Toegestaan: true, Regel: r.ID, Plichten: r.Plichten}
+			}
 			if toe == nil {
 				toe = r
 			}
 		case onbepaald:
+			// Fail-closed: telt niet mee. Overslaan is ook bij eerste-geldt veilig: een
+			// latere toestemming had dezelfde uitkomst, een later verbod weigert.
 			voorwaardelijk = append(voorwaardelijk, r.ID)
 		}
+	}
+	if b.Conflict == "toestemming-wint" && toe != nil {
+		return Besluit{Toegestaan: true, Regel: toe.ID, Plichten: toe.Plichten}
+	}
+	if verbod != nil {
+		return Besluit{Regel: verbod.ID}
 	}
 	if toe != nil {
 		return Besluit{Toegestaan: true, Regel: toe.ID, Plichten: toe.Plichten}
 	}
-	return Besluit{Voorwaardelijk: voorwaardelijk}
+	return Besluit{Toegestaan: b.Standaard == "toestaan", Voorwaardelijk: voorwaardelijk}
 }
 
 // ToegestanePaden beslist voor een lijst registerpaden tegelijk (bv. alle veldpaden van een

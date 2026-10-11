@@ -139,7 +139,8 @@ func TestLaadBundelWeigertOngeldig(t *testing.T) {
 		"formaat":   `{"formaat":"iets-anders","regels":[]}`,
 		"effect":    `{"formaat":"omnium-toegangsbundel/1","regels":[{"id":"a","effect":"misschien","handeling":"bekijken"}]}`,
 		"dubbel id": `{"formaat":"omnium-toegangsbundel/1","regels":[{"id":"a","effect":"toestaan","handeling":"bekijken"},{"id":"a","effect":"toestaan","handeling":"bekijken"}]}`,
-		"standaard": `{"formaat":"omnium-toegangsbundel/1","standaard":"toestaan","regels":[]}`,
+		"standaard": `{"formaat":"omnium-toegangsbundel/1","standaard":"misschien","regels":[]}`,
+		"conflict":  `{"formaat":"omnium-toegangsbundel/1","conflict":"loting","regels":[]}`,
 		"geen JSON": `{`,
 	}
 	for naam, json := range gevallen {

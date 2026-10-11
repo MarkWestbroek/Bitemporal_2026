@@ -1,0 +1,56 @@
+{
+  "formaat": "omnium-toegangsbundel/1",
+  "beleid": {
+    "naam": "Toestemming gaat voor",
+    "geldigVanaf": null,
+    "geldigTot": null,
+    "grondslag": null,
+    "doel": null
+  },
+  "standaard": "weigeren",
+  "conflict": "toestemming-wint",
+  "regels": [
+    {
+      "id": "medewerker-geen-bsn",
+      "naam": "medewerker geen bsn",
+      "effect": "verbieden",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "medewerker"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "beheerder-bsn",
+      "naam": "beheerder bsn",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "admin"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    }
+  ]
+}
