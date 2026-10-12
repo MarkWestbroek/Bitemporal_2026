@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -180,26 +181,57 @@ func TestLiveRespons(t *testing.T) {
 	if err := json.Unmarshal(data, &top); err != nil {
 		t.Fatal(err)
 	}
+	prefix := os.Getenv("PEP_LIVE_PREFIX")
+	if prefix == "" {
+		prefix = "NatuurlijkPersoon"
+	}
 	b := bundel(t, naam)
 	for sleutel, v := range top {
 		lijst, ok := v.([]any)
 		if !ok {
 			continue
 		}
-		for _, s := range []toegang.Subject{{Anoniem: true}, {Kenmerken: map[string][]string{"rol": {"medewerker"}}}} {
+		t.Logf("%s: %d records, %d e-mailwaarden vóór het filteren", sleutel, len(lijst), telEmail(lijst))
+		subjecten := []toegang.Subject{
+			{Anoniem: true},
+			{Kenmerken: map[string][]string{"rol": {"medewerker"}}},
+			{Kenmerken: map[string][]string{"rol": {"editor", "viewer"}}},
+		}
+		for _, s := range subjecten {
 			zichtbaar := 0
-			var voorbeeld []string
+			var gesnoeid []any
 			for _, r := range lijst {
-				if uit, z := filterRecord(b, verzoek(s), "NatuurlijkPersoon", r, true); z {
+				if uit, z := filterRecord(b, verzoek(s), prefix, r, true); z {
 					zichtbaar++
-					if voorbeeld == nil {
-						voorbeeld = paden(uit)
-					}
+					gesnoeid = append(gesnoeid, uit)
 				}
 			}
-			t.Logf("%s, subject %+v: %d van %d records zichtbaar; paden in eerste: %v", sleutel, s, zichtbaar, len(lijst), voorbeeld)
+			t.Logf("  subject %+v: %d records zichtbaar, %d e-mailwaarden", s, zichtbaar, telEmail(gesnoeid))
 		}
 	}
+}
+
+// telEmail telt waarden met een @ (zonder ze te tonen).
+func telEmail(x any) int {
+	switch t := x.(type) {
+	case map[string]any:
+		n := 0
+		for _, v := range t {
+			n += telEmail(v)
+		}
+		return n
+	case []any:
+		n := 0
+		for _, v := range t {
+			n += telEmail(v)
+		}
+		return n
+	case string:
+		if strings.Contains(t, "@") {
+			return 1
+		}
+	}
+	return 0
 }
 
 func contains(l []string, s string) bool {

@@ -18,18 +18,21 @@ import { naarOdrl } from "./odrl.js";
 import { renderBeleid } from "./renderer.js";
 
 const MAP = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../testdata/toegang");
-const velden = JSON.parse(readFileSync(path.join(MAP, "np-loc-velden.json"), "utf8"));
-const index = maakVeldIndex(velden);
+const laadIndex = (bestand) => maakVeldIndex(JSON.parse(readFileSync(path.join(MAP, bestand), "utf8")));
+const index = laadIndex("np-loc-velden.json");
+// Veldenfixture per beleid (standaard np-loc); uit verzamelVelden op het schema van app.
+const INDEX_PER_BELEID = { "cg-portfolio": laadIndex("cg-velden.json") };
 
 function compileer(naam) {
+  const idx = INDEX_PER_BELEID[naam] || index;
   const p = parseBeleid(readFileSync(path.join(MAP, `${naam}.toegangsspraak`), "utf8"));
   assert.ok(p.ok, JSON.stringify(p.fouten));
-  const r = resolveerBeleid(p.beleid, index);
+  const r = resolveerBeleid(p.beleid, idx);
   assert.deepEqual(r.fouten, [], "resolutiefouten");
-  return { ...compileerBundel(r.beleid, { index }), beleid: r.beleid };
+  return { ...compileerBundel(r.beleid, { index: idx }), beleid: r.beleid };
 }
 
-for (const naam of ["np-loc-demo", "openbaar", "open-tenzij", "toestemming-wint"]) {
+for (const naam of ["np-loc-demo", "openbaar", "open-tenzij", "toestemming-wint", "cg-portfolio"]) {
   test(`bundel ${naam} = testdata/toegang/${naam}.bundel.json`, () => {
     const { bundel, meldingen } = compileer(naam);
     assert.deepEqual(meldingen, []);

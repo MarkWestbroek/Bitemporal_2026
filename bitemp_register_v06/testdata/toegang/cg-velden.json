@@ -1,0 +1,550 @@
+[
+ {
+  "veldpad": "Initiatief.weergavenaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.planningen.planningsinfo",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.planningen.startdatum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.planningen.ready_for_use",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.planningen.waar_tegenaan_gelopen",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.planningen.fase",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Idee (nog geen concrete opbrengsten)",
+   "Initiatie (al een snelle POC)",
+   "Realisatie (gaat binnenkort draaien bij eerste gemeenten)",
+   "Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)",
+   "Doorontwikkeling en beheer",
+   "Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde)"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.planningen.obstakels",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.planningen.verwacht_ready_datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.producten.naam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.producten.omschrijving",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.producten.type",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Component",
+   "Toepassing",
+   "Standaard"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.producten.CG_laag",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Laag 5",
+   "Laag 4",
+   "Laag 3",
+   "Laag 2",
+   "Laag 1",
+   "Hosting en infrastructuur",
+   "Utility"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.producten.pitch",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.producten.vervangt_ouder_product",
+  "type": "boolean",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.producten.website",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.producten.git_repo",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.bijdragen.type_bijdrage",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Wendbaarheid",
+   "Dienstverlening",
+   "Regie"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.bijdragen.schaal",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Schaal 1",
+   "Schaal 2",
+   "Schaal 3",
+   "Schaal 4"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.bijdragen.toelichting",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.bijdragen.score",
+  "type": "integer",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.andere_domeinen.domein",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.anders_dan_gemeenten.andersDanGemeente",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.andere_api_standaarden.api_standaard",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatiefinfos.informatie",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatiefinfos.PbiID",
+  "type": "integer",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatiefinfos.aanmeldingsdatum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.betrokken_organisatie.type",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Gemeenten",
+   "Leveranciers",
+   "VNG",
+   "Ketenpartners",
+   "Rijk"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.beoordelingen.fase_cg_portfolio",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Brons",
+   "Zilver",
+   "Goud",
+   "Niet gecontroleerd"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.beoordelingen.datum_zilver",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.beoordelingen.datum_goud",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.beoordelingen.check_zilver",
+  "type": "boolean",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.beoordelingen.redenatie_zilver",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.beoordelingen.redenatie_goud",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.beoordelingen.goud_niet_gehaald",
+  "type": "boolean",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.beoordelingen.redenatie_goud_niet_gehaald",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.etalages.level1",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.etalages.level2",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.aanmeldstatussen.status",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "nieuwe_aanmelding",
+   "in_behandeling",
+   "geaccepteerd",
+   "afgewezen"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.aanmeldstatussen.toelichting",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_gemeenten.rol",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Realiseert",
+   "Maakt gebruik van"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.initiatief_gemeenten.weergavenaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_gemeenten.gemeentegegevens.naam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_gemeenten.gemeentegegevens.code",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_domeinen.weergavenaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_domeinen.domeingegevens.naam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_domeinen.domeingegevens.omschrijving",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_api_standaarden.weergavenaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_api_standaarden.api_standaard_namen.naam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.rol",
+  "type": "string",
+  "format": "",
+  "enum": [
+   "Contactorganisatie",
+   "BetrokkenOrganisatie"
+  ]
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.weergavenaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.organisatiecontactgegevens.url",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.organisatiecontactgegevens.email",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.organisatiecontactgegevens.telefoonnummer",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.organisatienamen.naam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.contactpersonen.rol",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.contactpersonen.persoonscontactgegevens.email",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.contactpersonen.persoonscontactgegevens.telefoonnummer",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.contactpersonen.persoonnamen.naam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.contactpersonen.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.contactpersonen.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.initiatief_organisaties.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Initiatief.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.weergavenaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.organisatiecontactgegevens.url",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.organisatiecontactgegevens.email",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.organisatiecontactgegevens.telefoonnummer",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.organisatienamen.naam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.contactpersonen.rol",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.contactpersonen.persoonscontactgegevens.email",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.contactpersonen.persoonscontactgegevens.telefoonnummer",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.contactpersonen.persoonnamen.naam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.contactpersonen.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.contactpersonen.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Organisatie.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Persoon.weergavenaam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Persoon.persoonscontactgegevens.email",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Persoon.persoonscontactgegevens.telefoonnummer",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Persoon.persoonnamen.naam",
+  "type": "string",
+  "format": "",
+  "enum": []
+ },
+ {
+  "veldpad": "Persoon.aanvang.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ },
+ {
+  "veldpad": "Persoon.einde.datum",
+  "type": "string",
+  "format": "date",
+  "enum": []
+ }
+]
