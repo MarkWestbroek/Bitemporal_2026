@@ -2292,6 +2292,7 @@ function Inspector() {
   const tabs = useModellerenStore((s) => s.tabs);
   const mapSelectie = useModellerenStore((s) => s.mapSelectie);
   const diagramSelectie = useModellerenStore((s) => s.diagramSelectie);
+  const elementSelectie = useModellerenStore((s) => s.elementSelectie);
   // Een geselecteerde map of diagram wint: structuur-elementen met eigen
   // eigenschappen (naam, kleur, type) — consolidatieplan, "superprofiel"-spoor.
   if (mapSelectie) return <MapEigenschappen mapId={mapSelectie} />;
@@ -2300,11 +2301,47 @@ function Inspector() {
   }
   const tab = tabs.find((t) => t.id === actieveTab) || null;
   const profiel = tab ? getProfieltype(tab.profielId) : null;
+  // Een element heeft eigenschappen, ook zonder open diagram (Mark, 12-10):
+  // zit het geselecteerde element in een ander profiel dan de actieve tab
+  // (of is er geen tab), toon het dan in een eigen Provider van zijn profiel.
+  if (elementSelectie && elementSelectie.profielId !== profiel?.id) {
+    const elProfiel = getProfieltype(elementSelectie.profielId);
+    if (elProfiel?.Inspector) {
+      return <LosElementInspector key={elProfiel.id} profiel={elProfiel} elementId={elementSelectie.elementId} />;
+    }
+  }
   const ProfielInspector = profiel?.Inspector;
   if (!ProfielInspector) {
     return <div className="studio-project__leeg" style={{ padding: 12 }}>Geen open diagram.</div>;
   }
   return <ProfielInspector />;
+}
+
+/**
+ * Inspector voor een element buiten het profiel van de actieve tab: een
+ * eigen Provider-instantie van dat profiel (selectie, context), waarin we
+ * het element selecteren via `<menuPrefix>:selecteer-element`. De emit
+ * wacht één tik: de Provider abonneert zich pas in zijn eigen effect, dat ná
+ * dat van dit kind draait.
+ */
+function LosElementInspector({ profiel, elementId }) {
+  const P = profiel.Provider || Fragment;
+  const ProfielInspector = profiel.Inspector;
+  return (
+    <P>
+      <SelecteerInProfiel prefix={profiel.menuPrefix} elementId={elementId} />
+      <ProfielInspector />
+    </P>
+  );
+}
+
+function SelecteerInProfiel({ prefix, elementId }) {
+  useEffect(() => {
+    if (!prefix) return undefined;
+    const t = setTimeout(() => menuBus.emit(`${prefix}:selecteer-element`, elementId), 0);
+    return () => clearTimeout(t);
+  }, [prefix, elementId]);
+  return null;
 }
 
 /**
@@ -2345,8 +2382,20 @@ function Provider({ children }) {
   // element-klik dood.
   useEffect(
     () =>
-      menuBus.on("studio:element-geselecteerd", () => {
+      menuBus.on("studio:element-geselecteerd", (sel) => {
         const s = useModellerenStore.getState();
+        // Met element: de boomselectie volgt (inspector en boom blijven gelijk).
+        if (sel?.profielId && sel?.elementId) {
+          const e = s.elementSelectie;
+          if (e?.profielId !== sel.profielId || e?.elementId !== sel.elementId || s.mapSelectie || s.diagramSelectie) {
+            useModellerenStore.setState({
+              elementSelectie: { profielId: sel.profielId, elementId: sel.elementId },
+              mapSelectie: null,
+              diagramSelectie: null,
+            });
+          }
+          return;
+        }
         if (s.mapSelectie || s.diagramSelectie) {
           useModellerenStore.setState({ mapSelectie: null, diagramSelectie: null });
         }

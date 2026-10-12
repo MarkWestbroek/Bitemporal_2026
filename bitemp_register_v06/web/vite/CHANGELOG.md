@@ -12,6 +12,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Eigenschappen volgen de pijltjes in de projectboom** (12-10, Mark): wie met ↑/↓ door de boom
   liep, zag bij elementen een leeg eigenschappenpaneel (alleen mappen en diagrammen werkten). Nu
   krijgt de inspector het element door, zoals bij een klik — binnen het profiel van de actieve tab.
+- **Eigenschappen ook zonder open diagram** (12-10, Mark: "elementen hebben eigenschappen, of er nu
+  een diagram open is of niet"): een element uit de boom toont zijn eigenschappen ook als er geen
+  tab open is, of als de actieve tab een ander profiel heeft. Een klik op het canvas zet de
+  selectie in de boom.
 
 ## [studio/v0.17.0] — 2026-10-12
 Canvas en modellering na 0.16.0: klik op leeg deselecteert betrouwbaar, kaders laten klikken door,
