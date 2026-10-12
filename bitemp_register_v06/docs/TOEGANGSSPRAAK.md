@@ -71,8 +71,17 @@ Beleid "Inzage inkomen bij schuldhulp".
 - **Nederlandse woordvolgorde**: na "als"/"waarvan" de bijzinsvolgorde
   ("… niet "nl" **is**"), in opsommingen de stellingsvorm; beide worden
   geaccepteerd, herformatteren normaliseert.
-- **Vaste conflictregel**: wat niet uitdrukkelijk is toegestaan, mag niet;
-  een verbod gaat altijd vóór een toestemming.
+- **Iedereen** (sinds 12-10-2026): "Iedereen mag de namen van een natuurlijk
+  persoon bekijken." geldt voor elk subject, ook een onbekend (anoniem,
+  openbaar). In ODRL een regel zonder assignee; in de beleidsbundel een regel
+  zonder subject-eisen.
+- **Superpolicy** (sinds 12-10-2026): twee optionele kopregels bepalen hoe de
+  regels samen uitpakken. `Standaard: weigeren.` (zonder kopregel ook zo) of
+  `Standaard: toestaan.` — alles dicht tenzij, of alles open tenzij.
+  `Bij conflict: verbod gaat voor.` (zonder kopregel ook zo),
+  `… toestemming gaat voor.` of `… de eerste regel geldt.` — bij die laatste is
+  de volgorde van de regels de prioriteit. Vergelijkbaar met de *combining
+  algorithms* van XACML (deny-overrides, permit-overrides, first-applicable).
 - **Uitbreidbaar per domein**: vergelijkingen ("valt geheel binnen"),
   handelingen en plichten komen uit registers, niet uit de grammatica.
 
@@ -135,6 +144,7 @@ projecties van dezelfde AST. Round-trip is een geteste wet:
 | `renderer.js` | AST → canonieke tekst; bijzinsvorm na als/waarvan, stellingsvorm in opsommingen |
 | `odrl.js` | AST → ODRL JSON-LD (Permission/Prohibition/Duty, LogicalConstraint, Party-/AssetCollection, `conflict: prohibit`); gebruikt geresolvede paden waar aanwezig |
 | `graaf.js` · `odrlApNlRegels.js` · `odrlExport.js` | AST → ODRL in **Turtle volgens ODRL-AP-NL** en de ODRL Visualisation Note, in de transformatievorm graafbeeld → regelset → schrijver (zie `TRANSFORMATIES.md` §8). Verschil met `odrl.js`: elke regel, voorwaarde en plicht heeft een eigen IRI en een naam; elk label is de zinsnede uit de klare taal; rol en doel zijn verfijningen op de handeling (`apnl:rolAanvrager`, `odrl:purpose`); het register is een `partOf`-hiërarchie; geldigheid met `schema:validFrom`. De trace is het verliesrapport. Voorbeelden voor de ODRL-viewer van de werkgroep FTV: `authz/odrl-viewer-voorbeelden/` |
+| `bundel.js` | AST (geresolved) → **uitvoerbare beleidsbundel** (`omnium-toegangsbundel/1`) voor de PDP in de Go-API (`toegang/`): regels als data, gedekte registerpaden, voorwaarden als boom, betrokkene-paden volledig opgelost binnen de entiteit van de regel. Contract met de PDP: `testdata/toegang/*.bundel.json` + `vectoren.json`. Zie hieronder *Uitvoeren* |
 | `metamodel.js` | veldindex over de schema-API-velden; keten-resolutie (verkorting, dubbelzinnigheids-fouten, metamodel-casing); typebewaking; `suggereerVanVormen`/`suggereerBases` |
 | `editorSuggesties.js` | autocomplete-context: binnen-keten (span-vervanging), achterstevoren, vooruit (met lidwoord-meevervanging) |
 | `voorbeeld.js` | canoniek voorbeeldbeleid (round-trip-anker) |
@@ -157,6 +167,31 @@ als data (longest match; bijzins-grenswoorden afgeleid uit het register),
 nesting via bullet-insprong uit de tokenizer, spans los van de AST (AST blijft
 positie-onafhankelijk vergelijkbaar). Zie ontwerpdoc §12.1 voor het
 activity-diagram.
+
+### Uitvoeren — beleidsbundel en PDP (fase 1a, 12-10-2026)
+
+Plan: `docs/plans/2026-10-12 Toegang op beleid — PAP, PDP en PEP (plan).md`. De Studio is de
+PAP: zij parseert en resolveert het beleid en compileert het met `bundel.js`. De PDP is het
+Go-package `toegang/` in de API (`LaadBundel`, `Beslis`, `ToegestanePaden`); het parseert geen
+Toegangsspraak maar evalueert de bundel. ODRL blijft het uitwisselformaat.
+
+| Semantiek | |
+|---|---|
+| standaard | `weigeren` (default) of `toestaan` — kopregel `Standaard:` |
+| conflict | `verbod-wint` (default), `toestemming-wint` of `eerste-geldt` (volgorde = prioriteit) — kopregel `Bij conflict:`. ODRL JSON-LD: `prohibit`, `perm`, `nlgov:eersteRegel`; standaard-toestaan als `nlgov:standaard`. De Turtle-export (ODRL-AP-NL) schrijft nog vast `odrl:prohibit` |
+| dekking | een regel dekt zijn registerpad en alles eronder, per padsegment; `*` dekt alles |
+| subject | `null` = iedereen (ook anoniem); anders moeten alle kenmerken aanwezig zijn (hoofdletterongevoelig) |
+| voorwaarden | drieweg: waar / onwaar / onbepaald. Kenmerken van de **aanvrager** zijn een gesloten wereld (ontbreken = leeg). Gegevens van de **betrokkene** en PIP-vragen (`bestaat`) zijn onbepaald zolang de PDP ze niet kent. Fail-closed: een toestemming met een onbepaalde voorwaarde geldt níet (staat dan in `Voorwaardelijk`), een verbod met een onbepaalde voorwaarde geldt wél |
+| geldigheid | `geldigVanaf` (inclusief) en `geldigTot` (exclusief) van het beleid tegen het peilmoment |
+
+Tests: `node --test src/toegangsspraak/bundel.test.js` (compiler; `BIJWERKEN=1` schrijft de
+bundels opnieuw) en `go test ./toegang/` (24 vectoren + benchmark, ± 0,4 µs per veldbeslissing).
+**PEP op het leespad (fase 1b):** met `TOEGANG_BUNDEL=<bundel.json>` snoeit de API de
+antwoorden van `/full`, de platte routes en GraphQL per veld (package `pep/`; zie
+`docs/AUTH_DEVELOPER_GUIDE.md` §TOEGANG_BUNDEL). Beleidspaden = de veldpaden van de Studio; in
+een `/full`-antwoord valt het Hub+_Data-niveau `data` weg en zijn technische sleutels (`id`,
+`opvoer`, `afvoer`, `rel_id`, `versie`, `*_id`) geen beleidspad. Nog niet: de bundel als
+bitemporeel register en publiceren vanuit de Studio (fase 1c), het schrijfpad (fase 2).
 
 ### Studio-activiteit — `web/vite/src/studio/activities/toegangActivity.jsx`
 

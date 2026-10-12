@@ -28,6 +28,16 @@ import { geefOperatoren, vindActie, geefActies, vindPlicht, geefPlichten } from 
 import { camelNaarWoorden, woordenNaarTypenaam, woordenNaarVeldnaam, lidwoordVoor, maakIsoDatum, isMaand } from "./woorden.js";
 
 export const ANKERS = ["aanvrager", "gegevens", "betrokkene", "aanvraag"];
+
+/**
+ * Conflictregels (superpolicy): klare-taalzin → canonieke waarde. Vgl. de combining
+ * algorithms van XACML (deny-overrides, permit-overrides, first-applicable) en ODRL `conflict`.
+ */
+export const CONFLICTZINNEN = {
+  "verbod gaat voor": "verbod-wint",
+  "toestemming gaat voor": "toestemming-wint",
+  "de eerste regel geldt": "eerste-geldt",
+};
 const LIDWOORDEN = ["de", "het", "een"];
 
 // ── Tokenizer ────────────────────────────────────────────────────────────────
@@ -237,6 +247,26 @@ class Parser {
         this.pakTeken(":", 'Na "Doel" hoort een dubbele punt.');
         beleid.doel = this.pakString("Het doel staat tussen aanhalingstekens.");
         this.pakTeken(".", "De doelregel eindigt met een punt.");
+      } else if (this.isWoord(t, "standaard")) {
+        // Superpolicy (1): wat geldt als geen regel iets zegt. Ontbreekt = weigeren.
+        this.pak();
+        this.markeer("structuur", t, t);
+        this.pakTeken(":", 'Na "Standaard" hoort een dubbele punt.');
+        beleid.standaard = this.pakWoord('Na "Standaard:" hoort "weigeren" of "toestaan".', "weigeren", "toestaan").toLowerCase();
+        this.pakTeken(".", "De standaardregel eindigt met een punt.");
+      } else if (this.isWoord(t, "bij")) {
+        // Superpolicy (2): hoe regels die elkaar tegenspreken worden afgewogen.
+        this.pak();
+        const conflictTok = this.kijk();
+        this.pakWoord('Na "Bij" hoort "conflict".', "conflict");
+        this.markeer("structuur", t, conflictTok);
+        this.pakTeken(":", 'Na "Bij conflict" hoort een dubbele punt.');
+        const zin = this.pakTekstTotPunt().toLowerCase().replace(/\s+/g, " ").trim();
+        const conflict = CONFLICTZINNEN[zin];
+        if (!conflict) {
+          this.fout(`Onbekende conflictregel "${zin}". Kies uit: ${Object.keys(CONFLICTZINNEN).join("; ")}.`);
+        }
+        beleid.conflict = conflict;
       } else {
         break;
       }
@@ -418,11 +448,17 @@ class Parser {
   }
 
   parseWie() {
+    // "Iedereen" = elk subject, ook een onbekend (anoniem, openbaar). In ODRL een
+    // regel zonder assignee; in de beleidsbundel een regel zonder subject-eisen.
+    if (this.isWoord(this.kijk(), "iedereen")) {
+      this.pak();
+      return { soort: "iedereen" };
+    }
     if (this.isWoord(this.kijk(), "iemand")) {
       this.pak();
       return { soort: "iemand", kenmerken: this.parseKenmerken() };
     }
-    const lidwoord = this.pakWoord("Het subject begint met Een, De, Het of Iemand.", ...LIDWOORDEN).toLowerCase();
+    const lidwoord = this.pakWoord("Het subject begint met Een, De, Het, Iemand of Iedereen.", ...LIDWOORDEN).toLowerCase();
     const woorden = [];
     while (this.kijk() && this.kijk().soort === "woord" && !this.isWoord(this.kijk(), "mag")) {
       woorden.push(this.pak().waarde);

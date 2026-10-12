@@ -238,6 +238,11 @@ export function beleidNaarGraaf(beleid, opties = {}) {
   const watBegrip = (naam) => beleid.begrippen.find((b) => b.soort === "wat" && b.naam.toLowerCase() === naam.toLowerCase());
 
   function wie(w) {
+    if (w.soort === "iedereen") {
+      // Elke partij, ook zonder bekend subject: een groep zonder kenmerken.
+      const id = knoop("groep-iedereen", { aard: "partij", tekst: "iedereen", definitie: "iedereen, ook zonder bekend subject (openbaar)" });
+      return { id, kenmerken: [] };
+    }
     const begrip = w.soort === "begrip" ? wieBegrip(w.naam) : null;
     const kenmerken = w.soort === "iemand" ? w.kenmerken : begrip ? begrip.kenmerken : [{ kenmerk: "rol", waarde: w.naam }];
     const naam = w.soort === "iemand" ? kenmerken.map((k) => `${k.kenmerk} ${k.waarde}`).join(", ") : w.naam;

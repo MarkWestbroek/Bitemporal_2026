@@ -1,0 +1,98 @@
+{
+  "formaat": "omnium-toegangsbundel/1",
+  "beleid": {
+    "naam": "CG portfolio",
+    "geldigVanaf": null,
+    "geldigTot": null,
+    "grondslag": null,
+    "doel": "portfolio"
+  },
+  "standaard": "weigeren",
+  "conflict": "verbod-wint",
+  "regels": [
+    {
+      "id": "initiatieven-openbaar",
+      "naam": "initiatieven openbaar",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": null,
+      "gegevens": [
+        {
+          "pad": "Initiatief"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "namen-van-organisaties-openbaar",
+      "naam": "namen van organisaties openbaar",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": null,
+      "gegevens": [
+        {
+          "pad": "Organisatie.organisatienamen"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "namen-van-personen-openbaar",
+      "naam": "namen van personen openbaar",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": null,
+      "gegevens": [
+        {
+          "pad": "Persoon.persoonnamen.naam"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "redacteur-ziet-organisaties",
+      "naam": "redacteur ziet organisaties",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "editor"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "Organisatie"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "redacteur-ziet-personen",
+      "naam": "redacteur ziet personen",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "editor"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "Persoon"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    }
+  ]
+}

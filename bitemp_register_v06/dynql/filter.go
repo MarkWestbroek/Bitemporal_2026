@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
 	"github.com/graphql-go/graphql"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -367,6 +368,13 @@ func operatorInputVoor(s filterSoort) *graphql.InputObject {
 // pasFilterToe voegt de filterconditie toe aan een query op de entiteittabel.
 // `filter` is de waarde van het GraphQL-argument (nil = geen filter).
 func pasFilterToe(query *bun.SelectQuery, meta model.TypeMeta, filter interface{}, peil *time.Time) (*bun.SelectQuery, error) {
+	return pasFilterToeMetToegang(query, meta, filter, peil, nil)
+}
+
+// pasFilterToeMetToegang: idem, maar elk veld waarop gefilterd wordt moet voor het subject
+// zichtbaar zijn (mag(registerpad)); anders is het filter een zijkanaal om verborgen waarden
+// af te tasten. mag == nil: geen toegangsbeleid actief.
+func pasFilterToeMetToegang(query *bun.SelectQuery, meta model.TypeMeta, filter interface{}, peil *time.Time, mag func(pad string) bool) (*bun.SelectQuery, error) {
 	if filter == nil {
 		return query, nil
 	}
@@ -378,7 +386,7 @@ func pasFilterToe(query *bun.SelectQuery, meta model.TypeMeta, filter interface{
 	if def == nil {
 		return nil, fmt.Errorf("filter: %s heeft geen filterbare velden", meta.Typenaam)
 	}
-	b := &filterBouwer{peil: peil}
+	b := &filterBouwer{peil: peil, mag: mag}
 	cond, err := b.entiteit(def, f)
 	if err != nil {
 		return nil, err
@@ -395,7 +403,19 @@ func pasFilterToe(query *bun.SelectQuery, meta model.TypeMeta, filter interface{
 type filterBouwer struct {
 	peil   *time.Time
 	args   []interface{}
-	aantal int // teller voor unieke subquery-aliassen
+	aantal int                   // teller voor unieke subquery-aliassen
+	mag    func(pad string) bool // toegangsbeleid (pep); nil = geen beleid actief
+}
+
+// toegang: weigert een filter op een veld dat het subject niet mag bekijken. Technische
+// sleutels (id, rel_id, *_id) zijn geen beleidspaden en blijven filterbaar, zoals ze ook met
+// zichtbare inhoud worden meegegeven (pep.IsTechnisch).
+func (b *filterBouwer) toegang(pad string) error {
+	laatste := pad[strings.LastIndex(pad, ".")+1:]
+	if b.mag != nil && !pep.IsTechnisch(laatste) && !b.mag(pad) {
+		return fmt.Errorf("filter: geen toegang tot %s volgens het toegangsbeleid", pad)
+	}
+	return nil
 }
 
 func (b *filterBouwer) arg(v interface{}) string {
@@ -432,6 +452,9 @@ func (b *filterBouwer) entiteit(def *filterDef, f map[string]interface{}) (strin
 		)
 		switch {
 		case def.eigen[naam].kolom != "":
+			if err := b.toegang(def.meta.Typenaam + "." + naam); err != nil {
+				return "", err
+			}
 			cond, err = b.velden(def.alias, def.eigen[naam], naam, waarde)
 		case def.kinderen[naam] != nil:
 			cond, err = b.kind(def, def.kinderen[naam], naam, waarde)
@@ -535,6 +558,9 @@ func (b *filterBouwer) kind(def *filterDef, kind *filterKind, naam string, waard
 		veld, ok := kind.velden[veldNaam]
 		if !ok {
 			return "", fmt.Errorf("filter %s: onbekend veld %q", naam, veldNaam)
+		}
+		if err := b.toegang(def.meta.Typenaam + "." + naam + "." + veldNaam); err != nil {
+			return "", err
 		}
 		alias := h
 		if veld.opData {

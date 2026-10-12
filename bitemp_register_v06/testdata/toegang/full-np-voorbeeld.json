@@ -1,0 +1,23 @@
+{
+  "id": 7,
+  "opvoer": "2026-09-20T10:00:00Z",
+  "weergavenaam": "J. de Vries",
+  "aanvang": [ { "natuurlijkpersoon_id": 7, "datum": "1980-01-01", "opvoer": "2026-09-20T10:00:00Z", "versie": 1 } ],
+  "namen": [
+    { "natuurlijkpersoon_id": 7, "rel_id": 1, "opvoer": "2026-09-20T10:00:00Z",
+      "data": [ { "natuurlijkpersoon_id": 7, "rel_id": 1, "versie": 1, "opvoer": "2026-09-20T10:00:00Z",
+                  "voorletters": "J.", "roepnaam": "Jan", "achternaam": "Vries" } ] }
+  ],
+  "persoonsidentificaties": [
+    { "natuurlijkpersoon_id": 7, "rel_id": 1, "opvoer": "2026-09-20T10:00:00Z",
+      "data": [ { "natuurlijkpersoon_id": 7, "rel_id": 1, "versie": 1, "bsn": "000000000", "ingezetene": true } ] }
+  ],
+  "geslacht": [
+    { "natuurlijkpersoon_id": 7, "rel_id": 1,
+      "data": [ { "natuurlijkpersoon_id": 7, "rel_id": 1, "versie": 1, "geslacht": "M" } ] }
+  ],
+  "aanspraak": [
+    { "natuurlijkpersoon_id": 7, "rel_id": 1,
+      "data": [ { "natuurlijkpersoon_id": 7, "rel_id": 1, "versie": 1, "aanspreektitel": "meneer", "formeelAanspreken": true } ] }
+  ]
+}

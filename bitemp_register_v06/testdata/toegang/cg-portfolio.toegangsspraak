@@ -1,0 +1,20 @@
+Beleid "CG portfolio".
+  Doel: "portfolio".
+
+  Begrippen.
+    Een redacteur is: iemand met rol "editor".
+
+  Regel "initiatieven openbaar".
+    Iedereen mag alle gegevens van een initiatief bekijken.
+
+  Regel "namen van organisaties openbaar".
+    Iedereen mag alle gegevens van de organisatienamen van een organisatie bekijken.
+
+  Regel "namen van personen openbaar".
+    Iedereen mag de naam van de persoonnamen van een persoon bekijken.
+
+  Regel "redacteur ziet organisaties".
+    Een redacteur mag alle gegevens van een organisatie bekijken.
+
+  Regel "redacteur ziet personen".
+    Een redacteur mag alle gegevens van een persoon bekijken.

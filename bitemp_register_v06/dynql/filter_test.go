@@ -426,3 +426,36 @@ func TestLijst_ZonderPeiltijdstipIsActueel(t *testing.T) {
 	}
 	verwachtBevat(t, queries[0], `opvoer <= '`, `(afvoer IS NULL OR afvoer > '`)
 }
+
+// Toegangsbeleid (fase 1b): een filter op een veld dat het subject niet mag zien, is een
+// zijkanaal en wordt geweigerd; technische sleutels blijven filterbaar.
+func TestFilterMetToegangsbeleid(t *testing.T) {
+	meta := initiatiefMeta(t)
+	render := func(filter map[string]interface{}, mag func(string) bool) error {
+		sqlDB, _, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("sqlmock: %v", err)
+		}
+		defer sqlDB.Close()
+		q := bun.NewDB(sqlDB, pgdialect.New()).NewSelect().Model(meta.SliceFactory())
+		_, err = pasFilterToeMetToegang(q, meta, filter, nil, mag)
+		return err
+	}
+	opNaam := map[string]interface{}{"producten": map[string]interface{}{"naam": map[string]interface{}{"eq": "x"}}}
+	alleenNaam := func(pad string) bool { return pad == "Initiatief.producten.naam" }
+	niets := func(string) bool { return false }
+
+	if err := render(opNaam, alleenNaam); err != nil {
+		t.Fatalf("toegestaan veld hoort filterbaar te zijn: %v", err)
+	}
+	err := render(opNaam, niets)
+	if err == nil || !strings.Contains(err.Error(), "geen toegang tot Initiatief.producten.naam") {
+		t.Fatalf("verborgen veld hoort geweigerd te worden, kreeg %v", err)
+	}
+	if err := render(map[string]interface{}{"id": map[string]interface{}{"eq": 1}}, niets); err != nil {
+		t.Fatalf("technische sleutel id hoort filterbaar te blijven: %v", err)
+	}
+	if err := render(opNaam, nil); err != nil {
+		t.Fatalf("zonder beleid geen extra controle: %v", err)
+	}
+}

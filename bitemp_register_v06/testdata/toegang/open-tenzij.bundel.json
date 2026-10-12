@@ -1,0 +1,49 @@
+{
+  "formaat": "omnium-toegangsbundel/1",
+  "beleid": {
+    "naam": "Open tenzij",
+    "geldigVanaf": null,
+    "geldigTot": null,
+    "grondslag": null,
+    "doel": null
+  },
+  "standaard": "toestaan",
+  "conflict": "eerste-geldt",
+  "regels": [
+    {
+      "id": "beheerder-ziet-bsn",
+      "naam": "beheerder ziet bsn",
+      "effect": "toestaan",
+      "handeling": "bekijken",
+      "subject": {
+        "kenmerken": [
+          {
+            "kenmerk": "rol",
+            "waarde": "admin"
+          }
+        ]
+      },
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    },
+    {
+      "id": "bsn-afgeschermd",
+      "naam": "bsn afgeschermd",
+      "effect": "verbieden",
+      "handeling": "bekijken",
+      "subject": null,
+      "gegevens": [
+        {
+          "pad": "NatuurlijkPersoon.persoonsidentificaties.bsn"
+        }
+      ],
+      "voorwaarden": null,
+      "plichten": []
+    }
+  ]
+}

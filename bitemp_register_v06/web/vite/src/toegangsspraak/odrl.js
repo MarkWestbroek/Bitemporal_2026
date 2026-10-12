@@ -176,9 +176,12 @@ export function naarOdrl(beleid) {
     "@type": "Set",
     uid: `urn:nlgov:beleid:${slug(beleid.naam)}`,
     profile: PROFIEL,
-    conflict: "prohibit",
+    // Superpolicy: ODRL kent "prohibit" en "perm"; "de eerste regel geldt" en een
+    // standaard-toestaan zijn NLGov-profieltermen (ODRL zelf weigert zonder toestemming).
+    conflict: { "toestemming-wint": "perm", "eerste-geldt": "nlgov:eersteRegel" }[beleid.conflict] || "prohibit",
     "dc:description": beleid.naam,
   };
+  if (beleid.standaard === "toestaan") doc["nlgov:standaard"] = "toestaan";
   if (beleid.geldigVanaf) doc["nlgov:geldigVanaf"] = beleid.geldigVanaf;
   if (beleid.geldigTot) doc["nlgov:geldigTot"] = beleid.geldigTot;
   if (beleid.grondslag) doc["nlgov:grondslag"] = beleid.grondslag;
@@ -190,9 +193,10 @@ export function naarOdrl(beleid) {
     const entry = {
       "nlgov:regelnaam": regel.naam,
       target: watNaarTarget(regel.wat, watBegrippen),
-      assignee: wieNaarAssignee(regel.wie, wieBegrippen),
       action: { "@id": vindActie(regel.actie)?.nlgov || `nlgov:${regel.actie}` },
     };
+    // "Iedereen": geen assignee — in ODRL geldt de regel dan voor iedere partij.
+    if (regel.wie.soort !== "iedereen") entry.assignee = wieNaarAssignee(regel.wie, wieBegrippen);
     const constraints = voorwaardenNaarConstraints(regel.voorwaarden);
     if (constraints.length) entry.constraint = constraints;
     if (regel.plichten.length) {

@@ -1,0 +1,18 @@
+Beleid "Openbaar np-loc".
+  Doel: "dienstverlening".
+
+  Begrippen.
+    Een beheerder is: iemand met rol "admin".
+    Een medewerker is: iemand met rol "medewerker".
+
+  Regel "namen openbaar".
+    Iedereen mag alle gegevens van de namen van een natuurlijk persoon bekijken.
+
+  Regel "medewerker ziet persoon".
+    Een medewerker mag alle gegevens van een natuurlijk persoon bekijken.
+
+  Regel "bsn niet voor medewerkers".
+    Een medewerker mag het bsn van een natuurlijk persoon niet bekijken.
+
+  Regel "beheerder ziet alles".
+    Een beheerder mag alle gegevens van een natuurlijk persoon bekijken.

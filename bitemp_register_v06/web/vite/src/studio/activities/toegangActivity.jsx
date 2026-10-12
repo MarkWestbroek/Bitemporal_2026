@@ -31,7 +31,7 @@ const Editor = EditorModule.default ?? EditorModule;
 import Prism from "../../shared/prismSetup";
 import { ModelPicker, FIELDREF_MIME, useSchemaModel, verzamelVelden } from "../../modelpicker";
 import {
-  parseBeleid, renderBeleid, naarOdrl, padNaarVerwijzing, renderVerwijzing,
+  parseBeleid, renderBeleid, naarOdrl, compileerBundel, padNaarVerwijzing, renderVerwijzing,
   verwijzingNaarPad, maakVeldIndex, resolveerBeleid, resolveerVerwijzing,
   resolveerGroep, bepaalSuggesties, VOORBEELD_BELEID,
 } from "../../toegangsspraak";
@@ -147,7 +147,7 @@ function ToegangProvider({ children }) {
 
   // Verse waarden voor menu-acties zonder de listeners te herbinden.
   const ref = useRef({});
-  ref.current = { tekst, resultaat, odrl, canoniek, beleidVoorWeergave };
+  ref.current = { tekst, resultaat, odrl, canoniek, beleidVoorWeergave, geresolved, veldIndex };
 
   const vindTextarea = useCallback(
     () => editorWrapRef.current?.querySelector("textarea"),
@@ -252,6 +252,21 @@ function ToegangProvider({ children }) {
         if (odrl) {
           downloadJson(odrl, `${(resultaat.beleid?.naam || "beleid").replace(/\s+/g, "_")}.odrl.json`);
         }
+      }),
+      // Beleidsbundel voor de PDP in de Go-API (TOEGANG_BUNDEL, plan 2026-10-12 fase 1b).
+      // Alleen met een volledig opgelost beleid: een onopgelost pad zou stil te veel of te
+      // weinig dekken.
+      menuBus.on("toegang:bundel", () => {
+        const { resultaat, geresolved, veldIndex } = ref.current;
+        if (!resultaat.ok) { window.alert("Het beleid bevat nog parseerfouten."); return; }
+        if (!geresolved || !veldIndex) { window.alert("Geen metamodel geladen: paden kunnen niet worden opgelost."); return; }
+        if (geresolved.fouten.length) {
+          window.alert(`Eerst de controle-meldingen oplossen (${geresolved.fouten.length}):\n- ${geresolved.fouten.map((f) => f.bericht).join("\n- ")}`);
+          return;
+        }
+        const { bundel, meldingen } = compileerBundel(geresolved.beleid, { index: veldIndex });
+        if (meldingen.length) window.alert(`Let op:\n- ${meldingen.join("\n- ")}`);
+        downloadJson(bundel, `${(resultaat.beleid?.naam || "beleid").replace(/\s+/g, "_")}.bundel.json`);
       }),
       // Stap 4: publiceer het beleid als diagram-model naar de motor-store
       // van het toegangsregel-profiel (projectboom + canvas). De tekst is de
@@ -688,6 +703,7 @@ export default {
         { id: "toegang-herformatteer", label: "Herformatteer (canonieke vorm)", onClick: () => menuBus.emit("toegang:herformatteer") },
         { type: "separator" },
         { id: "toegang-odrl", label: "Exporteer ODRL (JSON-LD)…", onClick: () => menuBus.emit("toegang:odrl") },
+        { id: "toegang-bundel", label: "Exporteer beleidsbundel voor de API (TOEGANG_BUNDEL)…", onClick: () => menuBus.emit("toegang:bundel") },
         { id: "toegang-publiceer", label: "Publiceer naar Modelleren (layout blijft behouden)", onClick: () => menuBus.emit("toegang:publiceer") },
         { id: "toegang-teruglezen", label: "Lees terug uit Modelleren (vervangt tekst; Ctrl+Z kan)", onClick: () => menuBus.emit("toegang:teruglezen") },
         { id: "toegang-kruisverbanden", label: "Kruisverbanden registreren (Koppelingen)", onClick: () => menuBus.emit("toegang:kruisverbanden") },

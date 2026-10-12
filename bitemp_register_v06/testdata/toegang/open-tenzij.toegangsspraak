@@ -1,0 +1,12 @@
+Beleid "Open tenzij".
+  Standaard: toestaan.
+  Bij conflict: de eerste regel geldt.
+
+  Begrippen.
+    Een beheerder is: iemand met rol "admin".
+
+  Regel "beheerder ziet bsn".
+    Een beheerder mag het bsn van een natuurlijk persoon bekijken.
+
+  Regel "bsn afgeschermd".
+    Iedereen mag het bsn van een natuurlijk persoon niet bekijken.

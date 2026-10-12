@@ -652,6 +652,25 @@ de vierde guard van `dynql.GraphQLHandler`. Tests: `routes/leestoegang_test.go`,
 Zet de poort pas dicht als de publicatiepagina aantoonbaar via opgeslagen documenten werkt
 (`docs/VPS_DEPLOYMENT.md` §9); anders valt de embed op commonground.nl weg. Op termijn neemt
 toegangsspraak dit over met rijcondities (plan 2026-09-22 §7.7 stap 4).
+
+### TOEGANG_BUNDEL
+
+*Sinds 12 oktober 2026 (fase 1b, standaard uit).* Pad naar een **gecompileerde
+Toegangsspraak-beleidsbundel** (`omnium-toegangsbundel/1`, zie `docs/TOEGANGSSPRAAK.md`
+§Uitvoeren). Zonder deze variabele gedraagt de API zich als voorheen. Met een bundel dwingt de
+**PEP** (`pep/`) het beleid af op het leespad, met de ingebouwde **PDP** (`toegang/`):
+
+| Oppervlak | Gedrag met bundel |
+|---|---|
+| `/full/{padnaam}`, `/full/{padnaam}/:id` | per record gesnoeid tot de velden die het subject mag bekijken (voorwaarden over de betrokkene met de gegevens van het record zelf); records zonder zichtbare inhoud vallen weg (detail: 404); van dit type zeker niets mogen zien → 403 |
+| `/{padnaam}`, `/{padnaam}/:id` (ook GE-/data-typen) | idem; `?q=` zoekt alleen in toegestane kolommen, `filter.<kolom>` en `sort=` op een niet-toegestane kolom → 403 (geen zijkanaal) |
+| GraphQL (entiteit, lijst, volledige lijst, relaties heen/terug) | idem, als laatste stap ná afgeleide velden en relaties; `filter` op een niet-toegestaan veld → fout |
+| `/registraties`, `/wijzigingen`, `/full/registraties`, bestanden, `max-id`, `secondaire-ids` | alleen ingelogd (tussenstap; nog geen beleid per veld) |
+
+Subject: anoniem zonder geldige cookie; anders kenmerk `rol` (met hiërarchie: admin ⊃ editor ⊃
+viewer) en `gebruikersnaam`. Met `AUTH_ENABLED=false` is dus iedereen anoniem. Een kapotte of
+onleesbare bundel stopt de start (fail-closed). Bekende beperkingen staan in het plan
+`docs/plans/2026-10-12 Toegang op beleid — PAP, PDP en PEP (plan).md` §6.
 ## 8. Rollen en hiërarchie
 
 ```
