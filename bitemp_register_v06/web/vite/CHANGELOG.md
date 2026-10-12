@@ -8,6 +8,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **Elementen onder een package/domein naar een diagram slepen** (12-10, Mark): in de projectboom
+  waren alleen rijen met een eigen plaatsing sleepbaar, dus na een V3-import kon je wel het
+  domein-package (np-loc) op een diagram zetten, maar niet de entiteiten eronder. Kindrijen in de
+  hiërarchie (ook GE's onder een entiteit) zijn nu sleepbaar naar het canvas; het lidmaatschap
+  van het domein blijft ongemoeid.
+
 ### Toegevoegd
 - **Afgeleide relaties: de Studio rekent mee** (11-10, bij de backend van BACKEND-GEN): de
   CEL-evaluator kent **collect** (`ouders.ouders`) en parset strikt, gelijk met de Go-evaluator
