@@ -2062,7 +2062,7 @@ export default function IndexSchemaPage() {
         const registratieSvgHoogte = Math.max(200, grootKruisEindY + 30);
 
         return (
-          <div className="container">
+          <div className="container schema-pagina">
             <SchemaIndexHeader schemaError={schemaError} vizSchema={vizSchema} />
 
             <SchemaIndexControls

@@ -55,28 +55,31 @@ a.muted {
   gap: 12px;
 }
 
-label {
+/* Element-regels alleen binnen de schemapagina's (.schema-pagina): ze
+   lekten anders de hele Studio in zodra een van deze pagina's geladen was
+   (labels erboven, witte knoptekst — gemeld 2026-10-12). */
+.schema-pagina label {
   display: flex;
   flex-direction: column;
   gap: 6px;
   font-size: 14px;
 }
 
-input,
-select,
-button {
+.schema-pagina input,
+.schema-pagina select,
+.schema-pagina button {
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   padding: 10px;
   font-size: 14px;
 }
 
-button {
+.schema-pagina button {
   cursor: pointer;
   color: #ffffff;
 }
 
-button:disabled {
+.schema-pagina button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

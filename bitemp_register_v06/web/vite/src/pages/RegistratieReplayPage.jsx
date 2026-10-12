@@ -807,7 +807,7 @@ export default function RegistratieReplayPage() {
   }, [replayResults]);
 
   return (
-    <div className="container" style={{ maxWidth: 1400 }}>
+    <div className="container schema-pagina" style={{ maxWidth: 1400 }}>
       <h1 className="page-title">Registraties replay en vergelijking</h1>
       <p className="muted" style={{ marginTop: 0 }}>
         <a className="muted" href="/viz/react/">Schema-index</a>
