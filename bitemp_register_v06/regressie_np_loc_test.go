@@ -119,6 +119,12 @@ func nieuweRegressieOmgevingMet(t testing.TB, behoud bool) *regressieOmgeving {
 		if err := dbsetup.DeleteTables(db); err != nil {
 			t.Fatalf("tabellen opruimen mislukt: %v", err)
 		}
+		// gebruiker_inlog (plumbing van Gebruiker, sinds api 0.10.0) valt buiten DeleteTables.
+		// Na een run met scenario 17 (seed_admin) blijft er een rij staan die bij CreateTables de
+		// FK naar de lege gebruiker-hub breekt; zonder dit is de suite niet herhaalbaar.
+		if _, err := db.ExecContext(ctx, "DROP TABLE IF EXISTS gebruiker_inlog CASCADE"); err != nil {
+			t.Fatalf("gebruiker_inlog opruimen mislukt: %v", err)
+		}
 		if err := dbsetup.CreateTables(db); err != nil {
 			t.Fatalf("tabellen aanmaken mislukt: %v", err)
 		}

@@ -253,10 +253,24 @@ Wat er staat, en waar het van het ontwerp hierboven afwijkt of het preciseert:
 - **GraphQL**: het veld is een *nullable* lijst. De full-resolvers (`full_<padnaam>`,
   `full_<padnaam>_list`) rekenen het per lijst in één keer uit en alleen als het veld gevraagd
   is; op andere plekken (gewone lijst, genest via een forward-relatie) is het `null`.
+  Sinds 11-10 (branch `feat/afgeleid-graphql-doelen`) staat ernaast `<rolnaam>_doelen:
+  [<Doeltype>]` met de volledige doelobjecten, in dezelfde platte vorm als `full_<padnaam>` en
+  op hetzelfde peilmoment (de doelen die de omgeving voor de weergavenaam al laadde). Afgeleide
+  relaties van zo'n doelobject zelf zijn `null`. Let op: de weergavenaam-verrijking van de
+  relatie-voorkomens in een doelobject doet, net als bij `full_<padnaam>_list`, een query per
+  object.
 - **Codegen-validatie** parset de regel nu ook (`celexpr.Parse`).
 - **Materiële tijd** telt bij de navigatie (nog) niet mee: "actief" is formeel actief, net als
   bij afgeleide velden. Een woonlocatie met een einde in het verleden telt dus nog mee. Open punt:
   een materieel peilmoment (`?m=`) voor afgeleide relaties en velden.
+
+**Open: zelf-relatie** (doel = bron, bv. Persoon → Persoon voor `ouders.ouders`). Codegen
+noemt de doelkolom `<doel>_id` en die valt dan samen met de eigen FK-kolom; zo'n relatie kan
+het register nu niet opslaan. Een andere naam (bv. `doel_<doel>_id`) raakt alle plekken die het
+doeltype uit de kolomnaam afleiden (`afleiding.DoelTypeVanRelatie`,
+`handlers.doelEntiteitVanSecondaireKolom`, `dynql.vindDoelEntiteit`,
+`model.doelEntiteitVanRelatie`, `entiteitTypeUitKolomnaam`, codegen/naamgeving); af te stemmen
+samen met de syntaxis van inverse navigatie. De Studio waarschuwt al (M3-MOF).
 
 **Pariteit met de frontend**: `testdata/cel-pariteit.json` (60 gevallen) is de gedeelde bron
 voor `celexpr/celexpr_test.go` en (door M3-MOF) `web/vite/src/shared/celEvaluator.test.js`.
@@ -270,3 +284,7 @@ leeftijd-gevallen via de nieuwe evaluator), en end-to-end
 N+1-bewaking, doorkijk via Locatie.Adres, GraphQL). De volledige np-loc-regressie blijft groen.
 Daarvoor is `regressie_declaratief_test.go` hersteld: `handlers.SeedAdminGebruiker` heet sinds
 api 0.10.0 `gebruikers.SeedAdmin` (de integratietests compileerden op main niet meer).
+
+**Regressie-harness herhaalbaar** (11-10): `regressie_np_loc_test.go` gooit bij de reset ook
+`gebruiker_inlog` weg. Die valt buiten `dbsetup.DeleteTables`; na een run met scenario 17
+(seed_admin) brak de FK bij de volgende `CreateTables`.

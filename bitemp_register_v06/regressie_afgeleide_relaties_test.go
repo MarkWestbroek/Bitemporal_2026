@@ -121,6 +121,33 @@ func TestAfgeleideRelatiesNpLoc(t *testing.T) {
 			t.Fatalf("woonadres = %v, verwacht [{id: 2}]", np["woonadres"])
 		}
 	})
+
+	t.Run("GraphQL doelobjecten (lijst)", func(t *testing.T) {
+		q := `{ full_natuurlijk_personen_list(limit: 100) { id woonadres_doelen { id weergaveadres adressen { straatnaam } } } }`
+		b, _ := json.Marshal(map[string]string{"query": q})
+		status, body, raw := o.met(t).do("POST", "/graphql/query", b)
+		if status != 200 || body["errors"] != nil {
+			t.Fatalf("status %d: %s", status, kort(raw))
+		}
+		lijst := body["data"].(map[string]any)["full_natuurlijk_personen_list"].([]any)
+		gezien := 0
+		for _, el := range lijst {
+			np := el.(map[string]any)
+			doelen, _ := np["woonadres_doelen"].([]any)
+			if len(doelen) == 0 {
+				continue
+			}
+			gezien++
+			loc := doelen[0].(map[string]any)
+			adres, _ := loc["adressen"].(map[string]any)
+			if loc["id"] != np["id"] || loc["weergaveadres"] == nil || adres == nil || adres["straatnaam"] == nil {
+				t.Errorf("NP %v: woonadres_doelen[0] = %v, verwacht Locatie %v met weergavenaam en adres", np["id"], loc, np["id"])
+			}
+		}
+		if gezien < 5 {
+			t.Fatalf("verwacht ≥5 personen met een woonadres-doel, kreeg %d", gezien)
+		}
+	})
 }
 
 func sleutels(m map[string]any) string {

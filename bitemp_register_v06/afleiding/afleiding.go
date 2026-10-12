@@ -88,6 +88,13 @@ func (o *Omgeving) VoegToe(typenaam string, id int, m map[string]any) {
 	o.geladen[sleutel{typenaam, id}] = m
 }
 
+// Geladen geeft de entiteit-map die de omgeving voor (typenaam, id) geladen heeft, of nil.
+// Na BerekenAfgeleideRelaties zijn alle doelen geladen (voor hun weergavenaam), op het
+// peilmoment van de lader; GraphQL gebruikt dit voor de volledige doelobjecten.
+func (o *Omgeving) Geladen(typenaam string, id int) map[string]any {
+	return o.geladen[sleutel{typenaam, id}]
+}
+
 // Entiteit geeft het Object voor een entiteit-map (de wortel van een evaluatie).
 func (o *Omgeving) Entiteit(meta model.TypeMeta, m map[string]any) *Entiteit {
 	return &Entiteit{omg: o, meta: meta, m: m}
