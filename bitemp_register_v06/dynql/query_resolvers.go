@@ -13,6 +13,7 @@ import (
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/afleiding"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
 	"github.com/graphql-go/graphql"
 	"github.com/uptrace/bun"
 )
@@ -27,6 +28,9 @@ func InitDB(database *bun.DB) {
 
 // makeFullEntityResolver maakt een resolver voor een volledige entiteit met geneste GE's/relaties.
 // Equivalent van handlers.MakeGetFullEntityByMetaHandler.
+// errGeenToegang: het actieve toegangsbeleid staat het subject niets van dit type toe.
+var errGeenToegang = fmt.Errorf("geen toegang volgens het actieve toegangsbeleid")
+
 func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
 		if db == nil {
@@ -79,6 +83,19 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		verrijkWeergavenamen(p.Context, flat, meta)
 		verrijkEigenAfgeleideVelden(flat, meta)
 		voegAfgeleideRelatiesToe(p.Context, p, []map[string]interface{}{flat}, meta, peil)
+		// Toegangsbeleid (fase 1b): als laatste snoeien, zodat ook afgeleide velden en
+		// relaties onder het beleid vallen. Na het flatten zijn de paden dezelfde als in REST
+		// (alleen het data-niveau is al weg).
+		if bundel := pep.Actief(); bundel != nil {
+			gesnoeid, magType, zichtbaar := pep.FilterMapCtx(p.Context, bundel, meta, flat)
+			if !magType {
+				return nil, errGeenToegang
+			}
+			if !zichtbaar {
+				return nil, nil
+			}
+			flat = gesnoeid
+		}
 		return flat, nil
 	}
 }
@@ -134,7 +151,11 @@ func lijstQuery(p graphql.ResolveParams, meta model.TypeMeta, entities interface
 
 	moment := actueelOfPeil(peil)
 	query := applyFormeleTijdFilter(db.NewSelect().Model(entities), meta.Typenaam, moment)
-	query, err := pasFilterToe(query, meta, p.Args["filter"], &moment)
+	var mag func(string) bool
+	if bundel := pep.Actief(); bundel != nil {
+		mag = func(pad string) bool { return pep.MagPadCtx(p.Context, bundel, pad) }
+	}
+	query, err := pasFilterToeMetToegang(query, meta, p.Args["filter"], &moment, mag)
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +184,18 @@ func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			return nil, fmt.Errorf("lijst query fout voor %s: %v", meta.Typenaam, err)
 		}
 
-		return sliceToMaps(entities, meta)
+		maps, err := sliceToMaps(entities, meta)
+		if err != nil {
+			return nil, err
+		}
+		if bundel := pep.Actief(); bundel != nil {
+			gefilterd, magType := pep.FilterMapsCtx(p.Context, bundel, meta, maps)
+			if !magType {
+				return nil, errGeenToegang
+			}
+			maps = gefilterd
+		}
+		return maps, nil
 	}
 }
 
@@ -211,6 +243,14 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			maps[i] = flat
 		}
 		voegAfgeleideRelatiesToe(p.Context, p, maps, meta, moment)
+		// Toegangsbeleid (fase 1b): als laatste, zie makeFullEntityResolver.
+		if bundel := pep.Actief(); bundel != nil {
+			gefilterd, magType := pep.FilterMapsCtx(p.Context, bundel, meta, maps)
+			if !magType {
+				return nil, errGeenToegang
+			}
+			maps = gefilterd
+		}
 		return maps, nil
 	}
 }
@@ -385,6 +425,14 @@ func makeReverseRelationResolver(rev ReverseRelationInfo) graphql.FieldResolveFn
 			verrijkWeergavenamen(p.Context, flat, bronMeta)
 			results[i] = flat
 		}
+		// Toegangsbeleid (fase 1b): als laatste, met het type van de bron-entiteiten.
+		if bundel := pep.Actief(); bundel != nil {
+			gefilterd, magType := pep.FilterMapsCtx(p.Context, bundel, bronMeta, results)
+			if !magType {
+				return []map[string]interface{}{}, nil // het subject mag van dat type niets zien
+			}
+			results = gefilterd
+		}
 		return results, nil
 	}
 }
@@ -447,6 +495,14 @@ func makeForwardRelationResolver(fwd ForwardRelationInfo) graphql.FieldResolveFn
 		}
 		flat := flattenEntityMap(result, doelMeta)
 		verrijkWeergavenamen(p.Context, flat, doelMeta)
+		// Toegangsbeleid (fase 1b): als laatste, met het type van de doel-entiteit.
+		if bundel := pep.Actief(); bundel != nil {
+			gesnoeid, magType, zichtbaar := pep.FilterMapCtx(p.Context, bundel, doelMeta, flat)
+			if !magType || !zichtbaar {
+				return nil, nil
+			}
+			flat = gesnoeid
+		}
 		return flat, nil
 	}
 }

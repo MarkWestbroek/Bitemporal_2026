@@ -420,3 +420,34 @@ func tekst(x any) string {
 	}
 	return fmt.Sprint(x)
 }
+
+// KanIetsZien beantwoordt grof, vóór het lezen: kan dit subject met deze handeling
+// mogelijk iets zien onder registerpad prefix (een entiteit of een GE-pad)? Waar dat
+// zeker niet zo is, kan de PEP het verzoek in zijn geheel weigeren (403) in plaats van een
+// lege of gesnoeide lijst te geven. Voorwaarden tellen als "misschien": daarover beslist
+// pas de evaluatie per record.
+func (b *Bundel) KanIetsZien(s Subject, handeling, prefix string, peilmoment time.Time) bool {
+	if peilmoment.IsZero() {
+		peilmoment = time.Now()
+	}
+	if !b.isGeldigOp(peilmoment.Format("2006-01-02")) {
+		return false
+	}
+	if b.Standaard == "toestaan" {
+		return true
+	}
+	for i := range b.Regels {
+		r := &b.Regels[i]
+		if r.Effect != "toestaan" || r.Handeling != handeling || !subjectVoldoet(r.Subject, s) {
+			continue
+		}
+		for _, g := range r.Gegevens {
+			// De regel dekt iets onder prefix, of prefix ligt onder het gedekte pad.
+			if g.Pad == "*" || g.Pad == prefix ||
+				strings.HasPrefix(g.Pad, prefix+".") || strings.HasPrefix(prefix, g.Pad+".") {
+				return true
+			}
+		}
+	}
+	return false
+}

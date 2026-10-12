@@ -6,6 +6,7 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
 	"github.com/gin-gonic/gin"
 )
 
@@ -90,6 +91,9 @@ func AddRoutes(router *gin.Engine) {
 	// Lezen van registerdata: open, of achter minimaal "viewer" als LEESTOEGANG=documenten
 	// (middleware/leestoegang.go). Per type beslist lezer(meta) in addroutes_helper.go.
 	lees := middleware.RequireLezer()
+	// Met een actief toegangsbeleid (TOEGANG_BUNDEL) zijn plumbing en bestanden alleen voor
+	// ingelogde gebruikers; zonder beleid een no-op (pep.PlumbingLezer).
+	plumbing := pep.PlumbingLezer()
 
 	//Add Tests routes to router
 	router.GET("/tests", lees, handlers.GetTests)
@@ -111,18 +115,18 @@ func AddRoutes(router *gin.Engine) {
 	// POST /registraties en POST /wijzigingen zijn verwijderd (BE-review §3.5):
 	// clients konden er audit-records mee aanmaken of vervalsen. Registraties
 	// ontstaan uitsluitend via POST /registratie/ (RegistreerCore).
-	router.GET("/registraties", lees, handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
-	router.GET("/registraties/:id", lees, handlers.MakeGetEntityHandler[model.Registratie]("Registratie"))
+	router.GET("/registraties", lees, plumbing, handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
+	router.GET("/registraties/:id", lees, plumbing, handlers.MakeGetEntityHandler[model.Registratie]("Registratie"))
 	router.PATCH("/registraties/:id", editor, handlers.PatchRegistratie())
 
 	// Wijziging routes (read-only)
-	router.GET("/wijzigingen", lees, handlers.MakeGetEntitiesHandler[model.Wijziging]("Wijzigingen"))
-	router.GET("/wijzigingen/:id", lees, handlers.MakeGetEntityHandler[model.Wijziging]("Wijziging"))
+	router.GET("/wijzigingen", lees, plumbing, handlers.MakeGetEntitiesHandler[model.Wijziging]("Wijzigingen"))
+	router.GET("/wijzigingen/:id", lees, plumbing, handlers.MakeGetEntityHandler[model.Wijziging]("Wijziging"))
 
 	// Get registratie met onderliggende wijzigingen (geen generieke handler gebruikt,
 	// omdat dit een specifiek afhandeling vroeg, en bovendien toch plumbing is)
-	router.GET("/full/registraties", lees, handlers.MakeGetRegistratiesMetWijzigingenHandler())
-	router.GET("/full/registraties/:id", lees, handlers.MakeGetRegistratieMetWijzigingenByIDHandler())
+	router.GET("/full/registraties", lees, plumbing, handlers.MakeGetRegistratiesMetWijzigingenHandler())
+	router.GET("/full/registraties/:id", lees, plumbing, handlers.MakeGetRegistratieMetWijzigingenByIDHandler())
 
 	/*
 		=== BELANGRIJKSTE BITEMPORELE REGISTRATIE ENDPOINT ===
@@ -137,8 +141,8 @@ func AddRoutes(router *gin.Engine) {
 
 	// Bestanden (IdeBestand) — upload, download en preview routes
 	router.POST("/api/bestanden/upload", editor, handlers.MaakUploadBestandHandler())
-	router.GET("/api/bestanden/:id/download", lees, handlers.MaakDownloadBestandHandler())
-	router.GET("/api/bestanden/:id/preview", lees, handlers.MaakPreviewBestandHandler())
+	router.GET("/api/bestanden/:id/download", lees, plumbing, handlers.MaakDownloadBestandHandler())
+	router.GET("/api/bestanden/:id/preview", lees, plumbing, handlers.MaakPreviewBestandHandler())
 
 	/* IDEE
 	Idee voor een generieke registratie/correctie/ongedaanmaking route,

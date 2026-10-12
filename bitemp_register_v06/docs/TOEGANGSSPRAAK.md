@@ -186,7 +186,12 @@ Toegangsspraak maar evalueert de bundel. ODRL blijft het uitwisselformaat.
 
 Tests: `node --test src/toegangsspraak/bundel.test.js` (compiler; `BIJWERKEN=1` schrijft de
 bundels opnieuw) en `go test ./toegang/` (24 vectoren + benchmark, ± 0,4 µs per veldbeslissing).
-Nog niet: PEP op het leespad (fase 1b) en de bundel als bitemporeel register (fase 1c).
+**PEP op het leespad (fase 1b):** met `TOEGANG_BUNDEL=<bundel.json>` snoeit de API de
+antwoorden van `/full`, de platte routes en GraphQL per veld (package `pep/`; zie
+`docs/AUTH_DEVELOPER_GUIDE.md` §TOEGANG_BUNDEL). Beleidspaden = de veldpaden van de Studio; in
+een `/full`-antwoord valt het Hub+_Data-niveau `data` weg en zijn technische sleutels (`id`,
+`opvoer`, `afvoer`, `rel_id`, `versie`, `*_id`) geen beleidspad. Nog niet: de bundel als
+bitemporeel register en publiceren vanuit de Studio (fase 1c), het schrijfpad (fase 2).
 
 ### Studio-activiteit — `web/vite/src/studio/activities/toegangActivity.jsx`
 

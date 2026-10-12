@@ -12,6 +12,7 @@ import (
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/afleiding"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
 	"github.com/gin-gonic/gin"
 	"github.com/uptrace/bun"
 )
@@ -1328,6 +1329,21 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		// Verrijk relatie-items met weergavenamen van doelentiteiten
 		responseEntities, _ = verrijkResponseMetWeergavenamen(c, responseEntities, meta)
 
+		// Toegangsbeleid (fase 1b): per record snoeien tot wat het subject mag bekijken.
+		if bundel := pep.Actief(); bundel != nil {
+			gefilterd, magType, err := pep.FilterLijst(c, bundel, meta, responseEntities)
+			if err != nil {
+				interneFout(c, "kon antwoord niet filteren op toegangsbeleid", err)
+				return
+			}
+			if !magType {
+				pep.Weiger(c)
+				return
+			}
+			// total_count/has_more tellen vóór het filteren (bekende beperking, fase 1b).
+			responseEntities = gefilterd
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			responseCollectionKey(meta): responseEntities,
 			"page":                      page,
@@ -1413,6 +1429,24 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 
 		// Verrijk relatie-items met weergavenamen van doelentiteiten
 		responseEntity, _ = verrijkResponseMetWeergavenamen(c, responseEntity, meta)
+
+		// Toegangsbeleid (fase 1b).
+		if bundel := pep.Actief(); bundel != nil {
+			uit, magType, zichtbaar, err := pep.FilterEen(c, bundel, meta, responseEntity)
+			if err != nil {
+				interneFout(c, "kon antwoord niet filteren op toegangsbeleid", err)
+				return
+			}
+			if !magType {
+				pep.Weiger(c)
+				return
+			}
+			if !zichtbaar {
+				c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " not found"})
+				return
+			}
+			responseEntity = uit
+		}
 
 		c.JSON(http.StatusOK, responseEntity)
 	}

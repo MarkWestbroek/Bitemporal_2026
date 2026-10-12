@@ -142,7 +142,19 @@ Uitvoering in drie stappen per verzoek (fasering uit §9 van de analyse van 30-0
   (ontbreken = leeg, dus onwaar); gegevens van de betrokkene blijven onbepaald zolang de PDP ze
   niet kent. Benchmark ± 0,4 µs per veldbeslissing. Zie `docs/TOEGANGSSPRAAK.md` §Uitvoeren.
 - **1b** — PEP op het leespad (`/full`, GE-routes, GraphQL, generieke paden), achter een
-  schakelaar, met de bundel uit een bestand.
+  schakelaar, met de bundel uit een bestand. **Gebouwd 12/13-10** (zelfde branch): package
+  `pep/` (`TOEGANG_BUNDEL`, subject uit claims met rolhiërarchie, snoeier op JSON-paden,
+  `Prefix` per type via de MetaRegistry — alle 311 typen eenduidig), aangesloten op `/full`,
+  platte routes (incl. `q`/`filter.`/`sort` als zijkanaal dicht), GraphQL (als laatste stap,
+  ook filterargument) en plumbing/bestanden (alleen ingelogd). Getest met unit-tests, sqlmock
+  door de echte handlers, en een echte lokale `/full`-respons (alleen-lezen) met drie bundels.
+  **Bekende beperkingen:** (1) `total_count`/`has_more` tellen vóór het filteren; (2)
+  voorwaarden over gegevens buiten het record (doorkijk via een relatie, bv. de wijk van de
+  woonlocatie) zijn onbepaald → fail-closed; (3) een record met alleen technische velden is
+  zichtbaar als het subject van het type iets mag zien; (4) plumbing per veld/wijziging nog
+  niet (nu: ingelogd); (5) met `AUTH_ENABLED=false` is iedereen anoniem; (6) nog niet
+  end-to-end tegen een draaiende API met database getest (bewust geen tweede instantie op de
+  ontwikkel-DB gestart).
 - **1c** — de bundel als bitemporeel register (domein voor beleid) en publiceren vanuit de Studio.
 
 ## 7. Oorspronkelijke open beslissingen (beantwoord in §5)

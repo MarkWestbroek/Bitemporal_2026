@@ -24,6 +24,7 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/notificaties"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/routes"
 )
 
@@ -182,8 +183,8 @@ func NewRouter() *gin.Engine {
 	router.GET("/api/valideer/functies", handlers.MaakValideerFunctiesHandler())
 	// max-id en secondaire-ids lezen registerdata: achter de leesguard (LEESTOEGANG, zie
 	// middleware/leestoegang.go). Schema en reflijst-opties zijn metadata/naslag en blijven open.
-	router.GET("/api/viz/entiteit/:typenaam/max-id", middleware.RequireLezer(), handlers.MaakVizEntiteitMaxIDHandler())
-	router.GET("/api/viz/relatie/:typenaam/secondaire-ids", middleware.RequireLezer(), handlers.MaakVizRelatieSecondaireIDsHandler())
+	router.GET("/api/viz/entiteit/:typenaam/max-id", middleware.RequireLezer(), pep.PlumbingLezer(), handlers.MaakVizEntiteitMaxIDHandler())
+	router.GET("/api/viz/relatie/:typenaam/secondaire-ids", middleware.RequireLezer(), pep.PlumbingLezer(), handlers.MaakVizRelatieSecondaireIDsHandler())
 	router.GET("/api/viz/reflijst/:typenaam/opties", handlers.MaakVizReflijstOptiesHandler())
 	// WEB_DIR (optioneel): serveer de frontend uit een andere map, bv. de gebouwde frontend van een
 	// andere checkout. Handig voor een test-instantie in een worktree waar de frontend niet gebouwd is.
@@ -203,6 +204,14 @@ func NewRouter() *gin.Engine {
 		}
 	} else {
 		fmt.Println("leestoegang: open — alle GET-routes en GraphQL-queries zijn anoniem leesbaar (zet LEESTOEGANG=documenten om de poort te sluiten)")
+	}
+
+	// Toegangsbeleid (plan 2026-10-12, fase 1b): met TOEGANG_BUNDEL snoeit de PEP de
+	// leesantwoorden per veld volgens een gecompileerd Toegangsspraak-beleid. Een kapotte
+	// bundel stopt de start: stilzwijgend zonder beleid draaien is erger dan niet draaien.
+	if err := pep.Init(); err != nil {
+		fmt.Println("FATAL:", err)
+		os.Exit(1)
 	}
 
 	// Autorisatie (BE-review 2026-07-07, actiepunt 3): muterende routes vereisen

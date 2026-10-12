@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
 	"github.com/gin-gonic/gin"
 )
 
@@ -263,8 +264,13 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 
 		// Optionele zoekterm: als ?q= is opgegeven, doorzoek alle string-kolommen
 		// met ILIKE (case-insensitive). Handig voor combobox/autocomplete in de frontend.
+		bundel := pep.Actief() // toegangsbeleid (fase 1b); nil = PEP uit
 		if q := strings.TrimSpace(c.Query("q")); q != "" {
 			cols := zoekbareKolommen(meta)
+			if bundel != nil {
+				// Zoeken alleen in kolommen die het subject mag bekijken (anders een zijkanaal).
+				cols = pep.ToegestaneKolommen(c, bundel, meta, cols)
+			}
 			if len(cols) > 0 {
 				var orParts []string
 				var orArgs []interface{}
@@ -292,6 +298,10 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("onbekende filterkolom: %s", col)})
 				return
 			}
+			if bundel != nil && !pep.MagKolom(c, bundel, meta, col) {
+				pep.Weiger(c)
+				return
+			}
 			val := strings.TrimSpace(values[0])
 			if val == "" {
 				continue
@@ -311,6 +321,10 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		if sortCol := c.Query("sort"); sortCol != "" {
 			if !allCols[sortCol] || !isVeiligeKolomnaam(sortCol) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("onbekende sorteerkolom: %s", sortCol)})
+				return
+			}
+			if bundel != nil && !pep.MagKolom(c, bundel, meta, sortCol) {
+				pep.Weiger(c)
 				return
 			}
 			order := "ASC"
@@ -338,8 +352,23 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		}
 		hasMore := offset+size < total
 
+		var antwoord any = entities
+		if bundel != nil {
+			gefilterd, magType, err := pep.FilterLijst(c, bundel, meta, entities)
+			if err != nil {
+				interneFout(c, "kon antwoord niet filteren op toegangsbeleid", err)
+				return
+			}
+			if !magType {
+				pep.Weiger(c)
+				return
+			}
+			// total_count/has_more tellen vóór het filteren (bekende beperking, fase 1b).
+			antwoord = gefilterd
+		}
+
 		c.JSON(http.StatusOK, gin.H{
-			responseCollectionKey(meta): entities,
+			responseCollectionKey(meta): antwoord,
 			"page":                      page,
 			"size":                      size,
 			"has_more":                  hasMore,
@@ -378,6 +407,24 @@ func MakeGetEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 
 		if isZeroID(entity.GetID()) {
 			c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " not found"})
+			return
+		}
+
+		if bundel := pep.Actief(); bundel != nil {
+			uit, magType, zichtbaar, err := pep.FilterEen(c, bundel, meta, entity)
+			if err != nil {
+				interneFout(c, "kon antwoord niet filteren op toegangsbeleid", err)
+				return
+			}
+			if !magType {
+				pep.Weiger(c)
+				return
+			}
+			if !zichtbaar {
+				c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " not found"})
+				return
+			}
+			c.JSON(http.StatusOK, uit)
 			return
 		}
 
