@@ -8,6 +8,18 @@
 
 ---
 
+## studio 0.17.0 (2026-10-12) — alleen frontend
+
+Geen backendrelease: api blijft **0.13.0**. De Studio krijgt canvas-fixes (deselecteren, kaders,
+vergroten, aanhechten op toppen, donker thema, slepen uit een domein), afgeleide relaties en de
+UML 2.5.1 Property-kernset, en documenten als Markdown + afbeeldingen. Details:
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md). De backendcommits voor afgeleide relaties
+(berekenen bij lezen, GraphQL-doelobjecten, codegen zonder tabel) staan op main en gaan mee met de
+volgende api-release. Uitrol: alleen de frontend-image op app; pf bouwt api en frontend uit één
+commit en wacht daarom op die api-release.
+
+---
+
 ## Sparx EA ↔ Omnium: api 0.13.0 / studio 0.16.0 (2026-10-10)
 
 Backend (minor, niet brekend; geen databasegevolg):
