@@ -885,7 +885,11 @@ fase 2 een **bewerkbare sandbox**:
   projectboom op het canvas slepen plaatst het; op een **container**
   (systeemkader, package, pool) geplaatst wordt het meteen lid. De
   boomrijen van de elementenlijst gaven de element-referentie niet mee
-  (bug, 2026-10-07) — nu wel.
+  (bug, 2026-10-07) — nu wel. **Kindrijen in de projectboom** (elementen
+  onder een package/V3-domein, GE's onder hun entiteit) waren niet
+  sleepbaar, omdat ze geen eigen plaatsing hebben; sinds 2026-10-12 geven ze
+  alleen de canvas-referentie mee (`ELEMENT_REF_MIME`, geen
+  `PLAATSING_MIME`). Het domeinlidmaatschap blijft ongemoeid.
 - **Eén undo-stap** voor "Kinderen in boomstijl" (store-actie
   `updateElementen`, één `set` voor alle connectoren); **taakbalken**
   starten gestapeld bovenin links i.p.v. verspreid over het canvas, en de

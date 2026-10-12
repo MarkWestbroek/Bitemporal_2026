@@ -1403,14 +1403,20 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
             }}
             onContextMenu={ctx}
             title={`${element.naam || elementId} — ${et?.label || "element"} (${profiel.label}; klik = eigenschappen, nog eens klikken of F2 = hernoemen)`}
-            draggable={!!sleutel}
+            // Ook kinderen in de hiërarchie (elementen onder een package /
+            // V3-domein, GE's onder hun entiteit) zijn sleepbaar naar een
+            // diagram. Ze hebben geen eigen plaatsing, dus alleen de
+            // canvas-referentie gaat mee; het lidmaatschap van het domein blijft
+            // ongemoeid (gemeld 2026-10-12: "ik kan alleen de map op het
+            // diagram plaatsen").
+            draggable
             onDragStart={(e) => {
-              if (!sleutel) return;
-              e.dataTransfer.setData(PLAATSING_MIME, meeTeNemen(sleutel).join("\n"));
-              // Cross-profiel referentie (instantie-van): op een canvas-node
-              // droppen (bv. levenslijn typeren) — zie ELEMENT_REF_MIME.
+              // Verplaatsen binnen de boom alleen voor rijen met een eigen plaatsing.
+              if (sleutel) e.dataTransfer.setData(PLAATSING_MIME, meeTeNemen(sleutel).join("\n"));
+              // Canvas-referentie: plaatsen op een diagram, of cross-profiel op
+              // een canvas-node droppen (bv. levenslijn typeren) — zie ELEMENT_REF_MIME.
               e.dataTransfer.setData(ELEMENT_REF_MIME, JSON.stringify({ profielId: profiel.id, elementId }));
-              e.dataTransfer.effectAllowed = "copyMove";
+              e.dataTransfer.effectAllowed = sleutel ? "copyMove" : "copy";
             }}
           >
             <span className="studio-project__regel-profiel" style={{ color: stijl.kleur || "inherit" }}>
