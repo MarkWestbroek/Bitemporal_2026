@@ -209,7 +209,7 @@ function Showcase() {
       <h1 style={{ margin: "0 0 0.25rem", background: "linear-gradient(90deg, #60a5fa, #6366f1, #22d3ee)", WebkitBackgroundClip: "text", color: "transparent" }}>Vormenbibliotheek</h1>
       <p style={{ marginTop: 0, color: "#475569", maxWidth: 820 }}>
         {aantal} vormen voor {Object.keys(INVOERSOORT).length} invoersoorten. Een vorm verandert nooit de data: onder elke vorm staat wat er
-        werkelijk wordt opgeslagen. Ontwerp: <code>docs/plans/2026-09-26 Invoersoort en vorm (ontwerp).md</code>.
+        werkelijk wordt opgeslagen.
       </p>
       <Matrix />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 560px), 1fr))", gap: 16, marginTop: 16 }}>{kaarten}</div>
