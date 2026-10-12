@@ -61,7 +61,10 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.16.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.17.0`**
+  (2026-10-12: canvas-fixes — deselecteren, kaders, vergroten, aanhechten op toppen, donker thema,
+  slepen uit een domein — afgeleide relaties en UML-Property-kernset; alleen frontend), na
+  **`studio/v0.16.0`**
   (2026-10-10: Sparx EA ↔ Omnium, acht nieuwe profielen, M3-overerving, documenten uit sjablonen),
   na **`studio/v0.15.2`** (2026-10-08: patch — snapshot-grens reist mee), na **`studio/v0.15.1`**
   (2026-10-08: patch — boomvolgorde synct en overleeft de snapshot) en **`studio/v0.15.0`**

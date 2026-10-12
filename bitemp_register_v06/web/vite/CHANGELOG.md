@@ -8,6 +8,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.17.0] — 2026-10-12
+Canvas en modellering na 0.16.0: klik op leeg deselecteert betrouwbaar, kaders laten klikken door,
+vergroten grijpt beter, ovalen en ruiten hechten aan op hun toppen, donker thema leesbaar, en
+elementen onder een domein (V3-package) zijn weer naar een diagram te slepen. Afgeleide relaties en
+de UML 2.5.1 Property-kernset in UML, MIM, canoniek en SysML; documenten als Markdown + afbeeldingen
+(.zip). Alleen frontend: **api blijft 0.13.0**. De register-kant van afgeleide relaties (backend,
+op main sinds 11-10) gaat mee met de volgende api-release; tot dan maakt codegen voor een afgeleide
+relatie nog gewoon een tabel.
+
 ### Opgelost
 - **Elementen onder een package/domein naar een diagram slepen** (12-10, Mark): in de projectboom
   waren alleen rijen met een eigen plaatsing sleepbaar, dus na een V3-import kon je wel het
