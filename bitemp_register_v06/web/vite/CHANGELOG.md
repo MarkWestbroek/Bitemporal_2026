@@ -16,6 +16,20 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   een diagram open is of niet"): een element uit de boom toont zijn eigenschappen ook als er geen
   tab open is, of als de actieve tab een ander profiel heeft. Een klik op het canvas zet de
   selectie in de boom.
+- **Inspector-opmaak zonder open diagram** (12-10, Mark: "het toelichting-veld is heel klein"): de
+  stylesheet van de diagramkern laadde alleen met het canvas mee; zonder diagram stonden de labels
+  erboven en was het tekstvak smal. De element-inspector laadt hem nu zelf. Grote tekstvelden (datatype `tekst`,
+  zoals toelichting en beschrijving) groeien mee met de inhoud, tot ±14 regels; daarboven een
+  schuifbalk. `string` blijft één regel.
+- **Knoppen en labels lekten niet meer groen de Studio in** (12-10, Mark: "soms grijs, soms
+  uitbundig groen"): `shared/schema-viz.css` en `styles/tijdlijn-schema.css` hadden globale regels
+  voor `label`, `input`, `select` en `button` (groen = de tijdlijn-accentkleur). Zodra een van die
+  pagina's in een sessie geladen was, golden ze overal. Nu alleen binnen `.schema-pagina`.
+- **Zoek in projectboom vindt kinderen** (12-10, Mark: "NP zoeken levert het domein op"): een
+  element onder een domein-package of entiteit heeft geen eigen plaatsing; het zoeken klapt nu de
+  voorouders open en laat de rij van het element zelf oplichten.
+- **Canoniek: relaties in de projectboom** (12-10, Mark: "REL is niet in de tree te zien, terwijl
+  het gewoon een speciale GE is"): een relatie staat nu onder zijn bron-entiteit, net als een GE.
 
 ## [studio/v0.17.0] — 2026-10-12
 Canvas en modellering na 0.16.0: klik op leeg deselecteert betrouwbaar, kaders laten klikken door,

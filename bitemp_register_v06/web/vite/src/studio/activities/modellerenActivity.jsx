@@ -517,6 +517,12 @@ export const useModellerenStore = create((set, get) => ({
 
   /** Kort oplichtende boomregel ("Zoek in projectboom"). */
   flitsSleutel: null,
+  /**
+   * Elementen die hun kinderen moeten tonen (elementKey → tijdstempel), zodat
+   * "Zoek in projectboom" een kind onder een domein/entiteit kan bereiken. De
+   * tijdstempel laat een tweede zoekactie de rij opnieuw openklappen.
+   */
+  boomUitklap: {},
   flits: (sleutel) => {
     set({ flitsSleutel: sleutel });
     setTimeout(() => {
@@ -1241,7 +1247,10 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const toggleMulti = useModellerenStore((s) => s.toggleMulti);
   const wisMulti = useModellerenStore((s) => s.wisMulti);
   const inMulti = useModellerenStore((s) => !!sleutel && s.multiSelectie.includes(sleutel));
-  const flitst = useModellerenStore((s) => !!sleutel && s.flitsSleutel === sleutel);
+  const flitst = useModellerenStore(
+    (s) => (!!sleutel && s.flitsSleutel === sleutel) || s.flitsSleutel === "el:" + elementKey(profiel.id, elementId)
+  );
+  const uitklapSignaal = useModellerenStore((s) => s.boomUitklap?.[elementKey(profiel.id, elementId)] || 0);
   const isSelectie = useModellerenStore(
     (s) => !!s.elementSelectie && s.elementSelectie.profielId === profiel.id && s.elementSelectie.elementId === elementId
   );
@@ -1255,6 +1264,10 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
     : null;
   const [dicht, setDicht] = React.useState(null); // null = volg profiel-default
   const [bewerk, setBewerk] = React.useState(false);
+  // "Zoek in projectboom" naar een kind: deze regel klapt open.
+  useEffect(() => {
+    if (uitklapSignaal) setDicht(false);
+  }, [uitklapSignaal]);
   // Inline hernoemen zoals mappen en diagrammen (0.13.0): F2 op de selectie,
   // nog eens klikken op de al geselecteerde regel, dubbelklik, of het contextmenu.
   useHernoemDoel("el:" + elementKey(profiel.id, elementId), () => setBewerk(true));
@@ -1792,7 +1805,8 @@ function Sidebar() {
         const p = getProfieltype(profielId);
         if (!p || !elementId) return;
         const { ouderVan } = bepaalHierarchie(p, p.useStore.getState().elements);
-        const sleutel = elementKey(profielId, topVoorouder(ouderVan, elementId));
+        const topId = topVoorouder(ouderVan, elementId);
+        const sleutel = elementKey(profielId, topId);
         const s = useModellerenStore.getState();
         const mapId = s.plaatsing[sleutel];
         if (!mapId) return; // element woont (nog) niet in een map
@@ -1801,6 +1815,20 @@ function Sidebar() {
         while (cursor) {
           mapOpen[cursor] = true;
           cursor = s.mappen[cursor]?.ouderId || null;
+        }
+        // Een kind (onder een domein-package of entiteit) heeft geen eigen
+        // plaatsing: klap de voorouders open en laat de kindregel zelf
+        // oplichten, niet het domein (gemeld 2026-10-12: "NP zoeken levert het
+        // domein op").
+        if (topId !== elementId) {
+          const nu = Date.now();
+          const boomUitklap = { ...s.boomUitklap };
+          for (let c = ouderVan.get(elementId), i = 0; c && i < 16; c = ouderVan.get(c), i++) {
+            boomUitklap[elementKey(profielId, c)] = nu;
+          }
+          useModellerenStore.setState({ mapOpen, boomUitklap });
+          s.flits("el:" + elementKey(profielId, elementId));
+          return;
         }
         useModellerenStore.setState({ mapOpen });
         s.flits(sleutel);
