@@ -1893,6 +1893,13 @@ function Sidebar() {
         } else if (sl.startsWith("el:")) {
           const [, pid, eid] = sl.slice(3).split("::");
           s.selecteerElement(pid, eid);
+          // Ook de inspector: die volgt de selectie van de actieve tab (zoals
+          // een klik in de boom via selecteer-element). Alleen binnen het
+          // profiel van de actieve tab — pijltjes wisselen geen tabs (gemeld
+          // 2026-10-12: eigenschappen bleven leeg bij pijltjesnavigatie).
+          const actief = s.tabs.find((t) => t.id === s.actieveTab);
+          const profiel = actief?.profielId === pid ? getProfieltype(pid) : null;
+          if (profiel?.menuPrefix) menuBus.emit(`${profiel.menuPrefix}:selecteer-element`, eid);
         }
         regel.scrollIntoView({ block: "nearest" });
       };

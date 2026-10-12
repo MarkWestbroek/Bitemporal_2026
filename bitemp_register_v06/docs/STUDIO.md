@@ -941,7 +941,12 @@ fase 2 een **bewerkbare sandbox**:
   map of springt naar de ouder, → opent een map of gaat naar het eerste
   kind, Enter opent een diagram. Bijvangst: twee mappen die in dezelfde
   milliseconde ontstonden kregen hetzelfde id (`map_<tijd>`), de tweede
-  overschreef de eerste — nu met een teller.
+  overschreef de eerste — nu met een teller. Sinds 2026-10-12 volgt ook de
+  **inspector** een element dat je met de pijltjes kiest (net als bij een
+  klik, via `<menuPrefix>:selecteer-element`), mits het in het profiel van de
+  actieve tab zit; pijltjes wisselen geen tabs. Daarvóór bleef het
+  eigenschappenpaneel bij elementen leeg (mappen en diagrammen hebben een
+  eigen inspector en werkten wel).
 - **Scheiding Mappen/Elementen** is een versleepbare splitter
   (`.studio-project__splitter`); de hoogte van de elementenlijst wordt per
   browser bewaard (`studio05-project-elementen-hoogte`, default 260 px) —
