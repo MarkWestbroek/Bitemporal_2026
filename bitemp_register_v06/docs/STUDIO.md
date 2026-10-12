@@ -946,7 +946,12 @@ fase 2 een **bewerkbare sandbox**:
   klik, via `<menuPrefix>:selecteer-element`), mits het in het profiel van de
   actieve tab zit; pijltjes wisselen geen tabs. Daarvóór bleef het
   eigenschappenpaneel bij elementen leeg (mappen en diagrammen hebben een
-  eigen inspector en werkten wel).
+  eigen inspector en werkten wel). **Ook zonder open diagram** (2026-10-12):
+  zit het geselecteerde element in een ander profiel dan de actieve tab, of
+  is er geen tab, dan toont de inspector het in een eigen Provider van zijn
+  profiel (`LosElementInspector`). Omgekeerd meldt het canvas zijn selectie
+  mét element (`studio:element-geselecteerd`), zodat de boomselectie het
+  canvas volgt en de inspector geen oude boomselectie vasthoudt.
 - **Scheiding Mappen/Elementen** is een versleepbare splitter
   (`.studio-project__splitter`); de hoogte van de elementenlijst wordt per
   browser bewaard (`studio05-project-elementen-hoogte`, default 260 px) —

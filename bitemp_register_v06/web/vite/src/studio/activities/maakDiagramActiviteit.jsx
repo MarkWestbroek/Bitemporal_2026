@@ -358,8 +358,11 @@ export function maakDiagramActiviteit(opties) {
     // Meld element-selecties aan de buitenwereld: de Modelleren-inspector
     // laat dan zijn map-/diagram-eigenschappen los (die wonnen anders van
     // élke element-klik — de inspector leek dood).
+    // Met het element erbij volgt de selectie in de projectboom het canvas
+    // (en houdt de inspector geen element uit de boom vast nadat je op het
+    // canvas iets anders koos — 2026-10-12).
     useEffect(() => {
-      if (selectieId) menuBus.emit("studio:element-geselecteerd");
+      if (selectieId) menuBus.emit("studio:element-geselecteerd", { profielId: id, elementId: selectieId });
     }, [selectieId]);
 
     // Menubalk-acties via de menuBus.
