@@ -15,7 +15,7 @@
  * Editor-contract: component met props
  *   { regel, waarde, onChange, element?, kandidaten? }
  */
-import { useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { getShape, alleShapeIds } from "../shapes/shapeRegistry.js";
 import { TypeIcoon, alleIcoonIds } from "../shapes/typeIconen.jsx";
 
@@ -44,10 +44,25 @@ function StringEditor({ regel, waarde, onChange }) {
   );
 }
 
+/**
+ * Grote tekst (datatype "tekst", tegenover "string" = één regel): groeit mee
+ * met de inhoud (Mark, 12-10: "het toelichting-veld mag meegroeien"),
+ * vanaf 2 regels tot ±14 regels; daarboven een schuifbalk. Met de hand
+ * groter slepen kan nog steeds (resize: vertical) — dat wint tot de inhoud
+ * weer verandert.
+ */
+const TEKST_MAX_HOOGTE = 260;
 function TekstEditor({ waarde, onChange }) {
-  // rows=2: metagegevens-teksten (definitie/toelichting) zijn meestal kort;
-  // de textarea groeit gewoon mee met de schuifbalk.
-  return <textarea rows={2} value={waarde || ""} onChange={(e) => onChange(e.target.value)} />;
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const ta = ref.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    const hoogte = Math.min(ta.scrollHeight + 2, TEKST_MAX_HOOGTE);
+    ta.style.height = `${hoogte}px`;
+    ta.style.overflowY = ta.scrollHeight + 2 > TEKST_MAX_HOOGTE ? "auto" : "hidden";
+  }, [waarde]);
+  return <textarea ref={ref} rows={2} value={waarde || ""} onChange={(e) => onChange(e.target.value)} />;
 }
 
 function BooleanEditor({ regel, waarde, onChange }) {
