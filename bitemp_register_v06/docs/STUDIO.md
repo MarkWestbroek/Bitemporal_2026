@@ -274,6 +274,10 @@ te wijzigen.
 > model-undo), Ctrl-klik-multiselect (boom én elementen-browser, bundel-
 > sleep), contextmenu's met "Verplaats naar ▸", handmatige mapvolgorde,
 > auto-scroll bij slepen en "Zoek in projectboom" vanaf de canvas.
+> Sinds 2026-10-12 vindt "Zoek in projectboom" ook kinderen zonder eigen
+> plaatsing (elementen onder een domein-package, GE's en — in canoniek —
+> relaties onder hun bron-entiteit, via `hooks.hierarchieParen`): de
+> voorouders klappen open (`boomUitklap`) en de kindregel zelf licht op.
 >
 > **Elementregels in de boom (2026-10-07, na 0.13.0):** hernoemen werkt nu
 > ook voor elementen zoals voor mappen en diagrammen (klik = selectie,

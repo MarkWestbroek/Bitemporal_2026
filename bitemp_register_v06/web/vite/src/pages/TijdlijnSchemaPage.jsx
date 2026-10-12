@@ -715,7 +715,7 @@ function normInt(v, fallback = 0) {
         }
 
         return (
-          <div className="container">
+          <div className="container schema-pagina">
             <SchemaTijdlijnHeader schemaError={schemaError} schema={schema} entityTypes={entityTypes} />
 
             <SchemaTijdlijnControls

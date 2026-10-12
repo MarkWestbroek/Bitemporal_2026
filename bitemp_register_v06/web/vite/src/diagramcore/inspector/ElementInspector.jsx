@@ -23,6 +23,10 @@ import {
   getPropertyTypeEditor,
   VerwijzingsKiezer,
 } from "./propertyTypeEditors.jsx";
+// Eigen opmaak, ook zonder open diagram: de stylesheet laadde alleen met de
+// canvas mee, dus zonder diagram vielen de rijen terug op de browser-
+// standaard (smal tekstvak, labels erboven — gemeld 2026-10-12).
+import "../styles/diagramcore.css";
 
 /** Eén property: kiezer bij referenceTypes, anders editor op datatype. */
 function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor, editorContext }) {

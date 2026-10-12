@@ -660,8 +660,14 @@ export const canoniekUmlDiagramType = {
      * alleen nog presentatie-edges met een ruit zónder structurele edge —
      * oudere opgeslagen modellen.
      */
-    hierarchieParen: ({ diagrams }) => {
+    hierarchieParen: ({ diagrams, elements }) => {
       const paren = [];
+      // Een relatie ís een (bijzonder) gegevenselement: in de boom onder zijn
+      // bron-entiteit, net als een GE (gemeld 2026-10-12: "REL is niet in de
+      // tree te zien").
+      for (const el of Object.values(elements || {})) {
+        if (el?.elementType === "relatie" && el.source && el.source !== el.id) paren.push([el.source, el.id]);
+      }
       for (const d of Object.values(diagrams || {})) {
         for (const e of d.edges || []) {
           if (e.data?.presentatie?.markerStart === "ruit") paren.push([e.source, e.target]);
