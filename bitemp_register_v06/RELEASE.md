@@ -8,6 +8,17 @@
 
 ---
 
+## studio 0.18.0 (2026-10-13) — alleen frontend
+
+Geen backendrelease: api blijft **0.13.0**. De Studio krijgt de beschrijving als vaste
+M3-eigenschap (met migratie van `toelichting`/`description`/`notes`), een inspector die ook met de
+pijltjes en zonder open diagram werkt, projectboom-fixes en de export van een beleidsbundel.
+Details: [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md). Op main staan ook backendcommits (afgeleide
+relaties, beleidsbundel en PDP in Go); die gaan mee met de volgende api-release. Uitrol: alleen de
+frontend-image op app.
+
+---
+
 ## studio 0.17.0 (2026-10-12) — alleen frontend
 
 Geen backendrelease: api blijft **0.13.0**. De Studio krijgt canvas-fixes (deselecteren, kaders,

@@ -8,6 +8,29 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.18.0] — 2026-10-13
+Beschrijving als vaste M3-eigenschap van elk element en veld (M3-MOF), eigenschappen die altijd
+zichtbaar zijn (pijltjes in de boom, zonder open diagram, meegroeiende tekstvelden), en
+projectboom-fixes: zoeken vindt elementen onder een domein, relaties staan onder hun entiteit, en
+knoppen kleuren niet meer groen door globale CSS van de schemapagina's. Daarnaast exporteert de
+Toegang-activiteit een beleidsbundel voor de API. Alleen frontend: **api blijft 0.13.0**.
+
+### Toegevoegd
+- **Beschrijving als vaste M3-eigenschap** (12-10, besluit Mark): elk element en elk veld heeft naast
+  zijn naam een **beschrijving** (`data.beschrijving`; UML `Comment::body`, EA Notes), zonder dat een
+  profiel hem declareert — de inspector toont hem vooraan. Notities en notitie-lijnen hebben er geen
+  (een notitie ís een tekst). De profieleigen varianten zijn opgeheven en migreren bij het laden
+  (`DiagramType.oudeBeschrijvingSleutels`): `toelichting` (use case, DMN, de acht EA-profielen),
+  `description` (canoniek; V3 houdt `description`, de adapter vertaalt) en `notes` (EA-import).
+  MIM houdt zijn `definitie` — volgens MIM "de beschrijving van de betekenis" — en markeert die met
+  `betekenis: "beschrijving"`; MIM-`toelichting` en de GEMMA-tags blijven eigen. EA-import (Notes),
+  ArchiMate-import (documentation), Mermaid, DMN-XML, XMI-export en de documentsjablonen
+  (`beschrijving`, met `toelichting` als alias) volgen.
+- **Beleidsbundel exporteren** (12-10, toegangsplan fase 1a): de Toegang-activiteit heeft
+  "Exporteer beleidsbundel voor de API (TOEGANG_BUNDEL)", alleen bij een volledig opgelost beleid;
+  met voorbeeldbeleid `cg-portfolio`. De Go-uitvoerder die de bundel gebruikt, komt met een
+  volgende api-release.
+
 ### Opgelost
 - **Eigenschappen volgen de pijltjes in de projectboom** (12-10, Mark): wie met ↑/↓ door de boom
   liep, zag bij elementen een leeg eigenschappenpaneel (alleen mappen en diagrammen werkten). Nu
@@ -48,16 +71,6 @@ relatie nog gewoon een tabel.
   van het domein blijft ongemoeid.
 
 ### Toegevoegd
-- **Beschrijving als vaste M3-eigenschap** (12-10, besluit Mark): elk element en elk veld heeft naast
-  zijn naam een **beschrijving** (`data.beschrijving`; UML `Comment::body`, EA Notes), zonder dat een
-  profiel hem declareert — de inspector toont hem vooraan. Notities en notitie-lijnen hebben er geen
-  (een notitie ís een tekst). De profieleigen varianten zijn opgeheven en migreren bij het laden
-  (`DiagramType.oudeBeschrijvingSleutels`): `toelichting` (use case, DMN, de acht EA-profielen),
-  `description` (canoniek; V3 houdt `description`, de adapter vertaalt) en `notes` (EA-import).
-  MIM houdt zijn `definitie` — volgens MIM "de beschrijving van de betekenis" — en markeert die met
-  `betekenis: "beschrijving"`; MIM-`toelichting` en de GEMMA-tags blijven eigen. EA-import (Notes),
-  ArchiMate-import (documentation), Mermaid, DMN-XML, XMI-export en de documentsjablonen
-  (`beschrijving`, met `toelichting` als alias) volgen.
 - **Afgeleide relaties: de Studio rekent mee** (11-10, bij de backend van BACKEND-GEN): de
   CEL-evaluator kent **collect** (`ouders.ouders`) en parset strikt, gelijk met de Go-evaluator
   (gedeeld `testdata/cel-pariteit.json`, 60/60). De inspector controleert de afleidingsregel van

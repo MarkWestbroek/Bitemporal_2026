@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.17.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.18.0`**
+  (2026-10-13: beschrijving als vaste M3-eigenschap, inspector altijd bruikbaar, projectboom-fixes,
+  beleidsbundel-export; alleen frontend), na **`studio/v0.17.0`**
   (2026-10-12: canvas-fixes — deselecteren, kaders, vergroten, aanhechten op toppen, donker thema,
   slepen uit een domein — afgeleide relaties en UML-Property-kernset; alleen frontend), na
   **`studio/v0.16.0`**
