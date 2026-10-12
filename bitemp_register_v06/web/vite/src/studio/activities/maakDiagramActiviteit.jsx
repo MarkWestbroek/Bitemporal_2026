@@ -55,6 +55,7 @@ function effectieveLijn(s, connectorId) {
 }
 
 import { hernoemBotsendeIds } from "../../diagramcore/model/hernoemBotsendeIds.js";
+import { migreerBeschrijving } from "../../diagramcore/model/beschrijving.js";
 // Side-effect: registreert de datatypes "element-verwijzing" en
 // "operatie-keuze" (instantie-van-concept) op het core-koppelvlak.
 import "../elementVerwijzing.jsx";
@@ -212,13 +213,19 @@ export function maakDiagramActiviteit(opties) {
   // bewaart de vorm van het moment van inladen. Breng hem bij — direct na het
   // hydrateren én na elke latere laad (project-import, herlaad). Buiten de
   // undo-historie: een migratie is geen gebruikershandeling.
-  if (descriptor.hooks?.migreerModel) {
+  // Plus de generieke M3-migratie van de beschrijving (2026-10-12): oude
+  // profielsleutels (DiagramType.oudeBeschrijvingSleutels) → data.beschrijving.
+  const oudeSleutels = descriptor.oudeBeschrijvingSleutels || [];
+  if (descriptor.hooks?.migreerModel || oudeSleutels.length) {
+    const typeVan = (id) => descriptor.elementTypes.find((et) => et.id === id);
     const migreer = (state) => {
-      const bijgewerkt = descriptor.hooks.migreerModel({
-        elements: state.elements,
+      const elements = migreerBeschrijving(state.elements, oudeSleutels, typeVan);
+      const vanHook = descriptor.hooks?.migreerModel?.({
+        elements: elements || state.elements,
         diagrams: state.diagrams,
         meta: state.meta,
       });
+      const bijgewerkt = vanHook || (elements ? { elements } : null);
       if (!bijgewerkt) return;
       const temporal = useStore.temporal?.getState?.();
       temporal?.pause?.();

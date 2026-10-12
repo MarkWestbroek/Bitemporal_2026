@@ -17,10 +17,10 @@ export const USECASE_NAAR_MERMAID = {
   bron: "usecase",
   doel: "mermaid-flowchart",
   regels: [
-    // ── Elementen; de toelichting wordt een notitie aan een stippellijn ──
-    { naam: "Actor", bij: "knoop", als: { aard: "actor" }, maak: { type: "cirkel", data: { klasse: "actor", notitie: "{eigenschappen.toelichting}" } } },
-    { naam: "Use case", bij: "knoop", als: { aard: "usecase" }, maak: { type: "stadion", data: { klasse: "usecase", notitie: "{eigenschappen.toelichting}" } } },
-    { naam: "Systeemkader", bij: "knoop", als: { aard: "systeem" }, maak: { type: "subgraph", data: { notitie: "{eigenschappen.toelichting}" } } },
+    // ── Elementen; de beschrijving wordt een notitie aan een stippellijn ──
+    { naam: "Actor", bij: "knoop", als: { aard: "actor" }, maak: { type: "cirkel", data: { klasse: "actor", notitie: "{eigenschappen.beschrijving}" } } },
+    { naam: "Use case", bij: "knoop", als: { aard: "usecase" }, maak: { type: "stadion", data: { klasse: "usecase", notitie: "{eigenschappen.beschrijving}" } } },
+    { naam: "Systeemkader", bij: "knoop", als: { aard: "systeem" }, maak: { type: "subgraph", data: { notitie: "{eigenschappen.beschrijving}" } } },
     { naam: "Notitie", bij: "knoop", als: { aard: "notitie" }, maak: { type: "rechthoek", naam: "{eigenschappen.tekst}", data: { klasse: "note" } } },
 
     // ── Relaties ──

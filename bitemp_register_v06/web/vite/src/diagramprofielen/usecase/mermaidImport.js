@@ -112,14 +112,14 @@ export function mermaidNaarUsecaseModel(tekst, { bestaand = {}, elementTypes = [
       const bekend = hergebruik && pe.naam ? opNaam.get(sleutel) : undefined;
       if (bekend) {
         idVan.set(pe.sleutel, bekend);
-        const toelichting = pe.data?.toelichting;
+        const toelichting = pe.data?.beschrijving;
         if (elements[bekend]) {
-          if (toelichting && !elements[bekend].data.toelichting) elements[bekend].data.toelichting = toelichting;
+          if (toelichting && !elements[bekend].data.beschrijving) elements[bekend].data.beschrijving = toelichting;
         } else {
           stats.hergebruikt += 1;
           meld({ severity: "info", code: "UC-HERGEBRUIKT", message: `Bestaand element hergebruikt (${pe.type})`, sourceId: pe.naam, path: null });
-          if (toelichting && !bestaandeElementen[bekend].data?.toelichting && !aanvullingen.some((a) => a.id === bekend)) {
-            aanvullingen.push({ id: bekend, data: { toelichting } });
+          if (toelichting && !bestaandeElementen[bekend].data?.beschrijving && !aanvullingen.some((a) => a.id === bekend)) {
+            aanvullingen.push({ id: bekend, data: { beschrijving: toelichting } });
           }
         }
         continue;

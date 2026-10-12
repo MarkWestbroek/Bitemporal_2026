@@ -297,7 +297,8 @@ export function schrijfXmi(model, { naam = "Omnium", schaal = EA_SCHAAL, exporte
       const ouder = ouderVan.get(el.id);
       const pkg = ouder && elements[ouder]?.elementType === "package" ? pkId(elements[ouder]) : wortelId;
       const stereotype = el.data?.stereotypen?.[0] || MIM_STEREOTYPE[el.elementType] || "";
-      const doc = el.elementType === "notitie" ? el.data?.tekst || "" : el.data?.notes || el.data?.definitie || "";
+      // EA Notes ← de M3-beschrijving (MIM: definitie); een notitie schrijft haar tekst.
+      const doc = el.elementType === "notitie" ? el.data?.tekst || "" : el.data?.beschrijving || el.data?.definitie || el.data?.notes || "";
       const sType = t.replace("uml:", "");
       return (
         `\t\t\t<element xmi:idref="${id}" xmi:type="${t}"${el.naam ? ` name="${esc(el.naam)}"` : ""} scope="public">\n` +

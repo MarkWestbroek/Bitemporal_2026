@@ -48,6 +48,16 @@ relatie nog gewoon een tabel.
   van het domein blijft ongemoeid.
 
 ### Toegevoegd
+- **Beschrijving als vaste M3-eigenschap** (12-10, besluit Mark): elk element en elk veld heeft naast
+  zijn naam een **beschrijving** (`data.beschrijving`; UML `Comment::body`, EA Notes), zonder dat een
+  profiel hem declareert — de inspector toont hem vooraan. Notities en notitie-lijnen hebben er geen
+  (een notitie ís een tekst). De profieleigen varianten zijn opgeheven en migreren bij het laden
+  (`DiagramType.oudeBeschrijvingSleutels`): `toelichting` (use case, DMN, de acht EA-profielen),
+  `description` (canoniek; V3 houdt `description`, de adapter vertaalt) en `notes` (EA-import).
+  MIM houdt zijn `definitie` — volgens MIM "de beschrijving van de betekenis" — en markeert die met
+  `betekenis: "beschrijving"`; MIM-`toelichting` en de GEMMA-tags blijven eigen. EA-import (Notes),
+  ArchiMate-import (documentation), Mermaid, DMN-XML, XMI-export en de documentsjablonen
+  (`beschrijving`, met `toelichting` als alias) volgen.
 - **Afgeleide relaties: de Studio rekent mee** (11-10, bij de backend van BACKEND-GEN): de
   CEL-evaluator kent **collect** (`ouders.ouders`) en parset strikt, gelijk met de Go-evaluator
   (gedeeld `testdata/cel-pariteit.json`, 60/60). De inspector controleert de afleidingsregel van

@@ -23,6 +23,7 @@ import {
   getPropertyTypeEditor,
   VerwijzingsKiezer,
 } from "./propertyTypeEditors.jsx";
+import { metBeschrijving } from "../model/beschrijving.js";
 // Eigen opmaak, ook zonder open diagram: de stylesheet laadde alleen met de
 // canvas mee, dus zonder diagram vielen de rijen terug op de browser-
 // standaard (smal tekstvak, labels erboven — gemeld 2026-10-12).
@@ -78,7 +79,8 @@ function focusNaarRij(plek, rijIndex) {
 }
 
 function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorContext, onChange, onVerwijder, onSchuif, eerste, laatste }) {
-  const regels = fieldType?.properties || [{ key: "naam", datatype: "string" }];
+  // Vaste M3-beschrijving (2026-10-12): elk veld heeft er een, in het detail.
+  const regels = metBeschrijving(fieldType?.properties || [{ key: "naam", datatype: "string" }], fieldType);
   const [detailOpen, setDetailOpen] = useState(false);
   const inline = [];
   const detail = [];
@@ -224,8 +226,9 @@ export default function ElementInspector({
         />
       </div>
 
-      {/* PropertyTypes van het ElementType (tekst, expressie, kleur, …) */}
-      {(elementType?.properties || []).map((regel) => (
+      {/* PropertyTypes van het ElementType (tekst, expressie, kleur, …), met
+          vooraan de vaste M3-beschrijving (diagramcore/model/beschrijving.js). */}
+      {metBeschrijving(elementType?.properties, elementType).map((regel) => (
         <div className="dc-inspector-rij" key={regel.key}>
           <label className="dc-veldlabel">{regel.label || regel.key}</label>
           <PropertyWidget

@@ -325,6 +325,8 @@ const referenceTypes = [
 export const puurUmlDiagramType = {
   id: PUUR_UML_ID,
   label: "Puur UML (klassediagram)",
+  // Beschrijving: wat de EA-import vóór 2026-10-12 als "notes" bewaarde → M3 data.beschrijving.
+  oudeBeschrijvingSleutels: ["notes"],
   // Zelfde StyleType als canoniek-uml: klassieke UML-pastels. Een eigen
   // tokenset is een §8.5b-punt (thema's per StyleType), geen fase 5-blokker.
   style: "uml-klassiek",

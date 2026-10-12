@@ -127,7 +127,6 @@ export function isRefLijstItem(el) {
 }
 
 /** Beschrijving en meervoud: zoals "Details" in de oude IDE voor ENT/GE/REL. */
-const BESCHRIJVING_VELD = { key: "description", label: "beschrijving", datatype: "tekst" };
 const MEERVOUD_VELD = { key: "meervoud", label: "meervoud", datatype: "string", placeholder: "bijv. Personen" };
 const MATERIEEL_VELD = { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" };
 
@@ -150,7 +149,7 @@ const elementTypes = [
     // ze gelijk; de terugreis zet typenaam := naam) en domein = het package
     // waar de entiteit in staat — daarom geen aparte properties.
     // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
-    properties: [BESCHRIJVING_VELD, MEERVOUD_VELD, MATERIEEL_VELD, KLEUR_VELD],
+    properties: [MEERVOUD_VELD, MATERIEEL_VELD, KLEUR_VELD],
     // Afgeleid boven de gewone velden (Mark, 10-10): voor ENT, GE en relatie,
     // ook in een opgenomen GE (opname.js volgt deze volgorde).
     compartments: [
@@ -640,6 +639,8 @@ const referenceResolvers = {
 export const canoniekUmlDiagramType = {
   id: CANONIEK_UML_ID,
   label: "Canoniek datamodel",
+  // Beschrijving: vóór 2026-10-12 het profielveld "description" (de V3-naam) → M3 data.beschrijving; de adapter vertaalt naar V3 `description`.
+  oudeBeschrijvingSleutels: ["description"],
   style: "uml-klassiek",
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
   // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.

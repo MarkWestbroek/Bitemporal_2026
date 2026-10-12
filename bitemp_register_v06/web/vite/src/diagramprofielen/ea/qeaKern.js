@@ -276,7 +276,7 @@ export function maakConnectorElement(h, c, vertaald) {
     compartimenten: [],
     data: {
       ...extraData(h, c.ea_guid, null),
-      ...(c.Notes ? { notes: c.Notes } : {}),
+      ...(c.Notes ? { beschrijving: c.Notes } : {}), // EA Notes = de M3-beschrijving
       ...vertaald.data,
     },
   };

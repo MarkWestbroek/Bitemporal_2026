@@ -13,7 +13,7 @@
  * abstracte `wsdlElement` als bereik voor dependency/notitielijn.
  * Elementtype-id's zijn een contract met de EA-lezer: nooit wijzigen.
  */
-import { TOELICHTING_VELD, KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
+import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
 
 export const WSDL_ID = "wsdl";
 
@@ -79,7 +79,6 @@ export const elementTypes = [
     properties: [
       { key: "targetNamespace", label: "targetNamespace", datatype: "string" },
       { key: "prefix", label: "prefix", datatype: "string" },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -89,7 +88,7 @@ export const elementTypes = [
     label: "WSDL-onderdeel",
     isAbstract: true,
     shape: "class-box",
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
   },
   {
     id: "service",
@@ -252,6 +251,9 @@ export const elementTypes = [
 export const wsdlDiagramType = {
   id: WSDL_ID,
   label: "WSDL",
+  // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
+  // "notes"); bij het laden migreert die naar data.beschrijving (M3).
+  oudeBeschrijvingSleutels: ["toelichting", "notes"],
   style: "uml-klassiek",
   randAanhechting: "zwevend",
   hierarchie: "bevat",

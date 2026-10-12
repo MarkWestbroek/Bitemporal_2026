@@ -108,3 +108,10 @@ test("lijn-op-lijn: connection overgeslagen, relatie node-op-node en níet verbo
   // hide-list, anders zou een geldige GEMMA-lijn stilletjes verdwijnen.
   assert.ok(!(diagram.verborgenConnectoren || []).includes("amx:test:assoc"));
 });
+
+test("ArchiMate documentation wordt de M3-beschrijving, in de gekozen taal", () => {
+  const props = converteer("properties-en-stijl.xml");
+  const zaak = Object.values(props.elements).find((e) => e.naam === "Zaak");
+  assert.equal(zaak.data.beschrijving, "Zaakgegevens");
+  assert.ok(zaak.data.exchange.documentation.length, "de meertalige bron blijft bewaard");
+});

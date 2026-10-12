@@ -9,7 +9,7 @@
  *   { map: {naam, omschrijving}, titel, omschrijving, diepte, kop,
  *     kinderen:   [ …submappen in dezelfde vorm, diepte + 1… ],
  *     profielen:  [{ id, label, elementen, diagrammen, verbindingen }],
- *     elementen:  [{ id, naam, type:{id,label}, data, toelichting, velden, diagrammen, verbindingen, profiel }],
+ *     elementen:  [{ id, naam, type:{id,label}, data, beschrijving (toelichting = alias), velden, diagrammen, verbindingen, profiel }],
  *     diagrammen: [{ id, naam, type, beschrijving, elementen, aantal, svg(), profiel }],
  *     verbindingen: [{ id, naam, type:{id,label}, bron, doel, profiel }] }
  *
@@ -65,6 +65,7 @@ export function maakDocumentContext({ naam, omschrijving = "", profielen = [], s
             compartiment: c.compartmentType || "",
             fieldType: v.fieldType || "",
             type: v.data?.typeLabel || "",
+            beschrijving: v.data?.beschrijving || v.data?.definitie || "",
             data: v.data || {},
           });
         }
@@ -74,7 +75,10 @@ export function maakDocumentContext({ naam, omschrijving = "", profielen = [], s
         naam: naamOf(el),
         type,
         data,
-        toelichting: data.toelichting || data.beschrijving || data.omschrijving || "",
+        // De M3-beschrijving (2026-10-12); MIM bewaart hem als definitie.
+        // `toelichting` blijft als alias voor bestaande sjablonen.
+        beschrijving: data.beschrijving || data.definitie || data.toelichting || data.description || "",
+        toelichting: data.beschrijving || data.definitie || data.toelichting || data.description || "",
         velden,
         diagrammen: [],
         verbindingen: [],

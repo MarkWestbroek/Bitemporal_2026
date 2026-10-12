@@ -168,6 +168,11 @@ export function qeaNaarMim(bron, { packageId, diagramTypeId = MIM_DIAGRAMTYPE, s
       continue;
     }
     const el = maakConnectorElement(h, c, vertaald);
+    // MIM: EA Notes van een relatie zijn haar definitie (= de beschrijving).
+    if (el.data.beschrijving !== undefined) {
+      if (!el.data.definitie) el.data.definitie = el.data.beschrijving;
+      delete el.data.beschrijving;
+    }
     idVanConnector.set(c.Connector_ID, el.id);
     elements[el.id] = el;
     verslag.connectoren += 1;

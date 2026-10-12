@@ -145,6 +145,11 @@ richting van plan §8.5: Definitie = data, Implementatie = code op id.
    recursiegrens uit het canonieke metamodel (bron/doel zijn nooit zelf een
    REL) — in MOF-termen een OCL-constraint op de associaties bron/doel, geen
    generalisatieregel.
+1b. **Beschrijving (gerealiseerd 2026-10-12):** UML/EMOF `Element::ownedComment` →
+   `Comment::body` (EA Notes) is in het M3 de vaste eigenschap `data.beschrijving` van elk element
+   en veld (`diagramcore/model/beschrijving.js`); een profiel kan een eigen eigenschap als
+   beschrijving aanwijzen (`PropertyType.betekenis: "beschrijving"`, MIM `definitie`). Notities zijn
+   geen beschrijving maar zelfstandige Comments (plakkers).
 2. **`Tag` als expliciet M3-begrip** i.p.v. het ongetypeerde `data{}`: in het
    modelregister wordt dat `Element_Eigenschap` (sleutel, waarde) — MOF-conform
    zonder meer.

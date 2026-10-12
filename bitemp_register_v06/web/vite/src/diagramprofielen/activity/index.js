@@ -258,6 +258,8 @@ const elementTypes = [
 export const activityDiagramType = {
   id: ACTIVITY_ID,
   label: "Activity",
+  // Beschrijving: wat de EA-import vóór 2026-10-12 als "notes" bewaarde → M3 data.beschrijving.
+  oudeBeschrijvingSleutels: ["notes"],
   style: "uml-klassiek",
   // Lijnen hechten aan de echte omtrek (ruit, stip: `omtrek` per type) in
   // plaats van aan vier handles — zoals EA; nodig voor geïmporteerde

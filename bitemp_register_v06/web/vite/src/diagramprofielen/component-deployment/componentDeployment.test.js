@@ -26,7 +26,9 @@ test("overerving: device/executieomgeving erven shape, container en compartiment
   assert.equal(device.shape, "cd-node");
   assert.equal(device.containerVoor, "bevat");
   assert.deepEqual(device.compartments.map((c) => c.id), ["eigenschappen"]);
-  assert.ok(device.properties.some((p) => p.key === "toelichting"));
+  // De beschrijving levert het M3 zelf (geen profielveld meer, 2026-10-12).
+  assert.ok(device.properties.some((p) => p.key === "kleur"));
+  assert.deepEqual(componentDeploymentDiagramType.oudeBeschrijvingSleutels, ["toelichting", "notes"]);
   assert.equal(et(dt, "deploymentspec").icoon, "cd-artifact");
 });
 

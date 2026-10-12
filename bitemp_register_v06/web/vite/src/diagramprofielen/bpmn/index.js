@@ -395,6 +395,8 @@ const elementTypes = [
 export const bpmnMotorDiagramType = {
   id: BPMN_ID,
   label: "BPMN",
+  // Beschrijving: wat de EA-import vóór 2026-10-12 als "notes" bewaarde → M3 data.beschrijving.
+  oudeBeschrijvingSleutels: ["notes"],
   style: "uml-klassiek",
   fieldTypes: [],
   elementTypes,

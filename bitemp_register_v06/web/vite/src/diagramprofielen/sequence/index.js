@@ -166,6 +166,8 @@ const elementTypes = [
 export const sequenceDiagramType = {
   id: SEQUENCE_ID,
   label: "Sequence",
+  // Beschrijving: wat de EA-import vóór 2026-10-12 als "notes" bewaarde → M3 data.beschrijving.
+  oudeBeschrijvingSleutels: ["notes"],
   style: "uml-klassiek",
   typeWeergave: "geen",
   fieldTypes: [],

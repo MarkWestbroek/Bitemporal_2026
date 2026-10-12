@@ -14,7 +14,7 @@
  * «supply» één regel is: resource → proces), `pakket` als container.
  * Elementtype-id's zijn een contract met de EA-lezer: nooit wijzigen.
  */
-import { TOELICHTING_VELD, KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
+import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
 
 export const BUSINESS_ID = "business";
 
@@ -64,7 +64,6 @@ export const elementTypes = [
     containerVoor: "bevat",
     properties: [
       { key: "eigenaar", label: "eigenaar", datatype: "string" },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -79,7 +78,6 @@ export const elementTypes = [
     kleur: "#fef9c3",
     properties: [
       { key: "meetbaar", label: "meetbaar als", datatype: "string", placeholder: "bijv. doorlooptijd < 5 dagen" },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -93,7 +91,6 @@ export const elementTypes = [
     kleur: "#dcfce7",
     properties: [
       { key: "hoeveelheid", label: "hoeveelheid / capaciteit", datatype: "string" },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -136,7 +133,7 @@ export const elementTypes = [
     icoon: "ep-event",
     shape: "ep-event",
     kleur: "#fef3c7",
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
   },
   {
     id: "bedrijfsobject",
@@ -147,7 +144,7 @@ export const elementTypes = [
     icoon: "ep-object",
     shape: "class-box",
     kleur: "#f5f3ff",
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
   },
   {
     id: "actor",
@@ -157,7 +154,7 @@ export const elementTypes = [
     icoon: "ep-actor",
     shape: "uc-actor",
     resizebaar: false,
-    properties: [TOELICHTING_VELD],
+    properties: [],
   },
   pakket(),
   NOTITIE,
@@ -244,6 +241,9 @@ export const elementTypes = [
 export const businessDiagramType = {
   id: BUSINESS_ID,
   label: "Business (Eriksson-Penker)",
+  // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
+  // "notes"); bij het laden migreert die naar data.beschrijving (M3).
+  oudeBeschrijvingSleutels: ["toelichting", "notes"],
   style: "uml-klassiek",
   randAanhechting: "zwevend",
   hierarchie: "bevat",

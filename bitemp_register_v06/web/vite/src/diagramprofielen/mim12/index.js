@@ -47,7 +47,10 @@ const TYPE_REFS = ["mim-primitief", "mim-datatype", "mim-waardelijst"];
 const MIM_BASIS = [
   { key: "alias", label: "alias", datatype: "string" },
   { key: "begrip", label: "begrip (URI)", datatype: "string" },
-  { key: "definitie", label: "definitie", datatype: "tekst" },
+  // MIM 1.2 §2.4.3.5: definitie = "de beschrijving van de betekenis van dit
+  // modelelement" — dus de M3-beschrijving (EA: het Notes-veld). De motor voegt
+  // dan geen eigen beschrijving toe. Toelichting blijft een MIM-eigen aanvulling.
+  { key: "definitie", label: "definitie", datatype: "tekst", betekenis: "beschrijving" },
   { key: "toelichting", label: "toelichting", datatype: "tekst" },
   { key: "herkomst", label: "herkomst", datatype: "string" },
   { key: "datumOpname", label: "datum opname", datatype: "string" },
@@ -61,7 +64,7 @@ const ATTRIBUUTSOORT_VELDEN = [
   { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
   // UML-notatie (2026-10-10): kardinaliteit als [0..1], identificerend als {id}.
   { key: "kardinaliteit", label: "kardinaliteit", datatype: "string", betekenis: "kardinaliteit" },
-  { key: "definitie", label: "definitie", datatype: "tekst" },
+  { key: "definitie", label: "definitie", datatype: "tekst", betekenis: "beschrijving" },
   { key: "authentiek", label: "authentiek", datatype: "string" },
   { key: "indicatieMaterieleHistorie", label: "materiële historie", datatype: "boolean" },
   { key: "indicatieFormeleHistorie", label: "formele historie", datatype: "boolean" },
@@ -255,7 +258,7 @@ const elementTypes = [
     properties: [
       KLEUR_VELD,
       { key: "soort", label: "soort (informatiemodel/domein/extern/view)", datatype: "string" },
-      { key: "definitie", label: "definitie", datatype: "tekst" },
+      { key: "definitie", label: "definitie", datatype: "tekst", betekenis: "beschrijving" },
       { key: "mimVersie", label: "MIM-versie (informatiemodel)", datatype: "string" },
       { key: "relatiemodelleringstype", label: "relatiemodelleringstype (soort/rol leidend)", datatype: "string" },
     ],

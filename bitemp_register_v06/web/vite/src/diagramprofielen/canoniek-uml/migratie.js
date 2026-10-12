@@ -66,9 +66,11 @@ export function vouwOudeComposities(state, elementTypes = []) {
     const d = el.data || {};
     const bron = d.bron || {};
     const ontbrekend = velden.filter((k) => !(k in d) && bron[k]);
-    if (!ontbrekend.length) continue;
+    // De M3-beschrijving komt uit V3 `description` (2026-10-12).
+    const beschrijving = !("beschrijving" in d) && bron.description ? { beschrijving: bron.description } : null;
+    if (!ontbrekend.length && !beschrijving) continue;
     aangevuld = aangevuld || { ...elements };
-    aangevuld[el.id] = { ...el, data: { ...d, ...Object.fromEntries(ontbrekend.map((k) => [k, bron[k]])) } };
+    aangevuld[el.id] = { ...el, data: { ...d, ...Object.fromEntries(ontbrekend.map((k) => [k, bron[k]])), ...beschrijving } };
   }
   if (!oudeEdges.length && meta.compositiesGevouwen) {
     return aangevuld ? { elements: aangevuld, diagrams, meta } : null;

@@ -110,7 +110,7 @@ test("vult GE-velden (typenaam, beschrijving, meervoud, labels) aan uit data.bro
   };
   const r = vouw(s);
   assert.equal(r.elements.Y.data.typenaam, "B_Y");
-  assert.equal(r.elements.Y.data.description, "Uitleg");
+  assert.equal(r.elements.Y.data.beschrijving, "Uitleg", "V3 description wordt de M3-beschrijving");
   assert.equal(r.elements.Y.data.naamLabelHeen, "heeft");
   assert.equal(r.elements.Y.data.meervoud, "", "leeggemaakt blijft leeg");
   assert.equal(vouw(r), null);
@@ -124,7 +124,7 @@ test("vult ook entiteit- en relatievelden (subtype, beschrijving) aan uit data.b
   s.elements.R = { id: "R", naam: "R", elementType: "relatie", source: "B", target: "B", compartimenten: [], data: { bron: { relatieSubtype: "associatie", meervoud: "rs" } } };
   const r = vouw(s);
   assert.equal(r.elements.B.data.entiteitSubtype, "referentielijst");
-  assert.equal(r.elements.B.data.description, "Lijst");
+  assert.equal(r.elements.B.data.beschrijving, "Lijst");
   assert.equal(r.elements.R.data.relatieSubtype, "associatie");
   assert.equal(r.elements.R.data.meervoud, "rs");
 });

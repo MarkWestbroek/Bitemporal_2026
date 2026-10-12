@@ -51,7 +51,7 @@ function veldenCompartiment(d) {
     velden: velden.map((v) => ({
       naam: v.naam,
       fieldType: "attribuut",
-      data: { verplicht: v.verplicht !== false, afgeleid: v.afgeleid === true, typeLabel: typeLabel(v) },
+      data: { verplicht: v.verplicht !== false, afgeleid: v.afgeleid === true, typeLabel: typeLabel(v), ...(v.description ? { beschrijving: v.description } : {}) },
     })),
   };
 }
@@ -69,6 +69,7 @@ function afgeleidCompartiment(d) {
         cursief: true,
         typeLabel: av.goType || "string",
         afleidingsregel: av.afleidingsregel || "",
+        ...(av.description ? { beschrijving: av.description } : {}),
       },
     })),
   };
@@ -102,6 +103,8 @@ function naarCoreElement(el) {
   // Bewerkbare profiel-properties (1-op-1, mappingV3Canoniek.js) in data;
   // typespecifieke code hieronder mag ze nog verfijnen.
   for (const k of profielVelden(el.type)) if (d[k]) basis.data[k] = d[k];
+  // V3 `description` = de vaste M3-beschrijving (2026-10-12).
+  if (d.description) basis.data.beschrijving = d.description;
 
   switch (el.type) {
     case "entiteit": {
@@ -529,6 +532,11 @@ function veldTerug(coreVeld, coreElements, bronVelden) {
   const veld = { ...bron, naam: coreVeld.naam };
   veld.verplicht = d.verplicht !== false;
   veld.afgeleid = d.afgeleid === true;
+  // De M3-beschrijving van een veld = V3 `description`.
+  if (d.beschrijving !== undefined) {
+    if (d.beschrijving) veld.description = d.beschrijving;
+    else delete veld.description;
+  }
   if (d.afleidingsregel !== undefined) {
     veld.afleidingsregel = d.afleidingsregel;
     veld.afleidingsregelTaal = bron.afleidingsregelTaal || "cel";
@@ -554,6 +562,7 @@ function afgeleidVeldTerug(coreVeld, bronLijst) {
     goType: (d.typeLabel || bron.goType || "string").trim() || "string",
     afleidingsregelTaal: bron.afleidingsregelTaal || "cel",
     afleidingsregel: d.afleidingsregel !== undefined ? d.afleidingsregel : bron.afleidingsregel || "",
+    ...(d.beschrijving !== undefined ? { description: d.beschrijving || undefined } : {}),
   };
 }
 
@@ -904,6 +913,15 @@ export function naarCanoniekModel(coreState) {
       type: "metamodel",
       data: g.data,
     });
+  }
+
+  // De M3-beschrijving (data.beschrijving) → V3 `description`, voor elk
+  // element dat terugreist (2026-10-12; vroeger een profielveld "description").
+  for (const [id, core] of Object.entries(coreEls)) {
+    const oud = elements[id];
+    if (!oud?.data || core?.data?.beschrijving === undefined) continue;
+    if (core.data.beschrijving) oud.data.description = core.data.beschrijving;
+    else delete oud.data.description;
   }
 
   const meta = coreState?.meta || {};

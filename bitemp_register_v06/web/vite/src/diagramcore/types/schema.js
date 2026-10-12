@@ -53,7 +53,7 @@
  * @property {boolean} [verplicht]
  * @property {string} [placeholder]        - voorbeeldtekst in een leeg invoerveld
  * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
- * @property {"afgeleid"|"kardinaliteit"|"standaardwaarde"|"geordend"|"nietUniek"|"alleenLezen"|"id"|"zichtbaarheid"} [betekenis]
+ * @property {"afgeleid"|"kardinaliteit"|"standaardwaarde"|"geordend"|"nietUniek"|"alleenLezen"|"id"|"zichtbaarheid"|"beschrijving"} [betekenis]
  *   - wat deze eigenschap *betekent* voor de motor, los van haar naam
  *   (2026-10-10, UML 2.5.1 Property; zie diagramcore/model/afgeleid.js):
  *   `"afgeleid"` (boolean) → "/" vóór de naam, ook bij een relatie — zo telt
@@ -63,6 +63,9 @@
  *   `"geordend"`/`"nietUniek"`/`"alleenLezen"`/`"id"` (boolean) →
  *   `{ordered}`/`{nonunique}`/`{readOnly}`/`{id}` achter het type.
  *   Een veld toont zo `+/naam : Type [0..*] = 5 {ordered, readOnly}`.
+ *   `"beschrijving"` (2026-10-12): deze eigenschap ís de beschrijving van het
+ *   element (MIM `definitie`); de motor voegt dan geen eigen beschrijving toe
+ *   (zie diagramcore/model/beschrijving.js).
  */
 
 /**
@@ -123,6 +126,9 @@
  *   shape, kleur, compartments, properties, hooks, bron/doel, randElement … van
  *   de ouder komen mee, het kind overschrijft per sleutel/id. In de
  *   profiel-ontwerper is dit de generalisatie-pijl tussen twee elementtypen.
+ * @property {boolean} [beschrijving]      - `false`: dit type heeft geen vaste
+ *   M3-beschrijving (notitie-lijn, lidmaatschap). Een notitie (vorm `note`)
+ *   heeft er sowieso geen: zij ís een tekst. Zie diagramcore/model/beschrijving.js.
  * @property {boolean} [isAbstract]         - niet instantieerbaar (geen knop in de
  *   Maken-balk, geen drop-doel, naam cursief), wél bruikbaar als **bereik**: in
  *   elke lijst van elementtype-ids (bron/doel, verbindingsregels,
@@ -279,6 +285,9 @@
  * @typedef {Object} DiagramType
  * @property {string} id                    - bv. "canoniek-uml", "puur-uml", "oas31"
  * @property {string} label
+ * @property {string[]} [oudeBeschrijvingSleutels] - sleutels waaronder dit profiel
+ *   vóór 2026-10-12 de beschrijving bewaarde (bv. `["toelichting", "notes"]`);
+ *   bij het laden migreren ze naar `data.beschrijving` (elementen en velden).
  * @property {string} style                 - StyleType-id (Implementatie-domein)
  * @property {"geen"|"icoon"|"tekst"} [typeWeergave] - default voor de
  *   Typering-toggle: alleen vorm, mini-icoon of stereotype-tekst (default "tekst")

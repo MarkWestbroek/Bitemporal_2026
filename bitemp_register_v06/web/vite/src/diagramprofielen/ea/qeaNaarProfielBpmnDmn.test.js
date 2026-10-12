@@ -100,8 +100,8 @@ test("DMN: beslissingen, invoergegevens, BKM's en kennisbronnen op stereotype; i
   assert.ok(infoReq.every((r) => model.elements[r.target]?.elementType === "decision"), "eis loopt naar de beslissing (EA's Dependency omgedraaid)");
   assert.ok(infoReq.some((r) => model.elements[r.source]?.elementType === "inputData"));
   assert.ok(Object.values(model.elements).every((e) => e.data?.stereotype === undefined), "het stereotype ís het type");
-  const metToelichting = van(model, "decision").find((d) => d.data.toelichting);
-  if (metToelichting) assert.equal(metToelichting.data.notes, undefined);
+  // EA Notes → de M3-beschrijving (2026-10-12), niet meer toelichting/notes.
+  assert.ok(van(model, "decision").every((d) => d.data.toelichting === undefined && d.data.notes === undefined));
 });
 
 test("BPMN: taken ín een subproces hangen in de pool erboven (tekenvolgorde) en het subproces is uitgeklapt", () => {

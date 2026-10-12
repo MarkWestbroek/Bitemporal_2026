@@ -25,7 +25,7 @@
  * Elementtype-id's zijn een contract met de EA-lezer (EA-GUID → id): nooit
  * wijzigen. Zie `eaMapping.js` voor de EA-tabel.
  */
-import { TOELICHTING_VELD, KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
+import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
 
 export const COMPONENT_DEPLOYMENT_ID = "component-deployment";
 
@@ -63,7 +63,7 @@ export const elementTypes = [
     label: "Klassifier",
     isAbstract: true,
     shape: "class-box",
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
     compartments: [{ id: "eigenschappen", label: null, fieldType: "eigenschap" }],
   },
   {
@@ -338,6 +338,9 @@ export const elementTypes = [
 export const componentDeploymentDiagramType = {
   id: COMPONENT_DEPLOYMENT_ID,
   label: "Component & deployment",
+  // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
+  // "notes"); bij het laden migreert die naar data.beschrijving (M3).
+  oudeBeschrijvingSleutels: ["toelichting", "notes"],
   style: "uml-klassiek",
   randAanhechting: "zwevend",
   hierarchie: "bevat",
