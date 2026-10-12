@@ -8,6 +8,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **Eigenschappen volgen de pijltjes in de projectboom** (12-10, Mark): wie met ↑/↓ door de boom
+  liep, zag bij elementen een leeg eigenschappenpaneel (alleen mappen en diagrammen werkten). Nu
+  krijgt de inspector het element door, zoals bij een klik — binnen het profiel van de actieve tab.
+
 ## [studio/v0.17.0] — 2026-10-12
 Canvas en modellering na 0.16.0: klik op leeg deselecteert betrouwbaar, kaders laten klikken door,
 vergroten grijpt beter, ovalen en ruiten hechten aan op hun toppen, donker thema leesbaar, en
