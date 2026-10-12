@@ -13,10 +13,10 @@ export const DMN_XML_NAAR_DRD = {
   bron: "dmn-xml",
   doel: "dmn-drd",
   regels: [
-    { naam: "Beslissing", bij: "knoop", als: { aard: "decision" }, maak: { type: "decision", data: { vraag: "{vraag}", toelichting: "{toelichting}" } } },
-    { naam: "Invoergegeven", bij: "knoop", als: { aard: "inputData" }, maak: { type: "inputData", data: { toelichting: "{toelichting}" } } },
-    { naam: "Business knowledge model", bij: "knoop", als: { aard: "businessKnowledgeModel" }, maak: { type: "bkm", data: { toelichting: "{toelichting}" } } },
-    { naam: "Kennisbron", bij: "knoop", als: { aard: "knowledgeSource" }, maak: { type: "knowledgeSource", data: { toelichting: "{toelichting}" } } },
+    { naam: "Beslissing", bij: "knoop", als: { aard: "decision" }, maak: { type: "decision", data: { vraag: "{vraag}", beschrijving: "{toelichting}" } } },
+    { naam: "Invoergegeven", bij: "knoop", als: { aard: "inputData" }, maak: { type: "inputData", data: { beschrijving: "{toelichting}" } } },
+    { naam: "Business knowledge model", bij: "knoop", als: { aard: "businessKnowledgeModel" }, maak: { type: "bkm", data: { beschrijving: "{toelichting}" } } },
+    { naam: "Kennisbron", bij: "knoop", als: { aard: "knowledgeSource" }, maak: { type: "knowledgeSource", data: { beschrijving: "{toelichting}" } } },
     { naam: "Tekstannotatie", bij: "knoop", als: { aard: "textAnnotation" }, maak: { type: "notitie", naam: "", data: { tekst: "{tekst}" } } },
 
     { naam: "Information requirement", bij: "verbinding", als: { aard: "informationRequirement" }, maak: { type: "infoReq" } },

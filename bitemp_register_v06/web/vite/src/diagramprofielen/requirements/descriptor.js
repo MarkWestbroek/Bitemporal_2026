@@ -17,7 +17,7 @@
  *
  * Elementtype-id's zijn een contract met de EA-lezer: nooit wijzigen.
  */
-import { TOELICHTING_VELD, KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
+import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
 
 export const REQUIREMENTS_ID = "requirements";
 
@@ -80,7 +80,6 @@ export const elementTypes = [
       { key: "status", label: "status", datatype: "keuze", opties: STATUS_OPTIES },
       { key: "prioriteit", label: "prioriteit", datatype: "keuze", opties: PRIORITEIT_OPTIES },
       { key: "moeilijkheid", label: "moeilijkheid", datatype: "keuze", opties: MOEILIJKHEID_OPTIES },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -159,7 +158,6 @@ export const elementTypes = [
     properties: [
       { key: "stereotype", label: "soort (stereotype)", datatype: "string", placeholder: "bijv. use case" },
       { key: "instantieVan", label: "verwijst naar", datatype: "element-verwijzing" },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -232,6 +230,9 @@ export const elementTypes = [
 export const requirementsDiagramType = {
   id: REQUIREMENTS_ID,
   label: "Requirements",
+  // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
+  // "notes"); bij het laden migreert die naar data.beschrijving (M3).
+  oudeBeschrijvingSleutels: ["toelichting", "notes"],
   style: "uml-klassiek",
   randAanhechting: "zwevend",
   hierarchie: "bevat",

@@ -37,7 +37,6 @@ const elementTypes = [
     properties: [
       KLEUR_VELD,
       { key: "vraag", label: "vraag (question)", datatype: "tekst" },
-      { key: "toelichting", label: "toelichting", datatype: "tekst" },
     ],
   },
   {
@@ -47,7 +46,7 @@ const elementTypes = [
     shape: "dmn-input-data",
     kleur: "#dcfce7",
     icoon: "invoer",
-    properties: [KLEUR_VELD, { key: "toelichting", label: "toelichting", datatype: "tekst" }],
+    properties: [KLEUR_VELD],
   },
   {
     id: "bkm",
@@ -56,7 +55,7 @@ const elementTypes = [
     shape: "dmn-bkm",
     kleur: "#fef9c3",
     icoon: "kennisregel",
-    properties: [KLEUR_VELD, { key: "toelichting", label: "toelichting", datatype: "tekst" }],
+    properties: [KLEUR_VELD],
   },
   {
     id: "knowledgeSource",
@@ -65,7 +64,7 @@ const elementTypes = [
     shape: "dmn-knowledge-source",
     kleur: "#fde68a",
     icoon: "kennisbron",
-    properties: [KLEUR_VELD, { key: "toelichting", label: "toelichting", datatype: "tekst" }],
+    properties: [KLEUR_VELD],
   },
   {
     id: "notitie",
@@ -210,6 +209,8 @@ export function drdRijenPosities({ ids, elements, edges, perRij = 5 }) {
 export const dmnDrdDiagramType = {
   id: DMN_DRD_ID,
   label: "DMN DRD",
+  // Beschrijving: vóór 2026-10-12 "toelichting" (en uit EA "notes") → M3 data.beschrijving.
+  oudeBeschrijvingSleutels: ["toelichting", "notes"],
   style: "uml-klassiek",
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
   // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.

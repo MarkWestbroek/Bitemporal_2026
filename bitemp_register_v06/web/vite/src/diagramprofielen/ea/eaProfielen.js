@@ -118,7 +118,7 @@ export const EA_PROFIELEN = {
         if (o.PDATA2) el.data.prioriteit = laag(o.PDATA2); // EA: Priority
         if (o.PDATA3) el.data.moeilijkheid = laag(o.PDATA3); // EA: Difficulty
         if (el.elementType === "requirement" && o.Stereotype) el.data.soort = laag(o.Stereotype);
-        delete el.data.notes;
+        delete el.data.beschrijving; // de Note is de eis-tekst, niet ook nog de beschrijving
         delete el.data.stereotype; // is de soort geworden
       }
       if (el.elementType === "verwijzing") el.data.stereotype = o.Object_Type === "UseCase" ? "use case" : laag(o.Object_Type);
@@ -305,8 +305,7 @@ EA_PROFIELEN.dmn = {
     const t = tagsVan(ctx, o);
     if (el.elementType === "decision" && t.question) el.data.vraag = t.question;
     if (["decision", "inputData", "bkm", "knowledgeSource"].includes(el.elementType) && o.Note) {
-      el.data.toelichting = o.Note;
-      delete el.data.notes;
+      el.data.beschrijving = o.Note; // EA Notes = de beschrijving (M3)
     }
     delete el.data.stereotype; // het stereotype ís het type
   },

@@ -6,7 +6,8 @@
  * React: de descriptors blijven zo in `node --test` laadbaar.
  *
  * Wat elk van die profielen gemeen heeft, staat hier één keer:
- *   - de standaardvelden (toelichting, kleur);
+ *   - het standaardveld kleur (de beschrijving levert het M3 zelf, sinds
+ *     2026-10-12: diagramcore/model/beschrijving.js);
  *   - notitie + notitie-lijn (EA tekent overal Notes; opdracht Mark 10-10);
  *   - het informele kader (boundary);
  *   - het vaste «stereotype»-label midden op een lijn.
@@ -15,8 +16,6 @@
  * EA-GUID en op deze id's): nooit meer wijzigen, hooguit toevoegen.
  */
 
-/** Vrije beschrijving van het element zelf (UML: documentatie/ownedComment). */
-export const TOELICHTING_VELD = { key: "toelichting", label: "Toelichting", datatype: "tekst" };
 export const KLEUR_VELD = { key: "kleur", datatype: "colour" };
 
 /**
@@ -85,6 +84,7 @@ export function notitielijn(doelen) {
     isConnector: true,
     bron: { elementTypes: ["notitie"] },
     doel: { elementTypes: doelen },
+    beschrijving: false,
     edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#94a3b8" },
   };
 }
@@ -107,6 +107,7 @@ export function bevat(bronnen, doelen, label = "Bevat") {
     isConnector: true,
     bron: { elementTypes: bronnen },
     doel: { elementTypes: doelen },
+    beschrijving: false,
     edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1", verbergBijNesting: true },
   };
 }
@@ -124,7 +125,7 @@ export function pakket(extra = {}) {
     icoon: "package",
     containerVoor: "bevat",
     standaardDichtInBoom: true,
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
     ...extra,
   };
 }

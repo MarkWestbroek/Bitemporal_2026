@@ -491,7 +491,7 @@ test("store-round-trip: in 0.5 bewerkte GE-velden gaan terug naar de oude datavo
   ge.data = {
     ...ge.data,
     typenaam: "A_Adres",
-    description: "Adresgegevens",
+    beschrijving: "Adresgegevens", // M3-beschrijving → V3 description
     meervoud: "adressen",
     naamLabelHeen: "woont op",
     naamLabelTerug: "is adres van",

@@ -74,7 +74,7 @@ test("requirements: Custom-diagram met MDG Requirements; velden uit Alias/Note/S
   assert.ok(["low", "medium", "high"].includes(r.data.moeilijkheid));
   assert.equal(r.data.soort, "functional");
   assert.equal(r.data.stereotype, undefined, "stereotype is de soort geworden");
-  assert.equal(r.data.notes, undefined, "Note is de tekst, niet ook nog notes");
+  assert.equal(r.data.beschrijving, undefined, "Note is de tekst, niet ook nog de beschrijving");
   const uc = van(model, "verwijzing");
   assert.equal(uc.length, 1);
   assert.equal(uc[0].data.stereotype, "use case");

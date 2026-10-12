@@ -24,9 +24,6 @@ import { registreerUseCaseShapes } from "./shapes.jsx";
 export const USECASE_ID = "usecase";
 
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
-// Vrije beschrijving van het element zelf (UML: documentatie/ownedComment) —
-// los van een notitie, die alleen op één diagram staat.
-const TOELICHTING_VELD = { key: "toelichting", label: "Toelichting", datatype: "tekst" };
 
 /** Vast stereotype-label («include»/«extend») midden op de lijn. */
 const stereotypeLabel = (tekst) => ({
@@ -43,7 +40,7 @@ const elementTypes = [
     icoon: "uc-actor",
     shape: "uc-actor",
     resizebaar: false,
-    properties: [TOELICHTING_VELD],
+    properties: [],
   },
   {
     id: "usecase",
@@ -54,7 +51,7 @@ const elementTypes = [
     icoon: "uc-usecase",
     shape: "uc-ellips",
     kleur: "#e0f2fe",
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
   },
   {
     id: "systeem",
@@ -66,7 +63,7 @@ const elementTypes = [
     // Container zoals een package: use cases erin slepen legt "bevat".
     containerVoor: "bevat",
     achtergrond: true,
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
   },
   {
     // UML 2 Collaboration (§11.7): gestippelde ellips — EA's "use case
@@ -81,7 +78,7 @@ const elementTypes = [
     shape: "uc-ellips",
     randStijl: "dashed",
     kleur: "#f8fafc",
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
   },
   {
     // Klassen die EA op een use case-diagram zet (de registraties die een use
@@ -93,7 +90,7 @@ const elementTypes = [
     icoon: "klasse",
     shape: "class-box",
     kleur: "#fef9c3",
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
   },
   {
     id: "notitie",
@@ -235,6 +232,9 @@ const elementTypes = [
 export const usecaseDiagramType = {
   id: USECASE_ID,
   label: "Use case",
+  // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
+  // "notes"); bij het laden migreert die naar data.beschrijving (M3).
+  oudeBeschrijvingSleutels: ["toelichting", "notes"],
   style: "uml-klassiek",
   // Connectoren hechten aan de omtrek i.p.v. aan vier handles: dozen
   // dragen vaak veel lijnen, en die moeten kunnen uitwaaieren.

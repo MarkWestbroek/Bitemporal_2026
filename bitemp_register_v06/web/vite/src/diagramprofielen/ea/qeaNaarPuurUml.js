@@ -7,7 +7,7 @@
  *
  * Principe (onderzoek §6.8): de lezer gooit niets weg. Wat puur-uml niet
  * kent reist mee op `data`: `eaGuid` (externe identiteit), `stereotypen`
- * (volledige namen uit t_xref), `tags` (tagged values), `notes`, `alias`.
+ * (volledige namen uit t_xref), `tags` (tagged values), `beschrijving` (EA Notes), `alias`.
  * Elementtypen die puur-uml niet heeft (Activity, UseCase, …) worden
  * overgeslagen en geteld in het verslag — die zijn voor de activity-/use
  * case-lezer (`qeaNaarActivity.js`).
@@ -64,7 +64,7 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
       naam: p.Name || "",
       elementType: "package",
       compartimenten: [],
-      data: { eaGuid: p.ea_guid, ...(p.Notes ? { notes: p.Notes } : {}) },
+      data: { eaGuid: p.ea_guid, ...(p.Notes ? { beschrijving: p.Notes } : {}) },
     };
     verslag.elementen += 1;
   }
@@ -94,7 +94,7 @@ export function qeaNaarPuurUml(bron, { packageId, diagramTypeId = PUUR_UML_DIAGR
       ...extraData(h, o.ea_guid, o.Object_ID),
       eaPakket: o.Package_ID,
       ...(o.Alias ? { alias: o.Alias } : {}),
-      ...(o.Note && elementType !== "notitie" ? { notes: o.Note } : {}),
+      ...(o.Note && elementType !== "notitie" ? { beschrijving: o.Note } : {}),
       ...(String(o.Abstract) === "1" ? { abstract: true } : {}),
     };
     // Elementkleur, anders de kleur van het diagramobject (zie maakHulptabellen).
@@ -208,7 +208,7 @@ function compartimentenVoor(o, elementType, h) {
 function veldData(rij) {
   return {
     ...(rij.ea_guid ? { eaGuid: rij.ea_guid } : {}),
-    ...(rij.Notes ? { notes: rij.Notes } : {}),
+    ...(rij.Notes ? { beschrijving: rij.Notes } : {}),
     ...(rij.Stereotype ? { stereotypen: [rij.Stereotype] } : {}),
   };
 }

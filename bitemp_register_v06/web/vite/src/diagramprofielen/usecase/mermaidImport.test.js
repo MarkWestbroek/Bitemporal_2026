@@ -67,7 +67,7 @@ test("de regelset is geldig", () => {
   assert.deepEqual(valideerRegelset(MERMAID_NAAR_USECASE), []);
 });
 
-test("actor- en use case-model: elementen, relaties en toelichtingen", () => {
+test("actor- en use case-model: elementen, relaties en beschrijvingen", () => {
   const { core, diagnostics, stats } = mermaidNaarUsecaseModel(fixture, { elementTypes });
   const el = core.elements;
 
@@ -77,13 +77,13 @@ test("actor- en use case-model: elementen, relaties en toelichtingen", () => {
   assert.equal(stats.diagrammen, 2);
   assert.deepEqual(Object.values(core.diagrams).map((d) => [d.naam, d.nodes.length]), [["actor model", 13], ["use case model klant", 25]]);
 
-  // <br/> in een naam wordt een spatie; de notitie wordt de toelichting,
+  // <br/> in een naam wordt een spatie; de notitie wordt de beschrijving,
   // zonder de vetgedrukte kopregel.
   assert.ok(opNaam(el, "Technisch beheerder"));
-  assert.equal(opNaam(el, "Beheerder").data.toelichting, "Algemene beheerrol.");
-  assert.equal(opNaam(el, "Informatiebeheerder").data.toelichting, "Voorheen: DIV-medewerker.\nBeheert, archiveert, draagt over en vernietigt informatie.");
-  assert.match(opNaam(el, "Vertegenwoordiger").data.toelichting, /^Handelt namens een andere klant\.\n\nMogelijke specialisaties:\n- gemachtigde\n/);
-  assert.match(opNaam(el, "Dien verzoek in").data.toelichting, /^De klant dient een verzoek in/);
+  assert.equal(opNaam(el, "Beheerder").data.beschrijving, "Algemene beheerrol.");
+  assert.equal(opNaam(el, "Informatiebeheerder").data.beschrijving, "Voorheen: DIV-medewerker.\nBeheert, archiveert, draagt over en vernietigt informatie.");
+  assert.match(opNaam(el, "Vertegenwoordiger").data.beschrijving, /^Handelt namens een andere klant\.\n\nMogelijke specialisaties:\n- gemachtigde\n/);
+  assert.match(opNaam(el, "Dien verzoek in").data.beschrijving, /^De klant dient een verzoek in/);
   assert.equal(telPerType(el).notitie, undefined);
 
   assert.ok(relaties(el, "generalisatie").includes("Technisch beheerder → Beheerder"));
@@ -139,9 +139,9 @@ test("tweede import hergebruikt elementen en relaties op naam; alleen het diagra
   const actoren = fixture.slice(0, fixture.indexOf("use case model klant:"));
   const klant = fixture.slice(fixture.indexOf("use case model klant:"));
 
-  // Eerst het use case-model: de vier actoren krijgen daar geen toelichting.
+  // Eerst het use case-model: de vier actoren krijgen daar geen beschrijving.
   await transformatie.run({ bron: { naam: "klant.mmd", tekst: klant }, doelMap: "doel" });
-  assert.equal(opNaam(useStore.getState().elements, "Klant").data.toelichting, undefined);
+  assert.equal(opNaam(useStore.getState().elements, "Klant").data.beschrijving, undefined);
   const naEerste = Object.keys(useStore.getState().elements).length;
 
   const tweede = await transformatie.run({ bron: { naam: "actoren.mmd", tekst: actoren }, doelMap: "doel" });
@@ -149,8 +149,8 @@ test("tweede import hergebruikt elementen en relaties op naam; alleen het diagra
   assert.equal(tweede.summary, "1 diagram: 9 actoren, 7 relaties geïmporteerd; 4 bestaande hergebruikt");
   assert.equal(telPerType(el).actor, 13);
   assert.equal(telPerType(el).generalisatie, 17);
-  // De nog lege toelichting van een hergebruikt element is aangevuld.
-  assert.match(opNaam(el, "Klant").data.toelichting, /^Algemene actor voor een partij/);
+  // De nog lege beschrijving van een hergebruikt element is aangevuld.
+  assert.match(opNaam(el, "Klant").data.beschrijving, /^Algemene actor voor een partij/);
 
   // Nog eens hetzelfde: niets nieuws behalve een (uniek genummerd) diagram.
   const derde = await transformatie.run({ bron: { naam: "actoren.mmd", tekst: actoren }, doelMap: "doel" });

@@ -91,6 +91,9 @@ export function naarCoreModel(exchange, opties = {}) {
       compartimenten: [],
       data: {
         ...(bron.type === "OrJunction" ? { soort: "of" } : {}),
+        // ArchiMate `documentation` = de M3-beschrijving (2026-10-12); de
+        // meertalige bron blijft in exchange.documentation.
+        ...(kiesTaalwaarde(bron.documentation, taal, "") ? { beschrijving: kiesTaalwaarde(bron.documentation, taal, "") } : {}),
         exchange: exchangeData(bron, exchange),
       },
     };
@@ -124,6 +127,7 @@ export function naarCoreModel(exchange, opties = {}) {
       data: {
         ...(elementType === "toegang" && toegang ? { toegang } : {}),
         ...(elementType === "beinvloeding" && bron.attributes?.modifier ? { invloed: bron.attributes.modifier } : {}),
+        ...(kiesTaalwaarde(bron.documentation, taal, "") ? { beschrijving: kiesTaalwaarde(bron.documentation, taal, "") } : {}),
         exchange: exchangeData(bron, exchange),
       },
     };

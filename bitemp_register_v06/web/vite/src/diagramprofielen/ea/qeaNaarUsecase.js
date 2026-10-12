@@ -70,7 +70,7 @@ export function qeaNaarUsecase(bron, { packageId, diagramTypeId = USECASE_DIAGRA
       ...extraData(h, o.ea_guid, o.Object_ID),
       eaPakket: o.Package_ID,
       ...(o.Alias ? { alias: o.Alias } : {}),
-      ...(o.Note && elementType !== "notitie" ? { toelichting: o.Note } : {}),
+      ...(o.Note && elementType !== "notitie" ? { beschrijving: o.Note } : {}),
       ...(elementType === "klasse" && o.Object_Type !== "Class" ? { eaType: o.Object_Type } : {}),
     };
     const kleur = kleurUitBgr(o.Backcolor);

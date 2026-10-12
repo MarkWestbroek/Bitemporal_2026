@@ -98,7 +98,7 @@ export function qeaNaarSequence(bron, { packageId, diagramTypeId = SEQUENCE_DIAG
             eaPakket: o.Package_ID,
             eaObjectType: o.Object_Type,
             ...(type ? { typeNaam: type } : {}),
-            ...(o.Note ? { notes: o.Note } : {}),
+            ...(o.Note ? { beschrijving: o.Note } : {}),
           },
         };
         verslag.elementen += 1;
@@ -152,7 +152,7 @@ export function qeaNaarSequence(bron, { packageId, diagramTypeId = SEQUENCE_DIAG
           volgnummer: Number(c.SeqNo) || 0,
           ...(signatuur.retval ? { retourtype: signatuur.retval } : {}),
           ...(signatuur.paramsDlg ? { argumenten: signatuur.paramsDlg } : {}),
-          ...(c.Notes ? { notes: c.Notes } : {}),
+          ...(c.Notes ? { beschrijving: c.Notes } : {}),
         },
       };
       verslag.connectoren += 1;

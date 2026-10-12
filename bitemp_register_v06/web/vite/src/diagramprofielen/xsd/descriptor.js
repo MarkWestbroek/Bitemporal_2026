@@ -21,7 +21,7 @@
  * de container (containerVoor "bevat", hierarchie).
  * Elementtype-id's zijn een contract met de EA-lezer: nooit wijzigen.
  */
-import { TOELICHTING_VELD, KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
+import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
 
 export const XSD_ID = "xsd";
 
@@ -92,7 +92,6 @@ export const elementTypes = [
       { key: "prefix", label: "prefix", datatype: "string" },
       { key: "elementFormDefault", label: "elementFormDefault", datatype: "keuze", opties: [{ waarde: "", label: "unqualified" }, { waarde: "qualified", label: "qualified" }] },
       { key: "version", label: "version", datatype: "string" },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -105,7 +104,6 @@ export const elementTypes = [
     shape: "class-box",
     properties: [
       { key: "abstract", label: "abstract", datatype: "boolean" },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -184,7 +182,6 @@ export const elementTypes = [
       { key: "typeLabel", label: "type (tekst)", datatype: "string" },
       { key: "nillable", label: "nillable", datatype: "boolean" },
       { key: "substitutionGroup", label: "substitutionGroup", datatype: "string" },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -197,7 +194,7 @@ export const elementTypes = [
     icoon: "xs-attribute",
     shape: "chip",
     kleur: "#f5f3ff",
-    properties: [{ key: "typeLabel", label: "type (tekst)", datatype: "string" }, TOELICHTING_VELD, KLEUR_VELD],
+    properties: [{ key: "typeLabel", label: "type (tekst)", datatype: "string" }, KLEUR_VELD],
   },
   {
     id: "group",
@@ -210,7 +207,6 @@ export const elementTypes = [
     kleur: "#e0f2fe",
     properties: [
       { key: "modelGroup", label: "model group", datatype: "keuze", opties: [{ waarde: "", label: "sequence" }, { waarde: "choice", label: "choice" }, { waarde: "all", label: "all" }] },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
     compartments: [{ id: "elementen", label: null, fieldType: "xsElement" }],
@@ -224,7 +220,7 @@ export const elementTypes = [
     icoon: "xs-group",
     shape: "class-box",
     kleur: "#ede9fe",
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
     compartments: [{ id: "attributen", label: null, fieldType: "xsAttribute" }],
   },
   NOTITIE,
@@ -337,6 +333,9 @@ export const elementTypes = [
 export const xsdDiagramType = {
   id: XSD_ID,
   label: "XML Schema (XSD)",
+  // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
+  // "notes"); bij het laden migreert die naar data.beschrijving (M3).
+  oudeBeschrijvingSleutels: ["toelichting", "notes"],
   style: "uml-klassiek",
   randAanhechting: "zwevend",
   hierarchie: "bevat",

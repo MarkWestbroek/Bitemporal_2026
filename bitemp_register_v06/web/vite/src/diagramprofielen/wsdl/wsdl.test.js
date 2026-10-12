@@ -19,7 +19,7 @@ test("wsdlElement → service, portType, binding, message, types", () => {
   const dep = dt.elementTypes.find((t) => t.id === "dependency");
   assert.deepEqual(dep.bron.elementTypes, ["service", "portType", "binding", "message", "types", "namespace"]);
   for (const id of ["service", "portType", "binding", "message", "types"]) {
-    assert.ok(dt.elementTypes.find((t) => t.id === id).properties.some((p) => p.key === "toelichting"), id);
+    assert.ok(dt.elementTypes.find((t) => t.id === id).properties.some((p) => p.key === "kleur"), id);
   }
 });
 

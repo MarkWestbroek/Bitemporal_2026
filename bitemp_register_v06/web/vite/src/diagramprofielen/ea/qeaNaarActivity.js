@@ -66,7 +66,7 @@ export function qeaNaarActivity(bron, { packageId, diagramTypeId = ACTIVITY_DIAG
       ...extraData(h, o.ea_guid, o.Object_ID),
       eaPakket: o.Package_ID,
       ...(o.Alias ? { alias: o.Alias } : {}),
-      ...(o.Note && vertaald.elementType !== "notitie" ? { notes: o.Note } : {}),
+      ...(o.Note && vertaald.elementType !== "notitie" ? { beschrijving: o.Note } : {}),
       ...vertaald.data,
     };
     const kleur = kleurUitBgr(o.Backcolor);
@@ -181,7 +181,7 @@ function vertaalObject(o, h) {
     case "Synchronization":
       return { elementType: "fork", naam, data: {} };
     case "StateNode":
-      if (Number(o.NType) === 100) return { elementType: "begin", naam: "", data: { ...(naam ? { notes: naam } : {}) } };
+      if (Number(o.NType) === 100) return { elementType: "begin", naam: "", data: { ...(naam ? { beschrijving: naam } : {}) } };
       if (Number(o.NType) === 101) return { elementType: "eind", naam, data: {} };
       if (Number(o.NType) === 102) return { elementType: "flow-eind", naam, data: {} };
       return null;

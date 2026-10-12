@@ -19,7 +19,7 @@
  * met zijn richting als pijl ("→ opvragen(id)" naar het doel van de link,
  * "← resultaat" terug). Elementtype-id's zijn een contract met de EA-lezer.
  */
-import { TOELICHTING_VELD, KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn } from "../uml2Basis.js";
+import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn } from "../uml2Basis.js";
 
 export const COMMUNICATION_ID = "communication";
 
@@ -60,7 +60,6 @@ export const elementTypes = [
       { key: "instantieVan", label: "instantie van", datatype: "element-verwijzing" },
       { key: "klassifierLabel", label: "klasse (tekst)", datatype: "string" },
       { key: "multi", label: "meerdere (multi-object)", datatype: "boolean" },
-      TOELICHTING_VELD,
       KLEUR_VELD,
     ],
   },
@@ -72,7 +71,7 @@ export const elementTypes = [
     icoon: "ep-actor",
     shape: "uc-actor",
     resizebaar: false,
-    properties: [TOELICHTING_VELD],
+    properties: [],
   },
   NOTITIE,
   BOUNDARY,
@@ -102,6 +101,9 @@ export const elementTypes = [
 export const communicationDiagramType = {
   id: COMMUNICATION_ID,
   label: "Communication",
+  // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
+  // "notes"); bij het laden migreert die naar data.beschrijving (M3).
+  oudeBeschrijvingSleutels: ["toelichting", "notes"],
   style: "uml-klassiek",
   randAanhechting: "zwevend",
   fieldTypes,

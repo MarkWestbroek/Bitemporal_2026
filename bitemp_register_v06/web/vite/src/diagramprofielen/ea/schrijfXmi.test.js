@@ -63,7 +63,7 @@ test("diagrammen: geometrie in EA-eenheden (Left/Top/Right/Bottom), lijnen met P
 });
 
 test("extension: stereotype, documentatie, tags en kleur per element; connector met labels", () => {
-  const metNotes = els.find((e) => e.data?.notes && e.elementType === "klasse");
+  const metNotes = els.find((e) => e.data?.beschrijving && e.elementType === "klasse");
   if (metNotes) assert.ok(xml.includes(`<element xmi:idref="${eaId(metNotes.data.eaGuid)}" xmi:type="uml:Class"`));
   assert.ok(xml.includes('ea_type="Generalization"'));
   assert.equal(kleurNaarBgr("#a7d8f9"), 16373927);

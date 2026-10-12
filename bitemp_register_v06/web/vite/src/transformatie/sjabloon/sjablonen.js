@@ -27,7 +27,7 @@ titel: Use case-overzicht {{map.naam}}
 {{#elk elementen type=actor sorteer=naam}}
 ## {{naam}}
 
-{{#if toelichting}}{{toelichting}}
+{{#if beschrijving}}{{beschrijving}}
 
 {{/if}}{{#elk verbindingen type=generalisatie richting=uit}}Is een {{doel.naam}}.
 
@@ -40,7 +40,7 @@ titel: Use case-overzicht {{map.naam}}
 {{#elk elementen type=usecase sorteer=naam}}
 ## {{naam}}
 
-{{#if toelichting}}{{toelichting}}
+{{#if beschrijving}}{{beschrijving}}
 
 {{/if}}| | |
 |---|---|
@@ -72,7 +72,7 @@ titel: Overzicht {{map.naam}}
 ### Elementen
 
 {{#elk elementen sorteer=naam}}
-- **{{naam}}** ({{type.label}}){{#if toelichting}} — {{toelichting}}{{/if}}{{#elk velden}}
+- **{{naam}}** ({{type.label}}){{#if beschrijving}} — {{beschrijving}}{{/if}}{{#elk velden}}
   - {{naam}}{{#if type}}: {{type}}{{/if}}{{/elk}}
 {{/elk}}
 {{/elk}}
@@ -93,7 +93,7 @@ titel: Gegevenswoordenboek {{map.naam}}
 {{#if velden}}
 ## {{naam}}{{#if type.label}} ({{type.label}}){{/if}}
 
-{{#if toelichting}}{{toelichting}}
+{{#if beschrijving}}{{beschrijving}}
 
 {{/if}}| Veld | Type | Compartiment |
 |---|---|---|
@@ -120,7 +120,7 @@ export const DEEL_PROJECTMAP = `{{kop}} {{naam}}
 
 {{/elk}}{{#elk elementen type=usecase sorteer=naam}}{{subkop}} {{naam}}
 
-{{#if toelichting}}{{toelichting}}
+{{#if beschrijving}}{{beschrijving}}
 
 {{/if}}{{#if verbindingen}}| | |
 |---|---|

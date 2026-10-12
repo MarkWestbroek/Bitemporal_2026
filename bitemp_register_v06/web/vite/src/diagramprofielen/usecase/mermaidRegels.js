@@ -41,8 +41,8 @@ export const MERMAID_NAAR_USECASE = {
     // Een notitie aan een element is in het model de toelichting ván dat
     // element; de notitie zelf vervalt (zonder de vetgedrukte kopregel, die
     // herhaalt alleen de naam).
-    { naam: "Toelichting uit notitie", bij: "verbinding", als: { doel: { type: "notitie" }, bron: { type: { niet: "notitie" } } }, zet: { op: "bron", data: { toelichting: "{doel.romp}" }, vervalt: "doel" } },
-    { naam: "Toelichting uit notitie (omgekeerd)", bij: "verbinding", als: { bron: { type: "notitie" }, doel: { type: { niet: "notitie" } } }, zet: { op: "doel", data: { toelichting: "{bron.romp}" }, vervalt: "bron" } },
+    { naam: "Toelichting uit notitie", bij: "verbinding", als: { doel: { type: "notitie" }, bron: { type: { niet: "notitie" } } }, zet: { op: "bron", data: { beschrijving: "{doel.romp}" }, vervalt: "doel" } },
+    { naam: "Toelichting uit notitie (omgekeerd)", bij: "verbinding", als: { bron: { type: "notitie" }, doel: { type: { niet: "notitie" } } }, zet: { op: "doel", data: { beschrijving: "{bron.romp}" }, vervalt: "bron" } },
 
     { naam: "Include", bij: "verbinding", als: { label: INCLUDE, bron: { type: "usecase" }, doel: { type: "usecase" } }, maak: { type: "include" } },
     { naam: "Extend", bij: "verbinding", als: { label: EXTEND, bron: { type: "usecase" }, doel: { type: "usecase" } }, maak: { type: "extend" } },

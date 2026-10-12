@@ -14,7 +14,7 @@
  * rolbinding-lijnen doen het werk). Abstracte `structureel` als bereik.
  * Elementtype-id's zijn een contract met de EA-lezer: nooit wijzigen.
  */
-import { TOELICHTING_VELD, KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
+import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
 
 export const COMPOSITE_STRUCTURE_ID = "composite-structure";
 
@@ -42,7 +42,7 @@ export const elementTypes = [
     label: "Structureel element",
     isAbstract: true,
     shape: "class-box",
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
     compartments: [{ id: "attributen", label: null, fieldType: "attribuut" }],
   },
   {
@@ -100,7 +100,7 @@ export const elementTypes = [
     shape: "class-box",
     kleur: "#dcfce7",
     samentrekking: { gedaante: "bol", relatieTypes: ["realisatie"], labelIngeklapt: "bolletje (lollipop)", labelUitgeklapt: "volledige interface" },
-    properties: [TOELICHTING_VELD, KLEUR_VELD],
+    properties: [KLEUR_VELD],
   },
   {
     id: "collaboratie",
@@ -242,6 +242,9 @@ export const elementTypes = [
 export const compositeStructureDiagramType = {
   id: COMPOSITE_STRUCTURE_ID,
   label: "Composite structure",
+  // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
+  // "notes"); bij het laden migreert die naar data.beschrijving (M3).
+  oudeBeschrijvingSleutels: ["toelichting", "notes"],
   style: "uml-klassiek",
   randAanhechting: "zwevend",
   hierarchie: "bevat",

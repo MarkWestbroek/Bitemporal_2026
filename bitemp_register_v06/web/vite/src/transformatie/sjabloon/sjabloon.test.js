@@ -43,8 +43,9 @@ test("context: elementen, velden, verbindingen in beide richtingen, diagrammen e
   assert.deepEqual(ctx.elementen.map((e) => e.naam), ["Klant", "Bel op", "Voer gesprek", "Kader"]);
   const bel = ctx.elementen.find((e) => e.naam === "Bel op");
   assert.deepEqual(bel.verbindingen.map((v) => [v.type.id, v.richting, v.ander.naam]), [["associatie", "in", "Klant"], ["include", "uit", "Voer gesprek"]]);
-  assert.deepEqual(ctx.elementen[2].velden, [{ naam: "kanaal", compartiment: "velden", fieldType: "x", type: "String", data: { typeLabel: "String" } }]);
+  assert.deepEqual(ctx.elementen[2].velden, [{ naam: "kanaal", compartiment: "velden", fieldType: "x", type: "String", beschrijving: "", data: { typeLabel: "String" } }]);
   assert.equal(ctx.elementen[0].toelichting, "Belt of mailt.");
+  assert.equal(ctx.elementen[0].beschrijving, "Belt of mailt.", "de M3-beschrijving; toelichting is een alias");
   assert.deepEqual(bel.diagrammen, [{ id: "d1", naam: "Overzicht" }]);
   assert.equal(ctx.diagrammen[0].aantal, 4);
   assert.equal(getekend, 0, "svg is lui");

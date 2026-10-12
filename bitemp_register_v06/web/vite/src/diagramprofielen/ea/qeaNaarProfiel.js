@@ -133,7 +133,7 @@ export function qeaNaarProfiel(bron, { packageId, profiel, schaal = EA_SCHAAL })
       eaPakket: o.Package_ID,
       eaObjectType: o.Object_Type,
       ...(o.Alias ? { alias: o.Alias } : {}),
-      ...(o.Note && !isNotitie ? { notes: o.Note } : {}),
+      ...(o.Note && !isNotitie ? { beschrijving: o.Note } : {}),
       ...(String(o.Abstract) === "1" ? { abstract: true } : {}),
     };
     // Stereotype dat de tabel niet verbruikte: als label op het element.
@@ -263,7 +263,7 @@ export function veldenUitAttributen(attrs, fieldType, extra = () => ({})) {
     data: {
       ...(a.ea_guid ? { eaGuid: a.ea_guid } : {}),
       ...(a.Type ? { typeLabel: a.Type } : {}),
-      ...(a.Notes ? { notes: a.Notes } : {}),
+      ...(a.Notes ? { beschrijving: a.Notes } : {}),
       ...extra(a),
     },
   }));
@@ -272,6 +272,6 @@ export function veldenUitOperaties(ops, fieldType = "operatie") {
   return ops.map((op) => ({
     naam: `${op.Name || ""}()`,
     fieldType,
-    data: { ...(op.ea_guid ? { eaGuid: op.ea_guid } : {}), ...(op.Type ? { typeLabel: op.Type } : {}), ...(op.Notes ? { notes: op.Notes } : {}) },
+    data: { ...(op.ea_guid ? { eaGuid: op.ea_guid } : {}), ...(op.Type ? { typeLabel: op.Type } : {}), ...(op.Notes ? { beschrijving: op.Notes } : {}) },
   }));
 }
