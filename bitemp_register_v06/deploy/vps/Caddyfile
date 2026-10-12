@@ -133,6 +133,14 @@ editor.musicbrain.nl {
 	# Vite-bundels hebben een hash in de naam: die mogen lang in de cache.
 	@hashed path /assets/*
 	header @hashed Cache-Control "public, max-age=31536000, immutable"
+	# AI-proxy (tools/ai-proxy in de MusicBrain-repo): /ai/* naar de container musicbrain-ai
+	handle /ai/* {
+		reverse_proxy 127.0.0.1:8787
+	}
+	# Spraakdienst (tools/piper-tts in de MusicBrain-repo): /tts/* naar de container musicbrain-tts
+	handle /tts/* {
+		reverse_proxy 127.0.0.1:8788
+	}
 	file_server
 }
 
