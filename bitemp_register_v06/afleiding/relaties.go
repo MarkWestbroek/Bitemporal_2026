@@ -21,13 +21,15 @@ type Verwijzing struct {
 type Uitkomst map[int]map[string][]Verwijzing
 
 // BerekenAfgeleideRelaties rekent alle afgeleide relaties van meta uit voor de bronnen met
-// de gegeven id's. Bronnen en doelen worden via de Lader van de omgeving geladen (allemaal
-// op hetzelfde peilmoment); al toegevoegde maps (VoegToe) worden hergebruikt.
+// de gegeven id's. Bronnen die met VoegToe al (volledig) bekend zijn, worden hergebruikt; de
+// rest en alle doelen worden via de Lader geladen, allemaal op hetzelfde peilmoment.
 //
-// Werkwijze (ontwerp §5): evalueer alle regels voor alle bronnen; laad de doelen die bij de
-// doorkijk ontbraken per type in één batch; herhaal tot er niets meer ontbreekt (maximaal
-// MaxRondes). Een regel die niet parset of een uitkomst van het verkeerde type levert een
-// lege relatie en een logregel op, geen fout: de rest van het antwoord blijft bruikbaar.
+// Werkwijze (ontwerp §5 en §8): evalueer alle regels voor alle bronnen; laad wat er bij de
+// doorkijk ontbrak (doelentiteiten kaal, onderliggende elementen alleen als een regel ze
+// aanspreekt), per type en rol in één batch; herhaal tot er niets meer ontbreekt (maximaal
+// MaxRondes). Daarna hetzelfde voor de weergavenamen van de doelen. Een regel die niet parset
+// of een uitkomst van het verkeerde type levert een lege relatie en een logregel op, geen
+// fout: de rest van het antwoord blijft bruikbaar.
 func (o *Omgeving) BerekenAfgeleideRelaties(ctx context.Context, meta model.TypeMeta, bronIDs []int) (Uitkomst, error) {
 	uit := Uitkomst{}
 	if len(meta.AfgeleideRelaties) == 0 || len(bronIDs) == 0 {
@@ -51,29 +53,32 @@ func (o *Omgeving) BerekenAfgeleideRelaties(ctx context.Context, meta model.Type
 		regels[i] = e
 	}
 
+	// Fase 1: de doel-id's per bron.
 	ids := map[int]map[string][]int{}
-	for ronde := 1; ; ronde++ {
+	err := o.totStabiel(ctx, meta.Typenaam, func(laatste bool) {
 		for _, bronID := range bronIDs {
-			m := o.geladen[sleutel{meta.Typenaam, bronID}]
-			if m == nil {
+			e := o.geladen[sleutel{meta.Typenaam, bronID}]
+			if e == nil || e.m == nil {
 				continue
 			}
-			ctxBron := wortel{bron: o.Entiteit(meta, m)}
+			ctxBron := wortel{bron: o.entiteitVan(meta, e)}
 			perRol := map[string][]int{}
 			for i, ar := range meta.AfgeleideRelaties {
 				if regels[i] == nil {
 					continue
 				}
+				voor := o.aantalMissers()
 				doelIDs, err := verwijzingenUit(regels[i].Eval(ctxBron), ar.DoelEntiteit)
+				// Melden pas als deze regel niets meer mist: een misser kan de uitkomst veranderen.
+				definitief := laatste || o.aantalMissers() == voor
 				if err != nil {
-					// Pas melden als alles geladen is; een misser kan de uitkomst nog veranderen.
-					if len(o.missers) == 0 {
+					if definitief {
 						log.Printf("AFLEIDING: %s %d, %s: %v", meta.Typenaam, bronID, ar.Naam, err)
 					}
 					doelIDs = nil
 				}
 				if ar.Momentvoorkomen == model.Enkelvoudig && len(doelIDs) > 1 {
-					if len(o.missers) == 0 {
+					if definitief {
 						log.Printf("AFLEIDING: %s %d, %s is enkelvoudig maar levert %d doelen; de eerste telt", meta.Typenaam, bronID, ar.Naam, len(doelIDs))
 					}
 					doelIDs = doelIDs[:1]
@@ -82,41 +87,47 @@ func (o *Omgeving) BerekenAfgeleideRelaties(ctx context.Context, meta model.Type
 			}
 			ids[bronID] = perRol
 		}
-		meer, err := o.laadMissers(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if !meer {
-			break
-		}
-		if ronde >= MaxRondes {
-			log.Printf("AFLEIDING: %s: na %d rondes nog niet alle doelen geladen (diepte of cyclus?); uitkomst kan onvolledig zijn", meta.Typenaam, MaxRondes)
-			break
-		}
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	// Weergavenamen: laad de doelen (één batch per type) en reken hun weergaveveld uit.
-	doelen := map[sleutel]bool{}
+	// Fase 2: de weergavenamen van de doelen (kaal geladen; hun weergaveveld laadt lui bij).
+	type doel struct {
+		typenaam string
+		id       int
+	}
+	var doelen []doel
+	gezien := map[doel]bool{}
 	for _, ar := range meta.AfgeleideRelaties {
-		for _, perRol := range ids {
-			for _, id := range perRol[ar.JSONRolnaam] {
-				doelen[sleutel{ar.DoelEntiteit, id}] = true
+		for _, bronID := range bronIDs {
+			for _, id := range ids[bronID][ar.JSONRolnaam] {
+				d := doel{ar.DoelEntiteit, id}
+				if !gezien[d] {
+					gezien[d] = true
+					doelen = append(doelen, d)
+				}
 			}
 		}
 	}
-	var teLaden []sleutel
-	for k := range doelen {
-		teLaden = append(teLaden, k)
-	}
-	if err := o.laad(ctx, teLaden); err != nil {
+	namen := map[doel]string{}
+	err = o.totStabiel(ctx, meta.Typenaam+" (weergavenamen)", func(bool) {
+		for _, d := range doelen {
+			if e := o.entiteitOp(d.typenaam, d.id); e != nil {
+				namen[d] = o.weergavenaamVan(e)
+			}
+		}
+	})
+	if err != nil {
 		return nil, err
 	}
+
 	for bronID, perRol := range ids {
 		uit[bronID] = map[string][]Verwijzing{}
 		for _, ar := range meta.AfgeleideRelaties {
 			lijst := []Verwijzing{}
 			for _, id := range perRol[ar.JSONRolnaam] {
-				lijst = append(lijst, Verwijzing{ID: id, Weergavenaam: o.weergavenaamVan(ar.DoelEntiteit, id)})
+				lijst = append(lijst, Verwijzing{ID: id, Weergavenaam: namen[doel{ar.DoelEntiteit, id}]})
 			}
 			uit[bronID][ar.JSONRolnaam] = lijst
 		}
@@ -184,13 +195,23 @@ func verwijzingenUit(v any, doelEntiteit string) ([]int, error) {
 	return ids, nil
 }
 
-func (o *Omgeving) weergavenaamVan(typenaam string, id int) string {
-	m := o.geladen[sleutel{typenaam, id}]
-	meta, ok := model.MetaRegistry.GetTypeMeta(typenaam)
-	if m == nil || !ok {
+// weergavenaamVan rekent het weergaveveld van een (mogelijk kaal geladen) entiteit uit; wat
+// het weergaveveld aanspreekt, wordt via de missers lui bijgeladen.
+func (o *Omgeving) weergavenaamVan(e *Entiteit) string {
+	for _, av := range e.meta.AfgeleideVelden {
+		if !av.IsWeergaveVeld {
+			continue
+		}
+		ex, err := ParseRegel(av.Afleidingsregel)
+		if err != nil {
+			return ""
+		}
+		if v := ex.Eval(wortel{bron: e}); v != nil {
+			return celexpr.Tekst(v)
+		}
 		return ""
 	}
-	return o.Weergavenaam(meta, m)
+	return ""
 }
 
 // ── Afgeleide velden (vervangt de zelfgeschreven evaluators in handlers en dynql) ──

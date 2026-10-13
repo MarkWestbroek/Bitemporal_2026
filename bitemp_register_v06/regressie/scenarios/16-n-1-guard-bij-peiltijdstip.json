@@ -1,7 +1,7 @@
 {
   "id": "16",
   "naam": "N+1-guard bij peiltijdstip",
-  "beschrijving": "Voor 4.4: 1 query per entiteit x per kind (60+). Nu set-based.",
+  "beschrijving": "Voor 4.4: 1 query per entiteit x per kind (60+). Nu set-based. Zonder afgeleide relaties op NP 40 queries (gemeten 13-10-2026); budget 48 laat ruimte voor afgeleide relaties (lui geladen, enkele queries elk; zie regressie_afgeleide_relaties_test.go). N+1 zelf blijft bewaakt doordat het aantal niet met size meegroeit.",
   "volgorde": 170,
   "dekt": [
     "BE-REVIEW-4.4"
@@ -16,7 +16,7 @@
       "verwacht": {
         "status": 200
       },
-      "max_queries": 40
+      "max_queries": 48
     }
   ]
 }

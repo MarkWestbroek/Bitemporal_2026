@@ -9,7 +9,8 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 )
 
-// nepLader levert vaste /full-maps en telt de batches per type.
+// nepLader levert uit vaste /full-maps lui: kale entiteitrijen en per rol de voorkomens.
+// batches telt de queries: "Type" voor entiteiten, "Type.rol" voor voorkomens.
 type nepLader struct {
 	data    map[string]map[int]map[string]any
 	batches []string
@@ -19,8 +20,27 @@ func (l *nepLader) LaadEntiteiten(_ context.Context, typenaam string, ids []int)
 	l.batches = append(l.batches, typenaam)
 	uit := map[int]map[string]any{}
 	for _, id := range ids {
-		if m, ok := l.data[typenaam][id]; ok {
-			uit[id] = m
+		m, ok := l.data[typenaam][id]
+		if !ok {
+			continue
+		}
+		kaal := map[string]any{}
+		for k, v := range m {
+			if _, lijst := v.([]any); !lijst {
+				kaal[k] = v
+			}
+		}
+		uit[id] = kaal
+	}
+	return uit, nil
+}
+
+func (l *nepLader) LaadVoorkomens(_ context.Context, typenaam, rol string, ids []int) (map[int][]any, error) {
+	l.batches = append(l.batches, typenaam+"."+rol)
+	uit := map[int][]any{}
+	for _, id := range ids {
+		if items, ok := l.data[typenaam][id][rol].([]any); ok {
+			uit[id] = items
 		}
 	}
 	return uit, nil
@@ -85,8 +105,8 @@ func ids(vs []Verwijzing) []int {
 	return uit
 }
 
-// /woonwijk = woonlocatie.gebiedsligging: twee hops, drie batches (bronnen, locaties,
-// gemeentedelen voor de weergavenaam) — onafhankelijk van het aantal bronnen.
+// /woonwijk = woonlocatie.gebiedsligging: twee hops, lui geladen — alleen de rollen die de
+// regel aanspreekt, elk één batch, onafhankelijk van het aantal bronnen.
 func TestWoonwijkOverTweeHops(t *testing.T) {
 	meta := npMetAfgeleid(t, model.AfgeleideRelatie{
 		Naam: "Woonwijk", JSONRolnaam: "woonwijk", DoelEntiteit: "Gemeentedeel",
@@ -103,8 +123,9 @@ func TestWoonwijkOverTweeHops(t *testing.T) {
 		}
 	}
 	sort.Strings(lader.batches)
-	if want := []string{"Gemeentedeel", "Locatie", "NatuurlijkPersoon"}; !reflect.DeepEqual(lader.batches, want) {
-		t.Errorf("batches = %v, verwacht één per type: %v", lader.batches, want)
+	want := []string{"Gemeentedeel", "Locatie", "Locatie.gebiedsligging", "NatuurlijkPersoon", "NatuurlijkPersoon.woonlocatie"}
+	if !reflect.DeepEqual(lader.batches, want) {
+		t.Errorf("batches = %v, verwacht één per type en gebruikte rol: %v", lader.batches, want)
 	}
 }
 

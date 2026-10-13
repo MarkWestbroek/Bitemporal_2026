@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/afleiding"
@@ -30,19 +31,21 @@ func verzoekContext(ctx context.Context) context.Context {
 	return ctx
 }
 
-// fullLader laadt entiteiten zoals /full ze levert (GE's en relaties, hub-kinderen, afgeleide
-// formele tijd) op één vast formeel peilmoment. Implementeert afleiding.Lader.
-type fullLader struct {
+// luiLader laadt voor de afleiding op één vast formeel peilmoment, lui (afleiding.Lader):
+// kale entiteitrijen, en per onderliggend element alleen wat een regel aanspreekt. Een doel
+// kost zo een paar queries in plaats van een hele /full-lading (die ook formele-tijdafleiding
+// en alle GE's meeneemt). Door het formele-tijdfilter zijn alle geladen voorkomens actief.
+type luiLader struct {
 	peil time.Time
 }
 
 // NieuweAfleidingLader geeft de lader voor afgeleide relaties op het formele peilmoment peil.
 // Ook gebruikt door dynql (GraphQL).
 func NieuweAfleidingLader(peil time.Time) afleiding.Lader {
-	return fullLader{peil: peil}
+	return luiLader{peil: peil}
 }
 
-func (l fullLader) LaadEntiteiten(ctx context.Context, typenaam string, ids []int) (map[int]map[string]any, error) {
+func (l luiLader) LaadEntiteiten(ctx context.Context, typenaam string, ids []int) (map[int]map[string]any, error) {
 	meta, ok := model.MetaRegistry.GetTypeMeta(typenaam)
 	if !ok || meta.SliceFactory == nil || meta.IDKolom == "" {
 		return nil, fmt.Errorf("geen laadbare entiteit: %s", typenaam)
@@ -50,7 +53,123 @@ func (l fullLader) LaadEntiteiten(ctx context.Context, typenaam string, ids []in
 	if len(ids) == 0 {
 		return map[int]map[string]any{}, nil
 	}
-	peil := l.peil
+	entities := meta.SliceFactory()
+	query := applyFormeleTijdFilterVoorModel(DB.NewSelect().Model(entities), typenaam, l.peil)
+	if err := query.Where("?TableAlias."+meta.IDKolom+" IN (?)", bun.In(ids)).Scan(verzoekContext(ctx)); err != nil && !isNoRows(err) {
+		return nil, err
+	}
+	return mapsPerID(entities, meta)
+}
+
+func (l luiLader) LaadVoorkomens(ctx context.Context, typenaam, rol string, ids []int) (map[int][]any, error) {
+	meta, ok := model.MetaRegistry.GetTypeMeta(typenaam)
+	if !ok {
+		return nil, fmt.Errorf("onbekend type: %s", typenaam)
+	}
+	var child *model.OnderliggendGegevenselement
+	for i := range meta.OnderliggendeGegevenselementen {
+		if meta.OnderliggendeGegevenselementen[i].JSONRolnaam == rol {
+			child = &meta.OnderliggendeGegevenselementen[i]
+			break
+		}
+	}
+	if child == nil {
+		return nil, fmt.Errorf("%s heeft geen onderliggend element %q", typenaam, rol)
+	}
+	childMeta, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+	if !ok {
+		return nil, fmt.Errorf("onbekend type: %s", child.Doeltype)
+	}
+	items, err := l.rijenVan(ctx, childMeta, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	// Hub: de actieve _Data (en _Aanvang/_Einde) erbij, gegroepeerd op (entiteit, rel_id).
+	if childMeta.GESubtype == model.GESubtypeHub {
+		type hubSleutel struct{ entiteit, rel int }
+		sleutelVan := func(m map[string]any, entKolom string) hubSleutel {
+			e, _ := m[entKolom].(float64)
+			r, _ := m["rel_id"].(float64)
+			return hubSleutel{int(e), int(r)}
+		}
+		for _, gc := range childMeta.OnderliggendeGegevenselementen {
+			gcMeta, ok := model.MetaRegistry.GetTypeMeta(gc.Doeltype)
+			if !ok {
+				continue
+			}
+			kinderen, err := l.rijenVan(ctx, gcMeta, ids)
+			if err != nil {
+				return nil, err
+			}
+			perHub := map[hubSleutel][]any{}
+			for _, k := range kinderen {
+				km := k.(map[string]any)
+				hs := sleutelVan(km, gcMeta.EntiteitIDKolom)
+				perHub[hs] = append(perHub[hs], km)
+			}
+			for _, it := range items {
+				m := it.(map[string]any)
+				lijst := perHub[sleutelVan(m, childMeta.EntiteitIDKolom)]
+				if lijst == nil {
+					lijst = []any{}
+				}
+				m[gc.JSONRolnaam] = lijst
+			}
+		}
+	}
+
+	uit := map[int][]any{}
+	for _, it := range items {
+		m := it.(map[string]any)
+		if id, ok := m[childMeta.EntiteitIDKolom].(float64); ok {
+			uit[int(id)] = append(uit[int(id)], m)
+		}
+	}
+	for id := range uit {
+		lijst := uit[id]
+		sort.SliceStable(lijst, func(i, j int) bool {
+			ri, _ := lijst[i].(map[string]any)["rel_id"].(float64)
+			rj, _ := lijst[j].(map[string]any)["rel_id"].(float64)
+			return ri < rj
+		})
+	}
+	return uit, nil
+}
+
+// rijenVan laadt de rijen van een (onderliggend) type voor de gegeven entiteit-id's, actief op
+// het peilmoment, als JSON-maps.
+func (l luiLader) rijenVan(ctx context.Context, meta model.TypeMeta, ids []int) ([]any, error) {
+	if meta.DBSliceFactory == nil || meta.EntiteitIDKolom == "" {
+		return nil, fmt.Errorf("geen laadbaar onderliggend type: %s", meta.Typenaam)
+	}
+	rijen := meta.DBSliceFactory()
+	query := applyFormeleTijdFilterVoorModel(DB.NewSelect().Model(rijen), meta.Typenaam, l.peil)
+	if err := query.Where("?TableAlias."+meta.EntiteitIDKolom+" IN (?)", bun.In(ids)).Scan(verzoekContext(ctx)); err != nil && !isNoRows(err) {
+		return nil, err
+	}
+	b, err := json.Marshal(rijen)
+	if err != nil {
+		return nil, err
+	}
+	var lijst []any
+	if err := json.Unmarshal(b, &lijst); err != nil {
+		return nil, err
+	}
+	return lijst, nil
+}
+
+// LaadVolledigeEntiteiten laadt entiteiten zoals /full ze levert (alle GE's en relaties,
+// hub-kinderen, afgeleide formele tijd) op het formele peilmoment peil, per id. Voor GraphQL
+// <rol>_doelen, waar de volledige doelobjecten gevraagd zijn.
+func LaadVolledigeEntiteiten(ctx context.Context, peil time.Time, typenaam string, ids []int) (map[int]map[string]any, error) {
+	meta, ok := model.MetaRegistry.GetTypeMeta(typenaam)
+	if !ok || meta.SliceFactory == nil || meta.IDKolom == "" {
+		return nil, fmt.Errorf("geen laadbare entiteit: %s", typenaam)
+	}
+	if len(ids) == 0 {
+		return map[int]map[string]any{}, nil
+	}
 	entities := meta.SliceFactory()
 	query := DB.NewSelect().Model(entities)
 	query = applyFormeleTijdFilterVoorModel(query, typenaam, peil)

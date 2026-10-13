@@ -105,26 +105,41 @@ func voegAfgeleideRelatiesToe(ctx context.Context, p graphql.ResolveParams, maps
 		log.Printf("AFLEIDING (GraphQL): %s: afgeleide relaties niet berekend: %v", meta.Typenaam, err)
 		return
 	}
-	// Volledige doelobjecten: één keer plat slaan per (type, id), ook als meerdere bronnen
-	// naar hetzelfde doel wijzen. De maps komen uit de omgeving (geladen voor de weergavenaam).
-	plat := map[string]map[int]map[string]interface{}{}
-	doelObject := func(typenaam string, id int) map[string]interface{} {
-		if m, ok := plat[typenaam][id]; ok {
-			return m
+	// Volledige doelobjecten (alleen als <rol>_doelen gevraagd is): per doeltype één volledige
+	// lading op hetzelfde peilmoment, één keer plat geslagen per (type, id). De omgeving laadt
+	// lui en heeft de doelen dus niet volledig.
+	perType := map[string][]int{}
+	for _, ar := range meta.AfgeleideRelaties {
+		if !alles && !namen[doelenVeldnaam(ar)] {
+			continue
 		}
+		for _, perRol := range uitkomst {
+			for _, v := range perRol[ar.JSONRolnaam] {
+				perType[ar.DoelEntiteit] = append(perType[ar.DoelEntiteit], v.ID)
+			}
+		}
+	}
+	plat := map[string]map[int]map[string]interface{}{}
+	for typenaam, ids := range perType {
 		doelMeta, ok := model.MetaRegistry.GetTypeMeta(typenaam)
-		ruw := omg.Geladen(typenaam, id)
-		var obj map[string]interface{}
-		if ok && ruw != nil {
-			obj = flattenEntityMap(kopieerMap(ruw), doelMeta)
+		if !ok {
+			continue
+		}
+		ruw, err := handlers.LaadVolledigeEntiteiten(ctx, peil, typenaam, ids)
+		if err != nil {
+			log.Printf("AFLEIDING (GraphQL): doelobjecten %s niet geladen: %v", typenaam, err)
+			continue
+		}
+		plat[typenaam] = map[int]map[string]interface{}{}
+		for id, m := range ruw {
+			obj := flattenEntityMap(m, doelMeta)
 			verrijkWeergavenamen(ctx, obj, doelMeta)
 			verrijkEigenAfgeleideVelden(obj, doelMeta)
+			plat[typenaam][id] = obj
 		}
-		if plat[typenaam] == nil {
-			plat[typenaam] = map[int]map[string]interface{}{}
-		}
-		plat[typenaam][id] = obj
-		return obj
+	}
+	doelObject := func(typenaam string, id int) map[string]interface{} {
+		return plat[typenaam][id]
 	}
 
 	for _, m := range maps {
@@ -153,28 +168,4 @@ func voegAfgeleideRelatiesToe(ctx context.Context, p graphql.ResolveParams, maps
 			}
 		}
 	}
-}
-
-// kopieerMap maakt een diepe kopie van een JSON-map (flattenEntityMap past in place aan; de
-// omgeving moet haar eigen /full-vorm houden).
-func kopieerMap(m map[string]interface{}) map[string]interface{} {
-	uit := make(map[string]interface{}, len(m))
-	for k, v := range m {
-		uit[k] = kopieerWaarde(v)
-	}
-	return uit
-}
-
-func kopieerWaarde(v interface{}) interface{} {
-	switch x := v.(type) {
-	case map[string]interface{}:
-		return kopieerMap(x)
-	case []interface{}:
-		uit := make([]interface{}, len(x))
-		for i, el := range x {
-			uit[i] = kopieerWaarde(el)
-		}
-		return uit
-	}
-	return v
 }
