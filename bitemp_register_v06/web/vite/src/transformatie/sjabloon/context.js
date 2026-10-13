@@ -6,7 +6,8 @@
  *
  * Vorm (zie het ontwerpvoorstel §3.3):
  *
- *   { map: {naam, omschrijving}, titel, omschrijving, diepte, kop,
+ *   { map: {naam, beschrijving}, titel, beschrijving, diepte, kop,
+ *     (omschrijving = alias van beschrijving, voor oudere sjablonen)
  *     kinderen:   [ …submappen in dezelfde vorm, diepte + 1… ],
  *     profielen:  [{ id, label, elementen, diagrammen, verbindingen }],
  *     elementen:  [{ id, naam, type:{id,label}, data, beschrijving (toelichting = alias), velden, diagrammen, verbindingen, profiel }],
@@ -26,12 +27,16 @@ const naamOf = (el) => el?.naam || "";
  *                      elements: Record<string, Object>, diagrams: Record<string, Object> }>,
  *   svgVan?: (diagram: Object, profielCtx: Object) => string }} invoer
  */
-export function maakDocumentContext({ naam, omschrijving = "", profielen = [], svgVan = null, kinderen = [], diepte = 1, diagramVolgorde = null }) {
+export function maakDocumentContext({ naam, beschrijving = "", omschrijving = "", profielen = [], svgVan = null, kinderen = [], diepte = 1, diagramVolgorde = null }) {
+  // Map-tekst heet `beschrijving` (13-10); `omschrijving` blijft als invoer en
+  // als alias in de context, zodat oudere sjablonen en scripts werken.
+  const tekst = beschrijving || omschrijving || "";
   const ctx = {
-    map: { naam: naam || "", omschrijving: omschrijving || "" },
+    map: { naam: naam || "", beschrijving: tekst, omschrijving: tekst },
     naam: naam || "",
     titel: naam || "",
-    omschrijving: omschrijving || "",
+    beschrijving: tekst,
+    omschrijving: tekst,
     diepte,
     // Markdown-kop voor deze map: "#" op niveau 1, "##" op 2, … (max 6).
     kop: "#".repeat(Math.min(6, Math.max(1, diepte))),

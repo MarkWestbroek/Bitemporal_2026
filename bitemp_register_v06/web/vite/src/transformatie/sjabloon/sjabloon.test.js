@@ -137,3 +137,16 @@ test("zip: geldig STORE-archief met UTF-8-namen en juiste CRC", async () => {
   const cdStart = dv.getUint32(eind + 16, true);
   assert.equal(dv.getUint32(cdStart, true), 0x02014b50);
 });
+
+test("map- en diagrambeschrijving: context heeft beschrijving (omschrijving als alias), diagramtekst lekt niet", async () => {
+  const { maakDocumentContext } = await import("./context.js");
+  const { renderSjabloon } = await import("./renderer.js");
+  const { DEEL_PROJECTMAP } = await import("./sjablonen.js");
+  const dia = { d1: { id: "d1", naam: "Plaat", nodes: [], beschrijving: "Wat de plaat laat zien." }, d2: { id: "d2", naam: "Tweede", nodes: [] } };
+  const ctx = maakDocumentContext({ naam: "Hoofdstuk", omschrijving: "Inleidende tekst.", profielen: [{ id: "p", label: "P", descriptor: { elementTypes: [] }, elements: {}, diagrams: dia }], svgVan: () => "<svg/>" });
+  assert.equal(ctx.beschrijving, "Inleidende tekst.");
+  assert.equal(ctx.map.omschrijving, "Inleidende tekst.");
+  const { tekst } = renderSjabloon(DEEL_PROJECTMAP, ctx);
+  assert.equal(tekst.split("Inleidende tekst.").length - 1, 1, "maptekst één keer, niet onder elk diagram");
+  assert.match(tekst, /\*Plaat\*\n\nWat de plaat laat zien\./);
+});

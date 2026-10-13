@@ -42,7 +42,8 @@ function mapInvoer(mapId, mappen, diepteGrens = 8) {
   const diagramVolgorde = {};
   let i = 0;
   for (const [sleutel, mid] of Object.entries(plaatsing)) if (mid === mapId && !sleutel.startsWith("el::")) diagramVolgorde[sleutel] = i++;
-  return { naam: m.naam || "", omschrijving: m.omschrijving || "", profielen: profielenVanMap(mapId), kinderen, diagramVolgorde };
+  const beschrijving = m.beschrijving || m.omschrijving || "";
+  return { naam: m.naam || "", beschrijving, profielen: profielenVanMap(mapId), kinderen, diagramVolgorde };
 }
 
 /** Context voor een map: alle profielen erin, de submappen, met lui getekende diagrammen. */

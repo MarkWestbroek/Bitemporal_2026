@@ -174,3 +174,23 @@ export function zonderWeesPlaatsingen(plaatsing, inhoud, bekend) {
   }
   return { plaatsing: uit, weggelaten };
 }
+
+/**
+ * Mappen heetten hun tekst eerst `omschrijving`; consequent met elementen en
+ * velden (M3 `beschrijving`) heet het nu `beschrijving` (Mark, 13-10). Oude
+ * mappen (opslag, projectbestand, sync-snapshot) migreren bij binnenkomst.
+ * @param {Record<string, Object>} mappen
+ */
+export function mappenMetBeschrijving(mappen) {
+  if (!mappen) return mappen;
+  let uit = null;
+  for (const [id, m] of Object.entries(mappen)) {
+    if (m && Object.prototype.hasOwnProperty.call(m, "omschrijving")) {
+      uit = uit || { ...mappen };
+      const { omschrijving, ...rest } = m;
+      const tekst = rest.beschrijving || omschrijving;
+      uit[id] = tekst ? { ...rest, beschrijving: tekst } : rest;
+    }
+  }
+  return uit || mappen;
+}
