@@ -1,5 +1,53 @@
 ﻿# Backlog — Bitemporeel Register v06
 
+## Hoge prioriteit (Mark, 14-10-2026)
+
+Bovenaan op verzoek van Mark. Volgorde van bouwen: help → kennismakingstour → meldingen; AI
+daarna (of tussendoor).
+
+| Id | Onderwerp | Stand |
+|---|---|---|
+| AI-1 | **MCP-API voor Omnium** | open, hoge prio |
+| AI-2 | **AI-assistent in context (rechtsklik in de projectboom)** | open, hoge prio |
+| HELP-1 | Gewone help afmaken volgens `plans/2026-09-10 Begeleiding in de Studio` | in uitvoering |
+| HELP-2 | Kennismakingstour (zoals de MusicBrain-editor) | in uitvoering |
+| HELP-3 | Bugs en wensen melden vanuit Omnium (formulier + schermafbeelding, Alt-klik en een kader trekken), gedogfood als register-entiteit | ontwerp |
+
+**AI-1 — MCP-API.** Een MCP-server (Model Context Protocol) op Omnium, zodat een AI-client
+(Claude Desktop/Code, een eigen assistent) projecten, modellen en registergegevens kan lezen en,
+met rechten, wijzigen. Zelfde opzet als MusicBrain (navragen: SDK, transport, auth). Tools op M1
+(model: elementen, relaties, diagrammen, mappen; via de projectsync-operaties, zodat het gewoon
+operaties zijn die iedereen live ziet) en op M0 (registreren/lezen via de bestaande API, door de
+PEP). Auth: dezelfde gebruiker en rol, plus "alles dicht tenzij" per project; schrijven alleen
+met recht schrijven. Eerder idee: TD2 (MCP voor testdata).
+
+**AI-2 — AI-assistent in context.** Rechtsklik op een map, element of diagram → "Vraag de
+assistent…". De assistent krijgt die context (de selectie en het profiel/M2) en stelt operaties
+voor op het model, die je ziet en bevestigt voordat ze worden toegepast (één ongedaan te maken
+stap). AI-aanpak: BYOK + proxy met codes, zoals de MusicBrain-editor; later lokale/EU-LLM.
+Voorbeelden van Mark:
+
+- *"Maak een use case-model met de actoren gebruiker en beheerder. Gebruiker: maak feature
+  request, bekijk status meldingen (extended door voeg foto of document toe), bekijk help.
+  Beheerder: behandel meldingen."*
+- *"Voeg de volgende attributen toe aan deze klasse: aap: string, noot: int, mies: tekst."*
+
+Bouwt op dezelfde gereedschapsset als AI-1 (één set modeloperaties, twee ingangen: MCP van
+buiten, assistent van binnen).
+
+**Zo doet MusicBrain het** (nagekeken 14-10, `D:\Git\Muziek\MusicBrain`): één toolset
+(`editor/src/modular-mb/recipe/tools.ts`, `TOOLS` + `runTool`, per tool `mutating`) voedt
+zowel de assistent als de MCP-server (`tools/mmb-mcp/src/server.ts`: low-level `Server` uit
+`@modelcontextprotocol/sdk`, alleen stdio, geen auth, importeert de editor-code via tsx en werkt
+op een project-JSON). De assistent werkt **preview-first**: leestools direct, wijzigende tools op
+een kopie (`sim`) en verzameld als voorstel; *Toepassen* = één undo-stap. BYOK (DeepSeek, Claude
+via `@anthropic-ai/sdk` in de browser, OpenAI, Ollama) of de eigen proxy met codes (`/ai/*`).
+Voor Omnium: tools op de projectsync-operaties (dan zijn toepassingen gewone operaties die
+iedereen live ziet), en voor de MCP liever streamable HTTP met de Omnium-sessie/token en
+projectrechten dan alleen stdio, zodat hij ook tegen app werkt.
+
+**Ontwerp HELP-3:** `plans/meldingen/2026-10-14 Bugs en wensen melden vanuit Omnium (voorstel).md`.
+
 ## Actuele triage: integrale review 2026-09-30
 
 De [integrale review](reviews/2026-09-30-omnium-integrale-review.md) bevat
