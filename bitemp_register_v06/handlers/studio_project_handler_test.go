@@ -70,7 +70,13 @@ func studioTestDB(t *testing.T) *bun.DB {
 	if _, err := db.NewCreateTable().Model((*model.StudioWerkruimte)(nil)).IfNotExists().Exec(ctx); err != nil {
 		t.Fatalf("werkruimte-tabel aanmaken: %v", err)
 	}
+	for _, m := range []any{(*model.StudioProjectToegang)(nil), (*model.StudioMigratie)(nil)} {
+		if _, err := db.NewCreateTable().Model(m).IfNotExists().Exec(ctx); err != nil {
+			t.Fatalf("toegang-tabellen aanmaken: %v", err)
+		}
+	}
 	t.Cleanup(func() {
+		_, _ = db.NewDelete().Model((*model.StudioProjectToegang)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
 		_, _ = db.NewDelete().Model((*model.StudioWerkruimte)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
 		_, _ = db.NewDelete().Model((*model.StudioProjectOp)(nil)).Where("project_id LIKE 'test-%'").Exec(ctx)
 		_, _ = db.NewDelete().Model((*model.StudioProject)(nil)).Where("id LIKE 'test-%'").Exec(ctx)
@@ -362,4 +368,10 @@ func TestStudioWerkruimte_LaatsteSchrijverWint(t *testing.T) {
 	if !bytes.Contains(rec.Body.Bytes(), []byte(`"t3"`)) {
 		t.Fatalf("nieuwere schrijver moest winnen: %s", rec.Body.String())
 	}
+}
+
+func studioDoeReq(r *gin.Engine, req *http.Request) *httptest.ResponseRecorder {
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	return rec
 }

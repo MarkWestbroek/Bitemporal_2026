@@ -4,6 +4,8 @@ import AuthBeschermd from "./components/AuthBeschermd";
 import IndexSchemaPage from "./pages/IndexSchemaPage";
 import TijdlijnSchemaPage from "./pages/TijdlijnSchemaPage";
 import RegistratieReplayPage from "./pages/RegistratieReplayPage";
+import UitnodigingPagina from "./components/UitnodigingPagina";
+import { uitnodigingToken } from "./shared/uitnodiging.js";
 
 // Lazy-load de editors zodat @xyflow/react niet in elke pagina-bundle zit
 const EditorPage = lazy(() => import("./pages/EditorPage"));
@@ -189,8 +191,13 @@ export default function App() {
   }
 
   if (route === "studio") {
+    // Uitnodiging accepteren (#uitnodiging=<token>): openbaar, vóór het inloggen.
+    const token = uitnodigingToken();
+    if (token) return <UitnodigingPagina token={token} />;
+    // Elke rol mag de Studio in; wat je per project mag, bepaalt de server ("alles dicht
+    // tenzij", plan 2026-10-12 §5). Bouwen/codegen/EA-import vragen daar de rol bouwer.
     return (
-      <AuthBeschermd vereistRol="editor">
+      <AuthBeschermd vereistRol="lezer">
         <Suspense fallback={<div style={{ padding: 32 }}>Studio laden…</div>}>
           <StudioPage />
         </Suspense>

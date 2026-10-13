@@ -178,7 +178,8 @@ func RequireAuth() gin.HandlerFunc {
 }
 
 // RequireRol is een Gin middleware die een specifieke rol (of hoger) vereist.
-// Rolhiërarchie: admin > editor > viewer.
+// Rangorde en aliassen (lezer=viewer < modelleur < ontwerper < bouwer=editor <
+// beheerder=admin): middleware/rollen.go.
 func RequireRol(minimaalRol string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !ControleerRol(c, minimaalRol) {
@@ -217,20 +218,14 @@ func ControleerRol(c *gin.Context, minimaalRol string) bool {
 }
 
 // rolToegestaan controleert of de huidige rol voldoende is voor de vereiste rol.
-// Hiërarchie: admin (3) > editor (2) > viewer (1).
 // Een onbekende vereiste rol (bijv. een typo in RequireRol("editer")) is een
 // deny: zonder deze check zou niveaus[vereist]=0 elke onbekende rol openzetten.
 func rolToegestaan(huidig, vereist string) bool {
-	niveaus := map[string]int{
-		"viewer": 1,
-		"editor": 2,
-		"admin":  3,
-	}
-	vereistNiveau, bekend := niveaus[vereist]
-	if !bekend {
+	vereistNiveau := RolNiveau(vereist) // rangorde: middleware/rollen.go
+	if vereistNiveau == 0 {
 		return false
 	}
-	return niveaus[huidig] >= vereistNiveau
+	return RolNiveau(huidig) >= vereistNiveau
 }
 
 // GetClaims haalt de JWT-claims uit de Gin context (of nil als niet ingelogd).

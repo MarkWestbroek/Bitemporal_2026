@@ -3,7 +3,8 @@
 *2026-10-12. Aanleiding: Mark wil op een testomgeving mensen per mail uitnodigen. Ze kiezen zelf
 een wachtwoord en krijgen rechten om te modelleren, meer om formulierdefinities te maken, of nog
 meer om codegen te starten. Rechten liefst per map in de projectboom, gedefinieerd in de tool zelf
-(dogfooding). Status: voorstel; nog niets gebouwd. Bouwt voort op
+(dogfooding). Status: fase 1 gebouwd (14-10, zie §6): uitnodigen, vijf rollen en toegang per
+project, "alles dicht tenzij". Bouwt voort op
 `2026-10-12 Toegang op beleid — PAP, PDP en PEP (plan).md` en
 `gebruikersbeheer/2026-10-06 Gebruikersbeheer als bitemporeel model (voorstel).md`.*
 
@@ -99,7 +100,13 @@ fijnere rollen komen er vanzelf bij als de beleidsbundel (toegangsplan fase 1a/1
 1. **Testomgeving:** app (app.omnium-ide.nl).
 2. **De genodigde kiest zelf een gebruikersnaam**: die verschijnt in de lijst "wie is actief".
 
-**Rollen (voorstel, nog te bevestigen).** Het verschil zit in de impact van wat je maakt:
+3. **Rollen:** zoals hieronder ("Rollen klopt").
+4. **Deny-by-default:** "alles dicht tenzij", ook voor de tool.
+5. **Datarechten binnen de tool:** een model is data, een map is data. Nu, zonder FTV, op
+   **niveau model** (project). Doel: genodigden werken in een **probeerproject** (iedereen of
+   groepjes samen) en komen niet in het productieproject van Mark en Hugo.
+
+**Rollen (besloten 13-10).** Het verschil zit in de impact van wat je maakt:
 
 | Rol | Mag | Gevolg van fouten |
 |---|---|---|
@@ -113,7 +120,7 @@ Nu een vaste keuzelijst (enum). Later een **referentielijst** in domein `beheer`
 zelf gemodelleerd; de **PIP** levert de rollen van een subject aan de PDP. De beleidsbundel
 verwijst alleen naar rolcodes, dus die overgang breekt niets (Mark, 13-10).
 
-**Toolrechten (voorstel).** Datarechten (het toegangsplan) gaan over wie welke registergegevens
+**Toolrechten.** Datarechten (het toegangsplan) gaan over wie welke registergegevens
 ziet; toolrechten over wat je in de werkbank mag. Zes groepen, oplopend in impact:
 
 1. **Lezen** — project openen, diagrammen bekijken, documenten genereren.
@@ -126,7 +133,56 @@ ziet; toolrechten over wat je in de werkbank mag. Zes groepen, oplopend in impac
 6. **Beheer** — gebruikers uitnodigen en rollen toekennen, toegangsbeleid publiceren, een project
    verwijderen of een serverversie overschrijven.
 
-**Nog open:**
+**Nog open:** krijgt "taal wijzigen" (4) een eigen rol, of blijft het bij de bouwer?
 
-3. Rolnamen en indeling hierboven: akkoord, en krijgt "taal wijzigen" (4) een eigen rol?
-4. Deny-by-default ook voor toolrechten (alleen wat expliciet mag)?
+## 6. Gebouwd (fase 1, 14-10)
+
+**Rollen** (`middleware/rollen.go`, spiegel `web/vite/src/shared/rollen.js`): één rangorde
+lezer 1 < modelleur 2 < ontwerper 3 < bouwer 4 < beheerder 5. De oude namen blijven geldig als
+alias (viewer = lezer, editor = bouwer, admin = beheerder), dus bestaande accounts en elke
+`RequireRol("editor"/"admin")` houden hun betekenis. Toekennen gebeurt met de nieuwe namen
+(enum `Gebruikersrol` uitgebreid). De PEP geeft een subject alle rolnamen tot en met zijn niveau,
+zodat beleid op `viewer` ook voor een bouwer geldt.
+
+**Toegang per project** (`handlers/studio_project_toegang.go`, tabel `studio_project_toegang`):
+
+| Wie | Recht |
+|---|---|
+| auth uit (dev) | beheren |
+| beheerder, of eigenaar van het project | beheren (toegang regelen, verwijderen) |
+| rij voor de gebruiker of `*` (iedereen die is ingelogd) | lezen of schrijven, de hoogste telt |
+| anders | geen: het project bestaat voor je niet (404) |
+
+Schrijven vraagt daarnaast minstens de rol modelleur; EA-import via de server de rol bouwer.
+De lijst toont alleen projecten met minstens leesrecht en geeft per project `recht` mee. Beheer
+in de Studio: *Van server ophalen…* → **Toegang…** bij een project (eigenaar en beheerder).
+
+**Overgang:** een eenmalige migratie (`studio_migraties`, `project_toegang_v1`) gaf bij de eerste
+start alle bestaande gebruikers toegang tot alle bestaande projecten (bouwer en hoger schrijven,
+de rest lezen). Wie daarna wordt uitgenodigd, krijgt alleen wat de uitnodiging zegt, en ziet het
+productieproject dus niet.
+
+**Uitnodigen** (`gebruikers/uitnodiging.go`, tabel `gebruiker_uitnodiging`): beheerder kiest in
+*Gebruikers → Uitnodigen* e-mail, rol, geldigheid (standaard 7 dagen, max 30) en per project
+lezen of schrijven. De server bewaart alleen de sha256 van de token; de link
+`<basis>/viz/react/studio.html#uitnodiging=<token>` (token in het fragment, dus niet in de
+serverlogs) gaat per mail als SMTP is ingericht en staat één keer in het antwoord om te kopiëren.
+De genodigde kiest een gebruikersnaam (voorstel: deel vóór de @) en wachtwoord; accepteren claimt
+de uitnodiging atomair, registreert de gebruiker in domein `beheer`, kent de projecttoegang toe en
+logt in. Rate limit 30 per 10 minuten per IP op de openbare routes. Aan met
+`UITNODIGEN_ENABLED=true` (en `AUTH_ENABLED=true`); basis-URL `STUDIO_BASIS_URL`, anders
+`NOTIFICATIE_BASIS_URL`, anders de host van het verzoek.
+
+**Bewust nog niet:**
+
+- De uitnodiging is plumbing, nog geen bitemporele entiteit (§2.4). De registratie van de
+  gebruiker zelf is wel bitemporeel en noemt de uitnodiging in de opmerking.
+- Wachtwoord vergeten (§2.3).
+- Rechten per map (fase 3) en de rollen als Toegangsspraak-regels (fase 2).
+- De Studio-UI is nog niet alleen-lezen bij leesrecht: bewerken kan lokaal, de server weigert het
+  opslaan en de operaties (403). Een slot in de UI volgt.
+- Datarechten op registergegevens (LEESTOEGANG, PEP-bundel) staan los van projecttoegang.
+
+**Op app aanzetten:** `UITNODIGEN_ENABLED=true` en `STUDIO_BASIS_URL=https://app.omnium-ide.nl`
+in de env van de api; zonder SMTP kopieer je de link uit het scherm. Maak eerst het probeerproject
+(*Naar server sturen*) en kies dat in de uitnodiging.

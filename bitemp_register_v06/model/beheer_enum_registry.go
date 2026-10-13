@@ -6,7 +6,7 @@ package model
 func initBeheerEnumRegistry() {
 	EnumWaarden["Gebruikersstatus"] = []string{"actief", "geblokkeerd"}
 	EnumDomeinen["Gebruikersstatus"] = "beheer"
-	EnumWaarden["Gebruikersrol"] = []string{"viewer", "editor", "admin"}
+	EnumWaarden["Gebruikersrol"] = []string{"viewer", "editor", "admin", "lezer", "modelleur", "ontwerper", "bouwer", "beheerder"}
 	EnumDomeinen["Gebruikersrol"] = "beheer"
 
 	// Enum editor-layout (positie + lock)

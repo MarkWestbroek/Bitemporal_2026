@@ -19,12 +19,14 @@ import rego.v1
 default allow := false
 
 # === Rolhiërarchie ===
-# admin heeft alle rechten van editor, editor alle rechten van viewer.
+# Zelfde rangorde als middleware/rollen.go: de oude namen zijn aliassen.
 
 rol_niveau := {
-    "admin": 3,
-    "editor": 2,
-    "viewer": 1,
+    "beheerder": 5, "admin": 5,
+    "bouwer": 4, "editor": 4,
+    "ontwerper": 3,
+    "modelleur": 2,
+    "lezer": 1, "viewer": 1,
 }
 
 heeft_minimaal_rol(vereist) if {

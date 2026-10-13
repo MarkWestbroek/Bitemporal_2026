@@ -56,14 +56,15 @@ type Stand struct {
 	Rollen            []Rol  `json:"rollen"`
 }
 
-var rolNiveau = map[string]int{"viewer": 1, "editor": 2, "admin": 3}
+// rolNiveau: de rangorde uit middleware/rollen.go (één bron).
+func rolNiveau(rol string) int { return middleware.RolNiveau(rol) }
 
 // HoogsteRol is de hoogste rol zonder domein ("voor alle domeinen"); leeg als er geen is.
 // Rollen met een domein tellen nog niet mee: die zijn voor de autorisatielaag (FTV/PIP).
 func (s Stand) HoogsteRol() string {
 	beste := ""
 	for _, r := range s.Rollen {
-		if r.Domein == "" && rolNiveau[r.Rol] > rolNiveau[beste] {
+		if r.Domein == "" && rolNiveau(r.Rol) > rolNiveau(beste) {
 			beste = r.Rol
 		}
 	}

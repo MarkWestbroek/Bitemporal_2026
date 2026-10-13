@@ -38,6 +38,11 @@ func RequestBodyLogger() gin.HandlerFunc {
 
 		start := time.Now()
 		path := c.Request.URL.Path
+		// Nooit wachtwoorden loggen: inloggen, wachtwoord zetten, uitnodiging accepteren.
+		if strings.HasPrefix(path, "/api/auth/") || strings.HasPrefix(path, "/api/uitnodiging/") || strings.HasSuffix(path, "/wachtwoord") {
+			c.Next()
+			return
+		}
 
 		// Lees body en zet hem terug voor handlers
 		body, err := io.ReadAll(c.Request.Body)

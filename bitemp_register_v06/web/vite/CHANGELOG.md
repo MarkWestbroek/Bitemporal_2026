@@ -8,6 +8,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Uitnodigen en toegang per project** (14-10, Mark): *Gebruikers → Uitnodigen* met e-mail,
+  rol, geldigheid en per project lezen/schrijven; de link verschijnt één keer (en gaat per mail
+  als de server SMTP heeft). De genodigde opent `studio.html#uitnodiging=…`, kiest gebruikersnaam
+  en wachtwoord en is ingelogd. *Van server ophalen…* toont alleen projecten waar je bij mag,
+  met "alleen lezen" waar dat geldt; eigenaar en beheerder krijgen **Toegang…** (gebruikers of
+  iedereen, lezen/schrijven). Vijf rollen (lezer, modelleur, ontwerper, bouwer, beheerder) in
+  `shared/rollen.js`; de Studio staat open voor elke rol, de API beslist per project.
+
+### Tests
+- **Uitnodigen** (14-10): `tests/e2e/15-studio-uitnodigen.spec.js` (accepteren, ongeldige link,
+  uitnodigformulier, Toegang…) en unittests voor rollen, token en toegangsrijen.
+
 ### Tests
 - **Regressietests voor de Studio** (13-10, Mark): Playwright-specs `tests/e2e/10…14-studio-*.spec.js`
   (20 tests: deselecteren incl. muisbeweging, klik-door in kaders, geen groepskader; relatiepaneel,

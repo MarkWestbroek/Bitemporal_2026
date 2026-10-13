@@ -6,15 +6,16 @@ package handlers
 // project-werkbestand (formaat "studio-project") als geheel, en haalt het als
 // geheel terug. Samenwerken is hier "om de beurt": de versieteller voorkomt dat
 // je ongemerkt andermans opslag overschrijft (409 bij een verouderde versie).
-// Wie is ingelogd ziet alle projecten (geen lidmaatschap; dat komt met het
-// modelregister, plan 2026-10-06). Zonder AUTH_ENABLED is de eigenaar leeg.
+// Toegang per project: "alles dicht tenzij" (studio_project_toegang.go): je ziet alleen
+// projecten waar je eigenaar van bent, een toegangsrij voor hebt, of alles als beheerder.
+// Zonder AUTH_ENABLED is de eigenaar leeg en mag iedereen alles.
 //
 // Routes (main.go):
 //   GET    /api/studio/projecten        lijst zonder inhoud
 //   GET    /api/studio/projecten/:id    volledig record
 //   POST   /api/studio/projecten        {id?, naam, inhoud}         → 201
 //   PUT    /api/studio/projecten/:id    {naam?, inhoud, versie}     → 200, 409 bij conflict
-//   DELETE /api/studio/projecten/:id    eigenaar of admin
+//   DELETE /api/studio/projecten/:id    eigenaar of beheerder
 
 import (
 	"context"
@@ -54,6 +55,7 @@ type StudioProjectMeta struct {
 	Grootte           int64     `json:"grootte" bun:"grootte"`                       // bytes van de JSON-inhoud
 	TotVolgnummer     int64     `json:"tot_volgnummer" bun:"tot_volgnummer"`         // snapshot geldt t/m dit volgnummer
 	LaatsteVolgnummer int64     `json:"laatste_volgnummer" bun:"laatste_volgnummer"` // hoogste volgnummer in het operatielog
+	Recht             string    `json:"recht,omitempty" bun:"-"`                     // jouw recht: lezen, schrijven of beheren
 }
 
 // studioProjectInvoer is het verzoek voor POST en PUT.
@@ -144,10 +146,28 @@ func MaakStudioProjectenLijstHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Projecten lezen mislukt: " + err.Error()})
 			return
 		}
-		if lijst == nil {
-			lijst = []StudioProjectMeta{}
+		// Alleen projecten waar je minstens leesrecht op hebt, met je recht erbij.
+		zichtbaar := []StudioProjectMeta{}
+		authAan := middleware.IsAuthEnabled()
+		var acl map[string]map[string]ProjectRecht
+		rol, gebruiker := "", ""
+		if claims := middleware.GetClaims(c); claims != nil {
+			rol, gebruiker = claims.Rol, claims.Gebruikersnaam
 		}
-		c.JSON(http.StatusOK, lijst)
+		if authAan {
+			if acl, err = aclVoor(c.Request.Context(), DB, gebruiker, ""); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Toegang lezen mislukt: " + err.Error()})
+				return
+			}
+		}
+		for _, m := range lijst {
+			r := besluitProjectRecht(authAan, rol, gebruiker, m.Eigenaar, acl[m.ID])
+			if r >= RechtLezen {
+				m.Recht = r.String()
+				zichtbaar = append(zichtbaar, m)
+			}
+		}
+		c.JSON(http.StatusOK, zichtbaar)
 	}
 }
 
@@ -181,6 +201,7 @@ func MaakStudioProjectOphalenHandler() gin.HandlerFunc {
 			"id": p.ID, "naam": p.Naam, "eigenaar": p.Eigenaar, "versie": p.Versie, "inhoud": p.Inhoud,
 			"aangemaakt": p.Aangemaakt, "bijgewerkt": p.Bijgewerkt, "bijgewerkt_door": p.BijgewerktDoor,
 			"tot_volgnummer": p.TotVolgnummer, "laatste_volgnummer": laatsteVolgnummerVan(c.Request.Context(), DB, p.ID),
+			"recht": huidigProjectRecht(c).String(),
 		})
 	}
 }
@@ -219,7 +240,9 @@ func MaakStudioProjectAanmakenHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project aanmaken mislukt: " + err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, studioProjectMeta(p))
+		meta := studioProjectMeta(p)
+		meta.Recht = RechtBeheren.String() // de maker is eigenaar
+		c.JSON(http.StatusCreated, meta)
 	}
 }
 
@@ -314,7 +337,8 @@ func MaakStudioProjectOpslaanHandler() gin.HandlerFunc {
 }
 
 // MaakStudioProjectVerwijderenHandler — DELETE /api/studio/projecten/:id
-// Alleen de eigenaar of een admin; zonder auth mag iedereen.
+// Alleen de eigenaar of een beheerder (VereisProjectRecht(RechtBeheren) in main.go); zonder
+// auth mag iedereen. De toegangsrijen gaan mee.
 func MaakStudioProjectVerwijderenHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
@@ -332,8 +356,8 @@ func MaakStudioProjectVerwijderenHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project lezen mislukt: " + err.Error()})
 			return
 		}
-		if claims := middleware.GetClaims(c); claims != nil && claims.Rol != "admin" && claims.Gebruikersnaam != p.Eigenaar {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Alleen de eigenaar of een admin kan dit project verwijderen."})
+		if recht, err := projectRechtVan(c, id, p.Eigenaar); err != nil || recht < RechtBeheren {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Alleen de eigenaar of een beheerder kan dit project verwijderen."})
 			return
 		}
 		tx, err := DB.BeginTx(ctx, nil)
@@ -344,6 +368,10 @@ func MaakStudioProjectVerwijderenHandler() gin.HandlerFunc {
 		defer tx.Rollback() //nolint:errcheck
 		if _, err := tx.NewDelete().Model((*model.StudioProjectOp)(nil)).Where("project_id = ?", id).Exec(ctx); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Operatielog verwijderen mislukt: " + err.Error()})
+			return
+		}
+		if _, err := tx.NewDelete().Model((*model.StudioProjectToegang)(nil)).Where("project_id = ?", id).Exec(ctx); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Toegang verwijderen mislukt: " + err.Error()})
 			return
 		}
 		if _, err := tx.NewDelete().Model(p).WherePK().Exec(ctx); err != nil {

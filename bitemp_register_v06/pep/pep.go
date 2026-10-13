@@ -62,13 +62,6 @@ func Actief() *toegang.Bundel { return actief.Load() }
 // de Studio zonder herstart.
 func ZetBundel(b *toegang.Bundel) { actief.Store(b) }
 
-// rolHierarchie: een hogere rol heeft de lagere rollen ook (zoals rolToegestaan in de
-// auth-middleware), zodat beleid op "viewer" ook voor een admin geldt.
-var rolHierarchie = map[string][]string{
-	"admin":  {"admin", "editor", "viewer"},
-	"editor": {"editor", "viewer"},
-	"viewer": {"viewer"},
-}
 
 // SubjectUit leidt het subject af uit de JWT-claims. Voorlopig (besluit Mark 12-10) alleen
 // gebruiker of anoniem; kenmerken: rol (met hiërarchie) en gebruikersnaam.
@@ -86,10 +79,9 @@ func subjectUitClaims(claims *middleware.JWTClaims) toegang.Subject {
 	if claims == nil {
 		return toegang.Subject{Anoniem: true}
 	}
-	rollen := rolHierarchie[strings.ToLower(claims.Rol)]
-	if rollen == nil && claims.Rol != "" {
-		rollen = []string{claims.Rol}
-	}
+	// Een hogere rol heeft de lagere rollen ook (rangorde en aliassen: middleware/rollen.go),
+	// zodat beleid op "viewer" ook voor een admin of bouwer geldt.
+	rollen := middleware.RollenTotEnMet(strings.ToLower(claims.Rol))
 	k := map[string][]string{"rol": rollen}
 	if claims.Gebruikersnaam != "" {
 		k["gebruikersnaam"] = []string{claims.Gebruikersnaam}
