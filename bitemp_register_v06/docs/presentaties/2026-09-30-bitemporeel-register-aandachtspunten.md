@@ -5,7 +5,13 @@
 > Doel: de plekken waar het deck iets claimt dat de repo (nog) niet volledig dekt, zodat je
 > ze tijdens de presentatie paraat hebt en ze na afloop kunt oplossen.
 
-## 1. Licentie: het deck zegt EUPL, de repo zegt MIT
+> **Bijgewerkt 2026-10-13:** licentie opgelost (EUPL-1.2 als `LICENSE` in de root, README
+> aangepast). Deck versie 5: slide *Registratie* gecorrigeerd (een entiteit is alleen identiteit;
+> hub + _Data hoort bij gegevenselementen en relaties, aanvang/einde op de hub), *Dashboards* als
+> schematisch voorbeeld gemarkeerd, *Framework* "meerdere domeinen", notities bij *MDA*: XMI nog
+> niet verliesvrij.
+
+## 1. Licentie: het deck zegt EUPL, de repo zegt MIT — opgelost 13-10
 
 - `bitemp_register_v06/README.md` (§Licentie, rond r. 503) vermeldt **MIT** en verwijst naar een
   `LICENSE`-bestand.
