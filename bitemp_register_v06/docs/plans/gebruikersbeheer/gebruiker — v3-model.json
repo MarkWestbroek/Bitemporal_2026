@@ -91,6 +91,26 @@
     {
      "constNaam": "Gebruikersroladmin",
      "waarde": "admin"
+    },
+    {
+     "constNaam": "Gebruikersrollezer",
+     "waarde": "lezer"
+    },
+    {
+     "constNaam": "Gebruikersrolmodelleur",
+     "waarde": "modelleur"
+    },
+    {
+     "constNaam": "Gebruikersrolontwerper",
+     "waarde": "ontwerper"
+    },
+    {
+     "constNaam": "Gebruikersrolbouwer",
+     "waarde": "bouwer"
+    },
+    {
+     "constNaam": "Gebruikersrolbeheerder",
+     "waarde": "beheerder"
     }
    ]
   }

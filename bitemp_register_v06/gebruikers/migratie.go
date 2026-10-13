@@ -41,7 +41,7 @@ func MigreerOudeGebruikers(ctx context.Context) error {
 			status = StatusGeblokkeerd
 		}
 		rol := strings.ToLower(strings.TrimSpace(o.Rol))
-		if _, ok := rolNiveau[rol]; !ok {
+		if rolNiveau(rol) == 0 {
 			rol = "viewer"
 		}
 		id, err := MaakAan(ctx, NieuweGebruiker{

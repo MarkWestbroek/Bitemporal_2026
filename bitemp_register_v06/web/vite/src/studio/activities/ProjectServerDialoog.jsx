@@ -6,10 +6,11 @@
  * Eén instantie hangt in de Main van Modelleren; openen gaat via de store:
  *   useProjectServerStore.getState().openen({ huidigId, onKies })
  */
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { create } from "zustand";
 import { lijstProjecten, verwijderProject } from "./projectSync.js";
 import { vraagBevestiging, toonMelding } from "../naamDialog.jsx";
+import ProjectToegang from "./ProjectToegang.jsx";
 
 export const useProjectServerStore = create((set, get) => ({
   open: false,
@@ -50,6 +51,7 @@ export default function ProjectServerDialoog() {
   const huidigId = useProjectServerStore((s) => s.huidigId);
   const sluiten = useProjectServerStore((s) => s.sluiten);
   const ververs = useProjectServerStore((s) => s.ververs);
+  const [toegangVoor, setToegangVoor] = useState(null); // project-id met open toegangspaneel
 
   useEffect(() => {
     if (!open) return undefined;
@@ -97,7 +99,7 @@ export default function ProjectServerDialoog() {
       <div
         role="dialog"
         aria-label="Projecten op de server"
-        style={{ width: "min(640px, 92vw)", maxHeight: "82vh", overflow: "auto", background: "var(--s-panel)", color: "var(--s-fg)", border: "1px solid var(--s-border)", borderRadius: 10, boxShadow: "0 16px 48px rgba(0,0,0,0.4)", padding: 16 }}
+        style={{ width: "min(720px, 92vw)", maxHeight: "82vh", overflow: "auto", background: "var(--s-panel)", color: "var(--s-fg)", border: "1px solid var(--s-border)", borderRadius: 10, boxShadow: "0 16px 48px rgba(0,0,0,0.4)", padding: 16 }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <h2 style={{ margin: 0, fontSize: 16 }}>Projecten op de server</h2>
@@ -136,13 +138,21 @@ export default function ProjectServerDialoog() {
             <tbody>
               {lijst.map((m) => {
                 const huidig = m.id === huidigId;
+                // Zonder `recht` (oude server): alles tonen, de server beslist.
+                const beheren = !m.recht || m.recht === "beheren";
                 return (
-                  <tr key={m.id} style={{ borderTop: "1px solid var(--s-border, #e2e8f0)" }}>
+                  <React.Fragment key={m.id}>
+                  <tr style={{ borderTop: "1px solid var(--s-border, #e2e8f0)" }} data-project-id={m.id}>
                     <td style={{ padding: "6px" }}>
                       <strong>{m.naam}</strong>
                       {huidig && (
                         <span style={{ marginLeft: 6, fontSize: 10, opacity: 0.7 }} title="Dit project staat nu open in deze browser">
                           huidig
+                        </span>
+                      )}
+                      {m.recht === "lezen" && (
+                        <span style={{ marginLeft: 6, fontSize: 10, opacity: 0.7 }} title="Je mag dit project bekijken, niet wijzigen">
+                          alleen lezen
                         </span>
                       )}
                     </td>
@@ -156,12 +166,29 @@ export default function ProjectServerDialoog() {
                     <td style={{ padding: "6px", whiteSpace: "nowrap", textAlign: "right" }}>
                       <button type="button" style={knop} onClick={() => kies(m)}>
                         Ophalen
-                      </button>{" "}
-                      <button type="button" style={{ ...knop, opacity: 0.7 }} onClick={() => verwijder(m)} title="Alleen de eigenaar of een admin">
-                        Verwijder
                       </button>
+                      {beheren && (
+                        <>
+                          {" "}
+                          <button type="button" style={knop} aria-expanded={toegangVoor === m.id}
+                            onClick={() => setToegangVoor(toegangVoor === m.id ? null : m.id)} title="Wie mag dit project lezen of wijzigen">
+                            Toegang…
+                          </button>{" "}
+                          <button type="button" style={{ ...knop, opacity: 0.7 }} onClick={() => verwijder(m)} title="Alleen de eigenaar of een beheerder">
+                            Verwijder
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
+                  {toegangVoor === m.id && (
+                    <tr>
+                      <td colSpan={6}>
+                        <ProjectToegang project={m} knop={knop} onKlaar={() => setToegangVoor(null)} />
+                      </td>
+                    </tr>
+                  )}
+                  </React.Fragment>
                 );
               })}
             </tbody>

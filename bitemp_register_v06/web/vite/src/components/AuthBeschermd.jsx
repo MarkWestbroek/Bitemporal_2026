@@ -1,5 +1,6 @@
 import { useAuth } from "../context/AuthContext";
 import LoginPagina from "./LoginPagina";
+import { rolNiveau } from "../shared/rollen.js";
 
 /**
  * AuthBeschermd — wrapper die een pagina alleen toont als de gebruiker
@@ -8,10 +9,10 @@ import LoginPagina from "./LoginPagina";
  * Als auth niet actief is (AUTH_ENABLED=false), wordt de pagina altijd getoond.
  *
  * Props:
- * - vereistRol: "viewer" | "editor" | "admin" (default: "viewer")
+ * - vereistRol: een rol uit shared/rollen.js (lezer … beheerder, of de oude namen
+ *   viewer/editor/admin); default "viewer"
  * - children: de beschermde pagina-content
  */
-const rolNiveaus = { viewer: 1, editor: 2, admin: 3 };
 
 export default function AuthBeschermd({ vereistRol = "viewer", children }) {
   const { authEnabled, ingelogd, gebruiker, laden } = useAuth();
@@ -34,8 +35,8 @@ export default function AuthBeschermd({ vereistRol = "viewer", children }) {
   }
 
   // Rolcheck
-  const huidigNiveau = rolNiveaus[gebruiker?.rol] || 0;
-  const vereistNiveau = rolNiveaus[vereistRol] || 0;
+  const huidigNiveau = rolNiveau(gebruiker?.rol);
+  const vereistNiveau = rolNiveau(vereistRol);
   if (huidigNiveau < vereistNiveau) {
     return (
       <div style={{

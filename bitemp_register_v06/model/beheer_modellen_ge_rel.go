@@ -19,9 +19,14 @@ const (
 type Gebruikersrol string
 
 const (
-	Gebruikersrolviewer Gebruikersrol = "viewer"
-	Gebruikersroleditor Gebruikersrol = "editor"
-	Gebruikersroladmin  Gebruikersrol = "admin"
+	Gebruikersrolviewer    Gebruikersrol = "viewer"
+	Gebruikersroleditor    Gebruikersrol = "editor"
+	Gebruikersroladmin     Gebruikersrol = "admin"
+	Gebruikersrollezer     Gebruikersrol = "lezer"
+	Gebruikersrolmodelleur Gebruikersrol = "modelleur"
+	Gebruikersrolontwerper Gebruikersrol = "ontwerper"
+	Gebruikersrolbouwer    Gebruikersrol = "bouwer"
+	Gebruikersrolbeheerder Gebruikersrol = "beheerder"
 )
 
 // Gebruiker_GebruikerIdentiteit — Wie het account is: de inlognaam en hoe iemand getoond wordt. Formeel: een correctie (typfout in de e-mail) heeft geen materiële betekenis. Bewust weinig persoonsgegevens (AVG).

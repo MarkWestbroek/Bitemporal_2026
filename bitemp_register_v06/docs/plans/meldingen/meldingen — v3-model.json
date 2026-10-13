@@ -1,0 +1,203 @@
+{
+ "versie": "v3",
+ "naam": "meldingen — Melding",
+ "beschrijving": "Bugs en wensen melden vanuit Omnium zelf (voorstel 2026-10-14, docs/plans/meldingen/). Dogfooding: een melding is een gewone bitemporele entiteit in het register, met de gegenereerde API, formulieren en toegangsbeleid. Wie meldde en wanneer staat in de registratie (formele tijd); daarom geen velden 'aangemaakt' of 'gemeld door' naast de relatie Melder.",
+ "datatypes": [
+  {
+   "naam": "KorteTekst",
+   "description": "Alfanumerieke tekst, max 255 tekens (MIM: AN255).",
+   "basistype": "string",
+   "domein": "gegevenstypen",
+   "positie": { "x": 1500, "y": 0 },
+   "validatie": { "maxLength": 255 },
+   "weergave": {}
+  },
+  {
+   "naam": "LangeTekst",
+   "description": "Onbeperkte tekst, meerdere regels (MIM: CharacterString).",
+   "basistype": "string",
+   "domein": "gegevenstypen",
+   "positie": { "x": 1500, "y": 120 },
+   "validatie": {},
+   "weergave": {}
+  },
+  {
+   "naam": "Bestand",
+   "description": "Verwijzing naar een bestand in de filestore als UUID; het bestand zelf staat in de filestore (/bestanden-API).",
+   "basistype": "string",
+   "domein": "gegevenstypen",
+   "positie": { "x": 1500, "y": 240 },
+   "validatie": {},
+   "weergave": {}
+  }
+ ],
+ "enums": [
+  {
+   "goType": "Meldingsoort",
+   "baseType": "string",
+   "domein": "meldingen",
+   "positie": { "x": -420, "y": 250 },
+   "waarden": [
+    { "constNaam": "Meldingsoortbug", "waarde": "bug" },
+    { "constNaam": "Meldingsoortwens", "waarde": "wens" },
+    { "constNaam": "Meldingsoortvraag", "waarde": "vraag" }
+   ]
+  },
+  {
+   "goType": "Meldingstatus",
+   "baseType": "string",
+   "domein": "meldingen",
+   "positie": { "x": 300, "y": 620 },
+   "waarden": [
+    { "constNaam": "Meldingstatusnieuw", "waarde": "nieuw" },
+    { "constNaam": "Meldingstatusinbehandeling", "waarde": "in_behandeling" },
+    { "constNaam": "Meldingstatusopgelost", "waarde": "opgelost" },
+    { "constNaam": "Meldingstatusafgewezen", "waarde": "afgewezen" },
+    { "constNaam": "Meldingstatusdubbel", "waarde": "dubbel" }
+   ]
+  },
+  {
+   "goType": "Meldingprioriteit",
+   "baseType": "string",
+   "domein": "meldingen",
+   "positie": { "x": 640, "y": 620 },
+   "waarden": [
+    { "constNaam": "Meldingprioriteitlaag", "waarde": "laag" },
+    { "constNaam": "Meldingprioriteitnormaal", "waarde": "normaal" },
+    { "constNaam": "Meldingprioriteithoog", "waarde": "hoog" }
+   ]
+  }
+ ],
+ "referentielijstInstanties": [],
+ "entiteiten": [
+  {
+   "typenaam": "Melding",
+   "description": "Een bug, wens of vraag over Omnium, gemeld vanuit de tool (Help → Melden, of Alt-klik + kader). De melder ziet de eigen meldingen en hun status; een beheerder ziet en behandelt alle. Formeel: wie meldde en wanneer staat in de registratie.",
+   "domein": "meldingen",
+   "isMaterieel": false,
+   "kleur": "#fde68a",
+   "meervoud": "meldingen",
+   "positie": { "x": 450, "y": 0 },
+   "gegevenselementen": [
+    {
+     "naam": "MeldingInhoud",
+     "description": "Wat er gemeld is. Een correctie (typfout) is formeel; de melder of een beheerder kan hem aanpassen.",
+     "domein": "meldingen",
+     "meervoud": "melding_inhouden",
+     "momentvoorkomen": "enkelvoudig",
+     "positie": { "x": -60, "y": 250 },
+     "velden": [
+      { "naam": "soort", "goType": "Meldingsoort", "type": "string", "verplicht": true, "enum": "Meldingsoort" },
+      { "naam": "titel", "goType": "KorteTekst", "type": "string", "datatype": "KorteTekst", "verplicht": true, "description": "Eén regel: wat ging er mis of wat wil je?" },
+      { "naam": "beschrijving", "goType": "*string", "type": "string", "datatype": "LangeTekst", "description": "Wat deed je, wat verwachtte je, wat gebeurde er?" }
+     ]
+    },
+    {
+     "naam": "MeldingContext",
+     "description": "Waar in de tool de melding vandaan kwam; door de Studio ingevuld, niet door de melder. Helpt reproduceren.",
+     "domein": "meldingen",
+     "meervoud": "melding_contexten",
+     "momentvoorkomen": "enkelvoudig",
+     "positie": { "x": 220, "y": 250 },
+     "velden": [
+      { "naam": "studioversie", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Bv. studio 0.19.0 / api 0.14.0." },
+      { "naam": "activiteit", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Actieve activiteit en profiel, bv. modelleren / usecase05." },
+      { "naam": "plek", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Wat er onder de Alt-klik zat: het pad in de interface (paneel, knop, element-id)." },
+      { "naam": "projectid", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Het open Studio-project (alleen het id, geen inhoud)." },
+      { "naam": "browser", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Browser, besturingssysteem en venstermaat." }
+     ]
+    },
+    {
+     "naam": "MeldingBijlage",
+     "description": "Schermafbeelding (een getrokken kader) of ander bestand. Het bestand staat in de filestore.",
+     "domein": "meldingen",
+     "meervoud": "melding_bijlagen",
+     "momentvoorkomen": "meervoudig",
+     "positie": { "x": 500, "y": 250 },
+     "velden": [
+      { "naam": "bestand", "goType": "Bestand", "type": "string", "datatype": "Bestand", "verplicht": true },
+      { "naam": "omschrijving", "goType": "*string", "type": "string", "datatype": "KorteTekst" }
+     ]
+    },
+    {
+     "naam": "MeldingStatus",
+     "description": "Waar de melding staat. Materieel: vanaf wanneer gold deze status (bv. opgelost per release). De vorige status sluit vanzelf.",
+     "domein": "meldingen",
+     "meervoud": "melding_statussen",
+     "momentvoorkomen": "enkelvoudig",
+     "isMaterieel": true,
+     "positie": { "x": 300, "y": 420 },
+     "velden": [
+      { "naam": "status", "goType": "Meldingstatus", "type": "string", "verplicht": true, "enum": "Meldingstatus" },
+      { "naam": "toelichting", "goType": "*string", "type": "string", "datatype": "LangeTekst", "description": "Antwoord aan de melder: waarom afgewezen, in welke versie opgelost." }
+     ]
+    },
+    {
+     "naam": "MeldingPrioriteit",
+     "description": "Door de beheerder gezet; de melder ziet hem wel.",
+     "domein": "meldingen",
+     "meervoud": "melding_prioriteiten",
+     "momentvoorkomen": "enkelvoudig",
+     "positie": { "x": 640, "y": 420 },
+     "velden": [
+      { "naam": "prioriteit", "goType": "Meldingprioriteit", "type": "string", "verplicht": true, "enum": "Meldingprioriteit" }
+     ]
+    },
+    {
+     "naam": "MeldingReactie",
+     "description": "Een bericht in het gesprek over de melding, van melder of beheerder. Wie en wanneer: de registratie.",
+     "domein": "meldingen",
+     "meervoud": "melding_reacties",
+     "momentvoorkomen": "meervoudig",
+     "positie": { "x": 900, "y": 250 },
+     "velden": [
+      { "naam": "tekst", "goType": "LangeTekst", "type": "string", "datatype": "LangeTekst", "verplicht": true }
+     ]
+    }
+   ],
+   "relaties": [
+    {
+     "naam": "MeldingMelder",
+     "description": "Wie de melding deed. Ook in de registratie, maar als relatie kan het toegangsbeleid er op filteren (de melder ziet de eigen meldingen).",
+     "domein": "meldingen",
+     "meervoud": "melding_melders",
+     "momentvoorkomen": "enkelvoudig",
+     "doelEntiteit": "Gebruiker",
+     "positie": { "x": 900, "y": -120 },
+     "velden": []
+    },
+    {
+     "naam": "MeldingBehandelaar",
+     "description": "Wie de melding oppakt (een beheerder).",
+     "domein": "meldingen",
+     "meervoud": "melding_behandelaars",
+     "momentvoorkomen": "enkelvoudig",
+     "isMaterieel": true,
+     "doelEntiteit": "Gebruiker",
+     "positie": { "x": 900, "y": 20 },
+     "velden": []
+    },
+    {
+     "naam": "MeldingDubbelVan",
+     "description": "Bij status dubbel: de melding waar deze een dubbele van is.",
+     "domein": "meldingen",
+     "meervoud": "melding_dubbel_van",
+     "momentvoorkomen": "enkelvoudig",
+     "doelEntiteit": "Melding",
+     "positie": { "x": 120, "y": -120 },
+     "velden": []
+    }
+   ]
+  },
+  {
+   "typenaam": "Gebruiker",
+   "description": "Uit domein beheer (docs/plans/gebruikersbeheer/); hier alleen als doel van de relaties.",
+   "domein": "beheer",
+   "isMaterieel": true,
+   "kleur": "#bae6fd",
+   "meervoud": "gebruikers",
+   "positie": { "x": 1300, "y": -60 },
+   "gegevenselementen": []
+  }
+ ]
+}

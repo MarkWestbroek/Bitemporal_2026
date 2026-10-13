@@ -8,6 +8,29 @@
 
 ---
 
+## Niet uitgebracht — uitnodigen en toegang per project
+
+Backend (minor; nieuwe tabellen, eenmalige datamigratie):
+
+- **Vijf rollen** (`middleware/rollen.go`): lezer < modelleur < ontwerper < bouwer < beheerder;
+  viewer/editor/admin blijven als alias geldig. Enum `Gebruikersrol` uitgebreid; PEP en
+  Rego-beleid kennen dezelfde rangorde.
+- **Toegang per Studio-project, "alles dicht tenzij"** (`handlers/studio_project_toegang.go`):
+  tabel `studio_project_toegang`; eigenaar en beheerder mogen alles, anderen alleen met een rij
+  (gebruiker of `*`, lezen/schrijven). Zonder leesrecht 404. Lijst gefilterd en met `recht`;
+  `GET/PUT /api/studio/projecten/:id/toegang`. Schrijven vraagt rol modelleur, EA-import bouwer.
+  **Migratie:** bij de eerste start krijgen alle bestaande gebruikers toegang tot alle bestaande
+  projecten (eenmalig, `studio_migraties`), zodat niemand iets kwijtraakt.
+- **Uitnodigen** (`gebruikers/uitnodiging.go`): tabel `gebruiker_uitnodiging` (alleen de hash
+  van de token), beheer-endpoints `/api/gebruikers/uitnodigingen`, openbaar
+  `/api/uitnodiging/:token` (+ `/accepteer`, rate limited). Aan met `UITNODIGEN_ENABLED=true`.
+- De debug-bodylogger (`APP_DEBUG_LOGS=1`) slaat paden met wachtwoorden over (inloggen,
+  wachtwoord zetten, uitnodiging accepteren).
+
+Plan en stand: `docs/plans/2026-10-12 Gebruikers uitnodigen en toolrechten (ontwerpvoorstel).md` §6.
+
+---
+
 ## studio 0.18.0 (2026-10-13) — alleen frontend
 
 Geen backendrelease: api blijft **0.13.0**. De Studio krijgt de beschrijving als vaste

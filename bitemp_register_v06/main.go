@@ -122,6 +122,21 @@ func main() {
 			fmt.Println("WARN: Admin-seed mislukt:", err)
 		}
 		middleware.ZetGebruikerResolver(gebruikers.Resolver)
+		// Eenmalig: bestaande gebruikers houden toegang tot bestaande Studio-projecten,
+		// vóór "alles dicht tenzij" (handlers/studio_project_toegang.go).
+		if alle, err := gebruikers.LaadAlle(sysCtx, time.Now()); err != nil {
+			fmt.Println("WARN: gebruikers laden voor de projecttoegang mislukt:", err)
+		} else {
+			lijst := make([]handlers.GebruikerMetRol, 0, len(alle))
+			for _, g := range alle {
+				lijst = append(lijst, handlers.GebruikerMetRol{Gebruikersnaam: g.Gebruikersnaam, Rol: g.HoogsteRol()})
+			}
+			if n, err := handlers.MigreerProjectToegangV1(sysCtx, db, lijst); err != nil {
+				fmt.Println("WARN: projecttoegang migreren mislukt:", err)
+			} else if n > 0 {
+				fmt.Printf("Studio: %d toegangsrijen gezet voor bestaande gebruikers en projecten (eenmalig)\n", n)
+			}
+		}
 	}
 
 	//run the server
@@ -225,6 +240,13 @@ func NewRouter() *gin.Engine {
 	// (/gebruikers, /full/gebruikers), die ook admin vragen (routes/leestoegang.go).
 	router.GET("/api/gebruikers", admin, gebruikers.LijstHandler())
 	router.PUT("/api/gebruikers/:id/wachtwoord", admin, gebruikers.ZetWachtwoordHandler())
+	// Uitnodigen (gebruikers/uitnodiging.go; plan 2026-10-12 §2/§5): beheer door de beheerder,
+	// bekijken en accepteren openbaar met de token (rate limit, UITNODIGEN_ENABLED).
+	router.GET("/api/gebruikers/uitnodigingen", admin, gebruikers.UitnodigingenLijstHandler())
+	router.POST("/api/gebruikers/uitnodigingen", admin, gebruikers.UitnodigingMakenHandler())
+	router.DELETE("/api/gebruikers/uitnodigingen/:id", admin, gebruikers.UitnodigingIntrekkenHandler())
+	router.GET("/api/uitnodiging/:token", gebruikers.UitnodigingBekijkenHandler())
+	router.POST("/api/uitnodiging/:token/accepteer", gebruikers.UitnodigingAccepterenHandler())
 
 	// AI-proxy (handlers/ai_proxy.go): toegangscodes voor proberen met de sleutel van de eigenaar.
 	// Uit zolang AI_UPSTREAM_KEY leeg is. Codes beheren: alleen admin.
@@ -265,32 +287,41 @@ func NewRouter() *gin.Engine {
 	router.POST("/api/schema/domeinen", editor, handlers.MaakPostSchemaDomeinHandler())
 
 	// Studio-projecten op de server (handlers/studio_project_handler.go; plan 2026-10-07
-	// Projectsync, stap 1): één JSONB-blob per project, lezen voor iedereen die is
-	// ingelogd, schrijven voor editors, verwijderen door eigenaar of admin.
+	// Projectsync, stap 1). Toegang per project, "alles dicht tenzij" (plan 2026-10-12
+	// Gebruikers uitnodigen §5, handlers/studio_project_toegang.go): de lijst toont alleen
+	// je eigen projecten en die met een toegangsrij; op de :id-routes vraagt
+	// VereisProjectRecht lezen, schrijven of beheren. Schrijven vraagt daarbij minstens de
+	// rol modelleur, EA-import de rol bouwer (= editor).
 	ingelogd := middleware.RequireAuth()
+	modelleur := middleware.RequireRol("modelleur")
+	pLezen := handlers.VereisProjectRecht(handlers.RechtLezen)
+	pSchrijven := handlers.VereisProjectRecht(handlers.RechtSchrijven)
+	pBeheren := handlers.VereisProjectRecht(handlers.RechtBeheren)
 	router.GET("/api/studio/projecten", ingelogd, handlers.MaakStudioProjectenLijstHandler())
-	router.GET("/api/studio/projecten/:id", ingelogd, handlers.MaakStudioProjectOphalenHandler())
-	router.POST("/api/studio/projecten", editor, handlers.MaakStudioProjectAanmakenHandler())
-	router.PUT("/api/studio/projecten/:id", editor, handlers.MaakStudioProjectOpslaanHandler())
-	router.DELETE("/api/studio/projecten/:id", ingelogd, handlers.MaakStudioProjectVerwijderenHandler())
+	router.GET("/api/studio/projecten/:id", ingelogd, pLezen, handlers.MaakStudioProjectOphalenHandler())
+	router.POST("/api/studio/projecten", modelleur, handlers.MaakStudioProjectAanmakenHandler())
+	router.PUT("/api/studio/projecten/:id", modelleur, pSchrijven, handlers.MaakStudioProjectOpslaanHandler())
+	router.DELETE("/api/studio/projecten/:id", ingelogd, pBeheren, handlers.MaakStudioProjectVerwijderenHandler())
+	router.GET("/api/studio/projecten/:id/toegang", ingelogd, pBeheren, handlers.MaakStudioProjectToegangOphalenHandler())
+	router.PUT("/api/studio/projecten/:id/toegang", ingelogd, pBeheren, handlers.MaakStudioProjectToegangOpslaanHandler())
 	// Operatielog (stap 2, onderdeel 3): batches aannemen en nalezen; SSE volgt in onderdeel 5.
-	router.POST("/api/studio/projecten/:id/ops", editor, handlers.MaakStudioProjectOpsToevoegenHandler())
-	router.GET("/api/studio/projecten/:id/ops", ingelogd, handlers.MaakStudioProjectOpsLijstHandler())
+	router.POST("/api/studio/projecten/:id/ops", modelleur, pSchrijven, handlers.MaakStudioProjectOpsToevoegenHandler())
+	router.GET("/api/studio/projecten/:id/ops", ingelogd, pLezen, handlers.MaakStudioProjectOpsLijstHandler())
 	// SSE-kanaal (stap 2, onderdeel 5): live operaties van anderen; de hub hangt aan het log.
 	handlers.KoppelStudioSSE()
-	router.GET("/api/studio/projecten/:id/events", ingelogd, handlers.MaakStudioProjectEventsHandler())
+	router.GET("/api/studio/projecten/:id/events", ingelogd, pLezen, handlers.MaakStudioProjectEventsHandler())
 	// Werkruimte (tabs, open mappen) per gebruiker per project: van jou, laatste schrijver wint.
-	router.GET("/api/studio/projecten/:id/werkruimte", ingelogd, handlers.MaakStudioWerkruimteOphalenHandler())
-	router.PUT("/api/studio/projecten/:id/werkruimte", ingelogd, handlers.MaakStudioWerkruimteOpslaanHandler())
+	router.GET("/api/studio/projecten/:id/werkruimte", ingelogd, pLezen, handlers.MaakStudioWerkruimteOphalenHandler())
+	router.PUT("/api/studio/projecten/:id/werkruimte", ingelogd, pLezen, handlers.MaakStudioWerkruimteOpslaanHandler())
 	// EA-import via de server (handlers/studio_ea_import_handler.go): de Studio bedient de
 	// node-sidecar die een .qea uit een git-checkout in het operatielog zet. Uit zolang
 	// STUDIO_EA_IMPORT_MAPPEN leeg is.
-	router.GET("/api/studio/ea-import/repos", ingelogd, handlers.MaakStudioEaImportReposHandler())
-	router.GET("/api/studio/ea-import/repos/:repo/bestanden", ingelogd, handlers.MaakStudioEaImportBestandenHandler())
-	router.GET("/api/studio/ea-import/repos/:repo/pakketten", ingelogd, handlers.MaakStudioEaImportPakkettenHandler())
-	router.POST("/api/studio/projecten/:id/ea-import", editor, handlers.MaakStudioEaImportStartHandler())
-	router.GET("/api/studio/projecten/:id/ea-import", ingelogd, handlers.MaakStudioEaImportTaakHandler())
-	router.GET("/api/studio/projecten/:id/ea-import/:taak", ingelogd, handlers.MaakStudioEaImportTaakHandler())
+	router.GET("/api/studio/ea-import/repos", editor, handlers.MaakStudioEaImportReposHandler())
+	router.GET("/api/studio/ea-import/repos/:repo/bestanden", editor, handlers.MaakStudioEaImportBestandenHandler())
+	router.GET("/api/studio/ea-import/repos/:repo/pakketten", editor, handlers.MaakStudioEaImportPakkettenHandler())
+	router.POST("/api/studio/projecten/:id/ea-import", editor, pSchrijven, handlers.MaakStudioEaImportStartHandler())
+	router.GET("/api/studio/projecten/:id/ea-import", ingelogd, pLezen, handlers.MaakStudioEaImportTaakHandler())
+	router.GET("/api/studio/projecten/:id/ea-import/:taak", ingelogd, pLezen, handlers.MaakStudioEaImportTaakHandler())
 	// Instellingen van de instantie voor de Studio (admin via env, bv. STUDIO_SYNC_POLL_MS).
 	router.GET("/api/studio/instellingen", handlers.MaakStudioInstellingenHandler())
 

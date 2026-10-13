@@ -14,13 +14,15 @@
  *   - rol eraf:          afvoer gebruikerroltoewijzing met rel_id
  *   - (de)blokkeren:     opvoer gebruikerstatus (enkelvoudig; de vorige sluit vanzelf)
  *   - beëindigen:        DELETE /gebruikers/:id (afvoer; niets wordt hard verwijderd)
+ *   - uitnodigen:        POST /api/gebruikers/uitnodigingen (plan 2026-10-12): rol + projecttoegang;
+ *                        de genodigde kiest zelf gebruikersnaam en wachtwoord (UitnodigingPagina)
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { IconGebruikers } from "../icons";
 import { apiBase } from "../studioUtils";
 import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
-
-const ROLLEN = ["viewer", "editor", "admin"];
+import { TOEKENBARE_ROLLEN as ROLLEN, ROL_UITLEG, isBeheerder } from "../../shared/rollen.js";
+import { lijstProjecten } from "./projectSync.js";
 const MIN_LENGTE = 10; // gelijk aan gebruikers.MinWachtwoordLengte
 
 async function api(pad, opties = {}) {
@@ -146,12 +148,12 @@ function EenmaligWachtwoord({ naam, wachtwoord, onKlaar }) {
 
 /** Kleine inline-form: rol erbij, optioneel met einddatum. */
 function RolErbij({ onToevoegen, onAnnuleer }) {
-  const [rol, setRol] = useState("editor");
+  const [rol, setRol] = useState("modelleur");
   const [tot, setTot] = useState("");
   return (
     <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
       <select style={invoer} value={rol} onChange={(e) => setRol(e.target.value)} aria-label="Rol">
-        {ROLLEN.map((r) => <option key={r}>{r}</option>)}
+        {ROLLEN.map((r) => <option key={r} title={ROL_UITLEG[r]}>{r}</option>)}
       </select>
       <input style={invoer} type="date" value={tot} onChange={(e) => setTot(e.target.value)} aria-label="Geldig tot (optioneel)" title="Geldig tot (optioneel)" />
       <button type="button" className="studio-btn studio-btn--primary" onClick={() => onToevoegen(rol, tot)}>Toevoegen</button>
@@ -160,12 +162,160 @@ function RolErbij({ onToevoegen, onAnnuleer }) {
   );
 }
 
+/** Uitnodiging: e-mail, rol en (optioneel) projecten met recht. Zonder project ziet de
+ *  genodigde niets ("alles dicht tenzij"). Na het maken: de link één keer zichtbaar. */
+function Uitnodigen() {
+  const leeg = { email: "", weergavenaam: "", rol: "modelleur", dagen: 7, projecten: {} };
+  const [stand, setStand] = useState(null); // { aan, mail, uitnodigingen }
+  const [projecten, setProjecten] = useState([]);
+  const [n, setN] = useState(leeg);
+  const [fout, setFout] = useState("");
+  const [resultaat, setResultaat] = useState(null); // { link, gemaild, mailfout, email }
+  const [gekopieerd, setGekopieerd] = useState(false);
+
+  const laad = useCallback(() => {
+    api("/api/gebruikers/uitnodigingen").then(setStand).catch((e) => setFout(e.message));
+    lijstProjecten().then((l) => setProjecten(Array.isArray(l) ? l : [])).catch(() => setProjecten([]));
+  }, []);
+  useEffect(laad, [laad]);
+
+  if (!stand) return fout ? <p role="alert" style={{ color: "#b91c1c", fontSize: 13 }}>{fout}</p> : null;
+
+  const zetProject = (id, recht) => {
+    const p = { ...n.projecten };
+    if (recht) p[id] = recht; else delete p[id];
+    setN({ ...n, projecten: p });
+  };
+
+  async function nodigUit(e) {
+    e.preventDefault();
+    setFout("");
+    setResultaat(null);
+    setGekopieerd(false);
+    try {
+      const d = await api("/api/gebruikers/uitnodigingen", {
+        method: "POST",
+        body: JSON.stringify({
+          email: n.email.trim(), weergavenaam: n.weergavenaam.trim(), rol: n.rol, dagen: Number(n.dagen) || 7,
+          projecten: Object.entries(n.projecten).map(([id, recht]) => ({ id, recht })),
+        }),
+      });
+      setResultaat({ ...d, email: n.email.trim() });
+      setN(leeg);
+      laad();
+    } catch (err) {
+      setFout(err.message);
+    }
+  }
+
+  async function trekIn(u) {
+    if (!(await vraagBevestiging({ titel: "Uitnodiging intrekken", tekst: `Uitnodiging voor ${u.email} intrekken? De link werkt dan niet meer.`, bevestig: "Intrekken", gevaar: true }))) return;
+    try {
+      await api(`/api/gebruikers/uitnodigingen/${u.id}`, { method: "DELETE" });
+    } catch (err) {
+      setFout(err.message);
+    }
+    laad();
+  }
+
+  const open = (stand.uitnodigingen || []).filter((u) => u.status === "open");
+  const recent = (stand.uitnodigingen || []).filter((u) => u.status !== "open").slice(0, 8);
+
+  return (
+    <section data-testid="uitnodigen" style={{ ...kader, marginTop: 14 }}>
+      <div style={{ fontSize: 13, marginBottom: 8 }}>
+        <strong>Uitnodigen</strong> — de genodigde kiest zelf een gebruikersnaam en wachtwoord.
+        {stand.aan
+          ? (stand.mail ? " De link gaat per mail en verschijnt hier ook." : " Er is geen mailserver ingericht: kopieer de link en stuur hem zelf door.")
+          : null}
+      </div>
+      {!stand.aan ? (
+        <p style={{ ...gedempt, fontSize: 13, margin: 0 }}>
+          Uitnodigen staat uit op deze instantie. Zet <code>UITNODIGEN_ENABLED=true</code> (met <code>AUTH_ENABLED=true</code>) in de omgeving van de API.
+        </p>
+      ) : (
+        <form onSubmit={nodigUit} style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
+          <label style={{ ...veld, flex: "1 1 200px" }}>E-mail
+            <input style={invoer} type="email" required value={n.email} onChange={(e) => setN({ ...n, email: e.target.value })} />
+          </label>
+          <label style={{ ...veld, flex: "1 1 140px" }}>Naam (optioneel)
+            <input style={invoer} value={n.weergavenaam} onChange={(e) => setN({ ...n, weergavenaam: e.target.value })} />
+          </label>
+          <label style={veld}>Rol
+            <select style={invoer} value={n.rol} onChange={(e) => setN({ ...n, rol: e.target.value })} title={ROL_UITLEG[n.rol]}>
+              {ROLLEN.map((r) => <option key={r} title={ROL_UITLEG[r]}>{r}</option>)}
+            </select>
+          </label>
+          <label style={{ ...veld, width: 70 }}>Dagen geldig
+            <input style={invoer} type="number" min={1} max={30} value={n.dagen} onChange={(e) => setN({ ...n, dagen: e.target.value })} />
+          </label>
+          <div style={{ flex: "1 1 100%", fontSize: 12 }}>
+            <div style={{ marginBottom: 4 }}>Projecten {projecten.length === 0 && <span style={gedempt}>(geen projecten op de server)</span>}</div>
+            <div style={{ display: "grid", gap: 2, maxHeight: 160, overflow: "auto" }}>
+              {projecten.map((p) => (
+                <div key={p.id} style={{ display: "flex", gap: 8, alignItems: "center" }} data-project-id={p.id}>
+                  <select style={{ ...invoer, width: 110 }} aria-label={`Toegang tot ${p.naam}`} value={n.projecten[p.id] || ""}
+                    onChange={(e) => zetProject(p.id, e.target.value)}>
+                    <option value="">geen toegang</option>
+                    <option value="lezen">lezen</option>
+                    <option value="schrijven">schrijven</option>
+                  </select>
+                  <span>{p.naam}</span>
+                  {p.eigenaar && <span style={gedempt}>· {p.eigenaar}</span>}
+                </div>
+              ))}
+            </div>
+            <div style={{ ...gedempt, marginTop: 4 }}>Alles dicht tenzij: zonder project ziet de genodigde geen enkel project.</div>
+          </div>
+          <button type="submit" className="studio-btn studio-btn--primary">Uitnodigen</button>
+        </form>
+      )}
+
+      {fout && <p role="alert" style={{ color: "#b91c1c", fontSize: 13 }}>{fout}</p>}
+      {resultaat && (
+        <div role="status" style={{ marginTop: 12, padding: 10, borderRadius: 8, border: "1px solid #86efac", background: "#f0fdf4", color: "#14532d", fontSize: 13 }}>
+          Uitnodiging voor <strong>{resultaat.email}</strong> gemaakt.{" "}
+          {resultaat.gemaild ? "De mail is verstuurd." : resultaat.mailfout ? `Mailen mislukte (${resultaat.mailfout}); stuur de link zelf door.` : "Stuur deze link zelf door:"}
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
+            <code data-testid="uitnodiging-link" style={{ flex: 1, fontSize: 12, padding: "4px 8px", background: "#fff", border: "1px solid #bbf7d0", borderRadius: 6, overflowWrap: "anywhere" }}>{resultaat.link}</code>
+            <button type="button" className="studio-btn" onClick={() => navigator.clipboard?.writeText(resultaat.link).then(() => setGekopieerd(true))}>
+              {gekopieerd ? "Gekopieerd ✓" : "Kopiëren"}
+            </button>
+            <button type="button" className="studio-btn" onClick={() => setResultaat(null)}>Klaar</button>
+          </div>
+          <div style={{ fontSize: 12, marginTop: 4 }}>De link is alleen nu zichtbaar; de server bewaart hem niet.</div>
+        </div>
+      )}
+
+      {(open.length > 0 || recent.length > 0) && (
+        <table style={{ width: "100%", marginTop: 12, borderCollapse: "collapse", fontSize: 12 }}>
+          <tbody>
+            {[...open, ...recent].map((u) => (
+              <tr key={u.id} style={{ borderTop: "1px solid var(--s-border, #f1f5f9)" }}>
+                <td style={{ padding: 4 }}>{u.email}{u.weergavenaam ? <span style={gedempt}> · {u.weergavenaam}</span> : null}</td>
+                <td style={{ padding: 4 }}>{u.rol}</td>
+                <td style={{ padding: 4 }}>{(u.projecten || []).map((p) => `${p.naam || p.id} (${p.recht})`).join(", ") || <span style={gedempt}>geen projecten</span>}</td>
+                <td style={{ padding: 4, whiteSpace: "nowrap" }}>
+                  {u.status === "open" ? `open tot ${datum(u.verloopt)}` : u.status === "geaccepteerd" ? `geaccepteerd als ${u.gebruikersnaam}` : u.status}
+                </td>
+                <td style={{ padding: 4, textAlign: "right" }}>
+                  {u.status === "open" && <button type="button" className="studio-btn" onClick={() => trekIn(u)}>Intrekken</button>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
 function Main() {
   const [ik, setIk] = useState(null); // { gebruikersnaam, rol } of null
   const [lijst, setLijst] = useState(null); // null = (nog) niet beschikbaar
   const [geenBeheer, setGeenBeheer] = useState("");
   const [fout, setFout] = useState("");
-  const [nieuw, setNieuw] = useState({ gebruikersnaam: "", weergavenaam: "", email: "", rol: "editor", tot: "" });
+  const [nieuw, setNieuw] = useState({ gebruikersnaam: "", weergavenaam: "", email: "", rol: "modelleur", tot: "" });
   const [eenmalig, setEenmalig] = useState(null); // { naam, wachtwoord }
   const [rolFormVoor, setRolFormVoor] = useState(null); // gebruiker-id
 
@@ -208,7 +358,7 @@ function Main() {
       if (!g) throw new Error(`${naam} is aangemaakt, maar niet teruggevonden; zet het wachtwoord via "Nieuw wachtwoord".`);
       const d = await api(`/api/gebruikers/${g.id}/wachtwoord`, { method: "PUT" });
       setEenmalig({ naam, wachtwoord: d.wachtwoord });
-      setNieuw({ gebruikersnaam: "", weergavenaam: "", email: "", rol: "editor", tot: "" });
+      setNieuw({ gebruikersnaam: "", weergavenaam: "", email: "", rol: "modelleur", tot: "" });
     });
   }
 
@@ -260,6 +410,8 @@ function Main() {
 
       <MijnWachtwoord ik={ik} />
 
+      {lijst !== null && <Uitnodigen />}
+
       {lijst === null ? (
         <p style={{ ...gedempt, fontSize: 13, marginTop: 14 }}>
           Gebruikersbeheer is alleen voor admins{geenBeheer ? ` (${geenBeheer})` : ""}.
@@ -279,7 +431,7 @@ function Main() {
             </label>
             <label style={veld}>Rol
               <select style={invoer} value={nieuw.rol} onChange={(e) => setNieuw({ ...nieuw, rol: e.target.value })}>
-                {ROLLEN.map((r) => <option key={r}>{r}</option>)}
+                {ROLLEN.map((r) => <option key={r} title={ROL_UITLEG[r]}>{r}</option>)}
               </select>
             </label>
             <label style={veld}>Rol geldig tot (optioneel)
@@ -320,7 +472,7 @@ function Main() {
                           <span key={r.rel_id} style={{ display: "inline-flex", gap: 4, alignItems: "center", padding: "1px 8px", borderRadius: 10, whiteSpace: "nowrap", background: "var(--s-hover, #f1f5f9)", color: "var(--s-fg, #0f172a)", border: "1px solid var(--s-border, #e2e8f0)" }}
                             title={r.einde ? `geldig tot ${datum(r.einde)}` : "zonder einddatum"}>
                             {r.rol}{r.domein ? ` · ${r.domein}` : ""}{r.einde ? ` · tot ${datum(r.einde)}` : ""}
-                            {!(zelf && r.rol === "admin") && (
+                            {!(zelf && isBeheerder(r.rol)) && (
                               <button type="button" onClick={() => rolEraf(g, r)} aria-label={`Rol ${r.rol} intrekken`}
                                 style={{ border: 0, background: "none", cursor: "pointer", padding: 0, color: "inherit" }}>×</button>
                             )}
@@ -355,7 +507,12 @@ function Main() {
 function Sidebar() {
   return (
     <div style={{ padding: 10, fontSize: 12, ...gedempt }}>
-      <p style={{ marginTop: 0 }}>Rollen: <strong>viewer</strong> kijkt, <strong>editor</strong> modelleert en registreert, <strong>admin</strong> beheert ook gebruikers.</p>
+      <p style={{ marginTop: 0 }}>Rollen, oplopend:</p>
+      <ul style={{ margin: "0 0 8px", paddingLeft: 16 }}>
+        {ROLLEN.map((r) => <li key={r}><strong>{r}</strong> {ROL_UITLEG[r]}</li>)}
+      </ul>
+      <p>De oude namen blijven werken: viewer = lezer, editor = bouwer, admin = beheerder.</p>
+      <p>Studio-projecten zijn dicht tenzij: een genodigde ziet alleen de projecten uit de uitnodiging (later uit te breiden via <em>Van server ophalen → Toegang…</em>).</p>
       <p>Een gebruiker is een bitemporele entiteit (domein <code>beheer</code>). Wachtwoorden staan daar bewust buiten en komen nooit in de geschiedenis.</p>
       <p>Zie <code>docs/AUTH_DEVELOPER_GUIDE.md</code> §11.</p>
     </div>

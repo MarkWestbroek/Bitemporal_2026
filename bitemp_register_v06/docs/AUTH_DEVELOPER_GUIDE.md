@@ -673,29 +673,32 @@ onleesbare bundel stopt de start (fail-closed). Bekende beperkingen staan in het
 `docs/plans/2026-10-12 Toegang op beleid — PAP, PDP en PEP (plan).md` §6.
 ## 8. Rollen en hiërarchie
 
-```
-admin (3)  ──▶  editor (2)  ──▶  viewer (1)
-   │               │                │
-   │               │                └── Kan alleen lezen (GET endpoints)
-   │               └── Kan lezen + schrijven (registratie, correctie, schema-publicatie)
-   └── Kan alles + admin-endpoints (drop tables, rebuild, gebruikersbeheer)
-```
+Sinds 14-10-2026 vijf rollen (plan `docs/plans/2026-10-12 Gebruikers uitnodigen en
+toolrechten`, §5–6). De oude namen zijn aliassen, dus bestaande accounts en routes veranderen niet:
 
-De hiërarchie is geïmplementeerd als een simpele integer-vergelijking:
+| Niveau | Rol | Alias | Mag |
+|---|---|---|---|
+| 1 | lezer | viewer | lezen (GET), Studio-projecten met leesrecht bekijken |
+| 2 | modelleur | | Studio-projecten met schrijfrecht bewerken, projecten maken |
+| 3 | ontwerper | | als modelleur; formulieren, documentsjablonen, huisstijl (handhaving volgt) |
+| 4 | bouwer | editor | registreren, corrigeren, schema publiceren, codegen, EA-import |
+| 5 | beheerder | admin | alles, ook gebruikers, uitnodigingen, projecttoegang, admin-endpoints |
 
-```go
-// In middleware/auth_middleware.go:
-func rolToegestaan(huidig, vereist string) bool {
-    niveaus := map[string]int{"viewer": 1, "editor": 2, "admin": 3}
-    return niveaus[huidig] >= niveaus[vereist]
-}
-```
+De rangorde staat op één plek, `middleware/rollen.go` (`RolNiveau`, `IsBeheerder`,
+`RollenTotEnMet`); `rolToegestaan` vergelijkt alleen niveaus. Een onbekende vereiste rol is een
+deny. De UI spiegelt de tabel in `web/vite/src/shared/rollen.js`.
+
+**Toegang per Studio-project** ("alles dicht tenzij") staat los van de rol:
+`handlers/studio_project_toegang.go`. Eigenaar en beheerder mogen alles; anderen alleen wat een
+rij in `studio_project_toegang` zegt (gebruiker of `*`, lezen of schrijven). Zonder leesrecht
+geeft de API 404. **Uitnodigen**: `gebruikers/uitnodiging.go`, aan met `UITNODIGEN_ENABLED=true`.
 
 Dezelfde hiërarchie staat in het Rego-beleid:
 
 ```rego
 # In authz/manager/policies/bitemp_authz.rego:
-rol_niveau := {"admin": 3, "editor": 2, "viewer": 1}
+rol_niveau := {"beheerder": 5, "admin": 5, "bouwer": 4, "editor": 4,
+               "ontwerper": 3, "modelleur": 2, "lezer": 1, "viewer": 1}
 heeft_minimaal_rol(vereist) if {
     rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
 }
@@ -708,7 +711,9 @@ heeft_minimaal_rol(vereist) if {
 | index, tijdlijn, registraties, universum | - (publiek) | Altijd toegankelijk |
 | swagger, redoc, graphiql | - (publiek) | API-documentatie; GraphQL-mutaties vragen wel `editor` (§3.6) |
 | publicatie | - (publiek) | Schema publicatie |
-| editor-v2, editor, ide, inhoud | editor | UML/metamodel/inhoud editors |
+| editor-v2, editor, ide, inhoud | editor (= bouwer) | UML/metamodel/inhoud editors |
+| studio | lezer | Wat je per project mag, bepaalt de API (toegang per project) |
+| studio.html#uitnodiging=… | - (publiek) | Uitnodiging accepteren (`UitnodigingPagina`) |
 
 ---
 

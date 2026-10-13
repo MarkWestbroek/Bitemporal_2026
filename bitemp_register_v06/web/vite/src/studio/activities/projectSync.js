@@ -148,9 +148,30 @@ export const slaProjectOp = (id, { naam, inhoud, versie, tot_volgnummer }) =>
     body: { naam, inhoud, versie, ...(tot_volgnummer != null ? { tot_volgnummer } : {}) },
   });
 
-/** Verwijderen (eigenaar of admin). */
+/** Verwijderen (eigenaar of beheerder). */
 export const verwijderProject = (id) =>
   roep(`/api/studio/projecten/${encodeURIComponent(id)}`, { methode: "DELETE" });
+
+// ── Toegang per project ("alles dicht tenzij", plan 2026-10-12 §5) ────
+// De lijst en het ophalen geven per project `recht`: lezen, schrijven of beheren.
+
+/** → {project_id, eigenaar, toegang: [{subject, recht, aangemaakt, aangemaakt_door}]} (beheren). */
+export const haalToegangOp = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}/toegang`);
+
+/** Rijen schoonmaken voor de PUT: trimmen, lege weg, dubbele subjecten: de laatste telt. */
+export function toegangVoorOpslaan(rijen) {
+  const perSubject = new Map();
+  for (const r of rijen || []) {
+    const subject = String(r?.subject || "").trim();
+    if (!subject) continue;
+    perSubject.set(subject, { subject, recht: r.recht === "schrijven" ? "schrijven" : "lezen" });
+  }
+  return [...perSubject.values()];
+}
+
+/** Vervangt alle rijen: [{subject: gebruikersnaam | "*", recht: "lezen" | "schrijven"}] (beheren). */
+export const zetToegang = (id, toegang) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/toegang`, { methode: "PUT", body: { toegang } });
 
 // ── Operatielog (stap 2, onderdeel 3/4) ───────────────────────────────
 
