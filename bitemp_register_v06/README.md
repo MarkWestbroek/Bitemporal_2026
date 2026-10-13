@@ -521,7 +521,9 @@ Contributions are welcome! If you find any issues or have suggestions for improv
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the **European Union Public Licence v. 1.2 (EUPL-1.2)**. See the [LICENSE](../LICENSE) file in the repository root. The EUPL is available in all official EU languages (including Dutch) at <https://interoperable-europe.ec.europa.eu/collection/eupl/eupl-text-eupl-12>; all language versions are equally valid.
+
+Third-party components keep their own licences (for example `web/vite/public/method-draw/LICENSE`).
 
 
 -------
