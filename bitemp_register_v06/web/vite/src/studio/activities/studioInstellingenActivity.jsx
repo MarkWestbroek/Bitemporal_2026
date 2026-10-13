@@ -539,6 +539,16 @@ function Main() {
       </div>
 
       <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
+        <h2 style={{ margin: "0 0 2px" }}>Modelleren</h2>
+        <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
+          Persoonlijke voorkeuren voor het werken op het canvas — per browser bewaard.
+        </p>
+      </div>
+      <div style={sectie}>
+        <ModelleerVoorkeuren />
+      </div>
+
+      <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
         <h2 style={{ margin: "0 0 2px" }}>Diagram-export</h2>
         <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
           Standaardinstellingen voor het exporteren van een diagram/selectie als afbeelding.
@@ -662,3 +672,30 @@ export default {
   fullMain: true,
   Main,
 };
+
+/** Modelleer-voorkeuren per gebruiker (useStudioStore, 13-10). */
+function ModelleerVoorkeuren() {
+  const relatiesMeeTerug = useStudioStore((s) => s.relatiesMeeTerug);
+  const relatiesPaneelOpen = useStudioStore((s) => s.relatiesPaneelOpen);
+  const zet = useStudioStore((s) => s.zetVoorkeur);
+  const rij = { display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8, padding: "4px 0", fontSize: 13 };
+  const uitleg = { display: "block", color: "var(--s-fg-muted, #64748b)", fontSize: 12 };
+  return (
+    <div>
+      <label style={rij}>
+        <input type="checkbox" checked={relatiesMeeTerug} onChange={(e) => zet("relatiesMeeTerug", e.target.checked)} />
+        <span>
+          Verborgen relaties komen mee terug als je een element weer op een diagram zet
+          <span style={uitleg}>Uit: een relatie die je van een diagram haalde, blijft daar weg tot je hem zelf weer toont (zoals in Archi).</span>
+        </span>
+      </label>
+      <label style={rij}>
+        <input type="checkbox" checked={relatiesPaneelOpen} onChange={(e) => zet("relatiesPaneelOpen", e.target.checked)} />
+        <span>
+          Relatiepaneel in de eigenschappen standaard uitgeklapt
+          <span style={uitleg}>Inklappen of uitklappen in het paneel zelf past deze voorkeur ook aan.</span>
+        </span>
+      </label>
+    </div>
+  );
+}

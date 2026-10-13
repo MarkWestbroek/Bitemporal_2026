@@ -334,6 +334,20 @@ export function maakDiagramActiviteit(opties) {
     return uit.sort((a, b) => (a.richting === b.richting ? a.typeLabel.localeCompare(b.typeLabel) : a.richting === "uit" ? -1 : 1));
   }
 
+  /**
+   * Na het (terug)zetten van een bestaand element op een diagram: zijn op dit
+   * diagram verborgen relaties komen mee terug — als de gebruiker dat wil
+   * (Studio-instellingen → Modelleren, standaard aan; 13-10).
+   */
+  function naTerugzetten(diagramId, elementId) {
+    if (!useStudioStore.getState().relatiesMeeTerug) return;
+    const s = useStore.getState();
+    for (const cid of [...(s.diagrams[diagramId]?.verborgenConnectoren || [])]) {
+      const c = s.elements[cid];
+      if (c && (c.source === elementId || c.target === elementId)) s.toonConnectorOpDiagram(diagramId, cid);
+    }
+  }
+
   function haalConnectorVanDiagram(diagramId, connectorId) {
     const s = useStore.getState();
     const d = s.diagrams[diagramId];
@@ -1414,6 +1428,7 @@ export function maakDiagramActiviteit(opties) {
         x: midden.x - 90,
         y: midden.y - 50,
       }, { meerdereVoorkomens });
+      naTerugzetten(actiefDiagram, el.id);
       setSelectieId(el.id);
     };
 
@@ -2873,6 +2888,7 @@ export function maakDiagramActiviteit(opties) {
                         const et = elementTypesById[el.elementType];
                         const meerdereVoorkomens = staatMeerdereVoorkomensToe(descriptor, et);
                         s.addElementToDiagram(diagram.id, el.id, positie, { meerdereVoorkomens });
+                        naTerugzetten(diagram.id, el.id);
                         if (doelEt?.containerVoor) verhangNaarContainer(useStore, el.id, doelEl.id);
                         selecteerVoorkomen(el.id, null);
                         return;
@@ -3012,6 +3028,7 @@ export function maakDiagramActiviteit(opties) {
 
   function Inspector() {
     const { selectieId, setSelectieId, selectieVoorkomenId } = useContext(Ctx);
+    const relatiesPaneelOpen = useStudioStore((s) => s.relatiesPaneelOpen);
     const element = useStore((s) => (selectieId ? s.elements[selectieId] : null));
     const actief = useStore((s) => s.actiefDiagramId);
     const elements = useStore((s) => s.elements);
@@ -3081,6 +3098,8 @@ export function maakDiagramActiviteit(opties) {
         {!elementType?.isConnector && (
           <RelatiesPaneel
             relaties={relatiesVan(element.id, elements, diagrams[actief])}
+            open={relatiesPaneelOpen}
+            onOpen={(v) => useStudioStore.getState().zetVoorkeur("relatiesPaneelOpen", v)}
             onSelecteer={(cid) => setSelectieId(cid)}
             onVerberg={(cid) => actief && haalConnectorVanDiagram(actief, cid)}
             onToon={(cid) => actief && useStore.getState().toonConnectorOpDiagram(actief, cid)}

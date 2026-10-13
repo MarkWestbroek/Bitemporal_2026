@@ -1116,6 +1116,11 @@ fase 2 een **bewerkbare sandbox**:
   *toon* en *× uit model*; een klik op de relatie selecteert hem. Code: `RelatiesPaneel.jsx`,
   `haalConnectorVanDiagram`/`relatiesVan` in `maakDiagramActiviteit.jsx`, store-actie
   `toonConnectorOpDiagram` (in `MODEL_OPS`). Alles terug: menu Beeld → *Toon verborgen relaties*.
+  **Voorkeuren per gebruiker** (Studio-instellingen → *Modelleren*, `useStudioStore`, per browser):
+  *verborgen relaties komen mee terug* als je een element weer op een diagram zet (standaard aan;
+  uit = zoals in Archi, de relatie blijft verborgen) — via `naTerugzetten` bij slepen uit boom/lijst
+  en de +-knop; en *relatiepaneel standaard uitgeklapt* (standaard ingeklapt; in- of uitklappen in
+  het paneel zelf zet de voorkeur ook).
 - **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
   Escape is nodig binnen een container zonder `achtergrond` (lane, package,
   stage): daar is geen leeg vlak — elke klik selecteert de container. In
