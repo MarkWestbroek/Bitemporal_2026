@@ -1628,6 +1628,15 @@ function CanvasBinnenkant({
           getNodes()
             .filter((n) => n.selected && !n.id.startsWith(ANKER_PREFIX))
             .map((n) => ({ nodeId: n.id, elementId: n.data?.element?.id || n.id })),
+        /** Connector-ids van geselecteerde lijnen (Ctrl+Delete = uit het model). */
+        selectieConnectorIds: () => [
+          ...new Set(
+            rfStoreApi
+              .getState()
+              .edges.filter((e) => e.selected && e.data?.connectorId)
+              .map((e) => e.data.connectorId)
+          ),
+        ],
         /**
          * Selecteer een node op het canvas (tree-klik). Alleen als hij
          * (deels) buiten beeld valt wordt het beeld minimaal bijgeschoven —

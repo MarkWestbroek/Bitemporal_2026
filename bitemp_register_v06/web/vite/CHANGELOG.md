@@ -8,6 +8,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Relatiepaneel in de inspector** (13-10, Mark): bij een element alle relaties van/naar dat
+  element, met type, richting, het andere uiteinde en de stand op het actieve diagram (zichtbaar,
+  verborgen, andere kant niet op dit diagram); per relatie *van diagram*, *toon* en *uit model*.
+
+### Opgelost
+- **Relaties van het diagram halen** (13-10, Mark): "Van diagram halen" in de inspector deed niets
+  bij een verbinding, en **Delete** op een lijn haalde de relatie uit het model. Nu verbergt beide
+  de relatie alleen op dit diagram; **Ctrl+Delete** haalt (na bevestiging) ook lijnen uit het model.
+
 ### Gewijzigd
 - **Mappen en diagrammen hebben een beschrijving** (13-10, Mark): de map-`omschrijving` heet nu
   `beschrijving`, consequent met elementen en velden (M3). Oude mappen migreren bij binnenkomst

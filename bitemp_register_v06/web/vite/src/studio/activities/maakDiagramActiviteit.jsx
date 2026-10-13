@@ -81,6 +81,7 @@ import { verbindingsregelsVan } from "../../diagramcore/types/typeRegistry.js";
 import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
 import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
+import RelatiesPaneel from "../../diagramcore/inspector/RelatiesPaneel.jsx";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { registreerIconenVocabulaire } from "../../diagramcore/shapes/iconenVocabulaire.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
@@ -302,6 +303,44 @@ export function maakDiagramActiviteit(opties) {
   let _plaatsTeller = 0;
 
   const Ctx = createContext(null);
+
+  /**
+   * Verbinding van één diagram halen zonder hem uit het model te verwijderen:
+   * een eventuele box-gedaante (node) gaat van het diagram en de lijn wordt
+   * hier verborgen (`diagram.verborgenConnectoren`). "Toon verborgen relaties"
+   * (menu Beeld) of het relatiepaneel zet hem terug.
+   */
+  /** Relaties van/naar een element, met hun stand op het actieve diagram. */
+  function relatiesVan(elementId, elements, diagram) {
+    const opDiagram = new Set((diagram?.nodes || []).map((n) => n.elementId));
+    const verborgen = new Set(diagram?.verborgenConnectoren || []);
+    const uit = [];
+    for (const c of Object.values(elements || {})) {
+      if (!c?.source || !c?.target || !elementTypesById[c.elementType]?.isConnector) continue;
+      if (c.source !== elementId && c.target !== elementId) continue;
+      const richting = c.source === elementId ? "uit" : "in";
+      const anderId = richting === "uit" ? c.target : c.source;
+      const ander = elements[anderId];
+      const stand = !opDiagram.has(elementId) || !opDiagram.has(anderId) ? "buiten" : verborgen.has(c.id) ? "verborgen" : "zichtbaar";
+      uit.push({
+        id: c.id,
+        typeLabel: elementTypesById[c.elementType]?.label || c.elementType,
+        richting,
+        naam: c.naam || "",
+        anderNaam: ander?.naam || anderId,
+        stand,
+      });
+    }
+    return uit.sort((a, b) => (a.richting === b.richting ? a.typeLabel.localeCompare(b.typeLabel) : a.richting === "uit" ? -1 : 1));
+  }
+
+  function haalConnectorVanDiagram(diagramId, connectorId) {
+    const s = useStore.getState();
+    const d = s.diagrams[diagramId];
+    if (!d || !s.elements[connectorId]) return;
+    if ((d.nodes || []).some((n) => n.elementId === connectorId)) s.removeElementFromDiagram(diagramId, connectorId);
+    s.verbergConnectorOpDiagram(diagramId, connectorId);
+  }
 
   function Provider({ children }) {
     const [selectieId, setSelectieIdState] = useState(null);
@@ -2516,7 +2555,11 @@ export function maakDiagramActiviteit(opties) {
             const sel = api?.selectieIds?.() || [];
             if (sel.length === 1) menuBus.emit("studio:zoek-in-boom", { profielId: id, elementId: sel[0].elementId });
           } else if (actie === "canvas:verwijder-uit-model") {
-            const sel = api?.selectieIds?.() || [];
+            // Elementen én geselecteerde lijnen (verbindingen).
+            const knopen = api?.selectieIds?.() || [];
+            const gezien = new Set(knopen.map((x) => x.elementId));
+            const lijnen = (api?.selectieConnectorIds?.() || []).filter((cid) => !gezien.has(cid)).map((cid) => ({ nodeId: cid, elementId: cid }));
+            const sel = [...knopen, ...lijnen];
             if (!sel.length) return;
             const naam = useStore.getState().elements[sel[0].elementId]?.naam || sel[0].elementId;
             vraagBevestiging({
@@ -2687,23 +2730,27 @@ export function maakDiagramActiviteit(opties) {
                     useStore.getState().updateNodeSize(diagram.id, voorkomenId, size, positie)
                   }
                   onVerbind={verbind}
+                  // Delete = van het diagram halen, ook voor verbindingen (lijn,
+                  // anker of box-gedaante): het model houdt de relatie; Ctrl+Delete
+                  // haalt hem uit het model (gemeld 2026-10-13: "Delete lijkt hem
+                  // uit het model te halen").
                   onVerwijder={(ids) => {
                     const s = useStore.getState();
                     ids.forEach((did) => {
                       if (did.startsWith(ANKER_PREFIX)) {
-                        s.deleteElement(did.slice(ANKER_PREFIX.length));
+                        haalConnectorVanDiagram(diagram.id, did.slice(ANKER_PREFIX.length));
                         return;
                       }
                       const el = s.elements[did];
                       if (el && elementTypesById[el.elementType]?.isConnector) {
-                        s.deleteElement(did);
+                        haalConnectorVanDiagram(diagram.id, did);
                       } else {
                         s.removeElementFromDiagram(diagram.id, did);
                       }
                     });
                   }}
                   onVerwijderConnectoren={(connectorIds) =>
-                    connectorIds.forEach((cid) => useStore.getState().deleteElement(cid))
+                    connectorIds.forEach((cid) => haalConnectorVanDiagram(diagram.id, cid))
                   }
                   onNormaliseer={(connectorIds) => menuBus.emit(ev("normaliseer"), connectorIds)}
                   onLabelOffset={(connectorId, zijde, offset) => {
@@ -3010,7 +3057,11 @@ export function maakDiagramActiviteit(opties) {
             useStore.getState().updateElement(element.id, patch);
           }}
           onVerwijderVanDiagram={() => {
-            if (actief) useStore.getState().removeElementFromDiagram(actief, selectieVoorkomenId || element.id);
+            if (actief) {
+              // Een verbinding is geen node: verbergen op dit diagram (13-10).
+              if (elementType?.isConnector) haalConnectorVanDiagram(actief, element.id);
+              else useStore.getState().removeElementFromDiagram(actief, selectieVoorkomenId || element.id);
+            }
             setSelectieId(null);
           }}
           onVerwijderUitModel={async () => {
@@ -3027,6 +3078,24 @@ export function maakDiagramActiviteit(opties) {
             }
           }}
         />
+        {!elementType?.isConnector && (
+          <RelatiesPaneel
+            relaties={relatiesVan(element.id, elements, diagrams[actief])}
+            onSelecteer={(cid) => setSelectieId(cid)}
+            onVerberg={(cid) => actief && haalConnectorVanDiagram(actief, cid)}
+            onToon={(cid) => actief && useStore.getState().toonConnectorOpDiagram(actief, cid)}
+            onVerwijder={async (cid) => {
+              const c = elements[cid];
+              const ok = await vraagBevestiging({
+                titel: "Relatie uit het model verwijderen",
+                tekst: `Deze relatie (${elementTypesById[c?.elementType]?.label || "relatie"}) uit het hele model verwijderen? Ctrl+Z maakt het ongedaan.`,
+                bevestig: "Verwijder",
+                gevaar: true,
+              });
+              if (ok) useStore.getState().deleteElement(cid);
+            }}
+          />
+        )}
       </div>
     );
   }

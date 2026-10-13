@@ -671,6 +671,18 @@ export function createDiagramStore({ persistKey } = {}) {
         };
       }),
 
+    /** Eén verborgen verbinding weer tonen op dit diagram (relatiepaneel, 13-10). */
+    toonConnectorOpDiagram: (diagramId, connectorId) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        const lijst = d?.verborgenConnectoren || [];
+        if (!d || !lijst.includes(connectorId)) return state;
+        const rest = lijst.filter((c) => c !== connectorId);
+        const nieuw = { ...d, verborgenConnectoren: rest };
+        if (!rest.length) delete nieuw.verborgenConnectoren;
+        return { isDirty: true, diagrams: { ...state.diagrams, [diagramId]: nieuw } };
+      }),
+
     toonVerborgenConnectoren: (diagramId) =>
       set((state) => {
         const d = state.diagrams[diagramId];

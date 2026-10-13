@@ -1106,6 +1106,16 @@ fase 2 een **bewerkbare sandbox**:
   variabelen (diagramcore.css), dus licht is ongewijzigd. Uitzondering: iconen
   óp een lichte vulling (BPMN-taaktype, subproces-plus) houden `DONKER_INKT`.
   Zoomknoppen en minimap krijgen donkere `--xy-*`-variabelen.
+- **Relaties: van het diagram of uit het model** (2026-10-13). **Delete** haalt een selectie
+  van het diagram, ook een lijn (verbinding): die wordt alleen op dít diagram verborgen
+  (`diagram.verborgenConnectoren`), het model houdt de relatie. **Ctrl+Delete** haalt elementen
+  én geselecteerde lijnen uit het model, na bevestiging. "Van diagram halen" in de inspector werkt
+  nu ook voor een verbinding. De inspector van een element heeft een **relatiepaneel**: alle
+  relaties van/naar het element met type, richting (→ uit, ← in), het andere uiteinde en de stand
+  op dit diagram (op dit diagram / verborgen / andere kant niet op dit diagram), met *van diagram*,
+  *toon* en *× uit model*; een klik op de relatie selecteert hem. Code: `RelatiesPaneel.jsx`,
+  `haalConnectorVanDiagram`/`relatiesVan` in `maakDiagramActiviteit.jsx`, store-actie
+  `toonConnectorOpDiagram` (in `MODEL_OPS`). Alles terug: menu Beeld → *Toon verborgen relaties*.
 - **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
   Escape is nodig binnen een container zonder `achtergrond` (lane, package,
   stage): daar is geen leeg vlak — elke klik selecteert de container. In

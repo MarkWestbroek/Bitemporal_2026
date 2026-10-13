@@ -1005,3 +1005,44 @@
   opacity: 0.75;
   white-space: nowrap;
 }
+
+/* Relatiepaneel in de inspector (13-10): relaties van/naar het element met
+   hun stand op het actieve diagram. */
+.dc-relatie {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 0;
+  border-top: 1px solid var(--s-border, #e2e8f0);
+}
+.dc-relatie:first-of-type { border-top: 0; }
+.dc-relatie-naam {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: baseline;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--s-fg, #1e293b);
+  cursor: pointer;
+}
+.dc-relatie-naam:hover .dc-relatie-ander { text-decoration: underline; }
+.dc-relatie-richting { color: var(--s-fg-muted, #64748b); width: 12px; }
+.dc-relatie-type { color: var(--s-fg-muted, #64748b); }
+.dc-relatie-label { font-style: italic; }
+.dc-relatie-ander { font-weight: 600; }
+.dc-relatie-stand {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--s-fg-muted, #64748b);
+  padding-left: 16px;
+}
+.dc-relatie-stand > span { flex: 1; }
+.dc-relatie.is-verborgen .dc-relatie-naam,
+.dc-relatie.is-buiten .dc-relatie-naam { opacity: 0.65; }
