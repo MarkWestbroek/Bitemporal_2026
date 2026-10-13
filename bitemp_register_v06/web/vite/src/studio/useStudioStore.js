@@ -30,6 +30,8 @@ function schrijfOpslag(state) {
         labsAan: state.labsAan,
         favorieten: state.favorieten,
         tooltipsAan: state.tooltipsAan,
+        relatiesMeeTerug: state.relatiesMeeTerug,
+        relatiesPaneelOpen: state.relatiesPaneelOpen,
       })
     );
   } catch { /* ignore */ }
@@ -61,6 +63,22 @@ const useStudioStore = create((set) => ({
   favorieten: opgeslagen.favorieten || [],
   /** Eigen taakbalk-tooltips (naam + omschrijving); uit → native title. */
   tooltipsAan: opgeslagen.tooltipsAan ?? true,
+
+  /**
+   * Modelleer-voorkeuren per gebruiker (13-10, Mark/Hugo): verborgen relaties
+   * komen weer mee als je een element terugzet op een diagram (aan = Mark;
+   * uit = Hugo, gewend aan Archi), en of het relatiepaneel in de inspector
+   * standaard open staat.
+   */
+  relatiesMeeTerug: opgeslagen.relatiesMeeTerug ?? true,
+  relatiesPaneelOpen: opgeslagen.relatiesPaneelOpen ?? false,
+  zetVoorkeur: (sleutel, waarde) =>
+    set((s) => {
+      if (!["relatiesMeeTerug", "relatiesPaneelOpen"].includes(sleutel) || s[sleutel] === waarde) return {};
+      const next = { ...s, [sleutel]: waarde };
+      schrijfOpslag(next);
+      return { [sleutel]: waarde };
+    }),
 
   toggleTooltips: () =>
     set((s) => {

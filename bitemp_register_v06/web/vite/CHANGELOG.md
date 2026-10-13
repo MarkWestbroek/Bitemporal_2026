@@ -9,6 +9,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Modelleer-voorkeuren per gebruiker** (13-10, Mark en Hugo): Studio-instellingen → *Modelleren*.
+  *Verborgen relaties komen mee terug* als je een element weer op een diagram zet (standaard aan;
+  uit werkt zoals Archi). *Relatiepaneel standaard uitgeklapt* (standaard ingeklapt; de kop van het
+  paneel klapt in/uit en onthoudt de stand).
+
+### Toegevoegd
 - **Relatiepaneel in de inspector** (13-10, Mark): bij een element alle relaties van/naar dat
   element, met type, richting, het andere uiteinde en de stand op het actieve diagram (zichtbaar,
   verborgen, andere kant niet op dit diagram); per relatie *van diagram*, *toon* en *uit model*.

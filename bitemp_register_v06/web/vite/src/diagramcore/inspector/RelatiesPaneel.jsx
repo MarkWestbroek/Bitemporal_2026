@@ -20,12 +20,17 @@ const STAND_LABEL = {
   buiten: "andere kant niet op dit diagram",
 };
 
-export default function RelatiesPaneel({ relaties = [], onSelecteer, onVerberg, onToon, onVerwijder }) {
+export default function RelatiesPaneel({ relaties = [], open = true, onOpen, onSelecteer, onVerberg, onToon, onVerwijder }) {
   if (!relaties.length) return null;
+  const verborgen = relaties.filter((r) => r.stand === "verborgen").length;
   return (
     <div className="dc-inspector-sectie dc-relaties">
-      <div className="dc-inspector-sectie-titel">Relaties ({relaties.length})</div>
-      {relaties.map((r) => (
+      {/* Kop klapt in/uit; de stand is een gebruikersvoorkeur (Studio-instellingen). */}
+      <button type="button" className="dc-inspector-sectie-titel dc-relaties-kop" aria-expanded={open} onClick={() => onOpen?.(!open)}>
+        <span aria-hidden="true">{open ? "▾" : "▸"}</span> Relaties ({relaties.length}
+        {verborgen ? `, ${verborgen} verborgen` : ""})
+      </button>
+      {open && relaties.map((r) => (
         <div key={r.id} className={"dc-relatie is-" + r.stand}>
           <button
             type="button"

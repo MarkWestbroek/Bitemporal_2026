@@ -1046,3 +1046,13 @@
 .dc-relatie-stand > span { flex: 1; }
 .dc-relatie.is-verborgen .dc-relatie-naam,
 .dc-relatie.is-buiten .dc-relatie-naam { opacity: 0.65; }
+.dc-relaties-kop {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
