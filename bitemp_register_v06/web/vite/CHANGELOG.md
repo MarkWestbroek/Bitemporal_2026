@@ -8,6 +8,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **Typekiezer valt niet meer buiten het paneel** (13-10, Mark): de minibrowser (🔍 bij een
+  verwijzing, bv. het type van een veld) was 240px breed en rechts uitgelijnd op het anker; in een
+  smal eigenschappenpaneel stak hij links buiten beeld en werd afgesneden. Nu een portal met vaste
+  positie, binnen het venster geklemd, boven het veld als er onder te weinig ruimte is; sluit bij
+  een klik ernaast, scrollen of venster-resize.
+
 ## [studio/v0.18.0] — 2026-10-13
 Beschrijving als vaste M3-eigenschap van elk element en veld (M3-MOF), eigenschappen die altijd
 zichtbaar zijn (pijltjes in de boom, zonder open diagram, meegroeiende tekstvelden), en

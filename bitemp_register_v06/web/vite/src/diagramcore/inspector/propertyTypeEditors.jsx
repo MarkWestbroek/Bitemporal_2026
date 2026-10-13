@@ -15,7 +15,8 @@
  * Editor-contract: component met props
  *   { regel, waarde, onChange, element?, kandidaten? }
  */
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { getShape, alleShapeIds } from "../shapes/shapeRegistry.js";
 import { TypeIcoon, alleIcoonIds } from "../shapes/typeIconen.jsx";
 
@@ -227,6 +228,44 @@ export function VerwijzingsKiezer({ regel, waarde, onChange, kandidaten = [] }) 
   const [open, setOpen] = useState(false);
   const [zoek, setZoek] = useState("");
   const ankerRef = useRef(null);
+  const popRef = useRef(null);
+  // Vaste positie in het venster (portal): in een smal paneel stak de
+  // minibrowser (240px, rechts uitgelijnd op het anker) links buiten het
+  // paneel en werd afgesneden (gemeld 2026-10-13). Nu binnen het venster
+  // geklemd, en boven het anker als er onder te weinig ruimte is.
+  const [pos, setPos] = useState(null);
+  const BREED = 240;
+  useLayoutEffect(() => {
+    if (!open || !ankerRef.current) return;
+    const r = ankerRef.current.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const left = Math.max(8, Math.min(r.right - BREED, vw - BREED - 8));
+    const onder = vh - r.bottom - 12, boven = r.top - 12;
+    const naarBoven = onder < 220 && boven > onder;
+    const maxHoogte = Math.max(140, Math.min(300, naarBoven ? boven : onder));
+    setPos(naarBoven ? { left, bottom: vh - r.top + 4, maxHoogte } : { left, top: r.bottom + 4, maxHoogte });
+  }, [open]);
+  // Sluiten bij een klik buiten de minibrowser, of als het paneel scrollt of
+  // het venster verandert (de vaste positie zou dan niet meer kloppen).
+  useEffect(() => {
+    if (!open) return undefined;
+    const buiten = (e) => {
+      if (popRef.current?.contains(e.target) || ankerRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
+    const sluit = (e) => {
+      if (popRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", buiten, true);
+    window.addEventListener("scroll", sluit, true);
+    window.addEventListener("resize", sluit);
+    return () => {
+      document.removeEventListener("mousedown", buiten, true);
+      window.removeEventListener("scroll", sluit, true);
+      window.removeEventListener("resize", sluit);
+    };
+  }, [open]);
 
   const groepeer = (lijst) => {
     const per = [];
@@ -284,8 +323,12 @@ export function VerwijzingsKiezer({ regel, waarde, onChange, kandidaten = [] }) 
         🔍
       </button>
 
-      {open && (
-        <div className="dc-minibrowser">
+      {open && pos && createPortal(
+        <div
+          ref={popRef}
+          className="dc-minibrowser"
+          style={{ position: "fixed", right: "auto", left: pos.left, top: pos.top ?? "auto", bottom: pos.bottom ?? "auto", maxHeight: pos.maxHoogte, zIndex: 400 }}
+        >
           <input
             type="text"
             autoFocus
@@ -320,7 +363,8 @@ export function VerwijzingsKiezer({ regel, waarde, onChange, kandidaten = [] }) 
               </div>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
