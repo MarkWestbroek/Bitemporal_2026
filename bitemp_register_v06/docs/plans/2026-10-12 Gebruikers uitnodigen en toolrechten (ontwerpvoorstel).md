@@ -92,10 +92,41 @@ fijnere rollen komen er vanzelf bij als de beleidsbundel (toegangsplan fase 1a/1
 | 2 | Toolresources en -handelingen in de beleidsbundel; rollen als Toegangsspraak-regels; uitnodiging met zo'n rol | toegangsplan 1a (bundel + uitvoerder) |
 | 3 | Rechten per map: servercheck in de projectsync, alleen-lezen in de Studio | fase 2 |
 
-## 5. Open vragen
+## 5. Besluiten en voorstellen (Mark, 13-10)
 
-1. Welke testomgeving eerst: app of pf (of een aparte)?
-2. Mag een genodigde zelf zijn gebruikersnaam kiezen, of is het e-mailadres de gebruikersnaam?
-3. De rolnamen (modelleur, ontwerper, bouwer): passen die, of gebruik je liever andere?
-4. Moet een "editor" zonder map-beperking alles mogen wijzigen, of is deny-by-default (zoals in
-   het toegangsplan) ook hier de regel: alleen wat expliciet mag?
+**Besloten:**
+
+1. **Testomgeving:** app (app.omnium-ide.nl).
+2. **De genodigde kiest zelf een gebruikersnaam**: die verschijnt in de lijst "wie is actief".
+
+**Rollen (voorstel, nog te bevestigen).** Het verschil zit in de impact van wat je maakt:
+
+| Rol | Mag | Gevolg van fouten |
+|---|---|---|
+| lezer | project openen, bekijken, documenten genereren | geen |
+| **modelleur** | modellen bewerken (elementen, diagrammen, mappen, koppelingen), eventueel per map | blijft in het model |
+| **ontwerper** | als modelleur, plus artefacten die anderen gebruiken: formulierdefinities, documentsjablonen, huisstijl/vormregels van het project | zichtbaar voor gebruikers van formulieren en documenten |
+| **bouwer** | als ontwerper, plus wat het draaiende systeem verandert: codegeneratie, schema publiceren, EA-import via de server | verandert database en API |
+| beheerder | gebruikers uitnodigen, rollen toekennen, toegangsbeleid publiceren, project verwijderen | — |
+
+Nu een vaste keuzelijst (enum). Later een **referentielijst** in domein `beheer`, bitemporeel en
+zelf gemodelleerd; de **PIP** levert de rollen van een subject aan de PDP. De beleidsbundel
+verwijst alleen naar rolcodes, dus die overgang breekt niets (Mark, 13-10).
+
+**Toolrechten (voorstel).** Datarechten (het toegangsplan) gaan over wie welke registergegevens
+ziet; toolrechten over wat je in de werkbank mag. Zes groepen, oplopend in impact:
+
+1. **Lezen** — project openen, diagrammen bekijken, documenten genereren.
+2. **Modelleren** — wijzigen in een map (elementen, diagrammen, koppelingen); per map te beperken.
+3. **Ontwerpen** — formulierdefinities, documentsjablonen, vormregels/huisstijl van het project.
+4. **Taal wijzigen** — profielen en M2 aanpassen (profiel-ontwerper); raakt elk model in die taal.
+   Bij de bouwer, of een eigen rol als de taal strenger bewaakt moet worden dan de code (open).
+5. **Bouwen en publiceren** — codegeneratie, schema publiceren naar het register, EA-import via de
+   server.
+6. **Beheer** — gebruikers uitnodigen en rollen toekennen, toegangsbeleid publiceren, een project
+   verwijderen of een serverversie overschrijven.
+
+**Nog open:**
+
+3. Rolnamen en indeling hierboven: akkoord, en krijgt "taal wijzigen" (4) een eigen rol?
+4. Deny-by-default ook voor toolrechten (alleen wat expliciet mag)?
