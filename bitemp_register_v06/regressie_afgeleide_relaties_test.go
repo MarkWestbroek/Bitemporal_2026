@@ -13,6 +13,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
@@ -49,7 +50,7 @@ func TestAfgeleideRelatiesNpLoc(t *testing.T) {
 	model.MetaRegistry["NatuurlijkPersoon"] = metAfgeleid
 
 	o := nieuweRegressieOmgeving(t)
-	o.seedViaReplay()
+	seedLaatste := o.seedViaReplay()
 
 	t.Run("full detail", func(t *testing.T) {
 		status, body, raw := o.met(t).do("GET", "/full/natuurlijk_personen/2", nil)
@@ -148,6 +149,40 @@ func TestAfgeleideRelatiesNpLoc(t *testing.T) {
 			t.Fatalf("verwacht ≥5 personen met een woonadres-doel, kreeg %d", gezien)
 		}
 	})
+
+	// Querybudget (zoals scenario 16, /full met peiltijdstip): de afgeleide relaties mogen er
+	// alleen een vast, klein aantal queries bij doen — de afleiding laadt lui (kale doelen, alleen
+	// de rollen die een regel aanspreekt). De nulmeting draait op een tweede router zonder
+	// afgeleide relaties, op dezelfde database. Als laatste, want NewRouter bouwt ook het
+	// GraphQL-schema opnieuw.
+	t.Run("querybudget: afgeleide relaties kosten een vast, klein aantal queries", func(t *testing.T) {
+		pad := fmt.Sprintf("/full/natuurlijk_personen?t=%d&size=5", seedLaatste)
+		met := o.meetQueries(t, o.srv, pad)
+		model.MetaRegistry["NatuurlijkPersoon"] = orig
+		zonderSrv := httptest.NewServer(NewRouter())
+		defer zonderSrv.Close()
+		model.MetaRegistry["NatuurlijkPersoon"] = metAfgeleid
+		zonder := o.meetQueries(t, zonderSrv, pad)
+		t.Logf("%s: %d queries met %d afgeleide relaties, %d zonder (+%d)", pad, met, len(metAfgeleid.AfgeleideRelaties), zonder, met-zonder)
+		if met-zonder > 8 {
+			t.Fatalf("afgeleide relaties kosten %d extra queries; verwacht ≤ 8 (lui laden kapot?)", met-zonder)
+		}
+	})
+}
+
+// meetQueries telt de queries van één GET op srv.
+func (o *regressieOmgeving) meetQueries(t *testing.T, srv *httptest.Server, pad string) int64 {
+	t.Helper()
+	o.teller.reset()
+	resp, err := o.client.Get(srv.URL + pad)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 200 {
+		t.Fatalf("%s: status %d", pad, resp.StatusCode)
+	}
+	return o.teller.aantal()
 }
 
 func sleutels(m map[string]any) string {

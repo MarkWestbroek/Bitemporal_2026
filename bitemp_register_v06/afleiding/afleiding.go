@@ -20,6 +20,7 @@ package afleiding
 import (
 	"context"
 	"fmt"
+	"log"
 	"math"
 	"sort"
 	"strings"
@@ -32,10 +33,16 @@ import (
 // MaxRondes begrenst het herhaald laden en evalueren (diepte- en cyclusbewaking).
 const MaxRondes = 8
 
-// Lader laadt entiteiten als JSON-maps, met hun GE's en relaties (zoals /full), op één vast
-// peilmoment. Ontbrekende id's komen niet in de uitkomst.
+// Lader laadt op één vast formeel peilmoment, lui: eerst alleen de entiteitrijen, en per
+// onderliggend element (GE of relatie) pas als een regel het aanspreekt. Zo kost een doel
+// niet een hele /full-lading terwijl de regel er één relatie of één GE van gebruikt.
 type Lader interface {
+	// LaadEntiteiten levert de kale entiteitrijen (zonder GE's/relaties) als JSON-maps per id.
+	// Ontbrekende of op het peilmoment niet bestaande id's komen niet in de uitkomst.
 	LaadEntiteiten(ctx context.Context, typenaam string, ids []int) (map[int]map[string]any, error)
+	// LaadVoorkomens levert per entiteit-id de actieve voorkomens van één onderliggend
+	// element (rol = JSONRolnaam), in /full-vorm (hub met "data", "aanvang", "einde").
+	LaadVoorkomens(ctx context.Context, typenaam, rol string, ids []int) (map[int][]any, error)
 }
 
 // ── Geparste regels (gedeeld, want de MetaRegistry verandert niet tijdens een verzoek) ──
@@ -67,58 +74,74 @@ type sleutel struct {
 	id       int
 }
 
+// kindSleutel wijst één onderliggend element (rol = JSONRolnaam) van één entiteit aan.
+type kindSleutel struct {
+	typenaam string
+	rol      string
+	id       int
+}
+
+// entry is een geladen entiteit. volledig: de map bevat al zijn GE's en relaties (uit een
+// response); anders is hij kaal geladen en worden onderliggende elementen lui bijgeladen.
+type entry struct {
+	m        map[string]any // nil: geladen maar bestaat niet (op het peilmoment)
+	volledig bool
+}
+
 // Omgeving bevat de entiteiten die tijdens één verzoek geladen zijn (allemaal op hetzelfde
-// peilmoment) en de doelen die bij de laatste evaluatie ontbraken. Niet geschikt voor
-// gelijktijdig gebruik.
+// peilmoment) en wat er bij de laatste evaluatie ontbrak: entiteiten (doorkijk naar een doel)
+// en onderliggende elementen van kaal geladen entiteiten. Niet geschikt voor gelijktijdig
+// gebruik.
 type Omgeving struct {
-	lader   Lader
-	geladen map[sleutel]map[string]any // nil-waarde: geladen maar bestaat niet
-	missers map[sleutel]bool
+	lader       Lader
+	geladen     map[sleutel]*entry
+	missers     map[sleutel]bool
+	kindMissers map[kindSleutel]bool
 }
 
 // NieuweOmgeving maakt een omgeving; lader mag nil zijn (dan blijft doorkijk naar niet
 // geladen doelen null, zoals bij afgeleide velden zonder database).
 func NieuweOmgeving(lader Lader) *Omgeving {
-	return &Omgeving{lader: lader, geladen: map[sleutel]map[string]any{}, missers: map[sleutel]bool{}}
+	return &Omgeving{lader: lader, geladen: map[sleutel]*entry{}, missers: map[sleutel]bool{}, kindMissers: map[kindSleutel]bool{}}
 }
 
-// VoegToe registreert een al geladen entiteit (bijv. uit de response), zodat doorkijk ernaar
-// geen query kost. Alleen doen als de map op hetzelfde peilmoment geladen is.
+// VoegToe registreert een volledig geladen entiteit (bijv. uit de response), zodat doorkijk
+// ernaar geen query kost. Alleen doen als de map op hetzelfde peilmoment geladen is.
 func (o *Omgeving) VoegToe(typenaam string, id int, m map[string]any) {
-	o.geladen[sleutel{typenaam, id}] = m
+	o.geladen[sleutel{typenaam, id}] = &entry{m: m, volledig: true}
 }
 
-// Geladen geeft de entiteit-map die de omgeving voor (typenaam, id) geladen heeft, of nil.
-// Na BerekenAfgeleideRelaties zijn alle doelen geladen (voor hun weergavenaam), op het
-// peilmoment van de lader; GraphQL gebruikt dit voor de volledige doelobjecten.
-func (o *Omgeving) Geladen(typenaam string, id int) map[string]any {
-	return o.geladen[sleutel{typenaam, id}]
-}
-
-// Entiteit geeft het Object voor een entiteit-map (de wortel van een evaluatie).
+// Entiteit geeft het Object voor een volledige entiteit-map (de wortel van een evaluatie).
 func (o *Omgeving) Entiteit(meta model.TypeMeta, m map[string]any) *Entiteit {
-	return &Entiteit{omg: o, meta: meta, m: m}
+	return &Entiteit{omg: o, meta: meta, m: m, volledig: true}
+}
+
+func (o *Omgeving) entiteitVan(meta model.TypeMeta, e *entry) *Entiteit {
+	return &Entiteit{omg: o, meta: meta, m: e.m, volledig: e.volledig}
 }
 
 // entiteitOp levert de geladen entiteit (typenaam, id), of registreert een misser.
 func (o *Omgeving) entiteitOp(typenaam string, id int) *Entiteit {
 	k := sleutel{typenaam, id}
-	m, ok := o.geladen[k]
+	e, ok := o.geladen[k]
 	if !ok {
 		o.missers[k] = true
 		return nil
 	}
-	if m == nil {
+	if e.m == nil {
 		return nil
 	}
 	meta, ok := model.MetaRegistry.GetTypeMeta(typenaam)
 	if !ok {
 		return nil
 	}
-	return o.Entiteit(meta, m)
+	return o.entiteitVan(meta, e)
 }
 
-// laad haalt de gegeven sleutels op die nog niet geladen zijn (per type één batch).
+func (o *Omgeving) heeftMissers() bool { return o.aantalMissers() > 0 }
+func (o *Omgeving) aantalMissers() int { return len(o.missers) + len(o.kindMissers) }
+
+// laad haalt de gegeven entiteiten op die nog niet geladen zijn (kaal; per type één batch).
 func (o *Omgeving) laad(ctx context.Context, sleutels []sleutel) error {
 	if o.lader == nil {
 		return nil
@@ -129,44 +152,133 @@ func (o *Omgeving) laad(ctx context.Context, sleutels []sleutel) error {
 			perType[k.typenaam] = append(perType[k.typenaam], k.id)
 		}
 	}
-	typen := make([]string, 0, len(perType))
-	for t := range perType {
-		typen = append(typen, t)
-	}
-	sort.Strings(typen)
-	for _, typenaam := range typen {
-		ids := perType[typenaam]
-		sort.Ints(ids)
+	for _, typenaam := range gesorteerd(perType) {
+		ids := uniek(perType[typenaam])
 		maps, err := o.lader.LaadEntiteiten(ctx, typenaam, ids)
 		if err != nil {
 			return fmt.Errorf("laden %s: %w", typenaam, err)
 		}
 		for _, id := range ids {
-			o.geladen[sleutel{typenaam, id}] = maps[id] // nil als hij niet bestaat
+			o.geladen[sleutel{typenaam, id}] = &entry{m: maps[id]} // m nil als hij niet bestaat
+		}
+	}
+	return nil
+}
+
+// laadKinderen haalt onderliggende elementen van kaal geladen entiteiten op (per type en rol
+// één batch) en zet ze in de entiteit-map, ook als ze leeg zijn.
+func (o *Omgeving) laadKinderen(ctx context.Context, sleutels []kindSleutel) error {
+	if o.lader == nil {
+		return nil
+	}
+	type typeRol struct{ typenaam, rol string }
+	perTypeRol := map[typeRol][]int{}
+	for _, k := range sleutels {
+		tr := typeRol{k.typenaam, k.rol}
+		perTypeRol[tr] = append(perTypeRol[tr], k.id)
+	}
+	volgorde := make([]typeRol, 0, len(perTypeRol))
+	for tr := range perTypeRol {
+		volgorde = append(volgorde, tr)
+	}
+	sort.Slice(volgorde, func(i, j int) bool {
+		if volgorde[i].typenaam != volgorde[j].typenaam {
+			return volgorde[i].typenaam < volgorde[j].typenaam
+		}
+		return volgorde[i].rol < volgorde[j].rol
+	})
+	for _, tr := range volgorde {
+		ids := uniek(perTypeRol[tr])
+		perID, err := o.lader.LaadVoorkomens(ctx, tr.typenaam, tr.rol, ids)
+		if err != nil {
+			return fmt.Errorf("laden %s.%s: %w", tr.typenaam, tr.rol, err)
+		}
+		for _, id := range ids {
+			e := o.geladen[sleutel{tr.typenaam, id}]
+			if e == nil || e.m == nil {
+				continue
+			}
+			items := perID[id]
+			if items == nil {
+				items = []any{}
+			}
+			e.m[tr.rol] = items
 		}
 	}
 	return nil
 }
 
 func (o *Omgeving) laadMissers(ctx context.Context) (bool, error) {
-	if len(o.missers) == 0 {
+	if !o.heeftMissers() {
 		return false, nil
 	}
 	sleutels := make([]sleutel, 0, len(o.missers))
 	for k := range o.missers {
 		sleutels = append(sleutels, k)
 	}
+	kinderen := make([]kindSleutel, 0, len(o.kindMissers))
+	for k := range o.kindMissers {
+		kinderen = append(kinderen, k)
+	}
 	o.missers = map[sleutel]bool{}
-	return true, o.laad(ctx, sleutels)
+	o.kindMissers = map[kindSleutel]bool{}
+	if err := o.laad(ctx, sleutels); err != nil {
+		return true, err
+	}
+	return true, o.laadKinderen(ctx, kinderen)
+}
+
+// totStabiel voert stap uit, laadt wat er ontbrak en herhaalt tot er niets meer ontbreekt
+// (maximaal MaxRondes). Evalueren is zuiver, dus herhalen is veilig. stap krijgt laatste=true
+// in de ronde waarna niets meer geladen wordt; pas dan mogen fouten gemeld worden.
+func (o *Omgeving) totStabiel(ctx context.Context, wat string, stap func(laatste bool)) error {
+	for ronde := 1; ; ronde++ {
+		stap(false)
+		if !o.heeftMissers() {
+			// Niets ontbrak: deze uitkomst is definitief. Nog één keer met laatste=true
+			// zou dubbel werk zijn; de aanroeper meldt fouten daarom ook als er geen missers zijn.
+			return nil
+		}
+		if _, err := o.laadMissers(ctx); err != nil {
+			return err
+		}
+		if ronde >= MaxRondes {
+			log.Printf("AFLEIDING: %s: na %d rondes nog niet alles geladen (diepte of cyclus?); uitkomst kan onvolledig zijn", wat, MaxRondes)
+			stap(true)
+			o.missers, o.kindMissers = map[sleutel]bool{}, map[kindSleutel]bool{}
+			return nil
+		}
+	}
+}
+
+func gesorteerd[V any](m map[string]V) []string {
+	uit := make([]string, 0, len(m))
+	for k := range m {
+		uit = append(uit, k)
+	}
+	sort.Strings(uit)
+	return uit
+}
+
+func uniek(ids []int) []int {
+	sort.Ints(ids)
+	uit := ids[:0]
+	for i, id := range ids {
+		if i == 0 || id != ids[i-1] {
+			uit = append(uit, id)
+		}
+	}
+	return uit
 }
 
 // ── Objects ─────────────────────────────────────────────────────────────
 
 // Entiteit is een entiteit als celexpr.Object (zie de pakketdocumentatie voor de namen).
 type Entiteit struct {
-	omg  *Omgeving
-	meta model.TypeMeta
-	m    map[string]any
+	omg      *Omgeving
+	meta     model.TypeMeta
+	m        map[string]any
+	volledig bool // false: kaal geladen, onderliggende elementen worden lui bijgeladen
 }
 
 // Typenaam en ID identificeren de entiteit (ID 0 als hij onbekend is).
@@ -227,7 +339,15 @@ func (e *Entiteit) kind(naam string, exact bool) (any, bool) {
 // GraphQL-maps (enkelvoudig als één object, data al plat).
 func (e *Entiteit) voorkomens(child model.OnderliggendGegevenselement, childMeta model.TypeMeta) []any {
 	var items []any
-	switch raw := e.m[child.JSONRolnaam].(type) {
+	raw, aanwezig := e.m[child.JSONRolnaam]
+	if !aanwezig && !e.volledig && e.omg.lader != nil {
+		// Kaal geladen: dit element is nog niet opgehaald. Misser; na het laden opnieuw.
+		if id := e.ID(); id > 0 {
+			e.omg.kindMissers[kindSleutel{e.meta.Typenaam, child.JSONRolnaam, id}] = true
+		}
+		return nil
+	}
+	switch raw := raw.(type) {
 	case []any:
 		items = raw
 	case map[string]any:

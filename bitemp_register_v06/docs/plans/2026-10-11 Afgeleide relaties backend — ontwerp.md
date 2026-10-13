@@ -240,9 +240,18 @@ Wat er staat, en waar het van het ontwerp hierboven afwijkt of het preciseert:
   `filter` enz.; de NP-weergavenaam uit `metamodel_v3.json` (BRP-naamgebruik met geneste `?:`)
   wordt nu goed berekend, waar de oude evaluator op `+` splitste. Tekstvelden blijven tekst
   (`""` voor null), `leeftijd` op een int-veld blijft een `int`.
-- **Lader** (`handlers.NieuweAfleidingLader`): dezelfde query als `/full` (formele-tijdfilter op
-  entiteit en voorkomens, hub-kinderen, afgeleide opvoer/afvoer), op één peilmoment. De
-  laadhelpers nemen daarvoor een `context.Context` (een `*gin.Context` blijft werken).
+- **Lader** (`handlers.NieuweAfleidingLader`), sinds 13-10 **lui**: eerst alleen de kale
+  entiteitrijen (formele-tijdfilter op het peilmoment), en per onderliggend element pas als een
+  regel of weergaveveld het aanspreekt (`LaadVoorkomens`: de hubrijen plus hun `_Data`/`_Aanvang`/
+  `_Einde`, gegroepeerd op `(entiteit, rel_id)`). De omgeving houdt naast ontbrekende entiteiten
+  ook ontbrekende rollen bij en laadt beide per type (en rol) in één batch. Aanleiding: de droge
+  test op het echte np-loc-model liet zien dat een volledige `/full`-lading per doel scenario 16
+  (max 40 queries) liet falen. Gemeten (np-loc-seed, 5 personen, met peiltijdstip): 40 queries
+  zonder afgeleide relaties, 43 mét drie (waarvan twee met doorkijk via Locatie → Adres); zonder
+  peiltijdstip 79 → 47. `regressie_afgeleide_relaties_test.go` bewaakt dit relatief (≤ 8 extra,
+  nulmeting op een tweede router). GraphQL `<rol>_doelen` laadt de doelen wél volledig
+  (`handlers.LaadVolledigeEntiteiten`), want daar zijn de hele objecten gevraagd. De laadhelpers
+  nemen een `context.Context` (een `*gin.Context` blijft werken).
 - **Peilmoment zonder `?t=`/`peiltijdstip`**: `/full` filtert dan zelf niet op formele tijd (de
   response bevat ook beëindigde voorkomens). De afgeleide relaties gebruiken dan "nu" en laden
   de bron daarvoor opnieuw (één extra batch per hop-niveau). Met een peiltijdstip wordt de
