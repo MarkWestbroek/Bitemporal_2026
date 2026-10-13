@@ -104,21 +104,23 @@ titel: Gegevenswoordenboek {{map.naam}}
 
 /**
  * Projectdocument: de mappenboom is de hoofdstukindeling. Per map de kop
- * (diepte = niveau), de omschrijving van de map als tekst, de diagrammen als
+ * (diepte = niveau), de beschrijving van de map als tekst, de diagrammen als
  * tekening, en de use cases in die map met toelichting en relaties; dan
  * recursief de submappen. Zo is een document als het CGV use case-model
- * volledig gegenereerd: inleiding = omschrijving van de bovenste map, de
+ * volledig gegenereerd: inleiding = beschrijving van de bovenste map, de
  * lagenplaat = een diagram in die map.
  */
 export const DEEL_PROJECTMAP = `{{kop}} {{naam}}
 
-{{#if omschrijving}}{{omschrijving}}
+{{#if beschrijving}}{{beschrijving}}
 
 {{/if}}{{#elk diagrammen}}{{svg}}
 
 *{{naam}}*
 
-{{/elk}}{{#elk elementen type=usecase sorteer=naam}}{{subkop}} {{naam}}
+{{#if beschrijving}}{{beschrijving}}
+
+{{/if}}{{/elk}}{{#elk elementen type=usecase sorteer=naam}}{{subkop}} {{naam}}
 
 {{#if beschrijving}}{{beschrijving}}
 
@@ -140,7 +142,7 @@ export const INGEBOUWDE_SJABLONEN = [
     id: "projectdocument",
     label: "Projectdocument (volgt de mappen)",
     profielTypes: "*",
-    toelichting: "Hoofdstukken = (sub)mappen; per map de omschrijving, de diagrammen en de use cases. Voor documenten als het CGV use case-model.",
+    toelichting: "Hoofdstukken = (sub)mappen; per map de beschrijving, de diagrammen (met hun beschrijving) en de use cases. Voor documenten als het CGV use case-model.",
     tekst: SJABLOON_PROJECTDOCUMENT,
     partials: { projectmap: DEEL_PROJECTMAP },
   },

@@ -33,7 +33,7 @@ Ingebouwd (`transformatie/sjabloon/sjablonen.js`):
 
 | Sjabloon | Profielen | Inhoud |
 |---|---|---|
-| **Projectdocument (volgt de mappen)** | alle | de mappenboom is de hoofdstukindeling: per (sub)map een kop op het juiste niveau, de **omschrijving van de map** als tekst, de diagrammen als tekening en de use cases met toelichting en relaties — zo is een document als het CGV use case-model volledig gegenereerd |
+| **Projectdocument (volgt de mappen)** | alle | de mappenboom is de hoofdstukindeling: per (sub)map een kop op het juiste niveau, de **beschrijving van de map** als tekst, de diagrammen als tekening met hun beschrijving en de use cases met toelichting en relaties — zo is een document als het CGV use case-model volledig gegenereerd |
 | Use case-overzicht | use case | per diagram de tekening; actoren met hun use cases; per use case een tabel met actoren, include, extend, specialisatie en de diagrammen |
 | Gegevenswoordenboek | canoniek, UML, MIM, ERD, GraphQL, OAS | per element met velden een tabel veld/type/compartiment; diagrammen als tekening |
 | Map-overzicht (generiek) | alle | per profiel de diagrammen en alle elementen met hun velden |
@@ -41,9 +41,9 @@ Ingebouwd (`transformatie/sjabloon/sjablonen.js`):
 **Volledig gegenereerd uit het model:** [`voorbeelden/documenten/CGV_Use_case_model-gegenereerd.md`](voorbeelden/documenten/CGV_Use_case_model-gegenereerd.md)
 (script `web/vite/scripts/genereer-cgv-voorbeeld.mjs`) naast het handgeschreven origineel
 [`CGV_Use_case_model.md`](voorbeelden/documenten/CGV_Use_case_model.md). De inleiding is de
-omschrijving van de bovenste map, de lagenplaat een ArchiMate-diagram in die map (gedaante
+beschrijving van de bovenste map, de lagenplaat een ArchiMate-diagram in die map (gedaante
 "Blokken (informeel)": de tekening volgt de shape-set die het diagram bewaart), de hoofdstukken
-Actoren en Use cases zijn submappen. Een map krijgt zijn omschrijving in de Studio via het
+Actoren en Use cases zijn submappen. Een map krijgt zijn beschrijving in de Studio via het
 eigenschappenpaneel (klik op de map in de projectboom).
 
 **Voorbeeld:** [`voorbeelden/documenten/use-case-overzicht-klant.md`](voorbeelden/documenten/use-case-overzicht-klant.md)
@@ -61,13 +61,14 @@ actor is 64 breed — zodat uitgelijnde vormen ook in het document uitgelijnd bl
 - **Diagrammen** staan in de volgorde van de projectboom (Ctrl+↑/↓ of *Omhoog*/*Omlaag* in de
   boom), ook als een map diagrammen van verschillende profielen bevat.
 - **Elementen** (actoren, use cases) staan op naam.
-- **Projectdocument**: per map eerst de **omschrijving** (eigenschappenpaneel van de map), dan de
+- **Projectdocument**: per map eerst de **beschrijving** (eigenschappenpaneel van de map), dan de
   diagrammen van die map, dan de use cases op die diagrammen, en daarna de submappen als
-  subhoofdstukken. Zet dus de inleiding in de omschrijving van de bovenste map, de overzichtsplaat
+  subhoofdstukken. Een **diagram** heeft sinds 13-10 ook een beschrijving (eigenschappenpaneel van
+  het diagram); die komt onder de plaat. Zet dus de inleiding in de beschrijving van de bovenste map, de overzichtsplaat
   (bv. het lagenschema) als eerste diagram in die map, en de rest in submappen (Actoren, Use cases,
   per actor een submap …).
 - **Use case-overzicht** is plat: alle diagrammen van de map, dan alle actoren, dan alle use cases;
-  submappen en omschrijvingen doen daar niet mee.
+  submappen en beschrijvingen doen daar niet mee.
 
 ## De sjabloontaal
 
@@ -90,7 +91,7 @@ Een blok-tag die alleen op een regel staat neemt zijn regel mee (geen lege regel
 `transformatie/sjabloon/context.js` → `maakDocumentContext({ naam, profielen, svgVan })`:
 
 ```
-map {naam, omschrijving}  ·  naam, omschrijving, diepte, kop ("#"…), subkop
+map {naam, beschrijving}  ·  naam, beschrijving, diepte, kop ("#"…), subkop  ·  (`omschrijving` = alias, voor oudere sjablonen)
 kinderen    [ …submappen in dezelfde vorm, diepte + 1… ]
 profielen   [{id,label,elementen,diagrammen,verbindingen}]
 elementen   [{ id, naam, type{id,label}, data, toelichting, velden[{naam,type,compartiment}],

@@ -1,7 +1,7 @@
 /**
  * genereer-cgv-voorbeeld — het CGV use case-model als volledig gegenereerd
  * document (sjabloon "Projectdocument (volgt de mappen)"): de mappenboom is de
- * hoofdstukindeling, de omschrijving van elke map de tekst, de diagrammen in de
+ * hoofdstukindeling, de beschrijving van elke map de tekst, de diagrammen in de
  * map de platen — ook de lagenplaat, als gewoon Omnium-diagram.
  * Uitvoer: docs/voorbeelden/documenten/CGV_Use_case_model-gegenereerd.md (+ SVG's).
  * Gebruik: node scripts/genereer-cgv-voorbeeld.mjs (vanuit web/vite).
@@ -120,14 +120,14 @@ const svgVan = (diagram, { elements, descriptor }) => {
 };
 const ctx = maakDocumentContext({
   naam: "CGV Use case model",
-  omschrijving: INLEIDING,
+  beschrijving: INLEIDING,
   profielen: [{ id: "archimate05", label: "ArchiMate", descriptor: archimateDescriptor, elements: lagen, diagrams: lagenDiagram }],
   svgVan,
   kinderen: [
-    { naam: "Actoren", omschrijving: ACTOREN, profielen: [{ id: "usecase05", label: "Use case", descriptor: ucDescriptor, elements: actoren, diagrams: actorDiagram }] },
-    { naam: "Use cases", omschrijving: "Per actor de use cases waarvoor de CGV gegevens, services of integratie levert.", profielen: [], kinderen: [
-      { naam: "Use cases Klant", omschrijving: "", profielen: [{ id: "usecase05", label: "Use case", descriptor: ucDescriptor, elements: ucKlant, diagrams: ucKlantDiagram }] },
-      { naam: "Use cases Medewerker", omschrijving: "", profielen: [{ id: "usecase05", label: "Use case", descriptor: ucDescriptor, elements: ucMw, diagrams: ucMwDiagram }] },
+    { naam: "Actoren", beschrijving: ACTOREN, profielen: [{ id: "usecase05", label: "Use case", descriptor: ucDescriptor, elements: actoren, diagrams: actorDiagram }] },
+    { naam: "Use cases", beschrijving: "Per actor de use cases waarvoor de CGV gegevens, services of integratie levert.", profielen: [], kinderen: [
+      { naam: "Use cases Klant", beschrijving: "", profielen: [{ id: "usecase05", label: "Use case", descriptor: ucDescriptor, elements: ucKlant, diagrams: ucKlantDiagram }] },
+      { naam: "Use cases Medewerker", beschrijving: "", profielen: [{ id: "usecase05", label: "Use case", descriptor: ucDescriptor, elements: ucMw, diagrams: ucMwDiagram }] },
     ] },
   ],
 });

@@ -8,6 +8,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Mappen en diagrammen hebben een beschrijving** (13-10, Mark): de map-`omschrijving` heet nu
+  `beschrijving`, consequent met elementen en velden (M3). Oude mappen migreren bij binnenkomst
+  (opslag, projectbestand, sync-snapshot; `mappenMetBeschrijving` in `structuurKern.js`); de oude
+  sync-operatie `zetMapOmschrijving` blijft werken. Een **diagram** heeft nu ook een beschrijving
+  (eigenschappenpaneel; `diagram.beschrijving` via `zetDiagram`). In documenten komt die onder de
+  plaat; `{{omschrijving}}` blijft als alias van de mapbeschrijving werken.
+
 ### Opgelost
 - **Typekiezer valt niet meer buiten het paneel** (13-10, Mark): de minibrowser (🔍 bij een
   verwijzing, bv. het type van een veld) was 240px breed en rechts uitgelijnd op het anker; in een

@@ -341,6 +341,8 @@ export const STRUCTUUR_OPS = {
   schuifMap: null,
   hernoemMap: null,
   zetMapKleur: null,
+  zetMapBeschrijving: null,
+  // Oude naam: blijft voor operaties in bestaande serverlogs (13-10).
   zetMapOmschrijving: null,
   verwijderMap: null,
   verplaatsMap: null,

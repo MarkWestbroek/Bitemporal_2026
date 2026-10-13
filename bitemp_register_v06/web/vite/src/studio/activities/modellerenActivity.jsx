@@ -26,7 +26,7 @@ import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.js
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
 import { useOutboxStore } from "../sync/outbox.js";
-import { zonderWeesPlaatsingen } from "../sync/structuurKern.js";
+import { zonderWeesPlaatsingen, mappenMetBeschrijving } from "../sync/structuurKern.js";
 import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
 import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore, aanwezigSamengevat } from "../sync/verzender.js";
 import {
@@ -88,6 +88,7 @@ const ELEMENT_MIME = "application/studio05-element";
 
 /** Plaatsing-sleutels: diagram = "profielId::diagramId", element = "el::profielId::elementId". */
 const elementKey = (profielId, elementId) => `el::${profielId}::${elementId}`;
+
 const isElementKey = (key) => key.startsWith("el::");
 
 // ── Tab-store (shell-state, los van de profiel-stores) ──────────────
@@ -339,7 +340,7 @@ export const useModellerenStore = create((set, get) => ({
   // van álle profieltypen door elkaar bevatten. Wat nergens geplaatst is
   // staat onder "Niet ingedeeld" (per profieltype).
   /** @type {Record<string,{id:string,naam:string,ouderId:string|null}>} */
-  mappen: opgeslagen.mappen || {},
+  mappen: mappenMetBeschrijving(opgeslagen.mappen) || {},
   /** open/dicht per map (default open) — werkruimte-laag */
   mapOpen: werkruimteBegin.mapOpen,
   /** { [tabId(profielId,diagramId)]: mapId } — plaatsing van diagrammen */
@@ -424,19 +425,22 @@ export const useModellerenStore = create((set, get) => ({
 
   /** Eigenschap van een map (kleur van het map-icoon). */
   /**
-   * Omschrijving van een map (vrije tekst, Markdown). Wordt in gegenereerde
+   * Beschrijving van een map (vrije tekst, Markdown). Wordt in gegenereerde
    * documenten de tekst onder de kop van die map (docs/DOCUMENTEN.md).
    */
-  zetMapOmschrijving: (id, omschrijving) =>
+  zetMapBeschrijving: (id, beschrijving) =>
     set((s) => {
       const m = s.mappen[id];
-      if (!m || (m.omschrijving || "") === (omschrijving || "")) return {};
+      if (!m || (m.beschrijving || "") === (beschrijving || "")) return {};
       legStructuurVast(s);
-      const mappen = { ...s.mappen, [id]: { ...m, omschrijving: omschrijving || undefined } };
+      const { omschrijving: _oud, ...rest } = m;
+      const mappen = { ...s.mappen, [id]: { ...rest, beschrijving: beschrijving || undefined } };
       const next = { ...s, mappen };
       schrijfOpslag(next);
       return { mappen };
     }),
+  /** Oude naam (sync-operaties in bestaande serverlogs): zelfde als zetMapBeschrijving. */
+  zetMapOmschrijving: (id, tekst) => get().zetMapBeschrijving(id, tekst),
 
   zetMapKleur: (id, kleur) =>
     set((s) => {
@@ -665,7 +669,7 @@ export const useModellerenStore = create((set, get) => ({
   patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [], volgordePlaatsing = null } = {}) =>
     set((s) => {
       legStructuurVast(s);
-      const mappen = { ...s.mappen, ...zetMappen };
+      const mappen = { ...s.mappen, ...mappenMetBeschrijving(zetMappen) };
       for (const id of wisMappen) delete mappen[id];
       let plaatsing = { ...s.plaatsing, ...zetPlaatsing };
       for (const key of wisPlaatsing) delete plaatsing[key];
@@ -683,7 +687,7 @@ export const useModellerenStore = create((set, get) => ({
       legStructuurVast(s);
       const next = {
         ...s,
-        mappen: mappen || {},
+        mappen: mappenMetBeschrijving(mappen) || {},
         plaatsing: plaatsing || {},
         tabs: tabs || [],
         actieveTab: actieveTab || null,
@@ -2096,7 +2100,7 @@ function MapEigenschappen({ mapId }) {
   const map = useModellerenStore((s) => s.mappen[mapId]);
   const hernoemMap = useModellerenStore((s) => s.hernoemMap);
   const zetMapKleur = useModellerenStore((s) => s.zetMapKleur);
-  const zetMapOmschrijving = useModellerenStore((s) => s.zetMapOmschrijving);
+  const zetMapBeschrijving = useModellerenStore((s) => s.zetMapBeschrijving);
   const selecteerMap = useModellerenStore((s) => s.selecteerMap);
   if (!map) return null;
   const rij = { display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: "4px 0", fontSize: 13 };
@@ -2137,13 +2141,13 @@ function MapEigenschappen({ mapId }) {
         )}
       </label>
       <label style={{ display: "flex", flexDirection: "column", gap: 4, padding: "6px 0", fontSize: 13 }}>
-        <span style={{ color: "var(--s-fg-muted)" }}>omschrijving</span>
+        <span style={{ color: "var(--s-fg-muted)" }}>beschrijving</span>
         <textarea
           key={map.id}
-          defaultValue={map.omschrijving || ""}
+          defaultValue={map.beschrijving || ""}
           rows={8}
           placeholder="Tekst voor dit hoofdstuk in een gegenereerd document (Markdown)"
-          onBlur={(e) => zetMapOmschrijving(map.id, e.target.value.trim())}
+          onBlur={(e) => zetMapBeschrijving(map.id, e.target.value.trim())}
           style={{ font: "inherit", fontSize: 13, padding: "4px 6px", border: "1px solid var(--s-border)", borderRadius: 5, background: "transparent", color: "var(--s-fg)", resize: "vertical" }}
         />
       </label>
@@ -2302,6 +2306,24 @@ function DiagramEigenschappen({ profielId, diagramId }) {
           <span style={{ width: 60, color: "var(--s-fg-muted)" }}>inhoud</span>
           <span style={readonly}>{(diagram.nodes || []).length} element(en) op dit diagram</span>
         </div>
+      )}
+      {/* Beschrijving van het diagram (Mark, 13-10): komt in gegenereerde
+          documenten onder de plaat ({{beschrijving}} in een diagram-lus). */}
+      {typeof profiel.useStore?.getState?.().zetDiagram === "function" && (
+        <label style={{ display: "flex", flexDirection: "column", gap: 4, padding: "6px 0", fontSize: 13 }}>
+          <span style={{ color: "var(--s-fg-muted)" }}>beschrijving</span>
+          <textarea
+            key={diagram.id}
+            defaultValue={diagram.beschrijving || ""}
+            rows={5}
+            placeholder="Wat laat dit diagram zien? (Markdown; komt in gegenereerde documenten)"
+            onBlur={(e) => {
+              const tekst = e.target.value.trim();
+              if (tekst !== (diagram.beschrijving || "")) profiel.useStore.getState().zetDiagram(diagram.id, { beschrijving: tekst || undefined });
+            }}
+            style={{ font: "inherit", fontSize: 13, padding: "4px 6px", border: "1px solid var(--s-border)", borderRadius: 5, background: "transparent", color: "var(--s-fg)", resize: "vertical" }}
+          />
+        </label>
       )}
       <button
         type="button"
