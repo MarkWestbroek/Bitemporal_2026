@@ -150,3 +150,19 @@ test("map- en diagrambeschrijving: context heeft beschrijving (omschrijving als 
   assert.equal(tekst.split("Inleidende tekst.").length - 1, 1, "maptekst één keer, niet onder elk diagram");
   assert.match(tekst, /\*Plaat\*\n\nWat de plaat laat zien\./);
 });
+
+test("schetsMaat: ovaal en actor zonder opgeslagen maat rekenen zoals het canvas (13-10)", async () => {
+  const { schetsMaat } = await import("./schets.js");
+  const uc = { id: "usecase", shape: "uc-ellips" };
+  // Gemeten canvasbreedtes (13-10): 150 / 173 / 193 / 216 / 280; ±4px marge.
+  const meting = [["Behandel issue", 150], ["Zet issue door (na triage)", 173], ["Beheer gegevensvoorziening", 193], ["Sluit gemeente aan (onboarding)", 216], ["Zet issue door naar ketenpartner (bijv. leverancier)", 280]];
+  for (const [naam, breed] of meting) {
+    const { w, h } = schetsMaat(null, { naam }, uc);
+    assert.ok(Math.abs(w - breed) <= 4, `${naam}: schets ${w}, canvas ${breed}`);
+    assert.ok(h >= 60);
+  }
+  const act = schetsMaat(null, { naam: "Medewerker Service-organisatie" }, { id: "actor", shape: "uc-actor" });
+  assert.deepEqual([act.w, act.h], [64, 84]);
+  // Opgeslagen maat wint altijd.
+  assert.deepEqual([schetsMaat({ size: { width: 333, height: 77 } }, { naam: "x" }, uc).w, schetsMaat({ size: { width: 333, height: 77 } }, { naam: "x" }, uc).h], [333, 77]);
+});

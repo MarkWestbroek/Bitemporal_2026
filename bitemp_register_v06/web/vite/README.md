@@ -59,6 +59,25 @@ start met `VITE_PRESERVE_SYMLINKS=1`, bv. `VITE_PRESERVE_SYMLINKS=1 npx vite --p
 de junction naar een pad buiten de root en faalt de EA-import ("Failed to fetch dynamically
 imported module … sql-wasm.wasm?import&url"). Zie `resolve.preserveSymlinks` in `vite.config.js`.
 
+## Regressietests Studio
+
+Unittests (puur, Node): `node --import ./test/register-aliases.mjs --test "src/**/*.test.js"`
+(op Windows via npm vindt het patroon niets door de quotes; roep node dan direct aan).
+
+Gedrag in de interface staat in Playwright-specs `tests/e2e/1x-studio-*.spec.js` (selectie en
+kaders, relaties en Delete, inspector, projectboom, vormen en vergroten). Ze mocken de API, dus
+alleen een dev-server is nodig:
+
+```bash
+VITE_PRESERVE_SYMLINKS=1 npx vite --port 5175 --strictPort --host     # eigen poort (in een worktree)
+PLAYWRIGHT_BASE_URL=http://localhost:5175 PLAYWRIGHT_API_URL=http://127.0.0.1:9 npm run test:e2e:studio
+```
+
+`PLAYWRIGHT_API_URL` naar een dode poort laat de global-setup de login overslaan. Gedeelde opzet:
+`tests/e2e/helpers/studio.js` (Studio openen, model in een profiel zetten, selectie lezen,
+HTML5-slepen). Na een codewijziging in een draaiende dev-server: eerst herstarten, anders laden
+de tests via HMR een tweede module-instantie.
+
 ## Builden naar door Gin geserveerde map
 
 - `npm run build`

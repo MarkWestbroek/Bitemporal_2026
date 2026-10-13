@@ -82,6 +82,7 @@ import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
 import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
 import RelatiesPaneel from "../../diagramcore/inspector/RelatiesPaneel.jsx";
+import { relatiesVan, verborgenRelatiesVan } from "../../diagramcore/model/relaties.js";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { registreerIconenVocabulaire } from "../../diagramcore/shapes/iconenVocabulaire.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
@@ -310,30 +311,6 @@ export function maakDiagramActiviteit(opties) {
    * hier verborgen (`diagram.verborgenConnectoren`). "Toon verborgen relaties"
    * (menu Beeld) of het relatiepaneel zet hem terug.
    */
-  /** Relaties van/naar een element, met hun stand op het actieve diagram. */
-  function relatiesVan(elementId, elements, diagram) {
-    const opDiagram = new Set((diagram?.nodes || []).map((n) => n.elementId));
-    const verborgen = new Set(diagram?.verborgenConnectoren || []);
-    const uit = [];
-    for (const c of Object.values(elements || {})) {
-      if (!c?.source || !c?.target || !elementTypesById[c.elementType]?.isConnector) continue;
-      if (c.source !== elementId && c.target !== elementId) continue;
-      const richting = c.source === elementId ? "uit" : "in";
-      const anderId = richting === "uit" ? c.target : c.source;
-      const ander = elements[anderId];
-      const stand = !opDiagram.has(elementId) || !opDiagram.has(anderId) ? "buiten" : verborgen.has(c.id) ? "verborgen" : "zichtbaar";
-      uit.push({
-        id: c.id,
-        typeLabel: elementTypesById[c.elementType]?.label || c.elementType,
-        richting,
-        naam: c.naam || "",
-        anderNaam: ander?.naam || anderId,
-        stand,
-      });
-    }
-    return uit.sort((a, b) => (a.richting === b.richting ? a.typeLabel.localeCompare(b.typeLabel) : a.richting === "uit" ? -1 : 1));
-  }
-
   /**
    * Na het (terug)zetten van een bestaand element op een diagram: zijn op dit
    * diagram verborgen relaties komen mee terug — als de gebruiker dat wil
@@ -342,10 +319,7 @@ export function maakDiagramActiviteit(opties) {
   function naTerugzetten(diagramId, elementId) {
     if (!useStudioStore.getState().relatiesMeeTerug) return;
     const s = useStore.getState();
-    for (const cid of [...(s.diagrams[diagramId]?.verborgenConnectoren || [])]) {
-      const c = s.elements[cid];
-      if (c && (c.source === elementId || c.target === elementId)) s.toonConnectorOpDiagram(diagramId, cid);
-    }
+    for (const cid of verborgenRelatiesVan(s.diagrams[diagramId], s.elements, elementId)) s.toonConnectorOpDiagram(diagramId, cid);
   }
 
   function haalConnectorVanDiagram(diagramId, connectorId) {
@@ -3097,7 +3071,7 @@ export function maakDiagramActiviteit(opties) {
         />
         {!elementType?.isConnector && (
           <RelatiesPaneel
-            relaties={relatiesVan(element.id, elements, diagrams[actief])}
+            relaties={relatiesVan(element.id, elements, diagrams[actief], elementTypesById)}
             open={relatiesPaneelOpen}
             onOpen={(v) => useStudioStore.getState().zetVoorkeur("relatiesPaneelOpen", v)}
             onSelecteer={(cid) => setSelectieId(cid)}
