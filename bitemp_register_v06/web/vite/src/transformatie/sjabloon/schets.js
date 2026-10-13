@@ -11,6 +11,7 @@
  * afronding), zodat dezelfde invoer altijd dezelfde tekst geeft.
  */
 import { el as svgEl, esc, num } from "../../diagramsvg/svg.js";
+import { tekstBreedte, breekAf } from "../../diagramsvg/tekstmaat.js";
 
 const DASHES = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4" };
 
@@ -42,6 +43,24 @@ export function schetsMaat(node, element, elementType) {
   const [bw, bh] = STANDAARD_MAAT[fam] || STANDAARD_MAAT.vak;
   let w = node?.size?.width || elementType?.minBreedte || bw;
   let h = node?.size?.height || bh;
+  // Zonder opgeslagen maat meet het canvas de inhoud; doe hier dezelfde
+  // rekensom, anders verspringen vormen die op het canvas netjes uitgelijnd
+  // staan (gemeld 2026-10-13: "goed uitgelijnd, maar in de md-export scheef").
+  if (!node?.size && fam === "ellips") {
+    // usecase EllipsShape: 12px/600, padding 0 18px, min 150×60, max 280 breed.
+    // De tekstmaat-tabel (Helvetica) schat het canvas-font iets te breed; 0,96
+    // is gekalibreerd op gemeten canvasbreedtes (13-10: 137/157/180 px tekst).
+    const K = 0.96;
+    const naam = element?.naam || "";
+    w = Math.min(280, Math.max(150, Math.ceil(tekstBreedte(naam, 12) * K) + 36));
+    const regels = breekAf(naam, 12, (w - 36) / K).length;
+    h = Math.max(60, Math.ceil(regels * 15.6) + 8);
+  } else if (!node?.size && fam === "actor") {
+    // usecase ActorShape: 64 breed, figuur 52 hoog, label ±15px per regel.
+    const regels = breekAf(element?.naam || "", 11, 64, { vet: true }).length;
+    w = 64;
+    h = 54 + 15 * Math.max(1, regels);
+  }
   if (!node?.size && fam === "vak") {
     const velden = (element?.compartimenten || []).reduce((t, c) => t + (c.velden || []).length, 0);
     h = Math.max(h, 40 + velden * 16);

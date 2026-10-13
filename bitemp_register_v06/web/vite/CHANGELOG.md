@@ -14,6 +14,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   smal eigenschappenpaneel stak hij links buiten beeld en werd afgesneden. Nu een portal met vaste
   positie, binnen het venster geklemd, boven het veld als er onder te weinig ruimte is; sluit bij
   een klik ernaast, scrollen of venster-resize.
+- **BPMN-events en -gateways zonder opgeslagen maat waren enorm** (13-10, Mark): hun SVG (breedte
+  100%) kreeg in een krimpende node de browser-standaard 300×150. Nu ligt de SVG absoluut over de
+  vorm en bepaalt de minimummaat de grootte (event ±60px, gateway ±68px).
+- **Use cases in de documentexport niet meer scheef** (13-10, Mark): de schets nam voor een ovaal
+  zonder opgeslagen maat altijd 160×64, terwijl het canvas de breedte aan de naam aanpast
+  (150–280px, afbreken). Nu dezelfde rekensom (gekalibreerd op het canvas, ±2px), en actoren
+  64px breed met een label dat meegroeit; vormen die op het canvas uitgelijnd staan, blijven dat
+  in Markdown en HTML.
 
 ## [studio/v0.18.0] — 2026-10-13
 Beschrijving als vaste M3-eigenschap van elk element en veld (M3-MOF), eigenschappen die altijd
