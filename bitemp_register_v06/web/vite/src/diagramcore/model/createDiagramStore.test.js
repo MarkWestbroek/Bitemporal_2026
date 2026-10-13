@@ -251,3 +251,29 @@ test("zetLijnen/zetLijn: lijndata per diagram; undefined haalt een sleutel weg, 
   st().deleteElement("A");
   assert.equal(st().diagrams.d1.lijnen, undefined, "lijndata van een verdwenen connector is opgeruimd");
 });
+
+// ── Relaties per diagram verbergen en tonen (2026-10-13) ────────────────
+test("verbergConnectorOpDiagram/toonConnectorOpDiagram: alleen dit diagram, model blijft", () => {
+  const store = createDiagramStore();
+  store.getState().laadModel({
+    diagramTypeId: "test",
+    elements: {
+      A: { id: "A", naam: "A", elementType: "x", compartimenten: [], data: {} },
+      B: { id: "B", naam: "B", elementType: "x", compartimenten: [], data: {} },
+      R: { id: "R", naam: "", elementType: "rel", source: "A", target: "B", compartimenten: [], data: {} },
+    },
+    diagrams: {
+      d1: { id: "d1", naam: "Eén", diagramType: "test", nodes: [], edges: [] },
+      d2: { id: "d2", naam: "Twee", diagramType: "test", nodes: [], edges: [] },
+    },
+  });
+  const s = () => store.getState();
+  s().verbergConnectorOpDiagram("d1", "R");
+  s().verbergConnectorOpDiagram("d1", "R"); // idempotent
+  assert.deepEqual(s().diagrams.d1.verborgenConnectoren, ["R"]);
+  assert.equal(s().diagrams.d2.verborgenConnectoren, undefined, "ander diagram ongemoeid");
+  assert.ok(s().elements.R, "model houdt de relatie");
+  s().toonConnectorOpDiagram("d1", "R");
+  assert.equal(s().diagrams.d1.verborgenConnectoren, undefined, "lege lijst verdwijnt");
+  s().toonConnectorOpDiagram("d1", "R"); // niets te tonen: geen fout
+});

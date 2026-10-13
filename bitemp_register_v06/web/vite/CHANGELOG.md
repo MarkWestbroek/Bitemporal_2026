@@ -8,6 +8,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Tests
+- **Regressietests voor de Studio** (13-10, Mark): Playwright-specs `tests/e2e/10…14-studio-*.spec.js`
+  (20 tests: deselecteren incl. muisbeweging, klik-door in kaders, geen groepskader; relatiepaneel,
+  Delete/Ctrl+Delete, "relaties mee terug"; inspector zonder diagram, pijltjes, meegroeiend
+  tekstveld, typekiezer, CSS-lekken; projectboom zoeken/slepen, REL, beschrijving; BPMN-maat,
+  vergroten, handle). Nieuw script `npm run test:e2e:studio`. Unittests voor `relaties.js`
+  (relatiepaneel-logica, uit de activiteit gehaald), verbergen/tonen per diagram, het
+  sync-vocabulaire en de schets-maat van use cases.
+
 ### Toegevoegd
 - **Modelleer-voorkeuren per gebruiker** (13-10, Mark en Hugo): Studio-instellingen → *Modelleren*.
   *Verborgen relaties komen mee terug* als je een element weer op een diagram zet (standaard aan;

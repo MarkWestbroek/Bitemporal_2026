@@ -220,3 +220,13 @@ test("herschikOpVolgorde: expliciete volgorde wint, onbekende sleutels achteraan
   const uitJsonb = { "k::1": "m", "el::p::lang": "m", "k::22": "m" };
   assert.deepEqual(Object.keys(herschikOpVolgorde(uitJsonb, ["el::p::lang", "k::22", "k::1"])), ["el::p::lang", "k::22", "k::1"]);
 });
+
+// ── Vocabulaire van 13-10 blijft gesynct ─────────────────────────────────
+test("sync-vocabulaire: relaties tonen/verbergen en map-beschrijving (ook de oude naam)", () => {
+  for (const op of ["verbergConnectorOpDiagram", "toonVerborgenConnectoren", "toonConnectorOpDiagram", "zetDiagram"]) {
+    assert.ok(op in MODEL_OPS, `MODEL_OPS mist ${op}`);
+  }
+  for (const op of ["zetMapBeschrijving", "zetMapOmschrijving"]) {
+    assert.ok(op in STRUCTUUR_OPS, `STRUCTUUR_OPS mist ${op}`);
+  }
+});
