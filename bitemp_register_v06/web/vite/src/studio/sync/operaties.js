@@ -281,6 +281,7 @@ export const MODEL_OPS = {
   zetLijn: null,
   verbergConnectorOpDiagram: null,
   toonVerborgenConnectoren: null,
+  toonConnectorOpDiagram: null,
   updateDiagramStijl: null,
 };
 
