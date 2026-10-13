@@ -88,8 +88,12 @@ function EventShape({ element, elementType, selected, children }) {
     // Vult de node: een bewaarde maat (EA-import: 30 pt × 1,5 = 45px) is de
     // omtrek waar de lijnen op aanhechten; een vaste ring linksboven liet een
     // gat tussen lijn en ring (Mark, 10-10). Zonder maat: `maat` als minimum.
+    // De SVG ligt absoluut over de vorm: zonder opgeslagen node-maat kreeg een
+    // SVG met breedte 100% in een krimpende container de browser-standaard
+    // (300×150) en werd het event enorm (gemeld 2026-10-13). Nu bepaalt
+    // minWidth/minHeight de maat; met een node-maat vult hij die.
     <div className="dc-punt-node" style={{ width: "100%", height: "100%", minWidth: maat, minHeight: maat, position: "relative", boxSizing: "border-box" }}>
-      <svg width="100%" height="100%" viewBox="0 0 20 20" style={{ display: "block", pointerEvents: "none" }}>
+      <svg width="100%" height="100%" viewBox="0 0 20 20" style={{ position: "absolute", inset: 0, display: "block", pointerEvents: "none" }}>
         <circle cx="10" cy="10" r="9" fill="var(--s-panel, #fff)" stroke={kleur} strokeWidth={dik ? 2.6 : 1.3} {...stippel} />
         {dubbel && <circle cx="10" cy="10" r="7.1" fill="none" stroke={kleur} strokeWidth="1.1" {...stippel} />}
         <SoortIcoon soort={d.soort} kleur={kleur} />
@@ -107,7 +111,7 @@ function GatewayShape({ element, selected, children }) {
   return (
     // Vult de node (zie EventShape): EA-gateways zijn 42 pt × 1,5 = 63px.
     <div className="dc-punt-node" style={{ width: "100%", height: "100%", minWidth: 34, minHeight: 34, position: "relative", boxSizing: "border-box" }}>
-      <svg width="100%" height="100%" viewBox="0 0 34 34" style={{ display: "block", pointerEvents: "none" }}>
+      <svg width="100%" height="100%" viewBox="0 0 34 34" style={{ position: "absolute", inset: 0, display: "block", pointerEvents: "none" }}>
         <path d="M17 2 L32 17 L17 32 L2 17 Z" fill="var(--s-panel, #fff)" stroke={kleur} strokeWidth={selected ? 2.2 : 1.5} />
         {soort === "exclusief" && <path {...sym} d="M12.5 12.5 L21.5 21.5 M21.5 12.5 L12.5 21.5" />}
         {soort === "parallel" && <path {...sym} d="M17 10.5 V23.5 M10.5 17 H23.5" />}

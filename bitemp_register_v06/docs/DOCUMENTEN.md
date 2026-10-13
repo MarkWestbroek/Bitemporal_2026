@@ -51,7 +51,10 @@ eigenschappenpaneel (klik op de map in de projectboom).
 schets-tekenaar als de Studio; diagrammen als losse `.svg` naast het document, omdat GitHub inline
 SVG in Markdown niet toont). Opnieuw maken: `node scripts/genereer-voorbeelddocument.mjs` vanuit
 `web/vite`. Bekend in de schets: pijlpunten stoppen op de omsluitende rechthoek van een ellips, niet
-op de ellipsrand.
+op de ellipsrand. **Maat zonder opgeslagen size** (2026-10-13): de schets rekent net als het canvas
+— een use case is `clamp(150, tekstbreedte + 36, 280)` breed en groeit in hoogte bij afbreken, een
+actor is 64 breed — zodat uitgelijnde vormen ook in het document uitgelijnd blijven
+(`schetsMaat` in `transformatie/sjabloon/schets.js`, tekstmaat uit `diagramsvg/tekstmaat.js`).
 
 ## Volgorde en indeling
 
