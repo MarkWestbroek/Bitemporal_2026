@@ -114,6 +114,10 @@ services:
       OPENFTV_PDP_URL: http://openftv-pdp:8443
       # Render-API (docs/RENDER_API.md): de SVG wordt getekend door de sidecar hieronder.
       RENDER_SVC_URL: http://render-svc:8095
+      # Uitnodigen (gebruikers/uitnodiging.go, api ≥ 0.14.0): op app aan (Mark, 14-10-2026).
+      # Zonder SMTP verschijnt de link alleen in het scherm. Uitzetten: UITNODIGEN_ENABLED=false in .env.
+      UITNODIGEN_ENABLED: ${UITNODIGEN_ENABLED:-true}
+      STUDIO_BASIS_URL: ${STUDIO_BASIS_URL:-https://app.omnium-ide.nl}
     depends_on:
       postgres:
         condition: service_healthy
