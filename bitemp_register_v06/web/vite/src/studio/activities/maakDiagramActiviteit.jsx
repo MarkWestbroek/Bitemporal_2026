@@ -849,7 +849,7 @@ export function maakDiagramActiviteit(opties) {
     /** Nieuwe connector (edge-drag op de canvas, regels al gecheckt). */
     const verbind = useCallback(({ connectorType, source, target, sourceHandle, targetHandle }) => {
       _connTeller += 1;
-      useStore.getState().addElement({
+      const conn = {
         id: `conn_${Date.now()}_${_connTeller}`,
         naam: "",
         elementType: connectorType.id,
@@ -857,7 +857,12 @@ export function maakDiagramActiviteit(opties) {
         target,
         compartimenten: [],
         data: { sourceHandle, targetHandle },
-      });
+      };
+      const s = useStore.getState();
+      s.addElement(conn);
+      // M3-hook naVerbinden: het profiel mag de nieuwe verbinding afmaken —
+      // bv. een sequence-zelfbericht krijgt zijn ontvangpunt 15px lager.
+      connectorType.hooks?.naVerbinden?.(conn, { s: useStore.getState(), diagramId: s.actiefDiagramId });
     }, []);
 
     const Dialogen = koppeling?.DialogenComponent || null;

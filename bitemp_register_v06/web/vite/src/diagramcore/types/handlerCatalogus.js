@@ -59,6 +59,11 @@ registreerHandlerInfo("hook", "edgeLabels", {
   beschrijving:
     "Bepaalt de labels op een connector (kardinaliteiten, rolnamen, «stereotype»-teksten) uit de connector-data (en via ctx.elements eventueel uit bron/doel), per zijde en voor de kale gedaante.",
 });
+registreerHandlerInfo("hook", "naVerbinden", {
+  naam: "Na verbinden",
+  beschrijving:
+    "Wordt aangeroepen zodra een verbinding op het canvas is getrokken: (connector, {s: store-state, diagramId}). Het profiel mag de verbinding afmaken — bv. een sequence-zelfbericht krijgt zijn ontvangpunt 15px lager op dezelfde levenslijn.",
+});
 registreerHandlerInfo("hook", "verschuifConnector", {
   naam: "Lijn verschuiven",
   beschrijving:

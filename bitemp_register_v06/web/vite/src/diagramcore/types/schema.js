@@ -234,7 +234,7 @@
  *   inspector (bv. tekst, expressie, kleur) — PropertyTypes van het ElementType
  * @property {CompartmentType[]} [compartments] - max 9, {ordered}
  * @property {Object} [hooks]               - Implementatie-domein: valideer,
- *   extraCompartimenten, edgeLabels, edgePresentatie (connector →
+ *   extraCompartimenten, edgeLabels, naVerbinden, verschuifConnector, edgePresentatie (connector →
  *   presentatie-overrides o.b.v. data, bv. richting → pijl), … (functies;
  *   NIET serialiseren)
  */

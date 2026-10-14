@@ -34,6 +34,7 @@ import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerSequenceShapes } from "./shapes.jsx";
 import { KOPPEN, berichtLabels } from "./labels.js";
 import { verschuifBericht } from "./verschuif.js";
+import { ontvangpuntVoorZelfbericht } from "./zelfbericht.js";
 
 export { KOPPEN, berichtLabels };
 
@@ -188,6 +189,8 @@ const elementTypes = [
       },
       /** Lijn verticaal slepen: punten mee, horizontaal, eronder wegduwen (verschuif.js). */
       verschuifConnector: verschuifBericht,
+      /** Getekend van een punt naar zichzelf: ontvangpunt 15px lager (zelfbericht.js). */
+      naVerbinden: (conn, ctx) => ontvangpuntVoorZelfbericht(conn, { ...ctx, maakPunt: () => maakElement("punt") }),
     },
   })),
 ];
