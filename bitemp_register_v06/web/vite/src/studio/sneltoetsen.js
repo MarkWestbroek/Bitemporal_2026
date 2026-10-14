@@ -35,6 +35,10 @@ export const SNELTOETS_ACTIES = [
   { id: "canvas:verwijder-uit-model", groep: "Bewerken", label: "Verwijderen uit model", standaard: "Ctrl+Delete" },
   { id: "canvas:zoek-in-boom", groep: "Bewerken", label: "Zoek in projectboom", standaard: "Alt+G" },
   { id: "canvas:normaliseer", groep: "Bewerken", label: "Normaliseer relaties", standaard: null },
+  // Melden (studio/MeldenHost.jsx; Mark 14-10: F8 en Alt+M). Overal in de Studio, niet alleen
+  // op het canvas; het canvas laat help:-acties door.
+  { id: "help:melden-kader", groep: "Help", label: "Melden met schermafbeelding", standaard: "F8" },
+  { id: "help:melden", groep: "Help", label: "Melden (bug, wens, vraag)", standaard: "Alt+M" },
 ];
 
 /** Vaste toetsen die niet instelbaar zijn (ter informatie in het instelscherm). */

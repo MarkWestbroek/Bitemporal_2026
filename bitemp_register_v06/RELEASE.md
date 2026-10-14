@@ -8,6 +8,19 @@
 
 ---
 
+## Niet uitgebracht — meldingen (bugs, wensen, vragen)
+
+Backend (minor; nieuw domein en een plumbing-tabel, geen gevolg voor bestaande data):
+
+- **Domein `meldingen`** (codegen): Melding met inhoud, context, bijlage, status, prioriteit,
+  reactie; relaties Melder en Behandelaar naar Gebruiker. Via de generieke routes, `/registratie/`
+  en GraphQL alleen voor beheerders (`middleware.IsBeheerdomein`).
+- **Package `meldingen`**: `/api/meldingen` (melden, eigen lijst, één melding, reageren,
+  bijlagen, behandeling door de beheerder), tabel `melding_bestand` voor bijlagen (MinIO of
+  database). Plan: `docs/plans/meldingen/` §5.
+
+---
+
 ## api 0.14.0 / studio 0.19.0 (2026-10-14)
 
 Mensen uitnodigen om Omnium te proberen, in een probeerproject en niet in het productieproject.

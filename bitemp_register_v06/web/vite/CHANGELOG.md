@@ -8,6 +8,22 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Melden vanuit Omnium** (14-10, Mark): *Help → Melden…* (Alt+M) voor een bug, wens of vraag,
+  met bijlagen (plakken, slepen, kiezen); *Melden met schermafbeelding…* (F8): trek een kader om
+  wat je wilt laten zien, het komt als bijlage mee, met de plek eronder. Rechtsklik op een map,
+  diagram of element: *Melden over dit item…* (pad en onderwerp gaan mee). *Mijn meldingen…*
+  toont status, toelichting en het gesprek; een beheerder behandelt er (status, prioriteit,
+  behandelaar). `melden.html` werkt ook als de Studio hangt. F8 en Alt+M zijn instelbaar.
+  Na de eerste eigen meldingen (14-10): F8 **bevriest** eerst het scherm, zodat ook een open
+  rechtsklikmenu op de afbeelding komt (#3); het formulier heeft **+ schermafbeelding** (#2); en
+  er is een soort **compliment** (#4).
+  Vereist de api met `/api/meldingen`.
+
+### Tests
+- **Melden** (14-10): `tests/e2e/18-studio-melden.spec.js` (7 tests) en unittests voor de
+  meldhulpen en de context.
+
 ## [studio/v0.19.0] — 2026-10-14
 Mensen uitnodigen om Omnium te proberen: uitnodigingen met een rol en toegang per project
 ("alles dicht tenzij"), vijf rollen, en voor nieuwe gebruikers een kennismakingstour, een

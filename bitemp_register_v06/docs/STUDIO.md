@@ -226,6 +226,12 @@ te wijzigen.
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 >
+> **Melden (2026-10-14, plan `plans/meldingen/`):** *Help → Melden…* (Alt+M), *Melden met
+> schermafbeelding…* (F8: kader trekken), *Mijn meldingen…* en rechtsklik *Melden over dit item…*
+> op map, diagram of element; `melden.html` als de Studio hangt. Code: `src/meldingen/`,
+> `studio/MeldenHost.jsx`; de context komt uit `studio/meldContext.js` (Modelleren levert project,
+> pad en onderwerp-id). Backend: package `meldingen`.
+>
 > **Begeleiding (2026-10-14, ontwerp `plans/2026-09-10 Begeleiding in de Studio` §7):**
 > het palet toont per opdracht een regel `uitleg` (veld op het menu-item) en groepeert
 > zonder zoekterm per menu. **Help** bevat Rondleiding (`Tour.jsx`, ankers `data-tour`),

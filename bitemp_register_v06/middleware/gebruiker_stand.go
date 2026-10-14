@@ -22,6 +22,14 @@ import (
 // DomeinBeheer is het domein van Gebruiker. Lezen en wijzigen vraagt de rol admin.
 const DomeinBeheer = "beheer"
 
+// DomeinMeldingen: bugs en wensen (docs/plans/meldingen/). Via de gegenereerde routes alleen
+// voor beheerders; een melder werkt via package meldingen (eigen meldingen, als systeemaanroep).
+const DomeinMeldingen = "meldingen"
+
+// IsBeheerdomein: domeinen die alleen een beheerder via de generieke routes, /registratie/ en
+// GraphQL mag lezen of wijzigen (en die niet in GraphQL staan).
+func IsBeheerdomein(domein string) bool { return domein == DomeinBeheer || domein == DomeinMeldingen }
+
 // StandCacheDuur is hoe lang een opgezochte stand wordt hergebruikt.
 const StandCacheDuur = 30 * time.Second
 

@@ -2553,7 +2553,7 @@ export function maakDiagramActiviteit(opties) {
           // Instelbare sneltoetsen (Studio-instellingen → Sneltoetsen,
           // EA-achtige standaarden): uitlijnen, maat, verwijderen, zoeken.
           const actie = actieVoorEvent(e);
-          if (!actie) return;
+          if (!actie || actie.startsWith("help:")) return; // help: doet MeldenHost
           const api = layoutApiRef.current;
           e.preventDefault();
           if (actie.startsWith("uitlijnen:")) api?.lijnUit(actie.slice("uitlijnen:".length));

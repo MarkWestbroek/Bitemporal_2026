@@ -2,7 +2,7 @@
 
 *2026-10-14. Aanleiding: Mark wil dat gebruikers (ook genodigden) vanuit de tool een bug, wens of
 vraag kunnen indienen, met een schermafbeelding, zonder afhankelijk te zijn van GitHub. Status:
-plan akkoord (Mark, 14-10, besluiten in §2 en §3); model getekend met de eigen renderer.
+plan akkoord (Mark, 14-10, besluiten in §2 en §3); **gebouwd 14-10 (§5)**.
 BACKLOG: HELP-3 (hoge prioriteit).*
 
 ## 1. Uitgangspunt: dogfooding
@@ -106,3 +106,44 @@ Use cases (zoals Mark ze noemde): *Gebruiker*: maak melding (bug/wens), bekijk s
 3. Losse pagina `melden.html` met hetzelfde formulier.
 4. Sneltoets + kader → schermafbeelding.
 5. Mijn meldingen + notificatie naar de beheerder.
+
+## 5. Gebouwd (14-10-2026)
+
+**Backend** (package `meldingen`, domein `meldingen` via codegen):
+
+| Endpoint | Wie | Wat |
+|---|---|---|
+| `POST /api/meldingen` | ingelogd | melden (soort, titel, beschrijving, context); melder = de ingelogde gebruiker |
+| `GET /api/meldingen` | ingelogd | eigen meldingen; een beheerder ziet ze allemaal |
+| `GET /api/meldingen/:id` | melder, beheerder | één melding met status, prioriteit, behandelaar, bijlagen en gesprek |
+| `POST /api/meldingen/:id/reacties` | melder, beheerder | reageren (veld `auteur`) |
+| `POST /api/meldingen/:id/bijlagen` | melder, beheerder | multipart; png/jpeg/gif/webp/pdf/tekst, max 10 MB |
+| `GET /api/meldingen/bestanden/:bestand` | wie de melding mag zien | de bijlage |
+| `PUT /api/meldingen/:id/behandeling` | beheerder | status (+ toelichting), prioriteit, behandelaar |
+
+- Het domein `meldingen` is via de generieke routes (`/full/meldingen`), `/registratie/` en
+  GraphQL alleen voor beheerders (`middleware.IsBeheerdomein`, zoals `beheer`); de endpoints
+  hierboven registreren als systeemaanroep. De toegangsregel "melder ziet eigen" zit nu in de
+  endpoints; in de PEP-bundel (Toegangsspraak) is een vervolgstap.
+- Bijlagen: plumbing-tabel `melding_bestand` (UUID, naam, mediatype; inhoud in MinIO als die er
+  is, anders in de database). `MeldingBijlage.bestand` verwijst er met de UUID naar.
+- End-to-end getest tegen een echte API en Postgres (36 controles: melden, bijlage heen en terug,
+  afscherming tegen een andere gebruiker en anoniem, `/full` en `/registratie/` geweigerd,
+  behandeling, gesprek, statuswissel).
+
+**Frontend:** *Help → Melden…* (Alt+M), *Melden met schermafbeelding…* (F8: kader trekken,
+`html-to-image`, de plek onder het beginpunt gaat mee), *Mijn meldingen…* (status, gesprek;
+voor de beheerder ook behandelen), *Losse meldpagina*; rechtsklik op map, diagram of element:
+*Melden over dit item…* (pad en onderwerp-id). `melden.html` voor als de Studio hangt (inloggen,
+formulier, eigen meldingen). Code: `src/meldingen/`, `studio/MeldenHost.jsx`,
+`studio/meldContext.js`; e2e `tests/e2e/18-studio-melden.spec.js`.
+
+**Afwijkingen van het voorstel:**
+
+- `MeldingDubbelVan` (Melding → Melding) is eruit: codegen kan nog geen zelf-relaties (twee keer
+  `melding_id`). "Dubbel van #12" staat in de toelichting bij de status. Zelf-relaties in codegen
+  staan op de backlog.
+- `MeldingReactie` kreeg een veld `auteur`: een registratie legt het tijdstip vast, maar **niet
+  wie** registreerde (zie BACKLOG). Bij de melding zelf vangt de relatie Melder dat op.
+- Een mail aan de beheerder bij een nieuwe melding: kan met een NotificatieDefinitie op
+  `Melding` zodra er SMTP is (app heeft die niet); nog niet ingericht.

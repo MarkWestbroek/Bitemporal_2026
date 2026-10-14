@@ -26,8 +26,8 @@ func controleerBeheerdomein(ctx context.Context, wijzigingen []model.WijzigingRe
 		} else if w.Afvoer != nil {
 			naam = w.Afvoer.Representatienaam
 		}
-		if meta, ok := model.MetaRegistry.GetTypeMeta(naam); ok && meta.Domein == middleware.DomeinBeheer {
-			return newRegistreerErr(http.StatusForbidden, "gebruikers en rollen (domein %s) mag alleen een admin wijzigen", middleware.DomeinBeheer)
+		if meta, ok := model.MetaRegistry.GetTypeMeta(naam); ok && middleware.IsBeheerdomein(meta.Domein) {
+			return newRegistreerErr(http.StatusForbidden, "domein %s mag alleen een beheerder wijzigen (meldingen: via /api/meldingen)", meta.Domein)
 		}
 	}
 	return nil

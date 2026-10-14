@@ -529,6 +529,10 @@ func init() {
 	initBeheerEnumRegistry()
 	initBeheerDatatypeRegistry()
 	initBeheerMetaRegistry()
+	// meldingen — bugs en wensen melden vanuit Omnium (docs/plans/meldingen/)
+	initMeldingenEnumRegistry()
+	initMeldingenDatatypeRegistry()
+	initMeldingenMetaRegistry()
 
 	propageerDomeinNaarOnderliggende()
 }

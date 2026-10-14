@@ -37,7 +37,7 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 		}
 		// Het beheerdomein (Gebruiker, rollen) staat niet in GraphQL: lezen gaat daar per
 		// document, niet per type, en gebruikers zijn alleen voor admins (REST, leestoegang.go).
-		if meta.Domein == middleware.DomeinBeheer {
+		if middleware.IsBeheerdomein(meta.Domein) { // beheer en meldingen
 			continue
 		}
 
@@ -181,7 +181,7 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 	// BuildPatchInputTypes vult patchInputTypeCache; getPatchInputType leest er uit.
 	BuildPatchInputTypes()
 	for _, meta := range model.MetaRegistry {
-		if meta.Domein == middleware.DomeinBeheer {
+		if middleware.IsBeheerdomein(meta.Domein) { // beheer en meldingen
 			continue // zie de query-velden hierboven
 		}
 		AddTypedMutationsForEntiteit(mutationFields, meta)

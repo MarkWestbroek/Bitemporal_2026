@@ -11,6 +11,7 @@ import { SNELTOETS_ACTIES, VASTE_SNELTOETSEN, bindingVoor } from "./sneltoetsen.
 import useStudioStore from "./useStudioStore.js";
 import { openDocumentatie } from "./buildMenus.js";
 import Tour from "./Tour.jsx";
+import MeldenHost from "./MeldenHost.jsx";
 import { tourGezien } from "./tourStappen.js";
 
 /** Toetsen van de werkbank zelf (niet instelbaar, niet van het canvas). */
@@ -133,6 +134,7 @@ export default function HelpHost() {
       {!tour && <HintStrook />}
       {sneltoetsen && <SneltoetsenOverzicht onSluit={() => setSneltoetsen(false)} />}
       {tour && <Tour onSluit={() => setTour(false)} />}
+      <MeldenHost />
     </>
   );
 }

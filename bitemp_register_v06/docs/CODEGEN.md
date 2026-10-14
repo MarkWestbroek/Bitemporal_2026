@@ -56,6 +56,7 @@ Het model is opgedeeld in **domeinen**. Elk domein heeft een eigen set gegeneree
 | `np-loc` | `np_loc_` | Natuurlijke personen en locaties |
 | `org-geo` | `org_geo_` | Afdeling, Medewerker, Gemeentedeel (demo-model, zie `docs/demo-model-np-loc-org-geo.md`) |
 | `beheer` | `beheer_` | Gebruiker (identiteit, status, roltoewijzing) — gebruikersbeheer; alleen voor admins, niet in GraphQL. Model: `docs/plans/gebruikersbeheer/` |
+| `meldingen` | `meldingen_` | Melding (inhoud, context, bijlage, status, prioriteit, reactie; melder en behandelaar → Gebruiker) — bugs en wensen melden; via de generieke routes alleen voor beheerders, niet in GraphQL; melders via `/api/meldingen` (package meldingen). Model: `docs/plans/meldingen/` |
 
 (Plus de domeinen die los van dit document zijn gegroeid: `abuvwxy`, `CG`,
 `configuratie`, `financieel`, `ide-bestanden`, `kennis2`, `gegevenstypen`. De
