@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.20.1] — 2026-10-14
+Nooit meer een release missen: de Studio meldt een nieuwe versie zelf en laat zien wat er nieuw
+is. Plus de eerste eigen meldingen opgelost. Alleen frontend; api blijft 0.15.0.
+
 ### Toegevoegd
 - **Nieuwe versie zonder F5** (14-10, Mark: Hugo kreeg de release pas na een F5): de Studio kijkt
   elke 5 minuten, en als je terugkomt in het tabblad, of er een nieuwere build is (`versie.json`,
