@@ -9,6 +9,25 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Help en rondleiding** (14-10, Mark): het opdrachtenpalet (Ctrl+K) toont per opdracht een
+  regel uitleg, groepeert per menu en vindt ook beginletters; het Help-menu kreeg Rondleiding,
+  Sneltoetsen… (overzicht met de actuele toetsen) en Tips opnieuw tonen. Een leeg diagram legt
+  uit wat je in dat profiel maakt, met startknoppen. Korte tips verschijnen één keer (eerste
+  element, eerste relatie per profiel). Een **kennismakingstour** van acht stappen start bij
+  het eerste bezoek en gaat vanzelf verder als je een diagram en een element maakt.
+
+### Gewijzigd
+- **Kardinaliteit van gegevenselementen** (14-10, Mark): de lijn van een entiteit naar een
+  gegevenselement toont nu `0..*` met `{enkelvoudig}` of `{meervoudig}` eronder, in de Studio en
+  in de render-API (`/api/render/svg`, dus ook bij Imprint). In een bitemporeel model zijn de
+  voorkomens alle voorkomens in de tijd; het momentvoorkomen is een constraint, geen `0..1`.
+  Relaties volgen nog.
+
+### Tests
+- **Help** (14-10): `tests/e2e/16-studio-help.spec.js`, `17-studio-tour.spec.js`; unittests voor
+  palet, tips en rondleiding (elk anker bestaat in de code).
+
+### Toegevoegd
 - **Uitnodigen en toegang per project** (14-10, Mark): *Gebruikers → Uitnodigen* met e-mail,
   rol, geldigheid en per project lezen/schrijven; de link verschijnt één keer (en gaat per mail
   als de server SMTP heeft). De genodigde opent `studio.html#uitnodiging=…`, kiest gebruikersnaam

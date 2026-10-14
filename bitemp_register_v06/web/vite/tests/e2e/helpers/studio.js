@@ -12,7 +12,9 @@
 // localStorage.
 
 /** Mock de API (ingelogde editor, verder 404) en open Modelleren in de Studio. */
-export async function openStudio(page) {
+export async function openStudio(page, { tour = false } = {}) {
+  // De rondleiding start bij een eerste bezoek vanzelf; in de tests alleen als erom gevraagd.
+  if (!tour) await page.addInitScript(() => localStorage.setItem("studio05-tour-v1", "gezien"));
   await page.route("**/api/auth/status", (r) => r.fulfill({ json: { auth_enabled: true, ingelogd: true, gebruikersnaam: "test", rol: "editor" } }));
   await page.route("**/api/**", (r) => r.fulfill({ status: 404, json: { error: "mock" } }));
   await page.goto("/viz/react/studio/", { waitUntil: "domcontentloaded" });

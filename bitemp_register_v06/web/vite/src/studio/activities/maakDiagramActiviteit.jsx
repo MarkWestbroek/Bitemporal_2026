@@ -37,6 +37,7 @@ import React, {
   useState,
   useLayoutEffect,
   useCallback,
+  useMemo,
   useRef,
   lazy,
   Suspense,
@@ -91,6 +92,8 @@ import { splitsVeldSleutel } from "../../diagramcore/canvas/inlineNaam.js";
 import { actieVoorEvent, bindingVoor, toonBinding } from "../sneltoetsen.js";
 import { schuifVeld } from "../../diagramcore/model/velden.js";
 import { vindShapeSet } from "../../diagramcore/model/shapeSet.js";
+import LegeCanvas from "./LegeCanvas.jsx";
+import { toonHint, hintEersteElement, hintEersteRelatie } from "../hints.js";
 
 /**
  * Inline naamveld voor lijstregels (elementenbrowser, diagramlijst): Enter
@@ -198,6 +201,9 @@ export function maakDiagramActiviteit(opties) {
     // { id, label, Component }. De Component krijgt { useStore } als props.
     // Bv. het shape-set-matrixpaneel van de profiel-editor.
     onderPaneel = null,
+    // Extra startacties in de lege staat van een diagram: [{id, label, run(useStore)}],
+    // bv. "Laad voorbeeld" (ontwerp Begeleiding in de Studio §2.1).
+    startActies = [],
     // OperatieResolver-facet (ontwerp "Sequence hermetisch" §2):
     // (element, elements) => [{id, naam, …}] — welke operaties dit profiel
     // voor een element aanbiedt (UML-operaties, OAS-operations, …).
@@ -1984,6 +1990,22 @@ export function maakDiagramActiviteit(opties) {
     // Fallback: na undo van "nieuw diagram" kan het actieve id verdwenen zijn.
     const diagram = (actief && diagrams[actief]) || Object.values(diagrams)[0] || null;
 
+    // Tips na een toestandsovergang (hints.js): het eerste element op een diagram, en de
+    // eerste relatie in dit profiel. Alleen bij een toename tijdens de sessie, niet bij laden.
+    const aantalNodes = diagram?.nodes?.length || 0;
+    const aantalConnectoren = useMemo(
+      () => Object.values(elements).filter((el) => elementTypesById[el.elementType]?.isConnector).length,
+      [elements]
+    );
+    const vorigeTelling = useRef(null);
+    useEffect(() => {
+      const vorig = vorigeTelling.current;
+      vorigeTelling.current = { diagramId: diagram?.id, nodes: aantalNodes, connectoren: aantalConnectoren };
+      if (!vorig) return;
+      if (vorig.diagramId === diagram?.id && vorig.nodes === 0 && aantalNodes > 0) toonHint(hintEersteElement());
+      if (aantalConnectoren > vorig.connectoren) toonHint(hintEersteRelatie(descriptor, id));
+    }, [diagram?.id, aantalNodes, aantalConnectoren]);
+
     const { voorkeuren, zetZichtbaar, zetPositie, zetBreedte, zetAllesAuto } = useTaakbalkVoorkeuren(
       taakbalkSleutel,
       taakbalkDefaults
@@ -2885,6 +2907,15 @@ export function maakDiagramActiviteit(opties) {
                   onViewport={(vp) => useStore.getState().updateDiagramViewport(diagram.id, vp)}
                 />
               </Suspense>
+              {aantalNodes === 0 && (
+                <LegeCanvas
+                  descriptor={descriptor}
+                  diagramTerm={diagramTerm}
+                  plaatsNieuwElement={plaatsNieuwElement}
+                  startActies={startActies}
+                  useStore={useStore}
+                />
+              )}
               {taakbalken
                 .filter((b) => voorkeuren[b.id]?.zichtbaar ?? true)
                 .map((b) => (

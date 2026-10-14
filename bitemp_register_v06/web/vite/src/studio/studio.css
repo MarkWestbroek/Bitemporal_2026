@@ -374,8 +374,95 @@
   color: var(--s-fg-muted);
   min-width: 64px;
 }
-.studio-palette__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-palette__tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.studio-palette__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-palette__uitleg { font-size: 11px; color: var(--s-fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-palette__item.is-selectie .studio-palette__uitleg { color: #dbeafe; }
 .studio-palette__shortcut { color: var(--s-fg-muted); font-size: 11px; }
+.studio-palette__groep {
+  padding: 8px 10px 2px; font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--s-fg-muted);
+}
+.studio-palette__voet {
+  display: flex; align-items: center; gap: 10px; padding: 6px 12px;
+  border-top: 1px solid var(--s-border); font-size: 11px; color: var(--s-fg-muted);
+}
+.studio-palette__voet > span { flex: 1; }
+.studio-palette__meer { font: inherit; font-size: 11px; color: var(--s-accent, #4f46e5); background: none; border: 0; cursor: pointer; padding: 0; }
+
+/* ── Kennismakingstour (Tour.jsx) ─────────────────────────── */
+.studio-tour { position: fixed; inset: 0; z-index: 180; pointer-events: none; }
+.studio-tour__spot {
+  position: fixed; border-radius: 8px; transition: all .2s ease;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.55), 0 0 0 3px var(--s-accent, #6366f1);
+}
+.studio-tour__dim { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); }
+.studio-tour__ballon {
+  position: fixed; pointer-events: auto; width: min(360px, calc(100vw - 24px)); box-sizing: border-box;
+  padding: 12px 14px; font-size: 13px; line-height: 1.5;
+  color: var(--s-fg); background: var(--s-panel); border: 1px solid var(--s-accent, #6366f1); border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+}
+.studio-tour__teller { font-size: 11px; color: var(--s-fg-muted); }
+.studio-tour__titel { font-size: 15px; font-weight: 600; margin: 2px 0 4px; }
+.studio-tour__tekst { margin: 0 0 6px; }
+.studio-tour__opdracht { margin: 0 0 6px; font-size: 12px; color: var(--s-accent, #6366f1); }
+.studio-tour__knoppen { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.studio-tour__actie { margin: 0 0 8px; }
+.studio-tour__verder { border-color: var(--s-accent, #6366f1); font-weight: 600; }
+
+/* ── Lege staat van een diagram (activities/LegeCanvas.jsx) ── */
+.dc-leeg {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.dc-leeg__kaart {
+  pointer-events: none; max-width: 460px; padding: 14px 18px; font-size: 13px; line-height: 1.5;
+  color: var(--s-fg); background: color-mix(in srgb, var(--s-panel) 92%, transparent);
+  border: 1px dashed var(--s-border); border-radius: 10px;
+}
+.dc-leeg__titel { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.dc-leeg__kaart p { margin: 0 0 6px; }
+.dc-leeg__kaart ul { margin: 0 0 10px; padding-left: 18px; color: var(--s-fg-muted); }
+.dc-leeg__acties { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Alleen de knoppen vangen de muis: slepen uit de boom of taakbalk landt dwars door de kaart op het canvas. */
+.dc-leeg__acties button { pointer-events: auto; }
+
+/* ── Tipstrook en sneltoetsenoverzicht (HelpHost.jsx) ─────── */
+.studio-hint {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 150;
+  display: flex; align-items: center; gap: 10px;
+  width: min(720px, calc(100vw - 32px)); box-sizing: border-box;
+  padding: 8px 12px; font-size: 13px; line-height: 1.4;
+  color: var(--s-fg); background: var(--s-panel);
+  border: 1px solid var(--s-accent, #6366f1); border-left-width: 4px; border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+}
+.studio-hint__icoon { flex: 0 0 auto; }
+.studio-hint__tekst { flex: 1; min-width: 0; }
+.studio-hint__knop {
+  flex: 0 0 auto; font: inherit; font-size: 12px; padding: 3px 10px; cursor: pointer;
+  color: var(--s-fg); background: transparent; border: 1px solid var(--s-border); border-radius: 6px;
+}
+.studio-hint__knop--zacht { border-color: transparent; color: var(--s-fg-muted); }
+.studio-sneltoetsen {
+  width: min(760px, 92vw); max-height: 80vh; overflow: auto; box-sizing: border-box; padding: 14px 18px;
+  color: var(--s-fg); background: var(--s-panel); border: 1px solid var(--s-border); border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+}
+.studio-sneltoetsen__kop { display: flex; align-items: center; gap: 8px; }
+.studio-sneltoetsen__kop h2 { flex: 1; margin: 0; font-size: 16px; }
+.studio-sneltoetsen__blokken { columns: 2 300px; column-gap: 24px; margin-top: 8px; }
+.studio-sneltoetsen__blokken section { break-inside: avoid; margin-bottom: 10px; }
+.studio-sneltoetsen__blokken h3 { margin: 6px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--s-fg-muted); }
+.studio-sneltoetsen__blokken table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.studio-sneltoetsen__blokken td { padding: 2px 0; vertical-align: top; }
+.studio-sneltoetsen__blokken td:last-child { text-align: right; white-space: nowrap; padding-left: 10px; }
+.studio-sneltoetsen kbd {
+  display: inline-block; min-width: 14px; padding: 0 4px; margin: 0 1px; font: inherit; font-size: 11px; text-align: center;
+  border: 1px solid var(--s-border); border-bottom-width: 2px; border-radius: 4px; background: var(--s-bg, transparent);
+}
+.studio-sneltoetsen__geen, .studio-sneltoetsen__voet { color: var(--s-fg-muted); font-size: 11px; }
 .studio-menubar__right { display: flex; align-items: center; padding: 0 10px; margin-left: auto; }
 .studio-menubar__brand { font-size: 12px; font-weight: 600; color: var(--s-bar-fg); display: inline-flex; align-items: center; }
 /* Ingelogde gebruiker + uitloggen, rechts in de menubalk (StudioGebruiker.jsx). */

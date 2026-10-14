@@ -1,7 +1,7 @@
 # Begeleiding in de Studio — palette, lege staten, hints, checklist (ontwerp)
 
 > Datum: 2026-09-10
-> Status: ontwerp, op te pakken na de demo van 14–15 september
+> Status: fase 1, 2 (begin) en 4 gebouwd op 14-10-2026 (§7); fase 3 (checklist) open
 > Backlog: [`BACKLOG.md` §28](../BACKLOG.md)
 > Context: [`STUDIO.md`](../STUDIO.md) (werkbank), `web/vite/src/studio/buildMenus.js`,
 > `web/vite/src/studio/activities/maakDiagramActiviteit.jsx`
@@ -129,12 +129,30 @@ GitHub (help-menu sinds studio 0.7.2).
 3. **Checklist voor het publiceerpad** (§2.4).
 4. **Rondleiding eerste minuut** — alleen na een gebruikerstest.
 
-## 6. Open vragen
+## 6. Besluiten (Mark, 14-10-2026)
 
-- Waar leeft `uitleg` per actie: in `buildMenus.js` bij de actie, of in een
-  aparte tabel die ook de palette en de Imprint-referentie voedt?
-- Hints per browser (`localStorage`) of per gebruiker (server)? Zolang §27.2
-  (bitemporele modelopslag) er niet is: per browser, en dat is hier ook
-  inhoudelijk juist.
-- Meertaligheid: de tool is Nederlands; afgeleide hints erven de taal van
-  het profiel — volstaat dat?
+- `uitleg` staat **bij de actie** (menu-item in `buildMenus.js` of de activiteit): menu,
+  palet en later de referentie delen één bron.
+- "Gezien" per **browser** (`localStorage`).
+- Alleen **Nederlands**.
+- Een **rondleiding** toch nu (fase 4), naar het model van de MusicBrain-editor: eigen
+  spotlight, geen library.
+
+## 7. Gebouwd (14-10-2026)
+
+| Onderdeel | Waar | Wat |
+|---|---|---|
+| Palet | `studio/CommandPalette.jsx`, logica `studio/paletOpdrachten.js` | uitlegregel per opdracht (er wordt ook op gezocht), zonder zoekterm gegroepeerd per menu, beginletters ("nd" = Nieuw diagram), accentongevoelig, tot 30 resultaten, voet met Sneltoetsen en "Meer… (documentatie)" |
+| Help-menu | `studio/buildMenus.js` | Opdrachtenpalet, Rondleiding, Sneltoetsen…, Tips opnieuw tonen, Documentatie, Over |
+| Sneltoetsen | `studio/HelpHost.jsx` | overzicht van werkbank-, vaste en instelbare toetsen (actuele binding), "Aanpassen…" naar Studio-instellingen |
+| Lege staat | `studio/activities/LegeCanvas.jsx` | op elk leeg diagram: wat je in dit profiel maakt en verbindt (afgeleid), drie "+ type"-knoppen, optioneel `startActies` per activiteit; laat slepen door en verdwijnt tijdens het slepen |
+| Tips | `studio/hints.js`, strook in `HelpHost.jsx` | één tegelijk, één keer, `studio05-hints-gezien`; "Begrepen" / "Geen tips meer". Nu: eerste element op een diagram (interactie, handgeschreven) en eerste relatie per profiel (afgeleid: de relatiesoorten) |
+| Rondleiding | `studio/Tour.jsx`, stappen `studio/tourStappen.js` | 8 stappen, `data-tour`-ankers; "Begin met een diagram" en "Elementen maken" gaan vanzelf verder als je het doet; start vanzelf bij het eerste bezoek (`studio05-tour-v1`), daarna via Help |
+
+Tests: unittests `paletOpdrachten`, `hints`, `tourStappen` (incl. "elk anker bestaat in de
+code"); e2e `16-studio-help` en `17-studio-tour`. De e2e-helper `openStudio` zet de
+rondleiding uit, behalve met `{ tour: true }`.
+
+**Nog open:** checklist publiceerpad (fase 3); meer afgeleide tips (compartimenten,
+verbindingsregels per elementtype); uitleg bij de activiteit-menu's (nu alleen de vaste
+menu's); help-link naar de draaiende versie (§27.1).

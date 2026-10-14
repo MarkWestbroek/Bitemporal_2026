@@ -9,8 +9,8 @@ daarna (of tussendoor).
 |---|---|---|
 | AI-1 | **MCP-API voor Omnium** | open, hoge prio |
 | AI-2 | **AI-assistent in context (rechtsklik in de projectboom)** | open, hoge prio |
-| HELP-1 | Gewone help afmaken volgens `plans/2026-09-10 Begeleiding in de Studio` | in uitvoering |
-| HELP-2 | Kennismakingstour (zoals de MusicBrain-editor) | in uitvoering |
+| HELP-1 | Gewone help afmaken volgens `plans/2026-09-10 Begeleiding in de Studio` | ✅ fase 1 + eerste tips (14-10); checklist open (§28.4) |
+| HELP-2 | Kennismakingstour (zoals de MusicBrain-editor) | ✅ gebouwd (14-10) |
 | HELP-3 | Bugs en wensen melden vanuit Omnium (formulier + schermafbeelding, Alt-klik en een kader trekken), gedogfood als register-entiteit | ontwerp |
 
 **AI-1 — MCP-API.** Een MCP-server (Model Context Protocol) op Omnium, zodat een AI-client
@@ -1435,16 +1435,16 @@ Ontwerp: [`plans/2026-09-10 Begeleiding in de Studio — palette, lege staten, h
 Vervangt het eerdere backlogidee "wizards". Uitgangspunt: hulp die aanwezig
 en toestandsbewust is maar nooit modaal — de gebruiker houdt de besturing.
 
-- [ ] **28.1 Command palette (Cmd+K)** — tweede weergave van de acties uit
+- [x] **28.1 Command palette (Cmd+K)** (✅ 14-10: uitleg, groepen, "Meer…") — tweede weergave van de acties uit
       `buildMenus.js`, met `uitleg` en sneltoets, fuzzy zoeken. Eerst.
-- [ ] **28.2 Lege staten** — generiek `LegeStaat` in `maakDiagramActiviteit`,
+- [x] **28.2 Lege staten** (✅ 14-10: `LegeCanvas.jsx`) — generiek `LegeStaat` in `maakDiagramActiviteit`,
       gevoed door `previewTekst`/`laadVoorbeeld` + startacties per activiteit.
-- [ ] **28.3 Contextuele hints** — op toestandsovergangen, één keer,
+- [~] **28.3 Contextuele hints** (14-10: mechanisme + eerste twee tips; meer afgeleide tips open) — op toestandsovergangen, één keer,
       niet-blokkerend; `studio05-hints-gezien`. Zoveel mogelijk **afgeleid**
       uit het actieve profiel (verbindingsregels, elementtypen).
 - [ ] **28.4 Checklist publiceerpad** — model → schemaversie → rebuild, in
       elke volgorde, met *toon me*.
-- [ ] 28.5 Rondleiding eerste minuut — alleen na gebruikerstest.
+- [x] 28.5 Rondleiding eerste minuut (✅ 14-10, toch nu: `Tour.jsx`, zoals MusicBrain).
 - Hangt samen met §27.3 (help als Imprint-site: de referentie waar "Meer…"
   naartoe linkt).
 

@@ -517,7 +517,7 @@ function Main() {
         <KruisverbandSymbolen />
       </div>
 
-      <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
+      <div id="instellingen-sneltoetsen" style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
         <h2 style={{ margin: "0 0 2px" }}>Sneltoetsen</h2>
         <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
           Toetsen voor uitlijnen, maat en bewerken op het canvas (standaard naar Enterprise Architect) — per

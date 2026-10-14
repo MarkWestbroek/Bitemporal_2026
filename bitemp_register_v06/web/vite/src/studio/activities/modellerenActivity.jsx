@@ -2208,7 +2208,7 @@ function LegeStaat() {
         Geen open diagrammen. Kies links een diagram in de projectbrowser, of begin
         met een nieuw diagram in een van de profielen:
       </p>
-      <div className="studio-modelleren__leeg-knoppen">
+      <div className="studio-modelleren__leeg-knoppen" data-tour="nieuw-diagram">
         {profielen.filter((p) => !p.vasteDocumenten).map((p) => (
           <button
             key={p.id}
@@ -3202,10 +3202,10 @@ function menus(ctx) {
           ]
         : []),
       { id: "proj-hernoem", label: "Hernoem project…", onClick: hernoemProject },
-      { id: "proj-nieuw", label: "Nieuw project… (huidige parkeren)", onClick: nieuwProject },
+      { id: "proj-nieuw", label: "Nieuw project… (huidige parkeren)", uitleg: "Begin leeg; het huidige project blijft in deze browser bewaard.", onClick: nieuwProject },
       { type: "separator" },
-      { id: "proj-push", label: "Naar server sturen (snapshot)", onClick: stuurNaarServer },
-      { id: "proj-pull", label: "Van server ophalen…", onClick: haalVanServer },
+      { id: "proj-push", label: "Naar server sturen (snapshot)", uitleg: "Zet het project op de server, zodat anderen erin kunnen meewerken.", onClick: stuurNaarServer },
+      { id: "proj-pull", label: "Van server ophalen…", uitleg: "Open een project van de server; daar regel je ook wie toegang heeft.", onClick: haalVanServer },
       {
         id: "proj-ea-import",
         label: "EA-import via de server (uit git)…",
@@ -3232,10 +3232,18 @@ function menus(ctx) {
         },
       },
       { type: "separator" },
-      { id: "proj-export", label: "Exporteer project (structuur + modellen)…", onClick: exporteerProject },
-      { id: "proj-import", label: "Importeer project…", onClick: kiesEnImporteerProject },
+      { id: "proj-export", label: "Exporteer project (structuur + modellen)…", uitleg: "Het hele project als JSON-bestand (back-up, doorgeven).", onClick: exporteerProject },
+      { id: "proj-import", label: "Importeer project…", uitleg: "Een geëxporteerd project-bestand openen.", onClick: kiesEnImporteerProject },
       { type: "separator" },
-      { id: "proj-transform", label: "Transformeren…", onClick: () => useTransformStore.getState().openen(null) },
+      { id: "proj-transform", label: "Transformeren…", uitleg: "Importeren, omzetten tussen talen en exporteren.", onClick: () => useTransformStore.getState().openen(null) },
+      // Ook in het rechtsklikmenu van een map; hier zodat het opdrachtenpalet het vindt
+      // (Mark, 14-10). Werkt op de geselecteerde map.
+      {
+        id: "proj-document",
+        label: "Document maken…",
+        uitleg: "Een document uit een map: use case-overzicht, gegevenswoordenboek, … (ook via rechtsklik op een map).",
+        onClick: () => useTransformStore.getState().openen(useModellerenStore.getState().mapSelectie || null, "export"),
+      },
     ],
   };
   const { profiel } = actieveTabInfo();
