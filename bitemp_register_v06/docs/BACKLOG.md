@@ -7,14 +7,20 @@ daarna (of tussendoor).
 
 | Id | Onderwerp | Stand |
 |---|---|---|
-| AI-1 | **MCP-API voor Omnium** | open, hoge prio |
-| AI-2 | **AI-assistent in context (rechtsklik in de projectboom)** | open, hoge prio |
+| AI-1 | **MCP-API voor Omnium** | in uitvoering: stap 1 gebouwd 14-10 (persoonlijke API-tokens + `tools/omnium-mcp` met meldingen en projecten, `.mcp.json`); volgende: modellen lezen en wijzigen |
+| AI-2 | **AI-assistent in context (rechtsklik in de projectboom)** | in uitvoering: stap 1 gebouwd 14-10 (rechtsklik op map → model in een taal, op element → velden; voorstel → Toepassen); zie `plans/2026-10-14 AI-hulp …` |
 | HELP-1 | Gewone help afmaken volgens `plans/2026-09-10 Begeleiding in de Studio` | ✅ fase 1 + eerste tips (14-10); checklist open (§28.4) |
 | HELP-2 | Kennismakingstour (zoals de MusicBrain-editor) | ✅ gebouwd (14-10) |
 | HELP-3 | Bugs en wensen melden vanuit Omnium (formulier + schermafbeelding, F8 en een kader trekken), gedogfood als register-entiteit | ✅ gebouwd (14-10); vervolg: mail via NotificatieDefinitie, regel in de PEP-bundel |
 | HELP-4 | **Help → Over Omnium: link naar de releaselogs** (studio-CHANGELOG en RELEASE.md, bij de draaiende versie) | ✅ 14-10: Help → Releaselog en Wat is er nieuw; plus de strook "nieuwe versie" |
 | CG-1 | **Codegen: zelf-relaties** (A → A, bv. Melding "dubbel van"): nu twee keer `<a>_id`; de doelkant heeft een eigen kolomnaam nodig (bv. `doel_melding_id`) | open (gevonden 14-10) |
 | AUD-1 | **Wie registreerde?** Een registratie legt het tijdstip vast, niet de gebruiker (alleen indirect in `request_body`). Voor audit en "wie meldde/reageerde" een kolom `door` op `registratie`, gevuld uit de claims | open (gevonden 14-10) |
+
+**AI-1, stap 1 (14-10, gebouwd):** persoonlijke API-tokens (`gebruikers/token.go`, *Gebruikers →
+Mijn API-tokens*) en de MCP-server `tools/omnium-mcp` (stdio, SDK 1.32): `omnium_wie_ben_ik`,
+`meldingen_lijst`, `melding_bekijken` (met schermafbeeldingen als afbeelding), `melding_reageren`,
+`melding_behandelen`, `projecten_lijst`. Gekoppeld via `.mcp.json` in de repo-root; token als
+omgevingsvariabele `OMNIUM_TOKEN`. Zie `tools/omnium-mcp/README.md`.
 
 **AI-1 — MCP-API.** Een MCP-server (Model Context Protocol) op Omnium, zodat een AI-client
 (Claude Desktop/Code, een eigen assistent) projecten, modellen en registergegevens kan lezen en,

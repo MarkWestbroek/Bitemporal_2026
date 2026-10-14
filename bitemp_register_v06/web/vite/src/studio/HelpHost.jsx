@@ -13,6 +13,7 @@ import { openDocumentatie } from "./buildMenus.js";
 import Tour from "./Tour.jsx";
 import MeldenHost from "./MeldenHost.jsx";
 import VersieWachter from "./VersieWachter.jsx";
+import AssistentHost from "./assistent/AssistentHost.jsx";
 import { tourGezien } from "./tourStappen.js";
 
 /** Toetsen van de werkbank zelf (niet instelbaar, niet van het canvas). */
@@ -138,6 +139,7 @@ export default function HelpHost() {
       <MeldenHost />
       {/* Bij een eerste bezoek is er de rondleiding; "wat is er nieuw" wacht dan. */}
       <VersieWachter uitgesteld={tour} />
+      <AssistentHost />
     </>
   );
 }

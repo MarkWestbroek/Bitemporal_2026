@@ -1,0 +1,11 @@
+{
+  "name": "omnium-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP-server voor Omnium: meldingen en projecten lezen en behandelen vanuit een AI-client (Claude Code, Claude Desktop, …).",
+  "type": "module",
+  "bin": { "omnium-mcp": "server.mjs" },
+  "scripts": { "smoke": "node smoke.mjs" },
+  "dependencies": { "@modelcontextprotocol/sdk": "1.32.1" },
+  "license": "EUPL-1.2"
+}

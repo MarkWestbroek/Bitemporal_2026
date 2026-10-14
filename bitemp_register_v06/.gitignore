@@ -18,6 +18,7 @@ web/react/assets/
 web/react/*.html
 web/react/versie.json
 web/vite/node_modules/
+tools/omnium-mcp/node_modules/
 web/vite/node_modules_backup_*/
 web/vite/.vite/
 web/vite/.vite-temp/

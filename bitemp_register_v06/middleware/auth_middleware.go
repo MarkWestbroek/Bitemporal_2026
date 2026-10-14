@@ -18,6 +18,9 @@ type JWTClaims struct {
 	Gebruikersnaam string `json:"gebruikersnaam"`
 	Rol            string `json:"rol"`
 	Email          string `json:"email,omitempty"`
+	// ViaToken: dit verzoek kwam binnen met een persoonlijk API-token (token.go), niet met de
+	// login-cookie. Niet in het JWT; o.a. gebruikt om met een token geen nieuwe tokens te maken.
+	ViaToken bool `json:"-"`
 }
 
 const (
@@ -132,14 +135,17 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		tokenString, err := c.Cookie(CookieNaam)
-		if err != nil || tokenString == "" {
-			c.Next()
-			return
+		// Eerst de login-cookie (browser), anders een persoonlijk API-token (token.go).
+		var claims *JWTClaims
+		if tokenString, err := c.Cookie(CookieNaam); err == nil && tokenString != "" {
+			if cl, err := ValideerJWT(tokenString); err == nil {
+				claims = cl
+			}
 		}
-
-		claims, err := ValideerJWT(tokenString)
-		if err != nil {
+		if claims == nil {
+			claims = claimsUitToken(c.Request.Context(), BearerToken(c.GetHeader("Authorization")))
+		}
+		if claims == nil {
 			c.Next()
 			return
 		}

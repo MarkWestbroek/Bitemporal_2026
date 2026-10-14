@@ -23,6 +23,7 @@ import { apiBase } from "../studioUtils";
 import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
 import { TOEKENBARE_ROLLEN as ROLLEN, ROL_UITLEG, isBeheerder } from "../../shared/rollen.js";
 import { lijstProjecten } from "./projectSync.js";
+import MijnTokens from "./MijnTokens.jsx";
 const MIN_LENGTE = 10; // gelijk aan gebruikers.MinWachtwoordLengte
 
 async function api(pad, opties = {}) {
@@ -409,6 +410,7 @@ function Main() {
       </p>
 
       <MijnWachtwoord ik={ik} />
+      {ik && <MijnTokens />}
 
       {lijst !== null && <Uitnodigen />}
 

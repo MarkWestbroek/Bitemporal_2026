@@ -226,6 +226,12 @@ te wijzigen.
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 >
+> **AI-assistent in context (2026-10-14, AI-2 stap 1):** rechtsklik op een map of element →
+> *✨ Vraag de assistent…* (`studio/assistent/AssistentHost.jsx`). De AI levert een plan; het
+> profiel controleert het (`assistentKern.js`: alleen bestaande typen en toegestane relaties);
+> Toepassen gaat via `planNaarCoreModel` + `importeerModel` (één undo-stap, gesynct). Ontwerp en
+> vervolg: `plans/2026-10-14 AI-hulp — MCP-server en assistent in context`.
+>
 > **Nieuwe versie en wat is er nieuw (2026-10-14):** de build schrijft `versie.json` (vite-plugin
 > `versieBestand`, met de kopjes uit de CHANGELOG); `studio/VersieWachter.jsx` kijkt elke 5 minuten
 > en bij terugkeer in het tabblad, en toont bij een andere build een strook met **Herladen**. Na een

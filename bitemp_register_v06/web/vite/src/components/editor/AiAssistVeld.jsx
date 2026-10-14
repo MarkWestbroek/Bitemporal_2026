@@ -1,5 +1,5 @@
 import { useState, useRef, useId } from "react";
-import { useSchema } from "../../context/SchemaContext";
+import { useSchema, useSchemaOptioneel } from "../../context/SchemaContext";
 import { useAiToegestaan } from "../../shared/ai/AiContext";
 import { ACTIES, bouwVraag, voegVoorstelIn } from "../../shared/ai/aiAssist";
 import { PRESETS, zetProfiel, actiefProfiel } from "../../shared/ai/aiProfielen";
@@ -125,7 +125,7 @@ Geef opnieuw ALLEEN de nieuwe tekst voor het veld.`, geschiedenis: voorstel.gesp
 }
 
 /** Kies de dienst en geef een sleutel of toegangscode (bewaard in deze browser). */
-export function AiInstellingen({ inst, onOpslaan, onAnnuleer }) {
+export function AiInstellingen({ inst, onOpslaan, onAnnuleer, baseUrl: baseUrlProp }) {
   const [preset, setPreset] = useState(inst.actief || "claude");
   const huidig = inst.profielen.find((p) => p.id === preset);
   const def = PRESETS.find((p) => p.id === preset);
@@ -135,7 +135,9 @@ export function AiInstellingen({ inst, onOpslaan, onAnnuleer }) {
   const [modellen, setModellen] = useState(null); // [{ id, naam }] van de dienst zelf
   const [modellenFout, setModellenFout] = useState("");
   const [modellenBezig, setModellenBezig] = useState(false);
-  const { baseUrl } = useSchema();
+  // Ook buiten een SchemaProvider bruikbaar (Studio-assistent): baseUrl dan als prop.
+  const schema = useSchemaOptioneel();
+  const baseUrl = baseUrlProp ?? schema?.baseUrl ?? "";
   const id = useId();
   async function laadModellen() {
     setModellenBezig(true); setModellenFout("");
