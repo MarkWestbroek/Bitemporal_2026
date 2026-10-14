@@ -8,6 +8,17 @@
 
 ---
 
+## studio 0.20.1 (2026-10-14) — alleen frontend
+
+Geen backendrelease: api blijft **0.15.0**. De Studio meldt voortaan zelf een nieuwe versie
+(`versie.json` + strook met Herladen) en toont na een update *Wat is er nieuw*; Help heeft een
+link naar de releaselog. Meldingen #5–#7 opgelost. Details:
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md). **Bouwen:** `docker build -f Dockerfile.frontend
+--build-arg VITE_GIT_SHA=$(git rev-parse --short HEAD) …` (de commit komt anders niet in de image).
+Uitrol: alleen de frontend op app. Deze ene keer is nog een F5 nodig; daarna meldt de Studio het.
+
+---
+
 ## api 0.15.0 / studio 0.20.0 (2026-10-14)
 
 Melden vanuit Omnium (HELP-3). Frontend: [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio
