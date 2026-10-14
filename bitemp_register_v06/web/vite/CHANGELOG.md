@@ -8,6 +8,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.20.0] — 2026-10-14
+Melden vanuit Omnium: een bug, wens, vraag of compliment, met een schermafbeelding (F8) en de
+plek waar het over gaat; *Mijn meldingen* met status en gesprek; `melden.html` als de Studio
+hangt. Samen met **api 0.15.0** (vereist).
+
 ### Toegevoegd
 - **Melden vanuit Omnium** (14-10, Mark): *Help → Melden…* (Alt+M) voor een bug, wens of vraag,
   met bijlagen (plakken, slepen, kiezen); *Melden met schermafbeelding…* (F8): trek een kader om

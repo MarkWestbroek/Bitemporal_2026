@@ -8,9 +8,15 @@
 
 ---
 
-## Niet uitgebracht — meldingen (bugs, wensen, vragen)
+## api 0.15.0 / studio 0.20.0 (2026-10-14)
 
-Backend (minor; nieuw domein en een plumbing-tabel, geen gevolg voor bestaande data):
+Melden vanuit Omnium (HELP-3). Frontend: [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio
+0.20.0). Uitrol: alleen app.
+
+**Databasegevolg:** nieuwe tabellen voor het domein `meldingen` (hubs en `_Data`) en
+`melding_bestand`, bij de start aangemaakt; bestaande data blijft ongemoeid.
+
+Backend (minor):
 
 - **Domein `meldingen`** (codegen): Melding met inhoud, context, bijlage, status, prioriteit,
   reactie; relaties Melder en Behandelaar naar Gebruiker. Via de generieke routes, `/registratie/`

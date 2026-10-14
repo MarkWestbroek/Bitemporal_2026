@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.19.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.20.0`**
+  (2026-10-14: melden vanuit Omnium — F8, Mijn meldingen, melden.html; samen met api 0.15.0),
+  na **`studio/v0.19.0`**
   (2026-10-14: uitnodigen en toegang per project, vijf rollen, help en kennismakingstour,
   relatiepaneel, GE-kardinaliteit `0..*` `{enkelvoudig}`; samen met api 0.14.0), na **`studio/v0.18.0`**
   (2026-10-13: beschrijving als vaste M3-eigenschap, inspector altijd bruikbaar, projectboom-fixes,
@@ -76,7 +78,8 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.14.0`** (2026-10-14: uitnodigen, vijf rollen en toegang per Studio-project
+- Backend: **`api/v0.15.0`** (2026-10-14: domein `meldingen` en `/api/meldingen`, tabel
+  `melding_bestand`). Daarvoor **`api/v0.14.0`** (2026-10-14: uitnodigen, vijf rollen en toegang per Studio-project
   — tabellen `studio_project_toegang`, `studio_migraties`, `gebruiker_uitnodiging` en een eenmalige
   toegangsmigratie —, toegangsbeleid fase 1a/1b (PDP en PEP op het leespad), afgeleide relaties
   bij lezen, EUPL-1.2). Daarvoor **`api/v0.13.0`** (2026-10-10: EA-import via de server — node-sidecar uit git —
