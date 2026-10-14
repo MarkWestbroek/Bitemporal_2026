@@ -837,6 +837,9 @@ export function maakDiagramActiviteit(opties) {
         : { x: 120 + cascade, y: 120 + cascade };
       s.addElement(el);
       s.addElementToDiagram(dId, el.id, positie);
+      // De projectboom zet het nieuwe element in de map van dit diagram (Mark, 14-10:
+      // "vanzelf waar de context is: het diagram", niet onder "Niet ingedeeld").
+      menuBus.emit("studio:element-gemaakt", { profielId: id, elementId: el.id, diagramId: dId });
       // Belandt het nieuwe element in een container (lane/pool), dan wordt het
       // daar meteen lid van — anders ligt het er wél in maar hoort het er
       // niet bij, en weigert de afbakening onbegrijpelijk een sequence flow.
@@ -2787,6 +2790,7 @@ export function maakDiagramActiviteit(opties) {
                       x: positie.x - maat.width / 2,
                       y: positie.y - maat.height / 2,
                     });
+                    menuBus.emit("studio:element-gemaakt", { profielId: id, elementId: nieuw.id, diagramId: st.actiefDiagramId });
                     // Losgelaten in een container (lane/pool): meteen lid.
                     if (containerId) verhangNaarContainer(useStore, nieuw.id, containerId);
                     verbind({
