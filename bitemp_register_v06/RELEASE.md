@@ -8,9 +8,23 @@
 
 ---
 
-## Niet uitgebracht — uitnodigen en toegang per project
+## api 0.14.0 / studio 0.19.0 (2026-10-14)
 
-Backend (minor; nieuwe tabellen, eenmalige datamigratie):
+Mensen uitnodigen om Omnium te proberen, in een probeerproject en niet in het productieproject.
+Frontend: [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio 0.19.0). Uitrol: alleen app;
+pf later.
+
+**Databasegevolg:** drie nieuwe tabellen (`studio_project_toegang`, `studio_migraties`,
+`gebruiker_uitnodiging`), bij de start aangemaakt. Bij de **eerste start met `AUTH_ENABLED=true`**
+krijgt elke bestaande gebruiker eenmalig toegang tot elk bestaand Studio-project (bouwer en hoger
+schrijven, de rest lezen); daarna geldt "alles dicht tenzij". De enum `Gebruikersrol` is uitgebreid
+(lezer, modelleur, ontwerper, bouwer, beheerder); de oude namen blijven geldig.
+
+**Aanzetten na de uitrol (optioneel):** `UITNODIGEN_ENABLED=true` en
+`STUDIO_BASIS_URL=https://app.omnium-ide.nl` in de env van de api. Zonder SMTP verschijnt de link
+alleen in het scherm.
+
+Backend, uitnodigen en toegang (minor; nieuwe tabellen, eenmalige datamigratie):
 
 - **Vijf rollen** (`middleware/rollen.go`): lezer < modelleur < ontwerper < bouwer < beheerder;
   viewer/editor/admin blijven als alias geldig. Enum `Gebruikersrol` uitgebreid; PEP en
@@ -28,6 +42,17 @@ Backend (minor; nieuwe tabellen, eenmalige datamigratie):
   wachtwoord zetten, uitnodiging accepteren).
 
 Plan en stand: `docs/plans/2026-10-12 Gebruikers uitnodigen en toolrechten (ontwerpvoorstel).md` §6.
+
+Backend, verder sinds api 0.13.0 (op main sinds 11–13 oktober):
+
+- **Toegangsbeleid fase 1a/1b** (`docs/plans/2026-10-12 Toegang op beleid`): beleidsbundel en PDP
+  in Go, superpolicy (Standaard en Bij conflict), en de PEP op het leespad die antwoorden per veld
+  snoeit (`TOEGANG_BUNDEL`; zonder bundel verandert er niets). De Studio exporteert de bundel.
+- **Afgeleide relaties**: codegen maakt er geen tabel voor; `/full` en GraphQL berekenen ze bij
+  het lezen, met doelobjecten (`<rol>_doelen`) en lui laden (alleen de aangesproken rollen).
+- **Licentie** EUPL-1.2; Caddy-config gelijk met live (`/ai`, `/tts`, omnium.imprint-engine.nl).
+- **Render-API**: een gegevenselement-lijn toont `0..*` met `{enkelvoudig|meervoudig}` (was `0..1`);
+  Imprint ziet dat na de uitrol.
 
 ---
 
