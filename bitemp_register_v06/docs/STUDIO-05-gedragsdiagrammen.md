@@ -328,8 +328,13 @@ State machine v0 laat vast zien wat "core + labels" oplevert; de bekende open pu
   (`sequence/activaties.js`), zelf-bericht als twee punten op één lijn met het haakje van EA,
   punten onzichtbaar tot hover/selectie, levenslijn alleen opzij (`layoutDimensie: "x"`), en de
   EA-lezer leidt kop (Actor/stereotype) en guard (`Btm_Mid_Label`) af en her-importeert weer
-  (punten met eigen GUID). Nog open: async-episodes (§6A van het plan), fragmenten, het label van
-  een zelf-bericht, EA-lifelines die ArchiMate-componenten zijn, "importeer als nieuw".
+  (punten met eigen GUID). **Tekenen van nul** (15-10): berichttype kiezen in de balk *Verbinding*
+  en van levenslijn naar levenslijn slepen op de gewenste hoogte — de punten ontstaan daar (M3-hook
+  `naVerbinden` krijgt de muispositie), punt/activatie uit het palet (`inPalet: false`), levenslijnen
+  in een rij en meegroeiend, Delete = uit het model mét punten (`verwijderen: "model"`, hook
+  `naVerwijderen`), tekenen/verwijderen één undo-stap; e2e `22-studio-sequence.spec.js`. Nog open:
+  async-episodes (§6A van het plan), fragmenten, het label van een zelf-bericht, EA-lifelines die
+  ArchiMate-componenten zijn, "importeer als nieuw".
 
 ---
 

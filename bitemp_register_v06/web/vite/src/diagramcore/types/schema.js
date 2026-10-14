@@ -170,6 +170,11 @@
  *   Zonder waarde geldt `DiagramType.randAanhechting`, en anders `"zijden"`.
  *   Een handmatig gekozen handle (`data.sourceHandle`/`targetHandle` op de
  *   connector) wint altijd — zweven geldt alleen waar niets gekozen is.
+ * @property {"diagram"|"model"} [verwijderen] - connectors: wat Delete doet — van het diagram
+ *   halen (default) of uit het model (sequence-bericht: een verborgen bericht op zijn eigen
+ *   interactiediagram is zinloos); hooks.naVerwijderen ruimt dan het eigendom op (de punten)
+ * @property {boolean} [inPalet]            - default true; false = niet in de balk "Maken" en
+ *   niet in het "nieuw element"-menu — het element ontstaat anders (sequence-punt: met een bericht)
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
  * @property {number} [minBreedte]          - resize-minimum (default 180) — bv. smalle balken
  * @property {number} [minHoogte]           - resize-minimum (default 56)

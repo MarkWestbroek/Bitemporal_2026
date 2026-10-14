@@ -60,7 +60,7 @@ import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
-import { InlineNaamContext } from "./inlineNaam.js";
+import { InlineNaamContext, isVlakHandle } from "./inlineNaam.js";
 import ConnectorEdge from "./ConnectorEdge.jsx";
 import { weigeringTekst } from "./afbakening.js";
 import { materialiseerConnectoren, vindConnectorType, vindConnectorTypes, geweigerdDoorAfbakening, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante, normaliseerHandle } from "./materialiseerConnectoren.js";
@@ -1250,6 +1250,11 @@ function CanvasBinnenkant({
   // mét het pointer-event aan; de keuze wacht daar in deze ref op.
   const wachtendeKeuzeRef = useRef(null);
   const magicMenuTijdRef = useRef(0);
+  // Waar de lijn-sleep begon en waar de muis het laatst was (flow-coördinaten):
+  // onConnect krijgt geen event, maar een profiel wil de hoogte weten (een
+  // sequence-bericht zet daar zijn punten; hook naVerbinden, 15-10).
+  const verbindStartRef = useRef(null);
+  const laatsteMuisRef = useRef(null);
   const elementVanNode = useCallback(
     (nodeId) => {
       const node = getNodes().find((n) => n.id === nodeId);
@@ -1326,6 +1331,8 @@ function CanvasBinnenkant({
           target: doelId,
           sourceHandle: handleVoorOpslag(bronId, verbinding.sourceHandle),
           targetHandle: handleVoorOpslag(doelId, verbinding.targetHandle, "target"),
+          van: verbindStartRef.current,
+          naar: laatsteMuisRef.current ? screenToFlowPosition(laatsteMuisRef.current) : null,
         });
       if (passend.length === 1) {
         leg(passend[0]);
@@ -1369,6 +1376,26 @@ function CanvasBinnenkant({
       const onder = document.elementFromPoint(punt.clientX, punt.clientY);
       const doelNodeId =
         toestand.toNode?.id || onder?.closest?.(".react-flow__node")?.getAttribute("data-id");
+      // Losgelaten op de **eigen** node (zelf-verbinding, bv. een sequence-
+      // zelfbericht van een levenslijn naar zichzelf, 15-10): React Flow
+      // weigert een handle die op zichzelf uitkomt (de vlak-handle in de
+      // verbind-modus), dus hier alsnog verbinden als het type dat toestaat.
+      if (doelNodeId && doelNodeId === toestand.fromNode.id && !toestand.fromNode.id.startsWith(ANKER_PREFIX)) {
+        const { element: zelf } = elementVanNode(doelNodeId);
+        if (zelf && vindConnectorTypes(diagramType, zelf, zelf, elements).length) {
+          handleConnect({
+            source: toestand.fromNode.id,
+            target: toestand.fromNode.id,
+            sourceHandle: isVlakHandle(toestand.fromHandle?.id) ? null : toestand.fromHandle?.id || null,
+            targetHandle: null,
+          });
+          // Meerdere typen → het magic-menu op de losplek (zoals bij een gewone drop).
+          const w = wachtendeKeuzeRef.current;
+          wachtendeKeuzeRef.current = null;
+          if (w) setContextMenu({ x: punt.clientX, y: punt.clientY, vlak, items: [{ kop: true, label: `${omschrijf(w.bron)} → ${omschrijf(w.doel)}` }, ...keuzes(w.passend, w.leg)] });
+          return;
+        }
+      }
       // Losgelaten op het **lege vlak** (§31.8): bied de elementtypen aan die
       // vanaf deze bron bereikbaar zijn; kiezen maakt het element op de
       // losplek én legt de verbinding.
@@ -1393,7 +1420,7 @@ function CanvasBinnenkant({
         const ouders = containerVanElementen(elements, lookups.elementTypesById);
         if (containerId) ouders.set("__nieuw", containerId);
         for (const et of diagramType?.elementTypes || []) {
-          if (et.isConnector || !et.kort) continue;
+          if (et.isConnector || !et.kort || et.inPalet === false) continue;
           const proef = { id: "__nieuw", elementType: et.id };
           const passend = vindConnectorTypes(
             diagramType,
@@ -1475,7 +1502,7 @@ function CanvasBinnenkant({
         ],
       });
     },
-    [bewerkbaar, omschrijf, elementVanNode, diagramType, verbindingsType, lookups, onVerbind, onMaakEnVerbind, screenToFlowPosition, elements, containerOpPunt, handleVoorOpslag]
+    [bewerkbaar, omschrijf, elementVanNode, diagramType, verbindingsType, lookups, onVerbind, onMaakEnVerbind, screenToFlowPosition, elements, containerOpPunt, handleVoorOpslag, handleConnect]
   );
 
   // ── Uiteinden lostrekken en elders aanhechten (§31.5) ─────────────────────
@@ -1866,10 +1893,15 @@ function CanvasBinnenkant({
     <InlineNaamContext.Provider value={inlineNaamWaarde}>
     <ReactFlow
       key={diagram?.id || "leeg"}
-      // dc-verbindmodus (Shift) / dc-verbindt (lijn in sleep): dan vangt de
-      // vlak-handle van elke node muis-input — zie diagramcore.css.
-      className={"dc-canvas" + (shiftVast && bewerkbaar ? " dc-verbindmodus" : "") + (verbindt ? " dc-verbindt" : "")}
+      // dc-verbindmodus (Shift, of een verbindingstype gekozen in de taakbalk
+      // — "Verbindingsmodus: …", 15-10) / dc-verbindt (lijn in sleep): dan
+      // vangt de vlak-handle van elke node muis-input — zie diagramcore.css.
+      // Zo trek je een sequence-bericht van lijn naar lijn op de hoogte van de muis.
+      className={"dc-canvas" + ((shiftVast || verbindingsType) && bewerkbaar ? " dc-verbindmodus" : "") + (verbindt ? " dc-verbindt" : "")}
       onKeyDown={handleKeyDown}
+      onPointerMoveCapture={(e) => {
+        laatsteMuisRef.current = { x: e.clientX, y: e.clientY };
+      }}
       onPointerDownCapture={(e) => {
         klikStartRef.current = {
           x: e.clientX,
@@ -1921,6 +1953,10 @@ function CanvasBinnenkant({
       onNodeDragStart={handleNodeDragStart}
       onNodeDrag={handleNodeDrag}
       onNodeDragStop={handleNodeDragStop}
+      onConnectStart={(ev) => {
+        const pt = ev?.changedTouches?.[0] || ev;
+        verbindStartRef.current = pt?.clientX != null ? screenToFlowPosition({ x: pt.clientX, y: pt.clientY }) : null;
+      }}
       onConnect={handleConnect}
       onConnectEnd={handleConnectEnd}
       onReconnectStart={handleReconnectStart}

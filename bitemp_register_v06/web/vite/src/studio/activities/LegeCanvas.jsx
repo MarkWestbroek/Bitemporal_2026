@@ -32,7 +32,7 @@ export default function LegeCanvas({ descriptor, diagramTerm = "diagram", plaats
   }, []);
   const { elementen, relaties } = profielInhoud(descriptor);
   // Snelle start: de eerste typen die ook in de Maken-taakbalk staan.
-  const snel = (descriptor?.elementTypes || []).filter((et) => !et.isConnector && et.kort && !et.isAbstract).slice(0, 3);
+  const snel = (descriptor?.elementTypes || []).filter((et) => !et.isConnector && et.kort && !et.isAbstract && et.inPalet !== false).slice(0, 3);
   return (
     <div className="dc-leeg" data-testid="lege-canvas" ref={ref}>
       <div className="dc-leeg__kaart">

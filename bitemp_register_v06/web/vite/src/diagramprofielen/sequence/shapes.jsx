@@ -30,6 +30,7 @@ import { SEQUENCE_PROFIEL_ID, BERICHTEN } from "./labels.js";
 // (diagramcore.css --dc-lijn-slate-700; gemeld 2026-10-10).
 const DONKER = "var(--dc-lijn-slate-700, #334155)";
 const KOP_BREED = 148;
+const LIJN_MIN_HOOGTE = 500;
 
 /** Levenslijn: smalle hoge node (de lijn), met de naam-kop erbovenop. */
 function LevenslijnShape({ element, selected, children }) {
@@ -39,6 +40,19 @@ function LevenslijnShape({ element, selected, children }) {
   const ref = element?.data?.instantieVan;
   const type = ref ? resolveerElementRef(ref) : null;
   const kop = element?.naam || (type ? "" : "(levenslijn)");
+  // Lengte: standaard ruim (500px, zoals EA tot onderaan), en de lijn groeit
+  // mee met zijn laagste punt — anders viel een bericht onder de lijn op het
+  // lege vlak en gebeurde er niets (15-10). Alleen de rand-elementen tellen.
+  const laagste = useStore((st) => {
+    let m = 0;
+    for (const n of st.nodes) {
+      if (n.parentId !== element?.id) continue;
+      const onder = (n.position?.y ?? 0) + (n.measured?.height ?? 12);
+      if (onder > m) m = onder;
+    }
+    return m;
+  });
+  const minHoogte = Math.max(LIJN_MIN_HOOGTE, laagste + 120);
   const naamTekst = ref ? (
     <span style={{ textDecoration: "underline" }}>
       {kop}
@@ -88,7 +102,7 @@ function LevenslijnShape({ element, selected, children }) {
     );
   }
   return (
-    <div style={{ width: 14, height: "100%", minHeight: 260, position: "relative" }}>
+    <div style={{ width: 14, height: "100%", minHeight: minHoogte, position: "relative" }}>
       {/* De gestippelde lijn zelf (gecentreerd in de smalle node). */}
       <svg width="14" height="100%" style={{ position: "absolute", inset: 0, pointerEvents: "none" }} preserveAspectRatio="none">
         <line x1="7" y1="30" x2="7" y2="100%" stroke={selected ? "var(--dc-selectie, #2563eb)" : DONKER} strokeWidth="1.4" strokeDasharray="6 4" />
@@ -145,6 +159,8 @@ function AfgeleideActivaties({ lijnId, selected }) {
       {balken.map((b, i) => (
         <div
           key={i}
+          className="dc-seq-activatie"
+          data-diepte={b.diepte}
           style={{
             position: "absolute",
             top: b.top,

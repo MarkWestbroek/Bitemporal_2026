@@ -40,11 +40,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   Punten zijn nu onzichtbaar (een ring zodra de muis erop staat of bij selectie) — in UML tekent
   men ze niet. Een **zelf-bericht** is niet langer een lus op één punt maar loopt tussen een zend-
   en een ontvangpunt op dezelfde lijn (EA: 15px lager): rechts eruit, hoekig, rechts erin — het
-  haakje van EA — en de "rugzak"-activatie volgt uit de afleiding; teken je zelf een bericht van
-  een punt naar datzelfde punt, dan ontstaat het ontvangpunt vanzelf; vanaf een activatie naar
-  zichzelf krijgt het bericht een zend- en ontvangpunt op de hoogte van de activatie (15-10). Motor:
-  `hooks.edgePresentatie` mag `sourceHandle`/`targetHandle`/`vorm` voorstellen; nieuwe M3-hook
-  `naVerbinden(connector, {s, diagramId})` zodra een verbinding op het canvas is getrokken. Parameters van een EA-bericht
+  haakje van EA — en de "rugzak"-activatie volgt uit de afleiding. **Tekenen** (15-10, Mark): kies
+  het berichttype in de balk *Verbinding* en sleep van levenslijn naar levenslijn op de gewenste
+  hoogte — de punten ontstaan daar vanzelf (horizontaal; naar dezelfde lijn 15px lager = het
+  haakje), de activaties volgen; *Punt* en *Activ* staan niet meer in het palet (M3
+  `ElementType.inPalet: false`). Motor: `hooks.edgePresentatie` mag `sourceHandle`/`targetHandle`/
+  `vorm` voorstellen; nieuwe M3-hook `naVerbinden(connector, {s, diagramId, van, naar})` zodra een
+  verbinding op het canvas is getrokken, met de muispositie bij begin en eind. **Delete** haalt een
+  bericht uit het model, mét zijn punten (M3 `verwijderen: "model"`, hook `naVerwijderen`); tekenen
+  en verwijderen zijn elk één undo-stap (Ctrl+Z liet eerst losse punten achter). Parameters van een EA-bericht
   vallen terug op `params` als `paramsDlg` ontbreekt (`Meld mij aan(anyID): id`).
 
 ### Opgelost

@@ -21,7 +21,11 @@
  * 2026-10-14 (fase 0 van het plan "Sequence — volgorde in het model, layout
  * erbovenop"): een levenslijn heeft een **kop** (object, actor, boundary,
  * control, entity); een bericht een **guard** en een **retourwaarde**
- * (`[guard] naam(…): retour`, labels.js).
+ * (`[guard] naam(…): retour`, labels.js). 15-10: je tekent een bericht van
+ * levenslijn naar levenslijn (kies het berichttype in de balk en sleep op de
+ * gewenste hoogte); de punten ontstaan vanzelf (zelfbericht.js) en de
+ * activaties worden afgeleid (activaties.js) — punt en activatie staan niet
+ * meer in het palet.
  *
  * Bewuste v0-versimpelingen (het resterende as-primitief, v1):
  * de verticale positie ís de volgorde en blijft handwerk — er is nog geen
@@ -34,7 +38,7 @@ import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerSequenceShapes } from "./shapes.jsx";
 import { KOPPEN, berichtLabels } from "./labels.js";
 import { verschuifBericht } from "./verschuif.js";
-import { ontvangpuntVoorZelfbericht } from "./zelfbericht.js";
+import { puntenVoorBericht, ruimPuntenOp } from "./zelfbericht.js";
 
 export { KOPPEN, berichtLabels };
 
@@ -42,8 +46,12 @@ export const SEQUENCE_ID = "sequence";
 
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
 
-/** Wat berichten kan zenden/ontvangen: punten en activaties op de lijn. */
-const AANHECHT = ["punt", "activatie"];
+/**
+ * Wat berichten kan zenden/ontvangen: de levenslijn zelf (de gewone manier:
+ * je trekt van lijn naar lijn op de hoogte van de muis en het profiel maakt
+ * de punten, zie zelfbericht.js), en bestaande punten en activaties.
+ */
+const AANHECHT = ["levenslijn", "punt", "activatie"];
 
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
@@ -87,6 +95,8 @@ const elementTypes = [
     icoon: "seq-punt",
     shape: "seq-punt",
     resizebaar: false,
+    // Ontstaat met een bericht (zelfbericht.js), niet uit het palet (15-10).
+    inPalet: false,
     // Rand-element (§3.1): klemt op de (smalle) levenslijn-node = op de lijn.
     randElement: { ouderTypes: ["levenslijn"], klem: "as" },
     properties: [],
@@ -100,6 +110,9 @@ const elementTypes = [
     shape: "seq-activatie",
     minBreedte: 14,
     minHoogte: 44,
+    // Activaties volgen uit de berichten (activaties.js); handmatig alleen
+    // nog in oude diagrammen (15-10).
+    inPalet: false,
     randElement: { ouderTypes: ["levenslijn"], klem: "as" },
     properties: [],
   },
@@ -165,6 +178,9 @@ const elementTypes = [
     bron: { elementTypes: AANHECHT },
     doel: { elementTypes: AANHECHT },
     edgePresentatie,
+    // Delete haalt een bericht uit het model (met zijn punten, zie
+    // naVerwijderen): verborgen op zijn eigen interactiediagram is zinloos.
+    verwijderen: "model",
     // Hermetisch (ontwerp §2): het bericht is een operatie van het type van
     // de doel-levenslijn (keten doel-punt → levenslijn → instantieVan),
     // met vrije argumenten. Zonder getypeerde levenslijn: vrije naam.
@@ -189,8 +205,10 @@ const elementTypes = [
       },
       /** Lijn verticaal slepen: punten mee, horizontaal, eronder wegduwen (verschuif.js). */
       verschuifConnector: verschuifBericht,
-      /** Getekend van een punt naar zichzelf: ontvangpunt 15px lager (zelfbericht.js). */
-      naVerbinden: (conn, ctx) => ontvangpuntVoorZelfbericht(conn, { ...ctx, maakPunt: () => maakElement("punt") }),
+      /** Getekend van/naar een levenslijn (of naar zichzelf): de punten ontstaan (zelfbericht.js). */
+      naVerbinden: (conn, ctx) => puntenVoorBericht(conn, { ...ctx, maakPunt: () => maakElement("punt") }),
+      /** Verwijderd: de punten die alleen van dit bericht waren gaan mee. */
+      naVerwijderen: ruimPuntenOp,
     },
   })),
 ];

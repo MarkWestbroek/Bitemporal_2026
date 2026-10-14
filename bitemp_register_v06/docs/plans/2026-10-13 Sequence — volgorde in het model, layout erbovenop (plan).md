@@ -262,8 +262,22 @@ Wat Mark nu al gebruikt en los van de herstructurering kan:
    §3) en een lijn hecht in het midden van een punt (`handleStijl: "midden"`);
    punten zijn vaag (§2.1: niet getekend) maar nog pakbaar.
 
-Nog open in fase 0: activaties en notities schuiven niet mee; "importeer als
-nieuw" (Mark, 14-10) als optie in de importdialoog.
+7. **Tekenen van nul** (15-10, na Marks filmpje): je kiest het berichttype in
+   de balk *Verbinding* (= verbind-modus) en sleept van levenslijn naar
+   levenslijn op de gewenste hoogte; de punten ontstaan daar (hook
+   `naVerbinden` met de muispositie), naar dezelfde lijn 15px lager (haakje
+   + rugzak). *Punt* en *Activ* staan niet meer in het palet (`inPalet:
+   false`); activaties volgen uit de berichten. Levenslijnen komen naast
+   elkaar (rij) en groeien mee met hun laagste punt. Delete haalt een bericht
+   mét zijn punten uit het model (`verwijderen: "model"`, hook
+   `naVerwijderen`); tekenen en verwijderen zijn één undo-stap. Een notitie
+   aan een punt schuift mee. Playwright-reeks `tests/e2e/22-studio-sequence`:
+   rij, muishoogte, genest, zelf, overslaan, duwen, kruisen, notitie,
+   verwijderen, Ctrl+Z.
+
+Nog open in fase 0: handgetekende activaties (oude diagrammen) overlappen met
+de afgeleide balken; "importeer als nieuw" (Mark, 14-10) als optie in de
+importdialoog; het label van een zelf-bericht.
 
 ## Bronnen
 
