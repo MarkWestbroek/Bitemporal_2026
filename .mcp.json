@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "omnium": {
+      "command": "node",
+      "args": ["bitemp_register_v06/tools/omnium-mcp/server.mjs"],
+      "env": {
+        "OMNIUM_URL": "${OMNIUM_URL:-https://app.omnium-ide.nl}",
+        "OMNIUM_TOKEN": "${OMNIUM_TOKEN:-}"
+      }
+    }
+  }
+}
