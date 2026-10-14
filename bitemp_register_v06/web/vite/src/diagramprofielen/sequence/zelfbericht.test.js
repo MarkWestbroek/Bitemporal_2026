@@ -31,10 +31,25 @@ test("zelf-bericht: nieuw punt op dezelfde lijn, 15px lager; handles van de slee
   assert.deepEqual(s.elements.c.data, { sourceHandle: null, targetHandle: null });
 });
 
+test("zelf-bericht vanaf een activatie: zend- en ontvangpunt op de hoogte van de activatie", () => {
+  const s = store();
+  s.elements.p.elementType = "activatie";
+  s.diagrams.d.nodes[1].size = { width: 14, height: 60 };
+  let n = 0;
+  const twee = () => ({ id: `n${++n}`, naam: "", elementType: "punt", compartimenten: [], data: {} });
+  assert.equal(ontvangpuntVoorZelfbericht(s.elements.c, { s, diagramId: "d", maakPunt: twee }), "n2");
+  assert.deepEqual([s.elements.c.source, s.elements.c.target], ["n1", "n2"]);
+  const pos = (id) => s.diagrams.d.nodes.find((x) => x.elementId === id).position;
+  assert.deepEqual(pos("n1"), { x: 1, y: 200 + 30 - 6 }, "midden van de activatie");
+  assert.deepEqual(pos("n2"), { x: 1, y: 200 + 30 - 6 + HAAK });
+  assert.equal(s.elements.n1.data.randVan, "L");
+  assert.equal(s.elements.p.elementType, "activatie", "de activatie blijft staan");
+});
+
 test("geen zelf-bericht, geen punt of niet op het diagram: niets", () => {
   const s = store();
   assert.equal(ontvangpuntVoorZelfbericht({ ...s.elements.c, target: "q" }, { s, diagramId: "d", maakPunt }), null);
-  s.elements.p.elementType = "activatie";
+  s.elements.p.elementType = "levenslijn";
   assert.equal(ontvangpuntVoorZelfbericht(s.elements.c, { s, diagramId: "d", maakPunt }), null);
   s.elements.p.elementType = "punt";
   assert.equal(ontvangpuntVoorZelfbericht(s.elements.c, { s, diagramId: "x", maakPunt }), null);

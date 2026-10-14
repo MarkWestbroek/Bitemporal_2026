@@ -41,7 +41,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   men ze niet. Een **zelf-bericht** is niet langer een lus op één punt maar loopt tussen een zend-
   en een ontvangpunt op dezelfde lijn (EA: 15px lager): rechts eruit, hoekig, rechts erin — het
   haakje van EA — en de "rugzak"-activatie volgt uit de afleiding; teken je zelf een bericht van
-  een punt naar datzelfde punt, dan ontstaat het ontvangpunt vanzelf (15-10). Motor:
+  een punt naar datzelfde punt, dan ontstaat het ontvangpunt vanzelf; vanaf een activatie naar
+  zichzelf krijgt het bericht een zend- en ontvangpunt op de hoogte van de activatie (15-10). Motor:
   `hooks.edgePresentatie` mag `sourceHandle`/`targetHandle`/`vorm` voorstellen; nieuwe M3-hook
   `naVerbinden(connector, {s, diagramId})` zodra een verbinding op het canvas is getrokken. Parameters van een EA-bericht
   vallen terug op `params` als `paramsDlg` ontbreekt (`Meld mij aan(anyID): id`).
