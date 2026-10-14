@@ -6,7 +6,21 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **silhouet-tekenaar met krommen**
+  fase 7 (register). Laatste ronde (2026-10-14, branch `feat/sequence-v1`,
+  sequence fase 0 — zie `plans/2026-10-13 Sequence — volgorde in het model,
+  layout erbovenop (plan).md`): vijf kleine **M3-aanvullingen** aan de motor,
+  alle generiek en gedocumenteerd in `schema.js`/`handlerCatalogus.js`:
+  `ElementType.layoutDimensie` ("x"|"y"|"xy": een levenslijn beweegt alleen
+  opzij; het canvas klemt al tijdens de sleep), hook **`verschuifConnector`**
+  (connector, dy, {elements, diagram}) → posities per voorkomen (de lijn is
+  verticaal versleepbaar met spooklijn; sequence duwt eronder weg),
+  `edgePresentatie.labelsBoven` (middenlabel boven de lijn),
+  `edgeLabels.rondNaam` {voor, na} (delen om de inline-bewerkbare naam heen:
+  `[guard] naam(args): retour`) en `hooks.edgePresentatie(el, {elements})` mag
+  `sourceHandle`/`targetHandle`/`vorm` voorstellen (zelf-bericht: rechts
+  eruit, hoekig, rechts erin). Verder: de zijdekeuze van een lijn rekent bij
+  aangehechte rand-elementen met het absolute midden (`absMidden`), notities
+  (vorm `note`) liggen op z-index 5 en de notitie-vorm mag tot 100×44. Eerdere ronde: **silhouet-tekenaar met krommen**
   (2026-07-11, branch `feat/studio05-shape-editor`): de eigen kleine tekenaar is
   van polygon-only naar een lichte **curve-editor** gegaan. Elk punt is rond of
   hoekig — **klik een punt** om te wisselen — en de tekenaar levert nu een gesloten

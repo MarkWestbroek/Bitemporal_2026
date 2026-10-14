@@ -417,7 +417,7 @@ te wijzigen.
 | modelleren   | Activity           | preview  | `diagramcore` + `diagramprofielen/activity` (acties, fork/join, pins, aanroep-doorklik, partities) — **niet in de balk** |
 | modelleren   | BPMN               | preview  | `diagramcore` + `diagramprofielen/bpmn` (eigen motor: events incl. boundary, gateways, lanes; naast de bpmn.io-activiteit) — **niet in de balk** |
 | modelleren   | ArchiMate          | preview  | `diagramcore` + `diagramprofielen/archimate` (v0: vier lagen, elf relaties; tweede notatie "Iconen als vorm" via **Beeld → Shape-set**) — **niet in de balk** |
-| modelleren   | Sequence           | preview  | `diagramcore` + `diagramprofielen/sequence` (v0: levenslijnen; punten/activaties op het rand-primitief) — **niet in de balk** |
+| modelleren   | Sequence           | preview  | `diagramcore` + `diagramprofielen/sequence` (v0+: levenslijnen met kop object/actor/boundary/control/entity of de weergave van hun type; berichten met guard/retour, verticaal te slepen met wegduwen; activaties afgeleid uit de berichten; zelf-bericht als haakje; punten onzichtbaar — plan `2026-10-13 Sequence — volgorde in het model`) — **niet in de balk** |
 | modelleren   | GraphQL            | preview  | `diagramcore` + `diagramprofielen/graphql` (schema-profiel/M2: typen, interfaces, unions, enums, inputs, directives; eigen SDL-parser, import/export `.graphql`; veldlijnen afgeleid uit de velden) — **niet in de balk** |
 | modelleren   | ERD                | preview  | `diagramcore` + `diagramprofielen/erd` (kraaienpoten; kardinaliteit per uiteinde, sleutel-compartiment) — **niet in de balk** |
 | modelleren   | SysML              | preview  | `diagramcore` + `diagramprofielen/sysml` (bdd, ibd met poorten op de rand, requirements + traceerrelaties) — **niet in de balk** |
@@ -464,7 +464,10 @@ UML-activiteit (zelfde IDE), zoals gewenst.
 > (`diagramcore/model/opslag.js`): geen plafond van 5 MB meer, bewaren gebundeld en buiten de
 > hoofddraad, met een eenmalige migratie uit localStorage; mislukt bewaren toch, dan werkt het
 > model in het geheugen en meldt het verslag dat. Sequence-diagrammen landen in het
-> sequence-profiel. **Terugweg**: *Bestand → Exporteer naar Sparx EA (XMI 2.1)…* in UML en MIM
+> sequence-profiel: levenslijnen met kop (Actor, stereotype boundary/control/entity, ook
+> business-), berichten met EA's conditie als guard, `retval`/`params` als retourwaarde en
+> argumenten, een zelf-bericht als twee punten (PtStartY/PtEndY); activaties rekent het profiel
+> zelf uit, zoals EA (14-10). Her-importeren werkt op de EA-GUID, ook voor de punten. **Terugweg**: *Bestand → Exporteer naar Sparx EA (XMI 2.1)…* in UML en MIM
 > schrijft het model mét diagrammen en de bewaarde EA-GUIDs in EA's XMI-vorm. *Beeld →
 > Compartimenten verbergen op dit diagram* (en per voorkomen in het contextmenu) toont alleen de
 > koppen, zoals EA's "Hide attributes"; de import neemt EA's instelling over. Zonder browser:
