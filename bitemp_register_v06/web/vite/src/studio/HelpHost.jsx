@@ -12,6 +12,7 @@ import useStudioStore from "./useStudioStore.js";
 import { openDocumentatie } from "./buildMenus.js";
 import Tour from "./Tour.jsx";
 import MeldenHost from "./MeldenHost.jsx";
+import VersieWachter from "./VersieWachter.jsx";
 import { tourGezien } from "./tourStappen.js";
 
 /** Toetsen van de werkbank zelf (niet instelbaar, niet van het canvas). */
@@ -135,6 +136,8 @@ export default function HelpHost() {
       {sneltoetsen && <SneltoetsenOverzicht onSluit={() => setSneltoetsen(false)} />}
       {tour && <Tour onSluit={() => setTour(false)} />}
       <MeldenHost />
+      {/* Bij een eerste bezoek is er de rondleiding; "wat is er nieuw" wacht dan. */}
+      <VersieWachter uitgesteld={tour} />
     </>
   );
 }

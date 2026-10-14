@@ -8,6 +8,25 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Nieuwe versie zonder F5** (14-10, Mark: Hugo kreeg de release pas na een F5): de Studio kijkt
+  elke 5 minuten, en als je terugkomt in het tabblad, of er een nieuwere build is (`versie.json`,
+  bij de build gemaakt). Dan verschijnt bovenin een strook met wat er nieuw is en **Herladen**
+  (stuurt eerst wat nog naar de server moet). Werkt vanaf deze versie; daarna niet meer nodig.
+- **Wat is er nieuw** (14-10, Mark): na het laden van een nieuwere versie één keer de wijzigingen
+  sinds je vorige bezoek, uit de CHANGELOG van de build; ook via *Help → Wat is er nieuw…*. Plus
+  *Help → Releaselog (CHANGELOG)…* naar de releaselog bij de draaiende versie (HELP-4).
+
+### Opgelost
+- **Meldingen** (14-10, eigen meldingen #5–#7): *Mijn meldingen* en *Melden* hebben een
+  sluitknop (#5); de link naar de losse meldpagina wees naar `…/studio/melden.html` (#6); F8 met
+  *Mijn meldingen* open neemt die nu mee op de afbeelding, en F8 met een open formulier voegt een
+  schermafbeelding toe in plaats van een nieuwe melding te beginnen (#7).
+
+### Tests
+- **Versie** (14-10): `tests/e2e/19-studio-versie.spec.js` (5) en unittests voor het lezen van de
+  CHANGELOG.
+
 ## [studio/v0.20.0] — 2026-10-14
 Melden vanuit Omnium: een bug, wens, vraag of compliment, met een schermafbeelding (F8) en de
 plek waar het over gaat; *Mijn meldingen* met status en gesprek; `melden.html` als de Studio

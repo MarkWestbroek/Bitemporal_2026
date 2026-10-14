@@ -4,6 +4,7 @@ import { resolve } from "path";
 import { readdir, readFile, writeFile } from "fs/promises";
 import { readFileSync, existsSync, mkdirSync, readdirSync, writeFileSync, unlinkSync } from "fs";
 import { execSync } from "child_process";
+import { leesChangelog, kopjes } from "./src/studio/releaseNotities.js";
 
 // ── Versie-/build-info voor de frontend ───────────────────────────────────
 // Eén bron van waarheid: de version uit package.json. Wordt via `define`
@@ -25,6 +26,40 @@ if (!GIT_SHA) {
   } catch {
     GIT_SHA = "";
   }
+}
+
+// Build-id: verschilt per build, ook bij dezelfde versie (patch zonder versieophoging). De Studio
+// vergelijkt hem met versie.json op de server om "nieuwe versie beschikbaar" te tonen.
+const BUILD_TIJD = new Date().toISOString();
+const BUILD_ID = `${APP_VERSION}+${GIT_SHA || BUILD_TIJD}`;
+
+// Plugin: versie.json naast de pagina's (build én dev). De Studio vraagt hem elke paar minuten
+// op (studio/VersieWachter.jsx); nginx laat hem altijd opnieuw controleren (no-cache). Met de
+// kopjes van de nieuwste release, zodat de strook al kan zeggen wat er nieuw is.
+function versieBestand() {
+  const inhoud = () => {
+    let nieuw = [];
+    try {
+      const releases = leesChangelog(readFileSync(resolve(__dirname, "CHANGELOG.md"), "utf8"));
+      nieuw = kopjes(releases.find((r) => r.versie === APP_VERSION) || null);
+    } catch {
+      /* geen CHANGELOG: dan zonder kopjes */
+    }
+    return JSON.stringify({ versie: APP_VERSION, build: BUILD_ID, sha: GIT_SHA, datum: BUILD_TIJD, nieuw }, null, 1);
+  };
+  return {
+    name: "versie-bestand",
+    configureServer(server) {
+      server.middlewares.use("/viz/react/versie.json", (_req, res) => {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "no-cache");
+        res.end(inhoud());
+      });
+    },
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "versie.json", source: inhoud() });
+    },
+  };
 }
 
 // Plugin: normaliseer line endings naar LF in alle HTML-bestanden na de build.
@@ -114,12 +149,13 @@ function studio05Map(sub) {
 }
 
 export default defineConfig({
-  plugins: [react(), normalizeBuildLineEndings(), studio05Map("profielen"), studio05Map("vormen"), studio05Map("iconen")],
+  plugins: [react(), normalizeBuildLineEndings(), versieBestand(), studio05Map("profielen"), studio05Map("vormen"), studio05Map("iconen")],
   base: "/viz/react/",
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),
     __BUILD_DATE__: JSON.stringify(BUILD_DATE),
     __GIT_SHA__: JSON.stringify(GIT_SHA),
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
   resolve: {
     // Git-worktrees delen node_modules via een junction/symlink naar de

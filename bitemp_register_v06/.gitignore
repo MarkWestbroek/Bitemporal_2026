@@ -16,6 +16,7 @@ _tmp_*.mjs
 # Build-output van web/vite
 web/react/assets/
 web/react/*.html
+web/react/versie.json
 web/vite/node_modules/
 web/vite/node_modules_backup_*/
 web/vite/.vite/

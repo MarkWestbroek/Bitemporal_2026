@@ -25,7 +25,8 @@ const typt = (e) => {
   return t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
 };
 const bestandsnaam = () => `schermafbeelding-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.png`;
-const isEigen = (el) => el.classList?.contains("mld-kaderlaag") || el.classList?.contains("mld-dialoog-achter");
+// Alleen de kaderlaag blijft buiten de afbeelding; een open meld-dialoog mag erop (melding #7).
+const isEigen = (el) => el.classList?.contains("mld-kaderlaag");
 
 function KaderTrekker({ beeld, onKlaar, onAnnuleer }) {
   const [start, setStart] = useState(null);
@@ -79,7 +80,11 @@ function Dialoog({ onSluit, children, label, verborgen = false }) {
   }, [onSluit, verborgen]);
   return (
     <div className="mld-dialoog-achter" onMouseDown={onSluit} style={verborgen ? { display: "none" } : undefined}>
-      <div className="mld-dialoog" role="dialog" aria-label={label} onMouseDown={(e) => e.stopPropagation()}>{children}</div>
+      <div className="mld-dialoog" role="dialog" aria-label={label} onMouseDown={(e) => e.stopPropagation()}>
+        {/* Melding #5: een zichtbare sluitknop (Esc en ernaast klikken werkten al). */}
+        <button type="button" className="mld-dialoog__sluit" onClick={onSluit} aria-label="Sluiten" title="Sluiten (Esc)">×</button>
+        {children}
+      </div>
     </div>
   );
 }
@@ -117,15 +122,24 @@ export default function MeldenHost() {
   };
   const meldenMetKader = (extra = {}) => {
     setFout("");
-    setLijst(null);
+    // Melding #7: eerst bevriezen, dán pas "Mijn meldingen" sluiten — wat open staat, komt mee.
     schermafbeelding((file, plek) => {
+      setLijst(null);
       setFormulier({ sleutel: Date.now(), context: verzamelMeldContext({ ...(plek ? { plek } : {}), ...extra }), bijlagen: file ? [file] : [] });
     });
   };
 
   // Laatste versies van de handlers voor de (eenmalig geregistreerde) listeners.
   const actueel = useRef({});
-  actueel.current = { melden, meldenMetKader, bezig: () => kader !== null };
+  const voegToeRef = useRef(null); // voegToe van het open formulier (via onSchermafbeelding)
+  actueel.current = {
+    melden,
+    // F8 met een open formulier: schermafbeelding erbij, zoals "+ schermafbeelding".
+    meldenMetKader: (extra) => (formulier && voegToeRef.current
+      ? schermafbeelding((file) => file && voegToeRef.current?.([file]))
+      : meldenMetKader(extra)),
+    bezig: () => kader !== null,
+  };
 
   useEffect(() => {
     const af = [
@@ -165,7 +179,7 @@ export default function MeldenHost() {
         <KaderTrekker beeld={kader.beeld} onKlaar={kaderKlaar} onAnnuleer={() => { setKader(null); naKaderRef.current = null; }} />
       )}
       {formulier && (
-        <Dialoog label="Melden" onSluit={() => setFormulier(null)} verborgen={formulierVerborgen}>
+        <Dialoog label="Melden" onSluit={() => { voegToeRef.current = null; setFormulier(null); }} verborgen={formulierVerborgen}>
           {fout && <p className="mld-fout" role="alert">{fout}</p>}
           <MeldFormulier
             key={formulier.sleutel}
@@ -173,6 +187,7 @@ export default function MeldenHost() {
             beginBijlagen={formulier.bijlagen}
             onAnnuleer={() => setFormulier(null)}
             onSchermafbeelding={(voegToe) => schermafbeelding((file) => file && voegToe([file]))}
+            registreerVoegToe={(fn) => { voegToeRef.current = fn; }}
             onMijnMeldingen={(id) => { setFormulier(null); setLijst({ openId: id }); }}
           />
         </Dialoog>

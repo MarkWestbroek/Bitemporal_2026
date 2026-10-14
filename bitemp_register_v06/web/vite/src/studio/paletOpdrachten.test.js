@@ -35,3 +35,9 @@ test("zoeken: label boven uitleg, beginletters, accenten", () => {
 test("groeperen: menu's in volgorde, Ga naar en Help achteraan", () => {
   assert.deepEqual(groepeerOpdrachten(alle).map((g) => g.groep), ["Bestand", "Diagram", "Ga naar", "Help"]);
 });
+
+test("naastStudio: pagina naast de Studio (melding #6)", async () => {
+  const { naastStudio } = await import("./paden.js");
+  assert.equal(naastStudio("melden.html", "/viz/react/studio/"), "/viz/react/melden.html");
+  assert.equal(naastStudio("melden.html", "/viz/react/studio.html"), "/viz/react/melden.html");
+});

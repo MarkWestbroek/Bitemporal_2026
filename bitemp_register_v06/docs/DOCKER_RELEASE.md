@@ -119,6 +119,7 @@ op `GET /version` — sla ze dus niet over, anders staat er `dev` in de image.
 FE_VERSIE=$(node -p "require('./web/vite/package.json').version")
 
 docker build -f Dockerfile.frontend \
+  --build-arg VITE_GIT_SHA=$(git rev-parse --short HEAD) \
   -t markwestbroek/bitemp-viz-frontend:$FE_VERSIE \
   -t markwestbroek/bitemp-viz-frontend:latest .
 

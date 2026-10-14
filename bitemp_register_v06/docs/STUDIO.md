@@ -226,6 +226,13 @@ te wijzigen.
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 >
+> **Nieuwe versie en wat is er nieuw (2026-10-14):** de build schrijft `versie.json` (vite-plugin
+> `versieBestand`, met de kopjes uit de CHANGELOG); `studio/VersieWachter.jsx` kijkt elke 5 minuten
+> en bij terugkeer in het tabblad, en toont bij een andere build een strook met **Herladen**. Na een
+> update één keer *Wat is er nieuw* (CHANGELOG van de build, `releaseNotities.js`;
+> localStorage `studio05-versie-gezien`). De Docker-build krijgt de commit via
+> `--build-arg VITE_GIT_SHA`.
+>
 > **Melden (2026-10-14, plan `plans/meldingen/`):** *Help → Melden…* (Alt+M), *Melden met
 > schermafbeelding…* (F8: kader trekken), *Mijn meldingen…* en rechtsklik *Melden over dit item…*
 > op map, diagram of element; `melden.html` als de Studio hangt. Code: `src/meldingen/`,
