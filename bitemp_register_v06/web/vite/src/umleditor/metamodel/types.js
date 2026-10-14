@@ -468,8 +468,8 @@ export function schemaResponseNaarEditor(schemaResponse) {
           rolnaam: child.rolnaam,
           jsonRolnaam: child.jsonRolnaam,
           momentvoorkomen: child.momentvoorkomen,
-          kardinaliteit:
-            child.momentvoorkomen === "enkelvoudig" ? "0..1" : "0..*",
+          // 0..* over de tijd; {enkelvoudig} is de constraint (zie v3ModelNaarEditor).
+          kardinaliteit: "0..*",
         },
       });
     });

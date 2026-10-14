@@ -248,7 +248,11 @@ export function v3ModelNaarEditor(v3Model) {
           rolnaam: ge.naam,
           jsonRolnaam: ge.meervoud || ge.naam.toLowerCase(),
           momentvoorkomen: ge.momentvoorkomen || "enkelvoudig",
-          kardinaliteit: ge.momentvoorkomen === "meervoudig" ? "0..*" : "0..1",
+          // Bitemporeel: de voorkomens van een GE zijn álle voorkomens in de tijd, dus de
+          // multipliciteit is 0..*. Of het op één moment er één of meer zijn, zegt de
+          // constraint {enkelvoudig|meervoudig} (momentvoorkomen), niet de kardinaliteit.
+          // Een UML-klassediagram zet de tijd stil; dit model niet (Mark, 14-10-2026).
+          kardinaliteit: "0..*",
         },
       });
 
