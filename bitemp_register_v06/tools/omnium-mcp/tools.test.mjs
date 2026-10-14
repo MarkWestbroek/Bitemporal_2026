@@ -71,3 +71,78 @@ test("api: Bearer-token in de header, 401 wordt een duidelijke melding", async (
   await assert.rejects(api.get("/api/meldingen"), /OMNIUM_TOKEN/);
   assert.equal(kop.Authorization, "Bearer omt_abc");
 });
+
+// ── Modeltools (AI-1 stap 2) ──
+
+/** Nep-server met één project: map Test met een use case-diagram (gebruiker, test). */
+function nepProjectApi({ recht = "schrijven" } = {}) {
+  const log = [];
+  const inhoud = {
+    formaat: "studio-project", versie: 3, project: { id: "p1", naam: "Zandbak" },
+    structuur: { mappen: { m1: { id: "m1", naam: "Test", ouderId: null, volgorde: 1 } }, plaatsing: { "usecase05::d_uc": "m1" } },
+    kruisverbanden: [],
+    profielen: {
+      usecase05: {
+        diagramTypeId: "usecase",
+        elements: { e_gebr: { id: "e_gebr", naam: "gebruiker", elementType: "actor", compartimenten: [], data: {} } },
+        diagrams: { d_uc: { id: "d_uc", naam: "Use case model", diagramType: "usecase", nodes: [{ elementId: "e_gebr", position: { x: 40, y: 40 } }], edges: [] } },
+      },
+    },
+  };
+  // Eén operatie ná de snapshot: de use case "test" (moet meegenomen worden).
+  const ops = [{ volgnummer: 8, store: "model:usecase05", op: "patchElementen", args: [{ zet: { e_test: { id: "e_test", naam: "test", elementType: "usecase", compartimenten: [], data: {} } }, wis: [] }] },
+    { volgnummer: 9, store: "model:usecase05", op: "patchDiagrammen", args: [{ zet: { d_uc: { ...inhoud.profielen.usecase05.diagrams.d_uc, nodes: [...inhoud.profielen.usecase05.diagrams.d_uc.nodes, { elementId: "e_test", position: { x: 300, y: 40 } }] } }, wis: [] }] }];
+  return {
+    log,
+    basis: "http://test",
+    async get(pad) {
+      log.push(["GET", pad]);
+      if (pad === "/api/studio/projecten") return [{ id: "p1", naam: "Zandbak", recht, versie: 3 }];
+      if (pad === "/api/studio/projecten/p1") return { id: "p1", naam: "Zandbak", versie: 3, tot_volgnummer: 7, recht, inhoud };
+      if (pad.startsWith("/api/studio/projecten/p1/ops?vanaf=7")) return { ops, laatste: 9, meer: false };
+      throw new Error(`onverwacht ${pad}`);
+    },
+    async post(pad, body) { log.push(["POST", pad, body]); return { van: 10, tot: 10 + body.ops.length - 1 }; },
+    async put() { throw new Error("niet verwacht"); },
+  };
+}
+
+test("modeltalen: lijst en één taal met regels en aanwijzingen", async () => {
+  const lijst = await voerUit(nepProjectApi(), "modeltalen", {});
+  assert.match(lijst.content[0].text, /usecase05 — Use case/);
+  const uc = await voerUit(nepProjectApi(), "modeltalen", { taal: "usecase05" });
+  assert.match(uc.content[0].text, /associatie: Associatie — actor → usecase/);
+  assert.match(uc.content[0].text, /Aanwijzingen:/);
+});
+
+test("project_bekijken: boom, en de inhoud van een map met ids (snapshot + ops)", async () => {
+  const boom = await voerUit(nepProjectApi(), "project_bekijken", { project: "zandbak" });
+  assert.match(boom.content[0].text, /▸ Test\n {2}◇ Use case model \[Use case, d_uc\]/);
+  const map = await voerUit(nepProjectApi(), "project_bekijken", { project: "Zandbak", map: "Test" });
+  assert.match(map.content[0].text, /element e_gebr: actor "gebruiker"/);
+  assert.match(map.content[0].text, /element e_test: usecase "test"/);
+});
+
+test("model_wijzigen: voorstel stuurt niets; toepassen stuurt de operaties", async () => {
+  const plan = { uitleg: "verbind", diagrammen: [], elementen: [], connectoren: [{ type: "associatie", bron: "e_test", doel: "e_gebr" }] };
+  const api = nepProjectApi();
+  const voorstel = await voerUit(api, "model_wijzigen", { project: "Zandbak", map: "Test", plan });
+  assert.match(voorstel.content[0].text, /Voorstel \(nog niet toegepast\).*1 relatie/);
+  assert.match(voorstel.content[0].text, /\+ associatie: gebruiker → test/);
+  assert.match(voorstel.content[0].text, /omgedraaid/);
+  assert.equal(api.log.filter(([m]) => m === "POST").length, 0);
+  const klaar = await voerUit(api, "model_wijzigen", { project: "Zandbak", map: "Test", plan, toepassen: true });
+  assert.match(klaar.content[0].text, /^Toegepast/);
+  const [, pad, body] = api.log.find(([m]) => m === "POST");
+  assert.equal(pad, "/api/studio/projecten/p1/ops");
+  assert.match(body.clientId, /^mcp-/);
+  assert.deepEqual(body.ops.map((o) => `${o.store}:${o.op}`), ["model:usecase05:patchElementen"]);
+  const con = Object.values(body.ops[0].args[0].zet)[0];
+  assert.deepEqual([con.source, con.target], ["e_gebr", "e_test"]);
+});
+
+test("model_wijzigen: met alleen leesrecht weigert toepassen", async () => {
+  const r = await voerUit(nepProjectApi({ recht: "lezen" }), "model_wijzigen", { project: "Zandbak", plan: { diagrammen: [], elementen: [], connectoren: [] }, toepassen: true });
+  assert.equal(r.isError, true);
+  assert.match(r.content[0].text, /leesrecht/);
+});
