@@ -18,6 +18,7 @@
 import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
+import { registreerMeldContext } from "../meldContext.js";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import useStudioStore from "../useStudioStore";
@@ -721,6 +722,45 @@ export const useModellerenStore = create((set, get) => ({
     }),
 }));
 
+// ── Melden (plan docs/plans/meldingen/) ─────────────────────────────
+// Pad in de projectboom (map/map/naam) en het stabiele id gaan mee met een melding.
+function meldPad(mapId, naam) {
+  const { mappen } = useModellerenStore.getState();
+  const delen = [];
+  for (let m = mappen[mapId], i = 0; m && i < 50; m = mappen[m.ouderId], i++) delen.unshift(m.naam);
+  if (naam) delen.push(naam);
+  return delen.join("/");
+}
+/** Rechtsklik-items "Melden over dit item…" voor een boomregel. */
+function meldItems(context) {
+  return [
+    { sep: true },
+    { label: "Melden over dit item…", onClick: () => menuBus.emit("help:melden", { context }) },
+    { label: "Melden met schermafbeelding…", onClick: () => menuBus.emit("help:melden-kader", { context }) },
+  ];
+}
+// Altijd mee: het project, de open tab, en wat er geselecteerd is.
+registreerMeldContext("modelleren", () => {
+  const s = useModellerenStore.getState();
+  const tab = s.tabs.find((t) => t.id === s.actieveTab);
+  const uit = { projectid: s.project?.id, activiteit: tab ? `modelleren / ${tab.profielId}` : undefined };
+  if (s.elementSelectie) {
+    const { profielId, elementId } = s.elementSelectie;
+    const el = getProfieltype(profielId)?.useStore?.getState?.().elements?.[elementId];
+    uit.onderwerpid = `${profielId}/${elementId}`;
+    uit.pad = meldPad(s.plaatsing[elementKey(profielId, elementId)], el?.naam || elementId);
+  } else if (s.diagramSelectie) {
+    const { profielId, diagramId } = s.diagramSelectie;
+    const d = getProfieltype(profielId)?.useStore?.getState?.().diagrams?.[diagramId];
+    uit.onderwerpid = `${profielId}/${diagramId}`;
+    uit.pad = meldPad(s.plaatsing[tabId(profielId, diagramId)], d?.naam || diagramId);
+  } else if (s.mapSelectie) {
+    uit.onderwerpid = `map/${s.mapSelectie}`;
+    uit.pad = meldPad(s.mapSelectie);
+  }
+  return uit;
+});
+
 // Projectsync (plan 2026-10-07, stap 2): structuuracties als operaties; de
 // structuur-undo/redo en laadStructuur vangt het diff-vangnet.
 koppelStore("structuur", useModellerenStore, {
@@ -866,6 +906,7 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
         }),
       },
       ...(inMap ? [{ sep: true }, { label: "Uit de map halen", onClick: () => verplaats(null) }] : []),
+      ...meldItems({ pad: meldPad(useModellerenStore.getState().plaatsing[id], diagram.naam), onderwerpid: `${profiel.id}/${diagram.id}` }),
       // Diagram weggooien — voor elk profiel (gemeld 2026-10-07: in de
       // Modelleren-host was er buiten documentenbeheer-editors geen weg).
       // Elementen blijven in het model; bij documentenbeheer (BPMN/DMN) gaat
@@ -1353,6 +1394,10 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
         : []),
       { sep: true },
       { label: "Verwijderen uit model…", onClick: verwijderUitModel },
+      ...meldItems({
+        pad: meldPad(useModellerenStore.getState().plaatsing[sleutel || elementKey(profiel.id, elementId)], element?.naam || elementId),
+        onderwerpid: `${profiel.id}/${elementId}`,
+      }),
     ]);
 
   return (
@@ -1590,6 +1635,7 @@ function Map_({ map, diepte }) {
       // Documentsjablonen: een document uit deze map (use case-overzicht,
       // gegevenswoordenboek, …) — de "Document: …"-generatoren onder Exporteren.
       { label: "Document maken…", onClick: () => useTransformStore.getState().openen(map.id, "export") },
+      ...meldItems({ pad: meldPad(map.id), onderwerpid: `map/${map.id}` }),
       { sep: true },
       { label: "Omhoog", onClick: () => schuifMap(map.id, "omhoog") },
       { label: "Omlaag", onClick: () => schuifMap(map.id, "omlaag") },

@@ -22,6 +22,7 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/filestore"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/gebruikers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/meldingen"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/notificaties"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/pep"
@@ -246,6 +247,15 @@ func NewRouter() *gin.Engine {
 	router.POST("/api/gebruikers/uitnodigingen", admin, gebruikers.UitnodigingMakenHandler())
 	router.DELETE("/api/gebruikers/uitnodigingen/:id", admin, gebruikers.UitnodigingIntrekkenHandler())
 	router.GET("/api/uitnodiging/:token", gebruikers.UitnodigingBekijkenHandler())
+	// Meldingen (package meldingen; plan docs/plans/meldingen/): melden, eigen meldingen, reageren,
+	// bijlagen; de beheerder behandelt. Alles achter inloggen.
+	router.POST("/api/meldingen", middleware.RequireAuth(), meldingen.MeldenHandler())
+	router.GET("/api/meldingen", middleware.RequireAuth(), meldingen.LijstHandler())
+	router.GET("/api/meldingen/bestanden/:bestand", middleware.RequireAuth(), meldingen.BestandHandler())
+	router.GET("/api/meldingen/:id", middleware.RequireAuth(), meldingen.EenHandler())
+	router.POST("/api/meldingen/:id/reacties", middleware.RequireAuth(), meldingen.ReactieHandler())
+	router.POST("/api/meldingen/:id/bijlagen", middleware.RequireAuth(), meldingen.BijlageHandler())
+	router.PUT("/api/meldingen/:id/behandeling", middleware.RequireAuth(), meldingen.BehandelingHandler())
 	router.POST("/api/uitnodiging/:token/accepteer", gebruikers.UitnodigingAccepterenHandler())
 
 	// AI-proxy (handlers/ai_proxy.go): toegangscodes voor proberen met de sleutel van de eigenaar.

@@ -161,6 +161,7 @@ export default defineConfig({
         aanmelden: resolve(__dirname, "aanmelden.html"),
         dashboard: resolve(__dirname, "dashboard.html"),
         vormen: resolve(__dirname, "vormen.html"),
+        melden: resolve(__dirname, "melden.html"),
       },
     },
   },

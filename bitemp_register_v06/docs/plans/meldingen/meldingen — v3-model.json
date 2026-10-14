@@ -8,8 +8,13 @@
    "description": "Alfanumerieke tekst, max 255 tekens (MIM: AN255).",
    "basistype": "string",
    "domein": "gegevenstypen",
-   "positie": { "x": 1500, "y": 0 },
-   "validatie": { "maxLength": 255 },
+   "positie": {
+    "x": 1500,
+    "y": 0
+   },
+   "validatie": {
+    "maxLength": 255
+   },
    "weergave": {}
   },
   {
@@ -17,7 +22,10 @@
    "description": "Onbeperkte tekst, meerdere regels (MIM: CharacterString).",
    "basistype": "string",
    "domein": "gegevenstypen",
-   "positie": { "x": 1500, "y": 120 },
+   "positie": {
+    "x": 1500,
+    "y": 120
+   },
    "validatie": {},
    "weergave": {}
   },
@@ -26,7 +34,10 @@
    "description": "Verwijzing naar een bestand in de filestore als UUID; het bestand zelf staat in de filestore (/bestanden-API).",
    "basistype": "string",
    "domein": "gegevenstypen",
-   "positie": { "x": 1500, "y": 240 },
+   "positie": {
+    "x": 1500,
+    "y": 240
+   },
    "validatie": {},
    "weergave": {}
   }
@@ -36,35 +47,81 @@
    "goType": "Meldingsoort",
    "baseType": "string",
    "domein": "meldingen",
-   "positie": { "x": -420, "y": 250 },
+   "positie": {
+    "x": -420,
+    "y": 250
+   },
    "waarden": [
-    { "constNaam": "Meldingsoortbug", "waarde": "bug" },
-    { "constNaam": "Meldingsoortwens", "waarde": "wens" },
-    { "constNaam": "Meldingsoortvraag", "waarde": "vraag" }
+    {
+     "constNaam": "Meldingsoortbug",
+     "waarde": "bug"
+    },
+    {
+     "constNaam": "Meldingsoortwens",
+     "waarde": "wens"
+    },
+    {
+     "constNaam": "Meldingsoortvraag",
+     "waarde": "vraag"
+    },
+    {
+     "constNaam": "Meldingsoortcompliment",
+     "waarde": "compliment"
+    }
    ]
   },
   {
    "goType": "Meldingstatus",
    "baseType": "string",
    "domein": "meldingen",
-   "positie": { "x": 300, "y": 620 },
+   "positie": {
+    "x": 300,
+    "y": 620
+   },
    "waarden": [
-    { "constNaam": "Meldingstatusnieuw", "waarde": "nieuw" },
-    { "constNaam": "Meldingstatusinbehandeling", "waarde": "in_behandeling" },
-    { "constNaam": "Meldingstatusopgelost", "waarde": "opgelost" },
-    { "constNaam": "Meldingstatusafgewezen", "waarde": "afgewezen" },
-    { "constNaam": "Meldingstatusdubbel", "waarde": "dubbel" }
+    {
+     "constNaam": "Meldingstatusnieuw",
+     "waarde": "nieuw"
+    },
+    {
+     "constNaam": "Meldingstatusinbehandeling",
+     "waarde": "in_behandeling"
+    },
+    {
+     "constNaam": "Meldingstatusopgelost",
+     "waarde": "opgelost"
+    },
+    {
+     "constNaam": "Meldingstatusafgewezen",
+     "waarde": "afgewezen"
+    },
+    {
+     "constNaam": "Meldingstatusdubbel",
+     "waarde": "dubbel"
+    }
    ]
   },
   {
    "goType": "Meldingprioriteit",
    "baseType": "string",
    "domein": "meldingen",
-   "positie": { "x": 640, "y": 620 },
+   "positie": {
+    "x": 640,
+    "y": 620
+   },
    "waarden": [
-    { "constNaam": "Meldingprioriteitlaag", "waarde": "laag" },
-    { "constNaam": "Meldingprioriteitnormaal", "waarde": "normaal" },
-    { "constNaam": "Meldingprioriteithoog", "waarde": "hoog" }
+    {
+     "constNaam": "Meldingprioriteitlaag",
+     "waarde": "laag"
+    },
+    {
+     "constNaam": "Meldingprioriteitnormaal",
+     "waarde": "normaal"
+    },
+    {
+     "constNaam": "Meldingprioriteithoog",
+     "waarde": "hoog"
+    }
    ]
   }
  ],
@@ -77,7 +134,10 @@
    "isMaterieel": false,
    "kleur": "#fde68a",
    "meervoud": "meldingen",
-   "positie": { "x": 450, "y": 0 },
+   "positie": {
+    "x": 450,
+    "y": 0
+   },
    "gegevenselementen": [
     {
      "naam": "MeldingInhoud",
@@ -85,11 +145,33 @@
      "domein": "meldingen",
      "meervoud": "melding_inhouden",
      "momentvoorkomen": "enkelvoudig",
-     "positie": { "x": -60, "y": 250 },
+     "positie": {
+      "x": -60,
+      "y": 250
+     },
      "velden": [
-      { "naam": "soort", "goType": "Meldingsoort", "type": "string", "verplicht": true, "enum": "Meldingsoort" },
-      { "naam": "titel", "goType": "KorteTekst", "type": "string", "datatype": "KorteTekst", "verplicht": true, "description": "Eén regel: wat ging er mis of wat wil je?" },
-      { "naam": "beschrijving", "goType": "*string", "type": "string", "datatype": "LangeTekst", "description": "Wat deed je, wat verwachtte je, wat gebeurde er?" }
+      {
+       "naam": "soort",
+       "goType": "Meldingsoort",
+       "type": "string",
+       "verplicht": true,
+       "enum": "Meldingsoort"
+      },
+      {
+       "naam": "titel",
+       "goType": "KorteTekst",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "verplicht": true,
+       "description": "Eén regel: wat ging er mis of wat wil je?"
+      },
+      {
+       "naam": "beschrijving",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "LangeTekst",
+       "description": "Wat deed je, wat verwachtte je, wat gebeurde er?"
+      }
      ]
     },
     {
@@ -98,13 +180,60 @@
      "domein": "meldingen",
      "meervoud": "melding_contexten",
      "momentvoorkomen": "enkelvoudig",
-     "positie": { "x": 220, "y": 250 },
+     "positie": {
+      "x": 220,
+      "y": 250
+     },
      "velden": [
-      { "naam": "studioversie", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Bv. studio 0.19.0 / api 0.14.0." },
-      { "naam": "activiteit", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Actieve activiteit en profiel, bv. modelleren / usecase05." },
-      { "naam": "plek", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Wat er onder de Alt-klik zat: het pad in de interface (paneel, knop, element-id)." },
-      { "naam": "projectid", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Het open Studio-project (alleen het id, geen inhoud)." },
-      { "naam": "browser", "goType": "*string", "type": "string", "datatype": "KorteTekst", "description": "Browser, besturingssysteem en venstermaat." }
+      {
+       "naam": "studioversie",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "description": "Bv. studio 0.19.0 / api 0.14.0."
+      },
+      {
+       "naam": "activiteit",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "description": "Actieve activiteit en profiel, bv. modelleren / usecase05."
+      },
+      {
+       "naam": "plek",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "description": "Wat er onder de Alt-klik zat: het pad in de interface (paneel, knop, element-id)."
+      },
+      {
+       "naam": "projectid",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "description": "Het open Studio-project (alleen het id, geen inhoud)."
+      },
+      {
+       "naam": "pad",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "description": "Waar het over gaat in de projectboom: map/map/element (bij rechtsklik of de selectie). Leesbaar; verandert bij hernoemen of verplaatsen."
+      },
+      {
+       "naam": "onderwerpid",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "description": "Het stabiele id van dat element, diagram of map in het project (bij EA-import afgeleid van de EA-GUID). Verandert niet bij hernoemen of verplaatsen."
+      },
+      {
+       "naam": "browser",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "description": "Browser, besturingssysteem en venstermaat."
+      }
      ]
     },
     {
@@ -113,10 +242,24 @@
      "domein": "meldingen",
      "meervoud": "melding_bijlagen",
      "momentvoorkomen": "meervoudig",
-     "positie": { "x": 500, "y": 250 },
+     "positie": {
+      "x": 500,
+      "y": 250
+     },
      "velden": [
-      { "naam": "bestand", "goType": "Bestand", "type": "string", "datatype": "Bestand", "verplicht": true },
-      { "naam": "omschrijving", "goType": "*string", "type": "string", "datatype": "KorteTekst" }
+      {
+       "naam": "bestand",
+       "goType": "Bestand",
+       "type": "string",
+       "datatype": "Bestand",
+       "verplicht": true
+      },
+      {
+       "naam": "omschrijving",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "KorteTekst"
+      }
      ]
     },
     {
@@ -126,10 +269,25 @@
      "meervoud": "melding_statussen",
      "momentvoorkomen": "enkelvoudig",
      "isMaterieel": true,
-     "positie": { "x": 300, "y": 420 },
+     "positie": {
+      "x": 300,
+      "y": 420
+     },
      "velden": [
-      { "naam": "status", "goType": "Meldingstatus", "type": "string", "verplicht": true, "enum": "Meldingstatus" },
-      { "naam": "toelichting", "goType": "*string", "type": "string", "datatype": "LangeTekst", "description": "Antwoord aan de melder: waarom afgewezen, in welke versie opgelost." }
+      {
+       "naam": "status",
+       "goType": "Meldingstatus",
+       "type": "string",
+       "verplicht": true,
+       "enum": "Meldingstatus"
+      },
+      {
+       "naam": "toelichting",
+       "goType": "*string",
+       "type": "string",
+       "datatype": "LangeTekst",
+       "description": "Antwoord aan de melder: waarom afgewezen, in welke versie opgelost, of bij status dubbel: van welke melding (\"dubbel van #12\")."
+      }
      ]
     },
     {
@@ -138,20 +296,46 @@
      "domein": "meldingen",
      "meervoud": "melding_prioriteiten",
      "momentvoorkomen": "enkelvoudig",
-     "positie": { "x": 640, "y": 420 },
+     "positie": {
+      "x": 640,
+      "y": 420
+     },
      "velden": [
-      { "naam": "prioriteit", "goType": "Meldingprioriteit", "type": "string", "verplicht": true, "enum": "Meldingprioriteit" }
+      {
+       "naam": "prioriteit",
+       "goType": "Meldingprioriteit",
+       "type": "string",
+       "verplicht": true,
+       "enum": "Meldingprioriteit"
+      }
      ]
     },
     {
      "naam": "MeldingReactie",
-     "description": "Een bericht in het gesprek over de melding, van melder of beheerder. Wie en wanneer: de registratie.",
+     "description": "Een bericht in het gesprek over de melding, van melder of beheerder. Wanneer: de registratie. Wie: het veld auteur (een registratie legt niet vast wie registreerde).",
      "domein": "meldingen",
      "meervoud": "melding_reacties",
      "momentvoorkomen": "meervoudig",
-     "positie": { "x": 900, "y": 250 },
+     "positie": {
+      "x": 900,
+      "y": 250
+     },
      "velden": [
-      { "naam": "tekst", "goType": "LangeTekst", "type": "string", "datatype": "LangeTekst", "verplicht": true }
+      {
+       "naam": "tekst",
+       "goType": "LangeTekst",
+       "type": "string",
+       "datatype": "LangeTekst",
+       "verplicht": true
+      },
+      {
+       "naam": "auteur",
+       "goType": "KorteTekst",
+       "type": "string",
+       "datatype": "KorteTekst",
+       "verplicht": true,
+       "description": "Gebruikersnaam van wie reageerde."
+      }
      ]
     }
    ],
@@ -163,7 +347,10 @@
      "meervoud": "melding_melders",
      "momentvoorkomen": "enkelvoudig",
      "doelEntiteit": "Gebruiker",
-     "positie": { "x": 900, "y": -120 },
+     "positie": {
+      "x": 900,
+      "y": -120
+     },
      "velden": []
     },
     {
@@ -174,17 +361,10 @@
      "momentvoorkomen": "enkelvoudig",
      "isMaterieel": true,
      "doelEntiteit": "Gebruiker",
-     "positie": { "x": 900, "y": 20 },
-     "velden": []
-    },
-    {
-     "naam": "MeldingDubbelVan",
-     "description": "Bij status dubbel: de melding waar deze een dubbele van is.",
-     "domein": "meldingen",
-     "meervoud": "melding_dubbel_van",
-     "momentvoorkomen": "enkelvoudig",
-     "doelEntiteit": "Melding",
-     "positie": { "x": 120, "y": -120 },
+     "positie": {
+      "x": 900,
+      "y": 20
+     },
      "velden": []
     }
    ]
@@ -196,7 +376,10 @@
    "isMaterieel": true,
    "kleur": "#bae6fd",
    "meervoud": "gebruikers",
-   "positie": { "x": 1300, "y": -60 },
+   "positie": {
+    "x": 1300,
+    "y": -60
+   },
    "gegevenselementen": []
   }
  ]

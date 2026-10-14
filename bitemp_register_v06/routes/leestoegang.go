@@ -37,7 +37,7 @@ func OpenbaarLeesbaar(meta model.TypeMeta) bool {
 // voor openbaar leesbare typen, anders RequireLezer (no-op zolang LEESTOEGANG=open of
 // AUTH_ENABLED=false).
 func lezer(meta model.TypeMeta) gin.HandlerFunc {
-	if meta.Domein == middleware.DomeinBeheer {
+	if middleware.IsBeheerdomein(meta.Domein) { // beheer en meldingen
 		return middleware.RequireRol("admin")
 	}
 	if OpenbaarLeesbaar(meta) {
@@ -50,7 +50,7 @@ func lezer(meta model.TypeMeta) gin.HandlerFunc {
 // (Gebruiker en rollen, docs/plans/gebruikersbeheer/) — daar admin. De registratie-engine
 // controleert dat ook zelf (handlers/registration_beheer.go), voor /registratie/ en GraphQL.
 func schrijver(meta model.TypeMeta) gin.HandlerFunc {
-	if meta.Domein == middleware.DomeinBeheer {
+	if middleware.IsBeheerdomein(meta.Domein) { // beheer en meldingen
 		return middleware.RequireRol("admin")
 	}
 	return middleware.RequireRol("editor")

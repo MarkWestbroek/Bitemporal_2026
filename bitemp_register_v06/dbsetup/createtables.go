@@ -248,7 +248,8 @@ func CreateTables(db *bun.DB) error {
 	}
 	// Toegang per project ("alles dicht tenzij"), migratiemarkeringen en uitnodigingen
 	// (plan 2026-10-12 Gebruikers uitnodigen, §5).
-	for _, m := range []any{(*model.StudioProjectToegang)(nil), (*model.StudioMigratie)(nil), (*model.GebruikerUitnodiging)(nil)} {
+	// Bijlagen van meldingen (plumbing; package meldingen).
+	for _, m := range []any{(*model.StudioProjectToegang)(nil), (*model.StudioMigratie)(nil), (*model.GebruikerUitnodiging)(nil), (*model.MeldingBestand)(nil)} {
 		if _, err = db.NewCreateTable().Model(m).IfNotExists().Exec(ctx); err != nil {
 			return err
 		}
