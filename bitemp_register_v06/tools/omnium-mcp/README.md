@@ -14,9 +14,37 @@ Eerste stap van AI-1 (BACKLOG, 14-10-2026); opzet zoals de MusicBrain-MCP (stdio
 | `melding_reageren` | een reactie plaatsen |
 | `melding_behandelen` | status, toelichting, prioriteit, behandelaar (beheerder) |
 | `projecten_lijst` | de Studio-projecten waar je bij mag, met je recht |
+| `modeltalen` | de modelleertalen (M2): typen, relaties met hun regels, aanwijzingen |
+| `project_bekijken` | de projectboom; of wat er in een map staat, **met ids** |
+| `model_wijzigen` | een plan (JSON) laten controleren en, met `toepassen: true`, doorvoeren |
 
 Alles gaat via de gewone Omnium-API (`/api/meldingen`, `/api/studio/projecten`), dus dezelfde
 afscherming als in de Studio.
+
+### Modellen (stap 2, 14-10)
+
+`model_wijzigen` gebruikt **dezelfde regelset en toepasser als de ✨ assistent in de Studio**
+(`web/vite/src/studio/assistent/assistentKern.js` en `wijziging.js`): de AI-client levert het
+plan, de server-kant van de MCP controleert het tegen de taal (onbekende typen en verboden
+relaties eruit, omgekeerde associaties gedraaid) en maakt er projectsync-operaties van
+(`nieuweMap`, `patchElementen`, `patchDiagrammen`, `plaatsPerMap`, `patchLinks`). Die gaan naar
+`POST /api/studio/projecten/:id/ops`; een open Studio ziet ze live. Zonder `toepassen` krijg je
+alleen het voorstel. De stand van een project = snapshot + operaties, nagespeeld in Node-stores
+(zoals de EA-import uit git).
+
+Het plan:
+
+```json
+{"uitleg": "…",
+ "diagrammen": [{"sleutel": "d1", "taal": "usecase05", "naam": "…", "map": "Submap"}, {"sleutel": "d2", "bestaand": "<diagram-id>"}],
+ "elementen": [{"sleutel": "u1", "type": "usecase", "naam": "…", "diagram": "d1", "in": "<container>"}, {"bestaand": "<element-id>", "naam": "nieuwe naam"}],
+ "connectoren": [{"type": "associatie", "bron": "a1", "doel": "<bestaand id>"}],
+ "verbanden": [{"van": "x1", "naar": "u1", "soort": "realiseert"}]}
+```
+
+Vereisten: de Studio-code in `web/vite` moet zijn afhankelijkheden hebben (`npm install` daar).
+De talen staan in `profielen.json`; **na een wijziging aan een profiel opnieuw genereren** met
+`node scripts/profielen-voor-mcp.mjs` (vanuit `web/vite`).
 
 ## Instellen (eenmalig)
 
@@ -32,11 +60,13 @@ afscherming als in de Studio.
 
 Daarna kun je in een chat bijvoorbeeld zeggen: *"Welke meldingen staan er open? Pak #5 op."* —
 de sessie leest de melding met schermafbeelding, past de code aan, en zet de status met een
-toelichting.
+toelichting. Of: *"Maak in project Zandbak, map Test, een activiteitendiagram onder use case
+test"* — de sessie bekijkt de map, maakt een plan, laat het controleren en past het toe.
 
 ## Testen
 
-- `node --test tools.test.mjs` — de tools tegen een nep-API.
+- `node --test tools.test.mjs` — de tools tegen een nep-API (ook de modeltools: snapshot + ops
+  naspelen, voorstel zonder POST, toepassen met de juiste operaties, leesrecht weigert).
 - `OMNIUM_URL=… OMNIUM_TOKEN=… node smoke.mjs` — de server echt over stdio (initialize,
   tools/list, tools/call), tegen een draaiende API.
 

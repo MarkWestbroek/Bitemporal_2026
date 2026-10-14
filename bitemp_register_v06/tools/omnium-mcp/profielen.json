@@ -1,0 +1,6130 @@
+{
+ "gegenereerd": "scripts/profielen-voor-mcp.mjs",
+ "profielen": [
+  {
+   "id": "activity05",
+   "naam": "Activity",
+   "diagramTypeId": "activity",
+   "elementen": [
+    {
+     "id": "begin",
+     "label": "Begin",
+     "omschrijving": "Startpunt van de flow — alleen uitgaande controlestromen.",
+     "vast": true
+    },
+    {
+     "id": "actie",
+     "label": "Actie",
+     "omschrijving": "Eén stap in het proces."
+    },
+    {
+     "id": "aanroep",
+     "label": "Aanroep",
+     "omschrijving": "Roept een ander activity-diagram aan; dubbelklik opent het.",
+     "eigenschappen": [
+      "gedragDiagramId"
+     ]
+    },
+    {
+     "id": "interactiegebruik",
+     "label": "Interactiegebruik",
+     "omschrijving": "Gebruikt een interactie (sequence-diagram); dubbelklik opent het.",
+     "eigenschappen": [
+      "gedragDiagramId"
+     ]
+    },
+    {
+     "id": "beslissing",
+     "label": "Beslissing/samenvoeging",
+     "omschrijving": "Beslissing (guards op de uitgaande stromen) of samenvoeging.",
+     "vast": true
+    },
+    {
+     "id": "fork",
+     "label": "Fork/join",
+     "omschrijving": "Splitst of synchroniseert parallelle stromen (vinkje: verticaal).",
+     "vast": true,
+     "eigenschappen": [
+      "verticaal"
+     ]
+    },
+    {
+     "id": "object",
+     "label": "Object",
+     "omschrijving": "Object node: gegevens die tussen acties stromen."
+    },
+    {
+     "id": "pin",
+     "label": "Pin",
+     "omschrijving": "In-/output-pin: sleep hem op de rand van een actie (objectstroom).",
+     "vast": true
+    },
+    {
+     "id": "partitie",
+     "label": "Partitie",
+     "omschrijving": "Swimlane: wie of wat voert de acties uit — sleep leden erin.",
+     "container": "bevat",
+     "leden": [
+      "begin",
+      "actie",
+      "aanroep",
+      "beslissing",
+      "fork",
+      "object",
+      "eind",
+      "flow-eind",
+      "partitie"
+     ]
+    },
+    {
+     "id": "eind",
+     "label": "Eind",
+     "omschrijving": "Einde van de hele activity.",
+     "vast": true
+    },
+    {
+     "id": "flow-eind",
+     "label": "Flow-eind",
+     "omschrijving": "Beëindigt alleen deze stroom, niet de hele activity.",
+     "vast": true
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "controlestroom",
+     "label": "Controlestroom",
+     "omschrijving": "Volgorde tussen acties; optioneel met [guard].",
+     "regels": [
+      {
+       "bron": [
+        "begin",
+        "actie",
+        "aanroep",
+        "beslissing",
+        "fork"
+       ],
+       "doel": [
+        "actie",
+        "aanroep",
+        "beslissing",
+        "fork",
+        "eind",
+        "flow-eind"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "guard"
+     ]
+    },
+    {
+     "id": "objectstroom",
+     "label": "Objectstroom",
+     "omschrijving": "Gegevensstroom tussen acties, objecten en pins.",
+     "regels": [
+      {
+       "bron": [
+        "actie",
+        "aanroep",
+        "object",
+        "pin"
+       ],
+       "doel": [
+        "actie",
+        "aanroep",
+        "object",
+        "pin"
+       ]
+      }
+     ]
+    }
+   ],
+   "aanwijzingen": [
+    "Een flow begint bij één begin-knoop en eindigt bij een eind-knoop; elke actie ligt op een pad daartussen.",
+    "Acties als korte werkwoordzin ('Controleer lening'); de volgorde via controlestromen.",
+    "Een keuze is een beslissing met twee of meer uitgaande controlestromen, elk met een guard (eigenschap guard, bv. 'te laat').",
+    "Parallel werk: een fork splitst, een tweede fork voegt samen.",
+    "Wie iets doet: een partitie per rol of systeem, met de acties erin via `in` (alleen als de opdracht rollen noemt)."
+   ]
+  },
+  {
+   "id": "archimate05",
+   "naam": "ArchiMate",
+   "diagramTypeId": "archimate",
+   "elementen": [
+    {
+     "id": "resource",
+     "label": "Resource",
+     "omschrijving": "Bezit of middel van de organisatie (mensen, kapitaal, informatie)."
+    },
+    {
+     "id": "capability",
+     "label": "Capability",
+     "omschrijving": "Vermogen dat de organisatie bezit of wil ontwikkelen."
+    },
+    {
+     "id": "koers",
+     "label": "Course of action",
+     "omschrijving": "Aanpak of plan om capabilities in te zetten richting het doel."
+    },
+    {
+     "id": "waardestroom",
+     "label": "Value stream",
+     "omschrijving": "Reeks waarde-toevoegende activiteiten, van trigger tot resultaat."
+    },
+    {
+     "id": "business-actor",
+     "label": "Business actor",
+     "omschrijving": "Organisatie-entiteit die gedrag kan uitvoeren (persoon, afdeling, organisatie)."
+    },
+    {
+     "id": "business-rol",
+     "label": "Business rol",
+     "omschrijving": "Verantwoordelijkheid die aan een actor toegewezen wordt."
+    },
+    {
+     "id": "business-collaboratie",
+     "label": "Business collaboratie",
+     "omschrijving": "Samenwerkingsverband van rollen/actoren voor gezamenlijk gedrag."
+    },
+    {
+     "id": "business-interface",
+     "label": "Business interface",
+     "omschrijving": "Kanaal waarlangs een business service beschikbaar is (balie, telefoon)."
+    },
+    {
+     "id": "business-proces",
+     "label": "Business proces",
+     "omschrijving": "Reeks gedragingen die een product of dienst oplevert."
+    },
+    {
+     "id": "business-functie",
+     "label": "Business functie",
+     "omschrijving": "Gedrag gebundeld op benodigde kennis/kunde (afdelings-agnostisch)."
+    },
+    {
+     "id": "business-interactie",
+     "label": "Business interactie",
+     "omschrijving": "Gedrag dat twee of meer rollen sámen uitvoeren."
+    },
+    {
+     "id": "business-service",
+     "label": "Business service",
+     "omschrijving": "Expliciet aangeboden dienst met waarde voor de omgeving."
+    },
+    {
+     "id": "business-event",
+     "label": "Business event",
+     "omschrijving": "Gebeurtenis die business-gedrag start of beïnvloedt."
+    },
+    {
+     "id": "business-object",
+     "label": "Business object",
+     "omschrijving": "Concept dat in de business gebruikt wordt (passieve structuur)."
+    },
+    {
+     "id": "contract",
+     "label": "Contract",
+     "omschrijving": "Formele afspraak over rechten en plichten (specialisatie van business object)."
+    },
+    {
+     "id": "representatie",
+     "label": "Representatie",
+     "omschrijving": "Waarneembare vorm van een business object (brief, formulier, bestand)."
+    },
+    {
+     "id": "product",
+     "label": "Product",
+     "omschrijving": "Samenhangend pakket van services en contract(en) met waarde voor de klant."
+    },
+    {
+     "id": "app-component",
+     "label": "Applicatiecomponent",
+     "omschrijving": "Modulair, zelfstandig inzetbaar stuk applicatie-functionaliteit."
+    },
+    {
+     "id": "app-collaboratie",
+     "label": "Applicatiecollaboratie",
+     "omschrijving": "Samenwerkende applicatiecomponenten voor gezamenlijk gedrag."
+    },
+    {
+     "id": "app-interface",
+     "label": "Applicatie-interface",
+     "omschrijving": "Toegangspunt waar een component zijn diensten aanbiedt (API, scherm)."
+    },
+    {
+     "id": "app-functie",
+     "label": "Applicatiefunctie",
+     "omschrijving": "Intern gedrag van een applicatiecomponent."
+    },
+    {
+     "id": "app-interactie",
+     "label": "Applicatie-interactie",
+     "omschrijving": "Gedrag dat componenten sámen uitvoeren."
+    },
+    {
+     "id": "app-proces",
+     "label": "Applicatieproces",
+     "omschrijving": "Reeks applicatiegedragingen richting een resultaat."
+    },
+    {
+     "id": "app-event",
+     "label": "Applicatie-event",
+     "omschrijving": "Gebeurtenis op applicatieniveau (bericht binnen, timer)."
+    },
+    {
+     "id": "app-service",
+     "label": "Applicatieservice",
+     "omschrijving": "Expliciet aangeboden applicatiedienst."
+    },
+    {
+     "id": "data-object",
+     "label": "Data-object",
+     "omschrijving": "Gegevens geschikt voor geautomatiseerde verwerking."
+    },
+    {
+     "id": "node",
+     "label": "Node",
+     "omschrijving": "Reken-/opslagresource waarop artifacts draaien."
+    },
+    {
+     "id": "device",
+     "label": "Device",
+     "omschrijving": "Fysiek IT-middel (server, telefoon, sensor)."
+    },
+    {
+     "id": "systeemsoftware",
+     "label": "Systeemsoftware",
+     "omschrijving": "Software-omgeving voor het draaien van componenten (OS, DBMS)."
+    },
+    {
+     "id": "tech-collaboratie",
+     "label": "Technology-collaboratie",
+     "omschrijving": "Samenwerkende nodes voor gezamenlijk technologiegedrag."
+    },
+    {
+     "id": "tech-interface",
+     "label": "Technology-interface",
+     "omschrijving": "Toegangspunt waar een node zijn diensten aanbiedt."
+    },
+    {
+     "id": "pad",
+     "label": "Pad",
+     "omschrijving": "Verbinding waarlangs nodes gegevens uitwisselen (realiseert een netwerk)."
+    },
+    {
+     "id": "communicatienetwerk",
+     "label": "Communicatienetwerk",
+     "omschrijving": "Verzameling verbonden communicatiemiddelen (LAN, internet)."
+    },
+    {
+     "id": "tech-functie",
+     "label": "Technology-functie",
+     "omschrijving": "Intern gedrag van een node."
+    },
+    {
+     "id": "tech-proces",
+     "label": "Technology-proces",
+     "omschrijving": "Reeks technologiegedragingen richting een resultaat."
+    },
+    {
+     "id": "tech-interactie",
+     "label": "Technology-interactie",
+     "omschrijving": "Gedrag dat nodes sámen uitvoeren."
+    },
+    {
+     "id": "tech-event",
+     "label": "Technology-event",
+     "omschrijving": "Gebeurtenis op technologieniveau."
+    },
+    {
+     "id": "tech-service",
+     "label": "Technologyservice",
+     "omschrijving": "Expliciet aangeboden infrastructuurdienst."
+    },
+    {
+     "id": "artifact",
+     "label": "Artifact",
+     "omschrijving": "Fysiek stuk data/software (bestand, deployable)."
+    },
+    {
+     "id": "equipment",
+     "label": "Equipment",
+     "omschrijving": "Fysieke machines of gereedschap (physical-laag)."
+    },
+    {
+     "id": "facility",
+     "label": "Facility",
+     "omschrijving": "Fysieke voorziening of gebouw (fabriek, datacenter)."
+    },
+    {
+     "id": "distributienetwerk",
+     "label": "Distributienetwerk",
+     "omschrijving": "Fysiek netwerk voor transport van materialen of energie."
+    },
+    {
+     "id": "materiaal",
+     "label": "Materiaal",
+     "omschrijving": "Tastbare grondstof of product (physical-laag)."
+    },
+    {
+     "id": "stakeholder",
+     "label": "Stakeholder",
+     "omschrijving": "Belanghebbende met interesse in de architectuur-uitkomst."
+    },
+    {
+     "id": "driver",
+     "label": "Driver",
+     "omschrijving": "Interne of externe drijfveer voor verandering."
+    },
+    {
+     "id": "assessment",
+     "label": "Assessment",
+     "omschrijving": "Uitkomst van een analyse van een driver (SWOT-bevinding)."
+    },
+    {
+     "id": "goal",
+     "label": "Goal",
+     "omschrijving": "Beoogd resultaat (doel) van een stakeholder."
+    },
+    {
+     "id": "outcome",
+     "label": "Outcome",
+     "omschrijving": "Bereikt eindresultaat, meetbaar gemaakt."
+    },
+    {
+     "id": "principle",
+     "label": "Principle",
+     "omschrijving": "Algemene ontwerpuitspraak die richting geeft."
+    },
+    {
+     "id": "requirement",
+     "label": "Requirement",
+     "omschrijving": "Concrete eis aan het systeem of de architectuur."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Opgelegde beperking op realisatie (bv. wet- en regelgeving)."
+    },
+    {
+     "id": "betekenis",
+     "label": "Betekenis (meaning)",
+     "omschrijving": "De betekenis of interpretatie van een business object."
+    },
+    {
+     "id": "waarde",
+     "label": "Waarde (value)",
+     "omschrijving": "Het belang of nut van een element voor een stakeholder."
+    },
+    {
+     "id": "werkpakket",
+     "label": "Werkpakket",
+     "omschrijving": "Afgebakende reeks acties met begin en eind (project, sprint)."
+    },
+    {
+     "id": "deliverable",
+     "label": "Deliverable",
+     "omschrijving": "Precies omschreven resultaat van een werkpakket."
+    },
+    {
+     "id": "implementatie-event",
+     "label": "Implementatie-event",
+     "omschrijving": "Gebeurtenis in de verandering (go-live, oplevering)."
+    },
+    {
+     "id": "plateau",
+     "label": "Plateau",
+     "omschrijving": "Relatief stabiele tussentoestand van de architectuur."
+    },
+    {
+     "id": "gap",
+     "label": "Gap",
+     "omschrijving": "Verschil tussen twee plateaus (wat er nog ontbreekt)."
+    },
+    {
+     "id": "locatie",
+     "label": "Locatie",
+     "omschrijving": "Conceptuele of fysieke plaats waar elementen zich bevinden."
+    },
+    {
+     "id": "grouping",
+     "label": "Grouping",
+     "omschrijving": "Groepeert elementen die iets delen (domein, thema)."
+    },
+    {
+     "id": "junction",
+     "label": "Junction",
+     "omschrijving": "Splitst/verbindt relaties van hetzelfde type (en = dicht, of = open).",
+     "vast": true,
+     "eigenschappen": [
+      "soort"
+     ]
+    },
+    {
+     "id": "kader",
+     "label": "Kader",
+     "omschrijving": "Puur visuele groepering in een view; geen ArchiMate-modelsemantiek."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "compositie",
+     "label": "Compositie",
+     "omschrijving": "Geheel-deel: het deel bestaat niet zonder het geheel (ruit aan het geheel).",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "aggregatie",
+     "label": "Aggregatie",
+     "omschrijving": "Groepeert delen die ook zelfstandig bestaan (open ruit aan het geheel).",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "toewijzing",
+     "label": "Toewijzing",
+     "omschrijving": "Actieve structuur voert gedrag uit (bol aan de uitvoerder).",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "realisatie",
+     "label": "Realisatie",
+     "omschrijving": "Het een realiseert het ander (bv. proces realiseert service).",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "bediening",
+     "label": "Bediening (serving)",
+     "omschrijving": "Levert zijn functionaliteit aan de ander.",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "toegang",
+     "label": "Toegang (access)",
+     "omschrijving": "Gedrag benadert een passief element (eigenschap: lezen/schrijven).",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "toegang"
+     ]
+    },
+    {
+     "id": "beinvloeding",
+     "label": "Beïnvloeding",
+     "omschrijving": "Motivatie-element beïnvloedt een ander (+/− als eigenschap).",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "invloed"
+     ]
+    },
+    {
+     "id": "trigger",
+     "label": "Trigger",
+     "omschrijving": "Tijdelijke of causale opvolging tussen gedrag.",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "stroom",
+     "label": "Stroom (flow)",
+     "omschrijving": "Overdracht (informatie, geld, goederen) tussen gedrag; naam = wat er stroomt.",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "specialisatie",
+     "label": "Specialisatie",
+     "omschrijving": "Is-een-soort-van (open driehoek naar het algemene element).",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "associatie",
+     "label": "Associatie",
+     "omschrijving": "Ongespecificeerde relatie.",
+     "regels": [
+      {
+       "bron": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bpmnMotor05",
+   "naam": "BPMN",
+   "diagramTypeId": "bpmn-motor",
+   "elementen": [
+    {
+     "id": "start-event",
+     "label": "Start event",
+     "omschrijving": "Waar het proces begint; soort bepaalt de trigger (bericht, timer, …).",
+     "vast": true,
+     "eigenschappen": [
+      "soort"
+     ]
+    },
+    {
+     "id": "taak",
+     "label": "Task",
+     "omschrijving": "Eén stap werk in het proces; het taaktype tekent een icoontje linksboven.",
+     "eigenschappen": [
+      "taakSoort"
+     ]
+    },
+    {
+     "id": "subproces",
+     "label": "Sub-process",
+     "omschrijving": "Samengevouwen deelproces; dubbelklik opent het onderliggende diagram.",
+     "eigenschappen": [
+      "gedragDiagramId"
+     ]
+    },
+    {
+     "id": "boundary-event",
+     "label": "Boundary event",
+     "omschrijving": "Sleep hem op de rand van een taak/subproces: vangt daar een gebeurtenis af. Vinkje 'onderbrekend' uit = gestippeld.",
+     "vast": true,
+     "eigenschappen": [
+      "soort",
+      "onderbrekend"
+     ]
+    },
+    {
+     "id": "tussen-event",
+     "label": "Intermediate event",
+     "omschrijving": "Gebeurtenis midden in de flow (wachten op bericht, timer, …).",
+     "vast": true,
+     "eigenschappen": [
+      "soort"
+     ]
+    },
+    {
+     "id": "exclusief",
+     "label": "Exclusive gateway (XOR)",
+     "omschrijving": "Kies precies één uitgaande pad (condities op de flows).",
+     "vast": true
+    },
+    {
+     "id": "parallel",
+     "label": "Parallel gateway (AND)",
+     "omschrijving": "Splitst naar álle paden of wacht tot ze allemaal binnen zijn.",
+     "vast": true
+    },
+    {
+     "id": "inclusief",
+     "label": "Inclusive gateway (OR)",
+     "omschrijving": "Eén of méér paden, op basis van condities (join-semantiek: alleen notatie).",
+     "vast": true
+    },
+    {
+     "id": "complex",
+     "label": "Complex gateway",
+     "omschrijving": "Samengestelde splits-/samenvoegregel (✱); de regel zelf is alleen notatie.",
+     "vast": true
+    },
+    {
+     "id": "event-gateway",
+     "label": "Event-based gateway",
+     "omschrijving": "Het eerstvolgende event bepaalt het pad (ring in de ruit).",
+     "vast": true
+    },
+    {
+     "id": "data-object",
+     "label": "Data object",
+     "omschrijving": "Gegevens die het proces in- of uitgaan (koppel met een data-associatie). Verzameling = drie streepjes.",
+     "vast": true,
+     "eigenschappen": [
+      "verzameling"
+     ]
+    },
+    {
+     "id": "data-store",
+     "label": "Data store",
+     "omschrijving": "Register, database of archief dat het proces overleeft (cilinder).",
+     "vast": true
+    },
+    {
+     "id": "pool",
+     "label": "Pool",
+     "omschrijving": "Een deelnemer (participant) met zijn proces. Sequence flows blijven binnen de pool; tussen pools loopt een message flow. Leeg = black box.",
+     "container": "bevat",
+     "leden": [
+      "start-event",
+      "tussen-event",
+      "eind-event",
+      "taak",
+      "subproces",
+      "exclusief",
+      "parallel",
+      "inclusief",
+      "complex",
+      "event-gateway",
+      "data-object",
+      "data-store",
+      "lane"
+     ]
+    },
+    {
+     "id": "lane",
+     "label": "Lane",
+     "omschrijving": "Wie of wat de taken uitvoert — sleep leden erin.",
+     "container": "bevat",
+     "leden": [
+      "start-event",
+      "tussen-event",
+      "eind-event",
+      "taak",
+      "subproces",
+      "exclusief",
+      "parallel",
+      "inclusief",
+      "complex",
+      "event-gateway",
+      "data-object",
+      "data-store",
+      "lane"
+     ]
+    },
+    {
+     "id": "eind-event",
+     "label": "End event",
+     "omschrijving": "Waar dit pad van het proces eindigt (dikke ring).",
+     "vast": true,
+     "eigenschappen": [
+      "soort"
+     ]
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "sequence-flow",
+     "label": "Sequence flow",
+     "omschrijving": "De volgorde in het proces; optioneel met [conditie]. Vink 'default' aan voor het standaardpad (schuin streepje).",
+     "regels": [
+      {
+       "bron": [
+        "start-event",
+        "tussen-event",
+        "boundary-event",
+        "taak",
+        "subproces",
+        "exclusief",
+        "parallel",
+        "inclusief",
+        "complex",
+        "event-gateway"
+       ],
+       "doel": [
+        "taak",
+        "subproces",
+        "exclusief",
+        "parallel",
+        "inclusief",
+        "complex",
+        "event-gateway",
+        "tussen-event",
+        "eind-event"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "conditie",
+      "standaard"
+     ]
+    },
+    {
+     "id": "message-flow",
+     "label": "Message flow",
+     "omschrijving": "Bericht tussen deelnemers: verbindt twee verschillende pools (of een pool en het proces zonder pool) — aan een element erbinnen of aan de poolrand (black box).",
+     "regels": [
+      {
+       "bron": [
+        "taak",
+        "subproces",
+        "start-event",
+        "tussen-event",
+        "eind-event",
+        "boundary-event",
+        "pool"
+       ],
+       "doel": [
+        "taak",
+        "subproces",
+        "start-event",
+        "tussen-event",
+        "pool"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "data-associatie",
+     "label": "Data association",
+     "omschrijving": "Koppelt een data-object aan een taak (in- of output).",
+     "regels": [
+      {
+       "bron": [
+        "data-object",
+        "data-store"
+       ],
+       "doel": [
+        "taak",
+        "subproces"
+       ]
+      },
+      {
+       "bron": [
+        "taak",
+        "subproces"
+       ],
+       "doel": [
+        "data-object",
+        "data-store"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "stereotype"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "business05",
+   "naam": "Business (EP)",
+   "diagramTypeId": "business",
+   "elementen": [
+    {
+     "id": "proces",
+     "label": "Bedrijfsproces",
+     "omschrijving": "Activiteit die input in output omzet, gestuurd door doelen en gevoed door resources (EP-pijlvorm).",
+     "container": "bevat",
+     "eigenschappen": [
+      "eigenaar"
+     ],
+     "leden": [
+      "proces",
+      "doel",
+      "fysiek",
+      "mensen",
+      "informatie",
+      "gebeurtenis",
+      "bedrijfsobject",
+      "actor",
+      "package"
+     ]
+    },
+    {
+     "id": "doel",
+     "label": "Doel",
+     "omschrijving": "Wat het proces wil bereiken; stuurt het proces (control, van boven).",
+     "eigenschappen": [
+      "meetbaar"
+     ]
+    },
+    {
+     "id": "fysiek",
+     "label": "Fysieke resource",
+     "omschrijving": "Machine, materiaal, gebouw — fysieke middelen die het proces gebruikt of verbruikt.",
+     "eigenschappen": [
+      "hoeveelheid"
+     ]
+    },
+    {
+     "id": "mensen",
+     "label": "Mensen",
+     "omschrijving": "Mensen/rollen als resource van het proces.",
+     "eigenschappen": [
+      "hoeveelheid"
+     ]
+    },
+    {
+     "id": "informatie",
+     "label": "Informatie",
+     "omschrijving": "Informatie als resource: documenten, gegevens, kennis.",
+     "eigenschappen": [
+      "hoeveelheid"
+     ]
+    },
+    {
+     "id": "gebeurtenis",
+     "label": "Gebeurtenis",
+     "omschrijving": "Wat een proces start of oplevert (bliksem)."
+    },
+    {
+     "id": "bedrijfsobject",
+     "label": "Bedrijfsobject",
+     "omschrijving": "Ding uit het bedrijfsdomein dat als input/output door het proces gaat (order, dossier, product)."
+    },
+    {
+     "id": "actor",
+     "label": "Actor",
+     "omschrijving": "Rol buiten het proces die het start, uitvoert of ontvangt.",
+     "vast": true
+    },
+    {
+     "id": "package",
+     "label": "Package",
+     "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
+     "container": "bevat",
+     "leden": [
+      "proces",
+      "doel",
+      "fysiek",
+      "mensen",
+      "informatie",
+      "gebeurtenis",
+      "bedrijfsobject",
+      "actor",
+      "package"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "invoer",
+     "label": "Invoer «input»",
+     "omschrijving": "Bedrijfsobject/gebeurtenis gaat het proces in (van links).",
+     "regels": [
+      {
+       "bron": [
+        "bedrijfsobject",
+        "gebeurtenis",
+        "informatie",
+        "proces"
+       ],
+       "doel": [
+        "proces"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "uitvoer",
+     "label": "Uitvoer «output»",
+     "omschrijving": "Het proces levert dit op (naar rechts).",
+     "regels": [
+      {
+       "bron": [
+        "proces"
+       ],
+       "doel": [
+        "bedrijfsobject",
+        "gebeurtenis",
+        "informatie",
+        "proces"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "besturing",
+     "label": "Besturing «control»",
+     "omschrijving": "Doel, regel of actor stuurt het proces (van boven).",
+     "regels": [
+      {
+       "bron": [
+        "doel",
+        "actor",
+        "informatie",
+        "proces"
+       ],
+       "doel": [
+        "proces"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "levering",
+     "label": "Levering «supply»",
+     "omschrijving": "Resource voedt het proces (van onder).",
+     "regels": [
+      {
+       "bron": [
+        "fysiek",
+        "mensen",
+        "informatie",
+        "actor"
+       ],
+       "doel": [
+        "proces"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "doelkoppeling",
+     "label": "Doelkoppeling «achieve»",
+     "omschrijving": "Het proces draagt bij aan het doel; een doel kan subdoelen hebben.",
+     "regels": [
+      {
+       "bron": [
+        "proces"
+       ],
+       "doel": [
+        "doel"
+       ]
+      },
+      {
+       "bron": [
+        "doel"
+       ],
+       "doel": [
+        "doel"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "stroom",
+     "label": "Processtroom",
+     "omschrijving": "Volgorde tussen (deel)processen of van gebeurtenis naar proces.",
+     "regels": [
+      {
+       "bron": [
+        "proces",
+        "gebeurtenis"
+       ],
+       "doel": [
+        "proces",
+        "gebeurtenis"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "dependency",
+     "label": "Dependency",
+     "omschrijving": "Overige afhankelijkheid; stereotype uit EA als label.",
+     "regels": [
+      {
+       "bron": [
+        "proces",
+        "doel",
+        "fysiek",
+        "mensen",
+        "informatie",
+        "gebeurtenis",
+        "bedrijfsobject",
+        "actor",
+        "package"
+       ],
+       "doel": [
+        "proces",
+        "doel",
+        "fysiek",
+        "mensen",
+        "informatie",
+        "gebeurtenis",
+        "bedrijfsobject",
+        "actor",
+        "package"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "stereotype"
+     ]
+    },
+    {
+     "id": "associatie",
+     "label": "Associatie",
+     "omschrijving": "Structurele samenhang (bv. actor — bedrijfsobject).",
+     "regels": [
+      {
+       "bron": [
+        "proces",
+        "doel",
+        "fysiek",
+        "mensen",
+        "informatie",
+        "gebeurtenis",
+        "bedrijfsobject",
+        "actor"
+       ],
+       "doel": [
+        "proces",
+        "doel",
+        "fysiek",
+        "mensen",
+        "informatie",
+        "gebeurtenis",
+        "bedrijfsobject",
+        "actor"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "generalisatie",
+     "label": "Generalisatie",
+     "omschrijving": "Specialisatie binnen dezelfde soort.",
+     "regels": [
+      {
+       "bron": [
+        "proces"
+       ],
+       "doel": [
+        "proces"
+       ]
+      },
+      {
+       "bron": [
+        "fysiek",
+        "mensen",
+        "informatie"
+       ],
+       "doel": [
+        "fysiek",
+        "mensen",
+        "informatie"
+       ]
+      },
+      {
+       "bron": [
+        "bedrijfsobject"
+       ],
+       "doel": [
+        "bedrijfsobject"
+       ]
+      },
+      {
+       "bron": [
+        "actor"
+       ],
+       "doel": [
+        "actor"
+       ]
+      },
+      {
+       "bron": [
+        "doel"
+       ],
+       "doel": [
+        "doel"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "diagram05",
+   "naam": "Canoniek model",
+   "diagramTypeId": "canoniek-uml",
+   "elementen": [
+    {
+     "id": "entiteit",
+     "label": "Entiteit",
+     "eigenschappen": [
+      "meervoud",
+      "materieel",
+      "entiteitSubtype"
+     ]
+    },
+    {
+     "id": "gegevenselement",
+     "label": "Gegevenselement",
+     "eigenschappen": [
+      "materieel",
+      "typenaam",
+      "domein",
+      "meervoud",
+      "naamLabelHeen",
+      "naamLabelTerug"
+     ]
+    },
+    {
+     "id": "enumeratie",
+     "label": "Enumeratie"
+    },
+    {
+     "id": "gegevenstype",
+     "label": "Gegevenstype",
+     "eigenschappen": [
+      "validatie",
+      "normalisatie",
+      "weergave"
+     ]
+    },
+    {
+     "id": "referentielijstInstantie",
+     "label": "Referentielijst-instantie"
+    },
+    {
+     "id": "package",
+     "label": "Package (domein)",
+     "container": "bevat",
+     "leden": [
+      "entiteit",
+      "enumeratie",
+      "gegevenstype",
+      "referentielijstInstantie",
+      "package",
+      "constraint"
+     ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "eigenschappen": [
+      "expressie"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader"
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "relatie",
+     "label": "Relatie",
+     "regels": [
+      {
+       "bron": [
+        "entiteit"
+       ],
+       "doel": [
+        "entiteit"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "materieel",
+      "typenaam",
+      "domein",
+      "meervoud",
+      "relatieSubtype",
+      "bronKardinaliteit",
+      "doelKardinaliteit",
+      "naamLabelHeen",
+      "naamLabelTerug",
+      "directioneel",
+      "geordend",
+      "afgeleid",
+      "afleidingsregel"
+     ]
+    },
+    {
+     "id": "compositie",
+     "label": "Compositie",
+     "regels": [
+      {
+       "bron": [
+        "entiteit"
+       ],
+       "doel": [
+        "gegevenselement"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rolnaam",
+      "jsonRolnaam",
+      "momentvoorkomen",
+      "kardinaliteit"
+     ]
+    },
+    {
+     "id": "generalisatie",
+     "label": "Generalisatie",
+     "regels": [
+      {
+       "bron": [
+        "entiteit"
+       ],
+       "doel": [
+        "entiteit"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "gebruik",
+     "label": "Gebruik («use»)",
+     "regels": [
+      {
+       "bron": [
+        "entiteit",
+        "gegevenselement"
+       ],
+       "doel": [
+        "enumeratie",
+        "gegevenstype",
+        "referentielijstInstantie"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cmmn05",
+   "naam": "CMMN",
+   "diagramTypeId": "cmmn",
+   "elementen": [
+    {
+     "id": "case-plan",
+     "label": "Case plan model",
+     "omschrijving": "De buitenste map: alles wat er in deze casus kan gebeuren.",
+     "container": "bevat",
+     "leden": [
+      "taak",
+      "stage",
+      "mijlpaal",
+      "event-listener",
+      "case-file-item"
+     ]
+    },
+    {
+     "id": "stage",
+     "label": "Stage",
+     "omschrijving": "Een fase in de casus; sleep taken en mijlpalen erin.",
+     "container": "bevat",
+     "eigenschappen": [
+      "verplicht",
+      "herhaling",
+      "handmatig",
+      "discretionair"
+     ],
+     "leden": [
+      "taak",
+      "stage",
+      "mijlpaal",
+      "event-listener",
+      "case-file-item"
+     ]
+    },
+    {
+     "id": "taak",
+     "label": "Task",
+     "omschrijving": "Werk in de casus. Kies de soort (human, process, case, decision) in de inspector.",
+     "eigenschappen": [
+      "soort",
+      "verplicht",
+      "herhaling",
+      "handmatig",
+      "discretionair"
+     ]
+    },
+    {
+     "id": "mijlpaal",
+     "label": "Milestone",
+     "omschrijving": "Een bereikt resultaat in de casus; heeft geen werk, alleen voorwaarden."
+    },
+    {
+     "id": "event-listener",
+     "label": "Event listener",
+     "omschrijving": "Wacht op iets van buiten: een timer of een handeling van een gebruiker.",
+     "vast": true,
+     "eigenschappen": [
+      "soort"
+     ]
+    },
+    {
+     "id": "case-file-item",
+     "label": "Case file item",
+     "omschrijving": "Een gegeven in het casusdossier; kan een sentry laten aanslaan.",
+     "vast": true
+    },
+    {
+     "id": "sentry",
+     "label": "Sentry",
+     "omschrijving": "Sleep hem op de rand: de bewaker. Open = entry (mag beginnen), gevuld = exit (moet stoppen).",
+     "vast": true,
+     "eigenschappen": [
+      "soort",
+      "ifPart"
+     ]
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "on-part",
+     "label": "On-part",
+     "omschrijving": "Wat de sentry laat aanslaan: 'als dit plan item/gegeven iets doet, gaat die bewaker open'.",
+     "regels": [
+      {
+       "bron": [
+        "taak",
+        "stage",
+        "mijlpaal",
+        "event-listener",
+        "case-file-item"
+       ],
+       "doel": [
+        "sentry"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "standaardEvent"
+     ]
+    },
+    {
+     "id": "associatie",
+     "label": "Associatie",
+     "omschrijving": "Losse koppeling, bijvoorbeeld naar een notitie.",
+     "regels": [
+      {
+       "bron": [
+        "taak",
+        "stage",
+        "mijlpaal",
+        "case-file-item",
+        "event-listener"
+       ],
+       "doel": [
+        "taak",
+        "stage",
+        "mijlpaal",
+        "case-file-item",
+        "event-listener"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "communication05",
+   "naam": "Communication",
+   "diagramTypeId": "communication",
+   "elementen": [
+    {
+     "id": "object",
+     "label": "Object (rol)",
+     "omschrijving": "Deelnemer: naam : Klasse (onderstreept); de klasse via een verwijzing of als tekst.",
+     "eigenschappen": [
+      "instantieVan",
+      "klassifierLabel",
+      "multi"
+     ]
+    },
+    {
+     "id": "actor",
+     "label": "Actor",
+     "omschrijving": "Externe deelnemer die de interactie start.",
+     "vast": true
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "link",
+     "label": "Link (met berichten)",
+     "omschrijving": "Verbinding tussen twee deelnemers; voeg de genummerde berichten toe als regels.",
+     "regels": [
+      {
+       "bron": [
+        "object",
+        "actor"
+       ],
+       "doel": [
+        "object",
+        "actor"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "naam"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "componentDeployment05",
+   "naam": "Component & deployment",
+   "diagramTypeId": "component-deployment",
+   "elementen": [
+    {
+     "id": "component",
+     "label": "Component",
+     "omschrijving": "Modulair, vervangbaar deel met duidelijke interfaces; sleep poorten op de rand en delen erin.",
+     "container": "bevat",
+     "eigenschappen": [
+      "abstract"
+     ],
+     "leden": [
+      "component",
+      "interface",
+      "artifact",
+      "deploymentspec",
+      "node",
+      "device",
+      "executieomgeving",
+      "package"
+     ]
+    },
+    {
+     "id": "interface",
+     "label": "Interface",
+     "omschrijving": "Aangeboden/benodigde interface; per voorkomen in te klappen tot lollipop."
+    },
+    {
+     "id": "poort",
+     "label": "Poort",
+     "omschrijving": "Sleep hem op de rand van een component of node: het aansluitpunt voor connectoren.",
+     "vast": true,
+     "eigenschappen": [
+      "typeLabel",
+      "richting"
+     ]
+    },
+    {
+     "id": "artifact",
+     "label": "Artifact",
+     "omschrijving": "Fysiek stuk informatie (jar, dll, script, document) dat gedeployd wordt.",
+     "eigenschappen": [
+      "bestandsnaam"
+     ]
+    },
+    {
+     "id": "deploymentspec",
+     "label": "Deployment specification",
+     "omschrijving": "Artifact met de deploy-parameters (UML «deployment spec»).",
+     "eigenschappen": [
+      "bestandsnaam",
+      "executionLocation",
+      "deploymentLocation"
+     ]
+    },
+    {
+     "id": "node",
+     "label": "Node",
+     "omschrijving": "Rekenmiddel (machine, server): sleep artifacts en componenten erin om ze te deployen.",
+     "container": "bevat",
+     "leden": [
+      "component",
+      "interface",
+      "artifact",
+      "deploymentspec",
+      "node",
+      "device",
+      "executieomgeving",
+      "package"
+     ]
+    },
+    {
+     "id": "device",
+     "label": "Device",
+     "omschrijving": "Fysiek apparaat met rekencapaciteit (UML «device»).",
+     "container": "bevat",
+     "leden": [
+      "component",
+      "interface",
+      "artifact",
+      "deploymentspec",
+      "node",
+      "device",
+      "executieomgeving",
+      "package"
+     ]
+    },
+    {
+     "id": "executieomgeving",
+     "label": "Execution environment",
+     "omschrijving": "Software-omgeving waarin iets draait: OS, app-server, container (UML «executionEnvironment»).",
+     "container": "bevat",
+     "leden": [
+      "component",
+      "interface",
+      "artifact",
+      "deploymentspec",
+      "node",
+      "device",
+      "executieomgeving",
+      "package"
+     ]
+    },
+    {
+     "id": "package",
+     "label": "Package",
+     "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
+     "container": "bevat",
+     "leden": [
+      "component",
+      "interface",
+      "artifact",
+      "deploymentspec",
+      "node",
+      "device",
+      "executieomgeving",
+      "package"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "realisatie",
+     "label": "Realisatie (aangeboden interface)",
+     "omschrijving": "De component biedt deze interface aan.",
+     "regels": [
+      {
+       "bron": [
+        "component",
+        "poort",
+        "artifact",
+        "deploymentspec"
+       ],
+       "doel": [
+        "interface",
+        "component"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "gebruikt",
+     "label": "Gebruikt (benodigde interface)",
+     "omschrijving": "De component heeft deze interface nodig (UML «use»; de socket-notatie).",
+     "regels": [
+      {
+       "bron": [
+        "component",
+        "poort",
+        "artifact",
+        "deploymentspec"
+       ],
+       "doel": [
+        "interface",
+        "component"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "assembly",
+     "label": "Assembly",
+     "omschrijving": "Koppelt een benodigde interface van de bron aan een aangeboden interface van het doel.",
+     "regels": [
+      {
+       "bron": [
+        "component",
+        "poort"
+       ],
+       "doel": [
+        "component",
+        "poort"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "interfaceLabel"
+     ]
+    },
+    {
+     "id": "delegatie",
+     "label": "Delegatie",
+     "omschrijving": "Poort delegeert naar een deel binnen de component (UML «delegate»).",
+     "regels": [
+      {
+       "bron": [
+        "poort",
+        "component"
+       ],
+       "doel": [
+        "component",
+        "poort",
+        "interface"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "deployment",
+     "label": "Deployment",
+     "omschrijving": "Artifact of component wordt gedeployd op een node (UML «deploy»).",
+     "regels": [
+      {
+       "bron": [
+        "artifact",
+        "deploymentspec",
+        "component"
+       ],
+       "doel": [
+        "node",
+        "device",
+        "executieomgeving"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "manifest",
+     "label": "Manifestatie",
+     "omschrijving": "Artifact is de fysieke vorm van een component/klassifier (UML «manifest»).",
+     "regels": [
+      {
+       "bron": [
+        "artifact",
+        "deploymentspec"
+       ],
+       "doel": [
+        "component",
+        "interface",
+        "node",
+        "device",
+        "executieomgeving"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "communicatiepad",
+     "label": "Communicatiepad",
+     "omschrijving": "Associatie tussen nodes: ze kunnen met elkaar communiceren (netwerk, bus).",
+     "regels": [
+      {
+       "bron": [
+        "node",
+        "device",
+        "executieomgeving"
+       ],
+       "doel": [
+        "node",
+        "device",
+        "executieomgeving"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "protocol",
+      "bronKardinaliteit",
+      "doelKardinaliteit"
+     ]
+    },
+    {
+     "id": "generalisatie",
+     "label": "Generalisatie",
+     "omschrijving": "Specialisatie binnen dezelfde soort (component→component, node→node, …).",
+     "regels": [
+      {
+       "bron": [
+        "component"
+       ],
+       "doel": [
+        "component"
+       ]
+      },
+      {
+       "bron": [
+        "interface"
+       ],
+       "doel": [
+        "interface"
+       ]
+      },
+      {
+       "bron": [
+        "artifact",
+        "deploymentspec"
+       ],
+       "doel": [
+        "artifact",
+        "deploymentspec"
+       ]
+      },
+      {
+       "bron": [
+        "node",
+        "device",
+        "executieomgeving"
+       ],
+       "doel": [
+        "node",
+        "device",
+        "executieomgeving"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "dependency",
+     "label": "Dependency",
+     "omschrijving": "Afhankelijkheid tussen klassifiers; een stereotype uit EA staat op de lijn.",
+     "regels": [
+      {
+       "bron": [
+        "component",
+        "interface",
+        "artifact",
+        "deploymentspec",
+        "node",
+        "device",
+        "executieomgeving",
+        "package"
+       ],
+       "doel": [
+        "component",
+        "interface",
+        "artifact",
+        "deploymentspec",
+        "node",
+        "device",
+        "executieomgeving",
+        "package"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "stereotype"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "compositeStructure05",
+   "naam": "Composite structure",
+   "diagramTypeId": "composite-structure",
+   "elementen": [
+    {
+     "id": "klasse",
+     "label": "Klasse (gestructureerd)",
+     "omschrijving": "De gestructureerde klasse: het frame waar parts in liggen en poorten op zitten.",
+     "container": "bevat",
+     "eigenschappen": [
+      "abstract"
+     ],
+     "leden": [
+      "klasse",
+      "part",
+      "collaboratie",
+      "collaboratiegebruik",
+      "interface",
+      "package"
+     ]
+    },
+    {
+     "id": "part",
+     "label": "Part",
+     "omschrijving": "Deel binnen een klasse: rolnaam : Type [multipliciteit]. Sleep hem in de klasse.",
+     "container": "bevat",
+     "eigenschappen": [
+      "typeLabel",
+      "multipliciteit",
+      "instantieVan",
+      "isReferentie"
+     ],
+     "leden": [
+      "klasse",
+      "part",
+      "collaboratie",
+      "collaboratiegebruik",
+      "interface",
+      "package"
+     ]
+    },
+    {
+     "id": "poort",
+     "label": "Poort",
+     "omschrijving": "Sleep hem op de rand van een klasse, part of collaboratie: aansluitpunt voor connectoren.",
+     "vast": true,
+     "eigenschappen": [
+      "typeLabel",
+      "richting",
+      "isGedrag"
+     ]
+    },
+    {
+     "id": "interface",
+     "label": "Interface",
+     "omschrijving": "Interface die een poort aanbiedt of vereist; in te klappen tot lollipop."
+    },
+    {
+     "id": "collaboratie",
+     "label": "Collaboratie",
+     "omschrijving": "Samenwerking van rollen (gestippelde ellips); sleep de rollen (parts) erin.",
+     "container": "bevat",
+     "leden": [
+      "klasse",
+      "part",
+      "collaboratie",
+      "collaboratiegebruik",
+      "interface",
+      "package"
+     ]
+    },
+    {
+     "id": "collaboratiegebruik",
+     "label": "Collaboration use",
+     "omschrijving": "Toepassing van een collaboratie in deze klasse: naam : Collaboratie, met rolbindingen naar de parts.",
+     "eigenschappen": [
+      "typeLabel",
+      "instantieVan"
+     ]
+    },
+    {
+     "id": "package",
+     "label": "Package",
+     "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
+     "container": "bevat",
+     "leden": [
+      "klasse",
+      "part",
+      "collaboratie",
+      "collaboratiegebruik",
+      "interface",
+      "package"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "connector",
+     "label": "Connector",
+     "omschrijving": "Verbinding tussen parts of poorten (assembly: ball-and-socket als het via interfaces loopt).",
+     "regels": [
+      {
+       "bron": [
+        "part",
+        "poort",
+        "klasse"
+       ],
+       "doel": [
+        "part",
+        "poort",
+        "klasse"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "bronRol",
+      "doelRol",
+      "bronKardinaliteit",
+      "doelKardinaliteit",
+      "isAssembly"
+     ]
+    },
+    {
+     "id": "delegatie",
+     "label": "Delegatie",
+     "omschrijving": "Poort op de klasse delegeert naar een part of poort binnenin (UML «delegate»).",
+     "regels": [
+      {
+       "bron": [
+        "poort"
+       ],
+       "doel": [
+        "part",
+        "poort"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "rolbinding",
+     "label": "Rolbinding",
+     "omschrijving": "Collaboration use bindt een rol van de collaboratie aan een part (gestippeld, rolnaam als label).",
+     "regels": [
+      {
+       "bron": [
+        "collaboratiegebruik"
+       ],
+       "doel": [
+        "part",
+        "poort",
+        "klasse"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rol"
+     ]
+    },
+    {
+     "id": "realisatie",
+     "label": "Realisatie (aangeboden interface)",
+     "omschrijving": "Poort of klasse biedt deze interface aan.",
+     "regels": [
+      {
+       "bron": [
+        "poort",
+        "klasse",
+        "part"
+       ],
+       "doel": [
+        "interface"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "gebruikt",
+     "label": "Gebruikt (benodigde interface)",
+     "omschrijving": "Poort of klasse vereist deze interface (UML «use»).",
+     "regels": [
+      {
+       "bron": [
+        "poort",
+        "klasse",
+        "part"
+       ],
+       "doel": [
+        "interface"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "dependency",
+     "label": "Dependency",
+     "omschrijving": "Overige afhankelijkheid; stereotype uit EA als label.",
+     "regels": [
+      {
+       "bron": [
+        "klasse",
+        "part",
+        "collaboratie",
+        "collaboratiegebruik",
+        "interface",
+        "package"
+       ],
+       "doel": [
+        "klasse",
+        "part",
+        "collaboratie",
+        "collaboratiegebruik",
+        "interface",
+        "package"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "stereotype"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "dmnDrd05",
+   "naam": "DMN DRD",
+   "diagramTypeId": "dmn-drd",
+   "elementen": [
+    {
+     "id": "decision",
+     "label": "Beslissing",
+     "eigenschappen": [
+      "vraag"
+     ]
+    },
+    {
+     "id": "inputData",
+     "label": "Invoergegeven"
+    },
+    {
+     "id": "bkm",
+     "label": "Business Knowledge Model"
+    },
+    {
+     "id": "knowledgeSource",
+     "label": "Kennisbron"
+    },
+    {
+     "id": "boundary",
+     "label": "Kader"
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "infoReq",
+     "label": "Information requirement",
+     "regels": [
+      {
+       "bron": [
+        "inputData",
+        "decision"
+       ],
+       "doel": [
+        "decision"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "knowReq",
+     "label": "Knowledge requirement",
+     "regels": [
+      {
+       "bron": [
+        "bkm"
+       ],
+       "doel": [
+        "decision",
+        "bkm"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "authReq",
+     "label": "Authority requirement",
+     "regels": [
+      {
+       "bron": [
+        "knowledgeSource",
+        "decision",
+        "inputData"
+       ],
+       "doel": [
+        "decision",
+        "bkm",
+        "knowledgeSource"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "erd05",
+   "naam": "ERD",
+   "diagramTypeId": "erd",
+   "elementen": [
+    {
+     "id": "entiteit",
+     "label": "Entiteit",
+     "omschrijving": "Een ding waarover je gegevens vastlegt; de sleutel staat boven de streep."
+    },
+    {
+     "id": "domein",
+     "label": "Domein",
+     "omschrijving": "Groepeert entiteiten (schema, deelmodel); sleep ze erin.",
+     "container": "bevat",
+     "leden": [
+      "entiteit",
+      "domein"
+     ]
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "relatie",
+     "label": "Relatie",
+     "omschrijving": "Kraaienpootlijn; zet de kardinaliteit per uiteinde in de inspector.",
+     "regels": [
+      {
+       "bron": [
+        "entiteit"
+       ],
+       "doel": [
+        "entiteit"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "bronKardinaliteit",
+      "doelKardinaliteit",
+      "soort",
+      "bronRol",
+      "doelRol"
+     ]
+    },
+    {
+     "id": "subtype",
+     "label": "Subtype",
+     "omschrijving": "Het subtype erft de sleutel en kolommen van het supertype (bron = subtype).",
+     "regels": [
+      {
+       "bron": [
+        "entiteit"
+       ],
+       "doel": [
+        "entiteit"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "formulierdiagram",
+   "naam": "Formulier (diagram)",
+   "diagramTypeId": "formulier",
+   "elementen": [
+    {
+     "id": "formulier",
+     "label": "Formulier",
+     "eigenschappen": [
+      "doeltype",
+      "status",
+      "isStandaard",
+      "definitieVersie"
+     ]
+    },
+    {
+     "id": "groep",
+     "label": "Groep",
+     "eigenschappen": [
+      "context",
+      "vorm",
+      "vormConfig"
+     ]
+    },
+    {
+     "id": "rij",
+     "label": "Rij",
+     "eigenschappen": [
+      "richting"
+     ]
+    },
+    {
+     "id": "lijst",
+     "label": "Lijst",
+     "eigenschappen": [
+      "bron",
+      "vorm",
+      "vormConfig",
+      "widget",
+      "min",
+      "max"
+     ]
+    },
+    {
+     "id": "conditioneel",
+     "label": "Conditioneel",
+     "eigenschappen": [
+      "conditieVeld",
+      "conditieOp",
+      "conditieWaarde"
+     ]
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "bevat",
+     "label": "Bevat",
+     "regels": [
+      {
+       "bron": [
+        "formulier",
+        "groep",
+        "rij",
+        "lijst",
+        "conditioneel"
+       ],
+       "doel": [
+        "groep",
+        "rij",
+        "lijst",
+        "conditioneel"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "volgorde"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "graphql05",
+   "naam": "GraphQL",
+   "diagramTypeId": "graphql-schema",
+   "elementen": [
+    {
+     "id": "schema",
+     "label": "Schema",
+     "eigenschappen": [
+      "beschrijving",
+      "directives"
+     ]
+    },
+    {
+     "id": "object",
+     "label": "Type (object)",
+     "eigenschappen": [
+      "beschrijving",
+      "directives"
+     ]
+    },
+    {
+     "id": "interface",
+     "label": "Interface",
+     "eigenschappen": [
+      "beschrijving",
+      "directives"
+     ]
+    },
+    {
+     "id": "union",
+     "label": "Union",
+     "eigenschappen": [
+      "beschrijving",
+      "directives"
+     ]
+    },
+    {
+     "id": "enum",
+     "label": "Enum",
+     "eigenschappen": [
+      "beschrijving",
+      "directives"
+     ]
+    },
+    {
+     "id": "input",
+     "label": "Input",
+     "eigenschappen": [
+      "beschrijving",
+      "directives"
+     ]
+    },
+    {
+     "id": "scalar",
+     "label": "Scalar",
+     "eigenschappen": [
+      "beschrijving",
+      "directives"
+     ]
+    },
+    {
+     "id": "directive",
+     "label": "Directive",
+     "eigenschappen": [
+      "beschrijving",
+      "locaties",
+      "herhaalbaar"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader"
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "veldtype",
+     "label": "veld → type",
+     "regels": [
+      {
+       "bron": [
+        "object",
+        "interface"
+       ],
+       "doel": [
+        "object",
+        "interface",
+        "union",
+        "enum"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rolnaam",
+      "typeLabel"
+     ]
+    },
+    {
+     "id": "argumenttype",
+     "label": "argument → type",
+     "regels": [
+      {
+       "bron": [
+        "object",
+        "interface",
+        "directive"
+       ],
+       "doel": [
+        "input",
+        "enum"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rolnaam"
+     ]
+    },
+    {
+     "id": "implements",
+     "label": "implements",
+     "regels": [
+      {
+       "bron": [
+        "object",
+        "interface"
+       ],
+       "doel": [
+        "interface"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "lid",
+     "label": "union-lid",
+     "regels": [
+      {
+       "bron": [
+        "union"
+       ],
+       "doel": [
+        "object"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "root",
+     "label": "root-operatie",
+     "regels": [
+      {
+       "bron": [
+        "schema"
+       ],
+       "doel": [
+        "object"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rol"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "mim05",
+   "naam": "MIM",
+   "diagramTypeId": "mim12",
+   "elementen": [
+    {
+     "id": "objecttype",
+     "label": "Objecttype",
+     "eigenschappen": [
+      "alias",
+      "begrip",
+      "definitie",
+      "toelichting",
+      "herkomst",
+      "datumOpname",
+      "herkomstDefinitie",
+      "uniekeAanduiding",
+      "populatie",
+      "kwaliteit",
+      "indicatieAbstract"
+     ]
+    },
+    {
+     "id": "gegevensgroeptype",
+     "label": "Gegevensgroeptype",
+     "eigenschappen": [
+      "alias",
+      "begrip",
+      "definitie",
+      "toelichting",
+      "herkomst",
+      "datumOpname"
+     ]
+    },
+    {
+     "id": "enumeratie",
+     "label": "Enumeratie",
+     "eigenschappen": [
+      "alias",
+      "begrip",
+      "definitie",
+      "toelichting",
+      "herkomst",
+      "datumOpname"
+     ]
+    },
+    {
+     "id": "codelijst",
+     "label": "Codelijst",
+     "eigenschappen": [
+      "alias",
+      "begrip",
+      "definitie",
+      "toelichting",
+      "herkomst",
+      "datumOpname",
+      "waardenverzameling"
+     ]
+    },
+    {
+     "id": "referentielijst",
+     "label": "Referentielijst",
+     "eigenschappen": [
+      "alias",
+      "begrip",
+      "definitie",
+      "toelichting",
+      "herkomst",
+      "datumOpname",
+      "locatie"
+     ]
+    },
+    {
+     "id": "primitiefDatatype",
+     "label": "Primitief datatype",
+     "eigenschappen": [
+      "alias",
+      "begrip",
+      "definitie",
+      "toelichting",
+      "herkomst",
+      "datumOpname",
+      "patroon",
+      "formeelPatroon",
+      "lengte"
+     ]
+    },
+    {
+     "id": "gestructureerdDatatype",
+     "label": "Gestructureerd datatype",
+     "eigenschappen": [
+      "alias",
+      "begrip",
+      "definitie",
+      "toelichting",
+      "herkomst",
+      "datumOpname"
+     ]
+    },
+    {
+     "id": "keuze",
+     "label": "Keuze",
+     "eigenschappen": [
+      "alias",
+      "begrip",
+      "definitie",
+      "toelichting",
+      "herkomst",
+      "datumOpname"
+     ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "eigenschappen": [
+      "specificatie"
+     ]
+    },
+    {
+     "id": "package",
+     "label": "Package",
+     "container": "bevat",
+     "eigenschappen": [
+      "soort",
+      "definitie",
+      "mimVersie",
+      "relatiemodelleringstype"
+     ],
+     "leden": [
+      "objecttype",
+      "gegevensgroeptype",
+      "primitiefDatatype",
+      "gestructureerdDatatype",
+      "enumeratie",
+      "codelijst",
+      "referentielijst",
+      "keuze",
+      "constraint",
+      "package"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader"
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "relatiesoort",
+     "label": "Relatiesoort",
+     "regels": [
+      {
+       "bron": [
+        "objecttype"
+       ],
+       "doel": [
+        "objecttype"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "alias",
+      "begrip",
+      "definitie",
+      "toelichting",
+      "herkomst",
+      "datumOpname",
+      "bronRolNaam",
+      "bronKardinaliteit",
+      "doelRolNaam",
+      "doelKardinaliteit",
+      "unidirectioneel",
+      "indicatieAfleidbaar",
+      "indicatieMaterieleHistorie",
+      "indicatieFormeleHistorie",
+      "authentiek"
+     ]
+    },
+    {
+     "id": "gegevensgroep",
+     "label": "Gegevensgroep (◆)",
+     "regels": [
+      {
+       "bron": [
+        "objecttype",
+        "gegevensgroeptype"
+       ],
+       "doel": [
+        "gegevensgroeptype"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "naam",
+      "kardinaliteit"
+     ]
+    },
+    {
+     "id": "generalisatie",
+     "label": "Generalisatie",
+     "regels": [
+      {
+       "bron": [
+        "objecttype"
+       ],
+       "doel": [
+        "objecttype"
+       ]
+      },
+      {
+       "bron": [
+        "primitiefDatatype",
+        "gestructureerdDatatype",
+        "enumeratie",
+        "codelijst",
+        "referentielijst"
+       ],
+       "doel": [
+        "primitiefDatatype",
+        "gestructureerdDatatype",
+        "enumeratie",
+        "codelijst",
+        "referentielijst"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "externeKoppeling",
+     "label": "Externe koppeling",
+     "regels": [
+      {
+       "bron": [
+        "objecttype"
+       ],
+       "doel": [
+        "objecttype"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "alternatief",
+     "label": "Alternatief (keuze)",
+     "regels": [
+      {
+       "bron": [
+        "keuze"
+       ],
+       "doel": [
+        "primitiefDatatype",
+        "gestructureerdDatatype",
+        "enumeratie",
+        "codelijst",
+        "referentielijst"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "oas05",
+   "naam": "OAS",
+   "diagramTypeId": "oas31",
+   "elementen": [
+    {
+     "id": "api",
+     "label": "API (info)",
+     "eigenschappen": [
+      "oasVersie",
+      "versie",
+      "beschrijving",
+      "licentie",
+      "contact"
+     ]
+    },
+    {
+     "id": "server",
+     "label": "Server",
+     "eigenschappen": [
+      "beschrijving"
+     ]
+    },
+    {
+     "id": "schema",
+     "label": "Schema (object)",
+     "eigenschappen": [
+      "beschrijving",
+      "typeLabel",
+      "voorbeeld",
+      "patroon",
+      "externRef"
+     ]
+    },
+    {
+     "id": "enum",
+     "label": "Enum",
+     "eigenschappen": [
+      "beschrijving"
+     ]
+    },
+    {
+     "id": "operatie",
+     "label": "Operatie",
+     "eigenschappen": [
+      "method",
+      "pad",
+      "samenvatting",
+      "beschrijving",
+      "tag",
+      "verouderd"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader"
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "ref",
+     "label": "$ref",
+     "regels": [
+      {
+       "bron": [
+        "schema",
+        "operatie"
+       ],
+       "doel": [
+        "schema",
+        "enum"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rolnaam"
+     ]
+    },
+    {
+     "id": "allOf",
+     "label": "allOf",
+     "regels": [
+      {
+       "bron": [
+        "schema"
+       ],
+       "doel": [
+        "schema"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "items",
+     "label": "items (array)",
+     "regels": [
+      {
+       "bron": [
+        "schema"
+       ],
+       "doel": [
+        "schema",
+        "enum"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rolnaam"
+     ]
+    },
+    {
+     "id": "oneOf",
+     "label": "oneOf",
+     "regels": [
+      {
+       "bron": [
+        "schema"
+       ],
+       "doel": [
+        "schema",
+        "enum"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "anyOf",
+     "label": "anyOf",
+     "regels": [
+      {
+       "bron": [
+        "schema"
+       ],
+       "doel": [
+        "schema",
+        "enum"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "servers",
+     "label": "servers",
+     "regels": [
+      {
+       "bron": [
+        "api"
+       ],
+       "doel": [
+        "server"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "object05",
+   "naam": "Object",
+   "diagramTypeId": "object",
+   "elementen": [
+    {
+     "id": "object",
+     "label": "Object",
+     "omschrijving": "Instantie van een klasse: naam : Klasse (onderstreept) met slots attribuut = waarde.",
+     "eigenschappen": [
+      "instantieVan",
+      "klassifierLabel",
+      "toestand"
+     ]
+    },
+    {
+     "id": "multiobject",
+     "label": "Multi-object",
+     "omschrijving": "Verzameling instanties van dezelfde klasse (dubbele rand).",
+     "eigenschappen": [
+      "instantieVan",
+      "klassifierLabel",
+      "toestand"
+     ]
+    },
+    {
+     "id": "package",
+     "label": "Package",
+     "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
+     "container": "bevat",
+     "leden": [
+      "object",
+      "multiobject",
+      "package"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "link",
+     "label": "Link",
+     "omschrijving": "Instantie van een associatie tussen twee objecten (rolnamen aan de uiteinden).",
+     "regels": [
+      {
+       "bron": [
+        "object",
+        "multiobject"
+       ],
+       "doel": [
+        "object",
+        "multiobject"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "bronRol",
+      "doelRol",
+      "directioneel"
+     ]
+    },
+    {
+     "id": "compositie",
+     "label": "Compositie (instantie)",
+     "omschrijving": "Het bron-object bezit het doel-object.",
+     "regels": [
+      {
+       "bron": [
+        "object",
+        "multiobject"
+       ],
+       "doel": [
+        "object",
+        "multiobject"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "dependency",
+     "label": "Dependency",
+     "omschrijving": "Afhankelijkheid tussen objecten; stereotype uit EA als label («instantiate», «create», …).",
+     "regels": [
+      {
+       "bron": [
+        "object",
+        "multiobject",
+        "package"
+       ],
+       "doel": [
+        "object",
+        "multiobject",
+        "package"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "stereotype"
+     ]
+    },
+    {
+     "id": "generalisatie",
+     "label": "Generalisatie",
+     "omschrijving": "Specialisatie tussen klassen op het objectdiagram (of tussen object en zijn klasse).",
+     "regels": [
+      {
+       "bron": [
+        "object",
+        "multiobject"
+       ],
+       "doel": [
+        "object",
+        "multiobject"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "requirements05",
+   "naam": "Requirements",
+   "diagramTypeId": "requirements",
+   "elementen": [
+    {
+     "id": "requirement",
+     "label": "Requirement",
+     "omschrijving": "Een eis aan het systeem; soort (functioneel, performance, …) als stereotype.",
+     "eigenschappen": [
+      "reqId",
+      "tekst",
+      "status",
+      "prioriteit",
+      "moeilijkheid",
+      "soort"
+     ]
+    },
+    {
+     "id": "feature",
+     "label": "Feature",
+     "omschrijving": "Kenmerk/functie van het product dat eisen groepeert of realiseert.",
+     "eigenschappen": [
+      "reqId",
+      "tekst",
+      "status",
+      "prioriteit",
+      "moeilijkheid"
+     ]
+    },
+    {
+     "id": "issue",
+     "label": "Issue",
+     "omschrijving": "Probleem of vraagstuk rond een eis (EA maintenance-type).",
+     "eigenschappen": [
+      "reqId",
+      "tekst",
+      "status",
+      "prioriteit",
+      "moeilijkheid"
+     ]
+    },
+    {
+     "id": "change",
+     "label": "Change",
+     "omschrijving": "Wijzigingsverzoek op een eis of feature (EA maintenance-type).",
+     "eigenschappen": [
+      "reqId",
+      "tekst",
+      "status",
+      "prioriteit",
+      "moeilijkheid"
+     ]
+    },
+    {
+     "id": "verwijzing",
+     "label": "Verwijzing",
+     "omschrijving": "Element uit een ander model (use case, klasse, component) dat eisen realiseert — alleen als verwijzing.",
+     "eigenschappen": [
+      "stereotype",
+      "instantieVan"
+     ]
+    },
+    {
+     "id": "package",
+     "label": "Package",
+     "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
+     "container": "bevat",
+     "leden": [
+      "requirement",
+      "feature",
+      "issue",
+      "change",
+      "verwijzing",
+      "package"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "aggregatie",
+     "label": "Bevat (aggregatie)",
+     "omschrijving": "Geheel-eis bevat deel-eis; de ruit staat bij het geheel.",
+     "regels": [
+      {
+       "bron": [
+        "requirement",
+        "feature",
+        "issue",
+        "change"
+       ],
+       "doel": [
+        "requirement",
+        "feature",
+        "issue",
+        "change"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "realisatie",
+     "label": "Realisatie",
+     "omschrijving": "Het bron-element realiseert de eis (gestippeld, driehoek).",
+     "regels": [
+      {
+       "bron": [
+        "requirement",
+        "feature",
+        "issue",
+        "change",
+        "verwijzing"
+       ],
+       "doel": [
+        "requirement",
+        "feature",
+        "issue",
+        "change"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "trace",
+     "label": "Trace",
+     "omschrijving": "Zwakke herleidbaarheid tussen eisen of naar een element elders.",
+     "regels": [
+      {
+       "bron": [
+        "requirement",
+        "feature",
+        "issue",
+        "change",
+        "verwijzing"
+       ],
+       "doel": [
+        "requirement",
+        "feature",
+        "issue",
+        "change",
+        "verwijzing"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "derive",
+     "label": "Derive",
+     "omschrijving": "De bron-eis is afgeleid van de doel-eis.",
+     "regels": [
+      {
+       "bron": [
+        "requirement",
+        "feature",
+        "issue",
+        "change"
+       ],
+       "doel": [
+        "requirement",
+        "feature",
+        "issue",
+        "change"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "verify",
+     "label": "Verify",
+     "omschrijving": "Het bron-element (test, use case) verifieert de doel-eis.",
+     "regels": [
+      {
+       "bron": [
+        "requirement",
+        "feature",
+        "issue",
+        "change",
+        "verwijzing"
+       ],
+       "doel": [
+        "requirement",
+        "feature",
+        "issue",
+        "change"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "refine",
+     "label": "Refine",
+     "omschrijving": "Het bron-element verfijnt de doel-eis (bv. een use case die een eis uitwerkt).",
+     "regels": [
+      {
+       "bron": [
+        "requirement",
+        "feature",
+        "issue",
+        "change",
+        "verwijzing"
+       ],
+       "doel": [
+        "requirement",
+        "feature",
+        "issue",
+        "change",
+        "verwijzing"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "dependency",
+     "label": "Dependency",
+     "omschrijving": "Overige afhankelijkheid; stereotype uit EA als label.",
+     "regels": [
+      {
+       "bron": [
+        "requirement",
+        "feature",
+        "issue",
+        "change",
+        "verwijzing",
+        "package"
+       ],
+       "doel": [
+        "requirement",
+        "feature",
+        "issue",
+        "change",
+        "verwijzing",
+        "package"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "stereotype"
+     ]
+    },
+    {
+     "id": "generalisatie",
+     "label": "Generalisatie",
+     "omschrijving": "Specialisatie tussen eisen van dezelfde soort.",
+     "regels": [
+      {
+       "bron": [
+        "requirement",
+        "feature",
+        "issue",
+        "change"
+       ],
+       "doel": [
+        "requirement",
+        "feature",
+        "issue",
+        "change"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sequence05",
+   "naam": "Sequence",
+   "diagramTypeId": "sequence",
+   "elementen": [
+    {
+     "id": "levenslijn",
+     "label": "Levenslijn",
+     "omschrijving": "Deelnemer aan de interactie — een object. Typeer hem via 'instantie van' of door een element uit de boom op de lijn te droppen.",
+     "eigenschappen": [
+      "instantieVan"
+     ]
+    },
+    {
+     "id": "punt",
+     "label": "Punt (occurrence)",
+     "omschrijving": "Aanhechtpunt op de levenslijn — sleep hem op de lijn; berichten lopen van punt naar punt.",
+     "vast": true
+    },
+    {
+     "id": "activatie",
+     "label": "Activatie",
+     "omschrijving": "Execution-balk op de levenslijn (sleep op de lijn; hoogte = duur)."
+    },
+    {
+     "id": "fragment",
+     "label": "Fragment",
+     "omschrijving": "Gecombineerd fragment (alt/opt/loop/par) — kader over een stuk interactie.",
+     "eigenschappen": [
+      "soort",
+      "naam"
+     ]
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "synchroon",
+     "label": "Synchroon bericht",
+     "omschrijving": "Aanroep die op antwoord wacht (dichte pijlpunt).",
+     "regels": [
+      {
+       "bron": [
+        "punt",
+        "activatie"
+       ],
+       "doel": [
+        "punt",
+        "activatie"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "operatie",
+      "argumenten"
+     ]
+    },
+    {
+     "id": "asynchroon",
+     "label": "Asynchroon bericht",
+     "omschrijving": "Bericht zonder te wachten (open pijlpunt).",
+     "regels": [
+      {
+       "bron": [
+        "punt",
+        "activatie"
+       ],
+       "doel": [
+        "punt",
+        "activatie"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "operatie",
+      "argumenten"
+     ]
+    },
+    {
+     "id": "retour",
+     "label": "Retourbericht",
+     "omschrijving": "Antwoord terug naar de aanroeper (gestippeld).",
+     "regels": [
+      {
+       "bron": [
+        "punt",
+        "activatie"
+       ],
+       "doel": [
+        "punt",
+        "activatie"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "operatie",
+      "argumenten"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "statemachine05",
+   "naam": "State machine",
+   "diagramTypeId": "statemachine",
+   "elementen": [
+    {
+     "id": "begin",
+     "label": "Begin",
+     "omschrijving": "Startpunt van de machine — alleen uitgaande transities.",
+     "vast": true
+    },
+    {
+     "id": "toestand",
+     "label": "Toestand",
+     "omschrijving": "Toestand van het systeem, met entry/do/exit-activiteiten."
+    },
+    {
+     "id": "eind",
+     "label": "Eind",
+     "omschrijving": "Eindtoestand: de machine is klaar — alleen inkomende transities.",
+     "vast": true
+    },
+    {
+     "id": "composiet",
+     "label": "Samengestelde toestand",
+     "omschrijving": "Samengestelde toestand: sleep deel-toestanden erin.",
+     "container": "bevat",
+     "leden": [
+      "begin",
+      "eind",
+      "toestand",
+      "composiet",
+      "submachine",
+      "keuze",
+      "junction",
+      "historie",
+      "entry",
+      "exit"
+     ]
+    },
+    {
+     "id": "submachine",
+     "label": "Submachine",
+     "omschrijving": "Verwijst naar een andere state machine; dubbelklik opent het diagram.",
+     "eigenschappen": [
+      "gedragDiagramId"
+     ]
+    },
+    {
+     "id": "keuze",
+     "label": "Keuze",
+     "omschrijving": "Dynamische keuze: guards bepalen welke uitgaande transitie volgt.",
+     "vast": true
+    },
+    {
+     "id": "junction",
+     "label": "Junction",
+     "omschrijving": "Statisch knooppunt om transities samen te voegen of te splitsen.",
+     "vast": true
+    },
+    {
+     "id": "historie",
+     "label": "Historie",
+     "omschrijving": "Herinnert de laatst actieve deel-toestand (H; vinkje 'diep' = H*).",
+     "vast": true,
+     "eigenschappen": [
+      "diep"
+     ]
+    },
+    {
+     "id": "entry",
+     "label": "Entry-point",
+     "omschrijving": "Entry-point: sleep hem op de rand van een toestand — nette binnenkomst.",
+     "vast": true
+    },
+    {
+     "id": "exit",
+     "label": "Exit-point",
+     "omschrijving": "Exit-point: sleep hem op de rand van een toestand — nette uitgang.",
+     "vast": true
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "transitie",
+     "label": "Transitie",
+     "omschrijving": "Overgang tussen toestanden: trigger [guard] / effect.",
+     "regels": [
+      {
+       "bron": [
+        "begin",
+        "toestand",
+        "composiet",
+        "submachine",
+        "keuze",
+        "junction",
+        "historie",
+        "entry",
+        "exit"
+       ],
+       "doel": [
+        "toestand",
+        "composiet",
+        "submachine",
+        "keuze",
+        "junction",
+        "historie",
+        "entry",
+        "exit",
+        "eind"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "trigger",
+      "guard",
+      "effect"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sysml05",
+   "naam": "SysML",
+   "diagramTypeId": "sysml",
+   "elementen": [
+    {
+     "id": "blok",
+     "label": "Blok",
+     "omschrijving": "«block» — het bouwsteentype van SysML. Sleep parts erin voor een intern blokdiagram.",
+     "container": "bevat-part",
+     "leden": [
+      "part"
+     ]
+    },
+    {
+     "id": "part",
+     "label": "Part",
+     "omschrijving": "Een deel binnen een blok (ibd): rolnaam : Type. Sleep hem in een blok.",
+     "container": "bevat-part",
+     "leden": [
+      "part"
+     ]
+    },
+    {
+     "id": "poort",
+     "label": "Poort",
+     "omschrijving": "Sleep hem op de rand van een blok of part: het aansluitpunt voor connectoren.",
+     "vast": true,
+     "eigenschappen": [
+      "richting"
+     ]
+    },
+    {
+     "id": "waardetype",
+     "label": "Waardetype",
+     "omschrijving": "«valueType» — een waarde zonder identiteit (met eenheid/dimensie)."
+    },
+    {
+     "id": "interfaceblok",
+     "label": "Interfaceblok",
+     "omschrijving": "«interfaceBlock» — wat er over een poort heen gaat."
+    },
+    {
+     "id": "constraintblok",
+     "label": "Constraintblok",
+     "omschrijving": "«constraint» — een vergelijking met parameters (basis voor parametrics)."
+    },
+    {
+     "id": "enumeratie",
+     "label": "Enumeratie",
+     "omschrijving": "«enumeration» — een vaste verzameling waarden."
+    },
+    {
+     "id": "requirement",
+     "label": "Requirement",
+     "omschrijving": "Een eis met id en tekst; koppel hem met satisfy/verify/derive/refine/trace.",
+     "container": "bevat-req",
+     "eigenschappen": [
+      "reqId",
+      "tekst"
+     ],
+     "leden": [
+      "requirement"
+     ]
+    },
+    {
+     "id": "pakket",
+     "label": "Pakket",
+     "omschrijving": "Groepeert blokken en requirements.",
+     "container": "bevat-pakket",
+     "leden": [
+      "blok",
+      "waardetype",
+      "interfaceblok",
+      "constraintblok",
+      "enumeratie",
+      "requirement",
+      "pakket"
+     ]
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "compositie",
+     "label": "Compositie",
+     "omschrijving": "Het geheel bezit de delen; delen gaan mee als het geheel verdwijnt.",
+     "regels": [
+      {
+       "bron": [
+        "blok"
+       ],
+       "doel": [
+        "blok",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "aggregatie",
+     "label": "Aggregatie",
+     "omschrijving": "Het geheel gebruikt de delen, maar bezit ze niet.",
+     "regels": [
+      {
+       "bron": [
+        "blok"
+       ],
+       "doel": [
+        "blok",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "generalisatie",
+     "label": "Generalisatie",
+     "omschrijving": "Het specifieke blok erft van het algemene (bron = specifiek).",
+     "regels": [
+      {
+       "bron": [
+        "blok",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie"
+       ],
+       "doel": [
+        "blok",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "associatie",
+     "label": "Associatie",
+     "omschrijving": "Een verband tussen blokken; kardinaliteit per uiteinde.",
+     "regels": [
+      {
+       "bron": [
+        "blok",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie"
+       ],
+       "doel": [
+        "blok",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "bronRolNaam",
+      "bronKardinaliteit",
+      "bronNavigeerbaar",
+      "bronGeordend",
+      "bronNietUniek",
+      "bronAlleenLezen",
+      "doelRolNaam",
+      "doelKardinaliteit",
+      "doelNavigeerbaar",
+      "doelGeordend",
+      "doelNietUniek",
+      "doelAlleenLezen",
+      "afgeleid",
+      "afleidingsregel"
+     ]
+    },
+    {
+     "id": "afhankelijkheid",
+     "label": "Afhankelijkheid",
+     "omschrijving": "De bron gebruikt het doel; verandert het doel, dan raakt dat de bron.",
+     "regels": [
+      {
+       "bron": [
+        "blok",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie",
+        "pakket"
+       ],
+       "doel": [
+        "blok",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie",
+        "pakket"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "trace",
+     "label": "Traceerrelatie",
+     "omschrijving": "satisfy · verify · deriveReqt · refine · trace — kies de soort in de inspector.",
+     "regels": [
+      {
+       "bron": [
+        "blok",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie",
+        "part",
+        "requirement",
+        "pakket"
+       ],
+       "doel": [
+        "requirement"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "soort"
+     ]
+    },
+    {
+     "id": "verbinding",
+     "label": "Connector (ibd)",
+     "omschrijving": "Verbindt twee poorten (of parts) binnen een blok.",
+     "regels": [
+      {
+       "bron": [
+        "poort",
+        "part"
+       ],
+       "doel": [
+        "poort",
+        "part"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "itemflow",
+     "label": "Item flow",
+     "omschrijving": "Wat er over een connector stroomt; de naam is het item.",
+     "regels": [
+      {
+       "bron": [
+        "poort",
+        "part"
+       ],
+       "doel": [
+        "poort",
+        "part"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "toegangsregels",
+   "naam": "Toegangsregels",
+   "diagramTypeId": "toegangsregel",
+   "elementen": [
+    {
+     "id": "policy",
+     "label": "Policy",
+     "eigenschappen": [
+      "geldigVanaf",
+      "geldigTot",
+      "grondslag",
+      "doel"
+     ]
+    },
+    {
+     "id": "map",
+     "label": "Map"
+    },
+    {
+     "id": "toegangsregel",
+     "label": "Toegangsregel",
+     "eigenschappen": [
+      "modaliteit"
+     ]
+    },
+    {
+     "id": "subject",
+     "label": "Subject",
+     "eigenschappen": [
+      "rol",
+      "kenmerken"
+     ]
+    },
+    {
+     "id": "handeling",
+     "label": "Handeling",
+     "eigenschappen": [
+      "nlgov"
+     ]
+    },
+    {
+     "id": "gegevensselectie",
+     "label": "Gegevensselectie",
+     "eigenschappen": [
+      "verwijzingsprofiel",
+      "verwijzingselement"
+     ]
+    },
+    {
+     "id": "voorwaardepoort",
+     "label": "Voorwaardepoort",
+     "vast": true,
+     "eigenschappen": [
+      "soort"
+     ]
+    },
+    {
+     "id": "voorwaarde",
+     "label": "Voorwaarde",
+     "eigenschappen": [
+      "links",
+      "vergelijking",
+      "rechts"
+     ]
+    },
+    {
+     "id": "plicht",
+     "label": "Plicht",
+     "eigenschappen": [
+      "nlgov"
+     ]
+    },
+    {
+     "id": "begrip",
+     "label": "Begrip",
+     "eigenschappen": [
+      "soort",
+      "definitie",
+      "verwijzingsprofiel",
+      "verwijzingselement"
+     ]
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "omvat",
+     "label": "omvat",
+     "regels": [
+      {
+       "bron": [
+        "policy"
+       ],
+       "doel": [
+        "toegangsregel"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "bevat",
+     "label": "bevat",
+     "regels": [
+      {
+       "bron": [
+        "map"
+       ],
+       "doel": [
+        "map",
+        "policy",
+        "toegangsregel",
+        "begrip"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "wie",
+     "label": "wie",
+     "regels": [
+      {
+       "bron": [
+        "toegangsregel"
+       ],
+       "doel": [
+        "subject"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "doet",
+     "label": "doet",
+     "regels": [
+      {
+       "bron": [
+        "toegangsregel",
+        "subject"
+       ],
+       "doel": [
+        "handeling"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "op",
+     "label": "op",
+     "regels": [
+      {
+       "bron": [
+        "toegangsregel",
+        "handeling"
+       ],
+       "doel": [
+        "gegevensselectie"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "als",
+     "label": "als",
+     "regels": [
+      {
+       "bron": [
+        "toegangsregel"
+       ],
+       "doel": [
+        "voorwaardepoort",
+        "voorwaarde"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "tak",
+     "label": "tak",
+     "regels": [
+      {
+       "bron": [
+        "voorwaardepoort"
+       ],
+       "doel": [
+        "voorwaardepoort",
+        "voorwaarde"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "waarbij",
+     "label": "waarbij",
+     "regels": [
+      {
+       "bron": [
+        "toegangsregel"
+       ],
+       "doel": [
+        "plicht"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "verwijst-naar",
+     "label": "verwijst naar",
+     "regels": [
+      {
+       "bron": [
+        "gegevensselectie",
+        "subject",
+        "begrip"
+       ],
+       "doel": [
+        "begrip"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "puurUml05",
+   "naam": "UML",
+   "diagramTypeId": "puur-uml",
+   "elementen": [
+    {
+     "id": "klasse",
+     "label": "Klasse",
+     "eigenschappen": [
+      "abstract"
+     ]
+    },
+    {
+     "id": "interface",
+     "label": "Interface"
+    },
+    {
+     "id": "enumeratie",
+     "label": "Enumeratie"
+    },
+    {
+     "id": "datatype",
+     "label": "Datatype"
+    },
+    {
+     "id": "package",
+     "label": "Package",
+     "container": "bevat",
+     "leden": [
+      "klasse",
+      "interface",
+      "enumeratie",
+      "datatype",
+      "package"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader"
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "associatie",
+     "label": "Associatie",
+     "regels": [
+      {
+       "bron": [
+        "klasse",
+        "interface",
+        "enumeratie"
+       ],
+       "doel": [
+        "klasse",
+        "interface",
+        "enumeratie"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "bronRolNaam",
+      "bronKardinaliteit",
+      "bronNavigeerbaar",
+      "bronGeordend",
+      "bronNietUniek",
+      "bronAlleenLezen",
+      "doelRolNaam",
+      "doelKardinaliteit",
+      "doelNavigeerbaar",
+      "doelGeordend",
+      "doelNietUniek",
+      "doelAlleenLezen",
+      "afgeleid",
+      "afleidingsregel"
+     ]
+    },
+    {
+     "id": "aggregatie",
+     "label": "Aggregatie",
+     "regels": [
+      {
+       "bron": [
+        "klasse"
+       ],
+       "doel": [
+        "klasse"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "bronRolNaam",
+      "bronKardinaliteit",
+      "bronNavigeerbaar",
+      "bronGeordend",
+      "bronNietUniek",
+      "bronAlleenLezen",
+      "doelRolNaam",
+      "doelKardinaliteit",
+      "doelNavigeerbaar",
+      "doelGeordend",
+      "doelNietUniek",
+      "doelAlleenLezen"
+     ]
+    },
+    {
+     "id": "compositie",
+     "label": "Compositie",
+     "regels": [
+      {
+       "bron": [
+        "klasse"
+       ],
+       "doel": [
+        "klasse"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "bronRolNaam",
+      "bronKardinaliteit",
+      "bronNavigeerbaar",
+      "bronGeordend",
+      "bronNietUniek",
+      "bronAlleenLezen",
+      "doelRolNaam",
+      "doelKardinaliteit",
+      "doelNavigeerbaar",
+      "doelGeordend",
+      "doelNietUniek",
+      "doelAlleenLezen"
+     ]
+    },
+    {
+     "id": "generalisatie",
+     "label": "Generalisatie",
+     "regels": [
+      {
+       "bron": [
+        "klasse",
+        "interface",
+        "enumeratie",
+        "datatype"
+       ],
+       "doel": [
+        "klasse",
+        "interface",
+        "enumeratie",
+        "datatype"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "realisatie",
+     "label": "Realisatie",
+     "regels": [
+      {
+       "bron": [
+        "klasse"
+       ],
+       "doel": [
+        "interface"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "dependency",
+     "label": "Dependency",
+     "regels": [
+      {
+       "bron": [
+        "klasse",
+        "interface",
+        "enumeratie",
+        "datatype"
+       ],
+       "doel": [
+        "klasse",
+        "interface",
+        "enumeratie",
+        "datatype"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "usecase05",
+   "naam": "Use case",
+   "diagramTypeId": "usecase",
+   "elementen": [
+    {
+     "id": "actor",
+     "label": "Actor",
+     "omschrijving": "Rol buiten het systeem die ermee interacteert.",
+     "vast": true
+    },
+    {
+     "id": "usecase",
+     "label": "Use case",
+     "omschrijving": "Samenhangend stuk functionaliteit met waarde voor een actor."
+    },
+    {
+     "id": "systeem",
+     "label": "Systeemkader",
+     "omschrijving": "Systeemgrens: sleep de use cases van dit systeem erin.",
+     "container": "bevat",
+     "leden": [
+      "usecase",
+      "systeem"
+     ]
+    },
+    {
+     "id": "collaboratie",
+     "label": "Collaboratie",
+     "omschrijving": "Use case-realisatie: de samenwerking die een use case uitwerkt (gestippelde ellips)."
+    },
+    {
+     "id": "klasse",
+     "label": "Klasse",
+     "omschrijving": "Klasse of interface uit het klassemodel, op dit diagram alleen als verwijzing."
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "associatie",
+     "label": "Associatie",
+     "omschrijving": "De actor neemt deel aan de use case.",
+     "regels": [
+      {
+       "bron": [
+        "actor",
+        "usecase",
+        "klasse"
+       ],
+       "doel": [
+        "actor",
+        "usecase",
+        "klasse"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "include",
+     "label": "Include",
+     "omschrijving": "De basis-use case omvat de geïncludeerde altijd.",
+     "regels": [
+      {
+       "bron": [
+        "usecase"
+       ],
+       "doel": [
+        "usecase"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "voorwaarde"
+     ]
+    },
+    {
+     "id": "extend",
+     "label": "Extend",
+     "omschrijving": "Optionele uitbreiding die invoegt op de basis-use case.",
+     "regels": [
+      {
+       "bron": [
+        "usecase"
+       ],
+       "doel": [
+        "usecase"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "voorwaarde"
+     ]
+    },
+    {
+     "id": "generalisatie",
+     "label": "Generalisatie",
+     "omschrijving": "Specialisatie tussen actoren of tussen use cases.",
+     "regels": [
+      {
+       "bron": [
+        "actor"
+       ],
+       "doel": [
+        "actor"
+       ]
+      },
+      {
+       "bron": [
+        "usecase"
+       ],
+       "doel": [
+        "usecase"
+       ]
+      },
+      {
+       "bron": [
+        "klasse"
+       ],
+       "doel": [
+        "klasse"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "realiseert",
+     "label": "Realiseert",
+     "omschrijving": "Collaboratie realiseert een use case (gestippeld, driehoek).",
+     "regels": [
+      {
+       "bron": [
+        "collaboratie",
+        "klasse"
+       ],
+       "doel": [
+        "usecase"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "dependency",
+     "label": "Dependency",
+     "omschrijving": "Afhankelijkheid (bv. «legt vast» van een use case naar een registratie).",
+     "regels": [
+      {
+       "bron": [
+        "actor",
+        "usecase",
+        "klasse",
+        "collaboratie"
+       ],
+       "doel": [
+        "actor",
+        "usecase",
+        "klasse",
+        "collaboratie"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "voorwaarde"
+     ]
+    }
+   ],
+   "aanwijzingen": [
+    "Een associatie verbindt een actor met een use case, van de actor naar de use case; nooit actor–actor of use case–use case.",
+    "Include: de basis-use case omvat de andere altijd (pijl van basis naar deel, bv. 'Leen boek' include 'Log in').",
+    "Extend: een optionele uitbreiding; pijl van de uitbreidende naar de basis-use case (bv. 'Bereken boete' extend 'Lever boek in').",
+    "Een extern systeem dat meedoet (betaalsysteem, e-mailserver) is een actor.",
+    "Gebruik alleen een systeemkader als de opdracht een systeem noemt; use cases liggen er dan in via `in`, actoren erbuiten.",
+    "Use case-namen als werkwoordzin vanuit de actor ('Leen boek', 'Behandel melding')."
+   ],
+   "paren": {
+    "associatie": [
+     [
+      "actor",
+      "usecase"
+     ]
+    ],
+    "include": [
+     [
+      "usecase",
+      "usecase"
+     ]
+    ],
+    "extend": [
+     [
+      "usecase",
+      "usecase"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "wsdl05",
+   "naam": "WSDL",
+   "diagramTypeId": "wsdl",
+   "elementen": [
+    {
+     "id": "namespace",
+     "label": "Namespace (definitions)",
+     "omschrijving": "wsdl:definitions — de WSDL-namespace; sleep service, portType, binding, messages en types erin.",
+     "container": "bevat",
+     "eigenschappen": [
+      "targetNamespace",
+      "prefix"
+     ],
+     "leden": [
+      "service",
+      "portType",
+      "binding",
+      "message",
+      "types",
+      "namespace"
+     ]
+    },
+    {
+     "id": "service",
+     "label": "Service",
+     "omschrijving": "wsdl:service — bundel van ports (elk een binding op een adres)."
+    },
+    {
+     "id": "portType",
+     "label": "PortType (interface)",
+     "omschrijving": "wsdl:portType — de abstracte interface: operaties met input/output/fault-messages."
+    },
+    {
+     "id": "binding",
+     "label": "Binding",
+     "omschrijving": "wsdl:binding — protocol en stijl (SOAP document/rpc, HTTP) voor een portType.",
+     "eigenschappen": [
+      "protocol",
+      "stijl",
+      "transport"
+     ]
+    },
+    {
+     "id": "message",
+     "label": "Message",
+     "omschrijving": "wsdl:message — de parts (elk een XSD-element of -type) van een bericht."
+    },
+    {
+     "id": "types",
+     "label": "Types",
+     "omschrijving": "wsdl:types — de ingesloten of geïmporteerde XML Schema's.",
+     "eigenschappen": [
+      "schema"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "realiseert",
+     "label": "Binding realiseert portType",
+     "omschrijving": "De binding implementeert deze abstracte interface.",
+     "regels": [
+      {
+       "bron": [
+        "binding"
+       ],
+       "doel": [
+        "portType"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "port",
+     "label": "Service port → binding",
+     "omschrijving": "De service biedt deze binding aan op een adres (wsdl:port).",
+     "regels": [
+      {
+       "bron": [
+        "service"
+       ],
+       "doel": [
+        "binding"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "adres"
+     ]
+    },
+    {
+     "id": "gebruiktMessage",
+     "label": "Operatie gebruikt message",
+     "omschrijving": "Een operatie van het portType gebruikt dit bericht als input, output of fault.",
+     "regels": [
+      {
+       "bron": [
+        "portType"
+       ],
+       "doel": [
+        "message"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "operatie",
+      "rol"
+     ]
+    },
+    {
+     "id": "gebruiktTypes",
+     "label": "Message gebruikt types",
+     "omschrijving": "De parts van het bericht komen uit deze types (XSD).",
+     "regels": [
+      {
+       "bron": [
+        "message"
+       ],
+       "doel": [
+        "types"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "import",
+     "label": "Import",
+     "omschrijving": "wsdl:import van een andere namespace.",
+     "regels": [
+      {
+       "bron": [
+        "namespace"
+       ],
+       "doel": [
+        "namespace"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "dependency",
+     "label": "Dependency",
+     "omschrijving": "Overige afhankelijkheid; stereotype uit EA als label.",
+     "regels": [
+      {
+       "bron": [
+        "service",
+        "portType",
+        "binding",
+        "message",
+        "types",
+        "namespace"
+       ],
+       "doel": [
+        "service",
+        "portType",
+        "binding",
+        "message",
+        "types",
+        "namespace"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "stereotype"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "xsd05",
+   "naam": "XML Schema",
+   "diagramTypeId": "xsd",
+   "elementen": [
+    {
+     "id": "schema",
+     "label": "Schema",
+     "omschrijving": "xs:schema — de namespace; sleep typen en elementen erin.",
+     "container": "bevat",
+     "eigenschappen": [
+      "targetNamespace",
+      "prefix",
+      "elementFormDefault",
+      "version"
+     ],
+     "leden": [
+      "complexType",
+      "simpleType",
+      "enumeration",
+      "element",
+      "attribute",
+      "group",
+      "attributeGroup",
+      "schema"
+     ]
+    },
+    {
+     "id": "complexType",
+     "label": "complexType",
+     "omschrijving": "Samengesteld type: elementen (sequence/choice/all) en attributen.",
+     "eigenschappen": [
+      "abstract",
+      "modelGroup",
+      "mixed"
+     ]
+    },
+    {
+     "id": "simpleType",
+     "label": "simpleType",
+     "omschrijving": "Enkelvoudig type: restriction/list/union op een basistype, met facets.",
+     "eigenschappen": [
+      "abstract",
+      "base",
+      "derivation"
+     ]
+    },
+    {
+     "id": "enumeration",
+     "label": "enumeration",
+     "omschrijving": "simpleType met een vaste waardenlijst.",
+     "eigenschappen": [
+      "abstract",
+      "base",
+      "derivation"
+     ]
+    },
+    {
+     "id": "element",
+     "label": "element (globaal)",
+     "omschrijving": "Globaal xs:element — de wortel of een herbruikbaar element; type via 'van type'.",
+     "eigenschappen": [
+      "typeLabel",
+      "nillable",
+      "substitutionGroup"
+     ]
+    },
+    {
+     "id": "attribute",
+     "label": "attribute (globaal)",
+     "omschrijving": "Globaal xs:attribute, herbruikbaar via ref.",
+     "eigenschappen": [
+      "typeLabel"
+     ]
+    },
+    {
+     "id": "group",
+     "label": "group",
+     "omschrijving": "Herbruikbare model group (sequence/choice) van elementen.",
+     "eigenschappen": [
+      "modelGroup"
+     ]
+    },
+    {
+     "id": "attributeGroup",
+     "label": "attributeGroup",
+     "omschrijving": "Herbruikbare groep attributen."
+    },
+    {
+     "id": "boundary",
+     "label": "Kader",
+     "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "extension",
+     "label": "Extension",
+     "omschrijving": "complexContent/extension: het bron-type breidt het doel-type uit (generalisatie «extend»).",
+     "regels": [
+      {
+       "bron": [
+        "complexType",
+        "simpleType",
+        "enumeration"
+       ],
+       "doel": [
+        "complexType",
+        "simpleType",
+        "enumeration"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "restriction",
+     "label": "Restriction",
+     "omschrijving": "restriction: het bron-type beperkt het doel-type (generalisatie «restrict»).",
+     "regels": [
+      {
+       "bron": [
+        "complexType",
+        "simpleType",
+        "enumeration"
+       ],
+       "doel": [
+        "complexType",
+        "simpleType",
+        "enumeration"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "vanType",
+     "label": "Van type",
+     "omschrijving": "Element, attribuut of lokaal element (rolnaam) heeft dit type.",
+     "regels": [
+      {
+       "bron": [
+        "element",
+        "attribute",
+        "complexType",
+        "group",
+        "attributeGroup"
+       ],
+       "doel": [
+        "complexType",
+        "simpleType",
+        "enumeration",
+        "element"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rolnaam",
+      "minOccurs",
+      "maxOccurs"
+     ]
+    },
+    {
+     "id": "groupRef",
+     "label": "Group ref",
+     "omschrijving": "complexType neemt een (attribute)group op via ref.",
+     "regels": [
+      {
+       "bron": [
+        "complexType",
+        "group",
+        "attributeGroup"
+       ],
+       "doel": [
+        "group",
+        "attributeGroup"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "import",
+     "label": "Import / include",
+     "omschrijving": "xs:import (andere namespace) of xs:include (zelfde namespace) tussen schema's.",
+     "regels": [
+      {
+       "bron": [
+        "schema"
+       ],
+       "doel": [
+        "schema"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "soort"
+     ]
+    },
+    {
+     "id": "dependency",
+     "label": "Dependency",
+     "omschrijving": "Overige afhankelijkheid; stereotype uit EA als label.",
+     "regels": [
+      {
+       "bron": [
+        "complexType",
+        "simpleType",
+        "enumeration",
+        "element",
+        "attribute",
+        "group",
+        "attributeGroup",
+        "schema"
+       ],
+       "doel": [
+        "complexType",
+        "simpleType",
+        "enumeration",
+        "element",
+        "attribute",
+        "group",
+        "attributeGroup",
+        "schema"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "stereotype"
+     ]
+    }
+   ]
+  }
+ ]
+}

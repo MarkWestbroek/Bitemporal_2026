@@ -288,7 +288,11 @@
  * @property {string[]} [oudeBeschrijvingSleutels] - sleutels waaronder dit profiel
  *   vóór 2026-10-12 de beschrijving bewaarde (bv. `["toelichting", "notes"]`);
  *   bij het laden migreren ze naar `data.beschrijving` (elementen en velden).
- * @property {string} style                 - StyleType-id (Implementatie-domein)
+ * @property {{aanwijzingen?: string[], paren?: Record<string, string[][]>}} [assistent] - voor de
+ *   AI-assistent (2026-10-14): `aanwijzingen` gaan als modelleerregels de prompt in; `paren`
+ *   (connector-id → toegestane [bron, doel]-typeparen) dwingt de controle af — een omgekeerd
+ *   paar wordt gedraaid, een ander paar valt weg (studio/assistent/assistentKern.js).
+ * @property {string} style                - StyleType-id (Implementatie-domein)
  * @property {"geen"|"icoon"|"tekst"} [typeWeergave] - default voor de
  *   Typering-toggle: alleen vorm, mini-icoon of stereotype-tekst (default "tekst")
  * @property {"zijden"|"zwevend"} [randAanhechting] - profiel-default voor waar

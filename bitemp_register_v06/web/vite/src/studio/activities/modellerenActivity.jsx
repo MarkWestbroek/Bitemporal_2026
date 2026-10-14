@@ -1395,8 +1395,18 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
         : []),
       { sep: true },
       { label: "Verwijderen uit model…", onClick: verwijderUitModel },
+      { sep: true },
+      // Assistent over de map waar dit element staat, met dit element als onderwerp (AI-2 stap 1b).
+      {
+        label: "✨ Vraag de assistent…",
+        onClick: () => {
+          const mapId = useModellerenStore.getState().plaatsing[sleutel || elementKey(profiel.id, elementId)] || null;
+          const mapNaam = mapId ? useModellerenStore.getState().mappen[mapId]?.naam || "" : "";
+          menuBus.emit("assistent:open", { soort: "model", mapId, mapNaam, focus: { profielId: profiel.id, elementId } });
+        },
+      },
       ...(element && veldCompartimenten(profiel.descriptor, element.elementType).length
-        ? [{ sep: true }, { label: "✨ Vraag de assistent…", onClick: () => menuBus.emit("assistent:open", { soort: "velden", profielId: profiel.id, elementId }) }]
+        ? [{ label: "✨ Velden toevoegen met de assistent…", onClick: () => menuBus.emit("assistent:open", { soort: "velden", profielId: profiel.id, elementId }) }]
         : []),
       ...meldItems({
         pad: meldPad(useModellerenStore.getState().plaatsing[sleutel || elementKey(profiel.id, elementId)], element?.naam || elementId),
@@ -1849,6 +1859,29 @@ function Sidebar() {
         const s = useModellerenStore.getState();
         const keys = elementIds.map((eid) => elementKey(profielId, eid)).filter((k) => s.plaatsing[k]);
         if (keys.length) s.plaatsMeerdere(keys, null);
+      }),
+    []
+  );
+
+  // Een nieuw element op een diagram landt in de map van dat diagram (14-10): de
+  // boom is de plek waar je het terugvindt, en "Niet ingedeeld" blijft voor wat
+  // van elders komt. Niet als een geplaatste voorouder (hiërarchie) het al
+  // meeneemt, en niet als het diagram zelf nergens staat. plaatsMeerdere is een
+  // gesynchroniseerde operatie, dus anderen zien het ook.
+  useEffect(
+    () =>
+      menuBus.on("studio:element-gemaakt", ({ profielId, elementId, diagramId } = {}) => {
+        const p = getProfieltype(profielId);
+        if (!p || !elementId || !diagramId) return;
+        const s = useModellerenStore.getState();
+        const mapId = s.plaatsing[tabId(profielId, diagramId)];
+        if (!mapId) return;
+        const sleutel = elementKey(profielId, elementId);
+        if (s.plaatsing[sleutel]) return;
+        const { ouderVan } = bepaalHierarchie(p, p.useStore.getState().elements);
+        const topId = topVoorouder(ouderVan, elementId);
+        if (topId !== elementId && s.plaatsing[elementKey(profielId, topId)]) return;
+        s.plaatsMeerdere([sleutel], mapId);
       }),
     []
   );

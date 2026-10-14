@@ -21,7 +21,9 @@ const server = new Server(
     instructions:
       "Omnium is een modelgedreven werkbank met een bitemporeel register. Met deze tools lees je meldingen " +
       "(bugs, wensen, vragen, complimenten) met hun context en schermafbeeldingen, reageer je erop en zet je de " +
-      "status (als beheerder), en zie je de Studio-projecten waar de gebruiker bij mag.",
+      "status (als beheerder), en zie je de Studio-projecten waar de gebruiker bij mag. Modellen: bekijk de talen " +
+      "(modeltalen) en de map (project_bekijken), maak een plan, en laat model_wijzigen het eerst als voorstel " +
+      "controleren; pas daarna toe (toepassen: true). Verwijs naar bestaande elementen met hun id.",
   },
 );
 

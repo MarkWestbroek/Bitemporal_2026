@@ -4,6 +4,10 @@
 // Alles loopt via de gewone Omnium-API met een persoonlijk token, dus met de rechten van die
 // gebruiker: een melder ziet de eigen meldingen, een beheerder alle; projecten volgen
 // "alles dicht tenzij".
+//
+// AI-1 stap 2 (14-10): modellen lezen en wijzigen (modeltalen, project_bekijken, model_wijzigen)
+// met dezelfde regelset en toepasser als de ✨ assistent in de Studio — zie model.mjs.
+import { profielen, zoekProject, leesProject, zoekMap, mapPad, boomTekst, wijzigModel, wijzigingTekst } from "./model.mjs";
 
 const tekst = (t) => ({ content: [{ type: "text", text: t }] });
 const fout = (t) => ({ content: [{ type: "text", text: t }], isError: true });
@@ -123,6 +127,72 @@ export const TOOLS = [
       const lijst = await api.get("/api/studio/projecten");
       if (!lijst?.length) return tekst("Geen projecten (of geen toegang).");
       return tekst(lijst.map((p) => `${p.naam} — id ${p.id} · ${p.recht || "?"} · eigenaar ${p.eigenaar || "—"} · v${p.versie} · bijgewerkt ${datum(p.bijgewerkt)}`).join("\n"));
+    },
+  },
+  {
+    name: "modeltalen",
+    description:
+      "De modelleertalen (M2-profielen) van Omnium: zonder `taal` een lijst; met `taal` (id) de element- en relatietypen, " +
+      "de verbindingsregels (bron → doel), eigenschappen en modelleeraanwijzingen. Lees dit vóór je een plan maakt voor model_wijzigen.",
+    inputSchema: { type: "object", properties: { taal: { type: "string", description: "profiel-id, bv. usecase05 of activity05" } } },
+    async run(_api, { taal } = {}) {
+      const lijst = profielen();
+      if (!taal) return tekst(lijst.map((p) => `${p.id} — ${p.naam} (${p.elementen.length} elementtypen, ${p.connectoren.length} relatietypen)`).join("\n"));
+      const p = lijst.find((x) => x.id === taal || x.naam.toLowerCase() === String(taal).toLowerCase());
+      if (!p) return fout(`Onbekende taal ${taal}; zie modeltalen zonder argument.`);
+      const r = [`# ${p.naam} (${p.id})`, "Elementtypen:"];
+      for (const e of p.elementen) r.push(`- ${e.id}: ${e.label}${e.omschrijving ? ` — ${e.omschrijving}` : ""}${e.container ? ` (container; leden via \`in\`: ${(e.leden || []).join(", ")})` : ""}${e.eigenschappen ? ` [eigenschappen: ${e.eigenschappen.join(", ")}]` : ""}`);
+      r.push("Relaties (bron → doel):");
+      for (const c of p.connectoren) r.push(`- ${c.id}: ${c.label} — ${(p.paren?.[c.id] || c.regels.map((x) => [x.bron.join("|"), x.doel.join("|")])).map(([b, d]) => `${b} → ${d}`).join("; ")}${c.eigenschappen ? ` [eigenschappen: ${c.eigenschappen.join(", ")}]` : ""}`);
+      if (p.aanwijzingen?.length) r.push("Aanwijzingen:", ...p.aanwijzingen.map((a) => `- ${a}`));
+      return tekst(r.join("\n"));
+    },
+  },
+  {
+    name: "project_bekijken",
+    description:
+      "Een Studio-project: zonder `map` de boom (mappen met hun diagrammen per taal); met `map` (pad zoals Test/Uitwerking, of \"/\" " +
+      "voor de hoofdmap) wat erin staat: diagrammen, elementen en relaties mét hun ids (voor verwijzingen in model_wijzigen).",
+    inputSchema: {
+      type: "object",
+      properties: { project: { type: "string", description: "naam of id (zie projecten_lijst)" }, map: { type: "string" } },
+      required: ["project"],
+    },
+    async run(api, { project, map }) {
+      const p = await zoekProject(api, project);
+      const proj = await leesProject(api, p.id);
+      if (map === undefined) return tekst(`# ${p.naam} (${p.recht || "?"})\n${boomTekst(proj)}`);
+      const { bestaandInMap, bestaandTekst } = await import("../../web/vite/src/studio/assistent/assistentKern.js");
+      const doel = zoekMap(proj.mappen, map);
+      const inhoud = bestaandTekst(bestaandInMap(proj, doel?.id || null, profielen().map((x) => x.id)), { max: 500 });
+      const sub = Object.values(proj.mappen).filter((m) => (m.ouderId || null) === (doel?.id || null)).map((m) => m.naam);
+      return tekst(`# ${p.naam} / ${doel ? mapPad(proj.mappen, doel.id) : "(hoofdmap)"}${sub.length ? `\nsubmappen: ${sub.join(", ")}` : ""}\n${inhoud || "(leeg)"}`);
+    },
+  },
+  {
+    name: "model_wijzigen",
+    description:
+      "Maak of wijzig modellen in een map van een Studio-project met een plan (JSON), gecontroleerd tegen de modeltalen. " +
+      "Standaard alleen een voorstel; met toepassen: true gaat het als projectsync-operaties naar de server en zien open Studio's het live. " +
+      "Plan: {uitleg, diagrammen: [{sleutel, taal, naam, map?} | {sleutel, bestaand: <diagram-id>}], " +
+      "elementen: [{sleutel, type, naam, diagram: <sleutel>, in?: <container>, eigenschappen?} | {bestaand: <element-id>, naam?, diagram?}], " +
+      "connectoren: [{type, bron, doel, naam?, eigenschappen?}] (bron/doel = sleutel van een nieuw element of id van een bestaand), " +
+      "verbanden: [{van, naar, soort: komt voort uit|heeft te maken met|genereert|realiseert}] (tussen talen), " +
+      "opstelling: [{diagram, actie: naast-elkaar|boven-elkaar|verdeel-horizontaal|verdeel-verticaal|links|rechts|boven|onder|automatisch, elementen?}]}. " +
+      "`map` op een diagram = (nieuwe) submap van de doelmap. Kijk eerst met modeltalen en project_bekijken.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        project: { type: "string" },
+        map: { type: "string", description: "pad van de doelmap, \"/\" of leeg = hoofdmap" },
+        plan: { type: "object", description: "het plan, zie de beschrijving" },
+        toepassen: { type: "boolean", description: "false (standaard): alleen voorstel; true: doorvoeren" },
+      },
+      required: ["project", "plan"],
+    },
+    async run(api, { project, map, plan, toepassen = false }) {
+      const uit = await wijzigModel(api, { project, map, plan: typeof plan === "string" ? JSON.parse(plan) : plan, toepassen });
+      return tekst(wijzigingTekst(uit, toepassen));
     },
   },
 ];
