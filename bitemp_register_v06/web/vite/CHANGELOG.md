@@ -8,6 +8,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.19.0] — 2026-10-14
+Mensen uitnodigen om Omnium te proberen: uitnodigingen met een rol en toegang per project
+("alles dicht tenzij"), vijf rollen, en voor nieuwe gebruikers een kennismakingstour, een
+opdrachtenpalet met uitleg, sneltoetsen, lege staten en tips. Verder het relatiepaneel, de
+modelleer-voorkeuren, beschrijvingen bij mappen en diagrammen, gegevenselementen als `0..*`
+`{enkelvoudig}` en de Studio-regressietests. Samen met **api 0.14.0** (vereist voor de
+uitnodigingen en de projecttoegang).
+
 ### Toegevoegd
 - **Help en rondleiding** (14-10, Mark): het opdrachtenpalet (Ctrl+K) toont per opdracht een
   regel uitleg, groepeert per menu en vindt ook beginletters; het Help-menu kreeg Rondleiding,
