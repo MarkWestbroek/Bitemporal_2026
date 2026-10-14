@@ -123,6 +123,7 @@ func main() {
 			fmt.Println("WARN: Admin-seed mislukt:", err)
 		}
 		middleware.ZetGebruikerResolver(gebruikers.Resolver)
+		middleware.ZetTokenResolver(gebruikers.TokenResolver)
 		// Eenmalig: bestaande gebruikers houden toegang tot bestaande Studio-projecten,
 		// vóór "alles dicht tenzij" (handlers/studio_project_toegang.go).
 		if alle, err := gebruikers.LaadAlle(sysCtx, time.Now()); err != nil {
@@ -182,6 +183,10 @@ func NewRouter() *gin.Engine {
 		auth.POST("/login", gebruikers.LoginHandler())
 		// Eigen wachtwoord wijzigen (met het huidige ter controle).
 		auth.PUT("/wachtwoord", middleware.RequireAuth(), gebruikers.EigenWachtwoordHandler())
+		// Persoonlijke API-tokens (gebruikers/token.go): voor de MCP-server of scripts.
+		auth.GET("/tokens", middleware.RequireAuth(), gebruikers.TokensLijstHandler())
+		auth.POST("/tokens", middleware.RequireAuth(), gebruikers.TokenMakenHandler())
+		auth.DELETE("/tokens/:id", middleware.RequireAuth(), gebruikers.TokenIntrekkenHandler())
 		auth.POST("/logout", handlers.LogoutHandler())
 		auth.GET("/me", handlers.MeHandler())
 		auth.GET("/status", handlers.AuthStatusHandler())
