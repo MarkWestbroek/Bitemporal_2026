@@ -290,8 +290,10 @@ function NoteShape({ element, selected, children }) {
     <div
       className="dc-node"
       style={{
-        minWidth: 160,
-        minHeight: 60,
+        // Klein mogen (EA-notities zijn 120×70; Mark, 14-10): het elementtype
+        // kan met minBreedte/minHoogte lager dan de box-minima.
+        minWidth: 100,
+        minHeight: 44,
         borderRadius: 4,
         border: `2px solid ${borderColor}`,
         backgroundColor: d.kleur || "#fffde7",

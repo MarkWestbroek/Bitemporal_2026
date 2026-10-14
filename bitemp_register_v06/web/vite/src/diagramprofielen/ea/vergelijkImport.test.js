@@ -182,3 +182,22 @@ test("her-import: oude knikken/vorm op het element (oude lezer) gaan weg; lijnda
   assert.deepEqual(editor2.lijnen[metPad].labelOffsets, { midden: { x: 5, y: 6 } }, "lokale labelpositie op het diagram blijft");
   assert.ok(editor2.lijnen[metPad].knikken || editor2.lijnen[metPad].vorm, "lijndata uit EA op het diagram");
 });
+
+test("sequence her-import: punten met én zonder GUID (oude import) botsen niet meer", async () => {
+  const { qeaNaarSequence } = await import("./qeaNaarSequence.js");
+  const seqBron = JSON.parse(readFileSync(join(hier, "fixtures", "sequence-js.qea.json"), "utf8"));
+  const model = qeaNaarSequence(seqBron, { packageId: 1170, schaal: 1 });
+  const punt = Object.values(model.elements).find((e) => e.elementType === "punt");
+  assert.match(punt.data.eaGuid, /~(van|naar)$/, "een punt heeft een eigen externe identiteit");
+  // Oude stand: dezelfde ids, maar punten zonder eaGuid.
+  const oud = Object.fromEntries(
+    Object.entries(model.elements).map(([id, e]) => {
+      if (e.elementType !== "punt") return [id, e];
+      const { eaGuid, ...rest } = e.data;
+      return [id, { ...e, data: rest }];
+    })
+  );
+  const plan = vergelijkMetStore(model, { elements: oud, diagrams: model.diagrams }, { pakketIds: [1170] });
+  assert.equal(plan.elementen.nieuw.length, 0, "geen punt als nieuw (dat gaf 'Element-id bestaat al')");
+  assert.ok(plan.elementen.gewijzigd.some((r) => model.elements[r.id]?.elementType === "punt"), "de punten krijgen hun GUID erbij");
+});

@@ -223,8 +223,13 @@
  *   ingeklapt (zoals mappen in een verkenner); de chevron-klik wint daarna
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector
  * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
+ * @property {"x"|"y"|"xy"} [layoutDimensie] - in welke richting het element op
+ *   het canvas beweegt (standaard "xy"); "x" = alleen opzij (sequence-levenslijn)
  * @property {Object} [edgePresentatie]     - declaratieve edge-vorm voor kale
- *   connectoren: { lijn, kleur, markerStart, markerEnd, labels } (zie ConnectorEdge)
+ *   connectoren: { lijn, kleur, markerStart, markerEnd, labels, labelsBoven } (zie
+ *   ConnectorEdge; labelsBoven = middenlabel boven de lijn, bv. sequence-berichten);
+ *   hooks.edgePresentatie(el, {elements}) mag daarnaast sourceHandle/targetHandle/vorm
+ *   voorstellen (een keuze op het diagram wint)
  * @property {PropertyType[]} [properties]  - element-brede eigenschappen voor de
  *   inspector (bv. tekst, expressie, kleur) — PropertyTypes van het ElementType
  * @property {CompartmentType[]} [compartments] - max 9, {ordered}

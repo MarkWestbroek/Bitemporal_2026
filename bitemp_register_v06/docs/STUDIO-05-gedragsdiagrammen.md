@@ -314,7 +314,14 @@ State machine v0 laat vast zien wat "core + labels" oplevert; de bekende open pu
 - **Pool + message flow**: als aparte collaboration-laag modelleren, of BPMN-pools bewust
   buiten scope houden in v1?
 - **Ordening/as** (sequence): positie-als-semantiek botst met vrije layout — apart
-  diagram-subtype met layout-constraints?
+  diagram-subtype met layout-constraints? **Richting gekozen (2026-10-13/14, Mark):** de volgorde
+  ligt in M1 (levenslijn → activatie → geordende berichten/activaties; punten blijven als
+  UML-occurrences, afgeleid en niet getekend), de layout erbovenop is één-dimensionaal (lijn: x;
+  activatie/bericht: y als afstand), "lijnen horizontaal" is een regel van de tekenaar. Zie
+  `docs/plans/2026-10-13 Sequence — volgorde in het model, layout erbovenop (plan).md`. Fase 0
+  daarvan is gebouwd: koppen actor/boundary/control/entity (robustness, Jacobson), guard en
+  retourwaarde op een bericht (`[guard] naam(…): retour`, via de nieuwe `rondNaam` van de
+  `edgeLabels`-hook), en de EA-lezer leidt de kop af uit Actor of het stereotype.
 
 ---
 

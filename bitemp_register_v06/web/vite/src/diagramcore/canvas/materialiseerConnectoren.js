@@ -24,7 +24,10 @@
  *
  * Labels komen uit de optionele profiel-hook
  * `elementType.hooks.edgeLabels(connector, { elements })` →
- *   { bron?: Label[], doel?: Label[], kaal?: Label[] } (ConnectorEdge-vorm).
+ *   { bron?: Label[], doel?: Label[], kaal?: Label[], rondNaam?: {voor?, na?} }
+ *   (ConnectorEdge-vorm). `rondNaam` zet delen vóór en na de naam in hetzelfde
+ *   label — bv. een guard `[x] ` en een retourwaarde `: T` om een
+ *   sequence-bericht — zodat de naam zelf inline bewerkbaar blijft.
  *
  * Puur en store-loos: testbaar met kale objecten.
  */
@@ -249,8 +252,18 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     const { bron: bronRef, doel: doelRef } = paar;
     const bronVoorkomenId = voorkomenId(bronRef);
     const doelVoorkomenId = voorkomenId(doelRef);
-    const bronMid = midden(bronRef, maten?.[bronVoorkomenId]);
-    const doelMid = midden(doelRef, maten?.[doelVoorkomenId]);
+    // Een aangehecht rand-element (sequence-punt op zijn levenslijn) bewaart
+    // zijn positie relatief aan zijn gastheer: voor de zijdekeuze het
+    // absolute midden nemen, anders lagen twee punten op x≈1 en kozen beide
+    // uiteinden "rechts" (berichten 18px naar rechts; Mark, 14-10).
+    const absMidden = (ref, vkId, elementId) => {
+      const m = midden(ref, maten?.[vkId]);
+      const gastheerId = elements[elementId]?.data?.randVan;
+      const gastheer = gastheerId ? (diagram?.nodes || []).find((n) => n.elementId === gastheerId) : null;
+      return gastheer?.position ? { x: m.x + gastheer.position.x, y: m.y + gastheer.position.y } : m;
+    };
+    const bronMid = absMidden(bronRef, bronVoorkomenId, el.source);
+    const doelMid = absMidden(doelRef, doelVoorkomenId, el.target);
 
     // Zwevende aanhechting per uiteinde (zie zwevendeRand.js). Twee
     // voorwaarden: het elementtype aan die kant moet het toestaan, én de
@@ -264,8 +277,17 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     // createDiagramStore.zetLijnen. Een sleutel die op het diagram ontbreekt
     // valt terug op het element (standaard voor elk diagram, oude modellen).
     const lijn = { ...(el.data || {}), ...(diagram?.lijnen?.[el.id] || {}) };
-    const bronHandle = normaliseerHandle(lijn.sourceHandle, "source");
-    const doelHandle = normaliseerHandle(lijn.targetHandle, "target");
+    // Statisch (edgePresentatie) + dynamisch (hooks.edgePresentatie op basis
+    // van de connector-data, bv. richting → pijl; §8.5c-familie). De hook mag
+    // ook `sourceHandle`/`targetHandle`/`vorm` voorstellen (bv. een
+    // sequence-zelfbericht: rechts eruit, rechts erin, hoekig); een keuze op
+    // het diagram of het element wint daarvan.
+    const basisPresentatie = {
+      ...(et.edgePresentatie || {}),
+      ...(et.hooks?.edgePresentatie?.(el, { elements }) || {}),
+    };
+    const bronHandle = normaliseerHandle(lijn.sourceHandle || basisPresentatie.sourceHandle, "source");
+    const doelHandle = normaliseerHandle(lijn.targetHandle || basisPresentatie.targetHandle, "target");
     const zwevendKant = (elementId, handle) =>
       elementTypesById[elements[elementId]?.elementType]?.randAanhechting === "zwevend" && !handle;
     const zwevendBron = zwevendKant(el.source, bronHandle);
@@ -278,13 +300,6 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       offsets
         ? lijst.map((l) => (offsets[l.zijde] ? { ...l, offset: offsets[l.zijde] } : l))
         : lijst;
-    // Statisch (edgePresentatie) + dynamisch (hooks.edgePresentatie op basis
-    // van de connector-data, bv. richting → pijl; §8.5c-familie).
-    const basisPresentatie = {
-      ...(et.edgePresentatie || {}),
-      ...(et.hooks?.edgePresentatie?.(el) || {}),
-    };
-
     // Samentrekking (lollipop): een ingeklapt uiteinde maakt de lijn kaal —
     // geen streepjespatroon, geen markers. Wat overblijft is het steeltje.
     if (
@@ -299,14 +314,16 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     if (effectieveConnectorGedaante(el, diagram) !== "box") {
       // ── Kale gedaante: één edge ──────────────────────────────────────────
       const kaalLabels = [...(basisPresentatie.labels || []), ...(labels.kaal || [])];
-      if (el.naam || isAfgeleid(el.data, et)) {
+      const voor = labels.rondNaam?.voor || [];
+      const na = labels.rondNaam?.na || [];
+      if (el.naam || isAfgeleid(el.data, et) || voor.length || na.length) {
         // `veld: "naam"`: dit deel toont de connector-naam en is op de canvas
         // inline te bewerken (klik op het label, zie ConnectorEdge.jsx).
         // Afgeleide relatie (UML 2.5.1 §11.5.4): "/" vóór de naam, als eigen
         // deel zodat het niet in de naam belandt bij inline bewerken.
         const delen = el.naam ? [{ tekst: el.naam, soort: "rolnaam", veld: "naam" }] : [];
         if (isAfgeleid(el.data, et)) delen.unshift({ tekst: "/", soort: "rolnaam" });
-        kaalLabels.push({ zijde: "midden", delen });
+        kaalLabels.push({ zijde: "midden", delen: [...voor, ...delen, ...na] });
       }
       // Zelf-lus (oortje): standaard hoekig en van boven naar rechts —
       // de kortste weg is bij één punt betekenisloos.

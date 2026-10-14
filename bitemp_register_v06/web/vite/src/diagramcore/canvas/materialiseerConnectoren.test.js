@@ -612,3 +612,47 @@ test("afgeleide relatie: '/' als eigen deel vóór de naam (data.afgeleid of pro
   // Ook zonder naam is een afgeleide relatie herkenbaar.
   assert.deepEqual(naamDelen({ afgeleid: true }, "").map((d) => d.tekst), ["/"]);
 });
+
+test("rondNaam: delen vóór en na de naam in hetzelfde label (naam blijft bewerkbaar)", () => {
+  const typen = {
+    entiteit: { id: "entiteit", shape: "class-box" },
+    bericht: {
+      id: "bericht",
+      shape: "edge",
+      isConnector: true,
+      hooks: { edgeLabels: () => ({ rondNaam: { voor: [{ tekst: "[ok] ", soort: "constraint" }], na: [{ tekst: ": T", soort: "rolnaam" }] } }) },
+    },
+  };
+  const elements = { A, B, m: { id: "m", naam: "doe()", elementType: "bericht", source: "A", target: "B", compartimenten: [], data: {} } };
+  const diagram = { id: "d", nodes: [{ elementId: "A", position: { x: 0, y: 0 } }, { elementId: "B", position: { x: 400, y: 0 } }] };
+  const { edges } = materialiseerConnectoren(elements, diagram, typen);
+  const label = edges[0].data.presentatie.labels.find((l) => l.delen.some((d) => d.veld === "naam"));
+  assert.deepEqual(label.delen.map((d) => d.tekst), ["[ok] ", "doe()", ": T"]);
+});
+
+test("rand-elementen (punten op levenslijnen): zijdekeuze op het absolute midden", () => {
+  const typen = {
+    lijn: { id: "lijn", shape: "seq-levenslijn" },
+    punt: { id: "punt", shape: "seq-punt", randElement: { ouderTypes: ["lijn"], klem: "as" } },
+    bericht: { id: "bericht", shape: "edge", isConnector: true },
+  };
+  const elements = {
+    L1: { id: "L1", elementType: "lijn" },
+    L2: { id: "L2", elementType: "lijn" },
+    p1: { id: "p1", elementType: "punt", data: { randVan: "L1" } },
+    p2: { id: "p2", elementType: "punt", data: { randVan: "L2" } },
+    m: { id: "m", naam: "doe()", elementType: "bericht", source: "p1", target: "p2", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    id: "d",
+    nodes: [
+      { elementId: "L1", position: { x: 0, y: 0 }, size: { width: 14, height: 400 } },
+      { elementId: "L2", position: { x: 300, y: 0 }, size: { width: 14, height: 400 } },
+      { elementId: "p1", position: { x: 1, y: 100 }, size: { width: 12, height: 12 } },
+      { elementId: "p2", position: { x: 1, y: 100 }, size: { width: 12, height: 12 } },
+    ],
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, typen);
+  assert.equal(edges[0].sourceHandle, "source-right");
+  assert.equal(edges[0].targetHandle, "target-left", "het doel ligt rechts: erin aan de linkerkant");
+});

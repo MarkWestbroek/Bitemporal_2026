@@ -12,9 +12,16 @@
  *     resizebaar) zijn rand-elementen op de levenslijn — berichten
  *     verbinden punt↔punt (of activatie);
  *   - **berichten**: synchroon (dichte pijl), asynchroon (open pijl) en
- *     retour (gestippeld); de naam is het label. Een zelf-bericht wordt
- *     het hoekige "oortje" (bestaande lus-presentatie);
+ *     retour (gestippeld); de naam is het label. Een zelf-bericht loopt
+ *     tussen twee punten op dezelfde lijn (zenden, 15px lager ontvangen):
+ *     rechts eruit, hoekig, rechts erin — het haakje van EA, en de
+ *     "rugzak"-activatie volgt uit de afleiding (activaties.js);
  *   - **fragment**: alt/opt/loop/par-kader (soort als keuze-property).
+ *
+ * 2026-10-14 (fase 0 van het plan "Sequence — volgorde in het model, layout
+ * erbovenop"): een levenslijn heeft een **kop** (object, actor, boundary,
+ * control, entity); een bericht een **guard** en een **retourwaarde**
+ * (`[guard] naam(…): retour`, labels.js).
  *
  * Bewuste v0-versimpelingen (het resterende as-primitief, v1):
  * de verticale positie ís de volgorde en blijft handwerk — er is nog geen
@@ -25,6 +32,10 @@
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerSequenceShapes } from "./shapes.jsx";
+import { KOPPEN, berichtLabels } from "./labels.js";
+import { verschuifBericht } from "./verschuif.js";
+
+export { KOPPEN, berichtLabels };
 
 export const SEQUENCE_ID = "sequence";
 
@@ -45,10 +56,18 @@ const elementTypes = [
     // Hoogte rekbaar (lijn langer maken); de breedte blijft praktisch 14px.
     minBreedte: 14,
     minHoogte: 200,
+    // Een levenslijn beweegt alleen opzij (zoals in EA): anders gaan alle
+    // berichten (rand-elementen, relatief aan de lijn) scheef (Mark, 14-10).
+    layoutDimensie: "x",
     properties: [
       // Instantie-van (ontwerp "Sequence hermetisch" §1): het type van dit
       // object, uit welk profiel dan ook. De kop rendert dan naam:Type.
       { key: "instantieVan", label: "instantie van", datatype: "element-verwijzing" },
+      // Kop (2026-10-14, Mark): de rol van de deelnemer. Boundary/control/
+      // entity zijn de robustness-stereotypes van Jacobson (Objectory, UML 1.x
+      // standaardprofiel; EA "Robustness"). Leeg = de weergave van het type
+      // (instantie van, bv. ArchiMate), zonder type de rechthoek.
+      { key: "kop", label: "kop", datatype: "keuze", opties: KOPPEN },
       KLEUR_VELD,
     ],
     hooks: {
@@ -74,7 +93,7 @@ const elementTypes = [
   {
     id: "activatie",
     label: "Activatie",
-    omschrijving: "Execution-balk op de levenslijn (sleep op de lijn; hoogte = duur).",
+    omschrijving: "Execution-balk op de levenslijn (sleep op de lijn; hoogte = duur). Uit berichten tussen punten leidt het diagram de balken zelf af.",
     kort: "Activ",
     icoon: "seq-activatie",
     shape: "seq-activatie",
@@ -107,7 +126,10 @@ const elementTypes = [
     omschrijving: "Vrije notitie op het diagram.",
     kort: "NOT",
     shape: "note",
-    handleStijl: "onzichtbaar",
+    // Klein mogen (EA: 120×70) en handles zichtbaar: zo trek je er een
+    // notitie-lijn uit zonder eerst de verbind-modus te kiezen (Mark, 14-10).
+    minBreedte: 100,
+    minHoogte: 44,
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
 
@@ -127,11 +149,11 @@ const elementTypes = [
   // ── Berichten ──────────────────────────────────────────────────────────
   ...[
     ["synchroon", "Synchroon bericht", "Aanroep die op antwoord wacht (dichte pijlpunt).",
-      { lijn: "solid", vorm: "recht", kleur: "#475569", markerEnd: "pijl-dicht" }],
+      { lijn: "solid", vorm: "recht", kleur: "#475569", markerEnd: "pijl-dicht", labelsBoven: true }],
     ["asynchroon", "Asynchroon bericht", "Bericht zonder te wachten (open pijlpunt).",
-      { lijn: "solid", vorm: "recht", kleur: "#475569", markerEnd: "pijl-open" }],
+      { lijn: "solid", vorm: "recht", kleur: "#475569", markerEnd: "pijl-open", labelsBoven: true }],
     ["retour", "Retourbericht", "Antwoord terug naar de aanroeper (gestippeld).",
-      { lijn: "dash-4-4", vorm: "recht", kleur: "#64748b", markerEnd: "pijl-open" }],
+      { lijn: "dash-4-4", vorm: "recht", kleur: "#64748b", markerEnd: "pijl-open", labelsBoven: true }],
   ].map(([id, label, omschrijving, edgePresentatie]) => ({
     id,
     label,
@@ -148,17 +170,24 @@ const elementTypes = [
     properties: [
       { key: "operatie", label: "operatie", datatype: "operatie-keuze" },
       { key: "argumenten", label: "argumenten", datatype: "string" },
+      // Retourwaarde (UML: retourparameter van de signatuur). De terugkeer
+      // zelf is het eind van de activatie; een retourpijl is optioneel.
+      { key: "retourtype", label: "retourwaarde", datatype: "string" },
+      // Guard (EA: conditie op het bericht), getekend als [guard] vóór de naam.
+      { key: "guard", label: "guard", datatype: "string" },
     ],
     hooks: {
-      /** Label: operatie(argumenten) — de gekozen operatie wint van de naam. */
-      edgeLabels: (conn) => {
-        const op = conn.data?.operatie;
-        if (!op?.naam) return {};
-        const args = conn.data?.argumenten;
-        // Signaturen ("doe(x): y") niet dubbel van haakjes voorzien.
-        const tekst = op.naam.includes("(") ? op.naam : `${op.naam}(${args || ""})`;
-        return { kaal: [{ zijde: "midden", delen: [{ tekst, soort: "naam" }] }] };
+      /** Label: [guard] operatie(argumenten): retourwaarde. */
+      edgeLabels: berichtLabels,
+      /** Zelf-bericht (beide punten op één lijn): het haakje naar rechts. */
+      edgePresentatie: (conn, ctx) => {
+        const a = ctx?.elements?.[conn.source], b = ctx?.elements?.[conn.target];
+        const lijn = a?.data?.randVan;
+        if (!lijn || lijn !== b?.data?.randVan || conn.source === conn.target) return {};
+        return { vorm: "hoekig", sourceHandle: "source-right", targetHandle: "target-right" };
       },
+      /** Lijn verticaal slepen: punten mee, horizontaal, eronder wegduwen (verschuif.js). */
+      verschuifConnector: verschuifBericht,
     },
   })),
 ];

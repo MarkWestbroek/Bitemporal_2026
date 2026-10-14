@@ -127,6 +127,16 @@ export function vergelijkMetStore(model, state, { pakketIds = [] } = {}) {
     const b = bevatBestaand.get(`${idMap.get(el.source) || el.source}~${idMap.get(el.target) || el.target}`);
     if (b) idMap.set(el.id, b.id);
   }
+  // Hulpelementen zonder eigen GUID (bv. de punten van een sequence-bericht,
+  // id `<bericht>~van`) uit een import van vóór ze een externe identiteit
+  // kregen: de lezers leiden ids deterministisch af uit de EA-GUID, dus
+  // hetzelfde id zonder GUID in de store is dezelfde EA-bron. Zonder deze
+  // terugval botste zo'n her-import op "Element-id bestaat al" (Mark, 14-10).
+  for (const el of Object.values(model.elements || {})) {
+    if (idMap.has(el.id)) continue;
+    const b = bestaandeEl[el.id];
+    if (b && !b.data?.eaGuid) idMap.set(el.id, b.id);
+  }
   const idVanImport = (id) => idMap.get(id) || id;
 
   const elementen = { nieuw: [], gewijzigd: [], ongewijzigd: [], verdwenen: [] };

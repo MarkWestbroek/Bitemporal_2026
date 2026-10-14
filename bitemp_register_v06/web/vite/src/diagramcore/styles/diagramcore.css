@@ -469,6 +469,10 @@
    bolletje volledig — de vorm zelf verdwijnt en de handles steken ver buiten
    de kern uit. Daarom houden we ze onzichtbaar tot je de node aanwijst of
    selecteert; connecteren blijft werken (alleen de opacity verandert). */
+/* .dc-seq-punt (sequence-punt): zelfde onzichtbare handles, maar óp de rand
+   van het punt in plaats van erbuiten — de lijn hecht dan aan de rand van de
+   activatiebalk, zoals EA (14-10). */
+.dc-canvas .dc-seq-punt .react-flow__handle,
 .dc-canvas .dc-punt-node .react-flow__handle {
   width: 7px;
   height: 7px;
@@ -476,6 +480,8 @@
   opacity: 0;
   transition: opacity 0.15s;
 }
+.dc-canvas .react-flow__node:hover .dc-seq-punt .react-flow__handle,
+.dc-canvas .react-flow__node.selected .dc-seq-punt .react-flow__handle,
 .dc-canvas .react-flow__node:hover .dc-punt-node .react-flow__handle,
 .dc-canvas .react-flow__node.selected .dc-punt-node .react-flow__handle {
   opacity: 0.7;
@@ -582,7 +588,11 @@
   border-color: #3d3d46;
 }
 
-[data-studio-theme="dark"] .dc-edge-rolnaam {
+[data-studio-theme="dark"] /* Staart van een naam ("(args): retour", sequence): tegen de naam aan, zonder gap. */
+.dc-edge-staart {
+  margin-left: -4px;
+}
+.dc-edge-rolnaam {
   color: #e2e8f0;
 }
 

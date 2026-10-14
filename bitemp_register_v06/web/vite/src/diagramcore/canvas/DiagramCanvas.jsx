@@ -415,8 +415,10 @@ function CanvasBinnenkant({
           // Achtergrond-elementen (kaders) starten diep onder de rest (-10);
           // de handmatige z-order (contextmenu) telt daar bovenop, zodat ook
           // kaders onderling naar voren/achteren kunnen.
-          ...(elementType.achtergrond || element.data?.zOrde
-            ? { zIndex: (elementType.achtergrond ? -10 : 0) + (element.data?.zOrde || 0) }
+          // Notities liggen bovenop (5): een levenslijn of kader dat later in
+          // de volgorde komt, tekende er anders dwars doorheen (Mark, 14-10).
+          ...(elementType.achtergrond || elementType.shape === "note" || element.data?.zOrde
+            ? { zIndex: (elementType.achtergrond ? -10 : elementType.shape === "note" ? 5 : 0) + (element.data?.zOrde || 0) }
             : {}),
           // Achtergrondkaders (systeemkader, kader, groepering, laag): het lege
           // binnenvlak is "canvas" — klikken deselecteert, slepen maakt
@@ -712,6 +714,19 @@ function CanvasBinnenkant({
               ...(onKnikken && e.data.knikken !== undefined
                 ? { onKnikken: (lijst) => onKnikken(e.data.connectorId, lijst) }
                 : {}),
+              // Lijn verticaal verschuiven (hook verschuifConnector, bv.
+              // sequence-berichten): de hook levert nieuwe posities per voorkomen.
+              ...(() => {
+                const conn = elements?.[e.data.connectorId];
+                const hook = lookups.elementTypesById[conn?.elementType]?.hooks?.verschuifConnector;
+                if (!hook || !onNodePosities) return {};
+                return {
+                  onVerschuif: (dy) => {
+                    const record = hook(conn, dy, { elements, diagram });
+                    if (record && Object.keys(record).length) onNodePosities(record);
+                  },
+                };
+              })(),
             }
           : e.data,
     }));
@@ -720,7 +735,7 @@ function CanvasBinnenkant({
       const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
-  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, onVerhangConnector, maten]);
+  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, onVerhangConnector, maten, elements, lookups, onNodePosities]);
 
   // Directe kliks altijd melden, óók als React Flow geen selectie-wijziging
   // ziet (node stond intern nog geselecteerd terwijl de inspector inmiddels
@@ -928,8 +943,38 @@ function CanvasBinnenkant({
     },
     [bewerkbaar, lookups, absVan, getNodes]
   );
+  /**
+   * Layout-dimensie (M3, plan "Sequence — volgorde in het model" §5.1):
+   * `ElementType.layoutDimensie: "x"` beweegt alleen opzij (sequence-
+   * levenslijn), `"y"` alleen op en neer. De andere coördinaat blijft wat
+   * het diagram bewaart.
+   */
+  const vastgezet = useCallback(
+    (node, pos) => {
+      const dim = node?.data?.elementType?.layoutDimensie;
+      if (!dim || dim === "xy") return pos;
+      const oud = (diagram?.nodes || []).find((k) => voorkomenId(k) === node.id)?.position;
+      if (!oud) return pos;
+      return dim === "x" ? { x: pos.x, y: oud.y } : { x: oud.x, y: pos.y };
+    },
+    [diagram]
+  );
+
   const handleNodeDrag = useCallback(
-    (_ev, node) => {
+    (_ev, node, nodes) => {
+      // Vastgezette dimensie: de sleep zelf al klemmen (niet pas bij loslaten).
+      const gesleept = nodes?.length ? nodes : node ? [node] : [];
+      const klem = gesleept.filter((n) => n?.data?.elementType?.layoutDimensie && n.data.elementType.layoutDimensie !== "xy");
+      if (klem.length) {
+        setNodes((hd) =>
+          hd.map((n) => {
+            const k = klem.find((x) => x.id === n.id);
+            if (!k) return n;
+            const pos = vastgezet(k, k.position);
+            return pos.x === n.position.x && pos.y === n.position.y ? n : { ...n, position: pos };
+          })
+        );
+      }
       const m = meesleepRef.current;
       if (!m || node?.id !== m.kaderId) return;
       const kp = absVan(node);
@@ -942,7 +987,7 @@ function CanvasBinnenkant({
         })
       );
     },
-    [absVan, setNodes]
+    [absVan, setNodes, vastgezet]
   );
 
   const handleNodeDragStop = useCallback(
@@ -962,7 +1007,7 @@ function CanvasBinnenkant({
       const record = {};
       for (const n of gesleept) {
         if (!n?.id) continue;
-        record[n.id] = isAangehechtRand(n) ? n.position : absVan(n);
+        record[n.id] = vastgezet(n, isAangehechtRand(n) ? n.position : absVan(n));
       }
       // Container versleept: alle (ook diepere) geneste leden schuiven in de
       // store mee — React Flow verplaatste ze visueel al.
@@ -1034,7 +1079,7 @@ function CanvasBinnenkant({
         }
       }
     },
-    [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups, verwerkRandAanhechting, absVan, nesting, diagram]
+    [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups, verwerkRandAanhechting, absVan, nesting, diagram, vastgezet]
   );
   // (handleNodeDragStart/handleNodeDrag hierboven: informeel kader.)
 

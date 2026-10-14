@@ -59,10 +59,15 @@ registreerHandlerInfo("hook", "edgeLabels", {
   beschrijving:
     "Bepaalt de labels op een connector (kardinaliteiten, rolnamen, «stereotype»-teksten) uit de connector-data (en via ctx.elements eventueel uit bron/doel), per zijde en voor de kale gedaante.",
 });
+registreerHandlerInfo("hook", "verschuifConnector", {
+  naam: "Lijn verschuiven",
+  beschrijving:
+    "Maakt een connector verticaal versleepbaar op het canvas: (connector, dy, {elements, diagram}) → nieuwe posities per voorkomen-id (bv. sequence: beide punten mee, lijn horizontaal, berichten eronder wegduwen).",
+});
 registreerHandlerInfo("hook", "edgePresentatie", {
   naam: "Edge-presentatie (dynamisch)",
   beschrijving:
-    "Vult de statische edgePresentatie aan op basis van connector-data — bv. een pijlpunt zodra 'gericht/unidirectioneel' aan staat.",
+    "Vult de statische edgePresentatie aan op basis van connector-data (ctx.elements erbij) — bv. een pijlpunt zodra 'gericht/unidirectioneel' aan staat; mag ook sourceHandle/targetHandle/vorm voorstellen (sequence-zelfbericht: rechts eruit, hoekig, rechts erin).",
 });
 registreerHandlerInfo("hook", "hierarchieParen", {
   naam: "Hiërarchie-paren",
