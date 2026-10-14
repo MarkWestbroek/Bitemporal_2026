@@ -233,6 +233,8 @@ export function diffLijst(voor = [], na = []) {
 /**
  * Omwikkelde modelacties. null = args ongewijzigd doorgeven. Niet hier (geen
  * modelwijziging): setActiefDiagram, markeerOpgeslagen, updateDiagramViewport.
+ * Bewust ook niet: pasWijzigingToe (AI-assistent) — die gaat via het vangnet
+ * als patchElementen + patchDiagrammen (bij naspelen gooien die nooit).
  */
 export const MODEL_OPS = {
   laadModel: null,

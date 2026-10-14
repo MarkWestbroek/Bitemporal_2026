@@ -725,6 +725,26 @@ export function createDiagramStore({ persistKey } = {}) {
         };
       }),
 
+    /**
+     * Elementen én diagrammen in één stap zetten (nieuw of bestaand, per id
+     * vervangen) — voor een wijziging die op bestaande elementen aansluit
+     * (AI-assistent, 2026-10-14: relatie tussen bestaande elementen, nieuwe
+     * knopen op een bestaand diagram, hernoemen). Eén set = één undo-stap;
+     * de sync ziet hem via het vangnet (patchElementen + patchDiagrammen).
+     * @param {{elements?: Record<string, Element>, diagrams?: Record<string, Diagram>}} wijziging
+     */
+    pasWijzigingToe: ({ elements = {}, diagrams = {} } = {}) =>
+      set((state) => {
+        const { kaal, viewports } = splitsViewports(diagrams);
+        return {
+          isDirty: true,
+          elements: { ...state.elements, ...elements },
+          diagrams: { ...state.diagrams, ...kaal },
+          viewports: { ...state.viewports, ...viewports },
+          actiefDiagramId: state.actiefDiagramId || Object.keys(kaal)[0] || null,
+        };
+      }),
+
     /** Viewport: apart van de diagrammen, geen isDirty en geen undo-entry. */
     updateDiagramViewport: (diagramId, viewport) =>
       set((state) => ({ viewports: { ...state.viewports, [diagramId]: viewport } })),
