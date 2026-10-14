@@ -1000,13 +1000,20 @@ function CanvasBinnenkant({
       meesleepRef.current = null;
       // Rand-element (enkel gesleept): aanhechten/losmaken persisteert zelf.
       if (gesleept.length === 1 && verwerkRandAanhechting(gesleept[0])) return;
+      // Meerdere nodes tegelijk (bv. de levenslijn stond nog geselecteerd toen
+      // de activatie werd gesleept, Mark 15-10): elk rand-element hecht toch
+      // zelf aan of los; de rest gaat de gewone weg.
+      const randAfgehandeld = new Set();
+      if (gesleept.length > 1) {
+        for (const n of gesleept) if (n?.data?.elementType?.randElement && verwerkRandAanhechting(n)) randAfgehandeld.add(n.id);
+      }
       // De store voert absolute posities; een genest lid meldt React Flow
       // relatief aan zijn container → omrekenen. Alleen een aangehecht
       // rand-element bewaart zijn positie relatief (aan zijn gastheer).
       const isAangehechtRand = (n) => !!n.parentId && !!n.data?.elementType?.randElement;
       const record = {};
       for (const n of gesleept) {
-        if (!n?.id) continue;
+        if (!n?.id || randAfgehandeld.has(n.id)) continue;
         record[n.id] = vastgezet(n, isAangehechtRand(n) ? n.position : absVan(n));
       }
       // Container versleept: alle (ook diepere) geneste leden schuiven in de

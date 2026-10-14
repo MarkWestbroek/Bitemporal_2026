@@ -471,7 +471,12 @@
    selecteert; connecteren blijft werken (alleen de opacity verandert). */
 /* .dc-seq-punt (sequence-punt): zelfde onzichtbare handles, maar óp de rand
    van het punt in plaats van erbuiten — de lijn hecht dan aan de rand van de
-   activatiebalk, zoals EA (14-10). */
+   activatiebalk, zoals EA (14-10). Op een punt van 12px dekken de handles
+   bijna alles af, dus: pas geselecteerd vangen ze de muis (een lijn trekken);
+   een niet-geselecteerd punt sleep je gewoon (15-10). */
+.dc-canvas .react-flow__node:not(.selected) .dc-seq-punt .react-flow__handle:not(.dc-handle-vlak) {
+  pointer-events: none;
+}
 .dc-canvas .dc-seq-punt .react-flow__handle,
 .dc-canvas .dc-punt-node .react-flow__handle {
   width: 7px;
