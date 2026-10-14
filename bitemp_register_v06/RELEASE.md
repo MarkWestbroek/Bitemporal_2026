@@ -8,6 +8,16 @@
 
 ---
 
+## Niet uitgebracht — API-tokens en de Omnium-MCP-server (AI-1, stap 1)
+
+- **Persoonlijke API-tokens** (`middleware/token.go`, `gebruikers/token.go`, tabel
+  `gebruiker_token`): `Authorization: Bearer omt_…` werkt als de gebruiker zelf;
+  `GET/POST /api/auth/tokens`, `DELETE /api/auth/tokens/:id`. Met een token geen nieuw token.
+- **`tools/omnium-mcp`**: MCP-server (stdio) met tools voor meldingen en projecten; `.mcp.json`
+  in de repo-root voor Claude Code. Zie de README daar.
+
+---
+
 ## studio 0.20.1 (2026-10-14) — alleen frontend
 
 Geen backendrelease: api blijft **0.15.0**. De Studio meldt voortaan zelf een nieuwe versie

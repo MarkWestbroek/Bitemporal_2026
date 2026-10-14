@@ -8,6 +8,25 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Mijn API-tokens** (14-10, AI-1): onder *Gebruikers* maak je een persoonlijk token voor de
+  Omnium-MCP-server (AI in VS Code) of een script; je ziet het één keer, daarna het begin, wanneer
+  het verloopt en wanneer het laatst gebruikt is; intrekken kan altijd. Vereist de api met
+  `/api/auth/tokens`.
+
+- **✨ Assistent in context** (14-10, AI-2): rechtsklik op een map → *Vraag de assistent…*:
+  beschrijf een model in gewone taal ("maak een use case-model met de actoren gebruiker en
+  beheerder …"), kies de taal, en je krijgt een voorstel met elementen en relaties, gecontroleerd
+  tegen het profiel (wat niet mag, wordt met uitleg weggelaten). **Toepassen** zet ze met een
+  diagram in de map (één keer Ctrl+Z maakt het ongedaan). Rechtsklik op een element: velden
+  erbij ("aap: string, noot: int"). Bijsturen in hetzelfde gesprek. Werkt met de bestaande
+  AI-instellingen (eigen sleutel of toegangscode voor de Omnium-proxy).
+
+### Tests
+- **Tokens** (14-10): `tests/e2e/20-studio-tokens.spec.js`.
+- **Assistent** (14-10): `tests/e2e/21-studio-assistent.spec.js` (AI gemockt) en unittests voor
+  `assistentKern.js`.
+
 ## [studio/v0.20.1] — 2026-10-14
 Nooit meer een release missen: de Studio meldt een nieuwe versie zelf en laat zien wat er nieuw
 is. Plus de eerste eigen meldingen opgelost. Alleen frontend; api blijft 0.15.0.

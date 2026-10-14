@@ -715,6 +715,17 @@ heeft_minimaal_rol(vereist) if {
 | studio | lezer | Wat je per project mag, bepaalt de API (toegang per project) |
 | studio.html#uitnodiging=… | - (publiek) | Uitnodiging accepteren (`UitnodigingPagina`) |
 
+### Persoonlijke API-tokens (sinds 14-10-2026)
+
+Naast de login-cookie accepteert de JWT-middleware `Authorization: Bearer omt_…`
+(`middleware/token.go`). Zo'n token hoort bij een gebruiker; rol en status komen daarna per
+verzoek uit het register, net als bij de cookie (een geblokkeerde gebruiker kan ook met een token
+niets). Opslag en beheer: `gebruikers/token.go`, tabel `gebruiker_token` (alleen de sha256,
+vervaldatum 1–365 dagen, intrekken, laatst gebruikt). Routes, achter inloggen:
+`GET/POST /api/auth/tokens`, `DELETE /api/auth/tokens/:id`; **met een token maak je geen nieuw
+token** (`JWTClaims.ViaToken`). In de Studio: *Gebruikers → Mijn API-tokens*. Gebruikt door de
+MCP-server `tools/omnium-mcp`.
+
 ---
 
 ## 9. OpenFTV sidecar
