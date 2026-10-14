@@ -11,7 +11,10 @@ daarna (of tussendoor).
 | AI-2 | **AI-assistent in context (rechtsklik in de projectboom)** | open, hoge prio |
 | HELP-1 | Gewone help afmaken volgens `plans/2026-09-10 Begeleiding in de Studio` | ✅ fase 1 + eerste tips (14-10); checklist open (§28.4) |
 | HELP-2 | Kennismakingstour (zoals de MusicBrain-editor) | ✅ gebouwd (14-10) |
-| HELP-3 | Bugs en wensen melden vanuit Omnium (formulier + schermafbeelding, Alt-klik en een kader trekken), gedogfood als register-entiteit | ontwerp |
+| HELP-3 | Bugs en wensen melden vanuit Omnium (formulier + schermafbeelding, F8 en een kader trekken), gedogfood als register-entiteit | ✅ gebouwd (14-10); vervolg: mail via NotificatieDefinitie, regel in de PEP-bundel |
+| HELP-4 | **Help → Over Omnium: link naar de releaselogs** (studio-CHANGELOG en RELEASE.md, bij de draaiende versie) | open (Mark, 14-10) |
+| CG-1 | **Codegen: zelf-relaties** (A → A, bv. Melding "dubbel van"): nu twee keer `<a>_id`; de doelkant heeft een eigen kolomnaam nodig (bv. `doel_melding_id`) | open (gevonden 14-10) |
+| AUD-1 | **Wie registreerde?** Een registratie legt het tijdstip vast, niet de gebruiker (alleen indirect in `request_body`). Voor audit en "wie meldde/reageerde" een kolom `door` op `registratie`, gevuld uit de claims | open (gevonden 14-10) |
 
 **AI-1 — MCP-API.** Een MCP-server (Model Context Protocol) op Omnium, zodat een AI-client
 (Claude Desktop/Code, een eigen assistent) projecten, modellen en registergegevens kan lezen en,
