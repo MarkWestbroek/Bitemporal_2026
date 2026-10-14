@@ -1,82 +1,29 @@
 /**
- * CommandPalette — opdrachtenpalet (Ctrl+K), consolidatieplan fase 1.
+ * CommandPalette — opdrachtenpalet (Ctrl+K), consolidatieplan fase 1; uitleg, groepen en
+ * "Meer…" uit het ontwerp Begeleiding in de Studio §2.2 (14-10).
  *
  * Eén zoekveld over álles wat klikbaar is:
  *  - activiteiten ("Ga naar: …") — ook wat niet in de activity bar staat;
  *  - de menubalk-acties van de actieve activiteit (incl. submenu's, als
  *    "Menu › Submenu › Item"), dezelfde onClick's als de menubalk zelf.
+ * Elke opdracht kan een regel `uitleg` hebben (bij het menu-item of de activiteit); daarop
+ * wordt ook gezocht. Zonder zoekterm staan de opdrachten per menu gegroepeerd.
  *
  * Het palet beheert zijn eigen open-stand: Ctrl+K (of Cmd+K) opent/sluit,
  * Escape of een klik op de achtergrond sluit, en menuBus "palette:open"
- * opent hem (voor het menu-item in Ga naar). ↑/↓ + Enter voeren uit.
+ * opent hem (voor de menu-items in Ga naar en Help). ↑/↓ + Enter voeren uit.
+ * Logica (verzamelen, zoeken, groeperen): paletOpdrachten.js.
  */
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { menuBus } from "./menuBus";
-
-/** Vlak de menustructuur af tot uitvoerbare opdrachten. */
-function verzamelOpdrachten({ menus, activiteiten, actiefId, setActief }) {
-  const items = [];
-  for (const a of activiteiten || []) {
-    items.push({
-      id: `ga-${a.id}`,
-      categorie: "Ga naar",
-      label: a.label,
-      badge: a.status,
-      actief: a.id === actiefId,
-      run: () => setActief(a.id),
-    });
-  }
-  const loop = (menuLabel, list, pad) => {
-    for (const it of list || []) {
-      if (!it || it.type === "separator" || it.type === "kop") continue;
-      if (Array.isArray(it.items) && it.items.length) {
-        loop(menuLabel, it.items, [...pad, it.label]);
-        continue;
-      }
-      if (it.disabled || typeof it.onClick !== "function") continue;
-      items.push({
-        id: `${menuLabel}-${it.id ?? pad.concat(it.label).join("-")}`,
-        categorie: menuLabel,
-        label: [...pad, it.label].join(" › "),
-        shortcut: it.shortcut,
-        run: it.onClick,
-      });
-    }
-  };
-  for (const m of menus || []) {
-    if (m.id === "ganaar") continue; // activiteiten staan er al in
-    loop(m.label, m.items, []);
-  }
-  return items;
-}
-
-/** Simpele score: alle zoektermen moeten voorkomen; vroege match telt zwaarder. */
-function filterOpdrachten(items, query) {
-  const q = query.trim().toLowerCase();
-  if (!q) return items.slice(0, 14);
-  const termen = q.split(/\s+/);
-  const gescoord = [];
-  for (const it of items) {
-    const tekst = `${it.categorie} ${it.label}`.toLowerCase();
-    let score = 0;
-    let ok = true;
-    for (const t of termen) {
-      const idx = tekst.indexOf(t);
-      if (idx < 0) { ok = false; break; }
-      score += idx === 0 || tekst[idx - 1] === " " || tekst[idx - 1] === "›" ? 2 : 1;
-      score -= idx / 100;
-    }
-    if (ok) gescoord.push([score, it]);
-  }
-  gescoord.sort((a, b) => b[0] - a[0]);
-  return gescoord.slice(0, 14).map(([, it]) => it);
-}
+import { verzamelOpdrachten, filterOpdrachten, groepeerOpdrachten } from "./paletOpdrachten.js";
 
 export default function CommandPalette({ menus, activiteiten, actiefId, setActief }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectie, setSelectie] = useState(0);
   const inputRef = useRef(null);
+  const lijstRef = useRef(null);
 
   // Ctrl/Cmd+K opent (of sluit); menu-item "Opdrachtenpalet…" via de menuBus.
   useEffect(() => {
@@ -107,8 +54,19 @@ export default function CommandPalette({ menus, activiteiten, actiefId, setActie
     () => (open ? verzamelOpdrachten({ menus, activiteiten, actiefId, setActief }) : []),
     [open, menus, activiteiten, actiefId, setActief]
   );
-  const zichtbaar = useMemo(() => filterOpdrachten(alle, query), [alle, query]);
+  const zoekt = query.trim() !== "";
+  // Zonder zoekterm: gegroepeerd per menu, in menuvolgorde; met zoekterm: op score.
+  const groepen = useMemo(
+    () => (zoekt ? [{ groep: null, items: filterOpdrachten(alle, query) }] : groepeerOpdrachten(alle)),
+    [alle, query, zoekt]
+  );
+  const zichtbaar = useMemo(() => groepen.flatMap((g) => g.items), [groepen]);
   const geselecteerd = Math.min(selectie, Math.max(0, zichtbaar.length - 1));
+
+  // Selectie in beeld houden bij ↑/↓.
+  useEffect(() => {
+    lijstRef.current?.querySelector(".is-selectie")?.scrollIntoView?.({ block: "nearest" });
+  }, [geselecteerd, open]);
 
   if (!open) return null;
 
@@ -131,41 +89,64 @@ export default function CommandPalette({ menus, activiteiten, actiefId, setActie
     }
   };
 
+  let index = -1;
   return (
     <div className="studio-palette-overlay" onMouseDown={() => setOpen(false)}>
       <div className="studio-palette" role="dialog" aria-label="Opdrachtenpalet" onMouseDown={(e) => e.stopPropagation()}>
         <input
           ref={inputRef}
           className="studio-palette__input"
-          placeholder="Typ een activiteit of opdracht…"
+          placeholder="Typ wat je wilt doen: een activiteit, opdracht of trefwoord…"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
             setSelectie(0);
           }}
           onKeyDown={onInputKey}
+          aria-label="Zoek een opdracht"
         />
-        <div className="studio-palette__lijst" role="listbox">
+        <div className="studio-palette__lijst" role="listbox" ref={lijstRef}>
           {zichtbaar.length === 0 && <div className="studio-palette__leeg">Geen opdrachten gevonden.</div>}
-          {zichtbaar.map((item, i) => (
-            <button
-              key={item.id}
-              type="button"
-              role="option"
-              aria-selected={i === geselecteerd}
-              className={"studio-palette__item" + (i === geselecteerd ? " is-selectie" : "")}
-              onMouseEnter={() => setSelectie(i)}
-              onClick={() => voerUit(item)}
-            >
-              <span className="studio-palette__categorie">{item.categorie}</span>
-              <span className="studio-palette__label">
-                {item.label}
-                {item.actief ? " ✓" : ""}
-              </span>
-              {item.badge && <span className="studio-menubar__badge">{item.badge}</span>}
-              {item.shortcut && <span className="studio-palette__shortcut">{item.shortcut}</span>}
-            </button>
+          {groepen.map((g) => (
+            <React.Fragment key={g.groep || "_"}>
+              {g.groep && g.items.length > 0 && <div className="studio-palette__groep">{g.groep}</div>}
+              {g.items.map((item) => {
+                index += 1;
+                const i = index;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="option"
+                    aria-selected={i === geselecteerd}
+                    className={"studio-palette__item" + (i === geselecteerd ? " is-selectie" : "")}
+                    onMouseEnter={() => setSelectie(i)}
+                    onClick={() => voerUit(item)}
+                  >
+                    {zoekt && <span className="studio-palette__categorie">{item.categorie}</span>}
+                    <span className="studio-palette__tekst">
+                      <span className="studio-palette__label">
+                        {item.label}
+                        {item.actief ? " ✓" : ""}
+                      </span>
+                      {item.uitleg && <span className="studio-palette__uitleg">{item.uitleg}</span>}
+                    </span>
+                    {item.badge && <span className="studio-menubar__badge">{item.badge}</span>}
+                    {item.shortcut && <span className="studio-palette__shortcut">{item.shortcut}</span>}
+                  </button>
+                );
+              })}
+            </React.Fragment>
           ))}
+        </div>
+        <div className="studio-palette__voet">
+          <span>↑↓ kiezen · Enter uitvoeren · Esc sluiten</span>
+          <button type="button" className="studio-palette__meer" onClick={() => { setOpen(false); menuBus.emit("help:sneltoetsen"); }}>
+            Sneltoetsen
+          </button>
+          <button type="button" className="studio-palette__meer" onClick={() => { setOpen(false); menuBus.emit("help:documentatie"); }}>
+            Meer… (documentatie)
+          </button>
         </div>
       </div>
     </div>

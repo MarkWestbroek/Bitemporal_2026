@@ -128,6 +128,7 @@ export default function MenuBar({ menus, links = null, brand = null }) {
             <button
               type="button"
               className={"studio-menubar__title" + (openId === menu.id ? " is-open" : "")}
+              data-tour={`menu-${menu.id}`}
               onClick={() => setOpenId((cur) => (cur === menu.id ? null : menu.id))}
               onMouseEnter={() => openId && setOpenId(menu.id)}
             >

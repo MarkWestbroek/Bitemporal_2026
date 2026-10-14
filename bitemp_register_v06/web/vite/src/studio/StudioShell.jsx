@@ -28,6 +28,7 @@ import { menuBus } from "./menuBus";
 import { OmniumMark } from "./icons";
 import { NaamDialogHost } from "./naamDialog";
 import { DocumentVoorbeeldHost } from "./activities/documentVoorbeeld.jsx";
+import HelpHost from "./HelpHost.jsx";
 
 function ThemaKnop() {
   const theme = useUIStore((s) => s.theme);
@@ -154,6 +155,7 @@ export default function StudioShell() {
         {palette}
         <NaamDialogHost />
         <DocumentVoorbeeldHost />
+        <HelpHost />
         <div className="studio-shell-row">
           <ActivityBar activiteiten={activiteiten} />
           <div className="studio-main">
@@ -176,6 +178,7 @@ export default function StudioShell() {
       {palette}
       <NaamDialogHost />
       <DocumentVoorbeeldHost />
+      <HelpHost />
       <div className="studio-shell-row">
         <ActivityBar activiteiten={activiteiten} />
 

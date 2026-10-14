@@ -155,6 +155,7 @@ export default function SidePanel({
           <aside
             ref={overlayRef}
             className={`studio-panel studio-panel--${kant} studio-panel--overlay`}
+            data-tour={`paneel-${kant}`}
             style={{ width, [kant]: "var(--s-rail-w)" }}
             onMouseEnter={annuleerVerberg}
             onMouseLeave={plansVerberg}
@@ -170,7 +171,7 @@ export default function SidePanel({
 
   // ── Gepind → vast gedockt paneel ──
   return (
-    <aside className={`studio-panel studio-panel--${kant}`} style={{ width }}>
+    <aside className={`studio-panel studio-panel--${kant}`} style={{ width }} data-tour={`paneel-${kant}`}>
       {kop}
       <div className="studio-panel__body">{children}</div>
       {splitter}

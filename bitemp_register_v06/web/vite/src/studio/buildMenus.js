@@ -12,6 +12,7 @@
 import { groepLabel } from "./activityRegistry";
 import { menuBus } from "./menuBus";
 import { toonMelding } from "./naamDialog.jsx";
+import { resetHints } from "./hints.js";
 
 /**
  * Items van het Ga naar-menu: het opdrachtenpalet bovenaan, daarna per groep
@@ -25,6 +26,7 @@ function gaNaarItems(activiteiten, actief, setActief) {
       id: "palette",
       label: "Opdrachtenpalet…",
       shortcut: "Ctrl+K",
+      uitleg: "Zoek elke activiteit en opdracht op naam of trefwoord.",
       onClick: () => menuBus.emit("palette:open"),
     },
   ];
@@ -45,6 +47,10 @@ function gaNaarItems(activiteiten, actief, setActief) {
   }
   return items;
 }
+
+/** De handleiding (voorlopig STUDIO.md op GitHub; zie de toelichting in standaardMenus). */
+export const DOCS_URL = "https://github.com/MarkWestbroek/Bitemporal_2026/blob/main/bitemp_register_v06/docs/STUDIO.md";
+export const openDocumentatie = () => window.open(DOCS_URL, "_blank", "noopener");
 
 /** Bouw de standaard-menu's (Bestand, Beeld, Ga naar, Help). */
 function standaardMenus(ctx) {
@@ -75,12 +81,7 @@ function standaardMenus(ctx) {
   // .git-map); in de productie-image zit alleen de binary, dus daar geeft
   // /docs/... "Markdown file not found". Structurele fix staat op de backlog:
   // gecureerde docs in de image + DOCS_ROOT, dan wordt dit weer /docs/STUDIO.md.
-  const openDocs = () =>
-    window.open(
-      "https://github.com/MarkWestbroek/Bitemporal_2026/blob/main/bitemp_register_v06/docs/STUDIO.md",
-      "_blank",
-      "noopener",
-    );
+  const openDocs = () => openDocumentatie();
 
   // Versie-/build-info (compile-time geïnjecteerd via vite.config.js → define).
   const versie = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
@@ -98,8 +99,8 @@ function standaardMenus(ctx) {
       id: "bestand",
       label: "Bestand",
       items: [
-        { id: "index", label: "Overzicht (index)…", onClick: gaNaarIndex },
-        { id: "herlaad", label: "Pagina herladen", shortcut: "F5", onClick: () => window.location.reload() },
+        { id: "index", label: "Overzicht (index)…", uitleg: "Naar de startpagina met schema, tijdlijn en registraties.", onClick: gaNaarIndex },
+        { id: "herlaad", label: "Pagina herladen", shortcut: "F5", uitleg: "Laadt de Studio opnieuw; je project blijft bewaard.", onClick: () => window.location.reload() },
       ],
     },
     {
@@ -109,6 +110,7 @@ function standaardMenus(ctx) {
         {
           id: "toggle-left",
           label: "Linkerpaneel",
+          uitleg: "Projectboom of verkenner tonen of verbergen.",
           checked: sidebarOpen,
           disabled: !heeftSidebar,
           onClick: toggleSidebar,
@@ -116,6 +118,7 @@ function standaardMenus(ctx) {
         {
           id: "toggle-right",
           label: "Rechterpaneel",
+          uitleg: "Eigenschappen van de selectie tonen of verbergen.",
           checked: inspectorOpen,
           disabled: !heeftInspector,
           onClick: toggleInspector,
@@ -139,6 +142,7 @@ function standaardMenus(ctx) {
         {
           id: "theme",
           label: theme === "dark" ? "Licht thema" : "Donker thema",
+          uitleg: "Wissel tussen licht en donker.",
           onClick: toggleTheme,
         },
       ],
@@ -152,8 +156,21 @@ function standaardMenus(ctx) {
       id: "help",
       label: "Help",
       items: [
-        { id: "docs", label: "Documentatie (STUDIO.md)…", onClick: openDocs },
-        { id: "about", label: `Over Omnium Studio (v${versie})`, onClick: () => toonMelding({ titel: "Over Omnium Studio", tekst: overTekst }) },
+        { id: "help-palette", label: "Opdrachtenpalet…", shortcut: "Ctrl+K", uitleg: "Zoek elke activiteit en opdracht op naam of trefwoord.", onClick: () => menuBus.emit("palette:open") },
+        { id: "tour", label: "Rondleiding", uitleg: "Een korte kennismaking met de Studio, stap voor stap.", onClick: () => menuBus.emit("help:tour") },
+        { id: "sneltoetsen", label: "Sneltoetsen…", uitleg: "Overzicht van alle toetsen, ook de instelbare.", onClick: () => menuBus.emit("help:sneltoetsen") },
+        {
+          id: "tips-reset",
+          label: "Tips opnieuw tonen",
+          uitleg: "Laat de korte tips (één keer per onderwerp) weer verschijnen.",
+          onClick: () => {
+            resetHints();
+            toonMelding({ titel: "Tips", tekst: "De tips verschijnen weer, één keer per onderwerp, als je iets voor het eerst doet." });
+          },
+        },
+        { type: "separator" },
+        { id: "docs", label: "Documentatie (STUDIO.md)…", uitleg: "De handleiding van de Studio (opent in een nieuw tabblad).", onClick: openDocs },
+        { id: "about", label: `Over Omnium Studio (v${versie})`, uitleg: "Versie en build.", onClick: () => toonMelding({ titel: "Over Omnium Studio", tekst: overTekst }) },
       ],
     },
   ];

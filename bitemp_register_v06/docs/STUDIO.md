@@ -226,6 +226,14 @@ te wijzigen.
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 >
+> **Begeleiding (2026-10-14, ontwerp `plans/2026-09-10 Begeleiding in de Studio` §7):**
+> het palet toont per opdracht een regel `uitleg` (veld op het menu-item) en groepeert
+> zonder zoekterm per menu. **Help** bevat Rondleiding (`Tour.jsx`, ankers `data-tour`),
+> Sneltoetsen… (`HelpHost.jsx`), Tips opnieuw tonen (`hints.js`) en de documentatie. Een
+> leeg diagram toont `LegeCanvas.jsx` (afgeleid uit het profiel, `startActies` per
+> activiteit). Tips en "rondleiding gezien" staan per browser in localStorage
+> (`studio05-hints-gezien`, `studio05-tour-v1`).
+>
 > **Consolidatie fase 2 (2026-07-11) — Modelleren als één ingang:** nieuwe
 > activiteit **Modelleren** (bovenaan de balk, preview) met een
 > **projectbrowser** (per profieltype zijn diagrammen, ＋ voor nieuw) en een

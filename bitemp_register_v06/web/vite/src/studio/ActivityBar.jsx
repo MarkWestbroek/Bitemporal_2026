@@ -99,7 +99,7 @@ export default function ActivityBar({ activiteiten }) {
   );
 
   return (
-    <nav className="studio-activitybar" aria-label="Hoofdfuncties">
+    <nav className="studio-activitybar" aria-label="Hoofdfuncties" data-tour="activiteiten">
       {favActiviteiten.length > 0 && (
         <>
           {favActiviteiten.map((a) => knop(a, true))}

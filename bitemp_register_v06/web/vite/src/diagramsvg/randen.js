@@ -142,6 +142,13 @@ export function tekenRand(edge, bron, doel, ctx) {
     const ux = (Q.x - P.x) / l;
     const uy = (Q.y - P.y) / l;
     delen.push(tekst({ x: P.x + ux * 16 - uy * 9, y: P.y + uy * 16 + ux * 9 + 3.5, "text-anchor": "middle", ...labelStijl }, kard));
+    // Gegevenselement: 0..* over de tijd, het momentvoorkomen als constraint eronder.
+    if (soort === "comp" && (d.momentvoorkomen === "enkelvoudig" || d.momentvoorkomen === "meervoudig")) {
+      // Verder langs de lijn dan de kardinaliteit, zodat hij niet over het kader valt: bij een
+      // steile lijn één regel verder, bij een vlakke lijn voorbij de breedte van "0..*".
+      const t = 16 + (Math.abs(uy) > 0.5 ? 13 : 46);
+      delen.push(tekst({ x: P.x + ux * t - uy * 9, y: P.y + uy * t + ux * 9 + 3.5, "text-anchor": "middle", ...labelStijl }, `{${d.momentvoorkomen}}`));
+    }
   }
   if (soort === "dep" && d.rolnaam) {
     delen.push(tekst({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 4, "text-anchor": "middle", ...labelStijl }, d.rolnaam));
