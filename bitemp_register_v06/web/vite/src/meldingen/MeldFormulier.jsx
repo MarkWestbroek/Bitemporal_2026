@@ -26,7 +26,7 @@ function Voorbeeld({ bestand, onWeg }) {
   );
 }
 
-export default function MeldFormulier({ context = {}, beginBijlagen = [], onKlaar, onAnnuleer, onMijnMeldingen, onSchermafbeelding }) {
+export default function MeldFormulier({ context = {}, beginBijlagen = [], onKlaar, onAnnuleer, onMijnMeldingen, onSchermafbeelding, registreerVoegToe }) {
   const [soort, setSoort] = useState("bug");
   const [titel, setTitel] = useState("");
   const [beschrijving, setBeschrijving] = useState("");
@@ -40,6 +40,11 @@ export default function MeldFormulier({ context = {}, beginBijlagen = [], onKlaa
   const titelRef = useRef(null);
 
   useEffect(() => { titelRef.current?.focus(); }, []);
+  // De host (F8 met een open formulier) mag bijlagen toevoegen.
+  useEffect(() => {
+    registreerVoegToe?.((lijst) => setBijlagen((b) => [...b, ...lijst]));
+    return () => registreerVoegToe?.(null);
+  }, [registreerVoegToe]);
 
   const voegToe = (lijst) => {
     const nieuw = [];

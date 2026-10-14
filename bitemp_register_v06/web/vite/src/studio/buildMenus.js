@@ -13,6 +13,8 @@ import { groepLabel } from "./activityRegistry";
 import { menuBus } from "./menuBus";
 import { toonMelding } from "./naamDialog.jsx";
 import { resetHints } from "./hints.js";
+import { releaselogUrl } from "./releaseNotities.js";
+import { naastStudio } from "./paden.js";
 
 /**
  * Items van het Ga naar-menu: het opdrachtenpalet bovenaan, daarna per groep
@@ -92,7 +94,8 @@ function standaardMenus(ctx) {
     (sha ? ` (${sha})` : "") +
     (buildDatum ? ` — build ${buildDatum}` : "") +
     "\n\nÉén rondom blik op je informatievoorziening: gegevens, processen, regels, " +
-    "connectiviteit, autorisatie en basisgegevens in één geïntegreerde werkbank.";
+    "connectiviteit, autorisatie en basisgegevens in één geïntegreerde werkbank." +
+    "\n\nWat er in deze versie nieuw is: Help → Wat is er nieuw…; alles: Help → Releaselog.";
 
   return [
     {
@@ -172,9 +175,11 @@ function standaardMenus(ctx) {
         { id: "melden", label: "Melden… (bug, wens, vraag)", shortcut: "Alt+M", uitleg: "Meld een bug, wens of vraag; je ziet later de status en het antwoord.", onClick: () => menuBus.emit("help:melden") },
         { id: "melden-kader", label: "Melden met schermafbeelding…", shortcut: "F8", uitleg: "Trek een kader om wat je wilt laten zien; het komt als bijlage in de melding.", onClick: () => menuBus.emit("help:melden-kader") },
         { id: "mijn-meldingen", label: "Mijn meldingen…", uitleg: "Je meldingen met hun status en het gesprek erover.", onClick: () => menuBus.emit("help:mijn-meldingen") },
-        { id: "melden-los", label: "Losse meldpagina (als de Studio hangt)…", uitleg: "melden.html: hetzelfde formulier, buiten de Studio.", onClick: () => window.open(window.location.pathname.replace(/[^/]*$/, "") + "melden.html", "_blank", "noopener") },
+        { id: "melden-los", label: "Losse meldpagina (als de Studio hangt)…", uitleg: "melden.html: hetzelfde formulier, buiten de Studio.", onClick: () => window.open(naastStudio("melden.html"), "_blank", "noopener") },
         { type: "separator" },
         { id: "docs", label: "Documentatie (STUDIO.md)…", uitleg: "De handleiding van de Studio (opent in een nieuw tabblad).", onClick: openDocs },
+        { id: "wat-is-nieuw", label: "Wat is er nieuw…", uitleg: "De laatste wijzigingen in Omnium, per versie.", onClick: () => menuBus.emit("help:wat-is-nieuw") },
+        { id: "releaselog", label: "Releaselog (CHANGELOG)…", uitleg: "Alle wijzigingen van deze versie en eerdere, op GitHub.", onClick: () => window.open(releaselogUrl(versie), "_blank", "noopener") },
         { id: "about", label: `Over Omnium Studio (v${versie})`, uitleg: "Versie en build.", onClick: () => toonMelding({ titel: "Over Omnium Studio", tekst: overTekst }) },
       ],
     },

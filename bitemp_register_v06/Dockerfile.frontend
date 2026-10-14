@@ -15,6 +15,9 @@ COPY web/vite/ ./
 
 ARG VITE_API_BASE_URL=
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+# Commit voor "Over Omnium" en versie.json (de build heeft geen .git): --build-arg VITE_GIT_SHA=…
+ARG VITE_GIT_SHA=
+ENV VITE_GIT_SHA=${VITE_GIT_SHA}
 
 RUN npm run build
 

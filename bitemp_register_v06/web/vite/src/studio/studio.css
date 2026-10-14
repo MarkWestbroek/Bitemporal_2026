@@ -411,6 +411,22 @@
 .studio-tour__actie { margin: 0 0 8px; }
 .studio-tour__verder { border-color: var(--s-accent, #6366f1); font-weight: 600; }
 
+/* ── Nieuwe versie en wat is er nieuw (VersieWachter.jsx) ──── */
+.studio-hint.studio-hint--versie { bottom: auto; top: 44px; border-color: #16a34a; } /* specifieker dan .studio-hint (staat verderop) */
+.studio-nieuw {
+  width: min(680px, 92vw); max-height: 80vh; overflow: auto; box-sizing: border-box; padding: 14px 18px;
+  color: var(--s-fg); background: var(--s-panel); border: 1px solid var(--s-border); border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35); font-size: 13px; line-height: 1.5;
+}
+.studio-nieuw__release { border-top: 1px solid var(--s-border); margin-top: 10px; padding-top: 8px; }
+.studio-nieuw__release h3 { margin: 0 0 4px; font-size: 14px; }
+.studio-nieuw__release h3 span { font-weight: 400; color: var(--s-fg-muted); }
+.studio-nieuw__release h4 { margin: 8px 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--s-fg-muted); }
+.studio-nieuw__release p { margin: 0 0 4px; }
+.studio-nieuw__release ul { margin: 0; padding-left: 18px; }
+.studio-nieuw__release li { margin: 2px 0; }
+.studio-nieuw a { color: var(--s-accent, #6366f1); }
+
 /* ── Lege staat van een diagram (activities/LegeCanvas.jsx) ── */
 .dc-leeg {
   position: absolute; inset: 0; z-index: 4; pointer-events: none;

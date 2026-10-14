@@ -80,6 +80,11 @@
 }
 .mld-kaderlaag__kader { position: fixed; border: 2px solid #6366f1; background: rgba(99, 102, 241, 0.08); box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.35); pointer-events: none; }
 .mld-dialoog-achter { position: fixed; inset: 0; z-index: 8000; background: rgba(0, 0, 0, 0.35); display: flex; justify-content: center; align-items: flex-start; padding-top: 6vh; }
+.mld-dialoog__sluit {
+  float: right; margin: -6px -8px 0 8px; width: 28px; height: 28px; font-size: 18px; line-height: 1; cursor: pointer;
+  color: var(--s-fg-muted, #64748b); background: transparent; border: 0; border-radius: 6px;
+}
+.mld-dialoog__sluit:hover { background: var(--s-hover, #f1f5f9); color: var(--s-fg, #0f172a); }
 .mld-dialoog {
   width: min(640px, 94vw); max-height: 86vh; overflow: auto; box-sizing: border-box; padding: 16px 18px;
   background: var(--s-panel, #fff); border: 1px solid var(--s-border, #e2e8f0); border-radius: 10px; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
