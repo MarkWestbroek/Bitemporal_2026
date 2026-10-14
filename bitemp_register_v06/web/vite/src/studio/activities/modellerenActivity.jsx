@@ -19,6 +19,7 @@ import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
 import { registreerMeldContext } from "../meldContext.js";
+import { veldCompartimenten } from "../assistent/assistentKern.js";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import useStudioStore from "../useStudioStore";
@@ -1394,6 +1395,9 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
         : []),
       { sep: true },
       { label: "Verwijderen uit model…", onClick: verwijderUitModel },
+      ...(element && veldCompartimenten(profiel.descriptor, element.elementType).length
+        ? [{ sep: true }, { label: "✨ Vraag de assistent…", onClick: () => menuBus.emit("assistent:open", { soort: "velden", profielId: profiel.id, elementId }) }]
+        : []),
       ...meldItems({
         pad: meldPad(useModellerenStore.getState().plaatsing[sleutel || elementKey(profiel.id, elementId)], element?.naam || elementId),
         onderwerpid: `${profiel.id}/${elementId}`,
@@ -1635,6 +1639,8 @@ function Map_({ map, diepte }) {
       // Documentsjablonen: een document uit deze map (use case-overzicht,
       // gegevenswoordenboek, …) — de "Document: …"-generatoren onder Exporteren.
       { label: "Document maken…", onClick: () => useTransformStore.getState().openen(map.id, "export") },
+      { sep: true },
+      { label: "✨ Vraag de assistent…", onClick: () => menuBus.emit("assistent:open", { soort: "model", mapId: map.id, mapNaam: map.naam }) },
       ...meldItems({ pad: meldPad(map.id), onderwerpid: `map/${map.id}` }),
       { sep: true },
       { label: "Omhoog", onClick: () => schuifMap(map.id, "omhoog") },

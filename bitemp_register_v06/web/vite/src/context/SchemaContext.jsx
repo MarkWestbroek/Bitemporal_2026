@@ -181,6 +181,11 @@ export function SchemaProvider({ baseUrl, children }) {
   return <SchemaContext.Provider value={value}>{children}</SchemaContext.Provider>;
 }
 
+/** Zoals useSchema, maar null buiten een SchemaProvider (bv. in de Studio). */
+export function useSchemaOptioneel() {
+  return useContext(SchemaContext);
+}
+
 export function useSchema() {
   const ctx = useContext(SchemaContext);
   if (!ctx) throw new Error("useSchema moet binnen een <SchemaProvider> worden gebruikt.");
