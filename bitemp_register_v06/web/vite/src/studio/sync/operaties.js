@@ -123,6 +123,12 @@ export function ontkoppelStore(naam) {
 export const gekoppeldeStores = () => [...stores.keys()];
 
 /**
+ * Bezig met andermans operatie of met een snapshot (niets van onszelf): wie op
+ * store-wijzigingen reageert met een eigen actie (boomregels), zwijgt dan.
+ */
+export const isStil = () => remoteDiepte > 0 || gedempt > 0;
+
+/**
  * Voer `fn` uit zonder operaties te melden (snapshot laden, project wisselen)
  * en zet daarna alle vangnet-baselines op de nieuwe stand.
  */

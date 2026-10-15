@@ -14,8 +14,8 @@ test("paletknop: het nieuwe element staat in de map van het open diagram", async
   await page.waitForTimeout(300);
   await page.locator(".dc-taakbalk").getByRole("button", { name: "UC", exact: true }).first().click();
   await expect.poll(() => inModelleren(page, 'const s = ms.getState(); return Object.entries(s.plaatsing).filter(([k, v]) => k.startsWith("el::usecase05::") && k !== "el::usecase05::e_gebr" && v === arg).length;', mapId)).toBe(1);
-  // Het bestaande, nooit geplaatste element blijft waar het was (niet ingedeeld).
-  expect(await inModelleren(page, 'return ms.getState().plaatsing["el::usecase05::e_gebr"] || null;')).toBeNull();
+  // Het bestaande element volgde al toen het diagram in de map kwam (boomregel).
+  expect(await inModelleren(page, 'return ms.getState().plaatsing["el::usecase05::e_gebr"] || null;')).toBe(mapId);
 });
 
 test("diagram zonder map: het element blijft niet ingedeeld", async ({ page }) => {
@@ -25,4 +25,15 @@ test("diagram zonder map: het element blijft niet ingedeeld", async ({ page }) =
   await page.locator(".dc-taakbalk").getByRole("button", { name: "UC", exact: true }).first().click();
   await page.waitForTimeout(300);
   expect(await inModelleren(page, 'return Object.keys(ms.getState().plaatsing).filter((k) => k.startsWith("el::")).length;')).toBe(0);
+});
+
+test("diagram in een map plaatsen: zijn niet-ingedeelde elementen volgen (import, migratie)", async ({ page }) => {
+  await openStudio(page);
+  await zetModel(page, { profielId: "usecase05", diagramId: "d_imp", diagramNaam: "Geïmporteerd", open: false, elementen: [
+    { id: "i1", naam: "Lid", type: "actor", pos: { x: 40, y: 60 } },
+    { id: "i2", naam: "Leen boek", type: "usecase", pos: { x: 300, y: 60 } },
+    { id: "i3", naam: "Wees", type: "usecase" },
+  ] });
+  const mapId = await inModelleren(page, 'const m = ms.getState().nieuweMap("Import"); ms.getState().plaatsMeerdere(["usecase05::d_imp"], m); return m;');
+  await expect.poll(() => inModelleren(page, 'const p = ms.getState().plaatsing; return [p["el::usecase05::i1"], p["el::usecase05::i2"], p["el::usecase05::i3"] || null];')).toEqual([mapId, mapId, null]);
 });

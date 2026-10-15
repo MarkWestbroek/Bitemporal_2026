@@ -226,11 +226,13 @@ te wijzigen.
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 >
-> **Nieuw element → map van het diagram (2026-10-14):** `maakDiagramActiviteit` meldt
-> `studio:element-gemaakt` {profielId, elementId, diagramId} na paletknop en magic link;
-> `modellerenActivity` plaatst het element dan in de map van dat diagram (`plaatsMeerdere`,
-> gesynct), tenzij een geplaatste voorouder het al meeneemt of het diagram nergens staat.
-> "Niet ingedeeld" blijft voor wat van elders komt (import, oude modellen).
+> **Boomregel BOOM-1 (2026-10-14):** `studio/boomRegels.js` (`volgDiagram`, zuiver): een
+> niet-ingedeeld element komt in de map van het eerste geplaatste diagram waarop het staat
+> (hiërarchie-kind → zijn top-voorouder; geen connectoren). `modellerenActivity` draait hem bij
+> (1) een lokale modelwijziging (abonnement per profielstore op `diagrams`, alleen de gewijzigde
+> diagrammen), (2) een diagram dat in een map komt (abonnement op `plaatsing`), (3) het laden
+> (hydratatie, en `pasProjectToe` → `ruimNietIngedeeldOp`). Niet tijdens andermans operaties of
+> een snapshot (`operaties.isStil`). De plaatsing gaat als `plaatsPerMap` de sync in.
 >
 > **AI-assistent stap 1b (2026-10-14):** de dialoog is een gesprek over een map. De assistent
 > krijgt mee wat er al is (`bestaandInMap`: diagrammen, elementen, relaties met ids) en mag in

@@ -42,15 +42,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   schuiven mee. Verandert een voorstel niets, dan staat dat er eerlijk bij (met wat de assistent
   wél kan) en is er geen Toepassen.
 
-- **Nieuw element landt in de map van zijn diagram** (14-10): teken je een element op een diagram
-  (paletknop of magic link), dan staat het meteen in de projectmap van dat diagram — niet meer
-  onder *Niet ingedeeld*. Dat is waar de context is (Mark). Een element dat via de hiërarchie al
-  onder een geplaatste voorouder hangt, wordt niet dubbel geplaatst; staat het diagram zelf
-  nergens, dan verandert er niets. Via de projectsync zien anderen dezelfde plaatsing.
+- **Elementen volgen hun diagram in de projectboom** (14-10, BOOM-1): één regel — *een
+  niet-ingedeeld element komt in de map van het eerste geplaatste diagram waarop het staat*. Dus:
+  een element dat je tekent (paletknop, magic link) of uit de lijst op een diagram sleept staat
+  meteen in de map van dat diagram; zet je een (geïmporteerd) diagram in een map, dan volgen zijn
+  elementen; en bij het laden van een project worden bestaande niet-ingedeelde elementen zo
+  opgeruimd. *Niet ingedeeld* houdt alleen wezen over (op geen enkel geplaatst diagram). Een
+  hiërarchie-kind reist met zijn top-voorouder mee; connectoren staan niet in de boom. Via de
+  projectsync zien anderen dezelfde plaatsing. Dat is waar de context is (Mark); de losse
+  elementenlijst kan daarna weg.
 
 ### Tests
 - **Tokens** (14-10): `tests/e2e/20-studio-tokens.spec.js`.
-- **Boom** (14-10): `tests/e2e/22-studio-boom-nieuw-element.spec.js`.
+- **Boom** (14-10): `tests/e2e/23-studio-boom-nieuw-element.spec.js` en `studio/boomRegels.test.js`.
 - **Assistent** (14-10): `tests/e2e/21-studio-assistent.spec.js` (AI gemockt: submap met twee
   talen en verband, bestaande elementen + doorpraten, velden) en unittests voor `assistentKern.js`
   en `wijziging.js`. Met DeepSeek Flash via de proxy nagespeeld op Marks scenario's (1–7 s per beurt).
