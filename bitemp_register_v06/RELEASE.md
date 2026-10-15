@@ -8,13 +8,41 @@
 
 ---
 
-## Niet uitgebracht — API-tokens en de Omnium-MCP-server (AI-1, stap 1)
+## api 0.16.0 / studio 0.21.0 (2026-10-15)
+
+AI-hulp (AI-1 MCP, AI-2 assistent), sequence fase 0 en de projectboom (BOOM-1). Frontend:
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio 0.21.0). Uitrol: alleen app.
+
+**Databasegevolg:** nieuwe tabel `gebruiker_token` (persoonlijke API-tokens, alleen de sha256),
+bij de start aangemaakt; bestaande data blijft ongemoeid.
+
+**Nieuwe instellingen (app-compose):** `AI_UPSTREAM_KEY`, `AI_UPSTREAM_URL`, `AI_UPSTREAM_MODEL`
+en `AI_DATA_DIR` op een volume `bitemp_api_ai_data` (zoals pf al had). Zonder sleutel in
+`/srv/omnium/.env` staat de proxy uit (503) en werkt de assistent alleen met een eigen sleutel in
+de browser; toegangscodes maakt een beheerder in *AI-toegang* (`docs/AI_ASSISTENT.md`).
+
+Backend (minor):
 
 - **Persoonlijke API-tokens** (`middleware/token.go`, `gebruikers/token.go`, tabel
   `gebruiker_token`): `Authorization: Bearer omt_…` werkt als de gebruiker zelf;
   `GET/POST /api/auth/tokens`, `DELETE /api/auth/tokens/:id`. Met een token geen nieuw token.
-- **`tools/omnium-mcp`**: MCP-server (stdio) met tools voor meldingen en projecten; `.mcp.json`
-  in de repo-root voor Claude Code. Zie de README daar.
+  Studio: *Gebruikers → Mijn API-tokens*.
+- **`tools/omnium-mcp`**: MCP-server (stdio) voor Claude Code en andere AI-clients, met tools
+  voor meldingen (lezen mét schermafbeeldingen, reageren, behandelen), projecten en **modellen**
+  (`modeltalen`, `project_bekijken`, `model_wijzigen`: plan → controle tegen de taal →
+  projectsync-operaties; dezelfde regelset en toepasser als de assistent in de Studio).
+  `.mcp.json` in de repo-root; `OMNIUM_URL`/`OMNIUM_TOKEN` uit de omgeving. README in de map.
+- **`scripts/bouw-domeinen.ps1`**: de backend bouwen met een deel van de domeinen (CODEGEN §12).
+
+Frontend (studio 0.21.0, samengevat): ✨ **assistent in context** (rechtsklik op map of element:
+modellen in meerdere talen, submappen, bestaande elementen, uitlijnen, gesprek blijft open);
+**boomregel** (een element volgt het eerste geplaatste diagram waarop het staat — tekenen,
+slepen, import, migratie bij laden); **sequence fase 0** (koppen, guard/retour, verticaal
+slepen, activaties afgeleid, tekenen van lijn naar lijn, zelf-bericht); **Mijn API-tokens**.
+
+Uitrol: images `bitemp-go-api:0.16.0` en `bitemp-viz-frontend:0.21.0` (frontend met
+`--build-arg VITE_GIT_SHA=$(git rev-parse --short HEAD)`); `AI_UPSTREAM_KEY` in
+`/srv/omnium/.env` (chmod 600) vóór `./update.sh`, anders blijft de proxy uit.
 
 ---
 

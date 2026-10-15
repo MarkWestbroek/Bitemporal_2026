@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.20.1`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.21.0`**
+  (2026-10-15: AI-assistent in context, Mijn API-tokens, boomregel, sequence fase 0; samen met
+  api 0.16.0), na **`studio/v0.20.1`**
   (2026-10-14: nieuwe versie zonder F5, wat is er nieuw, meldingen #5–#7; alleen frontend), na **`studio/v0.20.0`**
   (2026-10-14: melden vanuit Omnium — F8, Mijn meldingen, melden.html; samen met api 0.15.0),
   na **`studio/v0.19.0`**
@@ -79,7 +81,9 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.15.0`** (2026-10-14: domein `meldingen` en `/api/meldingen`, tabel
+- Backend: **`api/v0.16.0`** (2026-10-15: persoonlijke API-tokens — tabel `gebruiker_token` —,
+  `tools/omnium-mcp` met meldingen, projecten en modellen, AI-proxy-instellingen in de
+  app-compose). Daarvoor **`api/v0.15.0`** (2026-10-14: domein `meldingen` en `/api/meldingen`, tabel
   `melding_bestand`). Daarvoor **`api/v0.14.0`** (2026-10-14: uitnodigen, vijf rollen en toegang per Studio-project
   — tabellen `studio_project_toegang`, `studio_migraties`, `gebruiker_uitnodiging` en een eenmalige
   toegangsmigratie —, toegangsbeleid fase 1a/1b (PDP en PEP op het leespad), afgeleide relaties

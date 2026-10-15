@@ -118,6 +118,15 @@ services:
       # Zonder SMTP verschijnt de link alleen in het scherm. Uitzetten: UITNODIGEN_ENABLED=false in .env.
       UITNODIGEN_ENABLED: ${UITNODIGEN_ENABLED:-true}
       STUDIO_BASIS_URL: ${STUDIO_BASIS_URL:-https://app.omnium-ide.nl}
+      # AI-proxy voor de Studio-assistent (handlers/ai_proxy.go, docs/AI_ASSISTENT.md): de
+      # sleutel van de eigenaar in /srv/omnium/.env (chmod 600); uit (503) zolang die leeg is.
+      # Toegangscodes (alleen hashes) en verbruik op het volume hieronder, zoals pf.
+      AI_UPSTREAM_KEY: "${AI_UPSTREAM_KEY:-}"
+      AI_UPSTREAM_URL: "${AI_UPSTREAM_URL:-https://api.deepseek.com/chat/completions}"
+      AI_UPSTREAM_MODEL: "${AI_UPSTREAM_MODEL:-deepseek-chat}"
+      AI_DATA_DIR: /data/ai
+    volumes:
+      - bitemp_api_ai_data:/data/ai   # codes en verbruik; overleeft een herstart
     depends_on:
       postgres:
         condition: service_healthy
@@ -233,6 +242,7 @@ volumes:
   bitemp_postgres_data:
   bitemp_minio_data:
   openftv_postgres_data:
+  bitemp_api_ai_data:
 
 networks:
   bitemp_net:

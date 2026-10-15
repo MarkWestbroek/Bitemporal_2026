@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.21.0] — 2026-10-15
+
 ### Toegevoegd
 - **Sequence: koppen, guard en retourwaarde** (14-10, Mark): een levenslijn heeft een *kop* —
   object (rechthoek), actor, de robustness-stereotypes boundary, control en entity (Jacobson) en
