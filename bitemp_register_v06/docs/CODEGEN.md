@@ -18,6 +18,7 @@ Dit document beschrijft de volledige werkwijze voor het genereren, exporteren en
 9. [Bestandsoverzicht](#9-bestandsoverzicht)
 10. [Veelgestelde vragen](#10-veelgestelde-vragen)
 11. [Greenfield test — domeinonafhankelijkheid bewezen](#11-greenfield-test--domeinonafhankelijkheid-bewezen)
+12. [Een backend met alleen bepaalde domeinen bouwen](#12-een-backend-met-alleen-bepaalde-domeinen-bouwen)
 
 ---
 
@@ -64,7 +65,7 @@ init-volgorde staat in `model/metaregistry_plumbing.go`.)
 
 ### Register is altijd nodig
 
-Het register-domein bevat de kern-entiteiten (Referentielijst, Land, AdellijkeTitel) waar andere domeinen afhankelijkheden op hebben. Plumbing-types (interfaces, MetaRegistryType, constanten) staan in `metaregistry_plumbing.go` en zijn domein-onafhankelijk.
+Het register-domein bevat de kern-entiteiten (Referentielijst, Land) waar andere domeinen afhankelijkheden op hebben. Let op: de entiteit `AdellijkeTitel` wordt (stand oktober 2026) in **np-loc** gegenereerd, terwijl de referentielijst-relatie `AdellijkeTitelsTitel` in register ernaar wijst; zie §12. Plumbing-types (interfaces, MetaRegistryType, constanten) staan in `metaregistry_plumbing.go` en zijn domein-onafhankelijk.
 
 ### Init-volgorde
 
@@ -837,3 +838,81 @@ Dit bevestigt het ontwerpprincipe: **de MetaRegistry is de single source of trut
 ### Aandachtspunt
 
 De codegen genereert soms ongebruikte imports (`time`, `github.com/uptrace/bun`) in bestanden waar de betreffende types niet voorkomen. Dit is onschuldig maar vereist een `goimports`-stap na codegen. Overweeg `goimports` als automatische naverwerking in de codegen te integreren.
+
+---
+
+## 12. Een backend met alleen bepaalde domeinen bouwen
+
+**Script:** `scripts/bouw-domeinen.ps1` (sinds 15-10-2026).
+
+### Waarom zo, en niet met een instelling
+
+Een domein *is* gegenereerde code: de zeven bestanden `model/<prefix>_*.go` en drie
+`init…Registry()`-aanroepen in `model/metaregistry_plumbing.go`. Alles in de API (routes, tabellen,
+GraphQL, OpenAPI, schema-API) leest de MetaRegistry; wat daar niet in staat, bestaat voor de API
+niet. Een compacter register maak je dus door domeinen **weg te laten bij het bouwen**. Een
+runtime-filter (`ENABLED_DOMAINS`) is bewust afgewezen: dat wordt een tweede waarheid naast het model
+(besluit in het pf-plan, `docs/plans/2026-09-21 Opdracht tweede instantie pf…`). Dat het framework
+zonder een bepaald domein werkt, bewijst §11.
+
+### Wat het script doet
+
+Het script raakt je werkmap niet aan. Het werkt in een tijdelijke kopie (standaard
+`%TEMP%\omnium-bouw-domeinen`):
+
+1. kopieert de Go-pakketten van de module (`go list ./...`, zonder tests) naar `…\bron`;
+2. verwijdert daar de bestanden van de domeinen die je níet kiest;
+3. haalt hun `init…Registry()`-aanroepen uit `metaregistry_plumbing.go` (de namen leest het uit
+   de verwijderde bestanden zelf);
+4. **controleert de afhankelijkheden**: wijst een gekozen domein naar een type uit een
+   weggelaten domein (relatie-doel, onderliggend element, `VoegOnderliggendGEToe`), dan stopt het
+   met de vindplaats. Met `-Forceer` bouwt het toch; die relatie werkt dan niet;
+5. bouwt `bitemp-go-api.exe` en desgewenst een Docker-image met `Dockerfile.api`.
+
+### Gebruik
+
+```powershell
+# Welke domeinen zijn er?
+.\scripts\bouw-domeinen.ps1 -Lijst
+
+# Alleen controleren (kopie + afhankelijkheden), niets bouwen
+.\scripts\bouw-domeinen.ps1 -Domeinen "register,CG,gegevenstypen,configuratie,ide-bestanden,beheer" -AlleenControle
+
+# Bouwen, en een image maken
+.\scripts\bouw-domeinen.ps1 -Domeinen "register,CG,gegevenstypen,configuratie,ide-bestanden,beheer,meldingen,np-loc,org-geo" -Image omnium-api:pf
+
+# Met de /admin/*-routes (rebuild, droptables, diff)
+.\scripts\bouw-domeinen.ps1 -Domeinen "…" -Devtools
+```
+
+Domeinen mag je als domeinnaam (`np-loc`, `CG`) of als bestandsprefix (`np_loc`, `cg`) geven.
+Verplicht zijn `register` (kern-entiteiten) en `ide-bestanden` (handgeschreven handlers gebruiken
+zijn types: `bestanden_handlers.go`, `rebuild_handler.go`, `schema_model_handler.go`). Alle andere
+domeinen, ook `CG`, kun je weglaten. Wat geen domein is (plumbing, studio, de tabellen voor
+gebruikers en meldingen, `extra`-datatypes), gaat altijd mee.
+
+### Wat je moet weten
+
+- **Afhankelijkheden tussen domeinen** (gemeten 15-10-2026, elk domein één keer weggelaten):
+
+  | Van | Naar | Via |
+  |---|---|---|
+  | `register` | `np-loc` | `AdellijkeTitelsTitel` → entiteit `AdellijkeTitel` (staat in np-loc) |
+  | `np-loc` | `CG` | veld `Adres.gemeente` (`$ref: Gemeente`) |
+  | `np-loc` | `org-geo` | `Gebiedsligging` → `Gemeentedeel` |
+  | `org-geo` | `CG` | relaties naar `Organisatie` en `Gemeente` |
+  | `meldingen` | `beheer` | melder/behandelaar → `Gebruiker` |
+
+  Het script meldt deze; met `-Forceer` bouwt het toch, en die relatie of dat `$ref`-veld werkt
+  dan niet. Wil je zonder np-loc, dan werkt de referentielijst *Adellijke titels* niet, tenzij
+  `AdellijkeTitel` in het model naar register verhuist (modelbesluit).
+- **Inloggen** (`AUTH_ENABLED=true`) vraagt het domein `beheer` (Gebruiker); **meldingen**
+  (`/api/meldingen`) het domein `meldingen`.
+- **Gebruik een eigen database.** De API maakt alleen tabellen voor de gekozen domeinen. Bestaande
+  gegevens van weggelaten domeinen blijven in de database staan, maar zijn via deze API niet
+  bereikbaar.
+- **Tests:** het script bouwt zonder tests. Een deel van de unit-tests gaat uit van het testmodel
+  `abuvwxy` en van np-loc; die compileren in zo'n kopie niet. Dat zegt niets over de API zelf.
+- **Getest (15-10-2026):** zonder `abuvwxy`, `np-loc`, `org-geo`, `financieel` en `kennis2` start
+  de API op een lege database, maakt de tabellen, verwerkt een registratie op Land, en `/full`,
+  GraphQL en de schema-API antwoorden; np-loc-routes geven 404. Image-bouw: 62 MB.
