@@ -2224,6 +2224,19 @@ export function maakDiagramActiviteit(opties) {
                   onClick: () =>
                     menuBus.emit("studio:zoek-in-boom", { profielId: id, elementId: nodeId }),
                 },
+                // Uitwerking (M3 `uitwerking`, 15-10): wat in de projectboom onder dit element
+                // hangt (bv. het activiteitendiagram onder een use case). Ook via dubbelklik op
+                // de vorm; dubbelklik op de naam blijft hernoemen.
+                ...(elementTypesById[s.elements[voorkomenRef?.elementId || nodeId]?.elementType]?.uitwerking
+                  ? [
+                      {
+                        id: "open-uitwerking",
+                        label: "Open uitwerking",
+                        icoon: "⧉",
+                        onClick: () => menuBus.emit("studio:open-uitwerking", { profielId: id, elementId: voorkomenRef?.elementId || nodeId }),
+                      },
+                    ]
+                  : []),
                 {
                   id: "naar-voren",
                   label: "Naar voorgrond",
@@ -2882,7 +2895,16 @@ export function maakDiagramActiviteit(opties) {
                     // Modelleren-host (tab, via de bus; luistert die niet,
                     // dan is de emit onschadelijk).
                     const doelId = element?.data?.gedragDiagramId;
-                    if (!doelId || !useStore.getState().diagrams[doelId]) return;
+                    if (!doelId || !useStore.getState().diagrams[doelId]) {
+                      // Uitwerking (M3 `uitwerking`, 15-10): de projectboom weet welke
+                      // diagrammen onder dit element hangen en opent de eerste; `true`
+                      // terug = geopend (anders hernoemt het canvas).
+                      const et = element && (descriptor.elementTypes || []).find((t) => t.id === element.elementType);
+                      if (!et?.uitwerking) return false;
+                      const uit = { gevonden: false };
+                      menuBus.emit("studio:open-uitwerking", { profielId: id, elementId: element.id, uit });
+                      return uit.gevonden;
+                    }
                     useStore.getState().setActiefDiagram(doelId);
                     menuBus.emit("studio:open-diagram", { profielId: id, diagramId: doelId });
                   }}

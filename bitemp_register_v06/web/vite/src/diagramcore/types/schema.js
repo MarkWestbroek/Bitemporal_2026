@@ -214,6 +214,14 @@
  *   verwijzen (submachine state, BPMN call-activity). De verwijzing leeft in
  *   element.data.gedragDiagramId (property-datatype "diagram-verwijzing");
  *   dubbelklik op de node opent dat diagram (nieuwe tab in Modelleren).
+ * @property {boolean} [uitwerking] - dit elementtype kan een **uitwerking** dragen
+ *   (2026-10-15, Mark: "een use case als map in de boom, met het AD eronder"): in de
+ *   projectboom hangen diagrammen en elementen — uit welke taal dan ook — onder zo'n element
+ *   (hun plaatsing wijst naar de element-sleutel `el::profiel::id` als ouder), zoals EA's
+ *   child diagrams. Alleen zo'n element is een sleepdoel in de boom en een `map`-doel voor de
+ *   assistent en de MCP; dubbelklik op het canvas opent de eerste uitwerking (na een
+ *   `gedragDiagramId`). De boom blijft ordening (geen M1): de inhoudelijke band is een
+ *   kruisverband of gedragsverwijzing. Zie studio/activities/modellerenActivity.jsx.
  * @property {{gedaante: string, relatieTypes: string[], labelIngeklapt?: string, labelUitgeklapt?: string}} [samentrekking]
  *   - gedaanten van een samenstel (lollipop): een voorkomen met
  *   `DiagramNode.gedaante === gedaante` rendert ingeklapt en maakt de genoemde

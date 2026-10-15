@@ -23,9 +23,10 @@
  *                        — magic link op het lege vlak: nieuw element + verbinding (§31.8)
  *   onRandAanhechting? — (elementId, ouderId|null, {x,y}) => void — rand-element
  *                        aangehecht (positie relatief) of losgemaakt (absoluut)
- *   onNodeDoubleClick? — (element) => void — gedragsverwijzing openen (alleen
- *                        bij een gevulde verwijzing; anders start dubbelklik
- *                        het inline hernoemen)
+ *   onNodeDoubleClick? — (element) => boolean|void — gedragsverwijzing openen (alleen
+ *                        bij een gevulde verwijzing), of bij een type met `uitwerking`
+ *                        de eerste uitwerking uit de projectboom (geeft dan `true`);
+ *                        anders start dubbelklik het inline hernoemen
  *   onSchuifVeld?      — (elementId, veldSleutel, "omhoog"|"omlaag") => nieuweSleutel|null —
  *                        veld (attribuut) herordenen vanuit het inline-veld (Ctrl+↑/↓)
  *   onNodeMaten?       — ({voorkomenId → {width,height}}) => void — zelfde
@@ -1161,6 +1162,10 @@ function CanvasBinnenkant({
         onNodeDoubleClick(element);
         return;
       }
+      // Uitwerking (M3 `uitwerking`, 15-10): de host weet of er in de projectboom een diagram
+      // onder dit element hangt — geeft hij `true` terug, dan is dat geopend; anders is
+      // dubbelklik gewoon hernoemen.
+      if (onNodeDoubleClick && et?.uitwerking && onNodeDoubleClick(element) === true) return;
       if (bewerkbaar && onHernoem && !isAnker) setHernoem({ nodeId: node.id, veld: null });
       else onNodeDoubleClick?.(element);
     },

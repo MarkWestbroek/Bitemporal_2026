@@ -725,3 +725,7 @@
   background: #ffffff;
   color: #1f2937;
 }
+
+/* Uitwerking onder een element in de projectboom (M3 `uitwerking`, 15-10): het AD onder de use case. */
+.studio-project__uitwerking { margin-left: 14px; padding-left: 2px; border-left: 1px dashed var(--s-border, #e2e8f0); }
+.studio-project__elementrij.is-dropdoel { outline: 1px dashed var(--s-accent, #6366f1); outline-offset: -1px; border-radius: 4px; }

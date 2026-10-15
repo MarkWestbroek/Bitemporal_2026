@@ -129,6 +129,7 @@ const elementTypes = [
   },
   {
     id: "subproces",
+    uitwerking: true, // M3: diagrammen (bv. een activiteitendiagram) hangen er in de boom onder
     randAanhechting: "zwevend",
     label: "Sub-process",
     omschrijving: "Samengevouwen deelproces; dubbelklik opent het onderliggende diagram.",

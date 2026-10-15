@@ -78,6 +78,7 @@ export function zoekMap(mappen, map) {
   const m = String(map ?? "").trim();
   if (!m || m === "/") return null;
   if (mappen[m]) return mappen[m];
+  if (m.startsWith("el::")) return { id: m }; // uitwerking: een element als ouder
   const delen = m.split("/").map((x) => x.trim()).filter(Boolean);
   let ouder = null, gevonden = null;
   for (const deel of delen) {
@@ -91,9 +92,15 @@ export function zoekMap(mappen, map) {
   throw new Error(opNaam.length ? `Map "${m}" is niet eenduidig; geef het pad (bv. Ouder/${m}).` : `Map "${m}" bestaat niet.`);
 }
 
-export function mapPad(mappen, id) {
+export function mapPad(proj, id) {
+  const { mappen = {}, plaatsing = {}, profielen = {} } = proj;
+  const naam = (x) => {
+    if (mappen[x]) return mappen[x].naam;
+    const [, pid, eid] = x.split("::"); // uitwerking: element als ouder
+    return profielen[pid]?.elements?.[eid]?.naam || eid;
+  };
   const delen = [];
-  for (let m = mappen[id]; m; m = m.ouderId ? mappen[m.ouderId] : null) delen.unshift(m.naam);
+  for (let x = id, i = 0; x && i < 50; x = mappen[x] ? mappen[x].ouderId : plaatsing[x], i++) delen.unshift(naam(x));
   return delen.join("/");
 }
 
@@ -110,8 +117,16 @@ export function boomTekst(proj) {
   }
   const regels = [];
   const kinderen = (ouder) => Object.values(proj.mappen).filter((m) => (m.ouderId || null) === ouder).sort((a, b) => (a.volgorde || 0) - (b.volgorde || 0));
+  // Uitwerking: elementen die zelf ouder zijn (M3 `uitwerking`), met hun diagrammen eronder.
+  const elementOuders = [...new Set(Object.values(proj.plaatsing).filter((o) => typeof o === "string" && o.startsWith("el::")))];
+  const naamVan = (key) => { const [, pid, eid] = key.split("::"); return proj.profielen[pid]?.elements?.[eid]?.naam || eid; };
   const loop = (ouder, diepte) => {
     for (const d of diagrammenIn.get(ouder) || []) regels.push(`${"  ".repeat(diepte)}◇ ${d}`);
+    for (const ek of elementOuders) {
+      if ((proj.plaatsing[ek] || null) !== ouder) continue;
+      regels.push(`${"  ".repeat(diepte)}▹ ${naamVan(ek)} [uitwerking van ${ek}]`);
+      loop(ek, diepte + 1);
+    }
     for (const m of kinderen(ouder)) { regels.push(`${"  ".repeat(diepte)}▸ ${m.naam}`); loop(m.id, diepte + 1); }
   };
   loop(null, 0);
@@ -152,7 +167,7 @@ export async function wijzigModel(api, { project, map, plan, toepassen = false }
       verstuurd = ops.length;
     }
   }
-  return { project: p, map: doel ? mapPad(proj.mappen, doel.id) : "(hoofdmap)", plan: gecontroleerd, wijziging, bestaand, verstuurd };
+  return { project: p, map: doel ? mapPad(proj, doel.id) : "(hoofdmap)", plan: gecontroleerd, wijziging, bestaand, verstuurd };
 }
 
 /** Een gecontroleerd plan + wijziging als leesbare tekst. */

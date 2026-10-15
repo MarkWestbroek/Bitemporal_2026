@@ -83,7 +83,8 @@ Niet, hoewel het schema ze kent (`schema.js:105-183`):
   (behalve automatisch bij `note`/`boundary`), `resizebaar`, `minBreedte`,
   `minHoogte`, `achtergrond` (behalve bij `boundary`);
 - **plaatsing en gedrag:** `naamLabel`, `randAanhechting`, `randElement`,
-  `meerdereVoorkomens`, `gedragsVerwijzing`, `taakbalkGroep`,
+  `meerdereVoorkomens`, `gedragsVerwijzing`, `uitwerking` (15-10: diagrammen onder het
+  element in de projectboom), `taakbalkGroep`,
   `omschrijving`;
 - **gedaanten van een samenstel:** `samentrekking` en `opname`;
 - **hooks**, op de twee connector-hooks hierna na.

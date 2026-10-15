@@ -727,9 +727,9 @@ export const useModellerenStore = create((set, get) => ({
 // ── Melden (plan docs/plans/meldingen/) ─────────────────────────────
 // Pad in de projectboom (map/map/naam) en het stabiele id gaan mee met een melding.
 function meldPad(mapId, naam) {
-  const { mappen } = useModellerenStore.getState();
+  const { mappen, plaatsing } = useModellerenStore.getState();
   const delen = [];
-  for (let m = mappen[mapId], i = 0; m && i < 50; m = mappen[m.ouderId], i++) delen.unshift(m.naam);
+  for (let id = mapId, i = 0; id && i < 50; id = ouderVanBoomId(mappen, plaatsing, id), i++) delen.unshift(boomOuderNaam(mappen, id));
   if (naam) delen.push(naam);
   return delen.join("/");
 }
@@ -1275,7 +1275,65 @@ function plaatsElementenInMap(profiel, elementIds, mapId) {
   const keys = [...new Set(elementIds.map((eid) => topVoorouder(ouderVan, eid)))].map((id) =>
     elementKey(profiel.id, id)
   );
-  useModellerenStore.getState().plaatsMeerdere(keys, mapId);
+  useModellerenStore.getState().plaatsMeerdere(keys.filter((k) => k !== mapId), mapId);
+}
+
+// ── Uitwerking (M3 `ElementType.uitwerking`, 15-10-2026) ────────────
+// Een element van zo'n type kan in de boom óuder zijn: zijn sleutel
+// `el::profiel::id` staat dan als "map" in `plaatsing`. Mappen en zulke
+// elementen vormen samen één ouder-keten; de boomregel (volgDiagram) en de
+// sync zien er niets van, voor hen is een ouder een ondoorzichtig id.
+
+/** Ouder van een boom-id: van een map zijn ouderId, van een element-sleutel zijn plaatsing. */
+function ouderVanBoomId(mappen, plaatsing, id) {
+  if (!id) return null;
+  if (mappen[id]) return mappen[id].ouderId || null;
+  if (isElementKey(id)) return plaatsing[id] || null;
+  return null;
+}
+
+/** Naam van een ouder: mapnaam of elementnaam. */
+function boomOuderNaam(mappen, id) {
+  if (mappen[id]) return mappen[id].naam;
+  if (isElementKey(id)) {
+    const [, profielId, elementId] = id.split("::");
+    const el = getProfieltype(profielId)?.useStore?.getState?.().elements?.[elementId];
+    return el?.naam || elementId;
+  }
+  return "";
+}
+
+/** Mag `key` onder element-ouder `ouder` komen? Niet onder zichzelf of een eigen nazaat. */
+function magOnderElement(plaatsing, mappen, key, ouder) {
+  for (let cursor = ouder, i = 0; cursor && i < 50; cursor = ouderVanBoomId(mappen, plaatsing, cursor), i++) {
+    if (cursor === key) return false;
+  }
+  return true;
+}
+
+/** Niet (geldig) ingedeeld: geen ouder, of een element-ouder die zelf nergens staat. */
+function isWees(plaatsing, key) {
+  const ouder = plaatsing[key];
+  return !ouder || (isElementKey(ouder) && !plaatsing[ouder]);
+}
+
+/** Alles wat (transitief) onder deze ouders hangt, element-ouders meegenomen. */
+function ouderBereik(plaatsing, ouders) {
+  const bereik = new Set(ouders);
+  for (let groei = true; groei;) {
+    groei = false;
+    for (const [key, ouder] of Object.entries(plaatsing)) {
+      if (isElementKey(key) && bereik.has(ouder) && !bereik.has(key)) { bereik.add(key); groei = true; }
+    }
+  }
+  return bereik;
+}
+
+/** Wat onder een verwijderd of losgemaakt element hing, valt terug naar zijn ouder (map). */
+function herplaatsUitwerking(elKey, naarOuder) {
+  const s = useModellerenStore.getState();
+  const keys = Object.entries(s.plaatsing).filter(([, o]) => o === elKey).map(([k]) => k);
+  if (keys.length) s.plaatsMeerdere(keys, naarOuder || null);
 }
 
 /**
@@ -1311,6 +1369,11 @@ function naarMapItemsVoor(profiel) {
 function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const elements = profiel.useStore((s) => s.elements);
   const plaatsDiagram = useModellerenStore((s) => s.plaatsDiagram);
+  // Uitwerking (M3 `uitwerking`): wat in de boom onder dit element hangt.
+  const mappenAlle = useModellerenStore((s) => s.mappen);
+  const plaatsingAlle = useModellerenStore((s) => s.plaatsing);
+  const elKey = elementKey(profiel.id, elementId);
+  const uitwerking = boomIndex(mappenAlle, plaatsingAlle).inhoud.get(elKey) || GEEN;
   const toggleMulti = useModellerenStore((s) => s.toggleMulti);
   const wisMulti = useModellerenStore((s) => s.wisMulti);
   const inMulti = useModellerenStore((s) => !!sleutel && s.multiSelectie.includes(sleutel));
@@ -1339,6 +1402,22 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   // nog eens klikken op de al geselecteerde regel, dubbelklik, of het contextmenu.
   useHernoemDoel("el:" + elementKey(profiel.id, elementId), () => setBewerk(true));
   const klikHernoem = useKlikHernoem(() => setBewerk(true));
+  // Sleepdoel als dit type een uitwerking mag dragen én zelf een plek in de boom heeft.
+  const kanUitwerking = !!et?.uitwerking && !!sleutel;
+  const dropUit = useDrop({
+    [PLAATSING_MIME]: (data) =>
+      data.split("\n").forEach((key) => {
+        if (key !== elKey && magOnderElement(plaatsingAlle, mappenAlle, key, elKey)) plaatsDiagram(key, elKey);
+      }),
+    [ELEMENT_MIME]: (rauw) => {
+      try {
+        const { elementId: eid, elementIds } = JSON.parse(rauw);
+        const { profiel: bron } = actieveTabInfo();
+        if (!bron) return;
+        plaatsElementenInMap(bron, elementIds?.length ? elementIds : eid ? [eid] : [], elKey);
+      } catch { /* ignore */ }
+    },
+  });
   if (!element) return null;
 
   const { kinderenVan } = bepaalHierarchie(profiel, elements);
@@ -1394,6 +1473,7 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
       gevaar: true,
     });
     if (!ok) return;
+    herplaatsUitwerking(elKey, plaatsingAlle[elKey] || null);
     profiel.useStore.getState().deleteElement(elementId);
     if (sleutel) plaatsDiagram(sleutel, null);
   };
@@ -1439,10 +1519,11 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
     <div>
       <div
         ref={rijRef}
-        className={"studio-project__elementrij" + (flitst ? " is-flits" : "")}
+        className={"studio-project__elementrij" + (flitst ? " is-flits" : "") + (kanUitwerking && dropUit.over ? " is-dropdoel" : "")}
         style={{ paddingLeft: diepte ? diepte * 12 : 0 }}
+        {...(kanUitwerking ? dropUit.props : {})}
       >
-        {kinderen.length > 0 ? (
+        {kinderen.length > 0 || uitwerking.length > 0 ? (
           <button type="button" className="studio-project__caret" onClick={() => setDicht(!isDicht)}>
             {isDicht ? "▸" : "▾"}
           </button>
@@ -1499,7 +1580,7 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
               setBewerk(true);
             }}
             onContextMenu={ctx}
-            title={`${element.naam || elementId} — ${et?.label || "element"} (${profiel.label}; klik = eigenschappen, nog eens klikken of F2 = hernoemen)`}
+            title={`${element.naam || elementId} — ${et?.label || "element"} (${profiel.label}; klik = eigenschappen, nog eens klikken of F2 = hernoemen${kanUitwerking ? "; sleep hier een diagram of element in als uitwerking" : ""})`}
             // Ook kinderen in de hiërarchie (elementen onder een package /
             // V3-domein, GE's onder hun entiteit) zijn sleepbaar naar een
             // diagram. Ze hebben geen eigen plaatsing, dus alleen de
@@ -1527,6 +1608,17 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
         kinderen.map((kindId) => (
           <ElementRegel key={kindId} profiel={profiel} elementId={kindId} diepte={diepte + 1} />
         ))}
+      {/* Uitwerking: diagrammen (eerst) en elementen uit welke taal ook, onder dit element. */}
+      {!isDicht && uitwerking.length > 0 && (
+        <div className="studio-project__uitwerking" data-lijst>
+          {uitwerking.filter((k) => !isElementKey(k)).map((k) => (
+            <GeplaatstItem key={k} sleutel={k} />
+          ))}
+          {uitwerking.filter(isElementKey).map((k) => (
+            <GeplaatstItem key={k} sleutel={k} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1788,7 +1880,7 @@ function ProfielSectie({ profiel }) {
   const openTab = useModellerenStore((s) => s.openTab);
 
   // Alleen wat nog niet in een map is geplaatst.
-  const entries = Object.values(diagrams).filter((d) => !plaatsing[tabId(profiel.id, d.id)]);
+  const entries = Object.values(diagrams).filter((d) => isWees(plaatsing, tabId(profiel.id, d.id)));
   const nieuw = async () => {
     const naam = await vraagNaam({
       titel: `Nieuw ${profiel.diagramTerm}`,
@@ -1877,9 +1969,31 @@ function Sidebar() {
   useEffect(
     () =>
       menuBus.on("studio:uit-model-verwijderd", ({ profielId, elementIds = [] } = {}) => {
+        // Wat als uitwerking onder zo'n element hing, valt terug naar zijn ouder.
+        for (const eid of elementIds) {
+          const k = elementKey(profielId, eid);
+          herplaatsUitwerking(k, useModellerenStore.getState().plaatsing[k] || null);
+        }
         const s = useModellerenStore.getState();
         const keys = elementIds.map((eid) => elementKey(profielId, eid)).filter((k) => s.plaatsing[k]);
         if (keys.length) s.plaatsMeerdere(keys, null);
+      }),
+    []
+  );
+
+  // Dubbelklik op een element met `uitwerking` op het canvas (zonder
+  // gedragDiagramId): open de eerste uitwerking die in de boom onder het element hangt.
+  useEffect(
+    () =>
+      menuBus.on("studio:open-uitwerking", ({ profielId, elementId, uit } = {}) => {
+        const s = useModellerenStore.getState();
+        const key = elementKey(profielId, elementId);
+        const eerste = Object.entries(s.plaatsing).find(([k, o]) => o === key && !isElementKey(k));
+        if (!eerste) return;
+        const [pid, did] = eerste[0].split("::");
+        if (!getProfieltype(pid)?.useStore?.getState?.().diagrams?.[did]) return;
+        if (uit) uit.gevonden = true; // synchroon terug naar het canvas: niet hernoemen
+        s.openTab(pid, did);
       }),
     []
   );
@@ -2216,7 +2330,7 @@ function ElementenBrowserMetFilter({ profiel, Browser }) {
     };
     const prefix = `el::${profiel.id}::`;
     for (const key of Object.keys(plaatsing)) {
-      if (key.startsWith(prefix)) voegMetNazaten(key.slice(prefix.length));
+      if (key.startsWith(prefix) && !isWees(plaatsing, key)) voegMetNazaten(key.slice(prefix.length));
     }
     return set;
   }, [profiel, elements, plaatsing]);
@@ -2909,10 +3023,11 @@ function submappenVan(mappen, mapId) {
 async function verwijderMapMetInhoud(map) {
   const ms = useModellerenStore.getState();
   const mapIds = new Set([map.id, ...submappenVan(ms.mappen, map.id)]);
+  const bereik = ouderBereik(ms.plaatsing, mapIds); // ook wat onder elementen in die mappen hangt (uitwerking)
   // Inhoud per profiel: diagram-keys `profiel::diagram`, element-keys `el::profiel::element`.
   const perProfiel = new Map();
   for (const [key, mapId] of Object.entries(ms.plaatsing)) {
-    if (!mapIds.has(mapId)) continue;
+    if (!bereik.has(mapId)) continue;
     const isEl = isElementKey(key);
     const rest = isEl ? key.slice(4) : key;
     const i = rest.indexOf("::");

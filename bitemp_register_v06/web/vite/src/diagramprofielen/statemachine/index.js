@@ -66,6 +66,7 @@ const elementTypes = [
   },
   {
     id: "toestand",
+    uitwerking: true, // M3: diagrammen (bv. een activiteitendiagram) hangen er in de boom onder
     label: "Toestand",
     omschrijving: "Toestand van het systeem, met entry/do/exit-activiteiten.",
     kort: "TS",

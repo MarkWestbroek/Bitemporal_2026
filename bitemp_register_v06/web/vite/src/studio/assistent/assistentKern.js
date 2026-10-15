@@ -23,7 +23,7 @@
  * @property {string} id            - profiel-id (store "model:<id>", boomsleutel "<id>::<diagram>")
  * @property {string} naam
  * @property {string} diagramTypeId
- * @property {{id: string, label: string, omschrijving?: string, container?: string, leden?: string[], vast?: boolean, eigenschappen?: string[]}[]} elementen
+ * @property {{id: string, label: string, omschrijving?: string, container?: string, leden?: string[], vast?: boolean, uitwerking?: boolean, eigenschappen?: string[]}[]} elementen
  * @property {{id: string, label: string, omschrijving?: string, regels: {bron: string[], doel: string[]}[], eigenschappen?: string[]}[]} connectoren
  * @property {string[]} [aanwijzingen]
  * @property {Record<string, string[][]>} [paren]  - connector → toegestane [bron, doel]-paren (voorkeursrichting)
@@ -56,6 +56,7 @@ export function profielSamenvatting(descriptor, profielId = descriptor?.id) {
       ...(et.omschrijving ? { omschrijving: et.omschrijving } : {}),
       ...(et.containerVoor ? { container: et.containerVoor } : {}),
       ...(et.resizebaar === false ? { vast: true } : {}),
+      ...(et.uitwerking ? { uitwerking: true } : {}),
       ...(eigenschapSleutels(et).length ? { eigenschappen: eigenschapSleutels(et) } : {}),
     }));
   const bekend = new Set(elementen.map((e) => e.id));
@@ -107,8 +108,16 @@ export function bestaandInMap(stand, mapId, profielIds = Object.keys(stand.profi
     const loop = (id) => { for (const m of Object.values(mappen)) if (m.ouderId === id && !inMap.has(m.id)) { inMap.add(m.id); loop(m.id); } };
     loop(mapId);
   }
+  // Uitwerking (M3): elementen in de map kunnen zelf ouder zijn (hun sleutel als "map").
+  for (let groei = true; groei;) {
+    groei = false;
+    for (const [key, ouder] of Object.entries(plaatsing)) {
+      if (key.startsWith("el::") && inMap.has(ouder) && !inMap.has(key)) { inMap.add(key); groei = true; }
+    }
+  }
   const mapVan = (key) => plaatsing[key] || null;
-  const mapNaam = (id) => (id && id !== mapId ? mappen[id]?.naam : "");
+  const naamVanSleutel = (key) => { const [, pid, eid] = key.split("::"); return stand.profielen?.[pid]?.elements?.[eid]?.naam || eid; };
+  const mapNaam = (id) => (!id || id === mapId ? "" : mappen[id]?.naam || (id.startsWith("el::") ? naamVanSleutel(id) : ""));
   const uit = [];
   for (const profielId of profielIds) {
     const p = stand.profielen?.[profielId];
@@ -261,7 +270,7 @@ function taalTekst(s) {
   const regels = [
     `## ${s.id} — ${s.naam}`,
     "Elementtypen:",
-    ...s.elementen.map((e) => `- ${e.id}: ${e.label}${e.omschrijving ? ` — ${e.omschrijving}` : ""}${e.container ? ` (container: ${e.leden ? e.leden.join(", ") : "andere elementen"} kunnen erin liggen via \`in\`)` : ""}${e.eigenschappen ? ` [eigenschappen: ${e.eigenschappen.join(", ")}]` : ""}`),
+    ...s.elementen.map((e) => `- ${e.id}: ${e.label}${e.omschrijving ? ` — ${e.omschrijving}` : ""}${e.container ? ` (container: ${e.leden ? e.leden.join(", ") : "andere elementen"} kunnen erin liggen via \`in\`)` : ""}${e.uitwerking ? " (kan een uitwerking dragen: een diagram eronder via map)" : ""}${e.eigenschappen ? ` [eigenschappen: ${e.eigenschappen.join(", ")}]` : ""}`),
     "Relaties (bron → doel):",
     ...s.connectoren.map((c) => {
       const paren = s.paren?.[c.id];
@@ -321,6 +330,7 @@ export function vraagVoorOpdracht(talen, opdracht, { mapNaam = "", submappen = [
     "- Een relatie tussen bestaande elementen: alleen een connector met hun ids; geen nieuw diagram nodig.",
     "- Iets in een container zetten (bv. een use case in een systeemkader): `in` met de sleutel of het id van de container — ook voor een bestaand element ({\"bestaand\": \"<id>\", \"in\": \"<container>\"}). Zeg in de uitleg alleen wat het plan echt doet.",
     "- Nieuwe diagrammen in een submap: zet `map` (naam); een bestaande submap met die naam wordt hergebruikt.",
+    "- Een diagram onder een element hangen (bv. een activiteitendiagram onder een use case): zet `map` op de naam of het id van een element dat een uitwerking kan dragen — een bestaand element, of een nieuw element uit dit plan (zijn sleutel). Het diagram komt dan in de boom onder dat element.",
     "- Uitlijnen of opstellen: `opstelling` met het diagram (id of sleutel), een actie (naast-elkaar = op één rij, boven-elkaar = in één kolom, verdeel-horizontaal, verdeel-verticaal, links, rechts, boven, onder, automatisch = het hele diagram netjes opstellen) en de elementen (ids of sleutels; leeg = alle). \"Horizontaal uitlijnen\" = naast-elkaar (zelfde hoogte), \"verticaal uitlijnen\" = boven-elkaar (zelfde midden); verdelen alleen als om gelijke afstanden gevraagd wordt. Leden van een container schuiven mee.",
     "- Wat je niet kunt: elementen, relaties of diagrammen weghalen, en vrije posities of kleuren zetten. Vraagt de opdracht dat, zeg het in de uitleg en laat de lijsten leeg; beweer nooit dat je iets doet wat niet in het plan staat.",
     "- Hangen modellen in verschillende talen samen (bv. een use case met een activiteitendiagram dat hem uitwerkt), leg dan een `verband` tussen twee elementen — geen diagrammen; bv. de eerste actie van het activiteitendiagram realiseert de use case (soort: " + VERBAND_SOORTEN.join(", ") + ").",
