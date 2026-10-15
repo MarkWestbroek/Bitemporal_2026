@@ -26,7 +26,8 @@ import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
-import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN } from "../sync/operaties.js";
+import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
+import { volgDiagram } from "../boomRegels.js";
 import { useOutboxStore } from "../sync/outbox.js";
 import { zonderWeesPlaatsingen, mappenMetBeschrijving } from "../sync/structuurKern.js";
 import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
@@ -1090,6 +1091,26 @@ function topVoorouder(ouderVan, elementId) {
   return cursor;
 }
 
+/**
+ * Boomregel (BOOM-1, boomRegels.volgDiagram): niet-ingedeelde elementen van een
+ * profiel in de map van het eerste geplaatste diagram waarop ze staan.
+ * `diagramIds` = alleen elementen op die (gewijzigde) diagrammen; null = alles.
+ * plaatsPerMap is gesynct: anderen zien dezelfde plaatsing.
+ */
+function plaatsBijDiagrammen(profiel, diagramIds = null) {
+  const st = profiel.useStore?.getState?.();
+  if (!st?.elements || !st?.diagrams) return;
+  const ms = useModellerenStore.getState();
+  const { ouderVan } = bepaalHierarchie(profiel, st.elements);
+  const perMap = volgDiagram({ profielId: profiel.id, elements: st.elements, diagrams: st.diagrams, plaatsing: ms.plaatsing, ouderVan, diagramIds });
+  if (Object.keys(perMap).length) ms.plaatsPerMap(perMap);
+}
+
+/** Alle profielen opruimen (project geladen): wat op een geplaatst diagram staat, in die map. */
+function ruimNietIngedeeldOp() {
+  for (const p of getProfieltypen()) if (!p.klassiek) plaatsBijDiagrammen(p, null);
+}
+
 // ── Contextmenu (rechtsklik in de boom) ─────────────────────────────
 // Een item mag `items: [...]` dragen: klikken opent die lijst in hetzelfde
 // menu (drill-down met ‹ terug) — gebruikt voor "Verplaats naar ▸".
@@ -1863,28 +1884,58 @@ function Sidebar() {
     []
   );
 
-  // Een nieuw element op een diagram landt in de map van dat diagram (14-10): de
-  // boom is de plek waar je het terugvindt, en "Niet ingedeeld" blijft voor wat
-  // van elders komt. Niet als een geplaatste voorouder (hiërarchie) het al
-  // meeneemt, en niet als het diagram zelf nergens staat. plaatsMeerdere is een
-  // gesynchroniseerde operatie, dus anderen zien het ook.
-  useEffect(
-    () =>
-      menuBus.on("studio:element-gemaakt", ({ profielId, elementId, diagramId } = {}) => {
-        const p = getProfieltype(profielId);
-        if (!p || !elementId || !diagramId) return;
-        const s = useModellerenStore.getState();
-        const mapId = s.plaatsing[tabId(profielId, diagramId)];
-        if (!mapId) return;
-        const sleutel = elementKey(profielId, elementId);
-        if (s.plaatsing[sleutel]) return;
-        const { ouderVan } = bepaalHierarchie(p, p.useStore.getState().elements);
-        const topId = topVoorouder(ouderVan, elementId);
-        if (topId !== elementId && s.plaatsing[elementKey(profielId, topId)]) return;
-        s.plaatsMeerdere([sleutel], mapId);
-      }),
-    []
-  );
+  // Boomregel (BOOM-1): een niet-ingedeeld element volgt het eerste geplaatste
+  // diagram waarop het staat. Drie triggers: (1) een lokale modelwijziging —
+  // nieuwe knopen op een diagram (paletknop, magic link, slepen uit de lijst,
+  // import); (2) een diagram dat in een map komt (ook na een import); (3) het
+  // laden (hydratatie) — de migratie van bestaande projecten. Niet bij andermans
+  // operaties of tijdens een snapshot (isStil): die brengen hun plaatsing mee.
+  useEffect(() => {
+    const af = [];
+    for (const p of getProfieltypen()) {
+      if (p.klassiek || !p.useStore?.subscribe) continue;
+      let vorige = p.useStore.getState().diagrams;
+      af.push(
+        p.useStore.subscribe((s) => {
+          const na = s.diagrams;
+          if (na === vorige) return;
+          const voor = vorige;
+          vorige = na;
+          if (isStil() || !na) return;
+          const veranderd = Object.keys(na).filter((id) => na[id] !== voor?.[id]);
+          if (veranderd.length) plaatsBijDiagrammen(p, veranderd);
+        })
+      );
+      // Al gehydrateerd vóór dit abonnement (profiel zonder persist, of HMR): nu opruimen;
+      // anders doet de hydratatie-wijziging hierboven het.
+      if (!p.useStore.persist?.hasHydrated || p.useStore.persist.hasHydrated()) plaatsBijDiagrammen(p, null);
+    }
+    let vorigePlaatsing = useModellerenStore.getState().plaatsing;
+    af.push(
+      useModellerenStore.subscribe((s) => {
+        const na = s.plaatsing;
+        if (na === vorigePlaatsing) return;
+        const voor = vorigePlaatsing;
+        vorigePlaatsing = na;
+        if (isStil()) return;
+        const perProfiel = new Map();
+        for (const [key, mapId] of Object.entries(na || {})) {
+          if (!mapId || isElementKey(key) || voor?.[key] === mapId) continue;
+          const i = key.indexOf("::");
+          if (i < 0) continue;
+          const pid = key.slice(0, i);
+          if (!perProfiel.has(pid)) perProfiel.set(pid, []);
+          perProfiel.get(pid).push(key.slice(i + 2));
+        }
+        for (const [pid, ids] of perProfiel) {
+          const p = getProfieltype(pid);
+          if (p && !p.klassiek) plaatsBijDiagrammen(p, ids);
+        }
+      })
+    );
+    return () => af.forEach((f) => f?.());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profieltypenVersie()]);
 
   // "Zoek in projectboom" (rechtsklik op een canvas-element): klap de
   // map-keten open en laat de regel even oplichten.
@@ -2711,6 +2762,9 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}
     useKruisStore.getState().laadLinks(Array.isArray(data.kruisverbanden) ? data.kruisverbanden : []);
   });
   useOutboxStore.getState().wis();
+  // Boomregel (BOOM-1): wat op een geplaatst diagram staat, in die map (migratie van
+  // bestaande projecten; idempotent, dus bij een tweede client niets te doen).
+  ruimNietIngedeeldOp();
 }
 
 /** Alles leeg en een nieuwe projectidentiteit (na "parkeren"). */
