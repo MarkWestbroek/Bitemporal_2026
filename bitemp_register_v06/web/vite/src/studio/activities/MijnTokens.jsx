@@ -58,7 +58,8 @@ export default function MijnTokens() {
     <section data-testid="mijn-tokens" style={{ padding: 10, border: "1px solid var(--s-border, #e2e8f0)", borderRadius: 8, marginTop: 14, fontSize: 13 }}>
       <div style={{ marginBottom: 6 }}>
         <strong>Mijn API-tokens</strong> — voor de Omnium-MCP-server (AI in VS Code) of een script. Een token werkt als jij,
-        met jouw rol en rechten.
+        met jouw rol en rechten. Voor de ✨ assistent in de Studio heb je géén token nodig, maar een
+        toegangscode (om-…) van de beheerder (activiteit <em>AI-toegang</em>); een token (omt_…) werkt daar niet.
       </div>
       <form onSubmit={maak} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
         <label style={{ display: "grid", gap: 2, fontSize: 12, flex: "1 1 200px" }}>Waarvoor

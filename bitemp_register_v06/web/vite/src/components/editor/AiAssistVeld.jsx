@@ -202,7 +202,7 @@ export function AiInstellingen({ inst, onOpslaan, onAnnuleer, baseUrl: baseUrlPr
       )}
       <p style={{ margin: 0, fontSize: "0.75rem", color: "#64748b" }}>
         {preset === "server"
-          ? "Een toegangscode krijg je van de beheerder; hij is tijdelijk en heeft een daglimiet."
+          ? "Een toegangscode (om-…) krijg je van de beheerder (activiteit AI-toegang); hij is tijdelijk en heeft een daglimiet. Dit is níet een API-token (omt_…) uit Mijn API-tokens — dat is voor de MCP en scripts."
           : "Je eigen sleutel blijft in deze browser en gaat alleen naar de gekozen dienst. Gebruik dit niet op een gedeelde computer."}
       </p>
       <div style={{ display: "flex", gap: 6 }}>
