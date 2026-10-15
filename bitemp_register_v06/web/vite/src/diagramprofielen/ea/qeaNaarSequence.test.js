@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { qeaNaarSequence } from "./qeaNaarSequence.js";
+import { qeaNaarSequence, kopVan } from "./qeaNaarSequence.js";
 
 const hier = dirname(fileURLToPath(import.meta.url));
 const bron = JSON.parse(readFileSync(join(hier, "fixtures", "sequence-js.qea.json"), "utf8"));
@@ -33,7 +33,7 @@ test("levenslijnen: elk object op het diagram (Object, Sequence, Actor) wordt ee
   assert.equal(node.position.x, 15 + 45 - 7, "gecentreerd op EA's kolom");
 });
 
-test("berichten: punten op de lijnen, connector synchroon, volgnummer; zelf-bericht = lus op één punt", () => {
+test("berichten: punten op de lijnen, connector synchroon, volgnummer; zelf-bericht = twee punten op één lijn", () => {
   const berichten = van("synchroon");
   assert.equal(berichten.length, 35);
   assert.equal(van("asynchroon").length + van("retour").length, 0);
@@ -47,13 +47,17 @@ test("berichten: punten op de lijnen, connector synchroon, volgnummer; zelf-beri
   const n = diagram.nodes.find((x) => x.elementId === vanPunt.id);
   assert.deepEqual(n.position, { x: 1, y: 135 - 50 - 6 });
   const zelf = berichten.find((b) => b.data.volgnummer === 2);
-  assert.equal(zelf.source, zelf.target, "zelf-bericht: één punt, lus");
+  assert.notEqual(zelf.source, zelf.target, "zelf-bericht: twee punten");
+  assert.equal(model.elements[zelf.source].data.randVan, model.elements[zelf.target].data.randVan, "op dezelfde lijn");
+  const yVan = diagram.nodes.find((x) => x.elementId === zelf.source).position.y;
+  const yNaar = diagram.nodes.find((x) => x.elementId === zelf.target).position.y;
+  assert.ok(yNaar > yVan, "ontvangen onder zenden");
   assert.equal(diagram.lijnen[zelf.id].vorm, "hoekig");
-  assert.equal(diagram.lijnen[eerste.id].vorm, "recht");
+  assert.equal(diagram.lijnen[eerste.id], undefined, "gewoon bericht: geen lijndata");
   const metSignatuur = berichten.find((b) => b.naam === "addEnum(EA.Connector, EA.Element)");
   assert.equal(metSignatuur.data.retourtype, "EnumerationRepresentation");
   assert.equal(metSignatuur.data.argumenten, "connector, enumRep");
-  assert.equal(diagram.nodes.filter((x) => model.elements[x.elementId]?.elementType === "punt").length, 35 * 2 - berichten.filter((b) => b.source === b.target).length);
+  assert.equal(diagram.nodes.filter((x) => model.elements[x.elementId]?.elementType === "punt").length, 35 * 2);
 });
 
 test("verslag en schaal", () => {
@@ -64,4 +68,14 @@ test("verslag en schaal", () => {
   const lijn15 = d15.nodes.find((n) => n.elementId === lijn.elementId);
   assert.equal(lijn15.size.height, Math.round(1311 * 1.5));
   assert.equal(lijn15.size.width, 14, "lijnbreedte schaalt niet");
+});
+
+test("kop: Actor en robustness-stereotypes (boundary/control/entity), anders geen", () => {
+  assert.equal(van("levenslijn").find((l) => l.naam === "Analist").data.kop, "actor");
+  assert.equal(kopVan({ Object_Type: "Object", Stereotype: "Control" }), "control");
+  assert.equal(kopVan({ Object_Type: "Sequence", Stereotype: "boundary" }), "boundary");
+  assert.equal(kopVan({ Object_Type: "Object", Stereotype: "entity" }), "entity");
+  assert.equal(kopVan({ Object_Type: "Object", Stereotype: "business boundary" }), "business-boundary");
+  assert.equal(kopVan({ Object_Type: "Object", Stereotype: "table" }), "");
+  assert.equal(kopVan({ Object_Type: "Sequence" }), "");
 });

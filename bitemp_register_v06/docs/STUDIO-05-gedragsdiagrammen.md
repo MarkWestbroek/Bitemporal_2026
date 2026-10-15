@@ -314,7 +314,27 @@ State machine v0 laat vast zien wat "core + labels" oplevert; de bekende open pu
 - **Pool + message flow**: als aparte collaboration-laag modelleren, of BPMN-pools bewust
   buiten scope houden in v1?
 - **Ordening/as** (sequence): positie-als-semantiek botst met vrije layout — apart
-  diagram-subtype met layout-constraints?
+  diagram-subtype met layout-constraints? **Richting gekozen (2026-10-13/14, Mark):** de volgorde
+  ligt in M1 (levenslijn → activatie → geordende berichten/activaties; punten blijven als
+  UML-occurrences, afgeleid en niet getekend), de layout erbovenop is één-dimensionaal (lijn: x;
+  activatie/bericht: y als afstand), "lijnen horizontaal" is een regel van de tekenaar. Zie
+  `docs/plans/2026-10-13 Sequence — volgorde in het model, layout erbovenop (plan).md`. Fase 0
+  daarvan is gebouwd (14-10, `feat/sequence-v1`): koppen actor/boundary/control/entity (+
+  business-varianten; robustness, Jacobson), guard en retourwaarde op een bericht (`[guard]
+  naam(…): retour`, label boven de lijn), **berichten verticaal slepen** met wegduwen van wat
+  eronder ligt (M3-hook `verschuifConnector`; een notitie aan een punt schuift mee),
+  **activaties afgeleid** uit de berichten met de aanroepstapel-regel — EA bewaart ze ook niet
+  (`Activation=0`) — dus episodes, nesting en de "rugzak" bij een zelf-bericht ontstaan vanzelf
+  (`sequence/activaties.js`), zelf-bericht als twee punten op één lijn met het haakje van EA,
+  punten onzichtbaar tot hover/selectie, levenslijn alleen opzij (`layoutDimensie: "x"`), en de
+  EA-lezer leidt kop (Actor/stereotype) en guard (`Btm_Mid_Label`) af en her-importeert weer
+  (punten met eigen GUID). **Tekenen van nul** (15-10): berichttype kiezen in de balk *Verbinding*
+  en van levenslijn naar levenslijn slepen op de gewenste hoogte — de punten ontstaan daar (M3-hook
+  `naVerbinden` krijgt de muispositie), punt/activatie uit het palet (`inPalet: false`), levenslijnen
+  in een rij en meegroeiend, Delete = uit het model mét punten (`verwijderen: "model"`, hook
+  `naVerwijderen`), tekenen/verwijderen één undo-stap; e2e `22-studio-sequence.spec.js`. Nog open:
+  async-episodes (§6A van het plan), fragmenten, het label van een zelf-bericht, EA-lifelines die
+  ArchiMate-componenten zijn, "importeer als nieuw".
 
 ---
 

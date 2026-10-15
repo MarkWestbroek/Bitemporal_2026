@@ -328,10 +328,42 @@ export function maakDiagramActiviteit(opties) {
     for (const cid of verborgenRelatiesVan(s.diagrams[diagramId], s.elements, elementId)) s.toonConnectorOpDiagram(diagramId, cid);
   }
 
+  /**
+   * Eén undo-stap voor een actie plus wat het profiel er met een hook aan
+   * toevoegt (naVerbinden, naVerwijderen): de eerste mutatie wordt bijgehouden,
+   * de rest gebeurt met de historie gepauzeerd — Ctrl+Z zet dan alles terug.
+   */
+  function metHookInEenStap(eerste, hook) {
+    eerste();
+    const temporal = useStore.temporal?.getState?.();
+    temporal?.pause?.();
+    try {
+      hook();
+    } finally {
+      temporal?.resume?.();
+    }
+  }
+
+  /** Uit het model, met de opruiming van het profiel (hooks.naVerwijderen) in dezelfde undo-stap. */
+  function verwijderUitModel(elementId) {
+    const el = useStore.getState().elements[elementId];
+    if (!el) return;
+    const et = descriptor.elementTypes.find((t) => t.id === el.elementType);
+    metHookInEenStap(
+      () => useStore.getState().deleteElement(elementId),
+      () => et?.hooks?.naVerwijderen?.(el, { s: useStore.getState() })
+    );
+  }
+
   function haalConnectorVanDiagram(diagramId, connectorId) {
     const s = useStore.getState();
     const d = s.diagrams[diagramId];
     if (!d || !s.elements[connectorId]) return;
+    // M3 `verwijderen: "model"` (sequence-bericht): Delete haalt hem uit het model.
+    if (descriptor.elementTypes.find((t) => t.id === s.elements[connectorId].elementType)?.verwijderen === "model") {
+      verwijderUitModel(connectorId);
+      return;
+    }
     if ((d.nodes || []).some((n) => n.elementId === connectorId)) s.removeElementFromDiagram(diagramId, connectorId);
     s.verbergConnectorOpDiagram(diagramId, connectorId);
   }
@@ -832,9 +864,22 @@ export function maakDiagramActiviteit(opties) {
       // opeenvolgende elementen elkaar niet exact bedekken).
       const midden = layoutApiRef.current?.viewportMidden?.();
       const cascade = (_plaatsTeller % 4) * 28;
-      const positie = midden
+      let positie = midden
         ? { x: midden.x - 90 + cascade, y: midden.y - 50 + cascade }
         : { x: 120 + cascade, y: 120 + cascade };
+      // Elementen die alleen opzij bewegen (layoutDimensie "x", bv. een
+      // sequence-levenslijn) staan in een rij: naast de rechterste soortgenoot,
+      // op dezelfde hoogte — niet in de cascade (Mark, 15-10).
+      const et = descriptor.elementTypes.find((t) => t.id === elementTypeId);
+      if (et?.layoutDimensie === "x") {
+        const soortgenoten = (s.diagrams[dId]?.nodes || []).filter((n) => s.elements[n.elementId]?.elementType === et.id && n.position);
+        if (soortgenoten.length) {
+          const rechts = soortgenoten.reduce((a, n) => (n.position.x > a.position.x ? n : a));
+          positie = { x: rechts.position.x + (rechts.size?.width ?? 14) + 170, y: rechts.position.y };
+        } else {
+          positie = midden ? { x: midden.x - 300, y: midden.y - 200 } : { x: 120, y: 80 };
+        }
+      }
       s.addElement(el);
       s.addElementToDiagram(dId, el.id, positie);
       // De projectboom zet het nieuwe element in de map van dit diagram (boomregel
@@ -849,9 +894,9 @@ export function maakDiagramActiviteit(opties) {
     }, []);
 
     /** Nieuwe connector (edge-drag op de canvas, regels al gecheckt). */
-    const verbind = useCallback(({ connectorType, source, target, sourceHandle, targetHandle }) => {
+    const verbind = useCallback(({ connectorType, source, target, sourceHandle, targetHandle, van = null, naar = null }) => {
       _connTeller += 1;
-      useStore.getState().addElement({
+      const conn = {
         id: `conn_${Date.now()}_${_connTeller}`,
         naam: "",
         elementType: connectorType.id,
@@ -859,7 +904,16 @@ export function maakDiagramActiviteit(opties) {
         target,
         compartimenten: [],
         data: { sourceHandle, targetHandle },
-      });
+      };
+      const s = useStore.getState();
+      // M3-hook naVerbinden: het profiel mag de nieuwe verbinding afmaken —
+      // bv. een sequence-bericht krijgt zijn punten op de hoogte van de muis
+      // (van/naar: flow-coördinaten bij begin en eind van de sleep). Eén
+      // undo-stap met het leggen zelf (Ctrl+Z liet anders losse punten achter).
+      metHookInEenStap(
+        () => s.addElement(conn),
+        () => connectorType.hooks?.naVerbinden?.(conn, { s: useStore.getState(), diagramId: s.actiefDiagramId, van, naar })
+      );
     }, []);
 
     const Dialogen = koppeling?.DialogenComponent || null;
@@ -2614,7 +2668,7 @@ export function maakDiagramActiviteit(opties) {
           </span>
         );
       if (balk.acties === "elementTypes") {
-        const types = descriptor.elementTypes.filter((et) => !et.isConnector && et.kort && !et.isAbstract);
+        const types = descriptor.elementTypes.filter((et) => !et.isConnector && et.kort && !et.isAbstract && et.inPalet !== false);
         acties = types
           .map((et) => ({
             id: et.id,
@@ -3096,7 +3150,7 @@ export function maakDiagramActiviteit(opties) {
               gevaar: true,
             });
             if (ok) {
-              useStore.getState().deleteElement(element.id);
+              verwijderUitModel(element.id);
               menuBus.emit("studio:uit-model-verwijderd", { profielId: id, elementIds: [element.id] });
               setSelectieId(null);
             }
