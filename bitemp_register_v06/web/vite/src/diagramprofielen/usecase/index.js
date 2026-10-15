@@ -232,6 +232,20 @@ const elementTypes = [
 export const usecaseDiagramType = {
   id: USECASE_ID,
   label: "Use case",
+  // Voor de AI-assistent (AI-2 stap 1b, 14-10): aanwijzingen in de prompt en voorkeursparen
+  // die de controle afdwingt (omgekeerd wordt gedraaid, andere paren vallen weg). M2-kennis,
+  // dus hier en niet in de assistent.
+  assistent: {
+    aanwijzingen: [
+      "Een associatie verbindt een actor met een use case, van de actor naar de use case; nooit actor–actor of use case–use case.",
+      "Include: de basis-use case omvat de andere altijd (pijl van basis naar deel, bv. 'Leen boek' include 'Log in').",
+      "Extend: een optionele uitbreiding; pijl van de uitbreidende naar de basis-use case (bv. 'Bereken boete' extend 'Lever boek in').",
+      "Een extern systeem dat meedoet (betaalsysteem, e-mailserver) is een actor.",
+      "Gebruik alleen een systeemkader als de opdracht een systeem noemt; use cases liggen er dan in via `in`, actoren erbuiten.",
+      "Use case-namen als werkwoordzin vanuit de actor ('Leen boek', 'Behandel melding').",
+    ],
+    paren: { associatie: [["actor", "usecase"]], include: [["usecase", "usecase"]], extend: [["usecase", "usecase"]] },
+  },
   // Vóór 2026-10-12 stond de beschrijving onder "toelichting" (en uit EA onder
   // "notes"); bij het laden migreert die naar data.beschrijving (M3).
   oudeBeschrijvingSleutels: ["toelichting", "notes"],

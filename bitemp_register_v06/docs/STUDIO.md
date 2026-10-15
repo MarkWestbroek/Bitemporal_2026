@@ -226,6 +226,20 @@ te wijzigen.
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 >
+> **Nieuw element → map van het diagram (2026-10-14):** `maakDiagramActiviteit` meldt
+> `studio:element-gemaakt` {profielId, elementId, diagramId} na paletknop en magic link;
+> `modellerenActivity` plaatst het element dan in de map van dat diagram (`plaatsMeerdere`,
+> gesynct), tenzij een geplaatste voorouder het al meeneemt of het diagram nergens staat.
+> "Niet ingedeeld" blijft voor wat van elders komt (import, oude modellen).
+>
+> **AI-assistent stap 1b (2026-10-14):** de dialoog is een gesprek over een map. De assistent
+> krijgt mee wat er al is (`bestaandInMap`: diagrammen, elementen, relaties met ids) en mag in
+> één plan meerdere talen, submappen, bestaande elementen (`bestaand`), hernoemen en
+> kruisverbanden gebruiken. Controle: `assistentKern.controleerPlan` (profielsamenvatting als
+> data, plus `descriptor.assistent.aanwijzingen`/`paren`); toepasser: `wijziging.js`
+> (`maakWijziging` → mappen, per profiel `pasWijzigingToe` (één undo-stap), `plaatsPerMap`,
+> `patchLinks`; `naarOps` → dezelfde wijziging als projectsync-operaties voor de MCP).
+>
 > **AI-assistent in context (2026-10-14, AI-2 stap 1):** rechtsklik op een map of element →
 > *✨ Vraag de assistent…* (`studio/assistent/AssistentHost.jsx`). De AI levert een plan; het
 > profiel controleert het (`assistentKern.js`: alleen bestaande typen en toegestane relaties);

@@ -258,6 +258,16 @@ const elementTypes = [
 export const activityDiagramType = {
   id: ACTIVITY_ID,
   label: "Activity",
+  // Voor de AI-assistent (AI-2 stap 1b, 14-10): aanwijzingen in de prompt (M2-kennis).
+  assistent: {
+    aanwijzingen: [
+      "Een flow begint bij één begin-knoop en eindigt bij een eind-knoop; elke actie ligt op een pad daartussen.",
+      "Acties als korte werkwoordzin ('Controleer lening'); de volgorde via controlestromen.",
+      "Een keuze is een beslissing met twee of meer uitgaande controlestromen, elk met een guard (eigenschap guard, bv. 'te laat').",
+      "Parallel werk: een fork splitst, een tweede fork voegt samen.",
+      "Wie iets doet: een partitie per rol of systeem, met de acties erin via `in` (alleen als de opdracht rollen noemt).",
+    ],
+  },
   // Beschrijving: wat de EA-import vóór 2026-10-12 als "notes" bewaarde → M3 data.beschrijving.
   oudeBeschrijvingSleutels: ["notes"],
   style: "uml-klassiek",

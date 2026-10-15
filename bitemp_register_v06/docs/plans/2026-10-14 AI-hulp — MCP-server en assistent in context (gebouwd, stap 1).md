@@ -2,7 +2,8 @@
 
 *2026-10-14, 's nachts gebouwd na "na de 0.20.1-release mag je verder met de AI-hulp" (Mark).
 BACKLOG: AI-1 (MCP-API) en AI-2 (assistent in context), hoge prioriteit. Branch
-`feat/omnium-mcp` (worktree `D:\Git\Bitemporal_2026_meld`), **nog niet gecommit**.*
+`feat/omnium-mcp` (worktree `D:\Git\Bitemporal_2026_meld`), gemerged naar main 14-10 (b68399ff).
+Stap 1b en AI-1 stap 2: zie §5 (branch `feat/assistent-mappen`).*
 
 ## 1. Eén gedachte, twee ingangen
 
@@ -60,3 +61,34 @@ Vorm zoals de transformaties (lezer → regelset → toepasser):
    diagram meteen passend in beeld.
 4. **MCP op afstand** (streamable HTTP achter de API) zodat Claude Desktop of een andere machine
    zonder de repo kan koppelen.
+
+## 5. Stap 1b en AI-1 stap 2 (14-10, avond — na Marks eerste proef)
+
+Mark probeerde de assistent met DeepSeek Flash via de proxy: *"maak een map use case model met
+daarin een diagram met use case test en actor gebruiker"* — de map ontbrak; *"maak een
+associatie tussen gebruiker en test"* — de assistent kende de bestaande elementen niet. Zijn
+wensen: mappen (en meerdere samenhangende talen, bv. een use case met een activiteitendiagram
+eronder), **bestaande elementen** ("heel belangrijk"), **doorpraten na Toepassen** ("je sluit
+het, kijkt, en ziet dat het toch nog niet goed is"), Flash als standaard ("het moet snel gaan")
+en een strengere controle. Gebouwd:
+
+| | |
+|---|---|
+| plan | `diagrammen` (nieuw in een taal, evt. in een submap; of `bestaand`), `elementen` (nieuw op een diagram, evt. `in` een container; of `bestaand`: hernoemen / op een diagram zetten), `connectoren` (sleutel of bestaand id), `verbanden` (kruisverband tussen talen) |
+| regelset | `assistentKern.controleerPlan` op een **profielsamenvatting als data** (ook in Node): typen, verbindingsregels, toegestane leden van containers; plus `descriptor.assistent` (M2): `aanwijzingen` in de prompt en `paren` die de controle afdwingt (associatie actor → use case: omgekeerd wordt gedraaid, actor–actor valt weg). Verband met een diagram → eerste element erop. |
+| toepasser | `wijziging.maakWijziging` → mappen, per profiel elementen/diagrammen (nieuwe knopen op een bestaand diagram rechts ernaast), plaatsing, links; Studio: `pasWijzigingToe` (nieuwe store-actie, één undo-stap, sync via het vangnet); MCP: `naarOps` |
+| context | `bestaandInMap`: diagrammen, elementen en relaties in de map en submappen, met ids, gaan mee in de prompt |
+| Studio | talen als chips (+ automatisch: genoemd in de opdracht of al in de map), gesprekslog, één invoerveld (Vraag / Aanpassen), Toepassen, *nieuw gesprek*; rechtsklik op een element opent het gesprek over zijn map |
+| MCP | `modeltalen`, `project_bekijken`, `model_wijzigen` (voorstel, of `toepassen: true` → `POST …/ops`); talen uit `profielen.json` (`web/vite/scripts/profielen-voor-mcp.mjs`) |
+
+**Flash of Pro** (14-10, zelfde prompt via de proxy): Flash 2–4 s en ~1,4k tokens, Pro 40–64 s en
+5–7k tokens (denkt eerst; ~15–20× duurder per vraag). Pro was inhoudelijk beter op een lastige
+opdracht, maar te traag voor een gesprek; met de aanwijzingen en de strengere controle levert
+Flash nu goede plannen (Marks scenario's: 1,2–7 s per beurt). **Flash blijft de standaard.**
+
+**Getest:** unittests (kern + toepasser, 11), MCP-tools tegen een nep-API (9), e2e met gemockte AI
+(4), Flash-scenario's via de proxy, en de MCP end-to-end tegen een lokale API (project lezen uit
+snapshot + operaties, voorstel, toepassen, opnieuw lezen).
+
+**Vervolg:** vanaf het canvas (rechtsklik op een element of leeg vlak); elementen of relaties
+weghalen (nu alleen toevoegen, hernoemen en op een diagram zetten); MCP op afstand (HTTP).

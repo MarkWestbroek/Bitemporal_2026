@@ -82,11 +82,39 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   diagram in de map (één keer Ctrl+Z maakt het ongedaan). Rechtsklik op een element: velden
   erbij ("aap: string, noot: int"). Bijsturen in hetzelfde gesprek. Werkt met de bestaande
   AI-instellingen (eigen sleutel of toegangscode voor de Omnium-proxy).
+- **Assistent stap 1b** (14-10, na Marks eerste proef): de assistent **kent wat er al in de map
+  staat** en sluit erop aan — "maak een associatie tussen gebruiker en test" legt de relatie
+  tussen de bestaande elementen (geen dubbele, geen nieuw diagram), hernoemen kan ook. Eén
+  opdracht mag **meerdere talen** raken (een use case met een activiteitendiagram eronder, met
+  een kruisverband) en **submappen** maken. Het **gesprek blijft open na Toepassen**: kijken,
+  bijsturen, verder. Talen kies je als chips; talen die de opdracht noemt of die al in de map
+  staan gaan vanzelf mee. Strengere controle: een associatie hoort tussen actor en use case
+  (omgekeerd wordt gedraaid, anders weggelaten), geen relatie naar zichzelf, geen dubbele; een
+  actor ligt niet in een systeemkader. Aanwijzingen en voorkeursparen staan in het profiel (M2,
+  `descriptor.assistent`). Ook via rechtsklik op een element (de map waar het staat); velden
+  heten nu *Velden toevoegen met de assistent…*.
+  Meldingen #8 en #9 (lokaal): een **bestaand element in een kader zetten** werkt nu (`in`, of een
+  bevat-relatie van de AI); het element komt op het diagram ook echt in het kader en het kader
+  groeit mee. Een plan dat een bestaand diagram bij zijn id noemt, wordt geaccepteerd. Wat de
+  controle weglaat staat opvallend open bij het voorstel (de uitleg van de AI kan meer beloven).
+  Melding #11: de assistent kan **uitlijnen en opstellen** ("lijn alles horizontaal uit en test en
+  Omnium verticaal"): naast elkaar, boven elkaar, verdelen, links/rechts/boven/onder of het hele
+  diagram automatisch — met hetzelfde rekenwerk als de werkbalk Uitlijnen; leden van een kader
+  schuiven mee. Verandert een voorstel niets, dan staat dat er eerlijk bij (met wat de assistent
+  wél kan) en is er geen Toepassen.
+
+- **Nieuw element landt in de map van zijn diagram** (14-10): teken je een element op een diagram
+  (paletknop of magic link), dan staat het meteen in de projectmap van dat diagram — niet meer
+  onder *Niet ingedeeld*. Dat is waar de context is (Mark). Een element dat via de hiërarchie al
+  onder een geplaatste voorouder hangt, wordt niet dubbel geplaatst; staat het diagram zelf
+  nergens, dan verandert er niets. Via de projectsync zien anderen dezelfde plaatsing.
 
 ### Tests
 - **Tokens** (14-10): `tests/e2e/20-studio-tokens.spec.js`.
-- **Assistent** (14-10): `tests/e2e/21-studio-assistent.spec.js` (AI gemockt) en unittests voor
-  `assistentKern.js`.
+- **Boom** (14-10): `tests/e2e/22-studio-boom-nieuw-element.spec.js`.
+- **Assistent** (14-10): `tests/e2e/21-studio-assistent.spec.js` (AI gemockt: submap met twee
+  talen en verband, bestaande elementen + doorpraten, velden) en unittests voor `assistentKern.js`
+  en `wijziging.js`. Met DeepSeek Flash via de proxy nagespeeld op Marks scenario's (1–7 s per beurt).
 
 ## [studio/v0.20.1] — 2026-10-14
 Nooit meer een release missen: de Studio meldt een nieuwe versie zelf en laat zien wat er nieuw

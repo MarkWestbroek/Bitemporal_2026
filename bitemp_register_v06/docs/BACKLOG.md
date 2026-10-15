@@ -7,8 +7,9 @@ daarna (of tussendoor).
 
 | Id | Onderwerp | Stand |
 |---|---|---|
-| AI-1 | **MCP-API voor Omnium** | in uitvoering: stap 1 gebouwd 14-10 (persoonlijke API-tokens + `tools/omnium-mcp` met meldingen en projecten, `.mcp.json`); volgende: modellen lezen en wijzigen |
-| AI-2 | **AI-assistent in context (rechtsklik in de projectboom)** | in uitvoering: stap 1 gebouwd 14-10 (rechtsklik op map → model in een taal, op element → velden; voorstel → Toepassen); zie `plans/2026-10-14 AI-hulp …` |
+| AI-1 | **MCP-API voor Omnium** | in uitvoering: stap 1 gebouwd 14-10 (persoonlijke API-tokens + `tools/omnium-mcp` met meldingen en projecten, `.mcp.json`); stap 2 gebouwd 14-10: modellen lezen en wijzigen (`modeltalen`, `project_bekijken`, `model_wijzigen` — zelfde regelset en toepasser als de assistent, als projectsync-operaties); volgende: MCP op afstand (HTTP) |
+| AI-2 | **AI-assistent in context (rechtsklik in de projectboom)** | in uitvoering: stap 1 + 1b gebouwd 14-10 (rechtsklik op map of element → gesprek over de map: meerdere talen, submappen, bestaande elementen, doorpraten na Toepassen; velden); volgende: vanaf het canvas, en elementen weghalen; zie `plans/2026-10-14 AI-hulp …` |
+| BOOM-1 | **Elementen leven in de projectboom** (geen losse elementenlijst meer; Mark 14-10: "vanzelf waar de context is: het diagram") | stap 1 gebouwd 14-10: een nieuw element (paletknop, magic link) landt in de map van zijn diagram; volgende: één regel "een niet-ingedeeld element volgt het eerste geplaatste diagram waarop het staat" — bij lokale wijzigingen, bij het plaatsen van een diagram (dus ook na importen) en eenmalig bij het laden (migratie); daarna de elementenlijst alleen nog voor wezen, en dan weg |
 | HELP-1 | Gewone help afmaken volgens `plans/2026-09-10 Begeleiding in de Studio` | ✅ fase 1 + eerste tips (14-10); checklist open (§28.4) |
 | HELP-2 | Kennismakingstour (zoals de MusicBrain-editor) | ✅ gebouwd (14-10) |
 | HELP-3 | Bugs en wensen melden vanuit Omnium (formulier + schermafbeelding, F8 en een kader trekken), gedogfood als register-entiteit | ✅ gebouwd (14-10); vervolg: mail via NotificatieDefinitie, regel in de PEP-bundel |
