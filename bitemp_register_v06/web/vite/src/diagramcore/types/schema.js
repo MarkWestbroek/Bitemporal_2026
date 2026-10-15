@@ -170,6 +170,11 @@
  *   Zonder waarde geldt `DiagramType.randAanhechting`, en anders `"zijden"`.
  *   Een handmatig gekozen handle (`data.sourceHandle`/`targetHandle` op de
  *   connector) wint altijd — zweven geldt alleen waar niets gekozen is.
+ * @property {"diagram"|"model"} [verwijderen] - connectors: wat Delete doet — van het diagram
+ *   halen (default) of uit het model (sequence-bericht: een verborgen bericht op zijn eigen
+ *   interactiediagram is zinloos); hooks.naVerwijderen ruimt dan het eigendom op (de punten)
+ * @property {boolean} [inPalet]            - default true; false = niet in de balk "Maken" en
+ *   niet in het "nieuw element"-menu — het element ontstaat anders (sequence-punt: met een bericht)
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
  * @property {number} [minBreedte]          - resize-minimum (default 180) — bv. smalle balken
  * @property {number} [minHoogte]           - resize-minimum (default 56)
@@ -223,13 +228,18 @@
  *   ingeklapt (zoals mappen in een verkenner); de chevron-klik wint daarna
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector
  * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
+ * @property {"x"|"y"|"xy"} [layoutDimensie] - in welke richting het element op
+ *   het canvas beweegt (standaard "xy"); "x" = alleen opzij (sequence-levenslijn)
  * @property {Object} [edgePresentatie]     - declaratieve edge-vorm voor kale
- *   connectoren: { lijn, kleur, markerStart, markerEnd, labels } (zie ConnectorEdge)
+ *   connectoren: { lijn, kleur, markerStart, markerEnd, labels, labelsBoven } (zie
+ *   ConnectorEdge; labelsBoven = middenlabel boven de lijn, bv. sequence-berichten);
+ *   hooks.edgePresentatie(el, {elements}) mag daarnaast sourceHandle/targetHandle/vorm
+ *   voorstellen (een keuze op het diagram wint)
  * @property {PropertyType[]} [properties]  - element-brede eigenschappen voor de
  *   inspector (bv. tekst, expressie, kleur) — PropertyTypes van het ElementType
  * @property {CompartmentType[]} [compartments] - max 9, {ordered}
  * @property {Object} [hooks]               - Implementatie-domein: valideer,
- *   extraCompartimenten, edgeLabels, edgePresentatie (connector →
+ *   extraCompartimenten, edgeLabels, naVerbinden, verschuifConnector, edgePresentatie (connector →
  *   presentatie-overrides o.b.v. data, bv. richting → pijl), … (functies;
  *   NIET serialiseren)
  */

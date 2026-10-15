@@ -63,6 +63,7 @@ const SOORT_KLASSE = {
   kardinaliteit: "dc-edge-kardinaliteit",
   constraint: "dc-edge-constraint",
   naam: "dc-edge-naam",
+  staart: "dc-edge-staart",
 };
 
 /**
@@ -409,7 +410,39 @@ function ConnectorEdge({
    * het segment. De vorm wordt bij loslaten als knikpunten vastgelegd, dus
    * daarna blijft hij zo staan (en is hij verder te verfijnen).
    */
+  // ── Lijn verticaal verschuiven (data.onVerschuif, hook verschuifConnector —
+  // bv. sequence-berichten, 14-10). Tijdens het slepen een spooklijn op de
+  // nieuwe hoogte; bij loslaten levert de hook de nieuwe posities. ──
+  const [verschuifDy, setVerschuifDy] = useState(null);
+  const startVerschuif = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const doelEl = e.currentTarget;
+    doelEl.setPointerCapture?.(e.pointerId);
+    const startY = e.clientY;
+    let dy = 0;
+    const beweeg = (ev) => {
+      dy = (ev.clientY - startY) / zoom;
+      setVerschuifDy(dy);
+    };
+    const klaar = () => {
+      doelEl.removeEventListener("pointermove", beweeg);
+      doelEl.removeEventListener("pointerup", klaar);
+      setVerschuifDy(null);
+      if (Math.abs(dy) >= 2) {
+        netGesleeptRef.current = true; // geen selectie-klik na de sleep
+        data.onVerschuif(Math.round(dy));
+      }
+    };
+    doelEl.addEventListener("pointermove", beweeg);
+    doelEl.addEventListener("pointerup", klaar);
+  };
+
   const startSegmentSleep = (e) => {
+    if (typeof data?.onVerschuif === "function" && !e.ctrlKey && e.button === 0) {
+      startVerschuif(e);
+      return;
+    }
     if (!magKnikken || e.ctrlKey || e.button !== 0) return;
     const basisPts = huidigePolyline();
     if (!basisPts) return;
@@ -597,8 +630,10 @@ function ConnectorEdge({
 
   // Labelposities: 70% richting doel resp. bron (zelfde heuristiek als de
   // umleditor-edge, voor visuele pariteit).
+  // `labelsBoven` (edgePresentatie): het middenlabel staat bóven de lijn in
+  // plaats van erop — sequence-berichten, zoals EA en UML ze tekenen (14-10).
   const posities = {
-    midden: { x: labelX, y: labelY },
+    midden: { x: labelX, y: labelY - (p.labelsBoven ? 13 : 0) },
     doel: { x: labelX + (targetX - labelX) * 0.7, y: labelY + (targetY - labelY) * 0.7 },
     bron: { x: labelX + (sourceX - labelX) * 0.7, y: labelY + (sourceY - labelY) * 0.7 },
   };
@@ -828,6 +863,17 @@ function ConnectorEdge({
         );
       })()}
 
+      {verschuifDy !== null && (
+        <path
+          d={edgePath}
+          transform={`translate(0 ${verschuifDy})`}
+          fill="none"
+          stroke="var(--dc-selectie, #2563eb)"
+          strokeWidth={1.5}
+          strokeDasharray="5 4"
+          style={{ pointerEvents: "none", opacity: 0.7 }}
+        />
+      )}
       {/* Breed onzichtbaar klikpad voor ctrl-klik (knikpunt toevoegen);
           zonder ctrl bubbelt de klik door naar de gewone edge-selectie. */}
       {magKnikken && (
@@ -846,7 +892,7 @@ function ConnectorEdge({
             }
             klikVoegKnik(e);
           }}
-          style={{ pointerEvents: "stroke", cursor: "default" }}
+          style={{ pointerEvents: "stroke", cursor: typeof data?.onVerschuif === "function" ? "ns-resize" : "default" }}
         />
       )}
       {magKnikken && knikken && selected && (

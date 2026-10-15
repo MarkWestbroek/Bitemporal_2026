@@ -9,6 +9,67 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Sequence: koppen, guard en retourwaarde** (14-10, Mark): een levenslijn heeft een *kop* —
+  object (rechthoek), actor, de robustness-stereotypes boundary, control en entity (Jacobson) en
+  hun business-varianten (met schuine streep). Is de levenslijn een *instantie van* een element
+  uit een ander profiel (bv. een ArchiMate-applicatiecomponent) en is er geen kop gekozen, dan
+  tekent de kop dat element zoals zijn eigen profiel het doet. Een bericht heeft een *guard* en een
+  *retourwaarde*, getekend als `[guard] naam(…): retour` (een retour die al in de naam staat, komt
+  er niet dubbel bij); een benoemd bericht toont altijd zijn haakjes (`Verzend()`), zoals EA. Het
+  label staat bóven de lijn (`edgePresentatie.labelsBoven`). De EA-import zet de kop uit Actor of
+  het stereotype en de guard uit `Btm_Mid_Label`; de retourwaarde las hij al.
+- **Sequence: berichten verticaal slepen** (14-10, Mark): pak een bericht vast en sleep het omhoog
+  of omlaag (spooklijn tijdens het slepen). Beide punten gaan mee en de lijn wordt horizontaal;
+  omlaag duwt de berichten eronder weg zodra ze dichter dan 32px komen (trapsgewijs), zo maak je
+  ruimte voor een bericht ertussen. Omhoog schuift vrij — een ander bericht kruisen verandert de
+  volgorde, want in v0 is de hoogte de volgorde. Een notitie die met een notitie-lijn aan een punt
+  hangt, schuift evenveel mee (plan §3: relatief aan haar anker). Motor: nieuwe M3-hook
+  `verschuifConnector` (connector, dy, {elements, diagram}) → posities; sequence: `sequence/verschuif.js`.
+- **Sequence: activaties afgeleid uit de berichten** (14-10, Mark): de levenslijn tekent zelf haar
+  execution-balken, met dezelfde aanroepstapel-regel als EA (dat ze ook niet bewaart, `Activation=0`)
+  en als het plan: een zender die niet op de stapel staat opent een episode, een bericht nest een
+  activatie op de ontvanger, een retour sluit hem, anders eindigt hij 18px na zijn laatste bericht;
+  zelf-aanroepen nesten 5px naar rechts. Niets wordt opgeslagen, de balken volgen de berichten
+  (`sequence/activaties.js`, `AfgeleideActivaties` in shapes.jsx).
+- **Sequence: levenslijn beweegt alleen opzij** (14-10, Mark): omhoog/omlaag slepen zette alle
+  berichten scheef (punten hangen aan de lijn). M3: `ElementType.layoutDimensie: "x"|"y"|"xy"`; het
+  canvas klemt de sleep al tijdens het slepen.
+- **Sequence: lijn hecht aan de rand van het punt/de balk** (14-10, Mark): berichten begonnen en
+  eindigden 8px buiten de punten en leken naar rechts verschoven (eigen `.dc-seq-punt`-klasse:
+  de aanhechtpunten staan óp de rand van het punt = de rand van de activatiebalk, zoals EA).
+  Punten zijn nu onzichtbaar (een ring zodra de muis erop staat of bij selectie) — in UML tekent
+  men ze niet. Een **zelf-bericht** is niet langer een lus op één punt maar loopt tussen een zend-
+  en een ontvangpunt op dezelfde lijn (EA: 15px lager): rechts eruit, hoekig, rechts erin — het
+  haakje van EA — en de "rugzak"-activatie volgt uit de afleiding. **Tekenen** (15-10, Mark): kies
+  het berichttype in de balk *Verbinding* en sleep van levenslijn naar levenslijn op de gewenste
+  hoogte — de punten ontstaan daar vanzelf (horizontaal; naar dezelfde lijn 15px lager = het
+  haakje), de activaties volgen; *Punt* en *Activ* staan niet meer in het palet (M3
+  `ElementType.inPalet: false`). Motor: `hooks.edgePresentatie` mag `sourceHandle`/`targetHandle`/
+  `vorm` voorstellen; nieuwe M3-hook `naVerbinden(connector, {s, diagramId, van, naar})` zodra een
+  verbinding op het canvas is getrokken, met de muispositie bij begin en eind. **Delete** haalt een
+  bericht uit het model, mét zijn punten (M3 `verwijderen: "model"`, hook `naVerwijderen`); tekenen
+  en verwijderen zijn elk één undo-stap (Ctrl+Z liet eerst losse punten achter). Parameters van een EA-bericht
+  vallen terug op `params` als `paramsDlg` ontbreekt (`Meld mij aan(anyID): id`).
+
+### Opgelost
+- **Notitie op een sequencediagram** (14-10, Mark): kon niet kleiner dan 180×60 (EA-notities zijn
+  120×70) — nu 100×44 (`minBreedte`/`minHoogte`, de notitie-vorm zelf vraagt niet meer dan 100×44);
+  had onzichtbare handles, dus geen notitie-lijn te trekken zonder eerst de verbind-modus te kiezen
+  — handles zichtbaar; een levenslijn die later in de volgorde kwam tekende dwars door de notitie —
+  notities (vorm `note`) liggen nu in elk profiel op z-index 5, boven gewone elementen.
+- **Sequence-berichten hechtten aan de verkeerde kant** (14-10, Mark): de zijdekeuze van een lijn
+  rekende met de positie van de punten *relatief aan hun levenslijn* (beide x≈1), koos daardoor
+  aan beide kanten "rechts" en de berichten stonden 18px naar rechts met de pijl voorbij de balk.
+  Nu het absolute midden (`absMidden` in materialiseerConnectoren.js); EA-punten krijgen hun maat mee.
+- **Her-import van een EA-sequencediagram werd geweigerd** (14-10, Mark): de punten op de lijnen
+  hadden geen EA-GUID, dus de merge op GUID zag ze als nieuw en botste op hun id ("Element-id
+  bestaat al: …~van") — het hele sequence-profiel kwam dan niet binnen. Een punt heeft nu de GUID
+  van zijn bericht + `~van`/`~naar`; een element zonder GUID met hetzelfde id als in de import
+  geldt als dezelfde EA-bron (ids zijn afgeleid van de GUID), zodat oude imports ook bijwerken. Motor: de `edgeLabels`-hook kent
+  `rondNaam` (delen vóór en na de naam in hetzelfde, inline bewerkbare label). Eerste stap van
+  het plan *Sequence — volgorde in het model, layout erbovenop*.
+
+### Toegevoegd
 - **Mijn API-tokens** (14-10, AI-1): onder *Gebruikers* maak je een persoonlijk token voor de
   Omnium-MCP-server (AI in VS Code) of een script; je ziet het één keer, daarna het begin, wanneer
   het verloopt en wanneer het laatst gebruikt is; intrekken kan altijd. Vereist de api met

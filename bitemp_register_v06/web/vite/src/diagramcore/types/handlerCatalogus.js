@@ -59,10 +59,25 @@ registreerHandlerInfo("hook", "edgeLabels", {
   beschrijving:
     "Bepaalt de labels op een connector (kardinaliteiten, rolnamen, «stereotype»-teksten) uit de connector-data (en via ctx.elements eventueel uit bron/doel), per zijde en voor de kale gedaante.",
 });
+registreerHandlerInfo("hook", "naVerbinden", {
+  naam: "Na verbinden",
+  beschrijving:
+    "Wordt aangeroepen zodra een verbinding op het canvas is getrokken: (connector, {s: store-state, diagramId, van, naar}) — van/naar = muispositie (flow-coördinaten) bij begin en eind van de sleep. Het profiel mag de verbinding afmaken — bv. een sequence-bericht van levenslijn naar levenslijn krijgt zijn punten op die hoogte.",
+});
+registreerHandlerInfo("hook", "naVerwijderen", {
+  naam: "Na verwijderen",
+  beschrijving:
+    "Wordt aangeroepen nadat een element uit het model is verwijderd: (element, {s: store-state}). Het profiel ruimt wat het element bezat op — bv. de punten van een sequence-bericht die geen ander bericht meer gebruikt. Zit met het verwijderen in één undo-stap.",
+});
+registreerHandlerInfo("hook", "verschuifConnector", {
+  naam: "Lijn verschuiven",
+  beschrijving:
+    "Maakt een connector verticaal versleepbaar op het canvas: (connector, dy, {elements, diagram}) → nieuwe posities per voorkomen-id (bv. sequence: beide punten mee, lijn horizontaal, berichten eronder wegduwen).",
+});
 registreerHandlerInfo("hook", "edgePresentatie", {
   naam: "Edge-presentatie (dynamisch)",
   beschrijving:
-    "Vult de statische edgePresentatie aan op basis van connector-data — bv. een pijlpunt zodra 'gericht/unidirectioneel' aan staat.",
+    "Vult de statische edgePresentatie aan op basis van connector-data (ctx.elements erbij) — bv. een pijlpunt zodra 'gericht/unidirectioneel' aan staat; mag ook sourceHandle/targetHandle/vorm voorstellen (sequence-zelfbericht: rechts eruit, hoekig, rechts erin).",
 });
 registreerHandlerInfo("hook", "hierarchieParen", {
   naam: "Hiërarchie-paren",

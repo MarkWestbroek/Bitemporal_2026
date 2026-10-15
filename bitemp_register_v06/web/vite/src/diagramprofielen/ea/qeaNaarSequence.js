@@ -18,8 +18,11 @@
  * berichten lopen tussen **punten** (rand-elementen, klem "as") op de lijn.
  * Elk EA-bericht wordt dus: een punt op de bron-lijn (y van PtStartY), een
  * punt op de doel-lijn (y van PtEndY) en een connector synchroon/asynchroon/
- * retour. Een zelf-bericht wordt één punt met een lus (het "oortje").
+ * retour. Een zelf-bericht wordt twee punten op dezelfde lijn (EA: PtStartY en
+ * PtEndY, ±15px uit elkaar); het profiel tekent er het haakje naar rechts van.
  * Activaties en fragmenten (EA: InteractionFragment) komen in een volgende stap.
+ * De kop (actor/boundary/control/entity, ook business-) volgt uit Object_Type of
+ * stereotype; de guard van een bericht uit `Btm_Mid_Label`.
  */
 import { idUitGuid, deelboomPakketten, EA_SCHAAL } from "./qeaHulp.js";
 import { maakHulptabellen, maakVerslag, sla, extraData, diagramId } from "./qeaKern.js";
@@ -32,6 +35,19 @@ const PUNT = 12;
 
 /** Objecttypen die op een sequence-diagram géén levenslijn zijn. */
 const GEEN_LEVENSLIJN = new Set(["Note", "Text", "Boundary", "InteractionFragment", "InteractionOccurrence"]);
+
+/**
+ * Kop van de levenslijn (sequence/index.js KOPPEN): een Actor, of een object
+ * met het robustness-stereotype boundary/control/entity (EA: "stereotyped
+ * Object"). Anders geen kop = de rechthoek.
+ * @param {{Object_Type?: string, Stereotype?: string}} o
+ */
+export function kopVan(o) {
+  if (o.Object_Type === "Actor") return "actor";
+  // "business boundary" enz.: de business-varianten (Eriksson-Penker).
+  const st = String(o.Stereotype || "").toLowerCase().trim().replace(/\s+/g, "-");
+  return ["boundary", "control", "entity", "business-boundary", "business-control", "business-entity"].includes(st) ? st : "";
+}
 
 /**
  * @param {import("./qeaKern.js").QeaBron} bron
@@ -87,6 +103,7 @@ export function qeaNaarSequence(bron, { packageId, diagramTypeId = SEQUENCE_DIAG
       }
       // Levenslijn: naam = Name, anders de classifier; de classifier reist mee.
       const type = classifierNaam(o);
+      const kop = kopVan(o);
       if (!elements[id]) {
         elements[id] = {
           id,
@@ -98,6 +115,7 @@ export function qeaNaarSequence(bron, { packageId, diagramTypeId = SEQUENCE_DIAG
             eaPakket: o.Package_ID,
             eaObjectType: o.Object_Type,
             ...(type ? { typeNaam: type } : {}),
+            ...(kop ? { kop } : {}),
             ...(o.Note ? { beschrijving: o.Note } : {}),
           },
         };
@@ -124,14 +142,17 @@ export function qeaNaarSequence(bron, { packageId, diagramTypeId = SEQUENCE_DIAG
       const zelf = c.Start_Object_ID === c.End_Object_ID;
       const maakPunt = (lijn, y, suffix) => {
         const pid = `${cid}~${suffix}`;
-        elements[pid] = { id: pid, naam: "", elementType: "punt", compartimenten: [], data: { randVan: lijn.id, eaBericht: cid } };
+        // Eigen externe identiteit (GUID van het bericht + van/naar), zodat
+        // een her-import de punten herkent (merge op GUID, vergelijkImport.js).
+        elements[pid] = { id: pid, naam: "", elementType: "punt", compartimenten: [], data: { eaGuid: `${c.ea_guid}~${suffix}`, randVan: lijn.id, eaBericht: cid } };
         // Positie relatief aan de levenslijn-node (rand-element, klem "as"):
         // x gecentreerd op de lijn, y op de hoogte van het bericht.
-        nodes.push({ elementId: pid, position: { x: Math.round(LIJN_BREED / 2 - PUNT / 2), y: y - lijn.top - PUNT / 2 } });
+        nodes.push({ elementId: pid, position: { x: Math.round(LIJN_BREED / 2 - PUNT / 2), y: y - lijn.top - PUNT / 2 }, size: { width: PUNT, height: PUNT } });
         return pid;
       };
       const vanPunt = maakPunt(bron_, yStart, "van");
-      const naarPunt = zelf ? vanPunt : maakPunt(doel, yEind, "naar");
+      // Zelf-bericht: het ontvangpunt ligt lager (EA ±15px); nooit op dezelfde hoogte.
+      const naarPunt = maakPunt(doel, zelf && yEind <= yStart ? yStart + Math.round(15 * schaal) : yEind, "naar");
       const soort = String(c.PDATA3 || "").toLowerCase() === "return" ? "retour" : String(c.PDATA1 || "").toLowerCase() === "asynchronous" ? "asynchroon" : "synchroon";
       const signatuur = Object.fromEntries(
         String(c.PDATA2 || "")
@@ -151,12 +172,15 @@ export function qeaNaarSequence(bron, { packageId, diagramTypeId = SEQUENCE_DIAG
           ...extraData(h, c.ea_guid, null),
           volgnummer: Number(c.SeqNo) || 0,
           ...(signatuur.retval ? { retourtype: signatuur.retval } : {}),
-          ...(signatuur.paramsDlg ? { argumenten: signatuur.paramsDlg } : {}),
+          // EA: `paramsDlg` is de getoonde tekst, `params` de kale namen.
+          ...((signatuur.paramsDlg || signatuur.params) ? { argumenten: signatuur.paramsDlg || signatuur.params } : {}),
+          // EA bewaart de guard (conditie) van een bericht als middenlabel onder de lijn.
+          ...(c.Btm_Mid_Label ? { guard: c.Btm_Mid_Label } : {}),
           ...(c.Notes ? { beschrijving: c.Notes } : {}),
         },
       };
       verslag.connectoren += 1;
-      lijnen[cid] = { vorm: zelf ? "hoekig" : "recht" };
+      if (zelf) lijnen[cid] = { vorm: "hoekig" };
     }
 
     // Notitie-lijnen (NoteLink in t_diagramlinks) naar een levenslijn.

@@ -52,6 +52,7 @@ function StandaardHandles({ stijl, vlak }) {
   const s = stijl === "onzichtbaar" ? ONZICHTBAAR : undefined;
   return (
     <>
+
       {/* Vlak-handle éérst: de acht stippen komen later in de DOM en liggen
           dus bovenop — een precieze zijde kiezen blijft mogelijk, en een
           stip die over de naam ligt wint van "klik op de naam".
