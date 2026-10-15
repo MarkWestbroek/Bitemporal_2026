@@ -54,11 +54,14 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   // ── 1. Mappen ──
   const mappen = [];
   const alleMappen = { ...(stand.mappen || {}) };
+  const zoekSubmap = (naam) => {
+    const n = String(naam).toLowerCase();
+    return Object.values(alleMappen).find((m) => (m.ouderId || null) === (mapId || null) && String(m.naam).toLowerCase() === n)?.id || null;
+  };
   const submap = (naam) => {
     if (!naam) return mapId;
-    const n = naam.toLowerCase();
-    const al = Object.values(alleMappen).find((m) => (m.ouderId || null) === (mapId || null) && String(m.naam).toLowerCase() === n);
-    if (al) return al.id;
+    const al = zoekSubmap(naam);
+    if (al) return al;
     const id = `map_${nu}_${prefix}${mappen.length + 1}`;
     const m = { id, naam, ouderId: mapId || null };
     mappen.push(m);
@@ -72,7 +75,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     if (d.bestaandId) { diagramId.set(d.sleutel, { profielId: d.profielId, id: d.bestaandId, nieuw: false, map: stand.plaatsing?.[`${d.profielId}::${d.bestaandId}`] ?? mapId }); continue; }
     const id = uniek(d.profielId, `${prefix}_diagram_${slug(d.naam) || "nieuw"}`);
     bij(d.profielId).diagrams[id] = { id, naam: d.naam, diagramType: taal.get(d.profielId)?.diagramTypeId || d.profielId, nodes: [], edges: [] };
-    diagramId.set(d.sleutel, { profielId: d.profielId, id, nieuw: true, map: submap(d.map) });
+    diagramId.set(d.sleutel, { profielId: d.profielId, id, nieuw: true, map: null, mapRef: d.map }); // map: zie 3b
   }
 
   // ── 3. Elementen ──
@@ -82,8 +85,33 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     const id = uniek(e.profielId, `${prefix}_${slug(e.naam) || e.type}`);
     idVan.set(e.sleutel, id);
     bij(e.profielId).elements[id] = { id, naam: e.naam, elementType: e.type, compartimenten: [], data: { ...e.data } };
-    plaatsing[`el::${e.profielId}::${id}`] = diagramId.get(e.diagram)?.map ?? mapId;
   }
+  // ── 3b. De "map" van een nieuw diagram: een bestaande submap, een element met een
+  // uitwerking (M3 `uitwerking`: bestaand en geplaatst, of nieuw in dit plan — het diagram hangt
+  // dan in de boom onder dat element, zoals een activiteitendiagram onder een use case), of
+  // anders een nieuwe submap. ──
+  const uitwerkingOuder = (naam) => {
+    const n = String(naam).toLowerCase();
+    for (const e of plan.elementen) {
+      if ((e.sleutel.toLowerCase() === n || (e.naam || "").toLowerCase() === n) && etVan(e.profielId, e.type)?.uitwerking) {
+        return `el::${e.profielId}::${idVan.get(e.sleutel)}`;
+      }
+    }
+    for (const [pid, p] of Object.entries(stand.profielen || {})) {
+      for (const el of Object.values(p.elements || {})) {
+        if (el.source || !etVan(pid, el.elementType)?.uitwerking) continue;
+        if (el.id !== naam && String(el.naam || "").toLowerCase() !== n) continue;
+        const key = `el::${pid}::${el.id}`;
+        if (stand.plaatsing?.[key]) return key;
+      }
+    }
+    return null;
+  };
+  for (const d of diagramId.values()) {
+    if (!d.nieuw) continue;
+    d.map = d.mapRef ? zoekSubmap(d.mapRef) || uitwerkingOuder(d.mapRef) || submap(d.mapRef) : mapId;
+  }
+  for (const e of plan.elementen) plaatsing[`el::${e.profielId}::${idVan.get(e.sleutel)}`] = diagramId.get(e.diagram)?.map ?? mapId;
   const ref = (r) => (r?.nieuw ? idVan.get(r.nieuw) : r?.id);
   for (const h of plan.hernoemd) {
     const el = elementVan(h.profielId, h.id);

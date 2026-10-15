@@ -55,6 +55,7 @@ const elementTypes = [
   },
   {
     id: "actie",
+    uitwerking: true, // M3: diagrammen (bv. een activiteitendiagram) hangen er in de boom onder
     label: "Actie",
     omschrijving: "Eén stap in het proces.",
     kort: "Actie",
@@ -69,6 +70,7 @@ const elementTypes = [
   },
   {
     id: "aanroep",
+    uitwerking: true, // M3: diagrammen (bv. een activiteitendiagram) hangen er in de boom onder
     label: "Aanroep",
     omschrijving: "Roept een ander activity-diagram aan; dubbelklik opent het.",
     kort: "Aanroep",

@@ -8,6 +8,21 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Een use case als map: de uitwerking eronder** (15-10, Mark; M3 `ElementType.uitwerking`):
+  een element van een type dat een uitwerking mag dragen — use case en collaboratie, actie en
+  aanroep, BPMN-subproces, toestand, requirement — is in de projectboom zelf een ouder. Sleep er
+  een diagram of element op (uit welke taal dan ook: het activiteitendiagram onder de use case),
+  en het hangt eronder in een uitklap; wat je daarna op dat diagram tekent, volgt mee (boomregel).
+  Dubbelklik op het element op het canvas opent de eerste uitwerking. Verwijder je het element,
+  dan valt de uitwerking terug naar zijn map. De assistent en de MCP kennen het ook: `map` mag de
+  naam van zo'n element zijn ("maak een activiteitendiagram onder Leen boek"), en wat eronder
+  hangt telt als inhoud van de map. De boom blijft ordening, geen model: de inhoudelijke band is
+  het kruisverband (realiseert) of een gedragsverwijzing.
+- **Token of toegangscode?** (15-10, Mark): *Mijn API-tokens* (omt_…, voor MCP en scripts) en de
+  AI-instellingen (toegangscode om-…, uit *AI-toegang*) verwijzen nu naar elkaar — ze werden
+  door elkaar gehaald.
+
 ## [studio/v0.21.0] — 2026-10-15
 
 ### Toegevoegd

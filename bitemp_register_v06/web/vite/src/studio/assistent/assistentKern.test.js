@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { profielSamenvatting, vraagVoorOpdracht, controleerPlan, leesAntwoord, vraagVoorVelden, veldenToepassing, veldCompartimenten, genoemdeTalen } from "./assistentKern.js";
+import { profielSamenvatting, vraagVoorOpdracht, controleerPlan, leesAntwoord, vraagVoorVelden, veldenToepassing, veldCompartimenten, genoemdeTalen, bestaandInMap } from "./assistentKern.js";
 import { maakWijziging, naarOps } from "./wijziging.js";
 
 // Zoals diagramprofielen/usecase (de verbindingsregels en aanwijzingen die ertoe doen).
@@ -10,7 +10,7 @@ const useCaseDescriptor = {
   assistent: { aanwijzingen: ["Een associatie verbindt een actor met een use case."], paren: { associatie: [["actor", "usecase"]] } },
   elementTypes: [
     { id: "actor", label: "Actor", resizebaar: false },
-    { id: "usecase", label: "Use case", omschrijving: "iets wat een actor met het systeem doet" },
+    { id: "usecase", label: "Use case", omschrijving: "iets wat een actor met het systeem doet", uitwerking: true },
     { id: "systeem", label: "Systeemkader", containerVoor: "bevat" },
     { id: "notitie", label: "Notitie" },
     { id: "associatie", label: "Associatie", isConnector: true, bron: { elementTypes: ["actor", "usecase"] }, doel: { elementTypes: ["actor", "usecase"] } },
@@ -285,6 +285,42 @@ test("melding #11: uitlijnen — op één rij, dan test en kader boven elkaar; l
   assert.ok(Math.abs(n.e_test.position.x + 80 - (n.e_sys.position.x + 200)) <= 1);
   assert.ok(n.e_test.position.y >= n.e_sys.position.y && n.e_test.position.y + 70 <= n.e_sys.position.y + 300);
   assert.match(w.samenvatting, /opnieuw opgesteld/);
+});
+
+test("uitwerking (M3): samenvatting, prompt, bestaandInMap en een diagram onder een use case", () => {
+  assert.equal(uc.elementen.find((e) => e.id === "usecase").uitwerking, true);
+  assert.match(vraagVoorOpdracht([uc, ad], "x", {}).systeem, /usecase: Use case .*kan een uitwerking dragen/);
+  const stand = {
+    mappen: { m1: { id: "m1", naam: "Test", ouderId: null } },
+    plaatsing: { "usecase05::d_uc": "m1", "el::usecase05::e_test": "m1", "activity05::d_oud": "el::usecase05::e_test" },
+    profielen: {
+      usecase05: { elements: { e_gebr: { id: "e_gebr", naam: "gebruiker", elementType: "actor" }, e_test: { id: "e_test", naam: "test", elementType: "usecase" } },
+        diagrams: { d_uc: { id: "d_uc", naam: "Use case model", nodes: [{ elementId: "e_test", position: { x: 0, y: 0 } }] } } },
+      activity05: { elements: {}, diagrams: { d_oud: { id: "d_oud", naam: "Oude uitwerking", nodes: [] } } },
+    },
+  };
+  // Wat onder de use case hangt, telt mee als inhoud van de map (met de use case als "map").
+  const b = bestaandInMap(stand, "m1", ["usecase05", "activity05"]);
+  assert.deepEqual(b.find((x) => x.profielId === "activity05").diagrammen, [{ id: "d_oud", naam: "Oude uitwerking", map: "test" }]);
+  // Nieuw AD met map = "test" → onder de bestaande use case; map = sleutel van een nieuwe use case → daaronder.
+  const plan = controleerPlan({
+    uitleg: "",
+    diagrammen: [{ sleutel: "d1", bestaand: "d_uc" }, { sleutel: "d2", taal: "activity05", naam: "Testen", map: "test" }, { sleutel: "d3", taal: "activity05", naam: "Lenen", map: "u1" }],
+    elementen: [{ sleutel: "u1", type: "usecase", naam: "Leen boek", diagram: "d1" }, { sleutel: "b", type: "begin", naam: "", diagram: "d2" }, { sleutel: "b2", type: "begin", naam: "", diagram: "d3" }],
+    connectoren: [],
+  }, [uc, ad], bestaandInMap(stand, "m1", ["usecase05", "activity05"]));
+  assert.deepEqual(plan.problemen, []);
+  const w = maakWijziging(plan, stand, { mapId: "m1", samenvattingen: [uc, ad], nu: 1 });
+  const ads = Object.keys(w.profielen.activity05.diagrams);
+  assert.equal(ads.length, 2);
+  const testen = ads.find((id) => id.includes("testen")), lenen = ads.find((id) => id.includes("lenen"));
+  assert.equal(w.plaatsing[`activity05::${testen}`], "el::usecase05::e_test");
+  const u1 = Object.values(w.profielen.usecase05.elements).find((e) => e.naam === "Leen boek").id;
+  assert.equal(w.plaatsing[`activity05::${lenen}`], `el::usecase05::${u1}`);
+  assert.deepEqual(w.mappen, []); // geen submap gemaakt
+  // Het begin-element van "Testen" landt ook onder de use case (de map van zijn diagram).
+  const begin = Object.values(w.profielen.activity05.elements).find((e) => e.elementType === "begin");
+  assert.equal(w.plaatsing[`el::activity05::${begin.id}`], "el::usecase05::e_test");
 });
 
 test("leesAntwoord: kale JSON, codeblok of tekst eromheen", () => {

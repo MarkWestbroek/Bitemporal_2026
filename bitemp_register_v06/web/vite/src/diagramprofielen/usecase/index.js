@@ -44,6 +44,7 @@ const elementTypes = [
   },
   {
     id: "usecase",
+    uitwerking: true, // M3: diagrammen (bv. een activiteitendiagram) hangen er in de boom onder
     omtrek: "ellips",
     label: "Use case",
     omschrijving: "Samenhangend stuk functionaliteit met waarde voor een actor.",
@@ -70,6 +71,7 @@ const elementTypes = [
     // realization". Realiseert een use case; in EA ook een map voor de
     // uitwerking (diagrammen eronder), dat doet hier de projectmap.
     id: "collaboratie",
+    uitwerking: true, // M3: diagrammen (bv. een activiteitendiagram) hangen er in de boom onder
     omtrek: "ellips",
     label: "Collaboratie",
     omschrijving: "Use case-realisatie: de samenwerking die een use case uitwerkt (gestippelde ellips).",

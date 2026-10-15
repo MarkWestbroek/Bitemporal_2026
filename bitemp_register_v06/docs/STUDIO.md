@@ -226,6 +226,15 @@ te wijzigen.
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 >
+> **Uitwerking — een element als ouder in de boom (2026-10-15, M3 `ElementType.uitwerking`):**
+> use case, collaboratie, actie/aanroep, subproces, toestand en requirement (M2) kunnen
+> diagrammen en elementen onder zich dragen: `plaatsing[key] = "el::profiel::id"`. De boom
+> (`ElementRegel`) toont die rijen in een uitklap, is sleepdoel (`kanUitwerking`), en ouder-ketens
+> lopen over mappen én elementen (`ouderVanBoomId`, `meldPad`, `ouderBereik` bij map verwijderen,
+> `isWees` als de ouder verdwijnt, `herplaatsUitwerking` → terug naar de map). Dubbelklik op het
+> canvas: `studio:open-uitwerking` opent de eerste uitwerking. Assistent/MCP: `map` mag de naam of
+> het id van zo'n element zijn (`wijziging.js` 3b); `bestaandInMap` telt wat eronder hangt mee.
+>
 > **Boomregel BOOM-1 (2026-10-14):** `studio/boomRegels.js` (`volgDiagram`, zuiver): een
 > niet-ingedeeld element komt in de map van het eerste geplaatste diagram waarop het staat
 > (hiërarchie-kind → zijn top-voorouder; geen connectoren). `modellerenActivity` draait hem bij

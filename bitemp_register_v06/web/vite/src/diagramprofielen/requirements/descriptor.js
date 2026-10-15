@@ -85,6 +85,7 @@ export const elementTypes = [
   },
   {
     id: "requirement",
+    uitwerking: true, // M3: diagrammen (bv. een activiteitendiagram) hangen er in de boom onder
     label: "Requirement",
     erft: "eis",
     omschrijving: "Een eis aan het systeem; soort (functioneel, performance, …) als stereotype.",

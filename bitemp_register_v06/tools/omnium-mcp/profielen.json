@@ -15,12 +15,14 @@
     {
      "id": "actie",
      "label": "Actie",
-     "omschrijving": "Eén stap in het proces."
+     "omschrijving": "Eén stap in het proces.",
+     "uitwerking": true
     },
     {
      "id": "aanroep",
      "label": "Aanroep",
      "omschrijving": "Roept een ander activity-diagram aan; dubbelklik opent het.",
+     "uitwerking": true,
      "eigenschappen": [
       "gedragDiagramId"
      ]
@@ -1987,6 +1989,7 @@
      "id": "subproces",
      "label": "Sub-process",
      "omschrijving": "Samengevouwen deelproces; dubbelklik opent het onderliggende diagram.",
+     "uitwerking": true,
      "eigenschappen": [
       "gedragDiagramId"
      ]
@@ -4365,6 +4368,7 @@
      "id": "requirement",
      "label": "Requirement",
      "omschrijving": "Een eis aan het systeem; soort (functioneel, performance, …) als stereotype.",
+     "uitwerking": true,
      "eigenschappen": [
       "reqId",
       "tekst",
@@ -4633,7 +4637,8 @@
      "label": "Levenslijn",
      "omschrijving": "Deelnemer aan de interactie — een object. Typeer hem via 'instantie van' of door een element uit de boom op de lijn te droppen.",
      "eigenschappen": [
-      "instantieVan"
+      "instantieVan",
+      "kop"
      ]
     },
     {
@@ -4645,7 +4650,7 @@
     {
      "id": "activatie",
      "label": "Activatie",
-     "omschrijving": "Execution-balk op de levenslijn (sleep op de lijn; hoogte = duur)."
+     "omschrijving": "Execution-balk op de levenslijn (sleep op de lijn; hoogte = duur). Uit berichten tussen punten leidt het diagram de balken zelf af."
     },
     {
      "id": "fragment",
@@ -4665,10 +4670,12 @@
      "regels": [
       {
        "bron": [
+        "levenslijn",
         "punt",
         "activatie"
        ],
        "doel": [
+        "levenslijn",
         "punt",
         "activatie"
        ]
@@ -4676,7 +4683,9 @@
      ],
      "eigenschappen": [
       "operatie",
-      "argumenten"
+      "argumenten",
+      "retourtype",
+      "guard"
      ]
     },
     {
@@ -4686,10 +4695,12 @@
      "regels": [
       {
        "bron": [
+        "levenslijn",
         "punt",
         "activatie"
        ],
        "doel": [
+        "levenslijn",
         "punt",
         "activatie"
        ]
@@ -4697,7 +4708,9 @@
      ],
      "eigenschappen": [
       "operatie",
-      "argumenten"
+      "argumenten",
+      "retourtype",
+      "guard"
      ]
     },
     {
@@ -4707,10 +4720,12 @@
      "regels": [
       {
        "bron": [
+        "levenslijn",
         "punt",
         "activatie"
        ],
        "doel": [
+        "levenslijn",
         "punt",
         "activatie"
        ]
@@ -4718,7 +4733,9 @@
      ],
      "eigenschappen": [
       "operatie",
-      "argumenten"
+      "argumenten",
+      "retourtype",
+      "guard"
      ]
     }
    ]
@@ -4737,7 +4754,8 @@
     {
      "id": "toestand",
      "label": "Toestand",
-     "omschrijving": "Toestand van het systeem, met entry/do/exit-activiteiten."
+     "omschrijving": "Toestand van het systeem, met entry/do/exit-activiteiten.",
+     "uitwerking": true
     },
     {
      "id": "eind",
@@ -5536,7 +5554,8 @@
     {
      "id": "usecase",
      "label": "Use case",
-     "omschrijving": "Samenhangend stuk functionaliteit met waarde voor een actor."
+     "omschrijving": "Samenhangend stuk functionaliteit met waarde voor een actor.",
+     "uitwerking": true
     },
     {
      "id": "systeem",
@@ -5551,7 +5570,8 @@
     {
      "id": "collaboratie",
      "label": "Collaboratie",
-     "omschrijving": "Use case-realisatie: de samenwerking die een use case uitwerkt (gestippelde ellips)."
+     "omschrijving": "Use case-realisatie: de samenwerking die een use case uitwerkt (gestippelde ellips).",
+     "uitwerking": true
     },
     {
      "id": "klasse",

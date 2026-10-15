@@ -141,7 +141,7 @@ export const TOOLS = [
       const p = lijst.find((x) => x.id === taal || x.naam.toLowerCase() === String(taal).toLowerCase());
       if (!p) return fout(`Onbekende taal ${taal}; zie modeltalen zonder argument.`);
       const r = [`# ${p.naam} (${p.id})`, "Elementtypen:"];
-      for (const e of p.elementen) r.push(`- ${e.id}: ${e.label}${e.omschrijving ? ` — ${e.omschrijving}` : ""}${e.container ? ` (container; leden via \`in\`: ${(e.leden || []).join(", ")})` : ""}${e.eigenschappen ? ` [eigenschappen: ${e.eigenschappen.join(", ")}]` : ""}`);
+      for (const e of p.elementen) r.push(`- ${e.id}: ${e.label}${e.omschrijving ? ` — ${e.omschrijving}` : ""}${e.container ? ` (container; leden via \`in\`: ${(e.leden || []).join(", ")})` : ""}${e.uitwerking ? " (kan een uitwerking dragen: diagrammen eronder via map)" : ""}${e.eigenschappen ? ` [eigenschappen: ${e.eigenschappen.join(", ")}]` : ""}`);
       r.push("Relaties (bron → doel):");
       for (const c of p.connectoren) r.push(`- ${c.id}: ${c.label} — ${(p.paren?.[c.id] || c.regels.map((x) => [x.bron.join("|"), x.doel.join("|")])).map(([b, d]) => `${b} → ${d}`).join("; ")}${c.eigenschappen ? ` [eigenschappen: ${c.eigenschappen.join(", ")}]` : ""}`);
       if (p.aanwijzingen?.length) r.push("Aanwijzingen:", ...p.aanwijzingen.map((a) => `- ${a}`));
@@ -166,7 +166,7 @@ export const TOOLS = [
       const doel = zoekMap(proj.mappen, map);
       const inhoud = bestaandTekst(bestaandInMap(proj, doel?.id || null, profielen().map((x) => x.id)), { max: 500 });
       const sub = Object.values(proj.mappen).filter((m) => (m.ouderId || null) === (doel?.id || null)).map((m) => m.naam);
-      return tekst(`# ${p.naam} / ${doel ? mapPad(proj.mappen, doel.id) : "(hoofdmap)"}${sub.length ? `\nsubmappen: ${sub.join(", ")}` : ""}\n${inhoud || "(leeg)"}`);
+      return tekst(`# ${p.naam} / ${doel ? mapPad(proj, doel.id) : "(hoofdmap)"}${sub.length ? `\nsubmappen: ${sub.join(", ")}` : ""}\n${inhoud || "(leeg)"}`);
     },
   },
   {
@@ -179,7 +179,7 @@ export const TOOLS = [
       "connectoren: [{type, bron, doel, naam?, eigenschappen?}] (bron/doel = sleutel van een nieuw element of id van een bestaand), " +
       "verbanden: [{van, naar, soort: komt voort uit|heeft te maken met|genereert|realiseert}] (tussen talen), " +
       "opstelling: [{diagram, actie: naast-elkaar|boven-elkaar|verdeel-horizontaal|verdeel-verticaal|links|rechts|boven|onder|automatisch, elementen?}]}. " +
-      "`map` op een diagram = (nieuwe) submap van de doelmap. Kijk eerst met modeltalen en project_bekijken.",
+      "`map` op een diagram = (nieuwe) submap van de doelmap, of de naam/het id van een element dat een uitwerking kan dragen (bv. een use case; zie modeltalen): dan hangt het diagram daaronder. Kijk eerst met modeltalen en project_bekijken.",
     inputSchema: {
       type: "object",
       properties: {
