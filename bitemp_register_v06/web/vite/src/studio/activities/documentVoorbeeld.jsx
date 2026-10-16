@@ -13,6 +13,8 @@
 import React from "react";
 import { create } from "zustand";
 import { markdownMetAfbeeldingen } from "../../transformatie/sjabloon/markdownMetAfbeeldingen.js";
+import { markdownNaarHtml } from "../../transformatie/sjabloon/markdownNaarHtml.js";
+import { svgNaarAfbeeldingen, svgNaarPng, markdownZonderSvg } from "../../transformatie/sjabloon/rijkKopieren.js";
 import { maakZip } from "../../transformatie/sjabloon/zip.js";
 
 export const useDocumentStore = create((set) => ({
@@ -94,6 +96,29 @@ export function DocumentVoorbeeldHost() {
             }}
           >
             Kopieer Markdown
+          </button>
+          {/* Teams, Confluence, Word, Outlook plakken geen markdown/SVG maar wél HTML met
+              plaatjes (Mark, 16-10): de diagrammen gaan als PNG mee. */}
+          <button
+            style={knop}
+            data-testid="kopieer-rijk"
+            title="Opgemaakte tekst met de diagrammen als afbeelding — om te plakken in Teams, Confluence, Word of Outlook"
+            onClick={async () => {
+              try {
+                const fragment = await svgNaarAfbeeldingen(markdownNaarHtml(markdown), svgNaarPng);
+                const item = new ClipboardItem({
+                  "text/html": new Blob([fragment], { type: "text/html" }),
+                  "text/plain": new Blob([markdownZonderSvg(markdown)], { type: "text/plain" }),
+                });
+                await navigator.clipboard.write([item]);
+                setMelding("Gekopieerd voor Teams/Confluence: plak het daar met Ctrl+V.");
+              } catch (e) {
+                setMelding(`Kopiëren mislukt: ${e?.message || e}`);
+              }
+              setTimeout(() => setMelding(""), 3500);
+            }}
+          >
+            Kopieer voor Teams/Confluence
           </button>
           <button style={knop} onClick={() => iframeRef.current?.contentWindow?.print()} title="Afdrukken of als PDF bewaren">
             Afdrukken…

@@ -30,7 +30,10 @@ export const PROFIEL_ONTWERP_ID = "profiel-ontwerp";
 const EIGENSCHAP_VELDEN = [
   { key: "naam", label: "key", datatype: "string", verplicht: true },
   { key: "typeLabel", label: "datatype (string/tekst/boolean/colour)", datatype: "string" },
+  // M3 PropertyType.betekenis (16-10): wat de eigenschap voor de motor betekent.
+  { key: "betekenis", label: "betekenis (afgeleid/kardinaliteit/standaardwaarde/geordend/nietUniek/alleenLezen/id/zichtbaarheid/beschrijving)", datatype: "string" },
 ];
+const BETEKENISSEN = new Set(["afgeleid", "kardinaliteit", "standaardwaarde", "geordend", "nietUniek", "alleenLezen", "id", "zichtbaarheid", "beschrijving"]);
 
 /** @type {Object} descriptor-kern van de ontwerper zelf (hooks op id). */
 export const profielOntwerpKern = {
@@ -76,6 +79,16 @@ export const profielOntwerpKern = {
         // bevat-verbindingsregel), standaard dicht = ingeklapt beginnen.
         { key: "container", label: "container (drop-doel, package)", datatype: "boolean" },
         { key: "standaardDichtInBoom", label: "standaard dicht in boom", datatype: "boolean" },
+        // M3 (15/16-10): een uitwerking dragen (diagrammen en elementen eronder in de
+        // projectboom, zoals het AD onder een use case); verwijzen naar een gedragsdiagram
+        // (data.gedragDiagramId, dubbelklik opent het).
+        { key: "uitwerking", label: "uitwerking (diagrammen eronder in de boom)", datatype: "boolean" },
+        { key: "gedragsVerwijzing", label: "gedragsverwijzing (dubbelklik opent een diagram)", datatype: "boolean" },
+        // M3-velden uit schema.js die de ontwerper nog miste (werklijst M3-MOF, 16-10).
+        { key: "meerdereVoorkomens", label: "meerdere voorkomens op één diagram", datatype: "boolean" },
+        { key: "nietInPalet", label: "niet in het palet (ontstaat alleen via de motor)", datatype: "boolean" },
+        { key: "geenBeschrijving", label: "geen beschrijving (M3) op dit type", datatype: "boolean" },
+        { key: "layoutDimensie", label: "beweegt alleen in: x, y of xy", datatype: "string" },
         // M3: abstract type (EMOF isAbstract) — niet instantieerbaar, wel bereik;
         // de naam toont cursief (ClassBox leest data.abstract).
         { key: "abstract", label: "abstract (niet instantieerbaar)", datatype: "boolean" },
@@ -152,6 +165,8 @@ export const profielOntwerpKern = {
         { key: "doelKleur", label: "lijnkleur", datatype: "colour" },
         { key: "metKardinaliteiten", label: "kardinaliteiten-labels", datatype: "boolean" },
         { key: "richtingOptie", label: "richting-vinkje (→)", datatype: "boolean" },
+        // M3 ConnectorType.verwijderen (16-10): Delete haalt de connector uit het model (niet alleen van het diagram).
+        { key: "verwijderenUitModel", label: "Delete = uit het model (verwijderen: model)", datatype: "boolean" },
         { key: "isHierarchie", label: "bevat-relatie (hiërarchie, P02)", datatype: "boolean" },
       ],
     },
@@ -210,6 +225,7 @@ function eigenschappenVan(el) {
     key: slug(v.naam),
     label: v.naam,
     datatype: GELDIGE_DATATYPES.has(v.data?.typeLabel) ? v.data.typeLabel : "string",
+    ...(BETEKENISSEN.has(v.data?.betekenis) ? { betekenis: v.data.betekenis } : {}),
   }));
 }
 
@@ -305,6 +321,12 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       kleur: d.doelKleur || "#e2e8f0",
       ...(d.icoon ? { icoon: d.icoon } : {}),
       ...(d.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
+      ...(d.uitwerking ? { uitwerking: true } : {}),
+      ...(d.gedragsVerwijzing ? { gedragsVerwijzing: true } : {}),
+      ...(d.meerdereVoorkomens ? { meerdereVoorkomens: true } : {}),
+      ...(d.nietInPalet ? { inPalet: false } : {}),
+      ...(d.geenBeschrijving ? { beschrijving: false } : {}),
+      ...(["x", "y", "xy"].includes(d.layoutDimensie) ? { layoutDimensie: d.layoutDimensie } : {}),
       ...(d.container ? { _containerWens: true } : {}),
       ...(erftVan.has(def.id) ? { erft: erftVan.get(def.id) } : {}),
       ...(d.abstract ? { isAbstract: true } : {}),
@@ -356,6 +378,7 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       kort: d.markerStart === "ruit" ? "◆" : d.markerEnd === "driehoek" ? "▷" : "—",
       shape: "edge",
       isConnector: true,
+      ...(d.verwijderenUitModel ? { verwijderen: "model" } : {}),
       ...(regels.length === 1
         ? { bron: { elementTypes: regels[0].bron }, doel: { elementTypes: regels[0].doel } }
         : { verbindingsregels: regels }),
@@ -449,7 +472,7 @@ function eigenschapVelden(properties) {
     .map((p) => ({
       naam: p.label || p.key,
       fieldType: "eigenschapDef",
-      data: { typeLabel: p.datatype || "string" },
+      data: { typeLabel: p.datatype || "string", ...(p.betekenis ? { betekenis: p.betekenis } : {}) },
     }));
 }
 
@@ -531,6 +554,12 @@ export function ontwerpUitProfiel(descriptor) {
         ...(et.stereotype ? { doelStereotype: et.stereotype } : {}),
         ...(et.containerVoor ? { container: true } : {}),
         ...(et.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
+        ...(et.uitwerking ? { uitwerking: true } : {}),
+        ...(et.gedragsVerwijzing ? { gedragsVerwijzing: true } : {}),
+        ...(et.meerdereVoorkomens ? { meerdereVoorkomens: true } : {}),
+        ...(et.inPalet === false ? { nietInPalet: true } : {}),
+        ...(et.beschrijving === false ? { geenBeschrijving: true } : {}),
+        ...(et.layoutDimensie ? { layoutDimensie: et.layoutDimensie } : {}),
         ...(et.isAbstract ? { abstract: true } : {}),
       },
     };
@@ -641,6 +670,7 @@ export function ontwerpUitProfiel(descriptor) {
               doelKleur: p.kleur || "#64748b",
               metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
               richtingOptie: props.some((pr) => pr.key === "directioneel"),
+              ...(et.verwijderen === "model" ? { verwijderenUitModel: true } : {}),
               ...([].concat(descriptor.hierarchie || [])
                 .map((h) => (typeof h === "string" ? h : h?.type))
                 .includes(et.id)

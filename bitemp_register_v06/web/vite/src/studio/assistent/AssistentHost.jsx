@@ -114,12 +114,15 @@ function Voorstel({ voorstel, talen }) {
       )}
       {plan.opstelling?.length > 0 && <p><strong>Opstelling:</strong> {plan.opstelling.map((o) => `${o.actie}${o.elementen.length ? `: ${o.elementen.map(naam).join(", ")}` : " (alles)"}`).join("; ")}</p>}
       {plan.leden?.length > 0 && <p><strong>In een container:</strong> {plan.leden.map((l) => `${naam({ id: l.id })} in ${naam(l.in)}`).join(", ")}</p>}
+      {plan.verwijderen?.length > 0 && (
+        <p className="ast-weg"><strong>Weg:</strong> {plan.verwijderen.map((v) => (v.soort === "relatie" ? `${typeLabel(v.profielId, v.type)} ${v.id}` : v.naam || v.id)).join(", ")}</p>
+      )}
       {plan.hernoemd.length > 0 && <p><strong>Hernoemd:</strong> {plan.hernoemd.map((h) => `${h.oud} → ${h.naam}`).join(", ")}</p>}
       {plan.verbanden.length > 0 && <p><strong>Verbanden:</strong> {plan.verbanden.map((v) => `${naam(v.van)} ${v.soort} ${naam(v.naar)}`).join("; ")}</p>}
       {plan.opmerkingen.length > 0 && <ul className="ast-opmerkingen">{plan.opmerkingen.map((o, i) => <li key={i}>{o}</li>)}</ul>}
-      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && (
+      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && !plan.verwijderen?.length && (
         // Eerlijk (melding #11): de uitleg kan iets beloven wat de assistent niet kan.
-        <p className="ast-niets" data-testid="assistent-niets">Dit voorstel verandert niets. De assistent kan elementen, relaties, diagrammen en mappen maken, hernoemen, in een kader zetten, uitlijnen en verbanden leggen — nog niet weghalen.</p>
+        <p className="ast-niets" data-testid="assistent-niets">Dit voorstel verandert niets. De assistent kan elementen, relaties, diagrammen en mappen maken, hernoemen, in een kader zetten, uitlijnen, verbanden leggen en elementen of relaties weghalen — geen diagrammen of mappen weghalen.</p>
       )}
     </div>
   );
@@ -139,8 +142,23 @@ export default function AssistentHost() {
   const [fout, setFout] = useState("");
   const logRef = useRef(null);
 
-  useEffect(() => menuBus.on("assistent:open", (v) => {
-    setVerzoek(v); setOpdracht(""); setGesprek([]); setLog([]); setVoorstel(null); setToegepast(false); setFout("");
+  useEffect(() => menuBus.on("assistent:open", async (v) => {
+    let verzoek = v;
+    if (v?.soort === "model" && v.diagram && v.mapId === undefined) {
+      // Vanaf het canvas (AI-2 stap 2, 16-10): het gesprek gaat over de map van het open
+      // diagram (een map, of een element met een uitwerking), en dat diagram is het doel.
+      const { useModellerenStore } = await import("../activities/modellerenActivity.jsx");
+      const ms = useModellerenStore.getState();
+      const ouder = ms.plaatsing[`${v.diagram.profielId}::${v.diagram.diagramId}`] || null;
+      let naam = "";
+      if (ouder && ms.mappen[ouder]) naam = ms.mappen[ouder].naam;
+      else if (ouder && ouder.startsWith("el::")) {
+        const [, pid, eid] = ouder.split("::");
+        naam = getProfieltype(pid)?.useStore?.getState?.().elements?.[eid]?.naam || "";
+      }
+      verzoek = { ...v, mapId: ouder, mapNaam: naam };
+    }
+    setVerzoek(verzoek); setOpdracht(""); setGesprek([]); setLog([]); setVoorstel(null); setToegepast(false); setFout("");
   }), []);
   useEffect(() => {
     if (!verzoek) return undefined;
@@ -186,15 +204,22 @@ export default function AssistentHost() {
       const alle = alleTalen.map((p) => samenvattingVan(p.id)).filter(Boolean);
       const standAlle = await leesStand(alleTalen.map((p) => p.id));
       const bestaand = bestaandInMap(standAlle, verzoek.mapId || null);
-      const ids = [...new Set([...talenIds, ...genoemdeTalen(tekst, alle), ...bestaand.map((b) => b.profielId)])];
+      const ids = [...new Set([...talenIds, ...genoemdeTalen(tekst, alle), ...bestaand.map((b) => b.profielId), ...(verzoek.diagram ? [verzoek.diagram.profielId] : [])])];
       const talen = ids.map(samenvattingVan).filter(Boolean);
       const ms = standAlle.mappen || {};
       const submappen = Object.values(ms).filter((m) => (m.ouderId || null) === (verzoek.mapId || null)).map((m) => m.naam);
       const v = vraagVoorOpdracht(talen, tekst, { mapNaam: verzoek.mapNaam, submappen, bestaand });
       const focus = verzoek.focus ? bestaand.flatMap((b) => b.elementen).find((e) => e.id === verzoek.focus.elementId) : null;
+      // Vanaf het canvas: het open diagram is het doel voor nieuwe elementen.
+      const openDiagram = verzoek.diagram
+        ? bestaand.find((b) => b.profielId === verzoek.diagram.profielId)?.diagrammen.find((d) => d.id === verzoek.diagram.diagramId)
+        : null;
+      const diagramTekst = openDiagram
+        ? `Het open diagram is "${openDiagram.naam}" (${openDiagram.id}, taal ${verzoek.diagram.profielId}); zet nieuwe elementen daarop ({"sleutel": "d1", "bestaand": "${openDiagram.id}"}) tenzij de opdracht iets anders vraagt. `
+        : "";
       const vraagTekst = voorstel
         ? `Pas het voorstel aan: ${tekst}`
-        : `${toegepast ? "Het vorige voorstel is toegepast; de ids staan nu onder WAT ER AL IS. " : ""}${focus ? `Het gaat om ${focus.type} "${focus.naam}" (${focus.id}). ` : ""}Opdracht:\n${tekst}`;
+        : `${toegepast ? "Het vorige voorstel is toegepast; de ids staan nu onder WAT ER AL IS. " : ""}${diagramTekst}${focus ? `Het gaat om ${focus.type} "${focus.naam}" (${focus.id}). ` : ""}Opdracht:\n${tekst}`;
       const { tekst: antwoordTekst } = await vraagAi(aiProfiel, { systeem: v.systeem, vraag: vraagTekst, jsonSchema: v.jsonSchema, effort: "medium", geschiedenis: gesprek, baseUrl: apiBase() });
       const antwoord = leesAntwoord(antwoordTekst);
       if (!antwoord) throw new Error("Het antwoord was geen bruikbare JSON; probeer het nog eens.");
@@ -231,6 +256,11 @@ export default function AssistentHost() {
         if (!Object.keys(p.elements).length && !Object.keys(p.diagrams).length) continue;
         getProfieltype(profielId)?.useStore.getState().pasWijzigingToe(p);
       }
+      // Weghalen: eerst zijn de diagrammen al zonder de knopen gezet (hierboven), dan de elementen.
+      for (const [profielId, ids] of Object.entries(w.wis || {})) {
+        if (ids.length) getProfieltype(profielId)?.useStore.getState().patchElementen({ wis: ids });
+      }
+      if (w.plaatsingWis?.length) useModellerenStore.getState().plaatsPerMap({ null: w.plaatsingWis });
       const perMap = {};
       for (const [key, mapId] of Object.entries(w.plaatsing)) (perMap[mapId ?? "null"] ||= []).push(key);
       if (Object.keys(perMap).length) useModellerenStore.getState().plaatsPerMap(perMap);
@@ -249,7 +279,7 @@ export default function AssistentHost() {
 
   const nieuwGesprek = () => { setGesprek([]); setLog([]); setVoorstel(null); setToegepast(false); setFout(""); };
   const sluit = () => !bezig && setVerzoek(null);
-  const titel = verzoek.soort === "velden" && element ? ` — ${element.naam || element.id}` : verzoek.mapNaam ? ` — map ${verzoek.mapNaam}` : "";
+  const titel = verzoek.soort === "velden" && element ? ` — ${element.naam || element.id}` : verzoek.mapNaam ? ` — ${verzoek.mapId?.startsWith?.("el::") ? "onder" : "map"} ${verzoek.mapNaam}` : verzoek.diagram ? " — open diagram" : "";
   const nietGekozen = alleTalen.filter((p) => !talenIds.includes(p.id));
   return (
     <div className="mld-dialoog-achter" onMouseDown={sluit}>

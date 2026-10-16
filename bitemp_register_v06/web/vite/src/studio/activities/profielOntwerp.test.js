@@ -238,14 +238,21 @@ test("container-vinkje en standaard-dicht reizen mee door ontwerp en bouw", () =
         shape: "class-box",
         containerVoor: "in",
         standaardDichtInBoom: true,
+        uitwerking: true, // M3 (16-10): diagrammen eronder in de boom
+        gedragsVerwijzing: true,
+        meerdereVoorkomens: true,
+        inPalet: false,
+        beschrijving: false,
+        layoutDimensie: "x",
         properties: [],
       },
-      { id: "blad", label: "Blad", shape: "class-box", properties: [] },
+      { id: "blad", label: "Blad", shape: "class-box", properties: [{ key: "definitie", datatype: "tekst", betekenis: "beschrijving" }] },
       {
         id: "in",
         label: "In",
         shape: "edge",
         isConnector: true,
+        verwijderen: "model",
         bron: { elementTypes: ["map"] },
         doel: { elementTypes: ["blad"] },
       },
@@ -255,11 +262,22 @@ test("container-vinkje en standaard-dicht reizen mee door ontwerp en bouw", () =
   const mapDef = Object.values(ontwerp.elements).find((el) => el.naam === "Map");
   assert.equal(mapDef.data.container, true, "containerVoor wordt het container-vinkje");
   assert.equal(mapDef.data.standaardDichtInBoom, true);
+  assert.equal(mapDef.data.uitwerking, true, "uitwerking wordt een vinkje");
+  assert.equal(mapDef.data.gedragsVerwijzing, true);
 
   const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "pkg-test", label: "Pkg" });
   const mapEt = kern.elementTypes.find((et) => et.label === "Map");
   const inCt = kern.elementTypes.find((et) => et.isConnector);
   assert.equal(mapEt.standaardDichtInBoom, true);
+  assert.equal(mapEt.uitwerking, true, "en komt als M3-eigenschap terug");
+  assert.equal(mapEt.gedragsVerwijzing, true);
+  assert.equal(mapEt.meerdereVoorkomens, true);
+  assert.equal(mapEt.inPalet, false, "nietInPalet-vinkje → inPalet: false");
+  assert.equal(mapEt.beschrijving, false, "geenBeschrijving-vinkje → beschrijving: false");
+  assert.equal(mapEt.layoutDimensie, "x");
+  assert.equal(inCt.verwijderen, "model", "verwijderenUitModel-vinkje → verwijderen: model");
+  const bladEt = kern.elementTypes.find((et) => et.label === "Blad");
+  assert.equal(bladEt.properties.find((p) => p.key === "definitie")?.betekenis, "beschrijving", "PropertyType.betekenis reist mee");
   assert.equal(mapEt.containerVoor, inCt.id, "containerVoor wijst naar de hiërarchie-connector");
   assert.ok(!("_containerWens" in mapEt), "werk-vlag blijft niet achter");
 });

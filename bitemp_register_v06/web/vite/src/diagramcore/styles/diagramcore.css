@@ -1071,3 +1071,10 @@
   cursor: pointer;
   font: inherit;
 }
+
+/* GebruikPaneel (melding #5): op welke diagrammen staat het element. */
+.dc-gebruik-diagram { display: block; width: 100%; text-align: left; border: 0; background: none; color: inherit; font: inherit; padding: 3px 4px; border-radius: 4px; cursor: pointer; }
+.dc-gebruik-diagram:hover { background: var(--s-hover, #f1f5f9); text-decoration: underline; }
+.dc-gebruik-diagram.is-actief { font-weight: 600; }
+.dc-gebruik-aantal { color: var(--s-fg-muted, #64748b); font-weight: 400; }
+.dc-gebruik-leeg { margin: 2px 4px; font-style: italic; color: var(--s-fg-muted, #64748b); }

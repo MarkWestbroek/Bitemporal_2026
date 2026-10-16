@@ -28,6 +28,7 @@ import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.js
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
 import { volgDiagram } from "../boomRegels.js";
+import { gebruikVan } from "../../diagramcore/model/gebruik.js";
 import { useOutboxStore } from "../sync/outbox.js";
 import { zonderWeesPlaatsingen, mappenMetBeschrijving } from "../sync/structuurKern.js";
 import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
@@ -1404,6 +1405,8 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const klikHernoem = useKlikHernoem(() => setBewerk(true));
   // Sleepdoel als dit type een uitwerking mag dragen én zelf een plek in de boom heeft.
   const kanUitwerking = !!et?.uitwerking && !!sleutel;
+  const diagramsVanProfiel = profiel.useStore((s) => s.diagrams);
+  const ongebruikt = !!element && !element.source && gebruikVan(elementId, diagramsVanProfiel).length === 0;
   const dropUit = useDrop({
     [PLAATSING_MIME]: (data) =>
       data.split("\n").forEach((key) => {
@@ -1600,7 +1603,10 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
             <span className="studio-project__regel-profiel" style={{ color: stijl.kleur || "inherit" }}>
               {et ? <TypeIcoon elementType={et} maat={13} /> : <ProfielIcoon profiel={profiel} />}
             </span>
-            {weergaveNaam(element, et)}
+            {/* Cursief = op geen enkel diagram (melding #5, Hugo, 16-10). */}
+            <span className={ongebruikt ? "studio-project__ongebruikt" : undefined} title={ongebruikt ? "Op geen enkel diagram — weghalen verandert geen diagram" : undefined}>
+              {weergaveNaam(element, et)}
+            </span>
           </button>
         )}
       </div>
@@ -1894,6 +1900,9 @@ function ProfielSectie({ profiel }) {
   };
 
   const stijl = effectieveStijl(profiel);
+  // Zonder niet-ingedeelde diagrammen zwijgt dit profiel (BOOM-1, 16-10: twaalf regels
+  // "geen diagrammen" zeiden niets); nieuw maken kan via de ＋ in de kop "Niet ingedeeld".
+  if (entries.length === 0) return null;
   return (
     <div className="studio-project__sectie" data-lijst>
       <div className="studio-project__kop">
@@ -1906,12 +1915,24 @@ function ProfielSectie({ profiel }) {
           </button>
         )}
       </div>
-      {entries.length === 0 && <div className="studio-project__leeg">geen {profiel.diagramTerm}men</div>}
       {entries.map((d) => (
         <DiagramRegel key={d.id} profiel={profiel} diagram={d} />
       ))}
     </div>
   );
+}
+
+/** Onder "Niet ingedeeld" staat niets meer: zeg dat, in plaats van per profiel "geen diagrammen". */
+function NietIngedeeldLeeg({ profielen }) {
+  const plaatsing = useModellerenStore((s) => s.plaatsing);
+  // Abonneren op elke profielstore zou hooks in een lus zijn; de boom hertekent toch bij elke
+  // plaatsing- of diagramwijziging, dus lezen volstaat.
+  const leeg = profielen.every((p) => {
+    const diagrams = p.useStore?.getState?.().diagrams || {};
+    return !Object.values(diagrams).some((d) => isWees(plaatsing, tabId(p.id, d.id)));
+  });
+  if (!leeg) return null;
+  return <div className="studio-project__leeg" data-testid="niet-ingedeeld-leeg">alle diagrammen staan in een map</div>;
 }
 
 // Scrollpositie van de projectboom, buiten React: de boom is je navigatie
@@ -2283,10 +2304,22 @@ function Sidebar() {
           {...drop.props}
         >
           <span className="studio-project__naam">Niet ingedeeld</span>
+          {/* Eén ＋ voor alle talen (BOOM-1, 16-10): de lege profielregels zijn weg. */}
+          <button
+            type="button"
+            className="studio-project__nieuw"
+            title="Nieuw diagram (los; sleep het daarna in een map)"
+            data-testid="nieuw-diagram-los"
+            onClick={(e) => openCtxMenu(e, nieuwDiagramItems(null))}
+          >
+            ＋
+          </button>
         </div>
+        {/* Alleen profielen met diagrammen die nergens staan; de rest zwijgt (BOOM-1, 16-10). */}
         {profielen.map((p) => (
           <ProfielSectie key={p.id} profiel={p} />
         ))}
+        <NietIngedeeldLeeg profielen={profielen} />
       </div>
 
       {Browser && (
@@ -2294,13 +2327,13 @@ function Sidebar() {
       )}
       {Browser && (
         <div className="studio-project__elementen" style={{ flex: `0 0 ${elementenHoogte}px` }}>
-          <div className="studio-project__elementen-kop">
+          <div className="studio-project__elementen-kop" title="Elementen van dit profiel die nergens in de boom staan en op geen enkel geplaatst diagram (wezen). Sleep ze in een map of op een diagram.">
             <span
               className="studio-project__stip"
               style={{ background: effectieveStijl(profiel).kleur || "var(--s-fg-muted)" }}
             />
             <ProfielIcoon profiel={profiel} />
-            <span className="studio-project__naam">{profiel.label}</span>
+            <span className="studio-project__naam">{profiel.label} — niet ingedeeld</span>
           </div>
           <ElementenBrowserMetFilter profiel={profiel} Browser={Browser} />
         </div>
@@ -2337,6 +2370,17 @@ function ElementenBrowserMetFilter({ profiel, Browser }) {
   // "Verplaats naar map ▸" in de browser (per regel, per multiselectie en
   // per typegroep "alle N …") — de boom is de eigenaar van de mappen.
   const naarMapItems = React.useMemo(() => naarMapItemsVoor(profiel), [profiel]);
+  // BOOM-1 (16-10): alleen wezen. Sinds de boomregel staat alles wat op een geplaatst diagram
+  // staat in de boom; wat hier overblijft is echt zwervend. Niets over? Dan één regel.
+  const ets = profiel.descriptor?.elementTypes || [];
+  const wezen = Object.values(elements).filter((el) => {
+    if (verbergIds.has(el.id) || el.source) return false;
+    const et = ets.find((t) => t.id === el.elementType);
+    return !et?.isConnector;
+  }).length;
+  if (wezen === 0) {
+    return <div className="studio-project__leeg" data-testid="elementen-geen-wezen">alle elementen staan in de boom</div>;
+  }
   return <Browser verbergIds={verbergIds} naarMapItems={naarMapItems} />;
 }
 

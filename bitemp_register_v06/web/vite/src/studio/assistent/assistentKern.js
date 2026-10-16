@@ -259,6 +259,11 @@ const SCHEMA_PLAN = {
         properties: { van: { type: "string" }, naar: { type: "string" }, soort: { type: "string" } },
       },
     },
+    verwijderen: {
+      type: "array",
+      description: "ids van bestaande elementen of relaties die uit het model gaan (alleen als de opdracht dat vraagt)",
+      items: { type: "string" },
+    },
   },
 };
 
@@ -308,7 +313,8 @@ const PLAN_VORM =
   '"elementen": [{"sleutel": "u1", "type": "<elementtype-id>", "naam": "…", "diagram": "d1", "in": "<container>"}, {"bestaand": "<element-id>", "naam": "<nieuwe naam, optioneel>", "diagram": "d1", "in": "<container, optioneel>"}], ' +
   '"connectoren": [{"type": "<relatietype-id>", "bron": "<sleutel of bestaand id>", "doel": "<sleutel of bestaand id>", "eigenschappen": {}}], ' +
   '"verbanden": [{"van": "<sleutel of id>", "naar": "<sleutel of id>", "soort": "realiseert"}], ' +
-  '"opstelling": [{"diagram": "<diagram-id of sleutel>", "actie": "naast-elkaar", "elementen": ["<id of sleutel>"]}]}';
+  '"opstelling": [{"diagram": "<diagram-id of sleutel>", "actie": "naast-elkaar", "elementen": ["<id of sleutel>"]}], ' +
+  '"verwijderen": ["<id van een bestaand element of een bestaande relatie>"]}';
 
 /**
  * Systeemprompt + vraag voor een opdracht in de map.
@@ -332,7 +338,8 @@ export function vraagVoorOpdracht(talen, opdracht, { mapNaam = "", submappen = [
     "- Nieuwe diagrammen in een submap: zet `map` (naam); een bestaande submap met die naam wordt hergebruikt.",
     "- Een diagram onder een element hangen (bv. een activiteitendiagram onder een use case): zet `map` op de naam of het id van een element dat een uitwerking kan dragen — een bestaand element, of een nieuw element uit dit plan (zijn sleutel). Het diagram komt dan in de boom onder dat element.",
     "- Uitlijnen of opstellen: `opstelling` met het diagram (id of sleutel), een actie (naast-elkaar = op één rij, boven-elkaar = in één kolom, verdeel-horizontaal, verdeel-verticaal, links, rechts, boven, onder, automatisch = het hele diagram netjes opstellen) en de elementen (ids of sleutels; leeg = alle). \"Horizontaal uitlijnen\" = naast-elkaar (zelfde hoogte), \"verticaal uitlijnen\" = boven-elkaar (zelfde midden); verdelen alleen als om gelijke afstanden gevraagd wordt. Leden van een container schuiven mee.",
-    "- Wat je niet kunt: elementen, relaties of diagrammen weghalen, en vrije posities of kleuren zetten. Vraagt de opdracht dat, zeg het in de uitleg en laat de lijsten leeg; beweer nooit dat je iets doet wat niet in het plan staat.",
+    "- Weghalen: `verwijderen` met ids van bestaande elementen of relaties — alleen als de opdracht dat vraagt. Een element verdwijnt met zijn relaties uit het model en van alle diagrammen; een relatie alleen zelf.",
+    "- Wat je niet kunt: diagrammen of mappen weghalen, en vrije posities of kleuren zetten. Vraagt de opdracht dat, zeg het in de uitleg; beweer nooit dat je iets doet wat niet in het plan staat.",
     "- Hangen modellen in verschillende talen samen (bv. een use case met een activiteitendiagram dat hem uitwerkt), leg dan een `verband` tussen twee elementen — geen diagrammen; bv. de eerste actie van het activiteitendiagram realiseert de use case (soort: " + VERBAND_SOORTEN.join(", ") + ").",
     "- Namen in de taal van de opdracht, zoals een analist ze zou schrijven. Maak niets wat niet uit de opdracht volgt. Geef relaties de richting die de taal voorschrijft.",
     "Antwoord uitsluitend met JSON in deze vorm (geen tekst eromheen; lege lijsten mogen):",
@@ -645,8 +652,35 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     opstelling.push({ diagram: dia.sleutel, profielId: dia.profielId, actie: tekst(o.actie), modus, elementen: els });
   }
 
+  // 6. Weghalen (AI-2 stap 2, 16-10): alleen bestaande elementen en relaties, op id; nooit iets
+  // uit dit plan. Een relatie naar iets dat weggaat, vervalt.
+  const bestaandRel = new Map();
+  for (const p of bestaand) for (const r of p.relaties || []) bestaandRel.set(r.id, { profielId: p.profielId, type: r.type });
+  const verwijderen = [];
+  const wegIds = new Set();
+  for (const ref of Array.isArray(antwoord?.verwijderen) ? antwoord.verwijderen : []) {
+    const id = tekst(typeof ref === "object" && ref ? ref.id : ref);
+    if (!id || wegIds.has(id)) continue;
+    if (bestaandEl.has(id)) {
+      const b = bestaandEl.get(id);
+      verwijderen.push({ profielId: b.profielId, id, naam: b.naam, type: b.type, soort: "element" });
+      wegIds.add(id);
+    } else if (bestaandRel.has(id)) {
+      const r = bestaandRel.get(id);
+      verwijderen.push({ profielId: r.profielId, id, naam: "", type: r.type, soort: "relatie" });
+      wegIds.add(id);
+    } else {
+      problemen.push(`${id} bestaat niet (of valt buiten deze map); niet weggehaald.`);
+    }
+  }
+  const connectorenNa = connectoren.filter((c) => {
+    const raakt = wegIds.has(c.bron.id) || wegIds.has(c.doel.id);
+    if (raakt) problemen.push(`${c.type} naar een element dat weggaat is overgeslagen.`);
+    return !raakt;
+  });
+
   // Een nieuw diagram zonder iets erop is niets.
-  const gebruikt = new Set([...elementen.map((e) => e.diagram), ...opDiagram.map((o) => o.diagram), ...connectoren.map((c) => c.diagram).filter(Boolean), ...opstelling.map((o) => o.diagram)]);
+  const gebruikt = new Set([...elementen.map((e) => e.diagram), ...opDiagram.map((o) => o.diagram), ...connectorenNa.map((c) => c.diagram).filter(Boolean), ...opstelling.map((o) => o.diagram)]);
   const leeg = diagrammen.filter((d) => !d.bestaandId && !gebruikt.has(d.sleutel));
   for (const d of leeg) problemen.push(`Diagram "${d.naam}" blijft leeg; niet gemaakt.`);
 
@@ -658,8 +692,9 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     opDiagram,
     leden,
     opstelling,
-    connectoren,
+    connectoren: connectorenNa,
     verbanden,
+    verwijderen,
     problemen,
     opmerkingen,
   };
