@@ -8,6 +8,36 @@
 
 ---
 
+## api 0.17.0 / studio 0.23.0 (2026-10-16)
+
+Plaatjes als link voor Confluence, en de meldingen van app (#4, #7, #8). Frontend:
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio 0.23.0). Uitrol: alleen app.
+
+**Databasegevolg:** nieuwe tabel `studio_gedeeld_beeld` (plumbing, geen register-domein), bij de
+start aangemaakt met een gedeeltelijke unieke index (één actueel plaatje per diagram). De PNG's
+staan in MinIO onder `beelden/<token>.png`, of zonder MinIO in de tabel. Bestaande data blijft
+ongemoeid. Geen nieuwe instellingen; nginx stuurt `/api/beeld/` al naar de API.
+
+Backend (minor):
+
+- **Gedeelde plaatjes** (`handlers/studio_beeld_handler.go`): `POST/GET
+  /api/studio/projecten/:id/beelden` (lezen op het project), `DELETE …/beelden/:token` (wie deelde
+  of wie schrijven mag), en openbaar `GET /api/beeld/<token>.png`. Het token (24 bytes) is de
+  toegang. Momentopname: zelfde plaatje = zelfde adres, `immutable`. Actueel: één adres per
+  diagram, `no-cache` met ETag. Intrekken verwijdert het object; project weg = plaatjes weg.
+  `/api/beeld/` is publiek in de PEP.
+
+Frontend (studio 0.23.0, samengevat): **plaatjes als link** bij *Kopieer voor Teams/Confluence*
+(ingebed, momentopname of houd up to date), *Gedeelde plaatjes* met intrekken, rechtsklik *Kopieer
+als plaatje-link*; **velden via de assistent en de MCP** (ook enumeratiewaarden, melding #4); **op
+raster** (#7); **documentdiagram recht** met kardinaliteit (#8); **lege rijen weg** in het use
+case-document; **Studio-instellingen crashten niet meer** (React Flow #001 door de levenslijn).
+
+Uitrol: images `bitemp-go-api:0.17.0` en `bitemp-viz-frontend:0.23.0` (frontend met
+`--build-arg VITE_GIT_SHA=$(git rev-parse --short HEAD)`), daarna `./update.sh` op app.
+
+---
+
 ## studio 0.22.0 (2026-10-16) — alleen frontend
 
 Geen backendrelease: api blijft **0.16.0**. Use case als ouder in de projectboom (M3

@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.22.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.23.0`**
+  (2026-10-16: plaatjes als link voor Confluence, velden via de assistent, op raster,
+  documentdiagram recht, lege rijen weg, instellingen-crash; samen met api 0.17.0), na **`studio/v0.22.0`**
   (2026-10-16: use case als ouder in de boom, boom opgeruimd, assistent op het canvas en weghalen,
   Gebruikt op, kopieer voor Teams/Confluence; alleen frontend), na **`studio/v0.21.0`**
   (2026-10-15: AI-assistent in context, Mijn API-tokens, boomregel, sequence fase 0; samen met
@@ -83,7 +85,9 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.16.0`** (2026-10-15: persoonlijke API-tokens — tabel `gebruiker_token` —,
+- Backend: **`api/v0.17.0`** (2026-10-16: gedeelde plaatjes — tabel `studio_gedeeld_beeld`,
+  PNG in MinIO, `/api/studio/projecten/:id/beelden` en openbaar `/api/beeld/<token>.png`).
+  Daarvoor **`api/v0.16.0`** (2026-10-15: persoonlijke API-tokens — tabel `gebruiker_token` —,
   `tools/omnium-mcp` met meldingen, projecten en modellen, AI-proxy-instellingen in de
   app-compose). Daarvoor **`api/v0.15.0`** (2026-10-14: domein `meldingen` en `/api/meldingen`, tabel
   `melding_bestand`). Daarvoor **`api/v0.14.0`** (2026-10-14: uitnodigen, vijf rollen en toegang per Studio-project

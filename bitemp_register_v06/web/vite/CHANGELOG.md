@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.23.0] — 2026-10-16
+
 ### Toegevoegd
 - **Plaatjes als link voor Confluence** (16-10, Mark): Confluence laat ingebedde plaatjes bij
   plakken weg, maar toont een plaatje van een ander adres wél. Bij *Kopieer voor
