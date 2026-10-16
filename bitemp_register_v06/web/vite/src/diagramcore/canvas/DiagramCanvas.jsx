@@ -169,6 +169,7 @@ function CanvasBinnenkant({
   onContainerDrop,
   onRandAanhechting,
   onNodeDoubleClick,
+  opRaster = false,
   onHernoem,
   onSchuifVeld,
   onNodeMaten,
@@ -2001,6 +2002,9 @@ function CanvasBinnenkant({
       defaultViewport={viewport || { x: 0, y: 0, zoom: 1 }}
       fitView={!viewport && (diagram?.nodes?.length || 0) > 0}
       minZoom={0.1}
+      // Op raster (melding #7, Hugo): slepen klikt vast op het puntenraster (zelfde 16px als de achtergrond).
+      snapToGrid={!!opRaster}
+      snapGrid={[16, 16]}
       proOptions={{ hideAttribution: true }}
     >
       <Background gap={16} size={1} />

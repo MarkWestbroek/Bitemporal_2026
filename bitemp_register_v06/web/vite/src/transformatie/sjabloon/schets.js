@@ -68,6 +68,40 @@ export function schetsMaat(node, element, elementType) {
   return { w: Math.max(w, elementType?.minBreedte || 0), h: Math.max(h, elementType?.minHoogte || 0), fam };
 }
 
+/**
+ * Eindpunten van een lijn tussen twee vakken (melding #8, 16-10: "UML komt scheef uit").
+ * Overlappen de vakken verticaal (naast elkaar), dan een horizontale lijn op het midden van de
+ * overlap; overlappen ze horizontaal (boven elkaar), dan een verticale; anders schuin van midden
+ * naar midden, afgekapt op de rand. Zo lopen rechte lijnen op het canvas ook recht in het document.
+ */
+function lijnTussen(a, b) {
+  const overlapY = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+  const overlapX = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+  if (overlapY >= 12 && (a.x + a.w <= b.x || b.x + b.w <= a.x)) {
+    const y = Math.max(a.y, b.y) + overlapY / 2;
+    return a.x + a.w <= b.x ? [{ x: a.x + a.w, y }, { x: b.x, y }] : [{ x: a.x, y }, { x: b.x + b.w, y }];
+  }
+  if (overlapX >= 12 && (a.y + a.h <= b.y || b.y + b.h <= a.y)) {
+    const x = Math.max(a.x, b.x) + overlapX / 2;
+    return a.y + a.h <= b.y ? [{ x, y: a.y + a.h }, { x, y: b.y }] : [{ x, y: a.y }, { x, y: b.y + b.h }];
+  }
+  const ca = { x: a.x + a.w / 2, y: a.y + a.h / 2 };
+  const cb = { x: b.x + b.w / 2, y: b.y + b.h / 2 };
+  return [randPunt(a, cb.x, cb.y), randPunt(b, ca.x, ca.y)];
+}
+
+/** Uiteinde-labels (kardinaliteit, rolnaam) via de edgeLabels-hook van het profiel, als die er is. */
+function uiteindeLabels(et, c) {
+  const hook = et?.hooks?.edgeLabels;
+  if (typeof hook !== "function") return [];
+  try {
+    const uit = hook(c) || {};
+    return [...(uit.kaal || [])].filter((l) => l && (l.zijde === "bron" || l.zijde === "doel") && l.delen?.length);
+  } catch {
+    return [];
+  }
+}
+
 /** Snijpunt van de lijn vanuit het midden van een rechthoek naar (px,py) met de rand. */
 function randPunt(box, px, py) {
   const cx = box.x + box.w / 2;
@@ -202,10 +236,9 @@ export function schetsDiagramSvg({ diagram, elements, descriptor, idPrefix = "s"
     const metLabel = (bx) => (bx.fam === "actor" || bx.fam === "punt" ? { ...bx, h: bx.h + 24 } : bx);
     const ra = metLabel(a);
     const rb = metLabel(b);
-    const ca = { x: ra.x + ra.w / 2, y: ra.y + ra.h / 2 };
-    const cb = { x: rb.x + rb.w / 2, y: rb.y + rb.h / 2 };
-    const van = a === b ? { x: ca.x, y: a.y } : randPunt(ra, cb.x, cb.y);
-    const naar = a === b ? { x: cb.x + 20, y: b.y } : randPunt(rb, ca.x, ca.y);
+    const [van, naar] = a === b
+      ? [{ x: a.x + a.w / 2, y: a.y }, { x: b.x + b.w / 2 + 20, y: b.y }]
+      : lijnTussen(ra, rb);
     const marker = p.markerEnd && ["pijl-open", "driehoek", "pijl-dicht"].includes(p.markerEnd) ? p.markerEnd : null;
     if (marker) markers.add(marker);
     // Pijl aan het begin, naar de bron gericht (gedaante die de leesrichting omdraait).
@@ -222,6 +255,14 @@ export function schetsDiagramSvg({ diagram, elements, descriptor, idPrefix = "s"
     );
     const label = c.naam || (et.stereotype ? et.stereotype : /include|extend/.test(et.id) ? `«${et.id}»` : "");
     if (label) delen.push(tekstBlok((van.x + naar.x) / 2, (van.y + naar.y) / 2 - 6, [label], { grootte: 10, kleur: "#475569" }));
+    // Kardinaliteit en rolnaam bij de uiteinden (zoals op het canvas), 14px van de rand.
+    const len = Math.hypot(naar.x - van.x, naar.y - van.y) || 1;
+    const ux = (naar.x - van.x) / len, uy = (naar.y - van.y) / len;
+    for (const l of uiteindeLabels(et, c)) {
+      const p = l.zijde === "bron" ? { x: van.x + ux * 16, y: van.y + uy * 16 } : { x: naar.x - ux * 16, y: naar.y - uy * 16 };
+      // Iets naast de lijn (loodrecht), zodat de tekst de lijn niet raakt.
+      delen.push(tekstBlok(p.x - uy * 10, p.y + ux * 10 - 2, [l.delen.map((d) => d.tekst).join(" ")], { grootte: 10, kleur: "#6d28d9" }));
+    }
   }
 
   const defs = [...markers].map((m) => {

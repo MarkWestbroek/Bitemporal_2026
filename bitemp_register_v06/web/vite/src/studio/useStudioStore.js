@@ -32,6 +32,7 @@ function schrijfOpslag(state) {
         tooltipsAan: state.tooltipsAan,
         relatiesMeeTerug: state.relatiesMeeTerug,
         relatiesPaneelOpen: state.relatiesPaneelOpen,
+        opRaster: state.opRaster,
       })
     );
   } catch { /* ignore */ }
@@ -72,9 +73,11 @@ const useStudioStore = create((set) => ({
    */
   relatiesMeeTerug: opgeslagen.relatiesMeeTerug ?? true,
   relatiesPaneelOpen: opgeslagen.relatiesPaneelOpen ?? false,
+  /** Elementen vallen op het raster (16px) bij slepen en plaatsen (melding #7 van Hugo, 16-10). */
+  opRaster: opgeslagen.opRaster ?? false,
   zetVoorkeur: (sleutel, waarde) =>
     set((s) => {
-      if (!["relatiesMeeTerug", "relatiesPaneelOpen"].includes(sleutel) || s[sleutel] === waarde) return {};
+      if (!["relatiesMeeTerug", "relatiesPaneelOpen", "opRaster"].includes(sleutel) || s[sleutel] === waarde) return {};
       const next = { ...s, [sleutel]: waarde };
       schrijfOpslag(next);
       return { [sleutel]: waarde };

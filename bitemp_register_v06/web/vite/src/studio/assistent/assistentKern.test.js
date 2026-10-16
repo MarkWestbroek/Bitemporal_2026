@@ -359,6 +359,47 @@ test("verwijderen (AI-2 stap 2): element met zijn relaties uit model, diagrammen
   assert.deepEqual(w2.plaatsingWis, []);
 });
 
+test("velden in het plan (melding #4): waarden aan een bestaande enumeratie, attributen op een nieuwe klasse", () => {
+  const descriptor = {
+    id: "puur-uml", label: "UML",
+    fieldTypes: [{ id: "attribuut", viewer: "naam-type" }, { id: "literal", viewer: "waarde" }],
+    elementTypes: [
+      { id: "klasse", label: "Klasse", compartments: [{ id: "attributen", fieldType: "attribuut" }] },
+      { id: "enumeratie", label: "Enumeratie", compartments: [{ id: "literals", fieldType: "literal" }] },
+      { id: "assoc", label: "Associatie", isConnector: true, bron: { elementTypes: ["klasse"] }, doel: { elementTypes: ["klasse", "enumeratie"] } },
+    ],
+  };
+  const uml = profielSamenvatting(descriptor, "puurUml05");
+  assert.deepEqual(uml.elementen.find((e) => e.id === "enumeratie").velden, [{ id: "literals", soort: "waarde", fieldType: "literal" }]);
+  const stand = {
+    mappen: {}, plaatsing: { "puurUml05::d": null },
+    profielen: { puurUml05: {
+      elements: { status: { id: "status", naam: "status", elementType: "enumeratie", compartimenten: [{ compartmentType: "literals", velden: [{ naam: "Nieuw", fieldType: "literal", data: {} }] }] } },
+      diagrams: { d: { id: "d", naam: "UML test", nodes: [{ elementId: "status", position: { x: 0, y: 0 } }] } },
+    } },
+  };
+  const b = bestaandInMap(stand, null, ["puurUml05"]);
+  assert.deepEqual(b[0].elementen[0].velden, ["Nieuw"]);
+  assert.match(vraagVoorOpdracht([uml], "x", { bestaand: b }).systeem, /status" op d — velden: Nieuw/);
+  const plan = controleerPlan({
+    uitleg: "",
+    diagrammen: [{ sleutel: "d1", bestaand: "d" }],
+    elementen: [
+      { bestaand: "status", velden: [{ naam: "nieuw" }, { naam: "In behandeling", type: "string" }, { naam: "Afgerond" }] },
+      { sleutel: "k", type: "klasse", naam: "Melding", diagram: "d1", velden: [{ naam: "titel", type: "tekst" }] },
+    ],
+    connectoren: [],
+  }, [uml], b);
+  assert.deepEqual(plan.problemen, []);
+  const w = maakWijziging(plan, stand, { mapId: null, samenvattingen: [uml], nu: 1 });
+  const lits = w.profielen.puurUml05.elements.status.compartimenten[0].velden;
+  assert.deepEqual(lits.map((v) => v.naam), ["Nieuw", "In behandeling", "Afgerond"], "\"nieuw\" bestond al; waarden zonder type");
+  assert.deepEqual(lits[1].data, {});
+  const klas = Object.values(w.profielen.puurUml05.elements).find((e) => e.naam === "Melding");
+  assert.deepEqual(klas.compartimenten, [{ compartmentType: "attributen", velden: [{ naam: "titel", fieldType: "attribuut", data: { typeLabel: "tekst" } }] }]);
+  assert.match(w.samenvatting, /3 velden/);
+});
+
 test("leesAntwoord: kale JSON, codeblok of tekst eromheen", () => {
   assert.deepEqual(leesAntwoord('{"a":1}'), { a: 1 });
   assert.deepEqual(leesAntwoord('Hier:\n```json\n{"a":2}\n```'), { a: 2 });

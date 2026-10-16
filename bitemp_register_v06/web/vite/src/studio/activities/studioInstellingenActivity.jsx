@@ -12,6 +12,7 @@
  *      shape-sets) — zonder code te schrijven.
  */
 import React, { useEffect, useRef, useState } from "react";
+import { ReactFlowProvider } from "@xyflow/react";
 import { IconInstellingen } from "../icons";
 // Side-effect: registreert alle basis-shapes én de data-shapes in de registry,
 // zodat de galerij de volledige registry toont ook zonder geopende canvas.
@@ -93,7 +94,11 @@ function ShapePreviewBox({ Shape, naam = "Aa", kleur, schaal = 1 }) {
     <div style={{ width: 150 * schaal, height: 74 * schaal, overflow: "hidden", position: "relative", pointerEvents: "none" }}>
       <div style={{ position: "absolute", top: 0, left: 0, width: 150, height: 74, transform: `scale(${schaal})`, transformOrigin: "top left" }}>
         {Shape ? (
-          <Shape element={element} elementType={elementType} selected={false} fieldTypesById={{}} compartmentTypesById={{}} />
+          // Eigen React Flow-context: sommige vormen lezen de canvas-store (de levenslijn meet
+          // zijn laagste kind via useStore) en crashten hier buiten een canvas (gemeld 16-10).
+          <ReactFlowProvider>
+            <Shape element={element} elementType={elementType} selected={false} fieldTypesById={{}} compartmentTypesById={{}} />
+          </ReactFlowProvider>
         ) : (
           <span style={{ color: "var(--s-fg-muted)" }}>—</span>
         )}
@@ -677,6 +682,7 @@ export default {
 function ModelleerVoorkeuren() {
   const relatiesMeeTerug = useStudioStore((s) => s.relatiesMeeTerug);
   const relatiesPaneelOpen = useStudioStore((s) => s.relatiesPaneelOpen);
+  const opRaster = useStudioStore((s) => s.opRaster);
   const zet = useStudioStore((s) => s.zetVoorkeur);
   const rij = { display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 8, padding: "4px 0", fontSize: 13 };
   const uitleg = { display: "block", color: "var(--s-fg-muted, #64748b)", fontSize: 12 };
@@ -694,6 +700,13 @@ function ModelleerVoorkeuren() {
         <span>
           Relatiepaneel in de eigenschappen standaard uitgeklapt
           <span style={uitleg}>Inklappen of uitklappen in het paneel zelf past deze voorkeur ook aan.</span>
+        </span>
+      </label>
+      <label style={rij}>
+        <input type="checkbox" checked={opRaster} onChange={(e) => zet("opRaster", e.target.checked)} data-testid="voorkeur-op-raster" />
+        <span>
+          Op raster: elementen vallen bij slepen en plaatsen op het puntenraster
+          <span style={uitleg}>Ook aan/uit met de knop # in de taakbalk Uitlijnen of via rechtsklik op het canvas.</span>
         </span>
       </label>
     </div>

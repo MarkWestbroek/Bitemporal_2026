@@ -44,10 +44,18 @@ titel: Use case-overzicht {{map.naam}}
 
 {{/if}}| | |
 |---|---|
+{{#if verbindingen type=associatie}}
 | Actoren | {{#elk verbindingen type=associatie}}{{ander.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+{{/if}}
+{{#if verbindingen type=include richting=uit}}
 | Bevat (include) | {{#elk verbindingen type=include richting=uit}}{{doel.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+{{/if}}
+{{#if verbindingen type=extend richting=in}}
 | Uitgebreid door (extend) | {{#elk verbindingen type=extend richting=in}}{{bron.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+{{/if}}
+{{#if verbindingen type=generalisatie richting=uit}}
 | Specialiseert | {{#elk verbindingen type=generalisatie richting=uit}}{{doel.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+{{/if}}
 | Op diagram | {{diagrammen}} |
 
 {{/elk}}
@@ -126,9 +134,15 @@ export const DEEL_PROJECTMAP = `{{kop}} {{naam}}
 
 {{/if}}{{#if verbindingen}}| | |
 |---|---|
+{{#if verbindingen type=associatie}}
 | Actoren | {{#elk verbindingen type=associatie}}{{ander.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+{{/if}}
+{{#if verbindingen type=include richting=uit}}
 | Bevat (include) | {{#elk verbindingen type=include richting=uit}}{{doel.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+{{/if}}
+{{#if verbindingen type=extend richting=in}}
 | Uitgebreid door (extend) | {{#elk verbindingen type=extend richting=in}}{{bron.naam}}{{#unless laatste}}, {{/unless}}{{/elk}} |
+{{/if}}
 
 {{/if}}{{/elk}}{{#elk kinderen}}{{> projectmap}}{{/elk}}`;
 

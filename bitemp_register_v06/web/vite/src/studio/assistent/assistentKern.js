@@ -58,6 +58,7 @@ export function profielSamenvatting(descriptor, profielId = descriptor?.id) {
       ...(et.resizebaar === false ? { vast: true } : {}),
       ...(et.uitwerking ? { uitwerking: true } : {}),
       ...(eigenschapSleutels(et).length ? { eigenschappen: eigenschapSleutels(et) } : {}),
+      ...(veldCompartimenten(descriptor, et.id).length ? { velden: veldCompartimenten(descriptor, et.id).map((c) => ({ id: c.id, soort: c.soort, fieldType: c.fieldType })) } : {}),
     }));
   const bekend = new Set(elementen.map((e) => e.id));
   const lidmaatschap = new Set(elementen.map((e) => e.container).filter(Boolean));
@@ -137,7 +138,10 @@ export function bestaandInMap(stand, mapId, profielIds = Object.keys(stand.profi
     uit.push({
       profielId,
       diagrammen: diagrammen.map((d) => ({ id: d.id, naam: d.naam || d.id, ...(mapNaam(mapVan(`${profielId}::${d.id}`)) ? { map: mapNaam(mapVan(`${profielId}::${d.id}`)) } : {}) })),
-      elementen: [...ids].map((id) => ({ id, type: els[id].elementType, naam: els[id].naam || "", diagrammen: opDiagrammen(id) })),
+      elementen: [...ids].map((id) => {
+        const velden = (els[id].compartimenten || []).flatMap((c) => (c.velden || []).map((v) => v.naam)).filter(Boolean).slice(0, 30);
+        return { id, type: els[id].elementType, naam: els[id].naam || "", diagrammen: opDiagrammen(id), ...(velden.length ? { velden } : {}) };
+      }),
       relaties,
     });
   }
@@ -216,6 +220,11 @@ const SCHEMA_PLAN = {
           in: { type: "string", description: "sleutel of id van de container (systeemkader, partitie) waar het in ligt" },
           bestaand: { type: "string", description: "id van een bestaand element (hernoemen of op een diagram zetten)" },
           eigenschappen: { type: "object", additionalProperties: { type: "string" } },
+          velden: {
+            type: "array",
+            description: "attributen (naam + type) of waarden (alleen naam) erbij",
+            items: { type: "object", additionalProperties: false, required: ["naam"], properties: { naam: { type: "string" }, type: { type: "string" }, compartiment: { type: "string" } } },
+          },
         },
       },
     },
@@ -275,7 +284,7 @@ function taalTekst(s) {
   const regels = [
     `## ${s.id} — ${s.naam}`,
     "Elementtypen:",
-    ...s.elementen.map((e) => `- ${e.id}: ${e.label}${e.omschrijving ? ` — ${e.omschrijving}` : ""}${e.container ? ` (container: ${e.leden ? e.leden.join(", ") : "andere elementen"} kunnen erin liggen via \`in\`)` : ""}${e.uitwerking ? " (kan een uitwerking dragen: een diagram eronder via map)" : ""}${e.eigenschappen ? ` [eigenschappen: ${e.eigenschappen.join(", ")}]` : ""}`),
+    ...s.elementen.map((e) => `- ${e.id}: ${e.label}${e.omschrijving ? ` — ${e.omschrijving}` : ""}${e.container ? ` (container: ${e.leden ? e.leden.join(", ") : "andere elementen"} kunnen erin liggen via \`in\`)` : ""}${e.uitwerking ? " (kan een uitwerking dragen: een diagram eronder via map)" : ""}${e.velden ? ` [velden: ${e.velden.map((v) => (v.soort === "waarde" ? `${v.id} (alleen naam)` : `${v.id} (naam + type)`)).join(", ")}]` : ""}${e.eigenschappen ? ` [eigenschappen: ${e.eigenschappen.join(", ")}]` : ""}`),
     "Relaties (bron → doel):",
     ...s.connectoren.map((c) => {
       const paren = s.paren?.[c.id];
@@ -300,7 +309,7 @@ export function bestaandTekst(bestaand = [], { max = 200 } = {}) {
     for (const d of p.diagrammen || []) regels.push(`  diagram ${d.id} "${d.naam}"${d.map ? ` (map ${d.map})` : ""}`);
     for (const e of p.elementen || []) {
       if (n++ >= max) { regels.push("  … (meer elementen weggelaten)"); break; }
-      regels.push(`  element ${e.id}: ${e.type} "${e.naam}"${e.diagrammen?.length ? ` op ${e.diagrammen.join(", ")}` : ""}${e.in ? ` in ${e.in}` : ""}`);
+      regels.push(`  element ${e.id}: ${e.type} "${e.naam}"${e.diagrammen?.length ? ` op ${e.diagrammen.join(", ")}` : ""}${e.in ? ` in ${e.in}` : ""}${e.velden?.length ? ` — velden: ${e.velden.join(", ")}` : ""}`);
     }
     for (const r of (p.relaties || []).slice(0, max)) regels.push(`  relatie ${r.id}: ${r.type} ${r.bron} → ${r.doel}`);
   }
@@ -310,7 +319,7 @@ export function bestaandTekst(bestaand = [], { max = 200 } = {}) {
 const PLAN_VORM =
   '{"uitleg": "…", ' +
   '"diagrammen": [{"sleutel": "d1", "taal": "<profiel-id>", "naam": "…", "map": ""}, {"sleutel": "d2", "bestaand": "<diagram-id>"}], ' +
-  '"elementen": [{"sleutel": "u1", "type": "<elementtype-id>", "naam": "…", "diagram": "d1", "in": "<container>"}, {"bestaand": "<element-id>", "naam": "<nieuwe naam, optioneel>", "diagram": "d1", "in": "<container, optioneel>"}], ' +
+  '"elementen": [{"sleutel": "u1", "type": "<elementtype-id>", "naam": "…", "diagram": "d1", "in": "<container>"}, {"bestaand": "<element-id>", "naam": "<nieuwe naam, optioneel>", "diagram": "d1", "in": "<container, optioneel>", "velden": [{"naam": "…", "type": "…"}]}], ' +
   '"connectoren": [{"type": "<relatietype-id>", "bron": "<sleutel of bestaand id>", "doel": "<sleutel of bestaand id>", "eigenschappen": {}}], ' +
   '"verbanden": [{"van": "<sleutel of id>", "naar": "<sleutel of id>", "soort": "realiseert"}], ' +
   '"opstelling": [{"diagram": "<diagram-id of sleutel>", "actie": "naast-elkaar", "elementen": ["<id of sleutel>"]}], ' +
@@ -334,6 +343,7 @@ export function vraagVoorOpdracht(talen, opdracht, { mapNaam = "", submappen = [
     "- Een nieuw element krijgt een korte unieke `sleutel` (u1, a1, …) en komt op een diagram (`diagram`: sleutel van een diagram in `diagrammen`). Het diagram bepaalt de taal.",
     "- Verwijs naar iets dat al bestaat met zijn id (in `bron`, `doel`, `in`, `van`, `naar`, of als `bestaand`). Wil je een bestaand element op een nieuw diagram, of het hernoemen, zet het dan in `elementen` met `bestaand`.",
     "- Een relatie tussen bestaande elementen: alleen een connector met hun ids; geen nieuw diagram nodig.",
+    "- Velden (attributen van een klasse, waarden van een enumeratie): `velden` op het element, nieuw of bestaand ({\"bestaand\": \"<id>\", \"velden\": [{\"naam\": \"…\", \"type\": \"…\"}]}); bij waarden alleen de naam. Bestaande velden niet opnieuw.",
     "- Iets in een container zetten (bv. een use case in een systeemkader): `in` met de sleutel of het id van de container — ook voor een bestaand element ({\"bestaand\": \"<id>\", \"in\": \"<container>\"}). Zeg in de uitleg alleen wat het plan echt doet.",
     "- Nieuwe diagrammen in een submap: zet `map` (naam); een bestaande submap met die naam wordt hergebruikt.",
     "- Een diagram onder een element hangen (bv. een activiteitendiagram onder een use case): zet `map` op de naam of het id van een element dat een uitwerking kan dragen — een bestaand element, of een nieuw element uit dit plan (zijn sleutel). Het diagram komt dan in de boom onder dat element.",
@@ -352,9 +362,11 @@ export function vraagVoorOpdracht(talen, opdracht, { mapNaam = "", submappen = [
 export function veldCompartimenten(descriptor, elementType) {
   const et = (descriptor?.elementTypes || []).find((t) => t.id === elementType);
   const fts = new Map((descriptor?.fieldTypes || []).map((f) => [f.id, f]));
+  // naam-type: attributen ("naam: type"); waarde: alleen een naam (enumeratiewaarden, literals —
+  // melding #4, 16-10: "enum-waarden toevoegen via de assistent/MCP").
   return (et?.compartments || [])
-    .filter((c) => !c.alleenWeergave && fts.get(c.fieldType)?.viewer === "naam-type" && !fts.get(c.fieldType)?.afgeleid)
-    .map((c) => ({ id: c.id, label: c.label || c.id, fieldType: c.fieldType }));
+    .filter((c) => !c.alleenWeergave && ["naam-type", "waarde"].includes(fts.get(c.fieldType)?.viewer) && !fts.get(c.fieldType)?.afgeleid)
+    .map((c) => ({ id: c.id, label: c.label || c.id, fieldType: c.fieldType, soort: fts.get(c.fieldType).viewer === "waarde" ? "waarde" : "attribuut" }));
 }
 
 const SCHEMA_VELDEN = {
@@ -484,6 +496,17 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
   const hernoemd = [];
   const opDiagram = [];
   const lidVan = []; // bestaande elementen die in een container gaan
+  const veldenBij = []; // velden erbij op bestaande elementen
+  /** Velden uit het plan → {compartiment, fieldType, soort, velden:[{naam, type}]}; null als er niets (geldigs) is. */
+  const veldenUitPlan = (ruw, s, type, naam) => {
+    if (!Array.isArray(ruw) || !ruw.length) return null;
+    const comps = (s?.elementen.find((x) => x.id === type)?.velden) || [];
+    if (!comps.length) { problemen.push(`"${naam}" (${type}) heeft geen velden; ${ruw.length} veld(en) overgeslagen.`); return null; }
+    const gevraagd = tekst(ruw.find((v) => v?.compartiment)?.compartiment);
+    const comp = comps.find((c) => c.id === gevraagd) || comps[0];
+    const velden = ruw.map((v) => ({ naam: tekst(typeof v === "string" ? v : v?.naam), type: comp.soort === "waarde" ? "" : tekst(v?.type) })).filter((v) => v.naam);
+    return velden.length ? { compartiment: comp.id, fieldType: comp.fieldType, soort: comp.soort, velden } : null;
+  };
   const nieuwVan = new Map(); // sleutel → element
   const ruw = Array.isArray(antwoord?.elementen) ? antwoord.elementen : [];
   for (const e of ruw) {
@@ -498,6 +521,9 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
       else if (dia) opDiagram.push({ profielId: b.profielId, id, diagram: dia.sleutel });
       // Een bestaand element in een container zetten (melding #9: "zet test in systeem Omnium").
       if (tekst(e.in)) lidVan.push({ profielId: b.profielId, id, type: b.type, naam: b.naam, in: tekst(e.in) });
+      // Velden erbij (melding #4: waarden aan een enumeratie).
+      const vb = veldenUitPlan(e.velden, taalVan.get(b.profielId), b.type, b.naam);
+      if (vb) veldenBij.push({ profielId: b.profielId, id, naam: b.naam, ...vb });
       continue;
     }
     const sleutel = tekst(e?.sleutel);
@@ -512,7 +538,8 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     const s = taalVan.get(dia.profielId);
     const et = s && typeIn(s, e?.type);
     if (!et) { problemen.push(`Type "${e?.type}" bestaat niet in ${s?.naam || dia.profielId}; "${e?.naam}" overgeslagen.`); continue; }
-    const uit = { sleutel, profielId: dia.profielId, type: et.id, naam: tekst(e.naam), diagram: dia.sleutel, in: tekst(e.in), data: filterEigenschappen(e.eigenschappen, et.eigenschappen) };
+    const vn = veldenUitPlan(e?.velden, s, et.id, tekst(e.naam));
+    const uit = { sleutel, profielId: dia.profielId, type: et.id, naam: tekst(e.naam), diagram: dia.sleutel, in: tekst(e.in), data: filterEigenschappen(e.eigenschappen, et.eigenschappen), ...(vn ? { velden: vn } : {}) };
     elementen.push(uit); nieuwVan.set(sleutel, uit);
   }
 
@@ -689,6 +716,7 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     diagrammen: diagrammen.filter((d) => !leeg.includes(d)),
     elementen,
     hernoemd,
+    veldenBij,
     opDiagram,
     leden,
     opstelling,
@@ -715,7 +743,7 @@ export function veldenToepassing(antwoord, descriptor, element) {
     if (!naam) continue;
     if (namen.has(naam.toLowerCase())) { problemen.push(`"${naam}" bestaat al; overgeslagen.`); continue; }
     namen.add(naam.toLowerCase());
-    nieuw.push({ naam, fieldType: doel.fieldType, data: { ...(v.type ? { typeLabel: String(v.type).trim() } : {}), ...(v.verplicht ? { verplicht: true } : {}) } });
+    nieuw.push({ naam, fieldType: doel.fieldType, data: doel.soort === "waarde" ? {} : { ...(v.type ? { typeLabel: String(v.type).trim() } : {}), ...(v.verplicht ? { verplicht: true } : {}) } });
   }
   const compartimenten = (element.compartimenten || []).some((c) => c.compartmentType === doel.id)
     ? element.compartimenten.map((c) => (c.compartmentType === doel.id ? { ...c, velden: [...(c.velden || []), ...nieuw] } : c))

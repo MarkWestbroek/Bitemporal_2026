@@ -50,3 +50,9 @@ test("filterLijst: object-velden matchen op id/naam, sorteer numeriek-bewust, ma
   assert.deepEqual(filterLijst(items, { type: "x", sorteer: "naam" }).map((i) => i.naam), ["b2", "b10"]);
   assert.deepEqual(filterLijst(items, { sorteer: "naam", omgekeerd: true, max: "1" }).map((i) => i.naam), ["b10"]);
 });
+
+test("#if met lijst-params: waar als de gefilterde lijst niet leeg is (lege tabelrijen weglaten, 16-10)", () => {
+  const ctx = { verbindingen: [{ type: "associatie", ander: { naam: "Klant" } }, { type: "include", richting: "uit", doel: { naam: "Log in" } }] };
+  const sj = "{{#if verbindingen type=associatie}}\nA\n{{/if}}\n{{#if verbindingen type=extend richting=in}}\nE\n{{/if}}\n{{#unless verbindingen type=extend}}\ngeen extend\n{{/unless}}\n";
+  assert.equal(renderSjabloon(sj, ctx).tekst, "A\ngeen extend\n");
+});

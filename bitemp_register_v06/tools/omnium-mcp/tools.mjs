@@ -175,7 +175,7 @@ export const TOOLS = [
       "Maak of wijzig modellen in een map van een Studio-project met een plan (JSON), gecontroleerd tegen de modeltalen. " +
       "Standaard alleen een voorstel; met toepassen: true gaat het als projectsync-operaties naar de server en zien open Studio's het live. " +
       "Plan: {uitleg, diagrammen: [{sleutel, taal, naam, map?} | {sleutel, bestaand: <diagram-id>}], " +
-      "elementen: [{sleutel, type, naam, diagram: <sleutel>, in?: <container>, eigenschappen?} | {bestaand: <element-id>, naam?, diagram?}], " +
+      "elementen: [{sleutel, type, naam, diagram: <sleutel>, in?: <container>, eigenschappen?, velden?} | {bestaand: <element-id>, naam?, diagram?, velden?: [{naam, type?}]}] (velden = attributen of enumeratiewaarden), " +
       "connectoren: [{type, bron, doel, naam?, eigenschappen?}] (bron/doel = sleutel van een nieuw element of id van een bestaand), " +
       "verbanden: [{van, naar, soort: komt voort uit|heeft te maken met|genereert|realiseert}] (tussen talen), " +
       "opstelling: [{diagram, actie: naast-elkaar|boven-elkaar|verdeel-horizontaal|verdeel-verticaal|links|rechts|boven|onder|automatisch, elementen?}], " +
