@@ -83,6 +83,8 @@ import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
 import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
 import RelatiesPaneel from "../../diagramcore/inspector/RelatiesPaneel.jsx";
+import GebruikPaneel from "../../diagramcore/inspector/GebruikPaneel.jsx";
+import { gebruikVan, gebruikteIds } from "../../diagramcore/model/gebruik.js";
 import { relatiesVan, verborgenRelatiesVan } from "../../diagramcore/model/relaties.js";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { registreerIconenVocabulaire } from "../../diagramcore/shapes/iconenVocabulaire.jsx";
@@ -1171,6 +1173,8 @@ export function maakDiagramActiviteit(opties) {
     const elements = useStore((s) => s.elements);
     const diagrams = useStore((s) => s.diagrams);
     const actiefDiagram = useStore((s) => s.actiefDiagramId);
+    // Melding #5 (Hugo): wat op geen enkel diagram staat, toont cursief.
+    const gebruikt = React.useMemo(() => gebruikteIds(diagrams), [diagrams]);
     const { selectieId, setSelectieId, layoutApiRef } = useContext(Ctx);
     const [zoek, setZoek] = useState("");
     const [dicht, setDicht] = useState({});
@@ -1570,7 +1574,9 @@ export function maakDiagramActiviteit(opties) {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
-                  fontStyle: zichtbaar ? undefined : "italic",
+                  // Cursief = op geen enkel diagram: veilig weg te halen (melding #5, Hugo).
+                  fontStyle: !et?.isConnector && !gebruikt.has(el.id) ? "italic" : undefined,
+                  opacity: !et?.isConnector && !gebruikt.has(el.id) ? 0.75 : undefined,
                 }}
               >
                 {weergaveNaam(el, et)}
@@ -1729,7 +1735,9 @@ export function maakDiagramActiviteit(opties) {
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
-                            fontStyle: zichtbaar ? undefined : "italic",
+                            // Cursief = op geen enkel diagram: veilig weg te halen (melding #5, Hugo).
+                  fontStyle: !et?.isConnector && !gebruikt.has(el.id) ? "italic" : undefined,
+                  opacity: !et?.isConnector && !gebruikt.has(el.id) ? 0.75 : undefined,
                           }}
                         >
                           {weergaveNaam(el, et)}
@@ -2227,6 +2235,18 @@ export function maakDiagramActiviteit(opties) {
                 // Uitwerking (M3 `uitwerking`, 15-10): wat in de projectboom onder dit element
                 // hangt (bv. het activiteitendiagram onder een use case). Ook via dubbelklik op
                 // de vorm; dubbelklik op de naam blijft hernoemen.
+                {
+                  id: "assistent",
+                  label: "✨ Vraag de assistent…",
+                  // AI-2 stap 2 (16-10): gesprek over de map van dit diagram, met dit element als
+                  // onderwerp; nieuwe elementen komen op dit diagram.
+                  onClick: () =>
+                    menuBus.emit("assistent:open", {
+                      soort: "model",
+                      diagram: { profielId: id, diagramId: s.actiefDiagramId },
+                      focus: { profielId: id, elementId: voorkomenRef?.elementId || nodeId },
+                    }),
+                },
                 ...(elementTypesById[s.elements[voorkomenRef?.elementId || nodeId]?.elementType]?.uitwerking
                   ? [
                       {
@@ -2574,6 +2594,12 @@ export function maakDiagramActiviteit(opties) {
         const canvasDeel = (!nodeId && !connectorId
           ? [
               { sep: true },
+              {
+                id: "assistent",
+                label: "✨ Vraag de assistent…",
+                // AI-2 stap 2 (16-10): over de map van het open diagram; nieuwe elementen komen hierop.
+                onClick: () => menuBus.emit("assistent:open", { soort: "model", diagram: { profielId: id, diagramId: useStore.getState().actiefDiagramId } }),
+              },
               ...canvasMenuExtra.map((m) => ({
                 id: m.id,
                 label: m.label,
@@ -3195,6 +3221,17 @@ export function maakDiagramActiviteit(opties) {
                 gevaar: true,
               });
               if (ok) useStore.getState().deleteElement(cid);
+            }}
+          />
+        )}
+        {/* Melding #5 (Hugo, 16-10): waar wordt dit element gebruikt? */}
+        {!elementType?.isConnector && (
+          <GebruikPaneel
+            gebruik={gebruikVan(element.id, diagrams)}
+            actiefDiagramId={actief}
+            onOpen={(did) => {
+              useStore.getState().setActiefDiagram(did);
+              menuBus.emit("studio:open-diagram", { profielId: id, diagramId: did });
             }}
           />
         )}

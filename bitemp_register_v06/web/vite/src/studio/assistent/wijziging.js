@@ -360,6 +360,28 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     })
     .filter(Boolean);
 
+  // ── 7. Weghalen (AI-2 stap 2): een element met zijn connectoren uit het model en van alle
+  // diagrammen (knopen en lijndata), en uit de boom; een relatie alleen zelf. ──
+  const wis = {}; // profielId → ids
+  const plaatsingWis = [];
+  for (const v of plan.verwijderen || []) {
+    const alle = { ...huidig(v.profielId).elements, ...bij(v.profielId).elements };
+    const ids = new Set([v.id]);
+    if (v.soort === "element") {
+      for (const e of Object.values(alle)) if (e?.source && (e.source === v.id || e.target === v.id)) ids.add(e.id);
+      plaatsingWis.push(`el::${v.profielId}::${v.id}`);
+    }
+    (wis[v.profielId] ||= []).push(...ids);
+    for (const id of ids) delete bij(v.profielId).elements[id];
+    const diagrams = { ...huidig(v.profielId).diagrams, ...bij(v.profielId).diagrams };
+    for (const d of Object.values(diagrams)) {
+      const nodes = (d.nodes || []).filter((n) => !ids.has(n.elementId));
+      const lijnen = d.lijnen ? Object.fromEntries(Object.entries(d.lijnen).filter(([k]) => !ids.has(k))) : null;
+      const lijnenWeg = lijnen && Object.keys(lijnen).length !== Object.keys(d.lijnen).length;
+      if (nodes.length !== (d.nodes || []).length || lijnenWeg) bij(v.profielId).diagrams[d.id] = { ...d, nodes, ...(lijnen ? { lijnen } : {}) };
+    }
+  }
+
   // ── Samenvatting ──
   const nEl = plan.elementen.length;
   const nRel = plan.connectoren.length;
@@ -373,6 +395,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   if (plan.leden?.length) delen.push(`${plan.leden.length} in een container gezet`);
   if (uitgelijnd.size) delen.push(`${uitgelijnd.size === 1 ? "diagram" : `${uitgelijnd.size} diagrammen`} opnieuw opgesteld`);
   if (links.length) delen.push(`${links.length} verband${links.length === 1 ? "" : "en"}`);
+  if (plan.verwijderen?.length) delen.push(`${plan.verwijderen.length} weggehaald`);
 
   return {
     mappen,
@@ -381,6 +404,8 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     links,
     openen,
     zonderDiagram,
+    wis,
+    plaatsingWis,
     samenvatting: delen.length ? delen.join(", ") : "geen wijzigingen",
   };
 }
@@ -393,12 +418,17 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
 export function naarOps(w) {
   const ops = [];
   for (const m of w.mappen) ops.push({ store: "structuur", op: "nieuweMap", args: [m.naam, m.ouderId, m.id] });
-  for (const [profielId, p] of Object.entries(w.profielen)) {
-    if (Object.keys(p.elements).length) ops.push({ store: `model:${profielId}`, op: "patchElementen", args: [{ zet: p.elements, wis: [] }] });
+  const wis = w.wis || {};
+  for (const profielId of new Set([...Object.keys(w.profielen), ...Object.keys(wis)])) {
+    const p = w.profielen[profielId] || { elements: {}, diagrams: {} };
+    const weg = wis[profielId] || [];
+    // Eerst de diagrammen zonder de knopen, dan de elementen weg (volgorde maakt bij naspelen niet uit).
     if (Object.keys(p.diagrams).length) ops.push({ store: `model:${profielId}`, op: "patchDiagrammen", args: [{ zet: p.diagrams, wis: [] }] });
+    if (Object.keys(p.elements).length || weg.length) ops.push({ store: `model:${profielId}`, op: "patchElementen", args: [{ zet: p.elements, wis: weg }] });
   }
   const perMap = {};
   for (const [key, mapId] of Object.entries(w.plaatsing)) (perMap[mapId ?? "null"] ||= []).push(key);
+  for (const key of w.plaatsingWis || []) (perMap["null"] ||= []).push(key);
   if (Object.keys(perMap).length) ops.push({ store: "structuur", op: "plaatsPerMap", args: [perMap] });
   if (w.links.length) ops.push({ store: "kruis", op: "patchLinks", args: [{ zet: w.links, wis: [] }] });
   return ops;

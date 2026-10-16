@@ -178,7 +178,8 @@ export const TOOLS = [
       "elementen: [{sleutel, type, naam, diagram: <sleutel>, in?: <container>, eigenschappen?} | {bestaand: <element-id>, naam?, diagram?}], " +
       "connectoren: [{type, bron, doel, naam?, eigenschappen?}] (bron/doel = sleutel van een nieuw element of id van een bestaand), " +
       "verbanden: [{van, naar, soort: komt voort uit|heeft te maken met|genereert|realiseert}] (tussen talen), " +
-      "opstelling: [{diagram, actie: naast-elkaar|boven-elkaar|verdeel-horizontaal|verdeel-verticaal|links|rechts|boven|onder|automatisch, elementen?}]}. " +
+      "opstelling: [{diagram, actie: naast-elkaar|boven-elkaar|verdeel-horizontaal|verdeel-verticaal|links|rechts|boven|onder|automatisch, elementen?}], " +
+      "verwijderen: [<id van een bestaand element of relatie>] (weg uit het model en van alle diagrammen)}. " +
       "`map` op een diagram = (nieuwe) submap van de doelmap, of de naam/het id van een element dat een uitwerking kan dragen (bv. een use case; zie modeltalen): dan hangt het diagram daaronder. Kijk eerst met modeltalen en project_bekijken.",
     inputSchema: {
       type: "object",

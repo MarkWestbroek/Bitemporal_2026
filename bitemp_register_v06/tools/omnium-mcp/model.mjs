@@ -185,6 +185,7 @@ export function wijzigingTekst({ project, map, plan, wijziging, bestaand, verstu
   for (const c of plan.connectoren) r.push(`+ ${c.type}: ${naam(c.bron)} → ${naam(c.doel)}`);
   for (const h of plan.hernoemd) r.push(`~ hernoemd: ${h.oud} → ${h.naam}`);
   for (const l of plan.leden || []) r.push(`~ ${naam({ id: l.id })} in ${naam(l.in)}`);
+  for (const v of plan.verwijderen || []) r.push(`- weg: ${v.soort === "relatie" ? `${v.type} ${v.id}` : `${v.naam || v.id} (${v.id})`}`);
   for (const o of plan.opstelling || []) r.push(`~ opstelling ${o.actie}${o.elementen.length ? `: ${o.elementen.map(naam).join(", ")}` : " (alles)"}`);
   for (const v of plan.verbanden) r.push(`+ verband: ${naam(v.van)} ${v.soort} ${naam(v.naar)}`);
   if (plan.opmerkingen.length) r.push("", "Bijgestuurd:", ...plan.opmerkingen.map((x) => `- ${x}`));

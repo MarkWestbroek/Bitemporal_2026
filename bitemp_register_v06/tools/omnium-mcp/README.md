@@ -39,7 +39,8 @@ Het plan:
  "diagrammen": [{"sleutel": "d1", "taal": "usecase05", "naam": "…", "map": "Submap"}, {"sleutel": "d2", "bestaand": "<diagram-id>"}],
  "elementen": [{"sleutel": "u1", "type": "usecase", "naam": "…", "diagram": "d1", "in": "<container>"}, {"bestaand": "<element-id>", "naam": "nieuwe naam"}],
  "connectoren": [{"type": "associatie", "bron": "a1", "doel": "<bestaand id>"}],
- "verbanden": [{"van": "x1", "naar": "u1", "soort": "realiseert"}]}
+ "verbanden": [{"van": "x1", "naar": "u1", "soort": "realiseert"}],
+ "verwijderen": ["<id van een bestaand element of een bestaande relatie>"]}
 ```
 
 Vereisten: de Studio-code in `web/vite` moet zijn afhankelijkheden hebben (`npm install` daar).

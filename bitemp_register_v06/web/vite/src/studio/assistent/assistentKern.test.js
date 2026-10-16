@@ -323,6 +323,42 @@ test("uitwerking (M3): samenvatting, prompt, bestaandInMap en een diagram onder 
   assert.equal(w.plaatsing[`el::activity05::${begin.id}`], "el::usecase05::e_test");
 });
 
+test("verwijderen (AI-2 stap 2): element met zijn relaties uit model, diagrammen en boom; relatie los; onbekend id → probleem", () => {
+  const stand = {
+    mappen: { m1: { id: "m1", naam: "Test", ouderId: null } },
+    plaatsing: { "usecase05::d_uc": "m1", "el::usecase05::e_gebr": "m1", "el::usecase05::e_test": "m1" },
+    profielen: { usecase05: {
+      elements: {
+        e_gebr: { id: "e_gebr", naam: "gebruiker", elementType: "actor" },
+        e_test: { id: "e_test", naam: "test", elementType: "usecase" },
+        e_rel: { id: "e_rel", naam: "", elementType: "associatie", source: "e_gebr", target: "e_test" },
+      },
+      diagrams: { d_uc: { id: "d_uc", naam: "Use case model", nodes: [{ elementId: "e_gebr", position: { x: 0, y: 0 } }, { elementId: "e_test", position: { x: 200, y: 0 } }], lijnen: { e_rel: { knikken: [] } } } },
+    } },
+  };
+  const b = bestaandInMap(stand, "m1", ["usecase05"]);
+  assert.equal(b[0].relaties.length, 1);
+  const plan = controleerPlan({ uitleg: "", diagrammen: [], elementen: [], connectoren: [{ type: "associatie", bron: "e_gebr", doel: "e_test" }], verwijderen: ["e_gebr", "zz"] }, [uc], b);
+  assert.deepEqual(plan.verwijderen.map((v) => [v.id, v.soort]), [["e_gebr", "element"]]);
+  assert.equal(plan.connectoren.length, 0, "een relatie naar iets dat weggaat vervalt");
+  assert.match(plan.problemen.join(" | "), /zz bestaat niet/);
+  const w = maakWijziging(plan, stand, { mapId: "m1", samenvattingen: [uc], nu: 1 });
+  assert.deepEqual(w.wis.usecase05.sort(), ["e_gebr", "e_rel"], "de actor én zijn associatie");
+  assert.deepEqual(w.profielen.usecase05.diagrams.d_uc.nodes.map((n) => n.elementId), ["e_test"]);
+  assert.deepEqual(Object.keys(w.profielen.usecase05.diagrams.d_uc.lijnen), []);
+  assert.deepEqual(w.plaatsingWis, ["el::usecase05::e_gebr"]);
+  assert.match(w.samenvatting, /1 weggehaald/);
+  const ops = naarOps(w);
+  assert.deepEqual(ops.map((o) => `${o.store}:${o.op}`), ["model:usecase05:patchDiagrammen", "model:usecase05:patchElementen", "structuur:plaatsPerMap"]);
+  assert.deepEqual(ops[1].args[0].wis.sort(), ["e_gebr", "e_rel"]);
+  assert.deepEqual(ops[2].args[0], { null: ["el::usecase05::e_gebr"] });
+  // Alleen de relatie weg: element blijft.
+  const plan2 = controleerPlan({ uitleg: "", diagrammen: [], elementen: [], connectoren: [], verwijderen: ["e_rel"] }, [uc], b);
+  const w2 = maakWijziging(plan2, stand, { mapId: "m1", samenvattingen: [uc], nu: 1 });
+  assert.deepEqual(w2.wis.usecase05, ["e_rel"]);
+  assert.deepEqual(w2.plaatsingWis, []);
+});
+
 test("leesAntwoord: kale JSON, codeblok of tekst eromheen", () => {
   assert.deepEqual(leesAntwoord('{"a":1}'), { a: 1 });
   assert.deepEqual(leesAntwoord('Hier:\n```json\n{"a":2}\n```'), { a: 2 });
