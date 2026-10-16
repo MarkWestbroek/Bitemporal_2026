@@ -226,6 +226,45 @@ te wijzigen.
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 >
+> **Meldingen app 16-10 (#4, #7, #8):** velden in het assistent-plan (`velden` op nieuwe en
+> `bestaand`-elementen; `veldCompartimenten` kent nu ook `viewer: "waarde"` — enumeratiewaarden,
+> literals; `profielSamenvatting.elementen[].velden`; `wijziging.voegVeldenToe`); *op raster*
+> (`useStudioStore.opRaster` → `DiagramCanvas` `snapToGrid`/`snapGrid` 16, plaatsen afgerond;
+> knop # in Uitlijnen); documentdiagram `schets.lijnTussen` (recht bij overlap) en
+> uiteinde-labels via de `edgeLabels`-hook; sjabloontaal `{{#if lijst params}}`.
+>
+> **Gedeelde plaatjes (2026-10-16, Mark — Confluence):** Confluence Cloud laat data-URI-plaatjes
+> bij plakken weg, maar houdt een extern `<img>` als link (getest 16-10 op
+> commongroundprogramma.atlassian.net: het adres bleef `omnium-ide.nl`). Geen CORS (een `<img>` valt
+> er niet onder) en geen domein-goedkeuring nodig in Confluence Cloud.
+> - **Server** (`handlers/studio_beeld_handler.go`, tabel `studio_gedeeld_beeld`):
+>   `POST/GET /api/studio/projecten/:id/beelden`, `DELETE …/beelden/:token`, openbaar
+>   `GET /api/beeld/<token>.png` (token 24 bytes base64url = de toegang; `Cross-Origin-Resource-Policy:
+>   cross-origin`, `noindex`). Momentopname: zelfde PNG-hash = zelfde adres, `immutable`.
+>   Actueel: één rij per project+profiel+diagram (gedeeltelijke unieke index), `no-cache` + ETag;
+>   `alleen_bijwerken` geeft 404 als het adres ingetrokken is. Rechten: lezen op het project om te
+>   delen; intrekken door wie deelde of wie schrijven mag. Project weg = plaatjes weg.
+> - **Opslag** zoals de bijlagen van meldingen: de PNG in **MinIO** (`beelden/<token>.png`) als de
+>   filestore beschikbaar is (VPS), anders in de kolom `inhoud`. De tabel is plumbing, geen
+>   register-domein. **Geen versies**: een actueel plaatje overschrijft het vorige object;
+>   intrekken verwijdert het object, de rij blijft (wie, wat, wanneer ingetrokken). Later, na FTV:
+>   de metadata als register-entiteit (rechten via beleid, historie), de bytes blijven in MinIO.
+> - **Studio maakt de PNG** (de render-sidecar kent alleen V3): dezelfde `schets.js` als de
+>   documenten, `svgNaarPng` op schaal 2. `documentContext.svgVan` merkt elke `<svg>` met
+>   `data-omnium-profiel/-diagram/-naam` (`rijkKopieren.merkHerkomst`/`svgHerkomst`), zodat de
+>   kopieerknop per diagram een adres vraagt (`gedeeldeBeelden.deelSvg`).
+> - **Bijwerken** (`gedeeldeBeelden.startBeeldWachter`, gestart in modellerenActivity bij een
+>   project op de server): luistert naar de profielstores met een actueel plaatje, tekent na
+>   4 s stilte opnieuw en stuurt alleen wat veranderd is (kern: `gedeeldeBeeldenKern.js`). Bij
+>   openen één keer, voor wijzigingen buiten Studio om (MCP). Dus: bijgewerkt zolang iemand het
+>   project open heeft.
+> - **Klembord**: de `ClipboardItem` krijgt beloftes, zodat de klik geldig blijft terwijl de
+>   plaatjes uploaden. `text/plain` bevat dan `![Diagram n](adres)`.
+> - UI: keuzelijst naast *Kopieer voor Teams/Confluence* (onthouden in localStorage
+>   `studio-kopieer-plaatjes`), `GedeeldeBeeldenPaneel.jsx`, canvas-rechtsklik *Kopieer als
+>   plaatje-link*. Tests: `handlers/studio_beeld_handler_test.go`, `gedeeldeBeeldenKern.test.js`,
+>   e2e `29-studio-plaatje-link`.
+>
 > **Gebruik van een element (2026-10-16, melding #5):** `diagramcore/model/gebruik.js`
 > (`gebruikVan`, `gebruikteIds`; gebruikt = knoop op een diagram, ingebed telt mee),
 > `diagramcore/inspector/GebruikPaneel.jsx` onder de relaties; cursief in `ElementRegel`

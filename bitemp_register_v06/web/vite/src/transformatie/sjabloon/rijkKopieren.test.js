@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { svgMaat, svgNaarAfbeeldingen, markdownZonderSvg } from "./rijkKopieren.js";
+import { svgMaat, svgNaarAfbeeldingen, markdownZonderSvg, merkHerkomst, svgHerkomst } from "./rijkKopieren.js";
 
 const svgA = '<svg width="400" height="200" viewBox="0 0 400 200"><title>Overzicht</title><rect/></svg>';
 const svgB = '<svg viewBox="0 0 1800 900"><rect/></svg>';
@@ -24,4 +24,14 @@ test("svgNaarAfbeeldingen: elke svg wordt een img met data-URL, max 900 breed, a
 
 test("markdownZonderSvg: platte tekst zonder SVG-code", () => {
   assert.equal(markdownZonderSvg(`# Doc\n${svgA}\ntekst\n${svgB}`), "# Doc\n[Diagram 1]\ntekst\n[Diagram 2]");
+});
+
+test("merkHerkomst/svgHerkomst: profiel, diagram en naam heen en terug; ongemerkt = null", () => {
+  const gemerkt = merkHerkomst(svgA, { profielId: "usecase05", diagramId: "d_1", naam: 'Klant & "Order"' });
+  assert.match(gemerkt, /^<svg data-omnium-profiel="usecase05" data-omnium-diagram="d_1"/);
+  assert.deepEqual(svgHerkomst(gemerkt), { profielId: "usecase05", diagramId: "d_1", naam: 'Klant & "Order"' });
+  assert.equal(svgHerkomst(svgA), null);
+  assert.equal(merkHerkomst(svgA, {}), svgA);
+  // Het merk verandert de maat en het rasteren niet.
+  assert.deepEqual(svgMaat(gemerkt), svgMaat(svgA));
 });

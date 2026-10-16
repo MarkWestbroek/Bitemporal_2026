@@ -19,6 +19,7 @@ import { getShape, alleShapeIds } from "../../diagramcore/shapes/shapeRegistry.j
 import { TypeIcoon, alleIcoonIds } from "../../diagramcore/shapes/typeIconen.jsx";
 import { slug } from "./profielOntwerp.js";
 import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
+import { ReactFlowProvider } from "@xyflow/react";
 
 /** Alle bruikbare shape-ids — bij render (de registry vult zich bij import). */
 const shapeOpties = () => alleShapeIds().filter((id) => !["anker", "edge"].includes(id));
@@ -40,7 +41,12 @@ function ShapePreview({ shapeId, kleur }) {
       title={shapeId || "class-box"}
     >
       <div style={{ position: "absolute", top: 1, left: 1, width: 150, height: 72, transform: "scale(0.34)", transformOrigin: "top left" }}>
-        {Shape ? <Shape element={el} elementType={et} selected={false} fieldTypesById={{}} compartmentTypesById={{}} /> : null}
+        {/* Eigen React Flow-context: vormen als de levenslijn lezen de canvas-store (16-10). */}
+        {Shape ? (
+          <ReactFlowProvider>
+            <Shape element={el} elementType={et} selected={false} fieldTypesById={{}} compartmentTypesById={{}} />
+          </ReactFlowProvider>
+        ) : null}
       </div>
     </div>
   );

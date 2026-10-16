@@ -255,6 +255,26 @@ func CreateTables(db *bun.DB) error {
 		}
 	}
 
+	// Gedeelde plaatjes (diagram als PNG op een onraadbaar adres, handlers/studio_beeld_handler.go):
+	// één actueel adres per diagram, afgedwongen met een gedeeltelijke unieke index.
+	if _, err = db.NewCreateTable().Model((*model.StudioGedeeldBeeld)(nil)).IfNotExists().Exec(ctx); err != nil {
+		return err
+	}
+	// Tabellen van vóór de MinIO-opslag (alleen lokaal/test): object_key erbij, inhoud mag leeg.
+	if _, err = db.ExecContext(ctx, `ALTER TABLE studio_gedeeld_beeld ADD COLUMN IF NOT EXISTS object_key VARCHAR`); err != nil {
+		return err
+	}
+	if _, err = db.ExecContext(ctx, `ALTER TABLE studio_gedeeld_beeld ALTER COLUMN inhoud DROP NOT NULL`); err != nil {
+		return err
+	}
+	if _, err = db.ExecContext(ctx, `CREATE UNIQUE INDEX IF NOT EXISTS idx_studio_gedeeld_beeld_actueel
+		ON studio_gedeeld_beeld (project_id, profiel_id, diagram_id) WHERE soort = 'actueel' AND ingetrokken_op IS NULL`); err != nil {
+		return err
+	}
+	if _, err = db.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS idx_studio_gedeeld_beeld_project ON studio_gedeeld_beeld (project_id)`); err != nil {
+		return err
+	}
+
 	// Seed: "register" als standaard domein
 	_, err = db.NewInsert().
 		Model(&model.SchemaDomein{

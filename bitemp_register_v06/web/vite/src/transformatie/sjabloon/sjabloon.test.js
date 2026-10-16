@@ -166,3 +166,30 @@ test("schetsMaat: ovaal en actor zonder opgeslagen maat rekenen zoals het canvas
   // Opgeslagen maat wint altijd.
   assert.deepEqual([schetsMaat({ size: { width: 333, height: 77 } }, { naam: "x" }, uc).w, schetsMaat({ size: { width: 333, height: 77 } }, { naam: "x" }, uc).h], [333, 77]);
 });
+
+test("schets (melding #8): naast elkaar = horizontale lijn, boven elkaar = verticale; kardinaliteit bij het uiteinde", () => {
+  const descriptor = { id: "t", elementTypes: [
+    { id: "klasse", shape: "class-box" },
+    { id: "assoc", isConnector: true, hooks: { edgeLabels: (c) => ({ kaal: c.data?.doelKardinaliteit ? [{ zijde: "doel", delen: [{ tekst: c.data.doelKardinaliteit }] }] : [] }) } },
+  ] };
+  const elements = {
+    a: { id: "a", naam: "pakket", elementType: "klasse", compartimenten: [{ velden: [{ naam: "x" }, { naam: "y" }, { naam: "z" }] }] },
+    b: { id: "b", naam: "opties", elementType: "klasse", compartimenten: [] },
+    c: { id: "c", naam: "onder", elementType: "klasse", compartimenten: [] },
+    ab: { id: "ab", elementType: "assoc", source: "a", target: "b", data: { doelKardinaliteit: "0..*" } },
+    ac: { id: "ac", elementType: "assoc", source: "a", target: "c" },
+  };
+  const diagram = { nodes: [
+    { elementId: "a", position: { x: 0, y: 100 }, size: { width: 180, height: 106 } },
+    { elementId: "b", position: { x: 300, y: 110 }, size: { width: 180, height: 88 } },
+    { elementId: "c", position: { x: 20, y: 400 }, size: { width: 160, height: 70 } },
+  ] };
+  const svg = schetsDiagramSvg({ diagram, elements, descriptor });
+  const lijnen = [...svg.matchAll(/<line x1="([\d.-]+)" y1="([\d.-]+)" x2="([\d.-]+)" y2="([\d.-]+)"/g)].map((m) => m.slice(1).map(Number));
+  const horizontaal = lijnen.find(([x1, , x2]) => x1 === 180 && x2 === 300);
+  assert.ok(horizontaal, "lijn van rechterrand pakket naar linkerrand opties");
+  assert.equal(horizontaal[1], horizontaal[3], "horizontaal: y1 === y2");
+  const verticaal = lijnen.find(([, y1, , y2]) => y1 === 206 && y2 === 400);
+  assert.ok(verticaal && verticaal[0] === verticaal[2], "verticaal: x1 === x2");
+  assert.match(svg, />0\.\.\*</, "kardinaliteit getekend");
+});

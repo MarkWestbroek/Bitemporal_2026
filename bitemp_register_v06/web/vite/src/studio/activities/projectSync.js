@@ -213,3 +213,12 @@ export const haalWerkruimteOp = (id) => roep(`/api/studio/projecten/${encodeURIC
 /** Laatste schrijver wint op `bijgewerkt` (ISO). → {bijgewerkt, overgenomen} */
 export const slaWerkruimteOp = (id, { inhoud, bijgewerkt }) =>
   roep(`/api/studio/projecten/${encodeURIComponent(id)}/werkruimte`, { methode: "PUT", body: { inhoud, bijgewerkt } });
+
+// Gedeelde plaatjes (handlers/studio_beeld_handler.go): een diagram als PNG op een onraadbaar
+// adres voor Confluence en wiki's. Zie studio/gedeeldeBeelden.js.
+/** @param {{profiel_id:string, diagram_id:string, diagram_naam?:string, soort:"momentopname"|"actueel", png:string, breedte?:number, hoogte?:number, alleen_bijwerken?:boolean}} invoer */
+export const deelBeeld = (id, invoer) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/beelden`, { methode: "POST", body: invoer });
+export const lijstBeelden = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}/beelden`);
+export const trekBeeldIn = (id, token) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/beelden/${encodeURIComponent(token)}`, { methode: "DELETE" });

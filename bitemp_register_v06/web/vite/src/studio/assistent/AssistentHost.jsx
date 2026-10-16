@@ -117,10 +117,13 @@ function Voorstel({ voorstel, talen }) {
       {plan.verwijderen?.length > 0 && (
         <p className="ast-weg"><strong>Weg:</strong> {plan.verwijderen.map((v) => (v.soort === "relatie" ? `${typeLabel(v.profielId, v.type)} ${v.id}` : v.naam || v.id)).join(", ")}</p>
       )}
+      {plan.veldenBij?.length > 0 && plan.veldenBij.map((v) => (
+        <p key={v.id}><strong>{v.naam || v.id}, {v.soort === "waarde" ? "waarden" : "velden"} erbij:</strong> {v.velden.map((x) => (x.type ? `${x.naam}: ${x.type}` : x.naam)).join(", ")}</p>
+      ))}
       {plan.hernoemd.length > 0 && <p><strong>Hernoemd:</strong> {plan.hernoemd.map((h) => `${h.oud} → ${h.naam}`).join(", ")}</p>}
       {plan.verbanden.length > 0 && <p><strong>Verbanden:</strong> {plan.verbanden.map((v) => `${naam(v.van)} ${v.soort} ${naam(v.naar)}`).join("; ")}</p>}
       {plan.opmerkingen.length > 0 && <ul className="ast-opmerkingen">{plan.opmerkingen.map((o, i) => <li key={i}>{o}</li>)}</ul>}
-      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && !plan.verwijderen?.length && (
+      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && !plan.verwijderen?.length && !plan.veldenBij?.length && (
         // Eerlijk (melding #11): de uitleg kan iets beloven wat de assistent niet kan.
         <p className="ast-niets" data-testid="assistent-niets">Dit voorstel verandert niets. De assistent kan elementen, relaties, diagrammen en mappen maken, hernoemen, in een kader zetten, uitlijnen, verbanden leggen en elementen of relaties weghalen — geen diagrammen of mappen weghalen.</p>
       )}

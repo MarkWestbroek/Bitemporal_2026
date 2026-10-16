@@ -16,6 +16,26 @@ import { markdownMetAfbeeldingen } from "../../transformatie/sjabloon/markdownMe
 import { markdownNaarHtml } from "../../transformatie/sjabloon/markdownNaarHtml.js";
 import { svgNaarAfbeeldingen, svgNaarPng, markdownZonderSvg } from "../../transformatie/sjabloon/rijkKopieren.js";
 import { maakZip } from "../../transformatie/sjabloon/zip.js";
+import { useModellerenStore } from "./modellerenActivity.jsx";
+import { deelSvg, klembordFout } from "../gedeeldeBeelden.js";
+import { GedeeldeBeeldenPaneel } from "../GedeeldeBeeldenPaneel.jsx";
+
+// Hoe de plaatjes meegaan bij "Kopieer voor Teams/Confluence" (gedeelde plaatjes, 16-10):
+// ingebed werkt in Teams, Word en Outlook; Confluence laat ingebedde plaatjes weg en wil een link.
+const PLAATJES = [
+  { id: "ingebed", label: "Plaatjes ingebed (Teams, Word, Outlook)" },
+  { id: "momentopname", label: "Plaatjes als link — momentopname (Confluence)" },
+  { id: "actueel", label: "Plaatjes als link — houd up to date (Confluence)" },
+];
+const PLAATJES_SLEUTEL = "studio-kopieer-plaatjes";
+function leesPlaatjesKeuze() {
+  try {
+    const v = globalThis.localStorage?.getItem(PLAATJES_SLEUTEL);
+    return PLAATJES.some((p) => p.id === v) ? v : "ingebed";
+  } catch {
+    return "ingebed";
+  }
+}
 
 export const useDocumentStore = create((set) => ({
   open: false,
@@ -49,6 +69,12 @@ export function DocumentVoorbeeldHost() {
   const sluit = useDocumentStore((s) => s.sluit);
   const iframeRef = React.useRef(null);
   const [melding, setMelding] = React.useState("");
+  const [plaatjes, setPlaatjes] = React.useState(leesPlaatjesKeuze);
+  const [beheer, setBeheer] = React.useState(false);
+  const projectId = useModellerenStore((s) => s.project.id);
+  const opServer = useModellerenStore((s) => s.project.serverVersie != null);
+  // Links kunnen alleen voor een project op de server; anders valt de keuze terug op ingebed.
+  const plaatjesNu = opServer ? plaatjes : "ingebed";
   React.useEffect(() => {
     if (!open) return;
     const esc = (e) => e.key === "Escape" && sluit();
@@ -103,29 +129,95 @@ export function DocumentVoorbeeldHost() {
             style={knop}
             data-testid="kopieer-rijk"
             title="Opgemaakte tekst met de diagrammen als afbeelding — om te plakken in Teams, Confluence, Word of Outlook"
-            onClick={async () => {
+            onClick={() => {
+              // Eerst: kan dit hier wel? Anders blijft de melding "klaarzetten" staan (16-10).
+              const fout = klembordFout();
+              if (fout) {
+                setMelding(fout);
+                setTimeout(() => setMelding(""), 8000);
+                return;
+              }
               try {
-                const fragment = await svgNaarAfbeeldingen(markdownNaarHtml(markdown), svgNaarPng);
+                // Als link: elk diagram krijgt een eigen adres op de server; een plaatje zonder
+                // herkomst (geen diagram uit dit project) gaat ingebed mee.
+                const adressen = [];
+                const rasteriseer =
+                  plaatjesNu === "ingebed"
+                    ? svgNaarPng
+                    : async (svg, maat) => {
+                        const adres = await deelSvg(projectId, svg, plaatjesNu);
+                        adressen.push(adres);
+                        return adres || svgNaarPng(svg, maat);
+                      };
+                if (plaatjesNu !== "ingebed") setMelding("Plaatjes klaarzetten op de server…");
+                const fragment = svgNaarAfbeeldingen(markdownNaarHtml(markdown), rasteriseer);
+                // Het klembord vraagt een verse klik ("user activation"). Uploaden kan langer duren dan
+                // die geldig blijft, dus gaat de ClipboardItem meteen mee, met beloftes als inhoud.
+                let n = 0;
+                const platteTekst = fragment.then(() =>
+                  plaatjesNu === "ingebed"
+                    ? markdownZonderSvg(markdown)
+                    : markdown.replace(/<svg\b[\s\S]*?<\/svg>/g, () => {
+                        n += 1;
+                        const adres = adressen[n - 1];
+                        return adres ? `![Diagram ${n}](${adres})` : `[Diagram ${n}]`;
+                      })
+                );
                 const item = new ClipboardItem({
-                  "text/html": new Blob([fragment], { type: "text/html" }),
-                  "text/plain": new Blob([markdownZonderSvg(markdown)], { type: "text/plain" }),
+                  "text/html": fragment.then((f) => new Blob([f], { type: "text/html" })),
+                  "text/plain": platteTekst.then((t) => new Blob([t], { type: "text/plain" })),
                 });
-                await navigator.clipboard.write([item]);
-                setMelding("Gekopieerd voor Teams/Confluence: plak het daar met Ctrl+V.");
+                navigator.clipboard
+                  .write([item])
+                  .then(() => {
+                    const links = adressen.filter(Boolean).length;
+                    setMelding(
+                      plaatjesNu === "ingebed"
+                        ? "Gekopieerd voor Teams/Confluence: plak het daar met Ctrl+V."
+                        : `Gekopieerd met ${links} plaatje${links === 1 ? "" : "s"} als link${plaatjesNu === "actueel" ? " (houdt zich up to date)" : ""}. Wie de link heeft, ziet het plaatje; intrekken kan onder "Gedeelde plaatjes".`
+                    );
+                  })
+                  .catch((e) => setMelding(`Kopiëren mislukt: ${e?.message || e}`))
+                  .finally(() => setTimeout(() => setMelding(""), plaatjesNu === "ingebed" ? 3500 : 8000));
               } catch (e) {
                 setMelding(`Kopiëren mislukt: ${e?.message || e}`);
               }
-              setTimeout(() => setMelding(""), 3500);
             }}
           >
             Kopieer voor Teams/Confluence
           </button>
+          <select
+            data-testid="kopieer-plaatjes"
+            value={plaatjesNu}
+            title={opServer ? "Hoe gaan de diagrammen mee bij het kopiëren?" : "Plaatjes als link kan alleen voor een project op de server"}
+            onChange={(e) => {
+              setPlaatjes(e.target.value);
+              try {
+                globalThis.localStorage?.setItem(PLAATJES_SLEUTEL, e.target.value);
+              } catch {
+                /* geen opslag: de keuze geldt deze sessie */
+              }
+            }}
+            style={{ ...knop, padding: "4px 6px", maxWidth: 230 }}
+          >
+            {PLAATJES.map((p) => (
+              <option key={p.id} value={p.id} disabled={p.id !== "ingebed" && !opServer}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+          {opServer && (
+            <button style={knop} data-testid="gedeelde-plaatjes" onClick={() => setBeheer((b) => !b)} title="Plaatjes van dit project die als link gedeeld zijn: adres kopiëren of intrekken">
+              Gedeelde plaatjes
+            </button>
+          )}
           <button style={knop} onClick={() => iframeRef.current?.contentWindow?.print()} title="Afdrukken of als PDF bewaren">
             Afdrukken…
           </button>
           <button style={knop} onClick={sluit} aria-label="Sluiten">×</button>
         </div>
-        {melding && <div style={{ padding: "4px 12px", fontSize: 12, color: "var(--s-fg-muted)" }}>{melding}</div>}
+        {melding && <div data-testid="document-melding" style={{ padding: "4px 12px", fontSize: 12, color: "var(--s-fg-muted)" }}>{melding}</div>}
+        {beheer && opServer && <GedeeldeBeeldenPaneel projectId={projectId} onSluit={() => setBeheer(false)} />}
         <iframe
           ref={iframeRef}
           title={titel}

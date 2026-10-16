@@ -2541,6 +2541,13 @@
       "meervoud",
       "materieel",
       "entiteitSubtype"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "attribuut"
+      }
      ]
     },
     {
@@ -2553,11 +2560,25 @@
       "meervoud",
       "naamLabelHeen",
       "naamLabelTerug"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "attribuut"
+      }
      ]
     },
     {
      "id": "enumeratie",
-     "label": "Enumeratie"
+     "label": "Enumeratie",
+     "velden": [
+      {
+       "id": "waarden",
+       "soort": "waarde",
+       "fieldType": "waarde"
+      }
+     ]
     },
     {
      "id": "gegevenstype",
@@ -2566,11 +2587,25 @@
       "validatie",
       "normalisatie",
       "weergave"
+     ],
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
      ]
     },
     {
      "id": "referentielijstInstantie",
-     "label": "Referentielijst-instantie"
+     "label": "Referentielijst-instantie",
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
+     ]
     },
     {
      "id": "package",
@@ -2871,6 +2906,13 @@
      "eigenschappen": [
       "abstract"
      ],
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
+     ],
      "leden": [
       "component",
       "interface",
@@ -2885,7 +2927,19 @@
     {
      "id": "interface",
      "label": "Interface",
-     "omschrijving": "Aangeboden/benodigde interface; per voorkomen in te klappen tot lollipop."
+     "omschrijving": "Aangeboden/benodigde interface; per voorkomen in te klappen tot lollipop.",
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      },
+      {
+       "id": "operaties",
+       "soort": "attribuut",
+       "fieldType": "operatie"
+      }
+     ]
     },
     {
      "id": "poort",
@@ -2903,6 +2957,13 @@
      "omschrijving": "Fysiek stuk informatie (jar, dll, script, document) dat gedeployd wordt.",
      "eigenschappen": [
       "bestandsnaam"
+     ],
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
      ]
     },
     {
@@ -2913,6 +2974,13 @@
       "bestandsnaam",
       "executionLocation",
       "deploymentLocation"
+     ],
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
      ]
     },
     {
@@ -2920,6 +2988,13 @@
      "label": "Node",
      "omschrijving": "Rekenmiddel (machine, server): sleep artifacts en componenten erin om ze te deployen.",
      "container": "bevat",
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
+     ],
      "leden": [
       "component",
       "interface",
@@ -2936,6 +3011,13 @@
      "label": "Device",
      "omschrijving": "Fysiek apparaat met rekencapaciteit (UML «device»).",
      "container": "bevat",
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
+     ],
      "leden": [
       "component",
       "interface",
@@ -2952,6 +3034,13 @@
      "label": "Execution environment",
      "omschrijving": "Software-omgeving waarin iets draait: OS, app-server, container (UML «executionEnvironment»).",
      "container": "bevat",
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
+     ],
      "leden": [
       "component",
       "interface",
@@ -3217,6 +3306,13 @@
      "eigenschappen": [
       "abstract"
      ],
+     "velden": [
+      {
+       "id": "attributen",
+       "soort": "attribuut",
+       "fieldType": "attribuut"
+      }
+     ],
      "leden": [
       "klasse",
       "part",
@@ -3236,6 +3332,13 @@
       "multipliciteit",
       "instantieVan",
       "isReferentie"
+     ],
+     "velden": [
+      {
+       "id": "attributen",
+       "soort": "attribuut",
+       "fieldType": "attribuut"
+      }
      ],
      "leden": [
       "klasse",
@@ -3267,6 +3370,13 @@
      "label": "Collaboratie",
      "omschrijving": "Samenwerking van rollen (gestippelde ellips); sleep de rollen (parts) erin.",
      "container": "bevat",
+     "velden": [
+      {
+       "id": "attributen",
+       "soort": "attribuut",
+       "fieldType": "attribuut"
+      }
+     ],
      "leden": [
       "klasse",
       "part",
@@ -3283,6 +3393,13 @@
      "eigenschappen": [
       "typeLabel",
       "instantieVan"
+     ],
+     "velden": [
+      {
+       "id": "attributen",
+       "soort": "attribuut",
+       "fieldType": "attribuut"
+      }
      ]
     },
     {
@@ -3520,7 +3637,19 @@
     {
      "id": "entiteit",
      "label": "Entiteit",
-     "omschrijving": "Een ding waarover je gegevens vastlegt; de sleutel staat boven de streep."
+     "omschrijving": "Een ding waarover je gegevens vastlegt; de sleutel staat boven de streep.",
+     "velden": [
+      {
+       "id": "sleutel",
+       "soort": "attribuut",
+       "fieldType": "kolom"
+      },
+      {
+       "id": "kolommen",
+       "soort": "attribuut",
+       "fieldType": "kolom"
+      }
+     ]
     },
     {
      "id": "domein",
@@ -3586,6 +3715,13 @@
       "status",
       "isStandaard",
       "definitieVersie"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "veld"
+      }
      ]
     },
     {
@@ -3595,6 +3731,13 @@
       "context",
       "vorm",
       "vormConfig"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "veld"
+      }
      ]
     },
     {
@@ -3602,6 +3745,13 @@
      "label": "Rij",
      "eigenschappen": [
       "richting"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "veld"
+      }
      ]
     },
     {
@@ -3614,6 +3764,13 @@
       "widget",
       "min",
       "max"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "veld"
+      }
      ]
     },
     {
@@ -3623,6 +3780,13 @@
       "conditieVeld",
       "conditieOp",
       "conditieWaarde"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "veld"
+      }
      ]
     }
    ],
@@ -3672,6 +3836,13 @@
      "eigenschappen": [
       "beschrijving",
       "directives"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "veld"
+      }
      ]
     },
     {
@@ -3680,6 +3851,13 @@
      "eigenschappen": [
       "beschrijving",
       "directives"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "veld"
+      }
      ]
     },
     {
@@ -3696,6 +3874,13 @@
      "eigenschappen": [
       "beschrijving",
       "directives"
+     ],
+     "velden": [
+      {
+       "id": "waarden",
+       "soort": "waarde",
+       "fieldType": "literal"
+      }
      ]
     },
     {
@@ -3704,6 +3889,13 @@
      "eigenschappen": [
       "beschrijving",
       "directives"
+     ],
+     "velden": [
+      {
+       "id": "velden",
+       "soort": "attribuut",
+       "fieldType": "inputveld"
+      }
      ]
     },
     {
@@ -3721,6 +3913,13 @@
       "beschrijving",
       "locaties",
       "herhaalbaar"
+     ],
+     "velden": [
+      {
+       "id": "argumenten",
+       "soort": "attribuut",
+       "fieldType": "inputveld"
+      }
      ]
     },
     {
@@ -3839,6 +4038,13 @@
       "populatie",
       "kwaliteit",
       "indicatieAbstract"
+     ],
+     "velden": [
+      {
+       "id": "attribuutsoorten",
+       "soort": "attribuut",
+       "fieldType": "attribuutsoort"
+      }
      ]
     },
     {
@@ -3851,6 +4057,13 @@
       "toelichting",
       "herkomst",
       "datumOpname"
+     ],
+     "velden": [
+      {
+       "id": "attribuutsoorten",
+       "soort": "attribuut",
+       "fieldType": "attribuutsoort"
+      }
      ]
     },
     {
@@ -3863,6 +4076,13 @@
       "toelichting",
       "herkomst",
       "datumOpname"
+     ],
+     "velden": [
+      {
+       "id": "waarden",
+       "soort": "attribuut",
+       "fieldType": "waarde"
+      }
      ]
     },
     {
@@ -3889,6 +4109,13 @@
       "herkomst",
       "datumOpname",
       "locatie"
+     ],
+     "velden": [
+      {
+       "id": "elementen",
+       "soort": "attribuut",
+       "fieldType": "referentieElement"
+      }
      ]
     },
     {
@@ -3916,6 +4143,13 @@
       "toelichting",
       "herkomst",
       "datumOpname"
+     ],
+     "velden": [
+      {
+       "id": "dataElementen",
+       "soort": "attribuut",
+       "fieldType": "dataElement"
+      }
      ]
     },
     {
@@ -4112,6 +4346,13 @@
       "voorbeeld",
       "patroon",
       "externRef"
+     ],
+     "velden": [
+      {
+       "id": "properties",
+       "soort": "attribuut",
+       "fieldType": "property"
+      }
      ]
     },
     {
@@ -4119,6 +4360,13 @@
      "label": "Enum",
      "eigenschappen": [
       "beschrijving"
+     ],
+     "velden": [
+      {
+       "id": "waarden",
+       "soort": "waarde",
+       "fieldType": "literal"
+      }
      ]
     },
     {
@@ -4131,6 +4379,18 @@
       "beschrijving",
       "tag",
       "verouderd"
+     ],
+     "velden": [
+      {
+       "id": "parameters",
+       "soort": "attribuut",
+       "fieldType": "parameter"
+      },
+      {
+       "id": "responses",
+       "soort": "attribuut",
+       "fieldType": "response"
+      }
      ]
     },
     {
@@ -4249,6 +4509,13 @@
       "instantieVan",
       "klassifierLabel",
       "toestand"
+     ],
+     "velden": [
+      {
+       "id": "slots",
+       "soort": "attribuut",
+       "fieldType": "slot"
+      }
      ]
     },
     {
@@ -4259,6 +4526,13 @@
       "instantieVan",
       "klassifierLabel",
       "toestand"
+     ],
+     "velden": [
+      {
+       "id": "slots",
+       "soort": "attribuut",
+       "fieldType": "slot"
+      }
      ]
     },
     {
@@ -4755,7 +5029,14 @@
      "id": "toestand",
      "label": "Toestand",
      "omschrijving": "Toestand van het systeem, met entry/do/exit-activiteiten.",
-     "uitwerking": true
+     "uitwerking": true,
+     "velden": [
+      {
+       "id": "activiteiten",
+       "soort": "waarde",
+       "fieldType": "activiteit"
+      }
+     ]
     },
     {
      "id": "eind",
@@ -4872,6 +5153,23 @@
      "label": "Blok",
      "omschrijving": "«block» — het bouwsteentype van SysML. Sleep parts erin voor een intern blokdiagram.",
      "container": "bevat-part",
+     "velden": [
+      {
+       "id": "waarden",
+       "soort": "attribuut",
+       "fieldType": "waarde"
+      },
+      {
+       "id": "delen",
+       "soort": "attribuut",
+       "fieldType": "deel"
+      },
+      {
+       "id": "operaties",
+       "soort": "attribuut",
+       "fieldType": "operatie"
+      }
+     ],
      "leden": [
       "part"
      ]
@@ -4881,6 +5179,13 @@
      "label": "Part",
      "omschrijving": "Een deel binnen een blok (ibd): rolnaam : Type. Sleep hem in een blok.",
      "container": "bevat-part",
+     "velden": [
+      {
+       "id": "waarden",
+       "soort": "attribuut",
+       "fieldType": "waarde"
+      }
+     ],
      "leden": [
       "part"
      ]
@@ -4897,22 +5202,50 @@
     {
      "id": "waardetype",
      "label": "Waardetype",
-     "omschrijving": "«valueType» — een waarde zonder identiteit (met eenheid/dimensie)."
+     "omschrijving": "«valueType» — een waarde zonder identiteit (met eenheid/dimensie).",
+     "velden": [
+      {
+       "id": "waarden",
+       "soort": "attribuut",
+       "fieldType": "waarde"
+      }
+     ]
     },
     {
      "id": "interfaceblok",
      "label": "Interfaceblok",
-     "omschrijving": "«interfaceBlock» — wat er over een poort heen gaat."
+     "omschrijving": "«interfaceBlock» — wat er over een poort heen gaat.",
+     "velden": [
+      {
+       "id": "waarden",
+       "soort": "attribuut",
+       "fieldType": "waarde"
+      }
+     ]
     },
     {
      "id": "constraintblok",
      "label": "Constraintblok",
-     "omschrijving": "«constraint» — een vergelijking met parameters (basis voor parametrics)."
+     "omschrijving": "«constraint» — een vergelijking met parameters (basis voor parametrics).",
+     "velden": [
+      {
+       "id": "parameters",
+       "soort": "attribuut",
+       "fieldType": "waarde"
+      }
+     ]
     },
     {
      "id": "enumeratie",
      "label": "Enumeratie",
-     "omschrijving": "«enumeration» — een vaste verzameling waarden."
+     "omschrijving": "«enumeration» — een vaste verzameling waarden.",
+     "velden": [
+      {
+       "id": "literals",
+       "soort": "waarde",
+       "fieldType": "literal"
+      }
+     ]
     },
     {
      "id": "requirement",
@@ -5362,19 +5695,52 @@
      "label": "Klasse",
      "eigenschappen": [
       "abstract"
+     ],
+     "velden": [
+      {
+       "id": "attributen",
+       "soort": "attribuut",
+       "fieldType": "attribuut"
+      },
+      {
+       "id": "operaties",
+       "soort": "attribuut",
+       "fieldType": "operatie"
+      }
      ]
     },
     {
      "id": "interface",
-     "label": "Interface"
+     "label": "Interface",
+     "velden": [
+      {
+       "id": "operaties",
+       "soort": "attribuut",
+       "fieldType": "operatie"
+      }
+     ]
     },
     {
      "id": "enumeratie",
-     "label": "Enumeratie"
+     "label": "Enumeratie",
+     "velden": [
+      {
+       "id": "literals",
+       "soort": "waarde",
+       "fieldType": "literal"
+      }
+     ]
     },
     {
      "id": "datatype",
-     "label": "Datatype"
+     "label": "Datatype",
+     "velden": [
+      {
+       "id": "attributen",
+       "soort": "attribuut",
+       "fieldType": "attribuut"
+      }
+     ]
     },
     {
      "id": "package",
@@ -5767,12 +6133,26 @@
     {
      "id": "service",
      "label": "Service",
-     "omschrijving": "wsdl:service — bundel van ports (elk een binding op een adres)."
+     "omschrijving": "wsdl:service — bundel van ports (elk een binding op een adres).",
+     "velden": [
+      {
+       "id": "ports",
+       "soort": "attribuut",
+       "fieldType": "wsPort"
+      }
+     ]
     },
     {
      "id": "portType",
      "label": "PortType (interface)",
-     "omschrijving": "wsdl:portType — de abstracte interface: operaties met input/output/fault-messages."
+     "omschrijving": "wsdl:portType — de abstracte interface: operaties met input/output/fault-messages.",
+     "velden": [
+      {
+       "id": "operaties",
+       "soort": "attribuut",
+       "fieldType": "wsOperatie"
+      }
+     ]
     },
     {
      "id": "binding",
@@ -5782,12 +6162,26 @@
       "protocol",
       "stijl",
       "transport"
+     ],
+     "velden": [
+      {
+       "id": "operaties",
+       "soort": "attribuut",
+       "fieldType": "wsOperatie"
+      }
      ]
     },
     {
      "id": "message",
      "label": "Message",
-     "omschrijving": "wsdl:message — de parts (elk een XSD-element of -type) van een bericht."
+     "omschrijving": "wsdl:message — de parts (elk een XSD-element of -type) van een bericht.",
+     "velden": [
+      {
+       "id": "parts",
+       "soort": "attribuut",
+       "fieldType": "wsPart"
+      }
+     ]
     },
     {
      "id": "types",
@@ -5951,6 +6345,18 @@
       "abstract",
       "modelGroup",
       "mixed"
+     ],
+     "velden": [
+      {
+       "id": "elementen",
+       "soort": "attribuut",
+       "fieldType": "xsElement"
+      },
+      {
+       "id": "attributen",
+       "soort": "attribuut",
+       "fieldType": "xsAttribute"
+      }
      ]
     },
     {
@@ -5961,6 +6367,13 @@
       "abstract",
       "base",
       "derivation"
+     ],
+     "velden": [
+      {
+       "id": "facets",
+       "soort": "attribuut",
+       "fieldType": "xsFacet"
+      }
      ]
     },
     {
@@ -5971,6 +6384,18 @@
       "abstract",
       "base",
       "derivation"
+     ],
+     "velden": [
+      {
+       "id": "facets",
+       "soort": "attribuut",
+       "fieldType": "xsFacet"
+      },
+      {
+       "id": "waarden",
+       "soort": "waarde",
+       "fieldType": "xsLiteral"
+      }
      ]
     },
     {
@@ -5997,12 +6422,26 @@
      "omschrijving": "Herbruikbare model group (sequence/choice) van elementen.",
      "eigenschappen": [
       "modelGroup"
+     ],
+     "velden": [
+      {
+       "id": "elementen",
+       "soort": "attribuut",
+       "fieldType": "xsElement"
+      }
      ]
     },
     {
      "id": "attributeGroup",
      "label": "attributeGroup",
-     "omschrijving": "Herbruikbare groep attributen."
+     "omschrijving": "Herbruikbare groep attributen.",
+     "velden": [
+      {
+       "id": "attributen",
+       "soort": "attribuut",
+       "fieldType": "xsAttribute"
+      }
+     ]
     },
     {
      "id": "boundary",

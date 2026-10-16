@@ -8,6 +8,8 @@
  *
  *   {{pad}}                       waarde op de context; lijst → ", "-opsomming
  *   {{#if pad}} … {{else}} … {{/if}}      {{#unless pad}} … {{/unless}}
+ *   {{#if lijst type=x richting=uit}} … {{/if}}   waar als de gefilterde lijst niet leeg is
+ *                                 (zelfde filter als #elk; 16-10: lege tabelrijen weglaten)
  *   {{#elk lijst type=x richting=uit sorteer=naam}} … {{/elk}}
  *       lus; in de lus is het item de context, met index/eerste/laatste/aantal
  *   {{svg}}                       een functie op de context wordt aangeroepen
@@ -60,7 +62,9 @@ export function parseSjabloon(tekst) {
     } else if (soort === ">") {
       top().kinderen.push({ type: "deel", naam: rest.trim() });
     } else if (soort === "#if" || soort === "#unless") {
-      const knoop = { type: soort.slice(1), pad: rest.trim(), dan: [], anders: [], _tak: "dan" };
+      const [pad, ...rest2] = rest.trim().split(/\s+/);
+      const params = leesParams(rest2);
+      const knoop = { type: soort.slice(1), pad, params: Object.keys(params).length ? params : null, dan: [], anders: [], _tak: "dan" };
       top().kinderen.push(knoop);
       stapel.push({ type: "blok", kinderen: knoop.dan, eigenaar: knoop });
     } else if (soort === "else") {
@@ -71,12 +75,7 @@ export function parseSjabloon(tekst) {
       stapel.push({ type: "blok", kinderen: eigenaar.anders, eigenaar });
     } else if (soort === "#elk") {
       const [pad, ...rest2] = rest.trim().split(/\s+/);
-      const params = {};
-      for (const p of rest2) {
-        const i = p.indexOf("=");
-        if (i < 0) params[p] = true;
-        else params[p.slice(0, i)] = p.slice(i + 1).replace(/^["']|["']$/g, "");
-      }
+      const params = leesParams(rest2);
       const knoop = { type: "elk", pad, params, kinderen: [] };
       top().kinderen.push(knoop);
       stapel.push({ type: "blok", kinderen: knoop.kinderen, eigenaar: knoop });
@@ -118,6 +117,23 @@ export function naarTekst(w) {
   if (Array.isArray(w)) return w.map(naarTekst).filter((x) => x !== "").join(", ");
   if (typeof w === "object") return w.naam != null ? String(w.naam) : w.label != null ? String(w.label) : "";
   return String(w);
+}
+
+/** `type=x richting=uit` → {type: "x", richting: "uit"} (gedeeld door #elk en #if). */
+function leesParams(delen) {
+  const params = {};
+  for (const p of delen) {
+    const i = p.indexOf("=");
+    if (i < 0) params[p] = true;
+    else params[p.slice(0, i)] = p.slice(i + 1).replace(/^["']|["']$/g, "");
+  }
+  return params;
+}
+
+/** Waarde van een #if/#unless: met params de gefilterde lijst (niet leeg = waar). */
+function voorwaarde(scopes, k) {
+  const w = zoekWaarde(scopes, k.pad);
+  return k.params ? filterLijst(w, k.params).length > 0 : waar(w);
 }
 
 function waar(w) {
@@ -163,8 +179,8 @@ function renderKnopen(knopen, scopes, opties, diepte) {
   for (const k of knopen) {
     if (k.type === "tekst") uit += k.tekst;
     else if (k.type === "waarde") uit += naarTekst(zoekWaarde(scopes, k.pad));
-    else if (k.type === "if") uit += renderKnopen(waar(zoekWaarde(scopes, k.pad)) ? k.dan : k.anders, scopes, opties, diepte + 1);
-    else if (k.type === "unless") uit += renderKnopen(waar(zoekWaarde(scopes, k.pad)) ? k.anders : k.dan, scopes, opties, diepte + 1);
+    else if (k.type === "if") uit += renderKnopen(voorwaarde(scopes, k) ? k.dan : k.anders, scopes, opties, diepte + 1);
+    else if (k.type === "unless") uit += renderKnopen(voorwaarde(scopes, k) ? k.anders : k.dan, scopes, opties, diepte + 1);
     else if (k.type === "elk") {
       const items = filterLijst(zoekWaarde(scopes, k.pad), k.params);
       items.forEach((item, i) => {

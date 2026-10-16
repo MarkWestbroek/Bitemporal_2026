@@ -53,6 +53,33 @@ export async function svgNaarAfbeeldingen(html, rasteriseer) {
   });
 }
 
+const HERKOMST = { profielId: "data-omnium-profiel", diagramId: "data-omnium-diagram", naam: "data-omnium-naam" };
+
+/**
+ * Zet de herkomst (profiel, diagram, naam) als data-attributen op de `<svg>`, zodat "Kopieer voor
+ * Confluence" per plaatje weet welk diagram het is (gedeelde plaatjes, 16-10). Browsers, GitHub en
+ * VS Code negeren de attributen.
+ */
+export function merkHerkomst(svg, { profielId, diagramId, naam = "" } = {}) {
+  if (!svg || !profielId || !diagramId || !/^<svg\b/.test(svg)) return svg;
+  const attrs = Object.entries({ profielId, diagramId, naam })
+    .map(([k, v]) => ` ${HERKOMST[k]}="${escAttr(v)}"`)
+    .join("");
+  return svg.replace(/^<svg\b/, `<svg${attrs}`);
+}
+
+/** Herkomst uit een gemerkte `<svg>`, of null. */
+export function svgHerkomst(svg) {
+  const kop = (String(svg).match(/^<svg\b[^>]*>/) || [""])[0];
+  const lees = (naam) => {
+    const m = kop.match(new RegExp(`\\s${naam}="([^"]*)"`));
+    return m ? m[1].replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&amp;/g, "&") : "";
+  };
+  const profielId = lees(HERKOMST.profielId);
+  const diagramId = lees(HERKOMST.diagramId);
+  return profielId && diagramId ? { profielId, diagramId, naam: lees(HERKOMST.naam) } : null;
+}
+
 /** Platte tekst bij het rijke klembord: de markdown met een regel per diagram i.p.v. de SVG-code. */
 export function markdownZonderSvg(markdown) {
   let n = 0;

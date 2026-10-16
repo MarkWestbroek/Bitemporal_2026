@@ -25,6 +25,22 @@ const slug = (tekst) =>
     .toLowerCase();
 
 const STANDAARD = { breedte: 160, hoogte: 70 };
+
+/** Velden ({compartiment, fieldType, soort, velden}) toevoegen aan compartimenten; namen niet dubbel (hoofdletterongevoelig). */
+function voegVeldenToe(compartimenten, { compartiment, fieldType, soort, velden }) {
+  const oud = compartimenten.find((c) => c.compartmentType === compartiment);
+  const namen = new Set((oud?.velden || []).map((v) => String(v.naam).toLowerCase()));
+  const nieuw = [];
+  for (const v of velden) {
+    if (namen.has(v.naam.toLowerCase())) continue;
+    namen.add(v.naam.toLowerCase());
+    nieuw.push({ naam: v.naam, fieldType, data: soort === "waarde" || !v.type ? {} : { typeLabel: v.type } });
+  }
+  if (!nieuw.length) return compartimenten;
+  return oud
+    ? compartimenten.map((c) => (c === oud ? { ...c, velden: [...(c.velden || []), ...nieuw] } : c))
+    : [...compartimenten, { compartmentType: compartiment, velden: nieuw }];
+}
 const CONTAINER = { breedte: 320, hoogte: 200 };
 
 /**
@@ -84,7 +100,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   for (const e of plan.elementen) {
     const id = uniek(e.profielId, `${prefix}_${slug(e.naam) || e.type}`);
     idVan.set(e.sleutel, id);
-    bij(e.profielId).elements[id] = { id, naam: e.naam, elementType: e.type, compartimenten: [], data: { ...e.data } };
+    bij(e.profielId).elements[id] = { id, naam: e.naam, elementType: e.type, compartimenten: e.velden ? voegVeldenToe([], e.velden) : [], data: { ...e.data } };
   }
   // ── 3b. De "map" van een nieuw diagram: een bestaande submap, een element met een
   // uitwerking (M3 `uitwerking`: bestaand en geplaatst, of nieuw in dit plan — het diagram hangt
@@ -113,6 +129,17 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   }
   for (const e of plan.elementen) plaatsing[`el::${e.profielId}::${idVan.get(e.sleutel)}`] = diagramId.get(e.diagram)?.map ?? mapId;
   const ref = (r) => (r?.nieuw ? idVan.get(r.nieuw) : r?.id);
+  // Velden erbij op bestaande elementen (melding #4: waarden aan een enumeratie); bestaande namen niet dubbel.
+  const telVelden = (comps) => (comps || []).reduce((t, c) => t + (c.velden || []).length, 0);
+  let nVelden = 0;
+  for (const e of plan.elementen) nVelden += telVelden(bij(e.profielId).elements[idVan.get(e.sleutel)]?.compartimenten);
+  for (const v of plan.veldenBij || []) {
+    const el = elementVan(v.profielId, v.id);
+    if (!el) continue;
+    const comps = voegVeldenToe(el.compartimenten || [], v);
+    nVelden += telVelden(comps) - telVelden(el.compartimenten);
+    if (comps !== el.compartimenten) bij(v.profielId).elements[v.id] = { ...el, compartimenten: comps };
+  }
   for (const h of plan.hernoemd) {
     const el = elementVan(h.profielId, h.id);
     if (el) bij(h.profielId).elements[h.id] = { ...el, naam: h.naam };
@@ -392,6 +419,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   if (nEl) delen.push(`${nEl} element${nEl === 1 ? "" : "en"}`);
   if (nRel) delen.push(`${nRel} relatie${nRel === 1 ? "" : "s"}`);
   if (plan.hernoemd.length) delen.push(`${plan.hernoemd.length} hernoemd`);
+  if (nVelden) delen.push(`${nVelden} veld${nVelden === 1 ? "" : "en"}`);
   if (plan.leden?.length) delen.push(`${plan.leden.length} in een container gezet`);
   if (uitgelijnd.size) delen.push(`${uitgelijnd.size === 1 ? "diagram" : `${uitgelijnd.size} diagrammen`} opnieuw opgesteld`);
   if (links.length) delen.push(`${links.length} verband${links.length === 1 ? "" : "en"}`);

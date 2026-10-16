@@ -8,6 +8,43 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Plaatjes als link voor Confluence** (16-10, Mark): Confluence laat ingebedde plaatjes bij
+  plakken weg, maar toont een plaatje van een ander adres wél. Bij *Kopieer voor
+  Teams/Confluence* kies je nu hoe de diagrammen meegaan:
+  - **ingebed** (Teams, Word, Outlook), zoals tot nu toe;
+  - **als link, momentopname**: het plaatje van nu, op een vast adres;
+  - **als link, houd up to date**: één adres per diagram. Verandert het diagram, dan zet Studio
+    er na een paar seconden een nieuw plaatje op, en wie de Confluence-pagina opnieuw laadt, ziet
+    het nieuwe.
+
+  Het adres is openbaar maar onraadbaar: wie het kent, ziet dat ene plaatje en niets anders van
+  het project. *Gedeelde plaatjes* in het documentvenster toont alle links van het project, met
+  adres kopiëren en **intrekken** (het plaatje verdwijnt dan overal waar het geplakt is). Eén
+  diagram kan ook direct: rechtsklik op het lege canvas, *Kopieer als plaatje-link*. Alleen voor
+  projecten op de server; vraagt api 0.17.0.
+- **Op raster** (16-10, melding #7 van Hugo): schakelaar **#** in de taakbalk *Uitlijnen* (ook
+  via rechtsklik op het canvas en in de instellingen). Aan: elementen vallen bij slepen én bij
+  plaatsen op het 16px-puntenraster. Onthouden per gebruiker. *Alles op raster* (▦) blijft de
+  eenmalige actie.
+- **Velden via de assistent en de MCP** (16-10, melding #4): "kun je wat statussen aan status
+  toevoegen" voegt waarden toe aan een bestaande enumeratie; attributen met type ("geef pakket
+  naam: tekst") op een bestaande of nieuwe klasse. Bestaande namen niet dubbel; de assistent ziet
+  welke velden er al zijn.
+
+### Gewijzigd
+- **Use case-document zonder lege rijen** (16-10, Mark/Hugo): bij een use case staan *Actoren*,
+  *Bevat*, *Uitgebreid door* en *Specialiseert* alleen nog als er iets in staat. Sjabloontaal:
+  `{{#if lijst type=… richting=…}}` (waar als de gefilterde lijst niet leeg is).
+
+### Opgelost
+- **Studio-instellingen crashten** (16-10, Mark): de vormvoorbeelden tekenden de sequence-levenslijn
+  buiten een canvas, en die vraagt de canvas-store op (React Flow-fout #001). De voorbeelden hebben
+  nu een eigen React Flow-context, ook in het gedaantepaneel van de profielontwerper.
+- **Documentdiagram scheef** (16-10, melding #8): lijnen tussen vakken die naast of boven elkaar
+  staan lopen nu recht (horizontaal of verticaal, op het midden van de overlap) zoals op het
+  canvas, en kardinaliteit en rolnaam staan bij de uiteinden.
+
 ## [studio/v0.22.0] — 2026-10-16
 
 ### Toegevoegd
