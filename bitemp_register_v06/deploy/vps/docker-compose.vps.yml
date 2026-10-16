@@ -102,6 +102,9 @@ services:
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_BUCKET: ${MINIO_BUCKET:-ide-bestanden}
       MINIO_USE_SSL: "false"
+      # Registratietijd: de klok (productie). Zonder deze regel viel app terug op de
+      # demo-standaard `synthetisch` (1 jan 2026 + een uur per registratie) — melding #6, 16-10.
+      REGISTRATIE_TIJD: ${REGISTRATIE_TIJD:-klok}
       # Authenticatie — publiek bereikbaar, dus altijd aan.
       AUTH_ENABLED: "true"
       COOKIE_SECURE: "true"                 # HTTPS via Caddy; anders bewaart de browser de cookie niet
