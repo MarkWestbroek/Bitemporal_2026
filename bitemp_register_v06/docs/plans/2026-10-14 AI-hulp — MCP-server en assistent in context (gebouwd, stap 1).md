@@ -92,3 +92,23 @@ snapshot + operaties, voorstel, toepassen, opnieuw lezen).
 
 **Vervolg:** vanaf het canvas (rechtsklik op een element of leeg vlak); elementen of relaties
 weghalen (nu alleen toevoegen, hernoemen en op een diagram zetten); MCP op afstand (HTTP).
+
+## 6. AI-2 stap 2 (16-10): vanaf het canvas, en weghalen
+
+Mark koos dit na BOOM-1 (16-10). Gebouwd:
+
+- **Rechtsklik op een element of het lege vlak** → *✨ Vraag de assistent…*. Het gesprek gaat over
+  de map waar het open diagram staat (een map, of het element waar het als uitwerking onder hangt);
+  de AI krijgt het open diagram als doel mee ("zet nieuwe elementen daarop via `bestaand`"), en bij
+  een element dat element als onderwerp.
+- **Weghalen** via `verwijderen` (ids van bestaande elementen of relaties): een element gaat met
+  zijn relaties uit het model, van alle diagrammen (knopen én lijndata) en uit de boom; een relatie
+  alleen zelf. Relaties in hetzelfde plan naar iets dat weggaat, vervallen met uitleg. Diagrammen
+  en mappen haalt de assistent bewust niet weg. Ook via de MCP (`naarOps`: patchDiagrammen,
+  patchElementen met `wis`, plaatsPerMap).
+- Tests: kern (verwijderen, ops), e2e `25-studio-assistent-canvas` (leeg vlak → nieuw element op het
+  open diagram; element → weghalen).
+
+**Vervolg:** bestaande elementen verplaatsen (naar een ander diagram of map), het nieuwe diagram
+passend in beeld, HELP-5 (meldingen-overzicht) daarna.
+

@@ -19,6 +19,31 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   naam van zo'n element zijn ("maak een activiteitendiagram onder Leen boek"), en wat eronder
   hangt telt als inhoud van de map. De boom blijft ordening, geen model: de inhoudelijke band is
   het kruisverband (realiseert) of een gedragsverwijzing.
+- **Kopieer voor Teams/Confluence** (16-10, Mark): in het documentvoorbeeld kopieert een nieuwe
+  knop het document als opgemaakte tekst met de diagrammen als afbeelding (PNG). Markdown met
+  ingebedde SVG werd in Teams en Confluence als XML-code geplakt; die editors begrijpen geen
+  markdown of SVG, wel HTML met plaatjes. Werkt ook in Word en Outlook.
+- **Waar wordt een element gebruikt?** (16-10, melding #5 van Hugo): de eigenschappen van een
+  element tonen *Gebruikt op* — de diagrammen waarop het staat (met ×2 bij meer voorkomens), klik
+  opent het diagram. Staat het nergens, dan zegt het paneel dat weghalen geen diagram verandert, en
+  in de projectboom en de elementenlijst staat zo'n element **cursief**. (In de elementenlijst
+  betekende cursief eerst "niet op het open diagram"; dat zie je nu aan de ＋-knop.)
+- **Assistent vanaf het canvas, en weghalen** (16-10, AI-2 stap 2): rechtsklik op een element of
+  op het lege vlak van een diagram → *✨ Vraag de assistent…*. Het gesprek gaat over de map van dat
+  diagram (of het element waar het onder hangt), en nieuwe elementen komen op het open diagram.
+  Het plan kan nu ook **weghalen**: "haal de actor Lid weg" verwijdert het element met zijn
+  relaties uit het model, van alle diagrammen en uit de boom (rood in het voorstel; Ctrl+Z maakt
+  het ongedaan); een relatie alleen zelf. Diagrammen en mappen haalt hij bewust niet weg. Ook via
+  de MCP (`verwijderen` in het plan).
+- **Projectboom opgeruimd** (16-10, BOOM-1 stap 4): onder *Niet ingedeeld* staan alleen nog
+  profielen die écht zwervende diagrammen hebben (geen twaalf regels "geen diagrammen" meer), met
+  één ＋ in de kop voor een nieuw diagram in welke taal dan ook; de elementenlijst onderin heet
+  *‹profiel› — niet ingedeeld* en toont alleen wezen (elementen die nergens staan), anders één
+  regel "alle elementen staan in de boom". In de profiel-ontwerper zijn `uitwerking`,
+  `gedragsverwijzing`, `meerdere voorkomens`, `niet in het palet`, `geen beschrijving` en
+  `beweegt alleen in x/y` nu velden op een elementtype, `Delete = uit het model` op een
+  verbindingsregel en `betekenis` op een eigenschap — de M3-velden die de ontwerper nog miste
+  (werklijst M3-MOF).
 - **Token of toegangscode?** (15-10, Mark): *Mijn API-tokens* (omt_…, voor MCP en scripts) en de
   AI-instellingen (toegangscode om-…, uit *AI-toegang*) verwijzen nu naar elkaar — ze werden
   door elkaar gehaald.

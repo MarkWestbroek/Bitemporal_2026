@@ -226,6 +226,30 @@ te wijzigen.
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 >
+> **Gebruik van een element (2026-10-16, melding #5):** `diagramcore/model/gebruik.js`
+> (`gebruikVan`, `gebruikteIds`; gebruikt = knoop op een diagram, ingebed telt mee),
+> `diagramcore/inspector/GebruikPaneel.jsx` onder de relaties; cursief in `ElementRegel`
+> (`.studio-project__ongebruikt`) en in de ElementenBrowser (cursief betekende daar eerst "niet
+> op het actieve diagram").
+>
+> **Assistent vanaf het canvas (2026-10-16, AI-2 stap 2):** `maakDiagramActiviteit` zet in het
+> rechtsklikmenu van een knoop én van het lege vlak *✨ Vraag de assistent…* → `assistent:open`
+> {soort: "model", diagram: {profielId, diagramId}, focus?}; `AssistentHost` zoekt de map van dat
+> diagram op (map of element-ouder) en vertelt de AI welk diagram open is (nieuwe elementen daarop
+> via `bestaand`). Plan-veld `verwijderen` (ids): `controleerPlan` §6 (alleen bestaand; relaties
+> naar wat weggaat vervallen), `wijziging.js` §7 (`wis` per profiel incl. connectoren, knopen en
+> lijndata van alle diagrammen weg, `plaatsingWis`), Studio: `pasWijzigingToe` + `patchElementen({wis})`
+> + `plaatsPerMap({null})`; MCP: `naarOps` → patchDiagrammen, patchElementen met `wis`, plaatsPerMap.
+>
+> **Boom opgeruimd (2026-10-16, BOOM-1 stap 4):** `ProfielSectie` zwijgt zonder wezen-diagrammen
+> (`NietIngedeeldLeeg` zegt "alle diagrammen staan in een map"), één ＋ in de kop via
+> `nieuwDiagramItems(null)`; `ElementenBrowserMetFilter` toont alleen wezen (niet-connector,
+> niet verborgen) of één regel. Profiel-ontwerper (werklijst M3-MOF, 16-10): `uitwerking`, `gedragsVerwijzing`,
+> `meerdereVoorkomens`, `inPalet` (vinkje "niet in het palet"), `beschrijving: false`,
+> `layoutDimensie` op het elementtype, `verwijderen: "model"` op de verbindingsregel en
+> `PropertyType.betekenis` op de eigenschapsregel (`profielOntwerp.js`, heen en terug;
+> `oudeBeschrijvingSleutels` bewust niet: migratie, geen ontwerp).
+>
 > **Uitwerking — een element als ouder in de boom (2026-10-15, M3 `ElementType.uitwerking`):**
 > use case, collaboratie, actie/aanroep, subproces, toestand en requirement (M2) kunnen
 > diagrammen en elementen onder zich dragen: `plaatsing[key] = "el::profiel::id"`. De boom

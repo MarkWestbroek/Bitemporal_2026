@@ -74,7 +74,10 @@ id zonder waarschuwing — ook dat van een ingebouwd profiel.
 
 Wel: `id`/`label` (uit de naam), `kort`, `shape`, `icoon`, `kleur`,
 `stereotype`, `standaardDichtInBoom`, `containerVoor` (uit het
-container-vinkje), `properties` en `compartments`
+container-vinkje), `uitwerking`, `gedragsVerwijzing`, `meerdereVoorkomens`, `inPalet`
+(vinkje "niet in het palet"), `beschrijving: false` (vinkje "geen beschrijving"), `layoutDimensie`,
+`ConnectorType.verwijderen` (vinkje op de verbindingsregel) en `PropertyType.betekenis` (derde
+veld op de eigenschapsregel) — alle 16-10 —, `properties` en `compartments`
 (`profielOntwerp.js:272-288`).
 
 Niet, hoewel het schema ze kent (`schema.js:105-183`):
@@ -83,11 +86,12 @@ Niet, hoewel het schema ze kent (`schema.js:105-183`):
   (behalve automatisch bij `note`/`boundary`), `resizebaar`, `minBreedte`,
   `minHoogte`, `achtergrond` (behalve bij `boundary`);
 - **plaatsing en gedrag:** `naamLabel`, `randAanhechting`, `randElement`,
-  `meerdereVoorkomens`, `gedragsVerwijzing`, `uitwerking` (15-10: diagrammen onder het
-  element in de projectboom), `taakbalkGroep`,
+  `taakbalkGroep`,
   `omschrijving`;
 - **gedaanten van een samenstel:** `samentrekking` en `opname`;
-- **hooks**, op de twee connector-hooks hierna na.
+- **hooks**, op de twee connector-hooks hierna na;
+- **`DiagramType.oudeBeschrijvingSleutels`** bewust niet: dat is migratie van bestaande
+  code-profielen (waar de beschrijving vóór 2026-10-12 stond), geen ontwerpkeuze.
 
 Bovendien: van de 60 geregistreerde shapes staan er **11** op de witte lijst
 (`GELDIGE_SHAPES`, `profielOntwerp.js:170`). Een profiel met een andere shape
