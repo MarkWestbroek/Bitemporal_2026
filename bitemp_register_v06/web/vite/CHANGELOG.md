@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.22.0] — 2026-10-16
+
 ### Toegevoegd
 - **Een use case als map: de uitwerking eronder** (15-10, Mark; M3 `ElementType.uitwerking`):
   een element van een type dat een uitwerking mag dragen — use case en collaboratie, actie en
