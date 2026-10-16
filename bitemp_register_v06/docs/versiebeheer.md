@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.21.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.22.0`**
+  (2026-10-16: use case als ouder in de boom, boom opgeruimd, assistent op het canvas en weghalen,
+  Gebruikt op, kopieer voor Teams/Confluence; alleen frontend), na **`studio/v0.21.0`**
   (2026-10-15: AI-assistent in context, Mijn API-tokens, boomregel, sequence fase 0; samen met
   api 0.16.0), na **`studio/v0.20.1`**
   (2026-10-14: nieuwe versie zonder F5, wat is er nieuw, meldingen #5–#7; alleen frontend), na **`studio/v0.20.0`**

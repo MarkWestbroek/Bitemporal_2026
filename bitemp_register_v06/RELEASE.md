@@ -8,6 +8,24 @@
 
 ---
 
+## studio 0.22.0 (2026-10-16) — alleen frontend
+
+Geen backendrelease: api blijft **0.16.0**. Use case als ouder in de projectboom (M3
+`uitwerking`, het AD eronder), de boom opgeruimd (elementen volgen hun diagram, *Niet ingedeeld*
+en de elementenlijst alleen voor wat echt zwerft), de ✨ assistent ook vanaf het canvas en met
+weghalen, *Gebruikt op* in de eigenschappen en ongebruikte elementen cursief (melding #5 van Hugo),
+*Kopieer voor Teams/Confluence* in het documentvoorbeeld, de profiel-ontwerper met de ontbrekende
+M3-velden, en de hint token (omt_) tegenover toegangscode (om-). Details:
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+
+**Configuratie app (al toegepast 16-10):** `REGISTRATIE_TIJD=klok` in `deploy/vps/docker-compose.vps.yml`
+— app viel zonder die regel terug op de synthetische demotijd (alle registraties op 1 jan 2026;
+melding #6). Bestaande registraties houden hun tijdstip.
+
+Uitrol: alleen de frontend op app (`--build-arg VITE_GIT_SHA=$(git rev-parse --short HEAD)`).
+
+---
+
 ## api 0.16.0 / studio 0.21.0 (2026-10-15)
 
 AI-hulp (AI-1 MCP, AI-2 assistent), sequence fase 0 en de projectboom (BOOM-1). Frontend:
