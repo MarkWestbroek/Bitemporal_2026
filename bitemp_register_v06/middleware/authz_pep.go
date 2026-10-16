@@ -276,6 +276,12 @@ func isPubliekPad(path, method string) bool {
 		return true
 	}
 
+	// Gedeelde plaatjes (handlers/studio_beeld_handler.go): het onraadbare token in het adres
+	// is de toegang; Confluence en wiki's laden het plaatje zonder inloggen.
+	if strings.HasPrefix(lowerPath, "/api/beeld/") && method == http.MethodGet {
+		return true
+	}
+
 	// OpenAPI endpoints (documentatie)
 	if lowerPath == "/openapi.json" || lowerPath == "/openapi.yaml" ||
 		strings.HasPrefix(lowerPath, "/openapi") ||

@@ -360,6 +360,11 @@ func MaakStudioProjectVerwijderenHandler() gin.HandlerFunc {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Alleen de eigenaar of een beheerder kan dit project verwijderen."})
 			return
 		}
+		// MinIO-sleutels van de gedeelde plaatjes vóór de transactie lezen: een fout hier mag het
+		// verwijderen niet afbreken (dan blijft hooguit een los object in MinIO achter).
+		var beeldKeys []string
+		_ = DB.NewSelect().Model((*model.StudioGedeeldBeeld)(nil)).Column("object_key").
+			Where("project_id = ? AND object_key IS NOT NULL AND object_key <> ''", id).Scan(ctx, &beeldKeys)
 		tx, err := DB.BeginTx(ctx, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Transactie starten mislukt: " + err.Error()})
@@ -368,6 +373,12 @@ func MaakStudioProjectVerwijderenHandler() gin.HandlerFunc {
 		defer tx.Rollback() //nolint:errcheck
 		if _, err := tx.NewDelete().Model((*model.StudioProjectOp)(nil)).Where("project_id = ?", id).Exec(ctx); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Operatielog verwijderen mislukt: " + err.Error()})
+			return
+		}
+		// Gedeelde plaatjes van het project gaan mee: hun adressen geven daarna 404. De MinIO-
+		// objecten ruimen we na de commit op (zie VerwijderBeeldObjecten).
+		if _, err := tx.NewDelete().Model((*model.StudioGedeeldBeeld)(nil)).Where("project_id = ?", id).Exec(ctx); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gedeelde plaatjes verwijderen mislukt: " + err.Error()})
 			return
 		}
 		if _, err := tx.NewDelete().Model((*model.StudioProjectToegang)(nil)).Where("project_id = ?", id).Exec(ctx); err != nil {
@@ -382,6 +393,7 @@ func MaakStudioProjectVerwijderenHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Commit mislukt: " + err.Error()})
 			return
 		}
+		VerwijderBeeldObjecten(ctx, beeldKeys)
 		c.Status(http.StatusNoContent)
 	}
 }

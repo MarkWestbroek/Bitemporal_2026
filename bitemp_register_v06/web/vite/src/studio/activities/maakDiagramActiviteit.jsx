@@ -45,6 +45,7 @@ import React, {
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
+import { useBeeldenStore, kopieerDiagramAlsLink } from "../gedeeldeBeelden.js";
 /**
  * Lijndata van een connector zoals hij op het actieve diagram ligt: de
  * per-diagram override (diagram.lijnen) over de element-standaard. Alle
@@ -882,6 +883,8 @@ export function maakDiagramActiviteit(opties) {
           positie = midden ? { x: midden.x - 300, y: midden.y - 200 } : { x: 120, y: 80 };
         }
       }
+      // Op raster (melding #7, Hugo): ook een nieuw element valt op het raster.
+      if (useStudioStore.getState().opRaster) positie = { x: Math.round(positie.x / 16) * 16, y: Math.round(positie.y / 16) * 16 };
       s.addElement(el);
       s.addElementToDiagram(dId, el.id, positie);
       // De projectboom zet het nieuwe element in de map van dit diagram (boomregel
@@ -2173,6 +2176,12 @@ export function maakDiagramActiviteit(opties) {
         { id: "normaliseer", label: "Normaliseer relaties", icoon: "↔", onClick: () => menuBus.emit(ev("normaliseer")) },
         { id: "snap", label: "Snap nodes naar grid", icoon: UITLIJN_ICONEN.snap, onClick: () => layoutApiRef.current?.snapRaster() },
         {
+          id: "op-raster",
+          label: useStudioStore.getState().opRaster ? "✓ Op raster (slepen en plaatsen)" : "Op raster (slepen en plaatsen)",
+          icoon: "#",
+          onClick: () => useStudioStore.getState().zetVoorkeur("opRaster", !useStudioStore.getState().opRaster),
+        },
+        {
           id: "maten-inhoud",
           label: "Maten aanpassen aan inhoud (alles)",
           icoon: "◱",
@@ -2600,6 +2609,36 @@ export function maakDiagramActiviteit(opties) {
                 // AI-2 stap 2 (16-10): over de map van het open diagram; nieuwe elementen komen hierop.
                 onClick: () => menuBus.emit("assistent:open", { soort: "model", diagram: { profielId: id, diagramId: useStore.getState().actiefDiagramId } }),
               },
+              // Gedeelde plaatjes (16-10): dit diagram als <img>-link voor Confluence of een wiki.
+              // Alleen voor een project op de server (de wachter zet dan het project-id).
+              ...(useBeeldenStore.getState().projectId
+                ? [
+                    {
+                      id: "plaatje-link",
+                      label: "🔗 Kopieer als plaatje-link (Confluence)…",
+                      onClick: async () => {
+                        const diagramId = useStore.getState().actiefDiagramId;
+                        const soort = await vraagKeuze({
+                          titel: "Plaatje-link kopiëren",
+                          label: "Het plaatje komt op een eigen adres; wie het adres kent, ziet dit diagram.",
+                          opties: [
+                            { waarde: "actueel", label: "Houd up to date — volgt dit diagram" },
+                            { waarde: "momentopname", label: "Momentopname — zoals het nu is" },
+                          ],
+                          waarde: "actueel",
+                          bevestig: "Kopiëren",
+                        });
+                        if (!soort) return;
+                        try {
+                          await kopieerDiagramAlsLink(id, diagramId, soort);
+                          toonMelding({ titel: "Plaatje-link gekopieerd", tekst: "Plak het in Confluence met Ctrl+V. Intrekken kan in een documentvoorbeeld onder Gedeelde plaatjes." });
+                        } catch (e) {
+                          toonMelding({ titel: "Kopiëren mislukt", tekst: e?.message || String(e) });
+                        }
+                      },
+                    },
+                  ]
+                : []),
               ...canvasMenuExtra.map((m) => ({
                 id: m.id,
                 label: m.label,
@@ -2687,6 +2726,8 @@ export function maakDiagramActiviteit(opties) {
       return () => window.removeEventListener("keydown", onKey);
     }, []);
 
+    // Op raster (melding #7, Hugo): voorkeur per gebruiker, schakelaar in Uitlijnen.
+    const opRaster = useStudioStore((s) => s.opRaster);
     // Taakbalken uit de DiagramType-descriptor (§4.6): acties afgeleid.
     const taakbalken = (descriptor.taakbalken || []).map((balk) => {
       let acties = [];
@@ -2764,7 +2805,14 @@ export function maakDiagramActiviteit(opties) {
         };
         return i === 3 || i === 6 || i === 8 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
       }).concat([
-        { id: "snap", label: "▦", icoon: UITLIJN_ICONEN.snap, titel: "Alles op raster", onClick: () => layoutApiRef.current?.snapRaster() },
+        { id: "snap", label: "▦", icoon: UITLIJN_ICONEN.snap, titel: "Alles op raster (eenmalig)", onClick: () => layoutApiRef.current?.snapRaster() },
+        {
+          id: "op-raster",
+          label: "#",
+          actief: opRaster,
+          titel: opRaster ? "Op raster: aan — klik om uit te zetten" : "Op raster: uit — elementen vallen bij slepen en plaatsen op het raster",
+          onClick: () => useStudioStore.getState().zetVoorkeur("opRaster", !useStudioStore.getState().opRaster),
+        },
         { id: "sep-norm", sep: true },
         { id: "normaliseer", label: "↔", titel: "Normaliseer relaties (kortste weg)", onClick: () => menuBus.emit(ev("normaliseer")) },
       ]),
@@ -2793,6 +2841,7 @@ export function maakDiagramActiviteit(opties) {
             <>
               <Suspense fallback={<div style={{ padding: 16, color: "#64748b" }}>Canvas laden…</div>}>
                 <DiagramCanvas
+                  opRaster={opRaster}
                   diagramType={descriptor}
                   elements={elements}
                   diagram={diagram}
@@ -2878,9 +2927,10 @@ export function maakDiagramActiviteit(opties) {
                     if (!nieuw || !st.actiefDiagramId) return;
                     const maat = elementTypesById[elementTypeId]?.standaardMaat || { width: 160, height: 70 };
                     st.addElement(nieuw);
+                    const raster = (v) => (useStudioStore.getState().opRaster ? Math.round(v / 16) * 16 : v);
                     st.addElementToDiagram(st.actiefDiagramId, nieuw.id, {
-                      x: positie.x - maat.width / 2,
-                      y: positie.y - maat.height / 2,
+                      x: raster(positie.x - maat.width / 2),
+                      y: raster(positie.y - maat.height / 2),
                     });
                     // Losgelaten in een container (lane/pool): meteen lid.
                     if (containerId) verhangNaarContainer(useStore, nieuw.id, containerId);

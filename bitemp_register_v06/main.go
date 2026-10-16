@@ -325,6 +325,14 @@ func NewRouter() *gin.Engine {
 	// SSE-kanaal (stap 2, onderdeel 5): live operaties van anderen; de hub hangt aan het log.
 	handlers.KoppelStudioSSE()
 	router.GET("/api/studio/projecten/:id/events", ingelogd, pLezen, handlers.MaakStudioProjectEventsHandler())
+	// Gedeelde plaatjes (handlers/studio_beeld_handler.go): een diagram als PNG op een
+	// onraadbaar adres voor Confluence en wiki's. Delen en de lijst vragen lezen op het project;
+	// intrekken mag wie deelde of wie schrijven mag (gecontroleerd in de handler). Het adres
+	// zelf is openbaar: het token is de toegang.
+	router.POST("/api/studio/projecten/:id/beelden", ingelogd, pLezen, handlers.MaakStudioBeeldDelenHandler())
+	router.GET("/api/studio/projecten/:id/beelden", ingelogd, pLezen, handlers.MaakStudioBeeldenLijstHandler())
+	router.DELETE("/api/studio/projecten/:id/beelden/:token", ingelogd, pLezen, handlers.MaakStudioBeeldIntrekkenHandler())
+	router.GET("/api/beeld/:bestand", handlers.MaakBeeldOpenbaarHandler())
 	// Werkruimte (tabs, open mappen) per gebruiker per project: van jou, laatste schrijver wint.
 	router.GET("/api/studio/projecten/:id/werkruimte", ingelogd, pLezen, handlers.MaakStudioWerkruimteOphalenHandler())
 	router.PUT("/api/studio/projecten/:id/werkruimte", ingelogd, pLezen, handlers.MaakStudioWerkruimteOpslaanHandler())

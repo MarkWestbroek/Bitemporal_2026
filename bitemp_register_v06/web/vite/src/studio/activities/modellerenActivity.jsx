@@ -28,6 +28,7 @@ import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.js
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
 import { volgDiagram } from "../boomRegels.js";
+import { startBeeldWachter } from "../gedeeldeBeelden.js";
 import { gebruikVan } from "../../diagramcore/model/gebruik.js";
 import { useOutboxStore } from "../sync/outbox.js";
 import { zonderWeesPlaatsingen, mappenMetBeschrijving } from "../sync/structuurKern.js";
@@ -2790,6 +2791,9 @@ function Provider({ children }) {
       stopPoll();
     };
   }, [projectId, opServer, liveSync]);
+  // Gedeelde plaatjes (gedeeldeBeelden.js): plaatjes met "houd up to date" volgen het diagram
+  // zolang het project hier open is.
+  useEffect(() => (opServer && projectId ? startBeeldWachter(projectId) : undefined), [projectId, opServer]);
   // Menu-kop (sync-stand) volgt de verzender, met een kleine rem.
   useEffect(() => {
     let timer = null;
