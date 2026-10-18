@@ -20,6 +20,7 @@
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerUseCaseShapes } from "./shapes.jsx";
+import { controleerUseCase } from "./controle.js";
 
 export const USECASE_ID = "usecase";
 
@@ -52,7 +53,34 @@ const elementTypes = [
     icoon: "uc-usecase",
     shape: "uc-ellips",
     kleur: "#e0f2fe",
-    properties: [KLEUR_VELD],
+    // Use case-sjabloon (18-10, Mark; naar Cockburn): doel en trigger, pre- en
+    // postconditie, en de flow of events als vrije tekst. Later preciezer: de
+    // flows als afleiding uit het activiteitendiagram eronder (uitwerking), en
+    // scenario's als benoemde, geprioriteerde paden — zie docs/plans/
+    // 2026-10-18 Use case — doel, trigger, condities, flows en scenario's.
+    properties: [
+      { key: "doel", label: "doel", datatype: "tekst" },
+      { key: "trigger", label: "trigger", datatype: "tekst" },
+      {
+        key: "triggerSoort",
+        label: "soort trigger",
+        datatype: "keuze",
+        opties: [
+          { waarde: "", label: "—" },
+          { waarde: "actor", label: "actor (de primaire actor start)" },
+          { waarde: "tijd", label: "tijd (bv. elke nacht, batch)" },
+          { waarde: "gebeurtenis", label: "gebeurtenis (bv. een bericht komt binnen)" },
+        ],
+      },
+      { key: "preconditie", label: "preconditie", datatype: "tekst" },
+      { key: "postconditie", label: "postconditie", datatype: "tekst" },
+      { key: "flowOfEvents", label: "flow of events", datatype: "tekst" },
+      KLEUR_VELD,
+    ],
+    hooks: {
+      /** Waarschuwing: geen primaire actor én geen trigger (controle.js). */
+      valideer: controleerUseCase,
+    },
   },
   {
     id: "systeem",
@@ -133,6 +161,10 @@ const elementTypes = [
     aard: "associatie",
     label: "Associatie",
     omschrijving: "De actor neemt deel aan de use case.",
+    // Primaire actor (Cockburn): de belanghebbende wiens doel de use case dient.
+    // Betekenis, geen weergave: geen pijl (UML 2 kent het begrip niet; Mark wil
+    // een rustig plaatje). De layout zet primaire actoren links, de rest rechts.
+    properties: [{ key: "primair", label: "primaire actor", datatype: "boolean" }],
     kort: "—",
     shape: "edge",
     isConnector: true,

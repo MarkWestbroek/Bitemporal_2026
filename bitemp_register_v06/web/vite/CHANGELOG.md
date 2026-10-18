@@ -9,6 +9,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Use case: doel, trigger, pre- en postconditie, flow of events; primaire actor** (18-10, Mark;
+  naar Cockburn): een use case heeft nu `doel`, `trigger` (met soort: actor, tijd, gebeurtenis),
+  `preconditie`, `postconditie` en een vrij `flowOfEvents`; de associatie actor–use case heeft
+  `primair` (de belanghebbende wiens doel de use case dient — UML 2 kent het begrip niet, dus
+  zonder pijl). Een use case zonder primaire actor én zonder trigger geeft een waarschuwing (hook
+  `valideer`, `usecase/controle.js`). De EA-import neemt pre- en postcondities over uit EA's
+  constraints (`t_objectconstraint`). Richting voor flows en scenario's: `docs/plans/2026-10-18
+  Use case — doel, trigger, condities, flows en scenario's (ontwerp).md`.
 - **M3: betekenis en weergave van de auto-layout gescheiden** (18-10, Mark via OMNIUM-UI; M3-MOF):
   `ElementType.aard` zegt wat een type ís — connector: stroom, specialisatie, realisatie, bericht,
   associatie, afhankelijkheid, toewijzing, insluiting, annotatie; element: begin, eind, baan — en

@@ -156,6 +156,10 @@ export function leesBron(db, packageId) {
     );
   }
   const t_objectproperties = rijen(db, `SELECT Object_ID, Property, Value, Notes FROM t_objectproperties WHERE Object_ID IN (${oq})`, objectIds);
+  // Constraints op elementen (use case: Pre-condition, Post-condition, Invariant; 18-10).
+  const t_objectconstraint = bestaandeKolommen(db, "t_objectconstraint", ["ConstraintType"]).length
+    ? rijen(db, `SELECT Object_ID, "Constraint" AS Naam, ConstraintType, Notes, Status FROM t_objectconstraint WHERE Object_ID IN (${oq})`, objectIds)
+    : [];
   const attribuutIds = t_attribute.map((a) => a.ID);
   const t_attributetag = attribuutIds.length
     ? rijen(db, `SELECT ElementID, Property, VALUE, NOTES FROM t_attributetag WHERE ElementID IN (${attribuutIds.map(() => "?").join(",")})`, attribuutIds)
@@ -192,6 +196,7 @@ export function leesBron(db, packageId) {
     t_connector,
     t_xref,
     t_objectproperties,
+    t_objectconstraint,
     t_attributetag,
     t_connectortag,
     t_diagram,
