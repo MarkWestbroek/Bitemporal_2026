@@ -160,7 +160,7 @@ export const formulierDiagramType = {
   ],
   layouts: [],
   // Geen automatische layout: een formulier heeft zijn eigen opbouw (18-10).
-  leesvolgorde: false,
+  layoutStijlen: [],
 };
 
 let _teller = 0;

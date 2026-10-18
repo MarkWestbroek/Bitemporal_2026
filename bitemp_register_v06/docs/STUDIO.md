@@ -245,6 +245,18 @@ te wijzigen.
 > nog geen generieke layout. Debuglog van de hiërarchische modus alleen met `opts.debug`. Tests:
 > `canoniek-uml/layouts.test.js`, e2e `31-studio-auto-layout`.
 >
+> **LayoutStijl in de renderer (2026-10-18, OMNIUM-UI na M3-MOF):** `leesvolgordeLayouts(dt)` maakt
+> per `layoutStijl` (renderer "leesvolgorde") vier strategieën met `regelsVoorStijl(dt, stijl)` als
+> regels, `minimaal` uit `ElementType.minBreedte/minHoogte` en `afstanden` uit de stijl
+> (`legLeesvolgordeUit({…, afstanden})`). Strategie-id = `<stijl-id>-<richting>` (de generieke
+> standaard heet `leesvolgorde-…`). `vulLayoutsAan` kijkt niet meer naar `leesvolgorde` (veld weg);
+> `layoutStijlen: []` = geen. `kolommen` leest de renderer nog niet. Profielontwerper
+> (`profielOntwerp.js`): `aard`/`facetten` op elementDef, `aard` op verbindingsregel, knopen
+> `facetDef` en `layoutStijlDef` (DiagramType ◆ facetten, ◆ layoutStijlen). MCP:
+> `profielen-voor-mcp.mjs` schrijft `layoutStijlen`, `facetten` en per type aard/facetten/erft/
+> minimale maten; `model.mjs` bouwt daaruit de strategieën. De onderstaande alinea beschrijft het
+> algoritme; zijn invoer komt nu uit de stijl in plaats van een `leesvolgorde`-veld.
+>
 > **Auto-layout op leesvolgorde (2026-10-18, Mark):** `diagramcore/layout/leesvolgorde.js` is een
 > algemene, deterministische gelaagde layout. Een profiel beschrijft zijn **leesvolgorde** (M3:
 > `Leesvolgorde` in `types/schema.js`): `richting` (standaard TB/LR), `stroom`, `omgekeerd`,

@@ -40,16 +40,21 @@ export async function layoutsVoor(diagramTypeId) {
       const m = await laad(`diagramprofielen/${diagramTypeId}/index.js`);
       const d = Object.values(m).find((x) => x && typeof x === "object" && x.id === diagramTypeId && Array.isArray(x.elementTypes));
       lijst = d?.layouts || [];
-      // Zonder eigen layouts: de algemene layout op de leesvolgorde (zoals de registry in de Studio doet).
-      if (!lijst.length && d && d.leesvolgorde !== false) lijst = (await laad("diagramcore/layout/leesvolgorde.js")).leesvolgordeLayouts(d);
+      // Zonder eigen layouts: de algemene layout volgens de LayoutStijlen (zoals vulLayoutsAan in de Studio).
+      if (!lijst.length && d) lijst = (await laad("diagramcore/layout/leesvolgorde.js")).leesvolgordeLayouts(d);
     } catch {
       lijst = [];
     }
-    // Profielmodule laadt niet in Node (JSX): de leesvolgorde uit profielen.json.
+    // Profielmodule laadt niet in Node (JSX): stijlen, facetten en typen uit profielen.json.
     if (!lijst.length) {
       const p = profielen().find((x) => x.diagramTypeId === diagramTypeId);
-      if (p && p.leesvolgorde !== false && p.layoutTypen) {
-        lijst = (await laad("diagramcore/layout/leesvolgorde.js")).leesvolgordeLayouts({ leesvolgorde: p.leesvolgorde || {}, elementTypes: p.layoutTypen });
+      if (p?.layoutTypen) {
+        lijst = (await laad("diagramcore/layout/leesvolgorde.js")).leesvolgordeLayouts({
+          id: diagramTypeId,
+          elementTypes: p.layoutTypen,
+          ...(p.facetten ? { facetten: p.facetten } : {}),
+          ...(p.layoutStijlen !== undefined ? { layoutStijlen: p.layoutStijlen } : {}),
+        });
       }
     }
     _layouts.set(diagramTypeId, lijst);

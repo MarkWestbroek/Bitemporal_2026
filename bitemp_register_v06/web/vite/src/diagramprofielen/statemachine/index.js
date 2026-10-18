@@ -251,10 +251,8 @@ export const statemachineDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
-  // Leesvolgorde (18-10): van boven naar beneden langs de transities.
-  leesvolgorde: { richting: "TB", stroom: ["transitie"], start: ["begin", "entry"], eind: ["eind", "exit"] },
-  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
-  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  // Weergave (M3 LayoutStijl, 18-10): de auto-layout leest de aard van de typen
+  // (types/layoutStijl.js → diagramcore/layout/leesvolgorde.js).
   layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "TB", alleenStroom: true }],
 };
 

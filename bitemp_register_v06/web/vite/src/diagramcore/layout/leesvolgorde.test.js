@@ -87,11 +87,13 @@ test("lagen (ArchiMate): business boven applicatie boven technologie, los van de
 });
 
 test("leesvolgordeLayouts: vier richtingen, de standaard van het profiel eerst; canvas-invoer met lidmaatschap en zonder rand-elementen", () => {
+  // Sinds de M3-LayoutStijl (18-10): de regels komen uit de aard van de typen en de stijl.
   const descriptor = {
-    leesvolgorde: { richting: "LR", start: ["start"] },
+    id: "test",
+    layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "LR", alleenStroom: true }],
     elementTypes: [
-      { id: "start" }, { id: "taak" }, { id: "kader", containerVoor: "bevat" }, { id: "rand", randElement: true },
-      { id: "flow", isConnector: true }, { id: "bevat", isConnector: true },
+      { id: "start", aard: "begin" }, { id: "taak" }, { id: "kader", containerVoor: "bevat", minBreedte: 400, minHoogte: 50 }, { id: "rand", randElement: true },
+      { id: "flow", isConnector: true, aard: "stroom" }, { id: "bevat", isConnector: true, aard: "insluiting" },
     ],
   };
   const l = leesvolgordeLayouts(descriptor);
@@ -110,4 +112,17 @@ test("leesvolgordeLayouts: vier richtingen, de standaard van het profiel eerst; 
   assert.deepEqual(invoer.verbindingen, [{ bron: "s", doel: "t", soort: "flow" }]);
   const uit = l[0].run({ flowNodes, selectieIds: null, elements, diagram });
   assert.ok(uit.posities.s.x < uit.posities.kd.x && !("r" in uit.posities));
+  // De minimale maat van het type (minBreedte) geldt voor de container.
+  assert.equal(uit.maten.kd.width, 400);
+});
+
+test("layoutStijlen: [] = geen layout; zonder stijlen de generieke standaard; afstanden uit de stijl", () => {
+  assert.deepEqual(leesvolgordeLayouts({ id: "seq", layoutStijlen: [], elementTypes: [] }), []);
+  const std = leesvolgordeLayouts({ id: "x", elementTypes: [{ id: "a" }, { id: "lijn", isConnector: true }] });
+  assert.deepEqual(std.map((l) => l.id), ["leesvolgorde-tb", "leesvolgorde-lr", "leesvolgorde-bt", "leesvolgorde-rl"]);
+  const knopen = [k("a", "x"), k("b", "x")];
+  const dicht = legLeesvolgordeUit({ knopen, verbindingen: [v("a", "b")], afstanden: { laag: 10 } }).posities;
+  const ruim = legLeesvolgordeUit({ knopen, verbindingen: [v("a", "b")], afstanden: { laag: 200 } }).posities;
+  assert.equal(dicht.b.y - dicht.a.y, 60);
+  assert.equal(ruim.b.y - ruim.a.y, 250);
 });

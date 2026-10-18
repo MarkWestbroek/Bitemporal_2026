@@ -302,10 +302,11 @@
  * @property {(invoer: {flowNodes: Object[], flowEdges: Object[], selectieIds: string[]|null, elements: Object, diagram: Object}) => Record<string, {x: number, y: number}>|Map<string, {x: number, y: number}>|{posities: Record<string, {x: number, y: number}>, maten?: Record<string, {width: number, height: number}>}} run
  *   - posities per knoop; met `{posities, maten}` krijgen containers ook een nieuwe maat.
  *
- * Leesvolgorde — hoe je een diagram van dit profiel leest (2026-10-18, Mark: "boven/onder is per
- * profiel een ander concept"). Voedt de algemene gelaagde layout (diagramcore/layout/leesvolgorde.js);
- * een profiel zonder eigen `layouts` krijgt daarmee vier strategieën (de standaardrichting eerst).
- * `false` = geen automatische layout (bv. sequence: de volgorde ís de tekening).
+ * Leesvolgorde — het invoerformaat van de LayoutRenderer "leesvolgorde"
+ * (diagramcore/layout/leesvolgorde.js). Geen profielveld meer (18-10): `regelsVoorStijl` maakt het
+ * uit de aard en facetten van de typen en de LayoutStijl. Een profiel zonder eigen `layouts`
+ * krijgt per stijl vier strategieën (de richting van de stijl eerst); `layoutStijlen: []` = geen
+ * automatische layout (bv. sequence: de volgorde ís de tekening).
  *
  * LayoutStijl — de **weergave** van de automatische layout (M3, 2026-10-18), naast de
  * gedaante (ShapeSet): zelfde patroon als ShapeType/ShapeRenderer en LineStyle/
@@ -342,6 +343,7 @@
  * @property {string[]} [eind]      - element-typen die achteraan komen
  * @property {string[]} [banen]     - container-typen die banen zijn (lanes, partities)
  * @property {string[][]} [lagen]   - vaste lagen op type, in plaats van de stroom (ArchiMate)
+ * @property {Record<string, number[]>} [minimaal] - type-id → [breedte, hoogte] (uit ElementType.minBreedte/minHoogte)
  */
 
 /**

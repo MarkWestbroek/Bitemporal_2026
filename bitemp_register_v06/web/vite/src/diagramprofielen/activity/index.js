@@ -152,6 +152,9 @@ const elementTypes = [
   },
   {
     id: "partitie",
+    // Zoals PartitieShape tekent; de auto-layout rekent ermee (18-10).
+    minBreedte: 200,
+    minHoogte: 280,
     aard: "baan",
     label: "Partitie",
     omschrijving: "Swimlane: wie of wat voert de acties uit — sleep leden erin.",
@@ -292,10 +295,8 @@ export const activityDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
-  // Leesvolgorde (18-10, Mark): van boven naar beneden, van begin naar eind; partities zijn banen.
-  leesvolgorde: { richting: "TB", stroom: ["controlestroom", "objectstroom"], start: ["begin"], eind: ["eind", "flow-eind"], banen: ["partitie"], minimaal: { partitie: [200, 280] } },
-  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
-  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  // Weergave (M3 LayoutStijl, 18-10): de auto-layout leest de aard van de typen
+  // (types/layoutStijl.js → diagramcore/layout/leesvolgorde.js).
   layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "TB", alleenStroom: true }],
 };
 

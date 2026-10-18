@@ -19,8 +19,17 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   layoutStijl.js`) vertaalt dat naar het formaat dat de leesvolgorde-renderer al leest; registratie
   controleert aard, facetten en stijlen. Activity, BPMN, state machine, CMMN, use case en ArchiMate
   hebben aard/facetten en een stijl; die levert exact de huidige leesvolgorde, behalve dat een
-  notitie-lijn (aard annotatie) niet meer meetelt. De renderer leest de stijl nog niet — dat doet
-  OMNIUM-UI (dan vervalt `leesvolgorde` in de profielen).
+  notitie-lijn (aard annotatie) niet meer meetelt.
+- **De auto-layout leest de LayoutStijl** (18-10, OMNIUM-UI): per stijl van het profiel vier
+  richtingen (de richting van de stijl eerst; ArchiMate heet nu *Lagen, …*), de afstanden uit de
+  stijl, en de minimale maat van lanes, pools en partities uit het type (`minBreedte`/`minHoogte`).
+  Het oude `leesvolgorde`-veld in de profielen is weg; `layoutStijlen: []` = geen auto-layout
+  (sequence, formulier). De MCP leest dezelfde stijlen (uit `profielen.json`).
+- **Profielontwerper: aard, facetten en layoutstijlen** (18-10): *aard* en *facetten* als
+  eigenschappen op een elementtype en *aard* op een verbindingsregel; nieuwe knopen **Facet**
+  («facet», met de waarden in volgorde) en **Layoutstijl** («layoutstijl»: richting, alleen stroom,
+  rijen/kolommen per facet, afstanden, regels als JSON). Werkt beide kanten op: een bestaand profiel
+  bekijken toont ze, activeren neemt ze mee.
 - **Auto-layout in zes richtingen** (18-10, Mark): de deterministische layouts van de IDE staan nu
   ook in de Studio, voor het canonieke model: gelaagd van boven naar beneden, van onder naar
   boven, van links naar rechts, van rechts naar links, een waaier rond een middelpunt, en

@@ -228,7 +228,7 @@ export const sequenceDiagramType = {
   ],
   layouts: [],
   // Geen automatische layout: de volgorde van boven naar beneden ís de betekenis (18-10).
-  leesvolgorde: false,
+  layoutStijlen: [],
 };
 
 let _teller = 0;

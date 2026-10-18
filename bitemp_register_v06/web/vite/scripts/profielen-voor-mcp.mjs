@@ -39,10 +39,22 @@ try {
     .map((p) => ({
       ...profielSamenvatting(p.descriptor, p.id),
       naam: p.label || p.descriptor?.label || p.id,
-      // Voor de algemene layout in de MCP (diagramcore/layout/leesvolgorde.js): de leesvolgorde en
-      // per type alleen wat de layout leest (container, rand-element, connector).
-      ...(p.descriptor?.leesvolgorde !== undefined ? { leesvolgorde: p.descriptor.leesvolgorde } : {}),
-      layoutTypen: (p.descriptor?.elementTypes || []).map((t) => ({ id: t.id, ...(t.containerVoor ? { containerVoor: t.containerVoor } : {}), ...(t.randElement ? { randElement: true } : {}), ...(t.isConnector ? { isConnector: true } : {}) })),
+      // Voor de algemene layout in de MCP (diagramcore/layout/leesvolgorde.js): de LayoutStijlen en
+      // facetten van het profiel (M3, 18-10) en per type alleen wat de layout leest.
+      ...(p.descriptor?.layoutStijlen !== undefined ? { layoutStijlen: p.descriptor.layoutStijlen } : {}),
+      ...(p.descriptor?.facetten ? { facetten: p.descriptor.facetten } : {}),
+      layoutTypen: (p.descriptor?.elementTypes || []).map((t) => ({
+        id: t.id,
+        ...(t.isConnector ? { isConnector: true } : {}),
+        ...(t.isAbstract ? { isAbstract: true } : {}),
+        ...(t.erft ? { erft: t.erft } : {}),
+        ...(t.aard ? { aard: t.aard } : {}),
+        ...(t.facetten ? { facetten: t.facetten } : {}),
+        ...(t.containerVoor ? { containerVoor: t.containerVoor } : {}),
+        ...(t.randElement ? { randElement: true } : {}),
+        ...(t.minBreedte ? { minBreedte: t.minBreedte } : {}),
+        ...(t.minHoogte ? { minHoogte: t.minHoogte } : {}),
+      })),
     }))
     .sort((a, b) => a.naam.localeCompare(b.naam));
   writeFileSync(uit, JSON.stringify({ gegenereerd: "scripts/profielen-voor-mcp.mjs", profielen }, null, 1) + "\n");

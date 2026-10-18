@@ -166,29 +166,24 @@
     "Parallel werk: een fork splitst, een tweede fork voegt samen.",
     "Wie iets doet: een partitie per rol of systeem, met de acties erin via `in` (alleen als de opdracht rollen noemt)."
    ],
-   "leesvolgorde": {
-    "richting": "TB",
-    "stroom": [
-     "controlestroom",
-     "objectstroom"
-    ],
-    "start": [
-     "begin"
-    ],
-    "eind": [
-     "eind",
-     "flow-eind"
-    ],
-    "banen": [
-     "partitie"
-    ]
-   },
+   "layoutStijlen": [
+    {
+     "id": "leesvolgorde",
+     "label": "Leesvolgorde",
+     "renderer": "leesvolgorde",
+     "richting": "TB",
+     "alleenStroom": true
+    }
+   ],
    "layoutTypen": [
     {
-     "id": "begin"
+     "id": "begin",
+     "aard": "begin"
     },
     {
-     "id": "actie"
+     "id": "actie",
+     "minBreedte": 100,
+     "minHoogte": 40
     },
     {
      "id": "aanroep"
@@ -211,32 +206,41 @@
     },
     {
      "id": "partitie",
-     "containerVoor": "bevat"
+     "aard": "baan",
+     "containerVoor": "bevat",
+     "minBreedte": 200,
+     "minHoogte": 280
     },
     {
-     "id": "eind"
+     "id": "eind",
+     "aard": "eind"
     },
     {
-     "id": "flow-eind"
+     "id": "flow-eind",
+     "aard": "eind"
     },
     {
      "id": "notitie"
     },
     {
      "id": "controlestroom",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "stroom"
     },
     {
      "id": "objectstroom",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "stroom"
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -2055,279 +2059,456 @@
    ],
    "layouts": [
     {
-     "id": "leesvolgorde-tb",
-     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+     "id": "lagen-tb",
+     "label": "Lagen, van boven naar beneden (standaard)"
     },
     {
-     "id": "leesvolgorde-lr",
-     "label": "Leesvolgorde, van links naar rechts"
+     "id": "lagen-lr",
+     "label": "Lagen, van links naar rechts"
     },
     {
-     "id": "leesvolgorde-bt",
-     "label": "Leesvolgorde, van onder naar boven"
+     "id": "lagen-bt",
+     "label": "Lagen, van onder naar boven"
     },
     {
-     "id": "leesvolgorde-rl",
-     "label": "Leesvolgorde, van rechts naar links"
+     "id": "lagen-rl",
+     "label": "Lagen, van rechts naar links"
     }
    ],
-   "leesvolgorde": {
-    "richting": "TB",
-    "lagen": [
-     [
-      "stakeholder",
-      "driver",
-      "assessment",
-      "goal",
-      "outcome",
-      "principle",
-      "requirement",
-      "constraint",
-      "betekenis",
-      "waarde"
-     ],
-     [
-      "resource",
-      "capability",
-      "koers",
-      "waardestroom"
-     ],
-     [
-      "business-actor",
-      "business-rol",
-      "business-collaboratie",
-      "business-interface",
-      "business-proces",
-      "business-functie",
-      "business-interactie",
-      "business-service",
-      "business-event",
-      "business-object",
-      "contract",
-      "representatie",
-      "product"
-     ],
-     [
-      "app-component",
-      "app-collaboratie",
-      "app-interface",
-      "app-functie",
-      "app-interactie",
-      "app-proces",
-      "app-event",
-      "app-service",
-      "data-object"
-     ],
-     [
-      "node",
-      "device",
-      "systeemsoftware",
-      "tech-collaboratie",
-      "tech-interface",
-      "pad",
-      "communicatienetwerk",
-      "tech-functie",
-      "tech-proces",
-      "tech-interactie",
-      "tech-event",
-      "tech-service",
-      "artifact"
-     ],
-     [
-      "equipment",
-      "facility",
-      "distributienetwerk",
-      "materiaal"
-     ],
-     [
-      "werkpakket",
-      "deliverable",
-      "implementatie-event",
-      "plateau",
-      "gap"
-     ]
+   "layoutStijlen": [
+    {
+     "id": "lagen",
+     "label": "Lagen",
+     "renderer": "leesvolgorde",
+     "richting": "TB",
+     "rijen": "laag"
+    }
+   ],
+   "facetten": {
+    "laag": [
+     "motivatie",
+     "strategie",
+     "business",
+     "applicatie",
+     "technologie",
+     "fysiek",
+     "implementatie"
+    ],
+    "aspect": [
+     "passief",
+     "gedrag",
+     "actief",
+     "samengesteld"
     ]
    },
    "layoutTypen": [
     {
-     "id": "resource"
+     "id": "resource",
+     "facetten": {
+      "laag": "strategie"
+     }
     },
     {
-     "id": "capability"
+     "id": "capability",
+     "facetten": {
+      "laag": "strategie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "koers"
+     "id": "koers",
+     "facetten": {
+      "laag": "strategie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "waardestroom"
+     "id": "waardestroom",
+     "facetten": {
+      "laag": "strategie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "business-actor"
+     "id": "business-actor",
+     "facetten": {
+      "laag": "business",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "business-rol"
+     "id": "business-rol",
+     "facetten": {
+      "laag": "business",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "business-collaboratie"
+     "id": "business-collaboratie",
+     "facetten": {
+      "laag": "business",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "business-interface"
+     "id": "business-interface",
+     "facetten": {
+      "laag": "business",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "business-proces"
+     "id": "business-proces",
+     "facetten": {
+      "laag": "business",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "business-functie"
+     "id": "business-functie",
+     "facetten": {
+      "laag": "business",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "business-interactie"
+     "id": "business-interactie",
+     "facetten": {
+      "laag": "business",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "business-service"
+     "id": "business-service",
+     "facetten": {
+      "laag": "business",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "business-event"
+     "id": "business-event",
+     "facetten": {
+      "laag": "business",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "business-object"
+     "id": "business-object",
+     "facetten": {
+      "laag": "business",
+      "aspect": "passief"
+     }
     },
     {
-     "id": "contract"
+     "id": "contract",
+     "facetten": {
+      "laag": "business",
+      "aspect": "passief"
+     }
     },
     {
-     "id": "representatie"
+     "id": "representatie",
+     "facetten": {
+      "laag": "business",
+      "aspect": "passief"
+     }
     },
     {
-     "id": "product"
+     "id": "product",
+     "facetten": {
+      "laag": "business",
+      "aspect": "samengesteld"
+     }
     },
     {
-     "id": "app-component"
+     "id": "app-component",
+     "facetten": {
+      "laag": "applicatie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "app-collaboratie"
+     "id": "app-collaboratie",
+     "facetten": {
+      "laag": "applicatie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "app-interface"
+     "id": "app-interface",
+     "facetten": {
+      "laag": "applicatie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "app-functie"
+     "id": "app-functie",
+     "facetten": {
+      "laag": "applicatie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "app-interactie"
+     "id": "app-interactie",
+     "facetten": {
+      "laag": "applicatie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "app-proces"
+     "id": "app-proces",
+     "facetten": {
+      "laag": "applicatie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "app-event"
+     "id": "app-event",
+     "facetten": {
+      "laag": "applicatie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "app-service"
+     "id": "app-service",
+     "facetten": {
+      "laag": "applicatie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "data-object"
+     "id": "data-object",
+     "facetten": {
+      "laag": "applicatie",
+      "aspect": "passief"
+     }
     },
     {
-     "id": "node"
+     "id": "node",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "device"
+     "id": "device",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "systeemsoftware"
+     "id": "systeemsoftware",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "tech-collaboratie"
+     "id": "tech-collaboratie",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "tech-interface"
+     "id": "tech-interface",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "pad"
+     "id": "pad",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "communicatienetwerk"
+     "id": "communicatienetwerk",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "tech-functie"
+     "id": "tech-functie",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "tech-proces"
+     "id": "tech-proces",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "tech-interactie"
+     "id": "tech-interactie",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "tech-event"
+     "id": "tech-event",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "tech-service"
+     "id": "tech-service",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "artifact"
+     "id": "artifact",
+     "facetten": {
+      "laag": "technologie",
+      "aspect": "passief"
+     }
     },
     {
-     "id": "equipment"
+     "id": "equipment",
+     "facetten": {
+      "laag": "fysiek",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "facility"
+     "id": "facility",
+     "facetten": {
+      "laag": "fysiek",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "distributienetwerk"
+     "id": "distributienetwerk",
+     "facetten": {
+      "laag": "fysiek",
+      "aspect": "actief"
+     }
     },
     {
-     "id": "materiaal"
+     "id": "materiaal",
+     "facetten": {
+      "laag": "fysiek",
+      "aspect": "passief"
+     }
     },
     {
-     "id": "stakeholder"
+     "id": "stakeholder",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "driver"
+     "id": "driver",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "assessment"
+     "id": "assessment",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "goal"
+     "id": "goal",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "outcome"
+     "id": "outcome",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "principle"
+     "id": "principle",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "requirement"
+     "id": "requirement",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "constraint"
+     "id": "constraint",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "betekenis"
+     "id": "betekenis",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "waarde"
+     "id": "waarde",
+     "facetten": {
+      "laag": "motivatie"
+     }
     },
     {
-     "id": "werkpakket"
+     "id": "werkpakket",
+     "facetten": {
+      "laag": "implementatie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "deliverable"
+     "id": "deliverable",
+     "facetten": {
+      "laag": "implementatie",
+      "aspect": "passief"
+     }
     },
     {
-     "id": "implementatie-event"
+     "id": "implementatie-event",
+     "facetten": {
+      "laag": "implementatie",
+      "aspect": "gedrag"
+     }
     },
     {
-     "id": "plateau"
+     "id": "plateau",
+     "facetten": {
+      "laag": "implementatie",
+      "aspect": "samengesteld"
+     }
     },
     {
-     "id": "gap"
+     "id": "gap",
+     "facetten": {
+      "laag": "implementatie"
+     }
     },
     {
-     "id": "locatie"
+     "id": "locatie",
+     "facetten": {
+      "aspect": "samengesteld"
+     }
     },
     {
-     "id": "grouping"
+     "id": "grouping",
+     "facetten": {
+      "aspect": "samengesteld"
+     },
+     "minBreedte": 200,
+     "minHoogte": 90
     },
     {
      "id": "junction"
@@ -2340,51 +2521,63 @@
     },
     {
      "id": "compositie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     },
     {
      "id": "aggregatie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     },
     {
      "id": "toewijzing",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "toewijzing"
     },
     {
      "id": "realisatie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "realisatie"
     },
     {
      "id": "bediening",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "afhankelijkheid"
     },
     {
      "id": "toegang",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "afhankelijkheid"
     },
     {
      "id": "beinvloeding",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "afhankelijkheid"
     },
     {
      "id": "trigger",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "stroom"
     },
     {
      "id": "stroom",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "stroom"
     },
     {
      "id": "specialisatie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "specialisatie"
     },
     {
      "id": "associatie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "associatie"
     },
     {
      "id": "toelichting",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     }
    ]
   },
@@ -2646,25 +2839,19 @@
      "label": "Leesvolgorde, van rechts naar links"
     }
    ],
-   "leesvolgorde": {
-    "richting": "LR",
-    "stroom": [
-     "sequence-flow",
-     "data-associatie"
-    ],
-    "start": [
-     "start-event"
-    ],
-    "eind": [
-     "eind-event"
-    ],
-    "banen": [
-     "lane"
-    ]
-   },
+   "layoutStijlen": [
+    {
+     "id": "leesvolgorde",
+     "label": "Leesvolgorde",
+     "renderer": "leesvolgorde",
+     "richting": "LR",
+     "alleenStroom": true
+    }
+   ],
    "layoutTypen": [
     {
-     "id": "start-event"
+     "id": "start-event",
+     "aard": "begin"
     },
     {
      "id": "taak"
@@ -2702,37 +2889,48 @@
     },
     {
      "id": "pool",
-     "containerVoor": "bevat"
+     "containerVoor": "bevat",
+     "minBreedte": 320,
+     "minHoogte": 160
     },
     {
      "id": "lane",
-     "containerVoor": "bevat"
+     "aard": "baan",
+     "containerVoor": "bevat",
+     "minBreedte": 240,
+     "minHoogte": 100
     },
     {
-     "id": "eind-event"
+     "id": "eind-event",
+     "aard": "eind"
     },
     {
      "id": "notitie"
     },
     {
      "id": "sequence-flow",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "stroom"
     },
     {
      "id": "message-flow",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "bericht"
     },
     {
      "id": "data-associatie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "stroom"
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -3081,22 +3279,28 @@
    "layoutTypen": [
     {
      "id": "proces",
-     "containerVoor": "bevat"
+     "containerVoor": "bevat",
+     "minBreedte": 180,
+     "minHoogte": 64
     },
     {
      "id": "doel"
     },
     {
-     "id": "resource"
+     "id": "resource",
+     "isAbstract": true
     },
     {
-     "id": "fysiek"
+     "id": "fysiek",
+     "erft": "resource"
     },
     {
-     "id": "mensen"
+     "id": "mensen",
+     "erft": "resource"
     },
     {
-     "id": "informatie"
+     "id": "informatie",
+     "erft": "resource"
     },
     {
      "id": "gebeurtenis"
@@ -3115,7 +3319,9 @@
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "invoer",
@@ -3155,11 +3361,13 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -3376,17 +3584,21 @@
    ],
    "layoutTypen": [
     {
-     "id": "representatie"
+     "id": "representatie",
+     "isAbstract": true
     },
     {
-     "id": "entiteit"
+     "id": "entiteit",
+     "erft": "representatie"
     },
     {
-     "id": "gegevenselement"
+     "id": "gegevenselement",
+     "erft": "representatie"
     },
     {
      "id": "relatie",
-     "isConnector": true
+     "isConnector": true,
+     "erft": "gegevenselement"
     },
     {
      "id": "enumeratie"
@@ -3573,20 +3785,27 @@
      "label": "Leesvolgorde, van rechts naar links"
     }
    ],
-   "leesvolgorde": {
-    "richting": "LR",
-    "stroom": [
-     "on-part"
-    ]
-   },
+   "layoutStijlen": [
+    {
+     "id": "leesvolgorde",
+     "label": "Leesvolgorde",
+     "renderer": "leesvolgorde",
+     "richting": "LR",
+     "alleenStroom": true
+    }
+   ],
    "layoutTypen": [
     {
      "id": "case-plan",
-     "containerVoor": "bevat"
+     "containerVoor": "bevat",
+     "minBreedte": 320,
+     "minHoogte": 220
     },
     {
      "id": "stage",
-     "containerVoor": "bevat"
+     "containerVoor": "bevat",
+     "minBreedte": 220,
+     "minHoogte": 130
     },
     {
      "id": "taak"
@@ -3609,15 +3828,18 @@
     },
     {
      "id": "on-part",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "stroom"
     },
     {
      "id": "associatie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "associatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -3699,7 +3921,9 @@
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "link",
@@ -3707,7 +3931,8 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     }
    ]
   },
@@ -4130,36 +4355,50 @@
    ],
    "layoutTypen": [
     {
-     "id": "klassifier"
+     "id": "klassifier",
+     "isAbstract": true
     },
     {
      "id": "component",
+     "erft": "klassifier",
      "containerVoor": "bevat"
     },
     {
-     "id": "interface"
+     "id": "interface",
+     "erft": "klassifier"
     },
     {
      "id": "poort",
      "randElement": true
     },
     {
-     "id": "artifact"
+     "id": "artifact",
+     "erft": "klassifier"
     },
     {
-     "id": "deploymentspec"
+     "id": "deploymentspec",
+     "erft": "artifact"
     },
     {
      "id": "node",
-     "containerVoor": "bevat"
+     "erft": "klassifier",
+     "containerVoor": "bevat",
+     "minBreedte": 160,
+     "minHoogte": 90
     },
     {
      "id": "device",
-     "containerVoor": "bevat"
+     "erft": "node",
+     "containerVoor": "bevat",
+     "minBreedte": 160,
+     "minHoogte": 90
     },
     {
      "id": "executieomgeving",
-     "containerVoor": "bevat"
+     "erft": "node",
+     "containerVoor": "bevat",
+     "minBreedte": 160,
+     "minHoogte": 90
     },
     {
      "id": "package",
@@ -4169,7 +4408,9 @@
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "realisatie",
@@ -4209,11 +4450,13 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -4492,14 +4735,19 @@
    ],
    "layoutTypen": [
     {
-     "id": "structureel"
+     "id": "structureel",
+     "isAbstract": true
     },
     {
      "id": "klasse",
-     "containerVoor": "bevat"
+     "erft": "structureel",
+     "containerVoor": "bevat",
+     "minBreedte": 220,
+     "minHoogte": 140
     },
     {
      "id": "part",
+     "erft": "structureel",
      "containerVoor": "bevat"
     },
     {
@@ -4511,10 +4759,14 @@
     },
     {
      "id": "collaboratie",
-     "containerVoor": "bevat"
+     "erft": "structureel",
+     "containerVoor": "bevat",
+     "minBreedte": 220,
+     "minHoogte": 140
     },
     {
-     "id": "collaboratiegebruik"
+     "id": "collaboratiegebruik",
+     "erft": "structureel"
     },
     {
      "id": "package",
@@ -4524,7 +4776,9 @@
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "connector",
@@ -4552,11 +4806,13 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -4911,7 +5167,7 @@
      ]
     }
    ],
-   "leesvolgorde": false,
+   "layoutStijlen": [],
    "layoutTypen": [
     {
      "id": "formulier"
@@ -5971,7 +6227,8 @@
      "id": "object"
     },
     {
-     "id": "multiobject"
+     "id": "multiobject",
+     "erft": "object"
     },
     {
      "id": "package",
@@ -5981,7 +6238,9 @@
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "link",
@@ -6001,11 +6260,13 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -6296,19 +6557,24 @@
    ],
    "layoutTypen": [
     {
-     "id": "eis"
+     "id": "eis",
+     "isAbstract": true
     },
     {
-     "id": "requirement"
+     "id": "requirement",
+     "erft": "eis"
     },
     {
-     "id": "feature"
+     "id": "feature",
+     "erft": "eis"
     },
     {
-     "id": "issue"
+     "id": "issue",
+     "erft": "eis"
     },
     {
-     "id": "change"
+     "id": "change",
+     "erft": "eis"
     },
     {
      "id": "verwijzing"
@@ -6321,7 +6587,9 @@
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "aggregatie",
@@ -6357,11 +6625,13 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -6477,10 +6747,12 @@
      ]
     }
    ],
-   "leesvolgorde": false,
+   "layoutStijlen": [],
    "layoutTypen": [
     {
-     "id": "levenslijn"
+     "id": "levenslijn",
+     "minBreedte": 14,
+     "minHoogte": 200
     },
     {
      "id": "punt",
@@ -6488,13 +6760,17 @@
     },
     {
      "id": "activatie",
-     "randElement": true
+     "randElement": true,
+     "minBreedte": 14,
+     "minHoogte": 44
     },
     {
      "id": "fragment"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "notitielijn",
@@ -6660,29 +6936,26 @@
      "label": "Leesvolgorde, van rechts naar links"
     }
    ],
-   "leesvolgorde": {
-    "richting": "TB",
-    "stroom": [
-     "transitie"
-    ],
-    "start": [
-     "begin",
-     "entry"
-    ],
-    "eind": [
-     "eind",
-     "exit"
-    ]
-   },
+   "layoutStijlen": [
+    {
+     "id": "leesvolgorde",
+     "label": "Leesvolgorde",
+     "renderer": "leesvolgorde",
+     "richting": "TB",
+     "alleenStroom": true
+    }
+   ],
    "layoutTypen": [
     {
-     "id": "begin"
+     "id": "begin",
+     "aard": "begin"
     },
     {
      "id": "toestand"
     },
     {
-     "id": "eind"
+     "id": "eind",
+     "aard": "eind"
     },
     {
      "id": "composiet",
@@ -6702,10 +6975,12 @@
     },
     {
      "id": "entry",
+     "aard": "begin",
      "randElement": true
     },
     {
      "id": "exit",
+     "aard": "eind",
      "randElement": true
     },
     {
@@ -6713,11 +6988,13 @@
     },
     {
      "id": "transitie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "stroom"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -7707,7 +7984,9 @@
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "associatie",
@@ -7961,17 +8240,32 @@
      ]
     ]
    },
-   "leesvolgorde": {
-    "richting": "LR",
-    "start": [
-     "actor"
-    ],
-    "omgekeerd": [
-     "extend",
-     "generalisatie",
-     "realiseert"
-    ]
-   },
+   "layoutStijlen": [
+    {
+     "id": "leesvolgorde",
+     "label": "Leesvolgorde",
+     "renderer": "leesvolgorde",
+     "richting": "LR",
+     "regels": [
+      {
+       "selector": {
+        "elementType": "actor"
+       },
+       "opties": {
+        "positie": "begin"
+       }
+      },
+      {
+       "selector": {
+        "connectorType": "extend"
+       },
+       "opties": {
+        "volgorde": "omgekeerd"
+       }
+      }
+     ]
+    }
+   ],
    "layoutTypen": [
     {
      "id": "actor"
@@ -7993,39 +8287,49 @@
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "associatie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "associatie"
     },
     {
      "id": "include",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "afhankelijkheid"
     },
     {
      "id": "extend",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "afhankelijkheid"
     },
     {
      "id": "generalisatie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "specialisatie"
     },
     {
      "id": "realiseert",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "realisatie"
     },
     {
      "id": "dependency",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "afhankelijkheid"
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -8255,28 +8559,36 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "wsdlElement"
+     "id": "wsdlElement",
+     "isAbstract": true
     },
     {
-     "id": "service"
+     "id": "service",
+     "erft": "wsdlElement"
     },
     {
-     "id": "portType"
+     "id": "portType",
+     "erft": "wsdlElement"
     },
     {
-     "id": "binding"
+     "id": "binding",
+     "erft": "wsdlElement"
     },
     {
-     "id": "message"
+     "id": "message",
+     "erft": "wsdlElement"
     },
     {
-     "id": "types"
+     "id": "types",
+     "erft": "wsdlElement"
     },
     {
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "realiseert",
@@ -8304,11 +8616,13 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   },
@@ -8610,16 +8924,20 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "xsdType"
+     "id": "xsdType",
+     "isAbstract": true
     },
     {
-     "id": "complexType"
+     "id": "complexType",
+     "erft": "xsdType"
     },
     {
-     "id": "simpleType"
+     "id": "simpleType",
+     "erft": "xsdType"
     },
     {
-     "id": "enumeration"
+     "id": "enumeration",
+     "erft": "simpleType"
     },
     {
      "id": "element"
@@ -8637,7 +8955,9 @@
      "id": "notitie"
     },
     {
-     "id": "boundary"
+     "id": "boundary",
+     "minBreedte": 140,
+     "minHoogte": 90
     },
     {
      "id": "extension",
@@ -8665,11 +8985,13 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     }
    ]
   }
