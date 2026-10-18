@@ -415,3 +415,40 @@ test("erft/isAbstract: ontwerp ⇄ descriptor roundtrip, geërfde delen niet dub
   const regels = Object.values(terug.elements).filter((el) => el.elementType === "verbindingsregel");
   assert.equal(regels.length, 1, "één regel naar het abstracte type, niet vier");
 });
+
+test("M3 aard, facetten en layoutstijl (18-10): ontwerp ⇄ profiel, en registreerbaar", () => {
+  const kern = {
+    id: "lagen-test",
+    label: "Lagen-test",
+    style: "uml-klassiek",
+    fieldTypes: [{ id: "veld", viewer: "naam-type", properties: [{ key: "naam", datatype: "string", verplicht: true }] }],
+    facetten: { laag: ["business", "applicatie"] },
+    layoutStijlen: [{ id: "lagen", label: "Lagen", renderer: "leesvolgorde", richting: "TB", rijen: "laag", afstanden: { laag: 90 }, regels: [{ selector: { aard: "stroom" }, opties: { volgorde: "omgekeerd" } }] }],
+    elementTypes: [
+      { id: "start", label: "Start", shape: "class-box", aard: "begin", facetten: { laag: "business" }, properties: [], compartments: [] },
+      { id: "app", label: "App", shape: "class-box", facetten: { laag: "applicatie" }, properties: [], compartments: [] },
+      { id: "stroom", label: "Stroom", shape: "edge", isConnector: true, aard: "stroom", bron: { elementTypes: ["start"] }, doel: { elementTypes: ["app"] }, edgePresentatie: { lijn: "solid" } },
+    ],
+    taakbalken: [],
+    layouts: [],
+  };
+  const ontwerp = ontwerpUitProfiel(kern);
+  const soorten = Object.values(ontwerp.elements).map((e) => e.elementType);
+  assert.ok(soorten.includes("facetDef") && soorten.includes("layoutStijlDef"));
+  const terug = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "lagen-test", label: "Lagen-test" });
+  assert.deepEqual(terug.facetten, { laag: ["business", "applicatie"] });
+  assert.deepEqual(terug.layoutStijlen, [{ id: "lagen", label: "Lagen", renderer: "leesvolgorde", richting: "TB", rijen: "laag", afstanden: { laag: 90 }, regels: kern.layoutStijlen[0].regels }]);
+  const start = terug.elementTypes.find((e) => e.id === "start");
+  assert.equal(start.aard, "begin");
+  assert.deepEqual(start.facetten, { laag: "business" });
+  assert.equal(terug.elementTypes.find((e) => e.id === "stroom").aard, "stroom");
+  assert.deepEqual(valideerDiagramType(vertaalHooks(terug)), []);
+});
+
+test("M3 aard: een onbekende aard in het ontwerp wordt niet overgenomen", () => {
+  const ontwerp = voorbeeldOntwerpMetRegel();
+  const et = Object.values(ontwerp.elements).find((e) => e.elementType === "elementDef");
+  et.data = { ...et.data, aard: "zomaar" };
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "rt2" });
+  assert.ok(kern.elementTypes.every((e) => e.aard === undefined));
+});

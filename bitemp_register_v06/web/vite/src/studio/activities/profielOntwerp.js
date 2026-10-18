@@ -24,6 +24,7 @@
  */
 
 import { handlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
+import { AARD_CONNECTOR, AARD_ELEMENT } from "../../diagramcore/types/layoutStijl.js";
 
 export const PROFIEL_ONTWERP_ID = "profiel-ontwerp";
 
@@ -92,6 +93,10 @@ export const profielOntwerpKern = {
         // M3: abstract type (EMOF isAbstract) — niet instantieerbaar, wel bereik;
         // de naam toont cursief (ClassBox leest data.abstract).
         { key: "abstract", label: "abstract (niet instantieerbaar)", datatype: "boolean" },
+        // M3 betekenis (18-10, types/layoutStijl.js): wat het type ís — de auto-layout,
+        // transformaties en de MCP lezen het. Facetten: bv. "laag=business; aspect=actief".
+        { key: "aard", label: `aard (${AARD_ELEMENT.join("/")})`, datatype: "string" },
+        { key: "facetten", label: "facetten (naam=waarde; …)", datatype: "string" },
       ],
       compartments: [
         { id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" },
@@ -168,7 +173,44 @@ export const profielOntwerpKern = {
         // M3 ConnectorType.verwijderen (16-10): Delete haalt de connector uit het model (niet alleen van het diagram).
         { key: "verwijderenUitModel", label: "Delete = uit het model (verwijderen: model)", datatype: "boolean" },
         { key: "isHierarchie", label: "bevat-relatie (hiërarchie, P02)", datatype: "boolean" },
+        // M3 betekenis (18-10): wat de verbinding betekent (stroom bepaalt de leesvolgorde, …).
+        { key: "aard", label: `aard (${AARD_CONNECTOR.join("/")})`, datatype: "string" },
       ],
+    },
+    {
+      // M3 (18-10): DiagramType.facetten — een indeling met geordende waarden (ArchiMate: laag).
+      // De naam van de node is de naam van het facet.
+      id: "facetDef",
+      label: "Facet",
+      kort: "FAC",
+      stereotype: "«facet»",
+      shape: "class-box",
+      kleur: "#fde68a",
+      icoon: "elementtype",
+      properties: [{ key: "waarden", label: "waarden, in volgorde (komma's)", datatype: "string" }],
+      compartments: [],
+    },
+    {
+      // M3 (18-10): DiagramType.layoutStijlen — de weergave van de auto-layout (renderer
+      // "leesvolgorde"). De naam van de node is het label; regels als JSON (LayoutRegel[]).
+      id: "layoutStijlDef",
+      label: "Layoutstijl",
+      kort: "LAY",
+      stereotype: "«layoutstijl»",
+      shape: "class-box",
+      kleur: "#a7f3d0",
+      icoon: "elementtype",
+      properties: [
+        { key: "richting", label: "richting (TB/LR/BT/RL)", datatype: "string" },
+        { key: "alleenStroom", label: "alleen aard 'stroom' bepaalt de volgorde", datatype: "boolean" },
+        { key: "rijen", label: "rijen per facet (bv. laag)", datatype: "string" },
+        { key: "kolommen", label: "kolommen per facet (bv. aspect)", datatype: "string" },
+        { key: "afstandLaag", label: "afstand tussen lagen (px)", datatype: "string" },
+        { key: "afstandDwars", label: "afstand binnen een laag (px)", datatype: "string" },
+        { key: "marge", label: "binnenrand van een container (px)", datatype: "string" },
+        { key: "regels", label: "regels (JSON: [{selector, opties}])", datatype: "tekst" },
+      ],
+      compartments: [],
     },
     {
       id: "notitie",
@@ -330,6 +372,8 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       ...(d.container ? { _containerWens: true } : {}),
       ...(erftVan.has(def.id) ? { erft: erftVan.get(def.id) } : {}),
       ...(d.abstract ? { isAbstract: true } : {}),
+      ...(AARD_ELEMENT.includes(String(d.aard || "").trim()) ? { aard: String(d.aard).trim() } : {}),
+      ...(Object.keys(leesFacetten(d.facetten)).length ? { facetten: leesFacetten(d.facetten) } : {}),
       properties: [{ key: "kleur", datatype: "colour" }, ...eigenschappenVan(def)],
       compartments,
     });
@@ -379,6 +423,7 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       shape: "edge",
       isConnector: true,
       ...(d.verwijderenUitModel ? { verwijderen: "model" } : {}),
+      ...(AARD_CONNECTOR.includes(String(d.aard || "").trim()) ? { aard: String(d.aard).trim() } : {}),
       ...(regels.length === 1
         ? { bron: { elementTypes: regels[0].bron }, doel: { elementTypes: regels[0].doel } }
         : { verbindingsregels: regels }),
@@ -414,6 +459,35 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     if (kandidaat) et.containerVoor = kandidaat.id;
   }
 
+  // Facetten en layoutstijlen (M3, 18-10): getekende knopen → DiagramType.
+  const facetten = {};
+  for (const f of perSoort("facetDef")) {
+    const waarden = String(f.data?.waarden || "").split(",").map((x) => x.trim()).filter(Boolean);
+    if (f.naam && waarden.length) facetten[slug(f.naam)] = waarden;
+  }
+  const getal = (v) => (String(v ?? "").trim() !== "" && Number.isFinite(Number(v)) ? Number(v) : undefined);
+  const layoutStijlen = perSoort("layoutStijlDef").map((st) => {
+    const d = st.data || {};
+    let regels;
+    try {
+      regels = d.regels ? JSON.parse(d.regels) : undefined;
+    } catch {
+      regels = undefined; // ongeldige JSON: geen regels (de registratie meldt verder niets)
+    }
+    const afstanden = Object.fromEntries(Object.entries({ laag: getal(d.afstandLaag), dwars: getal(d.afstandDwars), marge: getal(d.marge) }).filter(([, v]) => v !== undefined));
+    return {
+      id: slug(st.naam),
+      label: st.naam || "Layoutstijl",
+      renderer: "leesvolgorde",
+      ...(["TB", "LR", "BT", "RL"].includes(String(d.richting || "").trim().toUpperCase()) ? { richting: String(d.richting).trim().toUpperCase() } : {}),
+      ...(d.alleenStroom ? { alleenStroom: true } : {}),
+      ...(d.rijen ? { rijen: slug(d.rijen) } : {}),
+      ...(d.kolommen ? { kolommen: slug(d.kolommen) } : {}),
+      ...(Object.keys(afstanden).length ? { afstanden } : {}),
+      ...(Array.isArray(regels) && regels.length ? { regels } : {}),
+    };
+  });
+
   // Style-data (diagram-niveau): shape-sets + typering-standaard, pass-through.
   const shapeSets =
     Array.isArray(state?.shapeSets) && state.shapeSets.length ? state.shapeSets : null;
@@ -430,6 +504,8 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       : {}),
     fieldTypes,
     elementTypes,
+    ...(Object.keys(facetten).length ? { facetten } : {}),
+    ...(layoutStijlen.length ? { layoutStijlen } : {}),
     taakbalken: [
       { id: "maken", label: "Maken", acties: "elementTypes" },
       { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
@@ -437,6 +513,20 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     layouts: [],
   };
 }
+
+/** "laag=business; aspect=actief" → {laag: "business", aspect: "actief"} (en een object blijft een object). */
+export function leesFacetten(waarde) {
+  if (waarde && typeof waarde === "object") return { ...waarde };
+  const uit = {};
+  for (const deel of String(waarde || "").split(/[;,]/)) {
+    const [k, v] = deel.split("=").map((x) => x?.trim());
+    if (k && v) uit[k] = v;
+  }
+  return uit;
+}
+
+/** {laag: "business", aspect: "actief"} → "laag=business; aspect=actief". */
+const facettenTekst = (f) => Object.entries(f || {}).map(([k, v]) => `${k}=${v}`).join("; ");
 
 /**
  * De elementen die bij één ontwerp-diagram horen (P01: meerdere profielen
@@ -561,6 +651,8 @@ export function ontwerpUitProfiel(descriptor) {
         ...(et.beschrijving === false ? { geenBeschrijving: true } : {}),
         ...(et.layoutDimensie ? { layoutDimensie: et.layoutDimensie } : {}),
         ...(et.isAbstract ? { abstract: true } : {}),
+        ...(et.aard ? { aard: et.aard } : {}),
+        ...(et.facetten && Object.keys(et.facetten).length ? { facetten: facettenTekst(et.facetten) } : {}),
       },
     };
     const x = 60 + kolom * 340;
@@ -671,6 +763,7 @@ export function ontwerpUitProfiel(descriptor) {
               metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
               richtingOptie: props.some((pr) => pr.key === "directioneel"),
               ...(et.verwijderen === "model" ? { verwijderenUitModel: true } : {}),
+              ...(et.aard ? { aard: et.aard } : {}),
               ...([].concat(descriptor.hierarchie || [])
                 .map((h) => (typeof h === "string" ? h : h?.type))
                 .includes(et.id)
@@ -682,6 +775,38 @@ export function ontwerpUitProfiel(descriptor) {
       }
     }
   });
+
+  // Facetten en layoutstijlen (M3, 18-10): één knoop per facet en per stijl, op een rij onder
+  // de veldtypen — ze horen bij het DiagramType, niet bij één elementtype.
+  let x2 = 60;
+  for (const [naam, waarden] of Object.entries(descriptor.facetten || {})) {
+    const id = `${prefix}_facet_${naam}`;
+    elements[id] = { id, naam, elementType: "facetDef", compartimenten: [], data: { waarden: waarden.join(", ") } };
+    nodes.push({ elementId: id, position: { x: x2, y: 900 } });
+    x2 += 300;
+  }
+  for (const st of descriptor.layoutStijlen || []) {
+    const id = `${prefix}_stijl_${st.id}`;
+    const a = st.afstanden || {};
+    elements[id] = {
+      id,
+      naam: st.label || st.id,
+      elementType: "layoutStijlDef",
+      compartimenten: [],
+      data: {
+        ...(st.richting ? { richting: st.richting } : {}),
+        ...(st.alleenStroom ? { alleenStroom: true } : {}),
+        ...(st.rijen ? { rijen: st.rijen } : {}),
+        ...(st.kolommen ? { kolommen: st.kolommen } : {}),
+        ...(a.laag != null ? { afstandLaag: String(a.laag) } : {}),
+        ...(a.dwars != null ? { afstandDwars: String(a.dwars) } : {}),
+        ...(a.marge != null ? { marge: String(a.marge) } : {}),
+        ...(st.regels?.length ? { regels: JSON.stringify(st.regels) } : {}),
+      },
+    };
+    nodes.push({ elementId: id, position: { x: x2, y: 900 } });
+    x2 += 300;
+  }
 
   // Shape-sets en typering-standaard zijn Style-data (diagram-niveau, geen
   // canvas-node): zet ze op het ontwerp-diagram, zodat het shape-set-paneel
