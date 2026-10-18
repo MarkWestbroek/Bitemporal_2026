@@ -288,7 +288,24 @@
  * @typedef {Object} LayoutStrategie
  * @property {string} id
  * @property {string} label
- * @property {(model: Object, diagram: Object, selectie: string[]) => Record<string, {x: number, y: number}>} run
+ * @property {string} [kort] - kort symbool voor de taakbalk (↓ → ⊙ …); `label` wordt de tooltip
+ * @property {(invoer: {flowNodes: Object[], flowEdges: Object[], selectieIds: string[]|null, elements: Object, diagram: Object}) => Record<string, {x: number, y: number}>|Map<string, {x: number, y: number}>|{posities: Record<string, {x: number, y: number}>, maten?: Record<string, {width: number, height: number}>}} run
+ *   - posities per knoop; met `{posities, maten}` krijgen containers ook een nieuwe maat.
+ *
+ * Leesvolgorde — hoe je een diagram van dit profiel leest (2026-10-18, Mark: "boven/onder is per
+ * profiel een ander concept"). Voedt de algemene gelaagde layout (diagramcore/layout/leesvolgorde.js);
+ * een profiel zonder eigen `layouts` krijgt daarmee vier strategieën (de standaardrichting eerst).
+ * `false` = geen automatische layout (bv. sequence: de volgorde ís de tekening).
+ *
+ * @typedef {Object} Leesvolgorde
+ * @property {"TB"|"LR"} [richting] - standaard (smaak: AD van boven naar beneden, BPMN van links naar rechts)
+ * @property {string[]} [stroom]    - connector-ids die de volgorde bepalen (weg = alle)
+ * @property {string[]} [omgekeerd] - lees doel → bron (standaard o.a. generalisatie: de ouder eerst)
+ * @property {string[]} [negeer]    - connector-ids die niet meetellen (bv. message flow)
+ * @property {string[]} [start]     - element-typen waar je begint (meer dan één mag)
+ * @property {string[]} [eind]      - element-typen die achteraan komen
+ * @property {string[]} [banen]     - container-typen die banen zijn (lanes, partities)
+ * @property {string[][]} [lagen]   - vaste lagen op type, in plaats van de stroom (ArchiMate)
  */
 
 /**
@@ -324,6 +341,7 @@
  *   resolver per ReferenceType-id (kandidaten uit model/runtime)
  * @property {TaskbarType[]} [taakbalken]
  * @property {LayoutStrategie[]} [layouts]
+ * @property {Leesvolgorde|false} [leesvolgorde] - zie Leesvolgorde; geldt als `layouts` leeg is
  * @property {boolean} [meerdereVoorkomens] - elementen mogen meermaals in één diagram voorkomen (default false)
  * @property {{exporteer?: Function, importeer?: Function}} [serialisatie]
  * @property {(ctx: Object) => Array<Object>} [menus] - extra menubalk-menu's

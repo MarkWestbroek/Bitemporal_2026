@@ -86,6 +86,9 @@
 .ast-problemen ul { margin: 4px 0 0; padding-left: 18px; }
 .ast-problemen--let-op summary { color: #b45309; font-weight: 600; }
 .ast-niets { color: #b45309; margin: 4px 0 0; }
+/* Wat de assistent niet kon (18-10): oranje kader, zodat het niet in de uitleg verdwijnt. */
+.ast-niet-gedaan { margin: 6px 0 0; padding: 4px 8px; border-left: 3px solid #f59e0b; color: #b45309; }
+.ast-niet-gedaan ul { margin: 2px 0 0; padding-left: 18px; }
 .ast-instellen form { display: grid; gap: 8px; }
 .ast-talen { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .ast-chip {

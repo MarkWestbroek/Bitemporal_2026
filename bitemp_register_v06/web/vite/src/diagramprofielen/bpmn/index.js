@@ -406,6 +406,9 @@ export const bpmnMotorDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
+  // Leesvolgorde (18-10, Mark): van links naar rechts langs de sequence flows; lanes zijn banen.
+  // Message flows (tussen pools) tellen niet mee voor de volgorde.
+  leesvolgorde: { richting: "LR", stroom: ["sequence-flow", "data-associatie"], start: ["start-event"], eind: ["eind-event"], banen: ["lane"], minimaal: { lane: [240, 100], pool: [320, 160] } },
 };
 
 let _teller = 0;

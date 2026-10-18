@@ -692,27 +692,43 @@ export const canoniekUmlDiagramType = {
    * ankers op middelpunten). `run` krijgt de live canvas-context en geeft
    * posities terug (Map/Record) die de core als één undo-stap toepast.
    */
+  // De richtingen van de IDE (Mark, 18-10: "deterministische layouts uit de IDE ook in de
+  // Studio"): zelfde algoritme, zelfde opties. De eerste is de standaard (menu, sneltoets).
   layouts: [
-    {
-      id: "gelaagd",
-      label: "Auto-layout",
-      run: ({ flowNodes, flowEdges, selectieIds }) =>
-        berekenAutoLayout(
-          // Synthetische ankers van de core ("__anker") spreken in het oude
-          // algoritme de taal van de umleditor ("associatieAnker" + relatieNaam).
-          flowNodes.map((n) =>
-            n.type === "__anker"
-              ? { ...n, type: "associatieAnker", data: { ...n.data, relatieNaam: n.data?.connectorId } }
-              : n
-          ),
-          flowEdges,
-          {
-            selectie: selectieIds || undefined,
-            respecteerLocked: true,
-          }
+    ["gelaagd", "Gelaagd, van boven naar beneden", "↓", "TB"],
+    ["gelaagd-bt", "Gelaagd, van onder naar boven", "↑", "BT"],
+    ["gelaagd-lr", "Gelaagd, van links naar rechts", "→", "LR"],
+    ["gelaagd-rl", "Gelaagd, van rechts naar links", "←", "RL"],
+    ["waaier", "Waaier rond een middelpunt", "⊙", "radial"],
+    ["hierarchisch", "Hiërarchisch (generalisaties als boom)", "🌳", "hierarchisch"],
+  ].map(([id, label, kort, richting]) => ({
+    id,
+    label,
+    kort,
+    run: ({ flowNodes, flowEdges, selectieIds, elements }) =>
+      berekenAutoLayout(
+        // Synthetische ankers van de core ("__anker") spreken in het oude
+        // algoritme de taal van de umleditor ("associatieAnker" + relatieNaam).
+        flowNodes.map((n) =>
+          n.type === "__anker"
+            ? { ...n, type: "associatieAnker", data: { ...n.data, relatieNaam: n.data?.connectorId } }
+            : n
         ),
-    },
-  ],
+        // De hiërarchische modus leest de boom uit generalisaties (kind → ouder) en
+        // composities (ouder → kind), in de vlaggen van de umleditor.
+        (flowEdges || []).map((e) => {
+          const soort = elements?.[e.data?.connectorId]?.elementType;
+          if (soort === "generalisatie") return { ...e, data: { ...e.data, isGeneralization: true } };
+          if (soort === "compositie") return { ...e, data: { ...e.data, isCompositie: true } };
+          return e;
+        }),
+        {
+          selectie: selectieIds || undefined,
+          respecteerLocked: true,
+          richting,
+        }
+      ),
+  })),
 };
 
 // Overerving (representatie → entiteit/gegevenselement → relatie) meteen

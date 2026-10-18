@@ -12,6 +12,17 @@
  */
 
 import { normaliseerErfenis, kopieVoorNormalisatie } from "./erfenis.js";
+import { leesvolgordeLayouts } from "../layout/leesvolgorde.js";
+
+/**
+ * Profiel zonder eigen layouts: de algemene gelaagde layout op zijn leesvolgorde (18-10). In
+ * place, net als de erfenis: de activiteiten houden dit object vast. `leesvolgorde: false` = niet.
+ */
+export function vulLayoutsAan(descriptor) {
+  if (!descriptor || descriptor.leesvolgorde === false || descriptor.layouts?.length) return descriptor;
+  descriptor.layouts = leesvolgordeLayouts(descriptor);
+  return descriptor;
+}
 
 /** @typedef {import("./schema.js").DiagramType} DiagramType */
 /** @typedef {import("./schema.js").ElementType} ElementType */
@@ -148,6 +159,7 @@ export function registreerDiagramType(descriptor) {
   }
   // In place: de activiteiten houden ditzelfde object vast (descriptor-prop).
   normaliseerErfenis(descriptor);
+  vulLayoutsAan(descriptor);
   _diagramTypes.set(descriptor.id, descriptor);
 }
 
@@ -163,6 +175,7 @@ export function vervangDiagramType(descriptor) {
     throw new Error(`Ongeldig DiagramType:\n- ${fouten.join("\n- ")}`);
   }
   normaliseerErfenis(descriptor);
+  vulLayoutsAan(descriptor);
   _diagramTypes.set(descriptor.id, descriptor);
 }
 

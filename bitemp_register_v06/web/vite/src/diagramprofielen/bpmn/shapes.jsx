@@ -293,7 +293,9 @@ function LaneShape({ element, selected, children }) {
         width: "100%",
         height: "100%",
         minWidth: 240,
-        minHeight: 200,
+        // 100 (was 200): een lane met één rij taken hoeft niet zo hoog; de auto-layout rekent
+        // met dezelfde ondergrens (leesvolgorde.minimaal in index.js, 18-10).
+        minHeight: 100,
         border: `2px solid ${rand}`,
         borderRadius: 4,
         background: element?.data?.kleur ? `${element.data.kleur}22` : "rgba(148, 163, 184, 0.07)",

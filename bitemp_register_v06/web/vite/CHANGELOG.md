@@ -8,6 +8,34 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Auto-layout in zes richtingen** (18-10, Mark): de deterministische layouts van de IDE staan nu
+  ook in de Studio, voor het canonieke model: gelaagd van boven naar beneden, van onder naar
+  boven, van links naar rechts, van rechts naar links, een waaier rond een middelpunt, en
+  hiërarchisch (generalisaties als boom). Rechtsklik op het canvas → **Auto-layout ▸**; met twee
+  of meer elementen geselecteerd alleen de selectie. Ook in de taakbalk *Auto-layout* (↓ ↑ → ← ⊙ 🌳)
+  en in het menu *Diagram*.
+- **Auto-layout voor alle profielen, op leesvolgorde** (18-10, Mark: "boven/onder is per profiel
+  een ander concept; het heeft te maken met leesvolgorde"). Elk profiel zonder eigen layout krijgt
+  een gelaagde layout die volgt hoe je het diagram leest: waar je begint (start-events, begin,
+  actoren), welke verbindingen de stroom vormen, wat achteraan komt, en welke containers banen zijn.
+  Vier richtingen, de standaard van het profiel eerst: **BPMN van links naar rechts** (de stroom
+  loopt door de lanes, alle lanes even lang), **activiteitendiagram van boven naar beneden**
+  (partities als banen), use cases van links naar rechts (actoren links, het systeemkader groeit om
+  zijn use cases), toestanden van boven naar beneden, ArchiMate in zijn lagen (motivatie,
+  strategie, business, applicatie, technologie, fysiek, implementatie). Containers groeien mee met
+  hun inhoud. Sequence en formulier krijgen bewust geen auto-layout.
+- **De assistent en de MCP kunnen verplaatsen** (18-10, Mark): een element naar een plek, of
+  rechts, links, onder of boven een ander element; en een diagram opstellen met een layout van zijn
+  taal ("zet dit diagram hiërarchisch neer"). Ze zien daarvoor waar elk element nu staat.
+- **"Niet gedaan" bij de assistent**: wat de AI van de opdracht niet kan (kleuren, lijnroutes,
+  diagrammen weghalen), en wat bij het toepassen niet lukte, staat apart in een oranje blok — niet
+  meer alleen verstopt in de uitleg (Mark, 18-10: "een uitgebreid antwoord, maar geen effect").
+
+### Gewijzigd
+- **BPMN-lane**: minimale hoogte 100 in plaats van 200, zodat een lane met één rij taken niet
+  onnodig hoog is.
+
 ## [studio/v0.23.0] — 2026-10-16
 
 ### Toegevoegd

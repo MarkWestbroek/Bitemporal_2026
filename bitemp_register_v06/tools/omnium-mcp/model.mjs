@@ -28,6 +28,35 @@ async function kern() {
   }
 }
 
+// Layout-strategieën per diagramtype (descriptor.layouts met `run`), voor opstel-acties als
+// "hierarchisch". De profielmodule moet in gewone Node laden (canoniek-uml kan dat); lukt dat
+// niet, dan heeft dat profiel hier geen layouts en meldt de wijziging het.
+const _layouts = new Map();
+export async function layoutsVoor(diagramTypeId) {
+  if (!diagramTypeId) return [];
+  if (!_layouts.has(diagramTypeId)) {
+    let lijst = [];
+    try {
+      const m = await laad(`diagramprofielen/${diagramTypeId}/index.js`);
+      const d = Object.values(m).find((x) => x && typeof x === "object" && x.id === diagramTypeId && Array.isArray(x.elementTypes));
+      lijst = d?.layouts || [];
+      // Zonder eigen layouts: de algemene layout op de leesvolgorde (zoals de registry in de Studio doet).
+      if (!lijst.length && d && d.leesvolgorde !== false) lijst = (await laad("diagramcore/layout/leesvolgorde.js")).leesvolgordeLayouts(d);
+    } catch {
+      lijst = [];
+    }
+    // Profielmodule laadt niet in Node (JSX): de leesvolgorde uit profielen.json.
+    if (!lijst.length) {
+      const p = profielen().find((x) => x.diagramTypeId === diagramTypeId);
+      if (p && p.leesvolgorde !== false && p.layoutTypen) {
+        lijst = (await laad("diagramcore/layout/leesvolgorde.js")).leesvolgordeLayouts({ leesvolgorde: p.leesvolgorde || {}, elementTypes: p.layoutTypen });
+      }
+    }
+    _layouts.set(diagramTypeId, lijst);
+  }
+  return _layouts.get(diagramTypeId);
+}
+
 let _profielen = null;
 export function profielen() {
   if (!_profielen) _profielen = JSON.parse(readFileSync(new URL("./profielen.json", import.meta.url), "utf8")).profielen;
@@ -154,7 +183,8 @@ export async function wijzigModel(api, { project, map, plan, toepassen = false }
   const talen = alle.filter((x) => genoemd.has(x.id));
   const gecontroleerd = k.controleerPlan(plan, talen, bestaand);
   const stand = { mappen: proj.mappen, plaatsing: proj.plaatsing, profielen: Object.fromEntries(talen.map((t) => [t.id, proj.profielen[t.id] || { elements: {}, diagrams: {} }])) };
-  const wijziging = k.maakWijziging(gecontroleerd, stand, { mapId, samenvattingen: talen, prefix: "mcp" });
+  const layoutLijsten = Object.fromEntries(await Promise.all(talen.map(async (t) => [t.id, await layoutsVoor(t.diagramTypeId)])));
+  const wijziging = k.maakWijziging(gecontroleerd, stand, { mapId, samenvattingen: talen, prefix: "mcp", layouts: (pid) => layoutLijsten[pid] || [] });
   let verstuurd = 0;
   if (toepassen) {
     const ops = k.naarOps(wijziging);
@@ -188,9 +218,13 @@ export function wijzigingTekst({ project, map, plan, wijziging, bestaand, verstu
   for (const v of plan.veldenBij || []) r.push(`~ ${v.naam || v.id}: ${v.soort === "waarde" ? "waarden" : "velden"} erbij — ${v.velden.map((x) => (x.type ? `${x.naam}: ${x.type}` : x.naam)).join(", ")}`);
   for (const v of plan.verwijderen || []) r.push(`- weg: ${v.soort === "relatie" ? `${v.type} ${v.id}` : `${v.naam || v.id} (${v.id})`}`);
   for (const o of plan.opstelling || []) r.push(`~ opstelling ${o.actie}${o.elementen.length ? `: ${o.elementen.map(naam).join(", ")}` : " (alles)"}`);
+  for (const p of plan.posities || []) r.push(`~ verplaatst: ${naam(p.element)} ${p.naast ? `${p.kant} van ${naam(p.naast)} (afstand ${p.afstand})` : `naar ${p.x}, ${p.y}`}`);
   for (const v of plan.verbanden) r.push(`+ verband: ${naam(v.van)} ${v.soort} ${naam(v.naar)}`);
   if (plan.opmerkingen.length) r.push("", "Bijgestuurd:", ...plan.opmerkingen.map((x) => `- ${x}`));
   if (plan.problemen.length) r.push("", "Weggelaten:", ...plan.problemen.map((x) => `- ${x}`));
+  // Expliciet wat niet gebeurt, zodat de aanroepende AI het niet als gedaan meldt.
+  const niet = [...(plan.nietGedaan || []), ...(wijziging.nietUitgevoerd || [])];
+  if (niet.length) r.push("", "NIET GEDAAN (meld dit aan de gebruiker):", ...niet.map((x) => `- ${x}`));
   if (wijziging.zonderDiagram.length) r.push("", `${wijziging.zonderDiagram.length} relatie(s) staan op geen diagram.`);
   if (!toepassen) r.push("", "Roep model_wijzigen opnieuw aan met toepassen: true om dit door te voeren (open Studio's zien het live).");
   return r.join("\n");

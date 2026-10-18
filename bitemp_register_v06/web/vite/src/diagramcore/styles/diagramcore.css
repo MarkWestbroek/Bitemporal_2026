@@ -1078,3 +1078,8 @@
 .dc-gebruik-diagram.is-actief { font-weight: 600; }
 .dc-gebruik-aantal { color: var(--s-fg-muted, #64748b); font-weight: 400; }
 .dc-gebruik-leeg { margin: 2px 4px; font-style: italic; color: var(--s-fg-muted, #64748b); }
+
+/* Submenu in het contextmenu (18-10): pijl rechts, open ouder-item blijft gemarkeerd. */
+.dc-contextmenu-pijl { margin-left: auto; padding-left: 12px; color: var(--s-fg-muted, #64748b); }
+.dc-contextmenu-item--sub.is-open { background: var(--s-hover, #f1f5f9); }
+.dc-contextmenu--sub { z-index: 201; }

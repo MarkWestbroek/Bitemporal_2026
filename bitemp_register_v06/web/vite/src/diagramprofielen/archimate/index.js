@@ -228,6 +228,20 @@ export const archimateDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
+  // Leesvolgorde (18-10): de lagen van ArchiMate van boven naar beneden — motivatie, strategie,
+  // business, applicatie, technologie, fysiek, implementatie — los van de pijlrichting.
+  leesvolgorde: {
+    richting: "TB",
+    lagen: [
+      ["stakeholder", "driver", "assessment", "goal", "outcome", "principle", "requirement", "constraint", "betekenis", "waarde"],
+      ["resource", "capability", "koers", "waardestroom"],
+      ["business-actor", "business-rol", "business-collaboratie", "business-interface", "business-proces", "business-functie", "business-interactie", "business-service", "business-event", "business-object", "contract", "representatie", "product"],
+      ["app-component", "app-collaboratie", "app-interface", "app-functie", "app-interactie", "app-proces", "app-event", "app-service", "data-object"],
+      ["node", "device", "systeemsoftware", "tech-collaboratie", "tech-interface", "pad", "communicatienetwerk", "tech-functie", "tech-proces", "tech-interactie", "tech-event", "tech-service", "artifact"],
+      ["equipment", "facility", "distributienetwerk", "materiaal"],
+      ["werkpakket", "deliverable", "implementatie-event", "plateau", "gap"],
+    ],
+  },
 };
 
 let _teller = 0;

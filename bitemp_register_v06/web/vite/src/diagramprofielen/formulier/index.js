@@ -159,6 +159,8 @@ export const formulierDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
+  // Geen automatische layout: een formulier heeft zijn eigen opbouw (18-10).
+  leesvolgorde: false,
 };
 
 let _teller = 0;

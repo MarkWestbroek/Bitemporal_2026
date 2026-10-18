@@ -495,8 +495,8 @@ function berekenHierarchischeLayout(nodes, edges, opts) {
   const sortedDepths = [...depthGroups.keys()].sort((a, b) => a - b);
   const maxDepth = sortedDepths.length > 0 ? sortedDepths[sortedDepths.length - 1] : 0;
 
-  // --- DEBUG: boomstructuur naar console ---
-  if (typeof console !== "undefined") {
+  // --- DEBUG: boomstructuur naar console (alleen met opts.debug; in de Studio stil) ---
+  if (opts?.debug && typeof console !== "undefined") {
     console.log("=== HIERARCHISCHE LAYOUT: boomstructuur ===");
     for (let d = 0; d <= maxDepth; d++) {
       const ids = depthGroups.get(d) || [];

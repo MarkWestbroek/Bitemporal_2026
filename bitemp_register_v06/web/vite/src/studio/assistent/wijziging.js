@@ -49,14 +49,18 @@ const CONTAINER = { breedte: 320, hoogte: 200 };
  * @param {{mapId?: string|null, samenvattingen: any[], prefix?: string, nu?: number, gemeten?: Record<string, {w: number, h: number}>}} opties
  *   `gemeten`: maten van knopen zoals het canvas ze tekent (voorkomen-id → {w, h}); uitlijnen
  *   rekent daarmee, net als de werkbalk (melding #11: een actor is 64×~70, geen schatting).
+ *   `layouts`: (profielId) → de layout-strategieën van dat profiel (descriptor.layouts, met `run`),
+ *   voor opstel-acties als "hierarchisch" (18-10). Zonder: zo'n actie wordt overgeslagen en gemeld.
  */
-export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefix = "ai", nu = Date.now(), gemeten = {} }) {
+export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefix = "ai", nu = Date.now(), gemeten = {}, layouts = () => [] }) {
   const taal = new Map(samenvattingen.map((s) => [s.id, s]));
   const etVan = (profielId, type) => taal.get(profielId)?.elementen.find((e) => e.id === type);
   const profielen = {}; // profielId → {elements, diagrams}
   const bij = (profielId) => (profielen[profielId] ||= { elements: {}, diagrams: {} });
   const huidig = (profielId) => stand.profielen?.[profielId] || { elements: {}, diagrams: {} };
   const elementVan = (profielId, id) => bij(profielId).elements[id] || huidig(profielId).elements?.[id];
+  // Wat het plan vroeg maar hier niet kon (layout onbekend, element niet op het diagram).
+  const nietUitgevoerd = [];
 
   // ── Ids ──
   const uniek = (profielId, basis) => {
@@ -347,7 +351,22 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     const gekozen = o.elementen.length ? o.elementen.map(ref).filter((id) => opId.has(id)) : [...opId.keys()].filter((id) => !verdelen || !lidVanIets.has(id));
     const item = (id) => { const n = opId.get(id), m = maatVan(d.profielId, n); return { id, x: n.position.x, y: n.position.y, width: m.w, height: m.h }; };
     let posities = {};
-    if (o.modus === "automatisch") {
+    if (o.modus.startsWith("layout:")) {
+      // Een layout van het profiel (bv. hierarchisch), met dezelfde invoer als op het canvas.
+      const strategie = (layouts(d.profielId) || []).find((l) => `layout:${l.id}` === o.modus);
+      if (!strategie?.run) { nietUitgevoerd.push(`Layout "${o.actie}" is hier niet beschikbaar; diagram niet opgesteld.`); continue; }
+      const alle = { ...huidig(d.profielId).elements, ...bij(d.profielId).elements };
+      const flowNodes = [...opId.keys()].map((id) => {
+        const it = item(id);
+        return { id, type: elementVan(d.profielId, id)?.elementType, position: { x: it.x, y: it.y }, measured: { width: it.width, height: it.height }, data: elementVan(d.profielId, id)?.data || {} };
+      });
+      const flowEdges = Object.values(alle).filter((x) => x.source && opId.has(x.source) && opId.has(x.target)).map((x) => ({ id: x.id, source: x.source, target: x.target, data: { connectorId: x.id } }));
+      const uit = strategie.run({ flowNodes, flowEdges, selectieIds: o.elementen.length ? gekozen : null, elements: alle, diagram });
+      // Map, record, of {posities, maten} (de algemene layout laat containers meegroeien).
+      const pos = uit instanceof Map ? uit : uit?.posities ? Object.entries(uit.posities) : Object.entries(uit || {});
+      for (const [id, p] of pos) if (opId.has(id) && p) posities[id] = { x: p.x, y: p.y };
+      for (const [id, m] of Object.entries((!(uit instanceof Map) && uit?.maten) || {})) if (opId.has(id)) opId.get(id).size = { width: m.width, height: m.height };
+    } else if (o.modus === "automatisch") {
       const groep = new Map();
       for (const [c, ls] of leden) for (const l of ls) if (opId.has(c) && opId.has(l)) groep.set(l, c);
       const plekken = legUit({
@@ -369,6 +388,44 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     for (const [id, p] of Object.entries(posities)) opId.get(id).position = { x: Math.round(p.x), y: Math.round(p.y) };
     bij(d.profielId).diagrams[d.id] = { ...diagram, nodes };
     uitgelijnd.add(`${d.profielId}::${d.id}`);
+    if (!openen.some((x) => x.profielId === d.profielId && x.diagramId === d.id)) openen.push({ profielId: d.profielId, diagramId: d.id });
+  }
+
+  const verplaatst = new Set();
+  // ── 5c. Posities (18-10): een element naar x/y, of naast een ander element. Leden van een
+  // container schuiven mee. Na de opstelling, zodat "naast" de nieuwe plek van de buur ziet.
+  for (const p of plan.posities || []) {
+    const d = diagramId.get(p.diagram);
+    if (!d) continue;
+    const diagram = bij(d.profielId).diagrams[d.id] || huidig(d.profielId).diagrams?.[d.id];
+    if (!diagram) continue;
+    const nodes = (diagram.nodes || []).map((n) => ({ ...n, position: { ...n.position } }));
+    const knoop = (id) => nodes.find((n) => n.elementId === id);
+    const n = knoop(ref(p.element));
+    if (!n) { nietUitgevoerd.push(`${p.element.id || p.element.nieuw} staat niet op het diagram; niet verplaatst.`); continue; }
+    let doel;
+    if (p.naast) {
+      const b = knoop(ref(p.naast));
+      if (!b) { nietUitgevoerd.push(`${p.naast.id || p.naast.nieuw} staat niet op het diagram; niet verplaatst.`); continue; }
+      const m = maatVan(d.profielId, n), mb = maatVan(d.profielId, b);
+      const midX = b.position.x + mb.w / 2 - m.w / 2, midY = b.position.y + mb.h / 2 - m.h / 2;
+      doel =
+        p.kant === "links" ? { x: b.position.x - p.afstand - m.w, y: midY }
+        : p.kant === "onder" ? { x: midX, y: b.position.y + mb.h + p.afstand }
+        : p.kant === "boven" ? { x: midX, y: b.position.y - p.afstand - m.h }
+        : { x: b.position.x + mb.w + p.afstand, y: midY };
+    } else {
+      doel = { x: p.x, y: p.y };
+    }
+    const dx = Math.round(doel.x) - n.position.x, dy = Math.round(doel.y) - n.position.y;
+    if (!dx && !dy) continue;
+    const leden = ledenVan(d.profielId);
+    const schuif = new Set([n.elementId]);
+    const loop = (id) => { for (const l of leden.get(id) || []) if (!schuif.has(l)) { schuif.add(l); loop(l); } };
+    loop(n.elementId);
+    for (const k of nodes) if (schuif.has(k.elementId)) k.position = { x: k.position.x + dx, y: k.position.y + dy };
+    verplaatst.add(`${d.profielId}::${n.elementId}`);
+    bij(d.profielId).diagrams[d.id] = { ...diagram, nodes };
     if (!openen.some((x) => x.profielId === d.profielId && x.diagramId === d.id)) openen.push({ profielId: d.profielId, diagramId: d.id });
   }
 
@@ -424,6 +481,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   if (uitgelijnd.size) delen.push(`${uitgelijnd.size === 1 ? "diagram" : `${uitgelijnd.size} diagrammen`} opnieuw opgesteld`);
   if (links.length) delen.push(`${links.length} verband${links.length === 1 ? "" : "en"}`);
   if (plan.verwijderen?.length) delen.push(`${plan.verwijderen.length} weggehaald`);
+  if (verplaatst.size) delen.push(`${verplaatst.size} verplaatst`);
 
   return {
     mappen,
@@ -434,6 +492,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     zonderDiagram,
     wis,
     plaatsingWis,
+    nietUitgevoerd,
     samenvatting: delen.length ? delen.join(", ") : "geen wijzigingen",
   };
 }

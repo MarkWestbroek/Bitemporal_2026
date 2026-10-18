@@ -2170,8 +2170,26 @@ export function maakDiagramActiviteit(opties) {
           return i === 3 || i === 6 || i === 8 ? [{ sep: true }, item] : [item];
         }),
         { sep: true },
+        // Auto-layout als submenu (Mark, 18-10): elke strategie van het profiel, bv. de zes
+        // richtingen van de IDE. Met een selectie van twee of meer alleen de selectie.
         ...(descriptor.layouts?.length
-          ? [{ id: "auto", label: "Auto-layout (alles)", icoon: "🎯", onClick: () => menuBus.emit(ev("auto-layout"), { selectie: false }) }]
+          ? [
+              {
+                id: "auto",
+                label: selectieAantal >= 2 ? `Auto-layout (selectie: ${selectieAantal})` : "Auto-layout",
+                icoon: "🎯",
+                // Eén strategie (DMN, GraphQL, OAS): gewoon een menuregel, geen submenu met één regel.
+                ...(descriptor.layouts.length === 1
+                  ? { onClick: () => menuBus.emit(ev("auto-layout"), { id: descriptor.layouts[0].id, selectie: selectieAantal >= 2 }) }
+                  : {}),
+                sub: descriptor.layouts.length === 1 ? undefined : descriptor.layouts.map((l) => ({
+                  id: `auto-${l.id}`,
+                  label: l.label,
+                  icoon: l.kort || undefined,
+                  onClick: () => menuBus.emit(ev("auto-layout"), { id: l.id, selectie: selectieAantal >= 2 }),
+                })),
+              },
+            ]
           : []),
         { id: "normaliseer", label: "Normaliseer relaties", icoon: "↔", onClick: () => menuBus.emit(ev("normaliseer")) },
         { id: "snap", label: "Snap nodes naar grid", icoon: UITLIJN_ICONEN.snap, onClick: () => layoutApiRef.current?.snapRaster() },
@@ -2782,7 +2800,7 @@ export function maakDiagramActiviteit(opties) {
       } else if (balk.acties === "layouts") {
         acties = (descriptor.layouts || []).map((strategie) => ({
           id: strategie.id,
-          label: strategie.label,
+          label: strategie.kort || strategie.label,
           titel: `${strategie.label} (heel diagram)`,
           onClick: () => layoutApiRef.current?.voerLayoutUit(strategie, false),
         }));
@@ -3377,8 +3395,16 @@ export function maakDiagramActiviteit(opties) {
         { type: "separator" },
         ...(descriptor.layouts?.length
           ? [
-              { id: `${menuPrefix}-auto`, label: "Auto-layout (heel diagram)", onClick: () => menuBus.emit(ev("auto-layout"), { selectie: false }) },
-              { id: `${menuPrefix}-auto-sel`, label: "Auto-layout (selectie)", onClick: () => menuBus.emit(ev("auto-layout"), { selectie: true }) },
+              {
+                id: `${menuPrefix}-auto`,
+                label: "Auto-layout (heel diagram)",
+                items: descriptor.layouts.map((l) => ({ id: `${menuPrefix}-auto-${l.id}`, label: l.label, onClick: () => menuBus.emit(ev("auto-layout"), { id: l.id, selectie: false }) })),
+              },
+              {
+                id: `${menuPrefix}-auto-sel`,
+                label: "Auto-layout (selectie)",
+                items: descriptor.layouts.map((l) => ({ id: `${menuPrefix}-auto-sel-${l.id}`, label: l.label, onClick: () => menuBus.emit(ev("auto-layout"), { id: l.id, selectie: true }) })),
+              },
             ]
           : []),
         { id: `${menuPrefix}-snap`, label: "Uitlijnen op raster", onClick: () => menuBus.emit(ev("layout"), "snap") },
