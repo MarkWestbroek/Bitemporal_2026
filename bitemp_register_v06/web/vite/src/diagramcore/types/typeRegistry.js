@@ -16,11 +16,13 @@ import { leesvolgordeLayouts } from "../layout/leesvolgorde.js";
 import { valideerAardEnFacetten, valideerLayoutStijl } from "./layoutStijl.js";
 
 /**
- * Profiel zonder eigen layouts: de algemene gelaagde layout op zijn leesvolgorde (18-10). In
- * place, net als de erfenis: de activiteiten houden dit object vast. `leesvolgorde: false` = niet.
+ * Profiel zonder eigen layouts: de algemene gelaagde layout volgens zijn LayoutStijlen (M3,
+ * 18-10; zonder stijlen de generieke standaard, `layoutStijlen: []` = geen). In place, net als de
+ * erfenis: de activiteiten houden dit object vast. Na normaliseerErfenis aanroepen (de aard en
+ * facetten moeten uitgevlakt zijn).
  */
 export function vulLayoutsAan(descriptor) {
-  if (!descriptor || descriptor.leesvolgorde === false || descriptor.layouts?.length) return descriptor;
+  if (!descriptor || descriptor.layouts?.length) return descriptor;
   descriptor.layouts = leesvolgordeLayouts(descriptor);
   return descriptor;
 }

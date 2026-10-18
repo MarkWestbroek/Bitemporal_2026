@@ -261,6 +261,9 @@ const elementTypes = [
   },
   {
     id: "pool",
+    // Zoals PoolShape tekent; de auto-layout rekent ermee (18-10).
+    minBreedte: 320,
+    minHoogte: 160,
     randAanhechting: "zwevend",
     label: "Pool",
     omschrijving:
@@ -277,6 +280,9 @@ const elementTypes = [
   {
     id: "lane",
     aard: "baan",
+    // Zoals LaneShape tekent; de auto-layout rekent ermee (18-10).
+    minBreedte: 240,
+    minHoogte: 100,
     randAanhechting: "zwevend",
     label: "Lane",
     omschrijving: "Wie of wat de taken uitvoert — sleep leden erin.",
@@ -414,11 +420,8 @@ export const bpmnMotorDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
-  // Leesvolgorde (18-10, Mark): van links naar rechts langs de sequence flows; lanes zijn banen.
-  // Message flows (tussen pools) tellen niet mee voor de volgorde.
-  leesvolgorde: { richting: "LR", stroom: ["sequence-flow", "data-associatie"], start: ["start-event"], eind: ["eind-event"], banen: ["lane"], minimaal: { lane: [240, 100], pool: [320, 160] } },
-  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
-  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  // Weergave (M3 LayoutStijl, 18-10): de auto-layout leest de aard van de typen
+  // (types/layoutStijl.js → diagramcore/layout/leesvolgorde.js).
   layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "LR", alleenStroom: true }],
 };
 

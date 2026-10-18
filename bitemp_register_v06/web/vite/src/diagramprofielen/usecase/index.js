@@ -270,10 +270,8 @@ export const usecaseDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
-  // Leesvolgorde (18-10): actoren links, hun use cases rechts; een extend leest vanaf de basis.
-  leesvolgorde: { richting: "LR", start: ["actor"], omgekeerd: ["extend", "generalisatie", "realiseert"] },
-  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
-  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  // Weergave (M3 LayoutStijl, 18-10): de auto-layout leest de aard van de typen
+  // (types/layoutStijl.js → diagramcore/layout/leesvolgorde.js).
   layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "LR", regels: [{ selector: { elementType: "actor" }, opties: { positie: "begin" } }, { selector: { connectorType: "extend" }, opties: { volgorde: "omgekeerd" } }] }],
 };
 

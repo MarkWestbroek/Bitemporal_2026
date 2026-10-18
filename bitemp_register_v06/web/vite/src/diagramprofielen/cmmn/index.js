@@ -268,10 +268,8 @@ export const cmmnDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
-  // Leesvolgorde (18-10): van links naar rechts langs de on-parts (sentries).
-  leesvolgorde: { richting: "LR", stroom: ["on-part"] },
-  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
-  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  // Weergave (M3 LayoutStijl, 18-10): de auto-layout leest de aard van de typen
+  // (types/layoutStijl.js → diagramcore/layout/leesvolgorde.js).
   layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "LR", alleenStroom: true }],
 };
 

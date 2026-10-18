@@ -4,7 +4,8 @@
  * profiel volgt (Mark, 18-10-2026: "boven/onder is per profiel een ander concept; het heeft te
  * maken met leesvolgorde").
  *
- * Elk profiel beschrijft in zijn descriptor (M2) een `leesvolgorde`:
+ * De regels hieronder (het 'Leesvolgorde'-formaat) maakt `regelsVoorStijl` uit de aard en facetten
+ * van de typen en de LayoutStijl van het profiel (types/layoutStijl.js, M3 18-10):
  *
  *   {
  *     richting:  "TB" | "LR",        standaard (smaak: AD van boven naar beneden, BPMN van links naar rechts)
@@ -34,11 +35,14 @@
  * Puur: geen DOM, geen stores. Zie `leesvolgordeLayouts` voor de strategieën op een descriptor.
  */
 
-const MARGE = { rand: 24, kop: 36 }; // binnenmarge van een container; boven ruimte voor de naam
-const AFSTAND = { laag: 70, dwars: 40, baan: 0 };
+/** Alleen de eindige getallen van de gegeven sleutels. */
+const pick = (o, sleutels) => Object.fromEntries(sleutels.filter((k) => Number.isFinite(o?.[k])).map((k) => [k, o[k]]));
+
+const MARGE_STANDAARD = { rand: 24, kop: 36 }; // binnenmarge van een container; boven ruimte voor de naam
+const AFSTAND_STANDAARD = { laag: 70, dwars: 40, baan: 0 };
 
 /** Standaard: verbindingen die "ouder/abstract eerst" lezen — woont bij de betekenis (types/layoutStijl.js). */
-import { STANDAARD_OMGEKEERD } from "../types/layoutStijl.js";
+import { STANDAARD_OMGEKEERD, stijlVoor, regelsVoorStijl } from "../types/layoutStijl.js";
 export { STANDAARD_OMGEKEERD };
 
 /**
@@ -47,10 +51,13 @@ export { STANDAARD_OMGEKEERD };
  */
 
 /**
- * @param {{knopen: Knoop[], verbindingen: Verbinding[], regels?: any, richting?: "TB"|"LR"|"BT"|"RL"}} invoer
+ * @param {{knopen: Knoop[], verbindingen: Verbinding[], regels?: any, richting?: "TB"|"LR"|"BT"|"RL", afstanden?: {laag?: number, dwars?: number, baan?: number, marge?: number}}} invoer
  * @returns {{posities: Record<string, {x: number, y: number}>, maten: Record<string, {width: number, height: number}>}}
  */
-export function legLeesvolgordeUit({ knopen, verbindingen, regels = {}, richting }) {
+export function legLeesvolgordeUit({ knopen, verbindingen, regels = {}, richting, afstanden = {} }) {
+  // Afstanden uit de LayoutStijl (laag, dwars, baan; marge = binnenrand van een container).
+  const AFSTAND = { ...AFSTAND_STANDAARD, ...pick(afstanden, ["laag", "dwars", "baan"]) };
+  const MARGE = { ...MARGE_STANDAARD, ...(Number.isFinite(afstanden?.marge) ? { rand: afstanden.marge } : {}) };
   const r = richting || regels.richting || "TB";
   const lr = r === "LR" || r === "RL";
   const perId = new Map(knopen.map((k) => [k.id, k]));
@@ -333,22 +340,36 @@ const RICHTINGEN = [
 ];
 
 /**
- * Layout-strategieën voor een descriptor met (of zonder) `leesvolgorde`: vier richtingen, de
- * standaard van het profiel eerst. `run` heeft dezelfde invoer als op het canvas
- * ({flowNodes, selectieIds, elements, diagram}) en geeft {posities, maten}.
+ * Layout-strategieën voor een (uitgevlakt) DiagramType, uit zijn **LayoutStijlen** (M3, 18-10;
+ * types/layoutStijl.js): per stijl vier richtingen, de richting van de stijl eerst. Zonder
+ * `layoutStijlen` de generieke standaardstijl; `layoutStijlen: []` = geen automatische layout
+ * (sequence, formulier). De regels komen uit `regelsVoorStijl` (aard en facetten van de typen),
+ * de minimale maten uit ElementType.minBreedte/minHoogte, de afstanden uit de stijl.
+ * `run` heeft dezelfde invoer als op het canvas ({flowNodes, selectieIds, elements, diagram}) en
+ * geeft {posities, maten}.
  */
 export function leesvolgordeLayouts(descriptor) {
-  const regels = descriptor?.leesvolgorde || {};
-  const standaard = regels.richting === "LR" ? "LR" : "TB";
+  const stijlen = (descriptor?.layoutStijlen ?? [stijlVoor(descriptor)]).filter((st) => (st.renderer || "leesvolgorde") === "leesvolgorde");
+  if (!stijlen.length) return [];
   const typen = new Map((descriptor?.elementTypes || []).map((t) => [t.id, t]));
-  const volgorde = [...RICHTINGEN].sort((a, b) => (a[0] === standaard ? -1 : b[0] === standaard ? 1 : 0));
-  return volgorde.map(([richting, tekst, kort]) => ({
-    id: `leesvolgorde-${richting.toLowerCase()}`,
-    label: `Leesvolgorde, ${tekst}${richting === standaard ? " (standaard)" : ""}`,
-    kort,
-    run: ({ flowNodes, selectieIds, elements, diagram }) =>
-      legLeesvolgordeUit({ ...invoerVanCanvas({ flowNodes, selectieIds, elements, diagram, typen }), regels, richting }),
-  }));
+  // Kleinste maat zoals de vorm hem tekent (bv. een BPMN-lane), zodat niets overloopt.
+  const minimaal = Object.fromEntries(
+    (descriptor?.elementTypes || []).filter((t) => !t.isConnector && (t.minBreedte || t.minHoogte)).map((t) => [t.id, [t.minBreedte || 0, t.minHoogte || 0]])
+  );
+  return stijlen.flatMap((stijl) => {
+    const regels = { ...regelsVoorStijl(descriptor, stijl), minimaal };
+    const standaard = RICHTINGEN.some(([r]) => r === regels.richting) ? regels.richting : "TB";
+    const naam = stijl.id === "standaard" ? "Leesvolgorde" : stijl.label || stijl.id;
+    const volgorde = [...RICHTINGEN].sort((a, b) => (a[0] === standaard ? -1 : b[0] === standaard ? 1 : 0));
+    return volgorde.map(([richting, tekst, kort]) => ({
+      id: `${stijl.id === "standaard" ? "leesvolgorde" : stijl.id}-${richting.toLowerCase()}`,
+      stijl: stijl.id,
+      label: `${naam}, ${tekst}${richting === standaard ? " (standaard)" : ""}`,
+      kort,
+      run: ({ flowNodes, selectieIds, elements, diagram }) =>
+        legLeesvolgordeUit({ ...invoerVanCanvas({ flowNodes, selectieIds, elements, diagram, typen }), regels, richting, afstanden: stijl.afstanden }),
+    }));
+  });
 }
 
 /**
