@@ -40,8 +40,19 @@ Het plan:
  "elementen": [{"sleutel": "u1", "type": "usecase", "naam": "…", "diagram": "d1", "in": "<container>"}, {"bestaand": "<element-id>", "naam": "nieuwe naam"}],
  "connectoren": [{"type": "associatie", "bron": "a1", "doel": "<bestaand id>"}],
  "verbanden": [{"van": "x1", "naar": "u1", "soort": "realiseert"}],
- "verwijderen": ["<id van een bestaand element of een bestaande relatie>"]}
+ "opstelling": [{"diagram": "<id>", "actie": "naast-elkaar", "elementen": ["…"]}, {"diagram": "<id>", "actie": "leesvolgorde-lr"}],
+ "posities": [{"diagram": "<id>", "element": "<id>", "x": 400, "y": 200}, {"diagram": "<id>", "element": "<id>", "naast": "<id>", "kant": "rechts", "afstand": 60}],
+ "verwijderen": ["<id van een bestaand element of een bestaande relatie>"],
+ "nietGedaan": ["Kleuren kan ik niet zetten."]}
 ```
+
+**Grenzen (18-10).** De server-instructies en de beschrijving van `model_wijzigen` zeggen wat
+níet kan: diagrammen of mappen weghalen, kleuren, lijnroutes, elementmaten. Wat het plan vraagt
+maar niet doorgaat, staat in het antwoord onder *Weggelaten* of *NIET GEDAAN*, zodat de
+aanroepende AI het niet als gedaan meldt. `project_bekijken` met een map toont per element waar het
+staat (`op <diagram> @ x,y (b×h)`). Layouts per taal staan in `modeltalen` (`Layouts …`); de
+MCP laadt de strategie uit de profielmodule, of bouwt de algemene layout op de leesvolgorde uit
+`profielen.json`.
 
 Vereisten: de Studio-code in `web/vite` moet zijn afhankelijkheden hebben (`npm install` daar).
 De talen staan in `profielen.json`; **na een wijziging aan een profiel opnieuw genereren** met

@@ -191,6 +191,18 @@ DELETE /api/ai/codes/Collega%20X   intrekken (werkt meteen)
 - er is een limiet per IP;
 - foutmeldingen van de upstream worden ingekort tot hun boodschap.
 
+## Wat de assistent niet kan, zegt hij (18-10)
+
+Mark vroeg DeepSeek in de Studio om elementen te verplaatsen en kreeg een uitgebreid antwoord
+zonder effect. Sindsdien:
+- **Verplaatsen kan** (plan-veld `posities`: naar x/y of naast een ander element), en opstellen met
+  een layout van de taal. De prompt toont per element waar het staat.
+- **Wat niet kan** (diagrammen of mappen weghalen, kleuren, lijnroutes, elementmaten) zet de AI in
+  `nietGedaan`; de Studio toont dat apart in een oranje blok, samen met wat bij het toepassen niet
+  lukte. Verandert een voorstel niets, dan zegt de Studio dat ook.
+- De MCP doet hetzelfde voor een AI-client: grenzen in de server-instructies en de
+  toolbeschrijving, en *NIET GEDAAN* in het antwoord.
+
 ## Nog niet
 
 - **Claude via de proxy.** Die komt met de Go-SDK, niet via een OpenAI-compatibele omweg.

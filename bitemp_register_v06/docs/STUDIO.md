@@ -233,6 +233,44 @@ te wijzigen.
 > knop # in Uitlijnen); documentdiagram `schets.lijnTussen` (recht bij overlap) en
 > uiteinde-labels via de `edgeLabels`-hook; sjabloontaal `{{#if lijst params}}`.
 >
+> **Auto-layout en submenu's (2026-10-18, Mark):** het canonieke profiel
+> (`diagramprofielen/canoniek-uml/index.js`) heeft zes `layouts`, één per richting van
+> `umleditor/metamodel/autoLayout.js` (TB, BT, LR, RL, radial, hierarchisch; de eerste is de
+> standaard). Generalisatie- en compositieconnectoren krijgen voor de hiërarchische modus de
+> vlaggen `isGeneralization`/`isCompositie` uit de umleditor. Elke strategie heeft `label` en
+> `kort` (symbool voor de taakbalk). Het contextmenu (`DiagramCanvas`) kent nu items met
+> `sub: [...]` (één niveau, eigen portaal naast het ouder-item, toetsenbord → ← Escape);
+> `bouwContextMenu` zet de strategieën onder *Auto-layout ▸* (één strategie: gewone regel). Het
+> IDE-algoritme kent alleen de canonieke elementtypen; andere profielen (use case, ArchiMate) hebben
+> nog geen generieke layout. Debuglog van de hiërarchische modus alleen met `opts.debug`. Tests:
+> `canoniek-uml/layouts.test.js`, e2e `31-studio-auto-layout`.
+>
+> **Auto-layout op leesvolgorde (2026-10-18, Mark):** `diagramcore/layout/leesvolgorde.js` is een
+> algemene, deterministische gelaagde layout. Een profiel beschrijft zijn **leesvolgorde** (M3:
+> `Leesvolgorde` in `types/schema.js`): `richting` (standaard TB/LR), `stroom`, `omgekeerd`,
+> `negeer`, `start`, `eind`, `banen`, `lagen`, `minimaal`. `typeRegistry.vulLayoutsAan` geeft elk
+> profiel zonder eigen `layouts` vier strategieën (`leesvolgordeLayouts`, de standaardrichting
+> eerst); `leesvolgorde: false` = geen (sequence, formulier). Algoritme per groep (diagram of
+> container): containers van binnen naar buiten (de container groeit mee), lagen = langste weg
+> vanaf de beginpunten (cycli in vaste volgorde gebroken), eindpunten achteraan, losse elementen
+> erachter; volgorde in een laag = huidige plek + barycentrum; **banen** (lane, partitie): lagen
+> gedeeld over alle banen, één strook per baan. De strategie geeft `{posities, maten}`;
+> `voerLayoutUit` zet de maten met `onNodeMaten`. Lidmaatschap komt uit de container-connector
+> (`containerVoor`); rand-elementen doen niet mee (ze hangen relatief aan hun gastheer). Profielen
+> met een eigen leesvolgorde: activity (TB, partities), bpmn (LR, lanes, message flow telt niet),
+> usecase (LR, actoren eerst), statemachine (TB), cmmn (LR), archimate (TB, zeven lagen); de rest
+> de standaard (alle verbindingen, generalisatie e.d. omgekeerd: de ouder eerst). Bekend: een lijn
+> kan door een element in dezelfde kolom lopen (lijnrouteren, niet de opstelling). Tests:
+> `layout/leesvolgorde.test.js`, e2e `31-studio-auto-layout`.
+>
+> **Verplaatsen via de assistent en de MCP (2026-10-18):** het plan kent `posities` (`{diagram,
+> element, x, y}` of `{…, naast, kant, afstand}`; leden van een container schuiven mee) en
+> `nietGedaan` (wat de AI niet kan; apart getoond); een opstel-actie mag ook een layout van de taal
+> zijn (`layout:<id>`, de samenvatting noemt `layouts`). `bestaandTekst` toont per element `op
+> <diagram> @ x,y (b×h)`. `maakWijziging` krijgt `layouts: (profielId) → strategieën` (Studio uit de
+> registry; MCP uit de profielmodule of, bij JSX, uit `profielen.json`: `leesvolgorde` +
+> `layoutTypen`) en geeft `nietUitgevoerd` terug.
+>
 > **Gedeelde plaatjes (2026-10-16, Mark — Confluence):** Confluence Cloud laat data-URI-plaatjes
 > bij plakken weg, maar houdt een extern `<img>` als link (getest 16-10 op
 > commongroundprogramma.atlassian.net: het adres bleef `omnium-ide.nl`). Geen CORS (een `<img>` valt
