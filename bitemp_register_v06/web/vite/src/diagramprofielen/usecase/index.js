@@ -303,8 +303,10 @@ export const usecaseDiagramType = {
   ],
   layouts: [],
   // Weergave (M3 LayoutStijl, 18-10): de auto-layout leest de aard van de typen
-  // (types/layoutStijl.js → diagramcore/layout/leesvolgorde.js).
-  layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "LR", regels: [{ selector: { elementType: "actor" }, opties: { positie: "begin" } }, { selector: { connectorType: "extend" }, opties: { volgorde: "omgekeerd" } }] }],
+  // (types/layoutStijl.js → diagramcore/layout/leesvolgorde.js). Use case (meting ARCH-PROJECT,
+  // 18-10): secundaire actoren rechts, het kader staand (2 kolommen), en een specialisatie geeft
+  // geen eigen kolom — het kind komt naast zijn ouder.
+  layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "LR", secundairAchteraan: true, secundairUit: "primair", kaderKolommen: 2, regels: [{ selector: { elementType: "actor" }, opties: { positie: "begin" } }, { selector: { connectorType: "extend" }, opties: { volgorde: "omgekeerd" } }, { selector: { aard: "specialisatie" }, opties: { volgorde: "negeer" } }] }],
 };
 
 let _teller = 0;

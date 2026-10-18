@@ -126,3 +126,53 @@ test("layoutStijlen: [] = geen layout; zonder stijlen de generieke standaard; af
   assert.equal(dicht.b.y - dicht.a.y, 60);
   assert.equal(ruim.b.y - ruim.a.y, 250);
 });
+
+// Use case (meting ARCH-PROJECT tegen Marks handwerk, 18-10): actoren bij hun use cases, een
+// secundaire actor rechts van het kader, het kader staand met include-doelen in kolom twee.
+const ucRegels = { richting: "LR", start: ["actor"], omgekeerd: ["extend"], negeer: ["generalisatie"], secundairAchteraan: true, kaderKolommen: 2 };
+const ucKnopen = () => [
+  k("sys", "systeem", 200, 0, { w: 200, h: 120, container: true }),
+  k("lid", "actor", 600, 0, { w: 64, h: 80 }),
+  k("med", "actor", 600, 600, { w: 64, h: 80 }),
+  k("bank", "actor", 0, 0, { w: 64, h: 80 }),
+  ...["u1", "u2", "u3", "u4", "u5"].map((u, i) => k(u, "usecase", 220, 20 + i * 10, { ouder: "sys" })),
+];
+const ucVerbindingen = [
+  v("lid", "u1", "associatie"), v("lid", "u2", "associatie"), v("lid", "u3", "associatie"), v("bank", "u3", "associatie"),
+  v("med", "u5", "associatie"), v("u1", "u4", "include"), v("u2", "u4", "include"),
+];
+
+test("use case: secundaire actor rechts van het kader, op de hoogte van zijn use case", () => {
+  const { posities: p, maten: m } = legLeesvolgordeUit({ knopen: ucKnopen(), verbindingen: ucVerbindingen, regels: ucRegels });
+  assert.ok(p.lid.x < p.sys.x && p.med.x < p.sys.x, "primaire actoren links");
+  assert.ok(p.bank.x > p.sys.x + m.sys.width, "het betaalsysteem (elke use case heeft een sterkere actor) rechts");
+  assert.ok(Math.abs(p.bank.y + 40 - (p.u3.y + 25)) < 2, "op de hoogte van 'Betaal boete'");
+});
+
+test("use case: het kader staand — use cases met een actor in kolom één, include-doelen in kolom twee", () => {
+  const { posities: p } = legLeesvolgordeUit({ knopen: ucKnopen(), verbindingen: ucVerbindingen, regels: ucRegels });
+  const kol1 = ["u1", "u2", "u3", "u5"].map((u) => p[u].x);
+  assert.equal(new Set(kol1).size, 1, "één kolom");
+  assert.ok(p.u4.x > kol1[0], "include-doel in de tweede kolom");
+  // Volgorde volgt de actoren: de use case van de medewerker staat onder die van het lid.
+  assert.ok(p.u5.y > Math.max(p.u1.y, p.u2.y, p.u3.y));
+  assert.ok(p.med.y > p.lid.y);
+});
+
+test("use case: een specialisatie geeft geen eigen kolom; het kind staat naast zijn ouder", () => {
+  const knopen = [k("sys", "systeem", 200, 0, { container: true, w: 200, h: 100 }), k("gebr", "actor", 0, 0, { w: 64, h: 80 }), k("beh", "actor", 0, 500, { w: 64, h: 80 }), k("u1", "usecase", 0, 0, { ouder: "sys" }), k("u2", "usecase", 0, 0, { ouder: "sys" })];
+  const verbindingen = [v("gebr", "u1", "associatie"), v("beh", "u2", "associatie"), v("beh", "gebr", "generalisatie")];
+  const { posities: p } = legLeesvolgordeUit({ knopen, verbindingen, regels: ucRegels });
+  assert.equal(p.gebr.x, p.beh.x, "zelfde kolom");
+});
+
+test("use case: 'primair' op de associatie wint van de vuistregel (secundairUit, Mark 18-10)", () => {
+  // Zonder vlag zou 'bank' (minder verbindingen) rechts komen; nu is alleen 'bank' primair.
+  const verb = ucVerbindingen.map((x) => (x.bron === "bank" ? { ...x, data: { primair: true } } : x));
+  const { posities: p, maten: m } = legLeesvolgordeUit({ knopen: ucKnopen(), verbindingen: verb, regels: { ...ucRegels, secundairUit: "primair" } });
+  assert.ok(p.bank.x < p.sys.x, "de primaire actor links");
+  assert.ok(p.lid.x > p.sys.x + m.sys.width && p.med.x > p.sys.x + m.sys.width, "actoren zonder primaire associatie rechts");
+  // Staat 'primair' nergens: de vuistregel (bank rechts, lid en med links).
+  const zonder = legLeesvolgordeUit({ knopen: ucKnopen(), verbindingen: ucVerbindingen, regels: { ...ucRegels, secundairUit: "primair" } }).posities;
+  assert.ok(zonder.bank.x > zonder.sys.x && zonder.lid.x < zonder.sys.x);
+});

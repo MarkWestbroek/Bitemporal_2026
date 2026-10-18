@@ -28,6 +28,7 @@ import { metBeschrijving } from "../model/beschrijving.js";
 // canvas mee, dus zonder diagram vielen de rijen terug op de browser-
 // standaard (smal tekstvak, labels erboven — gemeld 2026-10-12).
 import "../styles/diagramcore.css";
+import { valideerElement } from "../model/validatie.js";
 
 /** Eén property: kiezer bij referenceTypes, anders editor op datatype. */
 function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor, editorContext }) {
@@ -195,6 +196,10 @@ export default function ElementInspector({
       elements: editorContext?.elements || {},
     }) || [];
 
+  // Profielregels (ElementType.hooks.valideer, 18-10): meldingen bovenaan de inspector, bv. een
+  // use case zonder primaire actor en zonder trigger. Zie diagramcore/model/validatie.js.
+  const meldingen = valideerElement(elementType, element, { elements: editorContext?.elements || {} });
+
   /** Vervang de velden van één compartiment (maakt het aan als het ontbreekt). */
   const zetCompartiment = useCallback(
     (compartmentTypeId, velden) => {
@@ -214,6 +219,16 @@ export default function ElementInspector({
         {elementType?.label || element.elementType}
         {element.data?.domein ? ` · ${element.data.domein}` : ""}
       </p>
+      {meldingen.length > 0 && (
+        <ul className="dc-inspector-meldingen" data-testid="inspector-meldingen">
+          {meldingen.map((m, i) => (
+            <li key={i} className={`dc-inspector-melding dc-inspector-melding--${m.niveau}`}>
+              {m.niveau === "fout" ? "✖ " : m.niveau === "info" ? "ℹ " : "⚠ "}
+              {m.tekst}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* Naam */}
       <div className="dc-inspector-rij">

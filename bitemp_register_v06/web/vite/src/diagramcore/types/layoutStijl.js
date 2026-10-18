@@ -105,6 +105,10 @@ export function valideerLayoutStijl(dt, stijl) {
   if (!stijl?.id) fouten.push(`${waar}: id ontbreekt`);
   if (!LAYOUT_RENDERERS.includes(stijl?.renderer)) fouten.push(`${waar}: onbekende renderer "${stijl?.renderer}" (${LAYOUT_RENDERERS.join(", ")})`);
   if (stijl?.richting && !RICHTINGEN.includes(stijl.richting)) fouten.push(`${waar}: richting "${stijl.richting}" is geen ${RICHTINGEN.join("/")}`);
+  // Stijl-opties van de renderer (18-10): kaderKolommen een geheel getal ≥ 1, secundairAchteraan ja/nee.
+  if (stijl?.kaderKolommen !== undefined && !(Number.isInteger(stijl.kaderKolommen) && stijl.kaderKolommen >= 1)) fouten.push(`${waar}: kaderKolommen moet een geheel getal ≥ 1 zijn`);
+  if (stijl?.secundairAchteraan !== undefined && typeof stijl.secundairAchteraan !== "boolean") fouten.push(`${waar}: secundairAchteraan moet true of false zijn`);
+  if (stijl?.secundairUit !== undefined && !(typeof stijl.secundairUit === "string" && stijl.secundairUit)) fouten.push(`${waar}: secundairUit moet de naam van een eigenschap zijn`);
   for (const as of ["rijen", "kolommen"]) {
     if (stijl?.[as] && !dt?.facetten?.[stijl[as]]) fouten.push(`${waar}: ${as} "${stijl[as]}" is geen facet van het DiagramType`);
   }

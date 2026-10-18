@@ -245,6 +245,29 @@ te wijzigen.
 > nog geen generieke layout. Debuglog van de hiërarchische modus alleen met `opts.debug`. Tests:
 > `canoniek-uml/layouts.test.js`, e2e `31-studio-auto-layout`.
 >
+> **Use case-layout (2026-10-18, meting ARCH-PROJECT):** `legLeesvolgordeUit` draait de kern
+> (`legEenmaal`) vier keer: elke ronde krijgt per element een volgorde-hint = het gemiddelde dwars-
+> midden van zijn buren (alle verbindingen, ook over kadergrenzen) uit de vorige ronde. Daarna
+> uitlijnen op het bovenste niveau: per laag gesorteerd op het gewenste midden, gretig geplaatst met
+> tussenruimte, en als blok verschoven naar gemiddeld nul afwijking (nazaten schuiven mee).
+> LayoutStijl-opties: `secundairAchteraan` (een beginpunt van wie elke buur een sterker beginpunt
+> heeft — meer verbindingen, bij gelijkspel wie eerder staat — komt achter zijn buren) en
+> `kaderKolommen` (in een container hoogstens n kolommen; wat met iets buiten het kader verbonden
+> is vooraan). Use case: beide aan, plus regel `{aard: specialisatie} → volgorde: negeer`. Meting:
+> 4 diagrammen, kruisingen hand/auto 1/1, 0/1, 0/0, 0/0 (was 1/5, 0/2, 0/2, 0/4). Open: of een actor
+> *initieert* staat niet in het model (M3-MOF: eigenschap op de associatie); Imprint/webhook als
+> externe systemen rechts herkent de heuristiek nog niet.
+>
+> **Primair en meldingen (2026-10-18):** `LayoutStijl.secundairUit` (use case: `"primair"`, de
+> eigenschap die M3-MOF op de associatie zet): een beginpunt zonder verbinding met
+> `data[secundairUit] === true` is secundair; staat die eigenschap nergens op het diagram, dan
+> `secundairAchteraan`. `invoerVanCanvas` geeft daarvoor `data` van de connector mee. Validatie:
+> `kaderKolommen` geheel getal ≥ 1, `secundairAchteraan` boolean, `secundairUit` naam.
+> Inspector: `diagramcore/model/validatie.js` (`valideerElement`, `normaliseerMeldingen`) roept
+> `ElementType.hooks.valideer(element, {elements})` aan; de uitkomst (niets, tekst, of lijst van
+> teksten / `{niveau, tekst}`) staat bovenaan de ElementInspector (`.dc-inspector-meldingen`). Een
+> hook die gooit telt als geen melding. e2e `32-studio-valideer-melding`.
+>
 > **LayoutStijl in de renderer (2026-10-18, OMNIUM-UI na M3-MOF):** `leesvolgordeLayouts(dt)` maakt
 > per `layoutStijl` (renderer "leesvolgorde") vier strategieën met `regelsVoorStijl(dt, stijl)` als
 > regels, `minimaal` uit `ElementType.minBreedte/minHoogte` en `afstanden` uit de stijl
