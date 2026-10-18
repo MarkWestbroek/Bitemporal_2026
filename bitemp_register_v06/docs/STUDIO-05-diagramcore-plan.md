@@ -18,7 +18,7 @@
   | baan}, gekozen op specificiteit zoals CSS. Hetzelfde patroon als ShapeType/ShapeRenderer en
   LineStyle/LineRenderer in het metametamodel. `types/layoutStijl.js` (`regelsVoorStijl`) vertaalt
   naar het Leesvolgorde-formaat van de renderer; `valideerDiagramType` controleert aard, facetten
-  en stijlen. De renderer en de ontwerper volgen bij OMNIUM-UI. Eerdere ronde (2026-10-14, branch `feat/sequence-v1`,
+  en stijlen. Renderer, ontwerper en MCP volgden bij OMNIUM-UI (f2d22c3c); daarna drie stijl-opties voor de use case-layout (6794e48f, na een meting tegen Marks handwerk): `kaderKolommen` (hoogstens zoveel kolommen in een container; use case: 2), `secundairUit: "primair"` (een actor zonder associatie met `data.primair` komt achteraan, rechts) en `secundairAchteraan` (de heuristiek als terugval). Allemaal weergave; de betekenis `primair` staat op de use case-associatie (M2, naar Cockburn, 091cba07). Ook de hook `valideer` wordt nu gebruikt: `diagramcore/model/validatie.js` roept `hooks.valideer(element, {elements})` aan en de inspector toont de meldingen bovenaan (eerste gebruiker: `usecase/controle.js`). Eerdere ronde (2026-10-14, branch `feat/sequence-v1`,
   sequence fase 0 — zie `plans/2026-10-13 Sequence — volgorde in het model,
   layout erbovenop (plan).md`): vijf kleine **M3-aanvullingen** aan de motor,
   alle generiek en gedocumenteerd in `schema.js`/`handlerCatalogus.js`:
