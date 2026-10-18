@@ -17,6 +17,22 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   `valideer`, `usecase/controle.js`). De EA-import neemt pre- en postcondities over uit EA's
   constraints (`t_objectconstraint`). Richting voor flows en scenario's: `docs/plans/2026-10-18
   Use case — doel, trigger, condities, flows en scenario's (ontwerp).md`.
+- **Use case-layout zoals een modelleur hem zet** (18-10, meting van ARCH-PROJECT tegen Marks
+  handwerk in "Omnium architectuur"): een actor staat op de hoogte van zijn use cases, een
+  secundaire actor (van wie elke use case al een sterkere actor heeft) rechts van het kader, het
+  kader staand — use cases met een actor in de eerste kolom, wat alleen via include of extend
+  bereikt wordt in de tweede — en een specialisatie geeft geen eigen kolom (het kind naast zijn
+  ouder). Op de vier diagrammen daar: hoogstens één kruising (was 2–5), lijnen even kort of korter
+  dan het handwerk, het kader rechtop. Voor alle profielen: de volgorde binnen een laag volgt de
+  buren over kadergrenzen heen (een paar rondes), en elk element op het bovenste niveau staat op de
+  hoogte van zijn buren. Stijl-opties `secundairAchteraan` en `kaderKolommen`.
+- **Primaire actor bepaalt links of rechts** (18-10, Mark: Cockburn, "primair links, secundair
+  rechts"): staat op een associatie de eigenschap *primair*, dan komt een actor zonder primaire
+  associatie rechts van het kader. Staat *primair* nergens op het diagram, dan geldt de vuistregel.
+  Stijl-optie `secundairUit: "primair"`.
+- **Meldingen in de inspector**: een profielregel (`hooks.valideer`) laat zijn meldingen bovenaan
+  de eigenschappen zien — waarschuwing, fout of info. De use case laat zo "geen primaire actor en
+  geen trigger" zien.
 - **M3: betekenis en weergave van de auto-layout gescheiden** (18-10, Mark via OMNIUM-UI; M3-MOF):
   `ElementType.aard` zegt wat een type ís — connector: stroom, specialisatie, realisatie, bericht,
   associatie, afhankelijkheid, toewijzing, insluiting, annotatie; element: begin, eind, baan — en
