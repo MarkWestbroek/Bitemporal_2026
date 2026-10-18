@@ -380,7 +380,7 @@ test("velden in het plan (melding #4): waarden aan een bestaande enumeratie, att
   };
   const b = bestaandInMap(stand, null, ["puurUml05"]);
   assert.deepEqual(b[0].elementen[0].velden, ["Nieuw"]);
-  assert.match(vraagVoorOpdracht([uml], "x", { bestaand: b }).systeem, /status" op d — velden: Nieuw/);
+  assert.match(vraagVoorOpdracht([uml], "x", { bestaand: b }).systeem, /status" op d @ 0,0 — velden: Nieuw/);
   const plan = controleerPlan({
     uitleg: "",
     diagrammen: [{ sleutel: "d1", bestaand: "d" }],
@@ -422,4 +422,86 @@ test("velden: alleen bewerkbare naam-type-compartimenten; bestaande niet dubbel"
   assert.match(r.problemen[0], /"aap" bestaat al/);
   assert.equal(r.compartimenten[0].velden.length, 3);
   assert.equal(r.compartimenten[0].velden[1].fieldType, "attribuut");
+});
+
+// ── Verplaatsen en layouts via het plan (Mark, 18-10: "de AI gaf een uitgebreid antwoord, maar
+// geen effect") ──
+const standVerplaats = () => ({
+  mappen: {}, plaatsing: {},
+  profielen: { usecase05: {
+    elements: {
+      e_gebr: { id: "e_gebr", naam: "gebruiker", elementType: "actor" },
+      e_test: { id: "e_test", naam: "test", elementType: "usecase" },
+      e_sys: { id: "e_sys", naam: "Omnium", elementType: "systeem" },
+      e_bevat: { id: "e_bevat", elementType: "bevat", source: "e_sys", target: "e_test" },
+    },
+    diagrams: { d_uc: { id: "d_uc", naam: "Use case model", nodes: [
+      { elementId: "e_gebr", position: { x: 40, y: 100 }, size: { width: 64, height: 70 } },
+      { elementId: "e_sys", position: { x: 300, y: 40 }, size: { width: 400, height: 300 } },
+      { elementId: "e_test", position: { x: 320, y: 220 }, size: { width: 160, height: 70 } },
+    ] } },
+  } },
+});
+const bestaandVerplaats = (stand) => bestaandInMap(stand, null, ["usecase05"]);
+
+test("bestaandInMap/vraag: posities per diagram staan erbij (x,y en maat)", () => {
+  const stand = standVerplaats();
+  const b = bestaandVerplaats(stand);
+  assert.deepEqual(b[0].elementen.find((e) => e.id === "e_sys").plek, { d_uc: [300, 40, 400, 300] });
+  const v = vraagVoorOpdracht([uc], "zet gebruiker rechts van het kader", { bestaand: b });
+  assert.match(v.systeem, /e_sys: systeem "Omnium" op d_uc @ 300,40 \(400×300\)/);
+  assert.match(v.systeem, /posities/);
+  assert.match(v.systeem, /nietGedaan/);
+});
+
+test("posities: naar x/y, en naast een ander element; een container neemt zijn leden mee", () => {
+  const stand = standVerplaats();
+  const plan = controleerPlan({ uitleg: "", posities: [
+    { diagram: "d_uc", element: "e_sys", x: 500, y: 100 },
+    { diagram: "d_uc", element: "e_gebr", naast: "e_sys", kant: "links", afstand: 40 },
+  ] }, [uc], bestaandVerplaats(stand));
+  assert.deepEqual(plan.problemen, []);
+  const w = maakWijziging(plan, stand, { mapId: null, samenvattingen: [uc], nu: 1 });
+  const n = Object.fromEntries(w.profielen.usecase05.diagrams.d_uc.nodes.map((x) => [x.elementId, x.position]));
+  assert.deepEqual(n.e_sys, { x: 500, y: 100 });
+  assert.deepEqual(n.e_test, { x: 520, y: 280 }, "het lid schuift mee met het kader");
+  // links van het kader, 40 ertussen, verticaal gecentreerd: 500 - 40 - 64 = 396; 100 + 150 - 35 = 215
+  assert.deepEqual(n.e_gebr, { x: 396, y: 215 });
+  assert.match(w.samenvatting, /2 verplaatst/);
+  assert.ok(naarOps(w).some((o) => o.op === "patchDiagrammen" || o.op === "pasWijzigingToe" || /diagram/i.test(o.op)));
+});
+
+test("posities: zonder x/y of naast, of een onbekend element → probleem, niets verplaatst", () => {
+  const stand = standVerplaats();
+  const plan = controleerPlan({ uitleg: "", posities: [
+    { diagram: "d_uc", element: "e_gebr" },
+    { diagram: "d_uc", element: "bestaat_niet", x: 1, y: 2 },
+  ] }, [uc], bestaandVerplaats(stand));
+  assert.equal(plan.posities.length, 0);
+  assert.equal(plan.problemen.length, 2);
+});
+
+test("nietGedaan: wat de AI niet kan, komt apart terug", () => {
+  const plan = controleerPlan({ uitleg: "Ik maak het kader rood.", nietGedaan: ["Kleuren kan ik niet zetten."] }, [uc], []);
+  assert.deepEqual(plan.nietGedaan, ["Kleuren kan ik niet zetten."]);
+});
+
+test("layout als opstel-actie: alleen als de taal hem kent; de strategie levert de posities", () => {
+  const ucMetLayout = { ...uc, layouts: [{ id: "hierarchisch", label: "Hiërarchisch" }] };
+  const stand = standVerplaats();
+  // Taal zonder deze layout → probleem met de lijst die wél kan.
+  const zonder = controleerPlan({ opstelling: [{ diagram: "d_uc", actie: "hierarchisch" }] }, [uc], bestaandVerplaats(stand));
+  assert.equal(zonder.opstelling.length, 0);
+  assert.match(zonder.problemen[0], /bestaat niet voor deze taal/);
+  const plan = controleerPlan({ opstelling: [{ diagram: "d_uc", actie: "hierarchisch" }] }, [ucMetLayout], bestaandVerplaats(stand));
+  assert.equal(plan.opstelling[0].modus, "layout:hierarchisch");
+  let invoer = null;
+  const strategie = { id: "hierarchisch", run: (i) => { invoer = i; return new Map([["e_gebr", { x: 7, y: 8 }]]); } };
+  const w = maakWijziging(plan, stand, { mapId: null, samenvattingen: [ucMetLayout], nu: 1, layouts: () => [strategie] });
+  assert.deepEqual(w.profielen.usecase05.diagrams.d_uc.nodes.find((x) => x.elementId === "e_gebr").position, { x: 7, y: 8 });
+  assert.equal(invoer.flowNodes.length, 3);
+  assert.deepEqual(invoer.flowEdges.map((e) => [e.source, e.target]), [["e_sys", "e_test"]]);
+  // Zonder strategieën (bv. een MCP die het profiel niet kan laden): gemeld, niet stil.
+  const w2 = maakWijziging(plan, stand, { mapId: null, samenvattingen: [ucMetLayout], nu: 1 });
+  assert.match(w2.nietUitgevoerd[0], /niet beschikbaar/);
 });

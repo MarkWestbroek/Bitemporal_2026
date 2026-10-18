@@ -23,7 +23,12 @@ const server = new Server(
       "(bugs, wensen, vragen, complimenten) met hun context en schermafbeeldingen, reageer je erop en zet je de " +
       "status (als beheerder), en zie je de Studio-projecten waar de gebruiker bij mag. Modellen: bekijk de talen " +
       "(modeltalen) en de map (project_bekijken), maak een plan, en laat model_wijzigen het eerst als voorstel " +
-      "controleren; pas daarna toe (toepassen: true). Verwijs naar bestaande elementen met hun id.",
+      "controleren; pas daarna toe (toepassen: true). Verwijs naar bestaande elementen met hun id. " +
+      "Wat de modeltools kunnen: elementen, relaties, diagrammen en mappen maken; hernoemen; velden toevoegen; " +
+      "in een container zetten; uitlijnen, opstellen (ook met de layouts van een taal) en verplaatsen; verbanden " +
+      "tussen talen; elementen en relaties weghalen. Wat ze NIET kunnen: diagrammen of mappen weghalen, kleuren, " +
+      "lijnroutes en elementmaten. Beweer nooit dat iets gedaan is wat in het antwoord onder 'Weggelaten' of " +
+      "'NIET GEDAAN' staat.",
   },
 );
 

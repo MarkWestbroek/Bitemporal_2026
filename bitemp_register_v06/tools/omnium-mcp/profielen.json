@@ -141,12 +141,103 @@
      ]
     }
    ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
    "aanwijzingen": [
     "Een flow begint bij één begin-knoop en eindigt bij een eind-knoop; elke actie ligt op een pad daartussen.",
     "Acties als korte werkwoordzin ('Controleer lening'); de volgorde via controlestromen.",
     "Een keuze is een beslissing met twee of meer uitgaande controlestromen, elk met een guard (eigenschap guard, bv. 'te laat').",
     "Parallel werk: een fork splitst, een tweede fork voegt samen.",
     "Wie iets doet: een partitie per rol of systeem, met de acties erin via `in` (alleen als de opdracht rollen noemt)."
+   ],
+   "leesvolgorde": {
+    "richting": "TB",
+    "stroom": [
+     "controlestroom",
+     "objectstroom"
+    ],
+    "start": [
+     "begin"
+    ],
+    "eind": [
+     "eind",
+     "flow-eind"
+    ],
+    "banen": [
+     "partitie"
+    ]
+   },
+   "layoutTypen": [
+    {
+     "id": "begin"
+    },
+    {
+     "id": "actie"
+    },
+    {
+     "id": "aanroep"
+    },
+    {
+     "id": "interactiegebruik"
+    },
+    {
+     "id": "beslissing"
+    },
+    {
+     "id": "fork"
+    },
+    {
+     "id": "object"
+    },
+    {
+     "id": "pin",
+     "randElement": true
+    },
+    {
+     "id": "partitie",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "eind"
+    },
+    {
+     "id": "flow-eind"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "controlestroom",
+     "isConnector": true
+    },
+    {
+     "id": "objectstroom",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -1961,6 +2052,340 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "leesvolgorde": {
+    "richting": "TB",
+    "lagen": [
+     [
+      "stakeholder",
+      "driver",
+      "assessment",
+      "goal",
+      "outcome",
+      "principle",
+      "requirement",
+      "constraint",
+      "betekenis",
+      "waarde"
+     ],
+     [
+      "resource",
+      "capability",
+      "koers",
+      "waardestroom"
+     ],
+     [
+      "business-actor",
+      "business-rol",
+      "business-collaboratie",
+      "business-interface",
+      "business-proces",
+      "business-functie",
+      "business-interactie",
+      "business-service",
+      "business-event",
+      "business-object",
+      "contract",
+      "representatie",
+      "product"
+     ],
+     [
+      "app-component",
+      "app-collaboratie",
+      "app-interface",
+      "app-functie",
+      "app-interactie",
+      "app-proces",
+      "app-event",
+      "app-service",
+      "data-object"
+     ],
+     [
+      "node",
+      "device",
+      "systeemsoftware",
+      "tech-collaboratie",
+      "tech-interface",
+      "pad",
+      "communicatienetwerk",
+      "tech-functie",
+      "tech-proces",
+      "tech-interactie",
+      "tech-event",
+      "tech-service",
+      "artifact"
+     ],
+     [
+      "equipment",
+      "facility",
+      "distributienetwerk",
+      "materiaal"
+     ],
+     [
+      "werkpakket",
+      "deliverable",
+      "implementatie-event",
+      "plateau",
+      "gap"
+     ]
+    ]
+   },
+   "layoutTypen": [
+    {
+     "id": "resource"
+    },
+    {
+     "id": "capability"
+    },
+    {
+     "id": "koers"
+    },
+    {
+     "id": "waardestroom"
+    },
+    {
+     "id": "business-actor"
+    },
+    {
+     "id": "business-rol"
+    },
+    {
+     "id": "business-collaboratie"
+    },
+    {
+     "id": "business-interface"
+    },
+    {
+     "id": "business-proces"
+    },
+    {
+     "id": "business-functie"
+    },
+    {
+     "id": "business-interactie"
+    },
+    {
+     "id": "business-service"
+    },
+    {
+     "id": "business-event"
+    },
+    {
+     "id": "business-object"
+    },
+    {
+     "id": "contract"
+    },
+    {
+     "id": "representatie"
+    },
+    {
+     "id": "product"
+    },
+    {
+     "id": "app-component"
+    },
+    {
+     "id": "app-collaboratie"
+    },
+    {
+     "id": "app-interface"
+    },
+    {
+     "id": "app-functie"
+    },
+    {
+     "id": "app-interactie"
+    },
+    {
+     "id": "app-proces"
+    },
+    {
+     "id": "app-event"
+    },
+    {
+     "id": "app-service"
+    },
+    {
+     "id": "data-object"
+    },
+    {
+     "id": "node"
+    },
+    {
+     "id": "device"
+    },
+    {
+     "id": "systeemsoftware"
+    },
+    {
+     "id": "tech-collaboratie"
+    },
+    {
+     "id": "tech-interface"
+    },
+    {
+     "id": "pad"
+    },
+    {
+     "id": "communicatienetwerk"
+    },
+    {
+     "id": "tech-functie"
+    },
+    {
+     "id": "tech-proces"
+    },
+    {
+     "id": "tech-interactie"
+    },
+    {
+     "id": "tech-event"
+    },
+    {
+     "id": "tech-service"
+    },
+    {
+     "id": "artifact"
+    },
+    {
+     "id": "equipment"
+    },
+    {
+     "id": "facility"
+    },
+    {
+     "id": "distributienetwerk"
+    },
+    {
+     "id": "materiaal"
+    },
+    {
+     "id": "stakeholder"
+    },
+    {
+     "id": "driver"
+    },
+    {
+     "id": "assessment"
+    },
+    {
+     "id": "goal"
+    },
+    {
+     "id": "outcome"
+    },
+    {
+     "id": "principle"
+    },
+    {
+     "id": "requirement"
+    },
+    {
+     "id": "constraint"
+    },
+    {
+     "id": "betekenis"
+    },
+    {
+     "id": "waarde"
+    },
+    {
+     "id": "werkpakket"
+    },
+    {
+     "id": "deliverable"
+    },
+    {
+     "id": "implementatie-event"
+    },
+    {
+     "id": "plateau"
+    },
+    {
+     "id": "gap"
+    },
+    {
+     "id": "locatie"
+    },
+    {
+     "id": "grouping"
+    },
+    {
+     "id": "junction"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "kader"
+    },
+    {
+     "id": "compositie",
+     "isConnector": true
+    },
+    {
+     "id": "aggregatie",
+     "isConnector": true
+    },
+    {
+     "id": "toewijzing",
+     "isConnector": true
+    },
+    {
+     "id": "realisatie",
+     "isConnector": true
+    },
+    {
+     "id": "bediening",
+     "isConnector": true
+    },
+    {
+     "id": "toegang",
+     "isConnector": true
+    },
+    {
+     "id": "beinvloeding",
+     "isConnector": true
+    },
+    {
+     "id": "trigger",
+     "isConnector": true
+    },
+    {
+     "id": "stroom",
+     "isConnector": true
+    },
+    {
+     "id": "specialisatie",
+     "isConnector": true
+    },
+    {
+     "id": "associatie",
+     "isConnector": true
+    },
+    {
+     "id": "toelichting",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -2201,6 +2626,113 @@
      "eigenschappen": [
       "stereotype"
      ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts (standaard)"
+    },
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "leesvolgorde": {
+    "richting": "LR",
+    "stroom": [
+     "sequence-flow",
+     "data-associatie"
+    ],
+    "start": [
+     "start-event"
+    ],
+    "eind": [
+     "eind-event"
+    ],
+    "banen": [
+     "lane"
+    ]
+   },
+   "layoutTypen": [
+    {
+     "id": "start-event"
+    },
+    {
+     "id": "taak"
+    },
+    {
+     "id": "subproces"
+    },
+    {
+     "id": "boundary-event",
+     "randElement": true
+    },
+    {
+     "id": "tussen-event"
+    },
+    {
+     "id": "exclusief"
+    },
+    {
+     "id": "parallel"
+    },
+    {
+     "id": "inclusief"
+    },
+    {
+     "id": "complex"
+    },
+    {
+     "id": "event-gateway"
+    },
+    {
+     "id": "data-object"
+    },
+    {
+     "id": "data-store"
+    },
+    {
+     "id": "pool",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "lane",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "eind-event"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "sequence-flow",
+     "isConnector": true
+    },
+    {
+     "id": "message-flow",
+     "isConnector": true
+    },
+    {
+     "id": "data-associatie",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
     }
    ]
   },
@@ -2527,6 +3059,108 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "proces",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "doel"
+    },
+    {
+     "id": "resource"
+    },
+    {
+     "id": "fysiek"
+    },
+    {
+     "id": "mensen"
+    },
+    {
+     "id": "informatie"
+    },
+    {
+     "id": "gebeurtenis"
+    },
+    {
+     "id": "bedrijfsobject"
+    },
+    {
+     "id": "actor"
+    },
+    {
+     "id": "package",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "invoer",
+     "isConnector": true
+    },
+    {
+     "id": "uitvoer",
+     "isConnector": true
+    },
+    {
+     "id": "besturing",
+     "isConnector": true
+    },
+    {
+     "id": "levering",
+     "isConnector": true
+    },
+    {
+     "id": "doelkoppeling",
+     "isConnector": true
+    },
+    {
+     "id": "stroom",
+     "isConnector": true
+    },
+    {
+     "id": "dependency",
+     "isConnector": true
+    },
+    {
+     "id": "associatie",
+     "isConnector": true
+    },
+    {
+     "id": "generalisatie",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -2713,6 +3347,85 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "gelaagd",
+     "label": "Gelaagd, van boven naar beneden"
+    },
+    {
+     "id": "gelaagd-bt",
+     "label": "Gelaagd, van onder naar boven"
+    },
+    {
+     "id": "gelaagd-lr",
+     "label": "Gelaagd, van links naar rechts"
+    },
+    {
+     "id": "gelaagd-rl",
+     "label": "Gelaagd, van rechts naar links"
+    },
+    {
+     "id": "waaier",
+     "label": "Waaier rond een middelpunt"
+    },
+    {
+     "id": "hierarchisch",
+     "label": "Hiërarchisch (generalisaties als boom)"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "representatie"
+    },
+    {
+     "id": "entiteit"
+    },
+    {
+     "id": "gegevenselement"
+    },
+    {
+     "id": "relatie",
+     "isConnector": true
+    },
+    {
+     "id": "enumeratie"
+    },
+    {
+     "id": "gegevenstype"
+    },
+    {
+     "id": "referentielijstInstantie"
+    },
+    {
+     "id": "package",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "constraint"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "compositie",
+     "isConnector": true
+    },
+    {
+     "id": "generalisatie",
+     "isConnector": true
+    },
+    {
+     "id": "gebruik",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -2841,6 +3554,71 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts (standaard)"
+    },
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "leesvolgorde": {
+    "richting": "LR",
+    "stroom": [
+     "on-part"
+    ]
+   },
+   "layoutTypen": [
+    {
+     "id": "case-plan",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "stage",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "taak"
+    },
+    {
+     "id": "mijlpaal"
+    },
+    {
+     "id": "event-listener"
+    },
+    {
+     "id": "case-file-item"
+    },
+    {
+     "id": "sentry",
+     "randElement": true
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "on-part",
+     "isConnector": true
+    },
+    {
+     "id": "associatie",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -2890,6 +3668,46 @@
      "eigenschappen": [
       "naam"
      ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "object"
+    },
+    {
+     "id": "actor"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "link",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
     }
    ]
   },
@@ -3291,6 +4109,112 @@
       "stereotype"
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "klassifier"
+    },
+    {
+     "id": "component",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "interface"
+    },
+    {
+     "id": "poort",
+     "randElement": true
+    },
+    {
+     "id": "artifact"
+    },
+    {
+     "id": "deploymentspec"
+    },
+    {
+     "id": "node",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "device",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "executieomgeving",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "package",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "realisatie",
+     "isConnector": true
+    },
+    {
+     "id": "gebruikt",
+     "isConnector": true
+    },
+    {
+     "id": "assembly",
+     "isConnector": true
+    },
+    {
+     "id": "delegatie",
+     "isConnector": true
+    },
+    {
+     "id": "deployment",
+     "isConnector": true
+    },
+    {
+     "id": "manifest",
+     "isConnector": true
+    },
+    {
+     "id": "communicatiepad",
+     "isConnector": true
+    },
+    {
+     "id": "generalisatie",
+     "isConnector": true
+    },
+    {
+     "id": "dependency",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -3547,6 +4471,93 @@
       "stereotype"
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "structureel"
+    },
+    {
+     "id": "klasse",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "part",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "poort",
+     "randElement": true
+    },
+    {
+     "id": "interface"
+    },
+    {
+     "id": "collaboratie",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "collaboratiegebruik"
+    },
+    {
+     "id": "package",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "connector",
+     "isConnector": true
+    },
+    {
+     "id": "delegatie",
+     "isConnector": true
+    },
+    {
+     "id": "rolbinding",
+     "isConnector": true
+    },
+    {
+     "id": "realisatie",
+     "isConnector": true
+    },
+    {
+     "id": "gebruikt",
+     "isConnector": true
+    },
+    {
+     "id": "dependency",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -3627,6 +4638,48 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "drd-lagen",
+     "label": "Auto-layout"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "decision"
+    },
+    {
+     "id": "inputData"
+    },
+    {
+     "id": "bkm"
+    },
+    {
+     "id": "knowledgeSource"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "infoReq",
+     "isConnector": true
+    },
+    {
+     "id": "knowReq",
+     "isConnector": true
+    },
+    {
+     "id": "authReq",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -3699,6 +4752,48 @@
        ]
       }
      ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "entiteit"
+    },
+    {
+     "id": "domein",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "relatie",
+     "isConnector": true
+    },
+    {
+     "id": "subtype",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
     }
    ]
   },
@@ -3814,6 +4909,31 @@
      "eigenschappen": [
       "volgorde"
      ]
+    }
+   ],
+   "leesvolgorde": false,
+   "layoutTypen": [
+    {
+     "id": "formulier"
+    },
+    {
+     "id": "groep"
+    },
+    {
+     "id": "rij"
+    },
+    {
+     "id": "lijst"
+    },
+    {
+     "id": "conditioneel"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
     }
    ]
   },
@@ -4015,6 +5135,64 @@
      "eigenschappen": [
       "rol"
      ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "gql-lagen",
+     "label": "Auto-layout"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "schema"
+    },
+    {
+     "id": "object"
+    },
+    {
+     "id": "interface"
+    },
+    {
+     "id": "union"
+    },
+    {
+     "id": "enum"
+    },
+    {
+     "id": "input"
+    },
+    {
+     "id": "scalar"
+    },
+    {
+     "id": "directive"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "veldtype",
+     "isConnector": true
+    },
+    {
+     "id": "argumenttype",
+     "isConnector": true
+    },
+    {
+     "id": "implements",
+     "isConnector": true
+    },
+    {
+     "id": "lid",
+     "isConnector": true
+    },
+    {
+     "id": "root",
+     "isConnector": true
     }
    ]
   },
@@ -4312,6 +5490,91 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "objecttype"
+    },
+    {
+     "id": "gegevensgroeptype"
+    },
+    {
+     "id": "enumeratie"
+    },
+    {
+     "id": "codelijst"
+    },
+    {
+     "id": "referentielijst"
+    },
+    {
+     "id": "primitiefDatatype"
+    },
+    {
+     "id": "gestructureerdDatatype"
+    },
+    {
+     "id": "keuze"
+    },
+    {
+     "id": "constraint"
+    },
+    {
+     "id": "package",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "relatiesoort",
+     "isConnector": true
+    },
+    {
+     "id": "gegevensgroep",
+     "isConnector": true
+    },
+    {
+     "id": "generalisatie",
+     "isConnector": true
+    },
+    {
+     "id": "externeKoppeling",
+     "isConnector": true
+    },
+    {
+     "id": "alternatief",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -4494,6 +5757,59 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "oas-lagen",
+     "label": "Auto-layout"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "api"
+    },
+    {
+     "id": "server"
+    },
+    {
+     "id": "schema"
+    },
+    {
+     "id": "enum"
+    },
+    {
+     "id": "operatie"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "ref",
+     "isConnector": true
+    },
+    {
+     "id": "allOf",
+     "isConnector": true
+    },
+    {
+     "id": "items",
+     "isConnector": true
+    },
+    {
+     "id": "oneOf",
+     "isConnector": true
+    },
+    {
+     "id": "anyOf",
+     "isConnector": true
+    },
+    {
+     "id": "servers",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -4630,6 +5946,66 @@
        ]
       }
      ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "object"
+    },
+    {
+     "id": "multiobject"
+    },
+    {
+     "id": "package",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "link",
+     "isConnector": true
+    },
+    {
+     "id": "compositie",
+     "isConnector": true
+    },
+    {
+     "id": "dependency",
+     "isConnector": true
+    },
+    {
+     "id": "generalisatie",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
     }
    ]
   },
@@ -4899,6 +6275,94 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "eis"
+    },
+    {
+     "id": "requirement"
+    },
+    {
+     "id": "feature"
+    },
+    {
+     "id": "issue"
+    },
+    {
+     "id": "change"
+    },
+    {
+     "id": "verwijzing"
+    },
+    {
+     "id": "package",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "aggregatie",
+     "isConnector": true
+    },
+    {
+     "id": "realisatie",
+     "isConnector": true
+    },
+    {
+     "id": "trace",
+     "isConnector": true
+    },
+    {
+     "id": "derive",
+     "isConnector": true
+    },
+    {
+     "id": "verify",
+     "isConnector": true
+    },
+    {
+     "id": "refine",
+     "isConnector": true
+    },
+    {
+     "id": "dependency",
+     "isConnector": true
+    },
+    {
+     "id": "generalisatie",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -5011,6 +6475,42 @@
       "retourtype",
       "guard"
      ]
+    }
+   ],
+   "leesvolgorde": false,
+   "layoutTypen": [
+    {
+     "id": "levenslijn"
+    },
+    {
+     "id": "punt",
+     "randElement": true
+    },
+    {
+     "id": "activatie",
+     "randElement": true
+    },
+    {
+     "id": "fragment"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "synchroon",
+     "isConnector": true
+    },
+    {
+     "id": "asynchroon",
+     "isConnector": true
+    },
+    {
+     "id": "retour",
+     "isConnector": true
     }
    ]
   },
@@ -5140,6 +6640,84 @@
       "guard",
       "effect"
      ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "leesvolgorde": {
+    "richting": "TB",
+    "stroom": [
+     "transitie"
+    ],
+    "start": [
+     "begin",
+     "entry"
+    ],
+    "eind": [
+     "eind",
+     "exit"
+    ]
+   },
+   "layoutTypen": [
+    {
+     "id": "begin"
+    },
+    {
+     "id": "toestand"
+    },
+    {
+     "id": "eind"
+    },
+    {
+     "id": "composiet",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "submachine"
+    },
+    {
+     "id": "keuze"
+    },
+    {
+     "id": "junction"
+    },
+    {
+     "id": "historie"
+    },
+    {
+     "id": "entry",
+     "randElement": true
+    },
+    {
+     "id": "exit",
+     "randElement": true
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "transitie",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
     }
    ]
   },
@@ -5461,6 +7039,105 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "blok",
+     "containerVoor": "bevat-part"
+    },
+    {
+     "id": "part",
+     "containerVoor": "bevat-part"
+    },
+    {
+     "id": "poort",
+     "randElement": true
+    },
+    {
+     "id": "waardetype"
+    },
+    {
+     "id": "interfaceblok"
+    },
+    {
+     "id": "constraintblok"
+    },
+    {
+     "id": "enumeratie"
+    },
+    {
+     "id": "requirement",
+     "containerVoor": "bevat-req"
+    },
+    {
+     "id": "pakket",
+     "containerVoor": "bevat-pakket"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "compositie",
+     "isConnector": true
+    },
+    {
+     "id": "aggregatie",
+     "isConnector": true
+    },
+    {
+     "id": "generalisatie",
+     "isConnector": true
+    },
+    {
+     "id": "associatie",
+     "isConnector": true
+    },
+    {
+     "id": "afhankelijkheid",
+     "isConnector": true
+    },
+    {
+     "id": "trace",
+     "isConnector": true
+    },
+    {
+     "id": "verbinding",
+     "isConnector": true
+    },
+    {
+     "id": "itemflow",
+     "isConnector": true
+    },
+    {
+     "id": "bevat-req",
+     "isConnector": true
+    },
+    {
+     "id": "bevat-part",
+     "isConnector": true
+    },
+    {
+     "id": "bevat-pakket",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -5683,6 +7360,92 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "policy"
+    },
+    {
+     "id": "map"
+    },
+    {
+     "id": "toegangsregel"
+    },
+    {
+     "id": "subject"
+    },
+    {
+     "id": "handeling"
+    },
+    {
+     "id": "gegevensselectie"
+    },
+    {
+     "id": "voorwaardepoort"
+    },
+    {
+     "id": "voorwaarde"
+    },
+    {
+     "id": "plicht"
+    },
+    {
+     "id": "begrip"
+    },
+    {
+     "id": "omvat",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    },
+    {
+     "id": "wie",
+     "isConnector": true
+    },
+    {
+     "id": "doet",
+     "isConnector": true
+    },
+    {
+     "id": "op",
+     "isConnector": true
+    },
+    {
+     "id": "als",
+     "isConnector": true
+    },
+    {
+     "id": "tak",
+     "isConnector": true
+    },
+    {
+     "id": "waarbij",
+     "isConnector": true
+    },
+    {
+     "id": "verwijst-naar",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -5904,6 +7667,80 @@
       }
      ]
     }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "klasse"
+    },
+    {
+     "id": "interface"
+    },
+    {
+     "id": "enumeratie"
+    },
+    {
+     "id": "datatype"
+    },
+    {
+     "id": "package",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "associatie",
+     "isConnector": true
+    },
+    {
+     "id": "aggregatie",
+     "isConnector": true
+    },
+    {
+     "id": "compositie",
+     "isConnector": true
+    },
+    {
+     "id": "generalisatie",
+     "isConnector": true
+    },
+    {
+     "id": "realisatie",
+     "isConnector": true
+    },
+    {
+     "id": "dependency",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
    ]
   },
   {
@@ -6078,6 +7915,24 @@
      ]
     }
    ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts (standaard)"
+    },
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
    "aanwijzingen": [
     "Een associatie verbindt een actor met een use case, van de actor naar de use case; nooit actor–actor of use case–use case.",
     "Include: de basis-use case omvat de andere altijd (pijl van basis naar deel, bv. 'Leen boek' include 'Log in').",
@@ -6105,7 +7960,74 @@
       "usecase"
      ]
     ]
-   }
+   },
+   "leesvolgorde": {
+    "richting": "LR",
+    "start": [
+     "actor"
+    ],
+    "omgekeerd": [
+     "extend",
+     "generalisatie",
+     "realiseert"
+    ]
+   },
+   "layoutTypen": [
+    {
+     "id": "actor"
+    },
+    {
+     "id": "usecase"
+    },
+    {
+     "id": "systeem",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "collaboratie"
+    },
+    {
+     "id": "klasse"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "associatie",
+     "isConnector": true
+    },
+    {
+     "id": "include",
+     "isConnector": true
+    },
+    {
+     "id": "extend",
+     "isConnector": true
+    },
+    {
+     "id": "generalisatie",
+     "isConnector": true
+    },
+    {
+     "id": "realiseert",
+     "isConnector": true
+    },
+    {
+     "id": "dependency",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
+    }
+   ]
   },
   {
    "id": "wsdl05",
@@ -6307,6 +8229,86 @@
      "eigenschappen": [
       "stereotype"
      ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "namespace",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "wsdlElement"
+    },
+    {
+     "id": "service"
+    },
+    {
+     "id": "portType"
+    },
+    {
+     "id": "binding"
+    },
+    {
+     "id": "message"
+    },
+    {
+     "id": "types"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "realiseert",
+     "isConnector": true
+    },
+    {
+     "id": "port",
+     "isConnector": true
+    },
+    {
+     "id": "gebruiktMessage",
+     "isConnector": true
+    },
+    {
+     "id": "gebruiktTypes",
+     "isConnector": true
+    },
+    {
+     "id": "import",
+     "isConnector": true
+    },
+    {
+     "id": "dependency",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
     }
    ]
   },
@@ -6582,6 +8584,92 @@
      "eigenschappen": [
       "stereotype"
      ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "leesvolgorde-tb",
+     "label": "Leesvolgorde, van boven naar beneden (standaard)"
+    },
+    {
+     "id": "leesvolgorde-lr",
+     "label": "Leesvolgorde, van links naar rechts"
+    },
+    {
+     "id": "leesvolgorde-bt",
+     "label": "Leesvolgorde, van onder naar boven"
+    },
+    {
+     "id": "leesvolgorde-rl",
+     "label": "Leesvolgorde, van rechts naar links"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "schema",
+     "containerVoor": "bevat"
+    },
+    {
+     "id": "xsdType"
+    },
+    {
+     "id": "complexType"
+    },
+    {
+     "id": "simpleType"
+    },
+    {
+     "id": "enumeration"
+    },
+    {
+     "id": "element"
+    },
+    {
+     "id": "attribute"
+    },
+    {
+     "id": "group"
+    },
+    {
+     "id": "attributeGroup"
+    },
+    {
+     "id": "notitie"
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "extension",
+     "isConnector": true
+    },
+    {
+     "id": "restriction",
+     "isConnector": true
+    },
+    {
+     "id": "vanType",
+     "isConnector": true
+    },
+    {
+     "id": "groupRef",
+     "isConnector": true
+    },
+    {
+     "id": "import",
+     "isConnector": true
+    },
+    {
+     "id": "dependency",
+     "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true
+    },
+    {
+     "id": "bevat",
+     "isConnector": true
     }
    ]
   }

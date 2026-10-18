@@ -112,6 +112,9 @@ function Voorstel({ voorstel, talen }) {
           <ul>{plan.connectoren.map((c, i) => <li key={i}>{naam(c.bron)} —{typeLabel(c.profielId, c.type)}→ {naam(c.doel)}{c.data?.guard ? ` [${c.data.guard}]` : ""}</li>)}</ul>
         </>
       )}
+      {plan.posities?.length > 0 && (
+        <p><strong>Verplaatsen:</strong> {plan.posities.map((p) => (p.naast ? `${naam(p.element)} ${p.kant} van ${naam(p.naast)}` : `${naam(p.element)} naar ${p.x}, ${p.y}`)).join("; ")}</p>
+      )}
       {plan.opstelling?.length > 0 && <p><strong>Opstelling:</strong> {plan.opstelling.map((o) => `${o.actie}${o.elementen.length ? `: ${o.elementen.map(naam).join(", ")}` : " (alles)"}`).join("; ")}</p>}
       {plan.leden?.length > 0 && <p><strong>In een container:</strong> {plan.leden.map((l) => `${naam({ id: l.id })} in ${naam(l.in)}`).join(", ")}</p>}
       {plan.verwijderen?.length > 0 && (
@@ -123,9 +126,17 @@ function Voorstel({ voorstel, talen }) {
       {plan.hernoemd.length > 0 && <p><strong>Hernoemd:</strong> {plan.hernoemd.map((h) => `${h.oud} → ${h.naam}`).join(", ")}</p>}
       {plan.verbanden.length > 0 && <p><strong>Verbanden:</strong> {plan.verbanden.map((v) => `${naam(v.van)} ${v.soort} ${naam(v.naar)}`).join("; ")}</p>}
       {plan.opmerkingen.length > 0 && <ul className="ast-opmerkingen">{plan.opmerkingen.map((o, i) => <li key={i}>{o}</li>)}</ul>}
-      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && !plan.verwijderen?.length && !plan.veldenBij?.length && (
+      {/* Wat de AI zelf niet kan, en wat de toepasser niet kon: apart en zichtbaar (Mark, 18-10:
+          "een uitgebreid antwoord, maar geen effect"). */}
+      {(plan.nietGedaan?.length > 0 || wijziging.nietUitgevoerd?.length > 0) && (
+        <div className="ast-niet-gedaan" data-testid="assistent-niet-gedaan">
+          <strong>Niet gedaan:</strong>
+          <ul>{[...(plan.nietGedaan || []), ...(wijziging.nietUitgevoerd || [])].map((t, i) => <li key={i}>{t}</li>)}</ul>
+        </div>
+      )}
+      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && !plan.posities?.length && !plan.verwijderen?.length && !plan.veldenBij?.length && (
         // Eerlijk (melding #11): de uitleg kan iets beloven wat de assistent niet kan.
-        <p className="ast-niets" data-testid="assistent-niets">Dit voorstel verandert niets. De assistent kan elementen, relaties, diagrammen en mappen maken, hernoemen, in een kader zetten, uitlijnen, verbanden leggen en elementen of relaties weghalen — geen diagrammen of mappen weghalen.</p>
+        <p className="ast-niets" data-testid="assistent-niets">Dit voorstel verandert niets. De assistent kan elementen, relaties, diagrammen en mappen maken, hernoemen, in een kader zetten, uitlijnen en verplaatsen, verbanden leggen en elementen of relaties weghalen — geen diagrammen of mappen weghalen, en geen kleuren of lijnroutes.</p>
       )}
     </div>
   );
@@ -228,7 +239,8 @@ export default function AssistentHost() {
       if (!antwoord) throw new Error("Het antwoord was geen bruikbare JSON; probeer het nog eens.");
       const plan = controleerPlan(antwoord, talen, bestaand);
       const stand = { mappen: standAlle.mappen, plaatsing: standAlle.plaatsing, profielen: Object.fromEntries(ids.map((id) => [id, standAlle.profielen[id] || { elements: {}, diagrams: {} }])) };
-      const wijziging = maakWijziging(plan, stand, { mapId: verzoek.mapId || null, samenvattingen: talen, gemeten: meetKnopen() });
+      // Layouts (hierarchisch, gelaagd-lr, …) draaien met de strategieën van het profiel.
+      const wijziging = maakWijziging(plan, stand, { mapId: verzoek.mapId || null, samenvattingen: talen, gemeten: meetKnopen(), layouts: (pid) => getProfieltype(pid)?.descriptor?.layouts || [] });
       setGesprek([...gesprek, { role: "user", content: vraagTekst }, { role: "assistant", content: antwoordTekst }]);
       setLog((l) => [...l, { wie: "jij", tekst }]);
       setVoorstel({ soort: "model", plan, wijziging, bestaand, talen });

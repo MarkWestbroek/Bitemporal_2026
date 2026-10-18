@@ -82,12 +82,16 @@ export function profielSamenvatting(descriptor, profielId = descriptor?.id) {
     }))
     .filter((c) => c.regels.length);
   const a = descriptor?.assistent || {};
+  // Layouts van het profiel (bv. de zes richtingen van het canonieke model, 18-10): extra
+  // opstel-acties voor een heel diagram of een selectie.
+  const layouts = (descriptor?.layouts || []).filter((l) => l?.id).map((l) => ({ id: l.id, label: l.label || l.id }));
   return {
     id: profielId,
     naam: descriptor?.label || descriptor?.naam || profielId,
     diagramTypeId: descriptor?.id || profielId,
     elementen,
     connectoren,
+    ...(layouts.length ? { layouts } : {}),
     ...(a.aanwijzingen?.length ? { aanwijzingen: a.aanwijzingen } : {}),
     ...(a.paren ? { paren: a.paren } : {}),
   };
@@ -129,6 +133,16 @@ export function bestaandInMap(stand, mapId, profielIds = Object.keys(stand.profi
     for (const d of diagrammen) for (const n of d.nodes || []) if (els[n.elementId] && !els[n.elementId].source) ids.add(n.elementId);
     for (const e of Object.values(els)) if (!e.source && plaatsing[`el::${profielId}::${e.id}`] && inMap.has(mapVan(`el::${profielId}::${e.id}`))) ids.add(e.id);
     const opDiagrammen = (id) => diagrammen.filter((d) => (d.nodes || []).some((n) => n.elementId === id)).map((d) => d.id);
+    // Waar het element staat, per diagram (eerste voorkomen): x, y en, als bekend, de maat.
+    const plekken = (id) => {
+      const uit = {};
+      for (const d of diagrammen) {
+        const n = (d.nodes || []).find((k) => k.elementId === id);
+        if (!n?.position) continue;
+        uit[d.id] = [Math.round(n.position.x), Math.round(n.position.y), ...(n.size?.width ? [Math.round(n.size.width), Math.round(n.size.height)] : [])];
+      }
+      return uit;
+    };
     const relaties = [];
     for (const e of Object.values(els)) {
       if (!e.source || !ids.has(e.source) || !ids.has(e.target)) continue;
@@ -140,7 +154,8 @@ export function bestaandInMap(stand, mapId, profielIds = Object.keys(stand.profi
       diagrammen: diagrammen.map((d) => ({ id: d.id, naam: d.naam || d.id, ...(mapNaam(mapVan(`${profielId}::${d.id}`)) ? { map: mapNaam(mapVan(`${profielId}::${d.id}`)) } : {}) })),
       elementen: [...ids].map((id) => {
         const velden = (els[id].compartimenten || []).flatMap((c) => (c.velden || []).map((v) => v.naam)).filter(Boolean).slice(0, 30);
-        return { id, type: els[id].elementType, naam: els[id].naam || "", diagrammen: opDiagrammen(id), ...(velden.length ? { velden } : {}) };
+        const plek = plekken(id);
+        return { id, type: els[id].elementType, naam: els[id].naam || "", diagrammen: opDiagrammen(id), ...(Object.keys(plek).length ? { plek } : {}), ...(velden.length ? { velden } : {}) };
       }),
       relaties,
     });
@@ -185,6 +200,9 @@ export const OPSTEL_ACTIES = {
   onder: "bottom",
   automatisch: "automatisch",
 };
+
+/** Kanten voor een positie naast een ander element. */
+export const KANTEN = ["rechts", "links", "onder", "boven"];
 
 const SCHEMA_PLAN = {
   type: "object",
@@ -253,10 +271,33 @@ const SCHEMA_PLAN = {
         required: ["diagram", "actie"],
         properties: {
           diagram: { type: "string" },
-          actie: { type: "string", enum: Object.keys(OPSTEL_ACTIES) },
+          actie: { type: "string", description: `${Object.keys(OPSTEL_ACTIES).join(", ")}, of een layout van de taal` },
           elementen: { type: "array", items: { type: "string" } },
         },
       },
+    },
+    posities: {
+      type: "array",
+      description: "elementen verplaatsen: naar x/y, of naast een ander element",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["diagram", "element"],
+        properties: {
+          diagram: { type: "string" },
+          element: { type: "string" },
+          x: { type: "number" },
+          y: { type: "number" },
+          naast: { type: "string" },
+          kant: { type: "string", enum: KANTEN },
+          afstand: { type: "number" },
+        },
+      },
+    },
+    nietGedaan: {
+      type: "array",
+      description: "delen van de opdracht die je niet kunt uitvoeren, in korte zinnen",
+      items: { type: "string" },
     },
     verbanden: {
       type: "array",
@@ -292,6 +333,7 @@ function taalTekst(s) {
       return `- ${c.id}: ${c.label} — ${regel}${c.omschrijving ? ` (${c.omschrijving})` : ""}${c.eigenschappen ? ` [eigenschappen: ${c.eigenschappen.join(", ")}]` : ""}`;
     }),
   ];
+  if (s.layouts?.length) regels.push(`Layouts (actie in \`opstelling\`): ${s.layouts.map((l) => `${l.id} (${l.label})`).join(", ")}`);
   if (s.aanwijzingen?.length) regels.push("Aanwijzingen:", ...s.aanwijzingen.map((a) => `- ${a}`));
   return regels.join("\n");
 }
@@ -309,7 +351,11 @@ export function bestaandTekst(bestaand = [], { max = 200 } = {}) {
     for (const d of p.diagrammen || []) regels.push(`  diagram ${d.id} "${d.naam}"${d.map ? ` (map ${d.map})` : ""}`);
     for (const e of p.elementen || []) {
       if (n++ >= max) { regels.push("  … (meer elementen weggelaten)"); break; }
-      regels.push(`  element ${e.id}: ${e.type} "${e.naam}"${e.diagrammen?.length ? ` op ${e.diagrammen.join(", ")}` : ""}${e.in ? ` in ${e.in}` : ""}${e.velden?.length ? ` — velden: ${e.velden.join(", ")}` : ""}`);
+      const op = (e.diagrammen || []).map((d) => {
+        const p = e.plek?.[d];
+        return p ? `${d} @ ${p[0]},${p[1]}${p.length > 2 ? ` (${p[2]}×${p[3]})` : ""}` : d;
+      });
+      regels.push(`  element ${e.id}: ${e.type} "${e.naam}"${op.length ? ` op ${op.join(", ")}` : ""}${e.in ? ` in ${e.in}` : ""}${e.velden?.length ? ` — velden: ${e.velden.join(", ")}` : ""}`);
     }
     for (const r of (p.relaties || []).slice(0, max)) regels.push(`  relatie ${r.id}: ${r.type} ${r.bron} → ${r.doel}`);
   }
@@ -323,7 +369,9 @@ const PLAN_VORM =
   '"connectoren": [{"type": "<relatietype-id>", "bron": "<sleutel of bestaand id>", "doel": "<sleutel of bestaand id>", "eigenschappen": {}}], ' +
   '"verbanden": [{"van": "<sleutel of id>", "naar": "<sleutel of id>", "soort": "realiseert"}], ' +
   '"opstelling": [{"diagram": "<diagram-id of sleutel>", "actie": "naast-elkaar", "elementen": ["<id of sleutel>"]}], ' +
-  '"verwijderen": ["<id van een bestaand element of een bestaande relatie>"]}';
+  '"posities": [{"diagram": "<diagram-id of sleutel>", "element": "<id of sleutel>", "x": 400, "y": 200}, {"diagram": "…", "element": "…", "naast": "<id of sleutel>", "kant": "rechts", "afstand": 60}], ' +
+  '"verwijderen": ["<id van een bestaand element of een bestaande relatie>"], ' +
+  '"nietGedaan": ["<deel van de opdracht dat je niet kunt>"]}';
 
 /**
  * Systeemprompt + vraag voor een opdracht in de map.
@@ -347,9 +395,10 @@ export function vraagVoorOpdracht(talen, opdracht, { mapNaam = "", submappen = [
     "- Iets in een container zetten (bv. een use case in een systeemkader): `in` met de sleutel of het id van de container — ook voor een bestaand element ({\"bestaand\": \"<id>\", \"in\": \"<container>\"}). Zeg in de uitleg alleen wat het plan echt doet.",
     "- Nieuwe diagrammen in een submap: zet `map` (naam); een bestaande submap met die naam wordt hergebruikt.",
     "- Een diagram onder een element hangen (bv. een activiteitendiagram onder een use case): zet `map` op de naam of het id van een element dat een uitwerking kan dragen — een bestaand element, of een nieuw element uit dit plan (zijn sleutel). Het diagram komt dan in de boom onder dat element.",
-    "- Uitlijnen of opstellen: `opstelling` met het diagram (id of sleutel), een actie (naast-elkaar = op één rij, boven-elkaar = in één kolom, verdeel-horizontaal, verdeel-verticaal, links, rechts, boven, onder, automatisch = het hele diagram netjes opstellen) en de elementen (ids of sleutels; leeg = alle). \"Horizontaal uitlijnen\" = naast-elkaar (zelfde hoogte), \"verticaal uitlijnen\" = boven-elkaar (zelfde midden); verdelen alleen als om gelijke afstanden gevraagd wordt. Leden van een container schuiven mee.",
+    "- Uitlijnen of opstellen: `opstelling` met het diagram (id of sleutel), een actie (naast-elkaar = op één rij, boven-elkaar = in één kolom, verdeel-horizontaal, verdeel-verticaal, links, rechts, boven, onder, automatisch = het hele diagram netjes opstellen, of een layout die de taal noemt, bv. hierarchisch) en de elementen (ids of sleutels; leeg = alle). \"Horizontaal uitlijnen\" = naast-elkaar (zelfde hoogte), \"verticaal uitlijnen\" = boven-elkaar (zelfde midden); verdelen alleen als om gelijke afstanden gevraagd wordt. Leden van een container schuiven mee.",
+    "- Verplaatsen: `posities` met het diagram en het element, en óf `x`/`y` (linkerbovenhoek, in de coördinaten achter @ bij WAT ER AL IS), óf `naast` een ander element met `kant` (rechts, links, onder, boven) en eventueel `afstand` (standaard 60). Leden van een container schuiven mee.",
     "- Weghalen: `verwijderen` met ids van bestaande elementen of relaties — alleen als de opdracht dat vraagt. Een element verdwijnt met zijn relaties uit het model en van alle diagrammen; een relatie alleen zelf.",
-    "- Wat je niet kunt: diagrammen of mappen weghalen, en vrije posities of kleuren zetten. Vraagt de opdracht dat, zeg het in de uitleg; beweer nooit dat je iets doet wat niet in het plan staat.",
+    "- Wat je niet kunt: diagrammen of mappen weghalen, kleuren of lettertypen zetten, lijnen een eigen route geven, en maten van elementen kiezen. Zet zulke delen van de opdracht in `nietGedaan` (korte zinnen) en beweer in de uitleg nooit dat je iets doet wat niet in het plan staat.",
     "- Hangen modellen in verschillende talen samen (bv. een use case met een activiteitendiagram dat hem uitwerkt), leg dan een `verband` tussen twee elementen — geen diagrammen; bv. de eerste actie van het activiteitendiagram realiseert de use case (soort: " + VERBAND_SOORTEN.join(", ") + ").",
     "- Namen in de taal van de opdracht, zoals een analist ze zou schrijven. Maak niets wat niet uit de opdracht volgt. Geef relaties de richting die de taal voorschrijft.",
     "Antwoord uitsluitend met JSON in deze vorm (geen tekst eromheen; lege lijsten mogen):",
@@ -666,18 +715,42 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
   const opstelling = [];
   for (const o of Array.isArray(antwoord?.opstelling) ? antwoord.opstelling : []) {
     const dia = diagramOp(o?.diagram) || (diagrammen.length === 1 ? diagrammen[0] : null) || (bestaandDi.size === 1 ? diagramOp([...bestaandDi.keys()][0]) : null);
-    const modus = OPSTEL_ACTIES[tekst(o?.actie)];
     if (!dia) { problemen.push(`Opstelling op onbekend diagram ${o?.diagram || "?"} overgeslagen.`); continue; }
-    if (!modus) { problemen.push(`Opstel-actie "${o?.actie}" bestaat niet (wel: ${Object.keys(OPSTEL_ACTIES).join(", ")}).`); continue; }
+    // Een layout van de taal (bv. hierarchisch) heet "layout:<id>" in de wijziging.
+    const layouts = taalVan.get(dia.profielId)?.layouts || [];
+    const modus = OPSTEL_ACTIES[tekst(o?.actie)] || (layouts.some((l) => l.id === tekst(o?.actie)) ? `layout:${tekst(o?.actie)}` : null);
+    if (!modus) { problemen.push(`Opstel-actie "${o?.actie}" bestaat niet voor deze taal (wel: ${[...Object.keys(OPSTEL_ACTIES), ...layouts.map((l) => l.id)].join(", ")}).`); continue; }
     const els = [];
     for (const ref of Array.isArray(o.elementen) ? o.elementen : []) {
       const e = los(ref);
       if (!e || e.profielId !== dia.profielId) { problemen.push(`${ref} staat niet op diagram "${dia.naam}"; niet uitgelijnd.`); continue; }
       els.push(e.nieuw ? { nieuw: e.nieuw } : { id: e.id });
     }
-    if (modus !== "automatisch" && els.length === 1) { problemen.push(`Uitlijnen met één element (${o.elementen[0]}) doet niets.`); continue; }
+    if (modus !== "automatisch" && !modus.startsWith("layout:") && els.length === 1) { problemen.push(`Uitlijnen met één element (${o.elementen[0]}) doet niets.`); continue; }
     opstelling.push({ diagram: dia.sleutel, profielId: dia.profielId, actie: tekst(o.actie), modus, elementen: els });
   }
+
+  // 5b. Posities (18-10, Mark): een element naar x/y, of naast een ander element.
+  const posities = [];
+  for (const p of Array.isArray(antwoord?.posities) ? antwoord.posities : []) {
+    const dia = diagramOp(p?.diagram) || (diagrammen.length === 1 ? diagrammen[0] : null) || (bestaandDi.size === 1 ? diagramOp([...bestaandDi.keys()][0]) : null);
+    if (!dia) { problemen.push(`Positie op onbekend diagram ${p?.diagram || "?"} overgeslagen.`); continue; }
+    const e = los(p?.element);
+    if (!e || e.profielId !== dia.profielId) { problemen.push(`${p?.element || "?"} staat niet op diagram "${dia.naam}"; niet verplaatst.`); continue; }
+    const element = e.nieuw ? { nieuw: e.nieuw } : { id: e.id };
+    const x = Number(p.x), y = Number(p.y);
+    if (p.x != null && p.y != null && Number.isFinite(x) && Number.isFinite(y)) {
+      posities.push({ diagram: dia.sleutel, profielId: dia.profielId, element, x: Math.round(x), y: Math.round(y) });
+      continue;
+    }
+    const n = p?.naast != null ? los(p.naast) : null;
+    if (!n || n.profielId !== dia.profielId) { problemen.push(`Positie van ${e.naam || p.element}: geef x en y, of naast een element op hetzelfde diagram; niet verplaatst.`); continue; }
+    const kant = KANTEN.includes(tekst(p.kant)) ? tekst(p.kant) : "rechts";
+    const afstand = Number.isFinite(Number(p.afstand)) ? Math.max(0, Math.min(800, Math.round(Number(p.afstand)))) : 60;
+    posities.push({ diagram: dia.sleutel, profielId: dia.profielId, element, naast: n.nieuw ? { nieuw: n.nieuw } : { id: n.id }, kant, afstand });
+  }
+  // Wat de AI zelf zegt niet te kunnen; de Studio en de MCP tonen het apart.
+  const nietGedaan = (Array.isArray(antwoord?.nietGedaan) ? antwoord.nietGedaan : []).map(tekst).filter(Boolean).slice(0, 10);
 
   // 6. Weghalen (AI-2 stap 2, 16-10): alleen bestaande elementen en relaties, op id; nooit iets
   // uit dit plan. Een relatie naar iets dat weggaat, vervalt.
@@ -707,7 +780,7 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
   });
 
   // Een nieuw diagram zonder iets erop is niets.
-  const gebruikt = new Set([...elementen.map((e) => e.diagram), ...opDiagram.map((o) => o.diagram), ...connectorenNa.map((c) => c.diagram).filter(Boolean), ...opstelling.map((o) => o.diagram)]);
+  const gebruikt = new Set([...elementen.map((e) => e.diagram), ...opDiagram.map((o) => o.diagram), ...connectorenNa.map((c) => c.diagram).filter(Boolean), ...opstelling.map((o) => o.diagram), ...posities.map((p) => p.diagram)]);
   const leeg = diagrammen.filter((d) => !d.bestaandId && !gebruikt.has(d.sleutel));
   for (const d of leeg) problemen.push(`Diagram "${d.naam}" blijft leeg; niet gemaakt.`);
 
@@ -720,9 +793,11 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     opDiagram,
     leden,
     opstelling,
+    posities,
     connectoren: connectorenNa,
     verbanden,
     verwijderen,
+    nietGedaan,
     problemen,
     opmerkingen,
   };

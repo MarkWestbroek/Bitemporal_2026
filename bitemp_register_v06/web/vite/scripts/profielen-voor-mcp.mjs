@@ -36,7 +36,14 @@ try {
   const profielen = getProfieltypen()
     // Zonder de demo-profielen uit de profiel-ontwerper (dyn-…): die leven alleen in een browser.
     .filter((p) => !p.vasteDocumenten && !p.id.startsWith("dyn-") && (p.descriptor?.elementTypes || []).some((t) => t.isConnector))
-    .map((p) => ({ ...profielSamenvatting(p.descriptor, p.id), naam: p.label || p.descriptor?.label || p.id }))
+    .map((p) => ({
+      ...profielSamenvatting(p.descriptor, p.id),
+      naam: p.label || p.descriptor?.label || p.id,
+      // Voor de algemene layout in de MCP (diagramcore/layout/leesvolgorde.js): de leesvolgorde en
+      // per type alleen wat de layout leest (container, rand-element, connector).
+      ...(p.descriptor?.leesvolgorde !== undefined ? { leesvolgorde: p.descriptor.leesvolgorde } : {}),
+      layoutTypen: (p.descriptor?.elementTypes || []).map((t) => ({ id: t.id, ...(t.containerVoor ? { containerVoor: t.containerVoor } : {}), ...(t.randElement ? { randElement: true } : {}), ...(t.isConnector ? { isConnector: true } : {}) })),
+    }))
     .sort((a, b) => a.naam.localeCompare(b.naam));
   writeFileSync(uit, JSON.stringify({ gegenereerd: "scripts/profielen-voor-mcp.mjs", profielen }, null, 1) + "\n");
   console.log(`${profielen.length} profielen → ${path.relative(process.cwd(), uit)}`);
