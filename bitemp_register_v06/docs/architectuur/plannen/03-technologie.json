@@ -1,0 +1,52 @@
+{
+  "uitleg": "Technologie en uitrol (ArchiMate technologielaag): de VPS-stack met Caddy, de drie images per instantie, Postgres en MinIO, de tweede instantie pf, en de NAS voor backups.",
+  "diagrammen": [
+    { "sleutel": "dTech", "taal": "archimate05", "naam": "Technologie en uitrol (VPS)", "map": "2 Componenten" }
+  ],
+  "elementen": [
+    { "sleutel": "browser", "type": "device", "naam": "Browser van de gebruiker (Chrome, Edge, …)", "diagram": "dTech" },
+    { "sleutel": "internet", "type": "communicatienetwerk", "naam": "Internet (HTTPS)", "diagram": "dTech" },
+    { "sleutel": "vps", "type": "node", "naam": "VPS (Docker)", "diagram": "dTech" },
+    { "sleutel": "caddy", "type": "systeemsoftware", "naam": "Caddy (reverse proxy, Let's Encrypt)", "diagram": "dTech" },
+    { "sleutel": "docker", "type": "systeemsoftware", "naam": "Docker Compose", "diagram": "dTech" },
+    { "sleutel": "nApp", "type": "node", "naam": "Instantie app.omnium-ide.nl", "diagram": "dTech" },
+    { "sleutel": "nPf", "type": "node", "naam": "Instantie pf.common-ground-lab.nl (bouwt uit bron)", "diagram": "dTech" },
+    { "sleutel": "aFrontend", "type": "artifact", "naam": "bitemp-viz-frontend (nginx + Studio)", "diagram": "dTech" },
+    { "sleutel": "aApi", "type": "artifact", "naam": "bitemp-go-api", "diagram": "dTech" },
+    { "sleutel": "aRender", "type": "artifact", "naam": "bitemp-render-svc", "diagram": "dTech" },
+    { "sleutel": "pg", "type": "systeemsoftware", "naam": "PostgreSQL 16", "diagram": "dTech" },
+    { "sleutel": "minio", "type": "systeemsoftware", "naam": "MinIO (objectopslag)", "diagram": "dTech" },
+    { "sleutel": "openftv", "type": "systeemsoftware", "naam": "OpenFTV (externe PDP, optioneel profiel authz)", "diagram": "dTech" },
+    { "sleutel": "dockerhub", "type": "node", "naam": "Docker Hub (images markwestbroek/*)", "diagram": "dTech" },
+    { "sleutel": "nas", "type": "node", "naam": "NAS (haalt nachtelijke backups op)", "diagram": "dTech" },
+    { "sleutel": "github", "type": "node", "naam": "GitHub (bron, tags studio/ en api/)", "diagram": "dTech" },
+    { "sleutel": "tsUpdate", "type": "tech-proces", "naam": "update.sh: backup, pull, herstart, smoke-test", "diagram": "dTech" },
+    { "sleutel": "tsPf", "type": "tech-proces", "naam": "pf.sh deploy: git pull, images bouwen, herstart", "diagram": "dTech" },
+    { "sleutel": "tiHttps", "type": "tech-interface", "naam": "HTTPS :443", "diagram": "dTech" }
+  ],
+  "connectoren": [
+    { "type": "associatie", "bron": "browser", "doel": "internet" },
+    { "type": "associatie", "bron": "internet", "doel": "tiHttps" },
+    { "type": "compositie", "bron": "vps", "doel": "tiHttps" },
+    { "type": "toewijzing", "bron": "vps", "doel": "caddy" },
+    { "type": "toewijzing", "bron": "vps", "doel": "docker" },
+    { "type": "compositie", "bron": "vps", "doel": "nApp" },
+    { "type": "compositie", "bron": "vps", "doel": "nPf" },
+    { "type": "bediening", "bron": "caddy", "doel": "nApp", "naam": "app.omnium-ide.nl → :8083" },
+    { "type": "bediening", "bron": "caddy", "doel": "nPf", "naam": "pf.common-ground-lab.nl → :8084" },
+    { "type": "toewijzing", "bron": "nApp", "doel": "aFrontend" },
+    { "type": "toewijzing", "bron": "nApp", "doel": "aApi" },
+    { "type": "toewijzing", "bron": "nApp", "doel": "aRender" },
+    { "type": "toewijzing", "bron": "nApp", "doel": "pg" },
+    { "type": "toewijzing", "bron": "nApp", "doel": "minio" },
+    { "type": "toewijzing", "bron": "nApp", "doel": "openftv" },
+    { "type": "stroom", "bron": "aFrontend", "doel": "aApi", "naam": "nginx proxiet /api, /ai" },
+    { "type": "stroom", "bron": "aApi", "doel": "aRender", "naam": "RENDER_SVC_URL" },
+    { "type": "stroom", "bron": "dockerhub", "doel": "nApp", "naam": "docker pull :latest" },
+    { "type": "stroom", "bron": "github", "doel": "nPf", "naam": "git pull" },
+    { "type": "toewijzing", "bron": "nApp", "doel": "tsUpdate" },
+    { "type": "toewijzing", "bron": "nPf", "doel": "tsPf" },
+    { "type": "stroom", "bron": "vps", "doel": "nas", "naam": "backup (nachtelijk)" }
+  ],
+  "opstelling": [ { "diagram": "dTech", "actie": "automatisch" } ]
+}
