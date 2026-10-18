@@ -1,0 +1,41 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Operatie van A naar B (outbox → ops → SSE)",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_operatie_van_a_naar_b_outbox_ops_sse"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_studio_a_store_outbox_verzender",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_2",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_project_ops",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_sse_hub",
+   "x": 820,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_b",
+   "x": 1080,
+   "y": 40
+  }
+ ]
+}

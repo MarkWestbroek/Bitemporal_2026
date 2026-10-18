@@ -1,0 +1,41 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Inloggen en toegang (PEP → PDP)",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_inloggen_en_toegang_pep_pdp"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_browser",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_auth_middleware",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_domein_beheer_gebruiker_rollen",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_pep_2",
+   "x": 820,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_pdp_bundel_optioneel_openftv_via_authzen",
+   "x": 1080,
+   "y": 40
+  }
+ ]
+}

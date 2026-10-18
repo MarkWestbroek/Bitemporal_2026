@@ -1,0 +1,41 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Lezen op formeel tijdstip t (met PEP en PDP)",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_lezen_op_formeel_tijdstip_t_met_pep_en_p"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_lezer_studio_graphql_client",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_dynql",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_pep",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_pdp_beleidsbundel",
+   "x": 820,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_postgresql",
+   "x": 1080,
+   "y": 40
+  }
+ ]
+}

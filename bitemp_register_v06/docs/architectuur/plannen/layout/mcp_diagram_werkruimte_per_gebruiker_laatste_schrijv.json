@@ -1,0 +1,35 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Werkruimte per gebruiker (laatste schrijver wint)",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_werkruimte_per_gebruiker_laatste_schrijv"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_studio_op_de_desktop",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_5",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_werkruimtes_project_gebruiker",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_op_de_laptop",
+   "x": 820,
+   "y": 40
+  }
+ ]
+}

@@ -1,0 +1,15 @@
+{
+ "uitleg": "Opstelling lagen-tb voor Capabilities gerealiseerd door componenten",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  }
+ ],
+ "opstelling": [
+  {
+   "diagram": "d",
+   "actie": "lagen-tb"
+  }
+ ]
+}

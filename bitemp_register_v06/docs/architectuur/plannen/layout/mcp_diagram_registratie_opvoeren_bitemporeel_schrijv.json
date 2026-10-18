@@ -1,0 +1,47 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Registratie opvoeren (bitemporeel schrijven)",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_registratie_opvoeren_bitemporeel_schrijv"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_client_studio_of_formulier",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_route_middleware",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_registratie_engine",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_metaregistry_validatie",
+   "x": 820,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_postgresql_hub_data_registratie_wijzigin",
+   "x": 1080,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_notificaties",
+   "x": 1340,
+   "y": 40
+  }
+ ]
+}

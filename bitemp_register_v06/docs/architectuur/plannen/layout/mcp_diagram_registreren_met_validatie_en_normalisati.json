@@ -1,0 +1,15 @@
+{
+ "uitleg": "Opstelling leesvolgorde-tb voor Registreren met validatie en normalisatie",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_registreren_met_validatie_en_normalisati"
+  }
+ ],
+ "opstelling": [
+  {
+   "diagram": "d",
+   "actie": "leesvolgorde-tb"
+  }
+ ]
+}

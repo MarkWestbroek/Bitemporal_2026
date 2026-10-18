@@ -1,0 +1,35 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Render-API vanuit Imprint",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_render_api_vanuit_imprint"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_imprint",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_6",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_schema_versies_2",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_render_svc_diagramsvg",
+   "x": 820,
+   "y": 40
+  }
+ ]
+}

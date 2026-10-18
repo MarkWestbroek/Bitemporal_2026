@@ -1,0 +1,15 @@
+{
+ "uitleg": "Opstelling leesvolgorde-tb voor Herverbinden: naspelen of snapshot opnieuw",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_herverbinden_naspelen_of_snapshot_opnieu"
+  }
+ ],
+ "opstelling": [
+  {
+   "diagram": "d",
+   "actie": "leesvolgorde-tb"
+  }
+ ]
+}

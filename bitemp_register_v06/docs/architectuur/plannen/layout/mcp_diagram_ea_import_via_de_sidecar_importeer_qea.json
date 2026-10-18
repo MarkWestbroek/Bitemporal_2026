@@ -1,0 +1,15 @@
+{
+ "uitleg": "Opstelling leesvolgorde-tb voor EA-import via de sidecar (importeer-qea)",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_ea_import_via_de_sidecar_importeer_qea"
+  }
+ ],
+ "opstelling": [
+  {
+   "diagram": "d",
+   "actie": "leesvolgorde-tb"
+  }
+ ]
+}

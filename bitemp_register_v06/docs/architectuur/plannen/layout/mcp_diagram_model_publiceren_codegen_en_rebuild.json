@@ -1,0 +1,47 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Model publiceren, codegen en rebuild",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_model_publiceren_codegen_en_rebuild"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_studio_canoniek_model",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_schema_versies",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_beheerder_devloop",
+   "x": 820,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_codegen_cmd_codegen",
+   "x": 1080,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_build_entrypoint",
+   "x": 1340,
+   "y": 40
+  }
+ ]
+}

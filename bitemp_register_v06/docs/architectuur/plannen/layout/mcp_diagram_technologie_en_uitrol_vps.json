@@ -1,0 +1,15 @@
+{
+ "uitleg": "Opstelling lagen-tb voor Technologie en uitrol (VPS)",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_technologie_en_uitrol_vps"
+  }
+ ],
+ "opstelling": [
+  {
+   "diagram": "d",
+   "actie": "lagen-tb"
+  }
+ ]
+}

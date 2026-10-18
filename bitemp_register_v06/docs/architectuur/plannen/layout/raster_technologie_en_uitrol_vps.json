@@ -1,0 +1,125 @@
+{
+ "uitleg": "Raster per categorie voor Technologie en uitrol (VPS)",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_technologie_en_uitrol_vps"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_browser_van_de_gebruiker_chrome_edge",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_internet_https",
+   "x": 290,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_https_443",
+   "x": 540,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_github_bron_tags_studio_en_api",
+   "x": 790,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_docker_hub_images_markwestbroek",
+   "x": 1040,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_vps_docker",
+   "x": 40,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_caddy_reverse_proxy_let_s_encrypt",
+   "x": 290,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_docker_compose",
+   "x": 540,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_nas_haalt_nachtelijke_backups_op",
+   "x": 790,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_instantie_app_omnium_ide_nl",
+   "x": 40,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_bitemp_viz_frontend_nginx_studio",
+   "x": 290,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_bitemp_go_api",
+   "x": 540,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_bitemp_render_svc",
+   "x": 790,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_update_sh_backup_pull_herstart_smoke_tes",
+   "x": 1040,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_instantie_pf_common_ground_lab_nl_bouwt_",
+   "x": 40,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_postgresql_16",
+   "x": 290,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_minio_objectopslag",
+   "x": 540,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_openftv_externe_pdp_optioneel_profiel_au",
+   "x": 790,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_pf_sh_deploy_git_pull_images_bouwen_hers",
+   "x": 1040,
+   "y": 430
+  }
+ ]
+}

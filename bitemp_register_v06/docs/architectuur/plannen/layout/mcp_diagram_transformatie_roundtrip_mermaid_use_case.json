@@ -1,0 +1,15 @@
+{
+ "uitleg": "Opstelling leesvolgorde-tb voor Transformatie-roundtrip (Mermaid ↔ use case)",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_transformatie_roundtrip_mermaid_use_case"
+  }
+ ],
+ "opstelling": [
+  {
+   "diagram": "d",
+   "actie": "leesvolgorde-tb"
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Notificatie: CloudEvent naar webhook of e-mail",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_notificatie_cloudevent_naar_webhook_of_e"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_registratie_engine_2",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_notificaties_service",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_notificatiedefinities_configuratie_dynql",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_webhook_afnemer_of_smtp",
+   "x": 820,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_notificatie_bezorging",
+   "x": 1080,
+   "y": 40
+  }
+ ]
+}

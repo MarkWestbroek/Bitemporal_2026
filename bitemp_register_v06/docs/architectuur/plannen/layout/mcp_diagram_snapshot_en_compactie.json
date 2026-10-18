@@ -1,0 +1,41 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Snapshot en compactie",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_snapshot_en_compactie"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_online_client_bij_outbox_leeg",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_3",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_projecten",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_project_ops_2",
+   "x": 820,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_late_client_voor_de_grens",
+   "x": 1080,
+   "y": 40
+  }
+ ]
+}

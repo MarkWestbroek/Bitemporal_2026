@@ -1,0 +1,35 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Naar server sturen en van server ophalen",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_naar_server_sturen_en_van_server_ophalen"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_modelleur",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_menu_project",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_4",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_projecten_blob_versie_grens",
+   "x": 820,
+   "y": 40
+  }
+ ]
+}

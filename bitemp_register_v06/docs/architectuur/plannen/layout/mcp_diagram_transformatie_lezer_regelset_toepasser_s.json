@@ -1,0 +1,47 @@
+{
+ "uitleg": "Levenslijnen op één rij voor Transformatie: lezer → regelset → toepasser → schrijver",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_transformatie_lezer_regelset_toepasser_s"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_modelleur_2",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_transformatiepaneel",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_transformatieregistry",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_lezer_parser",
+   "x": 820,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_toepasser_regelset_data",
+   "x": 1080,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_creatediagramstore_profiel",
+   "x": 1340,
+   "y": 40
+  }
+ ]
+}

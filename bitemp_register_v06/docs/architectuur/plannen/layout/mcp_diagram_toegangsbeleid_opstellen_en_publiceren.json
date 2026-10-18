@@ -1,0 +1,15 @@
+{
+ "uitleg": "Opstelling leesvolgorde-tb voor Toegangsbeleid opstellen en publiceren",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_toegangsbeleid_opstellen_en_publiceren"
+  }
+ ],
+ "opstelling": [
+  {
+   "diagram": "d",
+   "actie": "leesvolgorde-tb"
+  }
+ ]
+}

@@ -1,0 +1,15 @@
+{
+ "uitleg": "Opstelling lagen-tb voor Applicatiecomponenten en interfaces",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_applicatiecomponenten_en_interfaces"
+  }
+ ],
+ "opstelling": [
+  {
+   "diagram": "d",
+   "actie": "lagen-tb"
+  }
+ ]
+}

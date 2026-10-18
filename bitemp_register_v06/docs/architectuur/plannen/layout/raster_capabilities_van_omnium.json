@@ -1,0 +1,107 @@
+{
+ "uitleg": "Raster per categorie voor Capabilities van Omnium",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_capabilities_van_omnium"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_omnium_modelgedreven_bitemporeel_registe",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_van_model_naar_werkend_register",
+   "x": 290,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_modelleren_profielgedreven_m3_m2_m1",
+   "x": 40,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_bitemporeel_registreren",
+   "x": 290,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_tijdreizen_en_lezen_op_t",
+   "x": 540,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_genereren_codegen_runtime_projectie_m1_m",
+   "x": 790,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_publiceren_formulieren_weergaven_dashboa",
+   "x": 1040,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_transformeren_tussen_notaties",
+   "x": 40,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_importeren_uit_sparx_ea",
+   "x": 290,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_samenwerken_projectsync_live",
+   "x": 540,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_ai_hulp_assistent_mcp_proxy",
+   "x": 790,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_renderen_van_diagrammen_svg_voor_imprint",
+   "x": 1040,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_toegang_en_beleid_pap_pdp_pep",
+   "x": 40,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_notificeren_cloudevents",
+   "x": 290,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_melden_bugs_wensen_vragen",
+   "x": 540,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_beheren_en_uitrollen_releases_vps_backup",
+   "x": 790,
+   "y": 430
+  }
+ ]
+}

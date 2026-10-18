@@ -22,7 +22,8 @@ de documentatie (`.github/copilot-instructions.md`, `docs/OMNIUM_WALKTHROUGH.md`
 - `omnium-architectuur.studio-project.json` — export van de stand op app (werkbestand
   `studio-project` v3), als back-up en voor een andere instantie: *Project → Importeer project…*.
 - `plannen/` — de plannen waarmee het model is gemaakt (`model_wijzigen`-JSON, plus
-  `04-realisatie-ops.mjs` voor de view over twee mappen); het model zelf is de bron. Wijzigingen gaan via de Studio of via de MCP-tool
+  `04-realisatie-ops.mjs` voor de view over twee mappen) en `plannen/layout/` met de
+  opstellingsplannen van de tweede ronde; het model zelf is de bron. Wijzigingen gaan via de Studio of via de MCP-tool
   `model_wijzigen` (eerst voorstel, dan toepassen).
 
 ## Hoe het gemaakt is
@@ -38,6 +39,23 @@ node tools/omnium-mcp/arch-driver.mjs <basis> <gebruiker> <wachtwoord-env|token-
 node tools/omnium-mcp/arch-driver.mjs <basis> <gebruiker> <env> plan "Naam" "<map>" plan.json toepassen
 node tools/omnium-mcp/arch-driver.mjs <basis> <gebruiker> <env> bekijk|boom|export …
 ```
+
+## Opstelling (leesbaarheid)
+
+Na de eerste bouw (18-10) stonden de diagrammen te breed of te hoog. Tweede ronde, met de
+auto-layout op de M3-LayoutStijl en de `posities` van `model_wijzigen` (`plannen/layout/`):
+
+- **Activity**: layout `leesvolgorde-tb` van het profiel (verticaal, zoals de standaard voor AD's):
+  360–560 breed, 1200–1900 hoog.
+- **Sequence**: het profiel heeft geen layoutstijl; de levenslijnen staan via `posities` op één rij
+  (260 px uit elkaar), de berichten tekent het diagram zelf in volgorde.
+- **ArchiMate**: de profiel-layout `lagen-tb` zet alles wat applicatielaag is op één rij (8360 breed)
+  en is hier dus onbruikbaar; de vier views staan in een raster per categorie via `posities`
+  (`raster_*.json`): 1160–1910 breed, 460–720 hoog.
+- **Use case**: de automatische opstelling van de bouw was al goed (600–900 × 600–770).
+
+Maten zijn de omhullende van de nodes; lijnen en berichten komen daar nog bij. Verder fijnslijpen
+kan in de Studio, of met `posities` (`naast`/`kant`) via MCP.
 
 ## Aanvullen per onderwerp
 

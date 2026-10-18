@@ -1,0 +1,15 @@
+{
+ "uitleg": "Opstelling lagen-tb voor Capabilities van Omnium",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_capabilities_van_omnium"
+  }
+ ],
+ "opstelling": [
+  {
+   "diagram": "d",
+   "actie": "lagen-tb"
+  }
+ ]
+}

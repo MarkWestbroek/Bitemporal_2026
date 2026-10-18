@@ -1,0 +1,263 @@
+{
+ "uitleg": "Raster per categorie voor Applicatiecomponenten en interfaces",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_applicatiecomponenten_en_interfaces"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_sparx_ea_extern_qea_via_bestand_of_git",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_ai_dienst_extern_claude_deepseek_openai_",
+   "x": 290,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_ai_client_extern_claude_code_via_mcp",
+   "x": 540,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_imprint_extern_sites_met_modeldiagrammen",
+   "x": 790,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_webhook_afnemer_extern",
+   "x": 1040,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_omnium_studio_react_vite_zustand_react_f",
+   "x": 40,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_diagrammotor_diagramcore_m3_typecontract",
+   "x": 290,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_profielen_m2_descriptors_adapters",
+   "x": 540,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_transformatielaag_lezer_regelset_toepass",
+   "x": 790,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_ea_lezer_qea_browser_en_sidecar",
+   "x": 1040,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_projectsync_client_operaties_outbox_verz",
+   "x": 1290,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_modelassistent_assistentkern",
+   "x": 1540,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_toegangsspraak_pap_beleid_als_m1",
+   "x": 1790,
+   "y": 170
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_modelservice_schema_versies_projecten_sy",
+   "x": 40,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_registerservice_registreren_lezen_op_t",
+   "x": 290,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_sse_api_studio_projecten_id_events",
+   "x": 540,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_rest_pad_full_registratie_api",
+   "x": 790,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_graphql_graphql_query",
+   "x": 1040,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_openapi_3_1_openapi_json_swagger",
+   "x": 1290,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_render_api_api_models_diagram_svg",
+   "x": 1540,
+   "y": 300
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_gin_bun",
+   "x": 40,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_projecten_en_operatielog_sse_hub",
+   "x": 290,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_authenticatie_en_gebruikers_jwt_tokens_u",
+   "x": 540,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_pep_snoeit_paden_op_route_veld_schrijfpa",
+   "x": 790,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_pdp_beleidsbundel_uitvoerder",
+   "x": 1040,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_notificaties_cloudevents_webhook_e_mail",
+   "x": 1290,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_ai_proxy_toegangscodes_lees_url",
+   "x": 1540,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_meldingen_domein_api",
+   "x": 1790,
+   "y": 430
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_metaregistry_typemeta_per_representatiet",
+   "x": 40,
+   "y": 560
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_registratie_engine_bitemporeel_schrijven",
+   "x": 290,
+   "y": 560
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_validatie_en_normalisatie_datatyperegist",
+   "x": 540,
+   "y": 560
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_dynql_graphql_uit_de_metaregistry",
+   "x": 790,
+   "y": 560
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_codegen_en_export_v3_v3_go",
+   "x": 1040,
+   "y": 560
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_webhook_cloudevents_hmac",
+   "x": 1290,
+   "y": 560
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_mcp_stdio_modeltalen_project_bekijken_mo",
+   "x": 1540,
+   "y": 560
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_mcp_server_tools_omnium_mcp",
+   "x": 1790,
+   "y": 560
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_studio_project_operatielog_werkruimte",
+   "x": 40,
+   "y": 690
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_register_hub_data_aanvang_einde",
+   "x": 290,
+   "y": 690
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_registratie_en_wijziging_formele_tijd",
+   "x": 540,
+   "y": 690
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_v3_model_schema_versies",
+   "x": 790,
+   "y": 690
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_beleidsbundel_toegangsspraak_json_odrl",
+   "x": 1040,
+   "y": 690
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_render_svc_node_sidecar_diagramsvg",
+   "x": 1290,
+   "y": 690
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+{
+ "uitleg": "Levenslijnen op één rij voor AI-assistent wijzigt het model via MCP",
+ "diagrammen": [
+  {
+   "sleutel": "d",
+   "bestaand": "mcp_diagram_ai_assistent_wijzigt_het_model_via_mcp"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d",
+   "element": "mcp_gebruiker",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_ai_client_claude_code",
+   "x": 300,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_omnium_mcp_stdio",
+   "x": 560,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_go_api_bearer_token",
+   "x": 820,
+   "y": 40
+  },
+  {
+   "diagram": "d",
+   "element": "mcp_open_studio_s_sse",
+   "x": 1080,
+   "y": 40
+  }
+ ]
+}
