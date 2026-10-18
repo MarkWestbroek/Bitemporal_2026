@@ -75,6 +75,8 @@ export function qeaNaarUsecase(bron, { packageId, diagramTypeId = USECASE_DIAGRA
     };
     const kleur = kleurUitBgr(o.Backcolor);
     if (kleur) data.kleur = kleur;
+    // Pre- en postcondities: EA bewaart ze als constraints op de use case.
+    if (elementType === "usecase") Object.assign(data, conditiesVan(bron, o.Object_ID));
     elements[id] = {
       id,
       naam: elementType === "notitie" ? "" : o.Name || "",
@@ -110,6 +112,22 @@ export function qeaNaarUsecase(bron, { packageId, diagramTypeId = USECASE_DIAGRA
     verslag.diagrammen += 1;
   }
   return { diagramTypeId, elements, diagrams, verslag };
+}
+
+/**
+ * EA-constraints van een use case → `preconditie`/`postconditie` (één regel per
+ * constraint: naam, en de notitie erachter als die er is).
+ */
+export function conditiesVan(bron, objectId) {
+  const uit = {};
+  for (const [soort, sleutel] of [["Pre-condition", "preconditie"], ["Post-condition", "postconditie"]]) {
+    const regels = (bron.t_objectconstraint || [])
+      .filter((k) => k.Object_ID === objectId && k.ConstraintType === soort)
+      .map((k) => [k.Naam, k.Notes].map((t) => String(t || "").trim()).filter(Boolean).join(": "))
+      .filter(Boolean);
+    if (regels.length) uit[sleutel] = regels.join("\n");
+  }
+  return uit;
 }
 
 function vertaalConnector(c, bronId, doelId, elements) {

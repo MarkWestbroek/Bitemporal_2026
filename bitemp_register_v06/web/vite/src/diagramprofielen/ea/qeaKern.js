@@ -30,6 +30,7 @@ import {
  * @property {any[]} t_connector
  * @property {any[]} [t_xref]
  * @property {any[]} [t_objectproperties]
+ * @property {any[]} [t_objectconstraint] - constraints (Pre-condition, Post-condition, …)
  * @property {any[]} [t_attributetag]
  * @property {any[]} [t_connectortag]
  * @property {any[]} [t_diagram]
