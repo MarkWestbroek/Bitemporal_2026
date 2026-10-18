@@ -54,6 +54,7 @@ const RAND_OUDERS = ["toestand", "composiet", "submachine"];
 const elementTypes = [
   {
     id: "begin",
+    aard: "begin",
     omtrek: "ellips",
     label: "Begin",
     omschrijving: "Startpunt van de machine — alleen uitgaande transities.",
@@ -79,6 +80,7 @@ const elementTypes = [
   },
   {
     id: "eind",
+    aard: "eind",
     omtrek: "ellips",
     label: "Eind",
     omschrijving: "Eindtoestand: de machine is klaar — alleen inkomende transities.",
@@ -154,6 +156,7 @@ const elementTypes = [
   },
   {
     id: "entry",
+    aard: "begin",
     label: "Entry-point",
     omschrijving: "Entry-point: sleep hem op de rand van een toestand — nette binnenkomst.",
     kort: "Entry",
@@ -167,6 +170,7 @@ const elementTypes = [
   },
   {
     id: "exit",
+    aard: "eind",
     label: "Exit-point",
     omschrijving: "Exit-point: sleep hem op de rand van een toestand — nette uitgang.",
     kort: "Exit",
@@ -190,6 +194,7 @@ const elementTypes = [
   // ── Connectoren ────────────────────────────────────────────────────────
   {
     id: "transitie",
+    aard: "stroom",
     label: "Transitie",
     omschrijving: "Overgang tussen toestanden: trigger [guard] / effect.",
     kort: "→",
@@ -223,6 +228,7 @@ const elementTypes = [
     // zelfde patroon als "Bevat (package)" in het canoniek model. Meestal
     // is de lijn visueel overbodig (het kind ligt ín de container).
     id: "bevat",
+    aard: "insluiting",
     label: "Bevat (toestand)",
     omschrijving: "Lidmaatschap van een samengestelde toestand (verborgen zolang het lid erin ligt).",
     kort: "⊞ ∋",
@@ -247,6 +253,9 @@ export const statemachineDiagramType = {
   layouts: [],
   // Leesvolgorde (18-10): van boven naar beneden langs de transities.
   leesvolgorde: { richting: "TB", stroom: ["transitie"], start: ["begin", "entry"], eind: ["eind", "exit"] },
+  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
+  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "TB", alleenStroom: true }],
 };
 
 let _teller = 0;

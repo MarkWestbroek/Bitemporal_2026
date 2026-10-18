@@ -130,6 +130,7 @@ const elementTypes = [
   // ── Connectoren ────────────────────────────────────────────────────────
   {
     id: "associatie",
+    aard: "associatie",
     label: "Associatie",
     omschrijving: "De actor neemt deel aan de use case.",
     kort: "—",
@@ -141,6 +142,7 @@ const elementTypes = [
   },
   {
     id: "include",
+    aard: "afhankelijkheid",
     label: "Include",
     omschrijving: "De basis-use case omvat de geïncludeerde altijd.",
     kort: "«i»",
@@ -154,6 +156,7 @@ const elementTypes = [
   },
   {
     id: "extend",
+    aard: "afhankelijkheid",
     label: "Extend",
     omschrijving: "Optionele uitbreiding die invoegt op de basis-use case.",
     kort: "«e»",
@@ -167,6 +170,7 @@ const elementTypes = [
   },
   {
     id: "generalisatie",
+    aard: "specialisatie",
     label: "Generalisatie",
     omschrijving: "Specialisatie tussen actoren of tussen use cases.",
     kort: "▷",
@@ -182,6 +186,7 @@ const elementTypes = [
   },
   {
     id: "realiseert",
+    aard: "realisatie",
     label: "Realiseert",
     omschrijving: "Collaboratie realiseert een use case (gestippeld, driehoek).",
     kort: "⊳┄",
@@ -194,6 +199,7 @@ const elementTypes = [
   },
   {
     id: "dependency",
+    aard: "afhankelijkheid",
     label: "Dependency",
     omschrijving: "Afhankelijkheid (bv. «legt vast» van een use case naar een registratie).",
     kort: "use",
@@ -207,6 +213,7 @@ const elementTypes = [
   },
   {
     id: "notitielijn",
+    aard: "annotatie",
     label: "Notitie-lijn",
     omschrijving: "Koppelt een notitie aan het element waar hij over gaat; geen modelrelatie.",
     kort: "not",
@@ -219,6 +226,7 @@ const elementTypes = [
   {
     // Lidmaatschap van het systeemkader — subtiel; het kind ligt er visueel al in.
     id: "bevat",
+    aard: "insluiting",
     label: "Bevat (systeem)",
     omschrijving: "Lidmaatschap van het systeemkader; verborgen zolang het lid erin ligt.",
     kort: "SYS ∋",
@@ -264,6 +272,9 @@ export const usecaseDiagramType = {
   layouts: [],
   // Leesvolgorde (18-10): actoren links, hun use cases rechts; een extend leest vanaf de basis.
   leesvolgorde: { richting: "LR", start: ["actor"], omgekeerd: ["extend", "generalisatie", "realiseert"] },
+  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
+  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "LR", regels: [{ selector: { elementType: "actor" }, opties: { positie: "begin" } }, { selector: { connectorType: "extend" }, opties: { volgorde: "omgekeerd" } }] }],
 };
 
 let _teller = 0;

@@ -13,6 +13,7 @@
 
 import { normaliseerErfenis, kopieVoorNormalisatie } from "./erfenis.js";
 import { leesvolgordeLayouts } from "../layout/leesvolgorde.js";
+import { valideerAardEnFacetten, valideerLayoutStijl } from "./layoutStijl.js";
 
 /**
  * Profiel zonder eigen layouts: de algemene gelaagde layout op zijn leesvolgorde (18-10). In
@@ -120,6 +121,9 @@ export function valideerDiagramType(dtRauw) {
       fouten.push(`DiagramType "${dt.id}": hierarchie "${hierId}" is geen connector-type`);
     }
   }
+  // Betekenis (aard, facetten) en weergave (layoutStijlen): types/layoutStijl.js.
+  fouten.push(...valideerAardEnFacetten(dt));
+  for (const stijl of dt.layoutStijlen || []) fouten.push(...valideerLayoutStijl(dt, stijl));
   // Verbindingsregels: 1..* per connector, en verwijzingen moeten bestaan.
   for (const et of dt.elementTypes) {
     if (!et?.isConnector) continue;

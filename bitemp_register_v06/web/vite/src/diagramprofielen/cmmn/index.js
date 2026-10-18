@@ -191,6 +191,7 @@ const elementTypes = [
   // ── Connectoren ────────────────────────────────────────────────────────
   {
     id: "on-part",
+    aard: "stroom",
     label: "On-part",
     omschrijving: "Wat de sentry laat aanslaan: 'als dit plan item/gegeven iets doet, gaat die bewaker open'.",
     kort: "⇢◇",
@@ -228,6 +229,7 @@ const elementTypes = [
   },
   {
     id: "associatie",
+    aard: "associatie",
     label: "Associatie",
     omschrijving: "Losse koppeling, bijvoorbeeld naar een notitie.",
     kort: "┄",
@@ -240,6 +242,7 @@ const elementTypes = [
   },
   {
     id: "bevat",
+    aard: "insluiting",
     label: "Bevat (stage)",
     omschrijving: "Lidmaatschap van een stage of het case plan model; verborgen zolang het lid erin ligt.",
     kort: "∋",
@@ -267,6 +270,9 @@ export const cmmnDiagramType = {
   layouts: [],
   // Leesvolgorde (18-10): van links naar rechts langs de on-parts (sentries).
   leesvolgorde: { richting: "LR", stroom: ["on-part"] },
+  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
+  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "LR", alleenStroom: true }],
 };
 
 let _teller = 0;

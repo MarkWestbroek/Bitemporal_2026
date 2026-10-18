@@ -189,6 +189,16 @@
  *   scheidingsteken. Zonder groepen geen scheidingen — zie
  *   diagramcore/taskbar/scheidingen.js
  * @property {boolean} [isConnector]
+ * @property {string} [aard] - **betekenis** van het type (M3, 2026-10-18; zie
+ *   types/layoutStijl.js): wat het ís, niet hoe het getekend wordt. Connector:
+ *   "stroom" | "specialisatie" | "realisatie" | "bericht" | "associatie" |
+ *   "afhankelijkheid" | "toewijzing" | "insluiting" | "annotatie". Element:
+ *   "begin" | "eind" | "baan". Gelezen door de layout (via de LayoutStijl) en
+ *   bruikbaar voor transformaties, documenten, validatie en de MCP.
+ * @property {Record<string, string>} [facetten] - indeling van het type op de
+ *   facetten van het DiagramType, bv. `{laag: "business", aspect: "actief"}`
+ *   (ArchiMate). Betekenis; de volgorde van de waarden staat op
+ *   `DiagramType.facetten`, de keuze "rijen per laag" in de LayoutStijl.
  * @property {string} [containerVoor]       - connectortype-id: dit type is een
  *   container (bv. package); een element erin slepen (canvas of boom) legt
  *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg.
@@ -297,6 +307,32 @@
  * een profiel zonder eigen `layouts` krijgt daarmee vier strategieën (de standaardrichting eerst).
  * `false` = geen automatische layout (bv. sequence: de volgorde ís de tekening).
  *
+ * LayoutStijl — de **weergave** van de automatische layout (M3, 2026-10-18), naast de
+ * gedaante (ShapeSet): zelfde patroon als ShapeType/ShapeRenderer en LineStyle/
+ * LineRenderer. De stijl noemt een LayoutRenderer (het algoritme, Implementatie-domein)
+ * en regels die per type kiezen, zoals CSS: van algemeen (aard) naar specifiek (type-id),
+ * bij gelijke specificiteit de laatste. Het resultaat zijn posities en maten per voorkomen
+ * (zoals OMG DI). `regelsVoorStijl` (types/layoutStijl.js) vertaalt een stijl met de aard
+ * en facetten van de typen naar het Leesvolgorde-formaat hieronder.
+ *
+ * @typedef {Object} LayoutStijl
+ * @property {string} id
+ * @property {string} [label]
+ * @property {"leesvolgorde"} renderer      - LayoutRenderer-id (zie LAYOUT_RENDERERS)
+ * @property {"TB"|"LR"|"BT"|"RL"} [richting] - leesrichting (standaard TB)
+ * @property {boolean} [alleenStroom]       - alleen connectoren met aard "stroom" bepalen de
+ *   volgorde (stroomdiagrammen: activity, BPMN, state machine, CMMN)
+ * @property {string} [rijen]               - facet-naam: vaste lagen langs de leesrichting in de
+ *   volgorde van DiagramType.facetten (ArchiMate: "laag")
+ * @property {string} [kolommen]            - facet-naam voor de dwarsrichting (bv. "aspect")
+ * @property {{laag?: number, dwars?: number, baan?: number, marge?: number}} [afstanden]
+ * @property {LayoutRegel[]} [regels]
+ *
+ * @typedef {Object} LayoutRegel
+ * @property {{aard?: string, elementType?: string, connectorType?: string, erft?: string, facet?: Record<string, string>}} selector
+ * @property {{volgorde?: "mee"|"omgekeerd"|"negeer", positie?: "begin"|"eind"|null, baan?: boolean}} opties
+ *   - connectoren: `volgorde`; elementen: `positie` (begin/eind) en `baan`
+ *
  * @typedef {Object} Leesvolgorde
  * @property {"TB"|"LR"} [richting] - standaard (smaak: AD van boven naar beneden, BPMN van links naar rechts)
  * @property {string[]} [stroom]    - connector-ids die de volgorde bepalen (weg = alle)
@@ -342,6 +378,12 @@
  * @property {TaskbarType[]} [taakbalken]
  * @property {LayoutStrategie[]} [layouts]
  * @property {Leesvolgorde|false} [leesvolgorde] - zie Leesvolgorde; geldt als `layouts` leeg is
+ * @property {Record<string, string[]>} [facetten] - de facetten van dit profiel met hun
+ *   **geordende** waarden, bv. `{laag: ["motivatie", "strategie", "business", …]}`.
+ *   ElementType.facetten kiest daaruit (gecontroleerd bij registratie).
+ * @property {LayoutStijl[]} [layoutStijlen] - weergave: de layoutstijlen van dit
+ *   profiel; een diagram kiest er één met `diagram.layoutStijl` (id), anders geldt de
+ *   eerste. Zonder stijlen een generieke standaard (types/layoutStijl.js stijlVoor).
  * @property {boolean} [meerdereVoorkomens] - elementen mogen meermaals in één diagram voorkomen (default false)
  * @property {{exporteer?: Function, importeer?: Function}} [serialisatie]
  * @property {(ctx: Object) => Array<Object>} [menus] - extra menubalk-menu's

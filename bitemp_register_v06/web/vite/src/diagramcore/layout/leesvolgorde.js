@@ -37,8 +37,9 @@
 const MARGE = { rand: 24, kop: 36 }; // binnenmarge van een container; boven ruimte voor de naam
 const AFSTAND = { laag: 70, dwars: 40, baan: 0 };
 
-/** Standaard: verbindingen die "ouder/abstract eerst" lezen. */
-export const STANDAARD_OMGEKEERD = ["generalisatie", "specialisatie", "subtype", "implements", "realisatie", "realiseert"];
+/** Standaard: verbindingen die "ouder/abstract eerst" lezen — woont bij de betekenis (types/layoutStijl.js). */
+import { STANDAARD_OMGEKEERD } from "../types/layoutStijl.js";
+export { STANDAARD_OMGEKEERD };
 
 /**
  * @typedef {{id: string, type?: string, x: number, y: number, w: number, h: number, ouder?: string|null, container?: boolean}} Knoop

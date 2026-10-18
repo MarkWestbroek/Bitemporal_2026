@@ -105,6 +105,7 @@ const SEQ_DOELEN = [...ACTIVITEITEN, ...GATEWAYS, "tussen-event", "eind-event"];
 const elementTypes = [
   {
     id: "start-event",
+    aard: "begin",
     randAanhechting: "zwevend",
     omtrek: "ellips",
     label: "Start event",
@@ -275,6 +276,7 @@ const elementTypes = [
   },
   {
     id: "lane",
+    aard: "baan",
     randAanhechting: "zwevend",
     label: "Lane",
     omschrijving: "Wie of wat de taken uitvoert — sleep leden erin.",
@@ -287,6 +289,7 @@ const elementTypes = [
   },
   {
     id: "eind-event",
+    aard: "eind",
     randAanhechting: "zwevend",
     omtrek: "ellips",
     label: "End event",
@@ -311,6 +314,7 @@ const elementTypes = [
   // ── Connectoren ────────────────────────────────────────────────────────
   {
     id: "sequence-flow",
+    aard: "stroom",
     label: "Sequence flow",
     omschrijving: "De volgorde in het proces; optioneel met [conditie]. Vink 'default' aan voor het standaardpad (schuin streepje).",
     kort: "→",
@@ -329,6 +333,7 @@ const elementTypes = [
   },
   {
     id: "message-flow",
+    aard: "bericht",
     label: "Message flow",
     omschrijving:
       "Bericht tussen deelnemers: verbindt twee verschillende pools (of een pool en het proces zonder pool) — aan een element erbinnen of aan de poolrand (black box).",
@@ -345,6 +350,7 @@ const elementTypes = [
   },
   {
     id: "data-associatie",
+    aard: "stroom",
     label: "Data association",
     omschrijving: "Koppelt een data-object aan een taak (in- of output).",
     kort: "⇢D",
@@ -367,6 +373,7 @@ const elementTypes = [
     // Notitie-lijn (BPMN association naar een text annotation): stippellijn
     // zonder pijl van de annotatie naar het element waar hij over gaat.
     id: "notitielijn",
+    aard: "annotatie",
     label: "Notitie-lijn",
     omschrijving: "Koppelt een text annotation aan het element waar hij over gaat; geen modelrelatie.",
     kort: "not",
@@ -378,6 +385,7 @@ const elementTypes = [
   },
   {
     id: "bevat",
+    aard: "insluiting",
     label: "Pool/lane membership",
     omschrijving: "Lidmaatschap van een pool of lane; verborgen zolang het lid erin ligt.",
     kort: "∋",
@@ -409,6 +417,9 @@ export const bpmnMotorDiagramType = {
   // Leesvolgorde (18-10, Mark): van links naar rechts langs de sequence flows; lanes zijn banen.
   // Message flows (tussen pools) tellen niet mee voor de volgorde.
   leesvolgorde: { richting: "LR", stroom: ["sequence-flow", "data-associatie"], start: ["start-event"], eind: ["eind-event"], banen: ["lane"], minimaal: { lane: [240, 100], pool: [320, 160] } },
+  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
+  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "LR", alleenStroom: true }],
 };
 
 let _teller = 0;
