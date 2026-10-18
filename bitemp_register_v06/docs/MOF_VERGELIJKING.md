@@ -158,6 +158,14 @@ richting van plan §8.5: Definitie = data, Implementatie = code op id.
 4. **Scheiding abstracte/concrete syntaxis** vasthouden en benoemen: Definitie
    (≈ EMOF) vs. Stijl/Implementatie (≈ DI + tool). In het register: `Element`/
    `Veld`/`Verwijzing` zijn het MOF-deel; `Voorkomen` is het DI-deel.
+   **Toegepast op de auto-layout (2026-10-18):** wat een type ís, staat als
+   `ElementType.aard` en `facetten` in de Definitie (bruikbaar voor layout, maar
+   ook voor transformaties en documenten); hoe het wordt opgesteld, is een
+   **LayoutStijl** in het Stijl-domein met een LayoutRenderer als Implementatie.
+   OMG DD kent geen layoutalgoritme, alleen het resultaat (DI: bounds per
+   shape); dat is bij ons de positie per voorkomen. De ArchiMate-lagen zijn
+   beide: lidmaatschap van een laag is betekenis (het raamwerk van de spec), de
+   volgorde boven-naar-beneden een conventie van de gelaagde weergave.
 
 Niet nastreven: MOF-*compliance* (vereist XMI-mapping per hfst. 15 en de
 reflectie-API). Wel: **EMOF-uitdrukbaarheid** van het Definitie-domein, zodat

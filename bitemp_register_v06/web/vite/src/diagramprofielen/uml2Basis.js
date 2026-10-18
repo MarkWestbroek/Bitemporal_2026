@@ -76,6 +76,7 @@ export const BOUNDARY = {
 export function notitielijn(doelen) {
   return {
     id: "notitielijn",
+    aard: "annotatie",
     label: "Notitie-lijn",
     omschrijving: "Koppelt een notitie aan het element waar hij over gaat; geen modelrelatie.",
     kort: "not",
@@ -99,6 +100,7 @@ export function notitielijn(doelen) {
 export function bevat(bronnen, doelen, label = "Bevat") {
   return {
     id: "bevat",
+    aard: "insluiting",
     label,
     omschrijving: "Lidmaatschap van een container; verborgen zolang het lid erin ligt.",
     kort: "∋",

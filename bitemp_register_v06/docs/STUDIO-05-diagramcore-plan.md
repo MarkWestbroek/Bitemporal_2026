@@ -6,7 +6,19 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde (2026-10-14, branch `feat/sequence-v1`,
+  fase 7 (register). Laatste ronde (2026-10-18, branch `feat/m3-aard-facetten`, M3-MOF): de
+  auto-layout gescheiden in **betekenis** en **weergave**, zoals MOF en OMG Diagram Definition dat
+  doen (DD kent geen layoutalgoritme; alleen het resultaat, posities en maten, is DI).
+  Betekenis: `ElementType.aard` (connector: stroom | specialisatie | realisatie | bericht |
+  associatie | afhankelijkheid | toewijzing | insluiting | annotatie; element: begin | eind | baan)
+  en `ElementType.facetten` op de geordende `DiagramType.facetten` (ArchiMate: laag, aspect).
+  Weergave: **LayoutStijl** (`DiagramType.layoutStijlen`, per diagram `diagram.layoutStijl`) met
+  een LayoutRenderer (nu "leesvolgorde"), richting, `alleenStroom`, `rijen`/`kolommen` per facet en
+  regels {selector: aard | elementType | connectorType | erft | facet → opties: volgorde | positie
+  | baan}, gekozen op specificiteit zoals CSS. Hetzelfde patroon als ShapeType/ShapeRenderer en
+  LineStyle/LineRenderer in het metametamodel. `types/layoutStijl.js` (`regelsVoorStijl`) vertaalt
+  naar het Leesvolgorde-formaat van de renderer; `valideerDiagramType` controleert aard, facetten
+  en stijlen. De renderer en de ontwerper volgen bij OMNIUM-UI. Eerdere ronde (2026-10-14, branch `feat/sequence-v1`,
   sequence fase 0 — zie `plans/2026-10-13 Sequence — volgorde in het model,
   layout erbovenop (plan).md`): vijf kleine **M3-aanvullingen** aan de motor,
   alle generiek en gedocumenteerd in `schema.js`/`handlerCatalogus.js`:

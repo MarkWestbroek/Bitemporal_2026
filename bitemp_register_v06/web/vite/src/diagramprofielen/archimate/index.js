@@ -31,12 +31,27 @@ import { registreerArchimateVormShapes } from "./vormShapes.jsx";
 import { VORMEN_SET } from "./vormSet.js";
 import { BLOK_SET } from "./blokSet.js";
 import { registreerArchimateBlokShapes } from "./blokShapes.jsx";
-import { ELEMENTEN, LAAG_GROEP, MOTIVATION } from "./elementen.js";
+import { ELEMENTEN, LAAG_GROEP, MOTIVATION, FACETTEN, facettenVan } from "./elementen.js";
 
 export const ARCHIMATE_ID = "archimate";
 
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
 const ROND = 10; // gedragselementen (proces/functie/service/event/…)
+
+/** ArchiMate-relatie → M3 aard. */
+const AARD_RELATIE = {
+  compositie: "insluiting",
+  aggregatie: "insluiting",
+  toewijzing: "toewijzing",
+  realisatie: "realisatie",
+  bediening: "afhankelijkheid",
+  toegang: "afhankelijkheid",
+  beinvloeding: "afhankelijkheid",
+  trigger: "stroom",
+  stroom: "stroom",
+  specialisatie: "specialisatie",
+  associatie: "associatie",
+};
 
 const ALLE_IDS = [...ELEMENTEN.map(([id]) => id), "junction"];
 
@@ -69,6 +84,8 @@ const elementTypes = [
     // Laag als taakbalkgroep: de Maken-balk krijgt een scheidingsteken op
     // elke laaggrens (business | application | technology | motivation).
     taakbalkGroep: LAAG_GROEP[kleur],
+    // Betekenis (M3 facetten): laag en aspect uit het ArchiMate-raamwerk.
+    ...(facettenVan(id, kleur, rond) ? { facetten: facettenVan(id, kleur, rond) } : {}),
     // ArchiMate tekent motivation-elementen met afgeschuinde hoeken — dat is
     // hun eigen vormgrammatica, net als ronde hoeken voor gedrag.
     ...(kleur === MOTIVATION ? { hoekStijl: "afgeschuind" } : {}),
@@ -155,6 +172,9 @@ const elementTypes = [
       { lijn: "solid", vorm: "recht", kleur: "#475569" }],
   ].map(([id, label, omschrijving, edgePresentatie]) => ({
     id,
+    // Betekenis (M3 aard): de categorieën van de spec — dynamisch = stroom,
+    // afhankelijkheid, structureel = insluiting/toewijzing/realisatie.
+    ...(AARD_RELATIE[id] ? { aard: AARD_RELATIE[id] } : {}),
     label,
     omschrijving,
     kort: label.split(" ")[0],
@@ -195,6 +215,7 @@ const elementTypes = [
   })),
   {
     id: "toelichting",
+    aard: "annotatie",
     taakbalkGroep: "view",
     label: "Toelichting",
     omschrijving: "View-only stippellijn van een notitie naar een element; geen ArchiMate-relatie.",
@@ -230,6 +251,10 @@ export const archimateDiagramType = {
   layouts: [],
   // Leesvolgorde (18-10): de lagen van ArchiMate van boven naar beneden — motivatie, strategie,
   // business, applicatie, technologie, fysiek, implementatie — los van de pijlrichting.
+  // Facetten (betekenis) en de gelaagde weergave (M3 LayoutStijl, 18-10): rijen per laag, in de
+  // volgorde van FACETTEN.laag. Vervangt `leesvolgorde` zodra de renderer omgezet is.
+  facetten: FACETTEN,
+  layoutStijlen: [{ id: "lagen", label: "Lagen", renderer: "leesvolgorde", richting: "TB", rijen: "laag" }],
   leesvolgorde: {
     richting: "TB",
     lagen: [

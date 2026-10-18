@@ -9,6 +9,18 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **M3: betekenis en weergave van de auto-layout gescheiden** (18-10, Mark via OMNIUM-UI; M3-MOF):
+  `ElementType.aard` zegt wat een type ís — connector: stroom, specialisatie, realisatie, bericht,
+  associatie, afhankelijkheid, toewijzing, insluiting, annotatie; element: begin, eind, baan — en
+  `ElementType.facetten` deelt in op de facetten van het profiel (`DiagramType.facetten`, geordend;
+  ArchiMate: laag en aspect uit het raamwerk). De weergave is een nieuw M3-begrip **LayoutStijl**
+  (`DiagramType.layoutStijlen`, per diagram te kiezen): renderer, richting, `alleenStroom`, `rijen`
+  per facet en regels die per type kiezen zoals CSS. `regelsVoorStijl` (`diagramcore/types/
+  layoutStijl.js`) vertaalt dat naar het formaat dat de leesvolgorde-renderer al leest; registratie
+  controleert aard, facetten en stijlen. Activity, BPMN, state machine, CMMN, use case en ArchiMate
+  hebben aard/facetten en een stijl; die levert exact de huidige leesvolgorde, behalve dat een
+  notitie-lijn (aard annotatie) niet meer meetelt. De renderer leest de stijl nog niet — dat doet
+  OMNIUM-UI (dan vervalt `leesvolgorde` in de profielen).
 - **Auto-layout in zes richtingen** (18-10, Mark): de deterministische layouts van de IDE staan nu
   ook in de Studio, voor het canonieke model: gelaagd van boven naar beneden, van onder naar
   boven, van links naar rechts, van rechts naar links, een waaier rond een middelpunt, en

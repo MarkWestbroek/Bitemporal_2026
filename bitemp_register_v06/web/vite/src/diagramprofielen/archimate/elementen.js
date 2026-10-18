@@ -42,6 +42,53 @@ export const LAAG_GROEP = {
   [OVERIG]: "overig",
 };
 
+/**
+ * Facetten (M3, 2026-10-18): de indeling van ArchiMate zelf — lagen en aspecten uit het
+ * generieke metamodel van de specificatie. Betekenis; de volgorde van de waarden is die
+ * van het raamwerk. De gelaagde weergave ("rijen per laag") kiest de LayoutStijl.
+ */
+export const FACETTEN = {
+  laag: ["motivatie", "strategie", "business", "applicatie", "technologie", "fysiek", "implementatie"],
+  // Kolommen van het raamwerk: passieve structuur | gedrag | actieve structuur; plus
+  // samengestelde elementen (product, plateau, locatie, grouping).
+  aspect: ["passief", "gedrag", "actief", "samengesteld"],
+};
+
+/** Laagkleur → facet laag (overig: geen laag). */
+const LAAG_VAN_KLEUR = {
+  [STRATEGY]: "strategie",
+  [BUSINESS]: "business",
+  [APPLICATION]: "applicatie",
+  [TECHNOLOGY]: "technologie",
+  [MOTIVATION]: "motivatie",
+  [IMPLEMENTATIE]: "implementatie",
+};
+
+/** Fysieke elementen horen in de spec bij de technologielaag, maar vormen een eigen laag. */
+const FYSIEK = new Set(["equipment", "facility", "distributienetwerk", "materiaal"]);
+const ACTIEF = new Set([
+  "business-actor", "business-rol", "business-collaboratie", "business-interface",
+  "app-component", "app-collaboratie", "app-interface",
+  "node", "device", "systeemsoftware", "tech-collaboratie", "tech-interface", "pad", "communicatienetwerk",
+  "equipment", "facility", "distributienetwerk",
+]);
+const PASSIEF = new Set(["business-object", "contract", "representatie", "data-object", "artifact", "materiaal", "deliverable"]);
+const SAMENGESTELD = new Set(["product", "plateau", "locatie", "grouping"]);
+
+/**
+ * Facetten van één element: laag (uit de laagkleur) en aspect. Motivatie-elementen,
+ * resource en gap hebben geen aspect in het raamwerk.
+ * @param {string} id @param {string} kleur @param {boolean} rond - gedrag (ronde hoeken)
+ * @returns {Record<string, string>|null}
+ */
+export function facettenVan(id, kleur, rond) {
+  const laag = FYSIEK.has(id) ? "fysiek" : LAAG_VAN_KLEUR[kleur];
+  const aspect = ACTIEF.has(id) ? "actief" : PASSIEF.has(id) ? "passief" : SAMENGESTELD.has(id) ? "samengesteld"
+    : rond && kleur !== MOTIVATION ? "gedrag" : null;
+  const uit = { ...(laag ? { laag } : {}), ...(aspect ? { aspect } : {}) };
+  return Object.keys(uit).length ? uit : null;
+}
+
 /** @type {[string, string, string, string, boolean, string, string?][]} */
 export const ELEMENTEN = [
   // ── strategy ──

@@ -43,6 +43,7 @@ const CONTROLE_DOELEN = [...CONTROLE_TUSSEN, "eind", "flow-eind"];
 const elementTypes = [
   {
     id: "begin",
+    aard: "begin",
     omtrek: "ellips",
     label: "Begin",
     omschrijving: "Startpunt van de flow — alleen uitgaande controlestromen.",
@@ -151,6 +152,7 @@ const elementTypes = [
   },
   {
     id: "partitie",
+    aard: "baan",
     label: "Partitie",
     omschrijving: "Swimlane: wie of wat voert de acties uit — sleep leden erin.",
     kort: "Lane",
@@ -163,6 +165,7 @@ const elementTypes = [
   },
   {
     id: "eind",
+    aard: "eind",
     omtrek: "ellips",
     label: "Eind",
     omschrijving: "Einde van de hele activity.",
@@ -175,6 +178,7 @@ const elementTypes = [
   },
   {
     id: "flow-eind",
+    aard: "eind",
     omtrek: "ellips",
     label: "Flow-eind",
     omschrijving: "Beëindigt alleen deze stroom, niet de hele activity.",
@@ -198,6 +202,7 @@ const elementTypes = [
   // ── Connectoren ────────────────────────────────────────────────────────
   {
     id: "controlestroom",
+    aard: "stroom",
     label: "Controlestroom",
     omschrijving: "Volgorde tussen acties; optioneel met [guard].",
     kort: "→",
@@ -218,6 +223,7 @@ const elementTypes = [
   },
   {
     id: "objectstroom",
+    aard: "stroom",
     label: "Objectstroom",
     omschrijving: "Gegevensstroom tussen acties, objecten en pins.",
     kort: "⇢",
@@ -231,6 +237,7 @@ const elementTypes = [
   {
     // Notitie-lijn (UML note attachment, EA NoteLink): stippel zonder pijl.
     id: "notitielijn",
+    aard: "annotatie",
     label: "Notitie-lijn",
     omschrijving: "Koppelt een notitie aan het element waar hij over gaat; geen modelrelatie.",
     kort: "not",
@@ -244,6 +251,7 @@ const elementTypes = [
     // Partitie-lidmaatschap ("uitgevoerd door") — subtiele stippellijn;
     // het lid ligt visueel al ín de lane.
     id: "bevat",
+    aard: "insluiting",
     label: "Bevat (partitie)",
     omschrijving: "Partitie-lidmaatschap ('uitgevoerd door'); verborgen zolang het lid erin ligt.",
     kort: "LANE ∋",
@@ -286,6 +294,9 @@ export const activityDiagramType = {
   layouts: [],
   // Leesvolgorde (18-10, Mark): van boven naar beneden, van begin naar eind; partities zijn banen.
   leesvolgorde: { richting: "TB", stroom: ["controlestroom", "objectstroom"], start: ["begin"], eind: ["eind", "flow-eind"], banen: ["partitie"], minimaal: { partitie: [200, 280] } },
+  // Weergave (M3 LayoutStijl, 18-10): leest de aard van de typen; vervangt
+  // `leesvolgorde` zodra de renderer omgezet is (types/layoutStijl.js).
+  layoutStijlen: [{ id: "leesvolgorde", label: "Leesvolgorde", renderer: "leesvolgorde", richting: "TB", alleenStroom: true }],
 };
 
 let _teller = 0;
