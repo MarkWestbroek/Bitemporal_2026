@@ -280,7 +280,7 @@ EA-Metametamodel-sync. Geen nieuw profiel.
 ## Addendum 2026-10-10 — BPMN/DMN-EA-tabellen, object-generalisatie
 
 - **`bpmn` en `dmn-drd` hebben nu ook een `eaMapping.js`** voor de generieke
-  EA-lezer (tweede smaak naast de native XML-import, `TRANSFORMATIES.md` §7).
+  EA-lezer (tweede smaak naast de native XML-import, `TRANSFORMATIES.md` §10).
   Let op de EA-werkelijkheid in het GGM: BPMN-diagrammen staan er als
   Diagram_Type "Analysis" — hetzelfde als Eriksson-Penker; de **stereotypen**
   houden ze uit elkaar (Activity«Activity», Event«StartEvent»/«IntermediateEvent»/

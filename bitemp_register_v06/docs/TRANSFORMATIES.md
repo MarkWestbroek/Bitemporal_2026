@@ -491,7 +491,7 @@ is de kale ingang, de live view de ingang met zicht op het effect.
 4. **Stapelen** als relatie tussen regelsets (§7.7), zodra het bereik `map` met
    meerdere profielen er is.
 
-## 7. BPMN 2.0 XML en DMN XML → eigen model (2026-10-10)
+## 10. BPMN 2.0 XML en DMN XML → eigen model (2026-10-10)
 
 Opdracht Mark (via EA-SYNC): de native uitwisselformaten van BPMN en DMN naar
 onze profielen `bpmn-motor` en `dmn-drd`, in de vorm van §3; de EA-smaak
