@@ -326,6 +326,15 @@
  * @property {string} [rijen]               - facet-naam: vaste lagen langs de leesrichting in de
  *   volgorde van DiagramType.facetten (ArchiMate: "laag")
  * @property {string} [kolommen]            - facet-naam voor de dwarsrichting (bv. "aspect")
+ * @property {boolean} [secundairAchteraan] - een beginpunt van wie elke buur al een sterker
+ *   beginpunt heeft, komt achter zijn buren (use case: secundaire actoren rechts van het kader;
+ *   18-10, meting ARCH-PROJECT). Terugval tot "initiatief" in het model staat.
+ * @property {string} [secundairUit]       - eigenschap op een verbinding die een beginpunt primair
+ *   maakt (use case: "primair", Cockburn — Mark 18-10). Een beginpunt zonder zo'n verbinding is
+ *   secundair en komt achteraan; staat de eigenschap nergens, dan `secundairAchteraan` (vuistregel).
+ * @property {number} [kaderKolommen]       - in een container hoogstens zoveel kolommen langs de
+ *   leesrichting: wat verbonden is met iets buiten het kader vooraan, de rest erachter (use case:
+ *   2 — de use cases staand, include/extend-doelen in de tweede kolom)
  * @property {{laag?: number, dwars?: number, baan?: number, marge?: number}} [afstanden]
  * @property {LayoutRegel[]} [regels]
  *
@@ -343,6 +352,9 @@
  * @property {string[]} [eind]      - element-typen die achteraan komen
  * @property {string[]} [banen]     - container-typen die banen zijn (lanes, partities)
  * @property {string[][]} [lagen]   - vaste lagen op type, in plaats van de stroom (ArchiMate)
+ * @property {boolean} [secundairAchteraan] - zie LayoutStijl.secundairAchteraan
+ * @property {number} [kaderKolommen] - zie LayoutStijl.kaderKolommen
+ * @property {string} [secundairUit] - zie LayoutStijl.secundairUit
  * @property {Record<string, number[]>} [minimaal] - type-id → [breedte, hoogte] (uit ElementType.minBreedte/minHoogte)
  */
 

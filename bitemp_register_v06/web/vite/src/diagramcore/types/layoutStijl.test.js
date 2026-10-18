@@ -89,3 +89,12 @@ test("stijlVoor: gekozen id, anders de eerste, anders de generieke standaard", (
   assert.equal(stijlVoor(dt, "weg").id, "een");
   assert.equal(stijlVoor({}).id, "standaard");
 });
+
+test("valideerLayoutStijl: kaderKolommen geheel getal ≥ 1, secundairAchteraan ja/nee (18-10)", () => {
+  const dt = { id: "t", elementTypes: [] };
+  const basis = { id: "s", renderer: "leesvolgorde" };
+  assert.deepEqual(valideerLayoutStijl(dt, { ...basis, kaderKolommen: 2, secundairAchteraan: true }), []);
+  assert.equal(valideerLayoutStijl(dt, { ...basis, kaderKolommen: 0 }).length, 1);
+  assert.equal(valideerLayoutStijl(dt, { ...basis, kaderKolommen: 1.5 }).length, 1);
+  assert.equal(valideerLayoutStijl(dt, { ...basis, secundairAchteraan: "ja" }).length, 1);
+});

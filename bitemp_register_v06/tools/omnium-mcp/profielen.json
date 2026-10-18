@@ -8037,7 +8037,15 @@
      "id": "usecase",
      "label": "Use case",
      "omschrijving": "Samenhangend stuk functionaliteit met waarde voor een actor.",
-     "uitwerking": true
+     "uitwerking": true,
+     "eigenschappen": [
+      "doel",
+      "trigger",
+      "triggerSoort",
+      "preconditie",
+      "postconditie",
+      "flowOfEvents"
+     ]
     },
     {
      "id": "systeem",
@@ -8084,6 +8092,9 @@
         "klasse"
        ]
       }
+     ],
+     "eigenschappen": [
+      "primair"
      ]
     },
     {
@@ -8246,6 +8257,9 @@
      "label": "Leesvolgorde",
      "renderer": "leesvolgorde",
      "richting": "LR",
+     "secundairAchteraan": true,
+     "secundairUit": "primair",
+     "kaderKolommen": 2,
      "regels": [
       {
        "selector": {
@@ -8261,6 +8275,14 @@
        },
        "opties": {
         "volgorde": "omgekeerd"
+       }
+      },
+      {
+       "selector": {
+        "aard": "specialisatie"
+       },
+       "opties": {
+        "volgorde": "negeer"
        }
       }
      ]

@@ -47,14 +47,86 @@ export { STANDAARD_OMGEKEERD };
 
 /**
  * @typedef {{id: string, type?: string, x: number, y: number, w: number, h: number, ouder?: string|null, container?: boolean}} Knoop
- * @typedef {{bron: string, doel: string, soort?: string}} Verbinding
+ * @typedef {{bron: string, doel: string, soort?: string, data?: Record<string, any>}} Verbinding
  */
 
 /**
  * @param {{knopen: Knoop[], verbindingen: Verbinding[], regels?: any, richting?: "TB"|"LR"|"BT"|"RL", afstanden?: {laag?: number, dwars?: number, baan?: number, marge?: number}}} invoer
  * @returns {{posities: Record<string, {x: number, y: number}>, maten: Record<string, {width: number, height: number}>}}
  */
-export function legLeesvolgordeUit({ knopen, verbindingen, regels = {}, richting, afstanden = {} }) {
+export function legLeesvolgordeUit(invoer) {
+  const { knopen, verbindingen, regels = {}, richting, afstanden = {} } = invoer;
+  const lr = ["LR", "RL"].includes(richting || regels.richting || "TB");
+  const gap = Number.isFinite(afstanden?.dwars) ? afstanden.dwars : AFSTAND_STANDAARD.dwars;
+  const perId = new Map(knopen.map((k) => [k.id, k]));
+  // Buren over alle verbindingen (ook over kadergrenzen heen), voor de volgorde en het uitlijnen.
+  const buren = new Map(knopen.map((k) => [k.id, []]));
+  for (const v of verbindingen) {
+    if (!buren.has(v.bron) || !buren.has(v.doel) || v.bron === v.doel) continue;
+    buren.get(v.bron).push(v.doel);
+    buren.get(v.doel).push(v.bron);
+  }
+  const maatIn = (uit, id) => (uit.maten[id] ? { w: uit.maten[id].width, h: uit.maten[id].height } : { w: perId.get(id).w, h: perId.get(id).h });
+  const midden = (uit, id) => { const p = uit.posities[id], m = maatIn(uit, id); return lr ? p.y + m.h / 2 : p.x + m.w / 2; };
+
+  // Rondes (Mark/ARCH-PROJECT 18-10: "het lijkt modelvolgorde"): elke ronde ordent elk element
+  // naar het gemiddelde van zijn buren uit de vorige ronde — ook buren in een ander kader, zodat
+  // actoren en hun use cases (binnen het systeemkader) elkaars volgorde volgen.
+  let uit = legEenmaal(invoer, null);
+  for (let ronde = 0; ronde < 3; ronde++) {
+    const hints = new Map();
+    for (const k of knopen) {
+      const b = buren.get(k.id);
+      hints.set(k.id, b.length ? b.reduce((s, n) => s + midden(uit, n), 0) / b.length : midden(uit, k.id));
+    }
+    uit = legEenmaal(invoer, hints);
+  }
+
+  // Uitlijnen: elk element op het bovenste niveau dwars naar het midden van zijn buren in andere
+  // lagen (een actor op de hoogte van zijn use cases), met behoud van volgorde en tussenruimte.
+  const nazaten = (id) => { const uitL = []; for (const k of knopen) for (let c = k.ouder; c; c = perId.get(c)?.ouder) if (c === id) { uitL.push(k.id); break; } return uitL; };
+  for (let ronde = 0; ronde < 2; ronde++) {
+    for (const laag of uit.topLagen) {
+      const inLaag = new Set(laag.flatMap((id) => [id, ...nazaten(id)]));
+      const items = [...laag].sort((a, b) => (lr ? uit.posities[a].y - uit.posities[b].y : uit.posities[a].x - uit.posities[b].x));
+      const doel = new Map();
+      for (const id of items) {
+        const eigen = [id, ...nazaten(id)];
+        const b = eigen.flatMap((x) => buren.get(x)).filter((n) => !inLaag.has(n));
+        if (b.length) doel.set(id, b.reduce((s, n) => s + midden(uit, n), 0) / b.length);
+      }
+      if (!doel.size) continue;
+      const maatDw = (id) => (lr ? maatIn(uit, id).h : maatIn(uit, id).w);
+      const begin = (id) => (lr ? uit.posities[id].y : uit.posities[id].x);
+      // Volgorde op het gewenste midden (zonder buren: de huidige plek), zodat een actor met zijn
+      // use cases onderaan niet boven een actor met zijn use cases in het midden blijft staan.
+      const sleutel = (id) => (doel.has(id) ? doel.get(id) : begin(id) + maatDw(id) / 2);
+      items.sort((a, b) => sleutel(a) - sleutel(b) || a.localeCompare(b));
+      // Gretig plaatsen in volgorde, dan het blok zo schuiven dat de gemiddelde afwijking nul is.
+      let eindVorige = -Infinity;
+      const nieuw = new Map();
+      for (const id of items) {
+        const wens = doel.has(id) ? doel.get(id) - maatDw(id) / 2 : begin(id);
+        const b = Math.max(wens, eindVorige + gap);
+        nieuw.set(id, b);
+        eindVorige = b + maatDw(id);
+      }
+      const afwijking = [...doel.keys()].reduce((s, id) => s + (doel.get(id) - maatDw(id) / 2 - nieuw.get(id)), 0) / doel.size;
+      for (const id of items) {
+        const delta = Math.round(nieuw.get(id) + afwijking - begin(id));
+        if (!delta) continue;
+        for (const x of [id, ...nazaten(id)]) {
+          if (lr) uit.posities[x].y += delta;
+          else uit.posities[x].x += delta;
+        }
+      }
+    }
+  }
+  return { posities: uit.posities, maten: uit.maten };
+}
+
+/** Eén opstelling; `hints` (id → dwarspositie) bepaalt de beginvolgorde binnen een laag. */
+function legEenmaal({ knopen, verbindingen, regels = {}, richting, afstanden = {} }, hints) {
   // Afstanden uit de LayoutStijl (laag, dwars, baan; marge = binnenrand van een container).
   const AFSTAND = { ...AFSTAND_STANDAARD, ...pick(afstanden, ["laag", "dwars", "baan"]) };
   const MARGE = { ...MARGE_STANDAARD, ...(Number.isFinite(afstanden?.marge) ? { rand: afstanden.marge } : {}) };
@@ -84,6 +156,9 @@ export function legLeesvolgordeUit({ knopen, verbindingen, regels = {}, richting
     pijlen.push(omgekeerd.has(v.soort) ? { van: v.doel, naar: v.bron } : { van: v.bron, naar: v.doel });
   }
   const start = new Set(regels.start || []);
+  // Buren op het oorspronkelijke niveau (zonder optillen naar een kader), voor 'secundair'.
+  const origBuren = new Map(knopen.map((k) => [k.id, []]));
+  for (const p of pijlen) { origBuren.get(p.van).push(p.naar); origBuren.get(p.naar).push(p.van); }
   const eind = new Set(regels.eind || []);
   const laagVanType = new Map();
   (regels.lagen || []).forEach((typen, i) => typen.forEach((t) => laagVanType.set(t, i)));
@@ -92,7 +167,7 @@ export function legLeesvolgordeUit({ knopen, verbindingen, regels = {}, richting
   const lang = (m) => (lr ? m.w : m.h);
   const dwars = (m) => (lr ? m.h : m.w);
   const hintLang = (k) => (lr ? k.x : k.y);
-  const hintDwars = (k) => (lr ? k.y : k.x);
+  const hintDwars = (k) => (hints?.has(k.id) ? hints.get(k.id) : lr ? k.y : k.x);
 
   // Uitkomst per groep: posities relatief aan de groep, en de maat van elke container.
   /** @type {Map<string, {x: number, y: number}>} */
@@ -148,6 +223,30 @@ export function legLeesvolgordeUit({ knopen, verbindingen, regels = {}, richting
       }
       // Een beginpunt staat vooraan, ook als er (in een cyclus) iets naar terug wijst.
       for (const id of ids) if (start.has(perId.get(id)?.type) && !inn.get(id).some((v) => !terug.has(`${v}>${id}`))) laag.set(id, 0);
+      // Secundaire beginpunten achter hun buren (LayoutStijl.secundairAchteraan, use case: de
+      // actor rechts van het kader). Secundair = elk van zijn buren heeft een sterker beginpunt
+      // (meer verbindingen; bij gelijkspel wie eerder staat). Of een actor initieert, staat nog
+      // niet in het model — dit is de terugval tot er zo'n eigenschap is.
+      if (regels.secundairAchteraan || regels.secundairUit) {
+        const isStart = (id) => start.has(perId.get(id)?.type);
+        // Uit het model (Mark 18-10, Cockburn): een beginpunt zonder enige verbinding waarop de
+        // eigenschap `secundairUit` (use case: "primair") aan staat, is secundair. Staat die
+        // eigenschap nergens op het diagram, dan de vuistregel hieronder.
+        const primairVlag = regels.secundairUit;
+        const primairen = new Set();
+        if (primairVlag) for (const v of verbindingen) if (v.data?.[primairVlag] === true) for (const x of [v.bron, v.doel]) if (isStart(x)) primairen.add(x);
+        const graad = (id) => origBuren.get(id)?.length || 0;
+        const plek = (id) => volgorde.indexOf(id);
+        const sterker = (t, s) => graad(t) > graad(s) || (graad(t) === graad(s) && plek(t) >= 0 && plek(s) >= 0 && plek(t) < plek(s));
+        for (const s of ids) {
+          if (!isStart(s)) continue;
+          const nb = origBuren.get(s) || [];
+          if (!nb.length) continue;
+          if (primairen.size ? primairen.has(s) : !nb.every((u) => (origBuren.get(u) || []).some((t) => t !== s && isStart(t) && sterker(t, s)))) continue;
+          const lokaal = [...uit.get(s), ...inn.get(s)];
+          if (lokaal.length) laag.set(s, Math.max(...lokaal.map((n) => laag.get(n))) + 1);
+        }
+      }
       const verbonden = ids.filter((id) => uit.get(id).length || inn.get(id).length);
       const maxVerbonden = verbonden.length ? Math.max(...verbonden.map((id) => laag.get(id))) : -1;
       // Eindpunten achteraan (als er meer is dan alleen het eindpunt).
@@ -216,7 +315,17 @@ export function legLeesvolgordeUit({ knopen, verbindingen, regels = {}, richting
     for (const k of kinderen) if (isContainer(k) && !isBaan(k)) zetContainer(k);
     const baanKinderen = kinderen.filter(isBaan);
     if (baanKinderen.length) return legBanen(g, kinderen, baanKinderen);
-    const lagen = rangschik(kinderen, pijlenOpNiveau(g));
+    let lagen = rangschik(kinderen, pijlenOpNiveau(g));
+    // In een kader hoogstens `kaderKolommen` kolommen (use case: wat een actor heeft vooraan,
+    // wat alleen via include/extend bereikt wordt erachter — staand i.p.v. een lange keten).
+    if (g !== null && regels.kaderKolommen > 0 && lagen.length > regels.kaderKolommen) {
+      const binnen = (n) => { for (let c = n; c; c = ouderVan(c)) if (c === g) return true; return false; };
+      const metBuiten = (id) => [id, ...(kinderenVan.get(id) || [])].some((x) => (origBuren.get(x) || []).some((n) => !binnen(n)));
+      const nieuw = Array.from({ length: regels.kaderKolommen }, () => []);
+      lagen.forEach((l, i) => l.forEach((id) => nieuw[metBuiten(id) ? 0 : Math.min(i, regels.kaderKolommen - 1)].push(id)));
+      lagen = nieuw.filter((l) => l.length);
+    }
+    if (g === null) topLagen = lagen;
     const m = plaatsLagen(lagen, (id, langs, dw) => rel.set(id, xy(langs, dw)));
     return lr ? { w: m.langs, h: m.dwars } : { w: m.dwars, h: m.langs };
   }
@@ -298,6 +407,7 @@ export function legLeesvolgordeUit({ knopen, verbindingen, regels = {}, richting
   }
 
   // Bovenste niveau. Een baan zonder ouder (partities los op het diagram) telt als banen van het diagram.
+  let topLagen = [];
   legGroep(null);
 
   // Absoluut maken, met de linkerbovenhoek waar het diagram nu begint.
@@ -329,7 +439,7 @@ export function legLeesvolgordeUit({ knopen, verbindingen, regels = {}, richting
     const m = maat.get(k.id);
     if (isContainer(k.id) && (Math.round(m.w) !== Math.round(k.w) || Math.round(m.h) !== Math.round(k.h))) maten[k.id] = { width: Math.round(m.w), height: Math.round(m.h) };
   }
-  return { posities, maten };
+  return { posities, maten, topLagen };
 }
 
 const RICHTINGEN = [
@@ -357,7 +467,13 @@ export function leesvolgordeLayouts(descriptor) {
     (descriptor?.elementTypes || []).filter((t) => !t.isConnector && (t.minBreedte || t.minHoogte)).map((t) => [t.id, [t.minBreedte || 0, t.minHoogte || 0]])
   );
   return stijlen.flatMap((stijl) => {
-    const regels = { ...regelsVoorStijl(descriptor, stijl), minimaal };
+    const regels = {
+      ...regelsVoorStijl(descriptor, stijl),
+      minimaal,
+      ...(stijl.secundairAchteraan ? { secundairAchteraan: true } : {}),
+      ...(typeof stijl.secundairUit === "string" && stijl.secundairUit ? { secundairUit: stijl.secundairUit } : {}),
+      ...(stijl.kaderKolommen > 0 ? { kaderKolommen: stijl.kaderKolommen } : {}),
+    };
     const standaard = RICHTINGEN.some(([r]) => r === regels.richting) ? regels.richting : "TB";
     const naam = stijl.id === "standaard" ? "Leesvolgorde" : stijl.label || stijl.id;
     const volgorde = [...RICHTINGEN].sort((a, b) => (a[0] === standaard ? -1 : b[0] === standaard ? 1 : 0));
@@ -409,7 +525,7 @@ export function invoerVanCanvas({ flowNodes = [], selectieIds = null, elements =
   for (const c of Object.values(elements)) {
     if (!c?.source || !c?.target) continue;
     const a = nodeVanElement.get(c.source) ?? c.source, b = nodeVanElement.get(c.target) ?? c.target;
-    if (op.has(a) && op.has(b) && ouder.get(b) !== a) verbindingen.push({ bron: a, doel: b, soort: c.elementType });
+    if (op.has(a) && op.has(b) && ouder.get(b) !== a) verbindingen.push({ bron: a, doel: b, soort: c.elementType, ...(c.data ? { data: c.data } : {}) });
   }
   return { knopen, verbindingen };
 }
