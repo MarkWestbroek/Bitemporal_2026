@@ -265,6 +265,8 @@ export const cmmnDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
+  // Leesvolgorde (18-10): van links naar rechts langs de on-parts (sentries).
+  leesvolgorde: { richting: "LR", stroom: ["on-part"] },
 };
 
 let _teller = 0;

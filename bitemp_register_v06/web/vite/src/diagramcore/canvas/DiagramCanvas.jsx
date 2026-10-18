@@ -195,12 +195,16 @@ function CanvasBinnenkant({
   const rfStoreApi = useStoreApi();
   // Contextmenu (rechtsklik): positie in schermcoördinaten, of null.
   const [contextMenu, setContextMenu] = useState(null);
+  // Open submenu (één niveau; item met `sub: [...]`, bv. Auto-layout ▸): sleutel, items en
+  // positie naast het ouder-item. Sluit mee met het menu.
+  const [subMenu, setSubMenu] = useState(null);
+  useEffect(() => setSubMenu(null), [contextMenu]);
   useEffect(() => {
     if (!contextMenu) return;
     const dicht = (e) => {
       if (!e.target.closest?.(".dc-contextmenu")) setContextMenu(null);
     };
-    const esc = (e) => e.key === "Escape" && setContextMenu(null);
+    const esc = (e) => e.key === "Escape" && !e.defaultPrevented && setContextMenu(null);
     window.addEventListener("pointerdown", dicht, true);
     window.addEventListener("keydown", esc);
     return () => {
@@ -1794,9 +1798,14 @@ function CanvasBinnenkant({
             ? getNodes().filter((n) => n.selected).map((n) => n.id)
             : null;
           if (alleenSelectie && (selectieIds?.length ?? 0) < 2) return;
-          pasToe(
-            strategie.run({ flowNodes, flowEdges: edges, selectieIds, elements, diagram })
-          );
+          const uit = strategie.run({ flowNodes, flowEdges: edges, selectieIds, elements, diagram });
+          // {posities, maten}: de algemene layout (leesvolgorde) laat containers meegroeien.
+          if (uit && !(uit instanceof Map) && uit.posities) {
+            if (uit.maten && Object.keys(uit.maten).length && onNodeMaten) onNodeMaten(uit.maten);
+            pasToe(uit.posities);
+          } else {
+            pasToe(uit);
+          }
         },
         /**
          * Exporteer het diagram (of de selectie) naar PNG/SVG — download of
@@ -2041,7 +2050,101 @@ function CanvasBinnenkant({
             knoppen[(i + stap + knoppen.length) % knoppen.length].focus();
           }}
         >
-          {contextMenu.items.map((item, i) =>
+          {contextMenu.items.map((item, i) => {
+            if (item.sep) return <div key={i} className="dc-contextmenu-sep" />;
+            if (item.kop) return <div key={i} className="dc-contextmenu-kop">{item.label}</div>;
+            const sleutel = item.id || `i${i}`;
+            if (item.sub) {
+              // Submenu (Mark, 18-10: layouts "als subitems, niet als hoofditems"). Opent bij
+              // aanwijzen, klikken of →; ← of Escape gaat terug naar dit item.
+              const open = (el, focus) => {
+                const r = el.getBoundingClientRect();
+                setSubMenu({ sleutel, items: item.sub, x: r.right - 2, y: r.top - 5, links: r.left, focus });
+              };
+              return (
+                <button
+                  key={sleutel}
+                  className={"dc-contextmenu-item dc-contextmenu-item--sub" + (subMenu?.sleutel === sleutel ? " is-open" : "")}
+                  data-sub={sleutel}
+                  aria-haspopup="menu"
+                  aria-expanded={subMenu?.sleutel === sleutel}
+                  disabled={item.disabled || !item.sub.length}
+                  onMouseEnter={(e) => open(e.currentTarget, false)}
+                  onClick={(e) => open(e.currentTarget, true)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "ArrowRight") return;
+                    e.preventDefault();
+                    open(e.currentTarget, true);
+                  }}
+                >
+                  {item.icoon ? <span className="dc-contextmenu-icoon">{item.icoon}</span> : null}
+                  {item.label}
+                  <span className="dc-contextmenu-pijl" aria-hidden="true">▸</span>
+                </button>
+              );
+            }
+            return (
+              <button
+                key={sleutel}
+                className="dc-contextmenu-item"
+                disabled={item.disabled}
+                onMouseEnter={subMenu ? () => setSubMenu(null) : undefined}
+                onClick={() => {
+                  setContextMenu(null);
+                  item.onClick?.();
+                }}
+              >
+                {item.icoon ? <span className="dc-contextmenu-icoon">{item.icoon}</span> : null}
+                {item.label}
+                {item.shortcut ? <span className="dc-contextmenu-sneltoets">{item.shortcut}</span> : null}
+              </button>
+            );
+          })}
+        </div>,
+        contextMenu.vlak || document.body
+      )}
+      {contextMenu && subMenu && createPortal(
+        <div
+          className="dc-contextmenu dc-contextmenu--sub"
+          role="menu"
+          data-testid="contextmenu-sub"
+          ref={(el) => {
+            if (!el) return;
+            // Past het niet rechts, dan links van het menu; en binnen het venster.
+            const r = el.getBoundingClientRect();
+            // Links van het hoofdmenu: verankerd aan de rechterkant, dus nooit over het ouder-item.
+            if (subMenu.x + r.width > window.innerWidth - 8) {
+              el.style.left = "auto";
+              el.style.right = `${Math.max(8, window.innerWidth - subMenu.links - 2)}px`;
+            }
+            if (subMenu.y + r.height > window.innerHeight - 8) el.style.top = `${Math.max(8, window.innerHeight - r.height - 8)}px`;
+            if (subMenu.focus && !el.dataset.gefocust) {
+              el.dataset.gefocust = "1";
+              el.querySelector("button:not(:disabled)")?.focus({ preventScroll: true });
+            }
+          }}
+          style={{ left: subMenu.x, top: subMenu.y }}
+          onContextMenu={(e) => e.preventDefault()}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowLeft" || e.key === "Escape") {
+              // Terug naar het ouder-item; Escape sluit niet meteen het hele menu.
+              e.preventDefault();
+              e.stopPropagation();
+              const sleutel = subMenu.sleutel;
+              setSubMenu(null);
+              document.querySelector(`.dc-contextmenu [data-sub="${CSS.escape(sleutel)}"]`)?.focus();
+              return;
+            }
+            if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+            e.preventDefault();
+            const knoppen = [...e.currentTarget.querySelectorAll("button:not(:disabled)")];
+            if (!knoppen.length) return;
+            const i = knoppen.indexOf(document.activeElement);
+            const stap = e.key === "ArrowDown" ? 1 : -1;
+            knoppen[(i + stap + knoppen.length) % knoppen.length].focus();
+          }}
+        >
+          {subMenu.items.map((item, i) =>
             item.sep ? (
               <div key={i} className="dc-contextmenu-sep" />
             ) : item.kop ? (
@@ -2050,7 +2153,9 @@ function CanvasBinnenkant({
               <button
                 key={item.id || i}
                 className="dc-contextmenu-item"
+                role="menuitem"
                 disabled={item.disabled}
+                title={item.titel || undefined}
                 onClick={() => {
                   setContextMenu(null);
                   item.onClick?.();

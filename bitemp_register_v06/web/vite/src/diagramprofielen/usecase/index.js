@@ -262,6 +262,8 @@ export const usecaseDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
+  // Leesvolgorde (18-10): actoren links, hun use cases rechts; een extend leest vanaf de basis.
+  leesvolgorde: { richting: "LR", start: ["actor"], omgekeerd: ["extend", "generalisatie", "realiseert"] },
 };
 
 let _teller = 0;

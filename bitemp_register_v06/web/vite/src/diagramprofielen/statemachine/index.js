@@ -245,6 +245,8 @@ export const statemachineDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
+  // Leesvolgorde (18-10): van boven naar beneden langs de transities.
+  leesvolgorde: { richting: "TB", stroom: ["transitie"], start: ["begin", "entry"], eind: ["eind", "exit"] },
 };
 
 let _teller = 0;

@@ -284,6 +284,8 @@ export const activityDiagramType = {
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
   ],
   layouts: [],
+  // Leesvolgorde (18-10, Mark): van boven naar beneden, van begin naar eind; partities zijn banen.
+  leesvolgorde: { richting: "TB", stroom: ["controlestroom", "objectstroom"], start: ["begin"], eind: ["eind", "flow-eind"], banen: ["partitie"], minimaal: { partitie: [200, 280] } },
 };
 
 let _teller = 0;
