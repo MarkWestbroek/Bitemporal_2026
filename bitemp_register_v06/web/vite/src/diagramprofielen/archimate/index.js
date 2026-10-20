@@ -117,18 +117,6 @@ const elementTypes = [
     ] }],
   },
   {
-    id: "notitie",
-    taakbalkGroep: "overig",
-    label: "Notitie",
-    omschrijving: "Vrije notitie op het diagram; koppel hem met een toelichting-lijn aan een element.",
-    kort: "NOT",
-    shape: "note",
-    // Geen handleStijl "onzichtbaar" zoals in de andere profielen: de
-    // toelichting-connector vertrekt vanaf de notitie, en onzichtbare handles
-    // hebben pointer-events: none — dan is die lijn niet te slepen.
-    properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
-  },
-  {
     id: "kader",
     taakbalkGroep: "overig",
     label: "Kader",
@@ -213,19 +201,6 @@ const elementTypes = [
         }
       : {}),
   })),
-  {
-    id: "toelichting",
-    aard: "annotatie",
-    taakbalkGroep: "view",
-    label: "Toelichting",
-    omschrijving: "View-only stippellijn van een notitie naar een element; geen ArchiMate-relatie.",
-    kort: "Toel.",
-    shape: "edge",
-    isConnector: true,
-    bron: { elementTypes: ["notitie"] },
-    doel: { elementTypes: [...ALLE_IDS, "kader"] },
-    edgePresentatie: { lijn: "dash-4-4", vorm: "recht", kleur: "#64748b" },
-  },
 ];
 
 export const archimateDiagramType = {
@@ -253,6 +228,9 @@ export const archimateDiagramType = {
   // volgorde van FACETTEN.laag — motivatie, strategie, business, applicatie, technologie, fysiek,
   // implementatie — los van de pijlrichting.
   facetten: FACETTEN,
+  // Notitie, notitielijn en constraint-annotatie komen uit het superprofiel (M3, 20-10); de
+  // eigen "toelichting"-lijn ging erin op. ArchiMate's eigen Constraint (motivatie) blijft.
+  hernoemdeTypen: { toelichting: "notitielijn" },
   layoutStijlen: [{ id: "lagen", label: "Lagen", renderer: "leesvolgorde", richting: "TB", rijen: "laag", maxPerRij: 6 }],
 };
 

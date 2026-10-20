@@ -75,7 +75,7 @@ test("importeert meerdere views, meerdere voorkomens, absolute nesting en hide-l
   assert.equal(diagram.nodes.filter((node) => node.elementId === "amx:test:component").length, 2);
   assert.ok(Object.values(viewOnly.elements).some((element) => element.elementType === "notitie"));
   assert.ok(Object.values(viewOnly.elements).some((element) => element.elementType === "kader"));
-  assert.ok(Object.values(viewOnly.elements).some((element) => element.elementType === "toelichting"));
+  assert.ok(Object.values(viewOnly.elements).some((element) => element.elementType === "notitielijn"));
   assert.ok(viewOnly.diagnostics.some((item) => item.code === "AMX-LOSS-ROUTING"));
 });
 

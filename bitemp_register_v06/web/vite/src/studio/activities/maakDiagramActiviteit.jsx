@@ -58,6 +58,7 @@ function effectieveLijn(s, connectorId) {
 
 import { hernoemBotsendeIds } from "../../diagramcore/model/hernoemBotsendeIds.js";
 import { migreerBeschrijving } from "../../diagramcore/model/beschrijving.js";
+import { migreerHernoemdeTypen, maakSuperprofielElement } from "../../diagramcore/types/superprofiel.js";
 // Side-effect: registreert de datatypes "element-verwijzing" en
 // "operatie-keuze" (instantie-van-concept) op het core-koppelvlak.
 import "../elementVerwijzing.jsx";
@@ -171,7 +172,7 @@ export function maakDiagramActiviteit(opties) {
     label,
     icon,
     descriptor,
-    maakElement,
+    maakElement: maakProfielElement,
     persistKey,
     taakbalkSleutel,
     taakbalkDefaults = STANDAARD_TAAKBALK_DEFAULTS,
@@ -215,6 +216,9 @@ export function maakDiagramActiviteit(opties) {
     // voor een element aanbiedt (UML-operaties, OAS-operations, …).
     operatiesVan = null,
   } = opties;
+  // Superprofiel-typen (constraint, diagramverwijzing, …) kent de maakElement van een profiel
+  // niet altijd; dan maakt het superprofiel ze (types/superprofiel.js, 20-10).
+  const maakElement = (elementTypeId) => maakProfielElement(elementTypeId) || maakSuperprofielElement(elementTypeId);
 
   const ev = (naam) => `${menuPrefix}:${naam}`;
   const diagramTermMv = diagramTerm === "diagram" ? "diagrammen" : `${diagramTerm}en`;
@@ -230,10 +234,13 @@ export function maakDiagramActiviteit(opties) {
   // Plus de generieke M3-migratie van de beschrijving (2026-10-12): oude
   // profielsleutels (DiagramType.oudeBeschrijvingSleutels) → data.beschrijving.
   const oudeSleutels = descriptor.oudeBeschrijvingSleutels || [];
-  if (descriptor.hooks?.migreerModel || oudeSleutels.length) {
+  // En de hernoemde typen (M3 DiagramType.hernoemdeTypen, 20-10: ArchiMate toelichting → notitielijn).
+  const hernoemd = descriptor.hernoemdeTypen || null;
+  if (descriptor.hooks?.migreerModel || oudeSleutels.length || hernoemd) {
     const typeVan = (id) => descriptor.elementTypes.find((et) => et.id === id);
     const migreer = (state) => {
-      const elements = migreerBeschrijving(state.elements, oudeSleutels, typeVan);
+      const naHernoemen = migreerHernoemdeTypen(state.elements, hernoemd);
+      const elements = migreerBeschrijving(naHernoemen || state.elements, oudeSleutels, typeVan) || naHernoemen;
       const vanHook = descriptor.hooks?.migreerModel?.({
         elements: elements || state.elements,
         diagrams: state.diagrams,

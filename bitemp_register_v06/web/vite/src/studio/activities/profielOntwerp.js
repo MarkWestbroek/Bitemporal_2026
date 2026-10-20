@@ -604,8 +604,11 @@ export function ontwerpUitProfiel(descriptor) {
   const nodeIdVoorElementType = new Map();
   const veldDefVoorFieldType = new Map();
 
-  const nietConnectoren = (descriptor.elementTypes || []).filter((et) => !et.isConnector);
-  const connectoren = (descriptor.elementTypes || []).filter((et) => et.isConnector);
+  // Superprofiel-typen (notitie, constraint, notitielijn, diagramverwijzing; M3 20-10) erft elk
+  // profiel; ze horen niet in de tekening, net als geërfde eigenschappen.
+  const eigen = (descriptor.elementTypes || []).filter((et) => !et._superprofiel);
+  const nietConnectoren = eigen.filter((et) => !et.isConnector);
+  const connectoren = eigen.filter((et) => et.isConnector);
 
   nietConnectoren.forEach((et, kolom) => {
     const etNodeId = `${prefix}_et_${et.id}`;

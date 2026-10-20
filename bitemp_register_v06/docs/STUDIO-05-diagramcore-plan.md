@@ -6,7 +6,12 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde (2026-10-20, branch `feat/m3-verwijstnaar`, M3-MOF): de
+  fase 7 (register). Laatste ronde (2026-10-20, branch `feat/m3-superprofiel`, M3-MOF): het
+  **superprofiel** — elk profiel erft notitie, constraint, notitielijn ("Annotatie-lijn", naar
+  elke knoop) en diagramverwijzing (`hoortBij: "diagram"`), `types/superprofiel.js`; altijd
+  geërfd, alleen het palet mag uit (`DiagramType.superprofiel`); een eigen constraint van een
+  profiel blijft; `DiagramType.hernoemdeTypen` migreert (ArchiMate toelichting → notitielijn).
+  Ronde daarvoor (2026-10-20, branch `feat/m3-verwijstnaar`, M3-MOF): de
   vaste M3-eigenschap **`verwijstNaar`** (`{profielId, diagramId}`, 0..1) op elke knoop: de
   doorklik naar een diagram, ook in een ander profiel (EA composite element). Patroon van de
   beschrijving: `model/verwijstNaar.js` (metVerwijstNaar, doorklikVan), opt-out

@@ -153,7 +153,25 @@ verwijzen, zoals EA's composite element ("child diagram").
   0 (bij de bron) via 0,5 (midden) tot 1 (bij het doel); daarmee kunnen midden en beide
   uiteinden, en is de plek sleepbaar. Motorwerk (deels OMNIUM-UI).
 
-## 8. Volgorde
+## 8. Gebouwd (20-10, M3-MOF, branch `feat/m3-superprofiel`)
+
+- `diagramcore/types/superprofiel.js`: `superprofielTypen`, `vulSuperprofielAan` (bij validatie
+  en registratie, na de overerving), `hoortBijDiagram`, `migreerHernoemdeTypen`,
+  `maakSuperprofielElement` (terugval voor de palet-knop).
+- **Pragmatische keuze:** de lijn houdt het id `notitielijn` (label "Annotatie-lijn"), zodat alle
+  bestaande modellen en de EA-lezers blijven werken; alleen ArchiMate's `toelichting` migreert.
+- notitie, notitielijn en diagramverwijzing: de superprofielversie wint van een eigen definitie
+  (de per-profiel definities zijn daarmee overbodig en mogen later weg); een eigen `constraint`
+  blijft (ArchiMate-motivatie, MIM, canoniek).
+- Vormen: `constraint` (lichtblauw ezelsoor, `{…}`) en een **voorlopige** `diagramverwijzing`.
+- Gecontroleerd: alle 25 profielen valideren met het superprofiel; in de browser (state machine)
+  notitie en constraint uit het palet, annotatie-lijn naar een toestand.
+- Voor OMNIUM-UI: de echte diagramverwijzing-vorm (doelnaam live, dubbelklik via
+  openVerwijzing), `hoortBij: "diagram"` respecteren (niet in boom/MCP-modelinhoud/documenten,
+  weg met het diagram), en de lijn aan een plek 0..1 op een relatie.
+- Later: EA Constraint-objecten inlezen als superprofiel-constraint.
+
+## 9. Volgorde (was)
 
 Het superprofiel wordt gebouwd nadat Mark de doorklik (UI van OMNIUM-UI, branch
 `feat/doorklikken`) getest heeft.

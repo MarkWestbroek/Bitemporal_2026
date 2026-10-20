@@ -323,6 +323,66 @@ function NoteShape({ element, selected, children }) {
   );
 }
 
+/**
+ * Constraint (superprofiel, 20-10): het UML-notatiesymbool (ezelsoor) met de
+ * specificatie tussen accolades — lichtblauw in plaats van het gele van een
+ * notitie, zodat ze in één oogopslag te onderscheiden zijn. De naam (optioneel)
+ * staat erboven, de taal (OCL, CEL) klein ernaast.
+ */
+function ConstraintShape({ element, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "#2563eb" : "#7dd3fc";
+  const spec = String(d.specificatie || "").trim();
+  return (
+    <div
+      className="dc-node"
+      style={{
+        minWidth: 100,
+        minHeight: 44,
+        position: "relative",
+        border: `1.5px solid ${rand}`,
+        backgroundColor: d.kleur || "#e0f2fe",
+        // Ezelsoor rechtsboven, zoals het UML-notitiesymbool.
+        clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%)",
+        padding: "6px 14px 6px 8px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+      }}
+    >
+      {children}
+      {(element.naam || d.taal) && (
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#075985" }}>
+          {element.naam}
+          {d.taal ? <span style={{ fontWeight: 400, color: "#0369a1" }}>{element.naam ? " · " : ""}{d.taal}</span> : null}
+        </div>
+      )}
+      <div style={{ fontSize: 12, color: "#0c4a6e", whiteSpace: "pre-wrap", lineHeight: 1.4, fontFamily: d.taal ? "ui-monospace, monospace" : undefined }}>
+        {spec ? `{${spec}}` : <span style={{ color: "#7dd3fc", fontStyle: "italic" }}>{"{…}"}</span>}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Diagramverwijzing (superprofiel, 20-10) — VOORLOPIG: kader met ⧉ en de naam
+ * van het element. De echte vorm (naam van het doeldiagram live opgezocht,
+ * dubbelklik via openVerwijzing) komt van OMNIUM-UI en vervangt deze.
+ */
+function DiagramVerwijzingShape({ element, selected, children }) {
+  const rand = selected ? "#2563eb" : "#94a3b8";
+  return (
+    <div
+      className="dc-node"
+      style={{ minWidth: 120, minHeight: 44, border: `1.5px solid ${rand}`, borderRadius: 4, background: "#f8fafc", padding: "6px 10px", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}
+    >
+      {children}
+      <span aria-hidden="true">⧉</span>
+      <span className="dc-naam">{element.naam || "(diagram)"}</span>
+    </div>
+  );
+}
+
 /** Afgeronde rechthoek met expressie (constraint). */
 function RoundedShape({ element, elementType, selected, children }) {
   const d = element.data || {};
@@ -752,6 +812,8 @@ registreerShape("class-box", ClassBoxShape);
 registreerShape("chip", ChipShape);
 registreerShape("knip-box", KnipBoxShape);
 registreerShape("note", NoteShape);
+registreerShape("constraint", ConstraintShape);
+registreerShape("diagramverwijzing", DiagramVerwijzingShape);
 registreerShape("rounded", RoundedShape);
 registreerShape("anker", AnkerShape);
 registreerShape("boundary", BoundaryShape);

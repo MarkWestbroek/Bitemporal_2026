@@ -129,6 +129,9 @@
  *   shape, kleur, compartments, properties, hooks, bron/doel, randElement … van
  *   de ouder komen mee, het kind overschrijft per sleutel/id. In de
  *   profiel-ontwerper is dit de generalisatie-pijl tussen twee elementtypen.
+ * @property {"model"|"diagram"} [hoortBij] - eigendom (M3, 2026-10-20): standaard "model";
+ *   "diagram" = weergave van één plaat — niet in de boom, de MCP-modelinhoud of documenten,
+ *   verdwijnt met het diagram (superprofiel: de diagramverwijzing). Zie types/superprofiel.js.
  * @property {boolean} [verwijstNaar]      - `false`: dit type heeft geen vaste doorklik
  *   (M3, 2026-10-20). Standaard heeft elke knoop `data.verwijstNaar = {profielId, diagramId}`:
  *   dubbelklik opent dat diagram, ook in een ander profiel (EA composite element). Connectoren
@@ -405,6 +408,12 @@
  * @property {TaskbarType[]} [taakbalken]
  * @property {LayoutStrategie[]} [layouts]
  * @property {Leesvolgorde|false} [leesvolgorde] - zie Leesvolgorde; geldt als `layouts` leeg is
+ * @property {Record<string, {inPalet?: false}>} [superprofiel] - het superprofiel (M3, 2026-10-20:
+ *   notitie, constraint, notitielijn, diagramverwijzing) erft elk profiel altijd; per type mag een
+ *   profiel alleen het palet uitzetten, bv. `{constraint: {inPalet: false}}`. Zie
+ *   types/superprofiel.js en docs/plans/2026-10-20 Notities, constraints en doorklikken.
+ * @property {Record<string, string>} [hernoemdeTypen] - migratie bij het laden: elementType
+ *   oud → nieuw (bv. ArchiMate `{toelichting: "notitielijn"}`)
  * @property {Record<string, string[]>} [facetten] - de facetten van dit profiel met hun
  *   **geordende** waarden, bv. `{laag: ["motivatie", "strategie", "business", …]}`.
  *   ElementType.facetten kiest daaruit (gecontroleerd bij registratie).
