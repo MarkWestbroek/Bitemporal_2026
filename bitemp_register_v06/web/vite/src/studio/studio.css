@@ -232,6 +232,7 @@
   100% { background: transparent; }
 }
 .studio-project__elementrij.is-flits { animation: studio-flits 1.8s ease-out; border-radius: 6px; }
+.studio-project__diagram.is-flits { animation: studio-flits 1.8s ease-out; border-radius: 6px; }
 .studio-project__mapkop .studio-project__nieuw { visibility: hidden; }
 .studio-project__mapkop:hover .studio-project__nieuw { visibility: visible; }
 .studio-project__caret {

@@ -81,6 +81,7 @@ const ANKER_ELEMENT_TYPE = {
 };
 import { berekenUitlijning, berekenRasterSnap, berekenMaten, MAAT_MODES } from "../layout/uitlijnen.js";
 import { skinElementType } from "../model/shapeSet.js";
+import { doorklikVan } from "../model/verwijstNaar.js";
 
 const nodeTypes = { element: ElementNode };
 const edgeTypes = { connector: ConnectorEdge };
@@ -1163,7 +1164,9 @@ function CanvasBinnenkant({
       const element = elements[id];
       if (!element) return;
       const et = lookups.elementTypesById[element.elementType];
-      if (onNodeDoubleClick && et?.gedragsVerwijzing && element.data?.gedragDiagramId) {
+      // Doorklik (M3 verwijstNaar, 20-10): de gedragsverwijzing of `verwijst naar`, ook naar
+      // een ander profiel — de host opent het diagram.
+      if (onNodeDoubleClick && doorklikVan(element, et)) {
         onNodeDoubleClick(element);
         return;
       }
