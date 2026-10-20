@@ -1,0 +1,13 @@
+{
+ "uitleg": "Verwijst naar (EA-composite): Studio en Go-API wijzen naar hun deelbeeld.",
+ "elementen": [
+  {
+   "bestaand": "mcp_omnium_studio_react_vite_zustand_react_f",
+   "verwijstNaar": "mcp_diagram_omnium_studio_frontend"
+  },
+  {
+   "bestaand": "mcp_go_api_gin_bun",
+   "verwijstNaar": "mcp_diagram_go_api_backend"
+  }
+ ]
+}

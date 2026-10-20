@@ -1,0 +1,61 @@
+{
+ "uitleg": "Verwijst naar: elke capability wijst naar de view die toont welke componenten haar realiseren.",
+ "elementen": [
+  {
+   "bestaand": "mcp_bitemporeel_registreren",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_importeren_uit_sparx_ea",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_notificeren_cloudevents",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_tijdreizen_en_lezen_op_t",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_melden_bugs_wensen_vragen",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_ai_hulp_assistent_mcp_proxy",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_samenwerken_projectsync_live",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_toegang_en_beleid_pap_pdp_pep",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_transformeren_tussen_notaties",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_modelleren_profielgedreven_m3_m2_m1",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_beheren_en_uitrollen_releases_vps_backup",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_genereren_codegen_runtime_projectie_m1_m",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_publiceren_formulieren_weergaven_dashboa",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  },
+  {
+   "bestaand": "mcp_renderen_van_diagrammen_svg_voor_imprint",
+   "verwijstNaar": "mcp_diagram_capabilities_gerealiseerd_door_componenten"
+  }
+ ]
+}
