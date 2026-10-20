@@ -57,6 +57,20 @@ auto-layout op de M3-LayoutStijl en de `posities` van `model_wijzigen` (`plannen
 Maten zijn de omhullende van de nodes; lijnen en berichten komen daar nog bij. Verder fijnslijpen
 kan in de Studio, of met `posities` (`naast`/`kant`) via MCP.
 
+## Deelbeelden en doorklikken (20-10)
+
+Mark: te veel elementen op één plaat. Daarom deelbeelden in "2 Componenten" (plan
+`10-deelbeelden.json`): voor de technologie *Uitrol pf-instantie*, *App-instantie: frontend en
+backend*, *Infrastructuur en diensten*; voor de applicatielaag *Omnium Studio (frontend)*, *Go-API
+(backend)*, *Interfaces, services en externe systemen*. Dezelfde elementen op meer views; niets
+onder een element gehangen — diagrammen onder een element (uitwerking) zijn in ArchiMate-tools de
+uitzondering voor gedrag (use case-realisatie, subproces), statische views staan los (EA, Archi).
+Navigatie via **verwijst naar** op het element (EA-composite, gebouwd 20-10 door OMNIUM-UI, main
+328e44be): Omnium Studio → *Omnium Studio (frontend)*, Go-API → *Go-API (backend)*, elke capability →
+*Capabilities gerealiseerd door componenten* (plannen 11 en 12). De view-reference op het canvas
+(Archi-stijl) volgt via M3-MOF. Open: de technologie herindelen naar doel (Gebruik, Uitrol app,
+Uitrol pf, Instanties) en het componentenoverzicht met groupings en verborgen compositielijnen.
+
 ## Aanvullen per onderwerp
 
 Het model is een startpunt uit de documentatie; de sessies die een onderwerp het best kennen
