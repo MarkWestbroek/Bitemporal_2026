@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **ArchiMate-lagen volgen de afhankelijkheden** (20-10, Mark: "in de ene staat alles op één lijn;
+  in de andere zou de afhankelijkheid beter gevolgd kunnen worden"). Binnen een laag bepalen de
+  relaties boven en onder: wie samenstelt, toewijst of voorgaat staat boven. Een laag met meer dan
+  zes elementen naast elkaar slaat om in een volgende rij, in plaats van één lange strook.
+  Stijl-optie `maxPerRij`.
 - **Use case: doel, trigger, pre- en postconditie, flow of events; primaire actor** (18-10, Mark;
   naar Cockburn): een use case heeft nu `doel`, `trigger` (met soort: actor, tijd, gebeurtenis),
   `preconditie`, `postconditie` en een vrij `flowOfEvents`; de associatie actor–use case heeft
