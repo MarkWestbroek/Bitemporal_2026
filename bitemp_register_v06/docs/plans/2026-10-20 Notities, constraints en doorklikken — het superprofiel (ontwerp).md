@@ -138,10 +138,22 @@ verwijzen, zoals EA's composite element ("child diagram").
    lijn aan een lijn, het palet.
 3. **Later, apart:** W3C-annotaties als externe laag (UI).
 
-## 7. Open
+## 7. Besluiten (Mark, 20-10)
 
-- Constraint-vorm: `{…}`-kader of notitie met accolades? (Smaak; EA tekent
-  een notitie met «constraint».)
-- Mag een profiel een superprofiel-type standaard uit hebben (bv. constraint
-  in ArchiMate), of altijd aan en de purist negeert het?
-- Annotatielijn naar een relatie: alleen het midden, of ook een uiteinde?
+- **Vorm van de constraint:** UML-notatie — het notitie-symbool (ezelsoor) met de
+  specificatie tussen accolades `{…}`, in **lichtblauw** in plaats van geel (zoals de
+  constraint in de oude IDE). Tussen twee elementen of relaties: annotatielijnen naar
+  beide, zoals `{xor}` tussen twee associaties (UML 2.5.1 §7.6.4).
+- **Superprofiel-type "uit" in een profiel:** niet weghalen — dat druist in tegen
+  overerving (in MOF haalt een subklasse geen geërfde eigenschap weg). Het type wordt
+  altijd geërfd en blijft geldig (import, migratie, MCP); een profiel mag het alleen uit
+  het **palet** halen met `inPalet: false` (weergave). Bv. ArchiMate erft de constraint
+  maar toont hem niet in *Maken*.
+- **Annotatielijn naar een relatie:** hecht aan **een plek op de relatie**, een getal van
+  0 (bij de bron) via 0,5 (midden) tot 1 (bij het doel); daarmee kunnen midden en beide
+  uiteinden, en is de plek sleepbaar. Motorwerk (deels OMNIUM-UI).
+
+## 8. Volgorde
+
+Het superprofiel wordt gebouwd nadat Mark de doorklik (UI van OMNIUM-UI, branch
+`feat/doorklikken`) getest heeft.
