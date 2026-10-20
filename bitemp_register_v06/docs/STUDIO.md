@@ -245,6 +245,24 @@ te wijzigen.
 > nog geen generieke layout. Debuglog van de hiërarchische modus alleen met `opts.debug`. Tests:
 > `canoniek-uml/layouts.test.js`, e2e `31-studio-auto-layout`.
 >
+> **Doorklikken (2026-10-20, OMNIUM-UI na M3-MOF `verwijstNaar`):** canvas en node gebruiken
+> `doorklikVan` (model/verwijstNaar.js) voor dubbelklik en ⧉-badge, dus de gedragsverwijzing én de
+> vaste doorklik via één pad. `maakDiagramActiviteit`: `openVerwijzing({profielId, diagramId})`
+> (zet het diagram actief in dat profiel en emit `studio:open-diagram` → tab in Modelleren),
+> `alleDiagrammen()` en `naamVanVerwijzing()`; de editorcontext krijgt `profielId`,
+> `alleDiagrammen` en `openDiagram`. `DiagramVerwijzingEditor`: optgroups per profiel; waarde
+> `{profielId, diagramId}` — behalve een gedragsverwijzing binnen het eigen profiel, die blijft
+> een kale id (EA-lezer, XMI). Contextmenu-item *Open <diagram>*. Assistent/MCP: plan-veld
+> `verwijstNaar` op een element (diagram uit het plan of bestaand, ook andere taal), `bestaandTekst`
+> toont `→ verwijst naar`. e2e `33-studio-doorklikken`. De Studio-helpers staan in
+> `studio/doorklik.js` (`openVerwijzing`, `alleDiagrammen`, `naamVanVerwijzing`,
+> `profielenUitRegistry`); de andere kant op, **Verwezen door**, is `model/verwezenDoor.js` (puur,
+> getest) en `studio/VerwezenDoorPaneel.jsx` (in `DiagramEigenschappen` en in de lege inspector
+> van het actieve diagram; hertekent als ergens een element verandert). *Zoek in projectboom* voor een
+> diagram: canvas-contextmenu → `studio:zoek-diagram-in-boom` (modellerenActivity klapt mappen en
+> element-ouders open via `boomUitklap`, flits `diag:<profiel>::<diagram>` op `DiagramRegel`).
+> e2e `34-studio-zoek-diagram`.
+>
 > **Use case-layout (2026-10-18, meting ARCH-PROJECT):** `legLeesvolgordeUit` draait de kern
 > (`legEenmaal`) vier keer: elke ronde krijgt per element een volgorde-hint = het gemiddelde dwars-
 > midden van zijn buren (alle verbindingen, ook over kadergrenzen) uit de vorige ronde. Daarna
