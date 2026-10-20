@@ -184,33 +184,50 @@ function KeuzeEditor({ regel, waarde, onChange }) {
 }
 
 /**
- * Diagram-kiezer (gedragsdiagram-primitief §3.2): keuzelijst over de
- * diagrammen van het profiel (context.diagrams) — voor gedragsverwijzingen
- * zoals een submachine state of call-activity. De waarde is het diagram-id;
- * dubbelklik op de node opent dat diagram.
+ * Diagram-kiezer (gedragsdiagram-primitief §3.2; over profielen heen sinds 20-10, M3 verwijstNaar).
+ * Zonder `context.alleDiagrammen` een keuzelijst over de diagrammen van het eigen profiel; mét
+ * een lijst per profiel (optgroups). Waarde: een kale diagram-id (dit profiel) of
+ * {profielId, diagramId}. De gedragsverwijzing (`gedragDiagramId`) blijft binnen het eigen profiel
+ * een kale id — de EA-lezer en XMI lezen die zo; `verwijst naar` bewaart altijd het object.
+ * Een ↗-knop opent het gekozen diagram (`context.openDiagram`).
  */
 function DiagramVerwijzingEditor({ regel, waarde, onChange, context }) {
-  const diagrams = Object.values(context?.diagrams || {});
-  // Waarde: kale diagram-id (dit profiel) of {profielId, diagramId} (M3 verwijstNaar,
-  // 2026-10-20). Deze keuzelijst kiest binnen het eigen profiel; een verwijzing naar
-  // een ander profiel blijft staan en wordt getoond (de kiezer over alle profielen is UI-werk).
-  const id = typeof waarde === "object" && waarde ? waarde.diagramId : waarde;
-  const anderProfiel = typeof waarde === "object" && waarde?.profielId && !diagrams.some((d) => d.id === waarde.diagramId);
-  const bestaat = !id || anderProfiel || diagrams.some((d) => d.id === id);
+  const eigen = context?.profielId || null;
+  const groepen = context?.alleDiagrammen?.length
+    ? context.alleDiagrammen
+    : [{ profielId: eigen, label: "", diagrams: Object.values(context?.diagrams || {}).map((d) => ({ id: d.id, naam: d.naam })) }];
+  const huidig = typeof waarde === "object" && waarde ? { profielId: waarde.profielId || eigen, diagramId: waarde.diagramId } : waarde ? { profielId: eigen, diagramId: waarde } : null;
+  const sleutel = (p, d) => `${p || ""}::${d}`;
+  const gekozen = huidig ? sleutel(huidig.profielId, huidig.diagramId) : "";
+  const bestaat = !huidig || groepen.some((g) => (g.profielId || null) === (huidig.profielId || null) && g.diagrams.some((d) => d.id === huidig.diagramId));
+  const kies = (v) => {
+    if (!v) return onChange(null);
+    const [p, ...rest] = v.split("::");
+    const d = rest.join("::");
+    const profielId = p || eigen;
+    // Gedragsverwijzing in het eigen profiel: kale id (achterwaarts); anders het object.
+    onChange(regel.key !== "verwijstNaar" && profielId === eigen ? d : { profielId, diagramId: d });
+  };
+  const stijl = { flex: 1, minWidth: 0, font: "inherit", fontSize: 12, padding: "3px 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)" };
   return (
-    <select
-      value={id || ""}
-      title={regel.label || regel.key}
-      onChange={(e) => onChange(e.target.value || null)}
-      style={{ flex: 1, minWidth: 0, font: "inherit", fontSize: 12, padding: "3px 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)" }}
-    >
-      <option value="">(geen)</option>
-      {anderProfiel && <option value={id}>(in {waarde.profielId}: {id})</option>}
-      {!bestaat && <option value={id}>(verwijderd diagram: {id})</option>}
-      {diagrams.map((d) => (
-        <option key={d.id} value={d.id}>{d.naam || d.id}</option>
-      ))}
-    </select>
+    <span style={{ display: "flex", gap: 4, flex: 1, minWidth: 0 }}>
+      <select value={gekozen} title={regel.label || regel.key} onChange={(e) => kies(e.target.value)} style={stijl} data-testid={`diagram-verwijzing-${regel.key}`}>
+        <option value="">(geen)</option>
+        {!bestaat && <option value={gekozen}>(verwijderd diagram: {huidig.diagramId})</option>}
+        {groepen.length === 1 && !groepen[0].label
+          ? groepen[0].diagrams.map((d) => <option key={d.id} value={sleutel(groepen[0].profielId, d.id)}>{d.naam || d.id}</option>)
+          : groepen.map((g) => (
+              <optgroup key={g.profielId || "-"} label={g.label || g.profielId}>
+                {g.diagrams.map((d) => <option key={d.id} value={sleutel(g.profielId, d.id)}>{d.naam || d.id}</option>)}
+              </optgroup>
+            ))}
+      </select>
+      {huidig && bestaat && context?.openDiagram && (
+        <button type="button" title="Open dit diagram" onClick={() => context.openDiagram(huidig)} style={{ ...stijl, flex: "none", cursor: "pointer" }}>
+          ↗
+        </button>
+      )}
+    </span>
   );
 }
 

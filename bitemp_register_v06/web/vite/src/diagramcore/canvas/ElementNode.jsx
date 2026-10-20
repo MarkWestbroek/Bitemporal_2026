@@ -19,6 +19,7 @@ import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { getShape } from "../shapes/shapeRegistry.js";
 import { InlineNaamContext, VLAK_HANDLE, splitsVeldSleutel } from "./inlineNaam.js";
 import NaamEditor from "./NaamEditor.jsx";
+import { doorklikVan } from "../model/verwijstNaar.js";
 
 const ONZICHTBAAR = {
   opacity: 0,
@@ -173,7 +174,8 @@ function ElementNode({ id, data, selected }) {
   // Gedragsverwijzing (§3.2): een gevulde verwijzing toont een ⧉-badge in de
   // hoek — dubbelklik opent het gerefereerde diagram. Generiek in de node
   // (via children in de shape-root), zodat élke shape hem meekrijgt.
-  const heeftGedrag = elementType.gedragsVerwijzing && element.data?.gedragDiagramId;
+  // Sinds 20-10 via doorklikVan: ook de vaste M3-doorklik `verwijst naar` krijgt de badge.
+  const heeftGedrag = !!doorklikVan(element, elementType);
   // Buitenlabel (motor-primitief): kleine vaste vormen — BPMN-events en
   // -gateways, state machine begin/eind/keuze, activity-knooppunten — kunnen
   // hun naam niet ín de vorm dragen. `naamLabel: "buiten"` laat de motor hem
@@ -219,7 +221,7 @@ function ElementNode({ id, data, selected }) {
           />
         )}
         {heeftGedrag && (
-          <span className="dc-gedrag-badge" title="Dubbelklik: open het gekoppelde diagram">
+          <span className="dc-gedrag-badge" title="Dubbelklik: open het diagram waar dit element naar verwijst">
             ⧉
           </span>
         )}

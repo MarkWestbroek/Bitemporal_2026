@@ -28,6 +28,7 @@ import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.js
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
 import { volgDiagram } from "../boomRegels.js";
+import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { startBeeldWachter } from "../gedeeldeBeelden.js";
 import { gebruikVan } from "../../diagramcore/model/gebruik.js";
 import { useOutboxStore } from "../sync/outbox.js";
@@ -878,6 +879,12 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
       s.diagramSelectie.profielId === profiel.id &&
       s.diagramSelectie.diagramId === diagram.id
   );
+  // "Zoek in projectboom" voor een diagram (Mark, 20-10): de regel licht op en scrolt in beeld.
+  const flitst = useModellerenStore((s) => s.flitsSleutel === "diag:" + id);
+  const diagRef = React.useRef(null);
+  useEffect(() => {
+    if (flitst) diagRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [flitst]);
   const verplaats = (mapId) =>
     meeTeNemen(id).forEach((k) => {
       if (mapId || !isElementKey(k)) plaatsDiagram(k, mapId);
@@ -953,11 +960,13 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
     <button
       type="button"
       data-boomsleutel={"diag:" + id}
+      ref={diagRef}
       className={
         "studio-project__diagram" +
         (id === actieveTab ? " is-actief" : "") +
         (isSelectie ? " is-selectie" : "") +
-        (inMulti ? " is-multi" : "")
+        (inMulti ? " is-multi" : "") +
+        (flitst ? " is-flits" : "")
       }
       data-sleutel={id}
       onMouseDown={(e) => {
@@ -2077,6 +2086,26 @@ function Sidebar() {
   // map-keten open en laat de regel even oplichten.
   useEffect(
     () =>
+      menuBus.on("studio:zoek-diagram-in-boom", ({ profielId, diagramId } = {}) => {
+        if (!profielId || !diagramId) return;
+        const s = useModellerenStore.getState();
+        const sleutel = tabId(profielId, diagramId);
+        const mapOpen = { ...s.mapOpen };
+        const boomUitklap = { ...s.boomUitklap };
+        // Ouder: een map, of (uitwerking) een element dat zelf weer in een map of onder een element hangt.
+        let ouder = s.plaatsing[sleutel] || null;
+        for (let i = 0; ouder && i < 24; i++) {
+          if (isElementKey(ouder)) {
+            boomUitklap[ouder] = Date.now();
+            ouder = s.plaatsing[ouder] || null;
+          } else {
+            mapOpen[ouder] = true;
+            ouder = s.mappen[ouder]?.ouderId || null;
+          }
+        }
+        useModellerenStore.setState({ mapOpen, boomUitklap });
+        s.flits("diag:" + sleutel);
+      }),
       menuBus.on("studio:zoek-in-boom", ({ profielId, elementId } = {}) => {
         const p = getProfieltype(profielId);
         if (!p || !elementId) return;
@@ -2620,6 +2649,8 @@ function DiagramEigenschappen({ profielId, diagramId }) {
           />
         </label>
       )}
+      {/* Welke elementen naar dit diagram doorklikken (Mark, 20-10). */}
+      <VerwezenDoorPaneel profielId={profielId} diagramId={diagramId} />
       <button
         type="button"
         onClick={() => selecteerDiagram(null)}

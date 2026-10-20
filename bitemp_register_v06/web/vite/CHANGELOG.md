@@ -9,6 +9,18 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Doorklikken in de Studio** (20-10, Mark): in de eigenschappen kies je bij *verwijst naar* een
+  diagram uit élk profiel (gegroepeerd per taal), met ↗ om het te openen. Een element met een
+  doorklik krijgt de ⧉-badge; dubbelklik of *Open <diagram>* in het rechtsklikmenu opent het, ook in
+  een andere taal (nieuwe tab). De assistent en de MCP kunnen een doorklik zetten
+  (`verwijstNaar` in het plan) en zien hem bij wat er al is.
+- **Verwezen door** (20-10, Mark): bij een diagram staat welke elementen ernaar doorklikken, uit
+  elk profiel — in de eigenschappen van het diagram (boom) en in het lege eigenschappenpaneel als
+  er op het canvas niets geselecteerd is. Klik: open een diagram waarop dat element staat.
+- **Zoek in projectboom voor een diagram** (20-10, Mark): rechtsklik op het lege canvas; dichte
+  mappen klappen open (ook als het diagram als uitwerking onder een element hangt) en de regel licht op.
+  Het rechtsklikmenu op het lege canvas begint nu met het kopje **Diagram** (zoeken, de assistent,
+  plaatje-link), zoals bij een element het kopje *Element*.
 - **ArchiMate-lagen volgen de afhankelijkheden** (20-10, Mark: "in de ene staat alles op één lijn;
   in de andere zou de afhankelijkheid beter gevolgd kunnen worden"). Binnen een laag bepalen de
   relaties boven en onder: wie samenstelt, toewijst of voorgaat staat boven. Een laag met meer dan

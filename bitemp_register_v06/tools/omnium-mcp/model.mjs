@@ -219,6 +219,7 @@ export function wijzigingTekst({ project, map, plan, wijziging, bestaand, verstu
   }
   for (const c of plan.connectoren) r.push(`+ ${c.type}: ${naam(c.bron)} → ${naam(c.doel)}`);
   for (const h of plan.hernoemd) r.push(`~ hernoemd: ${h.oud} → ${h.naam}`);
+  for (const v of plan.verwijzingen || []) r.push(`~ ${v.naam || naam(v.element)} verwijst naar diagram ${v.naar.naam || v.naar.sleutel || v.naar.id}`);
   for (const l of plan.leden || []) r.push(`~ ${naam({ id: l.id })} in ${naam(l.in)}`);
   for (const v of plan.veldenBij || []) r.push(`~ ${v.naam || v.id}: ${v.soort === "waarde" ? "waarden" : "velden"} erbij — ${v.velden.map((x) => (x.type ? `${x.naam}: ${x.type}` : x.naam)).join(", ")}`);
   for (const v of plan.verwijderen || []) r.push(`- weg: ${v.soort === "relatie" ? `${v.type} ${v.id}` : `${v.naam || v.id} (${v.id})`}`);

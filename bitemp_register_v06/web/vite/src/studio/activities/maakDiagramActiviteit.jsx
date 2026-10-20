@@ -63,6 +63,9 @@ import { migreerBeschrijving } from "../../diagramcore/model/beschrijving.js";
 import "../elementVerwijzing.jsx";
 import { ELEMENT_REF_MIME as REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import { registreerProfieltype } from "../profieltypeRegistry";
+import { openVerwijzing, alleDiagrammen, naamVanVerwijzing } from "../doorklik.js";
+import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
+import { doorklikVan } from "../../diagramcore/model/verwijstNaar.js";
 import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
 import { staatMeerdereVoorkomensToe, vindVoorkomen } from "../../diagramcore/model/voorkomens.js";
@@ -2250,6 +2253,14 @@ export function maakDiagramActiviteit(opties) {
                       },
                     ]
                   : []),
+                // Doorklik (M3 verwijstNaar / gedragsverwijzing, 20-10): open het diagram waar dit
+                // element naar verwijst, ook in een ander profiel.
+                ...(() => {
+                  const elDk = s.elements[voorkomenRef?.elementId || nodeId];
+                  const verw = doorklikVan(elDk, elementTypesById[elDk?.elementType], id);
+                  const naam = verw ? naamVanVerwijzing(verw) : null;
+                  return naam ? [{ id: "open-verwijzing", label: `Open ${naam}`, icoon: "⧉", onClick: () => openVerwijzing(verw) }] : [];
+                })(),
                 {
                   id: "zoek-in-boom",
                   label: "Zoek in projectboom",
@@ -2618,9 +2629,19 @@ export function maakDiagramActiviteit(opties) {
           : []);
         // Rechtsklik op leeg canvas: activiteit-eigen acties (bv. "Activeer
         // profiel…") + exporteren zonder eerst naar het menu te hoeven.
-        const canvasDeel = (!nodeId && !connectorId
+        // Rechtsklik op leeg canvas: bovenaan het kopje "Diagram" (zoals "Element" bij een element;
+        // Mark, 20-10) met zoeken in de boom, de assistent en de plaatje-link; onderaan de
+        // activiteit-eigen acties en de werkbestanden.
+        const diagramDeel = (!nodeId && !connectorId
           ? [
-              { sep: true },
+              { kop: true, label: "Diagram" },
+              {
+                id: "zoek-diagram-in-boom",
+                label: "Zoek in projectboom",
+                icoon: "🔎",
+                // Mark, 20-10: ook voor een diagram (klapt mappen open, licht de regel op).
+                onClick: () => menuBus.emit("studio:zoek-diagram-in-boom", { profielId: id, diagramId: useStore.getState().actiefDiagramId }),
+              },
               {
                 id: "assistent",
                 label: "✨ Vraag de assistent…",
@@ -2657,6 +2678,12 @@ export function maakDiagramActiviteit(opties) {
                     },
                   ]
                 : []),
+              { sep: true },
+            ]
+          : []);
+        const canvasDeel = (!nodeId && !connectorId
+          ? [
+              { sep: true },
               ...canvasMenuExtra.map((m) => ({
                 id: m.id,
                 label: m.label,
@@ -2675,7 +2702,7 @@ export function maakDiagramActiviteit(opties) {
             ]
           : []);
         // Aangeklikte ding eerst, dan het algemene deel (uitlijnen/exporteren).
-        const items = [...elementDeel, ...boomDeel, ...connectorDeel, ...algemeenDeel, ...canvasDeel];
+        const items = [...diagramDeel, ...elementDeel, ...boomDeel, ...connectorDeel, ...algemeenDeel, ...canvasDeel];
         while (items[0]?.sep) items.shift();
         return items;
       },
@@ -2984,10 +3011,11 @@ export function maakDiagramActiviteit(opties) {
                     s.updateNodePosition(diagram.id, voorkomenId || elementId, positie);
                   }}
                   onNodeDoubleClick={(element) => {
-                    // Gedragsverwijzing (§3.2): dubbelklik opent het
-                    // gekoppelde diagram — hier (actief diagram) én in de
-                    // Modelleren-host (tab, via de bus; luistert die niet,
-                    // dan is de emit onschadelijk).
+                    // Doorklik (gedragsverwijzing §3.2 of M3 `verwijst naar`, 20-10): dubbelklik
+                    // opent het diagram — ook in een ander profiel (tab in Modelleren).
+                    const etDk = element && (descriptor.elementTypes || []).find((t) => t.id === element.elementType);
+                    const verw = doorklikVan(element, etDk, id);
+                    if (verw && openVerwijzing(verw)) return true;
                     const doelId = element?.data?.gedragDiagramId;
                     if (!doelId || !useStore.getState().diagrams[doelId]) {
                       // Uitwerking (M3 `uitwerking`, 15-10): de projectboom weet welke
@@ -3210,7 +3238,11 @@ export function maakDiagramActiviteit(opties) {
     const actief = useStore((s) => s.actiefDiagramId);
     const elements = useStore((s) => s.elements);
     const diagrams = useStore((s) => s.diagrams);
-    const editorContext = React.useMemo(() => ({ elements, diagrams }), [elements, diagrams]);
+    // Kiezer over alle profielen (verwijst naar, 20-10) en ↗ om het gekozen diagram te openen.
+    const editorContext = React.useMemo(
+      () => ({ elements, diagrams, profielId: id, alleDiagrammen: alleDiagrammen(), openDiagram: openVerwijzing }),
+      [elements, diagrams]
+    );
 
     // Kandidaten via de ReferenceResolvers van het profiel (plan §4.5b).
     const kandidatenVoor = useCallback(
@@ -3229,6 +3261,8 @@ export function maakDiagramActiviteit(opties) {
           Selecteer een element op het canvas om het te bewerken. Nieuwe elementen maak je met de
           &ldquo;Maken&rdquo;-taakbalk; verbindingen sleep je tussen de aansluitpunten (kies eventueel
           eerst een type in &ldquo;Verbinding&rdquo;).
+          {/* Welke elementen naar dít diagram doorklikken (Mark, 20-10). */}
+          {actief && <VerwezenDoorPaneel profielId={id} diagramId={actief} />}
         </div>
       );
     }
