@@ -1,6 +1,6 @@
 # Transformaties — stand, vorm en richting
 
-> Stand per 2026-10-05. Dit document bundelt wat er over transformeren verspreid
+> Stand per 2026-10-20 (eerste versie 2026-10-05). Dit document bundelt wat er over transformeren verspreid
 > vastlag (consolidatieplan 2026-07-13, ArchiMate-exchange-ontwerp 2026-08-31 §8,
 > integrale review 2026-09-30 §5) en legt de **vorm** vast waarin nieuwe
 > transformaties worden geschreven. Eerste toepassing van die vorm: *Mermaid
@@ -43,10 +43,11 @@ bron- en doelelement.
 | import | ArchiMate Model Exchange → ArchiMate-model | code: parser → IR → core-model (`archimate/exchange/`) |
 | import | OpenAPI → canoniek model | code: `oasNaarV3` → V3 → core-model |
 | import | **Mermaid flowchart → use case-model** | **lezer + regelset + toepasser** (§3, §6) |
-| import | **BPMN 2.0 XML → BPMN-model** (bpmn-motor) | **lezer + regelset + toepasser** (§7) — mét BPMNDI-diagramlaag |
-| import | **DMN XML → DMN DRD-model** | **lezer + regelset + toepasser** (§7) — mét DMNDI |
+| import | **BPMN 2.0 XML → BPMN-model** (bpmn-motor) | **lezer + regelset + toepasser** (§10) — mét BPMNDI-diagramlaag |
+| import | **DMN XML → DMN DRD-model** | **lezer + regelset + toepasser** (§10) — mét DMNDI |
 | transform | Kopieer map-inhoud naar een map | code |
 | export | Map → JSON, Map → Markdown-overzicht | code |
+| export | Map → document (per documentsjabloon één transformatie, `document-<id>`) | sjabloon-renderer (`transformatie/sjabloon/`), zie *plans/2026-10-09 Documentsjablonen* |
 | export | **Use case-model → Mermaid flowchart** | **graafbeeld + regelset + toepasser + schrijver** (§3, §6) — de terugweg van de import, roundtrip getest |
 
 **Buiten de registry** (ouder, eigen ingang):
@@ -75,11 +76,28 @@ bron- en doelelement.
 - **Toegangsspraak → ODRL (ODRL-AP-NL)**, een export in de vorm van §3 mét
   schrijver (§8). Nog niet in de registry: een beleid leeft in de
   Toegangverlening-activiteit, niet in een Modelleren-map.
+- **EA-lezer per profiel**: naast de `.qea`-lezer hierboven heeft een tiental
+  profielen een `eaMapping.js` (bpmn, dmn-drd, xsd, wsdl, object, …) — ook
+  **data**, maar in een eigen tabelvorm (EA-objecttype + stereotype →
+  elementtype), niet als regelset van §3. Zie
+  [PROFIELEN-EA-AANVULLING.md](PROFIELEN-EA-AANVULLING.md).
 
-**Wat ontbreekt:** tot nu toe was elke transformatie specifieke code achter één
-`run()`. Er was geen gedeelde, leesbare vorm voor de afbeelding zelf; het bereik
-is alleen "een map"; trace wordt niet bewaard; er is geen proefdraaien met een
-verschil-overzicht en geen runner buiten de browser.
+**Wat is configuratie en wat is code.** Bij de transformaties in de vorm van §3
+— Mermaid ↔ use case, BPMN-XML, DMN-XML, Toegangsspraak → ODRL: vijf regelsets —
+is de *afbeelding* configuratie: wat wordt wat staat als regels in een
+regelset, en de toepasser is generiek. Code blijven: de **lezers en schrijvers**
+(syntax per extern formaat; zo bedoeld), de **aansluiting** per transformatie
+(registratie, plan → model; voor imports grotendeels generiek via
+`planNaarCoreModel`), en de **vindplaats**: de regelsets zijn `.js`-bestanden in
+de broncode. Configureren kan dus alleen wie de code wijzigt — bewust: eerst
+experimenteren met regelsets als JS-data, dan pas vastleggen (§9).
+
+**Wat ontbreekt:** de oudere transformaties (map-JSON, ArchiMate Exchange,
+OpenAPI → canoniek, de IDE-importen) zijn nog specifieke code zonder regelset;
+het bereik is alleen "een map"; de trace wordt niet bewaard; er is geen viewer of
+editor voor regelsets (§9) en geen runner buiten de browser. Proefdraaien met een
+verschil-overzicht bestaat voor de EA-import (*plans/2026-10-07 Sparx EA-sync*),
+nog niet generiek.
 
 ## 3. De vorm: lezer → regelset → toepasser → schrijver
 
@@ -399,13 +417,37 @@ Voorbeelden, de runner en hoe je ze in de viewer bekijkt:
 ## 9. Viewer, editor en de Transformatie-entiteit (ontwerp, 2026-10-06)
 
 Regelsets zijn nu `.js`-bestanden in de broncode. Dit is het ontwerp om ze te
-bekijken, te testen en te bewerken — en om ze, *eat your own dogfood*, als
-geregistreerde gegevens in het register te brengen. Het zijn **twee
-verschillende dingen** die elkaar op één punt raken.
+bekijken, te testen en te bewerken, en om ze later vast te leggen. Het zijn
+**twee verschillende dingen** die elkaar op één punt raken.
 
-### 9.1 De regelset als gegevens: entiteit `Transformatie`
+### 9.0 Een transformatie is M2, geen M1 (aanscherping 2026-10-20)
 
-Zoals de andere definities in het configuratiedomein (FormulierDefinitie,
+Een regelset is een afbeelding tussen twee **talen** — profiel ↔ profiel, of
+profiel ↔ extern formaat. Ze zegt niets over een concreet model, maar hoe *elk*
+model in taal A in taal B uitkomt. Dat is **M2**, op dezelfde hoogte als de
+profielen; een M1-model is alleen haar invoer (de proefbron, de map waarop je
+haar toepast). Daaruit volgt:
+
+- **Regelsets volgen de profielen.** Ze noemen elementtypen en connectoren van
+  een profiel en kloppen alleen bij een versie daarvan. Waar de profielen
+  komen te leven — in de code, in de projectsync, als bitemporele entiteit in het
+  toolregister — daar leven ook de regelsets; die beslissing wordt één keer
+  genomen, voor beide.
+- **Overdraagbaar.** Een profiel met zijn regelsets wil je kunnen meegeven aan
+  een andere instantie of een collega, los van de tool — zoals een
+  XSLT-stylesheet of een EA-MDG-technologie rondgaat. Daarom is de **JSON-vorm**
+  de eigenlijke drager: een bestand dat je deelt, in git versioneert en inleest.
+  Opslag in het register is één plek waar zo'n bestand bitemporeel bewaard
+  wordt, niet de enige vorm.
+- **Volgorde: eerst experimenteren, dan vastleggen.** Nu als JS-data in de code
+  (vijf regelsets); vastleggen pas als de vorm zich bewezen heeft, en dan samen
+  met de profielen.
+
+### 9.1 Mogelijkheid: de regelset als entiteit `Transformatie`
+
+Een **mogelijkheid**, geen besluit (zie 9.0): als profielen bitemporele
+entiteiten in het toolregister worden, dan regelsets ook, op dezelfde manier
+als de andere definities in het configuratiedomein (FormulierDefinitie,
 QueryDefinitie, NotificatieDefinitie): één entiteit, de inhoud in GE's. Daarmee
 komt gratis mee: bitemporele historie (welke regel gold op het moment van die
 export, wie veranderde wat), correctie via registraties, replay naar een andere
@@ -430,15 +472,15 @@ ENT Transformatie                      domein configuratie, isMaterieel
 - **Hergebruik is een relatie tussen regelsets**: `Transformatie bouwt voort op
   Transformatie` — het stapelen van §7.7, met de laag als eigen entiteit met eigen
   `code`, en het samengestelde id in de kop van de uitvoer.
-- **`bron` en `doel` zijn tekstsleutels** (`usecase`, `mermaid-flowchart`) met een
-  versie, geen relaties: profielen (M2) leven niet in het register.
+- **`bron` en `doel`**: zolang profielen niet in het register leven,
+  tekstsleutels (`usecase`, `mermaid-flowchart`) met een versie; leven ze er wel,
+  dan een verwijzing naar de profielversie.
 
-**Drie vindplaatsen, één vorm.** Dezelfde JSON leeft ingebouwd in de code (de
-standaardregelsets), in de projectboom (lokaal, zonder register) en in het
-register (gedeeld en gepubliceerd). De Studio laadt ze in die volgorde van
-voorkeur: register als het er is, anders project, anders ingebouwd; wie wat
-overschrijft wordt getoond, niet verzwegen. Deze laadroute is het eerste
-bouwwerk; de entiteit komt daarna.
+**Eén vorm, meerdere vindplaatsen.** Dezelfde JSON kan ingebouwd in de code
+staan (de standaardregelsets), als bestand bij een profiel of in de projectboom,
+en eventueel in het register. De Studio laadt ze in een vaste volgorde van
+voorkeur; wie wat overschrijft wordt getoond, niet verzwegen. Deze laadroute is
+het eerste bouwwerk; waar de regelsets uiteindelijk wonen volgt uit 9.0.
 
 ### 9.2 De formulier-editor
 
@@ -483,11 +525,14 @@ is de kale ingang, de live view de ingang met zicht op het effect.
 ### 9.5 Volgorde
 
 1. **Live view als lezer** over de ingebouwde regelsets, met de proefbron als
-   geplakte tekst of gekozen map. Dwingt de laadroute (9.1, drie vindplaatsen) en
-   het bereik (§4) uit.
-2. **Entiteit `Transformatie`** in het configuratiedomein, met de formulier-widget
-   voor `regels_json`; de Studio leest uit het register.
-3. **Bewerken in de live view** met bewaren als registratie.
+   geplakte tekst of gekozen map. Dwingt de laadroute (9.1) en het bereik (§4)
+   uit.
+2. **Regelsets als overdraagbaar JSON-bestand** naast de ingebouwde: inlezen,
+   valideren, exporteren.
+3. **Bewerken in de live view**, met bewaren naar dat bestand — of als
+   registratie, als de beslissing over de plek van profielen en regelsets (9.0)
+   op het toolregister uitkomt (dan ook de entiteit `Transformatie` met de
+   formulier-widget, 9.1–9.2).
 4. **Stapelen** als relatie tussen regelsets (§7.7), zodra het bereik `map` met
    meerdere profielen er is.
 
