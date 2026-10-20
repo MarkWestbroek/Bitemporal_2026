@@ -200,7 +200,7 @@ export function naarCoreModel(exchange, opties = {}) {
         zichtbareRelaties.add(connectorId);
       } else if (elements[bronNode.elementId]?.elementType === "notitie") {
         const connectorId = viewObjectId(importId, view.identifier, "connection", connection.identifier);
-        elements[connectorId] = { id: connectorId, naam: kiesTaalwaarde(connection.names, taal, ""), elementType: "toelichting", source: bronNode.elementId, target: doelNode.elementId, compartimenten: [], data: { exchange: { identifier: connection.identifier, type: connection.type, style: connection.style, bendpoints: connection.bendpoints, sourceAttachment: connection.sourceAttachment, targetAttachment: connection.targetAttachment, raw: connection.raw } } };
+        elements[connectorId] = { id: connectorId, naam: kiesTaalwaarde(connection.names, taal, ""), elementType: "notitielijn", source: bronNode.elementId, target: doelNode.elementId, compartimenten: [], data: { exchange: { identifier: connection.identifier, type: connection.type, style: connection.style, bendpoints: connection.bendpoints, sourceAttachment: connection.sourceAttachment, targetAttachment: connection.targetAttachment, raw: connection.raw } } };
         connectorVoorkomens[connectorId] = { bronNodeId: bronNode.nodeId, doelNodeId: doelNode.nodeId };
         zichtbareRelaties.add(connectorId);
       } else {

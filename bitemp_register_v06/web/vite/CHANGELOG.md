@@ -9,6 +9,18 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **M3: het superprofiel — notitie, constraint, annotatie-lijn en diagramverwijzing in elk profiel**
+  (20-10, Mark): elk profiel erft vier ingebouwde typen (`diagramcore/types/superprofiel.js`). De
+  **notitie** (UML Comment) en de **constraint** (UML Constraint: specificatie tussen `{…}` in
+  natuurlijke taal, OCL of CEL; lichtblauw ezelsoor) zijn modelinhoud. De **annotatie-lijn**
+  (`notitielijn`) gaat van notitie of constraint naar élk element van het profiel — ook in profielen
+  die er geen hadden (canoniek, state machine, CMMN, ERD, OAS, GraphQL, …). De **diagramverwijzing**
+  (zoals Archi's view reference, `hoortBij: "diagram"`) is het enige type dat bij de plaat hoort.
+  Een type wordt altijd geërfd; een profiel mag het alleen uit het palet halen
+  (`DiagramType.superprofiel = {constraint: {inPalet: false}}`). Een eigen `constraint` van een
+  profiel blijft (ArchiMate, MIM, canoniek). ArchiMate's `toelichting`-lijn ging erin op
+  (`DiagramType.hernoemdeTypen`, migratie bij het laden; ook de Exchange-import). Ontwerp:
+  `docs/plans/2026-10-20 Notities, constraints en doorklikken — het superprofiel (ontwerp).md`.
 - **Doorklikken in de Studio** (20-10, Mark): in de eigenschappen kies je bij *verwijst naar* een
   diagram uit élk profiel (gegroepeerd per taal), met ↗ om het te openen. Een element met een
   doorklik krijgt de ⧉-badge; dubbelklik of *Open <diagram>* in het rechtsklikmenu opent het, ook in

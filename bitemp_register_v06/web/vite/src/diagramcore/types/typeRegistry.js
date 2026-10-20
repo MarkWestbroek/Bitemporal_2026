@@ -14,6 +14,7 @@
 import { normaliseerErfenis, kopieVoorNormalisatie } from "./erfenis.js";
 import { leesvolgordeLayouts } from "../layout/leesvolgorde.js";
 import { valideerAardEnFacetten, valideerLayoutStijl } from "./layoutStijl.js";
+import { vulSuperprofielAan } from "./superprofiel.js";
 
 /**
  * Profiel zonder eigen layouts: de algemene gelaagde layout volgens zijn LayoutStijlen (M3,
@@ -94,6 +95,8 @@ export function valideerDiagramType(dtRauw) {
   // descriptor onaangeroerd blijft.
   const dt = kopieVoorNormalisatie(dtRauw);
   if (dt && typeof dt === "object") fouten.push(...normaliseerErfenis(dt));
+  // Superprofiel (M3, 20-10): notitie, constraint, notitielijn, diagramverwijzing in elk profiel.
+  if (dt && typeof dt === "object") fouten.push(...vulSuperprofielAan(dt));
   if (!dt?.id) fouten.push("DiagramType: id ontbreekt");
   if (!dt?.label) fouten.push(`DiagramType "${dt?.id ?? "?"}": label ontbreekt`);
   if (!dt?.style) fouten.push(`DiagramType "${dt?.id ?? "?"}": style (StyleType-id) ontbreekt`);
@@ -165,6 +168,7 @@ export function registreerDiagramType(descriptor) {
   }
   // In place: de activiteiten houden ditzelfde object vast (descriptor-prop).
   normaliseerErfenis(descriptor);
+  vulSuperprofielAan(descriptor);
   vulLayoutsAan(descriptor);
   _diagramTypes.set(descriptor.id, descriptor);
 }
@@ -181,6 +185,7 @@ export function vervangDiagramType(descriptor) {
     throw new Error(`Ongeldig DiagramType:\n- ${fouten.join("\n- ")}`);
   }
   normaliseerErfenis(descriptor);
+  vulSuperprofielAan(descriptor);
   vulLayoutsAan(descriptor);
   _diagramTypes.set(descriptor.id, descriptor);
 }
