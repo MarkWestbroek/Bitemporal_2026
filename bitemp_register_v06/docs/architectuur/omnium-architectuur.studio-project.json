@@ -1,7 +1,7 @@
 {
   "formaat": "studio-project",
   "versie": 3,
-  "geexporteerd": "2026-10-20T19:39:01.844Z",
+  "geexporteerd": "2026-10-20T19:48:41.803Z",
   "project": {
     "id": "a2e7a101-1cbd-4f5e-bef4-344e73da2966",
     "naam": "Omnium architectuur"
@@ -395,12 +395,19 @@
       "el::activity05::mcp_eind_6": "map_1792323013361_mcp5",
       "activity05::mcp_diagram_release_en_uitrol": "map_1792323013361_mcp5",
       "archimate05::mcp_diagram_capabilities_gerealiseerd_door_componenten": "map_1792323012055_mcp1",
-      "archimate05::mcp_diagram_uitrol_pf_instantie_bouwt_uit_bron": "map_1792323012236_mcp1",
-      "archimate05::mcp_diagram_app_instantie_frontend_en_backend": "map_1792323012236_mcp1",
-      "archimate05::mcp_diagram_infrastructuur_en_diensten_vps": "map_1792323012236_mcp1",
-      "archimate05::mcp_diagram_omnium_studio_frontend": "map_1792323012236_mcp1",
-      "archimate05::mcp_diagram_go_api_backend": "map_1792323012236_mcp1",
-      "archimate05::mcp_diagram_interfaces_services_en_externe_systemen": "map_1792323012236_mcp1"
+      "el::archimate05::mcp_gebruiker_modelleur_lezer": "map_1792323012236_mcp1",
+      "el::archimate05::mcp_beheerder_ontwikkelaar_rolt_uit": "map_1792323012236_mcp1",
+      "el::archimate05::mcp_frontend_fe": "map_1792323012236_mcp1",
+      "el::archimate05::mcp_backend_be": "map_1792323012236_mcp1",
+      "archimate05::mcp_diagram_gebruik_runtime_van_een_instantie": "map_1792323012236_mcp1",
+      "archimate05::mcp_diagram_uitrol_app_omnium_ide_nl_images_van_dock": "map_1792323012236_mcp1",
+      "archimate05::mcp_diagram_uitrol_pf_common_ground_lab_nl_bouwt_uit": "map_1792323012236_mcp1",
+      "archimate05::mcp_diagram_instanties_op_de_vps": "map_1792323012236_mcp1",
+      "archimate05::mcp_diagram_hoofdcomponenten_en_interfaces": "map_1792323012236_mcp1",
+      "archimate05::mcp_diagram_functioneel_modelleren_transformeren_en_": "map_1792323012236_mcp1",
+      "archimate05::mcp_diagram_functioneel_registreren_lezen_en_generer": "map_1792323012236_mcp1",
+      "archimate05::mcp_diagram_functioneel_samenwerken_en_ai_hulp": "map_1792323012236_mcp1",
+      "archimate05::mcp_diagram_functioneel_toegang_notificeren_renderen": "map_1792323012236_mcp1"
     },
     "plaatsingVolgorde": [
       "el::archimate05::mcp_omnium_modelgedreven_bitemporeel_registe",
@@ -686,12 +693,19 @@
       "el::activity05::mcp_eind_6",
       "activity05::mcp_diagram_release_en_uitrol",
       "archimate05::mcp_diagram_capabilities_gerealiseerd_door_componenten",
-      "archimate05::mcp_diagram_uitrol_pf_instantie_bouwt_uit_bron",
-      "archimate05::mcp_diagram_app_instantie_frontend_en_backend",
-      "archimate05::mcp_diagram_infrastructuur_en_diensten_vps",
-      "archimate05::mcp_diagram_omnium_studio_frontend",
-      "archimate05::mcp_diagram_go_api_backend",
-      "archimate05::mcp_diagram_interfaces_services_en_externe_systemen"
+      "el::archimate05::mcp_gebruiker_modelleur_lezer",
+      "el::archimate05::mcp_beheerder_ontwikkelaar_rolt_uit",
+      "el::archimate05::mcp_frontend_fe",
+      "el::archimate05::mcp_backend_be",
+      "archimate05::mcp_diagram_gebruik_runtime_van_een_instantie",
+      "archimate05::mcp_diagram_uitrol_app_omnium_ide_nl_images_van_dock",
+      "archimate05::mcp_diagram_uitrol_pf_common_ground_lab_nl_bouwt_uit",
+      "archimate05::mcp_diagram_instanties_op_de_vps",
+      "archimate05::mcp_diagram_hoofdcomponenten_en_interfaces",
+      "archimate05::mcp_diagram_functioneel_modelleren_transformeren_en_",
+      "archimate05::mcp_diagram_functioneel_registreren_lezen_en_generer",
+      "archimate05::mcp_diagram_functioneel_samenwerken_en_ai_hulp",
+      "archimate05::mcp_diagram_functioneel_toegang_notificeren_renderen"
     ]
   },
   "kruisverbanden": [],
@@ -6132,11 +6146,25 @@
           "elementType": "tech-interface",
           "compartimenten": []
         },
+        "mcp_backend_be": {
+          "id": "mcp_backend_be",
+          "data": {},
+          "naam": "Backend (BE)",
+          "elementType": "grouping",
+          "compartimenten": []
+        },
         "mcp_vps_docker": {
           "id": "mcp_vps_docker",
           "data": {},
           "naam": "VPS (Docker)",
           "elementType": "node",
+          "compartimenten": []
+        },
+        "mcp_frontend_fe": {
+          "id": "mcp_frontend_fe",
+          "data": {},
+          "naam": "Frontend (FE)",
+          "elementType": "grouping",
           "compartimenten": []
         },
         "mcp_bitemp_go_api": {
@@ -6164,7 +6192,7 @@
           "id": "mcp_go_api_gin_bun",
           "data": {
             "verwijstNaar": {
-              "diagramId": "mcp_diagram_go_api_backend",
+              "diagramId": "mcp_diagram_hoofdcomponenten_en_interfaces",
               "profielId": "archimate05"
             }
           },
@@ -6274,6 +6302,13 @@
           "data": {},
           "naam": "Webhook (CloudEvents, HMAC)",
           "elementType": "app-interface",
+          "compartimenten": []
+        },
+        "mcp_gebruiker_modelleur_lezer": {
+          "id": "mcp_gebruiker_modelleur_lezer",
+          "data": {},
+          "naam": "Gebruiker (modelleur, lezer)",
+          "elementType": "business-actor",
           "compartimenten": []
         },
         "mcp_melden_bugs_wensen_vragen": {
@@ -6392,6 +6427,13 @@
           "elementType": "app-component",
           "compartimenten": []
         },
+        "mcp_beheerder_ontwikkelaar_rolt_uit": {
+          "id": "mcp_beheerder_ontwikkelaar_rolt_uit",
+          "data": {},
+          "naam": "Beheerder / ontwikkelaar (rolt uit)",
+          "elementType": "business-actor",
+          "compartimenten": []
+        },
         "mcp_compositie_vps_docker_https_443": {
           "id": "mcp_compositie_vps_docker_https_443",
           "data": {},
@@ -6499,6 +6541,24 @@
           "elementType": "app-interface",
           "compartimenten": []
         },
+        "mcp_aggregatie_backend_be_bitemp_go_api": {
+          "id": "mcp_aggregatie_backend_be_bitemp_go_api",
+          "data": {},
+          "naam": "",
+          "source": "mcp_backend_be",
+          "target": "mcp_bitemp_go_api",
+          "elementType": "aggregatie",
+          "compartimenten": []
+        },
+        "mcp_aggregatie_backend_be_postgresql_16": {
+          "id": "mcp_aggregatie_backend_be_postgresql_16",
+          "data": {},
+          "naam": "",
+          "source": "mcp_backend_be",
+          "target": "mcp_postgresql_16",
+          "elementType": "aggregatie",
+          "compartimenten": []
+        },
         "mcp_associatie_internet_https_https_443": {
           "id": "mcp_associatie_internet_https_https_443",
           "data": {},
@@ -6587,6 +6647,15 @@
           "elementType": "stroom",
           "compartimenten": []
         },
+        "mcp_aggregatie_backend_be_bitemp_render_svc": {
+          "id": "mcp_aggregatie_backend_be_bitemp_render_svc",
+          "data": {},
+          "naam": "",
+          "source": "mcp_backend_be",
+          "target": "mcp_bitemp_render_svc",
+          "elementType": "aggregatie",
+          "compartimenten": []
+        },
         "mcp_notificaties_cloudevents_webhook_e_mail": {
           "id": "mcp_notificaties_cloudevents_webhook_e_mail",
           "data": {},
@@ -6599,6 +6668,15 @@
           "data": {},
           "naam": "Studio-projecten en operatielog (SSE-hub)",
           "elementType": "app-component",
+          "compartimenten": []
+        },
+        "mcp_aggregatie_backend_be_minio_objectopslag": {
+          "id": "mcp_aggregatie_backend_be_minio_objectopslag",
+          "data": {},
+          "naam": "",
+          "source": "mcp_backend_be",
+          "target": "mcp_minio_objectopslag",
+          "elementType": "aggregatie",
           "compartimenten": []
         },
         "mcp_ai_dienst_extern_claude_deepseek_openai_": {
@@ -6692,7 +6770,7 @@
           "id": "mcp_omnium_studio_react_vite_zustand_react_f",
           "data": {
             "verwijstNaar": {
-              "diagramId": "mcp_diagram_omnium_studio_frontend",
+              "diagramId": "mcp_diagram_hoofdcomponenten_en_interfaces",
               "profielId": "archimate05"
             }
           },
@@ -6778,6 +6856,15 @@
           "data": {},
           "naam": "Validatie en normalisatie (DatatypeRegistry)",
           "elementType": "app-component",
+          "compartimenten": []
+        },
+        "mcp_bediening_https_443_gebruiker_modelleur_lezer": {
+          "id": "mcp_bediening_https_443_gebruiker_modelleur_lezer",
+          "data": {},
+          "naam": "",
+          "source": "mcp_https_443",
+          "target": "mcp_gebruiker_modelleur_lezer",
+          "elementType": "bediening",
           "compartimenten": []
         },
         "mcp_compositie_go_api_gin_bun_meldingen_domein_api": {
@@ -7050,6 +7137,15 @@
           "elementType": "compositie",
           "compartimenten": []
         },
+        "mcp_aggregatie_frontend_fe_bitemp_viz_frontend_nginx_studio": {
+          "id": "mcp_aggregatie_frontend_fe_bitemp_viz_frontend_nginx_studio",
+          "data": {},
+          "naam": "",
+          "source": "mcp_frontend_fe",
+          "target": "mcp_bitemp_viz_frontend_nginx_studio",
+          "elementType": "aggregatie",
+          "compartimenten": []
+        },
         "mcp_compositie_go_api_gin_bun_rest_pad_full_registratie_api": {
           "id": "mcp_compositie_go_api_gin_bun_rest_pad_full_registratie_api",
           "data": {},
@@ -7075,6 +7171,15 @@
           "source": "mcp_bitemporeel_registreren",
           "target": "mcp_notificeren_cloudevents",
           "elementType": "trigger",
+          "compartimenten": []
+        },
+        "mcp_aggregatie_backend_be_openftv_externe_pdp_optioneel_prof": {
+          "id": "mcp_aggregatie_backend_be_openftv_externe_pdp_optioneel_prof",
+          "data": {},
+          "naam": "",
+          "source": "mcp_backend_be",
+          "target": "mcp_openftv_externe_pdp_optioneel_profiel_au",
+          "elementType": "aggregatie",
           "compartimenten": []
         },
         "mcp_aggregatie_omnium_modelgedreven_bitemporeel_registe_ai_h": {
@@ -7818,6 +7923,24 @@
           "elementType": "toegang",
           "compartimenten": []
         },
+        "mcp_toewijzing_beheerder_ontwikkelaar_rolt_uit_pf_sh_deploy_": {
+          "id": "mcp_toewijzing_beheerder_ontwikkelaar_rolt_uit_pf_sh_deploy_",
+          "data": {},
+          "naam": "",
+          "source": "mcp_beheerder_ontwikkelaar_rolt_uit",
+          "target": "mcp_pf_sh_deploy_git_pull_images_bouwen_hers",
+          "elementType": "toewijzing",
+          "compartimenten": []
+        },
+        "mcp_toewijzing_beheerder_ontwikkelaar_rolt_uit_update_sh_bac": {
+          "id": "mcp_toewijzing_beheerder_ontwikkelaar_rolt_uit_update_sh_bac",
+          "data": {},
+          "naam": "",
+          "source": "mcp_beheerder_ontwikkelaar_rolt_uit",
+          "target": "mcp_update_sh_backup_pull_herstart_smoke_tes",
+          "elementType": "toewijzing",
+          "compartimenten": []
+        },
         "mcp_toewijzing_instantie_app_omnium_ide_nl_bitemp_render_svc": {
           "id": "mcp_toewijzing_instantie_app_omnium_ide_nl_bitemp_render_svc",
           "data": {},
@@ -7883,9 +8006,9 @@
         }
       },
       "diagrams": {
-        "mcp_diagram_go_api_backend": {
-          "id": "mcp_diagram_go_api_backend",
-          "naam": "Go-API (backend)",
+        "mcp_diagram_instanties_op_de_vps": {
+          "id": "mcp_diagram_instanties_op_de_vps",
+          "naam": "Instanties op de VPS",
           "edges": [],
           "nodes": [
             {
@@ -7897,7 +8020,7 @@
                 "x": 40,
                 "y": 40
               },
-              "elementId": "mcp_go_api_gin_bun"
+              "elementId": "mcp_vps_docker"
             },
             {
               "size": {
@@ -7908,7 +8031,7 @@
                 "x": 290,
                 "y": 40
               },
-              "elementId": "mcp_render_svc_node_sidecar_diagramsvg"
+              "elementId": "mcp_caddy_reverse_proxy_let_s_encrypt"
             },
             {
               "size": {
@@ -7919,7 +8042,7 @@
                 "x": 40,
                 "y": 170
               },
-              "elementId": "mcp_metaregistry_typemeta_per_representatiet"
+              "elementId": "mcp_instantie_app_omnium_ide_nl"
             },
             {
               "size": {
@@ -7930,40 +8053,7 @@
                 "x": 290,
                 "y": 170
               },
-              "elementId": "mcp_registratie_engine_bitemporeel_schrijven"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 540,
-                "y": 170
-              },
-              "elementId": "mcp_validatie_en_normalisatie_datatyperegist"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 790,
-                "y": 170
-              },
-              "elementId": "mcp_dynql_graphql_uit_de_metaregistry"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 1040,
-                "y": 170
-              },
-              "elementId": "mcp_codegen_en_export_v3_v3_go"
+              "elementId": "mcp_instantie_pf_common_ground_lab_nl_bouwt_"
             },
             {
               "size": {
@@ -7974,7 +8064,7 @@
                 "x": 40,
                 "y": 300
               },
-              "elementId": "mcp_studio_projecten_en_operatielog_sse_hub"
+              "elementId": "mcp_docker_hub_images_markwestbroek"
             },
             {
               "size": {
@@ -7985,257 +8075,7 @@
                 "x": 290,
                 "y": 300
               },
-              "elementId": "mcp_authenticatie_en_gebruikers_jwt_tokens_u"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 540,
-                "y": 300
-              },
-              "elementId": "mcp_pep_snoeit_paden_op_route_veld_schrijfpa"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 790,
-                "y": 300
-              },
-              "elementId": "mcp_pdp_beleidsbundel_uitvoerder"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 1040,
-                "y": 300
-              },
-              "elementId": "mcp_notificaties_cloudevents_webhook_e_mail"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 1290,
-                "y": 300
-              },
-              "elementId": "mcp_ai_proxy_toegangscodes_lees_url"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 1540,
-                "y": 300
-              },
-              "elementId": "mcp_meldingen_domein_api"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 40,
-                "y": 430
-              },
-              "elementId": "mcp_register_hub_data_aanvang_einde"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 290,
-                "y": 430
-              },
-              "elementId": "mcp_registratie_en_wijziging_formele_tijd"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 540,
-                "y": 430
-              },
-              "elementId": "mcp_v3_model_schema_versies"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 790,
-                "y": 430
-              },
-              "elementId": "mcp_studio_project_operatielog_werkruimte"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 1040,
-                "y": 430
-              },
-              "elementId": "mcp_beleidsbundel_toegangsspraak_json_odrl"
-            }
-          ],
-          "diagramType": "archimate"
-        },
-        "mcp_diagram_omnium_studio_frontend": {
-          "id": "mcp_diagram_omnium_studio_frontend",
-          "naam": "Omnium Studio (frontend)",
-          "edges": [],
-          "nodes": [
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 40,
-                "y": 40
-              },
-              "elementId": "mcp_omnium_studio_react_vite_zustand_react_f"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 40,
-                "y": 170
-              },
-              "elementId": "mcp_diagrammotor_diagramcore_m3_typecontract"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 290,
-                "y": 170
-              },
-              "elementId": "mcp_profielen_m2_descriptors_adapters"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 540,
-                "y": 170
-              },
-              "elementId": "mcp_transformatielaag_lezer_regelset_toepass"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 790,
-                "y": 170
-              },
-              "elementId": "mcp_ea_lezer_qea_browser_en_sidecar"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 40,
-                "y": 300
-              },
-              "elementId": "mcp_projectsync_client_operaties_outbox_verz"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 290,
-                "y": 300
-              },
-              "elementId": "mcp_modelassistent_assistentkern"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 540,
-                "y": 300
-              },
-              "elementId": "mcp_toegangsspraak_pap_beleid_als_m1"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 40,
-                "y": 430
-              },
-              "elementId": "mcp_modelservice_schema_versies_projecten_sy"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 290,
-                "y": 430
-              },
-              "elementId": "mcp_registerservice_registreren_lezen_op_t"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 540,
-                "y": 430
-              },
-              "elementId": "mcp_sse_api_studio_projecten_id_events"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 790,
-                "y": 430
-              },
-              "elementId": "mcp_sparx_ea_extern_qea_via_bestand_of_git"
+              "elementId": "mcp_github_bron_tags_studio_en_api"
             }
           ],
           "diagramType": "archimate"
@@ -8641,9 +8481,9 @@
           ],
           "diagramType": "archimate"
         },
-        "mcp_diagram_infrastructuur_en_diensten_vps": {
-          "id": "mcp_diagram_infrastructuur_en_diensten_vps",
-          "naam": "Infrastructuur en diensten (VPS)",
+        "mcp_diagram_hoofdcomponenten_en_interfaces": {
+          "id": "mcp_diagram_hoofdcomponenten_en_interfaces",
+          "naam": "Hoofdcomponenten en interfaces",
           "edges": [],
           "nodes": [
             {
@@ -8655,7 +8495,7 @@
                 "x": 40,
                 "y": 40
               },
-              "elementId": "mcp_vps_docker"
+              "elementId": "mcp_sparx_ea_extern_qea_via_bestand_of_git"
             },
             {
               "size": {
@@ -8666,7 +8506,7 @@
                 "x": 290,
                 "y": 40
               },
-              "elementId": "mcp_docker_compose"
+              "elementId": "mcp_ai_dienst_extern_claude_deepseek_openai_"
             },
             {
               "size": {
@@ -8677,7 +8517,7 @@
                 "x": 540,
                 "y": 40
               },
-              "elementId": "mcp_caddy_reverse_proxy_let_s_encrypt"
+              "elementId": "mcp_ai_client_extern_claude_code_via_mcp"
             },
             {
               "size": {
@@ -8688,7 +8528,18 @@
                 "x": 790,
                 "y": 40
               },
-              "elementId": "mcp_docker_hub_images_markwestbroek"
+              "elementId": "mcp_imprint_extern_sites_met_modeldiagrammen"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1040,
+                "y": 40
+              },
+              "elementId": "mcp_webhook_afnemer_extern"
             },
             {
               "size": {
@@ -8699,7 +8550,7 @@
                 "x": 40,
                 "y": 170
               },
-              "elementId": "mcp_instantie_app_omnium_ide_nl"
+              "elementId": "mcp_omnium_studio_react_vite_zustand_react_f"
             },
             {
               "size": {
@@ -8710,7 +8561,7 @@
                 "x": 290,
                 "y": 170
               },
-              "elementId": "mcp_instantie_pf_common_ground_lab_nl_bouwt_"
+              "elementId": "mcp_mcp_server_tools_omnium_mcp"
             },
             {
               "size": {
@@ -8721,7 +8572,18 @@
                 "x": 540,
                 "y": 170
               },
-              "elementId": "mcp_nas_haalt_nachtelijke_backups_op"
+              "elementId": "mcp_go_api_gin_bun"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 790,
+                "y": 170
+              },
+              "elementId": "mcp_render_svc_node_sidecar_diagramsvg"
             },
             {
               "size": {
@@ -8732,7 +8594,7 @@
                 "x": 40,
                 "y": 300
               },
-              "elementId": "mcp_postgresql_16"
+              "elementId": "mcp_modelservice_schema_versies_projecten_sy"
             },
             {
               "size": {
@@ -8743,7 +8605,7 @@
                 "x": 290,
                 "y": 300
               },
-              "elementId": "mcp_minio_objectopslag"
+              "elementId": "mcp_registerservice_registreren_lezen_op_t"
             },
             {
               "size": {
@@ -8754,7 +8616,7 @@
                 "x": 540,
                 "y": 300
               },
-              "elementId": "mcp_openftv_externe_pdp_optioneel_profiel_au"
+              "elementId": "mcp_sse_api_studio_projecten_id_events"
             },
             {
               "size": {
@@ -8765,14 +8627,69 @@
                 "x": 790,
                 "y": 300
               },
-              "elementId": "mcp_update_sh_backup_pull_herstart_smoke_tes"
+              "elementId": "mcp_rest_pad_full_registratie_api"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1040,
+                "y": 300
+              },
+              "elementId": "mcp_graphql_graphql_query"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1290,
+                "y": 300
+              },
+              "elementId": "mcp_openapi_3_1_openapi_json_swagger"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1540,
+                "y": 300
+              },
+              "elementId": "mcp_render_api_api_models_diagram_svg"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1790,
+                "y": 300
+              },
+              "elementId": "mcp_mcp_stdio_modeltalen_project_bekijken_mo"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 2040,
+                "y": 300
+              },
+              "elementId": "mcp_webhook_cloudevents_hmac"
             }
           ],
           "diagramType": "archimate"
         },
-        "mcp_diagram_app_instantie_frontend_en_backend": {
-          "id": "mcp_diagram_app_instantie_frontend_en_backend",
-          "naam": "App-instantie: frontend en backend",
+        "mcp_diagram_gebruik_runtime_van_een_instantie": {
+          "id": "mcp_diagram_gebruik_runtime_van_een_instantie",
+          "naam": "Gebruik (runtime) van een instantie",
           "edges": [],
           "nodes": [
             {
@@ -8782,6 +8699,39 @@
               },
               "position": {
                 "x": 40,
+                "y": 40
+              },
+              "elementId": "mcp_gebruiker_modelleur_lezer"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 300
+              },
+              "elementId": "mcp_frontend_fe"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 430
+              },
+              "elementId": "mcp_backend_be"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
                 "y": 40
               },
               "elementId": "mcp_browser_van_de_gebruiker_chrome_edge"
@@ -8792,7 +8742,7 @@
                 "height": 70
               },
               "position": {
-                "x": 290,
+                "x": 540,
                 "y": 40
               },
               "elementId": "mcp_internet_https"
@@ -8803,7 +8753,7 @@
                 "height": 70
               },
               "position": {
-                "x": 540,
+                "x": 790,
                 "y": 40
               },
               "elementId": "mcp_https_443"
@@ -8814,8 +8764,8 @@
                 "height": 70
               },
               "position": {
-                "x": 40,
-                "y": 170
+                "x": 1040,
+                "y": 40
               },
               "elementId": "mcp_caddy_reverse_proxy_let_s_encrypt"
             },
@@ -8825,7 +8775,7 @@
                 "height": 70
               },
               "position": {
-                "x": 290,
+                "x": 40,
                 "y": 170
               },
               "elementId": "mcp_instantie_app_omnium_ide_nl"
@@ -8836,7 +8786,7 @@
                 "height": 70
               },
               "position": {
-                "x": 40,
+                "x": 290,
                 "y": 300
               },
               "elementId": "mcp_bitemp_viz_frontend_nginx_studio"
@@ -8848,7 +8798,7 @@
               },
               "position": {
                 "x": 290,
-                "y": 300
+                "y": 430
               },
               "elementId": "mcp_bitemp_go_api"
             },
@@ -8859,16 +8809,49 @@
               },
               "position": {
                 "x": 540,
-                "y": 300
+                "y": 430
               },
               "elementId": "mcp_bitemp_render_svc"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 790,
+                "y": 430
+              },
+              "elementId": "mcp_postgresql_16"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1040,
+                "y": 430
+              },
+              "elementId": "mcp_minio_objectopslag"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1290,
+                "y": 430
+              },
+              "elementId": "mcp_openftv_externe_pdp_optioneel_profiel_au"
             }
           ],
           "diagramType": "archimate"
         },
-        "mcp_diagram_uitrol_pf_instantie_bouwt_uit_bron": {
-          "id": "mcp_diagram_uitrol_pf_instantie_bouwt_uit_bron",
-          "naam": "Uitrol pf-instantie (bouwt uit bron)",
+        "mcp_diagram_functioneel_samenwerken_en_ai_hulp": {
+          "id": "mcp_diagram_functioneel_samenwerken_en_ai_hulp",
+          "naam": "Functioneel: samenwerken en AI-hulp",
           "edges": [],
           "nodes": [
             {
@@ -8880,7 +8863,7 @@
                 "x": 40,
                 "y": 40
               },
-              "elementId": "mcp_github_bron_tags_studio_en_api"
+              "elementId": "mcp_omnium_studio_react_vite_zustand_react_f"
             },
             {
               "size": {
@@ -8891,7 +8874,18 @@
                 "x": 290,
                 "y": 40
               },
-              "elementId": "mcp_caddy_reverse_proxy_let_s_encrypt"
+              "elementId": "mcp_ai_dienst_extern_claude_deepseek_openai_"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 40
+              },
+              "elementId": "mcp_ai_client_extern_claude_code_via_mcp"
             },
             {
               "size": {
@@ -8902,7 +8896,7 @@
                 "x": 40,
                 "y": 170
               },
-              "elementId": "mcp_instantie_pf_common_ground_lab_nl_bouwt_"
+              "elementId": "mcp_projectsync_client_operaties_outbox_verz"
             },
             {
               "size": {
@@ -8913,7 +8907,95 @@
                 "x": 290,
                 "y": 170
               },
-              "elementId": "mcp_pf_sh_deploy_git_pull_images_bouwen_hers"
+              "elementId": "mcp_modelassistent_assistentkern"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 170
+              },
+              "elementId": "mcp_go_api_gin_bun"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 790,
+                "y": 170
+              },
+              "elementId": "mcp_studio_projecten_en_operatielog_sse_hub"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1040,
+                "y": 170
+              },
+              "elementId": "mcp_ai_proxy_toegangscodes_lees_url"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1290,
+                "y": 170
+              },
+              "elementId": "mcp_mcp_server_tools_omnium_mcp"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 300
+              },
+              "elementId": "mcp_modelservice_schema_versies_projecten_sy"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 300
+              },
+              "elementId": "mcp_sse_api_studio_projecten_id_events"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 300
+              },
+              "elementId": "mcp_mcp_stdio_modeltalen_project_bekijken_mo"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 790,
+                "y": 300
+              },
+              "elementId": "mcp_studio_project_operatielog_werkruimte"
             }
           ],
           "diagramType": "archimate"
@@ -9388,9 +9470,9 @@
           ],
           "diagramType": "archimate"
         },
-        "mcp_diagram_interfaces_services_en_externe_systemen": {
-          "id": "mcp_diagram_interfaces_services_en_externe_systemen",
-          "naam": "Interfaces, services en externe systemen",
+        "mcp_diagram_functioneel_modelleren_transformeren_en_": {
+          "id": "mcp_diagram_functioneel_modelleren_transformeren_en_",
+          "naam": "Functioneel: modelleren, transformeren en importeren",
           "edges": [],
           "nodes": [
             {
@@ -9402,7 +9484,7 @@
                 "x": 40,
                 "y": 40
               },
-              "elementId": "mcp_imprint_extern_sites_met_modeldiagrammen"
+              "elementId": "mcp_omnium_studio_react_vite_zustand_react_f"
             },
             {
               "size": {
@@ -9411,39 +9493,6 @@
               },
               "position": {
                 "x": 290,
-                "y": 40
-              },
-              "elementId": "mcp_ai_client_extern_claude_code_via_mcp"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 540,
-                "y": 40
-              },
-              "elementId": "mcp_webhook_afnemer_extern"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 790,
-                "y": 40
-              },
-              "elementId": "mcp_ai_dienst_extern_claude_deepseek_openai_"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 1040,
                 "y": 40
               },
               "elementId": "mcp_sparx_ea_extern_qea_via_bestand_of_git"
@@ -9457,7 +9506,7 @@
                 "x": 40,
                 "y": 170
               },
-              "elementId": "mcp_render_api_api_models_diagram_svg"
+              "elementId": "mcp_diagrammotor_diagramcore_m3_typecontract"
             },
             {
               "size": {
@@ -9468,7 +9517,7 @@
                 "x": 290,
                 "y": 170
               },
-              "elementId": "mcp_mcp_stdio_modeltalen_project_bekijken_mo"
+              "elementId": "mcp_profielen_m2_descriptors_adapters"
             },
             {
               "size": {
@@ -9479,7 +9528,7 @@
                 "x": 540,
                 "y": 170
               },
-              "elementId": "mcp_webhook_cloudevents_hmac"
+              "elementId": "mcp_transformatielaag_lezer_regelset_toepass"
             },
             {
               "size": {
@@ -9490,40 +9539,7 @@
                 "x": 790,
                 "y": 170
               },
-              "elementId": "mcp_rest_pad_full_registratie_api"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 1040,
-                "y": 170
-              },
-              "elementId": "mcp_graphql_graphql_query"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 1290,
-                "y": 170
-              },
-              "elementId": "mcp_openapi_3_1_openapi_json_swagger"
-            },
-            {
-              "size": {
-                "width": 160,
-                "height": 70
-              },
-              "position": {
-                "x": 1540,
-                "y": 170
-              },
-              "elementId": "mcp_sse_api_studio_projecten_id_events"
+              "elementId": "mcp_ea_lezer_qea_browser_en_sidecar"
             },
             {
               "size": {
@@ -9545,7 +9561,7 @@
                 "x": 290,
                 "y": 300
               },
-              "elementId": "mcp_mcp_server_tools_omnium_mcp"
+              "elementId": "mcp_rest_pad_full_registratie_api"
             },
             {
               "size": {
@@ -9556,7 +9572,125 @@
                 "x": 540,
                 "y": 300
               },
-              "elementId": "mcp_notificaties_cloudevents_webhook_e_mail"
+              "elementId": "mcp_v3_model_schema_versies"
+            }
+          ],
+          "diagramType": "archimate"
+        },
+        "mcp_diagram_functioneel_registreren_lezen_en_generer": {
+          "id": "mcp_diagram_functioneel_registreren_lezen_en_generer",
+          "naam": "Functioneel: registreren, lezen en genereren",
+          "edges": [],
+          "nodes": [
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 40
+              },
+              "elementId": "mcp_go_api_gin_bun"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 40
+              },
+              "elementId": "mcp_registerservice_registreren_lezen_op_t"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 170
+              },
+              "elementId": "mcp_metaregistry_typemeta_per_representatiet"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 170
+              },
+              "elementId": "mcp_registratie_engine_bitemporeel_schrijven"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 170
+              },
+              "elementId": "mcp_validatie_en_normalisatie_datatyperegist"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 790,
+                "y": 170
+              },
+              "elementId": "mcp_dynql_graphql_uit_de_metaregistry"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1040,
+                "y": 170
+              },
+              "elementId": "mcp_codegen_en_export_v3_v3_go"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 300
+              },
+              "elementId": "mcp_rest_pad_full_registratie_api"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 300
+              },
+              "elementId": "mcp_graphql_graphql_query"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 300
+              },
+              "elementId": "mcp_openapi_3_1_openapi_json_swagger"
             },
             {
               "size": {
@@ -9567,7 +9701,7 @@
                 "x": 790,
                 "y": 300
               },
-              "elementId": "mcp_ai_proxy_toegangscodes_lees_url"
+              "elementId": "mcp_register_hub_data_aanvang_einde"
             },
             {
               "size": {
@@ -9578,7 +9712,7 @@
                 "x": 1040,
                 "y": 300
               },
-              "elementId": "mcp_ea_lezer_qea_browser_en_sidecar"
+              "elementId": "mcp_registratie_en_wijziging_formele_tijd"
             },
             {
               "size": {
@@ -9586,10 +9720,29 @@
                 "height": 70
               },
               "position": {
-                "x": 40,
-                "y": 430
+                "x": 1290,
+                "y": 300
               },
-              "elementId": "mcp_registerservice_registreren_lezen_op_t"
+              "elementId": "mcp_v3_model_schema_versies"
+            }
+          ],
+          "diagramType": "archimate"
+        },
+        "mcp_diagram_functioneel_toegang_notificeren_renderen": {
+          "id": "mcp_diagram_functioneel_toegang_notificeren_renderen",
+          "naam": "Functioneel: toegang, notificeren, renderen en meldingen",
+          "edges": [],
+          "nodes": [
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 40
+              },
+              "elementId": "mcp_omnium_studio_react_vite_zustand_react_f"
             },
             {
               "size": {
@@ -9598,9 +9751,311 @@
               },
               "position": {
                 "x": 290,
-                "y": 430
+                "y": 40
               },
-              "elementId": "mcp_modelservice_schema_versies_projecten_sy"
+              "elementId": "mcp_go_api_gin_bun"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 40
+              },
+              "elementId": "mcp_imprint_extern_sites_met_modeldiagrammen"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 790,
+                "y": 40
+              },
+              "elementId": "mcp_webhook_afnemer_extern"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 170
+              },
+              "elementId": "mcp_toegangsspraak_pap_beleid_als_m1"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 170
+              },
+              "elementId": "mcp_authenticatie_en_gebruikers_jwt_tokens_u"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 170
+              },
+              "elementId": "mcp_pep_snoeit_paden_op_route_veld_schrijfpa"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 790,
+                "y": 170
+              },
+              "elementId": "mcp_pdp_beleidsbundel_uitvoerder"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1040,
+                "y": 170
+              },
+              "elementId": "mcp_notificaties_cloudevents_webhook_e_mail"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1290,
+                "y": 170
+              },
+              "elementId": "mcp_meldingen_domein_api"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 1540,
+                "y": 170
+              },
+              "elementId": "mcp_render_svc_node_sidecar_diagramsvg"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 300
+              },
+              "elementId": "mcp_beleidsbundel_toegangsspraak_json_odrl"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 300
+              },
+              "elementId": "mcp_webhook_cloudevents_hmac"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 300
+              },
+              "elementId": "mcp_render_api_api_models_diagram_svg"
+            }
+          ],
+          "diagramType": "archimate"
+        },
+        "mcp_diagram_uitrol_app_omnium_ide_nl_images_van_dock": {
+          "id": "mcp_diagram_uitrol_app_omnium_ide_nl_images_van_dock",
+          "naam": "Uitrol app.omnium-ide.nl (images van Docker Hub)",
+          "edges": [],
+          "nodes": [
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 40
+              },
+              "elementId": "mcp_beheerder_ontwikkelaar_rolt_uit"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 40
+              },
+              "elementId": "mcp_github_bron_tags_studio_en_api"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 40
+              },
+              "elementId": "mcp_docker_hub_images_markwestbroek"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 170
+              },
+              "elementId": "mcp_vps_docker"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 170
+              },
+              "elementId": "mcp_docker_compose"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 540,
+                "y": 170
+              },
+              "elementId": "mcp_instantie_app_omnium_ide_nl"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 300
+              },
+              "elementId": "mcp_update_sh_backup_pull_herstart_smoke_tes"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 300
+              },
+              "elementId": "mcp_nas_haalt_nachtelijke_backups_op"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 520,
+                "y": 416
+              },
+              "elementId": "mcp_pf_sh_deploy_git_pull_images_bouwen_hers"
+            }
+          ],
+          "diagramType": "archimate"
+        },
+        "mcp_diagram_uitrol_pf_common_ground_lab_nl_bouwt_uit": {
+          "id": "mcp_diagram_uitrol_pf_common_ground_lab_nl_bouwt_uit",
+          "naam": "Uitrol pf.common-ground-lab.nl (bouwt uit bron)",
+          "edges": [],
+          "nodes": [
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 40
+              },
+              "elementId": "mcp_github_bron_tags_studio_en_api"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 40
+              },
+              "elementId": "mcp_caddy_reverse_proxy_let_s_encrypt"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 170
+              },
+              "elementId": "mcp_vps_docker"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 290,
+                "y": 170
+              },
+              "elementId": "mcp_instantie_pf_common_ground_lab_nl_bouwt_"
+            },
+            {
+              "size": {
+                "width": 160,
+                "height": 70
+              },
+              "position": {
+                "x": 40,
+                "y": 300
+              },
+              "elementId": "mcp_pf_sh_deploy_git_pull_images_bouwen_hers"
             }
           ],
           "diagramType": "archimate"
@@ -9965,7 +10420,7 @@
           ]
         }
       },
-      "actiefDiagramId": "mcp_diagram_go_api_backend",
+      "actiefDiagramId": "mcp_diagram_instanties_op_de_vps",
       "meta": null
     }
   }

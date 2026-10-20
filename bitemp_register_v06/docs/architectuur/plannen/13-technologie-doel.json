@@ -1,0 +1,414 @@
+{
+ "uitleg": "Technologie naar doel (Mark 20-10): gebruik (runtime) vs. uitrol, per instantie; FE/BE als grouping in de gebruiksview.",
+ "diagrammen": [
+  {
+   "sleutel": "d0",
+   "taal": "archimate05",
+   "naam": "Gebruik (runtime) van een instantie"
+  },
+  {
+   "sleutel": "d1",
+   "taal": "archimate05",
+   "naam": "Uitrol app.omnium-ide.nl (images van Docker Hub)"
+  },
+  {
+   "sleutel": "d2",
+   "taal": "archimate05",
+   "naam": "Uitrol pf.common-ground-lab.nl (bouwt uit bron)"
+  },
+  {
+   "sleutel": "d3",
+   "taal": "archimate05",
+   "naam": "Instanties op de VPS"
+  }
+ ],
+ "elementen": [
+  {
+   "sleutel": "aGebruiker",
+   "type": "business-actor",
+   "naam": "Gebruiker (modelleur, lezer)",
+   "diagram": "d0"
+  },
+  {
+   "sleutel": "aBeheerder",
+   "type": "business-actor",
+   "naam": "Beheerder / ontwikkelaar (rolt uit)",
+   "diagram": "d1"
+  },
+  {
+   "sleutel": "gFE",
+   "type": "grouping",
+   "naam": "Frontend (FE)",
+   "diagram": "d0"
+  },
+  {
+   "sleutel": "gBE",
+   "type": "grouping",
+   "naam": "Backend (BE)",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_browser_van_de_gebruiker_chrome_edge",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_internet_https",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_https_443",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_caddy_reverse_proxy_let_s_encrypt",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_instantie_app_omnium_ide_nl",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_bitemp_viz_frontend_nginx_studio",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_bitemp_go_api",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_bitemp_render_svc",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_postgresql_16",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_minio_objectopslag",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_openftv_externe_pdp_optioneel_profiel_au",
+   "diagram": "d0"
+  },
+  {
+   "bestaand": "mcp_github_bron_tags_studio_en_api",
+   "diagram": "d1"
+  },
+  {
+   "bestaand": "mcp_docker_hub_images_markwestbroek",
+   "diagram": "d1"
+  },
+  {
+   "bestaand": "mcp_vps_docker",
+   "diagram": "d1"
+  },
+  {
+   "bestaand": "mcp_docker_compose",
+   "diagram": "d1"
+  },
+  {
+   "bestaand": "mcp_instantie_app_omnium_ide_nl",
+   "diagram": "d1"
+  },
+  {
+   "bestaand": "mcp_update_sh_backup_pull_herstart_smoke_tes",
+   "diagram": "d1"
+  },
+  {
+   "bestaand": "mcp_nas_haalt_nachtelijke_backups_op",
+   "diagram": "d1"
+  },
+  {
+   "bestaand": "mcp_github_bron_tags_studio_en_api",
+   "diagram": "d2"
+  },
+  {
+   "bestaand": "mcp_caddy_reverse_proxy_let_s_encrypt",
+   "diagram": "d2"
+  },
+  {
+   "bestaand": "mcp_vps_docker",
+   "diagram": "d2"
+  },
+  {
+   "bestaand": "mcp_instantie_pf_common_ground_lab_nl_bouwt_",
+   "diagram": "d2"
+  },
+  {
+   "bestaand": "mcp_pf_sh_deploy_git_pull_images_bouwen_hers",
+   "diagram": "d2"
+  },
+  {
+   "bestaand": "mcp_vps_docker",
+   "diagram": "d3"
+  },
+  {
+   "bestaand": "mcp_caddy_reverse_proxy_let_s_encrypt",
+   "diagram": "d3"
+  },
+  {
+   "bestaand": "mcp_instantie_app_omnium_ide_nl",
+   "diagram": "d3"
+  },
+  {
+   "bestaand": "mcp_instantie_pf_common_ground_lab_nl_bouwt_",
+   "diagram": "d3"
+  },
+  {
+   "bestaand": "mcp_docker_hub_images_markwestbroek",
+   "diagram": "d3"
+  },
+  {
+   "bestaand": "mcp_github_bron_tags_studio_en_api",
+   "diagram": "d3"
+  }
+ ],
+ "connectoren": [
+  {
+   "type": "aggregatie",
+   "bron": "gFE",
+   "doel": "mcp_bitemp_viz_frontend_nginx_studio"
+  },
+  {
+   "type": "aggregatie",
+   "bron": "gBE",
+   "doel": "mcp_bitemp_go_api"
+  },
+  {
+   "type": "aggregatie",
+   "bron": "gBE",
+   "doel": "mcp_bitemp_render_svc"
+  },
+  {
+   "type": "aggregatie",
+   "bron": "gBE",
+   "doel": "mcp_postgresql_16"
+  },
+  {
+   "type": "aggregatie",
+   "bron": "gBE",
+   "doel": "mcp_minio_objectopslag"
+  },
+  {
+   "type": "aggregatie",
+   "bron": "gBE",
+   "doel": "mcp_openftv_externe_pdp_optioneel_profiel_au"
+  },
+  {
+   "type": "bediening",
+   "bron": "mcp_https_443",
+   "doel": "aGebruiker"
+  },
+  {
+   "type": "toewijzing",
+   "bron": "aBeheerder",
+   "doel": "mcp_update_sh_backup_pull_herstart_smoke_tes"
+  },
+  {
+   "type": "toewijzing",
+   "bron": "aBeheerder",
+   "doel": "mcp_pf_sh_deploy_git_pull_images_bouwen_hers"
+  }
+ ],
+ "posities": [
+  {
+   "diagram": "d0",
+   "element": "aGebruiker",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_browser_van_de_gebruiker_chrome_edge",
+   "x": 290,
+   "y": 40
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_internet_https",
+   "x": 540,
+   "y": 40
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_https_443",
+   "x": 790,
+   "y": 40
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_caddy_reverse_proxy_let_s_encrypt",
+   "x": 1040,
+   "y": 40
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_instantie_app_omnium_ide_nl",
+   "x": 40,
+   "y": 170
+  },
+  {
+   "diagram": "d0",
+   "element": "gFE",
+   "x": 40,
+   "y": 300
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_bitemp_viz_frontend_nginx_studio",
+   "x": 290,
+   "y": 300
+  },
+  {
+   "diagram": "d0",
+   "element": "gBE",
+   "x": 40,
+   "y": 430
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_bitemp_go_api",
+   "x": 290,
+   "y": 430
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_bitemp_render_svc",
+   "x": 540,
+   "y": 430
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_postgresql_16",
+   "x": 790,
+   "y": 430
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_minio_objectopslag",
+   "x": 1040,
+   "y": 430
+  },
+  {
+   "diagram": "d0",
+   "element": "mcp_openftv_externe_pdp_optioneel_profiel_au",
+   "x": 1290,
+   "y": 430
+  },
+  {
+   "diagram": "d1",
+   "element": "aBeheerder",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d1",
+   "element": "mcp_github_bron_tags_studio_en_api",
+   "x": 290,
+   "y": 40
+  },
+  {
+   "diagram": "d1",
+   "element": "mcp_docker_hub_images_markwestbroek",
+   "x": 540,
+   "y": 40
+  },
+  {
+   "diagram": "d1",
+   "element": "mcp_vps_docker",
+   "x": 40,
+   "y": 170
+  },
+  {
+   "diagram": "d1",
+   "element": "mcp_docker_compose",
+   "x": 290,
+   "y": 170
+  },
+  {
+   "diagram": "d1",
+   "element": "mcp_instantie_app_omnium_ide_nl",
+   "x": 540,
+   "y": 170
+  },
+  {
+   "diagram": "d1",
+   "element": "mcp_update_sh_backup_pull_herstart_smoke_tes",
+   "x": 40,
+   "y": 300
+  },
+  {
+   "diagram": "d1",
+   "element": "mcp_nas_haalt_nachtelijke_backups_op",
+   "x": 290,
+   "y": 300
+  },
+  {
+   "diagram": "d2",
+   "element": "mcp_github_bron_tags_studio_en_api",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d2",
+   "element": "mcp_caddy_reverse_proxy_let_s_encrypt",
+   "x": 290,
+   "y": 40
+  },
+  {
+   "diagram": "d2",
+   "element": "mcp_vps_docker",
+   "x": 40,
+   "y": 170
+  },
+  {
+   "diagram": "d2",
+   "element": "mcp_instantie_pf_common_ground_lab_nl_bouwt_",
+   "x": 290,
+   "y": 170
+  },
+  {
+   "diagram": "d2",
+   "element": "mcp_pf_sh_deploy_git_pull_images_bouwen_hers",
+   "x": 40,
+   "y": 300
+  },
+  {
+   "diagram": "d3",
+   "element": "mcp_vps_docker",
+   "x": 40,
+   "y": 40
+  },
+  {
+   "diagram": "d3",
+   "element": "mcp_caddy_reverse_proxy_let_s_encrypt",
+   "x": 290,
+   "y": 40
+  },
+  {
+   "diagram": "d3",
+   "element": "mcp_instantie_app_omnium_ide_nl",
+   "x": 40,
+   "y": 170
+  },
+  {
+   "diagram": "d3",
+   "element": "mcp_instantie_pf_common_ground_lab_nl_bouwt_",
+   "x": 290,
+   "y": 170
+  },
+  {
+   "diagram": "d3",
+   "element": "mcp_docker_hub_images_markwestbroek",
+   "x": 40,
+   "y": 300
+  },
+  {
+   "diagram": "d3",
+   "element": "mcp_github_bron_tags_studio_en_api",
+   "x": 290,
+   "y": 300
+  }
+ ]
+}

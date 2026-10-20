@@ -59,17 +59,26 @@ kan in de Studio, of met `posities` (`naast`/`kant`) via MCP.
 
 ## Deelbeelden en doorklikken (20-10)
 
-Mark: te veel elementen op één plaat. Daarom deelbeelden in "2 Componenten" (plan
-`10-deelbeelden.json`): voor de technologie *Uitrol pf-instantie*, *App-instantie: frontend en
-backend*, *Infrastructuur en diensten*; voor de applicatielaag *Omnium Studio (frontend)*, *Go-API
-(backend)*, *Interfaces, services en externe systemen*. Dezelfde elementen op meer views; niets
-onder een element gehangen — diagrammen onder een element (uitwerking) zijn in ArchiMate-tools de
-uitzondering voor gedrag (use case-realisatie, subproces), statische views staan los (EA, Archi).
-Navigatie via **verwijst naar** op het element (EA-composite, gebouwd 20-10 door OMNIUM-UI, main
-328e44be): Omnium Studio → *Omnium Studio (frontend)*, Go-API → *Go-API (backend)*, elke capability →
-*Capabilities gerealiseerd door componenten* (plannen 11 en 12). De view-reference op het canvas
-(Archi-stijl) volgt via M3-MOF. Open: de technologie herindelen naar doel (Gebruik, Uitrol app,
-Uitrol pf, Instanties) en het componentenoverzicht met groupings en verborgen compositielijnen.
+Mark: te veel elementen op één plaat, en diagrammen horen niet onder elementen (in EA en Archi
+is dat de uitzondering voor gedrag: use case-realisatie, subproces; statische views staan los).
+Daarom views in "2 Componenten", met dezelfde elementen op meer views, naast de twee totaalkaarten:
+
+- **Technologie naar doel** (plan `13-technologie-doel.json`): *Gebruik (runtime) van een instantie*
+  (gebruiker → browser → internet → HTTPS/Caddy → instantie, met groupings Frontend en Backend),
+  *Uitrol app.omnium-ide.nl (images van Docker Hub)* en *Uitrol pf.common-ground-lab.nl (bouwt uit
+  bron)* (beheerder/ontwikkelaar, GitHub, Docker Hub, update.sh/pf.sh, NAS), *Instanties op de VPS*.
+  Uitrollen en gebruiken zijn verschillende actoren, dus verschillende views.
+- **Applicatielaag in lagen van grofheid** (plan `14-applicatie-grofheid.json`):
+  *Hoofdcomponenten en interfaces* (Studio, Go-API, render-svc, MCP-server met hun interfaces,
+  services en de externe systemen; geen compositie) en vier functionele views langs de
+  use case-gebieden (modelleren/transformeren/importeren, registreren/lezen/genereren,
+  samenwerken/AI-hulp, toegang/notificeren/renderen/meldingen) met daarin de compositie.
+- Niets wordt verborgen (Mark: alleen als het heel duidelijk is). Een *grouping* is een
+  ArchiMate-element dat andere elementen samenneemt (hier FE en BE), via aggregatie.
+- Navigatie via **verwijst naar** op het element (EA-composite, OMNIUM-UI 20-10, main 328e44be):
+  Studio en Go-API → *Hoofdcomponenten en interfaces*, elke capability → *Capabilities
+  gerealiseerd door componenten* (plannen 12 en 15). De view-reference op het canvas (Archi-stijl)
+  volgt via M3-MOF.
 
 ## Aanvullen per onderwerp
 
