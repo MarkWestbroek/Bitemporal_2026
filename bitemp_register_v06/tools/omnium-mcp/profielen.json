@@ -2081,7 +2081,8 @@
      "label": "Lagen",
      "renderer": "leesvolgorde",
      "richting": "TB",
-     "rijen": "laag"
+     "rijen": "laag",
+     "maxPerRij": 6
     }
    ],
    "facetten": {

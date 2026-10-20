@@ -332,6 +332,8 @@
  * @property {string} [secundairUit]       - eigenschap op een verbinding die een beginpunt primair
  *   maakt (use case: "primair", Cockburn — Mark 18-10). Een beginpunt zonder zo'n verbinding is
  *   secundair en komt achteraan; staat de eigenschap nergens, dan `secundairAchteraan` (vuistregel).
+ * @property {number} [maxPerRij]           - hoogstens zoveel elementen naast elkaar in één laag; meer
+ *   slaat om in een volgende rij (ArchiMate: 6 — anders wordt een volle laag één lange strook)
  * @property {number} [kaderKolommen]       - in een container hoogstens zoveel kolommen langs de
  *   leesrichting: wat verbonden is met iets buiten het kader vooraan, de rest erachter (use case:
  *   2 — de use cases staand, include/extend-doelen in de tweede kolom)
@@ -354,6 +356,7 @@
  * @property {string[][]} [lagen]   - vaste lagen op type, in plaats van de stroom (ArchiMate)
  * @property {boolean} [secundairAchteraan] - zie LayoutStijl.secundairAchteraan
  * @property {number} [kaderKolommen] - zie LayoutStijl.kaderKolommen
+ * @property {number} [maxPerRij] - zie LayoutStijl.maxPerRij
  * @property {string} [secundairUit] - zie LayoutStijl.secundairUit
  * @property {Record<string, number[]>} [minimaal] - type-id → [breedte, hoogte] (uit ElementType.minBreedte/minHoogte)
  */
