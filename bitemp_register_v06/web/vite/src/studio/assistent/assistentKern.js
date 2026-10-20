@@ -155,7 +155,9 @@ export function bestaandInMap(stand, mapId, profielIds = Object.keys(stand.profi
       elementen: [...ids].map((id) => {
         const velden = (els[id].compartimenten || []).flatMap((c) => (c.velden || []).map((v) => v.naam)).filter(Boolean).slice(0, 30);
         const plek = plekken(id);
-        return { id, type: els[id].elementType, naam: els[id].naam || "", diagrammen: opDiagrammen(id), ...(Object.keys(plek).length ? { plek } : {}), ...(velden.length ? { velden } : {}) };
+        const vn = els[id].data?.verwijstNaar;
+        const verwijst = vn && typeof vn === "object" ? vn.diagramId : null;
+        return { id, type: els[id].elementType, naam: els[id].naam || "", diagrammen: opDiagrammen(id), ...(Object.keys(plek).length ? { plek } : {}), ...(velden.length ? { velden } : {}), ...(verwijst ? { verwijstNaar: verwijst } : {}) };
       }),
       relaties,
     });
@@ -237,6 +239,7 @@ const SCHEMA_PLAN = {
           diagram: { type: "string", description: "sleutel van het diagram waar het element op komt" },
           in: { type: "string", description: "sleutel of id van de container (systeemkader, partitie) waar het in ligt" },
           bestaand: { type: "string", description: "id van een bestaand element (hernoemen of op een diagram zetten)" },
+          verwijstNaar: { type: "string", description: "id of sleutel van een diagram waar dit element naar doorklikt" },
           eigenschappen: { type: "object", additionalProperties: { type: "string" } },
           velden: {
             type: "array",
@@ -355,7 +358,7 @@ export function bestaandTekst(bestaand = [], { max = 200 } = {}) {
         const p = e.plek?.[d];
         return p ? `${d} @ ${p[0]},${p[1]}${p.length > 2 ? ` (${p[2]}×${p[3]})` : ""}` : d;
       });
-      regels.push(`  element ${e.id}: ${e.type} "${e.naam}"${op.length ? ` op ${op.join(", ")}` : ""}${e.in ? ` in ${e.in}` : ""}${e.velden?.length ? ` — velden: ${e.velden.join(", ")}` : ""}`);
+      regels.push(`  element ${e.id}: ${e.type} "${e.naam}"${op.length ? ` op ${op.join(", ")}` : ""}${e.in ? ` in ${e.in}` : ""}${e.velden?.length ? ` — velden: ${e.velden.join(", ")}` : ""}${e.verwijstNaar ? ` → verwijst naar ${e.verwijstNaar}` : ""}`);
     }
     for (const r of (p.relaties || []).slice(0, max)) regels.push(`  relatie ${r.id}: ${r.type} ${r.bron} → ${r.doel}`);
   }
@@ -365,7 +368,7 @@ export function bestaandTekst(bestaand = [], { max = 200 } = {}) {
 const PLAN_VORM =
   '{"uitleg": "…", ' +
   '"diagrammen": [{"sleutel": "d1", "taal": "<profiel-id>", "naam": "…", "map": ""}, {"sleutel": "d2", "bestaand": "<diagram-id>"}], ' +
-  '"elementen": [{"sleutel": "u1", "type": "<elementtype-id>", "naam": "…", "diagram": "d1", "in": "<container>"}, {"bestaand": "<element-id>", "naam": "<nieuwe naam, optioneel>", "diagram": "d1", "in": "<container, optioneel>", "velden": [{"naam": "…", "type": "…"}]}], ' +
+  '"elementen": [{"sleutel": "u1", "type": "<elementtype-id>", "naam": "…", "diagram": "d1", "in": "<container>"}, {"bestaand": "<element-id>", "naam": "<nieuwe naam, optioneel>", "diagram": "d1", "in": "<container, optioneel>", "velden": [{"naam": "…", "type": "…"}], "verwijstNaar": "<diagram-id of sleutel, optioneel>"}], ' +
   '"connectoren": [{"type": "<relatietype-id>", "bron": "<sleutel of bestaand id>", "doel": "<sleutel of bestaand id>", "eigenschappen": {}}], ' +
   '"verbanden": [{"van": "<sleutel of id>", "naar": "<sleutel of id>", "soort": "realiseert"}], ' +
   '"opstelling": [{"diagram": "<diagram-id of sleutel>", "actie": "naast-elkaar", "elementen": ["<id of sleutel>"]}], ' +
@@ -391,6 +394,7 @@ export function vraagVoorOpdracht(talen, opdracht, { mapNaam = "", submappen = [
     "- Een nieuw element krijgt een korte unieke `sleutel` (u1, a1, …) en komt op een diagram (`diagram`: sleutel van een diagram in `diagrammen`). Het diagram bepaalt de taal.",
     "- Verwijs naar iets dat al bestaat met zijn id (in `bron`, `doel`, `in`, `van`, `naar`, of als `bestaand`). Wil je een bestaand element op een nieuw diagram, of het hernoemen, zet het dan in `elementen` met `bestaand`.",
     "- Een relatie tussen bestaande elementen: alleen een connector met hun ids; geen nieuw diagram nodig.",
+    "- Doorklikken: `verwijstNaar` op een element (nieuw of bestaand) met het id of de sleutel van een diagram — ook in een andere taal. Dubbelklik op het element opent dan dat diagram (zoals een deelbeeld onder een component).",
     "- Velden (attributen van een klasse, waarden van een enumeratie): `velden` op het element, nieuw of bestaand ({\"bestaand\": \"<id>\", \"velden\": [{\"naam\": \"…\", \"type\": \"…\"}]}); bij waarden alleen de naam. Bestaande velden niet opnieuw.",
     "- Iets in een container zetten (bv. een use case in een systeemkader): `in` met de sleutel of het id van de container — ook voor een bestaand element ({\"bestaand\": \"<id>\", \"in\": \"<container>\"}). Zeg in de uitleg alleen wat het plan echt doet.",
     "- Nieuwe diagrammen in een submap: zet `map` (naam); een bestaande submap met die naam wordt hergebruikt.",
@@ -546,6 +550,21 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
   const opDiagram = [];
   const lidVan = []; // bestaande elementen die in een container gaan
   const veldenBij = []; // velden erbij op bestaande elementen
+  // Doorklik (M3 verwijstNaar, 20-10): element → diagram uit het plan of een bestaand diagram.
+  const verwijzingen = [];
+  const diagramVerwijzing = (ref) => {
+    const r = tekst(ref);
+    if (!r) return null;
+    if (diagramVan.has(r)) return { sleutel: r };
+    const b = bestaandDi.get(r);
+    return b ? { id: r, profielId: b.profielId, naam: b.naam } : null;
+  };
+  const verwijzingVan = (doel, ruweRef, naam) => {
+    if (!ruweRef) return;
+    const naar = diagramVerwijzing(ruweRef);
+    if (!naar) { problemen.push(`${naam}: diagram "${ruweRef}" om naar door te klikken bestaat niet (of valt buiten deze map).`); return; }
+    verwijzingen.push({ ...doel, naar });
+  };
   /** Velden uit het plan → {compartiment, fieldType, soort, velden:[{naam, type}]}; null als er niets (geldigs) is. */
   const veldenUitPlan = (ruw, s, type, naam) => {
     if (!Array.isArray(ruw) || !ruw.length) return null;
@@ -573,6 +592,7 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
       // Velden erbij (melding #4: waarden aan een enumeratie).
       const vb = veldenUitPlan(e.velden, taalVan.get(b.profielId), b.type, b.naam);
       if (vb) veldenBij.push({ profielId: b.profielId, id, naam: b.naam, ...vb });
+      verwijzingVan({ element: { id }, profielId: b.profielId, naam: b.naam }, e.verwijstNaar, b.naam);
       continue;
     }
     const sleutel = tekst(e?.sleutel);
@@ -590,6 +610,7 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     const vn = veldenUitPlan(e?.velden, s, et.id, tekst(e.naam));
     const uit = { sleutel, profielId: dia.profielId, type: et.id, naam: tekst(e.naam), diagram: dia.sleutel, in: tekst(e.in), data: filterEigenschappen(e.eigenschappen, et.eigenschappen), ...(vn ? { velden: vn } : {}) };
     elementen.push(uit); nieuwVan.set(sleutel, uit);
+    verwijzingVan({ element: { nieuw: sleutel }, profielId: dia.profielId, naam: uit.naam }, e?.verwijstNaar, uit.naam || sleutel);
   }
 
   /** Verwijzing → {nieuw, profielId, type} of {id, profielId, type}; null als onbekend. */
@@ -790,6 +811,7 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     elementen,
     hernoemd,
     veldenBij,
+    verwijzingen,
     opDiagram,
     leden,
     opstelling,

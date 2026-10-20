@@ -505,3 +505,24 @@ test("layout als opstel-actie: alleen als de taal hem kent; de strategie levert 
   const w2 = maakWijziging(plan, stand, { mapId: null, samenvattingen: [ucMetLayout], nu: 1 });
   assert.match(w2.nietUitgevoerd[0], /niet beschikbaar/);
 });
+
+test("verwijstNaar (M3, 20-10): een bestaande use case klikt door naar een activiteitendiagram (andere taal)", () => {
+  const stand = {
+    mappen: {}, plaatsing: {},
+    profielen: {
+      usecase05: { elements: { u1: { id: "u1", naam: "Leen boek", elementType: "usecase" } }, diagrams: { d_uc: { id: "d_uc", naam: "Bibliotheek", nodes: [{ elementId: "u1", position: { x: 0, y: 0 } }] } } },
+      activity05: { elements: { b1: { id: "b1", naam: "", elementType: "begin" } }, diagrams: { d_ad: { id: "d_ad", naam: "Uitlenen", nodes: [{ elementId: "b1", position: { x: 0, y: 0 } }] } } },
+    },
+  };
+  const b = bestaandInMap(stand, null, ["usecase05", "activity05"]);
+  const plan = controleerPlan({ elementen: [{ bestaand: "u1", verwijstNaar: "d_ad" }, { bestaand: "u1", verwijstNaar: "bestaat_niet" }] }, [uc, ad], b);
+  assert.equal(plan.verwijzingen.length, 1);
+  assert.match(plan.problemen[0], /bestaat niet/);
+  const w = maakWijziging(plan, stand, { mapId: null, samenvattingen: [uc, ad], nu: 1 });
+  assert.deepEqual(w.profielen.usecase05.elements.u1.data.verwijstNaar, { profielId: "activity05", diagramId: "d_ad" });
+  assert.match(w.samenvatting, /1 doorklik/);
+  // Daarna ziet de AI de verwijzing bij WAT ER AL IS.
+  stand.profielen.usecase05.elements.u1.data = { verwijstNaar: { profielId: "activity05", diagramId: "d_ad" } };
+  const v = vraagVoorOpdracht([uc, ad], "x", { bestaand: bestaandInMap(stand, null, ["usecase05", "activity05"]) });
+  assert.match(v.systeem, /u1: usecase "Leen boek" op d_uc @ 0,0 → verwijst naar d_ad/);
+});

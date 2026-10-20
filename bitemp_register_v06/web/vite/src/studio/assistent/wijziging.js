@@ -148,6 +148,17 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     const el = elementVan(h.profielId, h.id);
     if (el) bij(h.profielId).elements[h.id] = { ...el, naam: h.naam };
   }
+  // Doorklik (M3 verwijstNaar, 20-10): data.verwijstNaar = {profielId, diagramId}, ook naar een
+  // diagram in een andere taal of een diagram dat dit plan pas maakt.
+  let nVerwijzingen = 0;
+  for (const v of plan.verwijzingen || []) {
+    const elId = ref(v.element);
+    const el = elementVan(v.profielId, elId);
+    const d = v.naar.sleutel ? diagramId.get(v.naar.sleutel) : { profielId: v.naar.profielId, id: v.naar.id };
+    if (!el || !d?.id) continue;
+    bij(v.profielId).elements[elId] = { ...el, data: { ...(el.data || {}), verwijstNaar: { profielId: d.profielId, diagramId: d.id } } };
+    nVerwijzingen += 1;
+  }
 
   // Lidmaatschap → container-connector ("bevat") + groep voor de opstelling.
   const groepVan = new Map(); // elementId → containerId
@@ -476,6 +487,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   if (nEl) delen.push(`${nEl} element${nEl === 1 ? "" : "en"}`);
   if (nRel) delen.push(`${nRel} relatie${nRel === 1 ? "" : "s"}`);
   if (plan.hernoemd.length) delen.push(`${plan.hernoemd.length} hernoemd`);
+  if (nVerwijzingen) delen.push(`${nVerwijzingen} doorklik${nVerwijzingen === 1 ? "" : "ken"}`);
   if (nVelden) delen.push(`${nVelden} veld${nVelden === 1 ? "" : "en"}`);
   if (plan.leden?.length) delen.push(`${plan.leden.length} in een container gezet`);
   if (uitgelijnd.size) delen.push(`${uitgelijnd.size === 1 ? "diagram" : `${uitgelijnd.size} diagrammen`} opnieuw opgesteld`);
