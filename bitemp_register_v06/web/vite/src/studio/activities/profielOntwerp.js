@@ -34,7 +34,7 @@ const EIGENSCHAP_VELDEN = [
   // M3 PropertyType.betekenis (16-10): wat de eigenschap voor de motor betekent.
   { key: "betekenis", label: "betekenis (afgeleid/kardinaliteit/standaardwaarde/geordend/nietUniek/alleenLezen/id/zichtbaarheid/beschrijving)", datatype: "string" },
 ];
-const BETEKENISSEN = new Set(["afgeleid", "kardinaliteit", "standaardwaarde", "geordend", "nietUniek", "alleenLezen", "id", "zichtbaarheid", "beschrijving"]);
+const BETEKENISSEN = new Set(["afgeleid", "kardinaliteit", "standaardwaarde", "geordend", "nietUniek", "alleenLezen", "id", "zichtbaarheid", "beschrijving", "verwijzing"]);
 
 /** @type {Object} descriptor-kern van de ontwerper zelf (hooks op id). */
 export const profielOntwerpKern = {

@@ -191,16 +191,22 @@ function KeuzeEditor({ regel, waarde, onChange }) {
  */
 function DiagramVerwijzingEditor({ regel, waarde, onChange, context }) {
   const diagrams = Object.values(context?.diagrams || {});
-  const bestaat = !waarde || diagrams.some((d) => d.id === waarde);
+  // Waarde: kale diagram-id (dit profiel) of {profielId, diagramId} (M3 verwijstNaar,
+  // 2026-10-20). Deze keuzelijst kiest binnen het eigen profiel; een verwijzing naar
+  // een ander profiel blijft staan en wordt getoond (de kiezer over alle profielen is UI-werk).
+  const id = typeof waarde === "object" && waarde ? waarde.diagramId : waarde;
+  const anderProfiel = typeof waarde === "object" && waarde?.profielId && !diagrams.some((d) => d.id === waarde.diagramId);
+  const bestaat = !id || anderProfiel || diagrams.some((d) => d.id === id);
   return (
     <select
-      value={waarde || ""}
+      value={id || ""}
       title={regel.label || regel.key}
       onChange={(e) => onChange(e.target.value || null)}
       style={{ flex: 1, minWidth: 0, font: "inherit", fontSize: 12, padding: "3px 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)" }}
     >
       <option value="">(geen)</option>
-      {!bestaat && <option value={waarde}>(verwijderd diagram: {waarde})</option>}
+      {anderProfiel && <option value={id}>(in {waarde.profielId}: {id})</option>}
+      {!bestaat && <option value={id}>(verwijderd diagram: {id})</option>}
       {diagrams.map((d) => (
         <option key={d.id} value={d.id}>{d.naam || d.id}</option>
       ))}

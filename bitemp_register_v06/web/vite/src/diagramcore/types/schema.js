@@ -47,13 +47,16 @@
  * @property {string} key                  - waar de waarde leeft (veld.naam of data[key])
  * @property {string} [label]
  * @property {string} [datatype]           - "string" (default) | "tekst" | "boolean" | "colour" |
- *   "keuze" | "diagram-verwijzing" | profiel-eigen
+ *   "keuze" | "diagram-verwijzing" | profiel-eigen. Waarde van "diagram-verwijzing":
+ *   `{profielId, diagramId}` (ook een ander profiel), of een kale diagram-id = dit profiel
  * @property {{waarde: string, label: string}[]} [opties] - bij datatype "keuze":
  *   de vaste lijst (bv. BPMN-event-soorten, ArchiMate-access lezen/schrijven)
  * @property {boolean} [verplicht]
  * @property {string} [placeholder]        - voorbeeldtekst in een leeg invoerveld
  * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
- * @property {"afgeleid"|"kardinaliteit"|"standaardwaarde"|"geordend"|"nietUniek"|"alleenLezen"|"id"|"zichtbaarheid"|"beschrijving"} [betekenis]
+ * @property {"afgeleid"|"kardinaliteit"|"standaardwaarde"|"geordend"|"nietUniek"|"alleenLezen"|"id"|"zichtbaarheid"|"beschrijving"|"verwijzing"} [betekenis]
+ *   ("verwijzing", 2026-10-20: deze diagram-verwijzing ís de doorklik van het element — de
+ *   gedragsverwijzing; de motor zet dan geen vaste `verwijstNaar` erbij, zie model/verwijstNaar.js)
  *   - wat deze eigenschap *betekent* voor de motor, los van haar naam
  *   (2026-10-10, UML 2.5.1 Property; zie diagramcore/model/afgeleid.js):
  *   `"afgeleid"` (boolean) → "/" vóór de naam, ook bij een relatie — zo telt
@@ -126,6 +129,11 @@
  *   shape, kleur, compartments, properties, hooks, bron/doel, randElement … van
  *   de ouder komen mee, het kind overschrijft per sleutel/id. In de
  *   profiel-ontwerper is dit de generalisatie-pijl tussen twee elementtypen.
+ * @property {boolean} [verwijstNaar]      - `false`: dit type heeft geen vaste doorklik
+ *   (M3, 2026-10-20). Standaard heeft elke knoop `data.verwijstNaar = {profielId, diagramId}`:
+ *   dubbelklik opent dat diagram, ook in een ander profiel (EA composite element). Connectoren
+ *   en notities niet. Een property met `betekenis: "verwijzing"` (de gedragsverwijzing) neemt
+ *   zijn plaats in. Zie diagramcore/model/verwijstNaar.js.
  * @property {boolean} [beschrijving]      - `false`: dit type heeft geen vaste
  *   M3-beschrijving (notitie-lijn, lidmaatschap). Een notitie (vorm `note`)
  *   heeft er sowieso geen: zij ís een tekst. Zie diagramcore/model/beschrijving.js.
@@ -223,7 +231,9 @@
  *   (gedragsdiagram-primitief §3.2): dit element kan naar een ander diagram
  *   verwijzen (submachine state, BPMN call-activity). De verwijzing leeft in
  *   element.data.gedragDiagramId (property-datatype "diagram-verwijzing");
- *   dubbelklik op de node opent dat diagram (nieuwe tab in Modelleren).
+ *   dubbelklik op de node opent dat diagram (nieuwe tab in Modelleren). Sinds 2026-10-20
+ *   een betekenis-variant van de generieke doorklik: de property draagt
+ *   `betekenis: "verwijzing"` en vervangt daarmee `verwijstNaar` (model/verwijstNaar.js).
  * @property {boolean} [uitwerking] - dit elementtype kan een **uitwerking** dragen
  *   (2026-10-15, Mark: "een use case als map in de boom, met het AD eronder"): in de
  *   projectboom hangen diagrammen en elementen — uit welke taal dan ook — onder zo'n element

@@ -140,7 +140,7 @@ const elementTypes = [
     kleur: "#e0f2fe",
     gedragsVerwijzing: true,
     properties: [
-      { key: "gedragDiagramId", label: "verwijst naar", datatype: "diagram-verwijzing" },
+      { key: "gedragDiagramId", label: "verwijst naar", datatype: "diagram-verwijzing", betekenis: "verwijzing" },
       KLEUR_VELD,
     ],
   },
