@@ -9,6 +9,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **M3: doorklikken naar een diagram, ook in een ander profiel** (20-10, Mark): elke knoop heeft
+  de vaste eigenschap `verwijstNaar` (`{profielId, diagramId}`), zoals EA's composite element —
+  in de inspector achteraan, naast de vaste beschrijving vooraan. Niet op connectoren en notities;
+  een type zet hem uit met `verwijstNaar: false`. De gedragsverwijzing (`gedragDiagramId` bij de
+  activity-aanroep, BPMN en state machine) is er een betekenis-variant van: die property draagt
+  `betekenis: "verwijzing"` en ís dan de doorklik, zonder tweede veld. `diagramcore/model/
+  verwijstNaar.js` (`doorklikVan`, `normaliseerVerwijzing`); een kale diagram-id blijft "dit
+  profiel". De kiezer over alle profielen, het openen in een andere activiteit, de ⧉-badge en
+  "Open …" volgen bij OMNIUM-UI. Ontwerp: `docs/plans/2026-10-20 Notities, constraints en
+  doorklikken — het superprofiel (ontwerp).md`.
 - **Use case: doel, trigger, pre- en postconditie, flow of events; primaire actor** (18-10, Mark;
   naar Cockburn): een use case heeft nu `doel`, `trigger` (met soort: actor, tijd, gebeurtenis),
   `preconditie`, `postconditie` en een vrij `flowOfEvents`; de associatie actor–use case heeft

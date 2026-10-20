@@ -24,6 +24,7 @@ import {
   VerwijzingsKiezer,
 } from "./propertyTypeEditors.jsx";
 import { metBeschrijving } from "../model/beschrijving.js";
+import { metVerwijstNaar } from "../model/verwijstNaar.js";
 // Eigen opmaak, ook zonder open diagram: de stylesheet laadde alleen met de
 // canvas mee, dus zonder diagram vielen de rijen terug op de browser-
 // standaard (smal tekstvak, labels erboven — gemeld 2026-10-12).
@@ -242,8 +243,9 @@ export default function ElementInspector({
       </div>
 
       {/* PropertyTypes van het ElementType (tekst, expressie, kleur, …), met
-          vooraan de vaste M3-beschrijving (diagramcore/model/beschrijving.js). */}
-      {metBeschrijving(elementType?.properties, elementType).map((regel) => (
+          vooraan de vaste M3-beschrijving (diagramcore/model/beschrijving.js)
+          en achteraan de vaste doorklik (model/verwijstNaar.js). */}
+      {metVerwijstNaar(metBeschrijving(elementType?.properties, elementType), elementType).map((regel) => (
         <div className="dc-inspector-rij" key={regel.key}>
           <label className="dc-veldlabel">{regel.label || regel.key}</label>
           <PropertyWidget

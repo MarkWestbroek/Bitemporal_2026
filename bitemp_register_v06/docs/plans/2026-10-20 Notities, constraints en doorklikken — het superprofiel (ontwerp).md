@@ -108,6 +108,12 @@ verwijzen, zoals EA's composite element ("child diagram").
 - Het datatype `diagram-verwijzing` accepteert dan ook het object
   `{profielId, diagramId}`; een kale string blijft "dit profiel".
 - **Metametamodel:** Element —verwijstNaar→ 0..1 Diagram.
+- **Gebouwd (20-10, M3-MOF, branch `feat/m3-verwijstnaar`):** `model/verwijstNaar.js`
+  (VERWIJST_NAAR, heeftVerwijstNaar, metVerwijstNaar, normaliseerVerwijzing, doorklikVan),
+  schema.js, de inspector toont hem, de editor verdraagt de objectvorm, `betekenis:
+  "verwijzing"` op de vier gedragDiagramId-properties. Open: de V3-export van het canonieke
+  model heeft er geen plek voor (verwijstNaar reist niet mee door V3); EA's composite element
+  inlezen.
 
 ## 5. Migratie en EA
 

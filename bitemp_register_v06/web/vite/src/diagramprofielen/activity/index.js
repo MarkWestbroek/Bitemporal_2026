@@ -81,7 +81,7 @@ const elementTypes = [
     // CallBehaviorAction (§3.2): verwijst naar een ander activity-diagram.
     gedragsVerwijzing: true,
     properties: [
-      { key: "gedragDiagramId", label: "verwijst naar", datatype: "diagram-verwijzing" },
+      { key: "gedragDiagramId", label: "verwijst naar", datatype: "diagram-verwijzing", betekenis: "verwijzing" },
       KLEUR_VELD,
     ],
   },
@@ -99,7 +99,7 @@ const elementTypes = [
     kleur: "#ede9fe",
     gedragsVerwijzing: true,
     properties: [
-      { key: "gedragDiagramId", label: "verwijst naar (sequence)", datatype: "diagram-verwijzing" },
+      { key: "gedragDiagramId", label: "verwijst naar (sequence)", datatype: "diagram-verwijzing", betekenis: "verwijzing" },
       KLEUR_VELD,
     ],
   },

@@ -115,7 +115,7 @@ const elementTypes = [
     // dubbelklik opent het (de node toont een ⧉-badge).
     gedragsVerwijzing: true,
     properties: [
-      { key: "gedragDiagramId", label: "verwijst naar", datatype: "diagram-verwijzing" },
+      { key: "gedragDiagramId", label: "verwijst naar", datatype: "diagram-verwijzing", betekenis: "verwijzing" },
       KLEUR_VELD,
     ],
   },

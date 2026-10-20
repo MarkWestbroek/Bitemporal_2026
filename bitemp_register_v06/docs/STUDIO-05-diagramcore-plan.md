@@ -6,7 +6,14 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde (2026-10-18, branch `feat/m3-aard-facetten`, M3-MOF): de
+  fase 7 (register). Laatste ronde (2026-10-20, branch `feat/m3-verwijstnaar`, M3-MOF): de
+  vaste M3-eigenschap **`verwijstNaar`** (`{profielId, diagramId}`, 0..1) op elke knoop: de
+  doorklik naar een diagram, ook in een ander profiel (EA composite element). Patroon van de
+  beschrijving: `model/verwijstNaar.js` (metVerwijstNaar, doorklikVan), opt-out
+  `ElementType.verwijstNaar: false`, en een property met `betekenis: "verwijzing"` (de
+  gedragsverwijzing `gedragDiagramId`) neemt zijn plaats in. Navigatie en kiezer: OMNIUM-UI.
+  Vervolg: het superprofiel (notitie, constraint, annotatielijn, diagramverwijzing; ontwerp
+  20-10). Ronde daarvoor (2026-10-18, branch `feat/m3-aard-facetten`, M3-MOF): de
   auto-layout gescheiden in **betekenis** en **weergave**, zoals MOF en OMG Diagram Definition dat
   doen (DD kent geen layoutalgoritme; alleen het resultaat, posities en maten, is DI).
   Betekenis: `ElementType.aard` (connector: stroom | specialisatie | realisatie | bericht |
