@@ -245,6 +245,14 @@ te wijzigen.
 > nog geen generieke layout. Debuglog van de hiërarchische modus alleen met `opts.debug`. Tests:
 > `canoniek-uml/layouts.test.js`, e2e `31-studio-auto-layout`.
 >
+> **Lagen met afhankelijkheden (2026-10-20, Mark):** in de lagen-modus (`regels.lagen`, ArchiMate
+> `rijen: "laag"`) is de rang nu `begin(laag) + sublaag`: binnen een hoofdlaag de langste weg over de
+> pijlen tussen elementen van díe laag (cycli in vaste volgorde gebroken); elke hoofdlaag krijgt
+> zoveel rijen als hij diep is. `LayoutStijl.maxPerRij` (ArchiMate 6) laat een te volle rij omslaan
+> (volgorde blijft). Getoetst op "Technologie en uitrol (VPS)" (was één strook van 3808×118, nu een
+> boom VPS → Caddy/Compose/NAS → instanties → containers) en "Applicatiecomponenten en
+> interfaces". Open: lijnen die over lagen springen lopen soms door een element (tussenknopen).
+>
 > **Use case-layout (2026-10-18, meting ARCH-PROJECT):** `legLeesvolgordeUit` draait de kern
 > (`legEenmaal`) vier keer: elke ronde krijgt per element een volgorde-hint = het gemiddelde dwars-
 > midden van zijn buren (alle verbindingen, ook over kadergrenzen) uit de vorige ronde. Daarna

@@ -191,8 +191,44 @@ function legEenmaal({ knopen, verbindingen, regels = {}, richting, afstanden = {
     for (const p of lokalePijlen) { uit.get(p.van).push(p.naar); inn.get(p.naar).push(p.van); }
     const laag = new Map();
     if (laagVanType.size) {
+      // Vaste lagen (ArchiMate: business, applicatie, technologie, …), en binnen een laag de
+      // relaties: wie samenstelt, toewijst of voorgaat staat boven (Mark 20-10: "de afhankelijkheid
+      // volgen, dan weet je iets over boven en onder"). Langste weg per laag, cycli in vaste volgorde
+      // gebroken; de lagen schuiven op naar gelang hoeveel rijen een laag nodig heeft.
       const max = Math.max(...laagVanType.values());
-      for (const id of ids) laag.set(id, laagVanType.get(perId.get(id)?.type) ?? max + 1);
+      const hoofd = new Map(ids.map((id) => [id, laagVanType.get(perId.get(id)?.type) ?? max + 1]));
+      const sub = new Map(ids.map((id) => [id, 0]));
+      const stand = new Map();
+      const terug = new Set();
+      const zelfde = (a, b) => hoofd.get(a) === hoofd.get(b);
+      const bezoek = (id) => {
+        stand.set(id, 1);
+        for (const n of uit.get(id)) {
+          if (!zelfde(id, n)) continue;
+          if (stand.get(n) === 1) terug.add(`${id}>${n}`);
+          else if (!stand.has(n)) bezoek(n);
+        }
+        stand.set(id, 2);
+      };
+      for (const w of [...volgorde.filter((id) => !inn.get(id).some((v) => zelfde(v, id))), ...volgorde]) if (!stand.has(w)) bezoek(w);
+      const inGraad = new Map(ids.map((id) => [id, 0]));
+      for (const id of ids) for (const n of uit.get(id)) if (zelfde(id, n) && !terug.has(`${id}>${n}`)) inGraad.set(n, inGraad.get(n) + 1);
+      const rij = volgorde.filter((id) => inGraad.get(id) === 0);
+      while (rij.length) {
+        const id = rij.shift();
+        for (const n of uit.get(id)) {
+          if (!zelfde(id, n) || terug.has(`${id}>${n}`)) continue;
+          sub.set(n, Math.max(sub.get(n), sub.get(id) + 1));
+          inGraad.set(n, inGraad.get(n) - 1);
+          if (inGraad.get(n) === 0) rij.push(n);
+        }
+      }
+      const diepte = new Map();
+      for (const id of ids) diepte.set(hoofd.get(id), Math.max(diepte.get(hoofd.get(id)) ?? 0, sub.get(id) + 1));
+      const begin = new Map();
+      let n = 0;
+      for (const h of [...diepte.keys()].sort((a, b) => a - b)) { begin.set(h, n); n += diepte.get(h); }
+      for (const id of ids) laag.set(id, begin.get(hoofd.get(id)) + sub.get(id));
     } else {
       // Cycli breken: DFS vanaf de beginpunten (start-typen, dan zonder inkomend), in vaste volgorde.
       const wortels = [...volgorde.filter((id) => start.has(perId.get(id)?.type)), ...volgorde.filter((id) => !inn.get(id).length)];
@@ -271,7 +307,10 @@ function legEenmaal({ knopen, verbindingen, regels = {}, richting, afstanden = {
         l.forEach((id, i) => plek.set(id, i));
       }
     }
-    return lagen.filter((l) => l.length);
+    // Een laag met meer dan `maxPerRij` elementen slaat om in meer rijen (volgorde blijft), zodat
+    // een laag vol technologie geen strook van duizenden pixels wordt.
+    const per = regels.maxPerRij > 0 ? regels.maxPerRij : Infinity;
+    return lagen.filter((l) => l.length).flatMap((l) => (l.length <= per ? [l] : Array.from({ length: Math.ceil(l.length / per) }, (_, k) => l.slice(k * per, (k + 1) * per))));
   }
 
   /** Pijlen tussen directe kinderen van groep g. */
@@ -473,6 +512,7 @@ export function leesvolgordeLayouts(descriptor) {
       ...(stijl.secundairAchteraan ? { secundairAchteraan: true } : {}),
       ...(typeof stijl.secundairUit === "string" && stijl.secundairUit ? { secundairUit: stijl.secundairUit } : {}),
       ...(stijl.kaderKolommen > 0 ? { kaderKolommen: stijl.kaderKolommen } : {}),
+      ...(stijl.maxPerRij > 0 ? { maxPerRij: stijl.maxPerRij } : {}),
     };
     const standaard = RICHTINGEN.some(([r]) => r === regels.richting) ? regels.richting : "TB";
     const naam = stijl.id === "standaard" ? "Leesvolgorde" : stijl.label || stijl.id;

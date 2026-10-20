@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **ArchiMate-lagen volgen de afhankelijkheden** (20-10, Mark: "in de ene staat alles op één lijn;
+  in de andere zou de afhankelijkheid beter gevolgd kunnen worden"). Binnen een laag bepalen de
+  relaties boven en onder: wie samenstelt, toewijst of voorgaat staat boven. Een laag met meer dan
+  zes elementen naast elkaar slaat om in een volgende rij, in plaats van één lange strook.
+  Stijl-optie `maxPerRij`.
 - **M3: doorklikken naar een diagram, ook in een ander profiel** (20-10, Mark): elke knoop heeft
   de vaste eigenschap `verwijstNaar` (`{profielId, diagramId}`), zoals EA's composite element —
   in de inspector achteraan, naast de vaste beschrijving vooraan. Niet op connectoren en notities;

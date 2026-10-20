@@ -176,3 +176,17 @@ test("use case: 'primair' op de associatie wint van de vuistregel (secundairUit,
   const zonder = legLeesvolgordeUit({ knopen: ucKnopen(), verbindingen: ucVerbindingen, regels: { ...ucRegels, secundairUit: "primair" } }).posities;
   assert.ok(zonder.bank.x > zonder.sys.x && zonder.lid.x < zonder.sys.x);
 });
+
+test("lagen: binnen een laag bepalen de relaties boven en onder; een volle rij slaat om (Mark 20-10)", () => {
+  // Alles in de technologielaag: VPS ◆ instantie, instantie → container (toewijzing).
+  const knopen = [k("vps", "node"), k("inst", "node"), k("c1", "artifact"), k("c2", "artifact"), k("c3", "artifact"), k("app", "app-component")];
+  const verbindingen = [v("vps", "inst", "compositie"), v("inst", "c1", "toewijzing"), v("inst", "c2", "toewijzing"), v("inst", "c3", "toewijzing"), v("app", "c1", "bediening")];
+  const regels = { lagen: [["app-component"], ["node", "artifact"]] };
+  const { posities: p } = legLeesvolgordeUit({ knopen, verbindingen, regels });
+  assert.ok(p.app.y < p.vps.y, "applicatielaag boven technologie");
+  assert.ok(p.vps.y < p.inst.y && p.inst.y < p.c1.y, "binnen de laag: VPS, dan instantie, dan containers");
+  assert.equal(p.c1.y, p.c2.y);
+  // maxPerRij 2: drie containers worden twee rijen.
+  const r = legLeesvolgordeUit({ knopen, verbindingen, regels: { ...regels, maxPerRij: 2 } }).posities;
+  assert.equal(new Set(["c1", "c2", "c3"].map((c) => r[c].y)).size, 2);
+});

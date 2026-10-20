@@ -253,7 +253,7 @@ export const archimateDiagramType = {
   // volgorde van FACETTEN.laag — motivatie, strategie, business, applicatie, technologie, fysiek,
   // implementatie — los van de pijlrichting.
   facetten: FACETTEN,
-  layoutStijlen: [{ id: "lagen", label: "Lagen", renderer: "leesvolgorde", richting: "TB", rijen: "laag" }],
+  layoutStijlen: [{ id: "lagen", label: "Lagen", renderer: "leesvolgorde", richting: "TB", rijen: "laag", maxPerRij: 6 }],
 };
 
 let _teller = 0;

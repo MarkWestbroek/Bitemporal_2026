@@ -107,6 +107,7 @@ export function valideerLayoutStijl(dt, stijl) {
   if (stijl?.richting && !RICHTINGEN.includes(stijl.richting)) fouten.push(`${waar}: richting "${stijl.richting}" is geen ${RICHTINGEN.join("/")}`);
   // Stijl-opties van de renderer (18-10): kaderKolommen een geheel getal ≥ 1, secundairAchteraan ja/nee.
   if (stijl?.kaderKolommen !== undefined && !(Number.isInteger(stijl.kaderKolommen) && stijl.kaderKolommen >= 1)) fouten.push(`${waar}: kaderKolommen moet een geheel getal ≥ 1 zijn`);
+  if (stijl?.maxPerRij !== undefined && !(Number.isInteger(stijl.maxPerRij) && stijl.maxPerRij >= 1)) fouten.push(`${waar}: maxPerRij moet een geheel getal ≥ 1 zijn`);
   if (stijl?.secundairAchteraan !== undefined && typeof stijl.secundairAchteraan !== "boolean") fouten.push(`${waar}: secundairAchteraan moet true of false zijn`);
   if (stijl?.secundairUit !== undefined && !(typeof stijl.secundairUit === "string" && stijl.secundairUit)) fouten.push(`${waar}: secundairUit moet de naam van een eigenschap zijn`);
   for (const as of ["rijen", "kolommen"]) {
