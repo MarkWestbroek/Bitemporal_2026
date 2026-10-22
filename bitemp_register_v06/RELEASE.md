@@ -8,6 +8,26 @@
 
 ---
 
+## studio 0.24.0 (2026-10-23)
+
+Alleen frontend; de api blijft 0.17.0. Geen databasegevolg, geen nieuwe instellingen. Frontend:
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio 0.24.0). Uitrol: alleen app.
+
+Studio 0.24.0, samengevat: **auto-layout op leesvolgorde** in alle profielen (zes richtingen als
+submenu, per profiel een LayoutStijl; M3: betekenis in *aard* en *facetten*, weergave in de stijl)
+en **ArchiMate-lagen die de afhankelijkheden volgen**; **use case naar Cockburn** (primaire actor,
+trigger, condities, flow of events) met een layout zoals een modelleur hem zet; **het
+superprofiel** — notitie, constraint, annotatie-lijn en diagramverwijzing in elk profiel;
+**doorklikken** naar een diagram in elk profiel, **Verwezen door**, *Zoek in projectboom* voor een
+diagram, de ⧉ op de plaat met live doelnaam; **groupings en locaties als containers** (M3:
+`containerVoor` mag een lijst zijn; slepen in een grouping laat andere relaties staan); de
+assistent en de MCP kunnen verplaatsen en opstellen en zeggen wat ze niet deden.
+
+Uitrol: image `bitemp-viz-frontend:0.24.0` (met `--build-arg VITE_GIT_SHA=$(git rev-parse --short
+HEAD)`), daarna `./update.sh` op app.
+
+---
+
 ## api 0.17.0 / studio 0.23.0 (2026-10-16)
 
 Plaatjes als link voor Confluence, en de meldingen van app (#4, #7, #8). Frontend:
