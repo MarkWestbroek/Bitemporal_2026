@@ -100,3 +100,15 @@ test("dubbele ElementType-ids worden gemeld", () => {
   dt.elementTypes.push({ id: "blok", label: "Blok 2", shape: "class-box" });
   assert.match(valideerDiagramType(dt).join("\n"), /dubbel ElementType-id "blok"/);
 });
+
+test("containerVoor als lijst: elk id moet een bestaand connector-type zijn", () => {
+  const basis = { id: "t", label: "T", style: "s", elementTypes: [
+    { id: "groep", label: "Groep", kort: "G", shape: "box", containerVoor: ["agg", "comp"] },
+    { id: "ding", label: "Ding", kort: "D", shape: "box" },
+    { id: "agg", label: "Agg", kort: "a", shape: "edge", isConnector: true, bron: { elementTypes: ["groep"] }, doel: { elementTypes: ["ding"] } },
+  ] };
+  const fouten = valideerDiagramType(basis);
+  assert.ok(fouten.some((f) => /containerVoor verwijst naar onbekend ElementType "comp"/.test(f)), fouten.join("; "));
+  const fout2 = valideerDiagramType({ ...basis, elementTypes: basis.elementTypes.map((et) => (et.id === "groep" ? { ...et, containerVoor: ["agg", "ding"] } : et)) });
+  assert.ok(fout2.some((f) => /containerVoor "ding" is geen connector-type/.test(f)), fout2.join("; "));
+});

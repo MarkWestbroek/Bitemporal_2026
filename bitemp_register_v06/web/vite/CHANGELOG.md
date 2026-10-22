@@ -9,6 +9,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **ArchiMate: groupings en locaties zijn containers** (20-10, Mark; ArchiMate 3 §4.5): een
+  aggregatie of compositie vanuit een grouping of locatie maakt het doel lid. Het lid reist op het
+  canvas mee met zijn grouping, slepen erin legt een aggregatie, en de lagen-layout zet het lid in
+  de grouping en laat die meegroeien. Ligt een deel in zijn geheel, dan verdwijnt de
+  compositie-/aggregatielijn (zoals in Archi); erbuiten blijft hij zichtbaar. Slepen in een
+  grouping laat andere relaties van het element met rust. (M3: `containerVoor` mag een lijst zijn.)
 - **M3: het superprofiel — notitie, constraint, annotatie-lijn en diagramverwijzing in elk profiel**
   (20-10, Mark): elk profiel erft vier ingebouwde typen (`diagramcore/types/superprofiel.js`). De
   **notitie** (UML Comment) en de **constraint** (UML Constraint: specificatie tussen `{…}` in

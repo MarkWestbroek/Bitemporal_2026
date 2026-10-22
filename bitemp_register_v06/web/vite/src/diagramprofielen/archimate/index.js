@@ -80,6 +80,11 @@ const elementTypes = [
     // Grouping: eigen kaderverm, áchter de inhoud (zie GroupingShape).
     shape: id === "grouping" ? "archimate-grouping" : "archimate-box",
     ...(id === "grouping" ? { achtergrond: true, minBreedte: 200, minHoogte: 90 } : {}),
+    // Samengestelde elementen (ArchiMate 3 §4.5; besluit Mark 20-10): een aggregatie of
+    // compositie vanuit een grouping of locatie maakt het doel lid — het nest op het canvas,
+    // reist mee, en de lagen-layout legt de grouping om zijn leden. Slepen erin legt de eerste
+    // (aggregatie), zoals EA.
+    ...(id === "grouping" || id === "locatie" ? { containerVoor: ["aggregatie", "compositie"] } : {}),
     kleur,
     // Laag als taakbalkgroep: de Maken-balk krijgt een scheidingsteken op
     // elke laaggrens (business | application | technology | motivation).
@@ -133,13 +138,16 @@ const elementTypes = [
   },
 
   // ── De elf relaties ────────────────────────────────────────────────────
+  // Compositie en aggregatie: ligt het deel ín het geheel (nesting, zoals de lagen-layout een
+  // grouping om zijn leden legt — ArchiMate 3 §4.5), dan toont de nesting de relatie al en is de
+  // lijn ruis (verbergBijNesting, zoals Archi); ligt het erbuiten, dan blijft hij staan (20-10).
   // v0 permissief: elke relatie mag tussen alle elementen (+ junction als
   // tussenstation); de geldigheidsmatrix wordt v1 (datatabel → regels).
   ...[
     ["compositie", "Compositie", "Geheel-deel: het deel bestaat niet zonder het geheel (ruit aan het geheel).",
-      { lijn: "solid", vorm: "recht", kleur: "#475569", markerStart: "ruit" }],
+      { lijn: "solid", vorm: "recht", kleur: "#475569", markerStart: "ruit", verbergBijNesting: true }],
     ["aggregatie", "Aggregatie", "Groepeert delen die ook zelfstandig bestaan (open ruit aan het geheel).",
-      { lijn: "solid", vorm: "recht", kleur: "#475569", markerStart: "ruit-open" }],
+      { lijn: "solid", vorm: "recht", kleur: "#475569", markerStart: "ruit-open", verbergBijNesting: true }],
     ["toewijzing", "Toewijzing", "Actieve structuur voert gedrag uit (bol aan de uitvoerder).",
       { lijn: "solid", vorm: "recht", kleur: "#475569", markerStart: "bol", markerEnd: "pijl-dicht" }],
     ["realisatie", "Realisatie", "Het een realiseert het ander (bv. proces realiseert service).",

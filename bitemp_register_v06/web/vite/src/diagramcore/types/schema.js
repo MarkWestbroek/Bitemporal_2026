@@ -210,9 +210,11 @@
  *   facetten van het DiagramType, bv. `{laag: "business", aspect: "actief"}`
  *   (ArchiMate). Betekenis; de volgorde van de waarden staat op
  *   `DiagramType.facetten`, de keuze "rijen per laag" in de LayoutStijl.
- * @property {string} [containerVoor]       - connectortype-id: dit type is een
+ * @property {string|string[]} [containerVoor] - connectortype-id(s): dit type is een
  *   container (bv. package); een element erin slepen (canvas of boom) legt
- *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg.
+ *   die lidmaatschaps-connector (bij een lijst de eerste), "Losmaken uit …" haalt hem weer weg.
+ *   Een lijst sinds 20-10 (Mark; ArchiMate 3 §4.5): een grouping is container voor aggregatie
+ *   én compositie. Lezers gaan via types/containerVoor.js (lidConnectoren, isLidConnector).
  *   Containers sorteren bovenaan in de elementen-boom
  *   Leden die ín de container liggen renderen als kind ervan: ze reizen mee
  *   en blijven binnen de rand (Alt+slepen tilt eruit) — canvas/nesting.js

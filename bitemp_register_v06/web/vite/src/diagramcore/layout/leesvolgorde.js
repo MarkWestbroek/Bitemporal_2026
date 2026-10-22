@@ -43,6 +43,7 @@ const AFSTAND_STANDAARD = { laag: 70, dwars: 40, baan: 0 };
 
 /** Standaard: verbindingen die "ouder/abstract eerst" lezen — woont bij de betekenis (types/layoutStijl.js). */
 import { STANDAARD_OMGEKEERD, stijlVoor, regelsVoorStijl } from "../types/layoutStijl.js";
+import { isLidConnector } from "../types/containerVoor.js";
 export { STANDAARD_OMGEKEERD };
 
 /**
@@ -531,19 +532,22 @@ export function leesvolgordeLayouts(descriptor) {
 /**
  * Canvas-invoer → knopen en verbindingen. Rand-elementen (aangehecht, relatief aan hun gastheer)
  * en synthetische knopen doen niet mee; lidmaatschap komt uit de container-connector van het type
- * (`containerVoor`). Met een selectie: alleen die knopen (en wat erin ligt).
+ * (`containerVoor`, één id of een lijst — ArchiMate: aggregatie/compositie vanuit een grouping of
+ * locatie, 20-10). De eerste ouder wint; een tweede kandidaat-ouder of een kring wordt een gewone
+ * verbinding. Met een selectie: alleen die knopen (en wat erin ligt).
  */
 export function invoerVanCanvas({ flowNodes = [], selectieIds = null, elements = {}, diagram = null, typen = new Map() }) {
   const nodeVanElement = new Map((diagram?.nodes || []).map((n) => [n.elementId, n.nodeId || n.elementId]));
   const doet = flowNodes.filter((n) => !n.hidden && !String(n.type || "").startsWith("__") && !typen.get(n.type)?.randElement && !typen.get(n.type)?.isConnector);
   const ids = new Set(doet.map((n) => n.id));
   const ouder = new Map();
+  const isVoorouder = (a, b) => { for (let x = a, i = 0; x && i < 64; x = ouder.get(x), i++) if (x === b) return true; return false; };
   for (const c of Object.values(elements)) {
     if (!c?.source || !c?.target) continue;
-    const bronType = typen.get(elements[c.source]?.elementType);
-    if (!bronType?.containerVoor || bronType.containerVoor !== c.elementType) continue;
+    if (!isLidConnector(typen.get(elements[c.source]?.elementType), c.elementType)) continue;
     const a = nodeVanElement.get(c.source) ?? c.source, b = nodeVanElement.get(c.target) ?? c.target;
-    if (ids.has(a) && ids.has(b)) ouder.set(b, a);
+    if (!ids.has(a) || !ids.has(b) || a === b || ouder.has(b) || isVoorouder(a, b)) continue;
+    ouder.set(b, a);
   }
   let knopen = doet.map((n) => ({
     id: n.id,

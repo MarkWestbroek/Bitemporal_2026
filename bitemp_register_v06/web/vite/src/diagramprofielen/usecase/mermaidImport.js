@@ -15,6 +15,7 @@
  */
 import { registreerTransformatie } from "../../studio/activities/transformatieRegistry.js";
 import { verbindingsregelsVan } from "../../diagramcore/types/typeRegistry.js";
+import { eersteLidConnector } from "../../diagramcore/types/containerVoor.js";
 import { leesMermaidFlowcharts, lijktOpMermaidFlowchart } from "../../transformatie/mermaidFlowchart.js";
 import { pasRegelsToe } from "../../transformatie/regels.js";
 import { legUit } from "../../transformatie/kolommenLayout.js";
@@ -151,7 +152,7 @@ export function mermaidNaarUsecaseModel(tekst, { bestaand = {}, elementTypes = [
       if (pe.groep == null) continue;
       const lid = idVan.get(pe.sleutel);
       const container = idVan.get(pe.groep);
-      const lidType = typeVan.get(typeVanId(container))?.containerVoor || "bevat";
+      const lidType = eersteLidConnector(typeVan.get(typeVanId(container))) || "bevat";
       if (!container || lid === container) continue;
       if (!magVerbinden(lidType, container, lid)) {
         meld({ severity: "info", code: "UC-BUITEN-KADER", message: `Een ${typeVanId(lid)} kan geen lid zijn van een ${typeVanId(container)}; buiten het kader geplaatst`, sourceId: pe.sleutel, path: null });

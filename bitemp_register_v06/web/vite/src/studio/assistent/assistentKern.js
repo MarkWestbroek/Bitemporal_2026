@@ -17,6 +17,7 @@
  * Alles hier werkt op een **profielsamenvatting** (gewone data), niet op de descriptor, zodat
  * de MCP in Node zonder de profielcode kan controleren (`tools/omnium-mcp/profielen.json`).
  */
+import { eersteLidConnector } from "../../diagramcore/types/containerVoor.js";
 
 /**
  * @typedef {Object} Samenvatting
@@ -54,7 +55,8 @@ export function profielSamenvatting(descriptor, profielId = descriptor?.id) {
       id: et.id,
       label: et.label || et.id,
       ...(et.omschrijving ? { omschrijving: et.omschrijving } : {}),
-      ...(et.containerVoor ? { container: et.containerVoor } : {}),
+      // container: het connectortype dat `in` legt (bij een lijst de eerste — ArchiMate: aggregatie).
+      ...(eersteLidConnector(et) ? { container: eersteLidConnector(et) } : {}),
       ...(et.resizebaar === false ? { vast: true } : {}),
       ...(et.uitwerking ? { uitwerking: true } : {}),
       ...(eigenschapSleutels(et).length ? { eigenschappen: eigenschapSleutels(et) } : {}),

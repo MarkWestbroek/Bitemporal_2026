@@ -19,6 +19,7 @@
  * `gedragDiagramId` naar.
  */
 import { verbindingsregelsVan } from "../diagramcore/types/typeRegistry.js";
+import { isLidConnector, eersteLidConnector } from "../diagramcore/types/containerVoor.js";
 import { legUit } from "./kolommenLayout.js";
 
 const slug = (tekst) =>
@@ -89,7 +90,7 @@ export function planNaarCoreModel(graaf, plan, { prefix, diagramTypeId, elementT
       return null;
     }
     const dubbel = `${type}|${bron}|${doel}`;
-    if (opUiteinden.has(dubbel) && type === (typeVan.get(typeVanId(bron))?.containerVoor || "bevat")) return null;
+    if (opUiteinden.has(dubbel) && isLidConnector(typeVan.get(typeVanId(bron)) || { containerVoor: "bevat" }, type)) return null;
     opUiteinden.add(dubbel);
     const id = uniek(`${prefix}_${slug(sleutel) || type}`);
     elements[id] = { id, naam: naam || "", elementType: type, source: bron, target: doel, compartimenten: [], data: { ...data } };
@@ -105,7 +106,7 @@ export function planNaarCoreModel(graaf, plan, { prefix, diagramTypeId, elementT
     // Een rand-element (boundary event, pin) woont op zijn gastheer, niet in
     // de container: het reist met de gastheer mee.
     if (elements[lid].data.randVan) continue;
-    const lidType = typeVan.get(typeVanId(container))?.containerVoor || "bevat";
+    const lidType = eersteLidConnector(typeVan.get(typeVanId(container))) || "bevat";
     if (voegConnectorToe(lidType, container, lid, "", {}, `${pe.groep}_bevat_${pe.sleutel}`)) groepVan.set(lid, container);
   }
   const idVanConnector = new Map();

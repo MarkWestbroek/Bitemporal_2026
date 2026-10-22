@@ -15,6 +15,7 @@ import { normaliseerErfenis, kopieVoorNormalisatie } from "./erfenis.js";
 import { leesvolgordeLayouts } from "../layout/leesvolgorde.js";
 import { valideerAardEnFacetten, valideerLayoutStijl } from "./layoutStijl.js";
 import { vulSuperprofielAan } from "./superprofiel.js";
+import { lidConnectoren } from "./containerVoor.js";
 
 /**
  * Profiel zonder eigen layouts: de algemene gelaagde layout volgens zijn LayoutStijlen (M3,
@@ -124,6 +125,15 @@ export function valideerDiagramType(dtRauw) {
       fouten.push(`DiagramType "${dt.id}": hierarchie verwijst naar onbekend ElementType "${hierId}"`);
     } else if (!doelwit.isConnector) {
       fouten.push(`DiagramType "${dt.id}": hierarchie "${hierId}" is geen connector-type`);
+    }
+  }
+  // containerVoor (één id of een lijst, 20-10): elk id bestaat en is een connector-type
+  // (abstract of niet: dat controleert normaliseerErfenis).
+  for (const et of dt.elementTypes) {
+    for (const cid of lidConnectoren(et)) {
+      const c = dt.elementTypes.find((x) => x?.id === cid);
+      if (!c) fouten.push(`DiagramType "${dt.id}", ElementType "${et?.id}": containerVoor verwijst naar onbekend ElementType "${cid}"`);
+      else if (!c.isConnector) fouten.push(`DiagramType "${dt.id}", ElementType "${et?.id}": containerVoor "${cid}" is geen connector-type`);
     }
   }
   // Betekenis (aard, facetten) en weergave (layoutStijlen): types/layoutStijl.js.
