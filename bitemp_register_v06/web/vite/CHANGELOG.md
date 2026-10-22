@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.24.0] — 2026-10-23
+
 ### Toegevoegd
 - **ArchiMate: groupings en locaties zijn containers** (20-10, Mark; ArchiMate 3 §4.5): een
   aggregatie of compositie vanuit een grouping of locatie maakt het doel lid. Het lid reist op het

@@ -61,7 +61,10 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.23.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.24.0`**
+  (2026-10-23: auto-layout op leesvolgorde in alle profielen en ArchiMate-lagen op afhankelijkheden,
+  use case naar Cockburn, het superprofiel (notitie, constraint, annotatie-lijn, diagramverwijzing),
+  doorklikken en Verwezen door, groupings als containers; alleen frontend), na **`studio/v0.23.0`**
   (2026-10-16: plaatjes als link voor Confluence, velden via de assistent, op raster,
   documentdiagram recht, lege rijen weg, instellingen-crash; samen met api 0.17.0), na **`studio/v0.22.0`**
   (2026-10-16: use case als ouder in de boom, boom opgeruimd, assistent op het canvas en weghalen,
