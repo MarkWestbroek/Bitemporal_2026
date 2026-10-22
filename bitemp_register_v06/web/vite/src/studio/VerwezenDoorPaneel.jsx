@@ -4,7 +4,7 @@
  * profielen. Klik: open een diagram waarop dat element staat en zoek het in de projectboom.
  */
 import React from "react";
-import { getProfieltypen } from "./profieltypeRegistry";
+import { getProfieltypen, getProfieltype } from "./profieltypeRegistry";
 import { menuBus } from "./menuBus";
 import { verwezenDoor, profielenUitRegistry, openVerwijzing } from "./doorklik.js";
 
@@ -37,6 +37,14 @@ export default function VerwezenDoorPaneel({ profielId, diagramId }) {
             onClick={() => {
               if (r.diagrammen[0]) openVerwijzing({ profielId: r.profielId, diagramId: r.diagrammen[0].id });
               menuBus.emit("studio:zoek-in-boom", { profielId: r.profielId, elementId: r.elementId });
+              // En selecteer het element op dat canvas (Mark, 22-10: "wordt niet geselecteerd").
+              // De activiteit luistert op <menuPrefix>:selecteer-element; als de tab pas nu opent,
+              // is die een tik later gemonteerd — daarom ook nog eens na een korte wacht.
+              const prefix = getProfieltype(r.profielId)?.menuPrefix;
+              if (prefix) {
+                menuBus.emit(`${prefix}:selecteer-element`, r.elementId);
+                setTimeout(() => menuBus.emit(`${prefix}:selecteer-element`, r.elementId), 120);
+              }
             }}
           >
             {r.naam}

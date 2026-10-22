@@ -26,6 +26,18 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   doorklik krijgt de ⧉-badge; dubbelklik of *Open <diagram>* in het rechtsklikmenu opent het, ook in
   een andere taal (nieuwe tab). De assistent en de MCP kunnen een doorklik zetten
   (`verwijstNaar` in het plan) en zien hem bij wat er al is.
+- **Diagramverwijzing** (20-10, Mark): zet met ⧉ in de Maken-balk een verwijzing naar een ander
+  diagram (ook in een andere taal) op het canvas; je kiest het doel bij het plaatsen. Hij toont de
+  naam van dat diagram, volgt een hernoeming en is doorgestreept als het doel verwijderd is;
+  dubbelklik opent het. Een gewoon modelelement: in de projectboom en op meer diagrammen te zetten.
+- **Verwijst naar: zoeken in plaats van scrollen** (21-10, Mark): de kiezer in de eigenschappen is
+  dezelfde als bij elke verwijzing — keuzelijst per taal plus 🔍 met zoekveld, voor modellen met
+  honderden diagrammen. De zoek-popup stak tegen de rechterrand 2 px buiten beeld; gerepareerd.
+- **Herkenbare knoppen voor diagramverwijzing en constraint** (22-10, Mark): in de compacte
+  Maken-balk hadden ⧉ en { } een nietszeggend doosje als icoon, waardoor de ⧉-knop niet te vinden
+  was; nu een eigen icoon.
+- **Dubbelklik op de naam opent de doorklik** (20-10, Mark): bij een element dat naar een diagram
+  verwijst start de eerste klik op de naam niet meer meteen het hernoemen.
 - **Verwezen door** (20-10, Mark): bij een diagram staat welke elementen ernaar doorklikken, uit
   elk profiel — in de eigenschappen van het diagram (boom) en in het lege eigenschappenpaneel als
   er op het canvas niets geselecteerd is. Klik: open een diagram waarop dat element staat.

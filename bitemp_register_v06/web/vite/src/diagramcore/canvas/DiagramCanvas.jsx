@@ -750,6 +750,8 @@ function CanvasBinnenkant({
   // Pointer-startpunt van de laatste klik (capture op de wrapper): een klik
   // ná een sleep mag geen inline bewerking starten.
   const klikStartRef = useRef(null);
+  /** Uitgesteld hernoemen bij een element met doorklik (zie handleNodeClick). */
+  const hernoemTimerRef = useRef(null);
   const handleNodeClick = useCallback(
     (e, node) => {
       if (!node) return;
@@ -769,9 +771,18 @@ function CanvasBinnenkant({
       if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 4) return;
       const doel = e.target?.closest?.("[data-dc-veld], [data-dc-naam], .dc-naam");
       if (!doel) return;
-      setHernoem({ nodeId: node.id, veld: doel.getAttribute("data-dc-veld") || null });
+      const veld = doel.getAttribute("data-dc-veld") || null;
+      // Een element met een doorklik (verwijst naar / gedragsverwijzing): dubbelklik op de naam
+      // moet openen, niet hernoemen (Mark, 20-10). Dus pas hernoemen als er geen tweede klik volgt.
+      const el = elements[id];
+      if (el && doorklikVan(el, lookups.elementTypesById[el.elementType])) {
+        clearTimeout(hernoemTimerRef.current);
+        hernoemTimerRef.current = setTimeout(() => setHernoem({ nodeId: node.id, veld }), 320);
+        return;
+      }
+      setHernoem({ nodeId: node.id, veld });
     },
-    [onSelectElement, elements, bewerkbaar, onHernoem]
+    [onSelectElement, elements, bewerkbaar, onHernoem, lookups]
   );
   const handleEdgeClick = useCallback(
     (_e, edge) => {
@@ -1159,6 +1170,7 @@ function CanvasBinnenkant({
   // (hernoem-state staat bovenaan bij de nodes-state: het nodes-effect gebruikt hem.)
   const handleNodeDoubleClick = useCallback(
     (_ev, node) => {
+      clearTimeout(hernoemTimerRef.current); // geen uitgesteld hernoemen na een dubbelklik
       const isAnker = node.id.startsWith(ANKER_PREFIX);
       const id = isAnker ? node.id.slice(ANKER_PREFIX.length) : node.data?.element?.id;
       const element = elements[id];

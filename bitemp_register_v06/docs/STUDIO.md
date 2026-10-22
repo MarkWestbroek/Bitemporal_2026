@@ -262,6 +262,30 @@ te wijzigen.
 > diagram: canvas-contextmenu → `studio:zoek-diagram-in-boom` (modellerenActivity klapt mappen en
 > element-ouders open via `boomUitklap`, flits `diag:<profiel>::<diagram>` op `DiagramRegel`).
 > e2e `34-studio-zoek-diagram`.
+>
+> **Diagramverwijzing (2026-10-20, OMNIUM-UI na M3-MOF superprofiel):** het superprofieltype
+> `diagramverwijzing` is een object dat naar een ander diagram wijst, ook in een andere taal. Het
+> is een **gewoon modelelement** (Mark, 20-10: "houd het simpel en enkelvoudig" — kleur en
+> verwijzing zijn van het modelelement; het ontwerp met `hoortBij: "diagram"` is losgelaten): in de
+> boom, op meer diagrammen te zetten, blijft bestaan als je hem van een diagram haalt. *Plaatsen*
+> (Maken-balk ⧉) vraagt eerst het doel (`vraagKeuze`, annuleren = niet plaatsen); het doel staat in
+> `data.verwijstNaar`, dus dubbelklik, *Open …* en **Verwezen door** werken via `doorklikVan`. De
+> inspector-kiezer *verwijst naar* is de gewone `VerwijzingsKiezer` (keuzelijst per taal + 🔍-
+> minibrowser met zoekveld; Mark 21-10: "die hebben we op veel plaatsen al", een volwassen model
+> heeft honderden diagrammen); `.dc-minibrowser` is nu `box-sizing: border-box`, want de klemming
+> rekende met 240 px en de popup was 254 — tegen de rechterrand stak hij 2 px buiten beeld. De
+> vorm (`basisShapes` `DiagramVerwijzingShape`) toont de naam van het doel **live** via
+> `diagramcore/model/diagramNamen.js` (`useDiagramNaam`; de Studio zet de bron in
+> `studio/doorklik.js`), doorgestreept en rood als het doel weg is; een eigen naam (inspector) gaat
+> voor. In boom en lijsten heet een naamloze ⧉ naar zijn doel (`weergaveNaam` → "⧉ Uitlenen" via
+> `diagramNaamVan`; was "(sp_…)"). Klik op die tekst hernoemt niet (geen `.dc-naam`); dubbelklik op de naam van élk element
+> met een doorklik opent het doel (het hernoemen wacht 320 ms op een tweede klik,
+> `DiagramCanvas.hernoemTimerRef`). De schets (documenten, plaatje-link) tekent hem met de doelnaam
+> via `verwijzingNaam`. Iconen: `typeIconen.perShape` kent `diagramverwijzing` en `constraint`
+> (22-10; in de compacte Maken-balk viel de ⧉-knop terug op het doosje en was onvindbaar). Nog
+> open: de annotatie-lijn naar een *relatie* (plek 0..1 langs de lijn;
+> motorwerk) en een diagram uit de boom op het canvas slepen als verwijzing. Tests:
+> `sjabloon/schets.test.js`, e2e `33-studio-doorklikken` (tweede scenario).
 > **Lagen met afhankelijkheden (2026-10-20, Mark):** in de lagen-modus (`regels.lagen`, ArchiMate
 > `rijen: "laag"`) is de rang nu `begin(laag) + sublaag`: binnen een hoofdlaag de langste weg over de
 > pijlen tussen elementen van díe laag (cycli in vaste volgorde gebroken); elke hoofdlaag krijgt

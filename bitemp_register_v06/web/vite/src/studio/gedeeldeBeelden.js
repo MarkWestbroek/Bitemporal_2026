@@ -15,6 +15,7 @@
  * De kern (`maakBeeldWachter`) krijgt zijn afhankelijkheden mee, zodat de unittest zonder browser,
  * server en stores draait.
  */
+import { naamVanVerwijzing } from "./doorklik.js";
 import { create } from "zustand";
 import { deelBeeld, lijstBeelden, trekBeeldIn } from "./activities/projectSync.js";
 import { svgNaarPng, svgMaat, svgHerkomst, merkHerkomst } from "../transformatie/sjabloon/rijkKopieren.js";
@@ -61,6 +62,7 @@ export function tekenDiagram(profielId, diagramId) {
     elements: st.elements,
     descriptor: descriptorMetShapeSet(p.descriptor, vindShapeSet(p.descriptor, diagram.shapeSetId, diagram)),
     idPrefix: "b",
+    verwijzingNaam: naamVanVerwijzing,
   });
 }
 

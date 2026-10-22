@@ -4,6 +4,7 @@
  * met de schets-tekenaar voor `{{svg}}`, en de generator die een sjabloon
  * rendert en het voorbeeldvenster opent.
  */
+import { naamVanVerwijzing } from "../doorklik.js";
 import { collectMapModel } from "./transformaties.js";
 import { useModellerenStore } from "./modellerenActivity.jsx";
 import { getProfieltype } from "../profieltypeRegistry";
@@ -65,6 +66,7 @@ export function bouwDocumentContext(mapId, mapNaam) {
           elements,
           descriptor: descriptorMetShapeSet(descriptor, vindShapeSet(descriptor, diagram.shapeSetId, diagram)),
           idPrefix: `d${(teller += 1)}`,
+          verwijzingNaam: naamVanVerwijzing,
         }),
         { profielId: profiel?.id, diagramId: diagram.id, naam: diagram.naam || "" }
       ),

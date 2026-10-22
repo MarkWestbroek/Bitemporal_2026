@@ -9,6 +9,7 @@
 import { getProfieltypen, getProfieltype } from "./profieltypeRegistry";
 import { menuBus } from "./menuBus";
 import { verwezenDoor } from "../diagramcore/model/verwezenDoor.js";
+import { stelDiagramNaamBronIn } from "../diagramcore/model/diagramNamen.js";
 
 export { verwezenDoor };
 
@@ -52,3 +53,17 @@ export function profielenUitRegistry() {
     return { profielId: p.id, elementTypes: p.descriptor?.elementTypes || [], elements: st.elements || {}, diagrams: st.diagrams || {} };
   });
 }
+
+/**
+ * Bron voor de diagramverwijzing op de plaat (diagramNamen.js): de naam live, ook na hernoemen of
+ * verwijderen van het doel in een ander profiel. Abonneert op de diagrammen van alle profielen.
+ */
+stelDiagramNaamBronIn({
+  naam: (verw) => naamVanVerwijzing(verw),
+  abonneer: (cb) => {
+    const af = getProfieltypen()
+      .map((p) => p.useStore?.subscribe?.((s, v) => s.diagrams !== v.diagrams && cb()))
+      .filter(Boolean);
+    return () => af.forEach((f) => f());
+  },
+});
