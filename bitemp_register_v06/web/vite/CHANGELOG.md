@@ -21,7 +21,7 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   natuurlijke taal, OCL of CEL; lichtblauw ezelsoor) zijn modelinhoud. De **annotatie-lijn**
   (`notitielijn`) gaat van notitie of constraint naar élk element van het profiel — ook in profielen
   die er geen hadden (canoniek, state machine, CMMN, ERD, OAS, GraphQL, …). De **diagramverwijzing**
-  (zoals Archi's view reference, `hoortBij: "diagram"`) is het enige type dat bij de plaat hoort.
+  (zoals Archi's view reference) wijst naar een ander diagram; sinds 21-10 een gewoon modelelement.
   Een type wordt altijd geërfd; een profiel mag het alleen uit het palet halen
   (`DiagramType.superprofiel = {constraint: {inPalet: false}}`). Een eigen `constraint` van een
   profiel blijft (ArchiMate, MIM, canoniek). ArchiMate's `toelichting`-lijn ging erin op

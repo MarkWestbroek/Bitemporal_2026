@@ -8,7 +8,8 @@
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
   fase 7 (register). Laatste ronde (2026-10-20, branch `feat/m3-superprofiel`, M3-MOF): het
   **superprofiel** — elk profiel erft notitie, constraint, notitielijn ("Annotatie-lijn", naar
-  elke knoop) en diagramverwijzing (`hoortBij: "diagram"`), `types/superprofiel.js`; altijd
+  elke knoop) en diagramverwijzing (sinds 21-10 een gewoon modelelement; `hoortBij` is
+  geschrapt), `types/superprofiel.js`; altijd
   geërfd, alleen het palet mag uit (`DiagramType.superprofiel`); een eigen constraint van een
   profiel blijft; `DiagramType.hernoemdeTypen` migreert (ArchiMate toelichting → notitielijn).
   Ronde daarvoor (2026-10-20, branch `feat/m3-verwijstnaar`, M3-MOF): de

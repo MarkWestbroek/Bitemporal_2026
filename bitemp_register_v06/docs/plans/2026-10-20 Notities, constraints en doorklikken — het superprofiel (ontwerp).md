@@ -45,15 +45,16 @@ Drie vragen kwamen samen:
 
 Een **superprofiel** is een set M3-ingebouwde elementtypen die de motor bij de
 registratie aan elk profiel toevoegt, zoals elk profiel er impliciet van
-erft. Een profiel kan een type uitzetten (`superprofiel: {constraint: false}`)
-of een eigen variant geven met hetzelfde id; standaard staan ze aan.
+erft. Een type wordt nooit weggehaald; een profiel mag het alleen uit het
+palet halen (`superprofiel: {constraint: {inPalet: false}}`, §7). Een eigen
+`constraint` van een profiel blijft staan als specialisatie.
 
 | Type | Soort | Hoort bij | UML / EA |
 |---|---|---|---|
 | `notitie` | knoop | model | Comment / Note |
 | `constraint` | knoop | model | Constraint / Constraint |
-| `annotatielijn` | connector | model | annotatedElement, constrainedElement / NoteLink |
-| `diagramverwijzing` | knoop | diagram | — / (Archi: diagram model reference) |
+| `notitielijn` ("Annotatie-lijn") | connector | model | annotatedElement, constrainedElement / NoteLink |
+| `diagramverwijzing` | knoop | model (sinds 21-10, §3.4) | — / (Archi: diagram model reference) |
 
 ### 3.1 Notitie (model)
 
@@ -79,15 +80,20 @@ of een eigen variant geven met hetzelfde id; standaard staan ze aan.
 - **Motorwerk:** een lijn die aan een andere lijn vastzit (aan het midden van
   een relatie, voor "XOR tussen twee relaties") kan de motor nu niet.
 
-### 3.4 Diagramverwijzing (diagram)
+### 3.4 Diagramverwijzing (model)
 
 - Zoals Archi's view reference: een object op het canvas met een
   diagram-icoon en de naam van het doeldiagram (live opgezocht);
   dubbelklik opent het, ook in een ander profiel.
-- Hoort bij het **diagram**, niet bij het model: niet in de boom, geen
-  relaties behalve een annotatielijn. Het enige superprofiel-type dat
-  weergave is; bewust, want het gaat over navigatie tussen platen.
-- Data: `{profielId, diagramId}`.
+- Data: `data.verwijstNaar = {profielId, diagramId}` (zelfde vorm als §4).
+- **Gewoon modelelement** (Mark, 21-10): het eerste ontwerp liet hem bij het
+  diagram horen (`hoortBij: "diagram"`: niet in de boom, weg met het
+  diagram). Mark koos voor eenvoud: kleur en verwijzing zijn eigenschappen
+  van het modelelement, geen per-diagram-uitzonderingen. Hij staat dus in de
+  boom, mag op meer diagrammen staan en blijft bestaan als je hem van een
+  diagram haalt. `hoortBij` is daarmee uit het M3 geschrapt (OMNIUM-UI,
+  c6a10fe8): een eigenschap die niemand gebruikt, belooft gedrag dat nergens
+  bestaat.
 
 ## 4. Doorklikken vanaf een element: `verwijstNaar`
 
@@ -156,7 +162,7 @@ verwijzen, zoals EA's composite element ("child diagram").
 ## 8. Gebouwd (20-10, M3-MOF, branch `feat/m3-superprofiel`)
 
 - `diagramcore/types/superprofiel.js`: `superprofielTypen`, `vulSuperprofielAan` (bij validatie
-  en registratie, na de overerving), `hoortBijDiagram`, `migreerHernoemdeTypen`,
+  en registratie, na de overerving), `migreerHernoemdeTypen`,
   `maakSuperprofielElement` (terugval voor de palet-knop).
 - **Pragmatische keuze:** de lijn houdt het id `notitielijn` (label "Annotatie-lijn"), zodat alle
   bestaande modellen en de EA-lezers blijven werken; alleen ArchiMate's `toelichting` migreert.
@@ -166,9 +172,13 @@ verwijzen, zoals EA's composite element ("child diagram").
 - Vormen: `constraint` (lichtblauw ezelsoor, `{…}`) en een **voorlopige** `diagramverwijzing`.
 - Gecontroleerd: alle 25 profielen valideren met het superprofiel; in de browser (state machine)
   notitie en constraint uit het palet, annotatie-lijn naar een toestand.
-- Voor OMNIUM-UI: de echte diagramverwijzing-vorm (doelnaam live, dubbelklik via
-  openVerwijzing), `hoortBij: "diagram"` respecteren (niet in boom/MCP-modelinhoud/documenten,
-  weg met het diagram), en de lijn aan een plek 0..1 op een relatie.
+- OMNIUM-UI (22-10, c6a10fe8 en fd6f6db8): de echte diagramverwijzing-vorm (doelnaam live,
+  dubbelklik via openVerwijzing, "Verwezen door"), herkenbare palet-iconen voor constraint en
+  diagramverwijzing; `hoortBij` geschrapt (zie §3.4). Nog open: de lijn aan een plek 0..1 op
+  een relatie.
+- Verwant (OMNIUM-UI, fd6f6db8): `ElementType.containerVoor` mag een lijst zijn (ArchiMate 3
+  §4.5: grouping en locatie zijn container voor aggregatie én compositie); helper
+  `diagramcore/types/containerVoor.js`.
 - Later: EA Constraint-objecten inlezen als superprofiel-constraint.
 
 ## 9. Volgorde (was)
