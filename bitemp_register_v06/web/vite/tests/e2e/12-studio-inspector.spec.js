@@ -87,7 +87,8 @@ test.describe("smal venster", () => {
     await wachtOpNode(page, "np");
     // Via de elementenlijst: in dit smalle venster dekken taakbalken en minimap het canvas.
     await page.locator('div[draggable="true"][title^="NatuurlijkPersoon"]').first().click();
-    await page.locator('.dc-inspector button[title="Bladeren…"]').first().click();
+    // De typekiezer van het veld is de láátste 🔍 (de diagramkiezer "verwijst naar" staat erboven, 21-10).
+    await page.locator('.dc-inspector button[title="Bladeren…"]').last().click();
     const pop = await page.locator(".dc-minibrowser").first().boundingBox();
     expect(pop.x).toBeGreaterThanOrEqual(0);
     expect(pop.x + pop.width).toBeLessThanOrEqual(1100);

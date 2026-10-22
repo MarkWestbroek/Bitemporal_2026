@@ -10,9 +10,9 @@
  *   - **notitielijn** (model; Comment.annotatedElement /
  *     Constraint.constrainedElement, EA NoteLink): van notitie of constraint
  *     naar élk element van het profiel — label "Annotatie-lijn";
- *   - **diagramverwijzing** (diagram; Archi view reference): een object op de
- *     plaat dat naar een ander diagram wijst (`data.verwijstNaar`), het enige
- *     type dat bij het diagram hoort en niet bij het model.
+ *   - **diagramverwijzing** (model; Archi view reference): een object dat naar
+ *     een ander diagram wijst (`data.verwijstNaar`). Een gewoon modelelement
+ *     (Mark, 20-10: eenvoud), dus in de boom en op meer diagrammen te zetten.
  *
  * Regels (besluiten Mark 20-10):
  *  - **Altijd geërfd.** Een type wordt nooit weggehaald (zoals in MOF een
@@ -95,11 +95,10 @@ export function superprofielTypen() {
     {
       id: "diagramverwijzing",
       label: "Diagramverwijzing",
-      omschrijving: "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model.",
+      omschrijving: "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het.",
       kort: "⧉",
       shape: "diagramverwijzing",
       taakbalkGroep: GROEP,
-      hoortBij: "diagram",
       beschrijving: false,
       minBreedte: 120,
       minHoogte: 44,
@@ -114,11 +113,6 @@ export const SUPERPROFIEL_IDS = ["notitie", "constraint", "notitielijn", "diagra
 
 /** Puur-M3-typen: de superprofielversie wint van een eigen definitie. */
 const ALTIJD_SUPERPROFIEL = new Set(["notitie", "notitielijn", "diagramverwijzing"]);
-
-/** Hoort dit type bij het diagram (niet in boom, MCP-modelinhoud, documenten)? */
-export function hoortBijDiagram(type) {
-  return type?.hoortBij === "diagram";
-}
 
 /**
  * Voeg het superprofiel toe aan een (uitgevlakt) DiagramType — in place,

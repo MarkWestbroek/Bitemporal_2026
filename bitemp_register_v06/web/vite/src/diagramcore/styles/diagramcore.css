@@ -836,6 +836,9 @@
   right: 0;
   z-index: 40;
   width: 240px;
+  /* Inclusief rand en padding: de klemming in VerwijzingsKiezer rekent met deze 240 px; zonder
+     border-box was hij 254 px en stak 2 px buiten het venster (verwijst naar, 21-10). */
+  box-sizing: border-box;
   max-height: 300px;
   display: flex;
   flex-direction: column;

@@ -175,7 +175,8 @@ function ElementNode({ id, data, selected }) {
   // hoek — dubbelklik opent het gerefereerde diagram. Generiek in de node
   // (via children in de shape-root), zodat élke shape hem meekrijgt.
   // Sinds 20-10 via doorklikVan: ook de vaste M3-doorklik `verwijst naar` krijgt de badge.
-  const heeftGedrag = !!doorklikVan(element, elementType);
+  // De diagramverwijzing (superprofiel) ís de doorklik: geen extra badge.
+  const heeftGedrag = elementType.shape !== "diagramverwijzing" && !!doorklikVan(element, elementType);
   // Buitenlabel (motor-primitief): kleine vaste vormen — BPMN-events en
   // -gateways, state machine begin/eind/keuze, activity-knooppunten — kunnen
   // hun naam niet ín de vorm dragen. `naamLabel: "buiten"` laat de motor hem

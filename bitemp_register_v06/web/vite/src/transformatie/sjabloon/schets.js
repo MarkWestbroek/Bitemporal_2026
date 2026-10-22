@@ -187,16 +187,23 @@ function tekenNode(box, element, elementType) {
 
 /**
  * Teken een diagram als SVG-tekst.
- * @param {{ diagram: Object, elements: Record<string,Object>, descriptor: Object, idPrefix?: string }} invoer
+ * @param {{ diagram: Object, elements: Record<string,Object>, descriptor: Object, idPrefix?: string,
+ *   verwijzingNaam?: (verw: any) => string|null }} invoer  verwijzingNaam: naam van een doeldiagram (diagramverwijzing)
  * @returns {string} SVG, of "" als er niets te tekenen is
  */
-export function schetsDiagramSvg({ diagram, elements, descriptor, idPrefix = "s" }) {
+export function schetsDiagramSvg({ diagram, elements, descriptor, idPrefix = "s", verwijzingNaam = null }) {
   const typen = Object.fromEntries((descriptor?.elementTypes || []).map((t) => [t.id, t]));
   const boxen = new Map();
   for (const n of diagram?.nodes || []) {
-    const element = elements?.[n.elementId];
+    let element = elements?.[n.elementId];
     if (!element) continue;
     const et = typen[element.elementType];
+    // Diagramverwijzing (superprofiel, 20-10): zonder eigen naam de naam van het doeldiagram
+    // (`verwijzingNaam` van de host; de schets kent de andere profielen niet).
+    if (et?.shape === "diagramverwijzing" && !element.naam) {
+      const doel = element.data?.verwijstNaar;
+      element = { ...element, naam: `⧉ ${(doel && verwijzingNaam?.(doel)) || "diagram"}` };
+    }
     if (et?.isConnector) continue;
     const { w, h, fam } = schetsMaat(n, element, et);
     const sleutel = n.nodeId || n.elementId;

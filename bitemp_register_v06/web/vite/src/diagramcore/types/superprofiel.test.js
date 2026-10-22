@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { vulSuperprofielAan, migreerHernoemdeTypen, maakSuperprofielElement, hoortBijDiagram, SUPERPROFIEL_IDS } from "./superprofiel.js";
+import { vulSuperprofielAan, migreerHernoemdeTypen, maakSuperprofielElement, SUPERPROFIEL_IDS } from "./superprofiel.js";
 import { valideerDiagramType } from "./typeRegistry.js";
 
 const profiel = (extra = {}) => ({
@@ -25,8 +25,6 @@ test("elk profiel erft de vier typen; de lijn wijst naar elke concrete knoop", (
   assert.deepEqual(type(dt, "notitielijn").doel.elementTypes.sort(), ["constraint", "diagramverwijzing", "klasse", "notitie"]);
   assert.deepEqual(type(dt, "notitielijn").bron.elementTypes, ["notitie", "constraint"]);
   assert.equal(type(dt, "notitielijn").aard, "annotatie");
-  assert.equal(hoortBijDiagram(type(dt, "diagramverwijzing")), true);
-  assert.equal(hoortBijDiagram(type(dt, "notitie")), false, "notitie is modelinhoud");
   const n = dt.elementTypes.length;
   vulSuperprofielAan(dt);
   assert.equal(dt.elementTypes.length, n, "idempotent");

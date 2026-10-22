@@ -14,6 +14,8 @@ import { registreerShape } from "./shapeRegistry.js";
 import { TypeIcoon } from "./typeIconen.jsx";
 import { maakVeldSleutel } from "../canvas/inlineNaam.js";
 import { isAfgeleid, veldAanvulling } from "../model/afgeleid.js";
+import { normaliseerVerwijzing } from "../model/verwijstNaar.js";
+import { useDiagramNaam, heeftDiagramNaamBron } from "../model/diagramNamen.js";
 
 /**
  * Typering-regel in de node-kop (vormgevingssessie 2026-07-07, MIM-besluit):
@@ -370,15 +372,25 @@ function ConstraintShape({ element, selected, children }) {
  * dubbelklik via openVerwijzing) komt van OMNIUM-UI en vervangt deze.
  */
 function DiagramVerwijzingShape({ element, selected, children }) {
-  const rand = selected ? "#2563eb" : "#94a3b8";
+  // Archi's view reference (superprofiel, 20-10): de naam van het doeldiagram, live; een eigen
+  // naam van het element gaat voor. Dubbelklik opent het doel (doorklikVan op data.verwijstNaar).
+  const verw = normaliseerVerwijzing(element.data?.verwijstNaar);
+  const doelNaam = useDiagramNaam(verw);
+  const weg = verw && heeftDiagramNaamBron() && !doelNaam;
+  const rand = selected ? "#2563eb" : weg ? "#dc2626" : "#94a3b8";
+  const tekst = element.naam || doelNaam || (verw ? verw.diagramId : "(kies een diagram)");
   return (
     <div
       className="dc-node"
-      style={{ minWidth: 120, minHeight: 44, border: `1.5px solid ${rand}`, borderRadius: 4, background: "#f8fafc", padding: "6px 10px", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}
+      data-testid="diagramverwijzing"
+      title={weg ? "Het diagram bestaat niet meer" : "Dubbelklik: open dit diagram"}
+      style={{ minWidth: 120, minHeight: 44, border: `1.5px solid ${rand}`, borderRadius: 4, background: "var(--dc-node-bg, #f8fafc)", padding: "6px 10px", display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: verw ? "pointer" : undefined }}
     >
       {children}
-      <span aria-hidden="true">⧉</span>
-      <span className="dc-naam">{element.naam || "(diagram)"}</span>
+      <span aria-hidden="true" style={{ color: "#64748b" }}>⧉</span>
+      {/* Geen .dc-naam: de tekst is meestal de naam van het doel, dus klik = niet hernoemen
+          (een eigen naam zet je in de inspector); dubbelklik opent het doel. */}
+      <span className="dc-diagramverwijzing-naam" style={{ fontWeight: 600, textDecoration: weg ? "line-through" : undefined }}>{tekst}</span>
     </div>
   );
 }

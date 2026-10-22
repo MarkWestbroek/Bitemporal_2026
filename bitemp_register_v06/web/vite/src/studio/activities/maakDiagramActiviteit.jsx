@@ -866,9 +866,28 @@ export function maakDiagramActiviteit(opties) {
     }, []);
 
     /** Nieuw element plaatsen op het actieve diagram (cascade rond het zwaartepunt). */
-    const plaatsNieuwElement = useCallback((elementTypeId) => {
+    const plaatsNieuwElement = useCallback(async (elementTypeId) => {
       const el = maakElement(elementTypeId);
       if (!el) return;
+      if (!useStore.getState().actiefDiagramId) return;
+      // Diagramverwijzing (superprofiel, 20-10): eerst kiezen waar hij naar wijst — zonder doel
+      // is hij niets. Annuleren = niet plaatsen.
+      if (elementTypeId === "diagramverwijzing" && !el.data?.verwijstNaar) {
+        const huidig = useStore.getState().actiefDiagramId;
+        const opties = alleDiagrammen().flatMap((g) =>
+          g.diagrams
+            .filter((d) => !(g.profielId === id && d.id === huidig))
+            .map((d) => ({ waarde: `${g.profielId}::${d.id}`, label: `${d.naam || d.id} · ${g.label}` }))
+        );
+        if (!opties.length) {
+          toonMelding({ titel: "Geen ander diagram", tekst: "Een diagramverwijzing wijst naar een ander diagram; dit project heeft er nog geen." });
+          return;
+        }
+        const keuze = await vraagKeuze({ titel: "Diagramverwijzing", label: "Naar welk diagram wijst hij?", opties, zoekbaar: opties.length > 8, bevestig: "Plaatsen" });
+        if (!keuze) return;
+        const [profielId, ...rest] = keuze.split("::");
+        el.data = { ...(el.data || {}), verwijstNaar: { profielId, diagramId: rest.join("::") } };
+      }
       const s = useStore.getState();
       const dId = s.actiefDiagramId;
       if (!dId) return;

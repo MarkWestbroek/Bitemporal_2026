@@ -129,9 +129,6 @@
  *   shape, kleur, compartments, properties, hooks, bron/doel, randElement … van
  *   de ouder komen mee, het kind overschrijft per sleutel/id. In de
  *   profiel-ontwerper is dit de generalisatie-pijl tussen twee elementtypen.
- * @property {"model"|"diagram"} [hoortBij] - eigendom (M3, 2026-10-20): standaard "model";
- *   "diagram" = weergave van één plaat — niet in de boom, de MCP-modelinhoud of documenten,
- *   verdwijnt met het diagram (superprofiel: de diagramverwijzing). Zie types/superprofiel.js.
  * @property {boolean} [verwijstNaar]      - `false`: dit type heeft geen vaste doorklik
  *   (M3, 2026-10-20). Standaard heeft elke knoop `data.verwijstNaar = {profielId, diagramId}`:
  *   dubbelklik opent dat diagram, ook in een ander profiel (EA composite element). Connectoren

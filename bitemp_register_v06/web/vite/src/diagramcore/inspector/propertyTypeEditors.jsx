@@ -208,22 +208,21 @@ function DiagramVerwijzingEditor({ regel, waarde, onChange, context }) {
     // Gedragsverwijzing in het eigen profiel: kale id (achterwaarts); anders het object.
     onChange(regel.key !== "verwijstNaar" && profielId === eigen ? d : { profielId, diagramId: d });
   };
-  const stijl = { flex: 1, minWidth: 0, font: "inherit", fontSize: 12, padding: "3px 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)" };
+  // Dezelfde kiezer als elke andere verwijzing (keuzelijst + 🔍-minibrowser met zoekveld; Mark,
+  // 21-10: "die hebben we op veel plaatsen al") — een volwassen model heeft honderden diagrammen.
+  const kandidaten = useMemo(
+    () => [
+      ...(huidig && !bestaat ? [{ waarde: gekozen, label: `(verwijderd diagram: ${huidig.diagramId})`, groep: "" }] : []),
+      ...groepen.flatMap((g) => g.diagrams.map((d) => ({ waarde: sleutel(g.profielId, d.id), label: d.naam || d.id, groep: groepen.length > 1 || g.label ? g.label || g.profielId : "" }))),
+    ],
+    [groepen, gekozen, bestaat]
+  );
+  const stijl = { flex: "none", font: "inherit", fontSize: 12, padding: "3px 6px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)", cursor: "pointer" };
   return (
-    <span style={{ display: "flex", gap: 4, flex: 1, minWidth: 0 }}>
-      <select value={gekozen} title={regel.label || regel.key} onChange={(e) => kies(e.target.value)} style={stijl} data-testid={`diagram-verwijzing-${regel.key}`}>
-        <option value="">(geen)</option>
-        {!bestaat && <option value={gekozen}>(verwijderd diagram: {huidig.diagramId})</option>}
-        {groepen.length === 1 && !groepen[0].label
-          ? groepen[0].diagrams.map((d) => <option key={d.id} value={sleutel(groepen[0].profielId, d.id)}>{d.naam || d.id}</option>)
-          : groepen.map((g) => (
-              <optgroup key={g.profielId || "-"} label={g.label || g.profielId}>
-                {g.diagrams.map((d) => <option key={d.id} value={sleutel(g.profielId, d.id)}>{d.naam || d.id}</option>)}
-              </optgroup>
-            ))}
-      </select>
+    <span style={{ display: "flex", gap: 4, flex: 1, minWidth: 0 }} data-testid={`diagram-verwijzing-${regel.key}`}>
+      <VerwijzingsKiezer regel={{ ...regel, label: "geen" }} waarde={gekozen} onChange={kies} kandidaten={kandidaten} />
       {huidig && bestaat && context?.openDiagram && (
-        <button type="button" title="Open dit diagram" onClick={() => context.openDiagram(huidig)} style={{ ...stijl, flex: "none", cursor: "pointer" }}>
+        <button type="button" title="Open dit diagram" onClick={() => context.openDiagram(huidig)} style={stijl}>
           ↗
         </button>
       )}

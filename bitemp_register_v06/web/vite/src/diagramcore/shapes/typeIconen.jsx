@@ -133,7 +133,28 @@ const IcoonEdgePresentatie = ({ maat = 14, presentatie = {} }) => {
   ));
 };
 
+// Superprofiel (20-10): de diagramverwijzing (⧉: twee vlakken, pijl naar het achterste) en de
+// constraint ({ }). Zonder eigen icoon viel de compacte Maken-balk terug op het doosje en was
+// de ⧉-knop onvindbaar (Mark, 22-10: "ik zie niets").
+const IcoonDiagramVerwijzing = ({ maat = 14 }) =>
+  basis(maat, (
+    <>
+      <rect x="1.5" y="4.5" width="8" height="8" rx="1" />
+      <path d="M5 2.5h7.5V10" />
+      <path d="M6.5 7.5 9.5 4.5M9.5 4.5H7M9.5 4.5V7" />
+    </>
+  ));
+const IcoonConstraint = ({ maat = 14 }) =>
+  basis(maat, (
+    <>
+      <path d="M5 2C3.5 2 3.5 3 3.5 4.5S3.5 7 2 7c1.5 0 1.5 1 1.5 2.5S3.5 12 5 12" />
+      <path d="M9 2c1.5 0 1.5 1 1.5 2.5S10.5 7 12 7c-1.5 0-1.5 1-1.5 2.5S10.5 12 9 12" />
+    </>
+  ));
+
 const perShape = {
+  diagramverwijzing: IcoonDiagramVerwijzing,
+  constraint: IcoonConstraint,
   "class-box": IcoonBox,
   bol: IcoonBol,
   note: IcoonNote,
