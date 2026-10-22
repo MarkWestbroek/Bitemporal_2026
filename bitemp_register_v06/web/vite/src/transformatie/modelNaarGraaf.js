@@ -18,6 +18,7 @@
  * beperkt de graaf; een connector gaat mee als beide uiteinden erin zitten.
  * Zonder bereik gaat het hele model mee. Puur en store-loos.
  */
+import { isLidConnector } from "../diagramcore/types/containerVoor.js";
 
 /**
  * @param {Object} invoer
@@ -39,7 +40,7 @@ export function modelNaarGraaf({ elements, elementTypes = [], bereik = null }) {
   for (const el of alle) {
     if (!isConnector(el) || el.source === el.target || !hoortErbij(el)) continue;
     const bronType = typeVan.get(elements[el.source]?.elementType);
-    if (bronType?.containerVoor === el.elementType && !containerVan.has(el.target)) containerVan.set(el.target, el.source);
+    if (isLidConnector(bronType, el.elementType) && !containerVan.has(el.target)) containerVan.set(el.target, el.source);
   }
 
   const knopen = [];

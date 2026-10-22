@@ -89,6 +89,20 @@
      "label": "Flow-eind",
      "omschrijving": "Beëindigt alleen deze stroom, niet de hele activity.",
      "vast": true
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -136,6 +150,33 @@
         "aanroep",
         "object",
         "pin"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "begin",
+        "actie",
+        "aanroep",
+        "interactiegebruik",
+        "beslissing",
+        "fork",
+        "object",
+        "pin",
+        "partitie",
+        "eind",
+        "flow-eind",
+        "constraint",
+        "diagramverwijzing"
        ]
       }
      ]
@@ -220,7 +261,9 @@
      "aard": "eind"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "controlestroom",
@@ -241,6 +284,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -542,12 +595,140 @@
     {
      "id": "locatie",
      "label": "Locatie",
-     "omschrijving": "Conceptuele of fysieke plaats waar elementen zich bevinden."
+     "omschrijving": "Conceptuele of fysieke plaats waar elementen zich bevinden.",
+     "container": "aggregatie",
+     "leden": [
+      "resource",
+      "capability",
+      "koers",
+      "waardestroom",
+      "business-actor",
+      "business-rol",
+      "business-collaboratie",
+      "business-interface",
+      "business-proces",
+      "business-functie",
+      "business-interactie",
+      "business-service",
+      "business-event",
+      "business-object",
+      "contract",
+      "representatie",
+      "product",
+      "app-component",
+      "app-collaboratie",
+      "app-interface",
+      "app-functie",
+      "app-interactie",
+      "app-proces",
+      "app-event",
+      "app-service",
+      "data-object",
+      "node",
+      "device",
+      "systeemsoftware",
+      "tech-collaboratie",
+      "tech-interface",
+      "pad",
+      "communicatienetwerk",
+      "tech-functie",
+      "tech-proces",
+      "tech-interactie",
+      "tech-event",
+      "tech-service",
+      "artifact",
+      "equipment",
+      "facility",
+      "distributienetwerk",
+      "materiaal",
+      "stakeholder",
+      "driver",
+      "assessment",
+      "goal",
+      "outcome",
+      "principle",
+      "requirement",
+      "constraint",
+      "betekenis",
+      "waarde",
+      "werkpakket",
+      "deliverable",
+      "implementatie-event",
+      "plateau",
+      "gap",
+      "locatie",
+      "grouping",
+      "junction"
+     ]
     },
     {
      "id": "grouping",
      "label": "Grouping",
-     "omschrijving": "Groepeert elementen die iets delen (domein, thema)."
+     "omschrijving": "Groepeert elementen die iets delen (domein, thema).",
+     "container": "aggregatie",
+     "leden": [
+      "resource",
+      "capability",
+      "koers",
+      "waardestroom",
+      "business-actor",
+      "business-rol",
+      "business-collaboratie",
+      "business-interface",
+      "business-proces",
+      "business-functie",
+      "business-interactie",
+      "business-service",
+      "business-event",
+      "business-object",
+      "contract",
+      "representatie",
+      "product",
+      "app-component",
+      "app-collaboratie",
+      "app-interface",
+      "app-functie",
+      "app-interactie",
+      "app-proces",
+      "app-event",
+      "app-service",
+      "data-object",
+      "node",
+      "device",
+      "systeemsoftware",
+      "tech-collaboratie",
+      "tech-interface",
+      "pad",
+      "communicatienetwerk",
+      "tech-functie",
+      "tech-proces",
+      "tech-interactie",
+      "tech-event",
+      "tech-service",
+      "artifact",
+      "equipment",
+      "facility",
+      "distributienetwerk",
+      "materiaal",
+      "stakeholder",
+      "driver",
+      "assessment",
+      "goal",
+      "outcome",
+      "principle",
+      "requirement",
+      "constraint",
+      "betekenis",
+      "waarde",
+      "werkpakket",
+      "deliverable",
+      "implementatie-event",
+      "plateau",
+      "gap",
+      "locatie",
+      "grouping",
+      "junction"
+     ]
     },
     {
      "id": "junction",
@@ -562,6 +743,11 @@
      "id": "kader",
      "label": "Kader",
      "omschrijving": "Puur visuele groepering in een view; geen ArchiMate-modelsemantiek."
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -569,141 +755,6 @@
      "id": "compositie",
      "label": "Compositie",
      "omschrijving": "Geheel-deel: het deel bestaat niet zonder het geheel (ruit aan het geheel).",
-     "regels": [
-      {
-       "bron": [
-        "resource",
-        "capability",
-        "koers",
-        "waardestroom",
-        "business-actor",
-        "business-rol",
-        "business-collaboratie",
-        "business-interface",
-        "business-proces",
-        "business-functie",
-        "business-interactie",
-        "business-service",
-        "business-event",
-        "business-object",
-        "contract",
-        "representatie",
-        "product",
-        "app-component",
-        "app-collaboratie",
-        "app-interface",
-        "app-functie",
-        "app-interactie",
-        "app-proces",
-        "app-event",
-        "app-service",
-        "data-object",
-        "node",
-        "device",
-        "systeemsoftware",
-        "tech-collaboratie",
-        "tech-interface",
-        "pad",
-        "communicatienetwerk",
-        "tech-functie",
-        "tech-proces",
-        "tech-interactie",
-        "tech-event",
-        "tech-service",
-        "artifact",
-        "equipment",
-        "facility",
-        "distributienetwerk",
-        "materiaal",
-        "stakeholder",
-        "driver",
-        "assessment",
-        "goal",
-        "outcome",
-        "principle",
-        "requirement",
-        "constraint",
-        "betekenis",
-        "waarde",
-        "werkpakket",
-        "deliverable",
-        "implementatie-event",
-        "plateau",
-        "gap",
-        "locatie",
-        "grouping",
-        "junction"
-       ],
-       "doel": [
-        "resource",
-        "capability",
-        "koers",
-        "waardestroom",
-        "business-actor",
-        "business-rol",
-        "business-collaboratie",
-        "business-interface",
-        "business-proces",
-        "business-functie",
-        "business-interactie",
-        "business-service",
-        "business-event",
-        "business-object",
-        "contract",
-        "representatie",
-        "product",
-        "app-component",
-        "app-collaboratie",
-        "app-interface",
-        "app-functie",
-        "app-interactie",
-        "app-proces",
-        "app-event",
-        "app-service",
-        "data-object",
-        "node",
-        "device",
-        "systeemsoftware",
-        "tech-collaboratie",
-        "tech-interface",
-        "pad",
-        "communicatienetwerk",
-        "tech-functie",
-        "tech-proces",
-        "tech-interactie",
-        "tech-event",
-        "tech-service",
-        "artifact",
-        "equipment",
-        "facility",
-        "distributienetwerk",
-        "materiaal",
-        "stakeholder",
-        "driver",
-        "assessment",
-        "goal",
-        "outcome",
-        "principle",
-        "requirement",
-        "constraint",
-        "betekenis",
-        "waarde",
-        "werkpakket",
-        "deliverable",
-        "implementatie-event",
-        "plateau",
-        "gap",
-        "locatie",
-        "grouping",
-        "junction"
-       ]
-      }
-     ]
-    },
-    {
-     "id": "aggregatie",
-     "label": "Aggregatie",
-     "omschrijving": "Groepeert delen die ook zelfstandig bestaan (open ruit aan het geheel).",
      "regels": [
       {
        "bron": [
@@ -2055,6 +2106,83 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "resource",
+        "capability",
+        "koers",
+        "waardestroom",
+        "business-actor",
+        "business-rol",
+        "business-collaboratie",
+        "business-interface",
+        "business-proces",
+        "business-functie",
+        "business-interactie",
+        "business-service",
+        "business-event",
+        "business-object",
+        "contract",
+        "representatie",
+        "product",
+        "app-component",
+        "app-collaboratie",
+        "app-interface",
+        "app-functie",
+        "app-interactie",
+        "app-proces",
+        "app-event",
+        "app-service",
+        "data-object",
+        "node",
+        "device",
+        "systeemsoftware",
+        "tech-collaboratie",
+        "tech-interface",
+        "pad",
+        "communicatienetwerk",
+        "tech-functie",
+        "tech-proces",
+        "tech-interactie",
+        "tech-event",
+        "tech-service",
+        "artifact",
+        "equipment",
+        "facility",
+        "distributienetwerk",
+        "materiaal",
+        "stakeholder",
+        "driver",
+        "assessment",
+        "goal",
+        "outcome",
+        "principle",
+        "requirement",
+        "constraint",
+        "betekenis",
+        "waarde",
+        "werkpakket",
+        "deliverable",
+        "implementatie-event",
+        "plateau",
+        "gap",
+        "locatie",
+        "grouping",
+        "junction",
+        "kader",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -2501,21 +2629,26 @@
      "id": "locatie",
      "facetten": {
       "aspect": "samengesteld"
-     }
+     },
+     "containerVoor": [
+      "aggregatie",
+      "compositie"
+     ]
     },
     {
      "id": "grouping",
      "facetten": {
       "aspect": "samengesteld"
      },
+     "containerVoor": [
+      "aggregatie",
+      "compositie"
+     ],
      "minBreedte": 200,
      "minHoogte": 90
     },
     {
      "id": "junction"
-    },
-    {
-     "id": "notitie"
     },
     {
      "id": "kader"
@@ -2576,9 +2709,19 @@
      "aard": "associatie"
     },
     {
-     "id": "toelichting",
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
      "isConnector": true,
      "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -2727,6 +2870,20 @@
      "eigenschappen": [
       "soort"
      ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -2820,6 +2977,37 @@
      "eigenschappen": [
       "stereotype"
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "start-event",
+        "taak",
+        "subproces",
+        "boundary-event",
+        "tussen-event",
+        "exclusief",
+        "parallel",
+        "inclusief",
+        "complex",
+        "event-gateway",
+        "data-object",
+        "data-store",
+        "pool",
+        "lane",
+        "eind-event",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -2906,7 +3094,9 @@
      "aard": "eind"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "sequence-flow",
@@ -2932,6 +3122,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -3029,6 +3229,20 @@
      "id": "boundary",
      "label": "Kader",
      "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -3257,6 +3471,32 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "proces",
+        "doel",
+        "fysiek",
+        "mensen",
+        "informatie",
+        "gebeurtenis",
+        "bedrijfsobject",
+        "actor",
+        "package",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -3317,7 +3557,9 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -3369,6 +3611,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -3473,6 +3725,11 @@
     {
      "id": "boundary",
      "label": "Kader"
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -3555,6 +3812,29 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "entiteit",
+        "gegevenselement",
+        "enumeratie",
+        "gegevenstype",
+        "referentielijstInstantie",
+        "package",
+        "constraint",
+        "boundary",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -3615,7 +3895,9 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "constraint"
@@ -3638,6 +3920,16 @@
     {
      "id": "bevat",
      "isConnector": true
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -3719,6 +4011,20 @@
       "soort",
       "ifPart"
      ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -3763,6 +4069,29 @@
         "mijlpaal",
         "case-file-item",
         "event-listener"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "case-plan",
+        "stage",
+        "taak",
+        "mijlpaal",
+        "event-listener",
+        "case-file-item",
+        "sentry",
+        "constraint",
+        "diagramverwijzing"
        ]
       }
      ]
@@ -3825,7 +4154,9 @@
      "randElement": true
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "on-part",
@@ -3841,6 +4172,21 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -3869,6 +4215,20 @@
      "id": "boundary",
      "label": "Kader",
      "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -3890,6 +4250,25 @@
      ],
      "eigenschappen": [
       "naam"
+     ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "object",
+        "actor",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
      ]
     }
    ],
@@ -3919,7 +4298,9 @@
      "id": "actor"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -3934,6 +4315,16 @@
      "id": "notitielijn",
      "isConnector": true,
      "aard": "annotatie"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -4116,6 +4507,20 @@
      "id": "boundary",
      "label": "Kader",
      "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -4334,6 +4739,32 @@
      "eigenschappen": [
       "stereotype"
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "component",
+        "interface",
+        "poort",
+        "artifact",
+        "deploymentspec",
+        "node",
+        "device",
+        "executieomgeving",
+        "package",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -4406,7 +4837,9 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -4458,6 +4891,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -4588,6 +5031,20 @@
      "id": "boundary",
      "label": "Kader",
      "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -4714,6 +5171,30 @@
      "eigenschappen": [
       "stereotype"
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "klasse",
+        "part",
+        "poort",
+        "interface",
+        "collaboratie",
+        "collaboratiegebruik",
+        "package",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -4774,7 +5255,9 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -4814,6 +5297,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -4844,9 +5337,44 @@
     {
      "id": "boundary",
      "label": "Kader"
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "decision",
+        "inputData",
+        "bkm",
+        "knowledgeSource",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
+    },
     {
      "id": "infoReq",
      "label": "Information requirement",
@@ -4916,14 +5444,17 @@
      "id": "knowledgeSource"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary"
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "infoReq",
@@ -4936,6 +5467,16 @@
     {
      "id": "authReq",
      "isConnector": true
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -4970,6 +5511,20 @@
       "entiteit",
       "domein"
      ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -5009,6 +5564,24 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "entiteit",
+        "domein",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -5038,7 +5611,9 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "relatie",
@@ -5051,6 +5626,21 @@
     {
      "id": "bevat",
      "isConnector": true
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -5140,6 +5730,20 @@
        "fieldType": "veld"
       }
      ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -5166,6 +5770,27 @@
      "eigenschappen": [
       "volgorde"
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "formulier",
+        "groep",
+        "rij",
+        "lijst",
+        "conditioneel",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layoutStijlen": [],
@@ -5186,11 +5811,28 @@
      "id": "conditioneel"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "bevat",
      "isConnector": true
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -5302,6 +5944,20 @@
     {
      "id": "boundary",
      "label": "Kader"
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -5392,6 +6048,31 @@
      "eigenschappen": [
       "rol"
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "schema",
+        "object",
+        "interface",
+        "union",
+        "enum",
+        "input",
+        "scalar",
+        "directive",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -5426,7 +6107,9 @@
      "id": "directive"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary"
@@ -5450,6 +6133,21 @@
     {
      "id": "root",
      "isConnector": true
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -5632,6 +6330,11 @@
     {
      "id": "boundary",
      "label": "Kader"
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -5746,6 +6449,32 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "objecttype",
+        "gegevensgroeptype",
+        "enumeratie",
+        "codelijst",
+        "referentielijst",
+        "primitiefDatatype",
+        "gestructureerdDatatype",
+        "keuze",
+        "constraint",
+        "package",
+        "boundary",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -5799,7 +6528,9 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary"
@@ -5826,11 +6557,17 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
      "isConnector": true
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -5916,6 +6653,20 @@
     {
      "id": "boundary",
      "label": "Kader"
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -6013,6 +6764,28 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "api",
+        "server",
+        "schema",
+        "enum",
+        "operatie",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -6038,7 +6811,9 @@
      "id": "operatie"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary"
@@ -6066,6 +6841,21 @@
     {
      "id": "servers",
      "isConnector": true
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -6123,6 +6913,20 @@
      "id": "boundary",
      "label": "Kader",
      "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -6203,6 +7007,26 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "object",
+        "multiobject",
+        "package",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -6236,7 +7060,9 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -6268,6 +7094,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -6353,6 +7189,20 @@
      "id": "boundary",
      "label": "Kader",
      "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -6536,6 +7386,29 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "requirement",
+        "feature",
+        "issue",
+        "change",
+        "verwijzing",
+        "package",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -6585,7 +7458,9 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -6633,6 +7508,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -6669,9 +7554,43 @@
       "soort",
       "naam"
      ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "levenslijn",
+        "punt",
+        "activatie",
+        "fragment",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
+    },
     {
      "id": "synchroon",
      "label": "Synchroon bericht",
@@ -6775,7 +7694,8 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "synchroon",
@@ -6788,6 +7708,16 @@
     {
      "id": "retour",
      "isConnector": true
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -6879,6 +7809,20 @@
      "label": "Exit-point",
      "omschrijving": "Exit-point: sleep hem op de rand van een toestand — nette uitgang.",
      "vast": true
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -6916,6 +7860,32 @@
       "trigger",
       "guard",
       "effect"
+     ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "begin",
+        "toestand",
+        "eind",
+        "composiet",
+        "submachine",
+        "keuze",
+        "junction",
+        "historie",
+        "entry",
+        "exit",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
      ]
     }
    ],
@@ -6985,7 +7955,9 @@
      "randElement": true
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "transitie",
@@ -6996,6 +7968,21 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -7130,6 +8117,20 @@
       "requirement",
       "pakket"
      ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -7316,6 +8317,31 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "blok",
+        "part",
+        "poort",
+        "waardetype",
+        "interfaceblok",
+        "constraintblok",
+        "enumeratie",
+        "requirement",
+        "pakket",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -7370,7 +8396,9 @@
      "containerVoor": "bevat-pakket"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "compositie",
@@ -7415,6 +8443,21 @@
     {
      "id": "bevat-pakket",
      "isConnector": true
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -7500,6 +8543,20 @@
       "verwijzingsprofiel",
       "verwijzingselement"
      ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -7637,6 +8694,32 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "policy",
+        "map",
+        "toegangsregel",
+        "subject",
+        "handeling",
+        "gegevensselectie",
+        "voorwaardepoort",
+        "voorwaarde",
+        "plicht",
+        "begrip",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -7723,6 +8806,26 @@
     {
      "id": "verwijst-naar",
      "isConnector": true
+    },
+    {
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -7798,6 +8901,20 @@
     {
      "id": "boundary",
      "label": "Kader"
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -7944,6 +9061,28 @@
        ]
       }
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "klasse",
+        "interface",
+        "enumeratie",
+        "datatype",
+        "package",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -7982,7 +9121,9 @@
      "containerVoor": "bevat"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -8015,11 +9156,22 @@
     },
     {
      "id": "notitielijn",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "annotatie"
     },
     {
      "id": "bevat",
      "isConnector": true
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -8073,6 +9225,20 @@
      "id": "boundary",
      "label": "Kader",
      "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -8204,6 +9370,28 @@
      "eigenschappen": [
       "voorwaarde"
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "actor",
+        "usecase",
+        "systeem",
+        "collaboratie",
+        "klasse",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -8307,7 +9495,9 @@
      "id": "klasse"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -8353,6 +9543,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -8444,6 +9644,20 @@
      "id": "boundary",
      "label": "Kader",
      "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -8556,6 +9770,29 @@
      "eigenschappen": [
       "stereotype"
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "namespace",
+        "service",
+        "portType",
+        "binding",
+        "message",
+        "types",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -8606,7 +9843,9 @@
      "erft": "wsdlElement"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -8646,6 +9885,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   },
@@ -8786,6 +10035,20 @@
      "id": "boundary",
      "label": "Kader",
      "omschrijving": "Informeel kader: groepeert visueel, zonder betekenis in het model."
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
+     "eigenschappen": [
+      "specificatie",
+      "taal"
+     ]
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het. Hoort bij dit diagram, niet bij het model."
     }
    ],
    "connectoren": [
@@ -8921,6 +10184,31 @@
      "eigenschappen": [
       "stereotype"
      ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "schema",
+        "complexType",
+        "simpleType",
+        "enumeration",
+        "element",
+        "attribute",
+        "group",
+        "attributeGroup",
+        "boundary",
+        "constraint",
+        "diagramverwijzing"
+       ]
+      }
+     ]
     }
    ],
    "layouts": [
@@ -8975,7 +10263,9 @@
      "id": "attributeGroup"
     },
     {
-     "id": "notitie"
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
     },
     {
      "id": "boundary",
@@ -9015,6 +10305,16 @@
      "id": "bevat",
      "isConnector": true,
      "aard": "insluiting"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
     }
    ]
   }

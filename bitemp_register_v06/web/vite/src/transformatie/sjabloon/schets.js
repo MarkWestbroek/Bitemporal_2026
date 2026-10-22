@@ -237,7 +237,12 @@ export function schetsDiagramSvg({ diagram, elements, descriptor, idPrefix = "s"
     const b = perElement.get(c.target);
     if (!a || !b) continue;
     const p = et.edgePresentatie || {};
-    if (p.verbergBijNesting) continue; // lidmaatschap: het kind ligt al in het kader
+    // Lidmaatschap: weg als het kind ín het kader ligt (middelpunt binnen de bron), zoals op het
+    // canvas (materialiseerConnectoren); erbuiten is de lijn juist informatief (ArchiMate, 20-10).
+    if (p.verbergBijNesting && a !== b) {
+      const mx = b.x + b.w / 2, my = b.y + b.h / 2;
+      if (mx >= a.x && mx <= a.x + a.w && my >= a.y && my <= a.y + a.h) continue;
+    }
     // Lijnen gaan om het naamlabel onder een actor/punt heen (anders landt
     // een pijlpunt precies op de naam).
     const metLabel = (bx) => (bx.fam === "actor" || bx.fam === "punt" ? { ...bx, h: bx.h + 24 } : bx);

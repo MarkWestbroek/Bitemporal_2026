@@ -67,6 +67,7 @@ import { registreerProfieltype } from "../profieltypeRegistry";
 import { openVerwijzing, alleDiagrammen, naamVanVerwijzing } from "../doorklik.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { doorklikVan } from "../../diagramcore/model/verwijstNaar.js";
+import { lidConnectoren, isLidConnector } from "../../diagramcore/types/containerVoor.js";
 import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
 import { staatMeerdereVoorkomensToe, vindVoorkomen } from "../../diagramcore/model/voorkomens.js";
@@ -267,10 +268,9 @@ export function maakDiagramActiviteit(opties) {
   const fieldTypesById = Object.fromEntries((descriptor.fieldTypes || []).map((ft) => [ft.id, ft]));
   const elementTypesById = Object.fromEntries(descriptor.elementTypes.map((et) => [et.id, et]));
   // Containertypen ("slepen in een package"): ElementType.containerVoor wijst
-  // naar het connectortype dat het lidmaatschap vastlegt (bv. "bevat").
-  const containerConnectorIds = new Set(
-    descriptor.elementTypes.filter((et) => et.containerVoor).map((et) => et.containerVoor)
-  );
+  // naar het connectortype dat het lidmaatschap vastlegt (bv. "bevat") — of
+  // naar een lijst (ArchiMate-grouping: aggregatie én compositie, 20-10).
+  const containerConnectorIds = new Set(descriptor.elementTypes.flatMap((et) => lidConnectoren(et)));
 
   /**
    * Verhang een element naar een container (of maak het los met
@@ -281,24 +281,26 @@ export function maakDiagramActiviteit(opties) {
     const s = useStoreRef.getState();
     const el = s.elements[elementId];
     if (!el || elementId === containerId) return;
-    const bestaande = Object.values(s.elements).filter(
-      (c) => containerConnectorIds.has(c.elementType) && c.target === elementId
-    );
+    // Alleen échte lidmaatschapslijnen: vanuit een container-type met dit connectortype in zijn
+    // containerVoor. Een ArchiMate-compositie vanuit een gewoon component (Omnium Studio → EA-lezer)
+    // is geen lidmaatschap en blijft staan (Mark, 22-10: "een grouping moet geen bestaande
+    // relaties verwijderen").
+    const isLidmaatschap = (c) => c.source && c.target && isLidConnector(elementTypesById[s.elements[c.source]?.elementType], c.elementType);
+    const bestaande = Object.values(s.elements).filter((c) => isLidmaatschap(c) && c.target === elementId);
     if (containerId) {
       const container = s.elements[containerId];
-      const ct = elementTypesById[elementTypesById[container?.elementType]?.containerVoor];
+      // Verbindingsregels respecteren (bv. geen notitie in een package); bij een
+      // lijst het eerste connectortype dat mag (ArchiMate: aggregatie).
+      const ct = lidConnectoren(elementTypesById[container?.elementType])
+        .map((id) => elementTypesById[id])
+        .find((c) => c && verbindingsregelsVan(c).some((r) => r.bron.includes(container.elementType) && r.doel.includes(el.elementType)));
       if (!ct) return;
-      // Verbindingsregels respecteren (bv. geen notitie in een package).
-      const mag = verbindingsregelsVan(ct).some(
-        (r) => r.bron.includes(container.elementType) && r.doel.includes(el.elementType)
-      );
-      if (!mag) return;
       // Cycle-guard: containerId mag niet (indirect) ín elementId zitten.
       let cursor = containerId;
       for (let i = 0; i < 50 && cursor; i += 1) {
         if (cursor === elementId) return;
         const ouderConn = Object.values(s.elements).find(
-          (c) => containerConnectorIds.has(c.elementType) && c.target === cursor
+          (c) => isLidmaatschap(c) && c.target === cursor
         );
         cursor = ouderConn?.source || null;
       }

@@ -37,6 +37,7 @@
  * Werkt in place (de activiteiten houden het descriptor-object zelf vast) en
  * is idempotent (`dt._erfenisGenormaliseerd`).
  */
+import { lidConnectoren } from "./containerVoor.js";
 
 /** Sleutels die een kind nooit van zijn ouder overneemt. */
 const NIET_ERVEN = new Set(["id", "label", "kort", "omschrijving", "erft", "isAbstract"]);
@@ -163,9 +164,9 @@ export function normaliseerErfenis(dt) {
       obj._relatieTypesVoorExpansie = bron;
       obj.relatieTypes = expandeer(bron);
     }
-    // Eén id, geen lijst: een container-relatie moet een concreet connectortype zijn.
-    if (et.containerVoor && perId.get(et.containerVoor)?.isAbstract) {
-      fouten.push(`${ctx(et)}: containerVoor "${et.containerVoor}" is abstract; kies een concreet connectortype`);
+    // Eén id of een lijst (20-10): elke container-relatie moet een concreet connectortype zijn.
+    for (const cid of lidConnectoren(et)) {
+      if (perId.get(cid)?.isAbstract) fouten.push(`${ctx(et)}: containerVoor "${cid}" is abstract; kies een concreet connectortype`);
     }
   }
   // Shape-sets: een gedaante voor een abstract type geldt voor zijn afstammelingen.

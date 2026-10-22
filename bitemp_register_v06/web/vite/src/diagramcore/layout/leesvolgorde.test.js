@@ -190,3 +190,43 @@ test("lagen: binnen een laag bepalen de relaties boven en onder; een volle rij s
   const r = legLeesvolgordeUit({ knopen, verbindingen, regels: { ...regels, maxPerRij: 2 } }).posities;
   assert.equal(new Set(["c1", "c2", "c3"].map((c) => r[c].y)).size, 2);
 });
+
+test("containerVoor als lijst (ArchiMate §4.5): aggregatie/compositie vanuit een grouping nest het lid; de grouping groeit mee", () => {
+  const typen = new Map([
+    ["grouping", { id: "grouping", containerVoor: ["aggregatie", "compositie"] }],
+    ["comp", { id: "comp" }],
+    ["aggregatie", { id: "aggregatie", isConnector: true }],
+    ["compositie", { id: "compositie", isConnector: true }],
+    ["serving", { id: "serving", isConnector: true }],
+  ]);
+  const elements = {
+    G: { id: "G", elementType: "grouping" },
+    H: { id: "H", elementType: "grouping" },
+    a: { id: "a", elementType: "comp" },
+    b: { id: "b", elementType: "comp" },
+    c: { id: "c", elementType: "comp" },
+    r1: { id: "r1", elementType: "aggregatie", source: "G", target: "a" },
+    r2: { id: "r2", elementType: "compositie", source: "G", target: "b" },
+    r3: { id: "r3", elementType: "aggregatie", source: "H", target: "a" }, // tweede ouder: gewone lijn
+    r4: { id: "r4", elementType: "serving", source: "a", target: "c" },
+  };
+  const diagram = { nodes: ["G", "H", "a", "b", "c"].map((id) => ({ elementId: id })) };
+  const flowNodes = diagram.nodes.map((n, i) => ({ id: n.elementId, type: elements[n.elementId].elementType, position: { x: i * 300, y: 0 }, measured: { width: 120, height: 50 } }));
+  const { knopen, verbindingen } = invoerVanCanvas({ flowNodes, elements, diagram, typen });
+  const k = Object.fromEntries(knopen.map((x) => [x.id, x]));
+  assert.equal(k.a.ouder, "G");
+  assert.equal(k.b.ouder, "G");
+  assert.equal(k.c.ouder, null);
+  assert.equal(k.G.container, true);
+  assert.ok(verbindingen.some((v) => v.bron === "H" && v.doel === "a"), "tweede ouder blijft een lijn");
+  assert.ok(!verbindingen.some((v) => v.bron === "G"), "lidmaatschap is geen lijn in de stroom");
+  // Zonder containerVoor: gewone knopen.
+  const kaal = new Map([...typen].map(([k, v]) => [k, k === "grouping" ? { id: "grouping" } : v]));
+  assert.equal(invoerVanCanvas({ flowNodes, elements, diagram, typen: kaal }).knopen.find((x) => x.id === "a").ouder, null);
+  // Uitgelegd: G omsluit a en b.
+  const { posities, maten } = legLeesvolgordeUit({ knopen, verbindingen, richting: "TB" });
+  for (const id of ["a", "b"]) {
+    assert.ok(posities[id].x >= posities.G.x && posities[id].x + 120 <= posities.G.x + maten.G.width, `${id} binnen G (x)`);
+    assert.ok(posities[id].y >= posities.G.y && posities[id].y + 50 <= posities.G.y + maten.G.height, `${id} binnen G (y)`);
+  }
+});

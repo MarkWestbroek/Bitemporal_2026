@@ -99,3 +99,28 @@ test("gemeten maten tellen mee als het voorkomen geen eigen maat heeft", () => {
   const n = bepaalNesting(elements, d, elementTypesById, { L: { width: 900, height: 600 } });
   assert.equal(n.ouderVan.get("T1"), "L");
 });
+
+test("containerVoor als lijst (ArchiMate-grouping, 20-10): aggregatie én compositie zijn lidmaatschap; de eerste ouder wint", () => {
+  const typen = {
+    grouping: { id: "grouping", containerVoor: ["aggregatie", "compositie"] },
+    comp: { id: "comp" },
+    aggregatie: { id: "aggregatie", isConnector: true },
+    compositie: { id: "compositie", isConnector: true },
+    serving: { id: "serving", isConnector: true },
+  };
+  const elements = {
+    G: { id: "G", elementType: "grouping" },
+    H: { id: "H", elementType: "grouping" },
+    a: { id: "a", elementType: "comp" },
+    b: { id: "b", elementType: "comp" },
+    c: { id: "c", elementType: "comp" },
+    r1: { id: "r1", elementType: "aggregatie", source: "G", target: "a" },
+    r2: { id: "r2", elementType: "compositie", source: "G", target: "b" },
+    r3: { id: "r3", elementType: "aggregatie", source: "H", target: "a" },
+    r4: { id: "r4", elementType: "serving", source: "G", target: "c" },
+  };
+  const m = containerVanElementen(elements, typen);
+  assert.equal(m.get("a"), "G");
+  assert.equal(m.get("b"), "G");
+  assert.equal(m.has("c"), false, "serving is geen lidmaatschap");
+});

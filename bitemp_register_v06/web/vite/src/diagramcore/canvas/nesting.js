@@ -19,6 +19,7 @@
  * Puur en store-loos: testbaar met kale objecten.
  */
 import { voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
+import { isLidConnector } from "../types/containerVoor.js";
 
 const STANDAARD_MAAT = { width: 200, height: 80 };
 
@@ -41,7 +42,7 @@ export function containerVanElementen(elements, elementTypesById) {
   for (const el of Object.values(elements || {})) {
     if (!el?.source || !el?.target || el.source === el.target) continue;
     const bronType = elementTypesById[elements[el.source]?.elementType];
-    if (!bronType?.containerVoor || bronType.containerVoor !== el.elementType) continue;
+    if (!isLidConnector(bronType, el.elementType)) continue;
     if (!resultaat.has(el.target)) resultaat.set(el.target, el.source);
   }
   return resultaat;

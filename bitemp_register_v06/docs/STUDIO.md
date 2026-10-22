@@ -294,6 +294,23 @@ te wijzigen.
 > boom VPS → Caddy/Compose/NAS → instanties → containers) en "Applicatiecomponenten en
 > interfaces". Open: lijnen die over lagen springen lopen soms door een element (tussenknopen).
 >
+> **Leden van een grouping (2026-10-20, besluit Mark via ARCH-PROJECT; ArchiMate 3 §4.5):**
+> `ElementType.containerVoor` mag nu een **lijst** zijn (M3, `schema.js`): een grouping of locatie
+> is container voor `["aggregatie", "compositie"]`. Elke lezer gaat via `types/containerVoor.js`
+> (`lidConnectoren`, `isLidConnector`, `eersteLidConnector`): canvas-nesting (lid reist mee met zijn
+> grouping), de lagen-layout (`invoerVanCanvas` nest het lid, de grouping groeit mee; de eerste
+> ouder wint, een tweede kandidaat of een kring blijft een gewone lijn), de boom, de transformaties
+> en de assistent/MCP (`container` = de eerste, dus slepen in een grouping legt een aggregatie, zoals
+> EA). Compositie en aggregatie hebben in ArchiMate `verbergBijNesting` (zoals Archi): ligt het deel
+> in het geheel, dan is de lijn weg; erbuiten blijft hij. De schets (documenten, plaatje-link) volgt
+> dezelfde geometrische regel (vroeger liet hij zulke lijnen altijd weg). `verhangNaarContainer`
+> ruimt bij het verhangen alleen échte lidmaatschapslijnen op (vanuit een container-type met dat
+> connectortype in zijn `containerVoor`); een compositie vanuit een gewoon component blijft staan
+> (Mark, 22-10: de compositie Omnium Studio → EA-lezer verdween bij slepen in de grouping). e2e
+> `35-studio-archimate-grouping`. Gemeten op de negen views
+> van "Omnium architectuur" (alleen lezen): "Gebruik (runtime)" 1 → 0 kruisingen met Frontend en
+> Backend als kaders om hun leden.
+>
 > **Use case-layout (2026-10-18, meting ARCH-PROJECT):** `legLeesvolgordeUit` draait de kern
 > (`legEenmaal`) vier keer: elke ronde krijgt per element een volgorde-hint = het gemiddelde dwars-
 > midden van zijn buren (alle verbindingen, ook over kadergrenzen) uit de vorige ronde. Daarna
