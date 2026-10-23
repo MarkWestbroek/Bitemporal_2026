@@ -42,7 +42,11 @@ RUN CGO_ENABLED=0 go build -o /app/bin/export_v3 ./cmd/export_v3
 
 # Bewaar een schone baseline van de modeldirectory, zodat een mislukte rebuild
 # later niet de volgende rebuild vergiftigt met half-gegenereerde bestanden.
-RUN mkdir -p /app/_baseline && cp -R /app/model /app/_baseline/model
+# De _baseline/ en _pre_rebuild/ uit de repo (COPY . .) eerst weg: anders nestte cp de kopie als
+# _baseline/model/model en bleef de verouderde gecommitte baseline staan (gezien 23-10-2026:
+# 8 van 12 domeinen), waarmee de crash-rollback in de entrypoint een niet-compilerende boom zou
+# terugzetten. Sinds die datum staan beide mappen ook in .dockerignore.
+RUN rm -rf /app/_baseline /app/_pre_rebuild && mkdir -p /app/_baseline && cp -R /app/model /app/_baseline/model
 
 # Entrypoint script
 COPY scripts/devloop-entrypoint.sh /app/scripts/devloop-entrypoint.sh
