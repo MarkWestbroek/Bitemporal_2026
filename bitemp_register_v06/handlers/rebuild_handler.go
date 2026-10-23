@@ -525,66 +525,7 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		appDir := resolveAppDir()
 		stappen = append(stappen, fmt.Sprintf("Werkdirectory bepaald als %s", appDir))
 
-		// Stap 0a: synchroniseer handmatige model-plumbingbestanden eerst naar de baseline,
-		// zodat een rebuild geen recente codewijzigingen terugdraait.
-		if meldingen, err := syncBaselineKernModelBestanden(appDir); err != nil {
-			c.JSON(http.StatusInternalServerError, RebuildResponse{
-				Status:  "fout",
-				Stappen: stappen,
-				Error:   err.Error(),
-			})
-			return
-		} else if len(meldingen) > 0 {
-			stappen = append(stappen, meldingen...)
-		}
-
-		// Stap 0b: Bepaal welke prefixen opgeschoond moeten worden.
-		// Bij een single-domein rebuild worden alleen bestanden voor dat domein verwijderd;
-		// bij een multi-domein rebuild (req.Domeinen) alleen de opgegeven domeinen.
-		// Een lege lijst betekent "alles" (volledige rebuild, ongebruikelijk via IDE).
-		var teVerwijderenPrefixen []string
-		if len(req.Domeinen) > 0 {
-			for _, d := range req.Domeinen {
-				p := strings.TrimSpace(d.Prefix)
-				if p == "" {
-					p = strings.ReplaceAll(d.Domein, "-", "_")
-				}
-				teVerwijderenPrefixen = append(teVerwijderenPrefixen, p)
-			}
-		} else if req.Domein != "" {
-			p := strings.TrimSpace(req.Prefix)
-			if p == "" {
-				p = strings.ReplaceAll(req.Domein, "-", "_")
-			}
-			teVerwijderenPrefixen = []string{p}
-		}
-
-		// Verwijder alleen codegen-bestanden voor de doeldomeinen (handmatige bestanden blijven intact).
-		if melding, err := herstelModelDirectoryVanuitBaseline(appDir, teVerwijderenPrefixen); err != nil {
-			c.JSON(http.StatusInternalServerError, RebuildResponse{
-				Status:  "fout",
-				Stappen: stappen,
-				Error:   err.Error(),
-			})
-			return
-		} else if melding != "" {
-			stappen = append(stappen, melding)
-		}
-
-		// Stap 0b: Maak backup van model/ vóór codegen (voor rollback bij fout).
-		if melding, err := backupModelDirectory(appDir); err != nil {
-			c.JSON(http.StatusInternalServerError, RebuildResponse{
-				Status:  "fout",
-				Stappen: stappen,
-				Error:   err.Error(),
-			})
-			return
-		} else if melding != "" {
-			stappen = append(stappen, melding)
-		}
-
-		// Stap 1: Bepaal welke modelbron gebruikt moet worden en schrijf het V3 model tijdelijk weg.
-		modelPath := filepath.Join(appDir, "_devloop_model.json")
+		// Stap 1: bepaal de modelbron (body, schema-versie, actief, laatste voorstel of code).
 		var modelBytes []byte
 
 		switch {
@@ -630,8 +571,8 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		default:
 			stappen = append(stappen, "V3 model exporteren vanuit huidige MetaRegistry (code)")
 			var exportCmd *exec.Cmd
-			if _, err := os.Stat(filepath.Join(appDir, "bin", "export_v3")); err == nil {
-				exportCmd = exec.Command(filepath.Join(appDir, "bin", "export_v3"), "--domein", req.Domein)
+			if _, err := os.Stat(binPad(appDir, "export_v3")); err == nil {
+				exportCmd = exec.Command(binPad(appDir, "export_v3"), "--domein", req.Domein)
 				stappen = append(stappen, "Export via prebuilt /app/bin/export_v3")
 			} else {
 				exportCmd = exec.Command("go", "run", "./cmd/export_v3", "--domein", req.Domein)
@@ -656,111 +597,55 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			req.Domein, req.Prefix, melding = bepaalDomeinEnPrefixUitModelJSON(modelBytes, req.Domein, req.Prefix)
 			stappen = append(stappen, melding)
 		}
-
-		if err := os.WriteFile(modelPath, modelBytes, 0644); err != nil {
-			c.JSON(http.StatusInternalServerError, RebuildResponse{
-				Status:  "fout",
-				Stappen: stappen,
-				Error:   fmt.Sprintf("kan model niet schrijven: %v", err),
-			})
-			return
-		}
-		stappen = append(stappen, fmt.Sprintf("Model opgeslagen als %s", modelPath))
-
-		// Stap 2: Codegen uitvoeren — multi-domein of single-domein.
-		//
-		// Als req.Domeinen is gevuld, voeren we per entry een codegen-run uit.
-		// Anders gebruiken we de legacy-single-domein-velden (Domein/Prefix/Mode).
 		domeinRuns := req.Domeinen
 		if len(domeinRuns) == 0 {
-			domeinRuns = []RebuildDomeinSpec{{
-				Domein: req.Domein,
-				Prefix: req.Prefix,
-				Mode:   req.Mode,
-			}}
+			domeinRuns = []RebuildDomeinSpec{{Domein: req.Domein, Prefix: req.Prefix, Mode: req.Mode}}
 		}
 
-		stappen = append(stappen, fmt.Sprintf("Codegen voor %d domein(en)", len(domeinRuns)))
-
-		for i, run := range domeinRuns {
-			runPrefix := strings.TrimSpace(run.Prefix)
-			if runPrefix == "" {
-				runPrefix = strings.ReplaceAll(run.Domein, "-", "_")
-			}
-
-			codegenArgs := []string{
-				"--input", modelPath,
-				"--mode", "additive",
-				"--domein", run.Domein,
-			}
-			if runPrefix != "" {
-				codegenArgs = append(codegenArgs, "--prefix", runPrefix)
-			}
-			codegenArgs = append(codegenArgs, "--output", filepath.Join(appDir, "model"))
-
-			var codegenCmd *exec.Cmd
-			if _, err := os.Stat(filepath.Join(appDir, "bin", "codegen")); err == nil {
-				stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen %s (domein=%s, prefix=%s, mode=additive)", i+1, len(domeinRuns), "/app/bin/codegen", run.Domein, runPrefix))
-				codegenCmd = exec.Command(filepath.Join(appDir, "bin", "codegen"), codegenArgs...)
-			} else {
-				fallbackArgs := append([]string{"run", "./cmd/codegen"}, codegenArgs...)
-				stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen go run ./cmd/codegen (domein=%s, prefix=%s, mode=additive)", i+1, len(domeinRuns), run.Domein, runPrefix))
-				codegenCmd = exec.Command("go", fallbackArgs...)
-			}
-			codegenCmd.Dir = appDir
-			codegenOutput, err := codegenCmd.CombinedOutput()
-			if err != nil {
-				// Codegen mislukt: rollback model/ naar pre-rebuild backup.
-				if rbMsg, rbErr := rollbackModelDirectory(appDir); rbErr != nil {
-					stappen = append(stappen, fmt.Sprintf("ROLLBACK MISLUKT: %v", rbErr))
-				} else {
-					stappen = append(stappen, rbMsg)
-				}
-				c.JSON(http.StatusInternalServerError, RebuildResponse{
-					Status:  "fout",
-					Stappen: stappen,
-					Error:   fmt.Sprintf("codegen [%d/%d] mislukt (domein=%s): %v\nOutput: %s", i+1, len(domeinRuns), run.Domein, err, string(codegenOutput)),
-				})
-				return
-			}
-			stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen domein=%s succesvol", i+1, len(domeinRuns), run.Domein))
-		}
-
-		// Stap 3: Go build
-		stappen = append(stappen, "Binary hercompileren...")
-		// -tags devtools: de devloop-binary moet zijn eigen rebuild-endpoint behouden.
-		buildCmd := exec.Command("go", "build", "-tags", "devtools", "-o", filepath.Join(appDir, "bitemp-go-api"), ".")
-		buildCmd.Dir = appDir
-		buildCmd.Env = append(os.Environ(), "CGO_ENABLED=0")
-		buildOutput, err := buildCmd.CombinedOutput()
+		// Stap 2-4: baseline-sync, opschonen van de doeldomeinen, backup, codegen, go build,
+		// baseline bijwerken (rebuild_core.go; gedeeld met de startup-rebuild). Sinds 22-10-2026
+		// worden alleen de prefixen van de doeldomeinen opgeschoond — voorheen kon een lege
+		// domeinopgave álle gegenereerde bestanden wissen.
+		kernStappen, buildOutput, err := voerCodegenEnBuildUit(appDir, modelBytes, domeinRuns)
+		stappen = append(stappen, kernStappen...)
 		if err != nil {
-			// Build mislukt: rollback model/ naar pre-rebuild backup.
-			stappen = append(stappen, fmt.Sprintf("Build mislukt: %v", err))
-			if rbMsg, rbErr := rollbackModelDirectory(appDir); rbErr != nil {
-				stappen = append(stappen, fmt.Sprintf("ROLLBACK MISLUKT: %v", rbErr))
-			} else {
-				stappen = append(stappen, rbMsg)
-			}
 			c.JSON(http.StatusInternalServerError, RebuildResponse{
 				Status:      "fout",
 				Stappen:     stappen,
 				BuildOutput: string(buildOutput),
-				Error:       fmt.Sprintf("build mislukt: %v — model is teruggedraaid naar pre-rebuild toestand", err),
+				Error:       err.Error(),
 			})
 			return
 		}
-		stappen = append(stappen, "Build succesvol")
 
-		// Stap 3b: Baseline bijwerken met succesvol gebouwde model/
-		if melding, err := updateBaseline(appDir); err != nil {
-			stappen = append(stappen, fmt.Sprintf("Waarschuwing: baseline bijwerken mislukt: %v", err))
-		} else {
-			stappen = append(stappen, melding)
+		// Stap 4b: de gebouwde versie actief maken (besluit Mark 23-10-2026; rebuild_activeer.go),
+		// zodat de startup-rebuild in de container altijd bij deze code uitkomt. Bron "code"
+		// (huidige MetaRegistry opnieuw) en "actief" veranderen niets aan de actieve versie.
+		{
+			var bestaandID *int64
+			activeren := true
+			switch {
+			case len(req.Model) > 0:
+			case req.SchemaVersieID != nil:
+				bestaandID = req.SchemaVersieID
+			case strings.EqualFold(req.SchemaBron, "latest_proposed") || strings.EqualFold(req.SchemaBron, "proposed") || strings.EqualFold(req.SchemaBron, "laatste"):
+				id, err := laatsteSchemaVersieIDOpStatus(c.Request.Context(), model.SchemaVersieStatusProposed)
+				if err != nil {
+					stappen = append(stappen, fmt.Sprintf("Waarschuwing: voorgestelde versie niet gevonden om te activeren: %v", err))
+					activeren = false
+				}
+				bestaandID = id
+			default:
+				activeren = false
+			}
+			if activeren {
+				if melding, err := activeerGebouwdModel(c.Request.Context(), modelBytes, bestaandID, c.GetString("gebruikersnaam")); err != nil {
+					stappen = append(stappen, fmt.Sprintf("Waarschuwing: gebouwde versie niet geactiveerd: %v", err))
+				} else {
+					stappen = append(stappen, melding)
+				}
+			}
 		}
-
-		// Stap 4: Opruimen
-		os.Remove(modelPath)
-		stappen = append(stappen, "Tijdelijk modelbestand opgeruimd")
 
 		// Stap 5: Stuur response en plan herstart
 		stappen = append(stappen, "API herstart gepland over 2 seconden...")

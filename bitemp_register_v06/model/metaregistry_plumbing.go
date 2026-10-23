@@ -447,6 +447,13 @@ var EnumWaarden = map[string][]string{}
 // `register` is het basisdomein; modelspecifieke enums kunnen bijv. `np-loc` krijgen.
 var EnumDomeinen = map[string]string{}
 
+// EnumConstNamen bewaart per enum-type de Go-constantenaam per waarde (bijv.
+// "IdeBestandFormaat" → {"json": "IdeBestandFormaatJSON"}). Zonder deze registry leidde de
+// V3-exporter de constNaam af als goType + waarde ("…json"), waarna een rebuild uit zo'n export
+// andere constanten genereerde dan de handgeschreven code gebruikt (22-10-2026). Codegen vult
+// hem in <prefix>_enum_registry.go; ontbreekt een enum, dan geldt StandaardEnumConstNaam.
+var EnumConstNamen = map[string]map[string]string{}
+
 // VoegOnderliggendGEToe voegt een OnderliggendGegevenselement toe aan een reeds
 // geregistreerde TypeMeta. Hiermee kan domein-specifieke code (bijv. np-loc)
 // een kind-relatie toevoegen aan een register-scope entiteit (bijv. Referentielijst).

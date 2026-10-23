@@ -54,6 +54,24 @@ rollback_en_herbouw() {
     fi
 }
 
+# Startup-rebuild (Kubernetes/Fundament): het container-bestandssysteem is weg bij elke
+# herstart; de actieve schema-versie in de database is de bron van waarheid. Verschilt die van
+# de gebouwde code, dan codegen + go build vóór de API start (handlers/rebuild_core.go).
+# Uitzetten: STARTUP_REBUILD=false. Alleen in container-modus.
+if [ "${DEVLOOP_CONTAINER:-}" = "true" ] && [ "${STARTUP_REBUILD:-true}" != "false" ]; then
+    echo ""
+    echo "=== Startup-rebuild ($(date -Iseconds)) ==="
+    set +e
+    /app/bitemp-go-api startup-rebuild
+    RC=$?
+    set -e
+    case "$RC" in
+        43) echo "=== Startup-rebuild: code opnieuw gegenereerd en gebouwd ===" ;;
+        0)  echo "=== Startup-rebuild: niets te doen (of overgeslagen) ===" ;;
+        *)  echo "=== Startup-rebuild eindigde met exit code $RC; ingebakken binary wordt gestart ===" ;;
+    esac
+fi
+
 # Restart loop
 while true; do
     echo ""

@@ -150,6 +150,42 @@ Ondersteunde bronnen zijn:
 - `schema_bron: "latest_proposed"`
 - geen body — export vanuit de huidige code/MetaRegistry
 
+### Startup-rebuild: de actieve databaseversie als bron van waarheid (sinds 22-10-2026)
+
+Op Kubernetes (Fundament) is het bestandssysteem van de container weg bij elke herstart of
+herschedule, en een nieuw image bevat het model van de *release*, niet de code die in de vorige
+container gegenereerd was. Daarom roept `scripts/devloop-entrypoint.sh` in container-modus
+(`DEVLOOP_CONTAINER=true`) vóór de restart-loop éénmalig `bitemp-go-api startup-rebuild` aan:
+
+1. laadt de **actieve** `schema_versies`-rij (status `active`); geen actieve versie → niets doen;
+2. vergelijkt de hash van dat model (sha256, opmaak-ongevoelig) met `_baseline/actieve-schema.sha256`,
+   de hash van het model waaruit de huidige code gebouwd is (geschreven na elke geslaagde rebuild);
+   gelijk → niets doen;
+3. anders: codegen voor **elk domein dat in het model voorkomt** (prefix = die van het bestaande
+   `model/<prefix>_metaregistry.go`, anders de domeinnaam met `-` → `_`), `go build -tags devtools`,
+   baseline bijwerken, exit 43 → de entrypoint start de nieuwe binary;
+4. mislukt het, dan start de ingebakken binary en staat de reden in het log.
+
+Reken op 1–3 minuten extra starttijd bij een verschil (Kubernetes: `startupProbe` ruim zetten).
+Uitzetten met `STARTUP_REBUILD=false`. De exit-42-herstart ná een `/admin/rebuild` loopt hier
+niet opnieuw doorheen (de stap staat vóór de loop).
+
+> **De rebuild activeert wat hij bouwt** (besluit Mark 23-10-2026, `handlers/rebuild_activeer.go`).
+> *Publiceer + Rebuild* in de Studio slaat het model op als `proposed` en bouwt uit de
+> editor-inhoud; omdat de startup-rebuild alleen naar de **actieve** versie kijkt, slaat
+> `/admin/rebuild` na een geslaagde build het gebouwde model zelf op als `active` (bron
+> `rebuild`; de vorige actieve wordt gearchiveerd), of activeert de `schema_versie_id`/laatste
+> voorgestelde versie waaruit hij bouwde. Bron `code` en `actief` veranderen niets. Zo komt een
+> herstart van de pod altijd bij de laatst gebouwde code uit.
+
+De pijplijn zelf (baseline-sync, opschonen, backup, codegen, build, rollback) staat sinds dezelfde
+datum in `handlers/rebuild_core.go` en wordt gedeeld door `/admin/rebuild` en de startup-rebuild.
+Daarbij is één gedrag veranderd: er worden alleen nog bestanden van de **doeldomeinen** opgeschoond;
+een lege domeinopgave kon voorheen alle gegenereerde bestanden wissen.
+
+Readiness en liveness: `GET /health` (200 als de database binnen 2 s antwoordt, anders 503) en
+`GET /version` (antwoordt zolang het proces leeft).
+
 ### Zonder model (huidige code re-exporteren en rebuilden)
 
 ```bash
@@ -228,7 +264,7 @@ Alle handmatige bestanden, tests, utilities en submappen (`json/`, `*_test.go`, 
 
 Functie: `backupModelDirectory(appDir)`
 
-De **gehele** `model/`-directory (na opschoning) wordt gekopieerd naar `_pre_rebuild/model/`. Dit is de rollback-bron: als codegen of build mislukt, wordt `model/` vanuit deze backup hersteld. Omdat de backup ná de opschoning wordt gemaakt, bevat deze alle handmatige bestanden en bestanden van niet-doeldomeinen, maar niet de zojuist verwijderde codegen-bestanden van het doeldomein.
+De **gehele** `model/`-directory (na opschoning) wordt gekopieerd naar `_pre_rebuild/model/`. Dit is de rollback-bron: als codegen of build mislukt, wordt `model/` vanuit deze backup hersteld. Sinds 22-10-2026 wordt de backup **vóór** de opschoning gemaakt (handlers/rebuild_core.go), zodat een rollback de complete, compilerende toestand van vóór de rebuild terugzet. Daarvoor kwam de backup ná de opschoning en ontbraken na een mislukte codegen de bestanden van het doeldomein tot de volgende rebuild.
 
 #### Stap 1: Modelbron bepalen en opslaan
 

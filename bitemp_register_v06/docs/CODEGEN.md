@@ -347,6 +347,22 @@ go test ./...
 
 Voor kleine wijzigingen (extra veld, andere tag) kan je de gegenereerde bestanden direct aanpassen. Maar: bij de volgende codegen-run worden ze weer overschreven. Bewaar handmatige wijzigingen in apart niet-gegenereerde bestanden, of breng ze aan in het V3 model.
 
+### 7.3b Rondreis code → V3 → code: wat er sinds 22-10-2026 behouden blijft
+
+Een rebuild uit de **actieve schema-versie** (startup-rebuild in de devloop-container, zie
+`docs/DEVLOOP.md`) genereert alle domeinen opnieuw uit een export van de code. Een end-to-end
+test van die route legde drie verliezen bloot, alle drie verholpen:
+
+| Verlies | Gevolg | Fix |
+|---|---|---|
+| `datatype_aliases.go` kreeg aliassen die `datatype_aliases_extra.go` (handgeschreven) al declareert (`Kleur`, `Duur`, …) | build: "redeclared in this block" | `mergeGedeeldBestand` slaat types over die elders in `model/` gedeclareerd zijn (`typesElders`) |
+| de exporter leidde enum-**constNamen** af als goType + waarde (`IdeBestandFormaatjson`), terwijl handgeschreven handlers `IdeBestandFormaatJSON`, `…ModelSnapshot` gebruiken | build: "undefined: model.IdeBestandFormaatJSON" | nieuwe registry `model.EnumConstNamen` (door codegen in `<prefix>_enum_registry.go` gevuld); de exporter geeft de namen exact terug (`model.EnumConstNaam`) |
+| `NaamLabelHeen`/`NaamLabelTerug` van relaties en GE's | UML-labels weg na een rebuild | `v3RelatieVanMeta`/`v3GegevenseElementVanMeta` nemen ze uit het onderliggende element |
+
+De bestaande `<prefix>_enum_registry.go`-bestanden zijn eenmalig gevuld met de constNamen uit
+hun const-blokken; vanaf nu schrijft codegen ze zelf. Overgebleven drift bij een volledige
+regeneratie is cosmetisch (volgorde van enums en velden, opmaak).
+
 ### 7.4 Twee voetangels bij een regeneratie
 
 Waargenomen bij het regenereren van `np-loc` voor het demo-model
