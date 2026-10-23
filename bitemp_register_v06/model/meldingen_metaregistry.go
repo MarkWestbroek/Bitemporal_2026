@@ -221,6 +221,7 @@ func initMeldingenMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "melding_id",
 		SecondaireEntiteitIDKolom: "gebruiker_id",
+		DoelTypenaam:              "Gebruiker",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout:                    &EditorLayout{Positie: &V3Positie{X: 900, Y: -120}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -249,6 +250,7 @@ func initMeldingenMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "melding_id",
 		SecondaireEntiteitIDKolom: "gebruiker_id",
+		DoelTypenaam:              "Gebruiker",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout:                    &EditorLayout{Positie: &V3Positie{X: 900, Y: 20}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{

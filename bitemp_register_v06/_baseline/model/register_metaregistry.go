@@ -368,6 +368,7 @@ func initRegisterMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "referentielijst_id",
 		SecondaireEntiteitIDKolom: "land_id",
+		DoelTypenaam:              "Land",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
 			Positie:    &V3Positie{X: 1290, Y: -310.5},
@@ -402,6 +403,7 @@ func initRegisterMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "referentielijst_id",
 		SecondaireEntiteitIDKolom: "adellijketitel_id",
+		DoelTypenaam:              "AdellijkeTitel",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
 			Positie:    &V3Positie{X: 1665, Y: -315},

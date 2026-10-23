@@ -273,7 +273,7 @@ Wat er staat, en waar het van het ontwerp hierboven afwijkt of het preciseert:
   bij afgeleide velden. Een woonlocatie met een einde in het verleden telt dus nog mee. Open punt:
   een materieel peilmoment (`?m=`) voor afgeleide relaties en velden.
 
-**Open: zelf-relatie** (doel = bron, bv. Persoon → Persoon voor `ouders.ouders`). Codegen
+**Zelf-relatie — opgelost 23-10-2026** (`docs/CODEGEN.md` §7.3c: verwijskolom `doel_<entiteit>_id`, doeltype expliciet in `TypeMeta.DoelTypenaam`). Oorspronkelijke tekst: (doel = bron, bv. Persoon → Persoon voor `ouders.ouders`). Codegen
 noemt de doelkolom `<doel>_id` en die valt dan samen met de eigen FK-kolom; zo'n relatie kan
 het register nu niet opslaan. Een andere naam (bv. `doel_<doel>_id`) raakt alle plekken die het
 doeltype uit de kolomnaam afleiden (`afleiding.DoelTypeVanRelatie`,

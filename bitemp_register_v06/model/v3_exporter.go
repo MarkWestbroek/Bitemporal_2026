@@ -585,21 +585,31 @@ func geNaamVanTypenaam(meta TypeMeta) string {
 	return meta.Typenaam
 }
 
-// doelEntiteitVanRelatie leidt de doelentiteit af uit SecondaireEntiteitIDKolom.
-// "b_id" → "B", "a_id" → "A", "land_id" → "Land"
-func doelEntiteitVanRelatie(meta TypeMeta) string {
+// doelEntiteitVanRelatie geeft de doelentiteit van een relatie (zie DoelTypenaamVanRelatie).
+func doelEntiteitVanRelatie(meta TypeMeta) string { return DoelTypenaamVanRelatie(meta) }
+
+// DoelTypenaamVanRelatie geeft de typenaam van de doelentiteit van een relatie-hub: expliciet
+// uit TypeMeta.DoelTypenaam (codegen, sinds 23-10-2026); voor oudere registries de heuristiek op
+// SecondaireEntiteitIDKolom ("land_id" → entiteit met tabel "land"; "doel_x_id" → "x").
+// "" voor een type zonder doel (geen relatie).
+func DoelTypenaamVanRelatie(meta TypeMeta) string {
+	if meta.DoelTypenaam != "" {
+		return meta.DoelTypenaam
+	}
 	col := meta.SecondaireEntiteitIDKolom
 	if col == "" {
 		return ""
 	}
-	// "land_id" → "land" → zoek entiteit op in MetaRegistry
-	name := strings.TrimSuffix(col, "_id")
+	name := strings.TrimPrefix(strings.TrimSuffix(col, "_id"), "doel_")
+	if name == "" {
+		return ""
+	}
 	for _, m := range MetaRegistry {
 		if m.Metatype == MetatypeEntiteit && strings.EqualFold(m.Tabelnaam, name) {
 			return m.Typenaam
 		}
 	}
-	// Fallback: eerste letter uppercase (werkt voor "a"→"A", "b"→"B")
+	// Fallback: eerste letter hoofdletter (werkt voor "a" → "A", "b" → "B")
 	return strings.ToUpper(name[:1]) + name[1:]
 }
 

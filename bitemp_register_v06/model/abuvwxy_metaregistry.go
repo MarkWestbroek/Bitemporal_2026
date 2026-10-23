@@ -163,6 +163,7 @@ func initAbuvwxyMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "a_id",
 		SecondaireEntiteitIDKolom: "b_id",
+		DoelTypenaam:              "B",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: 708, Y: 608},
@@ -662,6 +663,7 @@ func initAbuvwxyMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "c_id",
 		SecondaireEntiteitIDKolom: "b_id",
+		DoelTypenaam:              "B",
 		Momentvoorkomen:           Meervoudig,
 		Layout:                    &EditorLayout{Positie: &V3Positie{X: 1383, Y: 593}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{

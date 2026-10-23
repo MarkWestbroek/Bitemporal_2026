@@ -458,21 +458,15 @@ var doelTypeCache sync.Map // SecondaireEntiteitIDKolom → typenaam
 // DoelTypeVanRelatie bepaalt de doelentiteit van een relatie uit SecondaireEntiteitIDKolom
 // ("locatie_id" → de entiteit met tabel "locatie").
 func DoelTypeVanRelatie(meta model.TypeMeta) string {
-	kolom := meta.SecondaireEntiteitIDKolom
-	if kolom == "" {
+	if meta.SecondaireEntiteitIDKolom == "" {
 		return ""
 	}
-	if v, ok := doelTypeCache.Load(kolom); ok {
+	sleutel := meta.Typenaam + "\x00" + meta.SecondaireEntiteitIDKolom
+	if v, ok := doelTypeCache.Load(sleutel); ok {
 		return v.(string)
 	}
-	doel := ""
-	for _, m := range model.MetaRegistry {
-		if m.Metatype == model.MetatypeEntiteit && strings.EqualFold(m.Tabelnaam+"_id", kolom) {
-			doel = m.Typenaam
-			break
-		}
-	}
-	doelTypeCache.Store(kolom, doel)
+	doel := model.DoelTypenaamVanRelatie(meta) // expliciet (DoelTypenaam) of heuristiek op de kolom
+	doelTypeCache.Store(sleutel, doel)
 	return doel
 }
 

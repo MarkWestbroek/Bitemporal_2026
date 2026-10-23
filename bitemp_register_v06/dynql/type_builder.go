@@ -102,7 +102,7 @@ func buildReverseRelationMap() {
 			}
 
 			// Zoek de doel-entiteit: welke entiteit heeft IDKolom == SecondaireEntiteitIDKolom?
-			doelTypenaam := vindDoelEntiteit(relMeta.SecondaireEntiteitIDKolom)
+			doelTypenaam := model.DoelTypenaamVanRelatie(relMeta)
 			if doelTypenaam == "" {
 				continue
 			}
@@ -157,7 +157,7 @@ func buildForwardRelationMap() {
 			continue
 		}
 
-		doelTypenaam := vindDoelEntiteit(meta.SecondaireEntiteitIDKolom)
+		doelTypenaam := model.DoelTypenaamVanRelatie(meta)
 		if doelTypenaam == "" {
 			continue
 		}

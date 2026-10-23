@@ -206,6 +206,13 @@ type TypeMeta struct {
 	// SecondaireEntiteitIDKolom is the FK column for a secondary entiteit (relations only).
 	SecondaireEntiteitIDKolom string
 
+	// DoelTypenaam is de typenaam van de doelentiteit van een relatie (alleen relatie-hubs),
+	// door codegen gezet. Expliciet, omdat de kolomnaam geen betrouwbare bron is: bij een
+	// zelf-relatie heet de verwijskolom doel_<x>_id en A kan meerdere relaties naar B hebben
+	// waarin B verschillende rollen vervult. Leeg bij oudere registries → DoelTypenaamVanRelatie
+	// valt terug op de kolomnaam.
+	DoelTypenaam string
+
 	// ook bij het gegevenselement/relatie meta, want dat is nodig voor
 	// het automatisch afvoeren van onderliggende gegevenselementen/relaties
 	// bij opvoer van een opvolgend gegevenselement/relatie

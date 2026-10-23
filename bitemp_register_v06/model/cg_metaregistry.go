@@ -697,6 +697,7 @@ func initCgMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "initiatief_id",
 		SecondaireEntiteitIDKolom: "gemeente_id",
+		DoelTypenaam:              "Gemeente",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: 1395, Y: -3030},
@@ -741,6 +742,7 @@ func initCgMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "initiatief_id",
 		SecondaireEntiteitIDKolom: "domein_id",
+		DoelTypenaam:              "Domein",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: 1395, Y: -2715},
@@ -782,6 +784,7 @@ func initCgMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "initiatief_id",
 		SecondaireEntiteitIDKolom: "apistandaard_id",
+		DoelTypenaam:              "ApiStandaard",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: 1395, Y: -2370},
@@ -823,6 +826,7 @@ func initCgMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "initiatief_id",
 		SecondaireEntiteitIDKolom: "organisatie_id",
+		DoelTypenaam:              "Organisatie",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: 435, Y: -2460},
@@ -1521,6 +1525,7 @@ func initCgMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "organisatie_id",
 		SecondaireEntiteitIDKolom: "persoon_id",
+		DoelTypenaam:              "Persoon",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: 0, Y: -2310},

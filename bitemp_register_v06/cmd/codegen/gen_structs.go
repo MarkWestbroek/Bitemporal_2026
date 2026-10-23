@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/naamgeving"
 )
 
 // generateEntiteiten genereert modellen_entiteiten.go met entiteit structs
@@ -148,7 +149,7 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 
 		// Relaties
 		for _, rel := range ent.Relaties {
-			secEntIDKolom := strings.ToLower(rel.DoelEntiteit) + "_id"
+			secEntIDKolom := naamgeving.SecondaireIDKolom(ent.Typenaam, rel.DoelEntiteit)
 			generateHubStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, "relatie", rel.IsMaterieel, rel.Description, secEntIDKolom)
 			generateDataStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, rel.Velden, rel.Description)
 			if rel.IsMaterieel {

@@ -74,6 +74,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Velden zonder goType (extern geleverd V3 met alleen type/format/datatype): afleiden.
+	if meldingen := vulGoTypesAan(&v3); len(meldingen) > 0 {
+		fmt.Printf("  %d veld(en) zonder goType; afgeleid uit type/format/verplicht/enum (eerste: %s)\n", len(meldingen), meldingen[0])
+	}
+
 	if validationErrors := validateV3Model(v3, *domein); len(validationErrors) > 0 {
 		fmt.Fprintln(os.Stderr, "V3 model validatie mislukt:")
 		for _, e := range validationErrors {
@@ -713,6 +718,9 @@ func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 				if veld.Uniek != "" && veld.Uniek != "entiteit" && veld.Uniek != "domein" && veld.Uniek != "register" {
 					errs = append(errs, fmt.Sprintf("%s.uniek '%s' is ongeldig; gebruik 'entiteit', 'domein' of 'register'", vctx, veld.Uniek))
 				}
+				if dt := strings.TrimSpace(veld.Datatype); dt != "" && !datatypeBekend(v3, dt) {
+					errs = append(errs, fmt.Sprintf("%s.datatype '%s' bestaat niet (niet in model.datatypes en niet in het register); gebruik een bestaand datatype zoals KorteTekst of definieer het", vctx, dt))
+				}
 			}
 		}
 
@@ -740,6 +748,9 @@ func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 				}
 				if veld.Uniek != "" && veld.Uniek != "entiteit" && veld.Uniek != "domein" && veld.Uniek != "register" {
 					errs = append(errs, fmt.Sprintf("%s.uniek '%s' is ongeldig; gebruik 'entiteit', 'domein' of 'register'", vctx, veld.Uniek))
+				}
+				if dt := strings.TrimSpace(veld.Datatype); dt != "" && !datatypeBekend(v3, dt) {
+					errs = append(errs, fmt.Sprintf("%s.datatype '%s' bestaat niet (niet in model.datatypes en niet in het register); gebruik een bestaand datatype zoals KorteTekst of definieer het", vctx, dt))
 				}
 			}
 		}

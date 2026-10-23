@@ -89,7 +89,7 @@ func MaakVizRelatieSecondaireIDsHandler() gin.HandlerFunc {
 			return
 		}
 
-		secondaireEntiteitType := entiteitTypeUitKolomnaam(relatieMeta.SecondaireEntiteitIDKolom)
+		secondaireEntiteitType := model.DoelTypenaamVanRelatie(relatieMeta)
 		if secondaireEntiteitType == "" {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "kan secondaire entiteittype niet afleiden"})
 			return

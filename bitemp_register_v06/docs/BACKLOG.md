@@ -20,7 +20,7 @@ daarna (of tussendoor).
 | HELP-2 | Kennismakingstour (zoals de MusicBrain-editor) | ✅ gebouwd (14-10) |
 | HELP-3 | Bugs en wensen melden vanuit Omnium (formulier + schermafbeelding, F8 en een kader trekken), gedogfood als register-entiteit | ✅ gebouwd (14-10); vervolg: mail via NotificatieDefinitie, regel in de PEP-bundel |
 | HELP-4 | **Help → Over Omnium: link naar de releaselogs** (studio-CHANGELOG en RELEASE.md, bij de draaiende versie) | ✅ 14-10: Help → Releaselog en Wat is er nieuw; plus de strook "nieuwe versie" |
-| CG-1 | **Codegen: zelf-relaties** (A → A, bv. Melding "dubbel van"): nu twee keer `<a>_id`; de doelkant heeft een eigen kolomnaam nodig (bv. `doel_melding_id`) | open (gevonden 14-10) |
+| CG-1 | **Codegen: zelf-relaties** (A → A, bv. Melding "dubbel van"): nu twee keer `<a>_id`; de doelkant heeft een eigen kolomnaam nodig (bv. `doel_melding_id`) | **opgelost 23-10** — verwijskolom `doel_<a>_id`, doeltype expliciet in `TypeMeta.DoelTypenaam` (`docs/CODEGEN.md` §7.3c) |
 | AUD-1 | **Wie registreerde?** Een registratie legt het tijdstip vast, niet de gebruiker (alleen indirect in `request_body`). Voor audit en "wie meldde/reageerde" een kolom `door` op `registratie`, gevuld uit de claims | open (gevonden 14-10) |
 
 **AI-1, stap 1 (14-10, gebouwd):** persoonlijke API-tokens (`gebruikers/token.go`, *Gebruikers →
