@@ -311,6 +311,28 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
    `Datatype` → `Gegevenssoort` doorgevoerd; door codegen gevalideerd. Nog open: `ArtefactSoort`/
    `ArtefactFormaat` als referentielijst, traceregel niet-materieel (FUNDAMENT: eens).
 
+10. **Devloop-image gepusht (23-10):** `markwestbroek/bitemp-devloop:0.24.0` (+ `latest`),
+    linux/amd64, digest `sha256:847e186011a6…`, uit main 53ca4e2f. Daarbij een bestaande fout in
+    `Dockerfile.devloop` gefixt (geneste, verouderde baseline uit git; nu verse kopie, mappen in
+    `.dockerignore`). FUNDAMENT rolt uit.
+11. Zelf-relatie-fix (Mark 23-10): verwijskolom `doel_<entiteit>_id` bij doel = eigenaar, en het
+    doeltype **expliciet** in de MetaRegistry (`DoelTypenaam`), niet geraden uit de kolomnaam
+    (A kan meerdere relaties naar B hebben waarin B verschillende rollen vervult). **Gebouwd
+    23-10** (branch `feat/zelf-relatie-doeltypenaam`; `docs/CODEGEN.md` §7.3c): verwijskolom
+    `doel_artefact_id`, `TypeMeta.DoelTypenaam` (bestaande registries eenmalig gevuld), alle vijf
+    de raad-plekken vervangen door `model.DoelTypenaamVanRelatie`. Daarbij: codegen leidt een
+    ontbrekend `goType` af uit `type`/`format`/`verplicht`/`enum` (FUNDAMENT's V3 heeft geen
+    goType, zoals elk extern OAS-achtig model) en meldt een onbekend `datatype` als fout.
+    **FUNDAMENT's V3 (38fc769, met `Gegevenssoort`) genereert en bouwt ongewijzigd** als domein
+    `inrichting`. Volgende: commit/merge, nieuw devloop-image, dan het artefacten-endpoint.
+    **Review afgerond 23-10:** `ArtefactSoort` en `ArtefactFormaat` worden **referentielijsten**
+    (uitbreidbaar zonder rebuild, met geschiedenis; een item draagt standaarddoelcomponent en
+    identifier-regel), `ArtefactTraceregel` **niet-materieel**, `Gegevenssoort` en `versienummer`
+    akkoord. Aan FUNDAMENT doorgegeven met het V3-patroon (`docs/Referentielijsten.md`).
+12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
+    actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
+    inrichting-model wacht op het nieuwe image.
+
 Oorspronkelijke vraaglijst:
 
 1. Go voor de installatie op Fundament (FUNDAMENT wacht daarop).
