@@ -292,6 +292,25 @@ het producttype-artefact)?
 5. Volgorde (verzoektype-schema eerst): **hangt af van het model** — beslissen bij de review van 4.
 6. Open Product: niet apart beslist; volgt uit het model/producttype-artefact.
 
+**Gebouwd door BACKEND (23-10, branch `feat/devloop-startup-rebuild`):** `GET /health`
+(database-ping, 200/503), `bitemp-go-api startup-rebuild` + entrypoint-stap (`STARTUP_REBUILD`,
+exit 43; `docs/DEVLOOP.md` §"Startup-rebuild"), de rebuild-pijplijn gedeeld in
+`handlers/rebuild_core.go` (backup vóór opschonen; alleen doeldomeinen opschonen), en drie
+rondreis-fixes die de end-to-end test blootlegde (`docs/CODEGEN.md` §7.3b: dubbele aliassen,
+enum-constNamen via `EnumConstNamen`, naamlabels). Getest: volledige export (11 domeinen) als
+actieve versie → exit 43, herbouwde binary start en antwoordt op `/health`; tweede run: niets te
+doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer + Rebuild maakt
+`proposed`); zie open punt 7.
+
+7. Vereenvoudiging: laat `/admin/rebuild` de versie die hij bouwt ook opslaan én activeren —
+   **Mark 23-10: ja; gebouwd** (`handlers/rebuild_activeer.go`).
+8. Zelf-relatie (`Artefact → Artefact`): **Mark 23-10: (a) codegen-fix**, het model blijft zoals
+   het is. Volgende stap voor BACKEND (zie `docs/plans/2026-10-11 Afgeleide relaties backend —
+   ontwerp.md` §8 voor de plekken die het doeltype uit de kolomnaam afleiden).
+9. FUNDAMENT's V3 (23-10, commit 38fc769 in CG-Fundament): `versie` → `versienummer`,
+   `Datatype` → `Gegevenssoort` doorgevoerd; door codegen gevalideerd. Nog open: `ArtefactSoort`/
+   `ArtefactFormaat` als referentielijst, traceregel niet-materieel (FUNDAMENT: eens).
+
 Oorspronkelijke vraaglijst:
 
 1. Go voor de installatie op Fundament (FUNDAMENT wacht daarop).
