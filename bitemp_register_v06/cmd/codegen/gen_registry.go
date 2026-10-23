@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/naamgeving"
 )
 
 // layoutInfo bevat editor-layout metadata die doorgegeven wordt aan write-functies.
@@ -126,7 +127,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 
 		// ---- Relatie hubs ----
 		for _, rel := range ent.Relaties {
-			secIDKolom := strings.ToLower(rel.DoelEntiteit) + "_id"
+			secIDKolom := naamgeving.SecondaireIDKolom(ent.Typenaam, rel.DoelEntiteit)
 			dHub := deriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, secIDKolom)
 			writeRelHubEntry(b, dHub, rel, opts.domein)
 		}
@@ -328,6 +329,11 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie, do
 	b.WriteString("\t\tRelatieveAutoincrement: true,\n")
 	b.WriteString(fmt.Sprintf("\t\tEntiteitIDKolom:           %q,\n", d.EntiteitIDKolom))
 	b.WriteString(fmt.Sprintf("\t\tSecondaireEntiteitIDKolom: %q,\n", d.SecEntiteitIDKolom))
+	// Doeltype expliciet (niet geraden uit de kolomnaam): A kan meerdere relaties naar B hebben
+	// waarin B verschillende rollen vervult, en bij een zelf-relatie heet de kolom doel_<x>_id.
+	if rel.DoelEntiteit != "" {
+		b.WriteString(fmt.Sprintf("\t\tDoelTypenaam: %q,\n", rel.DoelEntiteit))
+	}
 	b.WriteString(fmt.Sprintf("\t\tMomentvoorkomen:           %s,\n", momentvoorkomenConst(rel.Momentvoorkomen)))
 	// Layout met volledige edge-info (bron→relatie + relatie→doel)
 	if rel.Directioneel {

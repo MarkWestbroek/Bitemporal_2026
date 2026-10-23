@@ -234,6 +234,21 @@ func GoTypeToDBType(goType string) string {
 
 // ---- Hogere-orde afleidingen vanuit V3 model ----
 
+// SecondaireIDKolom is de verwijskolom van een relatie naar haar doelentiteit: <doel>_id. Bij een
+// zelf-relatie (doel = eigenaar, bv. Artefact → Artefact) zou die samenvallen met de
+// eigenaarskolom; dan heet hij doel_<doel>_id. Een relatie is een gegevenselement van de entiteit
+// in de eigenaarsrol; de entiteit in de andere rol wordt verwezen (Mark, 23-10-2026).
+func SecondaireIDKolom(bronTypenaam, doelEntiteit string) string {
+	doel := strings.ToLower(strings.TrimSpace(doelEntiteit))
+	if doel == "" {
+		return ""
+	}
+	if strings.EqualFold(strings.TrimSpace(bronTypenaam), doelEntiteit) {
+		return "doel_" + doel + "_id"
+	}
+	return doel + "_id"
+}
+
 // AlleDerivedTypes berekent alle afgeleide types (entiteiten, hubs, data, aanvang, einde)
 // voor een volledig V3 model. Dit is de basis voor delta-vergelijkingen.
 func AlleDerivedTypes(v3 model.V3Model) []DerivedType {
@@ -274,7 +289,7 @@ func AlleDerivedTypes(v3 model.V3Model) []DerivedType {
 			}
 			secIDKolom := ""
 			if rel.DoelEntiteit != "" {
-				secIDKolom = strings.ToLower(rel.DoelEntiteit) + "_id"
+				secIDKolom = SecondaireIDKolom(ent.Typenaam, rel.DoelEntiteit)
 			}
 			hub := DeriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, secIDKolom)
 			result = append(result, hub)

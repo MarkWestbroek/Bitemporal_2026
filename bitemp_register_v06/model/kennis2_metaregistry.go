@@ -70,6 +70,7 @@ func initKennis2MetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "kennisartikel_id",
 		SecondaireEntiteitIDKolom: "trefwoord_id",
+		DoelTypenaam:              "Trefwoord",
 		Momentvoorkomen:           Meervoudig,
 		Layout:                    &EditorLayout{Positie: &V3Positie{X: 590, Y: 37.25}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -100,6 +101,7 @@ func initKennis2MetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "kennisartikel_id",
 		SecondaireEntiteitIDKolom: "kennisartikeltaalvariant_id",
+		DoelTypenaam:              "KennisartikelTaalvariant",
 		Momentvoorkomen:           Meervoudig,
 		Layout:                    &EditorLayout{Positie: &V3Positie{X: 358.125, Y: 180}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{

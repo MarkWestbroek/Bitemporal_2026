@@ -198,6 +198,7 @@ func initNpLocMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "locatie_id",
 		SecondaireEntiteitIDKolom: "gemeentedeel_id",
+		DoelTypenaam:              "Gemeentedeel",
 		Momentvoorkomen:           Enkelvoudig,
 		Directioneel:              true,
 		Layout:                    &EditorLayout{Positie: &V3Positie{X: 900, Y: -1110}},
@@ -658,6 +659,7 @@ func initNpLocMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "natuurlijkpersoon_id",
 		SecondaireEntiteitIDKolom: "locatie_id",
+		DoelTypenaam:              "Locatie",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: 225, Y: -825},
@@ -695,6 +697,7 @@ func initNpLocMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "natuurlijkpersoon_id",
 		SecondaireEntiteitIDKolom: "locatie_id",
+		DoelTypenaam:              "Locatie",
 		Momentvoorkomen:           Enkelvoudig,
 		Directioneel:              true,
 		Layout:                    &EditorLayout{Positie: &V3Positie{X: 225, Y: -1110}},

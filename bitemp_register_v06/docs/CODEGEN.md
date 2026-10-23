@@ -194,6 +194,8 @@ De codegen valideert het V3 model voordat er code wordt gegenereerd. Bij fouten 
 | `momentvoorkomen` | `enkelvoudig` of `meervoudig` | `enkelvoudig` | `enkel` |
 | `velden[].naam` | letters/cijfers/underscore | `CG_laag` | `CG laag` |
 | `relaties[].doelEntiteit` | moet bestaan in `entiteiten` | `Gemeente` | `Onbekend` |
+| `velden[].goType` | optioneel sinds 23-10-2026: ontbreekt het, dan afgeleid uit `type`/`format`/`verplicht`/`enum` (string → `string`, niet verplicht → `*string`, `date` → `Date`, `date-time` → `time.Time`, `integer` → `int`, `number` → `float64`, `boolean` → `bool`, enum → het enum-type) | `"type": "string"` zonder `goType` | — |
+| `velden[].datatype` | moet bestaan: in `model.datatypes` of in het register (`KorteTekst`, `LangeTekst`, `URL`, `Datum`, …) | `KorteTekst` | `AN40` |
 
 #### Enums
 
@@ -362,6 +364,25 @@ test van die route legde drie verliezen bloot, alle drie verholpen:
 De bestaande `<prefix>_enum_registry.go`-bestanden zijn eenmalig gevuld met de constNamen uit
 hun const-blokken; vanaf nu schrijft codegen ze zelf. Overgebleven drift bij een volledige
 regeneratie is cosmetisch (volgorde van enums en velden, opmaak).
+
+### 7.3c Zelf-relaties en het expliciete doeltype (23-10-2026)
+
+Een relatie is een gegevenselement van de entiteit in de **eigenaarsrol**; de entiteit in de
+andere rol wordt **verwezen** (Mark, 23-10). In de tabel: eigenaarskolom `<eigenaar>_id`
+(`EntiteitIDKolom`) en verwijskolom `<doel>_id` (`SecondaireEntiteitIDKolom`). Bij een
+**zelf-relatie** (doel = eigenaar, bv. `ArtefactAfhankelijkheid`: Artefact → Artefact) vielen die
+samen en kreeg de struct twee keer `Artefact_ID`. Nu geeft `naamgeving.SecondaireIDKolom` in dat
+geval `doel_<entiteit>_id` (`doel_artefact_id`, Go-veld `DoelArtefact_ID`); gewone relaties
+veranderen niet. Een symmetrische relatie (huwelijk) is geen zelf-relatie maar een eigen entiteit
+met twee relaties; dat gaf al geen botsing, want elke relatie is een eigen hub-tabel.
+
+Het **doeltype staat sindsdien expliciet** in de MetaRegistry: `TypeMeta.DoelTypenaam`, door
+codegen geschreven. Tot dan raadden vijf plekken het doeltype uit de kolomnaam (`gemeentedeel_id`
+→ Gemeentedeel); dat breekt bij `doel_x_id`, en A kan meerdere relaties naar B hebben waarin B
+verschillende rollen vervult. Alle plekken (exporter, schema-API, `/full`-verrijking,
+relatie-id-handler, GraphQL reverse/forward, afleiding) gebruiken nu
+`model.DoelTypenaamVanRelatie(meta)`; alleen voor registries zonder het veld geldt nog de
+heuristiek. De bestaande `<prefix>_metaregistry.go`-bestanden zijn eenmalig gevuld.
 
 ### 7.4 Twee voetangels bij een regeneratie
 

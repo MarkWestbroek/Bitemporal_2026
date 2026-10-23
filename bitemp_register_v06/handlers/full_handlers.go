@@ -204,7 +204,7 @@ func bepaalVerrijkingTargets(entityMeta model.TypeMeta) []verrijkingTarget {
 		if !ok || childMeta.SecondaireEntiteitIDKolom == "" {
 			continue
 		}
-		doelTypenaam := doelEntiteitVanSecondaireKolom(childMeta.SecondaireEntiteitIDKolom)
+		doelTypenaam := model.DoelTypenaamVanRelatie(childMeta)
 		doelMeta, doelOK := model.MetaRegistry.GetTypeMeta(doelTypenaam)
 		if !doelOK || doelMeta.Metatype != model.MetatypeEntiteit {
 			continue

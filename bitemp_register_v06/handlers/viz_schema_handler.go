@@ -443,9 +443,9 @@ func vizSchemaTypeDTOVanMeta(meta model.TypeMeta) vizSchemaTypeDTO {
 		item.GeerfdeVelden = geerfdeVeldenVoorType(meta.ParentTypenaam)
 	}
 
-	// DoelEntiteit: afleiden uit secondaire ID-kolom (bijv. "locatie_id" → "Locatie")
+	// DoelEntiteit: expliciet uit de MetaRegistry (DoelTypenaam), anders uit de secondaire ID-kolom
 	if meta.Metatype == model.MetatypeRelatie && meta.SecondaireEntiteitIDKolom != "" {
-		item.DoelEntiteit = doelEntiteitVanSecondaireKolom(meta.SecondaireEntiteitIDKolom)
+		item.DoelEntiteit = model.DoelTypenaamVanRelatie(meta)
 	}
 
 	// Achterwaartse compatibiliteit: oudere hardcoded entries hebben nog geen expliciete Meervoud.

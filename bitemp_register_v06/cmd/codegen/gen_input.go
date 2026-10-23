@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/naamgeving"
 )
 
 // generateInput genereert modellen_input.go met platte _Input structs
@@ -57,7 +58,7 @@ func generateInput(v3 model.V3Model) (string, error) {
 			}
 
 			// Secondary FK: doel_entiteit_id (bijv. B_ID voor Rel_A_B)
-			doelIDKolom := strings.ToLower(rel.DoelEntiteit) + "_id"
+			doelIDKolom := naamgeving.SecondaireIDKolom(ent.Typenaam, rel.DoelEntiteit)
 			doelIDField := strings.ToUpper(strings.TrimSuffix(doelIDKolom, "_id")) + "_ID"
 			b.WriteString(fmt.Sprintf("\t%s int `json:\"%s\"`\n", doelIDField, doelIDKolom))
 
