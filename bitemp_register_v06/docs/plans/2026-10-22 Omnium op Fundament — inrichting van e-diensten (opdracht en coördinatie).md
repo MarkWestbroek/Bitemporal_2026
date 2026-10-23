@@ -329,6 +329,14 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     (uitbreidbaar zonder rebuild, met geschiedenis; een item draagt standaarddoelcomponent en
     identifier-regel), `ArtefactTraceregel` **niet-materieel**, `Gegevenssoort` en `versienummer`
     akkoord. Aan FUNDAMENT doorgegeven met het V3-patroon (`docs/Referentielijsten.md`).
+13. **Devloop-image 0.24.1 gepusht (23-10):** `markwestbroek/bitemp-devloop:0.24.1` (+ `latest`),
+    digest `sha256:ca36dc7e8d9a…`, uit main e06cb6ff (zelf-relatie-fix, `DoelTypenaam`,
+    goType-afleiding). Nummer-tags voortaan, geen datumtags (Mark). FUNDAMENT wisselt het image.
+14. FUNDAMENT's V3 met referentielijsten (`ArtefactSoort`, `ArtefactFormaat` als
+    `referentielijst_item`, `$ref`-velden, traceregel niet-materieel) **genereert en bouwt**
+    (23-10). Eerste vulling klaar in CG-Fundament `docs/inrichting-referentielijsten.json`
+    (17 soorten, 8 formaten); BACKEND maakt daar registratie-JSON van zodra het domein op
+    Fundament staat (veldnamen uit `/api/schema/model/code`), incl. 7 Component-registraties.
 12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
     actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
     inrichting-model wacht op het nieuwe image.
