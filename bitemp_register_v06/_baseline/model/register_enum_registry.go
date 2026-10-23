@@ -6,6 +6,7 @@ package model
 func initRegisterEnumRegistry() {
 	EnumWaarden["ReferentielijstAdrestype"] = []string{"URL", "URN"}
 	EnumDomeinen["ReferentielijstAdrestype"] = "register"
+	EnumConstNamen["ReferentielijstAdrestype"] = map[string]string{"URL": "ReferentielijstAdrestypeURL", "URN": "ReferentielijstAdrestypeURN"}
 
 	// Enum editor-posities
 	EnumEditorLayouts["ReferentielijstAdrestype"] = &EditorLayout{Positie: &V3Positie{X: 1815, Y: -480}}

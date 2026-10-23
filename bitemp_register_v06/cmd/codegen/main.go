@@ -305,15 +305,24 @@ func main() {
 // mergeGedeeldBestand leest het bestaande bestand op pad en voegt type-declaraties
 // uit nieuwContent toe die nog niet bestaan. Dit voorkomt dubbele Go type-declaraties
 // wanneer meerdere prefixen hetzelfde gedeelde bestand bijwerken.
+//
+// Sinds 22-10-2026 tellen ook declaraties in de ándere .go-bestanden van de doelmap mee
+// (typesElders): de exporter deelt handgeschreven datatypes als Kleur en Duur
+// (model/datatype_aliases_extra.go) in bij een domein, en zonder deze controle schreef codegen
+// er een tweede `type Kleur string` voor, waarna de build faalde ("redeclared in this block").
 func mergeGedeeldBestand(pad, nieuwContent string) string {
+	elders := typesElders(filepath.Dir(pad), filepath.Base(pad))
 	bestaand, err := os.ReadFile(pad)
 	if err != nil {
-		// Bestand bestaat nog niet, gebruik de nieuwe content ongewijzigd
-		return nieuwContent
+		// Bestand bestaat nog niet: de nieuwe content, zonder types die elders al bestaan.
+		return zonderTypes(nieuwContent, elders)
 	}
 
-	// Parse bestaande type-declaraties
+	// Parse bestaande type-declaraties (in dit bestand én elders in de map)
 	bestaandeTypes := parseTypeDefs(string(bestaand))
+	for naam := range elders {
+		bestaandeTypes[naam] = true
+	}
 
 	// Voeg regels toe uit nieuwContent die nog geen bestaande declaratie zijn
 	var b strings.Builder
@@ -359,6 +368,54 @@ func mergeGedeeldBestand(pad, nieuwContent string) string {
 		fmt.Printf("  %d nieuwe type-alias(es) samengevoegd in %s\n", toegevoegd, filepath.Base(pad))
 	}
 	return b.String()
+}
+
+// typesElders geeft de typenamen die in de andere (niet-test) .go-bestanden van dir gedeclareerd
+// zijn, met uitzondering van bestandsnaam zelf.
+func typesElders(dir, bestandsnaam string) map[string]bool {
+	uit := make(map[string]bool)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return uit
+	}
+	for _, e := range entries {
+		naam := e.Name()
+		if e.IsDir() || naam == bestandsnaam || !strings.HasSuffix(naam, ".go") || strings.HasSuffix(naam, "_test.go") {
+			continue
+		}
+		inhoud, err := os.ReadFile(filepath.Join(dir, naam))
+		if err != nil {
+			continue
+		}
+		for t := range parseTypeDefs(string(inhoud)) {
+			uit[t] = true
+		}
+	}
+	return uit
+}
+
+// zonderTypes laat uit content de type-declaraties (met hun commentaarregel erboven) weg
+// waarvan de naam in overslaan staat.
+func zonderTypes(content string, overslaan map[string]bool) string {
+	if len(overslaan) == 0 {
+		return content
+	}
+	regels := strings.Split(content, "\n")
+	var uit []string
+	for _, regel := range regels {
+		trimmed := strings.TrimSpace(regel)
+		if strings.HasPrefix(trimmed, "type ") {
+			if parts := strings.Fields(trimmed); len(parts) >= 3 && overslaan[parts[1]] {
+				// Commentaarregel(s) direct erboven ook weglaten.
+				for len(uit) > 0 && strings.HasPrefix(strings.TrimSpace(uit[len(uit)-1]), "//") {
+					uit = uit[:len(uit)-1]
+				}
+				continue
+			}
+		}
+		uit = append(uit, regel)
+	}
+	return strings.Join(uit, "\n")
 }
 
 // parseTypeDefs parsed type-declaraties uit Go source en retourneert een map van typenamen.

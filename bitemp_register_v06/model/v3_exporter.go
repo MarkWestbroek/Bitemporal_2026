@@ -479,6 +479,8 @@ func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement)
 		Meervoud:        meta.Padnaam,
 		Momentvoorkomen: momentvoorkomenString(child.Momentvoorkomen),
 		IsMaterieel:     meta.IsMaterieel,
+		NaamLabelHeen:   child.NaamLabelHeen,
+		NaamLabelTerug:  child.NaamLabelTerug,
 		Velden:          extractContentFields(meta),
 		Runtime:         runtimeVanMeta(meta),
 		AfgeleideVelden: convertAfgeleideVelden(meta.AfgeleideVelden),
@@ -508,6 +510,8 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 		DoelEntiteit:             doelEntiteitVanRelatie(meta),
 		Directioneel:             meta.Directioneel,
 		Geordend:                 meta.Geordend,
+		NaamLabelHeen:            child.NaamLabelHeen, // tot 22-10-2026 verloor de export de UML-labels
+		NaamLabelTerug:           child.NaamLabelTerug,
 		Velden:                   extractContentFields(meta),
 		Runtime:                  runtimeVanMeta(meta),
 		AfgeleideVelden:          convertAfgeleideVelden(meta.AfgeleideVelden),
@@ -625,6 +629,23 @@ func collectEnums(velden []V3Veld, enums *[]V3Enum, seen map[string]bool) {
 // reNonIdent verwijdert alle tekens die ongeldig zijn in een Go-identifier.
 var reNonIdent = regexp.MustCompile(`[^A-Za-z0-9_]`)
 
+// StandaardEnumConstNaam is de afgeleide constantenaam als de registry hem niet kent:
+// goType + de waarde zonder niet-identifier-tekens ("model_snapshot" → "…model_snapshot").
+func StandaardEnumConstNaam(goType, waarde string) string {
+	return goType + reNonIdent.ReplaceAllString(waarde, "")
+}
+
+// EnumConstNaam geeft de Go-constantenaam van een enumwaarde: uit EnumConstNamen (door codegen
+// gevuld, exact zoals de code hem declareert), anders de standaardafleiding.
+func EnumConstNaam(goType, waarde string) string {
+	if per, ok := EnumConstNamen[goType]; ok {
+		if naam, ok := per[waarde]; ok && naam != "" {
+			return naam
+		}
+	}
+	return StandaardEnumConstNaam(goType, waarde)
+}
+
 // buildV3Enum bouwt een V3Enum door de enum-waarden te extraheren via EnumWaarden registry.
 func buildV3Enum(goTypeName string) *V3Enum {
 	waarden, ok := EnumWaarden[goTypeName]
@@ -637,9 +658,8 @@ func buildV3Enum(goTypeName string) *V3Enum {
 		Domein:   EnumDomeinen[goTypeName],
 	}
 	for _, w := range waarden {
-		cleanW := reNonIdent.ReplaceAllString(w, "")
 		enum.Waarden = append(enum.Waarden, V3EnumWaarde{
-			ConstNaam: goTypeName + cleanW,
+			ConstNaam: EnumConstNaam(goTypeName, w),
 			Waarde:    w,
 		})
 	}

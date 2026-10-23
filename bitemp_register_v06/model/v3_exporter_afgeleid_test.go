@@ -49,8 +49,11 @@ func TestExportMetaRegistryToV3_AfgeleideRelatieRondreis(t *testing.T) {
 }
 
 func TestV3RelatieVanMeta_Geordend(t *testing.T) {
-	rel := v3RelatieVanMeta(TypeMeta{Typenaam: "R", Geordend: true}, OnderliggendGegevenselement{})
+	rel := v3RelatieVanMeta(TypeMeta{Typenaam: "R", Geordend: true}, OnderliggendGegevenselement{NaamLabelHeen: "woont op", NaamLabelTerug: "is woonlocatie van"})
 	if !rel.Geordend {
 		t.Fatal("Geordend gaat verloren bij de export van een relatie")
+	}
+	if rel.NaamLabelHeen != "woont op" || rel.NaamLabelTerug != "is woonlocatie van" {
+		t.Fatalf("naamlabels gaan verloren bij de export: %+v", rel)
 	}
 }

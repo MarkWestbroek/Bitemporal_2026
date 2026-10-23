@@ -35,6 +35,13 @@ var buildTime = "17 april 2026 om 22.54"
 func main() {
 	loadDotEnvIfPresent()
 
+	// `bitemp-go-api startup-rebuild`: door de devloop-entrypoint aangeroepen vóór de API start.
+	// Bouwt de code opnieuw uit de actieve schema-versie als die verschilt van wat er gebouwd is
+	// (handlers/rebuild_core.go). Exit 43 = nieuwe binary, 0 = niets te doen of mislukt.
+	if len(os.Args) > 1 && os.Args[1] == "startup-rebuild" {
+		os.Exit(startupRebuild())
+	}
+
 	fmt.Println("Bitemp Go API Project")
 	fmt.Printf("build commit: %s, build time: %s\n", commit, buildTime)
 	dropTablesEnabled := isDropTablesEnabled()
@@ -144,6 +151,31 @@ func main() {
 	//run the server
 	router.Run()
 
+}
+
+// startupRebuild voert de startup-rebuild uit (zie main) en geeft de exitcode voor de entrypoint.
+func startupRebuild() int {
+	fmt.Println("=== Startup-rebuild: actieve schema-versie vergelijken met de gebouwde code ===")
+	db, err := connectToDatabase()
+	if err != nil {
+		fmt.Println("startup-rebuild: geen databaseverbinding, ingebakken code wordt gestart:", err)
+		return 0
+	}
+	defer db.Close()
+	handlers.DB = db
+	herbouwd, stappen, err := handlers.VoerStartupRebuildUit()
+	for _, stap := range stappen {
+		fmt.Println("  -", stap)
+	}
+	if err != nil {
+		fmt.Println("startup-rebuild MISLUKT; ingebakken code wordt gestart:", err)
+		return 0
+	}
+	if herbouwd {
+		fmt.Println("=== Startup-rebuild voltooid: nieuwe binary wordt gestart ===")
+		return handlers.ExitCodeStartupHerbouwd
+	}
+	return 0
 }
 
 func loadDotEnvIfPresent() {
@@ -348,9 +380,21 @@ func NewRouter() *gin.Engine {
 	// Instellingen van de instantie voor de Studio (admin via env, bv. STUDIO_SYNC_POLL_MS).
 	router.GET("/api/studio/instellingen", handlers.MaakStudioInstellingenHandler())
 
-	// Version endpoint
+	// Version endpoint (ook de liveness-probe: antwoordt zolang het proces leeft)
 	router.GET("/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
+	})
+
+	// Health (readiness): 200 als de database binnen 2 s antwoordt, anders 503. Een database-hik
+	// haalt de pod zo uit de service zonder hem te herstarten (Fundament/Kubernetes, 22-10-2026).
+	router.GET("/health", func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+		defer cancel()
+		if handlers.DB == nil || handlers.DB.PingContext(ctx) != nil {
+			c.JSON(503, gin.H{"status": "fout", "database": "onbereikbaar"})
+			return
+		}
+		c.JSON(200, gin.H{"status": "ok", "database": "ok"})
 	})
 
 	// OpenAPI 3.1 specificaties (conform NL API Strategie ADR 2.1.0)
