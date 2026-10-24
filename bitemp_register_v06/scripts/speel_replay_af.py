@@ -39,6 +39,13 @@ def lees_env(pad):
 
 
 def main():
+    # Windows-console (cp1252) kan ✓/✗ niet tonen: UnicodeEncodeError ná de eerste POST (FUNDAMENT
+    # 25-10-2026). Altijd UTF-8 naar stdout/stderr, onvertaalbare tekens vervangen.
+    for stroom in (sys.stdout, sys.stderr):
+        try:
+            stroom.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("bestanden", nargs="+", help="replay-bestand(en), in volgorde")
     ap.add_argument("--host", required=True, help="basis-URL, bv. https://pf.common-ground-lab.nl")
