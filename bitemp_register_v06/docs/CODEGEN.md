@@ -195,7 +195,8 @@ De codegen valideert het V3 model voordat er code wordt gegenereerd. Bij fouten 
 | `velden[].naam` | letters/cijfers/underscore | `CG_laag` | `CG laag` |
 | `relaties[].doelEntiteit` | moet bestaan in `entiteiten` | `Gemeente` | `Onbekend` |
 | `velden[].goType` | optioneel sinds 23-10-2026: ontbreekt het, dan afgeleid uit `type`/`format`/`verplicht`/`enum` (string → `string`, niet verplicht → `*string`, `date` → `Date`, `date-time` → `time.Time`, `integer` → `int`, `number` → `float64`, `boolean` → `bool`, enum → het enum-type) | `"type": "string"` zonder `goType` | — |
-| `velden[].datatype` | moet bestaan: in `model.datatypes` of in het register (`KorteTekst`, `LangeTekst`, `URL`, `Datum`, …) | `KorteTekst` | `AN40` |
+| `velden[].datatype` | moet bestaan: in `model.datatypes` of in het register (`KorteTekst`, `LangeTekst`, `URL`, `Datum`, …) | `KorteTekst` | `NietBestaand` |
+| `meervoud` (padnaam) | uniek over alle domeinen in de build (sinds 23-10-2026): elke padnaam wordt een route, en gin paniekt bij het opstarten op een dubbele route. Types van het eigen domein tellen niet mee | `inrichting_producten` | `producten` (bestaat al bij `Initiatief_Product`, domein CG) |
 
 #### Enums
 
