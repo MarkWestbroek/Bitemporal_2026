@@ -1,0 +1,1842 @@
+{
+  "version": 1,
+  "exported_at": "2026-10-23T12:00:00Z",
+  "source": "BACKEND: eerste vulling domein inrichting uit CG-Fundament docs/inrichting-referentielijsten.json",
+  "count": 38,
+  "notes": [
+    "Voor een verse database: expliciete id's (componenten 1-7, formaten 101.., soorten 201..).",
+    "Componenten worden eerst zonder artefactsoorten geregistreerd; stap 4 voegt per component de soorten toe die het ontvangt.",
+    "Aanvang van alle materiële gegevens: 2026-10-23."
+  ],
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: component openzaak",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "component": {
+                "id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentnaam": {
+                "component_id": 1,
+                "naam": "openzaak",
+                "weergavenaam": "Open Zaak",
+                "leverancier": "Maykin"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentlaag": {
+                "component_id": 1,
+                "laag": "1-2 gegevensbronnen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "component_aanvang": {
+                "component_id": 1,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: component openobject",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "component": {
+                "id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentnaam": {
+                "component_id": 2,
+                "naam": "openobject",
+                "weergavenaam": "Open Object",
+                "leverancier": "Maykin"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentlaag": {
+                "component_id": 2,
+                "laag": "1-2 gegevensbronnen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "component_aanvang": {
+                "component_id": 2,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: component openklant",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "component": {
+                "id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentnaam": {
+                "component_id": 3,
+                "naam": "openklant",
+                "weergavenaam": "Open Klant",
+                "leverancier": "Maykin"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentlaag": {
+                "component_id": 3,
+                "laag": "1-2 gegevensbronnen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "component_aanvang": {
+                "component_id": 3,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: component openproduct",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "component": {
+                "id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentnaam": {
+                "component_id": 4,
+                "naam": "openproduct",
+                "weergavenaam": "Open Product",
+                "leverancier": "Maykin"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentlaag": {
+                "component_id": 4,
+                "laag": "1-2 gegevensbronnen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "component_aanvang": {
+                "component_id": 4,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: component opennotificaties",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "component": {
+                "id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentnaam": {
+                "component_id": 5,
+                "naam": "opennotificaties",
+                "weergavenaam": "Open Notificaties",
+                "leverancier": "Maykin"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentlaag": {
+                "component_id": 5,
+                "laag": "3 verbinding"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "component_aanvang": {
+                "component_id": 5,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: component openforms",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "component": {
+                "id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentnaam": {
+                "component_id": 6,
+                "naam": "openforms",
+                "weergavenaam": "Open Formulieren",
+                "leverancier": "Maykin"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentlaag": {
+                "component_id": 6,
+                "laag": "4-5 proces"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "component_aanvang": {
+                "component_id": 6,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: component gzac",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "component": {
+                "id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentnaam": {
+                "component_id": 7,
+                "naam": "gzac",
+                "weergavenaam": "GZAC (Valtimo)",
+                "leverancier": "Ritense"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentlaag": {
+                "component_id": 7,
+                "laag": "4-5 proces"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "component_aanvang": {
+                "component_id": 7,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactformaat json-schema",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactformaat": {
+                "id": 101
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaatgegevens": {
+                "artefactformaat_id": 101,
+                "code": "json-schema",
+                "omschrijving": "JSON Schema (objecttype-versie)",
+                "mediatype": "application/schema+json"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaat_aanvang": {
+                "artefactformaat_id": 101,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactformaat catalogi-api-json",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactformaat": {
+                "id": 102
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaatgegevens": {
+                "artefactformaat_id": 102,
+                "code": "catalogi-api-json",
+                "omschrijving": "JSON in het formaat van de Catalogi API (zaaktype met onderdelen)",
+                "mediatype": "application/json"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaat_aanvang": {
+                "artefactformaat_id": 102,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactformaat openforms-export",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactformaat": {
+                "id": 103
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaatgegevens": {
+                "artefactformaat_id": 103,
+                "code": "openforms-export",
+                "omschrijving": "Open Formulieren-export (zip met forms.json, formDefinitions.json, ...)",
+                "mediatype": "application/zip"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaat_aanvang": {
+                "artefactformaat_id": 103,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactformaat bpmn-xml",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactformaat": {
+                "id": 104
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaatgegevens": {
+                "artefactformaat_id": 104,
+                "code": "bpmn-xml",
+                "omschrijving": "BPMN 2.0 XML (Operaton, Camunda 7-dialect)",
+                "mediatype": "application/xml"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaat_aanvang": {
+                "artefactformaat_id": 104,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactformaat dmn-xml",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactformaat": {
+                "id": 105
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaatgegevens": {
+                "artefactformaat_id": 105,
+                "code": "dmn-xml",
+                "omschrijving": "DMN 1.3 XML",
+                "mediatype": "application/xml"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaat_aanvang": {
+                "artefactformaat_id": 105,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactformaat objects-api-json",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactformaat": {
+                "id": 106
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaatgegevens": {
+                "artefactformaat_id": 106,
+                "code": "objects-api-json",
+                "omschrijving": "JSON in het formaat van de Objects API (object met record)",
+                "mediatype": "application/json"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaat_aanvang": {
+                "artefactformaat_id": 106,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactformaat pluginconfig-json",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactformaat": {
+                "id": 107
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaatgegevens": {
+                "artefactformaat_id": 107,
+                "code": "pluginconfig-json",
+                "omschrijving": "Valtimo pluginconfig-formaat (id, title, pluginDefinitionKey, properties)",
+                "mediatype": "application/json"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaat_aanvang": {
+                "artefactformaat_id": 107,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactformaat producttype-json",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactformaat": {
+                "id": 108
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaatgegevens": {
+                "artefactformaat_id": 108,
+                "code": "producttype-json",
+                "omschrijving": "JSON in het formaat van Open Product",
+                "mediatype": "application/json"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactformaat_aanvang": {
+                "artefactformaat_id": 108,
+                "datum": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort zaaktype",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 201
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 201,
+                "code": "zaaktype",
+                "omschrijving": "Zaaktype in de Catalogi API",
+                "identifierRegel": "catalogus.domein + '/' + identificatie; gepubliceerd zaaktype -> nieuwe versie met nieuwe beginGeldigheid, concept -> bijwerken"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 201,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 201,
+                "component_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort informatieobjecttype",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 202
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 202,
+                "code": "informatieobjecttype",
+                "omschrijving": "Informatieobjecttype in de Catalogi API",
+                "identifierRegel": "catalogus.domein + '/' + omschrijving; geldigheid als versiebegrip"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 202,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 202,
+                "component_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort statustype",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 203
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 203,
+                "code": "statustype",
+                "omschrijving": "Statustype binnen een zaaktype",
+                "identifierRegel": "zaaktype-identificatie + '/' + omschrijving (volgnummer bepaalt de volgorde)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 203,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 203,
+                "component_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort resultaattype",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 204
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 204,
+                "code": "resultaattype",
+                "omschrijving": "Resultaattype binnen een zaaktype",
+                "identifierRegel": "zaaktype-identificatie + '/' + omschrijving; selectielijstklasse via de Selectielijst API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 204,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 204,
+                "component_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort roltype",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 205
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 205,
+                "code": "roltype",
+                "omschrijving": "Roltype binnen een zaaktype",
+                "identifierRegel": "zaaktype-identificatie + '/' + omschrijving"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 205,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 205,
+                "component_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort objecttype",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 206
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 206,
+                "code": "objecttype",
+                "omschrijving": "Objecttype (JSON Schema) in Open Object",
+                "identifierRegel": "naam van het objecttype; gewijzigd schema -> nieuwe versie (draft/published)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 206,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 206,
+                "component_id": 2
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort verzoektype",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 207
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 207,
+                "code": "verzoektype",
+                "omschrijving": "Objecttype dat een verzoek (aanvraag) beschrijft",
+                "identifierRegel": "als objecttype"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 207,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 207,
+                "component_id": 2
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort formulier",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 208
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 208,
+                "code": "formulier",
+                "omschrijving": "Formulier in Open Formulieren (export-map)",
+                "identifierRegel": "slug van het formulier; import vervangt (uuid wijzigt, oude versie wordt inactief)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 208,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 208,
+                "component_id": 6
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort formulierSchema",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 209
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 209,
+                "code": "formulierSchema",
+                "omschrijving": "Registratie-instelling van een formulier (objecttype-koppeling)",
+                "identifierRegel": "n.v.t.: zit in het formulier"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 209,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 209,
+                "component_id": 6
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort bpmn",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 210
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 210,
+                "code": "bpmn",
+                "omschrijving": "Procesdefinitie (BPMN) voor GZAC/Operaton",
+                "identifierRegel": "process-key (id-attribuut van <process>); gewijzigde XML -> nieuwe engine-versie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 210,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 210,
+                "component_id": 7
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort dmn",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 211
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 211,
+                "code": "dmn",
+                "omschrijving": "Beslistabel (DMN) voor GZAC/Operaton",
+                "identifierRegel": "decision-key; als bpmn"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 211,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 211,
+                "component_id": 7
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort pluginconfiguratie",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 212
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 212,
+                "code": "pluginconfiguratie",
+                "omschrijving": "Pluginconfiguratie in GZAC (koppeling met een register)",
+                "identifierRegel": "vaste plugin-id (uuid) in het pluginconfig-bestand"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 212,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 212,
+                "component_id": 7
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort producttype",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 213
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 213,
+                "code": "producttype",
+                "omschrijving": "Producttype in Open Product",
+                "identifierRegel": "code of uniformeProductnaam; versiebegrip nog te bepalen (component nog niet geinstalleerd)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 213,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 213,
+                "component_id": 4
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort klanttaak",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 214
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 214,
+                "code": "klanttaak",
+                "omschrijving": "Klanttaak (objecttype taak) voor portaal/GZAC",
+                "identifierRegel": "als objecttype"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 214,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 214,
+                "component_id": 2
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort beschikkingtype",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 215
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 215,
+                "code": "beschikkingtype",
+                "omschrijving": "Beschikkingtype (besluittype) in de Catalogi API",
+                "identifierRegel": "catalogus.domein + '/' + omschrijving"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 215,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 215,
+                "component_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort kanaal",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 216
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 216,
+                "code": "kanaal",
+                "omschrijving": "Notificatiekanaal in Open Notificaties",
+                "identifierRegel": "naam van het kanaal; bijwerken van filters"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 216,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 216,
+                "component_id": 5
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoort autorisatie",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "artefactsoort": {
+                "id": 217
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortgegevens": {
+                "artefactsoort_id": 217,
+                "code": "autorisatie",
+                "omschrijving": "Applicatie met autorisaties in de Autorisaties API",
+                "identifierRegel": "clientId van de applicatie; bijwerken"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoort_aanvang": {
+                "artefactsoort_id": 217,
+                "datum": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "artefactsoortstandaarddoelcomponent": {
+                "artefactsoort_id": 217,
+                "component_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoorten van component openzaak",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 1,
+                "soort": 201,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 1,
+                "soort": 202,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 1,
+                "soort": 203,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 1,
+                "soort": 204,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 1,
+                "soort": 205,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 1,
+                "soort": 215,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 1,
+                "soort": 217,
+                "aanvang": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoorten van component openobject",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 2,
+                "soort": 206,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 2,
+                "soort": 207,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 2,
+                "soort": 214,
+                "aanvang": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoorten van component openproduct",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 4,
+                "soort": 213,
+                "aanvang": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoorten van component opennotificaties",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 5,
+                "soort": 216,
+                "aanvang": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoorten van component openforms",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 6,
+                "soort": 208,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 6,
+                "soort": 209,
+                "aanvang": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-10-23T12:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Inrichting: artefactsoorten van component gzac",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 7,
+                "soort": 210,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 7,
+                "soort": 211,
+                "aanvang": "2026-10-23"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "componentartefactsoort": {
+                "component_id": 7,
+                "soort": 212,
+                "aanvang": "2026-10-23"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

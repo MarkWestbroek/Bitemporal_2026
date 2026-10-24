@@ -79,7 +79,9 @@ func main() {
 		fmt.Printf("  %d veld(en) zonder goType; afgeleid uit type/format/verplicht/enum (eerste: %s)\n", len(meldingen), meldingen[0])
 	}
 
-	if validationErrors := validateV3Model(v3, *domein); len(validationErrors) > 0 {
+	validationErrors := validateV3Model(v3, *domein)
+	validationErrors = append(validationErrors, padnaamBotsingen(v3, *domein)...)
+	if len(validationErrors) > 0 {
 		fmt.Fprintln(os.Stderr, "V3 model validatie mislukt:")
 		for _, e := range validationErrors {
 			fmt.Fprintf(os.Stderr, "  - %s\n", e)

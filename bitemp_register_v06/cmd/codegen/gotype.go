@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/naamgeving"
 )
 
 // goTypeUitOAS leidt het Go-type van een veld af uit de V3.1-metadata (type, format, verplicht,
@@ -82,4 +84,33 @@ func datatypeBekend(v3 model.V3Model, naam string) bool {
 	}
 	_, ok := model.FindDatatype(naam)
 	return ok
+}
+
+// padnaamBotsingen meldt padnamen van het te genereren model die al bij een type uit een ánder
+// domein in de MetaRegistry van deze build staan. Elke padnaam wordt een route
+// (routes/addroutes_helper.go); gin paniekt bij het opstarten op een dubbele route
+// ("handlers are already registered for path '/producten'", Fundament 23-10-2026). Types van het
+// eigen domein (die opnieuw gegenereerd worden) tellen niet mee.
+func padnaamBotsingen(v3 model.V3Model, domein string) []string {
+	eigen := map[string]bool{}
+	nieuw := map[string]string{} // padnaam → typenaam in het nieuwe model
+	for _, d := range naamgeving.AlleDerivedTypes(v3) {
+		eigen[d.Typenaam] = true
+		if p := strings.TrimSpace(d.Padnaam); p != "" {
+			if _, al := nieuw[p]; !al {
+				nieuw[p] = d.Typenaam
+			}
+		}
+	}
+	var errs []string
+	for typenaam, meta := range model.MetaRegistry {
+		if eigen[typenaam] || meta.Padnaam == "" || (domein != "" && strings.EqualFold(meta.Domein, domein)) {
+			continue
+		}
+		if t, ok := nieuw[meta.Padnaam]; ok {
+			errs = append(errs, fmt.Sprintf("padnaam '%s' van %s bestaat al bij %s (domein %s): dat wordt een dubbele route; kies een ander meervoud", meta.Padnaam, t, typenaam, meta.Domein))
+		}
+	}
+	sort.Strings(errs)
+	return errs
 }

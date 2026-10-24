@@ -174,6 +174,21 @@ For each entiteit with padnaam `{pad}`:
 - **Description**: Inserts a full entity with child relations in one request. Sets FK values on children automatically via bun relation tags.
 - **Query params**: none
 
+### `GET /api/volgorde/{pad}` (sinds 23-10-2026)
+- **Handler**: `handlers.MaakVolgordeHandler()` (`volgorde_handler.go`)
+- **Doel**: entiteiten in afhankelijkheidsvolgorde, de vereiste eerst. Generiek (MetaRegistry-gedreven); gemaakt voor de uitrol van e-diensten op Fundament: "alle artefacten van e-dienstversie X, in de volgorde waarin ze uitgerold moeten worden".
+- **Voorbeeld**: `GET /api/volgorde/artefacten?via=artefactedienstversie&doel=12&na=artefactafhankelijkheid`
+- **Query params**:
+  | Param | Description |
+  |-------|-------------|
+  | `via` + `doel` | Alleen de entiteiten die via relatie `via` naar entiteit `doel` (id) wijzen. Samen of geen van beide; zonder: alle entiteiten van het type |
+  | `na` | Een zelf-relatie (A → A, expliciet doeltype) die "A hangt af van B" uitdrukt: B komt vóór A. Zonder `na`: volgorde op id |
+  | `peiltijdstip` / `t` | Formeel peilmoment voor selectie, afhankelijkheden en inhoud; standaard nu |
+
+  Relaties noem je met rolnaam, JSON-rolnaam of klassenaam.
+- **Antwoord 200**: `{ "volgorde": [ids], "<meervoud>": [entiteiten in /full-vorm, in die volgorde], "externeAfhankelijkheden": [{ "id", "afhankelijkVan" }], "peiltijdstip" }`. Een afhankelijkheid naar een entiteit buiten de selectie telt niet mee voor de volgorde maar staat in `externeAfhankelijkheden`. Bij gelijke stand komt het laagste id eerst (deterministisch).
+- **Fouten** (`application/problem+json`, `type` = `urn:omnium:volgorde:*`): 404 onbekende entiteit; 400 onbekende relatie, `na` geen zelf-relatie, `via` zonder `doel`; **409 `cyclus`** met de betrokken `ids`.
+
 ---
 
 ## 6. Referentielijst Endpoints

@@ -337,6 +337,20 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     (23-10). Eerste vulling klaar in CG-Fundament `docs/inrichting-referentielijsten.json`
     (17 soorten, 8 formaten); BACKEND maakt daar registratie-JSON van zodra het domein op
     Fundament staat (veldnamen uit `/api/schema/model/code`), incl. 7 Component-registraties.
+15. **Crashlus op Fundament (23-10) en de fix** (branch `feat/inrichting-volgorde`, nog niet
+    gecommit). De rebuild met inrichting activeerde een model waarvan de binary compileerde maar
+    bij het opstarten paniekte: padnaam `producten` van inrichting-`Product` botste met
+    `Initiatief_Product` (CG). Mitigatie door FUNDAMENT: `STARTUP_REBUILD=false` + herstart, geen
+    database-write. Fix: (1) de rebuild bouwt naar een tijdelijk pad en draait `bitemp-go-api
+    zelftest` vóór vervangen, baseline en activeren; (2) de startup-rebuild onthoudt een mislukte
+    versie en bouwt die niet bij elke start opnieuw; (3) codegen weigert een padnaam die al in een
+    ander domein bestaat. FUNDAMENT's V3 heeft nu `inrichting_producten`, `ediensten`,
+    `edienstversies`; lokaal gegenereerd, gebouwd en de zelftest geslaagd.
+16. **Eerste vulling + volgorde-endpoint** (zelfde branch): replay-bestand met 38 registraties
+    (7 componenten, 8 formaten, 17 soorten met standaarddoelcomponent, per component de soorten
+    die het ontvangt) en `GET /api/volgorde/{pad}?via=&doel=&na=` (zie `docs/API_REFERENCE.md`).
+    Integratietest op de regressiedatabase: vulling afgespeeld, artefacten in volgorde
+    objecttype → formulier → BPMN, cyclus geeft 409.
 12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
     actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
     inrichting-model wacht op het nieuwe image.

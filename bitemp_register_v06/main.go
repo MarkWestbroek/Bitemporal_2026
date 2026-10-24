@@ -41,6 +41,13 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "startup-rebuild" {
 		os.Exit(startupRebuild())
 	}
+	// `bitemp-go-api zelftest`: bouwt de router (alle routes registreren, GraphQL-schema, PEP)
+	// zonder database en zonder te luisteren. Door de rebuild aangeroepen op een vers gebouwde
+	// binary vóór die de draaiende vervangt: een panic bij het opstarten (bv. twee typen met
+	// dezelfde padnaam, Fundament 23-10-2026) mag nooit geactiveerd worden. Exit 0 = goed.
+	if len(os.Args) > 1 && os.Args[1] == "zelftest" {
+		os.Exit(zelftest())
+	}
 
 	fmt.Println("Bitemp Go API Project")
 	fmt.Printf("build commit: %s, build time: %s\n", commit, buildTime)
@@ -151,6 +158,20 @@ func main() {
 	//run the server
 	router.Run()
 
+}
+
+// zelftest bouwt de router en vangt een panic op; zie main.
+func zelftest() (code int) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("ZELFTEST MISLUKT:", r)
+			code = 1
+		}
+	}()
+	gin.SetMode(gin.TestMode)
+	_ = NewRouter()
+	fmt.Println("ZELFTEST OK: router gebouwd")
+	return 0
 }
 
 // startupRebuild voert de startup-rebuild uit (zie main) en geeft de exitcode voor de entrypoint.
@@ -320,6 +341,9 @@ func NewRouter() *gin.Engine {
 	// Model-link: naam + versie + asOf, uit schema_versies. Open, net als /api/schema/*.
 	router.GET("/api/models/:naam/diagram.svg", handlers.MaakModelDiagramSvgHandler())
 	router.GET("/api/models/:naam/views.json", handlers.MaakModelViewsHandler())
+	// Entiteiten in afhankelijkheidsvolgorde (generiek; o.a. artefacten van een e-dienstversie voor
+	// de uitrol op Fundament). Zie handlers/volgorde_handler.go.
+	router.GET("/api/volgorde/:padnaam", handlers.MaakVolgordeHandler())
 
 	// Schema model endpoints (v3-formaat, zie ontwerpkeuzen.md §7)
 	router.GET("/api/schema/model", handlers.MaakGetSchemaModelHandler())

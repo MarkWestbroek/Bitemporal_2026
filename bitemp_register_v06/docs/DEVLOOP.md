@@ -163,8 +163,11 @@ container gegenereerd was. Daarom roept `scripts/devloop-entrypoint.sh` in conta
    gelijk → niets doen;
 3. anders: codegen voor **elk domein dat in het model voorkomt** (prefix = die van het bestaande
    `model/<prefix>_metaregistry.go`, anders de domeinnaam met `-` → `_`), `go build -tags devtools`,
-   baseline bijwerken, exit 43 → de entrypoint start de nieuwe binary;
-4. mislukt het, dan start de ingebakken binary en staat de reden in het log.
+   zelftest (zie hieronder), baseline bijwerken, exit 43 → de entrypoint start de nieuwe binary;
+4. mislukt het, dan start de ingebakken binary en staat de reden in het log. De hash van de mislukte
+   versie komt in `/app/mislukte-schema.sha256`; bij een volgende start wordt die versie **niet
+   opnieuw** gebouwd (anders kost elke herstart minuten en loopt de pod in een lus). Een andere
+   actieve versie, of het bestand verwijderen, heft dat op.
 
 Reken op 1–3 minuten extra starttijd bij een verschil (Kubernetes: `startupProbe` ruim zetten).
 Uitzetten met `STARTUP_REBUILD=false`. De exit-42-herstart ná een `/admin/rebuild` loopt hier
@@ -182,6 +185,23 @@ De pijplijn zelf (baseline-sync, opschonen, backup, codegen, build, rollback) st
 datum in `handlers/rebuild_core.go` en wordt gedeeld door `/admin/rebuild` en de startup-rebuild.
 Daarbij is één gedrag veranderd: er worden alleen nog bestanden van de **doeldomeinen** opgeschoond;
 een lege domeinopgave kon voorheen alle gegenereerde bestanden wissen.
+
+#### Zelftest vóór vervangen en activeren (sinds 23-10-2026)
+
+Op Fundament activeerde een rebuild een model waarvan de binary wel compileerde maar bij het
+opstarten paniekte (gin: `handlers are already registered for path '/producten'`, twee typen uit
+verschillende domeinen met dezelfde padnaam). Omdat de versie al actief was en in de baseline
+stond, liep de pod daarna in een crashlus. Sindsdien:
+
+1. `go build` schrijft naar `bitemp-go-api.nieuw`; de draaiende binary blijft staan;
+2. `bitemp-go-api.nieuw zelftest` bouwt de router (alle routes, GraphQL-schema, PEP) zonder
+   database en zonder te luisteren, en vangt een panic op (exit 0 = goed, 1 = mislukt);
+3. pas na een geslaagde zelftest: binary vervangen, baseline en marker bijwerken, versie activeren.
+   Mislukt de zelftest, dan wordt `model/` teruggezet en wordt er **niets** geactiveerd; de uitvoer
+   van de zelftest staat in `build_output`.
+
+Daarnaast weigert de codegen een padnaam die al bij een type uit een ander domein bestaat (zie
+`CODEGEN.md` §4, validatieregels), zodat deze fout al bij de generatie stopt.
 
 Readiness en liveness: `GET /health` (200 als de database binnen 2 s antwoordt, anders 503) en
 `GET /version` (antwoordt zolang het proces leeft).
@@ -488,6 +508,7 @@ De devloop is expliciet defensief gemaakt zodat een mislukte generatie niet mete
 |----------|-------|------|
 | **Codegen fout** | `model/` wordt direct gerestored | `_pre_rebuild/model/` |
 | **Build fout** | `model/` wordt gerestored | `_pre_rebuild/model/` |
+| **Nieuwe binary start niet** (zelftest, sinds 23-10-2026) | `model/` gerestored, oude binary blijft, niets geactiveerd | `_pre_rebuild/model/` |
 | **Crash kort na herstart** (< 10 sec) | Entrypoint herstelt `model/` en hercompileert | `_baseline/model/` |
 | **Ongeldige rebuild-JSON** | Directe `400` response | Geen restore nodig (er is niets verwijderd) |
 

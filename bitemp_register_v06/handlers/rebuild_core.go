@@ -11,6 +11,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -21,6 +22,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 )
@@ -131,22 +133,50 @@ func voerCodegenEnBuildUit(appDir string, modelBytes []byte, domeinRuns []Rebuil
 		stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen domein=%s succesvol", i+1, len(domeinRuns), run.Domein))
 	}
 
-	// Stap 3: go build. -tags devtools: de devloop-binary moet zijn eigen rebuild-endpoint houden.
-	stappen = append(stappen, "Binary hercompileren...")
-	buildCmd := exec.Command("go", "build", "-tags", "devtools", "-o", filepath.Join(appDir, "bitemp-go-api"), ".")
-	buildCmd.Dir = appDir
-	buildCmd.Env = append(os.Environ(), "CGO_ENABLED=0")
-	buildOutput, err = buildCmd.CombinedOutput()
-	if err != nil {
-		stappen = append(stappen, fmt.Sprintf("Build mislukt: %v", err))
+	// Stap 3: go build naar een tijdelijk pad. -tags devtools: de devloop-binary moet zijn eigen
+	// rebuild-endpoint houden. De draaiende binary blijft staan tot de zelftest geslaagd is.
+	rollback := func() {
 		if rbMsg, rbErr := rollbackModelDirectory(appDir); rbErr != nil {
 			stappen = append(stappen, fmt.Sprintf("ROLLBACK MISLUKT: %v", rbErr))
 		} else {
 			stappen = append(stappen, rbMsg)
 		}
+	}
+	doel := filepath.Join(appDir, "bitemp-go-api")
+	nieuw := doel + ".nieuw"
+	stappen = append(stappen, "Binary hercompileren...")
+	buildCmd := exec.Command("go", "build", "-tags", "devtools", "-o", nieuw, ".")
+	buildCmd.Dir = appDir
+	buildCmd.Env = append(os.Environ(), "CGO_ENABLED=0")
+	buildOutput, err = buildCmd.CombinedOutput()
+	if err != nil {
+		stappen = append(stappen, fmt.Sprintf("Build mislukt: %v", err))
+		os.Remove(nieuw)
+		rollback()
 		return stappen, buildOutput, fmt.Errorf("build mislukt: %v — model is teruggedraaid naar pre-rebuild toestand", err)
 	}
 	stappen = append(stappen, "Build succesvol")
+
+	// Stap 3a: zelftest — start de nieuwe binary zo ver dat alle routes geregistreerd zijn (zonder
+	// database, zonder te luisteren). Een panic bij het opstarten (dubbele padnaam, kapotte
+	// toegangsbundel) wordt zo gevangen vóór er iets geactiveerd of in de baseline gezet wordt.
+	ctx, stop := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer stop()
+	testCmd := exec.CommandContext(ctx, nieuw, "zelftest")
+	testCmd.Dir = appDir
+	testCmd.Env = append(os.Environ(), "STARTUP_REBUILD=false")
+	if uit, err := testCmd.CombinedOutput(); err != nil {
+		stappen = append(stappen, fmt.Sprintf("Zelftest van de nieuwe binary mislukt: %v", err))
+		os.Remove(nieuw)
+		rollback()
+		return stappen, uit, fmt.Errorf("de nieuwe binary start niet (zelftest: %v) — niets geactiveerd, model teruggedraaid; zie build_output", err)
+	}
+	stappen = append(stappen, "Zelftest geslaagd (router gebouwd, alle routes geregistreerd)")
+	if err := os.Rename(nieuw, doel); err != nil {
+		os.Remove(nieuw)
+		rollback()
+		return stappen, nil, fmt.Errorf("kan nieuwe binary niet op zijn plaats zetten: %v", err)
+	}
 
 	// Stap 3b: baseline bijwerken met de succesvol gebouwde model/.
 	if melding, err := updateBaseline(appDir); err != nil {
@@ -189,6 +219,20 @@ func schrijfActieveSchemaMarker(appDir, hash string) error {
 		return err
 	}
 	return os.WriteFile(markerPad(appDir), []byte(hash+"\n"), 0644)
+}
+
+// mislukteSchemaMarkerPad: de hash van een actieve versie waarvan de startup-rebuild mislukte.
+// Buiten _baseline/ (die wordt bij een geslaagde rebuild vervangen), naast de binary.
+func mislukteSchemaMarkerPad(appDir string) string {
+	return filepath.Join(appDir, "mislukte-schema.sha256")
+}
+
+func leesMarker(pad string) string {
+	b, err := os.ReadFile(pad)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(b))
 }
 
 func leesActieveSchemaMarker(appDir string) string {
@@ -265,6 +309,10 @@ func VoerStartupRebuildUit() (herbouwd bool, stappen []string, err error) {
 	stappen = append(stappen, melding)
 
 	hash := schemaHash(modelBytes)
+	if mislukt := leesMarker(mislukteSchemaMarkerPad(appDir)); mislukt == hash {
+		stappen = append(stappen, "Deze versie ("+hash[:12]+") is eerder mislukt; overgeslagen (ingebakken code). Activeer een gecorrigeerde versie of verwijder "+mislukteSchemaMarkerPad(appDir))
+		return false, stappen, nil
+	}
 	if huidig := leesActieveSchemaMarker(appDir); huidig == hash {
 		stappen = append(stappen, "Code is al gebouwd uit deze versie ("+hash[:12]+"); niets te doen")
 		return false, stappen, nil
@@ -284,7 +332,9 @@ func VoerStartupRebuildUit() (herbouwd bool, stappen []string, err error) {
 	s2, uit, err := voerCodegenEnBuildUit(appDir, modelBytes, runs)
 	stappen = append(stappen, s2...)
 	if err != nil {
+		_ = os.WriteFile(mislukteSchemaMarkerPad(appDir), []byte(hash+"\n"), 0644)
 		return false, stappen, fmt.Errorf("%v\n%s", err, strings.TrimSpace(string(uit)))
 	}
+	os.Remove(mislukteSchemaMarkerPad(appDir))
 	return true, stappen, nil
 }
