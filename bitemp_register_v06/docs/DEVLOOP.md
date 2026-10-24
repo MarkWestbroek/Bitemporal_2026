@@ -179,7 +179,9 @@ niet opnieuw doorheen (de stap staat vóór de loop).
 > `/admin/rebuild` na een geslaagde build het gebouwde model zelf op als `active` (bron
 > `rebuild`; de vorige actieve wordt gearchiveerd), of activeert de `schema_versie_id`/laatste
 > voorgestelde versie waaruit hij bouwde. Bron `code` en `actief` veranderen niets. Zo komt een
-> herstart van de pod altijd bij de laatst gebouwde code uit.
+> herstart van de pod altijd bij de laatst gebouwde code uit. Sinds 25-10-2026 zet hij in dezelfde
+> transactie ook de domeinen van het gebouwde model in de domeincatalogus (`schema_domeinen`,
+> `GET /api/schema/domeinen`), zoals publiceren al deed.
 
 De pijplijn zelf (baseline-sync, opschonen, backup, codegen, build, rollback) staat sinds dezelfde
 datum in `handlers/rebuild_core.go` en wordt gedeeld door `/admin/rebuild` en de startup-rebuild.

@@ -13,6 +13,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 )
@@ -72,6 +74,14 @@ func activeerGebouwdModel(ctx context.Context, modelBytes []byte, bestaandID *in
 		}
 		melding = fmt.Sprintf("Gebouwd model opgeslagen als schema-versie %d en geactiveerd", versie.ID)
 	}
+	// De domeinen van het gebouwde model in de domeincatalogus (schema_domeinen; Studio-keuzelijst,
+	// GET /api/schema/domeinen). Publiceren doet dat al (schema_model_handler.go), deze route niet:
+	// op Fundament (25-10-2026) stond na een rebuild met inrichting alleen "register" in de lijst.
+	for _, d := range domeinenVanModel(modelBytes) {
+		if _, err := tx.NewInsert().Model(&model.SchemaDomein{Naam: d}).On("CONFLICT (naam) DO NOTHING").Exec(ctx); err != nil {
+			return "", fmt.Errorf("kan domein %q niet registreren: %w", d, err)
+		}
+	}
 	if err := tx.Commit(); err != nil {
 		return "", fmt.Errorf("kan transactie niet committen: %w", err)
 	}
@@ -86,4 +96,22 @@ func laatsteSchemaVersieIDOpStatus(ctx context.Context, status model.SchemaVersi
 		return nil, err
 	}
 	return &versie.ID, nil
+}
+
+// domeinenVanModel: de verschillende domeinnamen van de entiteiten in een V3-model, gesorteerd.
+func domeinenVanModel(modelBytes []byte) []string {
+	var v3 model.V3Model
+	if json.Unmarshal(modelBytes, &v3) != nil {
+		return nil
+	}
+	gezien := map[string]bool{}
+	var uit []string
+	for _, e := range v3.Entiteiten {
+		if d := strings.TrimSpace(e.Domein); d != "" && !gezien[d] {
+			gezien[d] = true
+			uit = append(uit, d)
+		}
+	}
+	sort.Strings(uit)
+	return uit
 }
