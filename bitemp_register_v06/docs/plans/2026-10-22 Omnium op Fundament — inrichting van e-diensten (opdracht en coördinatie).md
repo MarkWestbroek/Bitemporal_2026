@@ -337,8 +337,8 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     (23-10). Eerste vulling klaar in CG-Fundament `docs/inrichting-referentielijsten.json`
     (17 soorten, 8 formaten); BACKEND maakt daar registratie-JSON van zodra het domein op
     Fundament staat (veldnamen uit `/api/schema/model/code`), incl. 7 Component-registraties.
-15. **Crashlus op Fundament (23-10) en de fix** (branch `feat/inrichting-volgorde`, nog niet
-    gecommit). De rebuild met inrichting activeerde een model waarvan de binary compileerde maar
+15. **Crashlus op Fundament (23-10) en de fix** (gemerged naar main 25-10, 1b4739a1, gepusht;
+    devloop-image `markwestbroek/bitemp-devloop:0.24.2`, digest `sha256:b480b2ec4718…`). De rebuild met inrichting activeerde een model waarvan de binary compileerde maar
     bij het opstarten paniekte: padnaam `producten` van inrichting-`Product` botste met
     `Initiatief_Product` (CG). Mitigatie door FUNDAMENT: `STARTUP_REBUILD=false` + herstart, geen
     database-write. Fix: (1) de rebuild bouwt naar een tijdelijk pad en draait `bitemp-go-api
