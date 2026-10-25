@@ -1,0 +1,207 @@
+{
+  "_toelichting": "E-dienst-inrichtingsmodel voor 'Aanvraag (voorbeeld)': de keuzes per artefact die niet uit het canonieke datamodel (aanvraag-domein-v3.json) volgen en niet in een generieke regelset thuishoren (TRANSFORMATIES.md paragraaf 7.7, samengestelde bron). Alle verwijzingen zijn modelpaden (Entiteit.Gegevenselement.veld, relaties via hun naam); doelpaden volgen uit de transformatie en komen in de trace. Alleen positieve selectie. 'letterlijk' markeert delen die (nog) handwerk zijn en niet gegenereerd worden; 'passthrough' is letterlijk doelformaat dat ongewijzigd wordt meegenomen. Voorzet FUNDAMENT 25-10-2026 (v2 na review TRANSFORMATIES), tijdelijk bestand voor de eerste proef; op termijn inrichtingsdata bij EDienstVersie in het domein inrichting.",
+  "edienst": {
+    "naam": "Aanvraag (voorbeeld)",
+    "versienummer": "0.1.0",
+    "omgeving": "cg-test"
+  },
+  "bronmodel": {
+    "naam": "aanvraag",
+    "bestand": "docs/aanvraag-domein-v3.json",
+    "versie": "voorzet 2026-10-25 v3",
+    "hash": "sha256:5b5af637b7c7fac80e8ee9b947252b45f3f78cbc6ee1ecc61aa8d50f74ae4971",
+    "_hashregel": "sha256 over JCS(model) (RFC 8785, JSON Canonicalization Scheme; model = het 'model'-object zonder model_naam/model_beschrijving). Zelfde regel voor ArtefactInhoud.payloadHash van JSON-payloads; voor niet-JSON (bpmn-xml, zip) sha256 over de bytes"
+  },
+  "referentielijsten": {
+    "Aanvraagtype": {
+      "bron": "register: /full/aanvraagtypen",
+      "peiltijdstip": null,
+      "_peiltijdstip": "bij generatie vastleggen (ArtefactHerkomst, open punt 7 in het voorstel); null = nu",
+      "eersteVulling": {
+        "_status": "M0-data voor de proef; daarna geregistreerd in het register, met het peiltijdstip als bron",
+        "items": [
+          {
+            "code": "parkeervergunning",
+            "omschrijving": "Parkeervergunning",
+            "zaaktypeIdentificatie": "AANVRAAG"
+          },
+          {
+            "code": "evenement",
+            "omschrijving": "Evenementenvergunning",
+            "zaaktypeIdentificatie": "AANVRAAG"
+          }
+        ]
+      }
+    }
+  },
+  "artefacten": [
+    {
+      "identifier": "aanvraag",
+      "soort": "objecttype",
+      "formaat": "json-schema",
+      "doelcomponent": "openobject",
+      "bron": "Aanvraag",
+      "projectie": {
+        "materieel": "actueel",
+        "relaties": {
+          "AanvraagAanvrager": {
+            "als": "ingebed",
+            "naam": "aanvrager"
+          }
+        },
+        "referentielijsten": {
+          "Aanvraagtype": {
+            "als": "code",
+            "enum": false
+          }
+        }
+      },
+      "velden": [
+        "Aanvraag.AanvraagIdentificatie.aanvraagnummer",
+        "Aanvraag.AanvraagIdentificatie.aanvraagtype",
+        "Aanvraag.AanvraagAanvrager.Aanvrager.AanvragerNaam.naam",
+        "Aanvraag.AanvraagAanvrager.Aanvrager.AanvragerContact.email",
+        "Aanvraag.AanvraagAanvrager.Aanvrager.AanvragerKlantverwijzing.klantUrl",
+        "Aanvraag.AanvraagStatus.status",
+        "Aanvraag.AanvraagIndiening.ingediendOp",
+        "Aanvraag.AanvraagBijlage.naam",
+        "Aanvraag.AanvraagBijlage.documentUrl"
+      ],
+      "passthrough": {
+        "_toelichting": "doelspecifieke laag: letterlijk JSON Schema, niet getransformeerd",
+        "properties": {
+          "formulier": {
+            "type": "object",
+            "description": "De ingevulde formuliergegevens, vrij van vorm",
+            "additionalProperties": true
+          }
+        }
+      },
+      "metadata": {
+        "name": "aanvraag",
+        "namePlural": "aanvragen",
+        "description": "Aanvraag die een partij via de formulierservice indient; wordt gevalideerd door de valideerservice. Bijlagen staan in het documentregister.",
+        "dataClassification": "intern",
+        "maintainerOrganization": "Common Ground Lab",
+        "contactPerson": "Functioneel beheer",
+        "contactEmail": "beheer@example.org",
+        "source": "formulierservice",
+        "updateFrequency": "unknown",
+        "allowGeometry": false
+      }
+    },
+    {
+      "identifier": "aanvraag-voorbeeld",
+      "soort": "formulier",
+      "formaat": "openforms-export",
+      "doelcomponent": "openforms",
+      "bron": "Aanvraag",
+      "naam": "Aanvraag (voorbeeld)",
+      "stappen": [
+        {
+          "naam": "Gegevens aanvraag",
+          "slug": "gegevens-aanvraag",
+          "velden": [
+            {
+              "veld": "Aanvraag.AanvraagIdentificatie.aanvraagtype",
+              "key": "aanvraagtype",
+              "label": "Soort aanvraag",
+              "verplicht": true
+            },
+            {
+              "veld": "Aanvraag.AanvraagAanvrager.Aanvrager.AanvragerNaam.naam",
+              "key": "aanvragerNaam",
+              "label": "Naam aanvrager",
+              "verplicht": true
+            },
+            {
+              "veld": "Aanvraag.AanvraagAanvrager.Aanvrager.AanvragerContact.email",
+              "key": "aanvragerEmail",
+              "label": "E-mailadres",
+              "verplicht": false
+            },
+            {
+              "veld": "Aanvraag.AanvraagIndiening.toelichting",
+              "key": "toelichting",
+              "label": "Toelichting"
+            }
+          ],
+          "_component": "de vorm (select, textfield, email, textarea) leidt de regelset af uit het model ($ref naar referentielijst -> select, Emailadres -> email, LangeTekst -> textarea); alleen bij afwijking hier 'component' opnemen"
+        }
+      ],
+      "registratie": {
+        "objecttype": "aanvraag",
+        "vasteWaarden": {
+          "Aanvraag.AanvraagStatus.status": "ingediend"
+        },
+        "letterlijk": {
+          "Aanvraag.AanvraagIndiening.ingediendOp": "indientijdstip van Open Formulieren",
+          "Aanvraag.AanvraagIdentificatie.aanvraagnummer": "toegekend door de aanvraagservice (nog geen generiek mechanisme)"
+        }
+      }
+    },
+    {
+      "identifier": "TEST/AANVRAAG",
+      "soort": "zaaktype",
+      "formaat": "catalogi-api-json",
+      "doelcomponent": "openzaak",
+      "bron": "Aanvraagtype.AanvraagtypeGegevens.zaaktypeIdentificatie",
+      "catalogus": {
+        "domein": "TEST",
+        "rsin": "000000000"
+      },
+      "statuskoppeling": {
+        "_toelichting": "M1-tot-M1-correspondentie Aanvraag.AanvraagStatus.status -> statustype; hoort hier, niet in de regelset",
+        "ingediend": "Ontvangen",
+        "gevalideerd": "In behandeling",
+        "afgekeurd": "Afgehandeld",
+        "afgehandeld": "Afgehandeld"
+      },
+      "roltypen": {
+        "uitModel": {
+          "Aanvrager": "Aanvraag.AanvraagAanvrager"
+        },
+        "extra": [
+          "Behandelaar"
+        ]
+      },
+      "informatieobjecttypen": {
+        "uitModel": {
+          "Bijlage": "Aanvraag.AanvraagBijlage"
+        },
+        "extra": [
+          "Aanvraagformulier",
+          "Beschikking"
+        ]
+      },
+      "letterlijk": "catalogi/aanvraag.json#zaaktype (statustypen, resultaattypen, doorlooptijd, servicenorm, verlenging, selectielijst)",
+      "_status": "nog grotendeels letterlijk; niet in de eerste proef"
+    },
+    {
+      "identifier": "aanvraag-behandelen",
+      "soort": "bpmn",
+      "formaat": "bpmn-xml",
+      "doelcomponent": "gzac",
+      "letterlijk": "processen/aanvraag-behandelen.bpmn (gedrag, geen gegevensmodel)"
+    }
+  ],
+  "afhankelijkheden": [
+    {
+      "artefact": "aanvraag-voorbeeld",
+      "afhankelijkVan": "aanvraag",
+      "reden": "het formulier registreert in het objecttype"
+    },
+    {
+      "artefact": "aanvraag-behandelen",
+      "afhankelijkVan": "TEST/AANVRAAG",
+      "reden": "het proces maakt een zaak van dit zaaktype"
+    }
+  ],
+  "eersteProef": {
+    "artefacten": [
+      "aanvraag"
+    ],
+    "doel": "gegenereerd objecttype-schema met dezelfde canonieke hash als objecttypes/aanvraag.json (na het in lijn brengen van dat schema met de datatypen, open punt 8); uitrol geeft 'ongewijzigd'"
+  },
+  "_fixture": "Kopie van CG-Fundament docs/aanvraag-edienst.json (commit 2c46c4e+), met geanonimiseerd contact; voor tests."
+}

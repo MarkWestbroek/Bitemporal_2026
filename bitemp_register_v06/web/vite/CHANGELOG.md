@@ -8,6 +8,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Inrichting van e-diensten: objecttype uit het canonieke model** (25-10). Een transformatie
+  "canoniek model + e-dienst → objecttype (JSON Schema)" voor Open Object, als artefact in de vorm
+  van het inrichting-register op Fundament (herkomst, trace per modelknoop, hash = sha256 over
+  JCS/RFC 8785), met een runner (`scripts/maak_inrichtingsartefact.mjs`) die het artefact schrijft
+  en met een bestaand artefact vergelijkt. Nieuw in `src/transformatie/`: `v3Graaf.js`
+  (samengestelde bron), `jsonSchemaSchrijver.js`, `jcs.js`. De gedeelde datatypen staan als
+  snapshot in `testdata/gegevenstypen.json`, bewaakt door een Go-test. Zie
+  [`docs/TRANSFORMATIES.md`](../docs/TRANSFORMATIES.md) §11.
+
 ## [studio/v0.24.0] — 2026-10-23
 
 ### Toegevoegd

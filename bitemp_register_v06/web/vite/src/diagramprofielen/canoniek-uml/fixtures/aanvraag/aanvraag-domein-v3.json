@@ -1,0 +1,311 @@
+{
+  "model_naam": "aanvraag",
+  "model_beschrijving": "Canoniek model van de e-dienst 'Aanvraag (voorbeeld)': de aanvraag, de aanvrager en het aanvraagtype. Bron voor de transformaties naar objecttype (Open Object), formulier (Open Formulieren) en zaaktype (Open Zaak). Voorzet FUNDAMENT 25-10-2026, aangevuld na review TRANSFORMATIES (beschrijvingen, datatype Aanvraagnummer, verplichte relatie, meervoud bijlagen), afgeleid van objecttypes/aanvraag.json, de formulierexport en catalogi/aanvraag.json. Toelichting: docs/aanvraag-domein-voorstel.md.",
+  "model": {
+    "versie": "v3",
+    "datatypes": [
+      {
+        "naam": "Aanvraagnummer",
+        "description": "Aanvraagnummer: hoofdletters, cijfers en koppeltekens, max 40 tekens (toegekend door de aanvraagservice).",
+        "basistype": "string",
+        "domein": "aanvraag",
+        "validatie": {
+          "pattern": "^[A-Z0-9-]+$",
+          "maxLength": 40,
+          "voorbeelden": [
+            "AANVRAAG-2026-000123"
+          ],
+          "foutmelding": "Voer een aanvraagnummer in met hoofdletters, cijfers en koppeltekens"
+        },
+        "weergave": {
+          "placeholder": "AANVRAAG-2026-000123"
+        }
+      }
+    ],
+    "referentielijstInstanties": [],
+    "enums": [
+      {
+        "goType": "AanvraagStatus",
+        "baseType": "string",
+        "domein": "aanvraag",
+        "waarden": [
+          {
+            "constNaam": "AanvraagStatusIngediend",
+            "waarde": "ingediend"
+          },
+          {
+            "constNaam": "AanvraagStatusGevalideerd",
+            "waarde": "gevalideerd"
+          },
+          {
+            "constNaam": "AanvraagStatusAfgekeurd",
+            "waarde": "afgekeurd"
+          },
+          {
+            "constNaam": "AanvraagStatusAfgehandeld",
+            "waarde": "afgehandeld"
+          }
+        ]
+      }
+    ],
+    "entiteiten": [
+      {
+        "typenaam": "Aanvraagtype",
+        "domein": "aanvraag",
+        "entiteitSubtype": "referentielijst_item",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "meervoud": "aanvraagtypen",
+        "description": "Referentielijst: soort aanvraag (de keuzelijst 'Soort aanvraag' in het formulier). Per type het zaaktype dat erbij hoort in Open Zaak.",
+        "gegevenselementen": [
+          {
+            "naam": "AanvraagtypeGegevens",
+            "domein": "aanvraag",
+            "meervoud": "aanvraagtype_gegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Code (sleutel, bv. parkeervergunning), omschrijving voor de keuzelijst, en de identificatie van het zaaktype in de Catalogi API.",
+            "velden": [
+              {
+                "naam": "code",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "Code van het aanvraagtype (sleutel)"
+              },
+              {
+                "naam": "omschrijving",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "description": "Omschrijving voor de keuzelijst"
+              },
+              {
+                "naam": "zaaktypeIdentificatie",
+                "type": "string",
+                "datatype": "AN40",
+                "description": "Identificatie van het zaaktype in de Catalogi API dat bij dit aanvraagtype hoort"
+              },
+              {
+                "naam": "toelichting",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de aanvrager bij de aanvraag"
+              }
+            ]
+          }
+        ],
+        "relaties": [],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "AanvraagtypeGegevens.omschrijving",
+            "isWeergaveVeld": true
+          }
+        ]
+      },
+      {
+        "typenaam": "Aanvrager",
+        "domein": "aanvraag",
+        "isMaterieel": true,
+        "kleur": "#dbeafe",
+        "meervoud": "aanvragers",
+        "description": "De partij die een aanvraag indient. Eigen entiteit (niet ingebed in de aanvraag), zodat een partij meerdere aanvragen kan doen en de verwijzing naar Open Klant één keer bestaat.",
+        "gegevenselementen": [
+          {
+            "naam": "AanvragerNaam",
+            "domein": "aanvraag",
+            "meervoud": "aanvrager_namen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Naam zoals opgegeven in het formulier.",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "description": "Naam van de aanvrager zoals opgegeven in het formulier"
+              }
+            ]
+          },
+          {
+            "naam": "AanvragerContact",
+            "domein": "aanvraag",
+            "meervoud": "aanvrager_contacten",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Contactgegevens uit het formulier.",
+            "velden": [
+              {
+                "naam": "email",
+                "type": "string",
+                "datatype": "Emailadres",
+                "description": "E-mailadres van de aanvrager"
+              },
+              {
+                "naam": "telefoonnummer",
+                "type": "string",
+                "datatype": "Telefoonnummer",
+                "description": "Telefoonnummer van de aanvrager"
+              }
+            ]
+          },
+          {
+            "naam": "AanvragerKlantverwijzing",
+            "domein": "aanvraag",
+            "meervoud": "aanvrager_klantverwijzingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Verwijzing naar de partij in Open Klant (Klantinteracties API), zodra die gekoppeld is.",
+            "velden": [
+              {
+                "naam": "klantUrl",
+                "type": "string",
+                "datatype": "URL",
+                "description": "Verwijzing naar de partij in Open Klant"
+              }
+            ]
+          }
+        ],
+        "relaties": [],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "AanvragerNaam.naam",
+            "isWeergaveVeld": true
+          }
+        ]
+      },
+      {
+        "typenaam": "Aanvraag",
+        "domein": "aanvraag",
+        "isMaterieel": true,
+        "kleur": "#fde68a",
+        "meervoud": "aanvragen",
+        "description": "Eén aanvraag die een partij via de formulierservice indient: identificatie, indiening, status (met geschiedenis) en bijlagen in het documentregister.",
+        "gegevenselementen": [
+          {
+            "naam": "AanvraagIdentificatie",
+            "domein": "aanvraag",
+            "meervoud": "aanvraag_identificaties",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Uniek aanvraagnummer (toegekend door de aanvraagservice) en het aanvraagtype.",
+            "velden": [
+              {
+                "naam": "aanvraagnummer",
+                "type": "string",
+                "datatype": "Aanvraagnummer",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "Uniek nummer dat de aanvraagservice toekent"
+              },
+              {
+                "naam": "aanvraagtype",
+                "goType": "int",
+                "type": "integer",
+                "verplicht": true,
+                "$ref": "Aanvraagtype",
+                "description": "Soort aanvraag (keuzelijst Aanvraagtype)"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagIndiening",
+            "domein": "aanvraag",
+            "meervoud": "aanvraag_indieningen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Wanneer en met welke toelichting de aanvraag is ingediend.",
+            "velden": [
+              {
+                "naam": "ingediendOp",
+                "type": "string",
+                "datatype": "DatumTijd",
+                "verplicht": true,
+                "format": "date-time",
+                "description": "Tijdstip waarop de aanvraag is ingediend"
+              },
+              {
+                "naam": "toelichting",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de aanvrager bij de aanvraag"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagStatus",
+            "domein": "aanvraag",
+            "meervoud": "aanvraag_statussen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Status van de behandeling. Materieel: elke statuswijziging is een nieuwe geldigheid, zodat de statusgeschiedenis bevraagbaar is.",
+            "velden": [
+              {
+                "naam": "status",
+                "type": "string",
+                "enum": "AanvraagStatus",
+                "verplicht": true,
+                "description": "Status van de behandeling"
+              },
+              {
+                "naam": "reden",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Reden bij de statuswijziging (bv. bij afkeuring)"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagBijlage",
+            "domein": "aanvraag",
+            "meervoud": "bijlagen",
+            "momentvoorkomen": "meervoudig",
+            "isMaterieel": true,
+            "description": "Bijlage bij de aanvraag: naam en verwijzing naar het document in het documentregister (Documenten API). Gegevenselement, geen entiteit: een bijlage bestaat niet los van zijn aanvraag.",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "description": "Naam van de bijlage"
+              },
+              {
+                "naam": "documentUrl",
+                "type": "string",
+                "datatype": "URL",
+                "verplicht": true,
+                "description": "Verwijzing naar het document in het documentregister (Open Zaak Documenten API)"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "AanvraagAanvrager",
+            "domein": "aanvraag",
+            "meervoud": "aanvraag_aanvragers",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De partij die de aanvraag indient.",
+            "doelEntiteit": "Aanvrager",
+            "velden": [],
+            "doelKardinaliteit": "1"
+          }
+        ],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "AanvraagIdentificatie.aanvraagnummer",
+            "isWeergaveVeld": true
+          }
+        ]
+      }
+    ]
+  }
+}

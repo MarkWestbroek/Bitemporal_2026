@@ -76,6 +76,11 @@ bron- en doelelement.
 - **Toegangsspraak → ODRL (ODRL-AP-NL)**, een export in de vorm van §3 mét
   schrijver (§8). Nog niet in de registry: een beleid leeft in de
   Toegangverlening-activiteit, niet in een Modelleren-map.
+- **Canoniek model + e-dienst → objecttype (JSON Schema)**, een artefact voor
+  de inrichting van e-diensten op Fundament (§11): samengestelde bron, regelset,
+  JSON-schemaschrijver en een runner (`scripts/maak_inrichtingsartefact.mjs`).
+  Nog niet in de registry: de bron is een V3-bestand plus een e-dienstmodel,
+  niet een Modelleren-map.
 - **EA-lezer per profiel**: naast de `.qea`-lezer hierboven heeft een tiental
   profielen een `eaMapping.js` (bpmn, dmn-drd, xsd, wsdl, object, …) — ook
   **data**, maar in een eigen tabelvorm (EA-objecttype + stereotype →
@@ -564,3 +569,135 @@ Knikpunten landen op `element.data.knikken` (de plek op main). De branch van
 EA-SYNC verhuist lijndata naar `diagram.lijnen[connectorId]` en migreert
 `data.knikken`; de aansluiting hoeft dan alleen daar te schrijven.
 
+## 11. Inrichting van e-diensten: canoniek model + e-dienst → objecttype (2026-10-25)
+
+Eerste transformatie voor de **inrichting** van e-diensten op Fundament
+(opdracht en coördinatie: *plans/2026-10-22 Omnium op Fundament — inrichting van
+e-diensten*). Uit één canoniek model worden de artefacten gegenereerd die in
+Common Ground-componenten landen; FUNDAMENT registreert ze in het
+inrichting-register en rolt ze uit. Deze eerste stap maakt het
+**objecttype** (JSON Schema, voor Open Object) van de e-dienst "Aanvraag
+(voorbeeld)".
+
+### 11.1 Drie bronnen, één graaf (samengestelde bron, §7.7)
+
+| Bron | Niveau | Wat erin staat | Voorbeeld |
+|---|---|---|---|
+| canoniek datamodel | M1 | entiteiten, GE's, velden, relaties, datatypen, enums | `aanvraag-domein-v3.json` |
+| e-dienst-inrichtingsmodel | M1 (inrichting) | per artefact: bron-entiteit, **positieve selectie** van velden als modelpaden, **projectie** (relatie ingebed of niet, referentielijst als code), metadata, passthrough | `aanvraag-edienst.json` |
+| referentielijst-items | M0 | de items, op een **peiltijdstip** | Aanvraagtype: parkeervergunning, evenement |
+
+Wat specifiek is voor één e-dienst staat in het e-dienstmodel, niet in de
+regelset (die is M2 en geldt voor elk canoniek model) en niet in het datamodel.
+De lezer `transformatie/v3Graaf.js` maakt van de drie één graaf: de
+bron-entiteit als wortel, GE's en ingebedde relaties als groepen, velden als
+knopen, met als id het **modelpad** dat ook het e-dienstmodel gebruikt
+(`Aanvraag.AanvraagAanvrager.Aanvrager.AanvragerNaam.naam`). De V3-feiten worden
+in de lezer opgelost: datatype (eerst het model, dan de gedeelde bibliotheek),
+enum-waarden, de verwijzing naar een referentielijst volgens de projectie.
+
+**Gedeelde datatypen.** De gedeelde datatypebibliotheek van codegen en het
+register (`model/gegevenstypen_datatype_registry.go`) staat als snapshot in
+`testdata/gegevenstypen.json`. Een Go-test
+(`model/gegevenstypen_snapshot_test.go`) faalt zodra de snapshot achterloopt —
+zo lopen de JS-transformatie en de backend niet uit elkaar (zoals
+`testdata/cel-pariteit.json` voor CEL). Bijwerken:
+`SCHRIJF_GEGEVENSTYPEN=1 go test ./model -run TestGegevenstypenSnapshot`.
+
+### 11.2 Regelset en schrijver
+
+| Deel | Bestand |
+|---|---|
+| Regelset "canoniek-naar-objecttype" (data) | `diagramprofielen/canoniek-uml/objecttypeRegels.js` |
+| Schrijver plan → JSON Schema 2020-12 | `transformatie/jsonSchemaSchrijver.js` |
+| JCS (RFC 8785) en de hash | `transformatie/jcs.js` |
+| Aansluiting → artefact + `verschillen` | `diagramprofielen/canoniek-uml/objecttypeArtefact.js` |
+| Runner | `scripts/maak_inrichtingsartefact.mjs` |
+| Tests + fixtures | `objecttypeArtefact.test.js`, `jcs.test.js`, `canoniek-uml/fixtures/aanvraag/` |
+
+De regels in het kort: de bron-entiteit wordt het schema (`title`,
+`additionalProperties: false`); een **enkelvoudig GE** is een groepering en
+verdwijnt — zijn velden staan in het omvattende object (in de trace:
+`opgegaan`); een **meervoudig GE** wordt een array van objecten met de
+meervoudsnaam van het GE; een **ingebedde relatie** wordt een object, verplicht
+als de `doelKardinaliteit` met 1 begint; een **veld** wordt een property met
+type, format, pattern, min/maxLength en enum uit het datatype of de enum, en de
+`description` van het veld. Niet geselecteerde velden worden weggelaten (in de
+trace: `weggelaten`).
+
+Twee bewuste keuzes:
+
+- **`required` staat gesorteerd.** In JSON Schema is het een verzameling, maar
+  JCS telt lijstvolgorde mee; gesorteerd hangt de hash niet af van de volgorde
+  van de properties.
+- **De beschrijving van een GE gaat niet mee** naar het schema. Die beschrijft
+  de groepering en de modelkeuze ("gegevenselement, geen entiteit: …") en is voor
+  de modelleur. De beschrijvingen van velden en relaties gaan wel mee.
+
+De schrijver laat lege waarden weg (`""`, `null`, lege lijst), zodat een regel
+altijd alle sleutelwoorden mag noemen.
+
+### 11.3 Het artefact
+
+Eén JSON-object in de vorm van het inrichting-register (afspraak FUNDAMENT):
+`artefactIdentificatie` (soort, identifier, naam, versienummer),
+`artefactInhoud` (formaat, payload = metadata + `jsonSchema`, `payloadHash`),
+`artefactHerkomst` (regelset-id en -versie, `bronmodelHash`, schrijver-id,
+`peiltijdstip`), `traceregels` (per modelknoop: regel, actie, `doelPad` als
+JSON Pointer in de payload), `edienstversie`, `doelcomponent` en
+`afhankelijkheden`. FUNDAMENT registreert het bestand en rolt het uit; de runner
+schrijft niets in het register.
+
+**Hashregel**: `payloadHash` en `bronmodelHash` zijn sha256 over JCS
+(RFC 8785) — voor het model het object onder `model`. Voor niet-JSON (BPMN-XML,
+zip) sha256 over de bytes.
+
+### 11.4 De hash-toets
+
+Gelijke hash met het artefact dat al in het register staat = de uitrol geeft
+"ongewijzigd"; dat bewijst dat de transformatie hetzelfde maakt als het
+handwerk. Stand 25-10 tegen het handgemaakte `objecttypes/aanvraag.json` (na
+besluit A van Mark, open punt 8; hash `42409679…`): vijf verschillen, alle aan
+de kant van het handgemaakte schema:
+
+| Pad | Gegenereerd | Handwerk | Oorzaak |
+|---|---|---|---|
+| `aanvrager/description` | "De partij die de aanvraag indient." | "Partij die de aanvraag indient" | beschrijving van de relatie in het model |
+| `aanvrager/properties/naam/maxLength` | 255 | — | datatype KorteTekst |
+| `bijlagen/items/properties/naam/maxLength` | 255 | — | datatype KorteTekst |
+| `bijlagen/items/required` | `["documentUrl","naam"]` | `["naam","documentUrl"]` | gesorteerd |
+| `required` | gesorteerd | modelvolgorde | gesorteerd |
+
+Met die vijf aanpassingen in het handgemaakte schema is de hash gelijk (getest).
+
+**Uitkomst (25-10).** FUNDAMENT heeft de vijf aanpassingen in het handwerk
+doorgevoerd (onder besluit A van Mark) en het als versie 5 naar Open Object
+uitgerold. Daarna is de hash van het handwerk gelijk aan die van het
+gegenereerde artefact (`0211a15d…73c4`; ook hier nagerekend met de runner, exit
+0). Het artefact is in het register op Fundament geregistreerd als nieuwe
+inhoud van artefact 1, met herkomst uit de regelset (de handwerk-inhoud is
+formeel afgevoerd), en een uitrol vanuit het register gaf **"ongewijzigd"**
+tegen Open Object. Daarmee is de transformatie bewezen op dit artefact.
+Openstaand: `bronmodelVersie` en `peiltijdstip` uit de herkomst hebben in het
+inrichting-register nog geen veld (open punt 7 in het voorstel van FUNDAMENT).
+
+De runner toont de lijst zelf:
+
+```
+node scripts/maak_inrichtingsartefact.mjs --model <v3.json> --edienst <edienst.json> \
+  --artefact aanvraag --peiltijdstip 2026-10-25T06:51:13Z --doel <objecttypes/aanvraag.json>
+```
+
+### 11.5 Vervolg
+
+1. Formulier (Open Formulieren-export) uit dezelfde bron en hetzelfde bereik,
+   met een eigen regelset en schrijver; golden file van FUNDAMENT in
+   CG-Fundament `docs/voorbeelden/openforms-export-aanvraag/`. De component-key
+   is het eindpunt van de trace; de aansluitingscontrole loopt op key ↔
+   schema-property via dezelfde modelknoop.
+2. Zaaktype: nog grotendeels letterlijk; het datamodel levert alleen roltype
+   Aanvrager en informatieobjecttype Bijlage.
+3. BPMN voor GZAC: uitvoerbare BPMN (engine-extensies), §10 heeft alleen de
+   heenweg.
+4. Server-side draaien: dezelfde modules in een Node-runner (render-svc-patroon),
+   geen Go-port.
