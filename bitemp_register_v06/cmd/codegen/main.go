@@ -100,6 +100,13 @@ func main() {
 	//   zodat gedeelde register-types niet opnieuw worden aangemaakt en met
 	//   de bestaande `register_*` bestanden botsen.
 	if *domein != "" {
+		// Een domein waar niets van in het model staat is (bijna) altijd een tikfout of een
+		// samengevoegde lijst ("inrichting,aanvraag", Fundament 25-10-2026). Voorheen meldde codegen
+		// dan "succesvol" zonder iets te genereren en activeerde de rebuild die versie.
+		if fout := onbekendDomeinFout(v3, *domein); fout != "" {
+			fmt.Fprintln(os.Stderr, "V3 model validatie mislukt:\n  - "+fout)
+			os.Exit(1)
+		}
 		filtered := v3.Entiteiten[:0]
 		includeLegeDomeinen := *domein == "register"
 		// Als het model-niveau naam overeenkomt met het gevraagde domein, dan worden
