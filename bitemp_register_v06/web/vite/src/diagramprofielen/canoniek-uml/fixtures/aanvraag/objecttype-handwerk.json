@@ -1,0 +1,106 @@
+{
+  "name": "aanvraag",
+  "namePlural": "aanvragen",
+  "description": "Aanvraag die een partij via de formulierservice indient; wordt gevalideerd door de valideerservice. Bijlagen staan in het documentregister.",
+  "dataClassification": "intern",
+  "maintainerOrganization": "Common Ground Lab",
+  "contactPerson": "Functioneel beheer",
+  "contactEmail": "beheer@example.org",
+  "source": "formulierservice",
+  "updateFrequency": "unknown",
+  "allowGeometry": false,
+  "jsonSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Aanvraag",
+    "type": "object",
+    "properties": {
+      "aanvraagnummer": {
+        "type": "string",
+        "description": "Uniek nummer dat de aanvraagservice toekent",
+        "pattern": "^[A-Z0-9-]+$",
+        "maxLength": 40
+      },
+      "aanvraagtype": {
+        "type": "string",
+        "description": "Soort aanvraag (keuzelijst Aanvraagtype)"
+      },
+      "aanvrager": {
+        "type": "object",
+        "description": "Partij die de aanvraag indient",
+        "properties": {
+          "naam": {
+            "type": "string",
+            "description": "Naam van de aanvrager zoals opgegeven in het formulier"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "E-mailadres van de aanvrager",
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+          },
+          "klantUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Verwijzing naar de partij in Open Klant",
+            "pattern": "^https?://[^\\s]+$"
+          }
+        },
+        "required": [
+          "naam"
+        ],
+        "additionalProperties": false
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "ingediend",
+          "gevalideerd",
+          "afgekeurd",
+          "afgehandeld"
+        ],
+        "description": "Status van de behandeling"
+      },
+      "ingediendOp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Tijdstip waarop de aanvraag is ingediend"
+      },
+      "bijlagen": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "naam": {
+              "type": "string",
+              "description": "Naam van de bijlage"
+            },
+            "documentUrl": {
+              "type": "string",
+              "format": "uri",
+              "description": "Verwijzing naar het document in het documentregister (Open Zaak Documenten API)",
+              "pattern": "^https?://[^\\s]+$"
+            }
+          },
+          "required": [
+            "naam",
+            "documentUrl"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "formulier": {
+        "type": "object",
+        "description": "De ingevulde formuliergegevens, vrij van vorm",
+        "additionalProperties": true
+      }
+    },
+    "required": [
+      "aanvraagnummer",
+      "aanvraagtype",
+      "aanvrager",
+      "status",
+      "ingediendOp"
+    ],
+    "additionalProperties": false
+  }
+}
