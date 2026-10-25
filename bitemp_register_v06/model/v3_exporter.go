@@ -510,6 +510,8 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 		DoelEntiteit:             doelEntiteitVanRelatie(meta),
 		Directioneel:             meta.Directioneel,
 		Geordend:                 meta.Geordend,
+		BronKardinaliteit:        meta.BronKardinaliteit,
+		DoelKardinaliteit:        meta.DoelKardinaliteit,
 		NaamLabelHeen:            child.NaamLabelHeen, // tot 22-10-2026 verloor de export de UML-labels
 		NaamLabelTerug:           child.NaamLabelTerug,
 		Velden:                   extractContentFields(meta),

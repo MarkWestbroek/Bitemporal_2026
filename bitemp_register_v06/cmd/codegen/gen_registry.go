@@ -342,6 +342,14 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie, do
 	if rel.Geordend {
 		b.WriteString("\t\tGeordend: true,\n")
 	}
+	// Kardinaliteiten (UML), zoals bij afgeleide relaties al gebeurde; tot 25-10-2026 verloor de
+	// rondreis ze bij gewone relaties. Alleen metadata: afdwingen is BACKLOG §33.
+	if rel.BronKardinaliteit != "" {
+		b.WriteString(fmt.Sprintf("\t\tBronKardinaliteit: %q,\n", rel.BronKardinaliteit))
+	}
+	if rel.DoelKardinaliteit != "" {
+		b.WriteString(fmt.Sprintf("\t\tDoelKardinaliteit: %q,\n", rel.DoelKardinaliteit))
+	}
 	writeLayoutLine(b, relatieLayoutInfo(rel))
 
 	// OnderliggendeGegevenselementen

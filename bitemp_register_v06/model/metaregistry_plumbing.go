@@ -226,6 +226,11 @@ type TypeMeta struct {
 	// volgorde hebben. Alleen metadata (rondreis/schema-API); de opslag verandert niet.
 	Geordend bool
 
+	// BronKardinaliteit / DoelKardinaliteit (UML, bv. "1", "0..1", "0..*") van een relatie. Alleen
+	// metadata voor rondreis en schema-API; het register dwingt ze (nog) niet af (BACKLOG §33).
+	BronKardinaliteit string
+	DoelKardinaliteit string
+
 	// Directioneel geeft aan of de relatie een directionele associatie is.
 	// Bij directionele relaties wordt een open pijl weergegeven aan de doelzijde (B)
 	// en wordt de kardinaliteit aan de bronzijde (A) niet getoond.

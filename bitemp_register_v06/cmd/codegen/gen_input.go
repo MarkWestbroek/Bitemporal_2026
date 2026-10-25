@@ -12,8 +12,7 @@ import (
 // die hub + data velden combineren voor de registratie-API.
 func generateInput(v3 model.V3Model) (string, error) {
 	var b strings.Builder
-	b.WriteString(fileHeader("_Input structs: platte API-input die hub + data combineert.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
-	b.WriteString("\n")
+	kop := fileHeader("_Input structs: platte API-input die hub + data combineert.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken.")
 
 	for _, ent := range v3.Entiteiten {
 		entIDKolom := strings.ToLower(ent.Typenaam) + "_id"
@@ -81,5 +80,11 @@ func generateInput(v3 model.V3Model) (string, error) {
 		}
 	}
 
-	return b.String(), nil
+	// Een veld met format date-time wordt time.Time; dan is de import nodig (aanvraag.ingediendOp,
+	// 25-10-2026: zonder import compileerde de gegenereerde code niet).
+	body := b.String()
+	if strings.Contains(body, "time.Time") {
+		kop += "import \"time\"\n\n"
+	}
+	return kop + "\n" + body, nil
 }
