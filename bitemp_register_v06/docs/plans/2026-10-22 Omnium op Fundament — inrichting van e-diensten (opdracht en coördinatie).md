@@ -351,6 +351,35 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     die het ontvangt) en `GET /api/volgorde/{pad}?via=&doel=&na=` (zie `docs/API_REFERENCE.md`).
     Integratietest op de regressiedatabase: vulling afgespeeld, artefacten in volgorde
     objecttype → formulier → BPMN, cyclus geeft 409.
+17. **Inrichting live op Fundament (25-10):** devloop 0.24.2/0.24.3, schema-versie 2 actief,
+    eerste vulling 38/38 (17 soorten, 8 formaten, 7 componenten). Na de rebuild met
+    `schema_versie_id` 2 staat inrichting ook in de domeincatalogus.
+18. **Canoniek model `aanvraag` — voorzet FUNDAMENT** (CG-Fundament `docs/aanvraag-domein-v3.json`,
+    e857959; wacht op Marks review, niet gebouwd op Fundament). BACKEND-controle: codegen zonder
+    fouten, geen padnaambotsingen (ook samen met inrichting), zelftest OK, registratietest met
+    `/full/aanvragen` en 422 bij dubbel aanvraagnummer, ongeldige status en ongeldig e-mailadres.
+    URL, Emailadres en Telefoonnummer staan in de gedeelde datatypebibliotheek. Open, niet aan het
+    model: `ref`-velden worden niet op bestaan gecontroleerd (BACKLOG §33.4); `ingediendOp`
+    (DatumTijd) wordt een string, met `format: date-time` een `time.Time`.
+    **Review TRANSFORMATIES:** (1) de transformaties hebben drie bronnen nodig: het canonieke
+    datamodel, een e-dienst-inrichtingsmodel (veldselectie per artefact, objecttype-metadata,
+    statuskoppeling, rol-/resultaat-/statustypen) en referentielijst-items (M0, met peilmoment in
+    ArtefactHerkomst). E-dienstspecifieke koppelingen (ingediend → Ontvangen) horen niet in een
+    regelset (M2) of het datamodel, maar in het e-dienstmodel: eerst een klein JSON-bestand, op
+    termijn EDienstVersie-data in inrichting. (2) Het zaaktype volgt nauwelijks uit het datamodel;
+    alleen roltype Aanvrager en informatieobjecttype Bijlage. (3) De hash-toets wijkt op meer
+    punten af (toelichting/reden, beschrijvingen per property, patroon aanvraagnummer, aanvrager
+    verplicht, arraynaam bijlagen); advies: model aanvullen tot de hash gelijk is, formulier en
+    telefoonnummer daarna als bewuste nieuwe artefactversie.
+19. **Aanvraag live op Fundament (25-10).** Tweede versie van de V3 (beschrijvingen, datatype
+    Aanvraagnummer, `doelKardinaliteit: "1"` i.p.v. `verplicht`, `format: date-time`) legde codegen-
+    gaten bloot, gerepareerd in 79d3c581 (veldbeschrijvingen, time-import, kardinaliteit in de
+    rondreis, 422 met veldpad bij onleesbare waarden); devloop 0.24.4. FUNDAMENT rebuildde met één
+    samengesteld model (inrichting + aanvraag) → schema-versie 4; inrichting-gegevens ongewijzigd.
+    Codegen weigert sindsdien een domein dat niet in het model staat (63282b87; aanleiding: een
+    samengevoegde domeinnaam activeerde versie 3 zonder aanvraag-code). **Mark:** hij heeft een
+    wijziging op het aanvraag-model, bewust pas ná volledige implementatie, als test van hoe
+    flexibel het systeem een modelwijziging opvangt.
 12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
     actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
     inrichting-model wacht op het nieuwe image.
