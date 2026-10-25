@@ -236,6 +236,7 @@ func contentField(v model.V3Veld) StructField {
 	if v.Afgeleid && !strings.Contains(v.Afleidingsregel, "`") {
 		tags += " afleiding:" + strconv.Quote(v.Afleidingsregel)
 	}
+	tags += schemaDescTag(v.Description)
 
 	tags += "`"
 
@@ -244,6 +245,18 @@ func contentField(v model.V3Veld) StructField {
 		Type: goType,
 		Tags: tags,
 	}
+}
+
+// schemaDescTag: de veldbeschrijving (V3Veld.Description) als tag schema_desc:"…". Die tag lezen
+// de V3-export, OpenAPI, GraphQL en de schema-viz al (model/v3_exporter.go, dynql/); codegen
+// schreef hem voor inhoudsvelden niet, zodat beschrijvingen bij de rondreis verdwenen
+// (aanvraag-V3, 25-10-2026). Een backquote kan niet in een struct tag en wordt een '.
+func schemaDescTag(desc string) string {
+	desc = strings.TrimSpace(strings.ReplaceAll(desc, "`", "'"))
+	if desc == "" {
+		return ""
+	}
+	return " schema_desc:" + strconv.Quote(desc)
 }
 
 // ---- Bun relatie velden op entiteiten ----
@@ -321,6 +334,7 @@ func inputContentField(v model.V3Veld) StructField {
 	if len(schemaParts) > 0 {
 		tags += fmt.Sprintf(` schema:"%s"`, strings.Join(schemaParts, ","))
 	}
+	tags += schemaDescTag(v.Description)
 
 	tags += "`"
 

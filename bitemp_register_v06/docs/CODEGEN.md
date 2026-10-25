@@ -361,6 +361,16 @@ test van die route legde drie verliezen bloot, alle drie verholpen:
 | `datatype_aliases.go` kreeg aliassen die `datatype_aliases_extra.go` (handgeschreven) al declareert (`Kleur`, `Duur`, …) | build: "redeclared in this block" | `mergeGedeeldBestand` slaat types over die elders in `model/` gedeclareerd zijn (`typesElders`) |
 | de exporter leidde enum-**constNamen** af als goType + waarde (`IdeBestandFormaatjson`), terwijl handgeschreven handlers `IdeBestandFormaatJSON`, `…ModelSnapshot` gebruiken | build: "undefined: model.IdeBestandFormaatJSON" | nieuwe registry `model.EnumConstNamen` (door codegen in `<prefix>_enum_registry.go` gevuld); de exporter geeft de namen exact terug (`model.EnumConstNaam`) |
 | `NaamLabelHeen`/`NaamLabelTerug` van relaties en GE's | UML-labels weg na een rebuild | `v3RelatieVanMeta`/`v3GegevenseElementVanMeta` nemen ze uit het onderliggende element |
+| veld-`description` (25-10-2026) | beschrijvingen per veld weg na codegen, ook in OpenAPI/GraphQL | codegen schrijft `schema_desc:"…"` op data- én input-velden (`schemaDescTag`); die tag lazen export, OpenAPI, GraphQL en schema-viz al |
+| `bronKardinaliteit`/`doelKardinaliteit` van gewone relaties (25-10-2026) | kardinaliteit weg (alleen afgeleide relaties hielden hem) | `TypeMeta.BronKardinaliteit`/`DoelKardinaliteit`, door codegen gevuld en door `v3RelatieVanMeta` teruggegeven. **Alleen metadata:** het register dwingt een kardinaliteit als `"1"` niet af (BACKLOG §33) |
+
+Ook 25-10-2026: een veld met `format: date-time` wordt `time.Time`; `<prefix>_modellen_input.go`
+kreeg dan geen `import "time"` en compileerde niet. `generateInput` voegt de import nu toe als
+hij nodig is.
+
+> **Een relatie verplicht maken:** V3 kent geen `verplicht` op een relatie (een onbekende sleutel
+> wordt stil genegeerd). Gebruik `"doelKardinaliteit": "1"` (precies één) of `"1..*"`. Dat blijft
+> bewaard en staat in de schema-API, maar wordt nog niet afgedwongen.
 
 De bestaande `<prefix>_enum_registry.go`-bestanden zijn eenmalig gevuld met de constNamen uit
 hun const-blokken; vanaf nu schrijft codegen ze zelf. Overgebleven drift bij een volledige

@@ -334,6 +334,19 @@ verwijzende entiteiten aan zonder `max-id`-roundtrips:
 - Gebruikt door de FormulierDefinitie in nieuw-modus (`web/vite/src/components/editor/NieuwFormulierPagina.jsx`)
   en `veld.nieuwFormulier` (nieuwe doel-ENT vanuit een relatieveld).
 
+**Onleesbare waarden → 422 (sinds 25-10-2026).** Een tijdstip, datum of type dat al bij het
+decoderen strandt, geeft dezelfde `application/problem+json` als een validatiefout, met het veldpad:
+
+```json
+{ "status": 422, "code": "validation_error",
+  "invalidParams": [{ "name": "wijzigingen[1].aanvraagindiening.ingediendOp", "code": "format",
+                      "reason": "geen geldig tijdstip (verwacht RFC 3339, bv. 2026-10-25T10:00:00Z)",
+                      "value": "gisteren" }] }
+```
+
+Codes: `format` (tijdstip, datum `JJJJ-MM-DD`), `type` (bv. tekst waar een getal hoort). Voorheen
+een kale 400 met de Go-fout. Ongeldige JSON blijft 400 (`handlers/registration_decodefout.go`).
+
 ### `POST /api/valideer` en `GET /api/valideer/functies`
 - **Handler**: `handlers.MaakValideerHandler()` / `MaakValideerFunctiesHandler()` (`validatie_api_handler.go`)
 - **Description**: normaliseert en controleert een waarde volgens een V3Datatype, met dezelfde code

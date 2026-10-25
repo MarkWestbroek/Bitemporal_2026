@@ -51,6 +51,10 @@ func RegistreerJSONCore(ctx context.Context, rawBody []byte, defaultRegistratiet
 		request.Registratie = ruw.Registratie
 		request.RuweWijzigingen = ruw.Wijzigingen
 	} else if err := json.Unmarshal(rawBody, &request); err != nil {
+		// Een waarde die niet te decoderen is (tijdstip, datum, type) → 422 met veldpad.
+		if p := decodeFoutAlsProbleem(err, ruw.Wijzigingen, audit.RequestPath); p != nil {
+			return nil, p
+		}
 		return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: err.Error()}
 	}
 
@@ -61,6 +65,10 @@ func RegistreerJSONCore(ctx context.Context, rawBody []byte, defaultRegistratiet
 	if request.RuweWijzigingen == nil {
 		genormaliseerd, err := NormaliseerWijzigingen(request.Wijzigingen)
 		if err != nil {
+			// Bv. een ongeldige aanvang-datum van een materieel GE: die wordt pas hier gedecodeerd.
+			if p := decodeFoutAlsProbleem(err, ruw.Wijzigingen, audit.RequestPath); p != nil {
+				return nil, p
+			}
 			return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: fmt.Sprintf("normaliseren van wijzigingen mislukt: %v", err)}
 		}
 		request.Wijzigingen = genormaliseerd
