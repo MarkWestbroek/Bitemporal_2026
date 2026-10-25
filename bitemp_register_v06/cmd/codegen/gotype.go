@@ -114,3 +114,39 @@ func padnaamBotsingen(v3 model.V3Model, domein string) []string {
 	sort.Strings(errs)
 	return errs
 }
+
+// onbekendDomeinFout: niet leeg als het model geen entiteit, datatype of enum van dit domein bevat.
+// Voor "register" tellen entiteiten zonder domein mee, en voor elk domein dat gelijk is aan de
+// modelnaam ook (zelfde regels als het domeinfilter in main).
+func onbekendDomeinFout(v3 model.V3Model, domein string) string {
+	bekend := map[string]bool{}
+	for _, e := range v3.Entiteiten {
+		d := strings.TrimSpace(e.Domein)
+		if d == domein || (d == "" && (domein == "register" || v3.Naam == domein)) {
+			return ""
+		}
+		if d != "" {
+			bekend[d] = true
+		}
+	}
+	for _, dt := range v3.Datatypes {
+		if strings.TrimSpace(dt.Domein) == domein {
+			return ""
+		}
+	}
+	for _, en := range v3.Enums { // domeinRunsUitModel (rebuild) maakt ook runs voor enum-domeinen
+		if strings.TrimSpace(en.Domein) == domein {
+			return ""
+		}
+	}
+	namen := make([]string, 0, len(bekend))
+	for d := range bekend {
+		namen = append(namen, d)
+	}
+	sort.Strings(namen)
+	tip := ""
+	if strings.ContainsAny(domein, ", ") {
+		tip = " Eén domein per run; geef meerdere domeinen als aparte runs op."
+	}
+	return fmt.Sprintf("domein %q komt niet voor in het model (domeinen in het model: %s).%s", domein, strings.Join(namen, ", "), tip)
+}

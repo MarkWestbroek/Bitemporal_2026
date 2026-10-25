@@ -66,3 +66,18 @@ func TestMetaRegistry_KardinaliteitGewoneRelatie(t *testing.T) {
 		}
 	}
 }
+
+func TestOnbekendDomeinFout(t *testing.T) {
+	v3 := model.V3Model{Naam: "cg-test", Entiteiten: []model.V3Entiteit{
+		{Typenaam: "Artefact", Domein: "inrichting"}, {Typenaam: "Aanvraag", Domein: "aanvraag"}, {Typenaam: "Basis"},
+	}, Datatypes: []model.V3Datatype{{Naam: "Los", Domein: "alleendatatype"}}}
+	for _, goed := range []string{"inrichting", "aanvraag", "register", "cg-test", "alleendatatype"} {
+		if f := onbekendDomeinFout(v3, goed); f != "" {
+			t.Errorf("%s: onverwachte fout %s", goed, f)
+		}
+	}
+	f := onbekendDomeinFout(v3, "inrichting,aanvraag")
+	if !strings.Contains(f, `"inrichting,aanvraag"`) || !strings.Contains(f, "aanvraag, inrichting") || !strings.Contains(f, "aparte runs") {
+		t.Errorf("melding = %s", f)
+	}
+}
