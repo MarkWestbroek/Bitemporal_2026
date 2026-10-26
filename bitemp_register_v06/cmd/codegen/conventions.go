@@ -132,16 +132,21 @@ func entiteitPlumbingFields() []StructField {
 	}
 }
 
-// hubPlumbingFields genereert de plumbing-velden voor een hub.
-func hubPlumbingFields(entIDKolom string, parentEntType string) []StructField {
+// hubPlumbingFields genereert de plumbing-velden voor een hub. entPKKolom is de sleutelkolom van
+// de entiteit: "id", of bij een subtype (erft) de PFK "<ouder>_id". Tot 26-10-2026 stond hier
+// altijd "id"; een subtype met eigen GE's kwam daardoor niet door de zelftest ("must have column id").
+func hubPlumbingFields(entIDKolom string, parentEntType string, entPKKolom string) []StructField {
 	parentFieldName := "Parent" + parentEntType
+	if entPKKolom == "" {
+		entPKKolom = "id"
+	}
 	return []StructField{
 		{Name: parentEntType + "_ID", Type: "int",
 			Tags: fmt.Sprintf("`json:\"%s\" bun:\"%s,pk\" schema_desc:\"ID van de %s-entiteit\"`", entIDKolom, entIDKolom, parentEntType)},
 		{Name: "Rel_ID", Type: "int",
 			Tags: "`json:\"rel_id\" bun:\"rel_id,pk,autoincrement\"`"},
 		{Name: parentFieldName, Type: "*" + parentEntType,
-			Tags: fmt.Sprintf("`json:\"-\" bun:\"rel:belongs-to,join:%s=id,on_delete:cascade\"`", entIDKolom)},
+			Tags: fmt.Sprintf("`json:\"-\" bun:\"rel:belongs-to,join:%s=%s,on_delete:cascade\"`", entIDKolom, entPKKolom)},
 	}
 }
 

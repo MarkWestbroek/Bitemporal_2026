@@ -396,6 +396,27 @@ relatie-id-handler, GraphQL reverse/forward, afleiding) gebruiken nu
 `model.DoelTypenaamVanRelatie(meta)`; alleen voor registries zonder het veld geldt nog de
 heuristiek. De bestaande `<prefix>_metaregistry.go`-bestanden zijn eenmalig gevuld.
 
+### 7.3d Overerving (`erft`) over domeinen heen (26-10-2026)
+
+Een subtype mag in een ander domein staan dan zijn ouder (FUNDAMENT: `GehandicaptenparkeerkaartAanvraag`
+in `parkeren` erft `Aanvraag` uit `aanvraag`); codegen gebruikt alleen de naam van de ouder, en de
+rebuild genereert per domein. Getest op de regressiedatabase met een proefmodel; drie fouten verholpen:
+
+| Fout | Fix |
+|---|---|
+| hub-kinderen (GE's, relaties) van een subtype verwezen met `belongs-to … =id` naar de entiteit, maar een subtype heeft als sleutel de PFK `<ouder>_id`; de zelftest weigerde ("must have column id") | `entiteitPKKolom(ent)` in `gen_structs.go`/`conventions.go` |
+| `dbsetup` maakte de entiteit-level `_aanvang`/`_einde`-tabel van een materieel subtype met kolom `<tabel>_<idkolom>` (`…_aanvraag_id`), codegen verwachtte `<tabel>_id`; elke `/full`-leesactie gaf 500 | `createmodeltables.go`: altijd `<tabel>_id` |
+| `/full` van een subtype laadde de ouder kaal (alleen id), met peiltijdstip zelfs "missing FROM-clause entry" | ouder apart en volledig geladen in `laadOuderVoorSubtypes` (`full_handlers.go`); `GET /api/volgorde` vindt ook geërfde relaties |
+
+Wat werkt (proef 26-10-2026): registreren in één registratie (ouder-hub + geërfde GE's + subtype-hub +
+eigen GE's, zelfde id), alleen de subtype-hub (de engine maakt een kaal ouder-record), geërfde GE's later
+toevoegen; `/full/<subtype>/<id>` toont eigen GE's en onder `parent_<ouder>` de volledige ouder;
+`/full/<ouder>/<id>` toont alleen de ouder (zonder subtype-GE's); validatie (datatype, enum) op
+subtype-GE's; materieel subtype met eigen aanvang/einde; formeel tijdreizen; het volgorde-endpoint via
+een geërfde relatie. **Nog niet:** GraphQL geeft `parent_<ouder>` als tekst zonder inhoud (de ouder is
+daar niet getypeerd), en codegen controleert niet of de ouder bestaat (een tikfout in `erft` valt pas bij
+`go build`). Een lege `baseType` op een enum geeft ongeldige Go (`type X `) zonder melding.
+
 ### 7.4 Twee voetangels bij een regeneratie
 
 Waargenomen bij het regenereren van `np-loc` voor het demo-model

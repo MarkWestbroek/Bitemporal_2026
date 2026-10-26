@@ -347,6 +347,13 @@ Gewijzigd voor cross-GE save van parent-velden in de custom formulier modus en s
 - **O9**: Exporters: XMI (`isAbstract` + `UML:Generalization`), Mermaid (`--|>`), PlantUML (`<|--`)
 - **O10**: Bugfix: `shallowEqualOvererving` in `useOvergeerfdeVelden` voor correcte weergave van afgeleide velden in subklassen
 
+### 7.9 O12 — Subtype met eigen GE's, over domeinen heen (26-10-2026)
+
+Eerste echte proef (`GehandicaptenparkeerkaartAanvraag` erft `Aanvraag`, ander domein): `C_sub` had
+geen eigen GE's, dus dit pad was nooit doorlopen. Drie fouten verholpen (hub-kinderen naar de PFK,
+`_aanvang`/`_einde`-kolomnaam in dbsetup, ouder volledig laden in `/full`); zie `CODEGEN.md` §7.3d.
+Open: GraphQL typeert `parent_<ouder>` niet; codegen valideert `erft` niet.
+
 ### 7.8 O11 — Schemadiff
 
 - `isAbstract`-wijziging → ernst `Modificatie` (beide richtingen)
