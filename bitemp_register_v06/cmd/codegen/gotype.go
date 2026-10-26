@@ -94,7 +94,7 @@ func datatypeBekend(v3 model.V3Model, naam string) bool {
 func padnaamBotsingen(v3 model.V3Model, domein string) []string {
 	eigen := map[string]bool{}
 	nieuw := map[string]string{} // padnaam → typenaam in het nieuwe model
-	for _, d := range naamgeving.AlleDerivedTypes(v3) {
+	for _, d := range naamgeving.AlleDerivedTypes(entiteitenVanDomein(v3, domein)) {
 		eigen[d.Typenaam] = true
 		if p := strings.TrimSpace(d.Padnaam); p != "" {
 			if _, al := nieuw[p]; !al {
@@ -149,4 +149,73 @@ func onbekendDomeinFout(v3 model.V3Model, domein string) string {
 		tip = " Eén domein per run; geef meerdere domeinen als aparte runs op."
 	}
 	return fmt.Sprintf("domein %q komt niet voor in het model (domeinen in het model: %s).%s", domein, strings.Join(namen, ", "), tip)
+}
+
+// typenaamBotsingen meldt typenamen van het te genereren model (entiteiten, GE-hubs, relaties en
+// hun _Data/_Aanvang/_Einde) die al bij een type uit een ánder domein in de MetaRegistry van deze
+// build bestaan. Go-typen en tabelnamen zijn niet per domein geprefixt: een tweede NatuurlijkPersoon
+// (relatiebeheer naast np-loc) of Contactpersoon (naast CG) geeft "redeclared in this block" pas bij
+// go build (FUNDAMENT, 26-10-2026). Types van het eigen domein tellen niet mee.
+func typenaamBotsingen(v3 model.V3Model, domein string) []string {
+	var errs []string
+	gemeld := map[string]bool{}
+	for _, d := range naamgeving.AlleDerivedTypes(entiteitenVanDomein(v3, domein)) {
+		bestaand, ok := model.MetaRegistry[d.Typenaam]
+		if !ok || gemeld[d.Typenaam] || (domein != "" && strings.EqualFold(bestaand.Domein, domein)) {
+			continue
+		}
+		gemeld[d.Typenaam] = true
+		errs = append(errs, fmt.Sprintf("typenaam '%s' bestaat al in domein %s (%s): Go-typen en tabellen zijn niet per domein geprefixt; kies een andere naam (bv. met het domein ervoor)", d.Typenaam, bestaand.Domein, metatypeTekst(bestaand)))
+	}
+	sort.Strings(errs)
+	return errs
+}
+
+func metatypeTekst(m model.TypeMeta) string {
+	switch m.Metatype {
+	case model.MetatypeEntiteit:
+		return "entiteit"
+	case model.MetatypeRelatie:
+		return "relatie"
+	default:
+		return "gegevenselement"
+	}
+}
+
+// entiteitenVanDomein: het model beperkt tot de entiteiten die deze run genereert (zelfde regels
+// als het domeinfilter in main: het domein zelf, en entiteiten zonder domein bij "register" of bij
+// de modelnaam). Nodig voor de botsingscontroles: een samengesteld model bevat ook de entiteiten
+// van domeinen die al in de MetaRegistry van deze codegen-build zitten (bv. inrichting, als die
+// eerder gegenereerd is) en die zouden anders tegen zichzelf botsen.
+func entiteitenVanDomein(v3 model.V3Model, domein string) model.V3Model {
+	if domein == "" {
+		return v3
+	}
+	uit := v3
+	uit.Entiteiten = nil
+	for _, e := range v3.Entiteiten {
+		d := strings.TrimSpace(e.Domein)
+		if d == domein || (d == "" && (domein == "register" || v3.Naam == domein)) {
+			uit.Entiteiten = append(uit.Entiteiten, e)
+		}
+	}
+	return uit
+}
+
+// maxTabelnaam: Postgres kapt identifiers af op 63 tekens (NAMEDATALEN-1). Een langere tabelnaam
+// wordt stil ingekort, maar triggers en constraints verwijzen naar de volledige naam en falen dan
+// ("column versie of relation … does not exist", FUNDAMENT 26-10-2026 bij een GE dat de
+// entiteitsnaam herhaalt: natuurlijkpersoonzonderregistratie_natuurlijkpersoonzonderregistratiegegevens_data).
+const maxTabelnaam = 63
+
+// tabelnaamTeLang meldt afgeleide tabellen (hubs, _Data, _Aanvang, _Einde) met een te lange naam.
+func tabelnaamTeLang(v3 model.V3Model, domein string) []string {
+	var errs []string
+	for _, d := range naamgeving.AlleDerivedTypes(entiteitenVanDomein(v3, domein)) {
+		if len(d.Tabelnaam) > maxTabelnaam {
+			errs = append(errs, fmt.Sprintf("tabelnaam '%s' (%s) is %d tekens; Postgres staat %d toe. Kort de naam van het gegevenselement of de relatie in (het hoeft de entiteitsnaam niet te herhalen)", d.Tabelnaam, d.Typenaam, len(d.Tabelnaam), maxTabelnaam))
+		}
+	}
+	sort.Strings(errs)
+	return errs
 }

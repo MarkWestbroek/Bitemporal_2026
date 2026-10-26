@@ -81,6 +81,8 @@ func main() {
 
 	validationErrors := validateV3Model(v3, *domein)
 	validationErrors = append(validationErrors, padnaamBotsingen(v3, *domein)...)
+	validationErrors = append(validationErrors, typenaamBotsingen(v3, *domein)...)
+	validationErrors = append(validationErrors, tabelnaamTeLang(v3, *domein)...)
 	if len(validationErrors) > 0 {
 		fmt.Fprintln(os.Stderr, "V3 model validatie mislukt:")
 		for _, e := range validationErrors {

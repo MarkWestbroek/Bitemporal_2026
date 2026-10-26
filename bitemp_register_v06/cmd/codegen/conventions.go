@@ -336,6 +336,9 @@ func inputContentField(v model.V3Veld) StructField {
 	if v.Uniek != "" {
 		schemaParts = append(schemaParts, fmt.Sprintf("uniek=%s", v.Uniek))
 	}
+	if v.Ref != "" { // sinds 26-10-2026 ook op _Input, net als op _Data (ref-controle, BACKLOG §33.4)
+		schemaParts = append(schemaParts, fmt.Sprintf("ref:%s", v.Ref))
+	}
 	if len(schemaParts) > 0 {
 		tags += fmt.Sprintf(` schema:"%s"`, strings.Join(schemaParts, ","))
 	}
