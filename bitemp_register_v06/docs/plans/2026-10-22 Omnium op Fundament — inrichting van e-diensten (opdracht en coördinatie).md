@@ -380,6 +380,19 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     samengevoegde domeinnaam activeerde versie 3 zonder aanvraag-code). **Mark:** hij heeft een
     wijziging op het aanvraag-model, bewust pas ná volledige implementatie, als test van hoe
     flexibel het systeem een modelwijziging opvangt.
+20. **Overerving en het gpk-model (26-10).** FUNDAMENT's samengestelde model (inrichting,
+    relatiebeheer met Partij + 7 subtypen, aanvraag v2 met AanvraagPartij → Partij + `$ref` Partijrol,
+    zorg, parkeren met GehandicaptenparkeerkaartAanvraag erft Aanvraag) lokaal getest. Gerepareerd:
+    subtype met eigen GE's (gemerged 356ed51b); nieuw ongecommit: codegen weigert typenamen die al in
+    een ander domein bestaan, tabelnamen > 63 tekens, en zet `ref:` ook op `_Input`. Getest en goed:
+    relaties naar subtypen (ook over domeinen), subtype → subtype, `$ref` op een relatieveld,
+    materiële meervoudige relatie naar de ouder. **Flexibiliteitstest v1 → v2 op één database:** oude
+    aanvraag leesbaar, nieuwe relatie werkt, oude tabellen verweesd (schemadiff: destructief, DROP
+    voorgesteld); een gewijzigd doel onder dezelfde relatienaam is níet additief (500). **Open risico:**
+    `dbsetup.CreateTables` is bij het opstarten fataal (`main.go`); een modelwijziging die een
+    constraint laat falen komt door de zelftest maar stopt de API bij de start → crashlus. Voorstel:
+    constraint-stappen niet-fataal maken én de rebuild een database-proef laten doen (CreateTables in
+    een transactie met ROLLBACK) vóór activeren.
 12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
     actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
     inrichting-model wacht op het nieuwe image.

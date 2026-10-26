@@ -81,3 +81,45 @@ func TestOnbekendDomeinFout(t *testing.T) {
 		t.Errorf("melding = %s", f)
 	}
 }
+
+func TestTypenaamBotsingen(t *testing.T) {
+	// NatuurlijkPersoon bestaat in np-loc (entiteit), Contactpersoon in CG; Partij niet.
+	v3 := model.V3Model{Entiteiten: []model.V3Entiteit{
+		{Typenaam: "Partij", Meervoud: "partijen", Domein: "relatiebeheer"},
+		{Typenaam: "NatuurlijkPersoon", Meervoud: "rb_natuurlijke_personen", Domein: "relatiebeheer", Erft: "Partij"},
+		{Typenaam: "Contactpersoon", Meervoud: "rb_contactpersonen", Domein: "relatiebeheer", Erft: "Partij"},
+	}}
+	errs := typenaamBotsingen(v3, "relatiebeheer")
+	samen := strings.Join(errs, "\n")
+	for _, want := range []string{"'NatuurlijkPersoon' bestaat al in domein np-loc", "'Contactpersoon' bestaat al in domein CG"} {
+		if !strings.Contains(samen, want) {
+			t.Errorf("verwacht %q, kreeg:\n%s", want, samen)
+		}
+	}
+	if strings.Contains(samen, "'Partij'") {
+		t.Errorf("Partij hoort niet te botsen")
+	}
+	// Het eigen domein opnieuw genereren mag.
+	if errs := typenaamBotsingen(model.V3Model{Entiteiten: []model.V3Entiteit{{Typenaam: "NatuurlijkPersoon", Meervoud: "natuurlijk_personen", Domein: "np-loc"}}}, "np-loc"); len(errs) != 0 {
+		t.Errorf("eigen domein: %v", errs)
+	}
+}
+
+func TestTabelnaamTeLang(t *testing.T) {
+	v3 := model.V3Model{Entiteiten: []model.V3Entiteit{{
+		Typenaam: "NatuurlijkPersoonZonderRegistratie", Meervoud: "npzrs", Domein: "rb",
+		Gegevenselementen: []model.V3Gegevenselement{
+			{Naam: "NatuurlijkPersoonZonderRegistratieGegevens", Meervoud: "x", Momentvoorkomen: "enkelvoudig", Velden: []model.V3Veld{{Naam: "a", GoType: "string"}}},
+			{Naam: "Kort", Meervoud: "korten", Momentvoorkomen: "enkelvoudig", Velden: []model.V3Veld{{Naam: "a", GoType: "string"}}},
+		},
+	}}}
+	errs := tabelnaamTeLang(v3, "rb")
+	if len(errs) == 0 || !strings.Contains(errs[0], "natuurlijkpersoonzonderregistratie_natuurlijkpersoonzonderregistratiegegevens") {
+		t.Fatalf("verwacht fout over de lange tabelnaam, kreeg %v", errs)
+	}
+	for _, e := range errs {
+		if strings.Contains(e, "_kort") {
+			t.Errorf("korte tabelnaam ten onrechte gemeld: %s", e)
+		}
+	}
+}
