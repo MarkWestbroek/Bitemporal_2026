@@ -18,7 +18,7 @@ import (
 // hernoemOudeGebruikerTabel hernoemt de platte tabel `gebruiker` naar `gebruiker_oud` als
 // die nog de oude vorm heeft (kolom wachtwoord_hash). Idempotent: na de eerste keer is
 // `gebruiker` de hub en gebeurt er niets meer.
-func hernoemOudeGebruikerTabel(ctx context.Context, db *bun.DB) error {
+func hernoemOudeGebruikerTabel(ctx context.Context, db bun.IDB) error {
 	var oudeVorm bool
 	err := db.NewRaw(`SELECT EXISTS (
 		SELECT 1 FROM information_schema.columns
@@ -49,7 +49,7 @@ func hernoemOudeGebruikerTabel(ctx context.Context, db *bun.DB) error {
 }
 
 // maakGebruikerInlogTabel maakt gebruiker_inlog aan, met een verwijzing naar de hub.
-func maakGebruikerInlogTabel(ctx context.Context, db *bun.DB) error {
+func maakGebruikerInlogTabel(ctx context.Context, db bun.IDB) error {
 	if _, err := db.NewCreateTable().Model((*model.GebruikerInlog)(nil)).IfNotExists().Exec(ctx); err != nil {
 		return err
 	}

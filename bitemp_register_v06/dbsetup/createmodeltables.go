@@ -19,7 +19,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-func createModelTables(ctx context.Context, db *bun.DB) error {
+func createModelTables(ctx context.Context, db bun.IDB) error {
 	// Eenmalige migratie: hernoem tabellen en kolommen van de oude
 	// Landenlijst-als-entiteit structuur naar de nieuwe generieke
 	// Referentielijst-als-entiteit structuur.
@@ -87,9 +87,11 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 					return fmt.Errorf("entiteit-ID migratie mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
 				}
 				// Subtype-entiteiten: voeg FK constraint toe van child PK naar parent PK.
+				// Niet fataal (sinds 26-10-2026): een ontbrekende constraint mag de start niet
+				// blokkeren; de waarschuwing maakt de afwijking zichtbaar.
 				if meta.ParentTypenaam != "" {
-					if err := ensureSubtypeFK(ctx, db, meta); err != nil {
-						return fmt.Errorf("subtype FK constraint mislukt voor %s: %w", typeName, err)
+					if err := veiligeStap(ctx, db, func() error { return ensureSubtypeFK(ctx, db, meta) }); err != nil {
+						log.Printf("[dbsetup] WARN: subtype FK constraint niet aangemaakt voor %s: %v", typeName, err)
 					}
 				}
 			}
@@ -145,8 +147,8 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 						return fmt.Errorf("kon composite trigger niet aanmaken voor %s (%s): %w", typeName, meta.Tabelnaam, err)
 					}
 					// FK constraint naar de hub tabel
-					if err := ensureFKToParentHub(ctx, db, meta, parentMeta); err != nil {
-						return fmt.Errorf("FK constraint mislukt voor %s → %s: %w", typeName, parentMeta.Typenaam, err)
+					if err := veiligeStap(ctx, db, func() error { return ensureFKToParentHub(ctx, db, meta, parentMeta) }); err != nil {
+						log.Printf("[dbsetup] WARN: FK constraint niet aangemaakt voor %s → %s: %v", typeName, parentMeta.Typenaam, err)
 					}
 				} else {
 					if err := RegisterRelativeIDTrigger(ctx, db,
@@ -164,7 +166,7 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 
 // ensureEntiteitIDKolomMigrated hernoemt legacy entiteit-PK-kolom "<tabel>_id" naar "id"
 // wanneer "id" nog ontbreekt. Hiermee blijven oudere databases bruikbaar.
-func ensureEntiteitIDKolomMigrated(ctx context.Context, db *bun.DB, meta model.TypeMeta) error {
+func ensureEntiteitIDKolomMigrated(ctx context.Context, db bun.IDB, meta model.TypeMeta) error {
 	tableName := strings.TrimSpace(meta.Tabelnaam)
 	idCol := strings.TrimSpace(meta.IDKolom)
 	if tableName == "" || idCol == "" || idCol != "id" {
@@ -198,7 +200,7 @@ END $$;
 	return err
 }
 
-func createMaterielePlumbingTablesForEntiteit(ctx context.Context, db *bun.DB, entiteitMeta model.TypeMeta) error {
+func createMaterielePlumbingTablesForEntiteit(ctx context.Context, db bun.IDB, entiteitMeta model.TypeMeta) error {
 	for _, spec := range []struct {
 		suffix    string
 		waardeCol string
@@ -214,7 +216,7 @@ func createMaterielePlumbingTablesForEntiteit(ctx context.Context, db *bun.DB, e
 	return nil
 }
 
-func createMaterielePlumbingTable(ctx context.Context, db *bun.DB, parentMeta model.TypeMeta, tableSuffix string, waardeKolom string) error {
+func createMaterielePlumbingTable(ctx context.Context, db bun.IDB, parentMeta model.TypeMeta, tableSuffix string, waardeKolom string) error {
 	parentTable := strings.TrimSpace(parentMeta.Tabelnaam)
 	parentIDCol := strings.TrimSpace(parentMeta.IDKolom)
 	if parentTable == "" || parentIDCol == "" {
@@ -265,7 +267,7 @@ CREATE TABLE IF NOT EXISTS "%[1]s" (
 // ensureCompositePKForGEofRelatie zorgt idempotent dat de PK van een GE- of relatie-tabel
 // uit BEIDE kolommen (entiteit_id, rel_id) bestaat. Als de tabel al bestaat met alleen rel_id
 // als PK (bijv. na een schema-wijziging), wordt de PK opnieuw aangemaakt.
-func ensureCompositePKForGEofRelatie(ctx context.Context, db *bun.DB, meta model.TypeMeta) error {
+func ensureCompositePKForGEofRelatie(ctx context.Context, db bun.IDB, meta model.TypeMeta) error {
 	tableName := strings.TrimSpace(meta.Tabelnaam)
 	entiteitIDCol := strings.TrimSpace(meta.EntiteitIDKolom)
 
@@ -297,7 +299,7 @@ END $$;
 	return err
 }
 
-func createMaterielePlumbingTablesForGEofRelatie(ctx context.Context, db *bun.DB, geMeta model.TypeMeta) error {
+func createMaterielePlumbingTablesForGEofRelatie(ctx context.Context, db bun.IDB, geMeta model.TypeMeta) error {
 	for _, spec := range []struct {
 		suffix    string
 		waardeCol string
@@ -312,7 +314,7 @@ func createMaterielePlumbingTablesForGEofRelatie(ctx context.Context, db *bun.DB
 	return nil
 }
 
-func createMaterielePlumbingTableForGEofRelatie(ctx context.Context, db *bun.DB, parentMeta model.TypeMeta, tableSuffix string, waardeKolom string) error {
+func createMaterielePlumbingTableForGEofRelatie(ctx context.Context, db bun.IDB, parentMeta model.TypeMeta, tableSuffix string, waardeKolom string) error {
 	parentTable := strings.TrimSpace(parentMeta.Tabelnaam)
 	entiteitIDCol := strings.TrimSpace(parentMeta.EntiteitIDKolom)
 	relIDCol := strings.TrimSpace(parentMeta.IDKolom)
@@ -367,7 +369,7 @@ CREATE TABLE IF NOT EXISTS "%[1]s" (
 	return nil
 }
 
-func resolveKolomType(ctx context.Context, db *bun.DB, tableName string, columnName string) (string, error) {
+func resolveKolomType(ctx context.Context, db bun.IDB, tableName string, columnName string) (string, error) {
 	var kolomType string
 	err := db.NewSelect().
 		ColumnExpr("format_type(a.atttypid, a.atttypmod)").
@@ -392,7 +394,7 @@ func resolveKolomType(ctx context.Context, db *bun.DB, tableName string, columnN
 
 // ensureFKToParentHub voegt een composite FK constraint toe van een _Data of hub _Aanvang/_Einde
 // tabel naar de bovenliggende hub tabel, als die constraint nog niet bestaat.
-func ensureFKToParentHub(ctx context.Context, db *bun.DB, childMeta, parentMeta model.TypeMeta) error {
+func ensureFKToParentHub(ctx context.Context, db bun.IDB, childMeta, parentMeta model.TypeMeta) error {
 	childTable := strings.TrimSpace(childMeta.Tabelnaam)
 	parentTable := strings.TrimSpace(parentMeta.Tabelnaam)
 	entCol := strings.TrimSpace(childMeta.EntiteitIDKolom)
@@ -425,7 +427,7 @@ END $$;
 //   - landenlijst_land: kolom landenlijst_id → referentielijst_id
 //   - landenlijst_land_data: kolom landenlijst_id → referentielijst_id
 //   - drop oude landenlijst tabel
-func ensureReferentielijstRefactorMigrated(ctx context.Context, db *bun.DB) error {
+func ensureReferentielijstRefactorMigrated(ctx context.Context, db bun.IDB) error {
 	_, err := db.ExecContext(ctx, `
 DO $$
 BEGIN
@@ -515,7 +517,7 @@ END $$;
 // aan locatie_adres_data wanneer deze ontbreekt. De kolom is een referentie naar
 // een LandenlijstLand entry in de referentielijst.
 /*
-func ensureLocatieAdresDataLandKolom(ctx context.Context, db *bun.DB) error {
+func ensureLocatieAdresDataLandKolom(ctx context.Context, db bun.IDB) error {
 	_, err := db.ExecContext(ctx, `
 		ALTER TABLE locatie_adres_data
 		ADD COLUMN IF NOT EXISTS land INTEGER NOT NULL DEFAULT 0;
@@ -570,7 +572,7 @@ func topoSortEntiteiten(typeNames []string) []string {
 
 // ensureSubtypeFK voegt een FK constraint toe van de child-entiteitstabel naar de
 // parent-entiteitstabel (PFK patroon). Dit wordt idempotent uitgevoerd via IF NOT EXISTS.
-func ensureSubtypeFK(ctx context.Context, db *bun.DB, childMeta model.TypeMeta) error {
+func ensureSubtypeFK(ctx context.Context, db bun.IDB, childMeta model.TypeMeta) error {
 	parentMeta, ok := model.MetaRegistry.GetTypeMeta(childMeta.ParentTypenaam)
 	if !ok {
 		return fmt.Errorf("parent type %s niet gevonden in MetaRegistry", childMeta.ParentTypenaam)
@@ -604,7 +606,7 @@ END $$;
 // zet NOT NULL alleen bij PK of de tag `notnull`). Bestaande rijen krijgen NULL; bun leest
 // NULL als nulwaarde, ook in een niet-pointer veld. Een ontbrekende PK- of notnull-kolom
 // wordt gelogd en overgeslagen: die vraagt een eigen migratie (met een standaardwaarde).
-func ensureNieuweKolommen(ctx context.Context, db *bun.DB, dbModel any, tabel string) error {
+func ensureNieuweKolommen(ctx context.Context, db bun.IDB, dbModel any, tabel string) error {
 	var bestaand []string
 	if err := db.NewRaw(`SELECT column_name FROM information_schema.columns
 		WHERE table_schema = current_schema() AND table_name = ?`, tabel).Scan(ctx, &bestaand); err != nil {
@@ -617,7 +619,7 @@ func ensureNieuweKolommen(ctx context.Context, db *bun.DB, dbModel any, tabel st
 	for _, k := range bestaand {
 		heeft[k] = true
 	}
-	t := db.Table(reflect.TypeOf(dbModel))
+	t := db.Dialect().Tables().Get(reflect.TypeOf(dbModel))
 	for _, f := range t.Fields {
 		if heeft[f.Name] || f.CreateTableSQLType == "" {
 			continue
@@ -626,8 +628,11 @@ func ensureNieuweKolommen(ctx context.Context, db *bun.DB, dbModel any, tabel st
 			log.Printf("[dbsetup] kolom %s.%s ontbreekt maar is PK/notnull; niet automatisch toegevoegd", tabel, f.Name)
 			continue
 		}
-		if _, err := db.ExecContext(ctx, fmt.Sprintf(`ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s`,
-			string(t.SQLName), string(f.SQLName), f.CreateTableSQLType)); err != nil {
+		if err := veiligeStap(ctx, db, func() error {
+			_, err := db.ExecContext(ctx, fmt.Sprintf(`ALTER TABLE %s ADD COLUMN IF NOT EXISTS %s %s`,
+				string(t.SQLName), string(f.SQLName), f.CreateTableSQLType))
+			return err
+		}); err != nil {
 			// Niet fataal: de API moet blijven starten; de kolom ontbreekt dan zoals voorheen.
 			log.Printf("[dbsetup] kolom %s.%s (%s) toevoegen mislukt: %v", tabel, f.Name, f.CreateTableSQLType, err)
 			continue

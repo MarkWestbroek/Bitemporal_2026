@@ -198,9 +198,18 @@ stond, liep de pod daarna in een crashlus. Sindsdien:
 1. `go build` schrijft naar `bitemp-go-api.nieuw`; de draaiende binary blijft staan;
 2. `bitemp-go-api.nieuw zelftest` bouwt de router (alle routes, GraphQL-schema, PEP) zonder
    database en zonder te luisteren, en vangt een panic op (exit 0 = goed, 1 = mislukt);
-3. pas na een geslaagde zelftest: binary vervangen, baseline en marker bijwerken, versie activeren.
-   Mislukt de zelftest, dan wordt `model/` teruggezet en wordt er **niets** geactiveerd; de uitvoer
-   van de zelftest staat in `build_output`.
+3. `bitemp-go-api.nieuw dbproef` (sinds 27-10-2026): de tabelaanmaak van het nieuwe model op de
+   echte database, in één transactie die wordt teruggedraaid (`dbsetup.Proef`). Vangt wat de
+   zelftest niet ziet: een trigger of constraint die op de bestaande tabellen faalt (bv. een
+   hernoemde entiteit met oude tabellen) en de API bij de start zou laten stoppen (`CreateTables`
+   is fataal in `main.go`). Stappen die een fout bewust slikken lopen via een SAVEPOINT
+   (`veiligeStap`), anders zou één gevangen fout de hele proeftransactie afbreken.
+4. pas na een geslaagde zelftest én databaseproef: binary vervangen, baseline en marker bijwerken,
+   versie activeren. Mislukt een van beide, dan wordt `model/` teruggezet en wordt er **niets**
+   geactiveerd; de uitvoer staat in `build_output`.
+
+Sinds dezelfde datum zijn de FK-constraints van subtypen en van `_Data`-tabellen naar hun hub
+**niet-fataal** bij het opstarten (waarschuwing in het log), net als de enkelvoudig-constraint.
 
 Daarnaast weigert de codegen een padnaam die al bij een type uit een ander domein bestaat (zie
 `CODEGEN.md` §4, validatieregels), zodat deze fout al bij de generatie stopt.

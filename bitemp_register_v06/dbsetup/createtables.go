@@ -10,7 +10,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-func ensureSchemaVersiesMigrated(ctx context.Context, db *bun.DB) error {
+func ensureSchemaVersiesMigrated(ctx context.Context, db bun.IDB) error {
 	// Houd bestaande databases bruikbaar door de oude kolomnaam `versie` naar `id` te migreren
 	// en de nieuwe metadata-kolommen alleen toe te voegen als ze nog ontbreken.
 	_, err := db.ExecContext(ctx, `
@@ -72,7 +72,7 @@ END $$;
 	return err
 }
 
-func ensureRegistratieDomeinenMigrated(ctx context.Context, db *bun.DB) error {
+func ensureRegistratieDomeinenMigrated(ctx context.Context, db bun.IDB) error {
 	// Houd bestaande databases bruikbaar wanneer `registratie.domeinen`
 	// eerder als scalar tekstkolom is aangemaakt. Voor GIN-arrayfiltering
 	// normaliseren we dit naar TEXT[] met behoud van bestaande waarden.
@@ -104,7 +104,7 @@ END $$;
 	return err
 }
 
-func ensureRegistratieBronMigrated(ctx context.Context, db *bun.DB) error {
+func ensureRegistratieBronMigrated(ctx context.Context, db bun.IDB) error {
 	// Voegt bron en bron_kenmerk toe als ze nog niet bestaan.
 	// Hiermee kunnen registraties worden teruggevoerd naar het bron-systeem
 	// (bijv. Operaton process-instance-id).
@@ -132,7 +132,7 @@ END $$;
 	return err
 }
 
-func CreateTables(db *bun.DB) error {
+func CreateTables(db bun.IDB) error {
 	ctx := context.Background()
 
 	// tasks en tests tabellen zijn er puur voor de demo,
@@ -331,7 +331,7 @@ func CreateTables(db *bun.DB) error {
 //
 // Fouten zijn niet-fataal (waarschuwing): een bestaande database met historische
 // dubbelingen mag de startup niet blokkeren; de warning maakt de schending zichtbaar.
-func createEnkelvoudigInvariantIndexes(ctx context.Context, db *bun.DB) {
+func createEnkelvoudigInvariantIndexes(ctx context.Context, db bun.IDB) {
 	typeNames := make([]string, 0, len(model.MetaRegistry))
 	for typeName := range model.MetaRegistry {
 		typeNames = append(typeNames, typeName)
@@ -369,7 +369,7 @@ BEGIN
 			DEFERRABLE INITIALLY DEFERRED;
 	END IF;
 END $$;`, quoteLiteral(naam), naam, meta.Tabelnaam, elementen)
-		if _, err := db.ExecContext(ctx, stmt); err != nil {
+		if err := veiligeStap(ctx, db, func() error { _, err := db.ExecContext(ctx, stmt); return err }); err != nil {
 			fmt.Printf("WARN: enkelvoudig-invariant constraint %s niet aangemaakt (%s): %v\n", naam, meta.Tabelnaam, err)
 		}
 	}

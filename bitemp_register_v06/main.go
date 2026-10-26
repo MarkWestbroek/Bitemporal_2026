@@ -48,6 +48,12 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "zelftest" {
 		os.Exit(zelftest())
 	}
+	// `bitemp-go-api dbproef`: de tabelaanmaak van dit model op de database uitvoeren in een
+	// transactie en terugdraaien (dbsetup.Proef). De rebuild draait dit na de zelftest op de
+	// nieuwe binary, vóór activeren: wat bij het opstarten zou falen, faalt nu zonder gevolgen.
+	if len(os.Args) > 1 && os.Args[1] == "dbproef" {
+		os.Exit(dbproef())
+	}
 
 	fmt.Println("Bitemp Go API Project")
 	fmt.Printf("build commit: %s, build time: %s\n", commit, buildTime)
@@ -158,6 +164,22 @@ func main() {
 	//run the server
 	router.Run()
 
+}
+
+// dbproef: zie main en dbsetup/proef.go. Exit 0 = het model past op de database.
+func dbproef() int {
+	db, err := connectToDatabase()
+	if err != nil {
+		fmt.Println("DBPROEF MISLUKT: database niet bereikbaar:", err)
+		return 1
+	}
+	defer db.Close()
+	if err := dbsetup.Proef(context.Background(), db); err != nil {
+		fmt.Println("DBPROEF MISLUKT:", err)
+		return 1
+	}
+	fmt.Println("DBPROEF OK: tabelaanmaak slaagt op deze database (teruggedraaid)")
+	return 0
 }
 
 // zelftest bouwt de router en vangt een panic op; zie main.

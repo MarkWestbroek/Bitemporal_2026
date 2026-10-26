@@ -18,13 +18,13 @@ func getCRC32Hash(tableName string) string {
 }
 
 // om de reflectie code te bewaren. maar wordt niet gebruikt
-func RegisterRelativeIDTriggerUsingReflection(ctx context.Context, db *bun.DB, model interface{}) error {
+func RegisterRelativeIDTriggerUsingReflection(ctx context.Context, db bun.IDB, model interface{}) error {
 	// 1. Haal metadata op via Bun
 	typ := reflect.TypeOf(model)
 	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
 	}
-	table := db.Table(typ)
+	table := db.Dialect().Tables().Get(typ)
 
 	// 2. Validatie: We verwachten minimaal 2 PK's
 	if len(table.PKs) < 2 {
@@ -40,7 +40,7 @@ func RegisterRelativeIDTriggerUsingReflection(ctx context.Context, db *bun.DB, m
 	return RegisterRelativeIDTrigger(ctx, db, model, tableName, parentCol, relativeCol)
 }
 
-func RegisterRelativeIDTrigger(ctx context.Context, db *bun.DB, model interface{},
+func RegisterRelativeIDTrigger(ctx context.Context, db bun.IDB, model interface{},
 	tableName string, parentCol string, relativeCol string) error {
 
 	// Genereer korte, unieke functie-naam met CRC32 om PostgreSQL 63-karakters-limiet te omzeilen
@@ -87,7 +87,7 @@ func RegisterRelativeIDTrigger(ctx context.Context, db *bun.DB, model interface{
 // met een samengestelde parent key (2 parent-kolommen).
 // Dit is nodig voor aanvang/einde plumbing-tabellen van gegevenselementen en relaties,
 // waar de versie relatief is aan het paar (entiteit_id, rel_id).
-func RegisterRelativeIDTriggerComposite(ctx context.Context, db *bun.DB,
+func RegisterRelativeIDTriggerComposite(ctx context.Context, db bun.IDB,
 	tableName string, parentCol1 string, parentCol2 string, relativeCol string) error {
 
 	// Genereer korte, unieke functie-naam met CRC32 om PostgreSQL 63-karakters-limiet te omzeilen

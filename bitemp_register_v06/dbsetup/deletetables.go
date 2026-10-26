@@ -9,7 +9,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-func DeleteTables(db *bun.DB) error {
+func DeleteTables(db bun.IDB) error {
 	ctx := context.Background()
 
 	// Deze twee tabellen zijn 'plumbing' voor elk register,
@@ -49,7 +49,7 @@ func DeleteTables(db *bun.DB) error {
 
 // DeleteTablesByDomein dropt alleen de model-tabellen die tot het opgegeven domein behoren.
 // Plumbing-tabellen (registratie, wijziging) worden NIET gedropt, want die zijn gedeeld.
-func DeleteTablesByDomein(db *bun.DB, domein string) error {
+func DeleteTablesByDomein(db bun.IDB, domein string) error {
 	ctx := context.Background()
 	return dropModelTablesByDomein(ctx, db, domein)
 }
@@ -58,7 +58,7 @@ func DeleteTablesByDomein(db *bun.DB, domein string) error {
 Dropt de door het model gedefineerde tabellen, in de juiste volgorde:
 (relaties eerst, dan entiteiten, anders krijgen we problemen met foreign keys)
 */
-func dropModelTables(ctx context.Context, db *bun.DB) error {
+func dropModelTables(ctx context.Context, db bun.IDB) error {
 	dropOrder := []model.Metatype{
 		model.MetatypeGegevenselement,
 		model.MetatypeRelatie,
@@ -117,7 +117,7 @@ func dropModelTables(ctx context.Context, db *bun.DB) error {
 dropModelTablesByDomein dropt alleen de model-tabellen die tot het opgegeven domein behoren,
 in de juiste volgorde (gegevenselementen/relaties eerst, dan entiteiten).
 */
-func dropModelTablesByDomein(ctx context.Context, db *bun.DB, domein string) error {
+func dropModelTablesByDomein(ctx context.Context, db bun.IDB, domein string) error {
 	dropOrder := []model.Metatype{
 		model.MetatypeGegevenselement,
 		model.MetatypeRelatie,
