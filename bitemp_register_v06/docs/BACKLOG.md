@@ -802,6 +802,14 @@ v3-JSON's vergelijkt en een migratierapport genereert. Eventueel ook DDL-migrati
 6. Frontend: geërfde velden tonen in formulieren
 ```
 
+- [x] 1–6 gebouwd (zie `docs/overerving-analyse.md` §7); 26-10-2026: subtype met eigen GE's over
+      domeinen heen gerepareerd (§7.9).
+- [ ] **20.7 GraphQL: `parent_<ouder>` getypeerd.** `/full/<subtype>` geeft de volledige ouder onder
+      `parent_<ouder>`; in GraphQL is dat veld een ongetypeerde tekst zonder inhoud (`dynql/type_builder.go`
+      kent de belongs-to niet). Nodig zodra een afnemer subtypen via GraphQL leest (FUNDAMENT, gpk-aanvraag).
+- [ ] **20.8 Codegen valideert `erft`:** de ouder moet bestaan (in het model of de MetaRegistry van de
+      build); een lege enum-`baseType` moet een validatiefout zijn in plaats van ongeldige Go.
+
 ---
 
 ## 21. docs/inhoud-editor-technisch.md — Bekende aandachtspunten

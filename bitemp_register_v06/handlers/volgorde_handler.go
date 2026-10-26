@@ -104,16 +104,27 @@ func entiteitMetaOpPadnaam(padnaam string) (model.TypeMeta, bool) {
 	return model.TypeMeta{}, false
 }
 
-// relatieOpRol zoekt een relatie onder een entiteit op rolnaam, JSON-rolnaam of klassenaam.
+// relatieOpRol zoekt een relatie onder een entiteit op rolnaam, JSON-rolnaam of klassenaam. Bij
+// een subtype (erft) ook bij de ouder(s): een geërfde relatie telt mee (sinds 26-10-2026).
 func relatieOpRol(meta model.TypeMeta, rol string) (model.OnderliggendGegevenselement, model.TypeMeta, bool) {
-	for _, child := range meta.OnderliggendeGegevenselementen {
-		if !model.PadSegmentMatcht(child, rol) && !strings.EqualFold(child.Doeltype, rol) {
-			continue
+	for diepte := 0; diepte < 10; diepte++ {
+		for _, child := range meta.OnderliggendeGegevenselementen {
+			if !model.PadSegmentMatcht(child, rol) && !strings.EqualFold(child.Doeltype, rol) {
+				continue
+			}
+			cm, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+			if ok && cm.Metatype == model.MetatypeRelatie && cm.SecondaireEntiteitIDKolom != "" {
+				return child, cm, true
+			}
 		}
-		cm, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
-		if ok && cm.Metatype == model.MetatypeRelatie && cm.SecondaireEntiteitIDKolom != "" {
-			return child, cm, true
+		if meta.ParentTypenaam == "" {
+			break
 		}
+		ouder, ok := model.MetaRegistry.GetTypeMeta(meta.ParentTypenaam)
+		if !ok {
+			break
+		}
+		meta = ouder
 	}
 	return model.OnderliggendGegevenselement{}, model.TypeMeta{}, false
 }
@@ -216,6 +227,17 @@ func MaakVolgordeHandler() gin.HandlerFunc {
 		if err != nil {
 			interneFout(c, "kon de entiteiten niet laden", err)
 			return
+		}
+		if meta.ParentTypenaam != "" {
+			// Een geërfde relatie levert id's van de ouder; alleen de id's die ook een
+			// instantie van dit subtype zijn (zelfde id, PFK) tellen mee.
+			alleen := ids[:0]
+			for _, id := range ids {
+				if _, ok := maps[id]; ok {
+					alleen = append(alleen, id)
+				}
+			}
+			ids = alleen
 		}
 
 		afhankelijkVan := map[int][]int{}

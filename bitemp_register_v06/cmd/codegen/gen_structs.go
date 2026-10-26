@@ -140,7 +140,7 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 		// Gegevenselementen
 		for _, ge := range ent.Gegevenselementen {
 			hubType := geHubTypeName(ent, ge.Naam)
-			generateHubStruct(&b, hubType, ent.Typenaam, entIDKolom, "gegevenselement", ge.IsMaterieel, ge.Description, "")
+			generateHubStruct(&b, hubType, ent.Typenaam, entIDKolom, entiteitPKKolom(ent), ge.IsMaterieel, ge.Description, "")
 			generateDataStruct(&b, hubType, ent.Typenaam, entIDKolom, ge.Velden, ge.Description)
 			if ge.IsMaterieel {
 				generateAanvangEindeStructs(&b, hubType, ent.Typenaam, entIDKolom, true)
@@ -150,7 +150,7 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 		// Relaties
 		for _, rel := range ent.Relaties {
 			secEntIDKolom := naamgeving.SecondaireIDKolom(ent.Typenaam, rel.DoelEntiteit)
-			generateHubStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, "relatie", rel.IsMaterieel, rel.Description, secEntIDKolom)
+			generateHubStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, entiteitPKKolom(ent), rel.IsMaterieel, rel.Description, secEntIDKolom)
 			generateDataStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, rel.Velden, rel.Description)
 			if rel.IsMaterieel {
 				generateAanvangEindeStructs(&b, rel.Naam, ent.Typenaam, entIDKolom, true)
@@ -162,7 +162,7 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 }
 
 // generateHubStruct genereert een hub struct (GE of relatie).
-func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, entIDKolom string, _ string, isMaterieel bool, description string, secEntIDKolom string) {
+func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, entIDKolom string, entPKKolom string, isMaterieel bool, description string, secEntIDKolom string) {
 	tabelnaam := strings.ToLower(typeName)
 	if description != "" {
 		b.WriteString(fmt.Sprintf("// %s — %s\n", typeName, description))
@@ -170,7 +170,7 @@ func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, en
 	b.WriteString(fmt.Sprintf("type %s struct {\n", typeName))
 	writeField(b, bunBaseModelField(tabelnaam))
 
-	for _, f := range hubPlumbingFields(entIDKolom, parentEnt) {
+	for _, f := range hubPlumbingFields(entIDKolom, parentEnt, entPKKolom) {
 		writeField(b, f)
 	}
 
@@ -283,4 +283,12 @@ func relJSONRolnaam(naam, meervoud string) string {
 		return meervoud
 	}
 	return strings.ToLower(naam) + "s"
+}
+
+// entiteitPKKolom: de sleutelkolom van een entiteit — "id", of bij een subtype de PFK "<ouder>_id".
+func entiteitPKKolom(ent model.V3Entiteit) string {
+	if ent.Erft != "" {
+		return strings.ToLower(ent.Erft) + "_id"
+	}
+	return "id"
 }

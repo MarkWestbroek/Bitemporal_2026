@@ -1051,20 +1051,10 @@ func MakeGetRegistratieMetWijzigingenByIDHandler() gin.HandlerFunc {
 // Deze worden als geneste Relation() calls toegevoegd zodat Bun ze in één query
 // meeneemt. Bij peiltijdstip-filtering wordt ook op het geneste niveau gefilterd.
 func addOnderliggendeRelations(query *bun.SelectQuery, meta model.TypeMeta, peiltijdstip *time.Time) *bun.SelectQuery {
-	// Bij subtypes: laad ook de parent-entiteit via de belongs-to relatie.
-	// De parent's eigen OnderliggendeGegevenselementen worden apart geladen
-	// in laadHubKinderenNaQuery, net als bij gewone hubs.
-	if meta.ParentTypenaam != "" {
-		parentMeta, parentOK := model.MetaRegistry.GetTypeMeta(meta.ParentTypenaam)
-		if parentOK {
-			parentRelName := "Parent" + meta.ParentTypenaam
-			query = query.Relation(parentRelName, func(q *bun.SelectQuery) *bun.SelectQuery {
-				// Recursief: ook de parent's onderliggende GEs laden
-				q = addOnderliggendeRelations(q, parentMeta, peiltijdstip)
-				return q
-			})
-		}
-	}
+	// Bij subtypes wordt de ouder-entiteit niet hier genest geladen maar apart, in
+	// laadOuderVoorSubtypes (via laadHubKinderenNaQuery). Genest via de belongs-to werkte niet:
+	// de onderliggende GE's van de ouder kwamen niet mee, en met een peiltijdstip gaf het
+	// "missing FROM-clause entry" (overerving over domeinen heen, 26-10-2026).
 
 	for _, rel := range meta.OnderliggendeGegevenselementen {
 		capturedRel := rel
@@ -1205,28 +1195,80 @@ func laadHubKinderenNaQuery(ctx context.Context, entitiesOrEntity any, entityMet
 		}
 	}
 
-	// Bij subtypes: ook hub-kinderen laden voor de parent-entiteit die via belongs-to is ingeladen.
+	// Bij subtypes: de ouder-entiteit volledig laden en aan elk subtype-record hangen.
 	if entityMeta.ParentTypenaam != "" {
-		parentMeta, parentOK := model.MetaRegistry.GetTypeMeta(entityMeta.ParentTypenaam)
-		if parentOK {
-			parentFieldName := "Parent" + entityMeta.ParentTypenaam
-			for _, ev := range entityValues {
-				evDeref := ev
-				if evDeref.Kind() == reflect.Ptr {
-					evDeref = evDeref.Elem()
-				}
-				pField := evDeref.FieldByName(parentFieldName)
-				if !pField.IsValid() || pField.IsNil() {
-					continue
-				}
-				parentEntity := pField.Interface()
-				if err := laadHubKinderenNaQuery(ctx, parentEntity, parentMeta, peiltijdstip); err != nil {
-					return fmt.Errorf("laadHubKinderen voor parent %s: %v", entityMeta.ParentTypenaam, err)
-				}
-			}
+		if err := laadOuderVoorSubtypes(ctx, entityValues, entityMeta, peiltijdstip); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+// laadOuderVoorSubtypes laadt voor subtype-records (erft, TPT: zelfde id als de ouder) de
+// ouder-entiteit in /full-vorm — met haar GE's, relaties en hub-kinderen, op hetzelfde formele
+// peilmoment — in één batch, en zet die in het veld Parent<Ouder> van elk record. Werkt recursief
+// via laadHubKinderenNaQuery als de ouder zelf weer een subtype is. Sinds 26-10-2026; daarvóór
+// kwam de ouder kaal mee (alleen haar id).
+func laadOuderVoorSubtypes(ctx context.Context, kinderen []reflect.Value, meta model.TypeMeta, peiltijdstip *time.Time) error {
+	ouderMeta, ok := model.MetaRegistry.GetTypeMeta(meta.ParentTypenaam)
+	if !ok || ouderMeta.SliceFactory == nil || ouderMeta.IDKolom == "" {
+		return nil
+	}
+	ids := make([]int, 0, len(kinderen))
+	gezien := map[int]bool{}
+	for _, kv := range kinderen {
+		ev := kv
+		if ev.Kind() == reflect.Ptr {
+			ev = ev.Elem()
+		}
+		id, err := haalIntWaardeVoorKolomUitRepresentatie(ev.Addr().Interface(), meta.IDKolom)
+		if err == nil && id != 0 && !gezien[id] {
+			gezien[id] = true
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	ouders := ouderMeta.SliceFactory()
+	query := DB.NewSelect().Model(ouders)
+	if peiltijdstip != nil {
+		query = applyFormeleTijdFilterVoorModel(query, ouderMeta.Typenaam, *peiltijdstip)
+	}
+	query = addOnderliggendeRelations(query, ouderMeta, peiltijdstip)
+	if err := query.Where("?TableAlias."+ouderMeta.IDKolom+" IN (?)", bun.In(ids)).Scan(verzoekContext(ctx)); err != nil && !isNoRows(err) {
+		return fmt.Errorf("ouder %s van %s laden: %v", ouderMeta.Typenaam, meta.Typenaam, err)
+	}
+	if err := laadHubKinderenNaQuery(ctx, ouders, ouderMeta, peiltijdstip); err != nil {
+		return err
+	}
+	ouderSlice := reflect.ValueOf(ouders).Elem()
+	perID := make(map[int]reflect.Value, ouderSlice.Len())
+	for k := 0; k < ouderSlice.Len(); k++ {
+		id, err := haalIntWaardeVoorKolomUitRepresentatie(ouderSlice.Index(k).Addr().Interface(), ouderMeta.IDKolom)
+		if err == nil {
+			perID[id] = ouderSlice.Index(k).Addr()
+		}
+	}
+	veldnaam := "Parent" + meta.ParentTypenaam
+	for _, kv := range kinderen {
+		ev := kv
+		if ev.Kind() == reflect.Ptr {
+			ev = ev.Elem()
+		}
+		veld := ev.FieldByName(veldnaam)
+		if !veld.IsValid() || !veld.CanSet() {
+			continue
+		}
+		id, err := haalIntWaardeVoorKolomUitRepresentatie(ev.Addr().Interface(), meta.IDKolom)
+		if err != nil {
+			continue
+		}
+		if ouder, ok := perID[id]; ok && ouder.Type().AssignableTo(veld.Type()) {
+			veld.Set(ouder)
+		}
+	}
 	return nil
 }
 

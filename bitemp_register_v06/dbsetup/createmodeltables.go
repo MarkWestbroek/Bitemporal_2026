@@ -229,9 +229,12 @@ func createMaterielePlumbingTable(ctx context.Context, db *bun.DB, parentMeta mo
 	tableName := fmt.Sprintf("%s_%s", parentTable, tableSuffix)
 	// Lokale FK-kolom heet "{entiteit}_id" (bv. a_id, b_id) i.p.v. "id",
 	// zodat de naamgeving consistent is met andere GE-types die naar een
-	// bovenliggende entiteit verwijzen. De FK verwijst nog steeds naar
-	// de kolom "id" in de parent-tabel.
-	localFKCol := fmt.Sprintf("%s_%s", parentTable, parentIDCol)
+	// bovenliggende entiteit verwijzen; dat is ook wat codegen in de
+	// _Aanvang/_Einde-structs en in TypeMeta.EntiteitIDKolom zet. De FK verwijst
+	// naar de sleutelkolom van de entiteit: "id", of bij een subtype (erft) de
+	// PFK "<ouder>_id". Tot 26-10-2026 stond hier "<tabel>_<idkolom>", wat bij een
+	// subtype "<tabel>_<ouder>_id" gaf en elke /full-leesactie liet falen.
+	localFKCol := parentTable + "_id"
 	fkName := fmt.Sprintf("fk_%s_%s", tableName, localFKCol)
 
 	ddl := fmt.Sprintf(`
