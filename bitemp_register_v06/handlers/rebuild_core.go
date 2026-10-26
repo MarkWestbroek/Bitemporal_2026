@@ -172,6 +172,22 @@ func voerCodegenEnBuildUit(appDir string, modelBytes []byte, domeinRuns []Rebuil
 		return stappen, uit, fmt.Errorf("de nieuwe binary start niet (zelftest: %v) — niets geactiveerd, model teruggedraaid; zie build_output", err)
 	}
 	stappen = append(stappen, "Zelftest geslaagd (router gebouwd, alle routes geregistreerd)")
+
+	// Stap 3b: databaseproef — de tabelaanmaak van het nieuwe model op de echte database, in een
+	// transactie die wordt teruggedraaid (dbsetup.Proef). Vangt wat de zelftest niet ziet: een
+	// constraint of trigger die op de bestaande tabellen faalt en de API bij de start zou stoppen.
+	proefCtx, stopProef := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer stopProef()
+	proefCmd := exec.CommandContext(proefCtx, nieuw, "dbproef")
+	proefCmd.Dir = appDir
+	proefCmd.Env = append(os.Environ(), "STARTUP_REBUILD=false")
+	if uit, err := proefCmd.CombinedOutput(); err != nil {
+		stappen = append(stappen, fmt.Sprintf("Databaseproef van het nieuwe model mislukt: %v", err))
+		os.Remove(nieuw)
+		rollback()
+		return stappen, uit, fmt.Errorf("het nieuwe model past niet op de database (dbproef: %v) — niets geactiveerd, model teruggedraaid; zie build_output", err)
+	}
+	stappen = append(stappen, "Databaseproef geslaagd (tabelaanmaak in een teruggedraaide transactie)")
 	if err := os.Rename(nieuw, doel); err != nil {
 		os.Remove(nieuw)
 		rollback()

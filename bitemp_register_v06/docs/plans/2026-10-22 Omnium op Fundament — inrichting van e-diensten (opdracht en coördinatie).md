@@ -388,11 +388,11 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     relaties naar subtypen (ook over domeinen), subtype → subtype, `$ref` op een relatieveld,
     materiële meervoudige relatie naar de ouder. **Flexibiliteitstest v1 → v2 op één database:** oude
     aanvraag leesbaar, nieuwe relatie werkt, oude tabellen verweesd (schemadiff: destructief, DROP
-    voorgesteld); een gewijzigd doel onder dezelfde relatienaam is níet additief (500). **Open risico:**
-    `dbsetup.CreateTables` is bij het opstarten fataal (`main.go`); een modelwijziging die een
-    constraint laat falen komt door de zelftest maar stopt de API bij de start → crashlus. Voorstel:
-    constraint-stappen niet-fataal maken én de rebuild een database-proef laten doen (CreateTables in
-    een transactie met ROLLBACK) vóór activeren.
+    voorgesteld); een gewijzigd doel onder dezelfde relatienaam is níet additief (500). **Risico afgedekt (27-10, akkoord Mark):**
+    `dbsetup.CreateTables` was bij het opstarten fataal (`main.go`); een modelwijziging die een
+    constraint laat falen kwam door de zelftest maar stopte de API bij de start → crashlus. Gebouwd:
+    FK-constraints niet-fataal, en de rebuild doet een **databaseproef** (`bitemp-go-api dbproef`:
+    CreateTables in een transactie met ROLLBACK) vóór activeren; zie `docs/DEVLOOP.md`.
 12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
     actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
     inrichting-model wacht op het nieuwe image.

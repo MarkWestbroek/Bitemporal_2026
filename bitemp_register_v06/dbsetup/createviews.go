@@ -8,7 +8,7 @@ import (
 
 // createFormeleTijdIndexes maakt indexen aan die de formele tijdreis-functie ondersteunen.
 // Alle statements zijn idempotent via IF NOT EXISTS.
-func createFormeleTijdIndexes(ctx context.Context, db *bun.DB) error {
+func createFormeleTijdIndexes(ctx context.Context, db bun.IDB) error {
 	statements := []string{
 		`CREATE INDEX IF NOT EXISTS idx_wijziging_formele_lookup
 		 ON wijziging (entiteitnaam, entiteit_id, (COALESCE(representatienaam, '')), (COALESCE(representatie_id, '')), versie, registratie_id, id DESC);`,
@@ -31,7 +31,7 @@ func createFormeleTijdIndexes(ctx context.Context, db *bun.DB) error {
 
 // createFormeleTijdViews maakt de basisviews aan voor formele tijdreisquery's.
 // Deze view is bewust "basis": peiltijdstip blijft een runtime-parameter in de SELECTs.
-func createFormeleTijdViews(ctx context.Context, db *bun.DB) error {
+func createFormeleTijdViews(ctx context.Context, db bun.IDB) error {
 	// PostgreSQL laat geen wijziging van RETURN TABLE-signature toe via
 	// CREATE OR REPLACE FUNCTION. Daarom droppen we de bestaande functie
 	// expliciet voordat we de nieuwe definitie aanmaken.
