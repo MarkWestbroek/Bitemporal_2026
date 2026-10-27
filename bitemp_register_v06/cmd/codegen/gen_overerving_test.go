@@ -66,3 +66,16 @@ func TestEntiteitPKKolom(t *testing.T) {
 		t.Errorf("met erft: %s", k)
 	}
 }
+
+func TestEntiteiten_SubtypeToontIDInJSON(t *testing.T) {
+	code, err := generateEntiteitenWithOpts(subtypeTestModel(), codegenOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(code, "`json:\"id\" bun:\"aanvraag_id,pk\"`") {
+		t.Errorf("subtype hoort zijn PFK in JSON als id te tonen; code:\n%s", code)
+	}
+	if strings.Contains(code, "`json:\"aanvraag_id\"") {
+		t.Errorf("aanvraag_id hoort niet in de JSON van het subtype")
+	}
+}

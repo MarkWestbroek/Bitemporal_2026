@@ -33,12 +33,15 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 		writeField(&b, bunBaseModelField(d.Tabelnaam))
 
 		if ent.Erft != "" {
-			// Subtype: PFK naar parent-entiteit (bijv. Klanttaak_ID int → FK naar taak(id))
+			// Subtype: PFK naar parent-entiteit (bijv. Klanttaak_ID int → FK naar taak(id)). In JSON
+			// heet die sleutel gewoon "id" (besluit Mark 27-10-2026): een subtype ís de ouder, met
+			// hetzelfde id, en elke entiteit heeft zo uniform een `id`. De databasekolom blijft
+			// "<ouder>_id". Lezers van JSON gebruiken TypeMeta.JSONID(), niet IDKolom.
 			parentIDKolom := strings.ToLower(ent.Erft) + "_id"
 			writeField(&b, StructField{
 				Name: ent.Erft + "_ID",
 				Type: "int",
-				Tags: fmt.Sprintf("`json:\"%s\" bun:\"%s,pk\"`", parentIDKolom, parentIDKolom),
+				Tags: fmt.Sprintf("`json:\"id\" bun:\"%s,pk\"`", parentIDKolom),
 			})
 			// Belongs-to relatie naar parent-entiteit
 			parentJSONKey := "parent_" + strings.ToLower(ent.Erft)

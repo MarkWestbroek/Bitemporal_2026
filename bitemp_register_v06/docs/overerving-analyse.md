@@ -354,6 +354,16 @@ geen eigen GE's, dus dit pad was nooit doorlopen. Drie fouten verholpen (hub-kin
 `_aanvang`/`_einde`-kolomnaam in dbsetup, ouder volledig laden in `/full`); zie `CODEGEN.md` §7.3d.
 Open: GraphQL typeert `parent_<ouder>` niet; codegen valideert `erft` niet.
 
+### 7.10 O13 — `id` op subtypen (27-10-2026, besluit Mark)
+
+Een subtype ís de ouder, met hetzelfde id. In JSON heet de sleutel van een subtype daarom `id`
+(voorheen de PFK-kolomnaam, bv. `aanvraag_id`); de databasekolom blijft `<ouder>_id`.
+`TypeMeta.JSONID()` geeft de JSON-naam ("id" voor elke entiteit), `IDKolom` is alleen voor SQL;
+alle lezers van JSON op kolomnaam zijn omgezet. Plaatshouders (`$nieuw.x`) op een subtype horen bij
+de wortel-entiteit: ouder en subtype mogen dezelfde plaatshouder dragen, en bij een registratie van
+alleen de subtype-hub komt het id uit de tabel van de wortel-ouder. Registreren:
+`{"opvoer": {"gehandicaptenparkeerkaartaanvraag": {"id": 100}}}`.
+
 ### 7.8 O11 — Schemadiff
 
 - `isAbstract`-wijziging → ernst `Modificatie` (beide richtingen)

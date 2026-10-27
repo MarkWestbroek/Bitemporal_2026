@@ -410,6 +410,10 @@ rebuild genereert per domein. Getest op de regressiedatabase met een proefmodel;
 | `dbsetup` maakte de entiteit-level `_aanvang`/`_einde`-tabel van een materieel subtype met kolom `<tabel>_<idkolom>` (`…_aanvraag_id`), codegen verwachtte `<tabel>_id`; elke `/full`-leesactie gaf 500 | `createmodeltables.go`: altijd `<tabel>_id` |
 | `/full` van een subtype laadde de ouder kaal (alleen id), met peiltijdstip zelfs "missing FROM-clause entry" | ouder apart en volledig geladen in `laadOuderVoorSubtypes` (`full_handlers.go`); `GET /api/volgorde` vindt ook geërfde relaties |
 
+**JSON-sleutel (27-10-2026, besluit Mark):** een subtype toont zijn sleutel in JSON als `id`, net als
+elke entiteit; de databasekolom blijft `<ouder>_id`. Code die het id uit JSON leest gebruikt
+`TypeMeta.JSONID()`; `IDKolom` is alleen voor SQL. De schema-API geeft onder `idKolom` de JSON-naam.
+
 Wat werkt (proef 26-10-2026): registreren in één registratie (ouder-hub + geërfde GE's + subtype-hub +
 eigen GE's, zelfde id), alleen de subtype-hub (de engine maakt een kaal ouder-record), geërfde GE's later
 toevoegen; `/full/<subtype>/<id>` toont eigen GE's en onder `parent_<ouder>` de volledige ouder;

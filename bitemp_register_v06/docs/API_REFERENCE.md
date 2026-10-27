@@ -174,6 +174,13 @@ For each entiteit with padnaam `{pad}`:
 - **Description**: Inserts a full entity with child relations in one request. Sets FK values on children automatically via bun relation tags.
 - **Query params**: none
 
+### Subtypen (`erft`) in JSON (sinds 27-10-2026)
+Een subtype deelt het id van zijn ouder en toont dat in JSON als `id`, net als elke entiteit (de
+databasekolom is `<ouder>_id`). `GET /full/<subtype>/:id` geeft de eigen GE's en onder
+`parent_<ouder>` de volledige ouder; `GET /full/<ouder>/:id` toont alleen de ouder. Registreren met
+`{"opvoer": {"<subtype>": {"id": 100}}}`; de ouder-hub mag in dezelfde registratie staan of wordt
+kaal aangemaakt. Plaatshouders (`$nieuw.x`) werken op ouder én subtype samen.
+
 ### `GET /api/volgorde/{pad}` (sinds 23-10-2026)
 - **Handler**: `handlers.MaakVolgordeHandler()` (`volgorde_handler.go`)
 - **Doel**: entiteiten in afhankelijkheidsvolgorde, de vereiste eerst. Generiek (MetaRegistry-gedreven); gemaakt voor de uitrol van e-diensten op Fundament: "alle artefacten van e-dienstversie X, in de volgorde waarin ze uitgerold moeten worden".

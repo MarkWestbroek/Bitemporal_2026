@@ -426,6 +426,16 @@ func (r MetaRegistryType) GetBovenliggendeEntiteitMeta(childTypeName string) (Ty
 	return TypeMeta{}, false
 }
 
+// JSONID is de naam waaronder het id van dit type in JSON staat. Voor entiteiten altijd "id":
+// ook een subtype (erft) toont zijn PFK "<ouder>_id" in JSON als "id" (besluit Mark 27-10-2026).
+// Voor GE's en relaties is het de IDKolom (rel_id, versie). Gebruik IDKolom alleen voor SQL.
+func (m TypeMeta) JSONID() string {
+	if m.Metatype == MetatypeEntiteit {
+		return "id"
+	}
+	return m.IDKolom
+}
+
 // RelationNames returns the Bun relation field names for child representaties of an entity.
 func (m TypeMeta) RelationNames() []string {
 	if len(m.OnderliggendeGegevenselementen) == 0 {

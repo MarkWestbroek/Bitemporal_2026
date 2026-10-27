@@ -95,7 +95,7 @@ func BouwWijzigingen(in BouwWijzigingenInput) (*BouwWijzigingenResult, *Registre
 	}
 
 	// Stap 3: id-controle. Payload-id mag, maar moet matchen met URL-id.
-	if rawID, ok := entPayload[in.Meta.IDKolom]; ok {
+	if rawID, ok := entPayload[in.Meta.JSONID()]; ok {
 		// Vergelijk als string om type-issues (int vs string) te omzeilen.
 		var anyID any
 		if err := json.Unmarshal(rawID, &anyID); err != nil {
