@@ -1,6 +1,8 @@
 // Objecttypen uit het samengestelde model van cg-test (Fundament, 27-10):
 // aanvraag v2 (partijen met rol) en de specialisatie
-// GehandicaptenparkeerkaartAanvraag (erft Aanvraag). Regelset 0.3.0.
+// GehandicaptenparkeerkaartAanvraag (erft Aanvraag). Regelset 0.4.0. De
+// GPK-tests toetsen het schema zonder envelop (de modelprojectie); de envelop
+// (verzoek, 0.4.0) heeft een eigen test.
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -22,12 +24,47 @@ const maak = (edienstBestand, identifier, wijzig = (e) => e) =>
     sha256Hex,
   });
 const aanvraag = () => maak("aanvraag-edienst.json", "aanvraag");
-const gpk = (wijzig) => maak("gpk-edienst.json", "gehandicaptenparkeerkaartaanvraag", wijzig);
+const zonderEnvelop = (e) => {
+  delete e.artefacten.find((a) => a.identifier === "gehandicaptenparkeerkaartaanvraag").projectie.envelop;
+  return e;
+};
+const gpk = (wijzig = (e) => e) => maak("gpk-edienst.json", "gehandicaptenparkeerkaartaanvraag", (e) => wijzig(zonderEnvelop(e)));
+const gpkMetEnvelop = () => maak("gpk-edienst.json", "gehandicaptenparkeerkaartaanvraag");
+
+test("GPK met envelop verzoek: het schema van het model als data, voor de Verzoek-plugin van GZAC", async () => {
+  const kaal = (await gpk()).artefact;
+  const { artefact, diagnostics } = await gpkMetEnvelop();
+  assert.deepEqual(diagnostics, []);
+  const s = artefact.artefactInhoud.payload.jsonSchema;
+  assert.equal(s.$schema, "https://json-schema.org/draft/2020-12/schema");
+  assert.equal(s.type, "object");
+  assert.deepEqual(s.required, ["type", "data"]);
+  assert.equal(s.additionalProperties, undefined);
+  assert.deepEqual(Object.keys(s.properties), ["type", "bsn", "data", "attachments", "pdf_url"]);
+  assert.equal(s.properties.type.const, "gehandicaptenparkeerkaart");
+  assert.deepEqual(s.properties.attachments.items, { type: "string", format: "uri" });
+  assert.equal(s.properties.pdf_url.format, "uri");
+  // data = het schema zonder envelop, op $schema en title na.
+  const { $schema, title, ...binnen } = kaal.artefactInhoud.payload.jsonSchema;
+  assert.deepEqual(s.properties.data, binnen);
+  assert.equal(s.title, title);
+  // De trace schuift mee onder data; de envelopvelden hebben een eigen spoor.
+  const pad = (a, bron) => a.traceregels.find((t) => t.bronGE === bron)?.doelPad;
+  assert.equal(pad(artefact, "Aanvraag.AanvraagStatus.status"), "/jsonSchema/properties/data/properties/status");
+  assert.equal(pad(kaal, "Aanvraag.AanvraagStatus.status"), "/jsonSchema/properties/status");
+  assert.deepEqual(artefact.traceregels.filter((t) => t.bronGE?.startsWith("envelop:")).map((t) => t.doelPad), [
+    "/jsonSchema/properties/type",
+    "/jsonSchema/properties/bsn",
+    "/jsonSchema/properties/data",
+    "/jsonSchema/properties/attachments",
+    "/jsonSchema/properties/pdf_url",
+  ]);
+});
 
 test("aanvraag v2: partijen als lijst van {partijrol, partij}, zonder meldingen", async () => {
   const { artefact, diagnostics } = await aanvraag();
   assert.deepEqual(diagnostics, []);
-  assert.equal(artefact.artefactHerkomst.regelsetVersie, "0.3.0");
+  assert.equal(artefact.artefactHerkomst.regelsetVersie, "0.4.0");
   assert.equal(artefact.artefactIdentificatie.versienummer, "0.2.0");
   const s = artefact.artefactInhoud.payload.jsonSchema;
   assert.equal(s.properties.aanvrager, undefined);

@@ -9,6 +9,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Inrichting: zaaktype-artefact (Catalogi API)** (27-10, regelset canoniek-naar-zaaktype 0.1.0).
+  Identificatie en onderwerp uit het aanvraagtype (M0), omschrijving uit de e-dienst, de rest
+  letterlijk uit de e-dienst, met toetsen op bijlage ↔ informatieobjecttype, initiator en
+  selectielijst (`zaaktypeArtefact.js`, `maak_inrichtingsartefact.mjs`, docs/TRANSFORMATIES.md §11.7).
+- **Objecttype: verzoek-envelop voor GZAC** (27-10, regelset canoniek-naar-objecttype 0.4.0).
+  `projectie.envelop` legt het schema als `data` in het productaanvraag-formaat (`type`, `bsn`,
+  `attachments`, `pdf_url`) voor de Verzoek-plugin; het formulier koppelt daar vanzelf naartoe
+  (`data`-voorvoegsel, `verzoek_type`, `attachment_urls`, `pdf_url`, `iot_submission_report`).
+  docs/TRANSFORMATIES.md §11.8.
 - **Inhoud-editor: materiële elementen als lijst van voorkomens** (27-10). Een materieel GE of
   materiële relatie (ook enkelvoudig, zoals MeldingStatus) toont zijn voorkomens op volgorde van
   aanvang, met aanvang, einde en het label **nu**; **+ Nieuw voorkomen** legt een opvolger vast

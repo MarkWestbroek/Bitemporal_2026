@@ -16,9 +16,10 @@
 //     [--objecttype <objecttype-artefact.json>]
 //
 // De soort van het artefact in het e-dienstmodel kiest de transformatie:
-// objecttype (JSON Schema) of formulier (Open Formulieren-export). Bij een
-// formulier toetst --objecttype de aansluiting key ↔ property; de keuzelijsten
-// komen uit --referentielijst.
+// objecttype (JSON Schema), formulier (Open Formulieren-export) of zaaktype
+// (Catalogi API, --artefact = zaaktype-identificatie). Bij een formulier
+// toetst --objecttype de aansluiting key ↔ property; de keuzelijsten komen uit
+// --referentielijst, net als het aanvraagtype van een zaaktype.
 //
 // Met --doel vergelijkt het de payload met een bestaand (handgemaakt)
 // artefact (bij een formulier: de export-map, {bestandsnaam: inhoud}): gelijke
@@ -31,6 +32,7 @@ import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { maakObjecttypeArtefact, verschillen } from "../web/vite/src/diagramprofielen/canoniek-uml/objecttypeArtefact.js";
 import { maakFormulierArtefact } from "../web/vite/src/diagramprofielen/canoniek-uml/formulierArtefact.js";
+import { maakZaaktypeArtefact } from "../web/vite/src/diagramprofielen/canoniek-uml/zaaktypeArtefact.js";
 import { jcsHash } from "../web/vite/src/transformatie/jcs.js";
 
 const HIER = path.dirname(fileURLToPath(import.meta.url));
@@ -75,7 +77,9 @@ async function main() {
   const { artefact, diagnostics } =
     soort === "formulier"
       ? await maakFormulierArtefact({ ...invoer, objecttype: a.objecttype ? lees(a.objecttype) : null })
-      : await maakObjecttypeArtefact(invoer);
+      : soort === "zaaktype"
+        ? await maakZaaktypeArtefact(invoer)
+        : await maakObjecttypeArtefact(invoer);
 
   const uitPad = a.uit || path.resolve(process.cwd(), `${a.artefact}.artefact.json`);
   fs.mkdirSync(path.dirname(uitPad), { recursive: true });

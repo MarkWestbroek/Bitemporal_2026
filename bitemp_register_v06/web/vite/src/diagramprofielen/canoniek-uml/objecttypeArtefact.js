@@ -102,7 +102,8 @@ export async function maakObjecttypeArtefact({
     traceregels.push({ bronGE: null, regel: "passthrough (e-dienstmodel)", doelPad: `/jsonSchema/properties/${naam}`, actie: "letterlijk" });
   }
 
-  const payload = { ...zonderToelichting(keuzes.metadata), jsonSchema };
+  const envelop = keuzes.projectie?.envelop;
+  const payload = { ...zonderToelichting(keuzes.metadata), jsonSchema: envelop ? inEnvelop({ jsonSchema, envelop, regelset, traceregels, referentielijsten, diagnostics }) : jsonSchema };
   const payloadHash = await jcsHash(payload, sha256Hex);
 
   const artefact = {
@@ -131,6 +132,32 @@ export async function maakObjecttypeArtefact({
       .map((a) => ({ identifier: a.afhankelijkVan, reden: a.reden })),
   };
   return { artefact, graaf, plan, diagnostics };
+}
+
+/**
+ * Het schema in een envelop van de regelset (0.4.0): het schema wordt de
+ * property `data`, de trace schuift mee, en elk envelopveld krijgt een trace
+ * `envelop:<veld>`.
+ */
+function inEnvelop({ jsonSchema, envelop, regelset, traceregels, referentielijsten, diagnostics }) {
+  const vorm = regelset.enveloppen?.[envelop.soort];
+  if (!vorm) {
+    diagnostics.push({ severity: "error", code: "ART-ENVELOP", message: `Envelop "${envelop.soort}" kent de regelset niet`, sourceId: null, path: null });
+    return jsonSchema;
+  }
+  const codes = (referentielijsten.Aanvraagtype || []).map((i) => i.code);
+  if (codes.length && !codes.includes(envelop.type)) {
+    diagnostics.push({ severity: "warning", code: "ART-ENVELOP", message: `Envelop-type "${envelop.type}" is geen code van de referentielijst Aanvraagtype`, sourceId: envelop.type, path: null });
+  }
+  const { $schema, title, ...data } = jsonSchema;
+  const binnen = `/jsonSchema/properties/${vorm.data}`;
+  for (const t of traceregels) if (t.doelPad) t.doelPad = t.doelPad.replace(/^\/jsonSchema/, binnen);
+  const properties = {};
+  for (const [veld, fragment] of Object.entries(vorm.velden)) {
+    properties[veld] = veld === vorm.data ? data : veld === "type" ? { ...fragment, const: envelop.type } : fragment;
+    traceregels.push({ bronGE: `envelop:${veld}`, regel: `Envelop ${envelop.soort}: ${vorm.naam}`, doelPad: `/jsonSchema/properties/${veld}`, actie: "aangemaakt" });
+  }
+  return { $schema, title, type: "object", properties, required: vorm.required };
 }
 
 /**
