@@ -115,7 +115,9 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
   assert.ok(volgorde.indexOf("pasfoto") > volgorde.indexOf("vast_bijlagen"));
   // Bestanden naar de Documenten API: informatieobjecttype uit de e-dienst, catalogus per omgeving.
   assert.deepEqual(o.catalogue, { domain: "${CATALOGUS_DOMEIN}", rsin: "${CATALOGUS_RSIN}" });
-  assert.equal(o.iotAttachment, "Bijlage");
+  // Exportformaat: snake_case; de import negeert iotAttachment (uitrol 14, FUNDAMENT 27-10).
+  assert.equal(o.iot_attachment, "Bijlage");
+  assert.equal(o.iotAttachment, undefined);
   // Vaste waarden als gebruikersvariabelen met hun beginwaarde.
   // Een lijst krijgt een aanzet met één item (vaste waarden + lege tussenobjecten).
   assert.deepEqual(p["formVariables.json"].map((v) => [v.key, v.initial_value, v.data_type, v.source]), [

@@ -39,6 +39,12 @@
  *   (precies één "is"-GE per Partij). Voor de eigen GE's van de bron blijft
  *   `verplicht` → `required`. Gevolg voor het oude aanvraag-v1-model: het
  *   ingebedde `aanvrager` verliest `required: ["naam"]`.
+ *
+ * 0.3.0: een **optioneel veld mag leeg zijn**. Een string die niet verplicht
+ * is en een patroon, formaat, minimumlengte of enum heeft, krijgt
+ * `anyOf: [{const: ""}, {…eisen…}]`. Open Formulieren (4.0.3, objects_api v2)
+ * laat een leeg of verborgen gekoppeld veld niet weg maar stuurt "" (kenteken
+ * bij soort ≠ bestuurder), en Open Object weigerde dat tegen het patroon.
  */
 
 const BESCHRIJVING = "{eigenschappen.beschrijving}";
@@ -52,11 +58,14 @@ const VELD_DATA = {
   maxLength: "{eigenschappen.maxLength}",
   enum: "{eigenschappen.enumWaarden}",
   description: BESCHRIJVING,
+  // Optioneel = mag ook leeg (""); de schrijver doet dat alleen bij een veld
+  // dat niet verplicht is en eisen heeft (0.3.0, besluit Mark 27-10).
+  leegToegestaan: true,
 };
 
 export const CANONIEK_NAAR_OBJECTTYPE = {
   id: "canoniek-naar-objecttype",
-  versie: "0.2.0",
+  versie: "0.3.0",
   titel: "Canoniek model → objecttype (JSON Schema)",
   bron: "canoniek-uml (V3)",
   doel: "json-schema",

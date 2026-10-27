@@ -182,7 +182,7 @@ const objectsApiBackend = (r) => ({
     // Zonder catalogus en informatieobjecttype registreert Open Formulieren een
     // bestand niet in de Documenten API en levert het "" als url (FUNDAMENT
     // 27-10). De catalogus verschilt per omgeving: plaatshouders.
-    ...(r.iotBijlagen ? { catalogue: { domain: "${CATALOGUS_DOMEIN}", rsin: "${CATALOGUS_RSIN}" }, iotAttachment: r.iotBijlagen } : {}),
+    ...(r.iotBijlagen ? { catalogue: { domain: "${CATALOGUS_DOMEIN}", rsin: "${CATALOGUS_RSIN}" }, iot_attachment: r.iotBijlagen } : {}),
   },
 });
 
