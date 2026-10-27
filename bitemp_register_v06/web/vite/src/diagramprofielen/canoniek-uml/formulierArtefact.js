@@ -30,7 +30,7 @@ import { planNaarOpenforms, OF_RELEASE } from "../../transformatie/openformsSchr
 import { jcsHash } from "../../transformatie/jcs.js";
 import { CANONIEK_NAAR_FORMULIER } from "./formulierRegels.js";
 
-export const SCHRIJVER_ID = "openforms-schrijver@0.1.0";
+export const SCHRIJVER_ID = "openforms-schrijver@0.2.0";
 
 const ACTIE = { gemaakt: "aangemaakt", genegeerd: "weggelaten", "geen-regel": "geen-regel", overgeslagen: "overgeslagen", opgegaan: "opgegaan", gezet: "gezet" };
 
@@ -108,8 +108,13 @@ export async function maakFormulierArtefact({
   // De registratie hoort ook in de trace: per component de mapping, per vaste
   // waarde de variabele, en het pad voor de BSN uit de inlog.
   for (const r of registratie ? aansluiting.filter((a) => a.objectPad) : []) {
-    const sleutel = r.bron === "component" ? `mapping:${r.key}` : r.bron === "vasteWaarde" ? `vast:${r.variabele}` : "auth";
-    const regel = { component: "Registratie: component → objecttype", vasteWaarde: "Registratie: vaste waarde (e-dienstmodel)", uitInlog: "Registratie: waarde uit de inlog (e-dienstmodel)" }[r.bron];
+    const sleutel = { component: `mapping:${r.key}`, vasteWaarde: `vast:${r.variabele}`, uitOpenFormulieren: `of:${r.key}`, uitInlog: "auth" }[r.bron];
+    const regel = {
+      component: "Registratie: component → objecttype",
+      vasteWaarde: "Registratie: vaste waarde (e-dienstmodel)",
+      uitOpenFormulieren: "Registratie: variabele van Open Formulieren (e-dienstmodel)",
+      uitInlog: "Registratie: waarde uit de inlog (e-dienstmodel)",
+    }[r.bron];
     if (geschreven.paden.has(sleutel)) traceregels.push({ bronGE: r.modelknoop, regel, doelPad: geschreven.paden.get(sleutel), actie: "aangemaakt" });
   }
 
@@ -157,6 +162,8 @@ function sluitAan({ graaf, keuzes, objecttype, diagnostics }) {
     ...graaf.knopen.map((k) => ({ bron: "component", key: k.eigenschappen.key, modelknoop: k.id })),
     ...Object.entries(keuzes.registratie?.vasteWaarden || {}).map(([pad, waarde]) => ({ bron: "vasteWaarde", key: null, modelknoop: pad, waarde })),
     ...Object.keys(keuzes.registratie?.uitInlog || {}).map((pad) => ({ bron: "uitInlog", key: null, modelknoop: pad })),
+    // Waarden die Open Formulieren zelf kent: registratievariabele (public_reference) of statische variabele (now).
+    ...Object.entries(keuzes.registratie?.uitOpenFormulieren || {}).map(([pad, variabele]) => ({ bron: "uitOpenFormulieren", key: variabele, modelknoop: pad })),
   ].map((r) => {
     const objecttypePad = naarPad.get(r.modelknoop) ?? null;
     const objectPad = objecttypePad ? objectPadUit(objecttypePad) : null;
@@ -166,7 +173,7 @@ function sluitAan({ graaf, keuzes, objecttype, diagnostics }) {
     diagnostics.push({
       severity: "warning",
       code: "FRM-AANSLUITING",
-      message: `${r.key ? `Component "${r.key}"` : `Een ${r.bron === "uitInlog" ? "waarde uit de inlog" : "vaste waarde"}`} (${r.modelknoop}) heeft geen property in ${naam}`,
+      message: `${r.key ? `Component "${r.key}"` : `Een ${{ uitInlog: "waarde uit de inlog", uitOpenFormulieren: "variabele van Open Formulieren", vasteWaarde: "vaste waarde" }[r.bron]}`} (${r.modelknoop}) heeft geen property in ${naam}`,
       sourceId: r.modelknoop,
       path: null,
     });
@@ -200,6 +207,7 @@ function registratieUit(aansluiting, objecttype, diagnostics) {
     objecttype: objecttype.artefactIdentificatie?.identifier,
     mapping: metPad.filter((a) => a.bron === "component").map((a) => ({ variable_key: a.key, target_path: a.objectPad })),
     vast: metPad.filter((a) => a.bron === "vasteWaarde").map((a) => ({ key: a.variabele, waarde: a.waarde, target_path: a.objectPad })),
+    uitOF: metPad.filter((a) => a.bron === "uitOpenFormulieren").map((a) => ({ variable_key: a.key, target_path: a.objectPad })),
     authPad: inlog[0]?.objectPad || null,
   };
 }
