@@ -238,7 +238,7 @@ func laadOpgeslagen(ctx context.Context, filter map[string]interface{}, nu time.
 // `nu` ook materieel geldig is.
 func (c *opgeslagenContract) lees(m map[string]interface{}, nu time.Time) *OpgeslagenDocument {
 	d := &OpgeslagenDocument{}
-	if id, ok := m[c.ent.IDKolom].(float64); ok {
+	if id, ok := m[c.ent.JSONID()].(float64); ok {
 		d.ID = int(id)
 	}
 	// De entiteit zelf: levensduur van de definitie als geheel. Aanvang/einde van de

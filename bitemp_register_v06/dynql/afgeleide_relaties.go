@@ -93,7 +93,7 @@ func voegAfgeleideRelatiesToe(ctx context.Context, p graphql.ResolveParams, maps
 	omg := afleiding.NieuweOmgeving(handlers.NieuweAfleidingLader(peil))
 	var bronIDs []int
 	for _, m := range maps {
-		id, ok := m[meta.IDKolom].(float64)
+		id, ok := m[meta.JSONID()].(float64)
 		if !ok {
 			continue
 		}
@@ -143,7 +143,7 @@ func voegAfgeleideRelatiesToe(ctx context.Context, p graphql.ResolveParams, maps
 	}
 
 	for _, m := range maps {
-		id, ok := m[meta.IDKolom].(float64)
+		id, ok := m[meta.JSONID()].(float64)
 		if !ok {
 			continue
 		}

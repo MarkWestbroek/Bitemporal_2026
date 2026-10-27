@@ -76,13 +76,17 @@ func vindPlaatshouders(rawWijzigingen json.RawMessage) (*Plaatshouders, error) {
 					}
 					meta, ok := model.MetaRegistry.GetByVeldnaamMetPayload(veldnaam, keys)
 					if ok && meta.Metatype == model.MetatypeEntiteit {
-						if naam, isP := isPlaatshouder(payloadMap[meta.IDKolom]); isP {
-							if bestaand, dubbel := p.Typenaam[naam]; dubbel && bestaand != meta.Typenaam {
-								return nil, fmt.Errorf("plaatshouder %s is voor twee entiteittypen gedefinieerd (%s en %s)", naam, bestaand, meta.Typenaam)
+						if naam, isP := isPlaatshouder(payloadMap[meta.JSONID()]); isP {
+							// Een subtype (erft) deelt zijn id met de ouder: de plaatshouder hoort bij de
+							// wortel-entiteit (daar wordt het id toegekend, uit háár tabel), en ouder en
+							// subtype mogen dezelfde plaatshouder dragen (27-10-2026).
+							typenaam := wortelEntiteitTypenaam(meta)
+							if bestaand, dubbel := p.Typenaam[naam]; dubbel && bestaand != typenaam {
+								return nil, fmt.Errorf("plaatshouder %s is voor twee entiteittypen gedefinieerd (%s en %s)", naam, bestaand, typenaam)
 							}
 							if _, dubbel := p.Typenaam[naam]; !dubbel {
 								p.Volgorde = append(p.Volgorde, naam)
-								p.Typenaam[naam] = meta.Typenaam
+								p.Typenaam[naam] = typenaam
 							}
 						}
 					}
@@ -210,4 +214,16 @@ func verwerkPlaatshouders(ctx context.Context, tx bun.Tx, req *model.RegistreerR
 	req.Wijzigingen = genormaliseerd
 	req.RuweWijzigingen = nil
 	return ids, nil
+}
+
+// wortelEntiteitTypenaam: de bovenste ouder in een erft-keten (of het type zelf).
+func wortelEntiteitTypenaam(meta model.TypeMeta) string {
+	for diepte := 0; diepte < 10 && meta.ParentTypenaam != ""; diepte++ {
+		ouder, ok := model.MetaRegistry.GetTypeMeta(meta.ParentTypenaam)
+		if !ok {
+			break
+		}
+		meta = ouder
+	}
+	return meta.Typenaam
 }

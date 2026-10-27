@@ -291,7 +291,7 @@ func valideerAanmelding(wijzigingen []aanmeldingWijziging, doeltype string, toeg
 				return nil, "", fmt.Errorf("wijziging[%d]: onbekende representatie %q", i, veldnaam)
 			}
 			if meta.Metatype == model.MetatypeEntiteit {
-				naam, isP := isPlaatshouder(payload[meta.IDKolom])
+				naam, isP := isPlaatshouder(payload[meta.JSONID()])
 				if !isP {
 					return nil, "", fmt.Errorf("wijziging[%d]: een entiteit-id moet een plaatshouder ($nieuw.x) zijn; bestaande records zijn niet te wijzigen via het formulier", i)
 				}

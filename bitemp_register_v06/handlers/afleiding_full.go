@@ -198,7 +198,7 @@ func mapsPerID(entities any, meta model.TypeMeta) (map[int]map[string]any, error
 	}
 	uit := make(map[int]map[string]any, len(lijst))
 	for _, m := range lijst {
-		if id, ok := m[meta.IDKolom].(float64); ok {
+		if id, ok := m[meta.JSONID()].(float64); ok {
 			uit[int(id)] = m
 		}
 	}
@@ -227,7 +227,7 @@ func voegAfgeleideRelatiesToe(c *gin.Context, maps []map[string]any, meta model.
 	omg := afleiding.NieuweOmgeving(NieuweAfleidingLader(peil))
 	var bronIDs []int
 	for _, m := range maps {
-		id, ok := m[meta.IDKolom].(float64)
+		id, ok := m[meta.JSONID()].(float64)
 		if !ok {
 			continue
 		}
@@ -245,7 +245,7 @@ func voegAfgeleideRelatiesToe(c *gin.Context, maps []map[string]any, meta model.
 		return
 	}
 	for _, m := range maps {
-		id, ok := m[meta.IDKolom].(float64)
+		id, ok := m[meta.JSONID()].(float64)
 		if !ok {
 			continue
 		}
