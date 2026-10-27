@@ -46,7 +46,7 @@ test("GPK: export met drie stappen, zonder meldingen, aansluitend op het objectt
   assert.match(p["forms.json"][0].uuid, UUID);
   // Elke component, vaste waarde en inlogwaarde heeft een property in het objecttype.
   assert.ok(aansluiting.length === 15 && aansluiting.every((r) => r.objecttypePad));
-  assert.deepEqual(artefact.afhankelijkheden, [{ identifier: "gehandicaptenparkeerkaartaanvraag", reden: "het formulier registreert in het objecttype" }]);
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => a.identifier), ["gehandicaptenparkeerkaartaanvraag", "GPK"]);
 });
 
 test("GPK: de vorm volgt uit de inhoud van het model", async () => {
@@ -97,29 +97,39 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
   assert.equal(o.objects_api_group, "${OBJECTS_API_GROUP}");
   assert.equal(o.version, 2);
   assert.equal(o.update_existing_object, false);
+  // Het objecttype legt het schema in de verzoek-envelop (objecttype-regelset
+  // 0.4.0): elk modelpad begint met "data"; de variabelenamen blijven gelijk.
   // De BSN uit de inlog in de eerste partij; een lijst wordt het eerste item.
-  assert.deepEqual(o.auth_attribute_path, ["partijen", 0, "partij", "bsn"]);
-  const naar = Object.fromEntries(o.variables_mapping.map((m) => [m.variable_key, m.target_path]));
-  assert.deepEqual(naar.kenteken, ["kenteken"]);
-  assert.deepEqual(naar.pasfoto, ["bijlagen", 0, "documentUrl"]);
+  assert.deepEqual(o.auth_attribute_path, ["data", "partijen", 0, "partij", "bsn"]);
+  const naar = {};
+  for (const m of o.variables_mapping) (naar[m.variable_key] ??= []).push(m.target_path);
+  assert.deepEqual(naar.kenteken, [["data", "kenteken"]]);
+  assert.deepEqual(naar.pasfoto, [["data", "bijlagen", 0, "documentUrl"]]);
   // Aanvraagnummer en indientijdstip uit Open Formulieren zelf (besluit Mark 27-10).
-  assert.deepEqual(naar.public_reference, ["aanvraagnummer"]);
+  assert.deepEqual(naar.public_reference, [["data", "aanvraagnummer"]]);
   // Indientijdstip: eigen variabele, gevuld bij afronden (weg c, besluit Mark 27-10), niet `now` bij registratie.
-  assert.deepEqual(naar.afronden_ingediendOp, ["ingediendOp"]);
+  assert.deepEqual(naar.afronden_ingediendOp, [["data", "ingediendOp"]]);
   assert.equal(naar.now, undefined);
-  assert.equal(o.variables_mapping.length, 15);
+  // De envelop: type als vaste waarde, het BSN ook bovenin, bijlagen en rapport als url's.
+  assert.deepEqual(naar.verzoek_type, [["type"]]);
+  assert.deepEqual(naar.auth_bsn, [["data", "partijen", 0, "partij", "bsn"], ["bsn"]]);
+  assert.deepEqual(naar.attachment_urls, [["attachments"]]);
+  assert.deepEqual(naar.pdf_url, [["pdf_url"]]);
+  assert.equal(o.variables_mapping.length, 19);
   // Volgorde telt (glom, FUNDAMENT 27-10): eerst de lijst-aanzetten, dan het BSN
   // expliciet (auth_attribute_path schrijft niets), dan wat in de items schrijft.
   const volgorde = o.variables_mapping.map((m) => m.variable_key);
-  assert.deepEqual(volgorde.slice(0, 5), ["vast_bijlagen", "vast_partijen", "vast_aanvraagtype", "vast_status", "auth_bsn"]);
-  assert.deepEqual(naar.vast_partijen, ["partijen"]);
-  assert.deepEqual(naar.auth_bsn, ["partijen", 0, "partij", "bsn"]);
+  assert.deepEqual(volgorde.slice(0, 6), ["vast_bijlagen", "vast_partijen", "vast_aanvraagtype", "vast_status", "verzoek_type", "auth_bsn"]);
+  assert.deepEqual(volgorde.slice(-3), ["auth_bsn", "attachment_urls", "pdf_url"]);
+  assert.deepEqual(naar.vast_partijen, [["data", "partijen"]]);
   assert.ok(volgorde.indexOf("pasfoto") > volgorde.indexOf("vast_bijlagen"));
   // Bestanden naar de Documenten API: informatieobjecttype uit de e-dienst, catalogus per omgeving.
   assert.deepEqual(o.catalogue, { domain: "${CATALOGUS_DOMEIN}", rsin: "${CATALOGUS_RSIN}" });
   // Exportformaat: snake_case; de import negeert iotAttachment (uitrol 14, FUNDAMENT 27-10).
   assert.equal(o.iot_attachment, "Bijlage");
   assert.equal(o.iotAttachment, undefined);
+  // Het inzendingsrapport als document, anders blijft pdf_url leeg.
+  assert.equal(o.iot_submission_report, "Aanvraagformulier");
   // Vaste waarden als gebruikersvariabelen met hun beginwaarde.
   // Een lijst krijgt een aanzet met één item (vaste waarden + lege tussenobjecten).
   assert.deepEqual(p["formVariables.json"].map((v) => [v.key, v.initial_value, v.data_type, v.source]), [
@@ -127,6 +137,7 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
     ["vast_partijen", [{ partijrol: "aanvrager", partij: {} }], "array", "user_defined"],
     ["vast_aanvraagtype", "gehandicaptenparkeerkaart", "string", "user_defined"],
     ["vast_status", "ingediend", "string", "user_defined"],
+    ["verzoek_type", "gehandicaptenparkeerkaart", "string", "user_defined"],
     ["afronden_ingediendOp", null, "datetime", "user_defined"],
   ]);
   // De logica-regel: trigger op het verplichte component van de laatste stap
@@ -159,12 +170,22 @@ test("GPK: trace van modelknoop naar component", async () => {
   assert.deepEqual(bsn, {
     bronGE: "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn",
     regel: "Registratie: waarde uit de inlog (e-dienstmodel)",
-    doelPad: "/forms.json/0/registration_backends/0/options/variables_mapping/4",
+    doelPad: "/forms.json/0/registration_backends/0/options/variables_mapping/5",
     actie: "aangemaakt",
   });
   const nummer = artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagIdentificatie.aanvraagnummer");
   assert.equal(nummer.regel, "Registratie: variabele van Open Formulieren (e-dienstmodel)");
-  assert.equal(nummer.doelPad, "/forms.json/0/registration_backends/0/options/variables_mapping/13");
+  assert.equal(nummer.doelPad, "/forms.json/0/registration_backends/0/options/variables_mapping/14");
+  // De envelop in de trace.
+  assert.deepEqual(
+    artefact.traceregels.filter((t) => t.bronGE.startsWith("envelop:")).map((t) => [t.bronGE, t.doelPad]),
+    [
+      ["envelop:type", "/formVariables.json/4"],
+      ["envelop:bsn", "/forms.json/0/registration_backends/0/options/variables_mapping/16"],
+      ["envelop:attachments", "/forms.json/0/registration_backends/0/options/variables_mapping/17"],
+      ["envelop:pdf_url", "/forms.json/0/registration_backends/0/options/variables_mapping/18"],
+    ]
+  );
 });
 
 test("deterministisch: twee keer genereren geeft dezelfde hash", async () => {

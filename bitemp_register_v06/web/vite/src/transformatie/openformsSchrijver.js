@@ -137,6 +137,8 @@ function basisComponent(el) {
  * @property {string} [authVariabele]                     - statische variabele met het BSN (auth_bsn)
  * @property {{key: string, waarde: string, target_path: (string|number)[]}[]} [bijAfronden] - waarde bij afronden (logica-regel)
  * @property {string|null} [iotBijlagen]                 - informatieobjecttype (omschrijving) voor bestanden
+ * @property {{veld: string, variable_key: string, target_path: (string|number)[]}[]} [envelop] - envelop van het objecttype; `type` staat ook onder vast en komt niet nog eens in de mapping
+ * @property {string|null} [iotRapport]                  - informatieobjecttype (omschrijving) voor het inzendingsrapport
  */
 
 /** Gebruikersvariabele voor een vaste waarde, zoals Open Formulieren hem exporteert. */
@@ -156,6 +158,9 @@ const vasteVariabele = (formUrl, v) => ({
   is_sensitive_data: false,
   initial_value: v.waarde,
 });
+
+/** De envelopvelden die de mapping vult; het type is al een vaste waarde. */
+const envelopMapping = (r) => (r.envelop || []).filter((e) => e.veld !== "type");
 
 /** De registratie-backend naar Open Object (Objects API, versie 2). */
 const objectsApiBackend = (r) => ({
@@ -180,11 +185,16 @@ const objectsApiBackend = (r) => ({
       ...r.mapping,
       ...(r.uitOF || []),
       ...(r.bijAfronden || []).map((b) => ({ variable_key: b.key, target_path: b.target_path })),
+      // Envelop (verzoek): BSN, document-url's van de bijlagen, rapport-url.
+      ...envelopMapping(r).map((e) => ({ variable_key: e.variable_key, target_path: e.target_path })),
     ],
     // Zonder catalogus en informatieobjecttype registreert Open Formulieren een
     // bestand niet in de Documenten API en levert het "" als url (FUNDAMENT
     // 27-10). De catalogus verschilt per omgeving: plaatshouders.
-    ...(r.iotBijlagen ? { catalogue: { domain: "${CATALOGUS_DOMEIN}", rsin: "${CATALOGUS_RSIN}" }, iot_attachment: r.iotBijlagen } : {}),
+    ...(r.iotBijlagen || r.iotRapport ? { catalogue: { domain: "${CATALOGUS_DOMEIN}", rsin: "${CATALOGUS_RSIN}" } } : {}),
+    ...(r.iotBijlagen ? { iot_attachment: r.iotBijlagen } : {}),
+    // Zonder informatieobjecttype voor het rapport blijft pdf_url leeg.
+    ...(r.iotRapport ? { iot_submission_report: r.iotRapport } : {}),
   },
 });
 
@@ -277,6 +287,8 @@ export function planNaarOpenforms(plan, { uuidVoor, ofRelease = OF_RELEASE, regi
     (registratie.uitOF || []).forEach((m, i) => paden.set(`of:${m.variable_key}`, mappingPad(na + i)));
     const naOF = na + (registratie.uitOF || []).length;
     (registratie.bijAfronden || []).forEach((b, i) => paden.set(`afronden:${b.key}`, mappingPad(naOF + i)));
+    const naAfronden = naOF + (registratie.bijAfronden || []).length;
+    envelopMapping(registratie).forEach((e, i) => paden.set(`envelop:${e.veld}`, mappingPad(naAfronden + i)));
   }
 
   // Bij afronden: per waarde een logica-regel. 4.0.3 kent geen trigger_from_step;

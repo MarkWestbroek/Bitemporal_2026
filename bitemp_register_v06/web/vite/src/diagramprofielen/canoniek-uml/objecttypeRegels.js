@@ -45,6 +45,16 @@
  * `anyOf: [{const: ""}, {…eisen…}]`. Open Formulieren (4.0.3, objects_api v2)
  * laat een leeg of verborgen gekoppeld veld niet weg maar stuurt "" (kenteken
  * bij soort ≠ bestuurder), en Open Object weigerde dat tegen het patroon.
+ *
+ * 0.4.0 (27-10): **enveloppen**. Een e-dienst kan het schema in een envelop
+ * leggen (`projectie.envelop: {soort, type}`); het schema van 0.3.0 wordt dan
+ * ongewijzigd de property `data`. De vorm van een envelop is doelformaat, geen
+ * keuze van de e-dienst, en staat hier. `verzoek` is het productaanvraag-
+ * formaat dat de Verzoek-plugin van GZAC oppakt (VerzoekPluginEventListener):
+ * `type` (het aanvraagtype; GZAC vergelijkt hoofdletterongevoelig), `bsn` (de
+ * initiator van de zaak), `data`, `attachments` (document-url's, gekoppeld aan
+ * de zaak) en `pdf_url` (het inzendingsrapport). Besluit Mark 27-10: "We
+ * willen in dit gebied nu niet zelf bouwen."
  */
 
 const BESCHRIJVING = "{eigenschappen.beschrijving}";
@@ -63,12 +73,34 @@ const VELD_DATA = {
   leegToegestaan: true,
 };
 
+/**
+ * Enveloppen: per veld het schemafragment; `type` krijgt `const` uit de
+ * e-dienst, `data` is het schema van het model. Elk veld krijgt een trace
+ * `envelop:<veld>`, zodat het formulier weet waar het type, het BSN en de
+ * bijlagen landen.
+ */
+const ENVELOPPEN = {
+  verzoek: {
+    naam: "Verzoek (productaanvraag, Verzoek-plugin van GZAC)",
+    data: "data",
+    velden: {
+      type: { type: "string", description: "Soort verzoek: het aanvraagtype (GZAC kiest hiermee de verzoekconfiguratie)" },
+      bsn: { type: "string", description: "BSN van de ingelogde aanvrager (initiator van de zaak)" },
+      data: null,
+      attachments: { type: "array", description: "Bijlagen als document-url's (Documenten API)", items: { type: "string", format: "uri" } },
+      pdf_url: { type: "string", format: "uri", description: "Inzendingsrapport (PDF) als document-url" },
+    },
+    required: ["type", "data"],
+  },
+};
+
 export const CANONIEK_NAAR_OBJECTTYPE = {
   id: "canoniek-naar-objecttype",
-  versie: "0.3.0",
+  versie: "0.4.0",
   titel: "Canoniek model → objecttype (JSON Schema)",
   bron: "canoniek-uml (V3)",
   doel: "json-schema",
+  enveloppen: ENVELOPPEN,
   regels: [
     // ── De bron-entiteit wordt het schema ──
     {

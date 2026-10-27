@@ -34,7 +34,7 @@ test("artefact in de vorm van het inrichting-register, zonder meldingen", async 
   assert.match(artefact.artefactInhoud.payloadHash, /^[0-9a-f]{64}$/);
   assert.deepEqual(artefact.artefactHerkomst, {
     regelsetId: "canoniek-naar-objecttype",
-    regelsetVersie: "0.3.0",
+    regelsetVersie: "0.4.0",
     // Dezelfde hash als in het e-dienstmodel: JCS over het model-object.
     bronmodelHash: "5b5af637b7c7fac80e8ee9b947252b45f3f78cbc6ee1ecc61aa8d50f74ae4971",
     bronmodelVersie: "voorzet 2026-10-25 v3",

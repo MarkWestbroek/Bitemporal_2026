@@ -96,7 +96,7 @@ export async function maakFormulierArtefact({
   for (const deel of delen) uuids.set(deel, alsUuid(await sha256Hex(`omnium-inrichting:formulier:${keuzes.identifier}:${deel}`)));
   // Eerst de aansluiting: daaruit volgt de registratie naar het objecttype.
   const aansluiting = sluitAan({ graaf, keuzes, objecttype, diagnostics });
-  const registratie = objecttype ? registratieUit(aansluiting, objecttype, diagnostics, keuzes.registratie?.bijlagen) : null;
+  const registratie = objecttype ? registratieUit(aansluiting, objecttype, diagnostics, keuzes.registratie) : null;
   if (!objecttype) diagnostics.push({ severity: "info", code: "FRM-GEEN-REGISTRATIE", message: "Geen objecttype meegegeven: het formulier registreert nergens (registration_backends leeg)", sourceId: null, path: null });
 
   const geschreven = planNaarOpenforms(plan, { uuidVoor: (deel) => uuids.get(deel), ofRelease: keuzes.doelVersie || OF_RELEASE, registratie });
@@ -121,6 +121,10 @@ export async function maakFormulierArtefact({
       uitInlog: "Registratie: waarde uit de inlog (e-dienstmodel)",
     }[r.bron];
     if (geschreven.paden.has(sleutel)) traceregels.push({ bronGE: r.modelknoop, regel, doelPad: geschreven.paden.get(sleutel), actie: "aangemaakt" });
+  }
+  for (const e of registratie?.envelop || []) {
+    const pad = geschreven.paden.get(e.veld === "type" ? `vast:${e.variable_key}` : `envelop:${e.veld}`);
+    if (pad) traceregels.push({ bronGE: `envelop:${e.veld}`, regel: "Registratie: envelop van het objecttype", doelPad: pad, actie: "aangemaakt" });
   }
 
   const payload = geschreven.bestanden;
@@ -159,6 +163,9 @@ export async function maakFormulierArtefact({
 function sluitAan({ graaf, keuzes, objecttype, diagnostics }) {
   if (!objecttype) return [];
   const naarPad = new Map((objecttype.traceregels || []).filter((t) => t.bronGE && t.actie === "aangemaakt").map((t) => [t.bronGE, t.doelPad]));
+  // Ligt het schema in een envelop (objecttype-regelset 0.4.0), dan begint elk
+  // pad met ["data"]; de variabelenamen (vast_partijen) blijven zonder.
+  const voorvoegsel = naarPad.has("envelop:data") ? objectPadUit(naarPad.get("envelop:data")).length : 0;
   const naam = objecttype.artefactIdentificatie?.identifier || "het objecttype";
   if (keuzes.registratie?.objecttype && keuzes.registratie.objecttype !== naam) {
     diagnostics.push({ severity: "warning", code: "FRM-OBJECTTYPE", message: `Het formulier registreert in "${keuzes.registratie.objecttype}", maar het meegegeven objecttype is "${naam}"`, sourceId: null, path: null });
@@ -174,7 +181,7 @@ function sluitAan({ graaf, keuzes, objecttype, diagnostics }) {
   ].map((r) => {
     const objecttypePad = naarPad.get(r.modelknoop) ?? null;
     const objectPad = objecttypePad ? objectPadUit(objecttypePad) : null;
-    return { ...r, objecttypePad, objectPad, variabele: r.bron === "vasteWaarde" && objectPad ? `vast_${objectPad.join("_")}` : null };
+    return { ...r, objecttypePad, objectPad, voorvoegsel, variabele: r.bron === "vasteWaarde" && objectPad ? `vast_${objectPad.slice(voorvoegsel).join("_")}` : null };
   });
   for (const r of regels.filter((r) => !r.objecttypePad)) {
     diagnostics.push({
@@ -228,7 +235,7 @@ function lijstAanzetten(metPad, diagnostics) {
       diagnostics.push({ severity: "warning", code: "FRM-LIJST", message: `Lijst in een lijst (${a.objectPad.join(".")}): alleen de buitenste lijst krijgt een aanzet`, sourceId: a.modelknoop, path: null });
     }
     const pad = a.objectPad.slice(0, i);
-    const sleutel = `vast_${pad.join("_")}`;
+    const sleutel = `vast_${pad.slice(a.voorvoegsel || 0).join("_")}`;
     if (!perLijst.has(sleutel)) perLijst.set(sleutel, { key: sleutel, waarde: [{}], target_path: pad });
     let doel = perLijst.get(sleutel).waarde[0];
     for (const d of rest.slice(0, -1)) doel = doel[d] ??= {};
@@ -242,11 +249,14 @@ function lijstAanzetten(metPad, diagnostics) {
 }
 
 /** De registratie voor de schrijver: mapping per component, vaste waarden, BSN-pad. */
-function registratieUit(aansluiting, objecttype, diagnostics, bijlagen) {
+function registratieUit(aansluiting, objecttype, diagnostics, keuzes) {
+  const bijlagen = keuzes?.bijlagen;
   const metPad = aansluiting.filter((a) => a.objectPad);
   const inlog = metPad.filter((a) => a.bron === "uitInlog");
   if (inlog.length > 1) diagnostics.push({ severity: "warning", code: "FRM-INLOG", message: "Meer dan één waarde uit de inlog; Open Formulieren kent één auth_attribute_path, alleen de eerste telt", sourceId: inlog[1].modelknoop, path: null });
   const { aanzetten, binnenLijst } = lijstAanzetten(metPad, diagnostics);
+  const authVariabele = (String(inlog[0]?.inlogVariabele || "").match(/^auth_\w+/) || ["auth_bsn"])[0];
+  const envelop = envelopUit(objecttype, keuzes, authVariabele, diagnostics);
   return {
     objecttype: objecttype.artefactIdentificatie?.identifier,
     mapping: metPad.filter((a) => a.bron === "component").map((a) => ({ variable_key: a.key, target_path: a.objectPad })),
@@ -254,13 +264,48 @@ function registratieUit(aansluiting, objecttype, diagnostics, bijlagen) {
     vast: [
       ...aanzetten,
       ...metPad.filter((a) => a.bron === "vasteWaarde" && !binnenLijst.has(a)).map((a) => ({ key: a.variabele, waarde: a.waarde, target_path: a.objectPad })),
+      ...envelop.filter((e) => e.veld === "type").map((e) => ({ key: e.variable_key, waarde: e.waarde, target_path: e.target_path })),
     ],
     // De statische variabele met het BSN; de e-dienst noemt hem ("auth_bsn (DigiD)").
-    authVariabele: (String(inlog[0]?.inlogVariabele || "").match(/^auth_\w+/) || ["auth_bsn"])[0],
+    authVariabele,
     uitOF: metPad.filter((a) => a.bron === "uitOpenFormulieren").map((a) => ({ variable_key: a.key, target_path: a.objectPad })),
     bijAfronden: metPad.filter((a) => a.bron === "bijAfronden").map((a) => ({ key: a.key, waarde: a.waarde, target_path: a.objectPad })),
     authPad: inlog[0]?.objectPad || null,
     // Bestanden naar de Documenten API onder dit informatieobjecttype (omschrijving).
     iotBijlagen: bijlagen?.informatieobjecttype || null,
+    // De envelop (type staat ook onder vast) en het inzendingsrapport.
+    envelop,
+    iotRapport: envelop.some((e) => e.veld === "pdf_url") ? keuzes.rapport.informatieobjecttype : null,
   };
+}
+
+/**
+ * De velden van een envelop (objecttype-regelset 0.4.0, trace `envelop:<veld>`)
+ * en waar Open Formulieren ze vandaan haalt: het type als vaste waarde (de
+ * `const` uit het schema), het BSN uit de inlog, de bijlagen als
+ * registratievariabele `attachment_urls` en het inzendingsrapport als `pdf_url`.
+ * Dat laatste vult Open Formulieren alleen als het rapport een
+ * informatieobjecttype heeft (`registratie.rapport` in de e-dienst).
+ */
+function envelopUit(objecttype, keuzes, authVariabele, diagnostics) {
+  const paden = new Map((objecttype.traceregels || []).filter((t) => String(t.bronGE).startsWith("envelop:")).map((t) => [t.bronGE.slice(8), objectPadUit(t.doelPad)]));
+  const bron = {
+    type: { variable_key: "verzoek_type", waarde: objecttype.artefactInhoud?.payload?.jsonSchema?.properties?.type?.const },
+    bsn: { variable_key: authVariabele },
+    attachments: { variable_key: "attachment_urls" },
+    pdf_url: { variable_key: "pdf_url" },
+  };
+  const uit = [];
+  for (const [veld, padSegmenten] of paden) {
+    if (!(veld in bron)) continue;
+    if (veld === "pdf_url" && !keuzes?.rapport?.informatieobjecttype) {
+      diagnostics.push({ severity: "warning", code: "FRM-ENVELOP", message: "Envelopveld pdf_url zonder registratie.rapport.informatieobjecttype: Open Formulieren levert dan geen rapport-url", sourceId: "envelop:pdf_url", path: null });
+      continue;
+    }
+    if (veld === "attachments" && !keuzes?.bijlagen?.informatieobjecttype) {
+      diagnostics.push({ severity: "warning", code: "FRM-ENVELOP", message: "Envelopveld attachments zonder registratie.bijlagen.informatieobjecttype: de bijlagen krijgen geen document-url", sourceId: "envelop:attachments", path: null });
+    }
+    uit.push({ veld, ...bron[veld], target_path: padSegmenten });
+  }
+  return uit;
 }

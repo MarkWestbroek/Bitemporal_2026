@@ -903,11 +903,101 @@ boven 2,5 MB (`RequestDataTooBig`), en het bestand gaat base64 in de body.
 
 **Nog niet:** formulierlogica anders dan tonen-als, machtigen en eHerkenning.
 
-### 11.7 Vervolg
+### 11.7 Zaaktype: aanvraagtype + e-dienst → Catalogi API (2026-10-27)
 
-1. Formulier: `documentUrl` van de pasfoto (§11.6); machtigen (gemachtigde + subject) en eHerkenning.
-2. Zaaktype: nog grotendeels letterlijk; het datamodel levert alleen roltype
-   Aanvrager en informatieobjecttype Bijlage.
+Op verzoek van FUNDAMENT (Mark akkoord 27-10) het derde artefact van de GPK:
+soort `zaaktype`, formaat `catalogi-api-json`, identifier = de
+zaaktype-identificatie (`GPK`). De payload heeft de vorm van
+`catalogi/<naam>.json` in de Fundament-repo, die de adapter
+`scripts/openzaak-catalogus.ps1` via de Catalogi API aanmaakt en publiceert:
+`{catalogus, informatieobjecttypen, zaaktype}`. Selectielijst-verwijzingen zijn
+namen (procestype `{jaar, nummer}`, resultaat als klasse `11.1.1`); de adapter
+zoekt de url's op.
+
+**Weinig model, veel e-dienst.** Het canonieke model kent de inhoud van een
+zaaktype niet: statustypen, roltypen, resultaattypen, selectielijst en termijnen
+zijn procesinrichting. Die staan letterlijk in de e-dienst. De regelset
+`canoniek-naar-zaaktype` 0.1.0 (`zaaktypeRegels.js`) leidt alleen af wat model
+en register al weten:
+
+| Doel | Bron | Wanneer |
+|---|---|---|
+| `zaaktype.identificatie` | aanvraagtype (M0) `zaaktypeIdentificatie` | altijd; een afwijking in de e-dienst of in de identifier is een fout |
+| `zaaktype.onderwerp` | aanvraagtype (M0) `omschrijving` | als de e-dienst het niet zet |
+| `zaaktype.omschrijving` | naam van de e-dienst | als de e-dienst het niet zet |
+| `statustypevolgnummer`, `volgnummer` | volgorde in de e-dienst | als het er niet staat |
+
+Het aanvraagtype komt uit het register (`--referentielijst
+Aanvraagtype=<items.json>`), anders uit `referentielijsten.Aanvraagtype.nieuwItem`
+van de e-dienst (melding `ZTT-NIEUW-ITEM`).
+
+**Toetsen** (`zaaktypeArtefact.js`): de bijlage die een formulier van de e-dienst
+vastlegt (`registratie.bijlagen.informatieobjecttype`) is een
+informatieobjecttype van het zaaktype (`ZTT-BIJLAGE`), elk informatieobjecttype
+van het zaaktype staat in de catalogus (`ZTT-IOT`), er is een roltype
+`initiator` (`ZTT-INITIATOR`), elk resultaattype heeft een selectielijstklasse
+en er is een procestype (`ZTT-SELECTIELIJST`), en het aanvraagtype dat een
+formulier als vaste waarde zet is dat van het zaaktype (`ZTT-AANVRAAGTYPE`).
+
+**Afhankelijkheid.** Het formulier hangt nu ook af van het zaaktype (bijlagen
+met een informatieobjecttype uit zijn catalogus; `${CATALOGUS_DOMEIN}` en
+`${CATALOGUS_RSIN}` vult de uitrol uit het zaaktype in). Dat verandert de
+afhankelijkheden van het formulier-artefact, niet zijn payload.
+
+**Keuzes voor de GPK** (voorzet, `fixtures/cg-test/gpk-edienst.json`): dezelfde
+testcatalogus en informatieobjecttypen als zaaktype AANVRAAG; statustypen
+Ontvangen / In behandeling / Afgehandeld; roltypen Aanvrager (initiator) /
+Behandelaar; resultaattypen Verleend / Geweigerd / Ingetrokken (11.1.1, 11.2,
+11.3); referentieproces "Aanvraag oppakken"; doorlooptijd P56D, servicenorm
+P42D (het model kent geen termijnen). Vertrouwelijkheid `vertrouwelijk`
+(voorstel: gegevens over de beperking; het objecttype is `confidential`).
+
+### 11.8 Verzoek-envelop voor GZAC (objecttype 0.4.0, 2026-10-27)
+
+Besluit Mark 27-10: de Verzoek-plugin van GZAC pakt het GPK-object op en maakt
+de zaak ("we willen in dit gebied nu niet zelf bouwen"). Die plugin
+(VerzoekPluginEventListener) verwacht het productaanvraag-formaat. Het canonieke
+model verandert niet, alleen de projectie: `projectie.envelop: {soort:
+"verzoek", type: "gehandicaptenparkeerkaart"}` in de e-dienst.
+
+**Objecttype.** De vorm van een envelop is doelformaat en staat in de regelset
+(`objecttypeRegels.js`, `enveloppen.verzoek`, versie 0.4.0). Het schema van 0.3.0
+wordt ongewijzigd de property `data` (inclusief de `anyOf` voor optionele
+velden). Erbij komen:
+
+| Veld | Schema | Betekenis voor GZAC |
+|---|---|---|
+| `type` | string, `const` = het aanvraagtype | kiest de verzoekconfiguratie (hoofdletterongevoelig) |
+| `bsn` | string | initiator van de zaak |
+| `attachments` | array van string (uri) | documenten, gekoppeld aan de zaak |
+| `pdf_url` | string (uri) | het inzendingsrapport |
+
+Verplicht zijn `["type", "data"]`; er is geen `additionalProperties`-beperking
+bovenin. De trace schuift mee (`/jsonSchema/properties/data/…`), en elk envelopveld
+krijgt een spoor `envelop:<veld>`. Zonder `projectie.envelop` blijft het
+schema zoals in 0.3.0 (objecttype aanvraag).
+
+**Formulier.** De aansluiting leest de envelop uit de trace van het objecttype,
+dus niet uit de e-dienst. Alle koppelingen beginnen met `data`, maar de
+variabelenamen blijven gelijk (`vast_partijen`, `vast_status`). De envelopvelden
+komen achteraan in `variables_mapping`:
+- `type` wordt de gebruikersvariabele `verzoek_type` (de `const` uit het schema);
+- `bsn` komt uit `auth_bsn`, en die blijft daarnaast naar
+  `data.partijen[0].partij.bsn` gaan;
+- `attachments` komt uit de registratievariabele `attachment_urls`;
+- `pdf_url` komt uit de registratievariabele `pdf_url`.
+
+`pdf_url` vult Open Formulieren alleen als het rapport een informatieobjecttype
+heeft. Daarom zet de e-dienst `registratie.rapport.informatieobjecttype:
+"Aanvraagformulier"`, en dat wordt de exportoptie `iot_submission_report`.
+Ontbreekt die, dan valt `pdf_url` weg met melding `FRM-ENVELOP`. Het zaaktype
+toetst dat ook dit informatieobjecttype bij het zaaktype hoort (`ZTT-BIJLAGE`).
+
+### 11.9 Vervolg
+
+1. Formulier: machtigen (gemachtigde + subject) en eHerkenning.
+2. Zaaktype: termijnen en resultaten in het model (bv. bij het aanvraagtype)
+   zodra meer e-diensten ze delen; nu letterlijk in de e-dienst.
 3. BPMN voor GZAC: uitvoerbare BPMN (engine-extensies), §10 heeft alleen de
    heenweg.
 4. Server-side draaien: dezelfde modules in een Node-runner (render-svc-patroon),

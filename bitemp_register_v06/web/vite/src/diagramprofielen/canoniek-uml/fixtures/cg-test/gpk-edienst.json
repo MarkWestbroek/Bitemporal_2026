@@ -32,7 +32,9 @@
         "referentielijsten": {
           "Aanvraagtype": { "als": "code", "enum": false },
           "Partijrol": { "als": "code", "enum": false }
-        }
+        },
+        "envelop": { "soort": "verzoek", "type": "gehandicaptenparkeerkaart" },
+        "_envelop": "het schema als `data` in het productaanvraag-formaat, zodat de Verzoek-plugin van GZAC het object oppakt en een zaak maakt; besluit Mark 27-10 (\"we willen in dit gebied nu niet zelf bouwen\"); type = code van het aanvraagtype"
       },
       "velden": [
         "Aanvraag.AanvraagIdentificatie.aanvraagnummer",
@@ -118,6 +120,8 @@
         },
         "uitInlog": { "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn": "auth_bsn (DigiD)" },
         "bijlagen": { "informatieobjecttype": "Bijlage" },
+        "rapport": { "informatieobjecttype": "Aanvraagformulier" },
+        "_rapport": "het inzendingsrapport (PDF) als document in Open Zaak; zonder dit levert Open Formulieren geen pdf_url voor de envelop",
         "_bijlagen": "omschrijving van het informatieobjecttype in de catalogus (zaaktype); de catalogus zelf (domein, rsin) vult de uitrol per omgeving in",
         "uitOpenFormulieren": {
           "Aanvraag.AanvraagIdentificatie.aanvraagnummer": "public_reference"
@@ -127,9 +131,72 @@
         "_uitOpenFormulieren": "variabelen die Open Formulieren zelf kent: registratievariabele public_reference (inzendingskenmerk, bv. OF-2HD83V); besluit Mark 27-10, tot er een aanvraagservice is"
       },
       "_status": "voorzet; regelset formulier volgt (stap c). Open: machtigen (gemachtigde + subject) en de instellingenkaart (eHerkenning) als tweede inlogmiddel"
+    },
+    {
+      "identifier": "GPK",
+      "soort": "zaaktype",
+      "formaat": "catalogi-api-json",
+      "doelcomponent": "openzaak",
+      "naam": "Zaaktype Gehandicaptenparkeerkaart aanvragen",
+      "aanvraagtype": "gehandicaptenparkeerkaart",
+      "_aanvraagtype": "het M0-item van de referentielijst Aanvraagtype; daaruit komen de identificatie (zaaktypeIdentificatie) en het onderwerp (omschrijving), de omschrijving is de naam van de e-dienst (regelset canoniek-naar-zaaktype)",
+      "catalogus": { "domein": "TEST", "rsin": "000000000", "naam": "Testcatalogus cg-test", "contactpersoonBeheerNaam": "Beheer", "contactpersoonBeheerEmail": "beheer@example.org" },
+      "_catalogus": "de testcatalogus op cg-test; de adapter (openzaak-catalogus.ps1) maakt alleen aan wat ontbreekt",
+      "informatieobjecttypen": [
+        { "omschrijving": "Aanvraagformulier", "vertrouwelijkheidaanduiding": "intern", "informatieobjectcategorie": "aanvraag" },
+        { "omschrijving": "Bijlage", "vertrouwelijkheidaanduiding": "intern", "informatieobjectcategorie": "bijlage" },
+        { "omschrijving": "Beschikking", "vertrouwelijkheidaanduiding": "openbaar", "informatieobjectcategorie": "besluit" }
+      ],
+      "_informatieobjecttypen": "bestaan al in de testcatalogus (zaaktype AANVRAAG); dezelfde definitie",
+      "zaaktype": {
+        "omschrijvingGeneriek": "Aanvraag",
+        "vertrouwelijkheidaanduiding": "vertrouwelijk",
+        "_vertrouwelijkheidaanduiding": "voorstel: de zaak bevat gegevens over de beperking (objecttype: confidential); keuze Mark",
+        "doel": "Een aanvraag van een gehandicaptenparkeerkaart behandelen en een beschikking afgeven.",
+        "aanleiding": "Een inwoner dient met DigiD via de formulierservice een aanvraag in.",
+        "toelichting": "Zaaktype bij het objecttype gehandicaptenparkeerkaartaanvraag en het formulier gehandicaptenparkeerkaart-aanvragen.",
+        "indicatieInternOfExtern": "extern",
+        "handelingInitiator": "aanvragen",
+        "handelingBehandelaar": "behandelen",
+        "doorlooptijd": "P56D",
+        "servicenorm": "P42D",
+        "_doorlooptijd": "het model kent geen termijnen; zoals het zaaktype AANVRAAG (8 weken, servicenorm 6 weken)",
+        "opschortingEnAanhoudingMogelijk": true,
+        "verlengingMogelijk": true,
+        "verlengingstermijn": "P28D",
+        "trefwoorden": ["gehandicaptenparkeerkaart", "GPK", "parkeren"],
+        "publicatieIndicatie": false,
+        "verantwoordingsrelatie": [],
+        "productenOfDiensten": [],
+        "referentieproces": { "naam": "Aanvraag oppakken" },
+        "verantwoordelijke": "000000000",
+        "selectielijstProcestype": { "jaar": 2020, "nummer": 11 },
+        "statustypen": [
+          { "omschrijving": "Ontvangen", "omschrijvingGeneriek": "Ontvangen" },
+          { "omschrijving": "In behandeling", "omschrijvingGeneriek": "In behandeling" },
+          { "omschrijving": "Afgehandeld", "omschrijvingGeneriek": "Afgehandeld" }
+        ],
+        "_statustypen": "statustypevolgnummer volgt de volgorde (regelset)",
+        "roltypen": [
+          { "omschrijving": "Aanvrager", "omschrijvingGeneriek": "initiator" },
+          { "omschrijving": "Behandelaar", "omschrijvingGeneriek": "behandelaar" }
+        ],
+        "resultaattypen": [
+          { "omschrijving": "Verleend", "resultaattypeomschrijving": "Verleend", "selectielijstklasse": "11.1.1", "archiefnominatie": "vernietigen", "brondatumArchiefprocedure": { "afleidingswijze": "afgehandeld" } },
+          { "omschrijving": "Geweigerd", "resultaattypeomschrijving": "Geweigerd", "selectielijstklasse": "11.2", "archiefnominatie": "vernietigen", "brondatumArchiefprocedure": { "afleidingswijze": "afgehandeld" } },
+          { "omschrijving": "Ingetrokken", "resultaattypeomschrijving": "Ingetrokken", "selectielijstklasse": "11.3", "archiefnominatie": "vernietigen", "brondatumArchiefprocedure": { "afleidingswijze": "afgehandeld" } }
+        ],
+        "_resultaattypen": "selectielijst-verwijzingen als namen; de adapter zoekt de url's op (selectielijst 2020, procestype 11)",
+        "informatieobjecttypen": [
+          { "omschrijving": "Aanvraagformulier", "richting": "inkomend" },
+          { "omschrijving": "Bijlage", "richting": "inkomend" },
+          { "omschrijving": "Beschikking", "richting": "uitgaand" }
+        ]
+      }
     }
   ],
   "afhankelijkheden": [
-    { "artefact": "gehandicaptenparkeerkaart-aanvragen", "afhankelijkVan": "gehandicaptenparkeerkaartaanvraag", "reden": "het formulier registreert in het objecttype" }
+    { "artefact": "gehandicaptenparkeerkaart-aanvragen", "afhankelijkVan": "gehandicaptenparkeerkaartaanvraag", "reden": "het formulier registreert in het objecttype" },
+    { "artefact": "gehandicaptenparkeerkaart-aanvragen", "afhankelijkVan": "GPK", "reden": "het formulier legt bijlagen vast met een informatieobjecttype uit de catalogus van het zaaktype" }
   ]
 }
