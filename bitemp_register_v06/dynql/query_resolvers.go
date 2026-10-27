@@ -48,6 +48,10 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 
 		peil := actueelOfPeil(peiltijdstipUitArgs(p.Args))
 		peiltijdstip := &peil
+		geldigOp, err := geldigOpUitArgs(p.Args)
+		if err != nil {
+			return nil, err
+		}
 
 		entity := meta.Factory()
 		query := db.NewSelect().Model(entity)
@@ -56,7 +60,7 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		// Onderliggende relaties laden (zelfde patroon als addOnderliggendeRelations)
 		query = addOnderliggendeRelations(query, meta, peiltijdstip)
 
-		err := query.
+		err = query.
 			Where(meta.IDKolom+" = ?", id).
 			Scan(p.Context)
 		if err != nil {
@@ -73,6 +77,11 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			if isZeroID(hasID.GetID()) {
 				return nil, nil // niet gevonden
 			}
+		}
+
+		// Materieel tijdreizen (geldigOp): snoei tot wat op dat moment geldt.
+		if geldigOp != nil && !model.SnoeiMaterieelGeldigOp(entity, meta, *geldigOp, peiltijdstip) {
+			return nil, nil // bestaat niet op dat moment
 		}
 
 		result, err := entityToMap(entity, meta)
@@ -109,6 +118,27 @@ func actueelOfPeil(peil *time.Time) time.Time {
 		return *peil
 	}
 	return time.Now().UTC()
+}
+
+// geldigOpBeschrijving is de argumentbeschrijving van het materiële peilmoment.
+const geldigOpBeschrijving = "Materieel peilmoment: een datum (JJJJ-MM-DD, einde inclusief) of een tijdstip (RFC 3339, einde exclusief). " +
+	"Alleen de voorkomens die op dat moment gelden komen mee; een entiteit die dan niet bestaat geeft null. Optioneel; als leeg: alle formeel actieve voorkomens."
+
+// geldigOpUitArgs leest het optionele materiële peilmoment `geldigOp`.
+func geldigOpUitArgs(args map[string]interface{}) (*model.GeldigOp, error) {
+	raw, ok := args["geldigOp"]
+	if !ok || raw == nil {
+		return nil, nil
+	}
+	s, _ := raw.(string)
+	if s == "" {
+		return nil, nil
+	}
+	g, err := model.ParseGeldigOp(s)
+	if err != nil {
+		return nil, err
+	}
+	return &g, nil
 }
 
 // peiltijdstipUitArgs leest het optionele formele peiltijdstip uit de argumenten.
@@ -213,6 +243,10 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 
 		moment := actueelOfPeil(peiltijdstipUitArgs(p.Args))
 		peil := &moment
+		geldigOp, err := geldigOpUitArgs(p.Args)
+		if err != nil {
+			return nil, err
+		}
 		entities := meta.SliceFactory()
 		query, err := lijstQuery(p, meta, entities, peil)
 		if err != nil {
@@ -229,6 +263,11 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		// Hub-kinderen laden (Bun workaround)
 		if err := laadHubKinderenNaQuery(p.Context, entities, meta, peil); err != nil {
 			return nil, fmt.Errorf("hub-kinderen laden mislukt: %v", err)
+		}
+
+		// Materieel tijdreizen (geldigOp): snoei tot wat op dat moment geldt.
+		if geldigOp != nil {
+			model.FilterSliceMaterieelGeldigOp(entities, meta, *geldigOp, peil)
 		}
 
 		// Converteer naar maps en flatten
@@ -829,13 +868,11 @@ func flattenEntityMap(m map[string]interface{}, meta model.TypeMeta) map[string]
 			processed = append(processed, itemMap)
 		}
 
-		// Enkelvoudig: array → single object (of nil)
+		// Enkelvoudig: array → single object (of nil). Bij een materieel element kunnen er
+		// meerdere formeel actieve voorkomens zijn (opvolging, 27-10-2026): dan het voorkomen
+		// dat nu materieel geldt, anders dat met de laatste aanvang.
 		if child.Momentvoorkomen == model.Enkelvoudig {
-			if len(processed) > 0 {
-				m[child.JSONRolnaam] = processed[0]
-			} else {
-				m[child.JSONRolnaam] = nil
-			}
+			m[child.JSONRolnaam] = kiesEnkelvoudigVoorkomen(processed, childMeta)
 		} else {
 			m[child.JSONRolnaam] = processed
 		}

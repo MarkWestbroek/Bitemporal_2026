@@ -350,12 +350,26 @@ func createEnkelvoudigInvariantIndexes(ctx context.Context, db bun.IDB) {
 			continue
 		}
 
+		naam := fmt.Sprintf("ux_%s_enkelvoudig_actief", meta.Tabelnaam)
+
+		// Materieel én enkelvoudig (27-10-2026, handlers/registration_opvolging.go): enkelvoudig
+		// betekent dan "één geldig voorkomen per materieel moment"; meerdere formeel actieve hubs
+		// naast elkaar zijn normaal (opvolging met materieel einde). Een eerder aangemaakte
+		// constraint op "één formeel actieve hub" moet daarom weg. De materiële overlap bewaakt
+		// de engine (422); de kindtabellen (_Data/_Aanvang/_Einde) houden hun constraint.
+		if meta.IsMaterieelEnkelvoudigeHub() {
+			stmt := fmt.Sprintf(`ALTER TABLE %q DROP CONSTRAINT IF EXISTS %q; DROP INDEX IF EXISTS %q;`, meta.Tabelnaam, naam, naam)
+			if err := veiligeStap(ctx, db, func() error { _, err := db.ExecContext(ctx, stmt); return err }); err != nil {
+				fmt.Printf("WARN: enkelvoudig-invariant constraint %s niet verwijderd (%s): %v\n", naam, meta.Tabelnaam, err)
+			}
+			continue
+		}
+
 		elementen := fmt.Sprintf("%q WITH =", meta.EntiteitIDKolom)
 		if meta.HeeftHubChildRelIDScope() {
 			elementen += `, "rel_id" WITH =`
 		}
 
-		naam := fmt.Sprintf("ux_%s_enkelvoudig_actief", meta.Tabelnaam)
 		// Oudere runs maakten onder deze naam een (niet-uitstelbare) unique index aan;
 		// die moet weg voordat de constraint (met eigen gelijknamige index) kan bestaan.
 		stmt := fmt.Sprintf(`

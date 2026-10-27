@@ -1,0 +1,109 @@
+{
+  "id": "22",
+  "naam": "materieel GE: formeel tijdreizen, correctie en ongedaanmaking (borging)",
+  "beschrijving": "Borging vóór de aanpassing 'materieel enkelvoudig' (docs/plans/2026-10-25). Alles hier moet vóór én ná die aanpassing groen zijn: het raakt alleen één voorkomen van een materieel enkelvoudig GE (Burgerschap), nooit de opvolging van voorkomens. Correctie van inhoud en van aanvang maakt een nieuwe versie binnen hetzelfde voorkomen; formeel tijdreizen toont de toestand per registratie; ongedaanmaking herstelt de vorige versie.",
+  "volgorde": 222,
+  "dekt": ["MAT-ENK-BORGING"],
+  "tags": ["engine", "enkelvoudig", "materieel", "tijdreizen", "borging"],
+  "stappen": [
+    {
+      "naam": "1 opvoer NP 9101 met burgerschap NL vanaf 2000-01-01",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"registratietype": "registratie", "opmerking": "sc22 stap 1"}, "wijzigingen": [
+        {"opvoer": {"natuurlijkpersoon": {"id": 9101}}},
+        {"opvoer": {"burgerschap": {"natuurlijkpersoon_id": 9101, "landcode": "NL", "nationaliteit": "Nederlandse", "aanvang": "2000-01-01"}}}
+      ]},
+      "verwacht": {"status": 201},
+      "bewaar": {"reg1": "registratie_id"}
+    },
+    {
+      "naam": "na 1: één voorkomen, data v1, aanvang 2000-01-01",
+      "path": "/full/natuurlijk_personen/9101",
+      "verwacht": {"status": 200, "json": {
+        "burgerschappen[afvoer=null].rel_id": 1,
+        "burgerschappen[afvoer=null].data[afvoer=null].nationaliteit": "Nederlandse",
+        "burgerschappen[afvoer=null].data[afvoer=null].versie": 1,
+        "burgerschappen[afvoer=null].aanvang[afvoer=null].datum": "2000-01-01",
+        "burgerschappen[afvoer=null].einde": "null"
+      }}
+    },
+    {
+      "naam": "2 correctie van de inhoud (zelfde voorkomen)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"registratietype": "correctie", "opmerking": "sc22 stap 2"}, "wijzigingen": [
+        {"opvoer": {"burgerschap": {"natuurlijkpersoon_id": 9101, "rel_id": 1, "landcode": "NL", "nationaliteit": "Nederlands", "aanvang": "2000-01-01"}}}
+      ]},
+      "verwacht": {"status": 201},
+      "bewaar": {"reg2": "registratie_id"}
+    },
+    {
+      "naam": "na 2: zelfde voorkomen, data v2",
+      "path": "/full/natuurlijk_personen/9101",
+      "verwacht": {"status": 200, "json": {
+        "burgerschappen[afvoer=null].rel_id": 1,
+        "burgerschappen[afvoer=null].data[afvoer=null].nationaliteit": "Nederlands",
+        "burgerschappen[afvoer=null].data[afvoer=null].versie": 2
+      }}
+    },
+    {
+      "naam": "3 correctie van de aanvang naar 1999-06-01",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"registratietype": "correctie", "opmerking": "sc22 stap 3"}, "wijzigingen": [
+        {"opvoer": {"natuurlijkpersoon_burgerschap_aanvang": {"natuurlijkpersoon_id": 9101, "rel_id": 1, "datum": "1999-06-01"}}}
+      ]},
+      "verwacht": {"status": 201},
+      "bewaar": {"reg3": "registratie_id"}
+    },
+    {
+      "naam": "na 3: aanvang 1999-06-01, data ongewijzigd",
+      "path": "/full/natuurlijk_personen/9101",
+      "verwacht": {"status": 200, "json": {
+        "burgerschappen[afvoer=null].aanvang[afvoer=null].datum": "1999-06-01",
+        "burgerschappen[afvoer=null].data[afvoer=null].nationaliteit": "Nederlands"
+      }}
+    },
+    {
+      "naam": "formeel terug naar registratie 1: data v1, aanvang 2000-01-01",
+      "path": "/full/natuurlijk_personen/9101?peiltijdstip={{synthtijd:reg1}}",
+      "verwacht": {"status": 200, "json": {
+        "burgerschappen.0.data.0.nationaliteit": "Nederlandse",
+        "burgerschappen.0.data.0.versie": 1,
+        "burgerschappen.0.aanvang.0.datum": "2000-01-01",
+        "burgerschappen.0.data.1": "null"
+      }}
+    },
+    {
+      "naam": "formeel terug naar registratie 2: data v2, aanvang nog 2000-01-01",
+      "path": "/full/natuurlijk_personen/9101?peiltijdstip={{synthtijd:reg2}}",
+      "verwacht": {"status": 200, "json": {
+        "burgerschappen.0.data.0.nationaliteit": "Nederlands",
+        "burgerschappen.0.aanvang.0.datum": "2000-01-01"
+      }}
+    },
+    {
+      "naam": "vóór registratie 1 bestond NP 9101 niet",
+      "zet": {"voor1": "{{min1:reg1}}"},
+      "path": "/full/natuurlijk_personen/9101?peiltijdstip={{synthtijd:voor1}}",
+      "verwacht": {"status": 404}
+    },
+    {
+      "naam": "4 ongedaanmaking van de aanvang-correctie",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"registratietype": "ongedaanmaking", "maakt_ongedaan_registratie_id": "{{int:reg3}}", "opmerking": "sc22 stap 4"}, "wijzigingen": []},
+      "verwacht": {"status": 201}
+    },
+    {
+      "naam": "na 4: aanvang weer 2000-01-01, data v2 blijft",
+      "path": "/full/natuurlijk_personen/9101",
+      "verwacht": {"status": 200, "json": {
+        "burgerschappen[afvoer=null].aanvang[afvoer=null].datum": "2000-01-01",
+        "burgerschappen[afvoer=null].data[afvoer=null].nationaliteit": "Nederlands",
+        "burgerschappen[afvoer=null].rel_id": 1
+      }}
+    }
+  ]
+}

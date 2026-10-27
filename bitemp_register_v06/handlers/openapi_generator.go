@@ -600,6 +600,14 @@ func genereerFullSchemaVoorEntiteit(meta model.TypeMeta) oasMap {
 				"type":  "array",
 				"items": childRef,
 			}
+		} else if childMeta, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype); ok && childMeta.IsMaterieel {
+			// Materieel enkelvoudig (27-10-2026): één geldig voorkomen per materieel moment, maar
+			// meerdere formeel actieve voorkomens naast elkaar (opvolging met einde) — dus geen maxItems.
+			extraProperties[child.JSONRolnaam] = oasMap{
+				"type":        "array",
+				"items":       childRef,
+				"description": "Enkelvoudig op de materiële tijdlijn: hooguit één voorkomen geldt op elk moment; de historie van voorkomens staat naast elkaar (zie ?geldigOp=).",
+			}
 		} else {
 			// Enkelvoudig: toch als array met maxItems:1 (zo werkt de API)
 			extraProperties[child.JSONRolnaam] = oasMap{

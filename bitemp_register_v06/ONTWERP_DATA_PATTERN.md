@@ -108,6 +108,12 @@ Dit illustreert waarom de drielaagse opsplitsing noodzakelijk is:
 
 Elke laag kan apart gecorrigeerd worden zonder de andere lagen te beïnvloeden.
 
+> **Zo registreert de engine het sinds 27-10-2026** (`handlers/registration_opvolging.go`): stap 1
+> is één registratie met de opvoer van hub 2 mét aanvang 21/3/2026; het einde 20/3/2026 op hub 1
+> zet de engine automatisch (eigen `_Einde`-record, eigen wijziging). Beide hubs blijven formeel
+> actief — "enkelvoudig" is één geldig voorkomen per materieel moment. Lezen op een materieel
+> moment: `?geldigOp=2025-06-01` (zie `docs/API_REFERENCE.md` §5).
+
 ---
 
 ## 4. Ontwerpbeslissingen

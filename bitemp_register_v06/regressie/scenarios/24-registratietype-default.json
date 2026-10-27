@@ -1,0 +1,39 @@
+{
+  "id": "24",
+  "naam": "registratie zonder registratietype is een gewone registratie",
+  "beschrijving": "Besluit Mark 25-10-2026: geen registratietype = 'registratie'. Een nieuw voorkomen van een enkelvoudig GE sluit dan de voorganger formeel af, net als met een expliciet type. Voorheen bleef het type leeg, werd de voorganger niet afgesloten en gaf de enkelvoudig-constraint een 409 ('gelijktijdige wijziging').",
+  "volgorde": 224,
+  "dekt": ["REG-TYPE-DEFAULT"],
+  "tags": ["engine", "enkelvoudig"],
+  "stappen": [
+    {
+      "naam": "1 opvoer gemeente 9241 + gegevens, zonder registratietype",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"opmerking": "sc24 stap 1"}, "wijzigingen": [{"opvoer": {"gemeente": {"id": 9241}}}, {"opvoer": {"gemeentegegevens": {"gemeente_id": 9241, "naam": "Typeloos", "code": "GM9241"}}}]},
+      "verwacht": {"status": 201, "json": {"registratie_id": ">0"}}
+    },
+    {
+      "naam": "2 nieuwe gegevens, zonder registratietype",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {"registratie": {"opmerking": "sc24 stap 2"}, "wijzigingen": [{"opvoer": {"gemeentegegevens": {"gemeente_id": 9241, "naam": "Typeloos B", "code": "GM9241"}}}]},
+      "verwacht": {"status": 201},
+      "bewaar": {"reg2": "registratie_id"}
+    },
+    {
+      "naam": "na 2: voorkomen 1 afgevoerd, voorkomen 2 actief",
+      "path": "/full/gemeenten/9241?geschiedenis=true",
+      "verwacht": {"status": 200, "json": {
+        "gemeentegegevens[afvoer=null].rel_id": 2,
+        "gemeentegegevens[afvoer=null].data[afvoer=null].naam": "Typeloos B",
+        "gemeentegegevens[rel_id=1].afvoer": "!=null"
+      }}
+    },
+    {
+      "naam": "de registratie is vastgelegd als type registratie",
+      "path": "/registraties/{{reg2}}",
+      "verwacht": {"status": 200, "json": {"registratietype": "registratie"}}
+    }
+  ]
+}

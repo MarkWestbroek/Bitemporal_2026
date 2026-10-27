@@ -1,0 +1,457 @@
+{
+  "id": "23",
+  "naam": "materieel enkelvoudig: opvolging met automatisch einde, geldigOp, 422 en ongedaanmaking",
+  "beschrijving": "Besluit Mark 25/27-10-2026 (docs/plans/2026-10-25): een nieuw voorkomen van een materieel enkelvoudig GE mét aanvang laat de voorganger formeel actief en geeft hem automatisch einde = aanvang − 1 dag. Terugwerkende kracht tot op of vóór de aanvang van een voorganger en invoegen tussen voorkomens geven 422. ?geldigOp= (datum, einde inclusief) toont de toestand op een materieel moment; peiltijdstip blijft de formele as. Ongedaanmaking van een opvolging verwijdert het nieuwe voorkomen én het automatische einde. Een opvolger zonder aanvang vervangt de voorganger formeel (gedrag van vóór 27-10).",
+  "volgorde": 223,
+  "dekt": [
+    "MAT-ENK-OPVOLGING",
+    "B31",
+    "B33"
+  ],
+  "tags": [
+    "engine",
+    "enkelvoudig",
+    "materieel",
+    "tijdreizen"
+  ],
+  "stappen": [
+    {
+      "naam": "1 opvoer NP 9102 met burgerschap NL vanaf 2000-01-01",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc23 stap 1"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "natuurlijkpersoon": {
+                "id": 9102
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 9102,
+                "landcode": "NL",
+                "nationaliteit": "Nederlandse",
+                "aanvang": "2000-01-01"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201
+      },
+      "bewaar": {
+        "reg1": "registratie_id"
+      }
+    },
+    {
+      "naam": "2 opvolging: burgerschap DE vanaf 2010-05-01 (zonder rel_id)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc23 stap 2"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 9102,
+                "landcode": "DE",
+                "nationaliteit": "Duitse",
+                "aanvang": "2010-05-01"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201
+      },
+      "bewaar": {
+        "reg2": "registratie_id"
+      }
+    },
+    {
+      "naam": "na 2: beide voorkomens formeel actief; voorganger heeft automatisch einde 2010-04-30",
+      "path": "/full/natuurlijk_personen/9102",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen[rel_id=1].afvoer": "null",
+          "burgerschappen[rel_id=1].data[afvoer=null].landcode": "NL",
+          "burgerschappen[rel_id=1].aanvang[afvoer=null].datum": "2000-01-01",
+          "burgerschappen[rel_id=1].einde[afvoer=null].datum": "2010-04-30",
+          "burgerschappen[rel_id=2].afvoer": "null",
+          "burgerschappen[rel_id=2].data[afvoer=null].landcode": "DE",
+          "burgerschappen[rel_id=2].aanvang[afvoer=null].datum": "2010-05-01",
+          "burgerschappen[rel_id=2].einde": "null"
+        }
+      }
+    },
+    {
+      "naam": "materieel: geldigOp 2005-06-15 toont alleen NL",
+      "path": "/full/natuurlijk_personen/9102?geldigOp=2005-06-15",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen.0.rel_id": 1,
+          "burgerschappen.0.data[afvoer=null].landcode": "NL",
+          "burgerschappen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "materieel: geldigOp 2010-04-30 (einde inclusief) toont nog NL",
+      "path": "/full/natuurlijk_personen/9102?geldigOp=2010-04-30",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen.0.rel_id": 1,
+          "burgerschappen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "materieel: geldigOp 2010-05-01 toont DE",
+      "path": "/full/natuurlijk_personen/9102?geldigOp=2010-05-01",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen.0.rel_id": 2,
+          "burgerschappen.0.data[afvoer=null].landcode": "DE",
+          "burgerschappen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "materieel: geldigOp 1999-12-31 toont geen burgerschap",
+      "path": "/full/natuurlijk_personen/9102?geldigOp=1999-12-31",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "id": 9102,
+          "burgerschappen.0": "null"
+        }
+      }
+    },
+    {
+      "naam": "materieel én formeel: geldigOp 2012-01-01 op het peilmoment van registratie 1 toont NL zonder einde",
+      "path": "/full/natuurlijk_personen/9102?geldigOp=2012-01-01&peiltijdstip={{synthtijd:reg1}}",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen.0.rel_id": 1,
+          "burgerschappen.0.einde": "null",
+          "burgerschappen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "ongeldige geldigOp geeft 400",
+      "path": "/full/natuurlijk_personen/9102?geldigOp=gisteren",
+      "verwacht": {
+        "status": 400,
+        "bevat": "geldigOp"
+      }
+    },
+    {
+      "naam": "formeel: op het peilmoment van registratie 1 heeft NL nog geen einde en bestaat DE niet",
+      "path": "/full/natuurlijk_personen/9102?peiltijdstip={{synthtijd:reg1}}",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen.0.rel_id": 1,
+          "burgerschappen.0.einde": "null",
+          "burgerschappen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "3 terugwerkende kracht: aanvang gelijk aan die van het huidige voorkomen geeft 422",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc23 stap 3"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 9102,
+                "landcode": "FR",
+                "nationaliteit": "Franse",
+                "aanvang": "2010-05-01"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 422,
+        "bevat": "opvolging_terugwerkend",
+        "header": {
+          "Content-Type": "problem+json"
+        },
+        "json": {
+          "invalidParams.0.name": "wijzigingen[0].burgerschap.aanvang"
+        }
+      }
+    },
+    {
+      "naam": "4 invoegen tussen voorkomens geeft 422",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc23 stap 4"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 9102,
+                "landcode": "FR",
+                "nationaliteit": "Franse",
+                "aanvang": "2005-01-01"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 422,
+        "bevat": "opvolging_invoegen"
+      }
+    },
+    {
+      "naam": "na 3 en 4: niets veranderd (transactie teruggedraaid)",
+      "path": "/full/natuurlijk_personen/9102",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen[rel_id=2].afvoer": "null",
+          "burgerschappen[rel_id=3]": "null",
+          "burgerschappen[rel_id=1].einde[afvoer=null].datum": "2010-04-30"
+        }
+      }
+    },
+    {
+      "naam": "5 ongedaanmaking van de opvolging (registratie 2)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "ongedaanmaking",
+          "maakt_ongedaan_registratie_id": "{{int:reg2}}",
+          "opmerking": "sc23 stap 5"
+        }
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "na 5: DE weg, automatisch einde van NL weg",
+      "path": "/full/natuurlijk_personen/9102?t=100000",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen.0.rel_id": 1,
+          "burgerschappen.0.einde": "null",
+          "burgerschappen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "6 opnieuw opvolgen: DE vanaf 2010-05-01 (rel_id 3)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc23 stap 6"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 9102,
+                "landcode": "DE",
+                "nationaliteit": "Duitse",
+                "aanvang": "2010-05-01"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "na 6: NL weer automatisch afgesloten op 2010-04-30, DE actief als rel_id 3",
+      "path": "/full/natuurlijk_personen/9102?t=100000",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen[rel_id=1].einde.0.datum": "2010-04-30",
+          "burgerschappen[rel_id=1].einde.1": "null",
+          "burgerschappen[rel_id=3].aanvang.0.datum": "2010-05-01",
+          "burgerschappen[rel_id=2]": "null"
+        }
+      }
+    },
+    {
+      "naam": "7 expliciet einde op de voorganger in dezelfde registratie, vóór de opvolger: wint van het automatische einde",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc23 stap 7"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "natuurlijkpersoon_burgerschap_einde": {
+                "natuurlijkpersoon_id": 9102,
+                "rel_id": 3,
+                "datum": "2020-11-30"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 9102,
+                "landcode": "BE",
+                "nationaliteit": "Belgische",
+                "aanvang": "2021-01-01"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "na 7: DE eindigt 2020-11-30 (niet 2020-12-31), BE actief vanaf 2021-01-01",
+      "path": "/full/natuurlijk_personen/9102?t=100000",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen[rel_id=3].einde.0.datum": "2020-11-30",
+          "burgerschappen[rel_id=3].einde.1": "null",
+          "burgerschappen[rel_id=4].aanvang.0.datum": "2021-01-01",
+          "burgerschappen[rel_id=4].einde": "null"
+        }
+      }
+    },
+    {
+      "naam": "materieel: geldigOp 2020-12-15 valt in het gat: geen burgerschap",
+      "path": "/full/natuurlijk_personen/9102?geldigOp=2020-12-15",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen.0": "null"
+        }
+      }
+    },
+    {
+      "naam": "materieel: geldigOp als tijdstip (2015-06-01T12:00:00Z) toont DE",
+      "path": "/full/natuurlijk_personen/9102?geldigOp=2015-06-01T12:00:00Z",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen.0.rel_id": 3,
+          "burgerschappen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "GraphQL: enkelvoudig geeft het nu geldige voorkomen (BE), met geldigOp 2015-01-01 DE",
+      "method": "POST",
+      "path": "/graphql/query",
+      "body": {
+        "query": "{ nu: full_natuurlijk_personen(id: 9102) { burgerschappen { rel_id landcode } } toen: full_natuurlijk_personen(id: 9102, geldigOp: \"2015-01-01\") { burgerschappen { rel_id landcode } } }"
+      },
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "data.nu.burgerschappen.rel_id": 4,
+          "data.nu.burgerschappen.landcode": "BE",
+          "data.toen.burgerschappen.rel_id": 3,
+          "data.toen.burgerschappen.landcode": "DE"
+        }
+      }
+    },
+    {
+      "naam": "GraphQL: geldigOp 1999-01-01 geeft geen burgerschap",
+      "method": "POST",
+      "path": "/graphql/query",
+      "body": {
+        "query": "{ full_natuurlijk_personen(id: 9102, geldigOp: \"1999-01-01\") { id burgerschappen { rel_id } } }"
+      },
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "data.full_natuurlijk_personen.id": 9102,
+          "data.full_natuurlijk_personen.burgerschappen": "null"
+        }
+      }
+    },
+    {
+      "naam": "8 opvolger zonder aanvang vervangt formeel (gedrag van vóór 27-10)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc23 stap 8"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 9102,
+                "landcode": "NL",
+                "nationaliteit": "Nederlandse"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "na 8: BE formeel afgevoerd, NL (rel_id 5) actief zonder aanvang; de afgesloten historie (1, 3) blijft formeel actief",
+      "path": "/full/natuurlijk_personen/9102?t=100000",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "burgerschappen[rel_id=4]": "null",
+          "burgerschappen[rel_id=5].aanvang": "null",
+          "burgerschappen[rel_id=5].data.0.landcode": "NL",
+          "burgerschappen[rel_id=1].rel_id": 1,
+          "burgerschappen[rel_id=3].rel_id": 3
+        }
+      }
+    }
+  ]
+}

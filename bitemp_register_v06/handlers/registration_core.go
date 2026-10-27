@@ -190,8 +190,11 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 		}
 	}
 
-	// Stap 2: itereer over wijzigingen.
+	// Stap 2: itereer over wijzigingen. Nieuwe materieel enkelvoudige hubs worden verzameld en
+	// ná de lus opgevolgd (registration_opvolging.go).
+	ctx, opvolgingen := metOpvolgingVerzamelaar(ctx)
 	for wijzigingIdx, wijziging := range req.Wijzigingen {
+		opvolgingen.huidigeIdx = wijzigingIdx
 		var rep *model.RepresentatiePlusNaam
 		if wijziging.Opvoer != nil {
 			rep = wijziging.Opvoer
@@ -225,6 +228,12 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 				return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "wijziging[%d]: afvoer van %s (veldnaam=%s) mislukt: %v", wijzigingIdx, rep.Representatienaam, rep.Veldnaam, err)
 			}
 		}
+	}
+
+	// Stap 2b: materiële opvolging van de nieuwe materieel enkelvoudige hubs (422 bij
+	// terugwerkende kracht of invoegen; automatisch einde op de voorganger).
+	if rerr := verwerkVerzameldeOpvolgingen(ctx, tx, req.Registratie, opvolgingen, requestPath); rerr != nil {
+		return RegistreerResult{}, rerr
 	}
 
 	// Afgeleide domeinen: verzamel unieke domeinen uit TypeMeta.

@@ -100,7 +100,7 @@ GraphiQL is het actief onderhouden alternatief van de GraphQL Foundation. Voorde
 
 | Query | Argumenten | Retourtype | Beschrijving |
 |-------|-----------|------------|-------------|
-| `full_natuurlijk_personen(id, peiltijdstip?, t?)` | `id: Int!`, `peiltijdstip: DateTime`, `t: Int` | `NatuurlijkPersoon` | Volledige NP met alle GE's/relaties |
+| `full_natuurlijk_personen(id, peiltijdstip?, t?, geldigOp?)` | `id: Int!`, `peiltijdstip: DateTime`, `t: Int`, `geldigOp: String` | `NatuurlijkPersoon` | Volledige NP met alle GE's/relaties |
 | `natuurlijk_personen(filter?, peiltijdstip?, t?, limit?, offset?)` | `filter: NatuurlijkPersoonFilter`, `peiltijdstip: DateTime`, `t: Int`, `limit: Int = 20`, `offset: Int = 0` | `[NatuurlijkPersoon]` | Lijst NatuurlijkPersoon (paginering, [filter](#filteren)) |
 | `full_locaties(id, peiltijdstip?, t?)` | `id: Int!`, `peiltijdstip: DateTime`, `t: Int` | `Locatie` | Volledige Locatie met GE's |
 | `locaties(filter?, peiltijdstip?, t?, limit?, offset?)` | idem | `[Locatie]` | Lijst Locaties |
@@ -131,7 +131,7 @@ Voor elke entiteit in de MetaRegistry worden drie queries geregistreerd:
 ```graphql
 # Volledige entiteit met alle geneste GE's/relaties
 query {
-  full_<padnaam>(id: <Int|String>!, peiltijdstip: DateTime, t: Int) {
+  full_<padnaam>(id: <Int|String>!, peiltijdstip: DateTime, t: Int, geldigOp: String) {
     id
     # ... alle velden inclusief onderliggende GE's/relaties
   }
@@ -147,7 +147,7 @@ query {
 
 # Idem, met alle onderliggende GE's/relaties (hub+data platgeslagen)
 query {
-  full_<padnaam>_list(filter: <Entiteit>Filter, peiltijdstip: DateTime, t: Int, limit: Int = 20, offset: Int = 0) {
+  full_<padnaam>_list(filter: <Entiteit>Filter, peiltijdstip: DateTime, t: Int, geldigOp: String, limit: Int = 20, offset: Int = 0) {
     id
     # ... alle velden
   }
@@ -168,6 +168,16 @@ Voorbeelden (afhankelijk van actuele MetaRegistry-inhoud):
 `2026-01-01T00:00:00Z + t uur + t microseconden`.
 
 Als zowel `peiltijdstip` als `t` is meegegeven, krijgt `peiltijdstip` voorrang.
+
+**Materieel tijdreizen (`geldigOp`, sinds 27-10-2026).** `full_<padnaam>` en `full_<padnaam>_list`
+nemen daarnaast `geldigOp: String`: een datum (`"2015-01-01"`, einde inclusief) of een tijdstip
+(RFC 3339, einde exclusief). Alleen de voorkomens van materiële GE's/relaties die op dat moment
+gelden komen mee; een entiteit die dan zelf niet bestaat geeft `null`. Dezelfde regels als REST, zie
+`docs/API_REFERENCE.md` §5. Een **enkelvoudig** element wordt één object: met `geldigOp` het dan
+geldige voorkomen; zonder `geldigOp` het voorkomen dat nu materieel geldt, anders dat met de laatste
+aanvang (een materieel enkelvoudig element kan sinds 27-10-2026 meerdere formeel actieve voorkomens
+hebben: de historie van opvolgingen). Voorbeeld:
+`full_natuurlijk_personen(id: 9102, geldigOp: "2015-01-01") { burgerschappen { landcode } }`.
 
 ### Filteren
 
