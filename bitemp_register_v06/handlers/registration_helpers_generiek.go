@@ -322,7 +322,7 @@ func handleRepresentatieOpvoer(ctx context.Context, tx bun.Tx, registratie model
 		case uitgesteldeOpvolging(ctx, registratie, meta):
 			// Materieel én enkelvoudig (27-10-2026): de voorganger wordt ná alle wijzigingen
 			// materieel afgesloten en blijft formeel actief; zie registration_opvolging.go.
-			// Zonder aanvang op het nieuwe voorkomen valt dat terug op formeel vervangen.
+			// Zonder aanvang op het nieuwe voorkomen (bij een voorganger) volgt een 422.
 		case registratie.IsRegistratie() || isDataSubtype(meta):
 			if err := sluitActieveEnkelvoudigeVoorgangersAf(ctx, tx, registratie.ID, registratie.Tijdstip, representatienaam, representatie, meta); err != nil {
 				return err

@@ -8,9 +8,9 @@
 // zonder formeel tijdreizen.
 //
 // Regels (alleen bij registratietype registratie, nooit bij correctie):
-//   - zonder aanvang op het nieuwe voorkomen is er geen materiële opvolging mogelijk: dan
-//     vervangt het nieuwe voorkomen het oude formeel, zoals vóór 27-10-2026 (en zoals een
-//     niet-materieel enkelvoudig element altijd doet);
+//   - een nieuw voorkomen zonder aanvang terwijl er een voorganger is: 422 (besluit Mark
+//     27-10-2026: de aanvang is verplicht bij een opvolging, want zonder aanvang valt het einde
+//     van de voorganger niet te bepalen; een eerste voorkomen mag wel zonder aanvang);
 //   - met aanvang: elke formeel actieve voorganger zonder einde krijgt automatisch
 //     einde = aanvang − 1 dag (datums, inclusief) of einde = aanvang (tijdstippen, exclusief),
 //     als eigen _Einde-record met een eigen wijziging in dezelfde registratie — een
@@ -48,7 +48,7 @@ import (
 
 // opvolgingsFout is een inhoudelijke weigering van een opvolging: 422 problem+json met veldpad.
 type opvolgingsFout struct {
-	Code  string // opvolging_terugwerkend | opvolging_invoegen
+	Code  string // opvolging_zonder_aanvang | opvolging_terugwerkend | opvolging_invoegen
 	Reden string
 }
 
@@ -205,18 +205,14 @@ func verwerkMaterieleOpvolging(ctx context.Context, tx bun.Tx, registratie model
 		return err
 	}
 	if nieuweAanvang == nil {
-		// Geen aanvang: geen materiële opvolging mogelijk. Het nieuwe voorkomen vervangt dan
-		// formeel het voorkomen dat nu geldt (zonder einde), zoals vóór 27-10-2026; al
-		// afgesloten voorkomens zijn historie en blijven formeel actief.
-		for _, p := range perioden {
-			if p.einde != nil {
-				continue
-			}
-			if err := voerVoorgangerHubAf(ctx, tx, registratie, meta, parentTypenaam, item.entiteitID, p.relID); err != nil {
-				return err
-			}
+		// Geen aanvang: het einde van de voorganger is dan niet te bepalen (besluit Mark 27-10-2026).
+		return &opvolgingsFout{
+			Code: "opvolging_zonder_aanvang",
+			Reden: fmt.Sprintf("%s heeft al een voorkomen (rel_id %d); een nieuw voorkomen van een materieel enkelvoudig element "+
+				"heeft een aanvang nodig, zodat de voorganger daarmee afgesloten kan worden (einde = aanvang − 1 dag). "+
+				"Wil je het bestaande voorkomen wijzigen, gebruik dan een correctie met rel_id",
+				meta.Klassenaam, perioden[len(perioden)-1].relID),
 		}
-		return nil
 	}
 
 	// Controleren: alleen achteraan toevoegen.

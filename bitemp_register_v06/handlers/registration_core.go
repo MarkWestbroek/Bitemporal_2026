@@ -163,7 +163,11 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 	// → fouten verzamelen en doorgeven via RegistreerResult.Validatie.
 	validatie := valideerWijzigingen(req.Wijzigingen)
 	// Uniekheid (V3Veld.Uniek, registration_uniek.go): dezelfde route als de datatype-validatie.
-	validatie.Fouten = append(validatie.Fouten, controleerUniekheid(ctx, tx, req.Wijzigingen)...)
+	uniekFouten, uniekErr := controleerUniekheid(ctx, tx, req.Wijzigingen)
+	if uniekErr != nil {
+		return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "uniekheidscontrole mislukt: %v", uniekErr)
+	}
+	validatie.Fouten = append(validatie.Fouten, uniekFouten...)
 	strengheid := audit.Strengheid
 	if strengheid == "" {
 		strengheid = model.StrengheidStrict

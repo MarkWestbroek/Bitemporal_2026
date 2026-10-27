@@ -220,10 +220,11 @@ formeel actieve hub". Registreer een nieuw voorkomen gewoon als opvoer zonder `r
   de aanvang ligt op of vóór de aanvang van een bestaand voorkomen; gebruik een correctie of
   ongedaanmaking. **422** `opvolging_invoegen`: de aanvang valt binnen de periode van een al
   afgesloten voorkomen; een nieuw voorkomen komt alleen achteraan (invoegen volgt als het nodig blijkt).
-- **Zonder `aanvang`** is er geen materiële opvolging mogelijk: het nieuwe voorkomen vervangt dan
-  formeel het voorkomen dat nu geldt (zonder einde), zoals vóór 27-10-2026; al afgesloten voorkomens
-  blijven als historie staan. Dat houdt bestaande stromen zonder aanvang (zoals meldingstatussen in
-  Studio) werkend, maar hun historie is dan alleen formeel terug te kijken.
+- **Zonder `aanvang`** terwijl er al een voorkomen is: **422** `opvolging_zonder_aanvang` (besluit
+  Mark 27-10-2026: de aanvang is verplicht bij een opvolging, want zonder aanvang is het einde van de
+  voorganger niet te bepalen). Een eerste voorkomen mag zonder aanvang. Clients die statussen
+  zonder aanvang registreerden (Studio-meldingen, UitrolVerloop op Fundament) geven voortaan een
+  aanvang mee; wijzigen van het bestaande voorkomen gaat via een correctie met `rel_id`.
 - Niet-materiële enkelvoudige elementen (bv. gemeentegegevens) houden het oude gedrag: de
   voorganger wordt formeel afgevoerd. Correcties (zelfde `rel_id`) raken de opvolging niet.
 - De database-constraint `ux_<tabel>_enkelvoudig_actief` vervalt voor materieel enkelvoudige hubs

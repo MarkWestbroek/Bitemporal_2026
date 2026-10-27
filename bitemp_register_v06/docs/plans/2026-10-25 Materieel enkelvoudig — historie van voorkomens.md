@@ -130,10 +130,10 @@ Gebouwd op `feat/materieel-enkelvoudig` (worktree `_afgeleide_rel`), suite groen
   − 1 dag (datum) / = aanvang (tijdstip) als eigen `_Einde`-record met eigen wijziging; 422
   `opvolging_terugwerkend` en `opvolging_invoegen` (problem+json met veldpad); expliciet einde in
   dezelfde registratie wint; meerdere nieuwe voorkomens in één registratie volgen elkaar op.
-- **Zonder aanvang** (interim, niet door Mark besloten): geen materiële opvolging mogelijk → het
-  nieuwe voorkomen vervangt formeel het voorkomen zonder einde, zoals vóór 27-10; afgesloten
-  voorkomens blijven staan. Zo blijven meldingstatussen in Studio (zonder aanvang) werken. Alternatief
-  voor Mark: aanvang = vandaag als default (dan is "twee statussen op één dag" meteen een 422 → §5.5).
+- **Zonder aanvang** bij een voorganger: **422** `opvolging_zonder_aanvang` (besluit Mark 27-10-2026,
+  gekozen boven "formeel vervangen" en "aanvang = vandaag"). Een eerste voorkomen mag zonder aanvang.
+  Gevolg: clients die statussen zonder aanvang registreren (Studio-meldingen → OMNIUM-UI;
+  UitrolVerloop/AanvraagStatus → FUNDAMENT) moeten een aanvang meegeven.
 - **Database** `dbsetup/createtables.go`: `ux_<tabel>_enkelvoudig_actief` vervalt voor materieel
   enkelvoudige hubs (`DROP CONSTRAINT IF EXISTS` bij het opstarten); kindtabellen ongewijzigd.
 - **Lezen** `model/materieel_tijd.go`: `geldigOp` (datum of tijdstip) op `GET /full/{pad}[/:id]` en
@@ -148,7 +148,7 @@ Gebouwd op `feat/materieel-enkelvoudig` (worktree `_afgeleide_rel`), suite groen
   aanvang).
 
 Nog open (voor Mark): §5.5 granulariteit (tijdstipprecisie per representatie, M3-eigenschap);
-invoegen/periode splitsen; default-aanvang; Studio-formulieren (OMNIUM-UI: "max 1 actief record");
+invoegen/periode splitsen; Studio-formulieren (OMNIUM-UI: "max 1 actief record");
 `geldigOp` op de platte routes en opgeslagen documenten; afleidingen kiezen bij een enkelvoudige
 materiële relatie met meerdere doelen nu "de eerste" (`afleiding/relaties.go`) — beter: het geldige.
 FUNDAMENT krijgt een seintje zodra dit in een image zit (UitrolVerloop/AanvraagStatus: aanvang meegeven).
