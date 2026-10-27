@@ -65,6 +65,21 @@ func parsePeiltijdstipUitQuerystring(c *gin.Context) (*time.Time, error) {
 	return &peiltijdstip, nil
 }
 
+// parseGeldigOpUitQuerystring leest het optionele materiële peilmoment `geldigOp`: een datum
+// (JJJJ-MM-DD, einde inclusief) of een tijdstip (RFC 3339, einde exclusief). Zie
+// model/materieel_tijd.go. nil als de parameter ontbreekt.
+func parseGeldigOpUitQuerystring(c *gin.Context) (*model.GeldigOp, error) {
+	raw := c.Query("geldigOp")
+	if raw == "" {
+		return nil, nil
+	}
+	g, err := model.ParseGeldigOp(raw)
+	if err != nil {
+		return nil, fmt.Errorf("invalid 'geldigOp' parameter: %v", err)
+	}
+	return &g, nil
+}
+
 func tijdstipUitT(t int) time.Time {
 	return time.
 		Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).
@@ -1324,6 +1339,11 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		geldigOp, err := parseGeldigOpUitQuerystring(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		if peiltijdstip != nil {
 			query = applyFormeleTijdFilterVoorModel(query, meta.Typenaam, *peiltijdstip)
 		}
@@ -1350,6 +1370,12 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to derive formele tijdstippen: %v", err)})
 				return
 			}
+		}
+
+		// Materieel tijdreizen (geldigOp): snoei tot wat op dat moment geldt. Entiteiten die dan
+		// niet bestaan vallen weg uit de pagina (total_count telt vóór het snoeien).
+		if geldigOp != nil {
+			model.FilterSliceMaterieelGeldigOp(entities, meta, *geldigOp, peiltijdstip)
 		}
 
 		total, err := DB.NewSelect().Model(meta.Factory()).Count(c.Request.Context())
@@ -1428,6 +1454,11 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		geldigOp, err := parseGeldigOpUitQuerystring(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		if peiltijdstip != nil {
 			query = applyFormeleTijdFilterVoorModel(query, meta.Typenaam, *peiltijdstip)
 		}
@@ -1457,6 +1488,13 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 
 		if isZeroID(hasID.GetID()) {
 			c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " not found"})
+			return
+		}
+
+		// Materieel tijdreizen (geldigOp): snoei tot wat op dat moment geldt; bestaat de
+		// entiteit zelf dan niet (eigen aanvang/einde), dan 404.
+		if geldigOp != nil && !model.SnoeiMaterieelGeldigOp(entity, meta, *geldigOp, peiltijdstip) {
+			c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " bestaat niet op " + geldigOp.String()})
 			return
 		}
 

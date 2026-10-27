@@ -153,6 +153,7 @@ For each entiteit with padnaam `{pad}`:
   | `size` | int | `20` | Page size (max 100) |
   | `peiltijdstip` | string (RFC3339Nano) | — | Formeel peiltijdstip; filters on formele tijd |
   | `t` | int | — | Shorthand: generates peiltijdstip as `2026-01-01T00:00:00Z + t hours + t µs`. Ignored if `peiltijdstip` is set |
+  | `geldigOp` | datum (JJJJ-MM-DD) of tijdstip (RFC 3339) | — | Materieel peilmoment: alleen de voorkomens die dan gelden; entiteiten die dan niet bestaan vallen uit de pagina (`total_count` telt vóór het snoeien). Zie [Materieel tijdreizen](#materieel-tijdreizen-geldigop-en-opvolging-sinds-27-10-2026) |
   | `toonafvoer` | `"1"` | — | Alleen relevant bij peiltijdstip. Standaard worden `afvoer`-keys gestript bij peiltijdstip. Met `toonafvoer=1` blijven ze zichtbaar. Zonder peiltijdstip worden `afvoer`-keys altijd meegestuurd. |
 
 ### `GET /full/{pad}/:id`
@@ -167,6 +168,7 @@ For each entiteit with padnaam `{pad}`:
   |-------|------|---------|-------------|
   | `peiltijdstip` | string (RFC3339Nano) | — | Formeel peiltijdstip |
   | `t` | int | — | Shorthand peiltijdstip |
+  | `geldigOp` | datum of tijdstip | — | Materieel peilmoment; 404 als de entiteit zelf dan niet bestaat |
   | `toonafvoer` | `"1"` | — | Houd `afvoer`-keys in response bij peiltijdstip |
 
 ### `POST /full/{pad}`
@@ -180,6 +182,59 @@ databasekolom is `<ouder>_id`). `GET /full/<subtype>/:id` geeft de eigen GE's en
 `parent_<ouder>` de volledige ouder; `GET /full/<ouder>/:id` toont alleen de ouder. Registreren met
 `{"opvoer": {"<subtype>": {"id": 100}}}`; de ouder-hub mag in dezelfde registratie staan of wordt
 kaal aangemaakt. Plaatshouders (`$nieuw.x`) werken op ouder én subtype samen.
+
+### Materieel tijdreizen (`geldigOp`) en opvolging (sinds 27-10-2026)
+
+Twee tijdlijnen, twee parameters (besluit Mark 27-10-2026, termen van de werkgroep Historie):
+
+| As | Parameter | Waarde | Einde |
+|---|---|---|---|
+| formeel (registratietijd) | `peiltijdstip` (`t` als testafkorting) | RFC 3339 | exclusief (`afvoer`) |
+| materieel (geldigheid, bestaan) | `geldigOp` | datum `JJJJ-MM-DD` óf tijdstip RFC 3339 | datum: inclusief ("tot en met"); tijdstip: exclusief |
+
+`geldigOp` snoeit het antwoord van `GET /full/{pad}` en `GET /full/{pad}/:id` (en de GraphQL-queries
+`full_<pad>` en `full_<pad>_list`) tot wat op dat moment materieel geldt: per materiële hub (GE of
+relatie) alleen de voorkomens waarvan de formeel actieve `aanvang` op of vóór en het `einde` op of
+na het moment ligt; een entiteit met eigen aanvang/einde die dan niet bestaat geeft 404 (of valt uit
+de lijst). Formeel actief wordt beoordeeld op `peiltijdstip` als dat meegaat, anders nu; afgevoerde
+of ongedaan gemaakte voorkomens tellen dus niet mee. Beide parameters combineren mag: "wat gold op
+1-1-2012 volgens wat we op registratie 1 wisten". De precisie volgt de opgeslagen waarde (een datum
+vergelijkt op dagen, een tijdstip op het moment); per representatie vastleggen welke precisie geldt
+is een volgende stap.
+
+**Opvolging van een materieel én enkelvoudig element** (GE of relatie; bv. Burgerschap, Woonlocatie,
+MeldingStatus): enkelvoudig betekent "één geldig voorkomen op elk materieel moment", niet "één
+formeel actieve hub". Registreer een nieuw voorkomen gewoon als opvoer zonder `rel_id`, mét `aanvang`:
+
+```json
+{"registratie": {"registratietype": "registratie"}, "wijzigingen": [
+  {"opvoer": {"burgerschap": {"natuurlijkpersoon_id": 9102, "landcode": "DE", "nationaliteit": "Duitse", "aanvang": "2010-05-01"}}}
+]}
+```
+
+- De voorganger blijft formeel actief en krijgt automatisch `einde` = aanvang − 1 dag (datums) of
+  = aanvang (tijdstippen), als eigen `_Einde`-record met eigen wijziging in dezelfde registratie.
+  Een ongedaanmaking van de registratie verwijdert het nieuwe voorkomen én dat einde.
+- Een expliciet einde op de voorganger in dezelfde registratie mag en wint van het automatische.
+- **422** `opvolging_terugwerkend` (problem+json, `invalidParams[0].name` = `wijzigingen[i].<veld>.aanvang`):
+  de aanvang ligt op of vóór de aanvang van een bestaand voorkomen; gebruik een correctie of
+  ongedaanmaking. **422** `opvolging_invoegen`: de aanvang valt binnen de periode van een al
+  afgesloten voorkomen; een nieuw voorkomen komt alleen achteraan (invoegen volgt als het nodig blijkt).
+- **Zonder `aanvang`** terwijl er al een voorkomen is: **422** `opvolging_zonder_aanvang` (besluit
+  Mark 27-10-2026: de aanvang is verplicht bij een opvolging, want zonder aanvang is het einde van de
+  voorganger niet te bepalen). Een eerste voorkomen mag zonder aanvang. Clients die statussen
+  zonder aanvang registreerden (Studio-meldingen, UitrolVerloop op Fundament) geven voortaan een
+  aanvang mee; wijzigen van het bestaande voorkomen gaat via een correctie met `rel_id`.
+- Niet-materiële enkelvoudige elementen (bv. gemeentegegevens) houden het oude gedrag: de
+  voorganger wordt formeel afgevoerd. Correcties (zelfde `rel_id`) raken de opvolging niet.
+- De database-constraint `ux_<tabel>_enkelvoudig_actief` vervalt voor materieel enkelvoudige hubs
+  (bij het opstarten verwijderd); de kindtabellen houden "één actieve versie per voorkomen". De
+  OpenAPI toont zo'n rol als array zonder `maxItems`.
+- GraphQL geeft een enkelvoudig element als één object: met `geldigOp` het voorkomen dat dan geldt,
+  zonder `geldigOp` het voorkomen dat nu geldt (anders het laatst aangevangen).
+
+Zie `handlers/registration_opvolging.go`, `model/materieel_tijd.go`, scenario 23 en het plan
+`docs/plans/2026-10-25 Materieel enkelvoudig — historie van voorkomens.md`.
 
 ### `GET /api/volgorde/{pad}` (sinds 23-10-2026)
 - **Handler**: `handlers.MaakVolgordeHandler()` (`volgorde_handler.go`)
@@ -578,6 +633,7 @@ Consolidated lookup of all query parameters used across the API.
 | `size` | int (1–100) | Same as `page` | Page size (default: 20, max: 100) |
 | `peiltijdstip` | string (RFC3339Nano) | `GET /full/{pad}`, `GET /full/{pad}/:id`, `GET /full/registraties` | Formeel peiltijdstip for time-travel queries. Filters to state at this moment. |
 | `t` | int | Same as `peiltijdstip` | Shorthand: `2026-01-01T00:00:00Z + t*hour + t*µs`. Ignored when `peiltijdstip` is set. |
+| `geldigOp` | datum (JJJJ-MM-DD) of tijdstip (RFC 3339) | `GET /full/{pad}`, `GET /full/{pad}/:id` | Materieel peilmoment (geldigheid/bestaan); combineerbaar met `peiltijdstip`. Zie [Materieel tijdreizen](#materieel-tijdreizen-geldigop-en-opvolging-sinds-27-10-2026). |
 | `ta` | int | `GET /full/registraties` | Registratie interval start (inclusive). Same time formula as `t`. |
 | `tb` | int | `GET /full/registraties` | Registratie interval end (inclusive). Must be ≥ `ta`. |
 | `type` | string (multi) | `GET /full/registraties` | Filter registratietype: `registratie`, `correctie`, `ongedaanmaking`. Supports `QueryArray` and comma-separated. |

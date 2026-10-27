@@ -302,6 +302,39 @@ func kiesGeldigeHub(items []interface{}, hubMeta model.TypeMeta, nu time.Time) m
 	return beste
 }
 
+// kiesEnkelvoudigVoorkomen kiest bij een enkelvoudig element het ene object uit de (al
+// platgeslagen) voorkomens. Niet-materieel of één voorkomen: het eerste. Materieel met meerdere
+// formeel actieve voorkomens (opvolging, 27-10-2026): het voorkomen dat nu materieel geldt (bij
+// meer: de laatste aanvang), anders — alles afgesloten of nog toekomstig — dat met de laatste aanvang.
+func kiesEnkelvoudigVoorkomen(items []interface{}, childMeta model.TypeMeta) interface{} {
+	if len(items) == 0 {
+		return nil
+	}
+	if len(items) == 1 || !childMeta.IsMaterieel {
+		return items[0]
+	}
+	nu := time.Now().UTC()
+	var beste interface{}
+	var besteAanvang *time.Time
+	besteGeldig := false
+	for _, it := range items {
+		rec, ok := it.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		geldig := materieelGeldigOp(rec, childMeta, nu)
+		aanvang := aanvangVan(rec, childMeta)
+		later := aanvang != nil && (besteAanvang == nil || aanvang.After(*besteAanvang))
+		if beste == nil || (geldig && !besteGeldig) || (geldig == besteGeldig && later) {
+			beste, besteAanvang, besteGeldig = rec, aanvang, geldig
+		}
+	}
+	if beste == nil {
+		return items[0]
+	}
+	return beste
+}
+
 // aanvangVan geeft de aanvangsdatum van een platgeslagen record (nil als er geen is).
 func aanvangVan(rec map[string]interface{}, meta model.TypeMeta) *time.Time {
 	for _, child := range meta.OnderliggendeGegevenselementen {

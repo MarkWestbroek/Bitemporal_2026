@@ -61,6 +61,13 @@ func RegistreerJSONCore(ctx context.Context, rawBody []byte, defaultRegistratiet
 	if request.Registratie.Registratietype == "" && defaultRegistratietype != "" {
 		request.Registratie.Registratietype = defaultRegistratietype
 	}
+	// Geen type opgegeven = een gewone registratie (besluit Mark 25-10-2026). Voorheen bleef het
+	// type leeg; IsRegistratie() was dan false en de engine sloot de voorganger van een
+	// enkelvoudig GE niet af, zodat er twee actieve voorkomens ontstonden (of een 409 van de
+	// enkelvoudig-constraint). Correctie en ongedaanmaking blijven expliciet.
+	if request.Registratie.Registratietype == "" {
+		request.Registratie.Registratietype = model.RegistratietypeRegistratie
+	}
 
 	if request.RuweWijzigingen == nil {
 		genormaliseerd, err := NormaliseerWijzigingen(request.Wijzigingen)

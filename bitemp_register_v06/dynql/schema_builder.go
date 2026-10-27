@@ -70,6 +70,10 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 					Type:        graphql.Int,
 					Description: "Shorthand peiltijdstip: integer t wordt vertaald naar 2026-01-01T00:00:00Z + t uur + t µs. Als peiltijdstip ook is meegegeven, krijgt peiltijdstip voorrang.",
 				},
+				"geldigOp": &graphql.ArgumentConfig{
+					Type:        graphql.String,
+					Description: geldigOpBeschrijving,
+				},
 			},
 			Resolve: makeFullEntityResolver(meta),
 		}
@@ -264,6 +268,10 @@ func lijstArgs(meta model.TypeMeta) graphql.FieldConfigArgument {
 		"t": &graphql.ArgumentConfig{
 			Type:        graphql.Int,
 			Description: "Shorthand peiltijdstip (zie full_<padnaam>). peiltijdstip heeft voorrang.",
+		},
+		"geldigOp": &graphql.ArgumentConfig{
+			Type:        graphql.String,
+			Description: geldigOpBeschrijving,
 		},
 	}
 	if filter := filterInputVoorEntiteit(meta); filter != nil {

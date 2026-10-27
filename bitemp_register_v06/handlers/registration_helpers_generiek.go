@@ -318,7 +318,12 @@ func handleRepresentatieOpvoer(ctx context.Context, tx bun.Tx, registratie model
 	// Niet indien correctie
 	// v06: WEL voor data-subtypes bij correctie (hub-recursie: vorige data-versie afsluiten)
 	if meta.Metatype != model.MetatypeEntiteit && meta.Momentvoorkomen == model.Enkelvoudig {
-		if registratie.IsRegistratie() || isDataSubtype(meta) {
+		switch {
+		case uitgesteldeOpvolging(ctx, registratie, meta):
+			// Materieel én enkelvoudig (27-10-2026): de voorganger wordt ná alle wijzigingen
+			// materieel afgesloten en blijft formeel actief; zie registration_opvolging.go.
+			// Zonder aanvang op het nieuwe voorkomen (bij een voorganger) volgt een 422.
+		case registratie.IsRegistratie() || isDataSubtype(meta):
 			if err := sluitActieveEnkelvoudigeVoorgangersAf(ctx, tx, registratie.ID, registratie.Tijdstip, representatienaam, representatie, meta); err != nil {
 				return err
 			}
@@ -402,6 +407,12 @@ func handleRepresentatieOpvoer(ctx context.Context, tx bun.Tx, registratie model
 		if meta.GESubtype == model.GESubtypeHub {
 			if relID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, "rel_id"); err == nil {
 				hubRelID = relID
+			}
+			// Nieuwe materieel enkelvoudige hub: noteren voor de uitgestelde opvolging.
+			if uitgesteldeOpvolging(ctx, registratie, meta) {
+				if eid, err := strconv.Atoi(entiteitID); err == nil {
+					noteerNieuweHub(ctx, meta, eid, hubRelID)
+				}
 			}
 		}
 
