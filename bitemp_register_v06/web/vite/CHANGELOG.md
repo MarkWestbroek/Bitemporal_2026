@@ -24,6 +24,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   De inspector toont een eigenschap pas als een andere aan staat (of een waarde heeft); een
   gevulde eigenschap blijft zichtbaar. Eerste gebruik: tijdprecisie pas bij materieel.
   `diagramcore/model/zichtbaarAls.js`; ook voor velden (FieldType-properties).
+- **Formulier: registratie en uploadveld na de eerste inzending** (27-10, openforms-schrijver
+  0.2.0). Aanvraagnummer en ingediendOp komen uit Open Formulieren zelf (`public_reference`, `now`;
+  e-dienst `registratie.uitOpenFormulieren`), zodat Open Object het object aanneemt; het
+  uploadveld krijgt de volledige standaarddefinitie van de formulierbouwer (de minimale liet de
+  SDK vastlopen).
 - **Inrichting van e-diensten: formulier uit het canonieke model** (27-10, regelset
   canoniek-naar-formulier 0.1.0). De e-dienst kiest stappen, velden, labels en tonen-als; het model
   bepaalt de vorm (referentielijst → keuzelijst, enum → keuzerondjes, ja/nee → vinkje, getal,

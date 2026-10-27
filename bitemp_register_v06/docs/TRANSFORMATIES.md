@@ -803,23 +803,38 @@ objecttype erbij schrijft de schrijver een `objects_api`-backend (versie 2):
 - per vaste waarde (`registratie.vasteWaarden`) een gebruikersvariabele
   `vast_<pad>` in `formVariables.json` met de waarde als `initial_value`, plus
   zijn mapping;
-- de BSN uit de inlog (`registratie.uitInlog`) als `auth_attribute_path`.
+- de BSN uit de inlog (`registratie.uitInlog`) als `auth_attribute_path`;
+- waarden die Open Formulieren zelf kent (`registratie.uitOpenFormulieren`
+  {modelpad: variabele}) direct in de `variables_mapping`: voor de GPK
+  registratievariabele `public_reference` → aanvraagnummer (het
+  inzendingskenmerk, bv. `OF-2HD83V`) en statische variabele `now` →
+  ingediendOp. Zonder die twee weigerde Open Object de eerste inzending
+  (verplicht in het objecttype); besluit Mark 27-10, tot er een
+  aanvraagservice is.
 
 Wat per omgeving verschilt is een **plaatshouder**, die de uitrol-adapter
 invult: `${OBJECTTYPE_URL:<identifier>}` en `${OBJECTTYPE_VERSION:<identifier>}`
 uit het UitrolResultaat van de afhankelijkheid in dezelfde omgeving, en
 `${OBJECTS_API_GROUP}` van de omgeving. Zo blijft het artefact omgevingsvrij.
-De registratie staat ook in de trace (regels "Registratie: …"). Open: of Open
-Formulieren 4.0.3 paden in array-items aanneemt (`partijen[0]`, `bijlagen[0]`).
-Zo niet, dan vult de aanvraagservice die lijsten, of krijgt het objecttype
-platte velden; keuze Mark.
+De registratie staat ook in de trace (regels "Registratie: …"). Open Object
+neemt de paden in array-items aan (`partijen[0]`, `bijlagen[0]`; getoetst door
+FUNDAMENT 27-10). Open: wat Open Formulieren voor een bestand in
+`bijlagen[0].documentUrl` zet (alleen een url als de registratie een
+informatieobjecttype voor bijlagen heeft).
+
+**Uploadveld.** Een `file`-component met alleen de basisgegevens laat de SDK
+vastlopen ("Oeps! Er ging helaas iets fout"). De schrijver (0.2.0) zet daarom
+de volledige standaarddefinitie van de formulierbouwer
+(`@open-formulieren/formio-builder`, `registry/file/edit.tsx`): o.a.
+`fileMaxSize: "10MB"`, `filePattern: "*"`, `useConfigFiletypes`,
+`isSensitiveData`, `of.image.resize`. Geen `storage`/`url`: die vult Open
+Formulieren zelf in.
 
 **Nog niet:** formulierlogica anders dan tonen-als, machtigen en eHerkenning.
 
 ### 11.7 Vervolg
 
-1. Formulier: toetsen of Open Formulieren paden in array-items aanneemt (§11.6);
-   machtigen (gemachtigde + subject) en eHerkenning.
+1. Formulier: `documentUrl` van de pasfoto (§11.6); machtigen (gemachtigde + subject) en eHerkenning.
 2. Zaaktype: nog grotendeels letterlijk; het datamodel levert alleen roltype
    Aanvrager en informatieobjecttype Bijlage.
 3. BPMN voor GZAC: uitvoerbare BPMN (engine-extensies), §10 heeft alleen de

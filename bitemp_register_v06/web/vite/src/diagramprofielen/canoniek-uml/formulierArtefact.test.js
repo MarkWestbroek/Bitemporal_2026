@@ -45,7 +45,7 @@ test("GPK: export met drie stappen, zonder meldingen, aansluitend op het objectt
   p["formSteps.json"].forEach((s, i) => assert.equal(s.form_definition, p["formDefinitions.json"][i].url));
   assert.match(p["forms.json"][0].uuid, UUID);
   // Elke component, vaste waarde en inlogwaarde heeft een property in het objecttype.
-  assert.ok(aansluiting.length === 13 && aansluiting.every((r) => r.objecttypePad));
+  assert.ok(aansluiting.length === 15 && aansluiting.every((r) => r.objecttypePad));
   assert.deepEqual(artefact.afhankelijkheden, [{ identifier: "gehandicaptenparkeerkaartaanvraag", reden: "het formulier registreert in het objecttype" }]);
 });
 
@@ -63,6 +63,14 @@ test("GPK: de vorm volgt uit de inhoud van het model", async () => {
   assert.deepEqual(per.eerderKaartnummer.conditional, { show: true, when: "eerdereKaart", eq: true });
   // Een vorm die de e-dienst noemt krijgt geen patroon van het datatype (URL).
   assert.deepEqual(per.pasfoto.validate, { required: true });
+  // Het uploadveld met de volledige standaarddefinitie van de formulierbouwer
+  // (de minimale liet de SDK vastlopen, inzending FUNDAMENT 27-10).
+  assert.equal(per.pasfoto.fileMaxSize, "10MB");
+  assert.equal(per.pasfoto.filePattern, "*");
+  assert.deepEqual(per.pasfoto.file, { name: "", type: [], allowedTypesLabels: [] });
+  assert.deepEqual(per.pasfoto.openForms, { softRequired: false, translations: {} });
+  assert.equal(per.pasfoto.maxNumberOfFiles, null);
+  assert.equal(per.pasfoto.storage, undefined);
   // Geen validate zonder keuze en zonder verplicht in het model.
   assert.equal(per.toelichting.validate, undefined);
 });
@@ -90,7 +98,10 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
   assert.deepEqual(naar.kenteken, ["kenteken"]);
   assert.deepEqual(naar.pasfoto, ["bijlagen", 0, "documentUrl"]);
   assert.deepEqual(naar.vast_partijen_0_partijrol, ["partijen", 0, "partijrol"]);
-  assert.equal(o.variables_mapping.length, 12);
+  // Aanvraagnummer en indientijdstip uit Open Formulieren zelf (besluit Mark 27-10).
+  assert.deepEqual(naar.public_reference, ["aanvraagnummer"]);
+  assert.deepEqual(naar.now, ["ingediendOp"]);
+  assert.equal(o.variables_mapping.length, 14);
   // Vaste waarden als gebruikersvariabelen met hun beginwaarde.
   assert.deepEqual(p["formVariables.json"].map((v) => [v.key, v.initial_value, v.source]), [
     ["vast_aanvraagtype", "gehandicaptenparkeerkaart", "user_defined"],
@@ -118,6 +129,9 @@ test("GPK: trace van modelknoop naar component", async () => {
     doelPad: "/forms.json/0/registration_backends/0/options/auth_attribute_path",
     actie: "aangemaakt",
   });
+  const nummer = artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagIdentificatie.aanvraagnummer");
+  assert.equal(nummer.regel, "Registratie: variabele van Open Formulieren (e-dienstmodel)");
+  assert.equal(nummer.doelPad, "/forms.json/0/registration_backends/0/options/variables_mapping/12");
 });
 
 test("deterministisch: twee keer genereren geeft dezelfde hash", async () => {

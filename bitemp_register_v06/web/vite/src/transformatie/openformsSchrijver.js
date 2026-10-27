@@ -34,7 +34,9 @@
  * van het objecttype): een `objects_api`-backend versie 2 met per component een
  * `variables_mapping` (key → padsegmenten in het object), vaste waarden als
  * gebruikersvariabelen (formVariables.json) met hun eigen mapping, en het pad
- * voor de BSN uit de inlog (`auth_attribute_path`). Wat per omgeving verschilt,
+ * voor de BSN uit de inlog (`auth_attribute_path`). Waarden die Open
+ * Formulieren zelf kent (registratievariabele `public_reference`, statische
+ * variabele `now`) staan direct in de `variables_mapping`. Wat per omgeving verschilt,
  * staat er als plaatshouder (afspraak FUNDAMENT 27-10), de uitrol-adapter vult
  * in: `${OBJECTTYPE_URL:<identifier>}`, `${OBJECTTYPE_VERSION:<identifier>}`
  * en `${OBJECTS_API_GROUP}`. Zo blijft het artefact omgevingsvrij.
@@ -52,8 +54,43 @@ const LITERAL = (resolved) => ({ resolved, value: "" });
 const STAP_LITERALS = { previous_text: LITERAL("Previous page"), save_text: LITERAL("Save current information"), next_text: LITERAL("Next") };
 const STAP_VERTALINGEN = { nl: { previous_text: "", save_text: "", next_text: "" }, en: { previous_text: "", save_text: "", next_text: "" } };
 
+/**
+ * Een file-component met alleen de basisgegevens laat de SDK van Open
+ * Formulieren vastlopen ("Oeps! Er ging helaas iets fout", inzending FUNDAMENT
+ * 27-10). Daarom de volledige standaarddefinitie van de formulierbouwer
+ * (@open-formulieren/formio-builder, registry/file/edit.tsx). Geen
+ * storage/url: die vult Open Formulieren zelf in.
+ */
+const FILE_STANDAARD = {
+  description: "",
+  tooltip: "",
+  showInSummary: true,
+  showInEmail: false,
+  showInPDF: true,
+  multiple: false,
+  hidden: false,
+  clearOnHide: true,
+  isSensitiveData: true,
+  translatedErrors: {},
+  openForms: { softRequired: false, translations: {} },
+  file: { name: "", type: [], allowedTypesLabels: [] },
+  filePattern: "*",
+  useConfigFiletypes: true,
+  of: { image: { resize: { apply: false, width: 2000, height: 2000 } } },
+  fileMaxSize: "10MB",
+  maxNumberOfFiles: null,
+};
+
 /** Eén Form.io-component uit een plan-element. */
 function component(el) {
+  const basis = basisComponent(el);
+  if (basis.type !== "file") return basis;
+  // Volledige definitie; validate.required staat er altijd (de bouwer doet dat ook).
+  const d = el.data || {};
+  return { ...FILE_STANDAARD, ...basis, validate: { required: d.verplicht === true, ...(basis.validate || {}) } };
+}
+
+function basisComponent(el) {
   const d = el.data || {};
   const validate = zonderLeeg({
     required: d.valideerVerplicht === true ? d.verplicht === true : undefined,
@@ -81,6 +118,7 @@ function component(el) {
  * @property {string} objecttype                         - identifier van het objecttype-artefact
  * @property {{variable_key: string, target_path: (string|number)[]}[]} mapping - componenten
  * @property {{key: string, waarde: any, target_path: (string|number)[]}[]} vast - vaste waarden
+ * @property {{variable_key: string, target_path: (string|number)[]}[]} uitOF - variabelen van Open Formulieren zelf
  * @property {(string|number)[]|null} authPad            - waar de BSN uit de inlog landt
  */
 
@@ -114,7 +152,7 @@ const objectsApiBackend = (r) => ({
     objecttype_version: `\${OBJECTTYPE_VERSION:${r.objecttype}}`,
     update_existing_object: false,
     auth_attribute_path: r.authPad || [],
-    variables_mapping: [...r.mapping, ...r.vast.map((v) => ({ variable_key: v.key, target_path: v.target_path }))],
+    variables_mapping: [...r.mapping, ...r.vast.map((v) => ({ variable_key: v.key, target_path: v.target_path })), ...(r.uitOF || [])],
   },
 });
 
@@ -199,6 +237,8 @@ export function planNaarOpenforms(plan, { uuidVoor, ofRelease = OF_RELEASE, regi
       paden.set(`mapping:${m.variable_key}`, `/forms.json/0/registration_backends/0/options/variables_mapping/${i}`);
     });
     registratie.vast.forEach((v, i) => paden.set(`vast:${v.key}`, `/formVariables.json/${i}`));
+    const na = registratie.mapping.length + registratie.vast.length;
+    (registratie.uitOF || []).forEach((m, i) => paden.set(`of:${m.variable_key}`, `/forms.json/0/registration_backends/0/options/variables_mapping/${na + i}`));
     if (registratie.authPad) paden.set("auth", "/forms.json/0/registration_backends/0/options/auth_attribute_path");
   }
   const forms = [
