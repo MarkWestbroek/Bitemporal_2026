@@ -161,7 +161,7 @@ function sluitAan({ graaf, keuzes, objecttype, diagnostics }) {
   const regels = [
     ...graaf.knopen.map((k) => ({ bron: "component", key: k.eigenschappen.key, modelknoop: k.id })),
     ...Object.entries(keuzes.registratie?.vasteWaarden || {}).map(([pad, waarde]) => ({ bron: "vasteWaarde", key: null, modelknoop: pad, waarde })),
-    ...Object.keys(keuzes.registratie?.uitInlog || {}).map((pad) => ({ bron: "uitInlog", key: null, modelknoop: pad })),
+    ...Object.entries(keuzes.registratie?.uitInlog || {}).map(([pad, inlogVariabele]) => ({ bron: "uitInlog", key: null, modelknoop: pad, inlogVariabele })),
     // Waarden die Open Formulieren zelf kent: registratievariabele (public_reference) of statische variabele (now).
     ...Object.entries(keuzes.registratie?.uitOpenFormulieren || {}).map(([pad, variabele]) => ({ bron: "uitOpenFormulieren", key: variabele, modelknoop: pad })),
   ].map((r) => {
@@ -198,15 +198,55 @@ function objectPadUit(schemaPad) {
   return uit;
 }
 
+/**
+ * Open Formulieren schrijft een indexpad (["partijen", 0, "partijrol"]) alleen
+ * goed in een lijst die al bestaat; anders wordt "0" een sleutel en weigert
+ * Open Object het object ("is not of type 'array'", FUNDAMENT 27-10). Daarom per
+ * lijst een gebruikersvariabele `vast_<lijst>` met één item als aanzet: de
+ * vaste waarden van dat item plus lege objecten op de tussenliggende paden.
+ * Een vaste waarde in een lijst wordt geen eigen variabele; de trace wijst naar
+ * de aanzet.
+ */
+function lijstAanzetten(metPad, diagnostics) {
+  const perLijst = new Map();
+  const binnenLijst = new Set();
+  for (const a of metPad) {
+    const i = a.objectPad.findIndex((d) => typeof d === "number");
+    if (i < 0) continue;
+    const rest = a.objectPad.slice(i + 1);
+    if (rest.some((d) => typeof d === "number")) {
+      diagnostics.push({ severity: "warning", code: "FRM-LIJST", message: `Lijst in een lijst (${a.objectPad.join(".")}): alleen de buitenste lijst krijgt een aanzet`, sourceId: a.modelknoop, path: null });
+    }
+    const pad = a.objectPad.slice(0, i);
+    const sleutel = `vast_${pad.join("_")}`;
+    if (!perLijst.has(sleutel)) perLijst.set(sleutel, { key: sleutel, waarde: [{}], target_path: pad });
+    let doel = perLijst.get(sleutel).waarde[0];
+    for (const d of rest.slice(0, -1)) doel = doel[d] ??= {};
+    if (a.bron === "vasteWaarde") {
+      doel[rest[rest.length - 1]] = a.waarde;
+      a.variabele = sleutel;
+      binnenLijst.add(a);
+    }
+  }
+  return { aanzetten: [...perLijst.values()], binnenLijst };
+}
+
 /** De registratie voor de schrijver: mapping per component, vaste waarden, BSN-pad. */
 function registratieUit(aansluiting, objecttype, diagnostics, bijlagen) {
   const metPad = aansluiting.filter((a) => a.objectPad);
   const inlog = metPad.filter((a) => a.bron === "uitInlog");
   if (inlog.length > 1) diagnostics.push({ severity: "warning", code: "FRM-INLOG", message: "Meer dan één waarde uit de inlog; Open Formulieren kent één auth_attribute_path, alleen de eerste telt", sourceId: inlog[1].modelknoop, path: null });
+  const { aanzetten, binnenLijst } = lijstAanzetten(metPad, diagnostics);
   return {
     objecttype: objecttype.artefactIdentificatie?.identifier,
     mapping: metPad.filter((a) => a.bron === "component").map((a) => ({ variable_key: a.key, target_path: a.objectPad })),
-    vast: metPad.filter((a) => a.bron === "vasteWaarde").map((a) => ({ key: a.variabele, waarde: a.waarde, target_path: a.objectPad })),
+    // Eerst de lijst-aanzetten (met de vaste waarden van hun item), dan de vaste waarden buiten een lijst.
+    vast: [
+      ...aanzetten,
+      ...metPad.filter((a) => a.bron === "vasteWaarde" && !binnenLijst.has(a)).map((a) => ({ key: a.variabele, waarde: a.waarde, target_path: a.objectPad })),
+    ],
+    // De statische variabele met het BSN; de e-dienst noemt hem ("auth_bsn (DigiD)").
+    authVariabele: (String(inlog[0]?.inlogVariabele || "").match(/^auth_\w+/) || ["auth_bsn"])[0],
     uitOF: metPad.filter((a) => a.bron === "uitOpenFormulieren").map((a) => ({ variable_key: a.key, target_path: a.objectPad })),
     authPad: inlog[0]?.objectPad || null,
     // Bestanden naar de Documenten API onder dit informatieobjecttype (omschrijving).

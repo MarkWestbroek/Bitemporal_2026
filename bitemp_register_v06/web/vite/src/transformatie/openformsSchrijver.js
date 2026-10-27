@@ -120,6 +120,8 @@ function basisComponent(el) {
     data: d.type === "select" ? { values: waarden } : undefined,
     dataSrc: d.type === "select" ? "values" : undefined,
     values: d.type === "radio" ? waarden : undefined,
+    // Geheel getal: geen decimalen in het getalveld (het schema zegt integer).
+    decimalLimit: typeof d.decimalLimit === "number" ? d.decimalLimit : undefined,
     validate,
     conditional: d.conditional && typeof d.conditional === "object" ? d.conditional : undefined,
   });
@@ -132,6 +134,7 @@ function basisComponent(el) {
  * @property {{key: string, waarde: any, target_path: (string|number)[]}[]} vast - vaste waarden
  * @property {{variable_key: string, target_path: (string|number)[]}[]} uitOF - variabelen van Open Formulieren zelf
  * @property {(string|number)[]|null} authPad            - waar de BSN uit de inlog landt
+ * @property {string} [authVariabele]                     - statische variabele met het BSN (auth_bsn)
  * @property {string|null} [iotBijlagen]                 - informatieobjecttype (omschrijving) voor bestanden
  */
 
@@ -147,7 +150,7 @@ const vasteVariabele = (formUrl, v) => ({
   prefill_attribute: "",
   prefill_identifier_role: "main",
   prefill_options: {},
-  data_type: typeof v.waarde === "boolean" ? "boolean" : typeof v.waarde === "number" ? "float" : "string",
+  data_type: Array.isArray(v.waarde) ? "array" : typeof v.waarde === "boolean" ? "boolean" : typeof v.waarde === "number" ? "float" : "string",
   data_format: "",
   is_sensitive_data: false,
   initial_value: v.waarde,
@@ -165,7 +168,17 @@ const objectsApiBackend = (r) => ({
     objecttype_version: `\${OBJECTTYPE_VERSION:${r.objecttype}}`,
     update_existing_object: false,
     auth_attribute_path: r.authPad || [],
-    variables_mapping: [...r.mapping, ...r.vast.map((v) => ({ variable_key: v.key, target_path: v.target_path })), ...(r.uitOF || [])],
+    // Open Formulieren verwerkt de mapping in volgorde (glom Assign, missing=dict):
+    // een indexpad werkt alleen in een lijst die al bestaat. Dus eerst de vaste
+    // waarden met de lijst-aanzetten, dan de inlog en de componenten, die in de
+    // items schrijven. auth_attribute_path schrijft zelf niets in het object
+    // (alleen eigenaarschap bij update_existing_object): het BSN expliciet.
+    variables_mapping: [
+      ...r.vast.map((v) => ({ variable_key: v.key, target_path: v.target_path })),
+      ...(r.authPad ? [{ variable_key: r.authVariabele || "auth_bsn", target_path: r.authPad }] : []),
+      ...r.mapping,
+      ...(r.uitOF || []),
+    ],
     // Zonder catalogus en informatieobjecttype registreert Open Formulieren een
     // bestand niet in de Documenten API en levert het "" als url (FUNDAMENT
     // 27-10). De catalogus verschilt per omgeving: plaatshouders.
@@ -249,14 +262,17 @@ export function planNaarOpenforms(plan, { uuidVoor, ofRelease = OF_RELEASE, regi
   });
 
   if (registratie) {
+    // Volgorde zoals objectsApiBackend: vaste waarden (lijst-aanzetten eerst), inlog, componenten, Open Formulieren.
+    const mappingPad = (i) => `/forms.json/0/registration_backends/0/options/variables_mapping/${i}`;
+    registratie.vast.forEach((v, i) => paden.set(`vast:${v.key}`, `/formVariables.json/${i}`));
+    const inlog = registratie.authPad ? 1 : 0;
+    if (inlog) paden.set("auth", mappingPad(registratie.vast.length));
     registratie.mapping.forEach((m, i) => {
       if (!keys.has(m.variable_key)) diagnostics.push({ severity: "warning", code: "OFS-MAPPING", message: `Mapping voor onbekende component "${m.variable_key}"`, sourceId: null, path: null });
-      paden.set(`mapping:${m.variable_key}`, `/forms.json/0/registration_backends/0/options/variables_mapping/${i}`);
+      paden.set(`mapping:${m.variable_key}`, mappingPad(registratie.vast.length + inlog + i));
     });
-    registratie.vast.forEach((v, i) => paden.set(`vast:${v.key}`, `/formVariables.json/${i}`));
-    const na = registratie.mapping.length + registratie.vast.length;
-    (registratie.uitOF || []).forEach((m, i) => paden.set(`of:${m.variable_key}`, `/forms.json/0/registration_backends/0/options/variables_mapping/${na + i}`));
-    if (registratie.authPad) paden.set("auth", "/forms.json/0/registration_backends/0/options/auth_attribute_path");
+    const na = registratie.vast.length + inlog + registratie.mapping.length;
+    (registratie.uitOF || []).forEach((m, i) => paden.set(`of:${m.variable_key}`, mappingPad(na + i)));
   }
   const forms = [
     {

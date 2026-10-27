@@ -37,7 +37,7 @@ const component = (naam, als, type, data = BASIS) => ({ naam, bij: "knoop", als:
 
 export const CANONIEK_NAAR_FORMULIER = {
   id: "canoniek-naar-formulier",
-  versie: "0.1.0",
+  versie: "0.2.0",
   titel: "Canoniek model → formulier (Open Formulieren)",
   bron: "canoniek-uml (V3) + e-dienst",
   doel: "openforms-export",
@@ -62,7 +62,8 @@ export const CANONIEK_NAAR_FORMULIER = {
     component("Verwijzing naar een referentielijst → keuzelijst", { refAls: "code" }, "select", { ...BASIS, waarden: "{eigenschappen.waarden}" }),
     component("Enum → keuzerondjes", { heeftEnum: true }, "radio", { ...BASIS, waarden: "{eigenschappen.waarden}" }),
     component("Ja/nee → vinkje", { basistype: "boolean" }, "checkbox"),
-    component("Getal → getalveld", { basistype: ["integer", "number"] }, "number"),
+    component("Geheel getal → getalveld zonder decimalen", { basistype: "integer" }, "number", { ...BASIS, decimalLimit: 0 }),
+    component("Getal → getalveld", { basistype: "number" }, "number"),
     component("E-mailadres → e-mailveld", { format: "email" }, "email", TEKST),
     component("Datum → datumveld", { format: "date" }, "date"),
     component("Tijdstip → datum-tijdveld", { format: "date-time" }, "datetime"),

@@ -803,7 +803,10 @@ objecttype erbij schrijft de schrijver een `objects_api`-backend (versie 2):
 - per vaste waarde (`registratie.vasteWaarden`) een gebruikersvariabele
   `vast_<pad>` in `formVariables.json` met de waarde als `initial_value`, plus
   zijn mapping;
-- de BSN uit de inlog (`registratie.uitInlog`) als `auth_attribute_path`;
+- de BSN uit de inlog (`registratie.uitInlog`) via de statische variabele
+  `auth_bsn` in de mapping; `auth_attribute_path` blijft staan, maar schrijft
+  in 4.0.3 niets in het object (alleen eigenaarschap bij
+  `update_existing_object`);
 - waarden die Open Formulieren zelf kent (`registratie.uitOpenFormulieren`
   {modelpad: variabele}) direct in de `variables_mapping`: voor de GPK
   registratievariabele `public_reference` → aanvraagnummer (het
@@ -820,6 +823,23 @@ De registratie staat ook in de trace (regels "Registratie: …"). Open Object
 neemt de paden in array-items aan (`partijen[0]`, `bijlagen[0]`; getoetst door
 FUNDAMENT 27-10).
 
+**Lijsten en volgorde** (derde inzending, FUNDAMENT 27-10). Open Formulieren
+schrijft de mapping in volgorde met glom (`Assign`, `missing=dict`): een
+indexpad als `["partijen", 0, "partijrol"]` werkt alleen in een lijst die al
+bestaat, anders wordt `"0"` een sleutel en weigert Open Object het object
+("is not of type 'array'"). Per lijst komt er daarom een gebruikersvariabele
+`vast_<lijst>` (data_type `array`) met één item als **aanzet**: de vaste
+waarden van dat item plus lege objecten op de tussenliggende paden
+(`vast_partijen = [{partijrol: "aanvrager", partij: {}}]`). De mapping begint
+met de vaste waarden (aanzetten eerst), dan het BSN, dan de componenten en de
+variabelen van Open Formulieren; zo overschrijft de pasfoto de url in het
+aanzet-item. Een lijst in een lijst krijgt geen aanzet (`FRM-LIJST`). Eerste
+geslaagde object: OF-BKZPCT (FUNDAMENT, hotfix in deze vorm).
+
+**Getallen.** Een geheel getal in het model (`integer`) wordt een getalveld met
+`decimalLimit: 0`, zodat het formulier geen 50,5 aanneemt dat het schema
+weigert (regelset 0.2.0).
+
 **Bestanden naar de Documenten API.** Zonder catalogus en informatieobjecttype
 in de registratie-opties registreert Open Formulieren een bestand niet en zet
 het `""` in `bijlagen[0].documentUrl`; Open Object weigert dat (geen uri;
@@ -828,7 +848,16 @@ tweede inzending, FUNDAMENT 27-10). De e-dienst noemt het informatieobjecttype
 `Bijlage`) → `iotAttachment`; de catalogus verschilt per omgeving en is een
 plaatshouder: `catalogue: {domain: "${CATALOGUS_DOMEIN}", rsin:
 "${CATALOGUS_RSIN}"}`. Open: of de url van het enkelvoudig informatieobject
-inderdaad in `documentUrl` landt (volgende inzending).
+inderdaad in `documentUrl` landt (volgende inzending). Gezien bij OF-BKZPCT: `documentUrl` is de url van het
+enkelvoudig informatieobject in Open Zaak; de `titel` van dat document is de
+formuliernaam, dus de naam van de bijlage komt uit de vaste waarde.
+
+**Open punten na de eerste inzendingen.** `now` is het registratiemoment
+(minuutprecisie), niet het indienmoment: bij een herkansing schuift
+`ingediendOp` op; voor v1 aanvaard. Een optioneel veld met patroon, formaat of
+enum dat verborgen of leeg blijft (kenteken bij soort ≠ bestuurder) gaat als
+`""` mee, en Open Object weigert dat tegen het patroon; keuze Mark: lege
+string toestaan in het objecttype of anders oplossen.
 
 **Uploadveld.** Een `file`-component met alleen de basisgegevens laat de SDK
 vastlopen ("Oeps! Er ging helaas iets fout"). De schrijver (0.2.0) zet daarom
