@@ -866,6 +866,17 @@ trigger geeft een 500. Het moment is de laatste evaluatie bij het afronden,
 vlak vóór het indienen; minuutprecisie. Doel later (weg b): de ontvanger van
 de inzending zet `ingediendOp` uit `completed_on`.
 
+Valkuil bij de import: een geïmporteerde logica-regel heeft in 4.0.3 geen
+stapkoppeling (`form_steps` leeg) en draait dan nooit. De uitrol-adapter van
+FUNDAMENT slaat de regels na de import opnieuw op (`PUT …/logic-rules`),
+waarna Open Formulieren de stap bepaalt; het artefact blijft zoals het is.
+
+**Stand v1 (27-10).** Vijf echte inzendingen op cg-test; de laatste twee
+(OF-7ETATE, OF-TY9VTY) in één keer geregistreerd uit het register, zonder
+hotfix: soort passagier en instelling met leeg kenteken, BSN uit de inlog in
+`partijen[0]`, pasfoto als enkelvoudig informatieobject in Open Zaak
+(verkleind, alleen jpeg/png), `ingediendOp` uit de logica-regel.
+
 **Open punten na de eerste inzendingen.** Een optioneel veld met patroon, formaat of
 enum dat verborgen of leeg blijft (kenteken bij soort ≠ bestuurder) gaat als
 `""` mee, en Open Object weigerde dat tegen het patroon. Opgelost in de
