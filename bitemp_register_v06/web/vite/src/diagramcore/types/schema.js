@@ -53,6 +53,10 @@
  *   de vaste lijst (bv. BPMN-event-soorten, ArchiMate-access lezen/schrijven)
  * @property {boolean} [verplicht]
  * @property {string} [placeholder]        - voorbeeldtekst in een leeg invoerveld
+ * @property {{key: string, waarde?: any}} [zichtbaarAls] - voorwaardelijk tonen (M3, 2026-10-27):
+ *   de inspector toont deze eigenschap pas als eigenschap `key` aan staat (of gelijk is aan
+ *   `waarde`, of één van een lijst). Alleen weergave; een gevulde eigenschap blijft zichtbaar.
+ *   Bv. canoniek `tijdprecisie` met `{key: "materieel"}`. Zie diagramcore/model/zichtbaarAls.js.
  * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
  * @property {"afgeleid"|"kardinaliteit"|"standaardwaarde"|"geordend"|"nietUniek"|"alleenLezen"|"id"|"zichtbaarheid"|"beschrijving"|"verwijzing"} [betekenis]
  *   ("verwijzing", 2026-10-20: deze diagram-verwijzing ís de doorklik van het element — de

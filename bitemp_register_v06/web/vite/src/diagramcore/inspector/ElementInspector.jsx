@@ -25,6 +25,7 @@ import {
 } from "./propertyTypeEditors.jsx";
 import { metBeschrijving } from "../model/beschrijving.js";
 import { metVerwijstNaar } from "../model/verwijstNaar.js";
+import { isZichtbaar } from "../model/zichtbaarAls.js";
 // Eigen opmaak, ook zonder open diagram: de stylesheet laadde alleen met de
 // canvas mee, dus zonder diagram vielen de rijen terug op de browser-
 // standaard (smal tekstvak, labels erboven — gemeld 2026-10-12).
@@ -87,6 +88,7 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorC
   const inline = [];
   const detail = [];
   for (const regel of regels) {
+    if (!isZichtbaar(regel, { naam: veld.naam, ...veld.data })) continue; // M3 zichtbaarAls (27-10)
     const zwaar = regel.datatype === "boolean" || regel.datatype === "tekst";
     if (!zwaar && inline.length < 3) inline.push(regel);
     else detail.push(regel);
@@ -244,8 +246,11 @@ export default function ElementInspector({
 
       {/* PropertyTypes van het ElementType (tekst, expressie, kleur, …), met
           vooraan de vaste M3-beschrijving (diagramcore/model/beschrijving.js)
-          en achteraan de vaste doorklik (model/verwijstNaar.js). */}
-      {metVerwijstNaar(metBeschrijving(elementType?.properties, elementType), elementType).map((regel) => (
+          en achteraan de vaste doorklik (model/verwijstNaar.js); een eigenschap met
+          zichtbaarAls pas als haar voorwaarde geldt (model/zichtbaarAls.js). */}
+      {metVerwijstNaar(metBeschrijving(elementType?.properties, elementType), elementType)
+        .filter((regel) => isZichtbaar(regel, element.data))
+        .map((regel) => (
         <div className="dc-inspector-rij" key={regel.key}>
           <label className="dc-veldlabel">{regel.label || regel.key}</label>
           <PropertyWidget

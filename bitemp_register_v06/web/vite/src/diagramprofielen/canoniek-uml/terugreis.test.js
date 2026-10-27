@@ -505,3 +505,35 @@ test("store-round-trip: in 0.5 bewerkte GE-velden gaan terug naar de oude datavo
   assert.equal(terug.data.naamLabelTerug, "is adres van");
   assert.equal(terug.domein, "np-loc");
 });
+
+// Tijdprecisie (27-10, besluit Mark met BACKEND): "tijdstip" reist mee bij materieel;
+// "datum" (standaard) en een tijdstip zonder materieel worden niet geschreven.
+test("tijdprecisie: tijdstip bij materieel overleeft de rondreis, anders weg", () => {
+  const bron = maakBronState();
+  bron.elements.GE1.data = { ...bron.elements.GE1.data, isMaterieel: true, tijdprecisie: "tijdstip" };
+  bron.elements.REL1.data = { ...bron.elements.REL1.data, tijdprecisie: "tijdstip" }; // niet materieel
+  const canoniek = vanCanoniekModel(bron);
+  assert.equal(canoniek.elements.GE1.data.tijdprecisie, "tijdstip", "heenreis: in de Studio-data");
+  assert.equal(canoniek.elements.GE1.data.materieel, true);
+
+  const terug = naarCanoniekModel(canoniek);
+  assert.equal(terug.elements.GE1.data.tijdprecisie, "tijdstip");
+  assert.ok(!("tijdprecisie" in terug.elements.REL1.data), "zonder materieel niet geschreven");
+
+  // In de Studio terug naar datum, of materieel uit: de oude waarde uit data.bron verdwijnt.
+  canoniek.elements.GE1.data.tijdprecisie = "";
+  assert.ok(!("tijdprecisie" in naarCanoniekModel(canoniek).elements.GE1.data), "datum wordt niet geschreven");
+  canoniek.elements.GE1.data.tijdprecisie = "tijdstip";
+  canoniek.elements.GE1.data.materieel = false;
+  assert.ok(!("tijdprecisie" in naarCanoniekModel(canoniek).elements.GE1.data), "materieel uit: weg");
+});
+
+test("tijdprecisie: V3 → Studio → V3 met het cg-test-model (twee GE's met tijdstip)", async () => {
+  const fs = await import("node:fs");
+  const v3 = JSON.parse(fs.readFileSync(new URL("./fixtures/cg-test/omnium-model-cg-test-v3.json", import.meta.url), "utf8"));
+  const tel = (o) => JSON.stringify(o).split('"tijdprecisie":"tijdstip"').length - 1;
+  const store = v3ModelNaarStore(v3);
+  assert.equal(tel(v3), 2);
+  assert.equal(tel(store), 2, "V3 → store");
+  assert.equal(tel(storeNaarV3Model(naarCanoniekModel(vanCanoniekModel(store)))), 2, "terug naar V3");
+});

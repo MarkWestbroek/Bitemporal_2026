@@ -100,6 +100,15 @@ function afgeleideVeldenConvert(arr) {
  * @param {object} v3Full  - Volledig V3 object (met bron, model, etc.)
  * @returns {{ elements, structuralEdges, diagrams, domains, modelMeta }}
  */
+/**
+ * Tijdprecisie van de materiële tijdlijn (besluit Mark 27-10, met BACKEND): V3 kent
+ * `tijdprecisie: "tijdstip"` alleen naast `isMaterieel: true`; "datum" is de standaard en
+ * wordt nooit geschreven. Zelfde regel heen en terug (zie ook canoniek-uml/adapter.js).
+ */
+function tijdprecisieVan(d) {
+  return d?.isMaterieel && d.tijdprecisie === "tijdstip" ? { tijdprecisie: "tijdstip" } : {};
+}
+
 export function v3ModelNaarStore(v3Full) {
   const v3Model = v3Full?.model || v3Full;
   const elements = {};
@@ -235,6 +244,8 @@ export function v3ModelNaarStore(v3Full) {
         meervoud: ent.meervoud || "",
         metatype: "entiteit",
         isMaterieel: ent.isMaterieel || false,
+        // Tijdprecisie (27-10): alleen "tijdstip" bij materieel; "datum" = standaard, weggelaten.
+        ...tijdprecisieVan(ent),
         entiteitSubtype: ent.entiteitSubtype || "",
         kleur: ent.kleur || defaultKleur("entiteit", ent.entiteitSubtype || ""),
         velden: [],
@@ -279,6 +290,7 @@ export function v3ModelNaarStore(v3Full) {
           meervoud: ge.meervoud || "",
           metatype: "gegevenselement",
           isMaterieel: ge.isMaterieel || false,
+          ...tijdprecisieVan(ge),
           kleur: defaultKleur("gegevenselement"),
           naamLabelHeen: ge.naamLabelHeen || "",
           naamLabelTerug: ge.naamLabelTerug || "",
@@ -333,6 +345,7 @@ export function v3ModelNaarStore(v3Full) {
             meervoud: rel.meervoud || "",
             metatype: "relatie",
             isMaterieel: rel.isMaterieel || false,
+            ...tijdprecisieVan(rel),
             relatieSubtype: rel.relatieSubtype || "",
             referentielijstInstantie: rel.referentielijstInstantie || "",
             kleur: defaultKleur("relatie", rel.relatieSubtype || ""),
@@ -998,6 +1011,7 @@ export function storeNaarV3Model(state) {
     if (ent.domein) v3Ent.domein = ent.domein;
     if (d.entiteitSubtype) v3Ent.entiteitSubtype = d.entiteitSubtype;
     if (d.isMaterieel) v3Ent.isMaterieel = true;
+    Object.assign(v3Ent, tijdprecisieVan(d));
     if (d.kleur) v3Ent.kleur = d.kleur;
 
     // Generalisatie: supertype afleiden uit diagram-edge
@@ -1035,6 +1049,7 @@ export function storeNaarV3Model(state) {
         if (cd.description) v3GE.description = cd.description;
         if (child.domein && child.domein !== ent.domein) v3GE.domein = child.domein;
         if (cd.isMaterieel) v3GE.isMaterieel = true;
+        Object.assign(v3GE, tijdprecisieVan(cd));
         if (cd.naamLabelHeen) v3GE.naamLabelHeen = cd.naamLabelHeen;
         if (cd.naamLabelTerug) v3GE.naamLabelTerug = cd.naamLabelTerug;
 
@@ -1254,6 +1269,7 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
   if (cd.relatieSubtype) v3Rel.relatieSubtype = cd.relatieSubtype;
   if (cd.referentielijstInstantie) v3Rel.referentielijstInstantie = cd.referentielijstInstantie;
   if (cd.isMaterieel) v3Rel.isMaterieel = true;
+  Object.assign(v3Rel, tijdprecisieVan(cd));
   if (cd.naamLabelHeen) v3Rel.naamLabelHeen = cd.naamLabelHeen;
   if (cd.naamLabelTerug) v3Rel.naamLabelTerug = cd.naamLabelTerug;
   // {ordered} (V3Relatie.geordend sinds de backend van 2026-10-11).

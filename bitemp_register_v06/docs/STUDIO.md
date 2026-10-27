@@ -715,7 +715,7 @@ UML-activiteit (zelfde IDE), zoals gewenst.
 > **Metamodel v2026 in het profiel (2026-10-09).** Het canonieke profiel heeft een
 > abstracte wortel `representatie` (niet instantieerbaar, geen knop) met wat
 > entiteit, gegevenselement en relatie delen: beschrijving, meervoud, tijdlijn
-> (materieel), kleur en de velden-compartimenten. `entiteit` en
+> (materieel, met tijdprecisie datum/tijdstip sinds 27-10), kleur en de velden-compartimenten. `entiteit` en
 > `gegevenselement` erven ervan; `relatie` erft van `gegevenselement` — een
 > relatie ís een gegevenselement met bron en doel, zoals in de backend
 > (`Representatie`-interface) en in Marks EA-metamodel. De motor vlakt dat bij
@@ -723,6 +723,15 @@ UML-activiteit (zelfde IDE), zoals gewenst.
 > STUDIO-05-diagramcore-plan.md §4.2b); een bron of doel van een relatie is
 > nooit zelf een relatie. Zichtbaar gevolg: de inspector van een relatie toont
 > ook de geërfde velden (o.a. `typenaam`); in V3 is dat de naam.
+>
+> **Tijdprecisie (2026-10-27, besluit Mark met BACKEND).** `tijdprecisie` naast `materieel`:
+> leeg = datum (standaard), `"tijdstip"` = aanvang en einde als RFC 3339-tijdstip (einde
+> exclusief), zodat wisselingen op één dag gewone opvolgingen zijn. V3 kent de sleutel alleen
+> naast `isMaterieel: true`; "datum" wordt nooit geschreven (`canoniek-uml/adapter.js`
+> `metTijdprecisie`, `store/adapters.js` `tijdprecisieVan`). De inspector toont het veld pas
+> bij materieel (M3 `PropertyType.zichtbaarAls`, `diagramcore/model/zichtbaarAls.js`); staat
+> tijdstip toch zonder materieel (import, MCP), dan waarschuwt `hooks.valideer`. De relatielijn
+> toont «materieel, tijdstip».
 
 
 > Toegevoegd: 2026-07-03 (fase 1+2 van [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)).

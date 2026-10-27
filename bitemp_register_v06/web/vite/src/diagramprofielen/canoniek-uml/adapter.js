@@ -30,6 +30,16 @@ const profielVelden = (elementTypeId) =>
 const bewerkt = (elementTypeId, data) =>
   Object.fromEntries(profielVelden(elementTypeId).filter((k) => k in data).map((k) => [k, data[k]]));
 
+/**
+ * Terugreis van de tijdprecisie (27-10): alleen "tijdstip" bij een materieel element
+ * wordt geschreven; "datum" is de standaard en blijft weg, net als een oude waarde uit
+ * `data.bron` bij een element dat niet (meer) materieel is.
+ */
+function metTijdprecisie(data) {
+  const { tijdprecisie, ...rest } = data;
+  return rest.isMaterieel === true && tijdprecisie === "tijdstip" ? { ...rest, tijdprecisie } : rest;
+}
+
 /** Type-kolomtekst voor een veld — zelfde opbouw als EntiteitNode. */
 export function veldTypeLabel(v) {
   return typeLabel(v);
@@ -103,6 +113,7 @@ function naarCoreElement(el) {
   // Bewerkbare profiel-properties (1-op-1, mappingV3Canoniek.js) in data;
   // typespecifieke code hieronder mag ze nog verfijnen.
   for (const k of profielVelden(el.type)) if (d[k]) basis.data[k] = d[k];
+  if (d.tijdprecisie) basis.data.tijdprecisie = d.tijdprecisie;
   // V3 `description` = de vaste M3-beschrijving (2026-10-12).
   if (d.description) basis.data.beschrijving = d.description;
 
@@ -626,16 +637,17 @@ export function naarCanoniekModel(coreState) {
           naam: el.naam,
           type: "entiteit",
           domein: domeinVoor(el),
-          data: {
+          data: metTijdprecisie({
             ...bron,
             ...bewerkt("entiteit", d),
             typenaam: el.naam,
             kleur: d.kleur ?? bron.kleur,
             isAbstract: d.abstract === true,
             isMaterieel: d.materieel === true,
+            tijdprecisie: "tijdprecisie" in d ? d.tijdprecisie : bron.tijdprecisie,
             velden: basisVelden(),
             afgeleideVelden: basisAfgeleid(),
-          },
+          }),
         };
         break;
       case "gegevenselement":
@@ -644,7 +656,7 @@ export function naarCanoniekModel(coreState) {
           naam: el.naam,
           type: "gegevenselement",
           domein: domeinVoor(el),
-          data: {
+          data: metTijdprecisie({
             ...bron,
             // In de inspector bewerkte GE-velden winnen van de heenreis-kopie.
             ...bewerkt("gegevenselement", d),
@@ -652,9 +664,10 @@ export function naarCanoniekModel(coreState) {
             typenaam: ("typenaam" in d ? d.typenaam : bron.typenaam) || el.naam,
             kleur: d.kleur ?? bron.kleur,
             isMaterieel: d.materieel === true,
+            tijdprecisie: "tijdprecisie" in d ? d.tijdprecisie : bron.tijdprecisie,
             velden: basisVelden(),
             afgeleideVelden: basisAfgeleid(),
-          },
+          }),
         };
         break;
       case "relatie": {
@@ -664,12 +677,13 @@ export function naarCanoniekModel(coreState) {
           naam: el.naam,
           type: "relatie",
           domein: domeinVoor(el),
-          data: {
+          data: metTijdprecisie({
             ...bron,
             ...bewerkt("relatie", d),
             typenaam: el.naam,
             kleur: d.kleur ?? bron.kleur,
             isMaterieel: d.materieel === true,
+            tijdprecisie: "tijdprecisie" in d ? d.tijdprecisie : bron.tijdprecisie,
             doelEntiteit: el.target || bron.doelEntiteit || "",
             bronKardinaliteit: bronKard,
             doelKardinaliteit: d.doelKardinaliteit ?? bron.doelKardinaliteit,
@@ -681,7 +695,7 @@ export function naarCanoniekModel(coreState) {
               bronKard === "0..1" || bronKard === "1" || bronKard === "1..1" ? "enkelvoudig" : "meervoudig",
             velden: basisVelden(),
             afgeleideVelden: basisAfgeleid(),
-          },
+          }),
         };
         if (el.source && el.target) {
           structuralEdges.push({
