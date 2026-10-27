@@ -9,6 +9,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Tijdprecisie in het canonieke profiel** (27-10, besluit Mark met BACKEND). Naast
+  `materieel` op entiteit, gegevenselement en relatie: `tijdprecisie` datum (standaard) of
+  tijdstip (aanvang en einde als RFC 3339-tijdstip). V3 → Studio → V3 rondreis (ook in
+  `store/adapters.js`); geschreven alleen bij materieel + tijdstip, "datum" nooit. Relatielijn
+  «materieel, tijdstip»; waarschuwing als tijdstip zonder materieel staat.
+- **M3: voorwaardelijk tonen van een eigenschap** (`PropertyType.zichtbaarAls`, 27-10, Mark).
+  De inspector toont een eigenschap pas als een andere aan staat (of een waarde heeft); een
+  gevulde eigenschap blijft zichtbaar. Eerste gebruik: tijdprecisie pas bij materieel.
+  `diagramcore/model/zichtbaarAls.js`; ook voor velden (FieldType-properties).
 - **Objecttype: overerving en partijen met een rol** (27-10, regelset canoniek-naar-objecttype
   0.2.0). Een subtype (`erft`) geeft één schema met de velden van de ouder; een relatie met eigen
   velden (AanvraagPartij met `partijrol`) wordt een lijst van {partijrol, partij}; velden binnen

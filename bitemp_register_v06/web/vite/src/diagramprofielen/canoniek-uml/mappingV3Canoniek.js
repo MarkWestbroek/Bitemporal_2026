@@ -16,7 +16,8 @@
  *
  *  - EIGEN_VERTALING: basis-eigenschappen die de adapter voor élk type al
  *    vertaalt, met een andere vorm in het oude model (`materieel` ↔
- *    `isMaterieel`, `domein` staat naast `data`, `kleur` met terugval).
+ *    `isMaterieel`, `domein` staat naast `data`, `kleur` met terugval,
+ *    `tijdprecisie` alleen bij materieel + tijdstip).
  *  - GENERIEKE_TYPES: de elementtypen waarvoor deze 1-op-1-route aan staat.
  *    Andere typen (gegevenstype, enumeratie, …) hebben properties die in de
  *    oude vorm anders gestructureerd zijn en houden hun eigen vertaling.
@@ -26,7 +27,7 @@
  */
 
 /** Properties met een eigen vertaling in de adapter (niet 1-op-1 in data). */
-export const EIGEN_VERTALING = new Set(["kleur", "materieel", "domein"]);
+export const EIGEN_VERTALING = new Set(["kleur", "materieel", "tijdprecisie", "domein"]);
 
 /**
  * Per elementtype: geërfde properties die voor dát type níet 1-op-1 meegaan.

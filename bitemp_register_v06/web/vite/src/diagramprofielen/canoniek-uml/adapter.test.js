@@ -298,3 +298,16 @@ test("compositie-labels: leesrichting komt van de GE, de connector-kopie is teru
   assert.ok(teksten({ elements }).includes("◀ hoort bij"));
   assert.ok(!teksten({ elements }).includes("▶ oud"));
 });
+
+test("tijdprecisie: «materieel, tijdstip» op de relatielijn, waarschuwing zonder materieel", async () => {
+  const { controleerTijdprecisie } = await import("./index.js");
+  const rel = canoniekUmlDiagramType.elementTypes.find((et) => et.id === "relatie");
+  const teksten = (data) => (rel.hooks.edgeLabels({ id: "r", data }).kaal || []).flatMap((l) => l.delen.map((d) => d.tekst));
+  assert.ok(teksten({ materieel: true }).includes("«materieel»"));
+  assert.ok(teksten({ materieel: true, tijdprecisie: "tijdstip" }).includes("«materieel, tijdstip»"));
+  assert.ok(!teksten({ tijdprecisie: "tijdstip" }).some((t) => t.includes("materieel")));
+
+  assert.equal(controleerTijdprecisie({ data: { materieel: true, tijdprecisie: "tijdstip" } }), null);
+  assert.equal(controleerTijdprecisie({ data: { tijdprecisie: "" } }), null);
+  assert.match(controleerTijdprecisie({ data: { tijdprecisie: "tijdstip" } }), /alleen bij materieel/);
+});

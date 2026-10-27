@@ -129,6 +129,32 @@ export function isRefLijstItem(el) {
 /** Beschrijving en meervoud: zoals "Details" in de oude IDE voor ENT/GE/REL. */
 const MEERVOUD_VELD = { key: "meervoud", label: "meervoud", datatype: "string", placeholder: "bijv. Personen" };
 const MATERIEEL_VELD = { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" };
+/**
+ * Tijdprecisie van de materiële tijdlijn (besluit Mark 27-10, met BACKEND): "datum"
+ * (standaard, niet geschreven) of "tijdstip" (aanvang en einde als RFC 3339-tijdstip,
+ * einde exclusief). Betekent alleen iets bij materieel; zonder materieel waarschuwt
+ * de Studio (controleerTijdprecisie) en schrijft de terugreis hem niet (adapter.js).
+ */
+const TIJDPRECISIE_VELD = {
+  key: "tijdprecisie",
+  label: "tijdprecisie",
+  datatype: "keuze",
+  // Pas zichtbaar bij materieel (M3 zichtbaarAls, 27-10).
+  zichtbaarAls: { key: "materieel" },
+  opties: [
+    { waarde: "", label: "datum (standaard)" },
+    { waarde: "tijdstip", label: "tijdstip" },
+  ],
+};
+
+/** Waarschuwing: tijdstip gekozen zonder materieel (dan reist hij niet mee naar V3). */
+export function controleerTijdprecisie(element) {
+  const d = element?.data || {};
+  if (d.tijdprecisie === "tijdstip" && !d.materieel) {
+    return "Tijdprecisie 'tijdstip' geldt alleen bij materieel; zet materieel aan of kies datum.";
+  }
+  return null;
+}
 
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
@@ -149,7 +175,9 @@ const elementTypes = [
     // ze gelijk; de terugreis zet typenaam := naam) en domein = het package
     // waar de entiteit in staat — daarom geen aparte properties.
     // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
-    properties: [MEERVOUD_VELD, MATERIEEL_VELD, KLEUR_VELD],
+    properties: [MEERVOUD_VELD, MATERIEEL_VELD, TIJDPRECISIE_VELD, KLEUR_VELD],
+    // Geërfd per hook-sleutel (types/erfenis.js): entiteit, GE en relatie.
+    hooks: { valideer: controleerTijdprecisie },
     // Afgeleid boven de gewone velden (Mark, 10-10): voor ENT, GE en relatie,
     // ook in een opgenomen GE (opname.js volgt deze volgorde).
     compartments: [
@@ -319,8 +347,10 @@ const elementTypes = [
           kaal.push({ zijde: "doel", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
         }
         // Tijdlijnvoorkomen (LGM): «materieel» op de lijn; formeel is default.
+        // Met tijdprecisie tijdstip (27-10): «materieel, tijdstip».
         if (d.materieel) {
-          const label = { zijde: "midden", delen: [{ tekst: "«materieel»", soort: "constraint", kleur: "#0369a1" }] };
+          const tekst = d.tijdprecisie === "tijdstip" ? "«materieel, tijdstip»" : "«materieel»";
+          const label = { zijde: "midden", delen: [{ tekst, soort: "constraint", kleur: "#0369a1" }] };
           kaal.push(label);
           bron.push(label);
         }
