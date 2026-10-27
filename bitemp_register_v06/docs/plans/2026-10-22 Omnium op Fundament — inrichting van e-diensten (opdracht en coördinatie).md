@@ -393,6 +393,12 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     constraint laat falen kwam door de zelftest maar stopte de API bij de start → crashlus. Gebouwd:
     FK-constraints niet-fataal, en de rebuild doet een **databaseproef** (`bitemp-go-api dbproef`:
     CreateTables in een transactie met ROLLBACK) vóór activeren; zie `docs/DEVLOOP.md`.
+21. **Subtype toont `id` in JSON (27-10, besluit Mark; gemerged 9bb56b7f, devloop 0.24.6,
+    digest `sha256:24f5e4cb…`).** Een subtype ís zijn ouder met hetzelfde id; de registratievorm is
+    daarom `{"<subtype>": {"id": N}}` (was `{"<ouder>_id": N}`), en `/full` toont `id`. De
+    databasekolom blijft `<ouder>_id`. Plaatshouders (`$nieuw`) werken op ouder én subtype in één
+    registratie. Codegen-controles uit punt 20 (typenaam-/tabelnaambotsingen) zijn mee in 0.24.6
+    (gemerged 9403a0be). FUNDAMENT's gpk-docs en -scripts moeten `id` gebruiken.
 12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
     actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
     inrichting-model wacht op het nieuwe image.
