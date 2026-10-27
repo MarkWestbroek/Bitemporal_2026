@@ -101,7 +101,9 @@
           "naam": "Pasfoto",
           "slug": "pasfoto",
           "velden": [
-            { "veld": "Aanvraag.AanvraagBijlage.documentUrl", "key": "pasfoto", "label": "Pasfoto", "verplicht": true, "component": "file" }
+            { "veld": "Aanvraag.AanvraagBijlage.documentUrl", "key": "pasfoto", "label": "Pasfoto", "verplicht": true, "component": "file",
+              "bestand": { "typen": ["image/jpeg", "image/png"], "verkleinTot": { "breedte": 2000, "hoogte": 2000 } },
+              "_bestand": "verkleinen bij upload: Open Zaak (Documenten API) weigert een request-body boven 2,5 MB (FUNDAMENT 27-10)" }
           ]
         }
       ],
@@ -115,6 +117,8 @@
           "Aanvraag.AanvraagBijlage.naam": "pasfoto"
         },
         "uitInlog": { "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn": "auth_bsn (DigiD)" },
+        "bijlagen": { "informatieobjecttype": "Bijlage" },
+        "_bijlagen": "omschrijving van het informatieobjecttype in de catalogus (zaaktype); de catalogus zelf (domein, rsin) vult de uitrol per omgeving in",
         "uitOpenFormulieren": {
           "Aanvraag.AanvraagIdentificatie.aanvraagnummer": "public_reference",
           "Aanvraag.AanvraagIndiening.ingediendOp": "now"

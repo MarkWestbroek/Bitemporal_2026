@@ -28,7 +28,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   0.2.0). Aanvraagnummer en ingediendOp komen uit Open Formulieren zelf (`public_reference`, `now`;
   e-dienst `registratie.uitOpenFormulieren`), zodat Open Object het object aanneemt; het
   uploadveld krijgt de volledige standaarddefinitie van de formulierbouwer (de minimale liet de
-  SDK vastlopen).
+  SDK vastlopen). Daarna (tweede inzending): bestanden naar de Documenten API onder het
+  informatieobjecttype uit de e-dienst (`registratie.bijlagen`, catalogus als plaatshouder), en per
+  veld `bestand` met toegestane typen en verkleinen bij upload (Open Zaak weigert > 2,5 MB).
 - **Inrichting van e-diensten: formulier uit het canonieke model** (27-10, regelset
   canoniek-naar-formulier 0.1.0). De e-dienst kiest stappen, velden, labels en tonen-als; het model
   bepaalt de vorm (referentielijst → keuzelijst, enum → keuzerondjes, ja/nee → vinkje, getal,

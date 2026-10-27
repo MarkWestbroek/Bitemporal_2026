@@ -66,10 +66,13 @@ test("GPK: de vorm volgt uit de inhoud van het model", async () => {
   // Het uploadveld met de volledige standaarddefinitie van de formulierbouwer
   // (de minimale liet de SDK vastlopen, inzending FUNDAMENT 27-10).
   assert.equal(per.pasfoto.fileMaxSize, "10MB");
-  assert.equal(per.pasfoto.filePattern, "*");
-  assert.deepEqual(per.pasfoto.file, { name: "", type: [], allowedTypesLabels: [] });
   assert.deepEqual(per.pasfoto.openForms, { softRequired: false, translations: {} });
   assert.equal(per.pasfoto.maxNumberOfFiles, null);
+  // Uit de e-dienst: alleen jpeg/png, en verkleinen bij upload (Open Zaak weigert > 2,5 MB).
+  assert.deepEqual(per.pasfoto.file, { name: "", type: ["image/jpeg", "image/png"], allowedTypesLabels: [".jpeg", ".png"] });
+  assert.equal(per.pasfoto.filePattern, "image/jpeg,image/png");
+  assert.equal(per.pasfoto.useConfigFiletypes, false);
+  assert.deepEqual(per.pasfoto.of, { image: { resize: { apply: true, width: 2000, height: 2000 } } });
   assert.equal(per.pasfoto.storage, undefined);
   // Geen validate zonder keuze en zonder verplicht in het model.
   assert.equal(per.toelichting.validate, undefined);
@@ -102,6 +105,9 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
   assert.deepEqual(naar.public_reference, ["aanvraagnummer"]);
   assert.deepEqual(naar.now, ["ingediendOp"]);
   assert.equal(o.variables_mapping.length, 14);
+  // Bestanden naar de Documenten API: informatieobjecttype uit de e-dienst, catalogus per omgeving.
+  assert.deepEqual(o.catalogue, { domain: "${CATALOGUS_DOMEIN}", rsin: "${CATALOGUS_RSIN}" });
+  assert.equal(o.iotAttachment, "Bijlage");
   // Vaste waarden als gebruikersvariabelen met hun beginwaarde.
   assert.deepEqual(p["formVariables.json"].map((v) => [v.key, v.initial_value, v.source]), [
     ["vast_aanvraagtype", "gehandicaptenparkeerkaart", "user_defined"],

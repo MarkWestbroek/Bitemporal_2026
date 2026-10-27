@@ -92,7 +92,7 @@ export async function maakFormulierArtefact({
   for (const deel of delen) uuids.set(deel, alsUuid(await sha256Hex(`omnium-inrichting:formulier:${keuzes.identifier}:${deel}`)));
   // Eerst de aansluiting: daaruit volgt de registratie naar het objecttype.
   const aansluiting = sluitAan({ graaf, keuzes, objecttype, diagnostics });
-  const registratie = objecttype ? registratieUit(aansluiting, objecttype, diagnostics) : null;
+  const registratie = objecttype ? registratieUit(aansluiting, objecttype, diagnostics, keuzes.registratie?.bijlagen) : null;
   if (!objecttype) diagnostics.push({ severity: "info", code: "FRM-GEEN-REGISTRATIE", message: "Geen objecttype meegegeven: het formulier registreert nergens (registration_backends leeg)", sourceId: null, path: null });
 
   const geschreven = planNaarOpenforms(plan, { uuidVoor: (deel) => uuids.get(deel), ofRelease: keuzes.doelVersie || OF_RELEASE, registratie });
@@ -199,7 +199,7 @@ function objectPadUit(schemaPad) {
 }
 
 /** De registratie voor de schrijver: mapping per component, vaste waarden, BSN-pad. */
-function registratieUit(aansluiting, objecttype, diagnostics) {
+function registratieUit(aansluiting, objecttype, diagnostics, bijlagen) {
   const metPad = aansluiting.filter((a) => a.objectPad);
   const inlog = metPad.filter((a) => a.bron === "uitInlog");
   if (inlog.length > 1) diagnostics.push({ severity: "warning", code: "FRM-INLOG", message: "Meer dan één waarde uit de inlog; Open Formulieren kent één auth_attribute_path, alleen de eerste telt", sourceId: inlog[1].modelknoop, path: null });
@@ -209,5 +209,7 @@ function registratieUit(aansluiting, objecttype, diagnostics) {
     vast: metPad.filter((a) => a.bron === "vasteWaarde").map((a) => ({ key: a.variabele, waarde: a.waarde, target_path: a.objectPad })),
     uitOF: metPad.filter((a) => a.bron === "uitOpenFormulieren").map((a) => ({ variable_key: a.key, target_path: a.objectPad })),
     authPad: inlog[0]?.objectPad || null,
+    // Bestanden naar de Documenten API onder dit informatieobjecttype (omschrijving).
+    iotBijlagen: bijlagen?.informatieobjecttype || null,
   };
 }

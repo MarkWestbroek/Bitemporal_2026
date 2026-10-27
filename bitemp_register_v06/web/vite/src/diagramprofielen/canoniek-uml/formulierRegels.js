@@ -57,7 +57,7 @@ export const CANONIEK_NAAR_FORMULIER = {
       als: { aard: "veld", vasteVorm: true },
       // Lengte en patroon van het datatype passen niet bij elke vorm (een
       // bestand is geen tekst): bij een gekozen vorm alleen de basis.
-      maak: { type: "component", naam: "{tekst}", data: { ...BASIS, type: "{eigenschappen.component}" } },
+      maak: { type: "component", naam: "{tekst}", data: { ...BASIS, type: "{eigenschappen.component}", bestand: "{eigenschappen.bestand}" } },
     },
     component("Verwijzing naar een referentielijst → keuzelijst", { refAls: "code" }, "select", { ...BASIS, waarden: "{eigenschappen.waarden}" }),
     component("Enum → keuzerondjes", { heeftEnum: true }, "radio", { ...BASIS, waarden: "{eigenschappen.waarden}" }),
