@@ -1,6 +1,6 @@
 // Objecttypen uit het samengestelde model van cg-test (Fundament, 27-10):
 // aanvraag v2 (partijen met rol) en de specialisatie
-// GehandicaptenparkeerkaartAanvraag (erft Aanvraag). Regelset 0.2.0.
+// GehandicaptenparkeerkaartAanvraag (erft Aanvraag). Regelset 0.3.0.
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -27,7 +27,7 @@ const gpk = (wijzig) => maak("gpk-edienst.json", "gehandicaptenparkeerkaartaanvr
 test("aanvraag v2: partijen als lijst van {partijrol, partij}, zonder meldingen", async () => {
   const { artefact, diagnostics } = await aanvraag();
   assert.deepEqual(diagnostics, []);
-  assert.equal(artefact.artefactHerkomst.regelsetVersie, "0.2.0");
+  assert.equal(artefact.artefactHerkomst.regelsetVersie, "0.3.0");
   assert.equal(artefact.artefactIdentificatie.versienummer, "0.2.0");
   const s = artefact.artefactInhoud.payload.jsonSchema;
   assert.equal(s.properties.aanvrager, undefined);
@@ -40,7 +40,7 @@ test("aanvraag v2: partijen als lijst van {partijrol, partij}, zonder meldingen"
   assert.deepEqual(Object.keys(item.properties.partij.properties), ["bsn", "naam", "email", "kvkNummer", "vestigingsnummer", "klantUrl"]);
   assert.equal(item.properties.partij.required, undefined);
   assert.equal(item.properties.partij.additionalProperties, false);
-  assert.equal(item.properties.partij.properties.bsn.pattern, "^[0-9]{9}$");
+  assert.equal(item.properties.partij.properties.bsn.anyOf[1].pattern, "^[0-9]{9}$");
   // De partijen zijn niet verplicht: het model kent geen kardinaliteit (bedrijfsregel).
   assert.deepEqual(s.required, ["aanvraagnummer", "aanvraagtype", "ingediendOp", "status"]);
 });
@@ -68,7 +68,9 @@ test("GPK: ouder en subtype in één schema", async () => {
   assert.deepEqual(s.properties.soort.enum, ["bestuurder", "passagier", "instelling"]);
   assert.equal(s.properties.eerdereKaart.type, "boolean");
   assert.equal(s.properties.loopafstandMeter.type, "integer");
-  assert.equal(s.properties.kenteken.format, "kenteken");
+  assert.equal(s.properties.kenteken.anyOf[1].format, "kenteken");
+  // Optioneel: ook "" (kenteken verborgen bij soort ≠ bestuurder; 0.3.0).
+  assert.deepEqual(s.properties.kenteken.anyOf[0], { const: "" });
   assert.equal(artefact.artefactInhoud.payload.name, "gehandicaptenparkeerkaartaanvraag");
 });
 

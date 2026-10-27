@@ -845,7 +845,7 @@ in de registratie-opties registreert Open Formulieren een bestand niet en zet
 het `""` in `bijlagen[0].documentUrl`; Open Object weigert dat (geen uri;
 tweede inzending, FUNDAMENT 27-10). De e-dienst noemt het informatieobjecttype
 (`registratie.bijlagen.informatieobjecttype`, de omschrijving, hier
-`Bijlage`) → `iotAttachment`; de catalogus verschilt per omgeving en is een
+`Bijlage`) → `iot_attachment` (snake_case zoals alle opties in het exportformaat; de import negeert `iotAttachment`); de catalogus verschilt per omgeving en is een
 plaatshouder: `catalogue: {domain: "${CATALOGUS_DOMEIN}", rsin:
 "${CATALOGUS_RSIN}"}`. Open: of de url van het enkelvoudig informatieobject
 inderdaad in `documentUrl` landt (volgende inzending). Gezien bij OF-BKZPCT: `documentUrl` is de url van het
@@ -856,8 +856,15 @@ formuliernaam, dus de naam van de bijlage komt uit de vaste waarde.
 (minuutprecisie), niet het indienmoment: bij een herkansing schuift
 `ingediendOp` op; voor v1 aanvaard. Een optioneel veld met patroon, formaat of
 enum dat verborgen of leeg blijft (kenteken bij soort ≠ bestuurder) gaat als
-`""` mee, en Open Object weigert dat tegen het patroon; keuze Mark: lege
-string toestaan in het objecttype of anders oplossen.
+`""` mee, en Open Object weigerde dat tegen het patroon. Opgelost in de
+objecttype-regelset 0.3.0 (besluit Mark 27-10: "optionele velden zijn
+optioneel"): een string die niet verplicht is en eisen heeft (format,
+pattern, minLength, enum) krijgt `anyOf: [{const: ""}, {…eisen…}]`; de eisen
+blijven zichtbaar, `maxLength` blijft buiten de `anyOf` (daar voldoet "" al
+aan). Verplichte velden blijven streng. De schrijver
+(`jsonSchemaSchrijver.js`, `data.leegToegestaan`) doet de omzetting, de
+regelset zet het beleid. Nieuwe objecttypeversie in Open Object voor aanvraag
+en gehandicaptenparkeerkaartaanvraag.
 
 **Uploadveld.** Een `file`-component met alleen de basisgegevens laat de SDK
 vastlopen ("Oeps! Er ging helaas iets fout"). De schrijver (0.2.0) zet daarom

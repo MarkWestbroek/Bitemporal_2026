@@ -13,6 +13,13 @@
  *                              op `items`
  *                 "property" — een blad; data = JSON-Schema-sleutelwoorden
  *   element.groep de omvattende schema/object/array
+ *   data.leegToegestaan      — bij een property die niet verplicht is en een
+ *                              string met eisen (format, pattern, minLength,
+ *                              enum): ook "" is geldig, als
+ *                              `anyOf: [{const: ""}, {…de eisen…}]`. Een
+ *                              optioneel veld is optioneel, ook als een bron
+ *                              (Open Formulieren) het leeg meestuurt in plaats
+ *                              van weg te laten; wordt zelf niet geschreven
  *   data.verplicht (boolean) — zet de naam in `required` van de ouder;
  *                              wordt zelf niet geschreven. `required` is in
  *                              JSON Schema een verzameling; de schrijver zet
@@ -29,7 +36,10 @@
  * properties in planvolgorde. Puur.
  */
 
-const VOLGORDE = ["$schema", "title", "type", "description", "format", "pattern", "minLength", "maxLength", "enum", "items", "properties", "required", "additionalProperties"];
+const VOLGORDE = ["$schema", "title", "type", "description", "format", "pattern", "minLength", "maxLength", "enum", "anyOf", "items", "properties", "required", "additionalProperties"];
+
+/** Sleutelwoorden waar "" niet aan voldoet (maxLength wel). */
+const EISEN = ["format", "pattern", "minLength", "enum"];
 
 const isLeeg = (waarde) => waarde === undefined || waarde === null || waarde === "" || (Array.isArray(waarde) && waarde.length === 0);
 
@@ -80,8 +90,16 @@ export function planNaarJsonSchema(plan) {
 
   function schrijf(el, pad) {
     paden.set(el.sleutel, pad);
-    const { verplicht: _verplicht, ...data } = el.data || {};
-    if (el.type === "property") return geordend(data);
+    const { verplicht, leegToegestaan, ...data } = el.data || {};
+    if (el.type === "property") {
+      const eisen = EISEN.filter((k) => !isLeeg(data[k]));
+      if (leegToegestaan === true && verplicht !== true && data.type === "string" && eisen.length) {
+        const rest = Object.fromEntries(Object.entries(data).filter(([k]) => !EISEN.includes(k)));
+        const eis = geordend(Object.fromEntries(eisen.map((k) => [k, data[k]])));
+        return geordend({ ...rest, anyOf: [{ const: "" }, eis] });
+      }
+      return geordend(data);
+    }
     if (el.type === "array") {
       const { description, ...itemData } = data;
       const binnen = eigenschappen(el.sleutel, `${pad}/items`);

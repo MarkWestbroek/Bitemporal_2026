@@ -33,7 +33,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   veld `bestand` met toegestane typen en verkleinen bij upload (Open Zaak weigert > 2,5 MB). Daarna
   (derde inzending, regelset 0.2.0): per lijst in het objecttype een lijst-aanzet als
   gebruikersvariabele, de mapping in de volgorde die Open Formulieren nodig heeft, het BSN expliciet
-  via `auth_bsn`, en `decimalLimit: 0` voor gehele getallen.
+  via `auth_bsn`, en `decimalLimit: 0` voor gehele getallen; de registratie-optie heet
+  `iot_attachment` (snake_case, zoals het exportformaat).
+- **Objecttype: optionele velden mogen leeg zijn** (27-10, regelset canoniek-naar-objecttype 0.3.0).
+  Een niet-verplichte string met patroon, formaat, minimumlengte of enum krijgt
+  `anyOf: [{const: ""}, {…eisen…}]`, zodat een leeg of verborgen formulierveld (Open Formulieren
+  stuurt `""`) het object niet laat weigeren.
 - **Inrichting van e-diensten: formulier uit het canonieke model** (27-10, regelset
   canoniek-naar-formulier 0.1.0). De e-dienst kiest stappen, velden, labels en tonen-als; het model
   bepaalt de vorm (referentielijst → keuzelijst, enum → keuzerondjes, ja/nee → vinkje, getal,
