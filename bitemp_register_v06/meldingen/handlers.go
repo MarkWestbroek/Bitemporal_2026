@@ -300,7 +300,9 @@ func BehandelingHandler() gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Onbekende status."})
 				return
 			}
-			st := map[string]any{"melding_id": id, "status": in.Status}
+			// Materieel enkelvoudig met tijdstipprecisie (27-10-2026): elke statuswissel is een
+			// nieuw voorkomen vanaf nu; de vorige status krijgt automatisch dit tijdstip als einde.
+			st := map[string]any{"melding_id": id, "status": in.Status, "aanvang": time.Now().UTC().Format(time.RFC3339Nano)}
 			if in.Toelichting != nil && strings.TrimSpace(*in.Toelichting) != "" {
 				st["toelichting"] = strings.TrimSpace(*in.Toelichting)
 			}
@@ -319,7 +321,7 @@ func BehandelingHandler() gin.HandlerFunc {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Onbekende behandelaar."})
 				return
 			}
-			w = append(w, map[string]any{"opvoer": map[string]any{"meldingbehandelaar": map[string]any{"melding_id": id, "gebruiker_id": s.ID}}})
+			w = append(w, map[string]any{"opvoer": map[string]any{"meldingbehandelaar": map[string]any{"melding_id": id, "gebruiker_id": s.ID, "aanvang": time.Now().UTC().Format(time.RFC3339Nano)}}})
 		}
 		if len(w) == 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Niets te wijzigen."})

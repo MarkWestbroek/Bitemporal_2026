@@ -179,8 +179,11 @@ func dataPlumbingFields(parentEntType string, entIDKolom string) []StructField {
 	}
 }
 
-// aanvangEindePlumbingFields genereert plumbing-velden voor _Aanvang/_Einde.
-func aanvangEindePlumbingFields(parentEntType string, entIDKolom string, hasRelID bool) []StructField {
+// aanvangEindePlumbingFields genereert plumbing-velden voor _Aanvang/_Einde. Met tijdstip=true
+// (V3 tijdprecisie "tijdstip", 27-10-2026) is Datum een time.Time (kolom timestamptz) in plaats
+// van een Date; de veld- en kolomnaam blijven "datum", zodat engine, lezers en de JSON-shorthand
+// ("aanvang": "<waarde>") voor beide precisies gelijk werken.
+func aanvangEindePlumbingFields(parentEntType string, entIDKolom string, hasRelID bool, tijdstip bool) []StructField {
 	fields := []StructField{
 		{Name: parentEntType + "_ID", Type: "int",
 			Tags: fmt.Sprintf("`json:\"%s\" bun:\"%s,pk\"`", entIDKolom, entIDKolom)},
@@ -194,8 +197,7 @@ func aanvangEindePlumbingFields(parentEntType string, entIDKolom string, hasRelI
 	fields = append(fields,
 		StructField{Name: "Versie", Type: "int64",
 			Tags: "`json:\"versie,omitempty\" bun:\"versie,pk,autoincrement\"`"},
-		StructField{Name: "Datum", Type: "*Date",
-			Tags: "`json:\"datum,omitempty\" bun:\"datum,type:date\"`"},
+		datumField(tijdstip),
 		StructField{Name: "Opvoer", Type: "*time.Time",
 			Tags: "`json:\"opvoer,omitempty\"`"},
 		StructField{Name: "Afvoer", Type: "*time.Time",
@@ -203,6 +205,19 @@ func aanvangEindePlumbingFields(parentEntType string, entIDKolom string, hasRelI
 	)
 	return fields
 }
+
+// datumField: het Datum-veld van een _Aanvang/_Einde-record, als Date (dag) of time.Time (tijdstip).
+func datumField(tijdstip bool) StructField {
+	if tijdstip {
+		return StructField{Name: "Datum", Type: "*time.Time",
+			Tags: "`json:\"datum,omitempty\" bun:\"datum,type:timestamptz\"`"}
+	}
+	return StructField{Name: "Datum", Type: "*Date",
+		Tags: "`json:\"datum,omitempty\" bun:\"datum,type:date\"`"}
+}
+
+// isTijdstip: V3 tijdprecisie "tijdstip".
+func isTijdstip(tijdprecisie string) bool { return tijdprecisie == model.TijdprecisieTijdstip }
 
 // contentField genereert een StructField voor een inhoudsveld.
 func contentField(v model.V3Veld) StructField {
@@ -354,9 +369,13 @@ func inputContentField(v model.V3Veld) StructField {
 }
 
 // inputAanvangEindeFields genereert Aanvang/Einde velden voor materiële Input structs.
-func inputAanvangEindeFields() []StructField {
+func inputAanvangEindeFields(tijdstip bool) []StructField {
+	t := "*Date"
+	if tijdstip {
+		t = "*time.Time" // inputNaarHub kopieert dit veld één-op-één naar _Aanvang.Datum
+	}
 	return []StructField{
-		{Name: "Aanvang", Type: "*Date", Tags: "`json:\"aanvang,omitempty\"`"},
-		{Name: "Einde", Type: "*Date", Tags: "`json:\"einde,omitempty\"`"},
+		{Name: "Aanvang", Type: t, Tags: "`json:\"aanvang,omitempty\"`"},
+		{Name: "Einde", Type: t, Tags: "`json:\"einde,omitempty\"`"},
 	}
 }

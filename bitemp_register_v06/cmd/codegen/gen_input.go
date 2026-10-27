@@ -38,7 +38,7 @@ func generateInput(v3 model.V3Model) (string, error) {
 
 			// Aanvang/Einde (alleen als het GE zelf materieel is)
 			if ge.IsMaterieel {
-				for _, f := range inputAanvangEindeFields() {
+				for _, f := range inputAanvangEindeFields(isTijdstip(ge.Tijdprecisie)) {
 					writeField(&b, f)
 				}
 			}
@@ -71,7 +71,7 @@ func generateInput(v3 model.V3Model) (string, error) {
 
 			// Aanvang/Einde (alleen als relatie zelf materieel is)
 			if rel.IsMaterieel {
-				for _, f := range inputAanvangEindeFields() {
+				for _, f := range inputAanvangEindeFields(isTijdstip(rel.Tijdprecisie)) {
 					writeField(&b, f)
 				}
 			}

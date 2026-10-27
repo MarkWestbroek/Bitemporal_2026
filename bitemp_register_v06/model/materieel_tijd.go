@@ -84,6 +84,15 @@ func (g GeldigOp) Geldig(aanvang, einde *TijdWaarde) bool {
 	return true
 }
 
+// Tijdprecisie-waarden (V3 `tijdprecisie`).
+const (
+	TijdprecisieDatum    = "datum"
+	TijdprecisieTijdstip = "tijdstip"
+)
+
+// IsTijdstipPrecisie: de materiële tijdlijn van dit type heeft tijdstipprecisie.
+func (m TypeMeta) IsTijdstipPrecisie() bool { return m.Tijdprecisie == TijdprecisieTijdstip }
+
 // IsMaterieelEnkelvoudigeHub: een GE- of relatiehub die materieel én enkelvoudig is. Daarvoor
 // geldt sinds 27-10-2026 "één geldig voorkomen per materieel moment" in plaats van "één
 // formeel actieve hub" (zie handlers/registration_opvolging.go).

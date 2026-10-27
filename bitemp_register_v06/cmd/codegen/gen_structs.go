@@ -102,7 +102,7 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 				b.WriteString(fmt.Sprintf("type %s struct {\n", typeName))
 				d := deriveAanvangEinde(ent.Typenaam, ent.Typenaam, suffix)
 				writeField(&b, bunBaseModelField(d.Tabelnaam))
-				for _, f := range aanvangEindePlumbingFields(ent.Typenaam, entIDKolom, false) {
+				for _, f := range aanvangEindePlumbingFields(ent.Typenaam, entIDKolom, false, isTijdstip(ent.Tijdprecisie)) {
 					writeField(&b, f)
 				}
 				b.WriteString("}\n\n")
@@ -146,7 +146,7 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 			generateHubStruct(&b, hubType, ent.Typenaam, entIDKolom, entiteitPKKolom(ent), ge.IsMaterieel, ge.Description, "")
 			generateDataStruct(&b, hubType, ent.Typenaam, entIDKolom, ge.Velden, ge.Description)
 			if ge.IsMaterieel {
-				generateAanvangEindeStructs(&b, hubType, ent.Typenaam, entIDKolom, true)
+				generateAanvangEindeStructs(&b, hubType, ent.Typenaam, entIDKolom, true, isTijdstip(ge.Tijdprecisie))
 			}
 		}
 
@@ -156,7 +156,7 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 			generateHubStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, entiteitPKKolom(ent), rel.IsMaterieel, rel.Description, secEntIDKolom)
 			generateDataStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, rel.Velden, rel.Description)
 			if rel.IsMaterieel {
-				generateAanvangEindeStructs(&b, rel.Naam, ent.Typenaam, entIDKolom, true)
+				generateAanvangEindeStructs(&b, rel.Naam, ent.Typenaam, entIDKolom, true, isTijdstip(rel.Tijdprecisie))
 			}
 		}
 	}
@@ -232,14 +232,18 @@ func generateDataStruct(b *strings.Builder, hubType string, parentEntType string
 }
 
 // generateAanvangEindeStructs genereert _Aanvang en _Einde structs.
-func generateAanvangEindeStructs(b *strings.Builder, parentType string, parentEntType string, entIDKolom string, hasRelID bool) {
+func generateAanvangEindeStructs(b *strings.Builder, parentType string, parentEntType string, entIDKolom string, hasRelID bool, tijdstip bool) {
 	for _, suffix := range []string{"Aanvang", "Einde"} {
 		typeName := parentType + "_" + suffix
 		tabelnaam := strings.ToLower(typeName)
-		b.WriteString(fmt.Sprintf("// %s — %sdatum van %s.\n", typeName, strings.ToLower(suffix), parentType))
+		wat := "datum"
+		if tijdstip {
+			wat = "tijdstip"
+		}
+		b.WriteString(fmt.Sprintf("// %s — %s%s van %s.\n", typeName, strings.ToLower(suffix), wat, parentType))
 		b.WriteString(fmt.Sprintf("type %s struct {\n", typeName))
 		writeField(b, bunBaseModelFieldAlias(tabelnaam))
-		for _, f := range aanvangEindePlumbingFields(parentEntType, entIDKolom, hasRelID) {
+		for _, f := range aanvangEindePlumbingFields(parentEntType, entIDKolom, hasRelID, tijdstip) {
 			writeField(b, f)
 		}
 		b.WriteString("}\n\n")

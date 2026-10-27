@@ -657,6 +657,21 @@ func ensureInitRegistration(outputDir, prefix string) error {
 // validateV3Model valideert het V3 model. Als domeinFilter niet leeg is, worden
 // entiteiten van andere domeinen overgeslagen (relevant voor additive codegen waarbij
 // het volledige multi-domein model wordt aangeboden maar slechts één domein wordt gegenereerd).
+// valideerTijdprecisie: V3 `tijdprecisie` is leeg, "datum" of "tijdstip", en alleen zinvol bij
+// een materiële tijdlijn (27-10-2026).
+func valideerTijdprecisie(ctx string, isMaterieel bool, tijdprecisie string) string {
+	switch tijdprecisie {
+	case "":
+		return ""
+	case model.TijdprecisieDatum, model.TijdprecisieTijdstip:
+		if !isMaterieel {
+			return fmt.Sprintf("%s.tijdprecisie '%s' heeft alleen betekenis met isMaterieel: true", ctx, tijdprecisie)
+		}
+		return ""
+	}
+	return fmt.Sprintf("%s.tijdprecisie '%s' is ongeldig; gebruik 'datum' (default) of 'tijdstip'", ctx, tijdprecisie)
+}
+
 func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 	var errs []string
 
@@ -709,6 +724,9 @@ func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 			errs = append(errs, fmt.Sprintf("%s.meervoud '%s' is ongeldig; gebruik lowercase/snake_case (bijv. personen of persoon_records)", ctx, ent.Meervoud))
 		}
 		entiteiten[ent.Typenaam] = struct{}{}
+		if msg := valideerTijdprecisie(ctx, ent.IsMaterieel, ent.Tijdprecisie); msg != "" {
+			errs = append(errs, msg)
+		}
 
 		for j, ge := range ent.Gegevenselementen {
 			gctx := fmt.Sprintf("%s.gegevenselementen[%d]", ctx, j)
@@ -720,6 +738,9 @@ func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 			}
 			if ge.Momentvoorkomen != "enkelvoudig" && ge.Momentvoorkomen != "meervoudig" {
 				errs = append(errs, fmt.Sprintf("%s.momentvoorkomen '%s' is ongeldig; gebruik 'enkelvoudig' of 'meervoudig'", gctx, ge.Momentvoorkomen))
+			}
+			if msg := valideerTijdprecisie(gctx, ge.IsMaterieel, ge.Tijdprecisie); msg != "" {
+				errs = append(errs, msg)
 			}
 			for k, veld := range ge.Velden {
 				vctx := fmt.Sprintf("%s.velden[%d]", gctx, k)
@@ -745,6 +766,9 @@ func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 			}
 			if rel.Momentvoorkomen != "enkelvoudig" && rel.Momentvoorkomen != "meervoudig" {
 				errs = append(errs, fmt.Sprintf("%s.momentvoorkomen '%s' is ongeldig; gebruik 'enkelvoudig' of 'meervoudig'", rctx, rel.Momentvoorkomen))
+			}
+			if msg := valideerTijdprecisie(rctx, rel.IsMaterieel, rel.Tijdprecisie); msg != "" {
+				errs = append(errs, msg)
 			}
 			if rel.DoelEntiteit == "" {
 				errs = append(errs, fmt.Sprintf("%s.doelEntiteit is verplicht", rctx))

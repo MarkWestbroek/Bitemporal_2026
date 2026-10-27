@@ -78,6 +78,15 @@ func createModelTables(ctx context.Context, db bun.IDB) error {
 				return fmt.Errorf("kolommen aanvullen mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
 			}
 
+			// Tijdprecisie (27-10-2026): een bestaande _Aanvang/_Einde-tabel met een date-kolom
+			// waarvan het model nu tijdstip zegt → kolom verbreden naar timestamptz (verliesvrij;
+			// de andere kant op niet automatisch). Niet fataal.
+			if (meta.GESubtype == model.GESubtypeAanvang || meta.GESubtype == model.GESubtypeEinde) && meta.IsTijdstipPrecisie() {
+				if err := veiligeStap(ctx, db, func() error { return ensureDatumTijdstip(ctx, db, meta.Tabelnaam) }); err != nil {
+					log.Printf("[dbsetup] WARN: kolom datum van %s niet naar timestamptz gezet: %v", meta.Tabelnaam, err)
+				}
+			}
+
 			// Compatibiliteit met oudere schema's:
 			// sommige oude entiteitstabellen gebruikten "<tabelnaam>_id" als PK-kolom
 			// in plaats van de huidige conventie "id". Zonder deze migratie falen
@@ -164,6 +173,25 @@ func createModelTables(ctx context.Context, db bun.IDB) error {
 	return nil
 }
 
+// ensureDatumTijdstip zet de kolom datum van een _Aanvang/_Einde-tabel om van date naar
+// timestamptz als het model tijdstipprecisie heeft (dag → middernacht UTC).
+func ensureDatumTijdstip(ctx context.Context, db bun.IDB, tableName string) error {
+	sql := fmt.Sprintf(`
+DO $$
+BEGIN
+	IF EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = '%[1]s'
+		  AND column_name = 'datum' AND data_type = 'date'
+	) THEN
+		EXECUTE 'ALTER TABLE "%[1]s" ALTER COLUMN "datum" TYPE timestamptz USING ("datum"::timestamp AT TIME ZONE ''UTC'')';
+	END IF;
+END $$;
+`, tableName)
+	_, err := db.ExecContext(ctx, sql)
+	return err
+}
+
 // ensureEntiteitIDKolomMigrated hernoemt legacy entiteit-PK-kolom "<tabel>_id" naar "id"
 // wanneer "id" nog ontbreekt. Hiermee blijven oudere databases bruikbaar.
 func ensureEntiteitIDKolomMigrated(ctx context.Context, db bun.IDB, meta model.TypeMeta) error {
@@ -238,17 +266,22 @@ func createMaterielePlumbingTable(ctx context.Context, db bun.IDB, parentMeta mo
 	// subtype "<tabel>_<ouder>_id" gaf en elke /full-leesactie liet falen.
 	localFKCol := parentTable + "_id"
 	fkName := fmt.Sprintf("fk_%s_%s", tableName, localFKCol)
+	// Tijdprecisie (27-10-2026): "tijdstip" → timestamptz, anders date.
+	waardeType := "date"
+	if parentMeta.IsTijdstipPrecisie() {
+		waardeType = "timestamptz"
+	}
 
 	ddl := fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS "%[1]s" (
     "%[2]s" %[3]s NOT NULL,
     "versie" BIGINT NOT NULL,
-    "%[4]s" date NULL,
+    "%[4]s" %[8]s NULL,
     "opvoer" timestamptz NULL,
     "afvoer" timestamptz NULL,
     PRIMARY KEY ("%[2]s", "versie"),
     CONSTRAINT "%[5]s" FOREIGN KEY ("%[2]s") REFERENCES "%[6]s" ("%[7]s") ON DELETE CASCADE
-);`, tableName, localFKCol, parentIDType, waardeKolom, fkName, parentTable, parentIDCol)
+);`, tableName, localFKCol, parentIDType, waardeKolom, fkName, parentTable, parentIDCol, waardeType)
 
 	if _, err := db.ExecContext(ctx, ddl); err != nil {
 		return fmt.Errorf("create table mislukt voor %s: %w", tableName, err)

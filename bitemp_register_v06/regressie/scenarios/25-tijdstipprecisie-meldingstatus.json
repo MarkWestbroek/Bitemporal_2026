@@ -1,0 +1,214 @@
+{
+  "id": "25",
+  "naam": "tijdstipprecisie: twee statuswisselingen op één dag (MeldingStatus)",
+  "beschrijving": "Besluit Mark 27-10-2026: per materieel GE/relatie een tijdprecisie. MeldingStatus en MeldingBehandelaar hebben tijdprecisie 'tijdstip': aanvang/einde zijn RFC 3339-tijdstippen, het einde is exclusief, het automatische einde van de voorganger is gelijk aan de aanvang van de opvolger, en twee wisselingen op één dag zijn gewoon twee voorkomens. ?geldigOp= met een tijdstip kiest het juiste voorkomen; (Het meldingen-domein zit niet in GraphQL; die kant dekt scenario 23 en de dynql-unittest.)",
+  "volgorde": 225,
+  "vereist": [
+    "23"
+  ],
+  "dekt": [
+    "MAT-TIJDSTIP",
+    "B31"
+  ],
+  "tags": [
+    "engine",
+    "enkelvoudig",
+    "materieel",
+    "tijdreizen",
+    "meldingen"
+  ],
+  "stappen": [
+    {
+      "naam": "1 melding 9201 met status nieuw om 09:00",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc25 stap 1"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "melding": {
+                "id": 9201
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "meldingstatus": {
+                "melding_id": 9201,
+                "status": "nieuw",
+                "aanvang": "2026-10-27T09:00:00Z"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "2 status in_behandeling om 10:00 (zelfde dag)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc25 stap 2"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "meldingstatus": {
+                "melding_id": 9201,
+                "status": "in_behandeling",
+                "aanvang": "2026-10-27T10:00:00Z"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "3 status opgelost om 10:30 (derde op dezelfde dag)",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc25 stap 3"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "meldingstatus": {
+                "melding_id": 9201,
+                "status": "opgelost",
+                "aanvang": "2026-10-27T10:30:00Z"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 201
+      }
+    },
+    {
+      "naam": "na 3: drie voorkomens formeel actief; einde = aanvang van de opvolger (tijdstip)",
+      "path": "/full/meldingen/9201",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "melding_statussen[rel_id=1].afvoer": "null",
+          "melding_statussen[rel_id=1].einde[afvoer=null].datum": "2026-10-27T10:00:00Z",
+          "melding_statussen[rel_id=2].afvoer": "null",
+          "melding_statussen[rel_id=2].aanvang[afvoer=null].datum": "2026-10-27T10:00:00Z",
+          "melding_statussen[rel_id=2].einde[afvoer=null].datum": "2026-10-27T10:30:00Z",
+          "melding_statussen[rel_id=3].einde": "null"
+        }
+      }
+    },
+    {
+      "naam": "geldigOp 09:30 → nieuw",
+      "path": "/full/meldingen/9201?geldigOp=2026-10-27T09:30:00Z",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "melding_statussen.0.rel_id": 1,
+          "melding_statussen.0.data[afvoer=null].status": "nieuw",
+          "melding_statussen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "geldigOp precies 10:00 → in_behandeling (einde exclusief)",
+      "path": "/full/meldingen/9201?geldigOp=2026-10-27T10:00:00Z",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "melding_statussen.0.rel_id": 2,
+          "melding_statussen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "geldigOp als datum 2026-10-27 (= middernacht): nog geen status",
+      "path": "/full/meldingen/9201?geldigOp=2026-10-27",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "melding_statussen.0": "null"
+        }
+      }
+    },
+    {
+      "naam": "geldigOp 2026-10-28 (datum) → opgelost",
+      "path": "/full/meldingen/9201?geldigOp=2026-10-28",
+      "verwacht": {
+        "status": 200,
+        "json": {
+          "melding_statussen.0.rel_id": 3,
+          "melding_statussen.1": "null"
+        }
+      }
+    },
+    {
+      "naam": "4 aanvang gelijk aan die van het huidige voorkomen (10:30) geeft 422",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc25 stap 4"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "meldingstatus": {
+                "melding_id": 9201,
+                "status": "afgewezen",
+                "aanvang": "2026-10-27T10:30:00Z"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 422,
+        "bevat": "opvolging_terugwerkend"
+      }
+    },
+    {
+      "naam": "5 zonder aanvang geeft 422",
+      "method": "POST",
+      "path": "/registratie/",
+      "body": {
+        "registratie": {
+          "registratietype": "registratie",
+          "opmerking": "sc25 stap 5"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "meldingstatus": {
+                "melding_id": 9201,
+                "status": "afgewezen"
+              }
+            }
+          }
+        ]
+      },
+      "verwacht": {
+        "status": 422,
+        "bevat": "opvolging_zonder_aanvang"
+      }
+    }
+  ]
+}
