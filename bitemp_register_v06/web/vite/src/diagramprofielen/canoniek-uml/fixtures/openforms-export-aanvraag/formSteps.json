@@ -1,0 +1,91 @@
+[
+  {
+    "uuid": "5f54ba98-b82a-4fd9-9abe-a83accf6e834",
+    "index": 0,
+    "slug": "gegevens-aanvraag",
+    "configuration": {
+      "display": "form",
+      "components": [
+        {
+          "key": "aanvraagtype",
+          "data": {
+            "values": [
+              {
+                "label": "Parkeervergunning",
+                "value": "parkeervergunning"
+              },
+              {
+                "label": "Kapvergunning",
+                "value": "kapvergunning"
+              }
+            ]
+          },
+          "type": "select",
+          "input": true,
+          "label": "Soort aanvraag",
+          "dataSrc": "values",
+          "validate": {
+            "required": true
+          }
+        },
+        {
+          "key": "aanvragerNaam",
+          "type": "textfield",
+          "input": true,
+          "label": "Naam aanvrager",
+          "validate": {
+            "required": true
+          }
+        },
+        {
+          "key": "aanvragerEmail",
+          "type": "email",
+          "input": true,
+          "label": "E-mailadres",
+          "validate": {
+            "required": false
+          }
+        },
+        {
+          "key": "toelichting",
+          "type": "textarea",
+          "input": true,
+          "label": "Toelichting"
+        }
+      ]
+    },
+    "form_definition": "http://openforms/api/v2/form-definitions/3114214a-cbfd-4036-8e4d-615b9baf6e4e",
+    "name": "Gegevens aanvraag",
+    "internal_name": "",
+    "url": "http://openforms/api/v2/forms/27fc2f4c-30d4-42a4-9f6d-efdb78302550/steps/5f54ba98-b82a-4fd9-9abe-a83accf6e834",
+    "is_applicable": true,
+    "login_required": false,
+    "is_reusable": false,
+    "literals": {
+      "previous_text": {
+        "resolved": "Previous page",
+        "value": ""
+      },
+      "save_text": {
+        "resolved": "Save current information",
+        "value": ""
+      },
+      "next_text": {
+        "resolved": "Next",
+        "value": ""
+      }
+    },
+    "translations": {
+      "nl": {
+        "previous_text": "",
+        "save_text": "",
+        "next_text": ""
+      },
+      "en": {
+        "previous_text": "",
+        "save_text": "",
+        "next_text": ""
+      }
+    }
+  }
+]

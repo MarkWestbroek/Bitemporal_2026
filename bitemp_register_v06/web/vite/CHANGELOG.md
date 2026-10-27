@@ -9,6 +9,17 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Inrichting van e-diensten: formulier uit het canonieke model** (27-10, regelset
+  canoniek-naar-formulier 0.1.0). De e-dienst kiest stappen, velden, labels en tonen-als; het model
+  bepaalt de vorm (referentielijst → keuzelijst, enum → keuzerondjes, ja/nee → vinkje, getal,
+  e-mail, lange tekst) en de validatie uit de datatypen. Uitvoer is een Open Formulieren-export
+  ({bestandsnaam: inhoud}) met deterministische uuid's, als artefact met herkomst en trace; een
+  aansluitingscontrole toetst per component of het objecttype hetzelfde gegeven kent. Eerste
+  gebruik: de gehandicaptenparkeerkaart-aanvraag. Nieuw: `transformatie/formulierGraaf.js`,
+  `transformatie/openformsSchrijver.js`; de runner `scripts/maak_inrichtingsartefact.mjs` kiest
+  op de artefactsoort. Registratie naar Open Object met plaatshouders voor wat per omgeving
+  verschilt (objecttype-url en -versie, Objects API-groep); inloggen verplicht op de eerste
+  stapdefinitie. Zie [`docs/TRANSFORMATIES.md`](../docs/TRANSFORMATIES.md) §11.6.
 - **Objecttype: overerving en partijen met een rol** (27-10, regelset canoniek-naar-objecttype
   0.2.0). Een subtype (`erft`) geeft één schema met de velden van de ouder; een relatie met eigen
   velden (AanvraagPartij met `partijrol`) wordt een lijst van {partijrol, partij}; velden binnen

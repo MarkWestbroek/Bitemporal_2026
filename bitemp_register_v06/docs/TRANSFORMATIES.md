@@ -733,13 +733,93 @@ neutraal contactadres) en `objecttypeCgTest.test.js`. Stand 27-10: aanvraag v2
 verschilt van het geregistreerde objecttype precies op `aanvrager` →
 `partijen` en `required`; de rest is gelijk.
 
-### 11.6 Vervolg
+### 11.6 Formulier: canoniek model + e-dienst → Open Formulieren-export (2026-10-27)
 
-1. Formulier (Open Formulieren-export) uit dezelfde bron en hetzelfde bereik,
-   met een eigen regelset en schrijver; golden file van FUNDAMENT in
-   CG-Fundament `docs/voorbeelden/openforms-export-aanvraag/`. De component-key
-   is het eindpunt van de trace; de aansluitingscontrole loopt op key ↔
-   schema-property via dezelfde modelknoop.
+Tweede artefactsoort, voor de GPK-aanvraag (akkoord Mark 27-10). Zelfde bron
+(samengesteld model + e-dienstmodel + referentielijst-items) en dezelfde
+artefactvorm als het objecttype; de payload is de export van Open Formulieren
+als JSON-object {bestandsnaam: inhoud} (`forms.json`, `formDefinitions.json`,
+`formSteps.json`, `formLogic.json`, `formVariables.json`, `_meta.json`), het
+formaat dat de uitrol-adapter van FUNDAMENT importeert.
+
+| Deel | Bestand |
+|---|---|
+| Lezer (stappen + veldfeiten via `v3Graaf`) | `transformatie/formulierGraaf.js` |
+| Regelset "canoniek-naar-formulier" 0.1.0 | `diagramprofielen/canoniek-uml/formulierRegels.js` |
+| Schrijver plan → export | `transformatie/openformsSchrijver.js` |
+| Aansluiting → artefact + aansluitingscontrole | `diagramprofielen/canoniek-uml/formulierArtefact.js` |
+| Tests + golden file | `formulierArtefact.test.js`, `fixtures/openforms-export-aanvraag/` |
+
+**Wie bepaalt wat.** De e-dienst kiest de stappen, de velden en hun volgorde,
+key, label en eventueel `verplicht`, `toonAls` (tonen-als op een andere key),
+`toelichting` (hulptekst) en een afwijkende `component`. Het model levert de
+feiten; de regelset kiest daaruit de vorm (inhoud ≠ vorm): verwijzing naar een
+referentielijst → select met de items als keuzes (waarde = code, label =
+omschrijving), enum → radio, JaNee → checkbox, Geheel → number, Emailadres →
+email, Datum/DatumTijd → date/datetime, Telefoonnummer → phoneNumber,
+LangeTekst → textarea, anders textfield. Lengte en patroon van het datatype
+komen in `validate`, zodat het formulier weigert wat het objecttype weigert;
+niet bij een vorm die de e-dienst zelf noemt (een bestand is geen tekst).
+De **beschrijving** uit het model gaat níét mee als hulptekst: die is voor wie
+het schema leest.
+
+**Deterministisch.** De uuid's van formulier, stappen en definities zijn
+afgeleid van sha256 over identifier + deel (vorm v5); de url's volgen het
+patroon van de export (`http://openforms/api/v2/…`). Dezelfde invoer geeft
+dezelfde payloadHash. `_meta.json` bevat alleen `of_release`, geen tijdstip.
+De uuid's dienen alleen de hash: Open Formulieren maakt bij elke import een
+nieuw formulier met nieuwe uuid's (de adapter van FUNDAMENT hernoemt eerst het
+bestaande formulier). Proefimport 27-10 met ingevulde plaatshouders geslaagd,
+ook de paden in array-items (`["partijen", 0, "partijrol"]`; Open Formulieren
+geeft de index terug als tekst); of de registratie een geldig object maakt,
+blijkt bij de eerste inzending.
+
+**Aansluiting key ↔ property.** Met het objecttype-artefact erbij (`--objecttype`)
+toetst de aansluiting per component, vaste waarde en inlogwaarde of de
+modelknoop ook een property in het objecttype is (via beide traces). Zo niet:
+`FRM-AANSLUITING` — het gegeven gaat bij de registratie verloren. Het
+aanvraagformulier geeft er één (de toelichting bij de indiening zit niet in
+objecttype aanvraag); het GPK-formulier geen.
+
+**Tegen de golden file** (aanvraag-voorbeeld, uuid's gemaskeerd): alleen
+`_meta` (tijdstip en commit), de keuzelijst (uit het register in plaats van met
+de hand) en `maxLength`/`pattern` uit KorteTekst en Emailadres.
+
+**Inloggen.** `inloggen: ["digid"]` in de e-dienst geeft `auth_backends:
+[{backend: "digid", options: {}}]` (Open Formulieren vult `loa` aan) en
+`login_required: true` op de **eerste formulierdefinitie**: in Open
+Formulieren is "inloggen verplicht" van het formulier afgeleid uit de
+definities (proefimport FUNDAMENT 27-10). DigiD zelf is op cg-test nog niet
+ingericht.
+
+**Registratie naar Open Object** (keuze A met FUNDAMENT, 27-10). Met het
+objecttype erbij schrijft de schrijver een `objects_api`-backend (versie 2):
+
+- per component een `variables_mapping` {variable_key: de key, target_path:
+  padsegmenten}, afgeleid uit de trace van het objecttype
+  (`/jsonSchema/properties/bijlagen/items/properties/documentUrl` →
+  `["bijlagen", 0, "documentUrl"]`; een lijst wordt het eerste item, want het
+  formulier levert één voorkomen);
+- per vaste waarde (`registratie.vasteWaarden`) een gebruikersvariabele
+  `vast_<pad>` in `formVariables.json` met de waarde als `initial_value`, plus
+  zijn mapping;
+- de BSN uit de inlog (`registratie.uitInlog`) als `auth_attribute_path`.
+
+Wat per omgeving verschilt is een **plaatshouder**, die de uitrol-adapter
+invult: `${OBJECTTYPE_URL:<identifier>}` en `${OBJECTTYPE_VERSION:<identifier>}`
+uit het UitrolResultaat van de afhankelijkheid in dezelfde omgeving, en
+`${OBJECTS_API_GROUP}` van de omgeving. Zo blijft het artefact omgevingsvrij.
+De registratie staat ook in de trace (regels "Registratie: …"). Open: of Open
+Formulieren 4.0.3 paden in array-items aanneemt (`partijen[0]`, `bijlagen[0]`).
+Zo niet, dan vult de aanvraagservice die lijsten, of krijgt het objecttype
+platte velden; keuze Mark.
+
+**Nog niet:** formulierlogica anders dan tonen-als, machtigen en eHerkenning.
+
+### 11.7 Vervolg
+
+1. Formulier: toetsen of Open Formulieren paden in array-items aanneemt (§11.6);
+   machtigen (gemachtigde + subject) en eHerkenning.
 2. Zaaktype: nog grotendeels letterlijk; het datamodel levert alleen roltype
    Aanvrager en informatieobjecttype Bijlage.
 3. BPMN voor GZAC: uitvoerbare BPMN (engine-extensies), §10 heeft alleen de

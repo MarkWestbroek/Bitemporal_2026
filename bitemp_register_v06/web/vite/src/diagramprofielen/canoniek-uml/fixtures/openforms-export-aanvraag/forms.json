@@ -1,0 +1,157 @@
+[
+  {
+    "uuid": "27fc2f4c-30d4-42a4-9f6d-efdb78302550",
+    "name": "Aanvraag (voorbeeld)",
+    "internal_name": "aanvraag-voorbeeld",
+    "internal_remarks": "",
+    "login_required": false,
+    "translation_enabled": false,
+    "registration_backends": [],
+    "auth_backends": [],
+    "auto_login_authentication_backend": "",
+    "payment_required": false,
+    "payment_backend": "",
+    "payment_backend_options": {},
+    "price_variable_key": "",
+    "appointment_options": {
+      "supports_multiple_products": null
+    },
+    "literals": {
+      "previous_text": {
+        "resolved": "Previous page",
+        "value": ""
+      },
+      "begin_text": {
+        "resolved": "Begin form",
+        "value": ""
+      },
+      "change_text": {
+        "resolved": "Change",
+        "value": ""
+      },
+      "confirm_text": {
+        "resolved": "Confirm",
+        "value": ""
+      }
+    },
+    "product": null,
+    "slug": "aanvraag-voorbeeld",
+    "url": "http://openforms/api/v2/forms/27fc2f4c-30d4-42a4-9f6d-efdb78302550",
+    "type": "regular",
+    "category": null,
+    "theme": null,
+    "steps": [
+      {
+        "uuid": "5f54ba98-b82a-4fd9-9abe-a83accf6e834",
+        "slug": "gegevens-aanvraag",
+        "form_definition": "Gegevens aanvraag",
+        "index": 0,
+        "literals": {
+          "previous_text": {
+            "resolved": "Previous page",
+            "value": ""
+          },
+          "save_text": {
+            "resolved": "Save current information",
+            "value": ""
+          },
+          "next_text": {
+            "resolved": "Next",
+            "value": ""
+          }
+        },
+        "url": "http://openforms/api/v2/forms/27fc2f4c-30d4-42a4-9f6d-efdb78302550/steps/5f54ba98-b82a-4fd9-9abe-a83accf6e834",
+        "is_applicable": true
+      }
+    ],
+    "show_progress_indicator": true,
+    "show_summary_progress": false,
+    "maintenance_mode": false,
+    "active": true,
+    "activate_on": null,
+    "deactivate_on": null,
+    "is_deleted": false,
+    "submission_confirmation_template": "",
+    "introduction_page_content": "",
+    "explanation_template": "",
+    "submission_allowed": "yes",
+    "submission_limit": null,
+    "submission_counter": 0,
+    "submission_limit_reached": false,
+    "suspension_allowed": true,
+    "ask_privacy_consent": "global_setting",
+    "ask_statement_of_truth": "global_setting",
+    "submissions_removal_options": {
+      "successful_submissions_removal_limit": null,
+      "successful_submissions_removal_method": "",
+      "incomplete_submissions_removal_limit": null,
+      "incomplete_submissions_removal_method": "",
+      "errored_submissions_removal_limit": null,
+      "errored_submissions_removal_method": "",
+      "all_submissions_removal_limit": null
+    },
+    "confirmation_email_template": null,
+    "send_confirmation_email": true,
+    "display_main_website_link": true,
+    "include_confirmation_page_content_in_pdf": true,
+    "required_fields_with_asterisk": true,
+    "communication_preferences_portal_url": "",
+    "translations": {
+      "nl": {
+        "name": "Aanvraag (voorbeeld)",
+        "submission_confirmation_template": "",
+        "begin_text": "",
+        "previous_text": "",
+        "change_text": "",
+        "confirm_text": "",
+        "introduction_page_content": "",
+        "explanation_template": "",
+        "help_dialog_content": ""
+      },
+      "en": {
+        "name": "",
+        "submission_confirmation_template": "",
+        "begin_text": "",
+        "previous_text": "",
+        "change_text": "",
+        "confirm_text": "",
+        "introduction_page_content": "",
+        "explanation_template": "",
+        "help_dialog_content": ""
+      }
+    },
+    "resume_link_lifetime": 7,
+    "hide_non_applicable_steps": false,
+    "cosign_login_options": [],
+    "cosign_has_link_in_email": true,
+    "submission_statements_configuration": [
+      {
+        "key": "privacyPolicyAccepted",
+        "label": "Yes, I have read the  and explicitly agree to the processing of my submitted information.",
+        "validate": {
+          "required": true
+        },
+        "type": "checkbox"
+      },
+      {
+        "key": "statementOfTruthAccepted",
+        "label": "I declare that I have filled out the form truthfully and have not omitted any information.",
+        "validate": {
+          "required": false
+        },
+        "type": "checkbox"
+      }
+    ],
+    "submission_report_download_link_title": "Download PDF",
+    "brp_personen_request_options": null,
+    "help_callout_page": {
+      "display": "never",
+      "content": "",
+      "image": null
+    },
+    "help_dialog": {
+      "content": "",
+      "image": null
+    }
+  }
+]

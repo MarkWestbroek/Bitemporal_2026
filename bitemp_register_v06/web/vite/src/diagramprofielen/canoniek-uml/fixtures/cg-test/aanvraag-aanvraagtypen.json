@@ -1,4 +1,5 @@
 [
-  { "code": "parkeervergunning", "omschrijving": "Parkeervergunning", "zaaktypeIdentificatie": "AANVRAAG", "toelichting": "Voorbeeldtype voor de e-dienst Aanvraag (voorbeeld)." },
-  { "code": "evenement", "omschrijving": "Evenementenvergunning", "zaaktypeIdentificatie": "AANVRAAG", "toelichting": "Voorbeeldtype voor de e-dienst Aanvraag (voorbeeld)." }
+  {"code": "parkeervergunning", "omschrijving": "Parkeervergunning", "zaaktypeIdentificatie": "AANVRAAG", "toelichting": "Voorbeeldtype voor de e-dienst Aanvraag (voorbeeld)."},
+  {"code": "evenement", "omschrijving": "Evenementenvergunning", "zaaktypeIdentificatie": "AANVRAAG", "toelichting": "Voorbeeldtype voor de e-dienst Aanvraag (voorbeeld)."},
+  {"code": "gehandicaptenparkeerkaart", "omschrijving": "Gehandicaptenparkeerkaart", "zaaktypeIdentificatie": "GPK", "toelichting": "Aanvraag van een gehandicaptenparkeerkaart (Regeling gehandicaptenparkeerkaart); e-dienst Gehandicaptenparkeerkaart aanvragen. zaaktypeIdentificatie GPK is een aanname (zaaktype volgt)."}
 ]

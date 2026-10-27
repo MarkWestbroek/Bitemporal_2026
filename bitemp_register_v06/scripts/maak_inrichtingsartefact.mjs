@@ -12,17 +12,25 @@
 //   node scripts/maak_inrichtingsartefact.mjs \
 //     --model <V3-model.json> --edienst <edienst.json> --artefact aanvraag \
 //     [--peiltijdstip 2026-10-25T06:51:13Z] [--referentielijst Aanvraagtype=<items.json>] \
-//     [--doel <handgemaakt artefact.json>] [--uit <artefact.json>]
+//     [--doel <handgemaakt artefact.json | export-map>] [--uit <artefact.json>] \
+//     [--objecttype <objecttype-artefact.json>]
+//
+// De soort van het artefact in het e-dienstmodel kiest de transformatie:
+// objecttype (JSON Schema) of formulier (Open Formulieren-export). Bij een
+// formulier toetst --objecttype de aansluiting key ↔ property; de keuzelijsten
+// komen uit --referentielijst.
 //
 // Met --doel vergelijkt het de payload met een bestaand (handgemaakt)
-// artefact: gelijke hash = "ongewijzigd" bij de uitrol; anders een lijst met
-// de verschillen (JSON-Pointer-paden). Exitcode 0 bij gelijk of zonder --doel,
-// 2 bij verschillen, 1 bij een fout.
+// artefact (bij een formulier: de export-map, {bestandsnaam: inhoud}): gelijke
+// hash = "ongewijzigd" bij de uitrol; anders een lijst met de verschillen
+// (JSON-Pointer-paden). Exitcode 0 bij gelijk of zonder --doel, 2 bij
+// verschillen, 1 bij een fout.
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { maakObjecttypeArtefact, verschillen } from "../web/vite/src/diagramprofielen/canoniek-uml/objecttypeArtefact.js";
+import { maakFormulierArtefact } from "../web/vite/src/diagramprofielen/canoniek-uml/formulierArtefact.js";
 import { jcsHash } from "../web/vite/src/transformatie/jcs.js";
 
 const HIER = path.dirname(fileURLToPath(import.meta.url));
@@ -53,15 +61,21 @@ async function main() {
     const inhoud = lees(bestand);
     referentielijsten[naam] = Array.isArray(inhoud) ? inhoud : inhoud.items || [];
   }
-  const { artefact, diagnostics } = await maakObjecttypeArtefact({
+  const edienst = lees(a.edienst);
+  const soort = (edienst.artefacten || []).find((x) => x.identifier === a.artefact)?.soort;
+  const invoer = {
     modelBestand: lees(a.model),
-    edienst: lees(a.edienst),
+    edienst,
     identifier: a.artefact,
     datatypen: lees(DATATYPEN).datatypes,
     referentielijsten,
     peiltijdstip: a.peiltijdstip || null,
     sha256Hex,
-  });
+  };
+  const { artefact, diagnostics } =
+    soort === "formulier"
+      ? await maakFormulierArtefact({ ...invoer, objecttype: a.objecttype ? lees(a.objecttype) : null })
+      : await maakObjecttypeArtefact(invoer);
 
   const uitPad = a.uit || path.resolve(process.cwd(), `${a.artefact}.artefact.json`);
   fs.mkdirSync(path.dirname(uitPad), { recursive: true });
@@ -72,7 +86,10 @@ async function main() {
   for (const d of diagnostics) console.log(`  ${d.severity} ${d.code}: ${d.message}`);
 
   if (!a.doel) return 0;
-  const doel = lees(a.doel);
+  // Een map (export van Open Formulieren) als {bestandsnaam: inhoud}.
+  const doel = fs.statSync(a.doel).isDirectory()
+    ? Object.fromEntries(fs.readdirSync(a.doel).filter((f) => f.endsWith(".json")).sort().map((f) => [f, lees(path.join(a.doel, f))]))
+    : lees(a.doel);
   const doelHash = jcsHash(doel, sha256Hex);
   if (doelHash === artefact.artefactInhoud.payloadHash) {
     console.log(`Gelijk aan ${a.doel} (sha256 over JCS ${doelHash}): de uitrol geeft "ongewijzigd".`);
