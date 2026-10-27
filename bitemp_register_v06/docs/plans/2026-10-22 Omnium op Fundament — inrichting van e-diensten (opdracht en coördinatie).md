@@ -408,6 +408,15 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     blijft formeel actief met automatisch einde; zonder aanvang bij een voorganger → 422; `?geldigOp=`.
     FUNDAMENT: UitrolVerloop/AanvraagStatus voortaan met aanvang registreren. B35 (exclusiviteit over
     de "is"-GE's, hele materiële tijdlijn) in de backlog op wens van Mark.
+23. **Tijdprecisie per materiële representatie (27-10, besluit Mark; gemerged 0563e13e, main
+    e99fe3f3 gepusht, devloop 0.24.8, digest `sha256:81c0d5e4…`).** Aanleiding: statuswisselingen
+    binnen één dag (meldingen, UitrolVerloop, AanvraagStatus) gaven 422 `opvolging_terugwerkend`.
+    V3 `tijdprecisie: "datum" | "tijdstip"` naast `isMaterieel` (plan 2026-10-25 §8): bij tijdstip
+    zijn aanvang/einde RFC 3339, kolom `timestamptz`, einde exclusief, automatisch einde = aanvang
+    van de opvolger; een bestaande `date`-kolom wordt bij het opstarten verliesvrij verbreed.
+    MeldingStatus/MeldingBehandelaar staan op tijdstip. M3-MOF bouwde de Studio-kant in hetzelfde
+    main (09de549d: eigenschap naast `materieel`, M3 `zichtbaarAls`). FUNDAMENT: UitrolVerloop en
+    AanvraagStatus op `tijdstip` zetten; de correctie-omweg kan weg.
 12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
     actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
     inrichting-model wacht op het nieuwe image.
