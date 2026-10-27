@@ -34,7 +34,7 @@ test("artefact in de vorm van het inrichting-register, zonder meldingen", async 
   assert.match(artefact.artefactInhoud.payloadHash, /^[0-9a-f]{64}$/);
   assert.deepEqual(artefact.artefactHerkomst, {
     regelsetId: "canoniek-naar-objecttype",
-    regelsetVersie: "0.1.0",
+    regelsetVersie: "0.2.0",
     // Dezelfde hash als in het e-dienstmodel: JCS over het model-object.
     bronmodelHash: "5b5af637b7c7fac80e8ee9b947252b45f3f78cbc6ee1ecc61aa8d50f74ae4971",
     bronmodelVersie: "voorzet 2026-10-25 v3",
@@ -64,7 +64,8 @@ test("het schema: selectie, ingebedde relatie, meervoudig GE, datatypen, enum, v
   assert.deepEqual(s.properties.aanvraagtype, { type: "string", description: "Soort aanvraag (keuzelijst Aanvraagtype)" });
   // Relatie met doelKardinaliteit 1 → verplicht; required gesorteerd.
   assert.deepEqual(s.required, ["aanvraagnummer", "aanvraagtype", "aanvrager", "ingediendOp", "status"]);
-  assert.deepEqual(s.properties.aanvrager.required, ["naam"]);
+  // Velden binnen het doel van een relatie zijn niet verplicht (0.2.0).
+  assert.equal(s.properties.aanvrager.required, undefined);
   // Meervoudig GE → array van objecten met de meervoudsnaam.
   assert.deepEqual(s.properties.bijlagen.items.required, ["documentUrl", "naam"]);
   assert.equal(s.properties.bijlagen.items.additionalProperties, false);
@@ -77,7 +78,7 @@ test("trace: elke modelknoop met regel, actie en pad in het schema", async () =>
   const per = Object.fromEntries(artefact.traceregels.map((t) => [t.bronGE ?? t.doelPad, t]));
   assert.deepEqual(per["Aanvraag.AanvraagAanvrager.Aanvrager.AanvragerNaam.naam"], {
     bronGE: "Aanvraag.AanvraagAanvrager.Aanvrager.AanvragerNaam.naam",
-    regel: "Veld → property",
+    regel: "Veld van het doel van een relatie → property, niet verplicht",
     doelPad: "/jsonSchema/properties/aanvrager/properties/naam",
     actie: "aangemaakt",
   });
@@ -97,6 +98,8 @@ test("hash-toets tegen het handgemaakte objecttype: precies deze verschillen", a
     "anders /jsonSchema/properties/aanvrager/description",
     // KorteTekst heeft maxLength 255 in de gedeelde bibliotheek.
     "alleen-gegenereerd /jsonSchema/properties/aanvrager/properties/naam/maxLength",
+    // Regelset 0.2.0: een veld binnen het doel van een relatie is niet verplicht.
+    "alleen-doel /jsonSchema/properties/aanvrager/required",
     "alleen-gegenereerd /jsonSchema/properties/bijlagen/items/properties/naam/maxLength",
     // required is een verzameling; de schrijver sorteert hem.
     "anders /jsonSchema/properties/bijlagen/items/required",
@@ -110,6 +113,7 @@ test("na het in lijn brengen van het handgemaakte schema is de hash gelijk", asy
   doel.jsonSchema.properties.aanvrager.description = "De partij die de aanvraag indient.";
   doel.jsonSchema.properties.aanvrager.properties.naam.maxLength = 255;
   doel.jsonSchema.properties.bijlagen.items.properties.naam.maxLength = 255;
+  delete doel.jsonSchema.properties.aanvrager.required;
   doel.jsonSchema.properties.bijlagen.items.required = ["documentUrl", "naam"];
   doel.jsonSchema.required = [...doel.jsonSchema.required].sort();
   const { jcsHash } = await import("../../transformatie/jcs.js");

@@ -1,0 +1,1905 @@
+{
+  "model_naam": "cg-test",
+  "model_beschrijving": "Samengesteld model van de Omnium-instantie op Fundament (cg-test): alle domeinen die actief moeten zijn, in codegen-volgorde (ouders voor subtypen): inrichting, relatiebeheer, aanvraag, zorg, parkeren. Samengesteld uit de docs/<domein>-domein-v3.json-bestanden; een rebuild moet altijd met dit volledige model (scripts/omnium-rebuild.ps1 -Domein inrichting,relatiebeheer,aanvraag,zorg,parkeren).",
+  "model": {
+    "versie": "v3",
+    "datatypes": [
+      {
+        "naam": "Aanvraagnummer",
+        "description": "Aanvraagnummer: hoofdletters, cijfers en koppeltekens, max 40 tekens (toegekend door de aanvraagservice).",
+        "basistype": "string",
+        "domein": "aanvraag",
+        "validatie": {
+          "pattern": "^[A-Z0-9-]+$",
+          "maxLength": 40,
+          "voorbeelden": [
+            "AANVRAAG-2026-000123"
+          ],
+          "foutmelding": "Voer een aanvraagnummer in met hoofdletters, cijfers en koppeltekens"
+        },
+        "weergave": {
+          "placeholder": "AANVRAAG-2026-000123"
+        }
+      }
+    ],
+    "referentielijstInstanties": [],
+    "enums": [
+      {
+        "goType": "InrichtingLaag",
+        "baseType": "string",
+        "domein": "inrichting",
+        "waarden": [
+          {
+            "constNaam": "InrichtingLaagGegevensbronnen",
+            "waarde": "1-2 gegevensbronnen"
+          },
+          {
+            "constNaam": "InrichtingLaagVerbinding",
+            "waarde": "3 verbinding"
+          },
+          {
+            "constNaam": "InrichtingLaagProces",
+            "waarde": "4-5 proces"
+          }
+        ]
+      },
+      {
+        "goType": "GegevenssoortBeheerRol",
+        "baseType": "string",
+        "domein": "inrichting",
+        "waarden": [
+          {
+            "constNaam": "GegevenssoortBeheerRolBron",
+            "waarde": "bron"
+          },
+          {
+            "constNaam": "GegevenssoortBeheerRolKopie",
+            "waarde": "kopie"
+          },
+          {
+            "constNaam": "GegevenssoortBeheerRolGeneriek",
+            "waarde": "generiek"
+          }
+        ]
+      },
+      {
+        "goType": "EDienstStatus",
+        "baseType": "string",
+        "domein": "inrichting",
+        "waarden": [
+          {
+            "constNaam": "EDienstStatusConcept",
+            "waarde": "concept"
+          },
+          {
+            "constNaam": "EDienstStatusGereviewd",
+            "waarde": "gereviewd"
+          },
+          {
+            "constNaam": "EDienstStatusVrijgegeven",
+            "waarde": "vrijgegeven"
+          },
+          {
+            "constNaam": "EDienstStatusIngetrokken",
+            "waarde": "ingetrokken"
+          }
+        ]
+      },
+      {
+        "goType": "OmgevingSoort",
+        "baseType": "string",
+        "domein": "inrichting",
+        "waarden": [
+          {
+            "constNaam": "OmgevingSoortTest",
+            "waarde": "test"
+          },
+          {
+            "constNaam": "OmgevingSoortAcceptatie",
+            "waarde": "acceptatie"
+          },
+          {
+            "constNaam": "OmgevingSoortProductie",
+            "waarde": "productie"
+          }
+        ]
+      },
+      {
+        "goType": "UitrolStatus",
+        "baseType": "string",
+        "domein": "inrichting",
+        "waarden": [
+          {
+            "constNaam": "UitrolStatusBezig",
+            "waarde": "bezig"
+          },
+          {
+            "constNaam": "UitrolStatusGeslaagd",
+            "waarde": "geslaagd"
+          },
+          {
+            "constNaam": "UitrolStatusDeels",
+            "waarde": "deels"
+          },
+          {
+            "constNaam": "UitrolStatusMislukt",
+            "waarde": "mislukt"
+          },
+          {
+            "constNaam": "UitrolStatusTeruggedraaid",
+            "waarde": "teruggedraaid"
+          }
+        ]
+      },
+      {
+        "goType": "UitrolActie",
+        "baseType": "string",
+        "domein": "inrichting",
+        "waarden": [
+          {
+            "constNaam": "UitrolActieAangemaakt",
+            "waarde": "aangemaakt"
+          },
+          {
+            "constNaam": "UitrolActieBijgewerkt",
+            "waarde": "bijgewerkt"
+          },
+          {
+            "constNaam": "UitrolActieNieuweVersie",
+            "waarde": "nieuweVersie"
+          },
+          {
+            "constNaam": "UitrolActieOngewijzigd",
+            "waarde": "ongewijzigd"
+          },
+          {
+            "constNaam": "UitrolActieOvergeslagen",
+            "waarde": "overgeslagen"
+          },
+          {
+            "constNaam": "UitrolActieMislukt",
+            "waarde": "mislukt"
+          }
+        ]
+      },
+      {
+        "goType": "PartijSoort",
+        "baseType": "string",
+        "domein": "relatiebeheer",
+        "waarden": [
+          {
+            "constNaam": "PartijSoortNatuurlijkPersoon",
+            "waarde": "natuurlijkPersoon"
+          },
+          {
+            "constNaam": "PartijSoortNatuurlijkPersoonZonderRegistratie",
+            "waarde": "natuurlijkPersoonZonderRegistratie"
+          },
+          {
+            "constNaam": "PartijSoortNietNatuurlijkPersoon",
+            "waarde": "nietNatuurlijkPersoon"
+          },
+          {
+            "constNaam": "PartijSoortMaatschappelijkeActiviteit",
+            "waarde": "maatschappelijkeActiviteit"
+          },
+          {
+            "constNaam": "PartijSoortVestiging",
+            "waarde": "vestiging"
+          },
+          {
+            "constNaam": "PartijSoortZorgaanbieder",
+            "waarde": "zorgaanbieder"
+          },
+          {
+            "constNaam": "PartijSoortOverheidsorganisatie",
+            "waarde": "overheidsorganisatie"
+          }
+        ]
+      },
+      {
+        "goType": "AanvraagStatus",
+        "baseType": "string",
+        "domein": "aanvraag",
+        "waarden": [
+          {
+            "constNaam": "AanvraagStatusIngediend",
+            "waarde": "ingediend"
+          },
+          {
+            "constNaam": "AanvraagStatusGevalideerd",
+            "waarde": "gevalideerd"
+          },
+          {
+            "constNaam": "AanvraagStatusAfgekeurd",
+            "waarde": "afgekeurd"
+          },
+          {
+            "constNaam": "AanvraagStatusAfgehandeld",
+            "waarde": "afgehandeld"
+          }
+        ]
+      },
+      {
+        "goType": "MedischAdviesUitkomst",
+        "baseType": "string",
+        "domein": "zorg",
+        "waarden": [
+          {
+            "constNaam": "MedischAdviesUitkomstVoldoet",
+            "waarde": "voldoet"
+          },
+          {
+            "constNaam": "MedischAdviesUitkomstVoldoetNiet",
+            "waarde": "voldoetNiet"
+          },
+          {
+            "constNaam": "MedischAdviesUitkomstAanvullendOnderzoek",
+            "waarde": "aanvullendOnderzoek"
+          }
+        ]
+      },
+      {
+        "goType": "GpkSoort",
+        "baseType": "string",
+        "domein": "parkeren",
+        "waarden": [
+          {
+            "constNaam": "GpkSoortBestuurder",
+            "waarde": "bestuurder"
+          },
+          {
+            "constNaam": "GpkSoortPassagier",
+            "waarde": "passagier"
+          },
+          {
+            "constNaam": "GpkSoortInstelling",
+            "waarde": "instelling"
+          }
+        ]
+      },
+      {
+        "goType": "GpkKaartStatus",
+        "baseType": "string",
+        "domein": "parkeren",
+        "waarden": [
+          {
+            "constNaam": "GpkKaartStatusGeldig",
+            "waarde": "geldig"
+          },
+          {
+            "constNaam": "GpkKaartStatusIngetrokken",
+            "waarde": "ingetrokken"
+          },
+          {
+            "constNaam": "GpkKaartStatusVerlopen",
+            "waarde": "verlopen"
+          }
+        ]
+      }
+    ],
+    "entiteiten": [
+      {
+        "typenaam": "Component",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#dbeafe",
+        "meervoud": "componenten",
+        "description": "Een stuk software uit de basisset (Open Zaak, Open Object, Open Formulieren, GZAC, …). Productmodel naar Imprint.",
+        "gegevenselementen": [
+          {
+            "naam": "ComponentNaam",
+            "domein": "inrichting",
+            "meervoud": "component_namen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Technische naam (sleutel, bv. openzaak), weergavenaam en leverancier.",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true,
+                "uniek": "entiteit"
+              },
+              {
+                "naam": "weergavenaam",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true
+              },
+              {
+                "naam": "leverancier",
+                "type": "string",
+                "datatype": "KorteTekst"
+              }
+            ]
+          },
+          {
+            "naam": "ComponentLaag",
+            "domein": "inrichting",
+            "meervoud": "component_lagen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Laag in de basisset.",
+            "velden": [
+              {
+                "naam": "laag",
+                "type": "string",
+                "enum": "InrichtingLaag",
+                "verplicht": true
+              }
+            ]
+          },
+          {
+            "naam": "ComponentBron",
+            "domein": "inrichting",
+            "meervoud": "component_bronnen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Bronrepository en documentatie.",
+            "velden": [
+              {
+                "naam": "repository",
+                "type": "string",
+                "datatype": "GitAdres"
+              },
+              {
+                "naam": "documentatie",
+                "type": "string",
+                "datatype": "URL"
+              }
+            ]
+          },
+          {
+            "naam": "ComponentArtefactsoort",
+            "domein": "inrichting",
+            "meervoud": "component_artefactsoorten",
+            "momentvoorkomen": "meervoudig",
+            "isMaterieel": true,
+            "description": "Welke soorten artefacten dit component kan ontvangen.",
+            "velden": [
+              {
+                "naam": "soort",
+                "goType": "int",
+                "type": "integer",
+                "verplicht": true,
+                "$ref": "ArtefactSoort"
+              }
+            ]
+          }
+        ],
+        "relaties": []
+      },
+      {
+        "typenaam": "ComponentVersie",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#dbeafe",
+        "meervoud": "component_versies",
+        "description": "Een uitgebrachte versie van een component, met image en API-versies.",
+        "gegevenselementen": [
+          {
+            "naam": "ComponentversieNummer",
+            "domein": "inrichting",
+            "meervoud": "componentversie_nummers",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Semver-versie en image-referentie.",
+            "velden": [
+              {
+                "naam": "versienummer",
+                "type": "string",
+                "datatype": "Versie",
+                "verplicht": true
+              },
+              {
+                "naam": "imageReferentie",
+                "type": "string",
+                "datatype": "KorteTekst"
+              },
+              {
+                "naam": "uitgebrachtOp",
+                "type": "string",
+                "datatype": "Datum"
+              },
+              {
+                "naam": "ondersteundTot",
+                "type": "string",
+                "datatype": "Datum"
+              }
+            ]
+          },
+          {
+            "naam": "ComponentversieApi",
+            "domein": "inrichting",
+            "meervoud": "componentversie_apis",
+            "momentvoorkomen": "meervoudig",
+            "description": "API's die deze versie aanbiedt, met hun versie (bv. zaken 1.5).",
+            "velden": [
+              {
+                "naam": "api",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true
+              },
+              {
+                "naam": "apiVersie",
+                "type": "string",
+                "datatype": "Versie",
+                "verplicht": true
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "ComponentversieComponent",
+            "domein": "inrichting",
+            "meervoud": "componentversie_componenten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Het component waarvan dit een versie is.",
+            "doelEntiteit": "Component",
+            "velden": []
+          }
+        ]
+      },
+      {
+        "typenaam": "Product",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#dbeafe",
+        "meervoud": "inrichting_producten",
+        "description": "Een samenhangend geheel dat als één release wordt uitgerold, bv. CG-basisset. Meervoud/padnaam inrichting_producten: /producten bestaat al in het CG-domein van het register (Initiatief_Product); codegen in additive mode controleert padnamen niet over domeinen heen.",
+        "gegevenselementen": [
+          {
+            "naam": "ProductNaam",
+            "domein": "inrichting",
+            "meervoud": "product_namen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Naam en omschrijving.",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "uniek": "entiteit"
+              },
+              {
+                "naam": "omschrijving",
+                "type": "string",
+                "datatype": "LangeTekst"
+              }
+            ]
+          }
+        ],
+        "relaties": []
+      },
+      {
+        "typenaam": "ProductRelease",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#dbeafe",
+        "meervoud": "product_releases",
+        "description": "Een release van een product: de itinerary van componentversies die erin zitten.",
+        "gegevenselementen": [
+          {
+            "naam": "ProductreleaseVersie",
+            "domein": "inrichting",
+            "meervoud": "productrelease_versies",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Versie en datum.",
+            "velden": [
+              {
+                "naam": "versienummer",
+                "type": "string",
+                "datatype": "Versie",
+                "verplicht": true
+              },
+              {
+                "naam": "uitgebrachtOp",
+                "type": "string",
+                "datatype": "Datum"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "ProductreleaseProduct",
+            "domein": "inrichting",
+            "meervoud": "productrelease_producten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Het product.",
+            "doelEntiteit": "Product",
+            "velden": []
+          },
+          {
+            "naam": "ProductreleaseComponentversie",
+            "domein": "inrichting",
+            "meervoud": "productrelease_componentversies",
+            "momentvoorkomen": "meervoudig",
+            "isMaterieel": true,
+            "description": "Itinerary: componentversies in deze release (eerste/laatste release per componentversie is afleidbaar).",
+            "doelEntiteit": "ComponentVersie",
+            "velden": []
+          }
+        ]
+      },
+      {
+        "typenaam": "Gegevenssoort",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#dcfce7",
+        "meervoud": "gegevenssoorten",
+        "description": "Een soort gegeven dat een component beheert, niet te verwarren met de V3-datatypes van Omnium (DiDo: Verzoek, Zaak, Partij, Klantcontact, Formuliertype, Procesdefinitie, …).",
+        "gegevenselementen": [
+          {
+            "naam": "GegevenssoortNaam",
+            "domein": "inrichting",
+            "meervoud": "gegevenssoort_namen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Naam, omschrijving en de hub/GE in het canonieke model die deze gegevenssoort representeert.",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "uniek": "entiteit"
+              },
+              {
+                "naam": "omschrijving",
+                "type": "string",
+                "datatype": "LangeTekst"
+              },
+              {
+                "naam": "canoniekeHub",
+                "type": "string",
+                "datatype": "KorteTekst"
+              }
+            ]
+          }
+        ],
+        "relaties": []
+      },
+      {
+        "typenaam": "GegevenssoortBeheer",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#dcfce7",
+        "meervoud": "gegevenssoort_beheren",
+        "description": "Welk component beheert welke gegevenssoort, in welke rol en via welke API.",
+        "gegevenselementen": [
+          {
+            "naam": "GegevenssoortbeheerRol",
+            "domein": "inrichting",
+            "meervoud": "gegevenssoortbeheer_rollen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "bron = register van record; kopie; generiek = Open Object vangt op wat geen eigen register heeft.",
+            "velden": [
+              {
+                "naam": "rol",
+                "type": "string",
+                "enum": "GegevenssoortBeheerRol",
+                "verplicht": true
+              },
+              {
+                "naam": "apiPad",
+                "type": "string",
+                "datatype": "KorteTekst"
+              },
+              {
+                "naam": "opmerking",
+                "type": "string",
+                "datatype": "LangeTekst"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "GegevenssoortbeheerGegevenssoort",
+            "domein": "inrichting",
+            "meervoud": "gegevenssoortbeheer_gegevenssoorten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De gegevenssoort.",
+            "doelEntiteit": "Gegevenssoort",
+            "velden": []
+          },
+          {
+            "naam": "GegevenssoortbeheerComponent",
+            "domein": "inrichting",
+            "meervoud": "gegevenssoortbeheer_componenten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Het component.",
+            "doelEntiteit": "Component",
+            "velden": []
+          }
+        ]
+      },
+      {
+        "typenaam": "EDienst",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "meervoud": "ediensten",
+        "description": "Een business service / product-dienst / concrete use case, bv. Parkeervergunning aanvragen.",
+        "gegevenselementen": [
+          {
+            "naam": "EdienstNaam",
+            "domein": "inrichting",
+            "meervoud": "edienst_namen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Naam, omschrijving, eigenaar.",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "uniek": "entiteit"
+              },
+              {
+                "naam": "omschrijving",
+                "type": "string",
+                "datatype": "LangeTekst"
+              },
+              {
+                "naam": "eigenaar",
+                "type": "string",
+                "datatype": "KorteTekst"
+              }
+            ]
+          }
+        ],
+        "relaties": []
+      },
+      {
+        "typenaam": "EDienstVersie",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "meervoud": "edienstversies",
+        "description": "Een functionele versie van een e-dienst: status, bronmodel, bereik, vereiste componenten en artefacten.",
+        "gegevenselementen": [
+          {
+            "naam": "EdienstversieNummer",
+            "domein": "inrichting",
+            "meervoud": "edienstversie_nummers",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Versie en bronmodelversie/hash waaruit de artefacten zijn gegenereerd.",
+            "velden": [
+              {
+                "naam": "versienummer",
+                "type": "string",
+                "datatype": "Versie",
+                "verplicht": true
+              },
+              {
+                "naam": "bronmodelVersie",
+                "type": "string",
+                "datatype": "KorteTekst"
+              },
+              {
+                "naam": "bereik",
+                "type": "string",
+                "datatype": "LangeTekst"
+              }
+            ]
+          },
+          {
+            "naam": "EdienstversieStatus",
+            "domein": "inrichting",
+            "meervoud": "edienstversie_statussen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Levenscyclus: concept, gereviewd, vrijgegeven, ingetrokken.",
+            "velden": [
+              {
+                "naam": "status",
+                "type": "string",
+                "enum": "EDienstStatus",
+                "verplicht": true
+              },
+              {
+                "naam": "reden",
+                "type": "string",
+                "datatype": "LangeTekst"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "EdienstversieEdienst",
+            "domein": "inrichting",
+            "meervoud": "edienstversie_ediensten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De e-dienst.",
+            "doelEntiteit": "EDienst",
+            "velden": []
+          },
+          {
+            "naam": "EdienstversieComponentvereiste",
+            "domein": "inrichting",
+            "meervoud": "edienstversie_componentvereisten",
+            "momentvoorkomen": "meervoudig",
+            "isMaterieel": true,
+            "description": "Vereist component met semver-range en reden (bv. Documenten API voor bijlagen).",
+            "doelEntiteit": "Component",
+            "velden": [
+              {
+                "naam": "versieRange",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true
+              },
+              {
+                "naam": "reden",
+                "type": "string",
+                "datatype": "KorteTekst"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "ArtefactSoort",
+        "domein": "inrichting",
+        "entiteitSubtype": "referentielijst_item",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "meervoud": "artefactsoorten",
+        "description": "Referentielijst: soort artefact (zaaktype, objecttype, formulier, bpmn, ...). Uitbreidbaar zonder rebuild: nieuw component = nieuwe items. Draagt per soort het standaarddoelcomponent en de regel voor de stabiele identifier in dat component.",
+        "gegevenselementen": [
+          {
+            "naam": "ArtefactSoortGegevens",
+            "domein": "inrichting",
+            "meervoud": "artefactsoort_gegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Code (sleutel, bv. zaaktype), omschrijving en de identifier-regel: hoe de stabiele identifier in het doelcomponent is opgebouwd (bv. catalogus.domein + identificatie).",
+            "velden": [
+              {
+                "naam": "code",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true,
+                "uniek": "entiteit"
+              },
+              {
+                "naam": "omschrijving",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true
+              },
+              {
+                "naam": "identifierRegel",
+                "type": "string",
+                "datatype": "LangeTekst"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "ArtefactSoortStandaarddoelcomponent",
+            "domein": "inrichting",
+            "meervoud": "artefactsoort_standaarddoelcomponenten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Het component waarin artefacten van deze soort standaard landen.",
+            "doelEntiteit": "Component",
+            "velden": []
+          }
+        ],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "ArtefactSoortGegevens.code + ' - ' + ArtefactSoortGegevens.omschrijving",
+            "isWeergaveVeld": true
+          }
+        ]
+      },
+      {
+        "typenaam": "ArtefactFormaat",
+        "domein": "inrichting",
+        "entiteitSubtype": "referentielijst_item",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "meervoud": "artefactformaten",
+        "description": "Referentielijst: formaat van de payload (json-schema, catalogi-api-json, openforms-export, bpmn-xml, ...), met mediatype.",
+        "gegevenselementen": [
+          {
+            "naam": "ArtefactFormaatGegevens",
+            "domein": "inrichting",
+            "meervoud": "artefactformaat_gegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Code (sleutel, bv. bpmn-xml), omschrijving en mediatype (bv. application/xml).",
+            "velden": [
+              {
+                "naam": "code",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true,
+                "uniek": "entiteit"
+              },
+              {
+                "naam": "omschrijving",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true
+              },
+              {
+                "naam": "mediatype",
+                "type": "string",
+                "datatype": "AN200"
+              }
+            ]
+          }
+        ],
+        "relaties": [],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "ArtefactFormaatGegevens.code",
+            "isWeergaveVeld": true
+          }
+        ]
+      },
+      {
+        "typenaam": "Artefact",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#fde68a",
+        "meervoud": "artefacten",
+        "description": "Eén ding dat in één component moet landen: payload in het doelformaat, met stabiele identifier, hash en herkomst (regelset, bronmodel, schrijver, trace).",
+        "gegevenselementen": [
+          {
+            "naam": "ArtefactIdentificatie",
+            "domein": "inrichting",
+            "meervoud": "artefact_identificaties",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Soort, stabiele identifier in het doelcomponent (objecttype-naam, catalogus+identificatie, form-slug, process-key), naam, functionele versie en de versie-range van het doelcomponent.",
+            "velden": [
+              {
+                "naam": "soort",
+                "goType": "int",
+                "type": "integer",
+                "verplicht": true,
+                "$ref": "ArtefactSoort"
+              },
+              {
+                "naam": "identifier",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true
+              },
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "KorteTekst"
+              },
+              {
+                "naam": "versienummer",
+                "type": "string",
+                "datatype": "Versie"
+              },
+              {
+                "naam": "doelVersieRange",
+                "type": "string",
+                "datatype": "AN40"
+              }
+            ]
+          },
+          {
+            "naam": "ArtefactInhoud",
+            "domein": "inrichting",
+            "meervoud": "artefact_inhouden",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "De payload in het formaat van het doelcomponent, met sha256-hash (canoniek geserialiseerd). Materieel: elke nieuwe generatie is een registratie.",
+            "velden": [
+              {
+                "naam": "formaat",
+                "goType": "int",
+                "type": "integer",
+                "verplicht": true,
+                "$ref": "ArtefactFormaat"
+              },
+              {
+                "naam": "payload",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "verplicht": true
+              },
+              {
+                "naam": "payloadHash",
+                "type": "string",
+                "datatype": "AN200",
+                "verplicht": true
+              }
+            ]
+          },
+          {
+            "naam": "ArtefactHerkomst",
+            "domein": "inrichting",
+            "meervoud": "artefact_herkomsten",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Hoe de payload is gemaakt: regelset-id en -versie, bronmodelhash, schrijver.",
+            "velden": [
+              {
+                "naam": "regelsetId",
+                "type": "string",
+                "datatype": "KorteTekst"
+              },
+              {
+                "naam": "regelsetVersie",
+                "type": "string",
+                "datatype": "Versie"
+              },
+              {
+                "naam": "bronmodelHash",
+                "type": "string",
+                "datatype": "AN200"
+              },
+              {
+                "naam": "schrijverId",
+                "type": "string",
+                "datatype": "KorteTekst"
+              }
+            ]
+          },
+          {
+            "naam": "ArtefactTraceregel",
+            "domein": "inrichting",
+            "meervoud": "artefact_traceregels",
+            "momentvoorkomen": "meervoudig",
+            "description": "Trace per bron-element: welk GE van het canonieke model → welke regel → welk doel-item (pad in de payload). Niet-materieel (besluit Mark 23-10): een traceregel heeft geen geldigheid, de formele tijd volstaat.",
+            "velden": [
+              {
+                "naam": "bronGE",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true
+              },
+              {
+                "naam": "regel",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true
+              },
+              {
+                "naam": "doelPad",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true
+              },
+              {
+                "naam": "actie",
+                "type": "string",
+                "datatype": "AN40"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "ArtefactEdienstversie",
+            "domein": "inrichting",
+            "meervoud": "artefact_edienstversies",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De e-dienstversie waartoe het artefact behoort.",
+            "doelEntiteit": "EDienstVersie",
+            "velden": []
+          },
+          {
+            "naam": "ArtefactDoelcomponent",
+            "domein": "inrichting",
+            "meervoud": "artefact_doelcomponenten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Het component waarin het artefact moet landen.",
+            "doelEntiteit": "Component",
+            "velden": []
+          },
+          {
+            "naam": "ArtefactAfhankelijkheid",
+            "domein": "inrichting",
+            "meervoud": "artefact_afhankelijkheden",
+            "momentvoorkomen": "meervoudig",
+            "isMaterieel": true,
+            "description": "Expliciete volgorde: dit artefact kan pas na het doel-artefact worden uitgerold (objecttype vóór formulier, zaaktype vóór bpmn).",
+            "doelEntiteit": "Artefact",
+            "velden": [
+              {
+                "naam": "reden",
+                "type": "string",
+                "datatype": "KorteTekst"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "Omgeving",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#e9d5ff",
+        "meervoud": "omgevingen",
+        "description": "Een geïnstalleerde instantie van een product (cg-test, acceptatie, productie).",
+        "gegevenselementen": [
+          {
+            "naam": "OmgevingNaam",
+            "domein": "inrichting",
+            "meervoud": "omgeving_namen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Naam, soort en basis-URL.",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true,
+                "uniek": "entiteit"
+              },
+              {
+                "naam": "soort",
+                "type": "string",
+                "enum": "OmgevingSoort",
+                "verplicht": true
+              },
+              {
+                "naam": "basisUrl",
+                "type": "string",
+                "datatype": "URL"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "OmgevingProductrelease",
+            "domein": "inrichting",
+            "meervoud": "omgeving_productreleases",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "De release die technisch is uitgerold.",
+            "doelEntiteit": "ProductRelease",
+            "velden": []
+          },
+          {
+            "naam": "OmgevingComponentversie",
+            "domein": "inrichting",
+            "meervoud": "omgeving_componentversies",
+            "momentvoorkomen": "meervoudig",
+            "isMaterieel": true,
+            "description": "Werkelijke stand per component (kan afwijken van de release door hotfixes), met API-root.",
+            "doelEntiteit": "ComponentVersie",
+            "velden": [
+              {
+                "naam": "apiRoot",
+                "type": "string",
+                "datatype": "URL"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "Uitrol",
+        "domein": "inrichting",
+        "isMaterieel": true,
+        "kleur": "#fecaca",
+        "meervoud": "uitrollen",
+        "description": "Eén keer kiezen en uitrollen van een e-dienstversie naar een omgeving.",
+        "gegevenselementen": [
+          {
+            "naam": "UitrolVerloop",
+            "domein": "inrichting",
+            "meervoud": "uitrol_verlopen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "tijdprecisie": "tijdstip",
+            "description": "Start, einde, uitvoerder, status en opmerking. tijdprecisie=tijdstip (besluit Mark 27-10): aanvang en einde als RFC 3339-tijdstip (einde exclusief), zodat statuswisselingen op één dag gewone opvolgingen zijn; werkt vanaf het devloop-image ná 0.24.7 (een ouder image negeert de eigenschap en houdt datum); tot de bouw daarmee wordt dit GE bijgewerkt met een correctie (rel_id).",
+            "velden": [
+              {
+                "naam": "gestartOp",
+                "type": "string",
+                "datatype": "DatumTijd",
+                "verplicht": true
+              },
+              {
+                "naam": "afgerondOp",
+                "type": "string",
+                "datatype": "DatumTijd"
+              },
+              {
+                "naam": "uitgevoerdDoor",
+                "type": "string",
+                "datatype": "KorteTekst"
+              },
+              {
+                "naam": "status",
+                "type": "string",
+                "enum": "UitrolStatus",
+                "verplicht": true
+              },
+              {
+                "naam": "opmerking",
+                "type": "string",
+                "datatype": "LangeTekst"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "UitrolEdienstversie",
+            "domein": "inrichting",
+            "meervoud": "uitrol_edienstversies",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Wat is uitgerold.",
+            "doelEntiteit": "EDienstVersie",
+            "velden": []
+          },
+          {
+            "naam": "UitrolOmgeving",
+            "domein": "inrichting",
+            "meervoud": "uitrol_omgevingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Waarheen.",
+            "doelEntiteit": "Omgeving",
+            "velden": []
+          },
+          {
+            "naam": "UitrolResultaat",
+            "domein": "inrichting",
+            "meervoud": "uitrol_resultaten",
+            "momentvoorkomen": "meervoudig",
+            "isMaterieel": true,
+            "description": "Per artefact: actie, tijdstip, de uitgerolde hash, de URL/uuid en versie die het doelcomponent teruggaf, melding. Drift = laatste resultaat per omgeving/artefact met payloadHash ≠ Artefact.payloadHash.",
+            "doelEntiteit": "Artefact",
+            "velden": [
+              {
+                "naam": "actie",
+                "type": "string",
+                "enum": "UitrolActie",
+                "verplicht": true
+              },
+              {
+                "naam": "tijdstip",
+                "type": "string",
+                "datatype": "DatumTijd",
+                "verplicht": true
+              },
+              {
+                "naam": "payloadHash",
+                "type": "string",
+                "datatype": "AN200"
+              },
+              {
+                "naam": "doelUrl",
+                "type": "string",
+                "datatype": "URL"
+              },
+              {
+                "naam": "doelVersie",
+                "type": "string",
+                "datatype": "AN40"
+              },
+              {
+                "naam": "melding",
+                "type": "string",
+                "datatype": "LangeTekst"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "Partij",
+        "domein": "relatiebeheer",
+        "isMaterieel": true,
+        "kleur": "#e0e7ff",
+        "meervoud": "partijen",
+        "description": "Partij (DiDo, KCA/VNG): iedereen die in een verzoek, contact of taak een rol speelt. Geen subtypen (besluit Mark 27-10): natuurlijk persoon, rechtspersoon, vestiging enz. zijn entiteiten van de bronregistraties (BRP, Handelsregister, AGB, OIN) en worden hier niet nagebouwd; Partij houdt alleen hun sleutel, in een set 'is'-GE's waarvan er op elk materieel moment precies een geldig is (bedrijfsregel; constraint over GE's is BACKLOG B35). Partij is daarmee zelf de proxy van de externe identiteit (sleutel uniek per GE: een partij per persoon of organisatie). De soort is afgeleid uit welk GE gevuld is. Open Klant is de brug naar de bronregistraties.",
+        "gegevenselementen": [
+          {
+            "naam": "PartijNatuurlijkPersoon",
+            "domein": "relatiebeheer",
+            "meervoud": "partij_natuurlijke_personen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Natuurlijk persoon met BSN (bron: BRP, via Open Klant). Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "velden": [
+              {
+                "naam": "bsn",
+                "type": "string",
+                "datatype": "BSN",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "Burgerservicenummer (BRP)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijZonderRegistratie",
+            "domein": "relatiebeheer",
+            "meervoud": "partij_zonder_registraties",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Natuurlijk persoon zonder bronregistratie (bv. buitenlandse aanvrager): naam en contactgegevens zoals opgegeven (UML: naam, adres [0..1], tel [0..1], email [0..1]). Het enige 'is'-GE met eigen gegevens in plaats van een externe sleutel. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "description": "Naam zoals opgegeven"
+              },
+              {
+                "naam": "adres",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "description": "Adres zoals opgegeven"
+              },
+              {
+                "naam": "telefoon",
+                "type": "string",
+                "datatype": "Telefoonnummer",
+                "description": "Telefoonnummer zoals opgegeven"
+              },
+              {
+                "naam": "email",
+                "type": "string",
+                "datatype": "Emailadres",
+                "description": "E-mailadres zoals opgegeven"
+              }
+            ]
+          },
+          {
+            "naam": "PartijNietNatuurlijkPersoon",
+            "domein": "relatiebeheer",
+            "meervoud": "partij_niet_natuurlijke_personen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Niet-natuurlijk persoon (rechtspersoon) met RSIN (bron: Handelsregister). Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "velden": [
+              {
+                "naam": "rsin",
+                "type": "string",
+                "datatype": "RSIN",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "RSIN van de rechtspersoon (Handelsregister)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijMaatschappelijkeActiviteit",
+            "domein": "relatiebeheer",
+            "meervoud": "partij_maatschappelijke_activiteiten",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Maatschappelijke activiteit (onderneming) als geheel, met KvK-nummer (bron: Handelsregister); zonder specifieke vestiging. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "velden": [
+              {
+                "naam": "kvkNummer",
+                "type": "string",
+                "datatype": "KvKNummer",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "KvK-nummer van de maatschappelijke activiteit / onderneming"
+              }
+            ]
+          },
+          {
+            "naam": "PartijVestiging",
+            "domein": "relatiebeheer",
+            "meervoud": "partij_vestigingen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Vestiging als partij (zoals eHerkenning haar aanlevert: KvK-nummer plus vestigingsnummer). De vestiging is de partij; het KvK-nummer is bovenliggende informatie (Mark 27-10). Verandert een vestiging van onderneming, dan is dat een nieuwe materiele geldigheid van dit GE. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "velden": [
+              {
+                "naam": "vestigingsnummer",
+                "type": "string",
+                "datatype": "Vestigingsnummer",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "Vestigingsnummer (Handelsregister); de partij"
+              },
+              {
+                "naam": "kvkNummer",
+                "type": "string",
+                "datatype": "KvKNummer",
+                "verplicht": true,
+                "description": "KvK-nummer van de maatschappelijke activiteit waartoe de vestiging behoort; bovenliggende informatie, niet uniek (meerdere vestigingen per onderneming)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijZorgaanbieder",
+            "domein": "relatiebeheer",
+            "meervoud": "partij_zorgaanbieders",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Zorgaanbieder met AGB-code (bron: Vektis AGB-register); adviseert bij een gehandicaptenparkeerkaart. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "velden": [
+              {
+                "naam": "agbCode",
+                "type": "string",
+                "datatype": "AGBCode",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "AGB-code van de zorgaanbieder of zorginstelling (Vektis)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijOverheidsorganisatie",
+            "domein": "relatiebeheer",
+            "meervoud": "partij_overheidsorganisaties",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Overheidsorganisatie met OIN (bron: Logius OIN-register). Voorbeeld van een correctie (Mark 27-10): een overheidsorganisatie die per abuis als KvK-inschrijving is geregistreerd, moet via OIN; de registratie wordt gecorrigeerd. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "velden": [
+              {
+                "naam": "oin",
+                "type": "string",
+                "datatype": "OIN",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "Organisatie-identificatienummer (Logius, Digikoppeling)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijNaam",
+            "domein": "relatiebeheer",
+            "meervoud": "partij_namen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Naam als cache (besluit Mark 27-10): kopie van de naam uit BRP of Handelsregister, zodat Omnium een partij leesbaar kan tonen zonder de bron te bevragen. De bron blijft leidend; de kopie kan verouderen. Niet materieel: een cache heeft geen eigen materiele geldigheid. Bij een persoon zonder registratie staat de naam in PartijZonderRegistratie en blijft dit GE leeg. Geen 'is'-GE.",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "description": "Naam van de partij zoals bekend in de bronregistratie op het moment van overnemen"
+              },
+              {
+                "naam": "overgenomenOp",
+                "type": "string",
+                "datatype": "Datum",
+                "description": "Datum waarop de naam uit de bronregistratie is overgenomen"
+              }
+            ]
+          },
+          {
+            "naam": "PartijKlantverwijzing",
+            "domein": "relatiebeheer",
+            "meervoud": "partij_klantverwijzingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Brug naar Open Klant, dat de partij-identificatoren met de bronregistraties verbindt. Geen 'is'-GE.",
+            "velden": [
+              {
+                "naam": "klantUrl",
+                "type": "string",
+                "datatype": "URL",
+                "description": "Verwijzing naar de partij in Open Klant (Klantinteracties API)"
+              }
+            ]
+          }
+        ],
+        "relaties": [],
+        "afgeleideVelden": [
+          {
+            "naam": "soort",
+            "goType": "PartijSoort",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "PartijNatuurlijkPersoon != null ? 'natuurlijkPersoon' : PartijZonderRegistratie != null ? 'natuurlijkPersoonZonderRegistratie' : PartijNietNatuurlijkPersoon != null ? 'nietNatuurlijkPersoon' : PartijMaatschappelijkeActiviteit != null ? 'maatschappelijkeActiviteit' : PartijVestiging != null ? 'vestiging' : PartijZorgaanbieder != null ? 'zorgaanbieder' : PartijOverheidsorganisatie != null ? 'overheidsorganisatie' : null",
+            "description": "Partijsoort, afgeleid uit welk 'is'-GE gevuld is (enum PartijSoort; de API publiceert een afgeleid veld als tekst, BACKLOG B35). Niet invoerbaar, dus nooit in strijd met de registratie."
+          },
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "PartijNaam != null ? PartijNaam.naam : PartijZonderRegistratie != null ? PartijZonderRegistratie.naam : PartijNatuurlijkPersoon != null ? PartijNatuurlijkPersoon.bsn : PartijNietNatuurlijkPersoon != null ? PartijNietNatuurlijkPersoon.rsin : PartijMaatschappelijkeActiviteit != null ? PartijMaatschappelijkeActiviteit.kvkNummer : PartijVestiging != null ? PartijVestiging.vestigingsnummer : PartijZorgaanbieder != null ? PartijZorgaanbieder.agbCode : PartijOverheidsorganisatie != null ? PartijOverheidsorganisatie.oin : null",
+            "isWeergaveVeld": true
+          }
+        ]
+      },
+      {
+        "typenaam": "Partijrol",
+        "domein": "relatiebeheer",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "meervoud": "partijrollen",
+        "description": "Referentielijst: de rol die een partij speelt bij een verzoek, contact of taak (aanvrager, subject, gemachtigde, belanghebbende, betrokkene, melder, initiator, deelnemer; naar de rolnamen in Marks UML). Referentielijst in plaats van enum (besluit Mark 26-10): een nieuwe rol is een registratie, geen rebuild.",
+        "gegevenselementen": [
+          {
+            "naam": "PartijrolGegevens",
+            "domein": "relatiebeheer",
+            "meervoud": "partijrol_gegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Code en omschrijving.",
+            "velden": [
+              {
+                "naam": "code",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "Code (sleutel, bv. aanvrager)"
+              },
+              {
+                "naam": "omschrijving",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "description": "Omschrijving"
+              },
+              {
+                "naam": "toelichting",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Wanneer deze rol van toepassing is"
+              }
+            ]
+          }
+        ],
+        "relaties": [],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "PartijrolGegevens.code + ' - ' + PartijrolGegevens.omschrijving",
+            "isWeergaveVeld": true
+          }
+        ],
+        "entiteitSubtype": "referentielijst_item"
+      },
+      {
+        "typenaam": "Aanvraagtype",
+        "domein": "aanvraag",
+        "entiteitSubtype": "referentielijst_item",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "meervoud": "aanvraagtypen",
+        "description": "Referentielijst: soort aanvraag (de keuzelijst 'Soort aanvraag' in het formulier). Per type het zaaktype dat erbij hoort in Open Zaak.",
+        "gegevenselementen": [
+          {
+            "naam": "AanvraagtypeGegevens",
+            "domein": "aanvraag",
+            "meervoud": "aanvraagtype_gegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Code (sleutel, bv. parkeervergunning), omschrijving voor de keuzelijst, en de identificatie van het zaaktype in de Catalogi API.",
+            "velden": [
+              {
+                "naam": "code",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "Code van het aanvraagtype (sleutel)"
+              },
+              {
+                "naam": "omschrijving",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "description": "Omschrijving voor de keuzelijst"
+              },
+              {
+                "naam": "zaaktypeIdentificatie",
+                "type": "string",
+                "datatype": "AN40",
+                "description": "Identificatie van het zaaktype in de Catalogi API dat bij dit aanvraagtype hoort"
+              },
+              {
+                "naam": "toelichting",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de aanvrager bij de aanvraag"
+              }
+            ]
+          }
+        ],
+        "relaties": [],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "AanvraagtypeGegevens.omschrijving",
+            "isWeergaveVeld": true
+          }
+        ]
+      },
+      {
+        "typenaam": "Aanvraag",
+        "domein": "aanvraag",
+        "isMaterieel": true,
+        "kleur": "#fde68a",
+        "meervoud": "aanvragen",
+        "description": "Eén aanvraag die een partij via de formulierservice indient: identificatie, indiening, status (met geschiedenis) en bijlagen in het documentregister.",
+        "gegevenselementen": [
+          {
+            "naam": "AanvraagIdentificatie",
+            "domein": "aanvraag",
+            "meervoud": "aanvraag_identificaties",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Uniek aanvraagnummer (toegekend door de aanvraagservice) en het aanvraagtype.",
+            "velden": [
+              {
+                "naam": "aanvraagnummer",
+                "type": "string",
+                "datatype": "Aanvraagnummer",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "Uniek nummer dat de aanvraagservice toekent"
+              },
+              {
+                "naam": "aanvraagtype",
+                "goType": "int",
+                "type": "integer",
+                "verplicht": true,
+                "$ref": "Aanvraagtype",
+                "description": "Soort aanvraag (keuzelijst Aanvraagtype)"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagIndiening",
+            "domein": "aanvraag",
+            "meervoud": "aanvraag_indieningen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Wanneer en met welke toelichting de aanvraag is ingediend.",
+            "velden": [
+              {
+                "naam": "ingediendOp",
+                "type": "string",
+                "datatype": "DatumTijd",
+                "verplicht": true,
+                "format": "date-time",
+                "description": "Tijdstip waarop de aanvraag is ingediend"
+              },
+              {
+                "naam": "toelichting",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de aanvrager bij de aanvraag"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagStatus",
+            "domein": "aanvraag",
+            "meervoud": "aanvraag_statussen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "tijdprecisie": "tijdstip",
+            "description": "Status van de behandeling. Materieel: elke statuswijziging is een nieuwe geldigheid, zodat de statusgeschiedenis bevraagbaar is. tijdprecisie=tijdstip (besluit Mark 27-10): aanvang en einde als RFC 3339-tijdstip (einde exclusief), zodat statuswisselingen op één dag gewone opvolgingen zijn; werkt vanaf het devloop-image ná 0.24.7 (een ouder image negeert de eigenschap en houdt datum); tot de bouw daarmee wordt dit GE bijgewerkt met een correctie (rel_id).",
+            "velden": [
+              {
+                "naam": "status",
+                "type": "string",
+                "enum": "AanvraagStatus",
+                "verplicht": true,
+                "description": "Status van de behandeling"
+              },
+              {
+                "naam": "reden",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Reden bij de statuswijziging (bv. bij afkeuring)"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagBijlage",
+            "domein": "aanvraag",
+            "meervoud": "bijlagen",
+            "momentvoorkomen": "meervoudig",
+            "isMaterieel": true,
+            "description": "Bijlage bij de aanvraag: naam en verwijzing naar het document in het documentregister (Documenten API). Gegevenselement, geen entiteit: een bijlage bestaat niet los van zijn aanvraag.",
+            "velden": [
+              {
+                "naam": "naam",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "verplicht": true,
+                "description": "Naam van de bijlage"
+              },
+              {
+                "naam": "documentUrl",
+                "type": "string",
+                "datatype": "URL",
+                "verplicht": true,
+                "description": "Verwijzing naar het document in het documentregister (Open Zaak Documenten API)"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "AanvraagPartij",
+            "domein": "aanvraag",
+            "meervoud": "aanvraag_partijen",
+            "momentvoorkomen": "meervoudig",
+            "isMaterieel": true,
+            "description": "De partijen bij de aanvraag, elk met een rol (Partijrol): aanvrager, subject (bij een gemachtigde de inwoner over wie de aanvraag gaat), gemachtigde, belanghebbende, ... Meervoudig en materieel: een rol kan in de tijd veranderen. Bedrijfsregel (niet afdwingbaar in het model): ten minste één partij met rol aanvrager.",
+            "doelEntiteit": "Partij",
+            "velden": [
+              {
+                "naam": "partijrol",
+                "goType": "int",
+                "type": "integer",
+                "verplicht": true,
+                "$ref": "Partijrol",
+                "description": "Rol van de partij bij deze aanvraag (referentielijst Partijrol)"
+              }
+            ]
+          }
+        ],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "AanvraagIdentificatie.aanvraagnummer",
+            "isWeergaveVeld": true
+          }
+        ]
+      },
+      {
+        "typenaam": "MedischAdvies",
+        "domein": "zorg",
+        "isMaterieel": true,
+        "kleur": "#dcfce7",
+        "meervoud": "medische_adviezen",
+        "description": "Medisch advies van een zorgaanbieder (GGD, indicatieorgaan) over een persoon, bv. de loopbeperking bij een gehandicaptenparkeerkaart. Eigen entiteit: een advies kan meerdere aanvragen dienen. Materieel: een advies heeft een geldigheid.",
+        "gegevenselementen": [
+          {
+            "naam": "MedischAdviesGegevens",
+            "domein": "zorg",
+            "meervoud": "medischadvies_gegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De uitkomst en geldigheid van het advies.",
+            "velden": [
+              {
+                "naam": "adviesdatum",
+                "type": "string",
+                "datatype": "Datum",
+                "verplicht": true,
+                "description": "Datum van het advies"
+              },
+              {
+                "naam": "uitkomst",
+                "type": "string",
+                "enum": "MedischAdviesUitkomst",
+                "verplicht": true,
+                "description": "Uitkomst van het advies"
+              },
+              {
+                "naam": "geldigTot",
+                "type": "string",
+                "datatype": "Datum",
+                "description": "Tot wanneer het advies geldig is"
+              },
+              {
+                "naam": "toelichting",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de adviseur (geen medische details)"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "MedischAdviesAdviseur",
+            "domein": "zorg",
+            "meervoud": "medischadvies_adviseurs",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De zorgaanbieder die het advies gaf: een Partij met 'is'-GE PartijZorgaanbieder (AGB-code). Bedrijfsregel, niet in het model afdwingbaar: de partij moet een zorgaanbieder zijn (Zorgaanbieder is geen eigen entiteit meer; review Mark 27-10).",
+            "doelEntiteit": "Partij",
+            "velden": [],
+            "doelKardinaliteit": "1"
+          },
+          {
+            "naam": "MedischAdviesBetrokkene",
+            "domein": "zorg",
+            "meervoud": "medischadvies_betrokkenen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De persoon over wie het advies gaat.",
+            "doelEntiteit": "Partij",
+            "velden": [],
+            "doelKardinaliteit": "1"
+          }
+        ],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "MedischAdviesGegevens.adviesdatum + ' ' + MedischAdviesGegevens.uitkomst",
+            "isWeergaveVeld": true
+          }
+        ]
+      },
+      {
+        "typenaam": "GehandicaptenparkeerkaartAanvraag",
+        "domein": "parkeren",
+        "erft": "Aanvraag",
+        "isMaterieel": false,
+        "kleur": "#fde68a",
+        "meervoud": "gehandicaptenparkeerkaart_aanvragen",
+        "description": "Aanvraag van een gehandicaptenparkeerkaart (Regeling gehandicaptenparkeerkaart): specialisatie van de generieke Aanvraag. Niet-materieel: de geldigheid van de aanvraag ligt bij de ouder (een tijdlijn).",
+        "gegevenselementen": [
+          {
+            "naam": "GpkAanvraagKaart",
+            "domein": "parkeren",
+            "meervoud": "gpkaanvraag_kaarten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Welke kaart wordt gevraagd.",
+            "velden": [
+              {
+                "naam": "soort",
+                "type": "string",
+                "enum": "GpkSoort",
+                "verplicht": true,
+                "description": "Bestuurderskaart, passagierskaart of instellingenkaart"
+              },
+              {
+                "naam": "eerdereKaart",
+                "type": "string",
+                "datatype": "JaNee",
+                "description": "Had de aanvrager eerder een kaart"
+              },
+              {
+                "naam": "eerderKaartnummer",
+                "type": "string",
+                "datatype": "AN40",
+                "description": "Kaartnummer van de eerdere kaart"
+              },
+              {
+                "naam": "kenteken",
+                "type": "string",
+                "datatype": "Kenteken",
+                "description": "Kenteken van het voertuig (alleen bij een bestuurderskaart)"
+              }
+            ]
+          },
+          {
+            "naam": "GpkAanvraagBeperking",
+            "domein": "parkeren",
+            "meervoud": "gpkaanvraag_beperkingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De grond van de aanvraag; bron voor het medisch advies.",
+            "velden": [
+              {
+                "naam": "loopafstandMeter",
+                "type": "string",
+                "datatype": "Geheel",
+                "description": "Loopafstand in meters die de aanvrager met hulpmiddelen kan afleggen (criterium: ten hoogste 100 m)"
+              },
+              {
+                "naam": "hulpmiddel",
+                "type": "string",
+                "datatype": "KorteTekst",
+                "description": "Hulpmiddel (rolstoel, rollator, ...)"
+              },
+              {
+                "naam": "toelichting",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de aanvrager op de beperking"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "GpkAanvraagMedischAdvies",
+            "domein": "parkeren",
+            "meervoud": "gpkaanvraag_medische_adviezen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Het medisch advies waarop de beoordeling steunt (komt tijdens de behandeling).",
+            "doelEntiteit": "MedischAdvies",
+            "velden": []
+          }
+        ]
+      },
+      {
+        "typenaam": "Gehandicaptenparkeerkaart",
+        "domein": "parkeren",
+        "isMaterieel": true,
+        "kleur": "#fde68a",
+        "meervoud": "gehandicaptenparkeerkaarten",
+        "description": "De toegekende kaart (het product): kaartnummer, soort en geldigheid (ten hoogste vijf jaar). Materieel: geldig van/tot, intrekking.",
+        "gegevenselementen": [
+          {
+            "naam": "GpkKaartGegevens",
+            "domein": "parkeren",
+            "meervoud": "gpk_kaartgegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Kaartgegevens.",
+            "velden": [
+              {
+                "naam": "kaartnummer",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true,
+                "uniek": "entiteit",
+                "description": "Kaartnummer"
+              },
+              {
+                "naam": "soort",
+                "type": "string",
+                "enum": "GpkSoort",
+                "verplicht": true,
+                "description": "Soort kaart"
+              },
+              {
+                "naam": "geldigVan",
+                "type": "string",
+                "datatype": "Datum",
+                "verplicht": true,
+                "description": "Begin van de geldigheid"
+              },
+              {
+                "naam": "geldigTot",
+                "type": "string",
+                "datatype": "Datum",
+                "verplicht": true,
+                "description": "Einde van de geldigheid (ten hoogste vijf jaar na begin)"
+              },
+              {
+                "naam": "status",
+                "type": "string",
+                "enum": "GpkKaartStatus",
+                "verplicht": true,
+                "description": "Geldig, ingetrokken of verlopen"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "GpkKaartHouder",
+            "domein": "parkeren",
+            "meervoud": "gpk_kaarthouders",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De houder: een natuurlijk persoon (bestuurder/passagier) of een instelling (instellingenkaart).",
+            "doelEntiteit": "Partij",
+            "velden": [],
+            "doelKardinaliteit": "1"
+          },
+          {
+            "naam": "GpkKaartAanvraag",
+            "domein": "parkeren",
+            "meervoud": "gpk_kaartaanvragen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De aanvraag waarop de kaart is toegekend.",
+            "doelEntiteit": "GehandicaptenparkeerkaartAanvraag",
+            "velden": []
+          }
+        ],
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "GpkKaartGegevens.kaartnummer",
+            "isWeergaveVeld": true
+          }
+        ]
+      }
+    ]
+  }
+}

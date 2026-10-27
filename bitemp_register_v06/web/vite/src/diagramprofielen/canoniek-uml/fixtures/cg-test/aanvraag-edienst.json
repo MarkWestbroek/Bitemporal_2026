@@ -1,0 +1,95 @@
+{
+  "_toelichting": "E-dienst-inrichtingsmodel voor 'Aanvraag (voorbeeld)', v2 na de modelwijziging van 26-10 (AanvraagPartij → Partij met partijrol; Aanvrager vervalt). Voorzet TRANSFORMATIES 27-10 op basis van de v1 van FUNDAMENT. Bron is het samengestelde model van cg-test (de relatie verwijst naar relatiebeheer.Partij en de referentielijst Partijrol). Alle verwijzingen zijn modelpaden; een geërfd of ingebed veld heet naar de entiteit waar het gedefinieerd is. Alleen positieve selectie.",
+  "edienst": { "naam": "Aanvraag (voorbeeld)", "versienummer": "0.2.0", "omgeving": "cg-test" },
+  "bronmodel": {
+    "naam": "cg-test",
+    "bestand": "docs/omnium-model-cg-test-v3.json",
+    "versie": "cg-test 2026-10-27 (a71dae7)",
+    "hash": "sha256:50b318bb54de5996c15741c5a80c26835e6321caaa1ce99f7b87e0cf38e7313b",
+    "_hashregel": "sha256 over JCS(model) (RFC 8785); model = het 'model'-object van het samengestelde bestand"
+  },
+  "referentielijsten": {
+    "Aanvraagtype": { "bron": "register: /full/aanvraagtypen", "peiltijdstip": null, "eersteVulling": "docs/aanvraag-aanvraagtypen.json" },
+    "Partijrol": { "bron": "register: /full/partijrollen", "peiltijdstip": null, "eersteVulling": "docs/relatiebeheer-partijrollen.json" }
+  },
+  "artefacten": [
+    {
+      "identifier": "aanvraag",
+      "soort": "objecttype",
+      "formaat": "json-schema",
+      "doelcomponent": "openobject",
+      "bron": "Aanvraag",
+      "projectie": {
+        "materieel": "actueel",
+        "relaties": {
+          "AanvraagPartij": { "als": "ingebed", "naam": "partijen", "_toelichting": "Meervoudige relatie met een veld (partijrol): een lijst van {partijrol, partij}. Niet 'de partij met rol aanvrager': kiezen op een M0-waarde hoort niet in de regelset, en een gemachtigde-aanvraag heeft zowel aanvrager als subject nodig." }
+        },
+        "referentielijsten": {
+          "Aanvraagtype": { "als": "code", "enum": false },
+          "Partijrol": { "als": "code", "enum": false }
+        }
+      },
+      "velden": [
+        "Aanvraag.AanvraagIdentificatie.aanvraagnummer",
+        "Aanvraag.AanvraagIdentificatie.aanvraagtype",
+        "Aanvraag.AanvraagPartij.partijrol",
+        "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn",
+        "Aanvraag.AanvraagPartij.Partij.PartijMaatschappelijkeActiviteit.kvkNummer",
+        "Aanvraag.AanvraagPartij.Partij.PartijVestiging.vestigingsnummer",
+        "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.naam",
+        "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.email",
+        "Aanvraag.AanvraagPartij.Partij.PartijKlantverwijzing.klantUrl",
+        "Aanvraag.AanvraagStatus.status",
+        "Aanvraag.AanvraagIndiening.ingediendOp",
+        "Aanvraag.AanvraagBijlage.naam",
+        "Aanvraag.AanvraagBijlage.documentUrl"
+      ],
+      "_velden": "De partij als de sleutel van haar 'is'-GE: bsn (DigiD), kvkNummer of vestigingsnummer (eHerkenning), of naam + e-mail zonder registratie; klantUrl als die al bekend is. Geen Omnium-id: het formulier kent dat niet, de aanvraagservice zoekt of maakt de Partij op de sleutel. Niet gekozen: rsin, agbCode, oin (geen inlogmiddel van een aanvrager), PartijVestiging.kvkNummer (zou botsen met kvkNummer; het vestigingsnummer is uniek), PartijNaam (cache).",
+      "passthrough": {
+        "_toelichting": "doelspecifieke laag: letterlijk JSON Schema, niet getransformeerd",
+        "properties": { "formulier": { "type": "object", "description": "De ingevulde formuliergegevens, vrij van vorm", "additionalProperties": true } }
+      },
+      "metadata": {
+        "name": "aanvraag",
+        "namePlural": "aanvragen",
+        "description": "Aanvraag die een partij via de formulierservice indient; wordt gevalideerd door de valideerservice. Bijlagen staan in het documentregister.",
+        "dataClassification": "confidential",
+        "maintainerOrganization": "Common Ground Lab",
+        "contactPerson": "Beheer",
+        "contactEmail": "beheer@example.org",
+        "source": "formulierservice",
+        "updateFrequency": "unknown",
+        "allowGeometry": false
+      }
+    },
+    {
+      "identifier": "aanvraag-voorbeeld",
+      "soort": "formulier",
+      "formaat": "openforms-export",
+      "doelcomponent": "openforms",
+      "bron": "Aanvraag",
+      "naam": "Aanvraag (voorbeeld)",
+      "stappen": [
+        {
+          "naam": "Gegevens aanvraag",
+          "slug": "gegevens-aanvraag",
+          "velden": [
+            { "veld": "Aanvraag.AanvraagIdentificatie.aanvraagtype", "key": "aanvraagtype", "label": "Soort aanvraag", "verplicht": true },
+            { "veld": "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.naam", "key": "aanvragerNaam", "label": "Naam aanvrager", "verplicht": true },
+            { "veld": "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.email", "key": "aanvragerEmail", "label": "E-mailadres", "verplicht": false },
+            { "veld": "Aanvraag.AanvraagIndiening.toelichting", "key": "toelichting", "label": "Toelichting" }
+          ]
+        }
+      ],
+      "registratie": {
+        "objecttype": "aanvraag",
+        "vasteWaarden": { "Aanvraag.AanvraagStatus.status": "ingediend", "Aanvraag.AanvraagPartij.partijrol": "aanvrager" },
+        "letterlijk": { "Aanvraag.AanvraagIndiening.ingediendOp": "indientijdstip van Open Formulieren", "Aanvraag.AanvraagIdentificatie.aanvraagnummer": "toegekend door de aanvraagservice (nog geen generiek mechanisme)" }
+      },
+      "_status": "paden bijgewerkt naar v2; regelset formulier volgt"
+    }
+  ],
+  "afhankelijkheden": [
+    { "artefact": "aanvraag-voorbeeld", "afhankelijkVan": "aanvraag", "reden": "het formulier registreert in het objecttype" }
+  ]
+}

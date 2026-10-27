@@ -1,0 +1,10 @@
+[
+  { "code": "aanvrager", "omschrijving": "Aanvrager", "toelichting": "Dient de aanvraag in (kan een gemachtigde zijn)." },
+  { "code": "subject", "omschrijving": "Subject", "toelichting": "De partij over wie of waarvoor de aanvraag gaat, als dat niet de aanvrager is (bv. de inwoner bij een gemachtigde)." },
+  { "code": "gemachtigde", "omschrijving": "Gemachtigde", "toelichting": "Handelt namens het subject." },
+  { "code": "belanghebbende", "omschrijving": "Belanghebbende", "toelichting": "Heeft belang bij de uitkomst zonder aanvrager of subject te zijn." },
+  { "code": "betrokkene", "omschrijving": "Betrokkene", "toelichting": "Overige betrokken partij." },
+  { "code": "melder", "omschrijving": "Melder", "toelichting": "Doet een melding (verzoek van het type melding)." },
+  { "code": "initiator", "omschrijving": "Initiator", "toelichting": "Legt een contact of start een taak." },
+  { "code": "deelnemer", "omschrijving": "Deelnemer", "toelichting": "Neemt deel aan een contact." }
+]
