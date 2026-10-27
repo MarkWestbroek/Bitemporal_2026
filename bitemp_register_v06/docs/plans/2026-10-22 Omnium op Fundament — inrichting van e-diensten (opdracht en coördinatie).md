@@ -399,6 +399,15 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     databasekolom blijft `<ouder>_id`. Plaatshouders (`$nieuw`) werken op ouder én subtype in één
     registratie. Codegen-controles uit punt 20 (typenaam-/tabelnaambotsingen) zijn mee in 0.24.6
     (gemerged 9403a0be). FUNDAMENT's gpk-docs en -scripts moeten `id` gebruiken.
+22. **Materieel enkelvoudig + geldigOp; uniek-fix (27-10, gemerged 47b1d27b, devloop 0.24.7,
+    digest `sha256:7644249f…`).** FUNDAMENT bouwde het samengestelde model (20 entiteiten, Partij met
+    zeven "is"-GE's, alleen gpk erft nog) op Fundament met 0.24.6: schema-versie 5, data intact.
+    Gemeld: uniek-controle zette de JSON-veldnaam (`agbCode`) als SQL-kolom en liep door in een
+    afgebroken transactie → gefixt (kolom uit het bun-schema, fout fataal). Nieuw: opvolging van
+    materieel enkelvoudige GE's/relaties (besluit Mark; plan 2026-10-25): opvoer mét aanvang → voorganger
+    blijft formeel actief met automatisch einde; zonder aanvang bij een voorganger → 422; `?geldigOp=`.
+    FUNDAMENT: UitrolVerloop/AanvraagStatus voortaan met aanvang registreren. B35 (exclusiviteit over
+    de "is"-GE's, hele materiële tijdlijn) in de backlog op wens van Mark.
 12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
     actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
     inrichting-model wacht op het nieuwe image.
