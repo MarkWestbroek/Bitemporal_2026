@@ -87,7 +87,11 @@ export async function maakFormulierArtefact({
   diagnostics.push(...plan.diagnostics);
 
   // Deterministische uuid's: vooraf berekend, zodat de schrijver puur blijft.
-  const delen = ["formulier", ...(keuzes.stappen || []).flatMap((s) => [`stap:${s.slug}`, `definitie:${s.slug}`])];
+  const delen = [
+    "formulier",
+    ...(keuzes.stappen || []).flatMap((s) => [`stap:${s.slug}`, `definitie:${s.slug}`]),
+    ...Object.keys(keuzes.registratie?.bijAfronden || {}).flatMap((pad) => [`logica:${afrondKey(pad)}`, `actie:${afrondKey(pad)}`]),
+  ];
   const uuids = new Map();
   for (const deel of delen) uuids.set(deel, alsUuid(await sha256Hex(`omnium-inrichting:formulier:${keuzes.identifier}:${deel}`)));
   // Eerst de aansluiting: daaruit volgt de registratie naar het objecttype.
@@ -108,11 +112,12 @@ export async function maakFormulierArtefact({
   // De registratie hoort ook in de trace: per component de mapping, per vaste
   // waarde de variabele, en het pad voor de BSN uit de inlog.
   for (const r of registratie ? aansluiting.filter((a) => a.objectPad) : []) {
-    const sleutel = { component: `mapping:${r.key}`, vasteWaarde: `vast:${r.variabele}`, uitOpenFormulieren: `of:${r.key}`, uitInlog: "auth" }[r.bron];
+    const sleutel = { component: `mapping:${r.key}`, vasteWaarde: `vast:${r.variabele}`, uitOpenFormulieren: `of:${r.key}`, bijAfronden: `afronden:${r.key}`, uitInlog: "auth" }[r.bron];
     const regel = {
       component: "Registratie: component → objecttype",
       vasteWaarde: "Registratie: vaste waarde (e-dienstmodel)",
       uitOpenFormulieren: "Registratie: variabele van Open Formulieren (e-dienstmodel)",
+      bijAfronden: "Registratie: bij afronden van de laatste stap (e-dienstmodel)",
       uitInlog: "Registratie: waarde uit de inlog (e-dienstmodel)",
     }[r.bron];
     if (geschreven.paden.has(sleutel)) traceregels.push({ bronGE: r.modelknoop, regel, doelPad: geschreven.paden.get(sleutel), actie: "aangemaakt" });
@@ -164,6 +169,8 @@ function sluitAan({ graaf, keuzes, objecttype, diagnostics }) {
     ...Object.entries(keuzes.registratie?.uitInlog || {}).map(([pad, inlogVariabele]) => ({ bron: "uitInlog", key: null, modelknoop: pad, inlogVariabele })),
     // Waarden die Open Formulieren zelf kent: registratievariabele (public_reference) of statische variabele (now).
     ...Object.entries(keuzes.registratie?.uitOpenFormulieren || {}).map(([pad, variabele]) => ({ bron: "uitOpenFormulieren", key: variabele, modelknoop: pad })),
+    // Bij afronden: een eigen variabele die een logica-regel op de laatste stap vult (bv. met `now`).
+    ...Object.entries(keuzes.registratie?.bijAfronden || {}).map(([pad, waarde]) => ({ bron: "bijAfronden", key: afrondKey(pad), modelknoop: pad, waarde })),
   ].map((r) => {
     const objecttypePad = naarPad.get(r.modelknoop) ?? null;
     const objectPad = objecttypePad ? objectPadUit(objecttypePad) : null;
@@ -173,7 +180,7 @@ function sluitAan({ graaf, keuzes, objecttype, diagnostics }) {
     diagnostics.push({
       severity: "warning",
       code: "FRM-AANSLUITING",
-      message: `${r.key ? `Component "${r.key}"` : `Een ${{ uitInlog: "waarde uit de inlog", uitOpenFormulieren: "variabele van Open Formulieren", vasteWaarde: "vaste waarde" }[r.bron]}`} (${r.modelknoop}) heeft geen property in ${naam}`,
+      message: `${r.key ? `Component "${r.key}"` : `Een ${{ uitInlog: "waarde uit de inlog", uitOpenFormulieren: "variabele van Open Formulieren", bijAfronden: "waarde bij afronden", vasteWaarde: "vaste waarde" }[r.bron]}`} (${r.modelknoop}) heeft geen property in ${naam}`,
       sourceId: r.modelknoop,
       path: null,
     });
@@ -197,6 +204,9 @@ function objectPadUit(schemaPad) {
   }
   return uit;
 }
+
+/** Variabele voor een waarde bij afronden: "Aanvraag.AanvraagIndiening.ingediendOp" → "afronden_ingediendOp". */
+const afrondKey = (pad) => `afronden_${pad.split(".").pop()}`;
 
 /**
  * Open Formulieren schrijft een indexpad (["partijen", 0, "partijrol"]) alleen
@@ -248,6 +258,7 @@ function registratieUit(aansluiting, objecttype, diagnostics, bijlagen) {
     // De statische variabele met het BSN; de e-dienst noemt hem ("auth_bsn (DigiD)").
     authVariabele: (String(inlog[0]?.inlogVariabele || "").match(/^auth_\w+/) || ["auth_bsn"])[0],
     uitOF: metPad.filter((a) => a.bron === "uitOpenFormulieren").map((a) => ({ variable_key: a.key, target_path: a.objectPad })),
+    bijAfronden: metPad.filter((a) => a.bron === "bijAfronden").map((a) => ({ key: a.key, waarde: a.waarde, target_path: a.objectPad })),
     authPad: inlog[0]?.objectPad || null,
     // Bestanden naar de Documenten API onder dit informatieobjecttype (omschrijving).
     iotBijlagen: bijlagen?.informatieobjecttype || null,

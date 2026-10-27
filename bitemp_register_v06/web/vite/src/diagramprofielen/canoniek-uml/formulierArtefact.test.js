@@ -104,7 +104,9 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
   assert.deepEqual(naar.pasfoto, ["bijlagen", 0, "documentUrl"]);
   // Aanvraagnummer en indientijdstip uit Open Formulieren zelf (besluit Mark 27-10).
   assert.deepEqual(naar.public_reference, ["aanvraagnummer"]);
-  assert.deepEqual(naar.now, ["ingediendOp"]);
+  // Indientijdstip: eigen variabele, gevuld bij afronden (weg c, besluit Mark 27-10), niet `now` bij registratie.
+  assert.deepEqual(naar.afronden_ingediendOp, ["ingediendOp"]);
+  assert.equal(naar.now, undefined);
   assert.equal(o.variables_mapping.length, 15);
   // Volgorde telt (glom, FUNDAMENT 27-10): eerst de lijst-aanzetten, dan het BSN
   // expliciet (auth_attribute_path schrijft niets), dan wat in de items schrijft.
@@ -125,6 +127,20 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
     ["vast_partijen", [{ partijrol: "aanvrager", partij: {} }], "array", "user_defined"],
     ["vast_aanvraagtype", "gehandicaptenparkeerkaart", "string", "user_defined"],
     ["vast_status", "ingediend", "string", "user_defined"],
+    ["afronden_ingediendOp", null, "datetime", "user_defined"],
+  ]);
+  // De logica-regel: trigger op het verplichte component van de laatste stap
+  // (4.0.3 leidt de stap af uit de trigger), actie zet de variabele op `now`.
+  const [regel, ...meer] = p["formLogic.json"];
+  assert.equal(meer.length, 0);
+  assert.match(regel.uuid, UUID);
+  assert.equal(regel.form, p["forms.json"][0].url);
+  assert.deepEqual(regel.json_logic_trigger, { "!!": [{ var: "pasfoto" }] });
+  assert.equal(regel.order, 0);
+  assert.equal(regel.is_advanced, false);
+  assert.equal(regel.form_steps, undefined);
+  assert.deepEqual(regel.actions.map(({ uuid, ...a }) => a), [
+    { component: "", variable: "afronden_ingediendOp", form_step_uuid: null, action: { type: "variable", value: { var: "now" } } },
   ]);
 });
 

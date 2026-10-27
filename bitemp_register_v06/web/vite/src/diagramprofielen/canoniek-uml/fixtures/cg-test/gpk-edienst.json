@@ -120,10 +120,11 @@
         "bijlagen": { "informatieobjecttype": "Bijlage" },
         "_bijlagen": "omschrijving van het informatieobjecttype in de catalogus (zaaktype); de catalogus zelf (domein, rsin) vult de uitrol per omgeving in",
         "uitOpenFormulieren": {
-          "Aanvraag.AanvraagIdentificatie.aanvraagnummer": "public_reference",
-          "Aanvraag.AanvraagIndiening.ingediendOp": "now"
+          "Aanvraag.AanvraagIdentificatie.aanvraagnummer": "public_reference"
         },
-        "_uitOpenFormulieren": "variabelen die Open Formulieren zelf kent: registratievariabele public_reference (inzendingskenmerk, bv. OF-2HD83V) en statische variabele now (indientijdstip); besluit Mark 27-10, tot er een aanvraagservice is"
+        "bijAfronden": { "Aanvraag.AanvraagIndiening.ingediendOp": "now" },
+        "_bijAfronden": "een logica-regel op de laatste stap zet de variabele op het moment van afronden (niet bij een herkansing van de registratie); besluit Mark 27-10 (weg c), later zet de ontvanger het uit completed_on (weg b)",
+        "_uitOpenFormulieren": "variabelen die Open Formulieren zelf kent: registratievariabele public_reference (inzendingskenmerk, bv. OF-2HD83V); besluit Mark 27-10, tot er een aanvraagservice is"
       },
       "_status": "voorzet; regelset formulier volgt (stap c). Open: machtigen (gemachtigde + subject) en de instellingenkaart (eHerkenning) als tweede inlogmiddel"
     }
