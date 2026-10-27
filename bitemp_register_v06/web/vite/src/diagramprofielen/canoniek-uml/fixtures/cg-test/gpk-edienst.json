@@ -1,0 +1,129 @@
+{
+  "_toelichting": "E-dienst-inrichtingsmodel voor 'Gehandicaptenparkeerkaart aanvragen'. Voorzet TRANSFORMATIES 27-10, naar het voorbeeld van aanvraag-edienst.json. Bron-entiteit is de specialisatie GehandicaptenparkeerkaartAanvraag (erft Aanvraag); geërfde velden heten naar de entiteit waar ze gedefinieerd zijn (Aanvraag.…), zodat ze in de trace dezelfde modelknoop zijn als in het objecttype aanvraag. Eén objecttype per specialisatie (besluit Mark 27-10): ouder + eigen GE's in één schema.",
+  "edienst": { "naam": "Gehandicaptenparkeerkaart aanvragen", "versienummer": "0.1.0", "omgeving": "cg-test" },
+  "bronmodel": {
+    "naam": "cg-test",
+    "bestand": "docs/omnium-model-cg-test-v3.json",
+    "versie": "cg-test 2026-10-27 (a71dae7)",
+    "hash": "sha256:50b318bb54de5996c15741c5a80c26835e6321caaa1ce99f7b87e0cf38e7313b",
+    "_hashregel": "sha256 over JCS(model) (RFC 8785); model = het 'model'-object van het samengestelde bestand"
+  },
+  "referentielijsten": {
+    "Aanvraagtype": {
+      "bron": "register: /full/aanvraagtypen",
+      "peiltijdstip": null,
+      "nieuwItem": { "code": "gehandicaptenparkeerkaart", "omschrijving": "Gehandicaptenparkeerkaart", "zaaktypeIdentificatie": "GPK", "toelichting": "Aanvraag van een gehandicaptenparkeerkaart (Regeling gehandicaptenparkeerkaart)." },
+      "_nieuwItem": "toe te voegen aan de referentielijst (GPK-voorstel §4 stap 3); zaaktypeIdentificatie GPK is een aanname"
+    },
+    "Partijrol": { "bron": "register: /full/partijrollen", "peiltijdstip": null }
+  },
+  "artefacten": [
+    {
+      "identifier": "gehandicaptenparkeerkaartaanvraag",
+      "soort": "objecttype",
+      "formaat": "json-schema",
+      "doelcomponent": "openobject",
+      "bron": "GehandicaptenparkeerkaartAanvraag",
+      "projectie": {
+        "materieel": "actueel",
+        "relaties": {
+          "AanvraagPartij": { "als": "ingebed", "naam": "partijen" }
+        },
+        "referentielijsten": {
+          "Aanvraagtype": { "als": "code", "enum": false },
+          "Partijrol": { "als": "code", "enum": false }
+        }
+      },
+      "velden": [
+        "Aanvraag.AanvraagIdentificatie.aanvraagnummer",
+        "Aanvraag.AanvraagIdentificatie.aanvraagtype",
+        "Aanvraag.AanvraagPartij.partijrol",
+        "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn",
+        "Aanvraag.AanvraagPartij.Partij.PartijMaatschappelijkeActiviteit.kvkNummer",
+        "Aanvraag.AanvraagPartij.Partij.PartijVestiging.vestigingsnummer",
+        "Aanvraag.AanvraagPartij.Partij.PartijKlantverwijzing.klantUrl",
+        "Aanvraag.AanvraagStatus.status",
+        "Aanvraag.AanvraagIndiening.ingediendOp",
+        "Aanvraag.AanvraagBijlage.naam",
+        "Aanvraag.AanvraagBijlage.documentUrl",
+        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort",
+        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerdereKaart",
+        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerderKaartnummer",
+        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kenteken",
+        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.loopafstandMeter",
+        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.hulpmiddel",
+        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.toelichting"
+      ],
+      "_velden": "Partij: bsn (aanvrager of subject met DigiD; de kaart is persoonsgebonden), kvkNummer/vestigingsnummer (instellingenkaart, eHerkenning), klantUrl. Geen PartijZonderRegistratie: een GPK vraagt een geregistreerd persoon. Niet gekozen: AanvraagIndiening.toelichting (zou botsen met de toelichting op de beperking; zo nodig met projectie.namen hernoemen) en de relatie GpkAanvraagMedischAdvies (komt tijdens de behandeling, niet uit het formulier).",
+      "metadata": {
+        "name": "gehandicaptenparkeerkaartaanvraag",
+        "namePlural": "gehandicaptenparkeerkaartaanvragen",
+        "description": "Aanvraag van een gehandicaptenparkeerkaart (specialisatie van de aanvraag): soort kaart, de beperking en de partijen. Bijlagen (pasfoto) staan in het documentregister.",
+        "dataClassification": "confidential",
+        "_dataClassification": "voorstel: BSN en gegevens over de beperking; keuze Mark",
+        "maintainerOrganization": "Common Ground Lab",
+        "contactPerson": "Beheer",
+        "contactEmail": "beheer@example.org",
+        "source": "formulierservice",
+        "updateFrequency": "unknown",
+        "allowGeometry": false
+      }
+    },
+    {
+      "identifier": "gehandicaptenparkeerkaart-aanvragen",
+      "soort": "formulier",
+      "formaat": "openforms-export",
+      "doelcomponent": "openforms",
+      "bron": "GehandicaptenparkeerkaartAanvraag",
+      "naam": "Gehandicaptenparkeerkaart aanvragen",
+      "inloggen": ["digid"],
+      "stappen": [
+        {
+          "naam": "Soort kaart",
+          "slug": "soort-kaart",
+          "velden": [
+            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort", "key": "soort", "label": "Welke kaart vraagt u aan?", "verplicht": true },
+            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kenteken", "key": "kenteken", "label": "Kenteken", "toonAls": { "soort": "bestuurder" } },
+            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerdereKaart", "key": "eerdereKaart", "label": "Had u eerder een gehandicaptenparkeerkaart?" },
+            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerderKaartnummer", "key": "eerderKaartnummer", "label": "Nummer van de eerdere kaart", "toonAls": { "eerdereKaart": true } }
+          ]
+        },
+        {
+          "naam": "Uw beperking",
+          "slug": "beperking",
+          "velden": [
+            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.loopafstandMeter", "key": "loopafstandMeter", "label": "Hoeveel meter kunt u lopen, met hulpmiddelen?", "verplicht": true },
+            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.hulpmiddel", "key": "hulpmiddel", "label": "Welk hulpmiddel gebruikt u?" },
+            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.toelichting", "key": "toelichting", "label": "Toelichting op uw beperking" }
+          ]
+        },
+        {
+          "naam": "Pasfoto",
+          "slug": "pasfoto",
+          "velden": [
+            { "veld": "Aanvraag.AanvraagBijlage.documentUrl", "key": "pasfoto", "label": "Pasfoto", "verplicht": true, "component": "file" }
+          ]
+        }
+      ],
+      "_component": "de vorm leidt de regelset af uit het model (enum → radio, JaNee → checkbox, Geheel → number, LangeTekst → textarea); alleen bij afwijking 'component' opnemen. 'toonAls' = eenvoudige formulierlogica op keys",
+      "registratie": {
+        "objecttype": "gehandicaptenparkeerkaartaanvraag",
+        "vasteWaarden": {
+          "Aanvraag.AanvraagIdentificatie.aanvraagtype": "gehandicaptenparkeerkaart",
+          "Aanvraag.AanvraagStatus.status": "ingediend",
+          "Aanvraag.AanvraagPartij.partijrol": "aanvrager",
+          "Aanvraag.AanvraagBijlage.naam": "pasfoto"
+        },
+        "uitInlog": { "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn": "auth_bsn (DigiD)" },
+        "letterlijk": {
+          "Aanvraag.AanvraagIndiening.ingediendOp": "indientijdstip van Open Formulieren",
+          "Aanvraag.AanvraagIdentificatie.aanvraagnummer": "toegekend door de aanvraagservice (nog geen generiek mechanisme)"
+        }
+      },
+      "_status": "voorzet; regelset formulier volgt (stap c). Open: machtigen (gemachtigde + subject) en de instellingenkaart (eHerkenning) als tweede inlogmiddel"
+    }
+  ],
+  "afhankelijkheden": [
+    { "artefact": "gehandicaptenparkeerkaart-aanvragen", "afhankelijkVan": "gehandicaptenparkeerkaartaanvraag", "reden": "het formulier registreert in het objecttype" }
+  ]
+}

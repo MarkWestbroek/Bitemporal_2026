@@ -688,7 +688,52 @@ node scripts/maak_inrichtingsartefact.mjs --model <v3.json> --edienst <edienst.j
   --artefact aanvraag --peiltijdstip 2026-10-25T06:51:13Z --doel <objecttypes/aanvraag.json>
 ```
 
-### 11.5 Vervolg
+### 11.5 Regelset 0.2.0: overerving en partijen met een rol (2026-10-27)
+
+Aanleiding: de eerste echte e-dienst, de gehandicaptenparkeerkaart (GPK), en
+aanvraag v2 (besluiten Mark 26/27-10; CG-Fundament
+`docs/gehandicaptenparkeerkaart-voorstel.md`). Bron is voortaan het
+**samengestelde model** van de instantie (`omnium-model-cg-test-v3.json`),
+omdat relaties en referentielijsten over domeinen heen lopen (AanvraagPartij →
+relatiebeheer.Partij, Partijrol).
+
+| Wat | Lezer (`v3Graaf.js`) | Regelset |
+|---|---|---|
+| **`erft`** | de GE's en relaties van elke voorouder onder een groep `ouder`; ids naar de entiteit waar ze gedefinieerd zijn (`Aanvraag.AanvraagIdentificatie.aanvraagnummer`) | ouder → opgegaan: één schema voor ouder + subtype (één objecttype per specialisatie, besluit Mark) |
+| **velden op een relatie** | knopen in de relatiegroep (`Aanvraag.AanvraagPartij.partijrol`) | gewone property in het relatie-object |
+| **doel van een relatie** | eigen groep `doel` (`Aanvraag.AanvraagPartij.Partij`), vlag `metVelden` | met velden → object `partij` náást de velden, verplicht; zonder velden → opgegaan (vorm van 0.1.0) |
+| **veld binnen een doel** | vlag `inDoel` | property, nooit `required` |
+| **namen** | `projectie.namen` {modelpad: naam} in het e-dienstmodel | — |
+
+Keuzes, met reden:
+
+- **Een lijst `partijen` van {partijrol, partij}**, niet "de partij met rol
+  aanvrager". Kiezen op een M0-waarde (een rolcode) hoort niet in een regelset
+  die voor elk model geldt, en een aanvraag door een gemachtigde heeft zowel de
+  aanvrager als het subject nodig.
+- **De partij als de sleutels van haar "is"-GE's** (bsn, kvkNummer,
+  vestigingsnummer, of naam + e-mail zonder registratie) plus `klantUrl` als
+  die bekend is; geen Omnium-id. Het formulier kent dat id niet; DigiD of
+  eHerkenning levert de sleutel, en Partij is in relatiebeheer juist de proxy
+  met één partij per sleutel. De aanvraagservice zoekt of maakt de Partij op
+  de sleutel. Welke sleutels: positieve selectie in het e-dienstmodel.
+- **`verplicht` binnen een doel telt niet.** V3 kent geen verplicht GE;
+  `verplicht` op een veld geldt binnen zijn GE. Voor de eigen GE's van de bron
+  blijft dat `required` (zoals in 0.1.0), maar de GE's van een doel kunnen
+  elkaar uitsluiten (precies één "is"-GE per Partij, bedrijfsregel). Gevolg
+  voor het oude v1-model: `aanvrager` verliest `required: ["naam"]`. "Precies
+  één" zelf staat niet in het schema (het model kan het nog niet uitdrukken;
+  BACKLOG B35).
+- **Twee velden met dezelfde naam** (in de GPK twee keer `toelichting`) geven
+  `JSN-DUBBEL`; de e-dienst kiest er één of hernoemt met `projectie.namen`.
+
+Fixtures en tests: `canoniek-uml/fixtures/cg-test/` (kopie van het
+samengestelde model, de e-dienstbestanden van aanvraag v2 en de GPK, met een
+neutraal contactadres) en `objecttypeCgTest.test.js`. Stand 27-10: aanvraag v2
+verschilt van het geregistreerde objecttype precies op `aanvrager` →
+`partijen` en `required`; de rest is gelijk.
+
+### 11.6 Vervolg
 
 1. Formulier (Open Formulieren-export) uit dezelfde bron en hetzelfde bereik,
    met een eigen regelset en schrijver; golden file van FUNDAMENT in

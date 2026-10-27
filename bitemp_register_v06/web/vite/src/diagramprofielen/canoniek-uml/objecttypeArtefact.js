@@ -82,8 +82,11 @@ export async function maakObjecttypeArtefact({
   // Passthrough: letterlijk doelformaat uit het e-dienstmodel, niet getransformeerd.
   const passthrough = zonderToelichting(keuzes.passthrough?.properties);
   // Een enkelvoudig, gebruikt GE is niet weggelaten maar opgegaan in het
-  // omvattende object (zijn velden staan daar); dat onderscheid hoort in de trace.
-  const opgegaan = new Set(graaf.groepen.filter((g) => g.aard === "ge" && g.geselecteerd && !g.meervoudig).map((g) => g.id));
+  // omvattende object (zijn velden staan daar); dat onderscheid hoort in de
+  // trace. Zo ook een ouder (velden in het subtype) en het doel van een
+  // relatie zonder velden (velden in het relatie-object).
+  const lostOp = (g) => (g.aard === "ge" && !g.meervoudig) || g.aard === "ouder" || (g.aard === "doel" && !g.metVelden);
+  const opgegaan = new Set(graaf.groepen.filter((g) => g.geselecteerd && lostOp(g)).map((g) => g.id));
   const traceregels = plan.trace.map((spoor) => ({
     bronGE: spoor.bronId,
     regel: spoor.regel,

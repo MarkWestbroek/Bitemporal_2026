@@ -9,6 +9,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Objecttype: overerving en partijen met een rol** (27-10, regelset canoniek-naar-objecttype
+  0.2.0). Een subtype (`erft`) geeft één schema met de velden van de ouder; een relatie met eigen
+  velden (AanvraagPartij met `partijrol`) wordt een lijst van {partijrol, partij}; velden binnen
+  het doel van een relatie zijn niet verplicht; het e-dienstmodel kan namen geven
+  (`projectie.namen`). Eerste gebruik: aanvraag v2 en de gehandicaptenparkeerkaart-aanvraag. Zie
+  [`docs/TRANSFORMATIES.md`](../docs/TRANSFORMATIES.md) §11.5.
 - **Inrichting van e-diensten: objecttype uit het canonieke model** (25-10). Een transformatie
   "canoniek model + e-dienst → objecttype (JSON Schema)" voor Open Object, als artefact in de vorm
   van het inrichting-register op Fundament (herkomst, trace per modelknoop, hash = sha256 over
