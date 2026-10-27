@@ -135,6 +135,7 @@ function basisComponent(el) {
  * @property {{variable_key: string, target_path: (string|number)[]}[]} uitOF - variabelen van Open Formulieren zelf
  * @property {(string|number)[]|null} authPad            - waar de BSN uit de inlog landt
  * @property {string} [authVariabele]                     - statische variabele met het BSN (auth_bsn)
+ * @property {{key: string, waarde: string, target_path: (string|number)[]}[]} [bijAfronden] - waarde bij afronden (logica-regel)
  * @property {string|null} [iotBijlagen]                 - informatieobjecttype (omschrijving) voor bestanden
  */
 
@@ -178,6 +179,7 @@ const objectsApiBackend = (r) => ({
       ...(r.authPad ? [{ variable_key: r.authVariabele || "auth_bsn", target_path: r.authPad }] : []),
       ...r.mapping,
       ...(r.uitOF || []),
+      ...(r.bijAfronden || []).map((b) => ({ variable_key: b.key, target_path: b.target_path })),
     ],
     // Zonder catalogus en informatieobjecttype registreert Open Formulieren een
     // bestand niet in de Documenten API en levert het "" als url (FUNDAMENT
@@ -273,6 +275,39 @@ export function planNaarOpenforms(plan, { uuidVoor, ofRelease = OF_RELEASE, regi
     });
     const na = registratie.vast.length + inlog + registratie.mapping.length;
     (registratie.uitOF || []).forEach((m, i) => paden.set(`of:${m.variable_key}`, mappingPad(na + i)));
+    const naOF = na + (registratie.uitOF || []).length;
+    (registratie.bijAfronden || []).forEach((b, i) => paden.set(`afronden:${b.key}`, mappingPad(naOF + i)));
+  }
+
+  // Bij afronden: per waarde een logica-regel. 4.0.3 kent geen trigger_from_step;
+  // Open Formulieren leidt de stap af uit de variabelen in de trigger. Dus een
+  // trigger op een (bij voorkeur verplicht) component van de laatste stap; een
+  // letterlijke `true` mag niet (500), de eerste operand moet een var zijn
+  // (proef FUNDAMENT 27-10). Het moment is de laatste evaluatie bij afronden,
+  // dus vlak vóór het indienen en niet bij een herkansing; minuutprecisie.
+  const formLogic = [];
+  const afrondVariabelen = [];
+  if (registratie?.bijAfronden?.length) {
+    const laatste = stappen[stappen.length - 1];
+    const kandidaten = laatste ? plan.elementen.filter((e) => e.type === "component" && e.groep === laatste.sleutel) : [];
+    const trigger = kandidaten.find((e) => e.data?.verplicht === true) || kandidaten[0];
+    if (!trigger) {
+      diagnostics.push({ severity: "error", code: "OFS-AFRONDEN", message: "Geen component op de laatste stap om de logica-regel bij afronden aan te hangen", sourceId: null, path: null });
+    } else {
+      const triggerKey = trigger.data?.key || trigger.naam;
+      registratie.bijAfronden.forEach((b, i) => {
+        afrondVariabelen.push({ ...vasteVariabele(formUrl, { key: b.key, waarde: null }), data_type: "datetime" });
+        formLogic.push({
+          uuid: uuidVoor(`logica:${b.key}`),
+          form: formUrl,
+          json_logic_trigger: { "!!": [{ var: triggerKey }] },
+          description: `Bij afronden: ${b.key} = ${b.waarde}`,
+          order: i,
+          is_advanced: false,
+          actions: [{ uuid: uuidVoor(`actie:${b.key}`), component: "", variable: b.key, form_step_uuid: null, action: { type: "variable", value: { var: b.waarde } } }],
+        });
+      });
+    }
   }
   const forms = [
     {
@@ -294,9 +329,9 @@ export function planNaarOpenforms(plan, { uuidVoor, ofRelease = OF_RELEASE, regi
     bestanden: {
       "_meta.json": { of_release: ofRelease },
       "formDefinitions.json": definities,
-      "formLogic.json": [],
+      "formLogic.json": formLogic,
       "formSteps.json": formStappen,
-      "formVariables.json": registratie ? registratie.vast.map((v) => vasteVariabele(formUrl, v)) : [],
+      "formVariables.json": registratie ? [...registratie.vast.map((v) => vasteVariabele(formUrl, v)), ...afrondVariabelen] : [],
       "forms.json": forms,
     },
     paden,

@@ -35,6 +35,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   gebruikersvariabele, de mapping in de volgorde die Open Formulieren nodig heeft, het BSN expliciet
   via `auth_bsn`, en `decimalLimit: 0` voor gehele getallen; de registratie-optie heet
   `iot_attachment` (snake_case, zoals het exportformaat).
+- **Formulier: waarde bij afronden** (27-10). `registratie.bijAfronden` in de e-dienst geeft een
+  eigen variabele en een logica-regel op de laatste stap (formLogic.json); zo is `ingediendOp` het
+  moment van afronden in plaats van het registratiemoment (`now`).
 - **Objecttype: optionele velden mogen leeg zijn** (27-10, regelset canoniek-naar-objecttype 0.3.0).
   Een niet-verplichte string met patroon, formaat, minimumlengte of enum krijgt
   `anyOf: [{const: ""}, {…eisen…}]`, zodat een leeg of verborgen formulierveld (Open Formulieren

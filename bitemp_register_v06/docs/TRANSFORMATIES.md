@@ -852,9 +852,21 @@ inderdaad in `documentUrl` landt (volgende inzending). Gezien bij OF-BKZPCT: `do
 enkelvoudig informatieobject in Open Zaak; de `titel` van dat document is de
 formuliernaam, dus de naam van de bijlage komt uit de vaste waarde.
 
-**Open punten na de eerste inzendingen.** `now` is het registratiemoment
-(minuutprecisie), niet het indienmoment: bij een herkansing schuift
-`ingediendOp` op; voor v1 aanvaard. Een optioneel veld met patroon, formaat of
+**Bij afronden** (`registratie.bijAfronden` {modelpad: statische variabele}).
+`now` direct in de mapping is het registratiemoment: bij een herkansing schuift
+`ingediendOp` op. Open Formulieren 4.0.3 kent geen variabele voor het
+inzendtijdstip (registration_variables: public_reference, pdf_url, …;
+statisch: now, today, …). Daarom (besluit Mark 27-10, weg c): een eigen
+variabele `afronden_<veld>` (datetime) die een logica-regel vult met
+`{"var": "now"}`, en die gaat naar het objecttype. 4.0.3 heeft geen
+`trigger_from_step`: Open Formulieren bepaalt de stap uit de variabelen in de
+trigger. De schrijver hangt de regel daarom aan het (verplichte) component van
+de laatste stap, `{"!!": [{"var": "pasfoto"}]}`; een letterlijke `true` als
+trigger geeft een 500. Het moment is de laatste evaluatie bij het afronden,
+vlak vóór het indienen; minuutprecisie. Doel later (weg b): de ontvanger van
+de inzending zet `ingediendOp` uit `completed_on`.
+
+**Open punten na de eerste inzendingen.** Een optioneel veld met patroon, formaat of
 enum dat verborgen of leeg blijft (kenteken bij soort ≠ bestuurder) gaat als
 `""` mee, en Open Object weigerde dat tegen het patroon. Opgelost in de
 objecttype-regelset 0.3.0 (besluit Mark 27-10: "optionele velden zijn
