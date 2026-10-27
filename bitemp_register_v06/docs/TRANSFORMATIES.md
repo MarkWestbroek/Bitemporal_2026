@@ -818,9 +818,17 @@ uit het UitrolResultaat van de afhankelijkheid in dezelfde omgeving, en
 `${OBJECTS_API_GROUP}` van de omgeving. Zo blijft het artefact omgevingsvrij.
 De registratie staat ook in de trace (regels "Registratie: …"). Open Object
 neemt de paden in array-items aan (`partijen[0]`, `bijlagen[0]`; getoetst door
-FUNDAMENT 27-10). Open: wat Open Formulieren voor een bestand in
-`bijlagen[0].documentUrl` zet (alleen een url als de registratie een
-informatieobjecttype voor bijlagen heeft).
+FUNDAMENT 27-10).
+
+**Bestanden naar de Documenten API.** Zonder catalogus en informatieobjecttype
+in de registratie-opties registreert Open Formulieren een bestand niet en zet
+het `""` in `bijlagen[0].documentUrl`; Open Object weigert dat (geen uri;
+tweede inzending, FUNDAMENT 27-10). De e-dienst noemt het informatieobjecttype
+(`registratie.bijlagen.informatieobjecttype`, de omschrijving, hier
+`Bijlage`) → `iotAttachment`; de catalogus verschilt per omgeving en is een
+plaatshouder: `catalogue: {domain: "${CATALOGUS_DOMEIN}", rsin:
+"${CATALOGUS_RSIN}"}`. Open: of de url van het enkelvoudig informatieobject
+inderdaad in `documentUrl` landt (volgende inzending).
 
 **Uploadveld.** Een `file`-component met alleen de basisgegevens laat de SDK
 vastlopen ("Oeps! Er ging helaas iets fout"). De schrijver (0.2.0) zet daarom
@@ -828,7 +836,11 @@ de volledige standaarddefinitie van de formulierbouwer
 (`@open-formulieren/formio-builder`, `registry/file/edit.tsx`): o.a.
 `fileMaxSize: "10MB"`, `filePattern: "*"`, `useConfigFiletypes`,
 `isSensitiveData`, `of.image.resize`. Geen `storage`/`url`: die vult Open
-Formulieren zelf in.
+Formulieren zelf in. Per veld kan de e-dienst `bestand` opgeven: `typen`
+(mime-typen; dan een eigen lijst in plaats van die uit de configuratie) en
+`verkleinTot {breedte, hoogte}` (verkleinen bij upload). Dat laatste is nodig
+voor foto's: de Documenten API van Open Zaak 1.31 weigert een request-body
+boven 2,5 MB (`RequestDataTooBig`), en het bestand gaat base64 in de body.
 
 **Nog niet:** formulierlogica anders dan tonen-als, machtigen en eHerkenning.
 

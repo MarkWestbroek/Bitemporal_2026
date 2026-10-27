@@ -39,7 +39,8 @@
  * variabele `now`) staan direct in de `variables_mapping`. Wat per omgeving verschilt,
  * staat er als plaatshouder (afspraak FUNDAMENT 27-10), de uitrol-adapter vult
  * in: `${OBJECTTYPE_URL:<identifier>}`, `${OBJECTTYPE_VERSION:<identifier>}`
- * en `${OBJECTS_API_GROUP}`. Zo blijft het artefact omgevingsvrij.
+ * en `${OBJECTS_API_GROUP}`; bij bestanden ook `${CATALOGUS_DOMEIN}` en
+ * `${CATALOGUS_RSIN}` (catalogus van het informatieobjecttype). Zo blijft het artefact omgevingsvrij.
  *
  * Nog niet: formulierlogica anders dan tonen-als; zie §11.6. Puur.
  */
@@ -87,7 +88,18 @@ function component(el) {
   if (basis.type !== "file") return basis;
   // Volledige definitie; validate.required staat er altijd (de bouwer doet dat ook).
   const d = el.data || {};
-  return { ...FILE_STANDAARD, ...basis, validate: { required: d.verplicht === true, ...(basis.validate || {}) } };
+  const uit = { ...FILE_STANDAARD, ...basis, validate: { required: d.verplicht === true, ...(basis.validate || {}) } };
+  const b = d.bestand && typeof d.bestand === "object" ? d.bestand : {};
+  // Alleen deze typen: eigen lijst in plaats van die uit de configuratie.
+  if (Array.isArray(b.typen) && b.typen.length) {
+    uit.file = { name: "", type: b.typen, allowedTypesLabels: b.typen.map((t) => `.${t.split("/")[1]}`) };
+    uit.filePattern = b.typen.join(",");
+    uit.useConfigFiletypes = false;
+  }
+  // Verkleinen bij upload: de Documenten API van Open Zaak weigert een
+  // request-body boven 2,5 MB (RequestDataTooBig, inzending FUNDAMENT 27-10).
+  if (b.verkleinTot) uit.of = { image: { resize: { apply: true, width: b.verkleinTot.breedte, height: b.verkleinTot.hoogte } } };
+  return uit;
 }
 
 function basisComponent(el) {
@@ -120,6 +132,7 @@ function basisComponent(el) {
  * @property {{key: string, waarde: any, target_path: (string|number)[]}[]} vast - vaste waarden
  * @property {{variable_key: string, target_path: (string|number)[]}[]} uitOF - variabelen van Open Formulieren zelf
  * @property {(string|number)[]|null} authPad            - waar de BSN uit de inlog landt
+ * @property {string|null} [iotBijlagen]                 - informatieobjecttype (omschrijving) voor bestanden
  */
 
 /** Gebruikersvariabele voor een vaste waarde, zoals Open Formulieren hem exporteert. */
@@ -153,6 +166,10 @@ const objectsApiBackend = (r) => ({
     update_existing_object: false,
     auth_attribute_path: r.authPad || [],
     variables_mapping: [...r.mapping, ...r.vast.map((v) => ({ variable_key: v.key, target_path: v.target_path })), ...(r.uitOF || [])],
+    // Zonder catalogus en informatieobjecttype registreert Open Formulieren een
+    // bestand niet in de Documenten API en levert het "" als url (FUNDAMENT
+    // 27-10). De catalogus verschilt per omgeving: plaatshouders.
+    ...(r.iotBijlagen ? { catalogue: { domain: "${CATALOGUS_DOMEIN}", rsin: "${CATALOGUS_RSIN}" }, iotAttachment: r.iotBijlagen } : {}),
   },
 });
 

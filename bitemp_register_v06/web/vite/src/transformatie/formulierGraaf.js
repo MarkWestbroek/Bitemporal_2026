@@ -114,6 +114,8 @@ export function formulierGraaf({ model: invoerModel, keuzes, datatypen = [], ref
           // model is voor wie het schema leest, niet voor wie het formulier invult.
           hulptekst: veld.toelichting || "",
           component: veld.component || "",
+          // Bij een bestand: toegestane typen en verkleinen (e-dienst).
+          bestand: veld.bestand || null,
           // `verplicht` van de e-dienst gaat voor dat van het model; alleen een
           // expliciete keuze of een verplicht veld komt in `validate`.
           verplicht: veld.verplicht ?? f.verplicht,
