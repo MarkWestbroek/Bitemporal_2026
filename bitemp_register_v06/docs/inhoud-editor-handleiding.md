@@ -92,6 +92,10 @@ Na het klikken op een rij verschijnt het detailformulier met:
 2. **Onderliggende gegevenselementen** — per gerelateerd type een sectie:
    - *Enkelvoudig* (max 1 tegelijk): een formulier met de huidige waarden
    - *Meervoudig* (meerdere tegelijk): een tabel van de huidige records
+   - *Materieel* (met aanvang en einde, bv. een status): een tabel van voorkomens op volgorde van
+     aanvang; het voorkomen dat nu geldt heeft het label **nu**. Met **+ Nieuw voorkomen** leg je
+     een nieuwe status vast; het vorige voorkomen krijgt dan vanzelf een einde. Heeft het type
+     tijdstipprecisie, dan vul je datum én tijd in (meerdere wisselingen op één dag kunnen).
 3. **Formele tijd** — onderaan, als readonly metadata: wanneer het record is opgevoerd en eventueel afgevoerd
 
 ### Nieuw record formulier

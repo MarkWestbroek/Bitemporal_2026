@@ -6,6 +6,7 @@ import { evalueerCelExpressie, bouwCelContext, bouwReflijstOptieLabel } from "..
 import SchemaFormField from "./SchemaFormField";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 import { bepaalWidgetOverride } from "./widgetOverrides";
+import { naarInvoer, nuAlsInvoer, bouwMaterieleTijd, materieleTijdGewijzigd } from "../../shared/materieleTijd";
 
 /**
  * RepresentatieFormulier — formulier voor één representatie (entiteit, GE of relatie).
@@ -32,6 +33,13 @@ import { bepaalWidgetOverride } from "./widgetOverrides";
  *  - onSaved:          callback na succesvolle opslag
  *  - entiteitId:       parent entiteit ID (om FK terug te zetten in payload)
  *  - entiteitIdKolom:  naam van de FK-kolom (bijv. "natuurlijkpersoon_id")
+ *  - materieel:        (optioneel) materiële tijd van dit voorkomen (27-10-2026):
+ *                      { precisie: "datum"|"tijdstip", kinderen (materieleKinderen), origineel:
+ *                      { aanvang, einde }, sleutel (sleutelVanVoorkomen), aanvangVerplicht }.
+ *                      Toont aanvang/einde als datum- of datum/tijd-invoer. Nieuw voorkomen: de
+ *                      waarden gaan als shorthand mee op de hub (de engine sluit een enkelvoudige
+ *                      voorganger zelf af); bestaand: een gewijzigde aanvang/einde wordt een eigen
+ *                      opvoer op het _Aanvang/_Einde-element.
  */
 export default function RepresentatieFormulier({
   typeMeta,
@@ -43,6 +51,7 @@ export default function RepresentatieFormulier({
   entiteitIdKolom,
   isEnkelvoudig = true,
   hideIdEnTijd = false,
+  materieel = null,
 }) {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
   const navigate = useNavigate();
@@ -245,6 +254,16 @@ export default function RepresentatieFormulier({
     return init;
   });
 
+  // Materiële tijd (aanvang/einde) als invoerwaarden; een verplichte nieuwe aanvang staat op "nu".
+  const precisie = materieel?.precisie || "datum";
+  const [tijdInvoer, setTijdInvoer] = useState(() => ({
+    aanvang: materieel?.origineel?.aanvang
+      ? naarInvoer(materieel.origineel.aanvang, precisie)
+      : materieel?.aanvangVerplicht ? nuAlsInvoer(precisie) : "",
+    einde: naarInvoer(materieel?.origineel?.einde, precisie),
+  }));
+  const tijdDirty = Boolean(materieel) && materieleTijdGewijzigd(tijdInvoer, materieel.origineel, precisie);
+
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
@@ -272,7 +291,8 @@ export default function RepresentatieFormulier({
     });
   }, [parentValues, geerfdeVeldenBewerkbaar, parentInitialData]);
 
-  const isDirty = useMemo(() => {
+  // Inhoud (data/parent) gewijzigd, los van de materiële tijd.
+  const isDataDirty = useMemo(() => {
     if (!initialData) return true;
     const ownDirty = alleBewerkbaar.some((veld) => {
       const original = initialData[veld.naam] ?? "";
@@ -281,6 +301,7 @@ export default function RepresentatieFormulier({
     });
     return ownDirty || isParentDirty;
   }, [values, alleBewerkbaar, initialData, isParentDirty]);
+  const isDirty = isDataDirty || tijdDirty;
 
   const aantalGewijzigdeVelden = useMemo(() => {
     if (!initialData) return alleBewerkbaar.length + geerfdeVeldenBewerkbaar.length;
@@ -384,6 +405,12 @@ export default function RepresentatieFormulier({
           wijzigingen = [{ afvoer: { [veldnaam]: buildAfvoerSleutel() } }];
         } else {
           wijzigingen = [];
+          const mt = materieel
+            ? bouwMaterieleTijd({
+                invoer: tijdInvoer, origineel: materieel.origineel, precisie, kinderen: materieel.kinderen,
+                sleutel: materieel.sleutel, isNieuw, aanvangVerplicht: materieel.aanvangVerplicht,
+              })
+            : { hubVelden: {}, wijzigingen: [] };
           // Bij TPT subtypes: stuur parent-wijziging VÓÓR child-wijziging.
           // De backend verwerkt ze in volgorde; ensureParentRecordBijOpvoer
           // vindt het parent-record dan al en slaat aanmaak over.
@@ -392,7 +419,11 @@ export default function RepresentatieFormulier({
             const parentVeldnaam = parentTypeMeta.veldnaam || parentTypeMeta.padnaam;
             wijzigingen.push({ opvoer: { [parentVeldnaam]: parentPayload } });
           }
-          wijzigingen.push({ opvoer: { [veldnaam]: buildOpvoerPayload() } });
+          // Bestaand voorkomen waarvan alleen aanvang/einde veranderde: geen nieuwe data-versie.
+          if (isNieuw || isDataDirty) {
+            wijzigingen.push({ opvoer: { [veldnaam]: { ...buildOpvoerPayload(), ...mt.hubVelden } } });
+          }
+          wijzigingen.push(...mt.wijzigingen);
         }
 
         const res = await fetch(`${baseUrl}/registratie/`, {
@@ -417,7 +448,7 @@ export default function RepresentatieFormulier({
         setBusy(false);
       }
     },
-    [typeMeta, baseUrl, buildOpvoerPayload, buildAfvoerSleutel, buildParentOpvoerPayload, parentTypeMeta, onSaved, isEnkelvoudig]
+    [typeMeta, baseUrl, buildOpvoerPayload, buildAfvoerSleutel, buildParentOpvoerPayload, parentTypeMeta, onSaved, isEnkelvoudig, materieel, tijdInvoer, precisie, isNieuw, isDataDirty]
   );
 
   // Wijzigen: bij weinig gewijzigde velden → suggestie corrigeren
@@ -556,6 +587,35 @@ export default function RepresentatieFormulier({
           </>
         )}
 
+        {/* Materiële tijd: datum- of datum/tijd-invoer naar de tijdprecisie van het type */}
+        {materieel && (
+          <div className="cg-materiele-tijd" style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", marginBottom: "0.5rem", padding: "0.375rem 0.625rem", background: "var(--cg-lichtblauw, #f0f9ff)", borderRadius: "6px" }}>
+            {["aanvang", "einde"].map((soort) => (
+              <label key={soort} style={{ display: "flex", flexDirection: "column", fontSize: "0.875rem", fontWeight: 600 }}>
+                <span>
+                  {soort === "aanvang" ? "Aanvang" : "Einde"}
+                  {soort === "aanvang" && materieel.aanvangVerplicht && <span style={{ color: "var(--cg-fout, #dc2626)" }}> *</span>}
+                  <span style={{ fontWeight: 400, fontSize: "0.75rem", color: "var(--cg-donkergrijs)", marginLeft: "0.375rem" }}>
+                    {precisie === "tijdstip" ? "datum en tijd" : "datum"}{soort === "einde" ? (precisie === "tijdstip" ? ", tot" : ", t/m") : ""}
+                  </span>
+                </span>
+                <input
+                  type={precisie === "tijdstip" ? "datetime-local" : "date"}
+                  className="utrecht-textbox"
+                  name={`materieel-${soort}`}
+                  value={tijdInvoer[soort]}
+                  onChange={(e) => { const v = e.target.value; setTijdInvoer((prev) => ({ ...prev, [soort]: v })); }}
+                />
+              </label>
+            ))}
+            {isNieuw && materieel.aanvangVerplicht && (
+              <span style={{ alignSelf: "flex-end", fontSize: "0.75rem", color: "var(--cg-donkergrijs)" }}>
+                Het voorkomen dat nu geldt, krijgt automatisch een einde.
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Bewerkbare velden */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "0.5rem 1.5rem" }}>
           {bewerkbareVelden.map((veld) => (
@@ -587,7 +647,7 @@ export default function RepresentatieFormulier({
             >
               {busy ? "Opslaan…" : "Opslaan"}
             </button>
-          ) : isEnkelvoudig ? (
+          ) : isEnkelvoudig || materieel ? (
             <>
               <button
                 type="button"
@@ -607,15 +667,26 @@ export default function RepresentatieFormulier({
               >
                 Corrigeren
               </button>
+              {/* Materieel: beëindigen = een einde invullen; formeel weghalen heet hier "Verwijderen". */}
               <button
                 type="button"
                 className="utrecht-button utrecht-button--secondary-action"
                 style={{ padding: "0.5rem 1.25rem", color: "var(--cg-fout, #b91c1c)" }}
                 disabled={busy}
-                onClick={handleBeeindigen}
+                onClick={materieel ? handleVerwijderen : handleBeeindigen}
               >
-                Beëindigen
+                {materieel ? "Verwijderen" : "Beëindigen"}
               </button>
+              {onCancel && (
+                <button
+                  type="button"
+                  className="utrecht-button utrecht-button--secondary-action"
+                  style={{ padding: "0.5rem 1.25rem" }}
+                  onClick={onCancel}
+                >
+                  Annuleren
+                </button>
+              )}
             </>
           ) : (
             <>

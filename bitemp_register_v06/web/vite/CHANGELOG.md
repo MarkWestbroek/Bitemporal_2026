@@ -9,6 +9,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Inhoud-editor: materiële elementen als lijst van voorkomens** (27-10). Een materieel GE of
+  materiële relatie (ook enkelvoudig, zoals MeldingStatus) toont zijn voorkomens op volgorde van
+  aanvang, met aanvang, einde en het label **nu**; **+ Nieuw voorkomen** legt een opvolger vast
+  (de engine geeft het vorige automatisch een einde). Bij tijdprecisie `tijdstip` vul je datum én
+  tijd in (RFC 3339 naar de API). Aanvang of einde corrigeren wordt een eigen opvoer op
+  `_Aanvang`/`_Einde`. Zie [`docs/inhoud-editor-technisch.md`](../docs/inhoud-editor-technisch.md) §8b.
 - **Objecttype: overerving en partijen met een rol** (27-10, regelset canoniek-naar-objecttype
   0.2.0). Een subtype (`erft`) geeft één schema met de velden van de ouder; een relatie met eigen
   velden (AanvraagPartij met `partijrol`) wordt een lijst van {partijrol, partij}; velden binnen
