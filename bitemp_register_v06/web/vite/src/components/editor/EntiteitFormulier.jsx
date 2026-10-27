@@ -10,6 +10,9 @@ import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 import { bouwCustomVeldMapping, bouwCustomWijzigingen } from "./customFormMapping";
 import { vindDefinitie, sleutelVan } from "../../shared/definitieSleutel";
 import { useLijstDefinities } from "../../hooks/useLijstDefinitie";
+import {
+  tijdprecisieVan, materieleKinderen, materieleTijdVan, sorteerOpAanvang, isGeldigOp, toonMoment, sleutelVanVoorkomen,
+} from "../../shared/materieleTijd";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -31,6 +34,36 @@ import { useLijstDefinities } from "../../hooks/useLijstDefinitie";
  */
 function filterActueel(flatItems) {
   return flatItems.filter((item) => item.opvoer && !item.afvoer);
+}
+
+/**
+ * voorkomenRijen — de actuele voorkomens van een onderliggend element als rijen { item, tijd, geldig }.
+ *
+ * Materieel (hub met aanvang/einde): op aanvang gesorteerd, `geldig` = geldig op dit moment volgens
+ * de tijdprecisie van het type. Een materieel én enkelvoudig element heeft sinds 27-10-2026 meerdere
+ * formeel actieve voorkomens (één per materieel moment) en wordt daarom als lijst getoond.
+ */
+function voorkomenRijen(childMeta, actueleItems, typeMetaByTypenaam, nu = new Date()) {
+  if (!(childMeta?.isMaterieel && childMeta?.ge_subtype === "hub")) {
+    return { materieel: false, rijen: actueleItems.map((item) => ({ item, tijd: null, geldig: false })) };
+  }
+  const kinderen = materieleKinderen(childMeta, typeMetaByTypenaam);
+  const precisie = tijdprecisieVan(childMeta);
+  const rijen = sorteerOpAanvang(actueleItems.map((item) => ({ item, tijd: materieleTijdVan(item, kinderen) })))
+    .map((r) => ({ ...r, geldig: isGeldigOp(r.tijd, nu, precisie) }));
+  return { materieel: true, kinderen, precisie, rijen };
+}
+
+/** Props `materieel` voor RepresentatieFormulier (bestaand voorkomen: rij; nieuw: null). */
+function materieelProps(vk, childMeta, rij, aanvangVerplicht = false) {
+  if (!vk.materieel) return null;
+  return {
+    precisie: vk.precisie,
+    kinderen: vk.kinderen,
+    origineel: rij ? rij.tijd : { aanvang: null, einde: null },
+    sleutel: rij ? sleutelVanVoorkomen(rij.item, childMeta) : null,
+    aanvangVerplicht,
+  };
 }
 
 /**
@@ -551,7 +584,8 @@ export default function EntiteitFormulier() {
                 const flat = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
                 const actueel = filterActueel(flat);
                 const count = actueel.length;
-                const actief = actueel[0] || null;
+                const vkChip = voorkomenRijen(childMeta, actueel, typeMetaByTypenaam);
+                const actief = (vkChip.materieel ? vkChip.rijen.find((r) => r.geldig)?.item : actueel[0]) || null;
                 const weergave = actief
                   ? berekenWeergaveVoorItem(childMeta, actief, typeMetaByTypenaam, doelEntiteitCache)
                   : childWeergave(childMeta, rawItems, typeMetaByTypenaam);
@@ -707,6 +741,10 @@ export default function EntiteitFormulier() {
 
         const isEnkelvoudig = child.momentvoorkomen === "enkelvoudig";
         const label = childMeta.klassenaam || child.rolnaam || child.doeltype;
+        // Materieel: lijst van voorkomens met aanvang/einde, ook als het element enkelvoudig is.
+        const vk = voorkomenRijen(childMeta, actueleItems, typeMetaByTypenaam);
+        const alsFormulier = isEnkelvoudig && !vk.materieel;
+        const opvolging = isEnkelvoudig && vk.materieel; // nieuw voorkomen sluit het geldige af
 
         // Bepaal welk data-type de inhoudsvelden definiëert
         const dataChild = safeArray(childMeta?.onderliggende).find((c) => {
@@ -741,7 +779,7 @@ export default function EntiteitFormulier() {
               <span>
                 {label}
                 <span style={{ fontWeight: 400, fontSize: "0.75rem", color: "var(--cg-donkergrijs)", marginLeft: "0.5rem" }}>
-                  ({child.momentvoorkomen}) — {actueleItems.length} actueel
+                  ({child.momentvoorkomen}{vk.materieel ? `, materieel${vk.precisie === "tijdstip" ? " op tijdstip" : ""}` : ""}) — {actueleItems.length} {vk.materieel ? (actueleItems.length === 1 ? "voorkomen" : "voorkomens") : "actueel"}
                   {heeftHistorie && (
                     <button
                       type="button"
@@ -758,7 +796,7 @@ export default function EntiteitFormulier() {
                   )}
                 </span>
                 {/* Compact ID boven de gele streep voor enkelvoudig */}
-                {isEnkelvoudig && actueleItems.length > 0 && (() => {
+                {alsFormulier && actueleItems.length > 0 && (() => {
                   const item = actueleItems[0];
                   const entKolom = String(childMeta.entiteitIDKolom || "").toLowerCase();
                   const entId = entKolom ? item[entKolom] : null;
@@ -772,7 +810,7 @@ export default function EntiteitFormulier() {
                 })()}
               </span>
               {/* Symbolische formele tijd rechts, boven de gele streep */}
-              {isEnkelvoudig && actueleItems.length > 0 && (
+              {alsFormulier && actueleItems.length > 0 && (
                 <span style={{ fontWeight: 400, fontSize: "0.6875rem", color: "var(--cg-donkergrijs)" }}>
                   {actueleItems[0].opvoer && <>t={tUitRegistratieTijdstip(actueleItems[0].opvoer) ?? "?"}</>}
                   {actueleItems[0].afvoer && <span style={{ color: "var(--cg-fout)", marginLeft: "0.5rem" }}>afgevoerd t={tUitRegistratieTijdstip(actueleItems[0].afvoer) ?? "?"}</span>}
@@ -780,7 +818,7 @@ export default function EntiteitFormulier() {
               )}
             </div>
 
-            {isEnkelvoudig && actueleItems.length > 0 ? (
+            {alsFormulier && actueleItems.length > 0 ? (
               /* Enkelvoudig: formulier met het actuele (platgeslagen) record */
               <RepresentatieFormulier
                 typeMeta={childMeta}
@@ -792,8 +830,8 @@ export default function EntiteitFormulier() {
                 isEnkelvoudig={true}
                 hideIdEnTijd={true}
               />
-            ) : !isEnkelvoudig && actueleItems.length > 0 ? (
-              /* Meervoudig: compact tabel met actuele records + acties per rij */
+            ) : actueleItems.length > 0 ? (
+              /* Meervoudig of materieel: compacte tabel met de voorkomens + acties per rij */
               (() => {
                 // Bepaal of dit type een weergaveveld heeft
                 const heeftWeergave = safeArray(childMeta?.afgeleideVelden)
@@ -804,6 +842,12 @@ export default function EntiteitFormulier() {
                   <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
                       <tr className="utrecht-table__header-row">
+                        {vk.materieel && (
+                          <>
+                            <th className="utrecht-table__header-cell">aanvang</th>
+                            <th className="utrecht-table__header-cell">einde</th>
+                          </>
+                        )}
                         {inhoudsvelden.map((v) => (
                           <th key={v.naam} className="utrecht-table__header-cell">{v.naam}</th>
                         ))}
@@ -814,7 +858,8 @@ export default function EntiteitFormulier() {
                       </tr>
                     </thead>
                     <tbody>
-                      {actueleItems.map((item, i) => {
+                      {vk.rijen.map((rij, i) => {
+                        const { item } = rij;
                         const weergaveTekst = heeftWeergave
                           ? berekenWeergaveVoorItem(childMeta, item, typeMetaByTypenaam, doelEntiteitCache)
                           : null;
@@ -822,12 +867,27 @@ export default function EntiteitFormulier() {
                         <tr
                           key={i}
                           className="utrecht-table__row"
+                          data-geldig={rij.geldig ? "nu" : undefined}
                           style={{
                             background: bewerkRij?.doeltype === child.doeltype && bewerkRij?.index === i
                               ? "var(--cg-lichtblauw, #e0f0ff)"
                               : i % 2 === 1 ? "var(--cg-lichtgrijs)" : undefined,
+                            fontWeight: rij.geldig && opvolging ? 600 : undefined,
                           }}
                         >
+                          {vk.materieel && (
+                            <>
+                              <td className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem", whiteSpace: "nowrap" }}>
+                                {toonMoment(rij.tijd.aanvang, vk.precisie)}
+                                {rij.geldig && (
+                                  <span title="Geldt op dit moment" style={{ marginLeft: "0.375rem", padding: "0 0.375rem", borderRadius: "999px", background: "var(--cg-groen, #16a34a)", color: "#fff", fontSize: "0.6875rem", fontWeight: 600 }}>nu</span>
+                                )}
+                              </td>
+                              <td className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem", whiteSpace: "nowrap" }}>
+                                {toonMoment(rij.tijd.einde, vk.precisie)}
+                              </td>
+                            </>
+                          )}
                           {inhoudsvelden.map((v) => (
                             <td key={v.naam} className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem" }}>
                               {item[v.naam] != null ? String(item[v.naam]) : "—"}
@@ -865,15 +925,17 @@ export default function EntiteitFormulier() {
                   </table>
                 </div>
                 {/* Inline correctieformulier voor geselecteerde meervoudige rij */}
-                {bewerkRij?.doeltype === child.doeltype && bewerkRij.index < actueleItems.length && (
+                {bewerkRij?.doeltype === child.doeltype && bewerkRij.index < vk.rijen.length && (
                   <div style={{ marginTop: "0.5rem", padding: "0.75rem", border: "1px solid var(--cg-grijs, #ccc)", borderRadius: "6px", background: "var(--cg-lichtgrijs, #f8f9fa)" }}>
                     <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-                      Correctie {label}
+                      {vk.materieel ? `Voorkomen ${label} bewerken` : `Correctie ${label}`}
                     </div>
                     <RepresentatieFormulier
+                      key={`${child.doeltype}-${bewerkRij.index}`}
                       typeMeta={childMeta}
                       dataMeta={dataMeta}
-                      initialData={actueleItems[bewerkRij.index]}
+                      initialData={vk.rijen[bewerkRij.index].item}
+                      materieel={materieelProps(vk, childMeta, vk.rijen[bewerkRij.index])}
                       onSaved={() => { setBewerkRij(null); fetchEntity(); }}
                       onCancel={() => setBewerkRij(null)}
                       entiteitId={id}
@@ -951,6 +1013,7 @@ export default function EntiteitFormulier() {
                   typeMeta={childMeta}
                   dataMeta={dataMeta}
                   initialData={null}
+                  materieel={materieelProps(vk, childMeta, null, opvolging && vk.rijen.length > 0)}
                   onSaved={() => { setNieuwGE(null); setBewerkRij(null); fetchEntity(); }}
                   entiteitId={id}
                   entiteitIdKolom={childMeta.entiteitIDKolom}
@@ -966,8 +1029,8 @@ export default function EntiteitFormulier() {
               </div>
             )}
 
-            {/* Meervoudig: knop om extra record toe te voegen */}
-            {!isEnkelvoudig && actueleItems.length > 0 && nieuwGE !== child.doeltype && (
+            {/* Meervoudig: knop om extra record toe te voegen; materieel enkelvoudig: een opvolger */}
+            {!alsFormulier && actueleItems.length > 0 && nieuwGE !== child.doeltype && (
               <div style={{ paddingTop: "0.5rem" }}>
                 <button
                   type="button"
@@ -975,7 +1038,7 @@ export default function EntiteitFormulier() {
                   style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}
                   onClick={() => { setBewerkRij(null); setNieuwGE(child.doeltype); }}
                 >
-                  + {label} toevoegen
+                  {opvolging ? `+ Nieuw voorkomen ${label}` : `+ ${label} toevoegen`}
                 </button>
               </div>
             )}

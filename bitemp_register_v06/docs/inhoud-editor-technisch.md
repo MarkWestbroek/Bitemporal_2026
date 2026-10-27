@@ -253,6 +253,46 @@ Het inline correctieformulier (een `RepresentatieFormulier` met `isEnkelvoudig=f
 
 Toevoegen van een nieuw meervoudig GE-record is ongewijzigd ("+ toevoegen" knop).
 
+### Materiële GE's en relaties: lijst van voorkomens (27-10-2026)
+
+Een materieel element (hub met `_Aanvang`/`_Einde`, schema `isMaterieel`) wordt als **tabel van
+voorkomens** getoond, ook als het enkelvoudig is. Sinds 27-10-2026 betekent enkelvoudig bij een
+materieel element "één geldig voorkomen op elk materieel moment": een nieuwe status is een nieuw
+voorkomen en de engine geeft het vorige automatisch een einde (`docs/plans/2026-10-25 Materieel
+enkelvoudig — historie van voorkomens.md` §7–8). Een niet-materieel enkelvoudig element houdt het
+formulier hierboven.
+
+- Kolommen **aanvang** en **einde** vóór de inhoudsvelden, gesorteerd op aanvang (oudste eerst).
+  Het voorkomen dat nu geldt krijgt het label **nu** (`tr[data-geldig="nu"]`) en is bij een
+  enkelvoudig element vet. De chip bovenaan toont dat voorkomen.
+- **Tijdprecisie** volgt de schema-API (`tijdprecisie` op het hub-type): `"datum"` (default) →
+  `<input type="date">`, einde t/m; `"tijdstip"` → `<input type="datetime-local">` (lokale tijd),
+  verstuurd als RFC 3339 in UTC, einde exclusief ("tot"). De JSON-sleutel blijft `datum`.
+- **+ Nieuw voorkomen** (enkelvoudig) / **+ toevoegen** (meervoudig): aanvang en einde gaan als
+  shorthand op de hub mee. Bij een enkelvoudig element met een voorganger is de aanvang verplicht
+  (de engine geeft anders 422 `opvolging_zonder_aanvang`) en staat hij standaard op nu.
+- **✎** opent het voorkomen met aanvang/einde en de knoppen Wijzigen, Corrigeren, Verwijderen
+  (formeel afvoeren) en Annuleren. Een gewijzigde aanvang of einde wordt een eigen opvoer op het
+  `_Aanvang`/`_Einde`-element met de sleutel van het voorkomen (zoals scenario 22 stap 3); is
+  alleen de tijd veranderd, dan komt er geen nieuwe data-versie. Een einde weghalen kan hier niet
+  (correctie of ongedaanmaking). Materieel beëindigen = een einde invullen.
+
+Rekenwerk (sorteren, "nu", invoer ↔ API, payload) staat in `src/shared/materieleTijd.js` (unit-test
+`materieleTijd.test.js`); e2e met nagebootste API: `tests/e2e/36-editor-materieel-voorkomens.spec.js`.
+
+```json
+// Nieuw voorkomen (MeldingStatus, tijdstip): de engine sluit het geldige voorkomen af
+{ "registratie": { "registratietype": "registratie" },
+  "wijzigingen": [{ "opvoer": { "meldingstatus": { "melding_id": 9201, "status": "opgelost", "aanvang": "2026-10-27T10:30:00Z" } } }] }
+
+// Einde van voorkomen 1 corrigeren
+{ "registratie": { "registratietype": "correctie" },
+  "wijzigingen": [{ "opvoer": { "melding_meldingstatus_einde": { "melding_id": 9201, "rel_id": 1, "datum": "2026-10-27T09:45:00Z" } } }] }
+```
+
+Open: de oude schemapagina (`IndexSchemaPage`, actieboxen) kent alleen datumpickers; voor een
+type met tijdstipprecisie stuurt die nog een datum.
+
 ### State management
 
 - `bewerkRij` state: `{ doeltype, index }` — welke meervoudige rij in correctiemodus is
