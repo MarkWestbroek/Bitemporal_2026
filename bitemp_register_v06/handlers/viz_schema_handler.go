@@ -31,6 +31,7 @@ type vizSchemaTypeDTO struct {
 	Metatype                  model.Metatype                 `json:"metatype"`
 	GESubtype                 string                         `json:"ge_subtype,omitempty"`               // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
 	IsMaterieel               bool                           `json:"isMaterieel,omitempty"`              // of dit type een materiële tijdlijn heeft
+	Tijdprecisie              string                         `json:"tijdprecisie,omitempty"`             // "tijdstip" als aanvang/einde tijdstippen zijn (default datum)
 	IsAbstract                bool                           `json:"isAbstract,omitempty"`               // UML: abstracte klasse (niet-instantieerbaar)
 	ParentTypenaam            string                         `json:"parentTypenaam,omitempty"`           // typenaam van de parent-entiteit bij generalisatie
 	GeerfdeVelden             []vizSchemaFieldDTO            `json:"geerfdeVelden,omitempty"`            // velden geërfd van de parent-entiteit (recursief)
@@ -416,6 +417,7 @@ func vizSchemaTypeDTOVanMeta(meta model.TypeMeta) vizSchemaTypeDTO {
 		Metatype:       meta.Metatype,
 		GESubtype:      string(meta.GESubtype),
 		IsMaterieel:    meta.IsMaterieel,
+		Tijdprecisie:   meta.Tijdprecisie,
 		IsAbstract:     meta.IsAbstract,
 		ParentTypenaam: meta.ParentTypenaam,
 		Kleur:          meta.Kleur,

@@ -128,6 +128,7 @@ type V3Entiteit struct {
 	NaamLabelHeen     string              `json:"naamLabelHeen,omitempty"`   // UML-label op de heen-richting van de generalisatie-relatie
 	NaamLabelTerug    string              `json:"naamLabelTerug,omitempty"`  // UML-label op de terug-richting van de generalisatie-relatie
 	IsMaterieel       bool                `json:"isMaterieel,omitempty"`
+	Tijdprecisie      string              `json:"tijdprecisie,omitempty"` // materiële tijdlijn: "datum" (default) of "tijdstip" (27-10-2026)
 	Kleur             string              `json:"kleur,omitempty"`
 	Meervoud          string              `json:"meervoud"`               // URL-padnaam, bijv. "as", "personen"
 	Positie           *V3Positie          `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
@@ -146,6 +147,7 @@ type V3Gegevenselement struct {
 	Meervoud        string           `json:"meervoud"`         // URL-padnaam, bijv. "a-us"
 	Momentvoorkomen string           `json:"momentvoorkomen"`  // "enkelvoudig" of "meervoudig"
 	IsMaterieel     bool             `json:"isMaterieel,omitempty"`
+	Tijdprecisie    string           `json:"tijdprecisie,omitempty"`   // materiële tijdlijn: "datum" (default) of "tijdstip" (27-10-2026)
 	NaamLabelHeen   string           `json:"naamLabelHeen,omitempty"`  // UML-label op de heen-richting van de compositie (bijv. "heeft")
 	NaamLabelTerug  string           `json:"naamLabelTerug,omitempty"` // UML-label op de terug-richting van de compositie (bijv. "behoort bij")
 	Positie         *V3Positie       `json:"positie,omitempty"`        // editor-layout positie (genegeerd door codegen)
@@ -169,6 +171,7 @@ type V3Relatie struct {
 	Meervoud                 string `json:"meervoud"`                           // URL-padnaam, bijv. "rel-a-bs"
 	Momentvoorkomen          string `json:"momentvoorkomen"`                    // "enkelvoudig" of "meervoudig"
 	IsMaterieel              bool   `json:"isMaterieel,omitempty"`
+	Tijdprecisie             string `json:"tijdprecisie,omitempty"`      // materiële tijdlijn: "datum" (default) of "tijdstip" (27-10-2026)
 	DoelEntiteit             string `json:"doelEntiteit"`                // typenaam van de doel-entiteit
 	Directioneel             bool   `json:"directioneel,omitempty"`      // true = gerichte associatie (pijl naar doel-entiteit)
 	NaamLabelHeen            string `json:"naamLabelHeen,omitempty"`     // UML-label op de heen-richting van de associatie (bijv. "woont op")

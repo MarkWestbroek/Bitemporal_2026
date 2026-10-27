@@ -122,7 +122,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 				dHub.Veldnaam = strings.ToLower(hubType)
 			}
 			li := &layoutInfo{Positie: ge.Positie, LayoutLocked: ge.LayoutLocked, EdgeID: ge.ID, SourceHandle: ge.SourceHandle, TargetHandle: ge.TargetHandle, UseEdges: ge.UseEdges}
-			writeHubEntry(b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam, ge.AfgeleideVelden, opts.domein, li)
+			writeHubEntry(b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Tijdprecisie, ge.AfgeleideVelden, opts.domein, li)
 		}
 
 		// ---- Relatie hubs ----
@@ -147,7 +147,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 		if ent.IsMaterieel {
 			for _, suffix := range []string{"Aanvang", "Einde"} {
 				dAE := deriveAanvangEinde(ent.Typenaam, ent.Typenaam, suffix)
-				writeAanvangEindeEntry(b, dAE, ent.Kleur, suffix, ent.Typenaam)
+				writeAanvangEindeEntry(b, dAE, ent.Kleur, suffix, ent.Typenaam, ent.Tijdprecisie)
 			}
 		}
 
@@ -159,7 +159,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 			hubType := geHubTypeName(ent, ge.Naam)
 			for _, suffix := range []string{"Aanvang", "Einde"} {
 				dAE := deriveAanvangEinde(hubType, ent.Typenaam, suffix)
-				writeAanvangEindeEntry(b, dAE, ent.Kleur, suffix, hubType)
+				writeAanvangEindeEntry(b, dAE, ent.Kleur, suffix, hubType, ge.Tijdprecisie)
 			}
 		}
 		for _, rel := range ent.Relaties {
@@ -168,7 +168,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 			}
 			for _, suffix := range []string{"Aanvang", "Einde"} {
 				dAE := deriveAanvangEinde(rel.Naam, ent.Typenaam, suffix)
-				writeAanvangEindeEntry(b, dAE, ent.Kleur, suffix, rel.Naam)
+				writeAanvangEindeEntry(b, dAE, ent.Kleur, suffix, rel.Naam, rel.Tijdprecisie)
 			}
 		}
 	}
@@ -185,6 +185,7 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 		b.WriteString(fmt.Sprintf("\t\tEntiteitSubtype: %s,\n", entiteitSubtypeConst(ent.EntiteitSubtype)))
 	}
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel: %t,\n", ent.IsMaterieel))
+	writeTijdprecisie(b, ent.Tijdprecisie)
 	if ent.IsAbstract {
 		b.WriteString("\t\tIsAbstract:  true,\n")
 	}
@@ -256,13 +257,14 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 }
 
 // writeHubEntry schrijft een MetaRegistry entry voor een GE hub.
-func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, _ string, afgeleideVelden []model.V3AfgeleidVeld, domein string, li *layoutInfo) {
+func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, tijdprecisie string, afgeleideVelden []model.V3AfgeleidVeld, domein string, li *layoutInfo) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:     %q,\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription:  %q,\n", desc))
 	b.WriteString("\t\tMetatype:     MetatypeGegevenselement,\n")
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel:  %t,\n", isMaterieel))
+	writeTijdprecisie(b, tijdprecisie)
 	if domein != "" {
 		b.WriteString(fmt.Sprintf("\t\tDomein: %q,\n", domein))
 	}
@@ -310,6 +312,7 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie, do
 		b.WriteString(fmt.Sprintf("\t\tReferentielijstInstantie: %q,\n", rel.ReferentielijstInstantie))
 	}
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel:  %t,\n", rel.IsMaterieel))
+	writeTijdprecisie(b, rel.Tijdprecisie)
 	if domein != "" {
 		b.WriteString(fmt.Sprintf("\t\tDomein: %q,\n", domein))
 	}
@@ -390,13 +393,23 @@ func writeDataEntry(b *strings.Builder, d DerivedType, _ string, kleur string) {
 	b.WriteString("\t},\n")
 }
 
+// writeTijdprecisie schrijft Tijdprecisie als die is gezet ("tijdstip"; "datum" is de default).
+func writeTijdprecisie(b *strings.Builder, tijdprecisie string) {
+	if isTijdstip(tijdprecisie) {
+		b.WriteString("\t\tTijdprecisie: TijdprecisieTijdstip,\n")
+	}
+}
+
 // writeAanvangEindeEntry schrijft een MetaRegistry entry voor een _Aanvang/_Einde type.
-func writeAanvangEindeEntry(b *strings.Builder, d DerivedType, kleur string, suffix string, parentType string) {
+func writeAanvangEindeEntry(b *strings.Builder, d DerivedType, kleur string, suffix string, parentType string, tijdprecisie string) {
 	geSubtype := "GESubtypeAanvang"
 	descPrefix := "Aanvangsdatum"
 	if suffix == "Einde" {
 		geSubtype = "GESubtypeEinde"
 		descPrefix = "Einddatum"
+	}
+	if isTijdstip(tijdprecisie) {
+		descPrefix = strings.Replace(descPrefix, "datum", "tijdstip", 1)
 	}
 
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
@@ -405,6 +418,7 @@ func writeAanvangEindeEntry(b *strings.Builder, d DerivedType, kleur string, suf
 	b.WriteString(fmt.Sprintf("\t\tDescription:            %q,\n", fmt.Sprintf("%s van %s.", descPrefix, parentType)))
 	b.WriteString("\t\tMetatype:               MetatypeGegevenselement,\n")
 	b.WriteString(fmt.Sprintf("\t\tGESubtype:              %s,\n", geSubtype))
+	writeTijdprecisie(b, tijdprecisie)
 	b.WriteString(fmt.Sprintf("\t\tKleur:                  %q,\n", kleur))
 	b.WriteString(fmt.Sprintf("\t\tVeldnaam:               %q,\n", d.Veldnaam))
 	b.WriteString(fmt.Sprintf("\t\tPadnaam:                %q,\n", d.Padnaam))

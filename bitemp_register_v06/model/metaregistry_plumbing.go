@@ -151,11 +151,16 @@ var EnumEditorLayouts = map[string]*EditorLayout{}
 // TypeMeta holds metadata for a representatie type.
 type TypeMeta struct {
 	// ==== UML ====
-	Typenaam       string
-	Klassenaam     string // korte weergavenaam zonder entiteitsprefix (bijv. "PersoonsIdentificatie" i.p.v. "NatuurlijkPersoon_PersoonsIdentificatie")
-	Description    string
-	Metatype       Metatype
-	IsMaterieel    bool
+	Typenaam    string
+	Klassenaam  string // korte weergavenaam zonder entiteitsprefix (bijv. "PersoonsIdentificatie" i.p.v. "NatuurlijkPersoon_PersoonsIdentificatie")
+	Description string
+	Metatype    Metatype
+	IsMaterieel bool
+	// Tijdprecisie van de materiële tijdlijn (27-10-2026, besluit Mark): "" of "datum" = dagprecisie
+	// (aanvang/einde als Date, einde inclusief), "tijdstip" = aanvang/einde als time.Time (einde
+	// exclusief, twee voorkomens op één dag mogelijk). Staat op de entiteit/hub én op zijn
+	// _Aanvang/_Einde-entries.
+	Tijdprecisie   string
 	IsAbstract     bool   // UML: abstracte klasse (cursief weergegeven, niet-instantieerbaar)
 	ParentTypenaam string // typenaam van de parent-entiteit bij generalisatie (leeg indien geen overerving)
 

@@ -355,41 +355,40 @@ func kopieer(m map[string]interface{}) map[string]interface{} {
 	return uit
 }
 
-// materieelGeldigOp beoordeelt een (platgeslagen) record op zijn aanvang/einde-kinderen:
-// geldig als er geen aanvang is of de aanvang op of vóór de dag van `nu` ligt, en er geen
-// einde is of het einde ná die dag ligt. Een niet-materieel type is altijd geldig.
+// materieelGeldigOp beoordeelt een (platgeslagen) record op zijn aanvang/einde-kinderen op het
+// moment `nu`: een datum (dagprecisie) telt inclusief, een tijdstip exclusief — dezelfde regels
+// als model.GeldigOp.Geldig (27-10-2026). Een niet-materieel type is altijd geldig.
 func materieelGeldigOp(rec map[string]interface{}, meta model.TypeMeta, nu time.Time) bool {
 	if !meta.IsMaterieel {
 		return true
 	}
-	dag := time.Date(nu.Year(), nu.Month(), nu.Day(), 0, 0, 0, 0, time.UTC)
+	var aanvang, einde *model.TijdWaarde
 	for _, child := range meta.OnderliggendeGegevenselementen {
 		cm, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
 		if !ok {
 			continue
 		}
-		var datum *time.Time
 		switch cm.GESubtype {
-		case model.GESubtypeAanvang, model.GESubtypeEinde:
-			datum = datumUit(rec[child.JSONRolnaam])
-		default:
-			continue
-		}
-		if datum == nil {
-			continue // geen (geldige) aanvang of einde: open aan die kant
-		}
-		if cm.GESubtype == model.GESubtypeAanvang && datum.After(dag) {
-			return false
-		}
-		if cm.GESubtype == model.GESubtypeEinde && !datum.After(dag) {
-			return false
+		case model.GESubtypeAanvang:
+			aanvang = tijdWaardeUit(rec[child.JSONRolnaam])
+		case model.GESubtypeEinde:
+			einde = tijdWaardeUit(rec[child.JSONRolnaam])
 		}
 	}
-	return true
+	return model.GeldigOp{Moment: nu}.Geldig(aanvang, einde)
 }
 
-// datumUit leest "datum" (YYYY-MM-DD) uit een aanvang-/einde-record; nil als er geen is.
+// datumUit leest "datum" uit een aanvang-/einde-record als tijdstip; nil als er geen is.
 func datumUit(raw interface{}) *time.Time {
+	if w := tijdWaardeUit(raw); w != nil {
+		return &w.T
+	}
+	return nil
+}
+
+// tijdWaardeUit leest "datum" (YYYY-MM-DD, dagprecisie) of een RFC 3339-tijdstip uit een
+// aanvang-/einde-record; nil als er geen (geldige) waarde is.
+func tijdWaardeUit(raw interface{}) *model.TijdWaarde {
 	r, _ := raw.(map[string]interface{})
 	if r == nil {
 		return nil
@@ -398,11 +397,13 @@ func datumUit(raw interface{}) *time.Time {
 	if s == "" {
 		return nil
 	}
-	t, err := time.Parse("2006-01-02", s)
-	if err != nil {
-		return nil
+	if t, err := time.Parse("2006-01-02", s); err == nil {
+		return &model.TijdWaarde{T: t, IsDatum: true}
 	}
-	return &t
+	if t, err := time.Parse(time.RFC3339Nano, s); err == nil {
+		return &model.TijdWaarde{T: t}
+	}
+	return nil
 }
 
 // ValideerOpgeslagenDocumenten valideert alle actuele documenten tegen het schema en geeft

@@ -288,7 +288,8 @@
        "datatype": "LangeTekst",
        "description": "Antwoord aan de melder: waarom afgewezen, in welke versie opgelost, of bij status dubbel: van welke melding (\"dubbel van #12\")."
       }
-     ]
+     ],
+     "tijdprecisie": "tijdstip"
     },
     {
      "naam": "MeldingPrioriteit",
@@ -365,7 +366,8 @@
       "x": 900,
       "y": 20
      },
-     "velden": []
+     "velden": [],
+     "tijdprecisie": "tijdstip"
     }
    ]
   },

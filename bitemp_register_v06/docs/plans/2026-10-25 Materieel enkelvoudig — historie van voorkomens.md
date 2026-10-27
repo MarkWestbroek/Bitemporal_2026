@@ -92,7 +92,9 @@ Nog open:
 - **Einde:** inclusief bij datums (zoals nu, BRP-lijn "tot en met", en een BV bestaat nog op de
   dag van ontbinding), exclusief bij tijdstippen (half-open, zoals het afgeleide `afvoer`).
   Automatisch einde bij een opvolger: `aanvang − 1 dag` bij datums, `= aanvang` bij tijdstippen.
-- Precisie per representatie (datum/tijdstip) is een tweede stap (M3-eigenschap, met M3-MOF).
+- Precisie per representatie (datum/tijdstip): **gebouwd 27-10-2026** (besluit Mark, na de vraag van
+  OMNIUM-UI en FUNDAMENT over statuswisselingen binnen één dag), zie §8. De M3-/Studio-kant
+  (eigenschap in het canoniek-uml-profiel en de ontwerper) ligt bij M3-MOF.
 
 
 Nu in gebruik (REST en GraphQL): `peiltijdstip` (formeel, RFC 3339), `t` (synthetische afkorting
@@ -152,3 +154,31 @@ invoegen/periode splitsen; Studio-formulieren (OMNIUM-UI: "max 1 actief record")
 `geldigOp` op de platte routes en opgeslagen documenten; afleidingen kiezen bij een enkelvoudige
 materiële relatie met meerdere doelen nu "de eerste" (`afleiding/relaties.go`) — beter: het geldige.
 FUNDAMENT krijgt een seintje zodra dit in een image zit (UitrolVerloop/AanvraagStatus: aanvang meegeven).
+
+## 8. Tijdprecisie per representatie (27-10-2026)
+
+Aanleiding: meldingstatussen wisselen geregeld meerdere keren per dag (nieuw → in behandeling →
+opgelost in één sessie), UitrolVerloop en AanvraagStatus op Fundament ook. Met dagprecisie is de
+tweede wisseling een 422 `opvolging_terugwerkend`. Mark koos (27-10) voor tijdstipprecisie boven
+"correctie op dezelfde dag" en "alleen aanvang meesturen".
+
+- **V3:** `tijdprecisie: "datum" | "tijdstip"` op een materiële entiteit, GE of relatie (leeg =
+  datum). Codegen valideert de waarde en weigert hem zonder `isMaterieel`. Rondreis via de exporter.
+- **Codegen:** bij tijdstip is `_Aanvang/_Einde.Datum` een `*time.Time` met kolom `timestamptz`
+  (anders `*Date`/`date`); de `_Input` krijgt `Aanvang`/`Einde` als `*time.Time`. Veld- en kolomnaam
+  blijven `datum`, zodat engine, lezers en shorthand voor beide precisies gelijk werken.
+  `TypeMeta.Tijdprecisie` staat op het type én op zijn `_Aanvang/_Einde`-entries.
+- **Database:** entiteit-niveau plumbing-tabellen krijgen `timestamptz`; een bestaande `date`-kolom
+  wordt bij het opstarten verbreed (`ensureDatumTijdstip`, verliesvrij; andersom niet automatisch).
+- **Engine en lezen:** waren al precisie-bewust (`model.TijdWaarde`, `GeldigOp.Geldig`,
+  `VolgendEindeVoor`): tijdstip → einde exclusief, automatisch einde = aanvang van de opvolger.
+  `dynql.materieelGeldigOp` leest nu ook RFC 3339 (opgeslagen documenten, GraphQL enkelvoudig).
+  Let op: een einddatum (dagprecisie) telt sinds dit besluit inclusief; in de opgeslagen documenten
+  was hij tot 27-10 exclusief (test aangepast).
+- **Meldingen:** `MeldingStatus` en `MeldingBehandelaar` op tijdstip (model `docs/plans/meldingen/`,
+  domein opnieuw gegenereerd); de PATCH-handler stuurt `aanvang` = nu (RFC 3339) mee.
+- **Tests:** `cmd/codegen/gen_tijdprecisie_test.go`, scenario 25 (drie statussen op één dag,
+  einde = aanvang opvolger, geldigOp als tijdstip en als datum, 422 ×2), dynql-test met tijdstippen.
+- **Open:** Studio-ontwerper/profiel (M3-MOF): eigenschap `tijdprecisie` naast `materieel`;
+  formulieren tonen een tijdstip-aanvang als datum/tijd-invoer (OMNIUM-UI).
+

@@ -56,6 +56,9 @@ func TestOpgeslagen_MaterieelGeldigOp(t *testing.T) {
 	datum := func(d int) map[string]interface{} {
 		return map[string]interface{}{"datum": nu.AddDate(0, 0, d).Format("2006-01-02")}
 	}
+	tijdstip := func(min int) map[string]interface{} {
+		return map[string]interface{}{"datum": nu.Add(time.Duration(min) * time.Minute).Format(time.RFC3339)}
+	}
 	cases := []struct {
 		naam    string
 		rec     map[string]interface{}
@@ -66,10 +69,16 @@ func TestOpgeslagen_MaterieelGeldigOp(t *testing.T) {
 		{"aanvang gisteren", map[string]interface{}{aRol: datum(-1)}, true},
 		{"aanvang morgen (gestaged)", map[string]interface{}{aRol: datum(1)}, false},
 		{"einde morgen", map[string]interface{}{eRol: datum(1)}, true},
-		{"einde vandaag (exclusief)", map[string]interface{}{eRol: datum(0)}, false},
+		// Besluit Mark 27-10-2026: een einddatum is inclusief ("tot en met"); tot die dag was hij
+		// hier exclusief. Een einde als tijdstip is wél exclusief (half-open).
+		{"einde vandaag (datum: inclusief)", map[string]interface{}{eRol: datum(0)}, true},
 		{"einde gisteren", map[string]interface{}{eRol: datum(-1)}, false},
 		{"aanvang gisteren, einde morgen", map[string]interface{}{aRol: datum(-1), eRol: datum(1)}, true},
 		{"aanvang zonder datum", map[string]interface{}{aRol: map[string]interface{}{}}, true},
+		{"einde als tijdstip precies nu (exclusief)", map[string]interface{}{eRol: tijdstip(0)}, false},
+		{"einde als tijdstip een minuut later", map[string]interface{}{eRol: tijdstip(1)}, true},
+		{"aanvang als tijdstip een minuut later", map[string]interface{}{aRol: tijdstip(1)}, false},
+		{"aanvang als tijdstip precies nu", map[string]interface{}{aRol: tijdstip(0)}, true},
 	}
 	for _, c := range cases {
 		t.Run(c.naam, func(t *testing.T) {

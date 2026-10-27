@@ -54,8 +54,8 @@ type Melding_MeldingInhoud_Data struct {
 	Rel_ID        int          `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64        `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Soort         Meldingsoort `json:"soort" schema:"enum=Meldingsoort"`
-	Titel         KorteTekst   `json:"titel" schema:"datatype:KorteTekst"`
-	Beschrijving  *string      `json:"beschrijving,omitempty" schema:"datatype:LangeTekst"`
+	Titel         KorteTekst   `json:"titel" schema:"datatype:KorteTekst" schema_desc:"Eén regel: wat ging er mis of wat wil je?"`
+	Beschrijving  *string      `json:"beschrijving,omitempty" schema:"datatype:LangeTekst" schema_desc:"Wat deed je, wat verwachtte je, wat gebeurde er?"`
 	Opvoer        *time.Time   `json:"opvoer,omitempty"`
 	Afvoer        *time.Time   `json:"afvoer,omitempty"`
 }
@@ -77,13 +77,13 @@ type Melding_MeldingContext_Data struct {
 	Melding_ID    int        `json:"melding_id" bun:"melding_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Studioversie  *string    `json:"studioversie,omitempty" schema:"datatype:KorteTekst"`
-	Activiteit    *string    `json:"activiteit,omitempty" schema:"datatype:KorteTekst"`
-	Plek          *string    `json:"plek,omitempty" schema:"datatype:KorteTekst"`
-	Projectid     *string    `json:"projectid,omitempty" schema:"datatype:KorteTekst"`
-	Pad           *string    `json:"pad,omitempty" schema:"datatype:KorteTekst"`
-	Onderwerpid   *string    `json:"onderwerpid,omitempty" schema:"datatype:KorteTekst"`
-	Browser       *string    `json:"browser,omitempty" schema:"datatype:KorteTekst"`
+	Studioversie  *string    `json:"studioversie,omitempty" schema:"datatype:KorteTekst" schema_desc:"Bv. studio 0.19.0 / api 0.14.0."`
+	Activiteit    *string    `json:"activiteit,omitempty" schema:"datatype:KorteTekst" schema_desc:"Actieve activiteit en profiel, bv. modelleren / usecase05."`
+	Plek          *string    `json:"plek,omitempty" schema:"datatype:KorteTekst" schema_desc:"Wat er onder de Alt-klik zat: het pad in de interface (paneel, knop, element-id)."`
+	Projectid     *string    `json:"projectid,omitempty" schema:"datatype:KorteTekst" schema_desc:"Het open Studio-project (alleen het id, geen inhoud)."`
+	Pad           *string    `json:"pad,omitempty" schema:"datatype:KorteTekst" schema_desc:"Waar het over gaat in de projectboom: map/map/element (bij rechtsklik of de selectie). Leesbaar; verandert bij hernoemen of verplaatsen."`
+	Onderwerpid   *string    `json:"onderwerpid,omitempty" schema:"datatype:KorteTekst" schema_desc:"Het stabiele id van dat element, diagram of map in het project (bij EA-import afgeleid van de EA-GUID). Verandert niet bij hernoemen of verplaatsen."`
+	Browser       *string    `json:"browser,omitempty" schema:"datatype:KorteTekst" schema_desc:"Browser, besturingssysteem en venstermaat."`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
@@ -131,29 +131,29 @@ type Melding_MeldingStatus_Data struct {
 	Rel_ID        int           `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64         `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Status        Meldingstatus `json:"status" schema:"enum=Meldingstatus"`
-	Toelichting   *string       `json:"toelichting,omitempty" schema:"datatype:LangeTekst"`
+	Toelichting   *string       `json:"toelichting,omitempty" schema:"datatype:LangeTekst" schema_desc:"Antwoord aan de melder: waarom afgewezen, in welke versie opgelost, of bij status dubbel: van welke melding (\"dubbel van #12\")."`
 	Opvoer        *time.Time    `json:"opvoer,omitempty"`
 	Afvoer        *time.Time    `json:"afvoer,omitempty"`
 }
 
-// Melding_MeldingStatus_Aanvang — aanvangdatum van Melding_MeldingStatus.
+// Melding_MeldingStatus_Aanvang — aanvangtijdstip van Melding_MeldingStatus.
 type Melding_MeldingStatus_Aanvang struct {
 	bun.BaseModel `bun:"table:melding_meldingstatus_aanvang,alias:melding_meldingstatus_aanvang"`
 	Melding_ID    int        `json:"melding_id" bun:"melding_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Datum         *time.Time `json:"datum,omitempty" bun:"datum,type:timestamptz"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
-// Melding_MeldingStatus_Einde — eindedatum van Melding_MeldingStatus.
+// Melding_MeldingStatus_Einde — eindetijdstip van Melding_MeldingStatus.
 type Melding_MeldingStatus_Einde struct {
 	bun.BaseModel `bun:"table:melding_meldingstatus_einde,alias:melding_meldingstatus_einde"`
 	Melding_ID    int        `json:"melding_id" bun:"melding_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Datum         *time.Time `json:"datum,omitempty" bun:"datum,type:timestamptz"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
@@ -198,7 +198,7 @@ type Melding_MeldingReactie_Data struct {
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Tekst         LangeTekst `json:"tekst" schema:"datatype:LangeTekst"`
-	Auteur        KorteTekst `json:"auteur" schema:"datatype:KorteTekst"`
+	Auteur        KorteTekst `json:"auteur" schema:"datatype:KorteTekst" schema_desc:"Gebruikersnaam van wie reageerde."`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
@@ -249,24 +249,24 @@ type MeldingBehandelaar_Data struct {
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
-// MeldingBehandelaar_Aanvang — aanvangdatum van MeldingBehandelaar.
+// MeldingBehandelaar_Aanvang — aanvangtijdstip van MeldingBehandelaar.
 type MeldingBehandelaar_Aanvang struct {
 	bun.BaseModel `bun:"table:meldingbehandelaar_aanvang,alias:meldingbehandelaar_aanvang"`
 	Melding_ID    int        `json:"melding_id" bun:"melding_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Datum         *time.Time `json:"datum,omitempty" bun:"datum,type:timestamptz"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
-// MeldingBehandelaar_Einde — eindedatum van MeldingBehandelaar.
+// MeldingBehandelaar_Einde — eindetijdstip van MeldingBehandelaar.
 type MeldingBehandelaar_Einde struct {
 	bun.BaseModel `bun:"table:meldingbehandelaar_einde,alias:meldingbehandelaar_einde"`
 	Melding_ID    int        `json:"melding_id" bun:"melding_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Datum         *time.Time `json:"datum,omitempty" bun:"datum,type:timestamptz"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }

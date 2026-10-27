@@ -198,9 +198,17 @@ relatie) alleen de voorkomens waarvan de formeel actieve `aanvang` op of vóór 
 na het moment ligt; een entiteit met eigen aanvang/einde die dan niet bestaat geeft 404 (of valt uit
 de lijst). Formeel actief wordt beoordeeld op `peiltijdstip` als dat meegaat, anders nu; afgevoerde
 of ongedaan gemaakte voorkomens tellen dus niet mee. Beide parameters combineren mag: "wat gold op
-1-1-2012 volgens wat we op registratie 1 wisten". De precisie volgt de opgeslagen waarde (een datum
-vergelijkt op dagen, een tijdstip op het moment); per representatie vastleggen welke precisie geldt
-is een volgende stap.
+1-1-2012 volgens wat we op registratie 1 wisten".
+
+**Tijdprecisie per representatie** (V3 `tijdprecisie` op een materiële entiteit, GE of relatie;
+besluit Mark 27-10-2026): `"datum"` (default) — aanvang/einde zijn datums (`JJJJ-MM-DD`), het einde
+is inclusief, het automatische einde bij een opvolger is aanvang − 1 dag; `"tijdstip"` — aanvang/einde
+zijn RFC 3339-tijdstippen, het einde is exclusief, het automatische einde is gelijk aan de aanvang
+van de opvolger, en twee voorkomens op één dag zijn gewoon twee voorkomens. De JSON-sleutel blijft in
+beide gevallen `datum` (ook de shorthand `"aanvang": "2026-10-27T10:00:00Z"`); de kolom is `date` of
+`timestamptz`, en een bestaande `date`-kolom wordt bij het opstarten verbreed als het model naar
+tijdstip gaat. De schema-API toont `tijdprecisie` per type. MeldingStatus en MeldingBehandelaar
+hebben tijdstipprecisie (statuswisselingen binnen één dag); zie scenario 25.
 
 **Opvolging van een materieel én enkelvoudig element** (GE of relatie; bv. Burgerschap, Woonlocatie,
 MeldingStatus): enkelvoudig betekent "één geldig voorkomen op elk materieel moment", niet "één
