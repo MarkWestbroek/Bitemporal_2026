@@ -110,14 +110,25 @@ test("artefact aanvraag-oppakken uit het BPMN-model: call activity, activityId's
   );
   const vervolg = s.knopen.find((k) => k.id === "vervolgproces-starten");
   assert.equal(vervolg.aard, "callActivity");
-  assert.equal(vervolg.aangeroepenProces, "${processDefinitionKey}");
+  // Vaste sleutel (regelset 0.2.0): de GZAC-export zoekt het aangeroepen proces op sleutel op.
+  assert.equal(vervolg.aangeroepenProces, "gehandicaptenparkeerkaart-beoordelen");
   assert.equal(s.camunda["vervolgproces-starten@asyncAfter"], "true");
   assert.match(xml, /<camunda:in businessKey="#\{execution.processBusinessKey\}" \/>/);
   assert.match(xml, /<camunda:in variables="all" \/>/);
-  assert.deepEqual(aangeroepen, ["${processDefinitionKey}"]);
+  assert.deepEqual(aangeroepen, ["gehandicaptenparkeerkaart-beoordelen"]);
   assert.deepEqual(artefact.afhankelijkheden.map((a) => a.identifier), ["GPK", "gehandicaptenparkeerkaart-beoordelen"]);
   // Elk element in de trace, met zijn activityId.
   assert.ok(artefact.traceregels.some((t) => t.doelPad === "#document-koppelen"));
+});
+
+test("call activity: een expressie is een fout voor GZAC, een onbekend proces een waarschuwing", async () => {
+  const met = async (sleutel) => {
+    const m = lees("gpk-processen.bpmn-model.json");
+    Object.values(m.model.elements).find((e) => e.data?.bpmnId === "vervolgproces-starten").data.aangeroepenProces = sleutel;
+    return (await maakBpmnArtefact({ modelBestand: m, edienst: lees("gpk-edienst.json"), identifier: "aanvraag-oppakken", sha256Hex })).diagnostics;
+  };
+  assert.deepEqual((await met("${processDefinitionKey}")).map((d) => [d.code, d.severity]), [["BPMN-AANGEROEPEN", "error"]]);
+  assert.deepEqual((await met("bestaat-niet")).map((d) => [d.code, d.severity]), [["BPMN-AANGEROEPEN", "warning"]]);
 });
 
 test("artefact gehandicaptenparkeerkaart-beoordelen; een ontbrekende activityId is een fout", async () => {
