@@ -1138,7 +1138,7 @@ een token als `Authorization: Bearer`; zonder token stuurt hij de sessiecookie
 mee. CORS staat (30-10) open voor `http://localhost:5176`, niet voor de
 app-host. Schrijven (registreren) vanuit de browser kan nog niet: daarvoor zijn
 een service-account en CORS voor de app-origin nodig, en dat ligt bij BACKEND.
-Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.12).
+Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.13).
 
 **Model uit de map (beperking opgelost 30-10, BACKLOG §39).** Sinds 30-10
 bewaart de omzetting `verplicht`, `uniek`, `type` en `format`. Model uit de map
@@ -1247,7 +1247,66 @@ BPMN-model.
 Nog niet in de schrijver: pools/lanes, message flows, data-objecten, notities,
 boundary events en de inhoud van subprocessen (melding `BPMN-SCHRIJVER`).
 
-### 11.12 Vervolg
+### 11.12 Ontvankelijkheid: beslistabel (DMN) in het oppakproces (2026-10-30)
+
+Besluit Mark (plan Beslissing en beschikking §6.1): een aanvraag die te
+onvolledig is om te beoordelen, start geen zaak. Dat is geen besluit en geen
+afwijzing. Het oppakproces toetst daarom eerst de ontvankelijkheid met een
+beslistabel; buiten behandeling stellen (Awb 4:5) blijft een uitkomst in de
+zaak, voor wat het oppakken niet afving.
+
+**Route.**
+
+    DMN-model (profiel dmn-drd) ─ beslissing.beslistabel ─▶ dmnXmlSchrijver ─▶ DMN 1.3 XML ─▶ dmn-artefact
+    objecttype-artefact (traceregels) ─▶ invoer per kolom ───────────────────▶ BPMN-schrijver (businessRuleTask)
+
+- **Beslistabel** in de vorm van `dmn/dmnModel.js` op het element `decision`
+  (`data.beslistabel`). Elke kolom bindt aan een modelveld (`fieldRef.veldpad`);
+  `naam` is de variabele, `expressie` een FEEL-expressie als de kolom meer doet
+  dan het veld lezen, bijvoorbeeld `some b in bijlagen satisfies b.naam =
+  "pasfoto"`. Fixture: `fixtures/cg-test/gpk-beslissingen.dmn-model.json`,
+  beslissing "Aanvraag ontvankelijk" (hitPolicy FIRST, uitkomsten
+  `ontvankelijk` en `reden`), met de demoregels die Mark bevestigde:
+  - de aanvrager is geïdentificeerd (BSN);
+  - er is een pasfoto;
+  - bij een eerdere kaart is het kaartnummer ingevuld;
+  - bij een bestuurderskaart is het rijbewijsnummer ingevuld.
+- **Waar de engine elke kolom vindt**, volgt uit de traceregels van het
+  objecttype-artefact (`dmnArtefact.js`, `invoerVoorVeld`): een veld wordt een
+  JSON-pointer in de dossierinhoud (`/soort`), een veld in een meervoudig GE de
+  lijst (`/bijlagen`), en een envelopveld (`envelop:bsn`) een procesvariabele
+  (de Verzoek-plugin zet `bsn`). Een veld dat niet in het objecttype staat,
+  geeft `DMN-VELD` (waarschuwing; nu het rijbewijsnummer, dat nog in het model
+  moet). Getallen krijgen typeRef `number`: Valtimo geeft ze als Double door.
+- **dmn-artefact:** identifier = decision-id = `decisionRef`, formaat
+  `dmn-xml`, payloadHash = sha256 over de XML-tekst (zoals bpmn). FUNDAMENT zet
+  het als `dmn/<decision-id>.dmn` in de GZAC-dossierbundel.
+- **BPMN (bpmn-naar-gzac 0.4.0):** een taak met taaktype business rule krijgt
+  `beslissing` (decision-id) en `resultaat` (variabele). De regelset schrijft
+  een vaste `camunda:decisionRef` (een expressie is een fout, net als bij
+  calledElement), `mapDecisionResult="singleResult"` en `resultVariable`, en per
+  dossierkolom een `camunda:inputParameter` met
+  `documentDelegateService.findValueByJsonPointerOrDefault(<pointer>, execution,
+  null)`. Een servicetaak met `dossierstatus` zet de interne status van het
+  dossier (`setInternalStatus`). Toets `BPMN-BESLISSING`: de beslistabel is een
+  dmn-artefact van de e-dienst en is meegegeven.
+- **Oppakproces** (`gpk-processen.bpmn-model.json`): start → Ontvankelijkheid
+  toetsen → Ontvankelijk? → ja: zaak aanmaken (het bestaande pad) / nee:
+  Dossierstatus Niet opgepakt → Aanvraag niet opgepakt. Er is geen bericht naar
+  de aanvrager en geen status in Open Object; dat komt later.
+- **Bundel:** dmn komt vóór bpmn; een bpmn-artefact dat van een dmn-artefact
+  afhangt (`afhankelijkVanSoort: "dmn"`), haalt die beslistabel mee. DMN-modellen
+  komen in dezelfde map als de BPMN-modellen (`bron.model`).
+
+FUNDAMENT probeerde de constructie op cg-test (30-10). De FEEL-engine van
+Operaton leest de dossierwaarden als Map en List, dus de toets op de bijlagen
+werkt. Een dossier zonder pasfoto kreeg de status niet-opgepakt.
+
+Nog niet: de beslistabel bewerken in de Studio (de tabeleditor
+`dmn/DmnTableEditor.jsx` hangt nog niet aan het element), en de reden in het
+dossier bewaren (vraagt een veld in het dossierschema).
+
+### 11.13 Vervolg
 
 1. Formulier: machtigen (gemachtigde + subject) en eHerkenning; de documenttitel
    van een bestandscomponent uit het label (FUNDAMENT 30-10).
@@ -1264,3 +1323,7 @@ boundary events en de inhoud van subprocessen (melding `BPMN-SCHRIJVER`).
 6. Studio: registreren vanuit de browser (schrijfkant van §11.10) zodra BACKEND
    een service-account en CORS voor de app-origin heeft; daarna een modeltaal
    voor de e-dienst (stap c) en het formulierdiagram als bron (stap d).
+7. Studio als bron (Mark 31-10): het canonieke model, het BPMN-model en het
+   DMN-model in een Studio-project; de fixtures zijn dan kopieën voor de tests.
+   De beslistabel heeft daarvoor een bewerkscherm aan het element `decision`
+   nodig (§11.12).

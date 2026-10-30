@@ -46,8 +46,9 @@ export const ENGINES = { gzac: BPMN_NAAR_GZAC };
  * @param {string} [invoer.versienummer]
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
  * @param {any} [invoer.regelset]            - engine-regelset (anders volgens `engine` in de e-dienst)
+ * @param {Record<string, any[]>} [invoer.beslissingen] - per decision-id de invoer van de beslistabel (uit maakDmnArtefact)
  */
-export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peiltijdstip = null, versienummer, sha256Hex, regelset }) {
+export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peiltijdstip = null, versienummer, sha256Hex, regelset, beslissingen = {} }) {
   const model = modelBestand?.model || modelBestand;
   const keuzes = (edienst?.artefacten || []).find((a) => a.identifier === identifier && a.soort === "bpmn");
   if (!keuzes) throw new Error(`Geen bpmn-artefact "${identifier}" in het e-dienstmodel.`);
@@ -65,6 +66,7 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
     proces: { id: keuzes.identifier, naam: keuzes.naam || diagram.naam },
     targetNamespace: keuzes.targetNamespace,
     engine,
+    beslissingen,
   });
   diagnostics.push(...schrijf);
 
@@ -87,6 +89,20 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
     } else if (!processen.has(sleutel)) {
       diagnostics.push({ severity: "warning", code: "BPMN-AANGEROEPEN", message: `Aangeroepen proces "${sleutel}" is geen bpmn-artefact van deze e-dienst`, sourceId: sleutel, path: null });
     }
+  }
+
+  // Beslistabellen: een vaste decision-id die een dmn-artefact van de e-dienst is.
+  const dmns = new Set((edienst?.artefacten || []).filter((a) => a.soort === "dmn").map((a) => a.identifier));
+  for (const e of elementen.filter((x) => ids.has(x.id) && x.elementType === "taak" && x.data?.beslissing)) {
+    const ref = e.data.beslissing;
+    if (/[$#]\{/.test(ref)) {
+      if (engine.taken?.businessRuleTask?.vasteSleutel) diagnostics.push({ severity: "error", code: "BPMN-BESLISSING", message: `Beslistabel met expressie "${ref}": ${engine.id} vraagt een vaste decision-id`, sourceId: e.id, path: null });
+    } else if (!dmns.has(ref)) {
+      diagnostics.push({ severity: "error", code: "BPMN-BESLISSING", message: `Beslistabel "${ref}" is geen dmn-artefact van deze e-dienst`, sourceId: e.id, path: null });
+    } else if (!beslissingen[ref]) {
+      diagnostics.push({ severity: "error", code: "BPMN-BESLISSING", message: `Beslistabel "${ref}" is niet meegegeven; zonder haar kolommen krijgt de taak geen invoer`, sourceId: e.id, path: null });
+    }
+    if (!e.data?.resultaat) diagnostics.push({ severity: "warning", code: "BPMN-BESLISSING", message: `Taak "${e.naam}" zet de uitkomst van "${ref}" in geen variabele`, sourceId: e.id, path: null });
   }
 
   // Berichten: elk geworpen bericht start een proces van deze e-dienst (message

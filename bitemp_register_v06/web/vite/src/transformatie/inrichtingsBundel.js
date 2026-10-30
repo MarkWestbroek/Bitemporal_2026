@@ -7,6 +7,9 @@
  * waarin het registreert. Daarom komen de objecttypen eerst. Een bpmn-artefact
  * komt uit een BPMN-model (§11.11), niet uit het canonieke model: dat model
  * komt mee in `bpmnModellen`, op de naam uit `bron.model` van het artefact.
+ * Een dmn-artefact (beslistabel, §11.12) komt net zo uit een DMN-model in
+ * dezelfde map; het komt vóór de processen, want een businessRuleTask krijgt
+ * de kolommen van de tabel als invoer.
  *
  * Puur op de hashfunctie na (node:crypto of SubtleCrypto); zo draait dezelfde
  * code in de CLI, in de Studio (exportstap "Inrichtingsartefacten") en in de
@@ -17,9 +20,10 @@ import { maakFormulierArtefact } from "../diagramprofielen/canoniek-uml/formulie
 import { maakZaaktypeArtefact } from "../diagramprofielen/canoniek-uml/zaaktypeArtefact.js";
 import { maakDossierArtefact, DOSSIER_SOORTEN } from "../diagramprofielen/canoniek-uml/dossierArtefact.js";
 import { maakBpmnArtefact } from "../diagramprofielen/bpmn/bpmnArtefact.js";
+import { maakDmnArtefact } from "../diagramprofielen/dmn-drd/dmnArtefact.js";
 
 /** Volgorde van maken: wat een ander artefact nodig heeft komt eerst. */
-const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierschema", "dossierformulier", "dossiertabbladen", "bpmn"];
+const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierschema", "dossierformulier", "dossiertabbladen", "dmn", "bpmn"];
 
 /**
  * Bestandsnaam zoals de CLI hem schrijft: `<identifier>.artefact.json`, bij de
@@ -34,7 +38,7 @@ export function artefactBestandsnaam({ soort, identifier }) {
 /** Het objecttype waarin een formulier of dossierdeel registreert, volgens de e-dienst. */
 function objecttypeVoor(keuzes, edienst) {
   if (keuzes.soort === "formulier") return keuzes.registratie?.objecttype || null;
-  if (keuzes.soort === "dossierschema") return keuzes.objecttype || null;
+  if (keuzes.soort === "dossierschema" || keuzes.soort === "dmn") return keuzes.objecttype || null;
   if (keuzes.soort === "dossierformulier") {
     const schema = (edienst.artefacten || []).find((a) => a.soort === "dossierschema" && a.identifier === keuzes.dossierschema);
     return schema?.objecttype || null;
@@ -42,11 +46,11 @@ function objecttypeVoor(keuzes, edienst) {
   return null;
 }
 
-/** Het BPMN-model van een bpmn-artefact, of een fout die alleen dat artefact stopt. */
+/** Het BPMN- of DMN-model van een artefact, of een fout die alleen dat artefact stopt. */
 function bpmnModelVoor(keuzes, bpmnModellen) {
   const naam = keuzes.bron?.model;
   const model = naam ? bpmnModellen[naam] : null;
-  if (!model) throw new Error(`BPMN-model "${naam || "(geen bron.model)"}" is niet meegegeven.`);
+  if (!model) throw new Error(`${keuzes.soort === "dmn" ? "DMN" : "BPMN"}-model "${naam || "(geen bron.model)"}" is niet meegegeven.`);
   return model;
 }
 
@@ -60,7 +64,7 @@ function bpmnModelVoor(keuzes, bpmnModellen) {
  * @param {Record<string, any[]>} [invoer.referentielijsten] - M0-items per referentielijst
  * @param {string|null} [invoer.peiltijdstip]
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
- * @param {Record<string, any>} [invoer.bpmnModellen] - BPMN-modellen per naam (`bron.model` van een bpmn-artefact)
+ * @param {Record<string, any>} [invoer.bpmnModellen] - BPMN- en DMN-modellen per naam (`bron.model` van een bpmn- of dmn-artefact)
  * @param {(keuzes: any) => boolean} [invoer.kies]    - welke artefacten (default: alle)
  * @returns {Promise<Array<{bestandsnaam: string, soort: string, identifier: string,
  *   artefact: any|null, diagnostics: any[], fout: string|null}>>}
@@ -80,9 +84,11 @@ export async function maakInrichtingsBundel({
   const gekozen = alle.filter(kies);
   const invoer = { modelBestand, edienst, datatypen, referentielijsten, peiltijdstip, sha256Hex };
 
-  // Objecttypen die een gekozen artefact nodig heeft, ook als ze zelf niet gekozen zijn.
-  const nodig = new Set(gekozen.map((k) => objecttypeVoor(k, edienst)).filter(Boolean));
-  const teMaken = alle.filter((a) => gekozen.includes(a) || (a.soort === "objecttype" && nodig.has(a.identifier)));
+  // Objecttypen (en beslistabellen) die een gekozen artefact nodig heeft, ook als ze zelf niet gekozen zijn.
+  const nodigDmn = new Set(gekozen.filter((k) => k.soort === "bpmn").flatMap((k) => (edienst.afhankelijkheden || []).filter((a) => a.artefact === k.identifier && a.afhankelijkVanSoort === "dmn").map((a) => a.afhankelijkVan)));
+  const metDmn = alle.filter((a) => gekozen.includes(a) || (a.soort === "dmn" && nodigDmn.has(a.identifier)));
+  const nodig = new Set(metDmn.map((k) => objecttypeVoor(k, edienst)).filter(Boolean));
+  const teMaken = alle.filter((a) => metDmn.includes(a) || (a.soort === "objecttype" && nodig.has(a.identifier)));
   const rang = (s) => (VOLGORDE.indexOf(s) < 0 ? VOLGORDE.length : VOLGORDE.indexOf(s));
   const opVolgorde = [...teMaken].sort((a, b) => rang(a.soort) - rang(b.soort));
 
@@ -90,6 +96,8 @@ export async function maakInrichtingsBundel({
   const objecttypen = new Map();
   /** @type {Map<any, any>} */
   const uitkomst = new Map();
+  /** Per decision-id de invoer van de beslistabel, voor de processen. */
+  const beslissingen = {};
   for (const keuzes of opVolgorde) {
     const { soort, identifier } = keuzes;
     try {
@@ -104,11 +112,14 @@ export async function maakInrichtingsBundel({
               ? await maakZaaktypeArtefact({ ...invoer, identifier })
               : DOSSIER_SOORTEN.includes(soort)
                 ? await maakDossierArtefact({ ...invoer, identifier, soort, objecttype })
-                : soort === "bpmn"
-                  ? await maakBpmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), identifier })
-                  : null;
+                : soort === "dmn"
+                  ? await maakDmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), identifier, objecttype })
+                  : soort === "bpmn"
+                    ? await maakBpmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), identifier, beslissingen })
+                    : null;
       if (!r) throw new Error(`Onbekende artefactsoort "${soort}".`);
       if (soort === "objecttype") objecttypen.set(identifier, r.artefact);
+      if (soort === "dmn") beslissingen[identifier] = r.invoer;
       uitkomst.set(keuzes, { artefact: r.artefact, diagnostics: r.diagnostics || [], fout: null });
     } catch (e) {
       uitkomst.set(keuzes, { artefact: null, diagnostics: e?.diagnostics || [], fout: e?.message || String(e) });

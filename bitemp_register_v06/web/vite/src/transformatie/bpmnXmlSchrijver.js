@@ -22,6 +22,13 @@
  * message start event van een ander proces correleren) komt uit de regelset
  * (`berichten.werpen`, met `{bericht}` voor de naam).
  *
+ * Beslistabellen: een businessRuleTask met `data.beslissing` (decision-id) en
+ * `data.resultaat`. Waar de engine de kolommen van de tabel vandaan haalt,
+ * komt mee in `beslissingen` (per decision-id de `invoer` uit dmnArtefact);
+ * de regelset (`taken.businessRuleTask.invoer`) maakt er input-parameters van.
+ * Engine-attributen die een modelwaarde dragen staan in `uitData` van de
+ * regelset (`{veld}` = data.veld).
+ *
  * Nog niet: pools/lanes, message flows, data-objecten, notities, boundary
  * events en de inhoud van subprocessen. Die geven een melding
  * `BPMN-SCHRIJVER` en blijven weg.
@@ -117,9 +124,10 @@ const midden = (v) => ({ x: v.x + v.width / 2, y: v.y + v.height / 2 });
  * @param {{id: string, naam?: string}} invoer.proces - process-id (bij GZAC = de artefact-identifier) en naam
  * @param {string} [invoer.targetNamespace]
  * @param {any} [invoer.engine]                - engine-regelset (null = kale BPMN)
+ * @param {Record<string, any[]>} [invoer.beslissingen] - per decision-id de invoer van de beslistabel
  * @returns {{xml: string, ids: Map<string,string>, diagnostics: any[]}}
  */
-export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http://bpmn.io/schema/bpmn", engine = null }) {
+export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http://bpmn.io/schema/bpmn", engine = null, beslissingen = {} }) {
   const diagnostics = [];
   const meld = (message, sourceId = null) => diagnostics.push({ severity: "warning", code: "BPMN-SCHRIJVER", message, sourceId, path: null });
   const diagram = diagramId ? model.diagrams?.[diagramId] : Object.values(model.diagrams || {})[0];
@@ -191,6 +199,15 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     const a = { id, name: naamVan(el) };
     if (tag === "callActivity") a.calledElement = el.data.aangeroepenProces;
     Object.assign(a, metNs({ ...regel.attributen }));
+    // Engine-attributen met een waarde uit het model (bv. decisionRef uit data.beslissing).
+    for (const u of regel.uitData || []) {
+      if (!el.data?.[u.als]) continue;
+      for (const [k, v] of Object.entries(metNs(u.attributen))) {
+        const w = Object.entries(el.data).reduce((t, [veld, waarde]) => t.split(`{${veld}}`).join(String(waarde ?? "")), String(v));
+        if (/\{\w+\}/.test(w.replace(/\$\{[^}]*\}/g, ""))) meld(`"${el.naam || el.id}": ${k} mist een modelwaarde (${w})`, el.id);
+        a[k] = w;
+      }
+    }
     // asyncAfter: op de taak, of bij multi-instance per instantie op de lus.
     if (regel.asyncAfter && eng.asyncAfter && !meervoudig) Object.assign(a, metNs({ [eng.asyncAfter]: "true" }));
     const std = seq.find((e) => e.source === el.id && e.data?.standaard);
@@ -222,6 +239,18 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
       if (x.tag.includes(":")) nsGebruikt.add(x.tag.split(":")[0]);
       return `<${x.tag}${attrs(metNs(x.attributen))} />`;
     });
+    // Invoer van een beslistabel: per dossierkolom een input-parameter.
+    if (regel.invoer && el.data?.beslissing) {
+      const lijst = beslissingen[el.data.beslissing];
+      if (!lijst) meld(`Beslistabel "${el.data.beslissing}" is niet meegegeven; de businessRuleTask krijgt geen invoer`, el.id);
+      const params = (lijst || []).filter((x) => x.bron === "dossier");
+      if (params.length) {
+        for (const t of [regel.invoer.tag, regel.invoer.parameter]) if (t.includes(":")) nsGebruikt.add(t.split(":")[0]);
+        ext.push(`<${regel.invoer.tag}>`);
+        for (const x of params) ext.push(`  <${regel.invoer.parameter} name="${esc(x.naam)}">${esc(regel.invoer.dossier.split("{pointer}").join(x.pointer))}</${regel.invoer.parameter}>`);
+        ext.push(`</${regel.invoer.tag}>`);
+      }
+    }
     if (ext.length) kinderen.unshift(`<bpmn:extensionElements>`, ...ext.map((x) => `  ${x}`), `</bpmn:extensionElements>`);
     r.push(`    <bpmn:${tag}${attrs(a)}>`);
     for (const k of kinderen) r.push(`      ${k}`);

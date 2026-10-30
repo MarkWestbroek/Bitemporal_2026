@@ -19,6 +19,13 @@
  * hetzelfde dossier koppelt (FUNDAMENT, proef op cg-test 30-10). Een call
  * activity zou het oppakproces laten wachten tot de behandeling klaar is.
  *
+ * Ontvankelijkheid (0.4.0, Mark 30-10): een businessRuleTask leest een
+ * beslistabel (dmn-artefact) met een vaste decisionRef; de invoer van de tabel
+ * komt als input-parameters uit het dossier (JSON-pointer, uit de traceregels
+ * van het objecttype) of is al een procesvariabele (bv. bsn van de
+ * Verzoek-plugin). Een servicetaak met `dossierstatus` zet de interne status
+ * van het dossier (FUNDAMENT 30-10).
+ *
  * Bron van de keuzes: de handgemaakte processen gehandicaptenparkeerkaart-
  * beoordelen en aanvraag-oppakken (artefacten 6 en 7) die al op cg-test
  * draaiden.
@@ -26,7 +33,7 @@
 
 export const BPMN_NAAR_GZAC = {
   id: "bpmn-naar-gzac",
-  versie: "0.3.0",
+  versie: "0.4.0",
   titel: "BPMN-profiel → uitvoerbare BPMN voor GZAC (Operaton, Camunda 7-dialect)",
   engine: "operaton",
   namespaces: { camunda: "http://camunda.org/schema/1.0/bpmn" },
@@ -43,6 +50,20 @@ export const BPMN_NAAR_GZAC = {
     serviceTask: {
       attributen: { "camunda:expression": "${true}" },
       asyncAfter: true,
+      // Uit het model: `{veld}` = data.veld, letterlijk vervangen (${…} blijft staan).
+      uitData: [{ als: "dossierstatus", attributen: { "camunda:expression": "${documentDelegateService.setInternalStatus(execution, '{dossierstatus}')}" } }],
+    },
+    businessRuleTask: {
+      // Valtimo's exporter zoekt de beslistabel op sleutel op, net als bij calledElement.
+      vasteSleutel: true,
+      attributen: { "camunda:mapDecisionResult": "singleResult" },
+      uitData: [{ als: "beslissing", attributen: { "camunda:decisionRef": "{beslissing}", "camunda:resultVariable": "{resultaat}" } }],
+      // Per kolom van de beslistabel die uit het dossier komt een input-parameter.
+      invoer: {
+        tag: "camunda:inputOutput",
+        parameter: "camunda:inputParameter",
+        dossier: '${documentDelegateService.findValueByJsonPointerOrDefault("{pointer}", execution, null)}',
+      },
     },
     callActivity: {
       // Nog toegestaan, maar voor een vervolgproces is een bericht (hieronder) beter.

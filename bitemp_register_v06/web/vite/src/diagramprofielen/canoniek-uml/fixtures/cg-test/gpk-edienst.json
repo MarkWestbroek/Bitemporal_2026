@@ -269,6 +269,17 @@
       "_activityIds": "waarop de process-links van de dossierbundel plugin-acties binden (FUNDAMENT 30-10); een ontbrekende id is een fout"
     },
     {
+      "identifier": "aanvraag-ontvankelijk",
+      "soort": "dmn",
+      "formaat": "dmn-xml",
+      "doelcomponent": "gzac",
+      "naam": "Aanvraag ontvankelijk",
+      "bron": { "model": "gpk-beslissingen.dmn-model.json", "beslissing": "Aanvraag ontvankelijk" },
+      "objecttype": "gehandicaptenparkeerkaartaanvraag",
+      "_bron": "de beslistabel in het DMN-model; identifier = decision-id = decisionRef in aanvraag-oppakken; de kolommen binden aan modelvelden, het objecttype zegt waar die in het dossier staan",
+      "namespace": "http://common-ground-lab.nl/dmn"
+    },
+    {
       "identifier": "gehandicaptenparkeerkaart-beoordelen",
       "soort": "bpmn",
       "formaat": "bpmn-xml",
@@ -289,6 +300,8 @@
     { "artefact": "aanvraag-beoordelen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" },
     { "artefact": "gehandicaptenparkeerkaart-beoordelen", "afhankelijkVan": "GPK", "reden": "het proces draait op een zaak van zaaktype GPK" },
     { "artefact": "aanvraag-oppakken", "afhankelijkVan": "GPK", "reden": "het proces maakt een zaak van zaaktype GPK, met status en rol" },
+    { "artefact": "aanvraag-ontvankelijk", "soort": "dmn", "afhankelijkVan": "gehandicaptenparkeerkaartaanvraag", "reden": "de kolommen lezen velden van de aanvraag; het objecttype zegt waar die in het dossier staan" },
+    { "artefact": "aanvraag-oppakken", "afhankelijkVan": "aanvraag-ontvankelijk", "afhankelijkVanSoort": "dmn", "reden": "de businessRuleTask leest de beslistabel (decisionRef)" },
     { "artefact": "aanvraag-oppakken", "afhankelijkVan": "gehandicaptenparkeerkaart-beoordelen", "reden": "het bericht gehandicaptenparkeerkaart-beoordelen-gevraagd start het specifieke proces op hetzelfde dossier" }
   ]
 }

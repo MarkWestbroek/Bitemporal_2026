@@ -16,6 +16,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **V3.1-veldsleutels overleven de Studio** (30-10, BACKLOG §39). `verplicht`, `uniek`, `type` en
   `format` gaan heen en terug tussen V3 en het canonieke profiel; oude modellen zonder V3.1-sleutels
   blijven ongewijzigd. `uniek` (entiteit/domein/register) is te zien en te zetten op een attribuut.
+- **Ontvankelijkheid: beslistabel (DMN) in het oppakproces** (30-10, bpmn-naar-gzac 0.4.0). Een
+  DMN-schrijver (`dmnXmlSchrijver.js`) en `dmnArtefact.js` maken uit een beslistabel in het DMN-model
+  een dmn-artefact. Elke kolom bindt aan een modelveld, en de traceregels van het objecttype zeggen
+  waar dat veld in het dossier staat. Het oppakproces toetst eerst de ontvankelijkheid: een
+  businessRuleTask met vaste decisionRef en input-parameters uit het dossier, daarna een gateway
+  (nee → dossierstatus Niet opgepakt). Taakvelden `beslissing`, `resultaat` en `dossierstatus`.
+  Toetsen `DMN-VELD`, `BPMN-BESLISSING` (docs/TRANSFORMATIES.md §11.12).
 - **BPMN-schrijver en uitvoerbare BPMN voor GZAC** (30-10, engine-regelset bpmn-naar-gzac 0.1.0).
   Een diagram van het BPMN-profiel wordt BPMN 2.0 XML met BPMNDI (`bpmnXmlSchrijver.js`); de
   engine-regelset voegt het Operaton-dialect toe; `bpmnArtefact.js` maakt er een inrichtings-

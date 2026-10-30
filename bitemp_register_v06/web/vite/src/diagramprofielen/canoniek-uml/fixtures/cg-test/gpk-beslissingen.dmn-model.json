@@ -1,0 +1,208 @@
+{
+  "model_naam": "GPK-beslissingen (cg-test)",
+  "model_beschrijving": "Beslistabellen voor de inrichting van de e-dienst Gehandicaptenparkeerkaart (profiel dmn-drd). Aanvraag ontvankelijk: demoregels, door Mark bevestigd 30-10; toetst het oppakproces voordat er een zaak start (plan Beslissing en beschikking §6.1).",
+  "model": {
+    "elements": {
+      "dmn_aanvraag_ontvankelijk": {
+        "id": "dmn_aanvraag_ontvankelijk",
+        "naam": "Aanvraag ontvankelijk",
+        "elementType": "decision",
+        "compartimenten": [],
+        "data": {
+          "vraag": "Is de aanvraag compleet genoeg om een zaak te starten?",
+          "beslistabel": {
+            "naam": "Aanvraag ontvankelijk",
+            "hitPolicy": "FIRST",
+            "inputs": [
+              {
+                "id": "in_bsn",
+                "naam": "bsn",
+                "label": "BSN aanvrager",
+                "type": "string",
+                "fieldRef": {
+                  "veldpad": "envelop:bsn",
+                  "veldnaam": "bsn"
+                }
+              },
+              {
+                "id": "in_pasfoto",
+                "naam": "bijlagen",
+                "label": "Pasfoto bijgevoegd",
+                "type": "boolean",
+                "expressie": "some b in bijlagen satisfies b.naam = \"pasfoto\"",
+                "fieldRef": {
+                  "veldpad": "Aanvraag.AanvraagBijlage.naam",
+                  "veldnaam": "naam"
+                }
+              },
+              {
+                "id": "in_eerdere",
+                "naam": "eerdereKaart",
+                "label": "Eerdere kaart",
+                "type": "boolean",
+                "fieldRef": {
+                  "veldpad": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerdereKaart",
+                  "veldnaam": "eerdereKaart"
+                }
+              },
+              {
+                "id": "in_kaartnummer",
+                "naam": "eerderKaartnummer",
+                "label": "Eerder kaartnummer",
+                "type": "string",
+                "fieldRef": {
+                  "veldpad": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerderKaartnummer",
+                  "veldnaam": "eerderKaartnummer"
+                }
+              },
+              {
+                "id": "in_soort",
+                "naam": "soort",
+                "label": "Soort kaart",
+                "type": "string",
+                "fieldRef": {
+                  "veldpad": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort",
+                  "veldnaam": "soort",
+                  "enum": [
+                    "bestuurder",
+                    "passagier",
+                    "instelling"
+                  ]
+                }
+              },
+              {
+                "id": "in_rijbewijs",
+                "naam": "rijbewijsnummer",
+                "label": "Rijbewijsnummer",
+                "type": "string",
+                "fieldRef": {
+                  "veldpad": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.rijbewijsnummer",
+                  "veldnaam": "rijbewijsnummer"
+                }
+              }
+            ],
+            "outputs": [
+              {
+                "id": "out_ontvankelijk",
+                "naam": "ontvankelijk",
+                "label": "Ontvankelijk",
+                "type": "boolean",
+                "adhoc": true
+              },
+              {
+                "id": "out_reden",
+                "naam": "reden",
+                "label": "Reden",
+                "type": "string",
+                "adhoc": true
+              }
+            ],
+            "rules": [
+              {
+                "id": "r_bsn",
+                "toelichting": "De aanvrager is niet geïdentificeerd (DigiD).",
+                "inputEntries": {
+                  "in_bsn": "null, \"\"",
+                  "in_pasfoto": "",
+                  "in_eerdere": "",
+                  "in_kaartnummer": "",
+                  "in_soort": "",
+                  "in_rijbewijs": ""
+                },
+                "outputEntries": {
+                  "out_ontvankelijk": "false",
+                  "out_reden": "\"Aanvrager niet geïdentificeerd\""
+                }
+              },
+              {
+                "id": "r_pasfoto",
+                "toelichting": "Een gehandicaptenparkeerkaart vraagt een pasfoto.",
+                "inputEntries": {
+                  "in_bsn": "",
+                  "in_pasfoto": "false",
+                  "in_eerdere": "",
+                  "in_kaartnummer": "",
+                  "in_soort": "",
+                  "in_rijbewijs": ""
+                },
+                "outputEntries": {
+                  "out_ontvankelijk": "false",
+                  "out_reden": "\"Geen pasfoto bijgevoegd\""
+                }
+              },
+              {
+                "id": "r_kaartnummer",
+                "toelichting": "Bij een eerdere kaart hoort het kaartnummer.",
+                "inputEntries": {
+                  "in_bsn": "",
+                  "in_pasfoto": "",
+                  "in_eerdere": "true",
+                  "in_kaartnummer": "null, \"\"",
+                  "in_soort": "",
+                  "in_rijbewijs": ""
+                },
+                "outputEntries": {
+                  "out_ontvankelijk": "false",
+                  "out_reden": "\"Eerdere kaart zonder kaartnummer\""
+                }
+              },
+              {
+                "id": "r_rijbewijs",
+                "toelichting": "Een bestuurderskaart vraagt het rijbewijsnummer.",
+                "inputEntries": {
+                  "in_bsn": "",
+                  "in_pasfoto": "",
+                  "in_eerdere": "",
+                  "in_kaartnummer": "",
+                  "in_soort": "\"bestuurder\"",
+                  "in_rijbewijs": "null, \"\""
+                },
+                "outputEntries": {
+                  "out_ontvankelijk": "false",
+                  "out_reden": "\"Bestuurderskaart zonder rijbewijsnummer\""
+                }
+              },
+              {
+                "id": "r_ok",
+                "toelichting": "Anders: ontvankelijk; de zaak start.",
+                "inputEntries": {
+                  "in_bsn": "",
+                  "in_pasfoto": "",
+                  "in_eerdere": "",
+                  "in_kaartnummer": "",
+                  "in_soort": "",
+                  "in_rijbewijs": ""
+                },
+                "outputEntries": {
+                  "out_ontvankelijk": "true",
+                  "out_reden": "\"\""
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "diagrams": {
+      "dmn_diagram_ontvankelijkheid": {
+        "id": "dmn_diagram_ontvankelijkheid",
+        "naam": "Ontvankelijkheid",
+        "diagramType": "dmn-drd",
+        "nodes": [
+          {
+            "elementId": "dmn_aanvraag_ontvankelijk",
+            "position": {
+              "x": 160,
+              "y": 80
+            },
+            "size": {
+              "width": 180,
+              "height": 80
+            }
+          }
+        ],
+        "edges": []
+      }
+    }
+  }
+}

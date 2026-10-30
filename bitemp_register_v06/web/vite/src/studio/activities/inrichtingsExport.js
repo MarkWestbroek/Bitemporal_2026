@@ -83,7 +83,7 @@ registreerTransformatie({
     { key: "model", label: "V3-model (leeg = canoniek model uit de map)", datatype: "bestand", accept: ".json" },
     { key: "referentielijsten", label: "referentielijsten (naam bevat de lijstnaam)", datatype: "bestanden", accept: ".json" },
     // BPMN-artefacten (§11.11) komen uit een BPMN-model; het artefact noemt het bestand in bron.model.
-    { key: "bpmn", label: "BPMN-modellen (bestandsnaam = bron.model)", datatype: "bestanden", accept: ".json" },
+    { key: "bpmn", label: "BPMN- en DMN-modellen (bestandsnaam = bron.model)", datatype: "bestanden", accept: ".json" },
     { key: "peiltijdstip", label: "peiltijdstip (leeg = nu)", datatype: "string" },
     { key: "vergelijk", label: "vergelijk met het inrichting-register", datatype: "boolean", default: false },
     { key: "register", label: "register-URL", datatype: "string", default: STANDAARD_REGISTER },
