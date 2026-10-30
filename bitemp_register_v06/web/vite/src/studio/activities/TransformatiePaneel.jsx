@@ -22,6 +22,7 @@ import {
   getTransformaties,
   normaliseerTransformatieResultaat,
   standaardOpties,
+  verplichteOptiesIngevuld,
 } from "./transformatieRegistry.js";
 import { mapProfielen } from "./transformaties.js";
 import { getProfieltype } from "../profieltypeRegistry";
@@ -40,6 +41,21 @@ const ACTIES = [
   { id: "transform", label: "Transformeren", uitleg: "van een map naar een (andere) map" },
   { id: "export", label: "Exporteren", uitleg: "van een map naar buiten (bestand/API)" },
 ];
+
+/** Bestandskiezer voor een optie: één bestand ({naam, tekst}) of meerdere (lijst). */
+function kiesOptieBestanden(accept, meerdere, klaar) {
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = accept || ".json,application/json";
+  inp.multiple = !!meerdere;
+  inp.onchange = () => {
+    const files = [...(inp.files || [])];
+    Promise.all(files.map((f) => f.text().then((tekst) => ({ naam: f.name, tekst })))).then((lijst) => {
+      if (lijst.length) klaar(meerdere ? lijst : lijst[0]);
+    });
+  };
+  inp.click();
+}
 
 const veld = { font: "inherit", fontSize: 13, padding: "5px 8px", borderRadius: 6, border: "1px solid var(--s-border)", background: "var(--s-panel)", color: "var(--s-fg)" };
 const knop = { font: "inherit", fontSize: 13, padding: "6px 12px", borderRadius: 6, border: "1px solid var(--s-border)", background: "var(--s-panel-head)", color: "var(--s-fg)", cursor: "pointer" };
@@ -152,6 +168,7 @@ export default function TransformatiePaneel() {
   const doelGekozen = !!(doelMapId || doelNieuweNaam.trim());
   const kanUitvoeren =
     gekozen &&
+    verplichteOptiesIngevuld(gekozen, optieWaarden) &&
     (richting === "import" ? bestandTekst && doelGekozen : true) &&
     (richting === "export" ? bronMapId : true) &&
     (richting === "transform" ? bronMapId && doelGekozen : true);
@@ -306,6 +323,27 @@ export default function TransformatiePaneel() {
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {gekozen.opties.map((optie) => {
                 const waarde = optieWaarden[optie.key];
+                const zet = (w) => setOptieWaarden((huidig) => ({ ...huidig, [optie.key]: w }));
+                if (optie.datatype === "bestand" || optie.datatype === "bestanden") {
+                  const meerdere = optie.datatype === "bestanden";
+                  const namen = meerdere ? (waarde || []).map((b) => b.naam) : waarde ? [waarde.naam] : [];
+                  return (
+                    <div key={optie.key} data-optie={optie.key} style={{ display: "grid", gridTemplateColumns: "minmax(130px, 1fr) 2fr", gap: 8, alignItems: "center", fontSize: 13 }}>
+                      <span>{optie.label}{optie.verplicht ? " *" : ""}</span>
+                      <span style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
+                        <button type="button" style={{ ...knop, padding: "3px 8px" }} onClick={() => kiesOptieBestanden(optie.accept, meerdere, zet)}>
+                          {meerdere ? "Kies bestanden…" : "Kies bestand…"}
+                        </button>
+                        <span style={{ fontSize: 12, color: "var(--s-fg-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {namen.length ? namen.join(", ") : "—"}
+                        </span>
+                        {namen.length > 0 && (
+                          <button type="button" title="Wissen" style={{ ...knop, padding: "1px 6px" }} onClick={() => zet(meerdere ? [] : null)}>×</button>
+                        )}
+                      </span>
+                    </div>
+                  );
+                }
                 if (optie.datatype === "boolean") {
                   return (
                     <label key={optie.key} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
@@ -322,7 +360,8 @@ export default function TransformatiePaneel() {
                   <label key={optie.key} style={{ display: "grid", gridTemplateColumns: "minmax(130px, 1fr) 2fr", gap: 8, alignItems: "center", fontSize: 13 }}>
                     <span>{optie.label}</span>
                     <input
-                      type={optie.datatype === "number" ? "number" : "text"}
+                      type={optie.datatype === "number" ? "number" : optie.datatype === "wachtwoord" ? "password" : "text"}
+                      autoComplete={optie.datatype === "wachtwoord" ? "off" : undefined}
                       value={waarde ?? ""}
                       onChange={(e) => setOptieWaarden((huidig) => ({
                         ...huidig,
@@ -347,6 +386,26 @@ export default function TransformatiePaneel() {
             </span>
           )}
         </div>
+        {resultaat?.rapport?.rijen?.length > 0 && (
+          <table data-rapport style={{ width: "100%", marginTop: 10, borderCollapse: "collapse", fontSize: 12 }}>
+            <thead>
+              <tr>
+                {resultaat.rapport.kolommen.map((k) => (
+                  <th key={k} style={{ textAlign: "left", padding: "3px 6px", borderBottom: "1px solid var(--s-border)", color: "var(--s-fg-muted)", fontWeight: 600 }}>{k}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {resultaat.rapport.rijen.map((rij, i) => (
+                <tr key={i}>
+                  {rij.map((cel, j) => (
+                    <td key={j} style={{ padding: "3px 6px", borderBottom: "1px solid var(--s-border)", fontFamily: j === 2 ? "ui-monospace, monospace" : undefined }}>{cel}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
         {resultaat?.diagnostics?.length > 0 && (
           <details open={resultaat.status === "error"} style={{ marginTop: 10, fontSize: 12 }}>
             <summary style={{ cursor: "pointer", fontWeight: 600 }}>

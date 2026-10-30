@@ -18,13 +18,17 @@
  *     profielTypes?: string[] | "*",   // van toepassing op deze profieltypen
  *     bron?: { types?: string[], accept?: string[], mediaTypes?: string[],
  *              detecteer?: ({naam, tekst}) => number },
- *     opties?: Array<{key:string,label:string,datatype:string,default?:any}>,
+ *     opties?: Array<{key:string,label:string,datatype:string,default?:any,
+ *                     accept?:string, verplicht?:boolean}>,
+ *       // datatype: "string" | "number" | "boolean" | "wachtwoord"
+ *       //   | "bestand" (waarde {naam, tekst}) | "bestanden" (lijst daarvan)
  *     toelichting?, run: async (context) => void
  *   }
  * context: { mapId, mapNaam, richting, profielen: string[],
  *            bron?, doel?, opties? }  // bron/doel afhankelijk van de richting
  * run mag niets teruggeven (compatibel) of:
- *   { status:"success"|"warning", summary?, diagnostics?, created? }
+ *   { status:"success"|"warning", summary?, diagnostics?, created?,
+ *     rapport?: {kolommen: string[], rijen: string[][]} }  // tabel in het paneel
  */
 const _transformaties = [];
 
@@ -54,7 +58,17 @@ export function getTransformaties(richting, aanwezigeProfielen = null) {
 
 /** Waarden waarmee een declaratieve optieset begint. */
 export function standaardOpties(def) {
-  return Object.fromEntries((def?.opties || []).map((optie) => [optie.key, optie.default ?? (optie.datatype === "boolean" ? false : "")]));
+  const leeg = { boolean: false, bestand: null, bestanden: [] };
+  return Object.fromEntries((def?.opties || []).map((optie) => [optie.key, optie.default ?? (optie.datatype in leeg ? leeg[optie.datatype] : "")]));
+}
+
+/** Zijn alle verplichte opties ingevuld (een bestand gekozen, een tekst niet leeg)? */
+export function verplichteOptiesIngevuld(def, waarden = {}) {
+  return (def?.opties || []).every((optie) => {
+    if (!optie.verplicht) return true;
+    const w = waarden[optie.key];
+    return Array.isArray(w) ? w.length > 0 : w != null && w !== "" && w !== false;
+  });
 }
 
 /** HTML accept-attribuut voor de bestandskiezer; oude descriptors houden de brede fallback. */
@@ -74,6 +88,7 @@ export function normaliseerTransformatieResultaat(resultaat) {
     summary: resultaat.summary || (resultaat.status === "warning" ? "Voltooid met waarschuwingen." : "Gelukt."),
     diagnostics,
     created: resultaat.created || null,
+    rapport: resultaat.rapport && Array.isArray(resultaat.rapport.rijen) ? resultaat.rapport : null,
   };
 }
 

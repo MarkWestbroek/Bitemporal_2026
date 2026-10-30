@@ -1915,3 +1915,28 @@ gebouwd is: `docs/plans/2026-10-01 GraphQL-schema-profiel (M2) op de diagram-mot
     seed en migratie.
   - Rollen per domein laten meetellen (autorisatiespoor, FTV/PIP).
   - Later: uitnodiging en wachtwoordherstel per e-mail.
+
+## 39. Rondreis V3 ↔ canoniek profiel verliest verplicht/uniek/type van velden (2026-10-30)
+
+Gevonden bij de exportstap Inrichtingsartefacten (TRANSFORMATIES §11.10). De
+omzetting in `store/adapters.js` (`convertV3Veld` heen, `veldNaarV3` terug) kent
+alleen de oude schrijfwijze, waarin verplicht = `goType` zonder `*`. De nieuwere
+veldsleutels gaan bij importeren in de Studio en weer exporteren verloren:
+
+| Sleutel | Wat er misgaat |
+|---|---|
+| `verplicht: true` | weg; daarmee verdwijnen `required` en de `anyOf`-vorm in het objecttype |
+| `uniek` | weg; daardoor vindt de V3-lezer geen code voor referentielijsten (`V3-LEZER … geen uniek veld`) |
+| `type` | wordt `goType` |
+
+- Gevolg: een model dat in een Studio-project getekend is, geeft nog niet
+  dezelfde inrichtingsartefacten als het V3-bestand. Van GPK verschillen het
+  objecttype en het dossierschema.
+- Oplossing (voorstel):
+  - de expliciete sleutels heen en terug bewaren, inclusief door het canonieke
+    core-model;
+  - een rondreistest op `omnium-model-cg-test-v3.json`;
+  - de e2e-fixme in `37-studio-inrichtingsartefacten` aanzetten.
+- Let op: `verplicht: true` niet blind bij álle velden schrijven, want dat
+  verandert de V3 van oude modellen (codegen).
+- Open. Raakt de kern van de serialisatie; eerst afstemmen met M3-MOF/BACKEND.
