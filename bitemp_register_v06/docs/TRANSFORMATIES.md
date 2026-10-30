@@ -1199,7 +1199,14 @@ camunda-attributen. Er is één verschil. De `processService.startProcessBy…`-
 expressie die het vervolgproces startte, is engine-logica die het model niet
 kent. Het BPMN-model (`fixtures/cg-test/gpk-processen.bpmn-model.json`, ingelezen
 uit 6 en 7) maakt er daarom een **call activity** van, met `calledElement` =
-`${processDefinitionKey}` (de variabele van de Verzoek-plugin). De activityId
+`gehandicaptenparkeerkaart-beoordelen`. Eerst stond daar de expressie
+`${processDefinitionKey}` (de variabele van de Verzoek-plugin). Operaton voert
+die uit, maar de export van de dossierbundel in GZAC (Valtimo
+ProcessDefinitionExporter) zoekt elk aangeroepen proces op sleutel op en faalde
+erop (uitrol 26). Regelset 0.2.0 vraagt daarom een vaste proces-id: een
+expressie is een fout, en een proces dat geen bpmn-artefact van de e-dienst is,
+geeft een waarschuwing (`BPMN-AANGEROEPEN`). Het oppakproces noemt daarmee het
+specifieke proces van dit aanvraagtype. De activityId
 `vervolgproces-starten` blijft gelijk. Dat volgt het besluit van Mark: een call
 activity, zodat bezwaar en herziening hetzelfde specifieke proces kunnen
 aanroepen.

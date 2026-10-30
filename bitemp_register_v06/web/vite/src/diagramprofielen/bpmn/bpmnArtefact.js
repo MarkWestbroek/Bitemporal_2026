@@ -74,6 +74,14 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
     }
   }
   const aangeroepen = elementen.filter((e) => ids.has(e.id) && e.data?.aangeroepenProces).map((e) => e.data.aangeroepenProces);
+  const processen = new Set((edienst?.artefacten || []).filter((a) => a.soort === "bpmn").map((a) => a.identifier));
+  for (const sleutel of aangeroepen) {
+    if (/[$#]\{/.test(sleutel)) {
+      if (engine.taken?.callActivity?.vasteSleutel) diagnostics.push({ severity: "error", code: "BPMN-AANGEROEPEN", message: `Call activity met expressie "${sleutel}": ${engine.id} vraagt een vaste proces-id`, sourceId: sleutel, path: null });
+    } else if (!processen.has(sleutel)) {
+      diagnostics.push({ severity: "warning", code: "BPMN-AANGEROEPEN", message: `Aangeroepen proces "${sleutel}" is geen bpmn-artefact van deze e-dienst`, sourceId: sleutel, path: null });
+    }
+  }
 
   const traceregels = [...ids.entries()].map(([bronGE, xmlId]) => ({ bronGE, regel: "BPMN-schrijver + engine-regelset", doelPad: `#${xmlId}`, actie: "aangemaakt" }));
   const artefact = {

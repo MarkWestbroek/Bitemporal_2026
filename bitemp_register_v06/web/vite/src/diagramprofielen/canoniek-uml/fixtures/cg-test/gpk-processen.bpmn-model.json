@@ -81,7 +81,7 @@
           "meervoudig": "",
           "lusVerzameling": "",
           "lusElement": "",
-          "aangeroepenProces": "${processDefinitionKey}"
+          "aangeroepenProces": "gehandicaptenparkeerkaart-beoordelen"
         }
       },
       "bp_einde": {
