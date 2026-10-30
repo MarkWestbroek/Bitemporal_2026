@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray, platSlaHubItems, platSlaAlleVersies, tUitRegistratieTijdstip } from "../../shared/schemaUtils";
@@ -13,6 +13,8 @@ import { useLijstDefinities } from "../../hooks/useLijstDefinitie";
 import {
   tijdprecisieVan, materieleKinderen, materieleTijdVan, sorteerOpAanvang, isGeldigOp, toonMoment, sleutelVanVoorkomen,
 } from "../../shared/materieleTijd";
+import InhoudWeergave from "./InhoudWeergave";
+import { herkenInhoud, inhoudSamenvatting } from "./inhoudSoort.js";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -190,6 +192,10 @@ export default function EntiteitFormulier() {
   const [customEditValues, setCustomEditValues] = useState({}); // werkwaarden custom formulier
   const [customBusy, setCustomBusy] = useState(false);
   const [customFeedback, setCustomFeedback] = useState(null); // { type: "succes"|"fout", text }
+  // Lange inhoud (JSON, BPMN) uit een voorkomentabel bekijken: { doeltype, index, veld } of null.
+  // undefined = nog niets gekozen; dan opent ?toon=<veld> de weergave van het geldige voorkomen.
+  const [toonInhoud, setToonInhoud] = useState(undefined);
+  const inhoudGescrold = useRef(false);
 
   // Custom FormulierDefinitie ophalen voor dit entiteittype
   // Standaard: de FD met is_standaard. Met ?formulier=<id of code> (keuzelijst "Bewerken via", zoals
@@ -536,6 +542,24 @@ export default function EntiteitFormulier() {
       alert(`Fout bij verwijderen: ${err.message}`);
     }
   }
+
+  // Directe link naar een inhoud: #/t/artefacten/3?toon=payload opent de weergave van
+  // het veld `payload` in het eerste onderliggende element dat dat veld heeft.
+  const toonVeld = searchParams.get("toon");
+  const urlInhoudDoeltype = toonInhoud === undefined && toonVeld
+    ? onderliggende.find((c) => {
+        const cm = typeMetaByTypenaam?.[c.doeltype];
+        const dc = safeArray(cm?.onderliggende).find((x) => typeMetaByTypenaam?.[x.doeltype]?.ge_subtype === "data");
+        const dm = dc ? typeMetaByTypenaam?.[dc.doeltype] : null;
+        return safeArray(dm?.velden || cm?.velden).some((v) => v.naam === toonVeld);
+      })?.doeltype || null
+    : null;
+  const scrolNaarInhoud = (el) => {
+    if (el && toonInhoud === undefined && !inhoudGescrold.current) {
+      inhoudGescrold.current = true;
+      el.scrollIntoView({ block: "start" });
+    }
+  };
 
   return (
     <div>
@@ -888,11 +912,22 @@ export default function EntiteitFormulier() {
                               </td>
                             </>
                           )}
-                          {inhoudsvelden.map((v) => (
-                            <td key={v.naam} className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem" }}>
-                              {item[v.naam] != null ? String(item[v.naam]) : "—"}
-                            </td>
-                          ))}
+                          {inhoudsvelden.map((v) => {
+                            const w = item[v.naam];
+                            // Lange JSON/BPMN/XML niet als lap tekst in de cel, maar met een knop naar de weergave.
+                            const herkend = typeof w === "string" && w.length > 80 ? herkenInhoud(w) : null;
+                            return (
+                              <td key={v.naam} className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem" }}>
+                                {w == null ? "—" : herkend ? (
+                                  <button type="button" className="utrecht-button utrecht-button--secondary-action" data-bekijk-inhoud={v.naam}
+                                    style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem" }}
+                                    onClick={() => setToonInhoud({ doeltype: child.doeltype, index: i, veld: v.naam })}>
+                                    bekijk · {inhoudSamenvatting(w, herkend)}
+                                  </button>
+                                ) : String(w)}
+                              </td>
+                            );
+                          })}
                           {heeftWeergave && (
                             <td className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem", fontStyle: "italic", color: "var(--cg-donkergrijs)" }}>
                               {weergaveTekst || "—"}
@@ -924,6 +959,21 @@ export default function EntiteitFormulier() {
                     </tbody>
                   </table>
                 </div>
+                {/* Weergave van lange inhoud (JSON-boom, BPMN-diagram) van één voorkomen */}
+                {(() => {
+                  const keuze = toonInhoud !== undefined ? toonInhoud
+                    : urlInhoudDoeltype === child.doeltype && vk.rijen.length
+                      ? { doeltype: child.doeltype, index: Math.max(0, vk.rijen.findIndex((r) => r.geldig)), veld: toonVeld }
+                      : null;
+                  if (!keuze || keuze.doeltype !== child.doeltype || keuze.index >= vk.rijen.length) return null;
+                  const rij = vk.rijen[keuze.index];
+                  const titel = `${keuze.veld}${vk.materieel ? ` · voorkomen vanaf ${toonMoment(rij.tijd.aanvang, vk.precisie)}` : ""}`;
+                  return (
+                    <div ref={scrolNaarInhoud} id={`inhoud-${child.doeltype}-${keuze.veld}`} style={{ marginTop: "0.5rem" }}>
+                      <InhoudWeergave key={`${keuze.index}-${keuze.veld}`} waarde={rij.item[keuze.veld]} titel={titel} onSluiten={() => setToonInhoud(null)} />
+                    </div>
+                  );
+                })()}
                 {/* Inline correctieformulier voor geselecteerde meervoudige rij */}
                 {bewerkRij?.doeltype === child.doeltype && bewerkRij.index < vk.rijen.length && (
                   <div style={{ marginTop: "0.5rem", padding: "0.75rem", border: "1px solid var(--cg-grijs, #ccc)", borderRadius: "6px", background: "var(--cg-lichtgrijs, #f8f9fa)" }}>
@@ -982,7 +1032,10 @@ export default function EntiteitFormulier() {
                       </span>
                       {veldWaarden.length > 0 && (
                         <span style={{ marginLeft: "0.75rem", color: "var(--cg-tekst, #333)" }}>
-                          {veldWaarden.map((v) => `${v.naam}: ${v.waarde}`).join(" | ")}
+                          {veldWaarden.map((v) => {
+                            const lang = typeof v.waarde === "string" && v.waarde.length > 80 ? inhoudSamenvatting(v.waarde) : null;
+                            return `${v.naam}: ${lang ? `(${lang})` : v.waarde}`;
+                          }).join(" | ")}
                         </span>
                       )}
                     </div>
