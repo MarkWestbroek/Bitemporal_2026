@@ -26,6 +26,10 @@
 // dossierinhoud komt uit --objecttype. Schema en tabbladen dragen dezelfde
 // identifier (de key van het dossier): kies dan met --soort.
 //
+// Een bpmn-artefact (§11.11) komt uit een BPMN-model (profiel bpmn-motor):
+// --model is dan dat model, niet het canonieke. Naast het artefact schrijft
+// het script de XML als <identifier>.bpmn.
+//
 // Met --doel vergelijkt het de payload met een bestaand (handgemaakt)
 // artefact (bij een formulier: de export-map, {bestandsnaam: inhoud}): gelijke
 // hash = "ongewijzigd" bij de uitrol; anders een lijst met de verschillen
@@ -39,6 +43,7 @@ import { maakObjecttypeArtefact, verschillen } from "../web/vite/src/diagramprof
 import { maakFormulierArtefact } from "../web/vite/src/diagramprofielen/canoniek-uml/formulierArtefact.js";
 import { maakZaaktypeArtefact } from "../web/vite/src/diagramprofielen/canoniek-uml/zaaktypeArtefact.js";
 import { maakDossierArtefact, DOSSIER_SOORTEN } from "../web/vite/src/diagramprofielen/canoniek-uml/dossierArtefact.js";
+import { maakBpmnArtefact } from "../web/vite/src/diagramprofielen/bpmn/bpmnArtefact.js";
 import { jcsHash } from "../web/vite/src/transformatie/jcs.js";
 
 const HIER = path.dirname(fileURLToPath(import.meta.url));
@@ -85,15 +90,22 @@ async function main() {
       ? await maakFormulierArtefact({ ...invoer, objecttype: a.objecttype ? lees(a.objecttype) : null })
       : soort === "zaaktype"
         ? await maakZaaktypeArtefact(invoer)
-        : DOSSIER_SOORTEN.includes(soort)
-          ? await maakDossierArtefact({ ...invoer, soort, objecttype: a.objecttype ? lees(a.objecttype) : null })
-          : await maakObjecttypeArtefact(invoer);
+        : soort === "bpmn"
+          ? await maakBpmnArtefact(invoer)
+          : DOSSIER_SOORTEN.includes(soort)
+            ? await maakDossierArtefact({ ...invoer, soort, objecttype: a.objecttype ? lees(a.objecttype) : null })
+            : await maakObjecttypeArtefact(invoer);
 
   const stam = DOSSIER_SOORTEN.includes(soort) ? `${a.artefact}.${soort}` : a.artefact;
   const uitPad = a.uit || path.resolve(process.cwd(), `${stam}.artefact.json`);
   fs.mkdirSync(path.dirname(uitPad), { recursive: true });
   fs.writeFileSync(uitPad, `${JSON.stringify(artefact, null, 2)}\n`, "utf8");
   console.log(`Artefact geschreven: ${uitPad}`);
+  if (soort === "bpmn") {
+    const xmlPad = uitPad.replace(/(\.artefact)?\.json$/, "") + ".bpmn";
+    fs.writeFileSync(xmlPad, artefact.artefactInhoud.payload, "utf8");
+    console.log(`BPMN geschreven:     ${xmlPad}`);
+  }
   console.log(`  payloadHash  ${artefact.artefactInhoud.payloadHash}`);
   console.log(`  bronmodel    ${artefact.artefactHerkomst.bronmodelHash}`);
   for (const d of diagnostics) console.log(`  ${d.severity} ${d.code}: ${d.message}`);

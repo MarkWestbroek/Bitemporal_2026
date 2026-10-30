@@ -1,0 +1,135 @@
+// BPMN-rondgang (FUNDAMENT/Mark 30-10): de handgemaakte GZAC-processen
+// (artefacten 6 en 7, fixtures/cg-test/gzac-handwerk/bpmn) inlezen met de
+// BPMN-lezer, terugschrijven met de schrijver + engine-regelset gzac, en het
+// verschil bekijken. Daarna het artefact uit het BPMN-model (gpk-processen),
+// met de call activity in plaats van de processService-expressie.
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import crypto from "node:crypto";
+import { DOMParser } from "@xmldom/xmldom";
+
+import { leesBpmn } from "../../transformatie/bpmnXml.js";
+import { parseXml, afstammelingen, attr } from "../../transformatie/xmlBoom.js";
+import { schrijfBpmn, bpmnIdUit } from "../../transformatie/bpmnXmlSchrijver.js";
+import { bpmnXmlNaarModel } from "./bpmnXmlImport.js";
+import { BPMN_NAAR_GZAC } from "./bpmnGzacRegels.js";
+import { maakBpmnArtefact } from "./bpmnArtefact.js";
+
+const CG = new URL("../canoniek-uml/fixtures/cg-test/", import.meta.url);
+const tekst = (pad) => fs.readFileSync(new URL(pad, CG), "utf8");
+const lees = (pad) => JSON.parse(tekst(pad));
+const sha256Hex = (t) => crypto.createHash("sha256").update(t, "utf8").digest("hex");
+
+/** De semantiek van een BPMN-bestand, los van opmaak, commentaar en DI-id's. */
+function semantiek(xml) {
+  const g = leesBpmn(xml, { DOMParser });
+  const doc = parseXml(xml, { DOMParser });
+  const camunda = {};
+  const loop = (n) => {
+    for (let k = n.firstChild; k; k = k.nextSibling) {
+      if (k.nodeType !== 1) continue;
+      const id = attr(k, "id") || attr(k.parentNode, "id");
+      for (let i = 0; i < k.attributes.length; i += 1) {
+        const a = k.attributes[i];
+        if (a.prefix === "camunda") camunda[`${id}@${a.localName}`] = a.value;
+      }
+      loop(k);
+    }
+  };
+  loop(doc.documentElement);
+  const proces = afstammelingen(doc.documentElement, "process")[0];
+  return {
+    proces: { id: attr(proces, "id"), name: attr(proces, "name"), isExecutable: attr(proces, "isExecutable") },
+    knopen: g.knopen.map((k) => ({ id: k.id, aard: k.aard, tekst: k.tekst, meervoudig: k.meervoudig, aangeroepenProces: k.aangeroepenProces })),
+    flows: g.verbindingen.map((v) => [v.id, v.bron, v.doel, v.conditie]),
+    vormen: g.diagrammen[0].vormen,
+    lijnen: g.diagrammen[0].lijnen,
+    camunda,
+  };
+}
+
+const rondgang = (bestand, naam) => {
+  const hand = tekst(`gzac-handwerk/bpmn/${bestand}.bpmn`);
+  const { core, diagnostics } = bpmnXmlNaarModel(hand, { DOMParser, bestandsnaam: naam });
+  const uit = schrijfBpmn({ model: core, proces: { id: bestand }, targetNamespace: "http://common-ground-lab.nl/bpmn", engine: BPMN_NAAR_GZAC });
+  return { hand: semantiek(hand), terug: semantiek(uit.xml), diagnostics: [...diagnostics, ...uit.diagnostics] };
+};
+
+test("bpmnIdUit: een geldige XML-id uit vrije tekst", () => {
+  assert.equal(bpmnIdUit("Zaak aanmaken"), "zaak-aanmaken");
+  assert.equal(bpmnIdUit("Ëénmalig béoordelen"), "eenmalig-beoordelen");
+  assert.equal(bpmnIdUit("3 stappen"), "_3-stappen");
+});
+
+test("rondgang gehandicaptenparkeerkaart-beoordelen: semantisch gelijk", () => {
+  const { hand, terug, diagnostics } = rondgang("gehandicaptenparkeerkaart-beoordelen", "Gehandicaptenparkeerkaart beoordelen");
+  assert.deepEqual(diagnostics, []);
+  assert.deepEqual(terug, hand);
+});
+
+test("rondgang aanvraag-oppakken: gelijk op de processService-expressie na", () => {
+  const { hand, terug, diagnostics } = rondgang("aanvraag-oppakken", "Aanvraag oppakken");
+  assert.deepEqual(diagnostics, []);
+  // De enige afwijking: het starten van het vervolgproces is engine-logica in een
+  // expressie, die het model niet kent. Het BPMN-model maakt er een call activity van.
+  assert.match(hand.camunda["vervolgproces-starten@expression"], /startProcessByProcessDefinitionKey/);
+  assert.equal(terug.camunda["vervolgproces-starten@expression"], "${true}");
+  delete hand.camunda["vervolgproces-starten@expression"];
+  delete terug.camunda["vervolgproces-starten@expression"];
+  assert.deepEqual(terug, hand);
+});
+
+test("schrijver zonder engine-regelset: kale BPMN, geen camunda", () => {
+  const { core } = bpmnXmlNaarModel(tekst("gzac-handwerk/bpmn/aanvraag-oppakken.bpmn"), { DOMParser, bestandsnaam: "x" });
+  const { xml, diagnostics } = schrijfBpmn({ model: core, proces: { id: "p" } });
+  assert.doesNotMatch(xml, /camunda/);
+  assert.match(xml, /<bpmn:multiInstanceLoopCharacteristics \/>/);
+  assert.deepEqual(diagnostics.map((d) => d.code), ["BPMN-SCHRIJVER"]);
+});
+
+test("artefact aanvraag-oppakken uit het BPMN-model: call activity, activityId's stabiel", async () => {
+  const { artefact, diagnostics, aangeroepen } = await maakBpmnArtefact({
+    modelBestand: lees("gpk-processen.bpmn-model.json"),
+    edienst: lees("gpk-edienst.json"),
+    identifier: "aanvraag-oppakken",
+    sha256Hex,
+  });
+  assert.deepEqual(diagnostics, []);
+  const xml = artefact.artefactInhoud.payload;
+  assert.equal(typeof xml, "string");
+  assert.equal(artefact.artefactInhoud.payloadHash, sha256Hex(xml));
+  assert.equal(artefact.artefactInhoud.formaat, "bpmn-xml");
+  assert.equal(artefact.artefactHerkomst.regelsetId, "bpmn-naar-gzac");
+  assert.equal(artefact.artefactHerkomst.schrijverId, "bpmn-xml-schrijver@0.1.0");
+  const s = semantiek(xml);
+  assert.deepEqual(s.proces, { id: "aanvraag-oppakken", name: "Aanvraag oppakken", isExecutable: "true" });
+  assert.deepEqual(
+    s.knopen.map((k) => k.id),
+    ["start", "zaak-aanmaken", "rol-aanvrager-aanmaken", "document-koppelen", "status-ontvangen", "vervolgproces-starten", "einde"]
+  );
+  const vervolg = s.knopen.find((k) => k.id === "vervolgproces-starten");
+  assert.equal(vervolg.aard, "callActivity");
+  assert.equal(vervolg.aangeroepenProces, "${processDefinitionKey}");
+  assert.equal(s.camunda["vervolgproces-starten@asyncAfter"], "true");
+  assert.match(xml, /<camunda:in businessKey="#\{execution.processBusinessKey\}" \/>/);
+  assert.match(xml, /<camunda:in variables="all" \/>/);
+  assert.deepEqual(aangeroepen, ["${processDefinitionKey}"]);
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => a.identifier), ["GPK", "gehandicaptenparkeerkaart-beoordelen"]);
+  // Elk element in de trace, met zijn activityId.
+  assert.ok(artefact.traceregels.some((t) => t.doelPad === "#document-koppelen"));
+});
+
+test("artefact gehandicaptenparkeerkaart-beoordelen; een ontbrekende activityId is een fout", async () => {
+  const edienst = lees("gpk-edienst.json");
+  const maak = () => maakBpmnArtefact({ modelBestand: lees("gpk-processen.bpmn-model.json"), edienst, identifier: "gehandicaptenparkeerkaart-beoordelen", sha256Hex });
+  const { artefact, diagnostics } = await maak();
+  assert.deepEqual(diagnostics, []);
+  assert.deepEqual(semantiek(artefact.artefactInhoud.payload).knopen.map((k) => [k.id, k.aard]), [
+    ["start", "startEvent"],
+    ["aanvraag-beoordelen", "userTask"],
+    ["einde", "endEvent"],
+  ]);
+  edienst.artefacten.find((a) => a.identifier === "gehandicaptenparkeerkaart-beoordelen").activityIds.push("besluit-vastleggen");
+  assert.deepEqual((await maak()).diagnostics.map((d) => d.code), ["BPMN-ACTIVITYID"]);
+});

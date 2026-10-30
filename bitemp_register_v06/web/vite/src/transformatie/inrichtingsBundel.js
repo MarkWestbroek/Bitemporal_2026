@@ -4,7 +4,9 @@
  * (docs/TRANSFORMATIES.md §11.10). Eén plek voor wat de CLI
  * (scripts/maak_inrichtingsartefact.mjs) per artefact deed: de soort kiest de
  * transformatie, en een formulier of dossierdeel krijgt het objecttype-artefact
- * waarin het registreert. Daarom komen de objecttypen eerst.
+ * waarin het registreert. Daarom komen de objecttypen eerst. Een bpmn-artefact
+ * komt uit een BPMN-model (§11.11), niet uit het canonieke model: dat model
+ * komt mee in `bpmnModellen`, op de naam uit `bron.model` van het artefact.
  *
  * Puur op de hashfunctie na (node:crypto of SubtleCrypto); zo draait dezelfde
  * code in de CLI, in de Studio (exportstap "Inrichtingsartefacten") en in de
@@ -14,9 +16,10 @@ import { maakObjecttypeArtefact } from "../diagramprofielen/canoniek-uml/objectt
 import { maakFormulierArtefact } from "../diagramprofielen/canoniek-uml/formulierArtefact.js";
 import { maakZaaktypeArtefact } from "../diagramprofielen/canoniek-uml/zaaktypeArtefact.js";
 import { maakDossierArtefact, DOSSIER_SOORTEN } from "../diagramprofielen/canoniek-uml/dossierArtefact.js";
+import { maakBpmnArtefact } from "../diagramprofielen/bpmn/bpmnArtefact.js";
 
 /** Volgorde van maken: wat een ander artefact nodig heeft komt eerst. */
-const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierschema", "dossierformulier", "dossiertabbladen"];
+const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierschema", "dossierformulier", "dossiertabbladen", "bpmn"];
 
 /**
  * Bestandsnaam zoals de CLI hem schrijft: `<identifier>.artefact.json`, bij de
@@ -39,6 +42,14 @@ function objecttypeVoor(keuzes, edienst) {
   return null;
 }
 
+/** Het BPMN-model van een bpmn-artefact, of een fout die alleen dat artefact stopt. */
+function bpmnModelVoor(keuzes, bpmnModellen) {
+  const naam = keuzes.bron?.model;
+  const model = naam ? bpmnModellen[naam] : null;
+  if (!model) throw new Error(`BPMN-model "${naam || "(geen bron.model)"}" is niet meegegeven.`);
+  return model;
+}
+
 /**
  * Maak de artefacten van een e-dienst.
  *
@@ -49,6 +60,7 @@ function objecttypeVoor(keuzes, edienst) {
  * @param {Record<string, any[]>} [invoer.referentielijsten] - M0-items per referentielijst
  * @param {string|null} [invoer.peiltijdstip]
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
+ * @param {Record<string, any>} [invoer.bpmnModellen] - BPMN-modellen per naam (`bron.model` van een bpmn-artefact)
  * @param {(keuzes: any) => boolean} [invoer.kies]    - welke artefacten (default: alle)
  * @returns {Promise<Array<{bestandsnaam: string, soort: string, identifier: string,
  *   artefact: any|null, diagnostics: any[], fout: string|null}>>}
@@ -61,6 +73,7 @@ export async function maakInrichtingsBundel({
   referentielijsten = {},
   peiltijdstip = null,
   sha256Hex,
+  bpmnModellen = {},
   kies = () => true,
 }) {
   const alle = (edienst?.artefacten || []).filter((a) => a && a.identifier && a.soort);
@@ -91,7 +104,9 @@ export async function maakInrichtingsBundel({
               ? await maakZaaktypeArtefact({ ...invoer, identifier })
               : DOSSIER_SOORTEN.includes(soort)
                 ? await maakDossierArtefact({ ...invoer, identifier, soort, objecttype })
-                : null;
+                : soort === "bpmn"
+                  ? await maakBpmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), identifier })
+                  : null;
       if (!r) throw new Error(`Onbekende artefactsoort "${soort}".`);
       if (soort === "objecttype") objecttypen.set(identifier, r.artefact);
       uitkomst.set(keuzes, { artefact: r.artefact, diagnostics: r.diagnostics || [], fout: null });

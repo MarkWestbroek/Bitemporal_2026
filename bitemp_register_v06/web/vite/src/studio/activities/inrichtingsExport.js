@@ -82,6 +82,8 @@ registreerTransformatie({
     { key: "edienst", label: "e-dienstmodel (JSON)", datatype: "bestand", accept: ".json", verplicht: true },
     { key: "model", label: "V3-model (leeg = canoniek model uit de map)", datatype: "bestand", accept: ".json" },
     { key: "referentielijsten", label: "referentielijsten (naam bevat de lijstnaam)", datatype: "bestanden", accept: ".json" },
+    // BPMN-artefacten (§11.11) komen uit een BPMN-model; het artefact noemt het bestand in bron.model.
+    { key: "bpmn", label: "BPMN-modellen (bestandsnaam = bron.model)", datatype: "bestanden", accept: ".json" },
     { key: "peiltijdstip", label: "peiltijdstip (leeg = nu)", datatype: "string" },
     { key: "vergelijk", label: "vergelijk met het inrichting-register", datatype: "boolean", default: false },
     { key: "register", label: "register-URL", datatype: "string", default: STANDAARD_REGISTER },
@@ -93,11 +95,12 @@ registreerTransformatie({
     const modelBestand = opties.model ? leesJson(opties.model, "Het V3-model") : mapAlsV3(bronMap);
     if (!modelBestand) throw new Error("Geen canoniek model in deze map; kies een V3-bestand.");
     const referentieBestanden = (opties.referentielijsten || []).map((b) => ({ naam: b.naam, inhoud: leesJson(b, "Referentielijst") }));
+    const bpmnModellen = Object.fromEntries((opties.bpmn || []).map((b) => [b.naam, leesJson(b, "BPMN-model")]));
     const peiltijdstip = String(opties.peiltijdstip || "").trim() || new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
     const haalJson = opties.vergelijk ? registerLezer(opties.register || STANDAARD_REGISTER, String(opties.token || "").trim()) : null;
     const { datatypes } = (await import("../../transformatie/gegevenstypen.snapshot.json")).default;
 
-    const uit = await voerInrichtingsExportUit({ edienst, modelBestand, datatypen: datatypes, referentieBestanden, peiltijdstip, haalJson, sha256Hex });
+    const uit = await voerInrichtingsExportUit({ edienst, modelBestand, datatypen: datatypes, referentieBestanden, bpmnModellen, peiltijdstip, haalJson, sha256Hex });
     if (!opties.model) {
       // Bekend (30-10): de omzetting V3 ↔ canoniek profiel (store/adapters.js) kent de
       // nieuwere veldsleutels verplicht/uniek/type niet; required en codes vallen dan weg.

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Specifiek beoordelingsproces voor de gehandicaptenparkeerkaart. Gestart door aanvraag-oppakken (processDefinitionKey uit
+     de Verzoek-plugin), op hetzelfde dossier (businessKey). Eerste versie: één beoordelingstaak; medisch advies en besluit volgen. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  id="Definitions_gpk_beoordelen" targetNamespace="http://common-ground-lab.nl/bpmn">
+  <bpmn:process id="gehandicaptenparkeerkaart-beoordelen" name="Gehandicaptenparkeerkaart beoordelen" isExecutable="true">
+    <bpmn:startEvent id="start" name="Zaak aangemaakt">
+      <bpmn:outgoing>f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="aanvraag-beoordelen" name="Aanvraag beoordelen" camunda:candidateGroups="ROLE_USER">
+      <bpmn:incoming>f1</bpmn:incoming>
+      <bpmn:outgoing>f2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="einde" name="Beoordeeld">
+      <bpmn:incoming>f2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f1" sourceRef="start" targetRef="aanvraag-beoordelen" />
+    <bpmn:sequenceFlow id="f2" sourceRef="aanvraag-beoordelen" targetRef="einde" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_gpk_beoordelen">
+    <bpmndi:BPMNPlane id="Plane_gpk_beoordelen" bpmnElement="gehandicaptenparkeerkaart-beoordelen">
+      <bpmndi:BPMNShape id="s_start" bpmnElement="start"><dc:Bounds x="152" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_taak" bpmnElement="aanvraag-beoordelen"><dc:Bounds x="240" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_einde" bpmnElement="einde"><dc:Bounds x="392" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e1" bpmnElement="f1"><di:waypoint x="188" y="120" /><di:waypoint x="240" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e2" bpmnElement="f2"><di:waypoint x="340" y="120" /><di:waypoint x="392" y="120" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

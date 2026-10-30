@@ -91,10 +91,10 @@ export function bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen 
  * @param {((pad: string) => Promise<any>)|null} [invoer.haalJson] - lezen uit het register; null = niet vergelijken
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
  */
-export async function voerInrichtingsExportUit({ edienst, modelBestand, datatypen, referentieBestanden = [], peiltijdstip = null, haalJson = null, sha256Hex }) {
+export async function voerInrichtingsExportUit({ edienst, modelBestand, datatypen, referentieBestanden = [], bpmnModellen = {}, peiltijdstip = null, haalJson = null, sha256Hex }) {
   if (!Array.isArray(edienst?.artefacten) || !edienst.artefacten.length) throw new Error("Het e-dienstmodel heeft geen artefacten.");
   const { lijsten, diagnostics } = await verzamelReferentielijsten(edienst, referentieBestanden, haalJson);
-  const bundel = await maakInrichtingsBundel({ modelBestand, edienst, datatypen, referentielijsten: lijsten, peiltijdstip, sha256Hex });
+  const bundel = await maakInrichtingsBundel({ modelBestand, edienst, datatypen, referentielijsten: lijsten, bpmnModellen, peiltijdstip, sha256Hex });
 
   let rijen = bundel.map((b) => ({ ...b, status: b.fout ? "fout" : null, register: null }));
   let registerGelezen = false;

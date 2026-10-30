@@ -34,9 +34,9 @@ const EVENTS = [
 const eventRegels = [];
 for (const [aard, type] of EVENTS) {
   for (const [definitie, soort] of SOORTEN) {
-    eventRegels.push({ naam: `${aard} (${definitie})`, bij: "knoop", als: { aard, eventDefinitie: definitie }, maak: { type, data: { soort } } });
+    eventRegels.push({ naam: `${aard} (${definitie})`, bij: "knoop", als: { aard, eventDefinitie: definitie }, maak: { type, data: { soort, bpmnId: "{id}" } } });
   }
-  eventRegels.push({ naam: `${aard}`, bij: "knoop", als: { aard }, maak: { type, data: { soort: "" } } });
+  eventRegels.push({ naam: `${aard}`, bij: "knoop", als: { aard }, maak: { type, data: { soort: "", bpmnId: "{id}" } } });
 }
 const boundaryRegels = [];
 for (const [definitie, soort] of SOORTEN) {
@@ -56,12 +56,22 @@ const TAKEN = [
   ["businessRuleTask", "businessRule"],
   ["callActivity", ""],
 ];
-const taakRegels = TAKEN.map(([aard, taakSoort]) => ({ naam: `Taak (${aard})`, bij: "knoop", als: { aard }, maak: { type: "taak", data: { taakSoort, bpmnAard: "{aard}" } } }));
+// bpmnId: de id uit de XML blijft staan, zodat een rondgang dezelfde
+// activityId's oplevert (GZAC bindt plugin-acties en formulieren daarop).
+const taakRegels = TAKEN.map(([aard, taakSoort]) => ({
+  naam: `Taak (${aard})`,
+  bij: "knoop",
+  als: { aard },
+  maak: {
+    type: "taak",
+    data: { taakSoort, bpmnAard: "{aard}", bpmnId: "{id}", meervoudig: "{meervoudig}", lusVerzameling: "{lusVerzameling}", lusElement: "{lusElement}", ...(aard === "callActivity" ? { aangeroepenProces: "{aangeroepenProces}" } : {}) },
+  },
+}));
 const SUBPROCESSEN = ["subProcess", "adHocSubProcess", "transaction"];
 
 export const BPMN_XML_NAAR_BPMN = {
   id: "bpmn-xml-naar-bpmn-motor",
-  versie: 1,
+  versie: 2,
   titel: "BPMN 2.0 XML → BPMN-profiel",
   bron: "bpmn-xml",
   doel: "bpmn-motor",
@@ -85,7 +95,7 @@ export const BPMN_XML_NAAR_BPMN = {
     { naam: "Lane", bij: "groep", als: { aard: "lane" }, maak: { type: "lane" } },
 
     // ── Verbindingen ──
-    { naam: "Sequence flow", bij: "verbinding", als: { aard: "sequenceFlow" }, maak: { type: "sequence-flow", naam: "{label}", data: { conditie: "{conditie}", standaard: "{standaard}" } } },
+    { naam: "Sequence flow", bij: "verbinding", als: { aard: "sequenceFlow" }, maak: { type: "sequence-flow", naam: "{label}", data: { conditie: "{conditie}", standaard: "{standaard}", bpmnId: "{id}" } } },
     { naam: "Message flow", bij: "verbinding", als: { aard: "messageFlow" }, maak: { type: "message-flow", naam: "{label}" } },
     { naam: "Data-invoer", bij: "verbinding", als: { aard: "dataInputAssociation" }, maak: { type: "data-associatie" } },
     { naam: "Data-uitvoer", bij: "verbinding", als: { aard: "dataOutputAssociation" }, maak: { type: "data-associatie" } },

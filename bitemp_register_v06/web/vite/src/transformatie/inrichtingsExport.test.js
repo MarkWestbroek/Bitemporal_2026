@@ -34,6 +34,7 @@ test("GPK zonder register: zip met alle artefacten + overzicht", async () => {
     modelBestand: lees("omnium-model-cg-test-v3.json"),
     datatypen,
     referentieBestanden: bestanden(),
+    bpmnModellen: { "gpk-processen.bpmn-model.json": lees("gpk-processen.bpmn-model.json") },
     peiltijdstip: "2026-10-27T12:00:00Z",
     sha256Hex,
   });
