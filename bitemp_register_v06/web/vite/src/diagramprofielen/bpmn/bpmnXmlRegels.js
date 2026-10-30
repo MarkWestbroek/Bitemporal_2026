@@ -34,9 +34,10 @@ const EVENTS = [
 const eventRegels = [];
 for (const [aard, type] of EVENTS) {
   for (const [definitie, soort] of SOORTEN) {
-    eventRegels.push({ naam: `${aard} (${definitie})`, bij: "knoop", als: { aard, eventDefinitie: definitie }, maak: { type, data: { soort, bpmnId: "{id}" } } });
+    const data = { soort, bpmnId: "{id}", ...(aard === "intermediateThrowEvent" ? { richting: "werpt" } : {}), ...(definitie === "message" ? { bericht: "{bericht}" } : {}) };
+    eventRegels.push({ naam: `${aard} (${definitie})`, bij: "knoop", als: { aard, eventDefinitie: definitie }, maak: { type, data } });
   }
-  eventRegels.push({ naam: `${aard}`, bij: "knoop", als: { aard }, maak: { type, data: { soort: "", bpmnId: "{id}" } } });
+  eventRegels.push({ naam: `${aard}`, bij: "knoop", als: { aard }, maak: { type, data: { soort: "", bpmnId: "{id}", ...(aard === "intermediateThrowEvent" ? { richting: "werpt" } : {}) } } });
 }
 const boundaryRegels = [];
 for (const [definitie, soort] of SOORTEN) {
@@ -71,7 +72,7 @@ const SUBPROCESSEN = ["subProcess", "adHocSubProcess", "transaction"];
 
 export const BPMN_XML_NAAR_BPMN = {
   id: "bpmn-xml-naar-bpmn-motor",
-  versie: 2,
+  versie: 3,
   titel: "BPMN 2.0 XML → BPMN-profiel",
   bron: "bpmn-xml",
   doel: "bpmn-motor",

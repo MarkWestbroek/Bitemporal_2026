@@ -56,6 +56,8 @@ export function leesBpmn(tekst, opties = {}) {
   const groepen = [];
   const verbindingen = [];
   const knoopIds = new Set();
+  // Berichten (bpmn:message op definitions-niveau): messageRef → naam.
+  const berichtNaam = new Map(kinderen(wortel, "message").map((m) => [attr(m, "id"), attr(m, "name") || attr(m, "id")]));
 
   // ── Collaboration: pools en message flows ───────────────────────────────
   const poolVanProces = new Map(); // processId → participant-id
@@ -151,6 +153,7 @@ export function leesBpmn(tekst, opties = {}) {
         if (EVENTS.has(aard)) {
           const def = kinderen(el).find((k) => /EventDefinition$/.test(lokaal(k)));
           knoop.eventDefinitie = def ? lokaal(def).replace(/EventDefinition$/, "").toLowerCase() : "";
+          if (def && attr(def, "messageRef")) knoop.bericht = berichtNaam.get(attr(def, "messageRef")) || attr(def, "messageRef");
           if (aard === "boundaryEvent") {
             knoop.randVan = attr(el, "attachedToRef");
             knoop.onderbrekend = attr(el, "cancelActivity") !== "false";

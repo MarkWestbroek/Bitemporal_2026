@@ -1189,6 +1189,10 @@ versie 2):
 - `meervoudig`, `lusVerzameling`, `lusElement`: multi-instance;
 - `aangeroepenProces`: de call activity.
 
+Events kregen er twee bij (importregelset versie 3): `richting` ("werpt" voor
+een intermediateThrowEvent) en `bericht`, de naam van de `bpmn:message` waar
+een bericht-event naar verwijst.
+
 De id's zijn stabiel: de schrijver gebruikt `bpmnId`, en anders een slug van de
 naam (melding `BPMN-GEEN-ID`). De process-id is de identifier van het artefact.
 `activityIds` in de e-dienst noemt waarop de process-links binden; een
@@ -1208,9 +1212,33 @@ erop (uitrol 26). Regelset 0.2.0 vraagt daarom een vaste proces-id: een
 expressie is een fout, en een proces dat geen bpmn-artefact van de e-dienst is,
 geeft een waarschuwing (`BPMN-AANGEROEPEN`). Het oppakproces noemt daarmee het
 specifieke proces van dit aanvraagtype. De activityId
-`vervolgproces-starten` blijft gelijk. Dat volgt het besluit van Mark: een call
-activity, zodat bezwaar en herziening hetzelfde specifieke proces kunnen
-aanroepen.
+`vervolgproces-starten` blijft gelijk.
+
+**Regelset 0.3.0: losse processen, start op een bericht.** Mark besloot dat
+oppakken en behandelen losse processen zijn: oppakken is de brug tussen aanvraag
+en zaak en eindigt bij de zaak (docs/plans/2026-10-30 Beslissing en beschikking
+§6). Een call activity laat het oppakproces wachten tot de behandeling klaar is.
+Daarom is `vervolgproces-starten` nu een **werpend bericht-event** ("Beoordeling
+gevraagd"), en het beoordelingsproces start op een **message start event** met
+dezelfde berichtnaam (`gehandicaptenparkeerkaart-beoordelen-gevraagd`, conventie
+`<proces-id>-gevraagd`; de naam moet engine-breed uniek zijn).
+- De schrijver zet één `bpmn:message` per naam op definitions-niveau en een
+  `messageRef` op de eventdefinitie.
+- De regelset (`berichten.werpen`) zet op de definitie van het werpende event
+  een expressie die het bericht correleert via de engine-API
+  (`createMessageCorrelation(…).processInstanceBusinessKey(…).setVariables(…)
+  .correlateStartMessage()`), plus `asyncAfter`. Dezelfde businessKey is het
+  dossier, dus Valtimo koppelt het nieuwe proces aan hetzelfde dossier. Er is
+  geen `calledElement` meer om te volgen, dus de dossierexport werkt
+  (FUNDAMENT, proef op cg-test 30-10).
+- Alle procesvariabelen gaan mee; een smallere overdracht kan later per bericht.
+- Toets `BPMN-BERICHT` (waarschuwing): een geworpen bericht moet een message
+  start event raken in een ander bpmn-artefact van de e-dienst.
+  `maakBpmnArtefact` geeft die processen terug als `gestart`.
+
+De call activity blijft ondersteund, voor een specifiek deel dat de aanroeper
+wél afwacht (generiek beoordelen → specifiek beoordelen; bezwaar en herziening
+roepen hetzelfde deel aan, besluit Mark).
 
 **Hash.** De payload is de XML-tekst; payloadHash = sha256 over de UTF-8-tekst
 (niet JCS, afspraak FUNDAMENT). bronmodelHash = sha256 over JCS van het
@@ -1226,7 +1254,8 @@ boundary events en de inhoud van subprocessen (melding `BPMN-SCHRIJVER`).
 2. Zaaktype: termijnen en resultaten in het model (bv. bij het aanvraagtype)
    zodra meer e-diensten ze delen; nu letterlijk in de e-dienst.
 3. BPMN: lanes (rollen → candidateGroups), boundary events, ad-hoc subproces;
-   het generieke beoordeelproces met call activity naar het specifieke deel (§11.11).
+   het generieke beoordeelproces met call activity naar het specifieke deel;
+   een smallere variabelenoverdracht per bericht (§11.11).
 4. Dossier: Beslissing en Beschikking in het canonieke model (docs/plans/
    2026-10-30), zodat de behandelvelden (§11.9) uit het model komen; labels als
    modeleigenschap.

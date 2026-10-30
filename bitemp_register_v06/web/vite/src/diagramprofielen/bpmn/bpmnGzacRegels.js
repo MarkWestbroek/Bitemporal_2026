@@ -12,6 +12,13 @@
  * daarom alleen een lege expressie `${true}`, zodat de engine hem kan
  * uitvoeren; de process-link voert de actie uit.
  *
+ * Losse processen (Mark 30-10): oppakken is de brug tussen aanvraag en zaak en
+ * eindigt bij de zaak; behandelen start zelfstandig op een bericht (message
+ * start event). Het werpende event correleert dat bericht via de engine-API,
+ * met dezelfde businessKey (= het dossier), zodat Valtimo het nieuwe proces aan
+ * hetzelfde dossier koppelt (FUNDAMENT, proef op cg-test 30-10). Een call
+ * activity zou het oppakproces laten wachten tot de behandeling klaar is.
+ *
  * Bron van de keuzes: de handgemaakte processen gehandicaptenparkeerkaart-
  * beoordelen en aanvraag-oppakken (artefacten 6 en 7) die al op cg-test
  * draaiden.
@@ -19,7 +26,7 @@
 
 export const BPMN_NAAR_GZAC = {
   id: "bpmn-naar-gzac",
-  versie: "0.2.0",
+  versie: "0.3.0",
   titel: "BPMN-profiel → uitvoerbare BPMN voor GZAC (Operaton, Camunda 7-dialect)",
   engine: "operaton",
   namespaces: { camunda: "http://camunda.org/schema/1.0/bpmn" },
@@ -38,6 +45,7 @@ export const BPMN_NAAR_GZAC = {
       asyncAfter: true,
     },
     callActivity: {
+      // Nog toegestaan, maar voor een vervolgproces is een bericht (hieronder) beter.
       // Het aangeroepen proces draait op hetzelfde dossier (businessKey) met alle variabelen.
       asyncAfter: true,
       // 0.2.0 (uitrol 26, FUNDAMENT 30-10): calledElement moet een vaste proces-id
@@ -49,6 +57,20 @@ export const BPMN_NAAR_GZAC = {
         { tag: "camunda:in", attributen: { businessKey: "#{execution.processBusinessKey}" } },
         { tag: "camunda:in", attributen: { variables: "all" } },
       ],
+    },
+  },
+  berichten: {
+    // Werpend bericht-event (intermediate throw of end event): start het proces
+    // met het message start event van die naam, op hetzelfde dossier. Alle
+    // procesvariabelen gaan mee (zoals camunda:in variables="all" bij de call
+    // activity); een smallere overdracht kan later per bericht.
+    werpen: {
+      asyncAfter: true,
+      definitie: {
+        "camunda:expression":
+          "${execution.getProcessEngineServices().getRuntimeService().createMessageCorrelation('{bericht}')" +
+          ".processInstanceBusinessKey(execution.getProcessBusinessKey()).setVariables(execution.getVariables()).correlateStartMessage()}",
+      },
     },
   },
 };

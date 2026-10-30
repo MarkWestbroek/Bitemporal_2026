@@ -16,6 +16,12 @@
  * het vorige artefact, en de process-links van GZAC binden op de activityId's
  * (`bpmnId` in het model).
  *
+ * Een vervolgproces start bij voorkeur op een bericht (losse processen, Mark
+ * 30-10): toets BPMN-BERICHT kijkt of elk geworpen bericht een message start
+ * event van een ander bpmn-artefact van de e-dienst raakt; `gestart` geeft die
+ * processen terug. Een call activity (`aangeroepen`) mag nog, met toets
+ * BPMN-AANGEROEPEN.
+ *
  * Zelfde artefactvorm als de andere inrichtingsartefacten, met één verschil
  * (afspraak FUNDAMENT 28-10): de payload is de XML-tekst en payloadHash =
  * sha256 over de UTF-8-tekst, niet JCS (het is geen JSON). bronmodelHash is
@@ -83,6 +89,29 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
     }
   }
 
+  // Berichten: elk geworpen bericht start een proces van deze e-dienst (message
+  // start event met dezelfde naam, in een diagram dat een bpmn-artefact is).
+  const diagramNaarProces = new Map();
+  for (const a of (edienst?.artefacten || []).filter((x) => x.soort === "bpmn")) {
+    const d = Object.values(model.diagrams || {}).find((x) => x.naam === a.bron?.diagram || x.id === a.bron?.diagram);
+    if (d) diagramNaarProces.set(d.id, a.identifier);
+  }
+  const startBericht = new Map();
+  for (const d of Object.values(model.diagrams || {})) {
+    for (const n of d.nodes || []) {
+      const e = model.elements[n.elementId];
+      if (e?.elementType === "start-event" && e.data?.soort === "bericht" && e.data?.bericht && diagramNaarProces.has(d.id)) startBericht.set(e.data.bericht, diagramNaarProces.get(d.id));
+    }
+  }
+  const werpend = elementen.filter((e) => ids.has(e.id) && e.data?.soort === "bericht" && e.data?.bericht && (e.elementType === "eind-event" || (e.elementType === "tussen-event" && e.data?.richting === "werpt")));
+  const gestart = [];
+  for (const e of werpend) {
+    const doel = startBericht.get(e.data.bericht);
+    if (!doel) diagnostics.push({ severity: "warning", code: "BPMN-BERICHT", message: `Bericht "${e.data.bericht}" start geen proces van deze e-dienst (geen message start event met die naam)`, sourceId: e.id, path: null });
+    else if (doel === keuzes.identifier) diagnostics.push({ severity: "warning", code: "BPMN-BERICHT", message: `Bericht "${e.data.bericht}" start dit proces zelf`, sourceId: e.id, path: null });
+    else gestart.push(doel);
+  }
+
   const traceregels = [...ids.entries()].map(([bronGE, xmlId]) => ({ bronGE, regel: "BPMN-schrijver + engine-regelset", doelPad: `#${xmlId}`, actie: "aangemaakt" }));
   const artefact = {
     artefactIdentificatie: {
@@ -107,5 +136,5 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
       .filter((a) => a.artefact === keuzes.identifier && (!a.soort || a.soort === keuzes.soort))
       .map((a) => ({ identifier: a.afhankelijkVan, ...(a.afhankelijkVanSoort ? { soort: a.afhankelijkVanSoort } : {}), reden: a.reden })),
   };
-  return { artefact, diagnostics, aangeroepen };
+  return { artefact, diagnostics, aangeroepen, gestart };
 }

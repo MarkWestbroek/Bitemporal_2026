@@ -289,6 +289,6 @@
     { "artefact": "aanvraag-beoordelen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" },
     { "artefact": "gehandicaptenparkeerkaart-beoordelen", "afhankelijkVan": "GPK", "reden": "het proces draait op een zaak van zaaktype GPK" },
     { "artefact": "aanvraag-oppakken", "afhankelijkVan": "GPK", "reden": "het proces maakt een zaak van zaaktype GPK, met status en rol" },
-    { "artefact": "aanvraag-oppakken", "afhankelijkVan": "gehandicaptenparkeerkaart-beoordelen", "reden": "de call activity roept het specifieke proces aan" }
+    { "artefact": "aanvraag-oppakken", "afhankelijkVan": "gehandicaptenparkeerkaart-beoordelen", "reden": "het bericht gehandicaptenparkeerkaart-beoordelen-gevraagd start het specifieke proces op hetzelfde dossier" }
   ]
 }

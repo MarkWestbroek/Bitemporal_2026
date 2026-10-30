@@ -91,6 +91,10 @@ const TAAK_SOORT_OPTIES = [
   { waarde: "businessRule", label: "business rule (tabel)" },
 ];
 const SOORT_VELD = { key: "soort", label: "soort", datatype: "keuze", opties: SOORT_OPTIES };
+// Bericht-events (uitvoerbaar, 30-10): de naam van het bericht koppelt een
+// werpend event aan het message start event van een ander proces. De naam
+// moet engine-breed uniek zijn, bv. "<proces-id>-gevraagd".
+const BERICHT_VELD = { key: "bericht", label: "berichtnaam", datatype: "string", placeholder: "bv. gehandicaptenparkeerkaart-beoordelen-gevraagd", zichtbaarAls: { key: "soort", waarde: "bericht" } };
 
 // Sequence flow: wat kan hem verlaten/bereiken. Start alleen bron, eind
 // alleen doel; een boundary event alleen bron (het uitzonderingspad).
@@ -115,7 +119,7 @@ const elementTypes = [
     shape: "bpmn-event",
     naamLabel: "buiten",
     resizebaar: false,
-    properties: [SOORT_VELD],
+    properties: [SOORT_VELD, BERICHT_VELD],
   },
   {
     id: "taak",
@@ -175,13 +179,17 @@ const elementTypes = [
     randAanhechting: "zwevend",
     omtrek: "ellips",
     label: "Intermediate event",
-    omschrijving: "Gebeurtenis midden in de flow (wachten op bericht, timer, …).",
+    omschrijving: "Gebeurtenis midden in de flow: wachten op (vangt) of versturen van (werpt) een bericht, timer, ….",
     kort: "Interm",
     icoon: "gedrag-historie",
     shape: "bpmn-event",
     naamLabel: "buiten",
     resizebaar: false,
-    properties: [SOORT_VELD],
+    properties: [
+      SOORT_VELD,
+      { key: "richting", label: "richting", datatype: "keuze", opties: [{ waarde: "", label: "vangt (catch)" }, { waarde: "werpt", label: "werpt (throw)" }] },
+      BERICHT_VELD,
+    ],
   },
   {
     id: "exclusief",
@@ -316,7 +324,7 @@ const elementTypes = [
     shape: "bpmn-event",
     naamLabel: "buiten",
     resizebaar: false,
-    properties: [SOORT_VELD],
+    properties: [SOORT_VELD, BERICHT_VELD],
   },
   {
     id: "notitie",
