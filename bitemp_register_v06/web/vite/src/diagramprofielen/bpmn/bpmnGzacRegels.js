@@ -33,7 +33,7 @@
 
 export const BPMN_NAAR_GZAC = {
   id: "bpmn-naar-gzac",
-  versie: "0.4.0",
+  versie: "0.4.1",
   titel: "BPMN-profiel → uitvoerbare BPMN voor GZAC (Operaton, Camunda 7-dialect)",
   engine: "operaton",
   namespaces: { camunda: "http://camunda.org/schema/1.0/bpmn" },
@@ -63,6 +63,10 @@ export const BPMN_NAAR_GZAC = {
         tag: "camunda:inputOutput",
         parameter: "camunda:inputParameter",
         dossier: '${documentDelegateService.findValueByJsonPointerOrDefault("{pointer}", execution, null)}',
+        // 0.4.1: ook een procesvariabele expliciet, want feel-scala faalt op een
+        // ontbrekende variabele ("no variable found"); getVariable geeft dan null
+        // (FUNDAMENT 31-10: bsn staat niet altijd in het verzoek).
+        variabele: "${execution.getVariable('{variabele}')}",
       },
     },
     callActivity: {

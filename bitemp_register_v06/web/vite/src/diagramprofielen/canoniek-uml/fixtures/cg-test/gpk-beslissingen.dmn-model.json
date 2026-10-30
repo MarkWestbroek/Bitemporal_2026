@@ -29,7 +29,7 @@
                 "naam": "bijlagen",
                 "label": "Pasfoto bijgevoegd",
                 "type": "boolean",
-                "expressie": "some b in bijlagen satisfies b.naam = \"pasfoto\"",
+                "expressie": "bijlagen != null and some b in bijlagen satisfies b.naam = \"pasfoto\"",
                 "fieldRef": {
                   "veldpad": "Aanvraag.AanvraagBijlage.naam",
                   "veldnaam": "naam"

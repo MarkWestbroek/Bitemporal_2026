@@ -67,7 +67,8 @@ test("aanvraag-ontvankelijk: DMN 1.3, FIRST, vijf regels, invoer per kolom", asy
     ["ontvankelijk", "boolean"],
     ["reden", "string"],
   ]);
-  assert.match(xml, /<dmn:text>some b in bijlagen satisfies b.naam = &quot;pasfoto&quot;<\/dmn:text>/);
+  // Zonder bijlagen is `some …` null, en null matcht de regel "false" niet (FUNDAMENT 31-10).
+  assert.match(xml, /<dmn:text>bijlagen != null and some b in bijlagen satisfies b.naam = &quot;pasfoto&quot;<\/dmn:text>/);
 
   assert.deepEqual(invoer.map((x) => [x.naam, x.bron, x.pointer || x.variabele]), [
     ["bsn", "variabele", "bsn"],

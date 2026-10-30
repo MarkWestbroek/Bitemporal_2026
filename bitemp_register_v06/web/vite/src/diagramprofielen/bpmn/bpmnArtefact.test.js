@@ -131,7 +131,8 @@ test("artefact aanvraag-oppakken uit het BPMN-model: bericht start de beoordelin
   assert.equal(s.camunda["ontvankelijkheid-toetsen@mapDecisionResult"], "singleResult");
   assert.match(xml, /<camunda:inputParameter name="soort">\$\{documentDelegateService\.findValueByJsonPointerOrDefault\(&quot;\/soort&quot;, execution, null\)\}<\/camunda:inputParameter>/);
   assert.match(xml, /<camunda:inputParameter name="bijlagen">[^<]*&quot;\/bijlagen&quot;/);
-  assert.doesNotMatch(xml, /inputParameter name="bsn"/, "bsn is al een procesvariabele (Verzoek-plugin)");
+  // 0.4.1: bsn is een procesvariabele die kan ontbreken; getVariable geeft dan null in plaats van een FEEL-fout.
+  assert.match(xml, /<camunda:inputParameter name="bsn">\$\{execution\.getVariable\('bsn'\)\}<\/camunda:inputParameter>/);
   assert.equal(s.camunda["status-niet-opgepakt@expression"], "${documentDelegateService.setInternalStatus(execution, 'niet-opgepakt')}");
   assert.deepEqual(s.flows.filter((f) => f[1] === "ontvankelijk").map((f) => [f[2], f[3]]), [
     ["zaak-aanmaken", "${ontvankelijkheid.ontvankelijk}"],

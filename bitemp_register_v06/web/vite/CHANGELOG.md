@@ -23,6 +23,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   businessRuleTask met vaste decisionRef en input-parameters uit het dossier, daarna een gateway
   (nee → dossierstatus Niet opgepakt). Taakvelden `beslissing`, `resultaat` en `dossierstatus`.
   Toetsen `DMN-VELD`, `BPMN-BESLISSING` (docs/TRANSFORMATIES.md §11.12).
+  0.4.1: een procesvariabele (bsn) krijgt een input-parameter met `getVariable` (null in plaats van
+  een FEEL-fout), en de pasfoto-kolom controleert eerst of er bijlagen zijn.
 - **BPMN-schrijver en uitvoerbare BPMN voor GZAC** (30-10, engine-regelset bpmn-naar-gzac 0.1.0).
   Een diagram van het BPMN-profiel wordt BPMN 2.0 XML met BPMNDI (`bpmnXmlSchrijver.js`); de
   engine-regelset voegt het Operaton-dialect toe; `bpmnArtefact.js` maakt er een inrichtings-
