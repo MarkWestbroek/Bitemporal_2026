@@ -1939,4 +1939,18 @@ veldsleutels gaan bij importeren in de Studio en weer exporteren verloren:
   - de e2e-fixme in `37-studio-inrichtingsartefacten` aanzetten.
 - Let op: `verplicht: true` niet blind bij álle velden schrijven, want dat
   verandert de V3 van oude modellen (codegen).
-- Open. Raakt de kern van de serialisatie; eerst afstemmen met M3-MOF/BACKEND.
+- **Opgelost (30-10, M3-MOF, branch `feat/v31-veldsleutels`):**
+  - heen (`convertV3Veld`): een expliciete `verplicht`/`type`/`format` wint van
+    goType en datatype; `uniek` gaat mee. Het store-veld onthoudt in
+    `v31Sleutels` welke V3.1-sleutels de bron had;
+  - terug (`veldNaarV3`): `goType` altijd, zoals voorheen (de Go-codegen leest
+    type/format/verplicht alleen als goType ontbreekt); daarnaast precies de
+    V3.1-sleutels die de bron had, en `uniek` als hij gevuld is. Oude modellen
+    blijven zo zonder V3.1-sleutels; een nieuw Studio-veld krijgt ze wel;
+  - het canonieke core-model hield ze al (`veldTerug` begint bij het
+    bronveld); `uniek` is nu ook een eigenschap van het attribuut (keuze
+    entiteit/domein/register), te zien en te zetten in de inspector;
+  - test: `terugreis.test.js`, alle 117 velden van het cg-test-model gelijk op
+    verplicht/uniek/type/format, het demo-model krijgt er niets bij.
+  - Nog te doen (OMNIUM-UI): de e2e-fixme in `37-studio-inrichtingsartefacten`
+    aanzetten en de waarschuwing `INR-MODEL-UIT-MAP` herzien.

@@ -1140,7 +1140,10 @@ app-host. Schrijven (registreren) vanuit de browser kan nog niet: daarvoor zijn
 een service-account en CORS voor de app-origin nodig, en dat ligt bij BACKEND.
 Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.12).
 
-**Bekende beperking: model uit de map.** De omzetting V3 ↔ canoniek profiel
+**Bekende beperking: model uit de map (opgelost 30-10, BACKLOG §39).** Tot
+30-10 gold het volgende; sindsdien bewaart de omzetting `verplicht`, `uniek`,
+`type` en `format`. De fixme en de waarschuwing gaan eraf zodra OMNIUM-UI de
+e2e-test heeft aangezet. Wat er misging: de omzetting V3 ↔ canoniek profiel
 (`store/adapters.js`, `convertV3Veld`/`veldNaarV3`) kent de nieuwere
 veldsleutels `verplicht`, `uniek` en `type` niet. Ze leidt verplicht af uit
 `goType` zonder `*`, en schrijft alleen `goType` terug. Uit de map vallen

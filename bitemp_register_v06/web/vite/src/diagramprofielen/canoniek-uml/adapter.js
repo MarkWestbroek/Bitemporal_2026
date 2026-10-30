@@ -61,7 +61,13 @@ function veldenCompartiment(d) {
     velden: velden.map((v) => ({
       naam: v.naam,
       fieldType: "attribuut",
-      data: { verplicht: v.verplicht !== false, afgeleid: v.afgeleid === true, typeLabel: typeLabel(v), ...(v.description ? { beschrijving: v.description } : {}) },
+      data: {
+        verplicht: v.verplicht !== false,
+        afgeleid: v.afgeleid === true,
+        typeLabel: typeLabel(v),
+        ...(v.uniek ? { uniek: v.uniek } : {}),
+        ...(v.description ? { beschrijving: v.description } : {}),
+      },
     })),
   };
 }
@@ -543,6 +549,13 @@ function veldTerug(coreVeld, coreElements, bronVelden) {
   const veld = { ...bron, naam: coreVeld.naam };
   veld.verplicht = d.verplicht !== false;
   veld.afgeleid = d.afgeleid === true;
+  // Uniek (V3Veld.Uniek, 30-10): in de inspector gezet of gewist.
+  if (d.uniek !== undefined) {
+    if (d.uniek) veld.uniek = d.uniek;
+    else delete veld.uniek;
+  }
+  // Een nieuw veld uit de Studio schrijft de V3.1-sleutels (store/adapters.js veldNaarV3).
+  if (bron.naam === undefined) veld.v31Sleutels = ["type", "format", "verplicht"];
   // De M3-beschrijving van een veld = V3 `description`.
   if (d.beschrijving !== undefined) {
     if (d.beschrijving) veld.description = d.beschrijving;

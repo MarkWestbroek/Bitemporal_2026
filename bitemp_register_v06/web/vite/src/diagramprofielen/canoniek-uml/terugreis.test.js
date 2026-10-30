@@ -537,3 +537,32 @@ test("tijdprecisie: V3 → Studio → V3 met het cg-test-model (twee GE's met ti
   assert.equal(tel(store), 2, "V3 → store");
   assert.equal(tel(storeNaarV3Model(naarCanoniekModel(vanCanoniekModel(store)))), 2, "terug naar V3");
 });
+
+// V3.1-veldsleutels (30-10, OMNIUM-UI/BACKLOG §39): verplicht, uniek, type en format overleven
+// importeerV3 → exporteerV3; oude modellen zonder V3.1-sleutels krijgen ze er niet bij.
+test("V3.1-veldsleutels: cg-test-model houdt verplicht/uniek/type/format; demo-model blijft zonder", async () => {
+  const fs = await import("node:fs");
+  const v3 = JSON.parse(fs.readFileSync(new URL("./fixtures/cg-test/omnium-model-cg-test-v3.json", import.meta.url), "utf8"));
+  const SLEUTELS = ["verplicht", "uniek", "type", "format"];
+  const veldenVan = (model) => {
+    const uit = {};
+    const neem = (eigenaar, velden) => {
+      for (const v of velden || []) uit[`${eigenaar}.${v.naam}`] = Object.fromEntries(SLEUTELS.filter((k) => k in v).map((k) => [k, v[k]]));
+    };
+    for (const ent of (model.model || model).entiteiten || []) {
+      for (const ge of ent.gegevenselementen || []) neem(ge.naam, ge.velden);
+      for (const rel of ent.relaties || []) neem(rel.typenaam || rel.naam, rel.velden);
+    }
+    return uit;
+  };
+  const voor = veldenVan(v3);
+  assert.ok(Object.values(voor).some((v) => v.uniek), "het testmodel heeft een uniek veld");
+  const { v3: terug } = exporteerV3(importeerV3(v3));
+  assert.deepEqual(veldenVan(terug), voor);
+
+  // Oud model zonder V3.1-sleutels: geen type/format/verplicht erbij.
+  const { v3: demoTerug } = exporteerV3(importeerV3(demoV3Model));
+  for (const [naam, v] of Object.entries(veldenVan(demoTerug))) {
+    assert.deepEqual(v, veldenVan(demoV3Model)[naam] || {}, naam);
+  }
+});

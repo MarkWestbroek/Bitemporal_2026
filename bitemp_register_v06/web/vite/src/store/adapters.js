@@ -53,13 +53,20 @@ function goTypeNaarVeldType(goType) {
   }
 }
 
+/** V3.1-veldsleutels (model/v3_format.go V3Veld): naast of in plaats van goType. */
+const V31_SLEUTELS = ["type", "format", "verplicht"];
+
 function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
   const datatype = v3Veld.datatype
     ? datatypeLookup[v3Veld.datatype]
     : datatypeLookup[v3Veld.goType];
   const mapped = goTypeNaarVeldType(v3Veld.goType || "string");
-  const type = datatype?.basistype || mapped.type;
-  const format = datatype?.format || mapped.format;
+  // V3.1 (30-10): een expliciete type/format/verplicht wint van datatype en goType.
+  const type = v3Veld.type || datatype?.basistype || mapped.type;
+  const format = v3Veld.format || datatype?.format || mapped.format;
+  // Welke V3.1-sleutels de bron had: die schrijft de terugreis weer (oude modellen
+  // zonder V3.1-sleutels blijven zo byte-gelijk; zie veldNaarV3).
+  const v31Sleutels = V31_SLEUTELS.filter((k) => k in v3Veld);
   const enumBestaat = Boolean(v3Veld.enum && enumLookup[v3Veld.enum]);
   const enumWaarden = enumBestaat ? enumLookup[v3Veld.enum] : null;
 
@@ -72,7 +79,9 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
     enumNaam: enumBestaat ? v3Veld.enum : null,
     refNaam: v3Veld["$ref"] || null,
     refItemNaam: v3Veld["$ref"] || v3Veld.refItemNaam || null,
-    verplicht: !(v3Veld.goType || "").startsWith("*"),
+    verplicht: "verplicht" in v3Veld ? v3Veld.verplicht === true : !(v3Veld.goType || "").startsWith("*"),
+    ...(v3Veld.uniek ? { uniek: v3Veld.uniek } : {}),
+    ...(v31Sleutels.length ? { v31Sleutels } : {}),
     autoIncrement: false,
     description: v3Veld.description || "",
     afgeleid: v3Veld.afgeleid || false,
@@ -783,9 +792,16 @@ function veldNaarV3(veld) {
     v3.goType = v3.goType.replace(/^\*/, "");
   }
 
+  // V3.1-sleutels (30-10): alleen die de bron had (of die een nieuw Studio-veld meekrijgt),
+  // in de volgorde van V3Veld. De Go-codegen leest ze alleen als goType ontbreekt.
+  const v31 = veld.v31Sleutels || [];
+  if (v31.includes("type") && veld.type) v3.type = veld.type;
+  if (v31.includes("format") && veld.format) v3.format = veld.format;
+  if (v31.includes("verplicht")) v3.verplicht = veld.verplicht === true;
   if (veld.enumNaam) v3.enum = veld.enumNaam;
   if (veld.datatypeNaam) v3.datatype = veld.datatypeNaam;
   if (veld.refItemNaam) v3["$ref"] = veld.refItemNaam;
+  if (veld.uniek) v3.uniek = veld.uniek;
   if (veld.description) v3.description = veld.description;
   if (veld.afgeleid) {
     v3.afgeleid = true;

@@ -9,6 +9,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **V3.1-veldsleutels overleven de Studio** (30-10, BACKLOG §39). `verplicht`, `uniek`, `type` en
+  `format` gaan heen en terug tussen V3 en het canonieke profiel; oude modellen zonder V3.1-sleutels
+  blijven ongewijzigd. `uniek` (entiteit/domein/register) is te zien en te zetten op een attribuut.
 - **BPMN-schrijver en uitvoerbare BPMN voor GZAC** (30-10, engine-regelset bpmn-naar-gzac 0.1.0).
   Een diagram van het BPMN-profiel wordt BPMN 2.0 XML met BPMNDI (`bpmnXmlSchrijver.js`); de
   engine-regelset voegt het Operaton-dialect toe; `bpmnArtefact.js` maakt er een inrichtings-
@@ -21,9 +24,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   referentielijsten uit gekozen bestanden. Het resultaat is een zip voor het inrichting-register op
   Fundament, met dezelfde hash als de CLI. Met "vergelijk met het inrichting-register" toont het
   paneel per artefact **nieuw**, **gewijzigd** of **ongewijzigd**. Het paneel kreeg daarvoor
-  bestandsopties, verplichte opties en een resultaattabel (docs/TRANSFORMATIES.md §11.10). Bekend:
-  een model uit de map verliest nog verplicht/uniek van velden (BACKLOG §39); de stap waarschuwt
-  dan.
+  bestandsopties, verplichte opties en een resultaattabel (docs/TRANSFORMATIES.md §11.10). Een
+  model uit de map verloor eerst verplicht/uniek van velden; opgelost (BACKLOG §39, hierboven).
 - **Inrichting: GZAC-dossierbundel uit het model** (30-10, regelset canoniek-naar-gzac-dossier 0.1.0).
   Documentdefinitie (`dossierschema`), form.io-samenvatting en taakformulier (`dossierformulier`) en
   tabbladen (`dossiertabbladen`), elk één artefact. De inhoud komt uit het objecttype-artefact plus
