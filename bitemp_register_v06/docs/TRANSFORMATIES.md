@@ -1263,8 +1263,11 @@ zaak, voor wat het oppakken niet afving.
 - **Beslistabel** in de vorm van `dmn/dmnModel.js` op het element `decision`
   (`data.beslistabel`). Elke kolom bindt aan een modelveld (`fieldRef.veldpad`);
   `naam` is de variabele, `expressie` een FEEL-expressie als de kolom meer doet
-  dan het veld lezen, bijvoorbeeld `some b in bijlagen satisfies b.naam =
-  "pasfoto"`. Fixture: `fixtures/cg-test/gpk-beslissingen.dmn-model.json`,
+  dan het veld lezen, bijvoorbeeld `bijlagen != null and some b in bijlagen
+  satisfies b.naam = "pasfoto"`. Let op null: ontbreekt een lijst, dan is
+  `some …` null, en null matcht een regel met `false` niet. Zonder die
+  controle viel een aanvraag zonder bijlagen door naar "ontvankelijk"
+  (FUNDAMENT, cg-test 31-10). Fixture: `fixtures/cg-test/gpk-beslissingen.dmn-model.json`,
   beslissing "Aanvraag ontvankelijk" (hitPolicy FIRST, uitkomsten
   `ontvankelijk` en `reden`), met de demoregels die Mark bevestigde:
   - de aanvrager is geïdentificeerd (BSN);
@@ -1281,13 +1284,17 @@ zaak, voor wat het oppakken niet afving.
 - **dmn-artefact:** identifier = decision-id = `decisionRef`, formaat
   `dmn-xml`, payloadHash = sha256 over de XML-tekst (zoals bpmn). FUNDAMENT zet
   het als `dmn/<decision-id>.dmn` in de GZAC-dossierbundel.
-- **BPMN (bpmn-naar-gzac 0.4.0):** een taak met taaktype business rule krijgt
+- **BPMN (bpmn-naar-gzac 0.4.0, 0.4.1):** een taak met taaktype business rule krijgt
   `beslissing` (decision-id) en `resultaat` (variabele). De regelset schrijft
   een vaste `camunda:decisionRef` (een expressie is een fout, net als bij
   calledElement), `mapDecisionResult="singleResult"` en `resultVariable`, en per
   dossierkolom een `camunda:inputParameter` met
   `documentDelegateService.findValueByJsonPointerOrDefault(<pointer>, execution,
-  null)`. Een servicetaak met `dossierstatus` zet de interne status van het
+  null)`. Een procesvariabele die de tabel leest, zoals `bsn`, krijgt sinds
+  0.4.1 ook een input-parameter, `${execution.getVariable('bsn')}`. De
+  Verzoek-plugin zet `bsn` alleen als het verzoek hem heeft, en feel-scala
+  faalt op een ontbrekende variabele; nu wordt het null en vangt de regel het af.
+  Een servicetaak met `dossierstatus` zet de interne status van het
   dossier (`setInternalStatus`). Toets `BPMN-BESLISSING`: de beslistabel is een
   dmn-artefact van de e-dienst en is meegegeven.
 - **Oppakproces** (`gpk-processen.bpmn-model.json`): start → Ontvankelijkheid

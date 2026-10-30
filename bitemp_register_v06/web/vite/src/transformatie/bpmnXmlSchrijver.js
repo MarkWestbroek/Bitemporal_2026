@@ -25,7 +25,8 @@
  * Beslistabellen: een businessRuleTask met `data.beslissing` (decision-id) en
  * `data.resultaat`. Waar de engine de kolommen van de tabel vandaan haalt,
  * komt mee in `beslissingen` (per decision-id de `invoer` uit dmnArtefact);
- * de regelset (`taken.businessRuleTask.invoer`) maakt er input-parameters van.
+ * de regelset (`taken.businessRuleTask.invoer`) maakt er input-parameters van,
+ * per bron (dossierwaarde of procesvariabele) een sjabloon.
  * Engine-attributen die een modelwaarde dragen staan in `uitData` van de
  * regelset (`{veld}` = data.veld).
  *
@@ -243,11 +244,13 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     if (regel.invoer && el.data?.beslissing) {
       const lijst = beslissingen[el.data.beslissing];
       if (!lijst) meld(`Beslistabel "${el.data.beslissing}" is niet meegegeven; de businessRuleTask krijgt geen invoer`, el.id);
-      const params = (lijst || []).filter((x) => x.bron === "dossier");
+      // Per kolom een sjabloon voor zijn bron (dossier: {pointer}, variabele: {variabele}).
+      const sjabloon = (x) => (x.bron === "dossier" ? regel.invoer.dossier?.split("{pointer}").join(x.pointer) : regel.invoer.variabele?.split("{variabele}").join(x.variabele));
+      const params = (lijst || []).filter((x) => sjabloon(x));
       if (params.length) {
         for (const t of [regel.invoer.tag, regel.invoer.parameter]) if (t.includes(":")) nsGebruikt.add(t.split(":")[0]);
         ext.push(`<${regel.invoer.tag}>`);
-        for (const x of params) ext.push(`  <${regel.invoer.parameter} name="${esc(x.naam)}">${esc(regel.invoer.dossier.split("{pointer}").join(x.pointer))}</${regel.invoer.parameter}>`);
+        for (const x of params) ext.push(`  <${regel.invoer.parameter} name="${esc(x.naam)}">${esc(sjabloon(x))}</${regel.invoer.parameter}>`);
         ext.push(`</${regel.invoer.tag}>`);
       }
     }
