@@ -193,10 +193,75 @@
           { "omschrijving": "Beschikking", "richting": "uitgaand" }
         ]
       }
+    },
+    {
+      "identifier": "gehandicaptenparkeerkaart",
+      "soort": "dossierschema",
+      "formaat": "json-schema",
+      "doelcomponent": "gzac",
+      "naam": "Gehandicaptenparkeerkaart",
+      "_identifier": "de key van het GZAC-dossier (case-definition); $id wordt <identifier>.schema; FUNDAMENT leidt het pad in de bundel af uit soort + identifier",
+      "objecttype": "gehandicaptenparkeerkaartaanvraag",
+      "beschrijving": "Inhoud van het dossier: de data uit de verzoek-envelop van het aanvraagobject (Verzoek-plugin, copyStrategy full) plus de behandelvelden.",
+      "behandelvelden": {
+        "beoordeling": { "type": "string", "enum": ["toegekend", "afgewezen"], "description": "Uitkomst van de taak Aanvraag beoordelen" },
+        "beoordelingToelichting": { "type": "string", "description": "Toelichting van de behandelaar bij de beoordeling" }
+      },
+      "_behandelvelden": "wat de behandelaar in GZAC vult; het canonieke model kent nog geen beoordeling of besluit. Komt dat er, dan horen deze velden daar vandaan (FUNDAMENT 28-10)"
+    },
+    {
+      "identifier": "gehandicaptenparkeerkaart.summary",
+      "soort": "dossierformulier",
+      "formaat": "formio-json",
+      "doelcomponent": "gzac",
+      "naam": "Samenvatting gehandicaptenparkeerkaart",
+      "dossierschema": "gehandicaptenparkeerkaart",
+      "panelen": [
+        {
+          "key": "aanvraag",
+          "titel": "Aanvraag",
+          "kolommen": 2,
+          "velden": ["aanvraagnummer", "ingediendOp", "status", "soort", "hulpmiddel", "loopafstandMeter", "kenteken", "eerdereKaart", "eerderKaartnummer", "toelichting"]
+        }
+      ],
+      "_panelen": "alleen-lezen (standaard); het label komt uit de veldnaam, een label hier gaat voor; de velden lopen rij voor rij over de kolommen"
+    },
+    {
+      "identifier": "aanvraag-beoordelen",
+      "soort": "dossierformulier",
+      "formaat": "formio-json",
+      "doelcomponent": "gzac",
+      "naam": "Aanvraag beoordelen",
+      "dossierschema": "gehandicaptenparkeerkaart",
+      "panelen": [
+        { "uit": "gehandicaptenparkeerkaart.summary" },
+        {
+          "key": "beoordelingPanel",
+          "titel": "Beoordeling",
+          "alleenLezen": false,
+          "velden": [
+            { "key": "beoordeling", "label": "Beoordeling", "verplicht": true, "opties": { "toegekend": "Toekennen", "afgewezen": "Afwijzen" } },
+            { "key": "beoordelingToelichting", "label": "Toelichting bij de beoordeling" }
+          ]
+        }
+      ],
+      "verzenden": "Beoordeling vastleggen",
+      "_verzenden": "zonder verzendknop doet GZAC niets met de beoordeling"
+    },
+    {
+      "identifier": "gehandicaptenparkeerkaart",
+      "soort": "dossiertabbladen",
+      "formaat": "gzac-case-tab-json",
+      "doelcomponent": "gzac",
+      "naam": "Tabbladen gehandicaptenparkeerkaart",
+      "_tabbladen": "de vijf standaardtabbladen uit de regelset; een lijst `tabbladen` hier vervangt ze"
     }
   ],
   "afhankelijkheden": [
     { "artefact": "gehandicaptenparkeerkaart-aanvragen", "afhankelijkVan": "gehandicaptenparkeerkaartaanvraag", "reden": "het formulier registreert in het objecttype" },
-    { "artefact": "gehandicaptenparkeerkaart-aanvragen", "afhankelijkVan": "GPK", "reden": "het formulier legt bijlagen vast met een informatieobjecttype uit de catalogus van het zaaktype" }
+    { "artefact": "gehandicaptenparkeerkaart-aanvragen", "afhankelijkVan": "GPK", "reden": "het formulier legt bijlagen vast met een informatieobjecttype uit de catalogus van het zaaktype" },
+    { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierschema", "afhankelijkVan": "gehandicaptenparkeerkaartaanvraag", "reden": "de dossierinhoud is het schema van het objecttype (zonder envelop)" },
+    { "artefact": "gehandicaptenparkeerkaart.summary", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het formulier toont velden van de dossierinhoud" },
+    { "artefact": "aanvraag-beoordelen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" }
   ]
 }
