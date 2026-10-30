@@ -39,6 +39,17 @@ const fieldTypes = [
       { key: "naam", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
       { key: "verplicht", datatype: "boolean" },
+      // UML {unique} met een bereik (V3Veld.Uniek, 30-10): leeg = niet uniek.
+      {
+        key: "uniek",
+        datatype: "keuze",
+        opties: [
+          { waarde: "", label: "—" },
+          { waarde: "entiteit", label: "entiteit (binnen dit type)" },
+          { waarde: "domein", label: "domein" },
+          { waarde: "register", label: "register" },
+        ],
+      },
       { key: "afgeleid", datatype: "boolean", betekenis: "afgeleid" },
     ],
   },

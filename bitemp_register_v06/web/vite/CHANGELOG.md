@@ -9,6 +9,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **V3.1-veldsleutels overleven de Studio** (30-10, BACKLOG §39). `verplicht`, `uniek`, `type` en
+  `format` gaan heen en terug tussen V3 en het canonieke profiel; oude modellen zonder V3.1-sleutels
+  blijven ongewijzigd. `uniek` (entiteit/domein/register) is te zien en te zetten op een attribuut.
 - **Exporteren → Inrichtingsartefacten** (30-10, stap a+b voor FUNDAMENT). Het transformatiepaneel
   maakt alle artefacten van een e-dienst in één keer: objecttype, formulier, zaaktype en
   dossierdelen. Het model komt uit de map of uit een V3-bestand, het e-dienstmodel en de
