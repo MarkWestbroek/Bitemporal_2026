@@ -145,13 +145,13 @@
       "informatieobjecttypen": [
         { "omschrijving": "Aanvraagformulier", "vertrouwelijkheidaanduiding": "intern", "informatieobjectcategorie": "aanvraag" },
         { "omschrijving": "Bijlage", "vertrouwelijkheidaanduiding": "intern", "informatieobjectcategorie": "bijlage" },
-        { "omschrijving": "Beschikking", "vertrouwelijkheidaanduiding": "openbaar", "informatieobjectcategorie": "besluit" }
+        { "omschrijving": "Beschikking", "vertrouwelijkheidaanduiding": "vertrouwelijk", "informatieobjectcategorie": "besluit", "_vertrouwelijkheidaanduiding": "een beschikking is persoonlijk (besluit Mark 30-10)" }
       ],
       "_informatieobjecttypen": "bestaan al in de testcatalogus (zaaktype AANVRAAG); dezelfde definitie",
       "zaaktype": {
         "omschrijvingGeneriek": "Aanvraag",
         "vertrouwelijkheidaanduiding": "vertrouwelijk",
-        "_vertrouwelijkheidaanduiding": "voorstel: de zaak bevat gegevens over de beperking (objecttype: confidential); keuze Mark",
+        "_vertrouwelijkheidaanduiding": "de zaak bevat gegevens over de beperking (objecttype: confidential); bevestigd door Mark 28-10",
         "doel": "Een aanvraag van een gehandicaptenparkeerkaart behandelen en een beschikking afgeven.",
         "aanleiding": "Een inwoner dient met DigiD via de formulierservice een aanvraag in.",
         "toelichting": "Zaaktype bij het objecttype gehandicaptenparkeerkaartaanvraag en het formulier gehandicaptenparkeerkaart-aanvragen.",
@@ -255,6 +255,30 @@
       "doelcomponent": "gzac",
       "naam": "Tabbladen gehandicaptenparkeerkaart",
       "_tabbladen": "de vijf standaardtabbladen uit de regelset; een lijst `tabbladen` hier vervangt ze"
+    },
+    {
+      "identifier": "aanvraag-oppakken",
+      "soort": "bpmn",
+      "formaat": "bpmn-xml",
+      "doelcomponent": "gzac",
+      "naam": "Aanvraag oppakken",
+      "bron": { "model": "gpk-processen.bpmn-model.json", "diagram": "Aanvraag oppakken" },
+      "engine": "gzac",
+      "targetNamespace": "http://common-ground-lab.nl/bpmn",
+      "activityIds": ["zaak-aanmaken", "rol-aanvrager-aanmaken", "document-koppelen", "status-ontvangen"],
+      "_activityIds": "waarop de process-links van de dossierbundel plugin-acties binden (FUNDAMENT 30-10); een ontbrekende id is een fout"
+    },
+    {
+      "identifier": "gehandicaptenparkeerkaart-beoordelen",
+      "soort": "bpmn",
+      "formaat": "bpmn-xml",
+      "doelcomponent": "gzac",
+      "naam": "Gehandicaptenparkeerkaart beoordelen",
+      "bron": { "model": "gpk-processen.bpmn-model.json", "diagram": "Gehandicaptenparkeerkaart beoordelen" },
+      "engine": "gzac",
+      "targetNamespace": "http://common-ground-lab.nl/bpmn",
+      "activityIds": ["aanvraag-beoordelen"],
+      "_activityIds": "het taakformulier aanvraag-beoordelen bindt op deze user task"
     }
   ],
   "afhankelijkheden": [
@@ -262,6 +286,9 @@
     { "artefact": "gehandicaptenparkeerkaart-aanvragen", "afhankelijkVan": "GPK", "reden": "het formulier legt bijlagen vast met een informatieobjecttype uit de catalogus van het zaaktype" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierschema", "afhankelijkVan": "gehandicaptenparkeerkaartaanvraag", "reden": "de dossierinhoud is het schema van het objecttype (zonder envelop)" },
     { "artefact": "gehandicaptenparkeerkaart.summary", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het formulier toont velden van de dossierinhoud" },
-    { "artefact": "aanvraag-beoordelen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" }
+    { "artefact": "aanvraag-beoordelen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" },
+    { "artefact": "gehandicaptenparkeerkaart-beoordelen", "afhankelijkVan": "GPK", "reden": "het proces draait op een zaak van zaaktype GPK" },
+    { "artefact": "aanvraag-oppakken", "afhankelijkVan": "GPK", "reden": "het proces maakt een zaak van zaaktype GPK, met status en rol" },
+    { "artefact": "aanvraag-oppakken", "afhankelijkVan": "gehandicaptenparkeerkaart-beoordelen", "reden": "de call activity roept het specifieke proces aan" }
   ]
 }

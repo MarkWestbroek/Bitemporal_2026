@@ -1,0 +1,365 @@
+{
+  "model_naam": "GPK-processen (cg-test)",
+  "model_beschrijving": "BPMN-model (profiel bpmn-motor) van de GZAC-processen van de gehandicaptenparkeerkaart; eerste versie ingelezen uit de handgemaakte artefacten 6 en 7 (30-10).",
+  "model": {
+    "elements": {
+      "bp_start": {
+        "id": "bp_start",
+        "naam": "Aanvraag ontvangen",
+        "elementType": "start-event",
+        "compartimenten": [],
+        "data": {
+          "soort": "",
+          "bpmnId": "start"
+        }
+      },
+      "bp_zaak_aanmaken": {
+        "id": "bp_zaak_aanmaken",
+        "naam": "Zaak aanmaken",
+        "elementType": "taak",
+        "compartimenten": [],
+        "data": {
+          "taakSoort": "service",
+          "bpmnAard": "serviceTask",
+          "bpmnId": "zaak-aanmaken",
+          "meervoudig": "",
+          "lusVerzameling": "",
+          "lusElement": ""
+        }
+      },
+      "bp_rol_aanvrager_aanmaken": {
+        "id": "bp_rol_aanvrager_aanmaken",
+        "naam": "Rol aanvrager koppelen",
+        "elementType": "taak",
+        "compartimenten": [],
+        "data": {
+          "taakSoort": "service",
+          "bpmnAard": "serviceTask",
+          "bpmnId": "rol-aanvrager-aanmaken",
+          "meervoudig": "",
+          "lusVerzameling": "",
+          "lusElement": ""
+        }
+      },
+      "bp_document_koppelen": {
+        "id": "bp_document_koppelen",
+        "naam": "Documenten koppelen",
+        "elementType": "taak",
+        "compartimenten": [],
+        "data": {
+          "taakSoort": "service",
+          "bpmnAard": "serviceTask",
+          "bpmnId": "document-koppelen",
+          "meervoudig": "parallel",
+          "lusVerzameling": "documentUrls",
+          "lusElement": "documentUrl"
+        }
+      },
+      "bp_status_ontvangen": {
+        "id": "bp_status_ontvangen",
+        "naam": "Status Ontvangen",
+        "elementType": "taak",
+        "compartimenten": [],
+        "data": {
+          "taakSoort": "service",
+          "bpmnAard": "serviceTask",
+          "bpmnId": "status-ontvangen",
+          "meervoudig": "",
+          "lusVerzameling": "",
+          "lusElement": ""
+        }
+      },
+      "bp_vervolgproces_starten": {
+        "id": "bp_vervolgproces_starten",
+        "naam": "Specifiek beoordelingsproces",
+        "elementType": "taak",
+        "compartimenten": [],
+        "data": {
+          "taakSoort": "",
+          "bpmnAard": "callActivity",
+          "bpmnId": "vervolgproces-starten",
+          "meervoudig": "",
+          "lusVerzameling": "",
+          "lusElement": "",
+          "aangeroepenProces": "${processDefinitionKey}"
+        }
+      },
+      "bp_einde": {
+        "id": "bp_einde",
+        "naam": "Aanvraag opgepakt",
+        "elementType": "eind-event",
+        "compartimenten": [],
+        "data": {
+          "soort": "",
+          "bpmnId": "einde"
+        }
+      },
+      "bp_f1": {
+        "id": "bp_f1",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_start",
+        "target": "bp_zaak_aanmaken",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f1"
+        }
+      },
+      "bp_f2": {
+        "id": "bp_f2",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_zaak_aanmaken",
+        "target": "bp_rol_aanvrager_aanmaken",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f2"
+        }
+      },
+      "bp_f3": {
+        "id": "bp_f3",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_rol_aanvrager_aanmaken",
+        "target": "bp_document_koppelen",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f3"
+        }
+      },
+      "bp_f4": {
+        "id": "bp_f4",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_document_koppelen",
+        "target": "bp_status_ontvangen",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f4"
+        }
+      },
+      "bp_f5": {
+        "id": "bp_f5",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_status_ontvangen",
+        "target": "bp_vervolgproces_starten",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f5"
+        }
+      },
+      "bp_f6": {
+        "id": "bp_f6",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_vervolgproces_starten",
+        "target": "bp_einde",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f6"
+        }
+      },
+      "bp_start_2": {
+        "id": "bp_start_2",
+        "naam": "Zaak aangemaakt",
+        "elementType": "start-event",
+        "compartimenten": [],
+        "data": {
+          "soort": "",
+          "bpmnId": "start"
+        }
+      },
+      "bp_aanvraag_beoordelen": {
+        "id": "bp_aanvraag_beoordelen",
+        "naam": "Aanvraag beoordelen",
+        "elementType": "taak",
+        "compartimenten": [],
+        "data": {
+          "taakSoort": "user",
+          "bpmnAard": "userTask",
+          "bpmnId": "aanvraag-beoordelen",
+          "meervoudig": "",
+          "lusVerzameling": "",
+          "lusElement": ""
+        }
+      },
+      "bp_einde_2": {
+        "id": "bp_einde_2",
+        "naam": "Beoordeeld",
+        "elementType": "eind-event",
+        "compartimenten": [],
+        "data": {
+          "soort": "",
+          "bpmnId": "einde"
+        }
+      },
+      "bp_f1_2": {
+        "id": "bp_f1_2",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_start_2",
+        "target": "bp_aanvraag_beoordelen",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f1"
+        }
+      },
+      "bp_f2_2": {
+        "id": "bp_f2_2",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_aanvraag_beoordelen",
+        "target": "bp_einde_2",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f2"
+        }
+      }
+    },
+    "diagrams": {
+      "bp_diagram_Diagram_aanvraag_oppakken": {
+        "id": "bp_diagram_Diagram_aanvraag_oppakken",
+        "naam": "Aanvraag oppakken",
+        "diagramType": "bpmn-motor",
+        "nodes": [
+          {
+            "elementId": "bp_start",
+            "position": {
+              "x": 152,
+              "y": 102
+            },
+            "size": {
+              "width": 36,
+              "height": 36
+            }
+          },
+          {
+            "elementId": "bp_zaak_aanmaken",
+            "position": {
+              "x": 240,
+              "y": 80
+            },
+            "size": {
+              "width": 100,
+              "height": 80
+            }
+          },
+          {
+            "elementId": "bp_rol_aanvrager_aanmaken",
+            "position": {
+              "x": 390,
+              "y": 80
+            },
+            "size": {
+              "width": 100,
+              "height": 80
+            }
+          },
+          {
+            "elementId": "bp_document_koppelen",
+            "position": {
+              "x": 540,
+              "y": 80
+            },
+            "size": {
+              "width": 100,
+              "height": 80
+            }
+          },
+          {
+            "elementId": "bp_status_ontvangen",
+            "position": {
+              "x": 690,
+              "y": 80
+            },
+            "size": {
+              "width": 100,
+              "height": 80
+            }
+          },
+          {
+            "elementId": "bp_vervolgproces_starten",
+            "position": {
+              "x": 840,
+              "y": 80
+            },
+            "size": {
+              "width": 100,
+              "height": 80
+            }
+          },
+          {
+            "elementId": "bp_einde",
+            "position": {
+              "x": 992,
+              "y": 102
+            },
+            "size": {
+              "width": 36,
+              "height": 36
+            }
+          }
+        ],
+        "edges": []
+      },
+      "bp_diagram_Diagram_gpk_beoordelen": {
+        "id": "bp_diagram_Diagram_gpk_beoordelen",
+        "naam": "Gehandicaptenparkeerkaart beoordelen",
+        "diagramType": "bpmn-motor",
+        "nodes": [
+          {
+            "elementId": "bp_start_2",
+            "position": {
+              "x": 152,
+              "y": 102
+            },
+            "size": {
+              "width": 36,
+              "height": 36
+            }
+          },
+          {
+            "elementId": "bp_aanvraag_beoordelen",
+            "position": {
+              "x": 240,
+              "y": 80
+            },
+            "size": {
+              "width": 100,
+              "height": 80
+            }
+          },
+          {
+            "elementId": "bp_einde_2",
+            "position": {
+              "x": 392,
+              "y": 102
+            },
+            "size": {
+              "width": 36,
+              "height": 36
+            }
+          }
+        ],
+        "edges": []
+      }
+    }
+  }
+}

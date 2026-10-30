@@ -126,7 +126,18 @@ const elementTypes = [
     icoon: "gedrag-toestand",
     shape: "bpmn-taak",
     kleur: "#e0f2fe",
-    properties: [{ key: "taakSoort", label: "taaktype", datatype: "keuze", opties: TAAK_SOORT_OPTIES }, KLEUR_VELD],
+    properties: [
+      { key: "taakSoort", label: "taaktype", datatype: "keuze", opties: TAAK_SOORT_OPTIES },
+      // Uitvoerbaar maken (BPMN-schrijver, 30-10): de activityId waarop een
+      // engine (GZAC) acties en formulieren bindt, multi-instance en de
+      // aangeroepen procesdefinitie van een call activity.
+      { key: "bpmnId", label: "BPMN-id (activityId)", datatype: "string", placeholder: "bv. zaak-aanmaken" },
+      { key: "meervoudig", label: "multi-instance", datatype: "keuze", opties: [{ waarde: "", label: "nee" }, { waarde: "parallel", label: "parallel" }, { waarde: "sequentieel", label: "sequentieel" }] },
+      { key: "lusVerzameling", label: "verzameling (procesvariabele)", datatype: "string", zichtbaarAls: { key: "meervoudig" } },
+      { key: "lusElement", label: "elementvariabele", datatype: "string", zichtbaarAls: { key: "meervoudig" } },
+      { key: "aangeroepenProces", label: "call activity: aangeroepen proces", datatype: "string", placeholder: "proces-id of ${expressie}" },
+      KLEUR_VELD,
+    ],
   },
   {
     id: "subproces",

@@ -1075,14 +1075,77 @@ Niet modelgebonden en dus nog sjabloon of inrichting bij FUNDAMENT:
 case-definition, process-document-link, process-link (plugin-acties),
 zaak-type-link en document-list-column.
 
-### 11.10 Vervolg
+### 11.10 BPMN: model → uitvoerbare BPMN voor GZAC, en de rondgang (2026-10-30)
 
-1. Formulier: machtigen (gemachtigde + subject) en eHerkenning.
+Opdracht Mark via FUNDAMENT (30-10): de processen van de dossierbundel komen
+uit een BPMN-model in Omnium in plaats van uit handgemaakte XML. Eerste stap is
+de rondgang: de handgemaakte artefacten 6 en 7 inlezen met de lezer (§10),
+terugschrijven en het verschil bekijken.
+
+**De keten.**
+- Schrijver: `transformatie/bpmnXmlSchrijver.js` maakt van één diagram van het
+  BPMN-profiel `bpmn:definitions` met één `bpmn:process` en BPMNDI (bounds,
+  waypoints uit de knikpunten). Kale BPMN, engine-neutraal.
+- Engine-regelset: `diagramprofielen/bpmn/bpmnGzacRegels.js` (`bpmn-naar-gzac`
+  0.1.0, Operaton/Camunda 7-dialect) zegt wat de engine extra nodig heeft (tabel
+  hieronder).
+- Aansluiting: `diagramprofielen/bpmn/bpmnArtefact.js` maakt er een artefact
+  van, soort `bpmn`, formaat `bpmn-xml`.
+
+De engine-regelset:
+
+| Element | GZAC (Operaton) |
+|---|---|
+| process | `isExecutable="true"` |
+| userTask | `camunda:candidateGroups="ROLE_USER"` |
+| serviceTask | `camunda:expression="${true}"` + `camunda:asyncAfter`; de actie zelf zit in de process-link |
+| multi-instance | `camunda:collection` / `camunda:elementVariable` uit het model; asyncAfter per instantie op de lus |
+| callActivity | `calledElement` uit het model, `camunda:in businessKey` + `camunda:in variables="all"`, asyncAfter |
+
+Een andere engine is een andere regelset. Plugin-acties en taakformulieren
+horen niet in de XML: die binden de process-links van de dossierbundel op de
+activityId (FUNDAMENT).
+
+**Het model bewaart wat uitvoerbaarheid vraagt.** Het taakelement van het
+BPMN-profiel kreeg vier velden; de lezer vult ze bij het inlezen (importregelset
+versie 2):
+- `bpmnId`: de activityId;
+- `meervoudig`, `lusVerzameling`, `lusElement`: multi-instance;
+- `aangeroepenProces`: de call activity.
+
+De id's zijn stabiel: de schrijver gebruikt `bpmnId`, en anders een slug van de
+naam (melding `BPMN-GEEN-ID`). De process-id is de identifier van het artefact.
+`activityIds` in de e-dienst noemt waarop de process-links binden; een
+ontbrekende id is een fout (`BPMN-ACTIVITYID`).
+
+**Rondgang.** Beide handgemaakte processen zijn semantisch gelijk na inlezen en
+terugschrijven: process, id's, namen, typen, flows, bounds, waypoints en
+camunda-attributen. Er is één verschil. De `processService.startProcessBy…`-
+expressie die het vervolgproces startte, is engine-logica die het model niet
+kent. Het BPMN-model (`fixtures/cg-test/gpk-processen.bpmn-model.json`, ingelezen
+uit 6 en 7) maakt er daarom een **call activity** van, met `calledElement` =
+`${processDefinitionKey}` (de variabele van de Verzoek-plugin). De activityId
+`vervolgproces-starten` blijft gelijk. Dat volgt het besluit van Mark: een call
+activity, zodat bezwaar en herziening hetzelfde specifieke proces kunnen
+aanroepen.
+
+**Hash.** De payload is de XML-tekst; payloadHash = sha256 over de UTF-8-tekst
+(niet JCS, afspraak FUNDAMENT). bronmodelHash = sha256 over JCS van het
+BPMN-model.
+
+Nog niet in de schrijver: pools/lanes, message flows, data-objecten, notities,
+boundary events en de inhoud van subprocessen (melding `BPMN-SCHRIJVER`).
+
+### 11.11 Vervolg
+
+1. Formulier: machtigen (gemachtigde + subject) en eHerkenning; de documenttitel
+   van een bestandscomponent uit het label (FUNDAMENT 30-10).
 2. Zaaktype: termijnen en resultaten in het model (bv. bij het aanvraagtype)
    zodra meer e-diensten ze delen; nu letterlijk in de e-dienst.
-3. BPMN voor GZAC: uitvoerbare BPMN (engine-extensies); §10 heeft alleen de
-   heenweg. De processen 6 en 7 staan nu met herkomst "handmatig" in het register.
-4. Dossier: beoordeling/besluit in het canonieke model, zodat de behandelvelden
-   (§11.9) uit het model komen; labels als modeleigenschap.
-4. Server-side draaien: dezelfde modules in een Node-runner (render-svc-patroon),
+3. BPMN: lanes (rollen → candidateGroups), boundary events, ad-hoc subproces;
+   het generieke beoordeelproces met call activity naar het specifieke deel.
+4. Dossier: Beslissing en Beschikking in het canonieke model (docs/plans/
+   2026-10-30), zodat de behandelvelden (§11.9) uit het model komen; labels als
+   modeleigenschap.
+5. Server-side draaien: dezelfde modules in een Node-runner (render-svc-patroon),
    geen Go-port.

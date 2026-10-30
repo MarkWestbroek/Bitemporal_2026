@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generiek oppakproces (Operaton, Camunda 7-dialect). Gestart door de Verzoek-plugin van GZAC zodra Open Object een
+     nieuw aanvraagobject meldt (processToStart). Procesvariabelen van de plugin: RSIN, zaakTypeUrl, rolTypeUrl, rolDescription,
+     initiatorType/initiatorValue (bsn), verzoekObjectUrl, documentUrls, processDefinitionKey (specifiek vervolgproces).
+     De service-taken krijgen hun actie via process-link/aanvraag-oppakken.process-link.json (Zaken API-plugin).
+     Anders dan GZAC's create-zaakdossier blijft het aanvraagobject staan: dat is het register. -->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  id="Definitions_aanvraag_oppakken" targetNamespace="http://common-ground-lab.nl/bpmn">
+  <bpmn:process id="aanvraag-oppakken" name="Aanvraag oppakken" isExecutable="true">
+    <bpmn:startEvent id="start" name="Aanvraag ontvangen">
+      <bpmn:outgoing>f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="zaak-aanmaken" name="Zaak aanmaken" camunda:asyncAfter="true" camunda:expression="${true}">
+      <bpmn:incoming>f1</bpmn:incoming>
+      <bpmn:outgoing>f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="rol-aanvrager-aanmaken" name="Rol aanvrager koppelen" camunda:asyncAfter="true" camunda:expression="${true}">
+      <bpmn:incoming>f2</bpmn:incoming>
+      <bpmn:outgoing>f3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="document-koppelen" name="Documenten koppelen" camunda:expression="${true}">
+      <bpmn:incoming>f3</bpmn:incoming>
+      <bpmn:outgoing>f4</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics camunda:asyncAfter="true" camunda:collection="documentUrls" camunda:elementVariable="documentUrl" />
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="status-ontvangen" name="Status Ontvangen" camunda:asyncAfter="true" camunda:expression="${true}">
+      <bpmn:incoming>f4</bpmn:incoming>
+      <bpmn:outgoing>f5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="vervolgproces-starten" name="Specifiek beoordelingsproces starten" camunda:asyncAfter="true"
+                      camunda:expression="${processService.startProcessByProcessDefinitionKey(processDefinitionKey, execution.businessKey, execution.variables)}">
+      <bpmn:incoming>f5</bpmn:incoming>
+      <bpmn:outgoing>f6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="einde" name="Aanvraag opgepakt">
+      <bpmn:incoming>f6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="f1" sourceRef="start" targetRef="zaak-aanmaken" />
+    <bpmn:sequenceFlow id="f2" sourceRef="zaak-aanmaken" targetRef="rol-aanvrager-aanmaken" />
+    <bpmn:sequenceFlow id="f3" sourceRef="rol-aanvrager-aanmaken" targetRef="document-koppelen" />
+    <bpmn:sequenceFlow id="f4" sourceRef="document-koppelen" targetRef="status-ontvangen" />
+    <bpmn:sequenceFlow id="f5" sourceRef="status-ontvangen" targetRef="vervolgproces-starten" />
+    <bpmn:sequenceFlow id="f6" sourceRef="vervolgproces-starten" targetRef="einde" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_aanvraag_oppakken">
+    <bpmndi:BPMNPlane id="Plane_aanvraag_oppakken" bpmnElement="aanvraag-oppakken">
+      <bpmndi:BPMNShape id="s_start" bpmnElement="start"><dc:Bounds x="152" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_zaak" bpmnElement="zaak-aanmaken"><dc:Bounds x="240" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_rol" bpmnElement="rol-aanvrager-aanmaken"><dc:Bounds x="390" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_doc" bpmnElement="document-koppelen"><dc:Bounds x="540" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_status" bpmnElement="status-ontvangen"><dc:Bounds x="690" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_vervolg" bpmnElement="vervolgproces-starten"><dc:Bounds x="840" y="80" width="100" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_einde" bpmnElement="einde"><dc:Bounds x="992" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e1" bpmnElement="f1"><di:waypoint x="188" y="120" /><di:waypoint x="240" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e2" bpmnElement="f2"><di:waypoint x="340" y="120" /><di:waypoint x="390" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e3" bpmnElement="f3"><di:waypoint x="490" y="120" /><di:waypoint x="540" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e4" bpmnElement="f4"><di:waypoint x="640" y="120" /><di:waypoint x="690" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e5" bpmnElement="f5"><di:waypoint x="790" y="120" /><di:waypoint x="840" y="120" /></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e6" bpmnElement="f6"><di:waypoint x="940" y="120" /><di:waypoint x="992" y="120" /></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

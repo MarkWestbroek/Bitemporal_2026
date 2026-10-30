@@ -9,6 +9,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **BPMN-schrijver en uitvoerbare BPMN voor GZAC** (30-10, engine-regelset bpmn-naar-gzac 0.1.0).
+  Een diagram van het BPMN-profiel wordt BPMN 2.0 XML met BPMNDI (`bpmnXmlSchrijver.js`); de
+  engine-regelset voegt het Operaton-dialect toe; `bpmnArtefact.js` maakt er een inrichtings-
+  artefact van. Het taakelement kreeg BPMN-id, multi-instance en aangeroepen proces (de lezer vult
+  ze). De rondgang van de GZAC-processen is semantisch gelijk, op de call activity na
+  (docs/TRANSFORMATIES.md §11.10).
 - **Inrichting: GZAC-dossierbundel uit het model** (30-10, regelset canoniek-naar-gzac-dossier 0.1.0).
   Documentdefinitie (`dossierschema`), form.io-samenvatting en taakformulier (`dossierformulier`) en
   tabbladen (`dossiertabbladen`), elk één artefact. De inhoud komt uit het objecttype-artefact plus

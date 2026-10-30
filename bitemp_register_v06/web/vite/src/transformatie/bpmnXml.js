@@ -157,6 +157,16 @@ export function leesBpmn(tekst, opties = {}) {
           }
         }
         if (attr(el, "default")) knoop.standaardFlow = attr(el, "default");
+        // Multi-instance en call activity (rondgang Omnium ↔ engine, 30-10).
+        // collection/elementVariable zijn het Camunda 7-dialect; de lezer leest
+        // ze op lokale naam, de engine-regelset schrijft ze terug.
+        const lus = kind(el, "multiInstanceLoopCharacteristics");
+        if (lus) {
+          knoop.meervoudig = attr(lus, "isSequential") === "true" ? "sequentieel" : "parallel";
+          knoop.lusVerzameling = attr(lus, "collection");
+          knoop.lusElement = attr(lus, "elementVariable");
+        }
+        if (aard === "callActivity") knoop.aangeroepenProces = attr(el, "calledElement");
         if (aard === "dataObjectReference" || aard === "dataStoreReference") {
           knoop.verwijstNaar = attr(el, "dataObjectRef") || attr(el, "dataStoreRef");
           knoop.verzameling = attr(el, "isCollection") === "true" || verzamelingVan.get(knoop.verwijstNaar) === true;
