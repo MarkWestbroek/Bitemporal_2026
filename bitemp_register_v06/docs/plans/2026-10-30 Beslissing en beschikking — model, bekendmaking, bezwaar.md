@@ -199,7 +199,47 @@ Gevolgen voor dit plan:
   tot de behandeling klaar is, en dat past niet. Starten zonder te wachten past
   beter. Zie de open vraag hieronder.
 - **Geen zaak starten** is een uitkomst van oppakken en geen
-  Beslissingsuitkomst. Waar `buitenBehandeling` (§2) dan landt, is nog open.
+  Beslissingsuitkomst. Waar `buitenBehandeling` (§2) landt: zie §6.1.
+
+### 6.1 Ontvankelijkheid: wat oppakken afvangt (Mark, 30-10)
+
+Besluit: **c**, met **b** als doel.
+- Een zaak beoordeelt, beslist en leidt tot een beschikking of besluit. Een
+  afwijzing gebeurt op gronden. Een aanvraag die zo onvolledig is dat er niets
+  te beoordelen valt, hoort dus geen proces te starten dat een beslissing
+  probeert te maken.
+- **Doel (b):** het oppakken valideert, en een aanvraag die te onvolledig is,
+  start geen zaak. Dat is geen besluit en geen afwijzing.
+- **Nu (a):** het oppakproces controleert (bijna) niets, dus komt zo'n aanvraag
+  toch in een zaak terecht. Daar blijft buiten behandeling stellen (Awb 4:5, na
+  een hersteltermijn) een beslissingsuitkomst. `buitenBehandeling` blijft dus in
+  de lijst (§2), voor wat het oppakken niet afving.
+- **Samen (c):** hoe beter het oppakken valideert, hoe minder aanvragen er in de
+  zaak buiten behandeling gaan.
+
+Voorstel uitwerking (demo; de regels zelf vragen kennis van de regeling):
+1. **Waar een regel hoort.** Wat het formulier kan voorkomen, hoort in het
+   formulier: dat is beter voor de aanvrager. Een voorbeeld is conditioneel
+   verplicht, zoals "eerdere kaart = ja → kaartnummer verplicht"; dat is een
+   modelconstraint (M1) die de formulierschrijver meeneemt. Het oppakken vangt
+   af wat het formulier niet kan: andere kanalen, bijlagen, en gegevens van
+   buiten (BRP).
+2. **Hoe.** Een beslistabel (DMN-profiel in Omnium) "Aanvraag ontvankelijk" met
+   per regel een reden. Een businessRuleTask in aanvraag-oppakken leest die
+   tabel, daarna volgt een gateway.
+   - ja → zaak aanmaken (het huidige pad);
+   - nee → AanvraagStatus `nietInBehandeling` met reden, de aanvrager
+     informeren (geen klanttaak: die bestaat pas in de zaak), en het eindevent
+     "Aanvraag niet opgepakt".
+   De beslistabel wordt een nieuw inrichtingsartefact (soort `dmn`).
+3. **Regels voor GPK (voor de demo, door Mark bevestigd 30-10):**
+   - de aanvrager is geïdentificeerd (BSN, partijrol aanvrager);
+   - er is een pasfoto als bijlage;
+   - eerdere kaart = ja → eerder kaartnummer is ingevuld;
+   - soort bestuurder → rijbewijsnummer is ingevuld. Dat veld bestaat nog niet:
+     het komt in `GpkAanvraagKaart` (Mark werkt het cg-test-model bij). Het is
+     conditioneel verplicht, dus het formulier kan het al afdwingen (punt 1);
+   - de aanvrager woont in de gemeente (BRP; later, vraagt een koppeling).
 
 ## 7. Nog open
 
@@ -209,7 +249,8 @@ Gevolgen voor dit plan:
 2. De relatie tussen een beslissing en een eerdere beslissing komt niet in dit
    domein. Of het domein bezwaar en beroep een verwijzing naar de bestreden
    beschikking nodig heeft (`BezwaarTegen` → Beschikking), is aan dat domein.
-3. **Hoe start oppakken de behandeling?** Een call activity wacht tot het
+3. ~~**Hoe start oppakken de behandeling?**~~ Gebouwd: b, start via een bericht
+   (bpmn-naar-gzac 0.3.0, TRANSFORMATIES §11.11). Een call activity wacht tot het
    aangeroepen proces klaar is. Het oppakproces blijft dan open zolang de zaak
    loopt, en dat past niet bij losse processen. Wat wel kan in GZAC/Operaton:
    - **a.** Een servicetaak die het behandelproces start zonder te wachten, zoals
@@ -224,5 +265,10 @@ Gevolgen voor dit plan:
 
    Voorstel: b, als GZAC de message start toelaat bij een dossier-koppeling
    (navragen bij FUNDAMENT). Anders a.
-4. Waar landt `buitenBehandeling` (Awb 4:5)? Is het een beslissing in de zaak,
-   of een uitkomst van oppakken waarbij geen zaak start?
+4. ~~Waar landt `buitenBehandeling`?~~ Besloten (§6.1): c, met b als doel.
+5. Ontvankelijkheid (§6.1): de demo-regels staan. In het echt moeten ze uit de
+   regeling komen. Open: wie informeert de aanvrager als er geen zaak start, en
+   hoe? Mark denkt aan Open Notificaties, maar is daar niet zeker van. Open
+   Notificaties verdeelt meldingen tussen componenten; de mail of het bericht
+   aan de aanvrager komt dan van een abonnee, bijvoorbeeld OpenKlant of een
+   notify-dienst.
