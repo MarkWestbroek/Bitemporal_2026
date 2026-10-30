@@ -150,7 +150,58 @@ Pas daarna gaat de bezwaartermijn in.
 De variabele `beoordeling` wordt dus `beslissing.uitkomst`. Dat raakt het
 taakformulier en artefact 6 tegelijk.
 
-## 6. Nog open
+## 6. Keten: oppakken, behandelen, archiveren (Mark, 30-10)
+
+Besluit: **losse processen**. Oppakken is de brug tussen aanvraag en zaak, zoals
+het nu ook loopt. Uit een mailwisseling die Mark deelde:
+
+1. **Formulier.** Open Formulieren (of een andere front-end) levert de data van
+   het ingediende formulier. Daaruit komen een PDF, nog niet aan een zaak
+   gekoppeld, en een ProductAanvraag-object.
+2. **Verzoek.** Een volgende component (BtF of een andere) maakt een verzoek
+   (aanvraag of melding) in het verzoekenregister, mogelijk gekoppeld aan een
+   producttype.
+3. **Oppakken.** Een klein proces pakt het verzoek op en valideert het: is het
+   grofweg compleet en juist? Zo ja, dan start (G)ZAC een zaak.
+   - **Geen zaak starten is nog geen afwijzing.**
+   - Hier bestaat nog geen klanttaak: die hoort bij de behandeling.
+4. **Behandelen.** De zaak gaat naar een zaakbehandelaar, via de werkbak of
+   automatisch. Op basis van het zaaktype gaat ze naar een afdeling en daarbinnen
+   naar een medewerker; een teamleider kan toewijzen.
+   - Uit de behandeling komen medewerker-, ketenpartner- en klanttaken, die in de
+     werkmap worden vastgelegd (Werken-API).
+   - Het hele stuk van zaak aanmaken tot zaak sluiten is **één proces**, met
+     terugkoppeling naar de MijnOmgeving.
+5. **Gevolg.** Dat verschilt per aanvraag- of producttype.
+   - Een beschikking is een gevolg en het einde van het behandelen, maar vanuit
+     de klant gezien nog niet altijd het product.
+   - Het gevolg kan een product in Open Product worden.
+   - Het hoort ook bij een **Besluit** in de Besluiten API (BRC), eventueel met
+     een document. Besluittype en documenttype horen bij het zaaktype.
+   - **Een afwijzing is ook een gevolg:** niet in Open Product, wel als besluit
+     in de BRC.
+6. **Sluiten.** Als alles voor het gevolg gedaan is, wordt de zaak gesloten.
+   - De zaak blijft niet open tijdens de bezwaartermijn.
+   - Soms volgt eerst een **procestermijn**, bijvoorbeeld als een verstrekte
+     subsidie nog gecontroleerd moet worden, en daarna de bewaartermijn
+     (archiveren is het natraject).
+7. **Heropenen** gebeurt regelmatig, bijvoorbeeld om documenten bij te voegen.
+   Niet om de behandeling over te doen: de zaak stond al in de eindstatus.
+
+Gevolgen voor dit plan:
+
+- **Beschikking ↔ Besluit (BRC):** in §2 al zo; dat geldt ook voor een
+  afwijzing.
+- **Product:** het product (Open Product) is een gevolg naast de beschikking,
+  niet hetzelfde. Bij GPK is dat de bestaande `Gehandicaptenparkeerkaart`.
+- **Oppakken en behandelen zijn losse processen.** De call activity in
+  aanvraag-oppakken (§11.11, bpmn-naar-gzac 0.2.0) laat het oppakproces wachten
+  tot de behandeling klaar is, en dat past niet. Starten zonder te wachten past
+  beter. Zie de open vraag hieronder.
+- **Geen zaak starten** is een uitkomst van oppakken en geen
+  Beslissingsuitkomst. Waar `buitenBehandeling` (§2) dan landt, is nog open.
+
+## 7. Nog open
 
 1. Bekendmaking: wat als één van meer belanghebbenden de beschikking niet kon
    krijgen? Juridisch na te lopen (Awb 3:40, 3:41, 6:8). Het model legt het al
@@ -158,3 +209,20 @@ taakformulier en artefact 6 tegelijk.
 2. De relatie tussen een beslissing en een eerdere beslissing komt niet in dit
    domein. Of het domein bezwaar en beroep een verwijzing naar de bestreden
    beschikking nodig heeft (`BezwaarTegen` → Beschikking), is aan dat domein.
+3. **Hoe start oppakken de behandeling?** Een call activity wacht tot het
+   aangeroepen proces klaar is. Het oppakproces blijft dan open zolang de zaak
+   loopt, en dat past niet bij losse processen. Wat wel kan in GZAC/Operaton:
+   - **a.** Een servicetaak die het behandelproces start zonder te wachten, zoals
+     het handwerk deed (`startProcessByProcessDefinitionKey`). Het model kent
+     dan een vaste proces-id (data `startProces`). De regelset schrijft die
+     expressie, en het model ziet de afhankelijkheid nog steeds.
+   - **b.** Een message-gebeurtenis: oppakken gooit een bericht en het
+     behandelproces start op dat bericht (message start event). Dat is de
+     losste koppeling en staat netjes in BPMN.
+   - **c.** De call activity houden. Dat kan alleen als we accepteren dat
+     oppakken pas eindigt als de behandeling klaar is.
+
+   Voorstel: b, als GZAC de message start toelaat bij een dossier-koppeling
+   (navragen bij FUNDAMENT). Anders a.
+4. Waar landt `buitenBehandeling` (Awb 4:5)? Is het een beslissing in de zaak,
+   of een uitkomst van oppakken waarbij geen zaak start?
