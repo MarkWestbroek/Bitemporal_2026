@@ -140,6 +140,12 @@ const elementTypes = [
       { key: "lusVerzameling", label: "verzameling (procesvariabele)", datatype: "string", zichtbaarAls: { key: "meervoudig" } },
       { key: "lusElement", label: "elementvariabele", datatype: "string", zichtbaarAls: { key: "meervoudig" } },
       { key: "aangeroepenProces", label: "call activity: aangeroepen proces", datatype: "string", placeholder: "proces-id of ${expressie}" },
+      // Business rule task (30-10): welke beslistabel (decision-id = identifier
+      // van het dmn-artefact) en in welke variabele de uitkomst komt.
+      { key: "beslissing", label: "beslistabel (decision-id)", datatype: "string", placeholder: "bv. aanvraag-ontvankelijk", zichtbaarAls: { key: "taakSoort", waarde: "businessRule" } },
+      { key: "resultaat", label: "uitkomst in variabele", datatype: "string", placeholder: "bv. ontvankelijkheid", zichtbaarAls: { key: "taakSoort", waarde: "businessRule" } },
+      // Servicetaak die alleen de interne status van het dossier zet (GZAC: geen plugin-actie nodig).
+      { key: "dossierstatus", label: "zet dossierstatus", datatype: "string", placeholder: "bv. niet-opgepakt", zichtbaarAls: { key: "taakSoort", waarde: "service" } },
       KLEUR_VELD,
     ],
   },

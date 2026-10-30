@@ -16,11 +16,25 @@ import { schrijfBpmn, bpmnIdUit } from "../../transformatie/bpmnXmlSchrijver.js"
 import { bpmnXmlNaarModel } from "./bpmnXmlImport.js";
 import { BPMN_NAAR_GZAC } from "./bpmnGzacRegels.js";
 import { maakBpmnArtefact } from "./bpmnArtefact.js";
+import { maakDmnArtefact } from "../dmn-drd/dmnArtefact.js";
+import { maakObjecttypeArtefact } from "../canoniek-uml/objecttypeArtefact.js";
 
 const CG = new URL("../canoniek-uml/fixtures/cg-test/", import.meta.url);
 const tekst = (pad) => fs.readFileSync(new URL(pad, CG), "utf8");
 const lees = (pad) => JSON.parse(tekst(pad));
 const sha256Hex = (t) => crypto.createHash("sha256").update(t, "utf8").digest("hex");
+
+/** De invoer van de beslistabel aanvraag-ontvankelijk, zoals de bundel hem aan het proces geeft. */
+let _beslissingen;
+const beslissingen = async () => {
+  if (_beslissingen) return _beslissingen;
+  const datatypen = JSON.parse(fs.readFileSync(new URL("../../../../../testdata/gegevenstypen.json", import.meta.url), "utf8")).datatypes;
+  const edienst = lees("gpk-edienst.json");
+  const referentielijsten = { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Partijrol: lees("relatiebeheer-partijrollen.json") };
+  const ot = (await maakObjecttypeArtefact({ modelBestand: lees("omnium-model-cg-test-v3.json"), edienst, datatypen, referentielijsten, identifier: "gehandicaptenparkeerkaartaanvraag", sha256Hex })).artefact;
+  const { invoer } = await maakDmnArtefact({ modelBestand: lees("gpk-beslissingen.dmn-model.json"), edienst, identifier: "aanvraag-ontvankelijk", objecttype: ot, sha256Hex });
+  return (_beslissingen = { "aanvraag-ontvankelijk": invoer });
+};
 
 /** De semantiek van een BPMN-bestand, los van opmaak, commentaar en DI-id's. */
 function semantiek(xml) {
@@ -95,6 +109,7 @@ test("artefact aanvraag-oppakken uit het BPMN-model: bericht start de beoordelin
     edienst: lees("gpk-edienst.json"),
     identifier: "aanvraag-oppakken",
     sha256Hex,
+    beslissingen: await beslissingen(),
   });
   assert.deepEqual(diagnostics, []);
   const xml = artefact.artefactInhoud.payload;
@@ -107,8 +122,21 @@ test("artefact aanvraag-oppakken uit het BPMN-model: bericht start de beoordelin
   assert.deepEqual(s.proces, { id: "aanvraag-oppakken", name: "Aanvraag oppakken", isExecutable: "true" });
   assert.deepEqual(
     s.knopen.map((k) => k.id),
-    ["start", "zaak-aanmaken", "rol-aanvrager-aanmaken", "document-koppelen", "status-ontvangen", "vervolgproces-starten", "einde"]
+    ["start", "ontvankelijkheid-toetsen", "ontvankelijk", "status-niet-opgepakt", "niet-opgepakt", "zaak-aanmaken", "rol-aanvrager-aanmaken", "document-koppelen", "status-ontvangen", "vervolgproces-starten", "einde"]
   );
+  // Ontvankelijkheid (0.4.0): de beslistabel met vaste decisionRef; ja → zaak, nee → dossierstatus, einde.
+  assert.equal(s.knopen.find((k) => k.id === "ontvankelijkheid-toetsen").aard, "businessRuleTask");
+  assert.equal(s.camunda["ontvankelijkheid-toetsen@decisionRef"], "aanvraag-ontvankelijk");
+  assert.equal(s.camunda["ontvankelijkheid-toetsen@resultVariable"], "ontvankelijkheid");
+  assert.equal(s.camunda["ontvankelijkheid-toetsen@mapDecisionResult"], "singleResult");
+  assert.match(xml, /<camunda:inputParameter name="soort">\$\{documentDelegateService\.findValueByJsonPointerOrDefault\(&quot;\/soort&quot;, execution, null\)\}<\/camunda:inputParameter>/);
+  assert.match(xml, /<camunda:inputParameter name="bijlagen">[^<]*&quot;\/bijlagen&quot;/);
+  assert.doesNotMatch(xml, /inputParameter name="bsn"/, "bsn is al een procesvariabele (Verzoek-plugin)");
+  assert.equal(s.camunda["status-niet-opgepakt@expression"], "${documentDelegateService.setInternalStatus(execution, 'niet-opgepakt')}");
+  assert.deepEqual(s.flows.filter((f) => f[1] === "ontvankelijk").map((f) => [f[2], f[3]]), [
+    ["zaak-aanmaken", "${ontvankelijkheid.ontvankelijk}"],
+    ["status-niet-opgepakt", "${!ontvankelijkheid.ontvankelijk}"],
+  ]);
   // Regelset 0.3.0: een werpend bericht-event correleert het message start event
   // van het beoordelingsproces, op hetzelfde dossier (businessKey); oppakken
   // wacht niet op de behandeling.
@@ -118,10 +146,10 @@ test("artefact aanvraag-oppakken uit het BPMN-model: bericht start de beoordelin
   assert.equal(s.camunda["vervolgproces-starten@asyncAfter"], "true");
   assert.match(s.camunda["vervolgproces-starten-definitie@expression"], /createMessageCorrelation\('gehandicaptenparkeerkaart-beoordelen-gevraagd'\)\.processInstanceBusinessKey\(execution\.getProcessBusinessKey\(\)\).*correlateStartMessage\(\)\}$/);
   assert.match(xml, /<bpmn:message id="Message_gehandicaptenparkeerkaart-beoordelen-gevraagd" name="gehandicaptenparkeerkaart-beoordelen-gevraagd" \/>/);
-  assert.doesNotMatch(xml, /callActivity|camunda:in/);
+  assert.doesNotMatch(xml, /callActivity|<camunda:in /);
   assert.deepEqual(aangeroepen, []);
   assert.deepEqual(gestart, ["gehandicaptenparkeerkaart-beoordelen"]);
-  assert.deepEqual(artefact.afhankelijkheden.map((a) => a.identifier), ["GPK", "gehandicaptenparkeerkaart-beoordelen"]);
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["GPK", undefined], ["aanvraag-ontvankelijk", "dmn"], ["gehandicaptenparkeerkaart-beoordelen", undefined]]);
   // Elk element in de trace, met zijn activityId.
   assert.ok(artefact.traceregels.some((t) => t.doelPad === "#document-koppelen"));
 });
@@ -131,7 +159,7 @@ test("call activity: een expressie is een fout voor GZAC, een onbekend proces ee
     const m = lees("gpk-processen.bpmn-model.json");
     const el = Object.values(m.model.elements).find((e) => e.data?.bpmnId === "vervolgproces-starten");
     Object.assign(el, { elementType: "taak", data: { bpmnId: "vervolgproces-starten", aangeroepenProces: sleutel } });
-    return (await maakBpmnArtefact({ modelBestand: m, edienst: lees("gpk-edienst.json"), identifier: "aanvraag-oppakken", sha256Hex })).diagnostics;
+    return (await maakBpmnArtefact({ modelBestand: m, edienst: lees("gpk-edienst.json"), identifier: "aanvraag-oppakken", sha256Hex, beslissingen: await beslissingen() })).diagnostics;
   };
   assert.deepEqual((await met("${processDefinitionKey}")).map((d) => [d.code, d.severity]), [["BPMN-AANGEROEPEN", "error"]]);
   assert.deepEqual((await met("bestaat-niet")).map((d) => [d.code, d.severity]), [["BPMN-AANGEROEPEN", "warning"]]);
@@ -140,13 +168,13 @@ test("call activity: een expressie is een fout voor GZAC, een onbekend proces ee
 test("bericht: zonder message start event in de e-dienst een waarschuwing", async () => {
   const m = lees("gpk-processen.bpmn-model.json");
   Object.values(m.model.elements).find((e) => e.data?.bpmnId === "vervolgproces-starten").data.bericht = "niemand-luistert";
-  const { diagnostics, gestart } = await maakBpmnArtefact({ modelBestand: m, edienst: lees("gpk-edienst.json"), identifier: "aanvraag-oppakken", sha256Hex });
+  const { diagnostics, gestart } = await maakBpmnArtefact({ modelBestand: m, edienst: lees("gpk-edienst.json"), identifier: "aanvraag-oppakken", sha256Hex, beslissingen: await beslissingen() });
   assert.deepEqual(diagnostics.map((d) => [d.code, d.severity]), [["BPMN-BERICHT", "warning"]]);
   assert.deepEqual(gestart, []);
 });
 
 test("rondgang bericht: schrijven en teruglezen bewaart werpen en de berichtnaam", async () => {
-  const { artefact } = await maakBpmnArtefact({ modelBestand: lees("gpk-processen.bpmn-model.json"), edienst: lees("gpk-edienst.json"), identifier: "aanvraag-oppakken", sha256Hex });
+  const { artefact } = await maakBpmnArtefact({ modelBestand: lees("gpk-processen.bpmn-model.json"), edienst: lees("gpk-edienst.json"), identifier: "aanvraag-oppakken", sha256Hex, beslissingen: await beslissingen() });
   const { core } = bpmnXmlNaarModel(artefact.artefactInhoud.payload, { DOMParser, bestandsnaam: "terug" });
   const el = Object.values(core.elements).find((e) => e.data?.bpmnId === "vervolgproces-starten");
   assert.equal(el.elementType, "tussen-event");

@@ -1,6 +1,6 @@
 {
   "model_naam": "GPK-processen (cg-test)",
-  "model_beschrijving": "BPMN-model (profiel bpmn-motor) van de GZAC-processen van de gehandicaptenparkeerkaart; eerste versie ingelezen uit de handgemaakte artefacten 6 en 7 (30-10).",
+  "model_beschrijving": "BPMN-model (profiel bpmn-motor) van de GZAC-processen van de gehandicaptenparkeerkaart; eerste versie ingelezen uit de handgemaakte artefacten 6 en 7 (30-10). Oppakken toetst de ontvankelijkheid (beslistabel aanvraag-ontvankelijk) voordat er een zaak start; het beoordelingsproces start op een bericht.",
   "model": {
     "elements": {
       "bp_start": {
@@ -11,6 +11,56 @@
         "data": {
           "soort": "",
           "bpmnId": "start"
+        }
+      },
+      "bp_ontvankelijkheid_toetsen": {
+        "id": "bp_ontvankelijkheid_toetsen",
+        "naam": "Ontvankelijkheid toetsen",
+        "elementType": "taak",
+        "compartimenten": [],
+        "data": {
+          "taakSoort": "businessRule",
+          "bpmnAard": "businessRuleTask",
+          "bpmnId": "ontvankelijkheid-toetsen",
+          "meervoudig": "",
+          "lusVerzameling": "",
+          "lusElement": "",
+          "beslissing": "aanvraag-ontvankelijk",
+          "resultaat": "ontvankelijkheid"
+        }
+      },
+      "bp_ontvankelijk": {
+        "id": "bp_ontvankelijk",
+        "naam": "Ontvankelijk?",
+        "elementType": "exclusief",
+        "compartimenten": [],
+        "data": {
+          "bpmnId": "ontvankelijk"
+        }
+      },
+      "bp_status_niet_opgepakt": {
+        "id": "bp_status_niet_opgepakt",
+        "naam": "Dossierstatus Niet opgepakt",
+        "elementType": "taak",
+        "compartimenten": [],
+        "data": {
+          "taakSoort": "service",
+          "bpmnAard": "serviceTask",
+          "bpmnId": "status-niet-opgepakt",
+          "meervoudig": "",
+          "lusVerzameling": "",
+          "lusElement": "",
+          "dossierstatus": "niet-opgepakt"
+        }
+      },
+      "bp_niet_opgepakt": {
+        "id": "bp_niet_opgepakt",
+        "naam": "Aanvraag niet opgepakt",
+        "elementType": "eind-event",
+        "compartimenten": [],
+        "data": {
+          "soort": "",
+          "bpmnId": "niet-opgepakt"
         }
       },
       "bp_zaak_aanmaken": {
@@ -96,7 +146,7 @@
         "naam": "",
         "elementType": "sequence-flow",
         "source": "bp_start",
-        "target": "bp_zaak_aanmaken",
+        "target": "bp_ontvankelijkheid_toetsen",
         "compartimenten": [],
         "data": {
           "conditie": "",
@@ -167,6 +217,64 @@
           "conditie": "",
           "standaard": false,
           "bpmnId": "f6"
+        }
+      },
+      "bp_f7": {
+        "id": "bp_f7",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_ontvankelijkheid_toetsen",
+        "target": "bp_ontvankelijk",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f7"
+        }
+      },
+      "bp_f8": {
+        "id": "bp_f8",
+        "naam": "ja",
+        "elementType": "sequence-flow",
+        "source": "bp_ontvankelijk",
+        "target": "bp_zaak_aanmaken",
+        "compartimenten": [],
+        "data": {
+          "conditie": "${ontvankelijkheid.ontvankelijk}",
+          "standaard": false,
+          "bpmnId": "f8"
+        }
+      },
+      "bp_f9": {
+        "id": "bp_f9",
+        "naam": "nee",
+        "elementType": "sequence-flow",
+        "source": "bp_ontvankelijk",
+        "target": "bp_status_niet_opgepakt",
+        "compartimenten": [],
+        "data": {
+          "conditie": "${!ontvankelijkheid.ontvankelijk}",
+          "standaard": false,
+          "bpmnId": "f9",
+          "knikken": [
+            {
+              "x": 420,
+              "y": 260
+            }
+          ]
+        }
+      },
+      "bp_f10": {
+        "id": "bp_f10",
+        "naam": "",
+        "elementType": "sequence-flow",
+        "source": "bp_status_niet_opgepakt",
+        "target": "bp_niet_opgepakt",
+        "compartimenten": [],
+        "data": {
+          "conditie": "",
+          "standaard": false,
+          "bpmnId": "f10"
         }
       },
       "bp_start_2": {
@@ -249,7 +357,7 @@
             }
           },
           {
-            "elementId": "bp_zaak_aanmaken",
+            "elementId": "bp_ontvankelijkheid_toetsen",
             "position": {
               "x": 240,
               "y": 80
@@ -260,10 +368,21 @@
             }
           },
           {
-            "elementId": "bp_rol_aanvrager_aanmaken",
+            "elementId": "bp_ontvankelijk",
             "position": {
-              "x": 390,
-              "y": 80
+              "x": 395,
+              "y": 95
+            },
+            "size": {
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "elementId": "bp_status_niet_opgepakt",
+            "position": {
+              "x": 540,
+              "y": 220
             },
             "size": {
               "width": 100,
@@ -271,7 +390,18 @@
             }
           },
           {
-            "elementId": "bp_document_koppelen",
+            "elementId": "bp_niet_opgepakt",
+            "position": {
+              "x": 692,
+              "y": 242
+            },
+            "size": {
+              "width": 36,
+              "height": 36
+            }
+          },
+          {
+            "elementId": "bp_zaak_aanmaken",
             "position": {
               "x": 540,
               "y": 80
@@ -282,7 +412,7 @@
             }
           },
           {
-            "elementId": "bp_status_ontvangen",
+            "elementId": "bp_rol_aanvrager_aanmaken",
             "position": {
               "x": 690,
               "y": 80
@@ -293,9 +423,31 @@
             }
           },
           {
+            "elementId": "bp_document_koppelen",
+            "position": {
+              "x": 840,
+              "y": 80
+            },
+            "size": {
+              "width": 100,
+              "height": 80
+            }
+          },
+          {
+            "elementId": "bp_status_ontvangen",
+            "position": {
+              "x": 990,
+              "y": 80
+            },
+            "size": {
+              "width": 100,
+              "height": 80
+            }
+          },
+          {
             "elementId": "bp_vervolgproces_starten",
             "position": {
-              "x": 872,
+              "x": 1172,
               "y": 102
             },
             "size": {
@@ -306,7 +458,7 @@
           {
             "elementId": "bp_einde",
             "position": {
-              "x": 992,
+              "x": 1292,
               "y": 102
             },
             "size": {
