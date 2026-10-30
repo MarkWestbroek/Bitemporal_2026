@@ -1075,7 +1075,79 @@ Niet modelgebonden en dus nog sjabloon of inrichting bij FUNDAMENT:
 case-definition, process-document-link, process-link (plugin-acties),
 zaak-type-link en document-list-column.
 
-### 11.10 Vervolg
+### 11.10 Exportstap in de Studio: alle artefacten van een e-dienst (2026-10-30)
+
+Stap (a) en (b) van het voorstel aan FUNDAMENT (go Mark 30-10): de aansturing
+van de CLI (`scripts/maak_inrichtingsartefact.mjs`) als export in het
+transformatiepaneel, **Exporteren → Inrichtingsartefacten (e-dienst → register
+op Fundament)**. Dezelfde modules, dus dezelfde payloadHash als de CLI.
+
+| Deel | Bestand |
+|---|---|
+| Bundel: alle artefacten van een e-dienst, objecttype eerst, per artefact een eigen fout | `transformatie/inrichtingsBundel.js` |
+| Lezen uit het register + vergelijken (nieuw / gewijzigd / ongewijzigd) | `transformatie/inrichtingsRegister.js` |
+| De stap zonder Studio: referentielijsten, bundel, register, zip-inhoud + `OVERZICHT.md` | `transformatie/inrichtingsExport.js` |
+| Studio-kant: map → V3, opties, download | `studio/activities/inrichtingsExport.js` |
+| Datatypen in de frontend (kopie van `testdata/gegevenstypen.json`, test bewaakt gelijkheid) | `transformatie/gegevenstypen.snapshot.json` |
+| Tests | `inrichtingsBundel/Register/Export.test.js`, e2e `37-studio-inrichtingsartefacten` |
+
+**Invoer.**
+
+- **Model:** het canonieke model in de bron-map (`diagram05`, via `exporteerV3`),
+  of een gekozen V3-bestand; het bestand wint.
+- **E-dienstmodel:** een JSON-bestand (verplicht). Een modeltaal voor de e-dienst
+  is stap (c).
+- **Referentielijsten:** per lijst in de e-dienst, in deze volgorde:
+  1. een gekozen bestand waarvan de naam de lijstnaam bevat
+     (`aanvraag-aanvraagtypen.json` → `Aanvraagtype`);
+  2. het register (bron `register: /full/…`, laatste stand);
+  3. de `eersteVulling` in de e-dienst.
+
+  Per lijst zegt een melding (`INR-REFLIJST`) waar de items vandaan kwamen.
+- **Peiltijdstip:** leeg = nu (RFC 3339, op de seconde).
+
+**Uitvoer.** Een zip `inrichting-<e-dienst>-<versie>.zip` met per artefact
+`<identifier>.artefact.json` (bij de dossiersoorten `<identifier>.<soort>.artefact.json`,
+zoals de CLI) en een `OVERZICHT.md`. FUNDAMENT registreert de bestanden met
+`omnium-registreer-artefact.ps1` (per bestand, of met `-Map` in
+afhankelijkheidsvolgorde). Het paneel toont per artefact soort, identifier, hash
+en de stand in het register.
+
+**Vergelijken met het register (b, lezen).** Met "vergelijk met het
+inrichting-register" leest de stap `full/artefacten`, `full/artefactsoorten`,
+`full/ediensten` en `full/edienstversies` (`?size=500`, met `has_more`). Elke
+relatie in /full is een lijst voorkomens met versies. De geldende stand is het
+laatste voorkomen zonder afvoer of einde, en daarin de hoogste versie. Soort is
+een id; de code komt uit de artefactsoorten. De match gaat op e-dienstnaam +
+versienummer, soort en identifier:
+
+| Stand | Betekenis |
+|---|---|
+| `ongewijzigd` | zelfde payloadHash |
+| `gewijzigd` | andere payloadHash |
+| `nieuw` | nog niet in het register |
+
+Is het register niet te lezen, dan komt de zip er toch, met een waarschuwing
+`INR-REGISTER`.
+
+**Toegang.** De leesroutes vereisen een sessie (zonder: 401). De stap stuurt
+een token als `Authorization: Bearer`; zonder token stuurt hij de sessiecookie
+mee. CORS staat (30-10) open voor `http://localhost:5176`, niet voor de
+app-host. Schrijven (registreren) vanuit de browser kan nog niet: daarvoor zijn
+een service-account en CORS voor de app-origin nodig, en dat ligt bij BACKEND.
+Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.11).
+
+**Bekende beperking: model uit de map.** De omzetting V3 ↔ canoniek profiel
+(`store/adapters.js`, `convertV3Veld`/`veldNaarV3`) kent de nieuwere
+veldsleutels `verplicht`, `uniek` en `type` niet. Ze leidt verplicht af uit
+`goType` zonder `*`, en schrijft alleen `goType` terug. Uit de map vallen
+daardoor `required` en de codes van referentielijsten weg: twee van de zeven
+GPK-artefacten krijgen een andere hash. De stap waarschuwt dan
+(`INR-MODEL-UIT-MAP`). Registreer voorlopig vanuit het V3-bestand. De e2e-test
+"zelfde payloads als uit het bestand" staat op `fixme` tot dit is opgelost
+(BACKLOG §39).
+
+### 11.11 Vervolg
 
 1. Formulier: machtigen (gemachtigde + subject) en eHerkenning.
 2. Zaaktype: termijnen en resultaten in het model (bv. bij het aanvraagtype)
@@ -1084,5 +1156,8 @@ zaak-type-link en document-list-column.
    heenweg. De processen 6 en 7 staan nu met herkomst "handmatig" in het register.
 4. Dossier: beoordeling/besluit in het canonieke model, zodat de behandelvelden
    (§11.9) uit het model komen; labels als modeleigenschap.
-4. Server-side draaien: dezelfde modules in een Node-runner (render-svc-patroon),
-   geen Go-port.
+5. Server-side draaien: dezelfde modules in een Node-runner (render-svc-patroon),
+   geen Go-port. Kan `transformatie/inrichtingsExport.js` ongewijzigd aanroepen.
+6. Studio: registreren vanuit de browser (schrijfkant van §11.10) zodra BACKEND
+   een service-account en CORS voor de app-origin heeft; daarna een modeltaal
+   voor de e-dienst (stap c) en het formulierdiagram als bron (stap d).

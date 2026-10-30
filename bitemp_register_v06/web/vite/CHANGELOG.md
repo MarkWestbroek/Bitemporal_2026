@@ -9,6 +9,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Exporteren → Inrichtingsartefacten** (30-10, stap a+b voor FUNDAMENT). Het transformatiepaneel
+  maakt alle artefacten van een e-dienst in één keer: objecttype, formulier, zaaktype en
+  dossierdelen. Het model komt uit de map of uit een V3-bestand, het e-dienstmodel en de
+  referentielijsten uit gekozen bestanden. Het resultaat is een zip voor het inrichting-register op
+  Fundament, met dezelfde hash als de CLI. Met "vergelijk met het inrichting-register" toont het
+  paneel per artefact **nieuw**, **gewijzigd** of **ongewijzigd**. Het paneel kreeg daarvoor
+  bestandsopties, verplichte opties en een resultaattabel (docs/TRANSFORMATIES.md §11.10). Bekend:
+  een model uit de map verliest nog verplicht/uniek van velden (BACKLOG §39); de stap waarschuwt
+  dan.
 - **Inrichting: GZAC-dossierbundel uit het model** (30-10, regelset canoniek-naar-gzac-dossier 0.1.0).
   Documentdefinitie (`dossierschema`), form.io-samenvatting en taakformulier (`dossierformulier`) en
   tabbladen (`dossiertabbladen`), elk één artefact. De inhoud komt uit het objecttype-artefact plus
