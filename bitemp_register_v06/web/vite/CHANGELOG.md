@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Inrichting: GZAC-dossierbundel uit het model** (30-10, regelset canoniek-naar-gzac-dossier 0.1.0).
+  Documentdefinitie (`dossierschema`), form.io-samenvatting en taakformulier (`dossierformulier`) en
+  tabbladen (`dossiertabbladen`), elk één artefact. De inhoud komt uit het objecttype-artefact plus
+  behandelvelden uit de e-dienst (`dossierArtefact.js`, `maak_inrichtingsartefact.mjs --soort`,
+  docs/TRANSFORMATIES.md §11.9).
 - **Inrichting: zaaktype-artefact (Catalogi API)** (27-10, regelset canoniek-naar-zaaktype 0.1.0).
   Identificatie en onderwerp uit het aanvraagtype (M0), omschrijving uit de e-dienst, de rest
   letterlijk uit de e-dienst, met toetsen op bijlage ↔ informatieobjecttype, initiator en

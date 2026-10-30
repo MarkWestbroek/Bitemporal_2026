@@ -1,0 +1,101 @@
+{
+  "$id": "gehandicaptenparkeerkaart.schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gehandicaptenparkeerkaart",
+  "description": "Inhoud van het dossier = record.data.data van het aanvraagobject (verzoek-envelop, copyStrategy full): het schema van objecttype gehandicaptenparkeerkaartaanvraag zonder de envelop.",
+  "type": "object",
+  "properties": {
+    "aanvraagnummer": {
+      "type": "string",
+      "description": "Aanvraagnummer (public_reference van Open Formulieren)"
+    },
+    "aanvraagtype": {
+      "type": "string",
+      "description": "Code van het aanvraagtype"
+    },
+    "ingediendOp": {
+      "type": "string",
+      "description": "Tijdstip van indienen (RFC 3339)"
+    },
+    "status": {
+      "type": "string",
+      "description": "Status van de aanvraag in het register"
+    },
+    "soort": {
+      "type": "string",
+      "description": "bestuurder, passagier of instelling"
+    },
+    "eerdereKaart": {
+      "type": "boolean"
+    },
+    "eerderKaartnummer": {
+      "type": "string"
+    },
+    "kenteken": {
+      "type": "string"
+    },
+    "loopafstandMeter": {
+      "type": "integer"
+    },
+    "hulpmiddel": {
+      "type": "string"
+    },
+    "toelichting": {
+      "type": "string"
+    },
+    "partijen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "partijrol": {
+            "type": "string"
+          },
+          "partij": {
+            "type": "object",
+            "properties": {
+              "bsn": {
+                "type": "string"
+              },
+              "kvkNummer": {
+                "type": "string"
+              },
+              "vestigingsnummer": {
+                "type": "string"
+              },
+              "klantUrl": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "bijlagen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "naam": {
+            "type": "string"
+          },
+          "documentUrl": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "beoordeling": {
+      "type": "string",
+      "enum": [
+        "toegekend",
+        "afgewezen"
+      ],
+      "description": "Uitkomst van de taak Aanvraag beoordelen (formulier aanvraag-beoordelen)"
+    },
+    "beoordelingToelichting": {
+      "type": "string",
+      "description": "Toelichting van de behandelaar bij de beoordeling"
+    }
+  }
+}

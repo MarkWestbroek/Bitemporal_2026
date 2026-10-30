@@ -1,0 +1,37 @@
+[
+  {
+    "key" : "samenvatting",
+    "name" : "Samenvatting",
+    "type" : "standard",
+    "contentKey" : "summary",
+    "showTasks" : true
+  },
+  {
+    "key" : "documenten",
+    "name" : "Documenten",
+    "type" : "standard",
+    "contentKey" : "documents",
+    "showTasks" : false
+  },
+  {
+    "key" : "voortgang",
+    "name" : "Voortgang",
+    "type" : "standard",
+    "contentKey" : "progress",
+    "showTasks" : false
+  },
+  {
+    "key" : "historie",
+    "name" : "Historie",
+    "type" : "standard",
+    "contentKey" : "audit",
+    "showTasks" : false
+  },
+  {
+    "key" : "notities",
+    "name" : "Notities",
+    "type" : "standard",
+    "contentKey" : "notes",
+    "showTasks" : false
+  }
+]

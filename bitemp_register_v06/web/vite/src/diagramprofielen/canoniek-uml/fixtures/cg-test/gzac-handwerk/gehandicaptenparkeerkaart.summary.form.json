@@ -1,0 +1,115 @@
+{
+  "display": "form",
+  "components": [
+    {
+      "type": "panel",
+      "key": "aanvraag",
+      "title": "Aanvraag",
+      "input": false,
+      "tableView": false,
+      "components": [
+        {
+          "type": "columns",
+          "key": "kolommen",
+          "input": false,
+          "tableView": false,
+          "columns": [
+            {
+              "components": [
+                {
+                  "type": "textfield",
+                  "key": "aanvraagnummer",
+                  "label": "Aanvraagnummer",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true
+                },
+                {
+                  "type": "textfield",
+                  "key": "status",
+                  "label": "Status in het aanvraagregister",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true
+                },
+                {
+                  "type": "textfield",
+                  "key": "hulpmiddel",
+                  "label": "Hulpmiddel",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true
+                },
+                {
+                  "type": "textfield",
+                  "key": "kenteken",
+                  "label": "Kenteken",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true
+                },
+                {
+                  "type": "textfield",
+                  "key": "eerderKaartnummer",
+                  "label": "Nummer eerdere kaart",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true
+                }
+              ],
+              "width": 6,
+              "size": "md"
+            },
+            {
+              "components": [
+                {
+                  "type": "textfield",
+                  "key": "ingediendOp",
+                  "label": "Ingediend op",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true
+                },
+                {
+                  "type": "textfield",
+                  "key": "soort",
+                  "label": "Soort kaart",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true
+                },
+                {
+                  "type": "number",
+                  "key": "loopafstandMeter",
+                  "label": "Loopafstand (meter)",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true
+                },
+                {
+                  "type": "checkbox",
+                  "key": "eerdereKaart",
+                  "label": "Eerder een kaart gehad",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true
+                },
+                {
+                  "type": "textarea",
+                  "key": "toelichting",
+                  "label": "Toelichting van de aanvrager",
+                  "input": true,
+                  "disabled": true,
+                  "tableView": true,
+                  "rows": 3
+                }
+              ],
+              "width": 6,
+              "size": "md"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

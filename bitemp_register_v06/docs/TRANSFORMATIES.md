@@ -993,12 +993,96 @@ heeft. Daarom zet de e-dienst `registratie.rapport.informatieobjecttype:
 Ontbreekt die, dan valt `pdf_url` weg met melding `FRM-ENVELOP`. Het zaaktype
 toetst dat ook dit informatieobjecttype bij het zaaktype hoort (`ZTT-BIJLAGE`).
 
-### 11.9 Vervolg
+### 11.9 GZAC-dossierbundel: documentdefinitie, form.io-formulieren, tabbladen (2026-10-30)
+
+Opdracht Mark 30-10 (via FUNDAMENT): de GPK-specifieke bestanden van de
+GZAC-dossierbundel komen uit een transformatie, niet uit handwerk ("Ik wil zo min
+mogelijk, liefst geen, handwerk. Dit is de proef die we hier doen."). Een
+handgemaakt bestand mag even als proef dienen, maar moet daarna vervangen worden
+door een gegenereerd bestand.
+
+Er is één artefact per bestand (regelset `canoniek-naar-gzac-dossier` 0.1.0,
+`dossierRegels.js`; aansluiting `dossierArtefact.js`; schrijver
+`gzac-dossier-schrijver@0.1.0`). De payload is de inhoud van het bestand.
+FUNDAMENT leidt het pad in de bundel af uit soort + identifier:
+
+| Soort | Formaat | Bestand in de bundel | GPK |
+|---|---|---|---|
+| `dossierschema` | `json-schema` | `document/definition/<id>.schema.document-definition.json` | `gehandicaptenparkeerkaart` |
+| `dossierformulier` | `formio-json` | `form/<id>.form.json` | `gehandicaptenparkeerkaart.summary`, `aanvraag-beoordelen` |
+| `dossiertabbladen` | `gzac-case-tab-json` | `case/tab/<id>.case-tab.json` | `gehandicaptenparkeerkaart` |
+
+Schema en tabbladen dragen allebei de key van het dossier als identifier; de
+soort onderscheidt ze. Daarom kan een afhankelijkheid in de e-dienst `soort` en
+`afhankelijkVanSoort` noemen, en neemt de runner `--soort`.
+
+**Bron.** De dossierinhoud is het schema van het **objecttype-artefact**, zonder
+de verzoek-envelop: de Verzoek-plugin kopieert `data` naar het dossier. De
+traceregels van het objecttype geven per veld de modelknoop. Zo leest de
+aansluiting het model niet opnieuw en blijft er één projectie. Daarbij komen de
+**behandelvelden** uit de e-dienst (bij het dossierschema, bv. `beoordeling`
+met een enum en `beoordelingToelichting`). Het canonieke model kent nog geen
+beoordeling of besluit; komt dat er, dan horen de behandelvelden daaruit te
+komen.
+
+**Documentdefinitie.** Draft-07 (Valtimo), `$id` = `<id>.schema`. De properties
+zijn die van het objecttype plus de behandelvelden, met de beschrijvingen en
+beperkingen uit het model (enum, patroon, lengte, `required`). Formats die
+draft-07 niet kent (`bsn`, `kenteken`, `int32`, …) vallen weg (melding
+`DOS-FORMAT`, info); het patroon ernaast blijft de controle. Bovenaan is het
+schema open, zonder `additionalProperties: false`: de inhoud groeit in GZAC
+(behandelvelden, wat een taakformulier meestuurt). Dieper in het schema blijven
+de beperkingen van het model staan.
+
+**Formulieren.** De e-dienst zegt welke velden in welke volgorde in welk paneel
+staan (`panelen[].velden`, `kolommen`, `alleenLezen`). Een paneel `{uit:
+<formulier>}` neemt de panelen van een ander dossierformulier over; zo herhaalt
+het taakformulier de samenvatting. Het componenttype volgt uit het schema
+(eerste regel die past):
+
+| Veld | Component |
+|---|---|
+| behandelveld met enum | `radio` (labels uit `opties`) |
+| boolean | `checkbox` |
+| integer / number | `number` |
+| string zonder lengte, enum, format of patroon | `textarea` |
+| de rest (ook enum en tijdstip, alleen-lezen) | `textfield` |
+
+Alleen-lezen panelen (standaard) zetten `disabled` en geen validatie, met
+rij voor rij twee kolommen. Invoerpanelen krijgen `validate.required` bij
+`verplicht`. `verzenden` geeft een submit-knop; zonder die knop doet GZAC niets
+met het taakformulier. Het model kent geen labels: zonder label uit de
+e-dienst maakt de regelset er een uit de veldnaam (`ingediendOp` → "Ingediend
+op").
+
+**Tabbladen.** Generiek: de vijf standaardtabbladen (samenvatting, documenten,
+voortgang, historie, notities) staan in de regelset; een lijst `tabbladen` in de
+e-dienst vervangt ze.
+
+**Toetsen.** `DOS-VELD`: een veld in een paneel staat niet in de dossierinhoud.
+`DOS-BEHANDELVELD`: een behandelveld bestaat al in het objecttype.
+`DOS-OBJECTTYPE`: geen objecttype-artefact, of een ander dan de e-dienst noemt.
+`DOS-PANEEL`: `uit` noemt geen dossierformulier.
+
+**Harde test.** In de test zijn de handgemaakte bestanden uit de Fundament-repo
+de referentie (`fixtures/cg-test/gzac-handwerk`). De uitkomst:
+- samenvatting en taakformulier zijn gelijk op de labels na;
+- de tabbladen zijn gelijk;
+- de documentdefinitie heeft dezelfde properties en typen, maar is strenger
+  (beperkingen en beschrijvingen uit het model).
+
+Niet modelgebonden en dus nog sjabloon of inrichting bij FUNDAMENT:
+case-definition, process-document-link, process-link (plugin-acties),
+zaak-type-link en document-list-column.
+
+### 11.10 Vervolg
 
 1. Formulier: machtigen (gemachtigde + subject) en eHerkenning.
 2. Zaaktype: termijnen en resultaten in het model (bv. bij het aanvraagtype)
    zodra meer e-diensten ze delen; nu letterlijk in de e-dienst.
-3. BPMN voor GZAC: uitvoerbare BPMN (engine-extensies), §10 heeft alleen de
-   heenweg.
+3. BPMN voor GZAC: uitvoerbare BPMN (engine-extensies); §10 heeft alleen de
+   heenweg. De processen 6 en 7 staan nu met herkomst "handmatig" in het register.
+4. Dossier: beoordeling/besluit in het canonieke model, zodat de behandelvelden
+   (§11.9) uit het model komen; labels als modeleigenschap.
 4. Server-side draaien: dezelfde modules in een Node-runner (render-svc-patroon),
    geen Go-port.

@@ -13,13 +13,18 @@
 //     --model <V3-model.json> --edienst <edienst.json> --artefact aanvraag \
 //     [--peiltijdstip 2026-10-25T06:51:13Z] [--referentielijst Aanvraagtype=<items.json>] \
 //     [--doel <handgemaakt artefact.json | export-map>] [--uit <artefact.json>] \
-//     [--objecttype <objecttype-artefact.json>]
+//     [--objecttype <objecttype-artefact.json>] [--soort <soort>]
 //
 // De soort van het artefact in het e-dienstmodel kiest de transformatie:
 // objecttype (JSON Schema), formulier (Open Formulieren-export) of zaaktype
 // (Catalogi API, --artefact = zaaktype-identificatie). Bij een formulier
 // toetst --objecttype de aansluiting key ↔ property; de keuzelijsten komen uit
 // --referentielijst, net als het aanvraagtype van een zaaktype.
+//
+// De GZAC-dossierbundel (§11.9): dossierschema (documentdefinitie),
+// dossierformulier (form.io) en dossiertabbladen, elk één bestand; de
+// dossierinhoud komt uit --objecttype. Schema en tabbladen dragen dezelfde
+// identifier (de key van het dossier): kies dan met --soort.
 //
 // Met --doel vergelijkt het de payload met een bestaand (handgemaakt)
 // artefact (bij een formulier: de export-map, {bestandsnaam: inhoud}): gelijke
@@ -33,6 +38,7 @@ import { fileURLToPath } from "node:url";
 import { maakObjecttypeArtefact, verschillen } from "../web/vite/src/diagramprofielen/canoniek-uml/objecttypeArtefact.js";
 import { maakFormulierArtefact } from "../web/vite/src/diagramprofielen/canoniek-uml/formulierArtefact.js";
 import { maakZaaktypeArtefact } from "../web/vite/src/diagramprofielen/canoniek-uml/zaaktypeArtefact.js";
+import { maakDossierArtefact, DOSSIER_SOORTEN } from "../web/vite/src/diagramprofielen/canoniek-uml/dossierArtefact.js";
 import { jcsHash } from "../web/vite/src/transformatie/jcs.js";
 
 const HIER = path.dirname(fileURLToPath(import.meta.url));
@@ -64,7 +70,7 @@ async function main() {
     referentielijsten[naam] = Array.isArray(inhoud) ? inhoud : inhoud.items || [];
   }
   const edienst = lees(a.edienst);
-  const soort = (edienst.artefacten || []).find((x) => x.identifier === a.artefact)?.soort;
+  const soort = (edienst.artefacten || []).find((x) => x.identifier === a.artefact && (!a.soort || x.soort === a.soort))?.soort;
   const invoer = {
     modelBestand: lees(a.model),
     edienst,
@@ -79,9 +85,12 @@ async function main() {
       ? await maakFormulierArtefact({ ...invoer, objecttype: a.objecttype ? lees(a.objecttype) : null })
       : soort === "zaaktype"
         ? await maakZaaktypeArtefact(invoer)
-        : await maakObjecttypeArtefact(invoer);
+        : DOSSIER_SOORTEN.includes(soort)
+          ? await maakDossierArtefact({ ...invoer, soort, objecttype: a.objecttype ? lees(a.objecttype) : null })
+          : await maakObjecttypeArtefact(invoer);
 
-  const uitPad = a.uit || path.resolve(process.cwd(), `${a.artefact}.artefact.json`);
+  const stam = DOSSIER_SOORTEN.includes(soort) ? `${a.artefact}.${soort}` : a.artefact;
+  const uitPad = a.uit || path.resolve(process.cwd(), `${stam}.artefact.json`);
   fs.mkdirSync(path.dirname(uitPad), { recursive: true });
   fs.writeFileSync(uitPad, `${JSON.stringify(artefact, null, 2)}\n`, "utf8");
   console.log(`Artefact geschreven: ${uitPad}`);
