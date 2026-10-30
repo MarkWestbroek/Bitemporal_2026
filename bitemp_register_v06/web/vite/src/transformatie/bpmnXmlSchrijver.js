@@ -15,6 +15,13 @@
  * engine bindt acties en formulieren op die activityId), anders een slug van de
  * naam, anders de Omnium-id. Uniek gemaakt binnen het proces.
  *
+ * Berichten: een event met soort "bericht" en een `data.bericht` (de naam)
+ * krijgt een `bpmn:message` op definitions-niveau en een messageRef. Een
+ * werpend tussen-event (`data.richting` "werpt") wordt een
+ * intermediateThrowEvent; wat de engine bij het werpen doet (Operaton: het
+ * message start event van een ander proces correleren) komt uit de regelset
+ * (`berichten.werpen`, met `{bericht}` voor de naam).
+ *
  * Nog niet: pools/lanes, message flows, data-objecten, notities, boundary
  * events en de inhoud van subprocessen. Die geven een melding
  * `BPMN-SCHRIJVER` en blijven weg.
@@ -86,6 +93,7 @@ function tagVan(el) {
     return TAAK_TAG[el.data?.taakSoort || ""] || "task";
   }
   if (t === "subproces") return "subProcess";
+  if (t === "tussen-event" && el.data?.richting === "werpt") return "intermediateThrowEvent";
   return EVENT_TAG[t] || GATEWAY_TAG[t] || null;
 }
 const maatSoort = (t) => (EVENT_TAG[t] ? "event" : GATEWAY_TAG[t] ? "gateway" : "taak");
@@ -165,13 +173,21 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     return obj || {};
   };
 
+  // ── Berichten: één bpmn:message per naam ──
+  const berichten = new Map();
+  for (const { el } of opDiagram.values()) {
+    const naam = el.data?.soort === "bericht" ? el.data?.bericht : "";
+    if (naam && !berichten.has(naam)) berichten.set(naam, `Message_${bpmnIdUit(naam) || berichten.size + 1}`);
+  }
+
   // ── Proces ──
   const r = [];
   const naamVan = (el) => (el.naam ? el.naam : undefined);
   for (const { el, tag } of opDiagram.values()) {
     const id = ids.get(el.id);
     const meervoudig = el.data?.meervoudig;
-    const regel = taakRegel(tag);
+    const werpt = el.data?.soort === "bericht" && (tag === "intermediateThrowEvent" || tag === "endEvent");
+    const regel = werpt ? eng.berichten?.werpen || {} : taakRegel(tag);
     const a = { id, name: naamVan(el) };
     if (tag === "callActivity") a.calledElement = el.data.aangeroepenProces;
     Object.assign(a, metNs({ ...regel.attributen }));
@@ -183,7 +199,16 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     for (const f of inkomend.get(el.id) || []) kinderen.push(`<bpmn:incoming>${f}</bpmn:incoming>`);
     for (const f of uitgaand.get(el.id) || []) kinderen.push(`<bpmn:outgoing>${f}</bpmn:outgoing>`);
     const definitie = SOORT_DEFINITIE[el.data?.soort];
-    if (definitie && EVENT_TAG[el.elementType]) kinderen.push(`<bpmn:${definitie} id="${id}-definitie" />`);
+    if (definitie && EVENT_TAG[el.elementType]) {
+      const bericht = el.data?.soort === "bericht" ? el.data?.bericht : "";
+      const d = { id: `${id}-definitie`, messageRef: bericht ? berichten.get(bericht) : undefined };
+      // Wat de engine bij het werpen doet; {bericht} = de berichtnaam (letterlijk vervangen, ${…} blijft staan).
+      if (werpt) {
+        if (bericht) for (const [k, v] of Object.entries(metNs(regel.definitie))) d[k] = String(v).split("{bericht}").join(bericht);
+        else meld(`Werpend bericht-event "${el.naam || el.id}" heeft geen berichtnaam`, el.id);
+      }
+      kinderen.push(`<bpmn:${definitie}${attrs(d)} />`);
+    }
     if (meervoudig) {
       const lus = { isSequential: meervoudig === "sequentieel" ? "true" : undefined };
       if (eng.lus) {
@@ -239,6 +264,7 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
   const xml = [
     `<?xml version="1.0" encoding="UTF-8"?>`,
     `<bpmn:definitions${attrs({ ...ns, id: `Definitions_${proces.id}`, targetNamespace })}>`,
+    ...[...berichten].map(([naam, id]) => `  <bpmn:message${attrs({ id, name: naam })} />`),
     `  <bpmn:process${attrs(procesAttr)}>`,
     ...r,
     `  </bpmn:process>`,

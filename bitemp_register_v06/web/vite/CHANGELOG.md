@@ -19,7 +19,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   ze). De rondgang van de GZAC-processen is semantisch gelijk, op de call activity na
   (docs/TRANSFORMATIES.md §11.11). Engine-regelset 0.2.0: de call activity noemt een vaste
   proces-id, omdat de dossierexport van GZAC geen expressie in `calledElement` volgt
-  (toets `BPMN-AANGEROEPEN`).
+  (toets `BPMN-AANGEROEPEN`). Engine-regelset 0.3.0: oppakken en behandelen zijn losse processen;
+  het oppakproces werpt een bericht en het beoordelingsproces start op een message start event, op
+  hetzelfde dossier (toets `BPMN-BERICHT`). Events kregen `richting` (werpt) en `bericht` (naam).
 - **Exporteren → Inrichtingsartefacten** (30-10, stap a+b voor FUNDAMENT). Het transformatiepaneel
   maakt alle artefacten van een e-dienst in één keer: objecttype, formulier, zaaktype en
   dossierdelen. Het model komt uit de map of uit een V3-bestand, het e-dienstmodel en de
