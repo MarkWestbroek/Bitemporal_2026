@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.25.0] — 2026-10-31
+
 ### Toegevoegd
 - **Inhoud Editor: JSON-boom en BPMN-diagram** (30-10). Lange JSON of BPMN-XML in een tekstveld
   (bv. de payload van een inrichtingsartefact) krijgt een knop "bekijk": een gekleurde, inklapbare

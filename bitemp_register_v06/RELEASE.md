@@ -8,6 +8,33 @@
 
 ---
 
+## studio 0.25.0 (2026-10-31)
+
+Alleen frontend; de api op app blijft 0.17.0. De Go-wijzigingen sinds studio 0.24.0 (afgeleide
+relaties, tijdprecisie, subtype-id, enkelvoudig materieel) zijn via de devloop-images naar
+Fundament gegaan; een api-release voor app is een aparte stap. Geen databasegevolg, geen nieuwe
+instellingen. Frontend: [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio 0.25.0).
+
+Studio 0.25.0, samengevat: **de inrichting van e-diensten uit het model**. Uit het canonieke
+model en een e-dienstbestand maakt de Studio het objecttype (met de verzoek-envelop voor GZAC),
+het formulier voor Open Formulieren, het zaaktype voor de Catalogi API en de GZAC-dossierbundel
+(dossierschema, formulieren, tabbladen). Uit een BPMN-model maakt hij uitvoerbare BPMN voor GZAC
+(het vervolgproces start op een bericht). Een beslistabel (DMN) toetst de ontvankelijkheid in het
+oppakproces. Exporteren → *Inrichtingsartefacten* maakt alles in één zip voor het register op
+Fundament. Verder:
+- **de V3.1-veldsleutels overleven de Studio** (`verplicht`, `uniek`, `type`, `format`). In 0.24.0
+  maakte een import of export alle velden verplicht en verloor hij `uniek`; dat is nodig voor
+  modelleren in Omnium op Fundament;
+- tijdprecisie in het canonieke profiel;
+- voorwaardelijk tonen van een eigenschap (M3 `zichtbaarAls`);
+- in de inhoud-editor materiële elementen als lijst van voorkomens;
+- een JSON-boom en een BPMN-diagram voor lange JSON of BPMN-XML in een tekstveld.
+
+Uitrol: image `bitemp-viz-frontend:0.25.0` (met `--build-arg VITE_GIT_SHA=$(git rev-parse --short
+HEAD)`), daarna `./update.sh` op app; Omnium op Fundament via FUNDAMENT.
+
+---
+
 ## studio 0.24.0 (2026-10-23)
 
 Alleen frontend; de api blijft 0.17.0. Geen databasegevolg, geen nieuwe instellingen. Frontend:

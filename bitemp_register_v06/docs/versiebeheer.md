@@ -61,7 +61,10 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.24.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.25.0`**
+  (2026-10-31: inrichting van e-diensten uit het model — objecttype, formulier, zaaktype,
+  GZAC-dossierbundel, uitvoerbare BPMN en een DMN-beslistabel, export als zip voor Fundament; de
+  V3.1-veldsleutels overleven de Studio; alleen frontend), na **`studio/v0.24.0`**
   (2026-10-23: auto-layout op leesvolgorde in alle profielen en ArchiMate-lagen op afhankelijkheden,
   use case naar Cockburn, het superprofiel (notitie, constraint, annotatie-lijn, diagramverwijzing),
   doorklikken en Verwezen door, groupings als containers; alleen frontend), na **`studio/v0.23.0`**
