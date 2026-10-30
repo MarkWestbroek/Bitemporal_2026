@@ -1,5 +1,5 @@
 // Studio — exportstap "Inrichtingsartefacten" in het transformatiepaneel (stap a+b, 30-10):
-// e-dienst + V3-model + referentielijsten kiezen → zip met de artefacten, en met
+// e-dienst + V3-model + referentielijsten + BPMN-model kiezen → zip met de artefacten, en met
 // "vergelijk" per artefact nieuw/gewijzigd/ongewijzigd uit het (nagebootste) register.
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -44,6 +44,7 @@ test("zip met alle artefacten van de GPK-e-dienst", async ({ page }) => {
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "model", fix("omnium-model-cg-test-v3.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
+  await kies(page, "bpmn", fix("gpk-processen.bpmn-model.json"));
   await expect(page.locator('[data-optie="referentielijsten"]')).toContainText("relatiebeheer-partijrollen.json");
 
   const download = page.waitForEvent("download");
@@ -61,6 +62,7 @@ test("vergelijken met het register: ongewijzigd, gewijzigd, nieuw", async ({ pag
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "model", fix("omnium-model-cg-test-v3.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
+  await kies(page, "bpmn", fix("gpk-processen.bpmn-model.json"));
   const eerste = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();
   const zip = fs.readFileSync(await (await eerste).path(), "latin1");
@@ -96,41 +98,9 @@ test("vergelijken met het register: ongewijzigd, gewijzigd, nieuw", async ({ pag
   expect(auth).toBe("Bearer geheim-token");
 });
 
-// Het model uit de map werkt, maar geeft nog niet dezelfde payloads: de omzetting
-// V3 ↔ canoniek profiel verliest verplicht/uniek/type van velden (BACKLOG, 30-10).
-// Zodra dat is opgelost: de fixme weg, dan bewaakt deze test de gelijkheid.
-test("zonder V3-bestand: het canonieke model uit de map geeft een waarschuwing", async ({ page }) => {
-  await openPaneel(page);
-  // Het cg-test-model in het canonieke profiel laden en in de map zetten.
-  const v3 = JSON.parse(fs.readFileSync(fix("omnium-model-cg-test-v3.json"), "utf8"));
-  await page.evaluate(async (v3) => {
-    const { importeerV3 } = await import(location.origin + "/viz/react/src/diagramprofielen/canoniek-uml/serialisatie.js");
-    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
-    const { useModellerenStore: ms } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
-    const { useTransformStore } = await import(location.origin + "/viz/react/src/studio/activities/TransformatiePaneel.jsx");
-    const st = getProfieltype("diagram05").useStore;
-    st.getState().laadModel(importeerV3(v3));
-    const s = st.getState();
-    const map = ms.getState().nieuweMap("Canoniek");
-    ms.getState().plaatsMeerdere([
-      ...Object.keys(s.diagrams).map((d) => `diagram05::${d}`),
-      ...Object.values(s.elements).filter((e) => !e.source).map((e) => `el::diagram05::${e.id}`),
-    ], map);
-    useTransformStore.getState().sluiten();
-    useTransformStore.getState().openen(map, "export");
-  }, v3);
-  await page.getByText("Inrichtingsartefacten (e-dienst → register op Fundament)").click();
-  await kies(page, "edienst", fix("gpk-edienst.json"));
-  await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
-  const uitMap = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Uitvoeren" }).click();
-  await uitMap;
-  const n = GPK.artefacten.length;
-  await expect(page.getByText(`${n} van ${n} artefacten gemaakt`)).toBeVisible();
-  await expect(page.getByText("INR-MODEL-UIT-MAP").first()).toBeAttached(); // in de dichtgeklapte meldingen
-});
-
-test.fixme("zonder V3-bestand: zelfde payloads als uit het bestand", async ({ page }) => {
+// Het canonieke model uit de map moet dezelfde payloads geven als het V3-bestand:
+// de rondreis V3 ↔ canoniek profiel houdt verplicht/uniek/type/format vast (BACKLOG §39).
+test("zonder V3-bestand: zelfde payloads als uit het bestand", async ({ page }) => {
   await openPaneel(page);
   const v3 = JSON.parse(fs.readFileSync(fix("omnium-model-cg-test-v3.json"), "utf8"));
   await page.evaluate(async (v3) => {
@@ -152,6 +122,7 @@ test.fixme("zonder V3-bestand: zelfde payloads als uit het bestand", async ({ pa
   await page.getByText("Inrichtingsartefacten (e-dienst → register op Fundament)").click();
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
+  await kies(page, "bpmn", fix("gpk-processen.bpmn-model.json"));
   const n = GPK.artefacten.length;
   const uitMap = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();

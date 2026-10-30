@@ -100,18 +100,9 @@ registreerTransformatie({
     const haalJson = opties.vergelijk ? registerLezer(opties.register || STANDAARD_REGISTER, String(opties.token || "").trim()) : null;
     const { datatypes } = (await import("../../transformatie/gegevenstypen.snapshot.json")).default;
 
+    // Model uit de map en uit het V3-bestand geven dezelfde payloads sinds de
+    // V3.1-veldsleutels de omzetting overleven (BACKLOG §39; e2e 37 bewaakt dit).
     const uit = await voerInrichtingsExportUit({ edienst, modelBestand, datatypen: datatypes, referentieBestanden, bpmnModellen, peiltijdstip, haalJson, sha256Hex });
-    if (!opties.model) {
-      // Bekend (30-10): de omzetting V3 ↔ canoniek profiel (store/adapters.js) kent de
-      // nieuwere veldsleutels verplicht/uniek/type niet; required en codes vallen dan weg.
-      uit.diagnostics.unshift({
-        severity: "warning",
-        code: "INR-MODEL-UIT-MAP",
-        message: "Model uit de map: verplicht, uniek en type van velden gaan bij de omzetting naar V3 nog verloren (BACKLOG). Kies voorlopig het V3-bestand voor wat je registreert.",
-        sourceId: null,
-        path: null,
-      });
-    }
     const e = edienst.edienst || {};
     download(`inrichting-${veilig(e.naam)}-${e.versienummer || "0"}.zip`, maakZip(uit.bestanden), "application/zip");
 

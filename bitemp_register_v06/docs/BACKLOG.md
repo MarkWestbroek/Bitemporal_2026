@@ -1952,5 +1952,6 @@ veldsleutels gaan bij importeren in de Studio en weer exporteren verloren:
     entiteit/domein/register), te zien en te zetten in de inspector;
   - test: `terugreis.test.js`, alle 117 velden van het cg-test-model gelijk op
     verplicht/uniek/type/format, het demo-model krijgt er niets bij.
-  - Nog te doen (OMNIUM-UI): de e2e-fixme in `37-studio-inrichtingsartefacten`
-    aanzetten en de waarschuwing `INR-MODEL-UIT-MAP` herzien.
+  - Afgerond (30-10, OMNIUM-UI): de e2e-test "zelfde payloads als uit het
+    bestand" in `37-studio-inrichtingsartefacten` draait (geen fixme meer), en
+    de waarschuwing `INR-MODEL-UIT-MAP` is weg.
