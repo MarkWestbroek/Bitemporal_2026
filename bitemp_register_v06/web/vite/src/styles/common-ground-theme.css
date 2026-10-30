@@ -418,6 +418,129 @@
   font-style: italic;
 }
 
+/* ── Inhoudsweergave: JSON-boom en BPMN-diagram (InhoudWeergave.jsx) ── */
+
+.cg-inhoud-weergave {
+  border: 1px solid var(--cg-grijs, #d4d4d4);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.cg-inhoud-weergave__kop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 0.75rem;
+  background: var(--cg-lichtgrijs, #f5f5f5);
+  border-bottom: 1px solid var(--cg-grijs, #d4d4d4);
+  font-size: 0.8125rem;
+}
+
+.cg-inhoud-weergave__soort {
+  color: #706f6f;
+}
+
+.cg-inhoud-weergave__tab,
+.cg-inhoud-weergave__knop {
+  border: 1px solid transparent;
+  background: none;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  color: #0b6fa4;
+}
+
+.cg-inhoud-weergave__knop:hover,
+.cg-inhoud-weergave__tab:hover {
+  background: #fff;
+  border-color: var(--cg-grijs, #d4d4d4);
+}
+
+.cg-inhoud-weergave__tab--actief,
+.cg-inhoud-weergave__tab--actief:hover {
+  background: #0b6fa4;
+  color: #fff;
+}
+
+.cg-inhoud-weergave__tekst {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  max-height: 70vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.8125rem;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace;
+}
+
+/* Kleuren in CG-stijl: sleutels #0B6FA4, strings #1E7D3A, getallen #C24D00,
+   booleans/null #8A2BE2, leestekens #706F6F. */
+.cg-json-boom {
+  margin: 0;
+  padding: 0.75rem 1rem 0.75rem 1.75rem;
+  max-height: 70vh;
+  overflow: auto;
+  white-space: pre;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace;
+  color: #706f6f;
+}
+.cg-json-boom__sleutel { color: #0b6fa4; }
+.cg-json-boom__string { color: #1e7d3a; }
+.cg-json-boom__getal { color: #c24d00; }
+.cg-json-boom__null { color: #8a2be2; }
+.cg-json-boom__leesteken { color: #706f6f; }
+
+.cg-json-boom__knop {
+  border: none;
+  background: none;
+  padding: 0;
+  width: 1.1em;
+  margin-left: -1.1em;
+  cursor: pointer;
+  color: #706f6f;
+  font: inherit;
+}
+
+.cg-json-boom__samenvatting {
+  border: none;
+  background: #eef5fa;
+  border-radius: 3px;
+  padding: 0 4px;
+  margin: 0 2px;
+  cursor: pointer;
+  color: #706f6f;
+  font: inherit;
+  font-style: italic;
+}
+
+.cg-bpmn-weergave__balk {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--cg-lichtgrijs, #eee);
+}
+.cg-bpmn-weergave__balk button {
+  border: 1px solid var(--cg-grijs, #d4d4d4);
+  background: #fff;
+  border-radius: 4px;
+  width: 28px;
+  height: 26px;
+  cursor: pointer;
+}
+.cg-bpmn-weergave__fout {
+  color: #706f6f;
+  font-size: 0.75rem;
+}
+.cg-bpmn-weergave__canvas {
+  background: #fff;
+}
+
 /* ── Markdown viewer ─────────────────────────────────── */
 
 .cg-markdown-viewer {

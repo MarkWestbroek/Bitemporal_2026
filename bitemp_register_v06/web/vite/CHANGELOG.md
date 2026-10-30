@@ -9,6 +9,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Inhoud Editor: JSON-boom en BPMN-diagram** (30-10). Lange JSON of BPMN-XML in een tekstveld
+  (bv. de payload van een inrichtingsartefact) krijgt een knop "bekijk": een gekleurde, inklapbare
+  JSON-boom in CG-kleuren of een BPMN-diagram (bpmn-js-viewer), met tab Tekst en kopieer. Directe
+  link: `inhoud.html#/t/artefacten/3?toon=payload`.
 - **V3.1-veldsleutels overleven de Studio** (30-10, BACKLOG §39). `verplicht`, `uniek`, `type` en
   `format` gaan heen en terug tussen V3 en het canonieke profiel; oude modellen zonder V3.1-sleutels
   blijven ongewijzigd. `uniek` (entiteit/domein/register) is te zien en te zetten op een attribuut.

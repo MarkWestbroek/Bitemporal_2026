@@ -293,6 +293,31 @@ Rekenwerk (sorteren, "nu", invoer ↔ API, payload) staat in `src/shared/materie
 Open: de oude schemapagina (`IndexSchemaPage`, actieboxen) kent alleen datumpickers; voor een
 type met tijdstipprecisie stuurt die nog een datum.
 
+### Lange inhoud bekijken: JSON-boom en BPMN-diagram (30-10-2026)
+
+Een tekstveld met JSON of BPMN-XML (bv. `ArtefactInhoud.payload` in het inrichtingsregister) staat
+niet meer als lap tekst in een tabelcel. De editor herkent de inhoud (`inhoudSoort.js`,
+`herkenInhoud`, unit-test ernaast) en toont een knop **bekijk · JSON-object · 12 sleutels · 4,2 kB**.
+Die opent onder de tabel `InhoudWeergave`:
+
+- **JSON** → `JsonBoom`: ingesprongen, inklapbaar per object/lijst (▾/▸, "alles open",
+  "inklappen" tot de eerste laag). Kleuren in CG-stijl (`.cg-json-boom` in
+  `common-ground-theme.css`): sleutels `#0B6FA4`, strings `#1E7D3A`, getallen `#C24D00`,
+  booleans/null `#8A2BE2`, leestekens `#706F6F`.
+- **BPMN** (een `definitions`-element in de BPMN 2.0-namespace) → `BpmnWeergave`: de
+  NavigatedViewer van bpmn-js (slepen, zoomen, passend maken), pas geladen als er een BPMN te zien
+  is. Zonder BPMNDI kan hij niets tekenen.
+- Altijd beschikbaar: tab **Tekst** (de ruwe waarde) en **kopieer**.
+
+In een formulier (niet-materieel element, of het ✎-formulier) staat dezelfde knop onder het
+tekstvak (`SchemaFormField`).
+
+**Directe link:** `?toon=<veld>` opent meteen de weergave van dat veld voor het voorkomen dat nu
+geldt, in het eerste onderliggende element met dat veld, en scrolt ernaartoe. Voorbeeld voor
+artefact 3 in het inrichtingsregister: `inhoud.html#/t/artefacten/3?toon=payload`.
+
+E2e met nagebootste API: `tests/e2e/38-editor-inhoud-weergave.spec.js`.
+
 ### State management
 
 - `bewerkRij` state: `{ doeltype, index }` — welke meervoudige rij in correctiemodus is

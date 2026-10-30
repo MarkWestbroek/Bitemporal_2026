@@ -7,6 +7,8 @@ import CodeEditor, { jsonParseFout } from "./CodeEditor";
 import { normaliseer } from "../../umleditor/validatie/normaliseer.js";
 import VormInvoer, { VORMINVOER } from "./VormInvoer";
 import Uitleg from "./Uitleg";
+import InhoudWeergave from "./InhoudWeergave";
+import { herkenInhoud, inhoudSamenvatting } from "./inhoudSoort.js";
 import { normaliseerVorm, vormPastBij, invoersoortVanVeld, effectieveVorm, vormUitDatatype, splitsLijst, voegLijstSamen, INVOERSOORT } from "../../vormen/vormen";
 
 /**
@@ -43,6 +45,7 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
   // (boolean, nieuw-modus) verschijnt de verplicht-melding pas daarna of na een
   // verzendpoging; zonder die prop (bewerk-modus) direct, zoals voorheen.
   const [aangeraakt, setAangeraakt] = useState(false);
+  const [bekijk, setBekijk] = useState(false); // lange tekst als JSON-boom/BPMN-diagram tonen
   if (!veld) return null;
   const onChange = (v) => { setAangeraakt(true); onChangeProp(v); };
 
@@ -245,7 +248,11 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
 
     // Multiline / textarea widget (bijv. LangeTekst)
     if (weergave.multiline || effectieveWidget === "text-area") {
-      return (
+      // Staat er JSON of BPMN in (bv. de payload van een inrichtingsartefact), dan kun je hem
+      // ook leesbaar bekijken: gekleurde boom of diagram (InhoudWeergave).
+      const tekst = String(value ?? "");
+      const herkend = tekst.length > 80 ? herkenInhoud(tekst) : null;
+      const vak = (
         <textarea
           id={fieldId}
           className="utrecht-textarea utrecht-textarea--html-textarea"
@@ -258,6 +265,18 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
           placeholder={weergave.placeholder || undefined}
           maxLength={maxLength()}
         />
+      );
+      if (!herkend) return vak;
+      return (
+        <>
+          {bekijk ? <InhoudWeergave waarde={tekst} onSluiten={() => setBekijk(false)} /> : vak}
+          {!bekijk && (
+            <button type="button" className="utrecht-button utrecht-button--secondary-action" data-bekijk-inhoud={veld.naam}
+              style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", marginTop: "0.25rem" }} onClick={() => setBekijk(true)}>
+              bekijk · {inhoudSamenvatting(tekst, herkend)}
+            </button>
+          )}
+        </>
       );
     }
 
@@ -300,7 +319,7 @@ export default function SchemaFormField({ veld, value, onChange: onChangeProp, e
   }
 
   // JSON en markdown widgets moeten de volle breedte van het grid innemen
-  const isFullWidth = effectieveWidget === "json" || effectieveWidget === "markdown";
+  const isFullWidth = effectieveWidget === "json" || effectieveWidget === "markdown" || bekijk;
 
   return (
     <div className="utrecht-form-field" style={{ marginBottom: "0.75rem", ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }} onBlur={(e) => { if (!e.target.closest?.("[data-uitleg]")) setAangeraakt(true); }}>
