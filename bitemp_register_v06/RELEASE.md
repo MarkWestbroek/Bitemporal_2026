@@ -8,6 +8,73 @@
 
 ---
 
+## api 0.18.0 / studio 0.26.0 (2026-10-31)
+
+De Go-wijzigingen van 23 tot en met 31 oktober die tot nu toe alleen via de devloop-images
+(0.24.0 – 0.24.8) naar Fundament gingen, nu ook als api-release voor app; plus `uuid` uit de
+Studio (BACKLOG §40). Het devloop-image `bitemp-devloop:0.24.9` voor Fundament bevat dezelfde
+code. Frontend: [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio 0.26.0).
+
+**Databasegevolg** (bij het opstarten, `[dbsetup]` in de log; verliesvrij en idempotent):
+
+- Bij representaties met `tijdprecisie: tijdstip` (in het meldingen-domein onder meer
+  MeldingStatus en MeldingBehandelaar) wordt de kolom `datum` van de `_Aanvang`-/`_Einde`-tabellen
+  van `date` naar `timestamptz` verbreed (een dag wordt middernacht UTC).
+- Voor materieel én enkelvoudige GE's/relaties verdwijnt de constraint `ux_<tabel>_enkelvoudig_actief`
+  op de hub (meerdere formeel actieve voorkomens naast elkaar zijn daar nu de bedoeling; de engine
+  bewaakt de materiële overlap). De kindtabellen houden hun constraint.
+- Geen nieuwe tabellen. Geen nieuwe instellingen voor app (`STARTUP_REBUILD` geldt alleen voor de
+  devloop-container).
+
+**Brekend / gedragswijzigingen:**
+
+- **Opvolging van een materieel enkelvoudig element** (`handlers/registration_opvolging.go`,
+  besluit Mark 25/27-10): een nieuw voorkomen mét aanvang sluit de voorganger materieel af
+  (automatisch einde, eigen `_Einde`-record in dezelfde registratie); een nieuw voorkomen *zonder*
+  aanvang terwijl er een voorganger is geeft **422**, net als een aanvang op of vóór die van de
+  voorganger. De meldingen-API zet de aanvang zelf; de inhoud-editor van de Studio vraagt erom.
+- **Subtype toont zijn sleutel als `id`**: een subtype met eigen GE's heeft in JSON
+  `{"<subtype>": {"id": N}}` (was `<ouder>_id`); de databasekolom blijft `<ouder>_id`.
+- **Uniek-controle** gebruikt de SQL-kolomnaam uit het bun-schema en is fataal (liep eerder door
+  in een afgebroken transactie).
+- Een onleesbare waarde bij `POST /registratie/` (tijdstip, datum, getal) geeft **422**
+  problem+json met veldpad (was een kale 400 met de Go-fout).
+
+Backend (minor):
+
+- **Materieel tijdreizen**: `?geldigOp=` (datum of RFC 3339) op `/full` en als argument in GraphQL
+  (`model/materieel_tijd.go`); naast het formele peiltijdstip.
+- **Tijdprecisie per materiële representatie**: V3 `tijdprecisie: datum|tijdstip`, in TypeMeta;
+  bij tijdstip zijn aanvang/einde RFC 3339, kolom `timestamptz`, einde exclusief.
+- **`uuid` uit de Studio**: op de zeven V3-soorten (entiteit, GE, relatie, veld, enum, datatype,
+  referentielijst-instantie); codegen neemt hem over in `TypeMeta.UUID`, `EnumUUIDs`,
+  `DatatypeRegistry`, `ReferentielijstInstantieRegistry` en als tag `uuid:"…"` op `_Data`-velden;
+  de V3-export en het platte schema (`/api/viz/schema`, `/api/schema/model/code`) geven hem terug.
+  Leeg (weggelaten) tot een register uit een V3 mét uuid's is gegenereerd.
+- **`GET /api/volgorde/:padnaam`** (`via`, `doel`, `na`): entiteiten in afhankelijkheidsvolgorde,
+  409 bij een cyclus (voor de uitrol van e-diensten op Fundament).
+- **`GET /health`** en de subcommando's `bitemp-go-api startup-rebuild | zelftest | dbproef`.
+- **Codegen**: zelf-relaties en expliciet doeltype (`DoelTypenaam`), goType-afleiding, overerving
+  (subtype met eigen GE's, ook over domeinen heen), typenaam-/tabelnaamcontrole over domeinen,
+  weigering van een domein-run voor een onbekend domein, `schema_desc` voor veldbeschrijvingen,
+  Bron-/DoelKardinaliteit in TypeMeta; `cmd/codegen/CHANGELOG.md`.
+- **Devloop (alleen het devtools-image)**: startup-rebuild uit de actieve schema-versie, zelftest
+  en databaseproef vóór activeren, de rebuild registreert domeinen in de catalogus, FK-constraints
+  niet-fataal, verse baseline in het image (`.dockerignore`).
+
+Frontend (studio 0.26.0, samengevat): **V3 als delta in het project** (importeer alleen de
+wijzigingen, met review zoals de EA-import), **`uuid` op modelelementen en velden**, **namen uniek
+per domein** met ⚠ op het canvas, de veldkiezer leest het projectmodel en bindt een FieldRef via
+de uuid, en de rondgang V3 → Studio → V3 is dicht.
+
+Uitrol: images `bitemp-go-api:0.18.0` en `bitemp-viz-frontend:0.26.0` (met `--build-arg
+VITE_GIT_SHA=$(git rev-parse --short HEAD)`), daarna `./update.sh` op app (maakt eerst een backup).
+Fundament: `bitemp-devloop:0.24.9`, uitrol door FUNDAMENT. Bekend en open: `/full`-reads niet
+snapshot-consistent (BACKLOG §32), correctie op afgevoerde hub geeft 500 (§34), B35
+(exclusiviteit over de "is"-GE's).
+
+---
+
 ## studio 0.25.0 (2026-10-31)
 
 Alleen frontend; de api op app blijft 0.17.0. De Go-wijzigingen sinds studio 0.24.0 (afgeleide

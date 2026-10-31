@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.26.0] — 2026-10-31
+
 ### Toegevoegd
 - **DMN-export volgt de uuid-binding** (31-10): een kolom van de beslistabel met een
   `fieldRef.uuid` krijgt bij de export het naampad van nu uit het V3-model; traceregels
