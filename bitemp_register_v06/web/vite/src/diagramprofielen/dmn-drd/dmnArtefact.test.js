@@ -50,9 +50,8 @@ test("aanvraag-ontvankelijk: DMN 1.3, FIRST, vijf regels, invoer per kolom", asy
     objecttype: await objecttype(),
     sha256Hex,
   });
-  // Het rijbewijsnummer staat nog niet in het model (Mark voegt het toe).
-  assert.deepEqual(diagnostics.map((d) => [d.code, d.severity]), [["DMN-VELD", "warning"]]);
-  assert.match(diagnostics[0].message, /rijbewijsnummer/);
+  // Sinds Mark het rijbewijsnummer toevoegde (31-10) staat elk veld in het objecttype.
+  assert.deepEqual(diagnostics, []);
 
   const xml = artefact.artefactInhoud.payload;
   assert.equal(artefact.artefactInhoud.payloadHash, sha256Hex(xml));
@@ -67,8 +66,9 @@ test("aanvraag-ontvankelijk: DMN 1.3, FIRST, vijf regels, invoer per kolom", asy
     ["ontvankelijk", "boolean"],
     ["reden", "string"],
   ]);
-  // Zonder bijlagen is `some …` null, en null matcht de regel "false" niet (FUNDAMENT 31-10).
-  assert.match(xml, /<dmn:text>bijlagen != null and some b in bijlagen satisfies b.naam = &quot;pasfoto&quot;<\/dmn:text>/);
+  // Zonder bijlagen is `some …` null, en null matcht de regel "false" niet; feel-scala eist haakjes om
+  // een kwantor rechts van `and` (FUNDAMENT 31-10).
+  assert.match(xml, /<dmn:text>bijlagen != null and \(some b in bijlagen satisfies b.naam = &quot;pasfoto&quot;\)<\/dmn:text>/);
 
   assert.deepEqual(invoer.map((x) => [x.naam, x.bron, x.pointer || x.variabele]), [
     ["bsn", "variabele", "bsn"],
