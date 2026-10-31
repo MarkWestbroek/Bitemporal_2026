@@ -71,6 +71,9 @@ func writeDatatypeEntry(b *strings.Builder, dt model.V3Datatype, typed bool) {
 		b.WriteString("\t{\n")
 	}
 	b.WriteString(fmt.Sprintf("\t\tNaam:      %q,\n", dt.Naam))
+	if dt.UUID != "" {
+		b.WriteString(fmt.Sprintf("\t\tUUID:      %q,\n", dt.UUID))
+	}
 	if dt.Description != "" {
 		b.WriteString(fmt.Sprintf("\t\tDescription: %q,\n", dt.Description))
 	}

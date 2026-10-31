@@ -1999,10 +1999,15 @@ referentielijstinstantie (niet `id`: dat is op GE/relatie al een edge-id).
 - Bedacht bij een V3-export uit de Studio (`uuids.js`, `vulUuids`), nooit bij een import;
   daarna stabiel. De delta matcht eerst op uuid (een hernoeming wordt "gewijzigd · naam"),
   dan op het uit de namen afgeleide id.
-- **Open (BACKEND):** `UUID string json:"uuid,omitempty"` op V3Entiteit, V3Gegevenselement,
-  V3Relatie, V3Veld, V3Enum, V3Datatype en V3ReferentielijstInstantie, zodat de uuid via de API
-  en in de code blijft. De Go-decoder negeert hem nu (geen DisallowUnknownFields), maar een
-  her-marshal verliest hem.
+- ✅ **BACKEND (31-10):** `UUID string json:"uuid,omitempty"` op V3Entiteit, V3Gegevenselement,
+  V3Relatie, V3Veld, V3Enum, V3Datatype en V3ReferentielijstInstantie (`model/v3_format.go`); de
+  her-marshal in `POST /api/schema/model` → `schema_versies` → `GET /api/schema/model[/:id]` laat
+  hem nu door (test `model/v3_uuid_test.go`). Op wens van Mark (31-10: "dan is duidelijk uit precies
+  welk model het komt") neemt codegen hem ook over in de code: `TypeMeta.UUID` (entiteit, GE-hub,
+  relatie-hub), `EnumUUIDs`, `DatatypeRegistry[].UUID`, `ReferentielijstInstantieInfo.UUID` en een
+  tag `uuid:"…"` op `_Data`-velden; de V3-exporter geeft ze terug, zodat ook
+  `GET /api/schema/model/code` uuid's heeft zodra het model met uuid's is gebouwd. De engine
+  gebruikt de uuid nergens (tests `cmd/codegen/gen_uuid_test.go`, `model/v3_exporter_uuid_test.go`).
 - **Open:** versies van elementen (en mogelijk mappen/diagrammen) — Mark beslist.
 
 **Gevonden (31-10), opgelost door TRANSFORMATIES:** sinds a8e0a74e heeft de GPK-e-dienst een

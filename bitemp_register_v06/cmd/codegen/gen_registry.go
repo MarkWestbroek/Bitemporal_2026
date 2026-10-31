@@ -122,7 +122,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 				dHub.Veldnaam = strings.ToLower(hubType)
 			}
 			li := &layoutInfo{Positie: ge.Positie, LayoutLocked: ge.LayoutLocked, EdgeID: ge.ID, SourceHandle: ge.SourceHandle, TargetHandle: ge.TargetHandle, UseEdges: ge.UseEdges}
-			writeHubEntry(b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Tijdprecisie, ge.AfgeleideVelden, opts.domein, li)
+			writeHubEntry(b, dHub, ge.Description, ge.UUID, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Tijdprecisie, ge.AfgeleideVelden, opts.domein, li)
 		}
 
 		// ---- Relatie hubs ----
@@ -180,6 +180,7 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:    %q,\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:  %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription: %q,\n", ent.Description))
+	writeUUID(b, ent.UUID)
 	b.WriteString("\t\tMetatype:    MetatypeEntiteit,\n")
 	if ent.EntiteitSubtype != "" {
 		b.WriteString(fmt.Sprintf("\t\tEntiteitSubtype: %s,\n", entiteitSubtypeConst(ent.EntiteitSubtype)))
@@ -257,11 +258,12 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 }
 
 // writeHubEntry schrijft een MetaRegistry entry voor een GE hub.
-func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, tijdprecisie string, afgeleideVelden []model.V3AfgeleidVeld, domein string, li *layoutInfo) {
+func writeHubEntry(b *strings.Builder, d DerivedType, desc string, uuid string, kleur string, momentvoorkomenStr string, isMaterieel bool, tijdprecisie string, afgeleideVelden []model.V3AfgeleidVeld, domein string, li *layoutInfo) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:     %q,\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription:  %q,\n", desc))
+	writeUUID(b, uuid)
 	b.WriteString("\t\tMetatype:     MetatypeGegevenselement,\n")
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel:  %t,\n", isMaterieel))
 	writeTijdprecisie(b, tijdprecisie)
@@ -304,6 +306,7 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie, do
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:     %q,\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription:  %q,\n", rel.Description))
+	writeUUID(b, rel.UUID)
 	b.WriteString("\t\tMetatype:     MetatypeRelatie,\n")
 	if rel.RelatieSubtype != "" {
 		b.WriteString(fmt.Sprintf("\t\tRelatieSubtype: %s,\n", relatieSubtypeConst(rel.RelatieSubtype)))
@@ -391,6 +394,13 @@ func writeDataEntry(b *strings.Builder, d DerivedType, _ string, kleur string) {
 	b.WriteString("\t\tMomentvoorkomen:        Enkelvoudig,\n")
 	b.WriteString(fmt.Sprintf("\t\tBovenliggendTypenaam:   %q,\n", d.BovenliggendTypenaam))
 	b.WriteString("\t},\n")
+}
+
+// writeUUID schrijft UUID (identiteit in de Studio, V3 `uuid`) als het model er een heeft.
+func writeUUID(b *strings.Builder, uuid string) {
+	if u := strings.TrimSpace(uuid); u != "" {
+		b.WriteString(fmt.Sprintf("\t\tUUID:        %q,\n", u))
+	}
 }
 
 // writeTijdprecisie schrijft Tijdprecisie als die is gezet ("tijdstip"; "datum" is de default).
@@ -534,6 +544,9 @@ func writeReferentielijstInstanties(b *strings.Builder, v3 model.V3Model) {
 	b.WriteString("\n\t// Referentielijst-instantie metadata + editor-posities\n")
 	for _, ri := range v3.ReferentielijstInstanties {
 		b.WriteString(fmt.Sprintf("\tReferentielijstInstantieRegistry[%q] = ReferentielijstInstantieInfo{\n", ri.Systeemnaam))
+		if ri.UUID != "" {
+			b.WriteString(fmt.Sprintf("\t\tUUID: %q,\n", ri.UUID))
+		}
 		b.WriteString(fmt.Sprintf("\t\tNaam: %q", ri.Naam))
 		if ri.Omschrijving != "" {
 			b.WriteString(fmt.Sprintf(", Omschrijving: %q", ri.Omschrijving))
