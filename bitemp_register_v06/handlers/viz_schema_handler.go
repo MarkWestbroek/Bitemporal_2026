@@ -26,6 +26,7 @@ type vizSchemaChildDTO struct {
 
 type vizSchemaTypeDTO struct {
 	Typenaam                  string                         `json:"typenaam"`
+	UUID                      string                         `json:"uuid,omitempty"` // identiteit in de Studio (V3 `uuid`, via TypeMeta.UUID; 31-10-2026, BACKLOG §40)
 	Klassenaam                string                         `json:"klassenaam"`
 	Description               string                         `json:"description,omitempty"`
 	Metatype                  model.Metatype                 `json:"metatype"`
@@ -91,6 +92,7 @@ type vizSchemaAfgeleideRelatieDTO struct {
 
 type vizSchemaFieldDTO struct {
 	Naam          string   `json:"naam"`
+	UUID          string   `json:"uuid,omitempty"` // identiteit van het V3-veld in de Studio (tag uuid:"…" op het _Data-veld)
 	Description   string   `json:"description,omitempty"`
 	Type          string   `json:"type"`
 	Format        string   `json:"format,omitempty"`
@@ -352,6 +354,7 @@ func reflectedVeldenVoorMeta(meta model.TypeMeta) []vizSchemaFieldDTO {
 		veldType, format := schemaTypeVoorReflectType(f.Type)
 		enum := resolveEnumWaarden(f)
 		description := strings.TrimSpace(f.Tag.Get("schema_desc"))
+		uuid := strings.TrimSpace(f.Tag.Get("uuid")) // door codegen gezet uit V3Veld.UUID
 
 		// autoIncrement: via bun-tag óf als het veld de IDKolom is bij een type met
 		// relatieve autoincrement. Dit laatste is nodig omdat _Input structs (Factory)
@@ -367,6 +370,7 @@ func reflectedVeldenVoorMeta(meta model.TypeMeta) []vizSchemaFieldDTO {
 
 		velden = append(velden, vizSchemaFieldDTO{
 			Naam:           name,
+			UUID:           uuid,
 			Description:    description,
 			Type:           veldType,
 			Format:         format,
@@ -412,6 +416,7 @@ func geerfdeVeldenVoorType(parentTypenaam string) []vizSchemaFieldDTO {
 func vizSchemaTypeDTOVanMeta(meta model.TypeMeta) vizSchemaTypeDTO {
 	item := vizSchemaTypeDTO{
 		Typenaam:       meta.Typenaam,
+		UUID:           meta.UUID,
 		Klassenaam:     meta.Klassenaam,
 		Description:    meta.Description,
 		Metatype:       meta.Metatype,

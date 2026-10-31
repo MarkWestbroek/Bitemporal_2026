@@ -2008,6 +2008,9 @@ referentielijstinstantie (niet `id`: dat is op GE/relatie al een edge-id).
   tag `uuid:"…"` op `_Data`-velden; de V3-exporter geeft ze terug, zodat ook
   `GET /api/schema/model/code` uuid's heeft zodra het model met uuid's is gebouwd. De engine
   gebruikt de uuid nergens (tests `cmd/codegen/gen_uuid_test.go`, `model/v3_exporter_uuid_test.go`).
+  Het platte schema (`/api/viz/schema`, `/api/schema/model/code`) geeft `uuid` door op type en
+  veld (`vizSchemaTypeDTO`/`vizSchemaFieldDTO`; vraag OMNIUM-UI 31-10 voor de ModelPicker-fallback
+  zonder projectmodel; test `handlers/viz_schema_uuid_test.go`).
 - **Open:** versies van elementen (en mogelijk mappen/diagrammen) — Mark beslist.
 
 **Gevonden (31-10), opgelost door TRANSFORMATIES:** sinds a8e0a74e heeft de GPK-e-dienst een
