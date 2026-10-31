@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.26.0] — 2026-10-31
+
 ### Toegevoegd
 - **Namen uniek per domein, altijd actief** (31-10): dubbele namen of paden in het canonieke
   model geven een ⚠ op het canvas en een melding in de inspector.

@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.25.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.26.0`**
+  (2026-10-31: V3 als delta in het project, `uuid` op modelelementen, namen uniek per domein,
+  FieldRef gebonden via de uuid; samen met api 0.18.0), na **`studio/v0.25.0`**
   (2026-10-31: inrichting van e-diensten uit het model — objecttype, formulier, zaaktype,
   GZAC-dossierbundel, uitvoerbare BPMN en een DMN-beslistabel, export als zip voor Fundament; de
   V3.1-veldsleutels overleven de Studio; alleen frontend), na **`studio/v0.24.0`**
@@ -91,7 +93,11 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.17.0`** (2026-10-16: gedeelde plaatjes — tabel `studio_gedeeld_beeld`,
+- Backend: **`api/v0.18.0`** (2026-10-31: materieel enkelvoudig met opvolging en `geldigOp`,
+  tijdprecisie datum|tijdstip — `date` → `timestamptz` bij het opstarten —, subtype-id in JSON,
+  `uuid` uit de Studio in V3/TypeMeta/plat schema, `/api/volgorde`, `/health`, devloop
+  startup-rebuild/zelftest/dbproef; devloop-image 0.24.9). Daarvoor **`api/v0.17.0`**
+  (2026-10-16: gedeelde plaatjes — tabel `studio_gedeeld_beeld`,
   PNG in MinIO, `/api/studio/projecten/:id/beelden` en openbaar `/api/beeld/<token>.png`).
   Daarvoor **`api/v0.16.0`** (2026-10-15: persoonlijke API-tokens — tabel `gebruiker_token` —,
   `tools/omnium-mcp` met meldingen, projecten en modellen, AI-proxy-instellingen in de
