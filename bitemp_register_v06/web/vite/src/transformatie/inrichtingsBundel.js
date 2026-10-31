@@ -113,7 +113,7 @@ export async function maakInrichtingsBundel({
               : DOSSIER_SOORTEN.includes(soort)
                 ? await maakDossierArtefact({ ...invoer, identifier, soort, objecttype })
                 : soort === "dmn"
-                  ? await maakDmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), identifier, objecttype })
+                  ? await maakDmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), v3Model: modelBestand, identifier, objecttype })
                   : soort === "bpmn"
                     ? await maakBpmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), identifier, beslissingen })
                     : null;

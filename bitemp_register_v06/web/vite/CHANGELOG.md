@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **DMN-export volgt de uuid-binding** (31-10): een kolom van de beslistabel met een
+  `fieldRef.uuid` krijgt bij de export het naampad van nu uit het V3-model; traceregels
+  dragen `bronUuid`; melding `DMN-UUID` als het veld weg is. Kolommen uit de veldkiezer
+  (veldpad met collectienaam) worden nu ook in het objecttype gevonden
+  (docs/TRANSFORMATIES.md §11.12).
 - **Namen uniek per domein, altijd actief** (31-10): dubbele namen of paden in het canonieke
   model geven een ⚠ op het canvas en een melding in de inspector.
 - **Veldkiezer leest het projectmodel; FieldRef gebonden via uuid** (31-10): DMN-kolommen en

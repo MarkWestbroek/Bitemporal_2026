@@ -93,3 +93,44 @@ test("schrijver: lege cel = '-', ontbrekende uitkomst geeft een melding", () => 
   assert.match(xml, /hitPolicy="UNIQUE"/);
   assert.deepEqual(diagnostics.map((d) => d.code), ["DMN-SCHRIJVER"]);
 });
+
+// Binding via de uuid (besluit Mark 31-10, BACKLOG §40): hernoem je het veld in het model, dan
+// volgt de kolom; de export schrijft het naampad van dát moment.
+test("kolom gebonden via de uuid volgt een hernoeming; export op het naampad van nu", async () => {
+  const v3 = lees("omnium-model-cg-test-v3.json");
+  const ge = (v3.model || v3).entiteiten.flatMap((e) => e.gegevenselementen || []).find((g) => g.naam === "GpkAanvraagKaart");
+  const veld = ge.velden.find((v) => v.naam === "soort");
+  veld.uuid = "8f1c2d3e-0000-4000-8000-000000000001";
+  veld.naam = "kaartsoort";
+  const edienst = lees("gpk-edienst.json");
+  const ot = edienst.artefacten.find((a) => a.identifier === "gehandicaptenparkeerkaartaanvraag");
+  const s = JSON.stringify(ot).split('"GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort"').join('"GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kaartsoort"');
+  Object.assign(ot, JSON.parse(s));
+  const objecttypeNu = (
+    await maakObjecttypeArtefact({
+      modelBestand: v3,
+      edienst,
+      datatypen,
+      referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Partijrol: lees("relatiebeheer-partijrollen.json") },
+      identifier: "gehandicaptenparkeerkaartaanvraag",
+      sha256Hex,
+    })
+  ).artefact;
+
+  const dmn = lees("gpk-beslissingen.dmn-model.json");
+  const besl = Object.values((dmn.model || dmn).elements).find((e) => e.elementType === "decision");
+  const kolom = besl.data.beslistabel.inputs.find((c) => c.naam === "soort");
+  kolom.fieldRef.uuid = veld.uuid; // opgeslagen met de oude naam
+
+  const { artefact, diagnostics, invoer } = await maakDmnArtefact({ modelBestand: dmn, edienst, identifier: "aanvraag-ontvankelijk", objecttype: objecttypeNu, v3Model: v3, sha256Hex });
+  assert.deepEqual(diagnostics, []);
+  assert.deepEqual(invoer.find((x) => x.naam === "soort"), { naam: "soort", bron: "dossier", pointer: "/kaartsoort", lijst: false });
+  const trace = artefact.traceregels.find((t) => t.doelPad === "#aanvraag-ontvankelijk/input/soort");
+  assert.equal(trace.bronGE, "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kaartsoort");
+  assert.equal(trace.bronUuid, veld.uuid);
+
+  // Veld met die uuid weg uit het model: melding, en het opgeslagen naampad blijft.
+  ge.velden = ge.velden.filter((v) => v !== veld);
+  const weg = await maakDmnArtefact({ modelBestand: dmn, edienst, identifier: "aanvraag-ontvankelijk", objecttype: objecttypeNu, v3Model: v3, sha256Hex });
+  assert.ok(weg.diagnostics.some((d) => d.code === "DMN-UUID"));
+});

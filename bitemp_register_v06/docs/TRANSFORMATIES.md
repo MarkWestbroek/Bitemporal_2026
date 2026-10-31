@@ -1283,6 +1283,19 @@ zaak, voor wat het oppakken niet afving.
   geeft `DMN-VELD` (waarschuwing). Het rijbewijsnummer staat sinds 31-10 in het
   model (datatype Rijbewijsnummer, statuslijst van de aanvraag: ingediend,
   inBehandeling, nietInBehandeling, afgehandeld; besluit Mark). Getallen krijgen typeRef `number`: Valtimo geeft ze als Double door.
+- **Naam en uuid** (besluit Mark 31-10, BACKLOG §40): binnen het model bindt
+  een kolom via de `uuid` van het veld, zodat een hernoeming meegaat. Bij de
+  export is het naampad van dát moment de identificatie (Operaton, documentatie,
+  register). De aansluiting krijgt daarom het V3-model mee (`v3Model`) en
+  ververst elke `fieldRef` met uuid (`verversFieldRef`, `fieldRefsOpUuid`,
+  `pickerTypesUitV3`); een ref zonder uuid werkt op zijn naampad. Staat de uuid
+  niet meer in het model, dan `DMN-UUID` (waarschuwing) en het opgeslagen
+  naampad. De ModelPicker schrijft het veldpad met de collectienaam
+  (`Entiteit.gpkaanvraag_kaarten.soort`), de traceregels van het objecttype met
+  de GE-naam (`Entiteit.GpkAanvraagKaart.soort`); de aansluiting zoekt beide
+  (via `typenaam` + `veldnaam`). Traceregels van het dmn-artefact dragen
+  `bronUuid`, zodat het artefact ook na een hernoeming naar zijn bron terug te
+  voeren is.
 - **dmn-artefact:** identifier = decision-id = `decisionRef`, formaat
   `dmn-xml`, payloadHash = sha256 over de XML-tekst (zoals bpmn). FUNDAMENT zet
   het als `dmn/<decision-id>.dmn` in de GZAC-dossierbundel.
