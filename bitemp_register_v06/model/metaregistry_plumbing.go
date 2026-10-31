@@ -137,6 +137,7 @@ type EditorLayout struct {
 // ReferentielijstInstantieInfo bevat metadata en layout voor een referentielijst-instantie
 // die niet in de TypeMeta van de relatie past.
 type ReferentielijstInstantieInfo struct {
+	UUID         string // identiteit in de Studio (V3 `uuid`), zie TypeMeta.UUID
 	Naam         string
 	Omschrijving string
 	Layout       *EditorLayout
@@ -154,6 +155,11 @@ type TypeMeta struct {
 	Typenaam    string
 	Klassenaam  string // korte weergavenaam zonder entiteitsprefix (bijv. "PersoonsIdentificatie" i.p.v. "NatuurlijkPersoon_PersoonsIdentificatie")
 	Description string
+	// UUID is de identiteit van het element in de Studio (V3 `uuid`, bedacht bij een V3-export,
+	// daarna stabiel; besluit Mark 31-10-2026, BACKLOG §40). Codegen neemt hem over zodat uit de
+	// code herleidbaar is uit welk model(element) een type komt en de V3-export hem teruggeeft.
+	// De engine gebruikt hem niet; artefacten verwijzen op naampad.
+	UUID        string
 	Metatype    Metatype
 	IsMaterieel bool
 	// Tijdprecisie van de materiële tijdlijn (27-10-2026, besluit Mark): "" of "datum" = dagprecisie
@@ -473,6 +479,9 @@ var EnumWaarden = map[string][]string{}
 // EnumDomeinen bewaart per enum-type in welk domein het concept thuishoort.
 // `register` is het basisdomein; modelspecifieke enums kunnen bijv. `np-loc` krijgen.
 var EnumDomeinen = map[string]string{}
+
+// EnumUUIDs bewaart per enum-type (goType) de identiteit in de Studio (V3 `uuid`), zie TypeMeta.UUID.
+var EnumUUIDs = map[string]string{}
 
 // EnumConstNamen bewaart per enum-type de Go-constantenaam per waarde (bijv.
 // "IdeBestandFormaat" → {"json": "IdeBestandFormaatJSON"}). Zonder deze registry leidde de

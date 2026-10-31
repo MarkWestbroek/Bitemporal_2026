@@ -43,6 +43,7 @@ type V3Domein struct {
 // in de Referentielijst-entiteit (bijv. "Landenlijst", "EULidstaten").
 type V3ReferentielijstInstantie struct {
 	Systeemnaam  string     `json:"systeemnaam"`            // stabiele identifier, bijv. "Landenlijst"
+	UUID         string     `json:"uuid,omitempty"`         // identiteit binnen de Studio (lowercase UUID v4, bedacht bij een V3-export, daarna stabiel); alleen doorgegeven, codegen en artefacten gebruiken de naam (31-10-2026, BACKLOG §40)
 	Naam         string     `json:"naam,omitempty"`         // leesbare naam, bijv. "Landen"
 	Omschrijving string     `json:"omschrijving,omitempty"` // korte beschrijving
 	Positie      *V3Positie `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
@@ -52,6 +53,7 @@ type V3ReferentielijstInstantie struct {
 // V3Datatype beschrijft een custom gegevenstype met validatie en weergave.
 type V3Datatype struct {
 	Naam         string       `json:"naam"`
+	UUID         string       `json:"uuid,omitempty"` // identiteit binnen de Studio (lowercase UUID v4, bedacht bij een V3-export, daarna stabiel); alleen doorgegeven, codegen en artefacten gebruiken de naam (31-10-2026, BACKLOG §40)
 	Description  string       `json:"description,omitempty"`
 	Basistype    string       `json:"basistype"`              // string, integer, number
 	Format       string       `json:"format,omitempty"`       // bijv. "nl-postcode", "bsn"
@@ -104,6 +106,7 @@ type V3Weergave struct {
 // V3Enum beschrijft een enum type met zijn waarden.
 type V3Enum struct {
 	GoType       string         `json:"goType"`
+	UUID         string         `json:"uuid,omitempty"`         // identiteit binnen de Studio (lowercase UUID v4, bedacht bij een V3-export, daarna stabiel); alleen doorgegeven, codegen en artefacten gebruiken de naam (31-10-2026, BACKLOG §40)
 	BaseType     string         `json:"baseType"`               // bijv. "string"
 	Domein       string         `json:"domein,omitempty"`       // domeingroep: "register" = registerbasis, "" = ongegroepeerd
 	Positie      *V3Positie     `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
@@ -120,6 +123,7 @@ type V3EnumWaarde struct {
 // V3Entiteit beschrijft een top-level entiteit in het registermodel.
 type V3Entiteit struct {
 	Typenaam          string              `json:"typenaam"`
+	UUID              string              `json:"uuid,omitempty"` // identiteit binnen de Studio (lowercase UUID v4, bedacht bij een V3-export, daarna stabiel); alleen doorgegeven, codegen en artefacten gebruiken de naam (31-10-2026, BACKLOG §40)
 	Description       string              `json:"description,omitempty"`
 	Domein            string              `json:"domein,omitempty"`          // domeinnaam (bijv. "register", "np-loc"); gebruikt door codegen om cross-domein entiteiten te skippen
 	EntiteitSubtype   string              `json:"entiteitSubtype,omitempty"` // bijv. "referentielijst", "referentielijst_item"
@@ -141,7 +145,8 @@ type V3Entiteit struct {
 
 // V3Gegevenselement beschrijft een gegevenselement onder een entiteit.
 type V3Gegevenselement struct {
-	Naam            string           `json:"naam"` // bijv. "U", "V", "W"
+	Naam            string           `json:"naam"`           // bijv. "U", "V", "W"
+	UUID            string           `json:"uuid,omitempty"` // identiteit binnen de Studio (lowercase UUID v4, bedacht bij een V3-export, daarna stabiel); alleen doorgegeven, codegen en artefacten gebruiken de naam (31-10-2026, BACKLOG §40)
 	Description     string           `json:"description,omitempty"`
 	Domein          string           `json:"domein,omitempty"` // domein waartoe dit GE behoort (optioneel, erft normaal van parent-entiteit)
 	Meervoud        string           `json:"meervoud"`         // URL-padnaam, bijv. "a-us"
@@ -163,7 +168,8 @@ type V3Gegevenselement struct {
 
 // V3Relatie beschrijft een relatie onder een entiteit.
 type V3Relatie struct {
-	Naam                     string `json:"naam"` // bijv. "Rel_A_B"
+	Naam                     string `json:"naam"`           // bijv. "Rel_A_B"
+	UUID                     string `json:"uuid,omitempty"` // identiteit binnen de Studio (lowercase UUID v4, bedacht bij een V3-export, daarna stabiel); alleen doorgegeven, codegen en artefacten gebruiken de naam (31-10-2026, BACKLOG §40)
 	Description              string `json:"description,omitempty"`
 	Domein                   string `json:"domein,omitempty"`                   // domein waartoe deze relatie behoort (optioneel, erft normaal van parent-entiteit)
 	RelatieSubtype           string `json:"relatieSubtype,omitempty"`           // bijv. "referentielijst_items"
@@ -251,6 +257,7 @@ type V3Runtime struct {
 // V3Veld beschrijft een inhoudsveld (geen plumbing) in een GE of relatie.
 type V3Veld struct {
 	Naam      string `json:"naam"`
+	UUID      string `json:"uuid,omitempty"`      // identiteit binnen de Studio (lowercase UUID v4, bedacht bij een V3-export, daarna stabiel); alleen doorgegeven, codegen en artefacten gebruiken de naam (31-10-2026, BACKLOG §40)
 	GoType    string `json:"goType"`              // bijv. "string", "*bool", "float64", "RelABSoort"
 	Type      string `json:"type,omitempty"`      // V3.1: OAS 3.1 type ("string", "integer", "number", "boolean")
 	Format    string `json:"format,omitempty"`    // V3.1: OAS 3.1 format ("date", "date-time", "float32", "float64", ...)

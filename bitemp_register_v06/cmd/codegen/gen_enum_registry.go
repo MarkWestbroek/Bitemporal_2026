@@ -57,6 +57,9 @@ func writeEnumRegistryEntries(b *strings.Builder, enums []model.V3Enum) {
 		if strings.TrimSpace(enum.Domein) != "" {
 			b.WriteString(fmt.Sprintf("\tEnumDomeinen[%q] = %q\n", enum.GoType, enum.Domein))
 		}
+		if strings.TrimSpace(enum.UUID) != "" {
+			b.WriteString(fmt.Sprintf("\tEnumUUIDs[%q] = %q\n", enum.GoType, enum.UUID))
+		}
 		// Constantenamen per waarde, zodat de V3-exporter ze exact teruggeeft (rondreis; zie
 		// model.EnumConstNamen). Ontbreekt een constNaam in het model, dan de standaardafleiding.
 		if len(enum.Waarden) > 0 {

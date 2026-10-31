@@ -188,6 +188,9 @@ func extractContentFields(meta TypeMeta) []V3Veld {
 		if desc != "" {
 			veld.Description = desc
 		}
+		if u := strings.TrimSpace(f.Tag.Get("uuid")); u != "" {
+			veld.UUID = u // identiteit in de Studio, door codegen als tag meegegeven
+		}
 		velden = append(velden, veld)
 	}
 	return velden
@@ -332,6 +335,7 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 		}
 
 		ent := V3Entiteit{
+			UUID:            meta.UUID,
 			Typenaam:        meta.Typenaam,
 			Description:     meta.Description,
 			Domein:          meta.Domein,
@@ -389,6 +393,7 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 				Systeemnaam: meta.ReferentielijstInstantie,
 			}
 			if info, ok := ReferentielijstInstantieRegistry[meta.ReferentielijstInstantie]; ok {
+				inst.UUID = info.UUID
 				inst.Naam = info.Naam
 				inst.Omschrijving = info.Omschrijving
 				if info.Layout != nil {
@@ -474,6 +479,7 @@ func FilterV3ModelStrictByDomein(v3 V3Model, domein string) V3Model {
 // v3GegevenseElementVanMeta maakt een V3Gegevenselement van een hub-meta.
 func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Gegevenselement {
 	ge := V3Gegevenselement{
+		UUID:            meta.UUID,
 		Naam:            geNaamVanTypenaam(meta),
 		Description:     meta.Description,
 		Domein:          meta.Domein,
@@ -501,6 +507,7 @@ func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement)
 // v3RelatieVanMeta maakt een V3Relatie van een relatie-hub-meta.
 func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relatie {
 	rel := V3Relatie{
+		UUID:                     meta.UUID,
 		Naam:                     meta.Typenaam,
 		Description:              meta.Description,
 		Domein:                   meta.Domein,
@@ -668,6 +675,7 @@ func buildV3Enum(goTypeName string) *V3Enum {
 		return nil
 	}
 	enum := &V3Enum{
+		UUID:     EnumUUIDs[goTypeName],
 		GoType:   goTypeName,
 		BaseType: "string",
 		Domein:   EnumDomeinen[goTypeName],

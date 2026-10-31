@@ -257,6 +257,7 @@ func contentField(v model.V3Veld) StructField {
 		tags += " afleiding:" + strconv.Quote(v.Afleidingsregel)
 	}
 	tags += schemaDescTag(v.Description)
+	tags += uuidTag(v.UUID)
 
 	tags += "`"
 
@@ -265,6 +266,22 @@ func contentField(v model.V3Veld) StructField {
 		Type: goType,
 		Tags: tags,
 	}
+}
+
+// uuidTag: de identiteit van het veld in de Studio (V3Veld.UUID) als tag uuid:"…" op het
+// _Data-veld, zodat de V3-export hem teruggeeft (31-10-2026, BACKLOG §40). Alleen een geldige
+// UUID-vorm (hex en koppeltekens) komt in de tag; de _Input krijgt hem niet.
+func uuidTag(uuid string) string {
+	uuid = strings.ToLower(strings.TrimSpace(uuid))
+	if uuid == "" {
+		return ""
+	}
+	for _, r := range uuid {
+		if !(r == '-' || (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f')) {
+			return ""
+		}
+	}
+	return ` uuid:"` + uuid + `"`
 }
 
 // schemaDescTag: de veldbeschrijving (V3Veld.Description) als tag schema_desc:"…". Die tag lezen
