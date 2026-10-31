@@ -1,5 +1,5 @@
 // Studio — exportstap "Inrichtingsartefacten" in het transformatiepaneel (stap a+b, 30-10):
-// e-dienst + V3-model + referentielijsten + BPMN-model kiezen → zip met de artefacten, en met
+// e-dienst + V3-model + referentielijsten + BPMN- en DMN-model kiezen → zip met de artefacten, en met
 // "vergelijk" per artefact nieuw/gewijzigd/ongewijzigd uit het (nagebootste) register.
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
@@ -44,7 +44,7 @@ test("zip met alle artefacten van de GPK-e-dienst", async ({ page }) => {
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "model", fix("omnium-model-cg-test-v3.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
-  await kies(page, "bpmn", fix("gpk-processen.bpmn-model.json"));
+  await kies(page, "bpmn", [fix("gpk-processen.bpmn-model.json"), fix("gpk-beslissingen.dmn-model.json")]);
   await expect(page.locator('[data-optie="referentielijsten"]')).toContainText("relatiebeheer-partijrollen.json");
 
   const download = page.waitForEvent("download");
@@ -62,7 +62,7 @@ test("vergelijken met het register: ongewijzigd, gewijzigd, nieuw", async ({ pag
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "model", fix("omnium-model-cg-test-v3.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
-  await kies(page, "bpmn", fix("gpk-processen.bpmn-model.json"));
+  await kies(page, "bpmn", [fix("gpk-processen.bpmn-model.json"), fix("gpk-beslissingen.dmn-model.json")]);
   const eerste = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();
   const zip = fs.readFileSync(await (await eerste).path(), "latin1");
@@ -122,7 +122,7 @@ test("zonder V3-bestand: zelfde payloads als uit het bestand", async ({ page }) 
   await page.getByText("Inrichtingsartefacten (e-dienst → register op Fundament)").click();
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
-  await kies(page, "bpmn", fix("gpk-processen.bpmn-model.json"));
+  await kies(page, "bpmn", [fix("gpk-processen.bpmn-model.json"), fix("gpk-beslissingen.dmn-model.json")]);
   const n = GPK.artefacten.length;
   const uitMap = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();
