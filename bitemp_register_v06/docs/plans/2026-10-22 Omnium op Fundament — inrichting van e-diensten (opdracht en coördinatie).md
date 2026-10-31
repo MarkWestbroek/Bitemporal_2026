@@ -417,6 +417,15 @@ doen. **Voorwaarde** voor Fundament: activeer de gepubliceerde versie (Publiceer
     MeldingStatus/MeldingBehandelaar staan op tijdstip. M3-MOF bouwde de Studio-kant in hetzelfde
     main (09de549d: eigenschap naast `materieel`, M3 `zichtbaarAls`). FUNDAMENT: UitrolVerloop en
     AanvraagStatus op `tijdstip` zetten; de correctie-omweg kan weg.
+24. **Release api 0.18.0 / studio 0.26.0 / devloop 0.24.9 (31-10, Mark: "alles t/m uitrol app";
+    merge 47dc540f, tags `api/v0.18.0` en `studio/v0.26.0` gepusht).** Devloop-image
+    `markwestbroek/bitemp-devloop:0.24.9` (+ latest), digest `sha256:c53c96b3a1bd…`: zoals 0.24.8
+    plus de `uuid` uit de Studio (V3-structs, TypeMeta/registers/`_Data`-tags, V3-export, plat
+    schema; BACKLOG §40). Voor app de eerste api-release sinds 0.17.0: `bitemp-go-api:0.18.0`
+    (digest `sha256:7b33bb1be720…`) en `bitemp-viz-frontend:0.26.0` (digest `sha256:4c8060f72b01…`),
+    via `update.sh` uitgerold (`/version` → 47dc540f; datum-kolommen van de tijdstip-representaties
+    in `meldingen` bij het opstarten verbreed). FUNDAMENT rolt 0.24.9 en de Studio 0.26.0 op
+    Fundament uit; geen stappen vooraf. Zie `RELEASE.md` (api 0.18.0 / studio 0.26.0).
 12. FUNDAMENT heeft het devloop-image 0.24.0 uitgerold (23-10): startup-rebuild liep ("geen
     actieve versie"), `/health` 200, `/admin/*` achter de Gateway-allowlist. Rebuild met het
     inrichting-model wacht op het nieuwe image.
