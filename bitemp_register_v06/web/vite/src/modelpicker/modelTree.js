@@ -49,7 +49,54 @@ export function maakFieldRef({ veld, ownerTypenaam, entiteitTypenaam, rol, afgel
     afgeleid: Boolean(afgeleid),
     tDimensie: tDimensie || "formeel",
     momentvoorkomen: momentvoorkomen || "",
+    // Binding binnen het model (besluit Mark 31-10): de uuid van het modelveld. Het naampad
+    // hierboven is de leesbare kopie; verversFieldRef zet het na een hernoeming bij.
+    ...(veld?.uuid ? { uuid: veld.uuid } : {}),
   };
+}
+
+/** Naamdelen van een FieldRef die uit het model volgen (de rest — dimensie, keuzes — blijft). */
+const NAAMDELEN = ["typenaam", "veldnaam", "veldpad", "gepad", "entiteit", "datatype", "type", "format", "enum", "ref", "momentvoorkomen"];
+
+/**
+ * Index uuid → actuele FieldRef, uit dezelfde boom als de picker (incl. doorkijk 0).
+ * @param {Array} types  platte types (API of pickerTypesUitV3)
+ * @returns {Map<string, any>}
+ */
+export function fieldRefsOpUuid(types) {
+  const uit = new Map();
+  const loop = (knopen) => {
+    for (const k of safeArray(knopen)) if (k?.ref?.uuid && !uit.has(k.ref.uuid)) uit.set(k.ref.uuid, k.ref);
+  };
+  for (const d of bouwModelTree(types, { includeTechnisch: false })) {
+    for (const ent of d.entiteiten) {
+      loop(ent.velden);
+      for (const ge of ent.kinderen) loop(ge.velden);
+    }
+  }
+  return uit;
+}
+
+/**
+ * Ververs het naampad van een FieldRef vanuit zijn uuid (na laden of een hernoeming).
+ * Zonder uuid, of als het veld niet (meer) in het model staat: dezelfde ref terug.
+ * @param {any} ref
+ * @param {Map<string, any>} index  uit fieldRefsOpUuid
+ * @returns {any} de ref zelf als er niets verandert, anders een nieuwe
+ */
+export function verversFieldRef(ref, index) {
+  const actueel = ref?.uuid ? index.get(ref.uuid) : null;
+  if (!actueel) return ref;
+  let anders = false;
+  const uit = { ...ref };
+  for (const k of NAAMDELEN) {
+    if (!(k in actueel)) continue;
+    if (JSON.stringify(ref[k]) !== JSON.stringify(actueel[k])) {
+      uit[k] = actueel[k];
+      anders = true;
+    }
+  }
+  return anders ? uit : ref;
 }
 
 /** Stabiele sleutel voor een FieldRef (voor selectie-vergelijking). */

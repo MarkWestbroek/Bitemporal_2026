@@ -7,5 +7,6 @@
  */
 export { default as ModelPicker, FIELDREF_MIME } from "./ModelPicker.jsx";
 export { useSchemaModel } from "./useSchemaModel.js";
-export { bouwModelTree, filterTree, maakFieldRef, fieldRefKey } from "./modelTree.js";
+export { bouwModelTree, filterTree, maakFieldRef, fieldRefKey, fieldRefsOpUuid, verversFieldRef } from "./modelTree.js";
+export { pickerTypesUitV3 } from "./pickerTypesUitV3.js";
 export { verzamelVelden } from "./veldenlijst.js";

@@ -9,6 +9,7 @@
  * Gedeelde state (tabel, bind-modus, activeTab, dmnViews) loopt via een lokale React-context, zodat de
  * onderliggende dmn/-module ongewijzigd blijft en netjes gescheiden is van de shell.
  */
+import { useProjectTypes, useVerversFieldRefs } from "../fieldRefBinding.js";
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { ModelPicker } from "../../modelpicker";
 import DmnTableEditor from "../../dmn/DmnTableEditor";
@@ -233,7 +234,11 @@ function DmnProvider({ children }) {
 }
 
 function DmnSidebar() {
+  // Velden uit het canonieke model van het project (met uuid); zonder projectmodel de API.
+  const projectTypes = useProjectTypes();
   const { bindDoel, setBindDoel, setTable, activeTab, dmnViews, handleOpenView } = useContext(Ctx);
+  // Hernoemd in het model? Dan volgt het naampad van de gebonden kolommen (via de uuid).
+  useVerversFieldRefs(projectTypes, setTable);
 
   const onPick = useCallback(
     (ref) => {
@@ -272,7 +277,7 @@ function DmnSidebar() {
           {hintText}
         </p>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <ModelPicker baseUrl={apiBase()} onPick={onPick} expandEntiteiten />
+          <ModelPicker injectedTypes={projectTypes} baseUrl={apiBase()} onPick={onPick} expandEntiteiten />
         </div>
       </div>
     </div>
