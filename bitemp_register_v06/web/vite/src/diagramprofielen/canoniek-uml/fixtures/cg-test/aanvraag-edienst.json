@@ -4,8 +4,8 @@
   "bronmodel": {
     "naam": "cg-test",
     "bestand": "docs/omnium-model-cg-test-v3.json",
-    "versie": "cg-test 2026-10-27 (a71dae7)",
-    "hash": "sha256:50b318bb54de5996c15741c5a80c26835e6321caaa1ce99f7b87e0cf38e7313b",
+    "versie": "cg-test 2026-10-31 (rijbewijsnummer, statuslijst aanvraag)",
+    "hash": "sha256:7f43c508f2bfd5852f47b20a31ba53367ea2caed470cfadd4a57e76c86756656",
     "_hashregel": "sha256 over JCS(model) (RFC 8785); model = het 'model'-object van het samengestelde bestand"
   },
   "referentielijsten": {

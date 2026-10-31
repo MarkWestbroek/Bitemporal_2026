@@ -34,6 +34,9 @@ const componenten = (f) => {
   return uit;
 };
 
+/** Het rijbewijsnummer (Mark 31-10) staat niet in het handwerk; het staat achteraan, dus de rest schuift niet. */
+const zonderRijbewijs = (f) => JSON.parse(JSON.stringify(f, (k, v) => (Array.isArray(v) ? v.filter((c) => c?.key !== "rijbewijsnummer") : v)));
+
 test("labelUitNaam: camelCase naar een Nederlands label", () => {
   assert.equal(labelUitNaam("ingediendOp"), "Ingediend op");
   assert.equal(labelUitNaam("loopafstandMeter"), "Loopafstand meter");
@@ -44,14 +47,14 @@ test("samenvatting: gelijk aan het handwerk op de labels na, alles alleen-lezen"
   const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart.summary", "dossierformulier");
   assert.deepEqual(diagnostics, []);
   const f = artefact.artefactInhoud.payload;
-  assert.deepEqual(zonderLabels(f), zonderLabels(lees("gzac-handwerk/gehandicaptenparkeerkaart.summary.form.json")));
+  assert.deepEqual(zonderLabels(zonderRijbewijs(f)), zonderLabels(lees("gzac-handwerk/gehandicaptenparkeerkaart.summary.form.json")));
   const velden = componenten(f).filter((c) => c.input);
-  assert.equal(velden.length, 10);
+  assert.equal(velden.length, 11);
   assert.ok(velden.every((c) => c.disabled === true && !c.validate));
   assert.ok(!componenten(f).some((c) => c.type === "button"));
   // Velden rij voor rij over twee kolommen; type uit het model.
   const [links, rechts] = f.components[0].components[0].columns;
-  assert.deepEqual(links.components.map((c) => c.key), ["aanvraagnummer", "status", "hulpmiddel", "kenteken", "eerderKaartnummer"]);
+  assert.deepEqual(links.components.map((c) => c.key), ["aanvraagnummer", "status", "hulpmiddel", "kenteken", "eerderKaartnummer", "rijbewijsnummer"]);
   assert.deepEqual(rechts.components.map((c) => [c.key, c.type]), [
     ["ingediendOp", "textfield"],
     ["soort", "textfield"],
@@ -76,7 +79,7 @@ test("taakformulier aanvraag-beoordelen: samenvatting + behandelvelden + verzend
   const { artefact, diagnostics } = await maak("aanvraag-beoordelen", "dossierformulier");
   assert.deepEqual(diagnostics, []);
   const f = artefact.artefactInhoud.payload;
-  assert.deepEqual(zonderLabels(f), zonderLabels(lees("gzac-handwerk/aanvraag-beoordelen.form.json")));
+  assert.deepEqual(zonderLabels(zonderRijbewijs(f)), zonderLabels(lees("gzac-handwerk/aanvraag-beoordelen.form.json")));
   // De labels die de e-dienst opgeeft, ook van de keuzes.
   const [, beoordeling, knop] = f.components;
   assert.deepEqual(beoordeling.components[0].values, [
@@ -98,13 +101,15 @@ test("documentdefinitie: het objecttype zonder envelop plus behandelvelden, draf
   assert.equal(s.$id, hand.$id);
   assert.equal(s.$schema, hand.$schema);
   assert.equal(s.title, hand.title);
-  assert.deepEqual(Object.keys(s.properties).sort(), Object.keys(hand.properties).sort());
+  // Het rijbewijsnummer (Mark 31-10) is nieuw ten opzichte van het handwerk.
+  assert.deepEqual(Object.keys(s.properties).filter((k) => k !== "rijbewijsnummer").sort(), Object.keys(hand.properties).sort());
+  assert.equal(s.properties.rijbewijsnummer.type, "string");
   for (const [k, v] of Object.entries(hand.properties)) assert.equal(s.properties[k].type, v.type, k);
   assert.deepEqual(s.properties.beoordeling.enum, ["toegekend", "afgewezen"]);
   // Bovenaan open (GZAC vult aan); beperkingen en beschrijvingen uit het model.
   assert.equal(s.additionalProperties, undefined);
   assert.deepEqual(s.required, ["aanvraagnummer", "aanvraagtype", "ingediendOp", "soort", "status"]);
-  assert.deepEqual(s.properties.status.enum, ["ingediend", "gevalideerd", "afgekeurd", "afgehandeld"]);
+  assert.deepEqual(s.properties.status.enum, ["ingediend", "inBehandeling", "nietInBehandeling", "afgehandeld"]);
   assert.equal(s.properties.ingediendOp.format, "date-time");
   // Geen formats buiten draft-07; het patroon blijft.
   assert.ok(!JSON.stringify(s).match(/"format":"(bsn|kenteken|int32|kvk-nummer|vestigingsnummer)"/));

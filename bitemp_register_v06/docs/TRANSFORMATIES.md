@@ -1263,8 +1263,9 @@ zaak, voor wat het oppakken niet afving.
 - **Beslistabel** in de vorm van `dmn/dmnModel.js` op het element `decision`
   (`data.beslistabel`). Elke kolom bindt aan een modelveld (`fieldRef.veldpad`);
   `naam` is de variabele, `expressie` een FEEL-expressie als de kolom meer doet
-  dan het veld lezen, bijvoorbeeld `bijlagen != null and some b in bijlagen
-  satisfies b.naam = "pasfoto"`. Let op null: ontbreekt een lijst, dan is
+  dan het veld lezen, bijvoorbeeld `bijlagen != null and (some b in bijlagen
+  satisfies b.naam = "pasfoto")`. De haakjes zijn nodig: feel-scala (Operaton)
+  parset een kwantor (`some`, `every`) naast `and` of `or` alleen tussen haakjes. Let op null: ontbreekt een lijst, dan is
   `some …` null, en null matcht een regel met `false` niet. Zonder die
   controle viel een aanvraag zonder bijlagen door naar "ontvankelijk"
   (FUNDAMENT, cg-test 31-10). Fixture: `fixtures/cg-test/gpk-beslissingen.dmn-model.json`,
@@ -1279,8 +1280,9 @@ zaak, voor wat het oppakken niet afving.
   JSON-pointer in de dossierinhoud (`/soort`), een veld in een meervoudig GE de
   lijst (`/bijlagen`), en een envelopveld (`envelop:bsn`) een procesvariabele
   (de Verzoek-plugin zet `bsn`). Een veld dat niet in het objecttype staat,
-  geeft `DMN-VELD` (waarschuwing; nu het rijbewijsnummer, dat nog in het model
-  moet). Getallen krijgen typeRef `number`: Valtimo geeft ze als Double door.
+  geeft `DMN-VELD` (waarschuwing). Het rijbewijsnummer staat sinds 31-10 in het
+  model (datatype Rijbewijsnummer, statuslijst van de aanvraag: ingediend,
+  inBehandeling, nietInBehandeling, afgehandeld; besluit Mark). Getallen krijgen typeRef `number`: Valtimo geeft ze als Double door.
 - **dmn-artefact:** identifier = decision-id = `decisionRef`, formaat
   `dmn-xml`, payloadHash = sha256 over de XML-tekst (zoals bpmn). FUNDAMENT zet
   het als `dmn/<decision-id>.dmn` in de GZAC-dossierbundel.

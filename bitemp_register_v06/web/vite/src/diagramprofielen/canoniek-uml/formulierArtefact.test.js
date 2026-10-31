@@ -45,14 +45,14 @@ test("GPK: export met drie stappen, zonder meldingen, aansluitend op het objectt
   p["formSteps.json"].forEach((s, i) => assert.equal(s.form_definition, p["formDefinitions.json"][i].url));
   assert.match(p["forms.json"][0].uuid, UUID);
   // Elke component, vaste waarde en inlogwaarde heeft een property in het objecttype.
-  assert.ok(aansluiting.length === 15 && aansluiting.every((r) => r.objecttypePad));
+  assert.ok(aansluiting.length === 16 && aansluiting.every((r) => r.objecttypePad));
   assert.deepEqual(artefact.afhankelijkheden.map((a) => a.identifier), ["gehandicaptenparkeerkaartaanvraag", "GPK"]);
 });
 
 test("GPK: de vorm volgt uit de inhoud van het model", async () => {
   const per = Object.fromEntries(componenten((await gpk()).artefact).map((c) => [c.key, c]));
   assert.deepEqual(Object.fromEntries(Object.entries(per).map(([k, c]) => [k, c.type])), {
-    soort: "radio", kenteken: "textfield", eerdereKaart: "checkbox", eerderKaartnummer: "textfield",
+    soort: "radio", kenteken: "textfield", rijbewijsnummer: "textfield", eerdereKaart: "checkbox", eerderKaartnummer: "textfield",
     loopafstandMeter: "number", hulpmiddel: "textfield", toelichting: "textarea", pasfoto: "file",
   });
   assert.deepEqual(per.soort.values.map((w) => w.value), ["bestuurder", "passagier", "instelling"]);
@@ -61,6 +61,9 @@ test("GPK: de vorm volgt uit de inhoud van het model", async () => {
   assert.deepEqual(per.kenteken.validate, { maxLength: 11, pattern: "^[A-Z0-9]{1,3}-[A-Z0-9]{1,3}-[A-Z0-9]{1,3}$" });
   assert.deepEqual(per.kenteken.conditional, { show: true, when: "soort", eq: "bestuurder" });
   assert.deepEqual(per.eerderKaartnummer.conditional, { show: true, when: "eerdereKaart", eq: true });
+  // Rijbewijsnummer (Mark 31-10): patroon uit het datatype Rijbewijsnummer, verplicht en alleen bij een bestuurderskaart.
+  assert.deepEqual(per.rijbewijsnummer.validate, { required: true, maxLength: 10, pattern: "^[0-9]{10}$" });
+  assert.deepEqual(per.rijbewijsnummer.conditional, { show: true, when: "soort", eq: "bestuurder" });
   // Een vorm die de e-dienst noemt krijgt geen patroon van het datatype (URL).
   assert.deepEqual(per.pasfoto.validate, { required: true });
   // Het uploadveld met de volledige standaarddefinitie van de formulierbouwer
@@ -115,7 +118,7 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
   assert.deepEqual(naar.auth_bsn, [["data", "partijen", 0, "partij", "bsn"], ["bsn"]]);
   assert.deepEqual(naar.attachment_urls, [["attachments"]]);
   assert.deepEqual(naar.pdf_url, [["pdf_url"]]);
-  assert.equal(o.variables_mapping.length, 19);
+  assert.equal(o.variables_mapping.length, 20);
   // Volgorde telt (glom, FUNDAMENT 27-10): eerst de lijst-aanzetten, dan het BSN
   // expliciet (auth_attribute_path schrijft niets), dan wat in de items schrijft.
   const volgorde = o.variables_mapping.map((m) => m.variable_key);
@@ -175,15 +178,15 @@ test("GPK: trace van modelknoop naar component", async () => {
   });
   const nummer = artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagIdentificatie.aanvraagnummer");
   assert.equal(nummer.regel, "Registratie: variabele van Open Formulieren (e-dienstmodel)");
-  assert.equal(nummer.doelPad, "/forms.json/0/registration_backends/0/options/variables_mapping/14");
+  assert.equal(nummer.doelPad, "/forms.json/0/registration_backends/0/options/variables_mapping/15");
   // De envelop in de trace.
   assert.deepEqual(
     artefact.traceregels.filter((t) => t.bronGE.startsWith("envelop:")).map((t) => [t.bronGE, t.doelPad]),
     [
       ["envelop:type", "/formVariables.json/4"],
-      ["envelop:bsn", "/forms.json/0/registration_backends/0/options/variables_mapping/16"],
-      ["envelop:attachments", "/forms.json/0/registration_backends/0/options/variables_mapping/17"],
-      ["envelop:pdf_url", "/forms.json/0/registration_backends/0/options/variables_mapping/18"],
+      ["envelop:bsn", "/forms.json/0/registration_backends/0/options/variables_mapping/17"],
+      ["envelop:attachments", "/forms.json/0/registration_backends/0/options/variables_mapping/18"],
+      ["envelop:pdf_url", "/forms.json/0/registration_backends/0/options/variables_mapping/19"],
     ]
   );
 });

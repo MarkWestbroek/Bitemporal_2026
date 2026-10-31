@@ -207,12 +207,12 @@
             "waarde": "ingediend"
           },
           {
-            "constNaam": "AanvraagStatusGevalideerd",
-            "waarde": "gevalideerd"
+            "constNaam": "AanvraagStatusInBehandeling",
+            "waarde": "inBehandeling"
           },
           {
-            "constNaam": "AanvraagStatusAfgekeurd",
-            "waarde": "afgekeurd"
+            "constNaam": "AanvraagStatusNietInBehandeling",
+            "waarde": "nietInBehandeling"
           },
           {
             "constNaam": "AanvraagStatusAfgehandeld",
@@ -1772,6 +1772,12 @@
                 "type": "string",
                 "datatype": "Kenteken",
                 "description": "Kenteken van het voertuig (alleen bij een bestuurderskaart)"
+              },
+              {
+                "naam": "rijbewijsnummer",
+                "type": "string",
+                "datatype": "Rijbewijsnummer",
+                "description": "Rijbewijsnummer van de aanvrager (alleen bij een bestuurderskaart)"
               }
             ]
           },

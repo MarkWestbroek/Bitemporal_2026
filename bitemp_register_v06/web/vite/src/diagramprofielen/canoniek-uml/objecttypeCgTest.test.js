@@ -99,7 +99,7 @@ test("GPK: ouder en subtype in één schema", async () => {
   assert.equal(s.title, "GehandicaptenparkeerkaartAanvraag");
   assert.deepEqual(Object.keys(s.properties).sort(), [
     "aanvraagnummer", "aanvraagtype", "bijlagen", "eerderKaartnummer", "eerdereKaart", "hulpmiddel", "ingediendOp",
-    "kenteken", "loopafstandMeter", "partijen", "soort", "status", "toelichting",
+    "kenteken", "loopafstandMeter", "partijen", "rijbewijsnummer", "soort", "status", "toelichting",
   ]);
   assert.deepEqual(s.required, ["aanvraagnummer", "aanvraagtype", "ingediendOp", "soort", "status"]);
   assert.deepEqual(s.properties.soort.enum, ["bestuurder", "passagier", "instelling"]);
