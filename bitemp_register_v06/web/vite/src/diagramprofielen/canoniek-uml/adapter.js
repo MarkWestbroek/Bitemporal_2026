@@ -67,6 +67,7 @@ function veldenCompartiment(d) {
         typeLabel: typeLabel(v),
         ...(v.uniek ? { uniek: v.uniek } : {}),
         ...(v.description ? { beschrijving: v.description } : {}),
+        ...(v.uuid ? { uuid: v.uuid } : {}),
       },
     })),
   };
@@ -122,6 +123,8 @@ function naarCoreElement(el) {
   if (d.tijdprecisie) basis.data.tijdprecisie = d.tijdprecisie;
   // V3 `description` = de vaste M3-beschrijving (2026-10-12).
   if (d.description) basis.data.beschrijving = d.description;
+  // uuid: identiteit binnen de tool (delta-import, merge — besluit Mark 31-10).
+  if (d.uuid) basis.data.uuid = d.uuid;
 
   switch (el.type) {
     case "entiteit": {
@@ -335,8 +338,9 @@ export function vanCanoniekModel(state) {
         const d = el.data || {};
         core.source = bron;
         core.target = doel;
-        core.data.bronKardinaliteit =
-          d.bronKardinaliteit || (d.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
+        // momentvoorkomen staat in V3 op de structurele lijn (entiteit → relatie), niet in data.
+        const mv = d.momentvoorkomen || bronEdgeVoorRel.get(el.id)?.data?.momentvoorkomen;
+        core.data.bronKardinaliteit = d.bronKardinaliteit || (mv === "meervoudig" ? "0..*" : "0..1");
         core.data.doelKardinaliteit = d.doelKardinaliteit || "0..*";
         if (d.naamLabelHeen) core.data.naamLabelHeen = d.naamLabelHeen;
         if (d.naamLabelTerug) core.data.naamLabelTerug = d.naamLabelTerug;
@@ -545,8 +549,13 @@ function parseTypeLabel(label, coreElements) {
 /** Core-veld → oude veldvorm (bron-veld als basis, delta overschrijft). */
 function veldTerug(coreVeld, coreElements, bronVelden) {
   const d = coreVeld.data || {};
-  const bron = (bronVelden || []).find((v) => v.naam === coreVeld.naam) || {};
+  // Eerst op uuid (een hernoemd veld houdt zo zijn bron), dan op naam.
+  const bron =
+    (d.uuid && (bronVelden || []).find((v) => v.uuid === d.uuid)) ||
+    (bronVelden || []).find((v) => v.naam === coreVeld.naam) ||
+    {};
   const veld = { ...bron, naam: coreVeld.naam };
+  if (d.uuid) veld.uuid = d.uuid;
   veld.verplicht = d.verplicht !== false;
   veld.afgeleid = d.afgeleid === true;
   // Uniek (V3Veld.Uniek, 30-10): in de inspector gezet of gewist.
@@ -885,6 +894,12 @@ export function naarCanoniekModel(coreState) {
         });
       }
     }
+  }
+
+  // uuid (identiteit binnen de tool, besluit Mark 31-10): een in de Studio gezette
+  // data.uuid wint van de heenreis-kopie.
+  for (const el of Object.values(coreEls)) {
+    if (el?.data?.uuid && elements[el.id]) elements[el.id].data = { ...elements[el.id].data, uuid: el.data.uuid };
   }
 
   for (const [sleutel, c] of composities) {

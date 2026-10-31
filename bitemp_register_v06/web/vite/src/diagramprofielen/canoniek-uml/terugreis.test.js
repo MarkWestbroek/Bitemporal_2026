@@ -566,3 +566,50 @@ test("V3.1-veldsleutels: cg-test-model houdt verplicht/uniek/type/format; demo-m
     assert.deepEqual(v, veldenVan(demoV3Model)[naam] || {}, naam);
   }
 });
+
+// ─────────────── 3. cg-test-model: de rondgang laat de inhoud heel (31-10) ───────────────
+// importeerV3 → exporteerV3 op het canonieke cg-test-model. Wat over mag blijven:
+// lege lijsten, een expliciete `false`, posities/handles/diagrammen en de kopvelden.
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const CG_TEST = JSON.parse(fs.readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)),
+  "fixtures/cg-test/omnium-model-cg-test-v3.json"), "utf8"));
+const LAYOUT = new Set(["positie", "ankerPositie", "useEdges", "sourceHandle", "targetHandle", "diagrammen", "id", "doelId", "classLinkId"]);
+
+function inhoud(v3Model) {
+  const leeg = (v) => v === false || (Array.isArray(v) && v.length === 0);
+  const kaal = JSON.parse(JSON.stringify(v3Model, (k, v) => (LAYOUT.has(k) || leeg(v) ? undefined : v)));
+  delete kaal.naam;
+  delete kaal.beschrijving;
+  kaal.entiteiten = Object.fromEntries((kaal.entiteiten || []).map((e) => [e.typenaam, {
+    ...e,
+    gegevenselementen: Object.fromEntries((e.gegevenselementen || []).map((g) => [g.naam, g])),
+    relaties: Object.fromEntries((e.relaties || []).map((r) => [r.naam, r])),
+  }]));
+  return kaal;
+}
+
+test("cg-test-rondgang: kardinaliteiten, constNamen, domeinen en velden blijven gelijk", () => {
+  const { v3 } = exporteerV3(importeerV3(CG_TEST));
+  assert.deepEqual(inhoud(v3.model), inhoud(CG_TEST.model));
+});
+
+test("cg-test-rondgang: model_naam en model_beschrijving blijven in de envelop", () => {
+  const { v3 } = exporteerV3(importeerV3(CG_TEST));
+  assert.equal(v3.model_naam, CG_TEST.model_naam);
+  assert.equal(v3.model_beschrijving, CG_TEST.model_beschrijving);
+});
+
+test("cg-test-rondgang: een nieuwe enum-waarde krijgt een afgeleide constNaam", () => {
+  const core = importeerV3(CG_TEST);
+  const en = Object.values(core.elements).find((e) => e.elementType === "enumeratie" && e.naam === "InrichtingLaag");
+  assert.ok(en, "enum InrichtingLaag in het core-model");
+  en.compartimenten[0].velden.push({ naam: "6 beheer", fieldType: "waarde" });
+  const { v3 } = exporteerV3(core);
+  const w = v3.model.enums.find((e) => e.goType === "InrichtingLaag").waarden;
+  assert.equal(w.find((x) => x.waarde === "1-2 gegevensbronnen").constNaam, "InrichtingLaagGegevensbronnen");
+  assert.equal(w.find((x) => x.waarde === "6 beheer").constNaam, "InrichtingLaag6Beheer");
+});

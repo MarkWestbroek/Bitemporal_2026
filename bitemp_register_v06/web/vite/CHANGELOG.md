@@ -8,6 +8,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Importeer V3 in project (alleen wijzigingen)** (31-10): Modelleren → Bestand, uit een
+  bestand of van de API. Delta met review zoals de EA-import; diagrammen, mappen en
+  verwijzingen blijven staan. Melding bij dubbele naampaden (BACKLOG §40).
+- **`uuid` op modelelementen en velden** in V3 (entiteit, GE, relatie, veld, enum, datatype,
+  referentielijstinstantie): bedacht bij een V3-export uit de Studio, daarna stabiel; sleutel
+  voor de delta-import.
+
+### Gewijzigd
+- Rondgang V3 → Studio → V3 houdt `doelKardinaliteit`/`bronKardinaliteit`/`directioneel`,
+  de enum-`constNaam` (Go-constanten), `model_naam`/`model_beschrijving`, een expliciet
+  `domein` op GE's/relaties, en schrijft geen `goType` bij velden die zonder goType binnenkwamen.
+
 ## [studio/v0.25.0] — 2026-10-31
 
 ### Toegevoegd
