@@ -86,45 +86,86 @@ function verschillenDiagram(nieuw, bestaand, idVanImport) {
   return uit;
 }
 
+/** Externe identiteit van een EA-element: de GUID (standaard voor vergelijkMetStore). */
+const eaSleutel = (el) => el?.data?.eaGuid || null;
+const eaDiagramSleutel = (d) => diagramGuid(d?.id);
+
 /**
  * @param {{elements: Record<string, any>, diagrams: Record<string, any>}} model - de import (ids uit de lezer)
  * @param {{elements?: Record<string, any>, diagrams?: Record<string, any>}} state - de profielstore
- * @param {{pakketIds?: Set<number>|number[]}} [opties] - EA-pakketten van deze import, voor "verdwenen"
+ * @param {{pakketIds?: Set<number>|number[],
+ *          sleutelVan?: (el: any) => string|null,
+ *          diagramSleutelVan?: (d: any) => string|null,
+ *          opIdTerugval?: (importEl: any, bestaand: any) => boolean,
+ *          verdwenenKandidaat?: ((el: any) => boolean)|null,
+ *          verdwenenDiagram?: ((d: any) => boolean)|null,
+ *          opUiteinden?: Iterable<string>}} [opties]
+ *   Standaard de EA-identiteit (GUID) en "verdwenen" binnen de EA-pakketten van deze import.
+ *   Een andere bron (V3, 31-10) geeft eigen sleutels mee: `sleutelVan` (bv. data.uuid),
+ *   `opIdTerugval` (wanneer hetzelfde id zonder sleutel als dezelfde bron telt) en
+ *   `verdwenenKandidaat`/`verdwenenDiagram` (welke bestaande dingen weg kunnen zijn).
  */
-export function vergelijkMetStore(model, state, { pakketIds = [] } = {}) {
+export function vergelijkMetStore(model, state, opties = {}) {
+  const {
+    pakketIds = [],
+    sleutelVan = eaSleutel,
+    diagramSleutelVan = eaDiagramSleutel,
+    opIdTerugval = (_el, b) => !sleutelVan(b),
+    // Verbindingen zonder eigen identiteit: tegenhanger = zelfde soort tussen dezelfde uiteinden.
+    opUiteinden = ["bevat"],
+  } = opties;
+  const uiteindSoorten = new Set(opUiteinden);
   const bestaandeEl = state?.elements || {};
   const bestaandeDi = state?.diagrams || {};
   const pakketten = new Set([...(pakketIds instanceof Set ? pakketIds : pakketIds)].map(Number));
+  // EA: verdwenen = met GUID, uit dezelfde pakketten. Alleen als er pakketten zijn.
+  const verdwenenKandidaat =
+    opties.verdwenenKandidaat !== undefined
+      ? opties.verdwenenKandidaat
+      : pakketten.size
+        ? (el) => !!eaSleutel(el) && pakketten.has(Number(el.data?.eaPakket))
+        : null;
+  const verdwenenDiagram =
+    opties.verdwenenDiagram !== undefined
+      ? opties.verdwenenDiagram
+      : pakketten.size
+        ? (d) => !!eaDiagramSleutel(d) && pakketten.has(Number(d.eaPakket))
+        : null;
 
-  // Bestaande elementen/diagrammen op GUID.
+  // Bestaande elementen/diagrammen op hun externe sleutel.
   const elPerGuid = new Map();
-  for (const el of Object.values(bestaandeEl)) if (el?.data?.eaGuid) elPerGuid.set(el.data.eaGuid, el);
+  for (const el of Object.values(bestaandeEl)) {
+    const k = sleutelVan(el);
+    if (k) elPerGuid.set(k, el);
+  }
   const diPerGuid = new Map();
   for (const d of Object.values(bestaandeDi)) {
-    const g = diagramGuid(d.id);
+    const g = diagramSleutelVan(d);
     if (g) diPerGuid.set(g, d);
   }
 
   /** import-id → bestaand id (alleen voor gevonden tegenhangers). */
   const idMap = new Map();
   for (const el of Object.values(model.elements || {})) {
-    const b = el.data?.eaGuid ? elPerGuid.get(el.data.eaGuid) : null;
+    const k = sleutelVan(el);
+    const b = k ? elPerGuid.get(k) : null;
     if (b) idMap.set(el.id, b.id);
   }
   for (const d of Object.values(model.diagrams || {})) {
-    const g = diagramGuid(d.id);
+    const g = diagramSleutelVan(d);
     const b = g ? diPerGuid.get(g) : null;
     if (b) idMap.set(d.id, b.id);
   }
   // Bevat-connectoren (package → lid) hebben geen GUID maar een samengesteld
   // id; hun tegenhanger is de bevat-lijn tussen dezelfde (bestaande) ids.
+  // Zo ook andere soorten uit `opUiteinden` (V3: compositie, generalisatie).
   const bevatBestaand = new Map();
   for (const el of Object.values(bestaandeEl)) {
-    if (el.elementType === "bevat" && el.source && el.target) bevatBestaand.set(`${el.source}~${el.target}`, el);
+    if (uiteindSoorten.has(el.elementType) && el.source && el.target) bevatBestaand.set(`${el.elementType}:${el.source}~${el.target}`, el);
   }
   for (const el of Object.values(model.elements || {})) {
-    if (el.elementType !== "bevat" || idMap.has(el.id)) continue;
-    const b = bevatBestaand.get(`${idMap.get(el.source) || el.source}~${idMap.get(el.target) || el.target}`);
+    if (!uiteindSoorten.has(el.elementType) || idMap.has(el.id)) continue;
+    const b = bevatBestaand.get(`${el.elementType}:${idMap.get(el.source) || el.source}~${idMap.get(el.target) || el.target}`);
     if (b) idMap.set(el.id, b.id);
   }
   // Hulpelementen zonder eigen GUID (bv. de punten van een sequence-bericht,
@@ -132,10 +173,11 @@ export function vergelijkMetStore(model, state, { pakketIds = [] } = {}) {
   // kregen: de lezers leiden ids deterministisch af uit de EA-GUID, dus
   // hetzelfde id zonder GUID in de store is dezelfde EA-bron. Zonder deze
   // terugval botste zo'n her-import op "Element-id bestaat al" (Mark, 14-10).
+  const geclaimd = new Set(idMap.values());
   for (const el of Object.values(model.elements || {})) {
     if (idMap.has(el.id)) continue;
     const b = bestaandeEl[el.id];
-    if (b && !b.data?.eaGuid) idMap.set(el.id, b.id);
+    if (b && !geclaimd.has(b.id) && opIdTerugval(el, b)) idMap.set(el.id, b.id);
   }
   const idVanImport = (id) => idMap.get(id) || id;
 
@@ -166,18 +208,18 @@ export function vergelijkMetStore(model, state, { pakketIds = [] } = {}) {
     (verschillen.length ? diagrammen.gewijzigd : diagrammen.ongewijzigd).push({ id: d.id, bestaandId, naam: d.naam, verschillen });
   }
 
-  // Verdwenen: bestaand, uit dezelfde EA-pakketten, niet meer in de import.
-  if (pakketten.size) {
-    const geimporteerdeGuids = new Set(Object.values(model.elements || {}).map((e) => e.data?.eaGuid).filter(Boolean));
+  // Verdwenen: bestaand, kandidaat (EA: uit dezelfde pakketten), en door niets
+  // uit de import gematcht.
+  const gematcht = new Set(idMap.values());
+  if (verdwenenKandidaat) {
     for (const el of Object.values(bestaandeEl)) {
-      const g = el?.data?.eaGuid;
-      if (!g || !pakketten.has(Number(el.data?.eaPakket)) || geimporteerdeGuids.has(g)) continue;
+      if (!el || gematcht.has(el.id) || !verdwenenKandidaat(el)) continue;
       elementen.verdwenen.push({ bestaandId: el.id, naam: el.naam, elementType: el.elementType });
     }
-    const geimporteerdeDi = new Set(Object.values(model.diagrams || {}).map((d) => diagramGuid(d.id)).filter(Boolean));
+  }
+  if (verdwenenDiagram) {
     for (const d of Object.values(bestaandeDi)) {
-      const g = diagramGuid(d.id);
-      if (!g || !pakketten.has(Number(d.eaPakket)) || geimporteerdeDi.has(g)) continue;
+      if (!d || gematcht.has(d.id) || !verdwenenDiagram(d)) continue;
       diagrammen.verdwenen.push({ bestaandId: d.id, naam: d.naam });
     }
   }
@@ -221,7 +263,8 @@ export function herschrijfOpBestaandeIds(model, idMap) {
  * @param {any} st - store-state met acties (importeerModel, updateElementen, zetDiagram, deleteElement, deleteDiagram)
  * @param {{elements: Record<string, any>, diagrams: Record<string, any>}} model - de import (lezer-ids)
  * @param {ReturnType<typeof vergelijkMetStore>} plan
- * @param {{aan: Set<string>}} keuzes - sleutels `el:<importId>` / `di:<importId>` / `weg:<bestaandId>` die aan staan
+ * @param {{aan: Set<string>, behoudData?: (sleutel: string) => boolean}} keuzes - sleutels `el:<importId>` / `di:<importId>` / `weg:<bestaandId>` die aan staan;
+ *   `behoudData`: data-sleutels die de bron niet kent en dus blijven staan (V3 kent bv. geen uitwerking/verwijstNaar)
  * @returns {{toegevoegd: number, bijgewerkt: number, verwijderd: number, diagrammenToegevoegd: number, diagrammenBijgewerkt: number}}
  */
 export function pasPlanToe(st, model, plan, keuzes) {
@@ -265,7 +308,8 @@ export function pasPlanToe(st, model, plan, keuzes) {
     // niet meer levert (bv. knikken die weg zijn, een tag) gaat weg — de
     // store merget data per sleutel, dus expliciet op undefined zetten.
     const data = { ...(el.data || {}) };
-    for (const k of Object.keys(bestaand.data || {})) if (!(k in data)) data[k] = LOKALE_DATA.has(k) ? bestaand.data[k] : undefined;
+    const behoud = (k) => LOKALE_DATA.has(k) || !!keuzes?.behoudData?.(k);
+    for (const k of Object.keys(bestaand.data || {})) if (!(k in data)) data[k] = behoud(k) ? bestaand.data[k] : undefined;
     patches[r.bestaandId] = {
       naam: el.naam,
       elementType: el.elementType,

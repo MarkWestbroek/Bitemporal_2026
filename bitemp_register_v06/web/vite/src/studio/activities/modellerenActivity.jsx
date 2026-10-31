@@ -65,6 +65,7 @@ import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
 import { importeerQeaInProject } from "../../diagramprofielen/ea/importQeaProject.js";
 import { plaatsEaInProjectboomPlan } from "../../diagramprofielen/ea/eaProjectboom.js";
+import { importeerV3InProject } from "./v3ImportProject.js";
 import { weergaveNaam } from "../../diagramcore/model/weergaveNaam.js";
 
 const ELEMENTEN_HOOGTE_SLEUTEL = "studio05-project-elementen-hoogte";
@@ -3598,6 +3599,13 @@ function menus(ctx) {
     label: "Importeer Sparx EA (.qea)…",
     onClick: () => importeerQeaInProject({ kiesDoel: kiesDoelmapVoorEa, naImport: plaatsEaInProjectboom }),
   };
+  // V3 (bestand of API) als delta in het canonieke model van het project — zelfde vorm
+  // als de EA-merge; vervangt niets (Mark, 31-10). Zie studio/activities/v3ImportProject.js.
+  const v3Item = {
+    id: "proj-import-v3",
+    label: "Importeer V3 in project (alleen wijzigingen)…",
+    onClick: () => importeerV3InProject(),
+  };
   // In Modelleren is er maar één EA-import, en die doet altijd hetzelfde,
   // welk tabblad ook actief is (Mark, 09-10): de profiel-eigen varianten
   // ("… alleen dit profiel …") verdwijnen hier uit het Bestand-menu; ze
@@ -3613,8 +3621,8 @@ function menus(ctx) {
   const bestandIdx = profielMenus.findIndex((m) => m?.id === "bestand");
   const metEa =
     bestandIdx >= 0
-      ? profielMenus.map((m, i) => (i === bestandIdx ? { ...m, items: [eaItem, { type: "separator" }, ...zonderProfielEa(m.items)] } : m))
-      : [...profielMenus, { id: "bestand", aanvullen: true, items: [eaItem] }];
+      ? profielMenus.map((m, i) => (i === bestandIdx ? { ...m, items: [eaItem, v3Item, { type: "separator" }, ...zonderProfielEa(m.items)] } : m))
+      : [...profielMenus, { id: "bestand", aanvullen: true, items: [eaItem, v3Item] }];
   return [projectMenu, ...metEa];
 }
 

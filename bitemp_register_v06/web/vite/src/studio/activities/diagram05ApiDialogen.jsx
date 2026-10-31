@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 import { menuBus } from "../menuBus";
 import { apiBase } from "../../shared/apiBase.js";
 import { exporteerV3, importeerV3 } from "../../diagramprofielen/canoniek-uml/serialisatie.js";
+import { vulUuids } from "../../diagramprofielen/canoniek-uml/uuids.js";
 import { vraagBevestiging } from "../naamDialog.jsx";
 
 const OVERLAY = {
@@ -224,6 +225,7 @@ function PubliceerDialoog({ store, onSluit }) {
     setBezig(true);
     setFout(null);
     try {
+      vulUuids(store);
       const { v3, overgeslagen } = exporteerV3(store.getState());
       const body = {
         bron: "studio-0.5",

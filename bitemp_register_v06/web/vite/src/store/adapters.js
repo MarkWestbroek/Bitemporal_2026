@@ -72,6 +72,7 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
 
   return {
     naam: v3Veld.naam,
+    ...(v3Veld.uuid ? { uuid: v3Veld.uuid } : {}),
     type,
     format,
     datatypeNaam: v3Veld.datatype || datatype?.naam || null,
@@ -82,6 +83,8 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
     verplicht: "verplicht" in v3Veld ? v3Veld.verplicht === true : !(v3Veld.goType || "").startsWith("*"),
     ...(v3Veld.uniek ? { uniek: v3Veld.uniek } : {}),
     ...(v31Sleutels.length ? { v31Sleutels } : {}),
+    // Een V3.1-veld met type maar zonder goType: de terugreis schrijft dan ook geen goType.
+    ...(!("goType" in v3Veld) && (v3Veld.type || v3Veld.enum) ? { zonderGoType: true } : {}),
     autoIncrement: false,
     description: v3Veld.description || "",
     afgeleid: v3Veld.afgeleid || false,
@@ -180,10 +183,14 @@ export function v3ModelNaarStore(v3Full) {
       type: "enumeratie",
       domein: e.domein || inferredEnumDomein[e.goType] || "",
       data: {
+        ...(e.uuid ? { uuid: e.uuid } : {}),
         naam: e.goType,
         domein: e.domein || inferredEnumDomein[e.goType] || "",
         baseType: e.baseType || "string",
         waarden: (e.waarden || []).map((w) => w.waarde),
+        // constNaam per waarde zoals de bron hem had (Go-constanten): de terugreis
+        // leidt alleen voor nieuwe waarden een naam af (maakConstNaam).
+        constNamen: Object.fromEntries((e.waarden || []).filter((w) => w.constNaam).map((w) => [w.waarde, w.constNaam])),
       },
     };
     diagramNodes.push({
@@ -201,6 +208,7 @@ export function v3ModelNaarStore(v3Full) {
       type: "gegevenstype",
       domein: dt.domein || "",
       data: {
+        ...(dt.uuid ? { uuid: dt.uuid } : {}),
         naam: dt.naam,
         description: dt.description || "",
         domein: dt.domein || "",
@@ -226,6 +234,7 @@ export function v3ModelNaarStore(v3Full) {
       type: "referentielijstInstantie",
       domein: ri.domein || "",
       data: {
+        ...(ri.uuid ? { uuid: ri.uuid } : {}),
         systeemnaam: ri.systeemnaam || "",
         naam: ri.naam || "",
         omschrijving: ri.omschrijving || "",
@@ -246,6 +255,7 @@ export function v3ModelNaarStore(v3Full) {
       type: "entiteit",
       domein: ent.domein || "",
       data: {
+        ...(ent.uuid ? { uuid: ent.uuid } : {}),
         typenaam: ent.typenaam,
         klassenaam: ent.typenaam,
         description: ent.description || "",
@@ -292,12 +302,15 @@ export function v3ModelNaarStore(v3Full) {
         type: "gegevenselement",
         domein: ge.domein || ent.domein || "",
         data: {
+          ...(ge.uuid ? { uuid: ge.uuid } : {}),
           typenaam: geId,
           klassenaam: ge.naam,
           description: ge.description || "",
           domein: ge.domein || ent.domein || "",
           meervoud: ge.meervoud || "",
           metatype: "gegevenselement",
+          // Expliciet domein in de bron (ook als het gelijk is aan dat van de entiteit) terugschrijven.
+          ...(ge.domein ? { domeinExpliciet: true } : {}),
           isMaterieel: ge.isMaterieel || false,
           ...tijdprecisieVan(ge),
           kleur: defaultKleur("gegevenselement"),
@@ -347,12 +360,14 @@ export function v3ModelNaarStore(v3Full) {
           type: "relatie",
           domein: rel.domein || ent.domein || "",
           data: {
+            ...(rel.uuid ? { uuid: rel.uuid } : {}),
             typenaam: rel.naam,
             klassenaam: rel.naam,
             description: rel.description || "",
             domein: rel.domein || ent.domein || "",
             meervoud: rel.meervoud || "",
             metatype: "relatie",
+            ...(rel.domein ? { domeinExpliciet: true } : {}),
             isMaterieel: rel.isMaterieel || false,
             ...tijdprecisieVan(rel),
             relatieSubtype: rel.relatieSubtype || "",
@@ -361,6 +376,11 @@ export function v3ModelNaarStore(v3Full) {
             velden,
             afgeleideVelden: afgeleideVeldenConvert(rel.afgeleideVelden),
             doelEntiteit: rel.doelEntiteit || "",
+            // Kardinaliteiten en richting: de canonieke adapter leest ze uit data
+            // (vanCanoniekModel), buildV3Relatie schrijft ze terug.
+            ...(rel.bronKardinaliteit ? { bronKardinaliteit: rel.bronKardinaliteit } : {}),
+            ...(rel.doelKardinaliteit ? { doelKardinaliteit: rel.doelKardinaliteit } : {}),
+            ...(rel.directioneel ? { directioneel: true } : {}),
             // Afgeleide relatie (2026-10-10), zoals v3ModelNaarEditor.
             ...(rel.afgeleid ? { afgeleid: true, afleidingsregelTaal: rel.afleidingsregelTaal || "cel", afleidingsregel: rel.afleidingsregel || "" } : {}),
             ...(rel.geordend ? { geordend: true } : {}),
@@ -689,8 +709,11 @@ export function v3ModelNaarStore(v3Full) {
     id: v3Full?.id || null,
     indiener: v3Full?.indiener || "",
     versie: v3Model?.versie || "v3",
-    naam: v3Model?.naam || "",
-    beschrijving: v3Model?.beschrijving || "",
+    naam: v3Model?.naam || v3Full?.model_naam || "",
+    beschrijving: v3Model?.beschrijving || v3Full?.model_beschrijving || "",
+    // De envelop van /api/schema/model (en de fixtures) heet model_naam/model_beschrijving;
+    // onthouden zodat de terugreis dezelfde sleutels schrijft.
+    ...(v3Full?.model_naam ? { envelopNaam: true } : {}),
   };
 
   return { elements, structuralEdges, diagrams, domains, domainMeta, modelMeta };
@@ -778,6 +801,7 @@ function addFieldDependencyEdges(convertedVelden, parentId, rawVelden, datatypeL
  */
 function veldNaarV3(veld) {
   const v3 = { naam: veld.naam };
+  if (veld.uuid) v3.uuid = veld.uuid;
 
   // GoType afleiden: enum → enumnaam, anders uit type/format
   v3.goType = veld.enumNaam
@@ -791,6 +815,8 @@ function veldNaarV3(veld) {
   if (veld.verplicht) {
     v3.goType = v3.goType.replace(/^\*/, "");
   }
+  // V3.1-veld dat zonder goType binnenkwam: type/format/verplicht zeggen het al.
+  if (veld.zonderGoType && (veld.type || veld.enumNaam)) delete v3.goType;
 
   // V3.1-sleutels (30-10): alleen die de bron had (of die een nieuw Studio-veld meekrijgt),
   // in de volgorde van V3Veld. De Go-codegen leest ze alleen als goType ontbreekt.
@@ -946,9 +972,10 @@ export function storeNaarV3Model(state) {
     const goType = el.data?.naam || el.naam;
     const v3 = {
       goType,
+      ...(el.data?.uuid ? { uuid: el.data.uuid } : {}),
       baseType: el.data?.baseType || "string",
       waarden: (el.data?.waarden || []).map((w) => ({
-        constNaam: maakConstNaam(goType, w),
+        constNaam: el.data?.constNamen?.[w] || maakConstNaam(goType, w),
         waarde: w,
       })),
     };
@@ -963,6 +990,7 @@ export function storeNaarV3Model(state) {
     const d = el.data || {};
     const v3 = {
       naam: d.naam || el.naam,
+      ...(d.uuid ? { uuid: d.uuid } : {}),
       basistype: d.basistype || "string",
     };
     if (d.description) v3.description = d.description;
@@ -991,7 +1019,7 @@ export function storeNaarV3Model(state) {
   // --- ReferentielijstInstanties → V3 ---
   const v3RefInstanties = refInstanties.map((el) => {
     const d = el.data || {};
-    const v3 = { systeemnaam: d.systeemnaam || el.naam };
+    const v3 = { systeemnaam: d.systeemnaam || el.naam, ...(d.uuid ? { uuid: d.uuid } : {}) };
     if (d.naam) v3.naam = d.naam;
     if (d.omschrijving) v3.omschrijving = d.omschrijving;
     if (el.domein) v3.domein = el.domein;
@@ -1021,6 +1049,7 @@ export function storeNaarV3Model(state) {
     const d = ent.data || {};
     const v3Ent = {
       typenaam: d.typenaam || ent.naam,
+      ...(d.uuid ? { uuid: d.uuid } : {}),
       meervoud: d.meervoud || "",
     };
     if (d.description) v3Ent.description = d.description;
@@ -1059,11 +1088,12 @@ export function storeNaarV3Model(state) {
       if (child.type === "gegevenselement") {
         const v3GE = {
           naam: cd.klassenaam || child.naam,
+          ...(cd.uuid ? { uuid: cd.uuid } : {}),
           meervoud: cd.meervoud || edgeData.jsonRolnaam || "",
           momentvoorkomen: edgeData.momentvoorkomen || "enkelvoudig",
         };
         if (cd.description) v3GE.description = cd.description;
-        if (child.domein && child.domein !== ent.domein) v3GE.domein = child.domein;
+        if (child.domein && (child.domein !== ent.domein || cd.domeinExpliciet)) v3GE.domein = child.domein;
         if (cd.isMaterieel) v3GE.isMaterieel = true;
         Object.assign(v3GE, tijdprecisieVan(cd));
         if (cd.naamLabelHeen) v3GE.naamLabelHeen = cd.naamLabelHeen;
@@ -1265,6 +1295,8 @@ export function storeNaarV3Model(state) {
     build_versie: modelMeta?.build_versie || "",
     go_module: modelMeta?.go_module || "",
     indiener: modelMeta?.indiener || "IDE",
+    ...(modelMeta?.envelopNaam && modelMeta?.naam ? { model_naam: modelMeta.naam } : {}),
+    ...(modelMeta?.envelopNaam && modelMeta?.beschrijving ? { model_beschrijving: modelMeta.beschrijving } : {}),
     model: v3Model,
   };
 }
@@ -1276,18 +1308,25 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
   const cd = child.data || {};
   const v3Rel = {
     naam: cd.klassenaam || child.naam,
+    ...(cd.uuid ? { uuid: cd.uuid } : {}),
     meervoud: cd.meervoud || edgeData.jsonRolnaam || "",
     momentvoorkomen: edgeData.momentvoorkomen || "meervoudig",
     doelEntiteit: cd.doelEntiteit || "",
   };
   if (cd.description) v3Rel.description = cd.description;
-  if (child.domein && child.domein !== parentDomein) v3Rel.domein = child.domein;
+  if (child.domein && (child.domein !== parentDomein || cd.domeinExpliciet)) v3Rel.domein = child.domein;
   if (cd.relatieSubtype) v3Rel.relatieSubtype = cd.relatieSubtype;
   if (cd.referentielijstInstantie) v3Rel.referentielijstInstantie = cd.referentielijstInstantie;
   if (cd.isMaterieel) v3Rel.isMaterieel = true;
   Object.assign(v3Rel, tijdprecisieVan(cd));
   if (cd.naamLabelHeen) v3Rel.naamLabelHeen = cd.naamLabelHeen;
   if (cd.naamLabelTerug) v3Rel.naamLabelTerug = cd.naamLabelTerug;
+  if (cd.directioneel) v3Rel.directioneel = true;
+  // Kardinaliteiten alleen als ze afwijken van wat momentvoorkomen al zegt (bron)
+  // resp. de standaard "0..*" (doel): zo blijft een model zonder ze byte-gelijk.
+  const standaardBron = v3Rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1";
+  if (cd.bronKardinaliteit && cd.bronKardinaliteit !== standaardBron) v3Rel.bronKardinaliteit = cd.bronKardinaliteit;
+  if (cd.doelKardinaliteit && cd.doelKardinaliteit !== "0..*") v3Rel.doelKardinaliteit = cd.doelKardinaliteit;
   // {ordered} (V3Relatie.geordend sinds de backend van 2026-10-11).
   if (cd.geordend) v3Rel.geordend = true;
   // Afgeleide relatie (2026-10-10): geen tabel, leesbaar via de regel (codegen).

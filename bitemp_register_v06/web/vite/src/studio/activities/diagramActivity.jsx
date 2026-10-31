@@ -18,6 +18,7 @@ import {
 import { registreerCanoniekUmlImplementaties } from "../../diagramprofielen/canoniek-uml/implementaties.jsx";
 import { vanCanoniekModel, naarCanoniekModel } from "../../diagramprofielen/canoniek-uml/adapter.js";
 import { exporteerV3, importeerV3 } from "../../diagramprofielen/canoniek-uml/serialisatie.js";
+import { vulUuids } from "../../diagramprofielen/canoniek-uml/uuids.js";
 import ApiDialogen from "./diagram05ApiDialogen.jsx";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 
@@ -50,6 +51,8 @@ export default maakDiagramActiviteit({
     /** Fase 4A: V3-serialisatie (spiegel + delta). */
     exporteerV3,
     importeerV3,
+    // Ontbrekende uuid's (identiteit binnen de tool) vóór een V3-export in de store zetten.
+    vulUuids,
     /** Fase 4B: laden vanaf / publiceren naar de Go-API. */
     DialogenComponent: ApiDialogen,
   },

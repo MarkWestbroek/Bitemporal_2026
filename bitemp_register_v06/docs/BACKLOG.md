@@ -1955,3 +1955,57 @@ veldsleutels gaan bij importeren in de Studio en weer exporteren verloren:
   - Afgerond (30-10, OMNIUM-UI): de e2e-test "zelfde payloads als uit het
     bestand" in `37-studio-inrichtingsartefacten` draait (geen fixme meer), en
     de waarschuwing `INR-MODEL-UIT-MAP` is weg.
+
+## 40. V3 direct in de projectboom: delta-import, UUID's en de rest van de rondgang (2026-10-31)
+
+Wens van Mark (via TRANSFORMATIES, 31-10): het cg-test-model in de Studio modelleren en een
+V3-bestand of een model van de API **direct in de projectboom** importeren, met behoud van de
+diagrammen, en alleen wat gewijzigd is (zoals de EA-merge op GUID). Gebouwd op
+`feat/v3-delta-import` (OMNIUM-UI).
+
+**1. Rondgang V3 → Studio → V3 (vervolg op §39).** Op `omnium-model-cg-test-v3.json` bleef
+na de rondgang verlies over. Dat is nu dicht (test in `terugreis.test.js`):
+
+| Was | Nu |
+|---|---|
+| `doelKardinaliteit` (3 relaties) en `bronKardinaliteit`/`directioneel` vielen weg | gaan heen in de relatie-data en terug in `buildV3Relatie`, alleen als ze van de standaard afwijken |
+| enum-`constNaam` werd steeds opnieuw afgeleid (`InrichtingLaag12Gegevensbronnen`) — raakt de Go-constanten | de constNaam van de bron blijft; alleen een nieuwe waarde krijgt een afgeleide naam |
+| `model_naam`/`model_beschrijving` (envelop) weg | blijven in de envelop |
+| `domein` op GE's/relaties weg als gelijk aan de entiteit | blijft als de bron hem expliciet had |
+| `goType` erbij bij V3.1-velden met `type` of `enum` | alleen als de bron goType had |
+
+Over blijft (onschuldig): lege lijsten, een expliciete `isMaterieel: false`, `naam` ook in het
+model, en layout (posities, handles, diagrammen). Referentielijst-**instanties** zijn geen
+modelinhoud: in V3 staat alleen welke lijst er is (systeemnaam, naam); de waarden zijn eerste
+vulling (replay/e-dienst), niet het model (Mark, 31-10).
+
+**2. Delta-import.** Modelleren → Bestand → *Importeer V3 in project (alleen wijzigingen)…*
+(bestand of API: actief model of een versie). Zelfde vorm als de EA-import: vergelijken →
+review (nieuw/gewijzigd aan, verdwenen uit) → toepassen met behoud van ids, dus diagrammen,
+plaatsingen in mappen, kruisverbanden en verwijzingen blijven staan.
+- Code: `diagramprofielen/canoniek-uml/v3DeltaImport.js` (puur), `studio/activities/v3ImportProject.js` (UI).
+- `vergelijkMetStore`/`pasPlanToe` (EA) zijn generiek gemaakt: sleutelfunctie, terugval op id,
+  verdwenen-kandidaten, verbindingen die op hun uiteinden matchen, Studio-eigen data behouden.
+- Vergelijken in V3-ruimte: de store gaat eerst door dezelfde rondgang, zodat een in de Studio
+  bewerkt element niet als gewijzigd telt om een oude heenreis-kopie.
+- Diagrammen alleen als de V3 ze meebrengt (het afgeleide Overzicht alleen bij een lege
+  store). "Verdwenen" alleen voor V3-soorten in de domeinen van de import, standaard uit.
+- Dubbele naampaden worden gemeld: artefacten verwijzen op naampad (Mark, 31-10).
+
+**3. UUID's.** `uuid` op entiteit, gegevenselement, relatie, veld, enumeratie, gegevenstype en
+referentielijstinstantie (niet `id`: dat is op GE/relatie al een edge-id).
+- Identiteit binnen de tool (zandbakken, experimenten, voorstellen naast elkaar; delta, merge);
+  besluit Mark 31-10. Artefacten verwijzen **niet** naar de uuid, maar op naampad.
+- Bedacht bij een V3-export uit de Studio (`uuids.js`, `vulUuids`), nooit bij een import;
+  daarna stabiel. De delta matcht eerst op uuid (een hernoeming wordt "gewijzigd · naam"),
+  dan op het uit de namen afgeleide id.
+- **Open (BACKEND):** `UUID string json:"uuid,omitempty"` op V3Entiteit, V3Gegevenselement,
+  V3Relatie, V3Veld, V3Enum, V3Datatype en V3ReferentielijstInstantie, zodat de uuid via de API
+  en in de code blijft. De Go-decoder negeert hem nu (geen DisallowUnknownFields), maar een
+  her-marshal verliest hem.
+- **Open:** versies van elementen (en mogelijk mappen/diagrammen) — Mark beslist.
+
+**Gevonden (31-10), opgelost door TRANSFORMATIES:** sinds a8e0a74e heeft de GPK-e-dienst een
+DMN-artefact (`aanvraag-ontvankelijk`). De exportstap kan het DMN-model al kiezen (optie "BPMN- en
+DMN-modellen" neemt meerdere bestanden), maar e2e 37 gaf alleen het BPMN-bestand mee ("9 van 10
+artefacten gemaakt, 1 mislukt"). De test geeft nu ook `gpk-beslissingen.dmn-model.json` mee.

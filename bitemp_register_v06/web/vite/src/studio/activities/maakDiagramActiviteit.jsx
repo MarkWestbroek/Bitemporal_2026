@@ -513,6 +513,7 @@ export function maakDiagramActiviteit(opties) {
       if (koppeling?.exporteerV3) {
         af.push(
           menuBus.on(ev("exporteer-v3"), () => {
+            koppeling.vulUuids?.(useStore);
             const { v3, overgeslagen } = koppeling.exporteerV3(useStore.getState());
             const naam = (v3.model?.naam || "model").toLowerCase().replace(/[^a-z0-9]+/g, "-");
             const blob = new Blob([JSON.stringify(v3, null, 2)], { type: "application/json" });
