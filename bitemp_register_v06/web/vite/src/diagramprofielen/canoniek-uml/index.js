@@ -16,6 +16,7 @@
  *
  * Kleuren komen overeen met defaultKleur() in umleditor/metamodel/types.js.
  */
+import { naamBotsingen } from "./uniekeNamen.js";
 import { vouwOudeComposities } from "./migratie.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { normaliseerErfenis } from "../../diagramcore/types/erfenis.js";
@@ -167,6 +168,12 @@ export function controleerTijdprecisie(element) {
   return null;
 }
 
+/** Profielregels van entiteit, GE en relatie: tijdprecisie + unieke naam/pad (31-10). */
+function controleerRepresentatie(element, context) {
+  const tijd = controleerTijdprecisie(element);
+  return [...(tijd ? [tijd] : []), ...naamBotsingen(element, context)];
+}
+
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
   {
@@ -188,7 +195,7 @@ const elementTypes = [
     // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
     properties: [MEERVOUD_VELD, MATERIEEL_VELD, TIJDPRECISIE_VELD, KLEUR_VELD],
     // Geërfd per hook-sleutel (types/erfenis.js): entiteit, GE en relatie.
-    hooks: { valideer: controleerTijdprecisie },
+    hooks: { valideer: controleerRepresentatie },
     // Afgeleid boven de gewone velden (Mark, 10-10): voor ENT, GE en relatie,
     // ook in een opgenomen GE (opname.js volgt deze volgorde).
     compartments: [
@@ -384,6 +391,8 @@ const elementTypes = [
     icoon: "enumeratie",
     properties: [KLEUR_VELD],
     compartments: [{ id: "waarden", label: null, fieldType: "waarde" }],
+    // Naam uniek per domein, altijd actief (uniekeNamen.js, Mark 31-10).
+    hooks: { valideer: naamBotsingen },
   },
   {
     id: "gegevenstype",
@@ -411,6 +420,7 @@ const elementTypes = [
       { id: "weergave", label: null, fieldType: "regel", alleenWeergave: true, verbergInInspector: true },
     ],
     hooks: {
+      valideer: naamBotsingen,
       /**
        * Validatie- en weergave-compartimenten live uit element.data, zodat de
        * node meebeweegt met wat de inspector wijzigt (voorheen statisch bij
@@ -453,6 +463,7 @@ const elementTypes = [
     icoon: "lijst",
     properties: [KLEUR_VELD],
     compartments: [{ id: "eigenschappen", label: null, fieldType: "eigenschap" }],
+    hooks: { valideer: naamBotsingen },
   },
   {
     // Package = het V3-domein als gewoon elementtype (geen core-concept).

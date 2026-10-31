@@ -2010,6 +2010,34 @@ referentielijstinstantie (niet `id`: dat is op GE/relatie al een edge-id).
   gebruikt de uuid nergens (tests `cmd/codegen/gen_uuid_test.go`, `model/v3_exporter_uuid_test.go`).
 - **Open:** versies van elementen (en mogelijk mappen/diagrammen) — Mark beslist.
 
+**4. Binding via de uuid en altijd-actieve naamtoets (31-10, OMNIUM-UI, `feat/naam-uuid-binding`).**
+Regels van Mark (31-10): binnen het model loopt een link via de uuid (DMN-kolom → modelveld,
+berichtveld, probeersel → echt model), en hernoem je het origineel dan gaat de link mee; bij een
+export (Operaton, documentatie, register) zijn naam en pad van dát moment de identificatie; namen
+en paden zijn uniek per domein en die toets is **altijd** actief; een harde kopie krijgt nieuwe
+uuid's met dezelfde namen (versies, probeersels en kopieën: nog open).
+- **Naamtoets** (`canoniek-uml/uniekeNamen.js`, `hooks.valideer`, niveau "fout"): entiteit,
+  enumeratie, gegevenstype, referentielijstinstantie en relatie uniek per domein (één naamruimte),
+  gegevenselement uniek onder zijn entiteit, velden uniek per element. Melding bovenaan de
+  inspector én een ⚠ op het canvas (motor: `DiagramCanvas` geeft fouten van de valideer-hook aan
+  de node; alleen niveau "fout" krijgt de badge, waarschuwingen blijven inspector-only).
+- **FieldRef.uuid** (`modelpicker/modelTree.js maakFieldRef`) naast het naampad;
+  `fieldRefsOpUuid`/`verversFieldRef` zetten het naampad bij vanuit de uuid.
+- **Picker leest het projectmodel** (`modelpicker/pickerTypesUitV3.js`): zelfde vorm als
+  `types` van `/api/schema/model/code` (pariteit gecontroleerd: 228 van 228 veldpaden van het
+  cg-test-model gelijk aan het register op Fundament); DMN-, bericht- en BPMN-activiteit krijgen
+  `injectedTypes` via `useProjectTypes()` en vallen zonder projectmodel terug op de API.
+- **Binding** (`studio/fieldRefBinding.js`, gestart in StudioShell): na laden en na elke wijziging
+  in het canonieke model worden alle FieldRefs met uuid in de andere profielstores bijgewerkt
+  (buiten de undo-historie), en in de lokale state van bericht en de oude DMN-tabel.
+- **Open:** een indicator "primair canoniek model" per project (Mark: mogelijk nodig zodra er
+  meer canonieke modellen in één project staan; nu = de hele canoniek-uml-store).
+- Picker zonder projectmodel (API-fallback): het platte schema draagt `uuid` sinds 1a45fe8a
+  (zie hierboven), maar pas na een build met een V3 mét uuid's; een FieldRef zonder uuid blijft
+  gewoon werken op het naampad.
+- **TRANSFORMATIES:** `dmnArtefact.js` zoekt op de uuid en schrijft het naampad van het
+  exportmoment; traceregels krijgen de uuid als extra veld.
+
 **Gevonden (31-10), opgelost door TRANSFORMATIES:** sinds a8e0a74e heeft de GPK-e-dienst een
 DMN-artefact (`aanvraag-ontvankelijk`). De exportstap kan het DMN-model al kiezen (optie "BPMN- en
 DMN-modellen" neemt meerdere bestanden), maar e2e 37 gaf alleen het BPMN-bestand mee ("9 van 10

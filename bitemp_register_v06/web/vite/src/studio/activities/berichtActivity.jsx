@@ -6,6 +6,7 @@
  *   Main      → BerichttypeEditor (projectie + export-tabs)
  *   Inspector → samenvatting van gekozen velden
  */
+import { useProjectTypes, useVerversFieldRefs } from "../fieldRefBinding.js";
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { ModelPicker } from "../../modelpicker";
 import { BerichttypeEditor, nieuwBerichttype, voegVeldToe } from "../../bericht";
@@ -38,7 +39,11 @@ function BerichtProvider({ children }) {
 }
 
 function BerichtSidebar() {
+  // Velden uit het canonieke model van het project (met uuid); zonder projectmodel de API.
+  const projectTypes = useProjectTypes();
   const { bericht, setBericht } = useContext(Ctx);
+  // Hernoemd in het model? Dan volgt het naampad van de berichtvelden (via de uuid).
+  useVerversFieldRefs(projectTypes, setBericht);
   const onPick = useCallback((ref) => setBericht((b) => voegVeldToe(b, ref)), [setBericht]);
   const geselecteerd = bericht.velden.map((v) => ({ typenaam: v.ref.typenaam, veldnaam: v.ref.veldnaam }));
   return (
@@ -47,7 +52,7 @@ function BerichtSidebar() {
         Kies of sleep velden om het berichttype samen te stellen.
       </p>
       <div style={{ flex: 1, minHeight: 0 }}>
-        <ModelPicker baseUrl={apiBase()} onPick={onPick} multiSelect selected={geselecteerd} expandEntiteiten />
+        <ModelPicker injectedTypes={projectTypes} baseUrl={apiBase()} onPick={onPick} multiSelect selected={geselecteerd} expandEntiteiten />
       </div>
     </div>
   );

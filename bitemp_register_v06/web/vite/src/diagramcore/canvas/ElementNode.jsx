@@ -221,6 +221,13 @@ function ElementNode({ id, data, selected }) {
             }
           />
         )}
+        {data.fouten?.length > 0 && (
+          // Profielregel met niveau "fout" (bv. dubbele naam per domein, 31-10); de tekst staat
+          // ook bovenaan de inspector.
+          <span className="dc-fout-badge" data-testid="node-fout" title={data.fouten.map((m) => m.tekst).join(" · ")}>
+            ⚠
+          </span>
+        )}
         {heeftGedrag && (
           <span className="dc-gedrag-badge" title="Dubbelklik: open het diagram waar dit element naar verwijst">
             ⧉

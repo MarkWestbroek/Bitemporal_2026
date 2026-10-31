@@ -8,6 +8,7 @@
  *
  * Gedeelde state (berichttype, selectie, editor-ref, xml) loopt via context.
  */
+import { useProjectTypes } from "../fieldRefBinding.js";
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { ModelPicker } from "../../modelpicker";
 import { nieuwBerichttype, voegVeldToe } from "../../bericht";
@@ -59,6 +60,8 @@ function BpmnProvider({ children }) {
 }
 
 function BpmnSidebar() {
+  // Velden uit het canonieke model van het project (met uuid); zonder projectmodel de API.
+  const projectTypes = useProjectTypes();
   const { setBericht, bericht } = useContext(Ctx);
   const onPick = useCallback((ref) => setBericht((b) => voegVeldToe(b, ref)), [setBericht]);
   const geselecteerd = bericht.velden.map((v) => ({ typenaam: v.ref.typenaam, veldnaam: v.ref.veldnaam }));
@@ -68,7 +71,7 @@ function BpmnSidebar() {
         Stel een berichttype samen; koppel het rechts aan een event of procescontract.
       </p>
       <div style={{ flex: 1, minHeight: 0 }}>
-        <ModelPicker baseUrl={apiBase()} onPick={onPick} multiSelect selected={geselecteerd} expandEntiteiten />
+        <ModelPicker injectedTypes={projectTypes} baseUrl={apiBase()} onPick={onPick} multiSelect selected={geselecteerd} expandEntiteiten />
       </div>
     </div>
   );

@@ -25,6 +25,7 @@ import MenuBar from "./MenuBar";
 import CommandPalette from "./CommandPalette";
 import { buildMenus } from "./buildMenus";
 import { menuBus } from "./menuBus";
+import { startFieldRefBinding } from "./fieldRefBinding.js";
 import { OmniumMark } from "./icons";
 import { NaamDialogHost } from "./naamDialog";
 import { DocumentVoorbeeldHost } from "./activities/documentVoorbeeld.jsx";
@@ -68,6 +69,9 @@ export default function StudioShell() {
   // "menu:ververs" — de shell bouwt de menu's dan opnieuw op.
   const [, setMenuVersie] = React.useState(0);
   React.useEffect(() => menuBus.on("menu:ververs", () => setMenuVersie((v) => v + 1)), []);
+  // FieldRefs (DMN-kolommen, berichtvelden) volgen hernoemingen in het canonieke model via
+  // hun uuid (besluit Mark 31-10; studio/fieldRefBinding.js).
+  React.useEffect(() => startFieldRefBinding(), []);
 
   // Eerste activiteit selecteren als er nog geen actief is.
   const actief =

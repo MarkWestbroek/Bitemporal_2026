@@ -82,6 +82,7 @@ const ANKER_ELEMENT_TYPE = {
 import { berekenUitlijning, berekenRasterSnap, berekenMaten, MAAT_MODES } from "../layout/uitlijnen.js";
 import { skinElementType } from "../model/shapeSet.js";
 import { doorklikVan } from "../model/verwijstNaar.js";
+import { valideerElement } from "../model/validatie.js";
 
 const nodeTypes = { element: ElementNode };
 const edgeTypes = { connector: ConnectorEdge };
@@ -437,6 +438,9 @@ function CanvasBinnenkant({
             elementType,
             bewerkbaar,
             onResize: handleNodeResize,
+            // Profielregels met niveau "fout" (bv. een dubbele naam in het domein, 31-10)
+            // tonen ook op het canvas een ⚠-badge — niet alleen in de inspector.
+            fouten: valideerElement(elementType, element, { elements }).filter((m) => m.niveau === "fout"),
             // Voorkomen-gedaante (samentrekking): ElementNode rendert bv. het
             // lollipop-bolletje in plaats van de volledige shape.
             gedaante: ref.gedaante || null,

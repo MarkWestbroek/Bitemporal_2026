@@ -562,6 +562,17 @@
 
 /* Gedragsverwijzing (§3.2): hoek-badge op nodes met een gekoppeld diagram
    (submachine state, call-activity). Dubbelklik opent dat diagram. */
+.dc-fout-badge {
+  position: absolute;
+  right: 3px;
+  top: 1px;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--s-danger, #dc2626);
+  cursor: help;
+  user-select: none;
+  z-index: 2;
+}
 .dc-gedrag-badge {
   position: absolute;
   right: 3px;

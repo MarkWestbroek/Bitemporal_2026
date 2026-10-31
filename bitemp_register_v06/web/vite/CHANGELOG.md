@@ -9,6 +9,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Namen uniek per domein, altijd actief** (31-10): dubbele namen of paden in het canonieke
+  model geven een ⚠ op het canvas en een melding in de inspector.
+- **Veldkiezer leest het projectmodel; FieldRef gebonden via uuid** (31-10): DMN-kolommen en
+  berichtvelden volgen een hernoeming van het modelveld (BACKLOG §40).
 - **Importeer V3 in project (alleen wijzigingen)** (31-10): Modelleren → Bestand, uit een
   bestand of van de API. Delta met review zoals de EA-import; diagrammen, mappen en
   verwijzingen blijven staan. Melding bij dubbele naampaden (BACKLOG §40).
