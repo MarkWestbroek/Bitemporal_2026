@@ -1,10 +1,10 @@
 /**
- * Bundelt de M2-profielen voor taal=studio naar dist/studio-profielen.mjs.
+ * Bundelt de M2-profielen en de tekenaar voor taal=studio naar dist/studio-profielen.mjs.
  * De rest van de sidecar blijft plain Node; alleen de profielen bevatten JSX.
  *
  * Een .jsx-module wordt hier een stub met dezelfde exportnamen, elk een no-op-functie.
- * Registraties van vormen en iconen doen dan niets, en de schets heeft ze ook niet
- * nodig. Zo komen React en React Flow niet in de bundel. Mist er een naam, dan geeft
+ * De React-vormen en iconen registreren dan niets, en de tekenaar heeft ze ook niet
+ * nodig: die werkt op de ShapeTypes (gewone .js). Zo komen React en React Flow niet in de bundel. Mist er een naam, dan geeft
  * esbuild een waarschuwing, en die laat de bouw hier falen.
  */
 import { build } from "esbuild";

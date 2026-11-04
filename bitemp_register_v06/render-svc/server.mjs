@@ -66,16 +66,15 @@ const isStudio = (invoer) => String(invoer.taal ?? "").toLowerCase() === "studio
  * De profielen voor taal=studio staan in een aparte bundel (bouw.mjs). Dynamisch geladen:
  * ontbreekt of faalt de bundel, dan blijft taal=v3 gewoon werken.
  */
-let descriptors;
-function laadDescriptors() {
-  descriptors ??= import("./dist/studio-profielen.mjs")
-    .then((m) => m.descriptorVan)
+let bundel;
+function laadBundel() {
+  bundel ??= import("./dist/studio-profielen.mjs")
     .catch((e) => {
-      descriptors = undefined;
+      bundel = undefined;
       console.error("render-svc: profielbundel niet geladen", e);
       throw probleem(503, "studio-niet-beschikbaar", "taal=studio niet beschikbaar", "De profielbundel van de renderservice is niet geladen.");
     });
-  return descriptors;
+  return bundel;
 }
 
 function controleerVelden(invoer, toegestaan) {
@@ -112,7 +111,7 @@ export function maakServer() {
       if (req.method === "POST" && (pad === "/render/svg" || pad === "/api/render/svg")) {
         const invoer = await leesInvoer(req);
         controleerVelden(invoer, isStudio(invoer) ? STUDIO_VELDEN : RENDER_VELDEN);
-        const svg = isStudio(invoer) ? renderStudioSvg(invoer, await laadDescriptors()) : renderDiagramSvg(invoer);
+        const svg = isStudio(invoer) ? renderStudioSvg(invoer, await laadBundel()) : renderDiagramSvg(invoer);
         res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8" });
         return res.end(svg);
       }

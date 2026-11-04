@@ -1832,6 +1832,10 @@ Ook een vorm kan uitleg hebben (de kleurkiezer), naast de inhoud ("de kleur van 
 
 ## 36. Render-API voor modeldiagrammen — opdracht van Imprint (2026-09-29)
 
+**04-11: `taal=studio` tekent met de ene tekenaar** (plan Eén tekenaar, stap 5): `diagramsvg/studio.js`
+roept `diagramcore/tekenaar` aan in plaats van de schets; tekenaar en descriptors komen uit één
+bundel, zodat ze hetzelfde ShapeType-register delen. Zie `docs/RENDER_API.md`.
+
 **Vraag (Imprint, 25-09, aangevuld 29-09):** een HTTP-API die een modeldiagram als SVG
 teruggeeft, zodat Imprint niet zelf tekent (`v3-diagram.tsx` vervalt). Contract, eisen en
 tekenkeuzes: `docs/RENDER_API.md`.

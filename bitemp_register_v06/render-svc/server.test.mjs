@@ -59,6 +59,7 @@ test("taal=studio: elk diagram van een echt project voldoet aan de eisen, byte-g
     assert.doesNotMatch(svg, /<(script|style|foreignObject|image)\b|\son[a-z]+=/i);
     assert.doesNotMatch(svg, /NaN/);
     assert.match(svg, /<title /);
+    assert.match(svg, /data-tekenaar="vol"/);
     assert.equal(svg, await (await post("/render/svg", invoer)).text());
   }
 });
