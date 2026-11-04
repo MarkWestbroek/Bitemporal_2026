@@ -8,6 +8,44 @@
 
 ---
 
+## studio 0.27.0 / render 0.2.0 (2026-11-05)
+
+Alleen frontend en render-sidecar; de api op app blijft 0.18.0 (geen Go-wijziging sinds
+47dc540f). Eerste stappen van het plan *Eén tekenaar* (`docs/plans/2026-11-04 Eén tekenaar —
+vormen als sjablonen in het M2 (plan).md`, BACKLOG §36): dezelfde view voor documenten, gedeelde
+plaatjes en de render-API; het canvas tekent nog ongewijzigd (stap 3) en de meeste profielvormen
+staan nog op de terugval (stap 4).
+
+**Render-sidecar 0.2.0** (`render-svc/`, image `bitemp-render-svc:0.2.0`, git-tag `render/v0.2.0`):
+
+- **`taal=studio`** op `POST /api/render/svg` (stap 1, 04-11): een Studio-projectexport of één
+  profiel in de body, `profiel` en `diagram` als keuze, elk ingebouwd profiel (M2). `POST /views`
+  geeft ook `weergaven: [{ id, naam, profiel }]`. 422 bij een eigen profiel uit de ontwerper of
+  een onbekend elementtype; 503 `studio-niet-beschikbaar` als de profielbundel ontbreekt (`v3`
+  werkt dan door). Zie `docs/RENDER_API.md` §`taal=studio`.
+- **Tekent met de ene tekenaar** (stap 5, 04-11): `diagramsvg/studio.js` krijgt `tekenDiagram`
+  en `naarSvg` uit de bundel van de sidecar zelf mee (één register van vormen; een vorm die in
+  stap 4 een ShapeType wordt, tekent de API zonder wijziging), met `controleer: true` — een
+  renderer die het vormcontract breekt geeft een 500 in plaats van foute SVG. Alle 35 diagrammen
+  van het architectuurproject voldoen aan de Imprint-eisen (geen `foreignObject`, geen scripts).
+- **Bouw**: `render-svc/bouw.mjs` (esbuild, `.jsx` als stub) maakt de profielbundel;
+  `Dockerfile.render` en `.dockerignore` aangepast. `npm test` in `render-svc/` bouwt en test.
+- Niet getest: `taal=studio` via de draaiende Go-API (alleen de sidecar en het image).
+
+**Frontend (studio 0.27.0, samengevat):** vormcontract `ShapeType`/`ShapeRenderer` in het M3
+(`diagramcore/types/shapeType.js`), de tekenaar `diagramcore/tekenaar/` (maat, inhoud door de
+motor, lijnen via `materialiseerConnectoren`, veertien basisvormen), **documenten (`{{svg}}`) en
+gedeelde plaatjes tekenen ermee**; de schets blijft als lichte stand. Zie
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+
+Uitrol: images `bitemp-viz-frontend:0.27.0` (met `--build-arg VITE_GIT_SHA=…`) en
+`bitemp-render-svc:0.2.0` (`docs/DOCKER_RELEASE.md` §4.2a), daarna `./update.sh` op app. Geen
+databasegevolg, geen nieuwe instellingen. Bekend en open: lange tekst loopt onder een vak uit bij
+een opgeslagen kleine maat (activity, ArchiMate; terugval 14 px waar het canvas 12 px heeft),
+lijnen door tekst, sequence-berichten overlappen — allemaal stap 4.
+
+---
+
 ## api 0.18.0 / studio 0.26.0 (2026-10-31)
 
 De Go-wijzigingen van 23 tot en met 31 oktober die tot nu toe alleen via de devloop-images

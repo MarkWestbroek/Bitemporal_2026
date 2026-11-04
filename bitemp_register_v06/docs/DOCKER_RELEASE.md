@@ -134,13 +134,13 @@ standaard proxiet nginx in dezelfde image door naar de API-container.
 ### 4.2a Render-sidecar
 
 Nodig voor de render-API (`POST /api/render/svg`, zie [`RENDER_API.md`](RENDER_API.md)). De
-sidecar tekent met de code uit `web/vite/src/diagramsvg` en heeft een eigen nummer, begonnen bij
-`0.1.0`. Hij krijgt een nieuw nummer wanneer `render-svc/` of de tekenaar verandert. De git-tag
-heeft prefix `render/` (`render/v0.1.0`, zie `versiebeheer.md` §7); de render-*routes* in de Go-API
-vallen gewoon onder `api/`.
+sidecar tekent met de code uit `web/vite/src/diagramsvg` en `web/vite/src/diagramcore/tekenaar`
+en heeft een eigen nummer, begonnen bij `0.1.0`. Hij krijgt een nieuw nummer wanneer `render-svc/`
+of een tekenaar verandert. De git-tag heeft prefix `render/` (`render/v0.2.0`, zie
+`versiebeheer.md` §7); de render-*routes* in de Go-API vallen gewoon onder `api/`.
 
 ```bash
-RENDER_VERSIE=0.1.0
+RENDER_VERSIE=0.2.0
 
 docker build -f Dockerfile.render --platform linux/amd64 \
   -t markwestbroek/bitemp-render-svc:$RENDER_VERSIE \
