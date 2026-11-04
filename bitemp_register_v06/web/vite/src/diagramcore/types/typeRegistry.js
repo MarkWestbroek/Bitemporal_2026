@@ -16,6 +16,7 @@ import { leesvolgordeLayouts } from "../layout/leesvolgorde.js";
 import { valideerAardEnFacetten, valideerLayoutStijl } from "./layoutStijl.js";
 import { vulSuperprofielAan } from "./superprofiel.js";
 import { lidConnectoren } from "./containerVoor.js";
+import { valideerShapeType, registreerShapeType } from "./shapeType.js";
 
 /**
  * Profiel zonder eigen layouts: de algemene gelaagde layout volgens zijn LayoutStijlen (M3,
@@ -138,6 +139,13 @@ export function valideerDiagramType(dtRauw) {
   }
   // Betekenis (aard, facetten) en weergave (layoutStijlen): types/layoutStijl.js.
   fouten.push(...valideerAardEnFacetten(dt));
+  // Vormen als gegevens (M3, 2026-11-04): types/shapeType.js.
+  const shapeIds = new Set();
+  for (const st of dt.shapeTypes || []) {
+    fouten.push(...valideerShapeType(st));
+    if (st?.id && shapeIds.has(st.id)) fouten.push(`DiagramType "${dt.id}": dubbel ShapeType-id "${st.id}"`);
+    if (st?.id) shapeIds.add(st.id);
+  }
   for (const stijl of dt.layoutStijlen || []) fouten.push(...valideerLayoutStijl(dt, stijl));
   // Verbindingsregels: 1..* per connector, en verwijzingen moeten bestaan.
   for (const et of dt.elementTypes) {
@@ -180,6 +188,7 @@ export function registreerDiagramType(descriptor) {
   normaliseerErfenis(descriptor);
   vulSuperprofielAan(descriptor);
   vulLayoutsAan(descriptor);
+  (descriptor.shapeTypes || []).forEach(registreerShapeType);
   _diagramTypes.set(descriptor.id, descriptor);
 }
 
@@ -197,6 +206,7 @@ export function vervangDiagramType(descriptor) {
   normaliseerErfenis(descriptor);
   vulSuperprofielAan(descriptor);
   vulLayoutsAan(descriptor);
+  (descriptor.shapeTypes || []).forEach(registreerShapeType);
   _diagramTypes.set(descriptor.id, descriptor);
 }
 

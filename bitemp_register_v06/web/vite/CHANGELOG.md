@@ -8,6 +8,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **M3: vormcontract voor "één tekenaar"** (04-11, stap 0). `ShapeType` (gegevens: id, renderer,
+  parameters, minMaat, ankers) en `ShapeRenderer` (pure code: omtrek, inhoudsvak, kindervak, ornament,
+  rand) met een VormBoom van alleen SVG-elementen, `DiagramType.shapeTypes` en
+  `hooks.inhoudsregels` voor eigen inhoud (`diagramcore/types/shapeType.js`). Nog geen vorm gebruikt
+  dit: het canvas tekent ongewijzigd (docs/plans/2026-11-04 Eén tekenaar).
+
 ## [studio/v0.26.0] — 2026-10-31
 
 ### Toegevoegd

@@ -166,6 +166,12 @@ richting van plan §8.5: Definitie = data, Implementatie = code op id.
    shape); dat is bij ons de positie per voorkomen. De ArchiMate-lagen zijn
    beide: lidmaatschap van een laag is betekenis (het raamwerk van de spec), de
    volgorde boven-naar-beneden een conventie van de gelaagde weergave.
+   **Toegepast op de vormen (2026-11-04, "één tekenaar"):** een `ShapeType` is
+   gegevens in het Stijl-domein (id, renderer, parameters, minMaat, ankers), een
+   `ShapeRenderer` pure code in het Implementatie-domein die een VormBoom teruggeeft
+   (alleen SVG-elementen). Zo staat het ook in het EA-Metametamodel (diagram "Editor").
+   Vergelijkbaar met OMG DD: een DG-tekening als gegevens, los van de abstracte
+   syntaxis. Zie `diagramcore/types/shapeType.js`.
 
 Niet nastreven: MOF-*compliance* (vereist XMI-mapping per hfst. 15 en de
 reflectie-API). Wel: **EMOF-uitdrukbaarheid** van het Definitie-domein, zodat
