@@ -388,8 +388,9 @@ te wijzigen.
 >   register-domein. **Geen versies**: een actueel plaatje overschrijft het vorige object;
 >   intrekken verwijdert het object, de rij blijft (wie, wat, wanneer ingetrokken). Later, na FTV:
 >   de metadata als register-entiteit (rechten via beleid, historie), de bytes blijven in MinIO.
-> - **Studio maakt de PNG** (de render-sidecar kent alleen V3): dezelfde `schets.js` als de
->   documenten, `svgNaarPng` op schaal 2. `documentContext.svgVan` merkt elke `<svg>` met
+> - **Studio maakt de PNG** (de render-sidecar kent alleen V3): dezelfde tekenaar als de
+>   documenten (`diagramcore/tekenaar`, sinds 04-11; daarvoor `schets.js`), `svgNaarPng` op
+>   schaal 2. `documentContext.svgVan` merkt elke `<svg>` met
 >   `data-omnium-profiel/-diagram/-naam` (`rijkKopieren.merkHerkomst`/`svgHerkomst`), zodat de
 >   kopieerknop per diagram een adres vraagt (`gedeeldeBeelden.deelSvg`).
 > - **Bijwerken** (`gedeeldeBeelden.startBeeldWachter`, gestart in modellerenActivity bij een

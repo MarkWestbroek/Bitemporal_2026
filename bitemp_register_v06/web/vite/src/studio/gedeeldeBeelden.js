@@ -7,7 +7,7 @@
  *   - "actueel": één adres per diagram; verandert het diagram, dan zet Studio er een nieuw
  *     plaatje op, en wie de Confluence-pagina opnieuw laadt ziet het nieuwe.
  *
- * Studio tekent de PNG zelf (dezelfde schets als de documenten, schets.js → svgNaarPng); de
+ * Studio tekent de PNG zelf (dezelfde tekenaar als de documenten, diagramcore/tekenaar → svgNaarPng); de
  * server (handlers/studio_beeld_handler.go) bewaart en serveert. Bijwerken gebeurt dus zolang
  * iemand het project in Studio open heeft: elke wijziging komt uit Studio, en een wijziging via
  * de MCP wordt bij het eerstvolgende openen bijgewerkt.
@@ -20,7 +20,7 @@ import { create } from "zustand";
 import { deelBeeld, lijstBeelden, trekBeeldIn } from "./activities/projectSync.js";
 import { svgNaarPng, svgMaat, svgHerkomst, merkHerkomst } from "../transformatie/sjabloon/rijkKopieren.js";
 import { maakBeeldWachter } from "./gedeeldeBeeldenKern.js";
-import { schetsDiagramSvg } from "../transformatie/sjabloon/schets.js";
+import { diagramSvg } from "../diagramcore/tekenaar/index.js";
 import { vindShapeSet, descriptorMetShapeSet } from "../diagramcore/model/shapeSet.js";
 import { getProfieltype } from "./profieltypeRegistry";
 import { apiBase } from "../shared/apiBase.js";
@@ -51,13 +51,13 @@ export function beeldAdres(pad, basis = globalThis.location?.href || "http://loc
   return new URL(`${apiBase()}${pad}`, basis).href;
 }
 
-/** Teken een diagram uit de profielstore als SVG (zelfde schets als de documenten), of "". */
+/** Teken een diagram uit de profielstore als SVG (dezelfde tekenaar als de documenten), of "". */
 export function tekenDiagram(profielId, diagramId) {
   const p = getProfieltype(profielId);
   const st = p?.useStore?.getState?.();
   const diagram = st?.diagrams?.[diagramId];
   if (!diagram) return "";
-  return schetsDiagramSvg({
+  return diagramSvg({
     diagram,
     elements: st.elements,
     descriptor: descriptorMetShapeSet(p.descriptor, vindShapeSet(p.descriptor, diagram.shapeSetId, diagram)),

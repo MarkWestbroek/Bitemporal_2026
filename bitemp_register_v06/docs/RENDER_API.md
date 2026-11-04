@@ -98,7 +98,12 @@ geen levenslijnen, dus berichten overlappen.
 
 **Vormtrouw komt later.** Vormen worden SVG-sjablonen in het M2, zodat canvas en server dezelfde
 tekening geven (plan van OMNIUM-UI in `docs/plans`). Dan verandert alleen de aanroep in
-`diagramsvg/studio.js`; invoer en foutcontract blijven gelijk.
+`diagramsvg/studio.js`; invoer en foutcontract blijven gelijk. **04-11, stap 2 gebouwd:** die
+tekenaar staat in `diagramcore/tekenaar/` (`diagramSvg({diagram, elements, descriptor, thema,
+idPrefix, maatAttributen: false})`), tekent al met thema-tokens, inhoud uit de compartimenten,
+markers, knikken en nesting, en valt voor vormen zonder ShapeType terug op dezelfde zeven
+families. Documenten en gedeelde plaatjes gebruiken hem al; `studio.js` nog niet (stap 5,
+RENDER-API: aanroep omzetten, `werkAf` wordt dan vooral de witte lijst).
 
 **Hoe het is opgebouwd.**
 - `diagramsvg/studio.js` kiest het diagram, roept de schets aan en werkt de uitvoer af: alleen

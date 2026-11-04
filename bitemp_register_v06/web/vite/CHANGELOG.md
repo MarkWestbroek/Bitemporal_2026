@@ -14,6 +14,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   rand) met een VormBoom van alleen SVG-elementen, `DiagramType.shapeTypes` en
   `hooks.inhoudsregels` voor eigen inhoud (`diagramcore/types/shapeType.js`). Nog geen vorm gebruikt
   dit: het canvas tekent ongewijzigd (docs/plans/2026-11-04 Eén tekenaar).
+- **Eén tekenaar, stap 2** (04-11): `diagramcore/tekenaar/` tekent een Studio-diagram als VormBoom
+  en SVG op het vormcontract — maat uit opgeslagen maat of gemeten inhoud, de inhoud (stereotype,
+  naam, badges, `inhoudsregels`, compartimenten met veldregels) door de motor in het inhoudsvak,
+  lijnen via dezelfde `materialiseerConnectoren` als het canvas (handles, knikken, markers,
+  labels, zelf-lus, nesting), thema-tokens `var(--diagram-*)` tenzij een element een kleur heeft.
+  De veertien basisvormen (`class-box`, `note`, `package`, `boundary`, …) zijn ShapeTypes op de
+  bibliotheek-renderers (`bibliotheek.js`); een vorm zonder ShapeType valt terug op zijn
+  vormfamilie. **Documenten (`{{svg}}`) en gedeelde plaatjes tekenen hiermee**; de schets blijft
+  als lichte stand (`detail: "schets"`). Het canvas is nog ongewijzigd (stap 3).
 
 ## [studio/v0.26.0] — 2026-10-31
 
