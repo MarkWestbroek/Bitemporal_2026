@@ -1,30 +1,23 @@
 /**
  * studio — taal=studio van de render-API: een Studio-diagram (elk profiel) als SVG.
  *
- * Dunne laag, bewust een opstap: kiest het diagram uit het aangeleverde project,
- * laat de bestaande schets (transformatie/sjabloon/schets.js) tekenen en werkt de
- * uitvoer af tot de SVG-eisen van de render-API (docs/RENDER_API.md). Wie later de
- * tekenaar vervangt (vormen als SVG-sjablonen in het M2), hoeft alleen de aanroep van
- * de schets en `werkAf` om te zetten; invoer en foutcontract blijven gelijk.
+ * Dunne laag: kiest het diagram uit het aangeleverde project, laat de ene tekenaar
+ * (diagramcore/tekenaar, plan 2026-11-04 Eén tekenaar) tekenen en maakt de uitvoer af tot
+ * de eisen van de render-API (docs/RENDER_API.md).
  *
- * De schets kent zeven vormfamilies (ellips, actor, kader, notitie, afgerond, vak,
- * punt), dus de vormen zijn nog niet die van het canvas.
- *
- * De descriptors komen via `descriptorVan` binnen: de profielen bevatten JSX en worden
- * voor de sidecar apart gebundeld (render-svc/studioProfielen.js), zodat deze module
- * met gewone Node te testen blijft.
+ * Tekenaar en descriptors komen samen binnen, uit dezelfde profielbundel
+ * (render-svc/studioProfielen.js). Dat is nodig: de ShapeTypes staan in een register in
+ * modulestaat, dus een tekenaar die hier los geïmporteerd is, zou de vormen die een profiel
+ * in de bundel registreert niet zien en stil op de terugval tekenen.
  */
-import { schetsDiagramSvg } from "../transformatie/sjabloon/schets.js";
 import { vindShapeSet, descriptorMetShapeSet } from "../diagramcore/model/shapeSet.js";
 import { leesModel, normaliseerOpties } from "./index.js";
 import { ongeldigModel, ongeldigeParameter, nietGevonden } from "./fout.js";
-import { maakPalet, veiligeKleur, tekstOp } from "./thema.js";
-import { el, esc, fnv1a } from "./svg.js";
+import { maakPalet } from "./thema.js";
+import { fnv1a } from "./svg.js";
 
 /** De parameters van taal=studio; de V3-weergaveopties gelden hier niet. */
 export const STUDIO_VELDEN = new Set(["taal", "model", "code", "profiel", "diagram", "theme", "idPrefix"]);
-
-const FONT = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 // ───────────── invoer ─────────────
 
@@ -79,14 +72,18 @@ function kiesDiagram(weergaven, gevraagd) {
   throw ongeldigeParameter(`Meer diagrammen heten '${gevraagd}': kies op id, of beperk met 'profiel'.`, { diagrammen: treffers.map(zonderInhoud) });
 }
 
-/** Knopen die de schets niet kan tekenen: een 422 die het element noemt. Geeft de elementnamen terug. */
+/** Knopen die de tekenaar niet kan tekenen: een 422 die het element noemt. Geeft de elementnamen terug. */
 function controleer(weergave, descriptor) {
   const typen = new Set((descriptor.elementTypes || []).map((t) => t.id));
   const getal = (v) => v === undefined || v === null || Number.isFinite(v);
   const namen = [];
-  for (const [i, n] of (weergave.diagram?.nodes || []).entries()) {
+  const knopen = weergave.diagram?.nodes ?? [];
+  if (!Array.isArray(knopen) || knopen.some((n) => n === null || typeof n !== "object")) {
+    throw ongeldigModel(`Het diagram '${weergave.naam}' heeft een ongeldige lijst 'nodes'.`, weergave.naam, "diagram.nodes");
+  }
+  for (const [i, n] of knopen.entries()) {
     // Een knoop zonder element slaat het canvas ook over.
-    const element = weergave.inhoud.elements[n?.elementId];
+    const element = weergave.inhoud.elements[n.elementId];
     if (!element) continue;
     const wie = element.naam || n.elementId;
     if (!typen.has(element.elementType)) {
@@ -102,62 +99,36 @@ function controleer(weergave, descriptor) {
 
 // ───────────── afwerking ─────────────
 
-/** Vaste schetskleuren → themakleur; bij tekst apart, omdat randgrijs daar "muted" is. */
-const OP_TEKST = { "#0f172a": "text", "#475569": "muted", "#6d28d9": "accent" };
-const OP_VORM = {
-  "#ffffff": "surface",
-  "#fff": "surface",
-  "#f8fafc": "surface",
-  "#0f172a": "text",
-  "#475569": "border",
-  "#94a3b8": "border",
-  "#cbd5e1": "border",
-  "#6d28d9": "accent",
-};
-const VORMEN = new Set(["rect", "ellipse", "circle", "path", "polygon"]);
+/** Wat een fill of stroke mag zijn: geen, een #hex, of een thema-token met #hex-terugval. */
+const VEILIGE_KLEUR = /^(none|#[0-9a-f]{3}|#[0-9a-f]{6}|var\(--diagram-[a-z]+, #[0-9a-f]{6}\))$/i;
 
 /**
- * Schets-SVG → SVG volgens de eisen: alleen viewBox, titel en aria-label, themakleuren.
- * Elke fill en stroke gaat door een witte lijst, dus een kleur uit het model die geen
- * #hex is (bv. url(...)) komt er niet door. Tekst op een gekleurd element kiest zijn
- * kleur op contrast, net als bij taal=v3.
+ * Vangnet over de hele boom: elke fill en stroke door de witte lijst. De tekenaar laat alleen
+ * veilige kleuren door, maar een ShapeRenderer kiest in zijn eigen boom vrij een waarde.
  */
-function werkAf(svg, { titel, label, p, palet }) {
-  const open = /^<svg\b([^>]*)>/.exec(svg);
-  const viewBox = /viewBox="([^"]*)"/.exec(open[1])[1];
-  const [x, y, breedte, hoogte] = viewBox.split(" ").map(Number);
+function kleurenVeilig(knoop, palet) {
+  if (!knoop || typeof knoop !== "object") return knoop;
+  const attrs = { ...knoop.attrs };
+  for (const soort of ["fill", "stroke"]) {
+    if (attrs[soort] !== undefined && !VEILIGE_KLEUR.test(String(attrs[soort]))) {
+      attrs[soort] = palet(soort === "fill" ? "surface" : "border");
+    }
+  }
+  return { ...knoop, attrs, kinderen: (knoop.kinderen || []).map((k) => kleurenVeilig(k, palet)) };
+}
 
-  let achter = null; // kleur van de vorm waarop de volgende tekst staat
-  const binnen = svg
-    .slice(open[0].length, -"</svg>".length)
-    .replace(/<([a-z]+)\b([^<>]*)>/g, (_, tag, attrs) => {
-      if (tag === "line") achter = null;
-      if (VORMEN.has(tag)) {
-        const hex = veiligeKleur(/\bfill="([^"]*)"/.exec(attrs)?.[1], null);
-        achter = hex && !OP_VORM[hex] ? hex : null;
-      }
-      const uit = attrs.replace(/\b(fill|stroke)="([^"]*)"/g, (__, soort, waarde) => {
-        if (waarde === "none") return `${soort}="none"`;
-        if (tag === "text" && achter) return `${soort}="${tekstOp(achter)}"`;
-        const hex = veiligeKleur(waarde, null);
-        const token = (tag === "text" ? OP_TEKST : OP_VORM)[hex];
-        if (token) return `${soort}="${palet(token)}"`;
-        return `${soort}="${hex || palet(soort === "fill" ? "surface" : "border")}"`;
-      });
-      return `<${tag}${uit}>`;
-    });
-
-  return (
-    el(
-      "svg",
-      { xmlns: "http://www.w3.org/2000/svg", viewBox, role: "img", "aria-label": label, class: "omnium-diagram", "font-family": FONT },
-      [
-        el("title", { id: `${p}titel` }, esc(titel)),
-        el("rect", { class: "achtergrond", x, y, width: breedte, height: hoogte, fill: palet("surface") }),
-        binnen,
-      ],
-    ) + "\n"
-  );
+/** Getekende boom → de boom van de API: titel, aria-label, achtergrond en de witte lijst. */
+function werkAf({ boom, viewBox }, { titel, label, p, palet }) {
+  const { xmlns, viewBox: vb, role, ...rest } = boom.attrs;
+  return {
+    tag: "svg",
+    attrs: { xmlns, viewBox: vb, role, "aria-label": label, ...rest },
+    kinderen: [
+      { tag: "title", attrs: { id: `${p}titel` }, kinderen: [titel] },
+      { tag: "rect", attrs: { class: "achtergrond", x: viewBox.x, y: viewBox.y, width: viewBox.w, height: viewBox.h, fill: palet("surface") }, kinderen: [] },
+      ...kleurenVeilig(boom, palet).kinderen,
+    ],
+  };
 }
 
 // ───────────── publieke API ─────────────
@@ -171,9 +142,9 @@ export function studioViews(invoer) {
 /**
  * Teken een Studio-diagram. Gooit RenderFout (400/404/422).
  * @param invoer { taal, model | code, profiel?, diagram?, theme?, idPrefix? }
- * @param {(profielId: string) => object|undefined} descriptorVan
+ * @param bundel { descriptorVan, tekenDiagram, naarSvg }: uit één bundel, zie de kop van dit bestand
  */
-export function renderStudioSvg(invoer, descriptorVan) {
+export function renderStudioSvg(invoer, { descriptorVan, tekenDiagram, naarSvg }) {
   const model = leesModel(invoer);
   const opties = normaliseerOpties(invoer);
   const profielen = profielenUit(model, invoer.profiel);
@@ -186,16 +157,19 @@ export function renderStudioSvg(invoer, descriptorVan) {
 
   const { diagram, inhoud } = weergave;
   const p = opties.idPrefix ? `${opties.idPrefix}-` : `o${fnv1a(JSON.stringify([weergave.profiel, diagram, inhoud.elements, opties]))}-`;
-  const svg = schetsDiagramSvg({
+  const getekend = tekenDiagram({
     diagram,
     elements: inhoud.elements,
     descriptor: descriptorMetShapeSet(descriptor, vindShapeSet(descriptor, diagram.shapeSetId, diagram)),
     idPrefix: p.slice(0, -1),
+    thema: opties.theme,
+    maatAttributen: false,
+    controleer: true, // tags, on*, style, href: de SVG-eisen gelden ook voor elke ShapeRenderer
     verwijzingNaam: (v) => model.profielen?.[v?.profielId]?.diagrams?.[v?.diagramId]?.naam || null,
   });
-  if (!svg) throw ongeldigModel(`Het diagram '${weergave.naam}' bevat geen elementen.`, weergave.naam, "diagram.nodes");
+  if (!getekend.boom) throw ongeldigModel(`Het diagram '${weergave.naam}' bevat geen elementen.`, weergave.naam, "diagram.nodes");
 
   const titel = `${model.project?.naam || model.naam || "Model"} — ${weergave.naam}`;
   const label = `${titel}: ${namen.length} ${namen.length === 1 ? "element" : "elementen"}${namen.length ? ` (${namen.join(", ")})` : ""}`;
-  return werkAf(svg, { titel, label, p, palet: maakPalet(opties.theme) });
+  return naarSvg(werkAf(getekend, { titel, label, p, palet: maakPalet(opties.theme) })) + "\n";
 }

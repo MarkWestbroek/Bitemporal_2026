@@ -3,9 +3,12 @@
  * gebruiken (`diagramTypeId`, zie studio/activities/*Activity.jsx).
  *
  * Wordt met esbuild gebundeld (bouw.mjs): de profielen importeren JSX, dat Node niet
- * kan lezen. De .jsx-modules zijn in die bundel leeg; de schets gebruikt alleen de
- * gegevens uit de descriptor en heeft React dus niet nodig.
+ * kan lezen. De .jsx-modules zijn in die bundel leeg; de tekenaar heeft React niet nodig.
+ *
+ * De tekenaar gaat mee in deze bundel: de ShapeTypes staan in een register in modulestaat,
+ * dus profielen en tekenaar moeten dezelfde kopie delen.
  */
+export { tekenDiagram, naarSvg } from "../web/vite/src/diagramcore/tekenaar/index.js";
 import { getDiagramType } from "../web/vite/src/diagramcore/types/typeRegistry.js";
 import { registreerActivity, ACTIVITY_ID } from "../web/vite/src/diagramprofielen/activity/index.js";
 import { registreerArchimate, ARCHIMATE_ID } from "../web/vite/src/diagramprofielen/archimate/index.js";

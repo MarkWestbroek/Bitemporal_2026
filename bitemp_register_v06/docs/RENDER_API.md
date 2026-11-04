@@ -37,7 +37,7 @@ Body (JSON). Onbekende velden geven een 400.
 
 | Veld | Betekenis | Standaard |
 |---|---|---|
-| `taal` | `v3`, of `studio` (zie [hieronder](#taalstudio-elk-studio-profiel-als-schets)) | `v3` |
+| `taal` | `v3`, of `studio` (zie [hieronder](#taalstudio-elk-studio-profiel)) | `v3` |
 | `model` / `code` | het V3-model als object, óf als JSON-tekst. Precies één van de twee. Een Studio-export met envelop `{ versie, …, model: {…} }` wordt uitgepakt. | — |
 | `diagram` | naam van een opgeslagen diagram (`diagrammen[].naam`), op de posities uit dat diagram | — |
 | `domein` | alle elementen van één domein, in autoLayout. Buren in een ander domein verschijnen als gestippelde stomp. | — |
@@ -71,9 +71,9 @@ De validatie (`diagramsvg/validatie.js`) is bewust ruimer dan `validateV3Model.j
 volgt de codegen-eisen. Hier weigeren we alleen wat een tekening onmogelijk maakt: geen
 entiteiten, een ontbrekende of dubbele typenaam, een relatie naar een onbekende entiteit, …
 
-### `taal=studio`: elk Studio-profiel, als schets
+### `taal=studio`: elk Studio-profiel
 
-Opstap (04-11, BACKLOG §36): dezelfde route tekent ook diagrammen uit een Studio-project, voor
+Sinds 04-11 (BACKLOG §36) tekent dezelfde route ook diagrammen uit een Studio-project, voor
 elk ingebouwd profiel (M2). Alleen de POST; een `GET` op een project is een aparte keuze, omdat
 `studio_project` privé is.
 
@@ -90,26 +90,28 @@ ontwerper, of een element waarvan het type niet in het profiel staat, geeft een 
 (`studio-niet-beschikbaar`) betekent dat de profielbundel niet is gebouwd of geladen; `v3` werkt
 dan gewoon door.
 
-**Wat er nu getekend wordt.** De bestaande schets (`transformatie/sjabloon/schets.js`), met
-**zeven vormfamilies**: ellips, actor, kader, notitie, afgerond, vak en punt. Posities en maten
-komen uit het diagram, lijnen uit `edgePresentatie`. Geen profieleigen vormen of iconen. Bekende
-zwakke plekken: tekst kan buiten een vak lopen, lijnen zijn recht, en een sequence-diagram heeft
-geen levenslijnen, dus berichten overlappen.
+**Wat er nu getekend wordt.** Posities en maten komen uit het diagram, de inhoud uit de
+compartimenten, lijnen uit `edgePresentatie`, met knikken. Nog geen profieleigen iconen. Bekende
+zwakke plek: een sequence-diagram heeft nog geen echte levenslijnen, dus berichten overlappen.
 
-**Vormtrouw komt later.** Vormen worden SVG-sjablonen in het M2, zodat canvas en server dezelfde
-tekening geven (plan van OMNIUM-UI in `docs/plans`). Dan verandert alleen de aanroep in
-`diagramsvg/studio.js`; invoer en foutcontract blijven gelijk. **04-11, stap 2 gebouwd:** die
-tekenaar staat in `diagramcore/tekenaar/` (`diagramSvg({diagram, elements, descriptor, thema,
-idPrefix, maatAttributen: false})`), tekent al met thema-tokens, inhoud uit de compartimenten,
-markers, knikken en nesting, en valt voor vormen zonder ShapeType terug op dezelfde zeven
-families. Documenten en gedeelde plaatjes gebruiken hem al; `studio.js` nog niet (stap 5,
-RENDER-API: aanroep omzetten, `werkAf` wordt dan vooral de witte lijst).
+**Vormtrouw groeit mee.** Sinds stap 5 van het plan *Eén tekenaar* (`docs/plans/2026-11-04`,
+04-11) tekent `taal=studio` met dezelfde tekenaar als documenten en gedeelde plaatjes
+(`diagramcore/tekenaar/`): inhoud uit de compartimenten, markers, knikken en nesting. Vormen
+zonder ShapeType vallen terug op de zeven families; wordt een vorm een echt ShapeType (stap 4),
+dan tekent de API hem zonder wijziging hier. Nog op de terugval: `archimate-box`,
+`archimate-grouping`, `seq-levenslijn`, `act-begin`/`-eind`/`-beslissing`, `uc-actor`/`-ellips`/
+`-systeem`. De tekening verandert dus per release; `idPrefix` en het foutcontract niet.
 
 **Hoe het is opgebouwd.**
-- `diagramsvg/studio.js` kiest het diagram, roept de schets aan en werkt de uitvoer af: alleen
-  `viewBox`, `title` en `aria-label`, themakleuren, en elke `fill`/`stroke` door een witte lijst.
-  Studio's eigen schets (documenten, gedeelde plaatjes) blijft ongewijzigd.
-- `render-svc/studioProfielen.js` + `bouw.mjs` bundelen de descriptors met esbuild. De profielen
+- `diagramsvg/studio.js` kiest het diagram, controleert de invoer (422 met het element), roept de
+  tekenaar aan en werkt af: `title` en `aria-label`, de achtergrond, en elke `fill`/`stroke` door
+  een witte lijst. De tekenaar draait met `controleer: true`: een ShapeRenderer die de SVG-eisen
+  breekt (ander element, `on*`, `style`, externe `href`) geeft een 500 in plaats van foute uitvoer.
+- Tekenaar en descriptors komen **uit dezelfde bundel**. De ShapeTypes staan in een register in
+  modulestaat; een los geïmporteerde tekenaar zou de vormen uit de profielen niet zien en stil op
+  de terugval tekenen. Daarom krijgt `renderStudioSvg` ze mee als `{ descriptorVan, tekenDiagram,
+  naarSvg }`.
+- `render-svc/studioProfielen.js` + `bouw.mjs` bundelen descriptors en tekenaar met esbuild. De profielen
   importeren JSX; in de bundel zijn die modules stubs met dezelfde exportnamen, dus React gaat
   niet mee. Een ontbrekende naam laat de bouw falen.
 - Een nieuw profiel moet ook in `PROFIELEN` in `studioProfielen.js` staan.
