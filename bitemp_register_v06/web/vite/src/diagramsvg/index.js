@@ -74,7 +74,12 @@ function pakUit(model) {
 
 function haalModel(invoer) {
   const taal = String(invoer.taal ?? "v3").toLowerCase();
-  if (!TALEN.includes(taal)) throw ongeldigeParameter(`Onbekende taal '${invoer.taal}'. Ondersteund: ${TALEN.join(", ")}.`);
+  if (!TALEN.includes(taal)) throw ongeldigeParameter(`Onbekende taal '${invoer.taal}'. Ondersteund: ${[...TALEN, "studio"].join(", ")}.`);
+  return leesModel(invoer);
+}
+
+/** Het model uit `model` (object) of `code` (tekst); ook gebruikt door taal=studio (studio.js). */
+export function leesModel(invoer) {
   const heeftModel = invoer.model !== undefined && invoer.model !== null;
   const heeftCode = typeof invoer.code === "string" && invoer.code.trim() !== "";
   if (heeftModel === heeftCode) throw ongeldigeParameter("Geef precies één van 'model' (object) of 'code' (tekst) mee.");

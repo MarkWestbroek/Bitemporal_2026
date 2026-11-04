@@ -37,7 +37,7 @@ Body (JSON). Onbekende velden geven een 400.
 
 | Veld | Betekenis | Standaard |
 |---|---|---|
-| `taal` | `v3` (later meer) | `v3` |
+| `taal` | `v3`, of `studio` (zie [hieronder](#taalstudio-elk-studio-profiel-als-schets)) | `v3` |
 | `model` / `code` | het V3-model als object, óf als JSON-tekst. Precies één van de twee. Een Studio-export met envelop `{ versie, …, model: {…} }` wordt uitgepakt. | — |
 | `diagram` | naam van een opgeslagen diagram (`diagrammen[].naam`), op de posities uit dat diagram | — |
 | `domein` | alle elementen van één domein, in autoLayout. Buren in een ander domein verschijnen als gestippelde stomp. | — |
@@ -70,6 +70,44 @@ Body (JSON). Onbekende velden geven een 400.
 De validatie (`diagramsvg/validatie.js`) is bewust ruimer dan `validateV3Model.js`. Die laatste
 volgt de codegen-eisen. Hier weigeren we alleen wat een tekening onmogelijk maakt: geen
 entiteiten, een ontbrekende of dubbele typenaam, een relatie naar een onbekende entiteit, …
+
+### `taal=studio`: elk Studio-profiel, als schets
+
+Opstap (04-11, BACKLOG §36): dezelfde route tekent ook diagrammen uit een Studio-project, voor
+elk ingebouwd profiel (M2). Alleen de POST; een `GET` op een project is een aparte keuze, omdat
+`studio_project` privé is.
+
+| Veld | Betekenis |
+|---|---|
+| `model` / `code` | een Studio-projectexport (`{ formaat, project, profielen }`), of één profiel (`{ diagramTypeId, elements, diagrams }`) |
+| `profiel` | profiel-id, bv. `archimate05`; nodig als een diagramnaam in meer profielen voorkomt |
+| `diagram` | id of naam van het diagram. Verplicht als het model er meer heeft. |
+| `theme`, `idPrefix` | zoals bij `v3` |
+
+Andere velden geven een 400. `POST /views` op de sidecar geeft de keuzes, ook als
+`weergaven: [{ id, naam, profiel }]`. Fouten volgen de tabel hierboven; een eigen profiel uit de
+ontwerper, of een element waarvan het type niet in het profiel staat, geeft een 422. Een 503
+(`studio-niet-beschikbaar`) betekent dat de profielbundel niet is gebouwd of geladen; `v3` werkt
+dan gewoon door.
+
+**Wat er nu getekend wordt.** De bestaande schets (`transformatie/sjabloon/schets.js`), met
+**zeven vormfamilies**: ellips, actor, kader, notitie, afgerond, vak en punt. Posities en maten
+komen uit het diagram, lijnen uit `edgePresentatie`. Geen profieleigen vormen of iconen. Bekende
+zwakke plekken: tekst kan buiten een vak lopen, lijnen zijn recht, en een sequence-diagram heeft
+geen levenslijnen, dus berichten overlappen.
+
+**Vormtrouw komt later.** Vormen worden SVG-sjablonen in het M2, zodat canvas en server dezelfde
+tekening geven (plan van OMNIUM-UI in `docs/plans`). Dan verandert alleen de aanroep in
+`diagramsvg/studio.js`; invoer en foutcontract blijven gelijk.
+
+**Hoe het is opgebouwd.**
+- `diagramsvg/studio.js` kiest het diagram, roept de schets aan en werkt de uitvoer af: alleen
+  `viewBox`, `title` en `aria-label`, themakleuren, en elke `fill`/`stroke` door een witte lijst.
+  Studio's eigen schets (documenten, gedeelde plaatjes) blijft ongewijzigd.
+- `render-svc/studioProfielen.js` + `bouw.mjs` bundelen de descriptors met esbuild. De profielen
+  importeren JSX; in de bundel zijn die modules stubs met dezelfde exportnamen, dus React gaat
+  niet mee. Een ontbrekende naam laat de bouw falen.
+- Een nieuw profiel moet ook in `PROFIELEN` in `studioProfielen.js` staan.
 
 ### `GET /api/models/{naam}/diagram.svg` en `…/views.json` (model-link) — ✅ gebouwd
 
@@ -164,6 +202,9 @@ de map *Via Go-API* test ook de GET. Het resultaat staat als plaatje in de tab *
 # tekenaar (unit + golden): in web/vite
 node --import ./test/register-aliases.mjs --test src/diagramsvg/diagramsvg.test.js
 UPDATE_GOLDEN=1 …                     # golden bijwerken na een bewuste tekenwijziging
+
+# profielbundel voor taal=studio: één keer, en opnieuw na een wijziging in een profiel
+cd render-svc && npm install && npm test   # bouwt de bundel en draait de sidecar-tests
 
 # sidecar lokaal
 node render-svc/server.mjs            # luistert op 127.0.0.1:8095; POST /api/render/svg (of /render/svg)

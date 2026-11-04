@@ -1864,7 +1864,11 @@ tekenkeuzes: `docs/RENDER_API.md`.
     **05-10:** de VPS-API is nog van 16-09 (`b1fe996`), dus de uitrol is een release van ~224
     commits (model + `dbsetup`). Besluit Mark: uitrol later, als release met backup vooraf.
   - **Studio-export overzetten op `diagramsvg`**, zodat Studio en Imprint één tekenaar delen.
-  - **Andere talen/profielen** (ArchiMate, BPMN, …), één voor één.
+  - **Andere talen/profielen:** 🟡 **04-11 opstap gebouwd** (`feat/render-taal-studio`):
+    `POST /api/render/svg` met `taal=studio` tekent elk ingebouwd profiel met de schets (zeven
+    vormfamilies; zie RENDER_API). **Vormtrouw komt later**, via vormen als SVG-sjablonen in het M2
+    (plan OMNIUM-UI). Open: de CORS-lijst (`routes/addroutes.go`) staat vast, dus een los scherm op
+    een ander adres kan de route nog niet vanuit de browser aanroepen; eigen profielen uit de ontwerper.
   - **Lijnen die door kaarten lopen** (rechte lijnen). Eventueel orthogonaal routeren.
 
 ## 37. GraphQL-schema-profiel (M2) op de diagram-motor (2026-10-02)

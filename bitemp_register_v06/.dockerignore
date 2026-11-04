@@ -13,6 +13,8 @@ postman
 
 web/vite/node_modules
 web/vite/.vite
+render-svc/node_modules
+render-svc/dist
 
 *.md
 !README.md
