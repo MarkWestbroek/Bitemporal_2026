@@ -94,6 +94,10 @@ registreerHandlerInfo("hook", "stereotype", {
   beschrijving:
     "Leidt het stereotype op de node af uit element-data (bv. een subtype). undefined = opgeslagen stereotype gebruiken, lege string = het type-stereotype.",
 });
+registreerHandlerInfo("hook", "inhoudsregels", {
+  naam: "Eigen inhoud",
+  beschrijving: "Regels met eigen gegevens van dit type (bv. reqId en status), die de motor in het inhoudsvak van de vorm tekent.",
+});
 registreerHandlerInfo("hook", "valideer", {
   naam: "Validatie",
   beschrijving: "Valideert element-data bij bewerking (profiel-eigen regels).",

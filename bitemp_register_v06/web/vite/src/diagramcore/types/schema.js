@@ -4,7 +4,7 @@
  *
  * Kern-ontwerpkeuze (plan §4.2): descriptors zijn plain objects met een
  * JSON-serialiseerbare kern plus optionele functie-hooks. De hooks horen bij
- * het Implementatie-domein (ActionHook, ShapeType-componenten) en worden op
+ * het Implementatie-domein (ActionHook, ShapeRenderer) en worden op
  * id gekoppeld; de serialiseerbare kern is de kandidaat voor het
  * configuratie-register (plan §8.5). Bewaak die scheiding: geen functies in
  * nieuwe declaratieve velden.
@@ -118,7 +118,8 @@
 
 /**
  * ElementType — de betekenis-definitie van een soort element.
- * De vorm komt uit het ShapeType (Implementatie-domein), gekoppeld via `shape`.
+ * De vorm komt uit het ShapeType (Stijl-domein), gekoppeld via `shape`; een ShapeRenderer
+ * (Implementatie-domein) realiseert dat ShapeType.
  *
  * DiagramType.shapeSets (P07): optionele alternatieve gedaanten voor één
  * profiel — [{id, label, shapes: {elementTypeId: shapeId}}]. De gekozen set
@@ -273,9 +274,96 @@
  *   inspector (bv. tekst, expressie, kleur) — PropertyTypes van het ElementType
  * @property {CompartmentType[]} [compartments] - max 9, {ordered}
  * @property {Object} [hooks]               - Implementatie-domein: valideer,
- *   extraCompartimenten, edgeLabels, naVerbinden, verschuifConnector, edgePresentatie (connector →
+ *   extraCompartimenten, inhoudsregels (eigen inhoud in het inhoudsvak, zie InhoudsRegel),
+ *   edgeLabels, naVerbinden, verschuifConnector, edgePresentatie (connector →
  *   presentatie-overrides o.b.v. data, bv. richting → pijl), … (functies;
  *   NIET serialiseren)
+ */
+
+/**
+ * ShapeType — de vorm als gegevens (Stijl-domein, M3 2026-11-04; EA: Style). `ElementType.shape`
+ * en de shape-sets verwijzen ernaar met het id. Zie types/shapeType.js en docs/plans/2026-11-04
+ * Eén tekenaar §3.1. Een shape-id zonder ShapeType tekent nog via de oude React-component.
+ *
+ * @typedef {Object} ShapeType
+ * @property {string} id
+ * @property {string} renderer              - ShapeRenderer-id: bibliotheekvorm of eigen renderer
+ * @property {Object} [parameters]          - gewone gegevens voor de renderer, bv. `{hoekRadius: 8}`
+ * @property {{w: number, h: number}} [minMaat] - standaard; ElementType.minBreedte/minHoogte
+ *   overschrijft per as
+ * @property {"rechthoek"|"rand"} [ankers]  - waar lijnen aanhechten (standaard rechthoek);
+ *   "rand" gebruikt ShapeRenderer.rand, zonder die functie terugval op rechthoek
+ */
+
+/**
+ * ShapeRenderer — de code bij een ShapeType (Implementatie-domein; EA: Realisation). Puur: geen
+ * DOM, geen store, geen React; alles wat nodig is, zit in `ctx`. Geregistreerd met
+ * `registreerRenderer`. **Inhoud is van de motor:** naam, stereotype, badges, compartimenten en
+ * buitenlabel tekent de renderer nooit; eigen gegevens van een type lopen via
+ * `hooks.inhoudsregels`.
+ *
+ * @typedef {Object} ShapeRenderer
+ * @property {(ctx: ShapeContext) => VormBoom} omtrek - de vorm, met de stijl uit `ctx.stijl`
+ * @property {(ctx: ShapeContext) => (Vak|null)} inhoudsvak - waar de motor de inhoud zet;
+ *   `null` = geen inhoud (event, gateway met buitenlabel)
+ * @property {(ctx: ShapeContext) => Vak} [kindervak] - containers: waar de leden liggen (bij een
+ *   pool niet het labelvak)
+ * @property {(ctx: ShapeContext) => VormBoom} [ornament] - iconen en markeringen
+ * @property {(ctx: ShapeContext, hoek: number) => {x: number, y: number}} [rand] - aanhechtpunt
+ *   op de omtrek voor `ankers: "rand"`; hoek in graden
+ */
+
+/**
+ * ShapeContext — wat de motor aan een renderer geeft.
+ *
+ * @typedef {Object} ShapeContext
+ * @property {Object} element
+ * @property {ElementType} elementType
+ * @property {ShapeType} shapeType
+ * @property {{w: number, h: number}} maat
+ * @property {{kleur?: string, randDikte?: number, hoekRadius?: number, randStijl?: string}} stijl -
+ *   door de motor opgelost: element wint van type, type van thema (`losStijlOp`)
+ * @property {Object} [node]                - het voorkomen in het diagram; alleen voor een
+ *   renderer die dat echt nodig heeft (`gedaante` bij samentrekking en opname)
+ * @property {Object} diagram               - alleen-lezen; vervangt store-toegang (de levenslijn
+ *   leidt haar activaties af uit de berichten)
+ * @property {Object} [thema]
+ * @property {string} idPrefix              - voor id's in `clipPath` en `marker`
+ */
+
+/**
+ * VormBoom — één beschrijving, twee lezers: tekst voor server en documenten, React-elementen op
+ * het canvas. Alleen de tags uit `VORMBOOM_TAGS` (types/shapeType.js); tekst alleen in text en
+ * tspan. Kleur: thema-token `var(--diagram-<token>, <licht>)`, tenzij het element of type een
+ * kleur zet (die staat letterlijk in `ctx.stijl.kleur`).
+ *
+ * @typedef {Object} VormBoom
+ * @property {string} tag
+ * @property {Record<string, string|number>} [attrs]
+ * @property {Array<VormBoom|string|number>} [kinderen]
+ */
+
+/**
+ * Vak — een rechthoek binnen de vorm, in coördinaten van het element.
+ *
+ * @typedef {Object} Vak
+ * @property {number} x
+ * @property {number} y
+ * @property {number} w
+ * @property {number} h
+ * @property {"boven"|"midden"} [uitlijning] - inhoud bovenaan (standaard; class-box) of in het
+ *   midden (use case)
+ * @property {number} [rotatie]             - graden, bv. -90 voor de kop van een pool
+ */
+
+/**
+ * InhoudsRegel — één regel eigen inhoud (`hooks.inhoudsregels(element, context)`, M3 2026-11-04):
+ * bv. reqId en status van een eis, of links/op/rechts van een vergelijking. Zelfde vocabulaire
+ * als de labels van `hooks.edgeLabels`.
+ *
+ * @typedef {Object} InhoudsRegel
+ * @property {{tekst: string, soort?: string, kleur?: string, veld?: string}[]} delen - `veld` =
+ *   de data-sleutel voor inline bewerken
  */
 
 /**
@@ -397,6 +485,8 @@
  *   (connector-id → toegestane [bron, doel]-typeparen) dwingt de controle af — een omgekeerd
  *   paar wordt gedraaid, een ander paar valt weg (studio/assistent/assistentKern.js).
  * @property {string} style                - StyleType-id (Implementatie-domein)
+ * @property {ShapeType[]} [shapeTypes]     - de eigen vormen van dit profiel als gegevens (M3,
+ *   2026-11-04); `registreerDiagramType` registreert ze. Zie types/shapeType.js.
  * @property {"geen"|"icoon"|"tekst"} [typeWeergave] - default voor de
  *   Typering-toggle: alleen vorm, mini-icoon of stereotype-tekst (default "tekst")
  * @property {"zijden"|"zwevend"} [randAanhechting] - profiel-default voor waar
