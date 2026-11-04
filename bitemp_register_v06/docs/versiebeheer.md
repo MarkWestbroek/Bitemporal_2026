@@ -61,7 +61,10 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.26.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.27.0`**
+  (2026-11-05: één tekenaar — vormcontract ShapeType/ShapeRenderer in het M3, `diagramcore/tekenaar/`
+  voor documenten en gedeelde plaatjes; samen met render 0.2.0, api blijft 0.18.0), na
+  **`studio/v0.26.0`**
   (2026-10-31: V3 als delta in het project, `uuid` op modelelementen, namen uniek per domein,
   FieldRef gebonden via de uuid; samen met api 0.18.0), na **`studio/v0.25.0`**
   (2026-10-31: inrichting van e-diensten uit het model — objecttype, formulier, zaaktype,
@@ -111,8 +114,9 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.1.0`** (eerste uitgave, 2026-10-06; image
-  `bitemp-render-svc:0.1.0`), zie [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md) §4.2a.
+- Render-sidecar: **`render/v0.2.0`** (2026-11-05: `taal=studio` met de ene tekenaar; image
+  `bitemp-render-svc:0.2.0`), na **`render/v0.1.0`** (eerste uitgave, 2026-10-06), zie
+  [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md) §4.2a.
 - Deze nummers zijn óók de Docker-image-tags (zonder `v`): zie
   [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md).
 
@@ -133,7 +137,7 @@ welk component het nummer slaat.
 | Frontend / **Studio** | `web/vite/` (Studio + inhoud-editor + publicatie + IDE) | `package.json` `"version"` | `studio/` |
 | **Backend** (Go API) | Go-code buiten `web/` (`model/`, `handlers/`, `dynql/`, `dbsetup/`, …) | git-tag (evt. later een `VERSION`-bestand) | `api/` |
 | **Generator** (codegen) | `cmd/codegen/` | git-tag | `codegen/` |
-| **Render-sidecar** | `render-svc/` (+ de tekenaar `web/vite/src/diagramsvg`) | git-tag | `render/` |
+| **Render-sidecar** | `render-svc/` (+ de tekenaars `web/vite/src/diagramsvg` en `diagramcore/tekenaar`) | git-tag | `render/` |
 
 **Slash, geen hyphen.** We schrijven `studio/v0.4.0`, niet `studio-v0.4.0`. Redenen:
 - Git behandelt `/` als ref-hiërarchie (`refs/tags/studio/…`), dus `git tag -l 'studio/*'`

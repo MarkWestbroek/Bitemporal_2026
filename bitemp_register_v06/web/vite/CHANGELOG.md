@@ -8,6 +8,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.27.0] — 2026-11-05
+
+Alleen frontend en render-sidecar; de api blijft 0.18.0. Samen met **render 0.2.0**: `taal=studio`
+(elk ingebouwd profiel als SVG via `POST /api/render/svg`, stap 1) en die route tekent met de
+tekenaar hieronder (stap 5); zie `RELEASE.md` en `docs/RENDER_API.md`.
+
 ### Toegevoegd
 - **M3: vormcontract voor "één tekenaar"** (04-11, stap 0). `ShapeType` (gegevens: id, renderer,
   parameters, minMaat, ankers) en `ShapeRenderer` (pure code: omtrek, inhoudsvak, kindervak, ornament,
