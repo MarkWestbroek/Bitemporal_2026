@@ -1864,6 +1864,11 @@ tekenkeuzes: `docs/RENDER_API.md`.
     **05-10:** de VPS-API is nog van 16-09 (`b1fe996`), dus de uitrol is een release van ~224
     commits (model + `dbsetup`). Besluit Mark: uitrol later, als release met backup vooraf.
   - **Studio-export overzetten op `diagramsvg`**, zodat Studio en Imprint één tekenaar delen.
+    **04-11:** omgedraaid tot een plan voor één tekenaar — ShapeType (gegevens) en ShapeRenderer
+    (VormBoom) in het M2, inhoud door de motor, dezelfde view op canvas, in documenten en in
+    render-svc; `diagramsvg` (V3) gaat er als laatste onder; de schets blijft als lichte stand.
+    Besluit Mark 04-11, zie `docs/plans/2026-11-04 Eén tekenaar — vormen als sjablonen in het M2
+    (plan).md`. Stap 0 (M3-MOF, 2544907d) en stap 1 (RENDER-API, 7ff76176) zijn gemerged.
   - **Andere talen/profielen:** 🟡 **04-11 opstap gebouwd** (`feat/render-taal-studio`):
     `POST /api/render/svg` met `taal=studio` tekent elk ingebouwd profiel met de schets (zeven
     vormfamilies; zie RENDER_API). **Vormtrouw komt later**, via vormen als SVG-sjablonen in het M2
@@ -1918,7 +1923,15 @@ gebouwd is: `docs/plans/2026-10-01 GraphQL-schema-profiel (M2) op de diagram-mot
   - **Actor op de registratie** (wie registreerde wat); nu alleen bron `gebruikersbeheer` voor
     seed en migratie.
   - Rollen per domein laten meetellen (autorisatiespoor, FTV/PIP).
-  - Later: uitnodiging en wachtwoordherstel per e-mail.
+  - ✅ Uitnodiging per e-mail (studio 0.19.0 / api 0.14.0, `gebruikers/uitnodiging.go`);
+    wachtwoordherstel per e-mail nog niet.
+  - **Mail-vlag belooft te veel** (bevinding FUNDAMENT 03-11, voor BACKEND): het overzicht
+    `GET /api/gebruikers/uitnodigingen` geeft `"mail": true` zodra alleen `SMTP_HOST` is gezet
+    (`uitnodiging.go`, `cfg.SMTP.Host != ""`); de Studio zegt dan "wordt gemaild" terwijl
+    `SMTP_USER`/`SMTP_PASS`/`SMTP_FROM` ontbreken. Versturen faalt dan netjes (mailfout, link
+    blijft zichtbaar), dus niet kapot. Voorstel: pas `true` bij host + afzender + inlog, of de
+    uitkomst van `POST /notificaties/testmail` meewegen. FUNDAMENT omzeilt het met alle
+    SMTP-waarden in één Secret.
 
 ## 39. Rondreis V3 ↔ canoniek profiel verliest verplicht/uniek/type van velden (2026-10-30)
 
