@@ -1,8 +1,17 @@
 # Dockerfile.render — interne render-sidecar (render-svc) voor de render-API.
 #
 # Draait de pure SVG-tekenaar uit web/vite/src/diagramsvg met plain Node, zonder
-# npm-dependencies. Alleen de benodigde bronmappen gaan mee, op hun eigen pad,
-# zodat de relatieve imports kloppen. Zie docs/RENDER_API.md.
+# runtime-dependencies. Alleen de benodigde bronmappen gaan mee, op hun eigen pad,
+# zodat de relatieve imports kloppen. De M2-profielen voor taal=studio bevatten JSX
+# en worden in de eerste stap gebundeld (render-svc/bouw.mjs). Zie docs/RENDER_API.md.
+
+FROM node:22-alpine AS bundel
+
+WORKDIR /app
+COPY render-svc ./render-svc
+COPY web/vite/src ./web/vite/src
+RUN echo '{"type":"module"}' > ./web/vite/package.json
+RUN cd render-svc && npm ci --no-audit --no-fund && node bouw.mjs
 
 FROM node:22-alpine
 
@@ -11,7 +20,10 @@ WORKDIR /app
 COPY web/vite/src/diagramsvg ./web/vite/src/diagramsvg
 COPY web/vite/src/umleditor/metamodel ./web/vite/src/umleditor/metamodel
 COPY web/vite/src/shared/asoc.js ./web/vite/src/shared/asoc.js
-COPY render-svc ./render-svc
+COPY web/vite/src/transformatie/sjabloon/schets.js ./web/vite/src/transformatie/sjabloon/schets.js
+COPY web/vite/src/diagramcore/model/shapeSet.js ./web/vite/src/diagramcore/model/shapeSet.js
+COPY render-svc/server.mjs ./render-svc/server.mjs
+COPY --from=bundel /app/render-svc/dist ./render-svc/dist
 # Zonder package.json met "type": "module" leest Node de .js-bestanden als CommonJS.
 RUN echo '{"type":"module"}' > ./web/vite/package.json
 

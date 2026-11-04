@@ -9,16 +9,20 @@
  *   POST /render/svg  { taal, model | code, diagram, domein, entiteiten,
  *                       richting, theme, velden, afhankelijkheden,
  *                       idPrefix, linkPattern }
+ *                     of { taal: "studio", model | code, profiel, diagram, theme, idPrefix }
  *                     → 200 image/svg+xml, of application/problem+json
- *   POST /views       { taal, model | code } → { diagrammen, domeinen }
+ *   POST /views       { taal, model | code, profiel } → { diagrammen, domeinen }
  *   GET  /health      → { ok: true }
  *
- * Geen dependencies. Omgeving: RENDER_SVC_PORT (standaard 8095),
+ * Geen runtime-dependencies. taal=studio gebruikt de profielbundel uit bouw.mjs
+ * (`npm install && npm run bouw`); zonder bundel geeft alleen die taal een 503.
+ * Omgeving: RENDER_SVC_PORT (standaard 8095),
  * RENDER_SVC_HOST (standaard 127.0.0.1 — niet publiek binden),
  * RENDER_SVC_MAX_BYTES (standaard 5 MB).
  */
 import http from "node:http";
 import { renderDiagramSvg, diagramViews, RenderFout } from "../web/vite/src/diagramsvg/index.js";
+import { renderStudioSvg, studioViews, STUDIO_VELDEN } from "../web/vite/src/diagramsvg/studio.js";
 
 const PORT = Number(process.env.RENDER_SVC_PORT || 8095);
 const HOST = process.env.RENDER_SVC_HOST || "127.0.0.1";
@@ -26,6 +30,7 @@ const MAX_BYTES = Number(process.env.RENDER_SVC_MAX_BYTES || 5 * 1024 * 1024);
 
 const RENDER_VELDEN = new Set(["taal", "model", "code", "diagram", "domein", "entiteiten", "richting", "theme", "velden", "afhankelijkheden", "idPrefix", "linkPattern"]);
 const VIEWS_VELDEN = new Set(["taal", "model", "code"]);
+const STUDIO_VIEWS_VELDEN = new Set(["taal", "model", "code", "profiel"]);
 
 function stuurProbleem(res, fout) {
   const body = JSON.stringify(fout.toProblem());
@@ -55,7 +60,32 @@ function leesBody(req) {
   });
 }
 
-async function leesInvoer(req, toegestaan) {
+const isStudio = (invoer) => String(invoer.taal ?? "").toLowerCase() === "studio";
+
+/**
+ * De profielen voor taal=studio staan in een aparte bundel (bouw.mjs). Dynamisch geladen:
+ * ontbreekt of faalt de bundel, dan blijft taal=v3 gewoon werken.
+ */
+let descriptors;
+function laadDescriptors() {
+  descriptors ??= import("./dist/studio-profielen.mjs")
+    .then((m) => m.descriptorVan)
+    .catch((e) => {
+      descriptors = undefined;
+      console.error("render-svc: profielbundel niet geladen", e);
+      throw probleem(503, "studio-niet-beschikbaar", "taal=studio niet beschikbaar", "De profielbundel van de renderservice is niet geladen.");
+    });
+  return descriptors;
+}
+
+function controleerVelden(invoer, toegestaan) {
+  const onbekend = Object.keys(invoer).filter((k) => !toegestaan.has(k));
+  if (onbekend.length) {
+    throw new RenderFout(400, "ongeldige-parameter", "Ongeldige parameter", `Onbekende parameter(s): ${onbekend.join(", ")}.`, { parameters: onbekend });
+  }
+}
+
+async function leesInvoer(req) {
   const tekst = await leesBody(req);
   let invoer;
   try {
@@ -65,10 +95,6 @@ async function leesInvoer(req, toegestaan) {
   }
   if (invoer === null || typeof invoer !== "object" || Array.isArray(invoer)) {
     throw probleem(400, "ongeldige-body", "Ongeldige body", "De body moet een JSON-object zijn.");
-  }
-  const onbekend = Object.keys(invoer).filter((k) => !toegestaan.has(k));
-  if (onbekend.length) {
-    throw new RenderFout(400, "ongeldige-parameter", "Ongeldige parameter", `Onbekende parameter(s): ${onbekend.join(", ")}.`, { parameters: onbekend });
   }
   return invoer;
 }
@@ -84,12 +110,16 @@ export function maakServer() {
       // /api/render/svg: hetzelfde pad als de publieke Go-route, zodat een client
       // lokaal rechtstreeks op de sidecar kan draaien (zonder DB/Go-API).
       if (req.method === "POST" && (pad === "/render/svg" || pad === "/api/render/svg")) {
-        const svg = renderDiagramSvg(await leesInvoer(req, RENDER_VELDEN));
+        const invoer = await leesInvoer(req);
+        controleerVelden(invoer, isStudio(invoer) ? STUDIO_VELDEN : RENDER_VELDEN);
+        const svg = isStudio(invoer) ? renderStudioSvg(invoer, await laadDescriptors()) : renderDiagramSvg(invoer);
         res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8" });
         return res.end(svg);
       }
       if (req.method === "POST" && pad === "/views") {
-        const views = diagramViews(await leesInvoer(req, VIEWS_VELDEN));
+        const invoer = await leesInvoer(req);
+        controleerVelden(invoer, isStudio(invoer) ? STUDIO_VIEWS_VELDEN : VIEWS_VELDEN);
+        const views = isStudio(invoer) ? studioViews(invoer) : diagramViews(invoer);
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
         return res.end(JSON.stringify(views));
       }

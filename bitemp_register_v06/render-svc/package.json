@@ -1,0 +1,12 @@
+{
+  "name": "render-svc",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bouw": "node bouw.mjs",
+    "test": "node bouw.mjs && node --test server.test.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

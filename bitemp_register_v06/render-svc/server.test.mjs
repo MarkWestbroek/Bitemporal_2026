@@ -40,3 +40,38 @@ test("POST /views", async () => {
   const r = await post("/views", { taal: "v3", model });
   assert.deepEqual(await r.json(), { diagrammen: [], domeinen: ["catalogus", "site"] });
 });
+
+// ── taal=studio: de echte profielbundel (npm run bouw) en een echt project ──
+
+const project = JSON.parse(fs.readFileSync(fileURLToPath(new URL("../docs/architectuur/omnium-architectuur.studio-project.json", import.meta.url)), "utf8"));
+const bundelUrl = new URL("./dist/studio-profielen.mjs", import.meta.url);
+const zonderBundel = fs.existsSync(bundelUrl) ? false : "geen profielbundel: draai eerst npm run bouw";
+
+test("taal=studio: elk diagram van een echt project voldoet aan de eisen, byte-gelijk", { skip: zonderBundel }, async () => {
+  const views = await (await post("/views", { taal: "studio", model: project })).json();
+  assert.ok(views.weergaven.length > 10);
+  for (const w of views.weergaven) {
+    const invoer = { taal: "studio", model: project, profiel: w.profiel, diagram: w.id };
+    const r = await post("/render/svg", invoer);
+    const svg = await r.text();
+    assert.equal(r.status, 200, `${w.profiel}/${w.naam}: ${svg.slice(0, 200)}`);
+    assert.doesNotMatch(/^<svg[^>]*>/.exec(svg)[0], /\b(width|height)="/);
+    assert.doesNotMatch(svg, /<(script|style|foreignObject|image)\b|\son[a-z]+=/i);
+    assert.doesNotMatch(svg, /NaN/);
+    assert.match(svg, /<title /);
+    assert.equal(svg, await (await post("/render/svg", invoer)).text());
+  }
+});
+
+test("taal=studio: alle profielen registreren zonder browser", { skip: zonderBundel }, async () => {
+  const { profielIds, descriptorVan } = await import(bundelUrl);
+  assert.equal(profielIds.length, 25);
+  for (const id of profielIds) assert.ok(descriptorVan(id)?.elementTypes?.length, id);
+});
+
+test("taal=studio: V3-opties zijn een 400, v3 kent 'profiel' niet", async () => {
+  const a = await post("/render/svg", { taal: "studio", model: project, domein: "x" });
+  assert.equal(a.status, 400);
+  assert.deepEqual((await a.json()).parameters, ["domein"]);
+  assert.equal((await post("/render/svg", { taal: "v3", model, profiel: "x" })).status, 400);
+});
