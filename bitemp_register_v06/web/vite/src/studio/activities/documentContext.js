@@ -9,7 +9,7 @@ import { collectMapModel } from "./transformaties.js";
 import { useModellerenStore } from "./modellerenActivity.jsx";
 import { getProfieltype } from "../profieltypeRegistry";
 import { maakDocumentContext } from "../../transformatie/sjabloon/context.js";
-import { schetsDiagramSvg } from "../../transformatie/sjabloon/schets.js";
+import { diagramSvg } from "../../diagramcore/tekenaar/index.js";
 import { merkHerkomst } from "../../transformatie/sjabloon/rijkKopieren.js";
 import { vindShapeSet, descriptorMetShapeSet } from "../../diagramcore/model/shapeSet.js";
 import { renderSjabloon } from "../../transformatie/sjabloon/renderer.js";
@@ -56,12 +56,14 @@ export function bouwDocumentContext(mapId, mapNaam) {
   return maakDocumentContext({
     ...invoer,
     naam: mapNaam || invoer.naam,
-    // De tekening volgt de gedaante (shape-set) die het diagram bewaart.
+    // De tekening volgt de gedaante (shape-set) die het diagram bewaart, en komt sinds 04-11 van
+    // de ene tekenaar (diagramcore/tekenaar: dezelfde view als straks het canvas; de schets is
+    // de lichte stand `detail: "schets"`).
     // Met herkomst (profiel + diagram) op de <svg>: "Kopieer voor Confluence" deelt per diagram
     // een plaatje op een eigen adres (gedeelde plaatjes, 16-10).
     svgVan: (diagram, { elements, descriptor, profiel }) =>
       merkHerkomst(
-        schetsDiagramSvg({
+        diagramSvg({
           diagram,
           elements,
           descriptor: descriptorMetShapeSet(descriptor, vindShapeSet(descriptor, diagram.shapeSetId, diagram)),

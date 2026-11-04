@@ -224,7 +224,7 @@ big bang.
 |---|---|---|---|---|
 | 0 | M3-MOF | ShapeType (gegevens) en ShapeRenderer (contract) in `schema.js`, VormBoom-taglijst, `hooks.inhoudsregels`, rechtzetten "ShapeType = Implementatie"; Mark in de .qea | 1–2 dagen | keuzes §5 |
 | 1 | RENDER-API | `POST …/svg?taal=studio` op de schets, bundeling, Imprint-eisen (**gebouwd 04-11**, `feat/render-taal-studio`, ongecommit; wacht op Mark) | 1–1,5 dag | — |
-| 2 | OMNIUM-UI | tekenaar: maat, inhoud, lijnen, nesting, thema; de 14 basisvormen als ShapeType + renderer; schets als stand `detail=schets` (golden = huidige `schets.js`); documenten en gedeelde plaatjes erop | 1 week | 0 gemerged |
+| 2 | OMNIUM-UI | tekenaar: maat, inhoud, lijnen, nesting, thema; de 14 basisvormen als ShapeType + renderer; schets als stand `detail=schets`; documenten en gedeelde plaatjes erop — **gebouwd 04-11** (`feat/tekenaar`: `diagramcore/tekenaar/`, terugval per vormfamilie voor vormen zonder ShapeType; de 35 diagrammen van het architectuurproject getekend met de echte profielen) | 1 week | 0 gemerged |
 | 3 | OMNIUM-UI | canvas-adapter `SjabloonShape` + inline-editor en resizer op SVG; eerst op `class-box` | 3–4 dagen | 2 |
 | 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na | ±½ dag per profiel, 1 week totaal | 3 |
 | 5 | RENDER-API | render-svc op de tekenaar; `taal=v3` erachter; byte-vergelijking met de huidige fixtures | 2 dagen | 2, 4 |
