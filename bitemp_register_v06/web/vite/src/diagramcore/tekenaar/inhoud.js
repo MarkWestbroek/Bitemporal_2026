@@ -17,6 +17,12 @@
  *   "naam"         alleen de naam (kader, package-tab, actor)
  *   "tekst"        de tekst van het element (notitie: element.data.tekst)
  *   "specificatie" stereotype, naam en `{specificatie}` (constraint, rounded: data.expressie)
+ *
+ * Inhoudsregels (`hooks.inhoudsregels`, schema.js InhoudsRegel): delen naast elkaar op één regel
+ * (links of in het midden), een deel als chip (`soort: "badge"`) of in vaste breedte ("mono"),
+ * of één deel lopende tekst ("tekst") dat over meer regels breekt; `divider` zet een
+ * scheidslijn erboven. De weergavenaam (`hooks.naamWeergave`) komt als `naam` binnen;
+ * `parameters.naamOnderstreept` en `typePrefix` zijn voor de UML-objectnotatie.
  */
 import { tekstBreedte, breekAf } from "../../diagramsvg/tekstmaat.js";
 import { vorm } from "../types/shapeType.js";
@@ -43,8 +49,11 @@ function stereotypeVan(element, elementType) {
   return afgeleid !== undefined ? afgeleid || elementType?.stereotype : d.stereotype || elementType?.stereotype;
 }
 
-/** Eén veldregel als plat blok (naam links, type rechts), volgens de viewer van het veldtype. */
-function veldBlok(veld, fieldType, sleutel) {
+/**
+ * Eén veldregel als plat blok (naam links, type rechts), volgens de viewer van het veldtype.
+ * `typePrefix` komt vóór het type (object-slot: "= waarde").
+ */
+function veldBlok(veld, fieldType, sleutel, typePrefix = "") {
   const d = veld.data || {};
   const viewer = fieldType?.viewer || fieldType?.render || "naam-type";
   if (viewer === "waarde" || viewer === "tekst") {
@@ -57,10 +66,11 @@ function veldBlok(veld, fieldType, sleutel) {
     uml.eigenschappen.length ? `{${uml.eigenschappen.join(", ")}}` : "",
   ].filter(Boolean).join(" ");
   const voor = `${uml.zichtbaarheid || ""}${isAfgeleid(d, fieldType) ? "/" : ""}`;
+  const type = [d.typeLabel || "", achter].filter(Boolean).join(" ");
   return {
     soort: "veld",
     naam: `${voor}${veld.naam || ""}`,
-    type: [d.typeLabel || "", achter].filter(Boolean).join(" "),
+    type: type ? `${typePrefix}${type}` : "",
     vet: !!d.verplicht,
     cursief: !!d.cursief,
     sleutel,
@@ -69,7 +79,7 @@ function veldBlok(veld, fieldType, sleutel) {
 }
 
 /** Blokken van de compartimenten (descriptor-volgorde; alleen gevulde). */
-function compartimentBlokken(element, elementType, fieldTypesById, compartmentTypesById, veldSleutels, inspring = 0) {
+function compartimentBlokken(element, elementType, fieldTypesById, compartmentTypesById, veldSleutels, inspring = 0, typePrefix = "") {
   const orde = new Map((elementType?.compartments || []).map((ct, i) => [ct.id, i]));
   const comps = (element.compartimenten || [])
     .map((c, i) => ({ c, sleutel: orde.get(c.compartmentType) ?? 1000 + i }))
@@ -95,7 +105,7 @@ function compartimentBlokken(element, elementType, fieldTypesById, compartmentTy
         return;
       }
       const sleutel = veldSleutels && c.compartmentType && !c.extra ? veldSleutel(c.compartmentType, j) : null;
-      uit.push({ ...veldBlok(v, ft, sleutel), inspring });
+      uit.push({ ...veldBlok(v, ft, sleutel, typePrefix), inspring });
     });
     uit.push({ soort: "ruimte", h: 6 });
   }
@@ -112,9 +122,11 @@ function compartimentBlokken(element, elementType, fieldTypesById, compartmentTy
  * @param {Record<string, Object>} [p.fieldTypesById]
  * @param {Record<string, Object>} [p.compartmentTypesById]
  * @param {import("../types/schema.js").InhoudsRegel[]} [p.inhoudsregels]
+ * @param {string} [p.naam]              - de weergavenaam (`hooks.naamWeergave`); undefined = element.naam,
+ *   "" = geen naamregel
  * @returns {{blokken: Object[], h: number, minW: number, modus: string}}
  */
-export function planInhoud({ element, elementType, breedte, parameters = {}, fieldTypesById, compartmentTypesById, inhoudsregels = [] }) {
+export function planInhoud({ element, elementType, breedte, parameters = {}, fieldTypesById, compartmentTypesById, inhoudsregels = [], naam = undefined }) {
   const modus = parameters.inhoud || "volledig";
   const d = element?.data || {};
   const binnen = Math.max(20, breedte - 2 * PAD_X);
@@ -124,7 +136,7 @@ export function planInhoud({ element, elementType, breedte, parameters = {}, fie
     minW = Math.max(minW, tekstBreedte(t, grootte, opts));
   };
   const naamGrootte = parameters.naamGrootte ?? (modus === "naam" ? 12 : NAAM);
-  const naamTekst = element?.naam || (modus === "volledig" || modus === "specificatie" ? "(naamloos)" : "");
+  const naamTekst = naam !== undefined ? naam : element?.naam || (modus === "volledig" || modus === "specificatie" ? "(naamloos)" : "");
 
   if (modus === "tekst") {
     const tekst = String(d[parameters.tekstVeld || "tekst"] || "").trim();
@@ -142,7 +154,7 @@ export function planInhoud({ element, elementType, breedte, parameters = {}, fie
     if (naamTekst) {
       const regels = breekAf(naamTekst, naamGrootte, binnen, { vet: true });
       for (const r of regels) meet(r, naamGrootte, { vet: true });
-      blokken.push({ soort: "naam", regels, grootte: naamGrootte, cursief: !!d.abstract, h: regels.length * Math.round(naamGrootte * 1.3) });
+      blokken.push({ soort: "naam", regels, grootte: naamGrootte, cursief: !!d.abstract, onderstreept: !!parameters.naamOnderstreept, h: regels.length * Math.round(naamGrootte * 1.3) });
     }
     if (modus === "volledig" && d.materieel) {
       blokken.push({ soort: "badge", tekst: "materieel", h: 14 });
@@ -161,11 +173,21 @@ export function planInhoud({ element, elementType, breedte, parameters = {}, fie
     }
     if (modus === "volledig") {
       for (const regel of inhoudsregels) {
-        const tekst = regel.delen.map((x) => x.tekst).filter(Boolean).join(" ");
-        meet(tekst, VELD);
-        blokken.push({ soort: "regel", delen: regel.delen, h: REGEL });
+        const delen = (regel.delen || []).filter((x) => x.tekst);
+        if (!delen.length) continue;
+        if (regel.divider) blokken.push({ soort: "divider", h: 1 + 4 });
+        const grootte = regel.grootte ?? VELD;
+        if (delen.length === 1 && delen[0].soort === "tekst") {
+          // Lopende tekst (de tekst van een eis): afgebroken op de vakbreedte.
+          const regels = breekAf(delen[0].tekst, grootte, binnen);
+          for (const r of regels) meet(r, grootte);
+          blokken.push({ soort: "regel", delen, regels, grootte, anker: regel.anker, h: regels.length * REGEL });
+        } else {
+          meet(delen.map((x) => x.tekst).join(" "), grootte, { vet: delen.some((x) => x.vet) });
+          blokken.push({ soort: "regel", delen, grootte, anker: regel.anker, h: REGEL });
+        }
       }
-      const comps = compartimentBlokken(element, elementType, fieldTypesById, compartmentTypesById, true);
+      const comps = compartimentBlokken(element, elementType, fieldTypesById, compartmentTypesById, true, 0, parameters.typePrefix || "");
       for (const b of comps) {
         if (b.soort === "veld") minW = Math.max(minW, tekstBreedte(b.naam, VELD, { vet: b.vet }) + (b.type ? 12 + tekstBreedte(b.type, TYPE) : 0) + (b.inspring || 0));
         if (b.soort === "label") meet(b.tekst, LABEL);
@@ -211,6 +233,7 @@ export function tekenInhoud(vak, plan, kleuren, opties = {}) {
             "font-size": b.grootte,
             "font-weight": 700,
             ...(b.cursief ? { "font-style": "italic" } : {}),
+            ...(b.onderstreept ? { "text-decoration": "underline" } : {}),
             fill: kleuren.inkt,
             ...(i === 0 ? { "data-dc-naam": "" } : {}),
           })
@@ -221,14 +244,34 @@ export function tekenInhoud(vak, plan, kleuren, opties = {}) {
       kinderen.push(vorm("rect", { x: middenX - bw / 2, y: y + 1, width: bw, height: 12, rx: 6, fill: kleuren.rand, "fill-opacity": 0.18 }));
       kinderen.push(tekst(middenX, y + 10, b.tekst, { "text-anchor": "middle", "font-size": LABEL, "font-weight": 600, fill: kleuren.inkt }));
     } else if (b.soort === "regel") {
-      let x = links;
-      const delen = b.delen.filter((d) => d.tekst);
-      for (const deel of delen) {
-        const attrs = { "font-size": VELD, fill: deel.kleur || kleuren.inkt };
+      const grootte = b.grootte || VELD;
+      const deelAttrs = (deel) => {
+        const attrs = { "font-size": grootte, fill: deel.kleur || kleuren.inkt };
         if (deel.soort === "kardinaliteit" || deel.soort === "constraint" || deel.soort === "staart") attrs.fill = deel.kleur || kleuren.gedempt;
+        if (deel.soort === "mono") attrs["font-family"] = "ui-monospace, monospace";
+        if (deel.vet) attrs["font-weight"] = 700;
         if (deel.veld) attrs["data-dc-veld"] = deel.veld;
-        kinderen.push(tekst(x, y + 11, deel.tekst, attrs));
-        x += tekstBreedte(deel.tekst, VELD) + 6;
+        return attrs;
+      };
+      if (b.regels) {
+        // Lopende tekst, al afgebroken bij het plannen.
+        const attrs = deelAttrs(b.delen[0]);
+        const x = b.anker === "midden" ? middenX : links;
+        b.regels.forEach((r, i) => kinderen.push(tekst(x, y + REGEL * i + grootte, r, { ...attrs, "text-anchor": b.anker === "midden" ? "middle" : "start" })));
+      } else {
+        const breedtes = b.delen.map((deel) => (deel.soort === "badge" ? Math.ceil(tekstBreedte(deel.tekst, LABEL) + 12) : tekstBreedte(deel.tekst, grootte, { vet: !!deel.vet, mono: deel.soort === "mono" })));
+        const totaal = breedtes.reduce((t, bw) => t + bw, 0) + 6 * (b.delen.length - 1);
+        let x = b.anker === "midden" ? middenX - totaal / 2 : links;
+        b.delen.forEach((deel, i) => {
+          if (deel.soort === "badge") {
+            // Chip: lichte pil in de randkleur (status, prioriteit).
+            kinderen.push(vorm("rect", { x, y: y + 2, width: breedtes[i], height: 12, rx: 6, fill: kleuren.rand, "fill-opacity": 0.18 }));
+            kinderen.push(tekst(x + breedtes[i] / 2, y + 11, deel.tekst, { "text-anchor": "middle", "font-size": LABEL, "font-weight": 600, fill: kleuren.inkt }));
+          } else {
+            kinderen.push(tekst(x, y + grootte, deel.tekst, deelAttrs(deel)));
+          }
+          x += breedtes[i] + 6;
+        });
       }
     } else if (b.soort === "divider") {
       kinderen.push(vorm("line", { x1: vak.x, y1: y + 0.5, x2: vak.x + vak.w, y2: y + 0.5, stroke: kleuren.rand, "stroke-width": 1 }));

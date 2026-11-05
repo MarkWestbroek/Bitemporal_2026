@@ -12,6 +12,7 @@
  * canoniek model is alleen de default, niet hardgecodeerd.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { policyInhoud, voorwaardeNaam, voorwaardeInhoud } from "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4)
 
 export const TOEGANGSREGEL_ID = "toegangsregel";
 
@@ -57,6 +58,8 @@ const elementTypes = [
       { key: "doel", label: "doelbinding", datatype: "string" },
       KLEUR_VELD,
     ],
+    // "vanaf … · doel" onder de naam (eigen inhoud, door de motor getekend).
+    hooks: { inhoudsregels: policyInhoud },
   },
   {
     // Ordening in de projectboom: regels zijn herbruikbaar (aggregatie, geen
@@ -120,6 +123,8 @@ const elementTypes = [
     icoon: "tr-poort",
     // Vaste ruit (48px): resizen is zinloos en de box moet de vorm blijven.
     resizebaar: false,
+    // De ruit toont het symbool en de soort eronder; de naam niet (zoals de oude PoortShape).
+    naamLabel: "geen",
     kleur: KLEUREN.operator,
     properties: [
       { key: "soort", label: "soort (alle / ten minste één / precies één)", datatype: "string", verplicht: true },
@@ -139,6 +144,8 @@ const elementTypes = [
       { key: "rechts", label: "rechtsterm", datatype: "string" },
       KLEUR_VELD,
     ],
+    // Met links/rechts toont de strook "links · teken · rechts" in plaats van de naam.
+    hooks: { naamWeergave: voorwaardeNaam, inhoudsregels: voorwaardeInhoud },
   },
   {
     id: "plicht",

@@ -275,6 +275,7 @@
  * @property {CompartmentType[]} [compartments] - max 9, {ordered}
  * @property {Object} [hooks]               - Implementatie-domein: valideer,
  *   extraCompartimenten, inhoudsregels (eigen inhoud in het inhoudsvak, zie InhoudsRegel),
+ *   naamWeergave (de naam zoals de vorm hem toont: object "jan : Persoon"; "" = geen naamregel),
  *   edgeLabels, naVerbinden, verschuifConnector, edgePresentatie (connector →
  *   presentatie-overrides o.b.v. data, bv. richting → pijl), … (functies;
  *   NIET serialiseren)
@@ -291,8 +292,11 @@
  * @property {Object} [parameters]          - gewone gegevens voor de renderer, bv. `{hoekRadius: 8}`.
  *   Door de motor gelezen: `inhoud` (modus van de inhoud-tekenaar; "geen" = geen inhoudsvak, de
  *   naam wordt dan een buitenlabel), `naamGrootte`, `tekstAnker`, `maxBreedte`, `factorW/factorH`,
- *   `extraHoogte` (maat.js), `vulling`/`rand` (vaste kleuren) en `kleurAls: "rand"` (de eigen
- *   kleur van het element kleurt de rand, niet het vlak; de typekleur telt dan niet — kaders).
+ *   `extraHoogte` (maat.js), `vulling`/`rand` (vaste kleuren), `kleurAls: "rand"` (de eigen
+ *   kleur van het element kleurt de rand, niet het vlak; de typekleur telt dan niet — kaders),
+ *   `naamOnderstreept` (object-notatie), `typePrefix` (vóór het type van een veldregel: "= " bij
+ *   een slot), `stereotype: false` (geen stereotyperegel) en `klasse` (een CSS-klasse op het
+ *   canvas, bv. `dc-punt-node`).
  *   Een vorm kan hier ook als gegevens staan: `figuur: {viewBox, kinderen}` voor de
  *   bibliotheek-renderer "figuur" (ArchiMate-symbolen als vorm)
  * @property {{w: number, h: number}} [minMaat] - standaard; ElementType.minBreedte/minHoogte
@@ -374,11 +378,17 @@
 /**
  * InhoudsRegel — één regel eigen inhoud (`hooks.inhoudsregels(element, context)`, M3 2026-11-04):
  * bv. reqId en status van een eis, of links/op/rechts van een vergelijking. Zelfde vocabulaire
- * als de labels van `hooks.edgeLabels`.
+ * als de labels van `hooks.edgeLabels`. De context draagt `elements`, `diagram` en de
+ * host-functies (`verwijzingLabel`, zie tekenaar/host.js).
  *
  * @typedef {Object} InhoudsRegel
- * @property {{tekst: string, soort?: string, kleur?: string, veld?: string}[]} delen - `veld` =
- *   de data-sleutel voor inline bewerken
+ * @property {{tekst: string, soort?: string, kleur?: string, veld?: string, vet?: boolean}[]} delen -
+ *   `veld` = de data-sleutel voor inline bewerken; `soort`: "badge" (een chip), "mono"
+ *   (vaste breedte), "tekst" (als enige deel: wordt afgebroken over meer regels),
+ *   "kardinaliteit"/"constraint"/"staart" (gedempt)
+ * @property {boolean} [divider]            - een scheidslijn boven deze regel
+ * @property {"links"|"midden"} [anker]     - uitlijning van de regel (standaard links)
+ * @property {number} [grootte]             - lettergrootte (standaard 11)
  */
 
 /**

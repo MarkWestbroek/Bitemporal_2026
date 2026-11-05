@@ -17,6 +17,7 @@
  * `eaMapping.js`.
  */
 import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeUitData } from "../uml2Basis.js";
+import { objectKop } from "./vormen.js";
 
 export const OBJECT_ID = "object";
 
@@ -51,6 +52,9 @@ export const elementTypes = [
       KLEUR_VELD,
     ],
     compartments: [{ id: "slots", label: null, fieldType: "slot" }],
+    // De kop "naam : Klasse [toestand]" is de weergavenaam; de klasse komt via de host uit het
+    // andere profiel (instantieVan) of uit klassifierLabel (EA-lezer, server).
+    hooks: { naamWeergave: objectKop },
   },
   {
     // Meerdere objecten tegelijk (UML 1 "multiobject"; EA tekent ze als

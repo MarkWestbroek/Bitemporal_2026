@@ -98,6 +98,11 @@ registreerHandlerInfo("hook", "inhoudsregels", {
   naam: "Eigen inhoud",
   beschrijving: "Regels met eigen gegevens van dit type (bv. reqId en status), die de motor in het inhoudsvak van de vorm tekent.",
 });
+registreerHandlerInfo("hook", "naamWeergave", {
+  naam: "Naamweergave",
+  beschrijving:
+    "De naam zoals de vorm hem toont als dat niet letterlijk de naam is (object: \"jan : Persoon\"). Lege string = geen naamregel; undefined = de gewone naam.",
+});
 registreerHandlerInfo("hook", "valideer", {
   naam: "Validatie",
   beschrijving: "Valideert element-data bij bewerking (profiel-eigen regels).",

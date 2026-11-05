@@ -60,6 +60,29 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   of selectie.
   Zichtbaar verschil: data-object en data store zijn een doos van figuur + naam; de fragment-chip
   toont de soort, de naam staat ernaast (was: in één chip).
+- **Eén tekenaar, stap 4 (deel 3) — CMMN, SysML, component/deployment, Eriksson-Penker, object,
+  requirements en toegangsregel als ShapeType** (05-11): de laatste 25 profielvormen
+  (`cmmn/vormen.js` 7, `sysml/vormen.js` 2, `component-deployment/vormen.js` 1,
+  `business/vormen.js` 4, `object/vormen.js` 1, `requirements/vormen.js` 1,
+  `toegangsregel/vormen.js` 9) tekenen op canvas, in documenten, gedeelde plaatjes en de
+  render-API met dezelfde tekenaar; daarmee heeft elke profielvorm een ShapeType. Nieuw in de
+  motor, omdat deze vormen eigen inhoud dragen: **inhoudsregels** (`hooks.inhoudsregels`) kunnen
+  nu lopende tekst (afgebroken over regels), chips (`soort: "badge"`), vaste breedte, een
+  scheidslijn en een gecentreerde regel zijn — de eis (id-regel, tekst, status/prioriteit-chips),
+  de SysML-requirement (`id = …`, `text = …`), de EP-resource (hoeveelheid), de policy ("vanaf …
+  · doel") en de voorwaarde ("links · teken · rechts") leveren die regels zelf en de motor tekent
+  ze. Nieuwe hook **`naamWeergave`**: de naam zoals de vorm hem toont (object: "jan : Persoon
+  [actief]", onderstreept via `parameters.naamOnderstreept`; slots "attribuut = waarde" via
+  `typePrefix`; een voorwaarde met delen toont geen naam). De klasse van een object uit een ander
+  profiel komt via een **host-callback** (`tekenaar/host.js`, geregistreerd door de Studio in
+  `elementVerwijzing.jsx`); de server kent geen stores en valt terug op `klassifierLabel`. Verder:
+  `bibliotheek.geschaald`/`randCirkel` gedeeld (uit bpmn/vormen.js), de SysML-requirement heeft nu
+  `stereotype: "«requirement»"` op het type, de voorwaardepoort `naamLabel: "geen"` (de ruit toont
+  het symbool en de soort, zoals de oude shape). Zichtbaar verschil: vormen zonder bewaarde maat
+  meten op het inhoudsvak (`factorW`), dus een EP-doel of toegangsregel-kaart wordt zo breed als
+  de naam náást het icoon of de band vraagt; de CMMN-markeringen (! # ▷) staan iets strakker onder
+  de naam. Oude React-shapes staan er nog als tweede realisatie; opruimen is de afronding van
+  stap 4.
 
 ## [studio/v0.27.0] — 2026-11-05
 

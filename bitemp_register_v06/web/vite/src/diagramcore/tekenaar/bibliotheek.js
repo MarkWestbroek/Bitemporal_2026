@@ -41,6 +41,23 @@ export function randRechthoek({ w, h }, hoek) {
   return { x: w / 2 + dx * s, y: h / 2 + dy * s };
 }
 
+/** Aanhechtpunt op een cirkel die de maat vult (events, pseudotoestanden). */
+export function randCirkel(ctx, hoek) {
+  const { w, h } = ctx.maat;
+  const r = Math.min(w, h) / 2;
+  return { x: w / 2 + r * Math.cos(graden(hoek)), y: h / 2 + r * Math.sin(graden(hoek)) };
+}
+
+/**
+ * Een tekening in een vaste vierkante viewBox (`vb`), passend geschaald en gecentreerd in de
+ * maat — het SVG-`viewBox`-gedrag van de oude canvas-shapes, voor kleine vaste vormen.
+ */
+export function geschaald(ctx, vb, kinderen) {
+  const { w, h } = ctx.maat;
+  const s = Math.min(w, h) / vb;
+  return vorm("g", { transform: `translate(${n3((w - vb * s) / 2)} ${n3((h - vb * s) / 2)}) scale(${n3(s)})` }, ...kinderen);
+}
+
 function randEllips({ w, h }, hoek) {
   return { x: w / 2 + (w / 2) * Math.cos(graden(hoek)), y: h / 2 + (h / 2) * Math.sin(graden(hoek)) };
 }
