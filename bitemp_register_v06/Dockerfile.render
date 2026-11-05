@@ -23,6 +23,8 @@ COPY web/vite/src/umleditor/metamodel ./web/vite/src/umleditor/metamodel
 COPY web/vite/src/shared/asoc.js ./web/vite/src/shared/asoc.js
 COPY web/vite/src/diagramcore/model/shapeSet.js ./web/vite/src/diagramcore/model/shapeSet.js
 COPY render-svc/server.mjs ./render-svc/server.mjs
+# Alleen voor de versie (data-render-versie / X-Render-Versie); de sidecar heeft geen runtime-deps.
+COPY render-svc/package.json ./render-svc/package.json
 COPY --from=bundel /app/render-svc/dist ./render-svc/dist
 # Zonder package.json met "type": "module" leest Node de .js-bestanden als CommonJS.
 RUN echo '{"type":"module"}' > ./web/vite/package.json
