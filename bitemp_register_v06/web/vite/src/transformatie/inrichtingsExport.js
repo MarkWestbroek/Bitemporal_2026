@@ -9,6 +9,7 @@
  * de zip aan. Puur en node-testbaar.
  */
 import { maakInrichtingsBundel } from "./inrichtingsBundel.js";
+import { maakBronArtefacten } from "./bronArtefacten.js";
 import { leesRegisterStand, vergelijkMetRegister, leesReferentielijst } from "./inrichtingsRegister.js";
 
 const lijstUit = (inhoud) => (Array.isArray(inhoud) ? inhoud : Array.isArray(inhoud?.items) ? inhoud.items : []);
@@ -62,7 +63,7 @@ function waarschuwing(code, message, sourceId = null) {
 }
 
 /** Markdown-overzicht in de zip: welke artefacten, hun hash en de stand in het register. */
-export function bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen }) {
+export function bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen, bronnen = [] }) {
   const e = edienst?.edienst || {};
   const regels = [
     `# Inrichtingsartefacten — ${e.naam || "(e-dienst)"} ${e.versienummer || ""}`.trim(),
@@ -75,7 +76,19 @@ export function bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen 
     "|---|---|---|---|---|",
     ...rijen.map((r) => `| ${r.fout ? "—" : r.bestandsnaam} | ${r.soort} | ${r.identifier} | ${r.artefact ? r.artefact.artefactInhoud.payloadHash.slice(0, 12) + "…" : "—"} | ${r.fout ? `fout: ${r.fout}` : r.status || "—"} |`),
     "",
-    "Registreren: het script van FUNDAMENT (omnium-registreer-artefact.ps1, per bestand of met -Map).",
+    ...(bronnen.length
+      ? [
+          "## Bronnen",
+          "",
+          "Waaruit de artefacten zijn gemaakt; elk artefact noemt zijn bronnen met soort, identifier en payloadHash.",
+          "",
+          "| Bestand | Soort | Identifier | payloadHash |",
+          "|---|---|---|---|",
+          ...bronnen.map((b) => `| ${b.bestandsnaam} | ${b.soort} | ${b.identifier} | ${b.artefact.artefactInhoud.payloadHash.slice(0, 12)}… |`),
+          "",
+        ]
+      : []),
+    "Registreren: het script van FUNDAMENT (omnium-registreer-artefact.ps1, per bestand of met -Map); bronnen eerst.",
     "",
   ];
   return regels.join("\n");
@@ -87,14 +100,19 @@ export function bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen 
  * @param {any} invoer.modelBestand
  * @param {any[]} invoer.datatypen
  * @param {Array<{naam: string, inhoud: any}>} [invoer.referentieBestanden]
+ * @param {{elements: any, diagrams: any}|null} [invoer.canoniekDeel] - het canonieke profiel uit de Studio-map, met de
+ *   diagrammen; wordt de bron `logisch-model`. Zonder dit komt die bron uit het V3-model.
  * @param {string|null} [invoer.peiltijdstip]
  * @param {((pad: string) => Promise<any>)|null} [invoer.haalJson] - lezen uit het register; null = niet vergelijken
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
  */
-export async function voerInrichtingsExportUit({ edienst, modelBestand, datatypen, referentieBestanden = [], bpmnModellen = {}, peiltijdstip = null, haalJson = null, sha256Hex }) {
+export async function voerInrichtingsExportUit({ edienst, modelBestand, datatypen, referentieBestanden = [], bpmnModellen = {}, canoniekDeel = null, peiltijdstip = null, haalJson = null, sha256Hex }) {
   if (!Array.isArray(edienst?.artefacten) || !edienst.artefacten.length) throw new Error("Het e-dienstmodel heeft geen artefacten.");
   const { lijsten, diagnostics } = await verzamelReferentielijsten(edienst, referentieBestanden, haalJson);
-  const bundel = await maakInrichtingsBundel({ modelBestand, edienst, datatypen, referentielijsten: lijsten, bpmnModellen, peiltijdstip, sha256Hex });
+  // De bronnen eerst: elk artefact verwijst ernaar met hun payloadHash (§11.14).
+  const bron = await maakBronArtefacten({ edienst, modelBestand, canoniekDeel, bpmnModellen, peiltijdstip, sha256Hex });
+  diagnostics.push(...bron.diagnostics);
+  const bundel = await maakInrichtingsBundel({ modelBestand, edienst, datatypen, referentielijsten: lijsten, bpmnModellen, peiltijdstip, sha256Hex, bronnen: bron.bronnen });
 
   let rijen = bundel.map((b) => ({ ...b, status: b.fout ? "fout" : null, register: null }));
   let registerGelezen = false;
@@ -115,8 +133,9 @@ export async function voerInrichtingsExportUit({ edienst, modelBestand, datatype
 
   const gelukt = rijen.filter((r) => r.artefact);
   const bestanden = [
+    ...bron.bronnen.map((b) => ({ naam: b.bestandsnaam, inhoud: `${JSON.stringify(b.artefact, null, 2)}\n` })),
     ...gelukt.map((r) => ({ naam: r.bestandsnaam, inhoud: `${JSON.stringify(r.artefact, null, 2)}\n` })),
-    { naam: "OVERZICHT.md", inhoud: bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen }) },
+    { naam: "OVERZICHT.md", inhoud: bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen, bronnen: bron.bronnen }) },
   ];
   const telling = (s) => rijen.filter((r) => r.status === s).length;
   const fouten = rijen.length - gelukt.length;
@@ -124,6 +143,7 @@ export async function voerInrichtingsExportUit({ edienst, modelBestand, datatype
     `${gelukt.length} van ${rijen.length} artefacten gemaakt` +
     (registerGelezen ? ` — register: ${telling("nieuw")} nieuw, ${telling("gewijzigd")} gewijzigd, ${telling("ongewijzigd")} ongewijzigd` : "") +
     (fouten ? `, ${fouten} mislukt` : "") +
+    `; ${bron.bronnen.length} bronnen` +
     ".";
-  return { rijen, bestanden, diagnostics, summary, registerGelezen };
+  return { rijen, bestanden, diagnostics, summary, registerGelezen, bronnen: bron.bronnen };
 }

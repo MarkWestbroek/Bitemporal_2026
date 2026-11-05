@@ -1248,7 +1248,7 @@ een token als `Authorization: Bearer`; zonder token stuurt hij de sessiecookie
 mee. CORS staat (30-10) open voor `http://localhost:5176`, niet voor de
 app-host. Schrijven (registreren) vanuit de browser kan nog niet: daarvoor zijn
 een service-account en CORS voor de app-origin nodig, en dat ligt bij BACKEND.
-Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.14).
+Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.15).
 
 **Model uit de map (beperking opgelost 30-10, BACKLOG §39).** Sinds 30-10
 bewaart de omzetting `verplicht`, `uniek`, `type` en `format`. Model uit de map
@@ -1510,7 +1510,88 @@ handwerk in de Fundament-repo. Het is nu een artefact uit het BPMN-model
 Besluiten en achtergrond: docs/plans/2026-11-05 Servicetaken en dossierstatus
 uit het model.
 
-### 11.14 Vervolg
+### 11.14 Bronnen als artefacten (2026-11-05)
+
+Besluit Mark 05-11 (voorstel van INRICHTEN_VIZ in de Fundament-repo,
+`docs/inrichtingsmodel-wijziging-bronnen.md`): de bronnen van de transformaties
+komen als artefacten in het inrichting-register. Het register legt zo vast
+waaruit een artefact is gemaakt, en kan van een bron met diagrammen een
+tekening (SVG) maken. De exportstap levert de bronbestanden mee
+(`transformatie/bronArtefacten.js`); de tekening maakt het registratiescript
+met de render-API, niet de transformatie.
+
+**Bronbestanden, versie 1.** Per e-dienst, in dezelfde zip als de artefacten,
+vooraan:
+
+| Soort | Formaat | Inhoud |
+|---|---|---|
+| `edienstmodel` | `omnium-edienstmodel-json` | het e-dienstmodel, zoals gelezen |
+| `logisch-model` | `omnium-studio-json` | het canonieke model: elementen en diagrammen |
+| `bpmn-bron` | `omnium-studio-json` | het BPMN-model: elementen en diagrammen |
+| `dmn-bron` | `omnium-studio-json` | het DMN-model, met de beslistabel op het element `decision` |
+
+- **Identifier** = de code van de e-dienst (`edienst.code` in het e-dienstmodel:
+  `gehandicaptenparkeerkaart-aanvragen`, `aanvraag-voorbeeld`); de soort maakt
+  hem uniek, en hij verandert niet als een diagram of map een andere naam
+  krijgt. Leest een e-dienst meer dan één BPMN- of DMN-modelbestand, dan komt
+  de naam van het bestand erachter. Zonder code: `BRON-CODE` (waarschuwing), de
+  code komt dan uit de naam.
+- **Bestand** `<identifier>.<soort>.artefact.json`, zelfde vorm als de andere
+  artefacten, zonder doelcomponent (een bron wordt niet uitgerold).
+- **`omnium-studio-json`** is een Studio-project met één profiel:
+  `{formaat, versie, profielen: {<profiel-id>: {elements, diagrams}}}`, met de
+  profiel-id's van een project (`diagram05`, `bpmnMotor05`, `dmnDrd05`). Dat is
+  rechtstreeks de invoer van de render-API (`taal=studio`, docs/RENDER_API.md);
+  de diagrammen staan in `profielen.<profiel-id>.diagrams`.
+- **payloadHash** = sha256 over JCS van de payload. Er staat geen tijdstip in:
+  dezelfde bron geeft dezelfde hash. De opmaak telt mee: een verschoven vakje
+  is een andere bron. Omdat er één bron per profiel is, raakt een wijziging in
+  een proces het logisch model niet.
+- **Zelfstandig** (Mark 05-11): een bron bevat alles wat hij toont, ook
+  elementen die uit een gedeeld domein geleend zijn. Elk canoniek element
+  draagt zijn domein (`data.domein`), zodat te zien is wat eigen is en wat
+  geleend.
+- **Logisch model.** Draait de stap in de Studio op een map, dan is de bron het
+  canonieke profiel van die map, met zijn diagrammen. Bij een gekozen
+  V3-bestand (en in de CLI) komt hij uit V3, met alleen het diagram dat V3
+  draagt.
+
+**Op elk gegenereerd artefact.**
+
+- `bronnen: [{soort, identifier, payloadHash}]`: het e-dienstmodel, en wat de
+  soort verder leest (objecttype, formulier, dossierschema en dossierformulier
+  het logisch model; bpmn en proceskoppeling het BPMN-model dat ze noemen; dmn
+  het DMN-model en het logisch model; de dossierstatussen het logisch model en
+  alle processen). Het register maakt er de relatie ArtefactBron van.
+- `artefactHerkomst.bronmodelHash` blijft de hash van de hoofdbron zoals de
+  regelset die las (V3, of het BPMN-/DMN-model). Bestaande herkomst verandert
+  dus niet.
+- Elke traceregel krijgt waar het kan `bronElementId` naast `bronGE`: het
+  element-id in het BPMN- of DMN-model, of de uuid van het modelelement in het
+  canonieke model. Een naampad dat over een relatie loopt
+  (`Aanvraag.AanvraagPartij.Partij.PartijNaam`) wijst naar het element aan het
+  eind. Een model dat niet uit de Studio komt, heeft geen uuid's; dan blijft
+  het bij de naam.
+
+**Nog niet (uitgesteld, besluit ligt later bij Mark).**
+
+- Het canonieke model (CM) staat in Marks project los van de e-diensten, in
+  domeinen; een logisch model van een e-dienst leent er alles of bijna alles
+  uit. Het CM is dus van geen e-dienst en kan niet aan een e-dienstversie
+  hangen. Of het een eigen bron per domein wordt, of uit het modelregister
+  komt, is niet besloten.
+- Een verwijzing naar een bron van een andere eigenaar. Lezen twee e-diensten
+  hetzelfde modelbestand, dan krijgen ze elk een eigen bron met dezelfde
+  payloadHash; daaraan is te zien dat het dezelfde is.
+- BPMN en DMN uit de map lezen in plaats van uit gekozen bestanden. Dat volgt
+  als er per e-dienst een map is, met mapjes voor het logisch model, de
+  processen enzovoort (Mark 05-11). Een markering op een map die zegt welke
+  e-dienst het is, bestaat nog niet; tot dan is de map waarop de stap draait de
+  e-dienstmap.
+- CMMN en een formulierdefinitie zijn nog geen bron van een transformatie; de
+  referentielijsten en de bibliotheek met gegevenstypen gaan nog niet mee.
+
+### 11.15 Vervolg
 
 1. Formulier: machtigen (gemachtigde + subject) en eHerkenning; de documenttitel
    van een bestandscomponent uit het label (FUNDAMENT 30-10).

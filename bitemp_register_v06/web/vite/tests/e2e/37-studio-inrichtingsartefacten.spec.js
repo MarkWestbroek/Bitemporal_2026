@@ -66,7 +66,9 @@ test("vergelijken met het register: ongewijzigd, gewijzigd, nieuw", async ({ pag
   const eerste = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();
   const zip = fs.readFileSync(await (await eerste).path(), "latin1");
-  const hashObjecttype = /"payloadHash": "([0-9a-f]{64})"/.exec(zip)[1]; // eerste bestand = het objecttype
+  // De zip begint met de bronbestanden (§11.14); zoek het bestand van het objecttype zelf. Het
+  // e-dienstmodel noemt die soort ook, maar dieper ingesprongen.
+  const hashObjecttype = /\{\n  "artefactIdentificatie": \{\n    "soort": "objecttype",[\s\S]*?\n    "payloadHash": "([0-9a-f]{64})"/.exec(zip)[1];
 
   const vk = (data, extra = {}) => [{ rel_id: 1, data: [{ versie: 1, ...data }], ...extra }];
   const full = {

@@ -1,6 +1,6 @@
 {
   "_toelichting": "E-dienst-inrichtingsmodel voor 'Aanvraag (voorbeeld)', v2 na de modelwijziging van 26-10 (AanvraagPartij → Partij met partijrol; Aanvrager vervalt). Voorzet TRANSFORMATIES 27-10 op basis van de v1 van FUNDAMENT. Bron is het samengestelde model van cg-test (de relatie verwijst naar relatiebeheer.Partij en de referentielijst Partijrol). Alle verwijzingen zijn modelpaden; een geërfd of ingebed veld heet naar de entiteit waar het gedefinieerd is. Alleen positieve selectie.",
-  "edienst": { "naam": "Aanvraag (voorbeeld)", "versienummer": "0.2.0", "omgeving": "cg-test" },
+  "edienst": { "code": "aanvraag-voorbeeld", "naam": "Aanvraag (voorbeeld)", "versienummer": "0.2.0", "omgeving": "cg-test" },
   "bronmodel": {
     "naam": "cg-test",
     "bestand": "docs/omnium-model-cg-test-v3.json",

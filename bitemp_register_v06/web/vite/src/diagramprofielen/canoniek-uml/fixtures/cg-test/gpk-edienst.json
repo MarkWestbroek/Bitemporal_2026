@@ -1,6 +1,6 @@
 {
   "_toelichting": "E-dienst-inrichtingsmodel voor 'Gehandicaptenparkeerkaart aanvragen'. Voorzet TRANSFORMATIES 27-10, naar het voorbeeld van aanvraag-edienst.json. Bron-entiteit is de specialisatie GehandicaptenparkeerkaartAanvraag (erft Aanvraag); geërfde velden heten naar de entiteit waar ze gedefinieerd zijn (Aanvraag.…), zodat ze in de trace dezelfde modelknoop zijn als in het objecttype aanvraag. Eén objecttype per specialisatie (besluit Mark 27-10): ouder + eigen GE's in één schema.",
-  "edienst": { "naam": "Gehandicaptenparkeerkaart aanvragen", "versienummer": "0.1.0", "omgeving": "cg-test" },
+  "edienst": { "code": "gehandicaptenparkeerkaart-aanvragen", "naam": "Gehandicaptenparkeerkaart aanvragen", "versienummer": "0.1.0", "omgeving": "cg-test" },
   "bronmodel": {
     "naam": "cg-test",
     "bestand": "docs/omnium-model-cg-test-v3.json",
