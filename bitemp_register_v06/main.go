@@ -411,6 +411,11 @@ func NewRouter() *gin.Engine {
 	router.GET("/api/studio/projecten/:id/beelden", ingelogd, pLezen, handlers.MaakStudioBeeldenLijstHandler())
 	router.DELETE("/api/studio/projecten/:id/beelden/:token", ingelogd, pLezen, handlers.MaakStudioBeeldIntrekkenHandler())
 	router.GET("/api/beeld/:bestand", handlers.MaakBeeldOpenbaarHandler())
+	// Projectdiagram als SVG (handlers/render_project.go, docs/RENDER_API.md; privacy-besluit Mark
+	// 05-11-2026): ingelogd met leesrecht op het project, ook met een persoonlijk API-token. De
+	// openbare variant is een gedeelde link van soort "svg" op /api/beeld/<token>.svg hierboven.
+	router.GET("/api/studio/projecten/:id/diagram.svg", ingelogd, pLezen, handlers.MaakStudioProjectDiagramSvgHandler())
+	router.GET("/api/studio/projecten/:id/views.json", ingelogd, pLezen, handlers.MaakStudioProjectViewsHandler())
 	// Werkruimte (tabs, open mappen) per gebruiker per project: van jou, laatste schrijver wint.
 	router.GET("/api/studio/projecten/:id/werkruimte", ingelogd, pLezen, handlers.MaakStudioWerkruimteOphalenHandler())
 	router.PUT("/api/studio/projecten/:id/werkruimte", ingelogd, pLezen, handlers.MaakStudioWerkruimteOpslaanHandler())

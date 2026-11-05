@@ -1860,6 +1860,15 @@ tekenkeuzes: `docs/RENDER_API.md`.
 - ✅ **Gemerged naar `main` 30-09** (`cf017099`). **05-10:** *Render-svc v06* zit in de F5-compound
   *Start frontend and debug API v06* (root-`launch.json`), zodat de sidecar niet meer wegvalt;
   README en VPS_DEPLOYMENT §11 noemen de render-API en `RENDER_SVC_URL`.
+- ✅ **Stap 6 van *Eén tekenaar* gebouwd 05-11 (BACKEND, `feat/render-get-toegang`):** een diagram
+  uit een Studio-project als SVG, met toegang. Privacy-besluit Mark 05-11: ingelogd met leesrecht
+  op het project (ook met een persoonlijk API-token), én met een token of link zoals de gedeelde
+  plaatjes. `GET /api/studio/projecten/{id}/diagram.svg` en `…/views.json`; een link van soort
+  `svg` (`POST …/beelden`) op `GET /api/beeld/<token>.svg`. De server tekent de snapshot; de
+  database knipt het profiel uit de blob; de openbare link geeft geen detail van de sidecar door.
+  Beproefd tegen de echte keten met de 35 diagrammen van het architectuurproject. Wordt api 0.19.0.
+  Zie RENDER_API §Projectdiagram. **Open:** een knop in de Studio voor de SVG-link (OMNIUM-UI);
+  operaties ná de snapshot meetekenen (nu loopt de tekening tot 200 operaties achter); `HEAD`.
 - **Open:**
   - **API-sleutel** voor niet-publieke modellen (`Authorization: Bearer`, opdracht §5).
   - **VPS-uitrol:** config klaar (05-10: `render-svc` + `RENDER_SVC_URL` in `docker-compose.vps.yml`).
