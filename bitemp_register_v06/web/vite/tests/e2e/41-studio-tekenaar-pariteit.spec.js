@@ -46,15 +46,18 @@ async function tekenaarVan(page, profielId, diagramId) {
       }
       const paden = {};
       const activaties = {};
+      const labels = {};
       const uit = tekenDiagram({ diagram, elements: st.elements, descriptor: dt, thema: "light" });
       (function loop(k, elementId) {
         if (!k || typeof k !== "object") return;
         const id = k.attrs?.["data-element-id"] || elementId;
         if (k.tag === "path" && k.attrs?.class === "dc-lijn") paden[k.attrs["data-connector-id"]] = k.attrs.d;
+        // Een label: het midden van de chip ligt 3,5 boven de basislijn van de tekst.
+        if (k.tag === "text" && k.attrs?.["data-dc-label"]) (labels[k.attrs["data-dc-label"]] = labels[k.attrs["data-dc-label"]] || []).push({ tekst: k.kinderen.join(""), x: k.attrs.x, y: k.attrs.y - 3.5 });
         if (k.attrs?.class === "dc-seq-activatie") (activaties[id] = activaties[id] || []).push([Math.round(k.attrs.y), Math.round(k.attrs.height), Number(k.attrs["data-diepte"])]);
         (k.kinderen || []).forEach((kind) => loop(kind, id));
       })(uit.boom, null);
-      return { maten, paden, activaties, terugval: uit.terugval };
+      return { maten, paden, activaties, labels, terugval: uit.terugval };
     },
     { profielId, diagramId }
   );
@@ -79,7 +82,16 @@ async function canvasVan(page, ids) {
       const id = (e.getAttribute("data-id") || "").replace(/^conn:/, "");
       paden[id] = e.querySelector("path.react-flow__edge-path")?.getAttribute("d") || null;
     }
-    return { nodes, paden, activaties };
+    // Labels staan los van de lijnen in de DOM (EdgeLabelRenderer), gekoppeld via data-edge-id;
+    // hun midden staat in de tweede translate van de transform.
+    const labels = {};
+    for (const l of document.querySelectorAll(".react-flow__edgelabel-renderer [data-edge-id]")) {
+      const m = /translate\(-50%,\s*-50%\)\s*translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(l.style.transform || "");
+      if (!m) continue;
+      const id = l.getAttribute("data-edge-id").replace(/^conn:/, "");
+      (labels[id] = labels[id] || []).push({ tekst: l.textContent, x: Number(m[1]), y: Number(m[2]) });
+    }
+    return { nodes, paden, activaties, labels };
   }, ids);
 }
 
@@ -216,6 +228,41 @@ test("lijnen: het canvas en de tekenaar geven hetzelfde pad (vormen, knikken, ha
   canvas = await canvasVan(page, []);
   tekenaar = await tekenaarVan(page, "statemachine05", "d_sm");
   for (const id of ["sr1", "sr2", "sr3", "sr4"]) verwachtGelijkPad(canvas.paden[id], tekenaar.paden[id], `state machine ${id}`);
+});
+
+test("labels: zelfde plaats op canvas en in de tekenaar; conditie en naam op een BPMN-stroom staan onder elkaar", async ({ page }) => {
+  await openStudio(page);
+  // Een gateway met twee uitgaande stromen die elk een conditie én een naam dragen: twee
+  // labels op dezelfde zijde. Die stapelen (18 px), ze vallen niet op elkaar (render 0.3.0 deed
+  // dat in de tekenaar wel: gemeld op de eerste echte invoer, GPK "Aanvraag oppakken").
+  await zetModel(page, {
+    profielId: "bpmnMotor05",
+    diagramId: "d_label",
+    elementen: [
+      { id: "lg", naam: "Ontvankelijk?", type: "exclusief", pos: { x: 300, y: 300 } },
+      { id: "lt1", naam: "Zaak aanmaken", type: "taak", pos: { x: 620, y: 282 } },
+      { id: "lt2", naam: "Afwijzen", type: "taak", pos: { x: 620, y: 480 } },
+      { id: "lf1", naam: "ja", type: "sequence-flow", source: "lg", target: "lt1", data: { conditie: "${toets.ontvankelijk}" } },
+      { id: "lf2", naam: "nee", type: "sequence-flow", source: "lg", target: "lt2", data: { conditie: "${!toets.ontvankelijk}" } },
+    ],
+  });
+  await wachtOpNode(page, "lt2");
+  await page.waitForTimeout(600);
+  const canvas = await canvasVan(page, []);
+  const tekenaar = await tekenaarVan(page, "bpmnMotor05", "d_label");
+  const opVolgorde = (lijst) => [...(lijst || [])].sort((a, b) => a.y - b.y || a.x - b.x);
+  for (const id of ["lf1", "lf2"]) {
+    const c = opVolgorde(canvas.labels[id]);
+    const t = opVolgorde(tekenaar.labels[id]);
+    expect(c.length, `${id}: conditie en naam op het canvas`).toBe(2);
+    expect(t.length, `${id}: conditie en naam in de tekenaar`).toBe(2);
+    for (const [i, label] of c.entries()) {
+      expect(Math.abs(label.x - t[i].x), `${id} label ${i}: x canvas ${label.x} = tekenaar ${t[i].x}`).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(label.y - t[i].y), `${id} label ${i}: y canvas ${label.y} = tekenaar ${t[i].y}`).toBeLessThanOrEqual(0.5);
+    }
+    expect(t[1].y - t[0].y, `${id}: de twee labels staan 18 px onder elkaar`).toBeCloseTo(18, 5);
+    expect(t.map((l) => l.tekst).sort(), `${id}: beide teksten`).toEqual(c.map((l) => l.tekst).sort());
+  }
 });
 
 test("sequence: berichtlijnen en afgeleide activaties gelijk; een zelf-aanroep valt binnen de aanroep", async ({ page }) => {

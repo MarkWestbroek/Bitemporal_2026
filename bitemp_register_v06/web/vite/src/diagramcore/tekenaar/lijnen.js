@@ -19,7 +19,8 @@
  *   - markers met dezelfde maten en `markerUnits="strokeWidth"` als het canvas; de ruit van
  *     compositie/aggregatie als polygon op het begin van de lijn;
  *   - labels als chip (achtergrond, rand) op het labelpunt van de padfunctie; bron- en
- *     doellabels op 70% richting dat uiteinde (zelfde heuristiek als het canvas).
+ *     doellabels op 70% richting dat uiteinde (zelfde heuristiek als het canvas); meerdere
+ *     labels op dezelfde zijde stapelen 18 px onder elkaar.
  *
  * Puur en deterministisch; markers staan één keer in `<defs>` per soort en kleur.
  */
@@ -36,6 +37,8 @@ const DASHES = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4", gestip
 const SLATE = new Set(["#1f2937", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1"]);
 const LABEL = 10;
 const CHIP_H = 16;
+/** Afstand tussen labels op dezelfde zijde van een lijn (ConnectorEdge: 18). */
+const LABEL_STAPEL = 18;
 const LUS_UIT = 56;
 const BOOM_LAT = 40;
 const RUIT_LENGTE = 22;
@@ -281,18 +284,26 @@ export function tekenLijnen({ edges, boxen, elements, thema, idPrefix }) {
       doel: { x: labelX + (u.targetX - labelX) * 0.7, y: labelY + (u.targetY - labelY) * 0.7 },
       bron: { x: labelX + (u.sourceX - labelX) * 0.7, y: labelY + (u.sourceY - labelY) * 0.7 },
     };
+    // Meerdere labels op dezelfde zijde (een BPMN-stroom met conditie én naam, kardinaliteit +
+    // {ordered}) zouden exact op elkaar vallen: elk volgend label op die zijde schuift 18 px
+    // omlaag, bovenop een eventuele verschuiving — dezelfde stapeling als ConnectorEdge. Tot
+    // render 0.3.0 ontbrak ze hier en lag de naamchip midden op de conditie (RENDER-API, 05-11).
+    const stapel = {};
     for (const label of p.labels || []) {
+      const zijde = posities[label.zijde] ? label.zijde : "midden";
+      const stapelIdx = (stapel[zijde] = (stapel[zijde] ?? -1) + 1);
       const delen = (label.delen || []).filter((x) => x.tekst);
       const tekst = delen.map((x) => x.tekst).join(" ");
       if (!tekst) continue;
-      let pos = posities[label.zijde] || posities.midden;
-      if (label.offset) pos = { x: pos.x + (label.offset.x || 0), y: pos.y + (label.offset.y || 0) };
+      const basis = posities[zijde];
+      const pos = { x: basis.x + (label.offset?.x || 0), y: basis.y + (label.offset?.y || 0) + stapelIdx * LABEL_STAPEL };
       const naamDeel = delen.find((x) => x.veld === "naam");
       const eerste = delen[0]?.soort;
       const kleurLabel = delen[0]?.kleur || (eerste === "kardinaliteit" ? "#7c3aed" : eerste === "rolnaam" ? thema.text : naamDeel ? thema.text : thema.muted);
       const bw = tekstBreedte(tekst, LABEL) + 12;
       kinderen.push(vorm("rect", { x: pos.x - bw / 2, y: pos.y - CHIP_H / 2, width: bw, height: CHIP_H, rx: 4, fill: thema.surface, "fill-opacity": 0.9, stroke: thema.border, "stroke-opacity": 0.4 }));
-      const attrsT = { x: pos.x, y: pos.y + 3.5, "text-anchor": "middle", "font-size": LABEL, fill: kleurLabel };
+      // data-dc-label: de connector van dit label (voor tests en voor wie de SVG naloopt).
+      const attrsT = { x: pos.x, y: pos.y + 3.5, "text-anchor": "middle", "font-size": LABEL, fill: kleurLabel, ...(el.id ? { "data-dc-label": el.id } : {}) };
       if (eerste === "kardinaliteit" || eerste === "rolnaam") attrsT["font-weight"] = 600;
       if (naamDeel) attrsT["data-dc-veld"] = `connector:${el.id}:naam`;
       kinderen.push(vorm("text", attrsT, tekst));
