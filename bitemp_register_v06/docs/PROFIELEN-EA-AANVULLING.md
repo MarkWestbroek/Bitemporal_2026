@@ -9,7 +9,7 @@ dezelfde opbouw:
 |---|---|
 | `diagramprofielen/<id>/descriptor.js` | de descriptor (puur JS, laadbaar in `node --test`) |
 | `diagramprofielen/<id>/eaMapping.js` | **de EA-tabel** voor de lezer: `OBJECTEN` (Object_Type + stereotype → elementtype-id), `CONNECTOREN` (Connector_Type + stereotype → connectortype-id), `RAND_ELEMENTEN`, `CONTAINERS`, `EA_DIAGRAM_TYPES` |
-| `diagramprofielen/<id>/shapes.jsx` | eigen vormen (alleen waar nodig) |
+| `diagramprofielen/<id>/vormen.js` | eigen vormen als ShapeType + renderer, pure `.js` (alleen waar nodig; tot 05-11 `shapes.jsx`) |
 | `diagramprofielen/<id>/index.js` | registratie + `maakElement` |
 | `diagramprofielen/<id>/<id>.test.js` | descriptor geldig, overerving/bereik, EA-tabel sluit op de descriptor |
 | `studio/activities/<id>Activity.jsx` | de activiteit (preview, niet in de balk; via Modelleren) |

@@ -14,8 +14,7 @@
  *   tr-vaandel      Plicht: wimpel met zwaluwstaart + ⚑
  *   tr-tag          Begrip: label met oogje, gestippeld (referentie)
  *
- * De vorm is de omtrek (plus ornament); naam en deelregels tekent de motor. Dezelfde id's als
- * `shapes.jsx` (oude React-realisatie). Pure `.js`.
+ * De vorm is de omtrek (plus ornament); naam en deelregels tekent de motor. Pure `.js`.
  */
 import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";
 import { randRechthoek } from "../../diagramcore/tekenaar/bibliotheek.js";

@@ -12,12 +12,10 @@
  * (na Publiceer naar Modelleren) op de motor-canvas.
  */
 import React, { useMemo } from "react";
-import { getShape } from "../../diagramcore/shapes/shapeRegistry.js";
+import { SjabloonShape, sjabloonOpCanvas } from "../../diagramcore/canvas/SjabloonShape.jsx";
+// index.js registreert de ShapeTypes van het profiel (toegangsregel/vormen.js).
 import { toegangsregelDiagramType } from "../../diagramprofielen/toegangsregel/index.js";
-import { registreerToegangsregelShapes } from "../../diagramprofielen/toegangsregel/shapes.jsx";
 import { beleidNaarDiagramModel } from "../../diagramprofielen/toegangsregel/adapter.js";
-
-registreerToegangsregelShapes();
 
 const ELEMENTTYPE = new Map(toegangsregelDiagramType.elementTypes.map((et) => [et.id, et]));
 
@@ -26,14 +24,13 @@ function breedte(tekst, { basis = 90, perTeken = 7.2, max = 560 } = {}) {
   return Math.min(max, Math.round(basis + String(tekst || "").length * perTeken));
 }
 
-/** Eén profiel-shape in een vaste maat (de shapes vullen hun container). */
+/** Eén profielvorm in een vaste maat, getekend door de ene tekenaar (zoals op het canvas). */
 function Vorm({ element, w, h, title }) {
   const elementType = ELEMENTTYPE.get(element.elementType);
-  const Shape = getShape(elementType?.shape);
-  if (!Shape) return <span title={title}>{element.naam}</span>;
+  if (!elementType) return <span title={title}>{element.naam}</span>;
   return (
-    <div style={{ width: w, height: h, position: "relative", flexShrink: 0 }} title={title}>
-      <Shape element={element} elementType={elementType} selected={false} />
+    <div className="dc-vormvoorbeeld" style={{ width: w, height: h, position: "relative", flexShrink: 0, pointerEvents: "none" }} title={title}>
+      <SjabloonShape element={element} elementType={elementType} selected={false} fieldTypesById={{}} compartmentTypesById={{}} vormInfo={sjabloonOpCanvas(elementType.shape, elementType)} maat={{ w, h }} />
     </div>
   );
 }

@@ -123,7 +123,7 @@ export function qeaNaarActivity(bron, { packageId, diagramTypeId = ACTIVITY_DIAG
 }
 
 /**
- * Vaste maten van de activity-vormen (activity/shapes.jsx): ruit 28, begin 22,
+ * Vaste maten van de activity-vormen (activity/vormen.js): ruit 28, begin 22,
  * eind 24, flow-eind 20, pin 12. Zulke vormen krijgen niet de EA-maat maar
  * worden gecentreerd in de EA-rechthoek.
  */

@@ -2,8 +2,7 @@
 /**
  * statemachine/vormen — de state machine-vormen als ShapeType (plan 2026-11-04 Eén tekenaar,
  * stap 4): pseudotoestanden op de bibliotheek-`cirkel`/`ruit`, de historie met een eigen renderer
- * (Ⓗ / Ⓗ*), de samengestelde toestand op de bibliotheek-`kader`. Dezelfde id's als `shapes.jsx`
- * (oude React-realisatie, tweede realisatie tot de opruimstap). Pure `.js`.
+ * (Ⓗ / Ⓗ*), de samengestelde toestand op de bibliotheek-`kader`. Pure `.js`.
  */
 import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";
 import "../../diagramcore/tekenaar/bibliotheek.js";

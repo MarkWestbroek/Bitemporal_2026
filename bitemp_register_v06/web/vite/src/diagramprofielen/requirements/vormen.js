@@ -4,7 +4,7 @@
  * (bibliotheek-`rechthoek`) voor requirement/feature/issue/change. Kop met stereotype en naam,
  * dan de id-regel, de tekst en onderaan status/prioriteit/moeilijkheid als chips — die drie
  * zijn eigen inhoud van het type (`hooks.inhoudsregels` op de abstracte `eis` in descriptor.js),
- * getekend door de motor. Dezelfde id als `shapes.jsx`. Pure `.js`.
+ * getekend door de motor. Pure `.js`.
  */
 import { registreerShapeType } from "../../diagramcore/types/shapeType.js";
 import "../../diagramcore/tekenaar/bibliotheek.js";

@@ -8,7 +8,6 @@
  *     (`data.richting` in/uit); de naam hangt eronder als buitenlabel. Ook gebruikt door het
  *     component & deployment-profiel.
  *
- * Dezelfde id's als `shapes.jsx` (oude React-realisatie, tweede realisatie tot de opruimstap).
  * Pure `.js`.
  */
 import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";

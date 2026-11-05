@@ -26,7 +26,7 @@ const PROFIEL_ID = "usecase05";
 // daarom niet importeerbaar in de node-testrunner.
 const DIAGRAMTYPE_ID = "usecase";
 
-const ACTOR_BREEDTE = 64; // vaste maat van de strekfiguur (shapes.jsx)
+const ACTOR_BREEDTE = 64; // vaste maat van de strekfiguur (vormen.js)
 
 const slug = (tekst) =>
   String(tekst || "")

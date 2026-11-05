@@ -19,7 +19,6 @@
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
-import { registreerUseCaseShapes } from "./shapes.jsx";
 import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): canvas, documenten en render-svc
 import { controleerUseCase } from "./controle.js";
 
@@ -331,7 +330,6 @@ export function maakElement(elementTypeId) {
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerUseCase() {
   registreerGedragTypeIconen();
-  registreerUseCaseShapes();
   if (!getDiagramType(USECASE_ID)) {
     registreerDiagramType(usecaseDiagramType);
   }

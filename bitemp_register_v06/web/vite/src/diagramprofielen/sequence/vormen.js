@@ -84,7 +84,7 @@ const fragment = {
  * Icoon-koppen van de levenslijn (`data.kop`): actor (poppetje) en de robustness-stereotypes
  * van Jacobson — boundary (cirkel met staander links), control (cirkel met pijlpunt bovenop) en
  * entity (cirkel op een streep); de business-varianten dragen een schuine streep. Viewbox 48×40,
- * als gegevens: de tekenaar zet ze in de omtrek, het canvas (shapes.jsx) via naarReact.
+ * als gegevens: de tekenaar zet ze in de omtrek van de levenslijn.
  */
 const ICOON_W = 48;
 const ICOON_H = 40;

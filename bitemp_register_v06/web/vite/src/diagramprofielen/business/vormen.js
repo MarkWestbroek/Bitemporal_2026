@@ -5,7 +5,7 @@
  * een groot soort-icoon links) en gebeurtenis (afgeschuinde plaat met bliksem). Elke vorm
  * draagt zijn icoon ín de vorm, als ornament; de naam en het stereotype tekent de motor in
  * het inhoudsvak naast of onder het icoon. De actor is `uc-actor` (usecase/vormen.js).
- * Dezelfde id's als `shapes.jsx` (oude React-realisatie). Pure `.js`.
+ * Pure `.js`.
  */
 import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";
 import { randRechthoek } from "../../diagramcore/tekenaar/bibliotheek.js";

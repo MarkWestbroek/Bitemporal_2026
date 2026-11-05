@@ -1,13 +1,14 @@
 // vormSet.test.js — de shape-set "Iconen als vorm" (P07).
 // Run: node --import ./test/register-aliases.mjs --test src/diagramprofielen/archimate/vormSet.test.js
 //
-// N.B. het profiel zelf (`index.js`) importeert shapes (`.jsx`) en is daarmee
+// N.B. het profiel zelf (`index.js`) importeert iconen (`.jsx`) en is daarmee
 // niet laadbaar in de node-testrunner; vandaar dat de mapping in de pure
-// module `vormSet.js` woont (patroon `bpmn/sequenceFlow.js`). De twee
-// drift-checks lezen `index.js`/`vormShapes.jsx` daarom als **tekst**: dat
-// vangt precies de bugklasse waar een shape-set stuk op gaat — een
-// elementtype-id dat niet (meer) bestaat, of een shape die niet geregistreerd
-// is (dan valt de node stilzwijgend terug op de standaardvorm).
+// module `vormSet.js` woont (patroon `bpmn/sequenceFlow.js`) en `index.js` als
+// **tekst** gelezen wordt. De vormen zelf zijn sinds "één tekenaar" ShapeTypes
+// in de pure module `vormen.js`: de drift-checks vragen dus echt of elke vorm
+// tekenbaar is. Dat vangt precies de bugklasse waar een shape-set stuk op
+// gaat — een elementtype-id dat niet (meer) bestaat, of een vorm zonder
+// ShapeType (dan valt de node stilzwijgend terug op de standaardvorm).
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -72,11 +73,11 @@ test("elk gemapt elementtype bestaat in het profiel", () => {
   }
 });
 
-test("het profiel declareert de set en registreert de vormshapes", () => {
+test("het profiel declareert de set en laadt de ShapeTypes", () => {
   const bron = lees("index.js");
   assert.match(bron, /shapeSets:\s*\[VORMEN_SET, BLOK_SET\]/);
-  assert.match(bron, /registreerArchimateVormShapes\(\);/);
-  assert.match(bron, /registreerArchimateBlokShapes\(\);/);
+  assert.match(bron, /import\s+(?:[^;]*\sfrom\s+)?["']\.\/vormen\.js["']/, "index.js importeert vormen.js (registreert de ShapeTypes)");
+  assert.doesNotMatch(bron, /[sS]hapes\.jsx/, "de oude React-vormen zijn weg");
 });
 
 test("blokken-set: elk element een blok, Grouping het laagkader; beide shapes geregistreerd", async () => {
@@ -87,16 +88,15 @@ test("blokken-set: elk element een blok, Grouping het laagkader; beide shapes ge
   assert.deepEqual(BLOK_SET.shapes.bediening, { markerStart: "pijl-open", markerEnd: null });
   assert.deepEqual(BLOK_SET.shapes.grouping, { shape: "am-blok-laag", achtergrond: true });
   assert.equal(BLOK_SET.shapes["app-component"].shape, "am-blok");
-  const bron = lees("blokShapes.jsx");
-  assert.ok(bron.includes('"am-blok"') && bron.includes('"am-blok-laag"'));
+  await import("./vormen.js");
+  const { tekenbareVorm } = await import("../../diagramcore/types/shapeType.js");
+  assert.ok(tekenbareVorm("am-blok") && tekenbareVorm("am-blok-laag"), "beide blok-vormen zijn tekenbaar");
 });
 
-test("elke vorm-shape is ook daadwerkelijk geregistreerd (drift-check op vormShapes.jsx)", () => {
-  const bron = lees("vormShapes.jsx");
+test("elke vorm-shape is ook daadwerkelijk tekenbaar (drift-check op vormen.js)", async () => {
+  await import("./vormen.js");
+  const { tekenbareVorm } = await import("../../diagramcore/types/shapeType.js");
   for (const shapeId of VORM_SHAPE_IDS) {
-    assert.ok(
-      bron.includes(`"${shapeId}"`),
-      `shape ${shapeId} komt niet voor in vormShapes.jsx — de node valt dan terug op de standaardvorm`,
-    );
+    assert.ok(tekenbareVorm(shapeId), `vorm ${shapeId} heeft geen ShapeType in vormen.js — de node valt dan terug op de standaardvorm`);
   }
 });

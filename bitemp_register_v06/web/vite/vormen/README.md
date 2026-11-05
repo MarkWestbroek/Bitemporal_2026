@@ -16,8 +16,11 @@ een code-component, gemaakt/bewerkt in **Studio-instellingen → Eigen vormen**.
 }
 ```
 
-- De renderer zit in `src/diagramcore/shapes/dataShape.jsx`; registratie +
-  opslag in `src/studio/activities/vormenRegistratie.js`.
+- Elke vorm wordt een ShapeType op de renderer `data-vorm`
+  (`src/diagramcore/tekenaar/dataVorm.js`, pure `.js`: dezelfde tekenaar als elke andere
+  vorm, dus ook in documenten); registratie + opslag in
+  `src/studio/activities/vormenRegistratie.js`. Een `clipPath` moet een CSS-`polygon(…)`
+  zijn (procenten, px, `calc(100% - Npx)`); een andere clip-path-functie tekent als doos.
 - Geschreven door het dev-endpoint `/__studio05/vormen` (vite-plugin
   `studio05Map("vormen")`), bij het laden weer ingelezen (git wint van
   localStorage), en bij `vite build` in de bundle meegebakken

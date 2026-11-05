@@ -15,10 +15,8 @@ import { IconToegang } from "../icons";
 import {
   toegangsregelDiagramType, maakElement, registreerToegangsregelProfiel,
 } from "../../diagramprofielen/toegangsregel/index.js";
-import { registreerToegangsregelShapes } from "../../diagramprofielen/toegangsregel/shapes.jsx";
 import { registreerToegangsregelIconen } from "../../diagramprofielen/toegangsregel/iconen.jsx";
 
-registreerToegangsregelShapes();
 registreerToegangsregelIconen();
 registreerToegangsregelProfiel();
 

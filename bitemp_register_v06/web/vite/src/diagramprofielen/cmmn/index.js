@@ -37,7 +37,6 @@
  * verzinnen.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
-import { registreerCmmnShapes } from "./shapes.jsx";
 import { registreerCmmnIconen } from "./iconen.jsx";
 import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): canvas, documenten en render-svc
 
@@ -297,7 +296,6 @@ export function maakElement(elementTypeId) {
 
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerCmmn() {
-  registreerCmmnShapes();
   registreerCmmnIconen();
   if (!getDiagramType(CMMN_ID)) {
     registreerDiagramType(cmmnDiagramType);

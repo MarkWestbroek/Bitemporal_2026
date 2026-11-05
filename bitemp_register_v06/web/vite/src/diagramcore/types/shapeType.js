@@ -10,9 +10,9 @@
  *     geen HTML, maar geeft een **VormBoom**: één beschrijving die zowel het canvas als de server
  *     en de documenten kunnen lezen.
  *
- * Overgang: een oude React-component uit `shapes/shapeRegistry.js` is een tweede realisatie van
- * hetzelfde id. `tekenbareVorm(id)` zegt of er al een renderer is; zo niet, dan tekent de oude
- * component. Vorm voor vorm om te zetten.
+ * `tekenbareVorm(id)` zegt of een id een ShapeType met renderer heeft. Tot de opruimstap
+ * (05-11) tekende anders een React-component uit de shape-registry; die route is weg. Een id
+ * zonder ShapeType krijgt nu de terugval per familie (`tekenaar/vormen.js`, `vormVoor`).
  *
  * Puur: geen DOM, geen stores.
  */
@@ -158,8 +158,15 @@ export const getShapeType = (id) => _shapeTypes.get(id);
 export const getRenderer = (id) => _renderers.get(id);
 
 /**
- * De nieuwe tekenroute voor dit shape-id, als die er al is: ShapeType én renderer geregistreerd.
- * `null` = tekenen via de oude component (`getShape`).
+ * De id's van alle tekenbare vormen (ShapeType mét geregistreerde renderer), in volgorde van
+ * registratie: basisvormen, profielvormen en eigen vormen. Voor galerijen en vormkiezers.
+ * @returns {string[]}
+ */
+export const alleShapeTypeIds = () => [..._shapeTypes.keys()].filter((id) => _renderers.has(_shapeTypes.get(id).renderer));
+
+/**
+ * De tekenbare vorm voor dit shape-id: ShapeType én renderer geregistreerd.
+ * `null` = onbekend id; de aanroeper neemt de terugval per familie (`vormVoor`).
  * @param {string} shapeId
  * @returns {{shapeType: import("./schema.js").ShapeType, renderer: import("./schema.js").ShapeRenderer}|null}
  */

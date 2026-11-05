@@ -7,7 +7,6 @@
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerUml2Iconen } from "../uml2Iconen.jsx";
 import { maakElementFabriek } from "../uml2Basis.js";
-import { registreerRequirementsShapes } from "./shapes.jsx";
 import { REQUIREMENTS_ID, requirementsDiagramType, elementTypes } from "./descriptor.js";
 import "./vormen.js"; // het ShapeType (één tekenaar, stap 4): canvas, documenten en render-svc
 
@@ -18,7 +17,6 @@ export const maakElement = maakElementFabriek(elementTypes, "rq");
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerRequirements() {
   registreerUml2Iconen();
-  registreerRequirementsShapes();
   if (!getDiagramType(REQUIREMENTS_ID)) {
     registreerDiagramType(requirementsDiagramType);
   }

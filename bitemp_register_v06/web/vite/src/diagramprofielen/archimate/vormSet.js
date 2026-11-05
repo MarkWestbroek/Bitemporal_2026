@@ -6,7 +6,7 @@
  * type-icoon in de hoek (de standaard, `archimate-box`) én de gedaante waarin
  * het **symbool zélf de vorm is** (actor = poppetje, node = 3D-doos, …). Deze
  * module is de *data* van die tweede gedaante: welk elementtype welke
- * vorm-shape krijgt. Bewust een pure `.js` naast `vormShapes.jsx`, zodat de
+ * vorm-shape krijgt. Bewust een eigen pure `.js` naast `vormen.js`, zodat de
  * mapping in de node-testrunner laadbaar is (patroon `bpmn/sequenceFlow.js`).
  *
  * **Wat géén vorm krijgt (en waarom):** `junction`, `notitie` en `kader` —
@@ -22,7 +22,7 @@
  * de rechthoek met kopstreep) — precies zoals de spec dat doet.
  */
 
-/** Alle shape-id's die `vormShapes.jsx` registreert. */
+/** Alle shape-id's van de set; elk is een ShapeType in `vormen.js`. */
 export const VORM_SHAPE_IDS = [
   "am-vorm-actor",
   "am-vorm-rol",

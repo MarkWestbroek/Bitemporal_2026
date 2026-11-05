@@ -7,7 +7,6 @@
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerUml2Iconen } from "../uml2Iconen.jsx";
 import { maakElementFabriek } from "../uml2Basis.js";
-import { registreerComponentDeploymentShapes } from "./shapes.jsx";
 import { COMPONENT_DEPLOYMENT_ID, componentDeploymentDiagramType, elementTypes } from "./descriptor.js";
 import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): cd-node + sysml-poort; canvas, documenten en render-svc
 
@@ -19,7 +18,6 @@ export const maakElement = maakElementFabriek(elementTypes, "cd");
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerComponentDeployment() {
   registreerUml2Iconen();
-  registreerComponentDeploymentShapes();
   if (!getDiagramType(COMPONENT_DEPLOYMENT_ID)) {
     registreerDiagramType(componentDeploymentDiagramType);
   }

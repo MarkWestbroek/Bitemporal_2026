@@ -26,7 +26,6 @@
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
-import { registreerStateMachineShapes } from "./shapes.jsx";
 import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): canvas, documenten en render-svc
 
 export const STATEMACHINE_ID = "statemachine";
@@ -279,7 +278,6 @@ export function maakElement(elementTypeId) {
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerStateMachine() {
   registreerGedragTypeIconen();
-  registreerStateMachineShapes();
   if (!getDiagramType(STATEMACHINE_ID)) {
     registreerDiagramType(statemachineDiagramType);
   }

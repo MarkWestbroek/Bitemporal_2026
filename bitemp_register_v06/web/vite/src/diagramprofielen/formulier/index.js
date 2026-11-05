@@ -64,7 +64,7 @@ const elementTypes = [
     id: "formulier",
     label: "Formulier",
     kort: "FRM",
-    shape: "rect",
+    shape: "class-box",
     kleur: "#ddd6fe",
     properties: [
       { key: "doeltype", label: "doeltype (ENT)", datatype: "string" },
@@ -79,7 +79,7 @@ const elementTypes = [
     id: "groep",
     label: "Groep",
     kort: "GRP",
-    shape: "rect",
+    shape: "class-box",
     kleur: "#e0e7ff",
     properties: [{ key: "context", label: "pad-context", datatype: "string" }, ...VORM_VELDEN, KLEUR_VELD],
     compartments: [{ id: "velden", label: null, fieldType: "veld" }],
@@ -88,7 +88,7 @@ const elementTypes = [
     id: "rij",
     label: "Rij",
     kort: "RIJ",
-    shape: "rect",
+    shape: "class-box",
     kleur: "#dbeafe",
     // F47: kolom-variant kan hier als richting-property landen.
     properties: [{ key: "richting", label: "richting (rij/kolom)", datatype: "string" }, KLEUR_VELD],
@@ -98,7 +98,7 @@ const elementTypes = [
     id: "lijst",
     label: "Lijst",
     kort: "LST",
-    shape: "rect",
+    shape: "class-box",
     kleur: "#ccfbf1",
     properties: [
       { key: "bron", label: "bron (ENT.GE, meervoudig)", datatype: "string", verplicht: true },
@@ -114,7 +114,7 @@ const elementTypes = [
     id: "conditioneel",
     label: "Conditioneel",
     kort: "ALS",
-    shape: "rect",
+    shape: "class-box",
     kleur: "#fef3c7",
     properties: [
       { key: "conditieVeld", label: "conditie: veld", datatype: "string" },

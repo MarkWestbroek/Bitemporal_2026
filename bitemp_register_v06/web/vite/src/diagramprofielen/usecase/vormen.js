@@ -1,10 +1,8 @@
 // @ts-check
 /**
  * usecase/vormen — de use case-vormen als ShapeType (plan 2026-11-04 Eén tekenaar, stap 4):
- * gegevens op de bibliotheek-renderers, geen code. Dezelfde id's als `shapes.jsx` (de oude
- * React-realisatie, die blijft als tweede realisatie tot de opruimstap); het canvas, documenten
- * en render-svc tekenen via dit ShapeType. Pure `.js`: ook in de render-bundel (die .jsx leeg laat)
- * en in `node --test`.
+ * gegevens op de bibliotheek-renderers, geen code. Het canvas, documenten en render-svc tekenen
+ * via dit ShapeType. Pure `.js`: ook in de render-bundel (die .jsx leeg laat) en in `node --test`.
  */
 import { registreerShapeType } from "../../diagramcore/types/shapeType.js";
 import "../../diagramcore/tekenaar/bibliotheek.js";

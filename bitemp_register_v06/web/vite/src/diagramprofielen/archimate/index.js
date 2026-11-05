@@ -10,7 +10,7 @@
  * Application (blauw), Technology (groen) en Motivation (paars), plus de
  * junction (en/of). De **tweede officiële notatie** — het symbool zélf als
  * vorm (poppetje, 3D-doos, …) — zit als shape-set "Iconen als vorm" naast de
- * boxen: `vormSet.js` (mapping) + `vormShapes.jsx` (vormen), te kiezen via
+ * boxen: `vormSet.js` (mapping) + `vormen.js` (de ShapeTypes), te kiezen via
  * menu Beeld → Shape-set.
  *
  * Alle **elf relaties** zijn er, op bestaande lijn-/markermiddelen:
@@ -26,11 +26,8 @@
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerArchimateIconen } from "./iconen.jsx";
-import { registreerArchimateShapes } from "./shapes.jsx";
-import { registreerArchimateVormShapes } from "./vormShapes.jsx";
 import { VORMEN_SET } from "./vormSet.js";
 import { BLOK_SET } from "./blokSet.js";
-import { registreerArchimateBlokShapes } from "./blokShapes.jsx";
 import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): canvas, documenten en render-svc
 import { ELEMENTEN, LAAG_GROEP, MOTIVATION, FACETTEN, facettenVan } from "./elementen.js";
 
@@ -265,9 +262,6 @@ export function maakElement(elementTypeId) {
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerArchimate() {
   registreerArchimateIconen();
-  registreerArchimateShapes();
-  registreerArchimateVormShapes();
-  registreerArchimateBlokShapes();
   if (!getDiagramType(ARCHIMATE_ID)) {
     registreerDiagramType(archimateDiagramType);
   }

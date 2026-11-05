@@ -35,7 +35,6 @@
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { AFGELEID, AFLEIDINGSREGEL, ATTRIBUUT_KERNSET, uiteinde, navigatiePresentatie, uiteindeLabels } from "../umlEigenschappen.js";
-import { registreerSysmlShapes } from "./shapes.jsx";
 import { registreerSysmlIconen } from "./iconen.jsx";
 import { TRACE_OPTIES, traceLabels } from "./traces.js";
 import { requirementInhoud } from "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): canvas, documenten en render-svc
@@ -431,7 +430,6 @@ export function maakElement(elementTypeId) {
 
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerSysml() {
-  registreerSysmlShapes();
   registreerSysmlIconen();
   if (!getDiagramType(SYSML_ID)) {
     registreerDiagramType(sysmlDiagramType);

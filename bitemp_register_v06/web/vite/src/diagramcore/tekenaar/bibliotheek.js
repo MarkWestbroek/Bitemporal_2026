@@ -384,9 +384,12 @@ const verwijzing = {
   omtrek(ctx) {
     const { w, h } = ctx.maat;
     const d = dikte(ctx, 1.5);
-    return vorm("rect", { x: d / 2, y: d / 2, width: w - d, height: h - d, rx: 4, fill: ctx.thema.vulling, ...rand(ctx, 1.5) });
+    // Het doeldiagram bestaat niet meer (canvas: `ctx.verwijzing.weg`): rode rand.
+    const weg = ctx.verwijzing?.weg ? { stroke: "#dc2626" } : {};
+    return vorm("rect", { x: d / 2, y: d / 2, width: w - d, height: h - d, rx: 4, fill: ctx.thema.vulling, ...rand(ctx, 1.5), ...weg });
   },
-  inhoudsvak: (ctx) => ({ x: 14, y: 0, w: ctx.maat.w - 14, h: ctx.maat.h, uitlijning: "midden" }),
+  // De naam begint rechts van het ⧉ (10 + het teken + lucht), zoals de oude canvasvorm.
+  inhoudsvak: (ctx) => ({ x: 18, y: 0, w: ctx.maat.w - 18, h: ctx.maat.h, uitlijning: "midden" }),
   ornament: (ctx) => vorm("text", { x: 10, y: ctx.maat.h / 2 + 4, "font-size": 12, fill: ctx.thema.gedempt }, "⧉"),
   rand: (ctx, hoek) => randRechthoek(ctx.maat, hoek),
 };

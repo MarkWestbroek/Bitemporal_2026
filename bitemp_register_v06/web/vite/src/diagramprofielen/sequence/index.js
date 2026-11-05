@@ -35,7 +35,6 @@
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
-import { registreerSequenceShapes } from "./shapes.jsx";
 import { levenslijnNaam } from "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4), ook de levenslijn op het canvas
 import { KOPPEN, berichtLabels } from "./labels.js";
 import { verschuifBericht } from "./verschuif.js";
@@ -257,7 +256,6 @@ export function maakElement(elementTypeId) {
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerSequence() {
   registreerGedragTypeIconen();
-  registreerSequenceShapes();
   if (!getDiagramType(SEQUENCE_ID)) {
     registreerDiagramType(sequenceDiagramType);
   }

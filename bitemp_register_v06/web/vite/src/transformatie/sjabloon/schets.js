@@ -15,7 +15,7 @@ import { tekstBreedte, breekAf } from "../../diagramsvg/tekstmaat.js";
 
 const DASHES = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4" };
 
-/** Vorm-familie uit een shape-id (basisShapes + profielen). */
+/** Vorm-familie uit een shape-id (basisvormen + profielen). */
 export function vormFamilie(shape = "") {
   if (/ellips|^bol$|cmmn-mijlpaal/.test(shape)) return "ellips";
   if (/actor/.test(shape)) return "actor";

@@ -333,6 +333,43 @@ vormvoorbeelden (instellingen, shape-set-paneel), die nog via `getShape` gaan. P
 `naast-elkaar.mjs sequence-typen` (klasse, ArchiMate-component en -actor als type, verdwenen
 type, gekozen kop, zelf-aanroep); berichtlijnen 12 van 12 gelijk.
 
+**Opruimstap (05-11, OMNIUM-UI, `feat/tekenaar-opruimen`) — stap 4 is af.** Verwijderd: zestien
+`shapes.jsx`/`vormShapes.jsx`/`blokShapes.jsx`, `shapes/basisShapes.jsx`, `shapes/dataShape.jsx`
+en `shapes/shapeRegistry.js`. Wat nog aan de oude route hing, is omgezet:
+
+- **Eigen vormen** (data-shapes uit de Studio-instellingen) zijn nu wat dit plan bedoelt: een
+  ShapeType als gegevens op één renderer (`tekenaar/dataVorm.js`, `data-vorm`). Het silhouet uit
+  Method Draw is rauwe SVG; een kleine lezer zet het zonder DOM om naar een VormBoom.
+- **Diagramverwijzing** via het sjabloon; de live naam van het doel komt uit
+  `model/diagramNamen.js` (`bouwVoorkomen` kreeg de parameter `verwijzing: {naam, weg}`).
+- **Voorbeelden** (galerij, shape-sets, vormkiezer) via `canvas/VormVoorbeeld.jsx`; het
+  toegangsdiagram via `SjabloonShape` met een vaste maat.
+- Een shape-id zonder ShapeType: op het canvas dezelfde terugval per familie als elders.
+
+**Hoe het getest is.** Vooraf een nulmeting, achteraf dezelfde meting, pixel voor pixel
+vergeleken (scripts in de sessie-scratchpad, niet in de repo):
+
+| Meting | Omvang | Uitkomst |
+|---|---|---|
+| elk plaatsbaar elementtype per profiel op het canvas | 27 profielen, 315 vormen | gelijk, behalve de diagramverwijzing (nu sjabloon) en het formulierdiagram (`rect` → `class-box`) |
+| diagrammen met lijnen | 20 diagrammen | 19 pixelgelijk; de twintigste wijkt af door de herstelde arcering |
+| lijnpaden en nodematen van die diagrammen | 20 diagrammen | byte-gelijk |
+| canvaspad tegen renderpad per connector | alle lijnen | gelijk op 0,5 px |
+
+De meting vond één bestaande fout: de arcering van de regelkaart "mag niet" lag als een wig
+over de kaart (sinds deel 3; alleen op de kaart geknipt, niet op de band). Hersteld.
+
+**De regressietest die blijft** staat in de repo: `tests/e2e/41-studio-tekenaar-pariteit.spec.js`.
+Hij doet in het klein wat de meting deed, zonder plaatjes: per profiel elk elementtype (door de
+tekenaar, geen terugval, canvasmaat = tekenaarmaat), lijnpaden canvas = tekenaar, activaties,
+voorbeelden. Met een bewust ingebouwde afwijking van 2 px in `lijnen.js` faalt hij met beide
+paden in de melding.
+
+**Nog over** (buiten dit plan of klein): dode CSS van de oude vormen in `diagramcore.css`
+(`.dc-node` en verwanten; niet weggehaald: welke klassen nog elders in gebruik zijn is niet
+uitgezocht en vraagt een eigen controle); het type-icoon in de kop van een vorm (typering
+"icoon") als ornament.
+
 ### 3.4 Server en documenten (RENDER-API, OMNIUM-UI)
 
 - `render-svc` importeert de tekenaar; `taal=studio` krijgt daarmee vormtrouw. De route en het
@@ -360,7 +397,7 @@ type, gekozen kop, zelf-aanroep); berichtlijnen 12 van 12 gelijk.
 | 1 | RENDER-API | `POST …/svg?taal=studio` op de schets, bundeling, Imprint-eisen (**gebouwd 04-11**, `feat/render-taal-studio`, ongecommit; wacht op Mark) | 1–1,5 dag | — |
 | 2 | OMNIUM-UI | tekenaar: maat, inhoud, lijnen, nesting, thema; de 14 basisvormen als ShapeType + renderer; schets als stand `detail=schets`; documenten en gedeelde plaatjes erop — **gebouwd 04-11** (`feat/tekenaar`: `diagramcore/tekenaar/`, terugval per vormfamilie voor vormen zonder ShapeType; de 35 diagrammen van het architectuurproject getekend met de echte profielen) | 1 week | 0 gemerged |
 | 3 | OMNIUM-UI | canvas-adapter `SjabloonShape` + inline-editor en resizer op SVG — **gebouwd 05-11** (`feat/tekenaar-canvas`: alle basisvormen behalve `diagramverwijzing`; 1318 unit, 83 Studio-e2e groen; zie §3.3) | 3–4 dagen | 2 |
-| 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na — **deel gebouwd 05-11** (`feat/tekenaar-profielvormen`: use case, activity, ArchiMate incl. beide shape-sets = 33 vormen; `feat/tekenaar-profielvormen-2`: BPMN, state machine, sequence = 20 vormen, levenslijn op het canvas nog oud; `feat/tekenaar-profielvormen-3`: CMMN, SysML, component/deployment, EP, object, requirements, toegangsregel = 25 vormen — **alle profielvormen zijn ShapeTypes**; rest: opruimen; zie §3.3) | ±½ dag per profiel, 1 week totaal | 3 |
+| 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na — **deel gebouwd 05-11** (`feat/tekenaar-profielvormen`: use case, activity, ArchiMate incl. beide shape-sets = 33 vormen; `feat/tekenaar-profielvormen-2`: BPMN, state machine, sequence = 20 vormen, levenslijn op het canvas nog oud; `feat/tekenaar-profielvormen-3`: CMMN, SysML, component/deployment, EP, object, requirements, toegangsregel = 25 vormen — **alle profielvormen zijn ShapeTypes**; opruimstap 05-11: de oude React-vormen en de shape-registry zijn weg, **stap 4 af**; zie §3.3) | ±½ dag per profiel, 1 week totaal | 3 |
 | 5 | RENDER-API | render-svc op de tekenaar; `taal=v3` erachter; byte-vergelijking met de huidige fixtures | 2 dagen | 2, 4 |
 | 6 | RENDER-API + BACKEND | `GET` op project/diagram met toegang (privacy-besluit) | 1–2 dagen | 5 |
 

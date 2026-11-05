@@ -64,14 +64,21 @@ export function basisVanPalet(palet) {
  * @param {Object} p.basis                 - basiskleuren (basisVanPalet)
  * @param {string} p.idPrefix              - uniek per voorkomen (marker-/clip-id's)
  * @param {boolean} [p.verborgen]          - compartimenten verborgen (gedaante "kop" / diagram-breed)
- * @param {(verw: any) => string|null} [p.verwijzingNaam]
+ * @param {(verw: any) => string|null} [p.verwijzingNaam] - documenten/server: naam van een doeldiagram
+ * @param {{naam: string|null, weg: boolean}|null} [p.verwijzing] - canvas: de naam van het doel
+ *   live en of het doel verdwenen is (SjabloonShape leest die uit `model/diagramNamen.js`); wint
+ *   van `verwijzingNaam`
  */
-export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref = null, maat = null, diagram = null, elements = null, fieldTypesById, compartmentTypesById, basis, idPrefix, verborgen = false, verwijzingNaam = null }) {
+export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref = null, maat = null, diagram = null, elements = null, fieldTypesById, compartmentTypesById, basis, idPrefix, verborgen = false, verwijzingNaam = null, verwijzing = null }) {
   const et = elementType || {};
-  // Diagramverwijzing zonder eigen naam: de naam van het doeldiagram (van de host).
-  if (et.shape === "diagramverwijzing" && !element.naam) {
+  // Diagramverwijzing: zonder eigen naam de naam van het doeldiagram (van de host); is het doel
+  // weg, dan streept de motor de naam door en kleurt de renderer de rand rood.
+  let doelWeg = false;
+  if (et.shape === "diagramverwijzing") {
     const doel = element.data?.verwijstNaar;
-    element = { ...element, naam: (doel && verwijzingNaam?.(doel)) || "diagram" };
+    const info = verwijzing || { naam: (doel && verwijzingNaam?.(doel)) || null, weg: false };
+    doelWeg = !!info.weg;
+    if (!element.naam) element = { ...element, naam: info.naam || "diagram" };
   }
   if (verborgen && (element.compartimenten || []).length) element = { ...element, compartimenten: [] };
   const parameters = shapeType.parameters || {};
@@ -86,7 +93,7 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
   const weergave = naamWeergaveVan(et, element, hookContext);
   const naam = typeof weergave === "object" ? weergave.tekst : weergave;
   const naamOnderstreept = typeof weergave === "object" ? weergave.onderstreept : undefined;
-  const planVoor = (breedte) => planInhoud({ element, elementType: et, breedte, parameters, fieldTypesById, compartmentTypesById, inhoudsregels, naam, naamOnderstreept });
+  const planVoor = (breedte) => planInhoud({ element, elementType: et, breedte, parameters, fieldTypesById, compartmentTypesById, inhoudsregels, naam, naamOnderstreept, naamDoorgestreept: doelWeg });
   let maatRef = maat ? { size: { width: maat.w, height: maat.h } } : ref;
   // Zonder bewaarde maat mag de renderer de natuurlijke maat bepalen (fork/join: staand of
   // liggend; een levenslijn: tot onder het laagste element van het diagram).
@@ -114,6 +121,7 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
     node: ref || null,
     diagram,
     elementen: elements,
+    verwijzing: et.shape === "diagramverwijzing" ? { weg: doelWeg } : null,
     thema: kleurenVoor(basis, stijl, parameters),
     inhoud: plan ? { h: plan.h, minW: plan.minW } : null,
     idPrefix,
