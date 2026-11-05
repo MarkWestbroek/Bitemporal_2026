@@ -192,8 +192,11 @@ plaatjes.
   in plaats van een render; een nieuwe snapshot geeft meteen een nieuwe tekening.
 - **Titel**: de sidecar krijgt alleen `profielen` en `project.naam` mee, dus de titel van de SVG is
   "<projectnaam> — <diagramnaam>".
-- **Open**: een knop in de Studio om de SVG-link te maken (nu alleen via de API; de lijst toont
-  hem al); operaties ná de snapshot toepassen (vraagt de toepasser uit `studio/sync/operaties.js`
+- **In de Studio (06-11)**: rechtsklik op het canvas → *Kopieer als SVG-link (de server
+  tekent)*. Studio brengt daarbij eerst de snapshot bij (snapshot op verzoek), zodat de link het
+  diagram van nu toont; zie `docs/STUDIO.md` (gedeelde plaatjes).
+- **Open**: de link bijhouden tússen snapshots (nu: bij het maken van de link en na elke 200
+  operaties); operaties ná de snapshot toepassen (vraagt de toepasser uit `studio/sync/operaties.js`
   in de sidecar, of een snapshot op verzoek); de CORS-lijst voor een los scherm; `HEAD` geeft 404
   (gin kent alleen de GET).
 

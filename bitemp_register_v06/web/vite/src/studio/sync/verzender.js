@@ -282,6 +282,38 @@ export async function overweegSnapshot() {
   }
 }
 
+/**
+ * Snapshot op verzoek: breng de snapshot op de server nu bij, als dat kan. Voor wie de server
+ * uit de snapshot laat lezen terwijl het log verder is — de SVG-link (`/api/beeld/<token>.svg`)
+ * tekent uit de snapshot, dus een diagram dat alleen nog in het log staat geeft daar 404.
+ * Stuurt eerst de eigen wachtende operaties; zet daarna een snapshot als er operaties ná de
+ * grens staan. Geen grens van SNAPSHOT_NA: de aanroeper vraagt er uitdrukkelijk om.
+ * @returns {Promise<boolean>} de snapshot is bij (true ook als er niets te doen was); false als
+ *   het project niet live met de server loopt, de stand niet ok is, of het zetten mislukte
+ */
+export async function snapshotNu() {
+  if (!cfg.actief() || !cfg.projectId()) return false;
+  if (useOutboxStore.getState().ops.length) {
+    try {
+      await verzend();
+    } catch {
+      return false;
+    }
+  }
+  if (useSyncStore.getState().stand !== "ok" || useOutboxStore.getState().ops.length) return false;
+  if (cfg.laatsteVolgnummer() - cfg.totVolgnummer() <= 0) return true;
+  if (snapshotBezig) return false;
+  snapshotBezig = true;
+  try {
+    await cfg.maakSnapshot();
+  } catch {
+    return false;
+  } finally {
+    snapshotBezig = false;
+  }
+  return cfg.laatsteVolgnummer() - cfg.totVolgnummer() <= 0;
+}
+
 // ── SSE-kanaal (onderdeel 5) ──────────────────────────────────────────
 
 let bron = null;

@@ -119,3 +119,59 @@ test("Houd up to date: na een wijziging in het diagram gaat er vanzelf een nieuw
   await page.locator(".react-flow__pane").first().click({ button: "right", position: { x: 700, y: 250 }, force: true });
   await expect(page.getByText("Kopieer als plaatje-link (Confluence)")).toBeVisible();
 });
+
+test("SVG-link: de server tekent — geen plaatje mee, het .svg-adres op het klembord, eigen soort in de lijst", async ({ page, context }) => {
+  // Render-API stap 6 (06-11): POST …/beelden met soort "svg" geeft een adres waarop de server
+  // het diagram zelf tekent. Studio stuurt dus geen PNG en de wachter werkt er niets voor bij.
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const verstuurd = [];
+  await openStudio(page);
+  await page.route("**/api/**", (r) => r.fulfill({ status: 404, json: { error: "mock" } }));
+  const svgMeta = { token: TOKEN, pad: `/api/beeld/${TOKEN}.svg`, profiel_id: "usecase05", diagram_id: "d_svg", diagram_naam: "Overzicht", soort: "svg", aangemaakt: "2026-11-06T09:00:00Z", bijgewerkt: "2026-11-06T09:00:00Z", door: "mark" };
+  await page.route("**/api/studio/projecten/test-beeld-03/beelden**", async (r) => {
+    const req = r.request();
+    if (req.method() === "POST") {
+      verstuurd.push(req.postDataJSON());
+      return r.fulfill({ status: 201, json: svgMeta });
+    }
+    return r.fulfill({ json: { beelden: verstuurd.length ? [svgMeta] : [] } });
+  });
+  await zetModel(page, { profielId: "usecase05", diagramId: "d_svg", diagramNaam: "Overzicht", elementen: [
+    { id: "uc1", naam: "Boek lenen", type: "usecase", pos: { x: 300, y: 460 } },
+  ] });
+  await page.evaluate(async () => {
+    const { useModellerenStore } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
+    // Project "op de server", zonder live-sync: de snapshot op verzoek doet dan niets.
+    useModellerenStore.setState((s) => ({ project: { ...s.project, id: "test-beeld-03", serverVersie: 1, liveSync: false } }));
+  });
+  await page.waitForTimeout(600);
+
+  await page.locator(".react-flow__pane").first().click({ button: "right", position: { x: 700, y: 250 }, force: true });
+  await page.getByText("Kopieer als SVG-link (de server tekent)").click();
+  await expect(page.getByText("SVG-link gekopieerd")).toBeVisible();
+  // Geen live-sync: de melding zegt eerlijk dat de server de laatst bewaarde stand tekent.
+  await expect(page.getByText("laatst bewaarde stand van het project")).toBeVisible();
+
+  expect(verstuurd).toHaveLength(1);
+  expect(verstuurd[0]).toEqual({ profiel_id: "usecase05", diagram_id: "d_svg", diagram_naam: "Overzicht", soort: "svg" });
+  const klembord = await page.evaluate(async () => {
+    const [item] = await navigator.clipboard.read();
+    return { html: await (await item.getType("text/html")).text(), tekst: await (await item.getType("text/plain")).text() };
+  });
+  expect(klembord.tekst).toMatch(new RegExp(`^https?://[^ ]+/api/beeld/${TOKEN}\\.svg$`));
+  expect(klembord.html).toMatch(new RegExp(`<img src="https?://[^"]+/api/beeld/${TOKEN}\\.svg" alt="Overzicht">`));
+  // De wachter werkt een SVG-link niet bij: na een wijziging gaat er niets naar de server.
+  await inStore(page, "usecase05", 'store.getState().updateElement("uc1", { naam: "Boek verlengen" });');
+  await page.waitForTimeout(5000);
+  expect(verstuurd).toHaveLength(1);
+
+  // In de lijst heet de soort zoals hij is.
+  await page.keyboard.press("Escape");
+  await page.evaluate(async () => {
+    const { useDocumentStore } = await import(location.origin + "/viz/react/src/studio/activities/documentVoorbeeld.jsx");
+    useDocumentStore.getState().toon({ titel: "Testdocument", markdown: "# Test\n", html: "<html><body>Test</body></html>" });
+  });
+  await page.getByTestId("gedeelde-plaatjes").click();
+  await expect(page.getByTestId("gedeeld-plaatje")).toHaveCount(1);
+  await expect(page.getByTestId("gedeeld-plaatje-soort")).toHaveText("SVG — de server tekent");
+});

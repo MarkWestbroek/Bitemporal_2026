@@ -15,6 +15,17 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   Elk artefact noemt zijn bronnen (`bronnen`), en een traceregel draagt `bronElementId`. De
   payload van een bron is rechtstreeks de invoer van de render-API. Het e-dienstmodel heeft
   een `code` (docs/TRANSFORMATIES.md §11.14).
+- **Kopieer als SVG-link (de server tekent)** (06-11, op verzoek van Mark; voorstel BACKEND):
+  rechtsklik op het lege canvas van een project op de server → *Kopieer als SVG-link*. Het
+  klembord krijgt een adres (`/api/beeld/<token>.svg`) waarop de **server** het diagram tekent,
+  bij elke aanvraag (render-API stap 6). Er gaat geen plaatje mee en Studio werkt niets bij. De
+  server tekent uit de snapshot van het project; bij het maken van de link brengt Studio die
+  eerst bij (`sync/verzender.js` `snapshotNu`: snapshot op verzoek, zonder de grens van 200
+  operaties), zodat de link het diagram van nu toont. Latere wijzigingen verschijnen bij de
+  volgende snapshot; de melding zegt of de server de stand van nu heeft. In *Gedeelde plaatjes*
+  heet de soort "SVG — de server tekent" (was "momentopname"); intrekken werkt als bij de
+  plaatjes. Vraagt de API met stap 6 (nog niet uitgebracht); zonder die API geeft de actie een
+  foutmelding.
 
 ### Opgelost
 - **Tekenaar: twee labels op dezelfde plek van een lijn vallen niet meer over elkaar** (05-11,

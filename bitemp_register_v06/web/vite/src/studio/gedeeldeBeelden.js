@@ -12,6 +12,12 @@
  * iemand het project in Studio open heeft: elke wijziging komt uit Studio, en een wijziging via
  * de MCP wordt bij het eerstvolgende openen bijgewerkt.
  *
+ * Sinds 06-11 is er een derde soort, "svg": geen plaatje maar een adres waarop de **server** het
+ * diagram zelf tekent, bij elke aanvraag (render-API stap 6, `/api/beeld/<token>.svg`; besluit
+ * Mark 05-11). Studio stuurt dan niets op en hoeft niets bij te werken; wel tekent de server uit
+ * de snapshot van het project, dus bij het maken van de link brengt Studio die eerst bij
+ * (`snapshotNu`). De wachter laat deze soort met rust.
+ *
  * De kern (`maakBeeldWachter`) krijgt zijn afhankelijkheden mee, zodat de unittest zonder browser,
  * server en stores draait.
  */
@@ -24,8 +30,16 @@ import { diagramSvg } from "../diagramcore/tekenaar/index.js";
 import { vindShapeSet, descriptorMetShapeSet } from "../diagramcore/model/shapeSet.js";
 import { getProfieltype } from "./profieltypeRegistry";
 import { apiBase } from "../shared/apiBase.js";
+import { snapshotNu } from "./sync/verzender.js";
 
 export const SOORTEN = ["momentopname", "actueel"];
+
+/** Hoe een soort in de lijst heet. */
+export function soortLabel(soort) {
+  if (soort === "actueel") return "houdt up to date";
+  if (soort === "svg") return "SVG — de server tekent";
+  return "momentopname";
+}
 export const WACHT_MS = 4000; // na de laatste wijziging; slepen geeft veel kleine wijzigingen
 
 /** Zichtbare stand: de gedeelde plaatjes van het open project. */
@@ -108,6 +122,23 @@ export async function deelDiagram(projectId, profielId, diagramId, soort = "mome
   if (!svg) throw new Error("Dit diagram is leeg; er is niets om te delen.");
   const adres = await deelSvg(projectId, merkHerkomst(svg, { profielId, diagramId, naam }), soort);
   return { adres, naam, ...svgMaat(svg) };
+}
+
+/**
+ * Deel één diagram als SVG-link: een adres waarop de server het diagram tekent, bij elke
+ * aanvraag. Er gaat geen plaatje mee. De server tekent uit de snapshot van het project; die
+ * brengen we eerst bij, zodat de link het diagram van nu toont (en een net gemaakt diagram niet
+ * 404 geeft). `bij` zegt of dat gelukt is; zo niet, dan toont de link de laatst bewaarde stand.
+ * @returns {Promise<{adres: string, naam: string, bij: boolean}>}
+ */
+export async function deelDiagramAlsSvg(projectId, profielId, diagramId) {
+  const p = getProfieltype(profielId);
+  const diagram = p?.useStore?.getState?.().diagrams?.[diagramId];
+  if (!diagram) throw new Error("Dit diagram bestaat niet (meer).");
+  const bij = await snapshotNu().catch(() => false);
+  const meta = await deelBeeld(projectId, { profiel_id: profielId, diagram_id: diagramId, diagram_naam: diagram.naam || "", soort: "svg" });
+  zetInLijst(meta);
+  return { adres: beeldAdres(meta.pad), naam: diagram.naam || "", bij };
 }
 
 /** Lijst van de server ophalen (bij openen van het project en in het beheerpaneel). */
@@ -204,4 +235,25 @@ export async function kopieerDiagramAlsLink(profielId, diagramId, soort = "momen
     }),
   ]);
   return (await gedeeld).adres;
+}
+
+/**
+ * Kopieer één diagram als SVG-link naar het klembord (rechtsklik op het canvas): het adres als
+ * tekst, en als opgemaakte tekst een <img> met dat adres. Geeft het adres terug en of de server
+ * de stand van nu heeft (`bij`).
+ */
+export async function kopieerDiagramAlsSvgLink(profielId, diagramId) {
+  const projectId = useBeeldenStore.getState().projectId;
+  if (!projectId) throw new Error("Een SVG-link kan alleen voor een project op de server.");
+  const fout = klembordFout();
+  if (fout) throw new Error(fout);
+  const gedeeld = deelDiagramAlsSvg(projectId, profielId, diagramId);
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  await navigator.clipboard.write([
+    new ClipboardItem({
+      "text/html": gedeeld.then(({ adres, naam }) => new Blob([`<img src="${esc(adres)}" alt="${esc(naam || "Diagram")}">`], { type: "text/html" })),
+      "text/plain": gedeeld.then(({ adres }) => new Blob([adres], { type: "text/plain" })),
+    }),
+  ]);
+  return gedeeld;
 }

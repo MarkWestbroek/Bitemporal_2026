@@ -4,7 +4,7 @@
  * op elke pagina waar het geplakt is, verdwijnt het plaatje. Zie gedeeldeBeelden.js.
  */
 import React from "react";
-import { useBeeldenStore, laadBeelden, trekIn, beeldAdres } from "./gedeeldeBeelden.js";
+import { useBeeldenStore, laadBeelden, trekIn, beeldAdres, soortLabel } from "./gedeeldeBeelden.js";
 import { vraagBevestiging, vraagNaam } from "./naamDialog.jsx";
 
 const klein = { font: "inherit", fontSize: 12, padding: "2px 8px", borderRadius: 5, border: "1px solid var(--s-border)", background: "var(--s-panel)", color: "var(--s-fg)", cursor: "pointer" };
@@ -34,6 +34,7 @@ export function GedeeldeBeeldenPaneel({ projectId, onSluit }) {
       </div>
       <p style={{ margin: "0 0 6px", color: "var(--s-fg-muted)", fontSize: 12 }}>
         Wie het adres kent, ziet dat ene plaatje (niets anders van het project). Intrekken haalt het overal weg waar het geplakt is.
+        Bij een SVG-link tekent de server het diagram bij elke aanvraag, uit de laatst bewaarde stand van het project.
       </p>
       {fout && <p style={{ color: "var(--s-danger, #b91c1c)" }}>{fout}</p>}
       {!fout && beelden.length === 0 && <p style={{ fontStyle: "italic", color: "var(--s-fg-muted)" }}>Nog geen plaatjes gedeeld.</p>}
@@ -52,7 +53,7 @@ export function GedeeldeBeeldenPaneel({ projectId, onSluit }) {
             {beelden.map((b) => (
               <tr key={b.token} data-testid="gedeeld-plaatje" style={{ borderTop: "1px solid var(--s-border)" }}>
                 <td style={{ padding: "3px 4px" }}>{b.diagram_naam || b.diagram_id}</td>
-                <td>{b.soort === "actueel" ? "houdt up to date" : "momentopname"}</td>
+                <td data-testid="gedeeld-plaatje-soort">{soortLabel(b.soort)}</td>
                 <td>{wanneer(b.bijgewerkt)}</td>
                 <td>{b.door || "—"}</td>
                 <td style={{ whiteSpace: "nowrap", textAlign: "right" }}>

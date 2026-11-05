@@ -387,8 +387,15 @@ te wijzigen.
 >   zonder `png` geeft `/api/beeld/<token>.svg`. Daar tekent de **server** het diagram bij elke
 >   aanvraag uit de snapshot van het project (render-sidecar, `taal=studio`); er wordt geen plaatje
 >   bewaard. Eén link per diagram (eigen gedeeltelijke unieke index), zelfde lijst en zelfde
->   intrekken. De Studio heeft er nog geen knop voor en toont de soort in het paneel nog als
->   "momentopname". Zie `docs/RENDER_API.md` §Projectdiagram.
+>   intrekken. **In de Studio (06-11):** rechtsklik op het lege canvas → *Kopieer als SVG-link
+>   (de server tekent)* (`gedeeldeBeelden.js` `kopieerDiagramAlsSvgLink`): het adres als tekst en
+>   een `<img>` met dat adres als opgemaakte tekst. Omdat de server uit de **snapshot** tekent,
+>   brengt Studio die bij het maken van de link eerst bij (`sync/verzender.js` `snapshotNu`:
+>   eigen wachtende operaties sturen, dan een snapshot zonder de grens van `SNAPSHOT_NA`); loopt
+>   het project niet live met de server, dan zegt de melding dat de link de laatst bewaarde stand
+>   toont. Latere wijzigingen volgen pas bij de volgende snapshot (na 200 operaties, of bij een
+>   nieuwe link); de beeld-wachter doet voor deze soort niets. Het paneel noemt de soort
+>   "SVG — de server tekent" (`soortLabel`). Zie `docs/RENDER_API.md` §Projectdiagram.
 > - **Opslag** zoals de bijlagen van meldingen: de PNG in **MinIO** (`beelden/<token>.png`) als de
 >   filestore beschikbaar is (VPS), anders in de kolom `inhoud`. De tabel is plumbing, geen
 >   register-domein. **Geen versies**: een actueel plaatje overschrijft het vorige object;

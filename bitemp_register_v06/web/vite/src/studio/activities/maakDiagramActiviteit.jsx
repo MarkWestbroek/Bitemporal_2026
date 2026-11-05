@@ -45,7 +45,7 @@ import React, {
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
-import { useBeeldenStore, kopieerDiagramAlsLink } from "../gedeeldeBeelden.js";
+import { useBeeldenStore, kopieerDiagramAlsLink, kopieerDiagramAlsSvgLink } from "../gedeeldeBeelden.js";
 /**
  * Lijndata van een connector zoals hij op het actieve diagram ligt: de
  * per-diagram override (diagram.lijnen) over de element-standaard. Alle
@@ -2700,6 +2700,29 @@ export function maakDiagramActiviteit(opties) {
                         try {
                           await kopieerDiagramAlsLink(id, diagramId, soort);
                           toonMelding({ titel: "Plaatje-link gekopieerd", tekst: "Plak het in Confluence met Ctrl+V. Intrekken kan in een documentvoorbeeld onder Gedeelde plaatjes." });
+                        } catch (e) {
+                          toonMelding({ titel: "Kopiëren mislukt", tekst: e?.message || String(e) });
+                        }
+                      },
+                    },
+                    // SVG-link (06-11, render-API stap 6): geen plaatje, de server tekent het
+                    // diagram bij elke aanvraag op een eigen, onraadbaar adres.
+                    {
+                      id: "svg-link",
+                      label: "🔗 Kopieer als SVG-link (de server tekent)",
+                      onClick: async () => {
+                        const diagramId = useStore.getState().actiefDiagramId;
+                        try {
+                          const { bij } = await kopieerDiagramAlsSvgLink(id, diagramId);
+                          toonMelding({
+                            titel: "SVG-link gekopieerd",
+                            tekst:
+                              "Wie het adres kent, ziet dit diagram als SVG; de server tekent het bij elke aanvraag. " +
+                              (bij
+                                ? "De server heeft de stand van nu. Latere wijzigingen verschijnen zodra het project opnieuw op de server is bewaard."
+                                : "De server tekent de laatst bewaarde stand van het project; die kan achterlopen op wat je hier ziet.") +
+                              " Intrekken kan in een documentvoorbeeld onder Gedeelde plaatjes.",
+                          });
                         } catch (e) {
                           toonMelding({ titel: "Kopiëren mislukt", tekst: e?.message || String(e) });
                         }
