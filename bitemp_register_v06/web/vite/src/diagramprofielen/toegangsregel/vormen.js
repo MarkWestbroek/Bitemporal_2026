@@ -51,10 +51,15 @@ const regelkaart = {
     const { w, h } = ctx.maat;
     const verbod = isVerbod(ctx.element?.data?.modaliteit);
     const clip = `${ctx.idPrefix}-kaart`;
+    const clipBand = `${ctx.idPrefix}-band`;
     const band = [vorm("rect", { x: 0, y: 0, width: BAND, height: h, fill: verbod ? "#fecaca" : "#16a34a" })];
     if (verbod) {
-      // Diagonale arcering: nooit alleen rood (ook zonder kleurzicht leesbaar).
-      for (let x = -h; x < BAND + 4; x += 5) band.push(vorm("line", { x1: x, y1: h, x2: x + h, y2: 0, stroke: "#dc2626", "stroke-width": 2 }));
+      // Diagonale arcering: nooit alleen rood (ook zonder kleurzicht leesbaar). De lijnen lopen
+      // schuin over de hele hoogte en zijn dus veel breder dan de band: binnen de band geknipt
+      // (tot 05-11 alleen op de kaart geknipt, waardoor de arcering als een wig over de kaart lag).
+      const arcering = [];
+      for (let x = -h; x < BAND + 4; x += 5) arcering.push(vorm("line", { x1: x, y1: h, x2: x + h, y2: 0, stroke: "#dc2626", "stroke-width": 2 }));
+      band.push(vorm("g", { "clip-path": `url(#${clipBand})` }, ...arcering));
     }
     band.push(vorm("line", { x1: BAND, y1: 0, x2: BAND, y2: h, stroke: verbod ? "#dc2626" : "#15803d", "stroke-width": 1 }));
     const modaliteit = [vorm("text", { x: BAND + (w - BAND) / 2 + (verbod ? 8 : 0), y: 14, "text-anchor": "middle", "font-size": 9.5, "font-weight": 700, fill: verbod ? "#b91c1c" : "#15803d" }, verbod ? "mag niet" : "mag")];
@@ -65,7 +70,12 @@ const regelkaart = {
     return vorm(
       "g",
       {},
-      vorm("defs", {}, vorm("clipPath", { id: clip }, vorm("rect", { x: 0.75, y: 0.75, width: w - 1.5, height: h - 1.5, rx: 10 }))),
+      vorm(
+        "defs",
+        {},
+        vorm("clipPath", { id: clip }, vorm("rect", { x: 0.75, y: 0.75, width: w - 1.5, height: h - 1.5, rx: 10 })),
+        vorm("clipPath", { id: clipBand }, vorm("rect", { x: 0, y: 0, width: BAND, height: h }))
+      ),
       vorm("rect", { x: 0.75, y: 0.75, width: w - 1.5, height: h - 1.5, rx: 10, fill: ctx.thema.vulling, ...rand(ctx) }),
       vorm("g", { "clip-path": `url(#${clip})` }, ...band),
       ...modaliteit

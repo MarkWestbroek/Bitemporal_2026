@@ -34,7 +34,10 @@ test("alle negen vormen tekenbaar; kaft met boekrug en 'vanaf · doel'; regelkaa
   assert.equal(mag.omtrek.kinderen[0].kinderen[0].attrs.id, "a-kaart", "id met idPrefix");
   const niet = teken("tr-regelkaart", el("toegangsregel", "Inzage van derden", { modaliteit: "mag niet" }), { id: "toegangsregel", shape: "tr-regelkaart" });
   assert.match(niet.tekst, /"mag niet"/);
-  assert.ok(niet.omtrek.kinderen[2].kinderen.filter((x) => x.tag === "line").length > 5, "arcering");
+  const arcering = niet.omtrek.kinderen[2].kinderen.find((x) => x.tag === "g");
+  assert.ok(arcering.kinderen.filter((x) => x.tag === "line").length > 5, "arcering");
+  assert.equal(arcering.attrs["clip-path"], "url(#a-band)", "de arcering blijft binnen de band (geen wig over de kaart)");
+  assert.deepEqual(niet.omtrek.kinderen[0].kinderen[1].kinderen[0].attrs, { x: 0, y: 0, width: 11, height: niet.box.h }, "het knipvlak van de band");
   assert.ok(niet.omtrek.kinderen.some((x) => x.tag === "circle"), "⃠");
   assert.equal(isVerbod("verboden"), true);
   assert.equal(isVerbod("mag"), false);
