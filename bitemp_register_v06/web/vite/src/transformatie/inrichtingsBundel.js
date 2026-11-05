@@ -23,6 +23,36 @@ import { maakBpmnArtefact } from "../diagramprofielen/bpmn/bpmnArtefact.js";
 import { maakDmnArtefact } from "../diagramprofielen/dmn-drd/dmnArtefact.js";
 
 /** Volgorde van maken: wat een ander artefact nodig heeft komt eerst. */
+/**
+ * Plaatshouders die de uitrol (FUNDAMENT) oplost naar de url of versie van een
+ * type in de omgeving: `${OBJECTTYPE_URL:<id>}`, `${OBJECTTYPE_VERSION:<id>}`,
+ * `${ZAAKTYPE_URL:<id>}`. Het artefact dat dat type aanmaakt moet dan eerder
+ * uitgerold zijn; op een lege omgeving klopt de volgorde alleen als de
+ * afhankelijkheid in de e-dienst staat (FUNDAMENT, cg-test 05-11).
+ */
+const PLAATSHOUDER = /\$\{(OBJECTTYPE_URL|OBJECTTYPE_VERSION|ZAAKTYPE_URL):([^}]+)\}/g;
+
+/**
+ * Toets `ART-PLAATSHOUDER`: elke plaatshouder in de payload heeft een
+ * afhankelijkheid op het artefact dat het type aanmaakt.
+ * @param {any} artefact
+ * @returns {any[]} diagnostics
+ */
+export function toetsPlaatshouders(artefact) {
+  const payload = artefact?.artefactInhoud?.payload;
+  const tekst = typeof payload === "string" ? payload : JSON.stringify(payload ?? "");
+  const heeft = new Set((artefact?.afhankelijkheden || []).map((a) => a.identifier));
+  const mist = new Map();
+  for (const m of tekst.matchAll(PLAATSHOUDER)) if (!heeft.has(m[2]) && !mist.has(m[2])) mist.set(m[2], m[1]);
+  return [...mist].map(([id, soort]) => ({
+    severity: "warning",
+    code: "ART-PLAATSHOUDER",
+    message: `De payload verwijst naar "${id}" (\${${soort}:${id}}), maar het artefact heeft daar geen afhankelijkheid op; op een lege omgeving kan de uitrol dan in de verkeerde volgorde lopen`,
+    sourceId: null,
+    path: null,
+  }));
+}
+
 const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierschema", "dossierformulier", "dossiertabbladen", "dmn", "bpmn"];
 
 /**
@@ -120,7 +150,7 @@ export async function maakInrichtingsBundel({
       if (!r) throw new Error(`Onbekende artefactsoort "${soort}".`);
       if (soort === "objecttype") objecttypen.set(identifier, r.artefact);
       if (soort === "dmn") beslissingen[identifier] = r.invoer;
-      uitkomst.set(keuzes, { artefact: r.artefact, diagnostics: r.diagnostics || [], fout: null });
+      uitkomst.set(keuzes, { artefact: r.artefact, diagnostics: [...(r.diagnostics || []), ...toetsPlaatshouders(r.artefact)], fout: null });
     } catch (e) {
       uitkomst.set(keuzes, { artefact: null, diagnostics: e?.diagnostics || [], fout: e?.message || String(e) });
     }

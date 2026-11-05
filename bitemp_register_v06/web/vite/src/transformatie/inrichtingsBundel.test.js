@@ -72,3 +72,27 @@ test("een fout bij één artefact stopt de rest niet", async () => {
   assert.match(x.fout, /Onbekende artefactsoort/);
   assert.equal(bundel.filter((b) => b.fout).length, 1);
 });
+
+// Op een lege omgeving mislukte de uitrol van de tabbladen: het zaaktype bestond nog niet
+// (FUNDAMENT, cg-test 05-11). Wie naar een type verwijst, hangt af van het artefact dat het maakt.
+test("ART-PLAATSHOUDER: een plaatshouder zonder afhankelijkheid geeft een waarschuwing", async () => {
+  const { toetsPlaatshouders } = await import("./inrichtingsBundel.js");
+  const artefact = (payload, afhankelijkheden) => ({ artefactInhoud: { payload }, afhankelijkheden });
+  assert.deepEqual(toetsPlaatshouders(artefact({ url: "${ZAAKTYPE_URL:GPK}" }, [{ identifier: "GPK" }])), []);
+  assert.deepEqual(toetsPlaatshouders(artefact("<x a='${OBJECTTYPE_URL:aanvraag}' b='${OBJECTTYPE_VERSION:aanvraag}'/>", [])).map((d) => d.code), ["ART-PLAATSHOUDER"]);
+
+  // De GPK-bundel: het formulier draagt plaatshouders naar het objecttype en heeft die afhankelijkheid.
+  const bundel = await maakInrichtingsBundel(invoer());
+  assert.match(JSON.stringify(bundel.find((b) => b.soort === "formulier").artefact.artefactInhoud.payload), /\$\{OBJECTTYPE_URL:gehandicaptenparkeerkaartaanvraag\}/);
+  assert.deepEqual(bundel.flatMap((b) => b.diagnostics).filter((d) => d.code === "ART-PLAATSHOUDER"), []);
+  const edienst = lees("gpk-edienst.json");
+  edienst.afhankelijkheden = edienst.afhankelijkheden.filter((a) => a.artefact !== "gehandicaptenparkeerkaart-aanvragen");
+  const zonder = await maakInrichtingsBundel({ ...invoer(), edienst });
+  assert.deepEqual(zonder.find((b) => b.soort === "formulier").diagnostics.filter((d) => d.code === "ART-PLAATSHOUDER").length, 1);
+});
+
+test("tabbladen hangen af van het dossierschema en het zaaktype (volgorde op een lege omgeving)", async () => {
+  const bundel = await maakInrichtingsBundel(invoer());
+  const tab = bundel.find((b) => b.soort === "dossiertabbladen").artefact;
+  assert.deepEqual(tab.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"], ["GPK", "zaaktype"]]);
+});

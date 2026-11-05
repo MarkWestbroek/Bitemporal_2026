@@ -1016,6 +1016,19 @@ Schema en tabbladen dragen allebei de key van het dossier als identifier; de
 soort onderscheidt ze. Daarom kan een afhankelijkheid in de e-dienst `soort` en
 `afhankelijkVanSoort` noemen, en neemt de runner `--soort`.
 
+**Volgorde op een lege omgeving (FUNDAMENT, cg-test 05-11).** Na een reset van
+het cluster mislukte de eerste uitrol van de tabbladen: FUNDAMENT zet bij die
+stap de dossierbundel neer, en de zaak-type-link daarin (handwerk in de
+Fundament-repo) verwijst met `${ZAAKTYPE_URL:GPK}` naar het zaaktype, dat nog
+niet bestond. De tabbladen hangen daarom in de e-dienst af van het dossierschema
+en van het zaaktype (`afhankelijkVanSoort: "zaaktype"`). Algemeen geldt: een
+artefact dat naar een type in de omgeving verwijst, hangt af van het artefact dat
+dat type aanmaakt. De bundel toetst dat op de plaatshouders in de payload
+(`${OBJECTTYPE_URL:<id>}`, `${OBJECTTYPE_VERSION:<id>}`, `${ZAAKTYPE_URL:<id>}`):
+`ART-PLAATSHOUDER` (waarschuwing) als de afhankelijkheid ontbreekt
+(`toetsPlaatshouders` in `transformatie/inrichtingsBundel.js`). De zaak-type-link
+zelf is nog geen artefact uit het model (§11.13).
+
 **Bron.** De dossierinhoud is het schema van het **objecttype-artefact**, zonder
 de verzoek-envelop: de Verzoek-plugin kopieert `data` naar het dossier. De
 traceregels van het objecttype geven per veld de modelknoop. Zo leest de
@@ -1349,3 +1362,5 @@ dossier bewaren (vraagt een veld in het dossierschema).
    DMN-model in een Studio-project; de fixtures zijn dan kopieën voor de tests.
    De beslistabel heeft daarvoor een bewerkscherm aan het element `decision`
    nodig (§11.12).
+8. Dossier: de zaak-type-link (dossier ↔ zaaktype) als artefact uit de e-dienst;
+   nu handwerk in de Fundament-repo, met `${ZAAKTYPE_URL:<id>}` (§11.9).
