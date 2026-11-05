@@ -8,6 +8,26 @@
 
 ---
 
+## render 0.3.1 (2026-11-06)
+
+Alleen de render-sidecar (patch); api blijft 0.18.0, studio 0.28.0. De labelfix staat in de
+frontendbron (`diagramcore/tekenaar/lijnen.js`) en komt voor de Studio mee in de volgende
+studio-release (CHANGELOG [Unreleased]).
+
+- **Labels stapelen zoals op het canvas** (OMNIUM-UI, 387cdc43): labels op dezelfde zijde van een
+  lijn schuiven 18 px onder elkaar, zoals `ConnectorEdge`. Eerste melding uit het
+  inrichtingsregister: bij de BPMN-gateway "Ontvankelijk?" (GPK, "Aanvraag oppakken") lagen naam
+  ("ja"/"nee") en conditie op hetzelfde punt. Elk label draagt `data-dc-label="<connector-id>"`.
+  Een lang label op een kort segment kan nog over een vorm vallen, net als op het canvas.
+- Getest: render-svc 6/6; het GPK-diagram uit de fixture (`cg-test/gpk-processen.bpmn-model.json`)
+  bekeken: conditie en naam onder elkaar. OMNIUM-UI: 1397 unit, Studio-e2e 88/88 (met labeltest).
+- Main bevat ook stap 6 van BACKEND (projectdiagram als SVG, `2d30eeb9`); die Go-wijziging wordt
+  pas als api 0.19.0 uitgebracht en zit niet in dit image.
+
+Uitrol: image `bitemp-render-svc:0.3.1`; op Fundament door FUNDAMENT, op app met `./update.sh`.
+
+---
+
 ## studio 0.28.0 / render 0.3.0 (2026-11-05)
 
 Frontend en render-sidecar; api blijft 0.18.0 (geen Go-wijziging sinds 47dc540f). Aanleiding:

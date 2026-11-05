@@ -687,7 +687,7 @@ Mark 05-10: config wel, uitrol later.
 
 ```bash
 # lokaal, in bitemp_register_v06 — altijd linux/amd64
-docker build -f Dockerfile.render --platform linux/amd64   -t markwestbroek/bitemp-render-svc:0.3.0 -t markwestbroek/bitemp-render-svc:latest .
+docker build -f Dockerfile.render --platform linux/amd64   -t markwestbroek/bitemp-render-svc:0.3.1 -t markwestbroek/bitemp-render-svc:latest .
 docker build -f Dockerfile.api --platform linux/amd64   -t markwestbroek/bitemp-go-api:0.9.0 -t markwestbroek/bitemp-go-api:latest .
 docker push …   # alle vier de tags
 

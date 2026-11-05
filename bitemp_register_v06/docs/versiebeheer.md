@@ -117,7 +117,8 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.3.0`** (2026-11-05: profielvormen van stap 3/4, bouw los van
+- Render-sidecar: **`render/v0.3.1`** (2026-11-06: labels op dezelfde zijde van een lijn onder
+  elkaar, zoals het canvas; image `bitemp-render-svc:0.3.1`), na **`render/v0.3.0`** (2026-11-05: profielvormen van stap 3/4, bouw los van
   web/vite, `data-render-versie` in elke SVG; image `bitemp-render-svc:0.3.0`), na
   **`render/v0.2.0`** (2026-11-05: `taal=studio` met de ene tekenaar) en **`render/v0.1.0`**
   (eerste uitgave, 2026-10-06), zie
