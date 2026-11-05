@@ -136,6 +136,16 @@
 .dc-sjabloon .dc-ornament {
   pointer-events: none;
 }
+/* Een vorm buiten het canvas (canvas/VormVoorbeeld.jsx: galerij, shape-sets, vormkiezer; het
+   toegangsdiagram): daar bestaan de canvas-tokens niet, dus de tekenaar-tokens staan hier vast
+   op de lichte kaart — een voorbeeld is in beide thema's een lichte vorm, zoals een node. */
+.dc-vormvoorbeeld {
+  --diagram-surface: #f1f5f9;
+  --diagram-border: #94a3b8;
+  --diagram-text: #0f172a;
+  --diagram-muted: #64748b;
+  --diagram-accent: #4f46e5;
+}
 /* Afgeleide activaties op een levenslijn (sequence/vormen.js): niet aan te pakken, de punten
    eronder wel. */
 .dc-sjabloon .dc-seq-activatie {

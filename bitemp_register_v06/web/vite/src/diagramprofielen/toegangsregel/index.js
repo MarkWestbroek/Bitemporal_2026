@@ -318,7 +318,8 @@ export const toegangsregelDiagramType = {
 };
 
 /** Idempotente registratie (veilig bij HMR/dubbele import).
- *  De vormentaal (shapes.jsx + iconen.jsx, Implementatie-domein) wordt
+ *  De vormen zijn ShapeTypes (vormen.js, pure .js, hierboven geïmporteerd); de iconen
+ *  (iconen.jsx, Implementatie-domein) worden
  *  door de activiteiten geregistreerd — dit bestand blijft jsx-vrij
  *  zodat de node-tests het kunnen importeren. */
 export function registreerToegangsregelProfiel() {

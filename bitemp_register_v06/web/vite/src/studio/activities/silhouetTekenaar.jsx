@@ -1,7 +1,7 @@
 /**
  * silhouetTekenaar — een lichte vorm-editor voor data-shapes: klik punten, sleep
  * ze, en maak een punt **rond of hoekig** (klik erop) voor krommen. Levert een
- * gesloten SVG-`path` op de 0–100-box op, die als `silhouet` (zie `dataShape.jsx`)
+ * gesloten SVG-`path` op de 0–100-box op, die als `silhouet` (zie `tekenaar/dataVorm.js`)
  * met de node-box meerekt — béziers blijven behouden. Voor snel/simpel werk; voor
  * complexe vormen is er de Method Draw-modal.
  *

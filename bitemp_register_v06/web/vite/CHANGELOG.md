@@ -31,6 +31,31 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   behandelaar de taak doet; wordt de formulierkoppeling in de proceskoppeling.
 
 ### Gewijzigd
+- **Eén tekenaar, opruimstap — de oude React-vormen zijn weg** (05-11): op het canvas, in
+  documenten, gedeelde plaatjes, de render-API én in de voorbeelden tekent nu alleen nog de
+  tekenaar. Verwijderd: de zestien `shapes.jsx`/`vormShapes.jsx`/`blokShapes.jsx` per profiel,
+  `shapes/basisShapes.jsx`, `shapes/dataShape.jsx` en `shapes/shapeRegistry.js` (ruim 4000
+  regels). Omgezet:
+  - **eigen vormen** (Studio-instellingen, `web/vite/vormen/*.json`) zijn ShapeTypes op één
+    generieke renderer (`tekenaar/dataVorm.js`): grondvorm, hoekradius, CSS-`polygon(…)` en het
+    vrije silhouet uit Method Draw. Ze tekenen daardoor ook in documenten. Zichtbaar: de rand
+    van een silhouet is overal even dik, en `randStijl: "dashed"` werkt nu ook op een polygoon;
+  - de **diagramverwijzing** tekent via het sjabloon (naam van het doel live, doel weg =
+    doorgestreept en rood);
+  - de **vormvoorbeelden** (galerij in de instellingen, shape-sets en vormkiezer in de
+    profiel-ontwerper) en het **toegangsdiagram** tekenen met de tekenaar
+    (`canvas/VormVoorbeeld.jsx`); een voorbeeld toont de vorm zoals het eerste profiel dat hem
+    gebruikt hem tekent. De galerij toont de vormen nu heel in plaats van afgeknipt;
+  - een shape-id zonder ShapeType krijgt op het canvas dezelfde terugval per familie als in
+    documenten en op de server. De vijf containers van het formulierdiagram hadden zo'n id
+    (`rect`) en gebruiken nu `class-box`; een lege container is daardoor 56 hoog met de naam
+    bovenaan, zoals elke klasse-box.
+  Gevonden bij het testen en hersteld: op de regelkaart "mag niet" (toegangsregel) lag de rode
+  arcering als een wig over de kaart in plaats van in de band.
+  **Regressietest:** `tests/e2e/41-studio-tekenaar-pariteit.spec.js` controleert voor elk
+  plaatsbaar elementtype van elk geregistreerd profiel dat het canvas via de tekenaar tekent op
+  de maat die de tekenaar meet, dat lijnen op canvas en in de tekenaar hetzelfde pad hebben,
+  dat de sequence-activaties gelijk zijn, en dat de voorbeelden tekenen.
 - **Inrichting: zaaktypekoppeling van het dossier als artefact** (05-11): nieuwe soort
   `dossierzaaktypelink` (regelset `canoniek-naar-gzac-dossier` 0.2.0); zaaktype en
   `zaakBijDossier` uit de e-dienst, omgevingsgegevens als plaatshouder. Was handwerk bij

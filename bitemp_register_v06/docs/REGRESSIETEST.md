@@ -5,6 +5,12 @@ Uitgebreid 2026-09-18 tot een bewerkbare testsuite: alle scenario's declaratief 
 suite-editor, loadtests en export naar k6/Hurl. Achtergrond en afwegingen (o.a. waarom geen
 bestaande open-source tool): zie [TESTSUITE_VERKENNING.md](TESTSUITE_VERKENNING.md).*
 
+> **Dit is de regressietest van de backend (API + database).** De Studio heeft een eigen reeks:
+> de Playwright-specs in `web/vite/tests/e2e/` (zie `helpers/studio.js` voor het draaien) en de
+> unit-tests naast de bron. Voor de **tekening** (canvas = documenten = render-API) is dat
+> `tests/e2e/41-studio-tekenaar-pariteit.spec.js`; uitleg in `docs/STUDIO.md` (zoek op
+> "Regressietest").
+
 ## Wat het is
 
 Een **integratietest die de échte API in-process draait** (`NewRouter` + `httptest`) tegen een

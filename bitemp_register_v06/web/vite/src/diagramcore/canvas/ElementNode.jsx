@@ -1,8 +1,9 @@
 /**
  * ElementNode — dé generieke React Flow-node van de diagramcore.
  *
- * Vervangt de per-type node-componenten: de vorm komt uit de shapeRegistry
- * (via elementType.shape), de inhoud uit element.compartimenten. De node zelf
+ * Vervangt de per-type node-componenten: de vorm is het ShapeType achter
+ * elementType.shape, getekend door de ene tekenaar (SjabloonShape.jsx); de
+ * inhoud komt uit element.compartimenten. De node zelf
  * levert alleen de acht standaard-handles (zelfde id's als de umleditor-nodes:
  * source/target × top/bottom/left/right), zodat bestaande edge-handles
  * één-op-één blijven werken — plus de vlak-handle voor de verbind-modus
@@ -16,7 +17,6 @@
  */
 import { memo, useContext, useLayoutEffect, useRef, useState } from "react";
 import { Handle, NodeResizer, Position } from "@xyflow/react";
-import { getShape } from "../shapes/shapeRegistry.js";
 import { InlineNaamContext, VLAK_HANDLE, splitsVeldSleutel } from "./inlineNaam.js";
 import NaamEditor from "./NaamEditor.jsx";
 import { doorklikVan } from "../model/verwijstNaar.js";
@@ -120,17 +120,16 @@ function veldBijSleutel(element, sleutel) {
 function ElementNode({ id, data, selected }) {
   const { element, elementType, bewerkbaar, onResize, fieldTypesById, compartmentTypesById } = data;
   const inlineNaam = useContext(InlineNaamContext);
-  // Live maat tijdens het slepen aan de resizer: een sjabloonvorm tekent zichzelf op die maat
-  // (een oude component volgt de wrapper via width/height 100%). Weg na het loslaten; dan
-  // staat de maat in het voorkomen (data.size).
+  // Live maat tijdens het slepen aan de resizer: de vorm tekent zichzelf op die maat. Weg na
+  // het loslaten; dan staat de maat in het voorkomen (data.size).
   const [liveMaat, setLiveMaat] = useState(null);
   if (!element || !elementType) return null;
   const hernoemt = inlineNaam.nodeId === id;
   const veldSleutel = hernoemt ? inlineNaam.veld || null : null;
   const veld = veldSleutel ? veldBijSleutel(element, veldSleutel) : null;
-  // Eén tekenaar (stap 3): een shape-id met ShapeType + renderer tekent via SjabloonShape
-  // (dezelfde tekenaar als documenten en de render-API); anders de oude React-component.
-  const vormInfo = sjabloonOpCanvas(elementType.shape);
+  // Eén tekenaar: elk shape-id tekent via SjabloonShape (dezelfde tekenaar als documenten en
+  // de render-API); een id zonder ShapeType krijgt de terugval per familie.
+  const vormInfo = sjabloonOpCanvas(elementType.shape, elementType);
   // De naam onder de vorm: het type zegt het (`naamLabel: "buiten"`), of de vorm heeft geen
   // inhoudsvak (stap 4: begin/eind, ruit, junction, ArchiMate-figuren).
   const naamBuiten = elementType.naamLabel === "buiten" || sjabloonNaamBuiten(vormInfo, elementType);
@@ -173,15 +172,14 @@ function ElementNode({ id, data, selected }) {
     );
   }
 
-  const Shape = vormInfo ? SjabloonShape : getShape(elementType.shape) || getShape("class-box");
-  if (!Shape) return null;
+  const Shape = SjabloonShape;
   // Compartimenten verborgen op dit diagram/voorkomen: de shape krijgt een
   // type zonder compartimenten en een element zonder inhoud — alleen de kop.
   const verborgen = !!data.compartimentenVerborgen && (elementType.compartments?.length || element.compartimenten?.length);
   const shapeType = verborgen ? { ...elementType, compartments: [] } : elementType;
   const shapeElement = verborgen ? { ...element, compartimenten: [] } : element;
-  const sjabloonMaat = vormInfo ? liveMaat || (data.size ? { w: data.size.width, h: data.size.height } : null) : null;
-  const sjabloonMin = vormInfo ? sjabloonMinMaat(vormInfo, elementType) : null;
+  const sjabloonMaat = liveMaat || (data.size ? { w: data.size.width, h: data.size.height } : null);
+  const sjabloonMin = sjabloonMinMaat(vormInfo, elementType);
 
   const magResizen = bewerkbaar && elementType.resizebaar !== false;
   // Gedragsverwijzing (§3.2): een gevulde verwijzing toont een ⧉-badge in de
@@ -210,7 +208,8 @@ function ElementNode({ id, data, selected }) {
         selected={!!selected}
         fieldTypesById={fieldTypesById}
         compartmentTypesById={compartmentTypesById}
-        {...(vormInfo ? { vormInfo, maat: sjabloonMaat } : {})}
+        vormInfo={vormInfo}
+        maat={sjabloonMaat}
       >
         {magResizen && (
           <ShapeResizer
@@ -218,12 +217,12 @@ function ElementNode({ id, data, selected }) {
             // een sequence-diagram); default de klassieke box-minima, of de
             // minMaat van het ShapeType (sjabloonvorm). De shape zelf kan een
             // hoger minimum afdwingen (zie ShapeResizer).
-            minWidth={sjabloonMin ? sjabloonMin.w : elementType.minBreedte ?? 180}
-            minHeight={sjabloonMin ? sjabloonMin.h : elementType.minHoogte ?? 56}
+            minWidth={sjabloonMin.w}
+            minHeight={sjabloonMin.h}
             isVisible={!!selected}
             lineStyle={{ borderColor: "#2563eb" }}
             handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor: "#2563eb", background: "#ffffff" }}
-            onResize={vormInfo ? (_ev, params) => setLiveMaat({ w: Math.round(params.width), h: Math.round(params.height) }) : undefined}
+            onResize={(_ev, params) => setLiveMaat({ w: Math.round(params.width), h: Math.round(params.height) })}
             // Trekken aan de linker-/bovenrand verschuift ook de positie
             // (params.x/y, relatief aan een eventuele parent): meegeven,
             // anders sprong de node na de rebuild terug naar zijn oude plek

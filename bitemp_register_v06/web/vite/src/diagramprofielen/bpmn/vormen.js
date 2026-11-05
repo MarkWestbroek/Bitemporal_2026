@@ -3,15 +3,14 @@
  * bpmn/vormen — de BPMN-vormen als ShapeType (plan 2026-11-04 Eén tekenaar, stap 4). Eigen
  * renderers waar de vorm van het element of het type afhangt (event-ring en -icoon, gateway-
  * symbool, taaktype-icoon, subproces-markering, data-object/-store met de naam eronder, pool met
- * staande naamband); de lane op de bibliotheek-`kader`. Dezelfde id's als `shapes.jsx` (oude
- * React-realisatie, tweede realisatie tot de opruimstap). Pure `.js`.
+ * staande naamband); de lane op de bibliotheek-`kader`. Pure `.js`.
  */
 import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";
 import { randRechthoek, randCirkel, geschaald } from "../../diagramcore/tekenaar/bibliotheek.js";
 import { n3 } from "../../diagramcore/tekenaar/glyphs.js";
 import { veiligeKleur } from "../../diagramsvg/thema.js";
 
-/** Iconen óp een lichte taakvulling blijven donker, ook in donker thema (zoals shapes.jsx). */
+/** Iconen óp een lichte taakvulling blijven donker, ook in donker thema. */
 const INKT = "#334155";
 const graden = (hoek) => (hoek * Math.PI) / 180;
 

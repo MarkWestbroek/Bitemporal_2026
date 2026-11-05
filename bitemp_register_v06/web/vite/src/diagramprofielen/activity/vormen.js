@@ -2,8 +2,7 @@
 /**
  * activity/vormen — de activity-vormen als ShapeType (plan 2026-11-04 Eén tekenaar, stap 4).
  * Bibliotheek-renderers met parameters; alleen de fork/join-balk heeft een eigen renderer, omdat
- * zijn maat van het element afhangt (`data.verticaal`). Dezelfde id's als `shapes.jsx` (oude
- * React-realisatie, tweede realisatie tot de opruimstap). Pure `.js`.
+ * zijn maat van het element afhangt (`data.verticaal`). Pure `.js`.
  */
 import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";
 import "../../diagramcore/tekenaar/bibliotheek.js";

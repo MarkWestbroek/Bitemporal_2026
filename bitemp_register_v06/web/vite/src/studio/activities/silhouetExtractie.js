@@ -6,7 +6,7 @@
  *  - houd de groep-structuur intact (transforms op <g>'s blijven kloppen);
  *  - verwijder niet-tekenbare rommel (defs, title, namedview, style, script);
  *  - strip fill/stroke/stijl van álle elementen, zodat de node-vulling/-rand
- *    (op de wrapper-<g> in dataShape) via overerving wint — één egaal silhouet;
+ *    (op de omhullende <g> van de renderer, tekenaar/dataVorm.js) via overerving wint — één egaal silhouet;
  *  - meet de bounding box met getBBox → `box` wordt de viewBox waarmee de vorm
  *    met de node-box meerekt.
  *

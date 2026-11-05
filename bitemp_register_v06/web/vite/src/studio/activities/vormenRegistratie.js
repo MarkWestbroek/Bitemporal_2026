@@ -1,12 +1,13 @@
 /**
- * vormenRegistratie — opslag + registratie van **data-shapes** (Studio-
- * instellingen). Zelfde patroon als profielRegistratie: localStorage als
+ * vormenRegistratie — opslag + registratie van **eigen vormen** (data-shapes, Studio-
+ * instellingen); elke vorm wordt een ShapeType op de renderer `data-vorm`
+ * (diagramcore/tekenaar/dataVorm.js). Zelfde patroon als profielRegistratie: localStorage als
  * runtime-cache, een git-endpoint (`/__studio05/vormen` ↔ web/vite/vormen/*.json)
  * als gedeelde bron die via git meereist, en een build-glob zodat de vormen
  * ook in een productie-build zitten. Data-shapes leven globaal (Style-domein):
  * eenmaal geregistreerd zijn ze in élk profiel bruikbaar.
  */
-import { registreerDataShape } from "../../diagramcore/shapes/dataShape.jsx";
+import { registreerDataVorm } from "../../diagramcore/tekenaar/dataVorm.js";
 
 export const VORMEN_SLEUTEL = "studio05-vormen";
 const ENDPOINT = "/__studio05/vormen";
@@ -30,7 +31,7 @@ export function bewaarVormenLokaal(vormen) {
 /** Bewaar één data-shape: registreer live, cache lokaal, schrijf naar git. */
 export function bewaarVorm(def) {
   if (!def?.id) return;
-  registreerDataShape(def);
+  registreerDataVorm(def);
   bewaarVormenLokaal({ ...leesVormen(), [def.id]: def });
   try {
     fetch(`${ENDPOINT}/${encodeURIComponent(def.id)}`, {
@@ -60,14 +61,14 @@ export function verwijderVorm(id) {
 const _gebundeld = import.meta.glob("../../../vormen/*.json", { eager: true });
 for (const [, module] of Object.entries(_gebundeld)) {
   try {
-    registreerDataShape(module?.default || module);
+    registreerDataVorm(module?.default || module);
   } catch {
     /* kapotte vorm: overslaan */
   }
 }
 for (const def of Object.values(leesVormen())) {
   try {
-    registreerDataShape(def);
+    registreerDataVorm(def);
   } catch {
     /* kapotte vorm: overslaan */
   }
@@ -81,7 +82,7 @@ export async function synchroniseerVormenVanGit() {
     const bestanden = await r.json();
     const lokaal = leesVormen();
     for (const [id, def] of Object.entries(bestanden)) {
-      registreerDataShape(def);
+      registreerDataVorm(def);
       lokaal[id] = def;
     }
     bewaarVormenLokaal(lokaal);

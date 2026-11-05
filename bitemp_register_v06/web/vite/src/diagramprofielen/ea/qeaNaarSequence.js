@@ -29,7 +29,7 @@ import { maakHulptabellen, maakVerslag, sla, extraData, diagramId } from "./qeaK
 
 export const SEQUENCE_DIAGRAMTYPE = "sequence";
 
-/** Breedte van de levenslijn-node en maat van een punt (sequence/shapes.jsx). */
+/** Breedte van de levenslijn-node en maat van een punt (sequence/vormen.js). */
 const LIJN_BREED = 14;
 const PUNT = 12;
 

@@ -20,7 +20,7 @@
 
 /** Verticale afstand tussen zend- en ontvangpunt bij een zelf-bericht (px; EA: ±15). */
 export const HAAK = 15;
-/** Maat van een punt en breedte van de levenslijn-node (shapes.jsx). */
+/** Maat van een punt en breedte van de levenslijn-node (vormen.js). */
 const PUNT = 12;
 const LIJN_BREED = 14;
 /** Zonder muispositie (bv. vanaf een handle): zo ver onder de kop. */

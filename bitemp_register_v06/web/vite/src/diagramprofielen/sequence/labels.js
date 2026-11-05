@@ -12,7 +12,7 @@ export const SEQUENCE_PROFIEL_ID = "sequence05";
 export const BERICHTEN = ["synchroon", "asynchroon", "retour"];
 
 /**
- * Koppen van een levenslijn (zie shapes.jsx). Geen keuze = de weergave van het
+ * Koppen van een levenslijn (zie vormen.js). Geen keuze = de weergave van het
  * type (instantie van, bv. een ArchiMate-element), anders de rechthoek;
  * "object" dwingt de rechthoek met naam:Type af.
  */

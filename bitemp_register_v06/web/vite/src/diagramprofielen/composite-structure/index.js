@@ -6,10 +6,10 @@
  * `eaMapping.js`.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import "../sysml/vormen.js"; // sysml-poort
+import "../usecase/vormen.js"; // uc-actor
 import { registreerUml2Iconen } from "../uml2Iconen.jsx";
 import { maakElementFabriek } from "../uml2Basis.js";
-import { registreerSysmlShapes } from "../sysml/shapes.jsx";
-import { registreerUseCaseShapes } from "../usecase/shapes.jsx";
 import { COMPOSITE_STRUCTURE_ID, compositeStructureDiagramType, elementTypes } from "./descriptor.js";
 
 export { COMPOSITE_STRUCTURE_ID, compositeStructureDiagramType };
@@ -19,8 +19,6 @@ export const maakElement = maakElementFabriek(elementTypes, "cs");
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerCompositeStructure() {
   registreerUml2Iconen();
-  registreerSysmlShapes();
-  registreerUseCaseShapes();
   if (!getDiagramType(COMPOSITE_STRUCTURE_ID)) {
     registreerDiagramType(compositeStructureDiagramType);
   }

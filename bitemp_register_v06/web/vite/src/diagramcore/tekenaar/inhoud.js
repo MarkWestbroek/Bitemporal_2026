@@ -126,7 +126,7 @@ function compartimentBlokken(element, elementType, fieldTypesById, compartmentTy
  *   "" = geen naamregel
  * @returns {{blokken: Object[], h: number, minW: number, modus: string}}
  */
-export function planInhoud({ element, elementType, breedte, parameters = {}, fieldTypesById, compartmentTypesById, inhoudsregels = [], naam = undefined, naamOnderstreept = undefined }) {
+export function planInhoud({ element, elementType, breedte, parameters = {}, fieldTypesById, compartmentTypesById, inhoudsregels = [], naam = undefined, naamOnderstreept = undefined, naamDoorgestreept = false }) {
   const modus = parameters.inhoud || "volledig";
   const d = element?.data || {};
   const binnen = Math.max(20, breedte - 2 * PAD_X);
@@ -154,7 +154,7 @@ export function planInhoud({ element, elementType, breedte, parameters = {}, fie
     if (naamTekst) {
       const regels = breekAf(naamTekst, naamGrootte, binnen, { vet: true });
       for (const r of regels) meet(r, naamGrootte, { vet: true });
-      blokken.push({ soort: "naam", regels, grootte: naamGrootte, cursief: !!d.abstract, onderstreept: naamOnderstreept ?? !!parameters.naamOnderstreept, h: regels.length * Math.round(naamGrootte * 1.3) });
+      blokken.push({ soort: "naam", regels, grootte: naamGrootte, cursief: !!d.abstract, onderstreept: naamOnderstreept ?? !!parameters.naamOnderstreept, doorgestreept: !!naamDoorgestreept, gewicht: parameters.naamGewicht ?? 700, klasse: parameters.naamKlasse || null, bewerkbaar: parameters.naamBewerkbaar !== false, h: regels.length * Math.round(naamGrootte * 1.3) });
     }
     if (modus === "volledig" && d.materieel) {
       blokken.push({ soort: "badge", tekst: "materieel", h: 14 });
@@ -231,11 +231,14 @@ export function tekenInhoud(vak, plan, kleuren, opties = {}) {
           tekst(ankerX, y + lh * i + b.grootte, r, {
             "text-anchor": ankerAttr,
             "font-size": b.grootte,
-            "font-weight": 700,
+            "font-weight": b.gewicht,
             ...(b.cursief ? { "font-style": "italic" } : {}),
-            ...(b.onderstreept ? { "text-decoration": "underline" } : {}),
+            ...(b.doorgestreept ? { "text-decoration": "line-through" } : b.onderstreept ? { "text-decoration": "underline" } : {}),
             fill: kleuren.inkt,
-            ...(i === 0 ? { "data-dc-naam": "" } : {}),
+            ...(b.klasse ? { class: b.klasse } : {}),
+            // `data-dc-naam` = hier klikken hernoemt; een diagramverwijzing toont meestal de naam
+            // van haar doel, dus daar niet (`parameters.naamBewerkbaar: false`).
+            ...(i === 0 && b.bewerkbaar ? { "data-dc-naam": "" } : {}),
           })
         );
       });

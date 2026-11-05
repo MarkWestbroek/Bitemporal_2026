@@ -25,7 +25,7 @@ export const OBJECT_ID = "object";
 export const fieldTypes = [
   {
     // Slot: "attribuut = waarde" — de naam-type-viewer toont naam links en
-    // `typeLabel` rechts; de shape zet daar een "=" tussen (zie shapes.jsx).
+    // `typeLabel` rechts; de vorm zet daar een "=" tussen (`typePrefix`, zie vormen.js).
     id: "slot",
     viewer: "naam-type",
     properties: [

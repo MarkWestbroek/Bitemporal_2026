@@ -59,7 +59,7 @@ import { maakExportFilter } from "../export/exportFilter.js";
 import { tekenBounds } from "../export/tekenBounds.js";
 import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
-import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
+import "../tekenaar/basisVormen.js"; // registreert de basis-ShapeTypes en de bibliotheek-renderers
 import ElementNode from "./ElementNode.jsx";
 import { TekenContext } from "./SjabloonShape.jsx";
 import { InlineNaamContext, isVlakHandle } from "./inlineNaam.js";

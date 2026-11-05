@@ -17,7 +17,8 @@
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { getShape, alleShapeIds } from "../shapes/shapeRegistry.js";
+import { alleShapeTypeIds } from "../types/shapeType.js";
+import { VormVoorbeeld } from "../canvas/VormVoorbeeld.jsx";
 import { TypeIcoon, alleIcoonIds } from "../shapes/typeIconen.jsx";
 
 const _editors = new Map();
@@ -99,15 +100,10 @@ function ColourEditor({ regel, waarde, onChange }) {
  * (data.doelKleur) als die er is.
  */
 function ShapeKeuzeEditor({ regel, waarde, onChange, element }) {
-  const ids = alleShapeIds().filter((id) => !["anker", "edge"].includes(id));
+  const ids = alleShapeTypeIds().filter((id) => !["anker", "edge"].includes(id));
   const gekozen = waarde || "class-box";
-  const Shape = getShape(gekozen);
-  const dummyElement = {
-    naam: element?.naam || "Aa",
-    data: { kleur: element?.data?.doelKleur },
-    compartimenten: [],
-  };
-  const dummyType = { kleur: element?.data?.doelKleur || "#e2e8f0", compartments: [] };
+  // Een id dat (nog) niet in de lijst staat, bv. uit een ouder profiel: blijft kiesbaar.
+  const opties = ids.includes(gekozen) ? ids : [gekozen, ...ids];
   return (
     <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 6, alignItems: "center" }}>
       <select
@@ -115,7 +111,7 @@ function ShapeKeuzeEditor({ regel, waarde, onChange, element }) {
         onChange={(e) => onChange(e.target.value)}
         style={{ flex: 1, minWidth: 0, font: "inherit", fontSize: 12, padding: "3px 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)" }}
       >
-        {ids.map((id) => (
+        {opties.map((id) => (
           <option key={id} value={id}>{id}</option>
         ))}
       </select>
@@ -123,11 +119,7 @@ function ShapeKeuzeEditor({ regel, waarde, onChange, element }) {
         title={`preview: ${gekozen}`}
         style={{ flex: "0 0 auto", width: 78, height: 40, overflow: "hidden", borderRadius: 6, border: "1px dashed var(--s-border, #cbd5e1)", position: "relative", pointerEvents: "none" }}
       >
-        <div style={{ position: "absolute", top: 2, left: 2, width: 152, height: 72, transform: "scale(0.48)", transformOrigin: "top left" }}>
-          {Shape ? (
-            <Shape element={dummyElement} elementType={dummyType} selected={false} fieldTypesById={{}} compartmentTypesById={{}} />
-          ) : null}
-        </div>
+        <VormVoorbeeld shapeId={gekozen} naam={element?.naam || "Aa"} kleur={element?.data?.doelKleur} breedte={76} hoogte={38} />
       </div>
     </div>
   );

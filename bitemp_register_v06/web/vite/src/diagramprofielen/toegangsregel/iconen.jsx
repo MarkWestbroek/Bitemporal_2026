@@ -1,6 +1,6 @@
 /**
  * Toegangsregel-boomiconen — mini-silhouetten van de vormentaal (zie
- * shapes.jsx en het ontwerp-antwoord), op het typeIconen-koppelvlak voor
+ * vormen.js en het ontwerp-antwoord), op het typeIconen-koppelvlak voor
  * projectboom en taakbalken. Zelfde raster als de core-set (viewBox 14,
  * currentColor); één gevuld accent per icoon, conform de familieregels.
  */

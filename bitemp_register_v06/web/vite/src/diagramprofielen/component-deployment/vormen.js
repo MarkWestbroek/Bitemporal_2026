@@ -3,7 +3,7 @@
  * component-deployment/vormen — de node (UML-kubus) als ShapeType (plan 2026-11-04 Eén
  * tekenaar, stap 4): voorvlak met de naam, boven- en zijvlak in een lichtere tint van dezelfde
  * kleur, 10px diep. Component, interface en artifact zijn de class-box; de poort is
- * `sysml-poort` (sysml/vormen.js). Dezelfde id als `shapes.jsx`. Pure `.js`.
+ * `sysml-poort` (sysml/vormen.js). Pure `.js`.
  */
 import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";
 import { randRechthoek } from "../../diagramcore/tekenaar/bibliotheek.js";

@@ -1,8 +1,7 @@
 // @ts-check
 /**
  * cmmn/vormen — de CMMN-vormen als ShapeType (plan 2026-11-04 Eén tekenaar, stap 4). CMMN heeft
- * een eigen vormentaal die de betekenis ís, dus alle zeven zijn eigen renderers (zie
- * `shapes.jsx`, de oude React-realisatie, tweede realisatie tot de opruimstap):
+ * een eigen vormentaal die de betekenis ís, dus alle zeven zijn eigen renderers:
  *
  *   - case plan model: mapvorm met een brede, vierkante tab linksboven (anders dan de package);
  *   - stage: achthoek (afschuining 12), gestreept als discretionair; naam boven, markeringen onder;
@@ -21,7 +20,7 @@ import { tekstBreedte } from "../../diagramsvg/tekstmaat.js";
 import { n3 } from "../../diagramcore/tekenaar/glyphs.js";
 import { num } from "../../diagramsvg/svg.js";
 
-/** Iconen en markeringen óp een lichte vulling blijven donker, ook in donker thema (zoals shapes.jsx). */
+/** Iconen en markeringen óp een lichte vulling blijven donker, ook in donker thema. */
 const INKT = "#334155";
 const MARKERING = "#475569";
 const HOEK = 12;

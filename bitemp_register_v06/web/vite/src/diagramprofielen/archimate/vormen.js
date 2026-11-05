@@ -11,9 +11,8 @@
  *   - `am-vorm-*`          de set "Iconen als vorm": de spec-symbolen als **gegevens** in het
  *                          ShapeType (`parameters.figuur`), op de bibliotheek-renderer `figuur`.
  *
- * De iconen komen uit `glyphs.js` (gegevens), het icoon per type uit `elementType.icoon`. Dezelfde
- * id's als `shapes.jsx`/`blokShapes.jsx`/`vormShapes.jsx` (oude React-realisatie, tweede realisatie
- * tot de opruimstap). Pure `.js`: ook in de render-bundel en in `node --test`.
+ * De iconen komen uit `glyphs.js` (gegevens), het icoon per type uit `elementType.icoon`. Pure
+ * `.js`: ook in de render-bundel en in `node --test`.
  */
 import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";
 import { glyphVorm } from "../../diagramcore/tekenaar/glyphs.js";

@@ -12,14 +12,15 @@
  *      shape-sets) — zonder code te schrijven.
  */
 import React, { useEffect, useRef, useState } from "react";
-import { ReactFlowProvider } from "@xyflow/react";
 import { IconInstellingen } from "../icons";
-// Side-effect: registreert alle basis-shapes én de data-shapes in de registry,
-// zodat de galerij de volledige registry toont ook zonder geopende canvas.
-import "../../diagramcore/shapes/basisShapes.jsx";
-import { alleShapeIds, getShape } from "../../diagramcore/shapes/shapeRegistry.js";
+// Side-effect: registreert de basis-ShapeTypes, zodat de galerij ze ook zonder geopende canvas
+// toont; profielvormen en eigen vormen registreren bij het laden van hun profiel resp.
+// vormenRegistratie.js.
+import "../../diagramcore/tekenaar/basisVormen.js";
+import { alleShapeTypeIds } from "../../diagramcore/types/shapeType.js";
+import { VormVoorbeeld } from "../../diagramcore/canvas/VormVoorbeeld.jsx";
 import { alleIcoonIds, TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
-import { maakDataShapeComponent } from "../../diagramcore/shapes/dataShape.jsx";
+import { dataVormInfo } from "../../diagramcore/tekenaar/dataVorm.js";
 import { leesVormen, bewaarVorm, verwijderVorm } from "./vormenRegistratie.js";
 import { maakDataIcoonComponent } from "../../diagramcore/shapes/dataIcoon.jsx";
 import { leesIconen, bewaarIcoon, verwijderIcoon } from "./iconenRegistratie.js";
@@ -86,25 +87,12 @@ const kaartStijl = {
   alignItems: "center",
 };
 
-/** Preview-box: rendert een shape-component op ware grootte, geschaald. */
-function ShapePreviewBox({ Shape, naam = "Aa", kleur, schaal = 1 }) {
-  const element = { naam, data: {}, compartimenten: [] };
-  const elementType = { kleur: kleur || "#e2e8f0", compartments: [] };
-  return (
-    <div style={{ width: 150 * schaal, height: 74 * schaal, overflow: "hidden", position: "relative", pointerEvents: "none" }}>
-      <div style={{ position: "absolute", top: 0, left: 0, width: 150, height: 74, transform: `scale(${schaal})`, transformOrigin: "top left" }}>
-        {Shape ? (
-          // Eigen React Flow-context: sommige vormen lezen de canvas-store (de levenslijn meet
-          // zijn laagste kind via useStore) en crashten hier buiten een canvas (gemeld 16-10).
-          <ReactFlowProvider>
-            <Shape element={element} elementType={elementType} selected={false} fieldTypesById={{}} compartmentTypesById={{}} />
-          </ReactFlowProvider>
-        ) : (
-          <span style={{ color: "var(--s-fg-muted)" }}>—</span>
-        )}
-      </div>
-    </div>
-  );
+/**
+ * Preview-box: een vorm getekend door de ene tekenaar (VormVoorbeeld), in een vlak van
+ * 150 × 74. `shapeId` = een geregistreerde vorm; `vormInfo` = een vorm in bewerking.
+ */
+function ShapePreviewBox({ shapeId, vormInfo, naam = "Aa", kleur, schaal = 1 }) {
+  return <VormVoorbeeld shapeId={shapeId} vormInfo={vormInfo} naam={naam} kleur={kleur} breedte={150 * schaal} hoogte={74 * schaal} />;
 }
 
 const invoer = {
@@ -254,7 +242,7 @@ function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
   const [teken, setTeken] = useState(!!(start.silhouet?.punten || start.clipPath));
   const [mdOpen, setMdOpen] = useState(false);
   const zet = (patch) => setDef((d) => ({ ...d, ...patch }));
-  const Preview = maakDataShapeComponent(def);
+  const voorbeeld = dataVormInfo(def);
   const heeftSilhouet = !!def.silhouet?.inner;
   const rij = (label, node) => (
     <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
@@ -313,7 +301,7 @@ function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
           <span style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>preview</span>
-          <ShapePreviewBox Shape={Preview} naam={def.label || def.id} kleur={def.vulling} />
+          <ShapePreviewBox vormInfo={voorbeeld} naam={def.label || def.id} kleur={def.vulling} />
           <code style={{ fontSize: 10, color: "var(--s-fg-muted, #64748b)" }}>{def.id}</code>
         </div>
       </div>
@@ -448,7 +436,7 @@ function Main() {
   const eigenIcoonIds = new Set(Object.keys(eigenIconen));
   // Eigen vormen/iconen hebben hun eigen sectie; toon ze niet nóg eens tussen de
   // ingebouwde (anders dubbel, en die galerij labelt op id → oude naam blijft staan).
-  const shapeIds = alleShapeIds().filter((id) => id !== "anker" && !eigenIds.has(id));
+  const shapeIds = alleShapeTypeIds().filter((id) => id !== "anker" && !eigenIds.has(id));
   const icoonIds = alleIcoonIds().filter((id) => !eigenIcoonIds.has(id));
 
   const nieuwIcoon = async () => {
@@ -601,7 +589,7 @@ function Main() {
           <div style={grid(170)}>
             {Object.values(eigenVormen).map((def) => (
               <div key={def.id} style={{ ...kaartStijl, cursor: "pointer" }} onClick={() => setBewerk(def)} title="Klik om te bewerken">
-                <ShapePreviewBox Shape={getShape(def.id)} naam={def.label} kleur={def.vulling} />
+                <ShapePreviewBox shapeId={def.id} naam={def.label} kleur={def.vulling} />
                 <code style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>{def.id} ✎</code>
               </div>
             ))}
@@ -614,7 +602,7 @@ function Main() {
         <div style={grid(170)}>
           {shapeIds.map((id) => (
             <div key={id} style={kaartStijl}>
-              <ShapePreviewBox Shape={getShape(id)} naam={id} />
+              <ShapePreviewBox shapeId={id} naam={id} />
               <code style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>{id}</code>
             </div>
           ))}

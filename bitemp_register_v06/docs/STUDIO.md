@@ -274,7 +274,7 @@ te wijzigen.
 > minibrowser met zoekveld; Mark 21-10: "die hebben we op veel plaatsen al", een volwassen model
 > heeft honderden diagrammen); `.dc-minibrowser` is nu `box-sizing: border-box`, want de klemming
 > rekende met 240 px en de popup was 254 — tegen de rechterrand stak hij 2 px buiten beeld. De
-> vorm (`basisShapes` `DiagramVerwijzingShape`) toont de naam van het doel **live** via
+> vorm (ShapeType `diagramverwijzing`, op het canvas via `SjabloonShape`) toont de naam van het doel **live** via
 > `diagramcore/model/diagramNamen.js` (`useDiagramNaam`; de Studio zet de bron in
 > `studio/doorklik.js`), doorgestreept en rood als het doel weg is; een eigen naam (inspector) gaat
 > voor. In boom en lijsten heet een naamloze ⧉ naar zijn doel (`weergaveNaam` → "⧉ Uitlenen" via
@@ -1126,7 +1126,7 @@ fase 2 een **bewerkbare sandbox**:
   `tekenbareVorm`) tekent op het canvas als `<svg>` uit dezelfde tekenaar als documenten,
   gedeelde plaatjes en de render-API (`canvas/SjabloonShape.jsx` → `tekenaar/voorkomen.js`,
   `tekenaar/naarReact.js`). `ElementNode` kiest per id: sjabloon als `sjabloonOpCanvas(id)` het
-  geeft, anders de oude React-component uit `shapes/shapeRegistry.js` (nog: de profielvormen
+  geeft, anders (tot de opruimstap, zie onder) de oude React-component uit de shape-registry (toen nog: de profielvormen
   zonder ShapeType en de `diagramverwijzing`). Maat = bewaarde maat van het voorkomen, tijdens
   resizen de live maat, anders de gemeten inhoud; thema via `--diagram-*` → canvas-tokens;
   selectie kleurt de omtrek (`.dc-sjabloon.is-geselecteerd .dc-omtrek`). De inline-editor werkt
@@ -1171,6 +1171,33 @@ fase 2 een **bewerkbare sandbox**:
   `studio/elementVerwijzing.jsx`) en de levenslijn-renderer tekent die vorm met de tekenaar
   zelf (`bouwVoorkomen` in het klein). Buiten een canvas (vormvoorbeelden) en op de server is
   er geen host: rechthoek met de naam.
+  **Opruimstap (05-11): alleen nog de tekenaar.** De React-vormen per profiel
+  (`shapes.jsx`), `shapes/basisShapes.jsx`, `shapes/dataShape.jsx` en de shape-registry zijn
+  weg. `ElementNode` tekent elk voorkomen met `SjabloonShape`; `sjabloonOpCanvas(shape, type)`
+  geeft het ShapeType of, voor een id zonder ShapeType, dezelfde terugval per familie als
+  documenten en de server (`tekenaar/vormen.js`, `vormVoor`). Een nieuwe vorm is dus altijd een
+  ShapeType in `<profiel>/vormen.js` (pure `.js`), nooit een React-component. Verder:
+  - **Eigen vormen** (Studio-instellingen → *Eigen vormen*, `web/vite/vormen/*.json`) zijn
+    ShapeTypes op de renderer `data-vorm` (`tekenaar/dataVorm.js`): de definitie staat in
+    `parameters` (grondvorm, hoekRadius, clipPath als CSS-`polygon`, silhouet, randStijl,
+    randDikte, vulling). Het silhouet (rauwe SVG) leest een kleine eigen lezer naar een
+    VormBoom, zonder DOM, dus ook in documenten. Een eigen vorm overschrijft nooit een
+    ingebouwd ShapeType met dezelfde id.
+  - **Voorbeelden buiten het canvas** tekent `canvas/VormVoorbeeld.jsx` (galerij,
+    shape-sets, vormkiezer): de vorm op zijn natuurlijke maat in een ontwerpvlak van 150 × 74,
+    als geheel geschaald. Zonder gekozen kleur neemt het voorbeeld het eerste elementtype dat
+    de vorm gebruikt. `alleShapeTypeIds()` (types/shapeType.js) is de lijst voor kiezers.
+  - **Diagramverwijzing**: `SjabloonShape` leest de naam van het doel live uit
+    `model/diagramNamen.js` en geeft `{naam, weg}` door aan de tekenaar; `weg` streept de naam
+    door en kleurt de rand rood. De naam is daar niet inline bewerkbaar
+    (`parameters.naamBewerkbaar: false`).
+  - **Regressietest**: `tests/e2e/41-studio-tekenaar-pariteit.spec.js` (vier tests, ±25 s).
+    Voor élk plaatsbaar elementtype van élk geregistreerd profiel: getekend door de tekenaar,
+    geen terugval, canvasmaat = tekenaarmaat. Voor lijnen: het `d`-pad op het canvas = het pad
+    dat `tekenDiagram` geeft (lijnvormen, knikken, vaste handles, zelf-lus, punt-nodes,
+    sequence-berichten). Plus de sequence-activaties en de voorbeelden in de instellingen. Een
+    nieuw profiel of elementtype doet vanzelf mee. De test laadt de tekenaar in de pagina via
+    de dev-server; de render-svc is er niet voor nodig.
 - **Inline hernoemen** (2026-10-07): **F2** op de geselecteerde node, of
   **dubbelklik** op een node zonder gedragsverwijzing, opent een naamveld óp
   de vorm (bovenaan bij compartiment-vormen, gecentreerd bij de rest, onder

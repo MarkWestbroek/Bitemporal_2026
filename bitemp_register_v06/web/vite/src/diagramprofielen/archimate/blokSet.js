@@ -8,7 +8,7 @@
  * andere gedaante; vgl. vormSet.js). Buiten scope? Geef het element een
  * eigen kleur (bv. grijs); die wint van de blokkleur.
  *
- * Pure data (node-testbaar); de shapes staan in blokShapes.jsx.
+ * Pure data (node-testbaar); de vormen staan als ShapeType in vormen.js.
  */
 import { ELEMENTEN } from "./elementen.js";
 

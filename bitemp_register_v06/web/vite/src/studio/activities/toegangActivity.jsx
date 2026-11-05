@@ -40,7 +40,6 @@ import { menuBus } from "../menuBus";
 import { apiBase, downloadJson } from "../studioUtils";
 import ToegangDiagram from "./ToegangDiagram.jsx";
 import { registreerToegangsregelProfiel } from "../../diagramprofielen/toegangsregel/index.js";
-import { registreerToegangsregelShapes } from "../../diagramprofielen/toegangsregel/shapes.jsx";
 import { registreerToegangsregelIconen } from "../../diagramprofielen/toegangsregel/iconen.jsx";
 import { beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel, mergeCoreModel, PROFIELTYPE_TOEGANGSREGELS } from "../../diagramprofielen/toegangsregel/adapter.js";
 import { koppelArchimate, PROFIELTYPE_ARCHIMATE } from "../../diagramprofielen/toegangsregel/archimateKoppeling.js";
@@ -53,7 +52,6 @@ import "./toegangActivity.css";
 
 // Het toegangsregel-profiel (diagram als derde projectie) op de motor
 // registreren; idempotent, veilig bij HMR.
-registreerToegangsregelShapes();
 registreerToegangsregelIconen();
 registreerToegangsregelProfiel();
 

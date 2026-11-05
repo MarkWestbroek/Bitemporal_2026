@@ -290,7 +290,10 @@
  * @property {string} id
  * @property {string} renderer              - ShapeRenderer-id: bibliotheekvorm of eigen renderer
  * @property {Object} [parameters]          - gewone gegevens voor de renderer, bv. `{hoekRadius: 8}`.
- *   Door de motor gelezen: `inhoud` (modus van de inhoud-tekenaar; "geen" = geen inhoudsvak, de
+ *   Door de motor gelezen: `naamGewicht` (font-weight van de naam, standaard 700), `naamKlasse`
+ *   (CSS-klasse op de naamregel), `naamBewerkbaar: false` (klikken op de naam hernoemt niet:
+ *   diagramverwijzing), `testId` (data-testid op de canvasvorm),
+ *   `inhoud` (modus van de inhoud-tekenaar; "geen" = geen inhoudsvak, de
  *   naam wordt dan een buitenlabel), `naamGrootte`, `tekstAnker`, `maxBreedte`, `factorW/factorH`,
  *   `extraHoogte` (maat.js), `vulling`/`rand` (vaste kleuren), `kleurAls: "rand"` (de eigen
  *   kleur van het element kleurt de rand, niet het vlak; de typekleur telt dan niet — kaders),

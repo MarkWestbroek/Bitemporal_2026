@@ -15,14 +15,14 @@
  * Data leeft op het ontwerp-diagram (Style-data, via updateDiagramStijl); bij
  * *Activeer profiel…* gaat het pass-through naar descriptor.shapeSets.
  */
-import { getShape, alleShapeIds } from "../../diagramcore/shapes/shapeRegistry.js";
+import { alleShapeTypeIds } from "../../diagramcore/types/shapeType.js";
+import { VormVoorbeeld } from "../../diagramcore/canvas/VormVoorbeeld.jsx";
 import { TypeIcoon, alleIcoonIds } from "../../diagramcore/shapes/typeIconen.jsx";
 import { slug } from "./profielOntwerp.js";
 import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
-import { ReactFlowProvider } from "@xyflow/react";
 
 /** Alle bruikbare shape-ids — bij render (de registry vult zich bij import). */
-const shapeOpties = () => alleShapeIds().filter((id) => !["anker", "edge"].includes(id));
+const shapeOpties = () => alleShapeTypeIds().filter((id) => !["anker", "edge"].includes(id));
 
 /** Skin-waarde normaliseren: een kale string telt als alleen-shape. */
 function alsSkin(waarde) {
@@ -32,22 +32,9 @@ function alsSkin(waarde) {
 
 /** Mini-preview van een shape in de gegeven kleur (of grijs). */
 function ShapePreview({ shapeId, kleur }) {
-  const Shape = getShape(shapeId || "class-box");
-  const el = { naam: "Aa", data: { kleur }, compartimenten: [] };
-  const et = { kleur: kleur || "#e2e8f0", compartments: [] };
   return (
-    <div
-      style={{ width: 54, height: 30, overflow: "hidden", borderRadius: 4, position: "relative", pointerEvents: "none", flexShrink: 0 }}
-      title={shapeId || "class-box"}
-    >
-      <div style={{ position: "absolute", top: 1, left: 1, width: 150, height: 72, transform: "scale(0.34)", transformOrigin: "top left" }}>
-        {/* Eigen React Flow-context: vormen als de levenslijn lezen de canvas-store (16-10). */}
-        {Shape ? (
-          <ReactFlowProvider>
-            <Shape element={el} elementType={et} selected={false} fieldTypesById={{}} compartmentTypesById={{}} />
-          </ReactFlowProvider>
-        ) : null}
-      </div>
+    <div style={{ width: 54, height: 30, overflow: "hidden", borderRadius: 4, pointerEvents: "none", flexShrink: 0 }} title={shapeId || "class-box"}>
+      <VormVoorbeeld shapeId={shapeId || "class-box"} kleur={kleur} breedte={54} hoogte={30} />
     </div>
   );
 }
