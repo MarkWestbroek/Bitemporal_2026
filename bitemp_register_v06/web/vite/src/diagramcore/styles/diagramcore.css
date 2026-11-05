@@ -128,8 +128,9 @@
   overflow: visible;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
-.dc-sjabloon.is-geselecteerd .dc-omtrek *,
-.dc-sjabloon.is-geselecteerd .dc-omtrek > * {
+/* Alleen wat een rand hééft kleurt mee; een gevulde kern zonder rand (de roos van een doel,
+   de stip van een eind) krijgt er geen blauwe lijn omheen. */
+.dc-sjabloon.is-geselecteerd .dc-omtrek [stroke]:not([stroke="none"]) {
   stroke: var(--dc-selectie, #2563eb);
 }
 .dc-sjabloon .dc-ornament {

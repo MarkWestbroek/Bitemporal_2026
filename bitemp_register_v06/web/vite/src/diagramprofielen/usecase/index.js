@@ -20,6 +20,7 @@
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerUseCaseShapes } from "./shapes.jsx";
+import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): canvas, documenten en render-svc
 import { controleerUseCase } from "./controle.js";
 
 export const USECASE_ID = "usecase";

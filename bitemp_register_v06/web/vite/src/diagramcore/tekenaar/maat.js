@@ -4,7 +4,8 @@
  * maat meet de motor de inhoud met de tekstmaat-tabel, zoals het canvas shrink-to-fit meet
  * (diagramcore.css: min-width 180, max-width 280), met de ondergrens uit het ShapeType en het
  * ElementType (`minMaatVan`). Vormen waarvan het inhoudsvak kleiner is dan de buitenmaat
- * (ellips, ruit) geven dat op met `parameters.factorW`/`factorH`.
+ * (ellips, ruit) geven dat op met `parameters.factorW`/`factorH`; een vorm met een vast deel boven
+ * of onder de inhoud (strekfiguur met de naam eronder) met `parameters.extraHoogte`.
  */
 import { minMaatVan } from "../types/shapeType.js";
 
@@ -33,6 +34,6 @@ export function meetVoorkomen({ ref, elementType, shapeType, planVoor }) {
   const maxW = Math.max(p.maxBreedte ?? MAX_BREEDTE, min.w);
   const w = Math.ceil(Math.min(maxW, Math.max(min.w, natuurlijk.minW / fw)));
   const plan = planVoor(w * fw);
-  const h = Math.ceil(Math.max(min.h, plan.h / fh));
+  const h = Math.ceil(Math.max(min.h, plan.h / fh + (p.extraHoogte ?? 0)));
   return { w, h, plan };
 }

@@ -14,7 +14,7 @@ import "./basisVormen.js";
 const TERUGVAL = {
   ellips: { renderer: "ellips", parameters: { inhoud: "naam", naamGrootte: 12, maxBreedte: 280 }, minMaat: { w: 150, h: 60 } },
   actor: { renderer: "actor", parameters: { inhoud: "naam", naamGrootte: 11, maxBreedte: 64 }, minMaat: { w: 64, h: 70 } },
-  kader: { renderer: "kader", parameters: { inhoud: "naam", naamGrootte: 11, tekstAnker: "links" }, minMaat: { w: 240, h: 160 } },
+  kader: { renderer: "kader", parameters: { inhoud: "naam", naamGrootte: 11, tekstAnker: "links", kleurAls: "rand" }, minMaat: { w: 240, h: 160 } },
   notitie: { renderer: "notitie", parameters: { inhoud: "tekst", vulling: "#fffde7", rand: "#fbbf24", tekstAnker: "links" }, minMaat: { w: 160, h: 80 } },
   punt: { renderer: "cirkel", parameters: { inhoud: "geen" }, minMaat: { w: 32, h: 32 } },
   afgerond: { renderer: "rechthoek", parameters: { hoekRadius: 14 }, minMaat: { w: 160, h: 56 } },

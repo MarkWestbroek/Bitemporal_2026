@@ -20,6 +20,20 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   oude component (naam van het doel live). Zichtbaar verschil: geen slagschaduw meer, tekstmaten
   uit de tekstmaat-tabel (een vorm zonder bewaarde maat kan een paar pixels anders uitvallen).
   Profielvormen zonder ShapeType tekenen ongewijzigd (stap 4).
+- **Eén tekenaar, stap 4 (deel) — use case, activity en ArchiMate als ShapeType** (05-11): de 33
+  vormen van deze profielen (`usecase/vormen.js`, `activity/vormen.js`, `archimate/vormen.js`,
+  inclusief de ArchiMate-sets "Iconen als vorm" en "Blokken (informeel)") tekenen nu op canvas,
+  in documenten, gedeelde plaatjes en de render-API met dezelfde tekenaar. De ArchiMate-figuren
+  zijn gegevens in het ShapeType (`parameters.figuur` op de nieuwe bibliotheek-renderer `figuur`);
+  de 47 ArchiMate-iconen staan als gegevens in `archimate/glyphs.js` en komen als ornament
+  rechtsboven in de box (ook in documenten en op de server, waar ze eerder ontbraken). Nieuw in de
+  bibliotheek: `cirkel` met `kern`/`kruis`, `kader` met `kopLijn`/`tint`, `kleurAls: "rand"` (een
+  kader neemt de typekleur niet over; de naam op een open kader met eigen kleur was wit), de
+  renderer-hook `maat` (fork/join staand of liggend). Op het canvas: een vorm zonder inhoudsvak
+  (begin/eind, ruit, junction, figuur) draagt zijn naam als buitenlabel; selectie kleurt alleen
+  lijnen die een rand hebben. Zichtbaar verschil: de use case-actor is een doos van figuur + naam
+  (was: naam los onder 64px), een ArchiMate-figuur zonder bewaarde maat is 64px hoog met de naam
+  eronder, kleuren en lijndiktes uit de thema-tokens.
 
 ## [studio/v0.27.0] — 2026-11-05
 

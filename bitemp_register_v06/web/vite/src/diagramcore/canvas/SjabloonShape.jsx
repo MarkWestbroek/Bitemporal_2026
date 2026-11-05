@@ -48,6 +48,18 @@ export function sjabloonMinMaat(vormInfo, elementType) {
   return minMaatVan(vormInfo.shapeType, elementType) || { w: 0, h: 0 };
 }
 
+/**
+ * Een vorm zonder inhoudsvak (`parameters.inhoud: "geen"`: begin/eind, ruit, junction, de
+ * ArchiMate-figuren) draagt zijn naam als buitenlabel — dezelfde regel als in de tekenaar
+ * (index.js: geen vak → buitenlabel, tenzij `naamLabel: "geen"`).
+ */
+export function sjabloonNaamBuiten(vormInfo, elementType) {
+  return !!vormInfo && vormInfo.shapeType.parameters?.inhoud === "geen" && elementType?.naamLabel !== "geen";
+}
+
+/** Kleine vaste vorm: de handles liggen net buiten de vorm (diagramcore.css `.dc-punt-node`). */
+const isPuntNode = (vormInfo, elementType) => elementType?.resizebaar === false && vormInfo.shapeType.parameters?.inhoud === "geen";
+
 export function SjabloonShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, vormInfo, maat, children }) {
   // Uniek per node-instantie (clip-id); twee canvassen in één document delen anders id's.
   const uid = useId().replace(/[^A-Za-z0-9_-]/g, "");
@@ -63,15 +75,18 @@ export function SjabloonShape({ element, elementType, selected, fieldTypesById, 
       basis: BASIS,
       idPrefix: `sj${uid}`,
     });
-    const { omtrek, inhoud, ornament } = tekenVoorkomen(box);
-    return { w: box.w, h: box.h, omtrek, inhoud, ornament };
+    const { omtrek, inhoud, ornament, vak } = tekenVoorkomen(box);
+    // Knipvlak: de vorm, verruimd met een inhoudsvak dat erbuiten ligt (een renderer mag de naam
+    // naast of onder de vorm zetten).
+    const knip = { x0: Math.min(0, vak?.x ?? 0), y0: Math.min(0, vak?.y ?? 0), x1: Math.max(box.w, vak ? vak.x + vak.w : 0), y1: Math.max(box.h, vak ? vak.y + vak.h : 0) };
+    return { w: box.w, h: box.h, omtrek, inhoud, ornament, knip };
   }, [element, elementType, vormInfo, maat, fieldTypesById, compartmentTypesById, uid]);
-  const { w, h } = getekend;
+  const { w, h, knip } = getekend;
   const min = sjabloonMinMaat(vormInfo, elementType);
   const clipId = `sj${uid}-knip`;
   return (
     <div
-      className={"dc-sjabloon" + (selected ? " is-geselecteerd" : "")}
+      className={"dc-sjabloon" + (selected ? " is-geselecteerd" : "") + (isPuntNode(vormInfo, elementType) ? " dc-punt-node" : "")}
       data-shape={vormInfo.shapeType.id}
       style={{ width: w, height: h, minWidth: min.w, minHeight: min.h }}
     >
@@ -79,7 +94,7 @@ export function SjabloonShape({ element, elementType, selected, fieldTypesById, 
         <defs>
           {/* Inhoud nooit buiten de vorm (zoals `overflow: hidden` op .dc-node); het ornament mag wél uitsteken. */}
           <clipPath id={clipId}>
-            <rect x={0} y={0} width={w} height={h} />
+            <rect x={knip.x0} y={knip.y0} width={knip.x1 - knip.x0} height={knip.y1 - knip.y0} />
           </clipPath>
         </defs>
         <g className="dc-omtrek">{naarReact(getekend.omtrek)}</g>

@@ -18,7 +18,7 @@ export const BASIS_SHAPETYPES = [
   { id: "diagramverwijzing", renderer: "verwijzing", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "links" }, minMaat: { w: 120, h: 44 } },
   { id: "rounded", renderer: "rechthoek", parameters: { hoekRadius: 16, inhoud: "specificatie", naamGrootte: 12, vulling: "#e0f2fe", rand: "#7dd3fc" }, minMaat: { w: 150, h: 48 } },
   { id: "anker", renderer: "anker", parameters: { inhoud: "geen" }, minMaat: { w: 14, h: 14 } },
-  { id: "boundary", renderer: "kader", parameters: { inhoud: "naam", naamGrootte: 11, tekstAnker: "links" }, minMaat: { w: 240, h: 160 } },
+  { id: "boundary", renderer: "kader", parameters: { inhoud: "naam", naamGrootte: 11, tekstAnker: "links", kleurAls: "rand" }, minMaat: { w: 240, h: 160 } },
   { id: "bol", renderer: "bol", parameters: { inhoud: "naam", naamGrootte: 12, maxBreedte: 92 }, minMaat: { w: 92, h: 92 } },
   { id: "package", renderer: "package", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "links" }, minMaat: { w: 200, h: 110 } },
   { id: "dmn-input-data", renderer: "stadium", parameters: { inhoud: "volledig", naamGrootte: 13 }, minMaat: { w: 150, h: 56 } },
