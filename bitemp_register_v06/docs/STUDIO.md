@@ -1121,11 +1121,17 @@ fase 2 een **bewerkbare sandbox**:
   `tekenbareVorm`) tekent op het canvas als `<svg>` uit dezelfde tekenaar als documenten,
   gedeelde plaatjes en de render-API (`canvas/SjabloonShape.jsx` → `tekenaar/voorkomen.js`,
   `tekenaar/naarReact.js`). `ElementNode` kiest per id: sjabloon als `sjabloonOpCanvas(id)` het
-  geeft, anders de oude React-component uit `shapes/shapeRegistry.js` (nog: alle profielvormen
+  geeft, anders de oude React-component uit `shapes/shapeRegistry.js` (nog: de profielvormen
   zonder ShapeType en de `diagramverwijzing`). Maat = bewaarde maat van het voorkomen, tijdens
   resizen de live maat, anders de gemeten inhoud; thema via `--diagram-*` → canvas-tokens;
   selectie kleurt de omtrek (`.dc-sjabloon.is-geselecteerd .dc-omtrek`). De inline-editor werkt
-  ongewijzigd op `data-dc-naam`/`data-dc-veld`, nu op `<text>`-regels.
+  ongewijzigd op `data-dc-naam`/`data-dc-veld`, nu op `<text>`-regels. Stap 4 (05-11): de vormen
+  van **use case, activity en ArchiMate** (beide shape-sets) zijn ShapeTypes in een `vormen.js`
+  naast de descriptor — bibliotheek-renderer + parameters, een eigen renderer waar de vorm van
+  het element afhangt (`act-balk`, `am-box`, `am-laag`, `am-junction`), of de vorm als gegevens
+  (`parameters.figuur` op renderer `figuur`: de ArchiMate-symbolen). Een vorm zonder inhoudsvak
+  draagt zijn naam als buitenlabel. De ArchiMate-iconen zijn gegevens (`archimate/glyphs.js`)
+  voor taakbalk én tekenaar.
 - **Inline hernoemen** (2026-10-07): **F2** op de geselecteerde node, of
   **dubbelklik** op een node zonder gedragsverwijzing, opent een naamveld óp
   de vorm (bovenaan bij compartiment-vormen, gecentreerd bij de rest, onder

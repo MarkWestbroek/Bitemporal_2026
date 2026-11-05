@@ -19,10 +19,18 @@ import { meetVoorkomen } from "./maat.js";
 /** Lettertype van de tekening (canvas én SVG-uitvoer). */
 export const FONT = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
-/** De kleuren voor één voorkomen: thema-tokens, tenzij er een eigen kleur is. */
+/**
+ * De kleuren voor één voorkomen: thema-tokens, tenzij er een eigen kleur is. Met
+ * `parameters.kleurAls: "rand"` (kaders) kleurt de eigen kleur de rand en blijft het vlak
+ * open — de tekst kiest dan niet op contrast met die kleur, maar blijft de thematekst.
+ */
 export function kleurenVoor(basis, stijl, parameters) {
   const hex = veiligeKleur(stijl.kleur, null);
   const vast = veiligeKleur(parameters.vulling, null);
+  if (parameters.kleurAls === "rand") {
+    const inkt = vast ? tekstOp(vast) : basis.text;
+    return { ...basis, vulling: vast || basis.surface, rand: hex || veiligeKleur(parameters.rand, null) || basis.border, inkt, gedempt: vast ? inkt : basis.muted };
+  }
   const vulling = hex || vast || basis.surface;
   const inkt = hex ? tekstOp(hex) : vast ? tekstOp(vast) : basis.text;
   return {
@@ -66,10 +74,18 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
   }
   if (verborgen && (element.compartimenten || []).length) element = { ...element, compartimenten: [] };
   const parameters = shapeType.parameters || {};
-  const stijl = losStijlOp(element, et);
+  // Een kadervorm (`kleurAls: "rand"`) neemt de typekleur niet over: alleen een eigen kleur van
+  // het element kleurt zijn rand (een ArchiMate-grouping draagt de laagkleur van zijn type, maar
+  // die hoort bij de box-gedaante).
+  const stijl = losStijlOp(element, parameters.kleurAls === "rand" ? { ...et, kleur: undefined } : et);
   const inhoudsregels = inhoudsregelsVan(et, element, { elements, diagram });
   const planVoor = (breedte) => planInhoud({ element, elementType: et, breedte, parameters, fieldTypesById, compartmentTypesById, inhoudsregels });
-  const maatRef = maat ? { size: { width: maat.w, height: maat.h } } : ref;
+  let maatRef = maat ? { size: { width: maat.w, height: maat.h } } : ref;
+  // Zonder bewaarde maat mag de renderer de natuurlijke maat bepalen (fork/join: staand of liggend).
+  if (!(maatRef?.size?.width && maatRef?.size?.height) && renderer.maat) {
+    const eigen = renderer.maat({ element, elementType: et, parameters, stijl });
+    if (eigen) maatRef = { size: { width: eigen.w, height: eigen.h } };
+  }
   const { w, h, plan } = meetVoorkomen({ ref: maatRef, elementType: et, shapeType, planVoor });
   const ctx = {
     element,
@@ -81,6 +97,7 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
     node: ref || null,
     diagram,
     thema: kleurenVoor(basis, stijl, parameters),
+    inhoud: plan ? { h: plan.h, minW: plan.minW } : null,
     idPrefix,
   };
   return { ctx, renderer, w, h, plan, element, et, rand: renderer.rand ? (hoek) => renderer.rand(ctx, hoek) : null };

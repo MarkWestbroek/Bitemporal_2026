@@ -12,11 +12,12 @@
  * door de motor) wint van de parameters; `ctx.thema` draagt de opgeloste kleuren.
  *
  * Renderers: rechthoek, ellips, cirkel, ruit, kader, notitie, package, knip, stadium, bkm, golf,
- * anker, bol, actor, verwijzing.
+ * anker, bol, actor, verwijzing, figuur.
  */
 import { registreerRenderer, vorm } from "../types/shapeType.js";
 import { tekstBreedte } from "../../diagramsvg/tekstmaat.js";
 import { num } from "../../diagramsvg/svg.js";
+import { vulIn, n3 } from "./glyphs.js";
 
 const dikte = (ctx, standaard = 2) => ctx.stijl.randDikte ?? ctx.parameters.randDikte ?? standaard;
 const gestippeld = (ctx) => (ctx.stijl.randStijl ?? ctx.parameters.randStijl) === "dashed";
@@ -71,9 +72,13 @@ const ellips = {
     const d = dikte(ctx, 1.5);
     return vorm("ellipse", { cx: w / 2, cy: h / 2, rx: (w - d) / 2, ry: (h - d) / 2, fill: ctx.thema.vulling, ...rand(ctx, 1.5) });
   },
+  // Het inhoudsvak volgt factorW/factorH (standaard 72%), dezelfde factoren als waarmee maat.js
+  // de natuurlijke maat uit de inhoud terugrekent.
   inhoudsvak(ctx) {
     const { w, h } = ctx.maat;
-    return { x: w * 0.14, y: h * 0.14, w: w * 0.72, h: h * 0.72, uitlijning: "midden" };
+    const fw = ctx.parameters.factorW ?? 0.72;
+    const fh = ctx.parameters.factorH ?? 0.72;
+    return { x: (w * (1 - fw)) / 2, y: (h * (1 - fh)) / 2, w: w * fw, h: h * fh, uitlijning: "midden" };
   },
   rand: (ctx, hoek) => randEllips(ctx.maat, hoek),
 };
@@ -86,6 +91,13 @@ const cirkel = {
     const kinderen = [vorm("circle", { cx: w / 2, cy: h / 2, r, fill: ctx.parameters.dicht ? ctx.thema.rand : ctx.thema.vulling, ...rand(ctx) })];
     // Dubbele ring (eind-event, eindtoestand): een tweede cirkel erin.
     if (ctx.parameters.ring) kinderen.push(vorm("circle", { cx: w / 2, cy: h / 2, r: Math.max(2, r - 4), fill: ctx.parameters.dicht ? ctx.thema.vulling : "none", stroke: ctx.thema.rand, "stroke-width": 1.5 }));
+    // Kern (activity-eind: ring met gevulde stip): straal in px.
+    if (ctx.parameters.kern) kinderen.push(vorm("circle", { cx: w / 2, cy: h / 2, r: Math.min(ctx.parameters.kern, r - 2), fill: ctx.thema.rand, stroke: "none" }));
+    // Kruis (flow-eind): een X door de ring.
+    if (ctx.parameters.kruis) {
+      const k = r * 0.6;
+      kinderen.push(vorm("path", { d: `M ${num(w / 2 - k)} ${num(h / 2 - k)} L ${num(w / 2 + k)} ${num(h / 2 + k)} M ${num(w / 2 + k)} ${num(h / 2 - k)} L ${num(w / 2 - k)} ${num(h / 2 + k)}`, fill: "none", stroke: ctx.thema.rand, "stroke-width": dikte(ctx) }));
+    }
     return vorm("g", {}, ...kinderen);
   },
   inhoudsvak(ctx) {
@@ -118,9 +130,10 @@ const ruit = {
 };
 
 /**
- * Kader (boundary, package-romp, laag, pool): rand rondom, de naam in een kopstrook, de leden in
- * de rest. Standaard gestippeld (`lijn: "solid"` voor een laag). Zonder achtergrondkleur een
- * lichte tint van de randkleur, zoals op het canvas (~8%).
+ * Kader (boundary, package-romp, laag, pool, systeemkader, partitie): rand rondom, de naam in een
+ * kopstrook, de leden in de rest. Standaard gestippeld (`lijn: "solid"` voor een laag). Zonder
+ * achtergrondkleur een lichte tint van de eigen kleur (~8%), of met `tint: true` van de randkleur;
+ * `kopLijn: true` zet een lijn onder de kopstrook (systeemkader, swimlane).
  */
 const kader = {
   omtrek(ctx) {
@@ -133,11 +146,17 @@ const kader = {
     else if (eigen) {
       attrs.fill = eigen;
       attrs["fill-opacity"] = 0.08;
+    } else if (ctx.parameters.tint) {
+      attrs.fill = ctx.thema.rand;
+      attrs["fill-opacity"] = 0.08;
     } else attrs.fill = ctx.parameters.vulling || "none";
     attrs.stroke = eigen || ctx.thema.rand;
     attrs["stroke-width"] = d;
     if ((ctx.parameters.lijn || "dashed") === "dashed") attrs["stroke-dasharray"] = "6 4";
-    return vorm("rect", attrs);
+    const rect = vorm("rect", attrs);
+    if (!ctx.parameters.kopLijn) return rect;
+    const kop = ctx.parameters.kopHoogte ?? 24;
+    return vorm("g", {}, rect, vorm("line", { x1: d, y1: kop, x2: w - d, y2: kop, stroke: eigen || ctx.thema.rand, "stroke-width": 1, opacity: 0.6 }));
   },
   inhoudsvak(ctx) {
     const kop = ctx.parameters.kopHoogte ?? 24;
@@ -287,7 +306,11 @@ const bol = {
   rand: (ctx, hoek) => cirkel.rand(ctx, hoek),
 };
 
-/** Strekfiguur (use case-actor): figuur in de bovenste 54px, de naam eronder in het inhoudsvak. */
+/**
+ * Strekfiguur (use case-actor): figuur in de bovenste 54px, de naam eronder in het inhoudsvak —
+ * binnen de maat (het ShapeType rekent de figuur mee met `extraHoogte`), zodat canvas en
+ * documenten dezelfde doos zien.
+ */
 const FIGUUR_H = 54;
 const actor = {
   omtrek(ctx) {
@@ -305,7 +328,34 @@ const actor = {
       vorm("path", { d: `M ${num(cx)} ${num(nek)} V ${num(heup)} M ${num(cx - 16)} ${num(nek + 7)} H ${num(cx + 16)} M ${num(cx)} ${num(heup)} L ${num(cx - 14)} ${num(heup + 16)} M ${num(cx)} ${num(heup)} L ${num(cx + 14)} ${num(heup + 16)}`, ...s })
     );
   },
-  inhoudsvak: (ctx) => ({ x: -34, y: FIGUUR_H - 6, w: ctx.maat.w + 68, h: ctx.maat.h - FIGUUR_H + 6, uitlijning: "boven" }),
+  inhoudsvak: (ctx) => ({ x: 0, y: FIGUUR_H - 6, w: ctx.maat.w, h: ctx.maat.h - FIGUUR_H + 6, uitlijning: "boven" }),
+  rand: (ctx, hoek) => randRechthoek(ctx.maat, hoek),
+};
+
+/**
+ * Figuur: de vorm als gegevens in het ShapeType — `parameters.figuur = {viewBox, kinderen}`, een
+ * VormBoom met plaatshouders `$vulling` (elementkleur), `$kleur` (lijnkleur), `$open` (vlak dat open
+ * moet ogen) en `$sw` (lijndikte). Het figuur schaalt passend in de maat en zakt naar de onderkant
+ * (zoals `preserveAspectRatio="xMidYMax meet"`), zonder inhoudsvak: de naam wordt een buitenlabel.
+ * Zo zijn de ArchiMate-symbolen (poppetje, 3D-doos, …) sjablonen in het M2, geen code.
+ */
+const GETEKEND = new Set(["path", "rect", "circle", "ellipse", "line", "polyline", "polygon"]);
+const figuur = {
+  omtrek(ctx) {
+    const f = ctx.parameters.figuur || {};
+    const [, , vbW, vbH] = String(f.viewBox || "0 0 64 64").split(/\s+/).map(Number);
+    const { w, h } = ctx.maat;
+    const s = Math.min(w / (vbW || 1), h / (vbH || 1));
+    const dx = (w - vbW * s) / 2;
+    const dy = h - vbH * s;
+    const sw = ctx.stijl.randDikte ?? ctx.parameters.randDikte ?? 1.8;
+    const vervang = { $vulling: ctx.thema.vulling, $kleur: ctx.thema.rand, $open: ctx.thema.surface, $sw: sw };
+    // De lijndikte schaalt niet mee (vector-effect erft niet: op elke getekende vorm).
+    const nietSchalen = (k) => (typeof k !== "object" || !k ? k : { ...k, attrs: GETEKEND.has(k.tag) ? { ...k.attrs, "vector-effect": "non-scaling-stroke" } : k.attrs, kinderen: (k.kinderen || []).map(nietSchalen) });
+    const kinderen = (f.kinderen || []).map((k) => nietSchalen(vulIn(k, vervang)));
+    return vorm("g", { class: "dc-figuur", transform: `translate(${n3(dx)} ${n3(dy)}) scale(${n3(s)})`, stroke: ctx.thema.rand, "stroke-width": sw, "stroke-linejoin": "round", "stroke-linecap": "round" }, ...kinderen);
+  },
+  inhoudsvak: () => null,
   rand: (ctx, hoek) => randRechthoek(ctx.maat, hoek),
 };
 
@@ -321,6 +371,6 @@ const verwijzing = {
   rand: (ctx, hoek) => randRechthoek(ctx.maat, hoek),
 };
 
-export const BIBLIOTHEEK = { rechthoek, ellips, cirkel, ruit, kader, notitie, package: pakket, knip, stadium, bkm, golf, anker, bol, actor, verwijzing };
+export const BIBLIOTHEEK = { rechthoek, ellips, cirkel, ruit, kader, notitie, package: pakket, knip, stadium, bkm, golf, anker, bol, actor, verwijzing, figuur };
 
 for (const [id, r] of Object.entries(BIBLIOTHEEK)) registreerRenderer(id, r);

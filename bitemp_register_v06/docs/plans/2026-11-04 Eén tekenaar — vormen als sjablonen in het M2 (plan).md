@@ -215,6 +215,35 @@ inline-editor vindt `data-dc-naam`/`data-dc-veld` op `<text>` (NaamEditor centre
 van `.dc-node` (één view = documenten en canvas gelijk) en het type-icoon in de typering-stand
 "icoon" (de tekenaar kent alleen de stereotype-tekst; iconen horen bij stap 4 als ornament).
 
+**Stap 4 — eerste drie profielen, gebouwd 05-11 (OMNIUM-UI, `feat/tekenaar-profielvormen`).**
+Use case, activity en ArchiMate (33 vormen) zijn ShapeTypes in een pure `vormen.js` naast de
+descriptor, geïmporteerd uit `index.js` zodat canvas, documenten én de render-bundel (die `.jsx`
+leeg laat) ze krijgen. Patroon per vorm, van licht naar zwaar:
+- *bibliotheek-renderer + parameters* (de meeste): `uc-ellips` = `ellips`, `uc-actor` = `actor`,
+  `act-begin/eind/flow-eind` = `cirkel` (nieuw: `kern`, `kruis`), `act-beslissing` = `ruit`,
+  `act-object`/`act-pin`/`am-blok` = `rechthoek`, `uc-systeem`/`act-partitie` = `kader` (nieuw:
+  `kopLijn`, `tint`);
+- *eigen renderer in het profiel* waar de vorm van het element afhangt: `act-balk` (fork/join
+  staand of liggend — nieuw contractpunt `ShapeRenderer.maat`), `am-box` (laagkleur, ronde hoeken
+  voor gedrag, achthoek voor motivation, type-icoon als ornament), `am-laag` (grouping en
+  blok-laag), `am-junction` (open bij "of");
+- *de vorm als gegevens*: de negentien `am-vorm-*`-figuren (set "Iconen als vorm") zijn
+  `parameters.figuur = {viewBox, kinderen}` op de nieuwe bibliotheek-renderer `figuur`, met
+  plaatshouders `$vulling`/`$kleur`/`$open`; het figuur schaalt passend en zakt naar de onderkant,
+  de naam wordt een buitenlabel. Dat is letterlijk "vormen als sjablonen in het M2".
+
+Iconen: `archimate/glyphs.js` bevat de 47 hoek-iconen als VormBoom-gegevens; `iconen.jsx` maakt
+er React van (taakbalk, inspector) en de tekenaar zet ze als ornament (`tekenaar/glyphs.js`,
+`glyphVorm`). Motor-aanvullingen: `parameters.kleurAls: "rand"` (een kader neemt de typekleur
+niet over; de eigen kleur kleurt de rand en de tekst blijft de thematekst — dat was al fout bij
+`boundary`: witte naam op een open kader), `parameters.extraHoogte` (figuur boven de naam),
+`ctx.inhoud` (de gemeten inhoud voor een renderer die zijn vak eromheen legt), en op het canvas:
+een vorm zonder inhoudsvak draagt zijn naam als buitenlabel (`sjabloonNaamBuiten`) en kleine
+vaste vormen krijgen `.dc-punt-node` (handles net buiten de vorm). De oude React-componenten
+(`shapes.jsx`, `vormShapes.jsx`, `blokShapes.jsx`) staan er nog als tweede realisatie; opruimen
+hoort bij de afronding van stap 4. Nog niet: BPMN, sequence, state machine, CMMN, DMN-DRD, de
+UML-structuurprofielen en de rest (±27 vormen).
+
 ### 3.4 Server en documenten (RENDER-API, OMNIUM-UI)
 
 - `render-svc` importeert de tekenaar; `taal=studio` krijgt daarmee vormtrouw. De route en het
@@ -242,7 +271,7 @@ van `.dc-node` (één view = documenten en canvas gelijk) en het type-icoon in d
 | 1 | RENDER-API | `POST …/svg?taal=studio` op de schets, bundeling, Imprint-eisen (**gebouwd 04-11**, `feat/render-taal-studio`, ongecommit; wacht op Mark) | 1–1,5 dag | — |
 | 2 | OMNIUM-UI | tekenaar: maat, inhoud, lijnen, nesting, thema; de 14 basisvormen als ShapeType + renderer; schets als stand `detail=schets`; documenten en gedeelde plaatjes erop — **gebouwd 04-11** (`feat/tekenaar`: `diagramcore/tekenaar/`, terugval per vormfamilie voor vormen zonder ShapeType; de 35 diagrammen van het architectuurproject getekend met de echte profielen) | 1 week | 0 gemerged |
 | 3 | OMNIUM-UI | canvas-adapter `SjabloonShape` + inline-editor en resizer op SVG — **gebouwd 05-11** (`feat/tekenaar-canvas`: alle basisvormen behalve `diagramverwijzing`; 1318 unit, 83 Studio-e2e groen; zie §3.3) | 3–4 dagen | 2 |
-| 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na | ±½ dag per profiel, 1 week totaal | 3 |
+| 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na — **deel gebouwd 05-11** (`feat/tekenaar-profielvormen`: use case, activity, ArchiMate incl. beide shape-sets = 33 vormen; zie §3.3) | ±½ dag per profiel, 1 week totaal | 3 |
 | 5 | RENDER-API | render-svc op de tekenaar; `taal=v3` erachter; byte-vergelijking met de huidige fixtures | 2 dagen | 2, 4 |
 | 6 | RENDER-API + BACKEND | `GET` op project/diagram met toegang (privacy-besluit) | 1–2 dagen | 5 |
 

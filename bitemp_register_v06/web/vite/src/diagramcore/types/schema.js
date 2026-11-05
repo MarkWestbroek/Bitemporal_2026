@@ -288,7 +288,13 @@
  * @typedef {Object} ShapeType
  * @property {string} id
  * @property {string} renderer              - ShapeRenderer-id: bibliotheekvorm of eigen renderer
- * @property {Object} [parameters]          - gewone gegevens voor de renderer, bv. `{hoekRadius: 8}`
+ * @property {Object} [parameters]          - gewone gegevens voor de renderer, bv. `{hoekRadius: 8}`.
+ *   Door de motor gelezen: `inhoud` (modus van de inhoud-tekenaar; "geen" = geen inhoudsvak, de
+ *   naam wordt dan een buitenlabel), `naamGrootte`, `tekstAnker`, `maxBreedte`, `factorW/factorH`,
+ *   `extraHoogte` (maat.js), `vulling`/`rand` (vaste kleuren) en `kleurAls: "rand"` (de eigen
+ *   kleur van het element kleurt de rand, niet het vlak; de typekleur telt dan niet — kaders).
+ *   Een vorm kan hier ook als gegevens staan: `figuur: {viewBox, kinderen}` voor de
+ *   bibliotheek-renderer "figuur" (ArchiMate-symbolen als vorm)
  * @property {{w: number, h: number}} [minMaat] - standaard; ElementType.minBreedte/minHoogte
  *   overschrijft per as
  * @property {"rechthoek"|"rand"} [ankers]  - waar lijnen aanhechten (standaard rechthoek);
@@ -311,6 +317,9 @@
  * @property {(ctx: ShapeContext) => VormBoom} [ornament] - iconen en markeringen
  * @property {(ctx: ShapeContext, hoek: number) => {x: number, y: number}} [rand] - aanhechtpunt
  *   op de omtrek voor `ankers: "rand"`; hoek in graden
+ * @property {(p: {element: Object, elementType: ElementType, parameters: Object, stijl: Object}) => ({w: number, h: number}|null)} [maat] -
+ *   de natuurlijke maat als die van het element afhangt (fork/join: staand of liggend); alleen
+ *   zonder bewaarde maat gevraagd. `null` = de motor meet (maat.js)
  */
 
 /**
@@ -328,6 +337,9 @@
  * @property {Object} diagram               - alleen-lezen; vervangt store-toegang (de levenslijn
  *   leidt haar activaties af uit de berichten)
  * @property {Object} [thema]
+ * @property {{h: number, minW: number}|null} [inhoud] - de door de motor gemeten inhoud (hoogte en
+ *   de breedte die hij minimaal wil); `null` bij `parameters.inhoud: "geen"`. Een renderer die
+ *   zijn inhoudsvak om de inhoud heen legt, leest dit; hij meet nooit zelf
  * @property {string} idPrefix              - voor id's in `clipPath` en `marker`
  */
 

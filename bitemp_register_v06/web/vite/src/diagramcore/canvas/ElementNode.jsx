@@ -20,7 +20,7 @@ import { getShape } from "../shapes/shapeRegistry.js";
 import { InlineNaamContext, VLAK_HANDLE, splitsVeldSleutel } from "./inlineNaam.js";
 import NaamEditor from "./NaamEditor.jsx";
 import { doorklikVan } from "../model/verwijstNaar.js";
-import { SjabloonShape, sjabloonOpCanvas, sjabloonMinMaat } from "./SjabloonShape.jsx";
+import { SjabloonShape, sjabloonOpCanvas, sjabloonMinMaat, sjabloonNaamBuiten } from "./SjabloonShape.jsx";
 
 const ONZICHTBAAR = {
   opacity: 0,
@@ -128,6 +128,12 @@ function ElementNode({ id, data, selected }) {
   const hernoemt = inlineNaam.nodeId === id;
   const veldSleutel = hernoemt ? inlineNaam.veld || null : null;
   const veld = veldSleutel ? veldBijSleutel(element, veldSleutel) : null;
+  // Eén tekenaar (stap 3): een shape-id met ShapeType + renderer tekent via SjabloonShape
+  // (dezelfde tekenaar als documenten en de render-API); anders de oude React-component.
+  const vormInfo = sjabloonOpCanvas(elementType.shape);
+  // De naam onder de vorm: het type zegt het (`naamLabel: "buiten"`), of de vorm heeft geen
+  // inhoudsvak (stap 4: begin/eind, ruit, junction, ArchiMate-figuren).
+  const naamBuiten = elementType.naamLabel === "buiten" || sjabloonNaamBuiten(vormInfo, elementType);
   // Het tekstveld: de naam, of (bij een veldsleutel) de naam van dat veld.
   const editor = hernoemt && (!veldSleutel || veld) && (
     <NaamEditor
@@ -141,7 +147,7 @@ function ElementNode({ id, data, selected }) {
             }
           : vindNaamDoel
       }
-      plaats={elementType.naamLabel === "buiten" || data.gedaante === "bol" ? "buiten" : elementType.compartments?.length ? "boven" : "midden"}
+      plaats={naamBuiten || data.gedaante === "bol" ? "buiten" : elementType.compartments?.length ? "boven" : "midden"}
       klaar={(nieuw) => inlineNaam.klaar(id, nieuw, veldSleutel)}
       onSchuif={
         veldSleutel && inlineNaam.schuifVeld
@@ -167,9 +173,6 @@ function ElementNode({ id, data, selected }) {
     );
   }
 
-  // Eén tekenaar (stap 3): een shape-id met ShapeType + renderer tekent via SjabloonShape
-  // (dezelfde tekenaar als documenten en de render-API); anders de oude React-component.
-  const vormInfo = sjabloonOpCanvas(elementType.shape);
   const Shape = vormInfo ? SjabloonShape : getShape(elementType.shape) || getShape("class-box");
   if (!Shape) return null;
   // Compartimenten verborgen op dit diagram/voorkomen: de shape krijgt een
@@ -193,7 +196,7 @@ function ElementNode({ id, data, selected }) {
   // eronder zetten. Bewust een broer van de shape en niet een kind: shapes met
   // `.dc-node` hebben `overflow: hidden` en zouden het label wegknippen. De
   // React Flow-node-wrapper is `position: absolute` en dus het referentiekader.
-  const toonBuitenlabel = elementType.naamLabel === "buiten" && !!element.naam;
+  const toonBuitenlabel = naamBuiten && !!element.naam;
   // Verbind-modus: containers (pool, lane, package, systeemkader) krijgen
   // géén vlak-handle — een lijn op hun vlak loslaten is "leeg vlak dáárbinnen"
   // (magic link), en erin slepen legt al het lidmaatschap. Ankers evenmin.

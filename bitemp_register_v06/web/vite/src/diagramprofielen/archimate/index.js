@@ -31,6 +31,7 @@ import { registreerArchimateVormShapes } from "./vormShapes.jsx";
 import { VORMEN_SET } from "./vormSet.js";
 import { BLOK_SET } from "./blokSet.js";
 import { registreerArchimateBlokShapes } from "./blokShapes.jsx";
+import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): canvas, documenten en render-svc
 import { ELEMENTEN, LAAG_GROEP, MOTIVATION, FACETTEN, facettenVan } from "./elementen.js";
 
 export const ARCHIMATE_ID = "archimate";
