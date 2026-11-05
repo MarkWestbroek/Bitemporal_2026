@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.29.0] — 2026-11-06
+
 ### Toegevoegd
 - **Inrichting: bronnen als artefacten** (05-11): de exportstap levert per e-dienst het
   e-dienstmodel, het logisch model, de processen en de beslissingen mee als bronbestand

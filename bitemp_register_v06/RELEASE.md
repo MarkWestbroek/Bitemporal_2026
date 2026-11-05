@@ -8,6 +8,71 @@
 
 ---
 
+## api 0.19.0 / studio 0.29.0 (2026-11-06)
+
+De server tekent nu zelf een diagram uit een Studio-project (stap 6 van het plan *Eén tekenaar*),
+en de Studio heeft er een knop voor. Render blijft 0.3.1. Frontend:
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio 0.29.0).
+
+**Databasegevolg:** een nieuwe gedeeltelijke unieke index `idx_studio_gedeeld_beeld_svg` op
+`studio_gedeeld_beeld (project_id, profiel_id, diagram_id) WHERE soort = 'svg' AND ingetrokken_op
+IS NULL`, bij de start aangemaakt (`IF NOT EXISTS`). Geen nieuwe kolommen of tabellen; bestaande
+rijen blijven ongemoeid. Geen nieuwe instellingen. De nieuwe routes hebben de render-sidecar nodig
+(`RENDER_SVC_URL`, render 0.2.0 of nieuwer voor `taal=studio`); zonder sidecar geven ze 502 en
+werkt de rest gewoon.
+
+**Backend 0.19.0** (minor; BACKEND, `handlers/render_project.go`, `docs/RENDER_API.md`
+§Projectdiagram):
+
+- **Projectdiagram als SVG, met toegang.** Privacy-besluit Mark 05-11: een diagram uit een
+  Studio-project is op te halen door wie is ingelogd met leesrecht op het project (ook met een
+  persoonlijk API-token), én via een link met een onraadbaar token, zoals de gedeelde plaatjes.
+- `GET /api/studio/projecten/{id}/diagram.svg?profiel=&diagram=&theme=&idPrefix=` en
+  `…/views.json` (ingelogd + leesrecht). ETag, `Cache-Control: private, no-cache`,
+  `X-Omnium-Project-Versie`, en `X-Omnium-Achterstand` als er operaties zijn die nog niet in de
+  snapshot zitten.
+- **Soort `svg` bij de gedeelde plaatjes:** `POST …/beelden` met `soort: "svg"` (zonder `png`)
+  geeft `/api/beeld/<token>.svg`, openbaar. De server tekent bij elke aanvraag; er wordt geen
+  plaatje bewaard. Eén link per diagram; zelfde lijst, zelfde intrekken. `.png` op zo'n token
+  geeft 404.
+- De server tekent de **snapshot** van het project (`taal=studio`); de database knipt alleen het
+  profiel van het diagram uit de blob (de sidecar neemt 5 MB aan). De openbare link geeft een fout
+  van de sidecar niet door (die noemt andere diagramnamen of een element), alleen een kale
+  melding. Een getekende SVG blijft tien minuten in het geheugen, op projectversie.
+- Bekend en open: de tekening loopt achter op operaties ná de snapshot (de Studio zet daarom een
+  snapshot vlak vóór het maken van een link); een diagramverwijzing naar een ander profiel toont
+  "diagram" in plaats van de naam; `HEAD` geeft 404.
+
+**Studio 0.29.0** (OMNIUM-UI en TRANSFORMATIES):
+
+- **Kopieer als SVG-link (de server tekent):** rechtsklik op het lege canvas van een project op de
+  server. Het klembord krijgt het `.svg`-adres; er gaat geen plaatje mee. De Studio brengt eerst
+  de snapshot bij (snapshot op verzoek, `sync/verzender.js` `snapshotNu`), zodat de link het
+  diagram van nu toont; latere wijzigingen verschijnen bij de volgende snapshot. In *Gedeelde
+  plaatjes* heet de soort "SVG — de server tekent". Werkt alleen tegen api 0.19.0; een oudere api
+  geeft 400 op soort `svg`. Wie alleen leesrecht heeft, kan een link maken maar geen snapshot
+  zetten en krijgt de laatst bewaarde stand.
+- **Labels op dezelfde zijde van een lijn stapelen** (de fix van render 0.3.1, nu ook in de
+  Studio: documenten en gedeelde plaatjes): conditie en naam op een BPMN-stroom staan onder
+  elkaar.
+- **Inrichting: bronnen als artefacten** (TRANSFORMATIES): de exportstap levert het
+  e-dienstmodel, het logisch model, de processen en de beslissingen mee als bronbestand; elk
+  artefact noemt zijn bronnen en een traceregel draagt `bronElementId`.
+
+Getest op main 41b7da9b. Backend (BACKEND): `go build` en `go vet` schoon, `go test ./...` groen;
+`TestEaImportPakkettenLezerMetNode` vraagt `web/vite/node_modules` en is groen in een checkout
+die dat heeft. De echte keten (API + sidecar 0.3.1 + PostgreSQL) is beproefd, ook vanuit de
+Studio: link maken, snapshot op verzoek, het net toegevoegde element in de SVG. Frontend
+(OMNIUM-UI): 1398 unit, vite build, Studio-e2e 89/89 (de server nagebootst). Niet getest: de
+SVG-link met `AUTH_ENABLED=true` vanuit de Studio, en met een tweede client tegelijk.
+
+Uitrol: images `bitemp-go-api:0.19.0` en `bitemp-viz-frontend:0.29.0` (met `--build-arg
+VITE_GIT_SHA=$(git rev-parse --short HEAD)`), daarna `./update.sh` op app (maakt eerst een backup).
+Geen migratie en geen volgorde; api en frontend gaan samen. Render blijft 0.3.1 (staat op Hub).
+Fundament: `bitemp-devloop:0.24.10` met dezelfde Go-code, uitrol door FUNDAMENT.
+
+---
+
 ## render 0.3.1 (2026-11-06)
 
 Alleen de render-sidecar (patch); api blijft 0.18.0, studio 0.28.0. De labelfix staat in de
