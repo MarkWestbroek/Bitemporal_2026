@@ -1201,7 +1201,8 @@ fase 2 een **bewerkbare sandbox**:
     Voor élk plaatsbaar elementtype van élk geregistreerd profiel: getekend door de tekenaar,
     geen terugval, canvasmaat = tekenaarmaat. Voor lijnen: het `d`-pad op het canvas = het pad
     dat `tekenDiagram` geeft (lijnvormen, knikken, vaste handles, zelf-lus, punt-nodes,
-    sequence-berichten). Plus de sequence-activaties en de voorbeelden in de instellingen. Een
+    sequence-berichten) en de **plaats van de labels** is gelijk (twee labels op dezelfde zijde
+    stapelen 18 px, zoals `ConnectorEdge`). Plus de sequence-activaties en de voorbeelden in de instellingen. Een
     nieuw profiel of elementtype doet vanzelf mee. De test laadt de tekenaar in de pagina via
     de dev-server; de render-svc is er niet voor nodig.
 - **Inline hernoemen** (2026-10-07): **F2** op de geselecteerde node, of

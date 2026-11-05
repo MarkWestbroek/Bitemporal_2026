@@ -16,6 +16,17 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   payload van een bron is rechtstreeks de invoer van de render-API. Het e-dienstmodel heeft
   een `code` (docs/TRANSFORMATIES.md §11.14).
 
+### Opgelost
+- **Tekenaar: twee labels op dezelfde plek van een lijn vallen niet meer over elkaar** (05-11,
+  gemeld door RENDER-API op de eerste echte invoer voor render 0.3.0, GPK "Aanvraag oppakken"):
+  een BPMN-stroom met een conditie én een naam heeft twee labels op het midden van de lijn. Het
+  canvas zet elk volgend label op dezelfde zijde 18 px lager; de tekenaar (documenten, gedeelde
+  plaatjes, render-API) deed dat niet en legde de naamchip midden op de conditie. Nu dezelfde
+  stapeling (`tekenaar/lijnen.js`), ook bovenop een versleept label. Elk label in de SVG draagt
+  `data-dc-label="<connector-id>"`. De pariteitstest (`tests/e2e/41-…`) vergelijkt nu ook de
+  plaats van labels op canvas en in de tekenaar; nieuwe unit-tests in `tekenaar/lijnen.test.js`.
+  Raakt de uitvoer van `taal=studio`: vraagt een render-patch (0.3.1).
+
 ## [studio/v0.28.0] — 2026-11-05
 
 ### Toegevoegd
