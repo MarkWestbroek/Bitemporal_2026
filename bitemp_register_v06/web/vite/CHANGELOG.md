@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.28.0] — 2026-11-05
+
 ### Toegevoegd
 - **Inrichting: elke afhankelijkheid noemt de soort** (05-11): een identifier is niet uniek
   over soorten (proces en proceskoppeling, de delen van een dossier), en het register weigert

@@ -61,7 +61,10 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.27.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.28.0`**
+  (2026-11-05: één tekenaar stap 3 en 4 — het canvas tekent met de tekenaar, alle profielvormen
+  zijn ShapeTypes, de oude React-vormen zijn weg; samen met render 0.3.0, api blijft 0.18.0), na
+  **`studio/v0.27.0`**
   (2026-11-05: één tekenaar — vormcontract ShapeType/ShapeRenderer in het M3, `diagramcore/tekenaar/`
   voor documenten en gedeelde plaatjes; samen met render 0.2.0, api blijft 0.18.0), na
   **`studio/v0.26.0`**
@@ -114,8 +117,10 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.2.0`** (2026-11-05: `taal=studio` met de ene tekenaar; image
-  `bitemp-render-svc:0.2.0`), na **`render/v0.1.0`** (eerste uitgave, 2026-10-06), zie
+- Render-sidecar: **`render/v0.3.0`** (2026-11-05: profielvormen van stap 3/4, bouw los van
+  web/vite, `data-render-versie` in elke SVG; image `bitemp-render-svc:0.3.0`), na
+  **`render/v0.2.0`** (2026-11-05: `taal=studio` met de ene tekenaar) en **`render/v0.1.0`**
+  (eerste uitgave, 2026-10-06), zie
   [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md) §4.2a.
 - Deze nummers zijn óók de Docker-image-tags (zonder `v`): zie
   [`DOCKER_RELEASE.md`](DOCKER_RELEASE.md).
