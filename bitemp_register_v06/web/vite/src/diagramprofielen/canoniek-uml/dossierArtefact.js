@@ -2,10 +2,12 @@
 /**
  * dossierArtefact — aansluiting "canoniek model + e-dienst → GZAC-dossier-
  * bundel" voor de inrichting van e-diensten (docs/TRANSFORMATIES.md §11.9).
- * Eén artefact per bestand van de bundel: documentdefinitie
- * (`dossierschema`), form.io-formulier (`dossierformulier`), tabbladen
- * (`dossiertabbladen`) of de koppeling aan het zaaktype
- * (`dossierzaaktypelink`).
+ * Eén artefact per bestand van de bundel: de definitie van het dossier
+ * (`dossierdefinitie`), documentdefinitie (`dossierschema`), form.io-formulier
+ * (`dossierformulier`), tabbladen (`dossiertabbladen`), de koppeling aan het
+ * zaaktype (`dossierzaaktypelink`), de processen bij het dossier
+ * (`dossierprocessen`) of de kolommen van het documentenoverzicht
+ * (`dossierdocumentkolommen`).
  *
  * Route:
  *
@@ -32,7 +34,16 @@ import { CANONIEK_NAAR_DOSSIER } from "./dossierRegels.js";
 
 export const SCHRIJVER_ID = "gzac-dossier-schrijver@0.1.0";
 
-export const DOSSIER_SOORTEN = ["dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink"];
+export const DOSSIER_SOORTEN = ["dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierprocessen", "dossierdocumentkolommen"];
+
+/** Dossierdelen die de inhoud van het dossier niet lezen (geen objecttype nodig). */
+const ZONDER_INHOUD = {
+  dossierdefinitie: schrijfDefinitie,
+  dossiertabbladen: schrijfTabbladen,
+  dossierzaaktypelink: schrijfZaaktypelink,
+  dossierprocessen: schrijfProcessen,
+  dossierdocumentkolommen: schrijfDocumentkolommen,
+};
 
 const fout = (code, message, sourceId = null) => ({ severity: "error", code, message, sourceId, path: null });
 const info = (code, message, sourceId = null) => ({ severity: "info", code, message, sourceId, path: null });
@@ -243,6 +254,54 @@ function schrijfTabbladen({ keuzes, regelset, traceregels }) {
 }
 
 /**
+ * De definitie van het dossier: sleutel, naam, versie en beschrijving uit de
+ * e-dienst. De versie is een inrichtingskeuze: een andere versie maakt in GZAC
+ * een nieuwe dossierversie (FUNDAMENT 05-11).
+ */
+function schrijfDefinitie({ keuzes, regelset, diagnostics, traceregels }) {
+  if (!keuzes.versie) diagnostics.push(fout("DOS-VERSIE", `De dossierdefinitie "${keuzes.identifier}" noemt geen versie`));
+  const r = regelset.definitie;
+  const uitEdienst = (veld) => traceregels.push({ bronGE: null, regel: "Dossierdefinitie (e-dienst)", doelPad: `/${veld}`, actie: "aangemaakt" });
+  const keuze = (veld, sleutel) => {
+    const eigen = keuzes[sleutel] !== undefined;
+    traceregels.push({ bronGE: null, regel: eigen ? "Toewijzing (e-dienst)" : "Toewijzing (regelset)", doelPad: `/${veld}`, actie: "aangemaakt" });
+    return eigen ? !!keuzes[sleutel] : r[veld];
+  };
+  ["key", "name", "versionTag", "description"].forEach(uitEdienst);
+  return {
+    key: keuzes.identifier,
+    name: keuzes.dossiernaam || keuzes.naam || keuzes.identifier,
+    versionTag: keuzes.versie || "",
+    description: keuzes.beschrijving || "",
+    canHaveAssignee: keuze("canHaveAssignee", "behandelaar"),
+    autoAssignTasks: keuze("autoAssignTasks", "takenAutomatischToewijzen"),
+  };
+}
+
+/**
+ * De processen bij het dossier: elk bpmn-artefact van de e-dienst, of de
+ * lijst `processen` (proces-id's) als de e-dienst die noemt.
+ */
+function schrijfProcessen({ keuzes, edienst, regelset, diagnostics, traceregels }) {
+  const bpmn = (edienst?.artefacten || []).filter((a) => a.soort === "bpmn").map((a) => a.identifier);
+  const lijst = keuzes.processen || bpmn;
+  return lijst.map((proces, i) => {
+    if (!bpmn.includes(proces)) diagnostics.push(fout("DOS-PROCES", `Proces "${proces}" is geen bpmn-artefact van de e-dienst`, proces));
+    traceregels.push({ bronGE: null, regel: keuzes.processen ? "Processen (e-dienst)" : "Elk bpmn-artefact van de e-dienst", doelPad: `/${i}`, actie: "aangemaakt" });
+    return { processDefinitionKey: proces, ...regelset.processen };
+  });
+}
+
+/** De kolommen van het documentenoverzicht: uit de regelset, of de lijst `kolommen` van de e-dienst. */
+function schrijfDocumentkolommen({ keuzes, regelset, traceregels }) {
+  const lijst = zonderToelichting(keuzes.kolommen || regelset.documentkolommen);
+  return lijst.map((k, i) => {
+    traceregels.push({ bronGE: null, regel: keuzes.kolommen ? "Documentkolommen (e-dienst)" : "Standaardkolommen (regelset)", doelPad: `/${i}`, actie: "aangemaakt" });
+    return { key: k.key, defaultSort: k.sortering || null };
+  });
+}
+
+/**
  * Koppeling dossier ↔ zaaktype: het zaaktype en `zaakBijDossier` uit de
  * e-dienst, de omgevingsgegevens als plaatshouder uit de regelset.
  */
@@ -270,8 +329,8 @@ function schrijfZaaktypelink({ keuzes, edienst, regelset, diagnostics, tracerege
  * @param {any} invoer.modelBestand          - het V3-bestand ({model_naam, model}) of het model zelf (voor de bronmodel-hash)
  * @param {any} invoer.edienst               - het e-dienst-inrichtingsmodel
  * @param {string} invoer.identifier         - identifier van het artefact in de e-dienst
- * @param {string} [invoer.soort]            - de soort, nodig als schema, tabbladen en zaaktypekoppeling dezelfde identifier dragen
- * @param {any} [invoer.objecttype]          - het objecttype-artefact (bron van de dossierinhoud; niet nodig voor tabbladen en zaaktypekoppeling)
+ * @param {string} [invoer.soort]            - de soort, nodig omdat de dossierdelen dezelfde identifier dragen
+ * @param {any} [invoer.objecttype]          - het objecttype-artefact (bron van de dossierinhoud; alleen nodig voor schema en formulier)
  * @param {string|null} [invoer.peiltijdstip]
  * @param {string} [invoer.versienummer]
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
@@ -301,10 +360,8 @@ export async function maakDossierArtefact({
   }
 
   let payload;
-  if (keuzes.soort === "dossiertabbladen") {
-    payload = schrijfTabbladen({ keuzes, regelset, traceregels });
-  } else if (keuzes.soort === "dossierzaaktypelink") {
-    payload = schrijfZaaktypelink({ keuzes, edienst, regelset, diagnostics, traceregels });
+  if (ZONDER_INHOUD[keuzes.soort]) {
+    payload = ZONDER_INHOUD[keuzes.soort]({ keuzes, edienst, regelset, diagnostics, traceregels });
   } else {
     const schemaKeuzes = schemaKeuzesVoor(edienst, keuzes);
     if (!schemaKeuzes) diagnostics.push(fout("DOS-SCHEMA", `Geen dossierschema in de e-dienst voor "${identifier}"`));
@@ -339,7 +396,7 @@ export async function maakDossierArtefact({
     traceregels,
     edienstversie: { edienst: edienst?.edienst?.naam, versienummer: edienst?.edienst?.versienummer },
     doelcomponent: keuzes.doelcomponent,
-    // Schema, tabbladen en zaaktypekoppeling delen een identifier: een afhankelijkheid noemt dan de soort.
+    // De dossierdelen delen een identifier: een afhankelijkheid noemt dan de soort.
     afhankelijkheden: (edienst?.afhankelijkheden || [])
       .filter((a) => a.artefact === keuzes.identifier && (!a.soort || a.soort === keuzes.soort))
       .map((a) => ({ identifier: a.afhankelijkVan, ...(a.afhankelijkVanSoort ? { soort: a.afhankelijkVanSoort } : {}), reden: a.reden })),

@@ -297,6 +297,7 @@
           "taakSoort": "user",
           "bpmnAard": "userTask",
           "bpmnId": "aanvraag-beoordelen",
+          "formulier": "aanvraag-beoordelen",
           "meervoudig": "",
           "lusVerzameling": "",
           "lusElement": ""

@@ -8,6 +8,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Inrichting: vier bestanden van de GZAC-dossierbundel als artefact** (05-11), waren handwerk
+  bij FUNDAMENT: `dossierdefinitie`, `dossierprocessen`, `dossierdocumentkolommen` (regelset
+  `canoniek-naar-gzac-dossier` 0.3.0) en `proceskoppeling` (regelset `bpmn-naar-gzac` 0.5.0,
+  `procesLinkArtefact.js`). Toetsen `DOS-VERSIE`, `DOS-PROCES`, `PL-FORMULIER`, `PL-LEEG`
+  (docs/TRANSFORMATIES.md §11.9, §11.13).
+- **BPMN-profiel: `formulier` op een gebruikerstaak** (05-11): het dossierformulier waarmee de
+  behandelaar de taak doet; wordt de formulierkoppeling in de proceskoppeling.
+
 ### Gewijzigd
 - **Inrichting: zaaktypekoppeling van het dossier als artefact** (05-11): nieuwe soort
   `dossierzaaktypelink` (regelset `canoniek-naar-gzac-dossier` 0.2.0); zaaktype en
