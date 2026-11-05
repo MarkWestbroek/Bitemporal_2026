@@ -8,8 +8,6 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
-## [studio/v0.28.0] — 2026-11-05
-
 ### Toegevoegd
 - **Inrichting: bronnen als artefacten** (05-11): de exportstap levert per e-dienst het
   e-dienstmodel, het logisch model, de processen en de beslissingen mee als bronbestand
@@ -17,6 +15,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   Elk artefact noemt zijn bronnen (`bronnen`), en een traceregel draagt `bronElementId`. De
   payload van een bron is rechtstreeks de invoer van de render-API. Het e-dienstmodel heeft
   een `code` (docs/TRANSFORMATIES.md §11.14).
+
+## [studio/v0.28.0] — 2026-11-05
+
+### Toegevoegd
 - **Inrichting: elke afhankelijkheid noemt de soort** (05-11): een identifier is niet uniek
   over soorten (proces en proceskoppeling, de delen van een dossier), en het register weigert
   een dubbelzinnige afhankelijkheid. Eén gedeelde functie (`transformatie/afhankelijkheden.js`)
