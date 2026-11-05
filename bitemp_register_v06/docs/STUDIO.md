@@ -1138,8 +1138,8 @@ fase 2 een **bewerkbare sandbox**:
   draagt zijn naam als buitenlabel. De ArchiMate-iconen zijn gegevens (`archimate/glyphs.js`)
   voor taakbalk én tekenaar. Deel 2 (05-11): **BPMN, state machine en sequence** (events,
   gateways, taak/subproces, data, pool/lane, pseudotoestanden, composiet, punt/activatie/
-  fragment); alleen de sequence-levenslijn tekent op het canvas nog met de oude component
-  (`SjabloonShape.UITGEZONDERD`), in documenten en op de server via haar ShapeType. Deel 3
+  fragment); de sequence-levenslijn tekende op het canvas toen nog met de oude component
+  (`SjabloonShape.UITGEZONDERD`; sinds de levenslijn-stap hieronder niet meer). Deel 3
   (05-11): **CMMN, SysML, component/deployment, Eriksson-Penker, object, requirements en
   toegangsregel** — daarmee heeft elke profielvorm een ShapeType. Vormen met eigen inhoud leveren
   die als **inhoudsregels** (`hooks.inhoudsregels`: lopende tekst, chips, vaste breedte,
@@ -1156,8 +1156,21 @@ fase 2 een **bewerkbare sandbox**:
   labels als chip op het labelpunt (bron/doel op 70 %). Wat je in de Studio aan een lijn doet
   (omweg via knikken, lijnvorm uit het contextmenu, vaste handle, lus) rendert de server dus
   identiek; de proef `naast-elkaar.mjs` vergelijkt de `d`-paden van canvas en render per
-  connector (65 lijnen in tien diagrammen gelijk op 0,5 px; alleen sequence-berichten wijken
-  af door de afgeleide activaties). Pas `ConnectorEdge` en `lijnen.js` samen aan.
+  connector (65 lijnen in tien diagrammen gelijk op 0,5 px, daarna ook de sequence-berichten).
+  Pas `ConnectorEdge` en `lijnen.js` samen aan.
+  **Levenslijn (05-11):** ook de sequence-levenslijn tekent nu via het sjabloon; op het canvas
+  gebruikt alleen de `diagramverwijzing` de oude route nog. Een renderer die uit het diagram
+  tekent zet `leestDiagram: true`: `SjabloonShape` geeft hem dan het **levende** diagram (de
+  nodes uit de React Flow-store, dus ook tijdens slepen) en de elementen uit `TekenContext`
+  (gezet door `DiagramCanvas`); andere vormen krijgen geen diagram en hertekenen niet bij elke
+  verplaatsing. De levenslijn leidt daaruit haar activaties af (`activatiesVan`,
+  `rect.dc-seq-activatie` met `data-diepte`) en haar lengte (500, of tot 120 onder haar laagste
+  punt; `ondergrens` geldt ook bovenop een bewaarde maat en als minimum voor de resizer). De
+  kop: rechthoek, icoon-kop, of de vorm van het type uit een ander profiel — de host levert
+  element + ElementType (`verwijzingVorm` in `tekenaar/host.js`, geregistreerd in
+  `studio/elementVerwijzing.jsx`) en de levenslijn-renderer tekent die vorm met de tekenaar
+  zelf (`bouwVoorkomen` in het klein). Buiten een canvas (vormvoorbeelden) en op de server is
+  er geen host: rechthoek met de naam.
 - **Inline hernoemen** (2026-10-07): **F2** op de geselecteerde node, of
   **dubbelklik** op een node zonder gedragsverwijzing, opent een naamveld óp
   de vorm (bovenaan bij compartiment-vormen, gecentreerd bij de rest, onder

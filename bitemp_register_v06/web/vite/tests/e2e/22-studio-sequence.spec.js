@@ -88,7 +88,7 @@ test("van nul: berichten op muishoogte, genest, zelf, overslaan, duwen, kruisen,
   await bericht(page, B, C, 220);
   m = await berichten(page);
   expect(m.length).toBe(2);
-  const balk = async (lijn) => node(page, lijn).locator(".dc-seq-activatie").evaluateAll((els) => els.map((e) => ({ top: Math.round(parseFloat(e.style.top)), h: Math.round(parseFloat(e.style.height)), d: e.dataset.diepte })));
+  const balk = async (lijn) => node(page, lijn).locator(".dc-seq-activatie").evaluateAll((els) => els.map((e) => ({ top: Math.round(parseFloat(e.getAttribute("y"))), h: Math.round(parseFloat(e.getAttribute("height"))), d: e.dataset.diepte })));
   const bB = await balk(B);
   expect(bB.length).toBe(1);
   expect(Math.abs(bB[0].top - 150)).toBeLessThanOrEqual(3);

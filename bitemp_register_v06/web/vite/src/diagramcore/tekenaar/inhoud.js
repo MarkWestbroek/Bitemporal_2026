@@ -126,7 +126,7 @@ function compartimentBlokken(element, elementType, fieldTypesById, compartmentTy
  *   "" = geen naamregel
  * @returns {{blokken: Object[], h: number, minW: number, modus: string}}
  */
-export function planInhoud({ element, elementType, breedte, parameters = {}, fieldTypesById, compartmentTypesById, inhoudsregels = [], naam = undefined }) {
+export function planInhoud({ element, elementType, breedte, parameters = {}, fieldTypesById, compartmentTypesById, inhoudsregels = [], naam = undefined, naamOnderstreept = undefined }) {
   const modus = parameters.inhoud || "volledig";
   const d = element?.data || {};
   const binnen = Math.max(20, breedte - 2 * PAD_X);
@@ -154,7 +154,7 @@ export function planInhoud({ element, elementType, breedte, parameters = {}, fie
     if (naamTekst) {
       const regels = breekAf(naamTekst, naamGrootte, binnen, { vet: true });
       for (const r of regels) meet(r, naamGrootte, { vet: true });
-      blokken.push({ soort: "naam", regels, grootte: naamGrootte, cursief: !!d.abstract, onderstreept: !!parameters.naamOnderstreept, h: regels.length * Math.round(naamGrootte * 1.3) });
+      blokken.push({ soort: "naam", regels, grootte: naamGrootte, cursief: !!d.abstract, onderstreept: naamOnderstreept ?? !!parameters.naamOnderstreept, h: regels.length * Math.round(naamGrootte * 1.3) });
     }
     if (modus === "volledig" && d.materieel) {
       blokken.push({ soort: "badge", tekst: "materieel", h: 14 });

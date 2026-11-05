@@ -8,11 +8,21 @@
  * niets en krijgen `null` — de vorm valt dan terug op wat in het element zelf staat
  * (`data.klassifierLabel`).
  *
- * Bewust klein: alleen lezen, alleen tekst. Geen stores of elementen naar buiten.
+ * `verwijzingVorm` (levenslijn, stap 4 afronding): het element en zijn ElementType achter een
+ * verwijzing, zodat de kop van een levenslijn het type kan tekenen zoals zijn eigen profiel dat
+ * doet (een ArchiMate-applicatiecomponent als kop). Alleen-lezen; op de server null → de
+ * gewone rechthoek-kop.
+ *
+ * Bewust klein: alleen lezen. Geen stores naar buiten.
  */
 
-/** @type {{verwijzingLabel: ((verwijzing: any) => string|null)|null}} */
-const _host = { verwijzingLabel: null };
+/**
+ * @type {{
+ *   verwijzingLabel: ((verwijzing: any) => string|null)|null,
+ *   verwijzingVorm: ((verwijzing: any) => {element: Object, elementType: Object}|null)|null,
+ * }}
+ */
+const _host = { verwijzingLabel: null, verwijzingVorm: null };
 
 /**
  * Registreer (een deel van) de host-functies; latere registraties vullen aan of vervangen.
@@ -28,4 +38,5 @@ export const host = () => _host;
 /** Alleen voor tests. */
 export function _resetHostVoorTests() {
   _host.verwijzingLabel = null;
+  _host.verwijzingVorm = null;
 }

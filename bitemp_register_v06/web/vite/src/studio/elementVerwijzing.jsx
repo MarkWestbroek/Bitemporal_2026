@@ -19,6 +19,7 @@ import React from "react";
 import { getProfieltypen, getProfieltype } from "./profieltypeRegistry";
 import { registreerPropertyTypeEditor } from "../diagramcore/inspector/propertyTypeEditors.jsx";
 import { zetHost } from "../diagramcore/tekenaar/host.js";
+import { getDiagramType } from "../diagramcore/types/typeRegistry.js";
 
 /** @param {{profielId?: string, elementId?: string}|null} ref */
 export function resolveerElementRef(ref) {
@@ -32,7 +33,20 @@ export function resolveerElementRef(ref) {
 // Host-callback voor de tekenaar (één tekenaar, stap 4): een vorm die de naam van een element
 // in een ander profiel toont (object "jan : Persoon") vraagt die aan de host; de server kent
 // geen stores en krijgt null (tekenaar/host.js).
-zetHost({ verwijzingLabel: (ref) => resolveerElementRef(ref)?.label ?? null });
+// `verwijzingVorm`: het element met zijn ElementType (uit het geregistreerde, uitgevlakte
+// DiagramType van dat profiel), zodat de kop van een levenslijn het type kan tekenen zoals zijn
+// eigen profiel dat doet.
+zetHost({
+  verwijzingLabel: (ref) => resolveerElementRef(ref)?.label ?? null,
+  verwijzingVorm: (ref) => {
+    const opgelost = resolveerElementRef(ref);
+    if (!opgelost) return null;
+    const descriptor = opgelost.profiel?.descriptor;
+    const dt = (descriptor?.id && getDiagramType(descriptor.id)) || descriptor;
+    const elementType = dt?.elementTypes?.find((t) => t.id === opgelost.element.elementType) || null;
+    return elementType ? { element: opgelost.element, elementType } : null;
+  },
+});
 
 /**
  * Operaties van een element volgens zijn profieltype (OperatieResolver-

@@ -16,8 +16,15 @@
  * ShapeType én renderer doet dat, behalve de id's in UITGEZONDERD, die nog iets van de oude
  * component nodig hebben. Zo wordt elke in stap 4 omgezette profielvorm meteen op canvas én
  * server gelijk, en blijft de rest tekenen via `getShape`.
+ *
+ * Diagramkennis: een renderer met `leestDiagram: true` (de sequence-levenslijn: activaties uit
+ * de berichten, lengte tot onder haar laagste punt) krijgt hier het **levende** diagram — de
+ * nodes uit de React Flow-store, dus ook de posities tijdens het slepen — en de elementen uit
+ * `TekenContext` (DiagramCanvas). Buiten een canvas (vormvoorbeelden) is er geen context en
+ * tekent zo'n vorm zonder diagram.
  */
-import { useId, useMemo } from "react";
+import { createContext, useContext, useId, useMemo } from "react";
+import { useStore } from "@xyflow/react";
 import { tekenbareVorm, minMaatVan } from "../types/shapeType.js";
 import { maakPalet } from "../../diagramsvg/thema.js";
 import { bouwVoorkomen, tekenVoorkomen, basisVanPalet, isPuntNode } from "../tekenaar/voorkomen.js";
@@ -29,13 +36,14 @@ import "../tekenaar/basisVormen.js"; // registreert de basis-ShapeTypes en de bi
  * - diagramverwijzing: toont de naam van het doeldiagram live (useDiagramNaam) en markeert een
  *   verdwenen doel; de tekenaar kent alleen een vaste naam van de host.
  */
-const UITGEZONDERD = new Set([
-  "diagramverwijzing",
-  // seq-levenslijn: de kop toont het type (instantieVan, uit een ander profiel), de activaties
-  // zijn afgeleid uit de berichten op het canvas en de lijn groeit mee met haar laagste punt —
-  // allemaal canvas-kennis. Het ShapeType (sequence/vormen.js) tekent wél in documenten/server.
-  "seq-levenslijn",
-]);
+const UITGEZONDERD = new Set(["diagramverwijzing"]);
+
+/**
+ * Wat het canvas aan diagramkennis meegeeft aan een renderer met `leestDiagram`: de elementen
+ * van het model (ook de connectoren — berichten zijn geen nodes). DiagramCanvas zet hem.
+ * @type {import("react").Context<{elements: Record<string, Object>, diagramId: string|null}|null>}
+ */
+export const TekenContext = createContext(null);
 
 /** De canvas-palet: thema-tokens, door diagramcore.css gekoppeld aan de canvas-tokens. */
 const BASIS = basisVanPalet(maakPalet("auto"));
@@ -64,7 +72,28 @@ export function sjabloonNaamBuiten(vormInfo, elementType) {
 }
 
 
-export function SjabloonShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, vormInfo, maat, children }) {
+export function SjabloonShape(props) {
+  const teken = useContext(TekenContext);
+  // Alleen een renderer die het diagram leest volgt de canvas-store; de rest hertekent niet bij
+  // elke verplaatsing van een andere node.
+  if (teken && props.vormInfo.renderer.leestDiagram) return <SjabloonMetDiagram {...props} teken={teken} />;
+  return <SjabloonKern {...props} />;
+}
+
+/** Het levende diagram uit de React Flow-store, in de vorm van het model (elementId, position, size). */
+function SjabloonMetDiagram({ teken, ...props }) {
+  const nodes = useStore((s) => s.nodes);
+  const diagram = useMemo(
+    () => ({
+      id: teken.diagramId,
+      nodes: nodes.filter((n) => n.data?.element).map((n) => ({ elementId: n.data.element.id, nodeId: n.id, position: n.position, ...(n.data.size ? { size: n.data.size } : {}) })),
+    }),
+    [nodes, teken.diagramId]
+  );
+  return <SjabloonKern {...props} diagram={diagram} elements={teken.elements} />;
+}
+
+function SjabloonKern({ element, elementType, selected, fieldTypesById, compartmentTypesById, vormInfo, maat, diagram = null, elements = null, children }) {
   // Uniek per node-instantie (clip-id); twee canvassen in één document delen anders id's.
   const uid = useId().replace(/[^A-Za-z0-9_-]/g, "");
   const getekend = useMemo(() => {
@@ -74,6 +103,8 @@ export function SjabloonShape({ element, elementType, selected, fieldTypesById, 
       shapeType: vormInfo.shapeType,
       renderer: vormInfo.renderer,
       maat: maat && maat.w > 0 && maat.h > 0 ? maat : null,
+      diagram,
+      elements,
       fieldTypesById,
       compartmentTypesById,
       basis: BASIS,
@@ -83,10 +114,13 @@ export function SjabloonShape({ element, elementType, selected, fieldTypesById, 
     // Knipvlak: de vorm, verruimd met een inhoudsvak dat erbuiten ligt (een renderer mag de naam
     // naast of onder de vorm zetten).
     const knip = { x0: Math.min(0, vak?.x ?? 0), y0: Math.min(0, vak?.y ?? 0), x1: Math.max(box.w, vak ? vak.x + vak.w : 0), y1: Math.max(box.h, vak ? vak.y + vak.h : 0) };
-    return { w: box.w, h: box.h, omtrek, inhoud, ornament, knip };
-  }, [element, elementType, vormInfo, maat, fieldTypesById, compartmentTypesById, uid]);
+    return { w: box.w, h: box.h, omtrek, inhoud, ornament, knip, ondergrens: box.ondergrens };
+  }, [element, elementType, vormInfo, maat, diagram, elements, fieldTypesById, compartmentTypesById, uid]);
   const { w, h, knip } = getekend;
-  const min = sjabloonMinMaat(vormInfo, elementType);
+  // De resizer leest het minimum van deze root (ShapeResizer): een dynamische ondergrens van de
+  // renderer telt mee, anders krimpt het resize-kader wel en de vorm niet.
+  const vast = sjabloonMinMaat(vormInfo, elementType);
+  const min = { w: Math.max(vast.w, getekend.ondergrens?.w ?? 0), h: Math.max(vast.h, getekend.ondergrens?.h ?? 0) };
   const clipId = `sj${uid}-knip`;
   return (
     <div
