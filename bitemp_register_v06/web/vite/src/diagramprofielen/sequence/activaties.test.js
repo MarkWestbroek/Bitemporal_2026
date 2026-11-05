@@ -52,3 +52,31 @@ test("leeg en ongesorteerd", () => {
   const uit = leidActivatiesAf([{ id: "2", bron: "A", doel: "B", y: 50 }, { id: "1", bron: "A", doel: "B", y: 10 }]);
   assert.deepEqual(van(uit, "A").map((a) => a.berichten), [["1", "2"]]);
 });
+
+test("zelf-aanroep valt binnen de aanroep: korte rugzak, het vervolg hoort bij de buitenste (Mark 05-11)", () => {
+  // a1 roept zs aan (186); zs valideert zichzelf (226 → 241), wijst toe aan d (296), krijgt
+  // antwoord (346) en antwoordt a1 (406).
+  const uit = leidActivatiesAf([
+    { id: "registreren", bron: "a1", doel: "zs", y: 186 },
+    { id: "valideren", bron: "zs", doel: "zs", y: 226, yEind: 241 },
+    { id: "toewijzen", bron: "zs", doel: "d", y: 296 },
+    { id: "akkoord", bron: "d", doel: "zs", y: 346, soort: "retour" },
+    { id: "zaaknummer", bron: "zs", doel: "a1", y: 406, soort: "retour" },
+  ]);
+  assert.deepEqual(
+    van(uit, "zs").map((a) => [a.van, a.tot, a.diepte]),
+    [[186, 406, 0], [241, 241 + MARGE, 1]],
+    "de buitenste balk loopt van de aanroep tot de retour; de rugzak is kort en ligt erbinnen"
+  );
+  assert.deepEqual(van(uit, "d").map((a) => [a.van, a.tot]), [[296, 346]], "de aanroep naar d komt uit de buitenste activatie");
+  assert.deepEqual(van(uit, "zs")[0].berichten, ["registreren", "valideren", "toewijzen", "zaaknummer"]);
+});
+
+test("een rugzak valt nooit buiten haar ouder: een retour vlak eronder kort haar in", () => {
+  const uit = leidActivatiesAf([
+    { id: "a", bron: "A", doel: "B", y: 100 },
+    { id: "z", bron: "B", doel: "B", y: 120, yEind: 135 },
+    { id: "r", bron: "B", doel: "A", y: 145, soort: "retour" },
+  ]);
+  assert.deepEqual(van(uit, "B").map((a) => [a.van, a.tot, a.diepte]), [[100, 145, 0], [135, 145, 1]]);
+});

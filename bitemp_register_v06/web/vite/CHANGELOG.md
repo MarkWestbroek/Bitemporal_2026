@@ -46,9 +46,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   diagramsvg, waardoor een rechte of gebogen lijn tussen schuin geplaatste dozen zichtbaar
   afweek van de Studio. Proef: 65 lijnen in tien diagrammen (UML, BPMN, state machine, activity,
   ArchiMate, use case, CMMN, SysML, toegangsregel) hebben op canvas en server hetzelfde pad op
-  0,5 px na; alleen sequence-berichten verschillen nog (het canvas hecht aan de afgeleide
-  activaties, die de tekenaar nog niet kent). Zichtbaar: ⊕ bij SysML-bevat (was ⊗), grotere
+  0,5 px na, sequence-berichten inbegrepen. Zichtbaar: ⊕ bij SysML-bevat (was ⊗), grotere
   pijlpunten, labelchips in documenten en gedeelde plaatjes.
+- **Sequence: een zelf-aanroep valt binnen de aanroep** (05-11, gemeld door Mark): volgden er
+  na een zelf-bericht nog berichten op die levenslijn, dan kreeg de geneste activatie (de
+  "rugzak") ze allemaal; de buitenste balk stopte dan vroeg en de geneste stak er ver onderuit.
+  Nu is de rugzak kort (ontvangpunt + marge) en blijft ze niet op de aanroepstapel: het vervolg
+  hoort bij de buitenste activatie, een retour sluit die buitenste, en een rugzak valt nooit
+  buiten haar ouder (`sequence/activaties.js`). Beperking: "de zelf-aanroep roept zelf iets
+  aan" is uit de hoogtes niet af te leiden; dat kan pas met activaties in het model
+  (sequence-plan §5, stappen 1–3).
 - **Hoekige lijnen op het canvas: beide uiteinden op de dominante zijde** (05-11): een hoekige
   lijn tussen twee dozen die diagonaal van elkaar staan ging tot nu toe met één hoek — uit de
   dominante zijde van de bron, het doel in op het midden van de dwarse zijde. Die ingang viel samen

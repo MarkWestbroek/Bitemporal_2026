@@ -10,8 +10,16 @@
  *     nieuwe episode (alles sluit) en wordt A de wortel; staat A er wel, dan
  *     sluit alles bóven A (die aanroepen zijn klaar). Daarna wordt B
  *     aangeroepen: een nieuwe activatie op B, genest onder A;
- *   - een zelf-bericht (A → A) nest een activatie op A onder A (dieper), vanaf
- *     het ontvangpunt — de "rugzak";
+ *   - een zelf-bericht (A → A) nest een **korte** activatie op A onder A
+ *     (dieper), vanaf het ontvangpunt plus de marge — de "rugzak". Ze komt
+ *     niet op de stapel: wat A daarna stuurt of ontvangt hoort weer bij de
+ *     buitenste activatie, en een retour sluit die buitenste. Tot 05-11 bleef
+ *     de rugzak open en kreeg ze alle latere berichten van A; de buitenste balk
+ *     stopte dan vroeg en de geneste stak er ver onderuit (Mark, 05-11: "moet
+ *     de self call niet binnen de call vallen?"). Uit de hoogtes alleen is niet
+ *     af te leiden of een later bericht ín de zelf-aanroep valt; dat kan pas
+ *     als activaties expliciet in het model staan. Een rugzak valt nooit buiten
+ *     haar ouder: sluit die eerder (een retour vlak eronder), dan kort ze mee;
  *   - een retourbericht van A naar B sluit de activatie van A (en alles
  *     erboven) precies op de hoogte van de retour;
  *   - anders loopt een activatie van haar eerste tot haar laatste bericht
@@ -42,6 +50,8 @@ export function leidActivatiesAf(berichten) {
   const uit = [];
   const sluit = (frame, tot = null) => {
     const eind = tot === null ? frame.laatste + MARGE : Math.max(tot, frame.van + 4);
+    // Een rugzak valt binnen haar ouder.
+    for (const r of frame.rugzakken) r.tot = Math.max(r.van + 4, Math.min(r.tot, eind));
     uit.push({ lijn: frame.lijn, van: frame.van, tot: eind, diepte: frame.diepte, berichten: frame.berichten });
   };
   /** Sluit alles boven positie `index` (−1 = alles). */
@@ -50,7 +60,7 @@ export function leidActivatiesAf(berichten) {
   };
   const open = (lijn, y, id) => {
     const diepte = stapel.filter((f) => f.lijn === lijn).length;
-    stapel.push({ lijn, van: y, laatste: y, diepte, berichten: [id] });
+    stapel.push({ lijn, van: y, laatste: y, diepte, berichten: [id], rugzakken: [] });
   };
   const bovenste = (lijn) => {
     for (let i = stapel.length - 1; i >= 0; i -= 1) if (stapel[i].lijn === lijn) return i;
@@ -81,7 +91,15 @@ export function leidActivatiesAf(berichten) {
       stapel[i].berichten.push(b.id);
     }
     stapel[i].laatste = Math.max(stapel[i].laatste, yTot);
-    open(b.doel, yTot, b.id); // de aanroep begint op het ontvangpunt (zelf-bericht: lager)
+    if (b.bron === b.doel) {
+      // Zelf-aanroep: een korte rugzak vanaf het ontvangpunt, één niveau dieper dan wat er
+      // van deze lijn openstaat. Niet op de stapel: het vervolg hoort bij de buitenste.
+      const rugzak = { lijn: b.doel, van: yTot, tot: yTot + MARGE, diepte: stapel.filter((f) => f.lijn === b.doel).length, berichten: [b.id] };
+      stapel[i].rugzakken.push(rugzak);
+      uit.push(rugzak);
+      continue;
+    }
+    open(b.doel, yTot, b.id); // de aanroep begint op het ontvangpunt
   }
   sluitBoven(-1);
   return uit;
