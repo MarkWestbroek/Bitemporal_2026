@@ -20,6 +20,7 @@ import { getShape } from "../shapes/shapeRegistry.js";
 import { InlineNaamContext, VLAK_HANDLE, splitsVeldSleutel } from "./inlineNaam.js";
 import NaamEditor from "./NaamEditor.jsx";
 import { doorklikVan } from "../model/verwijstNaar.js";
+import { SjabloonShape, sjabloonOpCanvas, sjabloonMinMaat } from "./SjabloonShape.jsx";
 
 const ONZICHTBAAR = {
   opacity: 0,
@@ -119,6 +120,10 @@ function veldBijSleutel(element, sleutel) {
 function ElementNode({ id, data, selected }) {
   const { element, elementType, bewerkbaar, onResize, fieldTypesById, compartmentTypesById } = data;
   const inlineNaam = useContext(InlineNaamContext);
+  // Live maat tijdens het slepen aan de resizer: een sjabloonvorm tekent zichzelf op die maat
+  // (een oude component volgt de wrapper via width/height 100%). Weg na het loslaten; dan
+  // staat de maat in het voorkomen (data.size).
+  const [liveMaat, setLiveMaat] = useState(null);
   if (!element || !elementType) return null;
   const hernoemt = inlineNaam.nodeId === id;
   const veldSleutel = hernoemt ? inlineNaam.veld || null : null;
@@ -162,13 +167,18 @@ function ElementNode({ id, data, selected }) {
     );
   }
 
-  const Shape = getShape(elementType.shape) || getShape("class-box");
+  // Eén tekenaar (stap 3): een shape-id met ShapeType + renderer tekent via SjabloonShape
+  // (dezelfde tekenaar als documenten en de render-API); anders de oude React-component.
+  const vormInfo = sjabloonOpCanvas(elementType.shape);
+  const Shape = vormInfo ? SjabloonShape : getShape(elementType.shape) || getShape("class-box");
   if (!Shape) return null;
   // Compartimenten verborgen op dit diagram/voorkomen: de shape krijgt een
   // type zonder compartimenten en een element zonder inhoud — alleen de kop.
   const verborgen = !!data.compartimentenVerborgen && (elementType.compartments?.length || element.compartimenten?.length);
   const shapeType = verborgen ? { ...elementType, compartments: [] } : elementType;
   const shapeElement = verborgen ? { ...element, compartimenten: [] } : element;
+  const sjabloonMaat = vormInfo ? liveMaat || (data.size ? { w: data.size.width, h: data.size.height } : null) : null;
+  const sjabloonMin = vormInfo ? sjabloonMinMaat(vormInfo, elementType) : null;
 
   const magResizen = bewerkbaar && elementType.resizebaar !== false;
   // Gedragsverwijzing (§3.2): een gevulde verwijzing toont een ⧉-badge in de
@@ -197,28 +207,32 @@ function ElementNode({ id, data, selected }) {
         selected={!!selected}
         fieldTypesById={fieldTypesById}
         compartmentTypesById={compartmentTypesById}
+        {...(vormInfo ? { vormInfo, maat: sjabloonMaat } : {})}
       >
         {magResizen && (
           <ShapeResizer
             // Minimum-maten uit het elementtype (bv. smalle activatie-balken in
-            // een sequence-diagram); default de klassieke box-minima. De shape
-            // zelf kan een hoger minimum afdwingen (zie ShapeResizer).
-            minWidth={elementType.minBreedte ?? 180}
-            minHeight={elementType.minHoogte ?? 56}
+            // een sequence-diagram); default de klassieke box-minima, of de
+            // minMaat van het ShapeType (sjabloonvorm). De shape zelf kan een
+            // hoger minimum afdwingen (zie ShapeResizer).
+            minWidth={sjabloonMin ? sjabloonMin.w : elementType.minBreedte ?? 180}
+            minHeight={sjabloonMin ? sjabloonMin.h : elementType.minHoogte ?? 56}
             isVisible={!!selected}
             lineStyle={{ borderColor: "#2563eb" }}
             handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor: "#2563eb", background: "#ffffff" }}
+            onResize={vormInfo ? (_ev, params) => setLiveMaat({ w: Math.round(params.width), h: Math.round(params.height) }) : undefined}
             // Trekken aan de linker-/bovenrand verschuift ook de positie
             // (params.x/y, relatief aan een eventuele parent): meegeven,
             // anders sprong de node na de rebuild terug naar zijn oude plek
             // met de nieuwe maat (gemeld 2026-10-07, mp4).
-            onResizeEnd={(_ev, params) =>
+            onResizeEnd={(_ev, params) => {
+              setLiveMaat(null);
               onResize?.(
                 id,
                 { width: Math.round(params.width), height: Math.round(params.height) },
                 { x: params.x, y: params.y }
-              )
-            }
+              );
+            }}
           />
         )}
         {data.fouten?.length > 0 && (
