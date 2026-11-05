@@ -24,6 +24,8 @@ import { resolveerElementRef } from "../../studio/elementVerwijzing.jsx";
 import { getProfieltype } from "../../studio/profieltypeRegistry";
 import { leidActivatiesAf } from "./activaties.js";
 import { SEQUENCE_PROFIEL_ID, BERICHTEN } from "./labels.js";
+import { kopIcoon } from "./vormen.js";
+import { naarReact } from "../../diagramcore/tekenaar/naarReact.js";
 
 // Lijn/vulling voor vormen die direct op het canvas staan (start/eind,
 // balken, levenslijnen, randen): thema-variabele, in donker lichter
@@ -94,7 +96,7 @@ function LevenslijnShape({ element, selected, children }) {
   let kopVorm = rechthoek;
   if (metType) {
     kopVorm = <TypeKop {...metType} naam={`${kop}:${type.label}`} selected={selected} reserve={rechthoek} />;
-  } else if (ICONEN[element?.data?.kop]) {
+  } else if (kopIcoon(element?.data?.kop, { rand: DONKER })) {
     kopVorm = (
       <IcoonKop soort={element.data.kop} kleur={element?.data?.kleur} rand={selected ? rand : DONKER}>
         {naamTekst}
@@ -231,53 +233,11 @@ function TypeKop({ Shape, elementType, typeElement, naam, selected, reserve }) {
 
 /**
  * Icoon-koppen (2026-10-14): actor (poppetje) en de robustness-stereotypes
- * van Jacobson — boundary (cirkel met staander links), control (cirkel met
- * pijlpunt bovenop) en entity (cirkel op een streep). Viewbox 48×40; het
- * icoon staat gecentreerd boven de naam, de lijn loopt eronder door.
+ * van Jacobson — boundary, control, entity en de business-varianten. De
+ * iconen zelf staan als gegevens in vormen.js (`kopIcoon`, viewbox 48×40),
+ * gedeeld met de tekenaar voor documenten en de server; hier via naarReact.
+ * Het icoon staat gecentreerd boven de naam, de lijn loopt eronder door.
  */
-const ICONEN = {
-  actor: (s, f) => (
-    <g stroke={s} strokeWidth="1.6" fill="none" strokeLinecap="round">
-      <circle cx="24" cy="7" r="5.5" fill={f} />
-      <line x1="24" y1="12.5" x2="24" y2="26" />
-      <line x1="14" y1="17" x2="34" y2="17" />
-      <line x1="24" y1="26" x2="16" y2="38" />
-      <line x1="24" y1="26" x2="32" y2="38" />
-    </g>
-  ),
-  boundary: (s, f) => (
-    <g stroke={s} strokeWidth="1.6">
-      <line x1="7" y1="8" x2="7" y2="32" />
-      <line x1="7" y1="20" x2="15" y2="20" />
-      <circle cx="28" cy="20" r="13" fill={f} />
-    </g>
-  ),
-  control: (s, f) => (
-    <g stroke={s} strokeWidth="1.6">
-      <circle cx="24" cy="22" r="13" fill={f} />
-      <polyline points="28,4 23,9 28,14" fill="none" strokeLinejoin="round" />
-    </g>
-  ),
-  entity: (s, f) => (
-    <g stroke={s} strokeWidth="1.6">
-      <circle cx="24" cy="18" r="13" fill={f} />
-      <line x1="11" y1="35" x2="37" y2="35" />
-    </g>
-  ),
-};
-
-// Business-varianten: hetzelfde icoon met een schuine streep door de cirkel.
-const STREEP = { "business-boundary": [20, 31, 36, 9], "business-control": [16, 33, 32, 11], "business-entity": [16, 29, 32, 7] };
-for (const [soort, [x1, y1, x2, y2]] of Object.entries(STREEP)) {
-  const basis = ICONEN[soort.replace("business-", "")];
-  ICONEN[soort] = (s, f) => (
-    <g>
-      {basis(s, f)}
-      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={s} strokeWidth="1.6" />
-    </g>
-  );
-}
-
 function IcoonKop({ soort, kleur, rand, children }) {
   return (
     <div
@@ -292,7 +252,7 @@ function IcoonKop({ soort, kleur, rand, children }) {
       }}
     >
       <svg width="48" height="40" viewBox="0 0 48 40" style={{ overflow: "visible" }}>
-        {ICONEN[soort](rand, kleur || "#e0f2fe")}
+        {naarReact(kopIcoon(soort, { rand, vulling: kleur }))}
       </svg>
       <div
         style={{

@@ -184,9 +184,9 @@ export function zwevendeUiteinden({ bronRect, doelRect, zwevendBron, zwevendDoel
  * Uiteinden voor een hoekige lijn "zo recht als het kan" (EA Auto Routing,
  * Mark 10-10): overlappen de dozen in x, dan één verticale lijn midden in de
  * overlap tussen de naar elkaar toe gekeerde zijden; overlappen ze in y, dan
- * één horizontale; anders een L — uit de zijde waar de grootste afstand zit,
- * naar het midden van de tegenoverliggende zijde van de ander, zodat de
- * hoekige router (smoothstep) precies één hoek maakt.
+ * één horizontale; anders een Z — beide uiteinden op de zijde van de dominante
+ * as, uitgewaaierd langs die zijde (Mark 05-11: "Z"; dezelfde regel als de
+ * tekenaar, lijnen.js). Tot 05-11 was dat een L met één hoek, zie onder.
  * @param {Rechthoek} bron
  * @param {Rechthoek} doel
  * @param {number} [minOverlap] - minimale overlap (px) voor een rechte lijn
@@ -211,23 +211,19 @@ export function orthogonaleUiteinden(bron, doel, minOverlap = 12) {
       ? { sourceX: br, sourceY: y, sourcePosition: "right", targetX: dl, targetY: y, targetPosition: "left" }
       : { sourceX: bl, sourceY: y, sourcePosition: "left", targetX: dr, targetY: y, targetPosition: "right" };
   }
-  // Diagonaal (of overlappend): één hoek. De langste afstand bepaalt de
-  // zijde waar de bron uitgaat; de doelzijde is de tegenovergestelde as.
+  // Diagonaal (of overlappend): beide uiteinden op de zijde van de dominante as
+  // (dezelfde regel als `besteZijde` en de tekenaar, lijnen.js), op het punt
+  // waar de middellijn die zijde kruist — zo waaieren lijnen naar verschillende
+  // buren uit over de zijde. De hoekige router maakt er een Z van (twee
+  // hoeken). Tot 05-11 was dit één hoek (uit de dominante zijde, het doel in
+  // op het midden van de dwarse zijde): die ingang viel samen met de rechte
+  // lijn van een buur op diezelfde zijde (gateway → subproces ↔ subproces →
+  // taak), wat als een dubbele pijl oogde (Mark, 05-11).
   const bm = { x: (bl + br) / 2, y: (bb + bo) / 2 };
   const dm = { x: (dl + dr) / 2, y: (db + dO) / 2 };
-  const dx = dm.x - bm.x, dy = dm.y - bm.y;
-  if (Math.abs(dx) >= Math.abs(dy)) {
-    const uitRechts = dx >= 0;
-    return {
-      sourceX: uitRechts ? br : bl, sourceY: bm.y, sourcePosition: uitRechts ? "right" : "left",
-      targetX: dm.x, targetY: dy >= 0 ? db : dO, targetPosition: dy >= 0 ? "top" : "bottom",
-    };
-  }
-  const uitOnder = dy >= 0;
-  return {
-    sourceX: bm.x, sourceY: uitOnder ? bo : bb, sourcePosition: uitOnder ? "bottom" : "top",
-    targetX: dx >= 0 ? dl : dr, targetY: dm.y, targetPosition: dx >= 0 ? "left" : "right",
-  };
+  const s = aanhechtpunt(bron, dm);
+  const t = aanhechtpunt(doel, bm);
+  return { sourceX: s.x, sourceY: s.y, sourcePosition: s.zijde, targetX: t.x, targetY: t.y, targetPosition: t.zijde };
 }
 
 /**

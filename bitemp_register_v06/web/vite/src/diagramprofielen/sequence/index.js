@@ -36,6 +36,7 @@
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerSequenceShapes } from "./shapes.jsx";
+import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): punt/activatie/fragment op het canvas, de levenslijn in documenten
 import { KOPPEN, berichtLabels } from "./labels.js";
 import { verschuifBericht } from "./verschuif.js";
 import { puntenVoorBericht, ruimPuntenOp } from "./zelfbericht.js";

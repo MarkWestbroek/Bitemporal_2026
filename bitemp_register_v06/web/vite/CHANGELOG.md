@@ -34,6 +34,32 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   lijnen die een rand hebben. Zichtbaar verschil: de use case-actor is een doos van figuur + naam
   (was: naam los onder 64px), een ArchiMate-figuur zonder bewaarde maat is 64px hoog met de naam
   eronder, kleuren en lijndiktes uit de thema-tokens.
+- **Hoekige lijnen op het canvas: beide uiteinden op de dominante zijde** (05-11): een hoekige
+  lijn tussen twee dozen die diagonaal van elkaar staan ging tot nu toe met één hoek — uit de
+  dominante zijde van de bron, het doel in op het midden van de dwarse zijde. Die ingang viel samen
+  met de rechte lijn van een buur op diezelfde zijde (BPMN: gateway → subproces naast subproces →
+  taak; activity: beslissing → actie boven actie → object), wat oogde als een dubbele pijl. Nu
+  kiezen beide uiteinden de zijde van de dominante as, op het punt waar de middellijn die zijde
+  kruist (uitgewaaierd), en maakt de router er een Z van. Recht boven of naast elkaar blijft één
+  rechte lijn (`zwevendeRand.orthogonaleUiteinden`). De tekenaar voor documenten en de render-API
+  (`tekenaar/lijnen.js`) gebruikt voortaan diezelfde functie voor een hoekige lijn zonder gekozen
+  handles: tot nu toe kwam daar de zijde uit de handle en het punt uit het snijpunt met de rand,
+  en bij een doos schuin boven de ander spraken die elkaar tegen (de lijn liep langs de rand van
+  de doos, of door een buur heen). Canvas en render tekenen dezelfde lijnen; golden proef.svg
+  bijgewerkt.
+- **Eén tekenaar, stap 4 (deel 2) — BPMN, state machine en sequence als ShapeType** (05-11):
+  twintig vormen (`bpmn/vormen.js`, `statemachine/vormen.js`, `sequence/vormen.js`). Events,
+  gateways, taaktype-iconen, subproces-markering, data-object/-store en de pool met staande
+  naamband tekenen nu ook in documenten en op de server zoals op het canvas. De sequence-
+  levenslijn tekent op het canvas nog met de oude component (type-kop, afgeleide activaties,
+  meegroeiende lijn); in documenten en op de server via het nieuwe ShapeType: lijn tot onder het
+  laagste element van het diagram (renderer-hook `maat` krijgt nu `diagram` en `node`), met de
+  rechthoek-kop of een icoon-kop (actor, boundary, control, entity, business-varianten). Die
+  iconen staan als gegevens in `sequence/vormen.js` (`kopIcoon`); het canvas tekent ze via
+  naarReact. Het sequence-punt is in documenten onzichtbaar en op het canvas zichtbaar bij hover
+  of selectie.
+  Zichtbaar verschil: data-object en data store zijn een doos van figuur + naam; de fragment-chip
+  toont de soort, de naam staat ernaast (was: in één chip).
 
 ## [studio/v0.27.0] — 2026-11-05
 
