@@ -4,7 +4,8 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SEQUENCE_SHAPETYPES, kopIcoon } from "./vormen.js";
+import { SEQUENCE_SHAPETYPES, kopIcoon, activatiesVan, levenslijnNaam } from "./vormen.js";
+import { zetHost, _resetHostVoorTests } from "../../diagramcore/tekenaar/host.js";
 import { tekenbareVorm } from "../../diagramcore/types/shapeType.js";
 import { bouwVoorkomen, tekenVoorkomen, basisVanPalet } from "../../diagramcore/tekenaar/voorkomen.js";
 import { maakPalet } from "../../diagramsvg/thema.js";
@@ -16,8 +17,10 @@ const teken = (shapeId, element, elementType, extra = {}) => {
   const box = bouwVoorkomen({ element, elementType, ...vormInfo, basis, idPrefix: "a", ...extra });
   const uit = tekenVoorkomen(box, { controleer: true });
   assert.deepEqual(uit.fouten, [], shapeId);
-  return { box, ...uit };
+  const teksten = (uit.inhoud?.kinderen || []).filter((k) => k.tag === "text").map((k) => k.kinderen[0]);
+  return { box, ...uit, teksten };
 };
+const LIJN = { id: "levenslijn", shape: "seq-levenslijn", minBreedte: 14, minHoogte: 200, hooks: { naamWeergave: levenslijnNaam } };
 const el = (type, naam = "", data = {}) => ({ id: "x", naam, elementType: type, data, compartimenten: [] });
 
 test("punt onzichtbaar (opacity 0), activatie als balk, beide zonder inhoud", () => {
@@ -44,19 +47,21 @@ test("fragment: soort-chip linksboven, de naam ernaast, leden eronder", () => {
   assert.equal(f.box.renderer.kindervak(f.box.ctx).y, 18);
 });
 
-test("levenslijn (documenten): gestippelde lijn met de kop van 148 erbovenop; naam gecentreerd in de kop", () => {
-  const l = teken("seq-levenslijn", el("levenslijn", "Zaaksysteem"), { id: "levenslijn", shape: "seq-levenslijn", minBreedte: 14, minHoogte: 200 });
-  assert.deepEqual([l.box.w, l.box.h], [14, 200]);
+test("levenslijn: gestippelde lijn (500, zoals EA) met de kop van 148 erbovenop; naam gecentreerd in de kop", () => {
+  const l = teken("seq-levenslijn", el("levenslijn", "Zaaksysteem"), LIJN);
+  assert.deepEqual([l.box.w, l.box.h], [14, 500]);
   const [lijn, kop] = l.omtrek.kinderen;
   assert.equal(lijn.attrs["stroke-dasharray"], "6 4");
   assert.equal(kop.attrs.width, 148);
   assert.equal(kop.attrs.x, 7 - 74, "de kop steekt aan beide kanten uit de smalle node");
   assert.equal(lijn.attrs.y1, kop.attrs.height + 1.6, "de lijn begint onder de kop");
   assert.match(JSON.stringify(l.inhoud), /"x":7,[^}]*"text-anchor":"middle"/);
+  assert.equal(tekenbareVorm("seq-levenslijn").renderer.leestDiagram, true, "het canvas geeft deze renderer het levende diagram");
+  assert.deepEqual(teken("seq-levenslijn", el("levenslijn", ""), LIJN).teksten, ["(levenslijn)"]);
 });
 
 test("levenslijn met icoon-kop (actor): poppetje boven de naam, de lijn begint onder de naam", () => {
-  const l = teken("seq-levenslijn", el("levenslijn", "Burger", { kop: "actor" }), { id: "levenslijn", shape: "seq-levenslijn", minBreedte: 14, minHoogte: 200 });
+  const l = teken("seq-levenslijn", el("levenslijn", "Burger", { kop: "actor" }), LIJN);
   const [lijn, kop] = l.omtrek.kinderen;
   assert.equal(kop.tag, "g");
   assert.equal(kop.attrs.transform, "translate(-17 0)", "icoon van 48 gecentreerd op de lijn (x 7)");
@@ -68,17 +73,103 @@ test("levenslijn met icoon-kop (actor): poppetje boven de naam, de lijn begint o
   assert.equal(kopIcoon("object", { rand: "#000" }), null, "object = de rechthoek-kop");
 });
 
-test("levenslijn (documenten) loopt tot onder het laagste element van het diagram", () => {
-  const diagram = {
-    nodes: [
-      { elementId: "x", position: { x: 300, y: 100 } },
-      { elementId: "f", position: { x: 440, y: 520 }, size: { width: 440, height: 160 } },
-      { elementId: "p", parentId: "x", position: { x: 1, y: 300 }, size: { width: 12, height: 12 } },
-    ],
+// Een klein sequence-model: A roept B aan (150), B roept zichzelf aan (200 → 215), B antwoordt (300).
+const punt = (id, lijn) => ({ id, naam: "", elementType: "punt", data: { randVan: lijn }, compartimenten: [] });
+const bericht = (id, type, source, target) => ({ id, naam: "", elementType: type, data: {}, compartimenten: [], source, target });
+const MODEL = {
+  A: { ...el("levenslijn", "A"), id: "A" },
+  B: { ...el("levenslijn", "B"), id: "B" },
+  p1: punt("p1", "A"),
+  p2: punt("p2", "B"),
+  p3: punt("p3", "B"),
+  p4: punt("p4", "B"),
+  p5: punt("p5", "B"),
+  p6: punt("p6", "A"),
+  m1: bericht("m1", "synchroon", "p1", "p2"),
+  m2: bericht("m2", "synchroon", "p3", "p4"),
+  m3: bericht("m3", "retour", "p5", "p6"),
+};
+const DIAGRAM = {
+  id: "d",
+  nodes: [
+    { elementId: "A", position: { x: 100, y: 50 } },
+    { elementId: "B", position: { x: 400, y: 50 } },
+    { elementId: "p1", position: { x: 1, y: 150 } },
+    { elementId: "p2", position: { x: 1, y: 150 } },
+    { elementId: "p3", position: { x: 1, y: 200 } },
+    { elementId: "p4", position: { x: 1, y: 215 } },
+    { elementId: "p5", position: { x: 1, y: 300 } },
+    { elementId: "p6", position: { x: 1, y: 300 } },
+  ],
+};
+const balkenVan = (l) => l.omtrek.kinderen.filter((k) => k.attrs.class === "dc-seq-activatie");
+
+test("levenslijn: activaties afgeleid uit de berichten (diagram + elementen), genest 5 px naar rechts", () => {
+  assert.deepEqual(activatiesVan({ element: MODEL.A, diagram: null, elementen: MODEL }), [], "zonder diagram geen balken");
+  const b = activatiesVan({ element: MODEL.B, diagram: DIAGRAM, elementen: MODEL });
+  assert.deepEqual(b.map((a) => a.diepte).sort(), [0, 1], "de aanroep en de rugzak van het zelf-bericht");
+  const wortel = b.find((a) => a.diepte === 0);
+  const rugzak = b.find((a) => a.diepte === 1);
+  assert.deepEqual([wortel.top, wortel.top + wortel.hoogte], [156, 306], "de aanroep: van het ontvangpunt (150 + 6) tot de retour (300 + 6), relatief aan de lijn");
+  assert.deepEqual([rugzak.top, rugzak.top + rugzak.hoogte], [221, 239], "de rugzak: kort, vanaf het zelf-bericht (215 + 6), binnen de aanroep");
+  const l = teken("seq-levenslijn", MODEL.B, LIJN, { diagram: DIAGRAM, elements: MODEL });
+  assert.deepEqual(balkenVan(l).map((k) => [k.attrs["data-diepte"], k.attrs.x]).sort(), [[0, 0.75], [1, 5.75]]);
+  assert.equal(l.omtrek.kinderen.at(-1).tag, "rect", "de kop ligt bovenop");
+  assert.equal(balkenVan(teken("seq-levenslijn", MODEL.A, LIJN, { diagram: DIAGRAM, elements: MODEL })).length, 1, "A: de wortel-episode");
+  assert.equal(balkenVan(teken("seq-levenslijn", MODEL.B, LIJN)).length, 0, "buiten een diagram (vormvoorbeeld) geen balken");
+});
+
+test("levenslijn groeit mee met haar laagste punt, ook bovenop een bewaarde maat", () => {
+  const diep = { ...DIAGRAM, nodes: [...DIAGRAM.nodes, { elementId: "p7", position: { x: 1, y: 640 } }] };
+  const model = { ...MODEL, p7: punt("p7", "B") };
+  const b = teken("seq-levenslijn", MODEL.B, LIJN, { diagram: diep, elements: model });
+  assert.equal(b.box.h, 640 + 12 + 120, "laagste punt (640 + 12) + marge 120");
+  assert.equal(teken("seq-levenslijn", MODEL.A, LIJN, { diagram: diep, elements: model }).box.h, 500, "alleen de eigen punten tellen");
+  const bewaard = teken("seq-levenslijn", MODEL.B, LIJN, { diagram: diep, elements: model, maat: { w: 14, h: 300 } });
+  assert.equal(bewaard.box.h, 772, "een bewaarde maat van 300 houdt de lijn niet kort");
+  assert.deepEqual(bewaard.box.ondergrens, { h: 772 }, "het canvas zet dit als minimum voor de resizer");
+  const lang = teken("seq-levenslijn", MODEL.B, LIJN, { diagram: diep, elements: model, maat: { w: 14, h: 900 } });
+  assert.equal(lang.box.h, 900, "langer mag");
+});
+
+test("levenslijn met type (instantieVan): naam:Type onderstreept via de host; onvindbaar met waarschuwing; zonder host alleen de naam", () => {
+  const typed = el("levenslijn", "jan", { instantieVan: { profielId: "p", elementId: "e" } });
+  try {
+    assert.deepEqual(levenslijnNaam(typed, {}), { tekst: "jan", onderstreept: true }, "server: geen host");
+    assert.deepEqual(levenslijnNaam(typed, { verwijzingLabel: () => "Persoon" }), { tekst: "jan:Persoon", onderstreept: true });
+    assert.deepEqual(levenslijnNaam({ ...typed, naam: "" }, { verwijzingLabel: () => "Persoon" }), { tekst: ":Persoon", onderstreept: true }, "anonieme instantie");
+    assert.deepEqual(levenslijnNaam(typed, { verwijzingLabel: () => null }), { tekst: "jan ⚠", onderstreept: true });
+    zetHost({ verwijzingLabel: () => "Persoon" });
+    const l = teken("seq-levenslijn", typed, LIJN);
+    assert.deepEqual(l.teksten, ["jan:Persoon"]);
+    assert.equal(l.inhoud.kinderen.find((k) => k.tag === "text").attrs["text-decoration"], "underline");
+    assert.equal(levenslijnNaam(el("levenslijn", "los"), {}), undefined, "zonder type de gewone naam");
+  } finally {
+    _resetHostVoorTests();
+  }
+});
+
+test("levenslijn als instantie van een element uit een ander profiel: de kop is de vorm van dat type", () => {
+  const typed = el("levenslijn", "zs", { instantieVan: { profielId: "archimate", elementId: "c1" } });
+  const vreemd = {
+    element: { id: "c1", naam: "Zaaksysteem", elementType: "component", data: {}, compartimenten: [{ compartmentType: "x", velden: [] }] },
+    elementType: { id: "component", shape: "seq-fragment", kleur: "#bfdbfe" },
   };
-  const node = diagram.nodes[0];
-  const l = teken("seq-levenslijn", el("levenslijn", "Portaal"), { id: "levenslijn", shape: "seq-levenslijn", minBreedte: 14, minHoogte: 200 }, { diagram, ref: node });
-  assert.equal(l.box.h, 520 + 160 - 100 + 40, "fragment-onderkant (680) − eigen y (100) + marge");
-  const kort = teken("seq-levenslijn", el("levenslijn", "Portaal"), { id: "levenslijn", shape: "seq-levenslijn", minBreedte: 14, minHoogte: 200 }, { diagram: { nodes: [node] }, ref: node });
-  assert.equal(kort.box.h, 200, "alleen zichzelf: de minimumhoogte");
+  try {
+    zetHost({ verwijzingLabel: () => "Zaaksysteem", verwijzingVorm: () => vreemd });
+    assert.equal(levenslijnNaam(typed, { verwijzingLabel: () => "Zaaksysteem" }), "", "de vorm van het type draagt naam:Type zelf");
+    const l = teken("seq-levenslijn", typed, LIJN);
+    const kop = l.omtrek.kinderen.at(-1);
+    assert.equal(kop.attrs.transform, "translate(-67 0)", "148 breed, gecentreerd op de lijn");
+    assert.match(JSON.stringify(kop), /"zs:Zaaksysteem"/);
+    assert.equal(l.omtrek.kinderen[0].attrs.y1, 52, "de lijn begint onder de type-kop van 52");
+    assert.ok(l.vak, "een vak, zodat er geen buitenlabel komt");
+    assert.deepEqual(l.teksten, [], "geen eigen naamregel");
+    // Een gekozen kop wint; een klasse-box als type voegt niets toe: rechthoek met naam:Type.
+    assert.deepEqual(levenslijnNaam({ ...typed, data: { ...typed.data, kop: "actor" } }, { verwijzingLabel: () => "Zaaksysteem" }), { tekst: "zs:Zaaksysteem", onderstreept: true });
+    zetHost({ verwijzingVorm: () => ({ ...vreemd, elementType: { id: "klasse", shape: "class-box" } }) });
+    assert.deepEqual(levenslijnNaam(typed, { verwijzingLabel: () => "Zaaksysteem" }), { tekst: "zs:Zaaksysteem", onderstreept: true });
+  } finally {
+    _resetHostVoorTests();
+  }
 });

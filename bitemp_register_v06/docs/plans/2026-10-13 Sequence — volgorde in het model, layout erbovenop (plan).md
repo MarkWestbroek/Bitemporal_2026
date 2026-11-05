@@ -262,6 +262,17 @@ Wat Mark nu al gebruikt en los van de herstructurering kan:
    §3) en een lijn hecht in het midden van een punt (`handleStijl: "midden"`);
    punten zijn vaag (§2.1: niet getekend) maar nog pakbaar.
 
+   *Bijgesteld 05-11 (Mark: "moet de self call niet binnen de call vallen?"):*
+   een zelf-aanroep geeft een **korte** geneste activatie (ontvangpunt + marge)
+   die niet op de stapel blijft; het vervolg op die levenslijn hoort weer bij
+   de buitenste activatie en een retour sluit die buitenste. Daarvoor kreeg de
+   geneste activatie alle latere berichten en stak ze onder haar ouder uit. Dit
+   is de grens van afleiden uit hoogtes: of een later bericht ín de
+   zelf-aanroep valt, staat nergens. Dat wordt pas uitdrukbaar met §5 stap 2
+   (berichten en activaties in de geordende lijst van hun ouder-activatie) en
+   stap 3 (in- en uitspringen). Sinds 05-11 tekent de levenslijn-renderer
+   (`sequence/vormen.js`) deze balken ook in documenten en op de server.
+
 7. **Tekenen van nul** (15-10, na Marks filmpje): je kiest het berichttype in
    de balk *Verbinding* (= verbind-modus) en sleept van levenslijn naar
    levenslijn op de gewenste hoogte; de punten ontstaan daar (hook

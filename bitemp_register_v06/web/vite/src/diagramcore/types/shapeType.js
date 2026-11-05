@@ -29,7 +29,7 @@ const TEKST_TAGS = new Set(["text", "tspan"]);
 const ANKERS = new Set(["rechthoek", "rand"]);
 const UITLIJNINGEN = new Set(["boven", "midden"]);
 const VERPLICHT_IN_RENDERER = ["omtrek", "inhoudsvak"];
-const OPTIONEEL_IN_RENDERER = ["kindervak", "ornament", "rand", "maat"];
+const OPTIONEEL_IN_RENDERER = ["kindervak", "ornament", "rand", "maat", "ondergrens"];
 
 const isGetal = (v) => typeof v === "number" && Number.isFinite(v);
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -225,15 +225,18 @@ export function inhoudsregelsVan(elementType, element, context = {}) {
  * De weergavenaam van een element (`hooks.naamWeergave`): wat de motor als naam tekent als
  * dat niet letterlijk `element.naam` is — een object als "jan : Persoon [actief]", een
  * voorwaarde zonder naam als haar delen die tonen (lege string = geen naamregel).
- * `undefined` (geen hook, hook geeft undefined, of hook gooit) = de gewone naam.
- * @returns {string|undefined}
+ * `undefined` (geen hook, hook geeft undefined, of hook gooit) = de gewone naam. De hook mag
+ * ook `{tekst, onderstreept}` geven: de UML-objectnotatie hangt soms van het element af (een
+ * levenslijn mét type is "naam:Type" onderstreept, zonder type gewoon de naam).
+ * @returns {string|{tekst: string, onderstreept?: boolean}|undefined}
  */
 export function naamWeergaveVan(elementType, element, context = {}) {
   const hook = elementType?.hooks?.naamWeergave;
   if (typeof hook !== "function" || !element) return undefined;
   try {
     const uit = hook(element, context);
-    return typeof uit === "string" ? uit : undefined;
+    if (typeof uit === "string") return uit;
+    return uit && typeof uit === "object" && typeof uit.tekst === "string" ? { tekst: uit.tekst, onderstreept: !!uit.onderstreept } : undefined;
   } catch {
     return undefined;
   }

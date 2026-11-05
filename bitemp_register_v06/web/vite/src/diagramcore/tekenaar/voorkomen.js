@@ -83,16 +83,27 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
   // element in een ander profiel; op de server null).
   const hookContext = { elements, diagram, verwijzingLabel: host().verwijzingLabel };
   const inhoudsregels = inhoudsregelsVan(et, element, hookContext);
-  const naam = naamWeergaveVan(et, element, hookContext);
-  const planVoor = (breedte) => planInhoud({ element, elementType: et, breedte, parameters, fieldTypesById, compartmentTypesById, inhoudsregels, naam });
+  const weergave = naamWeergaveVan(et, element, hookContext);
+  const naam = typeof weergave === "object" ? weergave.tekst : weergave;
+  const naamOnderstreept = typeof weergave === "object" ? weergave.onderstreept : undefined;
+  const planVoor = (breedte) => planInhoud({ element, elementType: et, breedte, parameters, fieldTypesById, compartmentTypesById, inhoudsregels, naam, naamOnderstreept });
   let maatRef = maat ? { size: { width: maat.w, height: maat.h } } : ref;
   // Zonder bewaarde maat mag de renderer de natuurlijke maat bepalen (fork/join: staand of
   // liggend; een levenslijn: tot onder het laagste element van het diagram).
   if (!(maatRef?.size?.width && maatRef?.size?.height) && renderer.maat) {
-    const eigen = renderer.maat({ element, elementType: et, parameters, stijl, diagram, node: ref || null });
+    const eigen = renderer.maat({ element, elementType: et, parameters, stijl, diagram, elementen: elements, node: ref || null });
     if (eigen) maatRef = { size: { width: eigen.w, height: eigen.h } };
   }
-  const { w, h, plan } = meetVoorkomen({ ref: maatRef, elementType: et, shapeType, planVoor });
+  const gemeten = meetVoorkomen({ ref: maatRef, elementType: et, shapeType, planVoor });
+  const { plan } = gemeten;
+  let { w, h } = gemeten;
+  // Een dynamische ondergrens geldt ook bovenop een bewaarde maat (levenslijn: altijd tot onder
+  // haar laagste punt, anders valt een bericht naast de lijn).
+  const ondergrens = renderer.ondergrens ? renderer.ondergrens({ element, elementType: et, parameters, stijl, diagram, elementen: elements, node: ref || null }) || null : null;
+  if (ondergrens) {
+    w = Math.max(w, ondergrens.w ?? 0);
+    h = Math.max(h, ondergrens.h ?? 0);
+  }
   const ctx = {
     element,
     elementType: et,
@@ -102,11 +113,12 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
     stijl,
     node: ref || null,
     diagram,
+    elementen: elements,
     thema: kleurenVoor(basis, stijl, parameters),
     inhoud: plan ? { h: plan.h, minW: plan.minW } : null,
     idPrefix,
   };
-  return { ctx, renderer, w, h, plan, element, et, rand: renderer.rand ? (hoek) => renderer.rand(ctx, hoek) : null };
+  return { ctx, renderer, w, h, plan, element, et, ondergrens, rand: renderer.rand ? (hoek) => renderer.rand(ctx, hoek) : null };
 }
 
 /**

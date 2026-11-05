@@ -324,7 +324,15 @@
  * @property {(p: {element: Object, elementType: ElementType, parameters: Object, stijl: Object, diagram: Object|null, node: Object|null}) => ({w: number, h: number}|null)} [maat] -
  *   de natuurlijke maat als die van het element afhangt (fork/join: staand of liggend) of van
  *   het diagram (levenslijn: tot onder het laagste element; `diagram` alleen-lezen, `node` het
- *   eigen voorkomen); alleen zonder bewaarde maat gevraagd. `null` = de motor meet (maat.js)
+ *   eigen voorkomen); alleen zonder bewaarde maat gevraagd. `null` = de motor meet (maat.js).
+ *   Krijgt sinds 05-11 ook `elementen` (alleen-lezen)
+ * @property {(p: {element: Object, elementType: ElementType, parameters: Object, stijl: Object, diagram: Object|null, elementen: Object|null, node: Object|null}) => ({w?: number, h?: number}|null)} [ondergrens] -
+ *   een dynamische minimummaat die ook bovenop een bewaarde maat geldt (levenslijn: altijd tot
+ *   onder haar laagste punt); het canvas zet hem ook als minimum voor de resizer
+ * @property {boolean} [leestDiagram]       - deze renderer tekent uit `ctx.diagram` en
+ *   `ctx.elementen` (levenslijn: activaties uit de berichten). Het canvas geeft zo'n renderer het
+ *   levende diagram mee (posities tijdens slepen) en hertekent hem bij elke verplaatsing; een
+ *   renderer zonder deze vlag krijgt op het canvas geen diagram
  */
 
 /**
@@ -340,7 +348,9 @@
  * @property {Object} [node]                - het voorkomen in het diagram; alleen voor een
  *   renderer die dat echt nodig heeft (`gedaante` bij samentrekking en opname)
  * @property {Object} diagram               - alleen-lezen; vervangt store-toegang (de levenslijn
- *   leidt haar activaties af uit de berichten)
+ *   leidt haar activaties af uit de berichten). Op het canvas alleen voor `leestDiagram`
+ * @property {Record<string, Object>|null} [elementen] - de elementen van het model, alleen-lezen
+ *   (connectoren zijn geen nodes: de berichten van een sequence staan hier)
  * @property {Object} [thema]
  * @property {{h: number, minW: number}|null} [inhoud] - de door de motor gemeten inhoud (hoogte en
  *   de breedte die hij minimaal wil); `null` bij `parameters.inhoud: "geen"`. Een renderer die

@@ -61,6 +61,7 @@ import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
+import { TekenContext } from "./SjabloonShape.jsx";
 import { InlineNaamContext, isVlakHandle } from "./inlineNaam.js";
 import ConnectorEdge from "./ConnectorEdge.jsx";
 import { weigeringTekst } from "./afbakening.js";
@@ -1198,6 +1199,10 @@ function CanvasBinnenkant({
     },
     [onNodeDoubleClick, onHernoem, bewerkbaar, elements, lookups]
   );
+  // Diagramkennis voor renderers met `leestDiagram` (SjabloonShape): de elementen van het model
+  // (de berichten van een sequence zijn geen nodes); de posities leest de vorm live uit de
+  // React Flow-store.
+  const tekenWaarde = useMemo(() => ({ elements, diagramId: diagram?.id || null }), [elements, diagram?.id]);
   const inlineNaamWaarde = useMemo(
     () => ({
       nodeId: hernoem?.nodeId ?? null,
@@ -1927,6 +1932,7 @@ function CanvasBinnenkant({
   );
 
   return (
+    <TekenContext.Provider value={tekenWaarde}>
     <InlineNaamContext.Provider value={inlineNaamWaarde}>
     <ReactFlow
       key={diagram?.id || "leeg"}
@@ -2195,6 +2201,7 @@ function CanvasBinnenkant({
       <MiniMap pannable zoomable nodeComponent={MiniMapNode} />
     </ReactFlow>
     </InlineNaamContext.Provider>
+    </TekenContext.Provider>
   );
 }
 

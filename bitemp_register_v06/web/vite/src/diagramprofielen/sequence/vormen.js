@@ -6,19 +6,27 @@
  *     canvas zichtbaar bij hover of selectie (diagramcore.css `.dc-seq-punt`);
  *   - activatie: smalle staande balk;
  *   - fragment: kader met de soort (alt/opt/loop/par) als chip linksboven, de naam ernaast;
- *   - levenslijn: gestippelde lijn met de naam-kop erbovenop (rechthoek, of een icoon-kop uit
- *     `KOP_ICONEN` met de naam eronder), tot onder het laagste element van het diagram — alleen
- *     voor documenten en de server. Op het canvas tekent `shapes.jsx` hem nog
- *     (SjabloonShape.UITGEZONDERD): de kop toont daar ook het type (instantieVan uit een ander
- *     profiel), de activaties zijn afgeleid uit de berichten op het canvas en de lijn groeit
- *     mee met haar laagste punt. De icoon-koppen deelt het canvas via `kopIcoon` + naarReact.
+ *   - levenslijn: gestippelde lijn met de kop erbovenop, haar activaties en een lengte die
+ *     meegroeit met haar laagste punt — op het canvas, in documenten en op de server dezelfde
+ *     renderer (sinds 05-11; daarvoor tekende het canvas hem met een eigen React-component).
+ *     De kop is een rechthoek met de naam ("naam:Type" onderstreept bij `instantieVan`), een
+ *     icoon-kop uit `KOP_ICONEN` met de naam eronder, of — is het type een element uit een
+ *     ander profiel en is er geen kop gekozen — de vorm van dat type (een ArchiMate-
+ *     applicatiecomponent als kop). De activaties leidt de renderer af uit de berichten
+ *     (`activaties.js`) via `ctx.diagram` + `ctx.elementen`; het type komt van de host
+ *     (`tekenaar/host.js`: `verwijzingLabel`, `verwijzingVorm`; op de server null: rechthoek
+ *     met alleen de naam).
  *
  * Pure `.js`.
  */
-import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";
+import { registreerShapeType, registreerRenderer, vorm, tekenbareVorm } from "../../diagramcore/types/shapeType.js";
 import { randRechthoek } from "../../diagramcore/tekenaar/bibliotheek.js";
 import { tekstBreedte } from "../../diagramsvg/tekstmaat.js";
 import { n3 } from "../../diagramcore/tekenaar/glyphs.js";
+import { host } from "../../diagramcore/tekenaar/host.js";
+import { bouwVoorkomen, tekenVoorkomen } from "../../diagramcore/tekenaar/voorkomen.js";
+import { leidActivatiesAf } from "./activaties.js";
+import { BERICHTEN } from "./labels.js";
 
 const KOP_BREED = 148;
 const LIJN_X = 7;
@@ -108,48 +116,160 @@ export function kopIcoon(soort, { rand, vulling }) {
   return maak ? maak(rand, vulling || "#e0f2fe") : null;
 }
 
-/** Hoe ver het diagram onder de bovenkant van deze levenslijn reikt (laagste element + marge). */
-function diagramDiepte(diagram, node, eigenId) {
-  const y0 = node?.position?.y ?? 0;
-  const nodes = diagram?.nodes || [];
-  let onder = 0;
-  for (const n of nodes) {
-    if (!n || n.elementId === eigenId) continue;
-    // Een kind (punt op een levenslijn) staat relatief ten opzichte van zijn ouder.
-    const ouder = n.parentId ? nodes.find((o) => o?.elementId === n.parentId) : null;
-    const y = (ouder?.position?.y ?? 0) + (n.position?.y ?? 0) + (n.size?.height ?? 60);
-    if (y > onder) onder = y;
-  }
-  return onder - y0;
-}
+const LIJN_MIN_HOOGTE = 500;
+const LIJN_MARGE = 120;
+const PUNT = 12;
+const BALK_BREED = 14;
+const TYPEKOP_H = 52;
+/** Vormen die als kop niets toevoegen of niet passen: dan de rechthoek met naam:Type. */
+const GEEN_TYPEKOP = new Set(["class-box", "edge", "seq-levenslijn", "note"]);
 
-/** Hoogte van de kop: de rechthoek om de naam, of het icoon met de naam eronder. */
-function kopHoogte(ctx, icoon) {
-  const naamH = ctx.inhoud?.h ?? 26;
-  return icoon ? ICOON_H + 2 + naamH + 2 : Math.max(30, naamH + 4);
+/**
+ * Lengte van de lijn: standaard ruim (500, zoals EA tot onderaan), en altijd tot onder haar
+ * laagste punt — anders valt een bericht onder de lijn op het lege vlak (15-10). Alleen de
+ * rand-elementen van deze lijn tellen (`data.randVan`, positie relatief aan de lijn).
+ */
+function lijnHoogte({ element, diagram, elementen }) {
+  let laagste = 0;
+  if (diagram && elementen && element?.id) {
+    for (const n of diagram.nodes || []) {
+      const kind = elementen[n?.elementId];
+      if (kind?.data?.randVan !== element.id) continue;
+      const onder = (n.position?.y ?? 0) + (n.size?.height ?? (kind.elementType === "activatie" ? 44 : PUNT));
+      if (onder > laagste) laagste = onder;
+    }
+  }
+  return Math.max(LIJN_MIN_HOOGTE, laagste + LIJN_MARGE);
 }
 
 /**
- * Levenslijn (documenten/server): gestippelde lijn met de naam-kop (148 breed) erbovenop; met
- * `data.kop` een icoon-kop (actor, boundary, …) met de naam eronder. De node blijft 14 breed,
- * hoe lang de naam ook is (de kop steekt uit); daarom bepaalt `maat` de doos en meet de motor
- * de naam op de kopbreedte (`factorW` = 148/14). De lijn loopt tot onder het laagste element van
- * het diagram (zoals de canvas-lijn meegroeit met haar laagste punt), minstens `minHoogte`.
+ * Activaties van één levenslijn, afgeleid uit de berichten (activaties.js): de punten op het
+ * diagram geven per bericht de lijn en de hoogte; niets wordt opgeslagen, de balken volgen de
+ * berichten. Geneste activaties (zelf-aanroep) schuiven per niveau 5 px naar rechts, zoals EA.
+ * @returns {{top: number, hoogte: number, diepte: number}[]} top relatief aan de levenslijn
+ */
+export function activatiesVan({ element, diagram, elementen }) {
+  if (!diagram || !elementen || !element?.id) return [];
+  const nodes = diagram.nodes || [];
+  const lijnY = new Map();
+  for (const n of nodes) if (elementen[n?.elementId]?.elementType === "levenslijn") lijnY.set(n.elementId, n.position?.y ?? 0);
+  if (!lijnY.has(element.id)) return [];
+  /** punt → { lijn, y (absoluut, midden van het punt) } */
+  const punten = new Map();
+  for (const n of nodes) {
+    const e = elementen[n?.elementId];
+    if (e?.elementType !== "punt" || !lijnY.has(e.data?.randVan)) continue;
+    punten.set(e.id, { lijn: e.data.randVan, y: lijnY.get(e.data.randVan) + (n.position?.y ?? 0) + PUNT / 2 });
+  }
+  if (!punten.size) return [];
+  const berichten = [];
+  for (const c of Object.values(elementen)) {
+    if (!BERICHTEN.includes(c?.elementType)) continue;
+    const a = punten.get(c.source);
+    const b = punten.get(c.target);
+    if (!a || !b) continue;
+    berichten.push({ id: c.id, bron: a.lijn, doel: b.lijn, y: a.y, yEind: b.y, soort: c.elementType });
+  }
+  const mijnY = lijnY.get(element.id);
+  return leidActivatiesAf(berichten)
+    .filter((a) => a.lijn === element.id)
+    .map((a) => ({ top: a.van - mijnY, hoogte: a.tot - a.van, diepte: a.diepte }));
+}
+
+/**
+ * Welke kop: de vorm van het type (instantie van een element uit een ander profiel, geen kop
+ * gekozen, en de host kent het), een icoon-kop, of de rechthoek. Een gekozen kop wint.
+ */
+function kopVan(element) {
+  const d = element?.data || {};
+  if (d.instantieVan && !d.kop) {
+    const type = host().verwijzingVorm?.(d.instantieVan) || null;
+    const et = type?.elementType;
+    if (type?.element && et && !et.isConnector && !GEEN_TYPEKOP.has(et.shape)) {
+      const info = tekenbareVorm(et.shape);
+      if (info) return { soort: "type", type, info };
+    }
+  }
+  return { soort: KOP_ICONEN[d.kop] ? "icoon" : "rechthoek" };
+}
+
+/**
+ * `hooks.naamWeergave` van de levenslijn: zonder type de naam; met `instantieVan` de
+ * UML-objectnotatie "naam:Type" onderstreept (onvindbaar type: naam + ⚠; zonder host, op de
+ * server, alleen de naam); tekent de kop de vorm van het type, dan geen naamregel ("") — die
+ * vorm draagt "naam:Type" zelf.
+ */
+export function levenslijnNaam(element, context = {}) {
+  const ref = element?.data?.instantieVan;
+  if (!ref) return element?.naam ? undefined : "(levenslijn)";
+  if (kopVan(element).soort === "type") return "";
+  const label = context.verwijzingLabel ? context.verwijzingLabel(ref) : null;
+  const naam = element.naam || (label ? "" : "(levenslijn)");
+  if (label) return { tekst: `${naam}:${label}`, onderstreept: true };
+  return { tekst: context.verwijzingLabel ? `${naam} ⚠` : naam, onderstreept: true };
+}
+
+/** De vorm van het type als kop (148×52): zonder compartimenten, met naam:Type; via de tekenaar zelf. */
+function typeKop(ctx, kop) {
+  const { type, info } = kop;
+  const naam = `${ctx.element?.naam || ""}:${type.element.naam || type.element.id}`;
+  const box = bouwVoorkomen({
+    element: { ...type.element, naam, compartimenten: [] },
+    elementType: type.elementType,
+    shapeType: info.shapeType,
+    renderer: info.renderer,
+    maat: { w: KOP_BREED, h: TYPEKOP_H },
+    basis: ctx.thema,
+    idPrefix: `${ctx.idPrefix}-kop`,
+  });
+  const { omtrek, inhoud, ornament } = tekenVoorkomen(box);
+  return vorm("g", { transform: `translate(${LIJN_X - KOP_BREED / 2} 0)` }, omtrek, inhoud, ornament);
+}
+
+/** Hoogte van de kop: de vorm van het type, het icoon met de naam eronder, of de rechthoek om de naam. */
+function kopHoogte(ctx, soort) {
+  if (soort === "type") return TYPEKOP_H;
+  const naamH = ctx.inhoud?.h ?? 26;
+  return soort === "icoon" ? ICOON_H + 2 + naamH + 2 : Math.max(30, naamH + 4);
+}
+
+/**
+ * Levenslijn: gestippelde lijn met de kop (148 breed) erbovenop en haar afgeleide activaties.
+ * De node blijft 14 breed, hoe lang de naam ook is (de kop steekt uit); daarom bepaalt `maat` de
+ * doos en meet de motor de naam op de kopbreedte (`factorW` = 148/14). `ondergrens` houdt de
+ * lijn ook bij een bewaarde maat tot onder haar laagste punt. `leestDiagram`: het canvas geeft
+ * deze renderer het levende diagram (posities tijdens slepen) en de elementen mee.
  */
 const levenslijn = {
-  maat: ({ element, elementType, diagram, node }) => ({ w: 14, h: Math.max(elementType?.minHoogte ?? 200, diagramDiepte(diagram, node, element?.id) + 40) }),
+  leestDiagram: true,
+  maat: (p) => ({ w: 14, h: lijnHoogte(p) }),
+  ondergrens: (p) => ({ h: lijnHoogte(p) }),
   omtrek(ctx) {
     const { h } = ctx.maat;
-    const icoon = kopIcoon(ctx.element?.data?.kop, { rand: ctx.thema.rand });
-    const kopH = kopHoogte(ctx, icoon);
+    const kop = kopVan(ctx.element);
+    let kopVorm = null;
+    let soort = kop.soort;
+    if (soort === "type") {
+      // Valt de vreemde vorm buiten zijn eigen profiel om, dan de gewone rechthoek.
+      try {
+        kopVorm = typeKop(ctx, kop);
+      } catch {
+        soort = "rechthoek";
+      }
+    }
+    const kopH = kopHoogte(ctx, soort);
+    if (soort === "icoon") kopVorm = vorm("g", { transform: `translate(${LIJN_X - ICOON_W / 2} 0)` }, kopIcoon(ctx.element?.data?.kop, { rand: ctx.thema.rand, vulling: ctx.stijl?.kleur }));
+    else if (soort === "rechthoek") kopVorm = vorm("rect", { x: LIJN_X - KOP_BREED / 2, y: 0.8, width: KOP_BREED, height: kopH - 1.6, rx: 4, fill: ctx.thema.vulling, stroke: ctx.thema.rand, "stroke-width": 1.6 });
     const lijn = vorm("line", { x1: LIJN_X, y1: kopH, x2: LIJN_X, y2: h, stroke: ctx.thema.rand, "stroke-width": 1.4, "stroke-dasharray": "6 4" });
-    if (icoon) return vorm("g", {}, lijn, vorm("g", { transform: `translate(${LIJN_X - ICOON_W / 2} 0)` }, icoon));
-    return vorm("g", {}, lijn, vorm("rect", { x: LIJN_X - KOP_BREED / 2, y: 0.8, width: KOP_BREED, height: kopH - 1.6, rx: 4, fill: ctx.thema.vulling, stroke: ctx.thema.rand, "stroke-width": 1.6 }));
+    const balken = activatiesVan(ctx).map((a) =>
+      vorm("rect", { class: "dc-seq-activatie", "data-diepte": a.diepte, x: a.diepte * 5 + 0.75, y: n3(a.top), width: BALK_BREED - 1.5, height: n3(Math.max(1, a.hoogte)), rx: 2, fill: "#e2e8f0", stroke: ctx.thema.rand, "stroke-width": 1.5 })
+    );
+    return vorm("g", {}, lijn, balken, kopVorm);
   },
   inhoudsvak(ctx) {
-    const icoon = kopIcoon(ctx.element?.data?.kop, { rand: ctx.thema.rand });
-    const kopH = kopHoogte(ctx, icoon);
-    if (icoon) return { x: LIJN_X - KOP_BREED / 2, y: ICOON_H + 2, w: KOP_BREED, h: kopH - ICOON_H - 2, uitlijning: "boven" };
+    const soort = kopVan(ctx.element).soort;
+    const kopH = kopHoogte(ctx, soort);
+    if (soort === "icoon") return { x: LIJN_X - KOP_BREED / 2, y: ICOON_H + 2, w: KOP_BREED, h: kopH - ICOON_H - 2, uitlijning: "boven" };
     return { x: LIJN_X - KOP_BREED / 2, y: 0, w: KOP_BREED, h: kopH, uitlijning: "midden" };
   },
   rand: (ctx, hoek) => randRechthoek(ctx.maat, hoek),

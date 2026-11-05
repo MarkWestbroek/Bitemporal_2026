@@ -298,9 +298,40 @@ profiel-default `randAanhechting`, de 5 px / 12,5 px van de handle-stip, toppen,
 de React Flow-padfuncties uit `@xyflow/system` (bezier, smoothstep met radius 4, recht) en
 spiegelingen van `lusPad`/`boomPad`/`knikPad`; markers en labelchips met de canvas-maten.
 Bewijs: `naast-elkaar.mjs` legt per connector het `d`-pad uit de DOM naast dat uit de render-SVG
-(`vergelijk-paden.py`): 65 lijnen in tien diagrammen gelijk op 0,5 px. Nog niet gelijk:
-sequence-berichten (het canvas hecht aan de afgeleide activaties — hoort bij de levenslijn-stap).
+(`vergelijk-paden.py`): 65 lijnen in tien diagrammen gelijk op 0,5 px. De sequence-berichten
+leken nog af te wijken, maar dat was de handle-stip van een punt-node (12,5 px): na die
+correctie zijn ook zij gelijk — met de activaties had het niets te maken.
 Regel voortaan: wie `ConnectorEdge` aanpast, past `lijnen.js` mee aan, en andersom.
+
+**Levenslijn op het canvas via het sjabloon (05-11, OMNIUM-UI, `feat/tekenaar-levenslijn`).**
+De laatste profielvorm met een eigen React-component. Drie dingen wist alleen het canvas; alle
+drie zitten nu in de renderer (`sequence/vormen.js`), zodat documenten en de server ze ook
+tekenen:
+
+1. **Activaties** uit de berichten (`activaties.js`, ongewijzigd): de renderer leest de punten
+   en levenslijnen uit `ctx.diagram` en de berichten uit het nieuwe `ctx.elementen`
+   (connectoren zijn geen nodes). Op het canvas krijgt alleen een renderer met
+   `leestDiagram: true` een diagram: `SjabloonShape` bouwt het uit de React Flow-store (levend,
+   ook tijdens slepen) en haalt de elementen uit `TekenContext` (DiagramCanvas). Zo hertekent
+   niet elke vorm bij elke verplaatsing.
+2. **Lengte**: 500, of tot 120 onder haar laagste punt. Zonder bewaarde maat via `maat`, mét
+   bewaarde maat via de nieuwe hook `ondergrens` (een dynamisch minimum bovenop de bewaarde
+   maat; het canvas zet het ook als minimum voor de resizer). De oude regel van de
+   documentversie ("tot onder het laagste element van het diagram + 40") is vervallen: het
+   canvas is de maat.
+3. **Kop met het type**: `hooks.naamWeergave` geeft "naam:Type" onderstreept (mag nu
+   `{tekst, onderstreept}` teruggeven; onvindbaar type: ⚠; zonder host alleen de naam). Is het
+   type een element uit een ander profiel en is er geen kop gekozen, dan tekent de kop **de
+   vorm van dat type**: de host levert element + ElementType (`verwijzingVorm`), en de
+   levenslijn-renderer roept `bouwVoorkomen`/`tekenVoorkomen` aan voor een doos van 148×52 —
+   de tekenaar tekent dus een vorm ín een vorm, zonder React. De naamregel van de levenslijn
+   zelf is dan leeg; het vak blijft bestaan zodat er geen buitenlabel komt.
+
+Op het canvas tekent `getShape` nu alleen nog de `diagramverwijzing`. De oude
+`LevenslijnShape` in `sequence/shapes.jsx` blijft tot de opruimstap staan voor de
+vormvoorbeelden (instellingen, shape-set-paneel), die nog via `getShape` gaan. Proef:
+`naast-elkaar.mjs sequence-typen` (klasse, ArchiMate-component en -actor als type, verdwenen
+type, gekozen kop, zelf-aanroep); berichtlijnen 12 van 12 gelijk.
 
 ### 3.4 Server en documenten (RENDER-API, OMNIUM-UI)
 

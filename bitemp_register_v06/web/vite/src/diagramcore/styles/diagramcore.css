@@ -136,6 +136,11 @@
 .dc-sjabloon .dc-ornament {
   pointer-events: none;
 }
+/* Afgeleide activaties op een levenslijn (sequence/vormen.js): niet aan te pakken, de punten
+   eronder wel. */
+.dc-sjabloon .dc-seq-activatie {
+  pointer-events: none;
+}
 /* Sequence-punt als sjabloon: in documenten onzichtbaar (opacity-attribuut van de renderer),
    op het canvas zichtbaar bij hover of selectie — een CSS-eigenschap wint van het attribuut. */
 .dc-sjabloon.dc-seq-punt .dc-omtrek {

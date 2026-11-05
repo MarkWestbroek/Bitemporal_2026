@@ -36,7 +36,7 @@
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerSequenceShapes } from "./shapes.jsx";
-import "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): punt/activatie/fragment op het canvas, de levenslijn in documenten
+import { levenslijnNaam } from "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4), ook de levenslijn op het canvas
 import { KOPPEN, berichtLabels } from "./labels.js";
 import { verschuifBericht } from "./verschuif.js";
 import { puntenVoorBericht, ruimPuntenOp } from "./zelfbericht.js";
@@ -81,6 +81,8 @@ const elementTypes = [
       KLEUR_VELD,
     ],
     hooks: {
+      /** De kop: "naam:Type" onderstreept bij een instantie (vormen.js). */
+      naamWeergave: levenslijnNaam,
       /** Element uit de boom op de lijn gedropt → typeer de levenslijn. */
       ontvangtDrop: (element, ref, { updateElement }) => {
         if (!ref?.profielId || !ref?.elementId) return;

@@ -97,7 +97,12 @@ zwakke plek: een sequence-diagram heeft nog geen echte levenslijnen, dus bericht
 hoekig/recht/boom, knikken, zelf-lus, markers, labelchips) komt uit dezelfde bouwstenen als het
 Studio-canvas (`zwevendeRand.js`, de React Flow-padfuncties), dus een lijn die in de Studio via
 een omweg of met een andere lijnvorm is getrokken, rendert hier identiek (proef: 65 lijnen in
-tien diagrammen gelijk op 0,5 px; sequence-berichten wijken nog af door de activaties).
+tien diagrammen gelijk op 0,5 px, sequence-berichten inbegrepen).
+**Sequence (05-11):** de levenslijn tekent hier met dezelfde renderer als op het canvas: de
+lijn tot onder haar laagste punt (minstens 500) en de activaties afgeleid uit de berichten. Het
+type van een levenslijn (`instantieVan`, een element uit een ander profiel) kent de server
+niet: de kop is dan de rechthoek met alleen de naam, onderstreept. In de Studio toont de kop
+"naam:Type" of de vorm van het type.
 
 **Vormtrouw groeit mee.** Sinds stap 5 van het plan *Eén tekenaar* (`docs/plans/2026-11-04`,
 04-11) tekent `taal=studio` met dezelfde tekenaar als documenten en gedeelde plaatjes
