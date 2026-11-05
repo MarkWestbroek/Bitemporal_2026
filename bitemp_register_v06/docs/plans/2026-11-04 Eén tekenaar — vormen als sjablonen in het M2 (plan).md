@@ -286,6 +286,22 @@ natuurlijke breedte op de hele doos en loopt de naam in het icoon. Nog niet: de 
 (oude `shapes.jsx` per profiel, `shapes/basisShapes.jsx`, `getShape`-route behalve de twee
 uitzonderingen) en de levenslijn op het canvas.
 
+**Lijnen — de tekenaar volgt het canvas (05-11, OMNIUM-UI, `feat/tekenaar-lijnen`).** Mark vroeg
+of een lijn die je in de Studio via een omweg trekt of een andere vorm geeft, op de server net zo
+rendert. De route (knikken, vorm, handles) kwam al uit dezelfde bron (`diagram.lijnen` +
+`materialiseerConnectoren`), maar `tekenaar/lijnen.js` rekende de geometrie met een eigen "rand
+tot rand"-regel uit diagramsvg: een rechte of gebogen lijn tussen twee schuin geplaatste dozen
+liep op de server diagonaal van onderrand naar bovenrand, op het canvas verticaal langs de
+dominante zijde (`aanhechtpunt`, inzet 8). Nu gebruikt `lijnen.js` dezelfde bouwstenen als
+`ConnectorEdge.jsx`: `zwevendeUiteinden` (zelfde aanroep, inclusief de ingebakken
+profiel-default `randAanhechting`, de 5 px / 12,5 px van de handle-stip, toppen, knikken, Z),
+de React Flow-padfuncties uit `@xyflow/system` (bezier, smoothstep met radius 4, recht) en
+spiegelingen van `lusPad`/`boomPad`/`knikPad`; markers en labelchips met de canvas-maten.
+Bewijs: `naast-elkaar.mjs` legt per connector het `d`-pad uit de DOM naast dat uit de render-SVG
+(`vergelijk-paden.py`): 65 lijnen in tien diagrammen gelijk op 0,5 px. Nog niet gelijk:
+sequence-berichten (het canvas hecht aan de afgeleide activaties — hoort bij de levenslijn-stap).
+Regel voortaan: wie `ConnectorEdge` aanpast, past `lijnen.js` mee aan, en andersom.
+
 ### 3.4 Server en documenten (RENDER-API, OMNIUM-UI)
 
 - `render-svc` importeert de tekenaar; `taal=studio` krijgt daarmee vormtrouw. De route en het

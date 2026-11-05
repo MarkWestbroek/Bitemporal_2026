@@ -130,3 +130,10 @@ export function tekenVoorkomen(box, { controleer = false } = {}) {
   const inhoud = vak && plan ? tekenInhoud(vak, plan, ctx.thema, { tekstAnker: vak.tekstAnker || ctx.parameters.tekstAnker }) : null;
   return { omtrek, inhoud, ornament, vak, fouten };
 }
+
+/**
+ * Kleine vaste vorm (begin, keuze, junction, …): op het canvas liggen de handles net búiten de
+ * vorm (diagramcore.css `.dc-punt-node`), zodat de kern vrij blijft om te slepen. De tekenaar
+ * gebruikt dezelfde regel voor het punt van een vaste handle (lijnen.js).
+ */
+export const isPuntNode = (shapeType, elementType) => elementType?.resizebaar === false && shapeType?.parameters?.inhoud === "geen";
