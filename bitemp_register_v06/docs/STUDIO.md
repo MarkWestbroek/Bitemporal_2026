@@ -383,6 +383,12 @@ te wijzigen.
 >   Actueel: één rij per project+profiel+diagram (gedeeltelijke unieke index), `no-cache` + ETag;
 >   `alleen_bijwerken` geeft 404 als het adres ingetrokken is. Rechten: lezen op het project om te
 >   delen; intrekken door wie deelde of wie schrijven mag. Project weg = plaatjes weg.
+> - **SVG-link (05-11, soort `svg`; privacy-besluit Mark)**: `POST …/beelden` met `soort: "svg"`
+>   zonder `png` geeft `/api/beeld/<token>.svg`. Daar tekent de **server** het diagram bij elke
+>   aanvraag uit de snapshot van het project (render-sidecar, `taal=studio`); er wordt geen plaatje
+>   bewaard. Eén link per diagram (eigen gedeeltelijke unieke index), zelfde lijst en zelfde
+>   intrekken. De Studio heeft er nog geen knop voor en toont de soort in het paneel nog als
+>   "momentopname". Zie `docs/RENDER_API.md` §Projectdiagram.
 > - **Opslag** zoals de bijlagen van meldingen: de PNG in **MinIO** (`beelden/<token>.png`) als de
 >   filestore beschikbaar is (VPS), anders in de kolom `inhoud`. De tabel is plumbing, geen
 >   register-domein. **Geen versies**: een actueel plaatje overschrijft het vorige object;

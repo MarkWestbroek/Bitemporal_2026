@@ -9,6 +9,10 @@ package handlers
 //   DELETE /api/studio/projecten/:id/beelden/:token   → 204; het adres geeft voortaan 404
 //   GET    /api/beeld/:bestand                        → de PNG, openbaar (bestand = <token>.png)
 //
+// Soort "svg" (05-11-2026, privacy-besluit Mark; render_project.go): een link waarop de server
+// het diagram zelf tekent, als SVG, uit de snapshot van het project. Zelfde token, zelfde lijst,
+// zelfde intrekken; er wordt geen plaatje bewaard. POST zonder `png`, adres <token>.svg.
+//
 // Opslag: MinIO (beelden/<token>.png) als de filestore beschikbaar is, anders de kolom inhoud,
 // net als de bijlagen van meldingen. Geen versies: een actueel plaatje overschrijft het vorige.
 //
@@ -44,6 +48,8 @@ const (
 	beeldMaxBytes     = 4 << 20 // 4 MB PNG; een groot diagram op schaal 2 is ~0,5 MB
 	beeldSoortMoment  = "momentopname"
 	beeldSoortActueel = "actueel"
+	beeldSoortSvg     = "svg" // de server tekent bij elke aanvraag (render_project.go); geen opgeslagen plaatje
+	beeldSvgMediatype = "image/svg+xml"
 )
 
 var (
@@ -82,8 +88,12 @@ type BeeldMeta struct {
 }
 
 func beeldMeta(b *model.StudioGedeeldBeeld) BeeldMeta {
+	ext := ".png"
+	if b.Soort == beeldSoortSvg {
+		ext = ".svg"
+	}
 	return BeeldMeta{
-		Token: b.Token, Pad: "/api/beeld/" + b.Token + ".png", ProfielID: b.ProfielID, DiagramID: b.DiagramID,
+		Token: b.Token, Pad: "/api/beeld/" + b.Token + ext, ProfielID: b.ProfielID, DiagramID: b.DiagramID,
 		DiagramNaam: b.DiagramNaam, Soort: b.Soort, Hash: b.Hash, Grootte: b.Grootte, Breedte: b.Breedte,
 		Hoogte: b.Hoogte, Aangemaakt: b.Aangemaakt, Bijgewerkt: b.Bijgewerkt, Door: b.Door,
 	}
@@ -154,8 +164,11 @@ func valideerBeeldInvoer(in *beeldInvoer) string {
 	if in.Soort == "" {
 		in.Soort = beeldSoortMoment
 	}
-	if in.Soort != beeldSoortMoment && in.Soort != beeldSoortActueel {
-		return "Veld 'soort' moet 'momentopname' of 'actueel' zijn."
+	if in.Soort != beeldSoortMoment && in.Soort != beeldSoortActueel && in.Soort != beeldSoortSvg {
+		return "Veld 'soort' moet 'momentopname', 'actueel' of 'svg' zijn."
+	}
+	if in.Soort == beeldSoortSvg && strings.TrimSpace(in.PNG) != "" {
+		return "Bij soort 'svg' hoort geen 'png': de server tekent het diagram zelf."
 	}
 	if !beeldIDPatroon.MatchString(in.ProfielID) || !beeldIDPatroon.MatchString(in.DiagramID) {
 		return "Velden 'profiel_id' en 'diagram_id' zijn verplicht (letters, cijfers, _ . : -)."
@@ -193,6 +206,10 @@ func MaakStudioBeeldDelenHandler() gin.HandlerFunc {
 		}
 		if fout := valideerBeeldInvoer(&in); fout != "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": fout})
+			return
+		}
+		if in.Soort == beeldSoortSvg {
+			deelSvgLink(c, id, &in)
 			return
 		}
 		data, fout := leesPNG(in.PNG)
@@ -287,6 +304,63 @@ func MaakStudioBeeldDelenHandler() gin.HandlerFunc {
 	}
 }
 
+// deelSvgLink — POST …/beelden met soort "svg": één link per diagram, zoals bij "actueel". Er is
+// geen plaatje om te bewaren; de rij legt vast welk diagram het token ontsluit. Of het diagram
+// (al) in de snapshot staat wordt hier niet gecontroleerd: een diagram dat alleen nog in het
+// operatielog zit, geeft op de link een 404 tot de volgende snapshot.
+func deelSvgLink(c *gin.Context, id string, in *beeldInvoer) {
+	ctx := c.Request.Context()
+	bestaat, err := DB.NewSelect().Model((*model.StudioProject)(nil)).Where("id = ?", id).Exists(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Project lezen mislukt: " + err.Error()})
+		return
+	}
+	if !bestaat {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Project niet gevonden op de server."})
+		return
+	}
+	oud := new(model.StudioGedeeldBeeld)
+	err = DB.NewSelect().Model(oud).ExcludeColumn("inhoud").
+		Where("project_id = ? AND profiel_id = ? AND diagram_id = ? AND soort = ? AND ingetrokken_op IS NULL", id, in.ProfielID, in.DiagramID, beeldSoortSvg).
+		OrderExpr("aangemaakt DESC").Limit(1).Scan(ctx)
+	switch {
+	case err == nil:
+		uit := beeldMeta(oud)
+		if oud.DiagramNaam != in.DiagramNaam {
+			nu := time.Now()
+			if _, err := DB.NewUpdate().Model((*model.StudioGedeeldBeeld)(nil)).
+				Set("diagram_naam = ?, bijgewerkt = ?", in.DiagramNaam, nu).Where("token = ?", oud.Token).Exec(ctx); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Link bijwerken mislukt: " + err.Error()})
+				return
+			}
+			uit.DiagramNaam, uit.Bijgewerkt = in.DiagramNaam, nu
+		}
+		c.JSON(http.StatusOK, uit)
+		return
+	case !errors.Is(err, sql.ErrNoRows):
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gedeelde plaatjes lezen mislukt: " + err.Error()})
+		return
+	}
+	token, err := nieuwBeeldToken()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Token maken mislukt."})
+		return
+	}
+	nu := time.Now()
+	b := &model.StudioGedeeldBeeld{
+		Token: token, ProjectID: id, ProfielID: in.ProfielID, DiagramID: in.DiagramID, DiagramNaam: in.DiagramNaam,
+		Soort: beeldSoortSvg, Mediatype: beeldSvgMediatype, Aangemaakt: nu, Bijgewerkt: nu, Door: studioActor(c),
+	}
+	if _, err := DB.NewInsert().Model(b).Exec(ctx); err != nil {
+		// Twee tabbladen tegelijk: de unieke index laat er één winnen; opnieuw vragen geeft die link.
+		c.JSON(http.StatusConflict, gin.H{"error": "Link opslaan mislukt (probeer opnieuw): " + err.Error()})
+		return
+	}
+	uit := beeldMeta(b)
+	uit.Gewijzigd = true
+	c.JSON(http.StatusCreated, uit)
+}
+
 // MaakStudioBeeldenLijstHandler — GET /api/studio/projecten/:id/beelden
 func MaakStudioBeeldenLijstHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -350,12 +424,18 @@ func MaakStudioBeeldIntrekkenHandler() gin.HandlerFunc {
 // MaakBeeldOpenbaarHandler — GET /api/beeld/:bestand (zonder inloggen; het token is de toegang)
 func MaakBeeldOpenbaarHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := strings.TrimSuffix(c.Param("bestand"), ".png")
+		bestand := c.Param("bestand")
+		token := strings.TrimSuffix(bestand, ".png")
 		h := c.Writer.Header()
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("X-Robots-Tag", "noindex, nofollow")
 		// Confluence, Teams en wiki's laden het plaatje vanaf hun eigen domein.
 		h.Set("Cross-Origin-Resource-Policy", "cross-origin")
+		if strings.HasSuffix(bestand, ".svg") {
+			// Soort "svg": de server tekent het diagram nu (render_project.go).
+			beeldSvgOpenbaar(c, strings.TrimSuffix(bestand, ".svg"))
+			return
+		}
 		if !beeldTokenPatroon.MatchString(token) {
 			c.Status(http.StatusNotFound)
 			return
@@ -367,6 +447,11 @@ func MaakBeeldOpenbaarHandler() gin.HandlerFunc {
 				c.Status(http.StatusInternalServerError)
 				return
 			}
+			c.Status(http.StatusNotFound)
+			return
+		}
+		if b.Soort == beeldSoortSvg {
+			// Een SVG-link heeft geen plaatje; hij bestaat alleen op <token>.svg.
 			c.Status(http.StatusNotFound)
 			return
 		}

@@ -271,6 +271,11 @@ func CreateTables(db bun.IDB) error {
 		ON studio_gedeeld_beeld (project_id, profiel_id, diagram_id) WHERE soort = 'actueel' AND ingetrokken_op IS NULL`); err != nil {
 		return err
 	}
+	// Soort "svg" (05-11-2026): de link waarop de server het diagram zelf tekent; één per diagram.
+	if _, err = db.ExecContext(ctx, `CREATE UNIQUE INDEX IF NOT EXISTS idx_studio_gedeeld_beeld_svg
+		ON studio_gedeeld_beeld (project_id, profiel_id, diagram_id) WHERE soort = 'svg' AND ingetrokken_op IS NULL`); err != nil {
+		return err
+	}
 	if _, err = db.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS idx_studio_gedeeld_beeld_project ON studio_gedeeld_beeld (project_id)`); err != nil {
 		return err
 	}

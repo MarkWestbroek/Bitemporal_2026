@@ -74,8 +74,8 @@ entiteiten, een ontbrekende of dubbele typenaam, een relatie naar een onbekende 
 ### `taal=studio`: elk Studio-profiel
 
 Sinds 04-11 (BACKLOG §36) tekent dezelfde route ook diagrammen uit een Studio-project, voor
-elk ingebouwd profiel (M2). Alleen de POST; een `GET` op een project is een aparte keuze, omdat
-`studio_project` privé is.
+elk ingebouwd profiel (M2). De POST tekent wat de aanroeper meestuurt; voor een diagram dat op de
+server in een project staat is er sinds 05-11 een `GET` met toegang, zie *Projectdiagram* hieronder.
 
 | Veld | Betekenis |
 |---|---|
@@ -148,6 +148,58 @@ dan tekent de API hem zonder wijziging hier. Nog op de terugval: `archimate-box`
   Dat is bewust: het adres volgt het model zoals het gepubliceerd is.
 - Nog niet: modellen die alleen in de browser staan (Studio-localStorage). Die moeten eerst
   gepubliceerd worden.
+
+### Projectdiagram: `GET` op een Studio-project, met toegang — ✅ gebouwd (05-11, nog niet uitgebracht)
+
+Stap 6 van het plan *Eén tekenaar* (`handlers/render_project.go`). `studio_projecten` is privé
+("alles dicht tenzij"). **Privacy-besluit Mark 05-11-2026:** een projectdiagram is op te halen door
+wie is ingelogd met leesrecht op het project, én met een token of link zoals bij de gedeelde
+plaatjes.
+
+| Route | Toegang |
+|---|---|
+| `GET /api/studio/projecten/{id}/diagram.svg?profiel=&diagram=&theme=&idPrefix=` | ingelogd + leesrecht op het project; ook met een persoonlijk API-token (`Authorization: Bearer omt_…`) |
+| `GET /api/studio/projecten/{id}/views.json` | idem |
+| `POST /api/studio/projecten/{id}/beelden` met `{ profiel_id, diagram_id, diagram_naam, soort: "svg" }` | ingelogd + leesrecht; geeft de link (`pad`: `/api/beeld/<token>.svg`) |
+| `GET /api/beeld/<token>.svg?theme=&idPrefix=` | openbaar: het onraadbare token is de toegang, tot dat ene diagram |
+
+- **`diagram.svg`**: `diagram` is het id of de naam, `profiel` het profiel-id (bv. `archimate05`).
+  Met `profiel` haalt de database alleen dat profiel uit het project; zonder `profiel` gaan alle
+  profielen naar de sidecar, wat bij een groot project op de grens van 5 MB stuit (413 met de
+  aanwijzing om `profiel` mee te geven). `200 image/svg+xml` met `ETag` (304 op `If-None-Match`),
+  `Last-Modified` (de snapshot), `Cache-Control: private, no-cache`, `X-Omnium-Project-Versie` en,
+  als er operaties zijn die nog niet in de snapshot zitten, `X-Omnium-Achterstand: <aantal>`.
+  Fouten zoals bij de POST (`problem+json` van de sidecar, ongewijzigd), plus 404 voor een onbekend
+  project of profiel en 400 bij een onbekende queryparameter.
+- **`views.json`**: `{ naam, versie, bijgewerkt, tot_volgnummer, laatste_volgnummer, weergaven:
+  [{ id, naam, profiel }], diagrammen, domeinen: [] }`, op profiel en naam gesorteerd. Go leest dit
+  zelf uit de snapshot; geen grens van 5 MB.
+- **De link (soort `svg`)** hoort bij de gedeelde plaatjes (`studio_gedeeld_beeld`, zie
+  `docs/STUDIO.md`): één link per diagram, zichtbaar in *Gedeelde plaatjes*, in te trekken met
+  `DELETE …/beelden/{token}`; daarna geeft het adres meteen 404. Er wordt geen plaatje bewaard: de
+  server tekent bij de aanvraag. `Cache-Control: public, no-cache`, `ETag`, `noindex`,
+  `Cross-Origin-Resource-Policy: cross-origin`. De lezer kiest alleen `theme` en `idPrefix`; project,
+  profiel en diagram liggen vast in de link. **Een fout van de sidecar gaat hier niet door**: zijn
+  404 noemt de andere diagrammen van het profiel en een 422 een element. De lezer krijgt een kale
+  melding (404 "Dit diagram is er niet (meer)", 422 of 502), het detail staat in de API-log.
+- **Wat er getekend wordt: de snapshot.** De server bewaart een project als snapshot plus een
+  operatielog dat alleen de Studio toepast. Een online client zet een nieuwe snapshot na 200
+  operaties (`SNAPSHOT_NA`). De tekening kan dus achterlopen op wat iemand in de Studio ziet, en een
+  diagram dat alleen nog in het log staat geeft 404 tot de volgende snapshot. `X-Omnium-Achterstand`
+  en `laatste_volgnummer` zeggen hoeveel.
+- **Cache**: een getekende SVG blijft tien minuten in het geheugen van de API, op projectversie,
+  profiel, diagram, `theme` en `idPrefix`. Een navraag (`If-None-Match`) kost zo één lichte query
+  in plaats van een render; een nieuwe snapshot geeft meteen een nieuwe tekening.
+- **Titel**: de sidecar krijgt alleen `profielen` en `project.naam` mee, dus de titel van de SVG is
+  "<projectnaam> — <diagramnaam>".
+- **Open**: een knop in de Studio om de SVG-link te maken (nu alleen via de API; de lijst toont
+  hem al); operaties ná de snapshot toepassen (vraagt de toepasser uit `studio/sync/operaties.js`
+  in de sidecar, of een snapshot op verzoek); de CORS-lijst voor een los scherm; `HEAD` geeft 404
+  (gin kent alleen de GET).
+
+Beproefd 05-11 tegen de echte keten (API + sidecar 0.3.0 + PostgreSQL): de 35 diagrammen van het
+project *Omnium architectuur* tekenen alle; met `AUTH_ENABLED=true` geeft de link anoniem 200 en
+geven `diagram.svg`, `views.json` en het maken van een link anoniem 401.
 
 ## Eisen aan de SVG (afspraken met Imprint)
 
