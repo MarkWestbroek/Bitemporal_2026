@@ -81,9 +81,10 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
   const inhoudsregels = inhoudsregelsVan(et, element, { elements, diagram });
   const planVoor = (breedte) => planInhoud({ element, elementType: et, breedte, parameters, fieldTypesById, compartmentTypesById, inhoudsregels });
   let maatRef = maat ? { size: { width: maat.w, height: maat.h } } : ref;
-  // Zonder bewaarde maat mag de renderer de natuurlijke maat bepalen (fork/join: staand of liggend).
+  // Zonder bewaarde maat mag de renderer de natuurlijke maat bepalen (fork/join: staand of
+  // liggend; een levenslijn: tot onder het laagste element van het diagram).
   if (!(maatRef?.size?.width && maatRef?.size?.height) && renderer.maat) {
-    const eigen = renderer.maat({ element, elementType: et, parameters, stijl });
+    const eigen = renderer.maat({ element, elementType: et, parameters, stijl, diagram, node: ref || null });
     if (eigen) maatRef = { size: { width: eigen.w, height: eigen.h } };
   }
   const { w, h, plan } = meetVoorkomen({ ref: maatRef, elementType: et, shapeType, planVoor });
@@ -120,6 +121,7 @@ export function tekenVoorkomen(box, { controleer = false } = {}) {
     if (vak) fouten.push(...valideerVak(vak).map((f) => `${ctx.shapeType.id} ${f}`));
     if (ornament) fouten.push(...valideerVormBoom(ornament, { idPrefix: ctx.idPrefix }).map((f) => `${ctx.shapeType.id} ornament ${f}`));
   }
-  const inhoud = vak && plan ? tekenInhoud(vak, plan, ctx.thema, { tekstAnker: ctx.parameters.tekstAnker }) : null;
+  // Een Vak mag de tekstuitlijning van het ShapeType overschrijven (subproces: uitgeklapt links, ingeklapt midden).
+  const inhoud = vak && plan ? tekenInhoud(vak, plan, ctx.thema, { tekstAnker: vak.tekstAnker || ctx.parameters.tekstAnker }) : null;
   return { omtrek, inhoud, ornament, vak, fouten };
 }

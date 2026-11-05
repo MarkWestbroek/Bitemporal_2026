@@ -241,8 +241,28 @@ niet over; de eigen kleur kleurt de rand en de tekst blijft de thematekst — da
 een vorm zonder inhoudsvak draagt zijn naam als buitenlabel (`sjabloonNaamBuiten`) en kleine
 vaste vormen krijgen `.dc-punt-node` (handles net buiten de vorm). De oude React-componenten
 (`shapes.jsx`, `vormShapes.jsx`, `blokShapes.jsx`) staan er nog als tweede realisatie; opruimen
-hoort bij de afronding van stap 4. Nog niet: BPMN, sequence, state machine, CMMN, DMN-DRD, de
-UML-structuurprofielen en de rest (±27 vormen).
+hoort bij de afronding van stap 4.
+
+**Stap 4 — deel 2, gebouwd 05-11 (OMNIUM-UI, `feat/tekenaar-profielvormen-2`).** BPMN (8),
+state machine (8) en sequence (4): twintig vormen in `bpmn/vormen.js`, `statemachine/vormen.js`,
+`sequence/vormen.js`. BPMN heeft eigen renderers waar de vorm van het element afhangt: de
+event-ring (dun/dubbel/dik per type, gestippeld bij niet-onderbrekend, soort-icoon erin; vult een
+bewaarde maat zoals de EA-import die geeft), het gateway-symbool, het taaktype-icoon, de
+⊞-markering van het subproces (uitgeklapt: naam linksboven via `Vak.tekstAnker`), data-object en
+data store met de naam eronder, en de pool met de naam in een staande band (`Vak.rotatie`). De
+lane en de samengestelde toestand zijn de bibliotheek-`kader` (nieuw: `vullingOpacity`); de
+pseudotoestanden `cirkel`/`ruit`; alleen de historie (Ⓗ/Ⓗ*) is eigen. Sequence: punt (in
+documenten onzichtbaar via `opacity: 0`, op het canvas bij hover of selectie via CSS op
+`parameters.klasse: "dc-seq-punt"`), activatie en fragment (soort-chip, naam ernaast) tekenen op
+het canvas via het sjabloon; de **levenslijn** heeft een ShapeType voor documenten en de server
+(gestippelde lijn met de kop van 148 erbovenop, `maat`-hook houdt de node 14 breed), maar staat op
+het canvas in `SjabloonShape.UITGEZONDERD`: de kop toont het type (instantieVan uit een ander
+profiel), de activaties zijn afgeleid uit de berichten op het canvas en de lijn groeit mee met
+haar laagste punt — canvas-kennis die de tekenaar niet heeft. Die drie zouden in een volgende
+stap via `ctx.diagram` + de elementen kunnen (activaties uit berichten) en via een host-callback
+(typenaam), zoals de diagramverwijzing. Nog niet: CMMN (7), DMN-DRD (3 basis al), de
+UML-structuurprofielen (cd-node, sysml-poort, sysml-requirement, ob-object, rq-eis, ep-*),
+toegangsregel (tr-*) — ±25 vormen.
 
 ### 3.4 Server en documenten (RENDER-API, OMNIUM-UI)
 
@@ -271,7 +291,7 @@ UML-structuurprofielen en de rest (±27 vormen).
 | 1 | RENDER-API | `POST …/svg?taal=studio` op de schets, bundeling, Imprint-eisen (**gebouwd 04-11**, `feat/render-taal-studio`, ongecommit; wacht op Mark) | 1–1,5 dag | — |
 | 2 | OMNIUM-UI | tekenaar: maat, inhoud, lijnen, nesting, thema; de 14 basisvormen als ShapeType + renderer; schets als stand `detail=schets`; documenten en gedeelde plaatjes erop — **gebouwd 04-11** (`feat/tekenaar`: `diagramcore/tekenaar/`, terugval per vormfamilie voor vormen zonder ShapeType; de 35 diagrammen van het architectuurproject getekend met de echte profielen) | 1 week | 0 gemerged |
 | 3 | OMNIUM-UI | canvas-adapter `SjabloonShape` + inline-editor en resizer op SVG — **gebouwd 05-11** (`feat/tekenaar-canvas`: alle basisvormen behalve `diagramverwijzing`; 1318 unit, 83 Studio-e2e groen; zie §3.3) | 3–4 dagen | 2 |
-| 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na — **deel gebouwd 05-11** (`feat/tekenaar-profielvormen`: use case, activity, ArchiMate incl. beide shape-sets = 33 vormen; zie §3.3) | ±½ dag per profiel, 1 week totaal | 3 |
+| 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na — **deel gebouwd 05-11** (`feat/tekenaar-profielvormen`: use case, activity, ArchiMate incl. beide shape-sets = 33 vormen; `feat/tekenaar-profielvormen-2`: BPMN, state machine, sequence = 20 vormen, levenslijn op het canvas nog oud; zie §3.3) | ±½ dag per profiel, 1 week totaal | 3 |
 | 5 | RENDER-API | render-svc op de tekenaar; `taal=v3` erachter; byte-vergelijking met de huidige fixtures | 2 dagen | 2, 4 |
 | 6 | RENDER-API + BACKEND | `GET` op project/diagram met toegang (privacy-besluit) | 1–2 dagen | 5 |
 

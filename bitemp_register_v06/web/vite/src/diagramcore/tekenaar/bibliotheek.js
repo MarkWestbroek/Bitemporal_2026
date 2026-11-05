@@ -149,7 +149,10 @@ const kader = {
     } else if (ctx.parameters.tint) {
       attrs.fill = ctx.thema.rand;
       attrs["fill-opacity"] = 0.08;
-    } else attrs.fill = ctx.parameters.vulling || "none";
+    } else {
+      attrs.fill = ctx.parameters.vulling || "none";
+      if (ctx.parameters.vulling && ctx.parameters.vullingOpacity !== undefined) attrs["fill-opacity"] = ctx.parameters.vullingOpacity;
+    }
     attrs.stroke = eigen || ctx.thema.rand;
     attrs["stroke-width"] = d;
     if ((ctx.parameters.lijn || "dashed") === "dashed") attrs["stroke-dasharray"] = "6 4";

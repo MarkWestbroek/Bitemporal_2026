@@ -1131,7 +1131,10 @@ fase 2 een **bewerkbare sandbox**:
   het element afhangt (`act-balk`, `am-box`, `am-laag`, `am-junction`), of de vorm als gegevens
   (`parameters.figuur` op renderer `figuur`: de ArchiMate-symbolen). Een vorm zonder inhoudsvak
   draagt zijn naam als buitenlabel. De ArchiMate-iconen zijn gegevens (`archimate/glyphs.js`)
-  voor taakbalk én tekenaar.
+  voor taakbalk én tekenaar. Deel 2 (05-11): **BPMN, state machine en sequence** (events,
+  gateways, taak/subproces, data, pool/lane, pseudotoestanden, composiet, punt/activatie/
+  fragment); alleen de sequence-levenslijn tekent op het canvas nog met de oude component
+  (`SjabloonShape.UITGEZONDERD`), in documenten en op de server via haar ShapeType.
 - **Inline hernoemen** (2026-10-07): **F2** op de geselecteerde node, of
   **dubbelklik** op een node zonder gedragsverwijzing, opent een naamveld óp
   de vorm (bovenaan bij compartiment-vormen, gecentreerd bij de rest, onder

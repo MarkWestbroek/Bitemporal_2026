@@ -317,9 +317,10 @@
  * @property {(ctx: ShapeContext) => VormBoom} [ornament] - iconen en markeringen
  * @property {(ctx: ShapeContext, hoek: number) => {x: number, y: number}} [rand] - aanhechtpunt
  *   op de omtrek voor `ankers: "rand"`; hoek in graden
- * @property {(p: {element: Object, elementType: ElementType, parameters: Object, stijl: Object}) => ({w: number, h: number}|null)} [maat] -
- *   de natuurlijke maat als die van het element afhangt (fork/join: staand of liggend); alleen
- *   zonder bewaarde maat gevraagd. `null` = de motor meet (maat.js)
+ * @property {(p: {element: Object, elementType: ElementType, parameters: Object, stijl: Object, diagram: Object|null, node: Object|null}) => ({w: number, h: number}|null)} [maat] -
+ *   de natuurlijke maat als die van het element afhangt (fork/join: staand of liggend) of van
+ *   het diagram (levenslijn: tot onder het laagste element; `diagram` alleen-lezen, `node` het
+ *   eigen voorkomen); alleen zonder bewaarde maat gevraagd. `null` = de motor meet (maat.js)
  */
 
 /**
@@ -366,6 +367,8 @@
  * @property {"boven"|"midden"} [uitlijning] - inhoud bovenaan (standaard; class-box) of in het
  *   midden (use case)
  * @property {number} [rotatie]             - graden, bv. -90 voor de kop van een pool
+ * @property {"midden"|"links"} [tekstAnker] - overschrijft `parameters.tekstAnker` voor dit vak
+ *   (subproces: uitgeklapt links, ingeklapt midden)
  */
 
 /**

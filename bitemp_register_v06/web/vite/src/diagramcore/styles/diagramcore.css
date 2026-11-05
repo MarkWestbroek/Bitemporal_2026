@@ -136,6 +136,16 @@
 .dc-sjabloon .dc-ornament {
   pointer-events: none;
 }
+/* Sequence-punt als sjabloon: in documenten onzichtbaar (opacity-attribuut van de renderer),
+   op het canvas zichtbaar bij hover of selectie — een CSS-eigenschap wint van het attribuut. */
+.dc-sjabloon.dc-seq-punt .dc-omtrek {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dc-canvas .react-flow__node:hover .dc-sjabloon.dc-seq-punt .dc-omtrek,
+.dc-canvas .react-flow__node.selected .dc-sjabloon.dc-seq-punt .dc-omtrek {
+  opacity: 1;
+}
 [data-dc-typering="geen"] .dc-sjabloon [data-dc-stereotype],
 [data-dc-typering="icoon"] .dc-sjabloon [data-dc-stereotype] {
   display: none;

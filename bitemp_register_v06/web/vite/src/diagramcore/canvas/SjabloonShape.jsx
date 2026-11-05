@@ -29,7 +29,13 @@ import "../tekenaar/basisVormen.js"; // registreert de basis-ShapeTypes en de bi
  * - diagramverwijzing: toont de naam van het doeldiagram live (useDiagramNaam) en markeert een
  *   verdwenen doel; de tekenaar kent alleen een vaste naam van de host.
  */
-const UITGEZONDERD = new Set(["diagramverwijzing"]);
+const UITGEZONDERD = new Set([
+  "diagramverwijzing",
+  // seq-levenslijn: de kop toont het type (instantieVan, uit een ander profiel), de activaties
+  // zijn afgeleid uit de berichten op het canvas en de lijn groeit mee met haar laagste punt —
+  // allemaal canvas-kennis. Het ShapeType (sequence/vormen.js) tekent wél in documenten/server.
+  "seq-levenslijn",
+]);
 
 /** De canvas-palet: thema-tokens, door diagramcore.css gekoppeld aan de canvas-tokens. */
 const BASIS = basisVanPalet(maakPalet("auto"));
@@ -86,7 +92,13 @@ export function SjabloonShape({ element, elementType, selected, fieldTypesById, 
   const clipId = `sj${uid}-knip`;
   return (
     <div
-      className={"dc-sjabloon" + (selected ? " is-geselecteerd" : "") + (isPuntNode(vormInfo, elementType) ? " dc-punt-node" : "")}
+      className={
+        "dc-sjabloon" +
+        (selected ? " is-geselecteerd" : "") +
+        (isPuntNode(vormInfo, elementType) ? " dc-punt-node" : "") +
+        // Canvas-klasse uit het ShapeType (bv. dc-seq-punt: handles op de rand, zichtbaar bij hover).
+        (vormInfo.shapeType.parameters?.klasse ? ` ${vormInfo.shapeType.parameters.klasse}` : "")
+      }
       data-shape={vormInfo.shapeType.id}
       style={{ width: w, height: h, minWidth: min.w, minHeight: min.h }}
     >
