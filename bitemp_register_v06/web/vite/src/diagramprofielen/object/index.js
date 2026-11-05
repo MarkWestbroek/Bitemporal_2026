@@ -9,6 +9,7 @@ import { registreerUml2Iconen } from "../uml2Iconen.jsx";
 import { maakElementFabriek } from "../uml2Basis.js";
 import { registreerObjectShapes } from "./shapes.jsx";
 import { OBJECT_ID, objectDiagramType, elementTypes } from "./descriptor.js";
+import "./vormen.js"; // het ShapeType (één tekenaar, stap 4): canvas, documenten en render-svc
 
 export { OBJECT_ID, objectDiagramType };
 

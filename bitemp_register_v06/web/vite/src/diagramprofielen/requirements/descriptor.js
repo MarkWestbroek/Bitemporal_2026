@@ -18,6 +18,7 @@
  * Elementtype-id's zijn een contract met de EA-lezer: nooit wijzigen.
  */
 import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
+import { eisInhoud } from "./vormen.js";
 
 export const REQUIREMENTS_ID = "requirements";
 
@@ -82,6 +83,9 @@ export const elementTypes = [
       { key: "moeilijkheid", label: "moeilijkheid", datatype: "keuze", opties: MOEILIJKHEID_OPTIES },
       KLEUR_VELD,
     ],
+    // id-regel, tekst en badges zijn eigen inhoud van de eis (erft naar de vier soorten); de
+    // motor tekent ze in de doos. `requirement` voegt zijn eigen stereotype-hook toe.
+    hooks: { inhoudsregels: eisInhoud },
   },
   {
     id: "requirement",

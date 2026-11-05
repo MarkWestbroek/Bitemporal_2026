@@ -15,6 +15,7 @@
  * Elementtype-id's zijn een contract met de EA-lezer: nooit wijzigen.
  */
 import { KLEUR_VELD, NOTITIE, BOUNDARY, notitielijn, bevat, pakket, stereotypeLabel, stereotypeUitData } from "../uml2Basis.js";
+import { resourceInhoud } from "./vormen.js";
 
 export const BUSINESS_ID = "business";
 
@@ -93,6 +94,8 @@ export const elementTypes = [
       { key: "hoeveelheid", label: "hoeveelheid / capaciteit", datatype: "string" },
       KLEUR_VELD,
     ],
+    // De hoeveelheid onder de naam (eigen inhoud; erft naar fysiek/mensen/informatie).
+    hooks: { inhoudsregels: resourceInhoud },
   },
   {
     id: "fysiek",

@@ -38,6 +38,7 @@ import { AFGELEID, AFLEIDINGSREGEL, ATTRIBUUT_KERNSET, uiteinde, navigatiePresen
 import { registreerSysmlShapes } from "./shapes.jsx";
 import { registreerSysmlIconen } from "./iconen.jsx";
 import { TRACE_OPTIES, traceLabels } from "./traces.js";
+import { requirementInhoud } from "./vormen.js"; // de ShapeTypes (één tekenaar, stap 4): canvas, documenten en render-svc
 
 export const SYSML_ID = "sysml";
 
@@ -208,6 +209,7 @@ const elementTypes = [
     omschrijving: "Een eis met id en tekst; koppel hem met satisfy/verify/derive/refine/trace.",
     kort: "REQ",
     icoon: "sy-requirement",
+    stereotype: "«requirement»",
     shape: "sysml-requirement",
     kleur: "#ede9fe",
     // Samengestelde requirement: kinderen erin slepen legt de containment.
@@ -217,6 +219,8 @@ const elementTypes = [
       { key: "tekst", label: "tekst", datatype: "tekst" },
       KLEUR_VELD,
     ],
+    // `id = …` en `text = …` zijn eigen inhoud van het type; de motor tekent ze in de doos.
+    hooks: { inhoudsregels: requirementInhoud },
   },
   {
     id: "pakket",

@@ -7,27 +7,13 @@
  * React-realisatie, tweede realisatie tot de opruimstap). Pure `.js`.
  */
 import { registreerShapeType, registreerRenderer, vorm } from "../../diagramcore/types/shapeType.js";
-import { randRechthoek } from "../../diagramcore/tekenaar/bibliotheek.js";
+import { randRechthoek, randCirkel, geschaald } from "../../diagramcore/tekenaar/bibliotheek.js";
 import { n3 } from "../../diagramcore/tekenaar/glyphs.js";
 import { veiligeKleur } from "../../diagramsvg/thema.js";
 
 /** Iconen óp een lichte taakvulling blijven donker, ook in donker thema (zoals shapes.jsx). */
 const INKT = "#334155";
 const graden = (hoek) => (hoek * Math.PI) / 180;
-
-/** Aanhechtpunt op een cirkel die de maat vult. */
-function randCirkel(ctx, hoek) {
-  const { w, h } = ctx.maat;
-  const r = Math.min(w, h) / 2;
-  return { x: w / 2 + r * Math.cos(graden(hoek)), y: h / 2 + r * Math.sin(graden(hoek)) };
-}
-
-/** Een tekening in een vaste viewBox, passend geschaald en gecentreerd in de maat (zoals de oude <svg viewBox>). */
-function geschaald(ctx, vb, kinderen) {
-  const { w, h } = ctx.maat;
-  const s = Math.min(w, h) / vb;
-  return vorm("g", { transform: `translate(${n3((w - vb * s) / 2)} ${n3((h - vb * s) / 2)}) scale(${n3(s)})` }, ...kinderen);
-}
 
 // ── Events ───────────────────────────────────────────────────────────────────────────────────────
 /** Soort-icoontje ín een event (viewBox 20, kleur = ringkleur). */

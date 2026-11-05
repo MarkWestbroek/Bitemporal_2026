@@ -221,6 +221,24 @@ export function inhoudsregelsVan(elementType, element, context = {}) {
   }
 }
 
+/**
+ * De weergavenaam van een element (`hooks.naamWeergave`): wat de motor als naam tekent als
+ * dat niet letterlijk `element.naam` is — een object als "jan : Persoon [actief]", een
+ * voorwaarde zonder naam als haar delen die tonen (lege string = geen naamregel).
+ * `undefined` (geen hook, hook geeft undefined, of hook gooit) = de gewone naam.
+ * @returns {string|undefined}
+ */
+export function naamWeergaveVan(elementType, element, context = {}) {
+  const hook = elementType?.hooks?.naamWeergave;
+  if (typeof hook !== "function" || !element) return undefined;
+  try {
+    const uit = hook(element, context);
+    return typeof uit === "string" ? uit : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Alleen voor tests. */
 export function _resetVoorTests() {
   _shapeTypes.clear();

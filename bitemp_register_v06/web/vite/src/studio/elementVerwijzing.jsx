@@ -18,6 +18,7 @@
 import React from "react";
 import { getProfieltypen, getProfieltype } from "./profieltypeRegistry";
 import { registreerPropertyTypeEditor } from "../diagramcore/inspector/propertyTypeEditors.jsx";
+import { zetHost } from "../diagramcore/tekenaar/host.js";
 
 /** @param {{profielId?: string, elementId?: string}|null} ref */
 export function resolveerElementRef(ref) {
@@ -27,6 +28,11 @@ export function resolveerElementRef(ref) {
   if (!profiel || !element) return null;
   return { profiel, element, label: element.naam || element.id };
 }
+
+// Host-callback voor de tekenaar (één tekenaar, stap 4): een vorm die de naam van een element
+// in een ander profiel toont (object "jan : Persoon") vraagt die aan de host; de server kent
+// geen stores en krijgt null (tekenaar/host.js).
+zetHost({ verwijzingLabel: (ref) => resolveerElementRef(ref)?.label ?? null });
 
 /**
  * Operaties van een element volgens zijn profieltype (OperatieResolver-

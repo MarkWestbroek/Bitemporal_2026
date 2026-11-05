@@ -1139,7 +1139,14 @@ fase 2 een **bewerkbare sandbox**:
   voor taakbalk én tekenaar. Deel 2 (05-11): **BPMN, state machine en sequence** (events,
   gateways, taak/subproces, data, pool/lane, pseudotoestanden, composiet, punt/activatie/
   fragment); alleen de sequence-levenslijn tekent op het canvas nog met de oude component
-  (`SjabloonShape.UITGEZONDERD`), in documenten en op de server via haar ShapeType.
+  (`SjabloonShape.UITGEZONDERD`), in documenten en op de server via haar ShapeType. Deel 3
+  (05-11): **CMMN, SysML, component/deployment, Eriksson-Penker, object, requirements en
+  toegangsregel** — daarmee heeft elke profielvorm een ShapeType. Vormen met eigen inhoud leveren
+  die als **inhoudsregels** (`hooks.inhoudsregels`: lopende tekst, chips, vaste breedte,
+  scheidslijn, gecentreerd) en als **weergavenaam** (`hooks.naamWeergave`: object "jan : Persoon",
+  voorwaarde "links · teken · rechts"); de motor tekent ze. Wat alleen de host weet (de naam van
+  een element in een ander profiel, `instantieVan`) vraagt de tekenaar via `tekenaar/host.js`,
+  dat de Studio registreert in `studio/elementVerwijzing.jsx`; de server krijgt `null`.
 - **Inline hernoemen** (2026-10-07): **F2** op de geselecteerde node, of
   **dubbelklik** op een node zonder gedragsverwijzing, opent een naamveld óp
   de vorm (bovenaan bij compartiment-vormen, gecentreerd bij de rest, onder

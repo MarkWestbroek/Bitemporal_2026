@@ -9,6 +9,7 @@ import { registreerUml2Iconen } from "../uml2Iconen.jsx";
 import { maakElementFabriek } from "../uml2Basis.js";
 import { registreerRequirementsShapes } from "./shapes.jsx";
 import { REQUIREMENTS_ID, requirementsDiagramType, elementTypes } from "./descriptor.js";
+import "./vormen.js"; // het ShapeType (één tekenaar, stap 4): canvas, documenten en render-svc
 
 export { REQUIREMENTS_ID, requirementsDiagramType };
 

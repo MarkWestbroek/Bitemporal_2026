@@ -10,15 +10,11 @@ import React from "react";
 import { registreerShape } from "../../diagramcore/shapes/shapeRegistry.js";
 import { CompartimentLijst } from "../../diagramcore/shapes/basisShapes.jsx";
 import { resolveerElementRef } from "../../studio/elementVerwijzing.jsx";
+import { objectKop as kopVan } from "./vormen.js";
 
-/** "jan : Persoon" — naam leeg = anoniem object (": Persoon"). */
+/** "jan : Persoon" — naam leeg = anoniem object (": Persoon"). Zie vormen.js (één bron). */
 export function objectKop(element) {
-  const d = element?.data || {};
-  const ref = d.instantieVan ? resolveerElementRef(d.instantieVan) : null;
-  const klasse = ref?.label || d.klassifierLabel || "";
-  const naam = element?.naam || "";
-  const kop = klasse ? `${naam} : ${klasse}` : naam || "(object)";
-  return d.toestand ? `${kop} ${d.toestand}` : kop;
+  return kopVan(element, { verwijzingLabel: (ref) => resolveerElementRef(ref)?.label ?? null });
 }
 
 function ObjectShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, children }) {

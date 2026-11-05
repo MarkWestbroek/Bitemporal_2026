@@ -260,9 +260,31 @@ het canvas in `SjabloonShape.UITGEZONDERD`: de kop toont het type (instantieVan 
 profiel), de activaties zijn afgeleid uit de berichten op het canvas en de lijn groeit mee met
 haar laagste punt — canvas-kennis die de tekenaar niet heeft. Die drie zouden in een volgende
 stap via `ctx.diagram` + de elementen kunnen (activaties uit berichten) en via een host-callback
-(typenaam), zoals de diagramverwijzing. Nog niet: CMMN (7), DMN-DRD (3 basis al), de
-UML-structuurprofielen (cd-node, sysml-poort, sysml-requirement, ob-object, rq-eis, ep-*),
-toegangsregel (tr-*) — ±25 vormen.
+(typenaam), zoals de diagramverwijzing.
+
+**Stap 4 — deel 3, gebouwd 05-11 (OMNIUM-UI, `feat/tekenaar-profielvormen-3`).** De laatste 25:
+CMMN (7, alle eigen renderers: mapvorm met vierkante tab, achthoek, task met soort-icoon en
+markeringen, stadium, dubbele cirkel, dokje, sentry), SysML (poort; requirement op `rechthoek`),
+component/deployment (kubus met kindervak), Eriksson-Penker (chevron, doel-ellips, resource met
+groot icoon, gebeurtenisplaat), object (instantiedoos), requirements (eis op `rechthoek`) en
+toegangsregel (9: kaft, regelkaart met gearceerde verbodsband via `clipPath`, badge, pijlblok,
+cilinder, poort met soort-label, vergelijkingsstrook, vaandel, tag). Daarmee heeft **elke
+profielvorm een ShapeType**; `getShape` tekent op het canvas alleen nog `diagramverwijzing` en
+`seq-levenslijn`. Drie motoruitbreidingen waren nodig omdat deze vormen eigen inhoud dragen:
+(1) **inhoudsregels** kunnen lopende tekst (afgebroken), chips (`soort: "badge"`), vaste breedte,
+een scheidslijn en een gecentreerde regel zijn (eis: id/tekst/badges; SysML-requirement; policy;
+voorwaarde; EP-resource) — de descriptor levert de regels, de motor tekent; (2) **`hooks.naamWeergave`**
+(object "jan : Persoon [actief]", onderstreept via `parameters.naamOnderstreept`, slots via
+`typePrefix`; voorwaarde met delen: geen naam); (3) de **host-callback** `tekenaar/host.js`:
+de naam van een element in een ander profiel (`instantieVan`) vraagt de tekenaar aan de host; de
+Studio registreert die in `elementVerwijzing.jsx`, de server geeft `null` → `klassifierLabel`.
+Dat is het mechanisme waarmee ook de levenslijn-kop (typenaam) straks op het canvas via het
+sjabloon kan. Twee descriptor-tweaks: SysML-requirement `stereotype: "«requirement»"` (stond
+alleen in de shape), voorwaardepoort `naamLabel: "geen"`. Les: een vorm met een inspringend
+inhoudsvak (icoon links, band, punt) hoort `factorW` op te geven, anders meet de motor de
+natuurlijke breedte op de hele doos en loopt de naam in het icoon. Nog niet: de opruimstap
+(oude `shapes.jsx` per profiel, `shapes/basisShapes.jsx`, `getShape`-route behalve de twee
+uitzonderingen) en de levenslijn op het canvas.
 
 ### 3.4 Server en documenten (RENDER-API, OMNIUM-UI)
 
@@ -291,7 +313,7 @@ toegangsregel (tr-*) — ±25 vormen.
 | 1 | RENDER-API | `POST …/svg?taal=studio` op de schets, bundeling, Imprint-eisen (**gebouwd 04-11**, `feat/render-taal-studio`, ongecommit; wacht op Mark) | 1–1,5 dag | — |
 | 2 | OMNIUM-UI | tekenaar: maat, inhoud, lijnen, nesting, thema; de 14 basisvormen als ShapeType + renderer; schets als stand `detail=schets`; documenten en gedeelde plaatjes erop — **gebouwd 04-11** (`feat/tekenaar`: `diagramcore/tekenaar/`, terugval per vormfamilie voor vormen zonder ShapeType; de 35 diagrammen van het architectuurproject getekend met de echte profielen) | 1 week | 0 gemerged |
 | 3 | OMNIUM-UI | canvas-adapter `SjabloonShape` + inline-editor en resizer op SVG — **gebouwd 05-11** (`feat/tekenaar-canvas`: alle basisvormen behalve `diagramverwijzing`; 1318 unit, 83 Studio-e2e groen; zie §3.3) | 3–4 dagen | 2 |
-| 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na — **deel gebouwd 05-11** (`feat/tekenaar-profielvormen`: use case, activity, ArchiMate incl. beide shape-sets = 33 vormen; `feat/tekenaar-profielvormen-2`: BPMN, state machine, sequence = 20 vormen, levenslijn op het canvas nog oud; zie §3.3) | ±½ dag per profiel, 1 week totaal | 3 |
+| 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na — **deel gebouwd 05-11** (`feat/tekenaar-profielvormen`: use case, activity, ArchiMate incl. beide shape-sets = 33 vormen; `feat/tekenaar-profielvormen-2`: BPMN, state machine, sequence = 20 vormen, levenslijn op het canvas nog oud; `feat/tekenaar-profielvormen-3`: CMMN, SysML, component/deployment, EP, object, requirements, toegangsregel = 25 vormen — **alle profielvormen zijn ShapeTypes**; rest: opruimen; zie §3.3) | ±½ dag per profiel, 1 week totaal | 3 |
 | 5 | RENDER-API | render-svc op de tekenaar; `taal=v3` erachter; byte-vergelijking met de huidige fixtures | 2 dagen | 2, 4 |
 | 6 | RENDER-API + BACKEND | `GET` op project/diagram met toegang (privacy-besluit) | 1–2 dagen | 5 |
 

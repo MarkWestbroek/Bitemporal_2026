@@ -11,10 +11,11 @@
  *
  * Puur: geen DOM, geen stores.
  */
-import { losStijlOp, inhoudsregelsVan, valideerVormBoom, valideerVak } from "../types/shapeType.js";
+import { losStijlOp, inhoudsregelsVan, naamWeergaveVan, valideerVormBoom, valideerVak } from "../types/shapeType.js";
 import { veiligeKleur, tekstOp } from "../../diagramsvg/thema.js";
 import { planInhoud, tekenInhoud } from "./inhoud.js";
 import { meetVoorkomen } from "./maat.js";
+import { host } from "./host.js";
 
 /** Lettertype van de tekening (canvas én SVG-uitvoer). */
 export const FONT = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
@@ -78,8 +79,12 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
   // het element kleurt zijn rand (een ArchiMate-grouping draagt de laagkleur van zijn type, maar
   // die hoort bij de box-gedaante).
   const stijl = losStijlOp(element, parameters.kleurAls === "rand" ? { ...et, kleur: undefined } : et);
-  const inhoudsregels = inhoudsregelsVan(et, element, { elements, diagram });
-  const planVoor = (breedte) => planInhoud({ element, elementType: et, breedte, parameters, fieldTypesById, compartmentTypesById, inhoudsregels });
+  // De hook-context: het diagram, de elementen en wat de host weet (host.js: de naam van een
+  // element in een ander profiel; op de server null).
+  const hookContext = { elements, diagram, verwijzingLabel: host().verwijzingLabel };
+  const inhoudsregels = inhoudsregelsVan(et, element, hookContext);
+  const naam = naamWeergaveVan(et, element, hookContext);
+  const planVoor = (breedte) => planInhoud({ element, elementType: et, breedte, parameters, fieldTypesById, compartmentTypesById, inhoudsregels, naam });
   let maatRef = maat ? { size: { width: maat.w, height: maat.h } } : ref;
   // Zonder bewaarde maat mag de renderer de natuurlijke maat bepalen (fork/join: staand of
   // liggend; een levenslijn: tot onder het laagste element van het diagram).
