@@ -1,0 +1,12 @@
+[
+  {
+    "processDefinitionKey": "aanvraag-oppakken",
+    "canInitializeDocument": false,
+    "startableByUser": false
+  },
+  {
+    "processDefinitionKey": "gehandicaptenparkeerkaart-beoordelen",
+    "canInitializeDocument": false,
+    "startableByUser": false
+  }
+]

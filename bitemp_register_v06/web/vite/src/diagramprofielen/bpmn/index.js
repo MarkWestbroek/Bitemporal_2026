@@ -145,6 +145,9 @@ const elementTypes = [
       // van het dmn-artefact) en in welke variabele de uitkomst komt.
       { key: "beslissing", label: "beslistabel (decision-id)", datatype: "string", placeholder: "bv. aanvraag-ontvankelijk", zichtbaarAls: { key: "taakSoort", waarde: "businessRule" } },
       { key: "resultaat", label: "uitkomst in variabele", datatype: "string", placeholder: "bv. ontvankelijkheid", zichtbaarAls: { key: "taakSoort", waarde: "businessRule" } },
+      // Gebruikerstaak (05-11): het formulier waarmee de behandelaar de taak doet (identifier
+      // van een dossierformulier van de e-dienst); wordt de formulierkoppeling in de proceskoppeling.
+      { key: "formulier", label: "formulier bij de taak", datatype: "string", placeholder: "bv. aanvraag-beoordelen", zichtbaarAls: { key: "taakSoort", waarde: "user" } },
       // Servicetaak die alleen de interne status van het dossier zet (GZAC: geen plugin-actie nodig).
       { key: "dossierstatus", label: "zet dossierstatus", datatype: "string", placeholder: "bv. niet-opgepakt", zichtbaarAls: { key: "taakSoort", waarde: "service" } },
       KLEUR_VELD,

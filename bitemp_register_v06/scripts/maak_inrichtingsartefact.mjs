@@ -22,10 +22,13 @@
 // --referentielijst, net als het aanvraagtype van een zaaktype.
 //
 // De GZAC-dossierbundel (§11.9): dossierschema (documentdefinitie),
-// dossierformulier (form.io), dossiertabbladen en dossierzaaktypelink, elk één
-// bestand; de dossierinhoud komt uit --objecttype. Schema, tabbladen en
-// zaaktypekoppeling dragen dezelfde identifier (de key van het dossier): kies
-// dan met --soort.
+// dossierformulier (form.io), dossierdefinitie, dossiertabbladen,
+// dossierzaaktypelink, dossierprocessen en dossierdocumentkolommen, elk één
+// bestand; de dossierinhoud komt uit --objecttype. Op het formulier na dragen
+// ze dezelfde identifier (de key van het dossier): kies dan met --soort.
+//
+// Een proceskoppeling (§11.13, --soort proceskoppeling) komt net als een
+// bpmn-artefact uit het BPMN-model en draagt de proces-id als identifier.
 //
 // Een bpmn-artefact (§11.11) komt uit een BPMN-model (profiel bpmn-motor):
 // --model is dan dat model, niet het canonieke. Naast het artefact schrijft
@@ -44,6 +47,11 @@ import { maakObjecttypeArtefact, verschillen } from "../web/vite/src/diagramprof
 import { maakFormulierArtefact } from "../web/vite/src/diagramprofielen/canoniek-uml/formulierArtefact.js";
 import { maakZaaktypeArtefact } from "../web/vite/src/diagramprofielen/canoniek-uml/zaaktypeArtefact.js";
 import { maakDossierArtefact, DOSSIER_SOORTEN } from "../web/vite/src/diagramprofielen/canoniek-uml/dossierArtefact.js";
+import { maakProcesLinkArtefact, SOORT as PROCESKOPPELING } from "../web/vite/src/diagramprofielen/bpmn/procesLinkArtefact.js";
+
+// Soorten waarvan de identifier niet uniek is over soorten: de bestandsnaam noemt de soort
+// (zelfde lijst als SOORT_IN_BESTANDSNAAM in transformatie/inrichtingsBundel.js).
+const SOORT_IN_BESTANDSNAAM = [...DOSSIER_SOORTEN, PROCESKOPPELING];
 import { maakBpmnArtefact } from "../web/vite/src/diagramprofielen/bpmn/bpmnArtefact.js";
 import { jcsHash } from "../web/vite/src/transformatie/jcs.js";
 
@@ -93,11 +101,13 @@ async function main() {
         ? await maakZaaktypeArtefact(invoer)
         : soort === "bpmn"
           ? await maakBpmnArtefact(invoer)
+          : soort === PROCESKOPPELING
+            ? await maakProcesLinkArtefact(invoer)
           : DOSSIER_SOORTEN.includes(soort)
             ? await maakDossierArtefact({ ...invoer, soort, objecttype: a.objecttype ? lees(a.objecttype) : null })
             : await maakObjecttypeArtefact(invoer);
 
-  const stam = DOSSIER_SOORTEN.includes(soort) ? `${a.artefact}.${soort}` : a.artefact;
+  const stam = SOORT_IN_BESTANDSNAAM.includes(soort) ? `${a.artefact}.${soort}` : a.artefact;
   const uitPad = a.uit || path.resolve(process.cwd(), `${stam}.artefact.json`);
   fs.mkdirSync(path.dirname(uitPad), { recursive: true });
   fs.writeFileSync(uitPad, `${JSON.stringify(artefact, null, 2)}\n`, "utf8");

@@ -1,0 +1,12 @@
+[
+  {
+    "activityId" : "aanvraag-beoordelen",
+    "activityType" : "bpmn:UserTask:create",
+    "formDefinitionName" : "aanvraag-beoordelen",
+    "viewModelEnabled" : false,
+    "formDisplayType" : "panel",
+    "formSize" : "large",
+    "subtitles" : null,
+    "processLinkType" : "form"
+  }
+]

@@ -115,7 +115,8 @@ test("documentdefinitie: het objecttype zonder envelop plus behandelvelden, draf
   assert.ok(!JSON.stringify(s).match(/"format":"(bsn|kenteken|int32|kvk-nummer|vestigingsnummer)"/));
   assert.equal(s.properties.kenteken.anyOf[1].pattern, "^[A-Z0-9]{1,3}-[A-Z0-9]{1,3}-[A-Z0-9]{1,3}$");
   assert.equal(artefact.traceregels.find((t) => t.doelPad === "/properties/soort").bronGE, "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort");
-  assert.deepEqual(artefact.afhankelijkheden.map((a) => a.identifier), ["gehandicaptenparkeerkaartaanvraag"]);
+  // Het objecttype (de inhoud) en de dossierdefinitie (de wortel van de bundel, FUNDAMENT 05-11).
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaartaanvraag", undefined], ["gehandicaptenparkeerkaart", "dossierdefinitie"]]);
 });
 
 test("tabbladen: de standaardtabbladen uit de regelset, gelijk aan het handwerk", async () => {
@@ -155,6 +156,59 @@ test("zaaktypekoppeling: zaaktype en zaakBijDossier uit de e-dienst, omgevingsge
   });
   assert.deepEqual(extern.diagnostics.map((d) => [d.severity, d.code]), [["warning", "DOS-ZAAKTYPE"]]);
   assert.equal(extern.artefact.artefactInhoud.payload.zaakTypeUrl, "${ZAAKTYPE_URL:ANDERS}");
+});
+
+// Drie bestanden van de bundel die handwerk bij FUNDAMENT waren en geen modelkennis missen
+// (Mark 05-11): alles staat in de e-dienst of is een sjabloon uit de regelset.
+test("dossierdefinitie: sleutel, naam, versie en beschrijving uit de e-dienst; gelijk aan het handwerk op de beschrijving na", async () => {
+  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart", "dossierdefinitie");
+  assert.deepEqual(diagnostics, []);
+  const handwerk = lees("gzac-handwerk/gehandicaptenparkeerkaart.case-definition.json");
+  const { description, ...rest } = artefact.artefactInhoud.payload;
+  const { description: _oud, ...handwerkRest } = handwerk;
+  assert.deepEqual(rest, handwerkRest);
+  assert.deepEqual(Object.keys(artefact.artefactInhoud.payload), Object.keys(handwerk));
+  assert.match(description, /^Dossier voor een aanvraag van een gehandicaptenparkeerkaart/);
+  assert.equal(artefact.artefactInhoud.formaat, "gzac-case-definition-json");
+  assert.deepEqual(artefact.afhankelijkheden, []); // de wortel van de bundel
+
+  const eigen = await maak("gehandicaptenparkeerkaart", "dossierdefinitie", (e) => {
+    const d = e.artefacten.find((a) => a.soort === "dossierdefinitie");
+    delete d.versie;
+    d.takenAutomatischToewijzen = true;
+    return e;
+  });
+  assert.deepEqual(eigen.diagnostics.map((d) => [d.severity, d.code]), [["error", "DOS-VERSIE"]]);
+  assert.equal(eigen.artefact.artefactInhoud.payload.autoAssignTasks, true);
+});
+
+test("dossierprocessen: elk bpmn-artefact van de e-dienst, gelijk aan het handwerk", async () => {
+  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart", "dossierprocessen");
+  assert.deepEqual(diagnostics, []);
+  assert.deepEqual(artefact.artefactInhoud.payload, lees("gzac-handwerk/gehandicaptenparkeerkaart.process-document-link.json"));
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [
+    ["gehandicaptenparkeerkaart", "dossierschema"],
+    ["aanvraag-oppakken", "bpmn"],
+    ["gehandicaptenparkeerkaart-beoordelen", "bpmn"],
+  ]);
+
+  const eigen = await maak("gehandicaptenparkeerkaart", "dossierprocessen", (e) => {
+    e.artefacten.find((a) => a.soort === "dossierprocessen").processen = ["aanvraag-oppakken", "bestaat-niet"];
+    return e;
+  });
+  assert.deepEqual(eigen.diagnostics.map((d) => d.code), ["DOS-PROCES"]);
+  assert.deepEqual(eigen.artefact.artefactInhoud.payload.map((p) => p.processDefinitionKey), ["aanvraag-oppakken", "bestaat-niet"]);
+});
+
+test("documentkolommen: de standaardkolommen uit de regelset, gelijk aan het handwerk", async () => {
+  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart", "dossierdocumentkolommen");
+  assert.deepEqual(diagnostics, []);
+  assert.deepEqual(artefact.artefactInhoud.payload, lees("gzac-handwerk/gehandicaptenparkeerkaart.zgw-document-list-column.json"));
+  const eigen = await maak("gehandicaptenparkeerkaart", "dossierdocumentkolommen", (e) => {
+    e.artefacten.find((a) => a.soort === "dossierdocumentkolommen").kolommen = [{ key: "TITEL", sortering: "ASC" }];
+    return e;
+  });
+  assert.deepEqual(eigen.artefact.artefactInhoud.payload, [{ key: "TITEL", defaultSort: "ASC" }]);
 });
 
 test("toetsen: onbekend veld, behandelveld dat al in het model staat, geen objecttype", async () => {

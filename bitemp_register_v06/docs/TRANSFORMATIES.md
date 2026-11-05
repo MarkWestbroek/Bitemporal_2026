@@ -1001,21 +1001,52 @@ mogelijk, liefst geen, handwerk. Dit is de proef die we hier doen."). Een
 handgemaakt bestand mag even als proef dienen, maar moet daarna vervangen worden
 door een gegenereerd bestand.
 
-Er is één artefact per bestand (regelset `canoniek-naar-gzac-dossier` 0.2.0,
+Er is één artefact per bestand (regelset `canoniek-naar-gzac-dossier` 0.3.0,
 `dossierRegels.js`; aansluiting `dossierArtefact.js`; schrijver
 `gzac-dossier-schrijver@0.1.0`). De payload is de inhoud van het bestand.
 FUNDAMENT leidt het pad in de bundel af uit soort + identifier:
 
 | Soort | Formaat | Bestand in de bundel | GPK |
 |---|---|---|---|
+| `dossierdefinitie` | `gzac-case-definition-json` | `case/definition/<id>.case-definition.json` | `gehandicaptenparkeerkaart` |
 | `dossierschema` | `json-schema` | `document/definition/<id>.schema.document-definition.json` | `gehandicaptenparkeerkaart` |
 | `dossierformulier` | `formio-json` | `form/<id>.form.json` | `gehandicaptenparkeerkaart.summary`, `aanvraag-beoordelen` |
 | `dossiertabbladen` | `gzac-case-tab-json` | `case/tab/<id>.case-tab.json` | `gehandicaptenparkeerkaart` |
 | `dossierzaaktypelink` | `gzac-zaak-type-link-json` | `zgw/zaak-type-link/<id>.zaak-type-link.json` | `gehandicaptenparkeerkaart` |
+| `dossierprocessen` | `gzac-process-document-link-json` | `process-document-link/<id>.process-document-link.json` | `gehandicaptenparkeerkaart` |
+| `dossierdocumentkolommen` | `gzac-zgw-document-list-column-json` | `zgw/document-list-column/<id>.zgw-document-list-column.json` | `gehandicaptenparkeerkaart` |
 
-Schema, tabbladen en zaaktypekoppeling dragen alle drie de key van het dossier
-als identifier; de soort onderscheidt ze. Daarom kan een afhankelijkheid in de
+Op het formulier na dragen de dossierdelen de key van het dossier als
+identifier; de soort onderscheidt ze. Daarom kan een afhankelijkheid in de
 e-dienst `soort` en `afhankelijkVanSoort` noemen, en neemt de runner `--soort`.
+De proceskoppeling (`process-link`) hoort ook in de bundel, maar komt uit het
+BPMN-model: §11.13.
+
+**Definitie, processen, documentkolommen (regelset 0.3.0, 2026-11-05).** Drie
+bestanden die handwerk in de Fundament-repo waren en geen modelkennis missen
+(Mark 05-11):
+
+- **Dossierdefinitie**: de wortel van de bundel. Sleutel (`identifier`), naam
+  (`dossiernaam`), versie (`versie`) en beschrijving uit de e-dienst. De versie
+  is een inrichtingskeuze en staat letterlijk in de payload: een andere versie
+  maakt in GZAC een nieuwe dossierversie, dus ophogen is een bewuste stap
+  samen met de uitrol; FUNDAMENT leidt de map van de bundel eruit af. Of een
+  dossier een behandelaar kan hebben en of taken vanzelf toegewezen worden,
+  komt uit de regelset (`behandelaar` en `takenAutomatischToewijzen` in de
+  e-dienst wijken af). Toets `DOS-VERSIE`. GZAC voegt zelf velden toe
+  (`createdBy`, `final`, …); die leveren we niet.
+- **Dossierprocessen**: één regel per bpmn-artefact van de e-dienst, in de
+  volgorde van de e-dienst (een lijst `processen` in de e-dienst vervangt dat;
+  toets `DOS-PROCES`). Een proces maakt het dossier niet aan en een
+  behandelaar start het niet met de hand (regelset).
+- **Dossierdocumentkolommen**: de vijf standaardkolommen uit de regelset,
+  nieuwste document bovenaan; een lijst `kolommen` in de e-dienst vervangt ze.
+
+Het dossierschema hangt af van de dossierdefinitie; de processen hangen af van
+het dossierschema en van hun bpmn-artefacten, de kolommen van het
+dossierschema (afspraak FUNDAMENT 05-11). Nog handwerk bij FUNDAMENT: de
+proceskoppeling van "Aanvraag oppakken" (plugin-acties) en de interne status;
+voorstel in docs/plans/2026-11-05 Servicetaken en dossierstatus uit het model.
 
 **Zaaktypekoppeling (regelset 0.2.0, 2026-11-05).** De koppeling van het dossier
 aan zijn zaaktype was handwerk in de Fundament-repo en is nu een artefact
@@ -1178,7 +1209,7 @@ een token als `Authorization: Bearer`; zonder token stuurt hij de sessiecookie
 mee. CORS staat (30-10) open voor `http://localhost:5176`, niet voor de
 app-host. Schrijven (registreren) vanuit de browser kan nog niet: daarvoor zijn
 een service-account en CORS voor de app-origin nodig, en dat ligt bij BACKEND.
-Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.13).
+Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.14).
 
 **Model uit de map (beperking opgelost 30-10, BACKLOG §39).** Sinds 30-10
 bewaart de omzetting `verplicht`, `uniek`, `type` en `format`. Model uit de map
@@ -1368,7 +1399,49 @@ Nog niet: de beslistabel bewerken in de Studio (de tabeleditor
 `dmn/DmnTableEditor.jsx` hangt nog niet aan het element), en de reden in het
 dossier bewaren (vraagt een veld in het dossierschema).
 
-### 11.13 Vervolg
+### 11.13 Proceskoppeling: wat de engine aan een taak hangt (2026-11-05)
+
+De process-link van GZAC zegt per taak van een proces wat eraan hangt: een
+formulier bij een gebruikerstaak, een plugin-actie bij een servicetaak. Dat was
+handwerk in de Fundament-repo. Het is nu een artefact uit het BPMN-model
+(besluit Mark 05-11), voor zover het model het weet.
+
+**Route.**
+
+    BPMN-model (profiel bpmn-motor) ─ taken van het diagram ─▶ engine-regelset ─▶ koppelingen ─▶ proceskoppeling
+    e-dienst (bpmn-artefact met dezelfde identifier: model, diagram, engine)
+
+- **Artefact** `proceskoppeling`, formaat `gzac-process-link-json`, bestand
+  `process-link/<proces-id>.process-link.json`. De identifier is de proces-id,
+  dezelfde als van het bpmn-artefact; de soort onderscheidt ze. Model, diagram
+  en engine komen van dat bpmn-artefact, zodat ze maar op één plek staan
+  (`procesLinkArtefact.js`, schrijver `gzac-process-link-schrijver@0.1.0`,
+  payloadHash over JCS).
+- **Gebruikerstaak → formulier.** Het BPMN-profiel (M2) heeft op een
+  gebruikerstaak de eigenschap `formulier`: de identifier van een
+  dossierformulier van de e-dienst. De regelset `bpmn-naar-gzac` 0.5.0 maakt er
+  een formulierkoppeling van (`proceskoppeling.formulier`: `bpmn:UserTask:create`,
+  paneel, groot). `subtitles` is een lege lijst: zo geeft GZAC hem terug, en met
+  null zou elke uitrol "bijgewerkt" melden (FUNDAMENT 05-11).
+- **De activityId** is de id die de BPMN-schrijver in de XML zet; koppeling en
+  proces passen dus altijd op elkaar.
+- **Toetsen.** `PL-FORMULIER`: waarschuwing bij een gebruikerstaak zonder
+  formulier, fout als het formulier geen dossierformulier van de e-dienst is.
+  `PL-LEEG` (info): het proces heeft geen taken waar de regelset een koppeling
+  voor maakt.
+- **Afhankelijkheden**: het bpmn-artefact met dezelfde identifier en het
+  dossierformulier. Omdat de identifier gelijk is aan die van het bpmn-artefact,
+  telt voor de proceskoppeling alleen een afhankelijkheid die de soort noemt.
+- **GPK**: `gehandicaptenparkeerkaart-beoordelen`, één koppeling (taak
+  "Aanvraag beoordelen" → formulier `aanvraag-beoordelen`), gelijk aan het
+  handwerk op `subtitles` na.
+
+**Nog niet.** Wat een servicetaak doet (zaak aanmaken, rol koppelen, status
+zetten) staat niet in het model. De proceskoppeling van "Aanvraag oppakken"
+blijft daarom handwerk tot het voorstel in docs/plans/2026-11-05 Servicetaken
+en dossierstatus uit het model besloten is.
+
+### 11.14 Vervolg
 
 1. Formulier: machtigen (gemachtigde + subject) en eHerkenning; de documenttitel
    van een bestandscomponent uit het label (FUNDAMENT 30-10).
@@ -1389,6 +1462,7 @@ dossier bewaren (vraagt een veld in het dossierschema).
    DMN-model in een Studio-project; de fixtures zijn dan kopieën voor de tests.
    De beslistabel heeft daarvoor een bewerkscherm aan het element `decision`
    nodig (§11.12).
-8. Dossier: de process-link (welke plugin-actie aan welke taak hangt) als
-   artefact; nu handwerk in de Fundament-repo, met `${PLUGINCONFIG_ID:..}`
-   (§11.9). De zaaktypekoppeling is sinds 05-11 een artefact.
+8. Dossier: de plugin-acties van servicetaken in de proceskoppeling (§11.13)
+   en de interne status uit de statuslijst van het model; nu handwerk in de
+   Fundament-repo. Voorstel met vragen aan Mark: docs/plans/2026-11-05
+   Servicetaken en dossierstatus uit het model.

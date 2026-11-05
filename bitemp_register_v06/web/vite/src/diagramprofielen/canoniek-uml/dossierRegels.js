@@ -2,9 +2,12 @@
 /**
  * dossierRegels — de **regelset** "canoniek model + e-dienst → GZAC-
  * dossierbundel" voor de inrichting van e-diensten (docs/TRANSFORMATIES.md
- * §11.9). Vier artefactsoorten, elk één bestand uit de dossierbundel van GZAC
+ * §11.9). Zeven artefactsoorten, elk één bestand uit de dossierbundel van GZAC
  * (Valtimo):
  *
+ * - `dossierdefinitie` (gzac-case-definition-json): de wortel van de bundel:
+ *   sleutel, naam, versie en beschrijving van het dossier uit de e-dienst, en
+ *   hoe taken aan behandelaars toegewezen worden.
  * - `dossierschema` (json-schema): de documentdefinitie, het JSON Schema van
  *   de dossierinhoud. Dat is het schema van het objecttype (zonder de
  *   verzoek-envelop, want de Verzoek-plugin kopieert `data`) plus de
@@ -21,6 +24,10 @@
  *   meteen een zaak krijgt, staat in de e-dienst; de url van het zaaktype, de
  *   Zaken API-plugin en de RSIN zijn gegevens van de omgeving en gaan als
  *   plaatshouder mee, die de uitrol (FUNDAMENT) invult.
+ * - `dossierprocessen` (gzac-process-document-link-json): welke processen bij
+ *   het dossier horen: elk bpmn-artefact van de e-dienst.
+ * - `dossierdocumentkolommen` (gzac-zgw-document-list-column-json): de kolommen
+ *   van het documentenoverzicht; generiek, een sjabloon uit deze regelset.
  *
  * Wat waar vandaan komt: type, enum, beschrijving en lengte uit het model (via
  * het objecttype-artefact en zijn traceregels); welke velden, hun volgorde, de
@@ -30,17 +37,41 @@
 
 export const CANONIEK_NAAR_DOSSIER = {
   id: "canoniek-naar-gzac-dossier",
-  versie: "0.2.0",
-  titel: "Canoniek model + e-dienst → GZAC-dossierbundel (documentdefinitie, form.io, tabbladen, zaaktypekoppeling)",
+  versie: "0.3.0",
+  titel: "Canoniek model + e-dienst → GZAC-dossierbundel (definitie, documentdefinitie, form.io, tabbladen, zaaktypekoppeling, processen, documentkolommen)",
   bron: "objecttype-artefact (uit canoniek-uml V3) + e-dienst",
   doel: "gzac-dossierbundel",
 
   // Het pad in de bundel leidt FUNDAMENT af uit soort + identifier
   // (afspraak 30-10): form/<id>.form.json, document/definition/<id>.schema.
   // document-definition.json, case/tab/<id>.case-tab.json,
-  // zgw/zaak-type-link/<id>.zaak-type-link.json. De identifier van het
-  // dossierschema, de tabbladen en de zaaktypekoppeling is dus de key van het
-  // dossier.
+  // zgw/zaak-type-link/<id>.zaak-type-link.json, case/definition/<id>.
+  // case-definition.json, process-document-link/<id>.process-document-link.json,
+  // zgw/document-list-column/<id>.zgw-document-list-column.json. De identifier
+  // van die delen is dus de key van het dossier; alleen een dossierformulier
+  // heeft een eigen identifier.
+
+  /**
+   * Dossierdefinitie: wat de e-dienst niet zegt. Een dossier kan een
+   * behandelaar hebben; taken worden niet vanzelf aan hem toegewezen.
+   */
+  definitie: { canHaveAssignee: true, autoAssignTasks: false },
+
+  /**
+   * Processen bij het dossier: het dossier ontstaat uit het verzoek (Verzoek-
+   * plugin), niet uit een proces, en een behandelaar start een proces niet met
+   * de hand.
+   */
+  processen: { canInitializeDocument: false, startableByUser: false },
+
+  /** De kolommen van het documentenoverzicht (ZGW-documenten), nieuwste bovenaan. */
+  documentkolommen: [
+    { key: "TITEL" },
+    { key: "CREATIEDATUM", sortering: "DESC" },
+    { key: "AUTEUR" },
+    { key: "BESTANDSOMVANG" },
+    { key: "INFORMATIEOBJECTTYPE_OMSCHRIJVING" },
+  ],
 
   /** Documentdefinitie: Valtimo valideert met JSON Schema draft-07; $id = naam + ".schema". */
   schema: {

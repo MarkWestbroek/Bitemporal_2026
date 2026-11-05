@@ -1,0 +1,8 @@
+{
+  "key": "gehandicaptenparkeerkaart",
+  "name": "Gehandicaptenparkeerkaart",
+  "versionTag": "1.0.0",
+  "description": "Dossier voor een aanvraag van een gehandicaptenparkeerkaart; aangemaakt door de Verzoek-plugin bij een nieuw aanvraagobject in Open Object (verzoek-envelop). Komt uit de Fundament-repo (dossiers/gehandicaptenparkeerkaart).",
+  "canHaveAssignee": true,
+  "autoAssignTasks": false
+}

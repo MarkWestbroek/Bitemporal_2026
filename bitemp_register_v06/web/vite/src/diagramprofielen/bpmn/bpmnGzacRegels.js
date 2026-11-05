@@ -6,11 +6,17 @@
  * zodat de engine het proces kan uitvoeren. Een andere engine is een andere
  * regelset; het model blijft gelijk.
  *
- * Wat GZAC zelf bindt, hoort hier niet: plugin-acties (zaak aanmaken, status
- * zetten, document koppelen) en taakformulieren hangen in de process-links van
- * de dossierbundel aan de activityId (FUNDAMENT 30-10). Een servicetaak krijgt
- * daarom alleen een lege expressie `${true}`, zodat de engine hem kan
- * uitvoeren; de process-link voert de actie uit.
+ * Wat GZAC zelf bindt, staat niet in de XML: plugin-acties (zaak aanmaken,
+ * status zetten, document koppelen) en taakformulieren hangen in de
+ * process-links van de dossierbundel aan de activityId (FUNDAMENT 30-10). Een
+ * servicetaak krijgt daarom alleen een lege expressie `${true}`, zodat de
+ * engine hem kan uitvoeren; de process-link voert de actie uit.
+ *
+ * Proceskoppeling (0.5.0, Mark 05-11): de process-link van een proces is een
+ * eigen artefact (`procesLinkArtefact.js`). Een gebruikerstaak met een
+ * `formulier` krijgt een formulierkoppeling; `proceskoppeling.formulier` is
+ * het sjabloon. Plugin-acties van servicetaken volgen als het model zegt wat
+ * een servicetaak doet.
  *
  * Losse processen (Mark 30-10): oppakken is de brug tussen aanvraag en zaak en
  * eindigt bij de zaak; behandelen start zelfstandig op een bericht (message
@@ -33,7 +39,7 @@
 
 export const BPMN_NAAR_GZAC = {
   id: "bpmn-naar-gzac",
-  versie: "0.4.1",
+  versie: "0.5.0",
   titel: "BPMN-profiel → uitvoerbare BPMN voor GZAC (Operaton, Camunda 7-dialect)",
   engine: "operaton",
   namespaces: { camunda: "http://camunda.org/schema/1.0/bpmn" },
@@ -96,6 +102,19 @@ export const BPMN_NAAR_GZAC = {
           "${execution.getProcessEngineServices().getRuntimeService().createMessageCorrelation('{bericht}')" +
           ".processInstanceBusinessKey(execution.getProcessBusinessKey()).setVariables(execution.getVariables()).correlateStartMessage()}",
       },
+    },
+  },
+  /**
+   * Proceskoppeling (process-link): per taak wat GZAC eraan hangt. De schrijver
+   * zet `activityId` voorop en `formDefinitionName` tussen `voor` en `na` (de
+   * volgorde van de Valtimo-export). `subtitles` is een lege lijst: zo geeft
+   * GZAC hem terug, en met null zou elke uitrol "bijgewerkt" melden
+   * (FUNDAMENT 05-11).
+   */
+  proceskoppeling: {
+    formulier: {
+      voor: { activityType: "bpmn:UserTask:create" },
+      na: { viewModelEnabled: false, formDisplayType: "panel", formSize: "large", subtitles: [], processLinkType: "form" },
     },
   },
 };

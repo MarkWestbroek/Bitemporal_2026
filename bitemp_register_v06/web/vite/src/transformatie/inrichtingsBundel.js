@@ -21,6 +21,7 @@ import { maakZaaktypeArtefact } from "../diagramprofielen/canoniek-uml/zaaktypeA
 import { maakDossierArtefact, DOSSIER_SOORTEN } from "../diagramprofielen/canoniek-uml/dossierArtefact.js";
 import { maakBpmnArtefact } from "../diagramprofielen/bpmn/bpmnArtefact.js";
 import { maakDmnArtefact } from "../diagramprofielen/dmn-drd/dmnArtefact.js";
+import { maakProcesLinkArtefact, SOORT as PROCESKOPPELING } from "../diagramprofielen/bpmn/procesLinkArtefact.js";
 
 /**
  * Plaatshouders in een payload, die de uitrol (FUNDAMENT) per omgeving invult
@@ -68,15 +69,19 @@ export function toetsPlaatshouders(artefact) {
 }
 
 /** Volgorde van maken: wat een ander artefact nodig heeft komt eerst. */
-const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dmn", "bpmn"];
+const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierdocumentkolommen", "dmn", "bpmn", "dossierprocessen", PROCESKOPPELING];
+
+/** Soorten waarvan de identifier niet uniek is over soorten: de bestandsnaam noemt de soort. */
+export const SOORT_IN_BESTANDSNAAM = [...DOSSIER_SOORTEN, PROCESKOPPELING];
 
 /**
  * Bestandsnaam zoals de CLI hem schrijft: `<identifier>.artefact.json`, bij de
- * dossiersoorten met de soort erbij (identifier is daar niet uniek over soorten).
+ * dossiersoorten en de proceskoppeling met de soort erbij (de identifier is
+ * daar niet uniek over soorten).
  * @param {{soort: string, identifier: string}} keuzes
  */
 export function artefactBestandsnaam({ soort, identifier }) {
-  const stam = DOSSIER_SOORTEN.includes(soort) ? `${identifier}.${soort}` : identifier;
+  const stam = SOORT_IN_BESTANDSNAAM.includes(soort) ? `${identifier}.${soort}` : identifier;
   return `${stam}.artefact.json`;
 }
 
@@ -90,6 +95,9 @@ function objecttypeVoor(keuzes, edienst) {
   }
   return null;
 }
+
+/** Het bpmn-artefact waar een proceskoppeling bij hoort (zelfde identifier): daar staat het model. */
+const procesVan = (keuzes, edienst) => (edienst.artefacten || []).find((a) => a.soort === "bpmn" && a.identifier === keuzes.identifier) || keuzes;
 
 /** Het BPMN- of DMN-model van een artefact, of een fout die alleen dat artefact stopt. */
 function bpmnModelVoor(keuzes, bpmnModellen) {
@@ -161,7 +169,9 @@ export async function maakInrichtingsBundel({
                   ? await maakDmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), v3Model: modelBestand, identifier, objecttype })
                   : soort === "bpmn"
                     ? await maakBpmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), identifier, beslissingen })
-                    : null;
+                    : soort === PROCESKOPPELING
+                      ? await maakProcesLinkArtefact({ ...invoer, modelBestand: bpmnModelVoor(procesVan(keuzes, edienst), bpmnModellen), identifier, beslissingen })
+                      : null;
       if (!r) throw new Error(`Onbekende artefactsoort "${soort}".`);
       if (soort === "objecttype") objecttypen.set(identifier, r.artefact);
       if (soort === "dmn") beslissingen[identifier] = r.invoer;
