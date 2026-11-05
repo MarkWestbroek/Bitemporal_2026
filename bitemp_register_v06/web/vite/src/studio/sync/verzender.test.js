@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { koppelModelStore, ontkoppelStore, modelStoreNaam } from "./operaties.js";
 import { useOutboxStore, clientId } from "./outbox.js";
-import { configureer, verzend, haalBinnen, verwerkOp, overweegSnapshot, useSyncStore, _resetVoorTest, SNAPSHOT_NA } from "./verzender.js";
+import { configureer, verzend, haalBinnen, verwerkOp, overweegSnapshot, snapshotNu, useSyncStore, _resetVoorTest, SNAPSHOT_NA } from "./verzender.js";
 
 const el = (id) => ({ id, naam: id, elementType: "entiteit", compartimenten: [], data: {} });
 
@@ -220,6 +220,40 @@ test("snapshot-compactie: een nieuwe snapshot na SNAPSHOT_NA operaties, alleen a
   assert.equal(tot, SNAPSHOT_NA + 5);
   // Grens is opgeschoven → niet nogmaals.
   assert.equal(await overweegSnapshot(), false);
+});
+
+test("snapshot op verzoek: brengt de snapshot bij zonder de grens van SNAPSHOT_NA (voor de SVG-link)", async () => {
+  let gemaakt = 0;
+  let tot = 0;
+  let huidig = 3;
+  opzet({});
+  configureer({
+    laatsteVolgnummer: () => huidig,
+    totVolgnummer: () => tot,
+    maakSnapshot: async () => {
+      gemaakt++;
+      tot = huidig;
+    },
+  });
+  // Stand niet ok → niet.
+  useSyncStore.setState({ stand: "offline" });
+  assert.equal(await snapshotNu(), false);
+  assert.equal(gemaakt, 0);
+  // Drie operaties voorbij de grens, ver onder SNAPSHOT_NA: op verzoek toch een snapshot.
+  useSyncStore.setState({ stand: "ok" });
+  assert.equal(await overweegSnapshot(), false, "de automatische compactie doet hier nog niets");
+  assert.equal(await snapshotNu(), true);
+  assert.deepEqual([gemaakt, tot], [1, 3]);
+  // Al bij → niets te doen, wel "bij".
+  assert.equal(await snapshotNu(), true);
+  assert.equal(gemaakt, 1);
+  // Een ander was eerder (maakSnapshot neemt de grens niet over) → niet bij.
+  huidig = 5;
+  configureer({ maakSnapshot: async () => { gemaakt++; } });
+  assert.equal(await snapshotNu(), false);
+  // Mislukt zetten → false, geen uitzondering.
+  configureer({ maakSnapshot: async () => { throw new Error("offline"); } });
+  assert.equal(await snapshotNu(), false);
 });
 
 test("snapshotNodig van de server: snapshot opnieuw laden in plaats van operaties toepassen", async () => {
