@@ -34,6 +34,7 @@
  * Puur op de hashfunctie na, die wordt meegegeven.
  */
 import { jcsHash } from "../../transformatie/jcs.js";
+import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
 import { schrijfDmn } from "../../transformatie/dmnXmlSchrijver.js";
 import { fieldRefsOpUuid, verversFieldRef } from "../../modelpicker/modelTree.js";
 import { pickerTypesUitV3 } from "../../modelpicker/pickerTypesUitV3.js";
@@ -166,9 +167,7 @@ export async function maakDmnArtefact({ modelBestand, edienst, identifier, objec
     traceregels,
     edienstversie: { edienst: edienst?.edienst?.naam, versienummer: edienst?.edienst?.versienummer },
     doelcomponent: keuzes.doelcomponent,
-    afhankelijkheden: (edienst?.afhankelijkheden || [])
-      .filter((a) => a.artefact === keuzes.identifier && (!a.soort || a.soort === keuzes.soort))
-      .map((a) => ({ identifier: a.afhankelijkVan, ...(a.afhankelijkVanSoort ? { soort: a.afhankelijkVanSoort } : {}), reden: a.reden })),
+    afhankelijkheden: afhankelijkhedenVan(edienst, keuzes),
   };
   return { artefact, diagnostics, invoer: invoer.map(({ veldpad, uuid, ...x }) => x) };
 }

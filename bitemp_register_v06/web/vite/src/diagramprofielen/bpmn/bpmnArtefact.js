@@ -30,6 +30,7 @@
  * Puur op de hashfunctie na, die wordt meegegeven.
  */
 import { jcsHash } from "../../transformatie/jcs.js";
+import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
 import { schrijfBpmn } from "../../transformatie/bpmnXmlSchrijver.js";
 import { BPMN_NAAR_GZAC } from "./bpmnGzacRegels.js";
 
@@ -70,7 +71,9 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
   });
   diagnostics.push(...schrijf);
 
-  // Toetsen: wat een engine nodig heeft en wat de process-links verwachten.
+  // Toetsen: wat een engine nodig heeft. `activityIds` in de e-dienst is een losse controle
+  // voor process-links die niet uit het model komen; de proceskoppeling (procesLinkArtefact)
+  // leest de taken zelf uit het model en heeft de lijst niet nodig.
   const elementen = Object.values(model.elements);
   for (const id of keuzes.activityIds || []) {
     if (![...ids.values()].includes(id)) diagnostics.push({ severity: "error", code: "BPMN-ACTIVITYID", message: `activityId "${id}" (process-link) staat niet in het proces`, sourceId: id, path: null });
@@ -148,9 +151,7 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
     traceregels,
     edienstversie: { edienst: edienst?.edienst?.naam, versienummer: edienst?.edienst?.versienummer },
     doelcomponent: keuzes.doelcomponent,
-    afhankelijkheden: (edienst?.afhankelijkheden || [])
-      .filter((a) => a.artefact === keuzes.identifier && (!a.soort || a.soort === keuzes.soort))
-      .map((a) => ({ identifier: a.afhankelijkVan, ...(a.afhankelijkVanSoort ? { soort: a.afhankelijkVanSoort } : {}), reden: a.reden })),
+    afhankelijkheden: afhankelijkhedenVan(edienst, keuzes),
   };
   return { artefact, diagnostics, aangeroepen, gestart };
 }

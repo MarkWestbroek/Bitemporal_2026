@@ -81,6 +81,18 @@ const SOORT_OPTIES = [
   { waarde: "terminate", label: "terminate ●" },
 ];
 /** Taaktypen (BPMN 2.0 §10.3; EA tagged value `taskType`). */
+// Wat een servicetaak doet, in gewone termen (Mark 05-11). De engine-regelset
+// (bpmnGzacRegels.js) vertaalt een actie naar wat de engine eraan hangt. Het
+// zijn acties van zaakgericht werken; komt er een tweede domein met eigen
+// acties, dan verhuist deze lijst naar een aanvulling op het profiel.
+const ACTIE_OPTIES = [
+  { waarde: "", label: "(geen)" },
+  { waarde: "zaakAanmaken", label: "zaak aanmaken" },
+  { waarde: "rolKoppelen", label: "rol koppelen" },
+  { waarde: "documentKoppelen", label: "document koppelen" },
+  { waarde: "zaakstatusZetten", label: "zaakstatus zetten" },
+];
+
 const TAAK_SOORT_OPTIES = [
   { waarde: "", label: "(abstract)" },
   { waarde: "user", label: "user (persoon)" },
@@ -148,8 +160,14 @@ const elementTypes = [
       // Gebruikerstaak (05-11): het formulier waarmee de behandelaar de taak doet (identifier
       // van een dossierformulier van de e-dienst); wordt de formulierkoppeling in de proceskoppeling.
       { key: "formulier", label: "formulier bij de taak", datatype: "string", placeholder: "bv. aanvraag-beoordelen", zichtbaarAls: { key: "taakSoort", waarde: "user" } },
-      // Servicetaak die alleen de interne status van het dossier zet (GZAC: geen plugin-actie nodig).
-      { key: "dossierstatus", label: "zet dossierstatus", datatype: "string", placeholder: "bv. niet-opgepakt", zichtbaarAls: { key: "taakSoort", waarde: "service" } },
+      // Servicetaak (05-11): wat de taak doet. Bij "rol koppelen" en "zaakstatus zetten" hoort
+      // de rol of status erbij, op naam: een roltype of statustype van het zaaktype in de e-dienst.
+      { key: "actie", label: "actie", datatype: "keuze", opties: ACTIE_OPTIES, zichtbaarAls: { key: "taakSoort", waarde: "service" } },
+      { key: "actieDoel", label: "rol of status (naam in het zaaktype)", datatype: "string", placeholder: "bv. Aanvrager of Ontvangen", zichtbaarAls: { key: "actie" } },
+      { key: "actieToelichting", label: "toelichting bij de actie", datatype: "string", zichtbaarAls: { key: "actie" } },
+      // Servicetaak die de status van het dossier zet: een waarde uit de statuslijst van het
+      // canonieke model (de e-dienst noemt de lijst bij het artefact dossierstatussen).
+      { key: "dossierstatus", label: "zet dossierstatus (waarde uit de statuslijst)", datatype: "string", placeholder: "bv. nietInBehandeling", zichtbaarAls: { key: "taakSoort", waarde: "service" } },
       KLEUR_VELD,
     ],
   },

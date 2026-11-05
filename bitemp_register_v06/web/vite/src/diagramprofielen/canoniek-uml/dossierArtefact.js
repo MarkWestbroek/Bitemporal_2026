@@ -6,8 +6,9 @@
  * (`dossierdefinitie`), documentdefinitie (`dossierschema`), form.io-formulier
  * (`dossierformulier`), tabbladen (`dossiertabbladen`), de koppeling aan het
  * zaaktype (`dossierzaaktypelink`), de processen bij het dossier
- * (`dossierprocessen`) of de kolommen van het documentenoverzicht
- * (`dossierdocumentkolommen`).
+ * (`dossierprocessen`), de kolommen van het documentenoverzicht
+ * (`dossierdocumentkolommen`) of de statussen van het dossier
+ * (`dossierstatussen`).
  *
  * Route:
  *
@@ -30,11 +31,13 @@
  * Puur op de hashfunctie na, die wordt meegegeven.
  */
 import { jcsHash } from "../../transformatie/jcs.js";
+import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
 import { CANONIEK_NAAR_DOSSIER } from "./dossierRegels.js";
+import { kebab } from "../../transformatie/sleutel.js";
 
 export const SCHRIJVER_ID = "gzac-dossier-schrijver@0.1.0";
 
-export const DOSSIER_SOORTEN = ["dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierprocessen", "dossierdocumentkolommen"];
+export const DOSSIER_SOORTEN = ["dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierprocessen", "dossierdocumentkolommen", "dossierstatussen"];
 
 /** Dossierdelen die de inhoud van het dossier niet lezen (geen objecttype nodig). */
 const ZONDER_INHOUD = {
@@ -43,6 +46,7 @@ const ZONDER_INHOUD = {
   dossierzaaktypelink: schrijfZaaktypelink,
   dossierprocessen: schrijfProcessen,
   dossierdocumentkolommen: schrijfDocumentkolommen,
+  dossierstatussen: schrijfStatussen,
 };
 
 const fout = (code, message, sourceId = null) => ({ severity: "error", code, message, sourceId, path: null });
@@ -302,6 +306,70 @@ function schrijfDocumentkolommen({ keuzes, regelset, traceregels }) {
 }
 
 /**
+ * De dossierstatussen die de processen van de e-dienst zetten: per bpmn-artefact
+ * de servicetaken met een `dossierstatus` in het diagram van dat artefact.
+ * @returns {{gezet: Array<{waarde: string, taak: string, proces: string}>, ontbreekt: string[]}}
+ */
+export function gezetteStatussen(edienst, bpmnModellen = {}) {
+  const gezet = [];
+  const ontbreekt = [];
+  for (const a of (edienst?.artefacten || []).filter((x) => x.soort === "bpmn")) {
+    const bestand = bpmnModellen[a.bron?.model];
+    const model = bestand?.model || bestand;
+    const diagram = Object.values(model?.diagrams || {}).find((d) => d.naam === a.bron?.diagram || d.id === a.bron?.diagram);
+    if (!diagram) {
+      ontbreekt.push(a.identifier);
+      continue;
+    }
+    for (const knoop of diagram.nodes || []) {
+      const el = model.elements?.[knoop.elementId];
+      if (el?.elementType === "taak" && el.data?.dossierstatus) gezet.push({ waarde: el.data.dossierstatus, taak: el.naam, proces: a.identifier });
+    }
+  }
+  return { gezet, ontbreekt };
+}
+
+/**
+ * De statussen van het dossier: waarden uit de statuslijst van het model die
+ * de e-dienst noemt (`statuslijst`, de naam van een enum). Welke waarden: de
+ * lijst `waarden` van de e-dienst, anders wat de processen zetten.
+ */
+function schrijfStatussen({ keuzes, edienst, model, bpmnModellen, regelset, diagnostics, traceregels }) {
+  const lijstNaam = keuzes.statuslijst;
+  const lijst = (model?.enums || []).find((e) => e.goType === lijstNaam);
+  if (!lijstNaam) diagnostics.push(fout("DOS-STATUSLIJST", `De dossierstatussen "${keuzes.identifier}" noemen geen statuslijst`));
+  else if (!lijst) diagnostics.push(fout("DOS-STATUSLIJST", `Statuslijst "${lijstNaam}" staat niet in het model`));
+  const inModel = new Set((lijst?.waarden || []).map((w) => w.waarde));
+
+  let waarden = keuzes.waarden;
+  if (!waarden) {
+    const { gezet, ontbreekt } = gezetteStatussen(edienst, bpmnModellen);
+    if (ontbreekt.length) {
+      diagnostics.push({ severity: "warning", code: "DOS-STATUS", message: `BPMN-model niet meegegeven voor ${ontbreekt.join(", ")}: welke statussen die processen zetten is onbekend`, sourceId: null, path: null });
+    }
+    waarden = [...new Set(gezet.map((g) => g.waarde))];
+    for (const g of gezet) {
+      if (lijst && !inModel.has(g.waarde)) diagnostics.push(fout("DOS-STATUS", `Taak "${g.taak}" (${g.proces}) zet dossierstatus "${g.waarde}", maar die staat niet in statuslijst ${lijstNaam}`, g.waarde));
+    }
+  } else {
+    for (const w of waarden) if (lijst && !inModel.has(w)) diagnostics.push(fout("DOS-STATUS", `Dossierstatus "${w}" staat niet in statuslijst ${lijstNaam}`, w));
+  }
+
+  const eigen = zonderToelichting(keuzes.statussen || {});
+  return waarden.map((w, i) => {
+    traceregels.push({ bronGE: lijstNaam ? `${lijstNaam}.${w}` : null, regel: keuzes.waarden ? "Waarde uit de statuslijst (e-dienst kiest)" : "Waarde uit de statuslijst die een proces zet", doelPad: `/${i}`, actie: "aangemaakt" });
+    const e = eigen[w] || {};
+    return {
+      key: kebab(w),
+      title: e.titel || labelUitNaam(w),
+      visibleInCaseListByDefault: e.zichtbaarInLijst ?? regelset.statussen.zichtbaarInLijst,
+      color: e.kleur || regelset.statussen.kleur,
+      ...regelset.statussen.vast,
+    };
+  });
+}
+
+/**
  * Koppeling dossier ↔ zaaktype: het zaaktype en `zaakBijDossier` uit de
  * e-dienst, de omgevingsgegevens als plaatshouder uit de regelset.
  */
@@ -331,6 +399,7 @@ function schrijfZaaktypelink({ keuzes, edienst, regelset, diagnostics, tracerege
  * @param {string} invoer.identifier         - identifier van het artefact in de e-dienst
  * @param {string} [invoer.soort]            - de soort, nodig omdat de dossierdelen dezelfde identifier dragen
  * @param {any} [invoer.objecttype]          - het objecttype-artefact (bron van de dossierinhoud; alleen nodig voor schema en formulier)
+ * @param {Record<string, any>} [invoer.bpmnModellen] - BPMN-modellen per naam (`bron.model`); voor de dossierstatussen die de processen zetten
  * @param {string|null} [invoer.peiltijdstip]
  * @param {string} [invoer.versienummer]
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
@@ -342,6 +411,7 @@ export async function maakDossierArtefact({
   identifier,
   soort,
   objecttype = null,
+  bpmnModellen = {},
   peiltijdstip = null,
   versienummer,
   sha256Hex,
@@ -361,7 +431,7 @@ export async function maakDossierArtefact({
 
   let payload;
   if (ZONDER_INHOUD[keuzes.soort]) {
-    payload = ZONDER_INHOUD[keuzes.soort]({ keuzes, edienst, regelset, diagnostics, traceregels });
+    payload = ZONDER_INHOUD[keuzes.soort]({ keuzes, edienst, model, bpmnModellen, regelset, diagnostics, traceregels });
   } else {
     const schemaKeuzes = schemaKeuzesVoor(edienst, keuzes);
     if (!schemaKeuzes) diagnostics.push(fout("DOS-SCHEMA", `Geen dossierschema in de e-dienst voor "${identifier}"`));
@@ -396,10 +466,7 @@ export async function maakDossierArtefact({
     traceregels,
     edienstversie: { edienst: edienst?.edienst?.naam, versienummer: edienst?.edienst?.versienummer },
     doelcomponent: keuzes.doelcomponent,
-    // De dossierdelen delen een identifier: een afhankelijkheid noemt dan de soort.
-    afhankelijkheden: (edienst?.afhankelijkheden || [])
-      .filter((a) => a.artefact === keuzes.identifier && (!a.soort || a.soort === keuzes.soort))
-      .map((a) => ({ identifier: a.afhankelijkVan, ...(a.afhankelijkVanSoort ? { soort: a.afhankelijkVanSoort } : {}), reden: a.reden })),
+    afhankelijkheden: afhankelijkhedenVan(edienst, keuzes),
   };
   return { artefact, diagnostics };
 }

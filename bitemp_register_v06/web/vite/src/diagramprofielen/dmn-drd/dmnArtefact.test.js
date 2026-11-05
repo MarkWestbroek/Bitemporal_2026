@@ -78,7 +78,7 @@ test("aanvraag-ontvankelijk: DMN 1.3, FIRST, vijf regels, invoer per kolom", asy
     ["soort", "dossier", "/soort"],
     ["rijbewijsnummer", "dossier", "/rijbewijsnummer"],
   ]);
-  assert.deepEqual(artefact.afhankelijkheden.map((a) => a.identifier), ["gehandicaptenparkeerkaartaanvraag"]);
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierdefinitie"], ["gehandicaptenparkeerkaartaanvraag", "objecttype"]]);
 });
 
 test("schrijver: lege cel = '-', ontbrekende uitkomst geeft een melding", () => {

@@ -108,3 +108,21 @@ test("de zaaktypekoppeling hangt af van het dossierschema en het zaaktype (volgo
   const tab = bundel.find((b) => b.soort === "dossiertabbladen").artefact;
   assert.deepEqual(tab.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"]]);
 });
+
+// Een identifier is niet uniek over soorten; het register weigert een afhankelijkheid zonder
+// soort als dubbelzinnig (FUNDAMENT 05-11). In de e-diensten noemt daarom elke afhankelijkheid de soort.
+test("ART-AFHANKELIJKHEID: een afhankelijkheid zonder soort geeft een waarschuwing", async () => {
+  const { toetsAfhankelijkheden } = await import("./inrichtingsBundel.js");
+  const edienst = lees("gpk-edienst.json");
+  assert.ok(edienst.afhankelijkheden.every((a) => a.soort && a.afhankelijkVanSoort), "elke afhankelijkheid in de GPK-e-dienst noemt beide soorten");
+  assert.ok(lees("aanvraag-edienst.json").afhankelijkheden.every((a) => a.soort && a.afhankelijkVanSoort));
+  const bundel = await maakInrichtingsBundel(invoer());
+  assert.deepEqual(bundel.flatMap((b) => b.diagnostics).filter((d) => d.code === "ART-AFHANKELIJKHEID"), []);
+  assert.ok(bundel.every((b) => b.artefact.afhankelijkheden.every((a) => a.soort)));
+
+  const zonder = { afhankelijkheden: [{ identifier: "gehandicaptenparkeerkaart-beoordelen" }, { identifier: "GPK" }, { identifier: "GPK", soort: "zaaktype" }] };
+  const meldingen = toetsAfhankelijkheden(zonder, edienst);
+  assert.deepEqual(meldingen.map((d) => d.code), ["ART-AFHANKELIJKHEID", "ART-AFHANKELIJKHEID"]);
+  assert.match(meldingen[0].message, /dubbelzinnig \(bpmn, proceskoppeling\)/);
+  assert.doesNotMatch(meldingen[1].message, /dubbelzinnig/);
+});

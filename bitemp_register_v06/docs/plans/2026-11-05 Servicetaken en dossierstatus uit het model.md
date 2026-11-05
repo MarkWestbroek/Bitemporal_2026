@@ -1,4 +1,4 @@
-# Servicetaken en dossierstatus uit het model (voorstel, 2026-11-05)
+# Servicetaken en dossierstatus uit het model (voorstel en besluit, 2026-11-05)
 
 Aanleiding: Mark (05-11) over het handwerk in de GZAC-dossierbundel van de GPK:
 "handwerk is goed, maar met het idee van automatisering vanuit het model in
@@ -16,8 +16,33 @@ model de kennis nog niet heeft.
 | `process-link/aanvraag-oppakken.process-link.json` | wat de vier servicetaken doen, als plugin-acties van GZAC |
 | `case/internal-status/gehandicaptenparkeerkaart.internal-case-status.json` | de dossierstatus "Niet opgepakt", met titel en kleur |
 
-Niets hiervan is gebouwd. Het voorstel raakt hoe een proces gemodelleerd wordt,
-dus Mark beslist eerst.
+Het voorstel raakt hoe een proces gemodelleerd wordt, dus Mark besliste eerst.
+
+## 0. Besluit (Mark, 2026-11-05)
+
+Mark is akkoord met het advies op alle zes de vragen; het is daarna gebouwd
+(TRANSFORMATIES §11.9 en §11.13).
+
+| # | Vraag | Besluit |
+|---|---|---|
+| 1 | Actie als eigenschap of een eigen taaksoort? | Eigenschap `actie` op de servicetaak. |
+| 2 | Waar hoort de lijst acties? | Nu als optioneel veld in het BPMN-profiel; later een aanvulling "zaakgericht werken", als er een tweede domein met eigen acties komt. |
+| 3 | Verwijzen op naam of naar een modelelement? | Nu op naam (rol "Aanvrager", status "Ontvangen" in het zaaktype van de e-dienst). Via de uuid kan pas als het zaaktype zelf een model is. |
+| 4 | Is de status van de aanvraag die van het dossier? | Ja, één lijst: `AanvraagStatus` in het canonieke model. |
+| 5 | De statussen van de zaak (ZGW) ook uit het model? | Nu niet. |
+| 6 | Welke sleutel in GZAC? | `niet-in-behandeling`, afgeleid uit de waarde in het model; FUNDAMENT voert `niet-opgepakt` af. |
+
+Wat anders is uitgevallen dan in het voorstel hieronder:
+
+- De actie "dossierstatus zetten" is geen aparte actie: de taak houdt zijn veld
+  `dossierstatus`, nu met een waarde uit de statuslijst.
+- De rol bij "rol koppelen" wordt getoetst tegen het zaaktype, maar GZAC haalt
+  het roltype uit een procesvariabele van de Verzoek-plugin. De regelset kent
+  daarom alleen de initiator.
+- De titel van een status komt uit de naam van de waarde; de statuslijst in het
+  model heeft geen beschrijving per waarde.
+
+De tekst hieronder is het voorstel zoals het aan Mark is voorgelegd.
 
 ## 1. Wat een servicetaak doet
 

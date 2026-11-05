@@ -1001,7 +1001,7 @@ mogelijk, liefst geen, handwerk. Dit is de proef die we hier doen."). Een
 handgemaakt bestand mag even als proef dienen, maar moet daarna vervangen worden
 door een gegenereerd bestand.
 
-Er is één artefact per bestand (regelset `canoniek-naar-gzac-dossier` 0.3.0,
+Er is één artefact per bestand (regelset `canoniek-naar-gzac-dossier` 0.4.0,
 `dossierRegels.js`; aansluiting `dossierArtefact.js`; schrijver
 `gzac-dossier-schrijver@0.1.0`). De payload is de inhoud van het bestand.
 FUNDAMENT leidt het pad in de bundel af uit soort + identifier:
@@ -1015,6 +1015,7 @@ FUNDAMENT leidt het pad in de bundel af uit soort + identifier:
 | `dossierzaaktypelink` | `gzac-zaak-type-link-json` | `zgw/zaak-type-link/<id>.zaak-type-link.json` | `gehandicaptenparkeerkaart` |
 | `dossierprocessen` | `gzac-process-document-link-json` | `process-document-link/<id>.process-document-link.json` | `gehandicaptenparkeerkaart` |
 | `dossierdocumentkolommen` | `gzac-zgw-document-list-column-json` | `zgw/document-list-column/<id>.zgw-document-list-column.json` | `gehandicaptenparkeerkaart` |
+| `dossierstatussen` | `gzac-internal-case-status-json` | `case/internal-status/<id>.internal-case-status.json` | `gehandicaptenparkeerkaart` |
 
 Op het formulier na dragen de dossierdelen de key van het dossier als
 identifier; de soort onderscheidt ze. Daarom kan een afhankelijkheid in de
@@ -1044,9 +1045,38 @@ bestanden die handwerk in de Fundament-repo waren en geen modelkennis missen
 
 Het dossierschema hangt af van de dossierdefinitie; de processen hangen af van
 het dossierschema en van hun bpmn-artefacten, de kolommen van het
-dossierschema (afspraak FUNDAMENT 05-11). Nog handwerk bij FUNDAMENT: de
-proceskoppeling van "Aanvraag oppakken" (plugin-acties) en de interne status;
-voorstel in docs/plans/2026-11-05 Servicetaken en dossierstatus uit het model.
+dossierschema (afspraak FUNDAMENT 05-11). De bpmn-artefacten en de beslistabel
+van het dossier hangen ook af van de dossierdefinitie, zodat de wortel van de
+bundel in de uitrolvolgorde vooraan staat.
+
+**Dossierstatussen (regelset 0.4.0, 2026-11-05).** De status van het dossier is
+de status van de aanvraag (besluit Mark 05-11): er is één statuslijst, in het
+canonieke model (`AanvraagStatus`: ingediend, inBehandeling, nietInBehandeling,
+afgehandeld). De interne status van GZAC was handwerk met een eigen sleutel
+(`niet-opgepakt`); nu:
+
+- De e-dienst noemt bij het artefact de statuslijst (`statuslijst`, de naam van
+  de enum in het model).
+- Een servicetaak in het BPMN-model zet een **waarde uit die lijst**
+  (`dossierstatus: nietInBehandeling`). Dossierstatus wordt elke waarde die een
+  taak in een proces van de e-dienst zet (`gezetteStatussen`); een lijst
+  `waarden` in de e-dienst vervangt dat.
+- De sleutel in GZAC is de waarde met koppeltekens (`niet-in-behandeling`,
+  `transformatie/sleutel.js`). De BPMN-schrijver gebruikt dezelfde functie voor
+  `setInternalStatus` (`{dossierstatus|kebab}` in de regelset `bpmn-naar-gzac`),
+  zodat taak en statuslijst altijd dezelfde sleutel hebben.
+- De titel komt uit de naam van de waarde ("Niet in behandeling"); kleur en
+  zichtbaarheid in de dossierlijst zijn vormgeving: standaard uit de regelset
+  (grijs, zichtbaar), per waarde te wijzigen in de e-dienst (`statussen`).
+  `retentionPeriodInDays` en `label` leveren we mee zoals GZAC ze zelf invult.
+- Toetsen: `DOS-STATUSLIJST` (geen of een onbekende lijst), `DOS-STATUS` (een
+  taak zet een waarde die niet in de lijst staat; waarschuwing als een
+  BPMN-model niet is meegegeven).
+- Afhankelijkheden: de statussen van het dossierschema; het proces dat een
+  status zet van de statussen.
+
+Open: de statussen van de zaak (ZGW-statustypen) staan nog los in het zaaktype
+van de e-dienst (Mark 05-11: nu niet).
 
 **Zaaktypekoppeling (regelset 0.2.0, 2026-11-05).** De koppeling van het dossier
 aan zijn zaaktype was handwerk in de Fundament-repo en is nu een artefact
@@ -1086,6 +1116,15 @@ De bundel toetst de plaatshouders in elke payload (`toetsPlaatshouders` in
 afhankelijkheid. `ART-GEHEIM` (waarschuwing): een andere kale `${NAAM}`; die
 leest de uitrol als sleutel uit een Secret, en een geheim hoort niet in een
 artefact.
+
+**Elke afhankelijkheid noemt de soort (FUNDAMENT 05-11).** Een identifier is
+niet uniek over soorten: een proces en zijn proceskoppeling dragen dezelfde,
+en de delen van een dossier ook. Het register gokt niet en weigert een
+afhankelijkheid zonder soort als dubbelzinnig. In de e-dienst noemt daarom
+elke regel de soort aan beide kanten (`soort` en `afhankelijkVanSoort`), en
+die gaat mee in het artefact. Alle aansluitingen lezen hun afhankelijkheden
+via `transformatie/afhankelijkheden.js`; de bundel meldt `ART-AFHANKELIJKHEID`
+(waarschuwing) bij een afhankelijkheid zonder soort.
 
 **Bron.** De dossierinhoud is het schema van het **objecttype-artefact**, zonder
 de verzoek-envelop: de Verzoek-plugin kopieert `data` naar het dossier. De
@@ -1425,21 +1464,51 @@ handwerk in de Fundament-repo. Het is nu een artefact uit het BPMN-model
   null zou elke uitrol "bijgewerkt" melden (FUNDAMENT 05-11).
 - **De activityId** is de id die de BPMN-schrijver in de XML zet; koppeling en
   proces passen dus altijd op elkaar.
+- **Servicetaak → plugin-actie (regelset 0.6.0).** Het BPMN-profiel (M2) heeft
+  op een servicetaak de eigenschap `actie`: wat de taak doet, in gewone termen
+  (besluit Mark 05-11). De regelset vertaalt de actie naar de plugin-actie van
+  GZAC en zijn eigenschappen (`proceskoppeling.plugin`):
+
+  | Actie in het model | Verwijzing (`actieDoel`) | Plugin-actie in GZAC |
+  |---|---|---|
+  | zaak aanmaken | geen | `create-zaak` |
+  | rol koppelen | een roltype van het zaaktype, op naam ("Aanvrager") | `create-natuurlijk-persoon-zaak-rol` |
+  | document koppelen | geen | `link-document-to-zaak` |
+  | zaakstatus zetten | een statustype van het zaaktype, op naam ("Ontvangen") | `set-zaakstatus` |
+
+  Het model blijft los van de engine: welke plugin het doet en uit welke
+  procesvariabele (`pv:…`, gezet door de Verzoek-plugin) een waarde komt, is
+  kennis van de regelset. De status wordt `${STATUSTYPE_URL:<zaaktype>:<volgnummer>}`
+  (het volgnummer volgt de volgorde van de statustypen in de e-dienst), de
+  plugin `${PLUGINCONFIG_ID:zakenapi}`; `actieToelichting` wordt de
+  statustoelichting. De rol is nu alleen de initiator (een natuurlijk persoon
+  uit het verzoek). Het zaaktype is het enige zaaktype van de e-dienst, of
+  `zaaktype` bij het bpmn-artefact. De koppeling heeft de vorm die GZAC zelf
+  teruggeeft (met `referenceType`, `pluginDefinitionKey`, `actionResultMappings`).
+  Een servicetaak die alleen de dossierstatus zet, heeft geen koppeling: dat
+  staat in de XML (§11.9). Verwijzen gaat op naam; via de uuid kan pas als het
+  zaaktype zelf een model is.
 - **Toetsen.** `PL-FORMULIER`: waarschuwing bij een gebruikerstaak zonder
   formulier, fout als het formulier geen dossierformulier van de e-dienst is.
-  `PL-LEEG` (info): het proces heeft geen taken waar de regelset een koppeling
-  voor maakt.
+  `PL-ACTIE`: waarschuwing bij een servicetaak zonder actie (en zonder
+  dossierstatus), fout bij een actie die de regelset niet kent. `PL-ROL` en
+  `PL-STATUS`: de rol of status ontbreekt of staat niet in het zaaktype (fout);
+  een andere rol dan de initiator krijgt geen koppeling (waarschuwing).
+  `PL-ZAAKTYPE`: de e-dienst heeft niet precies één zaaktype. `PL-LEEG`
+  (info): het proces heeft geen taken waar de regelset een koppeling voor maakt.
 - **Afhankelijkheden**: het bpmn-artefact met dezelfde identifier en het
   dossierformulier. Omdat de identifier gelijk is aan die van het bpmn-artefact,
   telt voor de proceskoppeling alleen een afhankelijkheid die de soort noemt.
 - **GPK**: `gehandicaptenparkeerkaart-beoordelen`, één koppeling (taak
   "Aanvraag beoordelen" → formulier `aanvraag-beoordelen`), gelijk aan het
-  handwerk op `subtitles` na.
+  handwerk op `subtitles` na; `aanvraag-oppakken`, vier plugin-koppelingen,
+  gelijk aan het handwerk op de plaatshouder voor de plugin en de velden van
+  GZAC na. De lijst `activityIds` bij een bpmn-artefact in de e-dienst is
+  daarmee overbodig en uit de GPK-e-dienst gehaald; de toets `BPMN-ACTIVITYID`
+  blijft als losse controle.
 
-**Nog niet.** Wat een servicetaak doet (zaak aanmaken, rol koppelen, status
-zetten) staat niet in het model. De proceskoppeling van "Aanvraag oppakken"
-blijft daarom handwerk tot het voorstel in docs/plans/2026-11-05 Servicetaken
-en dossierstatus uit het model besloten is.
+Besluiten en achtergrond: docs/plans/2026-11-05 Servicetaken en dossierstatus
+uit het model.
 
 ### 11.14 Vervolg
 
@@ -1462,7 +1531,8 @@ en dossierstatus uit het model besloten is.
    DMN-model in een Studio-project; de fixtures zijn dan kopieën voor de tests.
    De beslistabel heeft daarvoor een bewerkscherm aan het element `decision`
    nodig (§11.12).
-8. Dossier: de plugin-acties van servicetaken in de proceskoppeling (§11.13)
-   en de interne status uit de statuslijst van het model; nu handwerk in de
-   Fundament-repo. Voorstel met vragen aan Mark: docs/plans/2026-11-05
-   Servicetaken en dossierstatus uit het model.
+8. Zaakgericht werken als aanvulling op het BPMN-profiel: de acties van een
+   servicetaak (§11.13) staan nu als optioneel veld in het profiel zelf. De
+   status- en roltypen van het zaaktype als model, zodat een taak er via de
+   uuid naar verwijst en de statussen van de zaak uit dezelfde lijst komen als
+   die van de aanvraag (Mark 05-11: later).

@@ -116,7 +116,7 @@ test("documentdefinitie: het objecttype zonder envelop plus behandelvelden, draf
   assert.equal(s.properties.kenteken.anyOf[1].pattern, "^[A-Z0-9]{1,3}-[A-Z0-9]{1,3}-[A-Z0-9]{1,3}$");
   assert.equal(artefact.traceregels.find((t) => t.doelPad === "/properties/soort").bronGE, "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort");
   // Het objecttype (de inhoud) en de dossierdefinitie (de wortel van de bundel, FUNDAMENT 05-11).
-  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaartaanvraag", undefined], ["gehandicaptenparkeerkaart", "dossierdefinitie"]]);
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaartaanvraag", "objecttype"], ["gehandicaptenparkeerkaart", "dossierdefinitie"]]);
 });
 
 test("tabbladen: de standaardtabbladen uit de regelset, gelijk aan het handwerk", async () => {
@@ -209,6 +209,54 @@ test("documentkolommen: de standaardkolommen uit de regelset, gelijk aan het han
     return e;
   });
   assert.deepEqual(eigen.artefact.artefactInhoud.payload, [{ key: "TITEL", defaultSort: "ASC" }]);
+});
+
+// De status van het dossier is de status van de aanvraag (Mark 05-11): een waarde uit de
+// statuslijst van het model, die een taak in een proces zet. Was handwerk bij FUNDAMENT, met
+// een eigen sleutel (niet-opgepakt).
+test("dossierstatussen: de waarden uit de statuslijst die een proces zet", async () => {
+  const bpmnModellen = { "gpk-processen.bpmn-model.json": lees("gpk-processen.bpmn-model.json") };
+  const maakStatussen = async (wijzig = (e) => e, modellen = bpmnModellen) => {
+    const edienst = wijzig(lees("gpk-edienst.json"));
+    return maakDossierArtefact({ modelBestand, edienst, identifier: "gehandicaptenparkeerkaart", soort: "dossierstatussen", bpmnModellen: modellen, sha256Hex });
+  };
+  const { artefact, diagnostics } = await maakStatussen();
+  assert.deepEqual(diagnostics, []);
+  // Zelfde vorm als het handwerk, met de sleutel en titel uit het model en de twee velden die GZAC zelf invult.
+  const handwerk = lees("gzac-handwerk/gehandicaptenparkeerkaart.internal-case-status.json");
+  assert.deepEqual(artefact.artefactInhoud.payload, [{ ...handwerk[0], key: "niet-in-behandeling", title: "Niet in behandeling", retentionPeriodInDays: -1, label: null }]);
+  assert.deepEqual(artefact.traceregels.map((t) => t.bronGE), ["AanvraagStatus.nietInBehandeling"]);
+  assert.equal(artefact.artefactInhoud.formaat, "gzac-internal-case-status-json");
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"]]);
+
+  // Een taak zet een status die de lijst niet kent.
+  const fout = structuredClone(bpmnModellen);
+  fout["gpk-processen.bpmn-model.json"].model.elements.bp_status_niet_opgepakt.data.dossierstatus = "nietOpgepakt";
+  assert.deepEqual((await maakStatussen((e) => e, fout)).diagnostics.map((d) => [d.severity, d.code]), [["error", "DOS-STATUS"]]);
+  // Zonder BPMN-model is niet te zien wat de processen zetten.
+  const zonder = await maakStatussen((e) => e, {});
+  assert.deepEqual(zonder.diagnostics.map((d) => [d.severity, d.code]), [["warning", "DOS-STATUS"]]);
+  assert.deepEqual(zonder.artefact.artefactInhoud.payload, []);
+  // De e-dienst kiest zelf de waarden en de vormgeving.
+  const eigen = await maakStatussen((e) => {
+    Object.assign(e.artefacten.find((a) => a.soort === "dossierstatussen"), { waarden: ["inBehandeling", "afgehandeld"], statussen: { afgehandeld: { titel: "Klaar", kleur: "GREEN", zichtbaarInLijst: false } } });
+    return e;
+  }, {});
+  assert.deepEqual(eigen.diagnostics, []);
+  assert.deepEqual(eigen.artefact.artefactInhoud.payload.map((s) => [s.key, s.title, s.color, s.visibleInCaseListByDefault]), [
+    ["in-behandeling", "In behandeling", "WARMGRAY", true],
+    ["afgehandeld", "Klaar", "GREEN", false],
+  ]);
+  // Geen of een onbekende statuslijst.
+  const lijst = async (naam) =>
+    (await maakStatussen((e) => {
+      const a = e.artefacten.find((x) => x.soort === "dossierstatussen");
+      if (naam) a.statuslijst = naam;
+      else delete a.statuslijst;
+      return e;
+    })).diagnostics.map((d) => d.code);
+  assert.deepEqual(await lijst(null), ["DOS-STATUSLIJST"]);
+  assert.deepEqual(await lijst("BestaatNiet"), ["DOS-STATUSLIJST"]);
 });
 
 test("toetsen: onbekend veld, behandelveld dat al in het model staat, geen objecttype", async () => {

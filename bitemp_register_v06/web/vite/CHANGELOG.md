@@ -9,6 +9,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Inrichting: elke afhankelijkheid noemt de soort** (05-11): een identifier is niet uniek
+  over soorten (proces en proceskoppeling, de delen van een dossier), en het register weigert
+  een dubbelzinnige afhankelijkheid. Eén gedeelde functie (`transformatie/afhankelijkheden.js`)
+  en de toets `ART-AFHANKELIJKHEID` in de bundel.
+- **BPMN-profiel: `actie` op een servicetaak** (05-11): wat de taak doet (zaak aanmaken, rol
+  koppelen, document koppelen, zaakstatus zetten), met de rol of status op naam en een
+  toelichting. De regelset `bpmn-naar-gzac` 0.6.0 maakt er de plugin-koppeling van; de
+  proceskoppeling van "Aanvraag oppakken" was handwerk bij FUNDAMENT (docs/TRANSFORMATIES.md §11.13).
+- **Inrichting: dossierstatussen uit de statuslijst van het model** (05-11): nieuwe soort
+  `dossierstatussen` (regelset `canoniek-naar-gzac-dossier` 0.4.0). Een servicetaak zet een
+  waarde uit de statuslijst (`nietInBehandeling`); de sleutel in GZAC is die waarde met
+  koppeltekens (`niet-in-behandeling`, was het handgemaakte `niet-opgepakt`). Toetsen
+  `DOS-STATUSLIJST`, `DOS-STATUS`, `PL-ACTIE`, `PL-ROL`, `PL-STATUS`, `PL-ZAAKTYPE` (§11.9).
 - **Inrichting: vier bestanden van de GZAC-dossierbundel als artefact** (05-11), waren handwerk
   bij FUNDAMENT: `dossierdefinitie`, `dossierprocessen`, `dossierdocumentkolommen` (regelset
   `canoniek-naar-gzac-dossier` 0.3.0) en `proceskoppeling` (regelset `bpmn-naar-gzac` 0.5.0,

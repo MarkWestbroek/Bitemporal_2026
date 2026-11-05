@@ -28,7 +28,8 @@
  * de regelset (`taken.businessRuleTask.invoer`) maakt er input-parameters van,
  * per bron (dossierwaarde of procesvariabele) een sjabloon.
  * Engine-attributen die een modelwaarde dragen staan in `uitData` van de
- * regelset (`{veld}` = data.veld).
+ * regelset (`{veld}` = data.veld; `{veld|kebab}` = dezelfde waarde als sleutel
+ * met koppeltekens, zie `sleutel.js`).
  *
  * Nog niet: pools/lanes, message flows, data-objecten, notities, boundary
  * events en de inhoud van subprocessen. Die geven een melding
@@ -36,6 +37,8 @@
  *
  * Puur: geen DOM nodig, de uitvoer is tekst.
  */
+
+import { kebab } from "./sleutel.js";
 
 const TAAK_TAG = {
   "": "task",
@@ -204,8 +207,11 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     for (const u of regel.uitData || []) {
       if (!el.data?.[u.als]) continue;
       for (const [k, v] of Object.entries(metNs(u.attributen))) {
-        const w = Object.entries(el.data).reduce((t, [veld, waarde]) => t.split(`{${veld}}`).join(String(waarde ?? "")), String(v));
-        if (/\{\w+\}/.test(w.replace(/\$\{[^}]*\}/g, ""))) meld(`"${el.naam || el.id}": ${k} mist een modelwaarde (${w})`, el.id);
+        const w = Object.entries(el.data).reduce(
+          (t, [veld, waarde]) => t.split(`{${veld}}`).join(String(waarde ?? "")).split(`{${veld}|kebab}`).join(kebab(waarde)),
+          String(v),
+        );
+        if (/\{\w+(\|\w+)?\}/.test(w.replace(/\$\{[^}]*\}/g, ""))) meld(`"${el.naam || el.id}": ${k} mist een modelwaarde (${w})`, el.id);
         a[k] = w;
       }
     }

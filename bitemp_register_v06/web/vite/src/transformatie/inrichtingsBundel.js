@@ -68,8 +68,37 @@ export function toetsPlaatshouders(artefact) {
   ];
 }
 
+/**
+ * Toets `ART-AFHANKELIJKHEID`: elke afhankelijkheid noemt de soort van het
+ * artefact waar ze naar wijst. Een identifier is niet uniek over soorten (een
+ * proces en zijn proceskoppeling, de delen van een dossier), en het register
+ * gokt niet: een afhankelijkheid zonder soort is dan dubbelzinnig en wordt
+ * geweigerd (FUNDAMENT 05-11).
+ * @param {any} artefact
+ * @param {any} edienst
+ * @returns {any[]} diagnostics
+ */
+export function toetsAfhankelijkheden(artefact, edienst) {
+  const uit = [];
+  for (const a of artefact?.afhankelijkheden || []) {
+    if (a.soort) continue;
+    const soorten = (edienst?.artefacten || []).filter((x) => x.identifier === a.identifier).map((x) => x.soort);
+    uit.push({
+      severity: "warning",
+      code: "ART-AFHANKELIJKHEID",
+      message:
+        soorten.length > 1
+          ? `De afhankelijkheid op "${a.identifier}" noemt geen soort en is dubbelzinnig (${soorten.join(", ")}); zet afhankelijkVanSoort in de e-dienst`
+          : `De afhankelijkheid op "${a.identifier}" noemt geen soort; zet afhankelijkVanSoort in de e-dienst`,
+      sourceId: null,
+      path: null,
+    });
+  }
+  return uit;
+}
+
 /** Volgorde van maken: wat een ander artefact nodig heeft komt eerst. */
-const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierdocumentkolommen", "dmn", "bpmn", "dossierprocessen", PROCESKOPPELING];
+const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierdocumentkolommen", "dossierstatussen", "dmn", "bpmn", "dossierprocessen", PROCESKOPPELING];
 
 /** Soorten waarvan de identifier niet uniek is over soorten: de bestandsnaam noemt de soort. */
 export const SOORT_IN_BESTANDSNAAM = [...DOSSIER_SOORTEN, PROCESKOPPELING];
@@ -164,7 +193,7 @@ export async function maakInrichtingsBundel({
             : soort === "zaaktype"
               ? await maakZaaktypeArtefact({ ...invoer, identifier })
               : DOSSIER_SOORTEN.includes(soort)
-                ? await maakDossierArtefact({ ...invoer, identifier, soort, objecttype })
+                ? await maakDossierArtefact({ ...invoer, identifier, soort, objecttype, bpmnModellen })
                 : soort === "dmn"
                   ? await maakDmnArtefact({ ...invoer, modelBestand: bpmnModelVoor(keuzes, bpmnModellen), v3Model: modelBestand, identifier, objecttype })
                   : soort === "bpmn"
@@ -175,7 +204,7 @@ export async function maakInrichtingsBundel({
       if (!r) throw new Error(`Onbekende artefactsoort "${soort}".`);
       if (soort === "objecttype") objecttypen.set(identifier, r.artefact);
       if (soort === "dmn") beslissingen[identifier] = r.invoer;
-      uitkomst.set(keuzes, { artefact: r.artefact, diagnostics: [...(r.diagnostics || []), ...toetsPlaatshouders(r.artefact)], fout: null });
+      uitkomst.set(keuzes, { artefact: r.artefact, diagnostics: [...(r.diagnostics || []), ...toetsPlaatshouders(r.artefact), ...toetsAfhankelijkheden(r.artefact, edienst)], fout: null });
     } catch (e) {
       uitkomst.set(keuzes, { artefact: null, diagnostics: e?.diagnostics || [], fout: e?.message || String(e) });
     }

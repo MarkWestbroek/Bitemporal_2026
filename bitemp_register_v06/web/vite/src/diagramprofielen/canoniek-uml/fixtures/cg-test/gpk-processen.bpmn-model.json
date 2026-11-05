@@ -40,7 +40,7 @@
       },
       "bp_status_niet_opgepakt": {
         "id": "bp_status_niet_opgepakt",
-        "naam": "Dossierstatus Niet opgepakt",
+        "naam": "Dossierstatus Niet in behandeling",
         "elementType": "taak",
         "compartimenten": [],
         "data": {
@@ -50,7 +50,7 @@
           "meervoudig": "",
           "lusVerzameling": "",
           "lusElement": "",
-          "dossierstatus": "niet-opgepakt"
+          "dossierstatus": "nietInBehandeling"
         }
       },
       "bp_niet_opgepakt": {
@@ -72,6 +72,7 @@
           "taakSoort": "service",
           "bpmnAard": "serviceTask",
           "bpmnId": "zaak-aanmaken",
+          "actie": "zaakAanmaken",
           "meervoudig": "",
           "lusVerzameling": "",
           "lusElement": ""
@@ -86,6 +87,8 @@
           "taakSoort": "service",
           "bpmnAard": "serviceTask",
           "bpmnId": "rol-aanvrager-aanmaken",
+          "actie": "rolKoppelen",
+          "actieDoel": "Aanvrager",
           "meervoudig": "",
           "lusVerzameling": "",
           "lusElement": ""
@@ -100,6 +103,7 @@
           "taakSoort": "service",
           "bpmnAard": "serviceTask",
           "bpmnId": "document-koppelen",
+          "actie": "documentKoppelen",
           "meervoudig": "parallel",
           "lusVerzameling": "documentUrls",
           "lusElement": "documentUrl"
@@ -114,6 +118,9 @@
           "taakSoort": "service",
           "bpmnAard": "serviceTask",
           "bpmnId": "status-ontvangen",
+          "actie": "zaakstatusZetten",
+          "actieDoel": "Ontvangen",
+          "actieToelichting": "Aanvraag ontvangen uit het aanvraagregister",
           "meervoudig": "",
           "lusVerzameling": "",
           "lusElement": ""
