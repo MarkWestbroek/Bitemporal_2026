@@ -448,6 +448,9 @@ function CanvasBinnenkant({
             // (`diagram.verbergCompartimenten`, Position-default) met per
             // voorkomen een override: gedaante "kop" = verbergen, "vol" = tonen.
             compartimentenVerborgen: ref.gedaante === "kop" || (!!diagram?.verbergCompartimenten && ref.gedaante !== "vol"),
+            // De bewaarde maat ook als gegeven (sjabloonvormen tekenen op die maat; zie
+            // SjabloonShape), naast de wrapper-stijl hierboven.
+            size: ref.size && (!ref.gedaante || ref.gedaante === "kop" || ref.gedaante === "vol") ? ref.size : null,
             fieldTypesById: lookups.fieldTypesById,
             compartmentTypesById: lookups.compartmentTypesById,
           },

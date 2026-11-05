@@ -8,6 +8,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Eén tekenaar, stap 3 — het canvas tekent met de tekenaar** (05-11): een vorm met een
+  ShapeType + renderer (nu de basisvormen `class-box`, `chip`, `knip-box`, `note`, `constraint`,
+  `rounded`, `anker`, `boundary`, `bol`, `package`, `dmn-*`) tekent op het canvas als SVG uit
+  dezelfde tekenaar als documenten, gedeelde plaatjes en de render-API
+  (`canvas/SjabloonShape.jsx`, `tekenaar/voorkomen.js`, `tekenaar/naarReact.js`). Handles,
+  resizer (live maat tijdens slepen), badges, buitenlabel en de inline-editor (naam en velden,
+  nu op `<text>`) blijven werken; selectie en thema via de canvas-tokens; de typering-stand
+  verbergt de stereotype-regel (`data-dc-stereotype`). De `diagramverwijzing` tekent nog via de
+  oude component (naam van het doel live). Zichtbaar verschil: geen slagschaduw meer, tekstmaten
+  uit de tekstmaat-tabel (een vorm zonder bewaarde maat kan een paar pixels anders uitvallen).
+  Profielvormen zonder ShapeType tekenen ongewijzigd (stap 4).
+
 ## [studio/v0.27.0] — 2026-11-05
 
 Alleen frontend en render-sidecar; de api blijft 0.18.0. Samen met **render 0.2.0**: `taal=studio`

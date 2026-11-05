@@ -1116,6 +1116,16 @@ fase 2 een **bewerkbare sandbox**:
   segment duwen/trekken. Werkt op de directe (kale) gedaante; opslag in
   `data.knikken` op de connector (`ConnectorEdge.jsx`). Eindpunten lostrekken
   en elders aanhechten kan nog niet — backlog §31.5/§31.6.
+- **Sjabloonvormen — één tekenaar op het canvas** (05-11, plan `docs/plans/2026-11-04 Eén
+  tekenaar`, stap 3): een shape-id met een ShapeType + ShapeRenderer (`types/shapeType.js`,
+  `tekenbareVorm`) tekent op het canvas als `<svg>` uit dezelfde tekenaar als documenten,
+  gedeelde plaatjes en de render-API (`canvas/SjabloonShape.jsx` → `tekenaar/voorkomen.js`,
+  `tekenaar/naarReact.js`). `ElementNode` kiest per id: sjabloon als `sjabloonOpCanvas(id)` het
+  geeft, anders de oude React-component uit `shapes/shapeRegistry.js` (nog: alle profielvormen
+  zonder ShapeType en de `diagramverwijzing`). Maat = bewaarde maat van het voorkomen, tijdens
+  resizen de live maat, anders de gemeten inhoud; thema via `--diagram-*` → canvas-tokens;
+  selectie kleurt de omtrek (`.dc-sjabloon.is-geselecteerd .dc-omtrek`). De inline-editor werkt
+  ongewijzigd op `data-dc-naam`/`data-dc-veld`, nu op `<text>`-regels.
 - **Inline hernoemen** (2026-10-07): **F2** op de geselecteerde node, of
   **dubbelklik** op een node zonder gedragsverwijzing, opent een naamveld óp
   de vorm (bovenaan bij compartiment-vormen, gecentreerd bij de rest, onder

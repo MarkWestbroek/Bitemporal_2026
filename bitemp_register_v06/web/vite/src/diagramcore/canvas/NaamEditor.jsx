@@ -38,7 +38,8 @@ export default function NaamEditor({ waarde: begin, vindDoel, plaats = "midden",
         const dw = d.width / zoom;
         const dh = d.height / zoom;
         const nodeBreedte = w.width / zoom;
-        const centreer = cs.textAlign === "center";
+        // HTML-tekst centreert met text-align, SVG-tekst (sjabloonvormen) met text-anchor.
+        const centreer = cs.textAlign === "center" || cs.textAnchor === "middle";
         let breedte = Math.max(dw + 14, 96);
         const hoogte = Math.max(dh + 4, 22);
         let left = (d.left - w.left) / zoom - (centreer ? (breedte - dw) / 2 : 7);

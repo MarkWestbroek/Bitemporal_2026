@@ -21,7 +21,7 @@
  * `detail: "schets"` geeft de lichte stand (transformatie/sjabloon/schets.js, zeven families;
  * besluit Mark 04-11: die blijft voorlopig).
  */
-import { maakPalet, veiligeKleur, tekstOp } from "../../diagramsvg/thema.js";
+import { maakPalet } from "../../diagramsvg/thema.js";
 import { breekAf } from "../../diagramsvg/tekstmaat.js";
 import { fnv1a } from "../../diagramsvg/svg.js";
 import { schetsDiagramSvg } from "../../transformatie/sjabloon/schets.js";
@@ -29,37 +29,20 @@ import { materialiseerConnectoren, effectieveConnectorGedaante } from "../canvas
 import { bepaalOpnames } from "../canvas/opname.js";
 import { voorkomenId } from "../model/voorkomens.js";
 import { lidConnectoren } from "../types/containerVoor.js";
-import { vorm, losStijlOp, inhoudsregelsVan, valideerVormBoom, valideerVak } from "../types/shapeType.js";
+import { vorm } from "../types/shapeType.js";
 import { vormVoor } from "./vormen.js";
-import { planInhoud, tekenInhoud } from "./inhoud.js";
-import { meetVoorkomen } from "./maat.js";
+import { bouwVoorkomen, tekenVoorkomen, basisVanPalet, FONT } from "./voorkomen.js";
 import { tekenLijnen } from "./lijnen.js";
 import { naarSvg } from "./serialiseer.js";
 
 export { naarSvg } from "./serialiseer.js";
 export { vormVoor } from "./vormen.js";
 
-const FONT = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 const MARGE = 24;
 const BUITENLABEL_BREEDTE = 132;
 
 const perId = (lijst) => Object.fromEntries((lijst || []).map((t) => [t.id, t]));
 const veiligId = (s) => String(s ?? "").replace(/[^A-Za-z0-9_-]/g, "-");
-
-/** De kleuren voor één voorkomen: thema-tokens, tenzij er een eigen kleur is. */
-function kleurenVoor(basis, stijl, parameters) {
-  const hex = veiligeKleur(stijl.kleur, null);
-  const vast = veiligeKleur(parameters.vulling, null);
-  const vulling = hex || vast || basis.surface;
-  const inkt = hex ? tekstOp(hex) : vast ? tekstOp(vast) : basis.text;
-  return {
-    ...basis,
-    vulling,
-    rand: veiligeKleur(parameters.rand, null) || basis.border,
-    inkt,
-    gedempt: hex || vast ? inkt : basis.muted,
-  };
-}
 
 /**
  * Teken een diagram als VormBoom.
@@ -79,8 +62,7 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
   const typen = perId(descriptor?.elementTypes);
   const fieldTypesById = perId(descriptor?.fieldTypes);
   const compartmentTypesById = perId(descriptor?.compartmentTypes);
-  const palet = maakPalet(thema);
-  const basis = { palet, surface: palet("surface"), border: palet("border"), text: palet("text"), muted: palet("muted"), accent: palet("accent") };
+  const basis = basisVanPalet(maakPalet(thema));
   const prefix = idPrefix || `t${fnv1a(JSON.stringify([diagram?.id, Object.keys(elements || {}).length]))}`;
   const terugval = new Set();
   const fouten = [];
@@ -88,39 +70,27 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
   const opnames = bepaalOpnames(elements || {}, diagram, typen);
   const posities = new Map((diagram?.nodes || []).map((n) => [n.elementId, n.position || { x: 0, y: 0 }]));
 
-  /** Bouw de tekenstand van één voorkomen (zonder te tekenen). */
+  /** Bouw de tekenstand van één voorkomen (zonder te tekenen); gedeeld met het canvas (voorkomen.js). */
   const maakBox = (ref, element, et, positie, soort = "node") => {
-    const parametersVanType = (vormInfo) => vormInfo.shapeType.parameters || {};
-    // Diagramverwijzing zonder eigen naam: de naam van het doeldiagram (van de host).
-    if (et?.shape === "diagramverwijzing" && !element.naam) {
-      const doel = element.data?.verwijstNaar;
-      element = { ...element, naam: (doel && verwijzingNaam?.(doel)) || "diagram" };
-    }
-    // Compartimenten verborgen op dit voorkomen (gedaante "kop", of diagram-breed).
-    const verborgen = ref && (ref.gedaante === "kop" || (!!diagram?.verbergCompartimenten && ref.gedaante !== "vol"));
-    if (verborgen && (element.compartimenten || []).length) element = { ...element, compartimenten: [] };
     const vormInfo = vormVoor(soort === "anker" ? "anker" : et?.shape || "class-box", et);
     if (vormInfo.terugval) terugval.add(vormInfo.shapeType.id);
-    const parameters = parametersVanType(vormInfo);
-    const stijl = losStijlOp(element, et);
-    const inhoudsregels = inhoudsregelsVan(et, element, { elements, diagram });
-    const planVoor = (breedte) => planInhoud({ element, elementType: et, breedte, parameters, fieldTypesById, compartmentTypesById, inhoudsregels });
-    const { w, h, plan } = meetVoorkomen({ ref, elementType: et, shapeType: vormInfo.shapeType, planVoor });
-    const ctx = {
+    const box = bouwVoorkomen({
       element,
-      elementType: et || {},
+      elementType: et,
       shapeType: vormInfo.shapeType,
-      parameters,
-      maat: { w, h },
-      stijl,
-      node: ref || null,
+      renderer: vormInfo.renderer,
+      ref,
       diagram,
-      thema: kleurenVoor(basis, stijl, parameters),
+      elements,
+      fieldTypesById,
+      compartmentTypesById,
+      basis,
       idPrefix: `${prefix}-${veiligId(ref ? voorkomenId(ref) : element.id)}`,
-    };
-    const box = { x: positie.x, y: positie.y, w, h, element, et: et || {}, ctx, renderer: vormInfo.renderer, plan, ref, soort };
-    if (vormInfo.renderer.rand) box.rand = (hoek) => vormInfo.renderer.rand(ctx, hoek);
-    return box;
+      // Compartimenten verborgen op dit voorkomen (gedaante "kop", of diagram-breed).
+      verborgen: !!ref && (ref.gedaante === "kop" || (!!diagram?.verbergCompartimenten && ref.gedaante !== "vol")),
+      verwijzingNaam,
+    });
+    return { ...box, x: positie.x, y: positie.y, ref, soort };
   };
 
   const boxen = new Map();
@@ -156,17 +126,11 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
   const punten = [];
   const knopen = [];
   for (const b of volgorde) {
-    const { ctx, renderer, plan, element, et } = b;
-    const omtrek = renderer.omtrek(ctx);
-    const vak = renderer.inhoudsvak(ctx);
-    const ornament = renderer.ornament ? renderer.ornament(ctx) : null;
-    if (controleer) {
-      fouten.push(...valideerVormBoom(omtrek, { idPrefix: ctx.idPrefix }).map((f) => `${ctx.shapeType.id} omtrek ${f}`));
-      if (vak) fouten.push(...valideerVak(vak).map((f) => `${ctx.shapeType.id} ${f}`));
-      if (ornament) fouten.push(...valideerVormBoom(ornament, { idPrefix: ctx.idPrefix }).map((f) => `${ctx.shapeType.id} ornament ${f}`));
-    }
+    const { ctx, element, et } = b;
+    const { omtrek, inhoud, ornament, vak, fouten: eigen } = tekenVoorkomen(b, { controleer });
+    fouten.push(...eigen);
     const kinderen = [omtrek];
-    if (vak && plan) kinderen.push(tekenInhoud(vak, plan, ctx.thema, { tekstAnker: ctx.parameters.tekstAnker }));
+    if (inhoud) kinderen.push(inhoud);
     if (ornament) kinderen.push(ornament);
     // Buitenlabel: de naam onder een vorm die hem niet kan dragen.
     const buiten = element.naam && (et.naamLabel === "buiten" || (!vak && et.naamLabel !== "geen"));

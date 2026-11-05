@@ -200,7 +200,8 @@ export function tekenInhoud(vak, plan, kleuren, opties = {}) {
 
   for (const b of plan.blokken) {
     if (b.soort === "stereotype") {
-      kinderen.push(tekst(ankerX, y + 10, b.tekst, { "text-anchor": ankerAttr, "font-size": STEREO, "font-style": "italic", fill: kleuren.gedempt }));
+      // `data-dc-stereotype`: het canvas verbergt hem in de typering-stand "geen"/"icoon" (diagramcore.css).
+      kinderen.push(tekst(ankerX, y + 10, b.tekst, { "text-anchor": ankerAttr, "font-size": STEREO, "font-style": "italic", fill: kleuren.gedempt, "data-dc-stereotype": "" }));
     } else if (b.soort === "naam") {
       const lh = Math.round(b.grootte * 1.3);
       b.regels.forEach((r, i) => {

@@ -199,6 +199,22 @@ rendert via `SjabloonShape`; een id met alleen een oude React-component rendert 
 elke vorm los worden omgezet, en is elke omgezette vorm meteen op canvas én server gelijk. Geen
 big bang.
 
+**Gebouwd 05-11 (OMNIUM-UI, `feat/tekenaar-canvas`).** `canvas/SjabloonShape.jsx` tekent een
+voorkomen als `<svg>` op de maat van het voorkomen met dezelfde functies als de diagram-tekenaar:
+`tekenaar/voorkomen.js` (`bouwVoorkomen`, `tekenVoorkomen`, uit index.js gelicht) en de nieuwe
+canvas-lezer `tekenaar/naarReact.js` (VormBoom → React-elementen). `ElementNode` schakelt per
+shape-id: `sjabloonOpCanvas(id)` = `tekenbareVorm(id)` min een korte uitzonderingslijst
+(`diagramverwijzing`: naam van het doel live via `useDiagramNaam`). Daardoor tekenen de dertien
+andere basisvormen nu via het sjabloon, en elke profielvorm die in stap 4 een ShapeType krijgt
+meteen ook. Maat: `data.size` (bewaard) → live maat uit de `NodeResizer` tijdens slepen → gemeten
+inhoud; de resizer-minima komen uit `minMaatVan`. Thema: diagramcore.css koppelt `--diagram-*` aan
+de canvas-tokens; selectie zet de omtrek in `--dc-selectie` via CSS (`.dc-omtrek`). De
+inline-editor vindt `data-dc-naam`/`data-dc-veld` op `<text>` (NaamEditor centreert ook op
+`text-anchor`); de typering-stand verbergt `data-dc-stereotype`. De inhoud is geknipt op de maat
+(zoals `overflow: hidden` eerder), ornamenten mogen uitsteken. Bewust weggelaten: de slagschaduw
+van `.dc-node` (één view = documenten en canvas gelijk) en het type-icoon in de typering-stand
+"icoon" (de tekenaar kent alleen de stereotype-tekst; iconen horen bij stap 4 als ornament).
+
 ### 3.4 Server en documenten (RENDER-API, OMNIUM-UI)
 
 - `render-svc` importeert de tekenaar; `taal=studio` krijgt daarmee vormtrouw. De route en het
@@ -225,7 +241,7 @@ big bang.
 | 0 | M3-MOF | ShapeType (gegevens) en ShapeRenderer (contract) in `schema.js`, VormBoom-taglijst, `hooks.inhoudsregels`, rechtzetten "ShapeType = Implementatie"; Mark in de .qea | 1–2 dagen | keuzes §5 |
 | 1 | RENDER-API | `POST …/svg?taal=studio` op de schets, bundeling, Imprint-eisen (**gebouwd 04-11**, `feat/render-taal-studio`, ongecommit; wacht op Mark) | 1–1,5 dag | — |
 | 2 | OMNIUM-UI | tekenaar: maat, inhoud, lijnen, nesting, thema; de 14 basisvormen als ShapeType + renderer; schets als stand `detail=schets`; documenten en gedeelde plaatjes erop — **gebouwd 04-11** (`feat/tekenaar`: `diagramcore/tekenaar/`, terugval per vormfamilie voor vormen zonder ShapeType; de 35 diagrammen van het architectuurproject getekend met de echte profielen) | 1 week | 0 gemerged |
-| 3 | OMNIUM-UI | canvas-adapter `SjabloonShape` + inline-editor en resizer op SVG; eerst op `class-box` | 3–4 dagen | 2 |
+| 3 | OMNIUM-UI | canvas-adapter `SjabloonShape` + inline-editor en resizer op SVG — **gebouwd 05-11** (`feat/tekenaar-canvas`: alle basisvormen behalve `diagramverwijzing`; 1318 unit, 83 Studio-e2e groen; zie §3.3) | 3–4 dagen | 2 |
 | 4 | OMNIUM-UI (parallel per profiel mogelijk) | 60 profielvormen omzetten naar sjablonen; per profiel e2e-screenshot vóór/na | ±½ dag per profiel, 1 week totaal | 3 |
 | 5 | RENDER-API | render-svc op de tekenaar; `taal=v3` erachter; byte-vergelijking met de huidige fixtures | 2 dagen | 2, 4 |
 | 6 | RENDER-API + BACKEND | `GET` op project/diagram met toegang (privacy-besluit) | 1–2 dagen | 5 |

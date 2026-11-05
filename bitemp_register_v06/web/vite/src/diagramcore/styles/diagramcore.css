@@ -25,6 +25,14 @@
   --dc-canvas-achtergrond: var(--s-canvas, #ffffff);
   --dc-marker-vulling: var(--dc-canvas-achtergrond);
   --dc-label-achtergrond: rgba(255, 255, 255, 0.92);
+  /* De tekenaar (diagramcore/tekenaar) kleurt met `var(--diagram-*)` (afspraak met Imprint,
+     diagramsvg/thema.js); op het canvas wijzen die tokens naar de canvas-tokens hierboven, zodat
+     een sjabloonvorm (SjabloonShape) dezelfde kleuren heeft als de oude componenten. */
+  --diagram-surface: var(--dc-node-vulling);
+  --diagram-border: var(--dc-node-rand);
+  --diagram-text: #0f172a;
+  --diagram-muted: #64748b;
+  --diagram-accent: var(--dc-selectie);
 }
 [data-studio-theme="dark"] .dc-canvas,
 [data-studio-theme="dark"] .dc-canvasvlak {
@@ -100,6 +108,36 @@
   cursor: grab;
   /* Inhoud nooit buiten de node laten steken (artefact bij smal resizen). */
   overflow: hidden;
+}
+
+/* Sjabloonvorm (één tekenaar, stap 3 — canvas/SjabloonShape.jsx): de node is een <svg> uit de
+   tekenaar, op de maat van het voorkomen. Selectie = de omtrek in de selectiekleur; een
+   CSS-regel wint van het stroke-attribuut van de renderer. De typering-stand (Beeld →
+   typering) geldt ook hier via `data-dc-stereotype` op de stereotype-regel. */
+.dc-sjabloon {
+  position: relative;
+  display: block;
+  cursor: grab;
+  user-select: none;
+}
+.dc-sjabloon:active {
+  cursor: grabbing;
+}
+.dc-sjabloon-svg {
+  display: block;
+  overflow: visible;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.dc-sjabloon.is-geselecteerd .dc-omtrek *,
+.dc-sjabloon.is-geselecteerd .dc-omtrek > * {
+  stroke: var(--dc-selectie, #2563eb);
+}
+.dc-sjabloon .dc-ornament {
+  pointer-events: none;
+}
+[data-dc-typering="geen"] .dc-sjabloon [data-dc-stereotype],
+[data-dc-typering="icoon"] .dc-sjabloon [data-dc-stereotype] {
+  display: none;
 }
 
 /* === Contextmenu (rechtsklik op de canvas) === */
