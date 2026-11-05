@@ -61,7 +61,10 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.28.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.29.0`**
+  (2026-11-06: Kopieer als SVG-link — de server tekent —, snapshot op verzoek, labels op dezelfde
+  zijde stapelen, inrichting: bronnen als artefacten; samen met api 0.19.0, render blijft 0.3.1),
+  na **`studio/v0.28.0`**
   (2026-11-05: één tekenaar stap 3 en 4 — het canvas tekent met de tekenaar, alle profielvormen
   zijn ShapeTypes, de oude React-vormen zijn weg; samen met render 0.3.0, api blijft 0.18.0), na
   **`studio/v0.27.0`**
@@ -99,7 +102,9 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.18.0`** (2026-10-31: materieel enkelvoudig met opvolging en `geldigOp`,
+- Backend: **`api/v0.19.0`** (2026-11-06: projectdiagram als SVG met toegang — `diagram.svg`
+  en `views.json` op een Studio-project, soort `svg` bij de gedeelde plaatjes; stap 6 van het
+  plan *Eén tekenaar*). Daarvoor **`api/v0.18.0`** (2026-10-31: materieel enkelvoudig met opvolging en `geldigOp`,
   tijdprecisie datum|tijdstip — `date` → `timestamptz` bij het opstarten —, subtype-id in JSON,
   `uuid` uit de Studio in V3/TypeMeta/plat schema, `/api/volgorde`, `/health`, devloop
   startup-rebuild/zelftest/dbproef; devloop-image 0.24.9). Daarvoor **`api/v0.17.0`**
