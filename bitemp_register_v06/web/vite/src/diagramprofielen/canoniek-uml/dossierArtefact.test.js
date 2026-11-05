@@ -123,8 +123,9 @@ test("tabbladen: de standaardtabbladen uit de regelset, gelijk aan het handwerk"
   assert.deepEqual(diagnostics, []);
   assert.deepEqual(artefact.artefactInhoud.payload, lees("gzac-handwerk/gehandicaptenparkeerkaart.case-tab.json"));
   assert.equal(artefact.artefactInhoud.formaat, "gzac-case-tab-json");
-  // Zelfde identifier als het schema, maar niet diens afhankelijkheden.
-  assert.deepEqual(artefact.afhankelijkheden, []);
+  // Zelfde identifier als het schema, maar niet diens afhankelijkheden. Wel het dossier zelf en
+  // het zaaktype: de dossierbundel koppelt het dossier aan het zaaktype (FUNDAMENT 05-11).
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"], ["GPK", "zaaktype"]]);
 });
 
 test("toetsen: onbekend veld, behandelveld dat al in het model staat, geen objecttype", async () => {

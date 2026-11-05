@@ -9,6 +9,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Gewijzigd
+- **Inrichting: tabbladen hangen af van dossierschema en zaaktype** (05-11): op een lege
+  omgeving rolde FUNDAMENT de tabbladen uit voordat het zaaktype bestond. Nieuwe toets
+  `ART-PLAATSHOUDER` in de bundel: een plaatshouder naar een object- of zaaktype zonder
+  afhankelijkheid op het artefact dat het aanmaakt (docs/TRANSFORMATIES.md §11.9).
 - **Eén tekenaar, stap 3 — het canvas tekent met de tekenaar** (05-11): een vorm met een
   ShapeType + renderer (nu de basisvormen `class-box`, `chip`, `knip-box`, `note`, `constraint`,
   `rounded`, `anker`, `boundary`, `bol`, `package`, `dmn-*`) tekent op het canvas als SVG uit
