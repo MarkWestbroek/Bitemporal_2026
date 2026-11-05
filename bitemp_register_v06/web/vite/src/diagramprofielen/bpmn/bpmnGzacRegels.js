@@ -15,8 +15,14 @@
  * Proceskoppeling (0.5.0, Mark 05-11): de process-link van een proces is een
  * eigen artefact (`procesLinkArtefact.js`). Een gebruikerstaak met een
  * `formulier` krijgt een formulierkoppeling; `proceskoppeling.formulier` is
- * het sjabloon. Plugin-acties van servicetaken volgen als het model zegt wat
- * een servicetaak doet.
+ * het sjabloon.
+ *
+ * Acties (0.6.0, Mark 05-11): een servicetaak zegt in het model wat hij doet
+ * (`actie`: zaak aanmaken, rol koppelen, document koppelen, zaakstatus
+ * zetten). `proceskoppeling.plugin` vertaalt dat naar de plugin-actie van GZAC
+ * en zijn eigenschappen. De dossierstatus die een taak zet, is een waarde uit
+ * de statuslijst van het canonieke model; de sleutel in GZAC is die waarde met
+ * koppeltekens (`{dossierstatus|kebab}`).
  *
  * Losse processen (Mark 30-10): oppakken is de brug tussen aanvraag en zaak en
  * eindigt bij de zaak; behandelen start zelfstandig op een bericht (message
@@ -39,7 +45,7 @@
 
 export const BPMN_NAAR_GZAC = {
   id: "bpmn-naar-gzac",
-  versie: "0.5.0",
+  versie: "0.6.0",
   titel: "BPMN-profiel → uitvoerbare BPMN voor GZAC (Operaton, Camunda 7-dialect)",
   engine: "operaton",
   namespaces: { camunda: "http://camunda.org/schema/1.0/bpmn" },
@@ -57,7 +63,8 @@ export const BPMN_NAAR_GZAC = {
       attributen: { "camunda:expression": "${true}" },
       asyncAfter: true,
       // Uit het model: `{veld}` = data.veld, letterlijk vervangen (${…} blijft staan).
-      uitData: [{ als: "dossierstatus", attributen: { "camunda:expression": "${documentDelegateService.setInternalStatus(execution, '{dossierstatus}')}" } }],
+      // De dossierstatus is een waarde uit de statuslijst van het model; GZAC krijgt hem als sleutel met koppeltekens.
+      uitData: [{ als: "dossierstatus", attributen: { "camunda:expression": "${documentDelegateService.setInternalStatus(execution, '{dossierstatus|kebab}')}" } }],
     },
     businessRuleTask: {
       // Valtimo's exporter zoekt de beslistabel op sleutel op, net als bij calledElement.
@@ -115,6 +122,50 @@ export const BPMN_NAAR_GZAC = {
     formulier: {
       voor: { activityType: "bpmn:UserTask:create" },
       na: { viewModelEnabled: false, formDisplayType: "panel", formSize: "large", subtitles: [], processLinkType: "form" },
+    },
+    /**
+     * Servicetaak met een `actie` → plugin-koppeling: activityId, `voor`,
+     * pluginConfigurationId, pluginDefinitionKey, pluginActionDefinitionKey,
+     * actionProperties en `na`. Dat is de vorm die GZAC zelf teruggeeft
+     * (met referenceType, pluginDefinitionKey en actionResultMappings), zodat
+     * een uitrol zonder wijziging "ongewijzigd" meldt (FUNDAMENT 05-11).
+     *
+     * In een eigenschap staat `pv:<naam>` voor een procesvariabele die de
+     * Verzoek-plugin bij het oppakken zet (RSIN, zaaktype, roltype, initiator,
+     * document). `{zaaktype}`, `{volgnummer}` en `{toelichting}` vult de
+     * schrijver in; een plaatshouder met een dollarteken lost de uitrol per
+     * omgeving op.
+     */
+    plugin: {
+      voor: { activityType: "bpmn:ServiceTask:start", processLinkType: "plugin", referenceType: "FIXED" },
+      // De Zaken API-plugin: de configuratie in de omgeving (plaatshouder) en de sleutel van de plugin.
+      configuratie: "${PLUGINCONFIG_ID:zakenapi}",
+      definitie: "zakenapi",
+      na: { actionResultMappings: [] },
+      acties: {
+        zaakAanmaken: {
+          actie: "create-zaak",
+          eigenschappen: { rsin: "pv:RSIN", zaaktypeUrl: "pv:zaakTypeUrl" },
+        },
+        rolKoppelen: {
+          actie: "create-natuurlijk-persoon-zaak-rol",
+          // De rol is een roltype van het zaaktype. De regelset kent nu alleen
+          // de initiator: een natuurlijk persoon (BSN) uit het verzoek, waarvan
+          // de Verzoek-plugin het roltype als procesvariabele aanlevert.
+          doel: { soort: "rol", alleenGeneriek: "initiator" },
+          eigenschappen: { roltypeUrl: "pv:rolTypeUrl", rolToelichting: "pv:rolDescription", inpBsn: "pv:initiatorValue" },
+        },
+        documentKoppelen: {
+          actie: "link-document-to-zaak",
+          eigenschappen: { documentUrl: "pv:documentUrl" },
+        },
+        zaakstatusZetten: {
+          actie: "set-zaakstatus",
+          // De status is een statustype van het zaaktype; het volgnummer volgt de volgorde in de e-dienst.
+          doel: { soort: "status" },
+          eigenschappen: { statustypeUrl: "${STATUSTYPE_URL:{zaaktype}:{volgnummer}}", statustoelichting: "{toelichting}" },
+        },
+      },
     },
   },
 };

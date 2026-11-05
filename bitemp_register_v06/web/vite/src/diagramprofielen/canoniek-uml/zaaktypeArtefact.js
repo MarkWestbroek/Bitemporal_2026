@@ -28,6 +28,7 @@
  * Puur op de hashfunctie na, die wordt meegegeven.
  */
 import { jcsHash } from "../../transformatie/jcs.js";
+import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
 import { CANONIEK_NAAR_ZAAKTYPE } from "./zaaktypeRegels.js";
 
 export const SCHRIJVER_ID = "catalogi-schrijver@0.1.0";
@@ -174,9 +175,7 @@ export async function maakZaaktypeArtefact({
     traceregels,
     edienstversie: { edienst: edienst?.edienst?.naam, versienummer: edienst?.edienst?.versienummer },
     doelcomponent: keuzes.doelcomponent,
-    afhankelijkheden: (edienst?.afhankelijkheden || [])
-      .filter((a) => a.artefact === keuzes.identifier)
-      .map((a) => ({ identifier: a.afhankelijkVan, reden: a.reden })),
+    afhankelijkheden: afhankelijkhedenVan(edienst, keuzes),
   };
   return { artefact, diagnostics };
 }

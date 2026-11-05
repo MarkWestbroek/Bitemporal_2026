@@ -21,6 +21,7 @@ import { v3Graaf } from "../../transformatie/v3Graaf.js";
 import { pasRegelsToe } from "../../transformatie/regels.js";
 import { planNaarJsonSchema } from "../../transformatie/jsonSchemaSchrijver.js";
 import { jcsHash } from "../../transformatie/jcs.js";
+import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
 import { CANONIEK_NAAR_OBJECTTYPE } from "./objecttypeRegels.js";
 
 export const SCHRIJVER_ID = "json-schema-schrijver@0.1.0";
@@ -127,9 +128,7 @@ export async function maakObjecttypeArtefact({
     traceregels,
     edienstversie: { edienst: edienst?.edienst?.naam, versienummer: edienst?.edienst?.versienummer },
     doelcomponent: keuzes.doelcomponent,
-    afhankelijkheden: (edienst?.afhankelijkheden || [])
-      .filter((a) => a.artefact === keuzes.identifier)
-      .map((a) => ({ identifier: a.afhankelijkVan, reden: a.reden })),
+    afhankelijkheden: afhankelijkhedenVan(edienst, keuzes),
   };
   return { artefact, graaf, plan, diagnostics };
 }

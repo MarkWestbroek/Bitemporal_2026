@@ -133,7 +133,8 @@ test("artefact aanvraag-oppakken uit het BPMN-model: bericht start de beoordelin
   assert.match(xml, /<camunda:inputParameter name="bijlagen">[^<]*&quot;\/bijlagen&quot;/);
   // 0.4.1: bsn is een procesvariabele die kan ontbreken; getVariable geeft dan null in plaats van een FEEL-fout.
   assert.match(xml, /<camunda:inputParameter name="bsn">\$\{execution\.getVariable\('bsn'\)\}<\/camunda:inputParameter>/);
-  assert.equal(s.camunda["status-niet-opgepakt@expression"], "${documentDelegateService.setInternalStatus(execution, 'niet-opgepakt')}");
+  // De status is een waarde uit de statuslijst van het model (nietInBehandeling); GZAC krijgt de sleutel met koppeltekens.
+  assert.equal(s.camunda["status-niet-opgepakt@expression"], "${documentDelegateService.setInternalStatus(execution, 'niet-in-behandeling')}");
   assert.deepEqual(s.flows.filter((f) => f[1] === "ontvankelijk").map((f) => [f[2], f[3]]), [
     ["zaak-aanmaken", "${ontvankelijkheid.ontvankelijk}"],
     ["status-niet-opgepakt", "${!ontvankelijkheid.ontvankelijk}"],
@@ -150,7 +151,13 @@ test("artefact aanvraag-oppakken uit het BPMN-model: bericht start de beoordelin
   assert.doesNotMatch(xml, /callActivity|<camunda:in /);
   assert.deepEqual(aangeroepen, []);
   assert.deepEqual(gestart, ["gehandicaptenparkeerkaart-beoordelen"]);
-  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["GPK", undefined], ["aanvraag-ontvankelijk", "dmn"], ["gehandicaptenparkeerkaart-beoordelen", undefined]]);
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [
+    ["gehandicaptenparkeerkaart", "dossierstatussen"], // het proces zet een status van het dossier
+    ["gehandicaptenparkeerkaart", "dossierdefinitie"],
+    ["GPK", "zaaktype"],
+    ["aanvraag-ontvankelijk", "dmn"],
+    ["gehandicaptenparkeerkaart-beoordelen", "bpmn"], // niet de proceskoppeling met dezelfde identifier
+  ]);
   // Elk element in de trace, met zijn activityId.
   assert.ok(artefact.traceregels.some((t) => t.doelPad === "#document-koppelen"));
 });
@@ -193,6 +200,7 @@ test("artefact gehandicaptenparkeerkaart-beoordelen; een ontbrekende activityId 
     ["aanvraag-beoordelen", "userTask"],
     ["einde", "endEvent"],
   ]);
-  edienst.artefacten.find((a) => a.identifier === "gehandicaptenparkeerkaart-beoordelen").activityIds.push("besluit-vastleggen");
+  // activityIds is een losse controle voor process-links die niet uit het model komen.
+  edienst.artefacten.find((a) => a.identifier === "gehandicaptenparkeerkaart-beoordelen" && a.soort === "bpmn").activityIds = ["aanvraag-beoordelen", "besluit-vastleggen"];
   assert.deepEqual((await maak()).diagnostics.map((d) => d.code), ["BPMN-ACTIVITYID"]);
 });

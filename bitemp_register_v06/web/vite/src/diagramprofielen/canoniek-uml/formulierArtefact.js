@@ -28,6 +28,7 @@ import { formulierGraaf } from "../../transformatie/formulierGraaf.js";
 import { pasRegelsToe } from "../../transformatie/regels.js";
 import { planNaarOpenforms, OF_RELEASE } from "../../transformatie/openformsSchrijver.js";
 import { jcsHash } from "../../transformatie/jcs.js";
+import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
 import { CANONIEK_NAAR_FORMULIER } from "./formulierRegels.js";
 
 export const SCHRIJVER_ID = "openforms-schrijver@0.2.0";
@@ -149,9 +150,7 @@ export async function maakFormulierArtefact({
     traceregels,
     edienstversie: { edienst: edienst?.edienst?.naam, versienummer: edienst?.edienst?.versienummer },
     doelcomponent: keuzes.doelcomponent,
-    afhankelijkheden: (edienst?.afhankelijkheden || [])
-      .filter((a) => a.artefact === keuzes.identifier)
-      .map((a) => ({ identifier: a.afhankelijkVan, reden: a.reden })),
+    afhankelijkheden: afhankelijkhedenVan(edienst, keuzes),
   };
   return { artefact, graaf, plan, aansluiting, diagnostics };
 }

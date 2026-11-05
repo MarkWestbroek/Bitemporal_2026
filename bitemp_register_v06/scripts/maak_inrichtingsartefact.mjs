@@ -13,7 +13,7 @@
 //     --model <V3-model.json> --edienst <edienst.json> --artefact aanvraag \
 //     [--peiltijdstip 2026-10-25T06:51:13Z] [--referentielijst Aanvraagtype=<items.json>] \
 //     [--doel <handgemaakt artefact.json | export-map>] [--uit <artefact.json>] \
-//     [--objecttype <objecttype-artefact.json>] [--soort <soort>]
+//     [--objecttype <objecttype-artefact.json>] [--soort <soort>] [--bpmn <BPMN-model.json>]
 //
 // De soort van het artefact in het e-dienstmodel kiest de transformatie:
 // objecttype (JSON Schema), formulier (Open Formulieren-export) of zaaktype
@@ -23,9 +23,12 @@
 //
 // De GZAC-dossierbundel (§11.9): dossierschema (documentdefinitie),
 // dossierformulier (form.io), dossierdefinitie, dossiertabbladen,
-// dossierzaaktypelink, dossierprocessen en dossierdocumentkolommen, elk één
-// bestand; de dossierinhoud komt uit --objecttype. Op het formulier na dragen
-// ze dezelfde identifier (de key van het dossier): kies dan met --soort.
+// dossierzaaktypelink, dossierprocessen, dossierdocumentkolommen en
+// dossierstatussen, elk één bestand; de dossierinhoud komt uit --objecttype.
+// Op het formulier na dragen ze dezelfde identifier (de key van het dossier):
+// kies dan met --soort. De dossierstatussen zijn de waarden uit de statuslijst
+// van het model die een proces zet: geef elk BPMN-model mee met --bpmn (de
+// bestandsnaam is `bron.model` van het bpmn-artefact).
 //
 // Een proceskoppeling (§11.13, --soort proceskoppeling) komt net als een
 // bpmn-artefact uit het BPMN-model en draagt de proces-id als identifier.
@@ -59,12 +62,12 @@ const HIER = path.dirname(fileURLToPath(import.meta.url));
 const DATATYPEN = path.resolve(HIER, "../testdata/gegevenstypen.json");
 
 function argumenten(argv) {
-  const uit = { referentielijst: [] };
+  const uit = { referentielijst: [], bpmn: [] };
   for (let i = 0; i < argv.length; i += 1) {
     const sleutel = argv[i].replace(/^--/, "");
     const waarde = argv[i + 1];
     if (!argv[i].startsWith("--") || waarde === undefined) throw new Error(`Onverwacht argument: ${argv[i]}`);
-    if (sleutel === "referentielijst") uit.referentielijst.push(waarde);
+    if (sleutel === "referentielijst" || sleutel === "bpmn") uit[sleutel].push(waarde);
     else uit[sleutel] = waarde;
     i += 1;
   }
@@ -104,7 +107,12 @@ async function main() {
           : soort === PROCESKOPPELING
             ? await maakProcesLinkArtefact(invoer)
           : DOSSIER_SOORTEN.includes(soort)
-            ? await maakDossierArtefact({ ...invoer, soort, objecttype: a.objecttype ? lees(a.objecttype) : null })
+            ? await maakDossierArtefact({
+                ...invoer,
+                soort,
+                objecttype: a.objecttype ? lees(a.objecttype) : null,
+                bpmnModellen: Object.fromEntries(a.bpmn.map((pad) => [path.basename(pad), lees(pad)])),
+              })
             : await maakObjecttypeArtefact(invoer);
 
   const stam = SOORT_IN_BESTANDSNAAM.includes(soort) ? `${a.artefact}.${soort}` : a.artefact;

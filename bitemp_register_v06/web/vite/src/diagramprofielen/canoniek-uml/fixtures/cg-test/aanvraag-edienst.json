@@ -90,6 +90,6 @@
     }
   ],
   "afhankelijkheden": [
-    { "artefact": "aanvraag-voorbeeld", "afhankelijkVan": "aanvraag", "reden": "het formulier registreert in het objecttype" }
+    { "artefact": "aanvraag-voorbeeld", "soort": "formulier", "afhankelijkVan": "aanvraag", "afhankelijkVanSoort": "objecttype", "reden": "het formulier registreert in het objecttype" }
   ]
 }

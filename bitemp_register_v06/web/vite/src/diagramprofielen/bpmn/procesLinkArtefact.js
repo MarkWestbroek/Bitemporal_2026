@@ -11,11 +11,16 @@
  *   BPMN-model (profiel bpmn-motor) ─ taken van het diagram ─▶ engine-regelset ─▶ koppelingen ─▶ artefact
  *   e-dienst (bpmn-artefact met dezelfde identifier: model, diagram, engine)
  *
- * Nu: een gebruikerstaak met een `formulier` (de identifier van een
- * dossierformulier van de e-dienst) krijgt een formulierkoppeling. Wat een
- * servicetaak doet (zaak aanmaken, rol koppelen, status zetten) staat nog niet
- * in het model; die plugin-koppelingen zijn nog handwerk bij FUNDAMENT
- * (docs/plans/2026-11-05 Servicetaken en dossierstatus uit het model).
+ * Twee soorten koppelingen:
+ * - een gebruikerstaak met een `formulier` (de identifier van een
+ *   dossierformulier van de e-dienst) krijgt een formulierkoppeling;
+ * - een servicetaak met een `actie` (zaak aanmaken, rol koppelen, document
+ *   koppelen, zaakstatus zetten) krijgt een plugin-koppeling. De rol of status
+ *   (`actieDoel`) is op naam een roltype of statustype van het zaaktype in de
+ *   e-dienst; de engine-regelset zegt welke plugin-actie erbij hoort
+ *   (docs/plans/2026-11-05 Servicetaken en dossierstatus uit het model).
+ * Een servicetaak die alleen de dossierstatus zet, heeft geen koppeling nodig:
+ * dat staat in de XML.
  *
  * De identifier is de proces-id, dezelfde als van het bpmn-artefact; de soort
  * onderscheidt ze. De activityId's zijn de id's die de BPMN-schrijver in de
@@ -25,6 +30,7 @@
  * en payloadHash = sha256 over JCS. Puur op de hashfunctie na.
  */
 import { jcsHash } from "../../transformatie/jcs.js";
+import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
 import { schrijfBpmn } from "../../transformatie/bpmnXmlSchrijver.js";
 import { ENGINES } from "./bpmnArtefact.js";
 
@@ -32,6 +38,75 @@ export const SCHRIJVER_ID = "gzac-process-link-schrijver@0.1.0";
 export const SOORT = "proceskoppeling";
 
 const meld = (severity, code, message, sourceId = null) => ({ severity, code, message, sourceId, path: null });
+
+/** Het zaaktype waar een proces op draait: genoemd bij het bpmn-artefact, anders het enige zaaktype van de e-dienst. */
+function zaaktypeVan(proces, artefacten) {
+  const alle = artefacten.filter((a) => a.soort === "zaaktype");
+  if (proces.zaaktype) return alle.find((a) => a.identifier === proces.zaaktype) || null;
+  return alle.length === 1 ? alle[0] : null;
+}
+
+/** Vul `{zaaktype}`, `{volgnummer}` en `{toelichting}` in; `${…}` en `pv:…` blijven staan. Leeg = weglaten. */
+function vulEigenschappen(sjabloon, waarden) {
+  const uit = {};
+  for (const [k, v] of Object.entries(sjabloon)) {
+    const w = Object.entries(waarden).reduce((t, [naam, waarde]) => t.split(`{${naam}}`).join(String(waarde ?? "")), String(v));
+    if (w !== "") uit[k] = w;
+  }
+  return uit;
+}
+
+/**
+ * De plugin-koppeling van een servicetaak met een actie, of null met een
+ * melding als de actie of zijn rol/status niet klopt.
+ */
+function pluginKoppeling({ el, activityId, regels, proces, artefacten, diagnostics }) {
+  const regel = regels.acties?.[el.data.actie];
+  if (!regel) {
+    diagnostics.push(meld("error", "PL-ACTIE", `Servicetaak "${el.naam}": de regelset kent de actie "${el.data.actie}" niet`, el.id));
+    return null;
+  }
+  const zaaktype = zaaktypeVan(proces, artefacten);
+  const waarden = { zaaktype: zaaktype?.identifier || "", volgnummer: "", toelichting: el.data.actieToelichting || "" };
+  const doel = el.data.actieDoel;
+  if (regel.doel) {
+    if (!zaaktype) {
+      diagnostics.push(meld("error", "PL-ZAAKTYPE", `Servicetaak "${el.naam}": de e-dienst heeft niet precies één zaaktype; noem het bij het bpmn-artefact (zaaktype)`, el.id));
+      return null;
+    }
+    if (!doel) {
+      diagnostics.push(meld("error", regel.doel.soort === "rol" ? "PL-ROL" : "PL-STATUS", `Servicetaak "${el.naam}": de actie "${el.data.actie}" noemt geen ${regel.doel.soort}`, el.id));
+      return null;
+    }
+    if (regel.doel.soort === "rol") {
+      const rol = (zaaktype.zaaktype?.roltypen || []).find((r) => r.omschrijving === doel);
+      if (!rol) {
+        diagnostics.push(meld("error", "PL-ROL", `Servicetaak "${el.naam}": zaaktype ${zaaktype.identifier} kent geen roltype "${doel}"`, el.id));
+        return null;
+      }
+      if (regel.doel.alleenGeneriek && rol.omschrijvingGeneriek !== regel.doel.alleenGeneriek) {
+        diagnostics.push(meld("warning", "PL-ROL", `Servicetaak "${el.naam}": de regelset koppelt alleen de rol "${regel.doel.alleenGeneriek}"; "${doel}" (${rol.omschrijvingGeneriek}) krijgt geen koppeling`, el.id));
+        return null;
+      }
+    } else {
+      const i = (zaaktype.zaaktype?.statustypen || []).findIndex((s) => s.omschrijving === doel);
+      if (i < 0) {
+        diagnostics.push(meld("error", "PL-STATUS", `Servicetaak "${el.naam}": zaaktype ${zaaktype.identifier} kent geen statustype "${doel}"`, el.id));
+        return null;
+      }
+      waarden.volgnummer = i + 1; // het statustypevolgnummer volgt de volgorde in de e-dienst (zaaktype-regelset)
+    }
+  }
+  return {
+    activityId,
+    ...regels.voor,
+    pluginConfigurationId: regels.configuratie,
+    pluginDefinitionKey: regels.definitie,
+    pluginActionDefinitionKey: regel.actie,
+    actionProperties: vulEigenschappen(regel.eigenschappen, waarden),
+    ...regels.na,
+  };
+}
 
 /**
  * @param {Object} invoer
@@ -68,7 +143,20 @@ export async function maakProcesLinkArtefact({ modelBestand, edienst, identifier
   const payload = [];
   for (const knoop of diagram.nodes || []) {
     const el = model.elements?.[knoop.elementId];
-    if (el?.elementType !== "taak" || el.data?.taakSoort !== "user") continue;
+    if (el?.elementType !== "taak") continue;
+    if (el.data?.taakSoort === "service") {
+      if (!el.data.actie) {
+        // Een taak die alleen de dossierstatus zet, doet dat in de XML.
+        if (!el.data.dossierstatus) diagnostics.push(meld("warning", "PL-ACTIE", `Servicetaak "${el.naam}" heeft geen actie; de engine voert hem uit zonder iets te doen`, el.id));
+        continue;
+      }
+      const koppeling = pluginKoppeling({ el, activityId: ids.get(el.id), regels: regels.plugin, proces, artefacten, diagnostics });
+      if (!koppeling) continue;
+      traceregels.push({ bronGE: el.id, regel: `Servicetaak met actie ${el.data.actie} → plugin-koppeling`, doelPad: `/${payload.length}`, actie: "aangemaakt" });
+      payload.push(koppeling);
+      continue;
+    }
+    if (el.data?.taakSoort !== "user") continue;
     const formulier = el.data?.formulier;
     if (!formulier) {
       diagnostics.push(meld("warning", "PL-FORMULIER", `Gebruikerstaak "${el.naam}" heeft geen formulier; de behandelaar kan de taak dan alleen zonder invoer afronden`, el.id));
@@ -102,9 +190,7 @@ export async function maakProcesLinkArtefact({ modelBestand, edienst, identifier
     edienstversie: { edienst: edienst?.edienst?.naam, versienummer: edienst?.edienst?.versienummer },
     doelcomponent: keuzes.doelcomponent,
     // Zelfde identifier als het bpmn-artefact: alleen afhankelijkheden die deze soort noemen.
-    afhankelijkheden: (edienst?.afhankelijkheden || [])
-      .filter((a) => a.artefact === keuzes.identifier && a.soort === keuzes.soort)
-      .map((a) => ({ identifier: a.afhankelijkVan, ...(a.afhankelijkVanSoort ? { soort: a.afhankelijkVanSoort } : {}), reden: a.reden })),
+    afhankelijkheden: afhankelijkhedenVan(edienst, keuzes, { alleenMetSoort: true }),
   };
   return { artefact, diagnostics };
 }

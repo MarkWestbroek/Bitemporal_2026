@@ -2,7 +2,7 @@
 /**
  * dossierRegels — de **regelset** "canoniek model + e-dienst → GZAC-
  * dossierbundel" voor de inrichting van e-diensten (docs/TRANSFORMATIES.md
- * §11.9). Zeven artefactsoorten, elk één bestand uit de dossierbundel van GZAC
+ * §11.9). Acht artefactsoorten, elk één bestand uit de dossierbundel van GZAC
  * (Valtimo):
  *
  * - `dossierdefinitie` (gzac-case-definition-json): de wortel van de bundel:
@@ -28,6 +28,11 @@
  *   het dossier horen: elk bpmn-artefact van de e-dienst.
  * - `dossierdocumentkolommen` (gzac-zgw-document-list-column-json): de kolommen
  *   van het documentenoverzicht; generiek, een sjabloon uit deze regelset.
+ * - `dossierstatussen` (gzac-internal-case-status-json): de statussen van het
+ *   dossier. Dat zijn waarden uit een statuslijst van het canonieke model (de
+ *   e-dienst noemt de lijst): standaard de waarden die een taak in een proces
+ *   van de e-dienst zet. Kleur en zichtbaarheid zijn vormgeving en komen uit
+ *   deze regelset of de e-dienst.
  *
  * Wat waar vandaan komt: type, enum, beschrijving en lengte uit het model (via
  * het objecttype-artefact en zijn traceregels); welke velden, hun volgorde, de
@@ -37,8 +42,8 @@
 
 export const CANONIEK_NAAR_DOSSIER = {
   id: "canoniek-naar-gzac-dossier",
-  versie: "0.3.0",
-  titel: "Canoniek model + e-dienst → GZAC-dossierbundel (definitie, documentdefinitie, form.io, tabbladen, zaaktypekoppeling, processen, documentkolommen)",
+  versie: "0.4.0",
+  titel: "Canoniek model + e-dienst → GZAC-dossierbundel (definitie, documentdefinitie, form.io, tabbladen, zaaktypekoppeling, processen, documentkolommen, statussen)",
   bron: "objecttype-artefact (uit canoniek-uml V3) + e-dienst",
   doel: "gzac-dossierbundel",
 
@@ -47,7 +52,8 @@ export const CANONIEK_NAAR_DOSSIER = {
   // document-definition.json, case/tab/<id>.case-tab.json,
   // zgw/zaak-type-link/<id>.zaak-type-link.json, case/definition/<id>.
   // case-definition.json, process-document-link/<id>.process-document-link.json,
-  // zgw/document-list-column/<id>.zgw-document-list-column.json. De identifier
+  // zgw/document-list-column/<id>.zgw-document-list-column.json,
+  // case/internal-status/<id>.internal-case-status.json. De identifier
   // van die delen is dus de key van het dossier; alleen een dossierformulier
   // heeft een eigen identifier.
 
@@ -63,6 +69,16 @@ export const CANONIEK_NAAR_DOSSIER = {
    * de hand.
    */
   processen: { canInitializeDocument: false, startableByUser: false },
+
+  /**
+   * Dossierstatus: de sleutel in GZAC is de waarde uit het model met
+   * koppeltekens (`sleutel.js`), de titel komt uit de naam van de waarde. Wat
+   * de e-dienst niet zegt: de status is zichtbaar in de dossierlijst, in grijs.
+   * `vast` zijn de velden die GZAC zelf invult (geen bewaartermijn, geen
+   * label); we leveren ze mee, zodat een uitrol zonder wijziging "ongewijzigd"
+   * meldt (FUNDAMENT 05-11).
+   */
+  statussen: { zichtbaarInLijst: true, kleur: "WARMGRAY", vast: { retentionPeriodInDays: -1, label: null } },
 
   /** De kolommen van het documentenoverzicht (ZGW-documenten), nieuwste bovenaan. */
   documentkolommen: [

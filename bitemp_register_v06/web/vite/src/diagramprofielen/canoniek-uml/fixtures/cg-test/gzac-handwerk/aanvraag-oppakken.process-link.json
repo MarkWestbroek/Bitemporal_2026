@@ -1,0 +1,46 @@
+[
+  {
+    "activityId": "zaak-aanmaken",
+    "activityType": "bpmn:ServiceTask:start",
+    "processLinkType": "plugin",
+    "pluginConfigurationId": "00000000-0000-0000-0000-000000000000",
+    "pluginActionDefinitionKey": "create-zaak",
+    "actionProperties": {
+      "rsin": "pv:RSIN",
+      "zaaktypeUrl": "pv:zaakTypeUrl"
+    }
+  },
+  {
+    "activityId": "rol-aanvrager-aanmaken",
+    "activityType": "bpmn:ServiceTask:start",
+    "processLinkType": "plugin",
+    "pluginConfigurationId": "00000000-0000-0000-0000-000000000000",
+    "pluginActionDefinitionKey": "create-natuurlijk-persoon-zaak-rol",
+    "actionProperties": {
+      "roltypeUrl": "pv:rolTypeUrl",
+      "rolToelichting": "pv:rolDescription",
+      "inpBsn": "pv:initiatorValue"
+    }
+  },
+  {
+    "activityId": "document-koppelen",
+    "activityType": "bpmn:ServiceTask:start",
+    "processLinkType": "plugin",
+    "pluginConfigurationId": "00000000-0000-0000-0000-000000000000",
+    "pluginActionDefinitionKey": "link-document-to-zaak",
+    "actionProperties": {
+      "documentUrl": "pv:documentUrl"
+    }
+  },
+  {
+    "activityId": "status-ontvangen",
+    "activityType": "bpmn:ServiceTask:start",
+    "processLinkType": "plugin",
+    "pluginConfigurationId": "00000000-0000-0000-0000-000000000000",
+    "pluginActionDefinitionKey": "set-zaakstatus",
+    "actionProperties": {
+      "statustypeUrl": "${STATUSTYPE_URL:GPK:1}",
+      "statustoelichting": "Aanvraag ontvangen uit het aanvraagregister"
+    }
+  }
+]

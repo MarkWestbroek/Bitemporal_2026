@@ -44,7 +44,48 @@ test("de activityId is de id die de BPMN-schrijver in de XML zet", async () => {
   const bpmn = await maakBpmnArtefact({ modelBestand: lees("gpk-processen.bpmn-model.json"), edienst: lees("gpk-edienst.json"), identifier: "gehandicaptenparkeerkaart-beoordelen", sha256Hex });
   assert.match(bpmn.artefact.artefactInhoud.payload, new RegExp(`<bpmn:userTask id="${artefact.artefactInhoud.payload[0].activityId}"`));
   // Het bpmn-artefact neemt de afhankelijkheden van de proceskoppeling niet over.
-  assert.deepEqual(bpmn.artefact.afhankelijkheden.map((a) => a.identifier), ["GPK"]);
+  assert.deepEqual(bpmn.artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierdefinitie"], ["GPK", "zaaktype"]]);
+});
+
+// Servicetaken (Mark 05-11): het model zegt wat een taak doet; de regelset maakt er de
+// plugin-koppeling van. Was handwerk bij FUNDAMENT.
+test("oppakken: vier servicetaken met een actie, gelijk aan het handwerk plus wat GZAC zelf teruggeeft", async () => {
+  const { artefact, diagnostics } = await maak("aanvraag-oppakken");
+  assert.deepEqual(diagnostics, []);
+  const handwerk = lees("gzac-handwerk/aanvraag-oppakken.process-link.json");
+  // Het handwerk had de vaste uuid van de pluginconfiguratie op cg-test; de uitrol vult de plaatshouder in.
+  // referenceType, pluginDefinitionKey en actionResultMappings geeft GZAC zelf terug (FUNDAMENT 05-11).
+  const verwacht = handwerk.map((k) => ({ ...k, pluginConfigurationId: "${PLUGINCONFIG_ID:zakenapi}", referenceType: "FIXED", pluginDefinitionKey: "zakenapi", actionResultMappings: [] }));
+  assert.deepEqual(artefact.artefactInhoud.payload, verwacht);
+  assert.deepEqual(artefact.artefactInhoud.payload.map((k) => [k.activityId, k.pluginActionDefinitionKey]), [
+    ["zaak-aanmaken", "create-zaak"],
+    ["rol-aanvrager-aanmaken", "create-natuurlijk-persoon-zaak-rol"],
+    ["document-koppelen", "link-document-to-zaak"],
+    ["status-ontvangen", "set-zaakstatus"],
+  ]);
+  // "Ontvangen" is het eerste statustype van zaaktype GPK in de e-dienst.
+  assert.equal(artefact.artefactInhoud.payload[3].actionProperties.statustypeUrl, "${STATUSTYPE_URL:GPK:1}");
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["aanvraag-oppakken", "bpmn"], ["GPK", "zaaktype"]]);
+  assert.deepEqual(artefact.traceregels.map((t) => t.bronGE), ["bp_zaak_aanmaken", "bp_rol_aanvrager_aanmaken", "bp_document_koppelen", "bp_status_ontvangen"]);
+});
+
+test("toetsen op een actie: onbekende status, onbekende rol, andere rol dan de initiator, taak zonder actie", async () => {
+  const codes = async (wijzig) => (await maak("aanvraag-oppakken", wijzig)).diagnostics.map((d) => [d.severity, d.code]);
+  assert.deepEqual(await codes((m) => (m.elements.bp_status_ontvangen.data.actieDoel = "Bestaat niet")), [["error", "PL-STATUS"]]);
+  assert.deepEqual(await codes((m) => delete m.elements.bp_status_ontvangen.data.actieDoel), [["error", "PL-STATUS"]]);
+  assert.deepEqual(await codes((m) => (m.elements.bp_rol_aanvrager_aanmaken.data.actieDoel = "Bestaat niet")), [["error", "PL-ROL"]]);
+  assert.deepEqual(
+    await codes((m, e) => {
+      e.artefacten.find((a) => a.soort === "zaaktype").zaaktype.roltypen.push({ omschrijving: "Behandelaar", omschrijvingGeneriek: "behandelaar" });
+      m.elements.bp_rol_aanvrager_aanmaken.data.actieDoel = "Behandelaar";
+    }),
+    [["warning", "PL-ROL"]],
+  );
+  assert.deepEqual(await codes((m) => delete m.elements.bp_zaak_aanmaken.data.actie), [["warning", "PL-ACTIE"]]);
+  assert.deepEqual(await codes((m) => (m.elements.bp_zaak_aanmaken.data.actie = "ietsAnders")), [["error", "PL-ACTIE"]]);
+  // De taak die alleen de dossierstatus zet, heeft geen actie nodig en krijgt geen koppeling.
+  const { artefact } = await maak("aanvraag-oppakken");
+  assert.ok(!artefact.artefactInhoud.payload.some((k) => k.activityId === "status-niet-opgepakt"));
 });
 
 test("toetsen: taak zonder formulier, onbekend formulier, geen bpmn-artefact", async () => {
