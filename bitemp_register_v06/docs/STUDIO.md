@@ -1147,6 +1147,17 @@ fase 2 een **bewerkbare sandbox**:
   voorwaarde "links · teken · rechts"); de motor tekent ze. Wat alleen de host weet (de naam van
   een element in een ander profiel, `instantieVan`) vraagt de tekenaar via `tekenaar/host.js`,
   dat de Studio registreert in `studio/elementVerwijzing.jsx`; de server krijgt `null`.
+  **Lijnen (05-11):** de tekenaar (`tekenaar/lijnen.js`) bepaalt de lijngeometrie met dezelfde
+  bouwstenen als `ConnectorEdge.jsx`: `zwevendeRand.zwevendeUiteinden` voor de uiteinden (vaste
+  handles op de buitenkant van de handle-stip — 5 px, op een punt-node 12,5 px —, zwevend,
+  toppen, knikken, de Z-regel), de React Flow-padfuncties (`@xyflow/system`) voor bezier,
+  hoekig (smoothstep, radius 4) en recht, en eigen spiegelingen van `lusPad`, `boomPad` en
+  `knikPad`; markers met de canvas-maten en `markerUnits="strokeWidth"`, de ruit als polygon,
+  labels als chip op het labelpunt (bron/doel op 70 %). Wat je in de Studio aan een lijn doet
+  (omweg via knikken, lijnvorm uit het contextmenu, vaste handle, lus) rendert de server dus
+  identiek; de proef `naast-elkaar.mjs` vergelijkt de `d`-paden van canvas en render per
+  connector (65 lijnen in tien diagrammen gelijk op 0,5 px; alleen sequence-berichten wijken
+  af door de afgeleide activaties). Pas `ConnectorEdge` en `lijnen.js` samen aan.
 - **Inline hernoemen** (2026-10-07): **F2** op de geselecteerde node, of
   **dubbelklik** op een node zonder gedragsverwijzing, opent een naamveld óp
   de vorm (bovenaan bij compartiment-vormen, gecentreerd bij de rest, onder

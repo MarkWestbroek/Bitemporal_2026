@@ -95,14 +95,16 @@ test("lijnen: markers in defs, verborgen en genest-verborgen lijnen weg, knikken
   const svg = diagramSvg(invoer);
   assert.match(svg, /<marker id="p-pijl-open-[a-z0-9]+" /);
   assert.match(svg, /<marker id="p-driehoek-[a-z0-9]+" /);
-  assert.match(svg, /<marker id="p-ruit-[a-z0-9]+-s" [^>]*orient="auto-start-reverse"/);
+  assert.match(svg, /<marker id="p-pijl-open-[a-z0-9]+" markerWidth="12" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth"/, "maten en eenheden als het canvas");
+  assert.match(svg, /data-connector-id="c4"[^>]*marker-end="url\(#p-pijl-open-[a-z0-9]+\)"[^>]*\/><polygon points="[^"]+" fill="[^"]+" stroke=/, "de ruit als polygon op het begin van de lijn, zoals het canvas");
   assert.doesNotMatch(svg, /data-connector-id="c7"/, "verborgen connector");
   assert.doesNotMatch(svg, /data-connector-id="c3"/, "lid ín zijn kader: lidmaatschapslijn weg");
   assert.match(svg, /data-connector-id="c4" d="M [\d.-]+ [\d.-]+ L 60 300 L /, "knik");
-  assert.match(svg, /data-connector-id="c5" d="M [\d.-]+ [\d.-]+ L [\d.-]+ [\d.-]+ L [\d.-]+ [\d.-]+ L [\d.-]+ [\d.-]+ L /, "zelf-lus als oortje");
+  assert.match(svg, /data-connector-id="c5" d="M [\d.-]+ [\d.-]+ L [\d.-]+ [\d.-]+ L [\d.-]+ [\d.-]+ L [\d.-]+ [\d.-]+ L /, "zelf-lus als hoekig oortje boven → rechts (ConnectorEdge.lusPad)");
   assert.match(svg, />0\.\.\*</, "kardinaliteit bij het doel");
   assert.match(svg, /data-dc-veld="connector:c1:naam"[^>]*>heeft</);
-  assert.match(svg, /data-connector-id="c2" d="M [\d.-]+ [\d.-]+ L [\d.-]+ [\d.-]+ L /, "hoekig");
+  assert.match(svg, /data-connector-id="c2" d="M[\d.-]+ [\d.-]+L[^"]*Q[^"]*"/, "hoekig = React Flow smoothstep met ronde hoeken, zoals het canvas");
+  assert.match(svg, /<rect [^>]*rx="4" fill="var\(--diagram-surface, #ffffff\)" fill-opacity="0.9"[^>]*\/><text [^>]*data-dc-veld="connector:c1:naam"/, "label als chip");
 });
 
 test("buitenlabel onder een vorm zonder inhoudsvak; kader met eigen kleur; thema-tokens voor de rest", () => {

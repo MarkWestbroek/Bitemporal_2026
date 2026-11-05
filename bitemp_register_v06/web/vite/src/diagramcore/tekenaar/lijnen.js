@@ -1,134 +1,193 @@
 // @ts-check
 /**
- * lijnen — de connectoren van een diagram als SVG. De gedaanten en de presentatie komen uit
- * `canvas/materialiseerConnectoren.js` (puur; dezelfde code als het canvas): kaal of
- * gematerialiseerd (anker + box), handles, knikken, labels, `verbergBijNesting`, verborgen
- * connectoren, meerdere voorkomens. Hier wordt alleen de geometrie bepaald:
+ * lijnen — de connectoren van een diagram als SVG, **zoals het canvas ze tekent**. De gedaanten
+ * en de presentatie komen uit `canvas/materialiseerConnectoren.js` (puur; dezelfde code als het
+ * canvas): kaal of gematerialiseerd (anker + box), handles, knikken, labels, `verbergBijNesting`,
+ * verborgen connectoren, meerdere voorkomens. Hier wordt alleen de geometrie bepaald, met
+ * dezelfde bouwstenen als `canvas/ConnectorEdge.jsx` (sinds 05-11; daarvóór had de tekenaar een
+ * eigen "rand tot rand"-regel uit diagramsvg, en week een rechte of gebogen lijn tussen twee
+ * schuin geplaatste dozen zichtbaar af van de Studio):
  *
- *   - een uiteinde met een gekozen handle (of een vorm met "toppen") hecht aan op het midden van
- *     die zijde; anders op het snijpunt van de rand met de lijn naar de overkant ("rand tot
- *     rand", zoals diagramsvg);
- *   - knikken (ctrl-klik op het canvas, EA-import) worden een polylijn;
- *   - `vorm`: "recht", "hoekig" (orthogonaal; zonder gekozen handles en knikken met dezelfde
- *     regel als het canvas, `zwevendeRand.orthogonaleUiteinden`: recht boven of naast elkaar
- *     één rechte lijn, anders beide uiteinden op de zijde van de dominante as en een Z — tot
- *     05-11 kwam de zijde uit de handle en het punt uit het snijpunt met de rand, en die twee
- *     spraken elkaar tegen bij een doos schuin boven de ander: de lijn liep dan langs de rand),
- *     anders een bezier;
- *   - een zelf-lus is het oortje van boven naar rechts.
+ *   - de uiteinden via `zwevendeRand.zwevendeUiteinden`: een vaste handle (gekozen, of de
+ *     dichtstbijzijnde zijde uit materialiseerConnectoren) op het midden van die zijde; een
+ *     zwevend uiteinde (ElementType.randAanhechting) op de dominante zijde, geschoven langs die
+ *     zijde; toppen; hoekig zonder knikken "zo recht mogelijk" (Z-regel, Mark 05-11); met
+ *     knikken mikt elk uiteinde op zijn knik;
+ *   - het pad met de padfuncties van React Flow (`@xyflow/system`): bezier, hoekig
+ *     (smoothstep, radius 4), recht; knikken als polylijn; boom (EA tree style: dwarslat op 40
+ *     van de ouder); een zelf-lus als oortje langs de handles (hoekig of gebogen, 56 uit);
+ *   - markers met dezelfde maten en `markerUnits="strokeWidth"` als het canvas; de ruit van
+ *     compositie/aggregatie als polygon op het begin van de lijn;
+ *   - labels als chip (achtergrond, rand) op het labelpunt van de padfunctie; bron- en
+ *     doellabels op 70% richting dat uiteinde (zelfde heuristiek als het canvas).
  *
- * Markers staan één keer in `<defs>` per soort en kleur; de start-variant is dezelfde vorm met
- * `orient="auto-start-reverse"`. Puur en deterministisch.
+ * Puur en deterministisch; markers staan één keer in `<defs>` per soort en kleur.
  */
+import { getBezierPath, getSmoothStepPath, getStraightPath } from "@xyflow/system";
 import { vorm } from "../types/shapeType.js";
 import { num } from "../../diagramsvg/svg.js";
 import { veiligeKleur } from "../../diagramsvg/thema.js";
 import { tekstBreedte } from "../../diagramsvg/tekstmaat.js";
-import { normaliseerHandle } from "../canvas/materialiseerConnectoren.js";
-import { orthogonaleUiteinden } from "../canvas/zwevendeRand.js";
+import { zwevendeUiteinden } from "../canvas/zwevendeRand.js";
+import { isPuntNode } from "./voorkomen.js";
 
 const DASHES = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4", gestippeld: "2 3" };
 /** Vaste slate-tinten van profielen (gekozen voor een wit canvas) → de randkleur van het thema. */
 const SLATE = new Set(["#1f2937", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1"]);
 const LABEL = 10;
-
-const zijdeVan = (handle) => (handle || "").replace(/^(source|target)-/, "");
+const CHIP_H = 16;
+const LUS_UIT = 56;
+const BOOM_LAT = 40;
+const RUIT_LENGTE = 22;
+const RUIT_BREEDTE = 16;
 const UIT = { top: { x: 0, y: -1 }, bottom: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } };
 
-function zijdeMidden(box, zijde) {
+const zijdeVan = (handle) => (handle || "").replace(/^(source|target)-/, "");
+
+/**
+ * Het punt van een vaste handle: midden van de zijde, een stukje buiten de doos — React Flow laat
+ * een lijn beginnen op de buitenkant van de handle-stip (8 px + rand, gecentreerd op de rand: 5);
+ * op een punt-node liggen de stippen 8 px naar buiten (diagramcore.css `.dc-punt-node`: 12,5).
+ */
+const HANDLE_UIT = 5;
+const HANDLE_UIT_PUNT = 12.5;
+function handlePunt(box, zijde) {
   const { x, y, w, h } = box;
-  if (zijde === "top") return { x: x + w / 2, y };
-  if (zijde === "bottom") return { x: x + w / 2, y: y + h };
-  if (zijde === "left") return { x, y: y + h / 2 };
-  return { x: x + w, y: y + h / 2 };
+  const uit = isPuntNode(box.ctx?.shapeType, box.et) ? HANDLE_UIT_PUNT : HANDLE_UIT;
+  if (zijde === "top") return { x: x + w / 2, y: y - uit };
+  if (zijde === "bottom") return { x: x + w / 2, y: y + h + uit };
+  if (zijde === "left") return { x: x - uit, y: y + h / 2 };
+  return { x: x + w + uit, y: y + h / 2 };
 }
 
-/** Snijpunt van de rand met de lijn uit het midden naar (px, py); via de renderer als die een rand kent. */
-function randPunt(box, px, py) {
-  const cx = box.x + box.w / 2;
-  const cy = box.y + box.h / 2;
-  const dx = px - cx;
-  const dy = py - cy;
-  if (!dx && !dy) return { x: cx, y: cy };
-  if (box.rand) {
-    const hoek = (Math.atan2(dy, dx) * 180) / Math.PI;
-    const p = box.rand(hoek);
-    return { x: box.x + p.x, y: box.y + p.y };
-  }
-  const sx = dx ? box.w / 2 / Math.abs(dx) : Infinity;
-  const sy = dy ? box.h / 2 / Math.abs(dy) : Infinity;
-  const s = Math.min(sx, sy);
-  return { x: cx + dx * s, y: cy + dy * s };
+const padVan = (pts) => pts.map((q, i) => `${i ? "L" : "M"} ${num(q.x)} ${num(q.y)}`).join(" ");
+
+/** Alle coördinaten uit een pad (M/L/Q/C), voor de omvang van het diagram. */
+function padPunten(d) {
+  const getallen = (d.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+  const pts = [];
+  for (let i = 0; i + 1 < getallen.length; i += 2) pts.push({ x: getallen[i], y: getallen[i + 1] });
+  return pts;
 }
 
-const midden = (b) => ({ x: b.x + b.w / 2, y: b.y + b.h / 2 });
-
-function padTekst(pts) {
-  return pts.map((p, i) => `${i ? "L" : "M"} ${num(p.x)} ${num(p.y)}`).join(" ");
-}
-
-/** Punt op de helft van een polylijn. */
-function halverwege(pts) {
-  let totaal = 0;
-  const lengtes = [];
-  for (let i = 1; i < pts.length; i++) {
-    const l = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
-    lengtes.push(l);
-    totaal += l;
-  }
-  let rest = totaal / 2;
-  for (let i = 1; i < pts.length; i++) {
-    if (rest <= lengtes[i - 1] || i === pts.length - 1) {
-      const t = lengtes[i - 1] ? rest / lengtes[i - 1] : 0;
-      return { x: pts[i - 1].x + (pts[i].x - pts[i - 1].x) * t, y: pts[i - 1].y + (pts[i].y - pts[i - 1].y) * t };
+/** Zelf-lus: het oortje van ConnectorEdge.lusPad — hoekig buitenom, anders gebogen. */
+function lusPad(u, hoekig) {
+  const nS = UIT[u.sourcePosition] || UIT.right;
+  const nT = UIT[u.targetPosition] || UIT.right;
+  const L = LUS_UIT;
+  const s = { x: u.sourceX, y: u.sourceY };
+  const t = { x: u.targetX, y: u.targetY };
+  if (hoekig) {
+    const p1 = { x: s.x + nS.x * L, y: s.y + nS.y * L };
+    const p2 = { x: t.x + nT.x * L, y: t.y + nT.y * L };
+    const sVert = nS.x === 0;
+    const tVert = nT.x === 0;
+    let pts = null;
+    if (sVert !== tVert) {
+      pts = [p1, sVert ? { x: p2.x, y: p1.y } : { x: p1.x, y: p2.y }, p2];
+    } else if (nS.x === nT.x && nS.y === nT.y) {
+      const d = { x: -nS.y, y: nS.x };
+      if (Math.abs(s.x - t.x) < 1 && Math.abs(s.y - t.y) < 1) {
+        pts = [p1, { x: p1.x + d.x * 34, y: p1.y + d.y * 34 }, { x: s.x + d.x * 34, y: s.y + d.y * 34 }];
+      } else if (sVert) {
+        const yUit = nS.y < 0 ? Math.min(p1.y, p2.y) : Math.max(p1.y, p2.y);
+        pts = [{ x: s.x, y: yUit }, { x: t.x, y: yUit }];
+      } else {
+        const xUit = nS.x < 0 ? Math.min(p1.x, p2.x) : Math.max(p1.x, p2.x);
+        pts = [{ x: xUit, y: s.y }, { x: xUit, y: t.y }];
+      }
     }
-    rest -= lengtes[i - 1];
+    if (pts) {
+      const apex = pts[Math.floor((pts.length - 1) / 2)];
+      return [padVan([s, ...pts, t]), apex.x, apex.y];
+    }
   }
-  return pts[0];
+  let c1 = { x: s.x + nS.x * L, y: s.y + nS.y * L };
+  let c2 = { x: t.x + nT.x * L, y: t.y + nT.y * L };
+  if (Math.abs(c1.x - c2.x) < 8 && Math.abs(c1.y - c2.y) < 8) {
+    const d = { x: -nS.y, y: nS.x };
+    c1 = { x: c1.x + d.x * 34, y: c1.y + d.y * 34 };
+    c2 = { x: c2.x - d.x * 34, y: c2.y - d.y * 34 };
+  }
+  return [`M ${num(s.x)} ${num(s.y)} C ${num(c1.x)} ${num(c1.y)}, ${num(c2.x)} ${num(c2.y)}, ${num(t.x)} ${num(t.y)}`, (c1.x + c2.x) / 2, (c1.y + c2.y) / 2];
 }
 
-/** Orthogonaal pad tussen twee uiteinden, langs hun zijden (EA Auto Routing in het klein). */
-function hoekigPad(p0, zA, p1, zB) {
-  const a = { x: p0.x + UIT[zA].x * 12, y: p0.y + UIT[zA].y * 12 };
-  const b = { x: p1.x + UIT[zB].x * 12, y: p1.y + UIT[zB].y * 12 };
-  const horA = zA === "left" || zA === "right";
-  const horB = zB === "left" || zB === "right";
-  if (horA && horB) {
-    const mx = (a.x + b.x) / 2;
-    return [p0, a, { x: mx, y: a.y }, { x: mx, y: b.y }, b, p1];
+/** Boomstijl: korte stam, één dwarslat op vaste afstand van de ouder, rechte poot per kind. */
+function boomPad(u) {
+  const { sourceX, sourceY, targetX, targetY, sourcePosition } = u;
+  if (sourcePosition === "left" || sourcePosition === "right") {
+    const latX = sourceX + (sourcePosition === "right" ? BOOM_LAT : -BOOM_LAT);
+    return [padVan([{ x: sourceX, y: sourceY }, { x: latX, y: sourceY }, { x: latX, y: targetY }, { x: targetX, y: targetY }]), latX, (sourceY + targetY) / 2];
   }
-  if (!horA && !horB) {
-    const my = (a.y + b.y) / 2;
-    return [p0, a, { x: a.x, y: my }, { x: b.x, y: my }, b, p1];
-  }
-  return horA ? [p0, a, { x: b.x, y: a.y }, b, p1] : [p0, a, { x: a.x, y: b.y }, b, p1];
+  const latY = sourceY + (sourcePosition === "top" ? -BOOM_LAT : BOOM_LAT);
+  return [padVan([{ x: sourceX, y: sourceY }, { x: sourceX, y: latY }, { x: targetX, y: latY }, { x: targetX, y: targetY }]), (sourceX + targetX) / 2, latY];
 }
 
-/** Marker-vorm, tekenend naar +x met de punt op refX. Geeft {w, h, refX, inhoud(kleur, vulling)}. */
-const MARKERS = {
-  "pijl-open": { w: 12, h: 10, refX: 10, inhoud: (k) => vorm("path", { d: "M 1 1 L 10 5 L 1 9", fill: "none", stroke: k, "stroke-width": 1.2 }) },
-  "pijl-dicht": { w: 12, h: 12, refX: 11, inhoud: (k) => vorm("path", { d: "M 1 1.5 L 11 6 L 1 10.5 Z", fill: k }) },
-  pijl: { w: 12, h: 12, refX: 11, inhoud: (k) => vorm("path", { d: "M 1 1.5 L 11 6 L 1 10.5 Z", fill: k }) },
-  driehoek: { w: 14, h: 14, refX: 13, inhoud: (k, v) => vorm("path", { d: "M 1 1 L 13 7 L 1 13 Z", fill: v, stroke: k, "stroke-width": 1.2 }) },
-  ruit: { w: 16, h: 14, refX: 15, inhoud: (k) => vorm("path", { d: "M 1 7 L 8 1 L 15 7 L 8 13 Z", fill: k }) },
-  "ruit-open": { w: 16, h: 14, refX: 15, inhoud: (k, v) => vorm("path", { d: "M 1 7 L 8 1 L 15 7 L 8 13 Z", fill: v, stroke: k, "stroke-width": 1.2 }) },
-  bol: { w: 14, h: 14, refX: 12, inhoud: (k) => vorm("circle", { cx: 7, cy: 7, r: 5, fill: k }) },
-  "cirkel-open": { w: 14, h: 14, refX: 12, inhoud: (k, v) => vorm("circle", { cx: 7, cy: 7, r: 5, fill: v, stroke: k, "stroke-width": 1.2 }) },
-  kruisje: { w: 12, h: 12, refX: 10, inhoud: (k) => vorm("path", { d: "M 2 2 L 10 10 M 10 2 L 2 10", fill: "none", stroke: k, "stroke-width": 1.4 }) },
-  "kruis-cirkel": { w: 16, h: 16, refX: 14, inhoud: (k, v) => vorm("g", {}, vorm("circle", { cx: 8, cy: 8, r: 6, fill: v, stroke: k, "stroke-width": 1.2 }), vorm("path", { d: "M 4 4 L 12 12 M 12 4 L 4 12", fill: "none", stroke: k, "stroke-width": 1.2 })) },
-  "schuine-streep": { w: 12, h: 14, refX: 6, inhoud: (k) => vorm("path", { d: "M 3 1 L 9 13", fill: "none", stroke: k, "stroke-width": 1.4 }) },
-  "kraai-een": { w: 22, h: 14, refX: 21, inhoud: (k) => vorm("path", { d: "M 20 1.5 L 20 12.5 M 15 1.5 L 15 12.5", fill: "none", stroke: k, "stroke-width": 1.2 }) },
-  "kraai-nul-of-een": { w: 22, h: 14, refX: 21, inhoud: (k, v) => vorm("g", {}, vorm("path", { d: "M 20 1.5 L 20 12.5", fill: "none", stroke: k, "stroke-width": 1.2 }), vorm("circle", { cx: 14, cy: 7, r: 3.2, fill: v, stroke: k, "stroke-width": 1.2 })) },
-  "kraai-een-of-meer": { w: 22, h: 14, refX: 21, inhoud: (k) => vorm("path", { d: "M 12 7 L 21 1.5 M 12 7 L 21 7 M 12 7 L 21 12.5 M 9 1.5 L 9 12.5", fill: "none", stroke: k, "stroke-width": 1.2 }) },
-  "kraai-nul-of-meer": { w: 22, h: 14, refX: 21, inhoud: (k, v) => vorm("g", {}, vorm("path", { d: "M 12 7 L 21 1.5 M 12 7 L 21 7 M 12 7 L 21 12.5", fill: "none", stroke: k, "stroke-width": 1.2 }), vorm("circle", { cx: 8, cy: 7, r: 3.2, fill: v, stroke: k, "stroke-width": 1.2 })) },
+/** Polylijn door de knikken; het label op het midden van het middelste segment. */
+function knikPad(u, knikken) {
+  const pts = [{ x: u.sourceX, y: u.sourceY }, ...knikken, { x: u.targetX, y: u.targetY }];
+  const midI = Math.floor(pts.length / 2);
+  return [padVan(pts), (pts[midI - 1].x + pts[midI].x) / 2, (pts[midI - 1].y + pts[midI].y) / 2];
+}
+
+const KRAAIENPOTEN = {
+  "kraai-een": { veel: false, optioneel: false },
+  "kraai-nul-of-een": { veel: false, optioneel: true },
+  "kraai-een-of-meer": { veel: true, optioneel: false },
+  "kraai-nul-of-meer": { veel: true, optioneel: true },
 };
 
+/**
+ * Markers zoals ConnectorEdge ze definieert (maat, refX/refY, geometrie, markerUnits
+ * "strokeWidth"). `inhoud(kleur, vulling)`; `start` = alleen aan het begin (orient
+ * auto-start-reverse), `beide` = één marker voor beide kanten.
+ */
+const MARKERS = {
+  "pijl-open": { w: 12, h: 10, refX: 9, refY: 5, inhoud: (k) => vorm("path", { d: "M 1 2 L 9 5 L 1 8", fill: "none", stroke: k, "stroke-width": 1, "stroke-linecap": "round", "stroke-linejoin": "round" }) },
+  "pijl-dicht": { w: 12, h: 12, refX: 10, refY: 6, inhoud: (k) => vorm("path", { d: "M 1 1.5 L 10.5 6 L 1 10.5 Z", fill: k }) },
+  pijl: { w: 12, h: 12, refX: 10, refY: 6, inhoud: (k) => vorm("path", { d: "M 1 1.5 L 10.5 6 L 1 10.5 Z", fill: k }) },
+  driehoek: { w: 14, h: 14, refX: 13, refY: 7, inhoud: (k, v) => vorm("path", { d: "M 1 1 L 13 7 L 1 13 Z", fill: v, stroke: k, "stroke-width": 1.2 }) },
+  bol: { w: 10, h: 10, refX: 7.6, refY: 5, inhoud: (k) => vorm("circle", { cx: 5, cy: 5, r: 3, fill: k }) },
+  "cirkel-open": { w: 10, h: 10, refX: 1, refY: 5, inhoud: (k, v) => vorm("circle", { cx: 5, cy: 5, r: 3.4, fill: v, stroke: k, "stroke-width": 1 }) },
+  "kruis-cirkel": { w: 16, h: 16, refX: 1, refY: 8, inhoud: (k, v) => vorm("g", {}, vorm("circle", { cx: 8, cy: 8, r: 6, fill: v, stroke: k, "stroke-width": 1.2 }), vorm("path", { d: "M8 2.6 V13.4 M2.6 8 H13.4", fill: "none", stroke: k, "stroke-width": 1.2, "stroke-linecap": "round" })) },
+  "schuine-streep": { w: 16, h: 14, refX: 0, refY: 7, inhoud: (k) => vorm("path", { d: "M 5 11.5 L 11 2.5", fill: "none", stroke: k, "stroke-width": 1.3, "stroke-linecap": "round" }) },
+  kruisje: { w: 20, h: 10, refX: 15, refY: 5, beide: true, inhoud: (k) => vorm("path", { d: "M 4 1.5 L 11 8.5 M 11 1.5 L 4 8.5", fill: "none", stroke: k, "stroke-width": 1.1, "stroke-linecap": "round" }) },
+};
+for (const [soort, k] of Object.entries(KRAAIENPOTEN)) {
+  MARKERS[soort] = {
+    w: 22, h: 14, refX: 21, refY: 7, refXStart: 1, spiegelStart: true,
+    inhoud: (kleur, vulling) => {
+      const s = { fill: "none", stroke: kleur, "stroke-width": 1.2, "stroke-linecap": "round" };
+      return vorm("g", {},
+        vorm("path", { ...s, d: k.veel ? "M 12 7 L 21 1.5 M 12 7 L 21 7 M 12 7 L 21 12.5" : "M 20 1.5 L 20 12.5" }),
+        k.optioneel
+          ? vorm("circle", { ...s, cx: k.veel ? 8 : 14, cy: 7, r: 3.2, fill: vulling })
+          : vorm("path", { ...s, d: k.veel ? "M 9 1.5 L 9 12.5" : "M 15 1.5 L 15 12.5" }));
+    },
+  };
+}
+
 const kleurSleutel = (k) => String(k).replace(/[^a-z0-9]/gi, "").slice(-12) || "x";
+
+/** Ruit (compositie ◆ / aggregatie ◇) als polygon op het begin van het pad, zoals het canvas. */
+function ruitPolygon(d, open, kleur, vulling) {
+  const pts = padPunten(d);
+  if (pts.length < 2) return null;
+  const p0 = pts[0];
+  const naar = pts[1];
+  const l = Math.hypot(naar.x - p0.x, naar.y - p0.y) || 1;
+  const u = { x: (naar.x - p0.x) / l, y: (naar.y - p0.y) / l };
+  const n = { x: -u.y * (RUIT_BREEDTE / 2), y: u.x * (RUIT_BREEDTE / 2) };
+  const pm = { x: p0.x + u.x * (RUIT_LENGTE / 2), y: p0.y + u.y * (RUIT_LENGTE / 2) };
+  const p1 = { x: p0.x + u.x * RUIT_LENGTE, y: p0.y + u.y * RUIT_LENGTE };
+  const punten = [p0, { x: pm.x + n.x, y: pm.y + n.y }, p1, { x: pm.x - n.x, y: pm.y - n.y }];
+  return vorm("polygon", { points: punten.map((q) => `${num(q.x)},${num(q.y)}`).join(" "), fill: open ? vulling : kleur, stroke: kleur, "stroke-width": 1.2, "stroke-linejoin": "round" });
+}
 
 /**
  * @param {Object} p
  * @param {Object[]} p.edges                     - uit materialiseerConnectoren
- * @param {Map<string, Object>} p.boxen          - voorkomen-id → {x, y, w, h, rand?, toppen?}
+ * @param {Map<string, Object>} p.boxen          - voorkomen-id → {x, y, w, h}
  * @param {Record<string, Object>} p.elements
  * @param {Object} p.diagram
  * @param {Record<string, Object>} p.typen
@@ -136,19 +195,26 @@ const kleurSleutel = (k) => String(k).replace(/[^a-z0-9]/gi, "").slice(-12) || "
  * @param {string} p.idPrefix
  * @returns {{defs: Object[], boom: Object, punten: {x: number, y: number}[]}}
  */
-export function tekenLijnen({ edges, boxen, elements, diagram, typen, thema, idPrefix }) {
+export function tekenLijnen({ edges, boxen, elements, thema, idPrefix }) {
   const defs = new Map();
   const kinderen = [];
   const punten = [];
   const markerId = (soort, kleur, start) => {
     const m = MARKERS[soort];
     if (!m) return null;
-    const id = `${idPrefix}-${soort}-${kleurSleutel(kleur)}${start ? "-s" : ""}`;
+    const id = `${idPrefix}-${soort}-${kleurSleutel(kleur)}${start && !m.beide ? "-s" : ""}`;
     if (!defs.has(id)) {
-      defs.set(id, vorm("marker", { id, markerWidth: m.w, markerHeight: m.h, refX: m.refX, refY: m.h / 2, orient: start ? "auto-start-reverse" : "auto", markerUnits: "userSpaceOnUse" }, m.inhoud(kleur, thema.surface)));
+      const inhoud = m.inhoud(kleur, thema.surface);
+      defs.set(id, vorm("marker", {
+        id, markerWidth: m.w, markerHeight: m.h,
+        refX: start && m.refXStart !== undefined ? m.refXStart : m.refX, refY: m.refY,
+        orient: m.beide || (start && !m.spiegelStart) ? "auto-start-reverse" : "auto",
+        markerUnits: "strokeWidth",
+      }, start && m.spiegelStart ? vorm("g", { transform: `translate(${m.w},0) scale(-1,1)` }, inhoud) : inhoud));
     }
     return id;
   };
+  const rect = (b) => ({ x: b.x, y: b.y, width: b.w, height: b.h });
 
   for (const e of edges) {
     if (e.hidden) continue;
@@ -158,99 +224,79 @@ export function tekenLijnen({ edges, boxen, elements, diagram, typen, thema, idP
     const p = e.data?.presentatie || {};
     if (p.lijn === "onzichtbaar") continue;
     const el = elements[e.data?.connectorId] || {};
-    const et = typen[el.elementType] || {};
-    const lijn = { ...(el.data || {}), ...(diagram?.lijnen?.[el.id] || {}) };
-    const hook = et.hooks?.edgePresentatie?.(el, { elements }) || {};
     const isLus = e.source === e.target;
-    let zA = zijdeVan(e.sourceHandle) || "right";
-    let zB = zijdeVan(e.targetHandle) || "left";
-    const handleA = !!(normaliseerHandle(lijn.sourceHandle, "source") || normaliseerHandle(hook.sourceHandle, "source"));
-    const handleB = !!(normaliseerHandle(lijn.targetHandle, "target") || normaliseerHandle(hook.targetHandle, "target"));
-    const explicietA = isLus || handleA || !!p.bronToppen;
-    const explicietB = isLus || handleB || !!p.doelToppen;
     const knikken = Array.isArray(e.data?.knikken) && e.data.knikken.length ? e.data.knikken : null;
-    const hoekig = p.vorm === "hoekig" || p.vorm === "boom";
-
-    let pts;
-    if (isLus) {
-      const t = zijdeMidden(a, "top");
-      const r = zijdeMidden(a, "right");
-      pts = [t, { x: t.x, y: t.y - 26 }, { x: r.x + 26, y: t.y - 26 }, { x: r.x + 26, y: r.y }, r];
-    } else if (hoekig && !knikken && !handleA && !handleB) {
-      // Beide uiteinden zonder gekozen handle: de canvasregel (zijde én punt uit één berekening;
-      // "toppen" geldt daar alleen voor rechte lijnen). Het punt ligt op de omhullende
-      // rechthoek; een ruit of ellips (box.rand) schuift het naar zijn omtrek.
-      const o = orthogonaleUiteinden({ x: a.x, y: a.y, width: a.w, height: a.h }, { x: b.x, y: b.y, width: b.w, height: b.h });
-      zA = o.sourcePosition;
-      zB = o.targetPosition;
-      const p0 = a.rand ? randPunt(a, o.sourceX + UIT[zA].x, o.sourceY + UIT[zA].y) : { x: o.sourceX, y: o.sourceY };
-      const p1 = b.rand ? randPunt(b, o.targetX + UIT[zB].x, o.targetY + UIT[zB].y) : { x: o.targetX, y: o.targetY };
-      pts = hoekigPad(p0, zA, p1, zB);
-    } else {
-      const naarA = knikken ? knikken[0] : midden(b);
-      const naarB = knikken ? knikken[knikken.length - 1] : midden(a);
-      const p0 = explicietA ? zijdeMidden(a, zA) : randPunt(a, naarA.x, naarA.y);
-      const p1 = explicietB ? zijdeMidden(b, zB) : randPunt(b, naarB.x, naarB.y);
-      if (knikken) pts = [p0, ...knikken, p1];
-      else if (hoekig) pts = hoekigPad(p0, zA, p1, zB);
-      else pts = [p0, p1];
-    }
-    const bezier = !isLus && !knikken && p.vorm !== "hoekig" && p.vorm !== "boom" && p.vorm !== "recht";
-    let d;
-    let mid;
-    if (bezier) {
-      const [p0, p1] = pts;
-      const afstand = Math.hypot(p1.x - p0.x, p1.y - p0.y);
-      const k = Math.min(140, Math.max(24, afstand * 0.4));
-      const c1 = { x: p0.x + UIT[zA].x * k, y: p0.y + UIT[zA].y * k };
-      const c2 = { x: p1.x + UIT[zB].x * k, y: p1.y + UIT[zB].y * k };
-      d = `M ${num(p0.x)} ${num(p0.y)} C ${num(c1.x)} ${num(c1.y)} ${num(c2.x)} ${num(c2.y)} ${num(p1.x)} ${num(p1.y)}`;
-      // Punt op t = 0,5 van de bezier: het labelmidden.
-      mid = { x: (p0.x + 3 * c1.x + 3 * c2.x + p1.x) / 8, y: (p0.y + 3 * c1.y + 3 * c2.y + p1.y) / 8 };
-      punten.push(c1, c2);
-    } else {
-      d = padTekst(pts);
-      mid = halverwege(pts);
-      punten.push(...pts);
-    }
+    const zA = zijdeVan(e.sourceHandle) || (isLus ? "top" : "right");
+    const zB = zijdeVan(e.targetHandle) || (isLus ? "right" : "left");
+    const sM = handlePunt(a, zA);
+    const tM = handlePunt(b, zB);
+    // Dezelfde aanroep als ConnectorEdge: vaste handles tenzij het uiteinde zweeft.
+    const u = zwevendeUiteinden({
+      bronRect: rect(a),
+      doelRect: rect(b),
+      zwevendBron: !!p.zwevendBron && (!isLus || !!knikken),
+      zwevendDoel: !!p.zwevendDoel && (!isLus || !!knikken),
+      bronRicht: knikken ? knikken[0] : null,
+      doelRicht: knikken ? knikken[knikken.length - 1] : null,
+      orthogonaal: p.vorm === "hoekig" && !knikken,
+      bronOmtrek: p.bronOmtrek || "rechthoek",
+      doelOmtrek: p.doelOmtrek || "rechthoek",
+      bronToppen: !!p.bronToppen,
+      doelToppen: !!p.doelToppen,
+      vast: { sourceX: sM.x, sourceY: sM.y, targetX: tM.x, targetY: tM.y, sourcePosition: zA, targetPosition: zB },
+    });
+    const [d, labelX, labelY] = knikken
+      ? knikPad(u, knikken)
+      : isLus
+        ? lusPad(u, p.vorm === "hoekig")
+        : p.vorm === "boom"
+          ? boomPad(u)
+          : p.vorm === "hoekig"
+            ? getSmoothStepPath({ ...u, borderRadius: 4 })
+            : p.vorm === "recht"
+              ? getStraightPath(u)
+              : getBezierPath(u);
+    punten.push(...padPunten(d));
 
     const hex = veiligeKleur(p.kleur, null);
     const kleur = !hex || SLATE.has(hex) ? thema.border : hex;
-    const attrs = { class: "dc-lijn", "data-connector-id": el.id, d, fill: "none", stroke: kleur, "stroke-width": p.dikte || 1.5 };
+    const attrs = { class: "dc-lijn", "data-connector-id": el.id, d, fill: "none", stroke: kleur, "stroke-width": p.dikte || 1.5, "stroke-linejoin": "round" };
     if (DASHES[p.lijn]) attrs["stroke-dasharray"] = DASHES[p.lijn];
+    if (p.opacity !== undefined) attrs.opacity = p.opacity;
     const mEnd = p.markerEnd ? markerId(p.markerEnd, kleur, false) : null;
-    const mStart = p.markerStart ? markerId(p.markerStart, kleur, true) : null;
+    const heeftRuit = p.markerStart === "ruit" || p.markerStart === "ruit-open";
+    const mStart = p.markerStart && !heeftRuit ? markerId(p.markerStart, kleur, true) : null;
     if (mEnd) attrs["marker-end"] = `url(#${mEnd})`;
     if (mStart) attrs["marker-start"] = `url(#${mStart})`;
     kinderen.push(vorm("path", attrs));
+    if (heeftRuit) {
+      const ruit = ruitPolygon(d, p.markerStart === "ruit-open", kleur, thema.surface);
+      if (ruit) kinderen.push(ruit);
+    }
 
-    // Labels: midden (naam, stereotype) boven het midden; bron/doel 16px van het uiteinde, iets
-    // naast de lijn; een handmatige verschuiving (labelOffsets) telt mee.
-    const eind = pts[pts.length - 1];
-    const begin = pts[0];
-    const richting = (van, naar) => {
-      const l = Math.hypot(naar.x - van.x, naar.y - van.y) || 1;
-      return { x: (naar.x - van.x) / l, y: (naar.y - van.y) / l };
+    // Labels: op het labelpunt van de padfunctie (midden), of 70% richting het uiteinde (bron,
+    // doel); een handmatige verschuiving (labelOffsets) telt mee. Chip zoals .dc-edge-label.
+    const posities = {
+      midden: { x: labelX, y: labelY - (p.labelsBoven ? 13 : 0) },
+      doel: { x: labelX + (u.targetX - labelX) * 0.7, y: labelY + (u.targetY - labelY) * 0.7 },
+      bron: { x: labelX + (u.sourceX - labelX) * 0.7, y: labelY + (u.sourceY - labelY) * 0.7 },
     };
     for (const label of p.labels || []) {
-      const tekst = (label.delen || []).map((x) => x.tekst).filter(Boolean).join(" ");
+      const delen = (label.delen || []).filter((x) => x.tekst);
+      const tekst = delen.map((x) => x.tekst).join(" ");
       if (!tekst) continue;
-      let pos;
-      if (label.zijde === "bron") {
-        const u = richting(begin, pts[1] || eind);
-        pos = { x: begin.x + u.x * 16 - u.y * 10, y: begin.y + u.y * 16 + u.x * 10 };
-      } else if (label.zijde === "doel") {
-        const u = richting(eind, pts[pts.length - 2] || begin);
-        pos = { x: eind.x + u.x * 16 - u.y * 10, y: eind.y + u.y * 16 + u.x * 10 };
-      } else pos = { x: mid.x, y: mid.y - 6 };
+      let pos = posities[label.zijde] || posities.midden;
       if (label.offset) pos = { x: pos.x + (label.offset.x || 0), y: pos.y + (label.offset.y || 0) };
-      const naamDeel = (label.delen || []).find((x) => x.veld === "naam");
-      const kleurLabel = label.delen?.[0]?.soort === "kardinaliteit" || label.delen?.[0]?.soort === "rolnaam" ? thema.muted : naamDeel ? thema.text : thema.muted;
-      const attrsT = { x: pos.x, y: pos.y, "text-anchor": "middle", "font-size": LABEL, fill: kleurLabel };
+      const naamDeel = delen.find((x) => x.veld === "naam");
+      const eerste = delen[0]?.soort;
+      const kleurLabel = delen[0]?.kleur || (eerste === "kardinaliteit" ? "#7c3aed" : eerste === "rolnaam" ? thema.text : naamDeel ? thema.text : thema.muted);
+      const bw = tekstBreedte(tekst, LABEL) + 12;
+      kinderen.push(vorm("rect", { x: pos.x - bw / 2, y: pos.y - CHIP_H / 2, width: bw, height: CHIP_H, rx: 4, fill: thema.surface, "fill-opacity": 0.9, stroke: thema.border, "stroke-opacity": 0.4 }));
+      const attrsT = { x: pos.x, y: pos.y + 3.5, "text-anchor": "middle", "font-size": LABEL, fill: kleurLabel };
+      if (eerste === "kardinaliteit" || eerste === "rolnaam") attrsT["font-weight"] = 600;
       if (naamDeel) attrsT["data-dc-veld"] = `connector:${el.id}:naam`;
       kinderen.push(vorm("text", attrsT, tekst));
-      const bw = tekstBreedte(tekst, LABEL) / 2;
-      punten.push({ x: pos.x - bw, y: pos.y - LABEL }, { x: pos.x + bw, y: pos.y + 2 });
+      punten.push({ x: pos.x - bw / 2, y: pos.y - CHIP_H / 2 }, { x: pos.x + bw / 2, y: pos.y + CHIP_H / 2 });
     }
   }
   return { defs: [...defs.values()], boom: vorm("g", { class: "dc-lijnen" }, ...kinderen), punten };

@@ -20,7 +20,7 @@
 import { useId, useMemo } from "react";
 import { tekenbareVorm, minMaatVan } from "../types/shapeType.js";
 import { maakPalet } from "../../diagramsvg/thema.js";
-import { bouwVoorkomen, tekenVoorkomen, basisVanPalet } from "../tekenaar/voorkomen.js";
+import { bouwVoorkomen, tekenVoorkomen, basisVanPalet, isPuntNode } from "../tekenaar/voorkomen.js";
 import { naarReact } from "../tekenaar/naarReact.js";
 import "../tekenaar/basisVormen.js"; // registreert de basis-ShapeTypes en de bibliotheek-renderers
 
@@ -63,8 +63,6 @@ export function sjabloonNaamBuiten(vormInfo, elementType) {
   return !!vormInfo && vormInfo.shapeType.parameters?.inhoud === "geen" && elementType?.naamLabel !== "geen";
 }
 
-/** Kleine vaste vorm: de handles liggen net buiten de vorm (diagramcore.css `.dc-punt-node`). */
-const isPuntNode = (vormInfo, elementType) => elementType?.resizebaar === false && vormInfo.shapeType.parameters?.inhoud === "geen";
 
 export function SjabloonShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, vormInfo, maat, children }) {
   // Uniek per node-instantie (clip-id); twee canvassen in één document delen anders id's.
@@ -95,7 +93,7 @@ export function SjabloonShape({ element, elementType, selected, fieldTypesById, 
       className={
         "dc-sjabloon" +
         (selected ? " is-geselecteerd" : "") +
-        (isPuntNode(vormInfo, elementType) ? " dc-punt-node" : "") +
+        (isPuntNode(vormInfo.shapeType, elementType) ? " dc-punt-node" : "") +
         // Canvas-klasse uit het ShapeType (bv. dc-seq-punt: handles op de rand, zichtbaar bij hover).
         (vormInfo.shapeType.parameters?.klasse ? ` ${vormInfo.shapeType.parameters.klasse}` : "")
       }

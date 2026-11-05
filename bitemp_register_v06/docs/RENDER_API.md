@@ -93,6 +93,11 @@ dan gewoon door.
 **Wat er nu getekend wordt.** Posities en maten komen uit het diagram, de inhoud uit de
 compartimenten, lijnen uit `edgePresentatie`, met knikken. Nog geen profieleigen iconen. Bekende
 zwakke plek: een sequence-diagram heeft nog geen echte levenslijnen, dus berichten overlappen.
+**Lijnen zoals in de Studio (05-11):** de geometrie van een lijn (aanhechting, vorm bezier/
+hoekig/recht/boom, knikken, zelf-lus, markers, labelchips) komt uit dezelfde bouwstenen als het
+Studio-canvas (`zwevendeRand.js`, de React Flow-padfuncties), dus een lijn die in de Studio via
+een omweg of met een andere lijnvorm is getrokken, rendert hier identiek (proef: 65 lijnen in
+tien diagrammen gelijk op 0,5 px; sequence-berichten wijken nog af door de activaties).
 
 **Vormtrouw groeit mee.** Sinds stap 5 van het plan *Eén tekenaar* (`docs/plans/2026-11-04`,
 04-11) tekent `taal=studio` met dezelfde tekenaar als documenten en gedeelde plaatjes

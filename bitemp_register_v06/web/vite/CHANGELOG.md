@@ -34,6 +34,21 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   lijnen die een rand hebben. Zichtbaar verschil: de use case-actor is een doos van figuur + naam
   (was: naam los onder 64px), een ArchiMate-figuur zonder bewaarde maat is 64px hoog met de naam
   eronder, kleuren en lijndiktes uit de thema-tokens.
+- **Eén tekenaar — lijnen zoals het canvas ze tekent** (05-11): de tekenaar (documenten, gedeelde
+  plaatjes, render-API `taal=studio`) bepaalt de lijngeometrie nu met dezelfde bouwstenen als
+  `ConnectorEdge`: uiteinden via `zwevendeRand.zwevendeUiteinden` (vaste handles op de buitenkant
+  van de handle-stip, zwevend langs de dominante zijde, toppen, knikken, de Z-regel), paden via
+  de React Flow-functies (`@xyflow/system`: bezier, hoekig met ronde hoeken, recht), boomstijl,
+  zelf-lus langs de handles (hoekig of gebogen), markers met de canvas-maten en
+  `markerUnits="strokeWidth"`, de ruit van compositie/aggregatie als polygon, labels als chip op
+  het labelpunt van de padfunctie (bron/doel op 70 %). De profiel-default `randAanhechting` wordt
+  ingebakken zoals op het canvas. Tot nu toe had de tekenaar een eigen "rand tot rand"-regel uit
+  diagramsvg, waardoor een rechte of gebogen lijn tussen schuin geplaatste dozen zichtbaar
+  afweek van de Studio. Proef: 65 lijnen in tien diagrammen (UML, BPMN, state machine, activity,
+  ArchiMate, use case, CMMN, SysML, toegangsregel) hebben op canvas en server hetzelfde pad op
+  0,5 px na; alleen sequence-berichten verschillen nog (het canvas hecht aan de afgeleide
+  activaties, die de tekenaar nog niet kent). Zichtbaar: ⊕ bij SysML-bevat (was ⊗), grotere
+  pijlpunten, labelchips in documenten en gedeelde plaatjes.
 - **Hoekige lijnen op het canvas: beide uiteinden op de dominante zijde** (05-11): een hoekige
   lijn tussen twee dozen die diagonaal van elkaar staan ging tot nu toe met één hoek — uit de
   dominante zijde van de bron, het doel in op het midden van de dwarse zijde. Die ingang viel samen

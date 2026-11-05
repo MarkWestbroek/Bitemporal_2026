@@ -59,7 +59,10 @@ const veiligId = (s) => String(s ?? "").replace(/[^A-Za-z0-9_-]/g, "-");
  * @returns {{boom: Object|null, viewBox: {x: number, y: number, w: number, h: number}|null, terugval: string[]}}
  */
 export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, thema = "auto", verwijzingNaam = null, maatAttributen = true, titel = null, controleer = false }) {
-  const typen = perId(descriptor?.elementTypes);
+  // De profiel-default voor randAanhechting inbakken, net als DiagramCanvas: zo ziet
+  // materialiseerConnectoren hier dezelfde zwevende uiteinden als op het canvas.
+  const randDefault = descriptor?.randAanhechting || "zijden";
+  const typen = perId((descriptor?.elementTypes || []).map((et) => (et.randAanhechting ? et : { ...et, randAanhechting: randDefault })));
   const fieldTypesById = perId(descriptor?.fieldTypes);
   const compartmentTypesById = perId(descriptor?.compartmentTypes);
   const basis = basisVanPalet(maakPalet(thema));
