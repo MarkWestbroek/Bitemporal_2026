@@ -9,7 +9,12 @@
  *     die zijde; anders op het snijpunt van de rand met de lijn naar de overkant ("rand tot
  *     rand", zoals diagramsvg);
  *   - knikken (ctrl-klik op het canvas, EA-import) worden een polylijn;
- *   - `vorm`: "recht", "hoekig" (orthogonaal via de handle-zijden), anders een bezier;
+ *   - `vorm`: "recht", "hoekig" (orthogonaal; zonder gekozen handles en knikken met dezelfde
+ *     regel als het canvas, `zwevendeRand.orthogonaleUiteinden`: recht boven of naast elkaar
+ *     één rechte lijn, anders beide uiteinden op de zijde van de dominante as en een Z — tot
+ *     05-11 kwam de zijde uit de handle en het punt uit het snijpunt met de rand, en die twee
+ *     spraken elkaar tegen bij een doos schuin boven de ander: de lijn liep dan langs de rand),
+ *     anders een bezier;
  *   - een zelf-lus is het oortje van boven naar rechts.
  *
  * Markers staan één keer in `<defs>` per soort en kleur; de start-variant is dezelfde vorm met
@@ -20,6 +25,7 @@ import { num } from "../../diagramsvg/svg.js";
 import { veiligeKleur } from "../../diagramsvg/thema.js";
 import { tekstBreedte } from "../../diagramsvg/tekstmaat.js";
 import { normaliseerHandle } from "../canvas/materialiseerConnectoren.js";
+import { orthogonaleUiteinden } from "../canvas/zwevendeRand.js";
 
 const DASHES = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4", gestippeld: "2 3" };
 /** Vaste slate-tinten van profielen (gekozen voor een wit canvas) → de randkleur van het thema. */
@@ -156,24 +162,37 @@ export function tekenLijnen({ edges, boxen, elements, diagram, typen, thema, idP
     const lijn = { ...(el.data || {}), ...(diagram?.lijnen?.[el.id] || {}) };
     const hook = et.hooks?.edgePresentatie?.(el, { elements }) || {};
     const isLus = e.source === e.target;
-    const zA = zijdeVan(e.sourceHandle) || "right";
-    const zB = zijdeVan(e.targetHandle) || "left";
-    const explicietA = isLus || !!(normaliseerHandle(lijn.sourceHandle, "source") || normaliseerHandle(hook.sourceHandle, "source")) || !!p.bronToppen;
-    const explicietB = isLus || !!(normaliseerHandle(lijn.targetHandle, "target") || normaliseerHandle(hook.targetHandle, "target")) || !!p.doelToppen;
+    let zA = zijdeVan(e.sourceHandle) || "right";
+    let zB = zijdeVan(e.targetHandle) || "left";
+    const handleA = !!(normaliseerHandle(lijn.sourceHandle, "source") || normaliseerHandle(hook.sourceHandle, "source"));
+    const handleB = !!(normaliseerHandle(lijn.targetHandle, "target") || normaliseerHandle(hook.targetHandle, "target"));
+    const explicietA = isLus || handleA || !!p.bronToppen;
+    const explicietB = isLus || handleB || !!p.doelToppen;
     const knikken = Array.isArray(e.data?.knikken) && e.data.knikken.length ? e.data.knikken : null;
+    const hoekig = p.vorm === "hoekig" || p.vorm === "boom";
 
     let pts;
     if (isLus) {
       const t = zijdeMidden(a, "top");
       const r = zijdeMidden(a, "right");
       pts = [t, { x: t.x, y: t.y - 26 }, { x: r.x + 26, y: t.y - 26 }, { x: r.x + 26, y: r.y }, r];
+    } else if (hoekig && !knikken && !handleA && !handleB) {
+      // Beide uiteinden zonder gekozen handle: de canvasregel (zijde én punt uit één berekening;
+      // "toppen" geldt daar alleen voor rechte lijnen). Het punt ligt op de omhullende
+      // rechthoek; een ruit of ellips (box.rand) schuift het naar zijn omtrek.
+      const o = orthogonaleUiteinden({ x: a.x, y: a.y, width: a.w, height: a.h }, { x: b.x, y: b.y, width: b.w, height: b.h });
+      zA = o.sourcePosition;
+      zB = o.targetPosition;
+      const p0 = a.rand ? randPunt(a, o.sourceX + UIT[zA].x, o.sourceY + UIT[zA].y) : { x: o.sourceX, y: o.sourceY };
+      const p1 = b.rand ? randPunt(b, o.targetX + UIT[zB].x, o.targetY + UIT[zB].y) : { x: o.targetX, y: o.targetY };
+      pts = hoekigPad(p0, zA, p1, zB);
     } else {
       const naarA = knikken ? knikken[0] : midden(b);
       const naarB = knikken ? knikken[knikken.length - 1] : midden(a);
       const p0 = explicietA ? zijdeMidden(a, zA) : randPunt(a, naarA.x, naarA.y);
       const p1 = explicietB ? zijdeMidden(b, zB) : randPunt(b, naarB.x, naarB.y);
       if (knikken) pts = [p0, ...knikken, p1];
-      else if (p.vorm === "hoekig" || p.vorm === "boom") pts = hoekigPad(p0, zA, p1, zB);
+      else if (hoekig) pts = hoekigPad(p0, zA, p1, zB);
       else pts = [p0, p1];
     }
     const bezier = !isLus && !knikken && p.vorm !== "hoekig" && p.vorm !== "boom" && p.vorm !== "recht";

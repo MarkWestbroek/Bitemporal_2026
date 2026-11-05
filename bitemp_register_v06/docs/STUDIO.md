@@ -1092,7 +1092,12 @@ fase 2 een **bewerkbare sandbox**:
   ElementType-attribuut `aanhechtpunten` ("toppen" | "snijpunt") heeft als
   default de waarde die uit `omtrek` volgt, dus use case, activiteit en BPMN
   doen mee zonder profielcode. Hoekige lijnen houden hun eigen route
-  (`orthogonaleUiteinden`), en een uiteinde met knik mikt op zijn knik. Code:
+  (`orthogonaleUiteinden`: recht boven of naast elkaar één rechte lijn, anders
+  beide uiteinden op de zijde van de dominante as en een Z — sinds 05-11,
+  daarvoor een L met één hoek die het doel op het midden van de dwarse zijde
+  inging en daar botste met rechte buren, de "dubbele pijl"; dezelfde regel als
+  de tekenaar voor documenten en de render-API), en een uiteinde met knik mikt
+  op zijn knik. Code:
   `kortsteToppen()`/`toppenVan()` in `zwevendeRand.js`,
   `aanhechtpuntenVan()` in `materialiseerConnectoren.js`. *Normaliseer
   relaties* (↔) wist de vaste handles; daarna geldt deze regel.

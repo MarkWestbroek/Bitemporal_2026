@@ -155,13 +155,16 @@ test("orthogonaleUiteinden: boven elkaar → één verticale lijn midden in de x
   assert.deepEqual(u, { sourceX: 150, sourceY: 60, sourcePosition: "bottom", targetX: 150, targetY: 200, targetPosition: "top" });
 });
 
-test("orthogonaleUiteinden: naast elkaar → één horizontale lijn; diagonaal → één hoek", () => {
+test("orthogonaleUiteinden: naast elkaar → één horizontale lijn; diagonaal → beide op de dominante zijde (Z), uitgewaaierd langs de zijde", () => {
   const h = orthogonaleUiteinden({ x: 0, y: 0, width: 100, height: 100 }, { x: 300, y: 40, width: 100, height: 100 });
   assert.deepEqual(h, { sourceX: 100, sourceY: 70, sourcePosition: "right", targetX: 300, targetY: 70, targetPosition: "left" });
-  const l = orthogonaleUiteinden({ x: 0, y: 0, width: 100, height: 100 }, { x: 400, y: 300, width: 100, height: 100 });
-  assert.equal(l.sourcePosition, "right");
-  assert.equal(l.targetPosition, "top");
-  assert.deepEqual([l.sourceX, l.sourceY, l.targetX, l.targetY], [100, 50, 450, 300]);
+  const z = orthogonaleUiteinden({ x: 0, y: 0, width: 100, height: 100 }, { x: 400, y: 300, width: 100, height: 100 });
+  assert.equal(z.sourcePosition, "right");
+  assert.equal(z.targetPosition, "left", "niet meer de dwarse zijde (één hoek, tot 05-11): die ingang botste met rechte buren");
+  assert.deepEqual([z.sourceX, z.sourceY, z.targetX, z.targetY], [100, 87.5, 400, 312.5], "op het snijpunt van de middellijn met de zijde");
+  // Gateway boven-rechts van een subproces (het dubbele-pijl-geval, BPMN-proef 05-11): onder eruit, boven erin.
+  const g = orthogonaleUiteinden({ x: 520, y: 428, width: 34, height: 34 }, { x: 300, y: 590, width: 180, height: 52 });
+  assert.deepEqual([g.sourcePosition, g.targetPosition], ["bottom", "top"]);
 });
 
 test("zwevendeUiteinden met orthogonaal: alleen als beide kanten vrij zijn en er geen knikken zijn", () => {
