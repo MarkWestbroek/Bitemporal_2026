@@ -8,6 +8,48 @@
 
 ---
 
+## studio 0.28.0 / render 0.3.0 (2026-11-05)
+
+Frontend en render-sidecar; api blijft 0.18.0 (geen Go-wijziging sinds 47dc540f). Aanleiding:
+het inrichtingsregister wil BPMN, DMN, CMMN en formulieren van een e-dienst als SVG vastleggen,
+op Fundament.
+
+**Render-sidecar 0.3.0** (`render-svc/`, image `bitemp-render-svc:0.3.0`, git-tag `render/v0.3.0`):
+
+- **Profielvormen** (stap 3 en 4 van het plan *Eén tekenaar*, OMNIUM-UI): elke ingebouwde vorm is
+  nu een ShapeType, dus `taal=studio` tekent BPMN, DMN-DRD, CMMN, formulier, use case, activity,
+  ArchiMate en sequence (levenslijn met activaties) met de vormen van het canvas; geen terugval
+  meer op de 35 diagrammen van het architectuurproject. Lijnen zoals het canvas: padfuncties van
+  `@xyflow/system`, markers, labelchips. De tekening verandert dus zichtbaar t.o.v. 0.2.0.
+- **Versie in de uitvoer**: elke SVG draagt `data-render-versie` op de wortel (komt ongewijzigd
+  door de Go-API); de sidecar zet ook `X-Render-Versie`, en `GET /health` geeft `versie`. Bron:
+  `render-svc/package.json`.
+- **Bouw**: de bundel vond `@xyflow/system` niet in een schone checkout (Docker), omdat de bronnen
+  in `web/vite` staan zonder `node_modules`. `render-svc` heeft het pakket nu als devDependency en
+  `bouw.mjs` zoekt ook in de eigen `node_modules`. Bundel ±0,7 MB.
+- Getest: sidecar 6/6, tekenaar- en diagramsvg-tests, Go-handler; image in een container op de
+  Studio-export Inrichten (Fundament, 95 elementen): 200, versie in SVG en header. Synthetische
+  proefdiagrammen per profiel (BPMN, DMN, CMMN, formulier) visueel bekeken. Niet getest:
+  `taal=studio` via de draaiende Go-API.
+
+**Frontend (studio 0.28.0):** één tekenaar, stap 3 en 4 af. Het canvas tekent nu met dezelfde
+tekenaar als documenten, gedeelde plaatjes en de render-API; alle profielvormen zijn ShapeTypes en
+de oude React-vormen en de shape-registry zijn weg. Lijnen in documenten en op de server lopen
+zoals op het canvas (zelfde aanhechting en padfuncties, markers, labelchips). Sequence: de
+levenslijn tekent via het sjabloon, met de afgeleide activaties ook in documenten en op de server,
+en een zelf-aanroep valt binnen de aanroep. Eigen vormen uit de Studio-instellingen zijn
+ShapeTypes en tekenen ook in documenten; de voorbeelden in de instellingen en de
+profiel-ontwerper tekenen met de tekenaar. Hersteld: de arcering van de regelkaart "mag niet"
+(toegangsregel). Nieuw: regressietest `tests/e2e/41-studio-tekenaar-pariteit.spec.js`. Verder het
+inrichtingswerk van 05-11 (dossier, servicetaak, zaaktypelink); zie
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md).
+
+Uitrol: images `bitemp-render-svc:0.3.0` en `bitemp-viz-frontend:0.28.0` (met
+`--build-arg VITE_GIT_SHA=…`), `docs/DOCKER_RELEASE.md`; render op Fundament door FUNDAMENT, op
+app met `./update.sh`. Geen databasegevolg, geen nieuwe instellingen.
+
+---
+
 ## studio 0.27.0 / render 0.2.0 (2026-11-05)
 
 Alleen frontend en render-sidecar; de api op app blijft 0.18.0 (geen Go-wijziging sinds
