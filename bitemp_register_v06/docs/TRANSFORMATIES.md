@@ -1001,7 +1001,7 @@ mogelijk, liefst geen, handwerk. Dit is de proef die we hier doen."). Een
 handgemaakt bestand mag even als proef dienen, maar moet daarna vervangen worden
 door een gegenereerd bestand.
 
-Er is één artefact per bestand (regelset `canoniek-naar-gzac-dossier` 0.1.0,
+Er is één artefact per bestand (regelset `canoniek-naar-gzac-dossier` 0.2.0,
 `dossierRegels.js`; aansluiting `dossierArtefact.js`; schrijver
 `gzac-dossier-schrijver@0.1.0`). De payload is de inhoud van het bestand.
 FUNDAMENT leidt het pad in de bundel af uit soort + identifier:
@@ -1011,23 +1011,50 @@ FUNDAMENT leidt het pad in de bundel af uit soort + identifier:
 | `dossierschema` | `json-schema` | `document/definition/<id>.schema.document-definition.json` | `gehandicaptenparkeerkaart` |
 | `dossierformulier` | `formio-json` | `form/<id>.form.json` | `gehandicaptenparkeerkaart.summary`, `aanvraag-beoordelen` |
 | `dossiertabbladen` | `gzac-case-tab-json` | `case/tab/<id>.case-tab.json` | `gehandicaptenparkeerkaart` |
+| `dossierzaaktypelink` | `gzac-zaak-type-link-json` | `zgw/zaak-type-link/<id>.zaak-type-link.json` | `gehandicaptenparkeerkaart` |
 
-Schema en tabbladen dragen allebei de key van het dossier als identifier; de
-soort onderscheidt ze. Daarom kan een afhankelijkheid in de e-dienst `soort` en
-`afhankelijkVanSoort` noemen, en neemt de runner `--soort`.
+Schema, tabbladen en zaaktypekoppeling dragen alle drie de key van het dossier
+als identifier; de soort onderscheidt ze. Daarom kan een afhankelijkheid in de
+e-dienst `soort` en `afhankelijkVanSoort` noemen, en neemt de runner `--soort`.
 
-**Volgorde op een lege omgeving (FUNDAMENT, cg-test 05-11).** Na een reset van
-het cluster mislukte de eerste uitrol van de tabbladen: FUNDAMENT zet bij die
-stap de dossierbundel neer, en de zaak-type-link daarin (handwerk in de
-Fundament-repo) verwijst met `${ZAAKTYPE_URL:GPK}` naar het zaaktype, dat nog
-niet bestond. De tabbladen hangen daarom in de e-dienst af van het dossierschema
-en van het zaaktype (`afhankelijkVanSoort: "zaaktype"`). Algemeen geldt: een
-artefact dat naar een type in de omgeving verwijst, hangt af van het artefact dat
-dat type aanmaakt. De bundel toetst dat op de plaatshouders in de payload
-(`${OBJECTTYPE_URL:<id>}`, `${OBJECTTYPE_VERSION:<id>}`, `${ZAAKTYPE_URL:<id>}`):
-`ART-PLAATSHOUDER` (waarschuwing) als de afhankelijkheid ontbreekt
-(`toetsPlaatshouders` in `transformatie/inrichtingsBundel.js`). De zaak-type-link
-zelf is nog geen artefact uit het model (§11.13).
+**Zaaktypekoppeling (regelset 0.2.0, 2026-11-05).** De koppeling van het dossier
+aan zijn zaaktype was handwerk in de Fundament-repo en is nu een artefact
+(besluit Mark 05-11). De e-dienst zegt welk zaaktype (`zaaktype`) en of het
+dossier bij aanmaken meteen een zaak krijgt (`zaakBijDossier`; bij de GPK
+`false`, want het oppakproces maakt de zaak na de ontvankelijkheidstoets,
+§11.12). Wat de omgeving bepaalt, gaat als plaatshouder mee en vult de uitrol
+in:
+
+| Veld | Waarde | Herkomst |
+|---|---|---|
+| `zaakTypeUrl` | `${ZAAKTYPE_URL:GPK}` | zaaktype uit de e-dienst; url uit de omgeving |
+| `zakenApiPluginConfigurationId` | `${PLUGINCONFIG_ID:zakenapi}` | omgeving (`zakenapi` = pluginDefinitionKey van GZAC) |
+| `createWithDossier` | `false` | e-dienst (`zaakBijDossier`) |
+| `rsin` | `${ORGANISATIE_RSIN}` | omgeving |
+
+Toets `DOS-ZAAKTYPE`: fout als de koppeling geen zaaktype noemt, waarschuwing
+als dat zaaktype geen artefact van de e-dienst is.
+
+**Plaatshouders en volgorde (afspraak FUNDAMENT 05-11).** Na een reset van het
+cluster mislukte de eerste uitrol op de lege omgeving: de zaak-type-link ging
+mee met de eerste bundelstap, toen het zaaktype nog niet bestond. Algemeen
+geldt: een artefact dat naar een type in de omgeving verwijst, hangt af van het
+artefact dat dat type aanmaakt. De zaaktypekoppeling hangt daarom af van het
+zaaktype en van het dossierschema; de tabbladen alleen van het dossierschema.
+De bundel toetst de plaatshouders in elke payload (`toetsPlaatshouders` in
+`transformatie/inrichtingsBundel.js`):
+
+| Plaatshouder | Betekenis | Afhankelijkheid |
+|---|---|---|
+| `${OBJECTTYPE_URL:<id>}`, `${OBJECTTYPE_VERSION:<id>}`, `${OBJECTTYPE_ID:<id>}` | het objecttype in de omgeving | objecttype-artefact `<id>` |
+| `${ZAAKTYPE_URL:<id>}`, `${ROLTYPE_URL:<id>:<omschrijvingGeneriek>}`, `${STATUSTYPE_URL:<id>:<volgnummer>}` | het zaaktype, een roltype of statustype ervan | zaaktype-artefact `<id>` |
+| `${PLUGINCONFIG_ID:<pluginDefinitionKey>}` | de pluginconfiguratie in GZAC | geen (omgeving) |
+| `${OBJECTS_API_GROUP}`, `${CATALOGUS_DOMEIN}`, `${CATALOGUS_RSIN}`, `${ORGANISATIE_RSIN}` | omgevingsgegevens | geen |
+
+`ART-PLAATSHOUDER` (waarschuwing): een verwijzing naar een type zonder de
+afhankelijkheid. `ART-GEHEIM` (waarschuwing): een andere kale `${NAAM}`; die
+leest de uitrol als sleutel uit een Secret, en een geheim hoort niet in een
+artefact.
 
 **Bron.** De dossierinhoud is het schema van het **objecttype-artefact**, zonder
 de verzoek-envelop: de Verzoek-plugin kopieert `data` naar het dossier. De
@@ -1362,5 +1389,6 @@ dossier bewaren (vraagt een veld in het dossierschema).
    DMN-model in een Studio-project; de fixtures zijn dan kopieën voor de tests.
    De beslistabel heeft daarvoor een bewerkscherm aan het element `decision`
    nodig (§11.12).
-8. Dossier: de zaak-type-link (dossier ↔ zaaktype) als artefact uit de e-dienst;
-   nu handwerk in de Fundament-repo, met `${ZAAKTYPE_URL:<id>}` (§11.9).
+8. Dossier: de process-link (welke plugin-actie aan welke taak hangt) als
+   artefact; nu handwerk in de Fundament-repo, met `${PLUGINCONFIG_ID:..}`
+   (§11.9). De zaaktypekoppeling is sinds 05-11 een artefact.

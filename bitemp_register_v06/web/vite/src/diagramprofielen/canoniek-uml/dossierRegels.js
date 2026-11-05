@@ -2,7 +2,7 @@
 /**
  * dossierRegels — de **regelset** "canoniek model + e-dienst → GZAC-
  * dossierbundel" voor de inrichting van e-diensten (docs/TRANSFORMATIES.md
- * §11.9). Drie artefactsoorten, elk één bestand uit de dossierbundel van GZAC
+ * §11.9). Vier artefactsoorten, elk één bestand uit de dossierbundel van GZAC
  * (Valtimo):
  *
  * - `dossierschema` (json-schema): de documentdefinitie, het JSON Schema van
@@ -16,6 +16,11 @@
  *   behandelvelden en een verzendknop.
  * - `dossiertabbladen` (gzac-case-tab-json): de tabbladen van de dossierpagina;
  *   generiek, een sjabloon uit deze regelset.
+ * - `dossierzaaktypelink` (gzac-zaak-type-link-json): de koppeling van het
+ *   dossier aan zijn zaaktype. Welk zaaktype en of het dossier bij aanmaken
+ *   meteen een zaak krijgt, staat in de e-dienst; de url van het zaaktype, de
+ *   Zaken API-plugin en de RSIN zijn gegevens van de omgeving en gaan als
+ *   plaatshouder mee, die de uitrol (FUNDAMENT) invult.
  *
  * Wat waar vandaan komt: type, enum, beschrijving en lengte uit het model (via
  * het objecttype-artefact en zijn traceregels); welke velden, hun volgorde, de
@@ -25,15 +30,17 @@
 
 export const CANONIEK_NAAR_DOSSIER = {
   id: "canoniek-naar-gzac-dossier",
-  versie: "0.1.0",
-  titel: "Canoniek model + e-dienst → GZAC-dossierbundel (documentdefinitie, form.io, tabbladen)",
+  versie: "0.2.0",
+  titel: "Canoniek model + e-dienst → GZAC-dossierbundel (documentdefinitie, form.io, tabbladen, zaaktypekoppeling)",
   bron: "objecttype-artefact (uit canoniek-uml V3) + e-dienst",
   doel: "gzac-dossierbundel",
 
   // Het pad in de bundel leidt FUNDAMENT af uit soort + identifier
   // (afspraak 30-10): form/<id>.form.json, document/definition/<id>.schema.
-  // document-definition.json, case/tab/<id>.case-tab.json. De identifier van
-  // het dossierschema en de tabbladen is dus de key van het dossier.
+  // document-definition.json, case/tab/<id>.case-tab.json,
+  // zgw/zaak-type-link/<id>.zaak-type-link.json. De identifier van het
+  // dossierschema, de tabbladen en de zaaktypekoppeling is dus de key van het
+  // dossier.
 
   /** Documentdefinitie: Valtimo valideert met JSON Schema draft-07; $id = naam + ".schema". */
   schema: {
@@ -70,4 +77,17 @@ export const CANONIEK_NAAR_DOSSIER = {
     { key: "historie", name: "Historie", contentKey: "audit", showTasks: false },
     { key: "notities", name: "Notities", contentKey: "notes", showTasks: false },
   ],
+
+  /**
+   * Koppeling dossier ↔ zaaktype. `{zaaktype}` is de identifier van het
+   * zaaktype uit de e-dienst; de plaatshouders vult de uitrol per omgeving
+   * in: de url van het uitgerolde zaaktype, de configuratie van de Zaken
+   * API-plugin (`zakenapi` is de pluginDefinitionKey van GZAC) en de RSIN van
+   * de organisatie. Namen afgesproken met FUNDAMENT (05-11).
+   */
+  zaaktypelink: {
+    zaakTypeUrl: "${ZAAKTYPE_URL:{zaaktype}}",
+    zakenApiPluginConfigurationId: "${PLUGINCONFIG_ID:zakenapi}",
+    rsin: "${ORGANISATIE_RSIN}",
+  },
 };

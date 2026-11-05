@@ -22,9 +22,10 @@
 // --referentielijst, net als het aanvraagtype van een zaaktype.
 //
 // De GZAC-dossierbundel (§11.9): dossierschema (documentdefinitie),
-// dossierformulier (form.io) en dossiertabbladen, elk één bestand; de
-// dossierinhoud komt uit --objecttype. Schema en tabbladen dragen dezelfde
-// identifier (de key van het dossier): kies dan met --soort.
+// dossierformulier (form.io), dossiertabbladen en dossierzaaktypelink, elk één
+// bestand; de dossierinhoud komt uit --objecttype. Schema, tabbladen en
+// zaaktypekoppeling dragen dezelfde identifier (de key van het dossier): kies
+// dan met --soort.
 //
 // Een bpmn-artefact (§11.11) komt uit een BPMN-model (profiel bpmn-motor):
 // --model is dan dat model, niet het canonieke. Naast het artefact schrijft

@@ -80,6 +80,14 @@ test("ART-PLAATSHOUDER: een plaatshouder zonder afhankelijkheid geeft een waarsc
   const artefact = (payload, afhankelijkheden) => ({ artefactInhoud: { payload }, afhankelijkheden });
   assert.deepEqual(toetsPlaatshouders(artefact({ url: "${ZAAKTYPE_URL:GPK}" }, [{ identifier: "GPK" }])), []);
   assert.deepEqual(toetsPlaatshouders(artefact("<x a='${OBJECTTYPE_URL:aanvraag}' b='${OBJECTTYPE_VERSION:aanvraag}'/>", [])).map((d) => d.code), ["ART-PLAATSHOUDER"]);
+  // Rol- en statustype: het eerste deel is het zaaktype; het tweede is geen artefact.
+  assert.deepEqual(toetsPlaatshouders(artefact({ rol: "${ROLTYPE_URL:GPK:initiator}", status: "${STATUSTYPE_URL:GPK:1}" }, [{ identifier: "GPK" }])), []);
+  assert.match(toetsPlaatshouders(artefact({ rol: "${ROLTYPE_URL:GPK:initiator}" }, []))[0].message, /"GPK" \(\$\{ROLTYPE_URL:GPK:initiator\}\)/);
+  // Omgevingsgegevens vragen geen afhankelijkheid; een andere kale naam is een geheim.
+  assert.deepEqual(toetsPlaatshouders(artefact({ a: "${PLUGINCONFIG_ID:zakenapi}", b: "${ORGANISATIE_RSIN}", c: "${CATALOGUS_DOMEIN}" }, [])), []);
+  assert.deepEqual(toetsPlaatshouders(artefact({ a: "${OPENZAAK_CLIENT_SECRET}" }, [])).map((d) => d.code), ["ART-GEHEIM"]);
+  // Een expressie van de engine is geen plaatshouder.
+  assert.deepEqual(toetsPlaatshouders(artefact("<f>${ontvankelijkheid.ontvankelijk}</f><g>${execution.getVariable('bsn')}</g>", [])), []);
 
   // De GPK-bundel: het formulier draagt plaatshouders naar het objecttype en heeft die afhankelijkheid.
   const bundel = await maakInrichtingsBundel(invoer());
@@ -91,8 +99,12 @@ test("ART-PLAATSHOUDER: een plaatshouder zonder afhankelijkheid geeft een waarsc
   assert.deepEqual(zonder.find((b) => b.soort === "formulier").diagnostics.filter((d) => d.code === "ART-PLAATSHOUDER").length, 1);
 });
 
-test("tabbladen hangen af van het dossierschema en het zaaktype (volgorde op een lege omgeving)", async () => {
+test("de zaaktypekoppeling hangt af van het dossierschema en het zaaktype (volgorde op een lege omgeving)", async () => {
   const bundel = await maakInrichtingsBundel(invoer());
+  const link = bundel.find((b) => b.soort === "dossierzaaktypelink");
+  assert.equal(link.bestandsnaam, "gehandicaptenparkeerkaart.dossierzaaktypelink.artefact.json");
+  assert.deepEqual(link.diagnostics, []); // ook geen ART-PLAATSHOUDER: de plaatshouder naar GPK heeft zijn afhankelijkheid
+  assert.deepEqual(link.artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"], ["GPK", "zaaktype"]]);
   const tab = bundel.find((b) => b.soort === "dossiertabbladen").artefact;
-  assert.deepEqual(tab.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"], ["GPK", "zaaktype"]]);
+  assert.deepEqual(tab.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"]]);
 });

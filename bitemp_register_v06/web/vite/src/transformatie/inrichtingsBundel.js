@@ -22,19 +22,31 @@ import { maakDossierArtefact, DOSSIER_SOORTEN } from "../diagramprofielen/canoni
 import { maakBpmnArtefact } from "../diagramprofielen/bpmn/bpmnArtefact.js";
 import { maakDmnArtefact } from "../diagramprofielen/dmn-drd/dmnArtefact.js";
 
-/** Volgorde van maken: wat een ander artefact nodig heeft komt eerst. */
 /**
- * Plaatshouders die de uitrol (FUNDAMENT) oplost naar de url of versie van een
- * type in de omgeving: `${OBJECTTYPE_URL:<id>}`, `${OBJECTTYPE_VERSION:<id>}`,
- * `${ZAAKTYPE_URL:<id>}`. Het artefact dat dat type aanmaakt moet dan eerder
- * uitgerold zijn; op een lege omgeving klopt de volgorde alleen als de
- * afhankelijkheid in de e-dienst staat (FUNDAMENT, cg-test 05-11).
+ * Plaatshouders in een payload, die de uitrol (FUNDAMENT) per omgeving invult
+ * (afspraak 05-11):
+ *
+ * - naar een type dat een ander artefact aanmaakt: `${OBJECTTYPE_URL:<id>}`,
+ *   `${OBJECTTYPE_VERSION:<id>}`, `${OBJECTTYPE_ID:<id>}`, `${ZAAKTYPE_URL:<id>}`,
+ *   `${ROLTYPE_URL:<id>:<omschrijvingGeneriek>}`, `${STATUSTYPE_URL:<id>:<volgnummer>}`.
+ *   `<id>` is de identifier van het objecttype- of zaaktype-artefact. Dat moet
+ *   eerder uitgerold zijn; op een lege omgeving klopt de volgorde alleen als
+ *   de afhankelijkheid in de e-dienst staat.
+ * - omgevingsgegevens, zonder afhankelijkheid: `${PLUGINCONFIG_ID:<pluginDefinitionKey>}`
+ *   en de kale namen in OMGEVING.
+ *
+ * Elke andere kale `${NAAM}` leest de uitrol als een geheim (sleutel uit een
+ * Secret); dat hoort niet in een artefact.
  */
-const PLAATSHOUDER = /\$\{(OBJECTTYPE_URL|OBJECTTYPE_VERSION|ZAAKTYPE_URL):([^}]+)\}/g;
+const PLAATSHOUDER = /\$\{(OBJECTTYPE_URL|OBJECTTYPE_VERSION|OBJECTTYPE_ID|ZAAKTYPE_URL|ROLTYPE_URL|STATUSTYPE_URL):([^:}]+)(?::[^}]*)?\}/g;
+const KAAL = /\$\{([A-Z][A-Z0-9_]*)\}/g;
+const OMGEVING = new Set(["OBJECTS_API_GROUP", "CATALOGUS_DOMEIN", "CATALOGUS_RSIN", "ORGANISATIE_RSIN"]);
 
 /**
- * Toets `ART-PLAATSHOUDER`: elke plaatshouder in de payload heeft een
- * afhankelijkheid op het artefact dat het type aanmaakt.
+ * Toetsen op de plaatshouders in de payload:
+ * - `ART-PLAATSHOUDER`: een verwijzing naar een type zonder afhankelijkheid op
+ *   het artefact dat het aanmaakt;
+ * - `ART-GEHEIM`: een kale `${NAAM}` die geen omgevingsgegeven is.
  * @param {any} artefact
  * @returns {any[]} diagnostics
  */
@@ -43,17 +55,20 @@ export function toetsPlaatshouders(artefact) {
   const tekst = typeof payload === "string" ? payload : JSON.stringify(payload ?? "");
   const heeft = new Set((artefact?.afhankelijkheden || []).map((a) => a.identifier));
   const mist = new Map();
-  for (const m of tekst.matchAll(PLAATSHOUDER)) if (!heeft.has(m[2]) && !mist.has(m[2])) mist.set(m[2], m[1]);
-  return [...mist].map(([id, soort]) => ({
-    severity: "warning",
-    code: "ART-PLAATSHOUDER",
-    message: `De payload verwijst naar "${id}" (\${${soort}:${id}}), maar het artefact heeft daar geen afhankelijkheid op; op een lege omgeving kan de uitrol dan in de verkeerde volgorde lopen`,
-    sourceId: null,
-    path: null,
-  }));
+  for (const m of tekst.matchAll(PLAATSHOUDER)) if (!heeft.has(m[2]) && !mist.has(m[2])) mist.set(m[2], m[0]);
+  const geheim = new Set();
+  for (const m of tekst.matchAll(KAAL)) if (!OMGEVING.has(m[1])) geheim.add(m[1]);
+  const meld = (code, message) => ({ severity: "warning", code, message, sourceId: null, path: null });
+  return [
+    ...[...mist].map(([id, plaatshouder]) =>
+      meld("ART-PLAATSHOUDER", `De payload verwijst naar "${id}" (${plaatshouder}), maar het artefact heeft daar geen afhankelijkheid op; op een lege omgeving kan de uitrol dan in de verkeerde volgorde lopen`),
+    ),
+    ...[...geheim].map((naam) => meld("ART-GEHEIM", `De payload bevat \${${naam}}; de uitrol leest dat als een geheim, en dat hoort niet in een artefact`)),
+  ];
 }
 
-const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierschema", "dossierformulier", "dossiertabbladen", "dmn", "bpmn"];
+/** Volgorde van maken: wat een ander artefact nodig heeft komt eerst. */
+const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dmn", "bpmn"];
 
 /**
  * Bestandsnaam zoals de CLI hem schrijft: `<identifier>.artefact.json`, bij de
