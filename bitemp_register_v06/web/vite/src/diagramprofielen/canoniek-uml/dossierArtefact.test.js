@@ -123,9 +123,38 @@ test("tabbladen: de standaardtabbladen uit de regelset, gelijk aan het handwerk"
   assert.deepEqual(diagnostics, []);
   assert.deepEqual(artefact.artefactInhoud.payload, lees("gzac-handwerk/gehandicaptenparkeerkaart.case-tab.json"));
   assert.equal(artefact.artefactInhoud.formaat, "gzac-case-tab-json");
-  // Zelfde identifier als het schema, maar niet diens afhankelijkheden. Wel het dossier zelf en
-  // het zaaktype: de dossierbundel koppelt het dossier aan het zaaktype (FUNDAMENT 05-11).
+  // Zelfde identifier als het schema, maar niet diens afhankelijkheden: alleen het dossier zelf.
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"]]);
+});
+
+// De koppeling dossier ↔ zaaktype was handwerk bij FUNDAMENT (zgw/zaak-type-link); nu uit de
+// e-dienst, met plaatshouders voor wat de omgeving bepaalt (afspraak FUNDAMENT 05-11).
+test("zaaktypekoppeling: zaaktype en zaakBijDossier uit de e-dienst, omgevingsgegevens als plaatshouder", async () => {
+  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart", "dossierzaaktypelink");
+  assert.deepEqual(diagnostics, []);
+  assert.deepEqual(artefact.artefactInhoud.payload, {
+    zaakTypeUrl: "${ZAAKTYPE_URL:GPK}",
+    zakenApiPluginConfigurationId: "${PLUGINCONFIG_ID:zakenapi}",
+    createWithDossier: false,
+    rsin: "${ORGANISATIE_RSIN}",
+  });
+  assert.equal(artefact.artefactInhoud.formaat, "gzac-zaak-type-link-json");
+  assert.equal(artefact.artefactIdentificatie.soort, "dossierzaaktypelink");
+  assert.equal(artefact.doelcomponent, "gzac");
   assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"], ["GPK", "zaaktype"]]);
+  assert.equal(artefact.traceregels.length, 4);
+
+  const zonder = await maak("gehandicaptenparkeerkaart", "dossierzaaktypelink", (e) => {
+    delete e.artefacten.find((a) => a.soort === "dossierzaaktypelink").zaaktype;
+    return e;
+  });
+  assert.deepEqual(zonder.diagnostics.map((d) => [d.severity, d.code]), [["error", "DOS-ZAAKTYPE"]]);
+  const extern = await maak("gehandicaptenparkeerkaart", "dossierzaaktypelink", (e) => {
+    e.artefacten.find((a) => a.soort === "dossierzaaktypelink").zaaktype = "ANDERS";
+    return e;
+  });
+  assert.deepEqual(extern.diagnostics.map((d) => [d.severity, d.code]), [["warning", "DOS-ZAAKTYPE"]]);
+  assert.equal(extern.artefact.artefactInhoud.payload.zaakTypeUrl, "${ZAAKTYPE_URL:ANDERS}");
 });
 
 test("toetsen: onbekend veld, behandelveld dat al in het model staat, geen objecttype", async () => {

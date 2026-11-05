@@ -259,6 +259,16 @@
       "_tabbladen": "de vijf standaardtabbladen uit de regelset; een lijst `tabbladen` hier vervangt ze"
     },
     {
+      "identifier": "gehandicaptenparkeerkaart",
+      "soort": "dossierzaaktypelink",
+      "formaat": "gzac-zaak-type-link-json",
+      "doelcomponent": "gzac",
+      "naam": "Koppeling dossier gehandicaptenparkeerkaart aan zaaktype GPK",
+      "zaaktype": "GPK",
+      "zaakBijDossier": false,
+      "_zaakBijDossier": "false: het oppakproces maakt de zaak (na de ontvankelijkheidstoets), niet het aanmaken van het dossier"
+    },
+    {
       "identifier": "aanvraag-oppakken",
       "soort": "bpmn",
       "formaat": "bpmn-xml",
@@ -299,7 +309,8 @@
     { "artefact": "gehandicaptenparkeerkaart-aanvragen", "afhankelijkVan": "GPK", "reden": "het formulier legt bijlagen vast met een informatieobjecttype uit de catalogus van het zaaktype" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierschema", "afhankelijkVan": "gehandicaptenparkeerkaartaanvraag", "reden": "de dossierinhoud is het schema van het objecttype (zonder envelop)" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossiertabbladen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "de tabbladen horen bij het dossier" },
-    { "artefact": "gehandicaptenparkeerkaart", "soort": "dossiertabbladen", "afhankelijkVan": "GPK", "afhankelijkVanSoort": "zaaktype", "reden": "de dossierbundel koppelt het dossier aan het zaaktype (zaak-type-link); op een lege omgeving moet het zaaktype er eerst zijn" },
+    { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierzaaktypelink", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "de koppeling hoort bij het dossier" },
+    { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierzaaktypelink", "afhankelijkVan": "GPK", "afhankelijkVanSoort": "zaaktype", "reden": "de koppeling verwijst naar het zaaktype in de omgeving; op een lege omgeving moet het zaaktype er eerst zijn" },
     { "artefact": "gehandicaptenparkeerkaart.summary", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het formulier toont velden van de dossierinhoud" },
     { "artefact": "aanvraag-beoordelen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" },
     { "artefact": "gehandicaptenparkeerkaart-beoordelen", "afhankelijkVan": "GPK", "reden": "het proces draait op een zaak van zaaktype GPK" },
