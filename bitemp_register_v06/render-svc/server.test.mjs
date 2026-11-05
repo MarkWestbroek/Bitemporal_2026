@@ -23,7 +23,13 @@ test("POST /render/svg → SVG, twee keer byte-gelijk", async () => {
   assert.equal(a.status, 200);
   assert.match(a.headers.get("content-type"), /^image\/svg\+xml/);
   const b = await post("/api/render/svg", { taal: "v3", model, domein: "catalogus" });
-  assert.equal(await a.text(), await b.text());
+  const tekst = await a.text();
+  assert.equal(tekst, await b.text());
+  // De versie staat in de SVG én in de header, en is die van package.json.
+  const versie = JSON.parse(fs.readFileSync(new URL("./package.json", import.meta.url), "utf8")).version;
+  assert.match(versie, /^\d+\.\d+\.\d+$/);
+  assert.equal(a.headers.get("x-render-versie"), versie);
+  assert.match(tekst, new RegExp(`^<svg data-render-versie="${versie.replace(/\./g, "\\.")}" xmlns=`));
 });
 
 test("fouten als problem+json", async () => {

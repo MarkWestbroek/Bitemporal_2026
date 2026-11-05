@@ -152,6 +152,7 @@ dan tekent de API hem zonder wijziging hier. Nog op de terugval: `archimate-box`
 ## Eisen aan de SVG (afspraken met Imprint)
 
 - `viewBox`, **geen** `width`/`height` op `<svg>`.
+- `data-render-versie` op de wortel (en header `X-Render-Versie` van de sidecar, `GET /health` → `versie`): de versie van render-svc uit `render-svc/package.json`. De tekening verandert per release; wie een SVG bewaart, legt zo vast waarmee hij getekend is. Binnen één versie blijft de uitvoer byte-gelijk.
 - `<title>`, `role="img"` en `aria-label` (titel plus de getekende entiteiten). Namen staan als
   `<text>` in de SVG, zodat ze doorzoekbaar zijn.
 - Geen `<script>`, `on*`, `<foreignObject>`, `<image>`, externe `href` of `@font-face`. Geen

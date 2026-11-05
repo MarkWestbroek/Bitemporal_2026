@@ -45,6 +45,8 @@ const uitkomst = await build({
   target: "node22",
   loader: { ".css": "empty", ".svg": "empty", ".png": "empty" },
   plugins: [leeg],
+  // De bronnen staan buiten render-svc; hun pakketten (bv. @xyflow/system van lijnen.js) komen uit onze node_modules.
+  nodePaths: [fileURLToPath(new URL("./node_modules", import.meta.url))],
   logLevel: "warning",
 });
 if (uitkomst.warnings.length) {

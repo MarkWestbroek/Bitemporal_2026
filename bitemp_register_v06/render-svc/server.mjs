@@ -12,7 +12,7 @@
  *                     of { taal: "studio", model | code, profiel, diagram, theme, idPrefix }
  *                     → 200 image/svg+xml, of application/problem+json
  *   POST /views       { taal, model | code, profiel } → { diagrammen, domeinen }
- *   GET  /health      → { ok: true }
+ *   GET  /health      → { ok: true, versie }
  *
  * Geen runtime-dependencies. taal=studio gebruikt de profielbundel uit bouw.mjs
  * (`npm install && npm run bouw`); zonder bundel geeft alleen die taal een 503.
@@ -21,12 +21,30 @@
  * RENDER_SVC_MAX_BYTES (standaard 5 MB).
  */
 import http from "node:http";
+import fs from "node:fs";
 import { renderDiagramSvg, diagramViews, RenderFout } from "../web/vite/src/diagramsvg/index.js";
 import { renderStudioSvg, studioViews, STUDIO_VELDEN } from "../web/vite/src/diagramsvg/studio.js";
 
 const PORT = Number(process.env.RENDER_SVC_PORT || 8095);
 const HOST = process.env.RENDER_SVC_HOST || "127.0.0.1";
 const MAX_BYTES = Number(process.env.RENDER_SVC_MAX_BYTES || 5 * 1024 * 1024);
+
+/**
+ * De versie van deze sidecar (render-svc/package.json; de git-tag is render/v<versie>). Staat in
+ * elke SVG als `data-render-versie` en in de header `X-Render-Versie`: de tekening verandert per
+ * release, en wie een SVG bewaart (bv. het inrichtingsregister) legt vast waarmee hij getekend is.
+ * Het attribuut komt ook door de Go-API, die de body ongewijzigd doorgeeft.
+ */
+export const RENDER_VERSIE = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(new URL("./package.json", import.meta.url), "utf8")).version || "onbekend";
+  } catch {
+    return "onbekend";
+  }
+})();
+
+/** Zet de versie op het wortelelement; de rest van de SVG blijft byte-gelijk. */
+export const metVersie = (svg) => svg.replace(/^<svg\b/, `<svg data-render-versie="${RENDER_VERSIE}"`);
 
 const RENDER_VELDEN = new Set(["taal", "model", "code", "diagram", "domein", "entiteiten", "richting", "theme", "velden", "afhankelijkheden", "idPrefix", "linkPattern"]);
 const VIEWS_VELDEN = new Set(["taal", "model", "code"]);
@@ -104,7 +122,7 @@ export function maakServer() {
     try {
       if (req.method === "GET" && pad === "/health") {
         res.writeHead(200, { "Content-Type": "application/json" });
-        return res.end('{"ok":true}');
+        return res.end(JSON.stringify({ ok: true, versie: RENDER_VERSIE }));
       }
       // /api/render/svg: hetzelfde pad als de publieke Go-route, zodat een client
       // lokaal rechtstreeks op de sidecar kan draaien (zonder DB/Go-API).
@@ -112,8 +130,8 @@ export function maakServer() {
         const invoer = await leesInvoer(req);
         controleerVelden(invoer, isStudio(invoer) ? STUDIO_VELDEN : RENDER_VELDEN);
         const svg = isStudio(invoer) ? renderStudioSvg(invoer, await laadBundel()) : renderDiagramSvg(invoer);
-        res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8" });
-        return res.end(svg);
+        res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
+        return res.end(metVersie(svg));
       }
       if (req.method === "POST" && pad === "/views") {
         const invoer = await leesInvoer(req);
