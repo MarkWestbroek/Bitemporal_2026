@@ -22,6 +22,7 @@ import { maakDossierArtefact, DOSSIER_SOORTEN } from "../diagramprofielen/canoni
 import { maakBpmnArtefact } from "../diagramprofielen/bpmn/bpmnArtefact.js";
 import { maakDmnArtefact } from "../diagramprofielen/dmn-drd/dmnArtefact.js";
 import { maakProcesLinkArtefact, SOORT as PROCESKOPPELING } from "../diagramprofielen/bpmn/procesLinkArtefact.js";
+import { bronnenVan, uuidIndex, zetBronElementIds } from "./bronArtefacten.js";
 
 /**
  * Plaatshouders in een payload, die de uitrol (FUNDAMENT) per omgeving invult
@@ -148,6 +149,8 @@ function bpmnModelVoor(keuzes, bpmnModellen) {
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
  * @param {Record<string, any>} [invoer.bpmnModellen] - BPMN- en DMN-modellen per naam (`bron.model` van een bpmn- of dmn-artefact)
  * @param {(keuzes: any) => boolean} [invoer.kies]    - welke artefacten (default: alle)
+ * @param {any[]|null} [invoer.bronnen]               - de bronartefacten van de e-dienst (maakBronArtefacten); dan
+ *   noemt elk artefact zijn bronnen in `bronnen` (§11.14)
  * @returns {Promise<Array<{bestandsnaam: string, soort: string, identifier: string,
  *   artefact: any|null, diagnostics: any[], fout: string|null}>>}
  *   in de volgorde van de e-dienst; een fout per artefact stopt de rest niet.
@@ -161,6 +164,7 @@ export async function maakInrichtingsBundel({
   sha256Hex,
   bpmnModellen = {},
   kies = () => true,
+  bronnen = null,
 }) {
   const alle = (edienst?.artefacten || []).filter((a) => a && a.identifier && a.soort);
   const gekozen = alle.filter(kies);
@@ -180,6 +184,8 @@ export async function maakInrichtingsBundel({
   const uitkomst = new Map();
   /** Per decision-id de invoer van de beslistabel, voor de processen. */
   const beslissingen = {};
+  /** Naampad → uuid in het canonieke model, voor `bronElementId` in de traceregels. */
+  const uuids = uuidIndex(modelBestand);
   for (const keuzes of opVolgorde) {
     const { soort, identifier } = keuzes;
     try {
@@ -204,6 +210,10 @@ export async function maakInrichtingsBundel({
       if (!r) throw new Error(`Onbekende artefactsoort "${soort}".`);
       if (soort === "objecttype") objecttypen.set(identifier, r.artefact);
       if (soort === "dmn") beslissingen[identifier] = r.invoer;
+      // Herkomst (§11.14): het element in de bron bij elke traceregel, en de bronnen van het artefact.
+      const bronModel = soort === "bpmn" || soort === "dmn" ? bpmnModellen[keuzes.bron?.model] : soort === PROCESKOPPELING ? bpmnModellen[procesVan(keuzes, edienst).bron?.model] : null;
+      zetBronElementIds(r.artefact, { uuids, elementen: (bronModel?.model || bronModel)?.elements || {} });
+      if (bronnen) r.artefact.bronnen = bronnenVan(keuzes, edienst, bronnen);
       uitkomst.set(keuzes, { artefact: r.artefact, diagnostics: [...(r.diagnostics || []), ...toetsPlaatshouders(r.artefact), ...toetsAfhankelijkheden(r.artefact, edienst)], fout: null });
     } catch (e) {
       uitkomst.set(keuzes, { artefact: null, diagnostics: e?.diagnostics || [], fout: e?.message || String(e) });

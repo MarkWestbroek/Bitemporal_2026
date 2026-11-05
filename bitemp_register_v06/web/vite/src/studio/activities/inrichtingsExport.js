@@ -6,7 +6,8 @@
  *
  * Invoer:
  *   - model: het canonieke model in de bron-map (diagram05 → V3), of een
- *     gekozen V3-bestand (wint);
+ *     gekozen V3-bestand (wint). Komt het model uit de map, dan gaat het
+ *     profiel met zijn diagrammen mee als bron `logisch-model` (§11.14);
  *   - e-dienstmodel: een gekozen JSON-bestand (nog geen modeltaal, stap c);
  *   - referentielijsten: gekozen bestanden, anders het register, anders de
  *     eersteVulling in de e-dienst;
@@ -102,7 +103,9 @@ registreerTransformatie({
 
     // Model uit de map en uit het V3-bestand geven dezelfde payloads sinds de
     // V3.1-veldsleutels de omzetting overleven (BACKLOG §39; e2e 37 bewaakt dit).
-    const uit = await voerInrichtingsExportUit({ edienst, modelBestand, datatypen: datatypes, referentieBestanden, bpmnModellen, peiltijdstip, haalJson, sha256Hex });
+    // Bron logisch-model: het canonieke profiel van de map, met de diagrammen; bij een gekozen V3-bestand komt hij uit V3.
+    const canoniekDeel = opties.model ? null : collectMapModel(bronMap)[CANONIEK] || null;
+    const uit = await voerInrichtingsExportUit({ edienst, modelBestand, datatypen: datatypes, referentieBestanden, bpmnModellen, canoniekDeel, peiltijdstip, haalJson, sha256Hex });
     const e = edienst.edienst || {};
     download(`inrichting-${veilig(e.naam)}-${e.versienummer || "0"}.zip`, maakZip(uit.bestanden), "application/zip");
 

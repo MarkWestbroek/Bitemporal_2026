@@ -39,12 +39,13 @@ test("GPK zonder register: zip met alle artefacten + overzicht", async () => {
     sha256Hex,
   });
   const n = lees("gpk-edienst.json").artefacten.length;
-  assert.equal(uit.bestanden.length, n + 1);
+  // De artefacten, het overzicht en de vier bronnen (e-dienstmodel, logisch model, processen, beslissingen).
+  assert.equal(uit.bestanden.length, n + 1 + 4);
   assert.ok(uit.bestanden.some((b) => b.naam === "gehandicaptenparkeerkaart.dossierschema.artefact.json"));
   assert.equal(uit.bestanden.at(-1).naam, "OVERZICHT.md");
-  assert.match(uit.summary, new RegExp(`^${n} van ${n} artefacten gemaakt\\.$`));
+  assert.match(uit.summary, new RegExp(`^${n} van ${n} artefacten gemaakt; 4 bronnen\\.$`));
   assert.equal(uit.registerGelezen, false);
-  const ot = JSON.parse(uit.bestanden[0].inhoud);
+  const ot = JSON.parse(uit.bestanden.find((b) => b.naam === "gehandicaptenparkeerkaartaanvraag.artefact.json").inhoud);
   assert.deepEqual(Object.keys(ot).slice(0, 3), ["artefactIdentificatie", "artefactInhoud", "artefactHerkomst"]);
 });
 
