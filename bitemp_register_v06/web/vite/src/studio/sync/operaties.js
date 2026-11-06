@@ -196,14 +196,33 @@ export function rebaseStand(stand, voor, na, velden) {
 
 // ── Diff-helpers voor de vangnetten ───────────────────────────────────
 
+/** Inhoudelijk gelijk (JSON-achtige waarden: objecten, lijsten, tekst, getallen, booleans, null). */
+export function gelijk(a, b) {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) if (!gelijk(a[i], b[i])) return false;
+    return true;
+  }
+  const ka = Object.keys(a).filter((k) => a[k] !== undefined);
+  const kb = Object.keys(b).filter((k) => b[k] !== undefined);
+  if (ka.length !== kb.length) return false;
+  for (const k of ka) if (!gelijk(a[k], b[k])) return false;
+  return true;
+}
+
 /**
- * Verschil tussen twee id-maps: `zet` = nieuw of (per referentie) gewijzigd,
+ * Verschil tussen twee id-maps: `zet` = nieuw of (inhoudelijk) gewijzigd,
  * `wis` = verdwenen.
  */
 export function diffMap(voor = {}, na = {}) {
   const zet = {};
   const wis = [];
-  for (const [id, v] of Object.entries(na || {})) if (voor?.[id] !== v) zet[id] = v;
+  // Andere referentie maar dezelfde inhoud telt niet (06-11): een geladen kopie (laadModel)
+  // bestaat uit nieuwe objecten; alleen wat inhoudelijk verschilt, gaat als operatie mee.
+  for (const [id, v] of Object.entries(na || {})) if (voor?.[id] !== v && !gelijk(voor?.[id], v)) zet[id] = v;
   for (const id of Object.keys(voor || {})) if (!(id in (na || {}))) wis.push(id);
   return { zet, wis, leeg: !wis.length && !Object.keys(zet).length };
 }
@@ -243,7 +262,11 @@ export function diffLijst(voor = [], na = []) {
  * als patchElementen + patchDiagrammen (bij naspelen gooien die nooit).
  */
 export const MODEL_OPS = {
-  laadModel: null,
+  // laadModel bewust NIET (besluit Mark 06-11, "Nu liever defensief"): als hele vervanging gooide
+  // één op het complete model over de server heen, ook een oude kopie (project Inrichten: een open
+  // tab zette een PUT van FUNDAMENT terug). Het vangnet maakt er nu patchElementen/patchDiagrammen
+  // van, met alleen wat echt veranderde; een tab die zijn eigen kopie herlaadt stuurt niets.
+  // Oude laadModel-ops in serverlogs blijven naspeelbaar (de actie bestaat nog).
   clear: null,
   importeerModel: null,
   addElement: null,

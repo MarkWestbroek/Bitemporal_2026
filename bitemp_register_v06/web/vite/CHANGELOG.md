@@ -8,6 +8,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **Een open tab zette een wijziging van buitenaf terug** (project Inrichten, 06-11): `laadModel`
+  ging als hele vervanging naar de server, ook met een oude kopie. Nu maakt het diff-vangnet er
+  `patchElementen`/`patchDiagrammen` van, met alleen wat inhoudelijk verschilt (`diffMap`
+  vergelijkt bij een andere referentie ook de inhoud); een tab die zijn eigen kopie herlaadt,
+  stuurt niets (besluit Mark: "Nu liever defensief"). De server gaat een volledige PUT weigeren
+  zolang er iemand in het project bezig is (BACKEND).
+
 ### Toegevoegd
 - **Diagram-tabs verslepen** (Mark, 06-11). Sleep een tab in de tabbalk naar een andere plek;
   een streep toont waar hij landt. De volgorde hoort bij de werkruimte (localStorage en de
