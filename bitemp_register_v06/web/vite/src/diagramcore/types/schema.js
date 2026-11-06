@@ -528,6 +528,15 @@
  * @property {string} style                - StyleType-id (Implementatie-domein)
  * @property {ShapeType[]} [shapeTypes]     - de eigen vormen van dit profiel als gegevens (M3,
  *   2026-11-04); `registreerDiagramType` registreert ze. Zie types/shapeType.js.
+ * @property {string|Array<string|{type: string, omgekeerd?: boolean}>} [hierarchie] - de
+ *   connectortypen die de ouder-kindrelatie in de elementenboom vormen (P02, "bevat-relatie").
+ *   Eén id (`"ref"`) of een lijst in volgorde van stapeling (`["bevat", "compositie"]`): de
+ *   boom nest een element onder de bron van zo'n connector. `{type, omgekeerd: true}` als de
+ *   pijl náár de ouder wijst (DMN: requirements naar de beslissing). Elk id moet een
+ *   connectortype van dit profiel zijn (`valideerDiagramType`); een abstract type staat voor
+ *   zijn concrete afstammelingen (`types/erfenis.js` breidt uit). De profiel-ontwerper leest
+ *   en schrijft hem (studio/activities/profielOntwerp.js). Relaties die geen connector-element
+ *   zijn, levert `hooks.hierarchieParen` (canoniek-uml: gespiegelde composities).
  * @property {"geen"|"icoon"|"tekst"} [typeWeergave] - default voor de
  *   Typering-toggle: alleen vorm, mini-icoon of stereotype-tekst (default "tekst")
  * @property {"zijden"|"zwevend"} [randAanhechting] - profiel-default voor waar
