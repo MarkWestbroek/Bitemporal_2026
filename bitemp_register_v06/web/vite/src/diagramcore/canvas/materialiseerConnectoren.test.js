@@ -676,3 +676,23 @@ test("zelf-relatie met velden (associatieklasse op een oortje): het anker ligt b
   assert.deepEqual([bron.sourceHandle, bron.targetHandle, doel.sourceHandle, doel.targetHandle], ["source-top", "target-left", "source-bottom", "target-right"]);
   assert.equal(bron.data.presentatie.vorm, "hoekig");
 });
+
+test("twee relaties tussen hetzelfde paar waaieren uit; een eigen verschuiving wint en telt niet mee", () => {
+  const typen = {
+    entiteit: { id: "entiteit" },
+    relatie: { id: "relatie", isConnector: true, bron: { elementTypes: ["entiteit"] }, doel: { elementTypes: ["entiteit"] } },
+  };
+  const elements = {
+    P: { id: "P", elementType: "entiteit", compartimenten: [], data: {} },
+    M: { id: "M", elementType: "entiteit", compartimenten: [], data: {} },
+    r1: { id: "r1", naam: "Adviseur", elementType: "relatie", source: "P", target: "M", compartimenten: [], data: {} },
+    r2: { id: "r2", naam: "Betrokkene", elementType: "relatie", source: "M", target: "P", compartimenten: [], data: {} },
+  };
+  const diagram = { id: "d", nodes: [{ elementId: "P", position: { x: 0, y: 0 } }, { elementId: "M", position: { x: 0, y: 300 } }], edges: [] };
+  const v = (uit, id) => uit.edges.find((e) => e.id === `conn:${id}`).data.presentatie.verschuiving;
+  const uit = materialiseerConnectoren(elements, diagram, typen);
+  assert.deepEqual([v(uit, "r1"), v(uit, "r2")], [-14, 14]);
+  // r2 versleept (verschuiving per diagram): die blijft; r1 staat dan alleen en spreidt niet.
+  const uit2 = materialiseerConnectoren(elements, { ...diagram, lijnen: { r2: { verschuiving: 40 } } }, typen);
+  assert.deepEqual([v(uit2, "r1"), v(uit2, "r2")], [undefined, 40]);
+});

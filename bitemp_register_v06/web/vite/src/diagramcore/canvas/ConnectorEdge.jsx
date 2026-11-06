@@ -48,7 +48,7 @@ import {
   useStore,
   useInternalNode,
 } from "@xyflow/react";
-import { zwevendeUiteinden, nodeRechthoek } from "./zwevendeRand.js";
+import { zwevendeUiteinden, nodeRechthoek, verschuifUiteinden } from "./zwevendeRand.js";
 import { InlineNaamContext } from "./inlineNaam.js";
 import NaamEditor from "./NaamEditor.jsx";
 
@@ -167,7 +167,10 @@ function ConnectorEdge({
   // Met knikpunten mikt elk uiteinde op zijn dichtstbijzijnde knik (zie
   // zwevendeRand.richtpuntOfAanhechtpunt), niet op de andere doos.
   const knikkenRand = Array.isArray(data?.knikken) && data.knikken.length ? data.knikken : null;
-  const { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition } =
+  // Een rechte lijn zijwaarts slepen (06-11): tijdens het slepen een voorlopige verschuiving.
+  const [verschuivingLive, setVerschuivingLive] = useState(null);
+  const verschuiving = verschuivingLive ?? (p.verschuiving || 0);
+  const uiteinden0 =
     zwevendeUiteinden({
       bronRect: nodeRechthoek(bronNode),
       doelRect: nodeRechthoek(doelNode),
@@ -193,6 +196,12 @@ function ConnectorEdge({
         targetPosition: targetPositionVast,
       },
     });
+  // Verschuiving langs de zijden (lijn.verschuiving, of automatisch gespreid; Mark 06-11): beide
+  // uiteinden schuiven mee, de lijn blijft recht. Niet bij een lus of met knikken.
+  const { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition } =
+    verschuiving && source !== target && !knikkenRand
+      ? verschuifUiteinden(uiteinden0, verschuiving, nodeRechthoek(bronNode), nodeRechthoek(doelNode))
+      : uiteinden0;
   const padArgs = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition };
   // Zelf-verwijzing (source == target): een "oortje" buitenom de node —
   // anders valt het pad samen met één punt en is de connector onzichtbaar
@@ -438,9 +447,46 @@ function ConnectorEdge({
     doelEl.addEventListener("pointerup", klaar);
   };
 
+  /**
+   * Een lijn zonder knikken (en niet hoekig) zijwaarts slepen: de lijn blijft recht en schuift
+   * evenwijdig; bij loslaten wordt de verschuiving per diagram bewaard (data.onVerschuifLijn).
+   */
+  const startVerschuifLijn = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const doelEl = e.currentTarget;
+    doelEl.setPointerCapture?.(e.pointerId);
+    const start = { x: e.clientX, y: e.clientY };
+    // Langs welke as schuift het? Volgens de zijde van de bron (boven/onder → x, links/rechts → y).
+    const inX = sourcePosition === "top" || sourcePosition === "bottom";
+    const basis = p.verschuiving || 0;
+    let nieuw = basis;
+    const beweeg = (ev) => {
+      nieuw = basis + ((inX ? ev.clientX - start.x : ev.clientY - start.y) / zoom);
+      setVerschuivingLive(nieuw);
+    };
+    const klaar = () => {
+      doelEl.removeEventListener("pointermove", beweeg);
+      doelEl.removeEventListener("pointerup", klaar);
+      setVerschuivingLive(null);
+      if (Math.abs(nieuw - basis) >= 2) {
+        netGesleeptRef.current = true;
+        data.onVerschuifLijn(Math.round(nieuw));
+      }
+    };
+    doelEl.addEventListener("pointermove", beweeg);
+    doelEl.addEventListener("pointerup", klaar);
+  };
+
   const startSegmentSleep = (e) => {
     if (typeof data?.onVerschuif === "function" && !e.ctrlKey && e.button === 0) {
       startVerschuif(e);
+      return;
+    }
+    // Recht = niet hoekig, of hoekig maar één recht stuk (dozen recht boven of naast elkaar).
+    const eenRechtStuk = p.vorm !== "hoekig" || Math.abs(sourceX - targetX) < 1 || Math.abs(sourceY - targetY) < 1;
+    if (typeof data?.onVerschuifLijn === "function" && !knikkenRand && eenRechtStuk && source !== target && !e.ctrlKey && e.button === 0) {
+      startVerschuifLijn(e);
       return;
     }
     if (!magKnikken || e.ctrlKey || e.button !== 0) return;

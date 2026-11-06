@@ -29,7 +29,7 @@ import { vorm } from "../types/shapeType.js";
 import { num } from "../../diagramsvg/svg.js";
 import { veiligeKleur } from "../../diagramsvg/thema.js";
 import { tekstBreedte } from "../../diagramsvg/tekstmaat.js";
-import { zwevendeUiteinden } from "../canvas/zwevendeRand.js";
+import { zwevendeUiteinden, verschuifUiteinden } from "../canvas/zwevendeRand.js";
 import { isPuntNode } from "./voorkomen.js";
 
 const DASHES = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4", gestippeld: "2 3" };
@@ -254,7 +254,7 @@ export function tekenLijnen({ edges, boxen, elements, thema, idPrefix }) {
     const sM = handlePunt(a, zA);
     const tM = handlePunt(b, zB);
     // Dezelfde aanroep als ConnectorEdge: vaste handles tenzij het uiteinde zweeft.
-    const u = zwevendeUiteinden({
+    const u0 = zwevendeUiteinden({
       bronRect: rect(a),
       doelRect: rect(b),
       zwevendBron: !!p.zwevendBron && (!isLus || !!knikken),
@@ -268,6 +268,8 @@ export function tekenLijnen({ edges, boxen, elements, thema, idPrefix }) {
       doelToppen: !!p.doelToppen,
       vast: { sourceX: sM.x, sourceY: sM.y, targetX: tM.x, targetY: tM.y, sourcePosition: zA, targetPosition: zB },
     });
+    // Verschuiving langs de zijden (06-11), zoals ConnectorEdge: alleen zonder knikken en geen lus.
+    const u = !knikken && !isLus && p.verschuiving ? verschuifUiteinden(u0, p.verschuiving, rect(a), rect(b)) : u0;
     const [d, labelX, labelY] = knikken
       ? knikPad(u, knikken)
       : isLus

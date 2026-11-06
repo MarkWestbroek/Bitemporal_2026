@@ -3185,6 +3185,11 @@ export function maakDiagramActiviteit(opties) {
                     const s = useStore.getState();
                     if (s.actiefDiagramId) s.zetLijn(s.actiefDiagramId, connectorId, { knikken: lijst || [] });
                   }}
+                  // Een rechte lijn zijwaarts geschoven (Mark 06-11): de verschuiving per diagram.
+                  onVerschuifLijn={(connectorId, n) => {
+                    const s = useStore.getState();
+                    if (s.actiefDiagramId) s.zetLijn(s.actiefDiagramId, connectorId, { verschuiving: n });
+                  }}
                   // Magic link op het lege vlak (§31.8): nieuw element,
                   // gecentreerd op de losplek, plus de verbinding — samen.
                   onMaakEnVerbind={({ elementTypeId, positie, connectorType, bronId, bronHandle, omgekeerd, containerId }) => {

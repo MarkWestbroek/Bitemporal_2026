@@ -160,6 +160,7 @@ function CanvasBinnenkant({
   selectieId = null,
   onSelectElement,
   onAchtergrondKlik,
+  onVerschuifLijn,
   onNodePositie,
   onNodePosities,
   onNodeSize,
@@ -700,6 +701,10 @@ function CanvasBinnenkant({
               ...(onKnikken && e.data.knikken !== undefined
                 ? { onKnikken: (lijst) => onKnikken(e.data.connectorId, lijst) }
                 : {}),
+              // Rechte lijn zijwaarts schuiven (06-11): verschuiving per diagram.
+              ...(onVerschuifLijn && e.data.knikken !== undefined
+                ? { onVerschuifLijn: (n) => onVerschuifLijn(e.data.connectorId, n) }
+                : {}),
               // Lijn verticaal verschuiven (hook verschuifConnector, bv.
               // sequence-berichten): de hook levert nieuwe posities per voorkomen.
               ...(() => {
@@ -721,7 +726,7 @@ function CanvasBinnenkant({
       const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
-  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, onHangConnectorOm, maten, elements, lookups, onNodePosities]);
+  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, onVerschuifLijn, onHangConnectorOm, maten, elements, lookups, onNodePosities]);
 
   // Directe kliks altijd melden, óók als React Flow geen selectie-wijziging
   // ziet (node stond intern nog geselecteerd terwijl de inspector inmiddels
