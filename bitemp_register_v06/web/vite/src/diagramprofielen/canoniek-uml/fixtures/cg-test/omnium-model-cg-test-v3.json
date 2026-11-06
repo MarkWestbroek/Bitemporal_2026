@@ -276,6 +276,40 @@
             "waarde": "verlopen"
           }
         ]
+      },
+      {
+        "goType": "ArtefactRichting",
+        "baseType": "string",
+        "domein": "inrichting",
+        "waarden": [
+          {
+            "constNaam": "ArtefactRichtingBron",
+            "waarde": "bron"
+          },
+          {
+            "constNaam": "ArtefactRichtingGegenereerd",
+            "waarde": "gegenereerd"
+          },
+          {
+            "constNaam": "ArtefactRichtingWeergave",
+            "waarde": "weergave"
+          }
+        ]
+      },
+      {
+        "goType": "ArtefactBronRol",
+        "baseType": "string",
+        "domein": "inrichting",
+        "waarden": [
+          {
+            "constNaam": "ArtefactBronRolBron",
+            "waarde": "bron"
+          },
+          {
+            "constNaam": "ArtefactBronRolWeergaveVan",
+            "waarde": "weergave-van"
+          }
+        ]
       }
     ],
     "entiteiten": [
@@ -348,26 +382,20 @@
                 "datatype": "URL"
               }
             ]
-          },
+          }
+        ],
+        "relaties": [
           {
             "naam": "ComponentArtefactsoort",
             "domein": "inrichting",
             "meervoud": "component_artefactsoorten",
             "momentvoorkomen": "meervoudig",
             "isMaterieel": true,
-            "description": "Welke soorten artefacten dit component kan ontvangen.",
-            "velden": [
-              {
-                "naam": "soort",
-                "goType": "int",
-                "type": "integer",
-                "verplicht": true,
-                "$ref": "ArtefactSoort"
-              }
-            ]
+            "description": "Welke soorten artefacten dit component kan ontvangen (referentielijst ArtefactSoort). Relatie en geen GE (besluit Mark 06-11). Meervoudig en materieel: wat een component kan ontvangen, verandert met de versies.",
+            "doelEntiteit": "ArtefactSoort",
+            "velden": []
           }
-        ],
-        "relaties": []
+        ]
       },
       {
         "typenaam": "ComponentVersie",
@@ -647,11 +675,27 @@
                 "naam": "eigenaar",
                 "type": "string",
                 "datatype": "KorteTekst"
+              },
+              {
+                "naam": "code",
+                "type": "string",
+                "datatype": "AN40",
+                "uniek": "entiteit"
               }
             ]
           }
         ],
-        "relaties": []
+        "relaties": [
+          {
+            "naam": "EdienstOnderdeelVan",
+            "domein": "inrichting",
+            "meervoud": "edienst_onderdelen_van",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Sub-e-dienst: deze e-dienst is onderdeel van de doel-e-dienst.",
+            "doelEntiteit": "EDienst",
+            "velden": []
+          }
+        ]
       },
       {
         "typenaam": "EDienstVersie",
@@ -775,6 +819,11 @@
                 "naam": "identifierRegel",
                 "type": "string",
                 "datatype": "LangeTekst"
+              },
+              {
+                "naam": "richting",
+                "type": "string",
+                "enum": "ArtefactRichting"
               }
             ]
           }
@@ -861,15 +910,8 @@
             "domein": "inrichting",
             "meervoud": "artefact_identificaties",
             "momentvoorkomen": "enkelvoudig",
-            "description": "Soort, stabiele identifier in het doelcomponent (objecttype-naam, catalogus+identificatie, form-slug, process-key), naam, functionele versie en de versie-range van het doelcomponent.",
+            "description": "Stabiele identifier in het doelcomponent (objecttype-naam, catalogus+identificatie, form-slug, process-key), naam, functionele versie en de versie-range van het doelcomponent. De soort is de relatie ArtefactArtefactsoort (doorloop 06-11).",
             "velden": [
-              {
-                "naam": "soort",
-                "goType": "int",
-                "type": "integer",
-                "verplicht": true,
-                "$ref": "ArtefactSoort"
-              },
               {
                 "naam": "identifier",
                 "type": "string",
@@ -899,15 +941,8 @@
             "meervoud": "artefact_inhouden",
             "momentvoorkomen": "enkelvoudig",
             "isMaterieel": true,
-            "description": "De payload in het formaat van het doelcomponent, met sha256-hash (canoniek geserialiseerd). Materieel: elke nieuwe generatie is een registratie.",
+            "description": "De payload met sha256-hash (canoniek geserialiseerd). Materieel: elke nieuwe generatie is een registratie. Het formaat hoort bij het artefact, niet bij de inhoud: relatie ArtefactArtefactformaat (doorloop 06-11).",
             "velden": [
-              {
-                "naam": "formaat",
-                "goType": "int",
-                "type": "integer",
-                "verplicht": true,
-                "$ref": "ArtefactFormaat"
-              },
               {
                 "naam": "payload",
                 "type": "string",
@@ -981,6 +1016,11 @@
                 "naam": "actie",
                 "type": "string",
                 "datatype": "AN40"
+              },
+              {
+                "naam": "bronElementId",
+                "type": "string",
+                "datatype": "AN200"
               }
             ]
           }
@@ -1019,6 +1059,47 @@
                 "datatype": "KorteTekst"
               }
             ]
+          },
+          {
+            "naam": "ArtefactBron",
+            "domein": "inrichting",
+            "meervoud": "artefact_bronnen",
+            "momentvoorkomen": "meervoudig",
+            "description": "Herkomst: dit artefact is gemaakt uit (rol bron) of is een tekening van (rol weergave-van) het doel-artefact. bronHash is de payloadHash van de bron op het moment van gebruik. Niet-materieel; een nieuwe bronversie is afvoer plus een nieuwe relatie. Doet niet mee in de uitrolvolgorde (dat is ArtefactAfhankelijkheid).",
+            "doelEntiteit": "Artefact",
+            "velden": [
+              {
+                "naam": "rol",
+                "type": "string",
+                "enum": "ArtefactBronRol",
+                "verplicht": true
+              },
+              {
+                "naam": "bronHash",
+                "type": "string",
+                "datatype": "AN200"
+              }
+            ]
+          },
+          {
+            "naam": "ArtefactArtefactsoort",
+            "domein": "inrichting",
+            "meervoud": "artefact_artefactsoorten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De soort van het artefact (referentielijst ArtefactSoort). Relatie en geen veld (besluit Mark 06-11). Verplicht (doelKardinaliteit 1), niet materieel.",
+            "doelEntiteit": "ArtefactSoort",
+            "velden": [],
+            "doelKardinaliteit": "1"
+          },
+          {
+            "naam": "ArtefactArtefactformaat",
+            "domein": "inrichting",
+            "meervoud": "artefact_artefactformaten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Het formaat van de payload (referentielijst ArtefactFormaat). Relatie en geen veld (besluit Mark 06-11). Verplicht (doelKardinaliteit 1), niet materieel: het formaat hoort bij het artefact, niet bij een inhoudsversie.",
+            "doelEntiteit": "ArtefactFormaat",
+            "velden": [],
+            "doelKardinaliteit": "1"
           }
         ]
       },
@@ -1132,6 +1213,22 @@
                 "datatype": "LangeTekst"
               }
             ]
+          },
+          {
+            "naam": "UitrolIdentificatie",
+            "domein": "inrichting",
+            "meervoud": "uitrol_identificaties",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Stabiele sleutel van de uitrol (uuid), een keer gezet bij de start. Los van UitrolVerloop, dat bij elke statuswissel een nieuw voorkomen krijgt. Ids hernummeren na een herstel; de uuid niet.",
+            "velden": [
+              {
+                "naam": "uuid",
+                "type": "string",
+                "datatype": "AN40",
+                "verplicht": true,
+                "uniek": "entiteit"
+              }
+            ]
           }
         ],
         "relaties": [
@@ -1193,6 +1290,12 @@
                 "naam": "melding",
                 "type": "string",
                 "datatype": "LangeTekst"
+              },
+              {
+                "naam": "componentversie",
+                "type": "string",
+                "datatype": "Versie",
+                "description": "Versie van het doelcomponent op het moment van uitrollen, gelezen uit de omgeving zelf (image-tag). Vastgelegd feit per uitrol (besluit Mark 06-11): afleiden via OmgevingComponentversie klopt alleen als elke upgrade op tijd geregistreerd is."
               }
             ]
           }
@@ -1361,7 +1464,7 @@
             "domein": "relatiebeheer",
             "meervoud": "partij_namen",
             "momentvoorkomen": "enkelvoudig",
-            "description": "Naam als cache (besluit Mark 27-10): kopie van de naam uit BRP of Handelsregister, zodat Omnium een partij leesbaar kan tonen zonder de bron te bevragen. De bron blijft leidend; de kopie kan verouderen. Niet materieel: een cache heeft geen eigen materiele geldigheid. Bij een persoon zonder registratie staat de naam in PartijZonderRegistratie en blijft dit GE leeg. Geen 'is'-GE.",
+            "description": "Naam als kopie uit BRP of Handelsregister, zodat Omnium een partij leesbaar kan tonen zonder de bron te bevragen. De bron blijft leidend. Materieel (besluit Mark 06-11): een naam verandert in de tijd. Bij een persoon zonder registratie staat de naam in PartijZonderRegistratie en blijft dit GE leeg. Geen 'is'-GE.",
             "velden": [
               {
                 "naam": "naam",
@@ -1376,7 +1479,8 @@
                 "datatype": "Datum",
                 "description": "Datum waarop de naam uit de bronregistratie is overgenomen"
               }
-            ]
+            ],
+            "isMaterieel": true
           },
           {
             "naam": "PartijKlantverwijzing",
@@ -1533,7 +1637,7 @@
             "domein": "aanvraag",
             "meervoud": "aanvraag_identificaties",
             "momentvoorkomen": "enkelvoudig",
-            "description": "Uniek aanvraagnummer (toegekend door de aanvraagservice) en het aanvraagtype.",
+            "description": "Uniek aanvraagnummer (toegekend door de aanvraagservice). Het aanvraagtype is de relatie AanvraagAanvraagtype (doorloop 06-11).",
             "velden": [
               {
                 "naam": "aanvraagnummer",
@@ -1542,14 +1646,6 @@
                 "verplicht": true,
                 "uniek": "entiteit",
                 "description": "Uniek nummer dat de aanvraagservice toekent"
-              },
-              {
-                "naam": "aanvraagtype",
-                "goType": "int",
-                "type": "integer",
-                "verplicht": true,
-                "$ref": "Aanvraagtype",
-                "description": "Soort aanvraag (keuzelijst Aanvraagtype)"
               }
             ]
           },
@@ -1644,6 +1740,16 @@
                 "description": "Rol van de partij bij deze aanvraag (referentielijst Partijrol)"
               }
             ]
+          },
+          {
+            "naam": "AanvraagAanvraagtype",
+            "domein": "aanvraag",
+            "meervoud": "aanvraag_aanvraagtypen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Het type van de aanvraag (referentielijst Aanvraagtype). Relatie en geen veld: een GE verwijst nooit naar een entiteit (besluit Mark 06-11). Verplicht (doelKardinaliteit 1). Niet materieel: een verkeerd type is een correctie, een nieuwe naam van het type zit in het referentielijst-item zelf.",
+            "doelEntiteit": "Aanvraagtype",
+            "velden": [],
+            "doelKardinaliteit": "1"
           }
         ],
         "afgeleideVelden": [
@@ -1739,7 +1845,7 @@
         "isMaterieel": false,
         "kleur": "#fde68a",
         "meervoud": "gehandicaptenparkeerkaart_aanvragen",
-        "description": "Aanvraag van een gehandicaptenparkeerkaart (Regeling gehandicaptenparkeerkaart): specialisatie van de generieke Aanvraag. Niet-materieel: de geldigheid van de aanvraag ligt bij de ouder (een tijdlijn).",
+        "description": "Aanvraag van een gehandicaptenparkeerkaart (Regeling gehandicaptenparkeerkaart): specialisatie van de generieke Aanvraag. Geen eigen tijdlijn (besluit Mark 06-11, bevestigd door BACKEND): een subtype is een aanvraag en erft de materialiteit (aanvang/einde) van Aanvraag; isMaterieel true zou een tweede, losse tijdlijn geven.",
         "gegevenselementen": [
           {
             "naam": "GpkAanvraagKaart",
@@ -1834,7 +1940,7 @@
             "domein": "parkeren",
             "meervoud": "gpk_kaartgegevens",
             "momentvoorkomen": "enkelvoudig",
-            "description": "Kaartgegevens.",
+            "description": "Kaartgegevens: nummer, soort en geldigheid. De status staat in het materiele GE GpkKaartStatus (doorloop 06-11).",
             "velden": [
               {
                 "naam": "kaartnummer",
@@ -1864,13 +1970,29 @@
                 "datatype": "Datum",
                 "verplicht": true,
                 "description": "Einde van de geldigheid (ten hoogste vijf jaar na begin)"
-              },
+              }
+            ]
+          },
+          {
+            "naam": "GpkKaartStatus",
+            "domein": "parkeren",
+            "meervoud": "gpk_kaart_statussen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "description": "Status van de kaart (geldig, ingetrokken, verlopen). Materieel, zoals AanvraagStatus: elke statuswijziging is een nieuwe geldigheid, zodat de geschiedenis bevraagbaar is (besluit Mark 06-11).",
+            "velden": [
               {
                 "naam": "status",
                 "type": "string",
                 "enum": "GpkKaartStatus",
                 "verplicht": true,
-                "description": "Geldig, ingetrokken of verlopen"
+                "description": "Status van de kaart"
+              },
+              {
+                "naam": "reden",
+                "type": "string",
+                "datatype": "LangeTekst",
+                "description": "Reden van de (laatste) statuswijziging"
               }
             ]
           }

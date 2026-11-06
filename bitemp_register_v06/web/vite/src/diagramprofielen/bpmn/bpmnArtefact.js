@@ -31,6 +31,7 @@
  */
 import { jcsHash } from "../../transformatie/jcs.js";
 import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
+import { doelVersieRange } from "../../transformatie/doelVersie.js";
 import { schrijfBpmn } from "../../transformatie/bpmnXmlSchrijver.js";
 import { BPMN_NAAR_GZAC } from "./bpmnGzacRegels.js";
 
@@ -138,6 +139,7 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
       identifier: keuzes.identifier,
       naam: keuzes.naam || diagram.naam,
       versienummer: versienummer || keuzes.versienummer || edienst?.edienst?.versienummer || "0.1.0",
+      doelVersieRange: doelVersieRange(keuzes),
     },
     artefactInhoud: { formaat: keuzes.formaat, payload: xml, payloadHash: await sha256Hex(xml) },
     artefactHerkomst: {

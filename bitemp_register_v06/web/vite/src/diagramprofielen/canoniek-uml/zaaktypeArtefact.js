@@ -29,6 +29,7 @@
  */
 import { jcsHash } from "../../transformatie/jcs.js";
 import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
+import { doelVersieRange } from "../../transformatie/doelVersie.js";
 import { CANONIEK_NAAR_ZAAKTYPE } from "./zaaktypeRegels.js";
 
 export const SCHRIJVER_ID = "catalogi-schrijver@0.1.0";
@@ -143,7 +144,10 @@ export async function maakZaaktypeArtefact({
       const iot = f.registratie?.[soort]?.informatieobjecttype;
       if (iot && !bijZaaktype.has(iot)) diagnostics.push(fout("ZTT-BIJLAGE", `Formulier "${f.identifier}" legt ${wat} vast als "${iot}", maar dat is geen informatieobjecttype van zaaktype ${keuzes.identifier}`, f.identifier));
     }
-    const vast = Object.entries(f.registratie?.vasteWaarden || {}).find(([pad]) => pad.endsWith(".aanvraagtype"));
+    // De code van het aanvraagtype dat het formulier vastlegt: vroeger het veld
+    // `aanvraagtype`, sinds 07-11 de sleutel van de referentielijst achter de
+    // relatie (…AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.code).
+    const vast = Object.entries(f.registratie?.vasteWaarden || {}).find(([pad]) => pad.endsWith(".aanvraagtype") || /\.Aanvraagtype\.\w+\.code$/.test(pad));
     if (vast && vast[1] !== code) diagnostics.push(waarschuwing("ZTT-AANVRAAGTYPE", `Formulier "${f.identifier}" zet aanvraagtype "${vast[1]}", het zaaktype hoort bij "${code}"`, f.identifier));
   }
   if (!(zaaktype.roltypen || []).some((r) => r.omschrijvingGeneriek === "initiator")) {
@@ -161,7 +165,7 @@ export async function maakZaaktypeArtefact({
       identifier: keuzes.identifier,
       naam: keuzes.naam || `Zaaktype ${keuzes.identifier}`,
       versienummer: versienummer || keuzes.versienummer || edienst?.edienst?.versienummer || "0.1.0",
-      ...(keuzes.doelVersieRange ? { doelVersieRange: keuzes.doelVersieRange } : {}),
+      doelVersieRange: doelVersieRange(keuzes),
     },
     artefactInhoud: { formaat: keuzes.formaat, payload, payloadHash },
     artefactHerkomst: {

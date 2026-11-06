@@ -72,9 +72,13 @@ export function bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen,
     "",
     registerGelezen ? "Vergeleken met het inrichting-register (zelfde e-dienstversie, soort en identifier)." : "Niet vergeleken met het register.",
     "",
-    "| Bestand | Soort | Identifier | payloadHash | Register |",
-    "|---|---|---|---|---|",
-    ...rijen.map((r) => `| ${r.fout ? "—" : r.bestandsnaam} | ${r.soort} | ${r.identifier} | ${r.artefact ? r.artefact.artefactInhoud.payloadHash.slice(0, 12) + "…" : "—"} | ${r.fout ? `fout: ${r.fout}` : r.status || "—"} |`),
+    "| Bestand | Soort | Identifier | Doel | payloadHash | Register |",
+    "|---|---|---|---|---|---|",
+    ...rijen.map((r) => {
+      // Doel: component en het versiebereik dat de regelset aanneemt (uitrol.ps1 toetst erop, Mark 07-11).
+      const doel = r.artefact ? `${r.artefact.doelcomponent || "—"} ${r.artefact.artefactIdentificatie?.doelVersieRange || "*"}` : "—";
+      return `| ${r.fout ? "—" : r.bestandsnaam} | ${r.soort} | ${r.identifier} | ${doel} | ${r.artefact ? r.artefact.artefactInhoud.payloadHash.slice(0, 12) + "…" : "—"} | ${r.fout ? `fout: ${r.fout}` : r.status || "—"} |`;
+    }),
     "",
     ...(bronnen.length
       ? [

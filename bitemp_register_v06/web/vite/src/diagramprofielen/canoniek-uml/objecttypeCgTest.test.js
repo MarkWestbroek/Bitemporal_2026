@@ -102,6 +102,17 @@ test("GPK: ouder en subtype in één schema", async () => {
     "kenteken", "loopafstandMeter", "partijen", "rijbewijsnummer", "soort", "status", "toelichting",
   ]);
   assert.deepEqual(s.required, ["aanvraagnummer", "aanvraagtype", "ingediendOp", "soort", "status"]);
+  // Het aanvraagtype via de relatie AanvraagAanvraagtype (Mark 07-11: een GE verwijst
+  // nooit naar een entiteit): een verplicht object met code én omschrijving, geen
+  // van beide verplicht (velden van een relatiedoel), de code met de lengte van AN40.
+  const at = s.properties.aanvraagtype;
+  assert.equal(at.type, "object");
+  assert.deepEqual(Object.keys(at.properties), ["code", "omschrijving"]);
+  assert.equal(at.required, undefined);
+  assert.equal(at.additionalProperties, false);
+  assert.equal(at.properties.code.maxLength, 40);
+  assert.equal(artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagAanvraagtype").doelPad, "/jsonSchema/properties/aanvraagtype");
+  assert.equal(artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.code").doelPad, "/jsonSchema/properties/aanvraagtype/properties/code");
   assert.deepEqual(s.properties.soort.enum, ["bestuurder", "passagier", "instelling"]);
   assert.equal(s.properties.eerdereKaart.type, "boolean");
   assert.equal(s.properties.loopafstandMeter.type, "integer");

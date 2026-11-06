@@ -29,7 +29,7 @@ test("de regelset is geldig", () => {
 test("artefact in de vorm van het inrichting-register, zonder meldingen", async () => {
   const { artefact, diagnostics } = await maak();
   assert.deepEqual(diagnostics, []);
-  assert.deepEqual(artefact.artefactIdentificatie, { soort: "objecttype", identifier: "aanvraag", naam: "Objecttype aanvraag", versienummer: "0.1.0" });
+  assert.deepEqual(artefact.artefactIdentificatie, { soort: "objecttype", identifier: "aanvraag", naam: "Objecttype aanvraag", versienummer: "0.1.0", doelVersieRange: "^4.3" });
   assert.equal(artefact.artefactInhoud.formaat, "json-schema");
   assert.match(artefact.artefactInhoud.payloadHash, /^[0-9a-f]{64}$/);
   assert.deepEqual(artefact.artefactHerkomst, {

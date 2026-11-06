@@ -31,6 +31,7 @@
  */
 import { jcsHash } from "../../transformatie/jcs.js";
 import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
+import { doelVersieRange } from "../../transformatie/doelVersie.js";
 import { schrijfBpmn } from "../../transformatie/bpmnXmlSchrijver.js";
 import { ENGINES } from "./bpmnArtefact.js";
 
@@ -176,6 +177,7 @@ export async function maakProcesLinkArtefact({ modelBestand, edienst, identifier
       identifier: keuzes.identifier,
       naam: keuzes.naam || `Taakkoppelingen ${proces.naam || diagram.naam}`,
       versienummer: versienummer || keuzes.versienummer || edienst?.edienst?.versienummer || "0.1.0",
+      doelVersieRange: doelVersieRange(keuzes),
     },
     artefactInhoud: { formaat: keuzes.formaat, payload, payloadHash: await jcsHash(payload, sha256Hex) },
     artefactHerkomst: {

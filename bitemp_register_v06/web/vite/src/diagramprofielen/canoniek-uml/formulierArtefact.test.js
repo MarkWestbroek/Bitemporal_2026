@@ -44,8 +44,9 @@ test("GPK: export met drie stappen, zonder meldingen, aansluitend op het objectt
   // Stap en definitie hangen aan elkaar via de url; uuid's zijn deterministisch.
   p["formSteps.json"].forEach((s, i) => assert.equal(s.form_definition, p["formDefinitions.json"][i].url));
   assert.match(p["forms.json"][0].uuid, UUID);
-  // Elke component, vaste waarde en inlogwaarde heeft een property in het objecttype.
-  assert.ok(aansluiting.length === 16 && aansluiting.every((r) => r.objecttypePad));
+  // Elke component, vaste waarde en inlogwaarde heeft een property in het objecttype
+  // (het aanvraagtype telt sinds 07-11 als twee vaste waarden: code en omschrijving).
+  assert.ok(aansluiting.length === 17 && aansluiting.every((r) => r.objecttypePad));
   assert.deepEqual(artefact.afhankelijkheden.map((a) => a.identifier), ["gehandicaptenparkeerkaartaanvraag", "GPK"]);
 });
 
@@ -118,11 +119,15 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
   assert.deepEqual(naar.auth_bsn, [["data", "partijen", 0, "partij", "bsn"], ["bsn"]]);
   assert.deepEqual(naar.attachment_urls, [["attachments"]]);
   assert.deepEqual(naar.pdf_url, [["pdf_url"]]);
-  assert.equal(o.variables_mapping.length, 20);
+  // Het aanvraagtype als object achter de relatie (07-11): code en omschrijving
+  // als vaste waarden in het geneste object `data.aanvraagtype`.
+  assert.deepEqual(naar.vast_aanvraagtype_code, [["data", "aanvraagtype", "code"]]);
+  assert.deepEqual(naar.vast_aanvraagtype_omschrijving, [["data", "aanvraagtype", "omschrijving"]]);
+  assert.equal(o.variables_mapping.length, 21);
   // Volgorde telt (glom, FUNDAMENT 27-10): eerst de lijst-aanzetten, dan het BSN
   // expliciet (auth_attribute_path schrijft niets), dan wat in de items schrijft.
   const volgorde = o.variables_mapping.map((m) => m.variable_key);
-  assert.deepEqual(volgorde.slice(0, 6), ["vast_bijlagen", "vast_partijen", "vast_aanvraagtype", "vast_status", "verzoek_type", "auth_bsn"]);
+  assert.deepEqual(volgorde.slice(0, 7), ["vast_bijlagen", "vast_partijen", "vast_aanvraagtype_code", "vast_aanvraagtype_omschrijving", "vast_status", "verzoek_type", "auth_bsn"]);
   assert.deepEqual(volgorde.slice(-3), ["auth_bsn", "attachment_urls", "pdf_url"]);
   assert.deepEqual(naar.vast_partijen, [["data", "partijen"]]);
   assert.ok(volgorde.indexOf("pasfoto") > volgorde.indexOf("vast_bijlagen"));
@@ -138,7 +143,8 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
   assert.deepEqual(p["formVariables.json"].map((v) => [v.key, v.initial_value, v.data_type, v.source]), [
     ["vast_bijlagen", [{ naam: "pasfoto" }], "array", "user_defined"],
     ["vast_partijen", [{ partijrol: "aanvrager", partij: {} }], "array", "user_defined"],
-    ["vast_aanvraagtype", "gehandicaptenparkeerkaart", "string", "user_defined"],
+    ["vast_aanvraagtype_code", "gehandicaptenparkeerkaart", "string", "user_defined"],
+    ["vast_aanvraagtype_omschrijving", "Gehandicaptenparkeerkaart", "string", "user_defined"],
     ["vast_status", "ingediend", "string", "user_defined"],
     ["verzoek_type", "gehandicaptenparkeerkaart", "string", "user_defined"],
     ["afronden_ingediendOp", null, "datetime", "user_defined"],
@@ -173,20 +179,20 @@ test("GPK: trace van modelknoop naar component", async () => {
   assert.deepEqual(bsn, {
     bronGE: "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn",
     regel: "Registratie: waarde uit de inlog (e-dienstmodel)",
-    doelPad: "/forms.json/0/registration_backends/0/options/variables_mapping/5",
+    doelPad: "/forms.json/0/registration_backends/0/options/variables_mapping/6",
     actie: "aangemaakt",
   });
   const nummer = artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagIdentificatie.aanvraagnummer");
   assert.equal(nummer.regel, "Registratie: variabele van Open Formulieren (e-dienstmodel)");
-  assert.equal(nummer.doelPad, "/forms.json/0/registration_backends/0/options/variables_mapping/15");
+  assert.equal(nummer.doelPad, "/forms.json/0/registration_backends/0/options/variables_mapping/16");
   // De envelop in de trace.
   assert.deepEqual(
     artefact.traceregels.filter((t) => t.bronGE.startsWith("envelop:")).map((t) => [t.bronGE, t.doelPad]),
     [
-      ["envelop:type", "/formVariables.json/4"],
-      ["envelop:bsn", "/forms.json/0/registration_backends/0/options/variables_mapping/17"],
-      ["envelop:attachments", "/forms.json/0/registration_backends/0/options/variables_mapping/18"],
-      ["envelop:pdf_url", "/forms.json/0/registration_backends/0/options/variables_mapping/19"],
+      ["envelop:type", "/formVariables.json/5"],
+      ["envelop:bsn", "/forms.json/0/registration_backends/0/options/variables_mapping/18"],
+      ["envelop:attachments", "/forms.json/0/registration_backends/0/options/variables_mapping/19"],
+      ["envelop:pdf_url", "/forms.json/0/registration_backends/0/options/variables_mapping/20"],
     ]
   );
 });
@@ -201,6 +207,20 @@ test("aanvraagformulier: de toelichting bij de indiening zit niet in objecttype 
   // Zonder property geen mapping: het gegeven gaat bij de registratie verloren.
   const mapping = artefact.artefactInhoud.payload["forms.json"][0].registration_backends[0].options.variables_mapping;
   assert.equal(mapping.find((m) => m.variable_key === "toelichting"), undefined);
+});
+
+test("aanvraagformulier: de code van het aanvraagtype achter de relatie is een keuzelijst uit het register", async () => {
+  // Sinds 07-11 is het aanvraagtype een relatie; het formulier laat de invuller de
+  // code (de sleutel van het referentielijst-item) kiezen en registreert die in
+  // het object `aanvraagtype`; de omschrijving zet het formulier niet.
+  const { artefact, diagnostics } = await maak("aanvraag-edienst.json", "aanvraag-voorbeeld", "aanvraag");
+  assert.ok(!diagnostics.some((d) => String(d.sourceId).includes("Aanvraagtype")));
+  const c = componenten(artefact).find((c) => c.key === "aanvraagtype");
+  assert.equal(c.type, "select");
+  assert.deepEqual(c.data.values.map((w) => w.value), ["parkeervergunning", "evenement", "gehandicaptenparkeerkaart"]);
+  const mapping = artefact.artefactInhoud.payload["forms.json"][0].registration_backends[0].options.variables_mapping;
+  assert.deepEqual(mapping.find((m) => m.variable_key === "aanvraagtype").target_path, ["aanvraagtype", "code"]);
+  assert.equal(mapping.find((m) => String(m.target_path).includes("omschrijving")), undefined);
 });
 
 test("aanvraagformulier (zonder registratie) tegen de golden file: precies deze verschillen", async () => {

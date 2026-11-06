@@ -93,7 +93,14 @@ export function formulierGraaf({ model: invoerModel, keuzes, datatypen = [], ref
       keys.add(veld.key);
       const [when, eq] = Object.entries(veld.toonAls || {})[0] || [];
       if (Object.keys(veld.toonAls || {}).length > 1) meld(`toonAls met meer dan één voorwaarde; alleen ${when} telt`, veld.veld);
-      const waarden = f.refAls === "code" ? lijstWaarden(f.refNaar, veld.veld) : (f.enumWaarden || []).map((w) => ({ label: hoofdletter(w), value: w }));
+      // Een keuzelijst: een `$ref`-veld met projectie code, óf de sleutel van een
+      // referentielijst-item dat via een relatie bereikt is (AanvraagAanvraagtype
+      // → Aanvraagtype.AanvraagtypeGegevens.code, 07-11). In beide gevallen kiest
+      // de invuller een code; de omschrijving van het item zet het formulier niet
+      // (die hangt van de keuze af en is aan de ontvanger).
+      const lijstNaam = f.refAls === "code" ? f.refNaar : f.referentielijst && f.sleutel ? f.entiteit : "";
+      const refAls = lijstNaam ? "code" : f.refAls || "";
+      const waarden = lijstNaam ? lijstWaarden(lijstNaam, veld.veld) : (f.enumWaarden || []).map((w) => ({ label: hoofdletter(w), value: w }));
       knopen.push({
         id: veld.veld,
         aard: "veld",
@@ -101,13 +108,14 @@ export function formulierGraaf({ model: invoerModel, keuzes, datatypen = [], ref
         groep: stapId,
         // Toetsbaar op het item zelf (regels.js, `past`).
         vasteVorm: Boolean(veld.component),
-        refAls: f.refAls || "",
+        refAls,
         heeftEnum: Boolean(f.enumWaarden),
         basistype: f.basistype,
         datatype: f.datatype,
         format: f.format,
         eigenschappen: {
           ...f,
+          refAls,
           key: veld.key,
           label: veld.label || veld.key,
           // Hulptekst bij het veld alleen uit de e-dienst: de beschrijving in het

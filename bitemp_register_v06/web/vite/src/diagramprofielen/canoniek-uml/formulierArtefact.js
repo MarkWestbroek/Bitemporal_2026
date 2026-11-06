@@ -29,6 +29,7 @@ import { pasRegelsToe } from "../../transformatie/regels.js";
 import { planNaarOpenforms, OF_RELEASE } from "../../transformatie/openformsSchrijver.js";
 import { jcsHash } from "../../transformatie/jcs.js";
 import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
+import { doelVersieRange } from "../../transformatie/doelVersie.js";
 import { CANONIEK_NAAR_FORMULIER } from "./formulierRegels.js";
 
 export const SCHRIJVER_ID = "openforms-schrijver@0.2.0";
@@ -136,7 +137,7 @@ export async function maakFormulierArtefact({
       identifier: keuzes.identifier,
       naam: keuzes.naam || `Formulier ${keuzes.identifier}`,
       versienummer: versienummer || keuzes.versienummer || edienst?.edienst?.versienummer || "0.1.0",
-      ...(keuzes.doelVersieRange ? { doelVersieRange: keuzes.doelVersieRange } : {}),
+      doelVersieRange: doelVersieRange(keuzes),
     },
     artefactInhoud: { formaat: keuzes.formaat, payload, payloadHash },
     artefactHerkomst: {

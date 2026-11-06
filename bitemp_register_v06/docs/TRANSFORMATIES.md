@@ -1248,7 +1248,7 @@ een token als `Authorization: Bearer`; zonder token stuurt hij de sessiecookie
 mee. CORS staat (30-10) open voor `http://localhost:5176`, niet voor de
 app-host. Schrijven (registreren) vanuit de browser kan nog niet: daarvoor zijn
 een service-account en CORS voor de app-origin nodig, en dat ligt bij BACKEND.
-Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.15).
+Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.16).
 
 **Model uit de map (beperking opgelost 30-10, BACKLOG §39).** Sinds 30-10
 bewaart de omzetting `verplicht`, `uniek`, `type` en `format`. Model uit de map
@@ -1591,7 +1591,66 @@ vooraan:
 - CMMN en een formulierdefinitie zijn nog geen bron van een transformatie; de
   referentielijsten en de bibliotheek met gegevenstypen gaan nog niet mee.
 
-### 11.15 Vervolg
+### 11.15 Referentielijst achter een relatie, en het versiebereik van het doel (2026-11-07)
+
+**Aanvraagtype als relatie.** Besluit Mark 07-11 bij de doorloop van het
+registermodel: een gegevenselement verwijst nooit naar een entiteit. Het veld
+`AanvraagIdentificatie.aanvraagtype` (`$ref: Aanvraagtype`) is vervangen door
+de relatie `AanvraagAanvraagtype → Aanvraagtype` (kardinaliteit 1, enkelvoudig,
+niet materieel); `partijrol` blijft een veld. In het objecttype wil Mark het
+aanvraagtype **met omschrijving**. Dat is geen nieuw motorwerk: de lezer
+`v3Graaf` kende een ingebedde relatie zonder velden al (het doel wordt een
+object met de gekozen velden, verplicht als de kardinaliteit met 1 begint). De
+e-dienst kiest:
+
+```json
+"relaties": { "AanvraagAanvraagtype": { "als": "ingebed", "naam": "aanvraagtype" } },
+"velden": [ "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.code",
+            "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.omschrijving" ]
+```
+
+en krijgt `aanvraagtype: {code, omschrijving}` (object, verplicht; de velden
+erin niet, zoals bij elk relatiedoel; de code houdt de lengte van AN40). De
+projectie `referentielijsten.Aanvraagtype` vervalt; de verzoek-envelop houdt
+`type` = de code uit de e-dienst. Dossierschema en -formulier volgen het
+objecttype (geneste objecten kenden ze van `partijen`).
+
+Nieuw in de lezer: elk veld draagt `entiteit` (van wie het is),
+`referentielijst` (die entiteit is een referentielijst-item) en `sleutel`
+(V3 `uniek: "entiteit"`). Daarmee herkent `formulierGraaf` de code van een
+referentielijst-item achter een relatie en maakt er dezelfde keuzelijst van als
+van een `$ref`-veld met projectie code (waarde = code, label = omschrijving).
+
+- **Formulier GPK**: het aanvraagtype ligt vast; `vasteWaarden` zet code én
+  omschrijving (`vast_aanvraagtype_code`, `vast_aanvraagtype_omschrijving`, in
+  het geneste object `data.aanvraagtype`). Of Open Formulieren het
+  tussenliggende object zelf aanmaakt, bevestigt FUNDAMENT op cg-test (bij een
+  lijst deed het dat niet, §11.6).
+- **Formulier aanvraag-voorbeeld**: de invuller kiest de code uit de
+  keuzelijst; de omschrijving zet het formulier niet (ze hangt van de keuze af
+  en is niet verplicht). Vullen uit de referentielijst is aan een ontvanger
+  (aanvraagservice), niet aan het formulier.
+- **Zaaktype**: de controle ZTT-AANVRAAGTYPE herkent de vaste waarde nu ook op
+  het pad `….Aanvraagtype.<GE>.code`.
+- De fixture `omnium-model-cg-test-v3.json` is de stand van Fundament f837496
+  (met GpkKaartStatus, PartijNaam materieel en rijbewijsnummer); de
+  `bronmodel.hash` van beide e-dienstmodellen is mee veranderd. Van die
+  wijzigingen raakt alleen de relatie de artefacten: geen e-dienst leest de
+  Kaart of PartijNaam.
+
+**Versiebereik van het doel.** Besluit Mark 07-11 (via FUNDAMENT): `uitrol.ps1`
+toetst vóór elke uitrol de draaiende componentversie tegen
+`artefactIdentificatie.doelVersieRange`; het bereik per e-dienstversie leidt
+de uitrol zelf af als doorsnede over de artefacten (dat leveren wij niet mee).
+Het bereik hoort bij de regelset — het zegt tegen welke doel-API de schrijver
+is gebouwd — en staat in `transformatie/doelVersie.js`, per doelcomponent:
+openobject `^4.3`, openzaak `^1.31`, openforms `^4.0`, gzac `^13.50` (stand
+cg-test 07-11). Elk gegenereerd artefact draagt het; een e-dienst kan het per
+artefact overschrijven met `doelVersieRange`; onbekend doel = `*` (geen eis).
+Bronnen (§11.14) krijgen geen bereik, ze worden niet uitgerold. Het
+`OVERZICHT.md` toont per artefact de kolom *Doel* (component + bereik).
+
+### 11.16 Vervolg
 
 1. Formulier: machtigen (gemachtigde + subject) en eHerkenning; de documenttitel
    van een bestandscomponent uit het label (FUNDAMENT 30-10).

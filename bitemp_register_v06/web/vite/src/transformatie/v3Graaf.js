@@ -45,7 +45,13 @@
  * Eigenschappen van een veld (`eigenschappen`): de V3-feiten, opgelost — het
  * basistype en de validatie van het datatype (model eerst, dan de gedeelde
  * bibliotheek), de waarden van een enum, en bij een verwijzing naar een
- * referentielijst de projectie die de e-dienst kiest (`als: "code"`).
+ * referentielijst de projectie die de e-dienst kiest (`als: "code"`). Verder
+ * `entiteit` (van wie het veld is), `referentielijst` (die entiteit is een
+ * referentielijst-item) en `sleutel` (het veld identificeert de entiteit):
+ * een referentielijst achter een **relatie** (AanvraagAanvraagtype → Aanvraagtype,
+ * besluit Mark 07-11: een GE-veld verwijst nooit naar een entiteit) wordt zo
+ * een object {code, omschrijving} in het objecttype, en het formulier herkent
+ * de code als keuzelijst.
  *
  * Puur en store-loos.
  */
@@ -156,9 +162,28 @@ export function v3Graaf({ model: invoerModel, keuzes, datatypen = [], referentie
     return e;
   }
 
-  /** Een veld als knoop in groep `ouder`. */
-  function voegVeldToe(veld, pad, ouder) {
-    knopen.push({ id: pad, aard: "veld", tekst: namen[pad] || veld.naam, groep: ouder, eigenschappen: { ...veldEigenschappen(veld, pad), veldnaam: veld.naam } });
+  /**
+   * Een veld als knoop in groep `ouder`. `entiteit` is de entiteit waarvan
+   * het veld is (de bron, een voorouder, of het doel van een relatie), met
+   * `sleutel` als het veld de entiteit identificeert (V3 `uniek: "entiteit"`).
+   * Zo herkent een regelset de code van een referentielijst-item achter een
+   * relatie (AanvraagAanvraagtype, 07-11): een GE-veld verwijst nooit naar een
+   * entiteit, een relatie wel.
+   */
+  function voegVeldToe(veld, pad, ouder, entiteit = null) {
+    knopen.push({
+      id: pad,
+      aard: "veld",
+      tekst: namen[pad] || veld.naam,
+      groep: ouder,
+      eigenschappen: {
+        ...veldEigenschappen(veld, pad),
+        veldnaam: veld.naam,
+        entiteit: entiteit?.typenaam || "",
+        referentielijst: entiteit?.entiteitSubtype === "referentielijst_item",
+        sleutel: veld.uniek === "entiteit",
+      },
+    });
   }
 
   /** De GE's van een entiteit als groepen onder `ouder`, met hun velden als knopen. */
@@ -179,7 +204,7 @@ export function v3Graaf({ model: invoerModel, keuzes, datatypen = [], referentie
           geselecteerd: velden.some(({ pad }) => geselecteerd.has(pad)),
         },
       });
-      for (const { veld, pad } of velden) voegVeldToe(veld, pad, gePad);
+      for (const { veld, pad } of velden) voegVeldToe(veld, pad, gePad, entiteit);
     }
   }
 
@@ -216,7 +241,7 @@ export function v3Graaf({ model: invoerModel, keuzes, datatypen = [], referentie
           geselecteerd: ergensGeselecteerd,
         },
       });
-      for (const veld of relatieVelden) voegVeldToe(veld, `${relPad}.${veld.naam}`, relPad);
+      for (const veld of relatieVelden) voegVeldToe(veld, `${relPad}.${veld.naam}`, relPad, entiteit);
       const doelPad = `${relPad}.${doel.typenaam}`;
       groepen.push({
         id: doelPad,
