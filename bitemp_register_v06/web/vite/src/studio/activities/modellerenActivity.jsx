@@ -27,7 +27,8 @@ import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
-import { volgDiagram } from "../boomRegels.js";
+import { volgDiagram, bouwHierarchie } from "../boomRegels.js";
+import { waaromNietOnder, boomRelatieVoor, boomRelatiesVan, REDEN_NIET_OMHANGEN } from "../../diagramcore/model/omhangen.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { startBeeldWachter } from "../gedeeldeBeelden.js";
 import { gebruikVan } from "../../diagramcore/model/gebruik.js";
@@ -92,6 +93,11 @@ function bewaarElementenHoogte(h) {
 const PLAATSING_MIME = "text/studio-diagram";
 const MAP_MIME = "text/studio-map";
 const ELEMENT_MIME = "application/studio05-element";
+/**
+ * Een element uit de boom zelf (ook een kind zonder eigen plaatsing), om het onder een ander
+ * element te hangen of in een map te zetten (fase 0 "Linked data als M2", 06-11).
+ */
+const BOOM_ELEMENT_MIME = "application/x-studio-boomelement";
 
 /** Plaatsing-sleutels: diagram = "profielId::diagramId", element = "el::profielId::elementId". */
 const elementKey = (profielId, elementId) => `el::${profielId}::${elementId}`;
@@ -675,6 +681,8 @@ export const useModellerenStore = create((set, get) => ({
    * tijdstempel laat een tweede zoekactie de rij opnieuw openklappen.
    */
   boomUitklap: {},
+  /** Klap een element in de boom open (na het maken of erin hangen van een kind). */
+  zetBoomUitklap: (elKey) => set((s) => ({ boomUitklap: { ...s.boomUitklap, [elKey]: Date.now() } })),
   flits: (sleutel) => {
     set({ flitsSleutel: sleutel });
     setTimeout(() => {
@@ -714,7 +722,7 @@ export const useModellerenStore = create((set, get) => ({
       return { mapOpen };
     }),
 
-  /** Verhang een map (ouderId null = naar de wortel). Weigert cycli. */
+  /** Hang een map om (ouderId null = naar de wortel). Weigert cycli. */
   verplaatsMap: (id, ouderId) =>
     set((s) => {
       if (id === ouderId) return {};
@@ -1178,13 +1186,14 @@ function useDrop(handlers) {
       onDragLeave: () => setOver(false),
       onDrop: (e) => {
         setOver(false);
+        // Een handler die false teruggeeft, laat de volgende soort proberen (06-11: een
+        // boomelement dat hier niet in kan, valt terug op de plaatsing als uitwerking).
         for (const m of mimes) {
           const data = e.dataTransfer.getData(m);
           if (data) {
             e.preventDefault();
             e.stopPropagation();
-            handlers[m](data);
-            return;
+            if (handlers[m](data) !== false) return;
           }
         }
       },
@@ -1219,35 +1228,9 @@ function bepaalHierarchie(profiel, elements) {
 }
 
 function berekenHierarchie(profiel, elements) {
-  const regels = [].concat(profiel.descriptor.hierarchie || [])
-    .map((h) => (typeof h === "string" ? { type: h } : h))
-    .filter((h) => h?.type);
-  const kinderenVan = new Map();
-  const ouderVan = new Map();
-  if (!regels.length) return { kinderenVan, ouderVan };
-  const gezien = new Set(); // "ouder\u0000kind": dubbele paren zonder includes() (kwadratisch bij veel kinderen)
-  const voeg = (ouder, kind) => {
-    if (ouder === kind || !elements[ouder] || !elements[kind]) return;
-    const sleutel = ouder + "\u0000" + kind;
-    if (gezien.has(sleutel)) return;
-    gezien.add(sleutel);
-    if (!kinderenVan.has(ouder)) kinderenVan.set(ouder, []);
-    kinderenVan.get(ouder).push(kind);
-    ouderVan.set(kind, ouder);
-  };
-  const regelPerType = new Map();
-  for (const h of regels) if (!regelPerType.has(h.type)) regelPerType.set(h.type, h);
-  for (const el of Object.values(elements)) {
-    const regel = regelPerType.get(el.elementType);
-    if (!regel || !el.source || !el.target) continue;
-    if (regel.omgekeerd) voeg(el.target, el.source);
-    else voeg(el.source, el.target);
-  }
-  const state = profiel.useStore.getState();
-  for (const [ouder, kind] of profiel.descriptor.hooks?.hierarchieParen?.(state) || []) {
-    voeg(ouder, kind);
-  }
-  return { kinderenVan, ouderVan };
+  // Pure regel in boomRegels.js: weergave onder elke ouder, boomouder = de eerste (06-11).
+  const extra = profiel.descriptor.hierarchie ? profiel.descriptor.hooks?.hierarchieParen?.(profiel.useStore.getState()) || [] : [];
+  return bouwHierarchie(elements, profiel.descriptor.hierarchie, extra);
 }
 
 /** Wandel naar de top van de hiërarchie (GE → zijn ENT). */
@@ -1425,8 +1408,177 @@ function nazatenVan(mappen, id) {
 /** Sleutels die meegaan bij slepen/verplaatsen: de multiselectie als de
  *  aangeklikte regel erin zit, anders alleen die regel. */
 function meeTeNemen(sleutel) {
-  const { multiSelectie } = useModellerenStore.getState();
-  return multiSelectie.includes(sleutel) ? multiSelectie : [sleutel];
+  const { multiSelectie, plaatsing } = useModellerenStore.getState();
+  if (!multiSelectie.includes(sleutel)) return [sleutel];
+  // Een kind in de selectie (06-11: ook kinderen zijn Ctrl/Shift-selecteerbaar) heeft geen eigen
+  // plaatsing: het reist met zijn ouder mee en hoort niet los in een map.
+  return multiSelectie.filter((k) => k === sleutel || !isElementKey(k) || k in plaatsing);
+}
+
+// ── Elementen maken en nesten in de boom (fase 0 "Linked data als M2" §8, 06-11) ──
+// Een element hoeft niet op een diagram te staan: je maakt het in een map, of ín een ander
+// element. "Erin" is een échte relatie die ook de `hierarchie` van het profiel is: een
+// lidmaatschap (M3 `containerVoor`; xsd, wsdl, package `bevat`) of een insluitende relatie (M3
+// aard "insluiting"; ENT ◆ GE in het canonieke model). Zie diagramcore/model/omhangen.js.
+
+const typenPerId = (profiel) => Object.fromEntries((profiel.descriptor?.elementTypes || []).map((et) => [et.id, et]));
+
+/** Elementtypen die je in de boom kunt maken: zoals de Maken-balk, zonder annotaties en randelementen. */
+function maakbareTypen(profiel) {
+  if (!profiel?.maakElement || profiel.klassiek) return [];
+  return (profiel.descriptor?.elementTypes || []).filter(
+    (et) => !et.isConnector && !et.isAbstract && et.inPalet !== false && !et._superprofiel && !et.randElement && et.id !== "diagramverwijzing"
+  );
+}
+
+/** Kan `container` (element) een element van type `typeId` onder zich krijgen, zó dat de boom het onder hem toont? */
+function kanBevatten(profiel, container, typeId) {
+  return !!boomRelatieVoor(typenPerId(profiel), profiel.descriptor?.hierarchie, container, typeId);
+}
+
+/**
+ * Maak een element in de boom: naam vragen, aanmaken, en dan óf in een container hangen
+ * (`containerId`, echte relatie) óf plaatsen onder een map of element-ouder (`ouderSleutel`).
+ * Het element staat op geen enkel diagram; zet je het later op een diagram, dan blijft de
+ * plaatsing staan (de boomregel raakt alleen niet-ingedeelde elementen).
+ */
+async function maakElementInBoom(profiel, et, { ouderSleutel = null, containerId = null } = {}) {
+  const naam = await vraagNaam({
+    titel: `Nieuw: ${et.label}`,
+    label: `Naam (${profiel.label})`,
+    waarde: et.label,
+    bevestig: "Aanmaken",
+  });
+  if (!naam) return null;
+  const el = profiel.maakElement(et.id);
+  if (!el) return null;
+  el.naam = naam;
+  profiel.useStore.getState().addElement(el);
+  const ms = useModellerenStore.getState();
+  if (containerId) {
+    const uit = profiel.hangOmOnder(el.id, containerId);
+    if (!uit?.ok) toonMelding({ tekst: REDEN_NIET_OMHANGEN[uit?.reden] || "Dat kan hier niet." });
+    else ms.zetBoomUitklap?.(elementKey(profiel.id, containerId));
+  } else if (ouderSleutel) {
+    ms.plaatsDiagram(elementKey(profiel.id, el.id), ouderSleutel);
+  }
+  ms.selecteerElement(profiel.id, el.id);
+  ms.flits("el:" + elementKey(profiel.id, el.id));
+  return el.id;
+}
+
+/**
+ * Submenu "Nieuw element ▸": per taal de maakbare typen. `filter(profiel, et)` beperkt de lijst
+ * (bv. alleen wat een container mag bevatten); `doe(profiel, et)` maakt het element.
+ */
+function nieuwElementItems({ filter = () => true, doe }) {
+  return getProfieltypen()
+    .map((p) => ({ p, typen: maakbareTypen(p).filter((et) => filter(p, et)) }))
+    .filter(({ typen }) => typen.length)
+    .map(({ p, typen }) => ({
+      label: p.label,
+      items: typen.map((et) => ({ label: et.label, onClick: () => doe(p, et) })),
+    }));
+}
+
+/**
+ * Nieuw diagram met elementen uit de boom (Mark, 06-11: "een diagram starten met een ENT en zijn
+ * GE's"). Elk element komt erop met zijn directe kinderen in de boom; ouders op de bovenste rij,
+ * kinderen eronder. Het diagram komt in de map van het (eerste) element, opent als tab, en krijgt
+ * de eerste auto-layout van de taal. Connectoren tussen de elementen tekent het canvas zelf.
+ * @param {any} profiel
+ * @param {string[]} elementIds - de gekozen elementen (zelfde taal)
+ */
+async function nieuwDiagramMet(profiel, elementIds) {
+  const st = profiel.useStore.getState();
+  const { kinderenVan, ouderVan } = bepaalHierarchie(profiel, st.elements);
+  const gekozen = elementIds.filter((id) => st.elements[id] && !st.elements[id].source);
+  if (!gekozen.length) return;
+  const alle = [...new Set(gekozen.flatMap((id) => [id, ...(kinderenVan.get(id) || [])]))].filter((id) => st.elements[id] && !st.elements[id].source);
+  const eerste = st.elements[gekozen[0]];
+  const naam = await vraagNaam({
+    titel: `Nieuw ${profiel.diagramTerm} (${profiel.label})`,
+    label: `Met ${alle.length} ${alle.length === 1 ? "element" : "elementen"}`,
+    waarde: gekozen.length === 1 ? eerste.naam || "Nieuw diagram" : `Nieuw ${profiel.diagramTerm}`,
+    bevestig: "Aanmaken",
+  });
+  if (!naam) return;
+  const s = profiel.useStore.getState();
+  const id = `${profiel.menuPrefix}_${Date.now()}`;
+  s.addDiagram({ id, naam, diagramType: profiel.descriptor.id });
+  // Rij per diepte binnen de keuze: wie zijn ouder ook op het diagram heeft, staat een rij lager.
+  const inKeuze = new Set(alle);
+  const diepte = (eid) => {
+    let d = 0;
+    for (let c = ouderVan.get(eid); c && d < 8; c = ouderVan.get(c)) if (inKeuze.has(c)) d += 1; else break;
+    return d;
+  };
+  const kolom = new Map();
+  for (const eid of alle) {
+    const rij = diepte(eid);
+    const k = kolom.get(rij) || 0;
+    kolom.set(rij, k + 1);
+    s.addElementToDiagram(id, eid, { x: 40 + k * 260, y: 40 + rij * 220 });
+  }
+  const ms = useModellerenStore.getState();
+  const top = topVoorouder(ouderVan, gekozen[0]);
+  const map = ms.plaatsing[elementKey(profiel.id, gekozen[0])] || ms.plaatsing[elementKey(profiel.id, top)] || null;
+  if (map) ms.plaatsDiagram(tabId(profiel.id, id), map);
+  ms.openTab(profiel.id, id);
+  const layout = profiel.descriptor.layouts?.[0];
+  if (layout) setTimeout(() => menuBus.emit(`${profiel.menuPrefix}:auto-layout`, { id: layout.id }), 600);
+}
+
+/** Alle kinderen (transitief, tot diepte 8) van een element in de boom van zijn taal. */
+function kinderenVanAlle(profiel, elementId) {
+  const { kinderenVan } = bepaalHierarchie(profiel, profiel.useStore.getState().elements);
+  const uit = [];
+  const loop = (id, d) => {
+    if (d > 8) return;
+    for (const k of kinderenVan.get(id) || []) if (!uit.includes(k)) { uit.push(k); loop(k, d + 1); }
+  };
+  loop(elementId, 0);
+  return uit;
+}
+
+/** "Gegevenselement" → "gegevenselement" in een zin; een afkorting ("XSD") blijft. */
+const inZin = (label) => (/^.[a-z]/.test(label || "") ? label[0].toLowerCase() + label.slice(1) : label || "");
+
+/**
+ * Het menu-item "Nieuw … ▸" zo kort als het kan (Mark, 06-11: "als het maar oplost tot 1
+ * elementtype, dan direct"):
+ *   - één taal met één type   → één item: "Nieuw gegevenselement hierin";
+ *   - één taal, meer typen    → "Nieuw element hierin ▸ typen" (zonder de taal-laag);
+ *   - meer talen              → "Nieuw element hierin ▸ taal ▸ typen".
+ * @param {string} achter - wat na "Nieuw …" komt ("hierin", "als uitwerking", of "")
+ * @param {Array<{label: string, items: Array<{label: string, onClick: Function}>}>} perTaal - uit nieuwElementItems
+ * @returns {Array<object>} nul of één menu-item
+ */
+function nieuwMenu(achter, perTaal) {
+  const staart = achter ? ` ${achter}` : "";
+  if (!perTaal.length) return [];
+  if (perTaal.length === 1 && perTaal[0].items.length === 1) {
+    const enig = perTaal[0].items[0];
+    return [{ label: `Nieuw ${inZin(enig.label)}${staart}`, onClick: enig.onClick }];
+  }
+  return [{ label: `Nieuw element${staart}`, items: perTaal.length === 1 ? perTaal[0].items : perTaal }];
+}
+
+/**
+ * Hang een boomelement onder `container` (zelfde taal, echte relatie). Zijn eigen plaatsing
+ * vervalt: hij reist voortaan met de container mee. Geeft false als het niet kan.
+ */
+function hangInBoomOm(profiel, elementId, container) {
+  const st = profiel.useStore.getState();
+  const reden = waaromNietOnder(st.elements, typenPerId(profiel), profiel.descriptor?.hierarchie, elementId, container.id);
+  if (reden) return reden;
+  const uit = profiel.hangOmOnder(elementId, container.id);
+  if (!uit?.ok) return uit?.reden || "geen-container";
+  const ms = useModellerenStore.getState();
+  const key = elementKey(profiel.id, elementId);
+  if (ms.plaatsing[key]) ms.plaatsDiagram(key, null);
+  ms.zetBoomUitklap?.(elementKey(profiel.id, container.id));
+  return null;
 }
 
 /**
@@ -1542,7 +1694,9 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const uitwerking = boomIndex(mappenAlle, plaatsingAlle).inhoud.get(elKey) || GEEN;
   const toggleMulti = useModellerenStore((s) => s.toggleMulti);
   const wisMulti = useModellerenStore((s) => s.wisMulti);
-  const inMulti = useModellerenStore((s) => !!sleutel && s.multiSelectie.includes(sleutel));
+  // Selectiesleutel: ook een kind zonder eigen plaatsing is Ctrl/Shift-selecteerbaar (Mark, 06-11).
+  const multiSleutel = sleutel || elKey;
+  const inMulti = useModellerenStore((s) => s.multiSelectie.includes(multiSleutel));
   const flitst = useModellerenStore(
     (s) => (!!sleutel && s.flitsSleutel === sleutel) || s.flitsSleutel === "el:" + elementKey(profiel.id, elementId)
   );
@@ -1572,7 +1726,23 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const kanUitwerking = !!et?.uitwerking && !!sleutel;
   const diagramsVanProfiel = profiel.useStore((s) => s.diagrams);
   const ongebruikt = !!element && !element.source && gebruikVan(elementId, diagramsVanProfiel).length === 0;
+  // Bevatten (fase 0, 06-11): dit element is een container waarvan de lidmaatschapsrelatie ook de
+  // hiërarchie van het profiel is — dan kun je er in de boom elementen in slepen of in maken.
+  const bevatTypen = element ? maakbareTypen(profiel).filter((t) => kanBevatten(profiel, element, t.id)) : [];
+  const kanBevat = bevatTypen.length > 0;
   const dropUit = useDrop({
+    // Een element uit de boom: erin hangen als dat kan; anders (false) de plaatsing hieronder.
+    [BOOM_ELEMENT_MIME]: (rauw) => {
+      try {
+        const { profielId, elementId: eid } = JSON.parse(rauw);
+        if (profielId === profiel.id && kanBevat) {
+          const reden = hangInBoomOm(profiel, eid, element);
+          if (!reden) return true;
+          if (!kanUitwerking) { toonMelding({ tekst: REDEN_NIET_OMHANGEN[reden] || "Dat kan hier niet." }); return true; }
+        }
+      } catch { /* ignore */ }
+      return false;
+    },
     [PLAATSING_MIME]: (data) =>
       data.split("\n").forEach((key) => {
         if (key !== elKey && magOnderElement(plaatsingAlle, mappenAlle, key, elKey)) plaatsDiagram(key, elKey);
@@ -1594,28 +1764,30 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const stijl = effectieveStijl(profiel);
 
   /**
-   * Klik = eigenschappen in de inspector (sessiebesluit 2026-07-12), en het
-   * element focussen op een open diagram als het daarop staat: wissel
-   * hooguit tussen ópen tabs — er wordt niets (her)geopend. Staat het
-   * element nergens op een open diagram van een ander profiel, dan
-   * gebeurt er niets.
+   * Klik = eigenschappen in de inspector (sessiebesluit 2026-07-12). Je blijft in het huidige
+   * diagram (Mark, 06-11: de Studio sprong naar het eerste open diagram met het element, ook als
+   * het op meer diagrammen staat): staat het element op het actieve diagram, dan wordt het daar
+   * geselecteerd; anders verandert alleen de inspector. Naar een ander diagram ga je met
+   * rechtsklik → *Toon gebruik ▸* of via "Gebruikt op" in de inspector.
    */
   const selecteer = () => {
     const ms = useModellerenStore.getState();
     ms.selecteerElement(profiel.id, elementId);
-    const st = profiel.useStore.getState();
-    const openTabsVanProfiel = ms.tabs.filter((t) => t.profielId === profiel.id);
-    const tabMetElement = openTabsVanProfiel.find((t) =>
-      (st.diagrams[t.diagramId]?.nodes || []).some((n) => n.elementId === elementId)
-    );
-    const isActiefProfiel = actieveTabInfo().profiel?.id === profiel.id;
-    if (tabMetElement && ms.actieveTab !== tabMetElement.id) ms.activeer(tabMetElement.id);
-    if (tabMetElement || isActiefProfiel) {
-      setTimeout(
-        () => menuBus.emit(`${profiel.menuPrefix}:selecteer-element`, elementId),
-        tabMetElement && ms.actieveTab !== tabMetElement.id ? 120 : 0
-      );
-    }
+    if (actieveTabInfo().profiel?.id === profiel.id) menuBus.emit(`${profiel.menuPrefix}:selecteer-element`, elementId);
+  };
+
+  /** De diagrammen waarop dit element staat; kiezen opent of activeert de tab en selecteert het. */
+  const toonGebruikItems = () => {
+    const lijst = gebruikVan(elementId, profiel.useStore.getState().diagrams);
+    if (!lijst.length) return [{ label: "(op geen enkel diagram)", onClick: () => {} }];
+    return lijst.map((d) => ({
+      label: `${d.naam}${d.aantal > 1 ? ` (${d.aantal}×)` : ""}`,
+      onClick: () => {
+        const ms = useModellerenStore.getState();
+        ms.openTab(profiel.id, d.id);
+        setTimeout(() => menuBus.emit(`${profiel.menuPrefix}:selecteer-element`, elementId), 150);
+      },
+    }));
   };
 
   const commitNaam = (naam) => {
@@ -1649,7 +1821,42 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const ctx = (e) =>
     openCtxMenu(e, [
       { label: "Selecteer in inspector", onClick: selecteer },
+      // Waar staat dit element? (Mark, 06-11; klikken springt niet meer zelf naar een diagram.)
+      ...(element?.source ? [] : [{ label: `Toon gebruik (${gebruikVan(elementId, profiel.useStore.getState().diagrams).length})`, items: toonGebruikItems() }]),
       { label: "Hernoemen", onClick: () => setBewerk(true) },
+      // Een diagram starten met dit element en zijn kinderen, of met de Ctrl-selectie (06-11).
+      ...(() => {
+        if (element?.source || profiel.klassiek || profiel.vasteDocumenten) return [];
+        const sel = useModellerenStore.getState().multiSelectie;
+        const metSelectie = sel.includes(multiSleutel)
+          ? sel.filter((k) => k.startsWith(`el::${profiel.id}::`)).map((k) => k.slice(`el::${profiel.id}::`.length))
+          : [];
+        if (metSelectie.length > 1) return [{ label: `Nieuw diagram met de selectie (${metSelectie.length})`, onClick: () => nieuwDiagramMet(profiel, metSelectie) }];
+        const n = (kinderen || []).length;
+        return [{ label: n ? `Nieuw diagram hiermee (met ${n} ${n === 1 ? "kind" : "kinderen"})` : "Nieuw diagram hiermee", onClick: () => nieuwDiagramMet(profiel, [elementId]) }];
+      })(),
+      // Fase 0 (06-11). Een type dat zowel container als uitwerking-ouder is (vaste keuze, zie
+      // STUDIO.md): wat het kan bevatten wordt een échte relatie ("Nieuw element hierin"), de
+      // rest alleen ordening ("Nieuw element als uitwerking").
+      ...(kanBevat
+        ? nieuwMenu("hierin", nieuwElementItems({ filter: (p, t) => p.id === profiel.id && bevatTypen.includes(t), doe: (p, t) => maakElementInBoom(p, t, { containerId: elementId }) }))
+        : []),
+      // Een leeg diagram eronder (uitwerking), naast "Nieuw diagram hiermee" (Mark, 06-11).
+      ...(kanUitwerking ? [{ label: "Nieuw diagram", items: nieuwDiagramItems(elKey) }] : []),
+      ...(kanUitwerking
+        ? nieuwMenu("als uitwerking", nieuwElementItems({ filter: (p, t) => !(p.id === profiel.id && bevatTypen.includes(t)), doe: (p, t) => maakElementInBoom(p, t, { ouderSleutel: elKey }) }))
+        : []),
+      ...(element?.source || !boomRelatiesVan(elements, typenPerId(profiel), profiel.descriptor?.hierarchie, elementId).length
+        ? []
+        : [{ label: "Uit de container halen", onClick: () => {
+            profiel.hangOmOnder(elementId, null);
+            // Waar moet hij heen? Naar de map van zijn vroegere container, zodat hij zichtbaar blijft.
+            const ms = useModellerenStore.getState();
+            const { ouderVan } = bepaalHierarchie(profiel, elements);
+            const top = topVoorouder(ouderVan, elementId);
+            const map = ms.plaatsing[elementKey(profiel.id, top)] || null;
+            if (map) ms.plaatsDiagram(elementKey(profiel.id, elementId), map);
+          } }]),
       ...(sleutel
         ? [
             { label: "Omhoog", onClick: () => useModellerenStore.getState().schuifPlaatsing(sleutel, "omhoog") },
@@ -1687,9 +1894,10 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
     <div>
       <div
         ref={rijRef}
-        className={"studio-project__elementrij" + (flitst ? " is-flits" : "") + (kanUitwerking && dropUit.over ? " is-dropdoel" : "")}
+        className={"studio-project__elementrij" + (flitst ? " is-flits" : "") + ((kanUitwerking || kanBevat) && dropUit.over ? " is-dropdoel" : "")}
         style={{ paddingLeft: diepte ? diepte * 12 : 0 }}
-        {...(kanUitwerking ? dropUit.props : {})}
+        data-testid={"boom-el-" + elementId}
+        {...(kanUitwerking || kanBevat ? dropUit.props : {})}
       >
         {kinderen.length > 0 || uitwerking.length > 0 ? (
           <button type="button" className="studio-project__caret" onClick={() => setDicht(!isDicht)}>
@@ -1730,13 +1938,13 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
               (inMulti ? " is-multi" : "") +
               (isSelectie && !inMulti ? " is-selectie" : "")
             }
-            data-sleutel={sleutel || undefined}
+            data-sleutel={multiSleutel}
             onMouseDown={(e) => {
               if (e.shiftKey) e.preventDefault();
             }}
             onClick={(e) => {
-              if (sleutel && e.shiftKey) useModellerenStore.getState().selecteerBereik(sleutel, rijenInLijst(e.currentTarget));
-              else if (sleutel && (e.ctrlKey || e.metaKey)) toggleMulti(sleutel);
+              if (e.shiftKey) useModellerenStore.getState().selecteerBereik(multiSleutel, rijenInLijst(e.currentTarget));
+              else if (e.ctrlKey || e.metaKey) toggleMulti(multiSleutel);
               else if (isSelectie && !inMulti) klikHernoem.plan();
               else {
                 wisMulti();
@@ -1759,19 +1967,35 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
             onDragStart={(e) => {
               // Verplaatsen binnen de boom alleen voor rijen met een eigen plaatsing.
               if (sleutel) e.dataTransfer.setData(PLAATSING_MIME, meeTeNemen(sleutel).join("\n"));
+              // Elk element (ook een kind) kan in een container of map gesleept worden (06-11).
+              e.dataTransfer.setData(BOOM_ELEMENT_MIME, JSON.stringify({ profielId: profiel.id, elementId }));
               // Canvas-referentie: plaatsen op een diagram, of cross-profiel op
               // een canvas-node droppen (bv. levenslijn typeren) — zie ELEMENT_REF_MIME.
-              e.dataTransfer.setData(ELEMENT_REF_MIME, JSON.stringify({ profielId: profiel.id, elementId }));
-              e.dataTransfer.effectAllowed = sleutel ? "copyMove" : "copy";
+              // Met de Ctrl-selectie gaan alle geselecteerde elementen van deze taal mee; met Ctrl
+              // (of Alt) bij het begin van het slepen ook hun kinderen in de boom (Mark, 06-11:
+              // "Ctrl slepen = inclusief kinderen").
+              const sel = useModellerenStore.getState().multiSelectie;
+              const prefix = `el::${profiel.id}::`;
+              const ids = sel.includes(multiSleutel) ? sel.filter((k) => k.startsWith(prefix)).map((k) => k.slice(prefix.length)) : [elementId];
+              const metKinderen = e.ctrlKey || e.metaKey || e.altKey;
+              const alle = metKinderen ? [...new Set(ids.flatMap((eid) => [eid, ...(kinderenVanAlle(profiel, eid))]))] : ids;
+              e.dataTransfer.setData(ELEMENT_REF_MIME, JSON.stringify({ profielId: profiel.id, elementId, ...(alle.length > 1 ? { elementIds: alle } : {}) }));
+              // copyMove ook voor een kind: in de boom kan het naar een container of map (06-11).
+              e.dataTransfer.effectAllowed = "copyMove";
             }}
           >
             <span className="studio-project__regel-profiel" style={{ color: stijl.kleur || "inherit" }}>
               {et ? <TypeIcoon elementType={et} maat={13} /> : <ProfielIcoon profiel={profiel} />}
             </span>
-            {/* Cursief = op geen enkel diagram (melding #5, Hugo, 16-10). */}
-            <span className={ongebruikt ? "studio-project__ongebruikt" : undefined} title={ongebruikt ? "Op geen enkel diagram — weghalen verandert geen diagram" : undefined}>
-              {weergaveNaam(element, et)}
-            </span>
+            <span>{weergaveNaam(element, et)}</span>
+            {/* Op geen enkel diagram (melding #5, Hugo, 16-10). Sinds 06-11 kun je elementen in de
+                boom maken; dan is "nog op geen diagram" gewoon, geen fout. Daarom geen cursief meer
+                maar een rustig teken met uitleg; weghalen blijft veilig. */}
+            {ongebruikt && (
+              <span className="studio-project__geen-diagram" data-testid="geen-diagram" title="Staat (nog) op geen diagram. Dat mag: zet het op een diagram wanneer je wilt. Weghalen verandert geen diagram.">
+                ◌
+              </span>
+            )}
           </button>
         )}
       </div>
@@ -1806,12 +2030,31 @@ function GeplaatstItem({ sleutel }) {
     const [, profielId, elementId] = sleutel.split("::");
     const profiel = getProfieltype(profielId);
     if (!profiel) return null;
-    return <ElementRegel profiel={profiel} elementId={elementId} sleutel={sleutel} />;
+    return <GeplaatstElement profiel={profiel} elementId={elementId} sleutel={sleutel} />;
   }
   const [profielId, diagramId] = sleutel.split("::");
   const profiel = getProfieltype(profielId);
   if (!profiel) return null;
   return <GeplaatstDiagram profiel={profiel} diagramId={diagramId} />;
+}
+
+/**
+ * Een element met een eigen plaats in de boom. Hangt het (ook) via een boomrelatie onder een
+ * ouder die zelf in de boom staat, dan toont de boom het alleen daar (Mark, 06-11: "control sleep
+ * ENT en daarna control Z een paar keer leverde een kopie op"). De relatie zit in het model en de
+ * plaats in de structuur; elk heeft een eigen Ctrl+Z, dus een oude plaats kan terugkomen terwijl
+ * de relatie blijft. De plaats blijft bewaard: valt de relatie weg, dan staat het element weer in
+ * die map.
+ */
+function GeplaatstElement({ profiel, elementId, sleutel }) {
+  const elements = profiel.useStore((s) => s.elements);
+  const plaatsing = useModellerenStore((s) => s.plaatsing);
+  const { ouderVan } = bepaalHierarchie(profiel, elements);
+  if (ouderVan.has(elementId)) {
+    const top = topVoorouder(ouderVan, elementId);
+    if (top !== elementId && plaatsing[elementKey(profiel.id, top)]) return null;
+  }
+  return <ElementRegel profiel={profiel} elementId={elementId} sleutel={sleutel} />;
 }
 
 function GeplaatstDiagram({ profiel, diagramId }) {
@@ -1876,8 +2119,20 @@ function Map_({ map, diepte }) {
   const drop = useDrop({
     // Boomregel(s): één sleutel, of de hele multiselectie (regel per regel).
     [PLAATSING_MIME]: (data) => data.split("\n").forEach((key) => plaatsDiagram(key, map.id)),
-    // Andere map: verhangen (met cyclus-check in de store).
+    // Andere map: omhangen (met cyclus-check in de store).
     [MAP_MIME]: (id) => verplaatsMap(id, map.id),
+    // Een element uit de boom zonder eigen plaatsing (een kind in een container): uit de
+    // container halen (de relatie gaat weg) en in deze map zetten (06-11).
+    [BOOM_ELEMENT_MIME]: (rauw) => {
+      try {
+        const { profielId, elementId } = JSON.parse(rauw);
+        const p = getProfieltype(profielId);
+        if (!p) return;
+        const st = p.useStore.getState();
+        if (boomRelatiesVan(st.elements, typenPerId(p), p.descriptor?.hierarchie, elementId).length) p.hangOmOnder(elementId, null);
+        plaatsDiagram(elementKey(profielId, elementId), map.id);
+      } catch { /* ignore */ }
+    },
     // Element(en) uit de ElementenBrowser (van het actieve tab-profiel);
     // een Ctrl-klik-multiselectie komt als bundel (elementIds). Een
     // hiërarchie-kind (GE) kan niet los geplaatst worden: we plaatsen zijn
@@ -1918,6 +2173,8 @@ function Map_({ map, diepte }) {
   const ctx = (e) =>
     openCtxMenu(e, [
       { label: "Nieuw diagram", items: nieuwDiagramItems(map.id) },
+      // Fase 0 (06-11): een element zonder diagram, meteen in deze map.
+      ...nieuwMenu("", nieuwElementItems({ doe: (p, et) => maakElementInBoom(p, et, { ouderSleutel: map.id }) })),
       { label: "Nieuwe submap…", onClick: nieuweSubmap },
       { label: "Hernoemen", onClick: () => setBewerk(true) },
       { label: "Eigenschappen", onClick: () => selecteerMap(map.id) },

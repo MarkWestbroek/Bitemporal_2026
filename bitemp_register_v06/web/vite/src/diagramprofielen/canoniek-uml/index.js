@@ -479,6 +479,9 @@ const elementTypes = [
     icoon: "package",
     // Drop-doel op canvas en in de boom: erin slepen legt de bevat-connector.
     containerVoor: "bevat",
+    // M3 uitwerking (Mark, 06-11): een diagram kan in de boom onder een package hangen, zoals onder
+    // een UC-realisatie. Elementen die het package kan bevatten blijven een bevat-relatie.
+    uitwerking: true,
     // Zoals mappen in een verkenner: dicht beginnen, openklikken op verzoek.
     standaardDichtInBoom: true,
     properties: [KLEUR_VELD],
@@ -525,6 +528,9 @@ const elementTypes = [
     shape: "edge",
     icoon: "compositie",
     isConnector: true,
+    // M3-aard (06-11): een GE is een deel van zijn ENT. Daardoor kun je in de projectboom een GE
+    // ín een entiteit maken of slepen (diagramcore/model/omhangen.js, boomRelatieVoor).
+    aard: "insluiting",
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["gegevenselement"] },
     edgePresentatie: { lijn: "solid", kleur: "#64748b", markerStart: "ruit" },

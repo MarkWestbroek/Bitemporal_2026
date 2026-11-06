@@ -21,7 +21,45 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   diagrammen toe aan de open tabs. Zie `docs/STUDIO.md` (Werkruimte). E2e
   `44-studio-bundels.spec.js`.
 
+- **Elementen maken en nesten in de projectboom** (fase 0 van het plan "Linked data als M2" §8,
+  akkoord Mark 06-11). *Nieuw element ▸* op een map maakt een element zonder diagram;
+  *Nieuw element hierin* en slepen in de boom leggen de échte relatie: een lidmaatschap (M3
+  `containerVoor`; xsd, wsdl, packages) of een insluitende relatie (M3-aard `insluiting`; een GE
+  ín een entiteit in het canonieke model, dat daarvoor `aard: "insluiting"` op de compositie
+  kreeg). Een kind naar een map slepen haalt het eruit. Zie `docs/STUDIO.md`. E2e
+  `45-studio-boom-elementen.spec.js`.
+
+- **Diagram starten vanuit de boom** (Mark, 06-11): rechtsklik op een element → *Nieuw diagram
+  hiermee* (met zijn kinderen, bv. een entiteit met zijn gegevenselementen), of met de
+  Ctrl-selectie.
+- **Kopiëren en plakken op het canvas** (Ctrl+C / Ctrl+V, Mark 06-11): elementen naar een
+  ander diagram van dezelfde taal, als verwijzing naar dezelfde elementen.
+- **Kinderen in de boom selecteren en meeslepen**: Ctrl/Shift-klik werkt ook op een kind (GE
+  onder ENT); Ctrl-slepen naar een diagram neemt de kinderen mee.
+- **Diagram onder een package** (M3 `uitwerking` op packages in canoniek, puur UML en de
+  UML-profielen met `pakket()`), zoals onder een UC-realisatie.
+- **Nieuw diagram ▸ taal** onder een package of ander element met `uitwerking`: een leeg
+  diagram eronder.
+- **Toon gebruik ▸** in het rechtsklikmenu van een element in de boom: de diagrammen waarop het
+  staat; kiezen opent dat diagram.
+- **Menu's in de boom zo kort als het kan**: één mogelijk type geeft meteen "Nieuw
+  gegevenselement hierin"; bij één taal vervalt de taal-laag.
+
+### Opgelost
+- **Een element stond twee keer in de boom** na Ctrl+Z in de boom (Mark, 06-11): de oude plaats
+  in een map kwam terug terwijl de relatie met het package bleef. De boom toont het element nu
+  alleen onder zijn ouder.
+
 ### Gewijzigd
+- **Klikken op een element in de boom blijft in het huidige diagram** (Mark, 06-11): de Studio
+  sprong naar het eerste open diagram met het element, ook als het op meer diagrammen stond.
+- **Eén boomouder, deterministisch** (besluit Mark 04-11): bij meer hiërarchie-ouders wint de
+  eerste in vaste volgorde (connector-id), niet de laatste in elementvolgorde; een kring telt
+  niet (`bouwHierarchie` in `studio/boomRegels.js`). De weergave toont een kind nog onder elke
+  ouder (OAS en GraphQL gebruiken de hiërarchie als graaf).
+- **"Op geen enkel diagram"** in de boom: een rustig teken ◌ met uitleg in plaats van cursief.
+- **Omhangen** in plaats van "verhangen" in code en docs (`hangOmNaarContainer`,
+  `diagramcore/model/omhangen.js`, gedeeld door canvas en boom).
 - **«gebruikt» in plaats van «use»** in het canonieke model (Mark, 06-11: "we doen alles in het
   NL"). Het connectortype heet *Gebruik («gebruikt»)*. Opgeslagen modellen dragen het label in
   `data.presentatie` van hun diagram-edges; de profiel-migratie `hernoemGebruikLabels`

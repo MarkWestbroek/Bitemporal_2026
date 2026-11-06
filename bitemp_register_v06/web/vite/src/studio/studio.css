@@ -301,6 +301,8 @@
 /* Tabs verslepen (06-11): de versleepte tab vervaagt, de plek waar hij landt krijgt een streep. */
 .studio-tab.is-gesleept { opacity: 0.45; }
 /* Diagrambundels in de zijbalk (06-11): icoon, naam, aantal diagrammen. */
+/* Element in de boom dat (nog) op geen diagram staat (06-11): rustig teken, geen cursief. */
+.studio-project__geen-diagram { margin-left: 6px; font-size: 10px; color: var(--s-fg-muted); opacity: 0.8; }
 .studio-bundel { display: flex; align-items: center; gap: 6px; width: 100%; }
 .studio-bundel__icoon { flex: 0 0 auto; font-size: 11px; }
 .studio-bundel__naam { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }

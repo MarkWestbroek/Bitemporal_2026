@@ -626,7 +626,7 @@ export function naarCanoniekModel(coreState) {
   const gebruikConnectoren = [];
 
   // Package → V3-domein: een bevat-connector wint van het (bij de heenreis
-  // gespiegelde) domein-veld, zodat verhangen in 0.5 doorwerkt in de export.
+  // gespiegelde) domein-veld, zodat omhangen in 0.5 doorwerkt in de export.
   const pakketVan = new Map();
   for (const el of Object.values(coreEls)) {
     if (el.elementType !== "bevat" || !el.source || !el.target) continue;

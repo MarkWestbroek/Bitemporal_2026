@@ -133,6 +133,9 @@ const elementTypes = [
     icoon: "package",
     // Drop-doel op canvas en in de boom: erin slepen legt de bevat-connector.
     containerVoor: "bevat",
+    // M3 uitwerking (Mark, 06-11): een diagram kan in de boom onder een package hangen, zoals onder
+    // een UC-realisatie. Elementen die het package kan bevatten blijven een bevat-relatie.
+    uitwerking: true,
     // Zoals mappen in een verkenner: dicht beginnen, openklikken op verzoek.
     standaardDichtInBoom: true,
     properties: [KLEUR_VELD],

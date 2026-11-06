@@ -67,7 +67,8 @@ import { registreerProfieltype } from "../profieltypeRegistry";
 import { openVerwijzing, alleDiagrammen, naamVanVerwijzing } from "../doorklik.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { doorklikVan } from "../../diagramcore/model/verwijstNaar.js";
-import { lidConnectoren, isLidConnector } from "../../diagramcore/types/containerVoor.js";
+import { lidConnectoren } from "../../diagramcore/types/containerVoor.js";
+import { hangOmNaarContainer as hangOmNaarContainerKern, hangOmOnder as hangOmOnderKern } from "../../diagramcore/model/omhangen.js";
 import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
 import { staatMeerdereVoorkomensToe, vindVoorkomen } from "../../diagramcore/model/voorkomens.js";
@@ -84,7 +85,6 @@ import { koppelModelStore } from "../sync/operaties.js";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
 import { ANKER_PREFIX } from "../../diagramcore/canvas/materialiseerConnectoren.js";
-import { verbindingsregelsVan } from "../../diagramcore/types/typeRegistry.js";
 import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
 import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
@@ -166,6 +166,14 @@ const STANDAARD_TAAKBALK_DEFAULTS = {
   uitlijnen: { zichtbaar: true, auto: true, positie: { x: 12, y: 120 } },
   "auto-layout": { zichtbaar: true, auto: true, positie: { x: 12, y: 174 } },
 };
+
+/**
+ * Het Studio-klembord voor elementen (Ctrl+C / Ctrl+V op het canvas, Mark 06-11): gedeeld door
+ * alle diagram-activiteiten, maar plakken kan alleen in dezelfde taal. Bewust niet het
+ * systeemklembord: dat draagt al de "Kopieer als afbeelding/link"-acties.
+ * @type {{profielId: string, diagramId: string, elementIds: string[], posities: Record<string, {x: number, y: number}>}|null}
+ */
+let _klembord = null;
 
 export function maakDiagramActiviteit(opties) {
   const {
@@ -273,52 +281,12 @@ export function maakDiagramActiviteit(opties) {
   const containerConnectorIds = new Set(descriptor.elementTypes.flatMap((et) => lidConnectoren(et)));
 
   /**
-   * Verhang een element naar een container (of maak het los met
-   * containerId = null): verwijder bestaande lidmaatschaps-connectoren en
-   * leg zo nodig een nieuwe. Met cycle-guard (package in zichzelf).
+   * Hang een element om naar een container (of maak het los met containerId = null). De regels
+   * (alleen lidmaatschapslijnen, verbindingsregels, geen kring, één container) staan sinds 06-11
+   * in diagramcore/model/omhangen.js, gedeeld met de projectboom.
    */
-  function verhangNaarContainer(useStoreRef, elementId, containerId) {
-    const s = useStoreRef.getState();
-    const el = s.elements[elementId];
-    if (!el || elementId === containerId) return;
-    // Alleen échte lidmaatschapslijnen: vanuit een container-type met dit connectortype in zijn
-    // containerVoor. Een ArchiMate-compositie vanuit een gewoon component (Omnium Studio → EA-lezer)
-    // is geen lidmaatschap en blijft staan (Mark, 22-10: "een grouping moet geen bestaande
-    // relaties verwijderen").
-    const isLidmaatschap = (c) => c.source && c.target && isLidConnector(elementTypesById[s.elements[c.source]?.elementType], c.elementType);
-    const bestaande = Object.values(s.elements).filter((c) => isLidmaatschap(c) && c.target === elementId);
-    if (containerId) {
-      const container = s.elements[containerId];
-      // Verbindingsregels respecteren (bv. geen notitie in een package); bij een
-      // lijst het eerste connectortype dat mag (ArchiMate: aggregatie).
-      const ct = lidConnectoren(elementTypesById[container?.elementType])
-        .map((id) => elementTypesById[id])
-        .find((c) => c && verbindingsregelsVan(c).some((r) => r.bron.includes(container.elementType) && r.doel.includes(el.elementType)));
-      if (!ct) return;
-      // Cycle-guard: containerId mag niet (indirect) ín elementId zitten.
-      let cursor = containerId;
-      for (let i = 0; i < 50 && cursor; i += 1) {
-        if (cursor === elementId) return;
-        const ouderConn = Object.values(s.elements).find(
-          (c) => isLidmaatschap(c) && c.target === cursor
-        );
-        cursor = ouderConn?.source || null;
-      }
-      if (bestaande.some((c) => c.source === containerId)) return; // zit er al in
-      for (const c of bestaande) s.deleteElement(c.id);
-      _connTeller += 1;
-      s.addElement({
-        id: `bev_${Date.now()}_${_connTeller}`,
-        naam: "",
-        elementType: ct.id,
-        source: containerId,
-        target: elementId,
-        compartimenten: [],
-        data: {},
-      });
-    } else {
-      for (const c of bestaande) s.deleteElement(c.id);
-    }
+  function hangOmNaarContainer(useStoreRef, elementId, containerId) {
+    return hangOmNaarContainerKern(useStoreRef, elementTypesById, elementId, containerId);
   }
 
   let _connTeller = 0;
@@ -926,7 +894,7 @@ export function maakDiagramActiviteit(opties) {
       // niet bij, en weigert de afbakening onbegrijpelijk een sequence flow.
       // Een container zelf (nieuwe lane) alleen in een ándere container.
       const containerId = layoutApiRef.current?.containerOp?.({ x: positie.x + 90, y: positie.y + 50 });
-      if (containerId) verhangNaarContainer(useStore, el.id, containerId);
+      if (containerId) hangOmNaarContainer(useStore, el.id, containerId);
       setSelectieId(el.id);
     }, []);
 
@@ -1310,7 +1278,7 @@ export function maakDiagramActiviteit(opties) {
             });
             if (!keuze) return;
             const doel = containers.find((c) => (c.naam || c.id) === keuze.trim());
-            if (doel) verhangNaarContainer(useStore, el.id, doel.id);
+            if (doel) hangOmNaarContainer(useStore, el.id, doel.id);
             else toonMelding({ tekst: `Onbekend package "${keuze}".` });
           },
         });
@@ -1321,7 +1289,7 @@ export function maakDiagramActiviteit(opties) {
       if (lidmaatschappen.length) {
         items.push({
           label: `Losmaken uit "${s.elements[lidmaatschappen[0].source]?.naam || "package"}"`,
-          onClick: () => verhangNaarContainer(useStore, el.id, null),
+          onClick: () => hangOmNaarContainer(useStore, el.id, null),
         });
       }
       items.push({ sep: true });
@@ -1340,7 +1308,7 @@ export function maakDiagramActiviteit(opties) {
       setZijMenu({ x: e.clientX, y: e.clientY, items });
     };
     // Drag & drop in de boom (vgl. IDE-ProjectBrowser): element op een
-    // container (package) slepen = verhangen; op de achtergrond = losmaken.
+    // container (package) slepen = omhangen; op de achtergrond = losmaken.
     const [sleepDoel, setSleepDoel] = useState(null);
     const SLEEP_MIME = "application/studio05-element";
     // Rechtsklik op een typekop ("Actor 13"): de hele groep in één keer
@@ -1398,9 +1366,9 @@ export function maakDiagramActiviteit(opties) {
               if (!rauw) return;
               try {
                 const { elementId } = JSON.parse(rauw);
-                // Connectoren horen niet in een container verhangen te worden.
+                // Connectoren horen niet in een container omhangen te worden.
                 const bronEt = elementTypesById[elements[elementId]?.elementType];
-                if (elementId && !bronEt?.isConnector) verhangNaarContainer(useStore, elementId, el.id);
+                if (elementId && !bronEt?.isConnector) hangOmNaarContainer(useStore, elementId, el.id);
               } catch {
                 /* geen geldig sleep-pakketje */
               }
@@ -1695,7 +1663,7 @@ export function maakDiagramActiviteit(opties) {
             setSleepDoel(null);
             try {
               const { elementId } = JSON.parse(rauw);
-              if (elementId) verhangNaarContainer(useStore, elementId, null);
+              if (elementId) hangOmNaarContainer(useStore, elementId, null);
             } catch {
               /* geen geldig sleep-pakketje */
             }
@@ -2655,7 +2623,7 @@ export function maakDiagramActiviteit(opties) {
                 {
                   id: "uit-container",
                   label: `Losmaken uit "${containerNaam}"`,
-                  onClick: () => verhangNaarContainer(useStore, nodeId, null),
+                  onClick: () => hangOmNaarContainer(useStore, nodeId, null),
                 },
               ];
             })()
@@ -2773,12 +2741,85 @@ export function maakDiagramActiviteit(opties) {
       });
     }, [voorkeuren, zetZichtbaar]);
 
+    /**
+     * Ctrl+C: de geselecteerde elementen (geen connectoren; die volgen vanzelf) naar het
+     * Studio-klembord, met hun posities op dit diagram. Geeft true als er iets gekopieerd is.
+     */
+    const kopieerSelectie = () => {
+      const s = useStore.getState();
+      const dId = s.actiefDiagramId;
+      const sel = (layoutApiRef.current?.selectieIds?.() || []).map((x) => x.elementId).filter((eid) => s.elements[eid] && !s.elements[eid].source);
+      if (!dId || !sel.length) return false;
+      const nodes = s.diagrams[dId]?.nodes || [];
+      const posities = {};
+      for (const eid of sel) {
+        const n = nodes.find((x) => x.elementId === eid);
+        if (n) posities[eid] = { ...n.position, ...(n.size ? { size: n.size } : {}) };
+      }
+      _klembord = { profielId: id, diagramId: dId, elementIds: [...new Set(sel)], posities };
+      toonMelding({ tekst: `${_klembord.elementIds.length} ${_klembord.elementIds.length === 1 ? "element" : "elementen"} gekopieerd. Plak met Ctrl+V op een ander ${diagramTerm} van deze taal.` });
+      return true;
+    };
+
+    /**
+     * Ctrl+V: de gekopieerde elementen op het actieve diagram zetten, als verwijzing naar
+     * dezelfde elementen (zoals in de IDE; geen kopie in het model). De onderlinge posities
+     * blijven; het geheel komt midden in beeld. Wat er al op staat, slaat over; op hetzelfde
+     * diagram geeft plakken een extra voorkomen (als de taal dat toestaat). Connectoren tussen
+     * de elementen tekent het canvas zelf.
+     */
+    const plakKlembord = () => {
+      const kb = _klembord;
+      if (!kb) return false;
+      if (kb.profielId !== id) {
+        toonMelding({ tekst: "Het klembord bevat elementen van een andere taal; plakken kan alleen in dezelfde taal." });
+        return true;
+      }
+      const s = useStore.getState();
+      const dId = s.actiefDiagramId;
+      if (!dId) return false;
+      const opDiagram = new Set((s.diagrams[dId]?.nodes || []).map((n) => n.elementId));
+      const zelfdeDiagram = kb.diagramId === dId;
+      // Op een ander diagram: wat er al staat, slaat over. Op hetzelfde diagram: een extra voorkomen,
+      // als de taal dat toestaat (anders valt er niets te plakken).
+      const teDoen = kb.elementIds.filter((eid) => {
+        const el = s.elements[eid];
+        if (!el) return false;
+        return !opDiagram.has(eid) || (zelfdeDiagram && staatMeerdereVoorkomensToe(descriptor, elementTypesById[el.elementType]));
+      });
+      if (!teDoen.length) {
+        toonMelding({ tekst: "Alles van het klembord staat al op dit diagram." });
+        return true;
+      }
+      const ps = teDoen.map((eid) => kb.posities[eid] || { x: 0, y: 0 });
+      const minX = Math.min(...ps.map((q) => q.x));
+      const minY = Math.min(...ps.map((q) => q.y));
+      const midden = layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 200 };
+      const zelfde = zelfdeDiagram;
+      teDoen.forEach((eid, i) => {
+        const q = ps[i];
+        const positie = zelfde ? { x: q.x + 40, y: q.y + 40 } : { x: midden.x - 150 + (q.x - minX), y: midden.y - 100 + (q.y - minY) };
+        const meerdere = staatMeerdereVoorkomensToe(descriptor, elementTypesById[s.elements[eid].elementType]);
+        s.addElementToDiagram(dId, eid, positie, { meerdereVoorkomens: meerdere });
+        naTerugzetten(dId, eid);
+      });
+      return true;
+    };
+
     // Sneltoetsen: Ctrl+Z / Ctrl+Y (Delete doet React Flow zelf).
     useEffect(() => {
       const onKey = (e) => {
         const doel = e.target;
         if (doel && (doel.tagName === "INPUT" || doel.tagName === "TEXTAREA" || doel.isContentEditable)) return;
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
+        const inBoom = !!doel?.closest?.(".studio-project");
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "c" && !inBoom) {
+          // Kopiëren (Mark, 06-11: "werkte in de IDE"): de geselecteerde elementen van dit
+          // diagram, met hun onderlinge posities. Geen tekstselectie in de pagina overschrijven.
+          if (window.getSelection?.()?.toString()) return;
+          if (kopieerSelectie()) e.preventDefault();
+        } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "v" && !inBoom) {
+          if (plakKlembord()) e.preventDefault();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
           e.preventDefault();
           useStore.temporal.getState().undo();
         } else if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "y" || (e.key.toLowerCase() === "z" && e.shiftKey))) {
@@ -3034,7 +3075,7 @@ export function maakDiagramActiviteit(opties) {
                       y: raster(positie.y - maat.height / 2),
                     });
                     // Losgelaten in een container (lane/pool): meteen lid.
-                    if (containerId) verhangNaarContainer(useStore, nieuw.id, containerId);
+                    if (containerId) hangOmNaarContainer(useStore, nieuw.id, containerId);
                     verbind({
                       connectorType,
                       source: omgekeerd ? nieuw.id : bronId,
@@ -3046,7 +3087,7 @@ export function maakDiagramActiviteit(opties) {
                   }}
                   // Uiteinde van een lijn elders aangehecht (§31.5): zelfde
                   // connector, nieuw paar; knikpunten vervallen.
-                  onVerhangConnector={(connectorId, { source, target, sourceHandle, targetHandle }) => {
+                  onHangConnectorOm={(connectorId, { source, target, sourceHandle, targetHandle }) => {
                     const s = useStore.getState();
                     s.zetLijnen(
                       s.actiefDiagramId,
@@ -3055,7 +3096,7 @@ export function maakDiagramActiviteit(opties) {
                     );
                   }}
                   onContainerDrop={(elementId, containerId) =>
-                    verhangNaarContainer(useStore, elementId, containerId)
+                    hangOmNaarContainer(useStore, elementId, containerId)
                   }
                   onRandAanhechting={(elementId, ouderId, positie, voorkomenId) => {
                     // Rand-aanhechting (§3.1): gastheer op het element zelf
@@ -3126,12 +3167,26 @@ export function maakDiagramActiviteit(opties) {
                     // 2026-10-07: droppen in een kader deed niets). Alleen
                     // profielen/typen met de voorkomen-vlag laten een tweede
                     // plaatsing toe.
+                    // Meer elementen tegelijk (Ctrl-selectie in de boom, of Ctrl-slepen = met
+                    // kinderen; Mark, 06-11): het gesleepte element komt op de plek van de drop
+                    // (met de containerregel hieronder), de rest in een raster eronder.
+                    // Wat al op het diagram staat, slaat over.
+                    if (ref?.profielId === id && Array.isArray(ref.elementIds) && ref.elementIds.length > 1) {
+                      const opDiagram = new Set((s.diagrams[diagram.id]?.nodes || []).map((n) => n.elementId));
+                      const rest = ref.elementIds.filter((eid) => eid !== ref.elementId && s.elements[eid] && !s.elements[eid].source && !opDiagram.has(eid));
+                      rest.forEach((eid, i) => {
+                        const pos = { x: positie.x + (i % 4) * 240, y: positie.y + 180 + Math.floor(i / 4) * 150 };
+                        s.addElementToDiagram(diagram.id, eid, pos);
+                        naTerugzetten(diagram.id, eid);
+                      });
+                      if (opDiagram.has(ref.elementId)) return;
+                    }
                     if (ref?.profielId === id && s.elements[ref.elementId]) {
                       const doelEl = nodeId ? s.elements[nodeId] : null;
                       const doelEt = doelEl ? elementTypesById[doelEl.elementType] : null;
                       // Een achtergrondkader zonder lidmaatschap (los kader,
                       // ArchiMate Grouping) geldt als lege ruimte: plaatsen
-                      // zonder verhangen (gemeld 2026-10-09).
+                      // zonder omhangen (gemeld 2026-10-09).
                       if (
                         !nodeId ||
                         ((doelEt?.containerVoor || doelEt?.achtergrond) && doelEl.id !== ref.elementId)
@@ -3141,7 +3196,7 @@ export function maakDiagramActiviteit(opties) {
                         const meerdereVoorkomens = staatMeerdereVoorkomensToe(descriptor, et);
                         s.addElementToDiagram(diagram.id, el.id, positie, { meerdereVoorkomens });
                         naTerugzetten(diagram.id, el.id);
-                        if (doelEt?.containerVoor) verhangNaarContainer(useStore, el.id, doelEl.id);
+                        if (doelEt?.containerVoor) hangOmNaarContainer(useStore, el.id, doelEl.id);
                         selecteerVoorkomen(el.id, null);
                         return;
                       }
@@ -3653,6 +3708,11 @@ export function maakDiagramActiviteit(opties) {
       diagramTerm,
       // OperatieResolver-facet: operaties van een element in dit profiel.
       operatiesVan,
+      // Projectboom (fase 0 "Linked data als M2", 06-11): elementen maken en nesten zonder diagram.
+      maakElement,
+      hangOmNaarContainer: (elementId, containerId) => hangOmNaarContainer(useStore, elementId, containerId),
+      // Onder een ouder in de boom: lidmaatschap of insluitende relatie (bv. ENT ◆ GE).
+      hangOmOnder: (elementId, ouderId) => hangOmOnderKern(useStore, elementTypesById, descriptor.hierarchie, elementId, ouderId),
     });
   }
 

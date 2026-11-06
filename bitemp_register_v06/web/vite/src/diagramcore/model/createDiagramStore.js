@@ -325,7 +325,7 @@ export function createDiagramStore({ persistKey } = {}) {
      * diagram; op het element kon een lijn op twee diagrammen maar op één
      * goed liggen (Mark, 10-10).
      * `elementPatches` (optioneel, zelfde vorm als updateElementen) gaat in
-     * dezelfde stap mee — één Ctrl+Z voor bv. een verhangen lijn.
+     * dezelfde stap mee — één Ctrl+Z voor bv. een omgehangen lijn.
      * @param {string} diagramId
      * @param {Record<string, Record<string, any>>} patches  connectorId → patch
      * @param {Record<string, Object>|null} [elementPatches]

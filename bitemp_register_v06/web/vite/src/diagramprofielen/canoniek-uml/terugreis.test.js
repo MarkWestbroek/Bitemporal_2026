@@ -332,7 +332,7 @@ test("V3-route: import zonder overzicht-entry reconstrueert zoals voorheen", () 
   assert.ok(core.diagrams.overzicht.nodes.length >= aantalElementen - 1);
 });
 
-test("packages: V3-domein ↔ package/bevat, verhangen wint bij de terugreis", () => {
+test("packages: V3-domein ↔ package/bevat, omhangen wint bij de terugreis", () => {
   const bron = {
     elements: {
       E1: {
@@ -353,7 +353,7 @@ test("packages: V3-domein ↔ package/bevat, verhangen wint bij de terugreis", (
   assert.equal(bevat?.source, pkg.id);
   assert.equal(bevat?.target, "E1");
 
-  // Verhangen in 0.5: bevat wijst naar een nieuw package → de terugreis
+  // Omhangen in 0.5: bevat wijst naar een nieuw package → de terugreis
   // volgt de connector, niet het gespiegelde domein-veld.
   core.elements.pkg2 = { id: "pkg2", naam: "anders", elementType: "package", compartimenten: [], data: {} };
   core.elements[bevat.id] = { ...bevat, source: "pkg2" };
