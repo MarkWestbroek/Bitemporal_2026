@@ -37,6 +37,10 @@ BEGIN
 	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS model_versie TEXT;
 	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS model_naam TEXT;
 	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS model_beschrijving TEXT;
+	-- herkomst bij een rebuild uit een Studio-project (07-11-2026)
+	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS bron_project_id TEXT;
+	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS bron_project_versie BIGINT;
+	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS bron_tot_volgnummer BIGINT;
 END $$;
 `)
 	if err != nil {

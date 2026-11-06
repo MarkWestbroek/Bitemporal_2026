@@ -104,16 +104,30 @@ type RebuildRequest struct {
 	// Model is het V3 model in JSON formaat.
 	// Als leeg, wordt de gekozen bron gebruikt (`code`, `actief`, `latest_proposed` of `schema_versie_id`).
 	Model json.RawMessage `json:"model"`
+
+	// ProjectID kiest een Studio-project als bron (07-11-2026, rebuild_uit_project.go): het
+	// canonieke profiel uit de snapshot, door de render-sidecar naar V3 omgezet. Zonder
+	// Domeinen worden alle domeinen van het model gebouwd. Niet samen met Model.
+	ProjectID string `json:"project_id,omitempty"`
+	// Profiel is de sleutel van het canonieke profiel in het project (default "diagram05").
+	Profiel string `json:"profiel,omitempty"`
 }
 
 // RebuildResponse beschrijft de response van de rebuild endpoint.
 type RebuildResponse struct {
 	Status       string   `json:"status"`
+	Reden        string   `json:"reden,omitempty"` // bij een weigering: achterstand, bezig, export, geen_project, …
 	Stappen      []string `json:"stappen"`
 	CodegenFiles []string `json:"codegen_files,omitempty"`
 	BuildOutput  string   `json:"build_output,omitempty"`
 	Error        string   `json:"error,omitempty"`
 	HerstartOver string   `json:"herstart_over,omitempty"`
+	// Bij een rebuild uit een Studio-project: de herkomst en de meldingen van de V3-terugreis.
+	Bron      *RebuildBron    `json:"bron,omitempty"`
+	Meldingen json.RawMessage `json:"meldingen,omitempty"`
+	// Bij reden "achterstand": de snapshot-grens en het laatste volgnummer van het project.
+	TotVolgnummer     int64 `json:"tot_volgnummer,omitempty"`
+	LaatsteVolgnummer int64 `json:"laatste_volgnummer,omitempty"`
 }
 
 func laadSchemaVersieJSONOpID(schemaVersieID int64) ([]byte, string, error) {
@@ -490,6 +504,7 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		if !rebuildMutex.TryLock() {
 			c.JSON(http.StatusConflict, gin.H{
 				"error": "er loopt al een rebuild; probeer het zo opnieuw",
+				"reden": "bezig",
 			})
 			return
 		}
@@ -525,13 +540,26 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		appDir := resolveAppDir()
 		stappen = append(stappen, fmt.Sprintf("Werkdirectory bepaald als %s", appDir))
 
-		// Stap 1: bepaal de modelbron (body, schema-versie, actief, laatste voorstel of code).
+		// Stap 1: bepaal de modelbron (body, Studio-project, schema-versie, actief, laatste voorstel of code).
 		var modelBytes []byte
+		var bron *RebuildBron
+		var meldingen json.RawMessage
 
 		switch {
+		case len(req.Model) > 0 && req.ProjectID != "":
+			c.JSON(http.StatusBadRequest, RebuildResponse{Status: "fout", Reden: "ongeldig", Stappen: stappen,
+				Error: "geef óf model óf project_id, niet allebei"})
+			return
 		case len(req.Model) > 0:
 			stappen = append(stappen, "V3 model ontvangen via request body (actuele editorinhoud)")
 			modelBytes = req.Model
+		case req.ProjectID != "":
+			var fout *rebuildProjectFout
+			modelBytes, meldingen, bron, stappen, fout = modelUitProject(c.Request.Context(), req.ProjectID, req.Profiel, stappen, true)
+			if fout != nil {
+				c.JSON(fout.status, fout.body)
+				return
+			}
 		case req.SchemaVersieID != nil:
 			bytes, melding, err := laadSchemaVersieJSONOpID(*req.SchemaVersieID)
 			if err != nil {
@@ -591,7 +619,19 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			modelBytes = output
 		}
 
-		// Bepaal domein/prefix uit model JSON als we in single-domein modus zitten.
+		// Bepaal domein/prefix uit model JSON als we in single-domein modus zitten. Een project is
+		// het hele model: zonder opgegeven domeinen bouwen we ze allemaal (zoals de startup-rebuild).
+		if len(req.Domeinen) == 0 && bron != nil {
+			runs, melding := domeinRunsUitModel(modelBytes, appDir)
+			if len(runs) == 0 {
+				c.JSON(http.StatusUnprocessableEntity, RebuildResponse{Status: "fout", Reden: "export", Stappen: stappen,
+					Error: "het V3-model uit het project heeft geen domeinen: " + melding, Bron: bron, Meldingen: meldingen})
+				return
+			}
+			req.Domeinen = runs
+			req.Domein = "project-" + bron.ProjectID
+			stappen = append(stappen, fmt.Sprintf("Alle %d domeinen van het project bouwen", len(runs)))
+		}
 		if len(req.Domeinen) == 0 {
 			var melding string
 			req.Domein, req.Prefix, melding = bepaalDomeinEnPrefixUitModelJSON(modelBytes, req.Domein, req.Prefix)
@@ -614,6 +654,8 @@ func MaakRebuildHandler() gin.HandlerFunc {
 				Stappen:     stappen,
 				BuildOutput: string(buildOutput),
 				Error:       err.Error(),
+				Bron:        bron,
+				Meldingen:   meldingen,
 			})
 			return
 		}
@@ -625,7 +667,7 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			var bestaandID *int64
 			activeren := true
 			switch {
-			case len(req.Model) > 0:
+			case len(req.Model) > 0, bron != nil:
 			case req.SchemaVersieID != nil:
 				bestaandID = req.SchemaVersieID
 			case strings.EqualFold(req.SchemaBron, "latest_proposed") || strings.EqualFold(req.SchemaBron, "proposed") || strings.EqualFold(req.SchemaBron, "laatste"):
@@ -639,7 +681,7 @@ func MaakRebuildHandler() gin.HandlerFunc {
 				activeren = false
 			}
 			if activeren {
-				if melding, err := activeerGebouwdModel(c.Request.Context(), modelBytes, bestaandID, c.GetString("gebruikersnaam")); err != nil {
+				if melding, err := activeerGebouwdModel(c.Request.Context(), modelBytes, bestaandID, c.GetString("gebruikersnaam"), bron); err != nil {
 					stappen = append(stappen, fmt.Sprintf("Waarschuwing: gebouwde versie niet geactiveerd: %v", err))
 				} else {
 					stappen = append(stappen, melding)
@@ -677,6 +719,8 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			Stappen:      stappen,
 			BuildOutput:  string(buildOutput),
 			HerstartOver: herstartMelding,
+			Bron:         bron,
+			Meldingen:    meldingen,
 		})
 
 		// Na het sturen van de response: exit met code 42 zodat het

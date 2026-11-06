@@ -21,10 +21,11 @@ import (
 
 // activeerGebouwdModel maakt na een geslaagde rebuild de gebouwde versie actief.
 //   - bestaandID != nil: die schema_versies-rij activeren (was proposed of archived).
-//   - anders: modelBytes opslaan als nieuwe rij met status active (bron "rebuild").
+//   - anders: modelBytes opslaan als nieuwe rij met status active (bron "rebuild", of
+//     "studio-project" met de herkomst als bron != nil; 07-11-2026).
 //
 // De vorige actieve versie wordt gearchiveerd. Geeft een melding voor de stappenlijst.
-func activeerGebouwdModel(ctx context.Context, modelBytes []byte, bestaandID *int64, indiener string) (string, error) {
+func activeerGebouwdModel(ctx context.Context, modelBytes []byte, bestaandID *int64, indiener string, bron *RebuildBron) (string, error) {
 	if DB == nil {
 		return "", fmt.Errorf("database niet geïnitialiseerd")
 	}
@@ -68,6 +69,14 @@ func activeerGebouwdModel(ctx context.Context, modelBytes []byte, bestaandID *in
 			ModelVersie:       v3.Versie,
 			Status:            model.SchemaVersieStatusActive,
 			Opmerking:         "Opgeslagen en geactiveerd door /admin/rebuild",
+		}
+		if bron != nil {
+			versie.Bron = "studio-project"
+			versie.BronProjectID = bron.ProjectID
+			versie.BronProjectVersie = &bron.ProjectVersie
+			versie.BronTotVolgnummer = &bron.TotVolgnummer
+			versie.Opmerking = fmt.Sprintf("Gebouwd uit Studio-project %q (versie %d, t/m volgnummer %d; render %s) door /admin/rebuild",
+				bron.ProjectNaam, bron.ProjectVersie, bron.TotVolgnummer, bron.RenderVersie)
 		}
 		if _, err := tx.NewInsert().Model(&versie).Returning("*").Exec(ctx); err != nil {
 			return "", fmt.Errorf("kan gebouwd model niet opslaan als schema-versie: %w", err)
