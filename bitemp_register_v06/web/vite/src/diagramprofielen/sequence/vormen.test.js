@@ -9,6 +9,7 @@ import { zetHost, _resetHostVoorTests } from "../../diagramcore/tekenaar/host.js
 import { tekenbareVorm } from "../../diagramcore/types/shapeType.js";
 import { bouwVoorkomen, tekenVoorkomen, basisVanPalet } from "../../diagramcore/tekenaar/voorkomen.js";
 import { maakPalet } from "../../diagramsvg/thema.js";
+import { tekenDiagram } from "../../diagramcore/tekenaar/index.js";
 
 const basis = basisVanPalet(maakPalet("light"));
 const teken = (shapeId, element, elementType, extra = {}) => {
@@ -172,4 +173,26 @@ test("levenslijn als instantie van een element uit een ander profiel: de kop is 
   } finally {
     _resetHostVoorTests();
   }
+});
+
+test("het beeld van een diagram omvat de koppen van de buitenste levenslijnen (de kop steekt 67 uit de node)", () => {
+  const elements = {
+    a: { id: "a", naam: "Gebruiker", elementType: "levenslijn", data: {}, compartimenten: [] },
+    b: { id: "b", naam: "Zaaksysteem", elementType: "levenslijn", data: {}, compartimenten: [] },
+  };
+  const descriptor = { id: "sequence", elementTypes: [LIJN] };
+  const beeld = (nodes) => tekenDiagram({ diagram: { id: "d", naam: "D", nodes, edges: [] }, elements, descriptor, idPrefix: "t" }).viewBox;
+  // Getekend op het canvas: de node is 14 breed, de kop loopt van x - 67 tot x + 81.
+  const smal = beeld([
+    { elementId: "a", position: { x: 100, y: 40 }, size: { width: 14, height: 500 } },
+    { elementId: "b", position: { x: 400, y: 40 }, size: { width: 14, height: 500 } },
+  ]);
+  assert.ok(smal.x <= 100 - 67, `de linkerkop valt binnen het beeld (viewBox begint op ${smal.x})`);
+  assert.ok(smal.x + smal.w >= 400 + 81, `de rechterkop valt binnen het beeld (viewBox eindigt op ${smal.x + smal.w})`);
+  // Gemaakt via de MCP: een doos van 160 x 70 met de lijn links; ook dan de linkerkop in beeld.
+  const breed = beeld([
+    { elementId: "a", position: { x: 40, y: 40 }, size: { width: 160, height: 70 } },
+    { elementId: "b", position: { x: 300, y: 40 }, size: { width: 160, height: 70 } },
+  ]);
+  assert.ok(breed.x <= 40 - 67, `de linkerkop valt binnen het beeld (viewBox begint op ${breed.x})`);
 });

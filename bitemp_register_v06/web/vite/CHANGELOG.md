@@ -8,6 +8,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **De kop van de buitenste levenslijn viel buiten het beeld** (06-11, gevonden op de SVG-link
+  van app): de tekenaar mat het beeld (`viewBox`) op de dozen van de voorkomens, maar de kop van
+  een levenslijn is 148 breed op een node van 14 en steekt aan beide kanten 67 uit. Links en
+  rechts ging er 43 van de kop af, in documenten, gedeelde plaatjes en de render-API. Het
+  inhoudsvak telt nu mee in het beeld (`tekenaar/index.js` `vakOmvang`; een gedraaid vak, zoals
+  de band van een BPMN-pool, na het draaien). Een pakket of fragment bovenaan in een diagram
+  geeft daardoor een beeld dat 1 tot 3 hoger is. De render-API heeft de fix pas met een nieuw
+  render-image (de tekenaar zit in de bundel van `render-svc`).
+
 ## [studio/v0.29.0] — 2026-11-06
 
 ### Toegevoegd

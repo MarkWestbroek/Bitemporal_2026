@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
-import { tekenDiagram, diagramSvg, naarSvg, vormVoor } from "./index.js";
+import { tekenDiagram, diagramSvg, naarSvg, vormVoor, vakOmvang } from "./index.js";
 import { BASIS_SHAPETYPES } from "./basisVormen.js";
 import { tekenbareVorm, valideerVormBoom, valideerVak, losStijlOp } from "../types/shapeType.js";
 import { planInhoud } from "./inhoud.js";
@@ -164,4 +164,11 @@ test("planInhoud meet natuurlijke breedte en hoogte; naam breekt af binnen een s
 
 test("naarSvg escapet tekst en schrijft attributen in volgorde", () => {
   assert.equal(naarSvg({ tag: "text", attrs: { x: 1.26, y: 2 }, kinderen: ["a < b"] }), '<text x="1.3" y="2">a &lt; b</text>');
+});
+
+test("vakOmvang: een gedraaid inhoudsvak telt na het draaien om zijn midden (pool: de staande band)", () => {
+  assert.deepEqual(vakOmvang({ x: -67, y: 0, w: 148, h: 30 }), { x0: -67, y0: 0, x1: 81, y1: 30 });
+  // Pool van 320 x 160 met een band van 30: het vak ligt ervoor (x -65), gedraaid valt het op de band.
+  const o = vakOmvang({ x: 15 - 80, y: 80 - 15, w: 160, h: 30, rotatie: -90 });
+  assert.deepEqual([o.x0, o.y0, o.x1, o.y1].map((v) => Math.round(v * 1000) / 1000 + 0), [0, 0, 30, 160]);
 });

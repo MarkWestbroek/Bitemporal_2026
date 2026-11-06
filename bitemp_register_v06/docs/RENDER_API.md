@@ -149,7 +149,7 @@ dan tekent de API hem zonder wijziging hier. Nog op de terugval: `archimate-box`
 - Nog niet: modellen die alleen in de browser staan (Studio-localStorage). Die moeten eerst
   gepubliceerd worden.
 
-### Projectdiagram: `GET` op een Studio-project, met toegang — ✅ gebouwd (05-11, nog niet uitgebracht)
+### Projectdiagram: `GET` op een Studio-project, met toegang — ✅ gebouwd (05-11, uitgebracht als api 0.19.0 op 06-11)
 
 Stap 6 van het plan *Eén tekenaar* (`handlers/render_project.go`). `studio_projecten` is privé
 ("alles dicht tenzij"). **Privacy-besluit Mark 05-11-2026:** een projectdiagram is op te halen door
@@ -203,6 +203,22 @@ plaatjes.
 Beproefd 05-11 tegen de echte keten (API + sidecar 0.3.0 + PostgreSQL): de 35 diagrammen van het
 project *Omnium architectuur* tekenen alle; met `AUTH_ENABLED=true` geeft de link anoniem 200 en
 geven `diagram.svg`, `views.json` en het maken van een link anoniem 401.
+
+Beproefd 06-11 op app (api 0.19.0, render 0.3.1, `AUTH_ENABLED=true`) met een persoonlijk
+API-token op het project *Omnium architectuur*: `views.json` en `diagram.svg` ingelogd 200 en
+anoniem 401; een link maken geeft 201 (anoniem 401) en een tweede keer hetzelfde adres; de link
+geeft anoniem dezelfde SVG als `diagram.svg`, met `ETag` (304 op navraag), `noindex` en
+`Cross-Origin-Resource-Policy: cross-origin`; `.png` op het token geeft 404; na intrekken geeft
+het adres meteen 404 en is de lijst weer leeg. `theme` kent `auto`, `light` en `dark`; een andere
+waarde geeft 400. Niet beproefd: de knop in de Studio zelf op app (met de snapshot op verzoek), en een
+tweede client tegelijk.
+
+Daarbij gevonden: de kop van de buitenste levenslijn viel buiten de `viewBox` (opgelost in de
+tekenaar, zie `web/vite/CHANGELOG.md`; in de render-API met het eerstvolgende render-image). En
+de twaalf sequence-diagrammen van dat project zijn via de MCP gemaakt: levenslijnen als doos van
+160 × 70 zonder punten, zodat de berichten van doosrand naar doosrand lopen, alle op één hoogte.
+Het canvas tekent ze precies zo (paden gelijk); dat is de inhoud van het model, geen
+renderverschil.
 
 ## Eisen aan de SVG (afspraken met Imprint)
 
