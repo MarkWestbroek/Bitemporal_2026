@@ -1067,6 +1067,8 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
       { label: "Openen", onClick: () => openTab(profiel.id, diagram.id) },
       { label: "Eigenschappen", onClick: () => selecteerDiagram(profiel.id, diagram.id) },
       { label: "Hernoemen", onClick: () => setBewerk(true) },
+      // Mark, 06-11: kopiëren, en elders plakken via "Plak diagram ▸" op een map of package.
+      { label: "Kopieer diagram", onClick: () => kopieerDiagram(profiel, diagram.id) },
       ...(inMap
         ? [
             { label: "Omhoog", onClick: () => useModellerenStore.getState().schuifPlaatsing(id, "omhoog") },
@@ -1362,6 +1364,121 @@ function verplaatsNaarItems(doe, { bovenaan = null, uitgesloten = new Set() } = 
   };
   loop(null, 0);
   return items;
+}
+
+// ── Diagram kopiëren en plakken in de boom (Mark, 06-11) ──────────────
+// "Dupliceren" in dezelfde map werd een puinhoop; je kopieert een diagram en plakt het elders:
+// met dezelfde elementen, of met kopieën van de elementen op die plek.
+
+/** Het gekopieerde diagram: {profielId, diagramId}, of null. */
+let _diagramKlembord = null;
+
+/** Rechtsklik op een diagram → Kopiëren. */
+function kopieerDiagram(profiel, diagramId) {
+  _diagramKlembord = { profielId: profiel.id, diagramId };
+}
+
+/** Vervang ids (als heel woord) in een JSON-waarde: voor het diagram en de gekopieerde elementen. */
+function vervangIds(waarde, nieuwId) {
+  if (!nieuwId.size) return JSON.parse(JSON.stringify(waarde));
+  const oud = [...nieuwId.keys()].sort((a, b) => b.length - a.length).map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const re = new RegExp(`(?<![A-Za-z0-9_\\-])(${oud.join("|")})(?![A-Za-z0-9_\\-])`, "g");
+  return JSON.parse(JSON.stringify(waarde).replace(re, (m) => nieuwId.get(m) || m));
+}
+
+/**
+ * Plak het gekopieerde diagram onder `ouderSleutel` (een map, of een element met uitwerking).
+ *   - `metKopieen` false: een nieuw diagram met dezelfde elementen (verwijzingen);
+ *   - `metKopieen` true: de elementen op het diagram én hun kinderen in de boom (bv. de GE's van
+ *     een ENT) worden gekopieerd, met de connectoren tússen de kopieën; het diagram toont de
+ *     kopieën, en die landen op dezelfde plek in de boom. Uuids gaan niet mee.
+ * Namen blijven; plakken in dezelfde map als het origineel geeft "(kopie)". Opent als tab.
+ * @returns {string|null} het nieuwe diagram-id
+ */
+function plakDiagram(ouderSleutel, { metKopieen = false } = {}) {
+  const kb = _diagramKlembord;
+  const profiel = kb ? getProfieltype(kb.profielId) : null;
+  const st = profiel?.useStore.getState();
+  const bron = st?.diagrams[kb?.diagramId];
+  if (!bron) {
+    toonMelding({ tekst: "Het gekopieerde diagram bestaat niet meer." });
+    return null;
+  }
+  const ms = useModellerenStore.getState();
+  const zelfdePlek = (ms.plaatsing[tabId(profiel.id, kb.diagramId)] || null) === (ouderSleutel || null);
+  const metKopie = (naam) => (zelfdePlek && naam ? `${naam} (kopie)` : naam);
+  const nieuweDiagramId = `${profiel.menuPrefix}_${Date.now()}`;
+  const nieuwId = new Map();
+  const kopieen = {};
+  const loskopieen = [];
+  if (metKopieen) {
+    const { kinderenVan, ouderVan } = bepaalHierarchie(profiel, st.elements);
+    const opDiagram = [...new Set((bron.nodes || []).map((n) => n.elementId))].filter((eid) => st.elements[eid] && !st.elements[eid].source);
+    const alle = new Set();
+    const voeg = (eid, d) => {
+      if (alle.has(eid) || d > 8 || !st.elements[eid] || st.elements[eid].source) return;
+      alle.add(eid);
+      for (const k of kinderenVan.get(eid) || []) voeg(k, d + 1);
+    };
+    opDiagram.forEach((eid) => voeg(eid, 0));
+    let n = 0;
+    for (const eid of alle) {
+      const basis = profiel.maakElement?.(st.elements[eid].elementType);
+      nieuwId.set(eid, basis?.id || `${st.elements[eid].elementType}_${Date.now()}_${(n += 1)}`);
+    }
+    // Connectoren tússen gekopieerde elementen (ook een relatie met een eigen doos op het diagram).
+    for (const c of Object.values(st.elements)) {
+      if (c.source && c.target && nieuwId.has(c.source) && nieuwId.has(c.target)) nieuwId.set(c.id, `conn_${Date.now()}_${(n += 1)}`);
+    }
+    for (const [oudId, nid] of nieuwId) {
+      const kopie = vervangIds(st.elements[oudId], nieuwId);
+      kopie.id = nid;
+      if (!kopie.source) kopie.naam = metKopie(kopie.naam);
+      if (kopie.data) delete kopie.data.uuid; // een kopie is een ander ding (besluit Mark 31-10)
+      kopieen[nid] = kopie;
+      // Zonder gekopieerde ouder: eigen plek in de boom (anders reist hij met zijn ouder mee).
+      if (!kopie.source && !(ouderVan.has(oudId) && nieuwId.has(ouderVan.get(oudId)))) loskopieen.push(nid);
+    }
+  }
+  const diagram = vervangIds(bron, nieuwId);
+  diagram.id = nieuweDiagramId;
+  diagram.naam = metKopie(bron.naam || kb.diagramId);
+  delete diagram.uuid;
+  // Eén Ctrl+Z voor model én diagram: de rest met de historie gepauzeerd.
+  if (Object.keys(kopieen).length) {
+    st.zetElementen({ ...st.elements, ...kopieen });
+    const temporal = profiel.useStore.temporal?.getState?.();
+    temporal?.pause?.();
+    try {
+      profiel.useStore.getState().addDiagram(diagram);
+    } finally {
+      temporal?.resume?.();
+    }
+  } else {
+    st.addDiagram(diagram);
+  }
+  if (ouderSleutel) {
+    ms.plaatsDiagram(tabId(profiel.id, nieuweDiagramId), ouderSleutel);
+    if (loskopieen.length) ms.plaatsPerMap({ [ouderSleutel]: loskopieen.map((id) => elementKey(profiel.id, id)) });
+  }
+  ms.openTab(profiel.id, nieuweDiagramId);
+  ms.flits("diag:" + tabId(profiel.id, nieuweDiagramId));
+  return nieuweDiagramId;
+}
+
+/** Menu-item "Plak diagram ▸" voor een map of element-ouder (alleen met een gekopieerd diagram). */
+function plakDiagramItems(ouderSleutel) {
+  if (!_diagramKlembord) return [];
+  const p = getProfieltype(_diagramKlembord.profielId);
+  const d = p?.useStore.getState().diagrams[_diagramKlembord.diagramId];
+  if (!d) return [];
+  return [{
+    label: `Plak diagram "${d.naam || d.id}"`,
+    items: [
+      { label: "Elementen niet dupliceren (dezelfde elementen)", onClick: () => plakDiagram(ouderSleutel, { metKopieen: false }) },
+      { label: "Elementen kopiëren naar deze plek", onClick: () => plakDiagram(ouderSleutel, { metKopieen: true }) },
+    ],
+  }];
 }
 
 /**
@@ -1842,7 +1959,7 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
         ? nieuwMenu("hierin", nieuwElementItems({ filter: (p, t) => p.id === profiel.id && bevatTypen.includes(t), doe: (p, t) => maakElementInBoom(p, t, { containerId: elementId }) }))
         : []),
       // Een leeg diagram eronder (uitwerking), naast "Nieuw diagram hiermee" (Mark, 06-11).
-      ...(kanUitwerking ? [{ label: "Nieuw diagram", items: nieuwDiagramItems(elKey) }] : []),
+      ...(kanUitwerking ? [{ label: "Nieuw diagram", items: nieuwDiagramItems(elKey) }, ...plakDiagramItems(elKey)] : []),
       ...(kanUitwerking
         ? nieuwMenu("als uitwerking", nieuwElementItems({ filter: (p, t) => !(p.id === profiel.id && bevatTypen.includes(t)), doe: (p, t) => maakElementInBoom(p, t, { ouderSleutel: elKey }) }))
         : []),
@@ -2173,6 +2290,7 @@ function Map_({ map, diepte }) {
   const ctx = (e) =>
     openCtxMenu(e, [
       { label: "Nieuw diagram", items: nieuwDiagramItems(map.id) },
+      ...plakDiagramItems(map.id),
       // Fase 0 (06-11): een element zonder diagram, meteen in deze map.
       ...nieuwMenu("", nieuwElementItems({ doe: (p, et) => maakElementInBoom(p, et, { ouderSleutel: map.id }) })),
       { label: "Nieuwe submap…", onClick: nieuweSubmap },
@@ -3336,6 +3454,19 @@ function Provider({ children }) {
       _panelenGeslotenDoorSchil = null;
     }
   }, [eigenSchil]);
+  // Klik op de achtergrond van een diagram → de eigenschappen van dát diagram in de inspector
+  // (Mark, 06-11). Een element-klik daarna laat ze weer los (hieronder).
+  useEffect(
+    () =>
+      menuBus.on("studio:diagram-achtergrond", ({ profielId, diagramId } = {}) => {
+        if (!profielId || !diagramId) return;
+        const s = useModellerenStore.getState();
+        const d = s.diagramSelectie;
+        if (d?.profielId === profielId && d?.diagramId === diagramId && !s.elementSelectie && !s.mapSelectie) return;
+        useModellerenStore.setState({ diagramSelectie: { profielId, diagramId }, elementSelectie: null, mapSelectie: null, multiSelectie: [] });
+      }),
+    []
+  );
   // Element geselecteerd (canvas of boom) → map-/diagram-eigenschappen
   // loslaten, anders blijven die de inspector bezet houden en lijkt elke
   // element-klik dood.

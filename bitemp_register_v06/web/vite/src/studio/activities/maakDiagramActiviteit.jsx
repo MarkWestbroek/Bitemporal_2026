@@ -2234,9 +2234,18 @@ export function maakDiagramActiviteit(opties) {
               const voorkomenRef = (s.diagrams[s.actiefDiagramId]?.nodes || []).find((n) => (n.nodeId || n.elementId) === nodeId);
               const diagramVerbergt = !!s.diagrams[s.actiefDiagramId]?.verbergCompartimenten;
               const nuVerborgen = voorkomenRef?.gedaante === "kop" || (diagramVerbergt && voorkomenRef?.gedaante !== "vol");
+              // Kopiëren (Mark 06-11): het aangeklikte element, of de hele selectie als het daarin zit.
+              const selectie = (layoutApiRef.current?.selectieIds?.() || []).map((x) => x.elementId);
+              const teKopieren = selectie.includes(voorkomenRef?.elementId || nodeId) && selectie.length > 1 ? selectie : [voorkomenRef?.elementId || nodeId];
               const items = [
                 { sep: true },
                 { kop: true, label: "Element" },
+                {
+                  id: "kopieer",
+                  label: teKopieren.length > 1 ? `Kopiëren (${teKopieren.length})` : "Kopiëren",
+                  shortcut: "Ctrl+C",
+                  onClick: () => kopieerElementen(teKopieren),
+                },
                 // Compartimenten per voorkomen: override op de diagramvlag (gedaante "kop"/"vol").
                 ...(voorkomenRef && (elementTypesById[s.elements[voorkomenRef.elementId]?.elementType]?.compartments?.length || 0) > 0
                   ? [
@@ -2707,6 +2716,14 @@ export function maakDiagramActiviteit(opties) {
           : []);
         const canvasDeel = (!nodeId && !connectorId
           ? [
+              // Plakken (Mark 06-11: "rechtsklik ook graag"); alleen met iets van deze taal op het klembord.
+              ...(_klembord?.profielId === id
+                ? [
+                    { sep: true },
+                    { id: "plak", label: `Plakken (${_klembord.elementIds.length})`, shortcut: "Ctrl+V", onClick: () => plakKlembord() },
+                    { id: "plak-kopie", label: "Plakken als kopie…", shortcut: "Ctrl+Shift+V", onClick: () => plakKlembord({ alsKopie: true }) },
+                  ]
+                : []),
               { sep: true },
               ...canvasMenuExtra.map((m) => ({
                 id: m.id,
@@ -2742,13 +2759,16 @@ export function maakDiagramActiviteit(opties) {
     }, [voorkeuren, zetZichtbaar]);
 
     /**
-     * Ctrl+C: de geselecteerde elementen (geen connectoren; die volgen vanzelf) naar het
-     * Studio-klembord, met hun posities op dit diagram. Geeft true als er iets gekopieerd is.
+     * Kopiëren (Ctrl+C of rechtsklik → Kopiëren): elementen (geen connectoren; die volgen
+     * vanzelf) naar het Studio-klembord, met hun posities op dit diagram. Zonder `ids` de
+     * selectie op het canvas. Geeft true als er iets gekopieerd is.
+     * @param {string[]|null} [ids]
      */
-    const kopieerSelectie = () => {
+    const kopieerElementen = (ids = null) => {
       const s = useStore.getState();
       const dId = s.actiefDiagramId;
-      const sel = (layoutApiRef.current?.selectieIds?.() || []).map((x) => x.elementId).filter((eid) => s.elements[eid] && !s.elements[eid].source);
+      const bron = ids || (layoutApiRef.current?.selectieIds?.() || []).map((x) => x.elementId);
+      const sel = [...new Set(bron)].filter((eid) => s.elements[eid] && !s.elements[eid].source);
       if (!dId || !sel.length) return false;
       const nodes = s.diagrams[dId]?.nodes || [];
       const posities = {};
@@ -2756,19 +2776,23 @@ export function maakDiagramActiviteit(opties) {
         const n = nodes.find((x) => x.elementId === eid);
         if (n) posities[eid] = { ...n.position, ...(n.size ? { size: n.size } : {}) };
       }
-      _klembord = { profielId: id, diagramId: dId, elementIds: [...new Set(sel)], posities };
-      toonMelding({ tekst: `${_klembord.elementIds.length} ${_klembord.elementIds.length === 1 ? "element" : "elementen"} gekopieerd. Plak met Ctrl+V op een ander ${diagramTerm} van deze taal.` });
+      // Stil: een melding met OK zou bij elke Ctrl+C in de weg zitten (de Studio heeft geen toast).
+      _klembord = { profielId: id, diagramId: dId, elementIds: sel, posities };
       return true;
     };
+    const kopieerSelectie = () => kopieerElementen(null);
 
     /**
-     * Ctrl+V: de gekopieerde elementen op het actieve diagram zetten, als verwijzing naar
-     * dezelfde elementen (zoals in de IDE; geen kopie in het model). De onderlinge posities
-     * blijven; het geheel komt midden in beeld. Wat er al op staat, slaat over; op hetzelfde
-     * diagram geeft plakken een extra voorkomen (als de taal dat toestaat). Connectoren tussen
-     * de elementen tekent het canvas zelf.
+     * Plakken (Ctrl+V, rechtsklik → Plakken): dezelfde elementen op het actieve diagram, als
+     * verwijzing (zoals in de IDE). Met `alsKopie` (Ctrl+Shift+V, Mark 06-11): na de vraag
+     * "Wil je deze elementen dupliceren?" nieuwe elementen in het model, met de connectoren
+     * tússen de gekopieerde elementen; namen krijgen "(kopie)", de uuid gaat niet mee (een
+     * kopie is een ander ding). Ze landen in de map van dit diagram via de boomregel (BOOM-1).
+     * De onderlinge posities blijven; het geheel komt midden in beeld (op hetzelfde diagram
+     * iets verschoven). Eén Ctrl+Z zet alles terug. Geeft true als de toets is afgehandeld.
+     * @param {{alsKopie?: boolean}} [opties]
      */
-    const plakKlembord = () => {
+    const plakKlembord = ({ alsKopie = false } = {}) => {
       const kb = _klembord;
       if (!kb) return false;
       if (kb.profielId !== id) {
@@ -2780,29 +2804,86 @@ export function maakDiagramActiviteit(opties) {
       if (!dId) return false;
       const opDiagram = new Set((s.diagrams[dId]?.nodes || []).map((n) => n.elementId));
       const zelfdeDiagram = kb.diagramId === dId;
-      // Op een ander diagram: wat er al staat, slaat over. Op hetzelfde diagram: een extra voorkomen,
-      // als de taal dat toestaat (anders valt er niets te plakken).
-      const teDoen = kb.elementIds.filter((eid) => {
-        const el = s.elements[eid];
-        if (!el) return false;
-        return !opDiagram.has(eid) || (zelfdeDiagram && staatMeerdereVoorkomensToe(descriptor, elementTypesById[el.elementType]));
-      });
+      const bestaand = kb.elementIds.filter((eid) => s.elements[eid]);
+      // Als verwijzing: op een ander diagram slaat over wat er al staat; op hetzelfde diagram een
+      // extra voorkomen als de taal dat toestaat. Als kopie: altijd alles (het worden nieuwe).
+      const teDoen = alsKopie
+        ? bestaand
+        : bestaand.filter((eid) => !opDiagram.has(eid) || (zelfdeDiagram && staatMeerdereVoorkomensToe(descriptor, elementTypesById[s.elements[eid].elementType])));
       if (!teDoen.length) {
-        toonMelding({ tekst: "Alles van het klembord staat al op dit diagram." });
+        toonMelding({ tekst: bestaand.length ? "Alles van het klembord staat al op dit diagram. Plakken als kopie kan met Ctrl+Shift+V." : "De gekopieerde elementen bestaan niet meer." });
         return true;
       }
       const ps = teDoen.map((eid) => kb.posities[eid] || { x: 0, y: 0 });
       const minX = Math.min(...ps.map((q) => q.x));
       const minY = Math.min(...ps.map((q) => q.y));
       const midden = layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 200 };
-      const zelfde = zelfdeDiagram;
-      teDoen.forEach((eid, i) => {
+      const positieVan = (i) => {
         const q = ps[i];
-        const positie = zelfde ? { x: q.x + 40, y: q.y + 40 } : { x: midden.x - 150 + (q.x - minX), y: midden.y - 100 + (q.y - minY) };
-        const meerdere = staatMeerdereVoorkomensToe(descriptor, elementTypesById[s.elements[eid].elementType]);
-        s.addElementToDiagram(dId, eid, positie, { meerdereVoorkomens: meerdere });
-        naTerugzetten(dId, eid);
-      });
+        return zelfdeDiagram ? { x: q.x + 40, y: q.y + 40 } : { x: midden.x - 150 + (q.x - minX), y: midden.y - 100 + (q.y - minY) };
+      };
+      if (!alsKopie) {
+        // Eén Ctrl+Z voor de hele plak: de eerste plaatsing telt, de rest in dezelfde stap.
+        const [eerste, ...rest] = teDoen.map((eid, i) => ({ eid, i }));
+        metHookInEenStap(
+          () => {
+            const st = useStore.getState();
+            st.addElementToDiagram(dId, eerste.eid, positieVan(eerste.i), { meerdereVoorkomens: staatMeerdereVoorkomensToe(descriptor, elementTypesById[st.elements[eerste.eid].elementType]) });
+            naTerugzetten(dId, eerste.eid);
+          },
+          () => {
+            const st = useStore.getState();
+            for (const { eid, i } of rest) {
+              st.addElementToDiagram(dId, eid, positieVan(i), { meerdereVoorkomens: staatMeerdereVoorkomensToe(descriptor, elementTypesById[st.elements[eid].elementType]) });
+              naTerugzetten(dId, eid);
+            }
+          }
+        );
+        return true;
+      }
+      (async () => {
+        const n = teDoen.length;
+        const ok = await vraagBevestiging({
+          titel: "Plakken als kopie",
+          tekst: `Wil je ${n === 1 ? "dit element" : `deze ${n} elementen`} dupliceren?\n\nEr ${n === 1 ? "komt een nieuw element" : "komen nieuwe elementen"} in het model, met "(kopie)" achter de naam en de verbindingen ertussen. ${n === 1 ? "Het landt" : "Ze landen"} in de map van dit diagram.`,
+          bevestig: "Dupliceer",
+        });
+        if (!ok) return;
+        const st0 = useStore.getState();
+        const nieuwId = new Map();
+        const kopieen = teDoen.map((eid, i) => {
+          const el = st0.elements[eid];
+          const basis = maakElement(el.elementType);
+          const nid = basis?.id || `${el.elementType}_${Date.now()}_${i}`;
+          nieuwId.set(eid, nid);
+          const data = { ...(el.data || {}) };
+          delete data.uuid; // identiteit: een kopie is een ander ding (besluit Mark 31-10)
+          return {
+            ...el,
+            id: nid,
+            naam: el.naam ? `${el.naam} (kopie)` : el.naam,
+            data,
+            compartimenten: JSON.parse(JSON.stringify(el.compartimenten || [])),
+          };
+        });
+        _connTeller += 1;
+        const verbindingen = Object.values(st0.elements)
+          .filter((c) => c.source && c.target && nieuwId.has(c.source) && nieuwId.has(c.target))
+          .map((c, i) => {
+            const data = { ...(c.data || {}) };
+            delete data.uuid;
+            return { ...c, id: `conn_${Date.now()}_${_connTeller}_${i}`, source: nieuwId.get(c.source), target: nieuwId.get(c.target), data, compartimenten: JSON.parse(JSON.stringify(c.compartimenten || [])) };
+          });
+        metHookInEenStap(
+          () => useStore.getState().addElement(kopieen[0]),
+          () => {
+            const st = useStore.getState();
+            for (const k of kopieen.slice(1)) st.addElement(k);
+            for (const c of verbindingen) st.addElement(c);
+            kopieen.forEach((k, i) => st.addElementToDiagram(dId, k.id, positieVan(i)));
+          }
+        );
+      })();
       return true;
     };
 
@@ -2817,8 +2898,9 @@ export function maakDiagramActiviteit(opties) {
           // diagram, met hun onderlinge posities. Geen tekstselectie in de pagina overschrijven.
           if (window.getSelection?.()?.toString()) return;
           if (kopieerSelectie()) e.preventDefault();
-        } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "v" && !inBoom) {
-          if (plakKlembord()) e.preventDefault();
+        } else if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === "v" && !inBoom) {
+          // Ctrl+V = dezelfde elementen; Ctrl+Shift+V = als kopie (na een vraag; Mark 06-11).
+          if (plakKlembord({ alsKopie: e.shiftKey })) e.preventDefault();
         } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
           e.preventDefault();
           useStore.temporal.getState().undo();
@@ -3158,6 +3240,9 @@ export function maakDiagramActiviteit(opties) {
                     s.updateElement(elementId, { compartimenten: uit.compartimenten });
                     return `${compartmentType}:${uit.nieuweIndex}`;
                   }}
+                  // Klik op de achtergrond: de host (Modelleren) toont de eigenschappen van dit
+                  // diagram in de inspector (Mark, 06-11).
+                  onAchtergrondKlik={() => menuBus.emit("studio:diagram-achtergrond", { profielId: id, diagramId: diagram.id })}
                   onExternDrop={(nodeId, ref, positie) => {
                     const s = useStore.getState();
                     // Een element uit de eigen elementen-/projectboom op het
