@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden, richtpuntOfAanhechtpunt, orthogonaleUiteinden, naarOmtrek } from "./zwevendeRand.js";
+import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden, richtpuntOfAanhechtpunt, orthogonaleUiteinden, naarOmtrek, verschuifUiteinden } from "./zwevendeRand.js";
 import { besteZijde, aanhechtpuntenVan } from "./materialiseerConnectoren.js";
 import { kortsteToppen, toppenVan } from "./zwevendeRand.js";
 
@@ -232,4 +232,16 @@ test("kortsteToppen: overlappende vormen -> null; zwevendeUiteinden zonder toppe
   const met = zwevendeUiteinden({ bronRect: r(0, 0, 200, 100), doelRect: r(400, 300, 200, 100), zwevendBron: true, zwevendDoel: true, vast: VAST_T, bronOmtrek: "ellips", doelOmtrek: "ellips", bronToppen: true, doelToppen: true });
   assert.notDeepEqual(zonder, met);
   assert.ok(toppenVan(r(0, 0, 200, 100)).some((t) => t.x === met.sourceX && t.y === met.sourceY), "bron op een top");
+});
+
+test("verschuifUiteinden: langs boven/onder in x, langs links/rechts in y; binnen de rand", () => {
+  const u = { sourceX: 100, sourceY: 80, targetX: 100, targetY: 200, sourcePosition: "bottom", targetPosition: "top" };
+  const bron = { x: 0, y: 0, width: 200, height: 80 };
+  const doel = { x: 0, y: 200, width: 200, height: 80 };
+  const v = verschuifUiteinden(u, 30, bron, doel);
+  assert.deepEqual([v.sourceX, v.sourceY, v.targetX, v.targetY], [130, 80, 130, 200], "evenwijdig, recht");
+  assert.equal(verschuifUiteinden(u, 500, bron, doel).sourceX, 192, "binnen de rand (8 px van de hoek)");
+  const h = verschuifUiteinden({ sourceX: 200, sourceY: 40, targetX: 300, targetY: 40, sourcePosition: "right", targetPosition: "left" }, -20, bron, { x: 300, y: 0, width: 100, height: 80 });
+  assert.deepEqual([h.sourceY, h.targetY], [20, 20]);
+  assert.equal(verschuifUiteinden(u, 0), u);
 });

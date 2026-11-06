@@ -400,6 +400,9 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
             // Per-connector lijnvorm (contextmenu) wint van het type-default;
             // een lus is standaard hoekig (het nette EA-oortje).
             vorm: lijn.vorm || (isLus ? "hoekig" : basisPresentatie.vorm),
+            // Verschuiving langs de zijden (per diagram, 06-11); zonder waarde spreidt
+            // spreidParallel() hieronder meer lijnen tussen hetzelfde paar.
+            ...(typeof lijn.verschuiving === "number" ? { verschuiving: lijn.verschuiving } : {}),
             zwevendBron,
             zwevendDoel,
             // Echte omtrek (ruit/ellips) voor het aanhechtpunt — zie zwevendeRand.
@@ -505,5 +508,34 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       },
     });
   }
+  spreidParallel(edges);
   return { edges, extraNodes };
+}
+
+/** Afstand (px) tussen naast elkaar gespreide lijnen tussen hetzelfde paar. */
+export const SPREIDING = 28;
+
+/**
+ * Meer kale lijnen tussen hetzelfde paar elementen (bv. twee relaties Partij ↔ MedischAdvies)
+ * vielen over elkaar. Lijnen zonder eigen verschuiving, zonder knikken en geen lus waaieren nu
+ * uit rond het midden, in vaste volgorde (connector-id), zoals EA dat doet. Een lijn met een
+ * eigen verschuiving (versleept) telt niet mee. Muteert de edges.
+ */
+function spreidParallel(edges) {
+  const groepen = new Map();
+  for (const e of edges) {
+    const p = e.data?.presentatie;
+    if (!p || !e.id.startsWith("conn:") || e.id.split(":").length !== 2) continue; // alleen de kale gedaante
+    if (e.source === e.target || e.data?.knikken || typeof p.verschuiving === "number" || e.hidden) continue;
+    const sleutel = [e.source, e.target].sort().join("|");
+    if (!groepen.has(sleutel)) groepen.set(sleutel, []);
+    groepen.get(sleutel).push(e);
+  }
+  for (const groep of groepen.values()) {
+    if (groep.length < 2) continue;
+    groep.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    groep.forEach((e, i) => {
+      e.data = { ...e.data, presentatie: { ...e.data.presentatie, verschuiving: Math.round((i - (groep.length - 1) / 2) * SPREIDING) } };
+    });
+  }
 }

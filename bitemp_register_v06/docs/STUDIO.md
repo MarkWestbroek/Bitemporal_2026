@@ -757,6 +757,14 @@ te wijzigen.
 >   gekopieerde ouder krijgen een plek onder het plakdoel. Namen blijven; plakken op de
 >   plek van het origineel geeft "(kopie)". Elementen via `zetElementen` (één diff-op) en
 >   het diagram in dezelfde undo-stap.
+> - **Lijnen verschuiven en spreiden** (Mark, 06-11): een lijn zonder knikken die recht is
+>   (niet hoekig, of hoekig maar één recht stuk) zijwaarts slepen zet
+>   `diagram.lijnen[connector].verschuiving` (px): `verschuifUiteinden` (`zwevendeRand.js`)
+>   schuift beide uiteinden langs hun zijde (boven/onder in x, links/rechts in y, 8 px van de
+>   hoek), dus de lijn blijft recht en evenwijdig. Zonder eigen verschuiving waaieren meer kale
+>   lijnen tussen hetzelfde paar uit (`spreidParallel`, 28 px, op connector-id). Hoekige lijnen
+>   met meer stukken houden het segment-duwen (knikken). Canvas (ConnectorEdge) en tekenaar
+>   (lijnen.js) rekenen hetzelfde.
 > - **Klik op de achtergrond = het diagram** (Mark, 06-11): `DiagramCanvas` krijgt
 >   `onAchtergrondKlik` (in de bestaande `onPaneClick`); de activiteit meldt
 >   `studio:diagram-achtergrond`, en Modelleren zet dat diagram als selectie, zodat de

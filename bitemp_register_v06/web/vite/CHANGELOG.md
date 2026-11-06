@@ -9,6 +9,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Lijnen verschuiven zonder knikken** (Mark, 06-11: "twee RELs tussen Partij en MedischAdvies
+  niet anders scheiden dan door te knikken; ik wil ze recht houden en eentje kunnen pakken en
+  schuiven"). Een rechte lijn (of een hoekige die één recht stuk is) zijwaarts slepen schuift
+  beide uiteinden langs hun zijde: de lijn blijft recht, de verschuiving geldt per diagram
+  (`lijnen[connector].verschuiving`). Meer lijnen tussen hetzelfde paar waaieren vanzelf uit
+  (28 px), tenzij er een versleept is. Canvas en tekenaar delen `verschuifUiteinden`
+  (`zwevendeRand.js`).
+
+### Toegevoegd
 - **De inspector van een verbinding toont zijn uiteinden** ("A → B"), in elke taal (Mark, 06-11:
   "ik kan op een REL niet zien wie A en B zijn").
 - **Rechtsklik op een verbinding → de uiteinden op het diagram zetten** wat er nog ontbreekt

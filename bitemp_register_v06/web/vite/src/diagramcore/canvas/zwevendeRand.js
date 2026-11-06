@@ -348,3 +348,27 @@ export function kortsteToppen({ bronRect, doelRect, vast, bron, doel, bronOmtrek
     targetX: beste.t.x, targetY: beste.t.y, targetPosition: beste.t.zijde,
   };
 }
+
+/**
+ * Verschuif beide uiteinden van een lijn langs hun zijde (Mark, 06-11: "twee RELs tussen Partij en
+ * Medisch advies niet anders scheiden dan door te knikken; ik wil ze recht houden en eentje
+ * kunnen pakken en schuiven"). Op een boven- of onderzijde schuift het punt in x, op een linker-
+ * of rechterzijde in y; zo blijft een rechte lijn tussen twee gekeerde zijden recht en
+ * evenwijdig. Binnen de rand gehouden (8 px van de hoek). Puur; gedeeld door canvas en tekenaar.
+ * @param {{sourceX:number, sourceY:number, targetX:number, targetY:number, sourcePosition:string, targetPosition:string}} u
+ * @param {number} d - verschuiving in px (0 of leeg = niets)
+ * @param {Rechthoek|null} [bronRect]
+ * @param {Rechthoek|null} [doelRect]
+ */
+export function verschuifUiteinden(u, d, bronRect = null, doelRect = null) {
+  if (!d || !u) return u;
+  const binnen = (v, min, max) => (min > max ? (min + max) / 2 : Math.max(min, Math.min(max, v)));
+  const schuif = (x, y, zijde, rect) => {
+    const horizontaal = zijde === "top" || zijde === "bottom";
+    if (horizontaal) return { x: rect ? binnen(x + d, rect.x + 8, rect.x + rect.width - 8) : x + d, y };
+    return { x, y: rect ? binnen(y + d, rect.y + 8, rect.y + rect.height - 8) : y + d };
+  };
+  const s = schuif(u.sourceX, u.sourceY, u.sourcePosition, bronRect);
+  const t = schuif(u.targetX, u.targetY, u.targetPosition, doelRect);
+  return { ...u, sourceX: s.x, sourceY: s.y, targetX: t.x, targetY: t.y };
+}
