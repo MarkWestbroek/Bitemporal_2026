@@ -8,6 +8,48 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **De kop van de buitenste levenslijn viel buiten het beeld** (06-11, gevonden op de SVG-link
+  van app): de tekenaar mat het beeld (`viewBox`) op de dozen van de voorkomens, maar de kop van
+  een levenslijn is 148 breed op een node van 14 en steekt aan beide kanten 67 uit. Links en
+  rechts ging er 43 van de kop af, in documenten, gedeelde plaatjes en de render-API. Het
+  inhoudsvak telt nu mee in het beeld (`tekenaar/index.js` `vakOmvang`; een gedraaid vak, zoals
+  de band van een BPMN-pool, na het draaien). Een pakket of fragment bovenaan in een diagram
+  geeft daardoor een beeld dat 1 tot 3 hoger is. De render-API heeft de fix pas met een nieuw
+  render-image (de tekenaar zit in de bundel van `render-svc`).
+- **De tekenaar tekende niet alles wat het canvas tekent** (06-11, Mark: de SVG-link van het
+  canonieke model miste de «use»-lijnen). Vier dingen deed alleen `DiagramCanvas.jsx`; ze
+  ontbraken daardoor in documenten, gedeelde plaatjes en de render-API. Canvas en tekenaar delen
+  er nu één functie voor:
+  - de **geïmporteerde presentatie-edges** van een diagram (`diagram.edges`, de «use»-lijnen
+    van het canonieke model): `geimporteerdeEdges` in `canvas/materialiseerConnectoren.js`;
+  - de **afgeleide vakken** van de profiel-hook `extraCompartimenten` (validatie en weergave van
+    een gegevenstype, overgeërfde velden, de signatuurregels van GraphQL) en een **opgenomen
+    deel** als sub-vak in zijn geheel (de tekenaar sloeg het deel over maar toonde het vak niet):
+    `verrijkElement` in `canvas/opname.js`;
+  - **labeldelen in hun eigen stijl**, zoals `.dc-edge-<soort>`: een rolnaam vet, een
+    kardinaliteit paars, een constraint klein en cursief (`tekenaar/lijnen.js` `deelStijl`, een
+    `tspan` per deel). Tot nu toe kreeg het hele label de stijl van zijn eerste deel.
+  De pariteitsreeks `tests/e2e/41` vergelijkt dit nu met het echte canvas (teksten, maat, pad en
+  stijl per deel); `tekenaar/canvasPariteit.test.js` doet het zonder browser.
+- **Een levenslijn is nooit breder dan 14** (06-11): een bewaarde breedte (de MCP en imports
+  schreven 160) zette de lijn links in een onzichtbaar kader, met de berichten aan de randen
+  daarvan. Nieuw in het vormcontract: `ShapeRenderer.bovengrens` knipt een bewaarde maat af
+  (`types/schema.js`, `tekenaar/voorkomen.js`); het canvas laat ook de node-wrapper volgen.
+
+### Toegevoegd
+- **Een sequence-diagram uit een plan krijgt punten en dus activaties** (06-11, Mark: "het
+  boxje op de levenslijn waar de berichten aankomen en vanuit gaan, die mis ik"). De ✨ assistent
+  en de MCP kennen in een plan alleen levenslijnen en berichten; dat werd een rij dozen met alle
+  berichten op één hoogte. `diagramprofielen/sequence/plaatsUitPlan.js` zet de nieuwe
+  levenslijnen op één rij zonder bewaarde maat en geeft elk bericht zijn zend- en ontvangpunt,
+  onder elkaar in de volgorde van het plan, met `puntenVoorBericht`: dezelfde functie als het
+  canvas. De activaties volgen daaruit. Ingehaakt als profiel-nazorg in
+  `studio/assistent/wijziging.js` (`NA_PLAATSEN`, per diagramtype); een opstel-actie laat
+  rand-elementen voortaan met rust. Het sequence-profiel geeft de assistent aanwijzingen
+  (`assistent.aanwijzingen`); `tools/omnium-mcp/profielen.json` is opnieuw gegenereerd.
+  Bestaande diagrammen die zonder punten zijn gemaakt veranderen hierdoor niet.
+
 ## [studio/v0.29.0] — 2026-11-06
 
 ### Toegevoegd

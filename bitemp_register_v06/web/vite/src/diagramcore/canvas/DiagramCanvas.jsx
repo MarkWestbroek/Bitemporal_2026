@@ -61,14 +61,14 @@ import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
 import "../tekenaar/basisVormen.js"; // registreert de basis-ShapeTypes en de bibliotheek-renderers
 import ElementNode from "./ElementNode.jsx";
-import { TekenContext } from "./SjabloonShape.jsx";
+import { TekenContext, sjabloonBegrensdeMaat } from "./SjabloonShape.jsx";
 import { InlineNaamContext, isVlakHandle } from "./inlineNaam.js";
 import ConnectorEdge from "./ConnectorEdge.jsx";
 import { weigeringTekst } from "./afbakening.js";
-import { materialiseerConnectoren, vindConnectorType, vindConnectorTypes, geweigerdDoorAfbakening, besteZijde, ANKER_PREFIX, effectieveConnectorGedaante, normaliseerHandle } from "./materialiseerConnectoren.js";
+import { materialiseerConnectoren, vindConnectorType, vindConnectorTypes, geweigerdDoorAfbakening, ANKER_PREFIX, effectieveConnectorGedaante, normaliseerHandle, geimporteerdeEdges } from "./materialiseerConnectoren.js";
 import { voorkomenId, voorkomensPerElement } from "../model/voorkomens.js";
 import { bepaalNesting, nakomelingenVan, containerVanElementen } from "./nesting.js";
-import { bepaalOpnames, opnameCompartiment } from "./opname.js";
+import { bepaalOpnames, verrijkElement } from "./opname.js";
 
 import { ELEMENT_REF_MIME } from "./externDrop.js";
 
@@ -227,14 +227,8 @@ function CanvasBinnenkant({
   // profiel-hook elementType.hooks.extraCompartimenten(element, ctx), plus
   // de sub-vakken van opgenomen delen.
   const verrijk = useCallback(
-    (element, elementType) => {
-      const extra = [...(elementType.hooks?.extraCompartimenten?.(element, { elements }) || [])];
-      const opgenomen = opnameCompartiment(element, opnames.delenVan.get(element.id), lookups.elementTypesById, elements);
-      if (opgenomen) extra.push(opgenomen);
-      if (!extra.length) return element;
-      // `extra: true` markeert ze als niet-eigen (niet inline te bewerken).
-      return { ...element, compartimenten: [...(element.compartimenten || []), ...extra.map((c) => ({ ...c, extra: true }))] };
-    },
+    // Dezelfde functie als de tekenaar (opname.js), zodat een plaatje toont wat het canvas toont.
+    (element, elementType) => verrijkElement(element, elementType, { elements, opnames, elementTypesById: lookups.elementTypesById }),
     [elements, opnames, lookups]
   );
 
@@ -407,7 +401,7 @@ function CanvasBinnenkant({
           // kon bv. een activity-actie niet smaller dan 180px (2026-10-07).
           style: {
             ...(ref.size && (!ref.gedaante || ref.gedaante === "kop" || ref.gedaante === "vol")
-              ? { width: ref.size.width, height: ref.size.height, "--dc-node-max": "none" }
+              ? { ...sjabloonBegrensdeMaat(elementType.shape, elementType, ref.size, element), "--dc-node-max": "none" }
               : {}),
             ...(elementType.minBreedte ? { "--dc-node-min": `${elementType.minBreedte}px` } : {}),
             ...(elementType.minHoogte ? { "--dc-node-min-h": `${elementType.minHoogte}px` } : {}),
@@ -672,39 +666,13 @@ function CanvasBinnenkant({
     [rfStoreApi]
   );
   useEffect(() => {
-    // Kortste-weg-handles voor presentatie-edges zonder expliciete handles
-    // (na "normaliseer relaties" zijn ze gewist).
-    const refs = new Map((diagram?.nodes || []).flatMap((n) => [[voorkomenId(n), n], ...(n.nodeId ? [] : [[n.elementId, n]])]));
-    const mid = (id) => {
-      const r = refs.get(id);
-      if (!r) return null;
-      return {
-        x: r.position.x + (r.size?.width ?? maten[id]?.width ?? 200) / 2,
-        y: r.position.y + (r.size?.height ?? maten[id]?.height ?? 80) / 2,
-      };
-    };
-    const geimporteerd = (diagram?.edges || []).map((e) => {
-      // Oude modellen bewaren kale zijden ("left"); zonder normalisatie
-      // weigert React Flow de edge stil en verdwijnt de lijn.
-      let sourceHandle = normaliseerHandle(e.sourceHandle, "source");
-      let targetHandle = normaliseerHandle(e.targetHandle, "target");
-      if (!sourceHandle || !targetHandle) {
-        const b = mid(e.source);
-        const d = mid(e.target);
-        if (b && d) {
-          sourceHandle = sourceHandle || `source-${besteZijde(b, d)}`;
-          targetHandle = targetHandle || `target-${besteZijde(d, b)}`;
-        }
-      }
-      return {
-        ...e,
-        sourceHandle,
-        targetHandle,
-        type: "connector",
-        hidden: e.hidden || false,
-        selectable: false, // geïmporteerde presentatie-edges zijn geen elementen
-      };
-    });
+    // Geïmporteerde presentatie-edges (diagram.edges), met kortste-weg-handles waar ze
+    // ontbreken: dezelfde functie als de tekenaar (materialiseerConnectoren.js).
+    const geimporteerd = geimporteerdeEdges(diagram, maten).map((e) => ({
+      ...e,
+      type: "connector",
+      selectable: false, // geïmporteerde presentatie-edges zijn geen elementen
+    }));
     // Gematerialiseerde connectoren zijn wél selecteerbaar (en dus met Delete
     // te wissen) zodra de canvas bewerkbaar is.
     const connectorEdges = gematerialiseerd.edges.map((e) => ({

@@ -10,11 +10,15 @@
 //      zelf-aanroep valt binnen de aanroep;
 //   4. de vormvoorbeelden buiten het canvas (Studio-instellingen) tekenen met de tekenaar,
 //      ook de eigen vormen.
+//   5. wat het canvas buiten de vormen om tekent, tekent de tekenaar ook: de geïmporteerde
+//      presentatie-edges van een diagram («use»), de afgeleide vakken van een profiel
+//      (extraCompartimenten), een opgenomen deel als sub-vak, en elk labeldeel in zijn stijl
+//      (gevonden 06-11 op de SVG-link van het canonieke model).
 //
 // Een nieuw profiel of elementtype doet vanzelf mee (1); wie ConnectorEdge of tekenaar/lijnen.js
 // aanpast zonder de ander, ziet het hier (2).
 import { test, expect } from "@playwright/test";
-import { openStudio, zetModel, inStore, wachtOpNode } from "./helpers/studio.js";
+import { openStudio, zetModel, inStore, wachtOpNode, node } from "./helpers/studio.js";
 
 test.use({ viewport: { width: 1600, height: 1000 } });
 
@@ -47,17 +51,28 @@ async function tekenaarVan(page, profielId, diagramId) {
       const paden = {};
       const activaties = {};
       const labels = {};
+      const teksten = {};
+      const dozen = {};
       const uit = tekenDiagram({ diagram, elements: st.elements, descriptor: dt, thema: "light" });
       (function loop(k, elementId) {
         if (!k || typeof k !== "object") return;
         const id = k.attrs?.["data-element-id"] || elementId;
-        if (k.tag === "path" && k.attrs?.class === "dc-lijn") paden[k.attrs["data-connector-id"]] = k.attrs.d;
+        // Een connector-element heeft zijn id; een geïmporteerde presentatie-edge zijn edge-id.
+        if (k.tag === "path" && k.attrs?.class === "dc-lijn") paden[k.attrs["data-connector-id"] || k.attrs["data-edge-id"]] = k.attrs.d;
         // Een label: het midden van de chip ligt 3,5 boven de basislijn van de tekst.
-        if (k.tag === "text" && k.attrs?.["data-dc-label"]) (labels[k.attrs["data-dc-label"]] = labels[k.attrs["data-dc-label"]] || []).push({ tekst: k.kinderen.join(""), x: k.attrs.x, y: k.attrs.y - 3.5 });
+        if (k.tag === "text" && k.attrs?.["data-dc-label"]) {
+          // Eén deel: de stijl staat op de tekst; meer delen: een tspan per deel.
+          const stijl = (a) => ({ vet: a["font-weight"] === 600, cursief: a["font-style"] === "italic", grootte: a["font-size"] || 10, kleur: a.fill });
+          const delen = k.kinderen.every((x) => typeof x === "string") ? [{ tekst: k.kinderen.join(""), ...stijl(k.attrs) }] : k.kinderen.map((x) => ({ tekst: x.kinderen.join(""), ...stijl(x.attrs) }));
+          (labels[k.attrs["data-dc-label"]] = labels[k.attrs["data-dc-label"]] || []).push({ tekst: delen.map((d) => d.tekst).join(""), x: k.attrs.x, y: k.attrs.y - 3.5, delen });
+        }
+        // De teksten en de buitenmaat van een voorkomen (klassedoos: de rand ligt 1 binnen de maat).
+        if (k.tag === "text" && id && !k.attrs?.["data-dc-label"]) (teksten[id] = teksten[id] || []).push(k.kinderen.map((x) => (typeof x === "string" ? x : x.kinderen.join(""))).join(""));
+        if (k.tag === "rect" && id && !dozen[id] && k.attrs?.x !== undefined) dozen[id] = { w: k.attrs.width + 2 * k.attrs.x, h: k.attrs.height + 2 * k.attrs.y };
         if (k.attrs?.class === "dc-seq-activatie") (activaties[id] = activaties[id] || []).push([Math.round(k.attrs.y), Math.round(k.attrs.height), Number(k.attrs["data-diepte"])]);
         (k.kinderen || []).forEach((kind) => loop(kind, id));
       })(uit.boom, null);
-      return { maten, paden, activaties, labels, terugval: uit.terugval };
+      return { maten, paden, activaties, labels, teksten, dozen, terugval: uit.terugval };
     },
     { profielId, diagramId }
   );
@@ -89,7 +104,11 @@ async function canvasVan(page, ids) {
       const m = /translate\(-50%,\s*-50%\)\s*translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(l.style.transform || "");
       if (!m) continue;
       const id = l.getAttribute("data-edge-id").replace(/^conn:/, "");
-      (labels[id] = labels[id] || []).push({ tekst: l.textContent, x: Number(m[1]), y: Number(m[2]) });
+      const delen = [...l.querySelectorAll("span")].map((s) => {
+        const cs = getComputedStyle(s);
+        return { tekst: s.textContent, vet: Number(cs.fontWeight) >= 600, cursief: cs.fontStyle === "italic", grootte: parseFloat(cs.fontSize), kleur: cs.color };
+      });
+      (labels[id] = labels[id] || []).push({ tekst: l.textContent, x: Number(m[1]), y: Number(m[2]), delen });
     }
     return { nodes, paden, activaties, labels };
   }, ids);
@@ -324,4 +343,100 @@ test("vormvoorbeelden buiten het canvas tekenen met de tekenaar, ook de eigen vo
   // De ster is een silhouet (een pad in een geschaalde groep), geen doos.
   await expect(page.locator('svg.dc-vormvoorbeeld[data-shape="ster"] .dc-omtrek path').first()).toBeAttached();
   expect(fouten).toEqual([]);
+});
+
+test("buiten de vormen om: geïmporteerde lijnen, afgeleide vakken, labeldelen en een opgenomen deel — canvas = tekenaar", async ({ page }) => {
+  await openStudio(page);
+  // Het canonieke model zoals de SVG-link van 06-11 het liet zien: een gegevenstype met validatie
+  // en weergave (vakken uit de hook extraCompartimenten), een compositie met een label in drie
+  // delen, en een «use»-lijn die alleen als presentatie-edge in het diagram staat.
+  await zetModel(page, {
+    profielId: "diagram05",
+    diagramId: "d_cm",
+    elementen: [
+      { id: "cp", naam: "NatuurlijkPersoon", type: "entiteit", pos: { x: 40, y: 40 } },
+      { id: "cn", naam: "Naamgebruik", type: "gegevenselement", pos: { x: 60, y: 340 }, compartimenten: [{ compartmentType: "velden", velden: [{ naam: "naamgebruik", fieldType: "attribuut", data: { typeLabel: "Naamgebruiksoort", verplicht: true } }] }] },
+      { id: "cs", naam: "Naamgebruiksoort", type: "enumeratie", pos: { x: 420, y: 520 } },
+      {
+        id: "cb",
+        naam: "BSN",
+        type: "gegevenstype",
+        pos: { x: 520, y: 40 },
+        data: { validatie: { pattern: "^[0-9]{9}$", minLength: 9, maxLength: 9, regels: [{ naam: "11-proef" }] }, weergave: { placeholder: "123456782", inputMask: "000000000" } },
+        compartimenten: [{ compartmentType: "eigenschappen", velden: [{ naam: "basistype", fieldType: "eigenschap", data: { typeLabel: "string" } }] }],
+      },
+      { id: "cc", naam: "", type: "compositie", source: "cp", target: "cn", data: { rolnaam: "Naamgebruik", kardinaliteit: "0..1", momentvoorkomen: "enkelvoudig" } },
+    ],
+  });
+  const use = {
+    id: "cn-->cs",
+    source: "cn",
+    target: "cs",
+    sourceHandle: null,
+    targetHandle: null,
+    hidden: false,
+    data: { presentatie: { lijn: "dash-6-3", kleur: "#64748b", markerEnd: "pijl-open", labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }] } },
+  };
+  await inStore(page, "diagram05", "store.setState((st) => ({ diagrams: { ...st.diagrams, d_cm: { ...st.diagrams.d_cm, edges: [arg] } } }))", use);
+  await wachtOpNode(page, "cb");
+  // De kleuren vergelijken we in het lichte thema (de tekenaar tekent hier met thema "light").
+  await page.evaluate(() => document.querySelector(".studio")?.setAttribute("data-studio-theme", "light"));
+  await page.waitForTimeout(800);
+
+  /** De teksten en de maat van een node op het canvas. */
+  const nodeVan = (id) =>
+    page.evaluate((id) => {
+      const n = document.querySelector(`.react-flow__node[data-id="${CSS.escape(id)}"]`);
+      if (!n) return null;
+      const r = n.getBoundingClientRect();
+      return { teksten: [...n.querySelectorAll("text")].map((t) => t.textContent), w: Math.round(r.width * 10) / 10, h: Math.round(r.height * 10) / 10 };
+    }, id);
+  const rgb = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
+
+  let canvas = await canvasVan(page, []);
+  let tekenaar = await tekenaarVan(page, "diagram05", "d_cm");
+
+  // 1. De afgeleide vakken: zelfde teksten, zelfde maat.
+  const bsn = await nodeVan("cb");
+  expect(bsn.teksten, "het canvas toont de validatie en de weergave van het gegevenstype").toEqual(expect.arrayContaining(["pattern: ^[0-9]{9}$", "regel: 11-proef", "placeholder: 123456782", "mask: 000000000"]));
+  expect(tekenaar.teksten.cb, "de tekenaar toont dezelfde teksten als het canvas").toEqual(bsn.teksten);
+  expect(Math.abs(tekenaar.dozen.cb.h - bsn.h), `BSN: hoogte canvas ${bsn.h} = tekenaar ${tekenaar.dozen.cb.h}`).toBeLessThanOrEqual(0.5);
+  expect(Math.abs(tekenaar.dozen.cb.w - bsn.w), `BSN: breedte canvas ${bsn.w} = tekenaar ${tekenaar.dozen.cb.w}`).toBeLessThanOrEqual(0.5);
+
+  // 2. De geïmporteerde lijn: zelfde pad, zelfde label.
+  expect(canvas.paden["cn-->cs"], "het canvas tekent de «use»-lijn").toBeTruthy();
+  verwachtGelijkPad(canvas.paden["cn-->cs"], tekenaar.paden["cn-->cs"], "«use» (presentatie-edge)");
+  expect(tekenaar.labels["cn-->cs"]?.map((l) => l.tekst), "het label van de «use»-lijn").toEqual(canvas.labels["cn-->cs"].map((l) => l.tekst));
+
+  // 3. Labeldelen: per deel dezelfde tekst, vet, cursief, grootte en kleur.
+  verwachtGelijkPad(canvas.paden.cc, tekenaar.paden.cc, "compositie");
+  for (const id of ["cc", "cn-->cs"]) {
+    const c = canvas.labels[id][0].delen;
+    const t = tekenaar.labels[id][0].delen;
+    expect(t.map((d) => d.tekst), `${id}: zelfde delen`).toEqual(c.map((d) => d.tekst));
+    for (const [i, deel] of c.entries()) {
+      const wat = `${id} deel '${deel.tekst}'`;
+      expect(t[i].vet, `${wat}: vet`).toBe(deel.vet);
+      expect(t[i].cursief, `${wat}: cursief`).toBe(deel.cursief);
+      expect(t[i].grootte, `${wat}: grootte`).toBe(deel.grootte);
+      expect(rgb(t[i].kleur), `${wat}: kleur`).toBe(deel.kleur);
+    }
+  }
+  expect(canvas.labels.cc[0].delen.map((d) => d.tekst)).toEqual(["Naamgebruik", "0..1", "{enkelvoudig}"]);
+
+  // 4. Het deel opgenomen in zijn geheel: geen eigen node, wel een sub-vak; de lijnen van het deel vervallen.
+  await inStore(page, "diagram05", "store.setState((st) => ({ diagrams: { ...st.diagrams, d_cm: { ...st.diagrams.d_cm, nodes: st.diagrams.d_cm.nodes.map((n) => (n.elementId === 'cn' ? { ...n, gedaante: 'ingebed' } : n)) } } }))");
+  await expect(node(page, "cn")).toHaveCount(0);
+  await page.waitForTimeout(600);
+  canvas = await canvasVan(page, []);
+  tekenaar = await tekenaarVan(page, "diagram05", "d_cm");
+  const geheel = await nodeVan("cp");
+  expect(geheel.teksten, "het canvas toont het deel als sub-vak").toEqual(expect.arrayContaining(["Naamgebruik", "naamgebruik"]));
+  expect(tekenaar.teksten.cp, "de tekenaar toont hetzelfde sub-vak").toEqual(geheel.teksten);
+  expect(tekenaar.teksten.cn, "het deel is in de tekenaar geen eigen doos").toBeUndefined();
+  expect(Math.abs(tekenaar.dozen.cp.h - geheel.h), `geheel: hoogte canvas ${geheel.h} = tekenaar ${tekenaar.dozen.cp.h}`).toBeLessThanOrEqual(0.5);
+  expect(tekenaar.paden.cc, "de compositielijn vervalt in de tekenaar").toBeUndefined();
+  expect(canvas.paden.cc ?? null, "en op het canvas").toBeNull();
+  expect(tekenaar.paden["cn-->cs"], "een presentatie-edge van een opgenomen deel tekent de tekenaar niet").toBeUndefined();
+  expect(canvas.paden["cn-->cs"] ?? null, "en het canvas ook niet").toBeNull();
 });

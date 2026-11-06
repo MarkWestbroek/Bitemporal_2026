@@ -2736,7 +2736,8 @@
      "omschrijving": "Waar het proces begint; soort bepaalt de trigger (bericht, timer, …).",
      "vast": true,
      "eigenschappen": [
-      "soort"
+      "soort",
+      "bericht"
      ]
     },
     {
@@ -2744,7 +2745,19 @@
      "label": "Task",
      "omschrijving": "Eén stap werk in het proces; het taaktype tekent een icoontje linksboven.",
      "eigenschappen": [
-      "taakSoort"
+      "taakSoort",
+      "bpmnId",
+      "meervoudig",
+      "lusVerzameling",
+      "lusElement",
+      "aangeroepenProces",
+      "beslissing",
+      "resultaat",
+      "formulier",
+      "actie",
+      "actieDoel",
+      "actieToelichting",
+      "dossierstatus"
      ]
     },
     {
@@ -2769,10 +2782,12 @@
     {
      "id": "tussen-event",
      "label": "Intermediate event",
-     "omschrijving": "Gebeurtenis midden in de flow (wachten op bericht, timer, …).",
+     "omschrijving": "Gebeurtenis midden in de flow: wachten op (vangt) of versturen van (werpt) een bericht, timer, ….",
      "vast": true,
      "eigenschappen": [
-      "soort"
+      "soort",
+      "richting",
+      "bericht"
      ]
     },
     {
@@ -2868,7 +2883,8 @@
      "omschrijving": "Waar dit pad van het proces eindigt (dikke ring).",
      "vast": true,
      "eigenschappen": [
-      "soort"
+      "soort",
+      "bericht"
      ]
     },
     {
@@ -3635,6 +3651,7 @@
      "eigenschappen": [
       "meervoud",
       "materieel",
+      "tijdprecisie",
       "entiteitSubtype"
      ],
      "velden": [
@@ -3650,6 +3667,7 @@
      "label": "Gegevenselement",
      "eigenschappen": [
       "materieel",
+      "tijdprecisie",
       "typenaam",
       "domein",
       "meervoud",
@@ -3748,6 +3766,7 @@
      ],
      "eigenschappen": [
       "materieel",
+      "tijdprecisie",
       "typenaam",
       "domein",
       "meervoud",
@@ -7666,6 +7685,13 @@
       "guard"
      ]
     }
+   ],
+   "aanwijzingen": [
+    "Maak alleen levenslijnen en berichten van levenslijn naar levenslijn. Maak zelf geen punten en geen activaties: de punten ontstaan bij elk bericht, en de activaties (de balkjes op de lijn) volgen daaruit.",
+    "De volgorde van de berichten in het plan is de volgorde van boven naar beneden in het diagram; de levenslijnen komen op één rij in de volgorde van het plan.",
+    "Een aanroep is een synchroon bericht; het antwoord is een retourbericht in de andere richting. Zo ontstaat op de ontvanger een activatie van de aanroep tot de retour.",
+    "Een bericht van een levenslijn naar zichzelf is een zelf-aanroep.",
+    "Stel een sequence-diagram niet opnieuw op met `opstelling`: de hoogte van de berichten is de volgorde."
    ],
    "layoutStijlen": [],
    "layoutTypen": [

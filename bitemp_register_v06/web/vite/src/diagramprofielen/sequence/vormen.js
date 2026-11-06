@@ -244,6 +244,9 @@ const levenslijn = {
   leestDiagram: true,
   maat: (p) => ({ w: 14, h: lijnHoogte(p) }),
   ondergrens: (p) => ({ h: lijnHoogte(p) }),
+  // Nooit breder dan de lijn zelf: een bewaarde breedte (de MCP en imports schreven 160) zou de
+  // lijn links in een onzichtbaar kader zetten, met de berichten aan de randen van dat kader.
+  bovengrens: () => ({ w: 14 }),
   omtrek(ctx) {
     const { h } = ctx.maat;
     const kop = kopVan(ctx.element);

@@ -332,6 +332,9 @@
  * @property {(p: {element: Object, elementType: ElementType, parameters: Object, stijl: Object, diagram: Object|null, elementen: Object|null, node: Object|null}) => ({w?: number, h?: number}|null)} [ondergrens] -
  *   een dynamische minimummaat die ook bovenop een bewaarde maat geldt (levenslijn: altijd tot
  *   onder haar laagste punt); het canvas zet hem ook als minimum voor de resizer
+ * @property {(p: {element: Object, elementType: ElementType, parameters: Object, stijl: Object, diagram: Object|null, elementen: Object|null, node: Object|null}) => ({w?: number, h?: number}|null)} [bovengrens] -
+ *   een maximummaat die een bewaarde maat afknipt (levenslijn: nooit breder dan 14, ook als een
+ *   import of de MCP een doos van 160 bewaarde); sinds 06-11
  * @property {boolean} [leestDiagram]       - deze renderer tekent uit `ctx.diagram` en
  *   `ctx.elementen` (levenslijn: activaties uit de berichten). Het canvas geeft zo'n renderer het
  *   levende diagram mee (posities tijdens slepen) en hertekent hem bij elke verplaatsing; een

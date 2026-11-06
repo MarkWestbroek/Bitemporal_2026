@@ -146,3 +146,36 @@ test("model_wijzigen: met alleen leesrecht weigert toepassen", async () => {
   assert.equal(r.isError, true);
   assert.match(r.content[0].text, /leesrecht/);
 });
+
+test("model_wijzigen: een sequence-plan krijgt punten bij elk bericht, zodat de Studio de activaties toont", async () => {
+  // Een plan kent alleen levenslijnen en berichten van lijn naar lijn. Tot 06-11 ging dat zo naar
+  // de server: dozen van 160 × 70, alle berichten op één hoogte en geen activaties.
+  const plan = {
+    uitleg: "bewaren",
+    diagrammen: [{ sleutel: "d1", taal: "sequence05", naam: "Bewaren" }],
+    elementen: [
+      { sleutel: "a", type: "levenslijn", naam: "Gebruiker", diagram: "d1" },
+      { sleutel: "b", type: "levenslijn", naam: "Studio", diagram: "d1" },
+    ],
+    connectoren: [
+      { type: "synchroon", bron: "a", doel: "b", naam: "bewaar" },
+      { type: "retour", bron: "b", doel: "a", naam: "klaar" },
+    ],
+  };
+  const api = nepProjectApi();
+  const klaar = await voerUit(api, "model_wijzigen", { project: "Zandbak", map: "Test", plan, toepassen: true });
+  assert.match(klaar.content[0].text, /^Toegepast/);
+  const [, , body] = api.log.find(([m]) => m === "POST");
+  const zet = body.ops.find((o) => o.store === "model:sequence05" && o.op === "patchElementen").args[0].zet;
+  const diagram = Object.values(body.ops.find((o) => o.store === "model:sequence05" && o.op === "patchDiagrammen").args[0].zet)[0];
+  const alle = Object.values(zet);
+  assert.equal(alle.filter((e) => e.elementType === "punt").length, 4, "twee punten per bericht");
+  const berichten = alle.filter((e) => e.source);
+  assert.equal(berichten.length, 2);
+  assert.ok(berichten.every((e) => zet[e.source].elementType === "punt" && zet[e.target].elementType === "punt"), "de berichten lopen van punt naar punt");
+  const lijnen = diagram.nodes.filter((n) => zet[n.elementId].elementType === "levenslijn");
+  assert.ok(lijnen.every((n) => !n.size && n.position.y === lijnen[0].position.y), "levenslijnen op één rij, zonder bewaarde maat");
+  // De samenvatting van de taal zegt de AI-client hoe het moet.
+  const taal = await voerUit(nepProjectApi(), "modeltalen", { taal: "sequence05" });
+  assert.match(taal.content[0].text, /Maak zelf geen punten en geen activaties/);
+});

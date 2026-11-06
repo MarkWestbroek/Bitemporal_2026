@@ -65,6 +65,23 @@ export function sjabloonMinMaat(vormInfo, elementType) {
 }
 
 /**
+ * De bewaarde maat van een voorkomen binnen de bovengrens van zijn renderer (levenslijn: nooit
+ * breder dan 14). De tekenaar knipt de vorm zelf al af (voorkomen.js); hiermee volgt ook de
+ * node-wrapper van React Flow, en dus het selectiekader.
+ * @param {string} shapeId
+ * @param {Object} elementType
+ * @param {{width: number, height: number}} size
+ * @param {Object} element
+ * @returns {{width: number, height: number}}
+ */
+export function sjabloonBegrensdeMaat(shapeId, elementType, size, element) {
+  const info = sjabloonOpCanvas(shapeId, elementType);
+  const grens = info?.renderer?.bovengrens?.({ element, elementType, parameters: info.shapeType.parameters || {}, stijl: {}, diagram: null, elementen: null, node: null });
+  if (!grens || !size) return size;
+  return { width: Math.min(size.width, grens.w ?? Infinity), height: Math.min(size.height, grens.h ?? Infinity) };
+}
+
+/**
  * Een vorm zonder inhoudsvak (`parameters.inhoud: "geen"`: begin/eind, ruit, junction, de
  * ArchiMate-figuren) draagt zijn naam als buitenlabel — dezelfde regel als in de tekenaar
  * (index.js: geen vak → buitenlabel, tenzij `naamLabel: "geen"`).

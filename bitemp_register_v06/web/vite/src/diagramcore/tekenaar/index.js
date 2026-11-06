@@ -25,8 +25,8 @@ import { maakPalet } from "../../diagramsvg/thema.js";
 import { breekAf } from "../../diagramsvg/tekstmaat.js";
 import { fnv1a } from "../../diagramsvg/svg.js";
 import { schetsDiagramSvg } from "../../transformatie/sjabloon/schets.js";
-import { materialiseerConnectoren, effectieveConnectorGedaante } from "../canvas/materialiseerConnectoren.js";
-import { bepaalOpnames } from "../canvas/opname.js";
+import { materialiseerConnectoren, effectieveConnectorGedaante, geimporteerdeEdges } from "../canvas/materialiseerConnectoren.js";
+import { bepaalOpnames, verrijkElement } from "../canvas/opname.js";
 import { voorkomenId } from "../model/voorkomens.js";
 import { lidConnectoren } from "../types/containerVoor.js";
 import { vorm } from "../types/shapeType.js";
@@ -43,6 +43,21 @@ const BUITENLABEL_BREEDTE = 132;
 
 const perId = (lijst) => Object.fromEntries((lijst || []).map((t) => [t.id, t]));
 const veiligId = (s) => String(s ?? "").replace(/[^A-Za-z0-9_-]/g, "-");
+
+/**
+ * De omvang van een inhoudsvak in element-coördinaten, zoals de motor het tekent: een gedraaid
+ * vak (pool: -90) draait om zijn midden (inhoud.js), dus telt de omvang ná het draaien.
+ * @param {{x: number, y: number, w: number, h: number, rotatie?: number}} vak
+ * @returns {{x0: number, y0: number, x1: number, y1: number}}
+ */
+export function vakOmvang(vak) {
+  const cx = vak.x + vak.w / 2;
+  const cy = vak.y + vak.h / 2;
+  const r = ((vak.rotatie || 0) * Math.PI) / 180;
+  const halfW = (Math.abs(Math.cos(r)) * vak.w + Math.abs(Math.sin(r)) * vak.h) / 2;
+  const halfH = (Math.abs(Math.sin(r)) * vak.w + Math.abs(Math.cos(r)) * vak.h) / 2;
+  return { x0: cx - halfW, y0: cy - halfH, x1: cx + halfW, y1: cy + halfH };
+}
 
 /**
  * Teken een diagram als VormBoom.
@@ -78,7 +93,8 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
     const vormInfo = vormVoor(soort === "anker" ? "anker" : et?.shape || "class-box", et);
     if (vormInfo.terugval) terugval.add(vormInfo.shapeType.id);
     const box = bouwVoorkomen({
-      element,
+      // Zoals het canvas: met de afgeleide vakken van het profiel en de opgenomen delen.
+      element: soort === "anker" ? element : verrijkElement(element, et, { elements: elements || {}, opnames, elementTypesById: typen }),
       elementType: et,
       shapeType: vormInfo.shapeType,
       renderer: vormInfo.renderer,
@@ -113,7 +129,11 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
 
   // Lijnen en hun ankers/boxen: dezelfde materialisatie als het canvas, met onze maten.
   const maten = Object.fromEntries([...boxen].map(([id, b]) => [id, { width: b.w, height: b.h }]));
-  const { edges, extraNodes } = materialiseerConnectoren(elements, diagram, typen, maten);
+  const gematerialiseerd = materialiseerConnectoren(elements, diagram, typen, maten);
+  const { extraNodes } = gematerialiseerd;
+  // Ook de geïmporteerde presentatie-edges van het diagram («use» in het canonieke model): het
+  // canvas tekent ze, dus de tekenaar ook. Eerst, zoals op het canvas (onder de connectoren).
+  const edges = [...geimporteerdeEdges(diagram, maten), ...gematerialiseerd.edges];
   for (const n of extraNodes) {
     const element = elements[n.connectorId];
     if (!element) continue;
@@ -149,6 +169,13 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
     if (et.id) attrs["data-element-type"] = et.id;
     knopen.push(vorm("g", attrs, ...kinderen));
     punten.push({ x: b.x, y: b.y }, { x: b.x + b.w, y: b.y + b.h + onder });
+    // Een inhoudsvak dat buiten de doos valt hoort bij het beeld: de kop van een levenslijn is 148
+    // breed op een node van 14, en viel aan de rand van het diagram buiten de viewBox (gevonden
+    // 06-11 op de SVG-link van de app). Ook zonder tekst: een type-kop tekent zichzelf in dat vak.
+    if (vak) {
+      const o = vakOmvang(vak);
+      punten.push({ x: b.x + o.x0, y: b.y + o.y0 }, { x: b.x + o.x1, y: b.y + o.y1 });
+    }
     // De satellieten van een bol steken buiten de maat uit.
     if (ctx.shapeType.renderer === "bol") punten.push({ x: b.x - 40, y: b.y - 40 }, { x: b.x + b.w + 40, y: b.y + b.h + 40 });
   }
