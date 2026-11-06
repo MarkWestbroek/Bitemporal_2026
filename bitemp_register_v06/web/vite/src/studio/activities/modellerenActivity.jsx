@@ -35,6 +35,7 @@ import { gebruikVan } from "../../diagramcore/model/gebruik.js";
 import { useOutboxStore } from "../sync/outbox.js";
 import { zonderWeesPlaatsingen, mappenMetBeschrijving } from "../sync/structuurKern.js";
 import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
+import { registerBouwenBeschikbaar, bouwRegister } from "../registerBouwen.js";
 import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore, aanwezigSamengevat } from "../sync/verzender.js";
 import {
   PROJECT_FORMAAT,
@@ -4265,6 +4266,10 @@ function menus(ctx) {
       { type: "separator" },
       { id: "proj-push", label: "Naar server sturen (snapshot)", uitleg: "Zet het project op de server, zodat anderen erin kunnen meewerken.", onClick: stuurNaarServer },
       { id: "proj-pull", label: "Van server ophalen…", uitleg: "Open een project van de server; daar regel je ook wie toegang heeft.", onClick: haalVanServer },
+      // Register bouwen uit dit project (07-11): alleen waar de server een devloop is.
+      ...(registerBouwenBeschikbaar()
+        ? [{ id: "proj-register", label: "Register bouwen…", uitleg: "De server bouwt het register uit dit project (beheerwachtwoord nodig).", disabled: project.serverVersie == null, onClick: () => bouwRegister(project) }]
+        : []),
       {
         id: "proj-ea-import",
         label: "EA-import via de server (uit git)…",

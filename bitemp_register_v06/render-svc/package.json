@@ -9,6 +9,9 @@
   },
   "devDependencies": {
     "@xyflow/system": "^0.0.75",
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "react": "^18.3.1",
+    "zundo": "^2.3.0",
+    "zustand": "^5.0.12"
   }
 }
