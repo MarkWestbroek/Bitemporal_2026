@@ -418,7 +418,18 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
     // ── Gematerialiseerde gedaante: anker + box + 3 edges ──────────────────
     const connRef = nodeRefs.get(el.id)?.[0] || null;
     const connVoorkomenId = connRef ? voorkomenId(connRef) : el.id;
-    const ankerPos = connRef?.ankerPosition || {
+    // Zelf-relatie met velden (associatieklasse op een oortje, Mark 06-11: ArtefactAfhankelijkheid
+    // op Artefact): het midden van bron en doel ligt ín de entiteit, dus beide lijnen hadden lengte
+    // nul. Het anker gaat rechtsboven buiten de entiteit; een opgeslagen anker binnen de entiteit
+    // (bv. na een import) telt niet.
+    const isLusM = el.source === el.target;
+    const bronW = bronRef?.size?.width ?? maten?.[bronVoorkomenId]?.width ?? maten?.[el.source]?.width ?? 200;
+    const bronH = bronRef?.size?.height ?? maten?.[bronVoorkomenId]?.height ?? maten?.[el.source]?.height ?? 80;
+    // Absoluut (ook binnen een container), afgeleid van het midden.
+    const bronRect = { x: bronMid.x - bronW / 2, y: bronMid.y - bronH / 2, w: bronW, h: bronH };
+    const binnenBron = (p) => p && p.x + 7 >= bronRect.x && p.x + 7 <= bronRect.x + bronRect.w && p.y + 7 >= bronRect.y && p.y + 7 <= bronRect.y + bronRect.h;
+    const lusAnker = { x: bronRect.x + bronRect.w + 60 - 7, y: bronRect.y - 60 - 7 };
+    const ankerPos = (isLusM ? (!binnenBron(connRef?.ankerPosition) && connRef?.ankerPosition) || lusAnker : connRef?.ankerPosition) || {
       x: (bronMid.x + doelMid.x) / 2 - 7,
       y: (bronMid.y + doelMid.y) / 2 - 7,
     };
@@ -434,7 +445,8 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       // Box nog niet op het diagram geplaatst → gecentreerd onder het anker.
       extraNodes.push({
         id: el.id,
-        position: { x: ankerPos.x - 93, y: ankerPos.y + 90 },
+        // Bij een lus rechts van het anker (onder het anker zou hij op de entiteit liggen).
+        position: isLusM ? { x: ankerPos.x + 60, y: ankerPos.y - 30 } : { x: ankerPos.x - 93, y: ankerPos.y + 90 },
         connectorId: el.id,
         soort: "box",
       });
@@ -445,15 +457,15 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       id: `conn:${el.id}:bron`,
       source: bronVoorkomenId,
       target: ankerId,
-      sourceHandle: bronHandle || `source-${besteZijde(bronMid, ankerMid)}`,
-      targetHandle: `target-${besteZijde(ankerMid, bronMid)}`,
+      sourceHandle: bronHandle || (isLusM ? "source-top" : `source-${besteZijde(bronMid, ankerMid)}`),
+      targetHandle: isLusM ? "target-left" : `target-${besteZijde(ankerMid, bronMid)}`,
       data: {
         connectorId: el.id,
         // markerStart (bv. ruit) blijft in de gematerialiseerde gedaante
         // zichtbaar aan de bronzijde.
         presentatie: {
           lijn: "solid",
-          vorm: lijn.vorm || basisPresentatie.vorm,
+          vorm: lijn.vorm || (isLusM ? "hoekig" : basisPresentatie.vorm),
           kleur: basisPresentatie.kleur || "#64748b",
           markerStart: basisPresentatie.markerStart,
           zwevendBron,
@@ -465,13 +477,13 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       id: `conn:${el.id}:doel`,
       source: ankerId,
       target: doelVoorkomenId,
-      sourceHandle: `source-${besteZijde(ankerMid, doelMid)}`,
-      targetHandle: doelHandle || `target-${besteZijde(doelMid, ankerMid)}`,
+      sourceHandle: isLusM ? "source-bottom" : `source-${besteZijde(ankerMid, doelMid)}`,
+      targetHandle: doelHandle || (isLusM ? "target-right" : `target-${besteZijde(doelMid, ankerMid)}`),
       data: {
         connectorId: el.id,
         presentatie: {
           lijn: "solid",
-          vorm: lijn.vorm || basisPresentatie.vorm,
+          vorm: lijn.vorm || (isLusM ? "hoekig" : basisPresentatie.vorm),
           kleur: basisPresentatie.kleur || "#64748b",
           markerEnd: basisPresentatie.markerEnd ?? (el.data?.directioneel ? "pijl-open" : null),
           zwevendDoel,

@@ -2436,8 +2436,22 @@ export function maakDiagramActiviteit(opties) {
         const connectorDeel = (connectorId
           ? (() => {
               const huidig = useStore.getState().elements[connectorId]?.data?.vorm || "bezier";
+              // De uiteinden ophalen (Mark, 06-11: "een REL onder Artefact, maar ik weet niet waar
+              // ik de andere ENT vandaan moet halen"): wat niet op dit diagram staat, erbij zetten.
+              const st0 = useStore.getState();
+              const conn = st0.elements[connectorId];
+              const opDiagram0 = new Set((st0.diagrams[st0.actiefDiagramId]?.nodes || []).map((n) => n.elementId));
+              const ontbreekt = conn?.source && conn?.target ? [conn.source, conn.target].filter((eid) => st0.elements[eid] && !opDiagram0.has(eid)) : [];
+              const uiteindenItem = ontbreekt.length
+                ? [{
+                    id: "uiteinden-erbij",
+                    label: ontbreekt.length === 2 ? "Zet beide uiteinden op dit diagram" : `Zet ${st0.elements[ontbreekt[0]]?.naam || "het andere uiteinde"} op dit diagram`,
+                    onClick: () => zetUiteindenOpDiagram(connectorId),
+                  }]
+                : [];
               return [
                 { sep: true },
+                ...uiteindenItem,
                 {
                   id: "verberg-connector",
                   label: "Verberg op dit diagram",
@@ -2757,6 +2771,34 @@ export function maakDiagramActiviteit(opties) {
         setTimeout(() => menuBus.emit("menu:ververs"), 0);
       });
     }, [voorkeuren, zetZichtbaar]);
+
+    /**
+     * Zet de uiteinden van een connector die nog niet op het actieve diagram staan erbij (rechtsklik
+     * op een relatie of lijn, Mark 06-11). Plek: naast de doos van de connector, of naast het
+     * uiteinde dat er al staat; bron links, doel rechts. Eén Ctrl+Z.
+     */
+    const zetUiteindenOpDiagram = (connectorId) => {
+      const s = useStore.getState();
+      const dId = s.actiefDiagramId;
+      const conn = s.elements[connectorId];
+      if (!dId || !conn?.source || !conn?.target) return;
+      const nodes = s.diagrams[dId]?.nodes || [];
+      const posVan = (eid) => nodes.find((n) => n.elementId === eid)?.position || null;
+      const anker = posVan(connectorId) || posVan(conn.source) || posVan(conn.target) || layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 200 };
+      const plek = (rol) => {
+        const andere = rol === "bron" ? posVan(conn.target) : posVan(conn.source);
+        if (posVan(connectorId)) return rol === "bron" ? { x: anker.x - 320, y: anker.y } : { x: anker.x + 360, y: anker.y };
+        if (andere) return rol === "bron" ? { x: andere.x - 380, y: andere.y } : { x: andere.x + 380, y: andere.y };
+        return rol === "bron" ? { x: anker.x - 200, y: anker.y } : { x: anker.x + 200, y: anker.y };
+      };
+      const teDoen = [["bron", conn.source], ["doel", conn.target]].filter(([, eid]) => s.elements[eid] && !posVan(eid));
+      if (!teDoen.length) return;
+      const [eerste, ...rest] = teDoen;
+      metHookInEenStap(
+        () => { useStore.getState().addElementToDiagram(dId, eerste[1], plek(eerste[0])); naTerugzetten(dId, eerste[1]); },
+        () => { for (const [rol, eid] of rest) { useStore.getState().addElementToDiagram(dId, eid, plek(rol)); naTerugzetten(dId, eid); } }
+      );
+    };
 
     /**
      * Kopiëren (Ctrl+C of rechtsklik → Kopiëren): elementen (geen connectoren; die volgen
