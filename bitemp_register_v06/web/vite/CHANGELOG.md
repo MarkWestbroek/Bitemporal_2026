@@ -9,6 +9,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Gewijzigd
+- **"Naar server sturen" noemt de eigen tab** (`clientId` in de PUT-body en header
+  `X-Omnium-Client`), voor de PUT-weigering van api 0.20.0 (BACKEND, besluit Mark 06-11): de
+  server weigert een volledige PUT zolang een ándere client in het project bezig is (409
+  `project_in_gebruik`). De Studio vraagt dan niet om te overschrijven maar meldt wie er bezig
+  is; de stille compactie probeert het later opnieuw; de SVG-link toont de laatst bewaarde stand.
+  Een oudere server negeert veld en header, dus deze studio kan vóór de api uit.
+
+### Gewijzigd
 - **GE-kardinaliteit standaard 0..\*** (besluit Mark 06-11, via FUNDAMENT): een gegevenselement
   is in het canonieke model altijd formeel en dus meervoudig in de tijd, dus 0..\* (optioneel) of
   1..\* (verplicht, door de gebruiker gezet); nooit 0..1 of 1. {enkelvoudig}/{meervoudig} staat er

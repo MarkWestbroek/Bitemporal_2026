@@ -592,7 +592,11 @@ te wijzigen.
 > alleen wat inhoudelijk verschilt (`diffMap` vergelijkt bij een andere referentie
 > ook de inhoud, `gelijk`). Een tab die zijn eigen kopie herlaadt, stuurt niets.
 > Oude `laadModel`-ops in een serverlog blijven naspeelbaar. Aan de serverkant
-> weigert een volledige PUT zolang er iemand in het project bezig is (BACKEND).
+> weigert een volledige PUT zolang er iemand in het project bezig is (BACKEND,
+> api 0.20.0: 409 `reden: "project_in_gebruik"` met `anderen`). De Studio noemt
+> daarvoor de eigen tab in elke PUT (`clientId` in body en `X-Omnium-Client`), vraagt
+> bij "in gebruik" niet om te overschrijven maar meldt wie er bezig is, en laat de
+> stille compactie het later opnieuw proberen.
 >
 > **Werkruimte en live-sync (2026-10-07, onderdeel 3–4):** de projectboom-store
 > is in twee lagen gesplitst: project (mappen, plaatsing, identiteit; sleutel

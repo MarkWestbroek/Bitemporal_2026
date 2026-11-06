@@ -75,3 +75,31 @@ test("slaProjectOp stuurt de snapshot-grens (tot_volgnummer) mee; stuurOps de ba
     globalThis.fetch = oudeFetch;
   }
 });
+
+test("slaProjectOp stuurt de clientId mee (body + X-Omnium-Client); 409 'project_in_gebruik' geeft reden en anderen door (06-11)", async () => {
+  const verzoeken = [];
+  const oudeFetch = globalThis.fetch;
+  let antwoord = { ok: true, status: 200, json: async () => ({ versie: 2 }) };
+  globalThis.fetch = async (url, init) => {
+    verzoeken.push({ url, body: JSON.parse(init.body), headers: init.headers || {} });
+    return antwoord;
+  };
+  try {
+    await slaProjectOp("p1", { naam: "P", inhoud: {}, versie: 1 });
+    assert.ok(verzoeken[0].body.clientId, "clientId in de body");
+    assert.equal(verzoeken[0].headers["X-Omnium-Client"], verzoeken[0].body.clientId);
+    antwoord = {
+      ok: false,
+      status: 409,
+      json: async () => ({ error: "In gebruik", reden: "project_in_gebruik", anderen: [{ clientId: "x", actor: "mark", bron: "verbonden" }], server: { versie: 3 } }),
+    };
+    await assert.rejects(slaProjectOp("p1", { naam: "P", inhoud: {}, versie: 3 }), (e) => {
+      assert.equal(e.status, 409);
+      assert.equal(e.reden, "project_in_gebruik");
+      assert.equal(e.anderen[0].actor, "mark");
+      return true;
+    });
+  } finally {
+    globalThis.fetch = oudeFetch;
+  }
+});

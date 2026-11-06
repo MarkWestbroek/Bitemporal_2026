@@ -13,6 +13,7 @@
  * met de stores staat in modellerenActivity.jsx.
  */
 import { apiBase } from "../../shared/apiBase.js";
+import { clientId } from "../sync/outbox.js";
 
 export const PROJECT_FORMAAT = "studio-project";
 export const PROJECT_FORMAAT_VERSIE = 3; // v3: zonder tabs/actieveTab en zonder viewports (werkruimte-laag)
@@ -88,22 +89,28 @@ export function normaliseerProjectData(data, { bestandsnaam = "" } = {}) {
 
 /** Fout met HTTP-status en (bij 409) de servermeta, zodat de UI kan kiezen. */
 export class ProjectSyncFout extends Error {
-  /** @param {string} bericht @param {number} status @param {any} [server] */
-  constructor(bericht, status, server) {
+  /**
+   * @param {string} bericht @param {number} status @param {any} [server]
+   * @param {{reden?: string, anderen?: Array<{clientId: string, actor?: string, bron?: string, laatst?: string}>}} [extra]
+   *   bij 409: `reden` "versie_verouderd" of "project_in_gebruik" (api 0.20.0), en wie er bezig is
+   */
+  constructor(bericht, status, server, extra = {}) {
     super(bericht);
     this.name = "ProjectSyncFout";
     this.status = status;
     this.server = server || null;
+    this.reden = extra.reden || null;
+    this.anderen = Array.isArray(extra.anderen) ? extra.anderen : [];
   }
 }
 
-async function roep(pad, { methode = "GET", body } = {}) {
+async function roep(pad, { methode = "GET", body, headers = {} } = {}) {
   let resp;
   try {
     resp = await fetch(`${apiBase()}${pad}`, {
       method: methode,
       credentials: "include",
-      headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+      headers: body !== undefined ? { "Content-Type": "application/json", ...headers } : Object.keys(headers).length ? headers : undefined,
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch (e) {
@@ -124,7 +131,7 @@ async function roep(pad, { methode = "GET", body } = {}) {
         : resp.status === 403
           ? "Geen rechten voor deze actie."
           : `Serverfout ${resp.status}.`);
-    throw new ProjectSyncFout(bericht, resp.status, json?.server);
+    throw new ProjectSyncFout(bericht, resp.status, json?.server, { reden: json?.reden, anderen: json?.anderen });
   }
   return json;
 }
@@ -145,7 +152,11 @@ export const slaProjectOp = (id, { naam, inhoud, versie, tot_volgnummer }) =>
     methode: "PUT",
     // tot_volgnummer = snapshot-grens (compactie): zonder dit veld bleef de grens 0 en
     // speelde een client na het ophalen álle operaties nogmaals af (gemeld 2026-10-08).
-    body: { naam, inhoud, versie, ...(tot_volgnummer != null ? { tot_volgnummer } : {}) },
+    // clientId (06-11, api 0.20.0): de server weigert een PUT zolang een ándere client in het
+    // project bezig is (409 "project_in_gebruik", besluit Mark); zo telt deze tab niet mee. Een
+    // oudere server negeert veld en header.
+    body: { naam, inhoud, versie, clientId, ...(tot_volgnummer != null ? { tot_volgnummer } : {}) },
+    headers: { "X-Omnium-Client": clientId },
   });
 
 /** Verwijderen (eigenaar of beheerder). */

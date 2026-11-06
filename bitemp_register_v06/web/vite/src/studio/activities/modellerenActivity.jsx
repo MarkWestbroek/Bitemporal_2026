@@ -3810,7 +3810,16 @@ async function stuurNaarServer() {
       try {
         meta = await slaProjectOp(project.id, { ...basis, versie: project.serverVersie });
       } catch (e) {
-        if (e.status === 409 && e.server) {
+        if (e.status === 409 && e.reden === "project_in_gebruik") {
+          // Iemand anders is bezig (api 0.20.0): overschrijven kan niet en wordt niet gevraagd.
+          // Je eigen wijzigingen gaan al als operaties mee (besluit Mark 06-11, "defensief").
+          const wie = [...new Set(e.anderen.map((a) => a.actor).filter(Boolean))].join(", ");
+          toonMelding({
+            titel: "Project in gebruik",
+            tekst: `${wie ? `${wie} werkt` : "Iemand anders werkt"} nu in dit project. Het hele project vervangen kan dan niet; je eigen wijzigingen gaan al live mee.`,
+          });
+          return;
+        } else if (e.status === 409 && e.server) {
           if (!(await bevestigOverschrijven(e.server))) return;
           meta = await slaProjectOp(project.id, { ...basis, versie: e.server.versie });
         } else if (e.status === 404) {
@@ -4006,6 +4015,8 @@ async function maakSnapshotStil() {
     });
     zetProject({ serverVersie: meta.versie, totVolgnummer: meta.tot_volgnummer || 0, laatsteSync: new Date().toISOString() });
   } catch (e) {
+    // In gebruik door een ander (api 0.20.0): stil; de verzender probeert het later opnieuw.
+    if (e?.status === 409 && e.reden === "project_in_gebruik") return;
     if (e?.status === 409 && e.server) {
       zetProject({ serverVersie: e.server.versie, totVolgnummer: e.server.tot_volgnummer || 0 });
     }
