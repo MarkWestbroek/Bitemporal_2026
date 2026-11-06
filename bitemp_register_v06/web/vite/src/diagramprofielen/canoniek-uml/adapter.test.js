@@ -130,7 +130,7 @@ test("presentatie: dependency en generalisatie", () => {
   const dep = presentatieVoorEdge({ source: "A_U", target: "Geslacht", data: { isDependency: true } }, state.elements);
   assert.equal(dep.lijn, "dash-6-3");
   assert.equal(dep.markerEnd, "pijl-open");
-  assert.equal(dep.labels[0].delen[0].tekst, "«use»");
+  assert.equal(dep.labels[0].delen[0].tekst, "«gebruikt»");
 
   const gen = presentatieVoorEdge({ source: "A", target: "A", data: { isGeneralization: true } }, state.elements);
   assert.equal(gen.markerEnd, "driehoek");

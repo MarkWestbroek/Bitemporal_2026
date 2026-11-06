@@ -2343,16 +2343,20 @@ export function maakDiagramActiviteit(opties) {
                     }),
                 },
               ];
+              // Wist de expliciete maat: terug naar de natuurlijke inhoud-maat (bv.
+              // het figuur i.p.v. de bewaarde Archi-boxmaat na een Exchange-import).
+              // Hoort het element bij een selectie van meer, dan geldt het voor de
+              // hele selectie, zoals Alt+Z (Mark, 06-11: "werkt niet op een selectie").
+              const selectieMaat = (layoutApiRef.current?.selectieIds?.() || []).map((x) => x.nodeId);
+              const opSelectie = selectieMaat.length >= 2 && (selectieMaat.includes(nodeId) || selectieMaat.includes(voorkomenId));
               items.push({
                 id: "maat-inhoud",
-                label: "Maat aanpassen aan inhoud",
+                label: opSelectie ? `Maat aanpassen aan inhoud (${selectieMaat.length} geselecteerd)` : "Maat aanpassen aan inhoud",
                 icoon: "◱",
-                // Wist de expliciete maat van dít voorkomen: terug naar de
-                // natuurlijke inhoud-maat (bv. het figuur i.p.v. de bewaarde
-                // Archi-boxmaat na een Exchange-import).
                 onClick: () => {
                   const s = useStore.getState();
-                  if (s.actiefDiagramId) s.wisNodeMaten(s.actiefDiagramId, voorkomenId || nodeId);
+                  if (!s.actiefDiagramId) return;
+                  for (const sleutel of opSelectie ? selectieMaat : [voorkomenId || nodeId]) s.wisNodeMaten(s.actiefDiagramId, sleutel);
                 },
               });
               if (selectieAantal >= 2) {

@@ -17,7 +17,7 @@
  * Kleuren komen overeen met defaultKleur() in umleditor/metamodel/types.js.
  */
 import { naamBotsingen } from "./uniekeNamen.js";
-import { vouwOudeComposities } from "./migratie.js";
+import { vouwOudeComposities, hernoemGebruikLabels, GEBRUIKT_LABEL } from "./migratie.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { normaliseerErfenis } from "../../diagramcore/types/erfenis.js";
 import { berekenAutoLayout } from "../../umleditor/metamodel/autoLayout.js";
@@ -604,7 +604,8 @@ const elementTypes = [
   },
   {
     id: "gebruik",
-    label: "Gebruik («use»)",
+    // «gebruikt» i.p.v. UML's «use»: het canonieke model is Nederlands (Mark, 06-11).
+    label: "Gebruik («gebruikt»)",
     kort: "use",
     shape: "edge",
     icoon: "gebruik",
@@ -615,7 +616,7 @@ const elementTypes = [
       lijn: "dash-6-3",
       kleur: "#64748b",
       markerEnd: "pijl-open",
-      labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }],
+      labels: [{ zijde: "midden", delen: [{ tekst: GEBRUIKT_LABEL, soort: "constraint", kleur: "#7c3aed" }] }],
     },
   },
   {
@@ -706,7 +707,13 @@ export const canoniekUmlDiagramType = {
      * Opgeslagen sandbox bijwerken: composities die nog als presentatie-edge
      * bestaan (vóór 2026-09-15) worden compositie-connectoren.
      */
-    migreerModel: (state) => vouwOudeComposities(state, elementTypes),
+    migreerModel: (state) => {
+      const gevouwen = vouwOudeComposities(state, elementTypes);
+      // En het label van de gebruik-lijnen: «use» → «gebruikt» (06-11).
+      const diagrams = hernoemGebruikLabels((gevouwen || state).diagrams);
+      if (!diagrams) return gevouwen;
+      return { ...(gevouwen || { elements: state.elements, meta: state.meta }), diagrams };
+    },
     /**
      * Composities uit een V3-import zijn sinds de heenreis compositie-
      * connectoren (die de "compositie"-hiërarchie al dekt). Deze hook vangt

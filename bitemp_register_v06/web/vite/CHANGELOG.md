@@ -8,6 +8,20 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **«gebruikt» in plaats van «use»** in het canonieke model (Mark, 06-11: "we doen alles in het
+  NL"). Het connectortype heet *Gebruik («gebruikt»)*. Opgeslagen modellen dragen het label in
+  `data.presentatie` van hun diagram-edges; de profiel-migratie `hernoemGebruikLabels`
+  (`canoniek-uml/migratie.js`) zet het om bij het laden. De tekenaar past de `migreerModel`-hook
+  van een profiel nu ook zelf toe, zodat een oudere snapshot op de server (SVG-link) óók
+  «gebruikt» tekent. De UML-profielen (puur UML, component, composite structure, WSDL) houden
+  het UML-sleutelwoord «use».
+
+### Opgelost
+- **Maat aanpassen aan inhoud op een selectie.** Het rechtsklikmenu wiste alleen de maat van het
+  aangeklikte element; hoort dat element bij een selectie van meer, dan geldt het nu voor de hele
+  selectie (zoals Alt+Z), met het aantal in het label. E2e: `42-studio-maat-selectie.spec.js`.
+
 ## [studio/v0.30.0] — 2026-11-06
 
 ### Opgelost

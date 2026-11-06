@@ -203,3 +203,14 @@ test("labeldelen: elk deel in zijn eigen stijl — rolnaam vet, kardinaliteit pa
   assert.match(delen[2][1], /font-style="italic"/);
   assert.match(delen[2][1], /font-size="9"/);
 });
+
+test("de tekenaar past de model-migratie van het profiel toe: een oude snapshot met «use» tekent «gebruikt»", async () => {
+  const { hernoemGebruikLabels } = await import("../../diagramprofielen/canoniek-uml/migratie.js");
+  const metHook = { ...descriptor, hooks: { migreerModel: (state) => { const diagrams = hernoemGebruikLabels(state.diagrams); return diagrams ? { ...state, diagrams } : null; } } };
+  const d = diagram({ edges: [use("N-->S")] });
+  const uit = tekenDiagram({ diagram: d, elements, descriptor: metHook, idPrefix: "p" });
+  const svg = naarSvg(uit.boom);
+  assert.match(svg, /«gebruikt»/);
+  assert.doesNotMatch(svg, /«use»/);
+  assert.equal(d.edges[0].data.presentatie.labels[0].delen[0].tekst, "«use»", "de invoer blijft ongemoeid");
+});

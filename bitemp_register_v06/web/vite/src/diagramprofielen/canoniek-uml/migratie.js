@@ -31,6 +31,38 @@
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
 import { vertaalbareVeldenPerType } from "./mappingV3Canoniek.js";
 
+/**
+ * Het label van een gebruik-lijn (GE/ENT/REL → enum, gegevenstype, referentielijst). Tot 06-11 was
+ * dat UML's «use»; het canonieke model is Nederlands, dus «gebruikt» (Mark, 06-11-2026).
+ */
+export const GEBRUIKT_LABEL = "«gebruikt»";
+const OUD_GEBRUIK_LABEL = "«use»";
+
+/**
+ * Derde stap (06-11): een opgeslagen gebruik-lijn draagt zijn label in `data.presentatie` (de
+ * heenreis zette het erin). Zet «use» om naar «gebruikt»; de rest van de edge blijft. Idempotent.
+ *
+ * @param {Record<string, Object>} diagrams
+ * @returns {Record<string, Object>|null} de bijgewerkte diagrammen, of null als er niets te doen is
+ */
+export function hernoemGebruikLabels(diagrams) {
+  let uit = null;
+  for (const [id, diag] of Object.entries(diagrams || {})) {
+    let geraakt = false;
+    const edges = (diag?.edges || []).map((e) => {
+      const labels = e?.data?.presentatie?.labels;
+      if (!Array.isArray(labels) || !labels.some((l) => (l?.delen || []).some((d) => d?.tekst === OUD_GEBRUIK_LABEL))) return e;
+      geraakt = true;
+      const nieuw = labels.map((l) => ({ ...l, delen: (l?.delen || []).map((d) => (d?.tekst === OUD_GEBRUIK_LABEL ? { ...d, tekst: GEBRUIKT_LABEL } : d)) }));
+      return { ...e, data: { ...e.data, presentatie: { ...e.data.presentatie, labels: nieuw } } };
+    });
+    if (!geraakt) continue;
+    uit = uit || { ...diagrams };
+    uit[id] = { ...diag, edges };
+  }
+  return uit;
+}
+
 /** Is deze presentatie-edge een (oude) compositie ENT → GE? */
 function isOudeCompositie(edge, elements) {
   if (elements[edge.source]?.elementType !== "entiteit") return false;

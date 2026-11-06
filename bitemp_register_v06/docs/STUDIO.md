@@ -860,6 +860,10 @@ fase 2 een **bewerkbare sandbox**:
   De migratie krijgt de elementtypen mee (`migreerModel: (state) =>
   vouwOudeComposities(state, elementTypes)`) — geen import van `index.js`,
   dus geen importkring.
+  Sinds 06-11 zet dezelfde hook ook het label van de gebruik-lijnen om («use» →
+  «gebruikt», `hernoemGebruikLabels`), en past de tekenaar (`diagramcore/tekenaar`)
+  de hook vóór het tekenen toe: een snapshot op de server van vóór de migratie
+  tekent zo hetzelfde als het canvas.
 - **Entiteit- en relatievelden bewerkbaar (2026-09-17).** Zoals *Details* in
   de oude IDE. Entiteit: beschrijving, meervoud, materieel, kleur, subtype.
   Relatie: domein, beschrijving, meervoud, materieel, kleur, subtype,
