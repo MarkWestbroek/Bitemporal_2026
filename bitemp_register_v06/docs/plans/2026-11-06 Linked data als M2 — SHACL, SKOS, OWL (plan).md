@@ -377,6 +377,45 @@ patronen, en niet-getekende onderdelen zichtbaar houden (als constraint of meldi
    linked data) en RM5; MIM's LD-vorm is gebaseerd op OWL/RDFS/SHACL
    ([MIM_VERGELIJKING](../MIM_VERGELIJKING.md) §4). Proef: de ODRL-export van Toegangsspraak
    valideren tegen `odrl22-kern.shacl.ttl`.
+   **Gebouwd 07-11** (zelfde branch, ongecommit): `diagramprofielen/shacl/vanCanoniek.js`
+   (`canoniekNaarShacl`, puur) en de transformatie *Canoniek model → SHACL-shapes* (richting
+   transform, `studio/activities/shaclTransformatie.js`). Afbeelding:
+
+   | Canoniek | SHACL |
+   |---|---|
+   | entiteit | node shape die zelf de klasse is (`a sh:NodeShape, rdfs:Class`, impliciet klassedoel) |
+   | veld : basistype / gegevenstype | regel met `xsd:`-datatype; pattern, min/maxLength, min/maxInclusive uit de validatie (eigen gegevenstype, anders de catalogus `gegevenstypen.snapshot.json`); verplicht → minCount 1; maxCount 1 |
+   | veld : enumeratie | `sh:in ( … )` |
+   | veld : ref.lijstitem | `sh:class` |
+   | ENT ◆ GE | `sh:node` naar de shape van het GE (geen doel, zoals een MIM-gegevensgroep) |
+   | relatie | `sh:class` naar de doel-entiteit, kardinaliteit van het doel |
+   | generalisatie | `rdfs:subClassOf` |
+   | afgeleid veld, {uniek} | niet (melding) |
+
+   - **Momentbeeld**: de shapes beschrijven de geldige stand op één moment. `{enkelvoudig}` →
+     maxCount 1; de tijdlijn (formeel/materieel) staat er niet in. Een historie-beeld kan later.
+   - **IRI's** per domein: `<basis-IRI><domein>#`, prefix = domeinnaam (optie *basis-IRI*).
+   - **Kruisverbanden**: per shape "genereert" in de koppelingen-matrix (canoniek = kolom).
+     Opnieuw uitvoeren werkt bij: posities blijven, wat niet meer gegenereerd wordt verdwijnt met
+     zijn kruisverbanden.
+   - Gecontroleerd met pyshacl op het aanvraag-domein: de shapes zijn geldig (meta-SHACL), een
+     kloppende aanvraag conform, een foute gaf precies de vier verwachte meldingen.
+   - **Proef Toegangsspraak → ODRL** (drie beleiden: schuldhulp, het voorbeeld, de FTV-demo),
+     met ODRL22.ttl erbij als vocabulaire. Twee bevindingen, in alle drie gelijk:
+     1. *Fout in de export*: een entiteit met gegevens eronder (`reg:NatuurlijkPersoon`) is
+        `odrl:Asset`, maar staat als waarde van `odrl:partOf`; ODRL 2.2 vraagt daar een
+        `odrl:AssetCollection`. Oplossing in de regelset: zo'n knoop ook `odrl:AssetCollection`.
+        **Nog niet aangepast** (Toegangsspraak; eerst Mark).
+     2. *Vocabulaire ontbreekt*: `apnl:rolAanvrager` als leftOperand is nergens
+        `odrl:LeftOperand`; dat hoort uit de ODRL-AP-NL-vocabulaire te komen, die hier niet
+        beschikbaar is. De eigen `ts:`-termen typeert de export wel zelf.
+     De kern-SHACL is daarbij verbeterd: aantal en klasse van leftOperand/operator in aparte
+     property shapes, zodat een verkeerd type niet als "precies één" gemeld wordt (309 triples).
+   - Tests: `vanCanoniek.test.js` (6), e2e 46 nu 4 (transformatiepaneel → shapes + 12
+     kruisverbanden). Unit 1471/1471.
+   - *Nog niet*: velden van een relatie (associatieklasse), uniciteit als `sh:sparql`, de
+     regelvorm (§3 van TRANSFORMATIES: nu geteste code achter het registry-contract, zoals OAS →
+     canoniek).
 4. **SKOS-profiel**, boom eerst.
 5. **OWL-profiel**, boom eerst; property als element.
 

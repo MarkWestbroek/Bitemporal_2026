@@ -44,3 +44,20 @@ from rdflib.compare import isomorphic
 a = Graph().parse("odrl22-kern.shacl.ttl"); b = Graph().parse("geexporteerd.ttl")
 print(isomorphic(a, b))   # True
 ```
+
+## Proef: Toegangsspraak → ODRL tegen de kern
+
+Exporteer een beleid naar ODRL (Toegangsverlening), voeg de ODRL-vocabulaire toe en valideer:
+
+```python
+from rdflib import Graph
+g = Graph(); g.parse("beleid.odrl.ttl"); g.parse("ODRL22.ttl"); g.serialize("beleid+vocab.ttl")
+```
+
+```sh
+pyshacl -s odrl22-kern.shacl.ttl -a beleid+vocab.ttl
+```
+
+Stand 07-11: twee meldingen per beleid (zie het plan, fase 3): een `odrl:partOf` naar een
+`odrl:Asset` die geen `odrl:AssetCollection` is, en `apnl:rolAanvrager` zonder type (de
+ODRL-AP-NL-vocabulaire ontbreekt hier).

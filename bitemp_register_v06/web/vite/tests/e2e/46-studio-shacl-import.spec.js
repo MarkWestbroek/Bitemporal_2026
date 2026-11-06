@@ -106,3 +106,49 @@ test("exporteren na een wijziging: Turtle met de wijziging, zonder meldingen", a
   expect(tekst).toContain('ok:PartyShape\n    a sh:NodeShape ;\n    rdfs:label "Partij" ;');
   expect(tekst).toContain("sh:alternativePath ( odrl:permission odrl:prohibition odrl:obligation )");
 });
+
+// Fase 3: canoniek model → SHACL-shapes via het transformatiepaneel, met kruisverbanden.
+test("canoniek model in een map → SHACL-shapes in de doelmap, met kruisverbanden", async ({ page }) => {
+  const v3 = JSON.parse(readFileSync(path.resolve(hier, "../../src/diagramprofielen/canoniek-uml/fixtures/aanvraag/aanvraag-domein-v3.json"), "utf8"));
+  await openStudio(page);
+  await shacl(page, "return true;");
+  const kaart = await page.evaluate(async (v3) => {
+    const { importeerV3 } = await import(location.origin + "/viz/react/src/diagramprofielen/canoniek-uml/serialisatie.js");
+    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const { useModellerenStore: ms } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
+    const { useTransformStore } = await import(location.origin + "/viz/react/src/studio/activities/TransformatiePaneel.jsx");
+    const st = getProfieltype("diagram05").useStore;
+    st.getState().laadModel(importeerV3(v3));
+    const s = st.getState();
+    const bron = ms.getState().nieuweMap("Aanvraag");
+    const doel = ms.getState().nieuweMap("Linked data");
+    ms.getState().plaatsMeerdere([
+      ...Object.keys(s.diagrams).map((d) => `diagram05::${d}`),
+      ...Object.values(s.elements).filter((e) => !e.source).map((e) => `el::diagram05::${e.id}`),
+    ], bron);
+    useTransformStore.getState().sluiten();
+    useTransformStore.getState().openen(bron, "transform");
+    return { bron, doel };
+  }, v3);
+  await page.locator("select").filter({ has: page.locator("option", { hasText: "— kies een map —" }) }).selectOption(kaart.doel);
+  await page.getByText("Canoniek model → SHACL-shapes").click();
+  await page.getByRole("button", { name: "Uitvoeren" }).click();
+  await expect(page.getByText(/11 node shapes in "Aanvraag \(SHACL\)", 12 kruisverbanden/)).toBeVisible();
+
+  const uit = await page.evaluate(async (kaart) => {
+    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const { useModellerenStore: ms } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
+    const { useKruisStore } = await import(location.origin + "/viz/react/src/studio/activities/koppelingenActivity.jsx");
+    const st = getProfieltype("shacl05").useStore.getState();
+    const pre = `cs_${kaart.bron}_`.replace(/[^A-Za-z0-9_-]+/g, "_");
+    const aanvraag = st.elements[`${pre}can_Aanvraag`];
+    return {
+      iri: aanvraag?.data?.iri,
+      pijlen: Object.values(st.elements).filter((e) => e.elementType === "verwijzing" && e.source === aanvraag?.id).length,
+      geplaatst: ms.getState().plaatsing[`shacl05::${pre}diagram`] === kaart.doel,
+      kruis: useKruisStore.getState().links.filter((l) => l.soort === "genereert" && l.rij.profielId === "shacl05" && l.kolom.profielId === "diagram05").length,
+      kruisAanvraag: useKruisStore.getState().links.some((l) => l.rij.elementId === aanvraag?.id && l.kolom.elementId === "Aanvraag" && l.omgekeerd),
+    };
+  }, kaart);
+  expect(uit).toEqual({ iri: "aanvraag:Aanvraag", pijlen: 5, geplaatst: true, kruis: 12, kruisAanvraag: true });
+});

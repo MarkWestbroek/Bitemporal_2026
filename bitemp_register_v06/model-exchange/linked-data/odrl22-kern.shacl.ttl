@@ -327,21 +327,31 @@ ok:ConstraintShape
     a sh:NodeShape ;
     rdfs:label "Constraint" ;
     sh:targetClass odrl:Constraint ;
+    # Aantal en klasse in aparte property shapes: een sh:message geldt voor elke
+    # overtreding van zijn shape, dus anders meldt een verkeerd type "precies één".
     sh:property [
         sh:path odrl:leftOperand ;
         sh:order 1 ;
-        sh:class odrl:LeftOperand ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:message "Een Constraint heeft precies één leftOperand."@nl ;
     ] ;
     sh:property [
+        sh:path odrl:leftOperand ;
+        sh:class odrl:LeftOperand ;
+        sh:message "De leftOperand van een Constraint is een odrl:LeftOperand (uit ODRL of een profiel)."@nl ;
+    ] ;
+    sh:property [
         sh:path odrl:operator ;
         sh:order 2 ;
-        sh:class odrl:Operator ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:message "Een Constraint heeft precies één operator."@nl ;
+    ] ;
+    sh:property [
+        sh:path odrl:operator ;
+        sh:class odrl:Operator ;
+        sh:message "De operator van een Constraint is een odrl:Operator."@nl ;
     ] ;
     # "Only one of rightOperand or rightOperandReference MUST appear": precies
     # één van de twee. Elke kant heeft sh:minCount 1, anders klopt ze altijd.

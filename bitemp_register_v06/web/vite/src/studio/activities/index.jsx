@@ -97,6 +97,7 @@ import { registreerActiviteitAlsProfieltype } from "./activiteitAlsProfieltype.j
 // Side-effect: registreert de ingebouwde transformaties (import/export/transform).
 import "./transformaties.js";
 import "./inrichtingsExport.js";
+import "./shaclTransformatie.js"; // canoniek → SHACL (linked data fase 3)
 import "./archimateTransformaties.js";
 import "./oasCanoniekTransformatie.js";
 import "./usecaseTransformaties.js";
