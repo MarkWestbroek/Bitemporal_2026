@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.30.0] — 2026-11-06
+
 ### Opgelost
 - **De kop van de buitenste levenslijn viel buiten het beeld** (06-11, gevonden op de SVG-link
   van app): de tekenaar mat het beeld (`viewBox`) op de dozen van de voorkomens, maar de kop van

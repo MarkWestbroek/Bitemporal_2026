@@ -8,6 +8,39 @@
 
 ---
 
+## studio 0.30.0 / render 0.3.2 (2026-11-06)
+
+De server tekent nu wat de Studio tekent. Gevonden op de SVG-link van app (Mark, 06-11): het
+canonieke model miste de «use»-lijnen, en de kop van de buitenste levenslijn viel buiten beeld.
+Api blijft 0.19.0 (geen Go-wijziging). Details: [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md)
+(studio 0.30.0).
+
+**Render 0.3.2** (de tekenaar zit in de bundel van `render-svc`; geen wijziging aan de service
+zelf):
+
+- de geïmporteerde presentatie-edges van een diagram (`diagram.edges`, de «use»-lijnen van het
+  canonieke model), de afgeleide vakken van de hook `extraCompartimenten` (validatie en weergave
+  van een gegevenstype, overgeërfde velden), een opgenomen deel als sub-vak, en de stijl per
+  labeldeel. Canvas en tekenaar delen daar nu één functie voor;
+- het inhoudsvak telt mee in het beeld: de kop van de buitenste levenslijn valt niet meer buiten
+  de `viewBox`. Een pakket of fragment bovenaan geeft een beeld dat 1 tot 3 hoger is;
+- een levenslijn is nooit breder dan 14 (`ShapeRenderer.bovengrens`, nieuw in het vormcontract).
+
+**Studio 0.30.0**: hetzelfde in documenten en gedeelde plaatjes, en een sequence-diagram uit een
+plan van de ✨ assistent of de MCP krijgt punten bij elk bericht en dus activaties
+(`diagramprofielen/sequence/plaatsUitPlan.js`). De twaalf sequence-diagrammen van *Omnium
+architectuur* op app zijn op 06-11 zo hersteld (150 punten bij 75 berichten).
+
+Getest op main fe97e24d: 1412 unit, vite build, render-svc 6, MCP 10, Studio-e2e 90/90 (met een
+nieuwe pariteitstest die teksten, maat, pad en labelstijl met het echte canvas vergelijkt).
+
+Uitrol: images `bitemp-viz-frontend:0.30.0` (met `--build-arg VITE_GIT_SHA=$(git rev-parse
+--short HEAD)`) en `bitemp-render-svc:0.3.2`, daarna `./update.sh` op app. Geen migratie, geen
+nieuwe instellingen; api blijft 0.19.0. Fundament heeft de nieuwe tekenaar pas met een nieuw
+devloop-image; dat is niet gebouwd.
+
+---
+
 ## api 0.19.0 / studio 0.29.0 (2026-11-06)
 
 De server tekent nu zelf een diagram uit een Studio-project (stap 6 van het plan *Eén tekenaar*),
