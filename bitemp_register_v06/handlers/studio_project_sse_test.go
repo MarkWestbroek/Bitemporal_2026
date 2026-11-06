@@ -130,8 +130,11 @@ func TestStudioProjectSSE_NaspelenEnLive(t *testing.T) {
 	}
 
 	// Compactie: snapshot t/m 4 → wie met Last-Event-ID 2 komt krijgt "snapshot".
+	// De PUT komt van de verbonden tab zelf (clientId); de recente ops van "vooraf"/"live" tellen
+	// hier niet mee (zie TestStudioProjectPut_WeigertBijGebruik).
+	zonderRecenteOps(t)
 	r.PUT("/api/studio/projecten/:id", MaakStudioProjectOpslaanHandler())
-	if rec = studioDoe(r, http.MethodPut, "/api/studio/projecten/"+pid, map[string]any{"inhoud": inhoud, "versie": 1, "tot_volgnummer": 4}); rec.Code != http.StatusOK {
+	if rec = studioDoe(r, http.MethodPut, "/api/studio/projecten/"+pid, map[string]any{"inhoud": inhoud, "versie": 1, "tot_volgnummer": 4, "clientId": "tab-a"}); rec.Code != http.StatusOK {
 		t.Fatalf("PUT snapshot: %d %s", rec.Code, rec.Body.String())
 	}
 	req2, _ := http.NewRequest(http.MethodGet, srv.URL+"/api/studio/projecten/"+pid+"/events", nil)

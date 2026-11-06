@@ -14,7 +14,10 @@ package handlers
 //   GET    /api/studio/projecten        lijst zonder inhoud
 //   GET    /api/studio/projecten/:id    volledig record
 //   POST   /api/studio/projecten        {id?, naam, inhoud}         → 201
-//   PUT    /api/studio/projecten/:id    {naam?, inhoud, versie}     → 200, 409 bij conflict
+//   PUT    /api/studio/projecten/:id    {naam?, inhoud, versie, tot_volgnummer?, clientId?}
+//                                       → 200; 409 bij een verouderde versie (reden "versie_verouderd")
+//                                       of als een andere client bezig is (reden "project_in_gebruik",
+//                                       zie studio_project_in_gebruik.go)
 //   DELETE /api/studio/projecten/:id    eigenaar of beheerder
 
 import (
@@ -65,6 +68,7 @@ type studioProjectInvoer struct {
 	Inhoud        json.RawMessage `json:"inhoud"`
 	Versie        *int64          `json:"versie"`
 	TotVolgnummer *int64          `json:"tot_volgnummer"` // PUT: snapshot-grens (onderdeel 6)
+	ClientID      string          `json:"clientId"`       // PUT: de eigen tab (of header X-Omnium-Client); zie studio_project_in_gebruik.go
 }
 
 // valideerStudioProjectInvoer controleert naam en inhoud; geeft een lege string als
@@ -289,9 +293,38 @@ func MaakStudioProjectOpslaanHandler() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project lezen mislukt: " + err.Error()})
 			return
 		}
+		// Defensief (besluit Mark 06-11): niet vervangen zolang een andere client bezig is.
+		eigen := strings.TrimSpace(in.ClientID)
+		if eigen == "" {
+			eigen = strings.TrimSpace(c.GetHeader("X-Omnium-Client"))
+		}
+		anderen, err := projectInGebruik(ctx, tx, id, eigen)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Controle op andere gebruikers mislukt: " + err.Error()})
+			return
+		}
+		// Uitzondering (Mark 06-11): een snapshot van een tab die zelf live verbonden is en alle
+		// operaties al heeft, is gelijk aan wat de anderen hebben; die mag wel (compactie, SVG-link).
+		if len(anderen) > 0 && isBijgewerkteSnapshot(ctx, tx, id, eigen, in.TotVolgnummer) {
+			anderen = nil
+		}
+		if len(anderen) > 0 {
+			// `server` staat erbij zodat een oudere Studio (die alleen de versieconflict-409
+			// kent) niet struikelt; `reden` onderscheidt dit geval.
+			c.JSON(http.StatusConflict, gin.H{
+				"error": "Er werkt nog iemand anders in dit project. Het project wordt niet in zijn geheel vervangen " +
+					"zolang anderen het open hebben of er net in werkten; er is niets gewijzigd. " +
+					"Wijzig via de Studio (operaties) of probeer het later opnieuw.",
+				"reden":   "project_in_gebruik",
+				"anderen": anderen,
+				"server":  studioProjectMeta(huidig),
+			})
+			return
+		}
 		if huidig.Versie != *in.Versie {
 			c.JSON(http.StatusConflict, gin.H{
 				"error":  "Het project is intussen op de server gewijzigd.",
+				"reden":  "versie_verouderd",
 				"server": studioProjectMeta(huidig),
 			})
 			return
