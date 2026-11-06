@@ -26,7 +26,7 @@ const zaaktypeVan = (e) => e.artefacten.find((a) => a.identifier === "GPK");
 test("GPK: identificatie en onderwerp uit het aanvraagtype, omschrijving uit de e-dienst", async () => {
   const { artefact, diagnostics } = await maak();
   assert.deepEqual(diagnostics, []);
-  assert.deepEqual(artefact.artefactIdentificatie, { soort: "zaaktype", identifier: "GPK", naam: "Zaaktype Gehandicaptenparkeerkaart aanvragen", versienummer: "0.1.0" });
+  assert.deepEqual(artefact.artefactIdentificatie, { soort: "zaaktype", identifier: "GPK", naam: "Zaaktype Gehandicaptenparkeerkaart aanvragen", versienummer: "0.1.0", doelVersieRange: "^1.31" });
   assert.equal(artefact.artefactInhoud.formaat, "catalogi-api-json");
   assert.equal(artefact.artefactHerkomst.regelsetId, "canoniek-naar-zaaktype");
   assert.equal(artefact.artefactHerkomst.regelsetVersie, "0.1.0");

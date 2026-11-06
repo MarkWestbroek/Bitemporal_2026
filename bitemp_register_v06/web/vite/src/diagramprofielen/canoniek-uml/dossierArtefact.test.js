@@ -104,7 +104,9 @@ test("documentdefinitie: het objecttype zonder envelop plus behandelvelden, draf
   // Het rijbewijsnummer (Mark 31-10) is nieuw ten opzichte van het handwerk.
   assert.deepEqual(Object.keys(s.properties).filter((k) => k !== "rijbewijsnummer").sort(), Object.keys(hand.properties).sort());
   assert.equal(s.properties.rijbewijsnummer.type, "string");
-  for (const [k, v] of Object.entries(hand.properties)) assert.equal(s.properties[k].type, v.type, k);
+  // Het aanvraagtype is sinds 07-11 een relatie: een object {code, omschrijving} waar het handwerk een code had.
+  for (const [k, v] of Object.entries(hand.properties)) assert.equal(s.properties[k].type, k === "aanvraagtype" ? "object" : v.type, k);
+  assert.deepEqual(Object.keys(s.properties.aanvraagtype.properties), ["code", "omschrijving"]);
   assert.deepEqual(s.properties.beoordeling.enum, ["toegekend", "afgewezen"]);
   // Bovenaan open (GZAC vult aan); beperkingen en beschrijvingen uit het model.
   assert.equal(s.additionalProperties, undefined);

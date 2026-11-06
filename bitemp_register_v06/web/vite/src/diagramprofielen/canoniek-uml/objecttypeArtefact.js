@@ -22,6 +22,7 @@ import { pasRegelsToe } from "../../transformatie/regels.js";
 import { planNaarJsonSchema } from "../../transformatie/jsonSchemaSchrijver.js";
 import { jcsHash } from "../../transformatie/jcs.js";
 import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
+import { doelVersieRange } from "../../transformatie/doelVersie.js";
 import { CANONIEK_NAAR_OBJECTTYPE } from "./objecttypeRegels.js";
 
 export const SCHRIJVER_ID = "json-schema-schrijver@0.1.0";
@@ -113,7 +114,7 @@ export async function maakObjecttypeArtefact({
       identifier: keuzes.identifier,
       naam: keuzes.naam || `Objecttype ${keuzes.identifier}`,
       versienummer: versienummer || keuzes.versienummer || edienst?.edienst?.versienummer || "0.1.0",
-      ...(keuzes.doelVersieRange ? { doelVersieRange: keuzes.doelVersieRange } : {}),
+      doelVersieRange: doelVersieRange(keuzes),
     },
     artefactInhoud: { formaat: keuzes.formaat, payload, payloadHash },
     artefactHerkomst: {

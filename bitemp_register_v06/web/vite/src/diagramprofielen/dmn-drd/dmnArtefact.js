@@ -35,6 +35,7 @@
  */
 import { jcsHash } from "../../transformatie/jcs.js";
 import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
+import { doelVersieRange } from "../../transformatie/doelVersie.js";
 import { schrijfDmn } from "../../transformatie/dmnXmlSchrijver.js";
 import { fieldRefsOpUuid, verversFieldRef } from "../../modelpicker/modelTree.js";
 import { pickerTypesUitV3 } from "../../modelpicker/pickerTypesUitV3.js";
@@ -154,6 +155,7 @@ export async function maakDmnArtefact({ modelBestand, edienst, identifier, objec
       identifier: keuzes.identifier,
       naam: keuzes.naam || el.naam,
       versienummer: versienummer || keuzes.versienummer || edienst?.edienst?.versienummer || "0.1.0",
+      doelVersieRange: doelVersieRange(keuzes),
     },
     artefactInhoud: { formaat: keuzes.formaat, payload: xml, payloadHash: await sha256Hex(xml) },
     artefactHerkomst: {

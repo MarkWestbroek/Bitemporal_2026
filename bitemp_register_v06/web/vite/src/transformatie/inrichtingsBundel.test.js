@@ -40,6 +40,18 @@ test("GPK: alle artefacten in de volgorde van de e-dienst, zonder fouten", async
   assert.equal(new Set(bundel.map((b) => b.bestandsnaam)).size, bundel.length, "bestandsnamen uniek");
 });
 
+test("doelVersieRange: elk artefact draagt het bereik van zijn doelcomponent; de e-dienst kan het overschrijven (Mark 07-11)", async () => {
+  const i = invoer();
+  i.edienst.artefacten.find((a) => a.soort === "zaaktype").doelVersieRange = ">=1.30 <2";
+  const bundel = await maakInrichtingsBundel(i);
+  const per = Object.fromEntries(bundel.map((b) => [`${b.soort}:${b.artefact.doelcomponent}`, b.artefact.artefactIdentificatie.doelVersieRange]));
+  assert.equal(per["objecttype:openobject"], "^4.3");
+  assert.equal(per["formulier:openforms"], "^4.0");
+  assert.equal(per["zaaktype:openzaak"], ">=1.30 <2");
+  for (const [sleutel, bereik] of Object.entries(per)) if (sleutel.endsWith(":gzac")) assert.equal(bereik, "^13.50", sleutel);
+  assert.ok(bundel.every((b) => typeof b.artefact.artefactIdentificatie.doelVersieRange === "string"));
+});
+
 test("GPK: zelfde payloadHash als de losse aanroepen (zoals de CLI met --objecttype)", async () => {
   const i = invoer();
   const bundel = await maakInrichtingsBundel(i);

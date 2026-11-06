@@ -8,6 +8,17 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Inrichting: aanvraagtype als relatie** (besluit Mark 07-11: een GE verwijst nooit naar een
+  entiteit). Het objecttype krijgt `aanvraagtype: {code, omschrijving}` via de ingebedde relatie
+  AanvraagAanvraagtype; het formulier zet code én omschrijving vast (GPK) of laat de code kiezen
+  uit de referentielijst achter de relatie (aanvraag-voorbeeld). De lezer `v3Graaf` geeft elk veld
+  `entiteit`, `referentielijst` en `sleutel`. Fixture cg-test = Fundament f837496
+  (docs/TRANSFORMATIES.md §11.15).
+- **Inrichting: versiebereik van het doel** op elk artefact (`doelVersieRange`, Mark 07-11 via
+  FUNDAMENT): per doelcomponent in `transformatie/doelVersie.js` (openobject ^4.3, openzaak ^1.31,
+  openforms ^4.0, gzac ^13.50), door de e-dienst te overschrijven; kolom *Doel* in OVERZICHT.md.
+
 ## [studio/v0.33.0] — 2026-11-07
 
 ### Toegevoegd
