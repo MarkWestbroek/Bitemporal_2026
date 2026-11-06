@@ -21,7 +21,7 @@ test("in een grouping slepen: aggregatie erbij, compositie van het component bli
   const rij = page.locator('[data-boomsleutel="el:el::archimate05::ea"]').first();
   await expect(rij).toBeVisible();
   // Uit de boom op de grouping laten vallen (zelfde pad als slepen op het canvas:
-  // verhangNaarContainer). De drop-handler hangt op het canvasvlak en zoekt zelf de node onder
+  // hangOmNaarContainer). De drop-handler hangt op het canvasvlak en zoekt zelf de node onder
   // de cursor; de lagen eroverheen (edges-svg) geven de drop niet door, dus rechtstreeks op het vlak.
   const dropOpGrouping = async () => {
     const f = await node(page, "fe").boundingBox();

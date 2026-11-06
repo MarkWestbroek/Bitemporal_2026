@@ -303,8 +303,8 @@ te wijzigen.
 > en de assistent/MCP (`container` = de eerste, dus slepen in een grouping legt een aggregatie, zoals
 > EA). Compositie en aggregatie hebben in ArchiMate `verbergBijNesting` (zoals Archi): ligt het deel
 > in het geheel, dan is de lijn weg; erbuiten blijft hij. De schets (documenten, plaatje-link) volgt
-> dezelfde geometrische regel (vroeger liet hij zulke lijnen altijd weg). `verhangNaarContainer`
-> ruimt bij het verhangen alleen échte lidmaatschapslijnen op (vanuit een container-type met dat
+> dezelfde geometrische regel (vroeger liet hij zulke lijnen altijd weg). `hangOmNaarContainer`
+> ruimt bij het omhangen alleen échte lidmaatschapslijnen op (vanuit een container-type met dat
 > connectortype in zijn `containerVoor`); een compositie vanuit een gewoon component blijft staan
 > (Mark, 22-10: de compositie Omnium Studio → EA-lezer verdween bij slepen in de grouping). e2e
 > `35-studio-archimate-grouping`. Gemeten op de negen views
@@ -630,6 +630,83 @@ te wijzigen.
 > in de zijbalk (👥 = gedeeld). Bewust (nog) niet: taakbalkposities in de
 > werkruimte (die zijn per apparaat), en rechten per bundel (wie het project
 > mag bewerken, mag een gedeelde bundel wijzigen).
+>
+> **Elementen maken en nesten in de boom (2026-11-06, fase 0 van het plan "Linked
+> data als M2" §8, akkoord Mark).** Een element hoeft niet op een diagram te staan.
+> - Menu's zo kort als het kan (Mark, 06-11): lost *Nieuw …* op tot één type, dan
+>   meteen *Nieuw gegevenselement hierin*; bij één taal met meer typen vervalt de
+>   taal-laag; pas bij meer talen *Nieuw element ▸ taal ▸ type* (`nieuwMenu`).
+> - *Nieuw element ▸ taal ▸ type* op een map maakt het element in die map (naam
+>   vragen, geen diagram-voorkomen). Zet je het later op een diagram, dan blijft de
+>   plaatsing staan: de boomregel (BOOM-1) raakt alleen niet-ingedeelde elementen.
+> - *Nieuw element hierin* op een element maakt een **échte relatie** die ook de
+>   `hierarchie` van het profiel is: een lidmaatschap (M3 `containerVoor`; xsd, wsdl,
+>   packages met `bevat`) óf een insluitende relatie (M3-aard `insluiting`; een GE ín
+>   een entiteit = compositie in het canonieke model, Mark 06-11). Beide zijn
+>   exclusief: een deel hoort bij één geheel. Een hiërarchie zonder die aard (OAS
+>   `ref`, GraphQL `veldtype`) is een graaf en doet niet mee; anders zou de boom het
+>   kind na het maken nergens tonen, of zou omhangen andere verwijzingen weghalen. Een element naar een ander element slepen hangt het om (zijn eigen
+>   plaatsing vervalt: het reist met de container mee); een kind naar een map slepen
+>   haalt het uit de container (de relatie gaat weg) en zet het in die map. Ook
+>   *Uit de container halen* in het menu zet het in de map van de oude container.
+> - **Vaste keuze bij een type met zowel `containerVoor` als `uitwerking`:** wat het
+>   type kan bevatten (zelfde taal) wordt een echte relatie (*Nieuw element hierin*,
+>   slepen); al het andere is alleen ordening (*Nieuw element als uitwerking*, of een
+>   diagram/element erop slepen). Een uitwerking ziet een export niet; een relatie wel.
+> - De regels van omhangen (alleen boomrelaties, verbindingsregels, geen kring,
+>   één ouder) staan in `diagramcore/model/omhangen.js`: `hangOmNaarContainer`
+>   (canvas, lidmaatschap) en `hangOmOnder` (boom, lidmaatschap of insluiting). Het
+>   profieltype geeft `maakElement`, `hangOmNaarContainer` en `hangOmOnder` door.
+> - **Eén boomouder** (besluit Mark 04-11): `bouwHierarchie` (`studio/boomRegels.js`)
+>   kiest bij meer hiërarchie-ouders de **eerste in vaste volgorde** (relaties op
+>   connector-id, daarna de hook `hierarchieParen`); tot 06-11 won de laatste in
+>   elementvolgorde, en die verschilt per client. Een kandidaat die een kring sluit
+>   telt niet en staat in `kringen`. De **weergave** toont een kind nog onder elke
+>   ouder: OAS (`ref`) en GraphQL (`veldtype`) gebruiken de hiërarchie bewust als
+>   graaf (een schema onder elke operatie die het gebruikt). De weergave kapt een
+>   kring af op diepte 8; een echte validatie van kringen hoort bij het M2.
+> - **"Op geen enkel diagram"** is in de boom geen cursief meer (dat klonk als een
+>   fout, terwijl je elementen nu bewust in de boom maakt) maar een rustig teken ◌ met
+>   uitleg; weghalen blijft veilig. In de elementen-browser van het canvas blijft
+>   cursief, daar wijst het op wezen.
+> - **Diagram starten vanuit de boom** (Mark, 06-11): rechtsklik op een element →
+>   *Nieuw diagram hiermee (met n kinderen)* zet het element met zijn directe kinderen
+>   (bv. een ENT met zijn GE's) op een nieuw diagram in dezelfde map, opent het en
+>   draait de eerste auto-layout van de taal. Met een Ctrl-selectie: *Nieuw diagram met
+>   de selectie (n)*. Kinderen zonder eigen plaats in een map zijn niet Ctrl-selecteerbaar.
+> - **Klikken springt niet meer naar een ander diagram** (Mark, 06-11): een klik op een
+>   element toont het in de inspector en selecteert het op het actieve diagram als het
+>   daar staat; je blijft waar je bent. Rechtsklik → *Toon gebruik (n) ▸* noemt de
+>   diagrammen waarop het staat; kiezen opent dat diagram en selecteert het element.
+> - **Kinderen selecteren en meeslepen** (Mark, 06-11): ook een kind zonder eigen
+>   plaats (GE onder ENT) is Ctrl/Shift-selecteerbaar (sleutel `el::profiel::id`); bij
+>   verplaatsen naar een map gaan alleen de geselecteerde regels mét eigen plaatsing mee
+>   (`meeTeNemen`). Naar een diagram slepen neemt de Ctrl-selectie van die taal mee; met
+>   **Ctrl (of Alt) bij het begin van het slepen** ook alle kinderen in de boom (bv. een
+>   ENT met zijn GE's). Wat al op het diagram staat, slaat over.
+> - **Diagram onder een package** (Mark, 06-11): packages (canoniek, puur UML, en de
+>   gedeelde `pakket()` van business/component/composite/object/requirements) hebben nu
+>   M3 `uitwerking`. Een diagram op een package slepen hangt het eronder, zoals onder een
+>   UC-realisatie; een element dat het package kan bevatten blijft een bevat-relatie.
+>   Beperking: alleen een package met een eigen plaats in een map (geen genest package).
+> - **Kopiëren en plakken op het canvas** (Ctrl+C / Ctrl+V, Mark 06-11, "werkte in de
+>   IDE"): de geselecteerde elementen gaan naar een Studio-klembord (niet het
+>   systeemklembord, dat draagt de plaatje-acties). Plakken zet **dezelfde elementen**
+>   op het actieve diagram van dezelfde taal (verwijzing, geen kopie in het model), met
+>   hun onderlinge posities, midden in beeld. Op een ander diagram slaat over wat er al
+>   staat; op hetzelfde diagram geeft plakken een extra voorkomen als de taal dat
+>   toestaat. Connectoren tussen de elementen tekent het canvas zelf. Niet in de boom
+>   (focus in `.studio-project`) en niet als er tekst geselecteerd is.
+> - **Eén keer in de boom** (Mark, 06-11: "control sleep ENT en daarna control Z een paar
+>   keer leverde een kopie op"): de relatie (model) en de plaats in een map (structuur)
+>   hebben elk een eigen Ctrl+Z, dus een oude plaats kan terugkomen terwijl de relatie
+>   blijft. Hangt een element onder een ouder die in de boom staat, dan toont de boom het
+>   alleen daar (`GeplaatstElement`); de oude plaats blijft bewaard en telt weer als de
+>   relatie wegvalt. Eén undo voor boom en diagram staat open (zie BACKLOG).
+> - Onder een element met `uitwerking` (package, UC-realisatie): ook *Nieuw diagram ▸
+>   taal* voor een leeg diagram eronder, naast *Nieuw diagram hiermee*.
+> - Taal: **omhangen**, niet "verhangen" (Mark, 06-11); in identifiers splitst het
+>   werkwoord (`hangOmNaarContainer`, `onHangConnectorOm`).
 >
 > **Hele groepen naar een map (2026-10-06):** in de elementen-browser is
 > rechtsklik op een typekop ("Actor 13") → *Selecteer alle N* of *Verplaats
@@ -1073,7 +1150,7 @@ fase 2 een **bewerkbare sandbox**:
   je de container versleept (ook dieper genest, en met aangehechte
   rand-elementen) en blijft **binnen de rand**. **Alt+slepen** tilt een lid
   over de rand; buiten elke container loslaten = losmaken, in een andere =
-  verhangen (*Losmaken uit "…"* staat ook in het contextmenu). De store
+  omhangen (*Losmaken uit "…"* staat ook in het contextmenu). De store
   blijft **absolute** posities voeren — de canvas rekent om bij het opbouwen
   en bij dragstop — zodat connector-materialisatie, auto-layout en export
   ongewijzigd doorrekenen en bestaande diagrammen niet migreren. Een lid dat
@@ -1094,7 +1171,7 @@ fase 2 een **bewerkbare sandbox**:
   dichtstbijzijnde voorouder van dat type (via lidmaatschap, en voor een
   rand-element via zijn gastheer); geen voorouder = de impliciete deelnemer.
   De toets zit in `vindConnectorTypes(…, elements)`, dus slepen, magic link en
-  verhangen geven dezelfde uitkomst — en het menu noemt de **reden**:
+  omhangen geven dezelfde uitkomst — en het menu noemt de **reden**:
   *"Sequence flow mag de grens van een Pool niet kruisen — wel mogelijk:
   Message flow"*. Eerste afnemer: **BPMN-pool** (`pool.afbakeningVoor =
   ["sequence-flow"]`, `message-flow.overbrugt = ["pool"]`; message flow mag
@@ -1137,7 +1214,7 @@ fase 2 een **bewerkbare sandbox**:
   relaties* (↔) wist de vaste handles; daarna geldt deze regel.
 - **Tekenen zet de aanhechting niet meer vast (2026-09-18).** Bij een
   elementtype met `randAanhechting: "zwevend"` bewaart de canvas bij tekenen,
-  verhangen en de magic link **geen** handle meer. Je sleept nu eenmaal altijd
+  omhangen en de magic link **geen** handle meer. Je sleept nu eenmaal altijd
   van handle naar handle; die toevallige keuze opslaan pinde elke nieuwe lijn
   op het midden van een zijde, zodat zweven alleen werkte na *normaliseer
   relaties*. Nu zweeft een nieuwe lijn meteen (uitwaaieren over de rand,

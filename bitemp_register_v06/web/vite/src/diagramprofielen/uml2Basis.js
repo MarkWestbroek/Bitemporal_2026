@@ -126,6 +126,9 @@ export function pakket(extra = {}) {
     kleur: "#f1f5f9",
     icoon: "package",
     containerVoor: "bevat",
+    // M3 uitwerking (Mark, 06-11): een diagram kan in de boom onder een package hangen, zoals onder
+    // een UC-realisatie. Elementen die het package kan bevatten blijven een bevat-relatie.
+    uitwerking: true,
     standaardDichtInBoom: true,
     properties: [KLEUR_VELD],
     ...extra,

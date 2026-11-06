@@ -3229,6 +3229,7 @@
      "label": "Package",
      "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
      "container": "bevat",
+     "uitwerking": true,
      "leden": [
       "proces",
       "doel",
@@ -3724,6 +3725,7 @@
      "id": "package",
      "label": "Package (domein)",
      "container": "bevat",
+     "uitwerking": true,
      "leden": [
       "entiteit",
       "enumeratie",
@@ -3926,7 +3928,8 @@
     },
     {
      "id": "compositie",
-     "isConnector": true
+     "isConnector": true,
+     "aard": "insluiting"
     },
     {
      "id": "generalisatie",
@@ -4511,6 +4514,7 @@
      "label": "Package",
      "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
      "container": "bevat",
+     "uitwerking": true,
      "leden": [
       "component",
       "interface",
@@ -5037,6 +5041,7 @@
      "label": "Package",
      "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
      "container": "bevat",
+     "uitwerking": true,
      "leden": [
       "klasse",
       "part",
@@ -6922,6 +6927,7 @@
      "label": "Package",
      "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
      "container": "bevat",
+     "uitwerking": true,
      "leden": [
       "object",
       "multiobject",
@@ -7195,6 +7201,7 @@
      "label": "Package",
      "omschrijving": "Groepeert elementen; erin slepen legt het lidmaatschap.",
      "container": "bevat",
+     "uitwerking": true,
      "leden": [
       "requirement",
       "feature",
@@ -8916,6 +8923,7 @@
      "id": "package",
      "label": "Package",
      "container": "bevat",
+     "uitwerking": true,
      "leden": [
       "klasse",
       "interface",

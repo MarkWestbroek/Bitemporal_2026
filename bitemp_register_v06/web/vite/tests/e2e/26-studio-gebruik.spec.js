@@ -5,7 +5,7 @@ import { openStudio, zetModel, inModelleren, node } from "./helpers/studio.js";
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
-test("Gebruikt op: diagrammen in de inspector, klik opent; ongebruikt element cursief", async ({ page }) => {
+test("Gebruikt op: diagrammen in de inspector, klik opent; ongebruikt element gemarkeerd", async ({ page }) => {
   await openStudio(page);
   await zetModel(page, { profielId: "usecase05", diagramId: "d_twee", diagramNaam: "Tweede diagram", open: false, elementen: [
     { id: "a1", naam: "Lid", type: "actor", pos: { x: 40, y: 40 } },
@@ -22,8 +22,9 @@ test("Gebruikt op: diagrammen in de inspector, klik opent; ongebruikt element cu
   await expect(paneel).toContainText("Eerste diagram");
   await paneel.getByRole("button", { name: "Tweede diagram" }).click();
   await expect.poll(() => inModelleren(page, "return ms.getState().actieveTab;")).toBe("usecase05::d_twee");
-  // Het ongebruikte element: cursief in de boom.
-  const weesRij = page.locator('[data-boomsleutel="el:el::usecase05::wees"] .studio-project__ongebruikt');
-  await expect(weesRij).toHaveText("Wees");
-  await expect(page.locator('[data-boomsleutel="el:el::usecase05::a1"] .studio-project__ongebruikt')).toHaveCount(0);
+  // Het ongebruikte element: een rustig teken in de boom (sinds 06-11 geen cursief: een element
+  // dat je in de boom maakt, staat nog op geen diagram, en dat is geen fout).
+  const weesTeken = page.locator('[data-boomsleutel="el:el::usecase05::wees"] [data-testid="geen-diagram"]');
+  await expect(weesTeken).toHaveAttribute("title", /op geen diagram/);
+  await expect(page.locator('[data-boomsleutel="el:el::usecase05::a1"] [data-testid="geen-diagram"]')).toHaveCount(0);
 });

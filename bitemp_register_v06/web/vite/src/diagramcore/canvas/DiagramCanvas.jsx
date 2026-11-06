@@ -17,7 +17,7 @@
  *   onVerbind?         — ({connectorType, source, target, sourceHandle, targetHandle}) => void
  *   onVerwijder?       — (elementIds: string[]) => void      (Delete op selectie)
  *   onViewport?        — ({x,y,zoom}) => void                (na pannen/zoomen)
- *   onVerhangConnector? — (connectorId, {source, target, sourceHandle, targetHandle}) => void
+ *   onHangConnectorOm? — (connectorId, {source, target, sourceHandle, targetHandle}) => void
  *                        — uiteinde van een lijn elders aangehecht (§31.5)
  *   onMaakEnVerbind? — ({elementTypeId, positie, connectorType, bronId, bronHandle, omgekeerd}) => void
  *                        — magic link op het lege vlak: nieuw element + verbinding (§31.8)
@@ -167,7 +167,7 @@ function CanvasBinnenkant({
   onViewport,
   onLabelOffset,
   onKnikken,
-  onVerhangConnector,
+  onHangConnectorOm,
   onMaakEnVerbind,
   onContainerDrop,
   onRandAanhechting,
@@ -682,7 +682,7 @@ function CanvasBinnenkant({
       // Uiteinden lostrekken (§31.5): alleen de directe gedaante — daar zet
       // de materialisatie het knikken-veld. Bij een ASOC-box zijn de drie
       // edges geen zelfstandige verbinding.
-      reconnectable: !!(bewerkbaar && onVerhangConnector && e.data?.connectorId && e.data.knikken !== undefined),
+      reconnectable: !!(bewerkbaar && onHangConnectorOm && e.data?.connectorId && e.data.knikken !== undefined),
       // Sleepbare labels (vgl. 0.2): de edge meldt de nieuwe offset per
       // zijde; de activiteit bewaart hem op het connector-element.
       data:
@@ -718,7 +718,7 @@ function CanvasBinnenkant({
       const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
-  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, onVerhangConnector, maten, elements, lookups, onNodePosities]);
+  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, onHangConnectorOm, maten, elements, lookups, onNodePosities]);
 
   // Directe kliks altijd melden, óók als React Flow geen selectie-wijziging
   // ziet (node stond intern nog geselecteerd terwijl de inspector inmiddels
@@ -1046,7 +1046,7 @@ function CanvasBinnenkant({
       else if (ids.length > 1 && onNodePositie) for (const id of ids) onNodePositie(id, record[id]);
       // "Slepen ín een package": eindigt een enkele sleep met het middelpunt
       // binnen een container-node (ElementType.containerVoor), meld dat aan
-      // de activiteit — die legt/verhangt de lidmaatschaps-connector.
+      // de activiteit — die legt de lidmaatschaps-connector of hangt hem om.
       if (onContainerDrop && gesleept.length === 1 && gesleept[0]?.id && !isAangehechtRand(gesleept[0])) {
         const n = gesleept[0];
         const np = record[n.id];
@@ -1233,7 +1233,7 @@ function CanvasBinnenkant({
   );
 
   // De edge die op dit moment aan een uiteinde versleept wordt (§31.5).
-  const verhangRef = useRef(null);
+  const omTeHangenRef = useRef(null);
   const isValidConnection = useCallback(
     (verbinding) => {
       if (!bewerkbaar) return false;
@@ -1241,10 +1241,10 @@ function CanvasBinnenkant({
       const doelNode = getNodes().find((node) => node.id === verbinding.target);
       const bron = elements[bronNode?.data?.element?.id || verbinding.source];
       const doel = elements[doelNode?.data?.element?.id || verbinding.target];
-      // Tijdens het verhangen van een bestaande lijn geldt háár type, niet de
+      // Tijdens het omhangen van een bestaande lijn geldt háár type, niet de
       // keuze in de taakbalk.
-      const verhangType = elements[verhangRef.current?.data?.connectorId]?.elementType;
-      return !!vindConnectorType(diagramType, bron, doel, verhangType || verbindingsType, elements);
+      const typeOmTeHangen = elements[omTeHangenRef.current?.data?.connectorId]?.elementType;
+      return !!vindConnectorType(diagramType, bron, doel, typeOmTeHangen || verbindingsType, elements);
     },
     [bewerkbaar, elements, diagramType, verbindingsType, getNodes]
   );
@@ -1275,7 +1275,7 @@ function CanvasBinnenkant({
   );
 
   /**
-   * Welke handle bewaren we bij een net getekende of verhangen lijn?
+   * Welke handle bewaren we bij een net getekende of omgehangen lijn?
    * Bij een **zwevend** elementtype (randAanhechting) géén: je sleept nu
    * eenmaal altijd van handle naar handle, en die toevallige keuze vastleggen
    * pinde elke nieuwe lijn op het midden van een zijde — zweven werkte dan
@@ -1515,28 +1515,28 @@ function CanvasBinnenkant({
   // (isValidConnection hierboven). Knikpunten vervallen: de geometrie klopt
   // niet meer. De handle wordt de zijde waar je loslaat.
   const handleReconnectStart = useCallback((_ev, edge) => {
-    verhangRef.current = edge;
+    omTeHangenRef.current = edge;
   }, []);
   const handleReconnect = useCallback(
     (oudeEdge, verbinding) => {
       const connectorId = oudeEdge?.data?.connectorId;
-      if (!bewerkbaar || !onVerhangConnector || !connectorId) return;
+      if (!bewerkbaar || !onHangConnectorOm || !connectorId) return;
       const { id: bronId } = elementVanNode(verbinding.source);
       const { id: doelId } = elementVanNode(verbinding.target);
-      verhangRef.current = { ...oudeEdge, gelukt: true };
-      onVerhangConnector(connectorId, {
+      omTeHangenRef.current = { ...oudeEdge, gelukt: true };
+      onHangConnectorOm(connectorId, {
         source: bronId,
         target: doelId,
         sourceHandle: handleVoorOpslag(bronId, verbinding.sourceHandle),
         targetHandle: handleVoorOpslag(doelId, verbinding.targetHandle),
       });
     },
-    [bewerkbaar, onVerhangConnector, elementVanNode, handleVoorOpslag]
+    [bewerkbaar, onHangConnectorOm, elementVanNode, handleVoorOpslag]
   );
   const handleReconnectEnd = useCallback(
     (ev, edge, handleType, toestand) => {
-      const gelukt = verhangRef.current?.gelukt;
-      verhangRef.current = null;
+      const gelukt = omTeHangenRef.current?.gelukt;
+      omTeHangenRef.current = null;
       if (gelukt || !bewerkbaar || toestand?.isValid) return;
       // Losgelaten op een node waar dit type niet heen mag: zeg waarom in
       // plaats van de lijn stil terug te laten springen.
@@ -1568,7 +1568,7 @@ function CanvasBinnenkant({
         items: [
           { kop: true, label: `${omschrijf(van)} → ${omschrijf(naar)}` },
           {
-            id: "verhang-geen",
+            id: "omhangen-geen",
             disabled: true,
             label: `${opGrens ? weigeringTekst(opGrens.connectorType, opGrens.weigering) : `${label} mag hier niet`} — de lijn blijft waar hij was`,
           },
