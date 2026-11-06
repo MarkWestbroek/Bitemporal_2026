@@ -225,7 +225,9 @@ render-API toont het met het eerstvolgende render-image):
   als doos van 160 × 70 zonder punten, de berichten van doosrand naar doosrand op één hoogte,
   geen activaties. Het canvas tekende ze precies zo (paden gelijk), dus geen renderverschil. Een
   levenslijn is nu altijd 14 breed, en de MCP maakt voortaan punten bij elk bericht
-  (`tools/omnium-mcp/README.md`). De bestaande diagrammen op app zijn daarmee nog niet hersteld.
+  (`tools/omnium-mcp/README.md`). De twaalf bestaande diagrammen op app zijn op 06-11 hersteld
+  (Mark akkoord): 150 punten bij 75 berichten, in de volgorde van de oorspronkelijke plannen, en
+  de doosmaat van de levenslijnen weg. De server tekent ze zo na de eerstvolgende snapshot.
 
 ## Eisen aan de SVG (afspraken met Imprint)
 
