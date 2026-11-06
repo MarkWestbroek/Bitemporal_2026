@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { vouwOudeComposities } from "./migratie.js";
+import { vouwOudeComposities, hernoemGebruikLabels } from "./migratie.js";
 import { vanCanoniekModel } from "./adapter.js";
 import { canoniekUmlDiagramType } from "./index.js";
 
@@ -127,4 +127,38 @@ test("vult ook entiteit- en relatievelden (subtype, beschrijving) aan uit data.b
   assert.equal(r.elements.B.data.beschrijving, "Lijst");
   assert.equal(r.elements.R.data.relatieSubtype, "associatie");
   assert.equal(r.elements.R.data.meervoud, "rs");
+});
+
+test("hernoemGebruikLabels: een opgeslagen «use»-lijn heet voortaan «gebruikt»; de rest blijft, idempotent", () => {
+  const diagrams = {
+    d1: {
+      id: "d1",
+      edges: [
+        { id: "u1", source: "ge", target: "t", sourceHandle: "source-right", data: { bron: { isDependency: true }, presentatie: { lijn: "dash-6-3", labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }] } } },
+        { id: "x", source: "a", target: "b", data: { presentatie: { labels: [] } } },
+      ],
+    },
+    d2: { id: "d2", edges: [] },
+  };
+  const uit = hernoemGebruikLabels(diagrams);
+  const u1 = uit.d1.edges[0];
+  assert.equal(u1.data.presentatie.labels[0].delen[0].tekst, "«gebruikt»");
+  assert.equal(u1.data.presentatie.labels[0].delen[0].kleur, "#7c3aed");
+  assert.equal(u1.sourceHandle, "source-right");
+  assert.deepEqual(u1.data.bron, { isDependency: true });
+  assert.equal(uit.d1.edges[1], diagrams.d1.edges[1]);
+  assert.equal(uit.d2, diagrams.d2);
+  assert.equal(hernoemGebruikLabels(uit), null);
+});
+
+test("migreerModel van het profiel zet ook het label om", () => {
+  const state = {
+    elements: { a: { id: "a", elementType: "entiteit", data: {} } },
+    diagrams: { d1: { id: "d1", edges: [{ id: "u", source: "a", target: "t", data: { presentatie: { labels: [{ delen: [{ tekst: "«use»" }] }] } } }] } },
+    meta: { compositiesGevouwen: true },
+  };
+  const uit = canoniekUmlDiagramType.hooks.migreerModel(state);
+  assert.equal(uit.diagrams.d1.edges[0].data.presentatie.labels[0].delen[0].tekst, "«gebruikt»");
+  assert.equal(uit.elements, state.elements);
+  assert.equal(canoniekUmlDiagramType.hooks.migreerModel({ ...state, diagrams: uit.diagrams }), null);
 });

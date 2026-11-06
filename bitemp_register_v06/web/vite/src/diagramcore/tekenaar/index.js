@@ -60,6 +60,20 @@ export function vakOmvang(vak) {
 }
 
 /**
+ * De model-migratie van het profiel (DiagramType.hooks.migreerModel) ook vóór het tekenen. De
+ * Studio past hem toe bij het laden; een snapshot op de server kan van daarvóór zijn (bv. «use»
+ * dat sinds 06-11 «gebruikt» heet). Zo tekent de tekenaar ook dan wat het canvas tekent. Puur:
+ * de invoer blijft ongemoeid.
+ * @returns {{diagram: Object, elements: Record<string, Object>}}
+ */
+function migreerVoorTekenen(diagram, elements, descriptor) {
+  const migreer = descriptor?.hooks?.migreerModel;
+  if (typeof migreer !== "function" || !diagram?.id) return { diagram, elements };
+  const uit = migreer({ elements: elements || {}, diagrams: { [diagram.id]: diagram }, meta: {} });
+  return { diagram: uit?.diagrams?.[diagram.id] || diagram, elements: uit?.elements || elements };
+}
+
+/**
  * Teken een diagram als VormBoom.
  * @param {Object} invoer
  * @param {Object} invoer.diagram
@@ -74,6 +88,7 @@ export function vakOmvang(vak) {
  * @returns {{boom: Object|null, viewBox: {x: number, y: number, w: number, h: number}|null, terugval: string[]}}
  */
 export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, thema = "auto", verwijzingNaam = null, maatAttributen = true, titel = null, controleer = false }) {
+  ({ diagram, elements } = migreerVoorTekenen(diagram, elements, descriptor));
   // De profiel-default voor randAanhechting inbakken, net als DiagramCanvas: zo ziet
   // materialiseerConnectoren hier dezelfde zwevende uiteinden als op het canvas.
   const randDefault = descriptor?.randAanhechting || "zijden";

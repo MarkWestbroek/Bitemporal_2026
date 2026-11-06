@@ -111,6 +111,9 @@ zonder ShapeType vallen terug op de zeven families; wordt een vorm een echt Shap
 dan tekent de API hem zonder wijziging hier. Nog op de terugval: `archimate-box`,
 `archimate-grouping`, `seq-levenslijn`, `act-begin`/`-eind`/`-beslissing`, `uc-actor`/`-ellips`/
 `-systeem`. De tekening verandert dus per release; `idPrefix` en het foutcontract niet.
+De tekenaar past eerst de model-migratie van het profiel toe (`hooks.migreerModel`), zoals de
+Studio bij het laden: een oudere snapshot tekent dus de huidige vorm (bv. «gebruikt» i.p.v.
+«use», 06-11).
 
 **Hoe het is opgebouwd.**
 - `diagramsvg/studio.js` kiest het diagram, controleert de invoer (422 met het element), roept de

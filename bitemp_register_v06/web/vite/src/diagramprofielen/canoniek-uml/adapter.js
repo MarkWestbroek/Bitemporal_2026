@@ -18,6 +18,7 @@
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
 import { CANONIEK_UML_ID, canoniekUmlDiagramType, isRefLijstItem } from "./index.js";
 import { vertaalbareVelden } from "./mappingV3Canoniek.js";
+import { GEBRUIKT_LABEL } from "./migratie.js";
 
 /**
  * Veldnamen die 1-op-1 meegaan, uit het profiel (mappingV3Canoniek.js). Op aanroeptijd
@@ -212,7 +213,7 @@ export function presentatieVoorEdge(edge, bronElements) {
       lijn: "dash-6-3",
       kleur: "#64748b",
       markerEnd: "pijl-open",
-      labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }],
+      labels: [{ zijde: "midden", delen: [{ tekst: GEBRUIKT_LABEL, soort: "constraint", kleur: "#7c3aed" }] }],
     };
   }
   if (d.isGeneralization === true) {
