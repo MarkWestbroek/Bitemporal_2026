@@ -8,6 +8,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Diagram-tabs verslepen** (Mark, 06-11). Sleep een tab in de tabbalk naar een andere plek;
+  een streep toont waar hij landt. De volgorde hoort bij de werkruimte (localStorage en de
+  server), dus ook op een andere computer. Store-actie `verplaatsTab` in
+  `modellerenActivity.jsx`; e2e `43-studio-tabs-verslepen.spec.js`.
+- **Rechtsklik op een tab**: sluiten, andere tabs, alle tabs links of rechts, alle tabs, en de
+  open tabs bewaren als bundel (Mark, 06-11).
+- **Diagrambundels** (Mark, 06-11): een benoemde set diagrammen, in de zijbalk boven *Mappen*.
+  Een eigen bundel staat in je werkruimte; *Deel met het project* zet een kopie in de
+  projectstructuur (`structuur.bundels`, gesynct als `patchStructuur`). Openen voegt de
+  diagrammen toe aan de open tabs. Zie `docs/STUDIO.md` (Werkruimte). E2e
+  `44-studio-bundels.spec.js`.
+
 ### Gewijzigd
 - **«gebruikt» in plaats van «use»** in het canonieke model (Mark, 06-11: "we doen alles in het
   NL"). Het connectortype heet *Gebruik («gebruikt»)*. Opgeslagen modellen dragen het label in

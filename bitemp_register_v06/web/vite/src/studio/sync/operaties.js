@@ -361,7 +361,8 @@ export const STRUCTUUR_OPS = {
   schuifPlaatsing: null,
 };
 
-export const STRUCTUUR_VELDEN = ["mappen", "plaatsing"];
+/** `bundels`: de gedeelde diagrambundels van het project (06-11); alleen via het vangnet. */
+export const STRUCTUUR_VELDEN = ["mappen", "plaatsing", "bundels"];
 
 /**
  * Vangnet structuur: structuur-undo/redo en laadStructuur. De volgorde in de
@@ -374,8 +375,10 @@ export function structuurNet(voor, na) {
   const volgordeVoor = Object.keys(voor.plaatsing || {}).join("\u0000");
   const volgordeNa = Object.keys(na.plaatsing || {}).join("\u0000");
   const volgordeAnders = volgordeVoor !== volgordeNa;
-  if (m.leeg && p.leeg && !volgordeAnders) return [];
+  const b = diffMap(voor.bundels, na.bundels);
+  if (m.leeg && p.leeg && b.leeg && !volgordeAnders) return [];
   const patch = { zetMappen: m.zet, wisMappen: m.wis, zetPlaatsing: p.zet, wisPlaatsing: p.wis };
+  if (!b.leeg) Object.assign(patch, { zetBundels: b.zet, wisBundels: b.wis });
   if (volgordeAnders) patch.volgordePlaatsing = Object.keys(na.plaatsing || {});
   return [{ store: "structuur", op: "patchStructuur", args: [patch] }];
 }

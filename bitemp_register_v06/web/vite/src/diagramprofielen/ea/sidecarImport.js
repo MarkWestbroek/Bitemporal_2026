@@ -73,7 +73,7 @@ export function maakStand(werkbestand = {}) {
       profielVoor(pid).getState().laadModel({ ...inhoud, elements: inhoud.elements || {}, diagrams: inhoud.diagrams || {} });
     }
     const s = werkbestand?.structuur || {};
-    structuur.getState().laadStructuur({ mappen: s.mappen || {}, plaatsing: herschikOpVolgorde(s.plaatsing || {}, s.plaatsingVolgorde) });
+    structuur.getState().laadStructuur({ mappen: s.mappen || {}, plaatsing: herschikOpVolgorde(s.plaatsing || {}, s.plaatsingVolgorde), bundels: s.bundels || {} });
   });
   // Kruisverbanden: geen store nodig, alleen de lijst (patchLinks = upsert/wis op id).
   const kruis = { links: Array.isArray(werkbestand?.kruisverbanden) ? [...werkbestand.kruisverbanden] : [] };
@@ -112,7 +112,7 @@ export function bouwWerkbestand(stand, { id, naam } = {}) {
     versie: 3,
     geexporteerd: new Date().toISOString(),
     project: { id: id ?? stand.origineel?.project?.id, naam: naam ?? stand.origineel?.project?.naam },
-    structuur: { mappen: s.mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing) },
+    structuur: { mappen: s.mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing), ...(Object.keys(s.bundels || {}).length ? { bundels: s.bundels } : {}) },
     kruisverbanden: stand.kruis.links,
     profielen,
   };
