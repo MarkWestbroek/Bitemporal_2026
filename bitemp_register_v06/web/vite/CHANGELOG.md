@@ -8,6 +8,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Een subtype heeft geen eigen tijdlijn** (besluit Mark 06-11, via BACKEND; CODEGEN.md §7.3d):
+  bij een entiteit met een generalisatie naar een ouder staan *materieel* en *tijdprecisie* in de
+  inspector uit, met "De tijdlijn komt van <ouder>"; de modelcontrole waarschuwt als ze toch gezet
+  zijn, en de V3-export laat ze op een subtype weg (ook uit een oud model). Nieuwe M3-hook
+  `eigenschapUit(element, key, {elements})` → reden. Materiële GE's en relaties óp een subtype
+  blijven toegestaan.
+
 ### Toegevoegd
 - **Lijnen verschuiven zonder knikken** (Mark, 06-11: "twee RELs tussen Partij en MedischAdvies
   niet anders scheiden dan door te knikken; ik wil ze recht houden en eentje kunnen pakken en

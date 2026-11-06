@@ -13,8 +13,8 @@ test("een veldtype naar een enumeratie geeft een «gebruikt»-lijn; een oude ove
   await zetModel(page, { profielId: "diagram05", diagramId: "d_eg", diagramNaam: "Erft en gebruik", elementen: [
     { id: "ge", naam: "Naam", type: "gegevenselement", pos: { x: 300, y: 460 }, compartimenten: [{ compartmentType: "velden", velden: [{ naam: "soort", fieldType: "attribuut", data: { typeLabel: "Soort" } }] }] },
     { id: "st", naam: "Soort", type: "enumeratie", pos: { x: 650, y: 460 } },
-    { id: "a", naam: "Aanvraag", type: "entiteit", pos: { x: 300, y: 650 } },
-    { id: "g", naam: "GpkAanvraag", type: "entiteit", pos: { x: 650, y: 650 } },
+    { id: "a", naam: "Aanvraag", type: "entiteit", pos: { x: 300, y: 600 } },
+    { id: "g", naam: "GpkAanvraag", type: "entiteit", pos: { x: 540, y: 600 } },
   ] });
   // GEBR-1: de migratie legt de «gebruikt»-connector uit het veldtype.
   await expect.poll(() => connectoren(page, "gebruik")).toEqual(["ge->st"]);
@@ -25,6 +25,17 @@ test("een veldtype naar een enumeratie geeft een «gebruikt»-lijn; een oude ove
   await inStore(page, "diagram05", `store.setState((s) => ({ diagrams: { ...s.diagrams, d_eg: { ...s.diagrams.d_eg, edges: [...(s.diagrams.d_eg.edges || []), { id: "gen-g-a", source: "g", target: "a", data: { bron: { isGeneralization: true } } }] } } }));`);
   await expect.poll(() => connectoren(page, "generalisatie")).toEqual(["g->a"]);
   expect(await inStore(page, "diagram05", 'return (store.getState().diagrams.d_eg.edges || []).filter((e) => e.data?.bron?.isGeneralization).length;')).toBe(0);
+
+  // Een subtype heeft geen eigen tijdlijn (besluit Mark 06-11): materieel staat uit, met de reden.
+  const { node } = await import("./helpers/studio.js");
+  await node(page, "g").click({ position: { x: 20, y: 10 } });
+  const rij = page.locator('[data-uit="materieel"]');
+  await expect(rij).toBeVisible();
+  await expect(rij).toContainText("De tijdlijn komt van Aanvraag");
+  await expect(rij.locator("input").first()).toBeDisabled();
+  // Bij de ouder niet.
+  await node(page, "a").click({ position: { x: 20, y: 10 } });
+  await expect(page.locator('[data-uit="materieel"]')).toHaveCount(0);
 
   // Het veld krijgt een gewoon type: de afgeleide «gebruikt» verdwijnt.
   await inStore(page, "diagram05", `const el = store.getState().elements.ge; store.getState().updateElement("ge", { compartimenten: [{ compartmentType: "velden", velden: [{ naam: "soort", fieldType: "attribuut", data: { typeLabel: "string" } }] }] });`);

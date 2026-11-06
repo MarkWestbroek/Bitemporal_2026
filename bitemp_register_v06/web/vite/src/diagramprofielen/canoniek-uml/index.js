@@ -169,10 +169,41 @@ export function controleerTijdprecisie(element) {
   return null;
 }
 
-/** Profielregels van entiteit, GE en relatie: tijdprecisie + unieke naam/pad (31-10). */
+/**
+ * De ouder van een entiteit die een subtype is (generalisatie-connector sub → super), of null.
+ * Besluit Mark (06-11, via BACKEND): een subtype ís een exemplaar van zijn ouder en heeft geen
+ * eigen tijdlijn; aanvang en einde horen bij de ouder (codegen weigert materieel/tijdprecisie op
+ * een entiteit met `erft`, CODEGEN.md §7.3d).
+ */
+export function supertypeVan(element, elements) {
+  if (element?.elementType !== "entiteit" || !elements) return null;
+  for (const c of Object.values(elements)) {
+    if (c?.elementType === "generalisatie" && c.source === element.id && elements[c.target]) return elements[c.target];
+  }
+  return null;
+}
+
+/** Waarschuwing: materieel of tijdprecisie op een subtype (wordt niet geëxporteerd). */
+function controleerSubtypeTijdlijn(element, context) {
+  const d = element?.data || {};
+  if (!d.materieel && !d.tijdprecisie) return null;
+  const ouder = supertypeVan(element, context?.elements);
+  if (!ouder) return null;
+  return `Materieel en tijdprecisie hebben bij een subtype geen betekenis: de tijdlijn (aanvang en einde) komt van ${ouder.naam || "de ouder"}. Ze gaan niet mee in de export.`;
+}
+
+/** Profielregels van entiteit, GE en relatie: tijdprecisie + unieke naam/pad (31-10) + subtype (06-11). */
 function controleerRepresentatie(element, context) {
   const tijd = controleerTijdprecisie(element);
-  return [...(tijd ? [tijd] : []), ...naamBotsingen(element, context)];
+  const sub = controleerSubtypeTijdlijn(element, context);
+  return [...(tijd ? [tijd] : []), ...(sub ? [sub] : []), ...naamBotsingen(element, context)];
+}
+
+/** M3-hook eigenschapUit: materieel en tijdprecisie uit bij een subtype, met de reden. */
+function eigenschapUitVoorSubtype(element, key, context) {
+  if (key !== "materieel" && key !== "tijdprecisie") return null;
+  const ouder = supertypeVan(element, context?.elements);
+  return ouder ? `De tijdlijn komt van ${ouder.naam || "de ouder"} (subtype).` : null;
 }
 
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
@@ -196,7 +227,7 @@ const elementTypes = [
     // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
     properties: [MEERVOUD_VELD, MATERIEEL_VELD, TIJDPRECISIE_VELD, KLEUR_VELD],
     // Geërfd per hook-sleutel (types/erfenis.js): entiteit, GE en relatie.
-    hooks: { valideer: controleerRepresentatie },
+    hooks: { valideer: controleerRepresentatie, eigenschapUit: eigenschapUitVoorSubtype },
     // Afgeleid boven de gewone velden (Mark, 10-10): voor ENT, GE en relatie,
     // ook in een opgenomen GE (opname.js volgt deze volgorde).
     compartments: [

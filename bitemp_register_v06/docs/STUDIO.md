@@ -1028,6 +1028,12 @@ fase 2 een **bewerkbare sandbox**:
   moment één of meer voorkomens heeft, zegt {enkelvoudig}/{meervoudig} (`momentvoorkomen`);
   de 0 of 1 volgt nooit uit de velden. Standaard 0..\*: bij tekenen (hook `naVerbinden` op de
   compositie) en bij de V3-import (V3 kent geen GE-kardinaliteit). Wat de gebruiker zet, blijft.
+- **Subtype zonder eigen tijdlijn (2026-11-06, besluit Mark via BACKEND, CODEGEN §7.3d).**
+  `supertypeVan(element, elements)` (generalisatie sub → super). Bij een subtype zet de hook
+  `eigenschapUit` (M3, nieuw: de inspector toont de eigenschap uitgeschakeld met de reden)
+  `materieel` en `tijdprecisie` uit; `valideer` waarschuwt als ze toch gezet zijn; de terugreis
+  schrijft `isMaterieel: false` en geen `tijdprecisie` voor een subtype (ook als de generalisatie
+  nog een ongevouwen presentatie-edge is). Codegen weigert ze sinds d3f43afc.
 - **Overerving en «gebruikt» als connectoren (2026-11-06, ERFT-1 en GEBR-1, Mark via
   FUNDAMENT).** `canoniek-uml/afgeleideConnectoren.js`, via `hooks.migreerModel` (dus bij laden,
   na elke wijziging en in de tekenaar):
