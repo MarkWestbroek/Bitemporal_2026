@@ -18,6 +18,7 @@
  */
 import { naamBotsingen } from "./uniekeNamen.js";
 import { vouwOudeComposities, hernoemGebruikLabels, GEBRUIKT_LABEL } from "./migratie.js";
+import { vouwOudeGeneralisaties, synchroniseerGebruik } from "./afgeleideConnectoren.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { normaliseerErfenis } from "../../diagramcore/types/erfenis.js";
 import { berekenAutoLayout } from "../../umleditor/metamodel/autoLayout.js";
@@ -627,7 +628,12 @@ const elementTypes = [
     icoon: "gebruik",
     isConnector: true,
     bron: { elementTypes: ["entiteit", "gegevenselement", "relatie"] },
-    doel: { elementTypes: ["enumeratie", "gegevenstype", "referentielijstInstantie"] },
+    // Een referentielijst-item is een entiteit met dat subtype (GEBR-1, Mark 06-11): `entiteit`
+    // staat erbij, de hook laat alleen die door.
+    doel: { elementTypes: ["enumeratie", "gegevenstype", "referentielijstInstantie", "entiteit"] },
+    hooks: {
+      magVerbinden: (_bron, doel) => doel?.elementType !== "entiteit" || isRefLijstItem(doel),
+    },
     edgePresentatie: {
       lijn: "dash-6-3",
       kleur: "#64748b",
@@ -724,11 +730,17 @@ export const canoniekUmlDiagramType = {
      * bestaan (vóór 2026-09-15) worden compositie-connectoren.
      */
     migreerModel: (state) => {
-      const gevouwen = vouwOudeComposities(state, elementTypes);
-      // En het label van de gebruik-lijnen: «use» → «gebruikt» (06-11).
-      const diagrams = hernoemGebruikLabels((gevouwen || state).diagrams);
-      if (!diagrams) return gevouwen;
-      return { ...(gevouwen || { elements: state.elements, meta: state.meta }), diagrams };
+      let uit = vouwOudeComposities(state, elementTypes);
+      const huidig = () => uit || state;
+      // Het label van de gebruik-lijnen: «use» → «gebruikt» (06-11).
+      const diagrams = hernoemGebruikLabels(huidig().diagrams);
+      if (diagrams) uit = { ...(uit || { elements: state.elements, meta: state.meta }), diagrams };
+      // ERFT-1 en GEBR-1 (06-11): overerving en «gebruikt» als connectoren (afgeleideConnectoren.js).
+      for (const stap of [vouwOudeGeneralisaties, synchroniseerGebruik]) {
+        const r = stap(huidig());
+        if (r) uit = { ...(uit || { meta: state.meta }), elements: r.elements, diagrams: r.diagrams };
+      }
+      return uit;
     },
     /**
      * Composities uit een V3-import zijn sinds de heenreis compositie-

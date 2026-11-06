@@ -72,10 +72,12 @@ function passendOpType(diagramType, bronElement, doelElement) {
           doel: r?.doel?.elementTypes || r?.doel || [],
         }))
       : [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
-  return kandidaten.filter((et) =>
-    regelsVan(et).some(
-      (r) => r.bron.includes(bronElement.elementType) && r.doel.includes(doelElement.elementType)
-    )
+  return kandidaten.filter(
+    (et) =>
+      regelsVan(et).some((r) => r.bron.includes(bronElement.elementType) && r.doel.includes(doelElement.elementType)) &&
+      // M3-hook (06-11): een connectortype mag binnen zijn regels verder beperken, bv. op een
+      // subtype van het doel (canoniek «gebruikt» naar een entiteit = alleen een ref.lijst-item).
+      (typeof et.hooks?.magVerbinden !== "function" || et.hooks.magVerbinden(bronElement, doelElement) !== false)
   );
 }
 

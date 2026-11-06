@@ -1020,6 +1020,21 @@ fase 2 een **bewerkbare sandbox**:
   moment één of meer voorkomens heeft, zegt {enkelvoudig}/{meervoudig} (`momentvoorkomen`);
   de 0 of 1 volgt nooit uit de velden. Standaard 0..\*: bij tekenen (hook `naVerbinden` op de
   compositie) en bij de V3-import (V3 kent geen GE-kardinaliteit). Wat de gebruiker zet, blijft.
+- **Overerving en «gebruikt» als connectoren (2026-11-06, ERFT-1 en GEBR-1, Mark via
+  FUNDAMENT).** `canoniek-uml/afgeleideConnectoren.js`, via `hooks.migreerModel` (dus bij laden,
+  na elke wijziging en in de tekenaar):
+  - `vouwOudeGeneralisaties`: presentatie-edges met `isGeneralization` (V3-import) → één
+    `generalisatie`-connector per paar (`gen_<sub>__<super>`); de edges gaan weg. De terugreis
+    leest de connector (met labels heen/terug) en de V3-export houdt `erft`.
+  - `synchroniseerGebruik`: een veld (`typeLabel`, zonder `{…}`/`«…»`) met als type een
+    enumeratie, gegevenstype of ref.lijst-item → `gebruik`-connector `gebr_<bron>__<doel>`
+    met `data.afgeleid: "veldtype"`; weg als geen veld het type nog gebruikt. Handmatige
+    «gebruikt» (zonder `afgeleid`) blijft altijd. Oude `isDependency`-edges vervallen; een
+    verborgen exemplaar wordt `verborgenConnectoren`. Een afgeleide lijn niet willen zien:
+    verbergen op het diagram (weghalen komt terug zolang het veld het type heeft).
+  - Handmatig: `gebruik` heeft nu ook `entiteit` als doel, met de nieuwe M3-hook
+    `magVerbinden(bron, doel)` (`passendOpType`, `handlerCatalogus`): alleen een
+    ref.lijst-item. Daarmee kan ook vanaf een relatie (AanvraagPartij → Partijrol).
 - **Entiteit- en relatievelden bewerkbaar (2026-09-17).** Zoals *Details* in
   de oude IDE. Entiteit: beschrijving, meervoud, materieel, kleur, subtype.
   Relatie: domein, beschrijving, meervoud, materieel, kleur, subtype,
