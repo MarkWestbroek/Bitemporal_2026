@@ -109,7 +109,9 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.19.0`** (2026-11-06: projectdiagram als SVG met toegang — `diagram.svg`
+- Backend: **`api/v0.20.0`** (2026-11-06: een volledige PUT op een Studio-project wordt geweigerd
+  zolang een andere client bezig is — 409 `project_in_gebruik` —, met een uitzondering voor de
+  snapshot van een verbonden tab die bij is; devloop-image 0.24.11). Daarvoor **`api/v0.19.0`** (2026-11-06: projectdiagram als SVG met toegang — `diagram.svg`
   en `views.json` op een Studio-project, soort `svg` bij de gedeelde plaatjes; stap 6 van het
   plan *Eén tekenaar*). Daarvoor **`api/v0.18.0`** (2026-10-31: materieel enkelvoudig met opvolging en `geldigOp`,
   tijdprecisie datum|tijdstip — `date` → `timestamptz` bij het opstarten —, subtype-id in JSON,

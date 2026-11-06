@@ -8,6 +8,46 @@
 
 ---
 
+## api 0.20.0 (2026-11-06)
+
+Defensief samenwerken (besluit Mark 06-11): een Studio-project wordt niet meer in zijn geheel
+vervangen terwijl iemand anders erin bezig is. Studio blijft 0.31.0, render 0.3.3.
+
+Aanleiding: op cg-test vervingen we met een PUT het project Inrichten (versie 2→3). Een open tab
+wist daar niets van en zette een kwartier later met een `laadModel`-op zijn oude kopie terug. Een
+PUT vervangt alleen de snapshot. Open tabs krijgen daarvan geen bericht.
+
+- **`PUT /api/studio/projecten/:id` geeft 409, `reden: "project_in_gebruik"`,** zodra een andere
+  client bezig is: een open SSE-verbinding van een andere tab, of een operatie van een andere tab
+  in de laatste 5 minuten. Er verandert dan niets. Het antwoord noemt wie (`anderen: [{clientId,
+  actor, bron, laatst?}]`) en geeft, net als de versie-409, `server` mee.
+- De eigen tab noemt zich met `clientId` in de body of de header `X-Omnium-Client` (Studio 0.31.0
+  doet dat al). Zonder clientId, bij een script of een oudere Studio, telt elke open verbinding
+  als een ander. Een script dat een heel project wil vervangen, kan dat dus alleen als niemand
+  het open heeft.
+- **Uitzondering:** een tab die zelf live verbonden is en alle operaties al heeft (`tot_volgnummer`
+  ≥ het laatste volgnummer), mag zijn stand wel bewaren. Dat is dezelfde stand als die van de
+  anderen. Zo blijven compactie, *Naar server sturen* en de snapshot voor *Kopieer als SVG-link*
+  werken als je samenwerkt. Een tab die achterloopt krijgt de 409; de Studio meldt dan wie er
+  bezig is, zonder overschrijfvraag.
+- De gewone versie-409 heet nu `reden: "versie_verouderd"`.
+- Open: de server controleert niet of de inhoud van zo'n snapshot echt de som van de operaties
+  is. Hele modellen vervangen hoort eigenlijk bij versiebeheer (nieuw model of nieuwe versie, de
+  oude behouden). Dat is nog niet uitgewerkt.
+
+Code: `handlers/studio_project_in_gebruik.go`; docs: `docs/STUDIO.md` (§Wie is online).
+
+Getest op main 1653558f: `go build` en `go vet` schoon, `go test ./...` groen tegen PostgreSQL. Dat
+geldt ook voor de nieuwe test (eigen tab alleen, andere tab verbonden, script, recente op,
+achterlopende en bijgewerkte snapshot, na het venster). `TestEaImportPakkettenLezerMetNode` vraagt
+`web/vite/node_modules`.
+
+Uitrol: image `bitemp-go-api:0.20.0`, daarna `./update.sh` op app. Geen migratie en geen nieuwe
+instellingen. App moet minstens studio 0.31.0 draaien; dat is zo sinds 06-11. Fundament:
+`bitemp-devloop:0.24.11` met dezelfde Go-code, uitrol door FUNDAMENT.
+
+---
+
 ## studio 0.31.0 / render 0.3.3 (2026-11-06)
 
 Een middag met Mark in de Studio: de projectboom wordt een plek om te modelleren, en de sync
