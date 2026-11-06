@@ -151,10 +151,11 @@ test("B6: één veld wordt geëxtraheerd naar GE met compositie-edge", () => {
   const edge = r.structuralEdges.find((e) => e.source === "e1" && e.target === ge.id);
   assert.ok(edge);
   assert.equal(edge.data.momentvoorkomen, "enkelvoudig");
-  assert.equal(edge.data.kardinaliteit, "1");
+  // Besluit Mark 06-11: een GE is altijd 0..* (verplicht 1..* zet de gebruiker), nooit afgeleid uit de velden.
+  assert.equal(edge.data.kardinaliteit, "0..*");
 });
 
-test("B6: optioneel veld krijgt kardinaliteit 0..1", () => {
+test("B6: ook een optioneel veld geeft 0..* (de kardinaliteit volgt niet uit de velden)", () => {
   const state = {
     elements: {
       e1: maakEntiteit("e1", "Auto", "demo", [
@@ -165,7 +166,7 @@ test("B6: optioneel veld krijgt kardinaliteit 0..1", () => {
   };
   const r = splitsEntiteit(state, "e1", ["kleur"]);
   const edge = r.structuralEdges.find((e) => e.source === "e1");
-  assert.equal(edge.data.kardinaliteit, "0..1");
+  assert.equal(edge.data.kardinaliteit, "0..*");
 });
 
 test("B6: meerdere velden in één call worden allemaal verplaatst", () => {

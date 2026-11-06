@@ -8,6 +8,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **GE-kardinaliteit standaard 0..\*** (besluit Mark 06-11, via FUNDAMENT): een gegevenselement
+  is in het canonieke model altijd formeel en dus meervoudig in de tijd, dus 0..\* (optioneel) of
+  1..\* (verplicht, door de gebruiker gezet); nooit 0..1 of 1. {enkelvoudig}/{meervoudig} staat er
+  los van. Nieuwe GE-composities (Studio-canvas via `naVerbinden` op de compositie, oude IDE,
+  UML-editor) en de V3-import krijgen 0..\*; de afleiding "1 als alle velden verplicht zijn" in de
+  IDE (`ide/transformations.js`) is weg. Wat de gebruiker zelf instelt, blijft staan. Relaties
+  zijn ongewijzigd (daar beslist Mark apart).
+
 ### Toegevoegd
 - **Diagram-tabs verslepen** (Mark, 06-11). Sleep een tab in de tabbalk naar een andere plek;
   een streep toont waar hij landt. De volgorde hoort bij de werkruimte (localStorage en de

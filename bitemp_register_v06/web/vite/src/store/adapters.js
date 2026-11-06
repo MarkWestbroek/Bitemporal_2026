@@ -334,7 +334,8 @@ export function v3ModelNaarStore(v3Full) {
           rolnaam: ge.naam,
           jsonRolnaam: ge.meervoud || ge.naam.toLowerCase(),
           momentvoorkomen: ge.momentvoorkomen || "enkelvoudig",
-          kardinaliteit: ge.momentvoorkomen === "meervoudig" ? "0..*" : "0..1",
+          // GE: altijd 0..* bij import (V3 kent geen GE-kardinaliteit; besluit Mark 06-11).
+          kardinaliteit: "0..*",
         },
       };
       structuralEdges.push(geEdge);

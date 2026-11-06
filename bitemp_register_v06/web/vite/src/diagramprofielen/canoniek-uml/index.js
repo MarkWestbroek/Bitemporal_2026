@@ -566,6 +566,16 @@ const elementTypes = [
     ],
     hooks: {
       /**
+       * Een nieuwe compositie (canvas, of in de boom een GE ín een entiteit) krijgt 0..*: een GE is
+       * formeel en dus meervoudig in de tijd; verplicht is 1..*, door de gebruiker gezet. De 0 of 1
+       * volgt nooit uit de velden, en {enkelvoudig}/{meervoudig} staat er los van (besluit Mark
+       * 06-11). Wat al gezet is, blijft.
+       */
+      naVerbinden: (conn, { s }) => {
+        if (conn?.data?.kardinaliteit) return;
+        s?.updateElement?.(conn.id, { data: { ...(s.elements?.[conn.id]?.data || conn.data || {}), kardinaliteit: "0..*" } });
+      },
+      /**
        * Labels zoals de oude presentatie-edge ze toonde (zie
        * adapter.presentatieVoorEdge): rolnaam, kardinaliteit en
        * {enkelvoudig|meervoudig} aan de GE-kant; heen/terug-namen erbij.
