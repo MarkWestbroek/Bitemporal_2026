@@ -8,30 +8,7 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
-### Gewijzigd
-- **"Naar server sturen" noemt de eigen tab** (`clientId` in de PUT-body en header
-  `X-Omnium-Client`), voor de PUT-weigering van api 0.20.0 (BACKEND, besluit Mark 06-11): de
-  server weigert een volledige PUT zolang een ándere client in het project bezig is (409
-  `project_in_gebruik`). De Studio vraagt dan niet om te overschrijven maar meldt wie er bezig
-  is; de stille compactie probeert het later opnieuw; de SVG-link toont de laatst bewaarde stand.
-  Een oudere server negeert veld en header, dus deze studio kan vóór de api uit.
-
-### Gewijzigd
-- **GE-kardinaliteit standaard 0..\*** (besluit Mark 06-11, via FUNDAMENT): een gegevenselement
-  is in het canonieke model altijd formeel en dus meervoudig in de tijd, dus 0..\* (optioneel) of
-  1..\* (verplicht, door de gebruiker gezet); nooit 0..1 of 1. {enkelvoudig}/{meervoudig} staat er
-  los van. Nieuwe GE-composities (Studio-canvas via `naVerbinden` op de compositie, oude IDE,
-  UML-editor) en de V3-import krijgen 0..\*; de afleiding "1 als alle velden verplicht zijn" in de
-  IDE (`ide/transformations.js`) is weg. Wat de gebruiker zelf instelt, blijft staan. Relaties
-  zijn ongewijzigd (daar beslist Mark apart).
-
-### Opgelost
-- **Een open tab zette een wijziging van buitenaf terug** (project Inrichten, 06-11): `laadModel`
-  ging als hele vervanging naar de server, ook met een oude kopie. Nu maakt het diff-vangnet er
-  `patchElementen`/`patchDiagrammen` van, met alleen wat inhoudelijk verschilt (`diffMap`
-  vergelijkt bij een andere referentie ook de inhoud); een tab die zijn eigen kopie herlaadt,
-  stuurt niets (besluit Mark: "Nu liever defensief"). De server gaat een volledige PUT weigeren
-  zolang er iemand in het project bezig is (BACKEND).
+## [studio/v0.31.0] — 2026-11-06
 
 ### Toegevoegd
 - **Diagram-tabs verslepen** (Mark, 06-11). Sleep een tab in de tabbalk naar een andere plek;
@@ -45,7 +22,6 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   projectstructuur (`structuur.bundels`, gesynct als `patchStructuur`). Openen voegt de
   diagrammen toe aan de open tabs. Zie `docs/STUDIO.md` (Werkruimte). E2e
   `44-studio-bundels.spec.js`.
-
 - **Elementen maken en nesten in de projectboom** (fase 0 van het plan "Linked data als M2" §8,
   akkoord Mark 06-11). *Nieuw element ▸* op een map maakt een element zonder diagram;
   *Nieuw element hierin* en slepen in de boom leggen de échte relatie: een lidmaatschap (M3
@@ -53,7 +29,6 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   ín een entiteit in het canonieke model, dat daarvoor `aard: "insluiting"` op de compositie
   kreeg). Een kind naar een map slepen haalt het eruit. Zie `docs/STUDIO.md`. E2e
   `45-studio-boom-elementen.spec.js`.
-
 - **Diagram starten vanuit de boom** (Mark, 06-11): rechtsklik op een element → *Nieuw diagram
   hiermee* (met zijn kinderen, bv. een entiteit met zijn gegevenselementen), of met de
   Ctrl-selectie.
@@ -70,12 +45,20 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Menu's in de boom zo kort als het kan**: één mogelijk type geeft meteen "Nieuw
   gegevenselement hierin"; bij één taal vervalt de taal-laag.
 
-### Opgelost
-- **Een element stond twee keer in de boom** na Ctrl+Z in de boom (Mark, 06-11): de oude plaats
-  in een map kwam terug terwijl de relatie met het package bleef. De boom toont het element nu
-  alleen onder zijn ouder.
-
 ### Gewijzigd
+- **"Naar server sturen" noemt de eigen tab** (`clientId` in de PUT-body en header
+  `X-Omnium-Client`), voor de PUT-weigering van api 0.20.0 (BACKEND, besluit Mark 06-11): de
+  server weigert een volledige PUT zolang een ándere client in het project bezig is (409
+  `project_in_gebruik`). De Studio vraagt dan niet om te overschrijven maar meldt wie er bezig
+  is; de stille compactie probeert het later opnieuw; de SVG-link toont de laatst bewaarde stand.
+  Een oudere server negeert veld en header, dus deze studio kan vóór de api uit.
+- **GE-kardinaliteit standaard 0..\*** (besluit Mark 06-11, via FUNDAMENT): een gegevenselement
+  is in het canonieke model altijd formeel en dus meervoudig in de tijd, dus 0..\* (optioneel) of
+  1..\* (verplicht, door de gebruiker gezet); nooit 0..1 of 1. {enkelvoudig}/{meervoudig} staat er
+  los van. Nieuwe GE-composities (Studio-canvas via `naVerbinden` op de compositie, oude IDE,
+  UML-editor) en de V3-import krijgen 0..\*; de afleiding "1 als alle velden verplicht zijn" in de
+  IDE (`ide/transformations.js`) is weg. Wat de gebruiker zelf instelt, blijft staan. Relaties
+  zijn ongewijzigd (daar beslist Mark apart).
 - **Klikken op een element in de boom blijft in het huidige diagram** (Mark, 06-11): de Studio
   sprong naar het eerste open diagram met het element, ook als het op meer diagrammen stond.
 - **Eén boomouder, deterministisch** (besluit Mark 04-11): bij meer hiërarchie-ouders wint de
@@ -94,6 +77,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   het UML-sleutelwoord «use».
 
 ### Opgelost
+- **Een open tab zette een wijziging van buitenaf terug** (project Inrichten, 06-11): `laadModel`
+  ging als hele vervanging naar de server, ook met een oude kopie. Nu maakt het diff-vangnet er
+  `patchElementen`/`patchDiagrammen` van, met alleen wat inhoudelijk verschilt (`diffMap`
+  vergelijkt bij een andere referentie ook de inhoud); een tab die zijn eigen kopie herlaadt,
+  stuurt niets (besluit Mark: "Nu liever defensief"). De server gaat een volledige PUT weigeren
+  zolang er iemand in het project bezig is (BACKEND).
+- **Een element stond twee keer in de boom** na Ctrl+Z in de boom (Mark, 06-11): de oude plaats
+  in een map kwam terug terwijl de relatie met het package bleef. De boom toont het element nu
+  alleen onder zijn ouder.
 - **Maat aanpassen aan inhoud op een selectie.** Het rechtsklikmenu wiste alleen de maat van het
   aangeklikte element; hoort dat element bij een selectie van meer, dan geldt het nu voor de hele
   selectie (zoals Alt+Z), met het aantal in het label. E2e: `42-studio-maat-selectie.spec.js`.
