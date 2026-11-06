@@ -270,19 +270,27 @@ export default function ElementInspector({
           zichtbaarAls pas als haar voorwaarde geldt (model/zichtbaarAls.js). */}
       {metVerwijstNaar(metBeschrijving(elementType?.properties, elementType), elementType)
         .filter((regel) => isZichtbaar(regel, element.data))
-        .map((regel) => (
-        <div className="dc-inspector-rij" key={regel.key}>
-          <label className="dc-veldlabel">{regel.label || regel.key}</label>
-          <PropertyWidget
-            regel={regel}
-            waarde={element.data?.[regel.key]}
-            element={element}
-            kandidatenVoor={kandidatenVoor}
-            editorContext={editorContext}
-            onChange={(w) => bewerkbaar && onUpdate({ data: { [regel.key]: w } })}
-          />
-        </div>
-      ))}
+        .map((regel) => {
+          // M3-hook eigenschapUit (06-11): het profiel zet een eigenschap hier uit, met de reden
+          // (canoniek: materieel/tijdprecisie bij een subtype — de tijdlijn komt van de ouder).
+          const uit = elementType?.hooks?.eigenschapUit?.(element, regel.key, { elements: editorContext?.elements || {} }) || null;
+          return (
+            <div className={"dc-inspector-rij" + (uit ? " is-uit" : "")} key={regel.key} title={uit || undefined} data-uit={uit ? regel.key : undefined}>
+              <label className="dc-veldlabel">{regel.label || regel.key}</label>
+              <fieldset disabled={!!uit} style={{ border: 0, padding: 0, margin: 0, minWidth: 0, flex: 1, display: "flex", alignItems: "center", gap: 6 }}>
+                <PropertyWidget
+                  regel={regel}
+                  waarde={element.data?.[regel.key]}
+                  element={element}
+                  kandidatenVoor={kandidatenVoor}
+                  editorContext={editorContext}
+                  onChange={(w) => bewerkbaar && !uit && onUpdate({ data: { [regel.key]: w } })}
+                />
+                {uit && <span className="dc-inspector-uit">{uit}</span>}
+              </fieldset>
+            </div>
+          );
+        })}
 
       {/* z-order (voor/achter op het canvas) — generiek, altijd zichtbaar
           zodat de werking van "naar voor-/achtergrond" verifieerbaar is. */}

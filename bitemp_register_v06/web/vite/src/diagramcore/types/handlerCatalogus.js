@@ -69,6 +69,11 @@ registreerHandlerInfo("hook", "magVerbinden", {
   beschrijving:
     "Beperkt een connectortype verder dan zijn verbindingsregels: (bronElement, doelElement) → false = deze verbinding niet. Bv. canoniek «gebruikt» naar een entiteit alleen als die een referentielijst-item is (subtype). Getoetst bij het trekken van een lijn (passendOpType).",
 });
+registreerHandlerInfo("hook", "eigenschapUit", {
+  naam: "Eigenschap uit",
+  beschrijving:
+    "Zet een eigenschap in de inspector uit, met de reden: (element, key, {elements}) → tekst of null. Bv. canoniek: materieel en tijdprecisie bij een subtype ('de tijdlijn komt van de ouder').",
+});
 registreerHandlerInfo("hook", "naVerwijderen", {
   naam: "Na verwijderen",
   beschrijving:

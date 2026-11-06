@@ -818,6 +818,9 @@
   font-size: 12px;
 }
 /* Uiteinden van een connector in de inspector (06-11): "A → B". */
+/* Eigenschap uit (hook eigenschapUit, 06-11): grijs, met de reden ernaast. */
+.dc-inspector-rij.is-uit { opacity: 0.6; }
+.dc-inspector-uit { font-size: 11px; color: var(--s-fg-muted, #64748b); font-style: italic; }
 .dc-inspector-uiteinden { margin: -4px 0 8px; font-size: 12px; color: var(--s-fg-muted, #64748b); }
 .dc-inspector-uiteinde strong { color: var(--s-fg, inherit); font-weight: 600; }
 

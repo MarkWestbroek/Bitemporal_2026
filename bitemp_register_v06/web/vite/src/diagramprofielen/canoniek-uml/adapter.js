@@ -646,6 +646,13 @@ export function naarCanoniekModel(coreState) {
     });
   }
 
+  // Subtypen (generalisatie sub → super; ook nog niet gevouwen presentatie-edges): zonder eigen
+  // tijdlijn in de export (06-11).
+  const subtypen = new Set(Object.values(coreEls).filter((c) => c?.elementType === "generalisatie" && c.source).map((c) => c.source));
+  for (const diag of Object.values(coreState?.diagrams || {})) {
+    for (const e of diag?.edges || []) if ((e.data?.bron?.isGeneralization || e.data?.isGeneralization) && e.source) subtypen.add(e.source);
+  }
+
   for (const el of Object.values(coreEls)) {
     const d = el.data || {};
     const bron = d.bron || {};
@@ -654,7 +661,10 @@ export function naarCanoniekModel(coreState) {
       compVelden(el, "afgeleid").map((v) => afgeleidVeldTerug(v, bron.afgeleideVelden));
 
     switch (el.elementType) {
-      case "entiteit":
+      case "entiteit": {
+        // Een subtype heeft geen eigen tijdlijn (besluit Mark 06-11, CODEGEN §7.3d): materieel en
+        // tijdprecisie gaan niet mee, ook niet uit een oud model.
+        const isSubtype = subtypen.has(el.id);
         elements[el.id] = {
           id: el.id,
           naam: el.naam,
@@ -666,13 +676,14 @@ export function naarCanoniekModel(coreState) {
             typenaam: el.naam,
             kleur: d.kleur ?? bron.kleur,
             isAbstract: d.abstract === true,
-            isMaterieel: d.materieel === true,
-            tijdprecisie: "tijdprecisie" in d ? d.tijdprecisie : bron.tijdprecisie,
+            isMaterieel: d.materieel === true && !isSubtype,
+            tijdprecisie: isSubtype ? undefined : "tijdprecisie" in d ? d.tijdprecisie : bron.tijdprecisie,
             velden: basisVelden(),
             afgeleideVelden: basisAfgeleid(),
           }),
         };
         break;
+      }
       case "gegevenselement":
         elements[el.id] = {
           id: el.id,
