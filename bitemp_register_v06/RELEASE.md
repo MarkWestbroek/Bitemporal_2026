@@ -8,6 +8,39 @@
 
 ---
 
+## studio 0.31.0 / render 0.3.3 (2026-11-06)
+
+Een middag met Mark in de Studio: de projectboom wordt een plek om te modelleren, en de sync
+wordt defensiever. Api blijft 0.19.0. Details: [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md)
+(studio 0.31.0).
+
+**Projectboom** (fase 0 van het plan "Linked data als M2"): elementen maken in een map of ín een
+ander element (echte relatie: lidmaatschap of insluiting, bv. een GE in een entiteit), omhangen
+door te slepen, één boomouder, *Nieuw diagram hiermee*, *Toon gebruik ▸*, diagrammen onder een
+package, kinderen selecteren en met Ctrl meeslepen. Klikken blijft in het huidige diagram.
+
+**Canvas en tabs**: Ctrl+C / Ctrl+V tussen diagrammen, tabs verslepen en sluiten via rechtsklik,
+diagrambundels (eigen of gedeeld in het project), maat aanpassen aan inhoud op een selectie.
+
+**Model**: «gebruikt» in plaats van «use» in het canonieke model (ook in oude snapshots, via de
+migratie in de tekenaar); de GE-kardinaliteit is standaard 0..* en volgt nooit meer uit de
+velden (besluit Mark).
+
+**Sync**: `laadModel` gaat via het diff-vangnet, zodat een open tab geen wijziging van buitenaf
+meer terugzet; een PUT noemt de eigen tab (`clientId`), klaar voor de PUT-weigering van api
+0.20.0 (BACKEND, nog niet uitgebracht).
+
+**Render 0.3.3**: de tekenaar van studio 0.31.0 (bundel), met de model-migratie van het profiel
+vóór het tekenen.
+
+Getest op main: 1429 unit, vite build, render-svc 6, MCP 10, Studio-e2e 103/103.
+
+Uitrol: images `bitemp-viz-frontend:0.31.0` (met `--build-arg VITE_GIT_SHA=$(git rev-parse
+--short HEAD)`) en `bitemp-render-svc:0.3.3`, daarna `./update.sh` op app. Geen migratie, geen
+nieuwe instellingen; api blijft 0.19.0.
+
+---
+
 ## studio 0.30.0 / render 0.3.2 (2026-11-06)
 
 De server tekent nu wat de Studio tekent. Gevonden op de SVG-link van app (Mark, 06-11): het
