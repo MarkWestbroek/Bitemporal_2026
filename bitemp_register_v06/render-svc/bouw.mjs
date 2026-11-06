@@ -46,7 +46,11 @@ const uitkomst = await build({
   loader: { ".css": "empty", ".svg": "empty", ".png": "empty" },
   plugins: [leeg],
   // De bronnen staan buiten render-svc; hun pakketten (bv. @xyflow/system van lijnen.js) komen uit onze node_modules.
+  // /export/v3 (07-11) speelt het model na in de echte stores: daarvoor zustand, zundo en react
+  // (zustand/react) als devDependencies hier, want in Dockerfile.render is er geen web/vite/node_modules.
   nodePaths: [fileURLToPath(new URL("./node_modules", import.meta.url))],
+  // Vite-alias (vite.config.js) voor de V3-terugreis (store/adapters.js → @umleditor/metamodel).
+  alias: { "@umleditor": fileURLToPath(new URL("../web/vite/src/umleditor", import.meta.url)) },
   logLevel: "warning",
 });
 if (uitkomst.warnings.length) {

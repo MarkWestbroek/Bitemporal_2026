@@ -86,8 +86,9 @@ function open(cfg) {
 }
 
 /** Tekst vragen; `null` bij annuleren. `meerregelig` geeft een textarea (plakken van JSON e.d.). */
-export function vraagNaam({ titel = "Naam", label = "Naam", waarde = "", bevestig = "OK", meerregelig = false, leegToegestaan = false } = {}) {
-  return open({ soort: "naam", titel, label, waarde, bevestig, meerregelig, leegToegestaan });
+export function vraagNaam({ titel = "Naam", label = "Naam", waarde = "", bevestig = "OK", meerregelig = false, leegToegestaan = false, geheim = false } = {}) {
+  // `geheim` (07-11): een wachtwoordveld (bv. het beheerwachtwoord bij Register bouwen).
+  return open({ soort: "naam", titel, label, waarde, bevestig, meerregelig, leegToegestaan, geheim });
 }
 
 /** Ja/nee-vraag; `true` bij bevestigen. `gevaar` kleurt de knop rood (verwijderen e.d.). */
@@ -448,7 +449,8 @@ export function NaamDialogHost() {
             ) : (
               <input
                 ref={inputRef}
-                type="text"
+                type={cfg.geheim ? "password" : "text"}
+                autoComplete={cfg.geheim ? "off" : undefined}
                 autoFocus
                 value={waarde}
                 onChange={(e) => setWaarde(e.target.value)}

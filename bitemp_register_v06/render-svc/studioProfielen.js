@@ -77,3 +77,42 @@ export const profielIds = [...typeIds.keys()];
 export function descriptorVan(profielId) {
   return typeIds.has(profielId) ? getDiagramType(typeIds.get(profielId)) : undefined;
 }
+
+// ── V3-export van een Studio-project (07-11, Mark: "het model is de bron voor het genereren") ──
+// Dezelfde terugreis als de Studio (canoniek-uml/adapter.js naarCanoniekModel + store/adapters.js
+// storeNaarV3Model), met eerst de ops ná de snapshot nagespeeld (zoals de MCP) en de migratie van
+// het profiel (composities, overerving, «gebruikt»). Zie server.mjs POST /export/v3.
+import { maakStand, speelOpsNa } from "../web/vite/src/diagramprofielen/ea/sidecarImport.js";
+import { naarCanoniekModel } from "../web/vite/src/diagramprofielen/canoniek-uml/adapter.js";
+import { exporteerV3 as studioExporteerV3, importeerV3 } from "../web/vite/src/diagramprofielen/canoniek-uml/serialisatie.js";
+import { valideerVoorV3 } from "../web/vite/src/store/adapters.js";
+
+/**
+ * @param {{profiel: any, ops?: Array<{store: string, op: string, args: any[], volgnummer?: number}>, profielId?: string}} p
+ * @returns {{model: any, meldingen: Array<{regel?: string, bericht: string, elementId?: string}>, nagespeeld: number}}
+ */
+export function exporteerV3({ profiel, ops = [], profielId = "diagram05" }) {
+  const stand = maakStand({ profielen: { [profielId]: profiel || {} } });
+  // Alleen de ops van dit profiel; structuur en kruisverbanden doen voor V3 niet mee.
+  const r = speelOpsNa(stand, (ops || []).filter((o) => o?.store === `model:${profielId}`));
+  const st = stand.profielVoor(profielId).getState();
+  const basis = { elements: st.elements || {}, diagrams: st.diagrams || {}, meta: st.meta || {} };
+  const desc = descriptorVan(profielId);
+  const mig = desc?.hooks?.migreerModel?.(basis);
+  const staat = mig ? { ...basis, ...mig } : basis;
+  // Precies wat de Studio bij "Exporteer V3" doet (serialisatie.exporteerV3, met het overzicht en
+  // de canonieke diagram-ids); de Studio geeft hem zijn al gemigreerde storestaat.
+  const { v3, overgeslagen } = studioExporteerV3({ ...st, ...staat });
+  const meldingen = [
+    ...r.problemen.map((bericht) => ({ regel: "OPS", bericht })),
+    ...(valideerVoorV3(naarCanoniekModel(staat)) || []).map((o) => ({ regel: o.regel, bericht: o.bericht || o.melding || o.tekst || JSON.stringify(o), ...(o.elementId ? { elementId: o.elementId } : {}) })),
+    ...(overgeslagen?.length ? [{ regel: "OVERGESLAGEN", bericht: `Niet in V3 (geen tegenhanger): ${overgeslagen.join(", ")}.` }] : []),
+  ];
+  return { model: v3, meldingen, nagespeeld: r.toegepast };
+}
+
+/** Heenreis (voor tests en proeven): V3 → de profielstaat zoals de Studio hem bewaart. */
+export function v3NaarProfiel(v3) {
+  const core = importeerV3(v3);
+  return { diagramTypeId: core.diagramTypeId, elements: core.elements, diagrams: core.diagrams, meta: core.meta || {} };
+}

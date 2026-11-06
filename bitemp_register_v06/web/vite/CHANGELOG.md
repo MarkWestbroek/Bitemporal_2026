@@ -8,6 +8,20 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Project → Register bouwen…** (Mark, 07-11: "het model is de bron voor het genereren"). De
+  server bouwt het register uit dít project: de Studio zet eerst een snapshot (`snapshotNu`),
+  vraagt het beheerwachtwoord (verborgen invoer, `vraagNaam({geheim: true})`) en roept
+  `POST /admin/rebuild {project_id}` aan met header `X-Beheer-Wachtwoord` (contract BACKEND). De
+  server haalt de V3 bij de render-sidecar (`POST /export/v3`, render-svc), bouwt en herstart de
+  API; de Studio wacht op `/health` en meldt stappen, bron (project-versie, volgnummer) en
+  meldingen. 409 (bezig/achterstand), 422 (export) en 403/404 krijgen een eigen melding. Het
+  item staat er alleen als `GET /admin/rebuild/status` bestaat (devloop); op app (404) blijft
+  het weg. Code: `studio/registerBouwen.js`; e2e `52-studio-register-bouwen`.
+- **render-svc: `POST /export/v3`**: V3 uit een Studio-project (`{profiel, ops?, profielId?}`),
+  met dezelfde migraties en export als *Exporteer V3* in de Studio, plus meldingen
+  (valideerVoorV3, overgeslagen, ops die niet naspeelbaar waren). Zie RENDER_API.md.
+
 ## [studio/v0.32.0] — 2026-11-06
 
 ### Toegevoegd

@@ -232,6 +232,40 @@ render-API toont het met het eerstvolgende render-image):
   (Mark akkoord): 150 punten bij 75 berichten, in de volgorde van de oorspronkelijke plannen, en
   de doosmaat van de levenslijnen weg. De server tekent ze zo na de eerstvolgende snapshot.
 
+### `POST /export/v3` (sidecar): V3 uit een Studio-project — ✅ gebouwd (07-11, nog niet uitgebracht)
+
+Mark (07-11): "het model is de bron voor het genereren". De rebuild van een register haalt het
+model uit het Studio-project in plaats van uit losse V3-bestanden. Daarvoor draait de
+**terugreis van de Studio** in de render-sidecar, met dezelfde code als de knop *Exporteer V3*
+(`canoniek-uml/serialisatie.js exporteerV3`). Er is geen Go-kopie en geen opgeslagen export.
+
+```
+POST /export/v3        (ook /api/export/v3)
+{ "profiel": <inhoud.profielen.diagram05 uit de snapshot>,
+  "ops": [<optioneel: ops ná tot_volgnummer, vorm van GET …/ops: {volgnummer, store, op, args}>],
+  "profielId": "diagram05" }
+→ 200 { "model": <V3>, "meldingen": [{regel, bericht, elementId?}], "nagespeeld": n, "renderVersie": "x.y.z" }
+→ 400 problem+json (geen profiel, onbekend veld, ops geen lijst); 422 {fout, meldingen, renderVersie} als de terugreis faalt
+```
+
+- **Ops:** die worden nagespeeld zoals de MCP dat doet (`sidecarImport.maakStand/speelOpsNa`), alleen die van
+  `model:<profielId>`. Eerste stap (besluit Mark 07-11): de api stuurt ze nog niet mee, en de rebuild
+  weigert bij achterstand (409, "zet eerst een snapshot"). De Studio krijgt daarvoor *Register bouwen*
+  met eerst `snapshotNu`.
+- **Migratie:** vóór de export draait `hooks.migreerModel` van het profiel (composities, overerving,
+  «gebruikt», labels), net als bij een geopende Studio en in de tekenaar.
+- **Meldingen:** `valideerVoorV3`, ops die niet toe te passen waren, en wat geen V3-tegenhanger heeft.
+- **De api-kant (BACKEND):** `POST /admin/rebuild {project_id, domeinen?}` laadt de snapshot, vraagt
+  hier de V3 en legt de herkomst vast in `schema_versies`.
+- **Tests:** `render-svc/server.test.mjs`: rondreis musicbrain-V3, een op nagespeeld, overerving uit
+  een oude snapshot.
+- **`model` is de envelop** van *Exporteer V3* (`{versie, bron, …, model: <V3>}`); de api pakt hem uit
+  voordat hij bewaart.
+- **Bouwen (Docker):** het naspelen gebruikt de echte stores, dus `zustand`, `zundo` en `react` staan
+  als devDependencies in `render-svc/package.json` (de bundelstap van `Dockerfile.render` heeft geen
+  `web/vite/node_modules`). Nagespeeld in een schone map met alleen `render-svc` + `web/vite/src`:
+  de bundel bouwt en exporteert (melding van BACKEND, 07-11).
+
 ## Eisen aan de SVG (afspraken met Imprint)
 
 - `viewBox`, **geen** `width`/`height` op `<svg>`.

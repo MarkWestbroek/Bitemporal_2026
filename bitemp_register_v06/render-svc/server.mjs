@@ -133,6 +133,27 @@ export function maakServer() {
         res.writeHead(200, { "Content-Type": "image/svg+xml; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
         return res.end(metVersie(svg));
       }
+      // V3-export van een Studio-project (07-11): {profiel, ops?, profielId?} → {model, meldingen,
+      // renderVersie}. Dezelfde terugreis en migraties als de Studio; ops in de vorm van GET …/ops.
+      // Een fout in de terugreis wordt 422 met de melding (BACKEND, rebuild uit een project-id).
+      if (req.method === "POST" && (pad === "/export/v3" || pad === "/api/export/v3")) {
+        const invoer = await leesInvoer(req);
+        const onbekend = Object.keys(invoer).filter((k) => !["profiel", "ops", "profielId"].includes(k));
+        if (onbekend.length) throw probleem(400, "ongeldige-parameter", "Ongeldige parameter", `Onbekende veld(en): ${onbekend.join(", ")}.`);
+        if (!invoer.profiel || typeof invoer.profiel !== "object") throw probleem(400, "ongeldige-body", "Ongeldige body", "`profiel` ontbreekt (de inhoud van profielen.<id> uit de snapshot).");
+        if (invoer.ops !== undefined && !Array.isArray(invoer.ops)) throw probleem(400, "ongeldige-body", "Ongeldige body", "`ops` moet een lijst zijn.");
+        const bundelExport = await laadBundel();
+        let uit;
+        try {
+          uit = bundelExport.exporteerV3({ profiel: invoer.profiel, ops: invoer.ops || [], profielId: invoer.profielId || "diagram05" });
+        } catch (e) {
+          console.error("render-svc: export mislukt", e);
+          res.writeHead(422, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
+          return res.end(JSON.stringify({ fout: `De terugreis naar V3 mislukte: ${e?.message || e}`, meldingen: [], renderVersie: RENDER_VERSIE }));
+        }
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
+        return res.end(JSON.stringify({ ...uit, renderVersie: RENDER_VERSIE }));
+      }
       if (req.method === "POST" && pad === "/views") {
         const invoer = await leesInvoer(req);
         controleerVelden(invoer, isStudio(invoer) ? STUDIO_VIEWS_VELDEN : VIEWS_VELDEN);

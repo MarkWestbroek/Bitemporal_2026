@@ -604,6 +604,18 @@ te wijzigen.
 > bij "in gebruik" niet om te overschrijven maar meldt wie er bezig is, en laat de
 > stille compactie het later opnieuw proberen.
 >
+> **Register bouwen (2026-11-07, besluit Mark 07-11: "het model is de bron voor het
+> genereren").** *Project → Register bouwen…* laat de server het register uit dit project
+> bouwen. Volgorde in `studio/registerBouwen.js`: snapshot bijzetten (`snapshotNu`; de server
+> bouwt uit de snapshot en weigert bij achterstand met 409), beheerwachtwoord vragen (verborgen
+> invoer), `POST /admin/rebuild {project_id}` met header `X-Beheer-Wachtwoord` (rol admin). De
+> API haalt de V3 bij de render-sidecar (`POST /export/v3`, RENDER_API.md), draait codegen en
+> herstart; de Studio wacht tot `/health` weer antwoordt en toont stappen, bron
+> (`project_versie`, `tot_volgnummer`) en meldingen. Het item verschijnt alleen als
+> `GET /admin/rebuild/status` bestaat (devloop); op app geeft die 404 en blijft het weg. Het is
+> uit zolang het project niet op de server staat. Let op: de rebuild in de IDE gebruikt nog de
+> oudere vorm met het wachtwoord in het pad (`/admin/rebuild/{wachtwoord}`).
+>
 > **Werkruimte en live-sync (2026-10-07, onderdeel 3–4):** de projectboom-store
 > is in twee lagen gesplitst: project (mappen, plaatsing, identiteit; sleutel
 > `studio-modelleren`) en werkruimte (tabs, actieve tab, open/dicht mappen;
