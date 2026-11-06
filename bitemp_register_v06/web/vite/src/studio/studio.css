@@ -298,6 +298,15 @@
   max-width: 220px;
 }
 .studio-tab.is-actief { background: var(--s-canvas); color: var(--s-fg); }
+/* Tabs verslepen (06-11): de versleepte tab vervaagt, de plek waar hij landt krijgt een streep. */
+.studio-tab.is-gesleept { opacity: 0.45; }
+/* Diagrambundels in de zijbalk (06-11): icoon, naam, aantal diagrammen. */
+.studio-bundel { display: flex; align-items: center; gap: 6px; width: 100%; }
+.studio-bundel__icoon { flex: 0 0 auto; font-size: 11px; }
+.studio-bundel__naam { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.studio-bundel__aantal { flex: 0 0 auto; font-size: 11px; color: var(--s-fg-muted); }
+.studio-tab.is-doel-links { box-shadow: inset 2px 0 0 var(--s-accent); }
+.studio-tab.is-doel-rechts { box-shadow: inset -2px 0 0 var(--s-accent); }
 .studio-tab__kies {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 4px 6px 10px;

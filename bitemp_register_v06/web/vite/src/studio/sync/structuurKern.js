@@ -33,6 +33,8 @@ export function maakStructuurStore(begin = {}) {
   return create((set, get) => ({
     mappen: begin.mappen || {},
     plaatsing: begin.plaatsing || {},
+    /** Gedeelde diagrambundels van het project (06-11): id → {id, naam, tabs, volgorde}. */
+    bundels: begin.bundels || {},
 
     nieuweMap: (naam, ouderId = null, mapId = null) => {
       const id = mapId || nieuwMapIdNode();
@@ -126,16 +128,18 @@ export function maakStructuurStore(begin = {}) {
         [sleutels[i], sleutels[j]] = [sleutels[j], sleutels[i]];
         return { plaatsing: herschikOpVolgorde(s.plaatsing, sleutels) };
       }),
-    patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [], volgordePlaatsing = null } = {}) =>
+    patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [], volgordePlaatsing = null, zetBundels = {}, wisBundels = [] } = {}) =>
       set((s) => {
         const mappen = { ...s.mappen, ...zetMappen };
         for (const id of wisMappen) delete mappen[id];
         let plaatsing = { ...s.plaatsing, ...zetPlaatsing };
         for (const key of wisPlaatsing) delete plaatsing[key];
         plaatsing = herschikOpVolgorde(plaatsing, volgordePlaatsing);
-        return { mappen, plaatsing };
+        const bundels = { ...s.bundels, ...zetBundels };
+        for (const id of wisBundels) delete bundels[id];
+        return { mappen, plaatsing, bundels };
       }),
-    laadStructuur: ({ mappen, plaatsing } = {}) => set({ mappen: mappen || {}, plaatsing: plaatsing || {} }),
+    laadStructuur: ({ mappen, plaatsing, bundels } = {}) => set({ mappen: mappen || {}, plaatsing: plaatsing || {}, bundels: bundels || {} }),
   }));
 }
 

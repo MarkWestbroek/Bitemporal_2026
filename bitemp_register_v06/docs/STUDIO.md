@@ -614,6 +614,23 @@ te wijzigen.
 > de serverwerkruimte over als die nieuwer is dan de lokale, zodat je op een
 > andere computer verdergaat waar je was.
 >
+> **Tabs en diagrambundels (2026-11-06, Mark):** tabs zijn te verslepen (de
+> volgorde hoort bij de werkruimte) en hebben een rechtsklikmenu: *Sluiten*,
+> *Sluit andere tabs*, *Sluit alle tabs links/rechts*, *Sluit alle tabs* en
+> *Bewaar open tabs als bundel…*. Een **diagrambundel** is een benoemde set
+> diagrammen. Een eigen bundel staat in je werkruimte (`inhoud.bundels`, een
+> lijst; geen Go-wijziging: de server bewaart de werkruimte als vrije JSON).
+> *Deel met het project* zet een **kopie** in de projectstructuur
+> (`structuur.bundels`, id → bundel); die gaat als `patchStructuur`
+> (`zetBundels`/`wisBundels`) via het vangnet naar de anderen, en speelt na in
+> `structuurKern` (MCP, EA-sidecar). Een gedeelde bundel staat niet in de
+> structuur-undo (`structuurFoto` = mappen + plaatsing). **Openen voegt toe**:
+> de diagrammen van de bundel komen bij de open tabs, de eerste wordt actief;
+> een verwijderd diagram valt stil weg. De sectie *Bundels* staat boven *Mappen*
+> in de zijbalk (👥 = gedeeld). Bewust (nog) niet: taakbalkposities in de
+> werkruimte (die zijn per apparaat), en rechten per bundel (wie het project
+> mag bewerken, mag een gedeelde bundel wijzigen).
+>
 > **Hele groepen naar een map (2026-10-06):** in de elementen-browser is
 > rechtsklik op een typekop ("Actor 13") → *Selecteer alle N* of *Verplaats
 > alle N naar map ▸* (bestaande mappen of *Nieuwe map…*, voorgesteld met het

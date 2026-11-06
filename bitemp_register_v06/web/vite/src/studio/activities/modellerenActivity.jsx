@@ -15,7 +15,7 @@
  * Open tabs persisteren in localStorage ("studio-modelleren"); een tab
  * waarvan het diagram elders verwijderd is, sluit zichzelf.
  */
-import React, { Fragment, useEffect, useSyncExternalStore } from "react";
+import React, { Fragment, useEffect, useState, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
 import { registreerMeldContext } from "../meldContext.js";
@@ -122,10 +122,10 @@ function leesWerkruimte(projectId) {
     const raw = projectId ? localStorage.getItem(werkruimteSleutel(projectId)) : null;
     if (raw) {
       const d = JSON.parse(raw);
-      return { bestaat: true, tabs: d.tabs || [], actieveTab: d.actieveTab || null, mapOpen: d.mapOpen || {}, bijgewerkt: d.bijgewerkt || null };
+      return { bestaat: true, tabs: d.tabs || [], actieveTab: d.actieveTab || null, mapOpen: d.mapOpen || {}, mijnBundels: d.bundels || [], bijgewerkt: d.bijgewerkt || null };
     }
   } catch { /* ignore */ }
-  return { bestaat: false, tabs: [], actieveTab: null, mapOpen: {}, bijgewerkt: null };
+  return { bestaat: false, tabs: [], actieveTab: null, mapOpen: {}, mijnBundels: [], bijgewerkt: null };
 }
 
 // Wat de werkruimte-sleutel het laatst bevatte, om alleen echte wijzigingen
@@ -139,11 +139,12 @@ function schrijfOpslag(state) {
       JSON.stringify({
         mappen: state.mappen,
         plaatsing: state.plaatsing,
+        bundels: state.bundels,
         project: state.project,
       })
     );
     if (state.project?.id) {
-      const inhoud = { tabs: state.tabs, actieveTab: state.actieveTab, mapOpen: state.mapOpen };
+      const inhoud = { tabs: state.tabs, actieveTab: state.actieveTab, mapOpen: state.mapOpen, bundels: state.mijnBundels || [] };
       const tekst = JSON.stringify(inhoud);
       const sleutel = werkruimteSleutel(state.project.id);
       if (tekst !== _werkruimteLaatst) {
@@ -176,11 +177,12 @@ async function haalWerkruimteBinnen() {
   });
   const actieveTab = tabs.some((t) => t.id === inhoud.actieveTab) ? inhoud.actieveTab : tabs[0]?.id || null;
   // Overnemen zonder nieuwe PUT: wat we schrijven is precies wat de server heeft.
-  _werkruimteLaatst = JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {} });
+  const mijnBundels = Array.isArray(inhoud.bundels) ? inhoud.bundels : [];
+  _werkruimteLaatst = JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, bundels: mijnBundels });
   try {
-    localStorage.setItem(werkruimteSleutel(projectId), JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, bijgewerkt: server.bijgewerkt }));
+    localStorage.setItem(werkruimteSleutel(projectId), JSON.stringify({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, bundels: mijnBundels, bijgewerkt: server.bijgewerkt }));
   } catch { /* ignore */ }
-  useModellerenStore.setState({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {} });
+  useModellerenStore.setState({ tabs, actieveTab, mapOpen: inhoud.mapOpen || {}, mijnBundels });
   if (actieveTab) useModellerenStore.getState().activeer(actieveTab);
   menuBus.emit("menu:ververs");
   return true;
@@ -216,7 +218,7 @@ const projectBegin = opgeslagen.project?.id
 const werkruimteBegin = (() => {
   const wr = leesWerkruimte(projectBegin.id);
   if (wr.bestaat || !opgeslagen.tabs) return wr;
-  return { bestaat: false, tabs: opgeslagen.tabs || [], actieveTab: opgeslagen.actieveTab || null, mapOpen: opgeslagen.mapOpen || {} };
+  return { bestaat: false, tabs: opgeslagen.tabs || [], actieveTab: opgeslagen.actieveTab || null, mapOpen: opgeslagen.mapOpen || {}, mijnBundels: [] };
 })();
 
 // ── Undo/redo voor de projectstructuur (mappen + plaatsingen) ───────
@@ -255,12 +257,107 @@ function isMapOpen(s, id) {
 }
 
 const nieuwMapId = () => `map_${Date.now()}_${(_mapTeller += 1)}`;
+/** Nieuw bundel-id (diagrambundels, 06-11). */
+const nieuwBundelId = () => `bundel_${Date.now()}_${(_mapTeller += 1)}`;
 
 export const useModellerenStore = create((set, get) => ({
   /** @type {{id:string, profielId:string, diagramId:string}[]} — werkruimte-laag */
   tabs: werkruimteBegin.tabs,
   /** id van de actieve tab, of null — werkruimte-laag */
   actieveTab: werkruimteBegin.actieveTab,
+
+  // ── Diagrambundels (Mark, 06-11) ──────────────────────────────────
+  // Een bundel is een benoemde set diagrammen (de open tabs op een moment). Van jou in je
+  // werkruimte (`mijnBundels`, lijst), of gedeeld in het project (`bundels`, id → bundel;
+  // gaat als patchStructuur via het vangnet naar de anderen). Openen vóegt de tabs toe.
+  /** @type {{id:string, naam:string, tabs:{profielId:string, diagramId:string}[]}[]} — werkruimte-laag */
+  mijnBundels: werkruimteBegin.mijnBundels || [],
+  /** @type {Record<string, {id:string, naam:string, tabs:{profielId:string, diagramId:string}[], volgorde:number}>} — project-laag */
+  bundels: opgeslagen.bundels || {},
+
+  /** De open tabs als nieuwe eigen bundel. Geeft het id, of null zonder tabs. */
+  bewaarBundel: (naam) => {
+    const s = get();
+    if (!s.tabs.length) return null;
+    const id = nieuwBundelId();
+    const bundel = { id, naam, tabs: s.tabs.map(({ profielId, diagramId }) => ({ profielId, diagramId })) };
+    set((st) => {
+      const next = { ...st, mijnBundels: [...st.mijnBundels, bundel] };
+      schrijfOpslag(next);
+      return { mijnBundels: next.mijnBundels };
+    });
+    return id;
+  },
+
+  /** Open de diagrammen van een bundel erbij (bestaande tabs blijven); de eerste wordt actief. */
+  openBundel: (bundel) => {
+    const bestaand = (bundel?.tabs || []).filter((t) => !!getProfieltype(t.profielId)?.useStore.getState().diagrams[t.diagramId]);
+    if (!bestaand.length) return 0;
+    set((s) => {
+      const open = new Set(s.tabs.map((t) => t.id));
+      const erbij = bestaand.map((t) => ({ id: tabId(t.profielId, t.diagramId), profielId: t.profielId, diagramId: t.diagramId })).filter((t) => !open.has(t.id));
+      const tabs = [...s.tabs, ...erbij];
+      const next = { ...s, tabs };
+      schrijfOpslag(next);
+      return { tabs };
+    });
+    get().activeer(tabId(bestaand[0].profielId, bestaand[0].diagramId));
+    return bestaand.length;
+  },
+
+  /** Wijzig een bundel (naam en/of tabs); `gedeeld` = de bundel van het project. */
+  wijzigBundel: (id, patch, gedeeld = false) =>
+    set((s) => {
+      if (gedeeld) {
+        if (!s.bundels[id]) return {};
+        const bundels = { ...s.bundels, [id]: { ...s.bundels[id], ...patch } };
+        schrijfOpslag({ ...s, bundels });
+        return { bundels };
+      }
+      const mijnBundels = s.mijnBundels.map((b) => (b.id === id ? { ...b, ...patch } : b));
+      schrijfOpslag({ ...s, mijnBundels });
+      return { mijnBundels };
+    }),
+
+  verwijderBundel: (id, gedeeld = false) =>
+    set((s) => {
+      if (gedeeld) {
+        if (!s.bundels[id]) return {};
+        const bundels = { ...s.bundels };
+        delete bundels[id];
+        schrijfOpslag({ ...s, bundels });
+        return { bundels };
+      }
+      const mijnBundels = s.mijnBundels.filter((b) => b.id !== id);
+      schrijfOpslag({ ...s, mijnBundels });
+      return { mijnBundels };
+    }),
+
+  /** Deel een eigen bundel: een kopie in het project (de eigen blijft). Geeft het nieuwe id. */
+  deelBundel: (id) => {
+    const b = get().mijnBundels.find((x) => x.id === id);
+    if (!b) return null;
+    const nieuw = nieuwBundelId();
+    set((s) => {
+      const bundels = { ...s.bundels, [nieuw]: { id: nieuw, naam: b.naam, tabs: b.tabs.map((t) => ({ ...t })), volgorde: Date.now() } };
+      schrijfOpslag({ ...s, bundels });
+      return { bundels };
+    });
+    return nieuw;
+  },
+
+  /** Een gedeelde bundel als eigen kopie (om zelf aan te passen). */
+  kopieerBundel: (id) => {
+    const b = get().bundels[id];
+    if (!b) return null;
+    const nieuw = nieuwBundelId();
+    set((s) => {
+      const mijnBundels = [...s.mijnBundels, { id: nieuw, naam: b.naam, tabs: b.tabs.map((t) => ({ ...t })) }];
+      schrijfOpslag({ ...s, mijnBundels });
+      return { mijnBundels };
+    });
+    return nieuw;
+  },
 
   /**
    * Identiteit van het project in deze browser (plan 2026-10-07 Projectsync):
@@ -281,11 +378,11 @@ export const useModellerenStore = create((set, get) => ({
       const wissel = patch.id && patch.id !== s.project.id;
       const wr = wissel ? leesWerkruimte(project.id) : null;
       const next = wissel
-        ? { ...s, project, tabs: wr.tabs, actieveTab: wr.actieveTab, mapOpen: wr.mapOpen, mapSelectie: null, diagramSelectie: null, elementSelectie: null, multiSelectie: [] }
+        ? { ...s, project, tabs: wr.tabs, actieveTab: wr.actieveTab, mapOpen: wr.mapOpen, mijnBundels: wr.mijnBundels, mapSelectie: null, diagramSelectie: null, elementSelectie: null, multiSelectie: [] }
         : { ...s, project };
       schrijfOpslag(next);
       menuBus.emit("menu:ververs");
-      return wissel ? { project, tabs: next.tabs, actieveTab: next.actieveTab, mapOpen: next.mapOpen, mapSelectie: null, diagramSelectie: null, elementSelectie: null, multiSelectie: [] } : { project };
+      return wissel ? { project, tabs: next.tabs, actieveTab: next.actieveTab, mapOpen: next.mapOpen, mijnBundels: next.mijnBundels, mapSelectie: null, diagramSelectie: null, elementSelectie: null, multiSelectie: [] } : { project };
     }),
 
   openTab: (profielId, diagramId) => {
@@ -325,6 +422,50 @@ export const useModellerenStore = create((set, get) => ({
     }
     // De menubalk volgt het profiel van de actieve tab.
     menuBus.emit("menu:ververs");
+  },
+
+  /**
+   * Zet een tab op een andere plek (slepen in de tabbalk, Mark 06-11). `naar` is de index in
+   * de lijst zónder de verplaatste tab. De volgorde hoort bij de werkruimte en gaat mee naar
+   * de server.
+   */
+  verplaatsTab: (id, naar) =>
+    set((s) => {
+      const tab = s.tabs.find((t) => t.id === id);
+      if (!tab) return {};
+      const rest = s.tabs.filter((t) => t.id !== id);
+      const plek = Math.max(0, Math.min(naar, rest.length));
+      const tabs = [...rest.slice(0, plek), tab, ...rest.slice(plek)];
+      if (tabs.every((t, i) => t === s.tabs[i])) return {};
+      const next = { ...s, tabs };
+      schrijfOpslag(next);
+      return { tabs };
+    }),
+
+  /**
+   * Sluit meerdere tabs tegelijk (rechtsklik op een tab: andere, links, rechts, alle; Mark
+   * 06-11). Blijft de actieve tab niet over, dan wordt de dichtstbijzijnde overgebleven tab
+   * actief.
+   */
+  sluitTabs: (ids) => {
+    const weg = new Set(ids);
+    set((s) => {
+      if (!s.tabs.some((t) => weg.has(t.id))) return {};
+      const tabs = s.tabs.filter((t) => !weg.has(t.id));
+      let actieveTab = s.actieveTab;
+      if (weg.has(actieveTab)) {
+        const idx = s.tabs.findIndex((t) => t.id === actieveTab);
+        const na = s.tabs.slice(idx + 1).find((t) => !weg.has(t.id));
+        const voor = s.tabs.slice(0, idx).reverse().find((t) => !weg.has(t.id));
+        actieveTab = (na || voor)?.id || null;
+      }
+      const next = { ...s, tabs, actieveTab };
+      schrijfOpslag(next);
+      return { tabs, actieveTab };
+    });
+    const actief = get().actieveTab;
+    if (actief) get().activeer(actief);
+    else menuBus.emit("menu:ververs");
   },
 
   sluitTab: (id) =>
@@ -673,8 +814,19 @@ export const useModellerenStore = create((set, get) => ({
    * Patch-operatie (projectsync-vangnet): mappen/plaatsingen van een ander
    * upserten of wissen. Buiten de structuur-undo (die staat dan uit).
    */
-  patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [], volgordePlaatsing = null } = {}) =>
+  patchStructuur: ({ zetMappen = {}, wisMappen = [], zetPlaatsing = {}, wisPlaatsing = [], volgordePlaatsing = null, zetBundels = null, wisBundels = null } = {}) =>
     set((s) => {
+      // Gedeelde diagrambundels: geen boomstap, dus niet in de structuur-undo.
+      if (zetBundels || wisBundels) {
+        const bundels = { ...s.bundels, ...(zetBundels || {}) };
+        for (const id of wisBundels || []) delete bundels[id];
+        const alleenBundels = !Object.keys(zetMappen).length && !wisMappen.length && !Object.keys(zetPlaatsing).length && !wisPlaatsing.length && !volgordePlaatsing;
+        if (alleenBundels) {
+          schrijfOpslag({ ...s, bundels });
+          return { bundels };
+        }
+        s = { ...s, bundels };
+      }
       legStructuurVast(s);
       const mappen = { ...s.mappen, ...mappenMetBeschrijving(zetMappen) };
       for (const id of wisMappen) delete mappen[id];
@@ -685,17 +837,18 @@ export const useModellerenStore = create((set, get) => ({
       plaatsing = herschikOpVolgorde(plaatsing, volgordePlaatsing);
       const next = { ...s, mappen, plaatsing };
       schrijfOpslag(next);
-      return { mappen, plaatsing };
+      return { mappen, plaatsing, bundels: s.bundels };
     }),
 
   /** Vervang de projectstructuur (project-werkbestand-import). */
-  laadStructuur: ({ mappen, plaatsing, tabs, actieveTab }) =>
+  laadStructuur: ({ mappen, plaatsing, bundels, tabs, actieveTab }) =>
     set((s) => {
       legStructuurVast(s);
       const next = {
         ...s,
         mappen: mappenMetBeschrijving(mappen) || {},
         plaatsing: plaatsing || {},
+        bundels: bundels || {},
         tabs: tabs || [],
         actieveTab: actieveTab || null,
         mapSelectie: null,
@@ -779,7 +932,8 @@ koppelStore("structuur", useModellerenStore, {
   // Een eigen Ctrl+Z mag andermans map/plaatsing niet terugdraaien: verwerk
   // de remote wijziging in elke bewaarde stand (zie pasOperatieToe).
   naRemote: (voor, na) => {
-    const rb = (stand) => rebaseStand(stand, voor, na, STRUCTUUR_VELDEN);
+    // Alleen wat de structuur-undo bewaart (structuurFoto); gedeelde bundels zitten er niet in.
+    const rb = (stand) => rebaseStand(stand, voor, na, ["mappen", "plaatsing"]);
     _structuurVerleden.splice(0, _structuurVerleden.length, ..._structuurVerleden.map(rb));
     _structuurToekomst.splice(0, _structuurToekomst.length, ..._structuurToekomst.map(rb));
   },
@@ -1951,6 +2105,107 @@ function NietIngedeeldLeeg({ profielen }) {
 // de actieve tab) of de elementen-sectie eronder verschijnt.
 let _projectScroll = 0;
 
+// ── Diagrambundels in de zijbalk (Mark, 06-11) ─────────────────────
+/** Vraag een naam en bewaar de open tabs als eigen bundel. */
+async function bewaarOpenTabsAlsBundel() {
+  const ms = useModellerenStore.getState();
+  if (!ms.tabs.length) return;
+  const naam = await vraagNaam({
+    titel: "Bewaar als diagrambundel",
+    label: `Naam van de bundel (${ms.tabs.length} ${ms.tabs.length === 1 ? "diagram" : "diagrammen"})`,
+    waarde: "Nieuwe bundel",
+    bevestig: "Bewaar",
+  });
+  if (naam) ms.bewaarBundel(naam);
+}
+
+/** Bundels in weergavevolgorde: eerst de gedeelde (op volgorde), dan de eigen. */
+function bundelLijst(s) {
+  const gedeeld = Object.values(s.bundels || {}).sort(opVolgorde).map((b) => ({ ...b, gedeeld: true }));
+  return [...gedeeld, ...(s.mijnBundels || []).map((b) => ({ ...b, gedeeld: false }))];
+}
+
+function bundelMenuItems(b) {
+  const ms = useModellerenStore.getState();
+  const items = [
+    { label: "Openen (bij de open tabs)", onClick: () => ms.openBundel(b) },
+    {
+      label: "Vervang door de open tabs",
+      onClick: () => {
+        const s = useModellerenStore.getState();
+        if (s.tabs.length) s.wijzigBundel(b.id, { tabs: s.tabs.map(({ profielId, diagramId }) => ({ profielId, diagramId })) }, b.gedeeld);
+      },
+    },
+    {
+      label: "Hernoemen…",
+      onClick: async () => {
+        const naam = await vraagNaam({ titel: "Hernoem bundel", label: "Naam", waarde: b.naam, bevestig: "Hernoem" });
+        if (naam && naam !== b.naam) ms.wijzigBundel(b.id, { naam }, b.gedeeld);
+      },
+    },
+    b.gedeeld
+      ? { label: "Kopieer naar mijn bundels", onClick: () => ms.kopieerBundel(b.id) }
+      : { label: "Deel met het project", onClick: () => ms.deelBundel(b.id) },
+    { sep: true },
+    {
+      label: "Verwijderen…",
+      onClick: async () => {
+        const ok = await vraagBevestiging({
+          titel: "Bundel verwijderen",
+          tekst: b.gedeeld
+            ? `De gedeelde bundel "${b.naam}" verdwijnt voor iedereen in het project. De diagrammen blijven.`
+            : `De bundel "${b.naam}" verdwijnt. De diagrammen blijven.`,
+          bevestig: "Verwijder",
+          gevaar: true,
+        });
+        if (ok) ms.verwijderBundel(b.id, b.gedeeld);
+      },
+    },
+  ];
+  return items;
+}
+
+function BundelSectie() {
+  const bundels = useModellerenStore((s) => s.bundels);
+  const mijnBundels = useModellerenStore((s) => s.mijnBundels);
+  const aantalTabs = useModellerenStore((s) => s.tabs.length);
+  const lijst = bundelLijst({ bundels, mijnBundels });
+  return (
+    <div className="studio-bundels" data-testid="bundels">
+      <div className="studio-project__kop">
+        <span className="studio-project__naam" title="Diagrambundels: een benoemde set diagrammen. Eigen bundels staan in je werkruimte; gedeelde (👥) horen bij het project.">
+          Bundels
+        </span>
+        <button
+          type="button"
+          className="studio-project__nieuw"
+          title={aantalTabs ? "Bewaar de open tabs als bundel" : "Open eerst diagrammen; die bewaar je dan als bundel"}
+          disabled={!aantalTabs}
+          data-testid="bundel-bewaar"
+          onClick={bewaarOpenTabsAlsBundel}
+        >
+          ＋
+        </button>
+      </div>
+      {lijst.map((b) => (
+        <button
+          key={(b.gedeeld ? "g:" : "e:") + b.id}
+          type="button"
+          className="studio-project__diagram studio-bundel"
+          data-bundel={b.id}
+          title={`${b.naam} — ${b.tabs.length} ${b.tabs.length === 1 ? "diagram" : "diagrammen"}${b.gedeeld ? ", gedeeld in het project" : ", van jou"} (klik = openen bij de open tabs, rechtsklik = meer)`}
+          onClick={() => useModellerenStore.getState().openBundel(b)}
+          onContextMenu={(e) => openCtxMenu(e, bundelMenuItems(b))}
+        >
+          <span className="studio-bundel__icoon" aria-hidden="true">{b.gedeeld ? "👥" : "🗂"}</span>
+          <span className="studio-bundel__naam">{b.naam}</span>
+          <span className="studio-bundel__aantal">{b.tabs.length}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Sidebar() {
   useSyncExternalStore(abonneerOpProfieltypen, profieltypenVersie);
   const profielen = getProfieltypen();
@@ -2314,6 +2569,7 @@ function Sidebar() {
         style={{ flex: 1, overflow: "auto", minHeight: 0 }}
         onDragOver={dragScroll}
       >
+        <BundelSectie />
         <div
           className={"studio-project__kop" + (dropWortel.over ? " is-dropdoel" : "")}
           {...dropWortel.props}
@@ -2488,7 +2744,35 @@ function MapEigenschappen({ mapId }) {
 }
 
 // ── Main: tab-host ──────────────────────────────────────────────────
-function Tab({ tab, actief }) {
+/** Rechtsklikmenu van de tabbalk (los van dat van de boom). */
+const useTabMenu = create(() => ({ menu: null }));
+
+/** De items van het tab-menu: sluiten, andere, links, rechts, alle (Mark, 06-11). */
+function tabMenuItems(id) {
+  const ms = useModellerenStore.getState();
+  const ids = ms.tabs.map((t) => t.id);
+  const i = ids.indexOf(id);
+  const links = ids.slice(0, i);
+  const rechts = ids.slice(i + 1);
+  const andere = ids.filter((x) => x !== id);
+  const items = [{ label: "Sluiten", onClick: () => ms.sluitTabs([id]) }];
+  if (andere.length) items.push({ label: "Sluit andere tabs", onClick: () => ms.sluitTabs(andere) });
+  if (links.length) items.push({ label: `Sluit alle tabs links (${links.length})`, onClick: () => ms.sluitTabs(links) });
+  if (rechts.length) items.push({ label: `Sluit alle tabs rechts (${rechts.length})`, onClick: () => ms.sluitTabs(rechts) });
+  items.push({ label: "Sluit alle tabs", onClick: () => ms.sluitTabs(ids) });
+  items.push({ sep: true }, { label: `Bewaar open tabs als bundel… (${ids.length})`, onClick: bewaarOpenTabsAlsBundel });
+  return items;
+}
+
+function TabContextMenu() {
+  const menu = useTabMenu((s) => s.menu);
+  return <ContextMenu menu={menu} sluit={() => useTabMenu.setState({ menu: null })} />;
+}
+
+/** Het dataTransfer-type van een versleepte tab (los van diagrammen uit de boom). */
+const TAB_SLEEP_TYPE = "application/x-studio-tab";
+
+function Tab({ tab, actief, index, sleep, setSleep }) {
   const profiel = getProfieltype(tab.profielId);
   const activeer = useModellerenStore((s) => s.activeer);
   const sluitTab = useModellerenStore((s) => s.sluitTab);
@@ -2502,9 +2786,47 @@ function Tab({ tab, actief }) {
   const stijl = effectieveStijl(profiel);
   return (
     <span
-      className={"studio-tab" + (actief ? " is-actief" : "")}
+      className={
+        "studio-tab" +
+        (actief ? " is-actief" : "") +
+        (sleep?.id === tab.id ? " is-gesleept" : "") +
+        (sleep && sleep.id !== tab.id && sleep.boven === index ? ` is-doel-${sleep.kant}` : "")
+      }
       style={actief ? { borderTopColor: stijl.kleur || "var(--s-accent)" } : undefined}
       title={`${diagram.naam} — ${profiel.label}`}
+      data-tab-id={tab.id}
+      // Slepen naar een andere plek in de tabbalk (Mark, 06-11).
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData(TAB_SLEEP_TYPE, tab.id);
+        e.dataTransfer.effectAllowed = "move";
+        setSleep({ id: tab.id, boven: null, kant: null });
+      }}
+      onDragOver={(e) => {
+        if (!sleep || !e.dataTransfer.types.includes(TAB_SLEEP_TYPE)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        const r = e.currentTarget.getBoundingClientRect();
+        const kant = e.clientX < r.left + r.width / 2 ? "links" : "rechts";
+        if (sleep.boven !== index || sleep.kant !== kant) setSleep({ ...sleep, boven: index, kant });
+      }}
+      onDrop={(e) => {
+        const id = e.dataTransfer.getData(TAB_SLEEP_TYPE);
+        if (!id || !sleep) return;
+        e.preventDefault();
+        const tabs = useModellerenStore.getState().tabs;
+        const van = tabs.findIndex((t) => t.id === id);
+        let naar = index + (sleep.kant === "rechts" ? 1 : 0);
+        if (van >= 0 && van < naar) naar -= 1; // index in de lijst zonder de versleepte tab
+        useModellerenStore.getState().verplaatsTab(id, naar);
+        setSleep(null);
+      }}
+      onDragEnd={() => setSleep(null)}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        useTabMenu.setState({ menu: { x: e.clientX, y: e.clientY, items: tabMenuItems(tab.id) } });
+      }}
     >
       <button type="button" className="studio-tab__kies" onClick={() => activeer(tab.id)}>
         <span className="studio-tab__icoon"><ProfielIcoon profiel={profiel} /></span>
@@ -2568,19 +2890,22 @@ function Main() {
   const tab = tabs.find((t) => t.id === actieveTab) || null;
   const profiel = tab ? getProfieltype(tab.profielId) : null;
   const ProfielMain = profiel?.Main;
+  // Een tab die versleept wordt: {id, boven: index waar hij boven hangt, kant: links|rechts}.
+  const [sleep, setSleep] = useState(null);
 
   return (
     <div className="studio-modelleren">
       {tabs.length > 0 && (
         <div className="studio-tabbalk" role="tablist">
-          {tabs.map((t) => (
-            <Tab key={t.id} tab={t} actief={t.id === actieveTab} />
+          {tabs.map((t, i) => (
+            <Tab key={t.id} tab={t} index={i} actief={t.id === actieveTab} sleep={sleep} setSleep={setSleep} />
           ))}
         </div>
       )}
       <div className="studio-modelleren__inhoud">
         {ProfielMain ? <ProfielMain /> : <LegeStaat />}
       </div>
+      <TabContextMenu />
       <TransformatiePaneel />
       <ProjectServerDialoog />
     </div>
@@ -2882,7 +3207,7 @@ function bouwProjectData() {
     project: { id: s.project.id, naam: s.project.naam },
     // plaatsingVolgorde: de boomvolgorde expliciet — jsonb op de server bewaart
     // de sleutelvolgorde van `plaatsing` niet (gemeld 2026-10-08).
-    structuur: { mappen: s.mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing) },
+    structuur: { mappen: s.mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing), ...(Object.keys(s.bundels || {}).length ? { bundels: s.bundels } : {}) },
     kruisverbanden: useKruisStore.getState().links,
     profielen,
   };
@@ -2950,6 +3275,7 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}
     ms.laadStructuur({
       mappen: data.structuur?.mappen,
       plaatsing: herschikOpVolgorde(data.structuur?.plaatsing || {}, data.structuur?.plaatsingVolgorde),
+      bundels: data.structuur?.bundels || {},
       tabs,
       actieveTab: tabs.some((t) => t.id === gewenstActief) ? gewenstActief : tabs[0]?.id || null,
     });
