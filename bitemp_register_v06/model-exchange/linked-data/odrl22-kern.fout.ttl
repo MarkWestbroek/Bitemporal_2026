@@ -1,0 +1,70 @@
+# Testdata bij odrl22-kern.shacl.ttl: per geval precies één fout.
+# Verwacht: conforms = false, met per focusknoop de melding in het commentaar.
+# De typen van vocabulairetermen staan onderaan (normaal uit ODRL22.ttl).
+
+@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+@prefix ex:   <https://omnium.example/beleid#> .
+
+# F1  ex:f1 — Agreement zonder assignee.
+#     Verwacht: "Een Agreement heeft precies één assignee."
+ex:f1 a odrl:Agreement ;
+    odrl:uid ex:f1 ;
+    odrl:assigner ex:gemeente ;
+    odrl:permission ex:p1 .
+ex:p1 a odrl:Permission ; odrl:action odrl:use ; odrl:target ex:inkomen .
+
+# F2  ex:f2 — Policy zonder enige regel.
+#     Verwacht: "Een Policy heeft minstens één permission, prohibition of obligation."
+ex:f2 a odrl:Set ;
+    odrl:uid ex:f2 .
+
+# F3  ex:c3 — Constraint met zowel rightOperand als rightOperandReference.
+#     Verwacht: "Een Constraint heeft precies één van rightOperand en rightOperandReference."
+ex:f3 a odrl:Set ; odrl:uid ex:f3 ; odrl:permission ex:p3 .
+ex:p3 a odrl:Permission ; odrl:action odrl:use ; odrl:target ex:inkomen ; odrl:constraint ex:c3 .
+ex:c3 a odrl:Constraint ;
+    odrl:leftOperand odrl:purpose ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand ex:schuldhulpverlening ;
+    odrl:rightOperandReference ex:doelenlijst .
+
+# F4  ex:c4 — Constraint zonder rightOperand en zonder rightOperandReference.
+#     Verwacht: dezelfde melding als F3.
+ex:f4 a odrl:Set ; odrl:uid ex:f4 ; odrl:permission ex:p4 .
+ex:p4 a odrl:Permission ; odrl:action odrl:use ; odrl:target ex:inkomen ; odrl:constraint ex:c4 .
+ex:c4 a odrl:Constraint ;
+    odrl:leftOperand odrl:purpose ;
+    odrl:operator odrl:eq .
+
+# F5  ex:p5 — Permission met twee targets.
+#     Verwacht: "Een Permission heeft precies één target."
+ex:f5 a odrl:Set ; odrl:uid ex:f5 ; odrl:permission ex:p5 .
+ex:p5 a odrl:Permission ; odrl:action odrl:use ; odrl:target ex:inkomen, ex:vermogen .
+
+# F6  ex:f6 — conflict met een eigen waarde: alleen een WAARSCHUWING (SHOULD).
+#     Verwacht: "conflict is bij voorkeur perm, prohibit of invalid." (sh:Warning)
+ex:f6 a odrl:Set ; odrl:uid ex:f6 ; odrl:conflict ex:eigenRegel ; odrl:permission ex:p1 .
+
+# F7  ex:f7a en ex:f7b — erven in een kring.
+#     Verwacht bij beide: "Een Policy erft (via inheritFrom) niet van zichzelf."
+ex:f7a a odrl:Set ; odrl:uid ex:f7a ; odrl:inheritFrom ex:f7b ; odrl:permission ex:p1 .
+ex:f7b a odrl:Set ; odrl:uid ex:f7b ; odrl:inheritFrom ex:f7a ; odrl:permission ex:p1 .
+
+# F8  ex:p8 — constraint die geen Constraint of LogicalConstraint is.
+#     Verwacht: "Een constraint is een Constraint of een LogicalConstraint."
+ex:f8 a odrl:Set ; odrl:uid ex:f8 ; odrl:permission ex:p8 .
+ex:p8 a odrl:Permission ; odrl:action odrl:use ; odrl:target ex:inkomen ; odrl:constraint ex:gemeente .
+
+# F9  ex:p9 — Permission met twee actions.
+#     Verwacht: "Een Rule heeft precies één action."
+ex:f9 a odrl:Set ; odrl:uid ex:f9 ; odrl:permission ex:p9 .
+ex:p9 a odrl:Permission ; odrl:action odrl:use, odrl:read ; odrl:target ex:inkomen .
+
+# Gedeelde, correcte onderdelen.
+ex:gemeente a odrl:Party .
+ex:inkomen a odrl:Asset .
+ex:vermogen a odrl:Asset .
+odrl:use a odrl:Action .
+odrl:read a odrl:Action ; odrl:includedIn odrl:use .
+odrl:purpose a odrl:LeftOperand .
+odrl:eq a odrl:Operator .

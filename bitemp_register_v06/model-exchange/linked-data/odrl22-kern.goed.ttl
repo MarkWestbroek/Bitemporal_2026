@@ -1,0 +1,101 @@
+# Testdata bij odrl22-kern.shacl.ttl: ODRL-beleid dat volledig klopt.
+# Verwacht: conforms = true.
+#
+# De typen van de vocabulairetermen (odrl:use, odrl:eq, ...) staan hier in de
+# data; normaal komen ze uit ODRL22.ttl.
+
+@prefix odrl: <http://www.w3.org/ns/odrl/2/> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:   <https://omnium.example/beleid#> .
+
+# Agreement: assigner, assignee, een permission met constraint en duty,
+# een prohibition met remedy.
+ex:afspraak
+    a odrl:Agreement ;
+    odrl:uid ex:afspraak ;
+    odrl:conflict odrl:prohibit ;
+    odrl:assigner ex:gemeente ;
+    odrl:assignee ex:schuldhulp ;
+    odrl:permission ex:magGebruiken ;
+    odrl:prohibition ex:magNietDelen .
+
+ex:magGebruiken
+    a odrl:Permission ;
+    odrl:action odrl:use ;
+    odrl:target ex:inkomen ;
+    odrl:constraint ex:alleenVoorSchuldhulp ;
+    odrl:duty ex:informeren .
+
+ex:alleenVoorSchuldhulp
+    a odrl:Constraint ;
+    odrl:leftOperand odrl:purpose ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperand ex:schuldhulpverlening .
+
+ex:informeren
+    a odrl:Duty ;
+    odrl:action odrl:inform .
+
+ex:magNietDelen
+    a odrl:Prohibition ;
+    odrl:action odrl:distribute ;
+    odrl:target ex:inkomen ;
+    odrl:remedy ex:verwijderen .
+
+ex:verwijderen
+    a odrl:Duty ;
+    odrl:action odrl:delete .
+
+# Offer met een logische constraint (or) en een rightOperandReference.
+ex:aanbod
+    a odrl:Offer ;
+    odrl:uid ex:aanbod ;
+    odrl:inheritFrom ex:afspraak ;
+    odrl:assigner ex:gemeente ;
+    odrl:permission ex:magInzien .
+
+ex:magInzien
+    a odrl:Permission ;
+    odrl:action odrl:read ;
+    odrl:target ex:inkomen ;
+    odrl:constraint ex:binnenWerktijdOfNood .
+
+ex:binnenWerktijdOfNood
+    a odrl:LogicalConstraint ;
+    odrl:or ( ex:binnenWerktijd ex:nood ) .
+
+ex:binnenWerktijd
+    a odrl:Constraint ;
+    odrl:leftOperand odrl:dateTime ;
+    odrl:operator odrl:lteq ;
+    odrl:rightOperand "2026-12-31T17:00:00"^^xsd:dateTime .
+
+ex:nood
+    a odrl:Constraint ;
+    odrl:leftOperand odrl:event ;
+    odrl:operator odrl:eq ;
+    odrl:rightOperandReference ex:noodsituatie .
+
+# Set met alleen een obligation (dat mag: "permission, prohibition of obligation").
+ex:verzameling
+    a odrl:Set ;
+    odrl:uid ex:verzameling ;
+    odrl:obligation ex:informeren .
+
+# Partijen, asset en collectie.
+ex:gemeente a odrl:Party ; odrl:uid ex:gemeente .
+ex:schuldhulp a odrl:Party ; odrl:uid ex:schuldhulp ; odrl:partOf ex:hulpverleners .
+ex:hulpverleners a odrl:PartyCollection ; odrl:source ex:hulpverlenersRegister .
+ex:inkomen a odrl:Asset ; odrl:uid ex:inkomen .
+
+# Vocabulairetermen (normaal uit ODRL22.ttl).
+odrl:use a odrl:Action .
+odrl:read a odrl:Action ; odrl:includedIn odrl:use .
+odrl:distribute a odrl:Action ; odrl:includedIn odrl:use .
+odrl:inform a odrl:Action ; odrl:includedIn odrl:use .
+odrl:delete a odrl:Action ; odrl:includedIn odrl:use .
+odrl:purpose a odrl:LeftOperand .
+odrl:dateTime a odrl:LeftOperand .
+odrl:event a odrl:LeftOperand .
+odrl:eq a odrl:Operator .
+odrl:lteq a odrl:Operator .

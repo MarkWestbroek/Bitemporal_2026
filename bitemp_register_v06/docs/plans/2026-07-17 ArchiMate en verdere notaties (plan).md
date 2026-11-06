@@ -190,6 +190,9 @@ ontologie wíl je vooral als boom + facetten browsen, niet primair tekenen.
 *Advies: pas oppakken samen met een import (Turtle/JSON-LD) en de
 projectboom als primaire view; het diagram is daar een afgeleide.*
 
+**Uitgewerkt 06-11-2026** in [Linked data als M2 — SHACL, SKOS, OWL](2026-11-06%20Linked%20data%20als%20M2%20—%20SHACL,%20SKOS,%20OWL%20(plan).md):
+ook SHACL en SKOS, de boom als hetzelfde model (geen aparte view), property als eigen element.
+
 ### ERD met kraaienpoten ✅ **gebouwd 2026-07-31**
 Bijna gratis: entiteiten zijn class-boxes; alleen **vier nieuwe
 marker-defs** (één/veel × verplicht/optioneel: `||`, `|<`, `o|`, `o<`) in de
