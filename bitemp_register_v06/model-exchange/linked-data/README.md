@@ -27,3 +27,20 @@ geeft negen overtredingen (F1–F5, F7 dubbel, F8, F9) en één waarschuwing (F6
 `sh:class` vraagt dat de data het `rdf:type` van een waarde kent. Voor vocabulairetermen
 (`odrl:use`, `odrl:eq`, …) staan de typen in de testdata; bij echt beleid geef je ODRL22.ttl
 mee als ontologie (`-e ODRL22.ttl`).
+
+## In de Studio
+
+Het profiel *SHACL* (preview, via Modelleren en de instellingen bereikbaar, zoals GraphQL) ▸ menu *Importeer SHACL (Turtle)…* leest `odrl22-kern.shacl.ttl` als
+diagram: 14 node shapes, twee klassen (`odrl:LeftOperand`, `odrl:Operator`), drie constraints
+(twee `sh:xone`, één `sh:sparql`) en geen meldingen. Een bestand met de valkuilen uit het plan
+(§11) geeft na het lezen een lijst meldingen.
+
+*Exporteer SHACL (Turtle)…* schrijft het model terug. Lezen en weer schrijven geeft dezelfde
+graaf (niet dezelfde tekst: commentaar en volgorde gaan verloren). Controle met rdflib:
+
+```python
+from rdflib import Graph
+from rdflib.compare import isomorphic
+a = Graph().parse("odrl22-kern.shacl.ttl"); b = Graph().parse("geexporteerd.ttl")
+print(isomorphic(a, b))   # True
+```

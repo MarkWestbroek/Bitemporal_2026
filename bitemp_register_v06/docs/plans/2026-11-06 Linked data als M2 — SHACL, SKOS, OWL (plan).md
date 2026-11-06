@@ -325,7 +325,54 @@ patronen, en niet-getekende onderdelen zichtbaar houden (als constraint of meldi
    **Gebouwd 06-11, uitgebracht in studio 0.31.0** (§8). Daarna erbij: "erin" ook voor insluiting (M3-aard `insluiting`, canonieke compositie), packages met `uitwerking`, meervoudige selectie in de boom, Ctrl+C/V op het canvas; één undo voor boom en diagram staat als UNDO-1 in de backlog.
 1. **Turtle-lezer + SHACL lezen en tekenen**, met de lint-meldingen van §11. Test:
    `odrl22-kern.*`.
+   **Gebouwd 07-11** (branch `feat/linked-data-shacl`, ongecommit):
+   - `transformatie/turtleLezer.js`: eigen lezer voor Turtle 1.1 (geen dependency, zoals de
+     SDL-parser) plus een kleine `RdfGraaf` (opzoeken, lijsten, compacte IRI's, fragmenten).
+     Geeft voor de drie testbestanden en ODRL22.ttl (2157 triples) een graaf die isomorf is
+     met die van rdflib.
+   - `diagramprofielen/shacl/`: profiel `shacl` (activiteit `shacl05`, preview). Elementen:
+     shapes graph (titel, prefixen, `sh:declare`), node shape, losse property shape, klasse
+     (doel van `sh:class` zonder shape) en een eigen constraint (taal SHACL of SPARQL).
+     Property shapes zijn regels `pad : type [kard] {facetten}`; het pad in SPARQL-padsyntax
+     (`a|b`, `a/b`, `^a`, `a*`). Elke parameter heeft een eigen veld; de weergave en de
+     pijlen worden in `hooks.migreerModel` afgeleid (`afleiding.js`). Klasse → shape: de meest
+     specifieke shape (de minste doelklassen). Een `sh:or` van alleen `sh:class` wordt `a | b`
+     met twee pijlen `{or}`.
+   - Niets gaat stil verloren: onbekende predicaten in `overig` (Turtle), triples zonder shape
+     in `overig` van de shapes graph, met een melding.
+   - `lint.js`: alle valkuilen van §11, plus onbekende `sh:`-predicaten/klassen (tikfouten),
+     SPARQL-vorm (haakjes, strings, niet-gedeclareerde prefixen, `$this`), shapes zonder doel,
+     property shapes zonder pad. Op het oude collega-bestand komen alle bekende fouten boven; de
+     ODRL-kern geeft geen enkele melding. Na de import toont een dialoog de meldingen.
+   - Ook geregistreerd in de render-dienst (`studioProfielen.js`) en de MCP (`profielen.json`).
+   - Tests: `turtleLezer.test.js` (8), `shacl.test.js` (9), e2e `46-studio-shacl-import` (2: import
+     via het menu, dialoog met meldingen). Unit 1458/1458, e2e 119/120 (02-verwijder-diagram faalt
+     ook zonder deze wijziging).
+   - *Nog niet:* een melding is nog niet per element terug te vinden in de
+     Studio (de dialoog toont ze bij import); de rijen-layout is grof; taaltags op
+     `sh:name`/`sh:message` met meer dan één taal gaan naar `overig` (één taal wordt bewaard, zie fase 2).
 2. **SHACL schrijven + rondreis** (IRI-veld, constraint-body met taal).
+   **Gebouwd 07-11** (zelfde branch, ongecommit): `diagramprofielen/shacl/schrijver.js`
+   (`naarTurtle`) en `pad.js` (`padNaarTurtle`, de terugweg van de pad-tekst). Menu *Exporteer
+   SHACL (Turtle)…*; meldingen en de lint van de uitvoer komen als `#`-commentaar bovenaan.
+   - **Rondreis = dezelfde graaf** (isomorf volgens rdflib) voor de drie ODRL-testbestanden,
+     ODRL22.ttl (2157 triples, alles in de losse triples), het oude collega-bestand (652) en een
+     lastig grammaticabestand (kring van lege knopen, geneste lijsten).
+   - Daarvoor bewaart de import nu ook: de taal van teksten (`messageTaal`, …), of de naam uit
+     `rdfs:label` kwam, `a sh:NodeShape`/`a sh:PropertyShape` (`getypeerd`), het klassetype van
+     een shape, predicaat en taal van titel en beschrijving, de SPARQL-query letterlijk (`ruw`,
+     zolang de specificatie niet bewerkt is) en `ask`/`select`. Triples die bij geen shape
+     horen staan in een eigen veld *losse triples* van de shapes graph.
+   - IRI = identiteit: hernoemen verandert de IRI niet (de naam wordt `rdfs:label`); een nieuw
+     element krijgt een IRI uit de namespace van de shapes graph (anders `ex:`).
+   - Elk bewerkbaar Turtle-fragment (overig, logica, `sh:in`, waarden, pad) wordt vóór het
+     schrijven gelezen; wat niet klopt wordt overgeslagen met een fout-melding met de plek, dus
+     de uitvoer is altijd geldige Turtle. Een constraint in natuurlijke taal of zonder
+     annotatie-lijn naar een shape geeft een waarschuwing.
+   - Tests: `schrijver.test.js` (7), e2e 46 nu 3 (ook export na hernoemen). Unit 1465/1465.
+   - *Grenzen:* een lege knoop die op twee plekken gebruikt wordt, wordt bij het schrijven twee
+     knopen (komt in SHACL zelden voor); een benoemde property shape in meer node shapes wordt
+     één keer geschreven (de eerste kopie).
 3. **Canoniek → SHACL** als kruisverband: shapes uit het eigen model. Raakt backlog E8 (MIM
    linked data) en RM5; MIM's LD-vorm is gebaseerd op OWL/RDFS/SHACL
    ([MIM_VERGELIJKING](../MIM_VERGELIJKING.md) §4). Proef: de ODRL-export van Toegangsspraak

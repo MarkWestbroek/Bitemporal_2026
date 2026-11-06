@@ -265,6 +265,20 @@ export const IconGraphQL05 = (p) => (
   </svg>
 );
 
+/* SHACL (0.5): een shape (box met regel) die met een pijl een knoop van de
+   graaf controleert — linked data als gevuld bolletje, zoals bij GraphQL. */
+export const IconSHACL05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="2.5" y="3" width="11" height="9" rx="1" />
+    <path d="M2.5 6.5h11" />
+    <path d="M5 9.2h6" />
+    <path d="M13.5 9 18 15.5" />
+    <circle cx="19" cy="17.5" r="2.5" {...vul} />
+    <circle cx="6" cy="18" r="1.6" />
+    <path d="M7.6 18h8.9" />
+  </svg>
+);
+
 /* ERD (0.5): twee entiteitsdozen, verbonden door de kraaienpoot zelf —
    het symbool dat deze notatie herkenbaar maakt. */
 export const IconERD05 = (p) => (
