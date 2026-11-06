@@ -269,6 +269,9 @@ func TestStudioProjectOps_Roundtrip(t *testing.T) {
 
 	// Snapshot-grens via PUT (compactie: operaties t/m 3 weg, 4 blijft); project-GET toont
 	// tot_volgnummer en laatste_volgnummer. Een grens voorbij het log wordt afgekapt.
+	// De weigering bij andere bezige clients (clients a en b stuurden net ops) staat hier uit;
+	// die heeft een eigen test (TestStudioProjectPut_WeigertBijGebruik).
+	zonderRecenteOps(t)
 	rec = studioDoe(r, http.MethodPut, "/api/studio/projecten/test-ops-0001", map[string]any{"inhoud": inhoud, "versie": 1, "tot_volgnummer": 3})
 	if rec.Code != http.StatusOK {
 		t.Fatalf("PUT snapshot: %d %s", rec.Code, rec.Body.String())

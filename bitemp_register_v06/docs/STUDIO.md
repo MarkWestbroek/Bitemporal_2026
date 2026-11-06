@@ -608,6 +608,24 @@ te wijzigen.
 > (`event: presence`); rechts in de menubalk staat "N anderen online" met de
 > namen in de tooltip (`StudioAanwezig.jsx`), en het Project-menu toont
 > "Online: …". Zonder auth heet iedereen "anoniem".
+> **Geen volledige PUT zolang anderen bezig zijn (2026-11-06, besluit Mark: "nu liever
+> defensief"):** `PUT /api/studio/projecten/:id` vervangt de hele blob, en open tabs merken
+> dat niet. Op cg-test draaide een script zo'n PUT terug, doordat een open tab later een
+> `laadModel`-op met zijn oude kopie stuurde. De server weigert de PUT nu met **409**,
+> `reden: "project_in_gebruik"` en `anderen: [{clientId, actor, bron, laatst?}]`, zodra een
+> **andere** client bezig is: een open SSE-verbinding (`bron: "verbonden"`) of een operatie in
+> de laatste 5 minuten (`bron: "recent"`). Er verandert dan niets. De eigen tab noemt zich met
+> `clientId` in de body of de header `X-Omnium-Client`. Zonder clientId, bij een script of een
+> oudere Studio, telt elke verbinding als een ander. De gewone versie-409 heet nu
+> `reden: "versie_verouderd"`; beide antwoorden geven `server` mee. **Uitzondering** (ook
+> besluit Mark 06-11): een snapshot van een tab die zelf live verbonden is (open SSE) en alle
+> operaties al heeft (`tot_volgnummer` ≥ het laatste volgnummer), mag wel. Die stand is gelijk
+> aan wat de anderen hebben. Zo blijven compactie en de snapshot voor *Kopieer als SVG-link*
+> werken als je samenwerkt. Een script zonder SSE of een tab die achterloopt valt er niet
+> onder; de server vertrouwt hierbij een bijgewerkte, verbonden tab en controleert de inhoud
+> zelf niet. Studio 0.31.0 stuurt `clientId` al mee. Hele modellen vervangen
+> hoort eigenlijk bij versiebeheer; dat is nog niet uitgewerkt. Code:
+> `handlers/studio_project_in_gebruik.go`.
 > **Werkruimte op de server (2026-10-08):** tabs, actieve tab en open/dicht
 > mappen gaan per gebruiker per project naar `…/werkruimte` (laatste schrijver
 > wint, `sync/werkruimte.js`); bij het openen van een project neemt de Studio
