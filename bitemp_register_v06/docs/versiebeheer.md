@@ -61,7 +61,11 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.31.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.32.0`**
+  (2026-11-06: kopiëren en plakken via rechtsklik en als kopie, diagram kopiëren/plakken in de
+  boom, overerving en «gebruikt» als connectoren (ERFT-1, GEBR-1), uiteinden van een verbinding,
+  lijnen verschuiven en spreiden, subtype zonder eigen tijdlijn; samen met render 0.3.4, api
+  blijft 0.20.0), na **`studio/v0.31.0`**
   (2026-11-06: elementen maken en nesten in de projectboom (fase 0 "Linked data als M2"),
   kopiëren en plakken, tabs verslepen, diagrambundels, «gebruikt», GE-kardinaliteit 0..*,
   laadModel via het vangnet, PUT noemt de eigen tab; samen met render 0.3.3, api blijft 0.19.0),
@@ -131,7 +135,10 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.3.3`** (2026-11-06: «gebruikt» en de model-migratie van het
+- Render-sidecar: **`render/v0.3.4`** (2026-11-06: de tekenaar van studio 0.32.0 — oude
+  generalisaties gevouwen, «gebruikt» uit het veldtype, lijnen spreiden en verschuiven,
+  zelf-relatie met associatieklasse; image `bitemp-render-svc:0.3.4`), na
+  **`render/v0.3.3`** (2026-11-06: «gebruikt» en de model-migratie van het
   profiel vóór het tekenen, packages met uitwerking; image `bitemp-render-svc:0.3.3`), na
   **`render/v0.3.2`** (2026-11-06: de tekenaar van studio 0.30.0 — «use»-lijnen,
   afgeleide vakken, labeldelen, de kop van de buitenste levenslijn in beeld; image

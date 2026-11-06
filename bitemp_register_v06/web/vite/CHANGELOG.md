@@ -8,13 +8,7 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
-### Gewijzigd
-- **Een subtype heeft geen eigen tijdlijn** (besluit Mark 06-11, via BACKEND; CODEGEN.md §7.3d):
-  bij een entiteit met een generalisatie naar een ouder staan *materieel* en *tijdprecisie* in de
-  inspector uit, met "De tijdlijn komt van <ouder>"; de modelcontrole waarschuwt als ze toch gezet
-  zijn, en de V3-export laat ze op een subtype weg (ook uit een oud model). Nieuwe M3-hook
-  `eigenschapUit(element, key, {elements})` → reden. Materiële GE's en relaties óp een subtype
-  blijven toegestaan.
+## [studio/v0.32.0] — 2026-11-06
 
 ### Toegevoegd
 - **Lijnen verschuiven zonder knikken** (Mark, 06-11: "twee RELs tussen Partij en MedischAdvies
@@ -24,34 +18,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   (`lijnen[connector].verschuiving`). Meer lijnen tussen hetzelfde paar waaieren vanzelf uit
   (28 px), tenzij er een versleept is. Canvas en tekenaar delen `verschuifUiteinden`
   (`zwevendeRand.js`).
-
-### Toegevoegd
 - **De inspector van een verbinding toont zijn uiteinden** ("A → B"), in elke taal (Mark, 06-11:
   "ik kan op een REL niet zien wie A en B zijn").
 - **Rechtsklik op een verbinding → de uiteinden op het diagram zetten** wat er nog ontbreekt
   (bv. de andere entiteit van een relatie); naast de doos of het andere uiteinde, één Ctrl+Z.
-
-### Opgelost
-- **Zelf-relatie met velden (associatieklasse op een oortje)**: het anker lag in het midden van
-  de entiteit, dus beide lijnen hadden lengte nul en de doos hing los. Nu ligt het anker
-  rechtsboven buiten de entiteit en lopen de lijnen hoekig van boven via het anker naar rechts
-  (canvas én tekenaar, `materialiseerConnectoren`).
-
-### Opgelost
-- **Overerving is een modelgegeven** (ERFT-1, Mark/FUNDAMENT 06-11): na een V3-import stond
-  `erft` alleen als lijn op de import-diagrammen. Nu wordt het één `generalisatie`-connector,
-  getekend op elk diagram waar beide entiteiten staan; bestaande projecten worden bij het openen
-  gevouwen (`vouwOudeGeneralisaties`). De V3-export houdt `erft`, ook zonder diagrammen.
-
-### Toegevoegd
 - **«gebruikt» volgt het veldtype** (GEBR-1, Mark/FUNDAMENT 06-11): een veld van het type van een
   enumeratie, gegevenstype of **referentielijst-item** legt een «gebruikt»-connector
   (`synchroniseerGebruik`, `data.afgeleid: "veldtype"`), en haalt hem weg als geen veld het type
   meer gebruikt; een handmatige blijft. Oude «use»-lijnen uit een import vervallen (verborgen
   blijft verborgen). Met de hand trekken kan nu ook naar een ref.lijst-item, ook vanaf een relatie
   (nieuwe M3-hook `magVerbinden` op een connectortype). V3-export ongewijzigd.
-
-### Toegevoegd
 - **Diagrammen hernoemen via de ✨ assistent en de MCP** (Mark, 06-11: de assistent beloofde een
   passende naam, maar het plan kende alleen hernoemde elementen): `bestaand` + een andere `naam`
   in `diagrammen` = hernoemen (`plan.diagramHernoemd`).
@@ -69,6 +45,24 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   dupliceren?" nieuwe elementen in het model, met "(kopie)" achter de naam, zonder uuid, en met
   de verbindingen tússen de gekopieerde elementen. Ze landen in de map van het diagram waarop je
   plakt (boomregel). Eén Ctrl+Z neemt de hele kopie terug; gewoon plakken is nu ook één stap.
+
+### Gewijzigd
+- **Een subtype heeft geen eigen tijdlijn** (besluit Mark 06-11, via BACKEND; CODEGEN.md §7.3d):
+  bij een entiteit met een generalisatie naar een ouder staan *materieel* en *tijdprecisie* in de
+  inspector uit, met "De tijdlijn komt van <ouder>"; de modelcontrole waarschuwt als ze toch gezet
+  zijn, en de V3-export laat ze op een subtype weg (ook uit een oud model). Nieuwe M3-hook
+  `eigenschapUit(element, key, {elements})` → reden. Materiële GE's en relaties óp een subtype
+  blijven toegestaan.
+
+### Opgelost
+- **Zelf-relatie met velden (associatieklasse op een oortje)**: het anker lag in het midden van
+  de entiteit, dus beide lijnen hadden lengte nul en de doos hing los. Nu ligt het anker
+  rechtsboven buiten de entiteit en lopen de lijnen hoekig van boven via het anker naar rechts
+  (canvas én tekenaar, `materialiseerConnectoren`).
+- **Overerving is een modelgegeven** (ERFT-1, Mark/FUNDAMENT 06-11): na een V3-import stond
+  `erft` alleen als lijn op de import-diagrammen. Nu wordt het één `generalisatie`-connector,
+  getekend op elk diagram waar beide entiteiten staan; bestaande projecten worden bij het openen
+  gevouwen (`vouwOudeGeneralisaties`). De V3-export houdt `erft`, ook zonder diagrammen.
 
 ## [studio/v0.31.0] — 2026-11-06
 

@@ -8,6 +8,45 @@
 
 ---
 
+## studio 0.32.0 / render 0.3.4 (2026-11-06)
+
+Een avond met Mark en FUNDAMENT in het registermodel: overerving en «gebruikt» worden echte
+modelgegevens, en een subtype heeft geen eigen tijdlijn. Api blijft 0.20.0. Details:
+[`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md) (studio 0.32.0).
+
+**Model** (Mark/FUNDAMENT): `erft` uit een V3-import wordt één `generalisatie`-connector,
+getekend op elk diagram waar beide entiteiten staan; oude projecten worden bij het openen
+gevouwen (ERFT-1). Een veld van het type van een enumeratie, gegevenstype of
+referentielijst-item legt zelf een «gebruikt»-lijn en haalt hem weer weg (GEBR-1).
+
+**Subtype zonder eigen tijdlijn** (besluit Mark): een subtype ís een exemplaar van zijn ouder,
+dus aanvang en einde horen bij de ouder. Bij een subtype staan *materieel* en *tijdprecisie* in de
+inspector uit, met "De tijdlijn komt van <ouder>"; de V3-export laat ze weg en de modelcontrole
+waarschuwt. Codegen weigert ze op een entiteit met `erft` (CODEGEN.md §7.3d). Die controle zit in
+devloop 0.24.12; het api-image van app voert geen codegen uit en blijft 0.20.0.
+
+**Canvas**: kopiëren en plakken via rechtsklik en als kopie (Ctrl+Shift+V); een diagram kopiëren
+en elders plakken in de projectboom; klik op de achtergrond toont het diagram in de inspector;
+de inspector van een verbinding noemt zijn uiteinden, en rechtsklik zet een ontbrekend uiteinde
+op het diagram; een rechte lijn zijwaarts schuiven houdt hem recht, en meer lijnen tussen
+hetzelfde paar waaieren uit; een zelf-relatie met een associatieklasse hangt niet meer los.
+De assistent en de MCP kunnen een diagram hernoemen.
+
+**Render 0.3.4**: de tekenaar van studio 0.32.0 (bundel). De SVG van de server verandert: oude
+generalisaties gevouwen, «gebruikt» uit het veldtype, lijnen spreiden en verschuiven, de
+zelf-relatie met associatieklasse.
+
+Getest op main fe68953c (BACKEND): 1441 unit, vite build, render-svc 6, Studio-e2e 110/110 (eigen
+Vite op 5182; `14-studio-vormen` faalde één keer onder parallelle belasting, los en bij een tweede
+volledige run groen), `go test ./cmd/codegen` groen.
+
+Uitrol: images `bitemp-viz-frontend:0.32.0` (met `--build-arg VITE_GIT_SHA=$(git rev-parse
+--short HEAD)`) en `bitemp-render-svc:0.3.4`, daarna `./update.sh` op app. Geen migratie en geen
+nieuwe instellingen; api blijft 0.20.0. Fundament: frontend en render op digest, plus
+`bitemp-devloop:0.24.12` (de codegen-controle op subtypes), uitrol door FUNDAMENT.
+
+---
+
 ## api 0.20.0 (2026-11-06)
 
 Defensief samenwerken (besluit Mark 06-11): een Studio-project wordt niet meer in zijn geheel
