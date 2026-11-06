@@ -585,6 +585,15 @@ te wijzigen.
 > een ander uit via dezelfde actie, met de undo gepauzeerd **en gerebased**
 > (anders zou je eigen Ctrl+Z andermans werk wissen).
 >
+> **`laadModel` via het vangnet (2026-11-06, besluit Mark: "Nu liever defensief").**
+> Een hele vervanging als één operatie zette een wijziging van buitenaf terug: een
+> open tab stuurde zijn oude kopie, en een PUT van FUNDAMENT op project Inrichten
+> was weg. `laadModel` staat daarom niet meer in `MODEL_OPS`; het vangnet stuurt
+> alleen wat inhoudelijk verschilt (`diffMap` vergelijkt bij een andere referentie
+> ook de inhoud, `gelijk`). Een tab die zijn eigen kopie herlaadt, stuurt niets.
+> Oude `laadModel`-ops in een serverlog blijven naspeelbaar. Aan de serverkant
+> weigert een volledige PUT zolang er iemand in het project bezig is (BACKEND).
+>
 > **Werkruimte en live-sync (2026-10-07, onderdeel 3–4):** de projectboom-store
 > is in twee lagen gesplitst: project (mappen, plaatsing, identiteit; sleutel
 > `studio-modelleren`) en werkruimte (tabs, actieve tab, open/dicht mappen;

@@ -68,7 +68,8 @@ test("modelacties leveren benoemde operaties en spelen identiek na", () => {
 
   assert.deepEqual(
     ops.map((o) => o.op),
-    ["laadModel", "addElement", "addDiagram", "addElementToDiagram", "updateNodePosition", "updateElement", "renameDiagram", "deleteElement"]
+    // laadModel gaat via het vangnet (besluit Mark 06-11): alleen het verschil, als patch-ops.
+    ["patchElementen", "patchDiagrammen", "addElement", "addDiagram", "addElementToDiagram", "updateNodePosition", "updateElement", "renameDiagram", "deleteElement"]
   );
   const b = speelNa(ops, "na1");
   assert.deepEqual(kern(b.getState()), kern(store.getState()));
@@ -229,4 +230,23 @@ test("sync-vocabulaire: relaties tonen/verbergen en map-beschrijving (ook de oud
   for (const op of ["zetMapBeschrijving", "zetMapOmschrijving"]) {
     assert.ok(op in STRUCTUUR_OPS, `STRUCTUUR_OPS mist ${op}`);
   }
+});
+
+test("laadModel stuurt alleen het verschil; dezelfde (oude) kopie opnieuw laden stuurt niets (besluit Mark 06-11)", () => {
+  const { store, ops, klaar } = maakGekoppeld();
+  const a = store.getState();
+  a.laadModel(model());
+  ops.length = 0;
+  // Dezelfde inhoud opnieuw laden (bv. een tab die zijn eigen kopie herlaadt): geen operatie,
+  // dus ook geen terugdraaien van wat een ander intussen op de server zette.
+  a.laadModel(model());
+  assert.deepEqual(ops.map((o) => o.op), []);
+  // Een kopie met één wijziging: alleen dat element gaat mee.
+  const m = model();
+  m.elements = { ...m.elements, A: { ...m.elements.A, naam: "A-nieuw" } };
+  a.laadModel(m);
+  assert.deepEqual(ops.map((o) => o.op), ["patchElementen"]);
+  assert.deepEqual(Object.keys(ops[0].args[0].zet), ["A"]);
+  assert.deepEqual(ops[0].args[0].wis, []);
+  klaar();
 });
