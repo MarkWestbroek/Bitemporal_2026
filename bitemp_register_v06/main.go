@@ -416,6 +416,8 @@ func NewRouter() *gin.Engine {
 	// openbare variant is een gedeelde link van soort "svg" op /api/beeld/<token>.svg hierboven.
 	router.GET("/api/studio/projecten/:id/diagram.svg", ingelogd, pLezen, handlers.MaakStudioProjectDiagramSvgHandler())
 	router.GET("/api/studio/projecten/:id/views.json", ingelogd, pLezen, handlers.MaakStudioProjectViewsHandler())
+	// V3-model van een project (de terugreis van de Studio in de sidecar; rebuild_uit_project.go).
+	router.GET("/api/studio/projecten/:id/v3", ingelogd, pLezen, handlers.MaakStudioProjectV3Handler())
 	// Werkruimte (tabs, open mappen) per gebruiker per project: van jou, laatste schrijver wint.
 	router.GET("/api/studio/projecten/:id/werkruimte", ingelogd, pLezen, handlers.MaakStudioWerkruimteOphalenHandler())
 	router.PUT("/api/studio/projecten/:id/werkruimte", ingelogd, pLezen, handlers.MaakStudioWerkruimteOpslaanHandler())

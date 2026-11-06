@@ -148,7 +148,46 @@ Ondersteunde bronnen zijn:
 - `schema_versie_id` — expliciet record uit `schema_versies`
 - `schema_bron: "actief"`
 - `schema_bron: "latest_proposed"`
+- `project_id` — een **Studio-project** (sinds 07-11-2026, zie hieronder)
 - geen body — export vanuit de huidige code/MetaRegistry
+
+### Rebuild uit een Studio-project (07-11-2026, besluit Mark: "het model is de bron")
+
+`POST /admin/rebuild {"project_id": "<id>", "domeinen"?: [...], "profiel"?: "diagram05"}` bouwt het
+register uit het canonieke model van een Studio-project. Code: `handlers/rebuild_uit_project.go`.
+
+1. De API knipt het canonieke profiel (`inhoud->'profielen'->'diagram05'`) uit de snapshot, net als
+   diagram.svg.
+2. De render-sidecar maakt er V3 van (`POST /export/v3`, render 0.3.5 of later). Dat is dezelfde
+   terugreis als *Exporteer V3* in de Studio, inclusief de modelmigraties (overerving, «gebruikt»).
+   Er is geen Go-kopie van die omzetting. De envelop van de export wordt uitgepakt.
+3. Daarna volgt het gewone pad. Zonder `domeinen` worden **alle** domeinen van het model gebouwd,
+   zoals bij de startup-rebuild.
+4. De gebouwde versie wordt actief, met `bron: "studio-project"` en de herkomst `bron_project_id`,
+   `bron_project_versie` en `bron_tot_volgnummer`. Die staan ook in `GET /api/schema/versies`, zodat
+   je ziet of het register achterloopt op de Studio.
+
+Het antwoord heeft dezelfde vorm als altijd (`status`, `stappen`, `build_output`, `error`), plus
+`bron` (project, versie, volgnummer, render-versie) en `meldingen` (uit de V3-controle van de
+Studio). Bij een weigering staat er een `reden` in:
+
+| Status | `reden` | Wanneer |
+|---|---|---|
+| 409 | `achterstand` | het operatielog heeft wijzigingen ná de snapshot (`tot_volgnummer`, `laatste_volgnummer` erbij); zet eerst een snapshot. De Studio-knop *Register bouwen* doet dat zelf. |
+| 409 | `bezig` | er loopt al een rebuild |
+| 404 | `geen_project` | onbekend project |
+| 422 | `geen_profiel` / `export` | geen canoniek profiel in de snapshot / de terugreis faalt (`meldingen` erbij) |
+| 502 | `sidecar` | sidecar onbereikbaar, of te oud (kent `/export/v3` niet) |
+| 500 | – | codegen of go build faalt (`stappen`, `build_output`), bv. een subtype met `isMaterieel` |
+
+Ops ná de snapshot spelen we (nog) niet na (keuze Mark 07-11). De sidecar kan het al (`ops`).
+
+Alleen het model bekijken, zonder te bouwen: `GET /api/studio/projecten/:id/v3[?profiel=]`. Daarvoor
+moet je ingelogd zijn met leesrecht op het project (ook met een API-token); de route bestaat ook
+buiten devloop. Het antwoord is `{model, meldingen, bron}` met de headers `X-Omnium-Achterstand`,
+`X-Omnium-Project-Versie` en `X-Render-Versie`. Bij achterstand komt het model van de snapshot toch
+mee; `bron.achterstand` zegt hoeveel wijzigingen er niet in zitten. Dit is handig om de pariteit
+met een V3-bestand te controleren.
 
 ### Startup-rebuild: de actieve databaseversie als bron van waarheid (sinds 22-10-2026)
 

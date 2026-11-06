@@ -32,4 +32,9 @@ type SchemaVersie struct {
 	GoModule          string             `json:"go_module,omitempty" bun:"go_module"`
 	Status            SchemaVersieStatus `json:"status" bun:"status,notnull,default:'proposed'"`
 	Opmerking         string             `json:"opmerking,omitempty" bun:"opmerking"`
+	// Herkomst bij een rebuild uit een Studio-project (07-11-2026): welk project, welke
+	// projectversie en t/m welk volgnummer van het operatielog. Leeg bij andere bronnen.
+	BronProjectID     string `json:"bron_project_id,omitempty" bun:"bron_project_id"`
+	BronProjectVersie *int64 `json:"bron_project_versie,omitempty" bun:"bron_project_versie"`
+	BronTotVolgnummer *int64 `json:"bron_tot_volgnummer,omitempty" bun:"bron_tot_volgnummer"`
 }

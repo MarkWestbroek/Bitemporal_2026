@@ -488,7 +488,8 @@ func MaakLijstSchemaVersiesHandler() gin.HandlerFunc {
 		var versies []model.SchemaVersie
 		query := DB.NewSelect().
 			Model(&versies).
-			Column("id", "tijdstip", "bron", "model_naam", "model_beschrijving", "model_versie", "indiener", "build_versie", "go_module", "status", "opmerking").
+			Column("id", "tijdstip", "bron", "model_naam", "model_beschrijving", "model_versie", "indiener", "build_versie", "go_module", "status", "opmerking",
+				"bron_project_id", "bron_project_versie", "bron_tot_volgnummer").
 			OrderExpr(sortExpr)
 
 		if modelNaamFilter != "" {
