@@ -8,6 +8,60 @@
 
 ---
 
+## api 0.21.0 / studio 0.33.0 / render 0.3.5 (2026-11-07)
+
+Het Studio-project wordt de bron van het register (besluit Mark 07-11: "het model is de bron voor
+het genereren"). Op Fundament bouwde de rebuild uit een V3-bestand in een repo, terwijl de Studio
+uit losse domeinbestanden gevuld was; die liepen uit elkaar.
+
+**Api 0.21.0 / devloop 0.24.13** (BACKEND):
+
+- **`POST /admin/rebuild {project_id, domeinen?, profiel?}`** (alleen devloop, rol admin plus
+  beheerwachtwoord, zoals elke rebuild). De API knipt het canonieke profiel (`diagram05`) uit de
+  snapshot van het project en laat de render-sidecar er V3 van maken. Er is geen tweede
+  omzetting in Go. Zonder `domeinen` worden alle domeinen van het model gebouwd. De gebouwde
+  versie wordt actief met `bron: "studio-project"` en de herkomst `bron_project_id`,
+  `bron_project_versie` en `bron_tot_volgnummer`, die ook in `GET /api/schema/versies` staat.
+- Weigeringen hebben een `reden`:
+  - `achterstand` (409): er zijn wijzigingen ná de snapshot. Zet eerst een snapshot; de Studio doet
+    dat zelf.
+  - `bezig` (409): er loopt al een rebuild.
+  - `geen_project` (404).
+  - `geen_profiel` of `export` (422), met de `meldingen` van de Studio-controle.
+  - `sidecar` (502): de sidecar is onbereikbaar of ouder dan 0.3.5.
+- **`GET /api/studio/projecten/:id/v3`** (ingelogd plus leesrecht, ook met een API-token, ook op
+  app): het V3-model van het project zonder te bouwen, `{model, meldingen, bron}`. Ook bij
+  achterstand; `bron.achterstand` zegt hoeveel wijzigingen er niet in zitten. Bedoeld voor
+  pariteit met een V3-bestand.
+- **Codegen: een subtype heeft geen eigen tijdlijn.** `isMaterieel: true` of `tijdprecisie` op een
+  entiteit met `erft` laat codegen (dus ook een rebuild) falen, met de melding dat de tijdlijn van
+  de ouder komt (CODEGEN.md §7.3d). Dit zat al in devloop 0.24.12; nu ook in de api-tag.
+- Migratie bij het opstarten: drie kolommen op `schema_versies` (`ADD COLUMN IF NOT EXISTS`).
+
+**Render 0.3.5** (OMNIUM-UI): `POST /export/v3 {profiel, ops?, profielId?}` →
+`{model, meldingen, nagespeeld, renderVersie}`. Eerst draaien de modelmigraties van het profiel
+(overerving, «gebruikt», composities), daarna dezelfde export als *Exporteer V3*. `ops` speelt
+bewerkingen ná de snapshot na; de rebuild gebruikt dat nog niet. De bundel trekt nu zustand,
+zundo en react mee; die staan als devDependencies in render-svc, zodat Dockerfile.render bouwt.
+
+**Studio 0.33.0** (OMNIUM-UI): **Project → Register bouwen…** zet eerst een snapshot, vraagt het
+beheerwachtwoord, bouwt via `/admin/rebuild {project_id}` en wacht op `/health`. Het item staat er
+alleen als de server een devloop is; op app (404 op `/admin/rebuild/status`) blijft het weg.
+
+Getest op main b9052c31 (BACKEND): 1441 unit, vite build, render-svc 9/9, Studio-e2e 112/112 (eigen
+Vite op 5182), `go test ./...` groen, ook tegen PostgreSQL. De keten api → sidecar is beproefd
+met een echt model: Portfolio.v3 → profiel → `/export/v3` → rebuild-invoer gaf dezelfde
+entiteiten, GE's, materialiteit, enums en datatypes. Niet beproefd: een volledige rebuild in een
+devloop-container uit een project.
+
+Uitrol: images `bitemp-go-api:0.21.0`, `bitemp-viz-frontend:0.33.0` (met `--build-arg
+VITE_GIT_SHA=$(git rev-parse --short HEAD)`) en `bitemp-render-svc:0.3.5`, daarna `./update.sh` op
+app. Geen nieuwe instellingen. Op app bestaat alleen de leesroute `…/v3`, want de rebuild is
+devloop-only. Fundament: `bitemp-devloop:0.24.13`, frontend en render op digest, uitrol door
+FUNDAMENT. Render 0.3.5 moet er zijn vóór een rebuild uit een project.
+
+---
+
 ## studio 0.32.0 / render 0.3.4 (2026-11-06)
 
 Een avond met Mark en FUNDAMENT in het registermodel: overerving en «gebruikt» worden echte
