@@ -17,7 +17,7 @@ func subtypeTestModel() model.V3Model {
 		Versie: "v3",
 		Entiteiten: []model.V3Entiteit{
 			{
-				Typenaam: "GpkAanvraag", Meervoud: "gpk_aanvragen", Domein: "parkeren", Erft: "Aanvraag", IsMaterieel: true,
+				Typenaam: "GpkAanvraag", Meervoud: "gpk_aanvragen", Domein: "parkeren", Erft: "Aanvraag",
 				Gegevenselementen: []model.V3Gegevenselement{{
 					Naam: "GpkGegevens", Meervoud: "gpk_gegevens", Momentvoorkomen: "enkelvoudig",
 					Velden: []model.V3Veld{{Naam: "kenteken", GoType: "string"}},
@@ -77,5 +77,33 @@ func TestEntiteiten_SubtypeToontIDInJSON(t *testing.T) {
 	}
 	if strings.Contains(code, "`json:\"aanvraag_id\"") {
 		t.Errorf("aanvraag_id hoort niet in de JSON van het subtype")
+	}
+}
+
+// Een subtype heeft geen eigen tijdlijn (besluit Mark 06-11-2026): isMaterieel of tijdprecisie op
+// een entiteit met `erft` wordt geweigerd; op de ouder mag het wel.
+func TestValidatie_SubtypeGeenEigenTijdlijn(t *testing.T) {
+	v3 := subtypeTestModel()
+	v3.Entiteiten = append(v3.Entiteiten, model.V3Entiteit{Typenaam: "Aanvraag", Meervoud: "aanvragen", Domein: "parkeren", IsMaterieel: true, Tijdprecisie: "tijdstip"})
+	if errs := validateV3Model(v3, ""); len(errs) != 0 {
+		t.Fatalf("subtype zonder tijdlijn onder een materiële ouder hoort geldig te zijn: %v", errs)
+	}
+
+	v3.Entiteiten[0].IsMaterieel = true
+	errs := validateV3Model(v3, "")
+	if len(errs) != 1 || !strings.Contains(errs[0], "GpkAanvraag erft van Aanvraag") || !strings.Contains(errs[0], "isMaterieel: true") || !strings.Contains(errs[0], "komt van Aanvraag") {
+		t.Fatalf("isMaterieel op een subtype: %v", errs)
+	}
+
+	v3.Entiteiten[0].Tijdprecisie = "datum"
+	errs = validateV3Model(v3, "")
+	if len(errs) != 1 || !strings.Contains(errs[0], "isMaterieel: true en tijdprecisie 'datum'") {
+		t.Fatalf("isMaterieel + tijdprecisie op een subtype: één melding verwacht: %v", errs)
+	}
+
+	v3.Entiteiten[0].IsMaterieel = false
+	errs = validateV3Model(v3, "")
+	if len(errs) != 1 || !strings.Contains(errs[0], "tijdprecisie 'datum' heeft bij een subtype geen betekenis") {
+		t.Fatalf("tijdprecisie op een subtype: %v", errs)
 	}
 }
