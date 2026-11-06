@@ -213,12 +213,19 @@ het adres meteen 404 en is de lijst weer leeg. `theme` kent `auto`, `light` en `
 waarde geeft 400. Niet beproefd: de knop in de Studio zelf op app (met de snapshot op verzoek), en een
 tweede client tegelijk.
 
-Daarbij gevonden: de kop van de buitenste levenslijn viel buiten de `viewBox` (opgelost in de
-tekenaar, zie `web/vite/CHANGELOG.md`; in de render-API met het eerstvolgende render-image). En
-de twaalf sequence-diagrammen van dat project zijn via de MCP gemaakt: levenslijnen als doos van
-160 × 70 zonder punten, zodat de berichten van doosrand naar doosrand lopen, alle op één hoogte.
-Het canvas tekent ze precies zo (paden gelijk); dat is de inhoud van het model, geen
-renderverschil.
+Daarbij gevonden, en opgelost in de tekenaar (zie `web/vite/CHANGELOG.md`, Unreleased; de
+render-API toont het met het eerstvolgende render-image):
+
+- de kop van de buitenste levenslijn viel buiten de `viewBox`;
+- de tekenaar tekende niet alles wat het canvas tekent: de geïmporteerde presentatie-edges van
+  een diagram (de «use»-lijnen van het canonieke model), de afgeleide vakken van de hook
+  `extraCompartimenten` (validatie en weergave van een gegevenstype), een opgenomen deel als
+  sub-vak, en de stijl per labeldeel. Canvas en tekenaar delen daar nu één functie voor;
+- de twaalf sequence-diagrammen van *Omnium architectuur* zijn via de MCP gemaakt: levenslijnen
+  als doos van 160 × 70 zonder punten, de berichten van doosrand naar doosrand op één hoogte,
+  geen activaties. Het canvas tekende ze precies zo (paden gelijk), dus geen renderverschil. Een
+  levenslijn is nu altijd 14 breed, en de MCP maakt voortaan punten bij elk bericht
+  (`tools/omnium-mcp/README.md`). De bestaande diagrammen op app zijn daarmee nog niet hersteld.
 
 ## Eisen aan de SVG (afspraken met Imprint)
 

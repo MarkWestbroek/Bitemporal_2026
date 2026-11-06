@@ -14,6 +14,7 @@
  */
 import { legUit } from "../../transformatie/kolommenLayout.js";
 import { berekenUitlijning } from "../../diagramcore/layout/uitlijnen.js";
+import { plaatsSequenceUitPlan } from "../../diagramprofielen/sequence/plaatsUitPlan.js";
 
 const slug = (tekst) =>
   String(tekst || "")
@@ -25,6 +26,16 @@ const slug = (tekst) =>
     .toLowerCase();
 
 const STANDAARD = { breedte: 160, hoogte: 70 };
+
+/**
+ * Profiel-nazorg na het plaatsen, per diagramtype: wat het canvas via de hooks van het profiel
+ * doet (`naVerbinden`), maar wat een plan niet kan vragen. De hooks zelf laden niet in Node (de
+ * profielmodules importeren JSX), dus de MCP kan ze niet aanroepen; daarom hier als pure functie,
+ * voor de ✨ assistent en de MCP gelijk. Sequence: levenslijnen op één rij en bij elk bericht
+ * zijn punten, zodat de activaties ontstaan (06-11).
+ * @type {Record<string, typeof plaatsSequenceUitPlan>}
+ */
+const NA_PLAATSEN = { sequence: plaatsSequenceUitPlan };
 
 /** Velden ({compartiment, fieldType, soort, velden}) toevoegen aan compartimenten; namen niet dubbel (hoofdletterongevoelig). */
 function voegVeldenToe(compartimenten, { compartiment, fieldType, soort, velden }) {
@@ -202,6 +213,13 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     }
   }
   const zonderDiagram = [];
+  const relatiesOp = new Map(); // diagram-sleutel → relatie-ids, in planvolgorde (voor de nazorg)
+  const onthoudRelatie = (sleutel, id) => { if (!relatiesOp.has(sleutel)) relatiesOp.set(sleutel, []); relatiesOp.get(sleutel).push(id); };
+  const bestaandSleutel = (profielId, did) => {
+    const sleutel = `bestaand:${did}`;
+    if (!diagramId.has(sleutel)) diagramId.set(sleutel, { profielId, id: did, nieuw: false, map: null });
+    return sleutel;
+  };
   for (const c of plan.connectoren) {
     const bron = ref(c.bron), doel = ref(c.doel);
     const bronEl = elementVan(c.profielId, bron), doelEl = elementVan(c.profielId, doel);
@@ -213,7 +231,8 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     let sleutel = c.diagram || diagramVanElement.get(bron) || diagramVanElement.get(doel) || null;
     if (!sleutel) {
       const opB = opBestaand(c.profielId, bron), opD = opBestaand(c.profielId, doel);
-      if (opB.some((d) => opD.includes(d))) continue;
+      const samen = opB.find((d) => opD.includes(d));
+      if (samen) { onthoudRelatie(bestaandSleutel(c.profielId, samen), id); continue; }
       const plan1 = plan.diagrammen.find((d) => d.profielId === c.profielId);
       if (plan1) sleutel = plan1.sleutel;
       else if (opB.length || opD.length) {
@@ -224,10 +243,12 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     }
     zetOp(sleutel, bron);
     zetOp(sleutel, doel);
+    onthoudRelatie(sleutel, id);
   }
 
   // ── 5. Knopen en opstelling per diagram ──
   const openen = [];
+  const knopenOp = new Map(); // diagram-sleutel → nieuwe element-ids, in planvolgorde (voor de nazorg)
   for (const [sleutel, ids] of nodesBij) {
     const d = diagramId.get(sleutel);
     if (!d) continue;
@@ -267,7 +288,37 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     const isC = (n) => (etVan(d.profielId, elementVan(d.profielId, n.elementId)?.elementType)?.container ? 1 : 0);
     nodes.sort((a, b) => isC(b) - isC(a));
     bij(d.profielId).diagrams[d.id] = { ...huidigDiagram, nodes: [...oud, ...nodes] };
+    knopenOp.set(sleutel, nieuw);
     openen.push({ profielId: d.profielId, diagramId: d.id });
+  }
+
+  // ── 5a. Profiel-nazorg (NA_PLAATSEN): op elk diagram waar dit plan knopen of relaties zette ──
+  for (const sleutel of new Set([...knopenOp.keys(), ...relatiesOp.keys()])) {
+    const d = diagramId.get(sleutel);
+    const nazorg = d && NA_PLAATSEN[taal.get(d.profielId)?.diagramTypeId];
+    if (!nazorg) continue;
+    const diagram = bij(d.profielId).diagrams[d.id] || huidig(d.profielId).diagrams?.[d.id];
+    if (!diagram) continue;
+    const uitgegeven = new Set();
+    const uit = nazorg({
+      diagram,
+      elements: { ...huidig(d.profielId).elements, ...bij(d.profielId).elements },
+      nieuweKnopen: knopenOp.get(sleutel) || [],
+      nieuweRelaties: relatiesOp.get(sleutel) || [],
+      maakPuntId: (berichtId, rol) => {
+        let id = uniek(d.profielId, `${berichtId}_${rol}`);
+        for (let n = 2; uitgegeven.has(id); n += 1) id = uniek(d.profielId, `${berichtId}_${rol}_${n}`);
+        uitgegeven.add(id);
+        return id;
+      },
+    });
+    if (!uit) continue;
+    bij(d.profielId).diagrams[d.id] = { ...diagram, nodes: uit.nodes };
+    Object.assign(bij(d.profielId).elements, uit.elements);
+    // De punten volgen hun diagram in de boom, zoals de elementen uit het plan.
+    const map = d.nieuw ? d.map ?? mapId : stand.plaatsing?.[`${d.profielId}::${d.id}`] ?? mapId;
+    for (const id of uit.punten) plaatsing[`el::${d.profielId}::${id}`] = map;
+    if (!openen.some((o) => o.profielId === d.profielId && o.diagramId === d.id)) openen.push({ profielId: d.profielId, diagramId: d.id });
   }
   // Leden die (nog) buiten hun container liggen, erin zetten — onder wat er al in ligt — en de
   // container zo nodig groter maken. Op elk gewijzigd diagram, en op bestaande diagrammen waar
@@ -352,7 +403,8 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     if (!diagram) continue;
     const nodes = (diagram.nodes || []).map((n) => ({ ...n, position: { ...n.position } }));
     const opId = new Map();
-    for (const n of nodes) if (!opId.has(n.elementId) && elementVan(d.profielId, n.elementId) && !elementVan(d.profielId, n.elementId).source) opId.set(n.elementId, n);
+    // Rand-elementen (punten op een levenslijn) staan relatief aan hun gastheer: ze doen niet zelf mee.
+    for (const n of nodes) if (!opId.has(n.elementId) && elementVan(d.profielId, n.elementId) && !elementVan(d.profielId, n.elementId).source && !elementVan(d.profielId, n.elementId).data?.randVan) opId.set(n.elementId, n);
     const leden = ledenVan(d.profielId);
     // "Alles" bij verdelen: zonder de leden van een container die ook meedoet — die schuiven met
     // hem mee (anders verdeel je een kader en zijn inhoud naast elkaar). Bij uitlijnen doen ze

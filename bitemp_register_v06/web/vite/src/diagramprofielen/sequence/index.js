@@ -231,6 +231,17 @@ export const sequenceDiagramType = {
   layouts: [],
   // Geen automatische layout: de volgorde van boven naar beneden ís de betekenis (18-10).
   layoutStijlen: [],
+  // Voor de ✨ assistent en de MCP: een plan kent alleen levenslijnen en berichten; de punten
+  // en daarmee de activaties maakt plaatsUitPlan.js erbij, zoals het canvas dat doet (06-11).
+  assistent: {
+    aanwijzingen: [
+      "Maak alleen levenslijnen en berichten van levenslijn naar levenslijn. Maak zelf geen punten en geen activaties: de punten ontstaan bij elk bericht, en de activaties (de balkjes op de lijn) volgen daaruit.",
+      "De volgorde van de berichten in het plan is de volgorde van boven naar beneden in het diagram; de levenslijnen komen op één rij in de volgorde van het plan.",
+      "Een aanroep is een synchroon bericht; het antwoord is een retourbericht in de andere richting. Zo ontstaat op de ontvanger een activatie van de aanroep tot de retour.",
+      "Een bericht van een levenslijn naar zichzelf is een zelf-aanroep.",
+      "Stel een sequence-diagram niet opnieuw op met `opstelling`: de hoogte van de berichten is de volgorde.",
+    ],
+  },
 };
 
 let _teller = 0;

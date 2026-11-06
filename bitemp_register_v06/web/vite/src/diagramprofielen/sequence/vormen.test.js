@@ -189,10 +189,32 @@ test("het beeld van een diagram omvat de koppen van de buitenste levenslijnen (d
   ]);
   assert.ok(smal.x <= 100 - 67, `de linkerkop valt binnen het beeld (viewBox begint op ${smal.x})`);
   assert.ok(smal.x + smal.w >= 400 + 81, `de rechterkop valt binnen het beeld (viewBox eindigt op ${smal.x + smal.w})`);
-  // Gemaakt via de MCP: een doos van 160 x 70 met de lijn links; ook dan de linkerkop in beeld.
+  // Een bewaarde doos van 160 x 70 (de MCP schreef die tot 06-11): ook dan de linkerkop in beeld.
   const breed = beeld([
     { elementId: "a", position: { x: 40, y: 40 }, size: { width: 160, height: 70 } },
     { elementId: "b", position: { x: 300, y: 40 }, size: { width: 160, height: 70 } },
   ]);
   assert.ok(breed.x <= 40 - 67, `de linkerkop valt binnen het beeld (viewBox begint op ${breed.x})`);
+});
+
+test("levenslijn is nooit breder dan 14: een bewaarde breedte (MCP, import) wordt afgeknipt, de hoogte niet", () => {
+  const l = teken("seq-levenslijn", el("levenslijn", "Zaaksysteem"), LIJN, { ref: { size: { width: 160, height: 70 } } });
+  assert.deepEqual([l.box.w, l.box.h], [14, 500], "14 breed, en tot de ondergrens van 500 hoog");
+  assert.deepEqual(l.box.bovengrens, { w: 14 });
+  const lang = teken("seq-levenslijn", el("levenslijn", "Zaaksysteem"), LIJN, { ref: { size: { width: 14, height: 900 } } });
+  assert.deepEqual([lang.box.w, lang.box.h], [14, 900], "een langere lijn blijft lang");
+  // Berichten lopen daardoor van lijn tot lijn, niet van de rand van een onzichtbaar kader.
+  const elements = {
+    a: { id: "a", naam: "A", elementType: "levenslijn", data: {}, compartimenten: [] },
+    b: { id: "b", naam: "B", elementType: "levenslijn", data: {}, compartimenten: [] },
+    m: { id: "m", naam: "vraag", elementType: "bericht", source: "a", target: "b", data: {} },
+  };
+  const descriptor = { id: "sequence", elementTypes: [LIJN, { id: "bericht", isConnector: true, bron: { elementTypes: ["levenslijn"] }, doel: { elementTypes: ["levenslijn"] }, edgePresentatie: { vorm: "recht", markerEnd: "pijl-dicht" } }] };
+  const nodes = [
+    { elementId: "a", position: { x: 40, y: 40 }, size: { width: 160, height: 70 } },
+    { elementId: "b", position: { x: 300, y: 40 }, size: { width: 160, height: 70 } },
+  ];
+  const { boom } = tekenDiagram({ diagram: { id: "d", naam: "D", nodes, edges: [] }, elements, descriptor, idPrefix: "t" });
+  const pad = JSON.stringify(boom).match(/"data-connector-id":"m","d":"([^"]+)"/)[1];
+  assert.equal(pad, "M 59,290L 295,290", "van 5 voorbij de lijn van A (40 + 14) tot 5 voor de lijn van B (300)");
 });

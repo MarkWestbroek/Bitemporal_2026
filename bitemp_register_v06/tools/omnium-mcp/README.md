@@ -54,6 +54,13 @@ staat (`op <diagram> @ x,y (b×h)`). Layouts per taal staan in `modeltalen` (`La
 MCP laadt de strategie uit de profielmodule, of bouwt de algemene layout op de leesvolgorde uit
 `profielen.json`.
 
+**Sequence (06-11).** Een plan voor een sequence-diagram noemt alleen levenslijnen en berichten
+van levenslijn naar levenslijn, in de volgorde van het gesprek. De gedeelde wijzigingscode zet de
+levenslijnen op één rij en maakt bij elk bericht de twee punten op de lijn, onder elkaar in
+planvolgorde, zoals het canvas dat doet (`web/vite/src/diagramprofielen/sequence/plaatsUitPlan.js`).
+De Studio leidt daaruit de activaties af. Een AI-client maakt zelf geen punten of activaties; dat
+staat ook in `modeltalen` voor `sequence05`. Diagrammen van vóór 06-11 hebben die punten niet.
+
 Vereisten: de Studio-code in `web/vite` moet zijn afhankelijkheden hebben (`npm install` daar).
 De talen staan in `profielen.json`; **na een wijziging aan een profiel opnieuw genereren** met
 `node scripts/profielen-voor-mcp.mjs` (vanuit `web/vite`).

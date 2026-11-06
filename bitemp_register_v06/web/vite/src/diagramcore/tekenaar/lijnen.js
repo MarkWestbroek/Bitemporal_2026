@@ -39,6 +39,26 @@ const LABEL = 10;
 const CHIP_H = 16;
 /** Afstand tussen labels op dezelfde zijde van een lijn (ConnectorEdge: 18). */
 const LABEL_STAPEL = 18;
+const LABEL_GAP = 4;
+
+/**
+ * De stijl van één labeldeel, zoals `.dc-edge-<soort>` in diagramcore.css: rolnaam vet,
+ * kardinaliteit paars en vet, constraint klein en cursief, een naam-soort cursief. Een eigen
+ * kleur van het deel wint. Zonder soort: de tekstkleur als het label de relatienaam draagt,
+ * anders gedempt.
+ * @param {{soort?: string, kleur?: string, veld?: string}} deel
+ * @param {{text: string, muted: string}} thema
+ * @param {boolean} heeftNaam - het label bevat het naamveld van de relatie
+ * @returns {Record<string, string|number>} SVG-attributen (fill, font-weight, font-style, font-size)
+ */
+function deelStijl(deel, thema, heeftNaam) {
+  const s = deel.soort;
+  const stijl = { fill: deel.kleur || (s === "kardinaliteit" ? "#7c3aed" : s === "rolnaam" || heeftNaam ? thema.text : thema.muted) };
+  if (s === "kardinaliteit" || s === "rolnaam") stijl["font-weight"] = 600;
+  if (s === "constraint" || s === "naam") stijl["font-style"] = "italic";
+  if (s === "constraint") stijl["font-size"] = 9;
+  return stijl;
+}
 const LUS_UIT = 56;
 const BOOM_LAT = 40;
 const RUIT_LENGTE = 22;
@@ -263,7 +283,7 @@ export function tekenLijnen({ edges, boxen, elements, thema, idPrefix }) {
 
     const hex = veiligeKleur(p.kleur, null);
     const kleur = !hex || SLATE.has(hex) ? thema.border : hex;
-    const attrs = { class: "dc-lijn", "data-connector-id": el.id, d, fill: "none", stroke: kleur, "stroke-width": p.dikte || 1.5, "stroke-linejoin": "round" };
+    const attrs = { class: "dc-lijn", "data-connector-id": el.id, ...(el.id || !e.id ? {} : { "data-edge-id": e.id }), d, fill: "none", stroke: kleur, "stroke-width": p.dikte || 1.5, "stroke-linejoin": "round" };
     if (DASHES[p.lijn]) attrs["stroke-dasharray"] = DASHES[p.lijn];
     if (p.opacity !== undefined) attrs.opacity = p.opacity;
     const mEnd = p.markerEnd ? markerId(p.markerEnd, kleur, false) : null;
@@ -293,20 +313,28 @@ export function tekenLijnen({ edges, boxen, elements, thema, idPrefix }) {
       const zijde = posities[label.zijde] ? label.zijde : "midden";
       const stapelIdx = (stapel[zijde] = (stapel[zijde] ?? -1) + 1);
       const delen = (label.delen || []).filter((x) => x.tekst);
-      const tekst = delen.map((x) => x.tekst).join(" ");
-      if (!tekst) continue;
+      if (!delen.length) continue;
       const basis = posities[zijde];
       const pos = { x: basis.x + (label.offset?.x || 0), y: basis.y + (label.offset?.y || 0) + stapelIdx * LABEL_STAPEL };
       const naamDeel = delen.find((x) => x.veld === "naam");
-      const eerste = delen[0]?.soort;
-      const kleurLabel = delen[0]?.kleur || (eerste === "kardinaliteit" ? "#7c3aed" : eerste === "rolnaam" ? thema.text : naamDeel ? thema.text : thema.muted);
-      const bw = tekstBreedte(tekst, LABEL) + 12;
+      // Elk deel in zijn eigen stijl, zoals het canvas (.dc-edge-<soort>): een rolnaam vet,
+      // een kardinaliteit paars en vet, een constraint klein en cursief. Tot 06-11 kreeg het
+      // hele label de stijl van zijn eerste deel ("Naam 0..1 {enkelvoudig}" als één zwarte tekst).
+      const stijlen = delen.map((deel) => deelStijl(deel, thema, !!naamDeel));
+      // Tussen de delen 4 px (de gap van .dc-edge-label); een staart sluit aan op zijn naam.
+      const tussen = delen.map((deel, i) => (i === 0 || deel.soort === "staart" ? 0 : LABEL_GAP));
+      const bw = delen.reduce((som, deel, i) => som + tussen[i] + tekstBreedte(deel.tekst, stijlen[i]["font-size"] || LABEL, { vet: stijlen[i]["font-weight"] === 600 }), 0) + 12;
       kinderen.push(vorm("rect", { x: pos.x - bw / 2, y: pos.y - CHIP_H / 2, width: bw, height: CHIP_H, rx: 4, fill: thema.surface, "fill-opacity": 0.9, stroke: thema.border, "stroke-opacity": 0.4 }));
       // data-dc-label: de connector van dit label (voor tests en voor wie de SVG naloopt).
-      const attrsT = { x: pos.x, y: pos.y + 3.5, "text-anchor": "middle", "font-size": LABEL, fill: kleurLabel, ...(el.id ? { "data-dc-label": el.id } : {}) };
-      if (eerste === "kardinaliteit" || eerste === "rolnaam") attrsT["font-weight"] = 600;
+      const attrsT = { x: pos.x, y: pos.y + 3.5, "text-anchor": "middle", "font-size": LABEL, ...(el.id || e.id ? { "data-dc-label": el.id || e.id } : {}) };
       if (naamDeel) attrsT["data-dc-veld"] = `connector:${el.id}:naam`;
-      kinderen.push(vorm("text", attrsT, tekst));
+      if (delen.length === 1) {
+        // Eén deel: de stijl op de tekst zelf.
+        kinderen.push(vorm("text", { ...attrsT, ...stijlen[0], "font-size": stijlen[0]["font-size"] || LABEL }, delen[0].tekst));
+      } else {
+        // Meer delen: één gecentreerde tekst met een tspan per deel; de browser zet ze achter elkaar.
+        kinderen.push(vorm("text", attrsT, ...delen.map((deel, i) => vorm("tspan", { ...(tussen[i] ? { dx: tussen[i] } : {}), ...stijlen[i] }, deel.tekst))));
+      }
       punten.push({ x: pos.x - bw / 2, y: pos.y - CHIP_H / 2 }, { x: pos.x + bw / 2, y: pos.y + CHIP_H / 2 });
     }
   }

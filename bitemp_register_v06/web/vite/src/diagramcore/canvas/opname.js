@@ -136,3 +136,24 @@ export function opnameCompartiment(geheel, delen, elementTypesById, elements = n
   });
   return { compartmentType, velden };
 }
+
+/**
+ * Het element zoals het getekend wordt: met de afgeleide weergave-compartimenten van de
+ * profiel-hook `elementType.hooks.extraCompartimenten(element, { elements })` (overgeërfde
+ * velden, validatie en weergave van een gegevenstype, …) en het sub-vak van opgenomen delen.
+ * Gedeeld door het canvas en de tekenaar: wat hier ontbreekt, ontbreekt in documenten,
+ * gedeelde plaatjes en de render-API (gevonden 06-11: de tekenaar sloeg dit over).
+ * `extra: true` markeert de vakken als niet-eigen (niet inline te bewerken).
+ *
+ * @param {Object} element
+ * @param {Object} elementType
+ * @param {{elements: Record<string, Object>, opnames?: Opnames|null, elementTypesById: Record<string, Object>}} ctx
+ * @returns {Object} hetzelfde element als er niets bijkomt
+ */
+export function verrijkElement(element, elementType, { elements, opnames = null, elementTypesById }) {
+  const extra = [...(elementType?.hooks?.extraCompartimenten?.(element, { elements }) || [])];
+  const opgenomen = opnameCompartiment(element, opnames?.delenVan.get(element.id), elementTypesById, elements);
+  if (opgenomen) extra.push(opgenomen);
+  if (!extra.length) return element;
+  return { ...element, compartimenten: [...(element.compartimenten || []), ...extra.map((c) => ({ ...c, extra: true }))] };
+}

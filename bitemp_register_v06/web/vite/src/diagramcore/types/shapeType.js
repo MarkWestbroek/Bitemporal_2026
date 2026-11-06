@@ -29,7 +29,7 @@ const TEKST_TAGS = new Set(["text", "tspan"]);
 const ANKERS = new Set(["rechthoek", "rand"]);
 const UITLIJNINGEN = new Set(["boven", "midden"]);
 const VERPLICHT_IN_RENDERER = ["omtrek", "inhoudsvak"];
-const OPTIONEEL_IN_RENDERER = ["kindervak", "ornament", "rand", "maat", "ondergrens"];
+const OPTIONEEL_IN_RENDERER = ["kindervak", "ornament", "rand", "maat", "ondergrens", "bovengrens"];
 
 const isGetal = (v) => typeof v === "number" && Number.isFinite(v);
 const isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);

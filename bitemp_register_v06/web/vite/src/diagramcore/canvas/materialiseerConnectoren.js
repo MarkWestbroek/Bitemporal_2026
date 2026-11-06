@@ -201,6 +201,41 @@ export function besteZijde(van, naar) {
 }
 
 /**
+ * De geïmporteerde presentatie-edges van een diagram (`diagram.edges`, bv. de «use»-lijnen van
+ * het canonieke model): geen elementen, wel lijnen. Met genormaliseerde handles: oude modellen
+ * bewaren kale zijden ("left"), en na "normaliseer relaties" zijn ze gewist; dan de kortste weg
+ * tussen de middens. Gedeeld door het canvas en de tekenaar (die sloeg ze tot 06-11 over).
+ *
+ * @param {Object} diagram
+ * @param {Record<string, {width: number, height: number}>} [maten] - gemeten maten per voorkomen
+ * @returns {Array<Object>} edges met `sourceHandle`/`targetHandle` en `hidden`
+ */
+export function geimporteerdeEdges(diagram, maten = {}) {
+  const refs = new Map((diagram?.nodes || []).flatMap((n) => [[voorkomenId(n), n], ...(n.nodeId ? [] : [[n.elementId, n]])]));
+  const mid = (id) => {
+    const r = refs.get(id);
+    if (!r) return null;
+    return {
+      x: (r.position?.x || 0) + (r.size?.width ?? maten[id]?.width ?? 200) / 2,
+      y: (r.position?.y || 0) + (r.size?.height ?? maten[id]?.height ?? 80) / 2,
+    };
+  };
+  return (diagram?.edges || []).map((e) => {
+    let sourceHandle = normaliseerHandle(e.sourceHandle, "source");
+    let targetHandle = normaliseerHandle(e.targetHandle, "target");
+    if (!sourceHandle || !targetHandle) {
+      const b = mid(e.source);
+      const d = mid(e.target);
+      if (b && d) {
+        sourceHandle = sourceHandle || `source-${besteZijde(b, d)}`;
+        targetHandle = targetHandle || `target-${besteZijde(d, b)}`;
+      }
+    }
+    return { ...e, sourceHandle, targetHandle, hidden: e.hidden || false };
+  });
+}
+
+/**
  * @param {Record<string, Object>} elements
  * @param {Object} diagram
  * @param {Record<string, Object>} elementTypesById

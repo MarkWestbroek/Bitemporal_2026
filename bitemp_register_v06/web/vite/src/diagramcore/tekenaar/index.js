@@ -25,8 +25,8 @@ import { maakPalet } from "../../diagramsvg/thema.js";
 import { breekAf } from "../../diagramsvg/tekstmaat.js";
 import { fnv1a } from "../../diagramsvg/svg.js";
 import { schetsDiagramSvg } from "../../transformatie/sjabloon/schets.js";
-import { materialiseerConnectoren, effectieveConnectorGedaante } from "../canvas/materialiseerConnectoren.js";
-import { bepaalOpnames } from "../canvas/opname.js";
+import { materialiseerConnectoren, effectieveConnectorGedaante, geimporteerdeEdges } from "../canvas/materialiseerConnectoren.js";
+import { bepaalOpnames, verrijkElement } from "../canvas/opname.js";
 import { voorkomenId } from "../model/voorkomens.js";
 import { lidConnectoren } from "../types/containerVoor.js";
 import { vorm } from "../types/shapeType.js";
@@ -93,7 +93,8 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
     const vormInfo = vormVoor(soort === "anker" ? "anker" : et?.shape || "class-box", et);
     if (vormInfo.terugval) terugval.add(vormInfo.shapeType.id);
     const box = bouwVoorkomen({
-      element,
+      // Zoals het canvas: met de afgeleide vakken van het profiel en de opgenomen delen.
+      element: soort === "anker" ? element : verrijkElement(element, et, { elements: elements || {}, opnames, elementTypesById: typen }),
       elementType: et,
       shapeType: vormInfo.shapeType,
       renderer: vormInfo.renderer,
@@ -128,7 +129,11 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
 
   // Lijnen en hun ankers/boxen: dezelfde materialisatie als het canvas, met onze maten.
   const maten = Object.fromEntries([...boxen].map(([id, b]) => [id, { width: b.w, height: b.h }]));
-  const { edges, extraNodes } = materialiseerConnectoren(elements, diagram, typen, maten);
+  const gematerialiseerd = materialiseerConnectoren(elements, diagram, typen, maten);
+  const { extraNodes } = gematerialiseerd;
+  // Ook de geïmporteerde presentatie-edges van het diagram («use» in het canonieke model): het
+  // canvas tekent ze, dus de tekenaar ook. Eerst, zoals op het canvas (onder de connectoren).
+  const edges = [...geimporteerdeEdges(diagram, maten), ...gematerialiseerd.edges];
   for (const n of extraNodes) {
     const element = elements[n.connectorId];
     if (!element) continue;

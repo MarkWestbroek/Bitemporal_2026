@@ -101,6 +101,12 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
     const eigen = renderer.maat({ element, elementType: et, parameters, stijl, diagram, elementen: elements, node: ref || null });
     if (eigen) maatRef = { size: { width: eigen.w, height: eigen.h } };
   }
+  // Een bovengrens knipt een bewaarde maat af (levenslijn: altijd 14 breed, ook als een import
+  // of de MCP er een doos van 160 van maakte; anders hangen de berichten aan een onzichtbaar kader).
+  const bovengrens = renderer.bovengrens ? renderer.bovengrens({ element, elementType: et, parameters, stijl, diagram, elementen: elements, node: ref || null }) || null : null;
+  if (bovengrens && maatRef?.size?.width && maatRef?.size?.height) {
+    maatRef = { ...maatRef, size: { width: Math.min(maatRef.size.width, bovengrens.w ?? Infinity), height: Math.min(maatRef.size.height, bovengrens.h ?? Infinity) } };
+  }
   const gemeten = meetVoorkomen({ ref: maatRef, elementType: et, shapeType, planVoor });
   const { plan } = gemeten;
   let { w, h } = gemeten;
@@ -126,7 +132,7 @@ export function bouwVoorkomen({ element, elementType, shapeType, renderer, ref =
     inhoud: plan ? { h: plan.h, minW: plan.minW } : null,
     idPrefix,
   };
-  return { ctx, renderer, w, h, plan, element, et, ondergrens, rand: renderer.rand ? (hoek) => renderer.rand(ctx, hoek) : null };
+  return { ctx, renderer, w, h, plan, element, et, ondergrens, bovengrens, rand: renderer.rand ? (hoek) => renderer.rand(ctx, hoek) : null };
 }
 
 /**
