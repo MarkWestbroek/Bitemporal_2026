@@ -8,6 +8,20 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **Overerving is een modelgegeven** (ERFT-1, Mark/FUNDAMENT 06-11): na een V3-import stond
+  `erft` alleen als lijn op de import-diagrammen. Nu wordt het één `generalisatie`-connector,
+  getekend op elk diagram waar beide entiteiten staan; bestaande projecten worden bij het openen
+  gevouwen (`vouwOudeGeneralisaties`). De V3-export houdt `erft`, ook zonder diagrammen.
+
+### Toegevoegd
+- **«gebruikt» volgt het veldtype** (GEBR-1, Mark/FUNDAMENT 06-11): een veld van het type van een
+  enumeratie, gegevenstype of **referentielijst-item** legt een «gebruikt»-connector
+  (`synchroniseerGebruik`, `data.afgeleid: "veldtype"`), en haalt hem weg als geen veld het type
+  meer gebruikt; een handmatige blijft. Oude «use»-lijnen uit een import vervallen (verborgen
+  blijft verborgen). Met de hand trekken kan nu ook naar een ref.lijst-item, ook vanaf een relatie
+  (nieuwe M3-hook `magVerbinden` op een connectortype). V3-export ongewijzigd.
+
 ### Toegevoegd
 - **Diagrammen hernoemen via de ✨ assistent en de MCP** (Mark, 06-11: de assistent beloofde een
   passende naam, maar het plan kende alleen hernoemde elementen): `bestaand` + een andere `naam`

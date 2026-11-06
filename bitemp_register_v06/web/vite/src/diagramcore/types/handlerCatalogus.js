@@ -64,6 +64,11 @@ registreerHandlerInfo("hook", "naVerbinden", {
   beschrijving:
     "Wordt aangeroepen zodra een verbinding op het canvas is getrokken: (connector, {s: store-state, diagramId, van, naar}) — van/naar = muispositie (flow-coördinaten) bij begin en eind van de sleep. Het profiel mag de verbinding afmaken — bv. een sequence-bericht van levenslijn naar levenslijn krijgt zijn punten op die hoogte.",
 });
+registreerHandlerInfo("hook", "magVerbinden", {
+  naam: "Mag verbinden",
+  beschrijving:
+    "Beperkt een connectortype verder dan zijn verbindingsregels: (bronElement, doelElement) → false = deze verbinding niet. Bv. canoniek «gebruikt» naar een entiteit alleen als die een referentielijst-item is (subtype). Getoetst bij het trekken van een lijn (passendOpType).",
+});
 registreerHandlerInfo("hook", "naVerwijderen", {
   naam: "Na verwijderen",
   beschrijving:

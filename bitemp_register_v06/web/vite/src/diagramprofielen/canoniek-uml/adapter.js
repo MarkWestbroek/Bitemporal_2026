@@ -818,7 +818,12 @@ export function naarCanoniekModel(coreState) {
             id: `gen_${el.id}`,
             source: el.source,
             target: el.target,
-            data: { isGeneralization: true },
+            // Labels heen/terug uit de connector (ERFT-1: gevouwen uit de oude presentatie-edge).
+            data: {
+              isGeneralization: true,
+              ...(el.data?.naamLabelHeen ? { naamLabelHeen: el.data.naamLabelHeen } : {}),
+              ...(el.data?.naamLabelTerug ? { naamLabelTerug: el.data.naamLabelTerug } : {}),
+            },
           });
         }
         break;

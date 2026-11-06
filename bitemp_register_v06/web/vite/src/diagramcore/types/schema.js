@@ -276,7 +276,8 @@
  * @property {Object} [hooks]               - Implementatie-domein: valideer,
  *   extraCompartimenten, inhoudsregels (eigen inhoud in het inhoudsvak, zie InhoudsRegel),
  *   naamWeergave (de naam zoals de vorm hem toont: object "jan : Persoon"; "" = geen naamregel),
- *   edgeLabels, naVerbinden, verschuifConnector, edgePresentatie (connector →
+ *   edgeLabels, naVerbinden, magVerbinden (connector: (bron, doel) → false = niet, verder dan
+ *   de verbindingsregels; 06-11), verschuifConnector, edgePresentatie (connector →
  *   presentatie-overrides o.b.v. data, bv. richting → pijl), … (functies;
  *   NIET serialiseren)
  */
