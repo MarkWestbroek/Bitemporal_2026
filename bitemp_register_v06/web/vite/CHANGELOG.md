@@ -8,6 +8,18 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **De inspector van een verbinding toont zijn uiteinden** ("A → B"), in elke taal (Mark, 06-11:
+  "ik kan op een REL niet zien wie A en B zijn").
+- **Rechtsklik op een verbinding → de uiteinden op het diagram zetten** wat er nog ontbreekt
+  (bv. de andere entiteit van een relatie); naast de doos of het andere uiteinde, één Ctrl+Z.
+
+### Opgelost
+- **Zelf-relatie met velden (associatieklasse op een oortje)**: het anker lag in het midden van
+  de entiteit, dus beide lijnen hadden lengte nul en de doos hing los. Nu ligt het anker
+  rechtsboven buiten de entiteit en lopen de lijnen hoekig van boven via het anker naar rechts
+  (canvas én tekenaar, `materialiseerConnectoren`).
+
 ### Opgelost
 - **Overerving is een modelgegeven** (ERFT-1, Mark/FUNDAMENT 06-11): na een V3-import stond
   `erft` alleen als lijn op de import-diagrammen. Nu wordt het één `generalisatie`-connector,

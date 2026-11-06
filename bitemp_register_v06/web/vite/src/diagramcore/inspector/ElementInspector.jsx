@@ -179,6 +179,17 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorC
   );
 }
 
+/** Naam van een uiteinde van een connector, met zijn type erachter (klein). */
+function UiteindeNaam({ id, elements }) {
+  const el = elements?.[id];
+  if (!el) return <span className="dc-inspector-uiteinde">{id}</span>;
+  return (
+    <span className="dc-inspector-uiteinde" title={el.elementType}>
+      <strong>{el.naam || "(naamloos)"}</strong>
+    </span>
+  );
+}
+
 export default function ElementInspector({
   element,
   elementType,
@@ -222,6 +233,15 @@ export default function ElementInspector({
         {elementType?.label || element.elementType}
         {element.data?.domein ? ` · ${element.data.domein}` : ""}
       </p>
+      {/* Tussen welke elementen loopt deze verbinding? (Mark, 06-11: "ik kan op een REL niet
+          zien wie A en B zijn"). Voor elke connector, in elke taal: bron → doel. */}
+      {element.source && element.target && (
+        <p className="dc-inspector-uiteinden" data-testid="inspector-uiteinden">
+          <UiteindeNaam id={element.source} elements={editorContext?.elements} />
+          <span className="dc-inspector-pijl" aria-label="naar"> → </span>
+          <UiteindeNaam id={element.target} elements={editorContext?.elements} />
+        </p>
+      )}
       {meldingen.length > 0 && (
         <ul className="dc-inspector-meldingen" data-testid="inspector-meldingen">
           {meldingen.map((m, i) => (

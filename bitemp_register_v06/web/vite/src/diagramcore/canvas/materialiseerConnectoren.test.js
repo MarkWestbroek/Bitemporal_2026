@@ -656,3 +656,23 @@ test("rand-elementen (punten op levenslijnen): zijdekeuze op het absolute midden
   assert.equal(edges[0].sourceHandle, "source-right");
   assert.equal(edges[0].targetHandle, "target-left", "het doel ligt rechts: erin aan de linkerkant");
 });
+
+test("zelf-relatie met velden (associatieklasse op een oortje): het anker ligt buiten de entiteit, de lijnen lopen boven → anker → rechts", () => {
+  const typen = {
+    entiteit: { id: "entiteit" },
+    relatie: { id: "relatie", isConnector: true, bron: { elementTypes: ["entiteit"] }, doel: { elementTypes: ["entiteit"] } },
+  };
+  const elements = {
+    A: { id: "A", naam: "Artefact", elementType: "entiteit", compartimenten: [], data: {} },
+    r: { id: "r", naam: "ArtefactAfhankelijkheid", elementType: "relatie", source: "A", target: "A", compartimenten: [{ compartmentType: "velden", velden: [{ naam: "reden" }] }], data: {} },
+  };
+  // Opgeslagen anker binnen de entiteit (zoals na een import): telt niet.
+  const diagram = { id: "d", nodes: [{ elementId: "A", position: { x: 0, y: 0 }, size: { width: 400, height: 160 } }, { elementId: "r", position: { x: 500, y: 300 }, ankerPosition: { x: 190, y: 70 } }], edges: [] };
+  const { edges, extraNodes } = materialiseerConnectoren(elements, diagram, typen);
+  const anker = extraNodes.find((n) => n.soort === "anker");
+  assert.ok(anker.position.x + 7 > 400 && anker.position.y + 7 < 0, `anker buiten de entiteit, rechtsboven (${JSON.stringify(anker.position)})`);
+  const bron = edges.find((e) => e.id === "conn:r:bron");
+  const doel = edges.find((e) => e.id === "conn:r:doel");
+  assert.deepEqual([bron.sourceHandle, bron.targetHandle, doel.sourceHandle, doel.targetHandle], ["source-top", "target-left", "source-bottom", "target-right"]);
+  assert.equal(bron.data.presentatie.vorm, "hoekig");
+});

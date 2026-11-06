@@ -817,6 +817,10 @@
   color: var(--s-fg-muted, #64748b);
   font-size: 12px;
 }
+/* Uiteinden van een connector in de inspector (06-11): "A → B". */
+.dc-inspector-uiteinden { margin: -4px 0 8px; font-size: 12px; color: var(--s-fg-muted, #64748b); }
+.dc-inspector-uiteinde strong { color: var(--s-fg, inherit); font-weight: 600; }
+
 
 .dc-inspector-sectie {
   margin: 0 0 12px;
