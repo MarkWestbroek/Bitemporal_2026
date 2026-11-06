@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.32.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.33.0`**
+  (2026-11-07: Project → Register bouwen… — het register uit dít project, via de server; samen
+  met api 0.21.0 en render 0.3.5), na **`studio/v0.32.0`**
   (2026-11-06: kopiëren en plakken via rechtsklik en als kopie, diagram kopiëren/plakken in de
   boom, overerving en «gebruikt» als connectoren (ERFT-1, GEBR-1), uiteinden van een verbinding,
   lijnen verschuiven en spreiden, subtype zonder eigen tijdlijn; samen met render 0.3.4, api
@@ -113,7 +115,10 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.20.0`** (2026-11-06: een volledige PUT op een Studio-project wordt geweigerd
+- Backend: **`api/v0.21.0`** (2026-11-07: rebuild uit een Studio-project — `POST /admin/rebuild
+  {project_id}` met de V3 van de render-sidecar en de herkomst op `schema_versies` —, `GET
+  /api/studio/projecten/:id/v3`, en de codegen-weigering van `isMaterieel`/`tijdprecisie` op een
+  subtype; devloop-image 0.24.13). Daarvoor **`api/v0.20.0`** (2026-11-06: een volledige PUT op een Studio-project wordt geweigerd
   zolang een andere client bezig is — 409 `project_in_gebruik` —, met een uitzondering voor de
   snapshot van een verbonden tab die bij is; devloop-image 0.24.11). Daarvoor **`api/v0.19.0`** (2026-11-06: projectdiagram als SVG met toegang — `diagram.svg`
   en `views.json` op een Studio-project, soort `svg` bij de gedeelde plaatjes; stap 6 van het
@@ -135,7 +140,9 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.3.4`** (2026-11-06: de tekenaar van studio 0.32.0 — oude
+- Render-sidecar: **`render/v0.3.5`** (2026-11-07: `POST /export/v3`, V3 uit een Studio-project
+  met de terugreis van de Studio; zustand, zundo en react als devDependencies voor de bundel;
+  image `bitemp-render-svc:0.3.5`), na **`render/v0.3.4`** (2026-11-06: de tekenaar van studio 0.32.0 — oude
   generalisaties gevouwen, «gebruikt» uit het veldtype, lijnen spreiden en verschuiven,
   zelf-relatie met associatieklasse; image `bitemp-render-svc:0.3.4`), na
   **`render/v0.3.3`** (2026-11-06: «gebruikt» en de model-migratie van het

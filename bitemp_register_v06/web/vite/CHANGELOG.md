@@ -8,6 +8,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.33.0] — 2026-11-07
+
 ### Toegevoegd
 - **Project → Register bouwen…** (Mark, 07-11: "het model is de bron voor het genereren"). De
   server bouwt het register uit dít project: de Studio zet eerst een snapshot (`snapshotNu`),
