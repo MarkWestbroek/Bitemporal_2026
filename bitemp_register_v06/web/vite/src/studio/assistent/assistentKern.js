@@ -225,7 +225,7 @@ const SCHEMA_PLAN = {
           taal: { type: "string", description: "profiel-id; alleen bij een nieuw diagram" },
           naam: { type: "string" },
           map: { type: "string", description: "naam van een (nieuwe) submap van de huidige map; leeg = de huidige map" },
-          bestaand: { type: "string", description: "id van een bestaand diagram (dan geen taal/naam)" },
+          bestaand: { type: "string", description: "id van een bestaand diagram (dan geen taal; `naam` alleen om het te hernoemen)" },
         },
       },
     },
@@ -396,6 +396,7 @@ export function vraagVoorOpdracht(talen, opdracht, { mapNaam = "", submappen = [
     "- Een nieuw element krijgt een korte unieke `sleutel` (u1, a1, …) en komt op een diagram (`diagram`: sleutel van een diagram in `diagrammen`). Het diagram bepaalt de taal.",
     "- Verwijs naar iets dat al bestaat met zijn id (in `bron`, `doel`, `in`, `van`, `naar`, of als `bestaand`). Wil je een bestaand element op een nieuw diagram, of het hernoemen, zet het dan in `elementen` met `bestaand`.",
     "- Een relatie tussen bestaande elementen: alleen een connector met hun ids; geen nieuw diagram nodig.",
+    "- Een bestaand diagram hernoemen: in `diagrammen` met `bestaand` (het id) en de nieuwe `naam`.",
     "- Doorklikken: `verwijstNaar` op een element (nieuw of bestaand) met het id of de sleutel van een diagram — ook in een andere taal. Dubbelklik op het element opent dan dat diagram (zoals een deelbeeld onder een component).",
     "- Velden (attributen van een klasse, waarden van een enumeratie): `velden` op het element, nieuw of bestaand ({\"bestaand\": \"<id>\", \"velden\": [{\"naam\": \"…\", \"type\": \"…\"}]}); bij waarden alleen de naam. Bestaande velden niet opnieuw.",
     "- Iets in een container zetten (bv. een use case in een systeemkader): `in` met de sleutel of het id van de container — ook voor een bestaand element ({\"bestaand\": \"<id>\", \"in\": \"<container>\"}). Zeg in de uitleg alleen wat het plan echt doet.",
@@ -510,13 +511,18 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
   // 1. Diagrammen.
   const diagrammen = [];
   const diagramVan = new Map();
+  /** @type {{profielId: string, id: string, naam: string, oud: string}[]} */
+  const diagramHernoemd = [];
   for (const d of Array.isArray(antwoord?.diagrammen) ? antwoord.diagrammen : []) {
     const sleutel = tekst(d?.sleutel) || `d${diagrammen.length + 1}`;
     if (diagramVan.has(sleutel)) { problemen.push(`Diagram met dubbele sleutel ${sleutel} overgeslagen.`); continue; }
     if (d?.bestaand) {
       const b = bestaandDi.get(tekst(d.bestaand));
       if (!b) { problemen.push(`Diagram ${d.bestaand} bestaat niet (of valt buiten deze map); overgeslagen.`); continue; }
-      const uit = { sleutel, profielId: b.profielId, bestaandId: tekst(d.bestaand), naam: b.naam };
+      // Een nieuwe naam bij een bestaand diagram = hernoemen (Mark, 06-11: de assistent beloofde
+      // het, maar het plan kende alleen hernoemde elementen).
+      if (tekst(d.naam) && tekst(d.naam) !== b.naam) diagramHernoemd.push({ profielId: b.profielId, id: tekst(d.bestaand), naam: tekst(d.naam), oud: b.naam });
+      const uit = { sleutel, profielId: b.profielId, bestaandId: tekst(d.bestaand), naam: tekst(d.naam) || b.naam };
       diagrammen.push(uit); diagramVan.set(sleutel, uit);
       continue;
     }
@@ -812,6 +818,7 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     diagrammen: diagrammen.filter((d) => !leeg.includes(d)),
     elementen,
     hernoemd,
+    diagramHernoemd,
     veldenBij,
     verwijzingen,
     opDiagram,

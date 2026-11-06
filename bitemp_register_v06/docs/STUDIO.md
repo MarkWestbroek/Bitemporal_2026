@@ -364,6 +364,12 @@ te wijzigen.
 > kan door een element in dezelfde kolom lopen (lijnrouteren, niet de opstelling). Tests:
 > `layout/leesvolgorde.test.js`, e2e `31-studio-auto-layout`.
 >
+> **Diagrammen hernoemen via de assistent en de MCP (2026-11-06, Mark):** de assistent beloofde
+> "het tweede diagram wordt 'Klank bewerken'", maar het plan kende alleen hernoemde elementen.
+> Nu: een `diagrammen`-regel met `bestaand` en een andere `naam` = hernoemen
+> (`plan.diagramHernoemd`, toegepast in `maakWijziging`, als `patchDiagrammen`); het voorstel
+> toont "Diagram hernoemd: oud → nieuw".
+>
 > **Verplaatsen via de assistent en de MCP (2026-10-18):** het plan kent `posities` (`{diagram,
 > element, x, y}` of `{…, naast, kant, afstand}`; leden van een container schuiven mee) en
 > `nietGedaan` (wat de AI niet kan; apart getoond); een opstel-actie mag ook een layout van de taal
@@ -727,7 +733,12 @@ te wijzigen.
 >   hun onderlinge posities, midden in beeld. Op een ander diagram slaat over wat er al
 >   staat; op hetzelfde diagram geeft plakken een extra voorkomen als de taal dat
 >   toestaat. Connectoren tussen de elementen tekent het canvas zelf. Niet in de boom
->   (focus in `.studio-project`) en niet als er tekst geselecteerd is.
+>   (focus in `.studio-project`) en niet als er tekst geselecteerd is. Ook via rechtsklik
+>   (*Kopiëren*, *Plakken (n)*). **Plakken als kopie** (Ctrl+Shift+V of rechtsklik, na een
+>   bevestiging): nieuwe elementen met "(kopie)" achter de naam en zonder `data.uuid` (een
+>   kopie is een ander ding), plus de connectoren tússen de gekopieerde elementen; ze landen
+>   via de boomregel in de map van het doeldiagram. Elke plak is één Ctrl+Z. Kopiëren is
+>   stil (de Studio heeft geen toast; een melding met OK zat in de weg).
 > - **Eén keer in de boom** (Mark, 06-11: "control sleep ENT en daarna control Z een paar
 >   keer leverde een kopie op"): de relatie (model) en de plaats in een map (structuur)
 >   hebben elk een eigen Ctrl+Z, dus een oude plaats kan terugkomen terwijl de relatie
@@ -736,6 +747,21 @@ te wijzigen.
 >   relatie wegvalt. Eén undo voor boom en diagram staat open (zie BACKLOG).
 > - Onder een element met `uitwerking` (package, UC-realisatie): ook *Nieuw diagram ▸
 >   taal* voor een leeg diagram eronder, naast *Nieuw diagram hiermee*.
+> - **Diagram kopiëren en plakken** (Mark, 06-11; "dupliceren in dezelfde map wordt een
+>   puinhoop"): rechtsklik op een diagram → *Kopieer diagram* (`kopieerDiagram`); op een map of
+>   een element met `uitwerking` → *Plak diagram ▸* (`plakDiagram`):
+>   *Elementen niet dupliceren* = een gekloond diagram met dezelfde elementen;
+>   *Elementen kopiëren naar deze plek* = de elementen op het diagram plus hun kinderen in
+>   de boom worden gekopieerd (ids als heel woord vervangen in diagram en kopieën,
+>   `vervangIds`), met de connectoren tússen de kopieën, zonder `data.uuid`; kopieën zonder
+>   gekopieerde ouder krijgen een plek onder het plakdoel. Namen blijven; plakken op de
+>   plek van het origineel geeft "(kopie)". Elementen via `zetElementen` (één diff-op) en
+>   het diagram in dezelfde undo-stap.
+> - **Klik op de achtergrond = het diagram** (Mark, 06-11): `DiagramCanvas` krijgt
+>   `onAchtergrondKlik` (in de bestaande `onPaneClick`); de activiteit meldt
+>   `studio:diagram-achtergrond`, en Modelleren zet dat diagram als selectie, zodat de
+>   inspector naam, beschrijving en type van het diagram toont. Een element-klik laat het
+>   weer los (`studio:element-geselecteerd`).
 > - Taal: **omhangen**, niet "verhangen" (Mark, 06-11); in identifiers splitst het
 >   werkwoord (`hangOmNaarContainer`, `onHangConnectorOm`).
 >

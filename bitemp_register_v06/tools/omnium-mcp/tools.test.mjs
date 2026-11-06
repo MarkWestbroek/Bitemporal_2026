@@ -179,3 +179,19 @@ test("model_wijzigen: een sequence-plan krijgt punten bij elk bericht, zodat de 
   const taal = await voerUit(nepProjectApi(), "modeltalen", { taal: "sequence05" });
   assert.match(taal.content[0].text, /Maak zelf geen punten en geen activaties/);
 });
+
+test("model_wijzigen: een bestaand diagram hernoemen (Mark, 06-11: de assistent beloofde het, maar deed het niet)", async () => {
+  const plan = { uitleg: "passende naam", diagrammen: [{ sleutel: "d1", bestaand: "d_uc", naam: "Bibliotheek gebruiken" }], elementen: [], connectoren: [] };
+  const api = nepProjectApi();
+  const voorstel = await voerUit(api, "model_wijzigen", { project: "Zandbak", map: "Test", plan });
+  assert.match(voorstel.content[0].text, /1 diagram hernoemd/);
+  assert.match(voorstel.content[0].text, /~ diagram hernoemd: Use case model → Bibliotheek gebruiken/);
+  const klaar = await voerUit(api, "model_wijzigen", { project: "Zandbak", map: "Test", plan, toepassen: true });
+  assert.match(klaar.content[0].text, /^Toegepast/);
+  const [, , body] = api.log.find(([m]) => m === "POST");
+  const op = body.ops.find((o) => o.op === "patchDiagrammen");
+  assert.ok(op, `verwacht patchDiagrammen, kreeg ${body.ops.map((o) => o.op).join(",")}`);
+  assert.equal(op.args[0].zet.d_uc.naam, "Bibliotheek gebruiken");
+  // De knopen blijven (ook de use case uit de op ná de snapshot).
+  assert.deepEqual(op.args[0].zet.d_uc.nodes.map((n) => n.elementId).sort(), ["e_gebr", "e_test"]);
+});

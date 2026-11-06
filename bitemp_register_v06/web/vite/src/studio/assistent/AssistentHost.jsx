@@ -127,6 +127,7 @@ function Voorstel({ voorstel, talen }) {
         <p><strong>Doorklikken:</strong> {plan.verwijzingen.map((v) => `${v.naam || naam(v.element)} → ${v.naar.naam || v.naar.sleutel || v.naar.id}`).join("; ")}</p>
       )}
       {plan.hernoemd.length > 0 && <p><strong>Hernoemd:</strong> {plan.hernoemd.map((h) => `${h.oud} → ${h.naam}`).join(", ")}</p>}
+      {plan.diagramHernoemd?.length > 0 && <p><strong>Diagram hernoemd:</strong> {plan.diagramHernoemd.map((h) => `${h.oud} → ${h.naam}`).join(", ")}</p>}
       {plan.verbanden.length > 0 && <p><strong>Verbanden:</strong> {plan.verbanden.map((v) => `${naam(v.van)} ${v.soort} ${naam(v.naar)}`).join("; ")}</p>}
       {plan.opmerkingen.length > 0 && <ul className="ast-opmerkingen">{plan.opmerkingen.map((o, i) => <li key={i}>{o}</li>)}</ul>}
       {/* Wat de AI zelf niet kan, en wat de toepasser niet kon: apart en zichtbaar (Mark, 18-10:
@@ -137,7 +138,7 @@ function Voorstel({ voorstel, talen }) {
           <ul>{[...(plan.nietGedaan || []), ...(wijziging.nietUitgevoerd || [])].map((t, i) => <li key={i}>{t}</li>)}</ul>
         </div>
       )}
-      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && !plan.posities?.length && !plan.verwijzingen?.length && !plan.verwijderen?.length && !plan.veldenBij?.length && (
+      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.diagramHernoemd?.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && !plan.posities?.length && !plan.verwijzingen?.length && !plan.verwijderen?.length && !plan.veldenBij?.length && (
         // Eerlijk (melding #11): de uitleg kan iets beloven wat de assistent niet kan.
         <p className="ast-niets" data-testid="assistent-niets">Dit voorstel verandert niets. De assistent kan elementen, relaties, diagrammen en mappen maken, hernoemen, in een kader zetten, uitlijnen en verplaatsen, verbanden leggen en elementen of relaties weghalen — geen diagrammen of mappen weghalen, en geen kleuren of lijnroutes.</p>
       )}

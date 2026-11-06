@@ -8,6 +8,25 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Diagrammen hernoemen via de ✨ assistent en de MCP** (Mark, 06-11: de assistent beloofde een
+  passende naam, maar het plan kende alleen hernoemde elementen): `bestaand` + een andere `naam`
+  in `diagrammen` = hernoemen (`plan.diagramHernoemd`).
+- **Kopiëren en plakken via rechtsklik** (Mark, 06-11): *Kopiëren* op een element (of de
+  selectie waarin het zit), *Plakken (n)* en *Plakken als kopie…* op het canvas.
+- **Diagram kopiëren en elders plakken in de projectboom** (Mark, 06-11): rechtsklik op een
+  diagram → *Kopieer diagram*; op een map of een element met uitwerking (package) → *Plak diagram ▸*
+  met *Elementen niet dupliceren* (een nieuw diagram met dezelfde elementen) of *Elementen
+  kopiëren naar deze plek* (kopieën van de elementen, hun kinderen in de boom en de connectoren
+  ertussen, zonder uuid, op die plek). Namen blijven; in dezelfde map krijgen ze "(kopie)".
+- **Klik op de diagram-achtergrond toont de eigenschappen van het diagram** in de inspector
+  (Mark, 06-11; nieuwe canvas-prop `onAchtergrondKlik`, event `studio:diagram-achtergrond`). Een
+  element-klik daarna toont weer het element.
+- **Plakken als kopie** (Ctrl+Shift+V, Mark 06-11): na de vraag "Wil je deze elementen
+  dupliceren?" nieuwe elementen in het model, met "(kopie)" achter de naam, zonder uuid, en met
+  de verbindingen tússen de gekopieerde elementen. Ze landen in de map van het diagram waarop je
+  plakt (boomregel). Eén Ctrl+Z neemt de hele kopie terug; gewoon plakken is nu ook één stap.
+
 ## [studio/v0.31.0] — 2026-11-06
 
 ### Toegevoegd

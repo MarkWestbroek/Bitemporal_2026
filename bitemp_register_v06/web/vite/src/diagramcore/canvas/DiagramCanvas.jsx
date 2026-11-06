@@ -10,6 +10,8 @@
  *   verbindingsType?   — expliciet gekozen connector-ElementType-id (taakbalk
  *                        "Verbinding"); null → automatisch afleiden uit de regels
  *   onSelectElement?   — (element|null) => void
+ *   onAchtergrondKlik? — () => void — klik op de lege achtergrond (de host toont dan bv. de
+ *                        eigenschappen van het diagram; Mark, 06-11)
  *   onNodePositie?     — (elementId, {x,y}) => void          (na slepen)
  *   onNodeSize?        — (voorkomenId, {width,height}, positie|null) => void — na
  *                        resizen; `positie` (absoluut) als de node daarbij
@@ -157,6 +159,7 @@ function CanvasBinnenkant({
   verbindingsType = null,
   selectieId = null,
   onSelectElement,
+  onAchtergrondKlik,
   onNodePositie,
   onNodePosities,
   onNodeSize,
@@ -1990,6 +1993,8 @@ function CanvasBinnenkant({
         // mag het zojuist geopende magic-link-menu niet meteen sluiten.
         if (Date.now() - magicMenuTijdRef.current < 400) return;
         setContextMenu(null);
+        // De host toont dan bv. de eigenschappen van het diagram (Mark, 06-11).
+        onAchtergrondKlik?.();
       }}
       onMoveEnd={handleMoveEnd}
       // Een echte muisklik beweegt vaak een paar pixels tussen indrukken en

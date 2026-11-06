@@ -23,6 +23,9 @@ afscherming als in de Studio.
 
 ### Modellen (stap 2, 14-10)
 
+Sinds 06-11 kan het plan ook een **bestaand diagram hernoemen**: `{sleutel, bestaand: <diagram-id>,
+naam: "<nieuwe naam>"}` in `diagrammen` (de tekst toont `~ diagram hernoemd: oud → nieuw`).
+
 `model_wijzigen` gebruikt **dezelfde regelset en toepasser als de ✨ assistent in de Studio**
 (`web/vite/src/studio/assistent/assistentKern.js` en `wijziging.js`): de AI-client levert het
 plan, de server-kant van de MCP controleert het tegen de taal (onbekende typen en verboden
