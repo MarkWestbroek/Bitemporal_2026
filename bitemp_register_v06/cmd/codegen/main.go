@@ -672,6 +672,31 @@ func valideerTijdprecisie(ctx string, isMaterieel bool, tijdprecisie string) str
 	return fmt.Sprintf("%s.tijdprecisie '%s' is ongeldig; gebruik 'datum' (default) of 'tijdstip'", ctx, tijdprecisie)
 }
 
+// valideerSubtypeTijdlijn: een subtype (`erft`) heeft geen eigen materiële tijdlijn (besluit Mark
+// 06-11-2026). Het ís een exemplaar van de ouder, dus het bestaat precies zolang de ouder bestaat:
+// aanvang en einde horen bij de ouder. Met isMaterieel: true maakte codegen een tweede, losse
+// tijdlijn (<subtype>_aanvang/_einde) die van die van de ouder kon afwijken; met geldigOp moesten
+// dan beide gelden. Daarom weigeren we isMaterieel en tijdprecisie op een subtype. `false` en
+// weglaten zijn in een bool niet te onderscheiden, dus alleen true telt. Of de ouder materieel is,
+// maakt niet uit: dan heeft het subtype ook geen tijdlijn.
+func valideerSubtypeTijdlijn(ctx string, ent model.V3Entiteit) string {
+	if strings.TrimSpace(ent.Erft) == "" {
+		return ""
+	}
+	var wat []string
+	if ent.IsMaterieel {
+		wat = append(wat, "isMaterieel: true")
+	}
+	if strings.TrimSpace(ent.Tijdprecisie) != "" {
+		wat = append(wat, fmt.Sprintf("tijdprecisie '%s'", ent.Tijdprecisie))
+	}
+	if len(wat) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%s (%s erft van %s): %s heeft bij een subtype geen betekenis; de tijdlijn (aanvang en einde) komt van %s. Laat het weg of zet het op de ouder.",
+		ctx, ent.Typenaam, ent.Erft, strings.Join(wat, " en "), ent.Erft)
+}
+
 func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 	var errs []string
 
@@ -724,7 +749,9 @@ func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 			errs = append(errs, fmt.Sprintf("%s.meervoud '%s' is ongeldig; gebruik lowercase/snake_case (bijv. personen of persoon_records)", ctx, ent.Meervoud))
 		}
 		entiteiten[ent.Typenaam] = struct{}{}
-		if msg := valideerTijdprecisie(ctx, ent.IsMaterieel, ent.Tijdprecisie); msg != "" {
+		if msg := valideerSubtypeTijdlijn(ctx, ent); msg != "" {
+			errs = append(errs, msg)
+		} else if msg := valideerTijdprecisie(ctx, ent.IsMaterieel, ent.Tijdprecisie); msg != "" {
 			errs = append(errs, msg)
 		}
 

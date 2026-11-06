@@ -197,7 +197,7 @@ De codegen valideert het V3 model voordat er code wordt gegenereerd. Bij fouten 
 | `velden[].goType` | optioneel sinds 23-10-2026: ontbreekt het, dan afgeleid uit `type`/`format`/`verplicht`/`enum` (string → `string`, niet verplicht → `*string`, `date` → `Date`, `date-time` → `time.Time`, `integer` → `int`, `number` → `float64`, `boolean` → `bool`, enum → het enum-type) | `"type": "string"` zonder `goType` | — |
 | `velden[].datatype` | moet bestaan: in `model.datatypes` of in het register (`KorteTekst`, `LangeTekst`, `URL`, `Datum`, …) | `KorteTekst` | `NietBestaand` |
 | `uuid` (entiteit, GE, relatie, veld, enum, datatype, referentielijstinstantie) | vrij; identiteit van het element binnen de Studio (lowercase UUID v4, bedacht bij een V3-export, daarna stabiel; besluit Mark 31-10-2026, BACKLOG §40). Codegen valideert niets en neemt hem over in de code: `TypeMeta.UUID`, `EnumUUIDs`, `DatatypeRegistry[].UUID`, `ReferentielijstInstantieInfo.UUID`, tag `uuid:"…"` op `_Data`-velden (alleen hex en koppeltekens komen in de tag); de exporter geeft hem terug, de API laat hem door bij POST/GET van schema-versies | `"uuid": "a1000000-0000-4000-8000-000000000001"` | — |
-| `tijdprecisie` (entiteit, GE, relatie) | leeg, `datum` (default) of `tijdstip`; alleen met `isMaterieel: true` (sinds 27-10-2026). `tijdstip`: `_Aanvang/_Einde.Datum` wordt `*time.Time` (kolom `timestamptz`, einde exclusief, automatisch einde = aanvang opvolger), de `_Input` krijgt `Aanvang`/`Einde` als `*time.Time`; veld- en kolomnaam blijven `datum` | `"isMaterieel": true, "tijdprecisie": "tijdstip"` | `"tijdprecisie": "uur"`, of `tijdstip` zonder `isMaterieel` |
+| `tijdprecisie` (entiteit, GE, relatie) | leeg, `datum` (default) of `tijdstip`; alleen met `isMaterieel: true` (sinds 27-10-2026), en niet op een subtype (`erft`, §7.3d). `tijdstip`: `_Aanvang/_Einde.Datum` wordt `*time.Time` (kolom `timestamptz`, einde exclusief, automatisch einde = aanvang opvolger), de `_Input` krijgt `Aanvang`/`Einde` als `*time.Time`; veld- en kolomnaam blijven `datum` | `"isMaterieel": true, "tijdprecisie": "tijdstip"` | `"tijdprecisie": "uur"`, `tijdstip` zonder `isMaterieel`, of `isMaterieel`/`tijdprecisie` op een entiteit met `erft` |
 | `--domein` | moet voorkomen in het model (sinds 25-10-2026): minstens één entiteit, datatype of enum met dat domein (voor `register` en voor de modelnaam tellen entiteiten zonder domein mee). Eén domein per run | `inrichting` | `inrichting,aanvraag` |
 | `typenaam` (entiteit, GE-hub, relatie en hun `_Data`/`_Aanvang`/`_Einde`) | uniek over alle domeinen in de build (sinds 26-10-2026): Go-typen en tabellen zijn niet per domein geprefixt; een tweede `NatuurlijkPersoon` gaf "redeclared in this block" pas bij `go build` | `PartijNatuurlijkPersoon` | `NatuurlijkPersoon` (bestaat in np-loc) |
 | tabelnaam (afgeleid) | hooguit 63 tekens (sinds 26-10-2026): Postgres kapt langere namen stil af en triggers en FK's vinden de tabel dan niet. Een GE-naam hoeft de entiteitsnaam niet te herhalen | `NatuurlijkPersoonZonderRegistratie` + GE `Gegevens` | GE `NatuurlijkPersoonZonderRegistratieGegevens` (tabel 82 tekens) |
@@ -420,10 +420,21 @@ Wat werkt (proef 26-10-2026): registreren in één registratie (ouder-hub + geë
 eigen GE's, zelfde id), alleen de subtype-hub (de engine maakt een kaal ouder-record), geërfde GE's later
 toevoegen; `/full/<subtype>/<id>` toont eigen GE's en onder `parent_<ouder>` de volledige ouder;
 `/full/<ouder>/<id>` toont alleen de ouder (zonder subtype-GE's); validatie (datatype, enum) op
-subtype-GE's; materieel subtype met eigen aanvang/einde; formeel tijdreizen; het volgorde-endpoint via
+subtype-GE's; formeel tijdreizen; het volgorde-endpoint via
 een geërfde relatie. **Nog niet:** GraphQL geeft `parent_<ouder>` als tekst zonder inhoud (de ouder is
 daar niet getypeerd), en codegen controleert niet of de ouder bestaat (een tikfout in `erft` valt pas bij
 `go build`). Een lege `baseType` op een enum geeft ongeldige Go (`type X `) zonder melding.
+
+**Geen eigen tijdlijn voor een subtype (06-11-2026, besluit Mark):** een subtype ís een exemplaar van
+zijn ouder en bestaat dus precies zolang de ouder bestaat. Aanvang en einde horen bij de ouder.
+`validateV3Model` weigert daarom `isMaterieel: true` en `tijdprecisie` op een entiteit met `erft`
+(`valideerSubtypeTijdlijn` in `cmd/codegen/main.go`), met de melding dat de tijdlijn van de ouder komt.
+Codegen en daarmee een (startup-)rebuild weigeren zo'n model. Vroeger maakte codegen dan een tweede,
+losse tijdlijn (`<subtype>_aanvang`/`_einde`), die van die van de ouder kon afwijken; met `geldigOp`
+moesten dan beide gelden. Zonder de vlag geldt alleen de tijdlijn van de ouder: `/full` hangt de ouder
+met haar aanvang en einde onder `parent_<ouder>`, en `geldigOp` laat het subtype weg als de ouder op dat
+moment niet bestaat (`snoeiStruct` in `model/materieel_tijd.go`). Materiële GE's en relaties óp het
+subtype zijn wel toegestaan: die hebben hun eigen tijdlijn als gegeven, niet als bestaan.
 
 ### 7.4 Twee voetangels bij een regeneratie
 
