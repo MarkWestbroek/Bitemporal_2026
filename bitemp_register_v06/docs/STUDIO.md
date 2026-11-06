@@ -881,6 +881,11 @@ fase 2 een **bewerkbare sandbox**:
   «gebruikt», `hernoemGebruikLabels`), en past de tekenaar (`diagramcore/tekenaar`)
   de hook vóór het tekenen toe: een snapshot op de server van vóór de migratie
   tekent zo hetzelfde als het canvas.
+- **GE-kardinaliteit (besluit Mark 2026-11-06).** Een GE is formeel en dus meervoudig in de
+  tijd: de compositie ENT ◆ GE heeft 0..\* (optioneel) of 1..\* (verplicht). Of het GE op enig
+  moment één of meer voorkomens heeft, zegt {enkelvoudig}/{meervoudig} (`momentvoorkomen`);
+  de 0 of 1 volgt nooit uit de velden. Standaard 0..\*: bij tekenen (hook `naVerbinden` op de
+  compositie) en bij de V3-import (V3 kent geen GE-kardinaliteit). Wat de gebruiker zet, blijft.
 - **Entiteit- en relatievelden bewerkbaar (2026-09-17).** Zoals *Details* in
   de oude IDE. Entiteit: beschrijving, meervoud, materieel, kleur, subtype.
   Relatie: domein, beschrijving, meervoud, materieel, kleur, subtype,

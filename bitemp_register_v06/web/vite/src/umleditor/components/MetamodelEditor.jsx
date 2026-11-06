@@ -679,7 +679,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
               rolnaam: "",
               jsonRolnaam: "",
               momentvoorkomen: "enkelvoudig",
-              kardinaliteit: "0..1",
+              // Naar een GE: 0..* (besluit Mark 06-11).
+              kardinaliteit: targetType === "gegevenselement" ? "0..*" : "0..1",
             },
           };
           setActiveEdgeMode(EDGE_MODES.NONE);
@@ -918,7 +919,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
                 rolnaam: "",
                 jsonRolnaam: "",
                 momentvoorkomen: "enkelvoudig",
-                kardinaliteit: "0..1",
+                // Naar een GE: 0..* (besluit Mark 06-11).
+                kardinaliteit: targetType === "gegevenselement" ? "0..*" : "0..1",
               },
         };
         return addEdge(newEdge, filteredEdges);
@@ -991,7 +993,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             rolnaam: geNaam,
             jsonRolnaam: geNaam.toLowerCase(),
             momentvoorkomen: "enkelvoudig",
-            kardinaliteit: "0..1",
+            kardinaliteit: "0..*", // ENT → GE (besluit Mark 06-11)
           },
         },
       ]);
@@ -1324,7 +1326,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             rolnaam: klassenaam,
             jsonRolnaam: klassenaam.toLowerCase(),
             momentvoorkomen: "enkelvoudig",
-            kardinaliteit: "0..1",
+            kardinaliteit: "0..*", // ENT → GE (besluit Mark 06-11)
           },
         });
         geIdx++;

@@ -286,7 +286,8 @@ function materialiseerDiagramEdges(store, elements, diagNodes, existingEdges = [
           rolnaam: targetEl?.naam || "",
           jsonRolnaam: targetEl?.data?.meervoud || (targetEl?.naam || "").toLowerCase(),
           momentvoorkomen: "enkelvoudig",
-          kardinaliteit: "0..1",
+          // GE: 0..* (besluit Mark 06-11); de rest ongewijzigd.
+          kardinaliteit: targetType === "gegevenselement" ? "0..*" : "0..1",
         });
 
     addEdge({
@@ -412,7 +413,7 @@ function discoverEdgesForNodes(store, elements, nodeIdSet, excludePairs) {
           rolnaam: targetEl?.naam || "",
           jsonRolnaam: targetEl?.data?.meervoud || (targetEl?.naam || "").toLowerCase(),
           momentvoorkomen: targetType === "relatie" ? "meervoudig" : "enkelvoudig",
-          kardinaliteit: targetType === "relatie" ? "0..*" : "0..1",
+          kardinaliteit: targetType === "relatie" || targetType === "gegevenselement" ? "0..*" : "0..1",
         });
 
     tryAdd({
@@ -1508,7 +1509,7 @@ function DiagramCanvasInner({ diagramId }) {
             rolnaam: el.naam || "",
             jsonRolnaam: (el.naam || "").toLowerCase(),
             momentvoorkomen: "enkelvoudig",
-            kardinaliteit: "0..1",
+            kardinaliteit: "0..*", // ENT → GE: 0..* (besluit Mark 06-11)
           },
         });
       });
@@ -1799,7 +1800,8 @@ function DiagramCanvasInner({ diagramId }) {
             rolnaam: "",
             jsonRolnaam: "",
             momentvoorkomen: "enkelvoudig",
-            kardinaliteit: "0..1",
+            // Naar een GE: 0..* (besluit Mark 06-11).
+            kardinaliteit: targetType === "gegevenselement" ? "0..*" : "0..1",
           },
         };
         const nextEdges = addEdge(compEdge, currentEdges);
@@ -1892,7 +1894,7 @@ function DiagramCanvasInner({ diagramId }) {
               rolnaam: doelElement?.naam || "",
               jsonRolnaam: doelElement?.data?.meervoud || (doelElement?.naam || "").toLowerCase(),
               momentvoorkomen: targetType === "relatie" ? "meervoudig" : "enkelvoudig",
-              kardinaliteit: targetType === "relatie" ? "0..*" : "0..1",
+              kardinaliteit: targetType === "relatie" || targetType === "gegevenselement" ? "0..*" : "0..1",
             },
       };
 

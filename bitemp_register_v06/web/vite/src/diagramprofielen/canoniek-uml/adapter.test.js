@@ -311,3 +311,14 @@ test("tijdprecisie: «materieel, tijdstip» op de relatielijn, waarschuwing zond
   assert.equal(controleerTijdprecisie({ data: { tijdprecisie: "" } }), null);
   assert.match(controleerTijdprecisie({ data: { tijdprecisie: "tijdstip" } }), /alleen bij materieel/);
 });
+
+test("GE-kardinaliteit (besluit Mark 06-11): een nieuwe compositie krijgt 0..*, een gezette blijft", async () => {
+  const { canoniekUmlDiagramType } = await import("./index.js");
+  const comp = canoniekUmlDiagramType.elementTypes.find((t) => t.id === "compositie");
+  const elements = { c: { id: "c", elementType: "compositie", source: "E", target: "G", data: {} }, d: { id: "d", elementType: "compositie", source: "E", target: "H", data: { kardinaliteit: "1..*" } } };
+  const s = { elements, updateElement: (id, patch) => { elements[id] = { ...elements[id], ...patch, data: { ...elements[id].data, ...patch.data } }; } };
+  comp.hooks.naVerbinden(elements.c, { s });
+  comp.hooks.naVerbinden(elements.d, { s });
+  assert.equal(elements.c.data.kardinaliteit, "0..*");
+  assert.equal(elements.d.data.kardinaliteit, "1..*");
+});

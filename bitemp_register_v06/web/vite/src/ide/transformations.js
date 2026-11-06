@@ -315,7 +315,8 @@ export function splitsEntiteit(state, entId, veldNamen = [], geNaamPerVeld = nul
         rolnaam: "",
         jsonRolnaam: geNaam.toLowerCase(),
         momentvoorkomen: "enkelvoudig",
-        kardinaliteit: velden.every((v) => v.verplicht !== false) ? "1" : "0..1",
+        // Nooit afleiden uit de velden: optioneel/verplicht staat daar los van (besluit Mark 06-11).
+        kardinaliteit: "0..*",
       },
     });
   }

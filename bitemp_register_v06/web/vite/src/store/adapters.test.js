@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { filterStoreByDomein, mergeStoreDomein } from "./adapters.js";
+import { filterStoreByDomein, mergeStoreDomein, v3ModelNaarStore } from "./adapters.js";
 
 // === filterStoreByDomein ==============================================
 
@@ -177,4 +177,19 @@ test("mergeStoreDomein: modelMeta blijft van bestaande state", () => {
   const nieuw = { elements: {}, structuralEdges: [], modelMeta: { versie: 99 } };
   const out = mergeStoreDomein(bestaand, nieuw, "kern");
   assert.equal(out.modelMeta.versie, 5);
+});
+
+// === GE-kardinaliteit (besluit Mark 06-11) ============================
+
+test("v3ModelNaarStore: een GE-compositie krijgt 0..*, ook bij enkelvoudig; momentvoorkomen blijft", () => {
+  const uit = v3ModelNaarStore({
+    entiteiten: [{ typenaam: "Persoon", domein: "kern", gegevenselementen: [
+      { naam: "Naam", momentvoorkomen: "enkelvoudig", velden: [{ naam: "voornaam", type: "string", verplicht: true }] },
+      { naam: "Adres", momentvoorkomen: "meervoudig", velden: [] },
+    ] }],
+  });
+  const ge = uit.structuralEdges.filter((e) => e.source === "Persoon");
+  assert.equal(ge.length, 2);
+  for (const e of ge) assert.equal(e.data.kardinaliteit, "0..*");
+  assert.deepEqual(ge.map((e) => e.data.momentvoorkomen).sort(), ["enkelvoudig", "meervoudig"]);
 });

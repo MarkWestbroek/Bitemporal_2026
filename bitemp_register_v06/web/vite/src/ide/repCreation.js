@@ -226,7 +226,8 @@ function bouwDiagramEdge(edge, elementsLookup) {
       rolnaam: targetElement?.naam || "",
       jsonRolnaam: (targetElement?.data?.meervoud || targetElement?.naam || "").toLowerCase(),
       momentvoorkomen: targetType === "relatie" ? "meervoudig" : "enkelvoudig",
-      kardinaliteit: targetType === "relatie" ? "0..*" : "0..1",
+      // GE en relatie: 0..* (GE: besluit Mark 06-11).
+      kardinaliteit: targetType === "relatie" || targetType === "gegevenselement" ? "0..*" : "0..1",
     },
   };
 }
@@ -370,7 +371,7 @@ export function voegNieuwRepToe(kind, opties = {}) {
         rolnaam: nieuwElement.naam,
         jsonRolnaam: normaliseerNaam(nieuwElement.naam, "nieuw").toLowerCase(),
         momentvoorkomen: nieuwElement.type === "relatie" ? "meervoudig" : "enkelvoudig",
-        kardinaliteit: nieuwElement.type === "relatie" ? "0..*" : "0..1",
+        kardinaliteit: nieuwElement.type === "relatie" || nieuwElement.type === "gegevenselement" ? "0..*" : "0..1",
       },
     });
   }
