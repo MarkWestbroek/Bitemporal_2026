@@ -226,6 +226,10 @@ export function wijzigingTekst({ project, map, plan, wijziging, bestaand, verstu
   for (const v of plan.verwijderen || []) r.push(`- weg: ${v.soort === "relatie" ? `${v.type} ${v.id}` : `${v.naam || v.id} (${v.id})`}`);
   for (const o of plan.opstelling || []) r.push(`~ opstelling ${o.actie}${o.elementen.length ? `: ${o.elementen.map(naam).join(", ")}` : " (alles)"}`);
   for (const p of plan.posities || []) r.push(`~ verplaatst: ${naam(p.element)} ${p.naast ? `${p.kant} van ${naam(p.naast)} (afstand ${p.afstand})` : `naar ${p.x}, ${p.y}`}`);
+  for (const l of plan.lijnen || []) {
+    const wat = [l.vorm && `vorm ${l.vorm === "bezier" ? "krom" : l.vorm}`, l.boom && `boomstijl, ouder ${l.boom}`, l.bron && `bron ${l.bron}`, l.doel && `doel ${l.doel}`].filter(Boolean).join(", ");
+    r.push(`~ lijnen: ${l.relatie ? `relatie ${l.relatie}` : `kinderen van ${naam(l.ouder)}`} — ${wat}`);
+  }
   for (const v of plan.verbanden) r.push(`+ verband: ${naam(v.van)} ${v.soort} ${naam(v.naar)}`);
   if (plan.opmerkingen.length) r.push("", "Bijgestuurd:", ...plan.opmerkingen.map((x) => `- ${x}`));
   if (plan.problemen.length) r.push("", "Weggelaten:", ...plan.problemen.map((x) => `- ${x}`));

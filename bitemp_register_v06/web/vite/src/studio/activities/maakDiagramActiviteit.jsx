@@ -47,33 +47,13 @@ import useStudioStore from "../useStudioStore";
 import { vraagNaam, vraagBevestiging, vraagKeuze, vraagReview, toonMelding } from "../naamDialog.jsx";
 import { useBeeldenStore, kopieerDiagramAlsLink, kopieerDiagramAlsSvgLink } from "../gedeeldeBeelden.js";
 
-/**
- * Boomstijl (EA "tree style"): haakse vorm, uiteinden vast, knikken weg (die winnen anders van de
- * vorm). De kant is waar de ouder staat t.o.v. zijn kinderen; Mark 07-11: alle vier de kanten.
- */
+/** Boomstijl-keuzes in het menu: [kant, label]; de lijndata komt uit diagramcore/model/lijnvorm.js. */
 const BOOM_KANTEN = [
   ["boven", "Verticaal"],
   ["onder", "Verticaal"],
   ["links", "Horizontaal"],
   ["rechts", "Horizontaal"],
 ];
-/** Per kant: [zijde van de ouder, zijde van het kind]. */
-const BOOM_ZIJDEN = {
-  boven: ["bottom", "top"],
-  onder: ["top", "bottom"],
-  links: ["right", "left"],
-  rechts: ["left", "right"],
-};
-/**
- * @param {string} kant - waar de ouder staat t.o.v. het kind
- * @param {boolean} [ouderAanDoel] - de verbinding wijst van kind naar ouder (generalisatie, 07-11)
- */
-function boomLijn(kant, ouderAanDoel = false) {
-  const [ouder, kind] = BOOM_ZIJDEN[kant];
-  return ouderAanDoel
-    ? { vorm: "boom", knikken: [], sourceHandle: `source-${kind}`, targetHandle: `target-${ouder}`, boomOuder: "doel" }
-    : { vorm: "boom", knikken: [], sourceHandle: `source-${ouder}`, targetHandle: `target-${kind}`, boomOuder: null };
-}
 
 /**
  * Lijndata van een connector zoals hij op het actieve diagram ligt: de
@@ -123,6 +103,7 @@ import { gebruikVan, gebruikteIds } from "../../diagramcore/model/gebruik.js";
 import { relatiesVan, verborgenRelatiesVan } from "../../diagramcore/model/relaties.js";
 import { gerelateerdeElementen, ringPosities } from "../../diagramcore/model/gerelateerd.js";
 import { wijstNaarOuder } from "../../diagramcore/types/layoutStijl.js";
+import { boomLijn, boomKinderen } from "../../diagramcore/model/lijnvorm.js";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { registreerIconenVocabulaire } from "../../diagramcore/shapes/iconenVocabulaire.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
@@ -2655,14 +2636,7 @@ export function maakDiagramActiviteit(opties) {
               // Kinderen = de verbindingen waarvan deze node de ouder is: de bron, of het doel bij
               // een verbinding die van kind naar ouder wijst (generalisatie; Mark 07-11: "overerving
               // wordt andersom geïnterpreteerd").
-              const uitgaand = Object.values(s.elements).filter(
-                (c) =>
-                  c.source &&
-                  c.target &&
-                  c.source !== c.target &&
-                  elementTypesById[c.elementType]?.isConnector &&
-                  (ouderAanDoelTypes.has(c.elementType) ? c.target === nodeId : c.source === nodeId)
-              );
+              const uitgaand = boomKinderen(s.elements, nodeId, (t) => !!elementTypesById[t]?.isConnector, (t) => ouderAanDoelTypes.has(t));
               if (uitgaand.length > 0) {
                 // Eén store-stap voor alle kinderen (één Ctrl+Z).
                 const zetBoomstijl = (kant) => {

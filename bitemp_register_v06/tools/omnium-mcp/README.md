@@ -50,7 +50,11 @@ Het plan:
 ```
 
 **Grenzen (18-10).** De server-instructies en de beschrijving van `model_wijzigen` zeggen wat
-níet kan: diagrammen of mappen weghalen, kleuren, lijnroutes, elementmaten. Wat het plan vraagt
+níet kan: diagrammen of mappen weghalen, kleuren, knikpunten of eigen lijnroutes, elementmaten.
+**Lijnen (07-11)** kunnen wél: `lijnen` met een relatie of een `ouder` (al zijn kinderen) zet de
+lijnvorm (krom, hoekig, recht, boom), de boomstijl (ouder boven/onder/links/rechts; bij overerving
+is het doel de ouder, via `naarOuder` in `profielen.json`) en vaste uiteinden — dezelfde lijndata
+als het rechtsklikmenu (`diagramcore/model/lijnvorm.js`). Wat het plan vraagt
 maar niet doorgaat, staat in het antwoord onder *Weggelaten* of *NIET GEDAAN*, zodat de
 aanroepende AI het niet als gedaan meldt. `project_bekijken` met een map toont per element waar het
 staat (`op <diagram> @ x,y (b×h)`). Layouts per taal staan in `modeltalen` (`Layouts …`); de

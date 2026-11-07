@@ -195,3 +195,26 @@ test("model_wijzigen: een bestaand diagram hernoemen (Mark, 06-11: de assistent 
   // De knopen blijven (ook de use case uit de op ná de snapshot).
   assert.deepEqual(op.args[0].zet.d_uc.nodes.map((n) => n.elementId).sort(), ["e_gebr", "e_test"]);
 });
+
+test("model_wijzigen: lijnen (Mark, 07-11: \"kan de MCP ook lijntypes wijzigen?\") — vorm en vast uiteinde op een bestaande relatie", async () => {
+  const api = nepProjectApi();
+  // Een associatie gebruiker → test, als op ná de snapshot.
+  const get = api.get.bind(api);
+  api.get = async (pad) => {
+    const r = await get(pad);
+    if (pad.startsWith("/api/studio/projecten/p1/ops")) {
+      r.ops = [...r.ops, { volgnummer: 10, store: "model:usecase05", op: "patchElementen", args: [{ zet: { e_as: { id: "e_as", naam: "", elementType: "associatie", source: "e_gebr", target: "e_test", compartimenten: [], data: {} } }, wis: [] }] }];
+      r.laatste = 10;
+    }
+    return r;
+  };
+  const plan = { uitleg: "hoekig", diagrammen: [], elementen: [], connectoren: [], lijnen: [{ diagram: "d_uc", relatie: "e_as", vorm: "hoekig", bron: "rechts" }] };
+  const voorstel = await voerUit(api, "model_wijzigen", { project: "Zandbak", map: "Test", plan });
+  assert.match(voorstel.content[0].text, /1 lijn gewijzigd/);
+  assert.match(voorstel.content[0].text, /~ lijnen: relatie e_as — vorm hoekig, bron rechts/);
+  const klaar = await voerUit(api, "model_wijzigen", { project: "Zandbak", map: "Test", plan, toepassen: true });
+  assert.match(klaar.content[0].text, /^Toegepast/);
+  const [, , body] = api.log.find(([m]) => m === "POST");
+  const op = body.ops.find((o) => o.op === "patchDiagrammen");
+  assert.deepEqual(op.args[0].zet.d_uc.lijnen.e_as, { vorm: "hoekig", knikken: [], sourceHandle: "source-right" });
+});

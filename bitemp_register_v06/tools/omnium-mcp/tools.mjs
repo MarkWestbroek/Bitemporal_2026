@@ -180,9 +180,10 @@ export const TOOLS = [
       "verbanden: [{van, naar, soort: komt voort uit|heeft te maken met|genereert|realiseert}] (tussen talen), " +
       "opstelling: [{diagram, actie: naast-elkaar|boven-elkaar|verdeel-horizontaal|verdeel-verticaal|links|rechts|boven|onder|automatisch, of een layout van de taal (modeltalen; bv. canoniek: gelaagd, gelaagd-lr, hierarchisch), elementen?}], " +
       "posities: [{diagram, element, x, y} | {diagram, element, naast: <element>, kant: rechts|links|onder|boven, afstand?}] (verplaatsen; x/y = linkerbovenhoek, zoals project_bekijken met map ze toont na @), " +
+      "lijnen: [{diagram, relatie: <relatie-id> | ouder: <element>, vorm?: krom|hoekig|recht|boom, boom?: boven|onder|links|rechts, bron?: boven|onder|links|rechts|auto, doel?: …}] (lijnvorm, boomstijl met de ouder aan die kant — bij overerving is het doel de ouder, dat gaat vanzelf goed — en vaste uiteinden; `ouder` = al zijn kinderen; alleen op een bestaand diagram), " +
       "nietGedaan: [<zin>] (wat je van de opdracht niet kunt; komt apart in het antwoord). " +
       "verwijderen: [<id van een bestaand element of relatie>] (weg uit het model en van alle diagrammen)}. " +
-      "Kan NIET: diagrammen of mappen weghalen, kleuren of lettertypen, lijnen een eigen route geven, maten van elementen kiezen. Meld dat aan de gebruiker in plaats van het te proberen; een onderdeel dat niet kan staat onder 'Weggelaten' of 'NIET GEDAAN' in het antwoord. " +
+      "Kan NIET: diagrammen of mappen weghalen, kleuren of lettertypen, knikpunten of een eigen route van een lijn, maten van elementen kiezen. Meld dat aan de gebruiker in plaats van het te proberen; een onderdeel dat niet kan staat onder 'Weggelaten' of 'NIET GEDAAN' in het antwoord. " +
       "`map` op een diagram = (nieuwe) submap van de doelmap, of de naam/het id van een element dat een uitwerking kan dragen (bv. een use case; zie modeltalen): dan hangt het diagram daaronder. Kijk eerst met modeltalen en project_bekijken.",
     inputSchema: {
       type: "object",

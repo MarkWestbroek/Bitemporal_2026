@@ -1154,7 +1154,8 @@
         "junction"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "bediening",
@@ -1970,7 +1971,8 @@
         "junction"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "associatie",
@@ -3487,7 +3489,8 @@
         "doel"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "notitielijn",
@@ -3815,7 +3818,8 @@
         "entiteit"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "gebruik",
@@ -4565,7 +4569,8 @@
         "component"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "gebruikt",
@@ -4730,7 +4735,8 @@
         "executieomgeving"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "dependency",
@@ -5150,7 +5156,8 @@
         "interface"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "gebruikt",
@@ -5588,7 +5595,8 @@
         "entiteit"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "notitielijn",
@@ -6041,7 +6049,8 @@
         "interface"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "lid",
@@ -6441,7 +6450,8 @@
         "referentielijst"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "externeKoppeling",
@@ -7032,7 +7042,8 @@
         "multiobject"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "notitielijn",
@@ -7274,7 +7285,8 @@
         "change"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "trace",
@@ -7412,7 +7424,8 @@
         "change"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "notitielijn",
@@ -8227,7 +8240,8 @@
         "enumeratie"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "associatie",
@@ -9061,7 +9075,8 @@
         "datatype"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "realisatie",
@@ -9075,7 +9090,8 @@
         "interface"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "dependency",
@@ -9364,7 +9380,8 @@
         "klasse"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "realiseert",
@@ -9380,7 +9397,8 @@
         "usecase"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "dependency",
@@ -9709,7 +9727,8 @@
         "portType"
        ]
       }
-     ]
+     ],
+     "naarOuder": true
     },
     {
      "id": "port",

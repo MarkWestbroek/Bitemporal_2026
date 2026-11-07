@@ -25,9 +25,10 @@ const server = new Server(
       "(modeltalen) en de map (project_bekijken), maak een plan, en laat model_wijzigen het eerst als voorstel " +
       "controleren; pas daarna toe (toepassen: true). Verwijs naar bestaande elementen met hun id. " +
       "Wat de modeltools kunnen: elementen, relaties, diagrammen en mappen maken; elementen en diagrammen hernoemen; velden toevoegen; " +
-      "in een container zetten; uitlijnen, opstellen (ook met de layouts van een taal) en verplaatsen; verbanden " +
+      "in een container zetten; uitlijnen, opstellen (ook met de layouts van een taal) en verplaatsen; lijnvorm, " +
+      "boomstijl en vaste uiteinden van relaties; verbanden " +
       "tussen talen; elementen en relaties weghalen. Wat ze NIET kunnen: diagrammen of mappen weghalen, kleuren, " +
-      "lijnroutes en elementmaten. Beweer nooit dat iets gedaan is wat in het antwoord onder 'Weggelaten' of " +
+      "knikpunten of eigen lijnroutes, en elementmaten. Beweer nooit dat iets gedaan is wat in het antwoord onder 'Weggelaten' of " +
       "'NIET GEDAAN' staat.",
   },
 );

@@ -526,3 +526,67 @@ test("verwijstNaar (M3, 20-10): een bestaande use case klikt door naar een activ
   const v = vraagVoorOpdracht([uc, ad], "x", { bestaand: bestaandInMap(stand, null, ["usecase05", "activity05"]) });
   assert.match(v.systeem, /u1: usecase "Leen boek" op d_uc @ 0,0 → verwijst naar d_ad/);
 });
+
+// Lijnen (07-11, Mark: "kan de MCP ook lijntypes wijzigen?"): vorm, boomstijl en uiteinden.
+const klasseDescriptor = {
+  id: "klasse",
+  label: "Klassen",
+  elementTypes: [
+    { id: "entiteit", label: "Entiteit" },
+    { id: "relatie", label: "Relatie", isConnector: true, bron: { elementTypes: ["entiteit"] }, doel: { elementTypes: ["entiteit"] } },
+    { id: "generalisatie", label: "Generalisatie", isConnector: true, bron: { elementTypes: ["entiteit"] }, doel: { elementTypes: ["entiteit"] } },
+  ],
+};
+const kl = profielSamenvatting(klasseDescriptor, "klasse05");
+const standLijnen = () => ({
+  profielen: { klasse05: {
+    elements: {
+      ouder: { id: "ouder", naam: "Partij", elementType: "entiteit" },
+      kind: { id: "kind", naam: "Persoon", elementType: "entiteit" },
+      adres: { id: "adres", naam: "Adres", elementType: "entiteit" },
+      gen: { id: "gen", naam: "", elementType: "generalisatie", source: "kind", target: "ouder" },
+      woont: { id: "woont", naam: "woont", elementType: "relatie", source: "ouder", target: "adres" },
+    },
+    diagrams: { d_k: { id: "d_k", naam: "Klassen", nodes: [
+      { elementId: "ouder", position: { x: 300, y: 40 } },
+      { elementId: "kind", position: { x: 300, y: 300 } },
+      { elementId: "adres", position: { x: 700, y: 40 } },
+    ] } },
+  } },
+});
+const bestaandLijnen = (stand) => bestaandInMap(stand, null, ["klasse05"]);
+
+test("samenvatting: generalisatie wijst naar de ouder (naarOuder), een relatie niet", () => {
+  assert.equal(kl.connectoren.find((c) => c.id === "generalisatie").naarOuder, true);
+  assert.equal(kl.connectoren.find((c) => c.id === "relatie").naarOuder, undefined);
+});
+
+test("lijnen: vorm op één relatie, boomstijl op de kinderen van een ouder (overerving: doel = ouder), uiteinde vast", () => {
+  const stand = standLijnen();
+  const plan = controleerPlan({ uitleg: "", lijnen: [
+    { diagram: "d_k", relatie: "woont", vorm: "hoekig", doel: "links" },
+    { diagram: "d_k", ouder: "ouder", boom: "boven" },
+  ] }, [kl], bestaandLijnen(stand));
+  assert.deepEqual(plan.problemen, []);
+  const w = maakWijziging(plan, stand, { mapId: null, samenvattingen: [kl], nu: 1 });
+  const lijnen = w.profielen.klasse05.diagrams.d_k.lijnen;
+  // De ouder is bron van "woont" en doel van "gen": beide zijn kinderen; boomstijl wint van de eerdere vorm.
+  assert.equal(lijnen.woont.vorm, "boom");
+  assert.equal(lijnen.woont.sourceHandle, "source-bottom");
+  assert.deepEqual([lijnen.gen.vorm, lijnen.gen.sourceHandle, lijnen.gen.targetHandle, lijnen.gen.boomOuder], ["boom", "source-top", "target-bottom", "doel"]);
+  assert.match(w.samenvatting, /3 lijnen gewijzigd/);
+  assert.ok(naarOps(w).some((o) => o.op === "patchDiagrammen"));
+});
+
+test("lijnen: onbekende vorm, relatie of zonder iets te doen → probleem", () => {
+  const stand = standLijnen();
+  const plan = controleerPlan({ uitleg: "", lijnen: [
+    { diagram: "d_k", relatie: "woont", vorm: "spiraal" },
+    { diagram: "d_k", relatie: "bestaat_niet", vorm: "recht" },
+    { diagram: "d_k", relatie: "woont" },
+  ] }, [kl], bestaandLijnen(stand));
+  assert.equal(plan.lijnen.length, 0);
+  assert.equal(plan.problemen.length, 3);
+  const vraag = vraagVoorOpdracht([kl], "maak de lijnen hoekig", { bestaand: bestaandLijnen(stand) });
+  assert.match(vraag.systeem, /`lijnen`/);
+});

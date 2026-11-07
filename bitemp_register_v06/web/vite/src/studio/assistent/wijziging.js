@@ -15,6 +15,7 @@
 import { legUit } from "../../transformatie/kolommenLayout.js";
 import { berekenUitlijning } from "../../diagramcore/layout/uitlijnen.js";
 import { plaatsSequenceUitPlan } from "../../diagramprofielen/sequence/plaatsUitPlan.js";
+import { boomLijn, boomKinderen, ZIJDE } from "../../diagramcore/model/lijnvorm.js";
 
 const slug = (tekst) =>
   String(tekst || "")
@@ -498,6 +499,36 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     if (!openen.some((x) => x.profielId === d.profielId && x.diagramId === d.id)) openen.push({ profielId: d.profielId, diagramId: d.id });
   }
 
+  // ── 5d. Lijnen (07-11): vorm, boomstijl, vaste uiteinden van bestaande relaties op een diagram
+  // (diagram.lijnen, zoals het rechtsklikmenu van het canvas; diagramcore/model/lijnvorm.js). Bij
+  // `ouder` al zijn kinderen; een generalisatie (naarOuder) heeft de ouder aan het doel.
+  let nLijnen = 0;
+  for (const l of plan.lijnen || []) {
+    const d = diagramId.get(l.diagram);
+    if (!d) continue;
+    const diagram = bij(d.profielId).diagrams[d.id] || huidig(d.profielId).diagrams?.[d.id];
+    if (!diagram) continue;
+    const alle = { ...huidig(d.profielId).elements, ...bij(d.profielId).elements };
+    const naarOuder = (type) => !!taal.get(d.profielId)?.connectoren?.find((c) => c.id === type)?.naarOuder;
+    const doelen = l.relatie
+      ? (alle[l.relatie]?.source ? [alle[l.relatie]] : [])
+      : boomKinderen(alle, ref(l.ouder), () => true, naarOuder);
+    if (!doelen.length) {
+      nietUitgevoerd.push(l.relatie ? `Relatie ${l.relatie} bestaat niet; lijn niet gewijzigd.` : `${l.ouder?.id || l.ouder?.nieuw} heeft geen kinderen; geen lijnen gewijzigd.`);
+      continue;
+    }
+    const lijnen = { ...(diagram.lijnen || {}) };
+    for (const c of doelen) {
+      const patch = l.boom ? boomLijn(l.boom, naarOuder(c.elementType)) : l.vorm ? { vorm: l.vorm, knikken: [] } : {};
+      if (l.bron) patch.sourceHandle = l.bron === "auto" ? null : `source-${ZIJDE[l.bron]}`;
+      if (l.doel) patch.targetHandle = l.doel === "auto" ? null : `target-${ZIJDE[l.doel]}`;
+      lijnen[c.id] = { ...(lijnen[c.id] || {}), ...patch };
+    }
+    nLijnen += doelen.length;
+    bij(d.profielId).diagrams[d.id] = { ...diagram, lijnen };
+    if (!openen.some((x) => x.profielId === d.profielId && x.diagramId === d.id)) openen.push({ profielId: d.profielId, diagramId: d.id });
+  }
+
   for (const [, d] of diagramId) {
     if (d.nieuw) plaatsing[`${d.profielId}::${d.id}`] = d.map ?? mapId;
     if (d.nieuw && !openen.some((o) => o.diagramId === d.id && o.profielId === d.profielId)) openen.push({ profielId: d.profielId, diagramId: d.id });
@@ -553,6 +584,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   if (links.length) delen.push(`${links.length} verband${links.length === 1 ? "" : "en"}`);
   if (plan.verwijderen?.length) delen.push(`${plan.verwijderen.length} weggehaald`);
   if (verplaatst.size) delen.push(`${verplaatst.size} verplaatst`);
+  if (nLijnen) delen.push(`${nLijnen} lijn${nLijnen === 1 ? "" : "en"} gewijzigd`);
 
   return {
     mappen,
