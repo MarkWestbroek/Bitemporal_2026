@@ -76,7 +76,8 @@ export function maakStand(werkbestand = {}) {
     structuur.getState().laadStructuur({ mappen: s.mappen || {}, plaatsing: herschikOpVolgorde(s.plaatsing || {}, s.plaatsingVolgorde), bundels: s.bundels || {} });
   });
   // Kruisverbanden: geen store nodig, alleen de lijst (patchLinks = upsert/wis op id).
-  const kruis = { links: Array.isArray(werkbestand?.kruisverbanden) ? [...werkbestand.kruisverbanden] : [] };
+  // `soorten`: de soortenlijst van het project (`koppelsoorten`, 07-11); undefined = niet in het werkbestand.
+  const kruis = { links: Array.isArray(werkbestand?.kruisverbanden) ? [...werkbestand.kruisverbanden] : [], soorten: werkbestand?.koppelsoorten };
   return { modellen, structuur, profielVoor, kruis, origineel: werkbestand || {} };
 }
 
@@ -114,6 +115,7 @@ export function bouwWerkbestand(stand, { id, naam } = {}) {
     project: { id: id ?? stand.origineel?.project?.id, naam: naam ?? stand.origineel?.project?.naam },
     structuur: { mappen: s.mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing), ...(Object.keys(s.bundels || {}).length ? { bundels: s.bundels } : {}) },
     kruisverbanden: stand.kruis.links,
+    ...(stand.kruis.soorten !== undefined ? { koppelsoorten: stand.kruis.soorten ?? undefined } : {}),
     profielen,
   };
 }
@@ -130,7 +132,9 @@ export function speelOpsNa(stand, ops) {
   for (const o of ops || []) {
     if (!o?.store) { overgeslagen++; continue; }
     if (o.store === "kruis") {
-      if (o.op === "patchLinks") { pasKruisToe(stand, o.args?.[0]); toegepast++; } else overgeslagen++;
+      if (o.op === "patchLinks") { pasKruisToe(stand, o.args?.[0]); toegepast++; }
+      else if (o.op === "zetSoorten") { stand.kruis.soorten = o.args?.[0] ?? null; toegepast++; }
+      else overgeslagen++;
       continue;
     }
     if (o.store.startsWith("model:")) stand.profielVoor(o.store.slice("model:".length));

@@ -9,6 +9,21 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Koppelingen als lijnen op het diagram** (Mark, 07-11; stap 2 van het koppeldiagram): een
+  koppeling uit de matrix staat als violette dependency (gestippeld, open pijl, de soort als
+  «stereotype»; realiseert als realisatie) op elk diagram waar beide uiteinden staan. Een lijn
+  trekken tussen twee talen biedt de koppelsoorten aan en legt de koppeling in de matrix. Eigen
+  inspector (soort, omdraaien, van diagram halen, verwijderen); Delete verbergt, Ctrl+Delete
+  verwijdert. Soorten uitgebreid met traceert naar, verfijnt, is afgeleid van en voldoet aan, plus
+  een vrije soort (*Andere soort…*). De matrix toont het elementtype bij elke rij en kolom.
+  `diagramcore/model/koppellijnen.js`.
+- **Soortenlijst per project** (Mark, 07-11): de soorten van koppelingen zijn per project te
+  bewerken in de zijbalk van *Koppelingen*: toevoegen, hernoemen (ook in alle koppelingen),
+  stijl (dependency/realisatie), default-richting, volgorde, verwijderen (als geen koppeling hem
+  gebruikt) en terug naar de standaardlijst. Een nieuw getypte soort komt er vanzelf in en staat
+  in alle keuzelijsten, ook de grafische weergave (die had eerst alleen de vaste lijst). Reist
+  mee als `koppelsoorten` in de project-JSON en via de projectsync (`kruis/zetSoorten`).
+  `studio/activities/koppelsoorten.js`.
 - **Elementen uit een andere taal op een diagram** (Mark, 07-11; stap 1 van het koppeldiagram):
   sleep een element uit de projectboom van een andere taal op een diagram. Het staat er als
   verwijzing (`<taal>::<id>`), in de notatie van zijn eigen taal en met de taal als label;
@@ -35,6 +50,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   neemt generalisaties mee en de kanten staan niet meer omgekeerd; de lat ligt bij de ouder.
 
 ### Opgelost
+- **Slepen in de grafische kruisverbanden-weergave** (Mark, 07-11: "waarom slepen de elementen zo
+  traag?"): een knoop bleef tijdens het slepen staan en sprong pas bij loslaten naar zijn plek
+  (gecontroleerde React Flow-knopen zonder `onNodesChange`). Nu volgt hij de muis; de positie gaat
+  nog steeds pas bij loslaten naar de store.
 - **Delete is één undo-stap** (Mark, 07-11: "A–B, A van het diagram halen; Ctrl+Z geeft alleen A
   terug, pas een tweede Ctrl+Z de associatie"). React Flow meldde de lijnen van een weggehaalde node
   apart als verwijderd, en het canvas verborg ze dan op het diagram: een tweede wijziging. Nu is

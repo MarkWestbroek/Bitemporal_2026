@@ -76,6 +76,8 @@ import { registreerProfieltype, getProfieltype, getProfieltypen } from "../profi
 import { metVreemdeElementen, ontleedVreemdeId, vreemdeId, vreemdeProfielen } from "../../diagramcore/model/vreemd.js";
 import { useVreemdeSelectie, zetVreemdeSelectie, LosGetoondContext } from "../vreemdeSelectie.js";
 import { gebruikInHetProject } from "../gebruikInProject.js";
+import { metKoppelingen, isKoppelingId, isKoppelType, linkIdVan, refVanCanvasId } from "../../diagramcore/model/koppellijnen.js";
+import { useKruisStore, useKoppelsoorten } from "./koppelingenActivity.jsx";
 import { openVerwijzing, alleDiagrammen, naamVanVerwijzing } from "../doorklik.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { doorklikVan } from "../../diagramcore/model/verwijstNaar.js";
@@ -373,7 +375,14 @@ export function maakDiagramActiviteit(opties) {
   function haalConnectorVanDiagram(diagramId, connectorId) {
     const s = useStore.getState();
     const d = s.diagrams[diagramId];
-    if (!d || !s.elements[connectorId]) return;
+    if (!d) return;
+    // Een koppeling (koppellijnen.js) of een relatie van een andere taal (vreemd.js) is geen
+    // element van deze taal: alleen op dit diagram verbergen.
+    if (!s.elements[connectorId] && (isKoppelingId(connectorId) || ontleedVreemdeId(connectorId))) {
+      s.verbergConnectorOpDiagram(diagramId, connectorId);
+      return;
+    }
+    if (!s.elements[connectorId]) return;
     // M3 `verwijderen: "model"` (sequence-bericht): Delete haalt hem uit het model.
     if (descriptor.elementTypes.find((t) => t.id === s.elements[connectorId].elementType)?.verwijderen === "model") {
       verwijderUitModel(connectorId);
@@ -451,6 +460,13 @@ export function maakDiagramActiviteit(opties) {
     useEffect(() => {
       // Een element uit een andere taal (vreemd.js): de host toont het in de inspector van die
       // taal (LosElementInspector) en de boom selecteert het daar.
+      // Een koppeling (koppellijnen.js) is geen element: de inspector van deze taal toont haar zelf.
+      // (Met deze taal als profielId: dan toont de host de inspector van dit diagram.)
+      if (isKoppelingId(selectieId)) {
+        zetVreemdeSelectie(null);
+        menuBus.emit("studio:element-geselecteerd", { profielId: id, elementId: selectieId });
+        return;
+      }
       const vreemd = ontleedVreemdeId(selectieId);
       if (vreemd) {
         // Eerst de context (vreemdeSelectie.js), dan de selectie: de inspector van die taal
@@ -955,6 +971,22 @@ export function maakDiagramActiviteit(opties) {
 
     /** Nieuwe connector (edge-drag op de canvas, regels al gecheckt). */
     const verbind = useCallback(({ connectorType, source, target, sourceHandle, targetHandle, van = null, naar = null }) => {
+      // Een koppeling tussen twee talen (koppellijnen.js) is geen element van deze taal: ze komt in
+      // de koppelingen-store, dezelfde als die van de matrix. Was ze hier verborgen, dan weer tonen.
+      if (isKoppelType(connectorType?.id)) {
+        const leg = (soort) => {
+          const vanRef = refVanCanvasId(source, id);
+          const naarRef = refVanCanvasId(target, id);
+          useKruisStore.getState().legLink(vanRef, naarRef, soort);
+          const s = useStore.getState();
+          const linkId = `${vanRef.profielId}::${vanRef.elementId}##${naarRef.profielId}::${naarRef.elementId}`;
+          if (s.actiefDiagramId) s.toonConnectorOpDiagram(s.actiefDiagramId, `koppeling:${linkId}`);
+        };
+        // "Andere soort…": een vrije soort (stereotype), Mark 07-11.
+        if (connectorType.koppelSoort) leg(connectorType.koppelSoort);
+        else vraagNaam({ titel: "Soort koppeling", label: "Soort (stereotype), bv. «gebruikt»" }).then((s) => s?.trim() && leg(s.trim()));
+        return;
+      }
       _connTeller += 1;
       const conn = {
         id: `conn_${Date.now()}_${_connTeller}`,
@@ -2137,11 +2169,16 @@ export function maakDiagramActiviteit(opties) {
       );
       return () => af.forEach((f) => typeof f === "function" && f());
     }, [vreemdeTalen]);
-    const canvasModel = useMemo(
-      () => metVreemdeElementen({ elements, descriptor, diagram, bron: vreemdeBron }),
+    // Koppelingen (kruisverbanden) als lijnen: wat in de matrix staat, staat ook hier zodra beide
+    // uiteinden op het diagram staan (diagramcore/model/koppellijnen.js; Mark 07-11, stap 2).
+    const kruisLinks = useKruisStore((s) => s.links);
+    // De soortenlijst van het project (bewerkbaar in Koppelingen): de lijntypen en hun stijl.
+    const koppelsoorten = useKoppelsoorten();
+    const canvasModel = useMemo(() => {
+      const v = metVreemdeElementen({ elements, descriptor, diagram, bron: vreemdeBron });
+      return metKoppelingen({ elements: v.elements, descriptor: v.descriptor, diagram, eigenProfielId: id, links: kruisLinks, soorten: koppelsoorten });
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [elements, diagram, vreemdTik]
-    );
+    }, [elements, diagram, vreemdTik, kruisLinks, koppelsoorten]);
 
     // Tips na een toestandsovergang (hints.js): het eerste element op een diagram, en de
     // eerste relatie in dit profiel. Alleen bij een toename tijdens de sessie, niet bij laden.
@@ -3124,16 +3161,29 @@ export function maakDiagramActiviteit(opties) {
             const knopen = api?.selectieIds?.() || [];
             const gezien = new Set(knopen.map((x) => x.elementId));
             const lijnen = (api?.selectieConnectorIds?.() || []).filter((cid) => !gezien.has(cid)).map((cid) => ({ nodeId: cid, elementId: cid }));
-            const sel = [...knopen, ...lijnen];
-            if (!sel.length) return;
-            const naam = useStore.getState().elements[sel[0].elementId]?.naam || sel[0].elementId;
+            const alles = [...knopen, ...lijnen];
+            // Koppelingen (koppellijnen.js) gaan uit de koppelingen-store (ook uit de matrix).
+            // Elementen en relaties van een andere taal (vreemd.js) horen daar: overslaan.
+            const koppelingen = alles.filter((x) => isKoppelingId(x.elementId));
+            const sel = alles.filter((x) => !isKoppelingId(x.elementId) && !ontleedVreemdeId(x.elementId));
+            if (!sel.length && !koppelingen.length) {
+              if (alles.length) toonMelding({ tekst: "Dit hoort bij een andere taal; hier staat alleen een verwijzing. Verwijder het in een diagram van die taal of in de projectboom." });
+              return;
+            }
+            const naam = sel.length ? useStore.getState().elements[sel[0].elementId]?.naam || sel[0].elementId : "deze koppeling";
+            const aantal = sel.length + koppelingen.length;
             vraagBevestiging({
               titel: "Uit het model verwijderen",
-              tekst: sel.length === 1 ? `"${naam}" uit het model verwijderen?` : `${sel.length} elementen uit het model verwijderen?`,
+              tekst: aantal === 1
+                ? (sel.length ? `"${naam}" uit het model verwijderen?` : "Deze koppeling verwijderen? Ze verdwijnt ook uit de matrix.")
+                : `${aantal} elementen${koppelingen.length ? " en koppelingen" : ""} uit het model verwijderen?`,
               bevestig: "Verwijder",
               gevaar: true,
             }).then((ok) => {
               if (!ok) return;
+              const kruis = useKruisStore.getState();
+              for (const k of koppelingen) kruis.verwijderLink(linkIdVan(k.elementId));
+              if (!sel.length) return;
               const s = useStore.getState();
               for (const { elementId } of sel) s.deleteElement(elementId);
               // Ook de plek in de projectboom weg, zoals het boommenu (Mark, 10-10).
@@ -3666,6 +3716,82 @@ export function maakDiagramActiviteit(opties) {
     );
   }
 
+  /**
+   * Een koppeling (kruisverband) die als lijn op dit diagram staat (koppellijnen.js): van → naar,
+   * de soort, omdraaien, van dit diagram halen (verbergen) of de koppeling verwijderen (ook uit de
+   * matrix). Mark 07-11, stap 2 van het koppeldiagram.
+   */
+  function KoppelingInspector({ linkId, diagramId, onKlaar }) {
+    const link = useKruisStore((s) => s.links.find((l) => l.id === linkId));
+    const soorten = useKoppelsoorten();
+    if (!link) {
+      return <div className="studio-inspector-pad" style={{ color: "var(--s-fg-muted)" }}>Deze koppeling bestaat niet meer.</div>;
+    }
+    const naamVan = (ref) => {
+      const p = getProfieltype(ref.profielId);
+      const el = p?.useStore?.getState().elements[ref.elementId];
+      return { naam: el?.naam || ref.elementId, taal: p?.label || ref.profielId };
+    };
+    const van = naamVan(link.omgekeerd ? link.kolom : link.rij);
+    const naar = naamVan(link.omgekeerd ? link.rij : link.kolom);
+    const kruis = useKruisStore.getState();
+    return (
+      <div className="studio-inspector-pad dc-inspector" data-testid="koppeling-inspector">
+        <h3>Koppeling</h3>
+        <div className="dc-inspector-type">Kruisverband tussen twee talen; staat ook in de matrix (Koppelingen).</div>
+        <p data-testid="koppeling-uiteinden">
+          <strong>{van.naam}</strong> <span style={{ color: "var(--s-fg-muted)" }}>({van.taal})</span>
+          {" → "}
+          <strong>{naar.naam}</strong> <span style={{ color: "var(--s-fg-muted)" }}>({naar.taal})</span>
+        </p>
+        <label style={{ display: "flex", gap: 8, alignItems: "center", margin: "8px 0" }}>
+          soort
+          {/* Kies uit de lijst of typ een eigen soort (stereotype); vastgelegd bij Enter of verlaten. */}
+          <input
+            key={link.soort}
+            defaultValue={link.soort}
+            list="koppel-soorten"
+            data-testid="koppeling-soort"
+            onBlur={(e) => {
+              const v = e.target.value.trim();
+              if (v && v !== link.soort) kruis.zetSoort(link.rij, link.kolom, v);
+            }}
+            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            style={{ flex: 1 }}
+          />
+          <datalist id="koppel-soorten">
+            {soorten.map((t) => (
+              <option key={t.soort} value={t.soort} />
+            ))}
+          </datalist>
+        </label>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 10 }}>
+          <button className="dc-mini-knop" onClick={() => kruis.draaiOm(link.id)}>Richting omdraaien</button>
+          <button
+            className="dc-mini-knop"
+            onClick={() => {
+              if (diagramId) useStore.getState().verbergConnectorOpDiagram(diagramId, `koppeling:${link.id}`);
+              onKlaar();
+            }}
+          >
+            Van diagram halen
+          </button>
+          <button
+            className="dc-mini-knop is-gevaar"
+            onClick={async () => {
+              const ok = await vraagBevestiging({ titel: "Koppeling verwijderen", tekst: "Deze koppeling verwijderen? Ze verdwijnt ook uit de matrix.", bevestig: "Verwijder", gevaar: true });
+              if (!ok) return;
+              kruis.verwijderLink(link.id);
+              onKlaar();
+            }}
+          >
+            Verwijder koppeling
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   function Inspector() {
     const { selectieId, setSelectieId, selectieVoorkomenId } = useContext(Ctx);
     const relatiesPaneelOpen = useStudioStore((s) => s.relatiesPaneelOpen);
@@ -3692,6 +3818,10 @@ export function maakDiagramActiviteit(opties) {
       },
       [elements]
     );
+
+    if (isKoppelingId(selectieId)) {
+      return <KoppelingInspector linkId={linkIdVan(selectieId)} diagramId={actief} onKlaar={() => setSelectieId(null)} />;
+    }
 
     if (!element) {
       return (

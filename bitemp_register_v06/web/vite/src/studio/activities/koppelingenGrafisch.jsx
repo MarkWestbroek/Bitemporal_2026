@@ -12,9 +12,10 @@
  * Onder water één React Flow-canvas dat leest uit `useKruisStore` (links,
  * posities) en de per-profiel-stores (element-namen/typen/kleur).
  */
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ReactFlow,
+  applyNodeChanges,
   ReactFlowProvider,
   Background,
   Controls,
@@ -26,7 +27,8 @@ import {
 import "@xyflow/react/dist/style.css";
 import { getProfieltype, getProfieltypen, effectieveStijl } from "../profieltypeRegistry";
 import ProfielIcoon from "../ProfielIcoon.jsx";
-import { useKruisStore, refKey, refUit, vanNaar, TRACE_SOORTEN } from "./koppelingenActivity.jsx";
+import { useKruisStore, refKey, refUit, vanNaar, useKoppelsoorten } from "./koppelingenActivity.jsx";
+import { vraagNaam } from "../naamDialog.jsx";
 
 const traceerbaar = () => getProfieltypen().filter((p) => !p.klassiek);
 
@@ -71,11 +73,15 @@ function KruisNode({ data }) {
 
 const nodeTypes = { kruis: KruisNode };
 
+/** Waarde van "Andere soort…" in de soort-keuze. */
+const ANDERE = "\u0000andere";
+
 // ── Contextmenu op een edge (soort/richting/verwijderen) ────────────
 function EdgeMenu({ menu, sluit }) {
   const zetSoort = useKruisStore((s) => s.zetSoort);
   const draaiOm = useKruisStore((s) => s.draaiOm);
   const verwijderLink = useKruisStore((s) => s.verwijderLink);
+  const soorten = useKoppelsoorten();
   React.useEffect(() => {
     if (!menu) return;
     const onDown = () => sluit();
@@ -91,11 +97,18 @@ function EdgeMenu({ menu, sluit }) {
   const l = menu.link;
   const items = [
     { kop: `Trace-relatie` },
-    ...TRACE_SOORTEN.map((t) => ({
+    ...soorten.map(({ soort: t }) => ({
       label: t,
       actief: l.soort === t,
       onClick: () => zetSoort(l.rij, l.kolom, t),
     })),
+    {
+      label: "Andere soort…",
+      onClick: async () => {
+        const t = (await vraagNaam({ titel: "Soort koppeling", label: "Soort (stereotype), bv. «gebruikt»", waarde: l.soort || "" }))?.trim();
+        if (t) zetSoort(l.rij, l.kolom, t);
+      },
+    },
     { sep: true },
     { label: "Richting omdraaien", onClick: () => draaiOm(l.id) },
     { label: "Verwijderen", onClick: () => verwijderLink(l.id) },
@@ -167,6 +180,8 @@ function Canvas() {
   const voegNodeToe = useKruisStore((s) => s.voegNodeToe);
   const verwijderNode = useKruisStore((s) => s.verwijderNode);
   const verwijderLink = useKruisStore((s) => s.verwijderLink);
+  // De soorten van het project, ook zelf aangemaakte (Mark, 07-11).
+  const soorten = useKoppelsoorten();
   const [menu, setMenu] = useState(null);
 
   // Alle betrokken refKeys: eindpunten van links + losse knopen.
@@ -232,6 +247,19 @@ function Canvas() {
     (c) => { if (c.source && c.target) legLink(refUit(c.source), refUit(c.target), soort); },
     [legLink, soort]
   );
+  // Lokale kopie van de knopen (Mark, 07-11: "waarom slepen de elementen zo traag?"). De knopen
+  // waren gecontroleerd zonder onNodesChange: React Flow kon tijdens het slepen niets verplaatsen
+  // en de knoop sprong pas bij loslaten (zetPositie) naar zijn plek. Nu volgt de knoop de muis via
+  // applyNodeChanges; de store krijgt de positie nog steeds pas bij loslaten (één schrijfactie).
+  const [rfNodes, setRfNodes] = useState(nodes);
+  useEffect(() => {
+    // Afgeleide wijziging (links, posities, namen): selectie van de lokale kopie behouden.
+    setRfNodes((oud) => {
+      const gekozen = new Set(oud.filter((n) => n.selected).map((n) => n.id));
+      return nodes.map((n) => (gekozen.has(n.id) ? { ...n, selected: true } : n));
+    });
+  }, [nodes]);
+  const onNodesChange = useCallback((changes) => setRfNodes((ns) => applyNodeChanges(changes, ns)), []);
   const onNodeDragStop = useCallback((_e, node) => zetPositie(node.id, node.position), [zetPositie]);
   const onEdgesDelete = useCallback((weg) => weg.forEach((e) => verwijderLink(e.id)), [verwijderLink]);
   const onNodesDelete = useCallback((weg) => weg.forEach((n) => verwijderNode(n.id)), [verwijderNode]);
@@ -249,8 +277,18 @@ function Canvas() {
       <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "6px 10px", borderBottom: "1px solid var(--s-border)", flexWrap: "wrap" }}>
         <label style={{ fontSize: 12, color: "var(--s-fg-muted)", display: "flex", alignItems: "center", gap: 6 }}>
           Nieuwe relatie:
-          <select value={soort} onChange={(e) => zetKeuze({ soort: e.target.value })} style={{ font: "inherit", fontSize: 12, padding: "3px 6px", borderRadius: 6, border: "1px solid var(--s-border)", background: "var(--s-panel)", color: "var(--s-fg)" }}>
-            {TRACE_SOORTEN.map((t) => <option key={t} value={t}>{t}</option>)}
+          <select
+            value={soort}
+            onChange={async (e) => {
+              if (e.target.value !== ANDERE) return zetKeuze({ soort: e.target.value });
+              const t = (await vraagNaam({ titel: "Nieuwe soort koppeling", label: "Soort (stereotype), bv. «gebruikt»" }))?.trim();
+              if (!t) return;
+              useKruisStore.getState().voegSoortToe(t);
+              zetKeuze({ soort: t });
+            }}
+            style={{ font: "inherit", fontSize: 12, padding: "3px 6px", borderRadius: 6, border: "1px solid var(--s-border)", background: "var(--s-panel)", color: "var(--s-fg)" }}>
+            {soorten.map(({ soort: t }) => <option key={t} value={t}>{t}</option>)}
+            <option value={ANDERE}>Andere soort…</option>
           </select>
         </label>
         <NodePicker onKies={(ref) => voegNodeToe(ref)} />
@@ -260,7 +298,8 @@ function Canvas() {
       </div>
       <div style={{ flex: 1, minHeight: 0, position: "relative" }} className="dc-canvasvlak">
         <ReactFlow
-          nodes={nodes}
+          nodes={rfNodes}
+          onNodesChange={onNodesChange}
           edges={edges}
           nodeTypes={nodeTypes}
           onConnect={onConnect}

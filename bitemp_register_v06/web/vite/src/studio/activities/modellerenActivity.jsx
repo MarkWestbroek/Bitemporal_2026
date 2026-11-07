@@ -3609,6 +3609,8 @@ function bouwProjectData() {
     // de sleutelvolgorde van `plaatsing` niet (gemeld 2026-10-08).
     structuur: { mappen: s.mappen, plaatsing, plaatsingVolgorde: Object.keys(plaatsing), ...(Object.keys(s.bundels || {}).length ? { bundels: s.bundels } : {}) },
     kruisverbanden: useKruisStore.getState().links,
+    // De soortenlijst van het project (07-11); ontbreekt = de standaardlijst.
+    ...(useKruisStore.getState().soorten ? { koppelsoorten: useKruisStore.getState().soorten } : {}),
     profielen,
   };
 }
@@ -3679,7 +3681,7 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}
       tabs,
       actieveTab: tabs.some((t) => t.id === gewenstActief) ? gewenstActief : tabs[0]?.id || null,
     });
-    useKruisStore.getState().laadLinks(Array.isArray(data.kruisverbanden) ? data.kruisverbanden : []);
+    useKruisStore.getState().laadLinks(Array.isArray(data.kruisverbanden) ? data.kruisverbanden : [], data.koppelsoorten ?? null);
   });
   useOutboxStore.getState().wis();
   // Boomregel (BOOM-1): wat op een geplaatst diagram staat, in die map (migratie van
@@ -3697,7 +3699,7 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
       p.useStore.temporal?.getState().clear();
     }
     useModellerenStore.getState().laadStructuur({});
-    useKruisStore.getState().laadLinks([]);
+    useKruisStore.getState().laadLinks([], null);
   });
   useOutboxStore.getState().wis();
   useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null });
