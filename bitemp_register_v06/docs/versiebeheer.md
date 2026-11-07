@@ -115,7 +115,10 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.21.1`** (2026-11-07, patch: vervallen kolommen breken geen insert meer —
+- Backend: **`api/v0.22.0`** (2026-11-07: de domeinen van het register expliciet — `domeinen`,
+  `alle_domeinen`, `precies` op `/admin/rebuild`, `schema_versies.gebouwde_domeinen` voor de
+  startup-rebuild, `/admin/wees-tabellen` —, GitAdres naar gegevenstypen, codegen klaar voor
+  gegevenstypen uit het model; devloop-image 0.25.0). Daarvoor **`api/v0.21.1`** (2026-11-07, patch: vervallen kolommen breken geen insert meer —
   `WithDiscardUnknownColumns`, vervallen NOT NULL nullable —, en de startup-rebuild leest
   `schema_versies` vóór de migratie; devloop-image 0.24.14). Daarvoor **`api/v0.21.0`**
   (2026-11-07: rebuild uit een Studio-project — `POST /admin/rebuild
