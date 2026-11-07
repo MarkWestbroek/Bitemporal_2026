@@ -189,6 +189,12 @@ test("diff-helpers en vangnetten van structuur en kruis", () => {
   const k = kruisNet({ links: l1 }, { links: l2 });
   assert.equal(k[0].op, "patchLinks");
   assert.deepEqual(kruisNet({ links: l1 }, { links: l1 }), []);
+  // Soortenlijst (07-11): de hele lijst, vóór de links (hernoemen raakt beide).
+  const soorten = [{ soort: "b", stijl: "afhankelijk", defaultOmgekeerd: false }];
+  const ks = kruisNet({ links: l1, soorten: null }, { links: l2, soorten });
+  assert.deepEqual(ks.map((o) => o.op), ["zetSoorten", "patchLinks"]);
+  assert.deepEqual(ks[0].args, [soorten]);
+  assert.deepEqual(kruisNet({ links: l1 }, { links: l1, soorten: null }), [], "undefined en null zijn gelijk");
 });
 
 test("zetElementen (hele map vervangen) wordt als patch gemeld, niet als vervanging", () => {

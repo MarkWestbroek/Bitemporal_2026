@@ -3,7 +3,8 @@
 *2026-10-12. Aanleiding: Mark wil koppelingen tussen profielen (de matrix) ook visueel kunnen
 maken en bekijken, op diagrammen waar elementen uit meerdere profielen samenkomen. Status:
 voorstel met Marks eerste keuzes (12-10), bijgestuurd 07-11 (§9a). Gebouwd 07-11: stap 1,
-vreemde elementen op elk diagram (`diagramcore/model/vreemd.js`, STUDIO.md).*
+vreemde elementen op elk diagram (`diagramcore/model/vreemd.js`), en stap 2, koppelingen als
+lijnen en trekken tussen talen (`diagramcore/model/koppellijnen.js`); zie STUDIO.md.*
 
 ## 1. Wat er al is
 

@@ -42,7 +42,11 @@ export function ontleedVreemdeId(id) {
   if (typeof id !== "string") return null;
   const i = id.indexOf(VREEMD_SCHEIDER);
   if (i <= 0 || i + VREEMD_SCHEIDER.length >= id.length) return null;
-  return { profielId: id.slice(0, i), elementId: id.slice(i + VREEMD_SCHEIDER.length) };
+  const profielId = id.slice(0, i);
+  // Een profiel-id is een eenvoudige naam (diagram05, archimate05); zo is bv. een koppeling-id
+  // (`koppeling:<a>::<b>##…`, model/koppellijnen.js) geen verwijzing.
+  if (!/^[\w-]+$/.test(profielId)) return null;
+  return { profielId, elementId: id.slice(i + VREEMD_SCHEIDER.length) };
 }
 
 /** De talen waarvan een element op dit diagram staat (buiten de eigen taal). */

@@ -32,6 +32,11 @@ import {
 } from "../profieltypeRegistry";
 import ProfielIcoon from "../ProfielIcoon.jsx";
 import { IconKoppeling } from "../icons";
+import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
+import {
+  STANDAARD_SOORTEN, STIJLEN, effectieveSoorten, vindSoort, metSoort, hernoemSoort, wijzigSoort,
+  zonderSoort, schuifSoort, normaliseerSoorten, gebruikVanSoort,
+} from "./koppelsoorten.js";
 // Circulaire import (grafisch ↔ activity): veilig omdat het pas bij render
 // gebruikt wordt, niet tijdens module-evaluatie.
 import KoppelingenGrafisch from "./koppelingenGrafisch.jsx";
@@ -40,14 +45,41 @@ import KoppelingenGrafisch from "./koppelingenGrafisch.jsx";
 // `stijl` stuurt het symbool (UML-achtig): realisatie = gestippeld + holle
 // driehoek, afhankelijkheid = gestippeld + open pijl, generatie = vol +
 // gevulde pijl, associatie = doorgetrokken lijn zonder kop.
-export const TRACE_TYPEN = [
-  { soort: "komt voort uit", stijl: "afhankelijk", defaultOmgekeerd: false },
-  { soort: "heeft te maken met", stijl: "associatie", defaultOmgekeerd: false },
-  { soort: "genereert", stijl: "generatie", defaultOmgekeerd: true },
-  { soort: "realiseert", stijl: "realisatie", defaultOmgekeerd: false },
-];
-export const TRACE_SOORTEN = TRACE_TYPEN.map((t) => t.soort);
-const TRACE_BY_SOORT = Object.fromEntries(TRACE_TYPEN.map((t) => [t.soort, t]));
+//
+// Mark, 07-11: koppelingen tekenen als **dependency** (gestippeld, open pijl, de soort als
+// «stereotype»), zoals EA dat doet: dan is de richting zichtbaar en lijkt een koppeling niet op
+// een associatie (de belangrijkste verbinding). Alleen *realiseert* blijft een realisatie (holle
+// driehoek). De lijst is uitgebreid met de EA-soorten (trace, refine, derive, satisfy) en een
+// koppeling mag ook een **vrije soort** hebben ("Andere soort…"); die tekent als dependency.
+//
+// Mark, 07-11 (vervolg): de lijst is **per project bewerkbaar** (zijbalk van Koppelingen); een
+// nieuw getypte soort komt er vanzelf in. Logica in koppelsoorten.js; de lijst reist mee als
+// `koppelsoorten` in de project-JSON en via de projectsync (operatie kruis/zetSoorten).
+/** De standaardlijst (een project zonder eigen lijst). */
+export const TRACE_TYPEN = STANDAARD_SOORTEN;
+
+/** De soort zoals het huidige project hem kent; een onbekende tekent als dependency. */
+export const traceType = (soort) => {
+  const s = useKruisStore.getState();
+  return vindSoort(soort, s.soorten, s.links);
+};
+
+/**
+ * Alle soorten van het huidige project: de eigen lijst (of de standaardlijst) plus de soorten die
+ * in de links staan.
+ * @param {{soort?: string}[]} [links]
+ */
+export function bekendeTraceTypen(links) {
+  const s = useKruisStore.getState();
+  return effectieveSoorten(s.soorten, links ?? s.links);
+}
+
+/** Hook: de soorten van het project, live. */
+export function useKoppelsoorten() {
+  const soorten = useKruisStore((s) => s.soorten);
+  const links = useKruisStore((s) => s.links);
+  return React.useMemo(() => effectieveSoorten(soorten, links), [soorten, links]);
+}
 
 /**
  * Klein UML-achtig relatiesymbool met een **hoekje** (orthogonale elleboog,
@@ -58,7 +90,9 @@ const TRACE_BY_SOORT = Object.fromEntries(TRACE_TYPEN.map((t) => [t.soort, t]));
  * geen kop.
  */
 export function TraceGlyph({ soort, omgekeerd = false, size = 24 }) {
-  const t = TRACE_BY_SOORT[soort] || {};
+  // Live: de stijl van een soort is per project in te stellen.
+  const eigen = useKruisStore((s) => s.soorten);
+  const t = vindSoort(soort, eigen);
   const w = size;
   const h = Math.round(size * 0.82);
   const sx = w / 24;
@@ -114,6 +148,7 @@ function bewaar(state) {
       LS_KEY,
       JSON.stringify({
         links: state.links,
+        soorten: state.soorten,
         bronId: state.bronId,
         doelId: state.doelId,
         soort: state.soort,
@@ -156,6 +191,12 @@ const opgeslagen = leesOpslag();
 export const useKruisStore = create((set) => ({
   /** @type {{id, rij:{profielId,elementId}, kolom:{profielId,elementId}, soort, omgekeerd}[]} */
   links: (opgeslagen.links || []).map(normaliseerLink).filter(Boolean),
+  /**
+   * De koppelsoorten van het project (`koppelsoorten` in de project-JSON); null = de
+   * standaardlijst. Zie koppelsoorten.js.
+   * @type {{soort, stijl, defaultOmgekeerd}[] | null}
+   */
+  soorten: normaliseerSoorten(opgeslagen.soorten),
   bronId: opgeslagen.bronId || null,
   doelId: opgeslagen.doelId || null,
   soort: opgeslagen.soort || "heeft te maken met",
@@ -181,7 +222,7 @@ export const useKruisStore = create((set) => ({
       if (s.links.some((l) => l.id === id)) {
         links = s.links.filter((l) => l.id !== id);
       } else {
-        const t = TRACE_BY_SOORT[s.soort] || {};
+        const t = vindSoort(s.soort, s.soorten, s.links);
         links = [...s.links, { id, rij, kolom, soort: s.soort, omgekeerd: !!t.defaultOmgekeerd }];
       }
       const next = { ...s, links };
@@ -198,12 +239,76 @@ export const useKruisStore = create((set) => ({
       if (bestaand) {
         links = s.links.map((l) => (l.id === id ? { ...l, soort } : l));
       } else {
-        const t = TRACE_BY_SOORT[soort] || {};
+        const t = vindSoort(soort, s.soorten, s.links);
         links = [...s.links, { id, rij, kolom, soort, omgekeerd: !!t.defaultOmgekeerd }];
       }
-      const next = { ...s, links };
+      // Een nieuw getypte soort komt in de lijst van het project (Mark, 07-11).
+      const soorten = metSoort(s.soorten, s.links, soort) ?? s.soorten;
+      const next = { ...s, links, soorten };
       bewaar(next);
-      return { links };
+      return { links, soorten };
+    }),
+
+  // ── Soorten (de lijst van het project) ────────────────────────────
+  /** Vervang de hele lijst (ook: een operatie van een ander, projectsync). */
+  zetSoorten: (lijst) =>
+    set((s) => {
+      const soorten = normaliseerSoorten(lijst);
+      const next = { ...s, soorten };
+      bewaar(next);
+      return { soorten };
+    }),
+
+  /** Voeg een soort toe (no-op als hij er al is). */
+  voegSoortToe: (soort) =>
+    set((s) => {
+      const soorten = metSoort(s.soorten, s.links, soort);
+      if (!soorten) return {};
+      const next = { ...s, soorten };
+      bewaar(next);
+      return { soorten };
+    }),
+
+  /** Hernoem een soort in de lijst én in alle links; de linkerklik-soort gaat mee. */
+  hernoemSoort: (oud, nieuw) =>
+    set((s) => {
+      const r = hernoemSoort(s.soorten, s.links, oud, nieuw);
+      if (!r) return {};
+      const patch = { soorten: r.soorten, links: r.links, soort: s.soort === oud ? nieuw.trim() : s.soort };
+      bewaar({ ...s, ...patch });
+      return patch;
+    }),
+
+  /** Stijl of default-richting van een soort. */
+  wijzigSoort: (soort, patch) =>
+    set((s) => {
+      const soorten = wijzigSoort(s.soorten, s.links, soort, patch);
+      bewaar({ ...s, soorten });
+      return { soorten };
+    }),
+
+  /** Uit de lijst (alleen zinvol als geen link hem gebruikt; anders blijft hij zichtbaar). */
+  verwijderSoort: (soort) =>
+    set((s) => {
+      const soorten = zonderSoort(s.soorten, s.links, soort);
+      const patch = { soorten, soort: s.soort === soort ? (soorten[0]?.soort || "heeft te maken met") : s.soort };
+      bewaar({ ...s, ...patch });
+      return patch;
+    }),
+
+  schuifSoort: (soort, richting) =>
+    set((s) => {
+      const soorten = schuifSoort(s.soorten, s.links, soort, richting);
+      if (!soorten) return {};
+      bewaar({ ...s, soorten });
+      return { soorten };
+    }),
+
+  /** Terug naar de standaardlijst (soorten die links gebruiken blijven zichtbaar). */
+  standaardSoorten: () =>
+    set((s) => {
+      bewaar({ ...s, soorten: null });
+      return { soorten: null };
     }),
 
   draaiOm: (id) =>
@@ -236,13 +341,16 @@ export const useKruisStore = create((set) => ({
       return { links };
     }),
 
-  /** Project-werkbestand-import: vervang alle links (migreert oud formaat). */
-  laadLinks: (links) =>
+  /**
+   * Project-werkbestand-import: vervang alle links (migreert oud formaat). Met `soorten` (ook
+   * `null`) ook de soortenlijst van het project; zonder (undefined) blijft die staan.
+   */
+  laadLinks: (links, soorten) =>
     set((s) => {
       const genormaliseerd = (links || []).map(normaliseerLink).filter(Boolean);
-      const next = { ...s, links: genormaliseerd };
-      bewaar(next);
-      return { links: genormaliseerd };
+      const patch = soorten === undefined ? { links: genormaliseerd } : { links: genormaliseerd, soorten: normaliseerSoorten(soorten) };
+      bewaar({ ...s, ...patch });
+      return patch;
     }),
 
   // ── Grafische view ────────────────────────────────────────────────
@@ -268,9 +376,10 @@ export const useKruisStore = create((set) => ({
       } else {
         links = [...s.links, { id, rij: van, kolom: naar, soort, omgekeerd: false }];
       }
-      const next = { ...s, links };
+      const soorten = metSoort(s.soorten, s.links, soort) ?? s.soorten;
+      const next = { ...s, links, soorten };
       bewaar(next);
-      return { links };
+      return { links, soorten };
     }),
 
   /** Voeg een element als los knooppunt aan het grafische canvas toe. */
@@ -318,6 +427,15 @@ function elementenVan(profiel, elements) {
     .filter((el) => !perType[el.elementType]?.isConnector)
     .sort((a, b) => (a.naam || a.id).localeCompare(b.naam || b.id));
 }
+
+/**
+ * Het elementtype bij een rij/kolom (Mark, 07-11: "de matrix is raar met dubbele rijen"): twee
+ * elementen met dezelfde naam (systeemgrens én package "Synthesizer") zijn zo te onderscheiden.
+ */
+function typeLabel(profiel, el) {
+  return (profiel.descriptor.elementTypes || []).find((t) => t.id === el.elementType)?.label || el.elementType;
+}
+const typeStijl = { fontSize: 10, fontWeight: 400, color: "var(--s-fg-muted)" };
 
 /** Naam + profiel van een element-ref (voor de linklijst). */
 function naamVan(ref) {
@@ -388,11 +506,98 @@ function Keuze({ label, waarde, onChange, andere }) {
   );
 }
 
+/**
+ * De soortenlijst van het project, bewerkbaar (Mark, 07-11): toevoegen, hernoemen (ook in alle
+ * koppelingen), stijl (dependency/realisatie), default-richting, volgorde, verwijderen (alleen
+ * als geen koppeling hem gebruikt) en terug naar de standaardlijst.
+ */
+export function SoortenBeheer() {
+  const soorten = useKoppelsoorten();
+  const eigen = useKruisStore((s) => s.soorten);
+  const links = useKruisStore((s) => s.links);
+  const st = useKruisStore.getState;
+  const mini = { border: "none", background: "transparent", color: "var(--s-fg-muted)", cursor: "pointer", padding: "0 3px", font: "inherit", fontSize: 12 };
+  const nieuw = async () => {
+    const soort = (await vraagNaam({ titel: "Nieuwe soort koppeling", label: "Soort (stereotype), bv. «gebruikt»" }))?.trim();
+    if (soort) st().voegSoortToe(soort);
+  };
+  const hernoem = async (oud) => {
+    const n = gebruikVanSoort(links, oud);
+    const nieuwNaam = (await vraagNaam({ titel: "Soort hernoemen", label: n ? `Nieuwe naam (geldt ook voor ${n} koppeling${n === 1 ? "" : "en"})` : "Nieuwe naam", waarde: oud }))?.trim();
+    if (nieuwNaam && nieuwNaam !== oud) st().hernoemSoort(oud, nieuwNaam);
+  };
+  const terugNaarStandaard = async () => {
+    const ok = await vraagBevestiging({
+      titel: "Standaardlijst herstellen",
+      tekst: "De soortenlijst van dit project wordt weer de standaardlijst. Soorten die koppelingen gebruiken blijven zichtbaar; de koppelingen zelf veranderen niet.",
+      bevestig: "Herstellen",
+    });
+    if (ok) st().standaardSoorten();
+  };
+  return (
+    <div data-testid="koppelsoorten" style={{ padding: "4px 8px 8px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "2px 2px 4px" }}>
+        <span style={{ flex: 1, fontSize: 12, color: "var(--s-fg-muted)" }}>Soorten in dit project</span>
+        <button type="button" data-testid="koppelsoort-nieuw" onClick={nieuw} style={{ ...mini, color: "var(--s-accent, #4f46e5)" }} title="Soort toevoegen">+ soort</button>
+      </div>
+      {soorten.map((t, i) => {
+        const n = gebruikVanSoort(links, t.soort);
+        return (
+          <div key={t.soort} data-testid="koppelsoort" data-soort={t.soort} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, padding: "1px 0" }}>
+            <button
+              type="button"
+              onClick={() => st().wijzigSoort(t.soort, { stijl: t.stijl === "realisatie" ? "afhankelijk" : "realisatie" })}
+              title={`Stijl: ${STIJLEN.find((x) => x.id === t.stijl)?.label} — klik om te wisselen`}
+              style={{ ...mini, color: "var(--s-fg)", padding: 0 }}
+            >
+              <TraceGlyph soort={t.soort} omgekeerd={t.defaultOmgekeerd} />
+            </button>
+            <span
+              onDoubleClick={() => hernoem(t.soort)}
+              title={`${t.soort} — ${n} koppeling${n === 1 ? "" : "en"}; dubbelklik om te hernoemen`}
+              style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", cursor: "text" }}
+            >
+              {t.soort}
+              {n > 0 && <span style={{ color: "var(--s-fg-muted)", fontSize: 10 }}> ({n})</span>}
+            </span>
+            <button
+              type="button"
+              onClick={() => st().wijzigSoort(t.soort, { defaultOmgekeerd: !t.defaultOmgekeerd })}
+              title={t.defaultOmgekeerd ? "Nieuwe koppelingen in de matrix: kolom → rij (klik: rij → kolom)" : "Nieuwe koppelingen in de matrix: rij → kolom (klik: kolom → rij)"}
+              style={mini}
+            >
+              {t.defaultOmgekeerd ? "←" : "→"}
+            </button>
+            <button type="button" onClick={() => hernoem(t.soort)} title="Hernoemen" style={mini}>✎</button>
+            <button type="button" disabled={i === 0} onClick={() => st().schuifSoort(t.soort, -1)} title="Omhoog" style={{ ...mini, opacity: i === 0 ? 0.3 : 1 }}>↑</button>
+            <button
+              type="button"
+              data-testid="koppelsoort-verwijder"
+              disabled={n > 0}
+              onClick={() => st().verwijderSoort(t.soort)}
+              title={n > 0 ? `In gebruik door ${n} koppeling${n === 1 ? "" : "en"}: hernoem hem, of geef die koppelingen eerst een andere soort` : "Uit de lijst"}
+              style={{ ...mini, opacity: n > 0 ? 0.3 : 1, cursor: n > 0 ? "default" : "pointer" }}
+            >
+              ×
+            </button>
+          </div>
+        );
+      })}
+      {eigen && (
+        <button type="button" onClick={terugNaarStandaard} style={{ ...mini, marginTop: 4, textDecoration: "underline" }}>
+          standaardlijst herstellen
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Sidebar() {
   const bronId = useKruisStore((s) => s.bronId);
   const doelId = useKruisStore((s) => s.doelId);
   const soort = useKruisStore((s) => s.soort);
   const links = useKruisStore((s) => s.links);
+  const soorten = useKoppelsoorten();
   const zetKeuze = useKruisStore((s) => s.zetKeuze);
   return (
     <div style={{ fontSize: 13 }}>
@@ -412,19 +617,12 @@ function Sidebar() {
           onChange={(e) => zetKeuze({ soort: e.target.value })}
           style={{ width: "100%", font: "inherit", fontSize: 13, padding: "4px 6px", borderRadius: 6, border: "1px solid var(--s-border)", background: "var(--s-panel)", color: "var(--s-fg)" }}
         >
-          {TRACE_SOORTEN.map((t) => (
-            <option key={t} value={t}>{t}</option>
+          {soorten.map((t) => (
+            <option key={t.soort} value={t.soort}>{t.soort}</option>
           ))}
         </select>
       </label>
-      <div style={{ padding: "4px 12px 8px" }}>
-        {TRACE_TYPEN.map((t) => (
-          <div key={t.soort} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "var(--s-fg-muted)", padding: "1px 0" }}>
-            <span style={{ color: "var(--s-fg)" }}><TraceGlyph soort={t.soort} /></span>
-            {t.soort}{t.defaultOmgekeerd ? " (kolom→rij)" : ""}
-          </div>
-        ))}
-      </div>
+      <SoortenBeheer />
       <p style={{ margin: 0, padding: "8px 10px", fontSize: 12, color: "var(--s-fg-muted)" }}>
         {links.length} kruisverband{links.length === 1 ? "" : "en"} in totaal (alle
         profielparen; zie de inspector).
@@ -442,6 +640,7 @@ function MatrixInhoud({ bron, doel }) {
   const zetSoort = useKruisStore((s) => s.zetSoort);
   const draaiOm = useKruisStore((s) => s.draaiOm);
   const verwijderLink = useKruisStore((s) => s.verwijderLink);
+  const soorten = useKoppelsoorten();
   const [zoekRij, setZoekRij] = React.useState("");
   const [zoekKolom, setZoekKolom] = React.useState("");
   const [menu, setMenu] = React.useState(null);
@@ -463,12 +662,20 @@ function MatrixInhoud({ bron, doel }) {
     const link = linkById.get(id);
     const items = [
       { kop: `${r.naam || r.id} × ${k.naam || k.id}` },
-      ...TRACE_TYPEN.map((t) => ({
+      ...soorten.map((t) => ({
         label: t.soort,
         glyph: <TraceGlyph soort={t.soort} />,
         actief: link?.soort === t.soort,
         onClick: () => zetSoort(rij, kolom, t.soort),
       })),
+      // Vrije soort (Mark, 07-11): tekent als dependency met de soort als «stereotype».
+      {
+        label: "Andere soort…",
+        onClick: async () => {
+          const soort = (await vraagNaam({ titel: "Soort koppeling", label: "Soort (stereotype), bv. «gebruikt»", waarde: link?.soort || "" }))?.trim();
+          if (soort) zetSoort(rij, kolom, soort);
+        },
+      },
     ];
     if (link) {
       const { van, naar } = vanNaar(link);
@@ -507,8 +714,9 @@ function MatrixInhoud({ bron, doel }) {
               {bron.label} ↓ / {doel.label} →
             </th>
             {kolommen.map((k) => (
-              <th key={k.id} style={kop} title={k.naam || k.id}>
+              <th key={k.id} style={kop} title={`${k.naam || k.id} (${typeLabel(doel, k)})`}>
                 {k.naam || k.id}
+                <div style={typeStijl}>{typeLabel(doel, k)}</div>
               </th>
             ))}
           </tr>
@@ -516,7 +724,9 @@ function MatrixInhoud({ bron, doel }) {
         <tbody>
           {rijen.map((r) => (
             <tr key={r.id}>
-              <th style={rijkop} title={r.naam || r.id}>{r.naam || r.id}</th>
+              <th style={rijkop} title={`${r.naam || r.id} (${typeLabel(bron, r)})`}>
+                {r.naam || r.id} <span style={typeStijl}>· {typeLabel(bron, r)}</span>
+              </th>
               {kolommen.map((k) => {
                 const rij = ref(r, "rij");
                 const kolom = ref(k, "kolom");

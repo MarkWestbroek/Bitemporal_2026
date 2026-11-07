@@ -49,18 +49,22 @@ function TaakbalkInstellingen() {
     </label>
   );
 }
-import { TRACE_TYPEN, TraceGlyph } from "./koppelingenActivity.jsx";
+import { useKoppelsoorten, TraceGlyph } from "./koppelingenActivity.jsx";
 import { vraagNaam, vraagBevestiging } from "../naamDialog.jsx";
 
-/** Legenda van de trace-relatiesymbolen (beide richtingen). Nu vast; later bewerkbaar. */
+/**
+ * Legenda van de trace-relatiesymbolen (beide richtingen), voor de soorten van het huidige
+ * project. Bewerken: zijbalk van Koppelingen (soortenlijst per project, 07-11).
+ */
 function KruisverbandSymbolen() {
+  const soorten = useKoppelsoorten();
   const cel = { display: "flex", alignItems: "center", justifyContent: "center", width: 46, height: 30, border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, color: "var(--s-fg)" };
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "6px 14px", alignItems: "center", fontSize: 13, maxWidth: 420 }}>
       <div style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>soort</div>
       <div style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", textAlign: "center" }}>rij → kolom</div>
       <div style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", textAlign: "center" }}>kolom → rij</div>
-      {TRACE_TYPEN.map((t) => (
+      {soorten.map((t) => (
         <React.Fragment key={t.soort}>
           <div>
             {t.soort}

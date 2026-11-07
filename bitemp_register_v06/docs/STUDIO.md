@@ -1733,8 +1733,7 @@ fase 2 een **bewerkbare sandbox**:
   het diagram waar je naar kijkt, niet van een diagram van de eigen taal. De canvas-activiteit
   zet daarvoor de context in `studio/vreemdeSelectie.js`; die geldt alleen binnen de
   `LosElementInspector` (`LosGetoondContext`), dus op een diagram van de eigen taal is hetzelfde
-  element gewoon een eigen element. Nog niet: nieuwe relaties tussen talen trekken (stap 2, kruisverbanden als lijn),
-  "ook andere talen" bij *Gerelateerde elementen toevoegen*, de render-API/tekenaar (slaat de
+  element gewoon een eigen element. Nog niet: "ook andere talen" bij *Gerelateerde elementen toevoegen*, de render-API/tekenaar (slaat de
   verwijzing over, zoals elke node zonder element). **Gebruik** telt de verwijzingen mee:
   *Toon gebruik ▸* in de projectboom en *Gebruikt op* in de inspector tonen ook de diagrammen
   van andere talen (met de taal erachter; kiezen opent dat diagram en selecteert de verwijzing),
@@ -1744,6 +1743,39 @@ fase 2 een **bewerkbare sandbox**:
   elementType, typen zonder verbindingsregels, weergave-hooks op het origineel; tests
   `vreemd.test.js`), in `maakDiagramActiviteit.jsx` de bron per taal (`vreemdeBron`), het
   abonnement op de stores van die talen en de drop; e2e `54-studio-vreemde-elementen.spec.js`.
+- **Koppelingen als lijnen** (2026-11-07, Mark; stap 2 van het koppeldiagram): een koppeling
+  (kruisverband uit *Koppelingen*, de matrix) waarvan beide uiteinden op een diagram staan, staat
+  daar als violette **dependency** (gestippeld, open pijl, de soort als «stereotype»; Mark: "zoals
+  EA, dan zie je de richting en ligt er geen associatie"); alleen «realiseert» is een realisatie
+  (holle driehoek). Matrix en diagram zijn twee weergaven van dezelfde koppelingen-store.
+  **Soorten**: komt voort uit, heeft te maken met, genereert, realiseert, en (EA) traceert naar,
+  verfijnt, is afgeleid van, voldoet aan; plus een **vrije soort** via *Andere soort…* (matrix,
+  lijn trekken) of door te typen in de inspector. Een vrije soort komt daarna in de
+  **soortenlijst van het project** en dus in alle keuzelijsten (matrix, grafische weergave,
+  canvas, inspector). Die lijst is te bewerken in de zijbalk van *Koppelingen* (Mark: "dan moet
+  je die lijst wel ergens kunnen bewerken"): toevoegen, hernoemen (de koppelingen gaan mee; naar
+  een bestaande naam = samenvoegen), stijl wisselen met een klik op het symbool
+  (dependency/realisatie), default-richting in de matrix (→/←), omhoog, verwijderen (uitgegrijsd
+  zolang een koppeling hem gebruikt) en *standaardlijst herstellen*. Opslag: `koppelsoorten` in
+  de project-JSON naast `kruisverbanden` (ontbreekt = standaardlijst); de projectsync stuurt bij
+  elke wijziging de hele lijst (`kruis/zetSoorten`, vóór de `patchLinks`); de sidecar-import
+  speelt die operatie ook na. Logica in `studio/activities/koppelsoorten.js` (+ test); in de
+  store `useKruisStore.soorten` met `voegSoortToe`, `hernoemSoort`, `wijzigSoort`,
+  `verwijderSoort`, `schuifSoort`, `standaardSoorten`, `zetSoorten`. De matrix toont bij elke rij en
+  kolom het elementtype, zodat twee elementen met dezelfde naam te onderscheiden zijn. **Een lijn
+  trekken** tussen een element van taal A en een van taal B biedt de koppelsoorten aan
+  (en verder niets: de eigen relatietypen gelden alleen binnen de taal); de keuze komt via
+  `legLink` in de matrix, niet als element in de taal van het diagram. Binnen één taal biedt het
+  canvas geen koppeling aan. **Selecteren** toont een eigen inspector: van → naar met hun
+  taal, de soort (wijzigbaar), *Richting omdraaien*, *Van diagram halen* (verbergt de lijn op dit
+  diagram, `diagram.verborgenConnectoren`) en *Verwijder koppeling* (ook uit de matrix).
+  **Delete** verbergt, **Ctrl+Delete** verwijdert (met bevestiging). Delete op een relatie van een
+  andere taal verbergt die nu ook op dit diagram (deed eerst niets). Code:
+  `diagramcore/model/koppellijnen.js` (`metKoppelingen`, `koppelTypen` met `hooks.magVerbinden`
+  "verschillende talen", `refVanCanvasId`; tests `koppellijnen.test.js`), in
+  `maakDiagramActiviteit.jsx` `verbind` (koppeltype → `useKruisStore.legLink`),
+  `haalConnectorVanDiagram`, Ctrl+Delete en `KoppelingInspector`. Nog niet: koppelingen tussen
+  **velden** (stap 3), koppelingen in het relatiepaneel van een element, de render-API.
 - **Delete is één undo-stap** (2026-11-07, Mark: "A van het diagram halen, Ctrl+Z gaf eerst
   alleen A terug en pas daarna de associatie"). Het canvas gebruikt React Flow's `onDelete` (één
   melding voor nodes en lijnen) in plaats van `onNodesDelete` + `onEdgesDelete`. Lijnen die

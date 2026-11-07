@@ -410,10 +410,14 @@ export function structuurNet(voor, na) {
 // Geen omwikkelde acties: toggleLink/zetSoort hangen af van UI-keuzes (de
 // actieve soort), dus de netto wijziging (links gezet/gewist) is de operatie.
 
-export const KRUIS_VELDEN = ["links"];
+// `soorten` (07-11): de soortenlijst van het project; klein, dus bij elke wijziging reist de hele
+// lijst mee (zetSoorten, last-writer-wins). Eerst de lijst, dan de links (hernoemen raakt beide).
+export const KRUIS_VELDEN = ["links", "soorten"];
 
 export function kruisNet(voor, na) {
+  const ops = [];
+  if ((voor.soorten ?? null) !== (na.soorten ?? null)) ops.push({ store: "kruis", op: "zetSoorten", args: [na.soorten ?? null] });
   const d = diffLijst(voor.links, na.links);
-  if (d.leeg) return [];
-  return [{ store: "kruis", op: "patchLinks", args: [{ zet: d.zet, wis: d.wis }] }];
+  if (!d.leeg) ops.push({ store: "kruis", op: "patchLinks", args: [{ zet: d.zet, wis: d.wis }] });
+  return ops;
 }
