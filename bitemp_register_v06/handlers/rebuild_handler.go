@@ -137,8 +137,13 @@ func laadSchemaVersieJSONOpID(schemaVersieID int64) ([]byte, string, error) {
 
 	ctx := context.Background()
 	var versie model.SchemaVersie
+	// Alleen de kolommen die we nodig hebben: de startup-rebuild draait vóór de migraties van
+	// dbsetup, dus een kolom die een nieuwe versie toevoegt (bv. bron_project_id, 07-11-2026)
+	// bestaat dan nog niet. Een SELECT op het hele model gaf op cg-test bij de upgrade naar 0.24.13
+	// "column does not exist" en twee minuten uitval.
 	err := DB.NewSelect().
 		Model(&versie).
+		Column("id", "schema_json", "status").
 		Where("id = ?", schemaVersieID).
 		Limit(1).
 		Scan(ctx)
@@ -159,8 +164,10 @@ func laadLaatsteSchemaVersieJSONOpStatus(status model.SchemaVersieStatus) ([]byt
 
 	ctx := context.Background()
 	var versie model.SchemaVersie
+	// Alleen de nodige kolommen: zie laadSchemaVersieJSONOpID (startup-rebuild vóór de migraties).
 	err := DB.NewSelect().
 		Model(&versie).
+		Column("id", "schema_json", "status").
 		Where("status = ?", status).
 		OrderExpr("id DESC").
 		Limit(1).

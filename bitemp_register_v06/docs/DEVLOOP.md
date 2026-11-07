@@ -256,6 +256,14 @@ Daarnaast weigert de codegen een padnaam die al bij een type uit een ander domei
 Readiness en liveness: `GET /health` (200 als de database binnen 2 s antwoordt, anders 503) en
 `GET /version` (antwoordt zolang het proces leeft).
 
+**De startup-rebuild draait vóór de migraties** (07-11-2026, gevonden bij de upgrade van cg-test
+naar devloop 0.24.13). Hij leest `schema_versies` voordat dbsetup nieuwe kolommen toevoegt. Een
+SELECT op het hele model (`bron_project_id` was net nieuw) gaf "column does not exist", waarna de
+ingebakken code startte. Het register gaf daardoor ongeveer twee minuten 404, tot een tweede
+herstart. Sinds 0.24.14 lezen de laders van de schema-versie alleen `id`, `schema_json` en
+`status`. Komt er een kolom bij die de startup-rebuild zelf nodig heeft, laat hem dan eerst
+migreren.
+
 ### Zonder model (huidige code re-exporteren en rebuilden)
 
 ```bash
