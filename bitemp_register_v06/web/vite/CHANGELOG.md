@@ -9,6 +9,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Sequence via de assistent en de MCP** (AI-3, 08-11): berichten tussen hetzelfde paar en
+  berichten naar zichzelf blijven staan (eerder vielen ze weg); elders ontdubbelt het plan op
+  type, paar én naam. De MCP zegt welke code hij draait en waarschuwt als hij herstart moet.
 - **Een referentielijst als veldtype** (08-11, plan Referentielijst-instanties §8): de type-keuze
   van een veld in het canonieke model biedt de items-relaties aan (groep *Referentielijsten*,
   voorkeur) naast de item-entiteiten (overgang). Een `$ref`-veld toont zijn verwijzing in plaats

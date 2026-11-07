@@ -218,3 +218,15 @@ test("model_wijzigen: lijnen (Mark, 07-11: \"kan de MCP ook lijntypes wijzigen?\
   const op = body.ops.find((o) => o.op === "patchDiagrammen");
   assert.deepEqual(op.args[0].zet.d_uc.lijnen.e_as, { vorm: "hoekig", knikken: [], sourceHandle: "source-right" });
 });
+
+test("AI-3 (08-11): de server zegt welke code hij draait, en waarschuwt als de repo verder is", async () => {
+  const { codeStand, codeStandTekst } = await import("./codestand.mjs");
+  const bij = codeStand(() => codeStand().gestart);
+  assert.equal(bij.verouderd, false);
+  const oud = codeStand(() => "ffffff0");
+  if (oud.gestart) {
+    assert.equal(oud.verouderd, true);
+    assert.match(codeStandTekst(oud), /Herstart de server/);
+  }
+  assert.match(codeStandTekst({ gestart: null, sinds: new Date(), huidig: null, verouderd: false }), /onbekend/);
+});

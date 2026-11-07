@@ -72,6 +72,11 @@ Vereisten: de Studio-code in `web/vite` moet zijn afhankelijkheden hebben (`npm 
 De talen staan in `profielen.json`; **na een wijziging aan een profiel opnieuw genereren** met
 `node scripts/profielen-voor-mcp.mjs` (vanuit `web/vite`).
 
+**Welke code draait de server?** Hij laadt de Studio-code en `profielen.json` één keer, bij het
+starten. `omnium_wie_ben_ik` noemt de commit waarop hij startte en waarschuwt als de repo verder
+is; `model_wijzigen` zet die waarschuwing boven zijn antwoord (`codestand.mjs`, AI-3 08-11). Dan
+de server herstarten (in Claude Code: `/mcp` → herstarten, of een nieuwe sessie).
+
 ## Instellen (eenmalig)
 
 1. **Afhankelijkheden:** `cd bitemp_register_v06/tools/omnium-mcp && npm install`

@@ -7,6 +7,7 @@
 //
 // AI-1 stap 2 (14-10): modellen lezen en wijzigen (modeltalen, project_bekijken, model_wijzigen)
 // met dezelfde regelset en toepasser als de ✨ assistent in de Studio — zie model.mjs.
+import { codeStand, codeStandTekst } from "./codestand.mjs";
 import { profielen, zoekProject, leesProject, zoekMap, mapPad, boomTekst, wijzigModel, wijzigingTekst } from "./model.mjs";
 
 const tekst = (t) => ({ content: [{ type: "text", text: t }] });
@@ -44,11 +45,12 @@ function meldingLang(m) {
 export const TOOLS = [
   {
     name: "omnium_wie_ben_ik",
-    description: "Met welke Omnium-gebruiker en rol deze MCP-server werkt, en tegen welke instantie.",
+    description: "Met welke Omnium-gebruiker en rol deze MCP-server werkt, tegen welke instantie, en welke code hij draait (met een waarschuwing als de repo verder is: dan herstarten).",
     inputSchema: { type: "object", properties: {} },
     async run(api) {
       const me = await api.get("/api/auth/me");
-      return tekst(`Ingelogd als ${me.gebruikersnaam} (rol ${me.rol}) op ${api.basis}.`);
+      return tekst(`Ingelogd als ${me.gebruikersnaam} (rol ${me.rol}) op ${api.basis}.
+${codeStandTekst()}`);
     },
   },
   {
@@ -197,7 +199,11 @@ export const TOOLS = [
     },
     async run(api, { project, map, plan, toepassen = false }) {
       const uit = await wijzigModel(api, { project, map, plan: typeof plan === "string" ? JSON.parse(plan) : plan, toepassen });
-      return tekst(wijzigingTekst(uit, toepassen));
+      // AI-3 (08-11): draait deze server oude code, zeg dat erbij (07-11 gaf dat lege sequence-diagrammen).
+      const stand = codeStand();
+      return tekst(`${stand.verouderd ? `${codeStandTekst(stand)}
+
+` : ""}${wijzigingTekst(uit, toepassen)}`);
     },
   },
 ];
