@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Lijnen via de assistent en de MCP** (Mark, 07-11: "kan de MCP ook lijntypes wijzigen?"): het
+  plan kent `lijnen` — op een bestaande relatie of op alle kinderen van een `ouder`: lijnvorm
+  (krom, hoekig, recht, boom), boomstijl (ouder boven/onder/links/rechts; overerving gaat vanzelf
+  goed via `naarOuder` in de taalsamenvatting) en vaste uiteinden. Dezelfde lijndata als het
+  rechtsklikmenu (`diagramcore/model/lijnvorm.js`). Knikpunten en eigen routes blijven buiten.
 - **Gerelateerde elementen toevoegen…** (rechtsklik op een element; Mark, 07-11): een venster met
   wat via een verbinding (elk soort) aan het element hangt en nog niet op het diagram staat. Een
   relatie neemt haar andere uiteinde mee. Keuzes: diepte (1, 2, 3, alles) en daarna auto-layout

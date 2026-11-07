@@ -18,6 +18,8 @@
  * de MCP in Node zonder de profielcode kan controleren (`tools/omnium-mcp/profielen.json`).
  */
 import { eersteLidConnector } from "../../diagramcore/types/containerVoor.js";
+import { wijstNaarOuder } from "../../diagramcore/types/layoutStijl.js";
+import { LIJNVORMEN, BOOM_KANTEN, ZIJDE } from "../../diagramcore/model/lijnvorm.js";
 
 /**
  * @typedef {Object} Samenvatting
@@ -25,7 +27,8 @@ import { eersteLidConnector } from "../../diagramcore/types/containerVoor.js";
  * @property {string} naam
  * @property {string} diagramTypeId
  * @property {{id: string, label: string, omschrijving?: string, container?: string, leden?: string[], vast?: boolean, uitwerking?: boolean, eigenschappen?: string[]}[]} elementen
- * @property {{id: string, label: string, omschrijving?: string, regels: {bron: string[], doel: string[]}[], eigenschappen?: string[]}[]} connectoren
+ * @property {{id: string, label: string, omschrijving?: string, regels: {bron: string[], doel: string[]}[], eigenschappen?: string[], naarOuder?: boolean}[]} connectoren
+ *   `naarOuder`: de verbinding wijst van kind naar ouder (generalisatie); voor de boomstijl.
  * @property {string[]} [aanwijzingen]
  * @property {Record<string, string[][]>} [paren]  - connector → toegestane [bron, doel]-paren (voorkeursrichting)
  */
@@ -81,6 +84,7 @@ export function profielSamenvatting(descriptor, profielId = descriptor?.id) {
         .map((r) => ({ bron: r.bron.filter((t) => bekend.has(t)), doel: r.doel.filter((t) => bekend.has(t)) }))
         .filter((r) => r.bron.length && r.doel.length),
       ...(eigenschapSleutels(et).length ? { eigenschappen: eigenschapSleutels(et) } : {}),
+      ...(wijstNaarOuder(et) ? { naarOuder: true } : {}),
     }))
     .filter((c) => c.regels.length);
   const a = descriptor?.assistent || {};
@@ -299,6 +303,24 @@ const SCHEMA_PLAN = {
         },
       },
     },
+    lijnen: {
+      type: "array",
+      description: "lijnvorm, boomstijl of vaste uiteinden van bestaande relaties op een diagram",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["diagram"],
+        properties: {
+          diagram: { type: "string" },
+          relatie: { type: "string", description: "id van een bestaande relatie" },
+          ouder: { type: "string", description: "id of sleutel van een element: al zijn kinderen (boomstijl)" },
+          vorm: { type: "string", enum: Object.values(LIJNVORMEN) },
+          boom: { type: "string", enum: BOOM_KANTEN, description: "boomstijl: waar de ouder staat" },
+          bron: { type: "string", enum: [...Object.keys(ZIJDE), "auto"] },
+          doel: { type: "string", enum: [...Object.keys(ZIJDE), "auto"] },
+        },
+      },
+    },
     nietGedaan: {
       type: "array",
       description: "delen van de opdracht die je niet kunt uitvoeren, in korte zinnen",
@@ -375,6 +397,7 @@ const PLAN_VORM =
   '"verbanden": [{"van": "<sleutel of id>", "naar": "<sleutel of id>", "soort": "realiseert"}], ' +
   '"opstelling": [{"diagram": "<diagram-id of sleutel>", "actie": "naast-elkaar", "elementen": ["<id of sleutel>"]}], ' +
   '"posities": [{"diagram": "<diagram-id of sleutel>", "element": "<id of sleutel>", "x": 400, "y": 200}, {"diagram": "…", "element": "…", "naast": "<id of sleutel>", "kant": "rechts", "afstand": 60}], ' +
+  '"lijnen": [{"diagram": "<diagram-id of sleutel>", "relatie": "<relatie-id>", "vorm": "hoekig"}, {"diagram": "…", "ouder": "<id of sleutel>", "boom": "boven"}], ' +
   '"verwijderen": ["<id van een bestaand element of een bestaande relatie>"], ' +
   '"nietGedaan": ["<deel van de opdracht dat je niet kunt>"]}';
 
@@ -405,7 +428,8 @@ export function vraagVoorOpdracht(talen, opdracht, { mapNaam = "", submappen = [
     "- Uitlijnen of opstellen: `opstelling` met het diagram (id of sleutel), een actie (naast-elkaar = op één rij, boven-elkaar = in één kolom, verdeel-horizontaal, verdeel-verticaal, links, rechts, boven, onder, automatisch = het hele diagram netjes opstellen, of een layout die de taal noemt, bv. hierarchisch) en de elementen (ids of sleutels; leeg = alle). \"Horizontaal uitlijnen\" = naast-elkaar (zelfde hoogte), \"verticaal uitlijnen\" = boven-elkaar (zelfde midden); verdelen alleen als om gelijke afstanden gevraagd wordt. Leden van een container schuiven mee.",
     "- Verplaatsen: `posities` met het diagram en het element, en óf `x`/`y` (linkerbovenhoek, in de coördinaten achter @ bij WAT ER AL IS), óf `naast` een ander element met `kant` (rechts, links, onder, boven) en eventueel `afstand` (standaard 60). Leden van een container schuiven mee.",
     "- Weghalen: `verwijderen` met ids van bestaande elementen of relaties — alleen als de opdracht dat vraagt. Een element verdwijnt met zijn relaties uit het model en van alle diagrammen; een relatie alleen zelf.",
-    "- Wat je niet kunt: diagrammen of mappen weghalen, kleuren of lettertypen zetten, lijnen een eigen route geven, en maten van elementen kiezen. Zet zulke delen van de opdracht in `nietGedaan` (korte zinnen) en beweer in de uitleg nooit dat je iets doet wat niet in het plan staat.",
+    "- Lijnen (07-11): `lijnen` met het diagram en óf `relatie` (id van een bestaande relatie) óf `ouder` (een element: al zijn kinderen). `vorm`: krom, hoekig, recht of boom. `boom`: boomstijl met de ouder boven, onder, links of rechts van de kinderen (overerving gaat vanzelf goed: daar is het doel de ouder). `bron`/`doel`: een uiteinde vastzetten op boven, onder, links of rechts, of auto.",
+    "- Wat je niet kunt: diagrammen of mappen weghalen, kleuren of lettertypen zetten, knikpunten of een eigen route van een lijn tekenen, en maten van elementen kiezen. Zet zulke delen van de opdracht in `nietGedaan` (korte zinnen) en beweer in de uitleg nooit dat je iets doet wat niet in het plan staat.",
     "- Hangen modellen in verschillende talen samen (bv. een use case met een activiteitendiagram dat hem uitwerkt), leg dan een `verband` tussen twee elementen — geen diagrammen; bv. de eerste actie van het activiteitendiagram realiseert de use case (soort: " + VERBAND_SOORTEN.join(", ") + ").",
     "- Namen in de taal van de opdracht, zoals een analist ze zou schrijven. Maak niets wat niet uit de opdracht volgt. Geef relaties de richting die de taal voorschrijft.",
     "Antwoord uitsluitend met JSON in deze vorm (geen tekst eromheen; lege lijsten mogen):",
@@ -778,6 +802,38 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     const afstand = Number.isFinite(Number(p.afstand)) ? Math.max(0, Math.min(800, Math.round(Number(p.afstand)))) : 60;
     posities.push({ diagram: dia.sleutel, profielId: dia.profielId, element, naast: n.nieuw ? { nieuw: n.nieuw } : { id: n.id }, kant, afstand });
   }
+  // 5c. Lijnen (07-11, Mark: "kan de MCP ook lijntypes wijzigen?"): vorm, boomstijl, uiteinden
+  // van bestaande relaties; `ouder` = al zijn kinderen (diagramcore/model/lijnvorm.js).
+  const relatieOp = new Map();
+  for (const p of bestaand) for (const r of p.relaties || []) relatieOp.set(r.id, { profielId: p.profielId, type: r.type });
+  const VORM_TERUG = Object.fromEntries(Object.entries(LIJNVORMEN).map(([k, v]) => [v, k]));
+  const zijdeOf = (w) => (w === "auto" ? "auto" : ZIJDE[tekst(w)] ? tekst(w) : null);
+  const lijnen = [];
+  for (const l of Array.isArray(antwoord?.lijnen) ? antwoord.lijnen : []) {
+    const dia = diagramOp(l?.diagram) || (bestaandDi.size === 1 ? diagramOp([...bestaandDi.keys()][0]) : null);
+    if (!dia || !dia.bestaandId) { problemen.push(`Lijnen op onbekend of nieuw diagram ${l?.diagram || "?"} overgeslagen (alleen op een bestaand diagram).`); continue; }
+    const vormIn = tekst(l?.vorm);
+    const vorm = vormIn ? VORM_TERUG[vormIn] || (LIJNVORMEN[vormIn] ? vormIn : null) : null;
+    if (vormIn && !vorm) { problemen.push(`Lijnvorm "${l.vorm}" bestaat niet (wel: ${Object.values(LIJNVORMEN).join(", ")}).`); continue; }
+    const boom = tekst(l?.boom);
+    if (boom && !BOOM_KANTEN.includes(boom)) { problemen.push(`Boomstijl "${l.boom}": kies ${BOOM_KANTEN.join(", ")}.`); continue; }
+    const bron = l?.bron != null ? zijdeOf(l.bron) : null;
+    const doel = l?.doel != null ? zijdeOf(l.doel) : null;
+    if ((l?.bron != null && !bron) || (l?.doel != null && !doel)) { problemen.push(`Uiteinde vastzetten: kies boven, onder, links, rechts of auto.`); continue; }
+    if (!vorm && !boom && !bron && !doel) { problemen.push(`Lijnen zonder vorm, boom of uiteinde doen niets; overgeslagen.`); continue; }
+    if (l?.relatie) {
+      const r = relatieOp.get(tekst(l.relatie));
+      if (!r || r.profielId !== dia.profielId) { problemen.push(`Relatie ${l.relatie} bestaat niet in de taal van diagram "${dia.naam}"; lijn niet gewijzigd.`); continue; }
+      lijnen.push({ diagram: dia.sleutel, profielId: dia.profielId, relatie: tekst(l.relatie), ...(vorm ? { vorm } : {}), ...(boom ? { boom } : {}), ...(bron ? { bron } : {}), ...(doel ? { doel } : {}) });
+    } else if (l?.ouder) {
+      const o = los(l.ouder);
+      if (!o || o.profielId !== dia.profielId) { problemen.push(`Ouder ${l.ouder} staat niet in de taal van diagram "${dia.naam}"; lijnen niet gewijzigd.`); continue; }
+      lijnen.push({ diagram: dia.sleutel, profielId: dia.profielId, ouder: o.nieuw ? { nieuw: o.nieuw } : { id: o.id }, ...(vorm ? { vorm } : {}), ...(boom ? { boom } : {}), ...(bron ? { bron } : {}), ...(doel ? { doel } : {}) });
+    } else {
+      problemen.push(`Lijnen: geef \`relatie\` (id) of \`ouder\` (element); overgeslagen.`);
+    }
+  }
+
   // Wat de AI zelf zegt niet te kunnen; de Studio en de MCP tonen het apart.
   const nietGedaan = (Array.isArray(antwoord?.nietGedaan) ? antwoord.nietGedaan : []).map(tekst).filter(Boolean).slice(0, 10);
 
@@ -825,6 +881,7 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     leden,
     opstelling,
     posities,
+    lijnen,
     connectoren: connectorenNa,
     verbanden,
     verwijderen,
