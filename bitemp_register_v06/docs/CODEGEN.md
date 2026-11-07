@@ -436,6 +436,22 @@ met haar aanvang en einde onder `parent_<ouder>`, en `geldigOp` laat het subtype
 moment niet bestaat (`snoeiStruct` in `model/materieel_tijd.go`). Materiële GE's en relaties óp het
 subtype zijn wel toegestaan: die hebben hun eigen tijdlijn als gegeven, niet als bestaan.
 
+### 7.3e Een veld verdwijnt uit het model: de kolom blijft (07-11-2026)
+
+Een additieve rebuild maakt nieuwe tabellen en kolommen aan (`ensureNieuweKolommen`), maar gooit
+geen kolom weg als een veld uit het model verdwijnt. De oude waarden zijn historie: registraties
+van vóór de wijziging moeten bij tijdreizen hun waarde houden. Op cg-test (schema-versie 3 en 4,
+velden vervangen door relaties) brak dat elke nieuwe opvoer van zo'n type met een 500:
+`bun: Artefact_ArtefactInhoud_Data does not have column "formaat"`.
+
+| Wat | Waarom het brak | Fix |
+|---|---|---|
+| lezen | `INSERT … RETURNING *` (en `SELECT *`) geeft de vervallen kolom terug; bun weigert een kolom die de struct niet kent | `bun.WithDiscardUnknownColumns()` op de database in `main.go` |
+| schrijven | is de vervallen kolom NOT NULL zonder standaard, dan faalt elke insert | `ensureVervallenKolommenNullable` (dbsetup, bij het opstarten): `DROP NOT NULL`, verliesvrij |
+
+Een vervallen kolom wordt bij elke start gelogd (`[dbsetup] vervallen kolom …`). Opruimen
+(`DROP COLUMN`) is een bewuste beheerdersstap, want daarmee verdwijnt de historie van dat veld.
+
 ### 7.4 Twee voetangels bij een regeneratie
 
 Waargenomen bij het regenereren van `np-loc` voor het demo-model

@@ -569,7 +569,12 @@ func connectToDatabase() (*bun.DB, error) {
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	configureerPool(sqldb) // zie db_pool.go
-	db := bun.NewDB(sqldb, pgdialect.New())
+	// WithDiscardUnknownColumns: een kolom die wel in de tabel staat maar niet (meer) in de
+	// Go-struct (een veld dat uit het model verdween; een additieve rebuild laat de kolom met zijn
+	// historie staan) breekt anders elke `RETURNING *` en `SELECT *` met "does not have column".
+	// Gevonden op cg-test 07-11-2026 (Artefact_ArtefactInhoud_Data.formaat). Zie
+	// dbsetup.ensureVervallenKolommenNullable voor de schrijfkant.
+	db := bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
 	return db, nil
 }
 
