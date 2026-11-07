@@ -152,3 +152,120 @@ test("canoniek model in een map → SHACL-shapes in de doelmap, met kruisverband
   }, kaart);
   expect(uit).toEqual({ iri: "aanvraag:Aanvraag", pijlen: 5, geplaatst: true, kruis: 12, kruisAanvraag: true });
 });
+
+// Ook via Modelleren ▸ Transformeren ▸ Importeren (niet alleen het menu van de SHACL-activiteit).
+test("SHACL importeren via het transformatiepaneel", async ({ page }) => {
+  await openStudio(page);
+  await shacl(page, "return true;");
+  const map = await page.evaluate(async () => {
+    const { useModellerenStore: ms } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
+    const { useTransformStore } = await import(location.origin + "/viz/react/src/studio/activities/TransformatiePaneel.jsx");
+    const id = ms.getState().nieuweMap("SHACL");
+    useTransformStore.getState().sluiten();
+    useTransformStore.getState().openen(id, "import");
+    return id;
+  });
+  const kiezer = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Kies bestand…" }).click();
+  await (await kiezer).setFiles(KERN);
+  await page.locator("select").filter({ has: page.locator("option", { hasText: "— kies een map —" }) }).selectOption(map);
+  await page.getByText("SHACL (Turtle) → SHACL-model").click();
+  await page.getByRole("button", { name: "Uitvoeren" }).click();
+  await expect(page.getByText("14 shapes ingelezen, geen meldingen.")).toBeVisible();
+  expect(await shacl(page, 'return Object.values(st.elements).filter((e) => e.elementType === "nodeshape").length;')).toBe(14);
+});
+
+// De omgekeerde richting: de ODRL-kern als UML (canoniek model), met supertypes en kardinaliteiten.
+test("SHACL-shapes → canoniek model: ODRL 2.2 als UML-diagram", async ({ page }) => {
+  await openStudio(page);
+  await shacl(page, "return true;");
+  const kaart = await page.evaluate(async () => {
+    const { useModellerenStore: ms } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
+    const { useTransformStore } = await import(location.origin + "/viz/react/src/studio/activities/TransformatiePaneel.jsx");
+    const bron = ms.getState().nieuweMap("SHACL");
+    const doel = ms.getState().nieuweMap("ODRL als UML");
+    useTransformStore.getState().sluiten();
+    useTransformStore.getState().openen(bron, "import");
+    return { bron, doel };
+  });
+  const kiezer = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Kies bestand…" }).click();
+  await (await kiezer).setFiles(KERN);
+  await page.locator("select").filter({ has: page.locator("option", { hasText: "— kies een map —" }) }).selectOption(kaart.bron);
+  await page.getByText("SHACL (Turtle) → SHACL-model").click();
+  await page.getByRole("button", { name: "Uitvoeren" }).click();
+  await expect(page.getByText("14 shapes ingelezen, geen meldingen.")).toBeVisible();
+
+  await page.evaluate(async (bron) => {
+    const { useTransformStore } = await import(location.origin + "/viz/react/src/studio/activities/TransformatiePaneel.jsx");
+    useTransformStore.getState().sluiten();
+    useTransformStore.getState().openen(bron, "transform");
+  }, kaart.bron);
+  await page.locator("select").filter({ has: page.locator("option", { hasText: "— kies een map —" }) }).selectOption(kaart.doel);
+  await page.getByText("SHACL-shapes → canoniek model (UML)").click();
+  await page.getByRole("button", { name: "Uitvoeren" }).click();
+  await expect(page.getByText(/18 entiteiten, 31 relaties, 6 generalisaties in "ODRL 2\.2 — kern van het informatiemodel \(testbestand\) \(UML\)"/)).toBeVisible();
+
+  const uit = await page.evaluate(async (kaart) => {
+    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const { useModellerenStore: ms } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
+    const { useKruisStore } = await import(location.origin + "/viz/react/src/studio/activities/koppelingenActivity.jsx");
+    const st = getProfieltype("diagram05").useStore.getState();
+    const pre = `vs_${kaart.bron}_`.replace(/[^A-Za-z0-9_-]+/g, "_");
+    ms.getState().openTab("diagram05", `${pre}diagram`);
+    return {
+      policy: st.elements[`${pre}sc_odrl_Policy`]?.naam,
+      geplaatst: ms.getState().plaatsing[`diagram05::${pre}diagram`] === kaart.doel,
+      kruis: useKruisStore.getState().links.filter((l) => l.soort === "genereert" && l.rij.profielId === "shacl05" && l.kolom.profielId === "diagram05" && !l.omgekeerd).length,
+    };
+  }, kaart);
+  expect(uit.policy).toBe("Policy");
+  expect(uit.geplaatst).toBe(true);
+  expect(uit.kruis).toBeGreaterThan(17);
+  await expect(page.locator(".react-flow__node").filter({ hasText: "LogicalConstraint" }).first()).toBeVisible({ timeout: 20_000 });
+  await page.keyboard.press("Escape");
+  await page.evaluate(async () => {
+    const { useTransformStore } = await import(location.origin + "/viz/react/src/studio/activities/TransformatiePaneel.jsx");
+    useTransformStore.getState().sluiten();
+  });
+  await page.locator(".react-flow__controls-fitview").click().catch(() => {});
+  await page.waitForTimeout(400);
+  await page.locator(".react-flow").screenshot({ path: test.info().outputPath("odrl-uml.png") });
+});
+
+// Layout overnemen: het SHACL-diagram volgt de (met de hand gezette) ordening van het CM.
+test("layout overnemen: SHACL-diagram geschikt zoals het canonieke model", async ({ page }) => {
+  await openStudio(page);
+  await shacl(page, "return true;");
+  const kaart = await page.evaluate(async () => {
+    const { useModellerenStore: ms } = await import(location.origin + "/viz/react/src/studio/activities/modellerenActivity.jsx");
+    const { getTransformaties } = await import(location.origin + "/viz/react/src/studio/activities/transformatieRegistry.js");
+    const bron = ms.getState().nieuweMap("SHACL");
+    const cm = ms.getState().nieuweMap("CM");
+    return { bron, cm, ids: getTransformaties("transform").map((t) => t.id) };
+  });
+  expect(kaart.ids).toContain("layout-overnemen");
+  const tekst = readFileSync(KERN, "utf8");
+  const uit = await page.evaluate(async ({ kaart, tekst }) => {
+    const { getTransformaties } = await import(location.origin + "/viz/react/src/studio/activities/transformatieRegistry.js");
+    const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
+    const run = (richting, id, arg) => getTransformaties(richting).find((t) => t.id === id).run(arg);
+    await run("import", "import-shacl-turtle", { bron: { naam: "kern.ttl", tekst }, doelMap: kaart.bron });
+    await run("transform", "shacl-naar-canoniek", { bronMap: kaart.bron, doelMap: kaart.cm });
+    // Het CM met de hand ordenen: Asset links boven, Policy rechts, Rule onder Policy.
+    const cm = getProfieltype("diagram05").useStore;
+    const pre = `vs_${kaart.bron}_`.replace(/[^A-Za-z0-9_-]+/g, "_");
+    const plek = { sc_odrl_Asset: { x: 0, y: 0 }, sc_odrl_Policy: { x: 900, y: 0 }, sc_odrl_Rule: { x: 900, y: 600 } };
+    const s = cm.getState();
+    const did = `${pre}diagram`;
+    cm.setState({ diagrams: { ...s.diagrams, [did]: { ...s.diagrams[did], nodes: s.diagrams[did].nodes.map((n) => ({ ...n, position: plek[n.elementId.slice(pre.length)] || n.position })) } } });
+    const r = await run("transform", "layout-overnemen", { bronMap: kaart.cm, doelMap: kaart.bron });
+    const sh = getProfieltype("shacl05").useStore.getState();
+    const pos = (id) => Object.values(sh.diagrams).flatMap((d) => d.nodes).find((n) => n.elementId === id)?.position;
+    return { summary: r.summary, asset: pos("ns_ok_AssetShape"), policy: pos("ns_ok_PolicyShape"), rule: pos("ns_ok_RuleShape") };
+  }, { kaart, tekst });
+  expect(uit.summary).toMatch(/21 element\(en\) geschikt/);
+  expect(uit.asset.x).toBeLessThan(uit.policy.x);
+  expect(uit.rule.y).toBeGreaterThan(uit.policy.y);
+  expect(Math.abs(uit.rule.x - uit.policy.x)).toBeLessThan(200);
+});

@@ -98,6 +98,7 @@ import { registreerActiviteitAlsProfieltype } from "./activiteitAlsProfieltype.j
 import "./transformaties.js";
 import "./inrichtingsExport.js";
 import "./shaclTransformatie.js"; // canoniek → SHACL (linked data fase 3)
+import "./layoutOvernemenTransformatie.js"; // layout overnemen via kruisverbanden
 import "./archimateTransformaties.js";
 import "./oasCanoniekTransformatie.js";
 import "./usecaseTransformaties.js";

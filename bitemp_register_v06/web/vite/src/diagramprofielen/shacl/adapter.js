@@ -388,6 +388,34 @@ export function vanTurtle(tekst, opties = {}) {
   };
   for (const ref of [...klasseRefs].sort()) if (!gericht.has(ref)) klasseElement(ref);
 
+  // ── Klassehiërarchie buiten de shapes: `C rdfs:subClassOf D` (RDFS, zoals in een vocabulaire) ──
+  // SHACL volgt subClassOf alleen in de data; in de shapes graph is het documentatie, maar wel
+  // de overerving die je in het diagram wilt zien (Mark 07-11: Policy ▷ Set, Rule ▷ Permission).
+  // Alleen subjecten met uitsluitend subClassOf-triples naar IRI's (de rest blijft losse triple).
+  // De pijl loopt tussen de boxen die de klassen tonen; de klasse-IRI's staan op de connector
+  // (van/naar), zodat de schrijver precies dezelfde triple terugzet.
+  const lijstVan = (x) => String(x || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const lokaleStam = (x) => String(x || "").replace(/>$/, "").replace(/^.*[:#/]/, "").replace(/Shape$/, "");
+  const eindpuntVoor = (ref) => {
+    const shapes = Object.values(elements).filter((el) => el.elementType === "nodeshape" && (lijstVan(el.data?.doelklassen).includes(ref) || (el.data?.ookKlasse && el.data?.iri === ref)));
+    const aantal = (s) => new Set([...lijstVan(s.data?.doelklassen), ...(s.data?.ookKlasse ? [s.data.iri] : [])]).size;
+    // Eerst de shape die alleen deze klasse richt; dan een shape met dezelfde naam (PolicyShape ↔
+    // odrl:Policy); anders de klasse zelf als box (odrl:Set, dat alleen via PolicyShape geraakt wordt).
+    const eigen = shapes.find((s) => aantal(s) === 1) || shapes.find((s) => lokaleStam(s.naam) === lokaleStam(ref) || lokaleStam(s.data?.iri) === lokaleStam(ref));
+    return eigen?.id || klasseElement(ref);
+  };
+  for (const t of subjecten.values()) {
+    if (t.type !== "iri" || gelezen.has(termSleutel(t)) || boxId.has(termSleutel(t))) continue;
+    const trs = g.van(t);
+    if (!trs.length || !trs.every((tr) => tr.p.waarde === `${RDFS}subClassOf` && tr.o.type === "iri")) continue;
+    verbruik(t, true);
+    const van = g.compact(t.waarde);
+    for (const tr of trs) {
+      const naar = g.compact(tr.o.waarde);
+      losseConnectoren.push({ soort: "subklasse", source: eindpuntVoor(van), target: eindpuntVoor(naar), data: { van, naar } });
+    }
+  }
+
   // ── Losse connectoren (sh:node, subClassOf, annotatie-lijnen) ────────────
   let n = 0;
   for (const c of losseConnectoren) {
@@ -397,7 +425,7 @@ export function vanTurtle(tekst, opties = {}) {
       target = boxId.get(termSleutel(c.doelIri)) || Object.values(elements).find((el) => el.data?.iri === ref && el.elementType !== "constraint")?.id || klasseElement(ref);
     }
     const cid = `${c.soort}__${c.source}__${n++}`;
-    elements[cid] = { id: cid, naam: "", elementType: c.soort, source: c.source, target, compartimenten: [], data: {} };
+    elements[cid] = { id: cid, naam: "", elementType: c.soort, source: c.source, target, compartimenten: [], data: { ...(c.data || {}) } };
   }
 
   // ── De shapes graph: document, prefixen, declaraties, de rest ───────────

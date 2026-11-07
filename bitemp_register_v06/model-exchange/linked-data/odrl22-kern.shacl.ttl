@@ -152,10 +152,12 @@ ok:AgreementShape
 # -----------------------------------------------------------------------------
 # Rule (§2.6): gemeenschappelijk voor Permission, Prohibition en Duty.
 # -----------------------------------------------------------------------------
+# odrl:Rule staat erbij als doel: abstract (geen beleid typeert een regel als odrl:Rule), maar zo
+# is de shape zichtbaar die van de klasse Rule.
 ok:RuleShape
     a sh:NodeShape ;
     rdfs:label "Rule" ;
-    sh:targetClass odrl:Permission, odrl:Prohibition, odrl:Duty ;
+    sh:targetClass odrl:Rule, odrl:Permission, odrl:Prohibition, odrl:Duty ;
     sh:property [
         sh:path odrl:uid ;
         sh:order 1 ;
@@ -188,6 +190,15 @@ ok:RuleShape
         sh:order 5 ;
         sh:or ( [ sh:class odrl:Constraint ] [ sh:class odrl:LogicalConstraint ] ) ;
         sh:message "Een constraint is een Constraint of een LogicalConstraint."@nl ;
+    ] ;
+    # failure (ODRL22.ttl): abstracte eigenschap tussen regels; remedy en consequence zijn er
+    # sub-eigenschappen van (rdfs:subPropertyOf). sh:class odrl:Rule vraagt dat de data de
+    # klassehiërarchie kent (geef ODRL22.ttl mee): een Duty is pas dan ook een Rule.
+    sh:property [
+        sh:path odrl:failure ;
+        sh:order 6 ;
+        sh:class odrl:Rule ;
+        sh:message "De waarde van failure is een Rule (Permission, Prohibition of Duty)."@nl ;
     ] .
 
 # Permission (§2.6.1): precies één target; duties.
@@ -327,31 +338,23 @@ ok:ConstraintShape
     a sh:NodeShape ;
     rdfs:label "Constraint" ;
     sh:targetClass odrl:Constraint ;
-    # Aantal en klasse in aparte property shapes: een sh:message geldt voor elke
-    # overtreding van zijn shape, dus anders meldt een verkeerd type "precies één".
+    # Aantal en klasse in één property shape (één regel in het diagram). Een sh:message
+    # geldt voor elke overtreding van zijn shape, daarom noemt de melding beide.
     sh:property [
         sh:path odrl:leftOperand ;
         sh:order 1 ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
-        sh:message "Een Constraint heeft precies één leftOperand."@nl ;
-    ] ;
-    sh:property [
-        sh:path odrl:leftOperand ;
         sh:class odrl:LeftOperand ;
-        sh:message "De leftOperand van een Constraint is een odrl:LeftOperand (uit ODRL of een profiel)."@nl ;
+        sh:message "Een Constraint heeft precies één leftOperand, een odrl:LeftOperand (uit ODRL of een profiel)."@nl ;
     ] ;
     sh:property [
         sh:path odrl:operator ;
         sh:order 2 ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
-        sh:message "Een Constraint heeft precies één operator."@nl ;
-    ] ;
-    sh:property [
-        sh:path odrl:operator ;
         sh:class odrl:Operator ;
-        sh:message "De operator van een Constraint is een odrl:Operator."@nl ;
+        sh:message "Een Constraint heeft precies één operator, een odrl:Operator."@nl ;
     ] ;
     # "Only one of rightOperand or rightOperandReference MUST appear": precies
     # één van de twee. Elke kant heeft sh:minCount 1, anders klopt ze altijd.
@@ -360,6 +363,22 @@ ok:ConstraintShape
         [ sh:path odrl:rightOperandReference ; sh:minCount 1 ]
     ) ;
     sh:message "Een Constraint heeft precies één van rightOperand en rightOperandReference."@nl ;
+    # De twee kanten ook als eigenschap (het aantal regelt de xone hierboven), zodat ze in
+    # een diagram van de shape te zien zijn. rightOperand wijst, zoals in het W3C-model,
+    # naar odrl:RightOperand. Dat is documentatie: de waarde mag ook een literal, een
+    # willekeurige IRI of een lijst zijn, dus de shape staat uit (sh:deactivated) en keurt
+    # niets af. rightOperandReference is een IRI.
+    sh:property [
+        sh:path odrl:rightOperand ;
+        sh:order 3 ;
+        sh:class odrl:RightOperand ;
+        sh:deactivated true ;
+    ] ;
+    sh:property [
+        sh:path odrl:rightOperandReference ;
+        sh:order 3 ;
+        sh:nodeKind sh:IRI ;
+    ] ;
     sh:property [
         sh:path odrl:dataType ;
         sh:order 4 ;
@@ -389,4 +408,22 @@ ok:LogicalConstraintShape
         [ sh:path odrl:and ; sh:minCount 1 ; sh:maxCount 1 ]
         [ sh:path odrl:andSequence ; sh:minCount 1 ; sh:maxCount 1 ]
     ) ;
-    sh:message "Een LogicalConstraint heeft precies één van or, xone, and en andSequence."@nl .
+    sh:message "Een LogicalConstraint heeft precies één van or, xone, and en andSequence."@nl ;
+    # Ook hier de operanden als eigenschap, zichtbaar in het diagram; de xone regelt het aantal.
+    sh:property [ sh:path odrl:or ; sh:order 1 ] ;
+    sh:property [ sh:path odrl:xone ; sh:order 2 ] ;
+    sh:property [ sh:path odrl:and ; sh:order 3 ] ;
+    sh:property [ sh:path odrl:andSequence ; sh:order 4 ] .
+
+# -----------------------------------------------------------------------------
+# Klassehiërarchie (uit ODRL22.ttl). SHACL volgt rdfs:subClassOf alleen in de
+# data, niet hier: daarom staan de doelklassen bij de shapes expliciet. Hier is
+# het documentatie, en de overerving in een diagram (Policy ▷ Set, Offer,
+# Agreement; Rule ▷ Permission, Prohibition, Duty).
+# -----------------------------------------------------------------------------
+odrl:Set rdfs:subClassOf odrl:Policy .
+odrl:Offer rdfs:subClassOf odrl:Policy .
+odrl:Agreement rdfs:subClassOf odrl:Policy .
+odrl:Permission rdfs:subClassOf odrl:Rule .
+odrl:Prohibition rdfs:subClassOf odrl:Rule .
+odrl:Duty rdfs:subClassOf odrl:Rule .

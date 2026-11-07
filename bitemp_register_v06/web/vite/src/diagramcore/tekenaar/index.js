@@ -222,7 +222,9 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
     vorm("g", { class: "dc-voorkomens" }, ...knopen),
     lijnen.boom
   );
-  return { boom, viewBox, terugval: [...terugval].sort() };
+  // `maten`: de buitenmaat per voorkomen (nodeId/elementId), zoals getekend; voor wie posities
+  // rekent zonder canvas (layout overnemen, studio/activities/layoutOvernemen.js).
+  return { boom, viewBox, terugval: [...terugval].sort(), maten };
 }
 
 /**

@@ -107,7 +107,7 @@ test("RdfGraaf: compact en fragment", () => {
 
 test("de testbestanden in model-exchange/linked-data zijn te lezen (aantallen = rdflib)", () => {
   for (const [bestand, aantal] of [
-    ["odrl22-kern.shacl.ttl", 309],
+    ["odrl22-kern.shacl.ttl", 336],
     ["odrl22-kern.goed.ttl", 73],
     ["odrl22-kern.fout.ttl", 72],
   ]) {

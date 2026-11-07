@@ -410,12 +410,79 @@ patronen, en niet-getekende onderdelen zichtbaar houden (als constraint of meldi
         `odrl:LeftOperand`; dat hoort uit de ODRL-AP-NL-vocabulaire te komen, die hier niet
         beschikbaar is. De eigen `ts:`-termen typeert de export wel zelf.
      De kern-SHACL is daarbij verbeterd: aantal en klasse van leftOperand/operator in aparte
-     property shapes, zodat een verkeerd type niet als "precies één" gemeld wordt (309 triples).
+     property shapes, zodat een verkeerd type niet als "precies één" gemeld wordt (toen 309 triples; zie 3b).
+   - Ook in het gedeelde transformatiepaneel (07-11, na vraag Mark): *SHACL (Turtle) → SHACL-model*
+     (import, herkent SHACL-Turtle zelf) en *SHACL-model → Turtle* (export), `shacl/shaclRegistry.js`.
    - Tests: `vanCanoniek.test.js` (6), e2e 46 nu 4 (transformatiepaneel → shapes + 12
      kruisverbanden). Unit 1471/1471.
    - *Nog niet*: velden van een relatie (associatieklasse), uniciteit als `sh:sparql`, de
      regelvorm (§3 van TRANSFORMATIES: nu geteste code achter het registry-contract, zoals OAS →
      canoniek).
+3b. **SHACL → canoniek (UML)**, de omgekeerde richting. Aanleiding (Mark 07-11): een UML-weergave
+   van ODRL 2.2. W3C publiceert geen XMI of ander UML-model, alleen tekeningen (OmniGraffle-SVG's
+   in `w3c/poe/model/`, 2017); `ODRL22.ttl` is OWL zonder kardinaliteiten. De SHACL-kern ligt het
+   dichtst bij UML (klasse, attribuut, associatie, multipliciteit).
+   **Gebouwd 07-11** (zelfde branch, ongecommit): `diagramprofielen/shacl/naarCanoniek.js`
+   (`shaclNaarCanoniek`, `voegCanoniekIn`, puur) en de transformatie *SHACL-shapes → canoniek
+   model (UML)* (richting transform, bron = een map met SHACL). Afbeelding:
+
+   | SHACL | Canoniek |
+   |---|---|
+   | doelklasse (`sh:targetClass` of impliciet) | entiteit, naam = lokale naam |
+   | shape voor meer klassen | supertype + generalisaties. Heet een doelklasse als de shape, dan is die de ouder (PolicyShape → Policy ▷ Set, Offer, Agreement); anders komt de ouder erbij (RuleShape → Rule ▷ Permission, Prohibition, Duty) |
+   | `sh:class` | relatie, doelkardinaliteit uit min/maxCount; `a \| b` → één relatie per klasse |
+   | `sh:node` naar een shape zonder doel | gegevenselement + compositie |
+   | `sh:in` | enumeratie |
+   | overige regel, ≤ 1 | veld; xsd → basistype, nodeKind IRI → `URL` |
+   | overige regel, > 1 | gegevenselement met één veld, compositie {meervoudig} |
+   | regels met hetzelfde pad | samengevoegd (strengste grenzen) |
+   | alternatief pad met minCount, `sh:xone`/`sh:or`, `sh:sparql` | constraint, in woorden (`{precies één van …}`); de SHACL in de beschrijving; de paden in een xone worden ook velden |
+   | `rdfs:subClassOf` | generalisatie |
+
+   - ODRL-kern: 18 entiteiten (met RightOperand, via een `sh:deactivated` documentatieregel), 31 relaties, 6 generalisaties, de enumeratie PolicyConflict,
+     twee meervoudige GE's (profile, inheritFrom) en vier constraints.
+   - Kruisverbanden "genereert": shape (rij) → canoniek element (kolom). Opnieuw uitvoeren werkt
+     bij (ids `vs_<map>_…`, posities blijven).
+   - Tests: `naarCanoniek.test.js` (8, ook canoniek → SHACL → canoniek), e2e 46 nu 6.
+   - **Layout overnemen** (07-11, na vraag Mark): Mark ordende het CM zoals het W3C-diagram; de
+     transformatie *Layout overnemen in de doelmap* (elke taal, `studio/activities/layoutOvernemen.js`)
+     zet het SHACL-diagram in dezelfde ordening. Partner per element via de kruisverbanden (bij meer
+     partners die met dezelfde naam: RuleShape → Rule), anders op naam; schaal automatisch uit de
+     doosmaten (de tekenaar geeft nu `maten` terug), daarna overlap weg (`haalUitElkaar`). Elementen
+     zonder partner (de shapes graph) op een rij erboven. Tests: `layoutOvernemen.test.js` (3), e2e 46 nu 7.
+   - **Overerving en operanden in de SHACL zelf** (07-11, na vergelijking Mark met de W3C-SVG): de kern
+     kreeg de klassehiërarchie uit ODRL22.ttl (`odrl:Set rdfs:subClassOf odrl:Policy`, …; voor de
+     validatie zonder effect, zie README), `odrl:Rule` als doel van RuleShape, en property shapes
+     zonder voorwaarde voor de operanden die alleen in een `sh:xone` stonden. 335 triples; pyshacl
+     ongewijzigd (goed conform, fout 10 meldingen); rondreis isomorf. De lezer tekent losse
+     `C rdfs:subClassOf D` nu als subklasse-pijl tussen de boxen die de klassen tonen (eigen shape,
+     anders de shape met dezelfde naam, anders een klasse-box: odrl:Set), met de IRI's op de pijl
+     (`van`/`naar`); de schrijver zet precies die triples terug.
+   - Daarna (07-11): `odrl:failure` op RuleShape (`sh:class odrl:Rule`; 340 triples, pyshacl
+     ongewijzigd), in het UML een lus Rule → Rule. In Marks project vier aanzichten naar de
+     W3C-indeling (00 Model, 01 Constraint, 02 Rule, 03 Shared) als diagrammen op dezelfde
+     elementen, posities uit zijn overzicht; eenmalig in het project gezet (geen transformatie).
+   - Daarna (07-11): aantal en klasse van leftOperand/operator weer in één property shape (één
+     regel in het diagram, één melding die beide noemt); `odrl:rightOperand` wijst naar
+     `odrl:RightOperand` met `sh:deactivated true` (documentatie: de waarde mag ook een literal of
+     willekeurige IRI zijn). 336 triples, pyshacl ongewijzigd.
+   - **Rondgang SHACL → canoniek → SHACL** (07-11, vraag Mark "zijn ze roundtrip compatible?"). Eerst
+     niet: terug gaf eigen IRI's, `xsd:string` voor IRI-velden, teksten voor IRI-waarden, en verloor
+     xone/sparql/or, severity, deactivated en messages (pyshacl: goed 16 fouten). Nu onthoudt
+     naarCanoniek bij elk onderdeel zijn herkomst (`data.shacl`, `shacl/herkomst.js`): de
+     oorspronkelijke property shapes, node shapes (met hun doelklassen), klasse, constraint en
+     shapes graph, plus een *afdruk* van hoe het in het CM stond. vanCanoniek schrijft wat
+     ongewijzigd is letterlijk terug; wat gewijzigd is (andere afdruk), leidt het opnieuw af in de
+     namespace van de entiteit en naar de klasse-IRI, met behoud van order/severity/deactivated en
+     zonder de oude message. Nieuwe termen krijgen de eigen namespace (`ok:`), niet `odrl:`. Een
+     regel waar meer CM-onderdelen uit komen (sh:or → twee relaties) gaat alleen letterlijk terug als
+     ze alle ongewijzigd zijn. Uitkomst: de kern via het CM terug is isomorf (rdflib), ook via de
+     store, een JSON-export en Marks project. Losstaand: URL zonder gegevenstype → `sh:nodeKind
+     sh:IRI`. Tests: `naarCanoniek.test.js` (10). Grens: een in het CM gewijzigde constraint
+     (xone/sparql) is niet terug te vertalen; de oorspronkelijke blijft, met een waarschuwing.
+   - *Nog niet*: packages (alles in één domein), definities uit de vocabulaire (`ODRL22.ttl`;
+     komt met het OWL-profiel, fase 5), "één van beide" bij `a | b` staat niet in het diagram,
+     de layout is een eerste opzet (auto-layout *Hiërarchisch* maakt hem netter).
 4. **SKOS-profiel**, boom eerst.
 5. **OWL-profiel**, boom eerst; property als element.
 

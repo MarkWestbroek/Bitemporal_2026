@@ -148,7 +148,9 @@ export function naarTurtle(state) {
   const lokaleNaam = (iri) => (iri.startsWith("<") ? iri.replace(/^<.*[/#]([^/#>]+)>$/, "$1") : iri.slice(iri.indexOf(":") + 1));
 
   // ── Verbindingen per element ─────────────────────────────────────────────
-  const uitgaand = (id, soort) => alle.filter((c) => isConnector(c) && c.elementType === soort && c.source === id);
+  // Een subklasse-pijl met `van`/`naar` is een losse klassehiërarchie-triple (adapter.js); die
+  // schrijven we apart, niet als eigenschap van de box waar de pijl begint.
+  const uitgaand = (id, soort) => alle.filter((c) => isConnector(c) && c.elementType === soort && c.source === id && !(soort === "subklasse" && c.data?.van));
   const constraintsVan = (id) =>
     alle.filter((c) => isConnector(c) && c.elementType === "notitielijn" && c.target === id).map((c) => elements[c.source]).filter((el) => el?.elementType === "constraint");
   const geschrevenConstraints = new Set();
@@ -334,6 +336,15 @@ export function naarTurtle(state) {
   }
 
   for (const [iri, r] of benoemdeRegels) blokken.push(statement(iri, r));
+
+  // Klassehiërarchie: `van rdfs:subClassOf naar`, per subklasse.
+  const hierarchie = new Map();
+  for (const c of alle) {
+    if (c.elementType !== "subklasse" || !c.data?.van || !c.data?.naar) continue;
+    if (!hierarchie.has(c.data.van)) hierarchie.set(c.data.van, []);
+    if (!hierarchie.get(c.data.van).includes(c.data.naar)) hierarchie.get(c.data.van).push(c.data.naar);
+  }
+  for (const [van, naar] of hierarchie) blokken.push(`${van} rdfs:subClassOf ${naar.join(", ")} .`);
 
   for (const c of alle) {
     if (c.elementType === "constraint" && !geschrevenConstraints.has(c.id) && heeft(c.data?.specificatie)) {

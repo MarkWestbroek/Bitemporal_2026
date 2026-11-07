@@ -11,6 +11,13 @@
  *     niet meer gegenereerd wordt verdwijnt (met zijn kruisverbanden);
  *   - per gemaakte shape een **kruisverband** "genereert" in de koppelingen-matrix: het
  *     canonieke element (kolom) genereert de shape (rij).
+ *
+ * En de omgekeerde richting, "SHACL-shapes → canoniek model" (naarCanoniek.js): een UML-weergave
+ * van een vocabulaire waarvoor alleen shapes bestaan (ODRL 2.2). Zelfde aansluiting: ids per
+ * bronmap (`vs_<map>_…`), opnieuw uitvoeren werkt bij, kruisverbanden shape (rij) genereert
+ * canoniek element (kolom).
+ *
+ * Daarnaast: SHACL (Turtle) importeren en exporteren via hetzelfde paneel (shaclRegistry.js).
  */
 import { registreerTransformatie } from "./transformatieRegistry.js";
 import { collectMapModel } from "./transformaties.js";
@@ -18,6 +25,8 @@ import { getProfieltype } from "../profieltypeRegistry";
 import { useModellerenStore } from "./modellerenActivity.jsx";
 import { useKruisStore, refKey } from "./koppelingenActivity.jsx";
 import { canoniekNaarShacl, voegShapesIn } from "../../diagramprofielen/shacl/vanCanoniek.js";
+import { registreerShaclTransformaties } from "../../diagramprofielen/shacl/shaclRegistry.js";
+import { shaclNaarCanoniek, voegCanoniekIn } from "../../diagramprofielen/shacl/naarCanoniek.js";
 
 const CANONIEK = "diagram05";
 const SHACL = "shacl05";
@@ -61,5 +70,64 @@ registreerTransformatie({
       summary: `${shapes} node shapes in "${diagrams[diagramId].naam}", ${zet.length} kruisverbanden.`,
       diagnostics: uit.meldingen.map((m) => ({ severity: m.niveau === "fout" ? "error" : m.niveau === "waarschuwing" ? "warning" : "info", code: "SHACL-CAN", message: m.bericht, sourceId: m.elementId || null })),
     };
+  },
+});
+
+registreerTransformatie({
+  id: "shacl-naar-canoniek",
+  label: "SHACL-shapes → canoniek model (UML)",
+  richting: "transform",
+  profielTypes: [SHACL],
+  toelichting:
+    "Maakt uit de SHACL-shapes in deze map een canoniek model in de doelmap: doelklassen als entiteiten, sh:class als " +
+    "relaties met kardinaliteit, velden met hun type, sh:in als enumeratie, een shape voor meer klassen als supertype, " +
+    "xone/or/sparql als constraint. Opnieuw uitvoeren werkt het model bij; elk element krijgt een kruisverband naar zijn shape.",
+  opties: [],
+  run: async ({ bronMap, doelMap, mapNaam }) => {
+    const shacl = collectMapModel(bronMap)[SHACL];
+    if (!shacl || !Object.values(shacl.elements || {}).some((el) => el.elementType === "nodeshape")) throw new Error("Geen SHACL-shapes in deze map.");
+    const p = getProfieltype(CANONIEK);
+    if (!p) throw new Error("Het canonieke profiel is niet geladen.");
+    const graaf = Object.values(shacl.elements).find((el) => el.elementType === "shapesgraaf");
+    const naam = graaf?.data?.titel || graaf?.naam || mapNaam || useModellerenStore.getState().mappen?.[bronMap]?.naam || "Model";
+    const uit = shaclNaarCanoniek(shacl, { titel: `${naam} (UML)` });
+
+    const st = p.useStore.getState();
+    const { elements, diagrams, diagramId, weg, her } = voegCanoniekIn({ elements: st.elements, diagrams: st.diagrams }, uit, bronMap);
+    p.useStore.setState({ elements, diagrams });
+    useModellerenStore.getState().plaatsDiagram(`${CANONIEK}::${diagramId}`, doelMap || bronMap);
+
+    // Kruisverbanden: shape (rij) genereert canoniek element (kolom).
+    const kruis = useKruisStore.getState();
+    const verweesd = new Set(weg.map((id) => refKey({ profielId: CANONIEK, elementId: id })));
+    const wis = kruis.links.filter((l) => verweesd.has(refKey(l.kolom))).map((l) => l.id);
+    const zet = uit.kruisverbanden.map(({ shaclId, canoniekId }) => {
+      const rij = { profielId: SHACL, elementId: shaclId };
+      const kolom = { profielId: CANONIEK, elementId: her(canoniekId) };
+      return { id: `${refKey(rij)}##${refKey(kolom)}`, rij, kolom, soort: "genereert", omgekeerd: false };
+    });
+    kruis.patchLinks({ zet, wis });
+
+    const tel = (soort) => Object.values(uit.elements).filter((el) => el.elementType === soort).length;
+    return {
+      status: uit.meldingen.some((m) => m.niveau !== "info") ? "warning" : "success",
+      summary: `${tel("entiteit")} entiteiten, ${tel("relatie")} relaties, ${tel("generalisatie")} generalisaties in "${diagrams[diagramId].naam}", ${zet.length} kruisverbanden.`,
+      diagnostics: uit.meldingen.map((m) => ({ severity: m.niveau === "fout" ? "error" : m.niveau === "waarschuwing" ? "warning" : "info", code: "SHACL-UML", message: m.bericht, sourceId: m.elementId || null })),
+    };
+  },
+});
+
+// SHACL (Turtle) in en uit via het paneel, met de echte stores.
+registreerShaclTransformaties({
+  getProfieltype,
+  getModellerenState: () => useModellerenStore.getState(),
+  collectMapModel,
+  download: (naam, tekst) => {
+    const url = URL.createObjectURL(new Blob([tekst], { type: "text/turtle;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = naam;
+    a.click();
+    URL.revokeObjectURL(url);
   },
 });

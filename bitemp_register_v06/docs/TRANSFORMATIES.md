@@ -46,7 +46,11 @@ bron- en doelelement.
 | import | **BPMN 2.0 XML → BPMN-model** (bpmn-motor) | **lezer + regelset + toepasser** (§10) — mét BPMNDI-diagramlaag |
 | import | **DMN XML → DMN DRD-model** | **lezer + regelset + toepasser** (§10) — mét DMNDI |
 | transform | Kopieer map-inhoud naar een map | code |
-| transform | **Canoniek model → SHACL-shapes** (met kruisverbanden "genereert") | code (`shacl/vanCanoniek.js`), zie plan *Linked data als M2* §12 fase 3 |
+| transform | **Layout overnemen in de doelmap** (elke taal): diagrammen in de doelmap geschikt zoals die in de bronmap, via kruisverbanden (anders op naam), geschaald naar de doosmaten van de tekenaar, overlap weg | code (`studio/activities/layoutOvernemen.js`), aanleiding: SHACL-diagram zoals het geordende ODRL-CM (plan *Linked data als M2* §12 fase 3b) |
+| import | **SHACL (Turtle) → SHACL-model** | code: eigen Turtle-lezer + adapter met lint (`shacl/shaclRegistry.js`); ook in het menu van de SHACL-activiteit |
+| export | **SHACL-model → Turtle** | code: schrijver (`shacl/schrijver.js`), semantische rondreis |
+| transform | **Canoniek model → SHACL-shapes** (met kruisverbanden "genereert"); komt het model uit SHACL, dan gaat wat ongewijzigd is letterlijk terug (rondgang, `shacl/herkomst.js`) | code (`shacl/vanCanoniek.js`), zie plan *Linked data als M2* §12 fase 3 en 3b |
+| transform | **SHACL-shapes → canoniek model (UML)** (met kruisverbanden "genereert") | code (`shacl/naarCanoniek.js`), zie plan *Linked data als M2* §12 fase 3b |
 | export | Map → JSON, Map → Markdown-overzicht | code |
 | export | Map → document (per documentsjabloon één transformatie, `document-<id>`) | sjabloon-renderer (`transformatie/sjabloon/`), zie *plans/2026-10-09 Documentsjablonen* |
 | export | **Use case-model → Mermaid flowchart** | **graafbeeld + regelset + toepasser + schrijver** (§3, §6) — de terugweg van de import, roundtrip getest |

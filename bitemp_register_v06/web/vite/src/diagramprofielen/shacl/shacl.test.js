@@ -91,7 +91,7 @@ test("import van de ODRL 2.2-kern: shapes, regels, pijlen, constraints, geen mel
   assert.equal(obligation.target, "ns_ok_DutyShape");
 
   // Klassen zonder shape worden een klasse-element.
-  assert.deepEqual(Object.values(els).filter((e) => e.elementType === "klasse").map((e) => e.naam).sort(), ["odrl:LeftOperand", "odrl:Operator"]);
+  assert.deepEqual(Object.values(els).filter((e) => e.elementType === "klasse").map((e) => e.naam).sort(), ["odrl:LeftOperand", "odrl:Operator", "odrl:RightOperand", "odrl:Set"]);
 
   // Node-niveau: sh:xone en sh:sparql als constraint met body en taal, met een annotatie-lijn.
   const xone = Object.values(els).find((e) => e.elementType === "constraint" && e.data.taal === "SHACL" && /odrl:rightOperand/.test(e.data.specificatie));
@@ -185,4 +185,22 @@ test("een bestand zonder shapes (OWL/SKOS) bewaart alles in de shapes graph", ()
 
 test("ontInspring haalt de gemeenschappelijke inspringing weg", () => {
   assert.equal(ontInspring("\n    SELECT\n      x\n    "), "SELECT\n  x");
+});
+
+test("klassehiërarchie buiten de shapes: pijlen tussen de boxen, en terug als dezelfde triples", async () => {
+  const { naarTurtle } = await import("./schrijver.js");
+  const tekst = `@prefix sh: <http://www.w3.org/ns/shacl#> . @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . @prefix ex: <urn:ex:> .
+ex:PolicyShape a sh:NodeShape ; rdfs:label "Policy" ; sh:targetClass ex:Policy, ex:Set, ex:Offer .
+ex:OfferShape a sh:NodeShape ; sh:targetClass ex:Offer .
+ex:Set rdfs:subClassOf ex:Policy .
+ex:Offer rdfs:subClassOf ex:Policy .`;
+  const m = vanTurtle(tekst, {});
+  const pijlen = Object.values(m.elements).filter((e) => e.elementType === "subklasse");
+  const naam = (id) => m.elements[id]?.data?.iri;
+  assert.deepEqual(pijlen.map((p) => [naam(p.source), naam(p.target)]).sort(), [["ex:OfferShape", "ex:PolicyShape"], ["ex:Set", "ex:PolicyShape"]]);
+  assert.ok(!m.elements.shapesgraaf?.data?.losseTriples, "geen losse triples");
+  const uit = naarTurtle(m).tekst;
+  assert.match(uit, /ex:Set rdfs:subClassOf ex:Policy \./);
+  assert.match(uit, /ex:Offer rdfs:subClassOf ex:Policy \./);
+  assert.doesNotMatch(uit, /ex:OfferShape[^.]*rdfs:subClassOf/);
 });
