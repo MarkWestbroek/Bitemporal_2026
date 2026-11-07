@@ -405,7 +405,9 @@ patronen, en niet-getekende onderdelen zichtbaar houden (als constraint of meldi
      1. *Fout in de export*: een entiteit met gegevens eronder (`reg:NatuurlijkPersoon`) is
         `odrl:Asset`, maar staat als waarde van `odrl:partOf`; ODRL 2.2 vraagt daar een
         `odrl:AssetCollection`. Oplossing in de regelset: zo'n knoop ook `odrl:AssetCollection`.
-        **Nog niet aangepast** (Toegangsspraak; eerst Mark).
+        **Opgelost 08-11** (fix/odrl-partof-assetcollection, akkoord Mark): een registerdeel met
+        delen eronder wordt `odrl:AssetCollection`, een blad blijft `odrl:Asset`. pyshacl tegen de
+        kern: schuldhulp 2→1, np-loc-demo 4→1, gbo-persoon 21→11; de rest is punt 2.
      2. *Vocabulaire ontbreekt*: `apnl:rolAanvrager` als leftOperand is nergens
         `odrl:LeftOperand`; dat hoort uit de ODRL-AP-NL-vocabulaire te komen, die hier niet
         beschikbaar is. De eigen `ts:`-termen typeert de export wel zelf.

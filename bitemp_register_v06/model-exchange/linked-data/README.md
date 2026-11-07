@@ -137,4 +137,7 @@ pyshacl -s odrl22-kern.shacl.ttl -a beleid+vocab.ttl
 
 Stand 07-11: twee meldingen per beleid (zie het plan, fase 3): een `odrl:partOf` naar een
 `odrl:Asset` die geen `odrl:AssetCollection` is, en `apnl:rolAanvrager` zonder type (de
-ODRL-AP-NL-vocabulaire ontbreekt hier).
+ODRL-AP-NL-vocabulaire ontbreekt hier). De eerste is opgelost op 08-11: een registerpad met delen
+eronder is nu `odrl:AssetCollection`. Wat overblijft, zijn termen uit ODRL-AP-NL zonder type
+(`apnl:rolAanvrager`, `apnl:verwerkingsverzoek`, `apnl:conformsToPolicy`); die verdwijnen met
+de AP-NL-vocabulaire erbij.
