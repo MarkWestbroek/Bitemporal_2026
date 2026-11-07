@@ -115,7 +115,10 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.21.0`** (2026-11-07: rebuild uit een Studio-project — `POST /admin/rebuild
+- Backend: **`api/v0.21.1`** (2026-11-07, patch: vervallen kolommen breken geen insert meer —
+  `WithDiscardUnknownColumns`, vervallen NOT NULL nullable —, en de startup-rebuild leest
+  `schema_versies` vóór de migratie; devloop-image 0.24.14). Daarvoor **`api/v0.21.0`**
+  (2026-11-07: rebuild uit een Studio-project — `POST /admin/rebuild
   {project_id}` met de V3 van de render-sidecar en de herkomst op `schema_versies` —, `GET
   /api/studio/projecten/:id/v3`, en de codegen-weigering van `isMaterieel`/`tijdprecisie` op een
   subtype; devloop-image 0.24.13). Daarvoor **`api/v0.20.0`** (2026-11-06: een volledige PUT op een Studio-project wordt geweigerd

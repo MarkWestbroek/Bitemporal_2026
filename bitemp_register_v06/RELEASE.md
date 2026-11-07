@@ -8,6 +8,36 @@
 
 ---
 
+## api 0.21.1 / devloop 0.24.14 (2026-11-07)
+
+Patch voor twee fouten die FUNDAMENT op cg-test vond. Studio blijft 0.33.0, render 0.3.5.
+
+- **Een veld dat uit het model verdween, brak elke nieuwe opvoer van dat type.** Een additieve
+  rebuild laat de kolom van zo'n veld bewust staan, want de waarden zijn historie. `INSERT …
+  RETURNING *` gaf hem dan terug, en bun weigerde: `Artefact_ArtefactInhoud_Data does not have
+  column "formaat"` (500, na schema-versie 3/4). Nu:
+  - de database draait met `bun.WithDiscardUnknownColumns()`;
+  - dbsetup maakt een vervallen kolom die NOT NULL is zonder standaardwaarde nullable, bij het
+    opstarten en verliesvrij;
+  - elke vervallen kolom wordt gelogd (`[dbsetup] vervallen kolom …`).
+  Er wordt niets weggegooid; opruimen met `DROP COLUMN` blijft een bewuste beheerdersstap
+  (CODEGEN.md §7.3e).
+- **De upgrade naar 0.24.13 gaf ongeveer twee minuten uitval.** De startup-rebuild las
+  `schema_versies` met alle kolommen van het model, vóór de migratie die `bron_project_id`
+  toevoegt. Dat gaf "column does not exist", waarna de ingebakken code startte en het register
+  404 gaf. De laders lezen nu alleen `id`, `schema_json` en `status` (DEVLOOP.md
+  §Startup-rebuild).
+
+Getest: `go test ./...` groen. Twee nieuwe proeven tegen PostgreSQL spelen beide gevallen na:
+- een tabel met een vervallen `formaat VARCHAR NOT NULL`: de insert lukt en de oude waarde blijft;
+- een `schema_versies` zonder de nieuwe kolommen: de oude code gaf de fout van cg-test, de nieuwe
+  laadt de actieve versie.
+
+Uitrol: image `bitemp-go-api:0.21.1`, daarna `./update.sh` op app. Geen migratie en geen nieuwe
+instellingen. Fundament: `bitemp-devloop:0.24.14`, uitrol door FUNDAMENT.
+
+---
+
 ## api 0.21.0 / studio 0.33.0 / render 0.3.5 (2026-11-07)
 
 Het Studio-project wordt de bron van het register (besluit Mark 07-11: "het model is de bron voor
