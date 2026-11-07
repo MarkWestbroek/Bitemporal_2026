@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createDiagramStore } from "./createDiagramStore.js";
+import { createDiagramStore, inEenUndoStap } from "./createDiagramStore.js";
 
 function maakStoreMetModel() {
   const store = createDiagramStore(); // zonder persist (node-omgeving)
@@ -276,4 +276,22 @@ test("verbergConnectorOpDiagram/toonConnectorOpDiagram: alleen dit diagram, mode
   s().toonConnectorOpDiagram("d1", "R");
   assert.equal(s().diagrams.d1.verborgenConnectoren, undefined, "lege lijst verdwijnt");
   s().toonConnectorOpDiagram("d1", "R"); // niets te tonen: geen fout
+});
+
+test("inEenUndoStap: meer acties zijn één undo-stap; niets veranderd = geen stap (Mark 07-11)", () => {
+  const store = maakStoreMetModel();
+  store.getState().addElementToDiagram("d1", "B", { x: 100, y: 0 });
+  store.temporal.getState().clear();
+  inEenUndoStap(store, () => {
+    store.getState().removeElementFromDiagram("d1", "A");
+    store.getState().removeElementFromDiagram("d1", "B");
+  });
+  assert.equal(store.getState().diagrams.d1.nodes.length, 0);
+  assert.equal(store.temporal.getState().pastStates.length, 1);
+  store.temporal.getState().undo();
+  assert.deepEqual(store.getState().diagrams.d1.nodes.map((n) => n.elementId), ["A", "B"]);
+  store.temporal.getState().redo();
+  assert.equal(store.getState().diagrams.d1.nodes.length, 0);
+  inEenUndoStap(store, () => store.getState().removeElementFromDiagram("d1", "bestaat-niet"));
+  assert.equal(store.temporal.getState().pastStates.length, 1);
 });

@@ -804,3 +804,27 @@ export function createDiagramStore({ persistKey } = {}) {
   );
   return storeApi;
 }
+
+/**
+ * Voer `fn` uit als **één undo-stap**, hoeveel store-acties er ook in zitten (Mark 07-11: "A van
+ * het diagram halen splitst in de actielijst"). De historie staat tijdens `fn` op pauze; daarna
+ * komt de toestand van vóór `fn` als één stap in `pastStates` (zelfde vorm als de partialize
+ * hierboven). Verandert er niets, dan ook geen stap.
+ * @param {any} useStore - een store uit createDiagramStore
+ * @param {() => void} fn
+ */
+export function inEenUndoStap(useStore, fn) {
+  const temporal = useStore.temporal;
+  if (!temporal) return fn();
+  const s = useStore.getState();
+  const voor = { elements: s.elements, diagrams: s.diagrams };
+  temporal.getState().pause();
+  try {
+    fn();
+  } finally {
+    temporal.getState().resume();
+  }
+  const na = useStore.getState();
+  if (na.elements === voor.elements && na.diagrams === voor.diagrams) return;
+  temporal.setState((t) => ({ pastStates: [...t.pastStates, voor].slice(-50), futureStates: [] }));
+}

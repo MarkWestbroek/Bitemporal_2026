@@ -1718,6 +1718,40 @@ fase 2 een **bewerkbare sandbox**:
   leesvolgorde gebruikt dezelfde functie. "Kinderen in boomstijl" op de ouder neemt die verbindingen nu mee, met de handles
   gespiegeld en `boomOuder: "doel"` in de lijndata; `zwevendeRand.boomPunten` (canvas én tekenaar)
   legt de lat dan bij het doel en houdt het pad van bron naar doel, zodat de pijl op de ouder blijft.
+- **Elementen uit een andere taal** (2026-11-07, Mark; stap 1 van het koppeldiagram, plan
+  *2026-10-12 Koppeldiagram* §9a): sleep een element uit de projectboom van een andere taal op
+  een diagram, en het staat er, getekend in de notatie van zijn eigen taal en met de taal als
+  klein label linksboven. Het element blijft in zijn eigen taal; het diagram heeft alleen een
+  verwijzing: een node met de samengestelde id `<profielId>::<elementId>` (bv.
+  `archimate05::ea`). Het project blijft één JSON; de bestaande store-acties (verplaatsen, maat,
+  Delete = van het diagram halen) werken ongewijzigd. Relaties van die taal tussen elementen die
+  er staan, verschijnen vanzelf. Selecteren toont het element in de inspector van zijn eigen taal
+  (`LosElementInspector`), dus daar bewerk je het; hernoemen op het canvas (F2) schrijft ook naar
+  die taal; dubbelklik zoekt het op in de boom. In die inspector staat dan "Staat als verwijzing
+  op een diagram van …", is **Verwijder uit model uitgegrijsd** (met de reden als tooltip; prop
+  `verwijderUitModelUit` van `ElementInspector`) en haalt **Van diagram halen** de verwijzing van
+  het diagram waar je naar kijkt, niet van een diagram van de eigen taal. De canvas-activiteit
+  zet daarvoor de context in `studio/vreemdeSelectie.js`; die geldt alleen binnen de
+  `LosElementInspector` (`LosGetoondContext`), dus op een diagram van de eigen taal is hetzelfde
+  element gewoon een eigen element. Nog niet: nieuwe relaties tussen talen trekken (stap 2, kruisverbanden als lijn),
+  "ook andere talen" bij *Gerelateerde elementen toevoegen*, de render-API/tekenaar (slaat de
+  verwijzing over, zoals elke node zonder element). **Gebruik** telt de verwijzingen mee:
+  *Toon gebruik ▸* in de projectboom en *Gebruikt op* in de inspector tonen ook de diagrammen
+  van andere talen (met de taal erachter; kiezen opent dat diagram en selecteert de verwijzing),
+  en een element dat alleen als verwijzing ergens staat krijgt geen ◌ (`gebruikInProject` in
+  `model/gebruik.js`, `studio/gebruikInProject.js`). Code:
+  `diagramcore/model/vreemd.js` (`metVreemdeElementen`: kopieën met samengestelde id en
+  elementType, typen zonder verbindingsregels, weergave-hooks op het origineel; tests
+  `vreemd.test.js`), in `maakDiagramActiviteit.jsx` de bron per taal (`vreemdeBron`), het
+  abonnement op de stores van die talen en de drop; e2e `54-studio-vreemde-elementen.spec.js`.
+- **Delete is één undo-stap** (2026-11-07, Mark: "A van het diagram halen, Ctrl+Z gaf eerst
+  alleen A terug en pas daarna de associatie"). Het canvas gebruikt React Flow's `onDelete` (één
+  melding voor nodes en lijnen) in plaats van `onNodesDelete` + `onEdgesDelete`. Lijnen die
+  alleen meegaan omdat hun uiteinde van het diagram gaat, worden niet meer apart verborgen (ze
+  verdwijnen vanzelf en komen met hun uiteinde terug); losse geselecteerde lijnen gaan als tweede
+  argument mee in `onVerwijder(ids, losseConnectorIds)`. De activiteit doet alles binnen
+  `inEenUndoStap(useStore, fn)` (`createDiagramStore.js`): historie op pauze, daarna precies één
+  stap. e2e `55-studio-undo-van-diagram.spec.js`.
 - **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
   Escape is nodig binnen een container zonder `achtergrond` (lane, package,
   stage): daar is geen leeg vlak — elke klik selecteert de container. In

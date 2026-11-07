@@ -637,6 +637,25 @@
   user-select: none;
   z-index: 2;
 }
+/* Element uit een andere taal (model/vreemd.js): de taal klein linksboven. */
+.dc-vreemd-badge {
+  position: absolute;
+  left: 3px;
+  top: 1px;
+  max-width: calc(100% - 20px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 9px;
+  line-height: 1.2;
+  padding: 0 3px;
+  border-radius: 3px;
+  color: var(--s-accent, #6366f1);
+  background: color-mix(in srgb, var(--s-accent, #6366f1) 12%, transparent);
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+}
 .dc-gedrag-badge {
   position: absolute;
   right: 3px;
@@ -891,10 +910,18 @@
   background: var(--s-hover, #f1f5f9);
 }
 
-.dc-mini-knop.is-gevaar:hover {
+.dc-mini-knop.is-gevaar:hover:not(:disabled) {
   background: #fee2e2;
   border-color: #fca5a5;
   color: #991b1b;
+}
+/* Uitgegrijsd, met de reden als tooltip (bv. een verwijzing naar een element uit een andere taal). */
+.dc-mini-knop:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.dc-mini-knop:disabled:hover {
+  background: transparent;
 }
 
 
@@ -1173,6 +1200,7 @@
 .dc-gebruik-diagram:hover { background: var(--s-hover, #f1f5f9); text-decoration: underline; }
 .dc-gebruik-diagram.is-actief { font-weight: 600; }
 .dc-gebruik-aantal { color: var(--s-fg-muted, #64748b); font-weight: 400; }
+.dc-gebruik-taal { color: var(--s-fg-muted, #64748b); font-weight: 400; font-size: 0.9em; }
 .dc-gebruik-leeg { margin: 2px 4px; font-style: italic; color: var(--s-fg-muted, #64748b); }
 
 /* Submenu in het contextmenu (18-10): pijl rechts, open ouder-item blijft gemarkeerd. */

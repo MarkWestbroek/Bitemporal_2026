@@ -72,7 +72,10 @@ import { migreerHernoemdeTypen, maakSuperprofielElement } from "../../diagramcor
 // "operatie-keuze" (instantie-van-concept) op het core-koppelvlak.
 import "../elementVerwijzing.jsx";
 import { ELEMENT_REF_MIME as REF_MIME } from "../../diagramcore/canvas/externDrop.js";
-import { registreerProfieltype } from "../profieltypeRegistry";
+import { registreerProfieltype, getProfieltype, getProfieltypen } from "../profieltypeRegistry";
+import { metVreemdeElementen, ontleedVreemdeId, vreemdeId, vreemdeProfielen } from "../../diagramcore/model/vreemd.js";
+import { useVreemdeSelectie, zetVreemdeSelectie, LosGetoondContext } from "../vreemdeSelectie.js";
+import { gebruikInHetProject } from "../gebruikInProject.js";
 import { openVerwijzing, alleDiagrammen, naamVanVerwijzing } from "../doorklik.js";
 import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { doorklikVan } from "../../diagramcore/model/verwijstNaar.js";
@@ -91,7 +94,7 @@ const leesExportOpties = () => {
   return { achtergrondModus: s.achtergrond, schaal: s.schaal, marge: s.marge };
 };
 import { koppelModelStore } from "../sync/operaties.js";
-import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
+import { createDiagramStore, inEenUndoStap } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
 import { ANKER_PREFIX } from "../../diagramcore/canvas/materialiseerConnectoren.js";
 import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
@@ -99,7 +102,7 @@ import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../di
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
 import RelatiesPaneel from "../../diagramcore/inspector/RelatiesPaneel.jsx";
 import GebruikPaneel from "../../diagramcore/inspector/GebruikPaneel.jsx";
-import { gebruikVan, gebruikteIds } from "../../diagramcore/model/gebruik.js";
+import { gebruikteIds } from "../../diagramcore/model/gebruik.js";
 import { relatiesVan, verborgenRelatiesVan } from "../../diagramcore/model/relaties.js";
 import { gerelateerdeElementen, ringPosities } from "../../diagramcore/model/gerelateerd.js";
 import { wijstNaarOuder } from "../../diagramcore/types/layoutStijl.js";
@@ -245,6 +248,19 @@ export function maakDiagramActiviteit(opties) {
   const diagramTermMv = diagramTerm === "diagram" ? "diagrammen" : `${diagramTerm}en`;
 
   const useStore = createDiagramStore({ persistKey });
+
+  /**
+   * Een andere taal als bron van vreemde elementen op een diagram van deze taal (vreemd.js):
+   * de elementen uit zijn store en zijn descriptor. Klassieke editors (BPMN/DMN-shim) hebben
+   * geen elementen in deze vorm en doen niet mee.
+   * @param {string} profielId
+   */
+  const vreemdeBron = (profielId) => {
+    if (profielId === id) return null;
+    const p = getProfieltype(profielId);
+    if (!p || p.klassiek || !p.useStore || !p.descriptor) return null;
+    return { elements: p.useStore.getState().elements || {}, descriptor: p.descriptor, label: p.label };
+  };
   // Projectsync (plan 2026-10-07, stap 2): elke modelactie wordt een benoemde
   // operatie in de outbox; undo/redo en migraties vangt het diff-vangnet.
   koppelModelStore(id, useStore);
@@ -433,7 +449,30 @@ export function maakDiagramActiviteit(opties) {
     // (en houdt de inspector geen element uit de boom vast nadat je op het
     // canvas iets anders koos — 2026-10-12).
     useEffect(() => {
-      if (selectieId) menuBus.emit("studio:element-geselecteerd", { profielId: id, elementId: selectieId });
+      // Een element uit een andere taal (vreemd.js): de host toont het in de inspector van die
+      // taal (LosElementInspector) en de boom selecteert het daar.
+      const vreemd = ontleedVreemdeId(selectieId);
+      if (vreemd) {
+        // Eerst de context (vreemdeSelectie.js), dan de selectie: de inspector van die taal
+        // toont het als verwijzing op dít diagram.
+        const diagramId = useStore.getState().actiefDiagramId;
+        zetVreemdeSelectie({
+          ...vreemd,
+          canvasProfielId: id,
+          diagramId,
+          sleutel: selectieId,
+          haalVanDiagram: () => useStore.getState().removeElementFromDiagram(diagramId, selectieId),
+        });
+        menuBus.emit("studio:element-geselecteerd", vreemd);
+      } else if (selectieId) {
+        // De LosElementInspector van deze taal selecteert hetzelfde element zelf ook: dan blijft
+        // de verwijzings-context staan.
+        const vs = useVreemdeSelectie.getState().selectie;
+        if (!(vs?.profielId === id && vs?.elementId === selectieId)) zetVreemdeSelectie(null);
+        menuBus.emit("studio:element-geselecteerd", { profielId: id, elementId: selectieId });
+      } else if (useVreemdeSelectie.getState().selectie?.canvasProfielId === id) {
+        zetVreemdeSelectie(null);
+      }
     }, [selectieId]);
 
     // Menubalk-acties via de menuBus.
@@ -1193,7 +1232,18 @@ export function maakDiagramActiviteit(opties) {
     const diagrams = useStore((s) => s.diagrams);
     const actiefDiagram = useStore((s) => s.actiefDiagramId);
     // Melding #5 (Hugo): wat op geen enkel diagram staat, toont cursief.
-    const gebruikt = React.useMemo(() => gebruikteIds(diagrams), [diagrams]);
+    // Ook als verwijzing op een diagram van een andere taal (Mark 07-11).
+    const gebruikt = React.useMemo(() => {
+      const ids = gebruikteIds(diagrams);
+      for (const p of getProfieltypen()) {
+        if (p.id === id || p.klassiek || !p.useStore) continue;
+        for (const vid of gebruikteIds(p.useStore.getState().diagrams)) {
+          const v = ontleedVreemdeId(vid);
+          if (v?.profielId === id) ids.add(v.elementId);
+        }
+      }
+      return ids;
+    }, [diagrams]);
     const { selectieId, setSelectieId, layoutApiRef } = useContext(Ctx);
     const [zoek, setZoek] = useState("");
     const [dicht, setDicht] = useState({});
@@ -2072,6 +2122,26 @@ export function maakDiagramActiviteit(opties) {
     const isDirty = useStore((s) => s.isDirty);
     // Fallback: na undo van "nieuw diagram" kan het actieve id verdwenen zijn.
     const diagram = (actief && diagrams[actief]) || Object.values(diagrams)[0] || null;
+
+    // Elementen uit een andere taal op dit diagram (diagramcore/model/vreemd.js; Mark 07-11).
+    // Abonneer op de elementen van die talen, zodat een wijziging daar (inspector, hernoemen)
+    // hier meteen te zien is.
+    const vreemdeTalen = [...vreemdeProfielen(diagram)].sort().join("|");
+    const [vreemdTik, setVreemdTik] = useState(0);
+    useEffect(() => {
+      if (!vreemdeTalen) return undefined;
+      const af = vreemdeTalen.split("|").map((pid) =>
+        getProfieltype(pid)?.useStore?.subscribe?.((s, vorig) => {
+          if (s.elements !== vorig?.elements) setVreemdTik((t) => t + 1);
+        })
+      );
+      return () => af.forEach((f) => typeof f === "function" && f());
+    }, [vreemdeTalen]);
+    const canvasModel = useMemo(
+      () => metVreemdeElementen({ elements, descriptor, diagram, bron: vreemdeBron }),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [elements, diagram, vreemdTik]
+    );
 
     // Tips na een toestandsovergang (hints.js): het eerste element op een diagram, en de
     // eerste relatie in dit profiel. Alleen bij een toename tijdens de sessie, niet bij laden.
@@ -3192,8 +3262,8 @@ export function maakDiagramActiviteit(opties) {
               <Suspense fallback={<div style={{ padding: 16, color: "#64748b" }}>Canvas laden…</div>}>
                 <DiagramCanvas
                   opRaster={opRaster}
-                  diagramType={descriptor}
-                  elements={elements}
+                  diagramType={canvasModel.descriptor}
+                  elements={canvasModel.elements}
                   diagram={diagram}
                   viewport={viewports[diagram.id] || null}
                   bewerkbaar
@@ -3239,23 +3309,27 @@ export function maakDiagramActiviteit(opties) {
                   // anker of box-gedaante): het model houdt de relatie; Ctrl+Delete
                   // haalt hem uit het model (gemeld 2026-10-13: "Delete lijkt hem
                   // uit het model te halen").
-                  onVerwijder={(ids) => {
-                    const s = useStore.getState();
-                    ids.forEach((did) => {
-                      if (did.startsWith(ANKER_PREFIX)) {
-                        haalConnectorVanDiagram(diagram.id, did.slice(ANKER_PREFIX.length));
-                        return;
-                      }
-                      const el = s.elements[did];
-                      if (el && elementTypesById[el.elementType]?.isConnector) {
-                        haalConnectorVanDiagram(diagram.id, did);
-                      } else {
-                        s.removeElementFromDiagram(diagram.id, did);
-                      }
-                    });
-                  }}
+                  // Eén Delete = één undo-stap, ook bij meer nodes en losse lijnen samen (Mark 07-11).
+                  onVerwijder={(ids, losseConnectoren = []) =>
+                    inEenUndoStap(useStore, () => {
+                      const s = useStore.getState();
+                      ids.forEach((did) => {
+                        if (did.startsWith(ANKER_PREFIX)) {
+                          haalConnectorVanDiagram(diagram.id, did.slice(ANKER_PREFIX.length));
+                          return;
+                        }
+                        const el = s.elements[did];
+                        if (el && elementTypesById[el.elementType]?.isConnector) {
+                          haalConnectorVanDiagram(diagram.id, did);
+                        } else {
+                          s.removeElementFromDiagram(diagram.id, did);
+                        }
+                      });
+                      losseConnectoren.forEach((cid) => haalConnectorVanDiagram(diagram.id, cid));
+                    })
+                  }
                   onVerwijderConnectoren={(connectorIds) =>
-                    connectorIds.forEach((cid) => haalConnectorVanDiagram(diagram.id, cid))
+                    inEenUndoStap(useStore, () => connectorIds.forEach((cid) => haalConnectorVanDiagram(diagram.id, cid)))
                   }
                   onNormaliseer={(connectorIds) => menuBus.emit(ev("normaliseer"), connectorIds)}
                   onLabelOffset={(connectorId, zijde, offset) => {
@@ -3321,6 +3395,13 @@ export function maakDiagramActiviteit(opties) {
                     s.updateNodePosition(diagram.id, voorkomenId || elementId, positie);
                   }}
                   onNodeDoubleClick={(element) => {
+                    // Een element uit een andere taal: dubbelklik zoekt het op in de projectboom
+                    // (de inspector van die taal toont het al bij selectie).
+                    const vreemd = element?.data?.vreemd;
+                    if (vreemd) {
+                      menuBus.emit("studio:zoek-in-boom", { profielId: vreemd.profielId, elementId: vreemd.elementId });
+                      return true;
+                    }
                     // Doorklik (gedragsverwijzing §3.2 of M3 `verwijst naar`, 20-10): dubbelklik
                     // opent het diagram — ook in een ander profiel (tab in Modelleren).
                     const etDk = element && (descriptor.elementTypes || []).find((t) => t.id === element.elementType);
@@ -3344,10 +3425,16 @@ export function maakDiagramActiviteit(opties) {
                   // op een veld). Naam: via hernoemElement, zodat velden die
                   // bij naam naar dit element verwijzen (attribuuttype) mee
                   // veranderen. Veld: de naam van dat veld in het compartiment.
-                  onHernoem={(elementId, naam, veldSleutel) => {
-                    const s = useStore.getState();
+                  onHernoem={(canvasId, naam, veldSleutel) => {
+                    // Een element uit een andere taal hernoem je in zijn eigen store (vreemd.js).
+                    const vreemd = ontleedVreemdeId(canvasId);
+                    const vp = vreemd ? getProfieltype(vreemd.profielId) : null;
+                    if (vreemd && !vp?.useStore) return;
+                    const doelStore = vp?.useStore || useStore;
+                    const elementId = vreemd ? vreemd.elementId : canvasId;
+                    const s = doelStore.getState();
                     if (!veldSleutel) {
-                      hernoemElement(useStore, descriptor, elementId, naam);
+                      hernoemElement(doelStore, vp?.descriptor || descriptor, elementId, naam);
                       return;
                     }
                     const { compartmentType, index } = splitsVeldSleutel(veldSleutel);
@@ -3364,6 +3451,7 @@ export function maakDiagramActiviteit(opties) {
                   onNodeMaten={(maten) => useStore.getState().updateNodeSizes(diagram.id, maten)}
                   // Ctrl+↑/↓ in het inline-veld van een attribuut.
                   onSchuifVeld={(elementId, veldSleutel, richting) => {
+                    if (ontleedVreemdeId(elementId)) return null; // velden schuiven in de eigen taal
                     const s = useStore.getState();
                     const { compartmentType, index } = splitsVeldSleutel(veldSleutel);
                     const uit = schuifVeld(s.elements[elementId], compartmentType, index, richting);
@@ -3427,7 +3515,27 @@ export function maakDiagramActiviteit(opties) {
                         updateElement: s.updateElement,
                         positie,
                       });
+                      return;
                     }
+                    // Een element uit een andere taal (Mark 07-11): als verwijzing op dit diagram,
+                    // getekend in de notatie van zijn eigen taal (diagramcore/model/vreemd.js).
+                    // Ook met meer elementen tegelijk; een relatie zelf plaats je niet (die
+                    // verschijnt zodra beide uiteinden er staan).
+                    const bron = ref?.profielId && ref.profielId !== id ? vreemdeBron(ref.profielId) : null;
+                    if (!bron) return;
+                    const opDiagram = new Set((s.diagrams[diagram.id]?.nodes || []).map((n) => n.elementId));
+                    const ids = [ref.elementId, ...((ref.elementIds || []).filter((e) => e !== ref.elementId))];
+                    let i = 0;
+                    for (const eid of ids) {
+                      const vel = bron.elements[eid];
+                      if (!vel || (vel.source && vel.target)) continue;
+                      const vid = vreemdeId(ref.profielId, eid);
+                      if (opDiagram.has(vid)) continue;
+                      const pos = i === 0 ? positie : { x: positie.x + ((i - 1) % 4) * 240, y: positie.y + 180 + Math.floor((i - 1) / 4) * 150 };
+                      s.addElementToDiagram(diagram.id, vid, pos);
+                      i += 1;
+                    }
+                    if (i) selecteerVoorkomen(vreemdeId(ref.profielId, ref.elementId), null);
                   }}
                   shapeSet={vindShapeSet(descriptor, diagram.shapeSetId ?? shapeSetId, diagram)}
                   bouwContextMenu={bouwContextMenu}
@@ -3561,6 +3669,9 @@ export function maakDiagramActiviteit(opties) {
   function Inspector() {
     const { selectieId, setSelectieId, selectieVoorkomenId } = useContext(Ctx);
     const relatiesPaneelOpen = useStudioStore((s) => s.relatiesPaneelOpen);
+    const vreemdeSelStore = useVreemdeSelectie((s) => s.selectie);
+    // Alleen in de LosElementInspector (element van een andere taal dan het actieve diagram).
+    const vreemdeSel = useContext(LosGetoondContext) ? vreemdeSelStore : null;
     const element = useStore((s) => (selectieId ? s.elements[selectieId] : null));
     const actief = useStore((s) => s.actiefDiagramId);
     const elements = useStore((s) => s.elements);
@@ -3595,8 +3706,16 @@ export function maakDiagramActiviteit(opties) {
     }
 
     const elementType = elementTypesById[element.elementType];
+    // Getoond als verwijzing op een diagram van een andere taal (vreemdeSelectie.js): "Van diagram
+    // halen" geldt dát diagram, en uit het model verwijderen kan hier niet.
+    const alsVerwijzing = vreemdeSel && vreemdeSel.profielId === id && vreemdeSel.elementId === element.id ? vreemdeSel : null;
     return (
       <div className="studio-inspector-pad">
+        {alsVerwijzing && (
+          <div className="studio-inspector-verwijzing" data-testid="inspector-verwijzing">
+            Staat als verwijzing op een diagram van {getProfieltype(alsVerwijzing.canvasProfielId)?.label || "een andere taal"}.
+          </div>
+        )}
         <ElementInspector
           element={element}
           elementType={elementType}
@@ -3604,6 +3723,7 @@ export function maakDiagramActiviteit(opties) {
           kandidatenVoor={kandidatenVoor}
           editorContext={editorContext}
           bewerkbaar
+          verwijderUitModelUit={alsVerwijzing ? `"${element.naam || element.id}" hoort bij ${descriptor.label || id}; op dit diagram staat alleen een verwijzing. Verwijderen uit het model doe je in een diagram van die taal of in de projectboom.` : null}
           onSelecteerElement={(eid) => setSelectieId(eid)}
           onUpdate={(patch) => {
             // Een naamwijziging loopt via hernoemElement (verwijzingen bij
@@ -3613,6 +3733,11 @@ export function maakDiagramActiviteit(opties) {
             useStore.getState().updateElement(element.id, patch);
           }}
           onVerwijderVanDiagram={() => {
+            if (alsVerwijzing) {
+              alsVerwijzing.haalVanDiagram();
+              setSelectieId(null);
+              return;
+            }
             if (actief) {
               // Een verbinding is geen node: verbergen op dit diagram (13-10).
               if (elementType?.isConnector) haalConnectorVanDiagram(actief, element.id);
@@ -3658,11 +3783,16 @@ export function maakDiagramActiviteit(opties) {
         {/* Melding #5 (Hugo, 16-10): waar wordt dit element gebruikt? */}
         {!elementType?.isConnector && (
           <GebruikPaneel
-            gebruik={gebruikVan(element.id, diagrams)}
-            actiefDiagramId={actief}
-            onOpen={(did) => {
-              useStore.getState().setActiefDiagram(did);
-              menuBus.emit("studio:open-diagram", { profielId: id, diagramId: did });
+            // Ook diagrammen van andere talen waar het als verwijzing staat (Mark 07-11).
+            gebruik={gebruikInHetProject(id, element.id)}
+            isActief={(d) =>
+              alsVerwijzing ? d.profielId === alsVerwijzing.canvasProfielId && d.id === alsVerwijzing.diagramId : d.profielId === id && d.id === actief
+            }
+            onOpen={(did, d) => {
+              const pid = d?.profielId || id;
+              if (pid === id) useStore.getState().setActiefDiagram(did);
+              else getProfieltype(pid)?.useStore?.getState().setActiefDiagram(did);
+              menuBus.emit("studio:open-diagram", { profielId: pid, diagramId: did });
             }}
           />
         )}

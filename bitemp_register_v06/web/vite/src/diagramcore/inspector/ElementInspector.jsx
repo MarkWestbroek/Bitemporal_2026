@@ -207,6 +207,7 @@ export default function ElementInspector({
   onUpdate,
   onVerwijderVanDiagram,
   onVerwijderUitModel,
+  verwijderUitModelUit = null,
   onSelecteerElement,
 }) {
   const compartimenten = element.compartimenten || [];
@@ -391,7 +392,15 @@ export default function ElementInspector({
             </button>
           )}
           {onVerwijderUitModel && (
-            <button className="dc-mini-knop is-gevaar" onClick={onVerwijderUitModel}>
+            // `verwijderUitModelUit`: een reden waarom het hier niet kan (bv. een verwijzing naar
+            // een element uit een andere taal, model/vreemd.js) — dan uitgegrijsd met die uitleg.
+            <button
+              className="dc-mini-knop is-gevaar"
+              onClick={verwijderUitModelUit ? undefined : onVerwijderUitModel}
+              disabled={!!verwijderUitModelUit}
+              title={verwijderUitModelUit || undefined}
+              data-testid="inspector-verwijder-uit-model"
+            >
               Verwijder uit model
             </button>
           )}

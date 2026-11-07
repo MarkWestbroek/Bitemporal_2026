@@ -704,6 +704,15 @@
 .studio-list li.is-actief { background: var(--s-accent); color: #fff; }
 
 .studio-inspector-pad { padding: 12px; font-size: 13px; line-height: 1.5; }
+/* Element uit een andere taal, geselecteerd als verwijzing op een diagram (vreemdeSelectie.js). */
+.studio-inspector-verwijzing {
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--s-fg-muted, #64748b);
+  background: color-mix(in srgb, var(--s-accent, #6366f1) 10%, transparent);
+}
 
 /* ── Tab-balk (bv. DMN: DRD/Tabel) ────────────────────────── */
 .studio-tabs {
