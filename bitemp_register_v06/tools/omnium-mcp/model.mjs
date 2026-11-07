@@ -222,7 +222,14 @@ export function wijzigingTekst({ project, map, plan, wijziging, bestaand, verstu
   for (const h of plan.diagramHernoemd || []) r.push(`~ diagram hernoemd: ${h.oud} → ${h.naam}`);
   for (const v of plan.verwijzingen || []) r.push(`~ ${v.naam || naam(v.element)} verwijst naar diagram ${v.naar.naam || v.naar.sleutel || v.naar.id}`);
   for (const l of plan.leden || []) r.push(`~ ${naam({ id: l.id })} in ${naam(l.in)}`);
-  for (const v of plan.veldenBij || []) r.push(`~ ${v.naam || v.id}: ${v.soort === "waarde" ? "waarden" : "velden"} erbij — ${v.velden.map((x) => (x.type ? `${x.naam}: ${x.type}` : x.naam)).join(", ")}`);
+  // Velden: wat er echt gebeurt — erbij, gewijzigd (verplicht/type/naam), of al zo (08-11).
+  for (const v of wijziging.veldenEffect || []) {
+    const soort = v.soort === "waarde" ? "waarden" : "velden";
+    const typeVan = (n) => (plan.veldenBij || []).find((x) => x.id === v.id)?.velden.find((x) => x.naam === n)?.type;
+    if (v.toegevoegd.length) r.push(`~ ${v.naam || v.id}: ${soort} erbij — ${v.toegevoegd.map((n) => (typeVan(n) ? `${n}: ${typeVan(n)}` : n)).join(", ")}`);
+    if (v.gewijzigd.length) r.push(`~ ${v.naam || v.id}: ${soort} gewijzigd — ${v.gewijzigd.map((g) => `${g.naam} (${g.wat.join(", ")})`).join(", ")}`);
+    if (v.ongewijzigd.length) r.push(`  ${v.naam || v.id}: ${v.ongewijzigd.length} ${soort} al zo, niets veranderd`);
+  }
   for (const v of plan.verwijderen || []) r.push(`- weg: ${v.soort === "relatie" ? `${v.type} ${v.id}` : `${v.naam || v.id} (${v.id})`}`);
   for (const o of plan.opstelling || []) r.push(`~ opstelling ${o.actie}${o.elementen.length ? `: ${o.elementen.map(naam).join(", ")}` : " (alles)"}`);
   for (const p of plan.posities || []) r.push(`~ verplaatst: ${naam(p.element)} ${p.naast ? `${p.kant} van ${naam(p.naast)} (afstand ${p.afstand})` : `naar ${p.x}, ${p.y}`}`);

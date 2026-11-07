@@ -18,7 +18,7 @@
  */
 import { naamBotsingen } from "./uniekeNamen.js";
 import { vouwOudeComposities, hernoemGebruikLabels, GEBRUIKT_LABEL } from "./migratie.js";
-import { vouwOudeGeneralisaties, synchroniseerGebruik } from "./afgeleideConnectoren.js";
+import { vouwOudeGeneralisaties, synchroniseerGebruik, herstelRefTypeLabels } from "./afgeleideConnectoren.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { normaliseerErfenis } from "../../diagramcore/types/erfenis.js";
 import { berekenAutoLayout } from "../../umleditor/metamodel/autoLayout.js";
@@ -30,7 +30,9 @@ export const CANONIEK_UML_ID = "canoniek-uml";
  * {key, datatype, referenceTypes?}; de widget volgt uit de datatype-registry.
  * `TYPE_REFS` = de vier soorten kandidaten voor een attribuuttype.
  */
-const TYPE_REFS = ["basistype", "gegevenstype", "enumeratie", "refitem"];
+// "reflijst" (08-11, plan Referentielijst-instanties §8): de items-relatie (item → Referentielijst)
+// is het pseudo-gegevenstype van een veld; vóór "refitem" (de item-entiteit, overgang).
+const TYPE_REFS = ["basistype", "gegevenstype", "enumeratie", "reflijst", "refitem"];
 
 /** @type {import("../../diagramcore/types/schema.js").FieldType[]} */
 const fieldTypes = [
@@ -139,6 +141,40 @@ export function isRefLijstItem(el) {
     : d.stereotype === "«ref.lijst item»";
 }
 
+/** Referentielijst-entiteit (de lijst zelf). */
+export function isRefLijst(el) {
+  if (el?.elementType !== "entiteit") return false;
+  const d = el.data || {};
+  return "entiteitSubtype" in d ? d.entiteitSubtype === "referentielijst" : d.stereotype === "«referentielijst»";
+}
+
+/**
+ * Items-relatie van een referentielijst (relatieSubtype referentielijst_items), met terugval op
+ * het stereotype. Plan "Referentielijst-instanties" §8 (besluit Mark 07/08-11): loopt van het
+ * item-type naar Referentielijst, en is wat een veld als type kiest (`$ref` = de naam van de REL).
+ */
+export function isRefLijstItems(el) {
+  if (el?.elementType !== "relatie") return false;
+  const d = el.data || {};
+  return "relatieSubtype" in d ? d.relatieSubtype === "referentielijst_items" : d.stereotype === "«ref.lijst items»";
+}
+
+/**
+ * Waarschuwing: een items-relatie hoort van een ref.lijst-item naar een referentielijst te lopen
+ * (plan §8; was andersom). Context: `{elements}`.
+ */
+export function controleerItemsRichting(element, context) {
+  if (!isRefLijstItems(element) || !context?.elements) return null;
+  const bron = context.elements[element.source];
+  const doel = context.elements[element.target];
+  if (!bron || !doel) return null;
+  if (isRefLijstItem(bron) && isRefLijst(doel)) return null;
+  if (isRefLijst(bron) && isRefLijstItem(doel)) {
+    return `Een ref.lijst-items-relatie loopt van het item (${doel.naam || "?"}) naar de referentielijst (${bron.naam || "?"}); deze staat andersom. Draai de richting om.`;
+  }
+  return "Een ref.lijst-items-relatie loopt van een ref.lijst-item naar een referentielijst.";
+}
+
 /** Beschrijving en meervoud: zoals "Details" in de oude IDE voor ENT/GE/REL. */
 const MEERVOUD_VELD = { key: "meervoud", label: "meervoud", datatype: "string", placeholder: "bijv. Personen" };
 const MATERIEEL_VELD = { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" };
@@ -196,7 +232,8 @@ function controleerSubtypeTijdlijn(element, context) {
 function controleerRepresentatie(element, context) {
   const tijd = controleerTijdprecisie(element);
   const sub = controleerSubtypeTijdlijn(element, context);
-  return [...(tijd ? [tijd] : []), ...(sub ? [sub] : []), ...naamBotsingen(element, context)];
+  const items = controleerItemsRichting(element, context);
+  return [...(tijd ? [tijd] : []), ...(sub ? [sub] : []), ...(items ? [items] : []), ...naamBotsingen(element, context)];
 }
 
 /** M3-hook eigenschapUit: materieel en tijdprecisie uit bij een subtype, met de reden. */
@@ -660,10 +697,12 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["entiteit", "gegevenselement", "relatie"] },
     // Een referentielijst-item is een entiteit met dat subtype (GEBR-1, Mark 06-11): `entiteit`
-    // staat erbij, de hook laat alleen die door.
-    doel: { elementTypes: ["enumeratie", "gegevenstype", "referentielijstInstantie", "entiteit"] },
+    // staat erbij, de hook laat alleen die door. Een items-relatie (08-11, plan §8) ook: dat is
+    // het voorkeursdoel van een veld dat een referentielijst gebruikt.
+    doel: { elementTypes: ["enumeratie", "gegevenstype", "referentielijstInstantie", "entiteit", "relatie"] },
     hooks: {
-      magVerbinden: (_bron, doel) => doel?.elementType !== "entiteit" || isRefLijstItem(doel),
+      magVerbinden: (_bron, doel) =>
+        doel?.elementType === "entiteit" ? isRefLijstItem(doel) : doel?.elementType === "relatie" ? isRefLijstItems(doel) : true,
     },
     edgePresentatie: {
       lijn: "dash-6-3",
@@ -708,7 +747,8 @@ const referenceTypes = [
   { id: "basistype", label: "Basistypen" },
   { id: "gegevenstype", label: "Gegevenstypen", icoon: "✦" },
   { id: "enumeratie", label: "Enumeraties", icoon: "◇" },
-  { id: "refitem", label: "Referentielijst-items", icoon: "▣" },
+  { id: "reflijst", label: "Referentielijsten", icoon: "▤" },
+  { id: "refitem", label: "Referentielijst-items (zonder lijst)", icoon: "▣" },
 ];
 
 /** Hulpje: elementen van een soort → gesorteerde kandidaten. */
@@ -731,13 +771,22 @@ const referenceResolvers = {
     elementKandidaten(elements, (el) => el.elementType === "gegevenstype", "✦", "Gegevenstypen"),
   enumeratie: ({ elements }) =>
     elementKandidaten(elements, (el) => el.elementType === "enumeratie", "◇", "Enumeraties"),
+  // De items-relatie (plan §8): "LandenlijstLand (Land → Landenlijst)". Voorkeur: bij twee
+  // lijsten over één item-type (Landenlijst, EULidstaten over Land) is de REL het enige onderscheid.
+  reflijst: ({ elements }) =>
+    elementKandidaten(elements, isRefLijstItems, "▤", "Referentielijsten", (el) => {
+      // Het item-type, aan welke kant het ook staat (oude modellen: lijst → item).
+      const item = [elements?.[el.source], elements?.[el.target]].find(isRefLijstItem);
+      return item?.naam ? `${el.naam} (items: ${item.naam})` : el.naam;
+    }),
+  // Overgang: rechtstreeks naar de item-entiteit ("alle items, zonder lijst", zoals Gemeente).
   refitem: ({ elements }) =>
     elementKandidaten(
       elements,
       isRefLijstItem,
       "▣",
-      "Referentielijst-items",
-      (el) => `${el.naam} (ref.lijst)`
+      "Referentielijst-items (zonder lijst)",
+      (el) => `${el.naam} (ref.lijst item)`
     ),
 };
 
@@ -767,7 +816,8 @@ export const canoniekUmlDiagramType = {
       const diagrams = hernoemGebruikLabels(huidig().diagrams);
       if (diagrams) uit = { ...(uit || { elements: state.elements, meta: state.meta }), diagrams };
       // ERFT-1 en GEBR-1 (06-11): overerving en «gebruikt» als connectoren (afgeleideConnectoren.js).
-      for (const stap of [vouwOudeGeneralisaties, synchroniseerGebruik]) {
+      // `$ref`-velden tonen hun verwijzing (08-11), vóór GEBR-1 zodat de «gebruikt»-lijn meekomt.
+      for (const stap of [vouwOudeGeneralisaties, herstelRefTypeLabels, synchroniseerGebruik]) {
         const r = stap(huidig());
         if (r) uit = { ...(uit || { meta: state.meta }), elements: r.elements, diagrams: r.diagrams };
       }

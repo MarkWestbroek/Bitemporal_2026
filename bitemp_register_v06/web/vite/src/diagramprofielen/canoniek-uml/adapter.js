@@ -16,7 +16,7 @@
  * (bestaande labelOffsets worden wél gerespecteerd).
  */
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
-import { CANONIEK_UML_ID, canoniekUmlDiagramType, isRefLijstItem } from "./index.js";
+import { CANONIEK_UML_ID, canoniekUmlDiagramType, isRefLijstItem, isRefLijstItems } from "./index.js";
 import { vertaalbareVelden } from "./mappingV3Canoniek.js";
 import { GEBRUIKT_LABEL } from "./migratie.js";
 
@@ -47,6 +47,10 @@ export function veldTypeLabel(v) {
 }
 
 function typeLabel(v) {
+  // Een `$ref` (refItemNaam: de items-relatie van een referentielijst, of — als overgang — de
+  // item-entiteit) toont zijn naam, niet "integer" (08-11; daarvóór verdween zo'n verwijzing uit
+  // beeld en ging hij verloren zodra iemand het type aanraakte).
+  if (v.refItemNaam && !v.enumNaam && !v.datatypeNaam) return v.refItemNaam;
   let t = v.enumNaam || v.datatypeNaam || v.type || "";
   if (!v.enumNaam && !v.datatypeNaam && v.format) t += ` «${v.format}»`;
   if (v.autoIncrement) t += " {AI}";
@@ -538,7 +542,9 @@ function parseTypeLabel(label, coreElements) {
       const b = el.data?.bron || {};
       return { type: b.basistype || "string", format: b.format || "", datatypeNaam: schoon };
     }
-    if (isRefLijstItem(el)) {
+    // De items-relatie (plan Referentielijst-instanties §8) of de item-entiteit (overgang):
+    // `$ref` = die naam; het veld bevat het item-id.
+    if (isRefLijstItems(el) || isRefLijstItem(el)) {
       return { type: "integer", format: "", refItemNaam: schoon };
     }
   }
@@ -576,8 +582,11 @@ function veldTerug(coreVeld, coreElements, bronVelden) {
     veld.afleidingsregelTaal = bron.afleidingsregelTaal || "cel";
   }
   const huidigLabel = bron.naam !== undefined ? veldTypeLabel(bron) : null;
+  // Vóór 08-11 toonde een `$ref`-veld zijn basistype ("integer"); dat label in een bestaand
+  // project betekent "niet aangeraakt", anders ging de verwijzing bij de export verloren.
+  const oudRefLabel = bron.naam !== undefined && bron.refItemNaam ? typeLabel({ ...bron, refItemNaam: null }) : null;
   const label = (d.typeLabel || "").trim();
-  if ((label && label !== huidigLabel) || bron.naam === undefined) {
+  if ((label && label !== huidigLabel && label !== oudRefLabel) || bron.naam === undefined) {
     delete veld.enumNaam;
     delete veld.datatypeNaam;
     delete veld.refItemNaam;

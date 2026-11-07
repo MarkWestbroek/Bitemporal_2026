@@ -159,7 +159,11 @@ export function bestaandInMap(stand, mapId, profielIds = Object.keys(stand.profi
       profielId,
       diagrammen: diagrammen.map((d) => ({ id: d.id, naam: d.naam || d.id, ...(mapNaam(mapVan(`${profielId}::${d.id}`)) ? { map: mapNaam(mapVan(`${profielId}::${d.id}`)) } : {}) })),
       elementen: [...ids].map((id) => {
-        const velden = (els[id].compartimenten || []).flatMap((c) => (c.velden || []).map((v) => v.naam)).filter(Boolean).slice(0, 30);
+        // Velden met type en (verplicht) (Mark 08-11: "alle velden optioneel" kon niet; de AI zag
+        // alleen namen en voegde ze dus "erbij").
+        const velden = (els[id].compartimenten || [])
+          .flatMap((c) => (c.velden || []).filter((v) => v.naam).map((v) => `${v.naam}${v.data?.typeLabel ? `: ${v.data.typeLabel}` : ""}${v.data?.verplicht ? " (verplicht)" : ""}`))
+          .slice(0, 80);
         const plek = plekken(id);
         const vn = els[id].data?.verwijstNaar;
         const verwijst = vn && typeof vn === "object" ? vn.diagramId : null;
@@ -249,8 +253,8 @@ const SCHEMA_PLAN = {
           eigenschappen: { type: "object", additionalProperties: { type: "string" } },
           velden: {
             type: "array",
-            description: "attributen (naam + type) of waarden (alleen naam) erbij",
-            items: { type: "object", additionalProperties: false, required: ["naam"], properties: { naam: { type: "string" }, type: { type: "string" }, compartiment: { type: "string" } } },
+            description: "attributen (naam + type) of waarden (alleen naam) erbij; bij een bestaand veld (zelfde naam): alleen wat verandert (verplicht, type, nieuweNaam)",
+            items: { type: "object", additionalProperties: false, required: ["naam"], properties: { naam: { type: "string" }, type: { type: "string" }, verplicht: { type: "boolean" }, nieuweNaam: { type: "string" }, compartiment: { type: "string" } } },
           },
         },
       },
@@ -421,7 +425,8 @@ export function vraagVoorOpdracht(talen, opdracht, { mapNaam = "", submappen = [
     "- Een relatie tussen bestaande elementen: alleen een connector met hun ids; geen nieuw diagram nodig.",
     "- Een bestaand diagram hernoemen: in `diagrammen` met `bestaand` (het id) en de nieuwe `naam`.",
     "- Doorklikken: `verwijstNaar` op een element (nieuw of bestaand) met het id of de sleutel van een diagram — ook in een andere taal. Dubbelklik op het element opent dan dat diagram (zoals een deelbeeld onder een component).",
-    "- Velden (attributen van een klasse, waarden van een enumeratie): `velden` op het element, nieuw of bestaand ({\"bestaand\": \"<id>\", \"velden\": [{\"naam\": \"…\", \"type\": \"…\"}]}); bij waarden alleen de naam. Bestaande velden niet opnieuw.",
+    "- Velden (attributen van een klasse, waarden van een enumeratie): `velden` op het element, nieuw of bestaand ({\"bestaand\": \"<id>\", \"velden\": [{\"naam\": \"…\", \"type\": \"…\"}]}); bij waarden alleen de naam.",
+    "- Een bestaand veld wijzigen (staat onder WAT ER AL IS, \"(verplicht)\" = verplicht): noem het in `velden` met zijn huidige naam en ALLEEN wat verandert: `verplicht` (true/false), `type` (alleen als het type echt anders wordt) of `nieuweNaam`. Bv. alle velden optioneel: {\"naam\": \"bsn\", \"verplicht\": false} per veld. Een veld weghalen kan niet.",
     "- Iets in een container zetten (bv. een use case in een systeemkader): `in` met de sleutel of het id van de container — ook voor een bestaand element ({\"bestaand\": \"<id>\", \"in\": \"<container>\"}). Zeg in de uitleg alleen wat het plan echt doet.",
     "- Nieuwe diagrammen in een submap: zet `map` (naam); een bestaande submap met die naam wordt hergebruikt.",
     "- Een diagram onder een element hangen (bv. een activiteitendiagram onder een use case): zet `map` op de naam of het id van een element dat een uitwerking kan dragen — een bestaand element, of een nieuw element uit dit plan (zijn sleutel). Het diagram komt dan in de boom onder dat element.",
@@ -604,7 +609,15 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     if (!comps.length) { problemen.push(`"${naam}" (${type}) heeft geen velden; ${ruw.length} veld(en) overgeslagen.`); return null; }
     const gevraagd = tekst(ruw.find((v) => v?.compartiment)?.compartiment);
     const comp = comps.find((c) => c.id === gevraagd) || comps[0];
-    const velden = ruw.map((v) => ({ naam: tekst(typeof v === "string" ? v : v?.naam), type: comp.soort === "waarde" ? "" : tekst(v?.type) })).filter((v) => v.naam);
+    // verplicht/nieuweNaam (08-11): bij een bestaand veld een wijziging in plaats van een nieuw veld.
+    const velden = ruw
+      .map((v) => ({
+        naam: tekst(typeof v === "string" ? v : v?.naam),
+        type: comp.soort === "waarde" ? "" : tekst(v?.type),
+        ...(comp.soort !== "waarde" && typeof v?.verplicht === "boolean" ? { verplicht: v.verplicht } : {}),
+        ...(tekst(v?.nieuweNaam) ? { nieuweNaam: tekst(v.nieuweNaam) } : {}),
+      }))
+      .filter((v) => v.naam);
     return velden.length ? { compartiment: comp.id, fieldType: comp.fieldType, soort: comp.soort, velden } : null;
   };
   const nieuwVan = new Map(); // sleutel → element

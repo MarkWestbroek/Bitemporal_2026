@@ -400,6 +400,61 @@ test("velden in het plan (melding #4): waarden aan een bestaande enumeratie, att
   assert.match(w.samenvatting, /3 velden/);
 });
 
+test("velden wijzigen (Mark 08-11: 'alle velden optioneel'): bestaand veld → wijziging, geen nieuw veld; eerlijk effect", () => {
+  const descriptor = {
+    id: "canoniek", label: "Canoniek",
+    fieldTypes: [{ id: "attribuut", viewer: "naam-type" }],
+    elementTypes: [{ id: "gegevenselement", label: "GE", compartments: [{ id: "velden", fieldType: "attribuut" }] }],
+  };
+  const cm = profielSamenvatting(descriptor, "diagram05");
+  const veld = (naam, data) => ({ naam, fieldType: "attribuut", data });
+  const stand = {
+    mappen: {}, plaatsing: { "diagram05::d": null },
+    profielen: { diagram05: {
+      elements: { ge: { id: "ge", naam: "TestGE", elementType: "gegevenselement", compartimenten: [{ compartmentType: "velden", velden: [
+        veld("bsn", { typeLabel: "BSN", verplicht: true }),
+        veld("iban", { typeLabel: "IBAN", verplicht: true }),
+        veld("url", { typeLabel: "string" }),
+      ] }] } },
+      diagrams: { d: { id: "d", naam: "GE", nodes: [{ elementId: "ge", position: { x: 0, y: 0 } }] } },
+    } },
+  };
+  const b = bestaandInMap(stand, null, ["diagram05"]);
+  // De AI ziet type en verplicht.
+  assert.deepEqual(b[0].elementen[0].velden, ["bsn: BSN (verplicht)", "iban: IBAN (verplicht)", "url: string"]);
+  assert.match(vraagVoorOpdracht([cm], "x", { bestaand: b }).systeem, /Een bestaand veld wijzigen/);
+  const plan = controleerPlan({
+    uitleg: "",
+    elementen: [{ bestaand: "ge", velden: [
+      { naam: "bsn", verplicht: false },
+      { naam: "IBAN", verplicht: false, type: "IBAN" }, // type gelijk: geen wijziging
+      { naam: "url", verplicht: false }, // was al optioneel
+      { naam: "kvk", type: "KvK", verplicht: true }, // nieuw
+      { naam: "bsn", nieuweNaam: "burgerservicenummer" },
+    ] }],
+    connectoren: [],
+  }, [cm], b);
+  assert.deepEqual(plan.problemen, []);
+  const w = maakWijziging(plan, stand, { mapId: null, samenvattingen: [cm], nu: 1 });
+  const velden = w.profielen.diagram05.elements.ge.compartimenten[0].velden;
+  assert.deepEqual(velden.map((v) => [v.naam, v.data.typeLabel, !!v.data.verplicht]), [
+    ["burgerservicenummer", "BSN", false],
+    ["iban", "IBAN", false],
+    ["url", "string", false],
+    ["kvk", "KvK", true],
+  ]);
+  const [effect] = w.veldenEffect;
+  assert.deepEqual(effect.toegevoegd, ["kvk"]);
+  assert.deepEqual(effect.gewijzigd.map((g) => [g.naam, g.wat]), [["bsn", ["optioneel"]], ["iban", ["optioneel"]], ["bsn", ["naam → burgerservicenummer"]]]);
+  assert.deepEqual(effect.ongewijzigd, ["url"]);
+  assert.match(w.samenvatting, /1 veld, 3 velden gewijzigd/);
+
+  // Alleen bestaande velden noemen zonder iets te veranderen → geen wijzigingen (het voorstel zegt dat eerlijk).
+  const niets = maakWijziging(controleerPlan({ uitleg: "", elementen: [{ bestaand: "ge", velden: [{ naam: "url", type: "string" }] }], connectoren: [] }, [cm], b), stand, { mapId: null, samenvattingen: [cm], nu: 1 });
+  assert.equal(niets.samenvatting, "geen wijzigingen");
+  assert.deepEqual(niets.veldenEffect[0].ongewijzigd, ["url"]);
+});
+
 test("leesAntwoord: kale JSON, codeblok of tekst eromheen", () => {
   assert.deepEqual(leesAntwoord('{"a":1}'), { a: 1 });
   assert.deepEqual(leesAntwoord('Hier:\n```json\n{"a":2}\n```'), { a: 2 });

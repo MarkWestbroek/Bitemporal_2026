@@ -24,7 +24,7 @@ const server = new Server(
       "status (als beheerder), en zie je de Studio-projecten waar de gebruiker bij mag. Modellen: bekijk de talen " +
       "(modeltalen) en de map (project_bekijken), maak een plan, en laat model_wijzigen het eerst als voorstel " +
       "controleren; pas daarna toe (toepassen: true). Verwijs naar bestaande elementen met hun id. " +
-      "Wat de modeltools kunnen: elementen, relaties, diagrammen en mappen maken; elementen en diagrammen hernoemen; velden toevoegen; " +
+      "Wat de modeltools kunnen: elementen, relaties, diagrammen en mappen maken; elementen en diagrammen hernoemen; velden toevoegen en wijzigen (verplicht, type, naam); " +
       "in een container zetten; uitlijnen, opstellen (ook met de layouts van een taal) en verplaatsen; lijnvorm, " +
       "boomstijl en vaste uiteinden van relaties; verbanden " +
       "tussen talen; elementen en relaties weghalen. Wat ze NIET kunnen: diagrammen of mappen weghalen, kleuren, " +

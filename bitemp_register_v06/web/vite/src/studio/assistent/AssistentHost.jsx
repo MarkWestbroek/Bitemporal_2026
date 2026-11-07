@@ -120,9 +120,19 @@ function Voorstel({ voorstel, talen }) {
       {plan.verwijderen?.length > 0 && (
         <p className="ast-weg"><strong>Weg:</strong> {plan.verwijderen.map((v) => (v.soort === "relatie" ? `${typeLabel(v.profielId, v.type)} ${v.id}` : v.naam || v.id)).join(", ")}</p>
       )}
-      {plan.veldenBij?.length > 0 && plan.veldenBij.map((v) => (
-        <p key={v.id}><strong>{v.naam || v.id}, {v.soort === "waarde" ? "waarden" : "velden"} erbij:</strong> {v.velden.map((x) => (x.type ? `${x.naam}: ${x.type}` : x.naam)).join(", ")}</p>
-      ))}
+      {/* Velden: wat er echt gebeurt (08-11, Mark: het voorstel noemde bestaande velden "erbij"). */}
+      {(wijziging.veldenEffect || []).map((v) => {
+        const soort = v.soort === "waarde" ? "waarden" : "velden";
+        const plan1 = plan.veldenBij.find((x) => x.id === v.id);
+        const typeVan = (n) => plan1?.velden.find((x) => x.naam === n)?.type;
+        return (
+          <div key={v.id} data-testid="assistent-velden">
+            {v.toegevoegd.length > 0 && <p><strong>{v.naam || v.id}, {soort} erbij:</strong> {v.toegevoegd.map((n) => (typeVan(n) ? `${n}: ${typeVan(n)}` : n)).join(", ")}</p>}
+            {v.gewijzigd.length > 0 && <p><strong>{v.naam || v.id}, {soort} gewijzigd:</strong> {v.gewijzigd.map((g) => `${g.naam} (${g.wat.join(", ")})`).join(", ")}</p>}
+            {v.ongewijzigd.length > 0 && <p className="mld-hulp">{v.naam || v.id}: {v.ongewijzigd.length} {soort} al zo, niets veranderd ({v.ongewijzigd.slice(0, 8).join(", ")}{v.ongewijzigd.length > 8 ? ", …" : ""}).</p>}
+          </div>
+        );
+      })}
       {plan.verwijzingen?.length > 0 && (
         <p><strong>Doorklikken:</strong> {plan.verwijzingen.map((v) => `${v.naam || naam(v.element)} → ${v.naar.naam || v.naar.sleutel || v.naar.id}`).join("; ")}</p>
       )}
@@ -138,9 +148,9 @@ function Voorstel({ voorstel, talen }) {
           <ul>{[...(plan.nietGedaan || []), ...(wijziging.nietUitgevoerd || [])].map((t, i) => <li key={i}>{t}</li>)}</ul>
         </div>
       )}
-      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.diagramHernoemd?.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && !plan.posities?.length && !plan.verwijzingen?.length && !plan.verwijderen?.length && !plan.veldenBij?.length && (
+      {!mapNaam.size && !plan.diagrammen.length && !plan.connectoren.length && !plan.hernoemd.length && !plan.diagramHernoemd?.length && !plan.verbanden.length && !plan.leden?.length && !plan.opstelling?.length && !plan.posities?.length && !plan.verwijzingen?.length && !plan.verwijderen?.length && !(wijziging.veldenEffect || []).some((v) => v.toegevoegd.length || v.gewijzigd.length) && (
         // Eerlijk (melding #11): de uitleg kan iets beloven wat de assistent niet kan.
-        <p className="ast-niets" data-testid="assistent-niets">Dit voorstel verandert niets. De assistent kan elementen, relaties, diagrammen en mappen maken, hernoemen, in een kader zetten, uitlijnen en verplaatsen, verbanden leggen en elementen of relaties weghalen — geen diagrammen of mappen weghalen, en geen kleuren of lijnroutes.</p>
+        <p className="ast-niets" data-testid="assistent-niets">Dit voorstel verandert niets. De assistent kan elementen, relaties, diagrammen en mappen maken, hernoemen, in een kader zetten, uitlijnen en verplaatsen, verbanden leggen en elementen of relaties weghalen, velden toevoegen en wijzigen (verplicht, type, naam) — geen diagrammen of mappen weghalen, en geen kleuren of lijnroutes.</p>
       )}
     </div>
   );
@@ -350,7 +360,7 @@ export default function AssistentHost() {
                 )}
               </div>
             )}
-            <label className="mld-veld"><span>{voorstel ? "Bijsturen" : log.length ? "Verder" : "Wat moet de assistent doen?"}</span>
+            <label className="mld-veld"><span>{voorstel ? "Je reactie op het voorstel" : log.length ? "Verder" : "Wat moet de assistent doen?"}</span>
               <textarea rows={log.length || voorstel ? 2 : 4} value={opdracht} onChange={(e) => setOpdracht(e.target.value)} disabled={bezig}
                 onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && opdracht.trim() && !bezig) vraag(); }}
                 placeholder={voorstel ? "bv. noem de actor Klant, of: de associatie moet naar Leen boek"
@@ -364,7 +374,17 @@ export default function AssistentHost() {
                 <button type="button" className="mld-knop mld-knop--link" onClick={() => setInstellen(true)}>instellen</button>
                 {(log.length > 0 || voorstel) && <> · <button type="button" className="mld-knop mld-knop--link" onClick={nieuwGesprek} disabled={bezig}>nieuw gesprek</button></>}
               </span>
-              <button type="button" className={`mld-knop${voorstel ? "" : " mld-knop--hoofd"}`} onClick={vraag} disabled={bezig || !opdracht.trim()}>{bezig ? "Bezig…" : voorstel ? "Aanpassen" : "Vraag"}</button>
+              {/* "Bijsturen" (08-11, was "Aanpassen"): stuurt je reactie als vervolgbericht en levert een nieuw
+                  voorstel; er verandert pas iets bij Toepassen. */}
+              <button
+                type="button"
+                className={`mld-knop${voorstel ? "" : " mld-knop--hoofd"}`}
+                onClick={vraag}
+                disabled={bezig || !opdracht.trim()}
+                title={voorstel ? "Stuurt je reactie naar de assistent; je krijgt een nieuw voorstel. Er verandert pas iets bij Toepassen." : undefined}
+              >
+                {bezig ? "Bezig…" : voorstel ? "Bijsturen" : "Vraag"}
+              </button>
               {voorstel && !(voorstel.soort === "model" && voorstel.wijziging.samenvatting === "geen wijzigingen") && <button type="button" className="mld-knop mld-knop--hoofd" onClick={pasToe} disabled={bezig}>Toepassen</button>}
             </div>
           </>
