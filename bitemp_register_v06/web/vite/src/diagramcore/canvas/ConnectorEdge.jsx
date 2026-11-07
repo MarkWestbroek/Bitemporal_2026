@@ -48,7 +48,7 @@ import {
   useStore,
   useInternalNode,
 } from "@xyflow/react";
-import { zwevendeUiteinden, nodeRechthoek, verschuifUiteinden } from "./zwevendeRand.js";
+import { zwevendeUiteinden, nodeRechthoek, verschuifUiteinden, boomPunten } from "./zwevendeRand.js";
 import { InlineNaamContext } from "./inlineNaam.js";
 import NaamEditor from "./NaamEditor.jsx";
 
@@ -289,26 +289,12 @@ function ConnectorEdge({
     const midI = Math.floor(pts.length / 2);
     return [pad, (pts[midI - 1].x + pts[midI].x) / 2, (pts[midI - 1].y + pts[midI].y) / 2];
   };
-  // Boomstijl (EA "tree style"): korte stam uit de ouder, één dwarslat op
-  // váste afstand van de ouder-handle, en per kind een rechte poot. Doordat
-  // de lat-positie alleen van de bron afhangt, delen alle kinderen van
-  // dezelfde ouder één lat — óók als ze op ongelijke hoogtes staan.
+  // Boomstijl (EA "tree style"): stam uit de ouder, één dwarslat op vaste afstand van de ouder,
+  // per kind een rechte poot (zwevendeRand.boomPunten, gedeeld met de tekenaar). Bij
+  // `boomOuder: "doel"` (generalisatie: kind → ouder, 07-11) hoort de lat bij het doel.
   const boomPad = () => {
-    const LAT = 40;
-    if (sourcePosition === "left" || sourcePosition === "right") {
-      const latX = sourceX + (sourcePosition === "right" ? LAT : -LAT);
-      return [
-        `M ${sourceX} ${sourceY} L ${latX} ${sourceY} L ${latX} ${targetY} L ${targetX} ${targetY}`,
-        latX,
-        (sourceY + targetY) / 2,
-      ];
-    }
-    const latY = sourceY + (sourcePosition === "top" ? -LAT : LAT);
-    return [
-      `M ${sourceX} ${sourceY} L ${sourceX} ${latY} L ${targetX} ${latY} L ${targetX} ${targetY}`,
-      (sourceX + targetX) / 2,
-      latY,
-    ];
+    const pts = boomPunten({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition }, p.boomOuder === "doel");
+    return [pts.map((q, i) => `${i ? "L" : "M"} ${q.x} ${q.y}`).join(" "), (pts[1].x + pts[2].x) / 2, (pts[1].y + pts[2].y) / 2];
   };
   const [edgePath, labelX, labelY] = knikken
     ? knikPad()

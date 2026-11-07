@@ -403,6 +403,8 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
             // Verschuiving langs de zijden (per diagram, 06-11); zonder waarde spreidt
             // spreidParallel() hieronder meer lijnen tussen hetzelfde paar.
             ...(typeof lijn.verschuiving === "number" ? { verschuiving: lijn.verschuiving } : {}),
+            // Boomstijl met de ouder aan het doel (generalisatie: kind → ouder, 07-11).
+            ...(lijn.boomOuder === "doel" ? { boomOuder: "doel" } : {}),
             zwevendBron,
             zwevendDoel,
             // Echte omtrek (ruit/ellips) voor het aanhechtpunt — zie zwevendeRand.

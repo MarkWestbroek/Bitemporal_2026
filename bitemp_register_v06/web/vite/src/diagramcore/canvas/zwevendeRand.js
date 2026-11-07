@@ -372,3 +372,27 @@ export function verschuifUiteinden(u, d, bronRect = null, doelRect = null) {
   const t = schuif(u.targetX, u.targetY, u.targetPosition, doelRect);
   return { ...u, sourceX: s.x, sourceY: s.y, targetX: t.x, targetY: t.y };
 }
+
+/**
+ * De vier punten van een boomstijl-lijn (EA "tree style"): korte stam uit de ouder, één dwarslat
+ * op vaste afstand van de ouder, rechte poot naar het kind. Doordat de lat alleen van de ouder
+ * afhangt, delen alle kinderen één lat, ook op ongelijke hoogtes. `ouderAanDoel` (generalisatie:
+ * kind → ouder, Mark 07-11): de lat hoort bij het doel; het pad loopt nog steeds van bron naar
+ * doel, zodat de pijl aan het doel blijft. Puur; gedeeld door canvas en tekenaar.
+ * @param {{sourceX:number, sourceY:number, targetX:number, targetY:number, sourcePosition?:string, targetPosition?:string}} u
+ * @param {boolean} [ouderAanDoel]
+ * @param {number} [lat] - afstand van de lat tot de ouder
+ * @returns {{x:number, y:number}[]}
+ */
+export function boomPunten(u, ouderAanDoel = false, lat = 40) {
+  if (ouderAanDoel) {
+    return boomPunten({ sourceX: u.targetX, sourceY: u.targetY, sourcePosition: u.targetPosition, targetX: u.sourceX, targetY: u.sourceY }, false, lat).reverse();
+  }
+  const { sourceX, sourceY, targetX, targetY, sourcePosition } = u;
+  if (sourcePosition === "left" || sourcePosition === "right") {
+    const latX = sourceX + (sourcePosition === "right" ? lat : -lat);
+    return [{ x: sourceX, y: sourceY }, { x: latX, y: sourceY }, { x: latX, y: targetY }, { x: targetX, y: targetY }];
+  }
+  const latY = sourceY + (sourcePosition === "top" ? -lat : lat);
+  return [{ x: sourceX, y: sourceY }, { x: sourceX, y: latY }, { x: targetX, y: latY }, { x: targetX, y: targetY }];
+}

@@ -29,7 +29,7 @@ import { vorm } from "../types/shapeType.js";
 import { num } from "../../diagramsvg/svg.js";
 import { veiligeKleur } from "../../diagramsvg/thema.js";
 import { tekstBreedte } from "../../diagramsvg/tekstmaat.js";
-import { zwevendeUiteinden, verschuifUiteinden } from "../canvas/zwevendeRand.js";
+import { zwevendeUiteinden, verschuifUiteinden, boomPunten } from "../canvas/zwevendeRand.js";
 import { isPuntNode } from "./voorkomen.js";
 
 const DASHES = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4", gestippeld: "2 3" };
@@ -135,15 +135,10 @@ function lusPad(u, hoekig) {
   return [`M ${num(s.x)} ${num(s.y)} C ${num(c1.x)} ${num(c1.y)}, ${num(c2.x)} ${num(c2.y)}, ${num(t.x)} ${num(t.y)}`, (c1.x + c2.x) / 2, (c1.y + c2.y) / 2];
 }
 
-/** Boomstijl: korte stam, één dwarslat op vaste afstand van de ouder, rechte poot per kind. */
-function boomPad(u) {
-  const { sourceX, sourceY, targetX, targetY, sourcePosition } = u;
-  if (sourcePosition === "left" || sourcePosition === "right") {
-    const latX = sourceX + (sourcePosition === "right" ? BOOM_LAT : -BOOM_LAT);
-    return [padVan([{ x: sourceX, y: sourceY }, { x: latX, y: sourceY }, { x: latX, y: targetY }, { x: targetX, y: targetY }]), latX, (sourceY + targetY) / 2];
-  }
-  const latY = sourceY + (sourcePosition === "top" ? -BOOM_LAT : BOOM_LAT);
-  return [padVan([{ x: sourceX, y: sourceY }, { x: sourceX, y: latY }, { x: targetX, y: latY }, { x: targetX, y: targetY }]), (sourceX + targetX) / 2, latY];
+/** Boomstijl (punten uit zwevendeRand.boomPunten, zoals het canvas); label op het midden van de lat. */
+function boomPad(u, ouderAanDoel = false) {
+  const pts = boomPunten(u, ouderAanDoel, BOOM_LAT);
+  return [padVan(pts), (pts[1].x + pts[2].x) / 2, (pts[1].y + pts[2].y) / 2];
 }
 
 /** Polylijn door de knikken; het label op het midden van het middelste segment. */
@@ -275,7 +270,7 @@ export function tekenLijnen({ edges, boxen, elements, thema, idPrefix }) {
       : isLus
         ? lusPad(u, p.vorm === "hoekig")
         : p.vorm === "boom"
-          ? boomPad(u)
+          ? boomPad(u, p.boomOuder === "doel")
           : p.vorm === "hoekig"
             ? getSmoothStepPath({ ...u, borderRadius: 4 })
             : p.vorm === "recht"

@@ -8,6 +8,18 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Gerelateerde elementen toevoegen…** (rechtsklik op een element; Mark, 07-11): een venster met
+  wat via een verbinding (elk soort) aan het element hangt en nog niet op het diagram staat. Een
+  relatie neemt haar andere uiteinde mee. Keuzes: diepte (1, 2, 3, alles) en daarna auto-layout
+  (standaard uit). Plaatsing in ringen rond de start, één undo-stap.
+- **Navigeren via relaties**: in het relatiepaneel selecteert de naam van het andere element dát
+  element (de relatie zelf blijft klikbaar); in de inspector van een verbinding zijn de uiteinden
+  "A → B" klikbaar.
+- **Boomstijl naar alle kanten**: ouder boven, onder, links of rechts (ook bij één lijn).
+  Bij overerving is de ouder het doel van de generalisatie (kind → ouder): "Kinderen in boomstijl"
+  neemt generalisaties mee en de kanten staan niet meer omgekeerd; de lat ligt bij de ouder.
+
 ### Gewijzigd
 - **Inrichting: aanvraagtype als relatie** (besluit Mark 07-11: een GE verwijst nooit naar een
   entiteit). Het objecttype krijgt `aanvraagtype: {code, omschrijving}` via de ingebedde relatie

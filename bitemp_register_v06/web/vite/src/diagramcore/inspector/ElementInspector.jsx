@@ -179,14 +179,21 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorC
   );
 }
 
-/** Naam van een uiteinde van een connector, met zijn type erachter (klein). */
-function UiteindeNaam({ id, elements }) {
+/** Naam van een uiteinde van een connector; klik selecteert het (Mark, 07-11). */
+function UiteindeNaam({ id, elements, onSelecteer }) {
   const el = elements?.[id];
   if (!el) return <span className="dc-inspector-uiteinde">{id}</span>;
+  if (!onSelecteer) {
+    return (
+      <span className="dc-inspector-uiteinde" title={el.elementType}>
+        <strong>{el.naam || "(naamloos)"}</strong>
+      </span>
+    );
+  }
   return (
-    <span className="dc-inspector-uiteinde" title={el.elementType}>
+    <button type="button" className="dc-inspector-uiteinde dc-inspector-uiteinde-knop" title={`Selecteer ${el.naam || id}`} onClick={() => onSelecteer(id)}>
       <strong>{el.naam || "(naamloos)"}</strong>
-    </span>
+    </button>
   );
 }
 
@@ -200,6 +207,7 @@ export default function ElementInspector({
   onUpdate,
   onVerwijderVanDiagram,
   onVerwijderUitModel,
+  onSelecteerElement,
 }) {
   const compartimenten = element.compartimenten || [];
 
@@ -237,9 +245,9 @@ export default function ElementInspector({
           zien wie A en B zijn"). Voor elke connector, in elke taal: bron → doel. */}
       {element.source && element.target && (
         <p className="dc-inspector-uiteinden" data-testid="inspector-uiteinden">
-          <UiteindeNaam id={element.source} elements={editorContext?.elements} />
+          <UiteindeNaam id={element.source} elements={editorContext?.elements} onSelecteer={onSelecteerElement} />
           <span className="dc-inspector-pijl" aria-label="naar"> → </span>
-          <UiteindeNaam id={element.target} elements={editorContext?.elements} />
+          <UiteindeNaam id={element.target} elements={editorContext?.elements} onSelecteer={onSelecteerElement} />
         </p>
       )}
       {meldingen.length > 0 && (
