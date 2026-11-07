@@ -50,6 +50,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   neemt generalisaties mee en de kanten staan niet meer omgekeerd; de lat ligt bij de ouder.
 
 ### Opgelost
+- **Leesrichtingspijl draait mee met de lijn** (Mark, 07-11: "horizontaal goed, verticaal draait
+  niet, diagonaal ook niet"): de dikke driehoek vóór "label heen"/"label terug" bij een relatie
+  in het canonieke model wijst nu langs de lijn (heen = bron → doel), op het canvas én in de
+  SVG van de render-API; bij een hoekige lijn in stappen van 90°.
+  `diagramcore/canvas/leesrichting.js`; e2e `56-studio-leesrichting`.
 - **Slepen in de grafische kruisverbanden-weergave** (Mark, 07-11: "waarom slepen de elementen zo
   traag?"): een knoop bleef tijdens het slepen staan en sprong pas bij loslaten naar zijn plek
   (gecontroleerde React Flow-knopen zonder `onNodesChange`). Nu volgt hij de muis; de positie gaat

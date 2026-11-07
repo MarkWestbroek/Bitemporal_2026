@@ -49,6 +49,7 @@ import {
   useInternalNode,
 } from "@xyflow/react";
 import { zwevendeUiteinden, nodeRechthoek, verschuifUiteinden, boomPunten } from "./zwevendeRand.js";
+import { splitsLeesrichting, leesrichtingHoek, driehoekPunten } from "./leesrichting.js";
 import { InlineNaamContext } from "./inlineNaam.js";
 import NaamEditor from "./NaamEditor.jsx";
 
@@ -852,16 +853,37 @@ function ConnectorEdge({
                 cursor: magSlepen ? "move" : undefined,
               }}
             >
-              {label.delen.map((deel, j) => (
-                <span
-                  key={j}
-                  className={SOORT_KLASSE[deel.soort] || undefined}
-                  data-dc-naam={deel.veld === "naam" ? "" : undefined}
-                  style={deel.kleur ? { color: deel.kleur } : undefined}
-                >
-                  {deel.tekst}
-                </span>
-              ))}
+              {label.delen.map((deel, j) => {
+                // Leesrichtingspijl ("▶ heen", "◀ terug"): een driehoek die langs de lijn wijst
+                // (leesrichting.js; Mark 07-11: "verticaal draait niet").
+                const { richting, rest } = j === 0 ? splitsLeesrichting(deel.tekst) : { richting: null, rest: deel.tekst };
+                const hoek = richting
+                  ? leesrichtingHoek(richting, { x: sourceX, y: sourceY }, { x: targetX, y: targetY }, { hoekig: p.vorm === "hoekig" && !knikkenRand })
+                  : 0;
+                return (
+                  <span
+                    key={j}
+                    className={SOORT_KLASSE[deel.soort] || undefined}
+                    data-dc-naam={deel.veld === "naam" ? "" : undefined}
+                    style={deel.kleur ? { color: deel.kleur } : undefined}
+                  >
+                    {richting && (
+                      <svg
+                        className="dc-leesrichting"
+                        data-hoek={hoek}
+                        width="0.8em"
+                        height="0.8em"
+                        viewBox="-6 -6 12 12"
+                        aria-label={richting === "heen" ? "leesrichting heen" : "leesrichting terug"}
+                        style={{ display: "inline-block", verticalAlign: "-0.05em", marginRight: "0.3em", overflow: "visible" }}
+                      >
+                        <polygon points={driehoekPunten(0, 0, 11, hoek)} fill="currentColor" />
+                      </svg>
+                    )}
+                    {rest}
+                  </span>
+                );
+              })}
             </div>
           </EdgeLabelRenderer>
         );

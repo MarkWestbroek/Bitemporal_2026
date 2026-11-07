@@ -1784,6 +1784,16 @@ fase 2 een **bewerkbare sandbox**:
   argument mee in `onVerwijder(ids, losseConnectorIds)`. De activiteit doet alles binnen
   `inEenUndoStap(useStore, fn)` (`createDiagramStore.js`): historie op pauze, daarna precies één
   stap. e2e `55-studio-undo-van-diagram.spec.js`.
+- **Leesrichtingspijl langs de lijn** (2026-11-07, Mark: "horizontaal goed, verticaal draait
+  niet, diagonaal ook niet"). Een profiel zet de leesrichting als teken vóór de naam in een label
+  (canoniek-uml `edgeLabels`: `▶ naamLabelHeen`, `◀ naamLabelTerug`). Beide tekenaars halen dat
+  teken eraf en tekenen een gevulde driehoek die langs de lijn wijst, zoals EA: heen = van bron
+  naar doel, terug = andersom; bij een hoekige lijn zonder knikken op de dominante as (stappen
+  van 90°), anders langs de rechte lijn bron → doel. De tekst blijft horizontaal. Code:
+  `diagramcore/canvas/leesrichting.js` (`splitsLeesrichting`, `leesrichtingHoek`,
+  `driehoekPunten`; test), gebruikt in `ConnectorEdge.jsx` (inline-SVG, `.dc-leesrichting`
+  met `data-hoek`) en `tekenaar/lijnen.js` (polygon in de labelchip). e2e
+  `56-studio-leesrichting.spec.js`.
 - **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
   Escape is nodig binnen een container zonder `achtergrond` (lane, package,
   stage): daar is geen leeg vlak — elke klik selecteert de container. In
