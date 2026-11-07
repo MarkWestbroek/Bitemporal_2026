@@ -6,6 +6,7 @@ app
 # rebuild-kopieën van model/ (devloop maakt zelf een verse baseline; zie Dockerfile.devloop)
 _baseline
 _pre_rebuild
+_image
 _tmp
 _temp
 perf-results

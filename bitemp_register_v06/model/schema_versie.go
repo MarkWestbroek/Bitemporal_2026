@@ -37,4 +37,17 @@ type SchemaVersie struct {
 	BronProjectID     string `json:"bron_project_id,omitempty" bun:"bron_project_id"`
 	BronProjectVersie *int64 `json:"bron_project_versie,omitempty" bun:"bron_project_versie"`
 	BronTotVolgnummer *int64 `json:"bron_tot_volgnummer,omitempty" bun:"bron_tot_volgnummer"`
+	// GebouwdeDomeinen: de domeinen die het register na de rebuild van deze versie had (07-11-2026,
+	// besluit Mark: "expliciet wat er gegenereerd wordt"). De startup-rebuild bouwt precies deze
+	// (plus het standaardpakket) en laat de rest weg, ook als het model meer domeinen heeft. Leeg
+	// bij oudere versies: dan bouwt de startup-rebuild zoals vroeger alle domeinen van het model
+	// bovenop de ingebakken code. Zie docs/DEVLOOP.md §"Domeinen van het register".
+	GebouwdeDomeinen []GebouwdDomein `json:"gebouwde_domeinen,omitempty" bun:"gebouwde_domeinen,type:jsonb"`
+}
+
+// GebouwdDomein is één domein van het register: de domeinnaam uit het model en de prefix van
+// de gegenereerde bestanden (model/<prefix>_*.go), bv. {"CG", "cg"} of {"np-loc", "np_loc"}.
+type GebouwdDomein struct {
+	Domein string `json:"domein"`
+	Prefix string `json:"prefix"`
 }

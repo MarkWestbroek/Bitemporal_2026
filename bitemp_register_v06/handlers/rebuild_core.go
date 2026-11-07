@@ -56,7 +56,12 @@ func prefixVoorRun(d RebuildDomeinSpec) string {
 // backup van model/, codegen per domein, go build -tags devtools, baseline bijwerken, en de
 // marker met de modelhash. Bij een fout is model/ teruggedraaid naar de backup; stappen bevat
 // dan wat er tot dan toe gebeurd is en buildOutput de uitvoer van codegen of go build.
-func voerCodegenEnBuildUit(appDir string, modelBytes []byte, domeinRuns []RebuildDomeinSpec) (stappen []string, buildOutput []byte, err error) {
+//
+// houden != nil: "precies" (rebuild_domeinen.go) — het register krijgt alleen de domeinen met
+// deze prefixen, die van domeinRuns en het standaardpakket; de gegenereerde bestanden van alle
+// andere domeinen gaan eruit vóór codegen, en na codegen controleert de pijplijn dat geen
+// overgebleven domein naar een weggelaten type verwijst. houden == nil: additief, zoals vroeger.
+func voerCodegenEnBuildUit(appDir string, modelBytes []byte, domeinRuns []RebuildDomeinSpec, houden []string) (stappen []string, buildOutput []byte, err error) {
 	// Stap 0a: handmatige plumbing-bestanden eerst naar de baseline, zodat een rebuild geen
 	// recente codewijzigingen terugdraait.
 	meldingen, err := syncBaselineKernModelBestanden(appDir)
@@ -92,6 +97,25 @@ func voerCodegenEnBuildUit(appDir string, modelBytes []byte, domeinRuns []Rebuil
 		return stappen, nil, err
 	} else if melding != "" {
 		stappen = append(stappen, melding)
+	}
+
+	// Stap 0d (precies): domeinen die niet in het register horen weglaten.
+	var weg weggelatenDomeinen
+	if houden != nil {
+		alles := append(append([]string{}, houden...), prefixen...)
+		weg, err = laatDomeinenWeg(filepath.Join(appDir, "model"), alles)
+		if err != nil {
+			if rbMsg, rbErr := rollbackModelDirectory(appDir); rbErr == nil {
+				stappen = append(stappen, rbMsg)
+			}
+			return stappen, nil, err
+		}
+		if len(weg.prefixen) > 0 {
+			stappen = append(stappen, fmt.Sprintf("Precies: %d domein(en) weggelaten: %s (%d tabellen niet meer in het register)",
+				len(weg.prefixen), strings.Join(weg.prefixen, ", "), len(weg.tabellen)))
+		} else {
+			stappen = append(stappen, "Precies: geen domeinen weg te laten")
+		}
 	}
 
 	// Stap 1: het model tijdelijk wegschrijven voor codegen.
@@ -131,6 +155,15 @@ func voerCodegenEnBuildUit(appDir string, modelBytes []byte, domeinRuns []Rebuil
 			return stappen, codegenOutput, fmt.Errorf("codegen [%d/%d] mislukt (domein=%s): %v\nOutput: %s", i+1, len(domeinRuns), run.Domein, err, string(codegenOutput))
 		}
 		stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen domein=%s succesvol", i+1, len(domeinRuns), run.Domein))
+	}
+
+	// Stap 2b (precies): geen verwijzingen van overgebleven naar weggelaten domeinen.
+	if fouten := verwijzingenNaarWeggelaten(filepath.Join(appDir, "model"), weg); len(fouten) > 0 {
+		stappen = append(stappen, "Verwijzingen naar weggelaten domeinen gevonden")
+		if rbMsg, rbErr := rollbackModelDirectory(appDir); rbErr == nil {
+			stappen = append(stappen, rbMsg)
+		}
+		return stappen, []byte(strings.Join(fouten, "\n")), &verwijzingenFout{plekken: fouten}
 	}
 
 	// Stap 3: go build naar een tijdelijk pad. -tags devtools: de devloop-binary moet zijn eigen
@@ -340,12 +373,36 @@ func VoerStartupRebuildUit() (herbouwd bool, stappen []string, err error) {
 
 	runs, melding := domeinRunsUitModel(modelBytes, appDir)
 	stappen = append(stappen, melding)
+
+	// Heeft de actieve versie een domeinenlijst (07-11-2026), dan bouwen we precies die: de
+	// domeinen van de lijst die in het model staan, en de rest van het image gaat eruit
+	// (behalve het standaardpakket). Zonder lijst (oudere versie) blijft het additief.
+	var houden []string
+	gebouwd, err := laadGebouwdeDomeinenVanActieveVersie(context.Background())
+	if err != nil {
+		stappen = append(stappen, "Waarschuwing: domeinenlijst van de actieve versie niet leesbaar ("+err.Error()+"); alle domeinen van het model bouwen")
+	}
+	if len(gebouwd) > 0 {
+		opLijst := map[string]bool{}
+		for _, g := range gebouwd {
+			opLijst[strings.ToLower(g.Prefix)] = true
+			houden = append(houden, g.Prefix)
+		}
+		var gekozen []RebuildDomeinSpec
+		for _, r := range runs {
+			if opLijst[strings.ToLower(r.Prefix)] && !isHandgemaaktPakket(r.Prefix) {
+				gekozen = append(gekozen, r)
+			}
+		}
+		runs = gekozen
+		stappen = append(stappen, fmt.Sprintf("Domeinenlijst van de actieve versie: %s; gebouwd uit het model: %s", gebouwdeNamen(gebouwd), runNamen(runs)))
+	}
 	if len(runs) == 0 {
-		stappen = append(stappen, "Geen domeinen in het model; niets te doen")
+		stappen = append(stappen, "Geen domeinen in het model (of geen van de lijst); niets te doen")
 		return false, stappen, nil
 	}
 
-	s2, uit, err := voerCodegenEnBuildUit(appDir, modelBytes, runs)
+	s2, uit, err := voerCodegenEnBuildUit(appDir, modelBytes, runs, houden)
 	stappen = append(stappen, s2...)
 	if err != nil {
 		_ = os.WriteFile(mislukteSchemaMarkerPad(appDir), []byte(hash+"\n"), 0644)

@@ -161,8 +161,9 @@ register uit het canonieke model van een Studio-project. Code: `handlers/rebuild
 2. De render-sidecar maakt er V3 van (`POST /export/v3`, render 0.3.5 of later). Dat is dezelfde
    terugreis als *Exporteer V3* in de Studio, inclusief de modelmigraties (overerving, «gebruikt»).
    Er is geen Go-kopie van die omzetting. De envelop van de export wordt uitgepakt.
-3. Daarna volgt het gewone pad. Zonder `domeinen` worden **alle** domeinen van het model gebouwd,
-   zoals bij de startup-rebuild.
+3. Daarna volgt het gewone pad. Welke domeinen er gebouwd worden, staat in
+   [Domeinen van het register](#domeinen-van-het-register-07-11-2026). Zonder `domeinen` zijn dat
+   sinds api 0.22.0 de **bestaande** domeinen (tot 0.21.x waren het alle domeinen van het model).
 4. De gebouwde versie wordt actief, met `bron: "studio-project"` en de herkomst `bron_project_id`,
    `bron_project_versie` en `bron_tot_volgnummer`. Die staan ook in `GET /api/schema/versies`, zodat
    je ziet of het register achterloopt op de Studio.
@@ -189,6 +190,86 @@ buiten devloop. Het antwoord is `{model, meldingen, bron}` met de headers `X-Omn
 mee; `bron.achterstand` zegt hoeveel wijzigingen er niet in zitten. Dit is handig om de pariteit
 met een V3-bestand te controleren.
 
+### Domeinen van het register (07-11-2026)
+
+Besluit Mark: een model mag meer domeinen hebben dan er gegenereerd worden ("goed
+bouwmateriaal"), maar wat er in het register komt moet expliciet zijn. Code:
+`handlers/rebuild_domeinen.go`.
+
+**Kiezen** in `POST /admin/rebuild`:
+
+| Body | Wat er gebouwd wordt |
+|---|---|
+| `"domeinen": ["inrichting", "aanvraag"]` | die domeinen. Een kale naam mag; de objectvorm `{"domein", "prefix"}` blijft werken. Een naam die niet in het model staat → 400 `reden: "domeinen"`. |
+| `"alle_domeinen": true` | alle domeinen van het model (bewust kiezen) |
+| `project_id` zonder lijst | de **bestaande** domeinen: wat het register nu heeft en ook in het model staat |
+| geen van beide (model in de body, schema-versie, …) | zoals vroeger: één domein, afgeleid uit het model |
+
+`gegevenstypen` hoort bij het standaardpakket en blijft dus altijd staan. Het wordt **niet**
+vanzelf opnieuw gegenereerd. `gegevenstypen_datatype_registry.go` is het handgemaakte, canonieke
+bestand met de datatypes van de NL-overheid-voorkeurslijst, en het vervangt duplicaten uit andere
+domeinen. Codegen zou dat bestand overschrijven met de versie uit het model. Alleen een
+expliciete lijst met `gegevenstypen`, of `alle_domeinen`, genereert het uit het model. Een nieuw
+algemeen datatype, zoals `GitAdres`, zet je dus in dat bestand; dat is een codewijziging. Go-aliassen
+krijgen alle datatypes van het model sowieso (`datatype_aliases.go`), dus het compileert altijd.
+Daarom controleert `precies` ook datatypes (zie hieronder).
+
+**`"precies": true`** maakt de keuze de samenstelling van het register. Domeinen die niet gekozen
+zijn en niet bij het standaardpakket horen, gaan eruit: hun zeven gegenereerde bestanden en hun
+init-aanroepen in `metaregistry_plumbing.go`. Dat is hetzelfde mechanisme als
+`scripts/bouw-domeinen.ps1`. Zonder `precies` blijft het additief: de rest blijft staan.
+
+Het **standaardpakket** gaat altijd mee: `register`, `ide_bestanden` (allebei compile-time nodig),
+`configuratie`, `beheer`, `financieel` en `gegevenstypen` (`standaardDomeinPrefixen`). Komt er een
+nieuw systeemdomein bij, zet het dan in dezelfde release in die lijst. Anders haalt de
+startup-rebuild het weg op een container waarvan de actieve versie een oudere lijst heeft.
+
+Na de codegen controleert `precies` of een overgebleven domein naar een weggelaten type verwijst.
+Het kijkt naar relatie-doelen, onderliggende elementen, secundaire relatiekolommen en
+`$ref`-velden. Het kijkt ook naar velden met een datatype (`schema:"datatype:X"`) waarvan de
+registryregel alleen in een weggelaten domein stond, en dat nergens anders gedefinieerd is.
+Voorbeeld: `inrichting.Component` gebruikt `GitAdres`, dat in CG staat. Zulke verwijzingen compileren vaak gewoon, maar de relatie werkt dan niet. De
+rebuild weigert in dat geval, draait `model/` terug en noemt de plek. Bekend geval (07-11):
+`register_metaregistry.go` heeft een relatie van `Referentielijst` naar `AdellijkeTitel` uit
+np-loc. Zolang dat zo is, kan np-loc niet weg.
+
+**Onthouden.** Elke rebuild die een versie activeert, zet de domeinen die het register daarna
+heeft op die versie: `schema_versies.gebouwde_domeinen`, `[{domein, prefix}]`. Dat geldt ook bij
+`schema_bron: "actief"`, op de actieve versie. De lijst staat ook in het antwoord
+(`gebouwde_domeinen`) en in `GET /api/schema/versies`. De startup-rebuild bouwt daarna **precies**
+die lijst: zie hieronder.
+
+**Wees-tabellen opruimen.** Een rebuild gooit nooit tabellen weg. Wat er na `precies` overblijft,
+ruim je in twee stappen op. Allebei zijn alleen beschikbaar in een devloop, met het
+beheerwachtwoord (`handlers/wees_tabellen.go`):
+
+1. `GET /admin/wees-tabellen` geeft de tabellen van domeinen die de draaiende code niet meer
+   kent, met per tabel het aantal rijen. Daarnaast het aantal `wijziging`-rijen dat naar hun types
+   wijst, en `leeg: true/false`. Dit verandert niets.
+2. `POST /admin/wees-tabellen/opruimen {"tabellen": [...]}` gooit ze weg. Dat gebeurt alleen als
+   de lijst precies gelijk is aan wat stap 1 nu geeft, en `leeg` waar is: alle tabellen leeg en
+   geen enkele wijziging. Alles gaat in één transactie met één `DROP TABLE a, b, …` zonder
+   CASCADE. Een view of tabel die eraan hangt laat het geheel mislukken (409); er is dan niets
+   weggegooid.
+
+Kandidaten komen alleen uit gegenereerde registerbestanden:
+- `_image/model/`: de onveranderde kopie die `Dockerfile.devloop` bij de build maakt;
+- `_pre_rebuild/model/`;
+- `_baseline/model/`;
+- `model/`.
+
+Een systeemtabel of handgemaakte tabel staat daar niet in en komt er dus nooit in.
+
+Voorbeeld (Fundament, na de rebuild die de demo-domeinen weglaat):
+
+```bash
+curl -X POST "$API/admin/rebuild" -H "X-Beheer-Wachtwoord: $PW" -H 'Content-Type: application/json' \
+  -d '{"project_id":"<id>","domeinen":["inrichting","aanvraag","parkeren","relatiebeheer","zorg"],"precies":true}'
+curl "$API/admin/wees-tabellen" -H "X-Beheer-Wachtwoord: $PW"            # bekijken
+curl -X POST "$API/admin/wees-tabellen/opruimen" -H "X-Beheer-Wachtwoord: $PW" \
+  -H 'Content-Type: application/json' -d '{"tabellen":[ …de lijst uit het overzicht… ]}'
+```
+
 ### Startup-rebuild: de actieve databaseversie als bron van waarheid (sinds 22-10-2026)
 
 Op Kubernetes (Fundament) is het bestandssysteem van de container weg bij elke herstart of
@@ -202,7 +283,12 @@ container gegenereerd was. Daarom roept `scripts/devloop-entrypoint.sh` in conta
    gelijk → niets doen;
 3. anders: codegen voor **elk domein dat in het model voorkomt** (prefix = die van het bestaande
    `model/<prefix>_metaregistry.go`, anders de domeinnaam met `-` → `_`), `go build -tags devtools`,
-   zelftest (zie hieronder), baseline bijwerken, exit 43 → de entrypoint start de nieuwe binary;
+   zelftest (zie hieronder), baseline bijwerken, exit 43 → de entrypoint start de nieuwe binary.
+   **Heeft de actieve versie `gebouwde_domeinen`** (sinds api 0.22.0 / devloop 0.25.0), dan
+   alleen de domeinen van die lijst die in het model staan, als `precies`. Wat het image verder
+   meebrengt gaat eruit, behalve het standaardpakket. Zonder lijst (oudere versies) blijft het
+   additief, zoals vroeger. De kolom wordt pas gelezen als hij bestaat, want deze stap draait vóór
+   de migraties;
 4. mislukt het, dan start de ingebakken binary en staat de reden in het log. De hash van de mislukte
    versie komt in `/app/mislukte-schema.sha256`; bij een volgende start wordt die versie **niet
    opnieuw** gebouwd (anders kost elke herstart minuten en loopt de pod in een lus). Een andere
@@ -498,7 +584,13 @@ Er wordt een domein gegenereerd dat er voorheen niet was.
 
 #### 3. Domein verwijderen
 
-Een domein dat voorheen bestond wordt niet meer meegenomen. **Let op:** dit scenario heeft momenteel nog geen volledige ondersteuning in de rebuild-flow.
+Een domein dat voorheen bestond wordt niet meer meegenomen.
+
+> **Sinds 07-11-2026 (api 0.22.0):** `"precies": true` doet dit. Het verwijdert de zeven bestanden
+> en de init-aanroepen, en weigert bij verwijzingen naar het weggelaten domein. De tabellen ruim je
+> daarna op met `/admin/wees-tabellen`. Zie
+> [Domeinen van het register](#domeinen-van-het-register-07-11-2026). De tabel hieronder beschrijft
+> de additieve rebuild zonder `precies`.
 
 | Aspect | Huidige situatie | Nodig |
 |--------|-----------------|-------|

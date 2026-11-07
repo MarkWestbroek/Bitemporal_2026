@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -183,6 +184,10 @@ func TestActiveerGebouwdModel_MetHerkomst(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	// Een testdatabase van vóór 0.22.0 heeft de kolom nog niet (dbsetup voegt hem toe).
+	if _, err := db.ExecContext(ctx, `ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS gebouwde_domeinen JSONB`); err != nil {
+		t.Fatal(err)
+	}
 	t.Cleanup(func() {
 		_, _ = db.NewDelete().Model((*model.SchemaVersie)(nil)).Where("bron_project_id = ? OR opmerking = 'test-herkomst'", proefProjectID).Exec(ctx)
 	})
@@ -194,9 +199,14 @@ func TestActiveerGebouwdModel_MetHerkomst(t *testing.T) {
 		t.Fatal(err)
 	}
 	bron := &RebuildBron{ProjectID: proefProjectID, ProjectNaam: "Inrichten", ProjectVersie: 7, TotVolgnummer: 40, RenderVersie: "0.3.5"}
-	melding, err := activeerGebouwdModel(ctx, []byte(proefV3), nil, "mark", bron)
+	gebouwd := []model.GebouwdDomein{{Domein: "inrichting", Prefix: "inrichting"}, {Domein: "register", Prefix: "register"}}
+	melding, err := activeerGebouwdModel(ctx, []byte(proefV3), nil, "mark", bron, gebouwd)
 	if err != nil {
 		t.Fatal(err)
+	}
+	// De startup-rebuild leest de domeinenlijst van de actieve versie terug.
+	if terug, err := laadGebouwdeDomeinenVanActieveVersie(ctx); err != nil || !reflect.DeepEqual(terug, gebouwd) {
+		t.Fatalf("gebouwde domeinen terug: %+v (%v)", terug, err)
 	}
 	var v model.SchemaVersie
 	if err := db.NewSelect().Model(&v).Where("bron_project_id = ?", proefProjectID).Scan(ctx); err != nil {

@@ -540,6 +540,9 @@ func NewRouter() *gin.Engine {
 		router.POST("/admin/rebuild", admin, handlers.MaakRebuildHandler())
 		router.POST("/admin/rebuild/:password", admin, handlers.MaakRebuildHandler())
 		router.GET("/admin/rebuild/status", admin, handlers.MaakRebuildStatusHandler())
+		// Tabellen van domeinen die niet meer in het register zitten (07-11-2026; wees_tabellen.go).
+		router.GET("/admin/wees-tabellen", admin, handlers.MaakWeesTabellenHandler())
+		router.POST("/admin/wees-tabellen/opruimen", admin, handlers.MaakWeesTabellenOpruimenHandler())
 		router.POST("/admin/diff", admin, handlers.MaakDiffHandler())
 		router.POST("/admin/diff/:password", admin, handlers.MaakDiffHandler())
 		// Regressie-UI (regressie_np_loc_test.go afspelen vanuit de browser); zie docs/REGRESSIETEST.md.
