@@ -128,15 +128,25 @@ export function vraagKeuze({ titel = "Kies", label = "Keuze", opties = [], waard
  * @typedef {{sleutel?:string, label:string, status?:string, detail?:string, aan?:boolean, kinderen?:ReviewKnoop[]}} ReviewKnoop
  * @returns {Promise<Set<string>|null>}
  */
-export function vraagReview({ titel = "Review", tekst = "", groepen = [], boom = null, bevestig = "Toepassen" } = {}) {
-  const knopen = boom || groepen.map((g) => ({ label: g.kop, kinderen: g.regels || [] }));
+export function vraagReview({ titel = "Review", tekst = "", groepen = [], boom = null, bevestig = "Toepassen", instellingen = null, herbereken = null } = {}) {
+  // instellingen + herbereken (07-11, "Gerelateerde elementen toevoegen"): keuzes boven de lijst
+  // (`[{sleutel, label, soort: "keuze"|"vink", opties?: [{waarde, label}], waarde}]`); bij elke
+  // wijziging bouwt `herbereken(waarden)` de boom opnieuw en staan de vinkjes weer op standaard.
+  // De uitkomst is dan `{vinken: Set, instellingen: {sleutel: waarde}}` (of null).
+  const beginWaarden = Object.fromEntries((instellingen || []).map((i) => [i.sleutel, i.waarde]));
+  const knopen = herbereken ? herbereken(beginWaarden) : boom || groepen.map((g) => ({ label: g.kop, kinderen: g.regels || [] }));
+  return open({ soort: "review", titel, tekst, knopen, aan: standaardAan(knopen), bevestig, instellingen, herbereken, beginWaarden });
+}
+
+/** De sleutels van alle bladeren die standaard aan staan (`aan !== false`). */
+function standaardAan(knopen) {
   const aan = new Set();
   const loop = (k) => {
     if (k.kinderen) k.kinderen.forEach(loop);
     else if (k.sleutel && k.aan !== false) aan.add(k.sleutel);
   };
-  knopen.forEach(loop);
-  return open({ soort: "review", titel, tekst, knopen, aan, bevestig });
+  (knopen || []).forEach(loop);
+  return aan;
 }
 
 /**
@@ -268,6 +278,8 @@ export function NaamDialogHost() {
   const [optieWaarden, setOptieWaarden] = useState({});
   const [nieuwTekst, setNieuwTekst] = useState("");
   const [open, setOpen] = useState(() => new Set()); // open takken van de review-boom (pad)
+  const [instWaarden, setInstWaarden] = useState({}); // review met instellingen (07-11)
+  const [knopenNu, setKnopenNu] = useState(null);
   const inputRef = useRef(null);
   const vakRef = useRef(null);
   const [plek, setPlek] = useState(null);
@@ -327,6 +339,8 @@ export function NaamDialogHost() {
         setOptieWaarden(Object.fromEntries((_actief.opties || []).map((o) => [o.sleutel, !!o.aan])));
         setNieuwTekst("");
         setOpen(_actief.knopen ? reviewStandaardOpen(_actief.knopen) : new Set());
+        setInstWaarden(_actief.beginWaarden || {});
+        setKnopenNu(null);
       }
     };
     luisteraars.add(fn);
@@ -348,8 +362,20 @@ export function NaamDialogHost() {
     } else if (isKeuze) {
       if (waarde) beeindig(cfg.nieuw ? { waarde, nieuw: nieuwTekst.trim() } : waarde);
     } else if (isReview) {
-      beeindig(new Set(vinken));
+      beeindig(cfg.instellingen ? { vinken: new Set(vinken), instellingen: { ...instWaarden } } : new Set(vinken));
     } else beeindig(isBevestiging ? (cfg.opties ? { ok: true, opties: { ...optieWaarden } } : true) : undefined);
+  };
+  // Review met instellingen: de boom volgt de keuzes.
+  const knopen = knopenNu || cfg.knopen || [];
+  const zetInstelling = (sleutel, w) => {
+    const nieuw = { ...instWaarden, [sleutel]: w };
+    setInstWaarden(nieuw);
+    if (cfg.herbereken) {
+      const k = cfg.herbereken(nieuw);
+      setKnopenNu(k);
+      setVinken(standaardAan(k));
+      setOpen(reviewStandaardOpen(k));
+    }
   };
   const zetVink = (sleutels, aan) =>
     setVinken((v) => {
@@ -526,8 +552,30 @@ export function NaamDialogHost() {
         ) : isReview ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 0, flex: 1 }}>
             {cfg.tekst && <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.45, fontSize: 12, opacity: 0.85 }}>{cfg.tekst}</div>}
+            {cfg.instellingen?.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", fontSize: 12 }} data-testid="review-instellingen">
+                {cfg.instellingen.map((i) =>
+                  i.soort === "vink" ? (
+                    <label key={i.sleutel} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <input type="checkbox" checked={!!instWaarden[i.sleutel]} onChange={(e) => zetInstelling(i.sleutel, e.target.checked)} />
+                      {i.label}
+                    </label>
+                  ) : (
+                    <label key={i.sleutel} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      {i.label}
+                      <select value={String(instWaarden[i.sleutel])} onChange={(e) => zetInstelling(i.sleutel, i.opties.find((o) => String(o.waarde) === e.target.value)?.waarde)} style={veldStijl}>
+                        {(i.opties || []).map((o) => (
+                          <option key={String(o.waarde)} value={String(o.waarde)}>{o.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )
+                )}
+              </div>
+            )}
             <div style={{ overflow: "auto", flex: 1, minHeight: 80, border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, padding: "4px 8px" }}>
-              {(cfg.knopen || []).map((k, i) => (
+              {knopen.length === 0 && <div style={{ opacity: 0.7, fontSize: 12, padding: 4 }}>Niets (meer) toe te voegen.</div>}
+              {knopen.map((k, i) => (
                 <ReviewTak
                   key={String(i)}
                   knoop={k}
@@ -547,7 +595,7 @@ export function NaamDialogHost() {
               ))}
             </div>
             <div style={{ display: "flex", gap: 8, fontSize: 12 }}>
-              <button className="dc-mini-knop" onClick={() => zetVink((cfg.knopen || []).flatMap((k) => reviewBladeren(k)), true)}>Alles</button>
+              <button className="dc-mini-knop" onClick={() => zetVink(knopen.flatMap((k) => reviewBladeren(k)), true)}>Alles</button>
               <button className="dc-mini-knop" onClick={() => setVinken(new Set())}>Niets</button>
               <span style={{ opacity: 0.7, alignSelf: "center" }}>{vinken.size} aangevinkt</span>
             </div>

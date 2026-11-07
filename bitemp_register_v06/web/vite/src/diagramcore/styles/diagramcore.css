@@ -1121,8 +1121,16 @@
   flex-wrap: wrap;
   gap: 4px;
   align-items: baseline;
-  font: inherit;
   font-size: 12px;
+}
+/* Twee klikdoelen per rij (07-11): de relatie en het element aan de andere kant. */
+.dc-relatie-zelf,
+.dc-relatie-ander,
+.dc-inspector-uiteinde-knop {
+  display: inline-flex;
+  gap: 4px;
+  align-items: baseline;
+  font: inherit;
   text-align: left;
   background: none;
   border: 0;
@@ -1130,7 +1138,10 @@
   color: var(--s-fg, #1e293b);
   cursor: pointer;
 }
-.dc-relatie-naam:hover .dc-relatie-ander { text-decoration: underline; }
+.dc-relatie-zelf:hover .dc-relatie-type,
+.dc-relatie-zelf:hover .dc-relatie-label,
+.dc-relatie-ander:hover,
+.dc-inspector-uiteinde-knop:hover strong { text-decoration: underline; }
 .dc-relatie-richting { color: var(--s-fg-muted, #64748b); width: 12px; }
 .dc-relatie-type { color: var(--s-fg-muted, #64748b); }
 .dc-relatie-label { font-style: italic; }

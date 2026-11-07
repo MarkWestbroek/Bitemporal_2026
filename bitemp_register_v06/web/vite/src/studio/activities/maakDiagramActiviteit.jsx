@@ -44,8 +44,37 @@ import React, {
 } from "react";
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
-import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
+import { vraagNaam, vraagBevestiging, vraagKeuze, vraagReview, toonMelding } from "../naamDialog.jsx";
 import { useBeeldenStore, kopieerDiagramAlsLink, kopieerDiagramAlsSvgLink } from "../gedeeldeBeelden.js";
+
+/**
+ * Boomstijl (EA "tree style"): haakse vorm, uiteinden vast, knikken weg (die winnen anders van de
+ * vorm). De kant is waar de ouder staat t.o.v. zijn kinderen; Mark 07-11: alle vier de kanten.
+ */
+const BOOM_KANTEN = [
+  ["boven", "Verticaal"],
+  ["onder", "Verticaal"],
+  ["links", "Horizontaal"],
+  ["rechts", "Horizontaal"],
+];
+/** Per kant: [zijde van de ouder, zijde van het kind]. */
+const BOOM_ZIJDEN = {
+  boven: ["bottom", "top"],
+  onder: ["top", "bottom"],
+  links: ["right", "left"],
+  rechts: ["left", "right"],
+};
+/**
+ * @param {string} kant - waar de ouder staat t.o.v. het kind
+ * @param {boolean} [ouderAanDoel] - de verbinding wijst van kind naar ouder (generalisatie, 07-11)
+ */
+function boomLijn(kant, ouderAanDoel = false) {
+  const [ouder, kind] = BOOM_ZIJDEN[kant];
+  return ouderAanDoel
+    ? { vorm: "boom", knikken: [], sourceHandle: `source-${kind}`, targetHandle: `target-${ouder}`, boomOuder: "doel" }
+    : { vorm: "boom", knikken: [], sourceHandle: `source-${ouder}`, targetHandle: `target-${kind}`, boomOuder: null };
+}
+
 /**
  * Lijndata van een connector zoals hij op het actieve diagram ligt: de
  * per-diagram override (diagram.lijnen) over de element-standaard. Alle
@@ -92,6 +121,8 @@ import RelatiesPaneel from "../../diagramcore/inspector/RelatiesPaneel.jsx";
 import GebruikPaneel from "../../diagramcore/inspector/GebruikPaneel.jsx";
 import { gebruikVan, gebruikteIds } from "../../diagramcore/model/gebruik.js";
 import { relatiesVan, verborgenRelatiesVan } from "../../diagramcore/model/relaties.js";
+import { gerelateerdeElementen, ringPosities } from "../../diagramcore/model/gerelateerd.js";
+import { wijstNaarOuder } from "../../diagramcore/types/layoutStijl.js";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { registreerIconenVocabulaire } from "../../diagramcore/shapes/iconenVocabulaire.jsx";
 import { hernoemElement } from "../../diagramcore/model/hernoemen.js";
@@ -279,6 +310,10 @@ export function maakDiagramActiviteit(opties) {
   // naar het connectortype dat het lidmaatschap vastlegt (bv. "bevat") — of
   // naar een lijst (ArchiMate-grouping: aggregatie én compositie, 20-10).
   const containerConnectorIds = new Set(descriptor.elementTypes.flatMap((et) => lidConnectoren(et)));
+  // Verbindingen die van kind naar ouder wijzen (M3 `wijstNaarOuder`: aard specialisatie/realisatie,
+  // bv. generalisatie in UML/CM/use case, specialisatie in ArchiMate): in de boomstijl staat de
+  // ouder daar aan het doel (Mark, 07-11).
+  const ouderAanDoelTypes = new Set(descriptor.elementTypes.filter(wijstNaarOuder).map((et) => et.id));
 
   /**
    * Hang een element om naar een container (of maak het los met containerId = null). De regels
@@ -2276,6 +2311,17 @@ export function maakDiagramActiviteit(opties) {
                   onClick: () =>
                     menuBus.emit("studio:zoek-in-boom", { profielId: id, elementId: nodeId }),
                 },
+                // Mark, 07-11: vanuit elk element de verwante elementen die hier nog ontbreken.
+                {
+                  id: "gerelateerd-toevoegen",
+                  label: "Gerelateerde elementen toevoegen…",
+                  icoon: "⊕",
+                  onClick: () => {
+                    const sel = (layoutApiRef.current?.selectieIds?.() || []).map((x) => x.elementId);
+                    const eigen = voorkomenRef?.elementId || nodeId;
+                    voegGerelateerdeToe(sel.includes(eigen) && sel.length > 1 ? sel : [eigen]);
+                  },
+                },
                 // Uitwerking (M3 `uitwerking`, 15-10): wat in de projectboom onder dit element
                 // hangt (bv. het activiteitendiagram onder een use case). Ook via dubbelklik op
                 // de vorm; dubbelklik op de naam blijft hernoemen.
@@ -2557,18 +2603,12 @@ export function maakDiagramActiviteit(opties) {
                 // weg: die winnen anders van de vorm (een EA-import brengt
                 // ze mee, en dan "deed" de boomstijl niets — Mark, 09-10).
                 { kop: true, label: "Boomstijl" },
-                {
-                  id: "boom-verticaal",
-                  label: "Verticaal (ouder boven)",
+                ...BOOM_KANTEN.map(([kant, label]) => ({
+                  id: `boom-${kant}`,
+                  label: `${label} (ouder ${kant})`,
                   onClick: () =>
-                    useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, { vorm: "boom", knikken: [], sourceHandle: "source-bottom", targetHandle: "target-top" }),
-                },
-                {
-                  id: "boom-horizontaal",
-                  label: "Horizontaal (ouder links)",
-                  onClick: () =>
-                    useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, { vorm: "boom", knikken: [], sourceHandle: "source-right", targetHandle: "target-left" }),
-                },
+                    useStore.getState().zetLijn(useStore.getState().actiefDiagramId, connectorId, boomLijn(kant, ouderAanDoelTypes.has(useStore.getState().elements[connectorId]?.elementType))),
+                })),
                 // L03: uiteinden vastzetten (wint van de kortste weg; "auto"
                 // geeft het uiteinde weer vrij — normaliseren doet dat ook).
                 ...(() => {
@@ -2612,27 +2652,27 @@ export function maakDiagramActiviteit(opties) {
               // hiërarchie-typen: in de profiel-ontwerper zijn de
               // bevat-lijnen bv. gewone verbindingsregels. Zelf-lussen
               // (oortjes) slaan we over: die hebben hun eigen vorm.
+              // Kinderen = de verbindingen waarvan deze node de ouder is: de bron, of het doel bij
+              // een verbinding die van kind naar ouder wijst (generalisatie; Mark 07-11: "overerving
+              // wordt andersom geïnterpreteerd").
               const uitgaand = Object.values(s.elements).filter(
                 (c) =>
-                  c.source === nodeId &&
+                  c.source &&
                   c.target &&
-                  c.target !== nodeId &&
-                  elementTypesById[c.elementType]?.isConnector
+                  c.source !== c.target &&
+                  elementTypesById[c.elementType]?.isConnector &&
+                  (ouderAanDoelTypes.has(c.elementType) ? c.target === nodeId : c.source === nodeId)
               );
               if (uitgaand.length > 0) {
                 // Eén store-stap voor alle kinderen (één Ctrl+Z).
-                const zetBoomstijl = (richting) => {
-                  const lijn =
-                    richting === "verticaal"
-                      ? { vorm: "boom", knikken: [], sourceHandle: "source-bottom", targetHandle: "target-top" }
-                      : { vorm: "boom", knikken: [], sourceHandle: "source-right", targetHandle: "target-left" };
-                  s.zetLijnen(s.actiefDiagramId, Object.fromEntries(uitgaand.map((c) => [c.id, lijn])));
+                const zetBoomstijl = (kant) => {
+                  s.zetLijnen(s.actiefDiagramId, Object.fromEntries(uitgaand.map((c) => [c.id, boomLijn(kant, ouderAanDoelTypes.has(c.elementType))])));
                 };
                 items.push(
                   { sep: true },
                   { kop: true, label: `Kinderen in boomstijl (${uitgaand.length})` },
-                  { id: "kinderen-boom-v", label: "Verticaal (deze ouder boven)", onClick: () => zetBoomstijl("verticaal") },
-                  { id: "kinderen-boom-h", label: "Horizontaal (deze ouder links)", onClick: () => zetBoomstijl("horizontaal") }
+                  // Mark, 07-11: ook "onder" en "rechts".
+                  ...BOOM_KANTEN.map(([kant, label]) => ({ id: `kinderen-boom-${kant}`, label: `${label} (deze ouder ${kant})`, onClick: () => zetBoomstijl(kant) }))
                 );
               }
               const lidmaatschappen = Object.values(s.elements).filter(
@@ -2798,6 +2838,76 @@ export function maakDiagramActiviteit(opties) {
         () => { useStore.getState().addElementToDiagram(dId, eerste[1], plek(eerste[0])); naTerugzetten(dId, eerste[1]); },
         () => { for (const [rol, eid] of rest) { useStore.getState().addElementToDiagram(dId, eid, plek(rol)); naTerugzetten(dId, eid); } }
       );
+    };
+
+    /**
+     * Gerelateerde elementen toevoegen (Mark, 07-11): een lijst van wat via een verbinding (elk
+     * soort) aan de start hangt en nog niet op dit diagram staat; een relatie expandeert naar
+     * haar andere uiteinde (diagramcore/model/gerelateerd.js). Keuzes: diepte (1, 2, 3, alles) en
+     * layout achteraf (standaard uit). Nieuwe elementen komen in ringen rond de start, in één
+     * undo-stap. Wat via een container-verbinding (package/map) hangt, staat standaard uit.
+     * @param {string[]} startIds
+     */
+    const voegGerelateerdeToe = async (startIds) => {
+      const s0 = useStore.getState();
+      const dId = s0.actiefDiagramId;
+      if (!dId || !startIds.length) return;
+      const opDiagram = new Set((s0.diagrams[dId]?.nodes || []).map((n) => n.elementId));
+      const kandidatenVoor = (diepte) =>
+        gerelateerdeElementen({ startIds, elements: s0.elements, opDiagram, elementTypesById, diepte });
+      const startNaam = startIds.length === 1 ? s0.elements[startIds[0]]?.naam || startIds[0] : `${startIds.length} elementen`;
+      const heeftLayout = (descriptor.layouts || []).length > 0;
+      const uitkomst = await vraagReview({
+        titel: `Gerelateerde elementen van ${startNaam}`,
+        tekst: "Wat via een verbinding aan dit element hangt en nog niet op dit diagram staat. Een relatie neemt haar andere uiteinde mee; de lijnen verschijnen vanzelf.",
+        bevestig: "Toevoegen",
+        instellingen: [
+          {
+            sleutel: "diepte",
+            label: "Diepte",
+            soort: "keuze",
+            waarde: 1,
+            opties: [
+              { waarde: 1, label: "1 (direct verbonden)" },
+              { waarde: 2, label: "2" },
+              { waarde: 3, label: "3" },
+              { waarde: Infinity, label: "alles wat bereikbaar is" },
+            ],
+          },
+          ...(heeftLayout ? [{ sleutel: "layout", label: "Daarna auto-layout (hele diagram)", soort: "vink", waarde: false }] : []),
+        ],
+        herbereken: ({ diepte }) => {
+          const lijst = kandidatenVoor(diepte);
+          const niveaus = [...new Set(lijst.map((k) => k.niveau))];
+          return niveaus.map((n) => ({
+            label: n === 1 ? "Direct verbonden" : `Niveau ${n}`,
+            kinderen: lijst
+              .filter((k) => k.niveau === n)
+              .map((k) => ({
+                sleutel: k.id,
+                label: `${k.naam} (${k.typeLabel})`,
+                detail: `${k.via.typeLabel}${k.via.naam ? ` "${k.via.naam}"` : ""} ${k.via.vanNaam}`,
+                aan: !containerConnectorIds.has(s0.elements[k.via.connectorId]?.elementType),
+              })),
+          }));
+        },
+      });
+      if (!uitkomst || !uitkomst.vinken.size) return;
+      const gekozen = kandidatenVoor(uitkomst.instellingen.diepte).filter((k) => uitkomst.vinken.has(k.id));
+      if (!gekozen.length) return;
+      const s = useStore.getState();
+      const nodes = s.diagrams[dId]?.nodes || [];
+      const anker = nodes.find((n) => n.elementId === startIds[0])?.position || layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 200 };
+      const posities = ringPosities(anker, gekozen);
+      const [eerste, ...rest] = gekozen;
+      metHookInEenStap(
+        () => { useStore.getState().addElementToDiagram(dId, eerste.id, posities[eerste.id]); naTerugzetten(dId, eerste.id); },
+        () => { for (const k of rest) { useStore.getState().addElementToDiagram(dId, k.id, posities[k.id]); naTerugzetten(dId, k.id); } }
+      );
+      if (uitkomst.instellingen.layout && heeftLayout) {
+        // Even wachten tot de nieuwe nodes gemeten zijn (de layout gebruikt hun maat).
+        setTimeout(() => layoutApiRef.current?.voerLayoutUit(descriptor.layouts[0], false), 120);
+      }
     };
 
     /**
@@ -3520,6 +3630,7 @@ export function maakDiagramActiviteit(opties) {
           kandidatenVoor={kandidatenVoor}
           editorContext={editorContext}
           bewerkbaar
+          onSelecteerElement={(eid) => setSelectieId(eid)}
           onUpdate={(patch) => {
             // Een naamwijziging loopt via hernoemElement (verwijzingen bij
             // naam volgen mee); lukt dat niet (leeg/gelijk), dan gewoon opslaan.
@@ -3555,6 +3666,7 @@ export function maakDiagramActiviteit(opties) {
             open={relatiesPaneelOpen}
             onOpen={(v) => useStudioStore.getState().zetVoorkeur("relatiesPaneelOpen", v)}
             onSelecteer={(cid) => setSelectieId(cid)}
+            onSelecteerAnder={(eid) => setSelectieId(eid)}
             onVerberg={(cid) => actief && haalConnectorVanDiagram(actief, cid)}
             onToon={(cid) => actief && useStore.getState().toonConnectorOpDiagram(actief, cid)}
             onVerwijder={async (cid) => {

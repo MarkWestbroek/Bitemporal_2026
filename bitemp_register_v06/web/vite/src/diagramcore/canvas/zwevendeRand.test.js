@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden, richtpuntOfAanhechtpunt, orthogonaleUiteinden, naarOmtrek, verschuifUiteinden } from "./zwevendeRand.js";
+import { aanhechtpunt, middelpunt, nodeRechthoek, zwevendeUiteinden, richtpuntOfAanhechtpunt, orthogonaleUiteinden, naarOmtrek, verschuifUiteinden, boomPunten } from "./zwevendeRand.js";
 import { besteZijde, aanhechtpuntenVan } from "./materialiseerConnectoren.js";
 import { kortsteToppen, toppenVan } from "./zwevendeRand.js";
 
@@ -244,4 +244,17 @@ test("verschuifUiteinden: langs boven/onder in x, langs links/rechts in y; binne
   const h = verschuifUiteinden({ sourceX: 200, sourceY: 40, targetX: 300, targetY: 40, sourcePosition: "right", targetPosition: "left" }, -20, bron, { x: 300, y: 0, width: 100, height: 80 });
   assert.deepEqual([h.sourceY, h.targetY], [20, 20]);
   assert.equal(verschuifUiteinden(u, 0), u);
+});
+
+// Mark, 07-11: bij overerving (kind → ouder) lag de lat bij het kind en stond alles omgekeerd.
+test("boomPunten: lat bij de ouder; ouder aan het doel geeft de lat bij het doel en houdt de looprichting", () => {
+  // Ouder boven (bron, onderzijde op y=100), kind onder (doel, bovenzijde op y=300).
+  const gewoon = boomPunten({ sourceX: 100, sourceY: 100, sourcePosition: "bottom", targetX: 300, targetY: 300, targetPosition: "top" });
+  assert.deepEqual(gewoon, [{ x: 100, y: 100 }, { x: 100, y: 140 }, { x: 300, y: 140 }, { x: 300, y: 300 }]);
+  // Generalisatie: kind (bron, bovenzijde y=300) → ouder (doel, onderzijde y=100).
+  const omg = boomPunten({ sourceX: 300, sourceY: 300, sourcePosition: "top", targetX: 100, targetY: 100, targetPosition: "bottom" }, true);
+  assert.deepEqual(omg[0], { x: 300, y: 300 }, "begint bij de bron (kind)");
+  assert.deepEqual(omg[3], { x: 100, y: 100 }, "eindigt bij het doel (ouder): de pijl blijft daar");
+  assert.equal(omg[1].y, 140, "de lat ligt 40 onder de ouder");
+  assert.equal(omg[2].y, 140);
 });

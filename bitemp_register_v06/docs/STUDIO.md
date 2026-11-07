@@ -1690,6 +1690,34 @@ fase 2 een **bewerkbare sandbox**:
   uit = zoals in Archi, de relatie blijft verborgen) — via `naTerugzetten` bij slepen uit boom/lijst
   en de +-knop; en *relatiepaneel standaard uitgeklapt* (standaard ingeklapt; in- of uitklappen in
   het paneel zelf zet de voorkeur ook).
+- **Navigeren via relaties** (2026-11-07, Mark: "Locatie is onderstreept, maar ik kom in de
+  relatie; en daar kom ik niet meer bij Locatie"). Een rij in het relatiepaneel heeft twee
+  klikdoelen: het type/label selecteert de relatie, de naam van het andere element selecteert dát
+  element (`relatiesVan` levert `anderId`). In de inspector van een verbinding zijn de uiteinden
+  "A → B" knoppen (`ElementInspector` prop `onSelecteerElement`). Selecteren kan ook als het
+  element niet op dit diagram staat: de inspector toont het dan toch.
+- **Gerelateerde elementen toevoegen…** (2026-11-07, rechtsklik op een element; bij een selectie
+  van meer elementen geldt de hele selectie als start). Een venster met wat via een verbinding,
+  van elk soort, aan het element hangt en nog niet op dit diagram staat, per niveau gegroepeerd
+  en aan te vinken. Een relatie is geen kandidaat maar "expandeert": je krijgt haar andere
+  uiteinde, en de lijn verschijnt vanzelf. Start je op een relatie als associatieklasse-box, dan
+  zijn haar uiteinden niveau 1. Keuzes: *diepte* (1 = direct verbonden, 2, 3 of alles wat
+  bereikbaar is; wat al op het diagram staat telt mee voor de afstand) en *daarna auto-layout*
+  (hele diagram, standaard uit). Wat via een package/map-verbinding hangt, staat standaard uit.
+  Nieuwe elementen komen in ringen rond de start (één ring per niveau), in één undo-stap. Code:
+  `diagramcore/model/gerelateerd.js` (`gerelateerdeElementen`, `ringPosities`; tests
+  `gerelateerd.test.js`), `voegGerelateerdeToe` in `maakDiagramActiviteit.jsx`; de dialoog is
+  `vraagReview` met `instellingen` + `herbereken` (`naamDialog.jsx`).
+- **Boomstijl naar alle kanten** (2026-11-07): "Kinderen in boomstijl" en de boomstijl van één
+  lijn kennen nu ouder boven, onder, links en rechts (`BOOM_KANTEN`/`boomLijn`). **Overerving**:
+  een generalisatie wijst van kind naar ouder, dus daar is het doel de ouder (Mark: "overerving
+  wordt andersom geïnterpreteerd"). Welke verbindingen zo lopen, zegt de M3-functie
+  `wijstNaarOuder(connectortype)` (`types/layoutStijl.js`): aard specialisatie of realisatie, of
+  zonder aard de oude ids (generalisatie, subtype, implements). Dat geldt dus voor CM, UML, MIM,
+  use case (ook al negeert de layoutstijl daar de generalisatie) en ArchiMate (specialisatie); de
+  leesvolgorde gebruikt dezelfde functie. "Kinderen in boomstijl" op de ouder neemt die verbindingen nu mee, met de handles
+  gespiegeld en `boomOuder: "doel"` in de lijndata; `zwevendeRand.boomPunten` (canvas én tekenaar)
+  legt de lat dan bij het doel en houdt het pad van bron naar doel, zodat de pijl op de ouder blijft.
 - **Deselecteren**: klik op het lege vlak, of **Escape** (2026-09-18).
   Escape is nodig binnen een container zonder `achtergrond` (lane, package,
   stage): daar is geen leeg vlak — elke klik selecteert de container. In

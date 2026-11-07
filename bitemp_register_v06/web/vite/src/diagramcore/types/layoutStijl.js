@@ -60,6 +60,18 @@ export const STANDAARD_VOLGORDE = Object.freeze({
   annotatie: "negeer",
 });
 
+/**
+ * Wijst een verbinding van dit type van kind naar ouder (van het specifieke naar het algemene)?
+ * Uit de betekenis: aard specialisatie of realisatie; zonder aard de oude ids (generalisatie,
+ * subtype, implements, …). Los van de layoutstijl, die zo'n verbinding mag negeren (use case).
+ * Gebruikt door de leesvolgorde en de boomstijl (Mark 07-11: overerving in UML, ArchiMate, …).
+ * @param {any} et - een connector-ElementType
+ */
+export function wijstNaarOuder(et) {
+  if (!et?.isConnector) return false;
+  return et.aard ? STANDAARD_VOLGORDE[et.aard] === "omgekeerd" : STANDAARD_OMGEKEERD.includes(et.id);
+}
+
 /** Bekende LayoutRenderers (Implementatie-domein). */
 export const LAYOUT_RENDERERS = ["leesvolgorde"];
 
@@ -177,7 +189,7 @@ export function regelsVoorStijl(dt, stijl = stijlVoor(dt)) {
     if (et.isAbstract) continue;
     const o = opties(et);
     if (et.isConnector) {
-      let v = et.aard ? STANDAARD_VOLGORDE[et.aard] || "mee" : STANDAARD_OMGEKEERD.includes(et.id) ? "omgekeerd" : "mee";
+      let v = et.aard ? STANDAARD_VOLGORDE[et.aard] || "mee" : wijstNaarOuder(et) ? "omgekeerd" : "mee";
       if (stijl?.alleenStroom && et.aard !== "stroom") v = "negeer";
       if (o.volgorde) v = o.volgorde;
       if (v === "negeer") uit.negeer.push(et.id);

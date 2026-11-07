@@ -16,7 +16,7 @@
  * @param {Record<string, any>} elements
  * @param {any} diagram
  * @param {Record<string, any>} elementTypesById
- * @returns {Array<{id: string, typeLabel: string, richting: "uit"|"in", naam: string, anderNaam: string, stand: "zichtbaar"|"verborgen"|"buiten"}>}
+ * @returns {Array<{id: string, typeLabel: string, richting: "uit"|"in", naam: string, anderId: string, anderNaam: string, stand: "zichtbaar"|"verborgen"|"buiten"}>}
  */
 export function relatiesVan(elementId, elements, diagram, elementTypesById) {
   const opDiagram = new Set((diagram?.nodes || []).map((n) => n.elementId));
@@ -35,6 +35,7 @@ export function relatiesVan(elementId, elements, diagram, elementTypesById) {
       typeLabel: elementTypesById[c.elementType]?.label || c.elementType,
       richting,
       naam: c.naam || "",
+      anderId,
       anderNaam: ander?.naam || anderId,
       stand,
     });

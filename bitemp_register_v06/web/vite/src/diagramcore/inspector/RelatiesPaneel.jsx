@@ -20,7 +20,7 @@ const STAND_LABEL = {
   buiten: "andere kant niet op dit diagram",
 };
 
-export default function RelatiesPaneel({ relaties = [], open = true, onOpen, onSelecteer, onVerberg, onToon, onVerwijder }) {
+export default function RelatiesPaneel({ relaties = [], open = true, onOpen, onSelecteer, onSelecteerAnder, onVerberg, onToon, onVerwijder }) {
   if (!relaties.length) return null;
   const verborgen = relaties.filter((r) => r.stand === "verborgen").length;
   return (
@@ -32,17 +32,23 @@ export default function RelatiesPaneel({ relaties = [], open = true, onOpen, onS
       </button>
       {open && relaties.map((r) => (
         <div key={r.id} className={"dc-relatie is-" + r.stand}>
-          <button
-            type="button"
-            className="dc-relatie-naam"
-            title="Selecteer deze relatie"
-            onClick={() => onSelecteer?.(r.id)}
-          >
-            <span className="dc-relatie-richting" aria-hidden="true">{r.richting === "uit" ? "→" : "←"}</span>
-            <span className="dc-relatie-type">{r.typeLabel}</span>
-            {r.naam ? <span className="dc-relatie-label">“{r.naam}”</span> : null}
-            <span className="dc-relatie-ander">{r.anderNaam}</span>
-          </button>
+          {/* Twee klikdoelen (Mark, 07-11: "Locatie is onderstreept, maar ik kom in de relatie"):
+              de relatie zelf, en het element aan de andere kant. */}
+          <div className="dc-relatie-naam">
+            <button type="button" className="dc-relatie-zelf" title="Selecteer deze relatie" onClick={() => onSelecteer?.(r.id)}>
+              <span className="dc-relatie-richting" aria-hidden="true">{r.richting === "uit" ? "→" : "←"}</span>
+              <span className="dc-relatie-type">{r.typeLabel}</span>
+              {r.naam ? <span className="dc-relatie-label">“{r.naam}”</span> : null}
+            </button>
+            <button
+              type="button"
+              className="dc-relatie-ander"
+              title={`Selecteer ${r.anderNaam}`}
+              onClick={() => (onSelecteerAnder || onSelecteer)?.(r.anderId || r.id)}
+            >
+              {r.anderNaam}
+            </button>
+          </div>
           <div className="dc-relatie-stand">
             <span>{STAND_LABEL[r.stand] || r.stand}</span>
             {r.stand === "zichtbaar" && (
