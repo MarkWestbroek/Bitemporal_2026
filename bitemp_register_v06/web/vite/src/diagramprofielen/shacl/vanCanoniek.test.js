@@ -57,7 +57,8 @@ test("veldtypen: eigen gegevenstype, catalogus, enumeratie en basistype", () => 
   // Eigen gegevenstype Aanvraagnummer: patroon en maxLength uit de validatie.
   const nr = regel(id, "aanvraag:aanvraagnummer");
   assert.deepEqual([nr.datatype, nr.pattern, nr.maxLength, nr.minCount, nr.maxCount], ["xsd:string", "^[A-Z0-9-]+$", 40, 1, 1]);
-  assert.equal(regel(id, "aanvraag:aanvraagtype").datatype, "xsd:integer");
+  // Aanvraagtype is (sinds referentielijst als veldtype, 77ccc678) een verwijzing naar de lijst: sh:class.
+  assert.equal(regel(id, "aanvraag:aanvraagtype").klasse, "aanvraag:Aanvraagtype");
   // Catalogus: DatumTijd → xsd:dateTime, URL → xsd:anyURI met patroon, KorteTekst → maxLength 255.
   assert.equal(regel(els.can_Aanvraag_AanvraagIndiening, "aanvraag:ingediendOp").datatype, "xsd:dateTime");
   assert.equal(regel(els.can_Aanvrager_AanvragerKlantverwijzing, "aanvraag:klantUrl").datatype, "xsd:anyURI");
