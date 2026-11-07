@@ -122,7 +122,7 @@ b:gegevens-inkomensgegevens a odrl:AssetCollection ;
 
 # ── Het register: paden als assets met partOf ─────────────────────────────────
 
-reg:NatuurlijkPersoon a odrl:Asset , ts:Entiteit ;
+reg:NatuurlijkPersoon a odrl:AssetCollection , ts:Entiteit ;
     rdfs:label "natuurlijk persoon"@nl ;
     dct:identifier "NatuurlijkPersoon" .
 

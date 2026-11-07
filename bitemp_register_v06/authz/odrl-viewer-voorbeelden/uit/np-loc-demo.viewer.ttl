@@ -182,7 +182,7 @@ b:groep-telefoonmedewerker a odrl:PartyCollection ;
 
 # ── Het register: paden als assets met partOf ─────────────────────────────────
 
-reg:NatuurlijkPersoon a odrl:Asset , ts:Entiteit ;
+reg:NatuurlijkPersoon a odrl:AssetCollection , ts:Entiteit ;
     rdfs:label "een natuurlijk persoon"@nl ;
     dct:identifier "NatuurlijkPersoon" ;
     odrl:partOf b:gegevens-persoonsgegevens .
@@ -192,7 +192,7 @@ reg:NatuurlijkPersoon.geslacht a odrl:Asset , ts:Gegevenselement ;
     dct:identifier "NatuurlijkPersoon.geslacht" ;
     odrl:partOf reg:NatuurlijkPersoon .
 
-reg:NatuurlijkPersoon.Aanspraak a odrl:Asset , ts:Gegevenselement ;
+reg:NatuurlijkPersoon.Aanspraak a odrl:AssetCollection , ts:Gegevenselement ;
     rdfs:label "aanspraak"@nl ;
     dct:identifier "NatuurlijkPersoon.Aanspraak" ;
     odrl:partOf reg:NatuurlijkPersoon .

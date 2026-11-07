@@ -86,8 +86,10 @@ export function odrlContext({ beleidSlug, modelNaam = "model", basisUrl = "https
       // De handeling per regel (een knoop met rdf:value) staat bij haar regel.
       { titel: "Regels en plichten", types: ["odrl:Permission", "odrl:Prohibition", "odrl:Duty"], iri: "^b:handeling-" },
       { titel: "Voorwaarden (benoemd, dus herbruikbaar en realiseerbaar)", types: ["odrl:Constraint", "odrl:LogicalConstraint"] },
-      { titel: "Wie en wat: begrippen uit de beleidstekst", types: ["odrl:PartyCollection", "odrl:AssetCollection", "dct:LegalResource", "skos:Concept"] },
-      { titel: "Het register: paden als assets met partOf", types: ["odrl:Asset"] },
+      // Een gegevensbegrip en een registerdeel met onderdelen zijn allebei AssetCollection; de
+      // begrippen herken je aan hun IRI (b:gegevens-…), de registerdelen staan in reg:.
+      { titel: "Wie en wat: begrippen uit de beleidstekst", types: ["odrl:PartyCollection", "dct:LegalResource", "skos:Concept"], iri: "^b:gegevens-" },
+      { titel: "Het register: paden als assets met partOf", types: ["odrl:Asset", "odrl:AssetCollection"] },
       { titel: "Realisatie: wat de regels uitvoert", types: ["apnl:RegoModule", "apnl:CedarPolicySet", "apnl:PolicyArtifact", "apnl:PolicyBundle"] },
       { titel: "Woordenschat van Toegangsspraak (labels komen uit de klare taal)", types: ["odrl:Profile", "odrl:LeftOperand", "odrl:Operator", "odrl:Action", "rdfs:Class"] },
     ],

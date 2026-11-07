@@ -203,11 +203,11 @@ b:gegevens-inkomensgegevens a odrl:AssetCollection ;
 
 # ── Het register: paden als assets met partOf ─────────────────────────────────
 
-reg:Persoon a odrl:Asset , ts:Entiteit ;
+reg:Persoon a odrl:AssetCollection , ts:Entiteit ;
     rdfs:label "een persoon"@nl ;
     dct:identifier "Persoon" .
 
-reg:Persoon.Naam a odrl:Asset , ts:Gegevenselement ;
+reg:Persoon.Naam a odrl:AssetCollection , ts:Gegevenselement ;
     rdfs:label "naam"@nl ;
     dct:identifier "Persoon.Naam" ;
     odrl:partOf reg:Persoon .
@@ -217,7 +217,7 @@ reg:Persoon.Naam.naam a odrl:Asset , ts:Veld ;
     dct:identifier "Persoon.Naam.naam" ;
     odrl:partOf reg:Persoon.Naam .
 
-reg:Persoon.Adres a odrl:Asset , ts:Gegevenselement ;
+reg:Persoon.Adres a odrl:AssetCollection , ts:Gegevenselement ;
     rdfs:label "adres"@nl ;
     dct:identifier "Persoon.Adres" ;
     odrl:partOf reg:Persoon .
@@ -242,7 +242,7 @@ reg:Persoon.Adres.plaats a odrl:Asset , ts:Veld ;
     dct:identifier "Persoon.Adres.plaats" ;
     odrl:partOf reg:Persoon.Adres .
 
-reg:Persoon.Inkomen a odrl:Asset , ts:Gegevenselement ;
+reg:Persoon.Inkomen a odrl:AssetCollection , ts:Gegevenselement ;
     rdfs:label "inkomen"@nl ;
     dct:identifier "Persoon.Inkomen" ;
     odrl:partOf reg:Persoon , b:gegevens-inkomensgegevens .

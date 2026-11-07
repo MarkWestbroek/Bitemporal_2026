@@ -313,5 +313,13 @@ export function beleidNaarGraaf(beleid, opties = {}) {
     }
   }
 
+  // Een registerdeel met delen eronder (NatuurlijkPersoon boven NatuurlijkPersoon.Inkomen) is in
+  // ODRL een verzameling: `odrl:partOf` wijst naar een AssetCollection, en een regel op de
+  // verzameling geldt voor elk lid. De regelset leest dit kenmerk.
+  for (const v of verbindingen) {
+    const doel = v.aard === "onderdeel-van" ? knopen.get(v.doel) : null;
+    if (doel?.aard === "registerdeel") doel.heeftOnderdelen = true;
+  }
+
   return { knopen: [...knopen.values()], groepen: [], verbindingen, waarschuwingen: [] };
 }

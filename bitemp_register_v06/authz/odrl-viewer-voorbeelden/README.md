@@ -56,7 +56,7 @@ Elke zin heeft precies één betekenis; de editor ontleedt hem en bewaakt hem te
 | "aan ten minste één van de volgende voorwaarden" | `odrl:LogicalConstraint` met `odrl:or ( … )` in tekstvolgorde | |
 | `waarbij: …` | `odrl:Duty` met de zin als titel | |
 | `Inkomensgegevens zijn: alle gegevens van …` | `odrl:AssetCollection`; het registerdeel hangt eronder met `odrl:partOf` | zoals de veldcollecties in het Vlierdam-voorbeeld |
-| "de naam van een persoon" | `odrl:Asset` per pad in het model (`Persoon`, `Persoon.Naam`, `Persoon.Naam.naam`), met `odrl:partOf` en een niveau-klasse (entiteit, gegevenselement, veld) | Note §3 |
+| "de naam van een persoon" | een asset per pad in het model (`Persoon`, `Persoon.Naam`, `Persoon.Naam.naam`), met `odrl:partOf` en een niveau-klasse (entiteit, gegevenselement, veld). Een pad met delen eronder is `odrl:AssetCollection`, een blad `odrl:Asset`: in ODRL 2.2 wijst `partOf` naar een AssetCollection, en een regel op de verzameling geldt voor elk lid (08-11; daarvoor was alles `odrl:Asset`, wat de SHACL-kern afkeurt) | Note §3, Information Model §2.2.1 |
 | elke operand, vergelijking en handeling die ODRL niet kent | een term in de eigen woordenschat (`ts:`), **met de zinsnede uit de klare taal als label** | Note §1: namen komen uit de data. Onze taal ís die naamgeving |
 
 Het punt van dit alles: **de labels hoeven niet bedacht te worden.** "De achternaam van de naam
