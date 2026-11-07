@@ -237,6 +237,12 @@ function ElementNode({ id, data, selected }) {
             }}
           />
         )}
+        {element.data?.vreemd && (
+          // Element uit een andere taal (model/vreemd.js): het woont daar, hier staat een verwijzing.
+          <span className="dc-vreemd-badge" data-testid="node-vreemd" title={`Uit ${element.data.vreemd.taal}; staat hier als verwijzing`}>
+            {element.data.vreemd.taal}
+          </span>
+        )}
         {data.fouten?.length > 0 && (
           // Profielregel met niveau "fout" (bv. dubbele naam per domein, 31-10); de tekst staat
           // ook bovenaan de inspector.

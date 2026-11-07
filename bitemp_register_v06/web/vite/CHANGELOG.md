@@ -9,6 +9,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Elementen uit een andere taal op een diagram** (Mark, 07-11; stap 1 van het koppeldiagram):
+  sleep een element uit de projectboom van een andere taal op een diagram. Het staat er als
+  verwijzing (`<taal>::<id>`), in de notatie van zijn eigen taal en met de taal als label;
+  relaties van die taal ertussen verschijnen vanzelf. Selecteren opent het in de inspector van
+  zijn eigen taal, F2 hernoemt het daar, Delete haalt de verwijzing van het diagram. In die
+  inspector is "Verwijder uit model" uitgegrijsd en geldt "Van diagram halen" het diagram waar je
+  naar kijkt. *Toon gebruik* (boom) en *Gebruikt op* (inspector) tellen de diagrammen van andere
+  talen mee.
+  `diagramcore/model/vreemd.js`; e2e `54-studio-vreemde-elementen`.
 - **Lijnen via de assistent en de MCP** (Mark, 07-11: "kan de MCP ook lijntypes wijzigen?"): het
   plan kent `lijnen` — op een bestaande relatie of op alle kinderen van een `ouder`: lijnvorm
   (krom, hoekig, recht, boom), boomstijl (ouder boven/onder/links/rechts; overerving gaat vanzelf
@@ -24,6 +33,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **Boomstijl naar alle kanten**: ouder boven, onder, links of rechts (ook bij één lijn).
   Bij overerving is de ouder het doel van de generalisatie (kind → ouder): "Kinderen in boomstijl"
   neemt generalisaties mee en de kanten staan niet meer omgekeerd; de lat ligt bij de ouder.
+
+### Opgelost
+- **Delete is één undo-stap** (Mark, 07-11: "A–B, A van het diagram halen; Ctrl+Z geeft alleen A
+  terug, pas een tweede Ctrl+Z de associatie"). React Flow meldde de lijnen van een weggehaalde node
+  apart als verwijderd, en het canvas verborg ze dan op het diagram: een tweede wijziging. Nu is
+  Delete één melding (`onDelete`); lijnen die alleen weggaan omdat hun uiteinde weggaat, worden
+  niet meer verborgen. Meer nodes tegelijk zijn ook één stap (`inEenUndoStap` in
+  `createDiagramStore.js`). e2e `55-studio-undo-van-diagram`.
 
 ### Gewijzigd
 - **Inrichting: aanvraagtype als relatie** (besluit Mark 07-11: een GE verwijst nooit naar een

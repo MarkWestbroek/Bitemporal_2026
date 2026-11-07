@@ -22,6 +22,9 @@ import { registreerMeldContext } from "../meldContext.js";
 import { veldCompartimenten } from "../assistent/assistentKern.js";
 import { vraagNaam, vraagBevestiging, vraagKeuze, toonMelding } from "../naamDialog.jsx";
 import { ELEMENT_REF_MIME } from "../../diagramcore/canvas/externDrop.js";
+import { LosGetoondContext } from "../vreemdeSelectie.js";
+import { gebruikInHetProject } from "../gebruikInProject.js";
+import { vreemdeId } from "../../diagramcore/model/vreemd.js";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
@@ -1843,7 +1846,8 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   // Sleepdoel als dit type een uitwerking mag dragen én zelf een plek in de boom heeft.
   const kanUitwerking = !!et?.uitwerking && !!sleutel;
   const diagramsVanProfiel = profiel.useStore((s) => s.diagrams);
-  const ongebruikt = !!element && !element.source && gebruikVan(elementId, diagramsVanProfiel).length === 0;
+  // Ook als verwijzing op een diagram van een andere taal telt als gebruik (Mark 07-11).
+  const ongebruikt = !!element && !element.source && gebruikVan(elementId, diagramsVanProfiel).length === 0 && gebruikInHetProject(profiel.id, elementId).length === 0;
   // Bevatten (fase 0, 06-11): dit element is een container waarvan de lidmaatschapsrelatie ook de
   // hiërarchie van het profiel is — dan kun je er in de boom elementen in slepen of in maken.
   const bevatTypen = element ? maakbareTypen(profiel).filter((t) => kanBevatten(profiel, element, t.id)) : [];
@@ -1894,16 +1898,21 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
     if (actieveTabInfo().profiel?.id === profiel.id) menuBus.emit(`${profiel.menuPrefix}:selecteer-element`, elementId);
   };
 
-  /** De diagrammen waarop dit element staat; kiezen opent of activeert de tab en selecteert het. */
+  /**
+   * De diagrammen waarop dit element staat, ook die van andere talen waar het als verwijzing staat
+   * (met de taal erachter); kiezen opent of activeert de tab en selecteert het.
+   */
   const toonGebruikItems = () => {
-    const lijst = gebruikVan(elementId, profiel.useStore.getState().diagrams);
+    const lijst = gebruikInHetProject(profiel.id, elementId);
     if (!lijst.length) return [{ label: "(op geen enkel diagram)", onClick: () => {} }];
     return lijst.map((d) => ({
-      label: `${d.naam}${d.aantal > 1 ? ` (${d.aantal}×)` : ""}`,
+      label: `${d.naam}${d.aantal > 1 ? ` (${d.aantal}×)` : ""}${d.taal ? ` — ${d.taal}` : ""}`,
       onClick: () => {
         const ms = useModellerenStore.getState();
-        ms.openTab(profiel.id, d.id);
-        setTimeout(() => menuBus.emit(`${profiel.menuPrefix}:selecteer-element`, elementId), 150);
+        ms.openTab(d.profielId, d.id);
+        const doel = getProfieltype(d.profielId);
+        const sleutel = d.profielId === profiel.id ? elementId : vreemdeId(profiel.id, elementId);
+        if (doel) setTimeout(() => menuBus.emit(`${doel.menuPrefix}:selecteer-element`, sleutel), 150);
       },
     }));
   };
@@ -1940,7 +1949,7 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
     openCtxMenu(e, [
       { label: "Selecteer in inspector", onClick: selecteer },
       // Waar staat dit element? (Mark, 06-11; klikken springt niet meer zelf naar een diagram.)
-      ...(element?.source ? [] : [{ label: `Toon gebruik (${gebruikVan(elementId, profiel.useStore.getState().diagrams).length})`, items: toonGebruikItems() }]),
+      ...(element?.source ? [] : [{ label: `Toon gebruik (${gebruikInHetProject(profiel.id, elementId).length})`, items: toonGebruikItems() }]),
       { label: "Hernoemen", onClick: () => setBewerk(true) },
       // Een diagram starten met dit element en zijn kinderen, of met de Ctrl-selectie (06-11).
       ...(() => {
@@ -3406,10 +3415,12 @@ function LosElementInspector({ profiel, elementId }) {
   const P = profiel.Provider || Fragment;
   const ProfielInspector = profiel.Inspector;
   return (
-    <P>
-      <SelecteerInProfiel prefix={profiel.menuPrefix} elementId={elementId} />
-      <ProfielInspector />
-    </P>
+    <LosGetoondContext.Provider value>
+      <P>
+        <SelecteerInProfiel prefix={profiel.menuPrefix} elementId={elementId} />
+        <ProfielInspector />
+      </P>
+    </LosGetoondContext.Provider>
   );
 }
 

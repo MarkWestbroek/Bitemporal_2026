@@ -2,7 +2,8 @@
 
 *2026-10-12. Aanleiding: Mark wil koppelingen tussen profielen (de matrix) ook visueel kunnen
 maken en bekijken, op diagrammen waar elementen uit meerdere profielen samenkomen. Status:
-voorstel met Marks eerste keuzes (12-10); nog niets gebouwd.*
+voorstel met Marks eerste keuzes (12-10), bijgestuurd 07-11 (§9a). Gebouwd 07-11: stap 1,
+vreemde elementen op elk diagram (`diagramcore/model/vreemd.js`, STUDIO.md).*
 
 ## 1. Wat er al is
 
@@ -135,6 +136,35 @@ dit voorstel. Het echte risico is het browsergeheugen bij meerdere grote project
 | 3 | **Veldkoppelingen**: stabiele veld-id's (M3-MOF), aanhechtpunten per veldregel, `{Veldtype}` |
 | 4 | **Basisprofiel** (Kader, Notitie, Notitie-lijn) uit alle profielen halen; profiel-ontwerper toont `{Elementtype}`/`{Veldtype}` |
 | 5 | Relaties binnen profielen tonen; rechten per map (na het toegangsplan) |
+
+## 9a. Bijsturing Mark (07-11): geen apart diagramsoort, vreemde elementen overal
+
+Aanleiding: de reikwijdte "ook andere talen" bij *Gerelateerde elementen toevoegen* (STUDIO.md).
+
+- **Elk diagram mag een vreemd element bevatten.** Uit de projectboom slepen moet op elk diagram
+  werken, ook als het element uit een andere taal komt. Het wordt getoond in de notatie van die
+  taal. Nu weigert de drop dat stil (`maakDiagramActiviteit.jsx`, `onExternDrop`: alleen
+  `ref.profielId === id`, anders alleen `hooks.ontvangtDrop`).
+- **Een koppeldiagram verschilt alleen in de werkbalk.** De maak- en verbindingswerkbalk hangen aan
+  de taal van het diagram. Op een diagram van taal X is dat de werkbalk van X; vreemde elementen
+  komen er via slepen (of *Gerelateerde elementen toevoegen*). Een diagram zonder eigen taal (het
+  koppeldiagram) heeft geen of een gecombineerde werkbalk. Verder is er geen verschil.
+- **Verbinden over talen heen: de mogelijke verbindingen zijn af te leiden.** Een lijn tussen een
+  element van taal A en een van taal B biedt de soorten aan die voor dat paar bestaan: de vier
+  kruisverband-soorten (`koppelingenActivity.jsx`) plus wat een profiel zelf over de grens
+  definieert (bv. `toegangsregel/archimateKoppeling.js`). De lijn is dan een kruisverband in de
+  store `kruis`, dus ook zichtbaar in de matrix.
+- **Velden als uiteinde.** Velden zitten meestal in een compartiment, maar hoeven niet (de graaf
+  toont ze als bolletjes op stokjes). Gebaar: klik-selecteer een veldregel en start daar de lijn,
+  of een toets (Alt) + klik op een veld. Het doel mag ook een veld zijn (zelfde toets), maar
+  element → veld en veld → element mogen ook. Voorwaarde: stabiele veld-id's. Canoniek heeft er
+  al een (`data.uuid` per veld, `canoniek-uml/uuids.js`); andere talen nog niet overal.
+
+Gevolg voor de fasering: fase 1 begint met **vreemde verwijzingen op elk diagram** (node met
+samengestelde id `<profielId>::<elementId>`, gerenderd met de descriptor van die taal; gebouwd
+07-11) en **kruisverbanden als lijnen** op het
+diagram. Het koppeldiagram zelf is dan een diagram zonder eigen taal. Fase 3 (velden) volgt het
+gebaar hierboven.
 
 ## 10. Open vragen
 

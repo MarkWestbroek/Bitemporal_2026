@@ -17,7 +17,9 @@
  *                        resizen; `positie` (absoluut) als de node daarbij
  *                        verschoof (linker-/bovenrand getrokken)
  *   onVerbind?         — ({connectorType, source, target, sourceHandle, targetHandle}) => void
- *   onVerwijder?       — (elementIds: string[]) => void      (Delete op selectie)
+ *   onVerwijder?       — (elementIds: string[], losseConnectorIds: string[]) => void
+ *                        (Delete op selectie; de lijnen van die nodes zitten er niet in,
+ *                        alleen lijnen die zelf geselecteerd waren — één undo-stap)
  *   onViewport?        — ({x,y,zoom}) => void                (na pannen/zoomen)
  *   onHangConnectorOm? — (connectorId, {source, target, sourceHandle, targetHandle}) => void
  *                        — uiteinde van een lijn elders aangehecht (§31.5)
@@ -1586,24 +1588,30 @@ function CanvasBinnenkant({
     [bewerkbaar, elements, elementVanNode, lookups, omschrijf, diagramType]
   );
 
-  const handleNodesDelete = useCallback(
-    (verwijderd) => {
-      if (bewerkbaar && onVerwijder && verwijderd?.length) {
-        onVerwijder(verwijderd.map((n) => n.id));
-      }
+  /**
+   * Delete op de selectie, als één melding (React Flow `onDelete`). React Flow neemt de lijnen
+   * van een weggehaalde node mee als "verwijderd"; die verdwijnen vanzelf (hun uiteinde staat er
+   * niet meer) en worden dus níet apart verborgen. Vroeger wel, via onEdgesDelete: dat was een
+   * tweede store-wijziging, en Ctrl+Z zette dan eerst alleen de node terug en pas daarna de lijn
+   * (Mark, 07-11). Losse lijnen in dezelfde selectie gaan mee in `onVerwijder(ids, connectorIds)`,
+   * zodat de activiteit er één undo-stap van kan maken.
+   */
+  const handleDelete = useCallback(
+    ({ nodes: wegNodes = [], edges: wegEdges = [] }) => {
+      if (!bewerkbaar) return;
+      const nodeIds = new Set(wegNodes.map((n) => n.id));
+      const losseConnectoren = [
+        ...new Set(
+          wegEdges
+            .filter((e) => !nodeIds.has(e.source) && !nodeIds.has(e.target))
+            .map((e) => e.data?.connectorId)
+            .filter(Boolean)
+        ),
+      ];
+      if (nodeIds.size && onVerwijder) onVerwijder([...nodeIds], losseConnectoren);
+      else if (losseConnectoren.length && onVerwijderConnectoren) onVerwijderConnectoren(losseConnectoren);
     },
-    [bewerkbaar, onVerwijder]
-  );
-
-  const handleEdgesDelete = useCallback(
-    (verwijderd) => {
-      if (!bewerkbaar || !onVerwijderConnectoren) return;
-      const connectorIds = (verwijderd || [])
-        .map((e) => e.data?.connectorId)
-        .filter(Boolean);
-      if (connectorIds.length) onVerwijderConnectoren(connectorIds);
-    },
-    [bewerkbaar, onVerwijderConnectoren]
+    [bewerkbaar, onVerwijder, onVerwijderConnectoren]
   );
 
   const handleMoveEnd = useCallback(
@@ -1982,8 +1990,7 @@ function CanvasBinnenkant({
       onReconnect={handleReconnect}
       onReconnectEnd={handleReconnectEnd}
       isValidConnection={isValidConnection}
-      onNodesDelete={handleNodesDelete}
-      onEdgesDelete={handleEdgesDelete}
+      onDelete={handleDelete}
       onEdgeDoubleClick={handleEdgeDoubleClick}
       onNodeDoubleClick={handleNodeDoubleClick}
       onDragOver={handleExternDragOver}
