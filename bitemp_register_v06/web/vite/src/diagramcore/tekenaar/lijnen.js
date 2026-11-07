@@ -31,6 +31,7 @@ import { veiligeKleur } from "../../diagramsvg/thema.js";
 import { tekstBreedte } from "../../diagramsvg/tekstmaat.js";
 import { zwevendeUiteinden, verschuifUiteinden, boomPunten } from "../canvas/zwevendeRand.js";
 import { isPuntNode } from "./voorkomen.js";
+import { splitsLeesrichting, leesrichtingHoek, driehoekPunten } from "../canvas/leesrichting.js";
 
 const DASHES = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4", gestippeld: "2 3" };
 /** Vaste slate-tinten van profielen (gekozen voor een wit canvas) → de randkleur van het thema. */
@@ -309,8 +310,12 @@ export function tekenLijnen({ edges, boxen, elements, thema, idPrefix }) {
     for (const label of p.labels || []) {
       const zijde = posities[label.zijde] ? label.zijde : "midden";
       const stapelIdx = (stapel[zijde] = (stapel[zijde] ?? -1) + 1);
-      const delen = (label.delen || []).filter((x) => x.tekst);
-      if (!delen.length) continue;
+      const delen0 = (label.delen || []).filter((x) => x.tekst);
+      if (!delen0.length) continue;
+      // Leesrichtingspijl ("▶ heen", "◀ terug"): eraf als tekst, als gedraaide driehoek ervóór
+      // (canvas/leesrichting.js, zoals ConnectorEdge; Mark 07-11).
+      const { richting, rest } = splitsLeesrichting(delen0[0].tekst);
+      const delen = richting ? [{ ...delen0[0], tekst: rest }, ...delen0.slice(1)] : delen0;
       const basis = posities[zijde];
       const pos = { x: basis.x + (label.offset?.x || 0), y: basis.y + (label.offset?.y || 0) + stapelIdx * LABEL_STAPEL };
       const naamDeel = delen.find((x) => x.veld === "naam");
@@ -320,10 +325,16 @@ export function tekenLijnen({ edges, boxen, elements, thema, idPrefix }) {
       const stijlen = delen.map((deel) => deelStijl(deel, thema, !!naamDeel));
       // Tussen de delen 4 px (de gap van .dc-edge-label); een staart sluit aan op zijn naam.
       const tussen = delen.map((deel, i) => (i === 0 || deel.soort === "staart" ? 0 : LABEL_GAP));
-      const bw = delen.reduce((som, deel, i) => som + tussen[i] + tekstBreedte(deel.tekst, stijlen[i]["font-size"] || LABEL, { vet: stijlen[i]["font-weight"] === 600 }), 0) + 12;
+      const pijlMaat = richting ? Math.round((stijlen[0]["font-size"] || LABEL) * 0.8 * 10) / 10 : 0;
+      const pijlRuimte = richting ? pijlMaat + 3 : 0;
+      const bw = delen.reduce((som, deel, i) => som + tussen[i] + tekstBreedte(deel.tekst, stijlen[i]["font-size"] || LABEL, { vet: stijlen[i]["font-weight"] === 600 }), 0) + 12 + pijlRuimte;
       kinderen.push(vorm("rect", { x: pos.x - bw / 2, y: pos.y - CHIP_H / 2, width: bw, height: CHIP_H, rx: 4, fill: thema.surface, "fill-opacity": 0.9, stroke: thema.border, "stroke-opacity": 0.4 }));
+      if (richting) {
+        const hoek = leesrichtingHoek(richting, { x: u.sourceX, y: u.sourceY }, { x: u.targetX, y: u.targetY }, { hoekig: p.vorm === "hoekig" && !knikken });
+        kinderen.push(vorm("polygon", { class: "dc-leesrichting", "data-hoek": hoek, points: driehoekPunten(pos.x - bw / 2 + 6 + pijlMaat / 2, pos.y, pijlMaat, hoek), fill: stijlen[0].fill }));
+      }
       // data-dc-label: de connector van dit label (voor tests en voor wie de SVG naloopt).
-      const attrsT = { x: pos.x, y: pos.y + 3.5, "text-anchor": "middle", "font-size": LABEL, ...(el.id || e.id ? { "data-dc-label": el.id || e.id } : {}) };
+      const attrsT = { x: pos.x + pijlRuimte / 2, y: pos.y + 3.5, "text-anchor": "middle", "font-size": LABEL, ...(el.id || e.id ? { "data-dc-label": el.id || e.id } : {}) };
       if (naamDeel) attrsT["data-dc-veld"] = `connector:${el.id}:naam`;
       if (delen.length === 1) {
         // Eén deel: de stijl op de tekst zelf.

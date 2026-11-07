@@ -55,3 +55,19 @@ test("labelsBoven (sequence) zet het middenlabel 13 boven de lijn; een onbekende
   assert.equal(vraag.y, 20 - 13);
   assert.equal(x.y, 20 - 13 + 18, "onbekende zijde = midden, en stapelt daar");
 });
+
+test("leesrichtingspijl: een driehoek langs de lijn, ook verticaal (Mark 07-11)", () => {
+  const boven = new Map([["a", doos(0, 300)], ["b", doos(0, 0)]]);
+  const edge = {
+    source: "a", target: "b", sourceHandle: "source-top", targetHandle: "target-bottom",
+    data: { connectorId: "c", presentatie: { vorm: "recht", labels: [
+      { zijde: "doel", delen: [{ tekst: "▶ label heen", soort: "naam" }] },
+      { zijde: "bron", delen: [{ tekst: "◀ label terug", soort: "naam" }] },
+    ] } },
+  };
+  const uit = tekenLijnen({ edges: [edge], boxen: boven, elements: { c: { id: "c" } }, thema, idPrefix: "p" });
+  const pijlen = uit.boom.kinderen.filter((k) => k.tag === "polygon" && k.attrs.class === "dc-leesrichting");
+  // Bron onder, doel boven: heen wijst omhoog, terug omlaag.
+  assert.deepEqual(pijlen.map((k) => k.attrs["data-hoek"]), [-90, 90]);
+  assert.deepEqual(teksten(uit).map((t) => t.tekst), ["label heen", "label terug"], "het teken is van de tekst af");
+});
