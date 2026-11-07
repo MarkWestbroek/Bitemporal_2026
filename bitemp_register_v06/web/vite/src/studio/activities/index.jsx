@@ -24,6 +24,7 @@ import diagramActivity from "./diagramActivity";
 import puurUmlActivity from "./puurUmlActivity";
 import oasActivity from "./oasActivity";
 import graphqlActivity from "./graphqlActivity";
+import shaclActivity from "./shaclActivity";
 import profielActivity from "./profielActivity";
 import profielOntwerpActivity from "./profielOntwerpActivity";
 import dmnActivity from "./dmnActivity";
@@ -96,6 +97,8 @@ import { registreerActiviteitAlsProfieltype } from "./activiteitAlsProfieltype.j
 // Side-effect: registreert de ingebouwde transformaties (import/export/transform).
 import "./transformaties.js";
 import "./inrichtingsExport.js";
+import "./shaclTransformatie.js"; // canoniek → SHACL (linked data fase 3)
+import "./layoutOvernemenTransformatie.js"; // layout overnemen via kruisverbanden
 import "./archimateTransformaties.js";
 import "./oasCanoniekTransformatie.js";
 import "./usecaseTransformaties.js";
@@ -110,6 +113,7 @@ registreerActiviteiten([
   puurUmlActivity, // "UML" — tweede profiel (preview)
   oasActivity, // "OAS" — derde profiel, OAS 3.0/3.1 (preview)
   graphqlActivity, // "GraphQL" — schema-profiel (M2): typesysteem, SDL in en uit (preview)
+  shaclActivity, // "SHACL" — linked data (M2): shapes, Turtle in, met lint (preview)
   mimActivity, // "MIM" — vijfde profiel, MIM 1.2 (preview)
   statemachineActivity, // "State machine" — gedragsdiagram-verkenning (preview)
   usecaseActivity, // "Use case" — actoren/use cases/systeemkader (preview)

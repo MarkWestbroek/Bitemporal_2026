@@ -7771,6 +7771,245 @@
    ]
   },
   {
+   "id": "shacl05",
+   "naam": "SHACL",
+   "diagramTypeId": "shacl",
+   "elementen": [
+    {
+     "id": "shapesgraaf",
+     "label": "Shapes graph",
+     "omschrijving": "Het SHACL-document: titel, beschrijving, prefixen en sh:declare (owl:Ontology).",
+     "eigenschappen": [
+      "iri",
+      "titel",
+      "beschrijving",
+      "prefixen",
+      "declaraties",
+      "overig",
+      "losseTriples"
+     ]
+    },
+    {
+     "id": "nodeshape",
+     "label": "Node shape",
+     "omschrijving": "Een sh:NodeShape: voorwaarden voor de knopen die hij als doel heeft; de property shapes zijn de regels.",
+     "eigenschappen": [
+      "iri",
+      "doelklassen",
+      "ookKlasse",
+      "doelknopen",
+      "doelSubjectenVan",
+      "doelObjectenVan",
+      "gesloten",
+      "genegeerd",
+      "nodeKind",
+      "severity",
+      "message",
+      "gedeactiveerd",
+      "beschrijving",
+      "overig"
+     ],
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
+     ]
+    },
+    {
+     "id": "propertyshape",
+     "label": "Property shape (los)",
+     "omschrijving": "Een sh:PropertyShape met eigen doelen, niet binnen een node shape.",
+     "eigenschappen": [
+      "iri",
+      "doelklassen",
+      "doelknopen",
+      "doelSubjectenVan",
+      "doelObjectenVan",
+      "nodeKind",
+      "severity",
+      "message",
+      "gedeactiveerd",
+      "beschrijving",
+      "overig"
+     ],
+     "velden": [
+      {
+       "id": "eigenschappen",
+       "soort": "attribuut",
+       "fieldType": "eigenschap"
+      }
+     ]
+    },
+    {
+     "id": "klasse",
+     "label": "Klasse",
+     "omschrijving": "Een klasse uit sh:class waar geen shape op richt; alleen het doel van een pijl.",
+     "eigenschappen": [
+      "iri",
+      "beschrijving"
+     ]
+    },
+    {
+     "id": "constraint",
+     "label": "Constraint",
+     "omschrijving": "SHACL-constraint die niet in een regel past (sh:or, sh:xone, sh:and, sh:not, sh:sparql); de body is het fragment zelf.",
+     "eigenschappen": [
+      "specificatie",
+      "taal",
+      "message",
+      "severity",
+      "prefixen",
+      "overig"
+     ]
+    },
+    {
+     "id": "boundary",
+     "label": "Kader"
+    },
+    {
+     "id": "diagramverwijzing",
+     "label": "Diagramverwijzing",
+     "omschrijving": "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het."
+    }
+   ],
+   "connectoren": [
+    {
+     "id": "verwijzing",
+     "label": "eigenschap → shape/klasse",
+     "regels": [
+      {
+       "bron": [
+        "nodeshape",
+        "propertyshape"
+       ],
+       "doel": [
+        "nodeshape",
+        "propertyshape",
+        "klasse"
+       ]
+      }
+     ],
+     "eigenschappen": [
+      "rolnaam",
+      "kardinaliteit",
+      "soort"
+     ]
+    },
+    {
+     "id": "node",
+     "label": "sh:node",
+     "regels": [
+      {
+       "bron": [
+        "nodeshape",
+        "propertyshape"
+       ],
+       "doel": [
+        "nodeshape",
+        "propertyshape"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "subklasse",
+     "label": "rdfs:subClassOf",
+     "regels": [
+      {
+       "bron": [
+        "nodeshape",
+        "klasse"
+       ],
+       "doel": [
+        "nodeshape",
+        "klasse"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "notitielijn",
+     "label": "Annotatie-lijn",
+     "omschrijving": "Van een notitie of constraint naar het element waar hij over gaat (UML annotatedElement / constrainedElement).",
+     "regels": [
+      {
+       "bron": [
+        "constraint"
+       ],
+       "doel": [
+        "shapesgraaf",
+        "nodeshape",
+        "propertyshape",
+        "klasse",
+        "constraint",
+        "boundary",
+        "diagramverwijzing"
+       ]
+      }
+     ]
+    }
+   ],
+   "layouts": [
+    {
+     "id": "shacl-lagen",
+     "label": "Auto-layout"
+    }
+   ],
+   "layoutTypen": [
+    {
+     "id": "shapesgraaf"
+    },
+    {
+     "id": "nodeshape",
+     "minBreedte": 340
+    },
+    {
+     "id": "propertyshape",
+     "minBreedte": 340
+    },
+    {
+     "id": "klasse"
+    },
+    {
+     "id": "constraint",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "boundary"
+    },
+    {
+     "id": "verwijzing",
+     "isConnector": true
+    },
+    {
+     "id": "node",
+     "isConnector": true
+    },
+    {
+     "id": "subklasse",
+     "isConnector": true
+    },
+    {
+     "id": "notitie",
+     "minBreedte": 100,
+     "minHoogte": 44
+    },
+    {
+     "id": "notitielijn",
+     "isConnector": true,
+     "aard": "annotatie"
+    },
+    {
+     "id": "diagramverwijzing",
+     "minBreedte": 120,
+     "minHoogte": 44
+    }
+   ]
+  },
+  {
    "id": "statemachine05",
    "naam": "State machine",
    "diagramTypeId": "statemachine",
