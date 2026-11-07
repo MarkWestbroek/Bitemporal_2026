@@ -29,7 +29,62 @@ export function isRli(el) {
   return "entiteitSubtype" in d ? d.entiteitSubtype === "referentielijst_item" : d.stereotype === "«ref.lijst item»";
 }
 
+/**
+ * Is dit element de items-relatie van een referentielijst (relatieSubtype referentielijst_items)?
+ * Zelfde regel als index.js `isRefLijstItems`. Plan Referentielijst-instanties §8 (08-11): het
+ * voorkeursdoel van een veld dat een referentielijst gebruikt.
+ */
+export function isItemsRel(el) {
+  if (el?.elementType !== "relatie") return false;
+  const d = el.data || {};
+  return "relatieSubtype" in d ? d.relatieSubtype === "referentielijst_items" : d.stereotype === "«ref.lijst items»";
+}
+
 const edgeData = (e) => ({ ...(e?.data?.bron || {}), ...(e?.data || {}) });
+
+/** Het typelabel van een V3-veld zoals de adapter het vóór 08-11 maakte (een `$ref` als basistype). */
+function oudRefLabel(v) {
+  let t = v.type || "";
+  if (v.format) t += ` «${v.format}»`;
+  if (v.autoIncrement) t += " {AI}";
+  if (v.enum) t += ` {${v.enum.join("|")}}`;
+  return t;
+}
+
+/**
+ * Velden met een `$ref` (in `data.bron.velden`: refItemNaam) die nog het oude label dragen
+ * ("integer") krijgen de naam van wat ze noemen: de items-relatie of de item-entiteit (08-11).
+ * Zo ziet de modelleur de verwijzing, leidt GEBR-1 de «gebruikt»-lijn af en kan hij hem
+ * omhangen. Een label dat de modelleur zelf zette, blijft. Idempotent; null als er niets te doen is.
+ * @param {{elements: Record<string, any>, diagrams: Record<string, any>}} state
+ */
+export function herstelRefTypeLabels(state) {
+  const elements = state?.elements || {};
+  let nieuw = null;
+  for (const el of Object.values(elements)) {
+    const bronVelden = el?.data?.bron?.velden;
+    if (!Array.isArray(bronVelden) || !bronVelden.some((v) => v?.refItemNaam)) continue;
+    let gewijzigd = false;
+    const compartimenten = (el.compartimenten || []).map((c) => {
+      if (c.compartmentType !== "velden") return c;
+      let cGewijzigd = false;
+      const velden = (c.velden || []).map((v) => {
+        const b = (v.data?.uuid && bronVelden.find((x) => x.uuid === v.data.uuid)) || bronVelden.find((x) => x.naam === v.naam);
+        if (!b?.refItemNaam || b.enumNaam || b.datatypeNaam) return v;
+        if ((v.data?.typeLabel || "") !== oudRefLabel(b)) return v;
+        cGewijzigd = true;
+        return { ...v, data: { ...(v.data || {}), typeLabel: b.refItemNaam } };
+      });
+      if (!cGewijzigd) return c;
+      gewijzigd = true;
+      return { ...c, velden };
+    });
+    if (!gewijzigd) continue;
+    nieuw = nieuw || { ...elements };
+    nieuw[el.id] = { ...el, compartimenten };
+  }
+  return nieuw ? { elements: nieuw, diagrams: state?.diagrams || {} } : null;
+}
 
 /**
  * ERFT-1: presentatie-edges met `isGeneralization` → `generalisatie`-connectoren.
@@ -86,7 +141,7 @@ export function synchroniseerGebruik(state) {
   const typeOpNaam = new Map();
   for (const el of Object.values(elements)) {
     if (!el?.naam || typeOpNaam.has(el.naam)) continue;
-    if (el.elementType === "enumeratie" || el.elementType === "gegevenstype" || isRli(el)) typeOpNaam.set(el.naam, el.id);
+    if (el.elementType === "enumeratie" || el.elementType === "gegevenstype" || isRli(el) || isItemsRel(el)) typeOpNaam.set(el.naam, el.id);
   }
   // Gewenste paren uit de velden.
   const gewenst = new Set();

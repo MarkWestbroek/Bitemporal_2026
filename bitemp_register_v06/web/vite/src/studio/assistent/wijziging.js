@@ -46,12 +46,65 @@ function voegVeldenToe(compartimenten, { compartiment, fieldType, soort, velden 
   for (const v of velden) {
     if (namen.has(v.naam.toLowerCase())) continue;
     namen.add(v.naam.toLowerCase());
-    nieuw.push({ naam: v.naam, fieldType, data: soort === "waarde" || !v.type ? {} : { typeLabel: v.type } });
+    nieuw.push({ naam: v.naam, fieldType, data: soort === "waarde" ? {} : { ...(v.type ? { typeLabel: v.type } : {}), ...(v.verplicht ? { verplicht: true } : {}) } });
   }
   if (!nieuw.length) return compartimenten;
   return oud
     ? compartimenten.map((c) => (c === oud ? { ...c, velden: [...(c.velden || []), ...nieuw] } : c))
     : [...compartimenten, { compartmentType: compartiment, velden: nieuw }];
+}
+/**
+ * Velden van het plan op een bestaand element (08-11, Mark: "alle velden optioneel" werd "velden
+ * erbij"): een veld met een bestaande naam (hoofdletterongevoelig, in elk compartiment) wordt
+ * **gewijzigd** — alleen wat het plan noemt (verplicht, type, nieuweNaam) — en een nieuwe naam
+ * komt erbij. Uit: de nieuwe compartimenten plus wat er echt gebeurt, zodat het voorstel eerlijk
+ * kan zeggen wat erbij komt, wat verandert en wat al zo was.
+ * @returns {{compartimenten: any[], toegevoegd: string[], gewijzigd: {naam: string, wat: string[]}[], ongewijzigd: string[]}}
+ */
+export function werkVeldenBij(compartimenten, v) {
+  const toegevoegd = [];
+  const gewijzigd = [];
+  const ongewijzigd = [];
+  let comps = compartimenten || [];
+  const nieuweVelden = [];
+  for (const veld of v.velden || []) {
+    const sleutel = veld.naam.toLowerCase();
+    let gevonden = null;
+    comps = comps.map((c) => {
+      if (gevonden) return c;
+      const i = (c.velden || []).findIndex((x) => String(x.naam).toLowerCase() === sleutel);
+      if (i < 0) return c;
+      const oud = c.velden[i];
+      const data = { ...(oud.data || {}) };
+      const wat = [];
+      if (v.soort !== "waarde" && typeof veld.verplicht === "boolean" && !!data.verplicht !== veld.verplicht) {
+        data.verplicht = veld.verplicht;
+        wat.push(veld.verplicht ? "verplicht" : "optioneel");
+      }
+      if (v.soort !== "waarde" && veld.type && veld.type !== (data.typeLabel || "")) {
+        wat.push(`type ${data.typeLabel || "—"} → ${veld.type}`);
+        data.typeLabel = veld.type;
+      }
+      let naam = oud.naam;
+      if (veld.nieuweNaam && veld.nieuweNaam !== oud.naam) {
+        wat.push(`naam → ${veld.nieuweNaam}`);
+        naam = veld.nieuweNaam;
+      }
+      gevonden = { naam: oud.naam, wat };
+      if (!wat.length) return c;
+      const velden = [...c.velden];
+      velden[i] = { ...oud, naam, data };
+      return { ...c, velden };
+    });
+    if (gevonden) (gevonden.wat.length ? gewijzigd : ongewijzigd).push(gevonden.wat.length ? gevonden : gevonden.naam);
+    else if (!nieuweVelden.some((x) => x.naam.toLowerCase() === sleutel)) nieuweVelden.push(veld);
+  }
+  if (nieuweVelden.length) {
+    const voor = comps;
+    comps = voegVeldenToe(comps, { ...v, velden: nieuweVelden });
+    if (comps !== voor) toegevoegd.push(...nieuweVelden.map((x) => x.naam));
+  }
+  return { compartimenten: comps, toegevoegd, gewijzigd, ongewijzigd };
 }
 const CONTAINER = { breedte: 320, hoogte: 200 };
 
@@ -148,13 +201,18 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   // Velden erbij op bestaande elementen (melding #4: waarden aan een enumeratie); bestaande namen niet dubbel.
   const telVelden = (comps) => (comps || []).reduce((t, c) => t + (c.velden || []).length, 0);
   let nVelden = 0;
+  let nVeldenGewijzigd = 0;
   for (const e of plan.elementen) nVelden += telVelden(bij(e.profielId).elements[idVan.get(e.sleutel)]?.compartimenten);
+  /** Per element wat de velden van het plan echt doen (voorstel: erbij / gewijzigd / al zo). */
+  const veldenEffect = [];
   for (const v of plan.veldenBij || []) {
     const el = elementVan(v.profielId, v.id);
     if (!el) continue;
-    const comps = voegVeldenToe(el.compartimenten || [], v);
-    nVelden += telVelden(comps) - telVelden(el.compartimenten);
-    if (comps !== el.compartimenten) bij(v.profielId).elements[v.id] = { ...el, compartimenten: comps };
+    const r = werkVeldenBij(el.compartimenten || [], v);
+    nVelden += r.toegevoegd.length;
+    nVeldenGewijzigd += r.gewijzigd.length;
+    veldenEffect.push({ profielId: v.profielId, id: v.id, naam: v.naam, soort: v.soort, toegevoegd: r.toegevoegd, gewijzigd: r.gewijzigd, ongewijzigd: r.ongewijzigd });
+    if (r.compartimenten !== el.compartimenten) bij(v.profielId).elements[v.id] = { ...el, compartimenten: r.compartimenten };
   }
   for (const h of plan.hernoemd) {
     const el = elementVan(h.profielId, h.id);
@@ -579,6 +637,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
   if (plan.diagramHernoemd?.length) delen.push(`${plan.diagramHernoemd.length} diagram${plan.diagramHernoemd.length === 1 ? "" : "men"} hernoemd`);
   if (nVerwijzingen) delen.push(`${nVerwijzingen} doorklik${nVerwijzingen === 1 ? "" : "ken"}`);
   if (nVelden) delen.push(`${nVelden} veld${nVelden === 1 ? "" : "en"}`);
+  if (nVeldenGewijzigd) delen.push(`${nVeldenGewijzigd} veld${nVeldenGewijzigd === 1 ? "" : "en"} gewijzigd`);
   if (plan.leden?.length) delen.push(`${plan.leden.length} in een container gezet`);
   if (uitgelijnd.size) delen.push(`${uitgelijnd.size === 1 ? "diagram" : `${uitgelijnd.size} diagrammen`} opnieuw opgesteld`);
   if (links.length) delen.push(`${links.length} verband${links.length === 1 ? "" : "en"}`);
@@ -596,6 +655,7 @@ export function maakWijziging(plan, stand, { mapId = null, samenvattingen, prefi
     wis,
     plaatsingWis,
     nietUitgevoerd,
+    veldenEffect,
     samenvatting: delen.length ? delen.join(", ") : "geen wijzigingen",
   };
 }

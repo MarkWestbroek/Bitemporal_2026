@@ -143,7 +143,7 @@ test("rechtsklik op een element: velden erbij, bestaande niet dubbel; bijsturen 
   await expect(dlg.locator(".ast-problemen summary")).toContainText("1 opmerking");
   // Bijsturen: de eerdere beurten gaan mee.
   await dlg.locator("textarea").fill("mies is verplicht");
-  await dlg.getByRole("button", { name: "Aanpassen" }).click();
+  await dlg.getByRole("button", { name: "Bijsturen" }).click();
   await expect.poll(() => vragen.length).toBe(2);
   expect(vragen[1].messages.map((m) => m.role)).toEqual(["system", "user", "assistant", "user"]);
   await dlg.getByRole("button", { name: "Toepassen" }).click();

@@ -1061,6 +1061,30 @@ fase 2 een **bewerkbare sandbox**:
   - Handmatig: `gebruik` heeft nu ook `entiteit` als doel, met de nieuwe M3-hook
     `magVerbinden(bron, doel)` (`passendOpType`, `handlerCatalogus`): alleen een
     ref.lijst-item. Daarmee kan ook vanaf een relatie (AanvraagPartij → Partijrol).
+- **Een veld dat een referentielijst gebruikt (2026-11-08, plan *Referentielijst-instanties —
+  richting, binding en domein* §8, besluit Mark 07/08-11; FUNDAMENT meldde dat de items-relatie
+  "Aanvraagtype" niet te kiezen was).** Het type van zo'n veld is de **items-relatie**
+  (`relatieSubtype referentielijst_items`, item → Referentielijst): `$ref` = de naam van de REL
+  (bv. `LandenlijstLand`), het veld bevat het item-id. Bij twee lijsten over één item-type
+  (Landenlijst, EULidstaten over Land) is de REL het enige onderscheid.
+  - **Kiezer:** de type-keuze heeft een groep *Referentielijsten* (referenceType `reflijst`,
+    label "LandenlijstLand (items: Land)", in welke richting de REL ook loopt), vóór
+    *Referentielijst-items (zonder lijst)* (`refitem`, de item-entiteit; blijft als overgang,
+    zoals Gemeente).
+  - **Rondreis:** een `$ref`-veld toont de naam van wat het noemt (REL of item), niet meer
+    "integer" (`typeLabel` in `adapter.js`); `parseTypeLabel` herkent een REL. Het oude label
+    "integer" uit een bestaand project telt als "niet aangeraakt" (anders ging de `$ref` bij de
+    export verloren), en `herstelRefTypeLabels` (`afgeleideConnectoren.js`, in `migreerModel`
+    vóór GEBR-1) zet het bij het laden om naar de verwijzingsnaam.
+  - **«gebruikt»:** `synchroniseerGebruik` leidt ook een lijn af van het veld naar de REL; handmatig
+    mag `gebruik` naar een items-relatie (`magVerbinden`). Een REL die als kale lijn getekend is,
+    heeft geen doos om naar te wijzen; de lijn verschijnt pas waar de REL een doos heeft.
+  - **Verbindingsregel:** een items-relatie loopt van het ref.lijst-item naar de referentielijst;
+    andersom geeft een waarschuwing "draai de richting om" (`controleerItemsRichting`, in de
+    validatie van representatie). Het demo-model np-loc staat nog andersom.
+  - Tests: `canoniek-uml/reflijstVeld.test.js` (op het demo-model np-loc: Adres.land →
+    LandenlijstLand, Adres.gemeente → Gemeente). Backend (opties-route REL → items/leden,
+    codegen-controle van het `$ref`-doel, controle bij registratie §33.4) volgt na api 0.22.0.
 - **Entiteit- en relatievelden bewerkbaar (2026-09-17).** Zoals *Details* in
   de oude IDE. Entiteit: beschrijving, meervoud, materieel, kleur, subtype.
   Relatie: domein, beschrijving, meervoud, materieel, kleur, subtype,

@@ -9,6 +9,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Een referentielijst als veldtype** (08-11, plan Referentielijst-instanties §8): de type-keuze
+  van een veld in het canonieke model biedt de items-relaties aan (groep *Referentielijsten*,
+  voorkeur) naast de item-entiteiten (overgang). Een `$ref`-veld toont zijn verwijzing in plaats
+  van "integer" en blijft heel bij de export, ook in bestaande projecten; «gebruikt» loopt dan
+  naar de REL; een items-relatie in de verkeerde richting (lijst → item) geeft een waarschuwing.
+- **Assistent: velden wijzigen** (08-11): verplicht/optioneel, type en naam van bestaande velden
+  (ook via de MCP). Het voorstel zegt per element wat erbij komt, wat verandert en wat al zo was;
+  de knop *Aanpassen* heet nu *Bijsturen* (stuurt je reactie, verandert nog niets).
 - **Koppelingen als lijnen op het diagram** (Mark, 07-11; stap 2 van het koppeldiagram): een
   koppeling uit de matrix staat als violette dependency (gestippeld, open pijl, de soort als
   «stereotype»; realiseert als realisatie) op elk diagram waar beide uiteinden staan. Een lijn

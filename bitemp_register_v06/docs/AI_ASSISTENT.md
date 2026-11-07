@@ -203,6 +203,24 @@ zonder effect. Sindsdien:
 - De MCP doet hetzelfde voor een AI-client: grenzen in de server-instructies en de
   toolbeschrijving, en *NIET GEDAAN* in het antwoord.
 
+## Velden wijzigen en bijsturen (08-11)
+
+Mark vroeg "maak alle velden in TestGEGegevenstypen optioneel". Het voorstel noemde alle bestaande
+velden "erbij": de AI zag van een element alleen de veldnamen, en het plan kende alleen velden
+toevoegen (bestaande namen werden stil overgeslagen, dus het voorstel deed niets). Sindsdien:
+- **De AI ziet per veld type en verplicht** (`bestaandInMap`: `bsn: BSN (verplicht)`, tot 80
+  velden per element).
+- **Een veld met een bestaande naam is een wijziging**, geen nieuw veld: in het plan `velden` met de
+  huidige naam en alleen wat verandert: `verplicht` (true/false), `type`, `nieuweNaam`
+  (`werkVeldenBij` in `studio/assistent/wijziging.js`). Een veld weghalen kan niet.
+- **Het voorstel is eerlijk over het effect** (`wijziging.veldenEffect`): per element *erbij*,
+  *gewijzigd* (bv. `bsn (optioneel)`, `type string → int`) en *al zo, niets veranderd*; de
+  samenvatting telt "n velden gewijzigd". Doet het voorstel niets, dan zegt de Studio dat.
+- **De knop heet *Bijsturen*** (was *Aanpassen*): hij stuurt je reactie als vervolgbericht en
+  levert een nieuw voorstel; er verandert pas iets bij *Toepassen*.
+- De MCP (`model_wijzigen`) kent hetzelfde: de toolbeschrijving noemt `verplicht`/`nieuweNaam`, en
+  het antwoord meldt erbij / gewijzigd / al zo.
+
 ## Nog niet
 
 - **Claude via de proxy.** Die komt met de Go-SDK, niet via een OpenAI-compatibele omweg.
