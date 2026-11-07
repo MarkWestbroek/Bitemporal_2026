@@ -93,6 +93,9 @@ export const TOEGANGSSPRAAK_NAAR_ODRL_AP_NL = {
     // ── Wie en wat ──────────────────────────────────────────────────────────
     { naam: "Partij", bij: "knoop", als: { aard: "partij" }, maak: { type: "odrl:PartyCollection", data: { "skos:definition": "{definitie}" } } },
     { naam: "Gegevensbegrip", bij: "knoop", als: { aard: "gegevensbegrip" }, maak: { type: "odrl:AssetCollection", data: { "skos:definition": "{definitie}" } } },
+    // Een deel met delen eronder is een AssetCollection: ODRL 2.2 laat odrl:partOf naar een
+    // AssetCollection wijzen, en een regel erop geldt dan voor elk lid (de register-hiërarchie).
+    { naam: "Registerdeel met onderdelen", bij: "knoop", als: { aard: "registerdeel", heeftOnderdelen: true }, maak: { type: "odrl:AssetCollection", data: { "dct:identifier": "{pad}" } } },
     { naam: "Registerdeel", bij: "knoop", als: { aard: "registerdeel" }, maak: { type: "odrl:Asset", data: { "dct:identifier": "{pad}" } } },
 
     // ── Voorwaarden: eerst wat ODRL of ODRL-AP-NL al een naam geeft ─────────

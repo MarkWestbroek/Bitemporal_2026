@@ -173,6 +173,13 @@ test("ODRL: groep door kenmerken, register als partOf-hiërarchie, bestaansvraag
   }).turtle;
   assert.match(blok(gbo, "reg:Persoon.Inkomen.jaar"), /a odrl:Asset , ts:Veld ;[\s\S]*odrl:partOf reg:Persoon\.Inkomen \./);
   assert.match(blok(gbo, "reg:Persoon.Inkomen"), /odrl:partOf reg:Persoon , b:gegevens-inkomensgegevens \./, "het registerdeel hangt ook onder het begrip");
+  // Een pad met delen eronder is een AssetCollection (partOf wijst in ODRL 2.2 naar een verzameling,
+  // en een regel erop geldt voor elk lid); een blad blijft Asset. Ze staan samen onder "Het register".
+  assert.match(blok(gbo, "reg:Persoon"), /^reg:Persoon a odrl:AssetCollection , ts:Entiteit ;/);
+  assert.match(blok(gbo, "reg:Persoon.Inkomen"), /^reg:Persoon\.Inkomen a odrl:AssetCollection , ts:Gegevenselement ;/);
+  assert.match(blok(gbo, "reg:Persoon.Inkomen.jaar"), /^reg:Persoon\.Inkomen\.jaar a odrl:Asset , /);
+  const register = gbo.slice(gbo.indexOf("# ── Het register"), gbo.indexOf("# ── Woordenschat"));
+  assert.ok(register.includes("reg:Persoon a odrl:AssetCollection") && !register.includes("b:gegevens-inkomensgegevens a"));
   assert.match(blok(gbo, "b:regel-inkomens-tot-en-met-2024"), /odrl:target reg:Persoon\.Inkomen/);
   assert.match(blok(gbo, "b:vw-het-jaar-van-de-aanvraag-is-ten-hoogste-2024"), /odrl:leftOperand ts:aanvraag\.jaar ;\n {4}odrl:operator odrl:lteq ;\n {4}odrl:rightOperand 2024 \./);
   // De bestaansvraag is geen kenmerk van het verzoek: voorwaarde op de regel.
