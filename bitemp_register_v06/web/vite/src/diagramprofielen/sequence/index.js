@@ -234,6 +234,11 @@ export const sequenceDiagramType = {
   // Voor de ✨ assistent en de MCP: een plan kent alleen levenslijnen en berichten; de punten
   // en daarmee de activaties maakt plaatsUitPlan.js erbij, zoals het canvas dat doet (06-11).
   assistent: {
+    // AI-3 (08-11): in een sequence is een bericht naar dezelfde levenslijn een zelf-aanroep, en
+    // tussen hetzelfde paar lopen vaak meer berichten (aanroep, retour, nog een aanroep): de
+    // planregels (assistentKern.controleerPlan) ontdubbelen ze dan niet en laten zelf-berichten staan.
+    zelfVerbindingen: true,
+    herhaling: true,
     aanwijzingen: [
       "Maak alleen levenslijnen en berichten van levenslijn naar levenslijn. Maak zelf geen punten en geen activaties: de punten ontstaan bij elk bericht, en de activaties (de balkjes op de lijn) volgen daaruit.",
       "De volgorde van de berichten in het plan is de volgorde van boven naar beneden in het diagram; de levenslijnen komen op één rij in de volgorde van het plan.",

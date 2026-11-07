@@ -7714,6 +7714,8 @@
     "Een bericht van een levenslijn naar zichzelf is een zelf-aanroep.",
     "Stel een sequence-diagram niet opnieuw op met `opstelling`: de hoogte van de berichten is de volgorde."
    ],
+   "zelfVerbindingen": true,
+   "herhaling": true,
    "layoutStijlen": [],
    "layoutTypen": [
     {

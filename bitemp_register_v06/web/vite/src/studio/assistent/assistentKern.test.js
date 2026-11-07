@@ -645,3 +645,39 @@ test("lijnen: onbekende vorm, relatie of zonder iets te doen → probleem", () =
   const vraag = vraagVoorOpdracht([kl], "maak de lijnen hoekig", { bestaand: bestaandLijnen(stand) });
   assert.match(vraag.systeem, /`lijnen`/);
 });
+
+test("AI-3 (08-11): sequence — zelf-berichten en herhaalde berichten tussen hetzelfde paar blijven; elders ontdubbelen op naam", () => {
+  const seq = (assistent) => ({
+    id: "sequence", label: "Sequence",
+    elementTypes: [
+      { id: "levenslijn", label: "Levenslijn" },
+      { id: "synchroon", label: "Synchroon bericht", isConnector: true, bron: { elementTypes: ["levenslijn"] }, doel: { elementTypes: ["levenslijn"] } },
+    ],
+    ...(assistent ? { assistent } : {}),
+  });
+  const plan = {
+    uitleg: "",
+    diagrammen: [{ sleutel: "d1", taal: "sequence05", naam: "Seq" }],
+    elementen: [{ sleutel: "a", type: "levenslijn", naam: "A", diagram: "d1" }, { sleutel: "b", type: "levenslijn", naam: "B", diagram: "d1" }],
+    connectoren: [
+      { type: "synchroon", bron: "a", doel: "b", naam: "vraag" },
+      { type: "synchroon", bron: "a", doel: "b", naam: "nog een vraag" },
+      { type: "synchroon", bron: "a", doel: "b", naam: "vraag" },
+      { type: "synchroon", bron: "a", doel: "a", naam: "denk na" },
+    ],
+  };
+  const met = profielSamenvatting(seq({ zelfVerbindingen: true, herhaling: true }), "sequence05");
+  assert.equal(met.zelfVerbindingen, true);
+  const p1 = controleerPlan(plan, [met], []);
+  assert.deepEqual(p1.connectoren.map((c) => c.data?.naam ?? c.naam), ["vraag", "nog een vraag", "vraag", "denk na"]);
+  assert.deepEqual(p1.problemen, []);
+  // De ids blijven uniek: niets vouwt samen.
+  const w = maakWijziging(p1, { mappen: {}, plaatsing: {}, profielen: { sequence05: { elements: {}, diagrams: {} } } }, { mapId: null, samenvattingen: [met], nu: 1 });
+  assert.equal(Object.values(w.profielen.sequence05.elements).filter((e) => e.elementType === "synchroon").length, 4);
+
+  // Zonder de aanwijzingen: andere naam blijft, dezelfde naam ontdubbelt, naar zichzelf valt weg.
+  const zonder = profielSamenvatting(seq(null), "sequence05");
+  const p2 = controleerPlan(plan, [zonder], []);
+  assert.deepEqual(p2.connectoren.map((c) => c.data?.naam ?? c.naam), ["vraag", "nog een vraag"]);
+  assert.match(p2.problemen.join(" "), /naar zichzelf/);
+});

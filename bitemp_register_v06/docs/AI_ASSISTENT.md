@@ -221,6 +221,19 @@ toevoegen (bestaande namen werden stil overgeslagen, dus het voorstel deed niets
 - De MCP (`model_wijzigen`) kent hetzelfde: de toolbeschrijving noemt `verplicht`/`nieuweNaam`, en
   het antwoord meldt erbij / gewijzigd / al zo.
 
+## Sequence-berichten en de code van de MCP (AI-3, 08-11)
+
+Drie sequence-diagrammen die ARCHITECTUUR op 07-11 via `model_wijzigen` maakte, misten punten en
+activaties, en 4 van de 36 berichten. De punten maakte de MCP al sinds 06-11 (`plaatsUitPlan.js`),
+maar het MCP-proces draaide nog oudere code. De berichten vielen weg in `controleerPlan`: een
+tweede verbinding van hetzelfde type tussen hetzelfde paar werd ontdubbeld, en een verbinding naar
+zichzelf overgeslagen. Sindsdien:
+- ontdubbelen gebeurt op type, paar **en naam**;
+- een taal kan in `descriptor.assistent` zeggen dat dezelfde verbinding vaker mag (`herhaling`) en
+  dat een verbinding naar zichzelf mag (`zelfVerbindingen`); sequence doet beide;
+- de MCP zegt welke code hij draait (`codestand.mjs`): in `omnium_wie_ben_ik`, en boven het
+  antwoord van `model_wijzigen` als de repo inmiddels verder is. Dan: server herstarten.
+
 ## Nog niet
 
 - **Claude via de proxy.** Die komt met de Go-SDK, niet via een OpenAI-compatibele omweg.

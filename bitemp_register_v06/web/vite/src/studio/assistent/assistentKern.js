@@ -100,6 +100,10 @@ export function profielSamenvatting(descriptor, profielId = descriptor?.id) {
     ...(layouts.length ? { layouts } : {}),
     ...(a.aanwijzingen?.length ? { aanwijzingen: a.aanwijzingen } : {}),
     ...(a.paren ? { paren: a.paren } : {}),
+    // AI-3 (08-11): een verbinding naar zichzelf mag (zelf-aanroep), en dezelfde verbinding tussen
+    // hetzelfde paar mag vaker voorkomen (berichten in een sequence).
+    ...(a.zelfVerbindingen ? { zelfVerbindingen: true } : {}),
+    ...(a.herhaling ? { herhaling: true } : {}),
   };
 }
 
@@ -711,7 +715,7 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
     const s = taalVan.get(bron.profielId);
     const ct = s?.connectoren.find((x) => x.id === c.type);
     if (!ct) { problemen.push(`Relatietype "${c?.type}" bestaat niet in ${s?.naam || bron.profielId}; overgeslagen.`); continue; }
-    if ((bron.nieuw ?? bron.id) === (doel.nieuw ?? doel.id)) { problemen.push(`${ct.label} van "${bron.naam}" naar zichzelf overgeslagen.`); continue; }
+    if ((bron.nieuw ?? bron.id) === (doel.nieuw ?? doel.id) && !s.zelfVerbindingen) { problemen.push(`${ct.label} van "${bron.naam}" naar zichzelf overgeslagen.`); continue; }
     const paren = s.paren?.[ct.id];
     if (paren) {
       const past = (b, d) => paren.some(([pb, pd]) => pb === b.type && pd === d.type);
@@ -729,9 +733,13 @@ export function controleerPlan(antwoord, talen, bestaand = []) {
       problemen.push(`${ct.label} van ${bron.type} naar ${doel.type} mag niet in ${s.naam}; overgeslagen.`);
       continue;
     }
-    const sleutel = `${ct.id}|${bron.nieuw ?? bron.id}|${doel.nieuw ?? doel.id}`;
-    if (gezien.has(sleutel)) continue;
-    gezien.add(sleutel);
+    // Geen dubbele: zelfde type, paar én naam (AI-3, 08-11: twee berichten met een andere naam
+    // tussen dezelfde levenslijnen vielen weg). Een taal met `herhaling` ontdubbelt niet.
+    const sleutel = `${ct.id}|${bron.nieuw ?? bron.id}|${doel.nieuw ?? doel.id}|${tekst(c.naam)}`;
+    if (!s.herhaling) {
+      if (gezien.has(sleutel)) continue;
+      gezien.add(sleutel);
+    }
     const dia = c.diagram ? diagramOp(c.diagram) : null;
     connectoren.push({
       profielId: s.id,
