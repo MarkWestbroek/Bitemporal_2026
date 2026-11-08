@@ -21,7 +21,7 @@ const invoer = () => ({
   referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Verzoekpartijrol: lees("relatiebeheer-verzoekpartijrollen.json") },
   peiltijdstip: "2026-10-27T12:00:00Z",
   sha256Hex,
-  bpmnModellen: { "gpk-processen.bpmn-model.json": lees("gpk-processen.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") },
+  bpmnModellen: { "project:bpmnMotor05": lees("inrichten-bpmn.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") },
 });
 
 test("bestandsnaam volgt de CLI", () => {
@@ -118,7 +118,7 @@ test("de zaaktypekoppeling hangt af van het dossierschema en het zaaktype (volgo
   assert.deepEqual(link.diagnostics, []); // ook geen ART-PLAATSHOUDER: de plaatshouder naar GPK heeft zijn afhankelijkheid
   assert.deepEqual(link.artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"], ["GPK", "zaaktype"]]);
   const tab = bundel.find((b) => b.soort === "dossiertabbladen").artefact;
-  assert.deepEqual(tab.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"]]);
+  assert.deepEqual(tab.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"], ["gehandicaptenparkeerkaart", "dossierwidgettabbladen"]]);
 });
 
 // Een identifier is niet uniek over soorten; het register weigert een afhankelijkheid zonder

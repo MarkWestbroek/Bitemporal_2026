@@ -1021,6 +1021,7 @@ FUNDAMENT leidt het pad in de bundel af uit soort + identifier:
 | `dossierprocessen` | `gzac-process-document-link-json` | `process-document-link/<id>.process-document-link.json` | `gehandicaptenparkeerkaart` |
 | `dossierdocumentkolommen` | `gzac-zgw-document-list-column-json` | `zgw/document-list-column/<id>.zgw-document-list-column.json` | `gehandicaptenparkeerkaart` |
 | `dossierstatussen` | `gzac-internal-case-status-json` | `case/internal-status/<id>.internal-case-status.json` | `gehandicaptenparkeerkaart` |
+| `dossierwidgettabbladen` (08-11) | `gzac-case-widget-tab-json` | `case/widget-tab/<id>.case-widget-tab.json` | `gehandicaptenparkeerkaart` |
 
 Op het formulier na dragen de dossierdelen de key van het dossier als
 identifier; de soort onderscheidt ze. Daarom kan een afhankelijkheid in de
@@ -1170,6 +1171,59 @@ met het taakformulier. Het model kent geen labels: zonder label uit de
 e-dienst maakt de regelset er een uit de veldnaam (`ingediendOp` → "Ingediend
 op").
 
+**Velden in een object en lijsten (08-11, regelset 0.5.0).** Mark wilde dat de
+behandelaar ook het aanvraagtype, de partijen en de bijlagen ziet. Twee
+uitbreidingen:
+- Een pad met een punt kiest een veld in een object:
+  `{"key": "aanvraagtype.omschrijving", "label": "Aanvraagtype"}`. In het
+  formulier wordt dat een `container` per stap (`aanvraagtype` → `omschrijving`),
+  zodat de data genest blijft zoals in het dossierschema. Een object zelf als
+  veld geeft `DOS-VELD` met een voorbeeld van een veld daarin.
+- Een lijst van objecten wordt een `datagrid`, alleen-lezen zonder rijen
+  toevoegen of weghalen. `kolommen` kiest de velden van het item, ook met een
+  punt (`partij.bsn`, als container met het kolomlabel); zonder keuze de
+  enkelvoudige velden van het item.
+
+De GPK-samenvatting heeft zo drie panelen: Aanvraag (met het aanvraagtype),
+Partijen (rol, BSN) en Bijlagen (naam). Het taakformulier aanvraag-beoordelen
+neemt ze over. De `documentUrl` staat er niet in: die wijst naar de
+Documenten-API, en de browser van de behandelaar heeft daar geen token voor
+(proef INRICHTEN_VIZ op cg-test, 08-11).
+
+**Tabbladen met widgets (08-11, regelset 0.5.0).** Een eigen tabblad
+"Aanvraag" in GZAC 13: soort `dossierwidgettabbladen`, één bestand per dossier
+(`case/widget-tab/<id>.case-widget-tab.json`) met per tabblad
+`{caseDefinitionKey, caseDefinitionVersionTag, key, widgets, widgetLayout}`. De
+vorm komt uit de export van een met de hand ingericht proeftabblad op cg-test
+(`gzac-handwerk/gehandicaptenparkeerkaart.case-widget-tab.json`). De e-dienst
+noemt per tabblad de widgets:
+- `fields`: `velden` over `kolommen` kolommen, kolom voor kolom gevuld, met
+  waarde `doc:/pad` (een veld in een object: `doc:/aanvraagtype/omschrijving`);
+- `collection`: een lijst van objecten (`veld`), met `titelVeld` als kop van elk
+  item en `velden` eronder, relatief (`partij/bsn`).
+- `custom`: een eigen widget in de GZAC-frontend, met `component` (componentKey)
+  en `waarden` (componentValue, letterlijk als inputs; een waarde met `/` vooraan
+  wordt getoetst als pad in de dossierinhoud). Voor de pasfoto bouwde GZAC-WIDGET
+  (08-11) het component `documentAfbeeldingen` met `{bijlagen: "/bijlagen", naam:
+  "pasfoto"}`, in een eigen frontend-image (gzac-frontend:13.50.0-omnium.N). De
+  GPK-e-dienst krijgt het widget pas als dat image is uitgerold.
+
+Het weergavetype komt uit het schema: boolean, number, date (format date),
+datetime (format date-time), anders text. Een enum blijft text (het type enum
+vraagt labels; niet getest), en een documentUrl wordt geen link. De versie is
+die van de dossierdefinitie (`DOS-VERSIE` zonder). De tabbladen van het dossier
+krijgen het tabblad erbij, type `widgets`, na de samenvatting (`na`). Toetsen:
+`DOS-VELD` (veld onbekend of niet enkelvoudig, geen lijst bij een collection),
+`DOS-WIDGET` (soort die de regelset niet kent).
+
+De pasfoto als afbeelding kan niet met het image-widget van GZAC: dat leest
+alleen bestanden uit de eigen tijdelijke opslag van Valtimo, niet uit de
+Documenten-API (proef 08-11). Het download-endpoint van GZAC
+(`/api/v1/documenten-api/{plugin}/files/{document}/download`) werkt wel met het
+token van de gebruiker; een eigen widget (Angular, eigen frontend-image) of de
+Documenten API Preview-plugin zijn de routes. Dat is een besluit voor Mark en
+FUNDAMENT.
+
 **Tabbladen.** Generiek: de vijf standaardtabbladen (samenvatting, documenten,
 voortgang, historie, notities) staan in de regelset; een lijst `tabbladen` in de
 e-dienst vervangt ze.
@@ -1181,7 +1235,10 @@ e-dienst vervangt ze.
 
 **Harde test.** In de test zijn de handgemaakte bestanden uit de Fundament-repo
 de referentie (`fixtures/cg-test/gzac-handwerk`). De uitkomst:
-- samenvatting en taakformulier zijn gelijk op de labels na;
+- samenvatting en taakformulier zijn gelijk op de labels na, met de velden
+  van het handwerk (zonder de panelen Partijen en Bijlagen van 08-11);
+- de tabbladen zijn gelijk zonder het tabblad met widgets; dat tabblad heeft
+  per widget dezelfde sleutels als het proeftabblad;
 - de tabbladen zijn gelijk;
 - de documentdefinitie heeft dezelfde properties en typen, maar is strenger
   (beperkingen en beschrijvingen uit het model).
@@ -1841,6 +1898,35 @@ alleen in de beschrijving van `partijen` en de titel van het GPK-schema.
 Open: de instantie Aanvraagtypen heeft in het project nog geen domein
 (Verzoekpartijrollen wel: relatiebeheer). De levering haalt de lijsten nog uit
 bestanden; uit het register lezen kan de Studio (haalJson), het script nog niet.
+
+**Generiek behandelen met berichten (08-11, voor de demo).** Mark koos berichten
+in plaats van een call activity (die maakt het dossier in GZAC onexporteerbaar)
+en vroeg de processen direct in het project te zetten. In het project Inrichten
+(ops 4409–4412, via POST …/ops, nooit PUT) staan nu:
+- **Aanvraag oppakken**: na Status Ontvangen zet "Beoordelingsproces bepalen"
+  (`zetVariabelen`) `beoordelingsbericht = gehandicaptenparkeerkaart-beoordelen-gevraagd`,
+  daarna werpt het `behandeling-gevraagd`.
+- **Aanvraag behandelen** (Marks tekening, omgezet): start op
+  `behandeling-gevraagd`, werpt `${beoordelingsbericht}`, wacht op
+  `beoordeling-afgerond` en kiest op `uitkomst`: Stel beschikking op, Wijs af, of
+  "Vraag aanvulling bij klant" (portaaltaak, formulier `aanvulling-gpk`) en terug
+  naar het beoordelen. De pool Klantportaal blijft notatie; de dubbele verborgen
+  verbindingen en het vangende "Taak uitgevoerd (klant)" zijn weg.
+- **Gehandicaptenparkeerkaart beoordelen**: na Aanvraag beoordelen zet
+  "Uitkomst vastleggen" `uitkomst` uit het behandelveld `beoordeling`
+  (toegekend, afgewezen, aanvulling); het einde werpt `beoordeling-afgerond`
+  (correlate op de business key).
+
+De e-dienst noemt de processen als `bron.model: "project:bpmnMotor05"`; het
+script biedt elk niet-canoniek profiel van het project zo aan, de Studio neemt het
+uit de geladen store, en een gekozen bestand met die naam gaat voor (de tests
+gebruiken de kopie `inrichten-bpmn.bpmn-model.json`). Nieuw in de e-dienst: het
+bpmn-artefact en de proceskoppeling `aanvraag-behandelen`, de taakformulieren
+`beschikking-opstellen` en `afwijzing-opstellen` met de behandelvelden
+`beschikkingToelichting` en `afwijzingReden`. De schrijver (regelset bpmn-naar-gzac
+0.8.0, berichten, `zetVariabelen`, pools, portaaltaak) is van OMNIUM-UI. Open: de
+portaaltaak vraagt op cg-test het objecttype taak, objectbeheer en de
+pluginconfiguratie (FUNDAMENT); er is nog geen klantportaal.
 
 ### 11.17 Vervolg
 

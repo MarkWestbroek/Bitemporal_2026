@@ -221,8 +221,10 @@
       "objecttype": "gehandicaptenparkeerkaartaanvraag",
       "beschrijving": "Inhoud van het dossier: de data uit de verzoek-envelop van het aanvraagobject (Verzoek-plugin, copyStrategy full) plus de behandelvelden.",
       "behandelvelden": {
-        "beoordeling": { "type": "string", "enum": ["toegekend", "afgewezen"], "description": "Uitkomst van de taak Aanvraag beoordelen" },
-        "beoordelingToelichting": { "type": "string", "description": "Toelichting van de behandelaar bij de beoordeling" }
+        "beoordeling": { "type": "string", "enum": ["toegekend", "afgewezen", "aanvulling"], "description": "Uitkomst van de taak Aanvraag beoordelen; wordt de procesvariabele uitkomst" },
+        "beoordelingToelichting": { "type": "string", "description": "Toelichting van de behandelaar bij de beoordeling" },
+        "beschikkingToelichting": { "type": "string", "description": "Toelichting bij de beschikking (taak Stel beschikking op)" },
+        "afwijzingReden": { "type": "string", "description": "Reden van de afwijzing (taak Wijs af)" }
       },
       "_behandelvelden": "wat de behandelaar in GZAC vult; het canonieke model kent nog geen beoordeling of besluit. Komt dat er, dan horen deze velden daar vandaan (FUNDAMENT 28-10)"
     },
@@ -238,10 +240,22 @@
           "key": "aanvraag",
           "titel": "Aanvraag",
           "kolommen": 2,
-          "velden": ["aanvraagnummer", "ingediendOp", "status", "soort", "hulpmiddel", "loopafstandMeter", "kenteken", "eerdereKaart", "eerderKaartnummer", "toelichting", "rijbewijsnummer"]
+          "velden": ["aanvraagnummer", { "key": "aanvraagtype.omschrijving", "label": "Aanvraagtype" }, "ingediendOp", "status", "soort", "hulpmiddel", "loopafstandMeter", "kenteken", "eerdereKaart", "eerderKaartnummer", "toelichting", "rijbewijsnummer"]
+        },
+        {
+          "key": "partijenPanel",
+          "titel": "Partijen",
+          "kolommen": 1,
+          "velden": [{ "key": "partijen", "label": "Partijen", "kolommen": [{ "key": "partijrol", "label": "Rol" }, { "key": "partij.bsn", "label": "BSN" }] }]
+        },
+        {
+          "key": "bijlagenPanel",
+          "titel": "Bijlagen",
+          "kolommen": 1,
+          "velden": [{ "key": "bijlagen", "label": "Bijlagen", "kolommen": [{ "key": "naam", "label": "Naam" }] }]
         }
       ],
-      "_panelen": "alleen-lezen (standaard); het label komt uit de veldnaam, een label hier gaat voor; de velden lopen rij voor rij over de kolommen"
+      "_panelen": "alleen-lezen (standaard); het label komt uit de veldnaam, een label hier gaat voor; de velden lopen rij voor rij over de kolommen. Een pad met een punt kiest een veld in een object (aanvraagtype.omschrijving); een lijst van objecten wordt een tabel met de gekozen kolommen (Mark 08-11: de behandelaar ziet ook aanvraagtype, partijen en bijlagen)"
     },
     {
       "identifier": "aanvraag-beoordelen",
@@ -257,7 +271,7 @@
           "titel": "Beoordeling",
           "alleenLezen": false,
           "velden": [
-            { "key": "beoordeling", "label": "Beoordeling", "verplicht": true, "opties": { "toegekend": "Toekennen", "afgewezen": "Afwijzen" } },
+            { "key": "beoordeling", "label": "Beoordeling", "verplicht": true, "opties": { "toegekend": "Toekennen", "afgewezen": "Afwijzen", "aanvulling": "Aanvulling vragen" } },
             { "key": "beoordelingToelichting", "label": "Toelichting bij de beoordeling" }
           ]
         }
@@ -266,12 +280,62 @@
       "_verzenden": "zonder verzendknop doet GZAC niets met de beoordeling"
     },
     {
+      "identifier": "beschikking-opstellen",
+      "soort": "dossierformulier",
+      "formaat": "formio-json",
+      "doelcomponent": "gzac",
+      "naam": "Stel beschikking op",
+      "dossierschema": "gehandicaptenparkeerkaart",
+      "panelen": [
+        { "uit": "gehandicaptenparkeerkaart.summary" },
+        { "key": "beschikkingPanel", "titel": "Beschikking", "alleenLezen": false, "velden": [{ "key": "beschikkingToelichting", "label": "Toelichting bij de beschikking" }] }
+      ],
+      "verzenden": "Beschikking vastleggen"
+    },
+    {
+      "identifier": "afwijzing-opstellen",
+      "soort": "dossierformulier",
+      "formaat": "formio-json",
+      "doelcomponent": "gzac",
+      "naam": "Wijs af",
+      "dossierschema": "gehandicaptenparkeerkaart",
+      "panelen": [
+        { "uit": "gehandicaptenparkeerkaart.summary" },
+        { "key": "afwijzingPanel", "titel": "Afwijzing", "alleenLezen": false, "velden": [{ "key": "afwijzingReden", "label": "Reden van de afwijzing", "verplicht": true }] }
+      ],
+      "verzenden": "Afwijzing vastleggen"
+    },
+    {
       "identifier": "gehandicaptenparkeerkaart",
       "soort": "dossiertabbladen",
       "formaat": "gzac-case-tab-json",
       "doelcomponent": "gzac",
       "naam": "Tabbladen gehandicaptenparkeerkaart",
       "_tabbladen": "de vijf standaardtabbladen uit de regelset; een lijst `tabbladen` hier vervangt ze"
+    },
+    {
+      "identifier": "gehandicaptenparkeerkaart",
+      "soort": "dossierwidgettabbladen",
+      "formaat": "gzac-case-widget-tab-json",
+      "doelcomponent": "gzac",
+      "naam": "Widgettabbladen gehandicaptenparkeerkaart",
+      "dossierschema": "gehandicaptenparkeerkaart",
+      "tabbladen": [
+        {
+          "key": "aanvraag",
+          "naam": "Aanvraag",
+          "widgets": [
+            {
+              "type": "fields", "key": "aanvraag", "titel": "Aanvraag", "breedte": 2, "kolommen": 2,
+              "velden": ["aanvraagnummer", { "key": "aanvraagtype.omschrijving", "label": "Aanvraagtype" }, "ingediendOp", "status", "soort", "hulpmiddel",
+                         { "key": "loopafstandMeter", "label": "Loopafstand (m)" }, "kenteken", "eerdereKaart", "eerderKaartnummer", "rijbewijsnummer", "toelichting"]
+            },
+            { "type": "collection", "key": "partijen", "titel": "Partijen", "breedte": 1, "titelVeld": "partijrol", "velden": [{ "key": "partij.bsn", "label": "BSN" }] },
+            { "type": "collection", "key": "bijlagen", "titel": "Bijlagen", "breedte": 1, "titelVeld": "naam", "velden": [{ "key": "naam", "label": "Bijlage" }] }
+          ]
+        }
+      ],
+      "_tabbladen": "tabblad Aanvraag met widgets (Mark 08-11: de behandelaar ziet de aanvraag in een eigen tabblad); komt na de samenvatting. Vorm uit de handmatige proef op cg-test (INRICHTEN_VIZ). Geen documentUrl als link: die wijst naar de Documenten-API zonder token. De pasfoto als afbeelding vraagt een eigen widget (volgt)"
     },
     {
       "identifier": "gehandicaptenparkeerkaart",
@@ -306,7 +370,7 @@
       "formaat": "bpmn-xml",
       "doelcomponent": "gzac",
       "naam": "Aanvraag oppakken",
-      "bron": { "model": "gpk-processen.bpmn-model.json", "diagram": "Aanvraag oppakken" },
+      "bron": { "model": "project:bpmnMotor05", "diagram": "Aanvraag oppakken" },
       "engine": "gzac",
       "targetNamespace": "http://common-ground-lab.nl/bpmn"
     },
@@ -327,9 +391,20 @@
       "formaat": "bpmn-xml",
       "doelcomponent": "gzac",
       "naam": "Gehandicaptenparkeerkaart beoordelen",
-      "bron": { "model": "gpk-processen.bpmn-model.json", "diagram": "Gehandicaptenparkeerkaart beoordelen" },
+      "bron": { "model": "project:bpmnMotor05", "diagram": "Gehandicaptenparkeerkaart beoordelen" },
       "engine": "gzac",
       "targetNamespace": "http://common-ground-lab.nl/bpmn"
+    },
+    {
+      "identifier": "aanvraag-behandelen",
+      "soort": "bpmn",
+      "formaat": "bpmn-xml",
+      "doelcomponent": "gzac",
+      "naam": "Aanvraag behandelen",
+      "bron": { "model": "project:bpmnMotor05", "diagram": "Aanvraag behandelen" },
+      "engine": "gzac",
+      "targetNamespace": "http://common-ground-lab.nl/bpmn",
+      "_bron": "generiek behandelen (Mark 08-11): start op behandeling-gevraagd, werpt het beoordelingsbericht van het aanvraagtype, wacht op beoordeling-afgerond en kiest op uitkomst: beschikken, afwijzen of aanvulling via een portaaltaak"
     },
     {
       "identifier": "gehandicaptenparkeerkaart",
@@ -353,6 +428,13 @@
       "formaat": "gzac-process-link-json",
       "doelcomponent": "gzac",
       "naam": "Taakkoppelingen Aanvraag oppakken"
+    },
+    {
+      "identifier": "aanvraag-behandelen",
+      "soort": "proceskoppeling",
+      "formaat": "gzac-process-link-json",
+      "doelcomponent": "gzac",
+      "naam": "Taakkoppelingen Aanvraag behandelen"
     }
   ],
   "afhankelijkheden": [
@@ -374,6 +456,17 @@
     { "artefact": "gehandicaptenparkeerkaart-beoordelen", "soort": "proceskoppeling", "afhankelijkVan": "gehandicaptenparkeerkaart-beoordelen", "afhankelijkVanSoort": "bpmn", "reden": "de koppelingen binden op de taken van het proces" },
     { "artefact": "gehandicaptenparkeerkaart-beoordelen", "soort": "proceskoppeling", "afhankelijkVan": "aanvraag-beoordelen", "afhankelijkVanSoort": "dossierformulier", "reden": "de gebruikerstaak toont dit formulier" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossiertabbladen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "de tabbladen horen bij het dossier" },
+    { "artefact": "aanvraag-behandelen", "soort": "bpmn", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierdefinitie", "reden": "het proces hoort bij het dossier" },
+    { "artefact": "aanvraag-behandelen", "soort": "bpmn", "afhankelijkVan": "gehandicaptenparkeerkaart-beoordelen", "afhankelijkVanSoort": "bpmn", "reden": "het werpt het bericht dat het beoordelingsproces start" },
+    { "artefact": "aanvraag-oppakken", "soort": "bpmn", "afhankelijkVan": "aanvraag-behandelen", "afhankelijkVanSoort": "bpmn", "reden": "het bericht behandeling-gevraagd start Aanvraag behandelen" },
+    { "artefact": "aanvraag-behandelen", "soort": "proceskoppeling", "afhankelijkVan": "aanvraag-behandelen", "afhankelijkVanSoort": "bpmn", "reden": "de koppelingen binden op de taken van het proces" },
+    { "artefact": "aanvraag-behandelen", "soort": "proceskoppeling", "afhankelijkVan": "beschikking-opstellen", "afhankelijkVanSoort": "dossierformulier", "reden": "de gebruikerstaak toont dit formulier" },
+    { "artefact": "aanvraag-behandelen", "soort": "proceskoppeling", "afhankelijkVan": "afwijzing-opstellen", "afhankelijkVanSoort": "dossierformulier", "reden": "de gebruikerstaak toont dit formulier" },
+    { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierprocessen", "afhankelijkVan": "aanvraag-behandelen", "afhankelijkVanSoort": "bpmn", "reden": "het proces moet bestaan voordat het aan het dossier hangt" },
+    { "artefact": "beschikking-opstellen", "soort": "dossierformulier", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" },
+    { "artefact": "afwijzing-opstellen", "soort": "dossierformulier", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" },
+    { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierwidgettabbladen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "de widgets tonen velden van de dossierinhoud" },
+    { "artefact": "gehandicaptenparkeerkaart", "soort": "dossiertabbladen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierwidgettabbladen", "reden": "het tabblad Aanvraag toont de widgets van dat tabblad" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierzaaktypelink", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "de koppeling hoort bij het dossier" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierzaaktypelink", "afhankelijkVan": "GPK", "afhankelijkVanSoort": "zaaktype", "reden": "de koppeling verwijst naar het zaaktype in de omgeving; op een lege omgeving moet het zaaktype er eerst zijn" },
     { "artefact": "gehandicaptenparkeerkaart.summary", "soort": "dossierformulier", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het formulier toont velden van de dossierinhoud" },
@@ -381,7 +474,6 @@
     { "artefact": "gehandicaptenparkeerkaart-beoordelen", "soort": "bpmn", "afhankelijkVan": "GPK", "afhankelijkVanSoort": "zaaktype", "reden": "het proces draait op een zaak van zaaktype GPK" },
     { "artefact": "aanvraag-oppakken", "soort": "bpmn", "afhankelijkVan": "GPK", "afhankelijkVanSoort": "zaaktype", "reden": "het proces maakt een zaak van zaaktype GPK, met status en rol" },
     { "artefact": "aanvraag-ontvankelijk", "soort": "dmn", "afhankelijkVan": "gehandicaptenparkeerkaartaanvraag", "afhankelijkVanSoort": "objecttype", "reden": "de kolommen lezen velden van de aanvraag; het objecttype zegt waar die in het dossier staan" },
-    { "artefact": "aanvraag-oppakken", "soort": "bpmn", "afhankelijkVan": "aanvraag-ontvankelijk", "afhankelijkVanSoort": "dmn", "reden": "de businessRuleTask leest de beslistabel (decisionRef)" },
-    { "artefact": "aanvraag-oppakken", "soort": "bpmn", "afhankelijkVan": "gehandicaptenparkeerkaart-beoordelen", "afhankelijkVanSoort": "bpmn", "reden": "het bericht gehandicaptenparkeerkaart-beoordelen-gevraagd start het specifieke proces op hetzelfde dossier" }
+    { "artefact": "aanvraag-oppakken", "soort": "bpmn", "afhankelijkVan": "aanvraag-ontvankelijk", "afhankelijkVanSoort": "dmn", "reden": "de businessRuleTask leest de beslistabel (decisionRef)" }
   ]
 }

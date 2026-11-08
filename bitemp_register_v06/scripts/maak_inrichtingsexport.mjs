@@ -37,6 +37,10 @@
 // --referentielijst: de bestandsnaam bevat de lijstnaam (zoals in de Studio);
 // zonder bestand komen de items uit de eersteVulling van de e-dienst.
 // --bpmn: de bestandsnaam is `bron.model` van het artefact.
+// Uit een project komen de BPMN-processen bij voorkeur uit het project zelf
+// (Mark 08-11): elk ander profiel dan het canonieke staat klaar als
+// `project:<profiel>` (bv. `"bron": {"model": "project:bpmnMotor05", "diagram":
+// "Aanvraag behandelen"}`); een --bpmn-bestand met dezelfde naam gaat voor.
 // Exitcode 0 = alles gemaakt, 2 = een of meer artefacten mislukt, 1 = fout.
 import fs from "node:fs";
 import path from "node:path";
@@ -149,6 +153,8 @@ async function main() {
   const edienst = lees(a.edienst);
   let modelBestand;
   let canoniekDeel = null;
+  /** BPMN-modellen uit het project zelf: project:<profiel> → {model: {elements, diagrams}}. */
+  const uitProject = {};
   if (a.project) {
     let inhoud;
     let ops = [];
@@ -172,6 +178,10 @@ async function main() {
       console.error(`Ops nagespeeld: ${ops.length}${r.toegepast !== undefined ? ` (${r.toegepast} toegepast, ${r.overgeslagen} overgeslagen)` : ""}`);
       for (const p of r.problemen || []) console.error(`warning OPS ${typeof p === "string" ? p : JSON.stringify(p)}`);
     }
+    for (const [pid, prof] of Object.entries(inhoud.profielen || {})) {
+      if (pid === CANONIEK || !prof?.elements) continue;
+      uitProject[`project:${pid}`] = { model_naam: `Studio-project, profiel ${pid}`, model: { elements: prof.elements, diagrams: prof.diagrams || {} } };
+    }
     const sleutels = a.map.map((m) => vindMap(inhoud, m));
     canoniekDeel = profielUitMappen(inhoud, sleutels, CANONIEK);
     if (!canoniekDeel) throw new Error(`Geen canoniek model in ${a.map.join(", ")}`);
@@ -189,7 +199,7 @@ async function main() {
     modelBestand,
     datatypen: datatypes,
     referentieBestanden: a.referentielijst.map((pad) => ({ naam: path.basename(pad), inhoud: lees(pad) })),
-    bpmnModellen: Object.fromEntries(a.bpmn.map((pad) => [path.basename(pad), lees(pad)])),
+    bpmnModellen: { ...uitProject, ...Object.fromEntries(a.bpmn.map((pad) => [path.basename(pad), lees(pad)])) },
     canoniekDeel,
     peiltijdstip: a.peiltijdstip || new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
     sha256Hex,

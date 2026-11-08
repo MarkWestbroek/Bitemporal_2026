@@ -57,7 +57,7 @@ test("GPK zonder register: zip met alle artefacten + overzicht", async () => {
     modelBestand: lees("inrichten-domeinen-v3.json"),
     datatypen,
     referentieBestanden: bestanden(),
-    bpmnModellen: { "gpk-processen.bpmn-model.json": lees("gpk-processen.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") },
+    bpmnModellen: { "project:bpmnMotor05": lees("inrichten-bpmn.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") },
     peiltijdstip: "2026-10-27T12:00:00Z",
     sha256Hex,
   });

@@ -8,6 +8,25 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Generiek behandelen in de GPK-e-dienst.** Het proces "Aanvraag behandelen" (uit het project
+  Inrichten) start op `behandeling-gevraagd`, gooit het beoordelingsbericht van het aanvraagtype,
+  wacht op `beoordeling-afgerond` en kiest op de uitkomst: beschikken, afwijzen of een portaaltaak
+  voor de klant. Nieuwe taakformulieren voor beschikken en afwijzen; de beoordeling kent ook
+  "aanvulling".
+- **BPMN uit het project.** Een bpmn-artefact kan `bron.model: "project:<profiel>"` noemen; het
+  script en de Studio nemen dan het BPMN-profiel van het project (een gekozen bestand met die naam
+  gaat voor).
+
+### Gewijzigd
+- **Samenvatting van het dossier met aanvraagtype, partijen en bijlagen.** Een dossierformulier
+  kan een veld in een object tonen (`aanvraagtype.omschrijving`, als container) en een lijst van
+  objecten als alleen-lezen tabel met gekozen kolommen (regelset canoniek-naar-gzac-dossier 0.5.0).
+- **Tabblad met widgets in het GZAC-dossier.** Nieuwe artefactsoort `dossierwidgettabbladen`
+  (`case/widget-tab/<dossier>.case-widget-tab.json`): fields- en collection-widgets uit de
+  dossierinhoud, met het weergavetype uit het model. De GPK krijgt het tabblad "Aanvraag" na de
+  samenvatting.
+
 ## [studio/v0.35.0] — 2026-11-08
 
 Samen met render 0.3.8 en devloop 0.25.6 (api 0.22.3). Voor de demo van 10-11: het generieke

@@ -1,0 +1,135 @@
+[
+  {
+    "caseDefinitionKey" : "gehandicaptenparkeerkaart",
+    "caseDefinitionVersionTag" : "1.0.0",
+    "key" : "aanvraag-proef",
+    "widgets" : [
+      {
+        "type" : "fields",
+        "key" : "aanvraag",
+        "title" : "Aanvraag",
+        "icon" : null,
+        "color" : "WHITE",
+        "width" : 2,
+        "highContrast" : false,
+        "isCompact" : null,
+        "actions" : [],
+        "displayConditions" : [],
+        "properties" : {
+          "columns" : [
+            [
+              {
+                "key" : "aanvraagnummer",
+                "title" : "Aanvraagnummer",
+                "value" : "doc:/aanvraagnummer",
+                "displayProperties" : {
+                  "type" : "text",
+                  "hideWhenEmpty" : false
+                }
+              },
+              {
+                "key" : "ingediendOp",
+                "title" : "Ingediend op",
+                "value" : "doc:/ingediendOp",
+                "displayProperties" : {
+                  "type" : "date",
+                  "hideWhenEmpty" : false
+                }
+              },
+              {
+                "key" : "eerdereKaart",
+                "title" : "Eerdere kaart",
+                "value" : "doc:/eerdereKaart",
+                "displayProperties" : {
+                  "type" : "boolean",
+                  "hideWhenEmpty" : false
+                }
+              }
+            ],
+            [
+              {
+                "key" : "kenteken",
+                "title" : "Kenteken",
+                "value" : "doc:/kenteken",
+                "displayProperties" : {
+                  "type" : "text",
+                  "hideWhenEmpty" : false
+                }
+              },
+              {
+                "key" : "rijbewijsnummer",
+                "title" : "Rijbewijsnummer",
+                "value" : "doc:/rijbewijsnummer",
+                "displayProperties" : {
+                  "type" : "text",
+                  "hideWhenEmpty" : false
+                }
+              },
+              {
+                "key" : "loopafstandMeter",
+                "title" : "Loopafstand (m)",
+                "value" : "doc:/loopafstandMeter",
+                "displayProperties" : {
+                  "type" : "number",
+                  "hideWhenEmpty" : false
+                }
+              }
+            ]
+          ]
+        }
+      },
+      {
+        "type" : "collection",
+        "key" : "bijlagen",
+        "title" : "Bijlagen",
+        "icon" : null,
+        "color" : "WHITE",
+        "width" : 2,
+        "highContrast" : false,
+        "isCompact" : null,
+        "actions" : [],
+        "displayConditions" : [],
+        "properties" : {
+          "collection" : "doc:/bijlagen",
+          "defaultPageSize" : 4,
+          "title" : {
+            "value" : "naam",
+            "displayProperties" : {
+              "type" : "text",
+              "hideWhenEmpty" : false
+            }
+          },
+          "fields" : [
+            {
+              "key" : "documentUrl",
+              "title" : "Document",
+              "value" : "documentUrl",
+              "width" : "full",
+              "displayProperties" : {
+                "type" : "link",
+                "hideWhenEmpty" : false
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type" : "image",
+        "key" : "pasfoto",
+        "title" : "Pasfoto",
+        "icon" : null,
+        "color" : "WHITE",
+        "width" : 1,
+        "highContrast" : false,
+        "isCompact" : null,
+        "actions" : [],
+        "displayConditions" : [],
+        "properties" : {
+          "value" : "doc:/bijlagen",
+          "displayAsCarousel" : false
+        }
+      }
+    ],
+    "widgetLayout" : "MUURI_GAP_FREE"
+  }
+]

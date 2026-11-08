@@ -154,9 +154,9 @@ test("artefact aanvraag-oppakken uit het BPMN-model: bericht start de beoordelin
   assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [
     ["gehandicaptenparkeerkaart", "dossierstatussen"], // het proces zet een status van het dossier
     ["gehandicaptenparkeerkaart", "dossierdefinitie"],
+    ["aanvraag-behandelen", "bpmn"], // sinds 08-11 start oppakken het generieke behandelen (e-dienst)
     ["GPK", "zaaktype"],
     ["aanvraag-ontvankelijk", "dmn"],
-    ["gehandicaptenparkeerkaart-beoordelen", "bpmn"], // niet de proceskoppeling met dezelfde identifier
   ]);
   // Elk element in de trace, met zijn activityId.
   assert.ok(artefact.traceregels.some((t) => t.doelPad === "#document-koppelen"));

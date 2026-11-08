@@ -1,0 +1,1253 @@
+{
+  "model_naam": "Inrichten (bpmnMotor05)",
+  "model_beschrijving": "Kopie van het BPMN-profiel van het Studio-project Inrichten op omnium.fundament (t/m op 4412): Aanvraag oppakken, Aanvraag behandelen (generiek, berichten), Gehandicaptenparkeerkaart beoordelen, en de schetsen Oppakken verzoek en Kies zaak uit werkbak. Testkopie; de bron is het project (Mark 08-11), in de e-dienst als project:bpmnMotor05.",
+  "model": {
+    "elements": {
+      "bp_1794147319067_1": {
+        "id": "bp_1794147319067_1",
+        "data": {
+          "soort": "bericht",
+          "bpmnId": "start",
+          "bericht": "behandeling-gevraagd"
+        },
+        "naam": "Behandeling gevraagd",
+        "elementType": "start-event",
+        "compartimenten": []
+      },
+      "bp_1794147356930_2": {
+        "id": "bp_1794147356930_2",
+        "data": {
+          "soort": "",
+          "bpmnId": "beschikt"
+        },
+        "naam": "Beschikt",
+        "elementType": "eind-event",
+        "compartimenten": []
+      },
+      "bp_1794147364002_3": {
+        "id": "bp_1794147364002_3",
+        "data": {
+          "soort": "bericht",
+          "bpmnId": "beoordeling-gevraagd",
+          "bericht": "${beoordelingsbericht}",
+          "richting": "werpt",
+          "beschrijving": "Start het beoordelingsproces van het aanvraagtype (bericht uit de variabele beoordelingsbericht; was de call activity Beoordeel zaak)."
+        },
+        "naam": "Beoordeling gevraagd",
+        "elementType": "tussen-event",
+        "compartimenten": []
+      },
+      "bp_1794147706108_5": {
+        "id": "bp_1794147706108_5",
+        "data": {},
+        "naam": "",
+        "elementType": "start-event",
+        "compartimenten": []
+      },
+      "bp_1794147740492_6": {
+        "id": "bp_1794147740492_6",
+        "data": {},
+        "naam": "Kies zaak om op te pakken",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_1794147781548_7": {
+        "id": "bp_1794147781548_7",
+        "data": {},
+        "naam": "OpenZaak",
+        "elementType": "data-store",
+        "compartimenten": []
+      },
+      "bp_1794147824940_8": {
+        "id": "bp_1794147824940_8",
+        "data": {
+          "soort": "signaal"
+        },
+        "naam": "Medewerker aan zaak gekoppeld",
+        "elementType": "eind-event",
+        "compartimenten": []
+      },
+      "bp_1794147923356_9": {
+        "id": "bp_1794147923356_9",
+        "data": {
+          "bpmnId": "beschikking-opstellen",
+          "bpmnAard": "userTask",
+          "formulier": "beschikking-opstellen",
+          "taakSoort": "user",
+          "lusElement": "",
+          "meervoudig": "",
+          "lusVerzameling": ""
+        },
+        "naam": "Stel beschikking op",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bev_1794148147751_2": {
+        "id": "bev_1794148147751_2",
+        "data": {},
+        "naam": "",
+        "source": "bp_1794148119629_13",
+        "target": "bp_1794148147741_14",
+        "elementType": "bevat",
+        "compartimenten": []
+      },
+      "bev_1794148163061_3": {
+        "id": "bev_1794148163061_3",
+        "data": {},
+        "naam": "",
+        "source": "bp_1794148119629_13",
+        "target": "bp_1794148161413_15",
+        "elementType": "bevat",
+        "compartimenten": []
+      },
+      "bev_1794148180086_4": {
+        "id": "bev_1794148180086_4",
+        "data": {},
+        "naam": "",
+        "source": "bp_1794148119629_13",
+        "target": "bp_1794148180085_16",
+        "elementType": "bevat",
+        "compartimenten": []
+      },
+      "bp_1794148119629_13": {
+        "id": "bp_1794148119629_13",
+        "data": {},
+        "naam": "Klantportaal",
+        "elementType": "pool",
+        "compartimenten": []
+      },
+      "bp_1794148147741_14": {
+        "id": "bp_1794148147741_14",
+        "data": {
+          "soort": "bericht"
+        },
+        "naam": "",
+        "elementType": "start-event",
+        "compartimenten": []
+      },
+      "bp_1794148161413_15": {
+        "id": "bp_1794148161413_15",
+        "data": {},
+        "naam": "Voer klanttaak uit",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_1794148180085_16": {
+        "id": "bp_1794148180085_16",
+        "data": {
+          "soort": "bericht"
+        },
+        "naam": "Taak uitgevoerd",
+        "elementType": "eind-event",
+        "compartimenten": []
+      },
+      "bp_1794148303822_17": {
+        "id": "bp_1794148303822_17",
+        "data": {
+          "bpmnId": "uitkomst"
+        },
+        "naam": "Uitkomst beoordeling",
+        "elementType": "exclusief",
+        "compartimenten": []
+      },
+      "bp_1794148355126_18": {
+        "id": "bp_1794148355126_18",
+        "data": {
+          "bpmnId": "afwijzing-opstellen",
+          "bpmnAard": "userTask",
+          "formulier": "afwijzing-opstellen",
+          "taakSoort": "user",
+          "lusElement": "",
+          "meervoudig": "",
+          "lusVerzameling": ""
+        },
+        "naam": "Wijs af",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_1794148434134_19": {
+        "id": "bp_1794148434134_19",
+        "data": {
+          "bpmnId": "samen"
+        },
+        "naam": "",
+        "elementType": "exclusief",
+        "compartimenten": []
+      },
+      "bp_1794150207705_20": {
+        "id": "bp_1794150207705_20",
+        "data": {
+          "actie": "portaaltaakAanmaken",
+          "bpmnId": "aanvulling-vragen",
+          "bpmnAard": "userTask",
+          "formulier": "aanvulling-gpk",
+          "taakSoort": "user",
+          "lusElement": "",
+          "meervoudig": "",
+          "beschrijving": "Portaaltaak voor de klant (Portaaltaak-plugin, create-portaaltaak); de taak is klaar als de klant de aanvulling in het portaal indient.",
+          "lusVerzameling": ""
+        },
+        "naam": "Vraag aanvulling bij klant",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "conn_1794147791549_1": {
+        "id": "conn_1794147791549_1",
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794147706108_5",
+        "target": "bp_1794147740492_6",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794147798572_2": {
+        "id": "conn_1794147798572_2",
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "koppel medewerker als zaakbehandelaar",
+        "source": "bp_1794147740492_6",
+        "target": "bp_1794147781548_7",
+        "elementType": "data-associatie",
+        "compartimenten": []
+      },
+      "conn_1794147835244_3": {
+        "id": "conn_1794147835244_3",
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794147740492_6",
+        "target": "bp_1794147824940_8",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794148170230_6": {
+        "id": "conn_1794148170230_6",
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794148147741_14",
+        "target": "bp_1794148161413_15",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794148183853_7": {
+        "id": "conn_1794148183853_7",
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794148161413_15",
+        "target": "bp_1794148180085_16",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794148308787_8": {
+        "id": "conn_1794148308787_8",
+        "data": {
+          "bpmnId": "naar-afgerond",
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794147364002_3",
+        "target": "bp_trf_beoordeling_afgerond",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794148315720_9": {
+        "id": "conn_1794148315720_9",
+        "data": {
+          "bpmnId": "toegekend",
+          "conditie": "${uitkomst == 'toegekend'}",
+          "standaard": false,
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "toegekend",
+        "source": "bp_1794148303822_17",
+        "target": "bp_1794147923356_9",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794148364326_10": {
+        "id": "conn_1794148364326_10",
+        "data": {
+          "bpmnId": "afgewezen",
+          "conditie": "${uitkomst == 'afgewezen'}",
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "afgewezen",
+        "source": "bp_1794148303822_17",
+        "target": "bp_1794148355126_18",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794148443174_13": {
+        "id": "conn_1794148443174_13",
+        "data": {
+          "bpmnId": "beschikking-klaar",
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794147923356_9",
+        "target": "bp_1794148434134_19",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794148445823_14": {
+        "id": "conn_1794148445823_14",
+        "data": {
+          "bpmnId": "afwijzing-klaar",
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794148355126_18",
+        "target": "bp_1794148434134_19",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794148486926_15": {
+        "id": "conn_1794148486926_15",
+        "data": {
+          "bpmnId": "naar-beschikt",
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794148434134_19",
+        "target": "bp_1794147356930_2",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794150219866_16": {
+        "id": "conn_1794150219866_16",
+        "data": {
+          "bpmnId": "aanvulling",
+          "conditie": "${uitkomst == 'aanvulling'}",
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "aanvulling",
+        "source": "bp_1794148303822_17",
+        "target": "bp_1794150207705_20",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794150249785_17": {
+        "id": "conn_1794150249785_17",
+        "data": {
+          "knikken": null,
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "{specifieke klant}",
+        "source": "bp_1794150207705_20",
+        "target": "bp_1794148147741_14",
+        "elementType": "message-flow",
+        "compartimenten": []
+      },
+      "conn_1794150341937_18": {
+        "id": "conn_1794150341937_18",
+        "data": {
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "{specifieke klant}",
+        "source": "bp_1794148180085_16",
+        "target": "bp_1794150207705_20",
+        "elementType": "message-flow",
+        "compartimenten": []
+      },
+      "bp_1794150396697_22": {
+        "id": "bp_1794150396697_22",
+        "data": {
+          "bpmnId": "opnieuw-beoordelen"
+        },
+        "naam": "",
+        "elementType": "exclusief",
+        "compartimenten": []
+      },
+      "conn_1794150404562_19": {
+        "id": "conn_1794150404562_19",
+        "data": {
+          "bpmnId": "naar-opnieuw",
+          "standaard": false,
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794147319067_1",
+        "target": "bp_1794150396697_22",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794150405746_20": {
+        "id": "conn_1794150405746_20",
+        "data": {
+          "bpmnId": "naar-beoordeling",
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794150396697_22",
+        "target": "bp_1794147364002_3",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "conn_1794150409233_21": {
+        "id": "conn_1794150409233_21",
+        "data": {
+          "bpmnId": "na-aanvulling",
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_1794150207705_20",
+        "target": "bp_1794150396697_22",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f1": {
+        "id": "bp_f1",
+        "data": {
+          "bpmnId": "f1",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_start",
+        "target": "bp_ontvankelijkheid_toetsen",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f2": {
+        "id": "bp_f2",
+        "data": {
+          "bpmnId": "f2",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_zaak_aanmaken",
+        "target": "bp_rol_aanvrager_aanmaken",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f3": {
+        "id": "bp_f3",
+        "data": {
+          "bpmnId": "f3",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_rol_aanvrager_aanmaken",
+        "target": "bp_document_koppelen",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f4": {
+        "id": "bp_f4",
+        "data": {
+          "bpmnId": "f4",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_document_koppelen",
+        "target": "bp_status_ontvangen",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f5": {
+        "id": "bp_f5",
+        "data": {
+          "bpmnId": "f5",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_status_ontvangen",
+        "target": "bp_beoordeling_kiezen",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f6": {
+        "id": "bp_f6",
+        "data": {
+          "bpmnId": "f6",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_vervolgproces_starten",
+        "target": "bp_einde",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f7": {
+        "id": "bp_f7",
+        "data": {
+          "bpmnId": "f7",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_ontvankelijkheid_toetsen",
+        "target": "bp_ontvankelijk",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f8": {
+        "id": "bp_f8",
+        "data": {
+          "bpmnId": "f8",
+          "conditie": "${ontvankelijkheid.ontvankelijk}",
+          "standaard": false
+        },
+        "naam": "ja",
+        "source": "bp_ontvankelijk",
+        "target": "bp_zaak_aanmaken",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f9": {
+        "id": "bp_f9",
+        "data": {
+          "bpmnId": "f9",
+          "knikken": [
+            {
+              "x": 420,
+              "y": 260
+            }
+          ],
+          "conditie": "${!ontvankelijkheid.ontvankelijk}",
+          "standaard": false
+        },
+        "naam": "nee",
+        "source": "bp_ontvankelijk",
+        "target": "bp_status_niet_opgepakt",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f10": {
+        "id": "bp_f10",
+        "data": {
+          "bpmnId": "f10",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_status_niet_opgepakt",
+        "target": "bp_niet_opgepakt",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f5b": {
+        "id": "bp_f5b",
+        "data": {
+          "bpmnId": "f5b",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_beoordeling_kiezen",
+        "target": "bp_vervolgproces_starten",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f1_2": {
+        "id": "bp_f1_2",
+        "data": {
+          "bpmnId": "f1",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_start_2",
+        "target": "bp_aanvraag_beoordelen",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f2_2": {
+        "id": "bp_f2_2",
+        "data": {
+          "bpmnId": "f2",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_aanvraag_beoordelen",
+        "target": "bp_uitkomst_vastleggen",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_f3_2": {
+        "id": "bp_f3_2",
+        "data": {
+          "bpmnId": "f3",
+          "conditie": "",
+          "standaard": false
+        },
+        "naam": "",
+        "source": "bp_uitkomst_vastleggen",
+        "target": "bp_einde_2",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_einde": {
+        "id": "bp_einde",
+        "data": {
+          "soort": "",
+          "bpmnId": "einde"
+        },
+        "naam": "Aanvraag opgepakt",
+        "elementType": "eind-event",
+        "compartimenten": []
+      },
+      "bp_start": {
+        "id": "bp_start",
+        "data": {
+          "soort": "",
+          "bpmnId": "start"
+        },
+        "naam": "Aanvraag ontvangen",
+        "elementType": "start-event",
+        "compartimenten": []
+      },
+      "bp_einde_2": {
+        "id": "bp_einde_2",
+        "data": {
+          "soort": "bericht",
+          "bpmnId": "einde",
+          "bericht": "beoordeling-afgerond",
+          "richting": "werpt"
+        },
+        "naam": "Beoordeling afgerond",
+        "elementType": "eind-event",
+        "compartimenten": []
+      },
+      "bp_start_2": {
+        "id": "bp_start_2",
+        "data": {
+          "soort": "bericht",
+          "bpmnId": "start",
+          "bericht": "gehandicaptenparkeerkaart-beoordelen-gevraagd"
+        },
+        "naam": "Zaak aangemaakt",
+        "elementType": "start-event",
+        "compartimenten": []
+      },
+      "bp_ontvankelijk": {
+        "id": "bp_ontvankelijk",
+        "data": {
+          "bpmnId": "ontvankelijk"
+        },
+        "naam": "Ontvankelijk?",
+        "elementType": "exclusief",
+        "compartimenten": []
+      },
+      "bp_niet_opgepakt": {
+        "id": "bp_niet_opgepakt",
+        "data": {
+          "soort": "",
+          "bpmnId": "niet-opgepakt"
+        },
+        "naam": "Aanvraag niet opgepakt",
+        "elementType": "eind-event",
+        "compartimenten": []
+      },
+      "bp_zaak_aanmaken": {
+        "id": "bp_zaak_aanmaken",
+        "data": {
+          "actie": "zaakAanmaken",
+          "bpmnId": "zaak-aanmaken",
+          "bpmnAard": "serviceTask",
+          "taakSoort": "service",
+          "lusElement": "",
+          "meervoudig": "",
+          "lusVerzameling": ""
+        },
+        "naam": "Zaak aanmaken",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_status_ontvangen": {
+        "id": "bp_status_ontvangen",
+        "data": {
+          "actie": "zaakstatusZetten",
+          "bpmnId": "status-ontvangen",
+          "bpmnAard": "serviceTask",
+          "actieDoel": "Ontvangen",
+          "taakSoort": "service",
+          "lusElement": "",
+          "meervoudig": "",
+          "lusVerzameling": "",
+          "actieToelichting": "Aanvraag ontvangen uit het aanvraagregister"
+        },
+        "naam": "Status Ontvangen",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_document_koppelen": {
+        "id": "bp_document_koppelen",
+        "data": {
+          "actie": "documentKoppelen",
+          "bpmnId": "document-koppelen",
+          "bpmnAard": "serviceTask",
+          "taakSoort": "service",
+          "lusElement": "documentUrl",
+          "meervoudig": "parallel",
+          "lusVerzameling": "documentUrls"
+        },
+        "naam": "Documenten koppelen",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_beoordeling_kiezen": {
+        "id": "bp_beoordeling_kiezen",
+        "data": {
+          "bpmnId": "beoordeling-kiezen",
+          "bpmnAard": "serviceTask",
+          "taakSoort": "service",
+          "lusElement": "",
+          "meervoudig": "",
+          "beschrijving": "Het bericht dat het beoordelingsproces van dit aanvraagtype start (vaste waarde uit het aanvraagtype; later uit Aanvraagtypegegevens).",
+          "zetVariabelen": "beoordelingsbericht=gehandicaptenparkeerkaart-beoordelen-gevraagd",
+          "lusVerzameling": ""
+        },
+        "naam": "Beoordelingsproces bepalen",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_aanvraag_beoordelen": {
+        "id": "bp_aanvraag_beoordelen",
+        "data": {
+          "bpmnId": "aanvraag-beoordelen",
+          "bpmnAard": "userTask",
+          "formulier": "aanvraag-beoordelen",
+          "taakSoort": "user",
+          "lusElement": "",
+          "meervoudig": "",
+          "lusVerzameling": ""
+        },
+        "naam": "Aanvraag beoordelen",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_uitkomst_vastleggen": {
+        "id": "bp_uitkomst_vastleggen",
+        "data": {
+          "bpmnId": "uitkomst-vastleggen",
+          "bpmnAard": "serviceTask",
+          "taakSoort": "service",
+          "lusElement": "",
+          "meervoudig": "",
+          "beschrijving": "Zet de beoordeling uit het formulier (toegekend, afgewezen of aanvulling) als procesvariabele uitkomst.",
+          "zetVariabelen": "uitkomst=${documentDelegateService.findValueByJsonPointerOrDefault(\"/beoordeling\", execution, null)}",
+          "lusVerzameling": ""
+        },
+        "naam": "Uitkomst vastleggen",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_status_niet_opgepakt": {
+        "id": "bp_status_niet_opgepakt",
+        "data": {
+          "bpmnId": "status-niet-opgepakt",
+          "bpmnAard": "serviceTask",
+          "taakSoort": "service",
+          "lusElement": "",
+          "meervoudig": "",
+          "dossierstatus": "nietInBehandeling",
+          "lusVerzameling": ""
+        },
+        "naam": "Dossierstatus Niet in behandeling",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_vervolgproces_starten": {
+        "id": "bp_vervolgproces_starten",
+        "data": {
+          "soort": "bericht",
+          "bpmnId": "vervolgproces-starten",
+          "bericht": "behandeling-gevraagd",
+          "richting": "werpt"
+        },
+        "naam": "Behandeling gevraagd",
+        "elementType": "tussen-event",
+        "compartimenten": []
+      },
+      "bp_rol_aanvrager_aanmaken": {
+        "id": "bp_rol_aanvrager_aanmaken",
+        "data": {
+          "actie": "rolKoppelen",
+          "bpmnId": "rol-aanvrager-aanmaken",
+          "bpmnAard": "serviceTask",
+          "actieDoel": "Aanvrager",
+          "taakSoort": "service",
+          "lusElement": "",
+          "meervoudig": "",
+          "lusVerzameling": ""
+        },
+        "naam": "Rol aanvrager koppelen",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "conn_trf_afgerond_uitkomst": {
+        "id": "conn_trf_afgerond_uitkomst",
+        "data": {
+          "bpmnId": "naar-uitkomst",
+          "conditie": "",
+          "standaard": false,
+          "sourceHandle": null,
+          "targetHandle": null
+        },
+        "naam": "",
+        "source": "bp_trf_beoordeling_afgerond",
+        "target": "bp_1794148303822_17",
+        "elementType": "sequence-flow",
+        "compartimenten": []
+      },
+      "bp_ontvankelijkheid_toetsen": {
+        "id": "bp_ontvankelijkheid_toetsen",
+        "data": {
+          "bpmnId": "ontvankelijkheid-toetsen",
+          "bpmnAard": "businessRuleTask",
+          "resultaat": "ontvankelijkheid",
+          "taakSoort": "businessRule",
+          "beslissing": "aanvraag-ontvankelijk",
+          "lusElement": "",
+          "meervoudig": "",
+          "lusVerzameling": ""
+        },
+        "naam": "Ontvankelijkheid toetsen",
+        "elementType": "taak",
+        "compartimenten": []
+      },
+      "bp_trf_beoordeling_afgerond": {
+        "id": "bp_trf_beoordeling_afgerond",
+        "data": {
+          "soort": "bericht",
+          "bpmnId": "beoordeling-afgerond",
+          "bericht": "beoordeling-afgerond",
+          "beschrijving": "Het beoordelingsproces werpt dit bericht met de variabele uitkomst (toegekend, afgewezen of aanvulling)."
+        },
+        "naam": "Beoordeling afgerond",
+        "elementType": "tussen-event",
+        "compartimenten": []
+      }
+    },
+    "diagrams": {
+      "bp05_1794147192751": {
+        "id": "bp05_1794147192751",
+        "naam": "Oppakken verzoek",
+        "edges": [],
+        "nodes": [],
+        "diagramType": "bpmn-motor"
+      },
+      "bp05_1794147313169": {
+        "id": "bp05_1794147313169",
+        "naam": "Aanvraag behandelen",
+        "edges": [],
+        "nodes": [
+          {
+            "position": {
+              "x": 182.42867216747285,
+              "y": 313.0365598765282
+            },
+            "elementId": "bp_1794147319067_1"
+          },
+          {
+            "position": {
+              "x": 1217.5036932292876,
+              "y": 399.3726989401168
+            },
+            "elementId": "bp_1794147356930_2"
+          },
+          {
+            "position": {
+              "x": 440,
+              "y": 313
+            },
+            "elementId": "bp_1794147364002_3"
+          },
+          {
+            "size": {
+              "width": 238,
+              "height": 115
+            },
+            "position": {
+              "x": 823.9495397549442,
+              "y": 269.1662089217536
+            },
+            "elementId": "bp_1794147923356_9"
+          },
+          {
+            "size": {
+              "width": 530,
+              "height": 182
+            },
+            "position": {
+              "x": 241,
+              "y": -76
+            },
+            "elementId": "bp_1794148119629_13"
+          },
+          {
+            "position": {
+              "x": 710.559592002029,
+              "y": -5.828338654709668
+            },
+            "elementId": "bp_1794148147741_14"
+          },
+          {
+            "size": {
+              "width": 180,
+              "height": 51
+            },
+            "position": {
+              "x": 448.2618736153427,
+              "y": -18.377373846248076
+            },
+            "elementId": "bp_1794148161413_15"
+          },
+          {
+            "position": {
+              "x": 336.56096194118714,
+              "y": 1.0908642153556514
+            },
+            "elementId": "bp_1794148180085_16"
+          },
+          {
+            "position": {
+              "x": 708.559592002029,
+              "y": 311.0365598765282
+            },
+            "elementId": "bp_1794148303822_17"
+          },
+          {
+            "size": {
+              "width": 190,
+              "height": 94
+            },
+            "position": {
+              "x": 661.1110528643238,
+              "y": 477.14772100504103
+            },
+            "elementId": "bp_1794148355126_18"
+          },
+          {
+            "position": {
+              "x": 1134.9856159851104,
+              "y": 395.96429543881777
+            },
+            "elementId": "bp_1794148434134_19"
+          },
+          {
+            "size": {
+              "width": 180,
+              "height": 60
+            },
+            "position": {
+              "x": 640,
+              "y": 165
+            },
+            "elementId": "bp_1794150207705_20"
+          },
+          {
+            "position": {
+              "x": 333.7481412174958,
+              "y": 311.0365598765282
+            },
+            "elementId": "bp_1794150396697_22"
+          },
+          {
+            "position": {
+              "x": 580,
+              "y": 313
+            },
+            "elementId": "bp_trf_beoordeling_afgerond"
+          }
+        ],
+        "lijnen": {
+          "conn_1794148443174_13": {
+            "knikken": []
+          },
+          "conn_1794148445823_14": {
+            "vorm": "boom",
+            "knikken": [],
+            "verschuiving": 17
+          },
+          "conn_1794150249785_17": {
+            "vorm": "bezier",
+            "knikken": [],
+            "labelOffsets": {
+              "midden": {
+                "x": 2,
+                "y": 13
+              }
+            },
+            "sourceHandle": null,
+            "targetHandle": null
+          },
+          "conn_1794150341937_18": {
+            "labelOffsets": {
+              "midden": {
+                "x": 2,
+                "y": 12
+              }
+            }
+          },
+          "conn_1794150409233_21": {
+            "vorm": "bezier",
+            "knikken": []
+          }
+        },
+        "diagramType": "bpmn-motor",
+        "verborgenConnectoren": []
+      },
+      "bp05_1794147636620": {
+        "id": "bp05_1794147636620",
+        "naam": "Kies zaak uit werkbak",
+        "edges": [],
+        "nodes": [
+          {
+            "position": {
+              "x": 434.37640380859375,
+              "y": 360.56390380859375
+            },
+            "elementId": "bp_1794147706108_5"
+          },
+          {
+            "position": {
+              "x": 520.3764038085938,
+              "y": 346.56390380859375
+            },
+            "elementId": "bp_1794147740492_6"
+          },
+          {
+            "position": {
+              "x": 573.3764038085938,
+              "y": 501.56390380859375
+            },
+            "elementId": "bp_1794147781548_7"
+          },
+          {
+            "position": {
+              "x": 772.3764038085938,
+              "y": 356.56390380859375
+            },
+            "elementId": "bp_1794147824940_8"
+          }
+        ],
+        "diagramType": "bpmn-motor"
+      },
+      "bp_diagram_Diagram_gpk_beoordelen": {
+        "id": "bp_diagram_Diagram_gpk_beoordelen",
+        "naam": "Gehandicaptenparkeerkaart beoordelen",
+        "edges": [],
+        "nodes": [
+          {
+            "size": {
+              "width": 36,
+              "height": 36
+            },
+            "position": {
+              "x": 152,
+              "y": 102
+            },
+            "elementId": "bp_start_2"
+          },
+          {
+            "size": {
+              "width": 100,
+              "height": 80
+            },
+            "position": {
+              "x": 240,
+              "y": 80
+            },
+            "elementId": "bp_aanvraag_beoordelen"
+          },
+          {
+            "size": {
+              "width": 36,
+              "height": 36
+            },
+            "position": {
+              "x": 542,
+              "y": 102
+            },
+            "elementId": "bp_einde_2"
+          },
+          {
+            "size": {
+              "width": 100,
+              "height": 80
+            },
+            "position": {
+              "x": 392,
+              "y": 80
+            },
+            "elementId": "bp_uitkomst_vastleggen"
+          }
+        ],
+        "diagramType": "bpmn-motor"
+      },
+      "bp_diagram_Diagram_aanvraag_oppakken": {
+        "id": "bp_diagram_Diagram_aanvraag_oppakken",
+        "naam": "Aanvraag oppakken",
+        "edges": [],
+        "nodes": [
+          {
+            "size": {
+              "width": 36,
+              "height": 36
+            },
+            "position": {
+              "x": 152,
+              "y": 102
+            },
+            "elementId": "bp_start"
+          },
+          {
+            "size": {
+              "width": 100,
+              "height": 80
+            },
+            "position": {
+              "x": 240,
+              "y": 80
+            },
+            "elementId": "bp_ontvankelijkheid_toetsen"
+          },
+          {
+            "size": {
+              "width": 50,
+              "height": 50
+            },
+            "position": {
+              "x": 395,
+              "y": 95
+            },
+            "elementId": "bp_ontvankelijk"
+          },
+          {
+            "size": {
+              "width": 100,
+              "height": 80
+            },
+            "position": {
+              "x": 540,
+              "y": 220
+            },
+            "elementId": "bp_status_niet_opgepakt"
+          },
+          {
+            "size": {
+              "width": 36,
+              "height": 36
+            },
+            "position": {
+              "x": 692,
+              "y": 242
+            },
+            "elementId": "bp_niet_opgepakt"
+          },
+          {
+            "size": {
+              "width": 100,
+              "height": 80
+            },
+            "position": {
+              "x": 540,
+              "y": 80
+            },
+            "elementId": "bp_zaak_aanmaken"
+          },
+          {
+            "size": {
+              "width": 100,
+              "height": 80
+            },
+            "position": {
+              "x": 690,
+              "y": 80
+            },
+            "elementId": "bp_rol_aanvrager_aanmaken"
+          },
+          {
+            "size": {
+              "width": 100,
+              "height": 80
+            },
+            "position": {
+              "x": 840,
+              "y": 80
+            },
+            "elementId": "bp_document_koppelen"
+          },
+          {
+            "size": {
+              "width": 100,
+              "height": 80
+            },
+            "position": {
+              "x": 990,
+              "y": 80
+            },
+            "elementId": "bp_status_ontvangen"
+          },
+          {
+            "size": {
+              "width": 36,
+              "height": 36
+            },
+            "position": {
+              "x": 1302,
+              "y": 102
+            },
+            "elementId": "bp_vervolgproces_starten"
+          },
+          {
+            "size": {
+              "width": 36,
+              "height": 36
+            },
+            "position": {
+              "x": 1422,
+              "y": 102
+            },
+            "elementId": "bp_einde"
+          },
+          {
+            "size": {
+              "width": 100,
+              "height": 80
+            },
+            "position": {
+              "x": 1152,
+              "y": 80
+            },
+            "elementId": "bp_beoordeling_kiezen"
+          }
+        ],
+        "diagramType": "bpmn-motor"
+      }
+    }
+  }
+}

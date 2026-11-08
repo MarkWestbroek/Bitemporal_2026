@@ -64,6 +64,7 @@ const LEEST = {
   dossierschema: ["logisch-model"],
   dossierformulier: ["logisch-model"],
   dossiertabbladen: [],
+  dossierwidgettabbladen: ["logisch-model"],
   dossierzaaktypelink: [],
   dossierprocessen: [],
   dossierdocumentkolommen: [],
