@@ -492,6 +492,18 @@ het image staan (`isHandgemaaktPakket`, DEVLOOP §"Domeinen van het register"). 
 vervalt zodra het model het domein volledig heeft en de vergelijking met de Studio-export
 rond is. Doe die vergelijking met dezelfde stappen, met de V3-export van het Studio-project in plaats van stap 1.
 
+### 7.3g Meerregelige beschrijvingen (08-11-2026)
+
+Een beschrijving uit de Studio mag meerdere regels hebben. Codegen zette hem als `// <Type> — <beschrijving>`
+in de code. De regel na een regelovergang was daardoor geen commentaar meer, en de build brak:
+`non-declaration statement outside function body`, en bij een apostrof ook "more than one character in rune
+literal". Dat gebeurde bij de rebuild van Inrichten op cg-test.
+
+`goCommentaar` (`cmd/codegen/conventions.go`) zet nu `// ` voor elke volgende regel. Dat geldt voor
+de beschrijvingen van entiteiten, GE's, relaties en datatypes, en voor de bestandskop. Een
+beschrijving in een string (`Description: %q`) of in de tag `schema_desc` (`strconv.Quote`) was al
+veilig. De test `gen_commentaar_test.go` parseert alle gegenereerde bronnen met zo'n beschrijving.
+
 ### 7.4 Twee voetangels bij een regeneratie
 
 Waargenomen bij het regenereren van `np-loc` voor het demo-model

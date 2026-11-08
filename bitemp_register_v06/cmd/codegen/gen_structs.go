@@ -27,7 +27,7 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 
 		// Entiteit struct
 		if ent.Description != "" {
-			b.WriteString(fmt.Sprintf("// %s — %s\n", ent.Typenaam, ent.Description))
+			b.WriteString(fmt.Sprintf("// %s — %s\n", ent.Typenaam, goCommentaar(ent.Description)))
 		}
 		b.WriteString(fmt.Sprintf("type %s struct {\n", ent.Typenaam))
 		writeField(&b, bunBaseModelField(d.Tabelnaam))
@@ -171,7 +171,7 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, entIDKolom string, entPKKolom string, isMaterieel bool, description string, secEntIDKolom string, tabelBasis string) {
 	tabelnaam := tabelBasis
 	if description != "" {
-		b.WriteString(fmt.Sprintf("// %s — %s\n", typeName, description))
+		b.WriteString(fmt.Sprintf("// %s — %s\n", typeName, goCommentaar(description)))
 	}
 	b.WriteString(fmt.Sprintf("type %s struct {\n", typeName))
 	writeField(b, bunBaseModelField(tabelnaam))
@@ -256,7 +256,7 @@ func generateAanvangEindeStructs(b *strings.Builder, parentType string, parentEn
 // ---- Helpers ----
 
 func fileHeader(description string) string {
-	return fmt.Sprintf("package model\n\n// %s\n\n", description)
+	return fmt.Sprintf("package model\n\n// %s\n\n", goCommentaar(description))
 }
 
 func writeField(b *strings.Builder, f StructField) {
