@@ -13,6 +13,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   relatie, enumeratie, gegevenstype en referentielijstinstantie een alleen-lezen regel *domein*
   met de herkomst (het package in de boom; bij een GE de entiteit, bij een relatie de bron). Het
   invulveld *domein* bij GE en relatie is weg; de V3-export en SHACL gebruiken dezelfde afleiding.
+- **Geen "0.5 preview"-strook meer boven het canvas.** De tekst "Bewerkbare sandbox — wijzigingen
+  blijven lokaal" klopte niet meer (een project op de server synchroniseert). De korte beschrijving
+  van een taal staat nu in de tooltip van het tabblad in Modelleren.
 
 ## [studio/v0.34.1] — 2026-11-08
 

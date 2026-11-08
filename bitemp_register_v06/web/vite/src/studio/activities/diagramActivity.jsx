@@ -37,7 +37,6 @@ export default maakDiagramActiviteit({
   menuLabel: "Diagram",
   kleur: "#6366f1",
   standaardVerborgen: true, // gedekt door de Modelleren-host
-  previewTekst: "Bewerkbare sandbox — wijzigingen blijven lokaal en raken het UML-model niet.",
   devHookNaam: "__diagram05Store",
   koppeling: {
     /** Fase 1: spiegel het klassieke UML-model in de sandbox. */

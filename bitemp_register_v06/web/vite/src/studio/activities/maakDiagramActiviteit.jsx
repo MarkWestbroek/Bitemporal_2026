@@ -18,7 +18,7 @@
  * @param {Object} [opties.taakbalkDefaults]
  * @param {string} opties.menuPrefix        - menuBus-eventprefix ("d05")
  * @param {string} opties.menuLabel         - hoofdmenu-label ("Diagram (0.5)")
- * @param {string} [opties.previewTekst]
+ * @param {string} [opties.previewTekst]    - korte beschrijving van de taal (tooltip op het tabblad)
  * @param {string} [opties.status]          - "preview" (default)
  * @param {string} [opties.devHookNaam]     - window-hook voor e2e (alleen dev)
  * @param {Object} [opties.koppeling]       - optionele model-koppeling:
@@ -204,7 +204,9 @@ export function maakDiagramActiviteit(opties) {
     taakbalkDefaults = STANDAARD_TAAKBALK_DEFAULTS,
     menuPrefix,
     menuLabel,
-    previewTekst = "Bewerkbare sandbox — wijzigingen blijven lokaal.",
+    // Korte beschrijving van de taal: tooltip op het tabblad in Modelleren (08-11; was de
+    // "0.5 preview"-strook boven het canvas, Mark: "klopt die wel?").
+    previewTekst = null,
     status = "preview",
     groep = "modelleren",
     // true → niet in de activity bar; alleen bereikbaar via menu Ga naar
@@ -2151,7 +2153,6 @@ export function maakDiagramActiviteit(opties) {
     const diagrams = useStore((s) => s.diagrams);
     const viewports = useStore((s) => s.viewports);
     const actief = useStore((s) => s.actiefDiagramId);
-    const isDirty = useStore((s) => s.isDirty);
     // Fallback: na undo van "nieuw diagram" kan het actieve id verdwenen zijn.
     const diagram = (actief && diagrams[actief]) || Object.values(diagrams)[0] || null;
 
@@ -3290,14 +3291,6 @@ export function maakDiagramActiviteit(opties) {
 
     return (
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <div className="dc-preview-strook">
-          <span className="dc-preview-badge">0.5 preview</span>
-          <span>
-            {previewTekst}
-            {isDirty ? " ●" : ""}
-          </span>
-          <span style={{ marginLeft: "auto" }}>{diagram?.naam || ""}</span>
-        </div>
         {/* Eigen canvas (geen third-party zoals bpmn/dmn-js) → volgt het
             studio-thema via dc-canvasvlak, i.p.v. het vaste witte papier. */}
         <div
@@ -4173,6 +4166,8 @@ export function maakDiagramActiviteit(opties) {
       label,
       icon,
       kleur,
+      // Beschrijving van de taal (tooltip op het tabblad).
+      omschrijving: previewTekst || null,
       useStore,
       descriptor,
       Provider,
