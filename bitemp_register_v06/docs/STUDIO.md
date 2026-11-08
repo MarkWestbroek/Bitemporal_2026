@@ -1086,6 +1086,10 @@ fase 2 een **bewerkbare sandbox**:
   - Tests: `canoniek-uml/reflijstVeld.test.js` (op het demo-model np-loc: Adres.land →
     LandenlijstLand, Adres.gemeente → Gemeente). Backend (opties-route REL → items/leden,
     codegen-controle van het `$ref`-doel, controle bij registratie §33.4) volgt na api 0.22.0.
+- **Geen preview-strook meer (2026-11-08).** De strook "0.5 preview — Bewerkbare sandbox …" boven
+  het canvas stamde uit de tijd dat het canonieke model een sandbox naast de klassieke UML-editor
+  was, en klopte niet meer. `previewTekst` van `maakDiagramActiviteit` is nu de beschrijving van de
+  taal (`omschrijving` op het profieltype) en verschijnt als tooltip op het tabblad in Modelleren.
 - **Domein: één bron (2026-11-08, Mark: "wat domineert?").** Het domein van een element is
   het **package** waarin het in de boom staat; een gegevenselement volgt zijn entiteit
   (compositie), een relatie haar bron. Alleen een element zonder package of eigenaar valt terug

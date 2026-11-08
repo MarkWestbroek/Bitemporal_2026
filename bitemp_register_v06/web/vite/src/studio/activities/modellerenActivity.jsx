@@ -3178,7 +3178,8 @@ function Tab({ tab, actief, index, sleep, setSleep }) {
         (sleep && sleep.id !== tab.id && sleep.boven === index ? ` is-doel-${sleep.kant}` : "")
       }
       style={actief ? { borderTopColor: stijl.kleur || "var(--s-accent)" } : undefined}
-      title={`${diagram.naam} — ${profiel.label}`}
+      title={`${diagram.naam} — ${profiel.label}${profiel.omschrijving ? `
+${profiel.omschrijving}` : ""}`}
       data-tab-id={tab.id}
       // Slepen naar een andere plek in de tabbalk (Mark, 06-11).
       draggable

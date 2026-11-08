@@ -16,6 +16,8 @@ test("inspector: domein uit het package, GE volgt de entiteit, geen invulveld", 
     { id: "c1", naam: "", type: "compositie", source: "partij", target: "naam" },
   ] });
   await wachtOpNode(page, "partij");
+  // Geen "0.5 preview"-strook meer boven het canvas (Mark 08-11: de sandboxtekst klopte niet).
+  await expect(page.locator(".dc-preview-strook")).toHaveCount(0);
 
   await page.locator('.react-flow__node[data-id="partij"]').click();
   const regel = page.getByTestId("inspector-afgeleid-domein");
