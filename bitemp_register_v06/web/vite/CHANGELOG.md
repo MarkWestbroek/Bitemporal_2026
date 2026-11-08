@@ -8,6 +8,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.34.1] — 2026-11-08
+
+Patch, samen met render 0.3.7 en devloop 0.25.3 (api 0.22.1).
+
+### Opgelost
+- **V3-export: `doelEntiteit` van een relatie is de naam van het doel**, niet zijn element-id.
+  Na het hernoemen van een entiteit wees de relatie naar een entiteit die niet bestaat en faalde de
+  rebuild (FUNDAMENT 08-11, project Inrichten). Geldt ook voor `/export/v3` in de render-sidecar
+  en dus `GET /api/studio/projecten/:id/v3`.
+
 ### Toegevoegd
 - **Inrichting: export uit een Studio-project** (Mark 08-11: de Studio is de bron, rechtstreeks gelezen, alleen de
   relevante stukken naar het register). `scripts/maak_inrichtingsexport.mjs` maakt de hele levering

@@ -8,6 +8,22 @@
 
 ---
 
+## studio 0.34.1 / render 0.3.7 / devloop 0.25.3 (2026-11-08)
+
+Patch voor de rebuild van het project Inrichten vóór de demo (akkoord Mark 08-11). api blijft
+0.22.1; devloop 0.25.3 is api 0.22.1 met studio 0.34.1.
+
+- **V3-export: `doelEntiteit` = de naam van het doel** (FUNDAMENT 08-11). Na een hernoeming
+  verschillen element-id en naam; de export zette het id, zodat de relatie (GpkKaartAanvraag →
+  Gehandicaptenparkeerkaartaanvraag) naar een niet-bestaande entiteit wees. Raakt
+  `/export/v3` in de render-sidecar en dus `GET /api/studio/projecten/:id/v3`.
+- Verder in deze Studio: de inrichtingsexport uit een Studio-project en de referentielijst als
+  veldtype in de lezer (zie `web/vite/CHANGELOG.md`, docs/TRANSFORMATIES.md §11.16).
+
+Uitrol: app (frontend + render), Fundament via FUNDAMENT.
+
+---
+
 ## api 0.22.1 / devloop 0.25.2 (2026-11-08)
 
 Patch voor de nieuwe richting van de items-relatie (plan 2026-11-07 Referentielijst-instanties,
