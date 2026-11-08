@@ -504,7 +504,9 @@ test("store-round-trip: in 0.5 bewerkte GE-velden gaan terug naar de oude datavo
   assert.equal(terug.data.meervoud, "adressen");
   assert.equal(terug.data.naamLabelHeen, "woont op");
   assert.equal(terug.data.naamLabelTerug, "is adres van");
-  assert.equal(terug.domein, "np-loc");
+  // Een GE volgt het domein van zijn entiteit (A, "kern"; Mark 08-11): een afwijkend eigen
+  // domein-veld telt niet meer mee (de codegen keek er ook nooit naar).
+  assert.equal(terug.domein, "kern");
 });
 
 // Tijdprecisie (27-10, besluit Mark met BACKEND): "tijdstip" reist mee bij materieel;

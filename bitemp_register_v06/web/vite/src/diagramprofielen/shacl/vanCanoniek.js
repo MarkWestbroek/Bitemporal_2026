@@ -38,6 +38,7 @@ import { leidAf } from "./afleiding.js";
 import { shaclRijenPosities } from "./index.js";
 import { lokaleNaam } from "./naarCanoniek.js";
 import { leesPrefixen } from "./schrijver.js";
+import { domeinVanElement } from "../canoniek-uml/uniekeNamen.js";
 import { afdrukVeld, afdrukRelatie, afdrukCompositie, afdrukGeneralisatie, afdrukConstraint, afdrukEnumeratie, kopie } from "./herkomst.js";
 
 const isConnector = (el) => Boolean(el?.source && el?.target);
@@ -85,11 +86,8 @@ export function canoniekNaarShacl(canoniek, opties = {}) {
   const standaardPrefix = graafH && !opties.basisIri ? /^([A-Za-z_][\w.-]*)?:$/.exec(graafH.data?.iri || "")?.[1] || null : null;
 
   // ── Domeinen en prefixen ────────────────────────────────────────────────
-  const domeinVan = (el) => {
-    if (el?.data?.domein) return el.data.domein;
-    const pkg = alle.find((c) => c.elementType === "bevat" && c.target === el.id);
-    return pkg ? bron[pkg.source]?.naam : "";
-  };
+  // Eén bron voor het domein (08-11): het package in de boom; een GE/relatie volgt haar entiteit.
+  const domeinVan = (el) => domeinVanElement(el, bron).domein;
   /** @type {Record<string, string>} */
   const prefixen = {
     sh: "http://www.w3.org/ns/shacl#",
