@@ -122,7 +122,8 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.14.0`** (2026-10-07: project op de server, operatielaag, projectboom-fixes) en
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
-- Backend: **`api/v0.22.1`** (2026-11-08, patch: items-relatie op het item — eigen tabel
+- Backend: **`api/v0.22.2`** (2026-11-08, patch: meerregelige beschrijvingen breken het
+  gegenereerde Go-commentaar niet meer; devloop-image 0.25.4). Daarvoor **`api/v0.22.1`** (2026-11-08, patch: items-relatie op het item — eigen tabel
   `<item>_<relatie>` en niet meer onder Referentielijst; devloop-image 0.25.2; devloop-image 0.25.3 = dezelfde api met studio 0.34.1). Daarvoor **`api/v0.22.0`** (2026-11-07: de domeinen van het register expliciet — `domeinen`,
   `alle_domeinen`, `precies` op `/admin/rebuild`, `schema_versies.gebouwde_domeinen` voor de
   startup-rebuild, `/admin/wees-tabellen` —, GitAdres naar gegevenstypen, codegen klaar voor

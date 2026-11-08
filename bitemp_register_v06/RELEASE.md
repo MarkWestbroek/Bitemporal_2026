@@ -8,6 +8,25 @@
 
 ---
 
+## api 0.22.2 / devloop 0.25.4 (2026-11-08)
+
+Patch voor codegen; studio blijft 0.34.1 en render 0.3.7.
+
+- **Een meerregelige beschrijving breekt de build niet meer.** Codegen zette een beschrijving uit
+  de Studio als `// <Type> — <beschrijving>` in de code. De regel na een regelovergang werd dan
+  code: `non-declaration statement outside function body`, bij de rebuild van Inrichten op cg-test.
+  `goCommentaar` zet nu `// ` voor elke volgende regel. Dat geldt voor entiteiten, GE's,
+  relaties, datatypes en de bestandskop (CODEGEN.md §7.3g).
+
+Getest: `go test ./...` slaagt. De nieuwe test `gen_commentaar_test.go` parseert alle gegenereerde
+bronnen met een beschrijving met regelovergangen, een lege regel en een apostrof. Zonder de fix
+faalt die test zoals op cg-test.
+
+Uitrol: Fundament `bitemp-devloop:0.25.4`, door FUNDAMENT. App is niet nodig, want alleen codegen
+verandert.
+
+---
+
 ## studio 0.34.1 / render 0.3.7 / devloop 0.25.3 (2026-11-08)
 
 Patch voor de rebuild van het project Inrichten vóór de demo (akkoord Mark 08-11). api blijft
