@@ -188,6 +188,17 @@ func schemaVersieLijstResponse(versie model.SchemaVersie) gin.H {
 		"model_url":          "/api/schema/model/" + strconv.FormatInt(versie.ID, 10),
 	}
 
+	// Herkomst uit een Studio-project (api 0.21.0; stond tot 0.22.0 wel in de SELECT maar niet in
+	// het antwoord) en de domeinen van het register na de rebuild (0.22.0).
+	if versie.BronProjectID != "" {
+		response["bron_project_id"] = versie.BronProjectID
+		response["bron_project_versie"] = versie.BronProjectVersie
+		response["bron_tot_volgnummer"] = versie.BronTotVolgnummer
+	}
+	if len(versie.GebouwdeDomeinen) > 0 {
+		response["gebouwde_domeinen"] = versie.GebouwdeDomeinen
+	}
+
 	if versie.Status == model.SchemaVersieStatusProposed {
 		response["activeer_url"] = "/api/schema/model/" + strconv.FormatInt(versie.ID, 10) + "/activeer"
 	}
@@ -489,7 +500,7 @@ func MaakLijstSchemaVersiesHandler() gin.HandlerFunc {
 		query := DB.NewSelect().
 			Model(&versies).
 			Column("id", "tijdstip", "bron", "model_naam", "model_beschrijving", "model_versie", "indiener", "build_versie", "go_module", "status", "opmerking",
-				"bron_project_id", "bron_project_versie", "bron_tot_volgnummer").
+				"bron_project_id", "bron_project_versie", "bron_tot_volgnummer", "gebouwde_domeinen").
 			OrderExpr(sortExpr)
 
 		if modelNaamFilter != "" {

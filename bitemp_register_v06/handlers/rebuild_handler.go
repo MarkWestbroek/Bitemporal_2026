@@ -16,6 +16,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -111,6 +112,13 @@ type RebuildRequest struct {
 	ProjectID string `json:"project_id,omitempty"`
 	// Profiel is de sleutel van het canonieke profiel in het project (default "diagram05").
 	Profiel string `json:"profiel,omitempty"`
+
+	// Domeinkeuze (07-11-2026, rebuild_domeinen.go). Domeinen mag ook een lijst namen zijn:
+	// ["inrichting", "aanvraag"]. AlleDomeinen: alle domeinen van het model. Precies: het register
+	// krijgt alleen de gekozen domeinen plus het standaardpakket; de rest gaat eruit. Zonder
+	// Domeinen en AlleDomeinen bouwt een project-rebuild de bestaande domeinen.
+	AlleDomeinen bool `json:"alle_domeinen,omitempty"`
+	Precies      bool `json:"precies,omitempty"`
 }
 
 // RebuildResponse beschrijft de response van de rebuild endpoint.
@@ -128,6 +136,8 @@ type RebuildResponse struct {
 	// Bij reden "achterstand": de snapshot-grens en het laatste volgnummer van het project.
 	TotVolgnummer     int64 `json:"tot_volgnummer,omitempty"`
 	LaatsteVolgnummer int64 `json:"laatste_volgnummer,omitempty"`
+	// Na een geslaagde rebuild: de domeinen die het register nu heeft.
+	GebouwdeDomeinen []model.GebouwdDomein `json:"gebouwde_domeinen,omitempty"`
 }
 
 func laadSchemaVersieJSONOpID(schemaVersieID int64) ([]byte, string, error) {
@@ -137,8 +147,13 @@ func laadSchemaVersieJSONOpID(schemaVersieID int64) ([]byte, string, error) {
 
 	ctx := context.Background()
 	var versie model.SchemaVersie
+	// Alleen de kolommen die we nodig hebben: de startup-rebuild draait vóór de migraties van
+	// dbsetup, dus een kolom die een nieuwe versie toevoegt (bv. bron_project_id, 07-11-2026)
+	// bestaat dan nog niet. Een SELECT op het hele model gaf op cg-test bij de upgrade naar 0.24.13
+	// "column does not exist" en twee minuten uitval.
 	err := DB.NewSelect().
 		Model(&versie).
+		Column("id", "schema_json", "status").
 		Where("id = ?", schemaVersieID).
 		Limit(1).
 		Scan(ctx)
@@ -159,8 +174,10 @@ func laadLaatsteSchemaVersieJSONOpStatus(status model.SchemaVersieStatus) ([]byt
 
 	ctx := context.Background()
 	var versie model.SchemaVersie
+	// Alleen de nodige kolommen: zie laadSchemaVersieJSONOpID (startup-rebuild vóór de migraties).
 	err := DB.NewSelect().
 		Model(&versie).
+		Column("id", "schema_json", "status").
 		Where("status = ?", status).
 		OrderExpr("id DESC").
 		Limit(1).
@@ -619,18 +636,29 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			modelBytes = output
 		}
 
-		// Bepaal domein/prefix uit model JSON als we in single-domein modus zitten. Een project is
-		// het hele model: zonder opgegeven domeinen bouwen we ze allemaal (zoals de startup-rebuild).
-		if len(req.Domeinen) == 0 && bron != nil {
-			runs, melding := domeinRunsUitModel(modelBytes, appDir)
-			if len(runs) == 0 {
+		// Welke domeinen (rebuild_domeinen.go, besluit Mark 07-11-2026): een lijst, alle_domeinen,
+		// of bij een project zonder lijst de bestaande domeinen van het register. Met precies
+		// bepaalt de lijst ook wat eruit gaat. Anders: de oude enkel-domein-route hieronder.
+		var houden []string
+		if len(req.Domeinen) > 0 || req.AlleDomeinen || req.Precies || bron != nil {
+			modelRuns, modelMelding := domeinRunsUitModel(modelBytes, appDir)
+			if len(modelRuns) == 0 {
 				c.JSON(http.StatusUnprocessableEntity, RebuildResponse{Status: "fout", Reden: "export", Stappen: stappen,
-					Error: "het V3-model uit het project heeft geen domeinen: " + melding, Bron: bron, Meldingen: meldingen})
+					Error: "het V3-model heeft geen domeinen: " + modelMelding, Bron: bron, Meldingen: meldingen})
 				return
 			}
-			req.Domeinen = runs
-			req.Domein = "project-" + bron.ProjectID
-			stappen = append(stappen, fmt.Sprintf("Alle %d domeinen van het project bouwen", len(runs)))
+			stappen = append(stappen, modelMelding)
+			keuze, fout := kiesDomeinRuns(modelRuns, aanwezigeDomeinen(filepath.Join(appDir, "model")), req.Domeinen, req.AlleDomeinen, req.Precies, bron != nil)
+			if fout != "" {
+				c.JSON(http.StatusBadRequest, RebuildResponse{Status: "fout", Reden: "domeinen", Stappen: stappen, Error: fout, Bron: bron, Meldingen: meldingen})
+				return
+			}
+			req.Domeinen = keuze.runs
+			houden = keuze.houden
+			stappen = append(stappen, keuze.melding)
+			if bron != nil {
+				req.Domein = "project-" + bron.ProjectID
+			}
 		}
 		if len(req.Domeinen) == 0 {
 			var melding string
@@ -646,10 +674,16 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		// baseline bijwerken (rebuild_core.go; gedeeld met de startup-rebuild). Sinds 22-10-2026
 		// worden alleen de prefixen van de doeldomeinen opgeschoond — voorheen kon een lege
 		// domeinopgave álle gegenereerde bestanden wissen.
-		kernStappen, buildOutput, err := voerCodegenEnBuildUit(appDir, modelBytes, domeinRuns)
+		kernStappen, buildOutput, err := voerCodegenEnBuildUit(appDir, modelBytes, domeinRuns, houden)
 		stappen = append(stappen, kernStappen...)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, RebuildResponse{
+			status, reden := http.StatusInternalServerError, ""
+			var vf *verwijzingenFout
+			if errors.As(err, &vf) {
+				status, reden = http.StatusUnprocessableEntity, "verwijzingen"
+			}
+			c.JSON(status, RebuildResponse{
+				Reden:       reden,
 				Status:      "fout",
 				Stappen:     stappen,
 				BuildOutput: string(buildOutput),
@@ -660,9 +694,15 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			return
 		}
 
+		// De domeinen die het register nu heeft; de geactiveerde versie onthoudt ze, zodat de
+		// startup-rebuild op een verse container precies deze bouwt.
+		gebouwd := aanwezigeDomeinen(filepath.Join(appDir, "model"))
+		stappen = append(stappen, "Domeinen van het register: "+gebouwdeNamen(gebouwd))
+
 		// Stap 4b: de gebouwde versie actief maken (besluit Mark 23-10-2026; rebuild_activeer.go),
 		// zodat de startup-rebuild in de container altijd bij deze code uitkomt. Bron "code"
-		// (huidige MetaRegistry opnieuw) en "actief" veranderen niets aan de actieve versie.
+		// (huidige MetaRegistry opnieuw) verandert niets aan de actieve versie; bij "actief" krijgt
+		// die versie wel de nieuwe domeinenlijst.
 		{
 			var bestaandID *int64
 			activeren := true
@@ -677,11 +717,16 @@ func MaakRebuildHandler() gin.HandlerFunc {
 					activeren = false
 				}
 				bestaandID = id
+			case strings.EqualFold(req.SchemaBron, "actief") || strings.EqualFold(req.SchemaBron, "active"):
+				activeren = false
+				if err := bewaarGebouwdeDomeinenOpActieveVersie(c.Request.Context(), gebouwd); err != nil {
+					stappen = append(stappen, fmt.Sprintf("Waarschuwing: domeinenlijst niet bewaard op de actieve versie: %v", err))
+				}
 			default:
 				activeren = false
 			}
 			if activeren {
-				if melding, err := activeerGebouwdModel(c.Request.Context(), modelBytes, bestaandID, c.GetString("gebruikersnaam"), bron); err != nil {
+				if melding, err := activeerGebouwdModel(c.Request.Context(), modelBytes, bestaandID, c.GetString("gebruikersnaam"), bron, gebouwd); err != nil {
 					stappen = append(stappen, fmt.Sprintf("Waarschuwing: gebouwde versie niet geactiveerd: %v", err))
 				} else {
 					stappen = append(stappen, melding)
@@ -715,12 +760,13 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		}()
 
 		c.JSON(http.StatusOK, RebuildResponse{
-			Status:       "succesvol",
-			Stappen:      stappen,
-			BuildOutput:  string(buildOutput),
-			HerstartOver: herstartMelding,
-			Bron:         bron,
-			Meldingen:    meldingen,
+			Status:           "succesvol",
+			Stappen:          stappen,
+			BuildOutput:      string(buildOutput),
+			HerstartOver:     herstartMelding,
+			Bron:             bron,
+			Meldingen:        meldingen,
+			GebouwdeDomeinen: gebouwd,
 		})
 
 		// Na het sturen van de response: exit met code 42 zodat het

@@ -44,6 +44,9 @@ func generateDatatypeRegistryAdditive(v3 model.V3Model, opts codegenOptions) (st
 	}
 
 	funcName := opts.initFuncName("DatatypeRegistry")
+	if isCanoniekDatatypePakket(opts.domein) {
+		return generateCanoniekeDatatypeRegistry(eigenDatatypes, funcName), nil
+	}
 	if len(eigenDatatypes) == 0 {
 		b.WriteString(fmt.Sprintf("func %s() {\n", funcName))
 		b.WriteString("\t// Geen domein-eigen datatypes; datatypes uit andere domeinen worden daar gegenereerd.\n")
@@ -103,7 +106,41 @@ func writeDatatypeEntry(b *strings.Builder, dt model.V3Datatype, typed bool) {
 		writeWeergave(b, dt.Weergave)
 	}
 
+	if dt.ExterneReferentie != "" {
+		b.WriteString(fmt.Sprintf("\t\tExterneReferentie: %q,\n", dt.ExterneReferentie))
+	}
+
 	b.WriteString("\t},\n")
+}
+
+// isCanoniekDatatypePakket: het domein gegevenstypen is de gedeelde datatypebibliotheek. Zijn
+// registry wordt als laatste geïnitialiseerd (metaregistry_plumbing.go) en VERVANGT dan wat
+// andere domeinen onder dezelfde naam hebben toegevoegd (bv. URL of Emailadres uit CG), in
+// plaats van er een tweede entry naast te zetten. Besluit Mark 07-11-2026: gegevenstypen komt
+// uit het model; het gegenereerde bestand houdt dezelfde vorm als het vroegere handgemaakte
+// gegevenstypen_datatype_registry.go (functie gegevenstypen(), die ook de snapshot-tests lezen).
+func isCanoniekDatatypePakket(domein string) bool {
+	return strings.EqualFold(strings.TrimSpace(domein), "gegevenstypen")
+}
+
+// generateCanoniekeDatatypeRegistry schrijft de registry van het gegevenstypen-domein: de init
+// vervangt-of-voegt-toe via registreerOfVervangDatatype (model/metaregistry_plumbing.go), de
+// lijst zelf staat in gegevenstypen().
+func generateCanoniekeDatatypeRegistry(dts []model.V3Datatype, funcName string) string {
+	var b strings.Builder
+	b.WriteString(fileHeader("Canonieke DatatypeRegistry van het domein gegevenstypen — vervangt datatypes met\n" +
+		"// dezelfde naam uit andere domeinen (registreerOfVervangDatatype; als laatste aangeroepen in\n" +
+		"// metaregistry_plumbing.go). Gegenereerd door cmd/codegen — niet handmatig bewerken;\n" +
+		"// wijzig de datatypes in het model (domein gegevenstypen)."))
+	b.WriteString(fmt.Sprintf("func %s() {\n", funcName))
+	b.WriteString("\tfor _, dt := range gegevenstypen() {\n\t\tregistreerOfVervangDatatype(dt)\n\t}\n}\n\n")
+	b.WriteString("// gegevenstypen geeft de canonieke set algemene datatypes terug.\n")
+	b.WriteString("func gegevenstypen() []V3Datatype {\n\treturn []V3Datatype{\n")
+	for _, dt := range dts {
+		writeDatatypeEntry(&b, dt, false)
+	}
+	b.WriteString("\t}\n}\n")
+	return b.String()
 }
 
 // writeValidatie schrijft het Validatie blok.
@@ -146,6 +183,24 @@ func writeWeergave(b *strings.Builder, w *model.V3Weergave) {
 	}
 	if w.InputMask != "" {
 		b.WriteString(fmt.Sprintf("\t\t\tInputMask:   %q,\n", w.InputMask))
+	}
+	if w.Widget != "" {
+		b.WriteString(fmt.Sprintf("\t\t\tWidget:      %q,\n", w.Widget))
+	}
+	if w.Prefix != "" {
+		b.WriteString(fmt.Sprintf("\t\t\tPrefix:      %q,\n", w.Prefix))
+	}
+	if w.Suffix != "" {
+		b.WriteString(fmt.Sprintf("\t\t\tSuffix:      %q,\n", w.Suffix))
+	}
+	if w.Multiline {
+		b.WriteString("\t\t\tMultiline:   true,\n")
+	}
+	if w.Decimalen != nil {
+		b.WriteString(fmt.Sprintf("\t\t\tDecimalen:   intPtr(%d),\n", *w.Decimalen))
+	}
+	if w.Scheiding != "" {
+		b.WriteString(fmt.Sprintf("\t\t\tScheiding:   %q,\n", w.Scheiding))
 	}
 	b.WriteString("\t\t},\n")
 }

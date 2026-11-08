@@ -60,7 +60,7 @@ func TestVoerCodegenEnBuildUit_WeigertZonderDomeinen(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(appDir, "model"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	_, _, err := voerCodegenEnBuildUit(appDir, []byte(`{}`), nil)
+	_, _, err := voerCodegenEnBuildUit(appDir, []byte(`{}`), nil, nil)
 	if err == nil {
 		t.Fatal("verwacht een fout zonder domeinen")
 	}

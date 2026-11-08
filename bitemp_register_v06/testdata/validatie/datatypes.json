@@ -302,6 +302,20 @@
     }
   },
   {
+    "naam": "GitAdres",
+    "basistype": "string",
+    "format": "git-address",
+    "validatie": {
+      "pattern": "^(https?://[^\\s]+|ssh://[^\\s]+|git://[^\\s]+|[A-Za-z0-9._-]+@[A-Za-z0-9.-]+:[^\\s]+)$",
+      "voorbeelden": [
+        "https://github.com/org/repo.git",
+        "git@github.com:org/repo.git",
+        "ssh://git@host/org/repo.git"
+      ],
+      "foutmelding": "Voer een geldig Git-adres in (https://, ssh://, git:// of gebruiker@host:pad)"
+    }
+  },
+  {
     "naam": "IBAN",
     "basistype": "string",
     "format": "iban",

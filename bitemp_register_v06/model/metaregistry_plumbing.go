@@ -490,6 +490,27 @@ var EnumUUIDs = map[string]string{}
 // hem in <prefix>_enum_registry.go; ontbreekt een enum, dan geldt StandaardEnumConstNaam.
 var EnumConstNamen = map[string]map[string]string{}
 
+// registreerOfVervangDatatype voegt een datatype toe of vervangt een bestaande
+// entry met dezelfde Naam (laatste-wint-op-Naam). Hiermee kan de gegevenstypen-
+// registry oudere duplicates uit andere domeinen overschrijven zonder dat we
+// die bestanden hoeven aan te raken. Staat hier (handgeschreven) en niet in
+// gegevenstypen_datatype_registry.go, omdat codegen dat bestand voor het domein
+// gegevenstypen genereert (cmd/codegen/gen_datatypes.go, generateCanoniekeDatatypeRegistry).
+func registreerOfVervangDatatype(dt V3Datatype) {
+	for i := range DatatypeRegistry {
+		if DatatypeRegistry[i].Naam == dt.Naam {
+			// Behoud Positie-info uit eerdere entry zodat de UML-editor-layout
+			// niet verspringt na een rebuild.
+			if dt.Positie == nil && DatatypeRegistry[i].Positie != nil {
+				dt.Positie = DatatypeRegistry[i].Positie
+			}
+			DatatypeRegistry[i] = dt
+			return
+		}
+	}
+	DatatypeRegistry = append(DatatypeRegistry, dt)
+}
+
 // VoegOnderliggendGEToe voegt een OnderliggendGegevenselement toe aan een reeds
 // geregistreerde TypeMeta. Hiermee kan domein-specifieke code (bijv. np-loc)
 // een kind-relatie toevoegen aan een register-scope entiteit (bijv. Referentielijst).

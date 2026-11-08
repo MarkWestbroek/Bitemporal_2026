@@ -436,6 +436,62 @@ met haar aanvang en einde onder `parent_<ouder>`, en `geldigOp` laat het subtype
 moment niet bestaat (`snoeiStruct` in `model/materieel_tijd.go`). Materiële GE's en relaties óp het
 subtype zijn wel toegestaan: die hebben hun eigen tijdlijn als gegeven, niet als bestaan.
 
+### 7.3e Een veld verdwijnt uit het model: de kolom blijft (07-11-2026)
+
+Een additieve rebuild maakt nieuwe tabellen en kolommen aan (`ensureNieuweKolommen`), maar gooit
+geen kolom weg als een veld uit het model verdwijnt. De oude waarden zijn historie: registraties
+van vóór de wijziging moeten bij tijdreizen hun waarde houden. Op cg-test (schema-versie 3 en 4,
+velden vervangen door relaties) brak dat elke nieuwe opvoer van zo'n type met een 500:
+`bun: Artefact_ArtefactInhoud_Data does not have column "formaat"`.
+
+| Wat | Waarom het brak | Fix |
+|---|---|---|
+| lezen | `INSERT … RETURNING *` (en `SELECT *`) geeft de vervallen kolom terug; bun weigert een kolom die de struct niet kent | `bun.WithDiscardUnknownColumns()` op de database in `main.go` |
+| schrijven | is de vervallen kolom NOT NULL zonder standaard, dan faalt elke insert | `ensureVervallenKolommenNullable` (dbsetup, bij het opstarten): `DROP NOT NULL`, verliesvrij |
+
+Een vervallen kolom wordt bij elke start gelogd (`[dbsetup] vervallen kolom …`). Opruimen
+(`DROP COLUMN`) is een bewuste beheerdersstap, want daarmee verdwijnt de historie van dat veld.
+
+### 7.3f gegevenstypen uit het model (07-11-2026)
+
+**Besluit Mark 07-11-2026:** het domein `gegevenstypen` (de gedeelde datatypebibliotheek) komt
+uit het model, net als de andere domeinen. `model/gegevenstypen_datatype_registry.go` is met de
+hand geschreven (f003a800, 15-05-2026) en wordt een gegenereerd bestand. Het bevat alleen
+gegevens. De Go-validatiefuncties waar een regel `type: "function"` naar verwijst
+(`iban_mod97`, `lei_mod97`, `isbn10_mod11`, `geo_range`, `geolijn_geojson`, `geovlak_geojson`) staan in de
+motor (`model/regels_eval.go`, en `umleditor/validatie/regels.js` voor de Studio) en blijven daar.
+
+Wat codegen daarvoor erbij kreeg (`cmd/codegen/gen_datatypes.go`):
+
+| Wat | Waarom |
+|---|---|
+| `ExterneReferentie` en de weergavevelden `Widget`, `Prefix`, `Suffix`, `Multiline`, `Decimalen` en `Scheiding` gaan mee | Codegen schreef ze niet. Het handgemaakte bestand heeft 10 externe referenties en `Widget: "color"` bij Kleur. Geldt voor elk domein. |
+| Voor het domein `gegevenstypen` maakt codegen een *canonieke* registry: `init…` roept `registreerOfVervangDatatype` aan voor elk datatype uit `gegevenstypen()` | De gewone registry voegt toe. Deze vervangt een datatype met dezelfde naam uit een ander domein (bv. URL of Emailadres uit CG). Zo blijft het werken zoals het handgemaakte bestand, dat als laatste draait. |
+| `registreerOfVervangDatatype` verhuisde naar `metaregistry_plumbing.go` | Stond in het bestand dat nu gegenereerd wordt |
+| `testdata/gegevenstypen.json` is gesorteerd op naam en zonder `uuid` | De volgorde van `gegevenstypen()` volgt de bron (handgemaakt of model) en betekent niets. De uuid is een Studio-identiteit. |
+
+**Simulatie (07-11-2026), uitgevoerd in een kopie van de repo:**
+1. Export van het register (`cmd/export_v3`).
+2. `cmd/codegen --domein gegevenstypen --prefix gegevenstypen --mode additive` over het handgemaakte bestand heen.
+3. Uitkomst ronde 1:
+   - Precies dezelfde 49 datatypes, met in geen enkel veld een verschil, in `testdata/gegevenstypen.json` en `testdata/validatie/datatypes.json`. Vergeleken velden: formaat, patroon, lengtes, voorbeelden, foutmelding, regels, normalisatie, weergave en externe referentie.
+   - De Go-alias `EnumLijst` kwam erbij in `datatype_aliases.go`. Dat bestand bevat alle datatypes van het model, en EnumLijst had nog geen alias.
+   - `go test ./...` slaagde.
+4. Ronde 2 (opnieuw exporteren en genereren): alle gegenereerde bestanden byte-gelijk.
+
+**Eén voetangel: de testentiteit** (`TestEntiteitGegevenstypen`, met de hand gemaakt). Zijn velden
+zijn waarden met `omitempty`. De exporter ziet ze daardoor als niet-verplicht, maar codegen maakt
+er verplichte velden van (geen pointer). Na één generatie zijn alle 39 velden verplicht; daarna is
+het stabiel. Neem de testentiteit daarom in het model op met niet-verplichte velden (codegen maakt
+dan `*BSN` enzovoort). Volgens het besluit van Mark komt hij in een domein `test`, samen met
+abuvwxy. Een generatie van `gegevenstypen` uit het model overschrijft ook
+`gegevenstypen_metaregistry.go` en de bijbehorende modelbestanden; daar staat de testentiteit nu.
+
+**Overgang:** zolang de rebuild `gegevenstypen` niet expliciet noemt, blijft het bestand van
+het image staan (`isHandgemaaktPakket`, DEVLOOP §"Domeinen van het register"). Die bescherming
+vervalt zodra het model het domein volledig heeft en de vergelijking met de Studio-export
+rond is. Doe die vergelijking met dezelfde stappen, met de V3-export van het Studio-project in plaats van stap 1.
+
 ### 7.4 Twee voetangels bij een regeneratie
 
 Waargenomen bij het regenereren van `np-loc` voor het demo-model
@@ -933,6 +989,15 @@ De codegen genereert soms ongebruikte imports (`time`, `github.com/uptrace/bun`)
 ## 12. Een backend met alleen bepaalde domeinen bouwen
 
 **Script:** `scripts/bouw-domeinen.ps1` (sinds 15-10-2026).
+
+> **In een devloop (07-11-2026, api 0.22.0):** hetzelfde kan ook zonder script, met de rebuild:
+> `POST /admin/rebuild {"domeinen": [...], "precies": true}`. Die rebuild laat de andere
+> domeinen weg, houdt het standaardpakket (register, ide_bestanden, configuratie, beheer,
+> financieel, gegevenstypen) en doet dezelfde verwijzingscontrole, en ook een op datatypes. De schema-versie onthoudt de
+> lijst (`gebouwde_domeinen`), zodat de startup-rebuild hem na een herstart weer zo bouwt. Lege
+> tabellen van weggelaten domeinen ruim je op met `/admin/wees-tabellen`. Zie DEVLOOP.md
+> §"Domeinen van het register". Het script blijft het middel voor een image met vaste domeinen,
+> zoals `go-api` voor pf.
 
 ### Waarom zo, en niet met een instelling
 

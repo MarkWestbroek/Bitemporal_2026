@@ -540,6 +540,9 @@ func NewRouter() *gin.Engine {
 		router.POST("/admin/rebuild", admin, handlers.MaakRebuildHandler())
 		router.POST("/admin/rebuild/:password", admin, handlers.MaakRebuildHandler())
 		router.GET("/admin/rebuild/status", admin, handlers.MaakRebuildStatusHandler())
+		// Tabellen van domeinen die niet meer in het register zitten (07-11-2026; wees_tabellen.go).
+		router.GET("/admin/wees-tabellen", admin, handlers.MaakWeesTabellenHandler())
+		router.POST("/admin/wees-tabellen/opruimen", admin, handlers.MaakWeesTabellenOpruimenHandler())
 		router.POST("/admin/diff", admin, handlers.MaakDiffHandler())
 		router.POST("/admin/diff/:password", admin, handlers.MaakDiffHandler())
 		// Regressie-UI (regressie_np_loc_test.go afspelen vanuit de browser); zie docs/REGRESSIETEST.md.
@@ -569,7 +572,12 @@ func connectToDatabase() (*bun.DB, error) {
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	configureerPool(sqldb) // zie db_pool.go
-	db := bun.NewDB(sqldb, pgdialect.New())
+	// WithDiscardUnknownColumns: een kolom die wel in de tabel staat maar niet (meer) in de
+	// Go-struct (een veld dat uit het model verdween; een additieve rebuild laat de kolom met zijn
+	// historie staan) breekt anders elke `RETURNING *` en `SELECT *` met "does not have column".
+	// Gevonden op cg-test 07-11-2026 (Artefact_ArtefactInhoud_Data.formaat). Zie
+	// dbsetup.ensureVervallenKolommenNullable voor de schrijfkant.
+	db := bun.NewDB(sqldb, pgdialect.New(), bun.WithDiscardUnknownColumns())
 	return db, nil
 }
 

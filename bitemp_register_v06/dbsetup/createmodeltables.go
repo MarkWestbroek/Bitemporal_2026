@@ -77,6 +77,12 @@ func createModelTables(ctx context.Context, db bun.IDB) error {
 			if err := ensureNieuweKolommen(ctx, db, dbModel, meta.Tabelnaam); err != nil {
 				return fmt.Errorf("kolommen aanvullen mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
 			}
+			// Vervallen kolommen (een veld dat uit het model verdween) blijven staan: hun waarden
+			// zijn historie. Zijn ze NOT NULL zonder standaard, dan zou elke nieuwe insert falen;
+			// die maken we nullable (07-11-2026, cg-test). Niet fataal.
+			if err := ensureVervallenKolommenNullable(ctx, db, dbModel, meta.Tabelnaam); err != nil {
+				log.Printf("[dbsetup] WARN: vervallen kolommen van %s niet nagelopen: %v", meta.Tabelnaam, err)
+			}
 
 			// Tijdprecisie (27-10-2026): een bestaande _Aanvang/_Einde-tabel met een date-kolom
 			// waarvan het model nu tijdstip zegt → kolom verbreden naar timestamptz (verliesvrij;
@@ -673,4 +679,58 @@ func ensureNieuweKolommen(ctx context.Context, db bun.IDB, dbModel any, tabel st
 		log.Printf("[dbsetup] kolom %s.%s (%s) toegevoegd", tabel, f.Name, f.CreateTableSQLType)
 	}
 	return nil
+}
+
+// ensureVervallenKolommenNullable loopt de kolommen na die wél in de tabel staan maar niet (meer)
+// in het Go-model: een veld dat uit het V3-model verdween. Een additieve rebuild laat zo'n kolom
+// bewust staan (de waarden zijn historie van eerdere registraties; weggooien zou tijdreizen naar
+// vóór de wijziging leeg maken). Twee dingen kunnen dan misgaan:
+//   - lezen: `INSERT … RETURNING *` en `SELECT *` geven de kolom terug, en bun weigert een kolom
+//     die de struct niet kent. Dat vangt bun.WithDiscardUnknownColumns() in main.go op.
+//   - schrijven: is de kolom NOT NULL zonder standaardwaarde, dan faalt elke nieuwe insert. Die
+//     maken we hier nullable (DROP NOT NULL; verliesvrij).
+// Gevonden op cg-test (07-11-2026): Artefact_ArtefactInhoud_Data.formaat na schema-versie 3/4.
+// Een vervallen kolom wordt gelogd, zodat een beheerder hem bewust kan opruimen.
+func ensureVervallenKolommenNullable(ctx context.Context, db bun.IDB, dbModel any, tabel string) error {
+	var kolommen []struct {
+		Naam       string  `bun:"column_name"`
+		IsNullable string  `bun:"is_nullable"`
+		Standaard  *string `bun:"column_default"`
+	}
+	if err := db.NewRaw(`SELECT column_name, is_nullable, column_default FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = ?`, tabel).Scan(ctx, &kolommen); err != nil {
+		return err
+	}
+	if len(kolommen) == 0 {
+		return nil
+	}
+	t := db.Dialect().Tables().Get(reflect.TypeOf(dbModel))
+	bekend := make(map[string]bool, len(t.Fields))
+	for _, f := range t.Fields {
+		bekend[f.Name] = true
+	}
+	for _, k := range kolommen {
+		if bekend[k.Naam] {
+			continue
+		}
+		if k.IsNullable == "NO" && k.Standaard == nil {
+			if err := veiligeStap(ctx, db, func() error {
+				_, err := db.ExecContext(ctx, fmt.Sprintf(`ALTER TABLE %s ALTER COLUMN %s DROP NOT NULL`,
+					string(t.SQLName), pgIdent(k.Naam)))
+				return err
+			}); err != nil {
+				log.Printf("[dbsetup] WARN: vervallen kolom %s.%s niet nullable gemaakt: %v", tabel, k.Naam, err)
+				continue
+			}
+			log.Printf("[dbsetup] vervallen kolom %s.%s nullable gemaakt (staat niet meer in het model; waarden blijven)", tabel, k.Naam)
+			continue
+		}
+		log.Printf("[dbsetup] vervallen kolom %s.%s staat niet meer in het model (blijft staan; waarden zijn historie)", tabel, k.Naam)
+	}
+	return nil
+}
+
+// pgIdent citeert een kolomnaam voor PostgreSQL.
+func pgIdent(naam string) string {
+	return `"` + strings.ReplaceAll(naam, `"`, `""`) + `"`
 }
