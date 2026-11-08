@@ -14,7 +14,7 @@ import { maakObjecttypeArtefact, verschillen } from "./objecttypeArtefact.js";
 const lees = (naam) => JSON.parse(fs.readFileSync(new URL(`./fixtures/${naam}`, import.meta.url), "utf8"));
 const datatypen = JSON.parse(fs.readFileSync(new URL("../../../../../testdata/gegevenstypen.json", import.meta.url), "utf8")).datatypes;
 const sha256Hex = (tekst) => crypto.createHash("sha256").update(tekst, "utf8").digest("hex");
-const modelBestand = lees("cg-test/omnium-model-cg-test-v3.json");
+const modelBestand = lees("cg-test/inrichten-domeinen-v3.json");
 const referentielijsten = { Aanvraagtype: lees("cg-test/aanvraag-aanvraagtypen.json") };
 
 async function maak(edienstBestand, identifier, objecttypeId) {

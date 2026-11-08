@@ -15,7 +15,7 @@ const lees = (naam) => JSON.parse(fs.readFileSync(new URL(`../diagramprofielen/c
 const datatypen = JSON.parse(fs.readFileSync(new URL("./gegevenstypen.snapshot.json", import.meta.url), "utf8")).datatypes;
 const sha256Hex = (tekst) => crypto.createHash("sha256").update(tekst, "utf8").digest("hex");
 const bpmnModellen = () => ({ "gpk-processen.bpmn-model.json": lees("gpk-processen.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") });
-const bronInvoer = () => ({ edienst: lees("gpk-edienst.json"), modelBestand: lees("omnium-model-cg-test-v3.json"), bpmnModellen: bpmnModellen(), peiltijdstip: "2026-11-05T12:00:00Z", sha256Hex });
+const bronInvoer = () => ({ edienst: lees("gpk-edienst.json"), modelBestand: lees("inrichten-domeinen-v3.json"), bpmnModellen: bpmnModellen(), peiltijdstip: "2026-11-05T12:00:00Z", sha256Hex });
 
 test("GPK: vier bronnen, identifier = de code van de e-dienst, hash over JCS", async () => {
   const { bronnen, diagnostics } = await maakBronArtefacten(bronInvoer());
@@ -64,7 +64,8 @@ test("de payload van een bron is de invoer van de render-API (taal=studio); de d
   // De beslistabel zit in de bron, op het element decision.
   assert.ok(Object.values(payload("dmn-bron").profielen[PROFIEL.dmn].elements).some((e) => e.elementType === "decision" && e.data?.beslistabel));
   // Zelfstandig: elk canoniek element draagt zijn domein, zodat te zien is wat geleend is.
-  const canoniek = Object.values(payload("logisch-model").profielen[PROFIEL.canoniek].elements).filter((e) => !e.source && e.elementType !== "package");
+  // Een referentielijst-instantie (Aanvraagtypen) heeft in het project (08-11) nog geen domein.
+  const canoniek = Object.values(payload("logisch-model").profielen[PROFIEL.canoniek].elements).filter((e) => !e.source && e.elementType !== "package" && e.elementType !== "referentielijstInstantie");
   assert.ok(canoniek.length > 50);
   assert.ok(canoniek.every((e) => e.data?.domein));
 });
@@ -91,7 +92,7 @@ test("elk gegenereerd artefact noemt zijn bronnen, met de hash van het bronbesta
   const bundel = await maakInrichtingsBundel({
     ...bronInvoer(),
     datatypen,
-    referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Partijrol: lees("relatiebeheer-partijrollen.json") },
+    referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Verzoekpartijrol: lees("relatiebeheer-verzoekpartijrollen.json") },
     bronnen,
   });
   const van = (soort, identifier) => bundel.find((b) => b.soort === soort && b.identifier === identifier).artefact.bronnen.map((x) => x.soort);
@@ -131,7 +132,7 @@ test("bronElementId: het element-id bij BPMN en DMN, de uuid bij het canonieke m
   const bundel = await maakInrichtingsBundel({
     ...invoer,
     datatypen,
-    referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Partijrol: lees("relatiebeheer-partijrollen.json") },
+    referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Verzoekpartijrol: lees("relatiebeheer-verzoekpartijrollen.json") },
   });
   const traces = (soort, identifier) => bundel.find((b) => b.soort === soort && b.identifier === identifier).artefact.traceregels;
   const soort = traces("objecttype", "gehandicaptenparkeerkaartaanvraag").find((t) => t.bronGE === `${ent.typenaam}.GpkAanvraagKaart.soort`);
@@ -170,11 +171,11 @@ test("bronnenVan: alleen het model dat het artefact leest", () => {
 test("export: de bronbestanden staan vooraan in de zip en in het overzicht", async () => {
   const uit = await voerInrichtingsExportUit({
     edienst: lees("gpk-edienst.json"),
-    modelBestand: lees("omnium-model-cg-test-v3.json"),
+    modelBestand: lees("inrichten-domeinen-v3.json"),
     datatypen,
     referentieBestanden: [
       { naam: "aanvraag-aanvraagtypen.json", inhoud: lees("aanvraag-aanvraagtypen.json") },
-      { naam: "relatiebeheer-partijrollen.json", inhoud: lees("relatiebeheer-partijrollen.json") },
+      { naam: "relatiebeheer-verzoekpartijrollen.json", inhoud: lees("relatiebeheer-verzoekpartijrollen.json") },
     ],
     bpmnModellen: bpmnModellen(),
     peiltijdstip: "2026-11-05T12:00:00Z",

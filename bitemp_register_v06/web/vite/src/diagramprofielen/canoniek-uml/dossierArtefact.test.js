@@ -16,7 +16,7 @@ const lees = (naam) => JSON.parse(fs.readFileSync(new URL(`./fixtures/cg-test/${
 const datatypen = JSON.parse(fs.readFileSync(new URL("../../../../../testdata/gegevenstypen.json", import.meta.url), "utf8")).datatypes;
 const sha256Hex = (tekst) => crypto.createHash("sha256").update(tekst, "utf8").digest("hex");
 
-const modelBestand = lees("omnium-model-cg-test-v3.json");
+const modelBestand = lees("inrichten-domeinen-v3.json");
 const objecttype = async (edienst) =>
   (await maakObjecttypeArtefact({ modelBestand, edienst, identifier: "gehandicaptenparkeerkaartaanvraag", datatypen, sha256Hex })).artefact;
 const maak = async (identifier, soort, wijzig = (e) => e) => {

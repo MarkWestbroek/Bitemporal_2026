@@ -30,8 +30,8 @@ const beslissingen = async () => {
   if (_beslissingen) return _beslissingen;
   const datatypen = JSON.parse(fs.readFileSync(new URL("../../../../../testdata/gegevenstypen.json", import.meta.url), "utf8")).datatypes;
   const edienst = lees("gpk-edienst.json");
-  const referentielijsten = { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Partijrol: lees("relatiebeheer-partijrollen.json") };
-  const ot = (await maakObjecttypeArtefact({ modelBestand: lees("omnium-model-cg-test-v3.json"), edienst, datatypen, referentielijsten, identifier: "gehandicaptenparkeerkaartaanvraag", sha256Hex })).artefact;
+  const referentielijsten = { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Verzoekpartijrol: lees("relatiebeheer-verzoekpartijrollen.json") };
+  const ot = (await maakObjecttypeArtefact({ modelBestand: lees("inrichten-domeinen-v3.json"), edienst, datatypen, referentielijsten, identifier: "gehandicaptenparkeerkaartaanvraag", sha256Hex })).artefact;
   const { invoer } = await maakDmnArtefact({ modelBestand: lees("gpk-beslissingen.dmn-model.json"), edienst, identifier: "aanvraag-ontvankelijk", objecttype: ot, sha256Hex });
   return (_beslissingen = { "aanvraag-ontvankelijk": invoer });
 };

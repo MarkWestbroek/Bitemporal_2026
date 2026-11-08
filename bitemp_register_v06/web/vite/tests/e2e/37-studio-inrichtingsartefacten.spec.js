@@ -42,10 +42,10 @@ test("zip met alle artefacten van de GPK-e-dienst", async ({ page }) => {
   const uitvoeren = page.getByRole("button", { name: "Uitvoeren" });
   await expect(uitvoeren).toBeDisabled(); // e-dienst is verplicht
   await kies(page, "edienst", fix("gpk-edienst.json"));
-  await kies(page, "model", fix("omnium-model-cg-test-v3.json"));
-  await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
+  await kies(page, "model", fix("inrichten-domeinen-v3.json"));
+  await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-verzoekpartijrollen.json")]);
   await kies(page, "bpmn", [fix("gpk-processen.bpmn-model.json"), fix("gpk-beslissingen.dmn-model.json")]);
-  await expect(page.locator('[data-optie="referentielijsten"]')).toContainText("relatiebeheer-partijrollen.json");
+  await expect(page.locator('[data-optie="referentielijsten"]')).toContainText("relatiebeheer-verzoekpartijrollen.json");
 
   const download = page.waitForEvent("download");
   await uitvoeren.click();
@@ -60,8 +60,8 @@ test("vergelijken met het register: ongewijzigd, gewijzigd, nieuw", async ({ pag
   // Eerst de echte hashes ophalen via een run zonder register, dan het register nabootsen.
   await openPaneel(page);
   await kies(page, "edienst", fix("gpk-edienst.json"));
-  await kies(page, "model", fix("omnium-model-cg-test-v3.json"));
-  await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
+  await kies(page, "model", fix("inrichten-domeinen-v3.json"));
+  await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-verzoekpartijrollen.json")]);
   await kies(page, "bpmn", [fix("gpk-processen.bpmn-model.json"), fix("gpk-beslissingen.dmn-model.json")]);
   const eerste = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();
@@ -104,7 +104,7 @@ test("vergelijken met het register: ongewijzigd, gewijzigd, nieuw", async ({ pag
 // de rondreis V3 ↔ canoniek profiel houdt verplicht/uniek/type/format vast (BACKLOG §39).
 test("zonder V3-bestand: zelfde payloads als uit het bestand", async ({ page }) => {
   await openPaneel(page);
-  const v3 = JSON.parse(fs.readFileSync(fix("omnium-model-cg-test-v3.json"), "utf8"));
+  const v3 = JSON.parse(fs.readFileSync(fix("inrichten-domeinen-v3.json"), "utf8"));
   await page.evaluate(async (v3) => {
     const { importeerV3 } = await import(location.origin + "/viz/react/src/diagramprofielen/canoniek-uml/serialisatie.js");
     const { getProfieltype } = await import(location.origin + "/viz/react/src/studio/profieltypeRegistry.js");
@@ -123,7 +123,7 @@ test("zonder V3-bestand: zelfde payloads als uit het bestand", async ({ page }) 
   }, v3);
   await page.getByText("Inrichtingsartefacten (e-dienst → register op Fundament)").click();
   await kies(page, "edienst", fix("gpk-edienst.json"));
-  await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-partijrollen.json")]);
+  await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-verzoekpartijrollen.json")]);
   await kies(page, "bpmn", [fix("gpk-processen.bpmn-model.json"), fix("gpk-beslissingen.dmn-model.json")]);
   const n = GPK.artefacten.length;
   const uitMap = page.waitForEvent("download");
@@ -132,7 +132,7 @@ test("zonder V3-bestand: zelfde payloads als uit het bestand", async ({ page }) 
   const hashes = async () => page.locator("table[data-rapport] tbody tr td:nth-child(3)").allTextContents();
   const vanMap = await hashes();
 
-  await kies(page, "model", fix("omnium-model-cg-test-v3.json"));
+  await kies(page, "model", fix("inrichten-domeinen-v3.json"));
   const uitBestand = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();
   await uitBestand;

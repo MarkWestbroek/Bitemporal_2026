@@ -11,7 +11,7 @@ const datatypen = JSON.parse(fs.readFileSync(new URL("./gegevenstypen.snapshot.j
 const sha256Hex = (tekst) => crypto.createHash("sha256").update(tekst, "utf8").digest("hex");
 const bestanden = () => [
   { naam: "aanvraag-aanvraagtypen.json", inhoud: lees("aanvraag-aanvraagtypen.json") },
-  { naam: "relatiebeheer-partijrollen.json", inhoud: lees("relatiebeheer-partijrollen.json") },
+  { naam: "relatiebeheer-verzoekpartijrollen.json", inhoud: lees("relatiebeheer-verzoekpartijrollen.json") },
 ];
 
 test("referentielijsten: bestand op naam, anders register, anders eersteVulling", async () => {
@@ -22,7 +22,7 @@ test("referentielijsten: bestand op naam, anders register, anders eersteVulling"
   assert.match(metBestand.diagnostics[1].message, /eersteVulling/);
 
   const uitRegister = await verzamelReferentielijsten(edienst, [], async () => ({ items: [{ id: 1, partijrol_gegevens: [{ rel_id: 1, data: [{ versie: 1, code: "x" }] }] }] }));
-  assert.deepEqual(uitRegister.lijsten.Partijrol, [{ code: "x" }]);
+  assert.deepEqual(uitRegister.lijsten.Verzoekpartijrol, [{ code: "x" }]);
 
   const register404 = await verzamelReferentielijsten(edienst, [], async () => { throw new Error("401"); });
   assert.ok(register404.diagnostics.some((d) => d.severity === "warning" && /401/.test(d.message)));
@@ -31,7 +31,7 @@ test("referentielijsten: bestand op naam, anders register, anders eersteVulling"
 test("GPK zonder register: zip met alle artefacten + overzicht", async () => {
   const uit = await voerInrichtingsExportUit({
     edienst: lees("gpk-edienst.json"),
-    modelBestand: lees("omnium-model-cg-test-v3.json"),
+    modelBestand: lees("inrichten-domeinen-v3.json"),
     datatypen,
     referentieBestanden: bestanden(),
     bpmnModellen: { "gpk-processen.bpmn-model.json": lees("gpk-processen.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") },
@@ -52,7 +52,7 @@ test("GPK zonder register: zip met alle artefacten + overzicht", async () => {
 test("register onbereikbaar: wel de zip, met een waarschuwing", async () => {
   const uit = await voerInrichtingsExportUit({
     edienst: lees("aanvraag-edienst.json"),
-    modelBestand: lees("omnium-model-cg-test-v3.json"),
+    modelBestand: lees("inrichten-domeinen-v3.json"),
     datatypen,
     referentieBestanden: bestanden(),
     haalJson: async () => { throw new Error("HTTP 401"); },

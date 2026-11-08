@@ -1,0 +1,1699 @@
+{
+  "versie": "v3",
+  "bron": "ide",
+  "build_versie": "",
+  "go_module": "",
+  "indiener": "IDE",
+  "model": {
+    "versie": "v3",
+    "naam": "IDE export",
+    "datatypes": [
+      {
+        "naam": "Aanvraagnummer",
+        "basistype": "string",
+        "description": "Aanvraagnummer: hoofdletters, cijfers en koppeltekens, max 40 tekens (toegekend door de aanvraagservice).",
+        "domein": "aanvraag",
+        "validatie": {
+          "pattern": "^[A-Z0-9-]+$",
+          "maxLength": 40,
+          "foutmelding": "Voer een aanvraagnummer in met hoofdletters, cijfers en koppeltekens",
+          "voorbeelden": [
+            "AANVRAAG-2026-000123"
+          ]
+        },
+        "weergave": {
+          "placeholder": "AANVRAAG-2026-000123"
+        }
+      },
+      {
+        "naam": "Rijbewijsnummer",
+        "basistype": "string",
+        "description": "Nederlands rijbewijsnummer (CBR/RDW): 10 cijfers.",
+        "format": "rijbewijs-nl",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^[0-9]{10}$",
+          "maxLength": 10,
+          "minLength": 10,
+          "foutmelding": "Voer een geldig rijbewijsnummer in (10 cijfers)",
+          "voorbeelden": [
+            "1234567890"
+          ]
+        },
+        "weergave": {
+          "inputMask": "0000000000",
+          "placeholder": "1234567890"
+        }
+      },
+      {
+        "naam": "Datum",
+        "basistype": "string",
+        "description": "Kalenderdatum zonder tijdcomponent (MIM: Date).",
+        "format": "date",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "weergave": {
+          "placeholder": "JJJJ-MM-DD"
+        }
+      },
+      {
+        "naam": "URL",
+        "basistype": "string",
+        "description": "Volledig internetadres (http of https).",
+        "format": "uri",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^https?://[^\\s]+$",
+          "foutmelding": "Voer een geldige http(s)-URL in",
+          "voorbeelden": [
+            "https://example.com/pad?x=1"
+          ]
+        },
+        "weergave": {
+          "placeholder": "https://example.com"
+        }
+      },
+      {
+        "naam": "KorteTekst",
+        "basistype": "string",
+        "description": "Alfanumerieke tekst, max 255 tekens (MIM: AN255).",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "maxLength": 255
+        }
+      },
+      {
+        "naam": "KvKNummer",
+        "basistype": "string",
+        "description": "KvK-nummer (8 cijfers).",
+        "format": "kvk-nummer",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^[0-9]{8}$",
+          "maxLength": 8,
+          "minLength": 8,
+          "foutmelding": "Voer een geldig KvK-nummer in (8 cijfers)",
+          "voorbeelden": [
+            "12345678"
+          ]
+        },
+        "weergave": {
+          "inputMask": "00000000",
+          "placeholder": "12345678"
+        }
+      },
+      {
+        "naam": "AN40",
+        "basistype": "string",
+        "description": "Alfanumerieke tekst, max 40 tekens (MIM: AN40).",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "maxLength": 40
+        }
+      },
+      {
+        "naam": "LangeTekst",
+        "basistype": "string",
+        "description": "Onbeperkte tekst, meerdere regels (MIM: CharacterString).",
+        "domein": "gegevenstypen"
+      },
+      {
+        "naam": "BSN",
+        "basistype": "string",
+        "description": "Burgerservicenummer (9 cijfers, 11-proef).",
+        "format": "bsn",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "regels": [
+            {
+              "naam": "11-proef",
+              "type": "checksum",
+              "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+            }
+          ],
+          "pattern": "^[0-9]{9}$",
+          "maxLength": 9,
+          "minLength": 9,
+          "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
+          "voorbeelden": [
+            "123456782"
+          ]
+        },
+        "weergave": {
+          "inputMask": "000000000",
+          "placeholder": "123456782"
+        }
+      },
+      {
+        "naam": "AGBCode",
+        "basistype": "string",
+        "description": "AGB-code: 8-cijferig identificatienummer voor zorgaanbieders en zorginstellingen (Agb = Algemeen Gegevens Beheer). Eerste 2 cijfers = specialismetype.",
+        "format": "agb-code",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^[0-9]{8}$",
+          "maxLength": 8,
+          "minLength": 8,
+          "foutmelding": "Voer een geldige AGB-code in (8 cijfers)",
+          "voorbeelden": [
+            "04010700",
+            "14010200"
+          ]
+        },
+        "weergave": {
+          "inputMask": "00000000",
+          "placeholder": "04010700"
+        }
+      },
+      {
+        "naam": "DatumTijd",
+        "basistype": "string",
+        "description": "Datum en tijd met tijdzone (MIM: DateTime).",
+        "format": "date-time",
+        "domein": "gegevenstypen",
+        "weergave": {
+          "placeholder": "JJJJ-MM-DDThh:mm"
+        }
+      },
+      {
+        "naam": "OIN",
+        "basistype": "string",
+        "description": "Organisatie-Identificatienummer (Logius/DigiKoppeling): 20 cijfers; identificeert overheidsinstellingen en aangewezen organisaties in de NL e-overheid.",
+        "format": "oin",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^[0-9]{20}$",
+          "maxLength": 20,
+          "minLength": 20,
+          "foutmelding": "Voer een geldig OIN in (20 cijfers)",
+          "voorbeelden": [
+            "00000001001234567000"
+          ]
+        },
+        "weergave": {
+          "inputMask": "00000000000000000000",
+          "placeholder": "00000001001234567000"
+        }
+      },
+      {
+        "naam": "RSIN",
+        "basistype": "string",
+        "description": "Rechtspersonen en Samenwerkingsverbanden Identificatienummer: 9 cijfers met 11-proef (zelfde algoritme als BSN). Identificeert rechtspersonen en samenwerkingsverbanden; beheerd door de KvK en het Handelsregister.",
+        "format": "rsin",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "regels": [
+            {
+              "naam": "11-proef",
+              "type": "checksum",
+              "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+            }
+          ],
+          "pattern": "^[0-9]{9}$",
+          "maxLength": 9,
+          "minLength": 9,
+          "foutmelding": "Voer een geldig RSIN in (9 cijfers, 11-proef)",
+          "voorbeelden": [
+            "123456782",
+            "807729218"
+          ]
+        },
+        "weergave": {
+          "inputMask": "000000000",
+          "placeholder": "123456782"
+        }
+      },
+      {
+        "naam": "Vestigingsnummer",
+        "basistype": "string",
+        "description": "KvK-vestigingsnummer: 12-cijferig identificatienummer voor een vestiging (hoofd- of nevenvestiging) in het Handelsregister. Geen publieke checksum.",
+        "format": "vestigingsnummer",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^[0-9]{12}$",
+          "maxLength": 12,
+          "minLength": 12,
+          "foutmelding": "Voer een geldig vestigingsnummer in (12 cijfers)",
+          "voorbeelden": [
+            "000012345678",
+            "123456789012"
+          ]
+        },
+        "weergave": {
+          "inputMask": "000000000000",
+          "placeholder": "000012345678"
+        }
+      },
+      {
+        "naam": "Emailadres",
+        "basistype": "string",
+        "description": "E-mailadres conform RFC 5322 (vereenvoudigd).",
+        "format": "email",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+          "foutmelding": "Voer een geldig e-mailadres in",
+          "voorbeelden": [
+            "naam@example.com"
+          ]
+        },
+        "weergave": {
+          "placeholder": "naam@example.com"
+        }
+      },
+      {
+        "naam": "Telefoonnummer",
+        "basistype": "string",
+        "description": "Telefoonnummer in nationale of internationale notatie.",
+        "format": "phone",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^[+0-9][0-9\\s\\-()]{6,20}$",
+          "foutmelding": "Voer een geldig telefoonnummer in",
+          "voorbeelden": [
+            "+31 6 12345678",
+            "0612345678"
+          ]
+        },
+        "weergave": {
+          "placeholder": "+31 6 12345678"
+        }
+      },
+      {
+        "naam": "JaNee",
+        "basistype": "boolean",
+        "description": "Ja/Nee keuze (MIM: Boolean).",
+        "domein": "gegevenstypen"
+      },
+      {
+        "naam": "Kenteken",
+        "basistype": "string",
+        "description": "Nederlands kenteken (RDW): 6 alfanumerieke tekens in drie groepen gescheiden door koppeltekens (bijv. AB-12-34, 1-ABC-23). Dekt alle actieve sidecodes.",
+        "format": "kenteken",
+        "domein": "gegevenstypen",
+        "validatie": {
+          "pattern": "^[A-Z0-9]{1,3}-[A-Z0-9]{1,3}-[A-Z0-9]{1,3}$",
+          "maxLength": 11,
+          "minLength": 6,
+          "foutmelding": "Voer een geldig kenteken in met koppeltekens (bijv. AB-12-34 of 1-ABC-23)",
+          "voorbeelden": [
+            "AB-12-34",
+            "12-AB-34",
+            "1-ABC-23",
+            "AB-123-C"
+          ]
+        },
+        "weergave": {
+          "placeholder": "AB-12-34"
+        }
+      },
+      {
+        "naam": "Geheel",
+        "basistype": "integer",
+        "description": "Geheel getal (MIM: Integer).",
+        "format": "int32",
+        "domein": "gegevenstypen"
+      }
+    ],
+    "enums": [
+      {
+        "goType": "AanvraagStatus",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "AanvraagStatusIngediend",
+            "waarde": "ingediend"
+          },
+          {
+            "constNaam": "AanvraagStatusInBehandeling",
+            "waarde": "inBehandeling"
+          },
+          {
+            "constNaam": "AanvraagStatusNietInBehandeling",
+            "waarde": "nietInBehandeling"
+          },
+          {
+            "constNaam": "AanvraagStatusAfgehandeld",
+            "waarde": "afgehandeld"
+          }
+        ],
+        "domein": "aanvraag"
+      },
+      {
+        "goType": "GpkSoort",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "GpkSoortBestuurder",
+            "waarde": "bestuurder"
+          },
+          {
+            "constNaam": "GpkSoortPassagier",
+            "waarde": "passagier"
+          },
+          {
+            "constNaam": "GpkSoortInstelling",
+            "waarde": "instelling"
+          }
+        ],
+        "domein": "parkeren"
+      },
+      {
+        "goType": "GpkKaartStatus",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "GpkKaartStatusGeldig",
+            "waarde": "geldig"
+          },
+          {
+            "constNaam": "GpkKaartStatusIngetrokken",
+            "waarde": "ingetrokken"
+          },
+          {
+            "constNaam": "GpkKaartStatusVerlopen",
+            "waarde": "verlopen"
+          }
+        ],
+        "domein": "parkeren"
+      },
+      {
+        "goType": "MedischAdviesUitkomst",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "MedischAdviesUitkomstVoldoet",
+            "waarde": "voldoet"
+          },
+          {
+            "constNaam": "MedischAdviesUitkomstVoldoetNiet",
+            "waarde": "voldoetNiet"
+          },
+          {
+            "constNaam": "MedischAdviesUitkomstAanvullendOnderzoek",
+            "waarde": "aanvullendOnderzoek"
+          }
+        ],
+        "domein": "zorg"
+      },
+      {
+        "goType": "PartijSoort",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "PartijSoortNatuurlijkPersoon",
+            "waarde": "natuurlijkPersoon"
+          },
+          {
+            "constNaam": "PartijSoortNatuurlijkPersoonZonderRegistratie",
+            "waarde": "natuurlijkPersoonZonderRegistratie"
+          },
+          {
+            "constNaam": "PartijSoortNietNatuurlijkPersoon",
+            "waarde": "nietNatuurlijkPersoon"
+          },
+          {
+            "constNaam": "PartijSoortMaatschappelijkeActiviteit",
+            "waarde": "maatschappelijkeActiviteit"
+          },
+          {
+            "constNaam": "PartijSoortVestiging",
+            "waarde": "vestiging"
+          },
+          {
+            "constNaam": "PartijSoortZorgaanbieder",
+            "waarde": "zorgaanbieder"
+          },
+          {
+            "constNaam": "PartijSoortOverheidsorganisatie",
+            "waarde": "overheidsorganisatie"
+          }
+        ],
+        "domein": "relatiebeheer"
+      },
+      {
+        "goType": "ReferentielijstAdrestype",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "ReferentielijstAdrestypeURL",
+            "waarde": "URL"
+          },
+          {
+            "constNaam": "ReferentielijstAdrestypeURN",
+            "waarde": "URN"
+          }
+        ],
+        "domein": "register"
+      }
+    ],
+    "referentielijstInstanties": [
+      {
+        "systeemnaam": "Aanvraagtypen",
+        "naam": "Aanvraagtypen"
+      },
+      {
+        "systeemnaam": "Verzoekpartijrollen",
+        "naam": "Verzoekpartijrollen"
+      }
+    ],
+    "entiteiten": [
+      {
+        "typenaam": "Partij",
+        "meervoud": "partijen",
+        "description": "Partij (DiDo, KCA/VNG): iedereen die in een verzoek, contact of taak een rol speelt. Geen subtypen (besluit Mark 27-10): natuurlijk persoon, rechtspersoon, vestiging enz. zijn entiteiten van de bronregistraties (BRP, Handelsregister, AGB, OIN) en worden hier niet nagebouwd; Partij houdt alleen hun sleutel, in een set 'is'-GE's waarvan er op elk materieel moment precies een geldig is (bedrijfsregel; constraint over GE's is BACKLOG B35). Partij is daarmee zelf de proxy van de externe identiteit (sleutel uniek per GE: een partij per persoon of organisatie). De soort is afgeleid uit welk GE gevuld is. Open Klant is de brug naar de bronregistraties.",
+        "domein": "relatiebeheer",
+        "isMaterieel": true,
+        "kleur": "#e0e7ff",
+        "afgeleideVelden": [
+          {
+            "naam": "soort",
+            "goType": "PartijSoort",
+            "description": "Partijsoort, afgeleid uit welk 'is'-GE gevuld is (enum PartijSoort; de API publiceert een afgeleid veld als tekst, BACKLOG B35). Niet invoerbaar, dus nooit in strijd met de registratie.",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "PartijNatuurlijkPersoon != null ? 'natuurlijkPersoon' : PartijZonderRegistratie != null ? 'natuurlijkPersoonZonderRegistratie' : PartijNietNatuurlijkPersoon != null ? 'nietNatuurlijkPersoon' : PartijMaatschappelijkeActiviteit != null ? 'maatschappelijkeActiviteit' : PartijVestiging != null ? 'vestiging' : PartijZorgaanbieder != null ? 'zorgaanbieder' : PartijOverheidsorganisatie != null ? 'overheidsorganisatie' : null"
+          },
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "PartijNaam != null ? PartijNaam.naam : PartijZonderRegistratie != null ? PartijZonderRegistratie.naam : PartijNatuurlijkPersoon != null ? PartijNatuurlijkPersoon.bsn : PartijNietNatuurlijkPersoon != null ? PartijNietNatuurlijkPersoon.rsin : PartijMaatschappelijkeActiviteit != null ? PartijMaatschappelijkeActiviteit.kvkNummer : PartijVestiging != null ? PartijVestiging.vestigingsnummer : PartijZorgaanbieder != null ? PartijZorgaanbieder.agbCode : PartijOverheidsorganisatie != null ? PartijOverheidsorganisatie.oin : null",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "PartijNatuurlijkPersoon",
+            "meervoud": "partij_natuurlijke_personen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Natuurlijk persoon met BSN (bron: BRP, via Open Klant). Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "bsn",
+                "goType": "string",
+                "datatype": "BSN",
+                "uniek": "entiteit",
+                "description": "Burgerservicenummer (BRP)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijZonderRegistratie",
+            "meervoud": "partij_zonder_registraties",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Natuurlijk persoon zonder bronregistratie (bv. buitenlandse aanvrager): naam en contactgegevens zoals opgegeven (UML: naam, adres [0..1], tel [0..1], email [0..1]). Het enige 'is'-GE met eigen gegevens in plaats van een externe sleutel. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string",
+                "datatype": "KorteTekst",
+                "description": "Naam zoals opgegeven"
+              },
+              {
+                "naam": "adres",
+                "goType": "*string",
+                "datatype": "KorteTekst",
+                "description": "Adres zoals opgegeven"
+              },
+              {
+                "naam": "telefoon",
+                "goType": "*string",
+                "datatype": "Telefoonnummer",
+                "description": "Telefoonnummer zoals opgegeven"
+              },
+              {
+                "naam": "email",
+                "goType": "*string",
+                "datatype": "Emailadres",
+                "description": "E-mailadres zoals opgegeven"
+              }
+            ]
+          },
+          {
+            "naam": "PartijNietNatuurlijkPersoon",
+            "meervoud": "partij_niet_natuurlijke_personen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Niet-natuurlijk persoon (rechtspersoon) met RSIN (bron: Handelsregister). Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "rsin",
+                "goType": "string",
+                "datatype": "RSIN",
+                "uniek": "entiteit",
+                "description": "RSIN van de rechtspersoon (Handelsregister)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijMaatschappelijkeActiviteit",
+            "meervoud": "partij_maatschappelijke_activiteiten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Maatschappelijke activiteit (onderneming) als geheel, met KvK-nummer (bron: Handelsregister); zonder specifieke vestiging. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "kvkNummer",
+                "goType": "string",
+                "datatype": "KvKNummer",
+                "uniek": "entiteit",
+                "description": "KvK-nummer van de maatschappelijke activiteit / onderneming"
+              }
+            ]
+          },
+          {
+            "naam": "PartijVestiging",
+            "meervoud": "partij_vestigingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Vestiging als partij (zoals eHerkenning haar aanlevert: KvK-nummer plus vestigingsnummer). De vestiging is de partij; het KvK-nummer is bovenliggende informatie (Mark 27-10). Verandert een vestiging van onderneming, dan is dat een nieuwe materiele geldigheid van dit GE. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "vestigingsnummer",
+                "goType": "string",
+                "datatype": "Vestigingsnummer",
+                "uniek": "entiteit",
+                "description": "Vestigingsnummer (Handelsregister); de partij"
+              },
+              {
+                "naam": "kvkNummer",
+                "goType": "string",
+                "datatype": "KvKNummer",
+                "description": "KvK-nummer van de maatschappelijke activiteit waartoe de vestiging behoort; bovenliggende informatie, niet uniek (meerdere vestigingen per onderneming)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijZorgaanbieder",
+            "meervoud": "partij_zorgaanbieders",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Zorgaanbieder met AGB-code (bron: Vektis AGB-register); adviseert bij een gehandicaptenparkeerkaart. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "agbCode",
+                "goType": "string",
+                "datatype": "AGBCode",
+                "uniek": "entiteit",
+                "description": "AGB-code van de zorgaanbieder of zorginstelling (Vektis)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijOverheidsorganisatie",
+            "meervoud": "partij_overheidsorganisaties",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Overheidsorganisatie met OIN (bron: Logius OIN-register). Voorbeeld van een correctie (Mark 27-10): een overheidsorganisatie die per abuis als KvK-inschrijving is geregistreerd, moet via OIN; de registratie wordt gecorrigeerd. Een van de 'is'-GE's van Partij: zegt welke externe identiteit achter de partij zit. Bedrijfsregel (BACKLOG B35, nog niet afdwingbaar in V3): op elk materieel moment is precies een 'is'-GE geldig; een verkeerde keuze wordt met een correctie rechtgezet. Materieel: de identiteit kan in de tijd veranderen (bv. persoon zonder registratie krijgt een BSN).",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "oin",
+                "goType": "string",
+                "datatype": "OIN",
+                "uniek": "entiteit",
+                "description": "Organisatie-identificatienummer (Logius, Digikoppeling)"
+              }
+            ]
+          },
+          {
+            "naam": "PartijNaam",
+            "meervoud": "partij_namen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Naam als kopie uit BRP of Handelsregister, zodat Omnium een partij leesbaar kan tonen zonder de bron te bevragen. De bron blijft leidend. Materieel (besluit Mark 06-11): een naam verandert in de tijd. Bij een persoon zonder registratie staat de naam in PartijZonderRegistratie en blijft dit GE leeg. Geen 'is'-GE.",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string",
+                "datatype": "KorteTekst",
+                "description": "Naam van de partij zoals bekend in de bronregistratie op het moment van overnemen"
+              },
+              {
+                "naam": "overgenomenOp",
+                "goType": "*Date",
+                "datatype": "Datum",
+                "description": "Datum waarop de naam uit de bronregistratie is overgenomen"
+              }
+            ]
+          },
+          {
+            "naam": "PartijKlantverwijzing",
+            "meervoud": "partij_klantverwijzingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Brug naar Open Klant, dat de partij-identificatoren met de bronregistraties verbindt. Geen 'is'-GE.",
+            "velden": [
+              {
+                "naam": "klantUrl",
+                "goType": "*string",
+                "datatype": "URL",
+                "description": "Verwijzing naar de partij in Open Klant (Klantinteracties API)"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "Referentielijst",
+        "meervoud": "referentielijsten",
+        "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+        "domein": "register",
+        "entiteitSubtype": "referentielijst",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "gegevenselementen": [
+          {
+            "naam": "Referentielijstnaam",
+            "meervoud": "referentielijstnamen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Leesbare naam van een referentielijst.",
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              }
+            ]
+          },
+          {
+            "naam": "Referentielijstomschrijving",
+            "meervoud": "referentielijstomschrijvingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Omschrijving van een referentielijst.",
+            "velden": [
+              {
+                "naam": "omschrijving",
+                "goType": "string"
+              }
+            ]
+          },
+          {
+            "naam": "ReferentielijstVisibility",
+            "meervoud": "visibilities",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).",
+            "velden": [
+              {
+                "naam": "domein",
+                "goType": "string"
+              }
+            ]
+          },
+          {
+            "naam": "ReferentielijstInternetadres",
+            "meervoud": "internetadressen",
+            "momentvoorkomen": "meervoudig",
+            "description": "Internetadres (URL/URN) van een referentielijst.",
+            "velden": [
+              {
+                "naam": "adrestype",
+                "goType": "ReferentielijstAdrestype",
+                "enum": "ReferentielijstAdrestype"
+              },
+              {
+                "naam": "adres",
+                "goType": "string"
+              },
+              {
+                "naam": "organisatie",
+                "goType": "string"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "PartijrolDefinitie",
+        "meervoud": "partijrollen",
+        "description": "Referentielijst: de rol die een partij speelt bij een verzoek, contact of taak (aanvrager, subject, gemachtigde, belanghebbende, betrokkene, melder, initiator, deelnemer; naar de rolnamen in Marks UML). Referentielijst in plaats van enum (besluit Mark 26-10): een nieuwe rol is een registratie, geen rebuild.",
+        "domein": "relatiebeheer",
+        "entiteitSubtype": "referentielijst_item",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "PartijrolGegevens.code + ' - ' + PartijrolGegevens.omschrijving",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "PartijrolGegevens",
+            "meervoud": "partijrol_gegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Code en omschrijving.",
+            "velden": [
+              {
+                "naam": "code",
+                "goType": "string",
+                "datatype": "AN40",
+                "uniek": "entiteit",
+                "description": "Code (sleutel, bv. aanvrager)"
+              },
+              {
+                "naam": "omschrijving",
+                "goType": "string",
+                "datatype": "KorteTekst",
+                "description": "Omschrijving"
+              },
+              {
+                "naam": "toelichting",
+                "goType": "*string",
+                "datatype": "LangeTekst",
+                "description": "Wanneer deze rol van toepassing is"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "Verzoekpartijrol",
+            "meervoud": "",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "Referentielijst",
+            "description": "De rol van een partij bij een verzoek.\n\nOmdat het materieel is, kan deze lijst in de tijd verschillen.",
+            "relatieSubtype": "referentielijst_items",
+            "isMaterieel": true
+          }
+        ]
+      },
+      {
+        "typenaam": "Aanvraag",
+        "meervoud": "aanvragen",
+        "description": "Eén aanvraag die een partij via de formulierservice indient: identificatie, indiening, status (met geschiedenis) en bijlagen in het documentregister.",
+        "domein": "aanvraag",
+        "isMaterieel": true,
+        "kleur": "#fde68a",
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "AanvraagIdentificatie.aanvraagnummer",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "AanvraagIdentificatie",
+            "meervoud": "aanvraag_identificaties",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Uniek aanvraagnummer (toegekend door de aanvraagservice). Het aanvraagtype is de relatie AanvraagAanvraagtype (doorloop 06-11).",
+            "velden": [
+              {
+                "naam": "aanvraagnummer",
+                "goType": "string",
+                "datatype": "Aanvraagnummer",
+                "uniek": "entiteit",
+                "description": "Uniek nummer dat de aanvraagservice toekent"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagIndiening",
+            "meervoud": "aanvraag_indieningen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Wanneer en met welke toelichting de aanvraag is ingediend.",
+            "velden": [
+              {
+                "naam": "ingediendOp",
+                "goType": "time.Time",
+                "datatype": "DatumTijd",
+                "description": "Tijdstip waarop de aanvraag is ingediend"
+              },
+              {
+                "naam": "toelichting",
+                "goType": "*string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de aanvrager bij de aanvraag"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagStatus",
+            "meervoud": "aanvraag_statussen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Status van de behandeling. Materieel: elke statuswijziging is een nieuwe geldigheid, zodat de statusgeschiedenis bevraagbaar is. tijdprecisie=tijdstip (besluit Mark 27-10): aanvang en einde als RFC 3339-tijdstip (einde exclusief), zodat statuswisselingen op één dag gewone opvolgingen zijn; werkt vanaf het devloop-image ná 0.24.7 (een ouder image negeert de eigenschap en houdt datum); tot de bouw daarmee wordt dit GE bijgewerkt met een correctie (rel_id).",
+            "isMaterieel": true,
+            "tijdprecisie": "tijdstip",
+            "velden": [
+              {
+                "naam": "status",
+                "goType": "AanvraagStatus",
+                "enum": "AanvraagStatus",
+                "description": "Status van de behandeling"
+              },
+              {
+                "naam": "reden",
+                "goType": "*string",
+                "datatype": "LangeTekst",
+                "description": "Reden bij de statuswijziging (bv. bij afkeuring)"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagBijlage",
+            "meervoud": "bijlagen",
+            "momentvoorkomen": "meervoudig",
+            "description": "Bijlage bij de aanvraag: naam en verwijzing naar het document in het documentregister (Documenten API). Gegevenselement, geen entiteit: een bijlage bestaat niet los van zijn aanvraag.",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string",
+                "datatype": "KorteTekst",
+                "description": "Naam van de bijlage"
+              },
+              {
+                "naam": "documentUrl",
+                "goType": "string",
+                "datatype": "URL",
+                "description": "Verwijzing naar het document in het documentregister (Open Zaak Documenten API)"
+              }
+            ]
+          },
+          {
+            "naam": "AanvraagAanvraagtype",
+            "meervoud": "",
+            "momentvoorkomen": "enkelvoudig",
+            "velden": [
+              {
+                "naam": "type",
+                "goType": "int",
+                "type": "integer",
+                "verplicht": true,
+                "$ref": "Aanvraagtype",
+                "description": "Het type aanvraag. Dit komt uit de referentielijst Aanvraagtypen."
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "AanvraagPartij",
+            "meervoud": "aanvraag_partijen",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "Partij",
+            "description": "De partijen bij de aanvraag, elk met een rol (Partijrol): aanvrager, subject (bij een gemachtigde de inwoner over wie de aanvraag gaat), gemachtigde, belanghebbende, ... Meervoudig en materieel: een rol kan in de tijd veranderen. Bedrijfsregel (niet afdwingbaar in het model): ten minste één partij met rol aanvrager.",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "partijrol",
+                "goType": "int",
+                "$ref": "Verzoekpartijrol",
+                "description": "Rol van de partij bij deze aanvraag (referentielijst Partijrol)"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "AanvraagtypeDefinitie",
+        "meervoud": "aanvraagtypen",
+        "description": "ReferentielijstItem\nEen soort aanvraag (de keuzelijst 'Soort aanvraag' in het formulier). Per type het zaaktype dat erbij hoort in Open Zaak.",
+        "domein": "aanvraag",
+        "entiteitSubtype": "referentielijst_item",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "AanvraagtypeGegevens.omschrijving",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "AanvraagtypeGegevens",
+            "meervoud": "aanvraagtype_gegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Code (sleutel, bv. parkeervergunning), omschrijving voor de keuzelijst, en de identificatie van het zaaktype in de Catalogi API.",
+            "velden": [
+              {
+                "naam": "code",
+                "goType": "string",
+                "datatype": "AN40",
+                "uniek": "entiteit",
+                "description": "Code van het aanvraagtype (sleutel)"
+              },
+              {
+                "naam": "omschrijving",
+                "goType": "string",
+                "datatype": "KorteTekst",
+                "description": "Omschrijving voor de keuzelijst"
+              },
+              {
+                "naam": "zaaktypeIdentificatie",
+                "goType": "*string",
+                "datatype": "AN40",
+                "description": "Identificatie van het zaaktype in de Catalogi API dat bij dit aanvraagtype hoort"
+              },
+              {
+                "naam": "toelichting",
+                "goType": "*string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de aanvrager bij de aanvraag"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "Aanvraagtype",
+            "meervoud": "",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "Referentielijst",
+            "description": "Eigenlijk een item uit de referentielijst Aanvraagtypen. Er zouden meer lijsten kunnen zijn, maar we hebben er nu maar één.\nDeze relatieklasse is materieel, wat wil zeggen dat een AanvraagtypeDefinitie een bestaan in deze lijst heeft. Dit mag ook open aan de voor- èn achterkant zijn.",
+            "relatieSubtype": "referentielijst_items",
+            "isMaterieel": true
+          }
+        ]
+      },
+      {
+        "typenaam": "Gehandicaptenparkeerkaart",
+        "meervoud": "gehandicaptenparkeerkaarten",
+        "description": "De toegekende kaart (het product): kaartnummer, soort en geldigheid (ten hoogste vijf jaar). Materieel: geldig van/tot, intrekking.",
+        "domein": "parkeren",
+        "isMaterieel": true,
+        "kleur": "#fde68a",
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "GpkKaartGegevens.kaartnummer",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "GpkKaartGegevens",
+            "meervoud": "gpk_kaartgegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Kaartgegevens: nummer, soort en geldigheid. De status staat in het materiele GE GpkKaartStatus (doorloop 06-11).",
+            "velden": [
+              {
+                "naam": "kaartnummer",
+                "goType": "string",
+                "datatype": "AN40",
+                "uniek": "entiteit",
+                "description": "Kaartnummer"
+              },
+              {
+                "naam": "soort",
+                "goType": "GpkSoort",
+                "enum": "GpkSoort",
+                "description": "Soort kaart"
+              },
+              {
+                "naam": "geldigVan",
+                "goType": "Date",
+                "datatype": "Datum",
+                "description": "Begin van de geldigheid"
+              },
+              {
+                "naam": "geldigTot",
+                "goType": "Date",
+                "datatype": "Datum",
+                "description": "Einde van de geldigheid (ten hoogste vijf jaar na begin)"
+              }
+            ]
+          },
+          {
+            "naam": "GpkKaartStatus",
+            "meervoud": "gpk_kaart_statussen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Status van de kaart (geldig, ingetrokken, verlopen). Materieel, zoals AanvraagStatus: elke statuswijziging is een nieuwe geldigheid, zodat de geschiedenis bevraagbaar is (besluit Mark 06-11).",
+            "isMaterieel": true,
+            "velden": [
+              {
+                "naam": "status",
+                "goType": "GpkKaartStatus",
+                "enum": "GpkKaartStatus",
+                "description": "Status van de kaart"
+              },
+              {
+                "naam": "reden",
+                "goType": "*string",
+                "datatype": "LangeTekst",
+                "description": "Reden van de (laatste) statuswijziging"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "GpkKaartHouder",
+            "meervoud": "gpk_kaarthouders",
+            "momentvoorkomen": "enkelvoudig",
+            "doelEntiteit": "Partij",
+            "description": "De houder: een natuurlijk persoon (bestuurder/passagier) of een instelling (instellingenkaart).",
+            "doelKardinaliteit": "1"
+          },
+          {
+            "naam": "GpkKaartAanvraag",
+            "meervoud": "gpk_kaartaanvragen",
+            "momentvoorkomen": "enkelvoudig",
+            "doelEntiteit": "GehandicaptenparkeerkaartAanvraag",
+            "description": "De aanvraag waarop de kaart is toegekend."
+          }
+        ]
+      },
+      {
+        "typenaam": "GehandicaptenparkeerkaartAanvraag",
+        "meervoud": "gehandicaptenparkeerkaart_aanvragen",
+        "description": "Aanvraag van een gehandicaptenparkeerkaart (Regeling gehandicaptenparkeerkaart): specialisatie van de generieke Aanvraag. Geen eigen tijdlijn (besluit Mark 06-11, bevestigd door BACKEND): een subtype is een aanvraag en erft de materialiteit (aanvang/einde) van Aanvraag; isMaterieel true zou een tweede, losse tijdlijn geven.",
+        "domein": "parkeren",
+        "kleur": "#fde68a",
+        "erft": "Aanvraag",
+        "gegevenselementen": [
+          {
+            "naam": "GpkAanvraagKaart",
+            "meervoud": "gpkaanvraag_kaarten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Welke kaart wordt gevraagd.",
+            "velden": [
+              {
+                "naam": "soort",
+                "goType": "GpkSoort",
+                "enum": "GpkSoort",
+                "description": "Bestuurderskaart, passagierskaart of instellingenkaart"
+              },
+              {
+                "naam": "eerdereKaart",
+                "goType": "*bool",
+                "datatype": "JaNee",
+                "description": "Had de aanvrager eerder een kaart"
+              },
+              {
+                "naam": "eerderKaartnummer",
+                "goType": "*string",
+                "datatype": "AN40",
+                "description": "Kaartnummer van de eerdere kaart"
+              },
+              {
+                "naam": "kenteken",
+                "goType": "*string",
+                "datatype": "Kenteken",
+                "description": "Kenteken van het voertuig (alleen bij een bestuurderskaart)"
+              },
+              {
+                "naam": "rijbewijsnummer",
+                "goType": "*string",
+                "datatype": "Rijbewijsnummer",
+                "description": "Rijbewijsnummer van de aanvrager (alleen bij een bestuurderskaart)"
+              }
+            ]
+          },
+          {
+            "naam": "GpkAanvraagBeperking",
+            "meervoud": "gpkaanvraag_beperkingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De grond van de aanvraag; bron voor het medisch advies.",
+            "velden": [
+              {
+                "naam": "loopafstandMeter",
+                "goType": "*int",
+                "datatype": "Geheel",
+                "description": "Loopafstand in meters die de aanvrager met hulpmiddelen kan afleggen (criterium: ten hoogste 100 m)"
+              },
+              {
+                "naam": "hulpmiddel",
+                "goType": "*string",
+                "datatype": "KorteTekst",
+                "description": "Hulpmiddel (rolstoel, rollator, ...)"
+              },
+              {
+                "naam": "toelichting",
+                "goType": "*string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de aanvrager op de beperking"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "GpkAanvraagMedischAdvies",
+            "meervoud": "gpkaanvraag_medische_adviezen",
+            "momentvoorkomen": "enkelvoudig",
+            "doelEntiteit": "MedischAdvies",
+            "description": "Het medisch advies waarop de beoordeling steunt (komt tijdens de behandeling)."
+          }
+        ]
+      },
+      {
+        "typenaam": "MedischAdvies",
+        "meervoud": "medische_adviezen",
+        "description": "Medisch advies van een zorgaanbieder (GGD, indicatieorgaan) over een persoon, bv. de loopbeperking bij een gehandicaptenparkeerkaart. Eigen entiteit: een advies kan meerdere aanvragen dienen. Materieel: een advies heeft een geldigheid.",
+        "domein": "zorg",
+        "isMaterieel": true,
+        "kleur": "#dcfce7",
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "MedischAdviesGegevens.adviesdatum + ' ' + MedischAdviesGegevens.uitkomst",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "MedischAdviesGegevens",
+            "meervoud": "medischadvies_gegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "De uitkomst en geldigheid van het advies.",
+            "velden": [
+              {
+                "naam": "adviesdatum",
+                "goType": "Date",
+                "datatype": "Datum",
+                "description": "Datum van het advies"
+              },
+              {
+                "naam": "uitkomst",
+                "goType": "MedischAdviesUitkomst",
+                "enum": "MedischAdviesUitkomst",
+                "description": "Uitkomst van het advies"
+              },
+              {
+                "naam": "geldigTot",
+                "goType": "*Date",
+                "datatype": "Datum",
+                "description": "Tot wanneer het advies geldig is"
+              },
+              {
+                "naam": "toelichting",
+                "goType": "*string",
+                "datatype": "LangeTekst",
+                "description": "Toelichting van de adviseur (geen medische details)"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "MedischAdviesAdviseur",
+            "meervoud": "medischadvies_adviseurs",
+            "momentvoorkomen": "enkelvoudig",
+            "doelEntiteit": "Partij",
+            "description": "De zorgaanbieder die het advies gaf: een Partij met 'is'-GE PartijZorgaanbieder (AGB-code). Bedrijfsregel, niet in het model afdwingbaar: de partij moet een zorgaanbieder zijn (Zorgaanbieder is geen eigen entiteit meer; review Mark 27-10).",
+            "doelKardinaliteit": "1"
+          },
+          {
+            "naam": "MedischAdviesBetrokkene",
+            "meervoud": "medischadvies_betrokkenen",
+            "momentvoorkomen": "enkelvoudig",
+            "doelEntiteit": "Partij",
+            "description": "De persoon over wie het advies gaat.",
+            "doelKardinaliteit": "1"
+          }
+        ]
+      }
+    ],
+    "diagrammen": [
+      {
+        "id": "d05_1793985964806",
+        "naam": "Partij",
+        "nodes": [
+          {
+            "elementId": "Partij",
+            "x": 370,
+            "y": -20
+          },
+          {
+            "elementId": "Partij_PartijNaam",
+            "x": 11.324237682426926,
+            "y": 20.540141244813007
+          },
+          {
+            "elementId": "Partij_PartijVestiging",
+            "x": 635.8692974584679,
+            "y": 472.2366926489085
+          },
+          {
+            "elementId": "Partij_PartijKlantverwijzing",
+            "x": 9.907210369942064,
+            "y": -112.06476499451004
+          },
+          {
+            "elementId": "Partij_PartijNatuurlijkPersoon",
+            "x": 841.1557178891843,
+            "y": 17.87732684587165
+          },
+          {
+            "elementId": "Partij_PartijZonderRegistratie",
+            "x": 9.08682416761254,
+            "y": 183.61159743345763
+          },
+          {
+            "elementId": "Partij_PartijOverheidsorganisatie",
+            "x": 344.6109004242571,
+            "y": 356.52548181871424
+          },
+          {
+            "elementId": "Partij_PartijNietNatuurlijkPersoon",
+            "x": 824.7855945594331,
+            "y": 152.41651832572873
+          },
+          {
+            "elementId": "Partij_PartijMaatschappelijkeActiviteit",
+            "x": 789.6980724484222,
+            "y": 319.94481407117576
+          },
+          {
+            "elementId": "Partij_PartijZorgaanbieder",
+            "x": 112.15399947679907,
+            "y": 423.71731683098096
+          },
+          {
+            "elementId": "Referentielijst",
+            "x": 575.6055884308573,
+            "y": -345.6943432507511
+          },
+          {
+            "elementId": "PartijrolDefinitie",
+            "x": 576.6177608748966,
+            "y": -178.5726498846268
+          },
+          {
+            "elementId": "PartijrolDefinitie_PartijrolGegevens",
+            "x": 838.9414592817171,
+            "y": -182.73736340266254
+          },
+          {
+            "elementId": "refinstantie_Verzoekpartijrollen",
+            "x": 346.2961955791446,
+            "y": -350.3770012975229
+          },
+          {
+            "elementId": "Verzoekpartijrol",
+            "x": 353.72832488565416,
+            "y": -242.8620302630787
+          }
+        ],
+        "edges": [
+          {
+            "id": "use_conn_1794133072298_2_d05_1793985964806",
+            "source": "Verzoekpartijrol",
+            "target": "refinstantie_Verzoekpartijrollen"
+          },
+          {
+            "id": "Partij->Partij_PartijNatuurlijkPersoon",
+            "source": "Partij",
+            "target": "Partij_PartijNatuurlijkPersoon"
+          },
+          {
+            "id": "Partij->Partij_PartijZonderRegistratie",
+            "source": "Partij",
+            "target": "Partij_PartijZonderRegistratie"
+          },
+          {
+            "id": "Partij->Partij_PartijNietNatuurlijkPersoon",
+            "source": "Partij",
+            "target": "Partij_PartijNietNatuurlijkPersoon"
+          },
+          {
+            "id": "Partij->Partij_PartijMaatschappelijkeActiviteit",
+            "source": "Partij",
+            "target": "Partij_PartijMaatschappelijkeActiviteit"
+          },
+          {
+            "id": "Partij->Partij_PartijVestiging",
+            "source": "Partij",
+            "target": "Partij_PartijVestiging"
+          },
+          {
+            "id": "Partij->Partij_PartijZorgaanbieder",
+            "source": "Partij",
+            "target": "Partij_PartijZorgaanbieder"
+          },
+          {
+            "id": "Partij->Partij_PartijOverheidsorganisatie",
+            "source": "Partij",
+            "target": "Partij_PartijOverheidsorganisatie"
+          },
+          {
+            "id": "Partij->Partij_PartijNaam",
+            "source": "Partij",
+            "target": "Partij_PartijNaam"
+          },
+          {
+            "id": "Partij->Partij_PartijKlantverwijzing",
+            "source": "Partij",
+            "target": "Partij_PartijKlantverwijzing"
+          },
+          {
+            "id": "Partijrol->Partijrol_PartijrolGegevens",
+            "source": "PartijrolDefinitie",
+            "target": "PartijrolDefinitie_PartijrolGegevens"
+          }
+        ]
+      },
+      {
+        "id": "d05_1793994426048",
+        "naam": "Aanvraag",
+        "nodes": [
+          {
+            "elementId": "Aanvraag",
+            "x": 205.5433728647816,
+            "y": -120.10343477311044
+          },
+          {
+            "elementId": "AanvraagtypeDefinitie",
+            "x": -399.07978213573807,
+            "y": 132.09554893147694
+          },
+          {
+            "elementId": "dt_Aanvraagnummer",
+            "x": -22.72598269979258,
+            "y": 294.04909748663226
+          },
+          {
+            "elementId": "enum_AanvraagStatus",
+            "x": 710.0700566860158,
+            "y": 100.4556574912087
+          },
+          {
+            "elementId": "Aanvraag_AanvraagBijlage",
+            "x": 477.69955127413994,
+            "y": 153.89107095446303
+          },
+          {
+            "elementId": "Aanvraag_AanvraagIndiening",
+            "x": 241.98501781804885,
+            "y": 152.91823959770218
+          },
+          {
+            "elementId": "Aanvraag_AanvraagIdentificatie",
+            "x": -27.778613124674536,
+            "y": 149.02691417065853
+          },
+          {
+            "elementId": "Aanvraag_AanvraagStatus",
+            "x": 699.5051006156303,
+            "y": -88.37013587823594
+          },
+          {
+            "elementId": "AanvraagtypeDefinitie_AanvraagtypeGegevens",
+            "x": -407.042080142231,
+            "y": 286.9495863081563
+          },
+          {
+            "elementId": "Partij",
+            "x": -280.17102339773976,
+            "y": -348.8284632309031
+          },
+          {
+            "elementId": "AanvraagPartij",
+            "x": -4.703060988531732,
+            "y": -302.3859537447271
+          },
+          {
+            "elementId": "PartijrolDefinitie",
+            "x": -7.130904441428413,
+            "y": -544.0594584338681
+          },
+          {
+            "elementId": "PartijrolDefinitie_PartijrolGegevens",
+            "x": 301.8892207549212,
+            "y": -540.7356003436998
+          },
+          {
+            "elementId": "Referentielijst",
+            "x": -524.8544510164061,
+            "y": -535.6100841566342
+          },
+          {
+            "elementId": "Aanvraagtype",
+            "x": -367.6483429608254,
+            "y": -57.458462253584706
+          },
+          {
+            "elementId": "Aanvraag_AanvraagAanvraagtype",
+            "x": -95,
+            "y": -69.4278624376993
+          },
+          {
+            "elementId": "refinstantie_Aanvraagtypen",
+            "x": -367.07069449133786,
+            "y": -153.28356064965104
+          },
+          {
+            "elementId": "Verzoekpartijrol",
+            "x": -5.6945466563521165,
+            "y": -408.67910743217027
+          }
+        ],
+        "edges": [
+          {
+            "id": "use_conn_1793994457819_1_d05_1793994426048",
+            "source": "Aanvraag_AanvraagIdentificatie",
+            "target": "dt_Aanvraagnummer"
+          },
+          {
+            "id": "use_conn_1793994521627_2_d05_1793994426048",
+            "source": "Aanvraag_AanvraagStatus",
+            "target": "enum_AanvraagStatus"
+          },
+          {
+            "id": "use_conn_1794092503601_9_d05_1793994426048",
+            "source": "Aanvraagtype",
+            "target": "refinstantie_Aanvraagtypen"
+          },
+          {
+            "id": "use_gebr_AanvraagPartij__conn_1794132929890_1_d05_1793994426048",
+            "source": "AanvraagPartij",
+            "target": "Verzoekpartijrol"
+          },
+          {
+            "id": "use_gebr_el_1794090602466_3__conn_1794089951858_7_d05_1793994426048",
+            "source": "Aanvraag_AanvraagAanvraagtype",
+            "target": "Aanvraagtype"
+          },
+          {
+            "id": "Aanvraag->Aanvraag_AanvraagIdentificatie",
+            "source": "Aanvraag",
+            "target": "Aanvraag_AanvraagIdentificatie"
+          },
+          {
+            "id": "Aanvraag->Aanvraag_AanvraagIndiening",
+            "source": "Aanvraag",
+            "target": "Aanvraag_AanvraagIndiening"
+          },
+          {
+            "id": "Aanvraag->Aanvraag_AanvraagStatus",
+            "source": "Aanvraag",
+            "target": "Aanvraag_AanvraagStatus"
+          },
+          {
+            "id": "Aanvraag->Aanvraag_AanvraagBijlage",
+            "source": "Aanvraag",
+            "target": "Aanvraag_AanvraagBijlage"
+          },
+          {
+            "id": "Aanvraagtype->Aanvraagtype_AanvraagtypeGegevens",
+            "source": "AanvraagtypeDefinitie",
+            "target": "AanvraagtypeDefinitie_AanvraagtypeGegevens"
+          },
+          {
+            "id": "Partijrol->Partijrol_PartijrolGegevens",
+            "source": "PartijrolDefinitie",
+            "target": "PartijrolDefinitie_PartijrolGegevens"
+          },
+          {
+            "id": "se_Aanvraag->el_1794090602466_3",
+            "source": "Aanvraag",
+            "target": "Aanvraag_AanvraagAanvraagtype"
+          }
+        ]
+      },
+      {
+        "id": "d05_1793994781182",
+        "naam": "GPK",
+        "nodes": [
+          {
+            "elementId": "enum_GpkSoort",
+            "x": -498.49208688445003,
+            "y": 214.34699683553808
+          },
+          {
+            "elementId": "enum_GpkKaartStatus",
+            "x": 12.490541651378358,
+            "y": 209.89894342187918
+          },
+          {
+            "elementId": "Gehandicaptenparkeerkaart",
+            "x": -151.71056863680204,
+            "y": -162.54876429403936
+          },
+          {
+            "elementId": "GehandicaptenparkeerkaartAanvraag",
+            "x": -686.48852506407,
+            "y": -151.43498559955393
+          },
+          {
+            "elementId": "GehandicaptenparkeerkaartAanvraag_GpkAanvraagBeperking",
+            "x": -505.09772976130785,
+            "y": 33.76330307468223
+          },
+          {
+            "elementId": "GehandicaptenparkeerkaartAanvraag_GpkAanvraagKaart",
+            "x": -765,
+            "y": 34
+          },
+          {
+            "elementId": "Gehandicaptenparkeerkaart_GpkKaartGegevens",
+            "x": -239.79021614665385,
+            "y": 33.76330307468223
+          },
+          {
+            "elementId": "GpkKaartHouder",
+            "x": -195.11313073250756,
+            "y": -208.5593772349751
+          },
+          {
+            "elementId": "Partij",
+            "x": -132.17141061602462,
+            "y": -437.66101952365057
+          },
+          {
+            "elementId": "Aanvraag",
+            "x": -660.4416704978958,
+            "y": -438.9951685427032
+          },
+          {
+            "elementId": "AanvraagPartij",
+            "x": -403.7897058795924,
+            "y": -597.1935500211379
+          },
+          {
+            "elementId": "MedischAdvies",
+            "x": -470.73729670578456,
+            "y": -322.035391590354
+          },
+          {
+            "elementId": "Gehandicaptenparkeerkaart_GpkKaartStatus",
+            "x": 14.517297468000208,
+            "y": 33.76330307468223
+          },
+          {
+            "elementId": "PartijrolDefinitie",
+            "x": -90.4153802336249,
+            "y": -595.9222013254872
+          },
+          {
+            "elementId": "PartijrolDefinitie_PartijrolGegevens",
+            "x": 234.38214386010887,
+            "y": -604.7243022494367
+          },
+          {
+            "elementId": "dt_Rijbewijsnummer",
+            "x": -762.1192961783762,
+            "y": 220.5302638205259
+          }
+        ],
+        "edges": [
+          {
+            "id": "use_conn_1793995064696_3_d05_1793994781182",
+            "source": "Gehandicaptenparkeerkaart_GpkKaartGegevens",
+            "target": "enum_GpkSoort"
+          },
+          {
+            "id": "use_conn_1793995066552_4_d05_1793994781182",
+            "source": "Gehandicaptenparkeerkaart_GpkKaartGegevens",
+            "target": "enum_GpkKaartStatus"
+          },
+          {
+            "id": "use_conn_1794002779812_1_d05_1793994781182",
+            "source": "Gehandicaptenparkeerkaart_GpkKaartStatus",
+            "target": "enum_GpkKaartStatus"
+          },
+          {
+            "id": "use_gebr_GehandicaptenparkeerkaartAanvraag_GpkAanvraagKaart__enum_GpkSoort_d05_1793994781182",
+            "source": "GehandicaptenparkeerkaartAanvraag_GpkAanvraagKaart",
+            "target": "enum_GpkSoort"
+          },
+          {
+            "id": "use_gebr_GehandicaptenparkeerkaartAanvraag_GpkAanvraagKaart__dt_Rijbewijsnummer_d05_1793994781182",
+            "source": "GehandicaptenparkeerkaartAanvraag_GpkAanvraagKaart",
+            "target": "dt_Rijbewijsnummer"
+          },
+          {
+            "id": "Gehandicaptenparkeerkaart->Gehandicaptenparkeerkaart_GpkKaartGegevens",
+            "source": "Gehandicaptenparkeerkaart",
+            "target": "Gehandicaptenparkeerkaart_GpkKaartGegevens"
+          },
+          {
+            "id": "GehandicaptenparkeerkaartAanvraag->GehandicaptenparkeerkaartAanvraag_GpkAanvraagKaart",
+            "source": "GehandicaptenparkeerkaartAanvraag",
+            "target": "GehandicaptenparkeerkaartAanvraag_GpkAanvraagKaart"
+          },
+          {
+            "id": "GehandicaptenparkeerkaartAanvraag->GehandicaptenparkeerkaartAanvraag_GpkAanvraagBeperking",
+            "source": "GehandicaptenparkeerkaartAanvraag",
+            "target": "GehandicaptenparkeerkaartAanvraag_GpkAanvraagBeperking"
+          },
+          {
+            "id": "Partijrol->Partijrol_PartijrolGegevens",
+            "source": "PartijrolDefinitie",
+            "target": "PartijrolDefinitie_PartijrolGegevens"
+          },
+          {
+            "id": "Gehandicaptenparkeerkaart->Gehandicaptenparkeerkaart_GpkKaartStatus",
+            "source": "Gehandicaptenparkeerkaart",
+            "target": "Gehandicaptenparkeerkaart_GpkKaartStatus"
+          }
+        ]
+      },
+      {
+        "id": "d05_1793997625630",
+        "naam": "Zorg",
+        "nodes": [
+          {
+            "elementId": "MedischAdvies",
+            "x": 73.70128089077187,
+            "y": 156.23268904789563
+          },
+          {
+            "elementId": "enum_MedischAdviesUitkomst",
+            "x": 358.7032446696034,
+            "y": 345.33751073217206
+          },
+          {
+            "elementId": "MedischAdvies_MedischAdviesGegevens",
+            "x": 63.20128089077187,
+            "y": 333.72038681721796
+          },
+          {
+            "elementId": "Partij",
+            "x": 73.70128089077187,
+            "y": -50.941633774826386
+          }
+        ],
+        "edges": [
+          {
+            "id": "use_conn_1793997714391_5_d05_1793997625630",
+            "source": "MedischAdvies_MedischAdviesGegevens",
+            "target": "enum_MedischAdviesUitkomst"
+          },
+          {
+            "id": "MedischAdvies->MedischAdvies_MedischAdviesGegevens",
+            "source": "MedischAdvies",
+            "target": "MedischAdvies_MedischAdviesGegevens"
+          }
+        ]
+      }
+    ]
+  },
+  "model_naam": "inrichten-domeinen",
+  "model_beschrijving": "Studio-project Inrichten op omnium.fundament (project versie 21, t/m op 3113), map Domeinen, via scripts/maak_inrichtingsexport.mjs (studioProject.js + exporteerV3). Testkopie; de bron is het project (Mark 08-11)."
+}
