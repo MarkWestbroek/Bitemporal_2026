@@ -249,6 +249,50 @@ func SecondaireIDKolom(bronTypenaam, doelEntiteit string) string {
 	return doel + "_id"
 }
 
+// IsItemsRelOpItem meldt of een relatie een items-relatie (subtype referentielijst_items) in de
+// nieuwe richting is: ze staat op het referentielijst-item en wijst naar Referentielijst (plan
+// 2026-11-07 Referentielijst-instanties, §1). In de oude richting staat ze op Referentielijst zelf.
+func IsItemsRelOpItem(bronTypenaam string, rel model.V3Relatie) bool {
+	return rel.RelatieSubtype == "referentielijst_items" && !strings.EqualFold(strings.TrimSpace(bronTypenaam), "Referentielijst")
+}
+
+// RelatieTabelBasis is de tabelnaam van een relatie-hub; _Data, _Aanvang en _Einde hangen er
+// "_data", "_aanvang" en "_einde" aan. Normaal is dat de relatienaam in kleine letters. Een
+// items-relatie in de nieuwe richting krijgt het patroon van een gegevenselement:
+// <item>_<relatie> (bv. aanvraagtypedefinitie_aanvraagtype). Marks naamregel is dat de
+// items-relatie heet zoals het item vroeger (Aanvraagtype naast AanvraagtypeDefinitie); zonder
+// dit patroon zou de nieuwe relatietabel de tabel van de oude entiteit hergebruiken, mét haar
+// rijen (CREATE TABLE IF NOT EXISTS + aanvullen van kolommen; 08-11-2026, cg-test). De Go-typenaam
+// blijft de relatienaam.
+func RelatieTabelBasis(bronTypenaam string, rel model.V3Relatie) string {
+	if IsItemsRelOpItem(bronTypenaam, rel) {
+		return strings.ToLower(bronTypenaam) + "_" + strings.ToLower(rel.Naam)
+	}
+	return strings.ToLower(rel.Naam)
+}
+
+// DeriveRelatieHub is DeriveHub voor een relatie, met de tabelnaam van RelatieTabelBasis.
+func DeriveRelatieHub(bronTypenaam string, rel model.V3Relatie, secEntIDKolom string) DerivedType {
+	d := DeriveHub(bronTypenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, secEntIDKolom)
+	d.Tabelnaam = RelatieTabelBasis(bronTypenaam, rel)
+	return d
+}
+
+// DeriveRelatieData is DeriveData voor een relatie, met de tabelnaam van RelatieTabelBasis.
+func DeriveRelatieData(bronTypenaam string, rel model.V3Relatie) DerivedType {
+	d := DeriveData(rel.Naam, bronTypenaam)
+	d.Tabelnaam = RelatieTabelBasis(bronTypenaam, rel) + "_data"
+	return d
+}
+
+// DeriveRelatieAanvangEinde is DeriveAanvangEinde voor een relatie, met de tabelnaam van
+// RelatieTabelBasis.
+func DeriveRelatieAanvangEinde(bronTypenaam string, rel model.V3Relatie, suffix string) DerivedType {
+	d := DeriveAanvangEinde(rel.Naam, bronTypenaam, suffix)
+	d.Tabelnaam = RelatieTabelBasis(bronTypenaam, rel) + "_" + strings.ToLower(suffix)
+	return d
+}
+
 // AlleDerivedTypes berekent alle afgeleide types (entiteiten, hubs, data, aanvang, einde)
 // voor een volledig V3 model. Dit is de basis voor delta-vergelijkingen.
 func AlleDerivedTypes(v3 model.V3Model) []DerivedType {
@@ -291,17 +335,17 @@ func AlleDerivedTypes(v3 model.V3Model) []DerivedType {
 			if rel.DoelEntiteit != "" {
 				secIDKolom = SecondaireIDKolom(ent.Typenaam, rel.DoelEntiteit)
 			}
-			hub := DeriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, secIDKolom)
+			hub := DeriveRelatieHub(ent.Typenaam, rel, secIDKolom)
 			result = append(result, hub)
 
 			if len(rel.Velden) > 0 {
-				result = append(result, DeriveData(rel.Naam, ent.Typenaam))
+				result = append(result, DeriveRelatieData(ent.Typenaam, rel))
 			}
 
 			// Materiële aanvang/einde op relatieniveau
 			if rel.IsMaterieel {
-				result = append(result, DeriveAanvangEinde(rel.Naam, ent.Typenaam, "Aanvang"))
-				result = append(result, DeriveAanvangEinde(rel.Naam, ent.Typenaam, "Einde"))
+				result = append(result, DeriveRelatieAanvangEinde(ent.Typenaam, rel, "Aanvang"))
+				result = append(result, DeriveRelatieAanvangEinde(ent.Typenaam, rel, "Einde"))
 			}
 		}
 	}

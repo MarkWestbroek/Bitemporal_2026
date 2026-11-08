@@ -128,7 +128,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 		// ---- Relatie hubs ----
 		for _, rel := range ent.Relaties {
 			secIDKolom := naamgeving.SecondaireIDKolom(ent.Typenaam, rel.DoelEntiteit)
-			dHub := deriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, secIDKolom)
+			dHub := naamgeving.DeriveRelatieHub(ent.Typenaam, rel, secIDKolom)
 			writeRelHubEntry(b, dHub, rel, opts.domein)
 		}
 
@@ -139,7 +139,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 			writeDataEntry(b, dData, ge.Description, ent.Kleur)
 		}
 		for _, rel := range ent.Relaties {
-			dData := deriveData(rel.Naam, ent.Typenaam)
+			dData := naamgeving.DeriveRelatieData(ent.Typenaam, rel)
 			writeDataEntry(b, dData, rel.Description, ent.Kleur)
 		}
 
@@ -167,7 +167,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 				continue
 			}
 			for _, suffix := range []string{"Aanvang", "Einde"} {
-				dAE := deriveAanvangEinde(rel.Naam, ent.Typenaam, suffix)
+				dAE := naamgeving.DeriveRelatieAanvangEinde(ent.Typenaam, rel, suffix)
 				writeAanvangEindeEntry(b, dAE, ent.Kleur, suffix, rel.Naam, rel.Tijdprecisie)
 			}
 		}
@@ -585,6 +585,12 @@ func writeVoegOnderliggendGEToe(b *strings.Builder, v3 model.V3Model) {
 	for _, ent := range v3.Entiteiten {
 		for _, rel := range ent.Relaties {
 			if rel.RelatieSubtype != "referentielijst_items" {
+				continue
+			}
+			// Nieuwe richting (plan 2026-11-07, §1): de items-relatie staat op het item en wijst
+			// naar Referentielijst; ze hoort alleen bij het item. Onder Referentielijst zou ze
+			// koppelen via <item>_id = referentielijst.id, dus met de verkeerde rijen (08-11-2026).
+			if naamgeving.IsItemsRelOpItem(ent.Typenaam, rel) {
 				continue
 			}
 			// De parent is altijd "Referentielijst". Als die al in deze run zit,

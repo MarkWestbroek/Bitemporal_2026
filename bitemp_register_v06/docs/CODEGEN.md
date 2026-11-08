@@ -623,6 +623,43 @@ Referentielijst (register)
 
 De `DoelEntiteit` (Land) kan in een ander domein leven — dat is de cross-domein dependency.
 
+#### Nieuwe richting: de items-relatie op het item (08-11-2026)
+
+Volgens het plan *2026-11-07 Referentielijst-instanties*, §1, staat de items-relatie op het
+item en wijst ze naar Referentielijst. Een voorbeeld: `AanvraagtypeDefinitie` (subtype
+`referentielijst_item`) met de relatie `Aanvraagtype` en instantie `Aanvraagtypen`. Dan komt de
+relatie in het domein van het item, en hangt register niet meer van dat domein af. Codegen
+behandelt zo'n relatie (`naamgeving.IsItemsRelOpItem`) op twee punten anders:
+
+| | Oude richting (op Referentielijst) | Nieuwe richting (op het item) |
+|---|---|---|
+| tabel | relatienaam: `landenlijstland`, `landenlijstland_data` | `<item>_<relatie>`: `aanvraagtypedefinitie_aanvraagtype`, `…_data`, `…_aanvang`, `…_einde` |
+| sleutel | `referentielijst_id` + `rel_id`, met `land_id` als verwijzing | `aanvraagtypedefinitie_id` + `rel_id`, met `referentielijst_id` als verwijzing |
+| `VoegOnderliggendGEToe("Referentielijst", …)` | ja, als Referentielijst niet in de run zit | nee: de relatie hoort alleen bij het item |
+
+**Waarom een eigen tabelnaam:** Marks naamregel is dat de items-relatie heet zoals het item
+vroeger (`Aanvraagtype` naast `AanvraagtypeDefinitie`). Met tabel = relatienaam hergebruikte de
+nieuwe relatietabel de tabel van de oude entiteit, mét haar rijen. dbsetup doet `CREATE TABLE IF NOT
+EXISTS` en vult alleen kolommen aan. De Go-typenaam blijft de relatienaam. `schemadiff` gebruikt
+dezelfde regel (`naamgeving.RelatieTabelBasis`).
+
+**Waarom niet onder Referentielijst:** daar koppelde de relatie via `<item>_id = referentielijst.id`,
+dus met de rijen van het verkeerde item.
+
+**Proef (08-11-2026),** in een eigen devloop-container:
+1. Model met de oude entiteit `Aanvraagtype` en 3 rijen.
+2. Rebuild naar het model met `AanvraagtypeDefinitie` en de relatie `Aanvraagtype`.
+3. Uitkomst:
+   - de oude tabel `aanvraagtype` blijft onaangeroerd met haar 3 rijen;
+   - de relatie krijgt de tabel `aanvraagtypedefinitie_aanvraagtype`, met sleutel (`aanvraagtypedefinitie_id`, `rel_id`);
+   - een item registreren met `"aanvraagtypen": [{"referentielijst_id": 10}]` werkt;
+   - `GET /full/aanvraagtype_definities/1` toont het lidmaatschap;
+   - `GET /full/referentielijsten/referentielijsten/10` toont geen vreemde leden.
+
+**Nog niet gebouwd** (plan §8): de seed en binding van instanties (een Referentielijst-record moet je
+nu zelf registreren), de controle dat `referentielijst_id` het gebonden record is (33.4), en de
+opties-route voor een `$ref` naar zo'n relatie.
+
 ---
 
 ## 9. Bestandsoverzicht
