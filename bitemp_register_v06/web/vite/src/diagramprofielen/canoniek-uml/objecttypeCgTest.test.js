@@ -16,7 +16,7 @@ const sha256Hex = (tekst) => crypto.createHash("sha256").update(tekst, "utf8").d
 
 const maak = (edienstBestand, identifier, wijzig = (e) => e) =>
   maakObjecttypeArtefact({
-    modelBestand: lees("omnium-model-cg-test-v3.json"),
+    modelBestand: lees("inrichten-domeinen-v3.json"),
     edienst: wijzig(lees(edienstBestand)),
     identifier,
     datatypen,
@@ -102,17 +102,17 @@ test("GPK: ouder en subtype in één schema", async () => {
     "kenteken", "loopafstandMeter", "partijen", "rijbewijsnummer", "soort", "status", "toelichting",
   ]);
   assert.deepEqual(s.required, ["aanvraagnummer", "aanvraagtype", "ingediendOp", "soort", "status"]);
-  // Het aanvraagtype via de relatie AanvraagAanvraagtype (Mark 07-11: een GE verwijst
-  // nooit naar een entiteit): een verplicht object met code én omschrijving, geen
-  // van beide verplicht (velden van een relatiedoel), de code met de lengte van AN40.
+  // Het aanvraagtype: het veld AanvraagAanvraagtype.type met als type de referentielijst
+  // (items-relatie Aanvraagtype, 08-11), ingebed als in 07-11: een verplicht object met code
+  // én omschrijving, geen van beide verplicht (velden van het item), de code met de lengte van AN40.
   const at = s.properties.aanvraagtype;
   assert.equal(at.type, "object");
   assert.deepEqual(Object.keys(at.properties), ["code", "omschrijving"]);
   assert.equal(at.required, undefined);
   assert.equal(at.additionalProperties, false);
   assert.equal(at.properties.code.maxLength, 40);
-  assert.equal(artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagAanvraagtype").doelPad, "/jsonSchema/properties/aanvraagtype");
-  assert.equal(artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.code").doelPad, "/jsonSchema/properties/aanvraagtype/properties/code");
+  assert.equal(artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagAanvraagtype.type").doelPad, "/jsonSchema/properties/aanvraagtype");
+  assert.equal(artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code").doelPad, "/jsonSchema/properties/aanvraagtype/properties/code");
   assert.deepEqual(s.properties.soort.enum, ["bestuurder", "passagier", "instelling"]);
   assert.equal(s.properties.eerdereKaart.type, "boolean");
   assert.equal(s.properties.loopafstandMeter.type, "integer");
@@ -153,7 +153,7 @@ test("GPK: twee keer toelichting botst; projectie.namen lost het op", async () =
 });
 
 test("een onbekende ouder en een naam voor een onbekend pad worden gemeld", async () => {
-  const model = lees("omnium-model-cg-test-v3.json");
+  const model = lees("inrichten-domeinen-v3.json");
   model.model.entiteiten.find((e) => e.typenaam === "GehandicaptenparkeerkaartAanvraag").erft = "Aanvraaag";
   const { diagnostics } = await maakObjecttypeArtefact({
     modelBestand: model,

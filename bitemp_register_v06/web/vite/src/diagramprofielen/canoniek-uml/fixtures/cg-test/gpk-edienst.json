@@ -2,10 +2,10 @@
   "_toelichting": "E-dienst-inrichtingsmodel voor 'Gehandicaptenparkeerkaart aanvragen'. Voorzet TRANSFORMATIES 27-10, naar het voorbeeld van aanvraag-edienst.json. Bron-entiteit is de specialisatie GehandicaptenparkeerkaartAanvraag (erft Aanvraag); geërfde velden heten naar de entiteit waar ze gedefinieerd zijn (Aanvraag.…), zodat ze in de trace dezelfde modelknoop zijn als in het objecttype aanvraag. Eén objecttype per specialisatie (besluit Mark 27-10): ouder + eigen GE's in één schema.",
   "edienst": { "code": "gehandicaptenparkeerkaart-aanvragen", "naam": "Gehandicaptenparkeerkaart aanvragen", "versienummer": "0.1.0", "omgeving": "cg-test" },
   "bronmodel": {
-    "naam": "cg-test",
-    "bestand": "docs/omnium-model-cg-test-v3.json",
-    "versie": "cg-test 2026-11-07 (relatie AanvraagAanvraagtype, GpkKaartStatus, PartijNaam materieel)",
-    "hash": "sha256:0627285869e7907af87e4ea0f7816db340556451ef2312b15d7c913af95d684b",
+    "naam": "inrichten-domeinen",
+    "bestand": "Studio-project Inrichten (omnium.fundament), map Domeinen",
+    "versie": "Inrichten 2026-11-08, op 3113 (referentielijst als veldtype: AanvraagAanvraagtype.type, Verzoekpartijrol)",
+    "hash": "sha256:c1b520afc764c7bf1f65e8c2cff36021a09f6da3d76423edf37f3799edef49e2",
     "_hashregel": "sha256 over JCS(model) (RFC 8785); model = het 'model'-object van het samengestelde bestand"
   },
   "referentielijsten": {
@@ -15,7 +15,7 @@
       "nieuwItem": { "code": "gehandicaptenparkeerkaart", "omschrijving": "Gehandicaptenparkeerkaart", "zaaktypeIdentificatie": "GPK", "toelichting": "Aanvraag van een gehandicaptenparkeerkaart (Regeling gehandicaptenparkeerkaart)." },
       "_nieuwItem": "toe te voegen aan de referentielijst (GPK-voorstel §4 stap 3); zaaktypeIdentificatie GPK is een aanname"
     },
-    "Partijrol": { "bron": "register: /full/partijrollen", "peiltijdstip": null }
+    "Verzoekpartijrol": { "bron": "register: /full/partijrollen", "peiltijdstip": null, "_toelichting": "items-relatie Verzoekpartijrol (PartijrolDefinitie → instantie Verzoekpartijrollen); tot de rebuild staan de items nog als Partijrol in het register" }
   },
   "artefacten": [
     {
@@ -27,19 +27,19 @@
       "projectie": {
         "materieel": "actueel",
         "relaties": {
-          "AanvraagPartij": { "als": "ingebed", "naam": "partijen" },
-          "AanvraagAanvraagtype": { "als": "ingebed", "naam": "aanvraagtype", "_toelichting": "het aanvraagtype als object {code, omschrijving}; besluit Mark 07-11: een GE-veld verwijst nooit naar een entiteit, en in het objecttype met omschrijving" }
+          "AanvraagPartij": { "als": "ingebed", "naam": "partijen" }
         },
         "referentielijsten": {
-          "Partijrol": { "als": "code", "enum": false }
+          "Aanvraagtype": { "als": "ingebed", "naam": "aanvraagtype", "_toelichting": "het veld AanvraagAanvraagtype.type (referentielijst Aanvraagtypen, items-relatie Aanvraagtype) als object {code, omschrijving}; in het objecttype met omschrijving (Mark 07-11, referentielijst als veldtype 08-11)" },
+          "Verzoekpartijrol": { "als": "code", "enum": false }
         },
         "envelop": { "soort": "verzoek", "type": "gehandicaptenparkeerkaart" },
         "_envelop": "het schema als `data` in het productaanvraag-formaat, zodat de Verzoek-plugin van GZAC het object oppakt en een zaak maakt; besluit Mark 27-10 (\"we willen in dit gebied nu niet zelf bouwen\"); type = code van het aanvraagtype"
       },
       "velden": [
         "Aanvraag.AanvraagIdentificatie.aanvraagnummer",
-        "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.code",
-        "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.omschrijving",
+        "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code",
+        "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.omschrijving",
         "Aanvraag.AanvraagPartij.partijrol",
         "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn",
         "Aanvraag.AanvraagPartij.Partij.PartijMaatschappelijkeActiviteit.kvkNummer",
@@ -116,8 +116,8 @@
       "registratie": {
         "objecttype": "gehandicaptenparkeerkaartaanvraag",
         "vasteWaarden": {
-          "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.code": "gehandicaptenparkeerkaart",
-          "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.omschrijving": "Gehandicaptenparkeerkaart",
+          "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code": "gehandicaptenparkeerkaart",
+          "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.omschrijving": "Gehandicaptenparkeerkaart",
           "Aanvraag.AanvraagStatus.status": "ingediend",
           "Aanvraag.AanvraagPartij.partijrol": "aanvrager",
           "Aanvraag.AanvraagBijlage.naam": "pasfoto"

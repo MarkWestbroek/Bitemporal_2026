@@ -1,16 +1,16 @@
 {
-  "_toelichting": "E-dienst-inrichtingsmodel voor 'Aanvraag (voorbeeld)', v2 na de modelwijziging van 26-10 (AanvraagPartij → Partij met partijrol; Aanvrager vervalt). Voorzet TRANSFORMATIES 27-10 op basis van de v1 van FUNDAMENT. Bron is het samengestelde model van cg-test (de relatie verwijst naar relatiebeheer.Partij en de referentielijst Partijrol). Alle verwijzingen zijn modelpaden; een geërfd of ingebed veld heet naar de entiteit waar het gedefinieerd is. Alleen positieve selectie.",
+  "_toelichting": "E-dienst-inrichtingsmodel voor 'Aanvraag (voorbeeld)', v2 na de modelwijziging van 26-10 (AanvraagPartij → Partij met partijrol; Aanvrager vervalt). Voorzet TRANSFORMATIES 27-10 op basis van de v1 van FUNDAMENT. Bron is het samengestelde model van cg-test (de relatie verwijst naar relatiebeheer.Partij en de referentielijst Verzoekpartijrollen via de items-relatie Verzoekpartijrol). Alle verwijzingen zijn modelpaden; een geërfd of ingebed veld heet naar de entiteit waar het gedefinieerd is. Alleen positieve selectie.",
   "edienst": { "code": "aanvraag-voorbeeld", "naam": "Aanvraag (voorbeeld)", "versienummer": "0.2.0", "omgeving": "cg-test" },
   "bronmodel": {
-    "naam": "cg-test",
-    "bestand": "docs/omnium-model-cg-test-v3.json",
-    "versie": "cg-test 2026-11-07 (relatie AanvraagAanvraagtype, GpkKaartStatus, PartijNaam materieel)",
-    "hash": "sha256:0627285869e7907af87e4ea0f7816db340556451ef2312b15d7c913af95d684b",
+    "naam": "inrichten-domeinen",
+    "bestand": "Studio-project Inrichten (omnium.fundament), map Domeinen",
+    "versie": "Inrichten 2026-11-08, op 3113 (referentielijst als veldtype: AanvraagAanvraagtype.type, Verzoekpartijrol)",
+    "hash": "sha256:c1b520afc764c7bf1f65e8c2cff36021a09f6da3d76423edf37f3799edef49e2",
     "_hashregel": "sha256 over JCS(model) (RFC 8785); model = het 'model'-object van het samengestelde bestand"
   },
   "referentielijsten": {
     "Aanvraagtype": { "bron": "register: /full/aanvraagtypen", "peiltijdstip": null, "eersteVulling": "docs/aanvraag-aanvraagtypen.json" },
-    "Partijrol": { "bron": "register: /full/partijrollen", "peiltijdstip": null, "eersteVulling": "docs/relatiebeheer-partijrollen.json" }
+    "Verzoekpartijrol": { "bron": "register: /full/partijrollen", "peiltijdstip": null, "eersteVulling": "docs/relatiebeheer-partijrollen.json" }
   },
   "artefacten": [
     {
@@ -22,17 +22,17 @@
       "projectie": {
         "materieel": "actueel",
         "relaties": {
-          "AanvraagPartij": { "als": "ingebed", "naam": "partijen", "_toelichting": "Meervoudige relatie met een veld (partijrol): een lijst van {partijrol, partij}. Niet 'de partij met rol aanvrager': kiezen op een M0-waarde hoort niet in de regelset, en een gemachtigde-aanvraag heeft zowel aanvrager als subject nodig." },
-          "AanvraagAanvraagtype": { "als": "ingebed", "naam": "aanvraagtype", "_toelichting": "het aanvraagtype als object {code, omschrijving} (besluit Mark 07-11). Dit formulier laat de invuller de code kiezen; de omschrijving blijft leeg (niet verplicht), tot een ontvanger die uit de referentielijst vult." }
+          "AanvraagPartij": { "als": "ingebed", "naam": "partijen", "_toelichting": "Meervoudige relatie met een veld (partijrol): een lijst van {partijrol, partij}. Niet 'de partij met rol aanvrager': kiezen op een M0-waarde hoort niet in de regelset, en een gemachtigde-aanvraag heeft zowel aanvrager als subject nodig." }
         },
         "referentielijsten": {
-          "Partijrol": { "als": "code", "enum": false }
+          "Aanvraagtype": { "als": "ingebed", "naam": "aanvraagtype", "_toelichting": "het veld AanvraagAanvraagtype.type als object {code, omschrijving} (Mark 07-11). Dit formulier laat de invuller de code kiezen; de omschrijving blijft leeg (niet verplicht), tot een ontvanger die uit de referentielijst vult." },
+          "Verzoekpartijrol": { "als": "code", "enum": false }
         }
       },
       "velden": [
         "Aanvraag.AanvraagIdentificatie.aanvraagnummer",
-        "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.code",
-        "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.omschrijving",
+        "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code",
+        "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.omschrijving",
         "Aanvraag.AanvraagPartij.partijrol",
         "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn",
         "Aanvraag.AanvraagPartij.Partij.PartijMaatschappelijkeActiviteit.kvkNummer",
@@ -75,7 +75,7 @@
           "naam": "Gegevens aanvraag",
           "slug": "gegevens-aanvraag",
           "velden": [
-            { "veld": "Aanvraag.AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.code", "key": "aanvraagtype", "label": "Soort aanvraag", "verplicht": true },
+            { "veld": "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code", "key": "aanvraagtype", "label": "Soort aanvraag", "verplicht": true },
             { "veld": "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.naam", "key": "aanvragerNaam", "label": "Naam aanvrager", "verplicht": true },
             { "veld": "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.email", "key": "aanvragerEmail", "label": "E-mailadres", "verplicht": false },
             { "veld": "Aanvraag.AanvraagIndiening.toelichting", "key": "toelichting", "label": "Toelichting" }

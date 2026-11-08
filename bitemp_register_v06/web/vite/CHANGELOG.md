@@ -8,6 +8,23 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Inrichting: export uit een Studio-project** (Mark 08-11: de Studio is de bron, rechtstreeks gelezen, alleen de
+  relevante stukken naar het register). `scripts/maak_inrichtingsexport.mjs` maakt de hele levering
+  van een e-dienst uit het Studio-project (via de API met een token, of een export) plus
+  mappen/domeinen (`--map Domeinen`), met de ops na de snapshot; `transformatie/studioProject.js` kiest de elementen en diagrammen. De bron
+  logisch-model van de GPK krijgt zo alleen Aanvraag, GPK, Zorg en Partij
+  (docs/TRANSFORMATIES.md §11.16).
+
+### Gewijzigd
+- **Inrichting: referentielijst als veldtype** in de lezer: een `$ref` naar de items-relatie wijst
+  naar het item, als code of ingebed (`aanvraagtype: {code, omschrijving}`); het formulier vindt de
+  items ook onder de naam van de items-relatie. `verplicht` volgt goType als de V3.1-sleutel
+  ontbreekt (V3 uit een opgeslagen project).
+- **Inrichting: e-diensten op het model uit het project** (Mark 08-11): AanvraagAanvraagtype.type
+  en Verzoekpartijrol; testmodel `fixtures/cg-test/inrichten-domeinen-v3.json` (project Inrichten,
+  map Domeinen). Payloads gelijk aan 07-11, op de beschrijving van `aanvraagtype` na.
+
 ## [studio/v0.34.0] — 2026-11-08
 
 Samen met api 0.22.0, render 0.3.6 en devloop 0.25.1.

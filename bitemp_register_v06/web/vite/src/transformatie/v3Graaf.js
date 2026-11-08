@@ -98,6 +98,15 @@ export function v3Graaf({ model: invoerModel, keuzes, datatypen = [], referentie
   const waarschuwingen = [];
   const meld = (melding, tekst = "") => waarschuwingen.push({ regel: 0, tekst, melding });
 
+  // Een `$ref` noemt een entiteit, of — sinds de referentielijst als veldtype
+  // (studio 0.34.0, plan Referentielijst-instanties §8) — de items-relatie van
+  // een referentielijst (item → Referentielijst). Dan is het doel het item.
+  const itemsRelatie = new Map();
+  for (const e of entiteiten.values())
+    for (const r of e.relaties || []) if (r.relatieSubtype === "referentielijst_items") itemsRelatie.set(r.naam, e);
+  const refDoel = (naam) => entiteiten.get(naam) || itemsRelatie.get(naam) || null;
+  const refKeuze = (naam) => projectie.referentielijsten?.[naam] || projectie.referentielijsten?.[refDoel(naam)?.typenaam || ""] || null;
+
   const wortel = entiteiten.get(keuzes?.bron);
   if (!wortel) {
     meld(`Bron-entiteit ${keuzes?.bron} staat niet in het model`);
@@ -108,7 +117,11 @@ export function v3Graaf({ model: invoerModel, keuzes, datatypen = [], referentie
   function veldEigenschappen(veld, pad) {
     const e = {
       geselecteerd: geselecteerd.has(pad),
-      verplicht: veld.verplicht === true,
+      // V3.1 `verplicht` wint; zonder die sleutel geldt de V3-regel van de
+      // adapter: een goType zonder `*` is verplicht (store/adapters.js
+      // convertV3Veld). Een V3 uit een opgeslagen Studio-project mist de
+      // V3.1-sleutels (08-11), een V3 van de backend heeft ze.
+      verplicht: "verplicht" in veld ? veld.verplicht === true : Boolean(veld.goType) && !String(veld.goType).startsWith("*"),
       beschrijving: veld.description || "",
       basistype: veld.type || "string",
       datatype: veld.datatype || "",
@@ -136,9 +149,9 @@ export function v3Graaf({ model: invoerModel, keuzes, datatypen = [], referentie
       // Verwijzing naar een (referentielijst-)entiteit: de e-dienst kiest hoe
       // die in het doel verschijnt. "code" = de sleutel van het item (het
       // unieke veld van de entiteit) als tekst.
-      const doel = entiteiten.get(veld.$ref);
-      const keuze = projectie.referentielijsten?.[veld.$ref];
-      e.refNaar = veld.$ref;
+      const doel = refDoel(veld.$ref);
+      const keuze = refKeuze(veld.$ref);
+      e.refNaar = doel?.typenaam || veld.$ref;
       if (!doel) meld(`Verwijzing naar ${veld.$ref}, maar die entiteit staat niet in het model`, pad);
       else if (!keuze) meld(`Geen projectie voor de verwijzing naar ${veld.$ref}; het veld blijft een id`, pad);
       else if (keuze.als === "code") {
@@ -152,7 +165,7 @@ export function v3Graaf({ model: invoerModel, keuzes, datatypen = [], referentie
           // lengte van het sleutelveld horen bij de referentielijst, niet hier.
           e.datatype = "";
           if (keuze.enum) {
-            const items = referentielijsten[veld.$ref];
+            const items = referentielijsten[veld.$ref] || referentielijsten[doel.typenaam];
             if (!items) meld(`enum: true voor ${veld.$ref}, maar er zijn geen referentielijst-items meegegeven`, pad);
             else e.enumWaarden = items.map((item) => item[sleutel.naam]).filter((w) => !leeg(w));
           }
@@ -204,8 +217,49 @@ export function v3Graaf({ model: invoerModel, keuzes, datatypen = [], referentie
           geselecteerd: velden.some(({ pad }) => geselecteerd.has(pad)),
         },
       });
-      for (const { veld, pad } of velden) voegVeldToe(veld, pad, gePad, entiteit);
+      for (const { veld, pad } of velden) {
+        if (veld.$ref && ingebedRef(veld, pad)) voegRefIngebedToe(veld, pad, gePad);
+        else voegVeldToe(veld, pad, gePad, entiteit);
+      }
     }
+  }
+
+  /**
+   * Een verwijzing naar een referentielijst-item ingebed, als object met de
+   * gekozen velden van het item: projectie `als: "ingebed"`, of de e-dienst
+   * kiest velden onder het veld (`Aanvraag.Aanvraagtype.type.AanvraagtypeDefinitie.
+   * AanvraagtypeGegevens.code`). Zelfde vorm als een ingebedde relatie zonder
+   * velden (07-11): `aanvraagtype: {code, omschrijving}`; de naam komt uit
+   * `projectie.namen[pad]` of de projectie, anders de veldnaam.
+   */
+  function ingebedRef(veld, pad) {
+    // Velden onder het veld kiezen is ook een keuze voor inbedden (het formulier
+    // projecteert elke referentielijst als code, maar volgt de gekozen velden).
+    return refKeuze(veld.$ref)?.als === "ingebed" || onderPad(pad);
+  }
+  function voegRefIngebedToe(veld, pad, ouder) {
+    const doel = refDoel(veld.$ref);
+    if (!doel) {
+      meld(`Verwijzing naar ${veld.$ref}, maar die entiteit staat niet in het model`, pad);
+      return;
+    }
+    const keuze = refKeuze(veld.$ref) || {};
+    groepen.push({
+      id: pad,
+      aard: "relatie-ingebed",
+      tekst: namen[pad] || keuze.naam || veld.naam,
+      groep: ouder,
+      eigenschappen: { verplicht: veld.verplicht === true, meervoudig: false, beschrijving: veld.description || "", geselecteerd: onderPad(pad), refNaar: doel.typenaam },
+    });
+    const doelPad = `${pad}.${doel.typenaam}`;
+    groepen.push({
+      id: doelPad,
+      aard: "doel",
+      tekst: namen[doelPad] || kleineEerste(doel.typenaam),
+      groep: pad,
+      eigenschappen: { metVelden: false, beschrijving: doel.description || "", geselecteerd: onderPad(doelPad) },
+    });
+    voegGEsToe(doel, doelPad, doelPad);
   }
 
   /** De relaties van een entiteit die de e-dienst inbedt, als groepen onder `ouder`. */

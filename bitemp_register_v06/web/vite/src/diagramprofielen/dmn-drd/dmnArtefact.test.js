@@ -19,10 +19,10 @@ const datatypen = JSON.parse(fs.readFileSync(new URL("../../../../../testdata/ge
 const objecttype = async () =>
   (
     await maakObjecttypeArtefact({
-      modelBestand: lees("omnium-model-cg-test-v3.json"),
+      modelBestand: lees("inrichten-domeinen-v3.json"),
       edienst: lees("gpk-edienst.json"),
       datatypen,
-      referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Partijrol: lees("relatiebeheer-partijrollen.json") },
+      referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Verzoekpartijrol: lees("relatiebeheer-verzoekpartijrollen.json") },
       identifier: "gehandicaptenparkeerkaartaanvraag",
       sha256Hex,
     })
@@ -97,7 +97,7 @@ test("schrijver: lege cel = '-', ontbrekende uitkomst geeft een melding", () => 
 // Binding via de uuid (besluit Mark 31-10, BACKLOG §40): hernoem je het veld in het model, dan
 // volgt de kolom; de export schrijft het naampad van dát moment.
 test("kolom gebonden via de uuid volgt een hernoeming; export op het naampad van nu", async () => {
-  const v3 = lees("omnium-model-cg-test-v3.json");
+  const v3 = lees("inrichten-domeinen-v3.json");
   const ge = (v3.model || v3).entiteiten.flatMap((e) => e.gegevenselementen || []).find((g) => g.naam === "GpkAanvraagKaart");
   const veld = ge.velden.find((v) => v.naam === "soort");
   veld.uuid = "8f1c2d3e-0000-4000-8000-000000000001";
@@ -111,7 +111,7 @@ test("kolom gebonden via de uuid volgt een hernoeming; export op het naampad van
       modelBestand: v3,
       edienst,
       datatypen,
-      referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Partijrol: lees("relatiebeheer-partijrollen.json") },
+      referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Verzoekpartijrol: lees("relatiebeheer-verzoekpartijrollen.json") },
       identifier: "gehandicaptenparkeerkaartaanvraag",
       sha256Hex,
     })

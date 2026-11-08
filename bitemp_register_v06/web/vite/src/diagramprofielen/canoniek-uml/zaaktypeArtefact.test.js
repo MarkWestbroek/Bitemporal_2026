@@ -14,7 +14,7 @@ const sha256Hex = (tekst) => crypto.createHash("sha256").update(tekst, "utf8").d
 
 const maak = (wijzig = (e) => e, referentielijsten = { Aanvraagtype: lees("aanvraag-aanvraagtypen.json") }) =>
   maakZaaktypeArtefact({
-    modelBestand: lees("omnium-model-cg-test-v3.json"),
+    modelBestand: lees("inrichten-domeinen-v3.json"),
     edienst: wijzig(lees("gpk-edienst.json")),
     identifier: "GPK",
     referentielijsten,
@@ -91,4 +91,13 @@ test("GPK: toetsen op bijlage, catalogus, initiator en selectielijst", async () 
     ["warning", "ZTT-INITIATOR", null],
     ["error", "ZTT-SELECTIELIJST", "Geweigerd"],
   ]);
+});
+
+test("ZTT-AANVRAAGTYPE: het formulier zet een ander aanvraagtype dan het zaaktype (pad achter het veld, 08-11)", async () => {
+  const pad = "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code";
+  const { diagnostics } = await maak((e) => {
+    e.artefacten.find((a) => a.soort === "formulier").registratie.vasteWaarden[pad] = "iets-anders";
+    return e;
+  });
+  assert.deepEqual(diagnostics.map((d) => d.code), ["ZTT-AANVRAAGTYPE"]);
 });

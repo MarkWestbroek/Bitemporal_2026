@@ -1253,7 +1253,7 @@ een token als `Authorization: Bearer`; zonder token stuurt hij de sessiecookie
 mee. CORS staat (30-10) open voor `http://localhost:5176`, niet voor de
 app-host. Schrijven (registreren) vanuit de browser kan nog niet: daarvoor zijn
 een service-account en CORS voor de app-origin nodig, en dat ligt bij BACKEND.
-Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.16).
+Tot dan registreert FUNDAMENT met de zip, of draait een server-runner (§11.17).
 
 **Model uit de map (beperking opgelost 30-10, BACKLOG §39).** Sinds 30-10
 bewaart de omzetting `verplicht`, `uniek`, `type` en `format`. Model uit de map
@@ -1655,7 +1655,94 @@ artefact overschrijven met `doelVersieRange`; onbekend doel = `*` (geen eis).
 Bronnen (§11.14) krijgen geen bereik, ze worden niet uitgerold. Het
 `OVERZICHT.md` toont per artefact de kolom *Doel* (component + bereik).
 
-### 11.16 Vervolg
+### 11.16 Export uit een Studio-project, en de referentielijst als veldtype (2026-11-08)
+
+**Studio-project als bron.** Besluit Mark 07-11/08-11: de Studio is de bron,
+V3 wordt afgeleid; in het register komen alleen de relevante stukken. Het
+script `scripts/maak_inrichtingsexport.mjs` maakt de hele levering van een
+e-dienst (artefacten, bronnen, OVERZICHT.md; dezelfde stap als de zip uit het
+transformatiepaneel, `voerInrichtingsExportUit`) uit het Studio-project:
+
+```
+OMNIUM_TOKEN=omt_… node scripts/maak_inrichtingsexport.mjs --edienst gpk-edienst.json \
+  --omnium https://omnium.fundament.common-ground-lab.nl --project Inrichten --map Domeinen \
+  --referentielijst aanvraag-aanvraagtypen.json --referentielijst relatiebeheer-partijrollen.json \
+  --bpmn gpk-processen.bpmn-model.json --bpmn gpk-beslissingen.dmn-model.json --uit <map>
+```
+
+- **Rechtstreeks uit Omnium** (Mark 08-11: "het best kijken ze in het model
+  zelf, niet via een export"): het script leest de snapshot en de ops met een
+  persoonlijk API-token (`OMNIUM_TOKEN`, of de naam in `--token-env`; Studio →
+  Gebruikers → Mijn API-tokens), zoals de MCP. Op schijf kan ook:
+  `--project <studio-project.json> [--ops <ops.json>]`.
+
+- **Wat meegaat** (`transformatie/studioProject.js`): de genoemde mappen en
+  domeinen (packages; `--map Domeinen`, `--map Overig/org-geo`, ook een pad),
+  recursief door submappen en door wat onder een element hangt (het diagram
+  GPK onder Gehandicaptenparkeerkaart). Daarbij wat die elementen nodig
+  hebben, langs `bevat`, `compositie`, `generalisatie`, `gebruik` en
+  `relatie`: GE's, ouders, gebruikte gegevenstypen en enumeraties, doelen van
+  relaties. Een connector komt mee als beide uiteinden er zijn. De diagrammen
+  zijn die in de genoemde mappen: met `--map Domeinen` krijgt de bron
+  `logisch-model` van de GPK precies Aanvraag, GPK, Zorg en Partij (geen
+  inrichting, Artefact, Component of het overzicht); 317 kB in plaats van
+  551 kB. De tekening maakt het registratiescript met de render-API.
+- **Snapshot + ops.** Het veld `inhoud` van GET /api/studio/projecten/<id> is
+  een snapshot tot `tot_volgnummer`; latere wijzigingen staan alleen in het
+  ops-log (`…/ops?vanaf=<tot_volgnummer>`, vanaf is exclusief, per pagina
+  zolang `meer`). Het script speelt ze na met `ea/sidecarImport.js`
+  (maakStand → speelOpsNa → bouwWerkbestand), zoals de MCP; met een
+  projectbestand alleen als je `--ops` meegeeft.
+- **`verplicht` uit goType.** Een V3 uit een opgeslagen project mist soms de
+  V3.1-sleutels (`v31Sleutels` ontbreekt in `data.bron`; gemeld aan
+  OMNIUM-UI). De lezer valt dan terug op de V3-regel van de adapter: een
+  goType zonder `*` is verplicht.
+- Met `--model <V3>` werkt het script ook op een V3-bestand (zoals de oude
+  route). De tests lezen een kopie van het project als V3:
+  `fixtures/cg-test/inrichten-domeinen-v3.json` (project Inrichten t/m op
+  3113, map Domeinen); de e-diensten noemen die als `bronmodel` met de hash
+  ervan. Het oude samengestelde model (`omnium-model-cg-test-v3.json`) blijft
+  voor de tests van terugreis, delta-import en binding.
+
+**Referentielijst als veldtype.** Sinds studio 0.34.0 kiest een veld de
+items-relatie van een referentielijst als type (plan Referentielijst-
+instanties §8): `Aanvraag.Aanvraagtype.type` met `$ref: "Aanvraagtype"`, de
+items-relatie AanvraagtypeDefinitie → Referentielijst. De lezer (`v3Graaf`):
+
+- een `$ref` noemt een entiteit of een items-relatie; bij een items-relatie is
+  het doel het item (AanvraagtypeDefinitie). De projectie in de e-dienst mag
+  de relatie of het item noemen;
+- `als: "code"`: zoals een `$ref` naar een entiteit (Partijrol);
+- `als: "ingebed"` (of de e-dienst kiest velden onder het veld): een object
+  met de gekozen velden van het item, onder `naam` uit de projectie; dezelfde
+  vorm als de relatie van §11.15, dus `aanvraagtype: {code, omschrijving}`.
+  Paden: `Aanvraag.Aanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code`;
+- het formulier zoekt de items onder de naam van de lijst, het item of de
+  items-relatie (`Aanvraagtype` bij AanvraagtypeDefinitie).
+
+**E-diensten (08-11).** Mark zette ook Partijrol om: item PartijrolDefinitie,
+items-relatie Verzoekpartijrol, instantie Verzoekpartijrollen (later ook
+Zaak- en Taakpartijrollen); het aanvraagtype is de GE AanvraagAanvraagtype met
+het veld `type`. De e-diensten volgen: paden
+`Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code`
+en `.omschrijving`, projectie `referentielijsten.Aanvraagtype: {als:
+"ingebed", naam: "aanvraagtype"}` en `Verzoekpartijrol: {als: "code"}`; de
+lijst heet in de e-dienst Verzoekpartijrol (testbestand
+`relatiebeheer-verzoekpartijrollen.json`). ZTT-AANVRAAGTYPE herkent het nieuwe
+pad.
+
+Proef 08-11, live uit Omnium op Fundament: formulieren, zaaktype en
+GZAC-bundel gelijk aan de levering van 07-11; objecttypen en dossierschema
+alleen met de nieuwe beschrijving van `aanvraagtype` uit het model.
+
+Open: na de hernoemingen moet het register op cg-test opnieuw gebouwd worden,
+met de items naar AanvraagtypeDefinitie en PartijrolDefinitie en hun
+lidmaatschap van de instanties; tot dan haalt de e-dienst de items uit
+`/full/aanvraagtypen` en `/full/partijrollen`. Met meer lijsten per item
+(Zaak-, Taakpartijrollen) komt de keuzelijst uit de leden van de instantie,
+niet uit alle items. De instanties hebben in het project nog geen domein.
+
+### 11.17 Vervolg
 
 1. Formulier: machtigen (gemachtigde + subject) en eHerkenning; de documenttitel
    van een bestandscomponent uit het label (FUNDAMENT 30-10).

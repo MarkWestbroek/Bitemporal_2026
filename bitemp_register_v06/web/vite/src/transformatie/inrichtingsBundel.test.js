@@ -15,10 +15,10 @@ const datatypen = JSON.parse(fs.readFileSync(new URL("../../../../testdata/gegev
 const sha256Hex = (tekst) => crypto.createHash("sha256").update(tekst, "utf8").digest("hex");
 
 const invoer = () => ({
-  modelBestand: lees("omnium-model-cg-test-v3.json"),
+  modelBestand: lees("inrichten-domeinen-v3.json"),
   edienst: lees("gpk-edienst.json"),
   datatypen,
-  referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Partijrol: lees("relatiebeheer-partijrollen.json") },
+  referentielijsten: { Aanvraagtype: lees("aanvraag-aanvraagtypen.json"), Verzoekpartijrol: lees("relatiebeheer-verzoekpartijrollen.json") },
   peiltijdstip: "2026-10-27T12:00:00Z",
   sha256Hex,
   bpmnModellen: { "gpk-processen.bpmn-model.json": lees("gpk-processen.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") },

@@ -63,7 +63,11 @@ export function formulierGraaf({ model: invoerModel, keuzes, datatypen = [], ref
 
   /** Keuzes van een referentielijst: waarde = de sleutel (code), label = de omschrijving. */
   function lijstWaarden(naam, pad) {
-    const items = referentielijsten[naam];
+    // De items heten naar de lijst, de entiteit of — sinds de referentielijst als
+    // veldtype (08-11) — de items-relatie van het item (Aanvraagtype bij
+    // AanvraagtypeDefinitie).
+    const relNamen = (entiteiten.get(naam)?.relaties || []).filter((r) => r.relatieSubtype === "referentielijst_items").map((r) => r.naam);
+    const items = [naam, ...relNamen].map((n) => referentielijsten[n]).find(Boolean);
     if (!items) {
       meld(`Geen items voor referentielijst ${naam}; de keuzelijst blijft leeg`, pad);
       return [];
