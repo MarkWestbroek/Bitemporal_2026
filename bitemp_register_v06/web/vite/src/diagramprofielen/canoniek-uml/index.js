@@ -16,7 +16,7 @@
  *
  * Kleuren komen overeen met defaultKleur() in umleditor/metamodel/types.js.
  */
-import { naamBotsingen } from "./uniekeNamen.js";
+import { naamBotsingen, domeinVanElement } from "./uniekeNamen.js";
 import { vouwOudeComposities, hernoemGebruikLabels, GEBRUIKT_LABEL } from "./migratie.js";
 import { vouwOudeGeneralisaties, synchroniseerGebruik, herstelRefTypeLabels } from "./afgeleideConnectoren.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
@@ -245,6 +245,26 @@ function controleerRepresentatie(element, context) {
   return [...(tijd ? [tijd] : []), ...(sub ? [sub] : []), ...(items ? [items] : []), ...naamBotsingen(element, context)];
 }
 
+/**
+ * M3-hook afgeleideEigenschappen: het domein als alleen-lezen regel in de inspector (Mark 08-11:
+ * "entiteiten lijken geen domein te hebben"; "wat domineert?"). Eén bron: het package in de boom;
+ * een GE volgt zijn entiteit, een relatie haar bron (zie uniekeNamen.domeinVanElement).
+ */
+function domeinRegel(element, context) {
+  const elements = context?.elements || {};
+  const h = domeinVanElement(element, elements);
+  const eigenaar = h.eigenaarId ? elements[h.eigenaarId] : null;
+  const uitleg =
+    h.via === "package"
+      ? "het package waarin het staat; omhangen doe je in de boom"
+      : h.via === "eigenaar"
+        ? `van ${eigenaar?.naam || "de entiteit"}${element?.elementType === "relatie" ? " (de bron)" : ""}`
+        : h.domein
+          ? "uit de import; hang het in de boom in een package"
+          : "geen package; hang het in de boom in een package";
+  return [{ key: "domein", label: "domein", waarde: h.domein, uitleg, inOndertitel: true }];
+}
+
 /** M3-hook eigenschapUit: materieel en tijdprecisie uit bij een subtype, met de reden. */
 function eigenschapUitVoorSubtype(element, key, context) {
   if (key !== "materieel" && key !== "tijdprecisie") return null;
@@ -269,11 +289,12 @@ const elementTypes = [
     shape: "class-box",
     // Velden als "Details" in de oude IDE. Typenaam = naam (de oude IDE houdt
     // ze gelijk; de terugreis zet typenaam := naam) en domein = het package
-    // waar de entiteit in staat — daarom geen aparte properties.
+    // waar de entiteit in staat — daarom geen aparte properties (de inspector toont het
+    // via afgeleideEigenschappen; een GE/relatie volgt haar entiteit, 08-11).
     // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
     properties: [MEERVOUD_VELD, MATERIEEL_VELD, TIJDPRECISIE_VELD, KLEUR_VELD],
     // Geërfd per hook-sleutel (types/erfenis.js): entiteit, GE en relatie.
-    hooks: { valideer: controleerRepresentatie, eigenschapUit: eigenschapUitVoorSubtype },
+    hooks: { valideer: controleerRepresentatie, eigenschapUit: eigenschapUitVoorSubtype, afgeleideEigenschappen: domeinRegel },
     // Afgeleid boven de gewone velden (Mark, 10-10): voor ENT, GE en relatie,
     // ook in een opgenomen GE (opname.js volgt deze volgorde).
     compartments: [
@@ -370,7 +391,8 @@ const elementTypes = [
     // overschrijft de geërfde op key).
     properties: [
       { key: "typenaam", label: "typenaam", datatype: "string", placeholder: "bijv. NatuurlijkPersoon_Naam" },
-      { key: "domein", label: "domein", datatype: "string" },
+      // Geen eigen domein-veld meer (Mark 08-11): een GE hoort bij het domein van zijn entiteit
+      // (afgeleideEigenschappen → domeinRegel); de codegen keek er ook nooit naar.
       { ...MEERVOUD_VELD, placeholder: "bijv. namen" },
       { key: "naamLabelHeen", label: "label heen", datatype: "string", placeholder: "bijv. heeft" },
       { key: "naamLabelTerug", label: "label terug", datatype: "string", placeholder: "bijv. behoort bij" },
@@ -470,7 +492,7 @@ const elementTypes = [
     properties: [KLEUR_VELD],
     compartments: [{ id: "waarden", label: null, fieldType: "waarde" }],
     // Naam uniek per domein, altijd actief (uniekeNamen.js, Mark 31-10).
-    hooks: { valideer: naamBotsingen },
+    hooks: { valideer: naamBotsingen, afgeleideEigenschappen: domeinRegel },
   },
   {
     id: "gegevenstype",
@@ -499,6 +521,7 @@ const elementTypes = [
     ],
     hooks: {
       valideer: naamBotsingen,
+      afgeleideEigenschappen: domeinRegel,
       /**
        * Validatie- en weergave-compartimenten live uit element.data, zodat de
        * node meebeweegt met wat de inspector wijzigt (voorheen statisch bij
@@ -541,7 +564,7 @@ const elementTypes = [
     icoon: "lijst",
     properties: [KLEUR_VELD],
     compartments: [{ id: "eigenschappen", label: null, fieldType: "eigenschap" }],
-    hooks: { valideer: naamBotsingen },
+    hooks: { valideer: naamBotsingen, afgeleideEigenschappen: domeinRegel },
   },
   {
     // Package = het V3-domein als gewoon elementtype (geen core-concept).
@@ -764,7 +787,7 @@ const referenceTypes = [
 function elementKandidaten(elements, filter, icoon, groep, labelFn = (el) => el.naam) {
   return Object.values(elements || {})
     .filter((el) => el.naam && filter(el))
-    .map((el) => ({ waarde: el.naam, label: labelFn(el), icoon, groep, pad: [el.data?.domein || ""] }))
+    .map((el) => ({ waarde: el.naam, label: labelFn(el), icoon, groep, pad: [domeinVanElement(el, elements).domein] }))
     .sort((a, b) => a.label.localeCompare(b.label));
 }
 

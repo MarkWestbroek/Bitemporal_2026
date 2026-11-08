@@ -1009,7 +1009,7 @@ fase 2 een **bewerkbare sandbox**:
   toont een opgeslagen waarde buiten de lijst (bv. `1`) als eigen optie in
   plaats van stil de eerste optie.
 - **GE-velden bewerkbaar (2026-09-17).** `gegevenselement` toont dezelfde
-  velden als *Details* in de oude IDE: typenaam, domein, beschrijving
+  velden als *Details* in de oude IDE: typenaam, beschrijving (domein sinds 08-11 afgeleid)
   (`description`), meervoud, materieel, kleur, label heen/terug. De sleutels
   zijn die van de oude datavorm; de heenreis zet ze in `data`, de terugreis schrijft bewerkte waarden terug
   (typenaam valt bij leegmaken terug op de klassenaam). Eerder ingeladen GE's
@@ -1086,9 +1086,20 @@ fase 2 een **bewerkbare sandbox**:
   - Tests: `canoniek-uml/reflijstVeld.test.js` (op het demo-model np-loc: Adres.land →
     LandenlijstLand, Adres.gemeente → Gemeente). Backend (opties-route REL → items/leden,
     codegen-controle van het `$ref`-doel, controle bij registratie §33.4) volgt na api 0.22.0.
+- **Domein: één bron (2026-11-08, Mark: "wat domineert?").** Het domein van een element is
+  het **package** waarin het in de boom staat; een gegevenselement volgt zijn entiteit
+  (compositie), een relatie haar bron. Alleen een element zonder package of eigenaar valt terug
+  op het geïmporteerde `data.domein`. Eén functie rekent het uit
+  (`canoniek-uml/uniekeNamen.js` → `domeinVanElement`) en die gebruiken de inspector, de
+  naamcontrole per domein, de minibrowser-kolom, de V3-export (`adapter.js` `domeinVoor`) en
+  SHACL. Het vrije veld *domein* bij GE en relatie is weg: de codegen keek er nooit naar (die
+  bouwt GE's en relaties in de run van hun entiteit) en je kon er fouten in maken. De inspector
+  toont het domein als alleen-lezen regel met de herkomst (nieuwe M3-hook
+  `hooks.afgeleideEigenschappen`, ook in de ondertitel); omhangen doe je in de boom. Tests:
+  `canoniek-uml/domein.test.js`, e2e `57-studio-domein`.
 - **Entiteit- en relatievelden bewerkbaar (2026-09-17).** Zoals *Details* in
   de oude IDE. Entiteit: beschrijving, meervoud, materieel, kleur, subtype.
-  Relatie: domein, beschrijving, meervoud, materieel, kleur, subtype,
+  Relatie: beschrijving, meervoud, materieel, kleur, subtype (domein: zie hierboven, 08-11),
   kardinaliteit bron/doel, label heen/terug, gericht, geordend. Bewust géén
   aparte *typenaam* (de oude IDE houdt die gelijk aan de naam; de terugreis zet
   `typenaam := naam`, en bij een entiteit is dat ook de V3-id — hernoemen is

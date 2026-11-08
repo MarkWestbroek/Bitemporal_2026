@@ -277,7 +277,9 @@
  *   extraCompartimenten, inhoudsregels (eigen inhoud in het inhoudsvak, zie InhoudsRegel),
  *   naamWeergave (de naam zoals de vorm hem toont: object "jan : Persoon"; "" = geen naamregel),
  *   eigenschapUit ((element, key, {elements}) → reden of null: de inspector zet de eigenschap
- *   uit; 06-11), edgeLabels, naVerbinden, magVerbinden (connector: (bron, doel) → false = niet, verder dan
+ *   uit; 06-11), afgeleideEigenschappen ((element, {elements}) → [{key, label, waarde, uitleg?,
+ *   inOndertitel?}]: alleen-lezen regels in de inspector, bv. het domein uit het package; 08-11),
+ *   edgeLabels, naVerbinden, magVerbinden (connector: (bron, doel) → false = niet, verder dan
  *   de verbindingsregels; 06-11), verschuifConnector, edgePresentatie (connector →
  *   presentatie-overrides o.b.v. data, bv. richting → pijl), … (functies;
  *   NIET serialiseren)

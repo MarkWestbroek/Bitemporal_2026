@@ -16,6 +16,7 @@
  * (bestaande labelOffsets worden wél gerespecteerd).
  */
 import { normaliseerHandle } from "../../diagramcore/canvas/materialiseerConnectoren.js";
+import { domeinVanElement } from "./uniekeNamen.js";
 import { CANONIEK_UML_ID, canoniekUmlDiagramType, isRefLijstItem, isRefLijstItems } from "./index.js";
 import { vertaalbareVelden } from "./mappingV3Canoniek.js";
 import { GEBRUIKT_LABEL } from "./migratie.js";
@@ -635,14 +636,16 @@ export function naarCanoniekModel(coreState) {
   const gebruikConnectoren = [];
 
   // Package → V3-domein: een bevat-connector wint van het (bij de heenreis
-  // gespiegelde) domein-veld, zodat omhangen in 0.5 doorwerkt in de export.
-  const pakketVan = new Map();
+  // gespiegelde) domein-veld, zodat omhangen in 0.5 doorwerkt in de export. Een GE
+  // en een relatie volgen hun entiteit (08-11, uniekeNamen.domeinVanElement): dezelfde
+  // bron als de inspector en de naamcontrole.
+  const pakketVan = new Map(); // package-lid → packagenaam (voor de domains-lijst van V3)
   for (const el of Object.values(coreEls)) {
     if (el.elementType !== "bevat" || !el.source || !el.target) continue;
     const pkg = coreEls[el.source];
     if (pkg?.elementType === "package" && pkg.naam) pakketVan.set(el.target, pkg.naam);
   }
-  const domeinVoor = (el) => pakketVan.get(el.id) || el.data?.domein || "";
+  const domeinVoor = (el) => domeinVanElement(el, coreEls).domein;
 
   // Seed met de bij de heenreis bewaarde structurele compositie-edges
   // (laagste prioriteit: connector-elementen en ruit-edges overschrijven).
@@ -855,7 +858,7 @@ export function naarCanoniekModel(coreState) {
         break;
       case "package":
       case "bevat":
-        // Al vertaald naar het domein-veld (zie pakketVan) — geen oude
+        // Al vertaald naar het domein-veld (zie domeinVoor) — geen oude
         // element-tegenhanger nodig.
         break;
       default:

@@ -840,6 +840,8 @@
 /* Eigenschap uit (hook eigenschapUit, 06-11): grijs, met de reden ernaast. */
 .dc-inspector-rij.is-uit { opacity: 0.6; }
 .dc-inspector-uit { font-size: 11px; color: var(--s-fg-muted, #64748b); font-style: italic; }
+/* Afgeleide eigenschap (hooks.afgeleideEigenschappen, 08-11): tekst, geen invoer. */
+.dc-inspector-afgeleid { flex: 1; min-width: 0; font-size: 13px; padding: 4px 0; }
 .dc-inspector-uiteinden { margin: -4px 0 8px; font-size: 12px; color: var(--s-fg-muted, #64748b); }
 .dc-inspector-uiteinde strong { color: var(--s-fg, inherit); font-weight: 600; }
 

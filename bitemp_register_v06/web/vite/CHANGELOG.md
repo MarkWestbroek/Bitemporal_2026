@@ -8,6 +8,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Domein uit het package, overal hetzelfde.** De inspector toont bij entiteit, gegevenselement,
+  relatie, enumeratie, gegevenstype en referentielijstinstantie een alleen-lezen regel *domein*
+  met de herkomst (het package in de boom; bij een GE de entiteit, bij een relatie de bron). Het
+  invulveld *domein* bij GE en relatie is weg; de V3-export en SHACL gebruiken dezelfde afleiding.
+
 ## [studio/v0.34.1] — 2026-11-08
 
 Patch, samen met render 0.3.7 en devloop 0.25.3 (api 0.22.1).

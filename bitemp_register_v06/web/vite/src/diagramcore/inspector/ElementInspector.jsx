@@ -223,6 +223,12 @@ export default function ElementInspector({
   // use case zonder primaire actor en zonder trigger. Zie diagramcore/model/validatie.js.
   const meldingen = valideerElement(elementType, element, { elements: editorContext?.elements || {} });
 
+  // Afgeleide eigenschappen (M3-hook, 08-11): alleen-lezen regels die het profiel uitrekent, bv.
+  // het domein uit het package in de boom. Eén met inOndertitel staat ook in de ondertitel.
+  const afgeleid = elementType?.hooks?.afgeleideEigenschappen?.(element, { elements: editorContext?.elements || {} }) || [];
+  const inOndertitel = afgeleid.find((r) => r.inOndertitel);
+  const ondertitel = inOndertitel ? inOndertitel.waarde : element.data?.domein;
+
   /** Vervang de velden van één compartiment (maakt het aan als het ontbreekt). */
   const zetCompartiment = useCallback(
     (compartmentTypeId, velden) => {
@@ -240,7 +246,7 @@ export default function ElementInspector({
       <h3>{element.naam || "(naamloos)"}</h3>
       <p className="dc-inspector-sub">
         {elementType?.label || element.elementType}
-        {element.data?.domein ? ` · ${element.data.domein}` : ""}
+        {ondertitel ? ` · ${ondertitel}` : ""}
       </p>
       {/* Tussen welke elementen loopt deze verbinding? (Mark, 06-11: "ik kan op een REL niet
           zien wie A en B zijn"). Voor elke connector, in elke taal: bron → doel. */}
@@ -272,6 +278,16 @@ export default function ElementInspector({
           onChange={(e) => bewerkbaar && onUpdate({ naam: e.target.value })}
         />
       </div>
+
+      {afgeleid.map((r) => (
+        <div className="dc-inspector-rij is-afgeleid" key={`afg-${r.key}`} data-testid={`inspector-afgeleid-${r.key}`} title={r.uitleg || undefined}>
+          <label className="dc-veldlabel">{r.label || r.key}</label>
+          <span className="dc-inspector-afgeleid">
+            {r.waarde || "—"}
+            {r.uitleg && <span className="dc-inspector-uit"> · {r.uitleg}</span>}
+          </span>
+        </div>
+      ))}
 
       {/* PropertyTypes van het ElementType (tekst, expressie, kleur, …), met
           vooraan de vaste M3-beschrijving (diagramcore/model/beschrijving.js)
