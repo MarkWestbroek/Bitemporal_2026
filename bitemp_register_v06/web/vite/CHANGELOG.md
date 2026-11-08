@@ -28,6 +28,9 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   samenvatting.
 
 ### Opgelost
+- **Portaaltaak: ontvanger `zaakInitiator`.** De Portaaltaak-plugin verwacht de JSON-waarde van
+  TaakReceiver (`zaakInitiator` of `other`), niet `ZAAK_INITIATOR`; GZAC weigerde de taak (uitrol 26).
+  Regelset bpmn-naar-gzac 0.8.1.
 - **Proceskoppeling: geen waarschuwing PL-ACTIE meer bij een servicetaak die alleen procesvariabelen
   zet** (*zet procesvariabelen*); die taak doet zijn werk in de XML.
 

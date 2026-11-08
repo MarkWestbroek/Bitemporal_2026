@@ -113,7 +113,7 @@ test("een actie met een eigen plugin, ook op een gebruikerstaak (portaaltaak, re
     [k.activityType, k.processLinkType, k.pluginDefinitionKey, k.pluginConfigurationId, k.pluginActionDefinitionKey, k.formDefinitionName],
     ["bpmn:UserTask:create", "plugin", "portaaltaak", "${PLUGINCONFIG_ID:portaaltaak}", "create-portaaltaak", undefined],
   );
-  assert.deepEqual(k.actionProperties, { formType: "id", formTypeId: "aanvulling-gpk", sendData: [], receiveData: [], receiver: "ZAAK_INITIATOR", verloopDurationInDays: 14 });
+  assert.deepEqual(k.actionProperties, { formType: "id", formTypeId: "aanvulling-gpk", sendData: [], receiveData: [], receiver: "zaakInitiator", verloopDurationInDays: 14 });
   // Zonder formulier: een fout.
   delete el.data.formulier;
   const zonder = await maakProcesLinkArtefact({ modelBestand, edienst: lees("gpk-edienst.json"), identifier: "gehandicaptenparkeerkaart-beoordelen", sha256Hex });

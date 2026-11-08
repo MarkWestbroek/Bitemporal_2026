@@ -45,7 +45,7 @@
 
 export const BPMN_NAAR_GZAC = {
   id: "bpmn-naar-gzac",
-  versie: "0.8.0",
+  versie: "0.8.1",
   titel: "BPMN-profiel → uitvoerbare BPMN voor GZAC (Operaton, Camunda 7-dialect)",
   engine: "operaton",
   namespaces: { camunda: "http://camunda.org/schema/1.0/bpmn" },
@@ -190,7 +190,8 @@ export const BPMN_NAAR_GZAC = {
           definitie: "portaaltaak",
           configuratie: "${PLUGINCONFIG_ID:portaaltaak}",
           voor: { activityType: "bpmn:UserTask:create" },
-          eigenschappen: { formType: "id", formTypeId: "{formulier}", sendData: [], receiveData: [], receiver: "ZAAK_INITIATOR", verloopDurationInDays: 14 },
+          eigenschappen: { formType: "id", formTypeId: "{formulier}", sendData: [], receiveData: [], receiver: "zaakInitiator", verloopDurationInDays: 14 },
+          // 0.8.1: de JSON-waarde van TaakReceiver is zaakInitiator (of other), niet de Kotlin-naam (uitrol 26, FUNDAMENT 08-11).
         },
         zaakstatusZetten: {
           actie: "set-zaakstatus",
