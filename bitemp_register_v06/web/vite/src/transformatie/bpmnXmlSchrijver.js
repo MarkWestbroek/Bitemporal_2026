@@ -7,7 +7,7 @@
  *
  * Engine-neutraal: wat een engine extra wil (Operaton/Camunda 7:
  * candidateGroups, asyncAfter, een expressie op een servicetaak, de
- * multi-instance-verzameling, `camunda:in` bij een call activity) komt uit een
+ * multi-instance-verzameling, `camunda:in`/`camunda:out` bij een call activity) komt uit een
  * **engine-regelset** (bv. `diagramprofielen/bpmn/bpmnGzacRegels.js`). Zonder
  * regelset schrijft hij kale BPMN.
  *
@@ -92,6 +92,21 @@ export function bpmnIdUit(tekst) {
     .replace(/[^a-z0-9_.-]+/g, "-")
     .replace(/^-+|-+$/g, "");
   return s && /^[a-z_]/.test(s) ? s : s ? `_${s}` : "";
+}
+
+/**
+ * Variabelen van een call activity uit de modeltekst: "a, b:c" → [{bron:"a",doel:"a"},
+ * {bron:"b",doel:"c"}] (bron = de kant waar hij vandaan komt); "alle" (of "*") → "alle".
+ * @param {string} tekst
+ * @returns {"alle" | {bron: string, doel: string}[]}
+ */
+export function variabelenLijst(tekst) {
+  const delen = String(tekst || "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (delen.some((d) => d === "*" || d.toLowerCase() === "alle")) return "alle";
+  return delen.map((d) => {
+    const [bron, doel] = d.split(":").map((s) => s.trim());
+    return { bron, doel: doel || bron };
+  });
 }
 
 /** Het BPMN-element van een Omnium-element (of null als de schrijver het niet kent). */
@@ -246,6 +261,19 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
       if (x.tag.includes(":")) nsGebruikt.add(x.tag.split(":")[0]);
       return `<${x.tag}${attrs(metNs(x.attributen))} />`;
     });
+    // Call activity: variabelen erheen en terug (data.aangeroepenIn / aangeroepenUit, zie variabelenLijst).
+    if (tag === "callActivity" && regel.variabelen) {
+      const v = regel.variabelen;
+      for (const [richting, veld, standaard] of [["in", "aangeroepenIn", v.standaardIn], ["uit", "aangeroepenUit", v.standaardUit]]) {
+        const t = v[richting];
+        if (!t) continue;
+        const lijst = variabelenLijst(el.data?.[veld] || standaard || "");
+        if (lijst !== "alle" && !lijst.length) continue;
+        if (t.includes(":")) nsGebruikt.add(t.split(":")[0]);
+        if (lijst === "alle") ext.push(`<${t} variables="all" />`);
+        else for (const { bron, doel } of lijst) ext.push(`<${t}${attrs({ source: bron, target: doel })} />`);
+      }
+    }
     // Invoer van een beslistabel: per dossierkolom een input-parameter.
     if (regel.invoer && el.data?.beslissing) {
       const lijst = beslissingen[el.data.beslissing];

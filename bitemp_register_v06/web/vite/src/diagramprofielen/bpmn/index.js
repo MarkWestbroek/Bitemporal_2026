@@ -137,7 +137,7 @@ const elementTypes = [
     id: "taak",
     randAanhechting: "zwevend",
     label: "Task",
-    omschrijving: "Eén stap werk in het proces; het taaktype tekent een icoontje linksboven.",
+    omschrijving: "Eén stap werk in het proces; het taaktype tekent een icoontje linksboven. Met een aangeroepen proces is het een call activity (dikke rand, ⊞ onderaan).",
     kort: "Task",
     icoon: "gedrag-toestand",
     shape: "bpmn-taak",
@@ -151,7 +151,13 @@ const elementTypes = [
       { key: "meervoudig", label: "multi-instance", datatype: "keuze", opties: [{ waarde: "", label: "nee" }, { waarde: "parallel", label: "parallel" }, { waarde: "sequentieel", label: "sequentieel" }] },
       { key: "lusVerzameling", label: "verzameling (procesvariabele)", datatype: "string", zichtbaarAls: { key: "meervoudig" } },
       { key: "lusElement", label: "elementvariabele", datatype: "string", zichtbaarAls: { key: "meervoudig" } },
-      { key: "aangeroepenProces", label: "call activity: aangeroepen proces", datatype: "string", placeholder: "proces-id of ${expressie}" },
+      { key: "aangeroepenProces", label: "call activity: aangeroepen proces", datatype: "string", placeholder: "proces-id, bv. gehandicaptenparkeerkaart-beoordelen" },
+      // Call activity (08-11, FUNDAMENT): welke procesvariabelen mee naar het aangeroepen proces gaan
+      // en welke terugkomen. Een lijst namen met komma's; "naam:andere" geeft de variabele aan de
+      // andere kant een andere naam; "alle" = alle variabelen. Leeg in = alle, leeg uit = niets.
+      // Het dossier (businessKey) gaat altijd mee; dat zet de engine-regelset.
+      { key: "aangeroepenIn", label: "variabelen erheen (leeg = alle)", datatype: "string", placeholder: "bv. aanvraag, bsn", zichtbaarAls: { key: "aangeroepenProces" } },
+      { key: "aangeroepenUit", label: "variabelen terug", datatype: "string", placeholder: "bv. uitkomst of uitkomst:beoordeling", zichtbaarAls: { key: "aangeroepenProces" } },
       // Business rule task (30-10): welke beslistabel (decision-id = identifier
       // van het dmn-artefact) en in welke variabele de uitkomst komt.
       { key: "beslissing", label: "beslistabel (decision-id)", datatype: "string", placeholder: "bv. aanvraag-ontvankelijk", zichtbaarAls: { key: "taakSoort", waarde: "businessRule" } },

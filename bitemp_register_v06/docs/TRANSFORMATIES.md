@@ -1291,7 +1291,7 @@ De engine-regelset:
 | userTask | `camunda:candidateGroups="ROLE_USER"` |
 | serviceTask | `camunda:expression="${true}"` + `camunda:asyncAfter`; de actie zelf zit in de process-link |
 | multi-instance | `camunda:collection` / `camunda:elementVariable` uit het model; asyncAfter per instantie op de lus |
-| callActivity | `calledElement` uit het model, `camunda:in businessKey` + `camunda:in variables="all"`, asyncAfter |
+| callActivity | `calledElement` uit het model, `camunda:in businessKey`, variabelen erheen (`camunda:in`, standaard `variables="all"`) en terug (`camunda:out`) uit het model (0.7.0), asyncAfter |
 
 Een andere engine is een andere regelset. Plugin-acties en taakformulieren
 horen niet in de XML: die binden de process-links van de dossierbundel op de
@@ -1354,6 +1354,22 @@ dezelfde berichtnaam (`gehandicaptenparkeerkaart-beoordelen-gevraagd`, conventie
 De call activity blijft ondersteund, voor een specifiek deel dat de aanroeper
 wél afwacht (generiek beoordelen → specifiek beoordelen; bezwaar en herziening
 roepen hetzelfde deel aan, besluit Mark).
+
+**Regelset 0.7.0: variabelen van een call activity (FUNDAMENT 08-11).** Een taak
+met een aangeroepen proces tekent nu als call activity: dikke rand en ⊞ onderaan
+(BPMN 2.0; `bpmn/vormen.js`). Twee velden zeggen welke procesvariabelen meegaan:
+- `aangeroepenIn`, *variabelen erheen*: namen met komma's, `naam:andere` voor
+  een andere naam aan de overkant, of `alle`. Leeg = alle (zoals vóór 0.7.0).
+- `aangeroepenUit`, *variabelen terug*: hetzelfde. Leeg = niets; voor het
+  generieke beoordelen minimaal `uitkomst`.
+
+De regelset (`taken.callActivity.variabelen`) maakt er `camunda:in`/`camunda:out`
+met `source`/`target` van, of `variables="all"`. `camunda:in businessKey` blijft
+altijd staan: zonder hangt het aangeroepen proces niet aan het dossier. Het
+aangeroepen proces moet een vaste proces-id zijn (`BPMN-AANGEROEPEN`, 0.2.0),
+dus geen `${expressie}`. Het generieke proces noemt dan één specifiek proces;
+een generiek proces dat per aanvraagtype iets anders aanroept, vraagt een eigen
+oplossing (open).
 
 **Hash.** De payload is de XML-tekst; payloadHash = sha256 over de UTF-8-tekst
 (niet JCS, afspraak FUNDAMENT). bronmodelHash = sha256 over JCS van het

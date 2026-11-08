@@ -94,43 +94,55 @@ const TAAK_ICONEN = {
   businessRule: (k) => [vorm("rect", { x: 2, y: 3.5, width: 12, height: 9, ...lijn(k, { "stroke-width": 1.2 }) }), vorm("path", { d: "M2 6.5 H14 M2 9.5 H14 M6 6.5 V12.5", ...lijn(k, { "stroke-width": 1.2 }) }), vorm("rect", { x: 2, y: 3.5, width: 12, height: 3, fill: k, stroke: "none" })],
 };
 
-const afgerondeRechthoek = (ctx) => {
+/** Rand van taak/subproces; `dik` = de call activity (BPMN 2.0 §10.3.6: een dikke rand). */
+const afgerondeRechthoek = (ctx, dik = false) => {
   const { w, h } = ctx.maat;
-  return vorm("rect", { x: 1, y: 1, width: w - 2, height: h - 2, rx: 10, fill: ctx.thema.vulling, stroke: ctx.thema.rand, "stroke-width": 2 });
+  const s = dik ? 4 : 2;
+  return vorm("rect", { x: s / 2, y: s / 2, width: w - s, height: h - s, rx: 10, fill: ctx.thema.vulling, stroke: ctx.thema.rand, "stroke-width": s });
 };
+/** ⊞ onderaan in het midden: samengevouwen subproces, of een call activity die een proces aanroept. */
+const plusMarkering = (ctx) => {
+  const { w, h } = ctx.maat;
+  return vorm(
+    "g",
+    { class: "dc-subproces-markering", transform: `translate(${n3(w / 2 - 6)} ${n3(h - 14)})` },
+    vorm("rect", { x: 0.8, y: 0.8, width: 10.4, height: 10.4, rx: 1.5, fill: "none", stroke: INKT, "stroke-width": 1.1 }),
+    vorm("path", { d: "M6 3.2 V8.8 M3.2 6 H8.8", stroke: INKT, "stroke-width": 1.1, "stroke-linecap": "round", fill: "none" })
+  );
+};
+/** Een taak met een aangeroepen proces is een call activity. */
+const isCallActivity = (ctx) => !!String(ctx.element?.data?.aangeroepenProces || "").trim();
 
-/** Taak: afgeronde rechthoek, naam gecentreerd, taaktype-icoon linksboven (`data.taakSoort`). */
+/**
+ * Taak: afgeronde rechthoek, naam gecentreerd, taaktype-icoon linksboven (`data.taakSoort`).
+ * Met `data.aangeroepenProces` een call activity: dikke rand en ⊞ onderaan (FUNDAMENT 08-11).
+ */
 const taak = {
-  omtrek: afgerondeRechthoek,
+  omtrek: (ctx) => afgerondeRechthoek(ctx, isCallActivity(ctx)),
   inhoudsvak(ctx) {
     const icoon = !!TAAK_ICONEN[ctx.element?.data?.taakSoort];
-    return { x: 0, y: icoon ? 10 : 0, w: ctx.maat.w, h: ctx.maat.h - (icoon ? 10 : 0), uitlijning: "midden" };
+    const onder = isCallActivity(ctx) ? 10 : 0;
+    return { x: 0, y: icoon ? 10 : 0, w: ctx.maat.w, h: ctx.maat.h - (icoon ? 10 : 0) - onder, uitlijning: "midden" };
   },
   kindervak: (ctx) => ({ x: 0, y: 0, w: ctx.maat.w, h: ctx.maat.h }),
   ornament(ctx) {
     const teken = TAAK_ICONEN[ctx.element?.data?.taakSoort];
-    return teken ? vorm("g", { class: "dc-taak-icoon", transform: "translate(6 4)" }, ...teken(INKT, ctx.thema.vulling)) : null;
+    const icoon = teken ? vorm("g", { class: "dc-taak-icoon", transform: "translate(6 4)" }, ...teken(INKT, ctx.thema.vulling)) : null;
+    if (!isCallActivity(ctx)) return icoon;
+    return icoon ? vorm("g", {}, icoon, plusMarkering(ctx)) : plusMarkering(ctx);
   },
   rand: (ctx, hoek) => randRechthoek(ctx.maat, hoek),
 };
 
 /** Subproces: taak-rechthoek met ⊞ onderaan; uitgeklapt (`data.uitgeklapt`) de naam linksboven. */
 const subproces = {
-  omtrek: afgerondeRechthoek,
+  omtrek: (ctx) => afgerondeRechthoek(ctx),
   inhoudsvak(ctx) {
     const { w, h } = ctx.maat;
     return ctx.element?.data?.uitgeklapt ? { x: 0, y: 0, w, h: 26, uitlijning: "boven", tekstAnker: "links" } : { x: 0, y: 0, w, h: h - 10, uitlijning: "midden" };
   },
   kindervak: (ctx) => ({ x: 0, y: 26, w: ctx.maat.w, h: ctx.maat.h - 26 }),
-  ornament(ctx) {
-    const { w, h } = ctx.maat;
-    return vorm(
-      "g",
-      { class: "dc-subproces-markering", transform: `translate(${n3(w / 2 - 6)} ${n3(h - 14)})` },
-      vorm("rect", { x: 0.8, y: 0.8, width: 10.4, height: 10.4, rx: 1.5, fill: "none", stroke: INKT, "stroke-width": 1.1 }),
-      vorm("path", { d: "M6 3.2 V8.8 M3.2 6 H8.8", stroke: INKT, "stroke-width": 1.1, "stroke-linecap": "round", fill: "none" })
-    );
-  },
+  ornament: plusMarkering,
   rand: (ctx, hoek) => randRechthoek(ctx.maat, hoek),
 };
 

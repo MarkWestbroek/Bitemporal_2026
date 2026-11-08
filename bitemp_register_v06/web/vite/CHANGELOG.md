@@ -23,6 +23,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   van een taal staat nu in de tooltip van het tabblad in Modelleren.
 
 ### Toegevoegd
+- **BPMN: call activity zichtbaar, met variabelen erheen en terug.** Een taak met een aangeroepen
+  proces heeft een dikke rand en ⊞ onderaan. Nieuwe velden *variabelen erheen* (leeg = alle) en
+  *variabelen terug* (bv. `uitkomst`); de GZAC-regelset 0.7.0 schrijft ze als
+  `camunda:in`/`camunda:out`, naast de vaste `camunda:in businessKey` (docs/TRANSFORMATIES.md).
 - **Tabnaam cursief zolang er iets niet is opgeslagen.** Heeft de server een wijziging aan een
   diagram (of aan een element dat erop staat) nog niet bevestigd, dan staat de naam van het tabblad
   in Modelleren cursief; de tooltip zegt "nog niet op de server opgeslagen". Alleen met live-sync.
