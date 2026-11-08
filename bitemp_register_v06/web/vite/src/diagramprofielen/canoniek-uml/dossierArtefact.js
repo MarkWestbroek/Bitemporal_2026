@@ -7,8 +7,9 @@
  * (`dossierformulier`), tabbladen (`dossiertabbladen`), de koppeling aan het
  * zaaktype (`dossierzaaktypelink`), de processen bij het dossier
  * (`dossierprocessen`), de kolommen van het documentenoverzicht
- * (`dossierdocumentkolommen`) of de statussen van het dossier
- * (`dossierstatussen`).
+ * (`dossierdocumentkolommen`), de statussen van het dossier
+ * (`dossierstatussen`) of de tabbladen met widgets (`dossierwidgettabbladen`,
+ * 08-11: velden en lijsten uit de dossierinhoud, zoals het tabblad Aanvraag).
  *
  * Route:
  *
@@ -38,7 +39,7 @@ import { kebab } from "../../transformatie/sleutel.js";
 
 export const SCHRIJVER_ID = "gzac-dossier-schrijver@0.1.0";
 
-export const DOSSIER_SOORTEN = ["dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierprocessen", "dossierdocumentkolommen", "dossierstatussen"];
+export const DOSSIER_SOORTEN = ["dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierprocessen", "dossierdocumentkolommen", "dossierstatussen", "dossierwidgettabbladen"];
 
 /** Dossierdelen die de inhoud van het dossier niet lezen (geen objecttype nodig). */
 const ZONDER_INHOUD = {
@@ -183,22 +184,90 @@ function componentType(def, behandelveld, regelset) {
   return regelset.componenten[regelset.componenten.length - 1];
 }
 
-function schrijfComponent(veld, { inhoud, regelset, alleenLezen, diagnostics, traceregels, pad }) {
+/**
+ * Het schema bij een veldpad: "kenteken", of met een punt een veld in een
+ * object ("aanvraagtype.omschrijving", "partij.bsn" in een tabelrij). In het
+ * formulier wordt zo'n pad een container per stap (inContainers).
+ */
+function defOp(schema, pad) {
+  let def = schema;
+  for (const deel of String(pad).split(".")) {
+    def = def?.type === "object" || def?.properties ? def.properties?.[deel] : undefined;
+    if (!def) return null;
+  }
+  return def;
+}
+
+/**
+ * Een veld in een object ("partij.bsn") als Form.io-container per stap: de
+ * data blijft genest ({partij: {bsn}}), zonder te leunen op punten in een
+ * sleutel. In een tabel draagt de buitenste container het kolomlabel.
+ */
+function inContainers(pad, veld, { label, alleenLezen, kolom = false }) {
+  const delen = String(pad).split(".");
+  if (delen.length === 1) return veld;
+  let c = { ...veld, key: delen[delen.length - 1], ...(kolom ? { hideLabel: true } : {}) };
+  for (let i = delen.length - 2; i >= 0; i -= 1) {
+    c = { type: "container", key: delen[i], label: i === 0 && kolom ? label : labelUitNaam(delen[i]), hideLabel: !(i === 0 && kolom), input: true, tableView: false, components: [c] };
+    if (alleenLezen) c.disabled = true;
+  }
+  return c;
+}
+
+const isObjectLijst = (def) => def?.type === "array" && (def.items?.type === "object" || def.items?.properties);
+
+/**
+ * Een lijst van objecten (partijen, bijlagen) als alleen-lezen tabel: een
+ * datagrid met een kolom per gekozen veld (`kolommen`, ook met een punt:
+ * "partij.bsn", als container); zonder keuze de enkelvoudige velden van het item.
+ */
+function schrijfTabel(v, def, { inhoud, regelset, alleenLezen, diagnostics, traceregels, pad }) {
+  const item = def.items;
+  const kolommen = v.kolommen || Object.keys(item.properties || {}).filter((k) => !["object", "array"].includes(item.properties[k]?.type));
+  const components = [];
+  for (const kol of kolommen) {
+    const k = typeof kol === "string" ? { key: kol } : kol;
+    const kdef = defOp(item, k.key);
+    if (!kdef || kdef.type === "object" || kdef.type === "array") {
+      diagnostics.push(fout("DOS-VELD", `Kolom "${k.key}" van "${v.key}" is geen enkelvoudig veld van het item`, `${v.key}.${k.key}`));
+      continue;
+    }
+    const regel = componentType(kdef, false, regelset);
+    const label = k.label || labelUitNaam(k.key.split(".").pop());
+    const c = { type: regel.type === "textarea" ? "textfield" : regel.type, key: k.key, label, input: true, tableView: true };
+    if (alleenLezen) c.disabled = true;
+    components.push(inContainers(k.key, c, { label, alleenLezen, kolom: true }));
+  }
+  const t = regelset.tabel;
+  const c = { type: t.type, key: v.key, label: v.label || labelUitNaam(v.key), input: true, tableView: false, components };
+  if (alleenLezen) Object.assign(c, { disabled: true, disableAddingRemovingRows: true, reorder: false });
+  traceregels.push({ bronGE: inhoud.bron.get(v.key) || null, regel: t.naam, doelPad: pad, actie: "aangemaakt" });
+  return c;
+}
+
+function schrijfComponent(veld, ctx) {
+  const { inhoud, regelset, alleenLezen, diagnostics, traceregels, pad } = ctx;
   const v = typeof veld === "string" ? { key: veld } : veld;
-  const def = inhoud.schema.properties[v.key];
+  const def = defOp(inhoud.schema, v.key);
   if (!def) {
     diagnostics.push(fout("DOS-VELD", `Veld "${v.key}" staat niet in de dossierinhoud (objecttype + behandelvelden)`, v.key));
     return null;
   }
-  const regel = componentType(def, inhoud.behandelvelden.has(v.key), regelset);
-  const c = { type: regel.type, key: v.key, label: v.label || labelUitNaam(v.key), input: true };
+  if (isObjectLijst(def)) return schrijfTabel(v, def, ctx);
+  if (def.type === "object") {
+    diagnostics.push(fout("DOS-VELD", `Veld "${v.key}" is een object; kies een veld daarin, bv. "${v.key}.${Object.keys(def.properties || {})[0] || "…"}"`, v.key));
+    return null;
+  }
+  const top = v.key.split(".")[0];
+  const regel = componentType(def, inhoud.behandelvelden.has(top), regelset);
+  const c = { type: regel.type, key: v.key, label: v.label || labelUitNaam(v.key.split(".").pop()), input: true };
   if (alleenLezen) c.disabled = true;
   c.tableView = true;
   if (!alleenLezen && v.verplicht) c.validate = { required: true };
   if (regel.type === "radio") c.values = def.enum.map((w) => ({ label: v.opties?.[w] || labelUitNaam(w), value: w }));
   if (regel.type === "textarea") c.rows = v.rijen || (alleenLezen ? regelset.formulier.rijen.alleenLezen : regelset.formulier.rijen.invoer);
-  traceregels.push({ bronGE: inhoud.bron.get(v.key) || null, regel: regel.naam, doelPad: pad, actie: "aangemaakt" });
-  return c;
+  traceregels.push({ bronGE: inhoud.bron.get(v.key) || inhoud.bron.get(top) || null, regel: regel.naam, doelPad: pad, actie: "aangemaakt" });
+  return inContainers(v.key, c, { label: c.label, alleenLezen });
 }
 
 function schrijfPaneel(p, ctx) {
@@ -250,12 +319,127 @@ function schrijfFormulier({ keuzes, edienst, inhoud, regelset, diagnostics, trac
   return { display: "form", components };
 }
 
-function schrijfTabbladen({ keuzes, regelset, traceregels }) {
-  const lijst = zonderToelichting(keuzes.tabbladen || regelset.tabbladen);
+function schrijfTabbladen({ keuzes, edienst, regelset, traceregels }) {
+  const lijst = zonderToelichting(keuzes.tabbladen || regelset.tabbladen).map((t) => ({ ...t, regel: keuzes.tabbladen ? "Tabbladen (e-dienst)" : "Standaardtabbladen (regelset)" }));
+  // Tabbladen met widgets van hetzelfde dossier (dossierwidgettabbladen) komen
+  // erbij, na het tabblad dat `na` noemt (standaard de samenvatting).
+  const widgets = (edienst?.artefacten || []).find((a) => a.soort === "dossierwidgettabbladen" && a.identifier === keuzes.identifier);
+  for (const w of zonderToelichting(widgets?.tabbladen || [])) {
+    const na = lijst.findIndex((t) => t.key === (w.na || regelset.widgets.na));
+    lijst.splice(na >= 0 ? na + 1 : lijst.length, 0, { key: w.key, name: w.naam || labelUitNaam(w.key), type: "widgets", contentKey: w.key, showTasks: !!w.showTasks, regel: "Tabblad met widgets (dossierwidgettabbladen)" });
+  }
   return lijst.map((t, i) => {
-    traceregels.push({ bronGE: null, regel: keuzes.tabbladen ? "Tabbladen (e-dienst)" : "Standaardtabbladen (regelset)", doelPad: `/${i}`, actie: "aangemaakt" });
+    traceregels.push({ bronGE: null, regel: t.regel, doelPad: `/${i}`, actie: "aangemaakt" });
     return { key: t.key, name: t.name, type: t.type || "standard", contentKey: t.contentKey, showTasks: !!t.showTasks };
   });
+}
+
+/** Weergavetype van een veld in een widget (displayProperties.type), de eerste regel die past. */
+function weergaveType(def, regelset) {
+  for (const r of regelset.widgets.weergave) {
+    const a = r.als;
+    if (a.type && ![].concat(a.type).includes(def.type)) continue;
+    if (a.format && def.format !== a.format) continue;
+    return r;
+  }
+  return regelset.widgets.weergave[regelset.widgets.weergave.length - 1];
+}
+
+/**
+ * Tabbladen met widgets (GZAC 13: case/widget-tab/<dossier>.case-widget-tab.json).
+ * Per tabblad de widgets uit de e-dienst; de waarden komen uit de dossierinhoud
+ * (`doc:/pad`), het weergavetype uit het schema. Twee soorten:
+ * - `fields`: velden over `kolommen` kolommen, kolom voor kolom gevuld; een
+ *   pad met een punt kiest een veld in een object (aanvraagtype.omschrijving).
+ * - `collection`: een lijst van objecten (`veld`), met `titelVeld` als kop van
+ *   elk item en `velden` eronder (relatief pad, met / bij een object).
+ * Vorm overgenomen uit de export van een met de hand ingericht tabblad op
+ * cg-test (INRICHTEN_VIZ 08-11, gzac-handwerk/…case-widget-tab.json).
+ */
+function schrijfWidgettabbladen({ keuzes, edienst, inhoud, regelset, diagnostics, traceregels }) {
+  const r = regelset.widgets;
+  const definitie = (edienst?.artefacten || []).find((a) => a.soort === "dossierdefinitie" && a.identifier === keuzes.identifier);
+  if (!definitie?.versie) diagnostics.push(fout("DOS-VERSIE", `Geen dossierdefinitie met versie voor "${keuzes.identifier}"; de widgettabbladen horen bij een dossierversie`));
+  const veldDef = (pad, basis = inhoud.schema) => {
+    const def = defOp(basis, pad);
+    if (!def) {
+      diagnostics.push(fout("DOS-VELD", `Veld "${pad}" staat niet in de dossierinhoud (objecttype + behandelvelden)`, pad));
+      return null;
+    }
+    if (def.type === "object" || def.type === "array") {
+      diagnostics.push(fout("DOS-VELD", `Veld "${pad}" is geen enkelvoudig veld`, pad));
+      return null;
+    }
+    return def;
+  };
+  const weergave = (def) => ({ type: weergaveType(def, regelset).type, hideWhenEmpty: false });
+  const bronVan = (pad) => inhoud.bron.get(pad) || inhoud.bron.get(pad.split(".")[0]) || null;
+  const gewoon = (v) => (typeof v === "string" ? { key: v } : v);
+  const rel = (p) => String(p).replace(/\./g, "/");
+  const laatste = (p) => String(p).split(".").pop();
+
+  return zonderToelichting(keuzes.tabbladen || []).map((tab, ti) => ({
+    caseDefinitionKey: keuzes.identifier,
+    caseDefinitionVersionTag: definitie?.versie || "",
+    key: tab.key,
+    widgets: (tab.widgets || []).map((w, wi) => {
+      const pad = `/${ti}/widgets/${wi}`;
+      const basis = { type: w.type, key: w.key, title: w.titel || labelUitNaam(w.key), icon: null, color: r.kleur, width: w.breedte || r.breedte[w.type] || 2, highContrast: false, isCompact: null, actions: [], displayConditions: [] };
+      if (w.type === "fields") {
+        const velden = (w.velden || []).map(gewoon).map((v) => ({ v, def: veldDef(v.key) })).filter((x) => x.def);
+        const n = Math.max(1, w.kolommen || r.kolommen);
+        const perKolom = Math.ceil(velden.length / n) || 1;
+        const columns = [];
+        velden.forEach((x, i) => {
+          const k = Math.floor(i / perKolom);
+          if (!columns[k]) columns[k] = [];
+          columns[k].push({ key: laatste(x.v.key), title: x.v.label || labelUitNaam(laatste(x.v.key)), value: `doc:/${rel(x.v.key)}`, displayProperties: weergave(x.def) });
+          traceregels.push({ bronGE: bronVan(x.v.key), regel: "Veld van de dossierinhoud: fields-widget", doelPad: `${pad}/properties/columns/${k}/${columns[k].length - 1}`, actie: "aangemaakt" });
+        });
+        return { ...basis, properties: { columns } };
+      }
+      if (w.type === "collection") {
+        const veld = w.veld || w.key;
+        const lijst = defOp(inhoud.schema, veld);
+        if (!isObjectLijst(lijst)) {
+          diagnostics.push(fout("DOS-VELD", `Widget "${w.key}": "${veld}" is geen lijst van objecten in de dossierinhoud`, w.key));
+          return { ...basis, properties: {} };
+        }
+        const titelDef = w.titelVeld ? veldDef(w.titelVeld, lijst.items) : null;
+        const fields = (w.velden || []).map(gewoon).map((v) => ({ v, def: veldDef(v.key, lijst.items) })).filter((x) => x.def)
+          .map((x) => ({ key: laatste(x.v.key), title: x.v.label || labelUitNaam(laatste(x.v.key)), value: rel(x.v.key), width: x.v.breedte || "full", displayProperties: weergave(x.def) }));
+        // GZAC 13.50 weigert een collection zonder velden ("fields: must not be empty", uitrol 25, 08-11).
+        if (!fields.length) diagnostics.push(fout("DOS-WIDGET", `Widget "${w.key}": een collection heeft minstens één veld nodig (velden); GZAC weigert hem anders`, w.key));
+        traceregels.push({ bronGE: bronVan(veld), regel: "Lijst van de dossierinhoud: collection-widget", doelPad: pad, actie: "aangemaakt" });
+        return {
+          ...basis,
+          properties: {
+            collection: `doc:/${rel(veld)}`,
+            defaultPageSize: w.paginagrootte || r.paginagrootte,
+            title: titelDef ? { value: rel(w.titelVeld), displayProperties: weergave(titelDef) } : null,
+            fields,
+          },
+        };
+      }
+      if (w.type === "custom") {
+        // Een eigen widget in de GZAC-frontend (CUSTOM_WIDGET_TOKEN, @valtimo/layout): GZAC geeft
+        // componentValue letterlijk als inputs door. Afspraak met GZAC-WIDGET (08-11): het component
+        // documentAfbeeldingen toont afbeeldingen uit de lijst `bijlagen` (JSON-pointer), met een
+        // optioneel filter `naam`. Een lijst in de dossierinhoud wordt getoetst.
+        if (!w.component) diagnostics.push(fout("DOS-WIDGET", `Widget "${w.key}": een custom widget noemt zijn component`, w.key));
+        const waarden = Object.fromEntries(Object.entries(w.waarden || {}).map(([k, v]) => [k, String(v)]));
+        for (const [k, v] of Object.entries(waarden)) {
+          if (!v.startsWith("/")) continue;
+          if (!defOp(inhoud.schema, v.slice(1).split("/").join("."))) diagnostics.push(fout("DOS-VELD", `Widget "${w.key}": ${k} = "${v}" staat niet in de dossierinhoud`, w.key));
+        }
+        traceregels.push({ bronGE: null, regel: "Eigen widget (e-dienst): custom", doelPad: pad, actie: "aangemaakt" });
+        return { ...basis, width: w.breedte || 1, properties: { componentKey: w.component || "", componentValue: waarden } };
+      }
+      diagnostics.push(fout("DOS-WIDGET", `Widget "${w.key}": soort "${w.type}" kent de regelset niet (fields, collection, custom)`, w.key));
+      return { ...basis, properties: {} };
+    }),
+    widgetLayout: r.layout,
+  }));
 }
 
 /**
@@ -443,7 +627,9 @@ export async function maakDossierArtefact({
     payload =
       keuzes.soort === "dossierschema"
         ? schrijfSchema({ keuzes, inhoud, regelset, diagnostics, traceregels })
-        : schrijfFormulier({ keuzes, edienst, inhoud, regelset, diagnostics, traceregels });
+        : keuzes.soort === "dossierwidgettabbladen"
+          ? schrijfWidgettabbladen({ keuzes, edienst, inhoud, regelset, diagnostics, traceregels })
+          : schrijfFormulier({ keuzes, edienst, inhoud, regelset, diagnostics, traceregels });
   }
 
   const payloadHash = await jcsHash(payload, sha256Hex);

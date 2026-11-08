@@ -37,6 +37,19 @@ const componenten = (f) => {
 /** Het rijbewijsnummer (Mark 31-10) staat niet in het handwerk; het staat achteraan, dus de rest schuift niet. */
 const zonderRijbewijs = (f) => JSON.parse(JSON.stringify(f, (k, v) => (Array.isArray(v) ? v.filter((c) => c?.key !== "rijbewijsnummer") : v)));
 
+/** De samenvatting zoals in het handwerk: alleen het paneel Aanvraag met de elf velden van 30-10/31-10 (zonder aanvraagtype, partijen, bijlagen van 08-11). */
+const alsHandwerk = (e) => {
+  const sam = e.artefacten.find((a) => a.identifier === "gehandicaptenparkeerkaart.summary");
+  sam.panelen = [{ ...sam.panelen[0], velden: sam.panelen[0].velden.filter((v) => typeof v === "string") }];
+  // De keuze "aanvulling" (generiek behandelen, 08-11) staat niet in het handwerk.
+  const beo = e.artefacten.find((a) => a.identifier === "aanvraag-beoordelen");
+  const veld = beo.panelen.find((p) => p.key === "beoordelingPanel").velden.find((v) => v.key === "beoordeling");
+  delete veld.opties.aanvulling;
+  const schema = e.artefacten.find((x) => x.soort === "dossierschema");
+  schema.behandelvelden = { ...schema.behandelvelden, beoordeling: { ...schema.behandelvelden.beoordeling, enum: ["toegekend", "afgewezen"] } };
+  return e;
+};
+
 test("labelUitNaam: camelCase naar een Nederlands label", () => {
   assert.equal(labelUitNaam("ingediendOp"), "Ingediend op");
   assert.equal(labelUitNaam("loopafstandMeter"), "Loopafstand meter");
@@ -44,7 +57,7 @@ test("labelUitNaam: camelCase naar een Nederlands label", () => {
 });
 
 test("samenvatting: gelijk aan het handwerk op de labels na, alles alleen-lezen", async () => {
-  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart.summary", "dossierformulier");
+  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart.summary", "dossierformulier", alsHandwerk);
   assert.deepEqual(diagnostics, []);
   const f = artefact.artefactInhoud.payload;
   assert.deepEqual(zonderLabels(zonderRijbewijs(f)), zonderLabels(lees("gzac-handwerk/gehandicaptenparkeerkaart.summary.form.json")));
@@ -75,8 +88,41 @@ test("samenvatting: gelijk aan het handwerk op de labels na, alles alleen-lezen"
   assert.deepEqual(artefact.afhankelijkheden, [{ identifier: "gehandicaptenparkeerkaart", soort: "dossierschema", reden: "het formulier toont velden van de dossierinhoud" }]);
 });
 
+// Mark 08-11: de behandelaar ziet ook het aanvraagtype, de partijen en de bijlagen.
+test("samenvatting met aanvraagtype, partijen en bijlagen: veld in een object en tabellen", async () => {
+  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart.summary", "dossierformulier");
+  assert.deepEqual(diagnostics, []);
+  const f = artefact.artefactInhoud.payload;
+  const [aanvraag, partijen, bijlagen] = f.components;
+  // Een veld in een object: container aanvraagtype met daarin omschrijving (data blijft genest).
+  const type = aanvraag.components[0].columns[1].components[0];
+  assert.deepEqual([type.type, type.key, type.hideLabel, type.disabled], ["container", "aanvraagtype", true, true]);
+  assert.deepEqual([type.components[0].key, type.components[0].type, type.components[0].label], ["omschrijving", "textfield", "Aanvraagtype"]);
+  const pt = partijen.components[0];
+  assert.deepEqual([pt.type, pt.key, pt.disabled, pt.disableAddingRemovingRows], ["datagrid", "partijen", true, true]);
+  assert.deepEqual(pt.components.map((c) => [c.type, c.key, c.label, c.disabled]), [["textfield", "partijrol", "Rol", true], ["container", "partij", "BSN", true]]);
+  assert.deepEqual([pt.components[1].components[0].key, pt.components[1].components[0].hideLabel], ["bsn", true]);
+  const bt = bijlagen.components[0];
+  assert.deepEqual(bt.components.map((c) => c.key), ["naam"]); // geen documentUrl: zonder token onbruikbaar (INRICHTEN_VIZ 08-11)
+  // Trace naar het model; het taakformulier neemt dezelfde panelen over.
+  const trace = (pad) => artefact.traceregels.find((t) => t.doelPad === pad);
+  assert.equal(trace("/components/1/components/0").regel, "Lijst van objecten: datagrid");
+  assert.ok(trace("/components/2/components/0").bronGE);
+  const taak = (await maak("aanvraag-beoordelen", "dossierformulier")).artefact.artefactInhoud.payload;
+  assert.deepEqual(taak.components.slice(0, 3).map((p) => p.key), ["aanvraag", "partijenPanel", "bijlagenPanel"]);
+
+  // Een object zelf of een kolom die niet bestaat wordt gemeld.
+  const fout = await maak("gehandicaptenparkeerkaart.summary", "dossierformulier", (e) => {
+    const sam = e.artefacten.find((a) => a.identifier === "gehandicaptenparkeerkaart.summary");
+    sam.panelen = [{ key: "x", velden: ["aanvraagtype", { key: "bijlagen", kolommen: ["bestaatNiet"] }] }];
+    return e;
+  });
+  assert.deepEqual(fout.diagnostics.map((d) => d.code), ["DOS-VELD", "DOS-VELD"]);
+  assert.match(fout.diagnostics[0].message, /aanvraagtype.code/);
+});
+
 test("taakformulier aanvraag-beoordelen: samenvatting + behandelvelden + verzendknop", async () => {
-  const { artefact, diagnostics } = await maak("aanvraag-beoordelen", "dossierformulier");
+  const { artefact, diagnostics } = await maak("aanvraag-beoordelen", "dossierformulier", alsHandwerk);
   assert.deepEqual(diagnostics, []);
   const f = artefact.artefactInhoud.payload;
   assert.deepEqual(zonderLabels(zonderRijbewijs(f)), zonderLabels(lees("gzac-handwerk/aanvraag-beoordelen.form.json")));
@@ -102,12 +148,14 @@ test("documentdefinitie: het objecttype zonder envelop plus behandelvelden, draf
   assert.equal(s.$schema, hand.$schema);
   assert.equal(s.title, hand.title);
   // Het rijbewijsnummer (Mark 31-10) is nieuw ten opzichte van het handwerk.
-  assert.deepEqual(Object.keys(s.properties).filter((k) => k !== "rijbewijsnummer").sort(), Object.keys(hand.properties).sort());
+  // Na het handwerk: de behandelvelden van het generieke behandelen (08-11).
+  const nieuw = new Set(["rijbewijsnummer", "beschikkingToelichting", "afwijzingReden"]);
+  assert.deepEqual(Object.keys(s.properties).filter((k) => !nieuw.has(k)).sort(), Object.keys(hand.properties).sort());
   assert.equal(s.properties.rijbewijsnummer.type, "string");
   // Het aanvraagtype is sinds 07-11 een relatie: een object {code, omschrijving} waar het handwerk een code had.
   for (const [k, v] of Object.entries(hand.properties)) assert.equal(s.properties[k].type, k === "aanvraagtype" ? "object" : v.type, k);
   assert.deepEqual(Object.keys(s.properties.aanvraagtype.properties), ["code", "omschrijving"]);
-  assert.deepEqual(s.properties.beoordeling.enum, ["toegekend", "afgewezen"]);
+  assert.deepEqual(s.properties.beoordeling.enum, ["toegekend", "afgewezen", "aanvulling"]);
   // Bovenaan open (GZAC vult aan); beperkingen en beschrijvingen uit het model.
   assert.equal(s.additionalProperties, undefined);
   assert.deepEqual(s.required, ["aanvraagnummer", "aanvraagtype", "ingediendOp", "soort", "status"]);
@@ -121,13 +169,75 @@ test("documentdefinitie: het objecttype zonder envelop plus behandelvelden, draf
   assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaartaanvraag", "objecttype"], ["gehandicaptenparkeerkaart", "dossierdefinitie"]]);
 });
 
+/** De e-dienst zonder de widgettabbladen van 08-11 (zoals het handwerk van 30-10). */
+const zonderWidgets = (e) => ({ ...e, artefacten: e.artefacten.filter((a) => a.soort !== "dossierwidgettabbladen"), afhankelijkheden: e.afhankelijkheden.filter((a) => a.afhankelijkVanSoort !== "dossierwidgettabbladen") });
+
 test("tabbladen: de standaardtabbladen uit de regelset, gelijk aan het handwerk", async () => {
-  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart", "dossiertabbladen");
+  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart", "dossiertabbladen", zonderWidgets);
   assert.deepEqual(diagnostics, []);
   assert.deepEqual(artefact.artefactInhoud.payload, lees("gzac-handwerk/gehandicaptenparkeerkaart.case-tab.json"));
   assert.equal(artefact.artefactInhoud.formaat, "gzac-case-tab-json");
   // Zelfde identifier als het schema, maar niet diens afhankelijkheden: alleen het dossier zelf.
   assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"]]);
+});
+
+// Mark 08-11: een eigen tabblad Aanvraag met widgets. De vorm komt uit een met de hand
+// ingericht proeftabblad op cg-test (INRICHTEN_VIZ, export van GZAC 13.50).
+test("widgettabbladen: tabblad Aanvraag uit de dossierinhoud, in de vorm van het handwerk", async () => {
+  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart", "dossierwidgettabbladen");
+  assert.deepEqual(diagnostics, []);
+  const [tab] = artefact.artefactInhoud.payload;
+  assert.deepEqual([tab.caseDefinitionKey, tab.caseDefinitionVersionTag, tab.key, tab.widgetLayout], ["gehandicaptenparkeerkaart", "1.0.0", "aanvraag", "MUURI_GAP_FREE"]);
+  const [velden, partijen, bijlagen] = tab.widgets;
+  // Elk widget heeft dezelfde sleutels als in het handwerk.
+  const hand = lees("gzac-handwerk/gehandicaptenparkeerkaart.case-widget-tab.json")[0];
+  const sleutels = (o) => Object.keys(o).sort();
+  assert.deepEqual(sleutels(tab), sleutels(hand));
+  assert.deepEqual(sleutels(velden), sleutels(hand.widgets[0]));
+  assert.deepEqual(sleutels(velden.properties.columns[0][0]), sleutels(hand.widgets[0].properties.columns[0][0]));
+  assert.deepEqual(sleutels(bijlagen.properties), sleutels(hand.widgets[1].properties));
+  // Velden kolom voor kolom; waarde = doc:/pad, een veld in een object met /; weergave uit het schema.
+  assert.deepEqual(velden.properties.columns.map((k) => k.length), [6, 6]);
+  const veld = (key) => velden.properties.columns.flat().find((v) => v.key === key);
+  assert.deepEqual(veld("omschrijving"), { key: "omschrijving", title: "Aanvraagtype", value: "doc:/aanvraagtype/omschrijving", displayProperties: { type: "text", hideWhenEmpty: false } });
+  assert.deepEqual(veld("loopafstandMeter"), hand.widgets[0].properties.columns[1][2]);
+  assert.deepEqual(veld("eerdereKaart"), hand.widgets[0].properties.columns[0][2]);
+  assert.deepEqual(veld("kenteken"), hand.widgets[0].properties.columns[1][0]);
+  // Lijsten: kop uit titelVeld, velden relatief; geen documentUrl als link.
+  assert.deepEqual(partijen.properties.collection, "doc:/partijen");
+  assert.deepEqual(partijen.properties.title.value, "partijrol");
+  assert.deepEqual(partijen.properties.fields.map((f) => [f.key, f.title, f.value]), [["bsn", "BSN", "partij/bsn"]]);
+  assert.deepEqual([bijlagen.properties.collection, bijlagen.properties.title], ["doc:/bijlagen", hand.widgets[1].properties.title]);
+  assert.deepEqual(bijlagen.properties.fields.map((f) => [f.key, f.title, f.value]), [["naam", "Bijlage", "naam"]]);
+  assert.ok(!JSON.stringify(tab).includes('"link"'));
+  // Trace naar het model; het tabblad staat in de tabbladen na de samenvatting.
+  const kenteken = artefact.traceregels.find((t) => t.regel.startsWith("Veld") && t.bronGE?.endsWith(".kenteken"));
+  assert.equal(kenteken.bronGE, "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.kenteken");
+  const tabs = (await maak("gehandicaptenparkeerkaart", "dossiertabbladen")).artefact;
+  assert.deepEqual(tabs.artefactInhoud.payload.map((t) => [t.key, t.type]).slice(0, 3), [["samenvatting", "standard"], ["aanvraag", "widgets"], ["documenten", "standard"]]);
+  assert.equal(tabs.artefactInhoud.payload[1].contentKey, "aanvraag");
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"]]);
+
+  // Fouten: onbekend veld, geen lijst, onbekende widgetsoort.
+  const fout = await maak("gehandicaptenparkeerkaart", "dossierwidgettabbladen", (e) => {
+    const w = e.artefacten.find((a) => a.soort === "dossierwidgettabbladen");
+    w.tabbladen = [{ key: "x", widgets: [{ type: "fields", key: "a", velden: ["bestaatNiet"] }, { type: "collection", key: "kenteken" }, { type: "image", key: "foto" }, { type: "collection", key: "bijlagen", titelVeld: "naam" }] }];
+    return e;
+  });
+  // De laatste: een collection zonder velden, die GZAC weigert (uitrol 25).
+  assert.deepEqual(fout.diagnostics.map((d) => d.code), ["DOS-VELD", "DOS-VELD", "DOS-WIDGET", "DOS-WIDGET"]);
+
+  // Eigen widget (GZAC-WIDGET 08-11): componentKey + componentValue, letterlijk; een pointer wordt getoetst.
+  const metFoto = await maak("gehandicaptenparkeerkaart", "dossierwidgettabbladen", (e) => {
+    const w = e.artefacten.find((a) => a.soort === "dossierwidgettabbladen");
+    w.tabbladen[0].widgets.push({ type: "custom", key: "pasfoto", titel: "Pasfoto", component: "documentAfbeeldingen", waarden: { bijlagen: "/bijlagen", naam: "pasfoto" } });
+    w.tabbladen[0].widgets.push({ type: "custom", key: "fout", waarden: { bijlagen: "/bestaatNiet" } });
+    return e;
+  });
+  const [foto] = metFoto.artefact.artefactInhoud.payload[0].widgets.filter((x) => x.type === "custom");
+  assert.deepEqual([foto.key, foto.title, foto.width, foto.color], ["pasfoto", "Pasfoto", 1, "WHITE"]);
+  assert.deepEqual(foto.properties, { componentKey: "documentAfbeeldingen", componentValue: { bijlagen: "/bijlagen", naam: "pasfoto" } });
+  assert.deepEqual(metFoto.diagnostics.map((d) => d.code), ["DOS-WIDGET", "DOS-VELD"]);
 });
 
 // De koppeling dossier ↔ zaaktype was handwerk bij FUNDAMENT (zgw/zaak-type-link); nu uit de
@@ -187,11 +297,13 @@ test("dossierdefinitie: sleutel, naam, versie en beschrijving uit de e-dienst; g
 test("dossierprocessen: elk bpmn-artefact van de e-dienst, gelijk aan het handwerk", async () => {
   const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart", "dossierprocessen");
   assert.deepEqual(diagnostics, []);
-  assert.deepEqual(artefact.artefactInhoud.payload, lees("gzac-handwerk/gehandicaptenparkeerkaart.process-document-link.json"));
+  // Het handwerk plus het generieke Aanvraag behandelen (08-11).
+  assert.deepEqual(artefact.artefactInhoud.payload, [...lees("gzac-handwerk/gehandicaptenparkeerkaart.process-document-link.json"), { processDefinitionKey: "aanvraag-behandelen", canInitializeDocument: false, startableByUser: false }]);
   assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [
     ["gehandicaptenparkeerkaart", "dossierschema"],
     ["aanvraag-oppakken", "bpmn"],
     ["gehandicaptenparkeerkaart-beoordelen", "bpmn"],
+    ["aanvraag-behandelen", "bpmn"],
   ]);
 
   const eigen = await maak("gehandicaptenparkeerkaart", "dossierprocessen", (e) => {
@@ -217,7 +329,7 @@ test("documentkolommen: de standaardkolommen uit de regelset, gelijk aan het han
 // statuslijst van het model, die een taak in een proces zet. Was handwerk bij FUNDAMENT, met
 // een eigen sleutel (niet-opgepakt).
 test("dossierstatussen: de waarden uit de statuslijst die een proces zet", async () => {
-  const bpmnModellen = { "gpk-processen.bpmn-model.json": lees("gpk-processen.bpmn-model.json") };
+  const bpmnModellen = { "project:bpmnMotor05": lees("inrichten-bpmn.bpmn-model.json") };
   const maakStatussen = async (wijzig = (e) => e, modellen = bpmnModellen) => {
     const edienst = wijzig(lees("gpk-edienst.json"));
     return maakDossierArtefact({ modelBestand, edienst, identifier: "gehandicaptenparkeerkaart", soort: "dossierstatussen", bpmnModellen: modellen, sha256Hex });
@@ -233,7 +345,7 @@ test("dossierstatussen: de waarden uit de statuslijst die een proces zet", async
 
   // Een taak zet een status die de lijst niet kent.
   const fout = structuredClone(bpmnModellen);
-  fout["gpk-processen.bpmn-model.json"].model.elements.bp_status_niet_opgepakt.data.dossierstatus = "nietOpgepakt";
+  fout["project:bpmnMotor05"].model.elements.bp_status_niet_opgepakt.data.dossierstatus = "nietOpgepakt";
   assert.deepEqual((await maakStatussen((e) => e, fout)).diagnostics.map((d) => [d.severity, d.code]), [["error", "DOS-STATUS"]]);
   // Zonder BPMN-model is niet te zien wat de processen zetten.
   const zonder = await maakStatussen((e) => e, {});

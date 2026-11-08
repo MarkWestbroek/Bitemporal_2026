@@ -14,7 +14,7 @@ import { studioViews } from "../diagramsvg/studio.js";
 const lees = (naam) => JSON.parse(fs.readFileSync(new URL(`../diagramprofielen/canoniek-uml/fixtures/cg-test/${naam}`, import.meta.url), "utf8"));
 const datatypen = JSON.parse(fs.readFileSync(new URL("./gegevenstypen.snapshot.json", import.meta.url), "utf8")).datatypes;
 const sha256Hex = (tekst) => crypto.createHash("sha256").update(tekst, "utf8").digest("hex");
-const bpmnModellen = () => ({ "gpk-processen.bpmn-model.json": lees("gpk-processen.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") });
+const bpmnModellen = () => ({ "project:bpmnMotor05": lees("inrichten-bpmn.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") });
 const bronInvoer = () => ({ edienst: lees("gpk-edienst.json"), modelBestand: lees("inrichten-domeinen-v3.json"), bpmnModellen: bpmnModellen(), peiltijdstip: "2026-11-05T12:00:00Z", sha256Hex });
 
 test("GPK: vier bronnen, identifier = de code van de e-dienst, hash over JCS", async () => {
@@ -45,7 +45,7 @@ test("dezelfde bron geeft dezelfde hash: geen tijdstip in de payload", async () 
   assert.deepEqual(a.bronnen.map((x) => x.artefact.artefactInhoud.payloadHash), b.bronnen.map((x) => x.artefact.artefactInhoud.payloadHash));
   // De opmaak telt mee: een verschoven vakje is een andere bron.
   const invoer = bronInvoer();
-  Object.values(invoer.bpmnModellen["gpk-processen.bpmn-model.json"].model.diagrams)[0].nodes[0].position.x += 10;
+  Object.values(invoer.bpmnModellen["project:bpmnMotor05"].model.diagrams).find((d) => d.nodes.length).nodes[0].position.x += 10;
   const c = await maakBronArtefacten(invoer);
   const hash = (r, soort) => r.bronnen.find((x) => x.soort === soort).artefact.artefactInhoud.payloadHash;
   assert.notEqual(hash(c, "bpmn-bron"), hash(a, "bpmn-bron"));
@@ -57,8 +57,12 @@ test("de payload van een bron is de invoer van de render-API (taal=studio); de d
   const payload = (soort) => bronnen.find((b) => b.soort === soort).artefact.artefactInhoud.payload;
   assert.deepEqual(Object.keys(payload("bpmn-bron").profielen), [PROFIEL.bpmn]);
   assert.deepEqual(studioViews({ taal: "studio", model: payload("bpmn-bron") }).weergaven.map((w) => [w.naam, w.profiel]), [
-    ["Aanvraag oppakken", "bpmnMotor05"],
+    // De processen komen sinds 08-11 uit het project: alle diagrammen van het BPMN-profiel, ook de schetsen.
+    ["Oppakken verzoek", "bpmnMotor05"],
+    ["Aanvraag behandelen", "bpmnMotor05"],
+    ["Kies zaak uit werkbak", "bpmnMotor05"],
     ["Gehandicaptenparkeerkaart beoordelen", "bpmnMotor05"],
+    ["Aanvraag oppakken", "bpmnMotor05"],
   ]);
   assert.deepEqual(Object.keys(payload("dmn-bron").profielen), [PROFIEL.dmn]);
   // De beslistabel zit in de bron, op het element decision.

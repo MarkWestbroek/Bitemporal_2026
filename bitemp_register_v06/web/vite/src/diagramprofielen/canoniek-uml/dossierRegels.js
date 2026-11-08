@@ -42,7 +42,7 @@
 
 export const CANONIEK_NAAR_DOSSIER = {
   id: "canoniek-naar-gzac-dossier",
-  versie: "0.4.0",
+  versie: "0.5.0",
   titel: "Canoniek model + e-dienst → GZAC-dossierbundel (definitie, documentdefinitie, form.io, tabbladen, zaaktypekoppeling, processen, documentkolommen, statussen)",
   bron: "objecttype-artefact (uit canoniek-uml V3) + e-dienst",
   doel: "gzac-dossierbundel",
@@ -53,7 +53,8 @@ export const CANONIEK_NAAR_DOSSIER = {
   // zgw/zaak-type-link/<id>.zaak-type-link.json, case/definition/<id>.
   // case-definition.json, process-document-link/<id>.process-document-link.json,
   // zgw/document-list-column/<id>.zgw-document-list-column.json,
-  // case/internal-status/<id>.internal-case-status.json. De identifier
+  // case/internal-status/<id>.internal-case-status.json,
+  // case/widget-tab/<id>.case-widget-tab.json (dossierwidgettabbladen, 08-11). De identifier
   // van die delen is dus de key van het dossier; alleen een dossierformulier
   // heeft een eigen identifier.
 
@@ -113,6 +114,32 @@ export const CANONIEK_NAAR_DOSSIER = {
     { naam: "Vrije tekst zonder lengte: textarea", als: { type: "string", vrijeTekst: true }, type: "textarea" },
     { naam: "Overige tekst (ook keuzes en tijdstippen alleen-lezen): textfield", als: {}, type: "textfield" },
   ],
+
+  /** Een lijst van objecten (partijen, bijlagen) in een dossierformulier: een tabel, alleen-lezen zonder rijen toevoegen of weghalen (0.5.0). */
+  tabel: { naam: "Lijst van objecten: datagrid", type: "datagrid" },
+
+  /**
+   * Tabbladen met widgets (0.5.0, vorm uit de handmatige proef op cg-test,
+   * INRICHTEN_VIZ 08-11). Het tabblad komt in de tabbladen na `na`. Weergave
+   * per veld: de eerste regel die past. Een enum toont de waarde als tekst
+   * (het weergavetype enum vraagt labels; niet getest). Een documentUrl wordt
+   * geen link: die wijst naar de Documenten-API zonder token.
+   */
+  widgets: {
+    na: "samenvatting",
+    kleur: "WHITE",
+    layout: "MUURI_GAP_FREE",
+    kolommen: 2,
+    paginagrootte: 4,
+    breedte: { fields: 2, collection: 2 },
+    weergave: [
+      { naam: "Ja/nee", als: { type: "boolean" }, type: "boolean" },
+      { naam: "Getal", als: { type: ["integer", "number"] }, type: "number" },
+      { naam: "Datum", als: { format: "date" }, type: "date" },
+      { naam: "Tijdstip", als: { format: "date-time" }, type: "datetime" },
+      { naam: "Overige: tekst", als: {}, type: "text" },
+    ],
+  },
 
   formulier: { kolommen: 2, rijen: { alleenLezen: 3, invoer: 4 }, verzendLabel: "Opslaan" },
 

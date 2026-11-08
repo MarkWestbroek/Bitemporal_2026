@@ -99,7 +99,7 @@ export function toetsAfhankelijkheden(artefact, edienst) {
 }
 
 /** Volgorde van maken: wat een ander artefact nodig heeft komt eerst. */
-const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierdocumentkolommen", "dossierstatussen", "dmn", "bpmn", "dossierprocessen", PROCESKOPPELING];
+const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierwidgettabbladen", "dossierzaaktypelink", "dossierdocumentkolommen", "dossierstatussen", "dmn", "bpmn", "dossierprocessen", PROCESKOPPELING];
 
 /** Soorten waarvan de identifier niet uniek is over soorten: de bestandsnaam noemt de soort. */
 export const SOORT_IN_BESTANDSNAAM = [...DOSSIER_SOORTEN, PROCESKOPPELING];
@@ -119,7 +119,7 @@ export function artefactBestandsnaam({ soort, identifier }) {
 function objecttypeVoor(keuzes, edienst) {
   if (keuzes.soort === "formulier") return keuzes.registratie?.objecttype || null;
   if (keuzes.soort === "dossierschema" || keuzes.soort === "dmn") return keuzes.objecttype || null;
-  if (keuzes.soort === "dossierformulier") {
+  if (keuzes.soort === "dossierformulier" || keuzes.soort === "dossierwidgettabbladen") {
     const schema = (edienst.artefacten || []).find((a) => a.soort === "dossierschema" && a.identifier === keuzes.dossierschema);
     return schema?.objecttype || null;
   }

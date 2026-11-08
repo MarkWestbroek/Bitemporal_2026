@@ -9,6 +9,9 @@ import { openStudio, zetModel, inModelleren } from "./helpers/studio.js";
 
 const FIX = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../src/diagramprofielen/canoniek-uml/fixtures/cg-test");
 const fix = (naam) => path.join(FIX, naam);
+// De processen staan in het project (bron.model "project:bpmnMotor05"); de test kiest de kopie onder die naam.
+const PROJECT_BPMN = { name: "project:bpmnMotor05", mimeType: "application/json", buffer: fs.readFileSync(path.join(FIX, "inrichten-bpmn.bpmn-model.json")) };
+const DMN = { name: "gpk-beslissingen.dmn-model.json", mimeType: "application/json", buffer: fs.readFileSync(path.join(FIX, "gpk-beslissingen.dmn-model.json")) };
 const REGISTER = "https://omnium.fundament.common-ground-lab.nl";
 const GPK = JSON.parse(fs.readFileSync(fix("gpk-edienst.json"), "utf8"));
 
@@ -44,7 +47,7 @@ test("zip met alle artefacten van de GPK-e-dienst", async ({ page }) => {
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "model", fix("inrichten-domeinen-v3.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-verzoekpartijrollen.json")]);
-  await kies(page, "bpmn", [fix("gpk-processen.bpmn-model.json"), fix("gpk-beslissingen.dmn-model.json")]);
+  await kies(page, "bpmn", [PROJECT_BPMN, DMN]);
   await expect(page.locator('[data-optie="referentielijsten"]')).toContainText("relatiebeheer-verzoekpartijrollen.json");
 
   const download = page.waitForEvent("download");
@@ -62,7 +65,7 @@ test("vergelijken met het register: ongewijzigd, gewijzigd, nieuw", async ({ pag
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "model", fix("inrichten-domeinen-v3.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-verzoekpartijrollen.json")]);
-  await kies(page, "bpmn", [fix("gpk-processen.bpmn-model.json"), fix("gpk-beslissingen.dmn-model.json")]);
+  await kies(page, "bpmn", [PROJECT_BPMN, DMN]);
   const eerste = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();
   const zip = fs.readFileSync(await (await eerste).path(), "latin1");
@@ -124,7 +127,7 @@ test("zonder V3-bestand: zelfde payloads als uit het bestand", async ({ page }) 
   await page.getByText("Inrichtingsartefacten (e-dienst → register op Fundament)").click();
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-verzoekpartijrollen.json")]);
-  await kies(page, "bpmn", [fix("gpk-processen.bpmn-model.json"), fix("gpk-beslissingen.dmn-model.json")]);
+  await kies(page, "bpmn", [PROJECT_BPMN, DMN]);
   const n = GPK.artefacten.length;
   const uitMap = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();
