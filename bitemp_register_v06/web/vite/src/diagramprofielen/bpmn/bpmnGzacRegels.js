@@ -45,7 +45,7 @@
 
 export const BPMN_NAAR_GZAC = {
   id: "bpmn-naar-gzac",
-  versie: "0.6.0",
+  versie: "0.7.0",
   titel: "BPMN-profiel → uitvoerbare BPMN voor GZAC (Operaton, Camunda 7-dialect)",
   engine: "operaton",
   namespaces: { camunda: "http://camunda.org/schema/1.0/bpmn" },
@@ -84,17 +84,18 @@ export const BPMN_NAAR_GZAC = {
     },
     callActivity: {
       // Nog toegestaan, maar voor een vervolgproces is een bericht (hieronder) beter.
-      // Het aangeroepen proces draait op hetzelfde dossier (businessKey) met alle variabelen.
+      // Het aangeroepen proces draait op hetzelfde dossier (businessKey); welke variabelen
+      // erheen en terug gaan, zegt het model (variabelen, hieronder).
       asyncAfter: true,
       // 0.2.0 (uitrol 26, FUNDAMENT 30-10): calledElement moet een vaste proces-id
       // zijn. Operaton voert een expressie wel uit, maar de export van de
       // dossierbundel (Valtimo ProcessDefinitionExporter) zoekt het aangeroepen
       // proces op sleutel op en faalt dan.
       vasteSleutel: true,
-      extensies: [
-        { tag: "camunda:in", attributen: { businessKey: "#{execution.processBusinessKey}" } },
-        { tag: "camunda:in", attributen: { variables: "all" } },
-      ],
+      extensies: [{ tag: "camunda:in", attributen: { businessKey: "#{execution.processBusinessKey}" } }],
+      // 0.7.0 (FUNDAMENT 08-11): welke variabelen erheen en terug, uit data.aangeroepenIn /
+      // data.aangeroepenUit ("a, b:c" of "alle"). Leeg erheen = alle (zoals vóór 0.7.0), leeg terug = niets.
+      variabelen: { in: "camunda:in", uit: "camunda:out", standaardIn: "alle" },
     },
   },
   berichten: {

@@ -64,6 +64,17 @@ test("taak en subproces: afgerond, taaktype-icoon linksboven, ⊞ onderaan; uitg
   assert.match(JSON.stringify(open.inhoud), /"text-anchor":"start"/, "uitgeklapt: naam linksboven");
 });
 
+test("call activity: een taak met een aangeroepen proces krijgt een dikke rand en ⊞ onderaan (FUNDAMENT 08-11)", () => {
+  const ca = teken("bpmn-taak", el("taak", "Beoordeel zaak", { aangeroepenProces: "gpk-beoordelen" }), { id: "taak", shape: "bpmn-taak" });
+  assert.equal(ca.omtrek.attrs["stroke-width"], 4, "dikke rand");
+  assert.equal(ca.ornament.attrs.class, "dc-subproces-markering");
+  assert.equal(ca.box.renderer.inhoudsvak(ca.box.ctx).h, 48 - 10, "naam boven de ⊞");
+  const metIcoon = teken("bpmn-taak", el("taak", "Beoordeel zaak", { aangeroepenProces: "x", taakSoort: "user" }), { id: "taak", shape: "bpmn-taak" });
+  assert.equal(metIcoon.ornament.kinderen.length, 2, "taaktype-icoon én ⊞");
+  const gewoon = teken("bpmn-taak", el("taak", "Taak", { aangeroepenProces: "  " }), { id: "taak", shape: "bpmn-taak" });
+  assert.equal(gewoon.omtrek.attrs["stroke-width"], 2, "leeg aangeroepen proces = gewone taak");
+});
+
 test("data-object en data store: figuur bovenaan, naam eronder binnen de doos; verzameling = streepjes", () => {
   const d = teken("bpmn-data", el("data-object", "Brondocument"), { id: "data-object", shape: "bpmn-data", resizebaar: false });
   assert.ok(d.box.w > 46 && d.box.w <= 120, `zo breed als de naam, tot 120 (${d.box.w})`);

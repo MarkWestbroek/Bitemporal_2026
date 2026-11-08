@@ -12,7 +12,7 @@ import { DOMParser } from "@xmldom/xmldom";
 
 import { leesBpmn } from "../../transformatie/bpmnXml.js";
 import { parseXml, afstammelingen, attr } from "../../transformatie/xmlBoom.js";
-import { schrijfBpmn, bpmnIdUit } from "../../transformatie/bpmnXmlSchrijver.js";
+import { schrijfBpmn, bpmnIdUit, variabelenLijst } from "../../transformatie/bpmnXmlSchrijver.js";
 import { bpmnXmlNaarModel } from "./bpmnXmlImport.js";
 import { BPMN_NAAR_GZAC } from "./bpmnGzacRegels.js";
 import { maakBpmnArtefact } from "./bpmnArtefact.js";
@@ -171,6 +171,28 @@ test("call activity: een expressie is een fout voor GZAC, een onbekend proces ee
   };
   assert.deepEqual((await met("${processDefinitionKey}")).map((d) => [d.code, d.severity]), [["BPMN-AANGEROEPEN", "error"]]);
   assert.deepEqual((await met("bestaat-niet")).map((d) => [d.code, d.severity]), [["BPMN-AANGEROEPEN", "warning"]]);
+});
+
+test("call activity: variabelen erheen en terug (regelset 0.7.0, FUNDAMENT 08-11)", () => {
+  assert.deepEqual(variabelenLijst("uitkomst, a:b ,"), [{ bron: "uitkomst", doel: "uitkomst" }, { bron: "a", doel: "b" }]);
+  assert.equal(variabelenLijst("Alle"), "alle");
+  assert.deepEqual(variabelenLijst(""), []);
+  const model = (data) => ({
+    elements: { t: { id: "t", naam: "Beoordeel zaak", elementType: "taak", data: { aangeroepenProces: "gpk-beoordelen", ...data } } },
+    diagrams: { d: { id: "d", naam: "Aanvraag behandelen", nodes: [{ elementId: "t", position: { x: 0, y: 0 } }] } },
+  });
+  const ext = (data) => schrijfBpmn({ model: model(data), proces: { id: "p" }, engine: BPMN_NAAR_GZAC }).xml.match(/<camunda:(in|out) [^>]*\/>/g);
+  // Standaard: het dossier en alle variabelen erheen, niets terug (zoals vóór 0.7.0).
+  assert.deepEqual(ext({}), ['<camunda:in businessKey="#{execution.processBusinessKey}" />', '<camunda:in variables="all" />']);
+  assert.deepEqual(ext({ aangeroepenIn: "aanvraag, bsn", aangeroepenUit: "uitkomst:beoordeling" }), [
+    '<camunda:in businessKey="#{execution.processBusinessKey}" />',
+    '<camunda:in source="aanvraag" target="aanvraag" />',
+    '<camunda:in source="bsn" target="bsn" />',
+    '<camunda:out source="uitkomst" target="beoordeling" />',
+  ]);
+  assert.deepEqual(ext({ aangeroepenUit: "alle" }).slice(-1), ['<camunda:out variables="all" />']);
+  // Zonder regelset: kale callActivity.
+  assert.doesNotMatch(schrijfBpmn({ model: model({ aangeroepenUit: "uitkomst" }), proces: { id: "p" } }).xml, /camunda/);
 });
 
 test("bericht: zonder message start event in de e-dienst een waarschuwing", async () => {
