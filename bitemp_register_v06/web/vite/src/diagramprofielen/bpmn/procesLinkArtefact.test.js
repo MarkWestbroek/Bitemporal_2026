@@ -101,3 +101,21 @@ test("toetsen: taak zonder formulier, onbekend formulier, geen bpmn-artefact", a
     /geen bpmn-artefact met dezelfde identifier/,
   );
 });
+
+test("een actie met een eigen plugin, ook op een gebruikerstaak (portaaltaak, regelset 0.8.0)", async () => {
+  const modelBestand = lees("gpk-processen.bpmn-model.json");
+  const el = Object.values((modelBestand.model || modelBestand).elements).find((e) => e.id === "bp_aanvraag_beoordelen");
+  Object.assign(el.data, { actie: "portaaltaakAanmaken", formulier: "aanvulling-gpk" });
+  const { artefact, diagnostics } = await maakProcesLinkArtefact({ modelBestand, edienst: lees("gpk-edienst.json"), identifier: "gehandicaptenparkeerkaart-beoordelen", sha256Hex });
+  assert.deepEqual(diagnostics, []);
+  const [k] = artefact.artefactInhoud.payload;
+  assert.deepEqual(
+    [k.activityType, k.processLinkType, k.pluginDefinitionKey, k.pluginConfigurationId, k.pluginActionDefinitionKey, k.formDefinitionName],
+    ["bpmn:UserTask:create", "plugin", "portaaltaak", "${PLUGINCONFIG_ID:portaaltaak}", "create-portaaltaak", undefined],
+  );
+  assert.deepEqual(k.actionProperties, { formType: "id", formTypeId: "aanvulling-gpk", sendData: [], receiveData: [], receiver: "ZAAK_INITIATOR", verloopDurationInDays: 14 });
+  // Zonder formulier: een fout.
+  delete el.data.formulier;
+  const zonder = await maakProcesLinkArtefact({ modelBestand, edienst: lees("gpk-edienst.json"), identifier: "gehandicaptenparkeerkaart-beoordelen", sha256Hex });
+  assert.deepEqual(zonder.diagnostics.map((d) => [d.code, d.severity]), [["PL-FORMULIER", "error"], ["PL-LEEG", "info"]]);
+});

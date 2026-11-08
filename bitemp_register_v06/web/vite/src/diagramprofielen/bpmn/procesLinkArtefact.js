@@ -47,10 +47,17 @@ function zaaktypeVan(proces, artefacten) {
   return alle.length === 1 ? alle[0] : null;
 }
 
-/** Vul `{zaaktype}`, `{volgnummer}` en `{toelichting}` in; `${…}` en `pv:…` blijven staan. Leeg = weglaten. */
+/**
+ * Vul `{zaaktype}`, `{volgnummer}`, `{toelichting}` en `{formulier}` in; `${…}` en `pv:…` blijven
+ * staan. Leeg = weglaten. Een waarde die geen tekst is (lijst, getal) gaat ongewijzigd mee.
+ */
 function vulEigenschappen(sjabloon, waarden) {
   const uit = {};
   for (const [k, v] of Object.entries(sjabloon)) {
+    if (typeof v !== "string") {
+      uit[k] = structuredClone(v);
+      continue;
+    }
     const w = Object.entries(waarden).reduce((t, [naam, waarde]) => t.split(`{${naam}}`).join(String(waarde ?? "")), String(v));
     if (w !== "") uit[k] = w;
   }
@@ -64,11 +71,15 @@ function vulEigenschappen(sjabloon, waarden) {
 function pluginKoppeling({ el, activityId, regels, proces, artefacten, diagnostics }) {
   const regel = regels.acties?.[el.data.actie];
   if (!regel) {
-    diagnostics.push(meld("error", "PL-ACTIE", `Servicetaak "${el.naam}": de regelset kent de actie "${el.data.actie}" niet`, el.id));
+    diagnostics.push(meld("error", "PL-ACTIE", `Taak "${el.naam}": de regelset kent de actie "${el.data.actie}" niet`, el.id));
     return null;
   }
   const zaaktype = zaaktypeVan(proces, artefacten);
-  const waarden = { zaaktype: zaaktype?.identifier || "", volgnummer: "", toelichting: el.data.actieToelichting || "" };
+  const waarden = { zaaktype: zaaktype?.identifier || "", volgnummer: "", toelichting: el.data.actieToelichting || "", formulier: el.data.formulier || "" };
+  if (!waarden.formulier && Object.values(regel.eigenschappen || {}).some((v) => typeof v === "string" && v.includes("{formulier}"))) {
+    diagnostics.push(meld("error", "PL-FORMULIER", `Taak "${el.naam}": de actie "${el.data.actie}" vraagt een formulier`, el.id));
+    return null;
+  }
   const doel = el.data.actieDoel;
   if (regel.doel) {
     if (!zaaktype) {
@@ -100,9 +111,12 @@ function pluginKoppeling({ el, activityId, regels, proces, artefacten, diagnosti
   }
   return {
     activityId,
+    // Een actie mag een eigen plugin hebben (definitie, configuratie) en een eigen activityType
+    // (`voor`), bv. de portaaltaak op een gebruikerstaak (regelset 0.8.0).
     ...regels.voor,
-    pluginConfigurationId: regels.configuratie,
-    pluginDefinitionKey: regels.definitie,
+    ...regel.voor,
+    pluginConfigurationId: regel.configuratie || regels.configuratie,
+    pluginDefinitionKey: regel.definitie || regels.definitie,
     pluginActionDefinitionKey: regel.actie,
     actionProperties: vulEigenschappen(regel.eigenschappen, waarden),
     ...regels.na,
@@ -144,7 +158,15 @@ export async function maakProcesLinkArtefact({ modelBestand, edienst, identifier
   const payload = [];
   for (const knoop of diagram.nodes || []) {
     const el = model.elements?.[knoop.elementId];
-    if (el?.elementType !== "taak") continue;
+    if (el?.elementType !== "taak" || !ids.has(el.id)) continue; // niet in het proces (pool als deelnemer)
+    // Een gebruikerstaak met een actie (bv. een portaaltaak, 08-11) krijgt ook een plugin-koppeling.
+    if (el.data?.taakSoort === "user" && el.data?.actie) {
+      const koppeling = pluginKoppeling({ el, activityId: ids.get(el.id), regels: regels.plugin, proces, artefacten, diagnostics });
+      if (!koppeling) continue;
+      traceregels.push({ bronGE: el.id, regel: `Gebruikerstaak met actie ${el.data.actie} → plugin-koppeling`, doelPad: `/${payload.length}`, actie: "aangemaakt" });
+      payload.push(koppeling);
+      continue;
+    }
     if (el.data?.taakSoort === "service") {
       if (!el.data.actie) {
         // Een taak die alleen de dossierstatus zet, doet dat in de XML.

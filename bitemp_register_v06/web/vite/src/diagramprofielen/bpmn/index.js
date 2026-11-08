@@ -90,6 +90,8 @@ const ACTIE_OPTIES = [
   { waarde: "rolKoppelen", label: "rol koppelen" },
   { waarde: "documentKoppelen", label: "document koppelen" },
   { waarde: "zaakstatusZetten", label: "zaakstatus zetten" },
+  // Op een gebruikerstaak: de klant doet hem in het portaal, met het formulier van de taak (08-11).
+  { waarde: "portaaltaakAanmaken", label: "portaaltaak aanmaken (klant, portaal)" },
 ];
 
 const TAAK_SOORT_OPTIES = [
@@ -106,7 +108,8 @@ const SOORT_VELD = { key: "soort", label: "soort", datatype: "keuze", opties: SO
 // Bericht-events (uitvoerbaar, 30-10): de naam van het bericht koppelt een
 // werpend event aan het message start event van een ander proces. De naam
 // moet engine-breed uniek zijn, bv. "<proces-id>-gevraagd".
-const BERICHT_VELD = { key: "bericht", label: "berichtnaam", datatype: "string", placeholder: "bv. gehandicaptenparkeerkaart-beoordelen-gevraagd", zichtbaarAls: { key: "soort", waarde: "bericht" } };
+// Een werpend event mag ook een variabele noemen (${beoordelingsbericht}, 08-11).
+const BERICHT_VELD = { key: "bericht", label: "berichtnaam", datatype: "string", placeholder: "bv. gehandicaptenparkeerkaart-beoordelen-gevraagd of ${variabele}", zichtbaarAls: { key: "soort", waarde: "bericht" } };
 
 // Sequence flow: wat kan hem verlaten/bereiken. Start alleen bron, eind
 // alleen doel; een boundary event alleen bron (het uitzonderingspad).
@@ -164,15 +167,18 @@ const elementTypes = [
       { key: "resultaat", label: "uitkomst in variabele", datatype: "string", placeholder: "bv. ontvankelijkheid", zichtbaarAls: { key: "taakSoort", waarde: "businessRule" } },
       // Gebruikerstaak (05-11): het formulier waarmee de behandelaar de taak doet (identifier
       // van een dossierformulier van de e-dienst); wordt de formulierkoppeling in de proceskoppeling.
-      { key: "formulier", label: "formulier bij de taak", datatype: "string", placeholder: "bv. aanvraag-beoordelen", zichtbaarAls: { key: "taakSoort", waarde: "user" } },
+      { key: "formulier", label: "formulier bij de taak", datatype: "string", placeholder: "bv. aanvraag-beoordelen (portaaltaak: het portaalformulier)", zichtbaarAls: { key: "taakSoort", waarde: "user" } },
       // Servicetaak (05-11): wat de taak doet. Bij "rol koppelen" en "zaakstatus zetten" hoort
       // de rol of status erbij, op naam: een roltype of statustype van het zaaktype in de e-dienst.
-      { key: "actie", label: "actie", datatype: "keuze", opties: ACTIE_OPTIES, zichtbaarAls: { key: "taakSoort", waarde: "service" } },
+      { key: "actie", label: "actie", datatype: "keuze", opties: ACTIE_OPTIES, zichtbaarAls: { key: "taakSoort", waarde: ["service", "user"] } },
       { key: "actieDoel", label: "rol of status (naam in het zaaktype)", datatype: "string", placeholder: "bv. Aanvrager of Ontvangen", zichtbaarAls: { key: "actie" } },
       { key: "actieToelichting", label: "toelichting bij de actie", datatype: "string", zichtbaarAls: { key: "actie" } },
       // Servicetaak die de status van het dossier zet: een waarde uit de statuslijst van het
       // canonieke model (de e-dienst noemt de lijst bij het artefact dossierstatussen).
       { key: "dossierstatus", label: "zet dossierstatus (waarde uit de statuslijst)", datatype: "string", placeholder: "bv. nietInBehandeling", zichtbaarAls: { key: "taakSoort", waarde: "service" } },
+      // Vaste procesvariabelen (08-11): na de taak staan ze in het proces, bv.
+      // beoordelingsbericht=gehandicaptenparkeerkaart-beoordelen-gevraagd.
+      { key: "zetVariabelen", label: "zet procesvariabelen (naam=waarde, …)", datatype: "string", placeholder: "bv. beoordelingsbericht=gehandicaptenparkeerkaart-beoordelen-gevraagd" },
       KLEUR_VELD,
     ],
   },

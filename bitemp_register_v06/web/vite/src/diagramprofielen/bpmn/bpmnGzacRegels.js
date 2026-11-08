@@ -45,7 +45,7 @@
 
 export const BPMN_NAAR_GZAC = {
   id: "bpmn-naar-gzac",
-  versie: "0.7.0",
+  versie: "0.8.0",
   titel: "BPMN-profiel → uitvoerbare BPMN voor GZAC (Operaton, Camunda 7-dialect)",
   engine: "operaton",
   namespaces: { camunda: "http://camunda.org/schema/1.0/bpmn" },
@@ -98,19 +98,39 @@ export const BPMN_NAAR_GZAC = {
       variabelen: { in: "camunda:in", uit: "camunda:out", standaardIn: "alle" },
     },
   },
+  /**
+   * Procesvariabelen met een vaste waarde (0.8.0, 08-11): `data.zetVariabelen` op een taak
+   * ("naam=waarde, …") wordt een output-parameter; na de taak staat de variabele in het proces.
+   * Zo zet Aanvraag oppakken `beoordelingsbericht` voor het generieke Aanvraag behandelen.
+   */
+  variabelenZetten: { tag: "camunda:inputOutput", parameter: "camunda:outputParameter" },
   berichten: {
-    // Werpend bericht-event (intermediate throw of end event): start het proces
-    // met het message start event van die naam, op hetzelfde dossier. Alle
-    // procesvariabelen gaan mee (zoals camunda:in variables="all" bij de call
-    // activity); een smallere overdracht kan later per bericht.
+    // Werpend bericht-event (intermediate throw of end event), op hetzelfde dossier
+    // (businessKey). Alle procesvariabelen gaan mee (zoals camunda:in variables="all"
+    // bij de call activity); een smallere overdracht kan later per bericht.
+    // `{bericht}` = de berichtnaam als tekst ('naam'), of bij een variabele naam
+    // (`${beoordelingsbericht}`) de expressie uit `variabel` (0.8.0).
+    // werpen: start het proces met het message start event van die naam.
     werpen: {
       asyncAfter: true,
       definitie: {
         "camunda:expression":
-          "${execution.getProcessEngineServices().getRuntimeService().createMessageCorrelation('{bericht}')" +
+          "${execution.getProcessEngineServices().getRuntimeService().createMessageCorrelation({bericht})" +
           ".processInstanceBusinessKey(execution.getProcessBusinessKey()).setVariables(execution.getVariables()).correlateStartMessage()}",
       },
     },
+    // wekken (0.8.0, FUNDAMENT 08-11): een lopend proces van hetzelfde dossier wacht op dit
+    // bericht (vangend tussen-event in de e-dienst); correlate() zet het door. Zo meldt het
+    // specifieke beoordelen "beoordeling-afgerond" (met uitkomst) aan het generieke proces.
+    wekken: {
+      asyncAfter: true,
+      definitie: {
+        "camunda:expression":
+          "${execution.getProcessEngineServices().getRuntimeService().createMessageCorrelation({bericht})" +
+          ".processInstanceBusinessKey(execution.getProcessBusinessKey()).setVariables(execution.getVariables()).correlate()}",
+      },
+    },
+    variabel: "execution.getVariable('{variabele}')",
   },
   /**
    * Proceskoppeling (process-link): per taak wat GZAC eraan hangt. De schrijver
@@ -140,6 +160,8 @@ export const BPMN_NAAR_GZAC = {
     plugin: {
       voor: { activityType: "bpmn:ServiceTask:start", processLinkType: "plugin", referenceType: "FIXED" },
       // De Zaken API-plugin: de configuratie in de omgeving (plaatshouder) en de sleutel van de plugin.
+      // Een actie kan een eigen plugin noemen (`definitie`, `configuratie`) en een eigen
+      // `voor` (bv. activityType bpmn:UserTask:create voor een portaaltaak), 0.8.0.
       configuratie: "${PLUGINCONFIG_ID:zakenapi}",
       definitie: "zakenapi",
       na: { actionResultMappings: [] },
@@ -159,6 +181,16 @@ export const BPMN_NAAR_GZAC = {
         documentKoppelen: {
           actie: "link-document-to-zaak",
           eigenschappen: { documentUrl: "pv:documentUrl" },
+        },
+        // Portaaltaak (0.8.0, 08-11): een taak voor de klant in het portaal, op een gebruikerstaak.
+        // Eigenschappen uit PortaaltaakPlugin.kt (FUNDAMENT); het formulier noemt het model
+        // (`formulier`), de ontvanger is de initiator van de zaak, verloop na 14 dagen.
+        portaaltaakAanmaken: {
+          actie: "create-portaaltaak",
+          definitie: "portaaltaak",
+          configuratie: "${PLUGINCONFIG_ID:portaaltaak}",
+          voor: { activityType: "bpmn:UserTask:create" },
+          eigenschappen: { formType: "id", formTypeId: "{formulier}", sendData: [], receiveData: [], receiver: "ZAAK_INITIATOR", verloopDurationInDays: 14 },
         },
         zaakstatusZetten: {
           actie: "set-zaakstatus",

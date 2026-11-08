@@ -19,7 +19,10 @@
  * Een vervolgproces start bij voorkeur op een bericht (losse processen, Mark
  * 30-10): toets BPMN-BERICHT kijkt of elk geworpen bericht een message start
  * event van een ander bpmn-artefact van de e-dienst raakt; `gestart` geeft die
- * processen terug. Een call activity (`aangeroepen`) mag nog, met toets
+ * processen terug. Wacht een lopend proces van de e-dienst op het bericht (vangend
+ * tussen-event met die naam), dan wekt het werpende event dat proces (`gewekt`;
+ * regelset `berichten.wekken`, 0.8.0). Een berichtnaam die een variabele is
+ * (`${beoordelingsbericht}`) kan de toets niet nagaan: een melding. Een call activity (`aangeroepen`) mag nog, met toets
  * BPMN-AANGEROEPEN.
  *
  * Zelfde artefactvorm als de andere inrichtingsartefacten, met één verschil
@@ -32,7 +35,7 @@
 import { jcsHash } from "../../transformatie/jcs.js";
 import { afhankelijkhedenVan } from "../../transformatie/afhankelijkheden.js";
 import { doelVersieRange } from "../../transformatie/doelVersie.js";
-import { schrijfBpmn } from "../../transformatie/bpmnXmlSchrijver.js";
+import { schrijfBpmn, berichtVariabele, deelnemersBuitenProces } from "../../transformatie/bpmnXmlSchrijver.js";
 import { BPMN_NAAR_GZAC } from "./bpmnGzacRegels.js";
 
 export const SCHRIJVER_ID = "bpmn-xml-schrijver@0.1.0";
@@ -62,6 +65,29 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
   const diagram = Object.values(model?.diagrams || {}).find((d) => d.naam === naam || d.id === naam);
   if (!diagram) throw new Error(`Diagram "${naam}" niet gevonden in het BPMN-model.`);
 
+  // Berichten: elk geworpen bericht start een proces van deze e-dienst (message
+  // start event met dezelfde naam, in een diagram dat een bpmn-artefact is), of wekt
+  // een proces dat er in een vangend tussen-event op wacht.
+  const diagramNaarProces = new Map();
+  for (const a of (edienst?.artefacten || []).filter((x) => x.soort === "bpmn")) {
+    const d = Object.values(model.diagrams || {}).find((x) => x.naam === a.bron?.diagram || x.id === a.bron?.diagram);
+    if (d) diagramNaarProces.set(d.id, a.identifier);
+  }
+  const startBericht = new Map();
+  /** Berichtnaam → proces dat er in een vangend tussen-event op wacht (0.8.0). */
+  const wachtBericht = new Map();
+  for (const d of Object.values(model.diagrams || {})) {
+    if (!diagramNaarProces.has(d.id)) continue;
+    const { buiten } = deelnemersBuitenProces(model, d); // een pool als deelnemer is notatie
+    for (const n of d.nodes || []) {
+      if (buiten.has(n.elementId)) continue;
+      const e = model.elements[n.elementId];
+      if (e?.data?.soort !== "bericht" || !e.data?.bericht) continue;
+      if (e.elementType === "start-event") startBericht.set(e.data.bericht, diagramNaarProces.get(d.id));
+      if (e.elementType === "tussen-event" && e.data?.richting !== "werpt") wachtBericht.set(e.data.bericht, diagramNaarProces.get(d.id));
+    }
+  }
+
   const { xml, ids, diagnostics: schrijf } = schrijfBpmn({
     model,
     diagramId: diagram.id,
@@ -69,6 +95,7 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
     targetNamespace: keuzes.targetNamespace,
     engine,
     beslissingen,
+    wekbareBerichten: new Set(wachtBericht.keys()),
   });
   diagnostics.push(...schrijf);
 
@@ -109,24 +136,22 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
     if (!e.data?.resultaat) diagnostics.push({ severity: "warning", code: "BPMN-BESLISSING", message: `Taak "${e.naam}" zet de uitkomst van "${ref}" in geen variabele`, sourceId: e.id, path: null });
   }
 
-  // Berichten: elk geworpen bericht start een proces van deze e-dienst (message
-  // start event met dezelfde naam, in een diagram dat een bpmn-artefact is).
-  const diagramNaarProces = new Map();
-  for (const a of (edienst?.artefacten || []).filter((x) => x.soort === "bpmn")) {
-    const d = Object.values(model.diagrams || {}).find((x) => x.naam === a.bron?.diagram || x.id === a.bron?.diagram);
-    if (d) diagramNaarProces.set(d.id, a.identifier);
-  }
-  const startBericht = new Map();
-  for (const d of Object.values(model.diagrams || {})) {
-    for (const n of d.nodes || []) {
-      const e = model.elements[n.elementId];
-      if (e?.elementType === "start-event" && e.data?.soort === "bericht" && e.data?.bericht && diagramNaarProces.has(d.id)) startBericht.set(e.data.bericht, diagramNaarProces.get(d.id));
-    }
-  }
   const werpend = elementen.filter((e) => ids.has(e.id) && e.data?.soort === "bericht" && e.data?.bericht && (e.elementType === "eind-event" || (e.elementType === "tussen-event" && e.data?.richting === "werpt")));
   const gestart = [];
+  const gewekt = [];
   for (const e of werpend) {
-    const doel = startBericht.get(e.data.bericht);
+    const naam = e.data.bericht;
+    if (berichtVariabele(naam)) {
+      diagnostics.push({ severity: "warning", code: "BPMN-BERICHT", message: `Berichtnaam "${naam}" is een variabele: welk proces hij start, blijkt pas bij het uitvoeren`, sourceId: e.id, path: null });
+      continue;
+    }
+    const wacht = wachtBericht.get(naam);
+    if (wacht) {
+      if (startBericht.has(naam)) diagnostics.push({ severity: "warning", code: "BPMN-BERICHT", message: `Bericht "${naam}" start een proces én een lopend proces wacht erop; het werpende event wekt het wachtende`, sourceId: e.id, path: null });
+      gewekt.push(wacht);
+      continue;
+    }
+    const doel = startBericht.get(naam);
     if (!doel) diagnostics.push({ severity: "warning", code: "BPMN-BERICHT", message: `Bericht "${e.data.bericht}" start geen proces van deze e-dienst (geen message start event met die naam)`, sourceId: e.id, path: null });
     else if (doel === keuzes.identifier) diagnostics.push({ severity: "warning", code: "BPMN-BERICHT", message: `Bericht "${e.data.bericht}" start dit proces zelf`, sourceId: e.id, path: null });
     else gestart.push(doel);
@@ -155,5 +180,5 @@ export async function maakBpmnArtefact({ modelBestand, edienst, identifier, peil
     doelcomponent: keuzes.doelcomponent,
     afhankelijkheden: afhankelijkhedenVan(edienst, keuzes),
   };
-  return { artefact, diagnostics, aangeroepen, gestart };
+  return { artefact, diagnostics, aangeroepen, gestart, gewekt };
 }

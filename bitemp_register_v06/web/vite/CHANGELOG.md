@@ -23,6 +23,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   van een taal staat nu in de tooltip van het tabblad in Modelleren.
 
 ### Toegevoegd
+- **BPMN: berichten tussen generiek en specifiek proces (GZAC-regelset 0.8.0).** Een werpend
+  bericht-event wekt een lopend proces dat er in een vangend tussen-event op wacht (`correlate()`),
+  en start anders een proces. De berichtnaam mag een variabele zijn (`${beoordelingsbericht}`). Een
+  taak kan vaste procesvariabelen zetten (*zet procesvariabelen*, "naam=waarde"). Een pool die
+  een deelnemer buiten het proces is (bv. Klantportaal) valt met zijn inhoud weg, met een
+  info-melding. Een actie kan een eigen plugin hebben, ook op een gebruikerstaak: nieuwe actie *portaaltaak
+  aanmaken* (de klant doet de taak in het portaal, met het formulier van de taak).
 - **BPMN: call activity zichtbaar, met variabelen erheen en terug.** Een taak met een aangeroepen
   proces heeft een dikke rand en ⊞ onderaan. Nieuwe velden *variabelen erheen* (leeg = alle) en
   *variabelen terug* (bv. `uitkomst`); de GZAC-regelset 0.7.0 schrijft ze als
