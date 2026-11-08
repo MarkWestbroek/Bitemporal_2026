@@ -8,6 +8,45 @@
 
 ---
 
+## api 0.22.1 / devloop 0.25.2 (2026-11-08)
+
+Patch voor de nieuwe richting van de items-relatie (plan 2026-11-07 Referentielijst-instanties,
+§1). Die staat nu op het referentielijst-item en wijst naar Referentielijst. Nodig voor de rebuild
+van het project Inrichten op cg-test vóór de demo (akkoord Mark 08-11). Studio blijft 0.34.0,
+render 0.3.6.
+
+- **Eigen tabel `<item>_<relatie>`** voor zo'n relatie, bijvoorbeeld
+  `aanvraagtypedefinitie_aanvraagtype` met `_data`, `_aanvang` en `_einde`.
+  - Marks naamregel geeft de relatie de naam van het oude item (Aanvraagtype naast
+    AanvraagtypeDefinitie). Met tabel = relatienaam hergebruikte de nieuwe relatietabel de tabel
+    van de oude entiteit, mét haar rijen.
+  - De Go-typenaam blijft de relatienaam.
+  - De oude richting (bijvoorbeeld `landenlijstland`) verandert niet.
+- **Niet meer onder Referentielijst.** Codegen hing de relatie ook onder Referentielijst
+  (`VoegOnderliggendGEToe`). Daar koppelde hij via `<item>_id = referentielijst.id`, dus met de
+  rijen van het verkeerde item.
+
+Getest:
+- `go test ./...` slaagt, met een nieuwe codegen-test voor beide richtingen.
+- Proef in een eigen devloop-container: eerst de oude entiteit Aanvraagtype met 3 rijen, daarna een
+  rebuild naar AanvraagtypeDefinitie met de relatie Aanvraagtype.
+  - De oude tabel bleef onaangeroerd.
+  - Een Referentielijst-record en twee items met lidmaatschap registreren werkte.
+  - `GET /full/<item>/:id` toont `referentielijst_id`.
+  - Referentielijst toont geen vreemde leden.
+- Zie CODEGEN.md §8.
+
+Nog niet gebouwd (plan §8):
+- de seed en binding van instanties;
+- de controle dat het lidmaatschap het gebonden record raakt (33.4);
+- de opties-route voor een `$ref` naar zo'n relatie.
+
+Uitrol:
+- Fundament: `bitemp-devloop:0.25.2`, door FUNDAMENT.
+- App: niet nodig, want alleen codegen verandert. `bitemp-go-api:0.22.1` staat wel op Hub.
+
+---
+
 ## studio 0.34.0 / render 0.3.6 / devloop 0.25.1 (2026-11-08)
 
 Samen uitgebracht met api 0.22.0 (hieronder, nu pas gepusht). Geen Go-wijzigingen; devloop 0.25.1
