@@ -1470,7 +1470,7 @@ Wat de schrijver en de regelset daarvoor doen:
 - **Portaaltaak** (actie `portaaltaakAanmaken`, op een gebruikerstaak): plugin
   `portaaltaak`, `create-portaaltaak`, `bpmn:UserTask:create`. Eigenschappen uit
   PortaaltaakPlugin.kt (FUNDAMENT): `formType` "id", `formTypeId` = het `formulier`
-  van de taak (zonder formulier: fout `PL-FORMULIER`), `receiver` "ZAAK_INITIATOR",
+  van de taak (zonder formulier: fout `PL-FORMULIER`), `receiver` "zaakInitiator" (de JSON-waarde; 0.8.1),
   `sendData`/`receiveData` leeg, `verloopDurationInDays` 14. FUNDAMENT controleert
   ze na de eerste uitrol.
 
