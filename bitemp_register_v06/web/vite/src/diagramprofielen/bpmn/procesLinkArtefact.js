@@ -169,8 +169,8 @@ export async function maakProcesLinkArtefact({ modelBestand, edienst, identifier
     }
     if (el.data?.taakSoort === "service") {
       if (!el.data.actie) {
-        // Een taak die alleen de dossierstatus zet, doet dat in de XML.
-        if (!el.data.dossierstatus) diagnostics.push(meld("warning", "PL-ACTIE", `Servicetaak "${el.naam}" heeft geen actie; de engine voert hem uit zonder iets te doen`, el.id));
+        // Een taak die alleen de dossierstatus of procesvariabelen zet, doet dat in de XML.
+        if (!el.data.dossierstatus && !String(el.data.zetVariabelen || "").trim()) diagnostics.push(meld("warning", "PL-ACTIE", `Servicetaak "${el.naam}" heeft geen actie; de engine voert hem uit zonder iets te doen`, el.id));
         continue;
       }
       const koppeling = pluginKoppeling({ el, activityId: ids.get(el.id), regels: regels.plugin, proces, artefacten, diagnostics });
