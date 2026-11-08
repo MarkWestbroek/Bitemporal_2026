@@ -151,7 +151,13 @@ function SjabloonKern({ element, elementType, selected, fieldTypesById, compartm
   // De resizer leest het minimum van deze root (ShapeResizer): een dynamische ondergrens van de
   // renderer telt mee, anders krimpt het resize-kader wel en de vorm niet.
   const vast = sjabloonMinMaat(vormInfo, elementType);
-  const min = { w: Math.max(vast.w, getekend.ondergrens?.w ?? 0), h: Math.max(vast.h, getekend.ondergrens?.h ?? 0) };
+  // Een bewaarde maat kleiner dan het minimum wint (zoals --dc-node-min in DiagramCanvas): de vorm
+  // tekent op die maat, dus het kader ook — anders stak het selectiekader ver buiten een smalle
+  // taak uit (MCP/import maakte 100 px, het minimum was 180; Mark 08-11).
+  const min = {
+    w: Math.min(w, Math.max(vast.w, getekend.ondergrens?.w ?? 0)),
+    h: Math.min(h, Math.max(vast.h, getekend.ondergrens?.h ?? 0)),
+  };
   const clipId = `sj${uid}-knip`;
   return (
     <div

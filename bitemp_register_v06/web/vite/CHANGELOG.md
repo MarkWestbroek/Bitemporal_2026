@@ -46,6 +46,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   Regelset bpmn-naar-gzac 0.8.1.
 - **Proceskoppeling: geen waarschuwing PL-ACTIE meer bij een servicetaak die alleen procesvariabelen
   zet** (*zet procesvariabelen*); die taak doet zijn werk in de XML.
+- **BPMN-servicetaak: een tandwiel in plaats van een zonnetje.** Eén omtrek met acht tanden en een as.
+- **Smallere BPMN-taken.** Het minimum van een taak is 90 px in plaats van 180: met de hand kun je hem
+  nu even smal maken als de MCP of een import. Een nieuwe taak is zo breed als zijn naam. Het
+  selectiekader volgt een bewaarde maat onder het minimum; het stak eerst ver buiten de taak uit.
 
 ## [studio/v0.35.0] — 2026-11-08
 

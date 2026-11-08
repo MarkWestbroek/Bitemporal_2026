@@ -50,7 +50,11 @@ test("gateways: ruit met het symbool van het type", () => {
 
 test("taak en subproces: afgerond, taaktype-icoon linksboven, ⊞ onderaan; uitgeklapt links", () => {
   const taak = teken("bpmn-taak", el("taak", "Aanvraag beoordelen", { taakSoort: "user" }), { id: "taak", shape: "bpmn-taak", kleur: "#e0f2fe" });
-  assert.deepEqual([taak.box.w, taak.box.h], [180, 48]);
+  // Minimum 90 (Mark 08-11): zonder bewaarde maat zo breed als de naam op één regel.
+  assert.deepEqual([taak.box.w, taak.box.h], [152, 48]);
+  const service = teken("bpmn-taak", el("taak", "X", { taakSoort: "service" }), { id: "taak", shape: "bpmn-taak" });
+  assert.deepEqual(service.ornament.kinderen.map((k) => k.tag), ["path", "circle"], "tandwiel: één omtrek met tanden + as, geen losse spaken");
+  assert.match(service.ornament.kinderen[0].attrs.d, / A4.9 /);
   assert.equal(taak.omtrek.attrs.rx, 10);
   assert.equal(taak.omtrek.attrs.stroke, "#7dd3fc");
   assert.equal(taak.ornament.attrs.class, "dc-taak-icoon");
