@@ -22,7 +22,8 @@ import { maakDossierArtefact, DOSSIER_SOORTEN } from "../diagramprofielen/canoni
 import { maakBpmnArtefact } from "../diagramprofielen/bpmn/bpmnArtefact.js";
 import { maakDmnArtefact } from "../diagramprofielen/dmn-drd/dmnArtefact.js";
 import { maakProcesLinkArtefact, SOORT as PROCESKOPPELING } from "../diagramprofielen/bpmn/procesLinkArtefact.js";
-import { bronnenVan, uuidIndex, zetBronElementIds } from "./bronArtefacten.js";
+import { bronnenVan, uuidIndex, studioIdIndex, zetBronElementIds } from "./bronArtefacten.js";
+import { importeerV3 } from "../diagramprofielen/canoniek-uml/serialisatie.js";
 
 /**
  * Plaatshouders in een payload, die de uitrol (FUNDAMENT) per omgeving invult
@@ -99,7 +100,7 @@ export function toetsAfhankelijkheden(artefact, edienst) {
 }
 
 /** Volgorde van maken: wat een ander artefact nodig heeft komt eerst. */
-const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierwidgettabbladen", "dossierzaaktypelink", "dossierdocumentkolommen", "dossierstatussen", "dmn", "bpmn", "dossierprocessen", PROCESKOPPELING];
+const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierwidgettabbladen", "dossierlijstkolommen", "dossierzaaktypelink", "dossierdocumentkolommen", "dossierstatussen", "dmn", "bpmn", "dossierprocessen", PROCESKOPPELING];
 
 /** Soorten waarvan de identifier niet uniek is over soorten: de bestandsnaam noemt de soort. */
 export const SOORT_IN_BESTANDSNAAM = [...DOSSIER_SOORTEN, PROCESKOPPELING];
@@ -119,7 +120,7 @@ export function artefactBestandsnaam({ soort, identifier }) {
 function objecttypeVoor(keuzes, edienst) {
   if (keuzes.soort === "formulier") return keuzes.registratie?.objecttype || null;
   if (keuzes.soort === "dossierschema" || keuzes.soort === "dmn") return keuzes.objecttype || null;
-  if (keuzes.soort === "dossierformulier" || keuzes.soort === "dossierwidgettabbladen") {
+  if (keuzes.soort === "dossierformulier" || keuzes.soort === "dossierwidgettabbladen" || keuzes.soort === "dossierlijstkolommen") {
     const schema = (edienst.artefacten || []).find((a) => a.soort === "dossierschema" && a.identifier === keuzes.dossierschema);
     return schema?.objecttype || null;
   }
@@ -165,6 +166,7 @@ export async function maakInrichtingsBundel({
   bpmnModellen = {},
   kies = () => true,
   bronnen = null,
+  canoniekDeel = null,
 }) {
   const alle = (edienst?.artefacten || []).filter((a) => a && a.identifier && a.soort);
   const gekozen = alle.filter(kies);
@@ -186,6 +188,8 @@ export async function maakInrichtingsBundel({
   const beslissingen = {};
   /** Naampad → uuid in het canonieke model, voor `bronElementId` in de traceregels. */
   const uuids = uuidIndex(modelBestand);
+  /** Naampad → Studio-id (de ids van de tekening), uit de Studio-map of anders uit het V3-model. */
+  const studioIds = studioIdIndex(canoniekDeel || (modelBestand ? importeerV3(modelBestand) : null));
   for (const keuzes of opVolgorde) {
     const { soort, identifier } = keuzes;
     try {
@@ -212,7 +216,7 @@ export async function maakInrichtingsBundel({
       if (soort === "dmn") beslissingen[identifier] = r.invoer;
       // Herkomst (§11.14): het element in de bron bij elke traceregel, en de bronnen van het artefact.
       const bronModel = soort === "bpmn" || soort === "dmn" ? bpmnModellen[keuzes.bron?.model] : soort === PROCESKOPPELING ? bpmnModellen[procesVan(keuzes, edienst).bron?.model] : null;
-      zetBronElementIds(r.artefact, { uuids, elementen: (bronModel?.model || bronModel)?.elements || {} });
+      zetBronElementIds(r.artefact, { uuids, studioIds, elementen: (bronModel?.model || bronModel)?.elements || {} });
       if (bronnen) r.artefact.bronnen = bronnenVan(keuzes, edienst, bronnen);
       uitkomst.set(keuzes, { artefact: r.artefact, diagnostics: [...(r.diagnostics || []), ...toetsPlaatshouders(r.artefact), ...toetsAfhankelijkheden(r.artefact, edienst)], fout: null });
     } catch (e) {

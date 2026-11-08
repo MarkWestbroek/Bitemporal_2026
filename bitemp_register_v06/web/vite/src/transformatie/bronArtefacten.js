@@ -33,9 +33,13 @@
  *   identifier, payloadHash}]`. `artefactHerkomst.bronmodelHash` blijft de
  *   hash van de hoofdbron zoals de regelset die las (V3, of het BPMN-/DMN-
  *   model).
- * - Een traceregel krijgt `bronElementId`: het id van het element in de bron
- *   (BPMN, DMN) of de uuid van het modelelement (canoniek model, als het model
- *   uuid's heeft). `bronGE` (de naam) blijft.
+ * - Een traceregel krijgt `bronElementId`: het id van het element in de bron,
+ *   zoals de Studio en de tekeningen het kennen (`data-element-id`): het
+ *   BPMN-/DMN-element, of het element van het canonieke model (besluit Mark
+ *   08-11, was: de uuid). Een veld krijgt het id van zijn gegevenselement,
+ *   een pad over een relatie het element aan het eind. De uuid van het
+ *   modelelement gaat apart mee als `bronUuid`, als het model die heeft.
+ *   `bronGE` (de naam) blijft.
  *
  * Nog niet: een verwijzing naar een bron van een andere eigenaar, en het
  * canonieke model zelf als bron per domein. Het canonieke model is van geen
@@ -65,6 +69,7 @@ const LEEST = {
   dossierformulier: ["logisch-model"],
   dossiertabbladen: [],
   dossierwidgettabbladen: ["logisch-model"],
+  dossierlijstkolommen: ["logisch-model"],
   dossierzaaktypelink: [],
   dossierprocessen: [],
   dossierdocumentkolommen: [],
@@ -207,6 +212,62 @@ export function uuidIndex(modelBestand) {
 }
 
 /**
+ * Naampad → Studio-id van het element in het canonieke model (de core-store uit
+ * de Studio, of importeerV3 van het V3-model). Een element houdt zijn id bij
+ * hernoemen; alleen de naam verandert. Zo blijven links uit de traceregels
+ * werken na een hernoeming (Imprint zoekt op `data-element-id` van de tekening).
+ * Een veld wijst naar het element waarin het staat (entiteit, gegevenselement,
+ * relatie), een enumwaarde naar haar enumeratie.
+ * @param {{elements?: Record<string, any>}|null} core
+ */
+export function studioIdIndex(core) {
+  const els = Object.values(core?.elements || {}).filter(Boolean);
+  const index = new Map();
+  const zet = (pad, id) => {
+    if (id && pad && !index.has(pad)) index.set(pad, id);
+  };
+  const naam = (el) => el.naam || el.data?.naam || el.data?.typenaam || el.id;
+  /** Alle namen waaronder een element in een naampad kan staan: de naam, de typenaam en,
+   *  als laatste, het id. Een pad uit een ouder e-dienstbestand noemt soms nog de naam
+   *  van vóór een hernoeming (Aanvraag.AanvraagPartij, nu Aanvraagpartij); in de Studio
+   *  is dat vaak het id, want een element houdt zijn id. Eerst alle namen, dan pas de ids
+   *  (tweede ronde), zodat een id nooit de huidige naam van een ander element verdringt. */
+  let ronde = 1;
+  const namen = (el) =>
+    ronde === 1 ? [...new Set([naam(el), el.data?.typenaam, el.data?.klassenaam].filter(Boolean))] : /^[A-Za-z]\w*$/.test(el.id) ? [el.id] : [];
+  const velden = (el) => (el.compartimenten || []).flatMap((c) => c.velden || []).map((v) => v.naam).filter(Boolean);
+  /** Gegevenselement → entiteit, via de compositie. */
+  const ouder = new Map();
+  for (const c of els) if (c.elementType === "compositie" && c.source && c.target) ouder.set(c.target, c.source);
+  const byId = new Map(els.map((e) => [e.id, e]));
+  for (; ronde <= 2; ronde += 1) for (const el of els) {
+    if (el.elementType === "entiteit") {
+      for (const n of namen(el)) {
+        zet(n, el.id);
+        for (const v of velden(el)) zet(`${n}.${v}`, el.id);
+      }
+    } else if (el.elementType === "gegevenselement" || el.elementType === "relatie") {
+      const ent = byId.get(el.elementType === "relatie" ? el.source : ouder.get(el.id));
+      // Zonder bekende eigenaar (in de Studio-store hangt een relatie soms alleen via
+      // lijnen in een diagram) de naam alleen: namen zijn uniek per domein, en
+      // uuidVanPad vindt dan het eind van het pad.
+      for (const voor of ent ? [...namen(ent).map((n) => `${n}.`), ""] : [""]) {
+        for (const n of namen(el)) {
+          zet(`${voor}${n}`, el.id);
+          for (const v of velden(el)) zet(`${voor}${n}.${v}`, el.id);
+        }
+      }
+    } else if (el.elementType === "enumeratie") {
+      for (const n of namen(el)) {
+        zet(n, el.id);
+        for (const v of velden(el)) zet(`${n}.${v}`, el.id);
+      }
+    }
+  }
+  return index;
+}
+
+/**
  * De uuid bij een naampad uit een traceregel. Een pad kan over een relatie
  * naar een andere entiteit lopen (`Aanvraag.AanvraagPartij.Partij.PartijNaam.naam`);
  * het eind van het pad (`Partij.PartijNaam.naam`) is dan het modelelement.
@@ -221,17 +282,26 @@ export function uuidVanPad(uuids, pad) {
 }
 
 /**
- * Zet `bronElementId` op de traceregels van een gegenereerd artefact: het
- * element-id in het BPMN- of DMN-model als `bronGE` dat is, de uuid die een
- * regel al draagt (`bronUuid`, bij een kolom van een beslistabel), of de uuid
- * van het modelelement met dat naampad.
+ * Zet `bronElementId` en `bronUuid` op de traceregels van een gegenereerd
+ * artefact (besluit Mark 08-11). `bronElementId`: het element-id in het BPMN-
+ * of DMN-model als `bronGE` dat is, anders het Studio-id van het modelelement
+ * met dat naampad (`studioIds`). `bronUuid`: de uuid die een regel al draagt
+ * (kolom van een beslistabel) of de uuid van het modelelement, als er een is.
+ * Alleen de traceregels veranderen; de payload en zijn hash blijven gelijk.
  * @param {any} artefact
- * @param {{uuids?: Map<string, string>, elementen?: Record<string, any>}} bron
+ * @param {{uuids?: Map<string, string>, studioIds?: Map<string, string>, elementen?: Record<string, any>}} bron
  */
-export function zetBronElementIds(artefact, { uuids = new Map(), elementen = {} } = {}) {
+export function zetBronElementIds(artefact, { uuids = new Map(), studioIds = new Map(), elementen = {} } = {}) {
   for (const t of artefact?.traceregels || []) {
-    const id = t.bronUuid || (t.bronGE && elementen[t.bronGE] ? t.bronGE : null) || (t.bronGE ? uuidVanPad(uuids, t.bronGE) : null);
+    if (!t.bronGE) continue;
+    if (elementen[t.bronGE]) {
+      t.bronElementId = t.bronGE;
+      continue;
+    }
+    const id = uuidVanPad(studioIds, t.bronGE);
+    const uuid = t.bronUuid || uuidVanPad(uuids, t.bronGE);
     if (id) t.bronElementId = id;
+    if (uuid) t.bronUuid = uuid;
   }
   return artefact;
 }

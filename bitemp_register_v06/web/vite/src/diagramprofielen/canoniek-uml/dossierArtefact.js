@@ -8,8 +8,9 @@
  * zaaktype (`dossierzaaktypelink`), de processen bij het dossier
  * (`dossierprocessen`), de kolommen van het documentenoverzicht
  * (`dossierdocumentkolommen`), de statussen van het dossier
- * (`dossierstatussen`) of de tabbladen met widgets (`dossierwidgettabbladen`,
- * 08-11: velden en lijsten uit de dossierinhoud, zoals het tabblad Aanvraag).
+ * (`dossierstatussen`), de tabbladen met widgets (`dossierwidgettabbladen`,
+ * 08-11: velden en lijsten uit de dossierinhoud, zoals het tabblad Aanvraag)
+ * of de kolommen van de dossierlijst (`dossierlijstkolommen`, 08-11).
  *
  * Route:
  *
@@ -39,7 +40,7 @@ import { kebab } from "../../transformatie/sleutel.js";
 
 export const SCHRIJVER_ID = "gzac-dossier-schrijver@0.1.0";
 
-export const DOSSIER_SOORTEN = ["dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierprocessen", "dossierdocumentkolommen", "dossierstatussen", "dossierwidgettabbladen"];
+export const DOSSIER_SOORTEN = ["dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierzaaktypelink", "dossierprocessen", "dossierdocumentkolommen", "dossierstatussen", "dossierwidgettabbladen", "dossierlijstkolommen"];
 
 /** Dossierdelen die de inhoud van het dossier niet lezen (geen objecttype nodig). */
 const ZONDER_INHOUD = {
@@ -491,6 +492,53 @@ function schrijfProcessen({ keuzes, edienst, regelset, diagnostics, traceregels 
   });
 }
 
+/**
+ * De kolommen van de dossierlijst (GZAC 13: case/list/<dossier>.case-list.json,
+ * vorm van Valtimo's CaseListExporter). Bestaat de lijst, dan vervangt hij de
+ * standaardkolommen helemaal; de e-dienst noemt daarom ook aanmaakdatum,
+ * behandelaar en status. Per kolom óf `veld` (de dossierinhoud, `doc:<veld>`,
+ * alleen een veld bovenaan; weergave uit het schema) óf `dossier` (een gegeven
+ * van GZAC zelf, `case:<naam>`, weergave uit de regelset). `sorteerbaar` en
+ * `sortering` (ASC/DESC, hooguit één kolom) uit de e-dienst.
+ */
+function schrijfLijstkolommen({ keuzes, inhoud, regelset, diagnostics, traceregels }) {
+  const r = regelset.lijst;
+  const kolommen = zonderToelichting(keuzes.kolommen || []);
+  if (!kolommen.length) diagnostics.push(fout("DOS-LIJST", `Dossierlijst "${keuzes.identifier}" zonder kolommen; GZAC toont dan een lege lijst in plaats van de standaardkolommen`));
+  const gesorteerd = kolommen.filter((k) => k.sortering);
+  if (gesorteerd.length > 1) diagnostics.push(fout("DOS-LIJST", `Hooguit één kolom met sortering (nu: ${gesorteerd.map((k) => k.veld || k.dossier).join(", ")})`));
+  const bronVan = (pad) => inhoud.bron.get(pad) || null;
+  return kolommen.map((k, i) => {
+    let path, type, key, bronGE = null;
+    if (k.dossier) {
+      type = r.dossier[k.dossier];
+      if (!type) diagnostics.push(fout("DOS-LIJST", `Kolom ${i}: dossiergegeven "${k.dossier}" kent de regelset niet (${Object.keys(r.dossier).join(", ")})`, k.dossier));
+      path = `case:${k.dossier}`;
+      key = k.key || k.dossier;
+    } else {
+      const def = k.veld && !String(k.veld).includes(".") ? defOp(inhoud.schema, k.veld) : null;
+      if (!def || def.type === "object" || def.type === "array") {
+        diagnostics.push(fout("DOS-VELD", `Kolom ${i}: "${k.veld}" is geen enkelvoudig veld bovenaan de dossierinhoud`, k.veld || null));
+      }
+      type = def ? (r.weergave.find((w) => (!w.als.type || [].concat(w.als.type).includes(def.type)) && (!w.als.format || w.als.format === def.format)) || r.weergave.at(-1)).type : "text";
+      path = `doc:${k.veld}`;
+      key = k.key || k.veld;
+      bronGE = bronVan(k.veld);
+    }
+    if (k.sortering && !["ASC", "DESC"].includes(k.sortering)) diagnostics.push(fout("DOS-LIJST", `Kolom ${i}: sortering "${k.sortering}" is geen ASC of DESC`, key));
+    traceregels.push({ bronGE, regel: k.dossier ? "Dossiergegeven van GZAC: lijstkolom" : "Veld van de dossierinhoud: lijstkolom", doelPad: `/${i}`, actie: "aangemaakt" });
+    return {
+      key,
+      title: k.label || labelUitNaam(key),
+      path,
+      displayType: { type: type || "text", displayTypeParameters: { ...(r.parameters[type] || {}) } },
+      sortable: k.sorteerbaar === true || !!k.sortering,
+      defaultSort: k.sortering || null,
+      order: i,
+    };
+  });
+}
+
 /** De kolommen van het documentenoverzicht: uit de regelset, of de lijst `kolommen` van de e-dienst. */
 function schrijfDocumentkolommen({ keuzes, regelset, traceregels }) {
   const lijst = zonderToelichting(keuzes.kolommen || regelset.documentkolommen);
@@ -639,7 +687,9 @@ export async function maakDossierArtefact({
         ? schrijfSchema({ keuzes, inhoud, regelset, diagnostics, traceregels })
         : keuzes.soort === "dossierwidgettabbladen"
           ? schrijfWidgettabbladen({ keuzes, edienst, inhoud, regelset, diagnostics, traceregels })
-          : schrijfFormulier({ keuzes, edienst, inhoud, regelset, diagnostics, traceregels });
+          : keuzes.soort === "dossierlijstkolommen"
+            ? schrijfLijstkolommen({ keuzes, inhoud, regelset, diagnostics, traceregels })
+            : schrijfFormulier({ keuzes, edienst, inhoud, regelset, diagnostics, traceregels });
   }
 
   const payloadHash = await jcsHash(payload, sha256Hex);

@@ -1029,6 +1029,7 @@ FUNDAMENT leidt het pad in de bundel af uit soort + identifier:
 | `dossierdocumentkolommen` | `gzac-zgw-document-list-column-json` | `zgw/document-list-column/<id>.zgw-document-list-column.json` | `gehandicaptenparkeerkaart` |
 | `dossierstatussen` | `gzac-internal-case-status-json` | `case/internal-status/<id>.internal-case-status.json` | `gehandicaptenparkeerkaart` |
 | `dossierwidgettabbladen` (08-11) | `gzac-case-widget-tab-json` | `case/widget-tab/<id>.case-widget-tab.json` | `gehandicaptenparkeerkaart` |
+| `dossierlijstkolommen` (08-11) | `gzac-case-list-json` | `case/list/<id>.case-list.json` | `gehandicaptenparkeerkaart` |
 
 Op het formulier na dragen de dossierdelen de key van het dossier als
 identifier; de soort onderscheidt ze. Daarom kan een afhankelijkheid in de
@@ -1233,6 +1234,20 @@ die van de dossierdefinitie (`DOS-VERSIE` zonder). De tabbladen van het dossier
 krijgen het tabblad erbij, type `widgets`, na de samenvatting (`na`). Toetsen:
 `DOS-VELD` (veld onbekend of niet enkelvoudig, geen lijst bij een collection),
 `DOS-WIDGET` (soort die de regelset niet kent).
+
+**Dossierlijst** (`dossierlijstkolommen`, regelset 0.7.0, op verzoek van Mark en
+FUNDAMENT 08-11): de kolommen van de lijst met dossiers in GZAC 13
+(`case/list/<id>.case-list.json`, de vorm van Valtimo's CaseListExporter:
+`{key, title, path, displayType {type, displayTypeParameters}, sortable,
+defaultSort, order}`). Bestaat de lijst, dan vervangt hij de standaardkolommen
+helemaal, dus de e-dienst noemt ook behandelaar, status en aanmaakdatum. Per kolom
+óf `veld` (dossierinhoud, `doc:<veld>`, alleen een veld bovenaan; weergave uit het
+schema: boolean, date bij format date/date-time, anders text) óf `dossier` (een
+gegeven van GZAC: `createdOn`, `modifiedOn`, `createdBy`, `assigneeFullName`,
+`internalStatus` als tags; `case:<naam>`). `sorteerbaar`, `sortering` (ASC/DESC,
+hooguit één). Toetsen: `DOS-VELD` (geen enkelvoudig veld bovenaan), `DOS-LIJST`
+(geen kolommen, onbekend dossiergegeven, sortering). Genest (`aanvraagtype/omschrijving`)
+en de BSN uit de partijen nog niet: of GZAC 13.50 een pad na `doc:` kent, is niet getest.
 
 De pasfoto als afbeelding kan niet met het image-widget van GZAC: dat leest
 alleen bestanden uit de eigen tijdelijke opslag van Valtimo, niet uit de
@@ -1709,11 +1724,27 @@ vooraan:
   regelset die las (V3, of het BPMN-/DMN-model). Bestaande herkomst verandert
   dus niet.
 - Elke traceregel krijgt waar het kan `bronElementId` naast `bronGE`: het
-  element-id in het BPMN- of DMN-model, of de uuid van het modelelement in het
-  canonieke model. Een naampad dat over een relatie loopt
-  (`Aanvraag.AanvraagPartij.Partij.PartijNaam`) wijst naar het element aan het
-  eind. Een model dat niet uit de Studio komt, heeft geen uuid's; dan blijft
-  het bij de naam.
+  id van het element zoals de Studio en de tekeningen het kennen
+  (`data-element-id`). Bij BPMN en DMN is dat het element-id in dat model, bij
+  het canonieke model het Studio-id van het modelelement (gegevenselement
+  bijvoorbeeld `GehandicaptenparkeerkaartAanvraag_GpkAanvraagKaart`). Een veld
+  krijgt het id van zijn gegevenselement (de tekening heeft geen element per
+  veld), een enumwaarde dat van haar enumeratie. Een naampad dat over een
+  relatie loopt (`Aanvraag.AanvraagPartij.Partij.PartijNaam`) wijst naar het
+  element aan het eind. Een pad met een naam van vóór een hernoeming (een ouder
+  e-dienstbestand noemt nog `Aanvraag.AanvraagPartij`, nu `Aanvraagpartij`) vindt
+  het element via zijn id; eerst gelden de huidige namen (`studioIdIndex`).
+  De uuid van het modelelement gaat apart mee als
+  `bronUuid`, als het model uuid's heeft (die krijgt het pas bij een V3-export
+  uit de Studio).
+  **Contractwijziging 08-11 (besluit Mark, keuze b):** tot 08-11 was
+  `bronElementId` bij het canonieke model de uuid. Dat bleef leeg in project
+  Inrichten (geen uuid's), en na een hernoeming (GehandicaptenparkeerkaartAanvraag
+  → Gehandicaptenparkeerkaartaanvraag) vond Imprint de elementen niet meer op
+  naam. Een element houdt zijn Studio-id bij hernoemen. Het besluit van 31-10
+  (uuid = identiteit) blijft voor de delta-import en codegen; voor de link naar
+  de tekening telt het Studio-id. Alleen de traceregels veranderen: payload,
+  payloadHash, paden en bestandsnamen blijven gelijk, dus er is geen uitrol nodig.
 
 **Nog niet (uitgesteld, besluit ligt later bij Mark).**
 

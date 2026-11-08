@@ -8,7 +8,15 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- Traceregels van de inrichtingsartefacten: `bronElementId` is nu het Studio-id van het modelelement (zoals
+  `data-element-id` in de tekening; een veld wijst naar zijn gegevenselement), ook na hernoemen; de uuid gaat
+  apart mee als `bronUuid` (besluit Mark 08-11). Payload en payloadHash blijven gelijk.
+
 ### Toegevoegd
+- Dossierlijst als artefact (`dossierlijstkolommen`, `gzac-case-list-json`, regelset dossier 0.7.0): kolommen uit de
+  dossierinhoud (`doc:`) en van GZAC (`case:`, status als tags). GPK-e-dienst: aanvraagnummer, ingediend op
+  (nieuwste eerst), soort kaart, behandelaar, status, aangemaakt op.
 - Open Formulieren: elk bestandsveld krijgt een `registration`-blok met als titel het label (de pasfoto heet
   "Pasfoto" in Open Zaak en GZAC, niet de formuliernaam); optioneel `bestand.registratie` in de e-dienst.
 - Regelset dossier-naar-gzac 0.6.0: een widgetveld kiest zelf zijn weergave (`weergave`);

@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import crypto from "node:crypto";
 
-import { maakBronArtefacten, bronnenVan, uuidIndex, uuidVanPad, zetBronElementIds, studioPayload, PROFIEL } from "./bronArtefacten.js";
+import { maakBronArtefacten, bronnenVan, uuidIndex, uuidVanPad, studioIdIndex, zetBronElementIds, studioPayload, PROFIEL } from "./bronArtefacten.js";
 import { maakInrichtingsBundel } from "./inrichtingsBundel.js";
 import { voerInrichtingsExportUit } from "./inrichtingsExport.js";
 import { jcsHash } from "./jcs.js";
@@ -120,7 +120,8 @@ test("elk gegenereerd artefact noemt zijn bronnen, met de hash van het bronbesta
   assert.equal(los[0].artefact.bronnen, undefined);
 });
 
-test("bronElementId: het element-id bij BPMN en DMN, de uuid bij het canonieke model", async () => {
+// Besluit Mark 08-11: bronElementId is het Studio-id (zoals data-element-id in de tekening), de uuid gaat apart mee.
+test("bronElementId: het element-id bij BPMN en DMN, het Studio-id bij het canonieke model; uuid als bronUuid", async () => {
   const invoer = bronInvoer();
   // Het model uit de Studio draagt uuid's; de fixture nog niet.
   const model = invoer.modelBestand.model || invoer.modelBestand;
@@ -140,17 +141,46 @@ test("bronElementId: het element-id bij BPMN en DMN, de uuid bij het canonieke m
   });
   const traces = (soort, identifier) => bundel.find((b) => b.soort === soort && b.identifier === identifier).artefact.traceregels;
   const soort = traces("objecttype", "gehandicaptenparkeerkaartaanvraag").find((t) => t.bronGE === `${ent.typenaam}.GpkAanvraagKaart.soort`);
-  assert.equal(soort.bronElementId, "uuid-soort");
+  // Een veld: het id van zijn gegevenselement (de tekening kent geen element per veld).
+  assert.deepEqual([soort.bronElementId, soort.bronUuid], [`${ent.typenaam}_GpkAanvraagKaart`, "uuid-soort"]);
   // Een pad over een relatie: het eind van het pad is het modelelement.
-  assert.equal(traces("objecttype", "gehandicaptenparkeerkaartaanvraag").find((t) => t.bronGE === "Aanvraag.AanvraagPartij.Partij.PartijNaam").bronElementId, "uuid-partijnaam");
-  // Zonder uuid in het model blijft het bij de naam.
-  assert.ok(traces("objecttype", "gehandicaptenparkeerkaartaanvraag").some((t) => t.bronGE && !t.bronElementId));
+  const pn = traces("objecttype", "gehandicaptenparkeerkaartaanvraag").find((t) => t.bronGE === "Aanvraag.AanvraagPartij.Partij.PartijNaam");
+  assert.deepEqual([pn.bronElementId, pn.bronUuid], ["Partij_PartijNaam", "uuid-partijnaam"]);
+  // Elke regel met een naampad uit het model heeft een Studio-id; zonder uuid in het model geen bronUuid.
+  // (De envelopvelden van het verzoek, envelop:bsn enz., zijn geen modelelement.)
+  const ot = traces("objecttype", "gehandicaptenparkeerkaartaanvraag").filter((t) => t.bronGE && !t.bronGE.startsWith("envelop:"));
+  assert.ok(ot.every((t) => t.bronElementId), JSON.stringify(ot.filter((t) => !t.bronElementId).map((t) => t.bronGE)));
+  assert.ok(ot.some((t) => !t.bronUuid));
+  // Dossierdelen en formulier ook; een enumwaarde wijst naar haar enumeratie.
+  assert.ok(traces("dossierwidgettabbladen", "gehandicaptenparkeerkaart").filter((t) => t.bronGE).every((t) => t.bronElementId));
+  assert.equal(traces("dossierstatussen", "gehandicaptenparkeerkaart")[0].bronElementId, "enum_Aanvraagstatus");
   // BPMN en proceskoppeling: bronGE is het element-id.
   assert.ok(traces("bpmn", "aanvraag-oppakken").every((t) => t.bronElementId === t.bronGE));
   assert.deepEqual(traces("proceskoppeling", "aanvraag-oppakken").map((t) => t.bronElementId), ["bp_zaak_aanmaken", "bp_rol_aanvrager_aanmaken", "bp_document_koppelen", "bp_status_ontvangen"]);
   // DMN: de beslissing op element-id; een kolom met een uuid-binding op die uuid.
   assert.equal(traces("dmn", "aanvraag-ontvankelijk")[0].bronElementId, traces("dmn", "aanvraag-ontvankelijk")[0].bronGE);
-  assert.deepEqual(zetBronElementIds({ traceregels: [{ bronGE: "A.b.c", bronUuid: "u1" }, { bronGE: null }] }).traceregels, [{ bronGE: "A.b.c", bronUuid: "u1", bronElementId: "u1" }, { bronGE: null }]);
+  assert.deepEqual(zetBronElementIds({ traceregels: [{ bronGE: "A.b.c", bronUuid: "u1" }, { bronGE: null }] }, { studioIds: new Map([["A.b", "A_b"]]) }).traceregels, [{ bronGE: "A.b.c", bronUuid: "u1" }, { bronGE: null }]);
+  assert.deepEqual(zetBronElementIds({ traceregels: [{ bronGE: "A.b.c", bronUuid: "u1" }] }, { studioIds: new Map([["A.b.c", "A_b"]]) }).traceregels, [{ bronGE: "A.b.c", bronUuid: "u1", bronElementId: "A_b" }]);
+});
+
+// Een hernoemd element houdt zijn Studio-id: de index loopt op de huidige naam naar het oude id.
+test("studioIdIndex: naampad → id, ook na hernoemen", () => {
+  const core = { elements: {
+    OudeNaam: { id: "OudeNaam", elementType: "entiteit", naam: "NieuweNaam", compartimenten: [{ compartmentType: "velden", velden: [{ naam: "x" }] }] },
+    OudeNaam_Kaart: { id: "OudeNaam_Kaart", elementType: "gegevenselement", naam: "Kaart", compartimenten: [{ compartmentType: "velden", velden: [{ naam: "soort" }] }] },
+    c1: { id: "c1", elementType: "compositie", source: "OudeNaam", target: "OudeNaam_Kaart" },
+    R: { id: "R", elementType: "relatie", naam: "Nieuwrel", data: { typenaam: "NieuwRel" }, source: "OudeNaam", target: "OudeNaam", compartimenten: [{ compartmentType: "velden", velden: [{ naam: "rol" }] }] },
+    enum_S: { id: "enum_S", elementType: "enumeratie", naam: "S", compartimenten: [{ compartmentType: "waarden", velden: [{ naam: "a" }] }] },
+  } };
+  const i = studioIdIndex(core);
+  assert.equal(uuidVanPad(i, "NieuweNaam.Kaart.soort"), "OudeNaam_Kaart");
+  assert.equal(uuidVanPad(i, "NieuweNaam.x"), "OudeNaam");
+  assert.equal(uuidVanPad(i, "S.a"), "enum_S");
+  // Een relatie onder haar naam én haar typenaam.
+  assert.equal(uuidVanPad(i, "NieuweNaam.NieuwRel.rol"), "R");
+  assert.equal(uuidVanPad(i, "NieuweNaam.Nieuwrel"), "R");
+  // Een pad met de naam van vóór de hernoeming (het id) vindt het element ook.
+  assert.equal(uuidVanPad(i, "OudeNaam.R"), "R");
 });
 
 test("uuidVanPad: het hele pad, anders het eind ervan", () => {

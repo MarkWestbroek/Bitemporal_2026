@@ -123,7 +123,7 @@ export async function voerInrichtingsExportUit({ edienst, modelBestand, datatype
   // De bronnen eerst: elk artefact verwijst ernaar met hun payloadHash (§11.14).
   const bron = await maakBronArtefacten({ edienst, modelBestand, canoniekDeel, bpmnModellen, peiltijdstip, sha256Hex });
   diagnostics.push(...bron.diagnostics);
-  const bundel = await maakInrichtingsBundel({ modelBestand, edienst, datatypen, referentielijsten: lijsten, bpmnModellen, peiltijdstip, sha256Hex, bronnen: bron.bronnen });
+  const bundel = await maakInrichtingsBundel({ modelBestand, edienst, datatypen, referentielijsten: lijsten, bpmnModellen, peiltijdstip, sha256Hex, bronnen: bron.bronnen, canoniekDeel });
 
   let rijen = bundel.map((b) => ({ ...b, status: b.fout ? "fout" : null, register: null }));
   let registerGelezen = false;
