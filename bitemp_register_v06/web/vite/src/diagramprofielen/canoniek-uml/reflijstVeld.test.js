@@ -105,6 +105,9 @@ test("verbindingsregel: een items-relatie loopt van het item naar de referentiel
   // De goede richting (item → lijst): geen melding; het element-type valideert hem ook zo.
   const goed = { ...rel, source: rel.target, target: rel.source };
   assert.equal(controleerItemsRichting(goed, ctx), null);
-  // Geen items-relatie: geen melding.
-  assert.equal(controleerItemsRichting({ ...rel, data: { ...rel.data, relatieSubtype: "associatie" } }, ctx), null);
+  // Tussen item en lijst maar zonder dat subtype (Mark 08-11, ModuleType): zet het subtype.
+  assert.match(controleerItemsRichting({ ...rel, data: { ...rel.data, relatieSubtype: "" } }, ctx), /subtype op referentielijst_items/);
+  // Een relatie tussen gewone entiteiten: geen melding.
+  const gewoon = Object.values(core.elements).find((e) => e.elementType === "relatie" && !isRefLijstItems(e));
+  if (gewoon) assert.equal(controleerItemsRichting(gewoon, ctx), null);
 });

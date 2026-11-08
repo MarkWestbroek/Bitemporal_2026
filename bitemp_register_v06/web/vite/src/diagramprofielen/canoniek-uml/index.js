@@ -164,10 +164,19 @@ export function isRefLijstItems(el) {
  * (plan §8; was andersom). Context: `{elements}`.
  */
 export function controleerItemsRichting(element, context) {
-  if (!isRefLijstItems(element) || !context?.elements) return null;
+  if (element?.elementType !== "relatie" || !context?.elements) return null;
   const bron = context.elements[element.source];
   const doel = context.elements[element.target];
   if (!bron || !doel) return null;
+  // Een relatie tussen een ref.lijst-item en een referentielijst zonder dat subtype (Mark 08-11:
+  // "ModuleType" stond niet in de type-keuze): de Studio en de backend herkennen hem pas met het
+  // subtype als items-relatie.
+  if (!isRefLijstItems(element)) {
+    const tussen = (isRefLijstItem(bron) && isRefLijst(doel)) || (isRefLijst(bron) && isRefLijstItem(doel));
+    return tussen
+      ? `Deze relatie verbindt een ref.lijst-item met een referentielijst. Zet het subtype op referentielijst_items: dan is hij als type van een veld te kiezen (groep Referentielijsten).`
+      : null;
+  }
   if (isRefLijstItem(bron) && isRefLijst(doel)) return null;
   if (isRefLijst(bron) && isRefLijstItem(doel)) {
     return `Een ref.lijst-items-relatie loopt van het item (${doel.naam || "?"}) naar de referentielijst (${bron.naam || "?"}); deze staat andersom. Draai de richting om.`;
