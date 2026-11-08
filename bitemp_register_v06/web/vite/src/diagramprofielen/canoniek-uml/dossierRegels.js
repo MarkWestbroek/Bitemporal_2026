@@ -28,6 +28,8 @@
  *   het dossier horen: elk bpmn-artefact van de e-dienst.
  * - `dossierdocumentkolommen` (gzac-zgw-document-list-column-json): de kolommen
  *   van het documentenoverzicht; generiek, een sjabloon uit deze regelset.
+ * - `dossierlijstkolommen` (gzac-case-list-json, 0.7.0): de kolommen van de
+ *   dossierlijst; velden uit de dossierinhoud en gegevens van GZAC zelf.
  * - `dossierstatussen` (gzac-internal-case-status-json): de statussen van het
  *   dossier. Dat zijn waarden uit een statuslijst van het canonieke model (de
  *   e-dienst noemt de lijst): standaard de waarden die een taak in een proces
@@ -42,7 +44,7 @@
 
 export const CANONIEK_NAAR_DOSSIER = {
   id: "canoniek-naar-gzac-dossier",
-  versie: "0.6.0",
+  versie: "0.7.0",
   titel: "Canoniek model + e-dienst → GZAC-dossierbundel (definitie, documentdefinitie, form.io, tabbladen, zaaktypekoppeling, processen, documentkolommen, statussen)",
   bron: "objecttype-artefact (uit canoniek-uml V3) + e-dienst",
   doel: "gzac-dossierbundel",
@@ -54,7 +56,8 @@ export const CANONIEK_NAAR_DOSSIER = {
   // case-definition.json, process-document-link/<id>.process-document-link.json,
   // zgw/document-list-column/<id>.zgw-document-list-column.json,
   // case/internal-status/<id>.internal-case-status.json,
-  // case/widget-tab/<id>.case-widget-tab.json (dossierwidgettabbladen, 08-11). De identifier
+  // case/widget-tab/<id>.case-widget-tab.json (dossierwidgettabbladen, 08-11),
+  // case/list/<id>.case-list.json (dossierlijstkolommen, 08-11). De identifier
   // van die delen is dus de key van het dossier; alleen een dossierformulier
   // heeft een eigen identifier.
 
@@ -80,6 +83,24 @@ export const CANONIEK_NAAR_DOSSIER = {
    * meldt (FUNDAMENT 05-11).
    */
   statussen: { zichtbaarInLijst: true, kleur: "WARMGRAY", vast: { retentionPeriodInDays: -1, label: null } },
+
+  /**
+   * Dossierlijst (0.7.0, vorm van Valtimo's CaseListExporter, FUNDAMENT 08-11).
+   * `dossier`: de gegevens die GZAC zelf bij een dossier bijhoudt (`case:<naam>`)
+   * met hun weergave; de status als tags. Een veld uit de dossierinhoud krijgt
+   * de eerste weergave die past. `parameters`: displayTypeParameters per type
+   * (een datum in het standaardformaat).
+   */
+  lijst: {
+    dossier: { createdOn: "date", modifiedOn: "date", createdBy: "text", assigneeFullName: "text", internalStatus: "tags" },
+    weergave: [
+      { naam: "Ja/nee", als: { type: "boolean" }, type: "boolean" },
+      { naam: "Datum", als: { format: "date" }, type: "date" },
+      { naam: "Tijdstip", als: { format: "date-time" }, type: "date" },
+      { naam: "Overige: tekst", als: {}, type: "text" },
+    ],
+    parameters: { date: { dateFormat: null } },
+  },
 
   /** De kolommen van het documentenoverzicht (ZGW-documenten), nieuwste bovenaan. */
   documentkolommen: [

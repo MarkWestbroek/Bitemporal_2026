@@ -340,6 +340,23 @@
     },
     {
       "identifier": "gehandicaptenparkeerkaart",
+      "soort": "dossierlijstkolommen",
+      "formaat": "gzac-case-list-json",
+      "doelcomponent": "gzac",
+      "naam": "Dossierlijst gehandicaptenparkeerkaart",
+      "dossierschema": "gehandicaptenparkeerkaart",
+      "kolommen": [
+        { "veld": "aanvraagnummer", "label": "Aanvraagnummer", "sorteerbaar": true },
+        { "veld": "ingediendOp", "label": "Ingediend op", "sortering": "DESC" },
+        { "veld": "soort", "label": "Soort kaart" },
+        { "dossier": "assigneeFullName", "label": "Behandelaar", "sorteerbaar": true },
+        { "dossier": "internalStatus", "key": "status", "label": "Status", "sorteerbaar": true },
+        { "dossier": "createdOn", "label": "Aangemaakt op", "sorteerbaar": true }
+      ],
+      "_kolommen": "dossierlijst voor de demo (Mark/FUNDAMENT 08-11). De lijst vervangt de standaardkolommen helemaal, dus ook behandelaar, status en aanmaakdatum. Aanvraagtype en BSN niet: genest of in een lijst; of GZAC 13.50 een pad in doc: kent, is niet getest"
+    },
+    {
+      "identifier": "gehandicaptenparkeerkaart",
       "soort": "dossierzaaktypelink",
       "formaat": "gzac-zaak-type-link-json",
       "doelcomponent": "gzac",
@@ -467,6 +484,8 @@
     { "artefact": "beschikking-opstellen", "soort": "dossierformulier", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" },
     { "artefact": "afwijzing-opstellen", "soort": "dossierformulier", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "het taakformulier vult behandelvelden van de dossierinhoud" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierwidgettabbladen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "de widgets tonen velden van de dossierinhoud" },
+    { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierlijstkolommen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "de kolommen tonen velden van de dossierinhoud" },
+    { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierlijstkolommen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierdefinitie", "reden": "de lijst hoort bij het dossier" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossiertabbladen", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierwidgettabbladen", "reden": "het tabblad Aanvraag toont de widgets van dat tabblad" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierzaaktypelink", "afhankelijkVan": "gehandicaptenparkeerkaart", "afhankelijkVanSoort": "dossierschema", "reden": "de koppeling hoort bij het dossier" },
     { "artefact": "gehandicaptenparkeerkaart", "soort": "dossierzaaktypelink", "afhankelijkVan": "GPK", "afhankelijkVanSoort": "zaaktype", "reden": "de koppeling verwijst naar het zaaktype in de omgeving; op een lege omgeving moet het zaaktype er eerst zijn" },

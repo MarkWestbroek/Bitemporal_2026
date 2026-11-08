@@ -391,3 +391,31 @@ test("toetsen: onbekend veld, behandelveld dat al in het model staat, geen objec
   assert.deepEqual(zonder.diagnostics.map((d) => d.code), ["DOS-OBJECTTYPE"]);
   await assert.rejects(maakDossierArtefact({ modelBestand, edienst: lees("gpk-edienst.json"), identifier: "GPK", soort: "dossierschema", sha256Hex }));
 });
+
+// De dossierlijst (FUNDAMENT/Mark 08-11): case/list/<dossier>.case-list.json, vorm van Valtimo's
+// CaseListExporter. Velden uit de dossierinhoud (doc:) en gegevens van GZAC zelf (case:).
+test("dossierlijstkolommen: kolommen uit de dossierinhoud en van GZAC, in de vorm van de CaseListExporter", async () => {
+  const { artefact, diagnostics } = await maak("gehandicaptenparkeerkaart", "dossierlijstkolommen");
+  assert.deepEqual(diagnostics, []);
+  const kolommen = artefact.artefactInhoud.payload;
+  assert.deepEqual(kolommen.map((k) => [k.key, k.title, k.path, k.displayType.type, k.sortable, k.defaultSort, k.order]), [
+    ["aanvraagnummer", "Aanvraagnummer", "doc:aanvraagnummer", "text", true, null, 0],
+    ["ingediendOp", "Ingediend op", "doc:ingediendOp", "date", true, "DESC", 1],
+    ["soort", "Soort kaart", "doc:soort", "text", false, null, 2],
+    ["assigneeFullName", "Behandelaar", "case:assigneeFullName", "text", true, null, 3],
+    ["status", "Status", "case:internalStatus", "tags", true, null, 4],
+    ["createdOn", "Aangemaakt op", "case:createdOn", "date", true, null, 5],
+  ]);
+  assert.deepEqual(kolommen[1].displayType.displayTypeParameters, { dateFormat: null });
+  assert.deepEqual(kolommen[0].displayType.displayTypeParameters, {});
+  assert.equal(artefact.traceregels[0].bronGE?.endsWith(".aanvraagnummer"), true);
+  assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"], ["gehandicaptenparkeerkaart", "dossierdefinitie"]]);
+
+  // Toetsen: genest veld, onbekend dossiergegeven, twee sorteringen, verkeerde sortering.
+  const fout = await maak("gehandicaptenparkeerkaart", "dossierlijstkolommen", (e) => {
+    const l = e.artefacten.find((a) => a.soort === "dossierlijstkolommen");
+    l.kolommen = [{ veld: "aanvraagtype.omschrijving" }, { dossier: "zaaknummer" }, { veld: "soort", sortering: "DESC" }, { dossier: "createdOn", sortering: "op" }];
+    return e;
+  });
+  assert.deepEqual(fout.diagnostics.map((d) => d.code), ["DOS-LIJST", "DOS-VELD", "DOS-LIJST", "DOS-LIJST"]);
+});
