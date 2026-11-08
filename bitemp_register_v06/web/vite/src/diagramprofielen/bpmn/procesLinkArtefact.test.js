@@ -119,3 +119,11 @@ test("een actie met een eigen plugin, ook op een gebruikerstaak (portaaltaak, re
   const zonder = await maakProcesLinkArtefact({ modelBestand, edienst: lees("gpk-edienst.json"), identifier: "gehandicaptenparkeerkaart-beoordelen", sha256Hex });
   assert.deepEqual(zonder.diagnostics.map((d) => [d.code, d.severity]), [["PL-FORMULIER", "error"], ["PL-LEEG", "info"]]);
 });
+
+test("servicetaak die alleen procesvariabelen zet: geen PL-ACTIE (TRANSFORMATIES 08-11)", async () => {
+  const { diagnostics } = await maak("aanvraag-oppakken", (m) => {
+    const el = Object.values(m.elements).find((e) => e.data?.taakSoort === "service" && e.data?.actie);
+    Object.assign(el.data, { actie: "", dossierstatus: "", zetVariabelen: "beoordelingsbericht=x" });
+  });
+  assert.deepEqual(diagnostics.filter((d) => d.code === "PL-ACTIE"), []);
+});

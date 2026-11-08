@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **Proceskoppeling: geen waarschuwing PL-ACTIE meer bij een servicetaak die alleen procesvariabelen
+  zet** (*zet procesvariabelen*); die taak doet zijn werk in de XML.
+
 ## [studio/v0.35.0] — 2026-11-08
 
 Samen met render 0.3.8 en devloop 0.25.6 (api 0.22.3). Voor de demo van 10-11: het generieke
