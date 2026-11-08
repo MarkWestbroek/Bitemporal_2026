@@ -8,6 +8,30 @@
 
 ---
 
+## studio 0.35.0 / render 0.3.8 / devloop 0.25.6 (2026-11-08)
+
+Release voor de demo van 10-11 (akkoord Mark 08-11). api blijft 0.22.3; devloop 0.25.6 is api
+0.22.3 met studio 0.35.0.
+
+- **BPMN naar GZAC, regelset `bpmn-naar-gzac` 0.8.0**: het generieke beoordelen met berichten.
+  - Een werpend bericht wekt een wachtend proces (`correlate()`) of start er een.
+  - De berichtnaam kan een variabele zijn.
+  - Een taak kan vaste procesvariabelen zetten.
+  - Een pool als deelnemer (Klantportaal) is documentatie.
+  - Een gebruikerstaak kan een portaaltaak worden (`create-portaaltaak`).
+  
+  Zie docs/TRANSFORMATIES.md.
+- **Call activity**: dikke rand en ⊞; variabelen erheen en terug (`camunda:in`/`camunda:out`, regelset 0.7.0).
+- **Studio**:
+  - het domein komt uit het package (alleen-lezen bij GE en relatie);
+  - geen "0.5 preview"-strook meer;
+  - een tabnaam is cursief zolang een wijziging nog niet op de server staat.
+- **Render**: `/export/v3` gebruikt dezelfde domeinafleiding.
+
+Uitrol: app (frontend + render), Fundament via FUNDAMENT.
+
+---
+
 ## api 0.22.3 / devloop 0.25.5 (2026-11-08)
 
 Patch voor de startup-rebuild (devloop); studio blijft 0.34.1 en render 0.3.7.

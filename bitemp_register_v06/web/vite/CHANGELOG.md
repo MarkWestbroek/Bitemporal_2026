@@ -8,6 +8,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.35.0] — 2026-11-08
+
+Samen met render 0.3.8 en devloop 0.25.6 (api 0.22.3). Voor de demo van 10-11: het generieke
+beoordelen met berichten (GZAC-regelset bpmn-naar-gzac 0.8.0).
+
 ### Gewijzigd
 - **Referentielijsten als instantie (na de rebuild van 08-11).** Een e-dienst noemt per lijst de
   bron, de `instantie` en het `lidmaatschap`; uit het inrichting-register komen alleen de leden van

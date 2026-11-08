@@ -61,7 +61,10 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.34.1`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.35.0`**
+  (2026-11-08: BPMN naar GZAC met berichten — wekken of starten, variabele berichtnaam, vaste
+  procesvariabelen, pools als deelnemer, portaaltaak; call activity met variabelen; domein uit het
+  package; samen met render 0.3.8 en devloop 0.25.6), na **`studio/v0.34.1`**
   (2026-11-08, patch: V3-export zet `doelEntiteit` op de naam van het doel, niet het element-id;
   inrichtingsexport uit een Studio-project; samen met render 0.3.7 en devloop 0.25.3), na **`studio/v0.34.0`**
   (2026-11-08: elementen uit een andere taal op een diagram, koppelingen als lijnen met een
@@ -124,7 +127,7 @@ dat, en forceert `git branch -D` het (met opzet).
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
 - Backend: **`api/v0.22.3`** (2026-11-08, patch: de startup-rebuild genereert het
   standaardpakket alleen als het expliciet gegenereerd was — vlag `gegenereerd` op
-  `gebouwde_domeinen`; devloop-image 0.25.5). Daarvoor **`api/v0.22.2`** (2026-11-08, patch: meerregelige beschrijvingen breken het
+  `gebouwde_domeinen`; devloop-image 0.25.5; devloop-image 0.25.6 = dezelfde api met studio 0.35.0). Daarvoor **`api/v0.22.2`** (2026-11-08, patch: meerregelige beschrijvingen breken het
   gegenereerde Go-commentaar niet meer; devloop-image 0.25.4). Daarvoor **`api/v0.22.1`** (2026-11-08, patch: items-relatie op het item — eigen tabel
   `<item>_<relatie>` en niet meer onder Referentielijst; devloop-image 0.25.2; devloop-image 0.25.3 = dezelfde api met studio 0.34.1). Daarvoor **`api/v0.22.0`** (2026-11-07: de domeinen van het register expliciet — `domeinen`,
   `alle_domeinen`, `precies` op `/admin/rebuild`, `schema_versies.gebouwde_domeinen` voor de
@@ -157,7 +160,8 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.3.7`** (2026-11-08: `/export/v3` met de doelEntiteit-fix van
+- Render-sidecar: **`render/v0.3.8`** (2026-11-08: de code van studio 0.35.0, o.a. de
+  domeinafleiding in `/export/v3`; image `bitemp-render-svc:0.3.8`), na **`render/v0.3.7`** (2026-11-08: `/export/v3` met de doelEntiteit-fix van
   studio 0.34.1; image `bitemp-render-svc:0.3.7`), na **`render/v0.3.6`** (2026-11-08: de tekenaar van studio 0.34.0 — leesrichtingspijl
   langs de lijn, een `$ref`-veld toont zijn verwijzing, «gebruikt» naar een items-relatie;
   image `bitemp-render-svc:0.3.6`), na **`render/v0.3.5`** (2026-11-07: `POST /export/v3`, V3 uit een Studio-project
