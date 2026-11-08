@@ -1369,7 +1369,53 @@ altijd staan: zonder hangt het aangeroepen proces niet aan het dossier. Het
 aangeroepen proces moet een vaste proces-id zijn (`BPMN-AANGEROEPEN`, 0.2.0),
 dus geen `${expressie}`. Het generieke proces noemt dan één specifiek proces;
 een generiek proces dat per aanvraagtype iets anders aanroept, vraagt een eigen
-oplossing (open).
+oplossing: zie 0.8.0.
+
+**Regelset 0.8.0: generiek en specifiek met berichten (besluit Mark 08-11).** Mark
+kiest voor het generieke beoordelen de berichtaanpak in plaats van een dynamische
+call activity (die de dossierexport van Valtimo niet aankan). De keten:
+1. Aanvraag oppakken zet met een taak de vaste procesvariabele
+   `beoordelingsbericht` en werpt "behandeling-gevraagd": dat start Aanvraag
+   behandelen.
+2. Aanvraag behandelen werpt `${beoordelingsbericht}`: dat start het specifieke
+   beoordelen (bv. gehandicaptenparkeerkaart-beoordelen). Daarna wacht het op een
+   vangend tussen-event "beoordeling-afgerond".
+3. Het specifieke proces werpt "beoordeling-afgerond". Dat wekt het wachtende
+   generieke proces van hetzelfde dossier; `uitkomst` gaat mee met alle
+   procesvariabelen.
+
+Wat de schrijver en de regelset daarvoor doen:
+- **Starten of wekken.** `maakBpmnArtefact` kijkt in alle bpmn-artefacten van de
+  e-dienst. Wacht een vangend tussen-event op de berichtnaam, dan krijgt het
+  werpende event `berichten.wekken`: `…correlate()` in plaats van
+  `…correlateStartMessage()`. Het gewekte proces staat in `gewekt`. Heeft een naam
+  zowel een message start event als een wachtend event, dan wekt hij, met een
+  melding `BPMN-BERICHT`.
+- **Variabele berichtnaam.** `${naam}` als berichtnaam van een werpend event wordt
+  `createMessageCorrelation(execution.getVariable('naam'))` (`berichten.variabel`);
+  een andere expressie gaat letterlijk mee. Welk proces start, blijkt pas bij
+  uitvoeren: een melding `BPMN-BERICHT`, geen fout. Een variabele naam start altijd,
+  hij wekt niet.
+- **Vaste procesvariabelen.** Een taak heeft het veld `zetVariabelen`
+  ("naam=waarde, …"; een komma zonder nieuwe `naam=` hoort bij de waarde). De
+  regelset (`variabelenZetten`) maakt er `camunda:outputParameter`s van, in
+  hetzelfde `camunda:inputOutput` als de invoer van een beslistabel.
+- **Pools als deelnemer.** Een pool als "Klantportaal" (met start, taak en einde
+  erin via `bevat`) is documentatie. Staan er stroomelementen buiten elke pool, dan
+  is dát het proces; anders de pool met de meeste stroomelementen. Een andere pool
+  valt met zijn leden weg, ook uit de toetsen op berichten en de proceskoppeling.
+  Pools, lanes en message flows geven een info-melding `BPMN-SCHRIJVER`.
+- **Een actie met een eigen plugin.** Een actie in `proceskoppeling.plugin.acties`
+  mag `definitie`, `configuratie` en `voor` (bv. `activityType`
+  `bpmn:UserTask:create`) noemen; anders geldt die van de Zaken API-plugin. Ook een
+  gebruikerstaak mag een `actie` hebben: dan krijgt hij een plugin-koppeling in
+  plaats van een formulier.
+- **Portaaltaak** (actie `portaaltaakAanmaken`, op een gebruikerstaak): plugin
+  `portaaltaak`, `create-portaaltaak`, `bpmn:UserTask:create`. Eigenschappen uit
+  PortaaltaakPlugin.kt (FUNDAMENT): `formType` "id", `formTypeId` = het `formulier`
+  van de taak (zonder formulier: fout `PL-FORMULIER`), `receiver` "ZAAK_INITIATOR",
+  `sendData`/`receiveData` leeg, `verloopDurationInDays` 14. FUNDAMENT controleert
+  ze na de eerste uitrol.
 
 **Hash.** De payload is de XML-tekst; payloadHash = sha256 over de UTF-8-tekst
 (niet JCS, afspraak FUNDAMENT). bronmodelHash = sha256 over JCS van het

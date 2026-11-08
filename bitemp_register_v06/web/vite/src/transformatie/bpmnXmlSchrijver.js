@@ -20,7 +20,10 @@
  * werpend tussen-event (`data.richting` "werpt") wordt een
  * intermediateThrowEvent; wat de engine bij het werpen doet (Operaton: het
  * message start event van een ander proces correleren) komt uit de regelset
- * (`berichten.werpen`, met `{bericht}` voor de naam).
+ * (`berichten.werpen`, met `{bericht}` voor de naam). Wacht er een lopend proces op het
+ * bericht (`wekbareBerichten`), dan `berichten.wekken` (correlate). Een berichtnaam
+ * `${variabele}` wordt de expressie uit `berichten.variabel` (0.8.0). Vaste
+ * procesvariabelen van een taak (`data.zetVariabelen`) worden output-parameters.
  *
  * Beslistabellen: een businessRuleTask met `data.beslissing` (decision-id) en
  * `data.resultaat`. Waar de engine de kolommen van de tabel vandaan haalt,
@@ -31,9 +34,12 @@
  * regelset (`{veld}` = data.veld; `{veld|kebab}` = dezelfde waarde als sleutel
  * met koppeltekens, zie `sleutel.js`).
  *
- * Nog niet: pools/lanes, message flows, data-objecten, notities, boundary
- * events en de inhoud van subprocessen. Die geven een melding
- * `BPMN-SCHRIJVER` en blijven weg.
+ * Pools, lanes en message flows zijn notatie (08-11): een pool die een deelnemer
+ * buiten het proces is (bv. "Klantportaal") valt met zijn inhoud weg, met een
+ * info-melding; zie `deelnemersBuitenProces`. Lanes en message flows ook (info).
+ *
+ * Nog niet: data-objecten, notities, boundary events en de inhoud van
+ * subprocessen. Die geven een melding `BPMN-SCHRIJVER` en blijven weg.
  *
  * Puur: geen DOM nodig, de uitvoer is tekst.
  */
@@ -109,6 +115,81 @@ export function variabelenLijst(tekst) {
   });
 }
 
+/**
+ * Een berichtnaam die een variabele is: `${beoordelingsbericht}` → {naam:"beoordelingsbericht"};
+ * een andere expressie (`${a.b}`) → {expressie:"a.b"}; een vaste naam → null.
+ * @param {string} bericht
+ */
+export function berichtVariabele(bericht) {
+  const m = /^\s*[$#]\{\s*(.*?)\s*\}\s*$/.exec(String(bericht || ""));
+  if (!m) return null;
+  return /^[A-Za-z_]\w*$/.test(m[1]) ? { naam: m[1] } : { expressie: m[1] };
+}
+
+/**
+ * Vaste procesvariabelen uit de modeltekst: "a=x, b = y" → [{naam:"a",waarde:"x"},{naam:"b",waarde:"y"}].
+ * Een komma hoort bij de waarde tenzij er een nieuwe `naam=` op volgt.
+ * @param {string} tekst
+ */
+export function zetLijst(tekst) {
+  return String(tekst || "")
+    .split(/[,\n](?=\s*[A-Za-z_]\w*\s*=)/)
+    .map((s) => s.trim())
+    .filter((s) => s.includes("="))
+    .map((s) => ({ naam: s.slice(0, s.indexOf("=")).trim(), waarde: s.slice(s.indexOf("=") + 1).trim() }))
+    .filter((x) => x.naam);
+}
+
+/**
+ * Pools op een diagram (08-11, TRANSFORMATIES): welke elementen buiten het proces vallen.
+ * Lidmaatschap loopt via `bevat`-connectoren (pool → lid, ook via een lane). Staan er
+ * stroomelementen buiten elke pool, dan is dát het proces en zijn alle pools deelnemers
+ * (bv. "Klantportaal", documentatie); anders is de pool met de meeste stroomelementen het
+ * proces. Een deelnemer valt met al zijn leden weg.
+ * @param {{elements: Record<string, any>}} model
+ * @param {{nodes?: {elementId: string}[]}} diagram
+ * @returns {{buiten: Set<string>, procesPool: string|null}}
+ */
+export function deelnemersBuitenProces(model, diagram) {
+  const ids = (diagram.nodes || []).map((n) => n.elementId).filter((id) => model.elements?.[id]);
+  const pools = ids.filter((id) => model.elements[id].elementType === "pool");
+  if (!pools.length) return { buiten: new Set(), procesPool: null };
+  const ouder = new Map();
+  for (const e of Object.values(model.elements || {})) if (e.elementType === "bevat" && e.source && e.target) ouder.set(e.target, e.source);
+  const poolVan = (id) => {
+    const gezien = new Set();
+    for (let p = ouder.get(id); p && !gezien.has(p); p = ouder.get(p)) {
+      gezien.add(p);
+      if (model.elements[p]?.elementType === "pool") return p;
+    }
+    return null;
+  };
+  const leden = new Map(pools.map((p) => [p, /** @type {string[]} */ ([])]));
+  let losse = 0;
+  const stroom = (id) => !!tagVan(model.elements[id]);
+  for (const id of ids) {
+    if (model.elements[id].elementType === "pool") continue;
+    const p = poolVan(id);
+    if (p && leden.has(p)) leden.get(p).push(id);
+    else if (stroom(id)) losse += 1;
+  }
+  let procesPool = null;
+  if (!losse) {
+    let meeste = -1;
+    for (const [p, l] of leden) {
+      const n = l.filter(stroom).length;
+      if (n > meeste) [procesPool, meeste] = [p, n];
+    }
+  }
+  const buiten = new Set();
+  for (const [p, l] of leden) {
+    if (p === procesPool) continue;
+    buiten.add(p);
+    for (const id of l) buiten.add(id);
+  }
+  return { buiten, procesPool };
+}
+
 /** Het BPMN-element van een Omnium-element (of null als de schrijver het niet kent). */
 function tagVan(el) {
   const t = el.elementType;
@@ -144,22 +225,36 @@ const midden = (v) => ({ x: v.x + v.width / 2, y: v.y + v.height / 2 });
  * @param {string} [invoer.targetNamespace]
  * @param {any} [invoer.engine]                - engine-regelset (null = kale BPMN)
  * @param {Record<string, any[]>} [invoer.beslissingen] - per decision-id de invoer van de beslistabel
+ * @param {Set<string>} [invoer.wekbareBerichten] - berichtnamen waar een lopend proces op wacht (vangend
+ *   tussen-event in de e-dienst): een werpend event wekt dat proces (`berichten.wekken`) in plaats van
+ *   er een te starten (`berichten.werpen`)
  * @returns {{xml: string, ids: Map<string,string>, diagnostics: any[]}}
  */
-export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http://bpmn.io/schema/bpmn", engine = null, beslissingen = {} }) {
+export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http://bpmn.io/schema/bpmn", engine = null, beslissingen = {}, wekbareBerichten = new Set() }) {
   const diagnostics = [];
   const meld = (message, sourceId = null) => diagnostics.push({ severity: "warning", code: "BPMN-SCHRIJVER", message, sourceId, path: null });
   const diagram = diagramId ? model.diagrams?.[diagramId] : Object.values(model.diagrams || {})[0];
   if (!diagram) throw new Error(`Diagram "${diagramId || "(eerste)"}" niet gevonden.`);
 
+  const info = (message, sourceId = null) => diagnostics.push({ severity: "info", code: "BPMN-SCHRIJVER", message, sourceId, path: null });
+
+  // ── Deelnemers buiten het proces (pools): met inhoud overgeslagen ──
+  const { buiten, procesPool } = deelnemersBuitenProces(model, diagram);
+  for (const id of buiten) {
+    const el = model.elements[id];
+    if (el?.elementType === "pool") info(`Pool "${el.naam || el.id}" is een deelnemer buiten het proces; met zijn inhoud overgeslagen (notatie)`, el.id);
+  }
+
   // ── Knopen en verbindingen op dit diagram ──
   const opDiagram = new Map();
   for (const n of diagram.nodes || []) {
     const el = model.elements?.[n.elementId];
-    if (!el) continue;
+    if (!el || buiten.has(el.id)) continue;
     const tag = tagVan(el);
     if (!tag) {
-      meld(`${el.elementType} "${el.naam || el.id}" schrijft de BPMN-schrijver (nog) niet`, el.id);
+      if (el.id === procesPool) info(`Pool "${el.naam || el.id}" is het proces; de pool zelf is notatie`, el.id);
+      else if (el.elementType === "lane") info(`Lane "${el.naam || el.id}" is notatie; haar leden staan in het proces`, el.id);
+      else meld(`${el.elementType} "${el.naam || el.id}" schrijft de BPMN-schrijver (nog) niet`, el.id);
       continue;
     }
     if (el.elementType === "subproces" && el.data?.gedragDiagramId) meld(`De inhoud van subproces "${el.naam}" blijft weg (alleen samengevouwen)`, el.id);
@@ -167,7 +262,12 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     opDiagram.set(el.id, { el, tag, vorm: { x: n.position.x, y: n.position.y, width: maat.width, height: maat.height } });
   }
   const flows = Object.values(model.elements || {}).filter((e) => e.source && opDiagram.has(e.source) && opDiagram.has(e.target));
-  for (const e of flows) if (e.elementType !== "sequence-flow") meld(`${e.elementType} "${e.naam || e.id}" schrijft de BPMN-schrijver (nog) niet`, e.id);
+  // Message flows zijn notatie: de engine correleert een bericht op naam en businessKey.
+  const opDitDiagram = new Set((diagram.nodes || []).map((n) => n.elementId));
+  for (const e of Object.values(model.elements || {})) {
+    if (e.elementType === "message-flow" && (opDitDiagram.has(e.source) || opDitDiagram.has(e.target))) info(`Message flow "${e.naam || e.id}" is notatie; de engine correleert berichten op naam`, e.id);
+  }
+  for (const e of flows) if (e.elementType !== "sequence-flow" && e.elementType !== "message-flow") meld(`${e.elementType} "${e.naam || e.id}" schrijft de BPMN-schrijver (nog) niet`, e.id);
   const seq = flows.filter((e) => e.elementType === "sequence-flow");
 
   // ── Id's: bpmnId, anders uit de naam, uniek ──
@@ -214,7 +314,11 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     const id = ids.get(el.id);
     const meervoudig = el.data?.meervoudig;
     const werpt = el.data?.soort === "bericht" && (tag === "intermediateThrowEvent" || tag === "endEvent");
-    const regel = werpt ? eng.berichten?.werpen || {} : taakRegel(tag);
+    const bericht = el.data?.soort === "bericht" ? el.data?.bericht || "" : "";
+    const variabel = berichtVariabele(bericht);
+    // Werpen start een proces; wacht er een lopend proces op dit bericht, dan wekken (0.8.0).
+    const wek = werpt && !variabel && wekbareBerichten.has(bericht) && eng.berichten?.wekken;
+    const regel = werpt ? (wek ? eng.berichten.wekken : eng.berichten?.werpen) || {} : taakRegel(tag);
     const a = { id, name: naamVan(el) };
     if (tag === "callActivity") a.calledElement = el.data.aangeroepenProces;
     Object.assign(a, metNs({ ...regel.attributen }));
@@ -239,11 +343,16 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
     for (const f of uitgaand.get(el.id) || []) kinderen.push(`<bpmn:outgoing>${f}</bpmn:outgoing>`);
     const definitie = SOORT_DEFINITIE[el.data?.soort];
     if (definitie && EVENT_TAG[el.elementType]) {
-      const bericht = el.data?.soort === "bericht" ? el.data?.bericht : "";
       const d = { id: `${id}-definitie`, messageRef: bericht ? berichten.get(bericht) : undefined };
-      // Wat de engine bij het werpen doet; {bericht} = de berichtnaam (letterlijk vervangen, ${…} blijft staan).
+      // Wat de engine bij het werpen doet; {bericht} = de naam als tekst ('naam'), of bij een
+      // variabele naam (${beoordelingsbericht}) de expressie uit berichten.variabel.
       if (werpt) {
-        if (bericht) for (const [k, v] of Object.entries(metNs(regel.definitie))) d[k] = String(v).split("{bericht}").join(bericht);
+        const naamExpr = variabel
+          ? variabel.naam
+            ? String(eng.berichten?.variabel || "{variabele}").split("{variabele}").join(variabel.naam)
+            : variabel.expressie
+          : `'${bericht.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+        if (bericht) for (const [k, v] of Object.entries(metNs(regel.definitie))) d[k] = String(v).split("{bericht}").join(naamExpr);
         else meld(`Werpend bericht-event "${el.naam || el.id}" heeft geen berichtnaam`, el.id);
       }
       kinderen.push(`<bpmn:${definitie}${attrs(d)} />`);
@@ -274,6 +383,8 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
         else for (const { bron, doel } of lijst) ext.push(`<${t}${attrs({ source: bron, target: doel })} />`);
       }
     }
+    /** Eén camunda:inputOutput voor de invoer van een beslistabel en de vaste variabelen. */
+    const io = { tag: "", regels: /** @type {string[]} */ ([]) };
     // Invoer van een beslistabel: per dossierkolom een input-parameter.
     if (regel.invoer && el.data?.beslissing) {
       const lijst = beslissingen[el.data.beslissing];
@@ -282,11 +393,23 @@ export function schrijfBpmn({ model, diagramId, proces, targetNamespace = "http:
       const sjabloon = (x) => (x.bron === "dossier" ? regel.invoer.dossier?.split("{pointer}").join(x.pointer) : regel.invoer.variabele?.split("{variabele}").join(x.variabele));
       const params = (lijst || []).filter((x) => sjabloon(x));
       if (params.length) {
-        for (const t of [regel.invoer.tag, regel.invoer.parameter]) if (t.includes(":")) nsGebruikt.add(t.split(":")[0]);
-        ext.push(`<${regel.invoer.tag}>`);
-        for (const x of params) ext.push(`  <${regel.invoer.parameter} name="${esc(x.naam)}">${esc(sjabloon(x))}</${regel.invoer.parameter}>`);
-        ext.push(`</${regel.invoer.tag}>`);
+        io.tag = regel.invoer.tag;
+        for (const x of params) io.regels.push(`<${regel.invoer.parameter} name="${esc(x.naam)}">${esc(sjabloon(x))}</${regel.invoer.parameter}>`);
       }
+    }
+    // Vaste procesvariabelen (data.zetVariabelen "naam=waarde, …"): output-parameters (0.8.0).
+    const zet = el.elementType === "taak" ? zetLijst(el.data?.zetVariabelen) : [];
+    if (zet.length) {
+      const z = eng.variabelenZetten;
+      if (!z) meld(`"${el.naam || el.id}" zet procesvariabelen; dat vraagt een engine-regelset`, el.id);
+      else {
+        io.tag = io.tag || z.tag;
+        for (const { naam, waarde } of zet) io.regels.push(`<${z.parameter} name="${esc(naam)}">${esc(waarde)}</${z.parameter}>`);
+      }
+    }
+    if (io.regels.length) {
+      for (const t of [io.tag, ...io.regels.map((x) => x.slice(1, x.indexOf(" ")))]) if (t.includes(":")) nsGebruikt.add(t.split(":")[0]);
+      ext.push(`<${io.tag}>`, ...io.regels.map((x) => `  ${x}`), `</${io.tag}>`);
     }
     if (ext.length) kinderen.unshift(`<bpmn:extensionElements>`, ...ext.map((x) => `  ${x}`), `</bpmn:extensionElements>`);
     r.push(`    <bpmn:${tag}${attrs(a)}>`);

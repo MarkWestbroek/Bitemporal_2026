@@ -12,7 +12,7 @@ import { DOMParser } from "@xmldom/xmldom";
 
 import { leesBpmn } from "../../transformatie/bpmnXml.js";
 import { parseXml, afstammelingen, attr } from "../../transformatie/xmlBoom.js";
-import { schrijfBpmn, bpmnIdUit, variabelenLijst } from "../../transformatie/bpmnXmlSchrijver.js";
+import { schrijfBpmn, bpmnIdUit, variabelenLijst, zetLijst } from "../../transformatie/bpmnXmlSchrijver.js";
 import { bpmnXmlNaarModel } from "./bpmnXmlImport.js";
 import { BPMN_NAAR_GZAC } from "./bpmnGzacRegels.js";
 import { maakBpmnArtefact } from "./bpmnArtefact.js";
@@ -177,6 +177,10 @@ test("call activity: variabelen erheen en terug (regelset 0.7.0, FUNDAMENT 08-11
   assert.deepEqual(variabelenLijst("uitkomst, a:b ,"), [{ bron: "uitkomst", doel: "uitkomst" }, { bron: "a", doel: "b" }]);
   assert.equal(variabelenLijst("Alle"), "alle");
   assert.deepEqual(variabelenLijst(""), []);
+  assert.deepEqual(zetLijst('beoordelingsproces=${documentDelegateService.findValueByJsonPointerOrDefault("/beoordeling", execution, null)}, x=1'), [
+    { naam: "beoordelingsproces", waarde: '${documentDelegateService.findValueByJsonPointerOrDefault("/beoordeling", execution, null)}' },
+    { naam: "x", waarde: "1" },
+  ]);
   const model = (data) => ({
     elements: { t: { id: "t", naam: "Beoordeel zaak", elementType: "taak", data: { aangeroepenProces: "gpk-beoordelen", ...data } } },
     diagrams: { d: { id: "d", naam: "Aanvraag behandelen", nodes: [{ elementId: "t", position: { x: 0, y: 0 } }] } },
@@ -225,4 +229,60 @@ test("artefact gehandicaptenparkeerkaart-beoordelen; een ontbrekende activityId 
   // activityIds is een losse controle voor process-links die niet uit het model komen.
   edienst.artefacten.find((a) => a.identifier === "gehandicaptenparkeerkaart-beoordelen" && a.soort === "bpmn").activityIds = ["aanvraag-beoordelen", "besluit-vastleggen"];
   assert.deepEqual((await maak()).diagnostics.map((d) => d.code), ["BPMN-ACTIVITYID"]);
+});
+
+// Regelset 0.8.0 (FUNDAMENT 08-11): generiek behandelen ↔ specifiek beoordelen met berichten.
+test("berichten: variabele naam erheen, terug wekt het wachtende proces met correlate()", async () => {
+  const el = (id, elementType, data, naam = "") => ({ id, naam, elementType, data });
+  const flow = (id, source, target) => ({ id, elementType: "sequence-flow", source, target, data: {} });
+  const elements = Object.fromEntries([
+    // Aanvraag behandelen (generiek)
+    el("g1", "start-event", { soort: "bericht", bericht: "behandeling-gevraagd" }),
+    el("g2", "tussen-event", { soort: "bericht", richting: "werpt", bericht: "${beoordelingsbericht}", bpmnId: "beoordeling-vragen" }),
+    el("g3", "tussen-event", { soort: "bericht", bericht: "beoordeling-afgerond", bpmnId: "beoordeling-afwachten" }),
+    el("g4", "eind-event", {}),
+    flow("gf1", "g1", "g2"), flow("gf2", "g2", "g3"), flow("gf3", "g3", "g4"),
+    // gehandicaptenparkeerkaart-beoordelen (specifiek)
+    el("s1", "start-event", { soort: "bericht", bericht: "gpk-beoordelen-gevraagd" }),
+    el("s2", "taak", { taakSoort: "user", bpmnId: "beoordelen", zetVariabelen: "uitkomst=toekennen, toelichting=a, b" }, "Beoordelen"),
+    el("s3", "eind-event", { soort: "bericht", bericht: "beoordeling-afgerond", bpmnId: "afgerond" }),
+    flow("sf1", "s1", "s2"), flow("sf2", "s2", "s3"),
+    // Pool "Klantportaal" in Aanvraag behandelen: een deelnemer als documentatie (TRANSFORMATIES 08-11).
+    el("kp", "pool", {}, "Klantportaal"),
+    el("k1", "start-event", { soort: "bericht", bericht: "beoordeling-afgerond" }),
+    el("k2", "taak", { taakSoort: "user" }, "Voer klanttaak uit"),
+    el("k3", "eind-event", {}),
+    { id: "kb1", elementType: "bevat", source: "kp", target: "k1", data: {} },
+    { id: "kb2", elementType: "bevat", source: "kp", target: "k2", data: {} },
+    { id: "kb3", elementType: "bevat", source: "kp", target: "k3", data: {} },
+    flow("kf1", "k1", "k2"), flow("kf2", "k2", "k3"),
+    { id: "km1", elementType: "message-flow", source: "g2", target: "k2", data: {} },
+  ].map((e) => [e.id, e]));
+  const nodes = (ids) => ids.map((elementId, i) => ({ elementId, position: { x: i * 150, y: 0 } }));
+  const model = { elements, diagrams: { G: { id: "G", naam: "Aanvraag behandelen", nodes: nodes(["g1", "g2", "g3", "g4", "kp", "k1", "k2", "k3"]) }, S: { id: "S", naam: "Beoordelen", nodes: nodes(["s1", "s2", "s3"]) } } };
+  const edienst = { edienst: { naam: "x", versienummer: "1.0.0" }, artefacten: [
+    { soort: "bpmn", identifier: "aanvraag-behandelen", engine: "gzac", formaat: "bpmn-xml", bron: { diagram: "Aanvraag behandelen" } },
+    { soort: "bpmn", identifier: "gpk-beoordelen", engine: "gzac", formaat: "bpmn-xml", bron: { diagram: "Beoordelen" } },
+  ] };
+  const maak = (identifier) => maakBpmnArtefact({ modelBestand: model, edienst, identifier, sha256Hex });
+
+  const g = await maak("aanvraag-behandelen");
+  assert.deepEqual(g.diagnostics.filter((d) => d.severity !== "info").map((d) => [d.code, d.sourceId]), [["BPMN-BERICHT", "g2"]], "variabele naam: een melding, geen fout");
+  assert.deepEqual(g.diagnostics.filter((d) => d.severity === "info").map((d) => d.sourceId), ["kp", "km1"], "pool en message flow: info");
+  assert.doesNotMatch(g.artefact.artefactInhoud.payload, /Voer klanttaak uit|Klantportaal/);
+  const gx = g.artefact.artefactInhoud.payload;
+  assert.match(gx, /createMessageCorrelation\(execution\.getVariable\('beoordelingsbericht'\)\)[^"]*correlateStartMessage\(\)\}/);
+  assert.match(gx, /<bpmn:intermediateCatchEvent id="beoordeling-afwachten">[\s\S]*?messageRef="Message_beoordeling-afgerond"/);
+
+  const s = await maak("gpk-beoordelen");
+  assert.deepEqual(s.diagnostics, []);
+  assert.deepEqual([s.gestart, s.gewekt], [[], ["aanvraag-behandelen"]]);
+  const sx = s.artefact.artefactInhoud.payload;
+  assert.match(sx, /createMessageCorrelation\('beoordeling-afgerond'\)\.processInstanceBusinessKey\(execution\.getProcessBusinessKey\(\)\)\.setVariables\(execution\.getVariables\(\)\)\.correlate\(\)\}/);
+  // Vaste procesvariabelen als output-parameters; een komma zonder nieuwe naam= hoort bij de waarde.
+  assert.match(sx, /<camunda:inputOutput>\s*<camunda:outputParameter name="uitkomst">toekennen<\/camunda:outputParameter>\s*<camunda:outputParameter name="toelichting">a, b<\/camunda:outputParameter>\s*<\/camunda:inputOutput>/);
+
+  // Start én wacht dezelfde naam: wekken, met een melding.
+  elements.g1.data.bericht = "beoordeling-afgerond";
+  assert.deepEqual((await maak("gpk-beoordelen")).diagnostics.map((d) => d.code), ["BPMN-BERICHT"]);
 });
