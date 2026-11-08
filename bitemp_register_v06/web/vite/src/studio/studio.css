@@ -319,6 +319,8 @@
 .studio-tab__icoon { display: inline-flex; flex: 0 0 auto; }
 .studio-tab__icoon svg { width: 14px; height: 14px; }
 .studio-tab__naam { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Nog niet op de server opgeslagen (outbox, 08-11): de naam cursief. */
+.studio-tab.is-onverzonden .studio-tab__naam { font-style: italic; }
 .studio-tab__sluit {
   width: 18px; height: 18px; margin: 0 4px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;

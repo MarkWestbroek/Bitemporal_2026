@@ -17,6 +17,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   blijven lokaal" klopte niet meer (een project op de server synchroniseert). De korte beschrijving
   van een taal staat nu in de tooltip van het tabblad in Modelleren.
 
+### Toegevoegd
+- **Tabnaam cursief zolang er iets niet is opgeslagen.** Heeft de server een wijziging aan een
+  diagram (of aan een element dat erop staat) nog niet bevestigd, dan staat de naam van het tabblad
+  in Modelleren cursief; de tooltip zegt "nog niet op de server opgeslagen". Alleen met live-sync.
+
 ## [studio/v0.34.1] — 2026-11-08
 
 Patch, samen met render 0.3.7 en devloop 0.25.3 (api 0.22.1).

@@ -1086,6 +1086,12 @@ fase 2 een **bewerkbare sandbox**:
   - Tests: `canoniek-uml/reflijstVeld.test.js` (op het demo-model np-loc: Adres.land →
     LandenlijstLand, Adres.gemeente → Gemeente). Backend (opties-route REL → items/leden,
     codegen-controle van het `$ref`-doel, controle bij registratie §33.4) volgt na api 0.22.0.
+- **Tabnaam cursief bij onverzonden wijzigingen (2026-11-08).** Zolang de outbox van de projectsync
+  een operatie heeft die het diagram raakt (het diagram-id of het id van een element of connector
+  erop), staat de tabnaam cursief (`.studio-tab.is-onverzonden`), met een regel in de tooltip.
+  Alleen met live-sync (`useSyncStore.stand !== "uit"`). Bij een grote outbox (>200, een import)
+  wordt niet gezocht: dan is elke tab van die taal cursief. Logica: `studio/sync/onverzonden.js`
+  (+ test). De `isDirty` van de profielstore werd nooit teruggezet en is daarvoor onbruikbaar.
 - **Geen preview-strook meer (2026-11-08).** De strook "0.5 preview — Bewerkbare sandbox …" boven
   het canvas stamde uit de tijd dat het canonieke model een sandbox naast de klassieke UML-editor
   was, en klopte niet meer. `previewTekst` van `maakDiagramActiviteit` is nu de beschrijving van de

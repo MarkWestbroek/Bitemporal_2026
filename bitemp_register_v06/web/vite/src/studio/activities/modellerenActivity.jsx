@@ -36,6 +36,7 @@ import VerwezenDoorPaneel from "../VerwezenDoorPaneel.jsx";
 import { startBeeldWachter } from "../gedeeldeBeelden.js";
 import { gebruikVan } from "../../diagramcore/model/gebruik.js";
 import { useOutboxStore } from "../sync/outbox.js";
+import { diagramHeeftOnverzonden } from "../sync/onverzonden.js";
 import { zonderWeesPlaatsingen, mappenMetBeschrijving } from "../sync/structuurKern.js";
 import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
 import { registerBouwenBeschikbaar, bouwRegister } from "../registerBouwen.js";
@@ -3166,6 +3167,10 @@ function Tab({ tab, actief, index, sleep, setSleep }) {
   useEffect(() => {
     if (!profiel || !diagram) sluitTab(tab.id);
   }, [profiel, diagram, sluitTab, tab.id]);
+  // Cursief zolang de server een wijziging aan dit diagram nog niet heeft (Mark 08-11). Alleen
+  // met live-sync: een lokaal project heeft niets "op te slaan" bij de server.
+  const syncAan = useSyncStore((s) => s.stand !== "uit");
+  const onverzonden = useOutboxStore((s) => syncAan && diagramHeeftOnverzonden(s.ops, tab.profielId, diagram));
   if (!profiel || !diagram) return null;
 
   const stijl = effectieveStijl(profiel);
@@ -3174,11 +3179,12 @@ function Tab({ tab, actief, index, sleep, setSleep }) {
       className={
         "studio-tab" +
         (actief ? " is-actief" : "") +
+        (onverzonden ? " is-onverzonden" : "") +
         (sleep?.id === tab.id ? " is-gesleept" : "") +
         (sleep && sleep.id !== tab.id && sleep.boven === index ? ` is-doel-${sleep.kant}` : "")
       }
       style={actief ? { borderTopColor: stijl.kleur || "var(--s-accent)" } : undefined}
-      title={`${diagram.naam} — ${profiel.label}${profiel.omschrijving ? `
+      title={`${diagram.naam} — ${profiel.label}${onverzonden ? " · nog niet op de server opgeslagen" : ""}${profiel.omschrijving ? `
 ${profiel.omschrijving}` : ""}`}
       data-tab-id={tab.id}
       // Slepen naar een andere plek in de tabbalk (Mark, 06-11).
