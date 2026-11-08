@@ -86,7 +86,8 @@ const gateway = {
 /** Taaktype-icoontje linksboven (BPMN 2.0 §10.3; viewBox 16). `vlak` = de taakvulling (open vlakken). */
 const TAAK_ICONEN = {
   user: (k) => [vorm("circle", { cx: 8, cy: 5, r: 2.6, ...lijn(k, { "stroke-width": 1.2 }) }), vorm("path", { d: "M2.8 14 C3.3 10.6 5.3 9.2 8 9.2 C10.7 9.2 12.7 10.6 13.2 14", ...lijn(k, { "stroke-width": 1.2 }) })],
-  service: (k) => [vorm("circle", { cx: 8, cy: 8, r: 2.2, ...lijn(k, { "stroke-width": 1.2 }) }), vorm("path", { d: "M8 2.2 V4 M8 12 V13.8 M2.2 8 H4 M12 8 H13.8 M3.9 3.9 L5.2 5.2 M10.8 10.8 L12.1 12.1 M12.1 3.9 L10.8 5.2 M5.2 10.8 L3.9 12.1", ...lijn(k, { "stroke-width": 1.2 }) })],
+  // Tandwiel met acht tanden (geen zonnetje: losse spaken lazen als zon — Mark 08-11).
+  service: (k) => [vorm("path", { d: "M12.79 6.95 L14.53 7.02 L14.53 8.98 L12.79 9.05 A4.9 4.9 0 0 1 12.13 10.64 L13.31 11.92 L11.92 13.31 L10.64 12.13 A4.9 4.9 0 0 1 9.05 12.79 L8.98 14.53 L7.02 14.53 L6.95 12.79 A4.9 4.9 0 0 1 5.36 12.13 L4.08 13.31 L2.69 11.92 L3.87 10.64 A4.9 4.9 0 0 1 3.21 9.05 L1.47 8.98 L1.47 7.02 L3.21 6.95 A4.9 4.9 0 0 1 3.87 5.36 L2.69 4.08 L4.08 2.69 L5.36 3.87 A4.9 4.9 0 0 1 6.95 3.21 L7.02 1.47 L8.98 1.47 L9.05 3.21 A4.9 4.9 0 0 1 10.64 3.87 L11.92 2.69 L13.31 4.08 L12.13 5.36 A4.9 4.9 0 0 1 12.79 6.95 Z", ...lijn(k, { "stroke-width": 1.1 }) }), vorm("circle", { cx: 8, cy: 8, r: 1.9, ...lijn(k, { "stroke-width": 1.1 }) })],
   send: (k, vlak) => [vorm("rect", { x: 2, y: 4, width: 12, height: 8.5, rx: 0.8, fill: k, stroke: k, "stroke-width": 1.2 }), vorm("path", { d: "M2 4.5 L8 9 L14 4.5", ...lijn(vlak, { "stroke-width": 1.2 }) })],
   receive: (k) => [vorm("rect", { x: 2, y: 4, width: 12, height: 8.5, rx: 0.8, ...lijn(k, { "stroke-width": 1.2 }) }), vorm("path", { d: "M2 4.5 L8 9 L14 4.5", ...lijn(k, { "stroke-width": 1.2 }) })],
   manual: (k) => [vorm("path", { d: "M3 9.5 V6.5 C3 5.5 4.4 5.5 4.4 6.5 V5 C4.4 4 5.8 4 5.8 5 V4.5 C5.8 3.5 7.2 3.5 7.2 4.5 V5.5 C7.2 4.5 8.6 4.5 8.6 5.5 V10 L10.5 8 C11.3 7.2 12.4 8.2 11.6 9 L8.8 12.8 C8.2 13.6 7.4 14 6.2 14 H5.6 C4 14 3 13 3 11.4 Z", ...lijn(k, { "stroke-width": 1.2 }) })],
@@ -212,7 +213,7 @@ registreerRenderer("bpmn-pool", pool);
 export const BPMN_SHAPETYPES = [
   { id: "bpmn-event", renderer: "bpmn-event", parameters: { inhoud: "geen" }, minMaat: { w: 26, h: 26 } },
   { id: "bpmn-gateway", renderer: "bpmn-gateway", parameters: { inhoud: "geen" }, minMaat: { w: 34, h: 34 } },
-  { id: "bpmn-taak", renderer: "bpmn-taak", parameters: { inhoud: "naam", naamGrootte: 12, rand: "#7dd3fc" }, minMaat: { w: 180, h: 48 } },
+  { id: "bpmn-taak", renderer: "bpmn-taak", parameters: { inhoud: "naam", naamGrootte: 12, rand: "#7dd3fc" }, minMaat: { w: 90, h: 48 } },
   { id: "bpmn-subproces", renderer: "bpmn-subproces", parameters: { inhoud: "naam", naamGrootte: 12, rand: "#7dd3fc" }, minMaat: { w: 180, h: 52 } },
   { id: "bpmn-data", renderer: "bpmn-data", parameters: { inhoud: "naam", naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
   { id: "bpmn-datastore", renderer: "bpmn-datastore", parameters: { inhoud: "naam", naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
