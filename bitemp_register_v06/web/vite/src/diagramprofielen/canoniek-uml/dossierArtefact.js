@@ -372,7 +372,11 @@ function schrijfWidgettabbladen({ keuzes, edienst, inhoud, regelset, diagnostics
     }
     return def;
   };
-  const weergave = (def) => ({ type: weergaveType(def, regelset).type, hideWhenEmpty: false });
+  // Een veld mag zelf een weergave kiezen (v.weergave, uit r.toegestaan); anders de eerste regel die past.
+  const weergave = (def, v = {}, wkey = "") => {
+    if (v.weergave && !r.toegestaan.includes(v.weergave)) diagnostics.push(fout("DOS-WIDGET", `Widget "${wkey}": weergave "${v.weergave}" kent de regelset niet (${r.toegestaan.join(", ")})`, wkey));
+    return { type: v.weergave && r.toegestaan.includes(v.weergave) ? v.weergave : weergaveType(def, regelset).type, hideWhenEmpty: false };
+  };
   const bronVan = (pad) => inhoud.bron.get(pad) || inhoud.bron.get(pad.split(".")[0]) || null;
   const gewoon = (v) => (typeof v === "string" ? { key: v } : v);
   const rel = (p) => String(p).replace(/\./g, "/");
@@ -393,7 +397,7 @@ function schrijfWidgettabbladen({ keuzes, edienst, inhoud, regelset, diagnostics
         velden.forEach((x, i) => {
           const k = Math.floor(i / perKolom);
           if (!columns[k]) columns[k] = [];
-          columns[k].push({ key: laatste(x.v.key), title: x.v.label || labelUitNaam(laatste(x.v.key)), value: `doc:/${rel(x.v.key)}`, displayProperties: weergave(x.def) });
+          columns[k].push({ key: laatste(x.v.key), title: x.v.label || labelUitNaam(laatste(x.v.key)), value: `doc:/${rel(x.v.key)}`, displayProperties: weergave(x.def, x.v, w.key) });
           traceregels.push({ bronGE: bronVan(x.v.key), regel: "Veld van de dossierinhoud: fields-widget", doelPad: `${pad}/properties/columns/${k}/${columns[k].length - 1}`, actie: "aangemaakt" });
         });
         return { ...basis, properties: { columns } };
@@ -407,7 +411,7 @@ function schrijfWidgettabbladen({ keuzes, edienst, inhoud, regelset, diagnostics
         }
         const titelDef = w.titelVeld ? veldDef(w.titelVeld, lijst.items) : null;
         const fields = (w.velden || []).map(gewoon).map((v) => ({ v, def: veldDef(v.key, lijst.items) })).filter((x) => x.def)
-          .map((x) => ({ key: laatste(x.v.key), title: x.v.label || labelUitNaam(laatste(x.v.key)), value: rel(x.v.key), width: x.v.breedte || "full", displayProperties: weergave(x.def) }));
+          .map((x) => ({ key: laatste(x.v.key), title: x.v.label || labelUitNaam(laatste(x.v.key)), value: rel(x.v.key), width: x.v.breedte || "full", displayProperties: weergave(x.def, x.v, w.key) }));
         // GZAC 13.50 weigert een collection zonder velden ("fields: must not be empty", uitrol 25, 08-11).
         if (!fields.length) diagnostics.push(fout("DOS-WIDGET", `Widget "${w.key}": een collection heeft minstens één veld nodig (velden); GZAC weigert hem anders`, w.key));
         traceregels.push({ bronGE: bronVan(veld), regel: "Lijst van de dossierinhoud: collection-widget", doelPad: pad, actie: "aangemaakt" });
@@ -426,11 +430,17 @@ function schrijfWidgettabbladen({ keuzes, edienst, inhoud, regelset, diagnostics
         // componentValue letterlijk als inputs door. Afspraak met GZAC-WIDGET (08-11): het component
         // documentAfbeeldingen toont afbeeldingen uit de lijst `bijlagen` (JSON-pointer), met een
         // optioneel filter `naam`. Een lijst in de dossierinhoud wordt getoetst.
+        // GZAC 13 geeft de dossierinhoud niet aan de frontend (includeDocumentContentInResponse=false);
+        // het widget leest daarom de gegevens van een collection-widget op hetzelfde tabblad:
+        // `bron` noemt die widget (GZAC-WIDGET/FUNDAMENT 08-11). Die moet bestaan.
         if (!w.component) diagnostics.push(fout("DOS-WIDGET", `Widget "${w.key}": een custom widget noemt zijn component`, w.key));
         const waarden = Object.fromEntries(Object.entries(w.waarden || {}).map(([k, v]) => [k, String(v)]));
         for (const [k, v] of Object.entries(waarden)) {
           if (!v.startsWith("/")) continue;
           if (!defOp(inhoud.schema, v.slice(1).split("/").join("."))) diagnostics.push(fout("DOS-VELD", `Widget "${w.key}": ${k} = "${v}" staat niet in de dossierinhoud`, w.key));
+        }
+        if (waarden.bron && !(tab.widgets || []).some((x) => x.type === "collection" && x.key === waarden.bron)) {
+          diagnostics.push(fout("DOS-WIDGET", `Widget "${w.key}": bron "${waarden.bron}" is geen collection-widget op tabblad "${tab.key}"`, w.key));
         }
         traceregels.push({ bronGE: null, regel: "Eigen widget (e-dienst): custom", doelPad: pad, actie: "aangemaakt" });
         return { ...basis, width: w.breedte || 1, properties: { componentKey: w.component || "", componentValue: waarden } };

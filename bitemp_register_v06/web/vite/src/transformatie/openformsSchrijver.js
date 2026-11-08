@@ -99,6 +99,19 @@ function component(el) {
   // Verkleinen bij upload: de Documenten API van Open Zaak weigert een
   // request-body boven 2,5 MB (RequestDataTooBig, inzending FUNDAMENT 27-10).
   if (b.verkleinTot) uit.of = { image: { resize: { apply: true, width: b.verkleinTot.breedte, height: b.verkleinTot.hoogte } } };
+  // Registratie van het document (tab Registratie in de formulierbouwer). Zonder dit blok
+  // gebruikt Open Formulieren zijn standaard: titel = formuliernaam, zodat het rapport en
+  // de pasfoto in Open Zaak en GZAC hetzelfde heten (GZAC-WIDGET 08-11). De titel is het
+  // label van het veld, tenzij bestand.registratie.titel iets anders zegt; een eigen
+  // informatieobjecttype (de waarde die Open Formulieren daar verwacht) is optioneel.
+  // Lege velden laten de standaard van het formulier staan.
+  const reg = b.registratie && typeof b.registratie === "object" ? b.registratie : {};
+  uit.registration = {
+    informatieobjecttype: reg.informatieobjecttype || "",
+    bronorganisatie: "",
+    docVertrouwelijkheidaanduiding: "",
+    titel: reg.titel || basis.label || "",
+  };
   return uit;
 }
 

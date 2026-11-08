@@ -188,7 +188,7 @@ test("widgettabbladen: tabblad Aanvraag uit de dossierinhoud, in de vorm van het
   assert.deepEqual(diagnostics, []);
   const [tab] = artefact.artefactInhoud.payload;
   assert.deepEqual([tab.caseDefinitionKey, tab.caseDefinitionVersionTag, tab.key, tab.widgetLayout], ["gehandicaptenparkeerkaart", "1.0.0", "aanvraag", "MUURI_GAP_FREE"]);
-  const [velden, partijen, bijlagen] = tab.widgets;
+  const [velden, partijen, bijlagen, foto] = tab.widgets;
   // Elk widget heeft dezelfde sleutels als in het handwerk.
   const hand = lees("gzac-handwerk/gehandicaptenparkeerkaart.case-widget-tab.json")[0];
   const sleutels = (o) => Object.keys(o).sort();
@@ -208,7 +208,11 @@ test("widgettabbladen: tabblad Aanvraag uit de dossierinhoud, in de vorm van het
   assert.deepEqual(partijen.properties.title.value, "partijrol");
   assert.deepEqual(partijen.properties.fields.map((f) => [f.key, f.title, f.value]), [["bsn", "BSN", "partij/bsn"]]);
   assert.deepEqual([bijlagen.properties.collection, bijlagen.properties.title], ["doc:/bijlagen", hand.widgets[1].properties.title]);
-  assert.deepEqual(bijlagen.properties.fields.map((f) => [f.key, f.title, f.value]), [["naam", "Bijlage", "naam"]]);
+  // documentUrl als tekst: daar leest het pasfoto-widget uit (bron), "link" toont GZAC 13.50 als ruwe HTML.
+  assert.deepEqual(bijlagen.properties.fields.map((f) => [f.key, f.title, f.value, f.displayProperties.type]), [["naam", "Bijlage", "naam", "text"], ["documentUrl", "Document", "documentUrl", "text"]]);
+  // Eigen widget (GZAC-WIDGET 08-11): componentKey + componentValue letterlijk; bron = de collection bijlagen.
+  assert.deepEqual([foto.type, foto.key, foto.title, foto.width, foto.color], ["custom", "pasfoto", "Pasfoto", 1, "WHITE"]);
+  assert.deepEqual(foto.properties, { componentKey: "documentAfbeeldingen", componentValue: { bijlagen: "/bijlagen", naam: "pasfoto", bron: "bijlagen" } });
   assert.ok(!JSON.stringify(tab).includes('"link"'));
   // Trace naar het model; het tabblad staat in de tabbladen na de samenvatting.
   const kenteken = artefact.traceregels.find((t) => t.regel.startsWith("Veld") && t.bronGE?.endsWith(".kenteken"));
@@ -227,17 +231,19 @@ test("widgettabbladen: tabblad Aanvraag uit de dossierinhoud, in de vorm van het
   // De laatste: een collection zonder velden, die GZAC weigert (uitrol 25).
   assert.deepEqual(fout.diagnostics.map((d) => d.code), ["DOS-VELD", "DOS-VELD", "DOS-WIDGET", "DOS-WIDGET"]);
 
-  // Eigen widget (GZAC-WIDGET 08-11): componentKey + componentValue, letterlijk; een pointer wordt getoetst.
+  // Toetsen bij widgets: weergave per veld, component, pointer en bron.
   const metFoto = await maak("gehandicaptenparkeerkaart", "dossierwidgettabbladen", (e) => {
     const w = e.artefacten.find((a) => a.soort === "dossierwidgettabbladen");
-    w.tabbladen[0].widgets.push({ type: "custom", key: "pasfoto", titel: "Pasfoto", component: "documentAfbeeldingen", waarden: { bijlagen: "/bijlagen", naam: "pasfoto" } });
-    w.tabbladen[0].widgets.push({ type: "custom", key: "fout", waarden: { bijlagen: "/bestaatNiet" } });
+    w.tabbladen[0].widgets.find((x) => x.key === "aanvraag").velden.push({ key: "kenteken", label: "Kenteken (link)", weergave: "link" });
+    w.tabbladen[0].widgets.push({ type: "custom", key: "fout", waarden: { bijlagen: "/bestaatNiet", bron: "aanvraag" } });
+    w.tabbladen[0].widgets.find((x) => x.key === "partijen").velden.push({ key: "partijrol", weergave: "plaatje" });
     return e;
   });
-  const [foto] = metFoto.artefact.artefactInhoud.payload[0].widgets.filter((x) => x.type === "custom");
-  assert.deepEqual([foto.key, foto.title, foto.width, foto.color], ["pasfoto", "Pasfoto", 1, "WHITE"]);
-  assert.deepEqual(foto.properties, { componentKey: "documentAfbeeldingen", componentValue: { bijlagen: "/bijlagen", naam: "pasfoto" } });
-  assert.deepEqual(metFoto.diagnostics.map((d) => d.code), ["DOS-WIDGET", "DOS-VELD"]);
+  // Een veld dat zelf een weergave kiest.
+  const aanv = metFoto.artefact.artefactInhoud.payload[0].widgets.find((x) => x.key === "aanvraag");
+  assert.equal(aanv.properties.columns.flat().filter((f) => f.title === "Kenteken (link)")[0].displayProperties.type, "link");
+  // Onbekende weergave; geen component; pointer buiten de inhoud; bron "aanvraag" is een fields-widget.
+  assert.deepEqual(metFoto.diagnostics.map((d) => d.code), ["DOS-WIDGET", "DOS-WIDGET", "DOS-VELD", "DOS-WIDGET"]);
 });
 
 // De koppeling dossier ↔ zaaktype was handwerk bij FUNDAMENT (zgw/zaak-type-link); nu uit de

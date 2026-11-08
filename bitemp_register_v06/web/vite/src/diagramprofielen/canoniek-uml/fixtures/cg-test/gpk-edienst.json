@@ -331,11 +331,12 @@
                          { "key": "loopafstandMeter", "label": "Loopafstand (m)" }, "kenteken", "eerdereKaart", "eerderKaartnummer", "rijbewijsnummer", "toelichting"]
             },
             { "type": "collection", "key": "partijen", "titel": "Partijen", "breedte": 1, "titelVeld": "partijrol", "velden": [{ "key": "partij.bsn", "label": "BSN" }] },
-            { "type": "collection", "key": "bijlagen", "titel": "Bijlagen", "breedte": 1, "titelVeld": "naam", "velden": [{ "key": "naam", "label": "Bijlage" }] }
+            { "type": "collection", "key": "bijlagen", "titel": "Bijlagen", "breedte": 1, "titelVeld": "naam", "velden": [{ "key": "naam", "label": "Bijlage" }, { "key": "documentUrl", "label": "Document" }] },
+            { "type": "custom", "key": "pasfoto", "titel": "Pasfoto", "component": "documentAfbeeldingen", "waarden": { "bijlagen": "/bijlagen", "naam": "pasfoto", "bron": "bijlagen" } }
           ]
         }
       ],
-      "_tabbladen": "tabblad Aanvraag met widgets (Mark 08-11: de behandelaar ziet de aanvraag in een eigen tabblad); komt na de samenvatting. Vorm uit de handmatige proef op cg-test (INRICHTEN_VIZ). Geen documentUrl als link: die wijst naar de Documenten-API zonder token. De pasfoto als afbeelding vraagt een eigen widget (volgt)"
+      "_tabbladen": "tabblad Aanvraag met widgets (Mark 08-11: de behandelaar ziet de aanvraag in een eigen tabblad); komt na de samenvatting. Vorm uit de handmatige proef op cg-test (INRICHTEN_VIZ). Geen documentUrl als link: die wijst naar de Documenten-API zonder token. De pasfoto als afbeelding: eigen widget documentAfbeeldingen (GZAC-WIDGET 08-11, frontend 13.50.0-omnium.4); GZAC 13 geeft de dossierinhoud niet aan de frontend, dus het leest de collection bijlagen (bron). documentUrl als tekst: link toont GZAC 13.50 in een collection als ruwe HTML"
     },
     {
       "identifier": "gehandicaptenparkeerkaart",

@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- Open Formulieren: elk bestandsveld krijgt een `registration`-blok met als titel het label (de pasfoto heet
+  "Pasfoto" in Open Zaak en GZAC, niet de formuliernaam); optioneel `bestand.registratie` in de e-dienst.
+- Regelset dossier-naar-gzac 0.6.0: een widgetveld kiest zelf zijn weergave (`weergave`);
+  een custom widget noemt met `bron` de collection-widget op hetzelfde tabblad waar het uit leest
+  (GZAC 13 geeft de dossierinhoud niet aan de frontend), getoetst als DOS-WIDGET.
 - **Generiek behandelen in de GPK-e-dienst.** Het proces "Aanvraag behandelen" (uit het project
   Inrichten) start op `behandeling-gevraagd`, gooit het beoordelingsbericht van het aanvraagtype,
   wacht op `beoordeling-afgerond` en kiest op de uitkomst: beschikken, afwijzen of een portaaltaak

@@ -42,7 +42,7 @@
 
 export const CANONIEK_NAAR_DOSSIER = {
   id: "canoniek-naar-gzac-dossier",
-  versie: "0.5.0",
+  versie: "0.6.0",
   titel: "Canoniek model + e-dienst → GZAC-dossierbundel (definitie, documentdefinitie, form.io, tabbladen, zaaktypekoppeling, processen, documentkolommen, statussen)",
   bron: "objecttype-artefact (uit canoniek-uml V3) + e-dienst",
   doel: "gzac-dossierbundel",
@@ -123,7 +123,10 @@ export const CANONIEK_NAAR_DOSSIER = {
    * INRICHTEN_VIZ 08-11). Het tabblad komt in de tabbladen na `na`. Weergave
    * per veld: de eerste regel die past. Een enum toont de waarde als tekst
    * (het weergavetype enum vraagt labels; niet getest). Een documentUrl wordt
-   * geen link: die wijst naar de Documenten-API zonder token.
+   * niet vanzelf een link (die wijst naar de Documenten-API zonder token); een
+   * veld kiest zelf een weergave uit `toegestaan` (0.6.0: de collection waar
+   * het pasfoto-widget uit leest, toont documentUrl als tekst: "link" toont
+   * GZAC 13.50 in een collection als ruwe HTML, GZAC-WIDGET 08-11).
    */
   widgets: {
     na: "samenvatting",
@@ -132,6 +135,7 @@ export const CANONIEK_NAAR_DOSSIER = {
     kolommen: 2,
     paginagrootte: 4,
     breedte: { fields: 2, collection: 2 },
+    toegestaan: ["text", "date", "datetime", "boolean", "number", "link"],
     weergave: [
       { naam: "Ja/nee", als: { type: "boolean" }, type: "boolean" },
       { naam: "Getal", als: { type: ["integer", "number"] }, type: "number" },
