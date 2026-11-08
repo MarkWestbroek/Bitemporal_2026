@@ -239,6 +239,19 @@ heeft op die versie: `schema_versies.gebouwde_domeinen`, `[{domein, prefix}]`. D
 (`gebouwde_domeinen`) en in `GET /api/schema/versies`. De startup-rebuild bouwt daarna **precies**
 die lijst: zie hieronder.
 
+**Standaardpakket bij de startup-rebuild (08-11-2026).** Elk domein op de lijst draagt sinds api
+0.22.3 de vlag `gegenereerd`: is het bij die rebuild uit het model gegenereerd, of stond het er al
+zoals het image het meebrengt?
+- Domeinen buiten het standaardpakket genereert de startup-rebuild altijd opnieuw uit het model.
+- Van het standaardpakket alleen de domeinen met `gegenereerd`.
+- Een lijst zonder vlaggen (van vóór 0.22.3): van het standaardpakket alleen `register`.
+- Een project-rebuild zonder lijst ("bestaande domeinen") neemt van het standaardpakket ook alleen
+  `register` mee.
+
+Waarom: op cg-test genereerde de startup-rebuild `ide_bestanden` uit het Studio-model. Dat paste
+niet bij de handgeschreven handlers (`IdeBestandFormaatJSON`, `GrootteBytes int64`). De build faalde,
+en elke nieuwe pod startte met de ingebakken code, zonder inrichting.
+
 **Wees-tabellen opruimen.** Een rebuild gooit nooit tabellen weg. Wat er na `precies` overblijft,
 ruim je in twee stappen op. Allebei zijn alleen beschikbaar in een devloop, met het
 beheerwachtwoord (`handlers/wees_tabellen.go`):
@@ -286,7 +299,9 @@ container gegenereerd was. Daarom roept `scripts/devloop-entrypoint.sh` in conta
    zelftest (zie hieronder), baseline bijwerken, exit 43 → de entrypoint start de nieuwe binary.
    **Heeft de actieve versie `gebouwde_domeinen`** (sinds api 0.22.0 / devloop 0.25.0), dan
    alleen de domeinen van die lijst die in het model staan, als `precies`. Wat het image verder
-   meebrengt gaat eruit, behalve het standaardpakket. Zonder lijst (oudere versies) blijft het
+   meebrengt gaat eruit, behalve het standaardpakket. Dat wordt alleen opnieuw gegenereerd als
+   het bij die rebuild expliciet gegenereerd was (vlag `gegenereerd`, sinds 0.22.3; zie
+   "Standaardpakket bij de startup-rebuild"). Zonder lijst (oudere versies) blijft het
    additief, zoals vroeger. De kolom wordt pas gelezen als hij bestaat, want deze stap draait vóór
    de migraties;
 4. mislukt het, dan start de ingebakken binary en staat de reden in het log. De hash van de mislukte

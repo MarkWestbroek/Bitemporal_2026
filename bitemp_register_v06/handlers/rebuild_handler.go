@@ -696,7 +696,7 @@ func MaakRebuildHandler() gin.HandlerFunc {
 
 		// De domeinen die het register nu heeft; de geactiveerde versie onthoudt ze, zodat de
 		// startup-rebuild op een verse container precies deze bouwt.
-		gebouwd := aanwezigeDomeinen(filepath.Join(appDir, "model"))
+		gebouwd := markeerGegenereerd(aanwezigeDomeinen(filepath.Join(appDir, "model")), domeinRuns)
 		stappen = append(stappen, "Domeinen van het register: "+gebouwdeNamen(gebouwd))
 
 		// Stap 4b: de gebouwde versie actief maken (besluit Mark 23-10-2026; rebuild_activeer.go),

@@ -284,6 +284,29 @@ func uuidTag(uuid string) string {
 	return ` uuid:"` + uuid + `"`
 }
 
+// goCommentaar maakt van een (model)beschrijving een veilig Go-commentaar na "// ". Een
+// beschrijving uit de Studio mag meerdere regels hebben; zonder bewerking werd de regel na een
+// regelovergang Go-code ("non-declaration statement outside function body", rebuild Inrichten op
+// cg-test, 08-11-2026). Elke volgende regel krijgt daarom zelf "// ".
+func goCommentaar(s string) string {
+	s = strings.ReplaceAll(s, "\r\n", "\n")
+	s = strings.ReplaceAll(s, "\r", "\n")
+	s = strings.TrimRight(s, "\n \t")
+	regels := strings.Split(s, "\n")
+	for i, r := range regels {
+		r = strings.TrimRight(r, " \t")
+		if i > 0 {
+			if r == "" {
+				r = "//"
+			} else {
+				r = "// " + r
+			}
+		}
+		regels[i] = r
+	}
+	return strings.Join(regels, "\n")
+}
+
 // schemaDescTag: de veldbeschrijving (V3Veld.Description) als tag schema_desc:"…". Die tag lezen
 // de V3-export, OpenAPI, GraphQL en de schema-viz al (model/v3_exporter.go, dynql/); codegen
 // schreef hem voor inhoudsvelden niet, zodat beschrijvingen bij de rondreis verdwenen

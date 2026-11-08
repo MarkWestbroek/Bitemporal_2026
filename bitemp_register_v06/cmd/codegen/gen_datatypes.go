@@ -223,7 +223,7 @@ func generateDatatypeAliases(v3 model.V3Model, _ codegenOptions) (string, error)
 	for _, dt := range v3.Datatypes {
 		goBase := jsonSchemaTypeToGo(dt.Basistype)
 		if dt.Description != "" {
-			b.WriteString(fmt.Sprintf("// %s — %s\n", dt.Naam, dt.Description))
+			b.WriteString(fmt.Sprintf("// %s — %s\n", dt.Naam, goCommentaar(dt.Description)))
 		}
 		b.WriteString(fmt.Sprintf("type %s %s\n\n", dt.Naam, goBase))
 	}

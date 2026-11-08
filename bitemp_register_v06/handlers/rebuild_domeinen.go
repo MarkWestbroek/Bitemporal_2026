@@ -177,7 +177,10 @@ func kiesDomeinRuns(modelRuns []RebuildDomeinSpec, aanwezig []model.GebouwdDomei
 			heeft[strings.ToLower(a.Prefix)] = true
 		}
 		for _, r := range modelRuns {
-			if heeft[strings.ToLower(r.Prefix)] && !isHandgemaaktPakket(r.Prefix) {
+			// Van het standaardpakket alleen register: de andere systeemdomeinen (ide_bestanden,
+			// beheer, …) blijven zoals het image ze heeft; hun model past niet per se bij de
+			// handgeschreven code (cg-test 08-11-2026). Noem ze expliciet om ze te genereren.
+			if heeft[strings.ToLower(r.Prefix)] && (!isStandaardPrefix(r.Prefix) || strings.EqualFold(r.Prefix, "register")) {
 				k.runs = append(k.runs, r)
 			}
 		}
@@ -204,6 +207,57 @@ func kiesDomeinRuns(modelRuns []RebuildDomeinSpec, aanwezig []model.GebouwdDomei
 		k.melding += "; precies: andere domeinen gaan eruit (behalve het standaardpakket)"
 	}
 	return k, ""
+}
+
+// markeerGegenereerd zet Gegenereerd op de domeinen van gebouwd die in deze rebuild uit het
+// model gegenereerd zijn (runs). Zo weet de startup-rebuild welke domeinen van het
+// standaardpakket uit het model kwamen en welke uit het image (08-11-2026).
+func markeerGegenereerd(gebouwd []model.GebouwdDomein, runs []RebuildDomeinSpec) []model.GebouwdDomein {
+	gen := map[string]bool{}
+	for _, r := range runs {
+		gen[strings.ToLower(r.Prefix)] = true
+	}
+	for i := range gebouwd {
+		gebouwd[i].Gegenereerd = gen[strings.ToLower(gebouwd[i].Prefix)]
+	}
+	return gebouwd
+}
+
+// startupRuns kiest de codegen-runs van de startup-rebuild uit de domeinen van het model en de
+// lijst van de actieve versie. Een domein buiten het standaardpakket staat erop → genereren. Een
+// domein van het standaardpakket alleen als het bij die rebuild expliciet gegenereerd is; anders
+// blijft het staan zoals het image het meebrengt. Zonder die regel genereerde de startup-rebuild
+// ide_bestanden uit het Studio-model, dat niet bij de handgeschreven handlers past (cg-test,
+// 08-11-2026: IdeBestandFormaatJSON, GrootteBytes int64; elke nieuwe pod startte zonder inrichting).
+//
+// Een lijst van vóór 08-11-2026 heeft geen Gegenereerd-vlaggen: dan geldt van het standaardpakket
+// alleen register als gegenereerd (een project-rebuild met precies moet register meenemen om de
+// oude items-relatie naar np-loc kwijt te raken), en gegevenstypen nooit.
+func startupRuns(modelRuns []RebuildDomeinSpec, gebouwd []model.GebouwdDomein) []RebuildDomeinSpec {
+	opLijst := map[string]model.GebouwdDomein{}
+	nieuwFormaat := false
+	for _, g := range gebouwd {
+		opLijst[strings.ToLower(g.Prefix)] = g
+		if g.Gegenereerd {
+			nieuwFormaat = true
+		}
+	}
+	var gekozen []RebuildDomeinSpec
+	for _, r := range modelRuns {
+		g, ok := opLijst[strings.ToLower(r.Prefix)]
+		if !ok {
+			continue
+		}
+		switch {
+		case !isStandaardPrefix(r.Prefix):
+			gekozen = append(gekozen, r)
+		case nieuwFormaat && g.Gegenereerd:
+			gekozen = append(gekozen, r)
+		case !nieuwFormaat && strings.EqualFold(r.Prefix, "register"):
+			gekozen = append(gekozen, r)
+		}
+	}
+	return gekozen
 }
 
 func gebouwdeNamen(g []model.GebouwdDomein) string {
