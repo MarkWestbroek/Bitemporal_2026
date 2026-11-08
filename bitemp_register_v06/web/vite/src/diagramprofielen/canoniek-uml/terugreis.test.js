@@ -221,7 +221,8 @@ test("store-round-trip: generalisatie, compositie en kardinaliteiten overleven",
 
   // Relatie: doel + kardinaliteiten + momentvoorkomen
   const rel = terug.elements.REL1.data;
-  assert.equal(rel.doelEntiteit, "B");
+  // De typenaam van het doel (B exporteert als "Werknemer"), niet het element-id (FUNDAMENT 08-11).
+  assert.equal(rel.doelEntiteit, "Werknemer");
   assert.equal(rel.bronKardinaliteit, "0..*");
   assert.equal(rel.doelKardinaliteit, "1");
   assert.equal(rel.momentvoorkomen, "meervoudig");
@@ -612,4 +613,18 @@ test("cg-test-rondgang: een nieuwe enum-waarde krijgt een afgeleide constNaam", 
   const w = v3.model.enums.find((e) => e.goType === "InrichtingLaag").waarden;
   assert.equal(w.find((x) => x.waarde === "1-2 gegevensbronnen").constNaam, "InrichtingLaagGegevensbronnen");
   assert.equal(w.find((x) => x.waarde === "6 beheer").constNaam, "InrichtingLaag6Beheer");
+});
+
+// FUNDAMENT 08-11 (project Inrichten): na het hernoemen van een entiteit verschillen element-id en
+// naam. De relatie moet de typenaam van haar doel exporteren, niet het id (anders zweeft ze bij de
+// rebuild: "doelEntiteit GehandicaptenparkeerkaartAanvraag bestaat niet").
+test("store-round-trip: doelEntiteit van een relatie is de naam van het doel, ook na hernoemen", () => {
+  const core = vanCanoniekModel(maakBronState());
+  const rel = Object.values(core.elements).find((e) => e.elementType === "relatie");
+  assert.ok(rel?.target, "relatie heeft een doel");
+  const doelId = rel.target;
+  core.elements[doelId] = { ...core.elements[doelId], naam: "Werknemersaanvraag" };
+  const terug = naarCanoniekModel(core);
+  assert.equal(terug.elements[rel.id].data.doelEntiteit, "Werknemersaanvraag");
+  assert.equal(terug.elements[doelId].data.typenaam, "Werknemersaanvraag");
 });
