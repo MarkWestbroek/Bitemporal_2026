@@ -9,6 +9,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Gewijzigd
+- **Referentielijsten als instantie (na de rebuild van 08-11).** Een e-dienst noemt per lijst de
+  bron, de `instantie` en het `lidmaatschap`; uit het inrichting-register komen alleen de leden van
+  die instantie, op de peildatum. De e-diensten GPK en aanvraag-voorbeeld volgen de hernoemde
+  GE's en entiteiten uit het project Inrichten; de property `bijlagen` blijft gelijk
+  (docs/TRANSFORMATIES.md §11.16).
 - **Domein uit het package, overal hetzelfde.** De inspector toont bij entiteit, gegevenselement,
   relatie, enumeratie, gegevenstype en referentielijstinstantie een alleen-lezen regel *domein*
   met de herkomst (het package in de boom; bij een GE de entiteit, bij een relatie de bron). Het

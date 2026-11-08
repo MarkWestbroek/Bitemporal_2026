@@ -1735,12 +1735,50 @@ Proef 08-11, live uit Omnium op Fundament: formulieren, zaaktype en
 GZAC-bundel gelijk aan de levering van 07-11; objecttypen en dossierschema
 alleen met de nieuwe beschrijving van `aanvraagtype` uit het model.
 
-Open: na de hernoemingen moet het register op cg-test opnieuw gebouwd worden,
-met de items naar AanvraagtypeDefinitie en PartijrolDefinitie en hun
-lidmaatschap van de instanties; tot dan haalt de e-dienst de items uit
-`/full/aanvraagtypen` en `/full/partijrollen`. Met meer lijsten per item
-(Zaak-, Taakpartijrollen) komt de keuzelijst uit de leden van de instantie,
-niet uit alle items. De instanties hebben in het project nog geen domein.
+**Na de rebuild (08-11, schema-versie 6).** FUNDAMENT bouwde het register op
+cg-test opnieuw uit het project Inrichten (versie 28, t/m op 3426). Mark
+hernoemde daarbij ook GE's en entiteiten, en de e-diensten volgen:
+
+| Was | Nu |
+|---|---|
+| AanvraagtypeDefinitie / AanvraagtypeGegevens | Aanvraagtypedefinitie / Aanvraagtypegegevens |
+| PartijrolDefinitie / PartijrolGegevens | Partijroldefinitie / Partijrolgegevens |
+| AanvraagIdentificatie, AanvraagIndiening, AanvraagBijlage | Aanvraagidentificatie, Aanvraagindiening, Aanvraagbijlage |
+| GE AanvraagStatus, enum AanvraagStatus | GE AanvraagAanvraagstatus, enum Aanvraagstatus |
+| GehandicaptenparkeerkaartAanvraag | Gehandicaptenparkeerkaartaanvraag |
+| GpkKaartGegevens / GpkKaartStatus | GpkGegevens / GpkStatus (enum Parkeerkaartstatus) |
+
+- **Referentielijst = instantie.** De e-dienst noemt per lijst de bron (het
+  pad van de item-entiteit), de `instantie` en het `lidmaatschap` (de meervoud
+  van de items-REL):
+  `"Verzoekpartijrol": {"bron": "register: /full/partijroldefinities",
+  "instantie": "Verzoekpartijrollen", "lidmaatschap": "verzoekpartijrollen"}`.
+  `leesReferentielijst` (inrichtingsRegister.js) zoekt het id van de instantie
+  op in `/full/referentielijsten/referentielijsten` (naam onder
+  `referentielijstnamen`) en houdt alleen de items met een voorkomen met dat
+  `referentielijst_id`: zonder afvoer, aanvang uiterlijk op de peildatum, geen
+  einde vóór de peildatum (einde = laatste geldige dag, inclusief; een
+  afgevoerde aanvang of einde telt niet). De opties-route van de API filtert
+  een `$ref` naar een items-REL (nog) niet (400). Een meegegeven bestand is al
+  de lijst en wordt niet gefilterd.
+- **Gegevens-GE.** Het item heeft nu `aanvraagtypegegevens` in plaats van
+  `aanvraagtype_gegevens`; de lader neemt de sleutel die op `gegevens` eindigt.
+- **De property `bijlagen` blijft.** De GE Aanvraagbijlage kreeg het meervoud
+  `aanvraagbijlagen`; zonder meer zou de lijst in objecttype, formulier,
+  documentdefinitie en de BPMN/DMN-pointers `aanvraagbijlagen` heten. De
+  projectie zet `namen: {"Aanvraag.Aanvraagbijlage": "bijlagen"}`, zodat het
+  contract met Open Formulieren, Objecten-API en GZAC gelijk blijft.
+- ZTT-AANVRAAGTYPE herkent ook `…Aanvraagtypedefinitie.Aanvraagtypegegevens.code`.
+
+Proef 08-11, live uit Omnium t/m op 3441 (op 3441 kreeg de relatie
+GpkKaartAanvraag het hernoemde doel; de rebuild t/m 3426 had nog de oude
+naam): formulieren, zaaktype, BPMN, DMN en GZAC-configuratie gelijk aan de
+levering van 08-11 ochtend. De objecttypen en het dossierschema verschillen
+alleen in de beschrijving van `partijen` en de titel van het GPK-schema.
+
+Open: de instantie Aanvraagtypen heeft in het project nog geen domein
+(Verzoekpartijrollen wel: relatiebeheer). De levering haalt de lijsten nog uit
+bestanden; uit het register lezen kan de Studio (haalJson), het script nog niet.
 
 ### 11.17 Vervolg
 

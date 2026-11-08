@@ -21,8 +21,31 @@ test("referentielijsten: bestand op naam, anders register, anders eersteVulling"
   assert.match(metBestand.diagnostics[0].message, /aanvraag-aanvraagtypen\.json/);
   assert.match(metBestand.diagnostics[1].message, /eersteVulling/);
 
-  const uitRegister = await verzamelReferentielijsten(edienst, [], async () => ({ items: [{ id: 1, partijrol_gegevens: [{ rel_id: 1, data: [{ versie: 1, code: "x" }] }] }] }));
-  assert.deepEqual(uitRegister.lijsten.Verzoekpartijrol, [{ code: "x" }]);
+  // Na de rebuild van 08-11 (vorm volgens FUNDAMENT): items op /full/partijroldefinities,
+  // lidmaatschap onder de items-REL (verzoekpartijrollen), instanties op
+  // /full/referentielijsten/referentielijsten. Alleen de leden van de instantie komen mee.
+  const gegevens = (code) => [{ rel_id: 1, data: [{ versie: 1, code: "oud" }, { versie: 2, code }] }];
+  const lid = (lijst, extra = {}) => ({ rel_id: 1, referentielijst_id: lijst, aanvang: [{ versie: 1, datum: "2026-11-05" }], ...extra });
+  const register = {
+    "full/referentielijsten/referentielijsten": [
+      { id: 1, referentielijstnamen: [{ rel_id: 1, data: [{ versie: 1, naam: "Aanvraagtypen" }] }] },
+      { id: 2, referentielijstnamen: [{ rel_id: 1, data: [{ versie: 1, naam: "Verzoekpartijrollen" }] }] },
+    ],
+    "full/partijroldefinities": [
+      { id: 1, partijrolgegevens: gegevens("aanvrager"), verzoekpartijrollen: [lid(2)] },
+      { id: 2, partijrolgegevens: gegevens("anderelijst"), verzoekpartijrollen: [lid(3)] },
+      { id: 3, partijrolgegevens: gegevens("geeindigd"), verzoekpartijrollen: [lid(2, { einde: [{ versie: 1, datum: "2026-11-06" }] })] },
+      { id: 4, partijrolgegevens: gegevens("eindetotvandaag"), verzoekpartijrollen: [lid(2, { einde: [{ versie: 1, datum: "2026-11-07" }] })] },
+      { id: 5, partijrolgegevens: gegevens("afgevoerd"), verzoekpartijrollen: [lid(2, { afvoer: "2026-11-06T10:00:00Z" })] },
+      { id: 6, partijrolgegevens: gegevens("eindegecorrigeerd"), verzoekpartijrollen: [lid(2, { einde: [{ versie: 1, datum: "2026-11-06", afvoer: "2026-11-06T11:00:00Z" }] })] },
+      { id: 7, partijrolgegevens: gegevens("nogniet"), verzoekpartijrollen: [lid(2, { aanvang: [{ versie: 1, datum: "2026-12-01" }] })] },
+    ],
+  };
+  const haal = async (pad) => ({ items: register[pad.split("?")[0]] || [] });
+  const metPeil = { ...edienst, referentielijsten: { Verzoekpartijrol: { ...edienst.referentielijsten.Verzoekpartijrol, peiltijdstip: "2026-11-07T12:00:00Z" } } };
+  const uitRegister = await verzamelReferentielijsten(metPeil, [], haal);
+  assert.deepEqual(uitRegister.lijsten.Verzoekpartijrol.map((x) => x.code), ["aanvrager", "eindetotvandaag", "eindegecorrigeerd"]); // einde is inclusief; een afgevoerd einde telt niet
+  assert.match(uitRegister.diagnostics[0].message, /leden van Verzoekpartijrollen/);
 
   const register404 = await verzamelReferentielijsten(edienst, [], async () => { throw new Error("401"); });
   assert.ok(register404.diagnostics.some((d) => d.severity === "warning" && /401/.test(d.message)));

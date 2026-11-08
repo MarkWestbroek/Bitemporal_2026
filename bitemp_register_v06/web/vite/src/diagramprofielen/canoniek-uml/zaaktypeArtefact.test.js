@@ -94,7 +94,7 @@ test("GPK: toetsen op bijlage, catalogus, initiator en selectielijst", async () 
 });
 
 test("ZTT-AANVRAAGTYPE: het formulier zet een ander aanvraagtype dan het zaaktype (pad achter het veld, 08-11)", async () => {
-  const pad = "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code";
+  const pad = "Aanvraag.AanvraagAanvraagtype.type.Aanvraagtypedefinitie.Aanvraagtypegegevens.code";
   const { diagnostics } = await maak((e) => {
     e.artefacten.find((a) => a.soort === "formulier").registratie.vasteWaarden[pad] = "iets-anders";
     return e;

@@ -36,8 +36,8 @@ test("typeRef: model- en Go-typen naar FEEL-basistypen", () => {
 
 test("invoerVoorVeld: veld → JSON-pointer, meervoudig GE → lijst, envelop → procesvariabele", async () => {
   const ot = await objecttype();
-  assert.deepEqual(invoerVoorVeld("GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort", ot), { bron: "dossier", pointer: "/soort", lijst: false });
-  assert.deepEqual(invoerVoorVeld("Aanvraag.AanvraagBijlage.naam", ot), { bron: "dossier", pointer: "/bijlagen", lijst: true });
+  assert.deepEqual(invoerVoorVeld("Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort", ot), { bron: "dossier", pointer: "/soort", lijst: false });
+  assert.deepEqual(invoerVoorVeld("Aanvraag.Aanvraagbijlage.naam", ot), { bron: "dossier", pointer: "/bijlagen", lijst: true });
   assert.deepEqual(invoerVoorVeld("envelop:bsn", ot), { bron: "variabele", variabele: "bsn" });
   assert.equal(invoerVoorVeld("Bestaat.Niet.veld", ot), null);
 });
@@ -104,7 +104,7 @@ test("kolom gebonden via de uuid volgt een hernoeming; export op het naampad van
   veld.naam = "kaartsoort";
   const edienst = lees("gpk-edienst.json");
   const ot = edienst.artefacten.find((a) => a.identifier === "gehandicaptenparkeerkaartaanvraag");
-  const s = JSON.stringify(ot).split('"GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort"').join('"GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kaartsoort"');
+  const s = JSON.stringify(ot).split('"Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort"').join('"Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.kaartsoort"');
   Object.assign(ot, JSON.parse(s));
   const objecttypeNu = (
     await maakObjecttypeArtefact({
@@ -126,7 +126,7 @@ test("kolom gebonden via de uuid volgt een hernoeming; export op het naampad van
   assert.deepEqual(diagnostics, []);
   assert.deepEqual(invoer.find((x) => x.naam === "soort"), { naam: "soort", bron: "dossier", pointer: "/kaartsoort", lijst: false });
   const trace = artefact.traceregels.find((t) => t.doelPad === "#aanvraag-ontvankelijk/input/soort");
-  assert.equal(trace.bronGE, "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kaartsoort");
+  assert.equal(trace.bronGE, "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.kaartsoort");
   assert.equal(trace.bronUuid, veld.uuid);
 
   // Veld met die uuid weg uit het model: melding, en het opgeslagen naampad blijft.

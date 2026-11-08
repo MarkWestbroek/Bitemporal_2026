@@ -4,13 +4,13 @@
   "bronmodel": {
     "naam": "inrichten-domeinen",
     "bestand": "Studio-project Inrichten (omnium.fundament), map Domeinen",
-    "versie": "Inrichten 2026-11-08, op 3113 (referentielijst als veldtype: AanvraagAanvraagtype.type, Verzoekpartijrol)",
-    "hash": "sha256:c1b520afc764c7bf1f65e8c2cff36021a09f6da3d76423edf37f3799edef49e2",
+    "versie": "Inrichten 2026-11-08, t/m op 3441 (na de rebuild van schema-versie 6, t/m 3426: referentielijst-instanties, hernoemde GE's; 3441 herstelt doelEntiteit van GpkKaartAanvraag)",
+    "hash": "sha256:51f7b4ca92a417dd57aa74856b31612dd75150396bb2db8f8cb9b5c5bee6fd27",
     "_hashregel": "sha256 over JCS(model) (RFC 8785); model = het 'model'-object van het samengestelde bestand"
   },
   "referentielijsten": {
-    "Aanvraagtype": { "bron": "register: /full/aanvraagtypen", "peiltijdstip": null, "eersteVulling": "docs/aanvraag-aanvraagtypen.json" },
-    "Verzoekpartijrol": { "bron": "register: /full/partijrollen", "peiltijdstip": null, "eersteVulling": "docs/relatiebeheer-partijrollen.json" }
+    "Aanvraagtype": { "bron": "register: /full/aanvraagtypedefinities", "instantie": "Aanvraagtypen", "lidmaatschap": "aanvraagtypen", "peiltijdstip": null, "eersteVulling": "docs/aanvraag-aanvraagtypen.json" },
+    "Verzoekpartijrol": { "bron": "register: /full/partijroldefinities", "instantie": "Verzoekpartijrollen", "lidmaatschap": "verzoekpartijrollen", "peiltijdstip": null, "eersteVulling": "docs/relatiebeheer-partijrollen.json" }
   },
   "artefacten": [
     {
@@ -21,6 +21,8 @@
       "bron": "Aanvraag",
       "projectie": {
         "materieel": "actueel",
+        "namen": { "Aanvraag.Aanvraagbijlage": "bijlagen" },
+        "_namen": "GE Aanvraagbijlage heeft sinds 08-11 het meervoud aanvraagbijlagen; de property blijft bijlagen, zodat objecttype, formulier, documentdefinitie en BPMN/DMN-pointers gelijk blijven",
         "relaties": {
           "AanvraagPartij": { "als": "ingebed", "naam": "partijen", "_toelichting": "Meervoudige relatie met een veld (partijrol): een lijst van {partijrol, partij}. Niet 'de partij met rol aanvrager': kiezen op een M0-waarde hoort niet in de regelset, en een gemachtigde-aanvraag heeft zowel aanvrager als subject nodig." }
         },
@@ -30,9 +32,9 @@
         }
       },
       "velden": [
-        "Aanvraag.AanvraagIdentificatie.aanvraagnummer",
-        "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code",
-        "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.omschrijving",
+        "Aanvraag.Aanvraagidentificatie.aanvraagnummer",
+        "Aanvraag.AanvraagAanvraagtype.type.Aanvraagtypedefinitie.Aanvraagtypegegevens.code",
+        "Aanvraag.AanvraagAanvraagtype.type.Aanvraagtypedefinitie.Aanvraagtypegegevens.omschrijving",
         "Aanvraag.AanvraagPartij.partijrol",
         "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn",
         "Aanvraag.AanvraagPartij.Partij.PartijMaatschappelijkeActiviteit.kvkNummer",
@@ -40,10 +42,10 @@
         "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.naam",
         "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.email",
         "Aanvraag.AanvraagPartij.Partij.PartijKlantverwijzing.klantUrl",
-        "Aanvraag.AanvraagStatus.status",
-        "Aanvraag.AanvraagIndiening.ingediendOp",
-        "Aanvraag.AanvraagBijlage.naam",
-        "Aanvraag.AanvraagBijlage.documentUrl"
+        "Aanvraag.AanvraagAanvraagstatus.status",
+        "Aanvraag.Aanvraagindiening.ingediendOp",
+        "Aanvraag.Aanvraagbijlage.naam",
+        "Aanvraag.Aanvraagbijlage.documentUrl"
       ],
       "_velden": "De partij als de sleutel van haar 'is'-GE: bsn (DigiD), kvkNummer of vestigingsnummer (eHerkenning), of naam + e-mail zonder registratie; klantUrl als die al bekend is. Geen Omnium-id: het formulier kent dat niet, de aanvraagservice zoekt of maakt de Partij op de sleutel. Niet gekozen: rsin, agbCode, oin (geen inlogmiddel van een aanvrager), PartijVestiging.kvkNummer (zou botsen met kvkNummer; het vestigingsnummer is uniek), PartijNaam (cache).",
       "passthrough": {
@@ -75,17 +77,17 @@
           "naam": "Gegevens aanvraag",
           "slug": "gegevens-aanvraag",
           "velden": [
-            { "veld": "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code", "key": "aanvraagtype", "label": "Soort aanvraag", "verplicht": true },
+            { "veld": "Aanvraag.AanvraagAanvraagtype.type.Aanvraagtypedefinitie.Aanvraagtypegegevens.code", "key": "aanvraagtype", "label": "Soort aanvraag", "verplicht": true },
             { "veld": "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.naam", "key": "aanvragerNaam", "label": "Naam aanvrager", "verplicht": true },
             { "veld": "Aanvraag.AanvraagPartij.Partij.PartijZonderRegistratie.email", "key": "aanvragerEmail", "label": "E-mailadres", "verplicht": false },
-            { "veld": "Aanvraag.AanvraagIndiening.toelichting", "key": "toelichting", "label": "Toelichting" }
+            { "veld": "Aanvraag.Aanvraagindiening.toelichting", "key": "toelichting", "label": "Toelichting" }
           ]
         }
       ],
       "registratie": {
         "objecttype": "aanvraag",
-        "vasteWaarden": { "Aanvraag.AanvraagStatus.status": "ingediend", "Aanvraag.AanvraagPartij.partijrol": "aanvrager" },
-        "letterlijk": { "Aanvraag.AanvraagIndiening.ingediendOp": "indientijdstip van Open Formulieren", "Aanvraag.AanvraagIdentificatie.aanvraagnummer": "toegekend door de aanvraagservice (nog geen generiek mechanisme)" }
+        "vasteWaarden": { "Aanvraag.AanvraagAanvraagstatus.status": "ingediend", "Aanvraag.AanvraagPartij.partijrol": "aanvrager" },
+        "letterlijk": { "Aanvraag.Aanvraagindiening.ingediendOp": "indientijdstip van Open Formulieren", "Aanvraag.Aanvraagidentificatie.aanvraagnummer": "toegekend door de aanvraagservice (nog geen generiek mechanisme)" }
       },
       "_status": "paden bijgewerkt naar v2; regelset formulier volgt"
     }

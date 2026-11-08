@@ -1,6 +1,6 @@
 // Objecttypen uit het samengestelde model van cg-test (Fundament, 27-10):
 // aanvraag v2 (partijen met rol) en de specialisatie
-// GehandicaptenparkeerkaartAanvraag (erft Aanvraag). Regelset 0.4.0. De
+// Gehandicaptenparkeerkaartaanvraag (erft Aanvraag). Regelset 0.4.0. De
 // GPK-tests toetsen het schema zonder envelop (de modelprojectie); de envelop
 // (verzoek, 0.4.0) heeft een eigen test.
 import test from "node:test";
@@ -50,8 +50,8 @@ test("GPK met envelop verzoek: het schema van het model als data, voor de Verzoe
   assert.equal(s.title, title);
   // De trace schuift mee onder data; de envelopvelden hebben een eigen spoor.
   const pad = (a, bron) => a.traceregels.find((t) => t.bronGE === bron)?.doelPad;
-  assert.equal(pad(artefact, "Aanvraag.AanvraagStatus.status"), "/jsonSchema/properties/data/properties/status");
-  assert.equal(pad(kaal, "Aanvraag.AanvraagStatus.status"), "/jsonSchema/properties/status");
+  assert.equal(pad(artefact, "Aanvraag.AanvraagAanvraagstatus.status"), "/jsonSchema/properties/data/properties/status");
+  assert.equal(pad(kaal, "Aanvraag.AanvraagAanvraagstatus.status"), "/jsonSchema/properties/status");
   assert.deepEqual(artefact.traceregels.filter((t) => t.bronGE?.startsWith("envelop:")).map((t) => t.doelPad), [
     "/jsonSchema/properties/type",
     "/jsonSchema/properties/bsn",
@@ -96,7 +96,7 @@ test("GPK: ouder en subtype in één schema", async () => {
   const { artefact, diagnostics } = await gpk();
   assert.deepEqual(diagnostics, []);
   const s = artefact.artefactInhoud.payload.jsonSchema;
-  assert.equal(s.title, "GehandicaptenparkeerkaartAanvraag");
+  assert.equal(s.title, "Gehandicaptenparkeerkaartaanvraag");
   assert.deepEqual(Object.keys(s.properties).sort(), [
     "aanvraagnummer", "aanvraagtype", "bijlagen", "eerderKaartnummer", "eerdereKaart", "hulpmiddel", "ingediendOp",
     "kenteken", "loopafstandMeter", "partijen", "rijbewijsnummer", "soort", "status", "toelichting",
@@ -112,7 +112,7 @@ test("GPK: ouder en subtype in één schema", async () => {
   assert.equal(at.additionalProperties, false);
   assert.equal(at.properties.code.maxLength, 40);
   assert.equal(artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagAanvraagtype.type").doelPad, "/jsonSchema/properties/aanvraagtype");
-  assert.equal(artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code").doelPad, "/jsonSchema/properties/aanvraagtype/properties/code");
+  assert.equal(artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagAanvraagtype.type.Aanvraagtypedefinitie.Aanvraagtypegegevens.code").doelPad, "/jsonSchema/properties/aanvraagtype/properties/code");
   assert.deepEqual(s.properties.soort.enum, ["bestuurder", "passagier", "instelling"]);
   assert.equal(s.properties.eerdereKaart.type, "boolean");
   assert.equal(s.properties.loopafstandMeter.type, "integer");
@@ -126,7 +126,7 @@ test("GPK: een geërfd veld is dezelfde modelknoop en property als in het object
   const a = (await aanvraag()).artefact;
   const g = (await gpk()).artefact;
   const spoor = (art, id) => art.traceregels.find((t) => t.bronGE === id);
-  for (const id of ["Aanvraag.AanvraagIdentificatie.aanvraagnummer", "Aanvraag.AanvraagPartij.partijrol", "Aanvraag.AanvraagBijlage.documentUrl"]) {
+  for (const id of ["Aanvraag.Aanvraagidentificatie.aanvraagnummer", "Aanvraag.AanvraagPartij.partijrol", "Aanvraag.Aanvraagbijlage.documentUrl"]) {
     assert.equal(spoor(g, id).doelPad, spoor(a, id).doelPad, id);
   }
   assert.deepEqual(g.artefactInhoud.payload.jsonSchema.properties.aanvraagnummer, a.artefactInhoud.payload.jsonSchema.properties.aanvraagnummer);
@@ -136,14 +136,14 @@ test("GPK: een geërfd veld is dezelfde modelknoop en property als in het object
 
 test("GPK: twee keer toelichting botst; projectie.namen lost het op", async () => {
   const metIndiening = (e) => {
-    e.artefacten[0].velden.push("Aanvraag.AanvraagIndiening.toelichting");
+    e.artefacten[0].velden.push("Aanvraag.Aanvraagindiening.toelichting");
     return e;
   };
   const botsing = await gpk(metIndiening);
   assert.deepEqual(botsing.diagnostics.map((d) => d.code), ["JSN-DUBBEL"]);
 
   const hernoemd = await gpk((e) => {
-    metIndiening(e).artefacten[0].projectie.namen = { "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.toelichting": "beperkingToelichting" };
+    metIndiening(e).artefacten[0].projectie.namen = { "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagBeperking.toelichting": "beperkingToelichting" };
     return e;
   });
   assert.deepEqual(hernoemd.diagnostics, []);
@@ -154,12 +154,12 @@ test("GPK: twee keer toelichting botst; projectie.namen lost het op", async () =
 
 test("een onbekende ouder en een naam voor een onbekend pad worden gemeld", async () => {
   const model = lees("inrichten-domeinen-v3.json");
-  model.model.entiteiten.find((e) => e.typenaam === "GehandicaptenparkeerkaartAanvraag").erft = "Aanvraaag";
+  model.model.entiteiten.find((e) => e.typenaam === "Gehandicaptenparkeerkaartaanvraag").erft = "Aanvraaag";
   const { diagnostics } = await maakObjecttypeArtefact({
     modelBestand: model,
     edienst: (() => {
       const e = lees("gpk-edienst.json");
-      e.artefacten[0].velden = ["GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort"];
+      e.artefacten[0].velden = ["Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort"];
       e.artefacten[0].projectie.namen = { "Bestaat.Niet": "x" };
       return e;
     })(),

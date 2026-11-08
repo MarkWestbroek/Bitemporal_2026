@@ -69,3 +69,18 @@ test("referentielijst uit het register: de gegevens zonder versie", async () => 
   const items = await leesReferentielijst(haalJson, "register: /full/aanvraagtypen");
   assert.deepEqual(items, [{ code: "gehandicaptenparkeerkaart", omschrijving: "GPK", zaaktypeIdentificatie: "GPK" }]);
 });
+
+test("referentielijst: gegevens-GE in oude en nieuwe vorm, lidmaatschap op de peildatum", async () => {
+  const { gegevensSleutel, isLidVan, leesReferentielijst } = await import("./inrichtingsRegister.js");
+  assert.equal(gegevensSleutel({ id: 1, aanvraagtype_gegevens: [] }), "aanvraagtype_gegevens");
+  assert.equal(gegevensSleutel({ id: 1, aanvraagtypegegevens: [], aanvraagtypen: [] }), "aanvraagtypegegevens");
+  const item = { aanvraagtypen: [{ rel_id: 1, referentielijst_id: 1, aanvang: [{ datum: "2026-11-05" }], einde: [{ datum: "2026-11-10" }] }] };
+  assert.equal(isLidVan(item, "aanvraagtypen", 1, "2026-11-04"), false);
+  assert.equal(isLidVan(item, "aanvraagtypen", 1, "2026-11-05"), true);
+  assert.equal(isLidVan(item, "aanvraagtypen", 1, "2026-11-10"), true);
+  assert.equal(isLidVan(item, "aanvraagtypen", 1, "2026-11-11"), false);
+  assert.equal(isLidVan(item, "aanvraagtypen", 2, "2026-11-06"), false);
+  // Zonder `lid` blijft het oude gedrag: alle items.
+  const oud = await leesReferentielijst(async () => [{ id: 1, partijrol_gegevens: [{ rel_id: 1, data: [{ versie: 1, code: "x" }] }] }], "register: /full/partijrollen");
+  assert.deepEqual(oud, [{ code: "x" }]);
+});

@@ -71,7 +71,7 @@ test("samenvatting: gelijk aan het handwerk op de labels na, alles alleen-lezen"
   assert.equal(artefact.artefactHerkomst.regelsetId, "canoniek-naar-gzac-dossier");
   assert.equal(artefact.artefactHerkomst.schrijverId, "gzac-dossier-schrijver@0.1.0");
   const kenteken = artefact.traceregels.find((t) => t.doelPad === "/components/0/components/0/columns/0/components/3");
-  assert.equal(kenteken.bronGE, "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kenteken");
+  assert.equal(kenteken.bronGE, "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.kenteken");
   assert.deepEqual(artefact.afhankelijkheden, [{ identifier: "gehandicaptenparkeerkaart", soort: "dossierschema", reden: "het formulier toont velden van de dossierinhoud" }]);
 });
 
@@ -116,7 +116,7 @@ test("documentdefinitie: het objecttype zonder envelop plus behandelvelden, draf
   // Geen formats buiten draft-07; het patroon blijft.
   assert.ok(!JSON.stringify(s).match(/"format":"(bsn|kenteken|int32|kvk-nummer|vestigingsnummer)"/));
   assert.equal(s.properties.kenteken.anyOf[1].pattern, "^[A-Z0-9]{1,3}-[A-Z0-9]{1,3}-[A-Z0-9]{1,3}$");
-  assert.equal(artefact.traceregels.find((t) => t.doelPad === "/properties/soort").bronGE, "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort");
+  assert.equal(artefact.traceregels.find((t) => t.doelPad === "/properties/soort").bronGE, "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort");
   // Het objecttype (de inhoud) en de dossierdefinitie (de wortel van de bundel, FUNDAMENT 05-11).
   assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaartaanvraag", "objecttype"], ["gehandicaptenparkeerkaart", "dossierdefinitie"]]);
 });
@@ -227,7 +227,7 @@ test("dossierstatussen: de waarden uit de statuslijst die een proces zet", async
   // Zelfde vorm als het handwerk, met de sleutel en titel uit het model en de twee velden die GZAC zelf invult.
   const handwerk = lees("gzac-handwerk/gehandicaptenparkeerkaart.internal-case-status.json");
   assert.deepEqual(artefact.artefactInhoud.payload, [{ ...handwerk[0], key: "niet-in-behandeling", title: "Niet in behandeling", retentionPeriodInDays: -1, label: null }]);
-  assert.deepEqual(artefact.traceregels.map((t) => t.bronGE), ["AanvraagStatus.nietInBehandeling"]);
+  assert.deepEqual(artefact.traceregels.map((t) => t.bronGE), ["Aanvraagstatus.nietInBehandeling"]);
   assert.equal(artefact.artefactInhoud.formaat, "gzac-internal-case-status-json");
   assert.deepEqual(artefact.afhankelijkheden.map((a) => [a.identifier, a.soort]), [["gehandicaptenparkeerkaart", "dossierschema"]]);
 
