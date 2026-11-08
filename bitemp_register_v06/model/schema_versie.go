@@ -50,4 +50,9 @@ type SchemaVersie struct {
 type GebouwdDomein struct {
 	Domein string `json:"domein"`
 	Prefix string `json:"prefix"`
+	// Gegenereerd: dit domein is bij de rebuild van deze versie uit het model gegenereerd (sinds
+	// 08-11-2026). Een domein van het standaardpakket zonder deze vlag stond er al zoals het image
+	// het meebrengt; de startup-rebuild genereert het dan niet opnieuw uit het model (cg-test,
+	// 08-11-2026: ide_bestanden uit het Studio-model paste niet bij de handgeschreven handlers).
+	Gegenereerd bool `json:"gegenereerd,omitempty"`
 }

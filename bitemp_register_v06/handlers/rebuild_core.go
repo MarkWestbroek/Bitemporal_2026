@@ -383,18 +383,12 @@ func VoerStartupRebuildUit() (herbouwd bool, stappen []string, err error) {
 		stappen = append(stappen, "Waarschuwing: domeinenlijst van de actieve versie niet leesbaar ("+err.Error()+"); alle domeinen van het model bouwen")
 	}
 	if len(gebouwd) > 0 {
-		opLijst := map[string]bool{}
 		for _, g := range gebouwd {
-			opLijst[strings.ToLower(g.Prefix)] = true
 			houden = append(houden, g.Prefix)
 		}
-		var gekozen []RebuildDomeinSpec
-		for _, r := range runs {
-			if opLijst[strings.ToLower(r.Prefix)] && !isHandgemaaktPakket(r.Prefix) {
-				gekozen = append(gekozen, r)
-			}
-		}
-		runs = gekozen
+		// Het standaardpakket alleen als het bij die rebuild expliciet gegenereerd is
+		// (startupRuns, rebuild_domeinen.go; cg-test 08-11-2026).
+		runs = startupRuns(runs, gebouwd)
 		stappen = append(stappen, fmt.Sprintf("Domeinenlijst van de actieve versie: %s; gebouwd uit het model: %s", gebouwdeNamen(gebouwd), runNamen(runs)))
 	}
 	if len(runs) == 0 {
