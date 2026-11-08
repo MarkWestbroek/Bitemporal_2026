@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 )
 
@@ -30,12 +31,16 @@ func gegevenstypenAlsJSON(t *testing.T) []byte {
 	// Geen HTML-escaping: de JS-kant leest de patronen letterlijk.
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	// Posities en layout zijn editorzaken; de snapshot draagt alleen betekenis.
+	// Posities, layout en de Studio-uuid zijn editorzaken; de snapshot draagt alleen betekenis.
+	// Gesorteerd op naam: gegevenstypen() volgt de volgorde van de bron (handgemaakt of, sinds
+	// 07-11-2026, het model), en die volgorde zegt niets.
 	lijst := gegevenstypen()
 	for i := range lijst {
 		lijst[i].Positie = nil
 		lijst[i].LayoutLocked = false
+		lijst[i].UUID = ""
 	}
+	sort.SliceStable(lijst, func(i, j int) bool { return lijst[i].Naam < lijst[j].Naam })
 	if err := enc.Encode(map[string]any{
 		"_toelichting": "Gegenereerd uit model/gegevenstypen_datatype_registry.go door gegevenstypen_snapshot_test.go; niet met de hand wijzigen.",
 		"datatypes":    lijst,

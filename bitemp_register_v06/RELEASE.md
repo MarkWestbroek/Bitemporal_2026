@@ -8,6 +8,91 @@
 
 ---
 
+## api 0.22.0 / devloop 0.25.0 (2026-11-07)
+
+Het register heeft een eigen, expliciete domeinenlijst (besluit Mark 07-11). Het Studio-model mag
+meer domeinen hebben dan er gegenereerd worden. Studio blijft 0.33.0, render 0.3.5.
+
+- **Domeinkeuze bij `POST /admin/rebuild`:**
+  - `domeinen`: een lijst namen, of `{domein, prefix}`;
+  - `alle_domeinen: true`;
+  - een Studio-project zonder lijst bouwt de *bestaande* domeinen (in het register én in het
+    model).
+- **`precies: true`** maakt de lijst de samenstelling van het register. Andere domeinen gaan
+  eruit: hun bestanden en init-aanroepen. Het standaardpakket blijft altijd staan: beheer,
+  configuratie, financieel, gegevenstypen, ide_bestanden en register.
+  - Wijst een overgebleven domein nog naar een weggelaten type, tabel of datatype, dan weigert de
+    rebuild met 422, reden `verwijzingen`, met de plek erbij. Op dit moment geldt dat voor
+    register → AdellijkeTitel (np-loc).
+- **`schema_versies.gebouwde_domeinen`:** elke actieve versie onthoudt haar domeinen. De
+  startup-rebuild bouwt precies die lijst, zodat een verse container geen ingebakken domeinen
+  terugbrengt. `GET /admin/schema/versies` toont de lijst en ook `bron_project_*`; die
+  herkomstvelden ontbraken sinds 0.21.0.
+- **Opruimen van achtergebleven tabellen** (alleen devloop, met het beheerwachtwoord):
+  - `GET /admin/wees-tabellen` en `POST /admin/wees-tabellen/opruimen {tabellen}`;
+  - alleen tabellen van types die niet meer in de MetaRegistry staan, die leeg zijn en waar geen
+    wijzigingen naar verwijzen;
+  - de lijst moet gelijk zijn aan het overzicht;
+  - één `DROP` zonder CASCADE.
+- **Devloop-image:** bewaart `/app/_image/model` als onveranderlijke referentie.
+- **GitAdres** is een algemeen datatype in gegevenstypen, met een controleregel voor https, ssh,
+  git en gebruiker@host:pad. Het stond in CG; inrichting gebruikt het ook.
+- **Codegen** (voorbereiding op gegevenstypen uit het model, CODEGEN.md §7.3f):
+  - `ExterneReferentie` en alle weergavevelden gaan mee;
+  - het domein gegevenstypen krijgt een canonieke registry die vervangt in plaats van toevoegt;
+  - simulatie export → codegen: 0 verschillen, ronde 2 byte-gelijk.
+  Zolang een rebuild gegevenstypen niet expliciet noemt, blijft het handgemaakte bestand staan.
+
+Getest:
+- `go test ./...` slaagt (de EA-test draait met node).
+- Alle 1443 JS-tests slagen.
+- E2E in een eigen devloop-container:
+  - de weigering op verwijzingen werkt;
+  - `precies` met [CG, np-loc, org-geo] haalde 68 tabellen van drie domeinen weg; de zelftest en
+    de databaseproef slaagden;
+  - een verse container bouwde dezelfde lijst;
+  - het opruimen weigerde een verkeerde lijst (409) en ruimde de goede op (349 → 281 tabellen).
+
+Uitrol:
+- Image `bitemp-go-api:0.22.0`, daarna `./update.sh` op app. De kolom `gebouwde_domeinen` komt er
+  bij het opstarten bij.
+- Op app verandert er niets: geen lijst betekent additief, zoals voorheen.
+- Fundament: `bitemp-devloop:0.25.0`. Om de demodomeinen uit cg-test te halen: een rebuild met
+  `domeinen` en `precies: true`, daarna de wees-tabellen opruimen (DEVLOOP.md §"Domeinen van het
+  register").
+
+---
+
+## api 0.21.1 / devloop 0.24.14 (2026-11-07)
+
+Patch voor twee fouten die FUNDAMENT op cg-test vond. Studio blijft 0.33.0, render 0.3.5.
+
+- **Een veld dat uit het model verdween, brak elke nieuwe opvoer van dat type.** Een additieve
+  rebuild laat de kolom van zo'n veld bewust staan, want de waarden zijn historie. `INSERT …
+  RETURNING *` gaf hem dan terug, en bun weigerde: `Artefact_ArtefactInhoud_Data does not have
+  column "formaat"` (500, na schema-versie 3/4). Nu:
+  - de database draait met `bun.WithDiscardUnknownColumns()`;
+  - dbsetup maakt een vervallen kolom die NOT NULL is zonder standaardwaarde nullable, bij het
+    opstarten en verliesvrij;
+  - elke vervallen kolom wordt gelogd (`[dbsetup] vervallen kolom …`).
+  Er wordt niets weggegooid; opruimen met `DROP COLUMN` blijft een bewuste beheerdersstap
+  (CODEGEN.md §7.3e).
+- **De upgrade naar 0.24.13 gaf ongeveer twee minuten uitval.** De startup-rebuild las
+  `schema_versies` met alle kolommen van het model, vóór de migratie die `bron_project_id`
+  toevoegt. Dat gaf "column does not exist", waarna de ingebakken code startte en het register
+  404 gaf. De laders lezen nu alleen `id`, `schema_json` en `status` (DEVLOOP.md
+  §Startup-rebuild).
+
+Getest: `go test ./...` groen. Twee nieuwe proeven tegen PostgreSQL spelen beide gevallen na:
+- een tabel met een vervallen `formaat VARCHAR NOT NULL`: de insert lukt en de oude waarde blijft;
+- een `schema_versies` zonder de nieuwe kolommen: de oude code gaf de fout van cg-test, de nieuwe
+  laadt de actieve versie.
+
+Uitrol: image `bitemp-go-api:0.21.1`, daarna `./update.sh` op app. Geen migratie en geen nieuwe
+instellingen. Fundament: `bitemp-devloop:0.24.14`, uitrol door FUNDAMENT.
+
+---
+
 ## api 0.21.0 / studio 0.33.0 / render 0.3.5 (2026-11-07)
 
 Het Studio-project wordt de bron van het register (besluit Mark 07-11: "het model is de bron voor

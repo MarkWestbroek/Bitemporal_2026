@@ -24,8 +24,10 @@ import (
 //   - anders: modelBytes opslaan als nieuwe rij met status active (bron "rebuild", of
 //     "studio-project" met de herkomst als bron != nil; 07-11-2026).
 //
-// De vorige actieve versie wordt gearchiveerd. Geeft een melding voor de stappenlijst.
-func activeerGebouwdModel(ctx context.Context, modelBytes []byte, bestaandID *int64, indiener string, bron *RebuildBron) (string, error) {
+// De vorige actieve versie wordt gearchiveerd. gebouwd (de domeinen van het register na de
+// rebuild) komt op de geactiveerde versie; de startup-rebuild bouwt precies die (07-11-2026).
+// Geeft een melding voor de stappenlijst.
+func activeerGebouwdModel(ctx context.Context, modelBytes []byte, bestaandID *int64, indiener string, bron *RebuildBron, gebouwd []model.GebouwdDomein) (string, error) {
 	if DB == nil {
 		return "", fmt.Errorf("database niet geïnitialiseerd")
 	}
@@ -48,6 +50,7 @@ func activeerGebouwdModel(ctx context.Context, modelBytes []byte, bestaandID *in
 		res, err := tx.NewUpdate().
 			Model((*model.SchemaVersie)(nil)).
 			Set("status = ?", model.SchemaVersieStatusActive).
+			Set("gebouwde_domeinen = ?", gebouwdeDomeinenJSON(gebouwd)).
 			Where("id = ?", *bestaandID).
 			Exec(ctx)
 		if err != nil {
@@ -69,6 +72,7 @@ func activeerGebouwdModel(ctx context.Context, modelBytes []byte, bestaandID *in
 			ModelVersie:       v3.Versie,
 			Status:            model.SchemaVersieStatusActive,
 			Opmerking:         "Opgeslagen en geactiveerd door /admin/rebuild",
+			GebouwdeDomeinen:  gebouwd,
 		}
 		if bron != nil {
 			versie.Bron = "studio-project"
@@ -95,6 +99,31 @@ func activeerGebouwdModel(ctx context.Context, modelBytes []byte, bestaandID *in
 		return "", fmt.Errorf("kan transactie niet committen: %w", err)
 	}
 	return melding, nil
+}
+
+// gebouwdeDomeinenJSON: de lijst als jsonb-waarde voor een UPDATE (nil → SQL NULL).
+func gebouwdeDomeinenJSON(gebouwd []model.GebouwdDomein) any {
+	if len(gebouwd) == 0 {
+		return nil
+	}
+	b, _ := json.Marshal(gebouwd)
+	return string(b)
+}
+
+// bewaarGebouwdeDomeinenOpActieveVersie zet de domeinenlijst op de nieuwste actieve versie (een
+// rebuild met schema_bron "actief" activeert niets nieuws, maar kan het register wel veranderen).
+func bewaarGebouwdeDomeinenOpActieveVersie(ctx context.Context, gebouwd []model.GebouwdDomein) error {
+	if DB == nil {
+		return fmt.Errorf("database niet geïnitialiseerd")
+	}
+	id, err := laatsteSchemaVersieIDOpStatus(ctx, model.SchemaVersieStatusActive)
+	if err != nil {
+		return err
+	}
+	_, err = DB.NewUpdate().Model((*model.SchemaVersie)(nil)).
+		Set("gebouwde_domeinen = ?", gebouwdeDomeinenJSON(gebouwd)).
+		Where("id = ?", *id).Exec(ctx)
+	return err
 }
 
 // laatsteSchemaVersieIDOpStatus geeft het id van de nieuwste schema-versie met deze status.

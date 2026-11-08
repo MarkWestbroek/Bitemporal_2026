@@ -16,6 +16,12 @@ package model
 // Toevoegen / wijzigen van een algemeen datatype gebeurt HIER. Codegen mag
 // register_/cg_/financieel_-bestanden blijven vullen; deze registry overschrijft
 // later wat conflicteert.
+//
+// Overgang (besluit Mark 07-11-2026): gegevenstypen gaat uit het model komen.
+// cmd/codegen genereert voor het domein gegevenstypen een bestand van precies
+// deze vorm (generateCanoniekeDatatypeRegistry). Tot de vergelijking met het
+// model rond is, blijft dit bestand de bron; registreerOfVervangDatatype staat
+// daarom al in metaregistry_plumbing.go.
 
 func initGegevenstypenDatatypeRegistry() {
 	for _, dt := range gegevenstypen() {
@@ -168,6 +174,17 @@ func gegevenstypen() []V3Datatype {
 				Foutmelding: "Voer een geldige https:// URL in",
 			},
 			Weergave: &V3Weergave{Placeholder: "https://example.com"}},
+		// GitAdres stond als gegenereerd datatype in domein CG (cg_datatype_registry.go),
+		// maar wordt ook buiten CG gebruikt (inrichting). Besluit Mark 07-11-2026: algemeen
+		// datatype. Formaat blijft "git-address", zodat bestaande velden niet veranderen.
+		{Naam: "GitAdres", Description: "Adres van een Git repository, bijvoorbeeld HTTPS of SSH.",
+			Basistype: "string", Format: "git-address", Domein: "gegevenstypen",
+			Validatie: &V3Validatie{
+				Pattern:     `^(https?://[^\s]+|ssh://[^\s]+|git://[^\s]+|[A-Za-z0-9._-]+@[A-Za-z0-9.-]+:[^\s]+)$`,
+				Voorbeelden: []string{"https://github.com/org/repo.git", "git@github.com:org/repo.git", "ssh://git@host/org/repo.git"},
+				Foutmelding: "Voer een geldig Git-adres in (https://, ssh://, git:// of gebruiker@host:pad)",
+			},
+			Weergave: &V3Weergave{Placeholder: "https://github.com/org/repo.git"}},
 
 		// — Visueel / geo —
 		{Naam: "Kleur", Description: "Hex-kleurcode in CSS-formaat (#RGB, #RRGGBB of #RRGGBBAA).",
@@ -493,23 +510,4 @@ func gegevenstypen() []V3Datatype {
 			ExterneReferentie: "https://www.gleif.org/en/about-lei/get-an-lei-find-lei-issuing-organizations",
 			Weergave:          &V3Weergave{Placeholder: "AAAAAAAAAAAAAAAAAA26"}},
 	}
-}
-
-// registreerOfVervangDatatype voegt een datatype toe of vervangt een bestaande
-// entry met dezelfde Naam (laatste-wint-op-Naam). Hiermee kan de gegevenstypen-
-// registry oudere duplicates uit codegen-bestanden overschrijven zonder dat we
-// die bestanden hoeven aan te raken.
-func registreerOfVervangDatatype(dt V3Datatype) {
-	for i := range DatatypeRegistry {
-		if DatatypeRegistry[i].Naam == dt.Naam {
-			// Behoud Positie-info uit eerdere entry zodat de UML-editor-layout
-			// niet verspringt na een rebuild.
-			if dt.Positie == nil && DatatypeRegistry[i].Positie != nil {
-				dt.Positie = DatatypeRegistry[i].Positie
-			}
-			DatatypeRegistry[i] = dt
-			return
-		}
-	}
-	DatatypeRegistry = append(DatatypeRegistry, dt)
 }

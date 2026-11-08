@@ -41,6 +41,8 @@ BEGIN
 	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS bron_project_id TEXT;
 	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS bron_project_versie BIGINT;
 	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS bron_tot_volgnummer BIGINT;
+	-- de domeinen van het register na de rebuild (07-11-2026; startup-rebuild bouwt precies deze)
+	ALTER TABLE schema_versies ADD COLUMN IF NOT EXISTS gebouwde_domeinen JSONB;
 END $$;
 `)
 	if err != nil {
