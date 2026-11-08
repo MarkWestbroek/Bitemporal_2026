@@ -906,6 +906,13 @@ Formulieren zelf in. Per veld kan de e-dienst `bestand` opgeven: `typen`
 voor foto's: de Documenten API van Open Zaak 1.31 weigert een request-body
 boven 2,5 MB (`RequestDataTooBig`), en het bestand gaat base64 in de body.
 
+Elk bestandsveld krijgt een `registration`-blok (tab Registratie in de
+formulierbouwer) met als `titel` het label van het veld. Zonder dat blok noemt
+Open Formulieren elk document naar het formulier, zodat het rapport en de
+pasfoto in Open Zaak en GZAC hetzelfde heten (GZAC-WIDGET 08-11). `bestand.registratie`
+kan `titel` en `informatieobjecttype` (de waarde die Open Formulieren daar
+verwacht) zelf geven; lege velden laten de standaard van het formulier staan.
+
 **Nog niet:** formulierlogica anders dan tonen-als, machtigen en eHerkenning.
 
 ### 11.7 Zaaktype: aanvraagtype + e-dienst → Catalogi API (2026-10-27)
@@ -1205,8 +1212,19 @@ noemt per tabblad de widgets:
   en `waarden` (componentValue, letterlijk als inputs; een waarde met `/` vooraan
   wordt getoetst als pad in de dossierinhoud). Voor de pasfoto bouwde GZAC-WIDGET
   (08-11) het component `documentAfbeeldingen` met `{bijlagen: "/bijlagen", naam:
-  "pasfoto"}`, in een eigen frontend-image (gzac-frontend:13.50.0-omnium.N). De
-  GPK-e-dienst krijgt het widget pas als dat image is uitgerold.
+  "pasfoto", bron: "bijlagen"}`, in een eigen frontend-image
+  (markwestbroek/gzac-frontend, 13.50.0-omnium.4 of later). GZAC 13 geeft de dossierinhoud
+  niet aan de frontend (`valtimo.includeDocumentContentInResponse=false`); het widget
+  leest daarom de gegevens van een collection-widget op hetzelfde tabblad, die de
+  backend oplost en op rechten toetst. `bron` noemt die widget; de regelset toetst
+  dat het een collection op hetzelfde tabblad is (DOS-WIDGET). Die collection heeft
+  `titelVeld: "naam"` (het widget vergelijkt `naam` hoofdletterongevoelig met de titel)
+  en het veld `documentUrl`, als tekst: `link` toont GZAC 13.50 in een collection als
+  ruwe HTML, en het widget leest toch de kale URL. Zonder `bron` valt het widget terug op de
+  bestandsnaam. De GPK-e-dienst krijgt het widget pas als dat image is uitgerold.
+
+Een veld in `fields` of `collection` mag zelf een weergave kiezen (`weergave`,
+uit `widgets.toegestaan` van de regelset, 0.6.0); anders geldt de regel hieronder.
 
 Het weergavetype komt uit het schema: boolean, number, date (format date),
 datetime (format date-time), anders text. Een enum blijft text (het type enum

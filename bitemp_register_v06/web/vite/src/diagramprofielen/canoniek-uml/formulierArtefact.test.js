@@ -78,6 +78,8 @@ test("GPK: de vorm volgt uit de inhoud van het model", async () => {
   assert.equal(per.pasfoto.useConfigFiletypes, false);
   assert.deepEqual(per.pasfoto.of, { image: { resize: { apply: true, width: 2000, height: 2000 } } });
   assert.equal(per.pasfoto.storage, undefined);
+  // Registratie: titel = label, anders heet het document zoals het formulier (GZAC-WIDGET 08-11).
+  assert.deepEqual(per.pasfoto.registration, { informatieobjecttype: "", bronorganisatie: "", docVertrouwelijkheidaanduiding: "", titel: "Pasfoto" });
   // Geen validate zonder keuze en zonder verplicht in het model.
   assert.equal(per.toelichting.validate, undefined);
   // Geheel getal (integer in het schema): geen decimalen in het getalveld.
