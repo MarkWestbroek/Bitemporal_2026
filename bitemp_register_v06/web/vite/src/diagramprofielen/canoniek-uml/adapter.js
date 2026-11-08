@@ -727,7 +727,10 @@ export function naarCanoniekModel(coreState) {
             kleur: d.kleur ?? bron.kleur,
             isMaterieel: d.materieel === true,
             tijdprecisie: "tijdprecisie" in d ? d.tijdprecisie : bron.tijdprecisie,
-            doelEntiteit: el.target || bron.doelEntiteit || "",
+            // De typenaam van het doel, niet zijn element-id: na een hernoeming verschillen die
+            // (FUNDAMENT 08-11: id GehandicaptenparkeerkaartAanvraag, naam …kaartaanvraag; de
+            // rebuild vond de doel-entiteit niet). Een entiteit exporteert als typenaam = naam.
+            doelEntiteit: (el.target && (coreEls[el.target]?.naam || el.target)) || bron.doelEntiteit || "",
             bronKardinaliteit: bronKard,
             doelKardinaliteit: d.doelKardinaliteit ?? bron.doelKardinaliteit,
             naamLabelHeen: d.naamLabelHeen ?? bron.naamLabelHeen,
