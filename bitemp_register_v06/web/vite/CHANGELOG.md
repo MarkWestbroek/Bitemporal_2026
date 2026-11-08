@@ -8,7 +8,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.34.0] — 2026-11-08
+
+Samen met api 0.22.0, render 0.3.6 en devloop 0.25.1.
+
 ### Toegevoegd
+- **SHACL-profiel (preview, via M2)**: SHACL (Turtle) importeren en exporteren in het
+  transformatiepaneel; SHACL-shapes → canoniek model (UML) met een rondgang terug (canoniek →
+  SHACL geeft dezelfde graaf). Staat niet in de standaardlijst: aanzetten in de instellingen, net
+  als GraphQL. Let op, ook buiten SHACL: canoniek → SHACL maakt van een veld met type URL nu
+  `sh:nodeKind sh:IRI` (als er geen gegevenstype of catalogus-type URL is; was `xsd:string` met
+  een waarschuwing). Docs: TRANSFORMATIES.md, model-exchange/linked-data/README.md.
+- **Transformatie "Layout overnemen in de doelmap"** (elke taal, via M2); de tekenaar geeft ook
+  `maten` terug.
 - **Sequence via de assistent en de MCP** (AI-3, 08-11): berichten tussen hetzelfde paar en
   berichten naar zichzelf blijven staan (eerder vielen ze weg); elders ontdubbelt het plan op
   type, paar én naam. De MCP zegt welke code hij draait en waarschuwt als hij herstart moet.
@@ -61,6 +73,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   neemt generalisaties mee en de kanten staan niet meer omgekeerd; de lat ligt bij de ouder.
 
 ### Opgelost
+- **Toegangsspraak → ODRL** (via M2): een registerpad met delen eronder wordt
+  `odrl:AssetCollection`.
 - **Leesrichtingspijl draait mee met de lijn** (Mark, 07-11: "horizontaal goed, verticaal draait
   niet, diagonaal ook niet"): de dikke driehoek vóór "label heen"/"label terug" bij een relatie
   in het canonieke model wijst nu langs de lijn (heen = bron → doel), op het canvas én in de

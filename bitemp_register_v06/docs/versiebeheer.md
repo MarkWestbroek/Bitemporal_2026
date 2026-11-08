@@ -61,7 +61,12 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.33.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.34.0`**
+  (2026-11-08: elementen uit een andere taal op een diagram, koppelingen als lijnen met een
+  soortenlijst per project, leesrichtingspijl langs de lijn, een referentielijst (items-relatie)
+  als veldtype, de assistent wijzigt velden, sequence-berichten via plan en MCP, SHACL-profiel
+  (preview) en ODRL AssetCollection; samen met api 0.22.0, render 0.3.6 en devloop 0.25.1), na
+  **`studio/v0.33.0`**
   (2026-11-07: Project → Register bouwen… — het register uit dít project, via de server; samen
   met api 0.21.0 en render 0.3.5), na **`studio/v0.32.0`**
   (2026-11-06: kopiëren en plakken via rechtsklik en als kopie, diagram kopiëren/plakken in de
@@ -118,7 +123,7 @@ dat, en forceert `git branch -D` het (met opzet).
 - Backend: **`api/v0.22.0`** (2026-11-07: de domeinen van het register expliciet — `domeinen`,
   `alle_domeinen`, `precies` op `/admin/rebuild`, `schema_versies.gebouwde_domeinen` voor de
   startup-rebuild, `/admin/wees-tabellen` —, GitAdres naar gegevenstypen, codegen klaar voor
-  gegevenstypen uit het model; devloop-image 0.25.0). Daarvoor **`api/v0.21.1`** (2026-11-07, patch: vervallen kolommen breken geen insert meer —
+  gegevenstypen uit het model; devloop-image 0.25.0; devloop-image 0.25.1 = dezelfde api met studio 0.34.0). Daarvoor **`api/v0.21.1`** (2026-11-07, patch: vervallen kolommen breken geen insert meer —
   `WithDiscardUnknownColumns`, vervallen NOT NULL nullable —, en de startup-rebuild leest
   `schema_versies` vóór de migratie; devloop-image 0.24.14). Daarvoor **`api/v0.21.0`**
   (2026-11-07: rebuild uit een Studio-project — `POST /admin/rebuild
@@ -146,7 +151,9 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.3.5`** (2026-11-07: `POST /export/v3`, V3 uit een Studio-project
+- Render-sidecar: **`render/v0.3.6`** (2026-11-08: de tekenaar van studio 0.34.0 — leesrichtingspijl
+  langs de lijn, een `$ref`-veld toont zijn verwijzing, «gebruikt» naar een items-relatie;
+  image `bitemp-render-svc:0.3.6`), na **`render/v0.3.5`** (2026-11-07: `POST /export/v3`, V3 uit een Studio-project
   met de terugreis van de Studio; zustand, zundo en react als devDependencies voor de bundel;
   image `bitemp-render-svc:0.3.5`), na **`render/v0.3.4`** (2026-11-06: de tekenaar van studio 0.32.0 — oude
   generalisaties gevouwen, «gebruikt» uit het veldtype, lijnen spreiden en verschuiven,

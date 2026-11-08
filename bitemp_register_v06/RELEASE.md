@@ -8,6 +8,23 @@
 
 ---
 
+## studio 0.34.0 / render 0.3.6 / devloop 0.25.1 (2026-11-08)
+
+Samen uitgebracht met api 0.22.0 (hieronder, nu pas gepusht). Geen Go-wijzigingen; devloop 0.25.1
+is api 0.22.0 met de Studio van 0.34.0. Details: `web/vite/CHANGELOG.md`.
+
+- **Studio:** elementen uit een andere taal op een diagram; koppelingen (kruisverbanden) als
+  dependency-lijnen met een bewerkbare soortenlijst per project (`koppelsoorten` in de
+  project-JSON, sync-operatie `kruis/zetSoorten`); leesrichtingspijl langs de lijn; Delete is één
+  undo-stap; gerelateerde elementen toevoegen; een referentielijst als veldtype (plan
+  Referentielijst-instanties §8, deel 1: `$ref` = de items-relatie, overgang via de item-entiteit;
+  bestaande `$ref`-velden worden bij het laden omgezet); de assistent en de MCP wijzigen velden
+  (verplicht, type, naam) en laten sequence-berichten niet meer samenvouwen (AI-3); SHACL-profiel
+  (preview) en ODRL AssetCollection (M2).
+- **Render 0.3.6:** dezelfde tekenaar als de Studio (leesrichtingspijl, `$ref`-labels).
+- **Let op:** de backend-kant van de referentielijst-verwijzing (opties-route voor een
+  items-relatie, codegen-controle, registratiecontrole §33.4) volgt nog.
+
 ## api 0.22.0 / devloop 0.25.0 (2026-11-07)
 
 Het register heeft een eigen, expliciete domeinenlijst (besluit Mark 07-11). Het Studio-model mag
