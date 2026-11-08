@@ -147,8 +147,9 @@ export async function maakZaaktypeArtefact({
     // De code van het aanvraagtype dat het formulier vastlegt: vroeger het veld
     // `aanvraagtype`, sinds 07-11 de sleutel van de referentielijst achter de
     // relatie (…AanvraagAanvraagtype.Aanvraagtype.AanvraagtypeGegevens.code), sinds 08-11 die
-    // van het item achter het veld (…AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code).
-    const vast = Object.entries(f.registratie?.vasteWaarden || {}).find(([pad]) => pad.endsWith(".aanvraagtype") || /\.Aanvraagtype(Definitie)?\.\w+\.code$/.test(pad));
+    // van het item achter het veld (…AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code),
+    // na de hernoeming van 08-11 …type.Aanvraagtypedefinitie.Aanvraagtypegegevens.code.
+    const vast = Object.entries(f.registratie?.vasteWaarden || {}).find(([pad]) => pad.endsWith(".aanvraagtype") || /\.Aanvraagtype([Dd]efinitie)?\.\w+\.code$/.test(pad));
     if (vast && vast[1] !== code) diagnostics.push(waarschuwing("ZTT-AANVRAAGTYPE", `Formulier "${f.identifier}" zet aanvraagtype "${vast[1]}", het zaaktype hoort bij "${code}"`, f.identifier));
   }
   if (!(zaaktype.roltypen || []).some((r) => r.omschrijvingGeneriek === "initiator")) {

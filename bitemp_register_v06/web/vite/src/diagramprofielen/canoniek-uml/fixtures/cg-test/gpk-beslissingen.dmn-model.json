@@ -31,7 +31,7 @@
                 "type": "boolean",
                 "expressie": "bijlagen != null and (some b in bijlagen satisfies b.naam = \"pasfoto\")",
                 "fieldRef": {
-                  "veldpad": "Aanvraag.AanvraagBijlage.naam",
+                  "veldpad": "Aanvraag.Aanvraagbijlage.naam",
                   "veldnaam": "naam"
                 }
               },
@@ -41,7 +41,7 @@
                 "label": "Eerdere kaart",
                 "type": "boolean",
                 "fieldRef": {
-                  "veldpad": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerdereKaart",
+                  "veldpad": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.eerdereKaart",
                   "veldnaam": "eerdereKaart"
                 }
               },
@@ -51,7 +51,7 @@
                 "label": "Eerder kaartnummer",
                 "type": "string",
                 "fieldRef": {
-                  "veldpad": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerderKaartnummer",
+                  "veldpad": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.eerderKaartnummer",
                   "veldnaam": "eerderKaartnummer"
                 }
               },
@@ -61,7 +61,7 @@
                 "label": "Soort kaart",
                 "type": "string",
                 "fieldRef": {
-                  "veldpad": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort",
+                  "veldpad": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort",
                   "veldnaam": "soort",
                   "enum": [
                     "bestuurder",
@@ -76,7 +76,7 @@
                 "label": "Rijbewijsnummer",
                 "type": "string",
                 "fieldRef": {
-                  "veldpad": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.rijbewijsnummer",
+                  "veldpad": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.rijbewijsnummer",
                   "veldnaam": "rijbewijsnummer"
                 }
               }

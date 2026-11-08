@@ -1,21 +1,21 @@
 {
-  "_toelichting": "E-dienst-inrichtingsmodel voor 'Gehandicaptenparkeerkaart aanvragen'. Voorzet TRANSFORMATIES 27-10, naar het voorbeeld van aanvraag-edienst.json. Bron-entiteit is de specialisatie GehandicaptenparkeerkaartAanvraag (erft Aanvraag); geërfde velden heten naar de entiteit waar ze gedefinieerd zijn (Aanvraag.…), zodat ze in de trace dezelfde modelknoop zijn als in het objecttype aanvraag. Eén objecttype per specialisatie (besluit Mark 27-10): ouder + eigen GE's in één schema.",
+  "_toelichting": "E-dienst-inrichtingsmodel voor 'Gehandicaptenparkeerkaart aanvragen'. Voorzet TRANSFORMATIES 27-10, naar het voorbeeld van aanvraag-edienst.json. Bron-entiteit is de specialisatie Gehandicaptenparkeerkaartaanvraag (erft Aanvraag); geërfde velden heten naar de entiteit waar ze gedefinieerd zijn (Aanvraag.…), zodat ze in de trace dezelfde modelknoop zijn als in het objecttype aanvraag. Eén objecttype per specialisatie (besluit Mark 27-10): ouder + eigen GE's in één schema.",
   "edienst": { "code": "gehandicaptenparkeerkaart-aanvragen", "naam": "Gehandicaptenparkeerkaart aanvragen", "versienummer": "0.1.0", "omgeving": "cg-test" },
   "bronmodel": {
     "naam": "inrichten-domeinen",
     "bestand": "Studio-project Inrichten (omnium.fundament), map Domeinen",
-    "versie": "Inrichten 2026-11-08, op 3113 (referentielijst als veldtype: AanvraagAanvraagtype.type, Verzoekpartijrol)",
-    "hash": "sha256:c1b520afc764c7bf1f65e8c2cff36021a09f6da3d76423edf37f3799edef49e2",
+    "versie": "Inrichten 2026-11-08, t/m op 3441 (na de rebuild van schema-versie 6, t/m 3426: referentielijst-instanties, hernoemde GE's; 3441 herstelt doelEntiteit van GpkKaartAanvraag)",
+    "hash": "sha256:51f7b4ca92a417dd57aa74856b31612dd75150396bb2db8f8cb9b5c5bee6fd27",
     "_hashregel": "sha256 over JCS(model) (RFC 8785); model = het 'model'-object van het samengestelde bestand"
   },
   "referentielijsten": {
     "Aanvraagtype": {
-      "bron": "register: /full/aanvraagtypen",
+      "bron": "register: /full/aanvraagtypedefinities", "instantie": "Aanvraagtypen", "lidmaatschap": "aanvraagtypen",
       "peiltijdstip": null,
       "nieuwItem": { "code": "gehandicaptenparkeerkaart", "omschrijving": "Gehandicaptenparkeerkaart", "zaaktypeIdentificatie": "GPK", "toelichting": "Aanvraag van een gehandicaptenparkeerkaart (Regeling gehandicaptenparkeerkaart)." },
       "_nieuwItem": "toe te voegen aan de referentielijst (GPK-voorstel §4 stap 3); zaaktypeIdentificatie GPK is een aanname"
     },
-    "Verzoekpartijrol": { "bron": "register: /full/partijrollen", "peiltijdstip": null, "_toelichting": "items-relatie Verzoekpartijrol (PartijrolDefinitie → instantie Verzoekpartijrollen); tot de rebuild staan de items nog als Partijrol in het register" }
+    "Verzoekpartijrol": { "bron": "register: /full/partijroldefinities", "instantie": "Verzoekpartijrollen", "lidmaatschap": "verzoekpartijrollen", "peiltijdstip": null, "_toelichting": "items-relatie Verzoekpartijrol op Partijroldefinitie; uit het register alleen de leden van de instantie Verzoekpartijrollen (rebuild 08-11)" }
   },
   "artefacten": [
     {
@@ -23,9 +23,11 @@
       "soort": "objecttype",
       "formaat": "json-schema",
       "doelcomponent": "openobject",
-      "bron": "GehandicaptenparkeerkaartAanvraag",
+      "bron": "Gehandicaptenparkeerkaartaanvraag",
       "projectie": {
         "materieel": "actueel",
+        "namen": { "Aanvraag.Aanvraagbijlage": "bijlagen" },
+        "_namen": "GE Aanvraagbijlage heeft sinds 08-11 het meervoud aanvraagbijlagen; de property blijft bijlagen, zodat objecttype, formulier, documentdefinitie en BPMN/DMN-pointers gelijk blijven",
         "relaties": {
           "AanvraagPartij": { "als": "ingebed", "naam": "partijen" }
         },
@@ -37,28 +39,28 @@
         "_envelop": "het schema als `data` in het productaanvraag-formaat, zodat de Verzoek-plugin van GZAC het object oppakt en een zaak maakt; besluit Mark 27-10 (\"we willen in dit gebied nu niet zelf bouwen\"); type = code van het aanvraagtype"
       },
       "velden": [
-        "Aanvraag.AanvraagIdentificatie.aanvraagnummer",
-        "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code",
-        "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.omschrijving",
+        "Aanvraag.Aanvraagidentificatie.aanvraagnummer",
+        "Aanvraag.AanvraagAanvraagtype.type.Aanvraagtypedefinitie.Aanvraagtypegegevens.code",
+        "Aanvraag.AanvraagAanvraagtype.type.Aanvraagtypedefinitie.Aanvraagtypegegevens.omschrijving",
         "Aanvraag.AanvraagPartij.partijrol",
         "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn",
         "Aanvraag.AanvraagPartij.Partij.PartijMaatschappelijkeActiviteit.kvkNummer",
         "Aanvraag.AanvraagPartij.Partij.PartijVestiging.vestigingsnummer",
         "Aanvraag.AanvraagPartij.Partij.PartijKlantverwijzing.klantUrl",
-        "Aanvraag.AanvraagStatus.status",
-        "Aanvraag.AanvraagIndiening.ingediendOp",
-        "Aanvraag.AanvraagBijlage.naam",
-        "Aanvraag.AanvraagBijlage.documentUrl",
-        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort",
-        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerdereKaart",
-        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerderKaartnummer",
-        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kenteken",
-        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.rijbewijsnummer",
-        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.loopafstandMeter",
-        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.hulpmiddel",
-        "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.toelichting"
+        "Aanvraag.AanvraagAanvraagstatus.status",
+        "Aanvraag.Aanvraagindiening.ingediendOp",
+        "Aanvraag.Aanvraagbijlage.naam",
+        "Aanvraag.Aanvraagbijlage.documentUrl",
+        "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort",
+        "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.eerdereKaart",
+        "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.eerderKaartnummer",
+        "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.kenteken",
+        "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.rijbewijsnummer",
+        "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagBeperking.loopafstandMeter",
+        "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagBeperking.hulpmiddel",
+        "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagBeperking.toelichting"
       ],
-      "_velden": "Partij: bsn (aanvrager of subject met DigiD; de kaart is persoonsgebonden), kvkNummer/vestigingsnummer (instellingenkaart, eHerkenning), klantUrl. Geen PartijZonderRegistratie: een GPK vraagt een geregistreerd persoon. Niet gekozen: AanvraagIndiening.toelichting (zou botsen met de toelichting op de beperking; zo nodig met projectie.namen hernoemen) en de relatie GpkAanvraagMedischAdvies (komt tijdens de behandeling, niet uit het formulier).",
+      "_velden": "Partij: bsn (aanvrager of subject met DigiD; de kaart is persoonsgebonden), kvkNummer/vestigingsnummer (instellingenkaart, eHerkenning), klantUrl. Geen PartijZonderRegistratie: een GPK vraagt een geregistreerd persoon. Niet gekozen: Aanvraagindiening.toelichting (zou botsen met de toelichting op de beperking; zo nodig met projectie.namen hernoemen) en de relatie GpkAanvraagMedischAdvies (komt tijdens de behandeling, niet uit het formulier).",
       "metadata": {
         "name": "gehandicaptenparkeerkaartaanvraag",
         "namePlural": "gehandicaptenparkeerkaartaanvragen",
@@ -78,7 +80,7 @@
       "soort": "formulier",
       "formaat": "openforms-export",
       "doelcomponent": "openforms",
-      "bron": "GehandicaptenparkeerkaartAanvraag",
+      "bron": "Gehandicaptenparkeerkaartaanvraag",
       "naam": "Gehandicaptenparkeerkaart aanvragen",
       "inloggen": ["digid"],
       "stappen": [
@@ -86,27 +88,27 @@
           "naam": "Soort kaart",
           "slug": "soort-kaart",
           "velden": [
-            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.soort", "key": "soort", "label": "Welke kaart vraagt u aan?", "verplicht": true },
-            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kenteken", "key": "kenteken", "label": "Kenteken", "toonAls": { "soort": "bestuurder" } },
-            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.rijbewijsnummer", "key": "rijbewijsnummer", "label": "Rijbewijsnummer", "verplicht": true, "toonAls": { "soort": "bestuurder" } },
-            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerdereKaart", "key": "eerdereKaart", "label": "Had u eerder een gehandicaptenparkeerkaart?" },
-            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.eerderKaartnummer", "key": "eerderKaartnummer", "label": "Nummer van de eerdere kaart", "toonAls": { "eerdereKaart": true } }
+            { "veld": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort", "key": "soort", "label": "Welke kaart vraagt u aan?", "verplicht": true },
+            { "veld": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.kenteken", "key": "kenteken", "label": "Kenteken", "toonAls": { "soort": "bestuurder" } },
+            { "veld": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.rijbewijsnummer", "key": "rijbewijsnummer", "label": "Rijbewijsnummer", "verplicht": true, "toonAls": { "soort": "bestuurder" } },
+            { "veld": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.eerdereKaart", "key": "eerdereKaart", "label": "Had u eerder een gehandicaptenparkeerkaart?" },
+            { "veld": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.eerderKaartnummer", "key": "eerderKaartnummer", "label": "Nummer van de eerdere kaart", "toonAls": { "eerdereKaart": true } }
           ]
         },
         {
           "naam": "Uw beperking",
           "slug": "beperking",
           "velden": [
-            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.loopafstandMeter", "key": "loopafstandMeter", "label": "Hoeveel meter kunt u lopen, met hulpmiddelen?", "verplicht": true },
-            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.hulpmiddel", "key": "hulpmiddel", "label": "Welk hulpmiddel gebruikt u?" },
-            { "veld": "GehandicaptenparkeerkaartAanvraag.GpkAanvraagBeperking.toelichting", "key": "toelichting", "label": "Toelichting op uw beperking" }
+            { "veld": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagBeperking.loopafstandMeter", "key": "loopafstandMeter", "label": "Hoeveel meter kunt u lopen, met hulpmiddelen?", "verplicht": true },
+            { "veld": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagBeperking.hulpmiddel", "key": "hulpmiddel", "label": "Welk hulpmiddel gebruikt u?" },
+            { "veld": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagBeperking.toelichting", "key": "toelichting", "label": "Toelichting op uw beperking" }
           ]
         },
         {
           "naam": "Pasfoto",
           "slug": "pasfoto",
           "velden": [
-            { "veld": "Aanvraag.AanvraagBijlage.documentUrl", "key": "pasfoto", "label": "Pasfoto", "verplicht": true, "component": "file",
+            { "veld": "Aanvraag.Aanvraagbijlage.documentUrl", "key": "pasfoto", "label": "Pasfoto", "verplicht": true, "component": "file",
               "bestand": { "typen": ["image/jpeg", "image/png"], "verkleinTot": { "breedte": 2000, "hoogte": 2000 } },
               "_bestand": "verkleinen bij upload: Open Zaak (Documenten API) weigert een request-body boven 2,5 MB (FUNDAMENT 27-10)" }
           ]
@@ -116,11 +118,11 @@
       "registratie": {
         "objecttype": "gehandicaptenparkeerkaartaanvraag",
         "vasteWaarden": {
-          "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.code": "gehandicaptenparkeerkaart",
-          "Aanvraag.AanvraagAanvraagtype.type.AanvraagtypeDefinitie.AanvraagtypeGegevens.omschrijving": "Gehandicaptenparkeerkaart",
-          "Aanvraag.AanvraagStatus.status": "ingediend",
+          "Aanvraag.AanvraagAanvraagtype.type.Aanvraagtypedefinitie.Aanvraagtypegegevens.code": "gehandicaptenparkeerkaart",
+          "Aanvraag.AanvraagAanvraagtype.type.Aanvraagtypedefinitie.Aanvraagtypegegevens.omschrijving": "Gehandicaptenparkeerkaart",
+          "Aanvraag.AanvraagAanvraagstatus.status": "ingediend",
           "Aanvraag.AanvraagPartij.partijrol": "aanvrager",
-          "Aanvraag.AanvraagBijlage.naam": "pasfoto"
+          "Aanvraag.Aanvraagbijlage.naam": "pasfoto"
         },
         "uitInlog": { "Aanvraag.AanvraagPartij.Partij.PartijNatuurlijkPersoon.bsn": "auth_bsn (DigiD)" },
         "bijlagen": { "informatieobjecttype": "Bijlage" },
@@ -128,9 +130,9 @@
         "_rapport": "het inzendingsrapport (PDF) als document in Open Zaak; zonder dit levert Open Formulieren geen pdf_url voor de envelop",
         "_bijlagen": "omschrijving van het informatieobjecttype in de catalogus (zaaktype); de catalogus zelf (domein, rsin) vult de uitrol per omgeving in",
         "uitOpenFormulieren": {
-          "Aanvraag.AanvraagIdentificatie.aanvraagnummer": "public_reference"
+          "Aanvraag.Aanvraagidentificatie.aanvraagnummer": "public_reference"
         },
-        "bijAfronden": { "Aanvraag.AanvraagIndiening.ingediendOp": "now" },
+        "bijAfronden": { "Aanvraag.Aanvraagindiening.ingediendOp": "now" },
         "_bijAfronden": "een logica-regel op de laatste stap zet de variabele op het moment van afronden (niet bij een herkansing van de registratie); besluit Mark 27-10 (weg c), later zet de ontvanger het uit completed_on (weg b)",
         "_uitOpenFormulieren": "variabelen die Open Formulieren zelf kent: registratievariabele public_reference (inzendingskenmerk, bv. OF-2HD83V); besluit Mark 27-10, tot er een aanvraagservice is"
       },
@@ -295,7 +297,7 @@
       "formaat": "gzac-internal-case-status-json",
       "doelcomponent": "gzac",
       "naam": "Statussen dossier gehandicaptenparkeerkaart",
-      "statuslijst": "AanvraagStatus",
+      "statuslijst": "Aanvraagstatus",
       "_statuslijst": "de statuslijst (enum) in het canonieke model; de status van het dossier is de status van de aanvraag (Mark 05-11). Dossierstatus wordt elke waarde die een taak in een proces van de e-dienst zet; een lijst `waarden` hier vervangt dat, en `statussen` geeft per waarde een eigen titel, kleur of zichtbaarInLijst"
     },
     {

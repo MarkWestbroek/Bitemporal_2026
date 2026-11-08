@@ -20,6 +20,12 @@ const lijstUit = (inhoud) => (Array.isArray(inhoud) ? inhoud : Array.isArray(inh
  * Aanvraagtype), dan het register (bron "register: /full/…"), dan de
  * eersteVulling in de e-dienst.
  *
+ * Na de rebuild van 08-11 is een referentielijst een instantie: de e-dienst
+ * noemt naast de bron (het pad van de item-entiteit) de `instantie` (bv.
+ * "Verzoekpartijrollen") en het `lidmaatschap` (de meervoud van de items-REL,
+ * bv. "verzoekpartijrollen"); uit het register komen dan alleen de leden. Een
+ * meegegeven bestand is al de lijst zelf en wordt niet gefilterd.
+ *
  * @param {any} edienst
  * @param {Array<{naam: string, inhoud: any}>} bestanden
  * @param {((pad: string) => Promise<any>)|null} haalJson
@@ -37,8 +43,9 @@ export async function verzamelReferentielijsten(edienst, bestanden = [], haalJso
     }
     if (haalJson && /^register:/.test(String(def?.bron || ""))) {
       try {
-        lijsten[naam] = await leesReferentielijst(haalJson, def.bron);
-        diagnostics.push(info("INR-REFLIJST", `${naam}: ${lijsten[naam].length} items uit het register (${def.bron.replace(/^register:\s*/, "")})`, naam));
+        const lid = def.instantie ? { instantie: def.instantie, lidmaatschap: def.lidmaatschap, instantieBron: def.instantieBron, peildatum: def.peiltijdstip || undefined } : null;
+        lijsten[naam] = await leesReferentielijst(haalJson, def.bron, lid);
+        diagnostics.push(info("INR-REFLIJST", `${naam}: ${lijsten[naam].length} items uit het register (${def.bron.replace(/^register:\s*/, "")}${def.instantie ? `, leden van ${def.instantie}` : ""})`, naam));
         continue;
       } catch (e) {
         diagnostics.push(waarschuwing("INR-REFLIJST", `${naam}: niet uit het register te lezen (${e?.message || e})`, naam));

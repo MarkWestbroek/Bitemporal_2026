@@ -166,9 +166,9 @@ test("GPK: registratie naar Open Object met plaatshouders, uit de trace van het 
 
 test("GPK: trace van modelknoop naar component", async () => {
   const { artefact } = await gpk();
-  const spoor = artefact.traceregels.find((t) => t.bronGE === "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kenteken");
+  const spoor = artefact.traceregels.find((t) => t.bronGE === "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.kenteken");
   assert.deepEqual(spoor, {
-    bronGE: "GehandicaptenparkeerkaartAanvraag.GpkAanvraagKaart.kenteken",
+    bronGE: "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.kenteken",
     regel: "Overig → tekstveld",
     doelPad: "/formDefinitions.json/0/configuration/components/1",
     actie: "aangemaakt",
@@ -182,7 +182,7 @@ test("GPK: trace van modelknoop naar component", async () => {
     doelPad: "/forms.json/0/registration_backends/0/options/variables_mapping/6",
     actie: "aangemaakt",
   });
-  const nummer = artefact.traceregels.find((t) => t.bronGE === "Aanvraag.AanvraagIdentificatie.aanvraagnummer");
+  const nummer = artefact.traceregels.find((t) => t.bronGE === "Aanvraag.Aanvraagidentificatie.aanvraagnummer");
   assert.equal(nummer.regel, "Registratie: variabele van Open Formulieren (e-dienstmodel)");
   assert.equal(nummer.doelPad, "/forms.json/0/registration_backends/0/options/variables_mapping/16");
   // De envelop in de trace.
@@ -203,7 +203,7 @@ test("deterministisch: twee keer genereren geeft dezelfde hash", async () => {
 
 test("aanvraagformulier: de toelichting bij de indiening zit niet in objecttype aanvraag", async () => {
   const { diagnostics, artefact } = await maak("aanvraag-edienst.json", "aanvraag-voorbeeld", "aanvraag");
-  assert.deepEqual(diagnostics.map((d) => `${d.code} ${d.sourceId}`), ["FRM-AANSLUITING Aanvraag.AanvraagIndiening.toelichting"]);
+  assert.deepEqual(diagnostics.map((d) => `${d.code} ${d.sourceId}`), ["FRM-AANSLUITING Aanvraag.Aanvraagindiening.toelichting"]);
   // Zonder property geen mapping: het gegeven gaat bij de registratie verloren.
   const mapping = artefact.artefactInhoud.payload["forms.json"][0].registration_backends[0].options.variables_mapping;
   assert.equal(mapping.find((m) => m.variable_key === "toelichting"), undefined);

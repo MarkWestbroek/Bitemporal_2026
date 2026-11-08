@@ -116,19 +116,79 @@ export function vergelijkMetRegister(bundel, stand, edienst) {
   });
 }
 
+/** De sleutel van het gegevens-GE van een item: `<x>_gegevens` (tot 08-11) of `<x>gegevens` (na de rebuild van 08-11, bv. aanvraagtypegegevens). */
+export function gegevensSleutel(item) {
+  return Object.keys(item || {}).find((s) => /gegevens$/i.test(s) && Array.isArray(item[s])) || null;
+}
+
+/** De datum van een aanvang of einde: de laatste `[{datum}]` zonder afvoer (een gecorrigeerde blijft met afvoer staan), of `{datum}`/string. */
+function datumVan(x) {
+  const geldig = Array.isArray(x) ? x.filter((e) => e && !e.afvoer) : [x];
+  const v = geldig[geldig.length - 1];
+  const d = typeof v === "string" ? v : v?.datum || v?.tijdstip || null;
+  return d ? String(d).slice(0, 10) : null;
+}
+
+/**
+ * Is het item lid van de referentielijst-instantie met id `lijstId` op `peildatum`?
+ * Lidmaatschap = een voorkomen van de items-relatie (sleutel `lidmaatschap`, de
+ * meervoud van de items-REL, bv. `aanvraagtypen`) met `referentielijst_id`,
+ * zonder afvoer, met aanvang uiterlijk op de peildatum en zonder einde vóór de
+ * peildatum (einde = laatste geldige dag, inclusief; afspraak FUNDAMENT 08-11).
+ * @param {any} item
+ * @param {string} lidmaatschap
+ * @param {any} lijstId
+ * @param {string} peildatum - JJJJ-MM-DD
+ */
+export function isLidVan(item, lidmaatschap, lijstId, peildatum) {
+  return (item?.[lidmaatschap] || []).some((v) => {
+    if (!v || v.afvoer || String(v.referentielijst_id) !== String(lijstId)) return false;
+    const aanvang = datumVan(v.aanvang);
+    const einde = datumVan(v.einde);
+    return (!aanvang || aanvang <= peildatum) && (!einde || einde >= peildatum);
+  });
+}
+
+/**
+ * Het id van een referentielijst-instantie bij haar naam (bv. "Verzoekpartijrollen"),
+ * uit de lijst van Referentielijst-records (naam onder `referentielijstnamen`).
+ * @param {(pad: string) => Promise<any>} haalJson
+ * @param {string} naam
+ * @param {string} [pad]
+ */
+export async function referentielijstId(haalJson, naam, pad = "full/referentielijsten/referentielijsten") {
+  const items = await haalAlles(haalJson, String(pad).replace(/^register:\s*/, "").replace(/^\/+/, ""));
+  const gevonden = items.filter((it) => {
+    const k = Object.keys(it).find((s) => /namen$/i.test(s) && Array.isArray(it[s]));
+    return k && laatsteData(it[k])?.naam === naam;
+  });
+  if (gevonden.length !== 1) throw new Error(gevonden.length ? `referentielijst "${naam}" komt ${gevonden.length} keer voor` : `referentielijst "${naam}" niet gevonden in ${pad}`);
+  return gevonden[0].id;
+}
+
 /**
  * Items van een referentielijst uit het register (laatste stand): de data van
- * het gegevenselement `<x>_gegevens` per item, bv. full/aanvraagtypen →
- * aanvraagtype_gegevens → {code, omschrijving, …}.
+ * het gegevens-GE per item, bv. full/aanvraagtypedefinities →
+ * aanvraagtypegegevens → {code, omschrijving, …}.
+ *
+ * Met `lid` alleen de items die lid zijn van die instantie (na de rebuild van
+ * 08-11: een item-entiteit kan in meer lijsten staan). De opties-route van de
+ * API filtert (nog) niet op een $ref naar een items-REL, dus dat doen we hier.
  * @param {(pad: string) => Promise<any>} haalJson
- * @param {string} bron - "register: /full/aanvraagtypen" of "full/aanvraagtypen"
+ * @param {string} bron - "register: /full/aanvraagtypedefinities" of "full/aanvraagtypedefinities"
+ * @param {{instantie: string, lidmaatschap: string, instantieBron?: string, peildatum?: string}|null} [lid]
  */
-export async function leesReferentielijst(haalJson, bron) {
+export async function leesReferentielijst(haalJson, bron, lid = null) {
   const pad = String(bron).replace(/^register:\s*/, "").replace(/^\/+/, "");
-  const items = await haalAlles(haalJson, pad);
+  let items = await haalAlles(haalJson, pad);
+  if (lid?.instantie) {
+    const id = await referentielijstId(haalJson, lid.instantie, lid.instantieBron);
+    const peildatum = (lid.peildatum || new Date().toISOString()).slice(0, 10);
+    items = items.filter((it) => isLidVan(it, lid.lidmaatschap, id, peildatum));
+  }
   return items
     .map((it) => {
-      const k = Object.keys(it).find((s) => s.endsWith("_gegevens"));
+      const k = gegevensSleutel(it);
       return k ? laatsteData(it[k]) : null;
     })
     .filter(Boolean)
