@@ -397,7 +397,7 @@ func vergelijkRelaties(rapport *DeltaRapport, entPad string, oud, nieuw model.V3
 					fmt.Sprintf("Afgeleide relatie '%s' verwijderd uit '%s' (geen tabel)", naam, entPad)))
 				continue
 			}
-			hub := naamgeving.DeriveHub(oud.Typenaam, naam, "relatie", oudRel.IsMaterieel, oudRel.Meervoud, "")
+			hub := naamgeving.DeriveRelatieHub(oud.Typenaam, oudRel, "")
 			rapport.Items = append(rapport.Items, DeltaItem{
 				Ernst:        Destructief,
 				Categorie:    CategorieRelatie,
@@ -417,7 +417,7 @@ func vergelijkRelaties(rapport *DeltaRapport, entPad string, oud, nieuw model.V3
 					fmt.Sprintf("Afgeleide relatie '%s' toegevoegd aan '%s' (geen tabel)", naam, entPad)))
 				continue
 			}
-			hub := naamgeving.DeriveHub(nieuw.Typenaam, naam, "relatie", nieuwRel.IsMaterieel, nieuwRel.Meervoud, "")
+			hub := naamgeving.DeriveRelatieHub(nieuw.Typenaam, nieuwRel, "")
 			rapport.Items = append(rapport.Items, DeltaItem{
 				Ernst:        Additief,
 				Categorie:    CategorieRelatie,
@@ -444,7 +444,7 @@ func vergelijkRelatie(rapport *DeltaRapport, entPad string, oudEnt model.V3Entit
 	// verwijderde/toegevoegde relatie; verdere vergelijking is dan zinloos.
 	if oud.Afgeleid != nieuw.Afgeleid {
 		if nieuw.Afgeleid {
-			hub := naamgeving.DeriveHub(oudEnt.Typenaam, oud.Naam, "relatie", oud.IsMaterieel, oud.Meervoud, "")
+			hub := naamgeving.DeriveRelatieHub(oudEnt.Typenaam, oud, "")
 			rapport.Items = append(rapport.Items, DeltaItem{
 				Ernst:        Destructief,
 				Categorie:    CategorieRelatie,
@@ -456,7 +456,7 @@ func vergelijkRelatie(rapport *DeltaRapport, entPad string, oudEnt model.V3Entit
 				Tabelnaam:    hub.Tabelnaam,
 			})
 		} else {
-			hub := naamgeving.DeriveHub(oudEnt.Typenaam, nieuw.Naam, "relatie", nieuw.IsMaterieel, nieuw.Meervoud, "")
+			hub := naamgeving.DeriveRelatieHub(oudEnt.Typenaam, nieuw, "")
 			rapport.Items = append(rapport.Items, DeltaItem{
 				Ernst:        Additief,
 				Categorie:    CategorieRelatie,
@@ -535,7 +535,7 @@ func vergelijkRelatie(rapport *DeltaRapport, entPad string, oudEnt model.V3Entit
 
 	// Velden vergelijken (op de _Data tabel)
 	if len(oud.Velden) > 0 || len(nieuw.Velden) > 0 {
-		dataType := naamgeving.DeriveData(oud.Naam, oudEnt.Typenaam)
+		dataType := naamgeving.DeriveRelatieData(oudEnt.Typenaam, oud)
 		vergelijkVelden(rapport, pad, dataType.Tabelnaam, oud.Velden, nieuw.Velden)
 	}
 }
@@ -847,7 +847,7 @@ func voegVerwijderdeOnderliggendenToe(rapport *DeltaRapport, ent model.V3Entitei
 		if rel.Afgeleid {
 			continue // geen tabel
 		}
-		hub := naamgeving.DeriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, "")
+		hub := naamgeving.DeriveRelatieHub(ent.Typenaam, rel, "")
 		rapport.Items = append(rapport.Items, DeltaItem{
 			Ernst:        Destructief,
 			Categorie:    CategorieRelatie,
@@ -878,7 +878,7 @@ func voegToegevoegdeOnderliggendenToe(rapport *DeltaRapport, ent model.V3Entitei
 		if rel.Afgeleid {
 			continue // geen tabel
 		}
-		hub := naamgeving.DeriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, "")
+		hub := naamgeving.DeriveRelatieHub(ent.Typenaam, rel, "")
 		rapport.Items = append(rapport.Items, DeltaItem{
 			Ernst:        Additief,
 			Categorie:    CategorieRelatie,

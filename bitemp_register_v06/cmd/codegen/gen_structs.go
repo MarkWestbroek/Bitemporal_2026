@@ -143,20 +143,21 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 		// Gegevenselementen
 		for _, ge := range ent.Gegevenselementen {
 			hubType := geHubTypeName(ent, ge.Naam)
-			generateHubStruct(&b, hubType, ent.Typenaam, entIDKolom, entiteitPKKolom(ent), ge.IsMaterieel, ge.Description, "")
-			generateDataStruct(&b, hubType, ent.Typenaam, entIDKolom, ge.Velden, ge.Description)
+			generateHubStruct(&b, hubType, ent.Typenaam, entIDKolom, entiteitPKKolom(ent), ge.IsMaterieel, ge.Description, "", strings.ToLower(hubType))
+			generateDataStruct(&b, hubType, ent.Typenaam, entIDKolom, ge.Velden, ge.Description, strings.ToLower(hubType))
 			if ge.IsMaterieel {
-				generateAanvangEindeStructs(&b, hubType, ent.Typenaam, entIDKolom, true, isTijdstip(ge.Tijdprecisie))
+				generateAanvangEindeStructs(&b, hubType, ent.Typenaam, entIDKolom, true, isTijdstip(ge.Tijdprecisie), strings.ToLower(hubType))
 			}
 		}
 
 		// Relaties
 		for _, rel := range ent.Relaties {
 			secEntIDKolom := naamgeving.SecondaireIDKolom(ent.Typenaam, rel.DoelEntiteit)
-			generateHubStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, entiteitPKKolom(ent), rel.IsMaterieel, rel.Description, secEntIDKolom)
-			generateDataStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, rel.Velden, rel.Description)
+			tabelBasis := naamgeving.RelatieTabelBasis(ent.Typenaam, rel)
+			generateHubStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, entiteitPKKolom(ent), rel.IsMaterieel, rel.Description, secEntIDKolom, tabelBasis)
+			generateDataStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, rel.Velden, rel.Description, tabelBasis)
 			if rel.IsMaterieel {
-				generateAanvangEindeStructs(&b, rel.Naam, ent.Typenaam, entIDKolom, true, isTijdstip(rel.Tijdprecisie))
+				generateAanvangEindeStructs(&b, rel.Naam, ent.Typenaam, entIDKolom, true, isTijdstip(rel.Tijdprecisie), tabelBasis)
 			}
 		}
 	}
@@ -165,8 +166,10 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 }
 
 // generateHubStruct genereert een hub struct (GE of relatie).
-func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, entIDKolom string, entPKKolom string, isMaterieel bool, description string, secEntIDKolom string) {
-	tabelnaam := strings.ToLower(typeName)
+// tabelBasis is de tabelnaam van de hub (naamgeving.RelatieTabelBasis voor een relatie); _Data,
+// _Aanvang en _Einde hangen er een achtervoegsel aan.
+func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, entIDKolom string, entPKKolom string, isMaterieel bool, description string, secEntIDKolom string, tabelBasis string) {
+	tabelnaam := tabelBasis
 	if description != "" {
 		b.WriteString(fmt.Sprintf("// %s — %s\n", typeName, description))
 	}
@@ -201,9 +204,9 @@ func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, en
 }
 
 // generateDataStruct genereert een _Data struct.
-func generateDataStruct(b *strings.Builder, hubType string, parentEntType string, entIDKolom string, velden []model.V3Veld, _ string) {
+func generateDataStruct(b *strings.Builder, hubType string, parentEntType string, entIDKolom string, velden []model.V3Veld, _ string, tabelBasis string) {
 	dataType := hubType + "_Data"
-	tabelnaam := strings.ToLower(dataType)
+	tabelnaam := tabelBasis + "_data"
 
 	b.WriteString(fmt.Sprintf("// %s — geversioned inhoud van %s.\n", dataType, hubType))
 	b.WriteString(fmt.Sprintf("type %s struct {\n", dataType))
@@ -232,10 +235,10 @@ func generateDataStruct(b *strings.Builder, hubType string, parentEntType string
 }
 
 // generateAanvangEindeStructs genereert _Aanvang en _Einde structs.
-func generateAanvangEindeStructs(b *strings.Builder, parentType string, parentEntType string, entIDKolom string, hasRelID bool, tijdstip bool) {
+func generateAanvangEindeStructs(b *strings.Builder, parentType string, parentEntType string, entIDKolom string, hasRelID bool, tijdstip bool, tabelBasis string) {
 	for _, suffix := range []string{"Aanvang", "Einde"} {
 		typeName := parentType + "_" + suffix
-		tabelnaam := strings.ToLower(typeName)
+		tabelnaam := tabelBasis + "_" + strings.ToLower(suffix)
 		wat := "datum"
 		if tijdstip {
 			wat = "tijdstip"
