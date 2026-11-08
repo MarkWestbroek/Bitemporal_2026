@@ -8,6 +8,35 @@
 
 ---
 
+## api 0.22.3 / devloop 0.25.5 (2026-11-08)
+
+Patch voor de startup-rebuild (devloop); studio blijft 0.34.1 en render 0.3.7.
+
+- **Een nieuwe pod start weer mét de gebouwde domeinen.** De startup-rebuild genereerde alle
+  domeinen van `gebouwde_domeinen` opnieuw uit het model, ook het standaardpakket. Op cg-test
+  kwam `ide_bestanden` zo uit het Studio-model, en dat past niet bij de handgeschreven handlers.
+  De build faalde, en elke nieuwe pod startte zonder inrichting. Nu:
+  - elk domein op de lijst draagt de vlag `gegenereerd`;
+  - de startup-rebuild genereert van het standaardpakket alleen de domeinen met die vlag;
+  - een lijst van vóór deze release (zonder vlaggen) genereert van het standaardpakket alleen
+    `register`;
+  - een project-rebuild zonder lijst neemt van het standaardpakket ook alleen `register` mee.
+  
+  Zie DEVLOOP.md §"Standaardpakket bij de startup-rebuild".
+
+Getest:
+- `go test ./...` slaagt, met nieuwe tests voor de keuze en de opslag van de vlag.
+- Proef in een verse devloop-container: een model met een niet-passend ide-bestanden, een rebuild
+  van een proefdomein, daarna een nieuwe container op dezelfde database. De startup-rebuild sloeg
+  het standaardpakket over, de build slaagde en het proefdomein antwoordde.
+
+Uitrol:
+- Fundament: `bitemp-devloop:0.25.5`, door FUNDAMENT. Versie 6 op cg-test start daarmee goed,
+  zonder nieuwe rebuild.
+- App: niet nodig.
+
+---
+
 ## api 0.22.2 / devloop 0.25.4 (2026-11-08)
 
 Patch voor codegen; studio blijft 0.34.1 en render 0.3.7.
