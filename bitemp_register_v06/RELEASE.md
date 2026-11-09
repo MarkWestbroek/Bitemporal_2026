@@ -8,6 +8,28 @@
 
 ---
 
+## studio 0.36.0 / render 0.3.9 / devloop 0.25.7 (2026-11-09)
+
+Kleine release voor de demo van 10-11 (akkoord Mark 09-11). api blijft 0.22.3; devloop 0.25.7 is api
+0.22.3 met studio 0.36.0.
+
+- **Inrichtingsartefacten**:
+  - de dossierlijst als artefact (`gzac-case-list-json`, regelset dossier 0.7.0);
+  - het tabblad met widgets in het GZAC-dossier, met de pasfoto-widget (`bron`);
+  - de samenvatting met aanvraagtype, partijen en bijlagen;
+  - een registratietitel per bestandsveld in Open Formulieren;
+  - `bronElementId` = het Studio-id (uuid apart als `bronUuid`);
+  - een bpmn-artefact haalt zijn proces uit het project (`bron.model: "project:<profiel>"`).
+- **BPMN naar GZAC, regelset 0.8.1**: de portaaltaak gaat naar `zaakInitiator`; geen PL-ACTIE bij een
+  taak die alleen procesvariabelen zet.
+- **BPMN-tekening**: tandwiel voor de servicetaak; een taak mag smaller (minimum 90 px) en het
+  selectiekader volgt de getekende vorm.
+- **Render**: dezelfde tekenaar, dus het tandwiel ook in de SVG's.
+
+Uitrol: app (frontend + render), Fundament via FUNDAMENT.
+
+---
+
 ## studio 0.35.0 / render 0.3.8 / devloop 0.25.6 (2026-11-08)
 
 Release voor de demo van 10-11 (akkoord Mark 08-11). api blijft 0.22.3; devloop 0.25.6 is api

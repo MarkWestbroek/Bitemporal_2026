@@ -8,10 +8,22 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.36.0] — 2026-11-09
+
+Samen met render 0.3.9 en devloop 0.25.7 (api 0.22.3). Dossierlijst en widget-tabblad als artefact,
+portaaltaak naar `zaakInitiator` (bpmn-naar-gzac 0.8.1), tandwiel en smallere BPMN-taken.
+
 ### Gewijzigd
 - Traceregels van de inrichtingsartefacten: `bronElementId` is nu het Studio-id van het modelelement (zoals
   `data-element-id` in de tekening; een veld wijst naar zijn gegevenselement), ook na hernoemen; de uuid gaat
   apart mee als `bronUuid` (besluit Mark 08-11). Payload en payloadHash blijven gelijk.
+- **Samenvatting van het dossier met aanvraagtype, partijen en bijlagen.** Een dossierformulier
+  kan een veld in een object tonen (`aanvraagtype.omschrijving`, als container) en een lijst van
+  objecten als alleen-lezen tabel met gekozen kolommen (regelset canoniek-naar-gzac-dossier 0.5.0).
+- **Tabblad met widgets in het GZAC-dossier.** Nieuwe artefactsoort `dossierwidgettabbladen`
+  (`case/widget-tab/<dossier>.case-widget-tab.json`): fields- en collection-widgets uit de
+  dossierinhoud, met het weergavetype uit het model. De GPK krijgt het tabblad "Aanvraag" na de
+  samenvatting.
 
 ### Toegevoegd
 - Dossierlijst als artefact (`dossierlijstkolommen`, `gzac-case-list-json`, regelset dossier 0.7.0): kolommen uit de
@@ -30,15 +42,6 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 - **BPMN uit het project.** Een bpmn-artefact kan `bron.model: "project:<profiel>"` noemen; het
   script en de Studio nemen dan het BPMN-profiel van het project (een gekozen bestand met die naam
   gaat voor).
-
-### Gewijzigd
-- **Samenvatting van het dossier met aanvraagtype, partijen en bijlagen.** Een dossierformulier
-  kan een veld in een object tonen (`aanvraagtype.omschrijving`, als container) en een lijst van
-  objecten als alleen-lezen tabel met gekozen kolommen (regelset canoniek-naar-gzac-dossier 0.5.0).
-- **Tabblad met widgets in het GZAC-dossier.** Nieuwe artefactsoort `dossierwidgettabbladen`
-  (`case/widget-tab/<dossier>.case-widget-tab.json`): fields- en collection-widgets uit de
-  dossierinhoud, met het weergavetype uit het model. De GPK krijgt het tabblad "Aanvraag" na de
-  samenvatting.
 
 ### Opgelost
 - **Portaaltaak: ontvanger `zaakInitiator`.** De Portaaltaak-plugin verwacht de JSON-waarde van
