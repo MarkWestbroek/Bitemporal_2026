@@ -713,6 +713,10 @@ Rol `editor`. Body `{clientId, ops: [{lokaalNr?, store, op, args: [...]}]}`, max
 8 MB per batch; `args` moet een JSON-array zijn. In één transactie (projectrij `FOR UPDATE`) krijgen
 de operaties opeenvolgende volgnummers. → `201 {van, tot, laatsteLokaalNr}`. `404` als het project
 niet bestaat.
+Optioneel `verwachtLaatsteVolgnummer`: de batch gaat alleen door als het laatste volgnummer van
+het project nog precies dat is, anders `409 {reden: "volgnummer_verschoven", verwacht,
+laatsteVolgnummer}` en wordt er niets opgeslagen. Bedoeld voor een merge van een afgeleid project
+naar zijn ouder en als revisiecheck per op.
 
 #### `GET /api/studio/projecten/:id/events`
 Ingelogd. **SSE-kanaal** (`text/event-stream`): elke bevestigde operatie als event `op`
@@ -744,6 +748,37 @@ maximaal 5000). → `{ops: [{volgnummer, clientId, actor, lokaalNr, tijd, store,
 (compactie heeft die operaties opgeruimd), dan komt `{ops: [], snapshotNodig: true, totVolgnummer}`:
 de client laadt de snapshot opnieuw en gaat verder vanaf die grens. Het SSE-kanaal stuurt in dat
 geval één `event: snapshot` met `{totVolgnummer}` en sluit.
+
+### Afgeleide projecten ("branches", werkplaats-plan §4B, stap 1)
+
+Een branch is een eigen project dat van een ouder is afgesplitst (`handlers/studio_project_afsplitsen.go`).
+Operatielog, SSE, compactie, toegang, export/v3 en render werken er ongewijzigd op. De server kent
+geen mappen: de branch bevat het hele project, `mapId` is alleen herkomst (de Studio beperkt er
+weergave en merge mee). Mergen (`/vergelijk`, `/samenvoegen`) volgt in stap 3; tot dan zet de
+Studio het resultaat als gewone ops op de ouder, met `verwachtLaatsteVolgnummer`.
+
+De meta (lijst en `GET /:id`) heeft bij een branch `herkomst: {ouderProject, basisVolgnummer, mapId?,
+afgesplitstOp, afgesplitstDoor, gearchiveerd}` (afwezig in de lijst, `null` bij `GET` voor een gewoon
+project). `afgesplitstOp`/`afgesplitstDoor` zijn het aanmaakmoment en de eigenaar van de branch;
+`gearchiveerd` zet de merge van stap 3 (nu altijd `false`).
+
+#### `POST /api/studio/projecten/:id/afsplitsen`
+Rol `modelleur` en lezen op de ouder. Body `{naam, mapId?, id?}`. In één transactie met `FOR UPDATE`
+op de ouder (hetzelfde slot als `POST /ops` en `PUT`): nieuw project met de blob en `tot_volgnummer`
+van de ouder, de staart-operaties (na `tot_volgnummer`) gekopieerd met **dezelfde volgnummers**
+(actor, client en tijd blijven die van het origineel), herkomst met `basisVolgnummer` = laatste
+volgnummer van de ouder, en de basis rauw in `studio_project_basis`. Toegang: de rijen van de ouder,
+plus `schrijven` voor de eigenaar van de ouder; wie afsplitst wordt eigenaar. → `201` meta van de
+branch (met `herkomst`, `laatste_volgnummer` = `basisVolgnummer`, `recht: "beheren"`). `400` bij
+ongeldige invoer, `404` onbekende ouder, `409` als het gekozen id al bestaat. Nieuwe ops op de branch
+tellen door vanaf `basisVolgnummer + 1`. De gekopieerde ops tellen niet mee voor `project_in_gebruik`.
+
+#### `GET /api/studio/projecten/:id/basis`
+Lezen op de branch. → `{projectId, ouderProject, basisVolgnummer, totVolgnummer, profiel, ops,
+aangemaakt, aangemaaktDoor}`: de blob van de ouder (`profiel`, geldig t/m `totVolgnummer`) en de
+operaties daarna t/m `basisVolgnummer`, in de vorm van `GET …/ops`. Onveranderlijk, ook na compactie
+van ouder of branch: dit is de basis voor een 3-weg-merge (basis, branch, ouder). De server speelt
+geen ops af; de Studio of de render-sidecar materialiseert. `404` voor een project dat geen branch is.
 
 ### EA-import via de server (sidecar uit git)
 

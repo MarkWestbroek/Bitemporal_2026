@@ -2,7 +2,9 @@ package handlers
 
 // Operatielog van Studio-projecten (plan 2026-10-07 Projectsync, stap 2, onderdeel 3).
 //
-//   POST /api/studio/projecten/:id/ops          batch aannemen, volgnummers toekennen
+//   POST /api/studio/projecten/:id/ops          batch aannemen, volgnummers toekennen;
+//                                               {clientId, ops, verwachtLaatsteVolgnummer?} →
+//                                               409 "volgnummer_verschoven" als het project verder is
 //   GET  /api/studio/projecten/:id/ops?vanaf=N  operaties ná N, in volgorde
 //
 // De server is een logboek: hij valideert de vorm ({store, op, args}), kent per
@@ -50,6 +52,11 @@ type studioOpInvoer struct {
 type studioOpsBatchInvoer struct {
 	ClientID string           `json:"clientId"`
 	Ops      []studioOpInvoer `json:"ops"`
+	// VerwachtLaatsteVolgnummer (optioneel, werkplaats-plan §4B, stap 1): de batch gaat
+	// alleen door als het laatste volgnummer van het project nog precies dit is; anders 409
+	// met reden "volgnummer_verschoven". Bedoeld voor een merge van een afgeleid project
+	// naar zijn ouder (de 3-weg-merge is berekend op die stand) en als revisiecheck per op.
+	VerwachtLaatsteVolgnummer *int64 `json:"verwachtLaatsteVolgnummer,omitempty"`
 }
 
 // StudioOpUit is de uitgaande vorm (GET en SSE): camelCase zoals de Studio hem kent.
@@ -143,6 +150,15 @@ func MaakStudioProjectOpsToevoegenHandler() gin.HandlerFunc {
 		// Doortellen vanaf het hoogste bekende nummer — ook na compactie (dan is de
 		// snapshot-grens het hoogste), zodat een nummer nooit tweemaal voorkomt.
 		laatste := laatsteVolgnummerVan(ctx, tx, id)
+		if in.VerwachtLaatsteVolgnummer != nil && *in.VerwachtLaatsteVolgnummer != laatste {
+			c.JSON(http.StatusConflict, gin.H{
+				"error":             "Het project is intussen verder gegaan dan het verwachte volgnummer; haal de nieuwe operaties op en probeer opnieuw.",
+				"reden":             "volgnummer_verschoven",
+				"verwacht":          *in.VerwachtLaatsteVolgnummer,
+				"laatsteVolgnummer": laatste,
+			})
+			return
+		}
 		actor := studioActor(c)
 		nu := time.Now()
 		rijen := make([]model.StudioProjectOp, 0, len(in.Ops))

@@ -86,12 +86,15 @@ func andereClients(eigen string, verbonden []StudioAanwezige, recent []recenteOp
 }
 
 // recenteOpClients leest per client de laatste operatie binnen het venster.
-// Variabele zodat tests hem kunnen vervangen.
+// Variabele zodat tests hem kunnen vervangen. Bij een afgeleid project tellen de van de
+// ouder gekopieerde operaties (t/m basis_volgnummer) niet mee: die clients werken in de
+// ouder, niet hier (studio_project_afsplitsen.go). Voor een gewoon project is de basis 0.
 var recenteOpClients = func(ctx context.Context, db bun.IDB, projectID string, sinds time.Time) ([]recenteOpClient, error) {
 	var rijen []recenteOpClient
 	err := db.NewSelect().Model((*model.StudioProjectOp)(nil)).
 		ColumnExpr("client_id, max(actor) AS actor, max(tijd) AS laatst").
 		Where("project_id = ? AND tijd >= ?", projectID, sinds).
+		Where("volgnummer > COALESCE((SELECT p.basis_volgnummer FROM studio_projecten p WHERE p.id = ?), 0)", projectID).
 		Group("client_id").
 		OrderExpr("laatst DESC").
 		Scan(ctx, &rijen)

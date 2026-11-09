@@ -19,6 +19,7 @@ package handlers
 //                                       of als een andere client bezig is (reden "project_in_gebruik",
 //                                       zie studio_project_in_gebruik.go)
 //   DELETE /api/studio/projecten/:id    eigenaar of beheerder
+//   POST   /api/studio/projecten/:id/afsplitsen  afgeleid project ("branch"), zie studio_project_afsplitsen.go
 
 import (
 	"context"
@@ -59,6 +60,35 @@ type StudioProjectMeta struct {
 	TotVolgnummer     int64     `json:"tot_volgnummer" bun:"tot_volgnummer"`         // snapshot geldt t/m dit volgnummer
 	LaatsteVolgnummer int64     `json:"laatste_volgnummer" bun:"laatste_volgnummer"` // hoogste volgnummer in het operatielog
 	Recht             string    `json:"recht,omitempty" bun:"-"`                     // jouw recht: lezen, schrijven of beheren
+	// Herkomst van een afgeleid project (studio_project_afsplitsen.go); nil = gewoon project.
+	Herkomst        *ProjectHerkomst `json:"herkomst,omitempty" bun:"-"`
+	OuderProjectID  string           `json:"-" bun:"ouder_project_id"`
+	BasisVolgnummer int64            `json:"-" bun:"basis_volgnummer"`
+	MapID           string           `json:"-" bun:"map_id"`
+	Gearchiveerd    bool             `json:"-" bun:"gearchiveerd"`
+}
+
+// ProjectHerkomst: waar een afgeleid project ("branch") vandaan komt. afgesplitstOp en
+// afgesplitstDoor zijn het aanmaakmoment en de eigenaar van de branch (die veranderen niet).
+type ProjectHerkomst struct {
+	OuderProject    string    `json:"ouderProject"`
+	BasisVolgnummer int64     `json:"basisVolgnummer"`
+	MapID           string    `json:"mapId,omitempty"`
+	AfgesplitstOp   time.Time `json:"afgesplitstOp"`
+	AfgesplitstDoor string    `json:"afgesplitstDoor"`
+	Gearchiveerd    bool      `json:"gearchiveerd"`
+}
+
+func projectHerkomst(ouder string, basis int64, mapID string, op time.Time, door string, gearchiveerd bool) *ProjectHerkomst {
+	if ouder == "" {
+		return nil
+	}
+	return &ProjectHerkomst{OuderProject: ouder, BasisVolgnummer: basis, MapID: mapID,
+		AfgesplitstOp: op, AfgesplitstDoor: door, Gearchiveerd: gearchiveerd}
+}
+
+func herkomstVan(p *model.StudioProject) *ProjectHerkomst {
+	return projectHerkomst(p.OuderProjectID, p.BasisVolgnummer, p.MapID, p.Aangemaakt, p.Eigenaar, p.Gearchiveerd)
 }
 
 // studioProjectInvoer is het verzoek voor POST en PUT.
@@ -117,6 +147,7 @@ func studioProjectMeta(p *model.StudioProject) StudioProjectMeta {
 		ID: p.ID, Naam: p.Naam, Eigenaar: p.Eigenaar, Versie: p.Versie,
 		Aangemaakt: p.Aangemaakt, Bijgewerkt: p.Bijgewerkt, BijgewerktDoor: p.BijgewerktDoor,
 		Grootte: int64(len(p.Inhoud)), TotVolgnummer: p.TotVolgnummer,
+		Herkomst: herkomstVan(p),
 	}
 }
 
@@ -142,7 +173,7 @@ func MaakStudioProjectenLijstHandler() gin.HandlerFunc {
 		var lijst []StudioProjectMeta
 		err := DB.NewSelect().
 			TableExpr("studio_projecten").
-			ColumnExpr("id, naam, eigenaar, versie, aangemaakt, bijgewerkt, bijgewerkt_door, length(inhoud::text) AS grootte, tot_volgnummer").
+			ColumnExpr("id, naam, eigenaar, versie, aangemaakt, bijgewerkt, bijgewerkt_door, length(inhoud::text) AS grootte, tot_volgnummer, ouder_project_id, basis_volgnummer, map_id, gearchiveerd").
 			ColumnExpr("GREATEST(tot_volgnummer, (SELECT COALESCE(MAX(o.volgnummer), 0) FROM studio_project_ops o WHERE o.project_id = studio_projecten.id)) AS laatste_volgnummer").
 			OrderExpr("bijgewerkt DESC").
 			Scan(c.Request.Context(), &lijst)
@@ -168,6 +199,7 @@ func MaakStudioProjectenLijstHandler() gin.HandlerFunc {
 			r := besluitProjectRecht(authAan, rol, gebruiker, m.Eigenaar, acl[m.ID])
 			if r >= RechtLezen {
 				m.Recht = r.String()
+				m.Herkomst = projectHerkomst(m.OuderProjectID, m.BasisVolgnummer, m.MapID, m.Aangemaakt, m.Eigenaar, m.Gearchiveerd)
 				zichtbaar = append(zichtbaar, m)
 			}
 		}
@@ -205,7 +237,8 @@ func MaakStudioProjectOphalenHandler() gin.HandlerFunc {
 			"id": p.ID, "naam": p.Naam, "eigenaar": p.Eigenaar, "versie": p.Versie, "inhoud": p.Inhoud,
 			"aangemaakt": p.Aangemaakt, "bijgewerkt": p.Bijgewerkt, "bijgewerkt_door": p.BijgewerktDoor,
 			"tot_volgnummer": p.TotVolgnummer, "laatste_volgnummer": laatsteVolgnummerVan(c.Request.Context(), DB, p.ID),
-			"recht": huidigProjectRecht(c).String(),
+			"recht":    huidigProjectRecht(c).String(),
+			"herkomst": herkomstVan(p),
 		})
 	}
 }
@@ -416,6 +449,12 @@ func MaakStudioProjectVerwijderenHandler() gin.HandlerFunc {
 		}
 		if _, err := tx.NewDelete().Model((*model.StudioProjectToegang)(nil)).Where("project_id = ?", id).Exec(ctx); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Toegang verwijderen mislukt: " + err.Error()})
+			return
+		}
+		// De basis van een afgeleid project gaat mee; afgeleide projecten van dit project
+		// houden hun eigen basis en herkomst (de ouder-id wijst dan naar niets meer).
+		if _, err := tx.NewDelete().Model((*model.StudioProjectBasis)(nil)).Where("project_id = ?", id).Exec(ctx); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Basis verwijderen mislukt: " + err.Error()})
 			return
 		}
 		if _, err := tx.NewDelete().Model(p).WherePK().Exec(ctx); err != nil {

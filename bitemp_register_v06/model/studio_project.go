@@ -27,4 +27,39 @@ type StudioProject struct {
 	// Snapshot-compactie (stap 2, onderdeel 6): de blob geldt tot en met dit volgnummer
 	// in studio_project_ops; een client laadt de blob en haalt de operaties daarna op.
 	TotVolgnummer int64 `json:"tot_volgnummer" bun:"tot_volgnummer,notnull"`
+	// Herkomst van een afgeleid project, een "branch" (werkplaats-plan §4B, stap 1; zie
+	// handlers/studio_project_afsplitsen.go). Leeg = een gewoon project. De ouder kan later
+	// verwijderd zijn; de herkomst blijft dan als gegeven staan.
+	OuderProjectID  string `json:"ouder_project_id,omitempty" bun:"ouder_project_id,nullzero"`
+	BasisVolgnummer int64  `json:"basis_volgnummer,omitempty" bun:"basis_volgnummer,notnull,default:0"`
+	MapID           string `json:"map_id,omitempty" bun:"map_id,nullzero"`
+	// Gearchiveerd: de branch is samengevoegd of opgegeven en blijft alleen voor de
+	// historie bestaan (gezet door de merge van stap 3; nu nog nergens).
+	Gearchiveerd bool `json:"gearchiveerd,omitempty" bun:"gearchiveerd,notnull,default:false"`
+}
+
+// StudioProjectBasis is de onveranderlijke basis van een afgeleid project: de stand van de
+// ouder op het moment van afsplitsen, rauw bewaard zoals de server hem kent. Dat is de
+// blob (geldig t/m TotVolgnummer) plus de staart-operaties daarna t/m BasisVolgnummer. De
+// server speelt geen operaties af; de Studio of de sidecar materialiseert de basis voor
+// een 3-weg-merge (basis, branch, ouder). Nodig omdat de compactie operaties weggooit.
+type StudioProjectBasis struct {
+	bun.BaseModel   `bun:"table:studio_project_basis"`
+	ProjectID       string          `json:"project_id" bun:"project_id,pk"` // het afgeleide project
+	OuderProjectID  string          `json:"ouder_project_id" bun:"ouder_project_id,notnull"`
+	BasisVolgnummer int64           `json:"basis_volgnummer" bun:"basis_volgnummer,notnull"`
+	TotVolgnummer   int64           `json:"tot_volgnummer" bun:"tot_volgnummer,notnull"`
+	Inhoud          json.RawMessage `json:"inhoud" bun:"inhoud,type:jsonb,notnull"`
+	Ops             json.RawMessage `json:"ops" bun:"ops,type:jsonb,notnull"` // StudioOpUit-lijst, oudste eerst
+	Aangemaakt      time.Time       `json:"aangemaakt" bun:"aangemaakt,notnull,default:current_timestamp"`
+	AangemaaktDoor  string          `json:"aangemaakt_door" bun:"aangemaakt_door"`
+}
+
+// StudioProjectHerkomstDDL voegt de herkomstkolommen toe aan een bestaande
+// studio_projecten-tabel (dbsetup en de integratietests gebruiken dezelfde lijst).
+var StudioProjectHerkomstDDL = []string{
+	`ALTER TABLE studio_projecten ADD COLUMN IF NOT EXISTS ouder_project_id VARCHAR`,
+	`ALTER TABLE studio_projecten ADD COLUMN IF NOT EXISTS basis_volgnummer BIGINT NOT NULL DEFAULT 0`,
+	`ALTER TABLE studio_projecten ADD COLUMN IF NOT EXISTS map_id VARCHAR`,
+	`ALTER TABLE studio_projecten ADD COLUMN IF NOT EXISTS gearchiveerd BOOLEAN NOT NULL DEFAULT false`,
 }

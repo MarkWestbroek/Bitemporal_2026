@@ -247,6 +247,16 @@ func CreateTables(db bun.IDB) error {
 	if err != nil {
 		return err
 	}
+	// Afgeleide projecten (werkplaats-plan §4B, stap 1): herkomst op het project en de
+	// onveranderlijke basis apart (handlers/studio_project_afsplitsen.go).
+	for _, ddl := range model.StudioProjectHerkomstDDL {
+		if _, err = db.ExecContext(ctx, ddl); err != nil {
+			return err
+		}
+	}
+	if _, err = db.NewCreateTable().Model((*model.StudioProjectBasis)(nil)).IfNotExists().Exec(ctx); err != nil {
+		return err
+	}
 	// Werkruimte per gebruiker per project (tabs, open mappen): van jou, laatste schrijver wint.
 	_, err = db.NewCreateTable().Model((*model.StudioWerkruimte)(nil)).IfNotExists().Exec(ctx)
 	if err != nil {

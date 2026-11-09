@@ -400,6 +400,10 @@ func NewRouter() *gin.Engine {
 	// Operatielog (stap 2, onderdeel 3): batches aannemen en nalezen; SSE volgt in onderdeel 5.
 	router.POST("/api/studio/projecten/:id/ops", modelleur, pSchrijven, handlers.MaakStudioProjectOpsToevoegenHandler())
 	router.GET("/api/studio/projecten/:id/ops", ingelogd, pLezen, handlers.MaakStudioProjectOpsLijstHandler())
+	// Afgeleide projecten / branches (werkplaats-plan §4B, stap 1; handlers/studio_project_afsplitsen.go):
+	// afsplitsen vraagt lezen op de ouder en de rol modelleur; de basis lezen vraagt lezen op de branch.
+	router.POST("/api/studio/projecten/:id/afsplitsen", modelleur, pLezen, handlers.MaakStudioProjectAfsplitsenHandler())
+	router.GET("/api/studio/projecten/:id/basis", ingelogd, pLezen, handlers.MaakStudioProjectBasisHandler())
 	// SSE-kanaal (stap 2, onderdeel 5): live operaties van anderen; de hub hangt aan het log.
 	handlers.KoppelStudioSSE()
 	router.GET("/api/studio/projecten/:id/events", ingelogd, pLezen, handlers.MaakStudioProjectEventsHandler())
