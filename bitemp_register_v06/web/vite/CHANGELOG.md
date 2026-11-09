@@ -8,6 +8,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Werkplaats (TRANSFORMATIES §11.18).** Een levering is aanwijsbaar: `artefactHerkomst` noemt `generatie`
+  (CLI `--generatie`, standaard de naam van de uitvoermap), `studioProjectId` en `totVolgnummer`. De bron
+  `edienstmodel` krijgt per veld van het model een traceregel `gekozen`/`weggelaten`. Bij elk formulier komt
+  een neutrale formulierbeschrijving mee (soort `formulier-neutraal`, formaat `omnium-formulier-json`,
+  contract 0.1), niet uitgerold. Bestaande payloads en hun hash blijven gelijk.
+
 ## [studio/v0.36.0] — 2026-11-09
 
 Samen met render 0.3.9 en devloop 0.25.7 (api 0.22.3). Dossierlijst en widget-tabblad als artefact,

@@ -63,6 +63,7 @@ export const BRON_SOORTEN = ["edienstmodel", "logisch-model", "bpmn-bron", "dmn-
 const LEEST = {
   objecttype: ["logisch-model"],
   formulier: ["logisch-model"],
+  "formulier-neutraal": ["logisch-model"],
   zaaktype: [],
   dossierdefinitie: [],
   dossierschema: ["logisch-model"],
@@ -265,6 +266,71 @@ export function studioIdIndex(core) {
     }
   }
   return index;
+}
+
+/**
+ * De velden van het model als traceregels van de bron `edienstmodel`
+ * (werkplaats §5.3, 09-11): per gegevenselement, relatie en entiteit elk veld,
+ * per enumeratie elke waarde, met `actie` "gekozen" (een gegenereerd artefact
+ * van de e-dienst leest het) of "weggelaten" (wel in het model, niet gebruikt).
+ * Zo toont de werkplaats "weggelaten" zonder de tekening te lezen.
+ *
+ * "Gekozen" komt uit de traceregels van de artefacten: een regel wijst met
+ * `bronElementId` naar het element (een veld heeft geen eigen id, het is dat van
+ * zijn GE) en met het laatste deel van `bronGE` naar het veld. `doelPad` noemt de
+ * soorten artefacten die het veld lezen (bv. "dossierschema, formulier, objecttype"),
+ * "-" als geen; welk artefact precies, staat in de traceregels van dat artefact.
+ * Een enumwaarde heeft geen eigen traceregel: ze gaat mee met het gekozen veld
+ * dat de enumeratie als type heeft (`enumNaam` in de V3-bron van het veld).
+ * Alleen de traceregels van de bron veranderen; zijn payload en hash niet.
+ * @param {any} bron      - het bronartefact edienstmodel
+ * @param {any} core      - het canonieke model ({elements}), zoals studioIdIndex
+ * @param {any[]} artefacten - de gegenereerde artefacten (null = mislukt, overgeslagen)
+ */
+export function zetModelvelden(bron, core, artefacten) {
+  if (!bron) return;
+  const els = Object.values(core?.elements || {}).filter(Boolean);
+  const byId = new Map(els.map((e) => [e.id, e]));
+  const ouder = new Map();
+  for (const c of els) if (c.elementType === "compositie" && c.source && c.target) ouder.set(c.target, c.source);
+  const naam = (el) => el.naam || el.data?.naam || el.data?.typenaam || el.id;
+  /** (element-id|veldnaam) → artefacten die het lezen */
+  const gebruik = new Map();
+  for (const a of artefacten || []) {
+    if (!a) continue;
+    const wie = String(a.artefactIdentificatie?.soort || "");
+    for (const t of a.traceregels || []) {
+      if (!t.bronElementId || !t.bronGE) continue;
+      const sleutel = `${t.bronElementId}|${String(t.bronGE).split(".").pop()}`;
+      if (!gebruik.has(sleutel)) gebruik.set(sleutel, new Set());
+      gebruik.get(sleutel).add(wie);
+    }
+  }
+  /** enumNaam → artefacten die een veld van dat type lezen */
+  const enumGebruik = new Map();
+  for (const el of els) {
+    for (const v of el.data?.bron?.velden || []) {
+      const wie = v?.enumNaam && gebruik.get(`${el.id}|${v.naam}`);
+      if (!wie) continue;
+      if (!enumGebruik.has(v.enumNaam)) enumGebruik.set(v.enumNaam, new Set());
+      for (const w of wie) enumGebruik.get(v.enumNaam).add(w);
+    }
+  }
+  const regels = [];
+  for (const el of els) {
+    const soort = el.elementType;
+    if (!["entiteit", "gegevenselement", "relatie", "enumeratie"].includes(soort)) continue;
+    const eigenaar = soort === "gegevenselement" ? byId.get(ouder.get(el.id)) : soort === "relatie" ? byId.get(el.source) : null;
+    const pad = eigenaar ? `${naam(eigenaar)}.${naam(el)}` : naam(el);
+    for (const v of (el.compartimenten || []).flatMap((c) => c.velden || [])) {
+      if (!v?.naam) continue;
+      const viaType = soort === "enumeratie" ? enumGebruik.get(el.data?.bron?.naam) || enumGebruik.get(naam(el)) || [] : [];
+      const wie = [...new Set([...(gebruik.get(`${el.id}|${v.naam}`) || []), ...viaType])].sort();
+      regels.push({ bronGE: `${pad}.${v.naam}`, regel: soort === "enumeratie" ? "modelwaarde" : "modelveld", doelPad: wie.join(", ") || "-", actie: wie.length ? "gekozen" : "weggelaten", bronElementId: el.id });
+    }
+  }
+  regels.sort((x, y) => x.bronGE.localeCompare(y.bronGE));
+  bron.traceregels = regels;
 }
 
 /**

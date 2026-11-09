@@ -9,7 +9,8 @@
  * de zip aan. Puur en node-testbaar.
  */
 import { maakInrichtingsBundel } from "./inrichtingsBundel.js";
-import { maakBronArtefacten } from "./bronArtefacten.js";
+import { maakBronArtefacten, zetModelvelden } from "./bronArtefacten.js";
+import { importeerV3 } from "../diagramprofielen/canoniek-uml/serialisatie.js";
 import { leesRegisterStand, vergelijkMetRegister, leesReferentielijst } from "./inrichtingsRegister.js";
 
 const lijstUit = (inhoud) => (Array.isArray(inhoud) ? inhoud : Array.isArray(inhoud?.items) ? inhoud.items : []);
@@ -70,12 +71,15 @@ function waarschuwing(code, message, sourceId = null) {
 }
 
 /** Markdown-overzicht in de zip: welke artefacten, hun hash en de stand in het register. */
-export function bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen, bronnen = [] }) {
+export function bundelOverzicht({ edienst, peiltijdstip, generatie = null, rijen, registerGelezen, bronnen = [] }) {
   const e = edienst?.edienst || {};
   const regels = [
     `# Inrichtingsartefacten — ${e.naam || "(e-dienst)"} ${e.versienummer || ""}`.trim(),
     "",
     `Omgeving: ${e.omgeving || "—"} · peiltijdstip: ${peiltijdstip || "—"}`,
+    ...(generatie?.label || generatie?.studioProjectId
+      ? [`Generatie: ${generatie.label || "—"} · Studio-project ${generatie.studioProjectId || "—"} t/m volgnummer ${generatie.totVolgnummer ?? "—"}`]
+      : []),
     "",
     registerGelezen ? "Vergeleken met het inrichting-register (zelfde e-dienstversie, soort en identifier)." : "Niet vergeleken met het register.",
     "",
@@ -106,6 +110,24 @@ export function bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen,
 }
 
 /**
+ * Het generatielabel in de herkomst van elk artefact (werkplaats §5.6): alleen
+ * de velden die bekend zijn, zodat een levering zonder project ze niet als
+ * leeg meestuurt. Register-velden van ArtefactHerkomst: generatie (AN40),
+ * studioProjectId (AN200), totVolgnummer (Geheel).
+ * @param {any[]} artefacten
+ * @param {{label?: string|null, studioProjectId?: string|null, totVolgnummer?: number|null}|null} generatie
+ */
+export function zetGeneratie(artefacten, generatie) {
+  if (!generatie) return;
+  const velden = {
+    ...(generatie.label ? { generatie: String(generatie.label).slice(0, 40) } : {}),
+    ...(generatie.studioProjectId ? { studioProjectId: String(generatie.studioProjectId) } : {}),
+    ...(Number.isInteger(generatie.totVolgnummer) ? { totVolgnummer: generatie.totVolgnummer } : {}),
+  };
+  for (const a of artefacten) if (a?.artefactHerkomst) Object.assign(a.artefactHerkomst, velden);
+}
+
+/**
  * @param {Object} invoer
  * @param {any} invoer.edienst
  * @param {any} invoer.modelBestand
@@ -114,16 +136,25 @@ export function bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen,
  * @param {{elements: any, diagrams: any}|null} [invoer.canoniekDeel] - het canonieke profiel uit de Studio-map, met de
  *   diagrammen; wordt de bron `logisch-model`. Zonder dit komt die bron uit het V3-model.
  * @param {string|null} [invoer.peiltijdstip]
+ * @param {{label?: string|null, studioProjectId?: string|null, totVolgnummer?: number|null}|null} [invoer.generatie] - maakt
+ *   de levering aanwijsbaar in het register (werkplaats §5.6, 09-11): het label (de leveringsmap, bv. 2026-11-08g),
+ *   het Studio-project en het volgnummer t/m waar de ops gelezen zijn. Komt in artefactHerkomst van elk artefact
+ *   en elke bron; de payload en zijn hash veranderen niet.
  * @param {((pad: string) => Promise<any>)|null} [invoer.haalJson] - lezen uit het register; null = niet vergelijken
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
  */
-export async function voerInrichtingsExportUit({ edienst, modelBestand, datatypen, referentieBestanden = [], bpmnModellen = {}, canoniekDeel = null, peiltijdstip = null, haalJson = null, sha256Hex }) {
+export async function voerInrichtingsExportUit({ edienst, modelBestand, datatypen, referentieBestanden = [], bpmnModellen = {}, canoniekDeel = null, peiltijdstip = null, generatie = null, haalJson = null, sha256Hex }) {
   if (!Array.isArray(edienst?.artefacten) || !edienst.artefacten.length) throw new Error("Het e-dienstmodel heeft geen artefacten.");
   const { lijsten, diagnostics } = await verzamelReferentielijsten(edienst, referentieBestanden, haalJson);
   // De bronnen eerst: elk artefact verwijst ernaar met hun payloadHash (§11.14).
   const bron = await maakBronArtefacten({ edienst, modelBestand, canoniekDeel, bpmnModellen, peiltijdstip, sha256Hex });
   diagnostics.push(...bron.diagnostics);
   const bundel = await maakInrichtingsBundel({ modelBestand, edienst, datatypen, referentielijsten: lijsten, bpmnModellen, peiltijdstip, sha256Hex, bronnen: bron.bronnen, canoniekDeel });
+
+  // Welke velden van het model de e-dienst gebruikt en welke niet (werkplaats §5.3).
+  const eigen = bron.bronnen.find((b) => b.soort === "edienstmodel");
+  if (eigen) zetModelvelden(eigen.artefact, canoniekDeel || (modelBestand ? importeerV3(modelBestand) : null), bundel.map((b) => b.artefact));
+  zetGeneratie([...bron.bronnen.map((b) => b.artefact), ...bundel.map((b) => b.artefact)], generatie);
 
   let rijen = bundel.map((b) => ({ ...b, status: b.fout ? "fout" : null, register: null }));
   let registerGelezen = false;
@@ -146,7 +177,7 @@ export async function voerInrichtingsExportUit({ edienst, modelBestand, datatype
   const bestanden = [
     ...bron.bronnen.map((b) => ({ naam: b.bestandsnaam, inhoud: `${JSON.stringify(b.artefact, null, 2)}\n` })),
     ...gelukt.map((r) => ({ naam: r.bestandsnaam, inhoud: `${JSON.stringify(r.artefact, null, 2)}\n` })),
-    { naam: "OVERZICHT.md", inhoud: bundelOverzicht({ edienst, peiltijdstip, rijen, registerGelezen, bronnen: bron.bronnen }) },
+    { naam: "OVERZICHT.md", inhoud: bundelOverzicht({ edienst, peiltijdstip, generatie, rijen, registerGelezen, bronnen: bron.bronnen }) },
   ];
   const telling = (s) => rijen.filter((r) => r.status === s).length;
   const fouten = rijen.length - gelukt.length;

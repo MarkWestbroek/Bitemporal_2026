@@ -32,7 +32,11 @@ test("bestandsnaam volgt de CLI", () => {
 test("GPK: alle artefacten in de volgorde van de e-dienst, zonder fouten", async () => {
   const bundel = await maakInrichtingsBundel(invoer());
   const e = lees("gpk-edienst.json");
-  assert.deepEqual(bundel.map((b) => [b.soort, b.identifier]), e.artefacten.map((a) => [a.soort, a.identifier]));
+  // De e-dienst, en daarna bij elk formulier de neutrale beschrijving (werkplaats §5.8, 09-11).
+  assert.deepEqual(bundel.map((b) => [b.soort, b.identifier]), [
+    ...e.artefacten.map((a) => [a.soort, a.identifier]),
+    ...e.artefacten.filter((a) => a.soort === "formulier").map((a) => ["formulier-neutraal", a.identifier]),
+  ]);
   for (const b of bundel) {
     assert.equal(b.fout, null, `${b.soort} ${b.identifier}: ${b.fout}`);
     assert.match(b.artefact.artefactInhoud.payloadHash, /^[0-9a-f]{64}$/);
@@ -72,7 +76,7 @@ test("GPK: zelfde payloadHash als de losse aanroepen (zoals de CLI met --objectt
 
 test("kies: alleen het formulier, het objecttype wordt wel gemaakt maar niet teruggegeven", async () => {
   const bundel = await maakInrichtingsBundel({ ...invoer(), kies: (k) => k.soort === "formulier" });
-  assert.deepEqual(bundel.map((b) => b.soort), ["formulier"]);
+  assert.deepEqual(bundel.map((b) => b.soort), ["formulier", "formulier-neutraal"]);
   assert.ok(!bundel[0].diagnostics.some((d) => d.code === "FRM-GEEN-REGISTRATIE"));
 });
 
