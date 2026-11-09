@@ -2003,3 +2003,70 @@ pluginconfiguratie (FUNDAMENT); er is nog geen klantportaal.
    status- en roltypen van het zaaktype als model, zodat een taak er via de
    uuid naar verwijst en de statussen van de zaak uit dezelfde lijst komen als
    die van de aanvraag (Mark 05-11: later).
+
+### 11.18 Werkplaats: generatie, modelvelden en neutraal formulier (2026-11-09)
+
+Drie aanvullingen voor de werkplaats per dienst (Fundament `docs/werkplaats-plan.md` §4A, §5.3, §5.6, §5.8;
+akkoord Mark 09-11). Geen payload van een bestaand artefact verandert; de payloadHash blijft gelijk.
+
+**Generatie aanwijsbaar (§5.6).** `voerInrichtingsExportUit({…, generatie})` zet in `artefactHerkomst` van
+elk artefact en elke bron:
+
+| Veld | Register (ArtefactHerkomst) | Waarde |
+|---|---|---|
+| `generatie` | AN40 | label van de levering; de CLI neemt `--generatie`, anders de naam van de `--uit`-map (bv. `2026-11-08g`) |
+| `studioProjectId` | AN200 | het Studio-project waaruit gelezen is (bij een branch: het afgeleide project) |
+| `totVolgnummer` | Geheel | het volgnummer t/m waar de ops gelezen zijn |
+
+Alleen bekende velden komen mee (een export uit een V3-bestand heeft geen project). OVERZICHT.md noemt ze ook.
+Het register kent de drie velden pas na een modelwijziging plus rebuild (FUNDAMENT); tot dan negeert de
+registratie ze. Twee generaties vergelijk je op `bronElementId` en payloadHash, niet op tijdstippen.
+
+**Modelvelden: gekozen of weggelaten (§5.3).** De bron `edienstmodel` krijgt traceregels (zijn payload blijft de
+e-dienst): per veld van elk gegevenselement, elke relatie en entiteit `regel: "modelveld"`, per enumwaarde
+`regel: "modelwaarde"`, met
+
+- `bronGE` = naampad (`Eigenaar.GE.veld`, `Enumeratie.waarde`), `bronElementId` = Studio-id van het element (een
+  veld heeft geen eigen id);
+- `actie` = `gekozen` als een gegenereerd artefact het leest (een traceregel met dat `bronElementId` en die
+  veldnaam als laatste deel van `bronGE`), anders `weggelaten`. Een enumwaarde is gekozen als een gekozen veld de
+  enumeratie als type heeft (`enumNaam`);
+- `doelPad` = de soorten artefacten die het lezen (`dossierschema, formulier, objecttype`), `-` als geen. Wélk
+  artefact staat in diens eigen traceregels.
+
+Per e-dienst, niet per artefact (INRICHTEN_VIZ: genoeg voor Fase A).
+
+**Neutrale formulierbeschrijving (§5.8, contract 0.1).** Bij elk formulier van de e-dienst maakt de bundel een
+artefact `formulier-neutraal` met dezelfde identifier (`<id>.formulier-neutraal.artefact.json`), formaat
+`omnium-formulier-json`, `doelcomponent: null` (niet uitgerold), `doelVersieRange: "^0.1"`, bronnen
+`edienstmodel` + `logisch-model`. Het komt uit hetzelfde plan als de Open Formulieren-export
+(`transformatie/neutraalFormulier.js`, naast `openformsSchrijver.js`); WordPress/OWC en Nextcloud Forms kunnen er
+later uit volgen. De voorbeeldweergave van de werkplaats (IMPRINT-CORE, `fromNeutraal()`) leest het.
+
+```jsonc
+{
+  "versie": "0.1",
+  "formulier": { "key": "<slug>", "naam": "…", "inloggen": ["digid"], "inleiding": "…", "verzendtekst": "…" },
+  "stappen": [
+    { "key": "<slug>", "titel": "…", "vragen": [
+      { "key": "soort", "label": "…", "hulptekst": "…",
+        "type": "tekst|tekstvak|email|telefoon|getal|datum|datumtijd|vinkje|keuze|bestand|anders",
+        "verplicht": true,
+        "keuzes": [{ "waarde": "bestuurder", "label": "Bestuurder" }],   // keuze
+        "keuzeWeergave": "rondjes|lijst",                                // keuze: enum → rondjes, referentielijst → lijst
+        "voorwaarde": { "vraag": "<key>", "gelijkAan": true, "toon": false }, // toon ontbreekt = tonen als …
+        "tekst": { "maxLengte": 200, "patroon": "…" },
+        "getal": { "decimalen": 0 },
+        "bestand": { "typen": ["image/jpeg"], "verkleinTot": { "breedte": 600, "hoogte": 800 }, "titel": "Pasfoto" },
+        "bron": { "pad": "Gehandicaptenparkeerkaartaanvraag.GpkAanvraagKaart.soort", "elementId": "<Studio-id>" },
+        "formio": "<type>"                                               // alleen bij type anders
+      } ] }
+  ]
+}
+```
+
+Regels: optionele eigenschappen ontbreken, nooit `null`; de volgorde is die van de inwoner; `gelijkAan` houdt het
+type uit de e-dienst (een vinkje: `true`); `inleiding` en `verzendtekst` komen uit `inleiding`/`verzendtekst` van
+het formulier in de e-dienst. De traceregels hebben `doelPad` = `/stappen/i/vragen/j`, en `bron.elementId` is
+altijd gelijk aan het `bronElementId` van die traceregel. Een groep met geneste vragen (`type: "groep"`,
+`vragen[]`) volgt als de GZAC-schermen neutraal worden.

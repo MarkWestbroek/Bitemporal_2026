@@ -61,7 +61,8 @@ test("GPK zonder register: zip met alle artefacten + overzicht", async () => {
     peiltijdstip: "2026-10-27T12:00:00Z",
     sha256Hex,
   });
-  const n = lees("gpk-edienst.json").artefacten.length;
+  // De artefacten van de e-dienst plus de neutrale formulierbeschrijving (09-11).
+  const n = lees("gpk-edienst.json").artefacten.length + 1;
   // De artefacten, het overzicht en de vier bronnen (e-dienstmodel, logisch model, processen, beslissingen).
   assert.equal(uit.bestanden.length, n + 1 + 4);
   assert.ok(uit.bestanden.some((b) => b.naam === "gehandicaptenparkeerkaart.dossierschema.artefact.json"));
@@ -84,4 +85,68 @@ test("register onbereikbaar: wel de zip, met een waarschuwing", async () => {
   assert.equal(uit.registerGelezen, false);
   assert.ok(uit.diagnostics.some((d) => d.code === "INR-REGISTER"));
   assert.ok(uit.bestanden.length >= 3);
+});
+
+// Werkplaats (09-11): generatie aanwijsbaar (§5.6), modelvelden gekozen/weggelaten (§5.3),
+// neutrale formulierbeschrijving (§5.8).
+test("werkplaats: generatielabel in elke herkomst, modelvelden op het e-dienstmodel, formulier-neutraal", async () => {
+  const basis = {
+    edienst: lees("gpk-edienst.json"),
+    modelBestand: lees("inrichten-domeinen-v3.json"),
+    datatypen,
+    referentieBestanden: bestanden(),
+    bpmnModellen: { "project:bpmnMotor05": lees("inrichten-bpmn.bpmn-model.json"), "gpk-beslissingen.dmn-model.json": lees("gpk-beslissingen.dmn-model.json") },
+    peiltijdstip: "2026-10-27T12:00:00Z",
+    sha256Hex,
+  };
+  const zonder = await voerInrichtingsExportUit(basis);
+  const uit = await voerInrichtingsExportUit({ ...basis, generatie: { label: "2026-11-09a", studioProjectId: "p-1", totVolgnummer: 4473 } });
+  const json = (r) => r.bestanden.filter((b) => b.naam.endsWith(".json")).map((b) => [b.naam, JSON.parse(b.inhoud)]);
+
+  // §5.6: elk artefact en elke bron, payloadHash ongewijzigd.
+  const hashZonder = new Map(json(zonder).map(([n, a]) => [n, a.artefactInhoud.payloadHash]));
+  for (const [naam, a] of json(uit)) {
+    assert.deepEqual([a.artefactHerkomst.generatie, a.artefactHerkomst.studioProjectId, a.artefactHerkomst.totVolgnummer], ["2026-11-09a", "p-1", 4473], naam);
+    assert.equal(a.artefactInhoud.payloadHash, hashZonder.get(naam), naam);
+  }
+  assert.ok(json(zonder).every(([, a]) => !("generatie" in a.artefactHerkomst)), "zonder generatie geen lege velden");
+  assert.match(uit.bestanden.at(-1).inhoud, /Generatie: 2026-11-09a · Studio-project p-1 t\/m volgnummer 4473/);
+
+  // §5.3: elk veld van het model, gekozen of weggelaten, met het Studio-id van zijn element.
+  const ed = json(uit).find(([n]) => n.endsWith(".edienstmodel.artefact.json"))[1];
+  const per = Object.fromEntries(ed.traceregels.map((t) => [t.bronGE, t]));
+  assert.ok(ed.traceregels.length > 20);
+  assert.ok(ed.traceregels.every((t) => ["gekozen", "weggelaten"].includes(t.actie) && t.bronElementId && t.doelPad.length <= 255));
+  const kenteken = Object.values(per).find((t) => t.bronGE.endsWith("GpkAanvraagKaart.kenteken"));
+  assert.equal(kenteken.actie, "gekozen");
+  assert.deepEqual(kenteken.doelPad.split(", ").filter((x) => x === "formulier" || x === "objecttype"), ["formulier", "objecttype"]);
+  assert.ok(ed.traceregels.some((t) => t.actie === "weggelaten"));
+  // Een enumwaarde gaat mee met het gekozen veld van dat type.
+  assert.ok(ed.traceregels.some((t) => t.regel === "modelwaarde" && t.actie === "gekozen"));
+
+  // §5.8: de neutrale beschrijving naast het formulier.
+  const nf = json(uit).find(([n]) => n === "gehandicaptenparkeerkaart-aanvragen.formulier-neutraal.artefact.json")[1];
+  assert.equal(nf.artefactInhoud.formaat, "omnium-formulier-json");
+  assert.equal(nf.doelcomponent, null);
+  assert.deepEqual(nf.bronnen.map((b) => b.soort).sort(), ["edienstmodel", "logisch-model"]);
+  const p = nf.artefactInhoud.payload;
+  assert.equal(p.versie, "0.1");
+  const frm = basis.edienst.artefacten.find((a) => a.soort === "formulier");
+  assert.deepEqual(p.stappen.map((s) => s.key), frm.stappen.map((s) => s.slug));
+  const vragen = Object.fromEntries(p.stappen.flatMap((s) => s.vragen).map((v) => [v.key, v]));
+  assert.equal(vragen.soort.type, "keuze");
+  assert.equal(vragen.soort.keuzeWeergave, "rondjes");
+  assert.ok(vragen.soort.keuzes.length >= 2 && vragen.soort.keuzes.every((k) => "waarde" in k && "label" in k));
+  assert.deepEqual(vragen.kenteken.voorwaarde, { vraag: "soort", gelijkAan: "bestuurder" });
+  assert.deepEqual(vragen.eerderKaartnummer.voorwaarde, { vraag: "eerdereKaart", gelijkAan: true });
+  assert.equal(vragen.eerdereKaart.type, "vinkje");
+  assert.equal(vragen.rijbewijsnummer.verplicht, true);
+  const bestand = Object.values(vragen).find((v) => v.type === "bestand");
+  assert.ok(bestand?.bestand?.titel);
+  // Optionele eigenschappen ontbreken, nooit null; bron.elementId = bronElementId van de traceregel.
+  assert.ok(!JSON.stringify(p).includes("null"));
+  for (const t of nf.traceregels.filter((t) => /^\/stappen\/\d+\/vragen\/\d+$/.test(t.doelPad))) {
+    const [, i, j] = t.doelPad.match(/(\d+)\/vragen\/(\d+)/);
+    assert.equal(p.stappen[+i].vragen[+j].bron.elementId, t.bronElementId, t.doelPad);
+  }
 });

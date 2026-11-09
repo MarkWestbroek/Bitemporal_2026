@@ -53,7 +53,8 @@ test("zip met alle artefacten van de GPK-e-dienst", async ({ page }) => {
   const download = page.waitForEvent("download");
   await uitvoeren.click();
   expect((await download).suggestedFilename()).toBe(`inrichting-gehandicaptenparkeerkaart-aanvragen-${GPK.edienst.versienummer}.zip`);
-  const n = GPK.artefacten.length;
+  // Plus de neutrale formulierbeschrijving bij het ene formulier (werkplaats §5.8, 09-11).
+  const n = GPK.artefacten.length + 1;
   await expect(page.getByText(`${n} van ${n} artefacten gemaakt`)).toBeVisible();
   await expect(page.locator("table[data-rapport] tbody tr")).toHaveCount(n);
   await expect(page.locator("table[data-rapport]")).toContainText("niet vergeleken");
@@ -128,7 +129,8 @@ test("zonder V3-bestand: zelfde payloads als uit het bestand", async ({ page }) 
   await kies(page, "edienst", fix("gpk-edienst.json"));
   await kies(page, "referentielijsten", [fix("aanvraag-aanvraagtypen.json"), fix("relatiebeheer-verzoekpartijrollen.json")]);
   await kies(page, "bpmn", [PROJECT_BPMN, DMN]);
-  const n = GPK.artefacten.length;
+  // Plus de neutrale formulierbeschrijving bij het ene formulier (werkplaats §5.8, 09-11).
+  const n = GPK.artefacten.length + 1;
   const uitMap = page.waitForEvent("download");
   await page.getByRole("button", { name: "Uitvoeren" }).click();
   await uitMap;

@@ -25,9 +25,15 @@
 //     --omnium https://omnium.fundament.common-ground-lab.nl --project Inrichten \
 //     --map Domeinen [--map Overig/org-geo] \
 //     [--referentielijst <items.json>]… [--bpmn <BPMN- of DMN-model.json>]… \
-//     [--peiltijdstip 2026-11-08T12:00:00Z] --uit <map>
+//     [--peiltijdstip 2026-11-08T12:00:00Z] [--generatie 2026-11-08g] --uit <map>
 // of met een projectexport op schijf: --project <studio-project.json> [--ops <ops.json>]…
 // of met een V3-bestand in plaats van --project/--map:  --model <V3-model.json>
+//
+// --generatie: het label van deze levering in artefactHerkomst (werkplaats §5.6,
+// 09-11); standaard de naam van de --uit-map. Uit een project komen er het
+// project-id en het volgnummer t/m waar de ops gelezen zijn bij (studioProjectId,
+// totVolgnummer), zodat de werkplaats twee generaties vergelijkt zonder op
+// tijdstippen te raden.
 //
 // --ops: de operaties ná de snapshot (`inhoud` is een snapshot tot
 // `tot_volgnummer`; latere wijzigingen staan alleen in het ops-log, GET
@@ -143,7 +149,7 @@ async function leesUitOmnium(basis, wie, tokenEnv) {
       vanaf = d.laatste ?? vanaf;
       if (!d.meer) break;
     }
-    if (!opnieuw) return { inhoud, ops, herkomst: `${basis}, project ${p.naam || id}: snapshot t/m ${p.tot_volgnummer || 0}, ops t/m ${vanaf}` };
+    if (!opnieuw) return { inhoud, ops, projectId: p.id || id, totVolgnummer: vanaf, herkomst: `${basis}, project ${p.naam || id}: snapshot t/m ${p.tot_volgnummer || 0}, ops t/m ${vanaf}` };
   }
   throw new Error("Het project werd tijdens het lezen steeds gecompacteerd; probeer het zo nog eens.");
 }
@@ -155,12 +161,15 @@ async function main() {
   let canoniekDeel = null;
   /** BPMN-modellen uit het project zelf: project:<profiel> → {model: {elements, diagrams}}. */
   const uitProject = {};
+  const generatie = { label: a.generatie || path.basename(path.resolve(a.uit)), studioProjectId: null, totVolgnummer: null };
   if (a.project) {
     let inhoud;
     let ops = [];
     if (a.omnium) {
       const r = await leesUitOmnium(a.omnium, a.project, a["token-env"] || "OMNIUM_TOKEN");
       ({ inhoud, ops } = r);
+      generatie.studioProjectId = r.projectId;
+      generatie.totVolgnummer = r.totVolgnummer;
       console.error(`Gelezen: ${r.herkomst}`);
     } else {
       const project = lees(a.project);
@@ -170,6 +179,10 @@ async function main() {
         const d = lees(pad);
         return Array.isArray(d) ? d : d.ops || [];
       });
+      // Een opgeslagen API-antwoord noemt id en tot_volgnummer; de ops gaan daar voorbij.
+      generatie.studioProjectId = project.id || null;
+      const nrs = [project.tot_volgnummer, ...ops.map((o) => o.volgnummer)].filter(Number.isInteger);
+      generatie.totVolgnummer = nrs.length ? Math.max(...nrs) : null;
     }
     if (ops.length) {
       const stand = maakStand(inhoud);
@@ -201,6 +214,7 @@ async function main() {
     referentieBestanden: a.referentielijst.map((pad) => ({ naam: path.basename(pad), inhoud: lees(pad) })),
     bpmnModellen: { ...uitProject, ...Object.fromEntries(a.bpmn.map((pad) => [path.basename(pad), lees(pad)])) },
     canoniekDeel,
+    generatie,
     peiltijdstip: a.peiltijdstip || new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
     sha256Hex,
   });

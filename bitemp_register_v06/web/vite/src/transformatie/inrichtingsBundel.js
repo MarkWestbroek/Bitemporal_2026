@@ -23,6 +23,7 @@ import { maakBpmnArtefact } from "../diagramprofielen/bpmn/bpmnArtefact.js";
 import { maakDmnArtefact } from "../diagramprofielen/dmn-drd/dmnArtefact.js";
 import { maakProcesLinkArtefact, SOORT as PROCESKOPPELING } from "../diagramprofielen/bpmn/procesLinkArtefact.js";
 import { bronnenVan, uuidIndex, studioIdIndex, zetBronElementIds } from "./bronArtefacten.js";
+import { maakNeutraalFormulierArtefact, SOORT_NEUTRAAL } from "./neutraalFormulier.js";
 import { importeerV3 } from "../diagramprofielen/canoniek-uml/serialisatie.js";
 
 /**
@@ -103,7 +104,7 @@ export function toetsAfhankelijkheden(artefact, edienst) {
 const VOLGORDE = ["objecttype", "zaaktype", "formulier", "dossierdefinitie", "dossierschema", "dossierformulier", "dossiertabbladen", "dossierwidgettabbladen", "dossierlijstkolommen", "dossierzaaktypelink", "dossierdocumentkolommen", "dossierstatussen", "dmn", "bpmn", "dossierprocessen", PROCESKOPPELING];
 
 /** Soorten waarvan de identifier niet uniek is over soorten: de bestandsnaam noemt de soort. */
-export const SOORT_IN_BESTANDSNAAM = [...DOSSIER_SOORTEN, PROCESKOPPELING];
+export const SOORT_IN_BESTANDSNAAM = [...DOSSIER_SOORTEN, PROCESKOPPELING, SOORT_NEUTRAAL];
 
 /**
  * Bestandsnaam zoals de CLI hem schrijft: `<identifier>.artefact.json`, bij de
@@ -190,6 +191,8 @@ export async function maakInrichtingsBundel({
   const uuids = uuidIndex(modelBestand);
   /** Naampad → Studio-id (de ids van de tekening), uit de Studio-map of anders uit het V3-model. */
   const studioIds = studioIdIndex(canoniekDeel || (modelBestand ? importeerV3(modelBestand) : null));
+  /** Bij elk gemaakt formulier de neutrale beschrijving (werkplaats §5.8): niet in de e-dienst, wel in de bundel. */
+  const neutraal = [];
   for (const keuzes of opVolgorde) {
     const { soort, identifier } = keuzes;
     try {
@@ -219,15 +222,29 @@ export async function maakInrichtingsBundel({
       zetBronElementIds(r.artefact, { uuids, studioIds, elementen: (bronModel?.model || bronModel)?.elements || {} });
       if (bronnen) r.artefact.bronnen = bronnenVan(keuzes, edienst, bronnen);
       uitkomst.set(keuzes, { artefact: r.artefact, diagnostics: [...(r.diagnostics || []), ...toetsPlaatshouders(r.artefact), ...toetsAfhankelijkheden(r.artefact, edienst)], fout: null });
+      if (soort === "formulier" && gekozen.includes(keuzes)) {
+        const nk = { ...keuzes, soort: SOORT_NEUTRAAL };
+        const rij = { bestandsnaam: artefactBestandsnaam(nk), soort: SOORT_NEUTRAAL, identifier };
+        try {
+          const n = await maakNeutraalFormulierArtefact({ keuzes, edienst, plan: r.plan, formulier: r.artefact, uuids, studioIds, sha256Hex });
+          if (bronnen) n.artefact.bronnen = bronnenVan(nk, edienst, bronnen);
+          neutraal.push({ ...rij, artefact: n.artefact, diagnostics: n.diagnostics, fout: null });
+        } catch (e) {
+          neutraal.push({ ...rij, artefact: null, diagnostics: e?.diagnostics || [], fout: e?.message || String(e) });
+        }
+      }
     } catch (e) {
       uitkomst.set(keuzes, { artefact: null, diagnostics: e?.diagnostics || [], fout: e?.message || String(e) });
     }
   }
 
-  return gekozen.map((keuzes) => ({
-    bestandsnaam: artefactBestandsnaam(keuzes),
-    soort: keuzes.soort,
-    identifier: keuzes.identifier,
-    ...uitkomst.get(keuzes),
-  }));
+  return [
+    ...gekozen.map((keuzes) => ({
+      bestandsnaam: artefactBestandsnaam(keuzes),
+      soort: keuzes.soort,
+      identifier: keuzes.identifier,
+      ...uitkomst.get(keuzes),
+    })),
+    ...neutraal,
+  ];
 }
