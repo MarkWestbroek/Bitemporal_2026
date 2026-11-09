@@ -8,6 +8,39 @@
 
 ---
 
+## api 0.23.0 / devloop 0.26.0 (2026-11-10)
+
+Branchen van een Studio-project, stap 1 (werkplaats-plan §4B, akkoord Mark 09-11). studio blijft
+0.36.0 en render 0.3.9; devloop 0.26.0 is api 0.23.0 met studio 0.36.0.
+
+- **Afgeleide projecten.** Een branch is een eigen project dat van een ouder is afgesplitst, zodat
+  operatielog, SSE, compactie, toegang, export/v3 en render ongewijzigd werken.
+  - `POST /api/studio/projecten/:id/afsplitsen {naam, mapId?, id?}` maakt hem in één transactie met
+    `FOR UPDATE` op de ouder. De blob, `tot_volgnummer` en de staart-ops (met dezelfde volgnummers)
+    komen van de ouder, net als de toegang; wie afsplitst wordt eigenaar.
+  - `GET …/:id/basis` geeft de onveranderlijke basis (`profiel` + `ops`) uit de nieuwe tabel
+    `studio_project_basis`, voor een 3-weg-merge. De compactie raakt hem niet.
+  - Lijst en `GET` tonen `herkomst {ouderProject, basisVolgnummer, mapId, afgesplitstOp,
+    afgesplitstDoor, gearchiveerd}`. De server kent geen mappen: `mapId` is alleen herkomst.
+  - De van de ouder gekopieerde ops tellen niet mee voor `project_in_gebruik`.
+- **`verwachtLaatsteVolgnummer` op `POST …/ops`** (optioneel): 409 `volgnummer_verschoven` als het
+  project verder is. Voor de merge naar de ouder en als revisiecheck per op.
+- Schema: kolommen `ouder_project_id`, `basis_volgnummer`, `map_id`, `gearchiveerd` op
+  `studio_projecten` (ADD COLUMN IF NOT EXISTS) en de tabel `studio_project_basis`.
+
+Nog niet: mergen (`/vergelijk`, `/samenvoegen`, stap 3) en `namens` voor serviceaccounts.
+
+Getest:
+- `go test ./...` slaagt (behalve de EA-test die node_modules nodig heeft), met nieuwe
+  integratietests tegen Postgres: afsplitsen na compactie, basis na compactie van de branch,
+  toegang, verwijderen, 409 op het volgnummer, en afsplitsen terwijl vier clients ops sturen.
+
+Uitrol:
+- Fundament: `bitemp-devloop:0.26.0`, door FUNDAMENT.
+- App: niet nodig.
+
+---
+
 ## studio 0.36.0 / render 0.3.9 / devloop 0.25.7 (2026-11-09)
 
 Kleine release voor de demo van 10-11 (akkoord Mark 09-11). api blijft 0.22.3; devloop 0.25.7 is api
