@@ -8,6 +8,29 @@
 
 ---
 
+## api 0.25.0 / devloop 0.28.0 (2026-11-10)
+
+Werkplaats laag 2 (akkoord Mark 10-11). devloop 0.28.0 is api 0.25.0 met studio 0.38.0 (daarin
+ook `feat/fd-formulier`); render blijft 0.4.2.
+
+- **`GET /api/studio/projecten/:id/model/:profiel`**: de actuele stand van één profiel (bv.
+  `formulierdiagram` van een branch) plus `laatsteVolgnummer`, zodat Imprint de Studio-stores niet
+  hoeft na te bouwen. Blob, ops op `model:<profiel>` en het laatste volgnummer in één REPEATABLE
+  READ-transactie; naspelen door render-svc `POST /materialiseer` (render 0.4.2, al uitgebracht).
+  Een oudere sidecar geeft 502 met reden `sidecar`.
+- **Eén branch per ouder + map**: `POST …/afsplitsen` met een `mapId` geeft `409 {reden:
+  "branch_bestaat", projectId}` als er al een niet-gearchiveerde branch voor die map is. Zo komen
+  "Branch maken" in de Studio en de werkplaats op dezelfde branch uit.
+
+Getest: `go test ./...` slaagt (behalve de EA-test die node_modules nodig heeft), met nieuwe
+integratietests (model-route met een nep-sidecar; branch_bestaat, ook na archiveren).
+
+Uitrol:
+- Fundament: `bitemp-devloop:0.28.0`, door FUNDAMENT. Geen schemawijziging.
+- App: niet nodig.
+
+---
+
 ## api 0.24.0 / devloop 0.27.0 (2026-11-10)
 
 Vervolg op de branches en het schrijfkanaal voor de werkplaats (werkplaats-plan §4B, akkoord Mark
