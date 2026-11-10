@@ -193,3 +193,18 @@ test("v3ModelNaarStore: een GE-compositie krijgt 0..*, ook bij enkelvoudig; mome
   for (const e of ge) assert.equal(e.data.kardinaliteit, "0..*");
   assert.deepEqual(ge.map((e) => e.data.momentvoorkomen).sort(), ["enkelvoudig", "meervoudig"]);
 });
+
+// Melding AI-INRICHTEN 10-11: een V3.1-veld zonder goType en zonder `verplicht` is optioneel.
+test("V3.1-veld zonder goType en zonder verplicht is optioneel; met goType blijft de oude regel", async () => {
+  const { importeerV3 } = await import("../diagramprofielen/canoniek-uml/serialisatie.js");
+  const v3 = { model: { entiteiten: [{ typenaam: "Proef", meervoud: "proeven", gegevenselementen: [{ naam: "ProefGe", meervoud: "proef_ges", velden: [
+    { naam: "los", type: "string" },
+    { naam: "moet", type: "string", verplicht: true },
+    { naam: "go", goType: "string" },
+    { naam: "goPtr", goType: "*string" },
+  ] }] }] } };
+  const model = importeerV3(v3);
+  const ge = Object.values(model.elements).find((e) => e.elementType === "gegevenselement");
+  const verplicht = Object.fromEntries((ge.data.bron?.velden || []).map((v) => [v.naam, v.verplicht]));
+  assert.deepEqual(verplicht, { los: false, moet: true, go: true, goPtr: false });
+});

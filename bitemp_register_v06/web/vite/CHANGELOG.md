@@ -8,6 +8,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **V3-delta-import verloor `erft`** (melding AI-INRICHTEN 10-11). Overerving kwam alleen als presentatie-edge op
+  het afgeleide Overzicht, en dat valt weg zodra het project al iets bevat. Nu wordt `erft` een
+  `generalisatie`-connector in de review en het project, en geeft de export hem terug. Een volgende import ziet
+  dezelfde overerving niet als gewijzigd.
+- **Een V3.1-veld zonder `goType` en zonder `verplicht` werd verplicht.** Het is nu optioneel, zoals
+  `docs/v3_1_runtime.md` zegt; met een goType blijft de regel "geen `*` = verplicht".
+
 ## [studio/v0.38.0] — 2026-11-10
 
 Samen met render 0.4.2 en devloop 0.27.3 (api 0.24.0).
