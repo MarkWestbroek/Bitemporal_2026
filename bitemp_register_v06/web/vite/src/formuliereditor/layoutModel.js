@@ -46,6 +46,7 @@ const CONTAINER_MET_ELEMENTEN = new Set(["formulier", "stap", "groep", "rij", "l
 
 /** Kan dit elementtype kinderen bevatten? */
 import { VORMEN, normaliseerVorm, valideerVormConfig } from "../vormen/vormen.js";
+import { korteConditie } from "../shared/formulierConditie.js";
 
 export function isContainer(el) {
   if (!el) return false;
@@ -319,15 +320,8 @@ export function elementLabel(el) {
     case "rij": return "Rij";
     case "lijst": return `Lijst · ${el.label || el.bron || "?"}${el.widget === "meerkeuze" ? " (meerkeuze)" : Number(el.min) > 0 && el.min === el.max ? " (vaste rij)" : " (meervoudig)"}`;
     case "veld": return el.label ? `${el.label} (${el.veld})` : (el.veld || "veld");
-    case "conditioneel": return `Conditioneel · ${el.conditie ? beschrijfConditie(el.conditie) : (el.als || "?")}`;
+    case "conditioneel": return `Conditioneel · als ${el.conditie ? korteConditie(el.conditie) || "?" : (el.als || "?")}`;
     default: return el.type;
   }
 }
 
-function beschrijfConditie(c) {
-  if (!c || typeof c !== "object") return String(c ?? "");
-  const { veld, op, waarde } = c;
-  if (op === "leeg") return `${veld} leeg`;
-  if (op === "nietleeg") return `${veld} ingevuld`;
-  return `${veld} ${op || "=="} ${waarde ?? ""}`;
-}
