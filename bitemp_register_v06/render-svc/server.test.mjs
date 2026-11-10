@@ -126,3 +126,36 @@ test("POST /export/v3: fouten in de invoer als problem+json", async () => {
   const opsGeenLijst = await post("/export/v3", { profiel: {}, ops: "x" });
   assert.equal(opsGeenLijst.status, 400);
 });
+
+// ── Verschil tussen een afgeleid project en MAIN (09-11, branch stap 1) ──────────────────────
+
+test("POST /vergelijk: basis + ops, tak met een eigen op, MAIN anders buiten de map", async () => {
+  const el = (id, naam) => ({ id, naam, elementType: "entiteit", compartimenten: [], data: {} });
+  const werkbestand = {
+    formaat: "studio-project",
+    versie: 3,
+    structuur: { mappen: { dienst: { id: "dienst", naam: "Dienst", ouderId: null }, cm: { id: "cm", naam: "CM", ouderId: null } }, plaatsing: { "el::diagram05::A": "dienst", "el::diagram05::B": "cm" } },
+    profielen: { diagram05: { diagramTypeId: "diagram05", elements: { A: el("A", "Aanvraag"), B: el("B", "Persoon") }, diagrams: {}, meta: {} } },
+  };
+  const op = (volgnummer, zet) => ({ volgnummer, store: "model:diagram05", op: "patchElementen", args: [{ zet, wis: [] }] });
+  const basis = { profiel: werkbestand, ops: [op(5, { A: el("A", "Aanvraag GPK") })] }; // staart t/m het basisvolgnummer
+  const tak = { profiel: werkbestand, ops: [op(5, { A: el("A", "Aanvraag GPK") }), op(6, { C: el("C", "Bijlage") })] };
+  const main = { profiel: werkbestand, ops: [op(5, { A: el("A", "Aanvraag GPK") }), op(6, { B: el("B", "Natuurlijk persoon") })] };
+  const r = await post("/vergelijk", { basis, tak, main, mapId: "dienst" });
+  assert.equal(r.status, 200);
+  const uit = await r.json();
+  const per = Object.fromEntries(uit.verschillen.map((v) => [v.id, v]));
+  assert.equal(per.C.status, "nieuw");
+  assert.equal(per.C.inScope, false, "C heeft (nog) geen plaatsing");
+  assert.equal(per.B.status, "main");
+  assert.equal(per.A, undefined, "de staart-op van de basis telt niet als verschil");
+  assert.deepEqual(uit.telling, { nieuw: 1, gewijzigd: 0, weg: 0, conflict: 0, main: 1 });
+  assert.deepEqual(uit.meldingen, []);
+});
+
+test("POST /vergelijk: fouten in de invoer als problem+json", async () => {
+  assert.equal((await post("/vergelijk", {})).status, 400);
+  const p = { profiel: {} };
+  assert.equal((await post("/vergelijk", { basis: p, tak: p, main: p, kleur: "rood" })).status, 400);
+  assert.equal((await post("/vergelijk", { basis: p, tak: { profiel: {}, ops: "x" }, main: p })).status, 400);
+});

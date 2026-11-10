@@ -657,6 +657,34 @@ te wijzigen.
 > zelf niet. Studio 0.31.0 stuurt `clientId` al mee. Hele modellen vervangen
 > hoort eigenlijk bij versiebeheer; dat is nog niet uitgewerkt. Code:
 > `handlers/studio_project_in_gebruik.go`.
+> **Branch = afgeleid project (in aanbouw, stap 1; besluit Mark 09-11, werkplaats-plan §4B in
+> de Fundament-docs).** De werkplaats werkt op een branch van een projectmap, niet op MAIN. Een
+> branch is een **afgeleid project**: afsplitsen kopieert het hele project op volgnummer N, met
+> herkomst `{ouderProject, basisVolgnummer, mapId}` en een onveranderlijk bewaarde basis
+> (BACKEND: snapshot + staart-ops). De ids blijven gelijk, zodat generatie, render, export en de
+> traceregels (bronElementId) zonder kennis van branches werken. De map is de scope. Binnen een
+> branch werk je live samen (SSE per project); MAIN-wijzigingen zie je pas na bijwerken of mergen.
+> Stap 1 = herkomstregel en de lijst *verschil met MAIN*; mergen gaat dan nog met de hand.
+> De vergelijking is `studio/takken/verschilMetMain.js`: een zuivere drieweg op drie
+> gematerialiseerde werkbestanden (basis, tak, MAIN) met per element, diagram, map en
+> kruisverband `nieuw`/`gewijzigd`/`weg`/`conflict`/`main` (alleen op MAIN veranderd), de
+> verschillende velden (`data.*` uitgesplitst) en `inScope` (plaatsing, een relatie volgt haar
+> bron, een kind zijn boomouder). Materialiseren (`sidecarImport.maakStand` + `speelOpsNa`) kan
+> niet in de browsertab zelf, want `maakStand` ontkoppelt de gekoppelde stores: dat doet de
+> render-sidecar (`POST /vergelijk {basis, tak, main, mapId}`, elk `{profiel: werkbestand, ops}`;
+> `vergelijkProjecten` in `render-svc/studioProfielen.js`). De Studio vraagt het aan de API
+> (`GET /api/studio/projecten/:id/vergelijk`, BACKEND), die basis (`…/basis`), branch en MAIN
+> ophaalt en de sidecar aanroept. In de Studio: het Project-menu toont bij een branch de regel
+> *Branch van "…" · map "…" · basis #N · afgesplitst … door …* (`takken/herkomst.js`; de herkomst
+> komt mee bij het ophalen, en wordt voor een eerder geladen project eenmalig nagevraagd) en het
+> item *Verschil met MAIN…* (`takken/VerschilMetMainDialoog.jsx`): telling per status, per status
+> een lijst met soort, naam, profiel en velden, het merk *buiten de map*, filters (alleen in de
+> map; wat alleen op MAIN veranderde) en een waarschuwing als er nog eigen wijzigingen te verzenden
+> zijn. Een diagram opent met een klik, een element via het eerste diagram waarop het staat. In
+> *Van server ophalen…* staat bij een branch "branch van …". Stap 2 (3-weg-merge naar ops op MAIN met
+> `verwachtLaatsteVolgnummer`, scope afdwingen, bijwerken vanaf MAIN) en stap 3 (verschil in
+> diagram en inspector, `/vergelijk` en `/samenvoegen`) wachten op Mark.
+>
 > **Werkruimte op de server (2026-10-08):** tabs, actieve tab en open/dicht
 > mappen gaan per gebruiker per project naar `…/werkruimte` (laatste schrijver
 > wint, `sync/werkruimte.js`); bij het openen van een project neemt de Studio

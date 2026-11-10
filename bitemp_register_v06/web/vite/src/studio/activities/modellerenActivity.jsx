@@ -29,6 +29,8 @@ import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
+import VerschilMetMainDialoog, { useVerschilMetMainStore } from "../takken/VerschilMetMainDialoog.jsx";
+import { herkomstRegel, isBranch } from "../takken/herkomst.js";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
 import { volgDiagram, bouwHierarchie } from "../boomRegels.js";
 import { waaromNietOnder, boomRelatieVoor, boomRelatiesVan, REDEN_NIET_OMHANGEN } from "../../diagramcore/model/omhangen.js";
@@ -49,6 +51,7 @@ import {
   normaliseerProjectData,
   bestandsstamVoor,
   haalProjectOp,
+  lijstProjecten,
   maakProjectAan,
   slaProjectOp,
   haalStudioInstellingenOp,
@@ -3300,6 +3303,7 @@ function Main() {
       <TabContextMenu />
       <TransformatiePaneel />
       <ProjectServerDialoog />
+      <VerschilMetMainDialoog />
     </div>
   );
 }
@@ -3639,7 +3643,7 @@ function exporteerProject() {
  * Gedeeld door JSON-import en "Van server ophalen". Onbekende profielen worden
  * overgeslagen (de aanroeper heeft dat al gemeld).
  */
-function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}) {
+function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herkomst = null } = {}) {
   // Projectwissel eerst: zetProject laadt de werkruimte (tabs, open mappen) van
   // dit project uit zijn eigen sleutel. Bestaat die nog niet, dan zijn de tabs
   // uit een v1/v2-werkbestand de eerste werkruimte.
@@ -3652,6 +3656,9 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0 } = {}
     totVolgnummer: laatsteVolgnummer,
     liveSync: true,
     laatsteSync: null,
+    // Branch (afgeleid project, 09-11): {ouderProject, basisVolgnummer, mapId, …} of null.
+    herkomst,
+    ouderNaam: null,
   });
   // Een snapshot laden is geen reeks handelingen: niets in de outbox, en de
   // outbox van het vorige project vervalt (de snapshot is de nieuwe basis).
@@ -3709,7 +3716,7 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
     useKruisStore.getState().laadLinks([], null);
   });
   useOutboxStore.getState().wis();
-  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null });
+  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null });
 }
 
 async function importeerProjectTekst(tekst, bestandsnaam = "") {
@@ -4188,7 +4195,7 @@ async function herlaadSnapshotStil() {
     const uit = normaliseerProjectData(rec.inhoud);
     if (!uit.ok) return;
     const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
-    pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0 });
+    pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null });
     await haalBinnen({ inclusiefEigen: true });
     useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
     menuBus.emit("menu:ververs");
@@ -4226,7 +4233,7 @@ function haalVanServer() {
         const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
         if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio: ${onbekend.join(", ")}.
 Niet te zien of te bewerken hier, maar ze blijven bewaard en gaan ongewijzigd mee terug naar de server.` });
-        pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0 });
+        pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null });
         // Snapshot + wat er daarna in het operatielog kwam (ook eigen oude operaties).
         const n = await haalBinnen({ inclusiefEigen: true });
         useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
@@ -4238,9 +4245,39 @@ Niet te zien of te bewerken hier, maar ze blijven bewaard en gaan ongewijzigd me
   });
 }
 
+/**
+ * Herkomst van het open serverproject bijwerken (branch, 09-11): een project dat vóór deze
+ * Studio-versie geladen werd, kent `herkomst` nog niet (undefined). Eenmalig per project-id; de
+ * naam van MAIN komt uit de projectenlijst.
+ */
+let _herkomstGevraagd = null;
+function zorgVoorHerkomst(project) {
+  if (project.serverVersie == null || _herkomstGevraagd === project.id) return;
+  if (project.herkomst !== undefined && (!isBranch(project.herkomst) || project.ouderNaam)) return;
+  _herkomstGevraagd = project.id;
+  (async () => {
+    try {
+      const herkomst = project.herkomst !== undefined ? project.herkomst : ((await haalProjectOp(project.id))?.herkomst ?? null);
+      let ouderNaam = null;
+      if (isBranch(herkomst)) {
+        const lijst = await lijstProjecten().catch(() => []);
+        ouderNaam = (lijst || []).find((m) => m.id === herkomst.ouderProject)?.naam || null;
+      }
+      if (useModellerenStore.getState().project.id === project.id) useModellerenStore.getState().zetProject({ herkomst, ouderNaam });
+    } catch {
+      _herkomstGevraagd = null; // offline: later opnieuw
+    }
+  })();
+}
+
 /** Menubalk = eigen Project-menu + de menu's van het profiel van de actieve tab. */
 function menus(ctx) {
   const { project } = useModellerenStore.getState();
+  zorgVoorHerkomst(project);
+  const branch = isBranch(project.herkomst);
+  const branchRegel = branch
+    ? herkomstRegel(project.herkomst, { ouderNaam: project.ouderNaam, mapNaam: useModellerenStore.getState().mappen?.[project.herkomst.mapId]?.naam })
+    : "";
   const sync = useSyncStore.getState();
   const liveAan = project.serverVersie != null && (project.liveSync ?? true);
   const syncStand =
@@ -4269,6 +4306,7 @@ function menus(ctx) {
     label: "Project",
     items: [
       { type: "kop", label: `${project.naam} — ${syncStand}` },
+      ...(branch ? [{ type: "kop", label: branchRegel }] : []),
       ...(liveAan && sync.kanaal === "verbonden" && aanwezigSamengevat().anderen
         ? [
             {
@@ -4286,6 +4324,15 @@ function menus(ctx) {
       { type: "separator" },
       { id: "proj-push", label: "Naar server sturen (snapshot)", uitleg: "Zet het project op de server, zodat anderen erin kunnen meewerken.", onClick: stuurNaarServer },
       { id: "proj-pull", label: "Van server ophalen…", uitleg: "Open een project van de server; daar regel je ook wie toegang heeft.", onClick: haalVanServer },
+      // Branch (afgeleid project, 09-11, stap 1): het verschil met MAIN; mergen nog met de hand.
+      ...(branch
+        ? [{
+            id: "proj-verschil-main",
+            label: "Verschil met MAIN…",
+            uitleg: "Wat deze branch en MAIN sinds het afsplitsen veranderden: nieuw, gewijzigd, weg, conflict.",
+            onClick: () => useVerschilMetMainStore.getState().openen({ projectId: project.id, regel: branchRegel, teVerzenden: useSyncStore.getState().teVerzenden || 0 }),
+          }]
+        : []),
       // Register bouwen uit dit project (07-11): alleen waar de server een devloop is.
       ...(registerBouwenBeschikbaar()
         ? [{ id: "proj-register", label: "Register bouwen…", uitleg: "De server bouwt het register uit dit project (beheerwachtwoord nodig).", disabled: project.serverVersie == null, onClick: () => bouwRegister(project) }]

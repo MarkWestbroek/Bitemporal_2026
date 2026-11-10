@@ -9,6 +9,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Branch = afgeleid project, stap 1 (Mark 09-11, werkplaats-plan §4B).** Het Project-menu toont bij een
+  branch waar hij vandaan komt (MAIN, map, basisvolgnummer, wie en wanneer) en heeft *Verschil met MAIN…*:
+  nieuw, gewijzigd, weg, conflict en wat alleen op MAIN veranderde, met de velden en het merk *buiten de map*.
+  *Van server ophalen…* noemt "branch van …". De vergelijking is een drieweg (`studio/takken/verschilMetMain.js`)
+  die de render-sidecar draait (`POST /vergelijk`); de API (`GET …/vergelijk`, BACKEND) haalt de drie standen
+  op. Mergen gaat nog met de hand.
 - **Werkplaats (TRANSFORMATIES §11.18).** Een levering is aanwijsbaar: `artefactHerkomst` noemt `generatie`
   (CLI `--generatie`, standaard de naam van de uitvoermap), `studioProjectId` en `totVolgnummer`. De bron
   `edienstmodel` krijgt per veld van het model een traceregel `gekozen`/`weggelaten`. Bij elk formulier komt

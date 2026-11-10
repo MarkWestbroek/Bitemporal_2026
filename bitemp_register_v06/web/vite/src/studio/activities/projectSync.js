@@ -139,8 +139,16 @@ async function roep(pad, { methode = "GET", body, headers = {} } = {}) {
 /** @returns {Promise<Array<{id:string,naam:string,eigenaar:string,versie:number,bijgewerkt:string,bijgewerkt_door:string,grootte:number}>>} */
 export const lijstProjecten = () => roep("/api/studio/projecten");
 
-/** Volledig record, incl. `inhoud` (het werkbestand). */
+/** Volledig record, incl. `inhoud` (het werkbestand) en `herkomst` (null, of de herkomst van een branch). */
 export const haalProjectOp = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}`);
+
+/**
+ * Verschil van een afgeleid project (branch) met MAIN (09-11, branch stap 1). De API haalt basis,
+ * branch en MAIN op en laat de render-sidecar vergelijken (POST /vergelijk). 404 = geen branch.
+ * @returns {Promise<{verschillen: Array<any>, telling: Record<string, number>, scope: string[], meldingen: Array<any>,
+ *                    main?: {laatsteVolgnummer: number}, tak?: {laatsteVolgnummer: number}}>}
+ */
+export const vergelijkMetMain = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}/vergelijk`);
 
 /** Aanmaken (versie 1). 409 als het id al bestaat. */
 export const maakProjectAan = ({ id, naam, inhoud }) =>
@@ -190,7 +198,11 @@ export const zetToegang = (id, toegang) =>
 export const stuurOps = (id, { clientId, ops }) =>
   roep(`/api/studio/projecten/${encodeURIComponent(id)}/ops`, { methode: "POST", body: { clientId, ops } });
 
-/** Operaties ná `vanaf`. → {ops: [{volgnummer, clientId, actor, store, op, args, …}], laatste, meer} */
+/**
+ * Operaties ná `vanaf`. → {ops: [{volgnummer, clientId, actor, namens?, store, op, args, …}], laatste, meer}
+ * `namens` (api 0.24.0): voor wie de actor het deed (bv. de werkplaats namens een gebruiker);
+ * een historie-weergave toont dan "actor namens X".
+ */
 export const haalOpsOp = (id, vanaf = 0, limiet = 1000) =>
   roep(`/api/studio/projecten/${encodeURIComponent(id)}/ops?vanaf=${Number(vanaf) || 0}&limiet=${limiet}`);
 

@@ -150,6 +150,13 @@ export default function ProjectServerDialoog() {
                           huidig
                         </span>
                       )}
+                      {/* Branch (afgeleid project, 09-11): van welk project, op welk volgnummer. */}
+                      {m.herkomst?.ouderProject && (
+                        <span style={{ marginLeft: 6, fontSize: 10, opacity: 0.8 }} data-branch-van={m.herkomst.ouderProject}
+                          title={`Afgesplitst van ${lijst.find((x) => x.id === m.herkomst.ouderProject)?.naam || m.herkomst.ouderProject} op #${m.herkomst.basisVolgnummer}`}>
+                          branch van {lijst.find((x) => x.id === m.herkomst.ouderProject)?.naam || m.herkomst.ouderProject}
+                        </span>
+                      )}
                       {m.recht === "lezen" && (
                         <span style={{ marginLeft: 6, fontSize: 10, opacity: 0.7 }} title="Je mag dit project bekijken, niet wijzigen">
                           alleen lezen

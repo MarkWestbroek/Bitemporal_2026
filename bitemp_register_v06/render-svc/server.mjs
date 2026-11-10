@@ -18,7 +18,8 @@
  * (`npm install && npm run bouw`); zonder bundel geeft alleen die taal een 503.
  * Omgeving: RENDER_SVC_PORT (standaard 8095),
  * RENDER_SVC_HOST (standaard 127.0.0.1 — niet publiek binden),
- * RENDER_SVC_MAX_BYTES (standaard 5 MB).
+ * RENDER_SVC_MAX_BYTES (standaard 5 MB),
+ * RENDER_SVC_MAX_BYTES_VERGELIJK (standaard 32 MB; POST /vergelijk draagt drie hele projecten).
  */
 import http from "node:http";
 import fs from "node:fs";
@@ -28,6 +29,7 @@ import { renderStudioSvg, studioViews, STUDIO_VELDEN } from "../web/vite/src/dia
 const PORT = Number(process.env.RENDER_SVC_PORT || 8095);
 const HOST = process.env.RENDER_SVC_HOST || "127.0.0.1";
 const MAX_BYTES = Number(process.env.RENDER_SVC_MAX_BYTES || 5 * 1024 * 1024);
+const MAX_BYTES_VERGELIJK = Number(process.env.RENDER_SVC_MAX_BYTES_VERGELIJK || 32 * 1024 * 1024);
 
 /**
  * De versie van deze sidecar (render-svc/package.json; de git-tag is render/v<versie>). Staat in
@@ -60,14 +62,14 @@ function probleem(status, code, title, detail) {
   return new RenderFout(status, code, title, detail);
 }
 
-function leesBody(req) {
+function leesBody(req, max = MAX_BYTES) {
   return new Promise((resolve, reject) => {
     const delen = [];
     let lengte = 0;
     req.on("data", (d) => {
       lengte += d.length;
-      if (lengte > MAX_BYTES) {
-        reject(probleem(413, "te-groot", "Verzoek te groot", `Het verzoek is groter dan ${MAX_BYTES} bytes.`));
+      if (lengte > max) {
+        reject(probleem(413, "te-groot", "Verzoek te groot", `Het verzoek is groter dan ${max} bytes.`));
         req.destroy();
         return;
       }
@@ -102,8 +104,8 @@ function controleerVelden(invoer, toegestaan) {
   }
 }
 
-async function leesInvoer(req) {
-  const tekst = await leesBody(req);
+async function leesInvoer(req, max = MAX_BYTES) {
+  const tekst = await leesBody(req, max);
   let invoer;
   try {
     invoer = JSON.parse(tekst || "{}");
@@ -150,6 +152,30 @@ export function maakServer() {
           console.error("render-svc: export mislukt", e);
           res.writeHead(422, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
           return res.end(JSON.stringify({ fout: `De terugreis naar V3 mislukte: ${e?.message || e}`, meldingen: [], renderVersie: RENDER_VERSIE }));
+        }
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
+        return res.end(JSON.stringify({ ...uit, renderVersie: RENDER_VERSIE }));
+      }
+      // Verschil tussen een afgeleid project en MAIN (09-11, branch stap 1): drie keer {profiel, ops}
+      // zoals /export/v3, maar `profiel` is hier het hele werkbestand (studio-project v3).
+      if (req.method === "POST" && (pad === "/vergelijk" || pad === "/api/vergelijk")) {
+        const invoer = await leesInvoer(req, MAX_BYTES_VERGELIJK);
+        const onbekend = Object.keys(invoer).filter((k) => !["basis", "tak", "main", "mapId"].includes(k));
+        if (onbekend.length) throw probleem(400, "ongeldige-parameter", "Ongeldige parameter", `Onbekende veld(en): ${onbekend.join(", ")}.`);
+        for (const kant of ["basis", "tak", "main"]) {
+          const x = invoer[kant];
+          if (!x || typeof x !== "object" || !x.profiel || typeof x.profiel !== "object") throw probleem(400, "ongeldige-body", "Ongeldige body", `${kant}.profiel ontbreekt (het werkbestand uit de snapshot).`);
+          if (x.ops !== undefined && !Array.isArray(x.ops)) throw probleem(400, "ongeldige-body", "Ongeldige body", `${kant}.ops moet een lijst zijn.`);
+        }
+        if (invoer.mapId != null && typeof invoer.mapId !== "string") throw probleem(400, "ongeldige-body", "Ongeldige body", "`mapId` moet tekst zijn.");
+        const bundel = await laadBundel();
+        let uit;
+        try {
+          uit = bundel.vergelijkProjecten({ basis: invoer.basis, tak: invoer.tak, main: invoer.main, mapId: invoer.mapId ?? null });
+        } catch (e) {
+          console.error("render-svc: vergelijken mislukt", e);
+          res.writeHead(422, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
+          return res.end(JSON.stringify({ fout: `Vergelijken mislukte: ${e?.message || e}`, renderVersie: RENDER_VERSIE }));
         }
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
         return res.end(JSON.stringify({ ...uit, renderVersie: RENDER_VERSIE }));
