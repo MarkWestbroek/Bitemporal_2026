@@ -68,6 +68,27 @@ Uitrol:
 
 ---
 
+## studio 0.37.0 / render 0.4.0 / devloop 0.27.1 (2026-11-10)
+
+Akkoord Mark 10-11. api blijft 0.24.0; devloop 0.27.1 is api 0.24.0 met studio 0.37.0.
+
+- **Branch stap 1**: het Project-menu toont de herkomst van een afgeleid project en *Verschil met
+  MAIN…* (nieuw, gewijzigd, weg, conflict, alleen op MAIN; filter op de map). *Van server
+  ophalen…* noemt "branch van …".
+- **Render 0.4.0**: nieuwe route `POST /vergelijk` (drieweg op de nagespeelde stand), met een eigen
+  grens van 32 MB (`RENDER_SVC_MAX_BYTES_VERGELIJK`). `GET /api/studio/projecten/:id/vergelijk`
+  (api 0.24.0) gebruikt hem; zonder deze sidecar geeft die route 502.
+- **FormulierDefinitie voor e-diensten** (FORMULIERDEFINITIES.md §2.6): `stap`; op een veld
+  `verplicht` (alleen strenger), `key`, `elementId`; vorm `bestand`; `invoegen {formulier}`
+  (sjabloon, opgelost bij het lezen); getypte conditiewaarde. De profiel-round-trip verliest geen
+  eigenschappen meer.
+- **Werkplaats**: herkomst per levering (`generatie`, `studioProjectId`, `totVolgnummer`),
+  traceregels per modelveld, `formulier-neutraal` naast elk formulier.
+
+Uitrol: app (frontend + render), Fundament via FUNDAMENT (devloop 0.27.1 + render 0.4.0).
+
+---
+
 ## studio 0.36.0 / render 0.3.9 / devloop 0.25.7 (2026-11-09)
 
 Kleine release voor de demo van 10-11 (akkoord Mark 09-11). api blijft 0.22.3; devloop 0.25.7 is api
