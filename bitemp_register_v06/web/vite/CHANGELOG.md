@@ -8,6 +8,12 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Kortere kop voor een conditioneel blok** (Mark 10-11): `als eerdereKaart = ja` in plaats van het hele veldpad
+  met `== true`. Alleen het laatste stuk van het pad; `=`/`≠`, *is ingevuld*/*is leeg*, ja/nee
+  (`shared/formulierConditie.js`). Geldt voor een nieuw element in het formulier-profiel en voor de boom van de
+  formuliereditor; een bestaande naam in een project blijft staan (vrije tekst).
+
 ## [studio/v0.37.1] — 2026-11-10
 
 Patch, samen met render 0.4.1 en devloop 0.27.2 (api 0.24.0).

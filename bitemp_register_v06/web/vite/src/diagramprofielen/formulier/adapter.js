@@ -11,6 +11,7 @@
  * projectie voor weergave/bewerking op de diagram-motor.
  */
 import { FORMULIER_ID } from "./index.js";
+import { korteConditie } from "../../shared/formulierConditie.js";
 
 const CONTAINER_TYPES = new Set(["formulier", "stap", "groep", "rij", "lijst", "conditioneel", "invoegen"]);
 
@@ -79,7 +80,8 @@ function containerNaam(el, meta) {
     case "invoegen": return el.formulier ? `invoegen: ${el.formulier}` : "Invoegen";
     case "conditioneel": {
       const c = el.conditie;
-      if (c?.veld) return `als ${c.veld} ${c.op || "nietleeg"}${c.waarde != null && c.waarde !== "" ? " " + c.waarde : ""}`;
+      // Korte kop (10-11): "als eerdereKaart = ja", niet het hele veldpad. De conditie zelf staat in de data.
+      if (c?.veld) return `als ${korteConditie(c)}`;
       return el.als ? `als ${el.als}` : "Conditioneel";
     }
     default: return el.type;
