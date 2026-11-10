@@ -3,10 +3,13 @@
 ## Hoge prioriteit (Mark, 14-10-2026)
 
 Bovenaan op verzoek van Mark. Volgorde van bouwen: help → kennismakingstour → meldingen; AI
-daarna (of tussendoor).
+daarna (of tussendoor). **10-11: LIJN-1 (lijnen tekenen) en TRANS-1 (transformaties als
+configuratie) erbij, met hogere prioriteit** (Mark).
 
 | Id | Onderwerp | Stand |
 |---|---|---|
+| LIJN-1 | **Het tekenen van lijnen** (Mark 10-11, hoge prioriteit). Eerst kijken wat er misgaat en waar, dan kiezen. Bekend: (a) rechte lijnen lopen dwars door kaarten (§36, "Lijnen die door kaarten lopen"); (b) lijnen in dezelfde kolom gaan door een element heen (LAYOUT-2b); (c) aanhechtpunten en lijnvorm verschillen tussen het canvas en de server-tekenaar, terwijl het plan "Eén tekenaar" één weergave vraagt; (d) orthogonaal routeren met omwegen om elementen heen is een kandidaat, per profiel of diagramtype aan of uit (M2), zodat een sequence- of DMN-diagram zijn eigen lijnen houdt. Stap 1: een rondgang met Mark over de diagrammen waar het nu lelijk is (architectuur-project, BPMN, canoniek), met schermafbeeldingen; daarna een plan | open, hoge prioriteit |
+| TRANS-1 | **Transformaties als configuratie, niet als code** (Mark 10-11, hoge prioriteit): regelsets (Mermaid, BPMN-/DMN-XML, ODRL, de inrichtingsartefacten objecttype/zaaktype/formulier/dossier, …) staan nu als `.js`-bestanden in de broncode (`*Regels.js`), en een nieuwe of gewijzigde afbeelding vraagt een release. Doel: bekijken, proefdraaien en bewerken in de UI, en bewaren in het register als configuratie — bitemporeel, met historie en replay. Ontwerp ligt er: `TRANSFORMATIES.md` §9 (regelset als JSON-drager, de entiteit `Transformatie` in het configuratiedomein, de live view "Transformaties" in de Studio, volgorde in §9.5). Open beslissing uit §9.0: regelsets leven waar de profielen (M2) leven, dus dit hangt samen met profielen in het register. Code blijven de lezers, schrijvers en de generieke toepasser | open, hoge prioriteit; eerste stap: §9.5 stap 1 (live view als lezer over de ingebouwde regelsets) en stap 2 (regelset als JSON-bestand) |
 | AI-1 | **MCP-API voor Omnium** | in uitvoering: stap 1 gebouwd 14-10 (persoonlijke API-tokens + `tools/omnium-mcp` met meldingen en projecten, `.mcp.json`); stap 2 gebouwd 14-10: modellen lezen en wijzigen (`modeltalen`, `project_bekijken`, `model_wijzigen` — zelfde regelset en toepasser als de assistent, als projectsync-operaties); volgende: MCP op afstand (HTTP) |
 | AI-2 | **AI-assistent in context (rechtsklik in de projectboom)** | in uitvoering: stap 1 + 1b gebouwd 14-10 (rechtsklik op map of element → gesprek over de map: meerdere talen, submappen, bestaande elementen, doorpraten na Toepassen; velden); stap 2 gebouwd 16-10: vanaf het canvas (rechtsklik op een element of het lege vlak — nieuwe elementen komen op het open diagram) en weghalen (`verwijderen`: element met relaties uit model, diagrammen en boom; ook via de MCP); volgende: bestaande elementen verplaatsen, nieuw diagram passend in beeld; zie `plans/2026-10-14 AI-hulp …` |
 | AI-3 | **Sequence via `model_wijzigen`: berichten vouwen samen** (wens ARCHITECTUUR via GQL-ODRL-EXEC, akkoord Mark 08-11) | gebouwd 08-11: `controleerPlan` ontdubbelt op type, paar én naam; een taal met `assistent.herhaling` ontdubbelt niet en met `assistent.zelfVerbindingen` mag een verbinding naar zichzelf (sequence: beide; `profielen.json` opnieuw gegenereerd). Punten en activaties voor berichten uit een plan bestonden al (06-11, `sequence/plaatsUitPlan.js`); de MCP zegt nu welke code hij draait (`tools/omnium-mcp/codestand.mjs`: commit bij het starten vs. nu, in `omnium_wie_ben_ik` en als waarschuwing boven `model_wijzigen`). Zelf herladen doet hij niet: herstarten. |
@@ -1891,7 +1894,8 @@ tekenkeuzes: `docs/RENDER_API.md`.
     vormfamilies; zie RENDER_API). **Vormtrouw komt later**, via vormen als SVG-sjablonen in het M2
     (plan OMNIUM-UI). Open: de CORS-lijst (`routes/addroutes.go`) staat vast, dus een los scherm op
     een ander adres kan de route nog niet vanuit de browser aanroepen; eigen profielen uit de ontwerper.
-  - **Lijnen die door kaarten lopen** (rechte lijnen). Eventueel orthogonaal routeren.
+  - **Lijnen die door kaarten lopen** (rechte lijnen). Eventueel orthogonaal routeren. Opgepakt
+    als **LIJN-1** (hoge prioriteit, bovenaan).
 
 ## 37. GraphQL-schema-profiel (M2) op de diagram-motor (2026-10-02)
 
