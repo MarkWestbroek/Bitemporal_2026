@@ -118,3 +118,44 @@ export function v3NaarProfiel(v3) {
   const core = importeerV3(v3);
   return { diagramTypeId: core.diagramTypeId, elements: core.elements, diagrams: core.diagrams, meta: core.meta || {} };
 }
+
+// ── Verschil tussen een afgeleid project (branch) en MAIN (09-11, branch stap 1) ──────────────
+// Drie werkbestanden materialiseren (snapshot + ops, zoals hierboven) en vergelijken met
+// studio/takken/verschilMetMain.js. Na elkaar: maakStand ontkoppelt de vorige stand.
+import { bouwWerkbestand } from "../web/vite/src/diagramprofielen/ea/sidecarImport.js";
+import { verschilMetMain } from "../web/vite/src/studio/takken/verschilMetMain.js";
+import { bouwHierarchie } from "../web/vite/src/studio/boomRegels.js";
+
+/** Snapshot + ops → werkbestand ("studio-project" v3). */
+export function materialiseer({ profiel, ops = [] }) {
+  const stand = maakStand(profiel || {});
+  const r = speelOpsNa(stand, ops || []);
+  return { werkbestand: bouwWerkbestand(stand), problemen: r.problemen, nagespeeld: r.toegepast };
+}
+
+/**
+ * @param {{basis: {profiel: any, ops?: any[]}, tak: {profiel: any, ops?: any[]}, main: {profiel: any, ops?: any[]}, mapId?: string|null}} p
+ */
+export function vergelijkProjecten({ basis, tak, main, mapId = null }) {
+  const m = { basis: materialiseer(basis), tak: materialiseer(tak), main: materialiseer(main) };
+  // Boomouder per profiel en per stand (hiërarchie van de descriptor), voor kinderen zonder plaatsing.
+  const cache = new Map();
+  const ouderVan = (profielId, elementId, stand) => {
+    const sleutel = stand.profielen?.[profielId];
+    if (!sleutel) return null;
+    if (!cache.has(sleutel)) {
+      const desc = descriptorVan(profielId);
+      let kaart = new Map();
+      if (desc?.hierarchie) {
+        try {
+          kaart = bouwHierarchie(sleutel.elements || {}, desc.hierarchie, desc.hooks?.hierarchieParen?.(sleutel) || []).ouderVan;
+        } catch { kaart = new Map(); }
+      }
+      cache.set(sleutel, kaart);
+    }
+    return cache.get(sleutel).get(elementId) || null;
+  };
+  const uit = verschilMetMain({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand, mapId, ouderVan });
+  const meldingen = Object.entries(m).flatMap(([kant, x]) => x.problemen.map((bericht) => ({ regel: "OPS", kant, bericht })));
+  return { ...uit, meldingen };
+}

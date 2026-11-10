@@ -266,6 +266,21 @@ POST /export/v3        (ook /api/export/v3)
   `web/vite/node_modules`). Nagespeeld in een schone map met alleen `render-svc` + `web/vite/src`:
   de bundel bouwt en exporteert (melding van BACKEND, 07-11).
 
+### `POST /vergelijk` (sidecar): verschil van een branch met MAIN — ✅ gebouwd (09-11, nog niet uitgebracht)
+
+Branch stap 1 (afgeleid project, werkplaats-plan §4B; zie STUDIO.md). Body
+`{basis, tak, main, mapId?}`, elk `{profiel, ops?}` zoals `/export/v3`, maar `profiel` is hier het
+**hele werkbestand** ("studio-project" v3) en `ops` loopt over alle stores. De sidecar speelt elk na
+(`maakStand` + `speelOpsNa` + `bouwWerkbestand`, na elkaar) en vergelijkt met
+`studio/takken/verschilMetMain.js`. Antwoord 200:
+`{verschillen: [{soort, profielId, id, naam, status, velden, inScope, kant?}], telling: {nieuw,
+gewijzigd, weg, conflict, main}, scope: [mapIds], meldingen: [{regel:"OPS", kant, bericht}],
+renderVersie}`. 400 bij ongeldige invoer (problem+json), 422 als vergelijken mislukt. Ook als
+`/api/vergelijk`. De API roept hem aan voor `GET /api/studio/projecten/:id/vergelijk`; drie
+werkbestanden passen niet onder de standaardgrens van 5 MB (`RENDER_SVC_MAX_BYTES`); deze route
+heeft daarom een eigen grens, `RENDER_SVC_MAX_BYTES_VERGELIJK` (standaard 32 MB), zodat er in
+compose of k8s niets ingesteld hoeft te worden.
+
 ## Eisen aan de SVG (afspraken met Imprint)
 
 - `viewBox`, **geen** `width`/`height` op `<svg>`.
