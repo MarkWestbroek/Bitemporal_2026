@@ -8,6 +8,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Projectnaam in de menubalk** (Mark 10-11): achter *Project* staat de naam van het open project; een branch
+  krijgt "⑂ naam (van MAIN)" met de herkomstregel als tooltip.
+
+### Opgelost
+- **Projectwissel tijdens het ophalen.** Een poll of SSE-event dat nog onderweg was voor het vorige project
+  (MAIN ↔ branch) kon zijn operaties en volgnummer in het nieuwe project zetten. Dat antwoord wordt nu genegeerd.
+
 ## [studio/v0.38.2] — 2026-11-10
 
 Patch, samen met devloop 0.28.2 (api 0.25.0). render blijft 0.4.2.

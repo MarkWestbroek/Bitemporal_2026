@@ -177,6 +177,26 @@ test("haalBinnen met inclusiefEigen (na snapshot) past ook eigen operaties toe",
   ontkoppelStore(naam);
 });
 
+test("haalBinnen: projectwissel tijdens het ophalen — antwoord van het vorige project niet toepassen (10-11)", async () => {
+  const store = createDiagramStore();
+  koppelModelStore("wissel", store);
+  const naam = modelStoreNaam("wissel");
+  let project = "main";
+  const { laatste } = opzet({
+    haalOpsOp: async (id) => {
+      // Terwijl het antwoord voor MAIN onderweg is, opent de Studio de branch.
+      project = "branch";
+      return { ops: [{ volgnummer: 4568, clientId: "ander", store: naam, op: "addElement", args: [el("VanMain")] }], laatste: 4580, meer: false };
+    },
+  });
+  configureer({ projectId: () => project });
+  const n = await haalBinnen();
+  assert.equal(n, 0);
+  assert.equal(store.getState().elements.VanMain, undefined, "operatie van MAIN niet in de branch");
+  assert.equal(laatste(), 0, "volgnummer van MAIN niet overgenomen");
+  ontkoppelStore(naam);
+});
+
 test("verwerkOp is idempotent op volgnummer (poll en SSE mogen elkaar overlappen)", () => {
   const store = createDiagramStore();
   koppelModelStore("idem", store);

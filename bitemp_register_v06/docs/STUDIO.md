@@ -635,6 +635,10 @@ te wijzigen.
 > stil een nieuwe snapshot; de server ruimt de operaties t/m de grens op. Wie
 > met een ouder volgnummer binnenkomt krijgt "snapshot nodig" en laadt de
 > snapshot opnieuw (tabs blijven), daarna de operaties ná de grens.
+> **Projectwissel (10-11):** `haalBinnen` en de SSE-handlers onthouden voor welk project ze
+> ophalen. Wisselt de Studio intussen van project (MAIN ↔ branch, *Van server ophalen*), dan
+> wordt het antwoord van het vorige project genegeerd: geen operaties en geen volgnummer van het
+> ene project in het andere (een poll of event die nog onderweg was tot het kanaal dicht ging).
 > **Wie is online (onderdeel 7):** het SSE-kanaal meldt aan- en afmeldingen
 > (`event: presence`); rechts in de menubalk staat "N anderen online" met de
 > namen in de tooltip (`StudioAanwezig.jsx`), en het Project-menu toont
@@ -682,6 +686,10 @@ te wijzigen.
 > map; wat alleen op MAIN veranderde) en een waarschuwing als er nog eigen wijzigingen te verzenden
 > zijn. Een diagram opent met een klik, een element via het eerste diagram waarop het staat. In
 > *Van server ophalen…* staat bij een branch "branch van …".
+> **Projectnaam in de menubalk (10-11, Mark):** achter de menutitel *Project* staat de naam van
+> het open project; bij een branch "⑂ naam (van MAIN-naam)" in paars, met de volledige
+> herkomstregel als tooltip (`projectKop` in `takken/herkomst.js`, menu-veld `naast` in
+> `MenuBar.jsx`).
 > **Branch maken (10-11, Mark):** rechtsklik op een map → *Branch maken…*
 > (`maakBranchVanMap` in `modellerenActivity.jsx`, pure hulp in `takken/branchMaken.js`). Alleen
 > vanuit MAIN en voor een project op de server. Eerst zoekt de Studio in de projectenlijst een

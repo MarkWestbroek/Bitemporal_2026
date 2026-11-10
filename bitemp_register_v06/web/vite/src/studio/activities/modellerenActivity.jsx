@@ -30,7 +30,7 @@ import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import VerschilMetMainDialoog, { useVerschilMetMainStore } from "../takken/VerschilMetMainDialoog.jsx";
-import { herkomstRegel, isBranch } from "../takken/herkomst.js";
+import { herkomstRegel, isBranch, projectKop } from "../takken/herkomst.js";
 import { bestaandeBranch, standaardBranchNaam, waaromGeenBranch } from "../takken/branchMaken.js";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
 import { volgDiagram, bouwHierarchie } from "../boomRegels.js";
@@ -4385,6 +4385,8 @@ function menus(ctx) {
   const projectMenu = {
     id: "project",
     label: "Project",
+    // Naam (en branch) van het open project naast de titel (10-11).
+    ...projectKop(project, { mapNaam: branch ? useModellerenStore.getState().mappen?.[project.herkomst.mapId]?.naam : null }),
     items: [
       { type: "kop", label: `${project.naam} — ${syncStand}` },
       ...(branch ? [{ type: "kop", label: branchRegel }] : []),

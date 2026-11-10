@@ -28,6 +28,25 @@ export function herkomstRegel(herkomst, { ouderNaam = null, mapNaam = null } = {
   return delen.join(" · ");
 }
 
+/**
+ * De naam van het open project voor naast de menutitel "Project" (10-11, Mark: "de naam en
+ * branch van het project is niet in de Studio te zien"). Een branch krijgt "⑂" en de naam van
+ * MAIN erachter; de volledige herkomstregel gaat in de tooltip.
+ * @param {{naam?: string, herkomst?: any, ouderNaam?: string|null}} project
+ * @param {{mapNaam?: string|null}} [opties]
+ * @returns {{naast: string, naastTitel: string, naastSoort?: "branch"}}
+ */
+export function projectKop(project, { mapNaam = null } = {}) {
+  const naam = String(project?.naam || "").trim() || "Naamloos project";
+  if (!isBranch(project?.herkomst)) return { naast: naam, naastTitel: `Project: ${naam}` };
+  const ouder = project.ouderNaam ? ` (van ${project.ouderNaam})` : "";
+  return {
+    naast: `⑂ ${naam}${ouder}`,
+    naastTitel: [`Branch: ${naam}`, herkomstRegel(project.herkomst, { ouderNaam: project.ouderNaam, mapNaam })].join("\n"),
+    naastSoort: "branch",
+  };
+}
+
 /** Labels en volgorde van de statussen (verschilMetMain). */
 export const STATUS_LABEL = {
   conflict: "Conflict",
