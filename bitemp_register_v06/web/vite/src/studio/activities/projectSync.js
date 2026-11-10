@@ -101,6 +101,8 @@ export class ProjectSyncFout extends Error {
     this.server = server || null;
     this.reden = extra.reden || null;
     this.anderen = Array.isArray(extra.anderen) ? extra.anderen : [];
+    /** bij 409 branch_bestaat (afsplitsen): het id van de bestaande branch */
+    this.projectId = extra.projectId || null;
   }
 }
 
@@ -131,13 +133,21 @@ async function roep(pad, { methode = "GET", body, headers = {} } = {}) {
         : resp.status === 403
           ? "Geen rechten voor deze actie."
           : `Serverfout ${resp.status}.`);
-    throw new ProjectSyncFout(bericht, resp.status, json?.server, { reden: json?.reden, anderen: json?.anderen });
+    throw new ProjectSyncFout(bericht, resp.status, json?.server, { reden: json?.reden, anderen: json?.anderen, projectId: json?.projectId });
   }
   return json;
 }
 
 /** @returns {Promise<Array<{id:string,naam:string,eigenaar:string,versie:number,bijgewerkt:string,bijgewerkt_door:string,grootte:number}>>} */
 export const lijstProjecten = () => roep("/api/studio/projecten");
+
+/**
+ * Een branch afsplitsen (api 0.23.0): het hele project wordt gekopieerd, `mapId` is de context
+ * (herkomst). → 201 meta van de branch. Een 409 `branch_bestaat` (met `projectId`) betekent dat er
+ * al een niet-gearchiveerde branch voor die map is.
+ */
+export const afsplitsen = (id, { naam, mapId = null }) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/afsplitsen`, { methode: "POST", body: { naam, ...(mapId ? { mapId } : {}) } });
 
 /** Volledig record, incl. `inhoud` (het werkbestand) en `herkomst` (null, of de herkomst van een branch). */
 export const haalProjectOp = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}`);

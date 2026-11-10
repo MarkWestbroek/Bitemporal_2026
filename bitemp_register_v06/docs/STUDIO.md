@@ -681,7 +681,18 @@ te wijzigen.
 > een lijst met soort, naam, profiel en velden, het merk *buiten de map*, filters (alleen in de
 > map; wat alleen op MAIN veranderde) en een waarschuwing als er nog eigen wijzigingen te verzenden
 > zijn. Een diagram opent met een klik, een element via het eerste diagram waarop het staat. In
-> *Van server ophalen…* staat bij een branch "branch van …". Stap 2 (3-weg-merge naar ops op MAIN met
+> *Van server ophalen…* staat bij een branch "branch van …".
+> **Branch maken (10-11, Mark):** rechtsklik op een map → *Branch maken…*
+> (`maakBranchVanMap` in `modellerenActivity.jsx`, pure hulp in `takken/branchMaken.js`). Alleen
+> vanuit MAIN en voor een project op de server. Eerst zoekt de Studio in de projectenlijst een
+> niet-gearchiveerde branch van dit project met dezelfde `herkomst.mapId`; bestaat die (ook een van
+> de werkplaats, die per dienst-map onder E-diensten een branch maakt en hem zo terugvindt), dan
+> biedt hij die aan om te openen in plaats van een tweede te maken. Daarna gaan eigen wijzigingen
+> eerst naar de server (anders mist de branch ze), vraagt hij de naam (standaard
+> "<project> — <map>") en roept `POST …/afsplitsen {naam, mapId}` aan; daarna kun je de branch
+> meteen openen (zelfde weg als *Van server ophalen…*, `openServerProject`). Een 409
+> `branch_bestaat` met `projectId` (BACKEND, voorgesteld) behandelt de Studio als "open de bestaande".
+> Stap 2 (3-weg-merge naar ops op MAIN met
 > `verwachtLaatsteVolgnummer`, scope afdwingen, bijwerken vanaf MAIN) en stap 3 (verschil in
 > diagram en inspector, `/vergelijk` en `/samenvoegen`) wachten op Mark.
 >
