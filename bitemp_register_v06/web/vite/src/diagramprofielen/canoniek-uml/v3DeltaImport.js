@@ -90,17 +90,29 @@ export function dubbeleNaampaden(v3) {
 function importeerMetGeneralisaties(v3) {
   const model = importeerV3(v3);
   const gevouwen = vouwOudeGeneralisaties({ elements: model.elements || {}, diagrams: model.diagrams || {} });
-  if (!gevouwen) return model;
-  // Alleen de betekenis in `data`: geen presentatie en geen lege labels. Een export laat lege labels
-  // weg, dus anders verschilt dezelfde overerving bij elke volgende import ("data.bron").
-  const elements = { ...gevouwen.elements };
+  const elements = { ...(gevouwen?.elements || model.elements || {}) };
+  /** Alleen de betekenis in `data`: geen presentatie en geen lege labels (een export laat lege labels weg). */
+  const minimaal = (naamLabelHeen, naamLabelTerug) => {
+    const labels = { ...(naamLabelHeen ? { naamLabelHeen } : {}), ...(naamLabelTerug ? { naamLabelTerug } : {}) };
+    return { bron: { isGeneralization: true, ...labels }, ...labels };
+  };
   for (const [id, el] of Object.entries(elements)) {
     if (el.elementType !== "generalisatie" || model.elements?.[id]) continue;
-    const { naamLabelHeen, naamLabelTerug } = el.data || {};
-    const labels = { ...(naamLabelHeen ? { naamLabelHeen } : {}), ...(naamLabelTerug ? { naamLabelTerug } : {}) };
-    elements[id] = { ...el, data: { bron: { isGeneralization: true, ...labels }, ...labels } };
+    elements[id] = { ...el, data: minimaal(el.data?.naamLabelHeen, el.data?.naamLabelTerug) };
   }
-  return { ...model, elements, diagrams: gevouwen.diagrams };
+  // Rechtstreeks uit `erft` (melding AI-INRICHTEN 10-11): brengt de V3 eigen diagrammen mee, dan zet
+  // importeerV3 de edge alleen voor entiteiten op die diagrammen, en een nieuwe subklasse elders
+  // verloor zijn supertype.
+  const paren = new Set(Object.values(elements).filter((e) => e.elementType === "generalisatie").map((e) => `${e.source}->${e.target}`));
+  const v3Model = v3?.model || v3 || {};
+  for (const ent of v3Model.entiteiten || []) {
+    const sub = ent?.typenaam, sup = ent?.erft;
+    if (!sub || !sup || !elements[sub] || !elements[sup] || paren.has(`${sub}->${sup}`)) continue;
+    paren.add(`${sub}->${sup}`);
+    const id = `gen_${sub}__${sup}`;
+    elements[id] = { id, naam: "", elementType: "generalisatie", source: sub, target: sup, compartimenten: [], data: minimaal(ent.naamLabelHeen, ent.naamLabelTerug) };
+  }
+  return { ...model, elements, diagrams: gevouwen?.diagrams || model.diagrams };
 }
 
 /**

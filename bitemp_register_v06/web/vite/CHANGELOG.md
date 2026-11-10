@@ -8,6 +8,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **`erft` ook zonder diagram** (melding AI-INRICHTEN 10-11). Bracht de V3 eigen diagrammen mee (bv. de export van
+  een project), dan kreeg een nieuwe subklasse die op geen van die diagrammen stond nog steeds geen generalisatie.
+  De delta-import leidt ze nu rechtstreeks af uit `erft`.
+
 ## [studio/v0.38.1] — 2026-11-10
 
 Patch, samen met devloop 0.28.1 (api 0.25.0). render blijft 0.4.2.
