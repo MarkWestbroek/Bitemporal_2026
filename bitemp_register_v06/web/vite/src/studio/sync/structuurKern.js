@@ -16,6 +16,22 @@ let _teller = 0;
 /** Map-id in dezelfde vorm als de browser (`map_<tijd>_<n>`), met een s-suffix voor de sidecar. */
 export const nieuwMapIdNode = () => `map_${Date.now()}_${(_teller += 1)}s`;
 
+/**
+ * De volgorde voor een map die achteraan komt: één meer dan de hoogste in het project (10-11).
+ * Hangt alleen van de stand af, niet van de klok: elke client die dezelfde operaties naspeelt,
+ * en de sidecar die basis, branch en MAIN naspeelt, komt op dezelfde volgorde uit. Met
+ * `Date.now()` verschilde hij per naspeling (direct na afsplitsen 9 schijnconflicten op mappen).
+ * Een hoogste over alle niveaus is genoeg: volgorde telt alleen tussen broertjes.
+ */
+export function volgendeMapVolgorde(mappen) {
+  let hoogste = 0;
+  for (const m of Object.values(mappen || {})) {
+    const v = Number(m?.volgorde);
+    if (Number.isFinite(v) && v > hoogste) hoogste = v;
+  }
+  return hoogste + 1;
+}
+
 /** Submappen (recursief) van een map, diepste laatst. */
 export function submappenVan(mappen, mapId) {
   const uit = [];
@@ -38,7 +54,7 @@ export function maakStructuurStore(begin = {}) {
 
     nieuweMap: (naam, ouderId = null, mapId = null) => {
       const id = mapId || nieuwMapIdNode();
-      set((s) => ({ mappen: { ...s.mappen, [id]: { id, naam, ouderId: ouderId || null, volgorde: Date.now() } } }));
+      set((s) => ({ mappen: { ...s.mappen, [id]: { id, naam, ouderId: ouderId || null, volgorde: volgendeMapVolgorde(s.mappen) } } }));
       return id;
     },
     nieuweMappen: (lijst) => {
@@ -46,7 +62,7 @@ export function maakStructuurStore(begin = {}) {
       if (!ids.length) return ids;
       set((s) => {
         const mappen = { ...s.mappen };
-        const basis = Date.now();
+        const basis = volgendeMapVolgorde(mappen);
         (lijst || []).forEach((m, i) => {
           mappen[ids[i]] = { id: ids[i], naam: m.naam, ouderId: m.ouderId || null, volgorde: basis + i };
         });
@@ -58,8 +74,14 @@ export function maakStructuurStore(begin = {}) {
       set((s) => (s.mappen[id] ? { mappen: { ...s.mappen, [id]: { ...s.mappen[id], naam } } } : {})),
     zetMapKleur: (id, kleur) =>
       set((s) => (s.mappen[id] ? { mappen: { ...s.mappen, [id]: { ...s.mappen[id], kleur: kleur || undefined } } } : {})),
+    // Van niveau gewisseld → achteraan in de nieuwe ouder (zoals in de browser-store).
     verplaatsMap: (id, ouderId) =>
-      set((s) => (s.mappen[id] ? { mappen: { ...s.mappen, [id]: { ...s.mappen[id], ouderId: ouderId || null } } } : {})),
+      set((s) => {
+        const m = s.mappen[id];
+        if (!m || id === ouderId) return {};
+        for (let c = ouderId; c; c = s.mappen[c]?.ouderId || null) if (c === id) return {};
+        return { mappen: { ...s.mappen, [id]: { ...m, ouderId: ouderId || null, volgorde: volgendeMapVolgorde(s.mappen) } } };
+      }),
     /** Eén plek omhoog/omlaag tussen de broertjes (op `volgorde`). */
     schuifMap: (id, richting) =>
       set((s) => {

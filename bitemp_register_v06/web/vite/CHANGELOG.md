@@ -8,6 +8,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Opgelost
+- **Mapvolgorde hangt niet meer van de klok af.** Een nieuwe of verplaatste map kreeg `volgorde: Date.now()`,
+  ook bij het naspelen van operaties. Elke client en elke naspeling kwam daardoor op een andere volgorde uit, en
+  *Verschil met MAIN* meldde direct na het afsplitsen schijnconflicten op mappen (9 in het architectuurproject).
+  Nu: achteraan = hoogste volgorde in het project + 1 (`volgendeMapVolgorde`, browser-store en sidecar-kern gelijk;
+  de kern zet bij verplaatsen nu ook de volgorde, zoals de browser).
+
 ## [studio/v0.37.0] — 2026-11-10
 
 Samen met render 0.4.0 en devloop 0.27.1 (api 0.24.0). Branch stap 1 (verschil met MAIN), de

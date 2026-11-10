@@ -39,3 +39,19 @@ test("gedeelde diagrambundels (06-11): het vangnet maakt er patchStructuur van, 
   kern.getState().laadStructuur({ mappen: {}, plaatsing: {}, bundels: { b1 } });
   assert.deepEqual(kern.getState().bundels, { b1 });
 });
+
+test("mapvolgorde hangt van de stand af, niet van de klok: twee naspelingen geven hetzelfde (10-11)", async () => {
+  const speel = () => {
+    const k = maakStructuurStore({ mappen: { a: { id: "a", naam: "A", ouderId: null, volgorde: 1794086782979 } } });
+    k.getState().nieuweMap("B", null, "b");
+    k.getState().nieuweMappen([{ naam: "C", mapId: "c" }, { naam: "D", ouderId: "c", mapId: "d" }]);
+    k.getState().verplaatsMap("b", "c");
+    return k.getState().mappen;
+  };
+  const een = speel();
+  await new Promise((r) => setTimeout(r, 5));
+  assert.deepEqual(speel(), een);
+  assert.equal(een.b.volgorde, 1794086782983, "achteraan: hoogste + 1, na het verplaatsen opnieuw achteraan");
+  assert.ok(een.b.volgorde > een.d.volgorde && een.d.volgorde > een.c.volgorde && een.c.volgorde > een.a.volgorde);
+  assert.equal(een.b.ouderId, "c");
+});
