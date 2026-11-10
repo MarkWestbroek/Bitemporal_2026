@@ -180,6 +180,29 @@ export function maakServer() {
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
         return res.end(JSON.stringify({ ...uit, renderVersie: RENDER_VERSIE }));
       }
+      // Eén profiel nagespeeld (10-11): blob-deel + de ops op `model:<profielId>`. Voor
+      // GET /api/studio/projecten/:id/model/:profiel (BACKEND) en laag 2 van de werkplaats.
+      if (req.method === "POST" && (pad === "/materialiseer" || pad === "/api/materialiseer")) {
+        const invoer = await leesInvoer(req, MAX_BYTES_VERGELIJK);
+        const onbekend = Object.keys(invoer).filter((k) => !["profielId", "profiel", "ops"].includes(k));
+        if (onbekend.length) throw probleem(400, "ongeldige-parameter", "Ongeldige parameter", `Onbekende veld(en): ${onbekend.join(", ")}.`);
+        if (typeof invoer.profielId !== "string" || !invoer.profielId) throw probleem(400, "ongeldige-body", "Ongeldige body", "`profielId` ontbreekt.");
+        if (invoer.profiel != null && typeof invoer.profiel !== "object") throw probleem(400, "ongeldige-body", "Ongeldige body", "`profiel` moet een object zijn ({elements, diagrams, …}).");
+        if (invoer.ops !== undefined && !Array.isArray(invoer.ops)) throw probleem(400, "ongeldige-body", "Ongeldige body", "`ops` moet een lijst zijn.");
+        const bundel = await laadBundel();
+        let uit;
+        try {
+          uit = bundel.materialiseerProfiel({ profielId: invoer.profielId, profiel: invoer.profiel, ops: invoer.ops || [] });
+        } catch (e) {
+          console.error("render-svc: materialiseren mislukt", e);
+          uit = null;
+          res.writeHead(422, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
+          return res.end(JSON.stringify({ fout: `Naspelen mislukte: ${e?.message || e}`, meldingen: [], renderVersie: RENDER_VERSIE }));
+        }
+        const status = uit.meldingen.length ? 422 : 200;
+        res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
+        return res.end(JSON.stringify({ ...uit, renderVersie: RENDER_VERSIE }));
+      }
       if (req.method === "POST" && pad === "/views") {
         const invoer = await leesInvoer(req);
         controleerVelden(invoer, isStudio(invoer) ? STUDIO_VIEWS_VELDEN : VIEWS_VELDEN);

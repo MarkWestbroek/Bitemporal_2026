@@ -159,3 +159,28 @@ test("POST /vergelijk: fouten in de invoer als problem+json", async () => {
   assert.equal((await post("/vergelijk", { basis: p, tak: p, main: p, kleur: "rood" })).status, 400);
   assert.equal((await post("/vergelijk", { basis: p, tak: { profiel: {}, ops: "x" }, main: p })).status, 400);
 });
+
+// ── Eén profiel nagespeeld (10-11, laag 2 van de werkplaats) ─────────────────────────────────
+
+test("POST /materialiseer: blob-deel + alleen de ops op het eigen profiel", async () => {
+  const el = (id, naam) => ({ id, naam, elementType: "entiteit", compartimenten: [], data: {} });
+  const profiel = { diagramTypeId: "diagram05", elements: { A: el("A", "Aanvraag") }, diagrams: {}, meta: {} };
+  const ops = [
+    { volgnummer: 7, store: "model:diagram05", op: "patchElementen", args: [{ zet: { B: el("B", "Bijlage") }, wis: ["A"] }] },
+    { volgnummer: 8, store: "structuur", op: "nieuweMap", args: ["X", null, "mx"] },
+  ];
+  const r = await post("/materialiseer", { profielId: "diagram05", profiel, ops });
+  assert.equal(r.status, 200);
+  const uit = await r.json();
+  assert.deepEqual(Object.keys(uit.profiel.elements), ["B"]);
+  assert.equal(uit.nagespeeld, 1);
+  assert.equal(uit.overgeslagen, 1);
+  assert.deepEqual(uit.meldingen, []);
+  assert.ok(uit.renderVersie);
+});
+
+test("POST /materialiseer: fouten in de invoer als problem+json", async () => {
+  assert.equal((await post("/materialiseer", {})).status, 400);
+  assert.equal((await post("/materialiseer", { profielId: "x", ops: "y" })).status, 400);
+  assert.equal((await post("/materialiseer", { profielId: "x", kleur: "rood" })).status, 400);
+});
