@@ -6,7 +6,8 @@ import { openStudio } from "./helpers/studio.js";
 test.use({ viewport: { width: 1440, height: 900 } });
 
 async function openProjectMenu(page) {
-  await page.getByRole("button", { name: "Project", exact: true }).first().click();
+  // Via data-tour: sinds 10-11 staat de projectnaam naast "Project" in dezelfde knop.
+  await page.locator("[data-tour=\"menu-project\"]").first().click();
 }
 
 test("zonder rebuild-route (app) geen menu-item Register bouwen", async ({ page }) => {

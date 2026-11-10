@@ -13,6 +13,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   krijgt "⑂ naam (van MAIN)" met de herkomstregel als tooltip.
 
 ### Opgelost
+- **Lijnen eindigden naast een vak in het niets na een diagramwissel** (Mark 10-11, evenementen-branch). Het canvas
+  hergebruikte bij het wisselen van diagram de React Flow-node met dezelfde id (het elementId), met de maat die je
+  hem op het vorige diagram met de muis gaf. Het vak tekende op zijn eigen maat, maar de omhulling en de
+  aanhechtpunten bleven op de oude. Bij een ander diagram worden de nodes nu vers opgebouwd. e2e-spec 59.
 - **Projectwissel tijdens het ophalen.** Een poll of SSE-event dat nog onderweg was voor het vorige project
   (MAIN ↔ branch) kon zijn operaties en volgnummer in het nieuwe project zetten. Dat antwoord wordt nu genegeerd.
 
