@@ -31,6 +31,7 @@ import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.js
 import ProjectServerDialoog, { useProjectServerStore } from "./ProjectServerDialoog.jsx";
 import VerschilMetMainDialoog, { useVerschilMetMainStore } from "../takken/VerschilMetMainDialoog.jsx";
 import { herkomstRegel, isBranch } from "../takken/herkomst.js";
+import { bestaandeBranch, standaardBranchNaam, waaromGeenBranch } from "../takken/branchMaken.js";
 import { koppelStore, zonderVastleggen, rebaseStand, herschikOpVolgorde, structuurNet, STRUCTUUR_OPS, STRUCTUUR_VELDEN, isStil } from "../sync/operaties.js";
 import { volgDiagram, bouwHierarchie } from "../boomRegels.js";
 import { waaromNietOnder, boomRelatieVoor, boomRelatiesVan, REDEN_NIET_OMHANGEN } from "../../diagramcore/model/omhangen.js";
@@ -52,6 +53,7 @@ import {
   bestandsstamVoor,
   haalProjectOp,
   lijstProjecten,
+  afsplitsen,
   maakProjectAan,
   slaProjectOp,
   haalStudioInstellingenOp,
@@ -2310,6 +2312,8 @@ function Map_({ map, diepte }) {
       ...nieuwMenu("", nieuwElementItems({ doe: (p, et) => maakElementInBoom(p, et, { ouderSleutel: map.id }) })),
       { label: "Nieuwe submap…", onClick: nieuweSubmap },
       { label: "Hernoemen", onClick: () => setBewerk(true) },
+      // Branch van deze map (10-11): een afgeleid project met deze map als context.
+      { label: "Branch maken…", onClick: () => maakBranchVanMap(map) },
       { label: "Eigenschappen", onClick: () => selecteerMap(map.id) },
       { sep: true },
       {
@@ -4222,28 +4226,104 @@ function haalVanServer() {
       if (!ok) {
         return;
       }
-      try {
-        const rec = await haalProjectOp(meta.id);
-        const uit = normaliseerProjectData(rec.inhoud);
-        if (!uit.ok) {
-          toonMelding({ tekst: `Serverproject onbruikbaar: ${uit.fout}` });
-          return;
-        }
-        // Naam en id van de server zijn leidend (hernoemd op de server telt).
-        const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
-        const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
-        if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio: ${onbekend.join(", ")}.
-Niet te zien of te bewerken hier, maar ze blijven bewaard en gaan ongewijzigd mee terug naar de server.` });
-        pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null });
-        // Snapshot + wat er daarna in het operatielog kwam (ook eigen oude operaties).
-        const n = await haalBinnen({ inclusiefEigen: true });
-        useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
-        if (n) menuBus.emit("menu:ververs");
-      } catch (e) {
-        toonMelding({ tekst: `Ophalen mislukt: ${e?.message || e}` });
-      }
+      await openServerProject(meta.id);
     },
   });
+}
+
+/**
+ * Een project van de server in deze browser zetten (vervangt het huidige). Gedeeld door
+ * "Van server ophalen…" en "Branch maken…" (10-11). → true als het gelukt is.
+ */
+async function openServerProject(id) {
+  try {
+    const rec = await haalProjectOp(id);
+    const uit = normaliseerProjectData(rec.inhoud);
+    if (!uit.ok) {
+      toonMelding({ tekst: `Serverproject onbruikbaar: ${uit.fout}` });
+      return false;
+    }
+    // Naam en id van de server zijn leidend (hernoemd op de server telt).
+    const data = { ...uit.data, project: { id: rec.id, naam: rec.naam } };
+    const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
+    if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio: ${onbekend.join(", ")}.
+Niet te zien of te bewerken hier, maar ze blijven bewaard en gaan ongewijzigd mee terug naar de server.` });
+    pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null });
+    // Snapshot + wat er daarna in het operatielog kwam (ook eigen oude operaties).
+    const n = await haalBinnen({ inclusiefEigen: true });
+    useModellerenStore.getState().zetProject({ laatsteSync: new Date().toISOString() });
+    if (n) menuBus.emit("menu:ververs");
+    return true;
+  } catch (e) {
+    toonMelding({ tekst: `Ophalen mislukt: ${e?.message || e}` });
+    return false;
+  }
+}
+
+/** Biedt een bestaande branch aan; → true als die geopend is (of de gebruiker koos niets te doen). */
+async function biedBestaandeBranchAan(branch, map) {
+  const wie = branch.bijgewerkt_door || branch.eigenaar;
+  const ok = await vraagBevestiging({
+    titel: "Er is al een branch voor deze map",
+    tekst: `Voor map "${map.naam}" bestaat al een branch: "${branch.naam || branch.id}"${wie ? ` (${wie})` : ""}.\n\nEén map heeft één branch; de werkplaats vindt hem ook terug. Openen? Dit vervangt het huidige project in deze browser.`,
+    bevestig: "Openen",
+  });
+  if (ok) await openServerProject(branch.id);
+}
+
+/**
+ * "Branch maken…" op een map (10-11, Mark): afsplitsen met deze map als context. Bestaat er al
+ * een niet-gearchiveerde branch voor de map (ook een van de werkplaats), dan die openen in plaats
+ * van een tweede maken. Eigen wijzigingen gaan eerst naar de server, anders mist de branch ze.
+ */
+async function maakBranchVanMap(map) {
+  const { project } = useModellerenStore.getState();
+  const reden = waaromGeenBranch(project);
+  if (reden) {
+    toonMelding({ titel: "Branch maken", tekst: reden });
+    return;
+  }
+  try {
+    const bestaand = bestaandeBranch(await lijstProjecten(), project.id, map.id);
+    if (bestaand) {
+      await biedBestaandeBranchAan(bestaand, map);
+      return;
+    }
+    if (useOutboxStore.getState().ops.length) {
+      await verzend();
+      if (useOutboxStore.getState().ops.length) {
+        toonMelding({ titel: "Branch maken", tekst: "Je laatste wijzigingen staan nog niet op de server, dus de branch zou ze missen. Probeer het zo opnieuw." });
+        return;
+      }
+    }
+    const naam = await vraagNaam({
+      titel: `Branch maken van map "${map.naam}"`,
+      label: "Naam van de branch",
+      waarde: standaardBranchNaam(project.naam, map.naam),
+      bevestig: "Maken",
+    });
+    if (!naam) return;
+    let meta;
+    try {
+      meta = await afsplitsen(project.id, { naam, mapId: map.id });
+    } catch (e) {
+      if (e?.status === 409 && e.reden === "branch_bestaat" && e.projectId) {
+        // Net tegelijk gemaakt (bv. door de werkplaats): dezelfde branch gebruiken.
+        await biedBestaandeBranchAan({ id: e.projectId, naam: "" }, map);
+        return;
+      }
+      throw e;
+    }
+    const open = await vraagBevestiging({
+      titel: "Branch gemaakt",
+      tekst: `"${meta?.naam || naam}" staat op de server, met map "${map.naam}" als context.\n\nNu openen? Dit vervangt "${project.naam}" in deze browser; MAIN blijft op de server.`,
+      bevestig: "Openen",
+      annuleer: "Hier blijven",
+    });
+    if (open) await openServerProject(meta.id);
+  } catch (e) {
+    toonMelding({ titel: "Branch maken", tekst: `Mislukt: ${e?.message || e}` });
+  }
 }
 
 /**

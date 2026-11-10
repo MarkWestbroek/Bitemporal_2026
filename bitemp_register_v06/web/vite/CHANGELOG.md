@@ -9,6 +9,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Branch maken op een map** (Mark 10-11): rechtsklik op een map in de projectboom → *Branch maken…*. De map
+  wordt de context van de branch (`POST …/afsplitsen {naam, mapId}`). Bestaat er al een niet-gearchiveerde branch
+  voor die map (ook een van de werkplaats), dan biedt de Studio die aan in plaats van een tweede te maken. Eigen
+  wijzigingen gaan eerst naar de server; daarna kun je de branch meteen openen.
 - **Het e-dienstformulier als FormulierDefinitie (TRANSFORMATIES §11.19, besluit Mark 10-11).** Een
   formulier in de e-dienst kan met `formulierDefinitie: {code}` naar een FD in het Studio-profiel `formulierdiagram` van het
   project wijzen; CLI en Studio-activiteit lezen de stappen en vragen daaruit (sjablonen via `invoegen`
