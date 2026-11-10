@@ -8,6 +8,33 @@
 
 ---
 
+## api 0.24.0 / devloop 0.27.0 (2026-11-10)
+
+Vervolg op de branches en het schrijfkanaal voor de werkplaats (werkplaats-plan §4B, akkoord Mark
+10-11). studio blijft 0.36.0 en render 0.3.9; devloop 0.27.0 is api 0.24.0 met studio 0.36.0.
+
+- **`GET /api/studio/projecten/:id/vergelijk`**: de API stelt basis, branch en ouder samen (elk
+  `{profiel, ops}`) en geeft ze met de `mapId` door aan de render-sidecar (`POST /vergelijk`). Het
+  antwoord gaat door met `main`/`tak: {projectId, laatsteVolgnummer}` erbij. Lezen op branch én
+  ouder. Werkt pas met een render-svc die `/vergelijk` kent (OMNIUM-UI, nog niet uitgebracht);
+  tot dan 502 met reden `sidecar`.
+- **`namens` op `POST …/ops`**: de eindgebruiker voor wie een serviceaccount schrijft (Imprint via
+  `omnium-schrijver`). Alleen van accounts in env `OMNIUM_NAMENS_ACCOUNTS`, anders 403
+  `namens_niet_toegestaan`. `actor` blijft het account; `namens` staat ernaast in `GET …/ops` en
+  SSE. Schema: kolom `studio_project_ops.namens` (ADD COLUMN IF NOT EXISTS).
+
+Getest: `go test ./...` slaagt (behalve de EA-test die node_modules nodig heeft), met nieuwe
+integratietests tegen Postgres (vergelijk met een nep-sidecar; namens voor serviceaccount en
+modelleur).
+
+Uitrol:
+- Fundament: `bitemp-devloop:0.27.0`, door FUNDAMENT, met `OMNIUM_NAMENS_ACCOUNTS=omnium-schrijver`,
+  het account `omnium-schrijver` (rol modelleur, token in de secret) en een toegangsrij `schrijven`
+  op het project Inrichten.
+- App: niet nodig.
+
+---
+
 ## api 0.23.0 / devloop 0.26.0 (2026-11-10)
 
 Branchen van een Studio-project, stap 1 (werkplaats-plan §4B, akkoord Mark 09-11). studio blijft
