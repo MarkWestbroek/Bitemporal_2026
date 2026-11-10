@@ -717,6 +717,11 @@ Optioneel `verwachtLaatsteVolgnummer`: de batch gaat alleen door als het laatste
 het project nog precies dat is, anders `409 {reden: "volgnummer_verschoven", verwacht,
 laatsteVolgnummer}` en wordt er niets opgeslagen. Bedoeld voor een merge van een afgeleid project
 naar zijn ouder en als revisiecheck per op.
+Optioneel `namens` (gebruikersnaam of e-mailadres, max 128): de eindgebruiker voor wie een
+serviceaccount schrijft (Imprint-werkplaats via `omnium-schrijver`). Alleen geaccepteerd van
+accounts in env `OMNIUM_NAMENS_ACCOUNTS` (komma-gescheiden); anders `403 {reden:
+"namens_niet_toegestaan"}`. `actor` blijft het serviceaccount; `namens` staat ernaast in
+`GET …/ops` en SSE. Zonder `AUTH_ENABLED` mag iedereen (`handlers/studio_namens.go`).
 
 #### `GET /api/studio/projecten/:id/events`
 Ingelogd. **SSE-kanaal** (`text/event-stream`): elke bevestigde operatie als event `op`
@@ -779,6 +784,16 @@ aangemaakt, aangemaaktDoor}`: de blob van de ouder (`profiel`, geldig t/m `totVo
 operaties daarna t/m `basisVolgnummer`, in de vorm van `GET …/ops`. Onveranderlijk, ook na compactie
 van ouder of branch: dit is de basis voor een 3-weg-merge (basis, branch, ouder). De server speelt
 geen ops af; de Studio of de render-sidecar materialiseert. `404` voor een project dat geen branch is.
+
+#### `GET /api/studio/projecten/:id/vergelijk`
+Lezen op de branch én de ouder (`403` zonder leesrecht op de ouder). De server stelt drie kanten
+samen, elk `{profiel, ops}`: `basis` (uit `studio_project_basis`), `tak` (blob van de branch + ops
+na zijn `tot_volgnummer`) en `main` (idem voor de ouder), en POST die met `mapId` uit de herkomst
+naar de render-sidecar (`POST /vergelijk`). Het antwoord van de sidecar (`{verschillen, telling,
+scope, meldingen, renderVersie}`) gaat door, aangevuld met `main: {projectId, laatsteVolgnummer}`
+en `tak: {projectId, laatsteVolgnummer}`. `404` met `reden: "geen_branch"` of `"ouder_weg"`, `413`
+boven 32 MB, `422` van de sidecar ongewijzigd, `502` met `reden: "sidecar"` als de sidecar
+onbereikbaar is of `/vergelijk` niet kent (`handlers/studio_project_vergelijk.go`).
 
 ### EA-import via de server (sidecar uit git)
 

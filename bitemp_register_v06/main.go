@@ -404,6 +404,9 @@ func NewRouter() *gin.Engine {
 	// afsplitsen vraagt lezen op de ouder en de rol modelleur; de basis lezen vraagt lezen op de branch.
 	router.POST("/api/studio/projecten/:id/afsplitsen", modelleur, pLezen, handlers.MaakStudioProjectAfsplitsenHandler())
 	router.GET("/api/studio/projecten/:id/basis", ingelogd, pLezen, handlers.MaakStudioProjectBasisHandler())
+	// Verschil branch ↔ ouder via de render-sidecar (studio_project_vergelijk.go); leesrecht op
+	// de ouder controleert de handler zelf.
+	router.GET("/api/studio/projecten/:id/vergelijk", ingelogd, pLezen, handlers.MaakStudioProjectVergelijkHandler())
 	// SSE-kanaal (stap 2, onderdeel 5): live operaties van anderen; de hub hangt aan het log.
 	handlers.KoppelStudioSSE()
 	router.GET("/api/studio/projecten/:id/events", ingelogd, pLezen, handlers.MaakStudioProjectEventsHandler())

@@ -56,10 +56,13 @@ type StudioProjectBasis struct {
 }
 
 // StudioProjectHerkomstDDL voegt de herkomstkolommen toe aan een bestaande
-// studio_projecten-tabel (dbsetup en de integratietests gebruiken dezelfde lijst).
+// studio_projecten-tabel, en `namens` aan studio_project_ops (dbsetup en de integratietests
+// gebruiken dezelfde lijst; draai hem na het aanmaken van beide tabellen).
 var StudioProjectHerkomstDDL = []string{
 	`ALTER TABLE studio_projecten ADD COLUMN IF NOT EXISTS ouder_project_id VARCHAR`,
 	`ALTER TABLE studio_projecten ADD COLUMN IF NOT EXISTS basis_volgnummer BIGINT NOT NULL DEFAULT 0`,
 	`ALTER TABLE studio_projecten ADD COLUMN IF NOT EXISTS map_id VARCHAR`,
 	`ALTER TABLE studio_projecten ADD COLUMN IF NOT EXISTS gearchiveerd BOOLEAN NOT NULL DEFAULT false`,
+	// namens op het operatielog (werkplaats-plan §4B; handlers/studio_namens.go)
+	`ALTER TABLE studio_project_ops ADD COLUMN IF NOT EXISTS namens VARCHAR`,
 }

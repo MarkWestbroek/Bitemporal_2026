@@ -23,6 +23,7 @@ type StudioProjectOp struct {
 	Volgnummer    int64           `json:"volgnummer" bun:"volgnummer,pk"`
 	ClientID      string          `json:"client_id" bun:"client_id"` // browsertab die hem maakte (echo-filter)
 	Actor         string          `json:"actor" bun:"actor"`         // gebruikersnaam (leeg zonder auth)
+	Namens        string          `json:"namens,omitempty" bun:"namens,nullzero"` // eindgebruiker achter een serviceaccount (OMNIUM_NAMENS_ACCOUNTS)
 	LokaalNr      int64           `json:"lokaal_nr" bun:"lokaal_nr"` // nummer in de outbox van de client (bevestiging)
 	Tijd          time.Time       `json:"tijd" bun:"tijd,default:current_timestamp"`
 	Store         string          `json:"store" bun:"store,notnull"`          // "model:<profielId>" | "structuur" | "kruis"

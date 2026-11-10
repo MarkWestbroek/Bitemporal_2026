@@ -57,6 +57,10 @@ type studioOpsBatchInvoer struct {
 	// met reden "volgnummer_verschoven". Bedoeld voor een merge van een afgeleid project
 	// naar zijn ouder (de 3-weg-merge is berekend op die stand) en als revisiecheck per op.
 	VerwachtLaatsteVolgnummer *int64 `json:"verwachtLaatsteVolgnummer,omitempty"`
+	// Namens (optioneel, werkplaats-plan §4B): de eindgebruiker voor wie een serviceaccount
+	// (bv. omnium-schrijver vanuit Imprint) schrijft. Alleen geaccepteerd van accounts in
+	// OMNIUM_NAMENS_ACCOUNTS (studio_namens.go); actor blijft het serviceaccount.
+	Namens string `json:"namens,omitempty"`
 }
 
 // StudioOpUit is de uitgaande vorm (GET en SSE): camelCase zoals de Studio hem kent.
@@ -64,6 +68,7 @@ type StudioOpUit struct {
 	Volgnummer int64           `json:"volgnummer"`
 	ClientID   string          `json:"clientId"`
 	Actor      string          `json:"actor"`
+	Namens     string          `json:"namens,omitempty"` // eindgebruiker achter een serviceaccount
 	LokaalNr   int64           `json:"lokaalNr,omitempty"`
 	Tijd       time.Time       `json:"tijd"`
 	Store      string          `json:"store"`
@@ -73,7 +78,7 @@ type StudioOpUit struct {
 
 func studioOpUit(o model.StudioProjectOp) StudioOpUit {
 	return StudioOpUit{
-		Volgnummer: o.Volgnummer, ClientID: o.ClientID, Actor: o.Actor, LokaalNr: o.LokaalNr,
+		Volgnummer: o.Volgnummer, ClientID: o.ClientID, Actor: o.Actor, Namens: o.Namens, LokaalNr: o.LokaalNr,
 		Tijd: o.Tijd, Store: o.Store, Op: o.Op, Args: o.Args,
 	}
 }
@@ -88,6 +93,9 @@ func valideerStudioOpsBatch(in *studioOpsBatchInvoer) string {
 	}
 	if len(in.Ops) == 0 {
 		return "Veld 'ops' is leeg."
+	}
+	if n := strings.TrimSpace(in.Namens); n != "" && !namensPatroon.MatchString(n) {
+		return "Veld 'namens' is ongeldig (een gebruikersnaam of e-mailadres, max 128 tekens)."
 	}
 	if len(in.Ops) > studioOpsBatchMax {
 		return "Te veel operaties in één batch (max 500)."
@@ -128,6 +136,12 @@ func MaakStudioProjectOpsToevoegenHandler() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": msg})
 			return
 		}
+		actor := studioActor(c)
+		namens := strings.TrimSpace(in.Namens)
+		if namens != "" && !magNamensSchrijven(actor) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Alleen aangewezen serviceaccounts mogen 'namens' meesturen.", "reden": "namens_niet_toegestaan"})
+			return
+		}
 		ctx := c.Request.Context()
 		tx, err := DB.BeginTx(ctx, nil)
 		if err != nil {
@@ -159,13 +173,12 @@ func MaakStudioProjectOpsToevoegenHandler() gin.HandlerFunc {
 			})
 			return
 		}
-		actor := studioActor(c)
 		nu := time.Now()
 		rijen := make([]model.StudioProjectOp, 0, len(in.Ops))
 		for i, o := range in.Ops {
 			rijen = append(rijen, model.StudioProjectOp{
 				ProjectID: id, Volgnummer: laatste + int64(i) + 1,
-				ClientID: in.ClientID, Actor: actor, LokaalNr: o.LokaalNr, Tijd: nu,
+				ClientID: in.ClientID, Actor: actor, Namens: namens, LokaalNr: o.LokaalNr, Tijd: nu,
 				Store: o.Store, Op: o.Op, Args: o.Args,
 			})
 		}
