@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.38.3] — 2026-11-10
+
+Patch, samen met devloop 0.28.3 (api 0.25.0). render blijft 0.4.2.
+
 ### Toegevoegd
 - **Projectnaam in de menubalk** (Mark 10-11): achter *Project* staat de naam van het open project; een branch
   krijgt "⑂ naam (van MAIN)" met de herkomstregel als tooltip.

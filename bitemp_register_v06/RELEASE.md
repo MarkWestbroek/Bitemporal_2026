@@ -8,6 +8,22 @@
 
 ---
 
+## studio 0.38.3 / devloop 0.28.3 (2026-11-10)
+
+Patch (akkoord Mark 10-11). render blijft 0.4.2; devloop 0.28.3 is api 0.25.0 met studio 0.38.3.
+
+- Canvas: na een diagramwissel nam een element de maat mee die je hem op het vorige diagram met de
+  muis gaf; lijnen eindigden dan naast het vak in het niets (evenementen-branch). Opgelost.
+- Projectsync: een antwoord dat nog onderweg was voor het vorige project (MAIN ↔ branch) wordt
+  genegeerd.
+- Menubalk: de naam van het open project naast *Project*; een branch als "⑂ naam (van MAIN)".
+
+Uitrol:
+- App: `viz-frontend:0.38.3` via `update.sh`.
+- Fundament: `bitemp-devloop:0.28.3`, door FUNDAMENT.
+
+---
+
 ## studio 0.38.2 / devloop 0.28.2 (2026-11-10)
 
 Patch (akkoord Mark 10-11). render blijft 0.4.2; devloop 0.28.2 is api 0.25.0 met studio 0.38.2.

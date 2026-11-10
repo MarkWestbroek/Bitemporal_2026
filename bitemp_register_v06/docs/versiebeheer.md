@@ -61,7 +61,10 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.38.2`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.38.3`**
+  (2026-11-10, patch: node-maat per diagram — geen lijnen in het niets na een diagramwissel;
+  projectwissel negeert een antwoord van het vorige project; projectnaam in de menubalk; samen met
+  devloop 0.28.3), na **`studio/v0.38.2`**
   (2026-11-10, patch: `erft` ook voor een entiteit op geen meegebracht diagram; samen met devloop 0.28.2), na **`studio/v0.38.1`**
   (2026-11-10, patch: V3-delta-import houdt `erft` en maakt een V3.1-veld zonder goType/verplicht
   niet meer verplicht; samen met devloop 0.28.1), na **`studio/v0.38.0`**
@@ -138,7 +141,7 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
 - Backend: **`api/v0.25.0`** (2026-11-10: `GET …/model/:profiel` via de render-sidecar, één branch
-  per ouder + map; devloop-image 0.28.0; 0.28.1 = dezelfde api met studio 0.38.1; 0.28.2 met studio 0.38.2). Daarvoor **`api/v0.24.0`** (2026-11-10: `GET …/vergelijk` via de render-sidecar en `namens` op het
+  per ouder + map; devloop-image 0.28.0; 0.28.1 = dezelfde api met studio 0.38.1; 0.28.2 met studio 0.38.2; 0.28.3 met studio 0.38.3). Daarvoor **`api/v0.24.0`** (2026-11-10: `GET …/vergelijk` via de render-sidecar en `namens` op het
   operatielog; devloop-image 0.27.0; 0.27.1 = dezelfde api met studio 0.37.0; 0.27.2 met studio 0.37.1; 0.27.3 met studio 0.38.0). Daarvoor **`api/v0.23.0`** (2026-11-10: afgeleide projecten — afsplitsen, basis en herkomst;
   `verwachtLaatsteVolgnummer` op `/ops`; devloop-image 0.26.0). Daarvoor **`api/v0.22.3`** (2026-11-08, patch: de startup-rebuild genereert het
   standaardpakket alleen als het expliciet gegenereerd was — vlag `gegenereerd` op
