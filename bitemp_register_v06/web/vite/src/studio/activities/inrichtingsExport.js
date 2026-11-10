@@ -21,6 +21,9 @@ import { collectMapModel } from "./transformaties.js";
 import { exporteerV3 } from "../../diagramprofielen/canoniek-uml/serialisatie.js";
 import { getProfieltype } from "../profieltypeRegistry";
 import { voerInrichtingsExportUit } from "../../transformatie/inrichtingsExport.js";
+import { fdsUitProfiel } from "../../transformatie/fdFormulier.js";
+import { formulierModelNaarLayout } from "../../diagramprofielen/formulier/adapter.js";
+import { losInvoegingenOp } from "../../shared/formulierInvoegen.js";
 import { maakZip } from "../../transformatie/sjabloon/zip.js";
 
 const CANONIEK = "diagram05";
@@ -106,6 +109,15 @@ registreerTransformatie({
       const st = getProfieltype(m[1])?.useStore.getState();
       if (st?.elements) bpmnModellen[naam] = { model_naam: `Studio-project, profiel ${m[1]}`, model: { elements: st.elements, diagrams: st.diagrams || {} } };
     }
+    // Formulieren uit het project (Mark 10-11, TRANSFORMATIES §11.19): de FD's in het Studio-profiel formulierdiagram (diagramtype formulier).
+    let formulierDefinities = null;
+    if ((edienst.artefacten || []).some((a) => a.formulierDefinitie)) {
+      const st = getProfieltype("formulierdiagram")?.useStore.getState();
+      formulierDefinities = st?.elements ? fdsUitProfiel(st, formulierModelNaarLayout) : {};
+      // Sjablonen (invoegen) bij het lezen oplossen, met dezelfde regels als renderer en CLI.
+      const zoek = (code) => formulierDefinities[code]?.layout || null;
+      for (const [code, fd] of Object.entries(formulierDefinities)) formulierDefinities[code] = { ...fd, layout: losInvoegingenOp(fd.layout, zoek, { code }) };
+    }
     const peiltijdstip = String(opties.peiltijdstip || "").trim() || new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
     const haalJson = opties.vergelijk ? registerLezer(opties.register || STANDAARD_REGISTER, String(opties.token || "").trim()) : null;
     const { datatypes } = (await import("../../transformatie/gegevenstypen.snapshot.json")).default;
@@ -114,7 +126,7 @@ registreerTransformatie({
     // V3.1-veldsleutels de omzetting overleven (BACKLOG §39; e2e 37 bewaakt dit).
     // Bron logisch-model: het canonieke profiel van de map, met de diagrammen; bij een gekozen V3-bestand komt hij uit V3.
     const canoniekDeel = opties.model ? null : collectMapModel(bronMap)[CANONIEK] || null;
-    const uit = await voerInrichtingsExportUit({ edienst, modelBestand, datatypen: datatypes, referentieBestanden, bpmnModellen, canoniekDeel, peiltijdstip, haalJson, sha256Hex });
+    const uit = await voerInrichtingsExportUit({ edienst, modelBestand, datatypen: datatypes, referentieBestanden, bpmnModellen, canoniekDeel, formulierDefinities, peiltijdstip, haalJson, sha256Hex });
     const e = edienst.edienst || {};
     download(`inrichting-${veilig(e.naam)}-${e.versienummer || "0"}.zip`, maakZip(uit.bestanden), "application/zip");
 
