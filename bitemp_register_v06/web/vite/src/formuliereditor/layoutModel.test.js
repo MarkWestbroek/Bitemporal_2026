@@ -108,3 +108,23 @@ test("valideer vlagt dubbele paden en onbekende paden", () => {
   assert.ok(meldingen.some((m) => /2×/.test(m.tekst)), "dubbel pad gemeld");
   assert.ok(meldingen.some((m) => /Onbekend veldpad: X\.Y\.z/.test(m.tekst)), "onbekend pad gemeld");
 });
+
+test("valideer (10-11): stap alleen onder de wortel en alles-of-niets, invoegen met code, verplicht niet opheffen, key uniek", () => {
+  const root = {
+    type: "formulier",
+    elementen: [
+      { type: "stap", label: "Een", elementen: [
+        { type: "veld", veld: "A.b.c", verplicht: false, key: "k" },
+        { type: "groep", elementen: [{ type: "stap", label: "Fout", elementen: [] }] },
+        { type: "invoegen" },
+      ] },
+      { type: "veld", veld: "A.b.d", key: "k" },
+    ],
+  };
+  const teksten = valideer(root, null, { verplichtePaden: new Set(["A.b.c"]) }).map((m) => `${m.niveau}: ${m.tekst}`);
+  assert.ok(teksten.some((t) => /helemaal uit stappen/.test(t)));
+  assert.ok(teksten.some((t) => /^fout: Stap Fout staat niet direct/.test(t)));
+  assert.ok(teksten.some((t) => /^fout: Invoegen zonder formulier-code/.test(t)));
+  assert.ok(teksten.some((t) => /^fout: A\.b\.c is verplicht in het model/.test(t)));
+  assert.ok(teksten.some((t) => /Sleutel k komt 2×/.test(t)));
+});

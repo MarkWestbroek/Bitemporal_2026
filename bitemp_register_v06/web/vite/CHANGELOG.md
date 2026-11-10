@@ -9,6 +9,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **FormulierDefinitie voor e-diensten (FORMULIERDEFINITIES.md §2.6).** Nieuw, allemaal optioneel:
+  - `stap` (pagina, alleen onder de wortel);
+  - op een veld: `verplicht` (alleen strenger dan het model), `key` (stabiele sleutel) en `elementId` (GE in het Studio-model);
+  - de vorm `bestand` (`accept`, `maxBytes`, `resizeTo`, `documentTitle`);
+  - `invoegen {formulier}`: een sjabloon, opgelost bij het lezen (`shared/formulierInvoegen.js`; een cyclus is een fout);
+  - een conditiewaarde met een type (`true` blijft boolean).
+
+  Het profiel `formulier` en de formuliereditor kennen ze; de editor controleert stappen, verplicht en dubbele sleutels. In de profiel-round-trip gaat niets meer verloren: onbekende eigenschappen reizen mee in `overig`.
 - **Werkplaats (TRANSFORMATIES §11.18).** Een levering is aanwijsbaar: `artefactHerkomst` noemt `generatie`
   (CLI `--generatie`, standaard de naam van de uitvoermap), `studioProjectId` en `totVolgnummer`. De bron
   `edienstmodel` krijgt per veld van het model een traceregel `gekozen`/`weggelaten`. Bij elk formulier komt

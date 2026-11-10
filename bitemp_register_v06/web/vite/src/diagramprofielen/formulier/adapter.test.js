@@ -147,3 +147,32 @@ test("round-trip: vorm + vormConfig (image-map) op veld en lijst blijven behoude
   assert.equal(typeof lijst.data.vormConfig, "string", "node-data zijn strings");
   assert.deepEqual(formulierModelNaarLayout(m).layout, lay);
 });
+
+// ── FD-uitbreidingen voor e-diensten (10-11) ─────────────────────────────
+test("round-trip: stap, invoegen, key/verplicht/elementId, getypte conditie, code en onbekende eigenschappen", () => {
+  const gpk = {
+    type: "formulier",
+    elementen: [
+      { type: "stap", key: "soort-kaart", label: "Soort kaart", elementen: [
+        { type: "veld", veld: "Gpk.kaart.soort", key: "soort", label: "Welke kaart?", verplicht: true, elementId: "Gpk_Kaart", uitleg: "gpk-soort" },
+        { type: "conditioneel", conditie: { veld: "Gpk.kaart.eerdereKaart", op: "==", waarde: true }, dan: [
+          { type: "veld", veld: "Gpk.kaart.nummer", validatie: { pattern: "^[0-9]+$" } },
+        ] },
+      ] },
+      { type: "stap", key: "pasfoto", label: "Pasfoto", elementen: [
+        { type: "lijst", bron: "Gpk.bijlagen", min: 1, max: 1, elementen: [
+          { type: "veld", veld: "naam", vasteWaarde: "pasfoto" },
+          { type: "veld", veld: "documentUrl", key: "pasfoto", verplicht: true, vorm: "bestand", vormConfig: { accept: ["image/jpeg"], resizeTo: { width: 2000, height: 2000 } } },
+        ] },
+        { type: "invoegen", formulier: "aanvraag-algemeen" },
+      ] },
+    ],
+  };
+  const m = layoutNaarFormulierModel(gpk, { naam: "GPK", code: "gpk-aanvragen", doeltype: "Gpk" });
+  const typen = Object.values(m.elements).map((e) => e.elementType);
+  assert.ok(typen.includes("stap") && typen.includes("invoegen"));
+  const terug = formulierModelNaarLayout(m);
+  assert.deepEqual(terug.layout, gpk);
+  assert.equal(terug.meta.code, "gpk-aanvragen");
+  assert.strictEqual(terug.layout.elementen[0].elementen[1].conditie.waarde, true, "vinkje blijft boolean");
+});

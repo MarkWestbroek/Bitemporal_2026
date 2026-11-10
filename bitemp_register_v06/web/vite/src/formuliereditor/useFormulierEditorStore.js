@@ -184,8 +184,9 @@ export const useFormulierEditorStore = create((set, get) => ({
   /** Voeg een groep/rij/conditioneel toe (leeg). */
   voegContainerToe(type) {
     const { root, selectieId } = get();
-    const parentId = bepaalDoelContainer(root, selectieId);
-    const extra = type === "groep" ? { label: "Nieuwe groep" } : {};
+    // Een stap staat altijd direct onder de wortel (10-11).
+    const parentId = type === "stap" ? root._id : bepaalDoelContainer(root, selectieId);
+    const extra = type === "groep" ? { label: "Nieuwe groep" } : type === "stap" ? { label: "Nieuwe stap" } : type === "invoegen" ? { formulier: "" } : {};
     const el = nieuwElement(type, extra);
     get()._push(voegToe(root, parentId, el));
     set({ selectieId: el._id });
@@ -260,7 +261,8 @@ export const useFormulierEditorStore = create((set, get) => ({
   meldingen() {
     const { root, veldInfo } = get();
     const bekend = new Set(Object.keys(veldInfo));
-    return valideer(root, bekend);
+    const verplichtePaden = new Set(Object.entries(veldInfo).filter(([, v]) => v?.verplicht).map(([p]) => p));
+    return valideer(root, bekend, { verplichtePaden });
   },
 }));
 

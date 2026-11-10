@@ -16,6 +16,16 @@
  *   - Volgorde is betekenisvol in een formulier: compartiment-velden en
  *     `bevat`-connectoren dragen een `volgorde`-index in hun data zodat de
  *     serialisatie (P2) de formulier-volgorde kan reconstrueren.
+ *
+ * Uitbreidingen voor e-diensten (10-11, akkoord Mark; FORMULIERDEFINITIES.md §2.6):
+ *   - `stap`: een pagina, alleen direct onder `formulier`;
+ *   - veld: `key` (stabiele sleutel), `verplicht` (alleen strenger dan het model), `elementId`
+ *     (Studio-id van het GE, naast het veldpad; naamtoets), `beschrijving`;
+ *   - vorm `bestand` (src/vormen/vormen.js);
+ *   - `invoegen {formulier}`: de layout van een ander formulier, opgelost bij het lezen
+ *     (shared/formulierInvoegen.js);
+ *   - `code` op het formulier; een conditiewaarde met een type (`conditieWaardeType`).
+ * Wat het profiel niet kent, gaat via `overig` (JSON) ongeschonden mee in de round-trip.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { VORMEN } from "../../vormen/vormen.js";
@@ -23,6 +33,8 @@ import { VORMEN } from "../../vormen/vormen.js";
 export const FORMULIER_ID = "formulier";
 
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
+/** Eigenschappen die het profiel (nog) niet kent, als JSON: zo verliest de round-trip niets. */
+const OVERIG_VELD = { key: "overig", label: "overige eigenschappen (JSON)", datatype: "tekst" };
 
 /**
  * vorm + vormConfig (formulier 3.0, ontwerp "Invoersoort en vorm" §9b): de vorm kiest uit de
@@ -43,7 +55,11 @@ const fieldTypes = [
     viewer: "naam-type",
     properties: [
       { key: "veld", label: "veldpad", datatype: "string", verplicht: true },
+      { key: "key", label: "sleutel (stabiel; standaard de veldnaam)", datatype: "string" },
       { key: "label", label: "label", datatype: "string" },
+      { key: "beschrijving", label: "beschrijving (helptekst)", datatype: "tekst" },
+      { key: "verplicht", label: "verplicht (alleen strenger dan het model)", datatype: "boolean" },
+      { key: "elementId", label: "element-id (GE in het model)", datatype: "string" },
       { key: "breedte", label: "breedte", datatype: "string" },
       ...VORM_VELDEN,
       { key: "widget", label: "widget (verouderd; gebruik vorm)", datatype: "string" },
@@ -51,12 +67,15 @@ const fieldTypes = [
       { key: "vasteWaarde", label: "vaste waarde (niet getoond; in een lijst óók filter)", datatype: "string" },
       { key: "kopieerNaar", label: "kopieer naar (vol pad)", datatype: "string" },
       { key: "nieuwFormulier", label: "nieuw-formulier (FD-id, relatie naar ENT)", datatype: "string" },
+      OVERIG_VELD,
     ],
   },
 ];
 
 /** Containertypes die kinderen (containers) mogen bevatten via `bevat`. */
-const CONTAINERS = ["formulier", "groep", "rij", "lijst", "conditioneel"];
+const CONTAINERS = ["formulier", "stap", "groep", "rij", "lijst", "conditioneel"];
+/** Wat een `bevat` mag aanwijzen: de containers (behalve de wortel) en `invoegen` (een blad). */
+const BEVATBAAR = [...CONTAINERS.filter((t) => t !== "formulier"), "invoegen"];
 
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
@@ -67,10 +86,27 @@ const elementTypes = [
     shape: "class-box",
     kleur: "#ddd6fe",
     properties: [
+      { key: "code", label: "code (leesbare sleutel)", datatype: "string" },
       { key: "doeltype", label: "doeltype (ENT)", datatype: "string" },
       { key: "status", label: "status", datatype: "string" },
       { key: "isStandaard", label: "standaard", datatype: "boolean" },
       { key: "definitieVersie", label: "definitie-versie", datatype: "string" },
+      KLEUR_VELD,
+    ],
+    compartments: [{ id: "velden", label: null, fieldType: "veld" }],
+  },
+  {
+    // Een pagina (10-11). Alleen direct onder het formulier; heeft een formulier stappen, dan
+    // bestaat het helemaal uit stappen (zie valideerFormulierLayout).
+    id: "stap",
+    label: "Stap",
+    kort: "STP",
+    shape: "class-box",
+    kleur: "#ede9fe",
+    properties: [
+      { key: "key", label: "sleutel (stabiel)", datatype: "string" },
+      { key: "beschrijving", label: "beschrijving", datatype: "tekst" },
+      OVERIG_VELD,
       KLEUR_VELD,
     ],
     compartments: [{ id: "velden", label: null, fieldType: "veld" }],
@@ -120,9 +156,25 @@ const elementTypes = [
       { key: "conditieVeld", label: "conditie: veld", datatype: "string" },
       { key: "conditieOp", label: "conditie: operator", datatype: "string" },
       { key: "conditieWaarde", label: "conditie: waarde", datatype: "string" },
+      // Een vinkje vergelijkt met true, niet met "true" (neutraal contract: gelijkAan houdt het type).
+      { key: "conditieWaardeType", label: "conditie: type van de waarde", datatype: "keuze",
+        opties: [{ waarde: "", label: "tekst" }, { waarde: "boolean", label: "ja/nee" }, { waarde: "number", label: "getal" }] },
       KLEUR_VELD,
     ],
     compartments: [{ id: "velden", label: null, fieldType: "veld" }],
+  },
+  {
+    // Een ander formulier (sjabloon) op deze plek, opgelost bij het lezen, niet gekopieerd (10-11).
+    id: "invoegen",
+    label: "Invoegen",
+    kort: "INV",
+    shape: "class-box",
+    kleur: "#f1f5f9",
+    properties: [
+      { key: "formulier", label: "formulier (code van het sjabloon)", datatype: "string", verplicht: true },
+      OVERIG_VELD,
+      KLEUR_VELD,
+    ],
   },
   {
     id: "notitie",
@@ -141,7 +193,7 @@ const elementTypes = [
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: CONTAINERS },
-    doel: { elementTypes: CONTAINERS.filter((t) => t !== "formulier") },
+    doel: { elementTypes: BEVATBAAR },
     edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#64748b", markerStart: "ruit" },
     properties: [{ key: "volgorde", label: "volgorde", datatype: "string" }],
   },
