@@ -134,6 +134,28 @@ export function materialiseer({ profiel, ops = [] }) {
 }
 
 /**
+ * Eén profiel nagespeeld (10-11, voor GET /api/studio/projecten/:id/model/:profiel van BACKEND en
+ * laag 2 van de werkplaats op Imprint): het profiel uit de blob plus alleen de ops op zijn eigen
+ * store (`model:<profielId>`). Ops op structuur of kruis raken het profiel niet; die worden
+ * overgeslagen (en geteld). → `{profiel, nagespeeld, overgeslagen, meldingen}`; een op die niet
+ * na te spelen is staat in `meldingen` (regel "OPS").
+ *
+ * @param {{profielId: string, profiel: any, ops?: any[]}} p
+ */
+export function materialiseerProfiel({ profielId, profiel, ops = [] }) {
+  const store = `model:${profielId}`;
+  const eigen = (ops || []).filter((o) => o?.store === store);
+  const werkbestand = { formaat: "studio-project", versie: 3, profielen: { [profielId]: profiel || { elements: {}, diagrams: {} } } };
+  const r = materialiseer({ profiel: werkbestand, ops: eigen });
+  return {
+    profiel: r.werkbestand?.profielen?.[profielId] ?? null,
+    nagespeeld: r.nagespeeld,
+    overgeslagen: (ops || []).length - eigen.length,
+    meldingen: (r.problemen || []).map((bericht) => ({ regel: "OPS", bericht: typeof bericht === "string" ? bericht : JSON.stringify(bericht) })),
+  };
+}
+
+/**
  * @param {{basis: {profiel: any, ops?: any[]}, tak: {profiel: any, ops?: any[]}, main: {profiel: any, ops?: any[]}, mapId?: string|null}} p
  */
 export function vergelijkProjecten({ basis, tak, main, mapId = null }) {

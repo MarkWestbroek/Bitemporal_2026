@@ -281,6 +281,18 @@ werkbestanden passen niet onder de standaardgrens van 5 MB (`RENDER_SVC_MAX_BYTE
 heeft daarom een eigen grens, `RENDER_SVC_MAX_BYTES_VERGELIJK` (standaard 32 MB), zodat er in
 compose of k8s niets ingesteld hoeft te worden.
 
+### `POST /materialiseer` (sidecar): één profiel nagespeeld — ✅ gebouwd (10-11, nog niet uitgebracht)
+
+Voor `GET /api/studio/projecten/:id/model/:profiel` (BACKEND) en laag 2 van de werkplaats op
+Imprint, zodat die de store-semantiek niet hoeft na te bouwen. Body `{profielId, profiel, ops?}`:
+`profiel` = `inhoud.profielen[profielId]` uit de blob, `ops` in de vorm van `GET …/ops`. Alleen ops
+op `model:<profielId>` worden nagespeeld; ops op andere stores (structuur, kruis) raken het
+profiel niet en worden overgeslagen. Antwoord 200: `{profiel: {elements, diagrams, …} (dezelfde vorm
+als in de blob), nagespeeld, overgeslagen, meldingen: [], renderVersie}`; 422 met `meldingen`
+(`{regel: "OPS", bericht}`) als een op niet na te spelen is; 400 bij ongeldige invoer. Ook als
+`/api/materialiseer`. Grens als `/vergelijk` (`RENDER_SVC_MAX_BYTES_VERGELIJK`). Code:
+`materialiseerProfiel` in `render-svc/studioProfielen.js`.
+
 ## Eisen aan de SVG (afspraken met Imprint)
 
 - `viewBox`, **geen** `width`/`height` op `<svg>`.
