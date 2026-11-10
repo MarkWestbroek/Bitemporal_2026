@@ -8,6 +8,8 @@ package handlers
 // studio_project_ops, die al die onderdelen een tak zou moeten leren.
 //
 //   POST /api/studio/projecten/:id/afsplitsen  {naam, mapId?, id?}  → 201 meta van de branch
+//                                              409 {reden: "branch_bestaat", projectId} als er al een
+//                                              niet-gearchiveerde branch van deze ouder voor die mapId is
 //   GET  /api/studio/projecten/:id/basis                            → de basis (alleen voor een branch)
 //
 // Afsplitsen gebeurt in één transactie met FOR UPDATE op de ouder; POST /ops en PUT nemen
@@ -113,6 +115,23 @@ func MaakStudioProjectAfsplitsenHandler() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Project lezen mislukt: " + err.Error()})
 			return
+		}
+		// Eén branch per ouder + map (besluit Mark 10-11): de Studio ("Branch maken") en de
+		// werkplaats (automatisch per dienstmap) moeten op dezelfde branch uitkomen. Het slot op
+		// de ouder maakt deze controle atomair. Zonder mapId mogen er meer zijn.
+		if mapID := strings.TrimSpace(in.MapID); mapID != "" {
+			var bestaand []string
+			if err := tx.NewSelect().Model((*model.StudioProject)(nil)).Column("id").
+				Where("ouder_project_id = ? AND map_id = ? AND NOT gearchiveerd", ouderID, mapID).
+				OrderExpr("aangemaakt DESC").Limit(1).Scan(ctx, &bestaand); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Bestaande branches lezen mislukt: " + err.Error()})
+				return
+			}
+			if len(bestaand) > 0 {
+				c.JSON(http.StatusConflict, gin.H{"reden": "branch_bestaat", "projectId": bestaand[0],
+					"error": "Er is al een branch van dit project voor deze map; open die."})
+				return
+			}
 		}
 		var staart []model.StudioProjectOp
 		if err := tx.NewSelect().Model(&staart).

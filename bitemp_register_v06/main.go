@@ -407,6 +407,8 @@ func NewRouter() *gin.Engine {
 	// Verschil branch ↔ ouder via de render-sidecar (studio_project_vergelijk.go); leesrecht op
 	// de ouder controleert de handler zelf.
 	router.GET("/api/studio/projecten/:id/vergelijk", ingelogd, pLezen, handlers.MaakStudioProjectVergelijkHandler())
+	// Actuele stand van één profiel, nagespeeld door de render-sidecar (studio_project_model.go).
+	router.GET("/api/studio/projecten/:id/model/:profiel", ingelogd, pLezen, handlers.MaakStudioProjectModelHandler())
 	// SSE-kanaal (stap 2, onderdeel 5): live operaties van anderen; de hub hangt aan het log.
 	handlers.KoppelStudioSSE()
 	router.GET("/api/studio/projecten/:id/events", ingelogd, pLezen, handlers.MaakStudioProjectEventsHandler())

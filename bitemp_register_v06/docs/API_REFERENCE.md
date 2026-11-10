@@ -775,7 +775,9 @@ van de ouder, de staart-operaties (na `tot_volgnummer`) gekopieerd met **dezelfd
 volgnummer van de ouder, en de basis rauw in `studio_project_basis`. Toegang: de rijen van de ouder,
 plus `schrijven` voor de eigenaar van de ouder; wie afsplitst wordt eigenaar. → `201` meta van de
 branch (met `herkomst`, `laatste_volgnummer` = `basisVolgnummer`, `recht: "beheren"`). `400` bij
-ongeldige invoer, `404` onbekende ouder, `409` als het gekozen id al bestaat. Nieuwe ops op de branch
+ongeldige invoer, `404` onbekende ouder, `409` als het gekozen id al bestaat. Met een `mapId`
+is er per ouder en map hooguit één niet-gearchiveerde branch: een tweede poging geeft `409
+{reden: "branch_bestaat", projectId}` met de bestaande (de Studio en de werkplaats openen die dan). Nieuwe ops op de branch
 tellen door vanaf `basisVolgnummer + 1`. De gekopieerde ops tellen niet mee voor `project_in_gebruik`.
 
 #### `GET /api/studio/projecten/:id/basis`
@@ -794,6 +796,18 @@ scope, meldingen, renderVersie}`) gaat door, aangevuld met `main: {projectId, la
 en `tak: {projectId, laatsteVolgnummer}`. `404` met `reden: "geen_branch"` of `"ouder_weg"`, `413`
 boven 32 MB, `422` van de sidecar ongewijzigd, `502` met `reden: "sidecar"` als de sidecar
 onbereikbaar is of `/vergelijk` niet kent (`handlers/studio_project_vergelijk.go`).
+
+#### `GET /api/studio/projecten/:id/model/:profiel`
+Lezen op het project (ook een branch). De actuele stand van één profiel zonder dat de afnemer de
+Studio-stores hoeft na te bouwen (werkplaats van Imprint). In één transactie (REPEATABLE READ):
+het profiel uit de blob (`inhoud.profielen[profiel]`), de ops op store `model:<profiel>` na
+`tot_volgnummer` en het laatste volgnummer van het project. De render-sidecar speelt na
+(`POST /materialiseer`, vanaf render 0.4.2); ops op `structuur` en `kruis` raken het profiel niet.
+→ de velden van het nagespeelde profiel (`elements`, `diagrams`, …) plus `{projectId, profielId,
+totVolgnummer, laatsteVolgnummer, nagespeeld, meldingen, renderVersie}`. Schrijf daarna met
+`verwachtLaatsteVolgnummer` = `laatsteVolgnummer`. `404` (project, of `reden: "geen_profiel"`),
+`413` boven 32 MB, `422` van de sidecar ongewijzigd, `502` met `reden: "sidecar"`
+(`handlers/studio_project_model.go`).
 
 ### EA-import via de server (sidecar uit git)
 
