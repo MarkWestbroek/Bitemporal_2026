@@ -75,6 +75,13 @@
   background: transparent; border: none; color: var(--s-bar-fg);
   font-size: 13px; cursor: pointer;
 }
+/* Tekst naast een menutitel (10-11): de naam van het open project achter "Project". */
+.studio-menubar__naast {
+  margin-left: 6px; max-width: 280px; display: inline-block; vertical-align: bottom;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 12px; opacity: .7; font-weight: 600;
+}
+.studio-menubar__naast.is-branch { color: #a78bfa; opacity: .95; }
 .studio-menubar__title:hover,
 .studio-menubar__title.is-open { background: var(--s-hover); color: var(--s-bar-fg-active); }
 .studio-menubar__dropdown {

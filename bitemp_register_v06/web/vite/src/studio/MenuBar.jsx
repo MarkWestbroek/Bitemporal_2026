@@ -7,7 +7,7 @@
  *
  * Menu-model:
  *   menus: [
- *     { id, label, items: [
+ *     { id, label, naast?, naastTitel?, naastSoort?, items: [
  *        { id, label, onClick, shortcut?, disabled?, checked?,
  *          badge?, muted? }                                          // gewoon item
  *        { id, label, items: [ … ] }                                 // submenu (flyout)
@@ -15,6 +15,10 @@
  *        { type: "kop", label }                                      // groepskop (niet klikbaar)
  *     ]}
  *   ]
+ *
+ * `naast` (10-11): korte tekst die gedempt achter de menutitel staat, bv. de naam van het open
+ * project achter "Project"; `naastTitel` is de tooltip, `naastSoort` een modifier-klasse
+ * (`is-branch`).
  *
  * `badge` (bv. "preview"/"concept") verschijnt als label-chip achter het item;
  * `muted` dempt het item visueel maar laat het klikbaar (anders dan disabled).
@@ -133,6 +137,11 @@ export default function MenuBar({ menus, links = null, brand = null }) {
               onMouseEnter={() => openId && setOpenId(menu.id)}
             >
               {menu.label}
+              {menu.naast && (
+                <span className={"studio-menubar__naast" + (menu.naastSoort ? ` is-${menu.naastSoort}` : "")} title={menu.naastTitel || menu.naast}>
+                  {menu.naast}
+                </span>
+              )}
             </button>
             {openId === menu.id && <Dropdown items={menu.items} onKies={kies} />}
           </div>

@@ -195,6 +195,10 @@ export function verwerkOp(o, { inclusiefEigen = false } = {}) {
  */
 export async function haalBinnen({ inclusiefEigen = false } = {}) {
   if (!cfg.actief() || !cfg.projectId()) return 0;
+  // Het project waarvoor we ophalen. Wisselt de Studio tijdens het wachten op de server van
+  // project (MAIN ↔ branch, "Van server ophalen"), dan hoort het antwoord bij het vorige project:
+  // niet toepassen en het volgnummer niet opschuiven (10-11).
+  const pid = cfg.projectId();
   let toegepast = 0;
   let meer = true;
   let rondes = 0;
@@ -202,11 +206,13 @@ export async function haalBinnen({ inclusiefEigen = false } = {}) {
     rondes++;
     let uit;
     try {
-      uit = await cfg.haalOpsOp(cfg.projectId(), cfg.laatsteVolgnummer());
+      uit = await cfg.haalOpsOp(pid, cfg.laatsteVolgnummer());
     } catch (e) {
+      if (cfg.projectId() !== pid) return toegepast;
       zet({ stand: e?.status === 404 ? "nietOpServer" : "offline", fout: e?.message || String(e) });
       return toegepast;
     }
+    if (cfg.projectId() !== pid) return toegepast;
     if (uit?.snapshotNodig) {
       // Compactie (onderdeel 6): de operaties tussen ons volgnummer en de grens
       // zijn opgeruimd. Eigen werk eerst weg, dan de snapshot opnieuw laden;
@@ -322,7 +328,11 @@ let bron = null;
 export function startKanaal() {
   stopKanaal();
   if (typeof EventSource === "undefined" || !cfg.actief() || !cfg.projectId()) return;
-  const url = cfg.eventsUrl(cfg.projectId(), cfg.laatsteVolgnummer(), clientId);
+  // Events van een kanaal dat nog bij het vorige project hoort (tussen de projectwissel en het
+  // sluiten van het kanaal door de effect-opruiming) negeren we, net als in haalBinnen.
+  const pid = cfg.projectId();
+  const vanDitProject = () => cfg.projectId() === pid;
+  const url = cfg.eventsUrl(pid, cfg.laatsteVolgnummer(), clientId);
   zet({ kanaal: "verbindt" });
   try {
     bron = new EventSource(url, { withCredentials: true });
@@ -334,6 +344,7 @@ export function startKanaal() {
   // De browser herverbindt zelf (met Last-Event-ID); tot die tijd vangt de poll het op.
   bron.onerror = () => zet({ kanaal: "verbroken" });
   bron.addEventListener("op", (e) => {
+    if (!vanDitProject()) return;
     try {
       const o = JSON.parse(e.data);
       const toegepast = verwerkOp(o);
@@ -343,6 +354,7 @@ export function startKanaal() {
     }
   });
   bron.addEventListener("snapshot", async () => {
+    if (!vanDitProject()) return;
     // Te oud om bij te praten: kanaal dicht, snapshot opnieuw, dan weer verbinden
     // (vanaf de nieuwe grens). Zie haalBinnen voor de poll-variant.
     stopKanaal();
@@ -351,6 +363,7 @@ export function startKanaal() {
     startKanaal();
   });
   bron.addEventListener("presence", (e) => {
+    if (!vanDitProject()) return;
     try {
       const { aanwezig } = JSON.parse(e.data);
       if (Array.isArray(aanwezig)) zet({ aanwezig });
@@ -359,6 +372,7 @@ export function startKanaal() {
     }
   });
   bron.addEventListener("stand", (e) => {
+    if (!vanDitProject()) return;
     try {
       const { laatste } = JSON.parse(e.data);
       if (typeof laatste === "number") cfg.zetLaatsteVolgnummer(Math.max(cfg.laatsteVolgnummer(), laatste));
