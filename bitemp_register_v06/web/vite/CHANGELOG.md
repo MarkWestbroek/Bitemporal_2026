@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.37.1] — 2026-11-10
+
+Patch, samen met render 0.4.1 en devloop 0.27.2 (api 0.24.0).
+
 ### Opgelost
 - **Mapvolgorde hangt niet meer van de klok af.** Een nieuwe of verplaatste map kreeg `volgorde: Date.now()`,
   ook bij het naspelen van operaties. Elke client en elke naspeling kwam daardoor op een andere volgorde uit, en

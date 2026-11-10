@@ -68,6 +68,14 @@ Uitrol:
 
 ---
 
+## studio 0.37.1 / render 0.4.1 / devloop 0.27.2 (2026-11-10)
+
+Patch (akkoord Mark 10-11). De mapvolgorde hangt niet meer van de klok af: na afsplitsen meldde
+*Verschil met MAIN* schijnconflicten op mappen, en clients konden de volgorde verschillend naspelen.
+api blijft 0.24.0; devloop 0.27.2 is api 0.24.0 met studio 0.37.1.
+
+---
+
 ## studio 0.37.0 / render 0.4.0 / devloop 0.27.1 (2026-11-10)
 
 Akkoord Mark 10-11. api blijft 0.24.0; devloop 0.27.1 is api 0.24.0 met studio 0.37.0.
