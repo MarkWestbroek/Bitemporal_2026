@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.38.1] — 2026-11-10
+
+Patch, samen met devloop 0.28.1 (api 0.25.0). render blijft 0.4.2.
+
 ### Opgelost
 - **V3-delta-import verloor `erft`** (melding AI-INRICHTEN 10-11). Overerving kwam alleen als presentatie-edge op
   het afgeleide Overzicht, en dat valt weg zodra het project al iets bevat. Nu wordt `erft` een

@@ -8,6 +8,21 @@
 
 ---
 
+## studio 0.38.1 / devloop 0.28.1 (2026-11-10)
+
+Patch (akkoord Mark 10-11). render blijft 0.4.2; devloop 0.28.1 is api 0.25.0 met studio 0.38.1.
+
+- V3-delta-import (*Importeer V3 in project*): `erft` wordt een `generalisatie`-connector, ook als
+  het project al iets bevat (ging verloren); een V3.1-veld zonder `goType` en zonder `verplicht` is
+  optioneel (werd verplicht). Melding AI-INRICHTEN.
+- E2E-test voor *Branch maken…*.
+
+Uitrol:
+- App: `viz-frontend:0.38.1` via `update.sh`.
+- Fundament: `bitemp-devloop:0.28.1`, door FUNDAMENT.
+
+---
+
 ## api 0.25.0 / devloop 0.28.0 (2026-11-10)
 
 Werkplaats laag 2 (akkoord Mark 10-11). devloop 0.28.0 is api 0.25.0 met studio 0.38.0 (daarin
