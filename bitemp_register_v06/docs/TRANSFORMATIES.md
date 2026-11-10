@@ -534,6 +534,9 @@ is de kale ingang, de live view de ingang met zicht op het effect.
 
 ### 9.5 Volgorde
 
+**Prioriteit (Mark 10-11): hoog** — transformaties horen in de UI en het register als
+configuratie, niet in code of bestanden. Op de backlog als **TRANS-1**.
+
 1. **Live view als lezer** over de ingebouwde regelsets, met de proefbron als
    geplakte tekst of gekozen map. Dwingt de laadroute (9.1) en het bereik (§4)
    uit.
