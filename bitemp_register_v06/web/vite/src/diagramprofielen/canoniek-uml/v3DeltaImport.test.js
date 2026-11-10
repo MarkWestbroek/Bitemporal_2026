@@ -175,3 +175,19 @@ test("delta-import: bestaande generalisaties tellen niet als nieuw of gewijzigd"
   assert.deepEqual(plan.elementen.nieuw.map((r) => r.id), []);
   assert.deepEqual(plan.elementen.gewijzigd.map((r) => r.id), []);
 });
+
+test("delta-import: erft ook voor een nieuwe entiteit die op geen meegebracht diagram staat", () => {
+  const store = projectStore();
+  // Een V3 met eigen diagrammen (zoals de export van een project): importeerV3 maakt dan geen nieuw Overzicht.
+  const v3 = exporteerV3(store.getState()).v3;
+  assert.ok((v3.model.diagrammen || []).length, "de export brengt diagrammen mee");
+  const ouder = v3.model.entiteiten[0];
+  v3.model.entiteiten.push({ typenaam: "LosKind", meervoud: "loskinderen", domein: ouder.domein, erft: ouder.typenaam, gegevenselementen: [] });
+  const { plan } = pasToe(store, v3);
+  const gen = `gen_LosKind__${ouder.typenaam}`;
+  assert.equal(store.getState().elements[gen]?.elementType, "generalisatie");
+  assert.equal(exporteerV3(store.getState()).v3.model.entiteiten.find((e) => e.typenaam === "LosKind")?.erft, ouder.typenaam);
+  assert.ok(plan.elementen.nieuw.some((r) => r.id === "LosKind"));
+  const { plan: opnieuw } = planV3Import(v3, store.getState());
+  assert.deepEqual([...opnieuw.elementen.nieuw, ...opnieuw.elementen.gewijzigd].map((r) => r.id), []);
+});
