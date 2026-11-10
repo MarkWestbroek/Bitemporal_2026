@@ -686,6 +686,12 @@ te wijzigen.
 > map; wat alleen op MAIN veranderde) en een waarschuwing als er nog eigen wijzigingen te verzenden
 > zijn. Een diagram opent met een klik, een element via het eerste diagram waarop het staat. In
 > *Van server ophalen…* staat bij een branch "branch van …".
+> **Maat per diagram (10-11, Mark):** het Studio-canvas heeft geen `key` per diagram; de
+> node-rebuild in `DiagramCanvas.jsx` hergebruikt per id het bestaande React Flow-node-object
+> (measured, dragging, …). Omdat de node-id het elementId is, nam een element bij een
+> diagramwissel zijn React Flow-maat van het vorige diagram mee (width/height na met de muis
+> resizen): vak smal, omhulling en aanhechtpunten breed, lijnen in het niets. Nu alleen
+> hergebruik binnen hetzelfde diagram (`nodesDiagramRef`); e2e `59-studio-maat-per-diagram`.
 > **Projectnaam in de menubalk (10-11, Mark):** achter de menutitel *Project* staat de naam van
 > het open project; bij een branch "⑂ naam (van MAIN-naam)" in paars, met de volledige
 > herkomstregel als tooltip (`projectKop` in `takken/herkomst.js`, menu-veld `naast` in

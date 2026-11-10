@@ -254,6 +254,8 @@ function CanvasBinnenkant({
   // handleSelectionChange geen oude canvas-selectie terug de context in duwt
   // (dat hield elke nieuwe boomselectie op de eerste geselecteerde vast).
   const selectiePropRef = useRef(selectieId);
+  // Het diagram waarvan de huidige React Flow-nodes zijn (zie de node-rebuild hieronder).
+  const nodesDiagramRef = useRef(null);
   const gemeldeSelectieRef = useRef("");
   // Programmatische selectie van een element dat (nog) niet op de canvas
   // staat — bv. net aangemaakt: de prop wijzigt vóór de node bestaat. Zodra
@@ -535,8 +537,16 @@ function CanvasBinnenkant({
     // wijziging). Edges blijven met rust (zie flipper-les hierboven).
     const programmatischElders = selectiePropGewijzigd && !!selectieId && !opDitDiagram && !gedekt;
     if (selectiePropGewijzigd) wachtendeSelectieRef.current = selectieId && !opDitDiagram ? selectieId : null;
+    // Ander diagram in hetzelfde canvas (tabwissel; het canvas heeft geen key per diagram): de
+    // oude nodes NIET hergebruiken. De node-id is het elementId, dus "Aanvraag" van het vorige
+    // diagram nam anders zijn React Flow-maat mee (width/height na resizen, measured): het vak
+    // tekende op zijn eigen maat, maar de omhulling en de aanhechtpunten bleven op de oude, en de
+    // lijnen eindigden naast het vak in het niets (Mark, 10-11, evenementen-branch: 462 breed van
+    // het Besluit-diagram).
+    const zelfdeDiagram = nodesDiagramRef.current === (diagram?.id ?? null);
+    nodesDiagramRef.current = diagram?.id ?? null;
     setNodes((huidige) => {
-      const perIdHuidig = new Map(huidige.map((n) => [n.id, n]));
+      const perIdHuidig = new Map(zelfdeDiagram ? huidige.map((n) => [n.id, n]) : []);
       let geselecteerd = new Set(huidige.filter((n) => n.selected).map((n) => n.id));
       if (programmatisch) {
         // Programmatische selectie (bv. klik in de projectboom) wint: de
