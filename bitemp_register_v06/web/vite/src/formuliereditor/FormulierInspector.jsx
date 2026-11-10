@@ -96,6 +96,32 @@ export default function FormulierInspector() {
     <div className="studio-inspector-pad">
       <h3 style={{ margin: "0 0 2px", fontSize: 13, textTransform: "capitalize" }}>{el.type}</h3>
 
+      {el.type === "stap" && (
+        <>
+          <Regel label="Label (titel van de pagina)">
+            <input style={veldStijl} value={el.label || ""} onChange={(e) => update(el._id, { label: e.target.value })} />
+          </Regel>
+          <Regel label="Sleutel (stabiel; voor generator en werkplaats)">
+            <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.key || ""} onChange={(e) => update(el._id, { key: e.target.value || undefined })} placeholder="bv. soort-kaart" />
+          </Regel>
+          <Regel label="Beschrijving">
+            <input style={veldStijl} value={el.beschrijving || ""} onChange={(e) => update(el._id, { beschrijving: e.target.value || undefined })} />
+          </Regel>
+        </>
+      )}
+
+      {el.type === "invoegen" && (
+        <>
+          <Regel label="Formulier (code van het sjabloon)">
+            <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.formulier || ""} onChange={(e) => update(el._id, { formulier: e.target.value })} placeholder="bv. aanvraag-algemeen" />
+          </Regel>
+          <p style={{ fontSize: 12, color: "var(--s-fg-muted, #94a3b8)" }}>
+            De elementen van dat formulier komen bij het lezen op deze plek; ze worden niet gekopieerd.
+            Een wijziging in het sjabloon geldt dus meteen overal waar het is ingevoegd.
+          </p>
+        </>
+      )}
+
       {el.type === "groep" && (
         <>
           <Regel label="Label (heading)">
@@ -154,6 +180,18 @@ export default function FormulierInspector() {
           </Regel>
           <Regel label="Beschrijving (helptekst)">
             <input style={veldStijl} value={el.beschrijving || ""} onChange={(e) => update(el._id, { beschrijving: e.target.value })} />
+          </Regel>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: 12.5, cursor: "pointer" }}
+            title={veldInfo[el.veld]?.verplicht ? "Het model maakt dit veld verplicht; het formulier kan dat niet opheffen." : "Alleen strenger dan het model"}>
+            <input type="checkbox" checked={!!veldInfo[el.veld]?.verplicht || el.verplicht === true} disabled={!!veldInfo[el.veld]?.verplicht}
+              onChange={(e) => update(el._id, { verplicht: e.target.checked ? true : undefined })} />
+            Verplicht{veldInfo[el.veld]?.verplicht ? " (uit het model)" : ""}
+          </label>
+          <Regel label="Sleutel (stabiel; leeg = de veldnaam)">
+            <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.key || ""} onChange={(e) => update(el._id, { key: e.target.value || undefined })} />
+          </Regel>
+          <Regel label="Element-id (GE in het Studio-model; naast het veldpad)">
+            <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.elementId || ""} onChange={(e) => update(el._id, { elementId: e.target.value || undefined })} />
           </Regel>
           <UitlegEditor el={el} update={update} />
           <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: 12.5, cursor: "pointer" }}>

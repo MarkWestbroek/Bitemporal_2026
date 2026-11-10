@@ -96,6 +96,9 @@ export const VORMEN = Object.freeze({
   "ai-assist":      v("Tekst met AI-assistent", [TEKST], "textarea + assistent", "Tekstvak met ✨: inkorten, herschrijven, aanvullen of een eigen opdracht; de invuller neemt een voorstel over of niet.", { naam: "ai-assist" }),
   "ranking":        v("Rangorde", [MEER_UIT_LIJST], "select (geordend)", "Een volgorde uit een lijst: toevoegen, slepen of ↑↓. De opslag bewaart de volgorde.", { bediening: "Voeg toe wat je kiest en zet het in volgorde: slepen, of met de knoppen ↑ en ↓. Bovenaan is het belangrijkst.", naam: "ranking" }),
   "tag-input":      v("Labels invoeren", [MEER_UIT_LIJST, TEKST], 'appearance="minimal" + labels', "Gekozen waarden als labels in het veld; typen om aan te vullen. Zonder lijst: vrije labels.", { bediening: "Typ en kies uit de lijst (↓ en Enter). Backspace in een leeg veld haalt het laatste label weg.", naam: "tag-input" }),
+  // Bestand (10-11): de inhoud is tekst (de verwijzing naar het document), de vorm een upload.
+  // Omniums eigen renderer heeft nog geen upload; daar valt hij terug op een invoerveld.
+  "bestand":        v("Bestand", [TEKST], 'upload (mediatype="…")', "Een bestand opsturen (bv. een pasfoto); de waarde is de verwijzing naar het document.", { bediening: "Kies een bestand of sleep het hierheen.", naam: "bestand" }),
   "number-stepper": v("Plus-min", [GETAL], "range (knoppen)", "Een getal met − en + knoppen, binnen min en max.", { naam: "number-stepper" }),
 });
 

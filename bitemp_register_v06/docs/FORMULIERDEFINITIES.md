@@ -74,13 +74,18 @@ editor-model `web/vite/src/formuliereditor/layoutModel.js`, profiel `web/vite/sr
 | `veld` | zie §2.2 | één invoerveld |
 | `conditioneel` | `conditie {veld, op, waarde}`, `dan[]` | toon de inhoud alleen als de conditie waar is. `op`: `nietleeg`, `leeg`, `==`, `!=`. (Oudere vorm: `als: "veld == 'x'"`.) |
 | `lijst` | zie §2.3 | herhaalbare sectie voor een **meervoudig** GE of een relatie |
+| `stap` | `key`, `label`, `beschrijving`, `elementen[]` | een pagina (sinds 10-11, §2.6). Alleen direct onder `formulier`; heeft het formulier stappen, dan bestaat het helemaal uit stappen. |
+| `invoegen` | `formulier` (code) | de elementen van een ander formulier op deze plek, opgelost bij het lezen (sinds 10-11, §2.6) |
 
 ### 2.2 Veld
 
 | Eigenschap | Betekenis |
 |---|---|
 | `veld` | **veldpad** `ENT.rol.veld`, bv. `Initiatief.producten.naam` (rol = JSON-rolnaam). Binnen een `lijst` relatief: alleen de veldnaam (`schaal`). |
+| `key` | stabiele sleutel van de vraag (sinds 10-11); leeg = de veldnaam. Component-sleutel in Open Formulieren, adres in de werkplaats; blijft gelijk als het label of het pad verandert. Uniek binnen het formulier. |
 | `label` | eigen label; leeg = de veldnaam uit het model. Vraagnummers horen hier (`"1. Naam van het initiatief"`). |
+| `verplicht` | `true` = verplicht, ook als het model het niet verplicht maakt (sinds 10-11). Alleen strenger: `false` op een veld dat het model verplicht maakt is een fout. |
+| `elementId` | het Studio-id van het GE in het model, naast het veldpad (sinds 10-11). Het veldpad blijft de betekenis; loopt de naam van het element uit de pas met het pad, dan waarschuwt de lezer (naamtoets). Blijft gelijk in een branch. |
 | `beschrijving` | helptekst onder het label |
 | `uitleg`, `uitlegTekst`, `vormUitleg` | het (i)-rondje naast het label: een code uit de uitleglijst, een eigen tekst, en of de bediening van de vorm meekomt (§2.5). Ook op `groep` en `lijst`. |
 | `breedte` | `50%`, `33%`, `25%`, `100%` (binnen een `rij`) |
@@ -208,6 +213,41 @@ dus het is geen tooltip die alleen bij aanwijzen verschijnt.
    en twee inhoud-uitleggen ook in het Engels), plus het formulier.
 2. Open `inhoud.html#/t/initiatieven/nieuw?formulier=aanmelding-portfolio`, of
    `aanmelden.html?formulier=aanmelding-portfolio` als het in `OPENBARE_FORMULIEREN` staat.
+
+### 2.6 Uitbreidingen voor e-diensten (sinds 10-11)
+
+De vorm van een e-dienstformulier is een gewone FormulierDefinitie (besluit Mark 10-11), in het
+Studio-project als profiel `formulier`. De inrichtingsgenerator leest hem (en maakt er het Open
+Formulieren-formulier en formulier-neutraal van), de werkplaats bewerkt hem in de branch van de
+dienst. Daarvoor kwam er bij, allemaal optioneel (oude definities blijven geldig):
+
+- **`stap`**: een pagina. Omniums eigen renderer toont de stappen nog onder elkaar, als sectie met
+  een kop; bladeren per stap komt later. De formuliereditor plaatst een nieuwe stap altijd onder de
+  wortel.
+- **`verplicht`, `key`, `elementId`** op een veld (§2.2).
+- **vorm `bestand`** (§3.1): een upload. `vormConfig`: `accept` (MIME-typen), `maxBytes`,
+  `resizeTo {width, height}` (afbeelding vooraf verkleinen) en `documentTitle` (titel bij de
+  registratie). Sleutels Engels, zoals elke vormConfig (gedeeld contract met Imprint). Omniums
+  renderer heeft nog geen upload en valt terug op een invoerveld.
+- **`invoegen {formulier: <code>}`**: een sjabloon (bv. een algemeen aanvraagformulier) op deze
+  plek. Het element wordt bij het **lezen** vervangen door de `elementen` van de wortel van dat
+  formulier, niet bij het opslaan gekopieerd. Code: `shared/formulierInvoegen.js`
+  (`losInvoegingenOp`, `invoegCodes`); `useFormulierDefinitie(s)` lost het op met de
+  definities die al opgehaald zijn. Een cyclus, een onbekende code of een lege code is een fout;
+  de renderer toont dan "niet ingevoegd". De preview in de formuliereditor lost (nog) niet op.
+- **Conditie met een type**: `conditie.waarde` mag `true`/`false` of een getal zijn (een vinkje
+  vergelijkt met `true`). Het profiel bewaart het type in `conditieWaardeType`.
+- **`code` op het formulier** in het profiel (de `code` uit §1.1), zodat een e-dienst ernaar kan
+  wijzen.
+
+**Profiel en round-trip.** `diagramprofielen/formulier/adapter.js` kent al deze eigenschappen.
+Wat het profiel niet kent (bv. `uitleg`, `validatie`, of iets van later) gaat als JSON in
+`data.overig` mee en komt er ongeschonden weer uit: layout → model → layout is gelijk. Velden zijn
+compartiment-regels van hun container (geen eigen element), met een `volgorde`-index; een vraag
+verplaatsen is dus het bijwerken van één of twee containers.
+
+**Waarden van buiten het formulier** (BSN uit DigiD, moment van indienen, referentie van Open
+Formulieren) horen niet in de FD: dat zijn instellingen van het doel (OF), in de e-dienst.
 
 ## 3. Widgets
 

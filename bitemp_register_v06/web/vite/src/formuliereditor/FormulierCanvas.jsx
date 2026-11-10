@@ -98,10 +98,12 @@ export default function FormulierCanvas() {
       {/* Structuur */}
       <div style={{ flex: "0 0 42%", minWidth: 0, display: "flex", flexDirection: "column", borderRight: "1px solid var(--s-border, #e2e8f0)" }}>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: 10, borderBottom: "1px solid var(--s-border, #e2e8f0)" }}>
+          <button type="button" style={werkBtn} onClick={() => voegContainerToe("stap")} title="Een pagina; altijd direct onder het formulier">+ Stap</button>
           <button type="button" style={werkBtn} onClick={() => voegContainerToe("groep")}>+ Groep</button>
           <button type="button" style={werkBtn} onClick={() => voegContainerToe("rij")}>+ Rij</button>
           <button type="button" style={werkBtn} onClick={() => voegContainerToe("lijst")}>+ Lijst</button>
           <button type="button" style={werkBtn} onClick={() => voegContainerToe("conditioneel")}>+ Conditioneel</button>
+          <button type="button" style={werkBtn} onClick={() => voegContainerToe("invoegen")} title="Een ander formulier (sjabloon) op deze plek">+ Invoegen</button>
           <span style={{ flex: 1 }} />
           <button type="button" style={werkBtn} onClick={undo} title="Ongedaan maken">↶</button>
           <button type="button" style={werkBtn} onClick={redo} title="Opnieuw">↷</button>

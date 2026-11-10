@@ -247,6 +247,21 @@ export const CONFIG_SCHEMAS = {
       minHeight: { type: "number", minimum: 40 },
     },
   },
+  // Bestand (10-11, FD-uitbreiding voor e-diensten): een upload; de waarde is de verwijzing
+  // (URL) naar het opgeslagen document. `accept` = MIME-typen (zoals <input accept>).
+  bestand: {
+    type: "object",
+    properties: {
+      accept: { type: "array", items: { type: "string" }, "x-omschrijving": "toegestane MIME-typen, bv. image/jpeg" },
+      maxBytes: { type: "number", minimum: 1, "x-omschrijving": "grootste bestand in bytes" },
+      resizeTo: {
+        type: "object",
+        properties: { width: { type: "number", minimum: 1 }, height: { type: "number", minimum: 1 } },
+        "x-omschrijving": "afbeelding verkleinen tot binnen deze maat (px), vóór het opsturen",
+      },
+      documentTitle: { type: "string", "x-omschrijving": "titel van het document bij registratie (bv. 'Pasfoto')" },
+    },
+  },
   "number-stepper": {
     type: "object",
     properties: {

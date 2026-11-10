@@ -13,6 +13,12 @@
  *                                                readonly?, beschrijving?, vasteWaarde?, kopieerNaar?, nieuwFormulier? }
  *   - lijst       → herhaalbare sectie         { type, bron: "ENT.GE", label?, widget?, min?, max?, elementen[] }
  *   - conditioneel→ conditioneel blok          { type, als?|conditie?, dan[] }
+ *   - stap        → pagina (alleen onder de wortel) { type, key?, label?, beschrijving?, elementen[] }
+ *   - invoegen    → een ander formulier op deze plek { type, formulier: "<code>" } (shared/formulierInvoegen.js)
+ *
+ * Veld, sinds 10-11 (e-diensten): `key` (stabiele sleutel, standaard de veldnaam), `verplicht`
+ * (alleen strenger dan het model: `false` op een veld dat het model verplicht maakt is een fout)
+ * en `elementId` (Studio-id van het GE, naast het veldpad). Zie FORMULIERDEFINITIES.md §2.6.
  *
  * `vasteWaarde` (niet getoond; vaste waarde bij opvoeren, in een lijst óók het filter
  * van die lijst), `kopieerNaar` (één invoer, twee doelen) en `widget: "meerkeuze"` op
@@ -36,7 +42,7 @@ function nieuwId() {
 }
 
 /** Containertypes die een `elementen`-array hebben. */
-const CONTAINER_MET_ELEMENTEN = new Set(["formulier", "groep", "rij", "lijst"]);
+const CONTAINER_MET_ELEMENTEN = new Set(["formulier", "stap", "groep", "rij", "lijst"]);
 
 /** Kan dit elementtype kinderen bevatten? */
 import { VORMEN, normaliseerVorm, valideerVormConfig } from "../vormen/vormen.js";
@@ -227,13 +233,26 @@ export function verplaats(root, id, richting) {
  * op dezelfde bron (per rol, vaste rijen) herhalen hun velden bewust.
  * Een `vorm` moet bestaan en zijn `vormConfig` voldoen aan het configSchema (src/vormen).
  *
+ * Stappen (10-11): een `stap` staat alleen direct onder de wortel, en heeft de wortel stappen,
+ * dan bestaat hij helemaal uit stappen. `invoegen` vraagt een code. `verplicht: false` op een veld
+ * dat het model verplicht maakt kan niet. Een `key` komt maar één keer voor.
+ *
  * @param {object} root
  * @param {Set<string>} bekendePaden  (optioneel) geldige veldpaden uit het model
+ * @param {{ verplichtePaden?: Set<string> }} [opties]  veldpaden die het model verplicht maakt
  * @returns {Array<{ id, niveau, tekst }>}
  */
-export function valideer(root, bekendePaden = null) {
+export function valideer(root, bekendePaden = null, opties = {}) {
   const meldingen = [];
   const padTelling = new Map();
+  const keyTelling = new Map();
+  const verplichtePaden = opties.verplichtePaden || null;
+
+  const wortelKinderen = Array.isArray(root?.elementen) ? root.elementen : [];
+  const aantalStappen = wortelKinderen.filter((k) => k?.type === "stap").length;
+  if (aantalStappen > 0 && aantalStappen < wortelKinderen.length) {
+    meldingen.push({ id: root._id, niveau: "waarschuwing", tekst: "Een formulier met stappen bestaat helemaal uit stappen: zet de losse elementen in een stap." });
+  }
 
   const controleerVorm = (el, wat) => {
     if (!el.vorm) return;
@@ -244,8 +263,16 @@ export function valideer(root, bekendePaden = null) {
     }
   };
 
-  const loop = (el, bron) => {
+  const loop = (el, bron, ouder) => {
     if (!el) return;
+    if (el.key) keyTelling.set(el.key, (keyTelling.get(el.key) || 0) + 1);
+    if (el.type === "stap" && ouder !== root) {
+      meldingen.push({ id: el._id, niveau: "fout", tekst: `Stap ${el.label || ""} staat niet direct onder het formulier.`.replace("  ", " ") });
+    }
+    if (el.type === "invoegen") {
+      if (!el.formulier) meldingen.push({ id: el._id, niveau: "fout", tekst: "Invoegen zonder formulier-code." });
+      return;
+    }
     if (el.type === "veld") {
       const pad = el.veld || "";
       if (!pad) {
@@ -258,13 +285,20 @@ export function valideer(root, bekendePaden = null) {
         meldingen.push({ id: el._id, niveau: "waarschuwing", tekst: `Onbekend veldpad: ${vol}` });
       }
       controleerVorm(el, vol);
+      if (el.verplicht === false && verplichtePaden?.has(vol)) {
+        meldingen.push({ id: el._id, niveau: "fout", tekst: `${vol} is verplicht in het model; het formulier kan dat niet opheffen.` });
+      }
       return;
     }
     if (el.type === "lijst" || el.type === "groep") controleerVorm(el, el.label || el.bron || el.type);
     const binnen = el.type === "lijst" ? el.bron || bron : bron;
-    for (const k of [...(el.elementen || []), ...(el.dan || [])]) loop(k, binnen);
+    for (const k of [...(el.elementen || []), ...(el.dan || [])]) loop(k, binnen, el);
   };
-  loop(root, null);
+  loop(root, null, null);
+
+  for (const [key, n] of keyTelling) {
+    if (n > 1) meldingen.push({ id: null, niveau: "waarschuwing", tekst: `Sleutel ${key} komt ${n}× voor.` });
+  }
 
   for (const [pad, n] of padTelling) {
     if (n > 1) {
@@ -279,6 +313,8 @@ export function elementLabel(el) {
   if (!el) return "";
   switch (el.type) {
     case "formulier": return "Formulier";
+    case "stap": return el.label ? `Stap · ${el.label}` : "Stap";
+    case "invoegen": return `Invoegen · ${el.formulier || "?"}`;
     case "groep": return el.label ? `Groep · ${el.label}` : "Groep";
     case "rij": return "Rij";
     case "lijst": return `Lijst · ${el.label || el.bron || "?"}${el.widget === "meerkeuze" ? " (meerkeuze)" : Number(el.min) > 0 && el.min === el.max ? " (vaste rij)" : " (meervoudig)"}`;

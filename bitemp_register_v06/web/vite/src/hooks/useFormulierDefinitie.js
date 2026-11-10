@@ -2,6 +2,39 @@ import { useState, useEffect } from "react";
 import { useSchema } from "../context/SchemaContext";
 import { safeArray } from "../shared/schemaUtils";
 import { actueleData as vindActueleData } from "../shared/actueleData";
+import { losInvoegingenOp } from "../shared/formulierInvoegen";
+
+/**
+ * Opzoekfunctie code → layout over alle (niet-afgevoerde) definities, voor `invoegen`
+ * (10-11, shared/formulierInvoegen.js). Een actieve definitie wint van een concept.
+ */
+function sjabloonZoeker(items) {
+  const perCode = new Map();
+  for (const full of items) {
+    if (!full || full.afvoer) continue;
+    const meta = vindActueleData(full, "formulier_definitie_metas");
+    const code = meta?.code;
+    if (!code) continue;
+    if (perCode.has(code) && meta?.status !== "actief") continue;
+    const ld = vindActueleData(full, "formulier_definitie_layouts");
+    try {
+      if (ld?.layout_json) perCode.set(code, JSON.parse(ld.layout_json));
+    } catch {
+      /* ongeldige layout: niet als sjabloon bruikbaar */
+    }
+  }
+  return (code) => perCode.get(code) || null;
+}
+
+/** Layout met `invoegen` opgelost; bij een fout (cyclus, onbekende code) de fout als tekst. */
+function metInvoegingen(layout, zoek, code) {
+  if (!layout) return { layout, fout: null };
+  try {
+    return { layout: losInvoegingenOp(layout, zoek, { code }), fout: null };
+  } catch (e) {
+    return { layout, fout: e?.message || String(e) };
+  }
+}
 
 /**
  * useFormulierDefinitie — haalt de actieve FormulierDefinitie op voor een gegeven doeltype.
@@ -69,6 +102,9 @@ export function useFormulierDefinitie(doeltype) {
             setError("Ongeldige layout JSON in FormulierDefinitie");
           }
         }
+        const opgelost = metInvoegingen(parsedLayout, sjabloonZoeker(items), metaData?.code);
+        parsedLayout = opgelost.layout;
+        if (opgelost.fout) setError(opgelost.fout);
 
         setFormulierDefinitie({ id: match.id, meta: metaData, layoutRaw: layoutData });
         setLayout(parsedLayout);
@@ -117,7 +153,9 @@ export function useFormulierDefinities(doeltype) {
       .then((lijst) => {
         if (cancelled) return;
         const uit = [];
-        for (const full of safeArray(lijst?.["formulier definities"])) {
+        const alle = safeArray(lijst?.["formulier definities"]);
+        const zoek = sjabloonZoeker(alle);
+        for (const full of alle) {
           if (!full || full.afvoer) continue;
           const meta = vindActueleData(full, "formulier_definitie_metas");
           if ((doeltype !== "*" && meta?.doeltype !== doeltype) || meta?.status !== "actief") continue;
@@ -129,6 +167,9 @@ export function useFormulierDefinities(doeltype) {
             layout = null;
           }
           if (!layout) continue;
+          // Een fout bij invoegen (cyclus, onbekende code) laat het `invoegen`-element staan; de
+          // renderer zegt dan dat het formulier daar niet is ingevoegd.
+          layout = metInvoegingen(layout, zoek, meta?.code).layout;
           uit.push({ id: full.id, meta, layout, isStandaard: meta.is_standaard === true || meta.is_standaard === "true" });
         }
         uit.sort((a, b) => Number(b.isStandaard) - Number(a.isStandaard) || String(a.meta?.naam || "").localeCompare(String(b.meta?.naam || "")));

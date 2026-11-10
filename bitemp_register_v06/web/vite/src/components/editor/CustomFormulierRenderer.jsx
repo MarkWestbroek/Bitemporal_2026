@@ -178,6 +178,29 @@ export default function CustomFormulierRenderer({
         );
       }
 
+      // Stap (10-11): een pagina. Hier nog als sectie met een kop onder elkaar; bladeren per
+      // stap komt later. Zonder zichtbare inhoud niet tonen, net als een groep.
+      case "stap": {
+        const kinderen = (element.elementen || []).map((child, i) => renderElement(child, i, scope));
+        if (kinderen.every((k) => k == null)) return null;
+        return (
+          <section key={index} className="cg-form-stap" data-stap={element.key || undefined} style={{ marginBottom: "1.5rem" }}>
+            {element.label && <h2 className="utrecht-heading-2" style={{ fontSize: "1.2rem", margin: "0 0 0.5rem" }}>{element.label}</h2>}
+            {element.beschrijving && <div className="utrecht-form-field-description" style={{ marginBottom: "0.5rem" }}>{element.beschrijving}</div>}
+            {kinderen}
+          </section>
+        );
+      }
+
+      // Invoegen (10-11) lost de aanroeper op vóór het tekenen (shared/formulierInvoegen.js).
+      // Staat het er nog, dan is het sjabloon niet gevonden of niet opgehaald: zeg dat.
+      case "invoegen":
+        return (
+          <div key={index} style={{ color: "var(--cg-fout, red)", marginBottom: "0.75rem" }}>
+            Formulier <code>{element.formulier || "?"}</code> is hier niet ingevoegd.
+          </div>
+        );
+
       case "rij": {
         const cellen = (element.elementen || []).map((child, i) => ({ child, inhoud: renderElement(child, i, scope) })).filter((c) => c.inhoud != null);
         if (cellen.length === 0) return null;
@@ -209,8 +232,9 @@ export default function CustomFormulierRenderer({
         }
         // Layout-overrides op het schema-veld: beschrijving, en eigen validatie (aanvullend op
         // het datatype, shared/datatypeValidatie.js).
-        const veldMetOverride = element.beschrijving || element.validatie
-          ? { ...veldDef, ...(element.beschrijving ? { description: element.beschrijving } : {}), ...(element.validatie ? { validatie: element.validatie } : {}) }
+        // `verplicht: true` (10-11) maakt strenger dan het model; opheffen kan niet.
+        const veldMetOverride = element.beschrijving || element.validatie || element.verplicht === true
+          ? { ...veldDef, ...(element.beschrijving ? { description: element.beschrijving } : {}), ...(element.validatie ? { validatie: element.validatie } : {}), ...(element.verplicht === true ? { verplicht: true } : {}) }
           : veldDef;
         return (
           <div key={index} style={element.breedte ? {} : undefined}>
