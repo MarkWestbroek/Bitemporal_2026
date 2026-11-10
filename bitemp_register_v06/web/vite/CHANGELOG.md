@@ -8,6 +8,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.37.0] — 2026-11-10
+
+Samen met render 0.4.0 en devloop 0.27.1 (api 0.24.0). Branch stap 1 (verschil met MAIN), de
+FormulierDefinitie voor e-diensten en de werkplaats-herkomst.
+
 ### Toegevoegd
 - **Branch = afgeleid project, stap 1 (Mark 09-11, werkplaats-plan §4B).** Het Project-menu toont bij een
   branch waar hij vandaan komt (MAIN, map, basisvolgnummer, wie en wanneer) en heeft *Verschil met MAIN…*:
