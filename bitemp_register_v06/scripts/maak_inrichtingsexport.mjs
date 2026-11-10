@@ -35,6 +35,11 @@
 // totVolgnummer), zodat de werkplaats twee generaties vergelijkt zonder op
 // tijdstippen te raden.
 //
+// Formulieren uit het project (besluit Mark 10-11, TRANSFORMATIES §11.19): een formulier in de
+// e-dienst met `"formulierDefinitie": {"code": …}` krijgt zijn stappen en vragen uit de
+// FormulierDefinitie met die code in het Studio-profiel `formulierdiagram` van het project (diagramtype formulier); `invoegen`
+// (sjablonen) wordt opgelost met shared/formulierInvoegen.js.
+//
 // --ops: de operaties ná de snapshot (`inhoud` is een snapshot tot
 // `tot_volgnummer`; latere wijzigingen staan alleen in het ops-log, GET
 // /api/studio/projecten/<id>/ops?vanaf=<tot_volgnummer>, exclusief). Het antwoord
@@ -63,6 +68,9 @@ const { voerInrichtingsExportUit } = await laad("transformatie/inrichtingsExport
 const { vindMap, profielUitMappen } = await laad("transformatie/studioProject.js");
 const { exporteerV3 } = await laad("diagramprofielen/canoniek-uml/serialisatie.js");
 const { maakStand, speelOpsNa, bouwWerkbestand } = await laad("diagramprofielen/ea/sidecarImport.js");
+const { fdsUitProfiel } = await laad("transformatie/fdFormulier.js");
+const { formulierModelNaarLayout } = await laad("diagramprofielen/formulier/adapter.js");
+const { losInvoegingenOp } = await laad("shared/formulierInvoegen.js");
 const { maakApi } = await import(pathToFileURL(path.resolve(HIER, "../tools/omnium-mcp/api.mjs")).href);
 
 const CANONIEK = "diagram05";
@@ -161,6 +169,8 @@ async function main() {
   let canoniekDeel = null;
   /** BPMN-modellen uit het project zelf: project:<profiel> → {model: {elements, diagrams}}. */
   const uitProject = {};
+  /** FormulierDefinities uit het project: code → {layout, meta}. */
+  let formulierDefinities = null;
   const generatie = { label: a.generatie || path.basename(path.resolve(a.uit)), studioProjectId: null, totVolgnummer: null };
   if (a.project) {
     let inhoud;
@@ -195,6 +205,13 @@ async function main() {
       if (pid === CANONIEK || !prof?.elements) continue;
       uitProject[`project:${pid}`] = { model_naam: `Studio-project, profiel ${pid}`, model: { elements: prof.elements, diagrams: prof.diagrams || {} } };
     }
+    if (inhoud.profielen?.formulierdiagram?.elements) {
+      formulierDefinities = fdsUitProfiel(inhoud.profielen.formulierdiagram, formulierModelNaarLayout);
+      const codes = Object.keys(formulierDefinities);
+      const zoek = (code) => formulierDefinities[code]?.layout || null;
+      for (const c of codes) formulierDefinities[c] = { ...formulierDefinities[c], layout: losInvoegingenOp(formulierDefinities[c].layout, zoek, { code: c }) };
+      console.error(`FormulierDefinities in het project: ${codes.join(", ") || "geen"}`);
+    }
     const sleutels = a.map.map((m) => vindMap(inhoud, m));
     canoniekDeel = profielUitMappen(inhoud, sleutels, CANONIEK);
     if (!canoniekDeel) throw new Error(`Geen canoniek model in ${a.map.join(", ")}`);
@@ -214,6 +231,7 @@ async function main() {
     referentieBestanden: a.referentielijst.map((pad) => ({ naam: path.basename(pad), inhoud: lees(pad) })),
     bpmnModellen: { ...uitProject, ...Object.fromEntries(a.bpmn.map((pad) => [path.basename(pad), lees(pad)])) },
     canoniekDeel,
+    formulierDefinities,
     generatie,
     peiltijdstip: a.peiltijdstip || new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
     sha256Hex,

@@ -8,6 +8,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Het e-dienstformulier als FormulierDefinitie (TRANSFORMATIES §11.19, besluit Mark 10-11).** Een
+  formulier in de e-dienst kan met `formulierDefinitie: {code}` naar een FD in het Studio-profiel `formulierdiagram` van het
+  project wijzen; CLI en Studio-activiteit lezen de stappen en vragen daaruit (sjablonen via `invoegen`
+  opgelost). `stappenNaarFd` zet de stappen van een bestaande e-dienst om; voor GPK geeft de export uit de FD
+  dezelfde payloads als uit de JSON.
+
 ## [studio/v0.37.0] — 2026-11-10
 
 Samen met render 0.4.0 en devloop 0.27.1 (api 0.24.0). Branch stap 1 (verschil met MAIN), de

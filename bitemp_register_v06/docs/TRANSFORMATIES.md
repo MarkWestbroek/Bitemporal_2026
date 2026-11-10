@@ -2070,3 +2070,50 @@ type uit de e-dienst (een vinkje: `true`); `inleiding` en `verzendtekst` komen u
 het formulier in de e-dienst. De traceregels hebben `doelPad` = `/stappen/i/vragen/j`, en `bron.elementId` is
 altijd gelijk aan het `bronElementId` van die traceregel. Een groep met geneste vragen (`type: "groep"`,
 `vragen[]`) volgt als de GZAC-schermen neutraal worden.
+
+### 11.19 Het e-dienstformulier als FormulierDefinitie (2026-11-10)
+
+Besluit Mark 10-11 (Fundament `docs/werkplaats-plan.md` §5.11): de stappen en vragen van een
+e-dienstformulier staan niet meer in de e-dienst-JSON (`formulier.stappen`) maar in een Omnium
+**FormulierDefinitie** (FD) in het Studio-project, Studio-profiel `formulierdiagram` (het diagramtype heet `formulier`, het profiel in het project `formulierdiagram`; ops gaan naar store `model:formulierdiagram`), in een map per e-dienst
+(`E-diensten/<dienst>`). De werkplaats bewerkt die FD per vraag (op de branch van de dienst); de
+generator leest hem. Het FD-formaat met de uitbreidingen voor e-diensten (stap, key, verplicht,
+elementId, vorm `bestand`, invoegen) staat in `FORMULIERDEFINITIES.md` §2.6 (OMNIUM-UI, studio 0.37.0).
+
+**In de e-dienst** wijst het formulier naar de FD in plaats van stappen te noemen:
+
+```json
+{ "identifier": "gehandicaptenparkeerkaart-aanvragen", "soort": "formulier", …,
+  "formulierDefinitie": { "model": "project:formulierdiagram", "code": "gehandicaptenparkeerkaart-aanvragen" },
+  "inloggen": ["digid"], "registratie": { … } }
+```
+
+Naam, inloggen en registratie (vaste waarden, uit de inlog, bij afronden, variabelen van Open
+Formulieren) blijven in de e-dienst: dat zijn instellingen van het doel, geen vorm van het formulier.
+
+**Lezen** (`transformatie/fdFormulier.js`): `fdsUitProfiel` splitst het profiel per formulier
+(op `code`), `formulierModelNaarLayout` (profiel-adapter) geeft de layout, `losInvoegingenOp`
+(`shared/formulierInvoegen.js`) voegt sjablonen in, en `fdNaarStappen` maakt er de stappen van die
+formulierGraaf al kent. `voerInrichtingsExportUit({…, formulierDefinities})` vervangt de stappen
+vóór het genereren; het e-dienstmodel (de bron) is dan de e-dienst mét die stappen. CLI en
+Studio-activiteit lezen de FD's uit het project, net als de processen (`project:<profiel>`).
+
+| FD | e-dienst (stappen) |
+|---|---|
+| `stap {key, label}` | stap `{slug, naam}`; zonder stappen is het hele formulier één stap |
+| `veld {key, label, beschrijving, verplicht, elementId, veld}` | vraag `{key, label, toelichting, verplicht, veld}`; `veld` = naampad uit **elementId** + veldnaam |
+| `conditioneel {conditie: {veld, op: "==", waarde}, dan}` | `toonAls {<key van dat veld>: waarde}` op elke vraag erin |
+| `lijst {bron, min: 1, max: 1}` met vaste rij-waarden | de vragen erin op rij 0 (zo wijst de FD de bijlage "pasfoto" aan) |
+| vorm `bestand` + `vormConfig {accept, resizeTo, documentTitle}` | `component: "file"`, `bestand {typen, verkleinTot, registratie.titel}` |
+| vorm `text-area` / `radio-group` / `combobox` | `component` textarea / radio / select |
+
+Wat het e-dienstformulier nog niet kent, meldt de lezer: een voorwaarde met een andere operator dan
+`==` (FD-CONDITIE), een lijst met meer dan één rij (FD-LIJST, herhaalbare groep), een vaste waarde
+buiten een lijst (FD-VAST), een element zonder elementId (FD-ELEMENT); een FD die de e-dienst noemt
+maar die er niet is, is een fout (FD-ONTBREEKT). Het veldpad in de FD (`ENT.rol.veld`, rol =
+JSON-rolnaam = meervoud van het GE) is leesbaarheid; een geërfd GE staat onder zijn eigenaar
+(`Aanvraag.aanvraagbijlagen.documentUrl`, BACKEND 10-11). De identiteit is `elementId`.
+
+**Omzetten** (eenmalig, en de toets): `stappenNaarFd(keuzes, {core, studioIds})` maakt van de
+stappen van een e-dienst een FD-layout. Voor GPK geldt: stappen → FD → stappen is gelijk, en de
+export uit de FD geeft voor elk artefact dezelfde payloadHash als uit de JSON (`fdFormulier.test.js`).

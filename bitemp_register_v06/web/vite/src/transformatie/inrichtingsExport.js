@@ -11,6 +11,7 @@
 import { maakInrichtingsBundel } from "./inrichtingsBundel.js";
 import { maakBronArtefacten, zetModelvelden } from "./bronArtefacten.js";
 import { importeerV3 } from "../diagramprofielen/canoniek-uml/serialisatie.js";
+import { pasFormulierDefinitiesToe } from "./fdFormulier.js";
 import { leesRegisterStand, vergelijkMetRegister, leesReferentielijst } from "./inrichtingsRegister.js";
 
 const lijstUit = (inhoud) => (Array.isArray(inhoud) ? inhoud : Array.isArray(inhoud?.items) ? inhoud.items : []);
@@ -140,12 +141,23 @@ export function zetGeneratie(artefacten, generatie) {
  *   de levering aanwijsbaar in het register (werkplaats §5.6, 09-11): het label (de leveringsmap, bv. 2026-11-08g),
  *   het Studio-project en het volgnummer t/m waar de ops gelezen zijn. Komt in artefactHerkomst van elk artefact
  *   en elke bron; de payload en zijn hash veranderen niet.
+ * @param {Record<string, {layout: any, meta: any}>|null} [invoer.formulierDefinities] - FD's uit het project (code →
+ *   opgeloste layout + meta, §11.19): een formulier met `formulierDefinitie: {code}` krijgt zijn stappen daaruit.
+ *   Het e-dienstmodel (de bron) is dan de e-dienst mét die stappen.
  * @param {((pad: string) => Promise<any>)|null} [invoer.haalJson] - lezen uit het register; null = niet vergelijken
  * @param {(tekst: string) => string | Promise<string>} invoer.sha256Hex
  */
-export async function voerInrichtingsExportUit({ edienst, modelBestand, datatypen, referentieBestanden = [], bpmnModellen = {}, canoniekDeel = null, peiltijdstip = null, generatie = null, haalJson = null, sha256Hex }) {
+export async function voerInrichtingsExportUit({ edienst, modelBestand, datatypen, referentieBestanden = [], bpmnModellen = {}, canoniekDeel = null, peiltijdstip = null, generatie = null, formulierDefinities = null, haalJson = null, sha256Hex }) {
+  /** @type {any[]} */
+  const fdMeldingen = [];
+  if ((edienst?.artefacten || []).some((a) => a.formulierDefinitie)) {
+    const r = pasFormulierDefinitiesToe(edienst, formulierDefinities || {}, canoniekDeel || (modelBestand ? importeerV3(modelBestand) : null));
+    edienst = r.edienst;
+    fdMeldingen.push(...r.diagnostics);
+  }
   if (!Array.isArray(edienst?.artefacten) || !edienst.artefacten.length) throw new Error("Het e-dienstmodel heeft geen artefacten.");
   const { lijsten, diagnostics } = await verzamelReferentielijsten(edienst, referentieBestanden, haalJson);
+  diagnostics.push(...fdMeldingen);
   // De bronnen eerst: elk artefact verwijst ernaar met hun payloadHash (§11.14).
   const bron = await maakBronArtefacten({ edienst, modelBestand, canoniekDeel, bpmnModellen, peiltijdstip, sha256Hex });
   diagnostics.push(...bron.diagnostics);
