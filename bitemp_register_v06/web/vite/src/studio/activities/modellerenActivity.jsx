@@ -39,7 +39,7 @@ import { startBeeldWachter } from "../gedeeldeBeelden.js";
 import { gebruikVan } from "../../diagramcore/model/gebruik.js";
 import { useOutboxStore } from "../sync/outbox.js";
 import { diagramHeeftOnverzonden } from "../sync/onverzonden.js";
-import { zonderWeesPlaatsingen, mappenMetBeschrijving } from "../sync/structuurKern.js";
+import { zonderWeesPlaatsingen, mappenMetBeschrijving, volgendeMapVolgorde } from "../sync/structuurKern.js";
 import { configureerWerkruimte, werkruimteGewijzigd, haalWerkruimteOp as haalWerkruimteVanServer, nieuwste as nieuwsteWerkruimte } from "../sync/werkruimte.js";
 import { registerBouwenBeschikbaar, bouwRegister } from "../registerBouwen.js";
 import { configureer as configureerVerzender, verzend, haalBinnen, startPoll, stopPoll, startKanaal, stopKanaal, useSyncStore, aanwezigSamengevat } from "../sync/verzender.js";
@@ -517,7 +517,8 @@ export const useModellerenStore = create((set, get) => ({
     set((s) => {
       legStructuurVast(s);
       // volgorde = handmatige sortering per niveau; nieuw komt achteraan.
-      const mappen = { ...s.mappen, [id]: { id, naam, ouderId, volgorde: Date.now() } };
+      // Uit de stand, niet de klok: elke client komt zo op dezelfde volgorde (10-11).
+      const mappen = { ...s.mappen, [id]: { id, naam, ouderId, volgorde: volgendeMapVolgorde(s.mappen) } };
       const next = { ...s, mappen };
       schrijfOpslag(next);
       return { mappen };
@@ -540,7 +541,7 @@ export const useModellerenStore = create((set, get) => ({
     set((s) => {
       legStructuurVast(s);
       const mappen = { ...s.mappen };
-      const basis = Date.now();
+      const basis = volgendeMapVolgorde(mappen);
       (lijst || []).forEach((m, i) => {
         mappen[ids[i]] = { id: ids[i], naam: m.naam, ouderId: m.ouderId || null, volgorde: basis + i };
       });
@@ -744,7 +745,7 @@ export const useModellerenStore = create((set, get) => ({
       }
       // Van niveau gewisseld → achteraan in de nieuwe ouder.
       legStructuurVast(s);
-      const mappen = { ...s.mappen, [id]: { ...m, ouderId: ouderId || null, volgorde: Date.now() } };
+      const mappen = { ...s.mappen, [id]: { ...m, ouderId: ouderId || null, volgorde: volgendeMapVolgorde(s.mappen) } };
       const next = { ...s, mappen };
       schrijfOpslag(next);
       return { mappen };
