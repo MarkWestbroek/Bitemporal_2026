@@ -80,7 +80,10 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
     enumNaam: enumBestaat ? v3Veld.enum : null,
     refNaam: v3Veld["$ref"] || null,
     refItemNaam: v3Veld["$ref"] || v3Veld.refItemNaam || null,
-    verplicht: "verplicht" in v3Veld ? v3Veld.verplicht === true : !(v3Veld.goType || "").startsWith("*"),
+    // Zonder `verplicht`: een goType zonder `*` is verplicht (V3); een V3.1-veld zonder goType is
+    // optioneel tenzij `verplicht: true` (docs/v3_1_runtime.md; melding AI-INRICHTEN 10-11 — een
+    // ontbrekende goType telde eerder als verplicht).
+    verplicht: "verplicht" in v3Veld ? v3Veld.verplicht === true : v3Veld.goType ? !v3Veld.goType.startsWith("*") : false,
     ...(v3Veld.uniek ? { uniek: v3Veld.uniek } : {}),
     ...(v31Sleutels.length ? { v31Sleutels } : {}),
     // Een V3.1-veld met type maar zonder goType: de terugreis schrijft dan ook geen goType.

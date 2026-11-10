@@ -25,6 +25,7 @@
  */
 import { importeerV3, exporteerV3 } from "./serialisatie.js";
 import { vergelijkMetStore } from "../ea/vergelijkImport.js";
+import { vouwOudeGeneralisaties } from "./afgeleideConnectoren.js";
 /** Het afgeleide Overzicht-diagram (zoals serialisatie.js). */
 const DEFAULT_DIAGRAM_ID = "overzicht";
 
@@ -80,11 +81,34 @@ export function dubbeleNaampaden(v3) {
 }
 
 /**
+ * importeerV3 met `erft` als `generalisatie`-connectoren (ERFT-1). importeerV3 zet overerving
+ * alleen als presentatie-edge op het afgeleide Overzicht; dat diagram valt hieronder weg zodra
+ * de store niet leeg is, en dan ging `erft` verloren (melding AI-INRICHTEN 10-11). Vouwen vóór
+ * het filteren maakt er modelelementen van die de review en pasPlanToe meenemen.
+ * @param {any} v3
+ */
+function importeerMetGeneralisaties(v3) {
+  const model = importeerV3(v3);
+  const gevouwen = vouwOudeGeneralisaties({ elements: model.elements || {}, diagrams: model.diagrams || {} });
+  if (!gevouwen) return model;
+  // Alleen de betekenis in `data`: geen presentatie en geen lege labels. Een export laat lege labels
+  // weg, dus anders verschilt dezelfde overerving bij elke volgende import ("data.bron").
+  const elements = { ...gevouwen.elements };
+  for (const [id, el] of Object.entries(elements)) {
+    if (el.elementType !== "generalisatie" || model.elements?.[id]) continue;
+    const { naamLabelHeen, naamLabelTerug } = el.data || {};
+    const labels = { ...(naamLabelHeen ? { naamLabelHeen } : {}), ...(naamLabelTerug ? { naamLabelTerug } : {}) };
+    elements[id] = { ...el, data: { bron: { isGeneralization: true, ...labels }, ...labels } };
+  }
+  return { ...model, elements, diagrams: gevouwen.diagrams };
+}
+
+/**
  * @param {any} v3 - V3-bestand ({model_naam, model}) of het model zelf
  * @param {{elements?: Record<string, any>, diagrams?: Record<string, any>}} state - de canoniek-uml-store
  */
 export function planV3Import(v3, state) {
-  const model = importeerV3(v3);
+  const model = importeerMetGeneralisaties(v3);
   const v3Model = v3?.model || v3 || {};
   const bestaandeEl = state?.elements || {};
   const bestaandeDi = state?.diagrams || {};
@@ -97,7 +121,8 @@ export function planV3Import(v3, state) {
   );
 
   // Bestaande stand door dezelfde rondgang (alleen de elementen; diagrammen zoals ze zijn).
-  const genormaliseerd = leeg ? { elements: {} } : importeerV3(exporteerV3(state).v3);
+  // Zelfde vouw als het binnenkomende model, zodat bestaande generalisaties niet als nieuw tellen.
+  const genormaliseerd = leeg ? { elements: {} } : importeerMetGeneralisaties(exporteerV3(state).v3);
   const vergelijkState = { elements: genormaliseerd.elements, diagrams: bestaandeDi };
 
   const domeinen = new Set(Object.values(model.elements).map((e) => e.data?.domein || ""));

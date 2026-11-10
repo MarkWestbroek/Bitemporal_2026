@@ -975,7 +975,11 @@ fase 2 een **bewerkbare sandbox**:
   V3-bestand in de sandbox (met bevestiging — vervangt alles). In Modelleren is er daarnaast
   **Bestand → Importeer V3 in project (alleen wijzigingen)…** (bestand of API): een delta met
   review, zoals de EA-import, die niets vervangt — diagrammen, mappen en verwijzingen blijven
-  staan; identiteit via `uuid`, anders de naam (BACKLOG §40). De **veldkiezer** (ModelPicker) in DMN, bericht en BPMN leest
+  staan; identiteit via `uuid`, anders de naam (BACKLOG §40). `erft` wordt daarbij een
+  `generalisatie`-connector (`gen_<sub>__<super>`), ook als de store niet leeg is (fix 10-11; eerder
+  ging overerving verloren met het afgeleide Overzicht). Een V3.1-veld zonder `goType` en zonder
+  `verplicht` is optioneel; alleen een goType zonder `*` maakt een veld zonder `verplicht` verplicht
+  (`store/adapters.js`, conform `docs/v3_1_runtime.md`). De **veldkiezer** (ModelPicker) in DMN, bericht en BPMN leest
   het canonieke model van het project (met uuid's); een FieldRef volgt een hernoeming via zijn uuid,
   en dubbele namen per domein geven altijd een ⚠ (BACKLOG §40, punt 4). De activiteit
   levert daarvoor een eigen Bestand-menu (zelfde patroon als de UML-IDE). Onder water werkt dit via

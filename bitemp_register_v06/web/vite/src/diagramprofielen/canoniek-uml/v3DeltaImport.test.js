@@ -148,3 +148,30 @@ test("uuid: een hernoemd veld houdt zijn eigenschappen", () => {
   assert.equal(uit.uuid, "22222222-2222-4222-8222-222222222222");
   assert.equal(uit.description, "blijft");
 });
+
+// ── Melding AI-INRICHTEN 10-11: erft en verplicht bij een delta-import ───────────────────────
+
+test("delta-import: een nieuwe entiteit met erft krijgt een generalisatie, en de export geeft erft terug", () => {
+  const store = projectStore();
+  const v3 = kopie();
+  const ouder = v3.model.entiteiten[0];
+  v3.model.entiteiten.push({ typenaam: "Kindtype", meervoud: "kindtypen", domein: ouder.domein, erft: ouder.typenaam, gegevenselementen: [] });
+  const { plan, uit } = pasToe(store, v3);
+  const gen = `gen_Kindtype__${ouder.typenaam}`;
+  assert.ok(plan.elementen.nieuw.some((r) => r.id === "Kindtype"));
+  const st = store.getState();
+  assert.equal(st.elements[gen]?.elementType, "generalisatie", JSON.stringify(Object.keys(uit)));
+  const { v3: terug } = exporteerV3(st);
+  assert.equal(terug.model.entiteiten.find((e) => e.typenaam === "Kindtype")?.erft, ouder.typenaam);
+});
+
+test("delta-import: bestaande generalisaties tellen niet als nieuw of gewijzigd", () => {
+  const store = projectStore();
+  const v3 = kopie();
+  const ouder = v3.model.entiteiten[0];
+  v3.model.entiteiten.push({ typenaam: "Kindtype", meervoud: "kindtypen", domein: ouder.domein, erft: ouder.typenaam, gegevenselementen: [] });
+  pasToe(store, v3);
+  const { plan } = planV3Import(v3, store.getState());
+  assert.deepEqual(plan.elementen.nieuw.map((r) => r.id), []);
+  assert.deepEqual(plan.elementen.gewijzigd.map((r) => r.id), []);
+});
