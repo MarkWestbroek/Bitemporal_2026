@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.38.0] — 2026-11-10
+
+Samen met render 0.4.2 en devloop 0.27.3 (api 0.24.0).
+
 ### Toegevoegd
 - **Branch maken op een map** (Mark 10-11): rechtsklik op een map in de projectboom → *Branch maken…*. De map
   wordt de context van de branch (`POST …/afsplitsen {naam, mapId}`). Bestaat er al een niet-gearchiveerde branch

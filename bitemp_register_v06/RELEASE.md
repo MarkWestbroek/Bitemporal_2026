@@ -68,6 +68,21 @@ Uitrol:
 
 ---
 
+## studio 0.38.0 / render 0.4.2 / devloop 0.27.3 (2026-11-10)
+
+Akkoord Mark 10-11. api blijft 0.24.0; devloop 0.27.3 is api 0.24.0 met studio 0.38.0.
+
+- Studio: *Branch maken…* op een map (biedt een bestaande branch voor die map aan), het
+  e-dienstformulier als FormulierDefinitie, kortere kop voor een conditioneel blok.
+- Render: `POST /materialiseer` — één profiel nagespeeld (blob-deel + de ops op
+  `model:<profiel>`); nodig voor `GET /api/studio/projecten/:id/model/:profiel` van de backend.
+
+Uitrol:
+- App: `bitemp-render-svc:0.4.2` en `viz-frontend:0.38.0` via `update.sh`.
+- Fundament: `bitemp-devloop:0.27.3`, door FUNDAMENT.
+
+---
+
 ## studio 0.37.1 / render 0.4.1 / devloop 0.27.2 (2026-11-10)
 
 Patch (akkoord Mark 10-11). De mapvolgorde hangt niet meer van de klok af: na afsplitsen meldde

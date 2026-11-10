@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.37.1`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.38.0`**
+  (2026-11-10: *Branch maken…* op een map, e-dienstformulier als FormulierDefinitie, korte
+  conditiekop; samen met render 0.4.2 en devloop 0.27.3), na **`studio/v0.37.1`**
   (2026-11-10, patch: mapvolgorde uit de stand in plaats van de klok — geen schijnconflicten na
   afsplitsen; samen met render 0.4.1 en devloop 0.27.2), na **`studio/v0.37.0`**
   (2026-11-10: branch stap 1 — verschil met MAIN —, FormulierDefinitie voor e-diensten,
@@ -133,7 +135,7 @@ dat, en forceert `git branch -D` het (met opzet).
   **`studio/v0.13.0`** (2026-10-07: canvas-bediening — inline hernoemen, verbind-modus, kaders,
   taakbalken op een rij); zie `web/vite/CHANGELOG.md`.
 - Backend: **`api/v0.24.0`** (2026-11-10: `GET …/vergelijk` via de render-sidecar en `namens` op het
-  operatielog; devloop-image 0.27.0; 0.27.1 = dezelfde api met studio 0.37.0; 0.27.2 met studio 0.37.1). Daarvoor **`api/v0.23.0`** (2026-11-10: afgeleide projecten — afsplitsen, basis en herkomst;
+  operatielog; devloop-image 0.27.0; 0.27.1 = dezelfde api met studio 0.37.0; 0.27.2 met studio 0.37.1; 0.27.3 met studio 0.38.0). Daarvoor **`api/v0.23.0`** (2026-11-10: afgeleide projecten — afsplitsen, basis en herkomst;
   `verwachtLaatsteVolgnummer` op `/ops`; devloop-image 0.26.0). Daarvoor **`api/v0.22.3`** (2026-11-08, patch: de startup-rebuild genereert het
   standaardpakket alleen als het expliciet gegenereerd was — vlag `gegenereerd` op
   `gebouwde_domeinen`; devloop-image 0.25.5; devloop-image 0.25.6 = dezelfde api met studio 0.35.0; 0.25.7 met studio 0.36.0). Daarvoor **`api/v0.22.2`** (2026-11-08, patch: meerregelige beschrijvingen breken het
@@ -169,7 +171,8 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.4.1`** (2026-11-10, patch: deterministische mapvolgorde bij het
+- Render-sidecar: **`render/v0.4.2`** (2026-11-10: `POST /materialiseer` — één profiel
+  nagespeeld, voor `GET …/model/:profiel`; image `bitemp-render-svc:0.4.2`), na **`render/v0.4.1`** (2026-11-10, patch: deterministische mapvolgorde bij het
   naspelen in `/vergelijk` en `/export/v3`; image `bitemp-render-svc:0.4.1`), na **`render/v0.4.0`** (2026-11-10: `POST /vergelijk` voor branch stap 1, eigen
   grens van 32 MB; de tekenaar van studio 0.37.0; image `bitemp-render-svc:0.4.0`), na **`render/v0.3.9`** (2026-11-09: de tekenaar van studio 0.36.0 — tandwiel,
   smallere BPMN-taken; image `bitemp-render-svc:0.3.9`), na **`render/v0.3.8`** (2026-11-08: de code van studio 0.35.0, o.a. de
