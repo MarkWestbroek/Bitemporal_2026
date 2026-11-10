@@ -217,9 +217,17 @@ dus het is geen tooltip die alleen bij aanwijzen verschijnt.
 ### 2.6 Uitbreidingen voor e-diensten (sinds 10-11)
 
 De vorm van een e-dienstformulier is een gewone FormulierDefinitie (besluit Mark 10-11), in het
-Studio-project als profiel `formulier`. De inrichtingsgenerator leest hem (en maakt er het Open
-Formulieren-formulier en formulier-neutraal van), de werkplaats bewerkt hem in de branch van de
-dienst. Daarvoor kwam er bij, allemaal optioneel (oude definities blijven geldig):
+Studio-project. De inrichtingsgenerator leest hem (en maakt er het Open Formulieren-formulier en
+formulier-neutraal van), de werkplaats bewerkt hem in de branch van de dienst.
+
+> **Welk id?** In een project is het profiel **`formulierdiagram`** (het id van de activiteit,
+> `studio/activities/formulierDiagramActivity.jsx`); operaties gaan dus naar store
+> **`model:formulierdiagram`**. `formulier` is alleen het id van het *diagramtype* (de descriptor in
+> `diagramprofielen/formulier/`). Een store `model:formulier` toont de Studio niet. De activiteit is
+> `standaardVerborgen`, maar dat verbergt alleen het icoon in de activiteitenbalk: de projectboom
+> toont de diagrammen gewoon in hun map.
+
+Daarvoor kwam er bij, allemaal optioneel (oude definities blijven geldig):
 
 - **`stap`**: een pagina. Omniums eigen renderer toont de stappen nog onder elkaar, als sectie met
   een kop; bladeren per stap komt later. De formuliereditor plaatst een nieuwe stap altijd onder de
