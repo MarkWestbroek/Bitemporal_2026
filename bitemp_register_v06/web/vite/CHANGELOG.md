@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.39.0] — 2026-11-12
+
+Samen met render 0.4.3 en devloop 0.28.4 (api 0.25.0).
+
 ### Toegevoegd
 - **Kopiëren in het ene project, plakken in het andere** (KLEM-1, Mark 11-11). Het Studio-klembord (Ctrl+C / Ctrl+V
   op het canvas, *Kopieer diagram* in de boom) draagt nu de inhoud van wat je kopieerde en staat in localStorage.

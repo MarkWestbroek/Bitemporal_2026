@@ -8,6 +8,29 @@
 
 ---
 
+## studio 0.39.0 / render 0.4.3 / devloop 0.28.4 (2026-11-12)
+
+Akkoord Mark 12-11. api blijft 0.25.0; devloop 0.28.4 is api 0.25.0 met studio 0.39.0.
+
+- Versie per profiel (M2), genoteerd in het project (M1): `profielVersies` in het werkbestand; een
+  oudere Studio meldt een project dat op een nieuwere profielversie leunt. Bewaking in
+  `render-svc/profielVersies.vast.json` (versie + vingerafdruk van de structuur per profiel).
+- Klembord over projecten en tabs (KLEM-1): kopiëren in het ene project, plakken in het andere,
+  als hetzelfde element of als kopie.
+- Werkkopie per project (TAB-1): twee tabs met twee projecten halen elkaars werk niet meer door
+  elkaar. De bestaande werkkopie in de browser verhuist één keer mee naar haar project;
+  werkkopieën die 30 dagen niet zijn bewerkt worden opgeruimd.
+- Render 0.4.3: dezelfde tekenaar; de bundel bevat de profielen met hun versie.
+
+Let op: een oudere Studio-versie leest de nieuwe werkkopie-sleutels niet. Na een rollback van de
+frontend is lokaal werk dat niet op de server staat daar niet zichtbaar.
+
+Uitrol:
+- App: `bitemp-render-svc:0.4.3` en `viz-frontend:0.39.0` via `update.sh`.
+- Fundament: `bitemp-devloop:0.28.4`, door FUNDAMENT.
+
+---
+
 ## studio 0.38.3 / devloop 0.28.3 (2026-11-10)
 
 Patch (akkoord Mark 10-11). render blijft 0.4.2; devloop 0.28.3 is api 0.25.0 met studio 0.38.3.
