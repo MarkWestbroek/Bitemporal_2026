@@ -692,6 +692,27 @@ te wijzigen.
 > diagramwissel zijn React Flow-maat van het vorige diagram mee (width/height na met de muis
 > resizen): vak smal, omhulling en aanhechtpunten breed, lijnen in het niets. Nu alleen
 > hergebruik binnen hetzelfde diagram (`nodesDiagramRef`); e2e `59-studio-maat-per-diagram`.
+> **Profielversie in het project (11-11, Mark):** een model (M1) leunt op zijn profiel (M2), en
+> de profielen zitten vast in de Studio. Daarom heeft elk profiel een eigen versie
+> (`DiagramType.versie`, semver; zonder eigen versie zet de registratie "1.0.0") en noteert het
+> werkbestand per profiel met inhoud de versie waarmee het is bewaard: `profielVersies`
+> (`{diagram05: "1.0.0", …}`, naast `profielen`). Bij *Van server ophalen* en *Importeer
+> project* vergelijkt de Studio de notitie met zijn eigen profielen. Alleen een project dat
+> **nieuwer** is dan de Studio geeft een melding: andere hoofdversie = het model kan hier iets
+> anders betekenen, niet bewerken; nieuwere minor = typen of eigenschappen kunnen hier
+> ontbreken. Een ouder project gaat zoals altijd door `hooks.migreerModel`; een project zonder
+> notitie is van vóór deze regeling. Bij het bewaren blijft een nieuwere notitie staan (hier
+> bewaren maakt de inhoud niet ouder), net als de notitie van een profiel dat deze Studio niet
+> kent. We verwijzen en sluiten niet in: een profiel is ook code (hooks, adapters), en kopieën
+> per project lopen uit elkaar. Insluiten past later alleen bij een export voor archief.
+> **Wanneer verhogen:** major = bestaande modellen veranderen van betekenis of vragen een
+> migratie; minor = uitbreiding; patch = alleen weergave. De bewaking staat in render-svc
+> (de enige plek waar alle profielen in Node laden): `profielVersies.vast.json` met per
+> profiel versie + vingerafdruk van de structuur; `npm test` faalt bij een structuurwijziging
+> zonder versieverhoging, `npm run profielversies` legt vast na een verhoging. Logica:
+> `diagramcore/types/profielVersie.js` (zuiver, getest); e2e `60-studio-profielversie`.
+> Vervolg op de backlog: PROF-1 (profielen als project; de verwijzing wordt dan "profiel X,
+> versie N uit dat project") en KLEM-1 (klembord over tabs).
 > **Projectnaam in de menubalk (10-11, Mark):** achter de menutitel *Project* staat de naam van
 > het open project; bij een branch "⑂ naam (van MAIN-naam)" in paars, met de volledige
 > herkomstregel als tooltip (`projectKop` in `takken/herkomst.js`, menu-veld `naast` in

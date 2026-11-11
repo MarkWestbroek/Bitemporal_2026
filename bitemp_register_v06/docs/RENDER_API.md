@@ -367,6 +367,7 @@ UPDATE_GOLDEN=1 …                     # golden bijwerken na een bewuste tekenw
 
 # profielbundel voor taal=studio: één keer, en opnieuw na een wijziging in een profiel
 cd render-svc && npm install && npm test   # bouwt de bundel en draait de sidecar-tests
+npm run profielversies                     # na een versieverhoging van een profiel: vast.json bijwerken
 
 # sidecar lokaal
 node render-svc/server.mjs            # luistert op 127.0.0.1:8095; POST /api/render/svg (of /render/svg)

@@ -10,6 +10,7 @@
  */
 export { tekenDiagram, naarSvg } from "../web/vite/src/diagramcore/tekenaar/index.js";
 import { getDiagramType } from "../web/vite/src/diagramcore/types/typeRegistry.js";
+import { versieVan, profielVingerafdruk } from "../web/vite/src/diagramcore/types/profielVersie.js";
 import { registreerActivity, ACTIVITY_ID } from "../web/vite/src/diagramprofielen/activity/index.js";
 import { registreerArchimate, ARCHIMATE_ID } from "../web/vite/src/diagramprofielen/archimate/index.js";
 import { registreerBpmnMotor, BPMN_ID } from "../web/vite/src/diagramprofielen/bpmn/index.js";
@@ -74,6 +75,21 @@ for (const [profielId, registreer, typeId] of PROFIELEN) {
 }
 
 export const profielIds = [...typeIds.keys()];
+
+/**
+ * Per profiel-id de versie en de vingerafdruk van de structuur (types/profielVersie.js). De
+ * test profielVersies.test.mjs legt dit naast profielVersies.vast.json: een structuurwijziging
+ * zonder versieverhoging laat hem falen.
+ * @returns {Record<string, {versie: string, vingerafdruk: string}>}
+ */
+export function profielVersieOverzicht() {
+  return Object.fromEntries(
+    [...typeIds.keys()].sort().map((pid) => {
+      const d = getDiagramType(typeIds.get(pid));
+      return [pid, { versie: versieVan(d), vingerafdruk: profielVingerafdruk(d) }];
+    }),
+  );
+}
 
 /** De descriptor van een profiel-id uit een project, of undefined. */
 export function descriptorVan(profielId) {

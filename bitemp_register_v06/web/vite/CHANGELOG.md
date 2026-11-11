@@ -8,6 +8,19 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Versie per profiel, genoteerd in het project** (Mark 11-11: "moet een M1 niet noteren op welke M2-versie het
+  leunt?"). Elk profiel (M2) heeft een eigen `versie` (M3: `DiagramType.versie`, semver; alle ingebouwde profielen
+  beginnen op 1.0.0). Het werkbestand krijgt `profielVersies`: per profiel de versie waarmee het project is
+  bewaard. Opent een oudere Studio een project met een nieuwere profielversie, dan meldt hij dat (andere
+  hoofdversie: niet bewerken; nieuwere uitbreiding: hier kan iets ontbreken), en bij het bewaren blijft de nieuwere
+  notitie staan. Verwijzen, niet insluiten: het project bevat geen kopie van het profiel.
+  `diagramcore/types/profielVersie.js`; e2e-spec 60.
+- **Bewaking van de profielversies.** `render-svc/profielVersies.vast.json` legt per profiel de versie en een
+  vingerafdruk van de structuur vast (typen, eigenschappen, vakken, verbindingsregels; geen weergave). De test in
+  render-svc faalt als de structuur van een profiel verandert terwijl zijn versie gelijk blijft; na een
+  versieverhoging leg je vast met `npm run profielversies`.
+
 ## [studio/v0.38.3] — 2026-11-10
 
 Patch, samen met devloop 0.28.3 (api 0.25.0). render blijft 0.4.2.

@@ -63,6 +63,7 @@ import {
   startEaImport,
   eaImportTaak,
 } from "./projectSync.js";
+import { versieVan, noteerProfielVersies, beoordeelProfielVersies, profielVersieMelding } from "../../diagramcore/types/profielVersie.js";
 import { IconModelleren } from "../icons";
 import {
   getProfieltypen,
@@ -3593,6 +3594,29 @@ function Provider({ children }) {
  * snapshot na 200 operaties) hun inhoud op de server (10-10).
  */
 let _onbekendeProfielen = {};
+/**
+ * De notitie `profielVersies` uit het laatst geladen werkbestand (11-11): per profiel de versie
+ * waarmee het project is bewaard. Was dat nieuwer dan deze Studio, dan blijft het staan.
+ */
+let _geladenProfielVersies = {};
+
+/** Profiel-id → versie van het profiel in deze Studio. */
+function beschikbareProfielVersies() {
+  return Object.fromEntries(
+    getProfieltypen()
+      .filter((p) => !p.klassiek && p.descriptor)
+      .map((p) => [p.id, versieVan(p.descriptor)]),
+  );
+}
+
+/** Meld het als het project met een nieuwere profielversie is bewaard dan deze Studio heeft. */
+function meldProfielVersies(data) {
+  const tekst = profielVersieMelding(
+    beoordeelProfielVersies(data?.profielVersies, beschikbareProfielVersies()),
+    (pid) => getProfieltype(pid)?.label || pid,
+  );
+  if (tekst) toonMelding({ titel: "Nieuwere profielversie", tekst });
+}
 
 function bouwProjectData() {
   const s = useModellerenStore.getState();
@@ -3627,6 +3651,8 @@ function bouwProjectData() {
     kruisverbanden: useKruisStore.getState().links,
     // De soortenlijst van het project (07-11); ontbreekt = de standaardlijst.
     ...(useKruisStore.getState().soorten ? { koppelsoorten: useKruisStore.getState().soorten } : {}),
+    // Per profiel de versie waarmee dit is bewaard (M1 leunt op M2; types/profielVersie.js).
+    profielVersies: noteerProfielVersies(Object.keys(profielen), beschikbareProfielVersies(), _geladenProfielVersies),
     profielen,
   };
 }
@@ -3668,6 +3694,7 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herko
   // Een snapshot laden is geen reeks handelingen: niets in de outbox, en de
   // outbox van het vorige project vervalt (de snapshot is de nieuwe basis).
   _onbekendeProfielen = Object.fromEntries(Object.entries(data.profielen || {}).filter(([pid]) => !getProfieltype(pid)));
+  _geladenProfielVersies = data.profielVersies && typeof data.profielVersies === "object" ? { ...data.profielVersies } : {};
   zonderVastleggen(() => {
     for (const [pid, inhoud] of Object.entries(data.profielen || {})) {
       const p = getProfieltype(pid);
@@ -3711,6 +3738,7 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herko
 /** Alles leeg en een nieuwe projectidentiteit (na "parkeren"). */
 function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
   _onbekendeProfielen = {}; // nieuw project: niets van het vorige mee
+  _geladenProfielVersies = {};
   zonderVastleggen(() => {
     for (const p of getProfieltypen()) {
       if (p.klassiek) continue;
@@ -3751,6 +3779,7 @@ async function importeerProjectTekst(tekst, bestandsnaam = "") {
   if (!ok) {
     return;
   }
+  meldProfielVersies(data);
   pasProjectToe(data);
 }
 
@@ -4248,6 +4277,7 @@ async function openServerProject(id) {
     const onbekend = Object.keys(data.profielen || {}).filter((pid) => !getProfieltype(pid));
     if (onbekend.length) toonMelding({ tekst: `Profielen onbekend in deze Studio: ${onbekend.join(", ")}.
 Niet te zien of te bewerken hier, maar ze blijven bewaard en gaan ongewijzigd mee terug naar de server.` });
+    meldProfielVersies(data);
     pasProjectToe(data, { serverVersie: rec.versie, laatsteVolgnummer: rec.tot_volgnummer || 0, herkomst: rec.herkomst ?? null });
     // Snapshot + wat er daarna in het operatielog kwam (ook eigen oude operaties).
     const n = await haalBinnen({ inclusiefEigen: true });
