@@ -64,6 +64,7 @@ import {
   eaImportTaak,
 } from "./projectSync.js";
 import { versieVan, noteerProfielVersies, beoordeelProfielVersies, profielVersieMelding } from "../../diagramcore/types/profielVersie.js";
+import { zetKlembord, leesKlembord, uitAnderProject, zetKlembordProject, vervangIds, vervangIdsInElement, verzamelInhoud, bereidPlakVoor, plakSamenvatting } from "../klembord.js";
 import { IconModelleren } from "../icons";
 import {
   getProfieltypen,
@@ -1382,20 +1383,87 @@ function verplaatsNaarItems(doe, { bovenaan = null, uitgesloten = new Set() } = 
 // "Dupliceren" in dezelfde map werd een puinhoop; je kopieert een diagram en plakt het elders:
 // met dezelfde elementen, of met kopieën van de elementen op die plek.
 
-/** Het gekopieerde diagram: {profielId, diagramId}, of null. */
-let _diagramKlembord = null;
+// Het klembord staat in ../klembord.js en is sinds 11-11 (KLEM-1) gedeeld over de tabs van deze
+// Studio, mét de inhoud: zo plak je een diagram ook in een ander project. Het klembord weet
+// daarvoor welk project in deze tab open is.
+zetKlembordProject(useModellerenStore.getState().project);
+useModellerenStore.subscribe((s) => zetKlembordProject(s.project));
 
 /** Rechtsklik op een diagram → Kopiëren. */
 function kopieerDiagram(profiel, diagramId) {
-  _diagramKlembord = { profielId: profiel.id, diagramId };
+  const st = profiel.useStore.getState();
+  const diagram = st.diagrams[diagramId];
+  const opDiagram = [...new Set((diagram?.nodes || []).map((n) => n.elementId))];
+  const { kinderenVan } = bepaalHierarchie(profiel, st.elements);
+  zetKlembord("diagram", {
+    profielId: profiel.id,
+    profielVersie: versieVan(profiel.descriptor),
+    diagramId,
+    inhoud: { diagram: diagram ? JSON.parse(JSON.stringify(diagram)) : null, elements: verzamelInhoud(st.elements, opDiagram, kinderenVan) },
+  });
 }
 
-/** Vervang ids (als heel woord) in een JSON-waarde: voor het diagram en de gekopieerde elementen. */
-function vervangIds(waarde, nieuwId) {
-  if (!nieuwId.size) return JSON.parse(JSON.stringify(waarde));
-  const oud = [...nieuwId.keys()].sort((a, b) => b.length - a.length).map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-  const re = new RegExp(`(?<![A-Za-z0-9_\\-])(${oud.join("|")})(?![A-Za-z0-9_\\-])`, "g");
-  return JSON.parse(JSON.stringify(waarde).replace(re, (m) => nieuwId.get(m) || m));
+/**
+ * Plak een diagram dat in een ander project is gekopieerd (andere tab; KLEM-1, 11-11).
+ *   - `metKopieen` false: met **dezelfde** elementen: id en uuid blijven; wat hier al staat
+ *     wordt hergebruikt en niet overschreven, de rest komt erbij;
+ *   - `metKopieen` true: alle elementen als kopie (nieuwe id's, geen uuid).
+ * Regels: ../klembord.js. Het diagram zelf is altijd een nieuw diagram.
+ * @returns {string|null} het nieuwe diagram-id
+ */
+function plakDiagramUitAnderProject(kb, ouderSleutel, { metKopieen = false } = {}) {
+  const profiel = getProfieltype(kb.profielId);
+  const bron = kb.inhoud?.diagram;
+  if (!profiel || profiel.klassiek || !bron) {
+    toonMelding({ tekst: "Het gekopieerde diagram is hier niet te plakken (onbekende taal)." });
+    return null;
+  }
+  const hoofd = (v) => String(v || "").split(".")[0];
+  if (kb.profielVersie && hoofd(kb.profielVersie) !== hoofd(versieVan(profiel.descriptor))) {
+    toonMelding({ tekst: `Het klembord komt uit een Studio met een andere hoofdversie van dit profiel (${kb.profielVersie}, hier ${versieVan(profiel.descriptor)}). Werk beide tabs bij en kopieer opnieuw.` });
+    return null;
+  }
+  const st = profiel.useStore.getState();
+  let n = 0;
+  const plan = bereidPlakVoor({
+    inhoud: kb.inhoud.elements || {},
+    doelElements: st.elements,
+    wijze: metKopieen ? "kopie" : "zelfde",
+    maakId: (el) => (el.source ? `conn_${Date.now()}_${(n += 1)}` : profiel.maakElement?.(el.elementType)?.id || `${el.elementType}_${Date.now()}_${(n += 1)}`),
+  });
+  const nietMee = new Set(plan.conflicten.map((c) => c.id));
+  const diagram = vervangIds({ ...bron, nodes: (bron.nodes || []).filter((x) => !nietMee.has(x.elementId)) }, plan.idMap);
+  const nieuweDiagramId = `${profiel.menuPrefix}_${Date.now()}`;
+  diagram.id = nieuweDiagramId;
+  delete diagram.uuid;
+  // Nieuwe elementen zonder (mee geplakte) ouder krijgen een eigen plek in de boom.
+  const extra = profiel.descriptor.hierarchie ? profiel.descriptor.hooks?.hierarchieParen?.({ elements: kb.inhoud.elements, diagrams: {} }) || [] : [];
+  const { ouderVan } = bouwHierarchie(kb.inhoud.elements || {}, profiel.descriptor.hierarchie, extra);
+  const bronIdVan = new Map([...plan.idMap].map(([oud, nieuw]) => [nieuw, oud]));
+  const los = plan.toevoegen.filter((e) => !e.source && !plan.idMap.has(ouderVan.get(bronIdVan.get(e.id)))).map((e) => e.id);
+  // Eén Ctrl+Z voor model én diagram: de rest met de historie gepauzeerd.
+  if (plan.toevoegen.length) {
+    st.zetElementen({ ...st.elements, ...Object.fromEntries(plan.toevoegen.map((e) => [e.id, e])) });
+    const temporal = profiel.useStore.temporal?.getState?.();
+    temporal?.pause?.();
+    try {
+      profiel.useStore.getState().addDiagram(diagram);
+    } finally {
+      temporal?.resume?.();
+    }
+  } else {
+    st.addDiagram(diagram);
+  }
+  const ms = useModellerenStore.getState();
+  if (ouderSleutel) {
+    ms.plaatsDiagram(tabId(profiel.id, nieuweDiagramId), ouderSleutel);
+    if (los.length) ms.plaatsPerMap({ [ouderSleutel]: los.map((id) => elementKey(profiel.id, id)) });
+  }
+  ms.openTab(profiel.id, nieuweDiagramId);
+  ms.flits("diag:" + tabId(profiel.id, nieuweDiagramId));
+  const samenvatting = plakSamenvatting(plan);
+  if (samenvatting) toonMelding({ titel: "Geplakt uit een ander project", tekst: samenvatting });
+  return nieuweDiagramId;
 }
 
 /**
@@ -1408,7 +1476,8 @@ function vervangIds(waarde, nieuwId) {
  * @returns {string|null} het nieuwe diagram-id
  */
 function plakDiagram(ouderSleutel, { metKopieen = false } = {}) {
-  const kb = _diagramKlembord;
+  const kb = leesKlembord("diagram");
+  if (kb && uitAnderProject(kb)) return plakDiagramUitAnderProject(kb, ouderSleutel, { metKopieen });
   const profiel = kb ? getProfieltype(kb.profielId) : null;
   const st = profiel?.useStore.getState();
   const bron = st?.diagrams[kb?.diagramId];
@@ -1443,7 +1512,8 @@ function plakDiagram(ouderSleutel, { metKopieen = false } = {}) {
       if (c.source && c.target && nieuwId.has(c.source) && nieuwId.has(c.target)) nieuwId.set(c.id, `conn_${Date.now()}_${(n += 1)}`);
     }
     for (const [oudId, nid] of nieuwId) {
-      const kopie = vervangIds(st.elements[oudId], nieuwId);
+      // Met zijn eigen namen: een id is vaak ook de naam (11-11).
+      const kopie = vervangIdsInElement(st.elements[oudId], nieuwId);
       kopie.id = nid;
       if (!kopie.source) kopie.naam = metKopie(kopie.naam);
       if (kopie.data) delete kopie.data.uuid; // een kopie is een ander ding (besluit Mark 31-10)
@@ -1480,9 +1550,21 @@ function plakDiagram(ouderSleutel, { metKopieen = false } = {}) {
 
 /** Menu-item "Plak diagram ▸" voor een map of element-ouder (alleen met een gekopieerd diagram). */
 function plakDiagramItems(ouderSleutel) {
-  if (!_diagramKlembord) return [];
-  const p = getProfieltype(_diagramKlembord.profielId);
-  const d = p?.useStore.getState().diagrams[_diagramKlembord.diagramId];
+  const kb = leesKlembord("diagram");
+  if (!kb) return [];
+  const p = getProfieltype(kb.profielId);
+  if (uitAnderProject(kb)) {
+    const bron = kb.inhoud?.diagram;
+    if (!p || p.klassiek || !bron) return [];
+    return [{
+      label: `Plak diagram "${bron.naam || bron.id}" uit ${kb.projectNaam ? `"${kb.projectNaam}"` : "een ander project"}`,
+      items: [
+        { label: "Met dezelfde elementen (zelfde identiteit; bestaande blijven staan)", onClick: () => plakDiagram(ouderSleutel, { metKopieen: false }) },
+        { label: "Elementen kopiëren naar deze plek", onClick: () => plakDiagram(ouderSleutel, { metKopieen: true }) },
+      ],
+    }];
+  }
+  const d = p?.useStore.getState().diagrams[kb.diagramId];
   if (!d) return [];
   return [{
     label: `Plak diagram "${d.naam || d.id}"`,

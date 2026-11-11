@@ -9,6 +9,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ## [Unreleased]
 
 ### Toegevoegd
+- **Kopiëren in het ene project, plakken in het andere** (KLEM-1, Mark 11-11). Het Studio-klembord (Ctrl+C / Ctrl+V
+  op het canvas, *Kopieer diagram* in de boom) draagt nu de inhoud van wat je kopieerde en staat in localStorage.
+  Het overleeft dus een projectwissel en is te lezen in een andere tab. Plakken in een ander project vraagt hoe:
+  **als hetzelfde element** (id en uuid blijven; wat er al staat wordt hergebruikt en niet overschreven) of **als
+  kopie** (nieuwe id's, geen uuid's; Ctrl+Shift+V kiest dit meteen). Zelfde id met een andere uuid is een conflict
+  en wordt niet geplakt. In de boom: *Plak diagram "…" uit "…"* met dezelfde twee keuzes. Binnen één project
+  verandert er niets. `studio/klembord.js`; e2e-spec 61.
 - **Versie per profiel, genoteerd in het project** (Mark 11-11: "moet een M1 niet noteren op welke M2-versie het
   leunt?"). Elk profiel (M2) heeft een eigen `versie` (M3: `DiagramType.versie`, semver; alle ingebouwde profielen
   beginnen op 1.0.0). Het werkbestand krijgt `profielVersies`: per profiel de versie waarmee het project is
@@ -20,6 +27,11 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   vingerafdruk van de structuur vast (typen, eigenschappen, vakken, verbindingsregels; geen weergave). De test in
   render-svc faalt als de structuur van een profiel verandert terwijl zijn versie gelijk blijft; na een
   versieverhoging leg je vast met `npm run profielversies`.
+
+### Opgelost
+- **Plakken als kopie verving de naam** als die gelijk was aan het id (een entiteit "Aanvraag" met id "Aanvraag"
+  heette daarna naar zijn nieuwe id). Bij *Plak diagram ▸ Elementen kopiëren naar deze plek* houden het element
+  en zijn velden nu hun naam.
 
 ## [studio/v0.38.3] — 2026-11-10
 

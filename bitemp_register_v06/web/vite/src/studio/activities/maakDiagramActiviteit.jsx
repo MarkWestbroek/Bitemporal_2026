@@ -119,6 +119,9 @@ import { schuifVeld } from "../../diagramcore/model/velden.js";
 import { vindShapeSet } from "../../diagramcore/model/shapeSet.js";
 import LegeCanvas from "./LegeCanvas.jsx";
 import { toonHint, hintEersteElement, hintEersteRelatie } from "../hints.js";
+import { zetKlembord, leesKlembord, uitAnderProject, verzamelInhoud, bereidPlakVoor, plakSamenvatting } from "../klembord.js";
+import { bouwHierarchie } from "../boomRegels.js";
+import { versieVan } from "../../diagramcore/types/profielVersie.js";
 
 /**
  * Inline naamveld voor lijstregels (elementenbrowser, diagramlijst): Enter
@@ -184,13 +187,9 @@ const STANDAARD_TAAKBALK_DEFAULTS = {
   "auto-layout": { zichtbaar: true, auto: true, positie: { x: 12, y: 174 } },
 };
 
-/**
- * Het Studio-klembord voor elementen (Ctrl+C / Ctrl+V op het canvas, Mark 06-11): gedeeld door
- * alle diagram-activiteiten, maar plakken kan alleen in dezelfde taal. Bewust niet het
- * systeemklembord: dat draagt al de "Kopieer als afbeelding/link"-acties.
- * @type {{profielId: string, diagramId: string, elementIds: string[], posities: Record<string, {x: number, y: number}>}|null}
- */
-let _klembord = null;
+// Het Studio-klembord voor elementen (Ctrl+C / Ctrl+V op het canvas, Mark 06-11) staat in
+// ../klembord.js: gedeeld door alle diagram-activiteiten én, sinds 11-11 (KLEM-1), door alle
+// tabs van deze Studio. Plakken kan alleen in dezelfde taal.
 
 export function maakDiagramActiviteit(opties) {
   const {
@@ -2853,10 +2852,10 @@ export function maakDiagramActiviteit(opties) {
         const canvasDeel = (!nodeId && !connectorId
           ? [
               // Plakken (Mark 06-11: "rechtsklik ook graag"); alleen met iets van deze taal op het klembord.
-              ...(_klembord?.profielId === id
+              ...(leesKlembord("elementen")?.profielId === id
                 ? [
                     { sep: true },
-                    { id: "plak", label: `Plakken (${_klembord.elementIds.length})`, shortcut: "Ctrl+V", onClick: () => plakKlembord() },
+                    { id: "plak", label: `Plakken (${leesKlembord("elementen").elementIds.length})`, shortcut: "Ctrl+V", onClick: () => plakKlembord() },
                     { id: "plak-kopie", label: "Plakken als kopie…", shortcut: "Ctrl+Shift+V", onClick: () => plakKlembord({ alsKopie: true }) },
                   ]
                 : []),
@@ -3010,8 +3009,19 @@ export function maakDiagramActiviteit(opties) {
         const n = nodes.find((x) => x.elementId === eid);
         if (n) posities[eid] = { ...n.position, ...(n.size ? { size: n.size } : {}) };
       }
+      // De inhoud reist mee (KLEM-1, 11-11): de elementen, hun kinderen in de boom en de
+      // connectoren ertussen. Daarmee kan een andere tab ze in een ander project plakken.
+      const extra = descriptor.hierarchie ? descriptor.hooks?.hierarchieParen?.({ elements: s.elements, diagrams: s.diagrams }) || [] : [];
+      const { kinderenVan } = bouwHierarchie(s.elements, descriptor.hierarchie, extra);
       // Stil: een melding met OK zou bij elke Ctrl+C in de weg zitten (de Studio heeft geen toast).
-      _klembord = { profielId: id, diagramId: dId, elementIds: sel, posities };
+      zetKlembord("elementen", {
+        profielId: id,
+        profielVersie: versieVan(descriptor),
+        diagramId: dId,
+        elementIds: sel,
+        posities,
+        inhoud: { elements: verzamelInhoud(s.elements, sel, kinderenVan) },
+      });
       return true;
     };
     const kopieerSelectie = () => kopieerElementen(null);
@@ -3026,8 +3036,70 @@ export function maakDiagramActiviteit(opties) {
      * iets verschoven). Eén Ctrl+Z zet alles terug. Geeft true als de toets is afgehandeld.
      * @param {{alsKopie?: boolean}} [opties]
      */
+    /**
+     * Plakken uit een ander project (andere tab; KLEM-1, 11-11). De elementen bestaan hier nog
+     * niet, dus ze komen uit de inhoud van het klembord. De keuze: *als hetzelfde element* (id
+     * en uuid blijven; wat hier al staat wordt hergebruikt en niet overschreven) of *als kopie*
+     * (nieuwe id's, geen uuid). Ctrl+Shift+V kiest meteen de kopie. Regels: ../klembord.js.
+     */
+    const plakUitAnderProject = async (kb, { alsKopie = false } = {}) => {
+      const dId = useStore.getState().actiefDiagramId;
+      if (!dId) return;
+      const hoofd = (v) => String(v || "").split(".")[0];
+      if (kb.profielVersie && hoofd(kb.profielVersie) !== hoofd(versieVan(descriptor))) {
+        toonMelding({ tekst: `Het klembord komt uit een Studio met een andere hoofdversie van dit profiel (${kb.profielVersie}, hier ${versieVan(descriptor)}). Werk beide tabs bij en kopieer opnieuw.` });
+        return;
+      }
+      const n = kb.elementIds.length;
+      const wijze = alsKopie
+        ? "kopie"
+        : await vraagKeuze({
+            titel: `Plakken uit ${kb.projectNaam ? `"${kb.projectNaam}"` : "een ander project"}`,
+            label: `${n === 1 ? "Dit element komt" : `Deze ${n} elementen komen`} uit een ander project. Hoe wil je plakken?`,
+            opties: [
+              { waarde: "zelfde", label: "Als hetzelfde element (zelfde identiteit; bestaande blijven staan)" },
+              { waarde: "kopie", label: "Als kopie (nieuwe elementen)" },
+            ],
+            waarde: "zelfde",
+            bevestig: "Plak",
+          });
+      if (!wijze) return;
+      const plan = bereidPlakVoor({
+        inhoud: kb.inhoud?.elements || {},
+        doelElements: useStore.getState().elements,
+        wijze,
+        maakId: (el, i) => {
+          if (el.source) {
+            _connTeller += 1;
+            return `conn_${Date.now()}_${_connTeller}_${i}`;
+          }
+          return maakElement(el.elementType)?.id || `${el.elementType}_${Date.now()}_${i}`;
+        },
+      });
+      // Op het diagram: wat geselecteerd was, voor zover het er nog niet staat.
+      const opDiagram = new Set((useStore.getState().diagrams[dId]?.nodes || []).map((x) => x.elementId));
+      const wortels = kb.elementIds.filter((eid) => plan.idMap.has(eid) && !opDiagram.has(plan.idMap.get(eid)));
+      const ps = wortels.map((eid) => kb.posities?.[eid] || { x: 0, y: 0 });
+      const minX = Math.min(...ps.map((q) => q.x));
+      const minY = Math.min(...ps.map((q) => q.y));
+      const midden = layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 200 };
+      const acties = [
+        ...plan.toevoegen.map((el) => () => useStore.getState().addElement(el)),
+        ...wortels.map((eid, i) => () => {
+          const doelId = plan.idMap.get(eid);
+          useStore.getState().addElementToDiagram(dId, doelId, { x: midden.x - 150 + (ps[i].x - minX), y: midden.y - 100 + (ps[i].y - minY) });
+          if (plan.hergebruikt.includes(doelId)) naTerugzetten(dId, doelId);
+        }),
+      ];
+      // Eén Ctrl+Z voor de hele plak.
+      if (acties.length) metHookInEenStap(acties[0], () => acties.slice(1).forEach((f) => f()));
+      const samenvatting = plakSamenvatting(plan);
+      if (!acties.length) toonMelding({ tekst: samenvatting || "Alles van het klembord staat al op dit diagram." });
+      else if (samenvatting) toonMelding({ titel: "Geplakt uit een ander project", tekst: samenvatting });
+    };
+
     const plakKlembord = ({ alsKopie = false } = {}) => {
-      const kb = _klembord;
+      const kb = leesKlembord("elementen");
       if (!kb) return false;
       if (kb.profielId !== id) {
         toonMelding({ tekst: "Het klembord bevat elementen van een andere taal; plakken kan alleen in dezelfde taal." });
@@ -3036,6 +3108,10 @@ export function maakDiagramActiviteit(opties) {
       const s = useStore.getState();
       const dId = s.actiefDiagramId;
       if (!dId) return false;
+      if (uitAnderProject(kb)) {
+        plakUitAnderProject(kb, { alsKopie });
+        return true;
+      }
       const opDiagram = new Set((s.diagrams[dId]?.nodes || []).map((n) => n.elementId));
       const zelfdeDiagram = kb.diagramId === dId;
       const bestaand = kb.elementIds.filter((eid) => s.elements[eid]);
