@@ -1,0 +1,106 @@
+{
+  "activity05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "559679b71c147f5d"
+  },
+  "archimate05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "5b6cafde94bb9300"
+  },
+  "bpmnMotor05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "97f1e8e21ad15a00"
+  },
+  "business05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "34edc32d97f25f67"
+  },
+  "cmmn05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "429a84bdc560c7f3"
+  },
+  "communication05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "5b85be273793887d"
+  },
+  "componentDeployment05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "7d5cc2db5fe9328d"
+  },
+  "compositeStructure05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "4a8e13ff2eeda515"
+  },
+  "diagram05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "91cc35d0cc18450e"
+  },
+  "dmnDrd05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "a3dd0fd0608e567e"
+  },
+  "erd05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "94748fbe8f34318c"
+  },
+  "formulierdiagram": {
+    "versie": "1.0.0",
+    "vingerafdruk": "5ff86a6503acf04b"
+  },
+  "graphql05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "ba9b072565a3062b"
+  },
+  "mim05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "157943467c0f2dec"
+  },
+  "oas05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "4f90a7b946f0681f"
+  },
+  "object05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "b92ed12d0ad03157"
+  },
+  "puurUml05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "5180290c7568e27a"
+  },
+  "requirements05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "d7c6a56bf1cf9e31"
+  },
+  "sequence05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "138f27784254df5a"
+  },
+  "shacl05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "cec17212e1383cd0"
+  },
+  "statemachine05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "1e3dd73eed3863c8"
+  },
+  "sysml05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "c499a401383a741b"
+  },
+  "toegangsregels": {
+    "versie": "1.0.0",
+    "vingerafdruk": "b56bfbdfd3bd8c7d"
+  },
+  "usecase05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "9277ba9094ba2d3e"
+  },
+  "wsdl05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "04cd6370f0204c0a"
+  },
+  "xsd05": {
+    "versie": "1.0.0",
+    "vingerafdruk": "b6c8fb2e3cfdf170"
+  }
+}

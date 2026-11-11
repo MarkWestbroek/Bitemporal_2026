@@ -17,6 +17,7 @@ import { valideerAardEnFacetten, valideerLayoutStijl } from "./layoutStijl.js";
 import { vulSuperprofielAan } from "./superprofiel.js";
 import { lidConnectoren } from "./containerVoor.js";
 import { valideerShapeType, registreerShapeType } from "./shapeType.js";
+import { isProfielVersie, STANDAARD_PROFIELVERSIE } from "./profielVersie.js";
 
 /**
  * Profiel zonder eigen layouts: de algemene gelaagde layout volgens zijn LayoutStijlen (M3,
@@ -102,6 +103,9 @@ export function valideerDiagramType(dtRauw) {
   if (!dt?.id) fouten.push("DiagramType: id ontbreekt");
   if (!dt?.label) fouten.push(`DiagramType "${dt?.id ?? "?"}": label ontbreekt`);
   if (!dt?.style) fouten.push(`DiagramType "${dt?.id ?? "?"}": style (StyleType-id) ontbreekt`);
+  if (dt?.versie !== undefined && !isProfielVersie(dt.versie)) {
+    fouten.push(`DiagramType "${dt?.id ?? "?"}": versie "${dt.versie}" is geen versie als "1.2.3"`);
+  }
   if (!Array.isArray(dt?.elementTypes) || dt.elementTypes.length === 0) {
     fouten.push(`DiagramType "${dt?.id ?? "?"}": elementTypes ontbreekt of is leeg`);
     return fouten;
@@ -188,6 +192,8 @@ export function registreerDiagramType(descriptor) {
   normaliseerErfenis(descriptor);
   vulSuperprofielAan(descriptor);
   vulLayoutsAan(descriptor);
+  // Elk geregistreerd profiel heeft een versie (types/profielVersie.js).
+  if (!descriptor.versie) descriptor.versie = STANDAARD_PROFIELVERSIE;
   (descriptor.shapeTypes || []).forEach(registreerShapeType);
   _diagramTypes.set(descriptor.id, descriptor);
 }
@@ -206,6 +212,8 @@ export function vervangDiagramType(descriptor) {
   normaliseerErfenis(descriptor);
   vulSuperprofielAan(descriptor);
   vulLayoutsAan(descriptor);
+  // Elk geregistreerd profiel heeft een versie (types/profielVersie.js).
+  if (!descriptor.versie) descriptor.versie = STANDAARD_PROFIELVERSIE;
   (descriptor.shapeTypes || []).forEach(registreerShapeType);
   _diagramTypes.set(descriptor.id, descriptor);
 }

@@ -522,6 +522,12 @@
  * @typedef {Object} DiagramType
  * @property {string} id                    - bv. "canoniek-uml", "puur-uml", "oas31"
  * @property {string} label
+ * @property {string} [versie]              - de versie van dit profiel, semver "1.2.3" (M3,
+ *   2026-11-11). Een project noteert per profiel de versie waarmee het is bewaard
+ *   (`profielVersies`); de Studio vergelijkt die bij het openen. major = bestaande modellen
+ *   veranderen van betekenis of vragen een migratie; minor = uitbreiding; patch = alleen
+ *   weergave. Zonder eigen versie zet de registratie "1.0.0". Zie types/profielVersie.js; de
+ *   vingerafdruk-test in render-svc faalt bij een structuurwijziging zonder versieverhoging.
  * @property {string[]} [oudeBeschrijvingSleutels] - sleutels waaronder dit profiel
  *   vóór 2026-10-12 de beschrijving bewaarde (bv. `["toelichting", "notes"]`);
  *   bij het laden migreren ze naar `data.beschrijving` (elementen en velden).

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "bouw": "node bouw.mjs",
-    "test": "node bouw.mjs && node --test server.test.mjs"
+    "test": "node bouw.mjs && node --test server.test.mjs profielVersies.test.mjs",
+    "profielversies": "node bouw.mjs && node profielVersies.mjs --bijwerken"
   },
   "devDependencies": {
     "@xyflow/system": "^0.0.75",
