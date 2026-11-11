@@ -692,6 +692,27 @@ te wijzigen.
 > diagramwissel zijn React Flow-maat van het vorige diagram mee (width/height na met de muis
 > resizen): vak smal, omhulling en aanhechtpunten breed, lijnen in het niets. Nu alleen
 > hergebruik binnen hetzelfde diagram (`nodesDiagramRef`); e2e `59-studio-maat-per-diagram`.
+> **Klembord over projecten en tabs (KLEM-1, 11-11, Mark):** het klembord voor elementen
+> (Ctrl+C/Ctrl+V op het canvas) en voor diagrammen (*Kopieer diagram* in de boom) staat in
+> `studio/klembord.js`: in het geheugen én in localStorage (`studio-klembord:elementen`,
+> `studio-klembord:diagram`), met het bronproject, de profielversie en de **inhoud**: de
+> gekopieerde elementen, hun kinderen in de boom (de GE's van een ENT) en de connectoren
+> ertussen. Zo plak je na een projectwissel, of in een andere tab, in een ander project. Binnen
+> hetzelfde project is alles als voorheen (verwijzing, of kopie met "(kopie)"). Uit een ander
+> project (`uitAnderProject`) is er een keuze, omdat de uuid de identiteit is: **als hetzelfde
+> element** = id en uuid blijven; staat het er al (zelfde id, of zelfde uuid onder een ander
+> id) dan wordt het bestaande hergebruikt en **niet overschreven**; zelfde id met een andere
+> uuid is een conflict en wordt niet geplakt (melding: plak als kopie). **Als kopie** = nieuwe
+> id's, uuid's weg (ook van velden), namen blijven. Op het canvas vraagt Ctrl+V de keuze en
+> kiest Ctrl+Shift+V meteen de kopie; in de boom staan beide onder *Plak diagram "…" uit "…"*.
+> Plakken blijft binnen dezelfde taal en weigert bij een andere hoofdversie van het profiel.
+> Zuivere regels: `bereidPlakVoor`, `verzamelInhoud`, `vervangIdsInElement` (getest); e2e
+> `61-studio-klembord-ander-project`. **Let op bij twee tabs:** de werkkopie van de Studio is
+> per browser, niet per tab (modellen in IndexedDB `studio05-<profiel>`, projectidentiteit in
+> localStorage `studio-modelleren`). Twee tabs met twee projecten werken zolang je geen van
+> beide herlaadt; na herladen krijgt een tab wat er het laatst is bewaard, mogelijk van het
+> andere project. De veilige weg is één tab: kopiëren, van project wisselen, plakken. Zie
+> BACKLOG TAB-1.
 > **Profielversie in het project (11-11, Mark):** een model (M1) leunt op zijn profiel (M2), en
 > de profielen zitten vast in de Studio. Daarom heeft elk profiel een eigen versie
 > (`DiagramType.versie`, semver; zonder eigen versie zet de registratie "1.0.0") en noteert het
