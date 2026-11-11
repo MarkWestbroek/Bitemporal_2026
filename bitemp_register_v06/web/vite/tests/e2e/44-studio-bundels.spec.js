@@ -74,7 +74,7 @@ test("bundel: bewaren, openen voegt toe, delen met het project", async ({ page }
   await expect(rijen.first()).toContainText("👥");
   const gedeeld = await inModelleren(page, `return Object.values(ms.getState().bundels).map((b) => [b.naam, b.tabs.map((t) => t.diagramId)]);`);
   expect(gedeeld).toEqual([["Kern", ["d_b_Een", "d_b_Twee"]]]);
-  // En het gaat mee in het projectbestand (structuur.bundels) — via de opslag van de projectlaag.
-  const inProject = await inModelleren(page, `return Object.values(JSON.parse(localStorage.getItem("studio-modelleren")).bundels || {}).map((b) => b.naam);`);
+  // En het gaat mee in het projectbestand (structuur.bundels) — via de opslag van de projectlaag (per project, TAB-1).
+  const inProject = await inModelleren(page, `return Object.values(JSON.parse(localStorage.getItem("studio-project::" + ms.getState().project.id)).bundels || {}).map((b) => b.naam);`);
   expect(inProject).toEqual(["Kern"]);
 });

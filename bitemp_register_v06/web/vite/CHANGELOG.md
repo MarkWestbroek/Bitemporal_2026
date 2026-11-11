@@ -29,6 +29,14 @@ De single source of truth voor het nummer is `package.json` `"version"`.
   versieverhoging leg je vast met `npm run profielversies`.
 
 ### Opgelost
+- **Twee tabs met twee projecten haalden elkaars werk door elkaar** (TAB-1, nagespeeld 11-11). De werkkopie in de
+  browser was er één per browser: na herladen had een tab de naam van het ene project met de inhoud van het
+  andere, en een snapshot stuurde dat mengsel naar de server. De werkkopie is nu **per project**: elke bewaarde
+  sleutel heeft het project-id erachter (modellen in IndexedDB, projectlaag, kruisverbanden en de wachtrij met
+  onverstuurde wijzigingen in localStorage), en een tab onthoudt zelf welk project hij open heeft. De bestaande
+  werkkopie verhuist één keer mee naar haar project. Een nieuwe tab opent het project van de tab die je het
+  laatst gebruikte. Werkkopieën die 30 dagen niet zijn aangeraakt worden opgeruimd.
+  `diagramcore/model/opslagRuimte.js`, `studio/werkkopie.js`; e2e-spec 62.
 - **Plakken als kopie verving de naam** als die gelijk was aan het id (een entiteit "Aanvraag" met id "Aanvraag"
   heette daarna naar zijn nieuwe id). Bij *Plak diagram ▸ Elementen kopiëren naar deze plek* houden het element
   en zijn velden nu hun naam.

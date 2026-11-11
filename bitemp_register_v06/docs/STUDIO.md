@@ -707,12 +707,34 @@ te wijzigen.
 > kiest Ctrl+Shift+V meteen de kopie; in de boom staan beide onder *Plak diagram "…" uit "…"*.
 > Plakken blijft binnen dezelfde taal en weigert bij een andere hoofdversie van het profiel.
 > Zuivere regels: `bereidPlakVoor`, `verzamelInhoud`, `vervangIdsInElement` (getest); e2e
-> `61-studio-klembord-ander-project`. **Let op bij twee tabs:** de werkkopie van de Studio is
-> per browser, niet per tab (modellen in IndexedDB `studio05-<profiel>`, projectidentiteit in
-> localStorage `studio-modelleren`). Twee tabs met twee projecten werken zolang je geen van
-> beide herlaadt; na herladen krijgt een tab wat er het laatst is bewaard, mogelijk van het
-> andere project. De veilige weg is één tab: kopiëren, van project wisselen, plakken. Zie
-> BACKLOG TAB-1.
+> `61-studio-klembord-ander-project`. Twee tabs met twee projecten kan sinds de werkkopie
+> per project (hieronder).
+> **Werkkopie per project (TAB-1, 11-11, Mark):** tot 11-11 had de browser één werkkopie
+> (modellen in IndexedDB onder `studio05-<profiel>`, projectlaag in localStorage onder
+> `studio-modelleren`). Twee tabs met twee projecten schreven naar dezelfde plek; nagespeeld:
+> na herladen heette tab 1 "GPK" met de entiteiten van Evenementen, en dat is ook wat een
+> snapshot naar de server stuurt. Nu staat het project-id achter elke bewaarde sleutel
+> (`<basis>::<projectId>`): de modelstores (`studio05-<profiel>::…` in IndexedDB), de
+> projectlaag (`studio-project::…`), de kruisverbanden (`studio-kruisverbanden::…`) en de
+> outbox (`studio-outbox::…`); de werkruimte was al per project. Een tab onthoudt zijn project
+> in `sessionStorage["studio-tab-project"]` (overleeft herladen); een nieuwe tab opent
+> `localStorage["studio-laatste-project"]`: het project van de tab die je het laatst gebruikte
+> of bewerkte. Bij een projectwissel (`zetProject` met een ander id → `zetOpslagRuimte`)
+> schrijven alle stores eerst wat nog wacht naar de sleutel van het vorige project en gaan dan
+> verder onder de nieuwe; de werkkopie van het vorige project blijft staan. *Nieuw project*
+> wisselt daarom eerst en maakt dan leeg. **Verhuizing:** de oude sleutels zonder project
+> horen bij het project dat in `studio-modelleren` stond; dat id wordt één keer vastgelegd
+> (`studio-werkkopie-oud-project`) en alleen dát project neemt ze over (de modelstores
+> verhuizen en de oude sleutel verdwijnt; `studio-modelleren` wordt alleen nog gelezen).
+> **Opruimen:** `studio/werkkopie.js` houdt in `studio-werkkopieen` bij welke werkkopieën er
+> zijn; bij het starten verdwijnt wat 30 dagen niet is bewerkt (nooit het project van de tab
+> zelf). Een project dat alleen lokaal bestond is dan weg; vóór 11-11 was het al weg zodra je
+> een ander project opende. **Grenzen:** twee tabs op *hetzelfde* project delen nog steeds
+> één werkkopie (de laatste schrijver wint lokaal; de server-sync houdt ze gelijk); de
+> klassieke editors met eigen opslag doen niet mee; een oudere Studio-versie leest de nieuwe
+> sleutels niet. Regels en tests: `diagramcore/model/opslagRuimte.js` (+ test, ook
+> `opslag.js` `oudeNaam`/`geladen`), `studio/werkkopie.js` (+ test); e2e
+> `62-studio-werkkopie-per-project` (twee tabs; verhuizing van de oude werkkopie).
 > **Profielversie in het project (11-11, Mark):** een model (M1) leunt op zijn profiel (M2), en
 > de profielen zitten vast in de Studio. Daarom heeft elk profiel een eigen versie
 > (`DiagramType.versie`, semver; zonder eigen versie zet de registratie "1.0.0") en noteert het

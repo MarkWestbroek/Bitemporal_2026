@@ -14,6 +14,7 @@
  */
 import { apiBase } from "../../shared/apiBase.js";
 import { clientId } from "../sync/outbox.js";
+import { nieuwRuimteId } from "../../diagramcore/model/opslagRuimte.js";
 
 export const PROJECT_FORMAAT = "studio-project";
 export const PROJECT_FORMAAT_VERSIE = 3; // v3: zonder tabs/actieveTab en zonder viewports (werkruimte-laag)
@@ -21,11 +22,7 @@ export const STANDAARD_PROJECTNAAM = "Naamloos project";
 
 /** Nieuw project-id: UUID (de server accepteert 8–64 tekens uit [A-Za-z0-9_-]). */
 export function nieuwProjectId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID();
-  }
-  // Fallback zonder Web Crypto (oude webviews): tijd + toeval, zelfde alfabet.
-  return `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+  return nieuwRuimteId();
 }
 
 /** "studio-project-2026-10-07.json" → "studio-project-2026-10-07"; leeg → standaardnaam. */
