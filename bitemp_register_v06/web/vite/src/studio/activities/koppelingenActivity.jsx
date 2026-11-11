@@ -40,6 +40,7 @@ import {
 // Circulaire import (grafisch ↔ activity): veilig omdat het pas bij render
 // gebruikt wordt, niet tijdens module-evaluatie.
 import KoppelingenGrafisch from "./koppelingenGrafisch.jsx";
+import { sleutelIn, neemtOudeOver } from "../../diagramcore/model/opslagRuimte.js";
 
 // ── Trace-typen: soort + symbool + default-richting ─────────────────
 // `stijl` stuurt het symbool (UML-achtig): realisatie = gestippeld + holle
@@ -134,9 +135,11 @@ export function TraceGlyph({ soort, omgekeerd = false, size = 24 }) {
 // ── Store ───────────────────────────────────────────────────────────
 const LS_KEY = "studio-kruisverbanden";
 
+// Per project (TAB-1, 11-11): `studio-kruisverbanden::<projectId>`. De oude sleutel zonder
+// project wordt alleen nog gelezen door het project waar hij bij hoorde.
 function leesOpslag() {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(sleutelIn(LS_KEY)) ?? (neemtOudeOver() ? localStorage.getItem(LS_KEY) : null);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return {};
@@ -145,7 +148,7 @@ function leesOpslag() {
 function bewaar(state) {
   try {
     localStorage.setItem(
-      LS_KEY,
+      sleutelIn(LS_KEY),
       JSON.stringify({
         links: state.links,
         soorten: state.soorten,

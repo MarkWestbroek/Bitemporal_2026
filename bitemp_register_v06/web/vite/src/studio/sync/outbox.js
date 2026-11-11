@@ -10,6 +10,7 @@
  */
 import { create } from "zustand";
 import { abonneer } from "./operaties.js";
+import { sleutelIn, neemtOudeOver } from "../../diagramcore/model/opslagRuimte.js";
 
 const LS_SLEUTEL = "studio-outbox";
 const SS_SLEUTEL = "studio-client-id";
@@ -29,7 +30,8 @@ let persisteren = (() => {
 
 function leesOpslag() {
   try {
-    const raw = globalThis.localStorage?.getItem(LS_SLEUTEL);
+    // Per project (TAB-1, 11-11); de oude sleutel alleen voor het project waar hij bij hoorde.
+    const raw = globalThis.localStorage?.getItem(sleutelIn(LS_SLEUTEL)) ?? (neemtOudeOver() ? globalThis.localStorage?.getItem(LS_SLEUTEL) : null);
     if (raw) {
       const d = JSON.parse(raw);
       if (Array.isArray(d.ops)) {
@@ -45,7 +47,7 @@ function leesOpslag() {
 function schrijfOpslag({ ops, volgende, projectId }) {
   if (!persisteren) return;
   try {
-    globalThis.localStorage?.setItem(LS_SLEUTEL, JSON.stringify({ ops, volgende, projectId }));
+    globalThis.localStorage?.setItem(sleutelIn(LS_SLEUTEL), JSON.stringify({ ops, volgende, projectId }));
   } catch {
     /* geen opslag of vol — de snapshot-sync vangt dat op */
   }
@@ -122,7 +124,7 @@ export const useOutboxStore = create((set, get) => ({
     if (aan) schrijfOpslag(get());
     else {
       try {
-        globalThis.localStorage?.removeItem(LS_SLEUTEL);
+        globalThis.localStorage?.removeItem(sleutelIn(LS_SLEUTEL));
       } catch {
         /* geen opslag */
       }

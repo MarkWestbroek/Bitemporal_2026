@@ -14,6 +14,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { maakStoreOpslag, heeftIndexedDb, opslagFouten } from "./opslag.js";
+import { sleutelIn, neemtOudeOver, bijRuimteWissel } from "./opslagRuimte.js";
 import { temporal } from "zundo";
 import { nieuwVoorkomenId, voorkomenId, vindVoorkomen } from "./voorkomens.js";
 
@@ -92,7 +93,8 @@ export { opslagFouten };
 
 function veiligeLocalStorage(persistKey) {
   return {
-    getItem: (k) => localStorage.getItem(k),
+    // Zonder eigen werkkopie: die van vóór "per project", als die bij dit project hoort (TAB-1).
+    getItem: (k) => localStorage.getItem(k) ?? (k !== persistKey && neemtOudeOver() ? localStorage.getItem(persistKey) : null),
     removeItem: (k) => localStorage.removeItem(k),
     setItem: (k, v) => {
       try {
@@ -785,13 +787,18 @@ export function createDiagramStore({ persistKey } = {}) {
     return storeApi;
   }
 
+  // De werkkopie is per project (TAB-1, 11-11; zie opslagRuimte.js): de sleutel krijgt het
+  // project van deze tab erachter. De oude sleutel (zonder project) verhuist één keer mee, naar
+  // het project waar hij bij hoorde.
+  const naam = sleutelIn(persistKey);
+  let opslag = heeftIndexedDb() ? maakStoreOpslag(naam, { oudeNaam: neemtOudeOver() ? persistKey : null }) : null;
   storeApi = create(
     persist(metUndo, {
-      name: persistKey,
+      name: naam,
       // IndexedDB bewaart het persist-object zelf ({ state, version }); de
       // hydratatie is dan asynchroon — projectsync wacht erop (koppelModelStore),
       // de UI rendert even leeg en vult zich als de store geladen is.
-      storage: heeftIndexedDb() ? maakStoreOpslag(persistKey) : createJSONStorage(() => veiligeLocalStorage(persistKey)),
+      storage: opslag || createJSONStorage(() => veiligeLocalStorage(persistKey)),
       partialize: (state) => ({
         diagramTypeId: state.diagramTypeId,
         elements: state.elements,
@@ -802,6 +809,20 @@ export function createDiagramStore({ persistKey } = {}) {
       }),
     })
   );
+  // De tab gaat naar een ander project: wat nog wacht eerst naar de sleutel van het vorige
+  // project, daarna schrijft de store onder de nieuwe sleutel. De inhoud in het geheugen
+  // verhuist mee; wie van project wisselt laadt of wist die daarna zelf.
+  bijRuimteWissel((nieuw) => {
+    opslag?.flush?.();
+    const nieuweNaam = sleutelIn(persistKey, nieuw);
+    if (opslag) {
+      opslag = maakStoreOpslag(nieuweNaam, { geladen: true });
+      storeApi.persist.setOptions({ name: nieuweNaam, storage: opslag });
+    } else {
+      storeApi.persist.setOptions({ name: nieuweNaam });
+    }
+    storeApi.setState({}); // schrijft de huidige stand onder de nieuwe sleutel
+  });
   return storeApi;
 }
 

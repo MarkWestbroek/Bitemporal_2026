@@ -93,6 +93,11 @@ export const indexedDbKv = {
     const db = await openDb();
     return verzoek(db.transaction(STORE_NAAM, "readwrite").objectStore(STORE_NAAM).delete(naam));
   },
+  /** Alle sleutels (voor het opruimen van oude werkkopieën). @returns {Promise<string[]>} */
+  async sleutels() {
+    const db = await openDb();
+    return (await verzoek(db.transaction(STORE_NAAM, "readonly").objectStore(STORE_NAAM).getAllKeys())).map(String);
+  },
 };
 
 /** Backend op een Map (tests, of browsers zonder IndexedDB). */
@@ -101,6 +106,7 @@ export function geheugenKv(map = new Map()) {
     async get(naam) { return map.get(naam); },
     async put(naam, waarde) { map.set(naam, waarde); },
     async del(naam) { map.delete(naam); },
+    async sleutels() { return [...map.keys()]; },
     map,
   };
 }
@@ -108,11 +114,15 @@ export function geheugenKv(map = new Map()) {
 /**
  * Maak de persist-storage voor één store.
  * @param {string} persistKey
- * @param {{kv?: {get:Function, put:Function, del:Function}, localStorage?: Storage|null, wachtMs?: number}} [opties]
+ * @param {{kv?: {get:Function, put:Function, del:Function}, localStorage?: Storage|null, wachtMs?: number, oudeNaam?: string|null, geladen?: boolean}} [opties]
+ *   - `oudeNaam` (TAB-1, 11-11): de sleutel van vóór de werkkopie per project. Staat er onder de
+ *     eigen sleutel niets, dan verhuist wat onder `oudeNaam` staat hierheen (één keer).
+ *   - `geladen`: de store heeft zijn inhoud al (verhuizing naar een ander project): niet eerst
+ *     lezen, meteen schrijven.
  * @returns {{getItem:Function, setItem:Function, removeItem:Function, flush:Function}}
  */
-export function maakStoreOpslag(persistKey, { kv = indexedDbKv, localStorage: ls = globalThis.localStorage || null, wachtMs = WACHT_MS } = {}) {
-  let gehydrateerd = false;
+export function maakStoreOpslag(persistKey, { kv = indexedDbKv, localStorage: ls = globalThis.localStorage || null, wachtMs = WACHT_MS, oudeNaam = null, geladen = false } = {}) {
+  let gehydrateerd = !!geladen;
   let laatste = undefined; // laatste aangeboden waarde (nog niet weggeschreven)
   let timer = null;
   let bezig = null; // lopende put
@@ -162,6 +172,19 @@ export function maakStoreOpslag(persistKey, { kv = indexedDbKv, localStorage: ls
             } catch (e) {
               meldFout(persistKey, e);
             }
+          }
+        }
+        if ((waarde === undefined || waarde === null) && oudeNaam && oudeNaam !== naam) {
+          // Werkkopie van vóór "per project" (TAB-1): verhuizen naar de eigen sleutel.
+          waarde = await kv.get(oudeNaam);
+          if (waarde === undefined || waarde === null) {
+            const oud = ls?.getItem?.(oudeNaam);
+            if (oud) waarde = JSON.parse(oud);
+          }
+          if (waarde !== undefined && waarde !== null) {
+            await kv.put(naam, waarde);
+            await kv.del(oudeNaam);
+            ls?.removeItem?.(oudeNaam);
           }
         }
         return waarde ?? null;

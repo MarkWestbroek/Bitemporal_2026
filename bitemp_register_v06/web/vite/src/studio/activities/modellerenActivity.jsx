@@ -64,6 +64,8 @@ import {
   eaImportTaak,
 } from "./projectSync.js";
 import { versieVan, noteerProfielVersies, beoordeelProfielVersies, profielVersieMelding } from "../../diagramcore/types/profielVersie.js";
+import { opslagRuimte, sleutelIn, neemtOudeOver, zetOpslagRuimte, markeerLaatsteProject } from "../../diagramcore/model/opslagRuimte.js";
+import { LS_PROJECT, noteerWerkkopie, ruimOudeWerkkopieenOp } from "../werkkopie.js";
 import { zetKlembord, leesKlembord, uitAnderProject, zetKlembordProject, vervangIds, vervangIdsInElement, verzamelInhoud, bereidPlakVoor, plakSamenvatting } from "../klembord.js";
 import { IconModelleren } from "../icons";
 import {
@@ -123,13 +125,22 @@ const isElementKey = (key) => key.startsWith("el::");
 //  - `studio-werkruimte:<projectId>`: de werkruimte-laag (open tabs, actieve tab,
 //    open/dicht mappen) — van jou, per project; wisselen van project bewaart hem.
 // Apparaat-instellingen (paneelbreedtes, taakbalken) staan in studio-shell e.d.
+//
+// Werkkopie per project (TAB-1, 11-11): de project-laag staat onder
+// `studio-project::<projectId>`, en een tab onthoudt zelf welk project hij open heeft
+// (diagramcore/model/opslagRuimte.js). `studio-modelleren` is de oude, gedeelde sleutel: die
+// wordt alleen nog gelezen, door het project dat erin stond, en niet meer geschreven.
 const LS_KEY = "studio-modelleren";
 const werkruimteSleutel = (projectId) => `studio-werkruimte:${projectId}`;
 
 function leesOpslag() {
   try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) return JSON.parse(raw);
+    const eigen = localStorage.getItem(sleutelIn(LS_PROJECT));
+    if (eigen) return JSON.parse(eigen);
+    if (neemtOudeOver()) {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) return JSON.parse(raw);
+    }
   } catch { /* ignore */ }
   return {};
 }
@@ -152,8 +163,11 @@ let _werkruimteLaatst = "";
 
 function schrijfOpslag(state) {
   try {
+    // Onder de sleutel van het project zelf: een tab schrijft nooit in andermans werkkopie.
+    if (state.project?.id) noteerWerkkopie(state.project);
+    markeerLaatsteProject();
     localStorage.setItem(
-      LS_KEY,
+      sleutelIn(LS_PROJECT, state.project?.id || opslagRuimte()),
       JSON.stringify({
         mappen: state.mappen,
         plaatsing: state.plaatsing,
@@ -228,9 +242,18 @@ function rijenInLijst(el) {
 }
 
 const opgeslagen = leesOpslag();
+// Zonder bewaarde projectlaag: een leeg project op het id van deze tab (de modelstores zijn
+// al onder dat id gemaakt).
 const projectBegin = opgeslagen.project?.id
   ? { serverVersie: null, ...opgeslagen.project }
-  : { id: nieuwProjectId(), naam: STANDAARD_PROJECTNAAM, serverVersie: null };
+  : { id: opslagRuimte() || nieuwProjectId(), naam: STANDAARD_PROJECTNAAM, serverVersie: null };
+// Werkkopieën die lang niet zijn aangeraakt mogen weg (studio/werkkopie.js); na het opstarten.
+if (typeof window !== "undefined") setTimeout(() => ruimOudeWerkkopieenOp(opslagRuimte()), 15_000);
+// Een nieuwe tab opent het project van de tab die je het laatst gebruikte (focus), of bewerkte.
+if (typeof window !== "undefined") {
+  window.addEventListener("focus", () => markeerLaatsteProject());
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") markeerLaatsteProject(); });
+}
 // Werkruimte van dit project; een oude `studio-modelleren` met tabs erin
 // (vóór 2026-10-07) wordt eenmalig als werkruimte overgenomen.
 const werkruimteBegin = (() => {
@@ -394,6 +417,9 @@ export const useModellerenStore = create((set, get) => ({
     set((s) => {
       const project = { ...s.project, ...patch };
       const wissel = patch.id && patch.id !== s.project.id;
+      // Ander project: de tab en al zijn bewaarde stores verhuizen naar de werkkopie van dát
+      // project (TAB-1). De werkkopie van het vorige project blijft staan.
+      if (wissel) zetOpslagRuimte(project.id);
       const wr = wissel ? leesWerkruimte(project.id) : null;
       const next = wissel
         ? { ...s, project, tabs: wr.tabs, actieveTab: wr.actieveTab, mapOpen: wr.mapOpen, mijnBundels: wr.mijnBundels, mapSelectie: null, diagramSelectie: null, elementSelectie: null, multiSelectie: [] }
@@ -3821,6 +3847,9 @@ function pasProjectToe(data, { serverVersie = null, laatsteVolgnummer = 0, herko
 function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
   _onbekendeProfielen = {}; // nieuw project: niets van het vorige mee
   _geladenProfielVersies = {};
+  // Eerst naar het nieuwe project, dan leegmaken: andersom zou het leegmaken in de werkkopie
+  // van het vorige project landen (TAB-1, 11-11).
+  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null });
   zonderVastleggen(() => {
     for (const p of getProfieltypen()) {
       if (p.klassiek) continue;
@@ -3831,7 +3860,6 @@ function leegProject({ naam = STANDAARD_PROJECTNAAM } = {}) {
     useKruisStore.getState().laadLinks([], null);
   });
   useOutboxStore.getState().wis();
-  useModellerenStore.getState().zetProject({ id: nieuwProjectId(), naam, serverVersie: null, laatsteVolgnummer: 0, totVolgnummer: 0, liveSync: true, laatsteSync: null, herkomst: null, ouderNaam: null });
 }
 
 async function importeerProjectTekst(tekst, bestandsnaam = "") {
