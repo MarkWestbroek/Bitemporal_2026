@@ -32,6 +32,11 @@ test("GPK: token op het diagram, gat met de hand, doorlopen tot Beschikt", async
   sc.vulwijze.perGat = { "aanvraag-beoordelen": "hand" };
   await scenario.fill(JSON.stringify(sc, null, 2));
 
+  // Start bij: het proces van het scenario; elk proces met een startevent is te kiezen.
+  const startbij = page.getByTestId("sim-startproces");
+  await expect(startbij).toHaveValue("aanvraag-oppakken");
+  await expect(startbij.locator("option")).toHaveText([/^Aanvraag oppakken$/, /^Gehandicaptenparkeerkaart beoordelen \(start op een bericht/, /^Aanvraag behandelen \(start op een bericht/]);
+
   await page.getByTestId("sim-start").click();
   await expect(page.getByTestId("sim-stand")).toHaveText(/Loopt/);
   // Het token staat op het startevent: een rand in de kleur van "kan verder".

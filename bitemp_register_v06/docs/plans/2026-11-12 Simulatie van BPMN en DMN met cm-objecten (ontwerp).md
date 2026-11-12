@@ -651,6 +651,14 @@ De beslistabellen komen uit de DMN-profielen van het project. Het
 e-dienstmodel is een bestand dat je kiest. "GPK-voorbeeld laden" zet de drie
 GPK-processen in de activiteit, met beslistabel, e-dienstmodel en scenario 4.
 
+**Welk proces start.** Onder "Start bij" kies je het proces waar het
+startobject binnenkomt. Kies je niets, dan is het het proces dat het scenario
+noemt, anders het diagram dat open staat, anders het eerste proces met een
+startevent zonder trigger. Een proces dat op een bericht start is ook te
+kiezen: het start dan alsof dat bericht binnenkomt. Zonder e-dienstmodel is
+elk diagram met een startevent een proces, ook een schets (bevinding Mark
+13-11: de run begon ongevraagd bij "Kies zaak uit werkbak").
+
 **Getoetst** met `tests/e2e/63-studio-simulatie.spec.js`: voorbeeld laden,
 starten, het token op startevent en gateway, doorlopen tot het gat bij Aanvraag
 beoordelen (het diagram volgt naar het beoordelingsproces), een verplicht veld

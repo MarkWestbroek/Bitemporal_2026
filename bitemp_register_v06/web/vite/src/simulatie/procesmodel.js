@@ -79,6 +79,14 @@ export function leesProcessen(modelBestand, edienst) {
 export const gewoneStart = (proces, elementen) =>
   [...proces.elementen].map((id) => elementen[id]).find((e) => e.elementType === "start-event" && !e.data?.soort) || null;
 
+/**
+ * Waar een proces begint als je het zelf start: het startevent zonder trigger,
+ * en anders zijn eerste startevent (een proces dat op een bericht start, start
+ * je dan alsof dat bericht binnenkomt).
+ */
+export const startVan = (proces, elementen) =>
+  gewoneStart(proces, elementen) || [...proces.elementen].map((id) => elementen[id]).find((e) => e.elementType === "start-event") || null;
+
 /** Het proces met een message start event voor dit bericht, en dat event. */
 export function startOpBericht(processen, elementen, naam) {
   for (const proces of processen) {

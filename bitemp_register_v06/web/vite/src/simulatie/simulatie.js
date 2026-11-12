@@ -26,7 +26,7 @@
  * Puur: alle toestand staat in het log (store.js).
  */
 import { legeToestand, pasToe, toestandUit, PROCESINSTANTIE } from "./store.js";
-import { leesProcessen, gewoneStart, startOpBericht } from "./procesmodel.js";
+import { leesProcessen, gewoneStart, startVan, startOpBericht } from "./procesmodel.js";
 import { rekenBeslissingUit, vindBeslissing, rekenCel, Onleesbaar } from "./beslistabel.js";
 import { verwachtVoorFormulier, willekeurig, kiesWijze, antwoordUitFixture, toets } from "./gaten.js";
 import { leesAlsCel, isJuel } from "../transformatie/celOmzetting.js";
@@ -358,8 +358,9 @@ export function maakSimulatie({ m1, scenario }) {
   function start() {
     if (log.length) throw new Error("De simulatie is al gestart");
     const s = scenario.start || {};
+    // Het proces dat het scenario noemt (op id of naam); anders het eerste met een startevent zonder trigger.
     const proces = s.proces ? procesVan(s.proces) || processen.find((p) => p.naam === s.proces) : processen.find((p) => gewoneStart(p, elementen));
-    const startEvent = proces && gewoneStart(proces, elementen);
+    const startEvent = proces && startVan(proces, elementen);
     if (!startEvent) throw new Error(`Geen proces met een startevent gevonden${s.proces ? ` voor "${s.proces}"` : ""}`);
     sleutel = s.id || "startobject";
     nieuweRegel(`Start: ${s.type || "object"} bij "${startEvent.naam || proces.naam}"`, startEvent.id);

@@ -28,6 +28,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { maakSimulatie } from "../../simulatie/simulatie.js";
 import { willekeurig } from "../../simulatie/gaten.js";
 import { PROCESINSTANTIE } from "../../simulatie/store.js";
+import { leesProcessen, startVan, gewoneStart } from "../../simulatie/procesmodel.js";
 import { tokenBeeld, tokenCss, standTekst, mutatieTekst, TOKEN_KLEUR } from "../../simulatie/weergave.js";
 import { getProfieltypen } from "../profieltypeRegistry";
 import { vraagBevestiging, toonMelding } from "../naamDialog.jsx";
@@ -58,7 +59,7 @@ const PROFIEL_ID = "bpmnMotor05";
  * eigen tabblad, en het paneel wordt opnieuw opgebouwd als het diagram het
  * token naar een ander proces volgt. De run mag dan niet verdwijnen.
  */
-const S = { sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, volg: true, fout: null, versie: 0 };
+const S = { sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, startProces: null, volg: true, fout: null, versie: 0 };
 const luisteraars = new Set();
 function zet(patch = {}) {
   Object.assign(S, patch);
@@ -91,8 +92,23 @@ function beslissingenUitProject() {
   return uit;
 }
 
+/**
+ * Vrije invoer bij een gat zonder bekende velden: JSON. Gekrulde aanhalingstekens
+ * (uit een tekstverwerker of een telefoon) tellen als rechte.
+ */
+function leesVrijeInvoer(tekst) {
+  const recht = String(tekst || "").replace(/[“”„«»]/g, '"').replace(/[‘’]/g, "'").trim();
+  try {
+    const w = JSON.parse(recht || "{}");
+    if (!w || typeof w !== "object" || Array.isArray(w)) throw new Error("geen object");
+    return w;
+  } catch (e) {
+    throw new Error(`Dit is geen geldige JSON. Verwacht iets als {"veld": "waarde"} (${e.message}).`);
+  }
+}
+
 /** Het rudimentaire formulier bij een gat: per verwacht veld een invoer naar type; zonder velden vrije JSON. */
-function GatFormulier({ gat, zaadje, onVul }) {
+function GatFormulier({ gat, zaadje, onVul, hulp }) {
   const [waarde, setWaarde] = useState({});
   const [vrij, setVrij] = useState("{}");
   const [fout, setFout] = useState(null);
@@ -104,7 +120,7 @@ function GatFormulier({ gat, zaadje, onVul }) {
   const zet = (naam, w) => setWaarde((v) => ({ ...v, [naam]: w }));
   const vul = () => {
     try {
-      onVul(gat.velden.length ? waarde : JSON.parse(vrij || "{}"));
+      onVul(gat.velden.length ? waarde : leesVrijeInvoer(vrij));
     } catch (e) {
       setFout(e.message);
     }
@@ -148,9 +164,10 @@ function GatFormulier({ gat, zaadje, onVul }) {
       {!gat.velden.length && (
         <label style={{ display: "block", fontSize: 12, marginBottom: 5 }}>
           Geen velden bekend; vrije invoer (JSON)
-          <textarea style={{ ...veldstijl, ...mono, height: 54 }} value={vrij} onChange={(e) => setVrij(e.target.value)} />
+          <textarea style={{ ...veldstijl, ...mono, height: 54 }} value={vrij} onChange={(e) => (setVrij(e.target.value), setFout(null))} data-testid="sim-vrij" />
         </label>
       )}
+      {hulp}
       {fout && <div style={{ color: TOKEN_KLEUR.vast, fontSize: 11, marginBottom: 4 }}>{fout}</div>}
       <div style={{ display: "flex", gap: 6 }}>
         <button style={hoofdknop} onClick={vul} data-testid="sim-vul">
@@ -208,15 +225,39 @@ export default function SimulatiePaneel({ useStore }) {
     zet({ fout: f });
   };
 
+  // Welk proces start: wat je hier kiest, anders wat het scenario noemt, anders het diagram dat
+  // open staat, anders het eerste proces met een startevent zonder trigger.
+  const actiefDiagramId = useStore((s) => s.actiefDiagramId);
+  const edienstNu = edienst?.inhoud || gpkAanvulling?.edienst || null;
+  const startbaar = useMemo(() => {
+    const { elementen, processen } = leesProcessen({ model: { elements, diagrams } }, edienstNu);
+    return processen.map((p) => ({ ...p, start: startVan(p, elementen), gewoon: !!gewoneStart(p, elementen) })).filter((p) => p.start);
+  }, [elements, diagrams, edienstNu]);
+  const scenarioProces = (() => {
+    try {
+      const naam = JSON.parse(scenarioTekst).start?.proces;
+      return startbaar.find((p) => p.id === naam || p.naam === naam)?.id || null;
+    } catch {
+      return null;
+    }
+  })();
+  const startProces =
+    (startbaar.some((p) => p.id === S.startProces) && S.startProces) ||
+    scenarioProces ||
+    startbaar.find((p) => p.diagramId === actiefDiagramId)?.id ||
+    startbaar.find((p) => p.gewoon)?.id ||
+    startbaar[0]?.id ||
+    null;
+
   const start = () =>
     probeer(() => {
       const scenario = JSON.parse(scenarioTekst);
       const m1 = {
         proces: { model_naam: "BPMN-model van het project", model: { elements, diagrams } },
         beslissingen: projectBeslissingen.length ? projectBeslissingen : gpkAanvulling ? [gpkAanvulling.beslissingen] : [],
-        edienst: edienst?.inhoud || gpkAanvulling?.edienst || null,
+        edienst: edienstNu,
       };
-      const nieuw = maakSimulatie({ m1, scenario });
+      const nieuw = maakSimulatie({ m1, scenario: { ...scenario, start: { ...scenario.start, proces: startProces } } });
       nieuw.start();
       Object.assign(S, { sim: nieuw, m1 });
     });
@@ -231,7 +272,8 @@ export default function SimulatiePaneel({ useStore }) {
 
   const kiesVoorbeeld = async (nr) => {
     if (!nr) return;
-    setScenarioTekst(JSON.stringify(await laadScenario(nr), null, 2));
+    // Een gekozen scenario noemt zijn eigen startproces; een eerdere keuze hier vervalt.
+    zet({ scenarioTekst: JSON.stringify(await laadScenario(nr), null, 2), startProces: null });
     if (!S.gpk) {
       const gpk = await laadGpk();
       zet({ gpk: { beslissingen: gpk.beslissingen, edienst: gpk.edienst } });
@@ -244,7 +286,7 @@ export default function SimulatiePaneel({ useStore }) {
     const eerste = Object.values(gpk.proces.model.diagrams).find((d) => d.naam === "Aanvraag oppakken");
     st.laadModel({ diagramTypeId: st.diagramTypeId, elements: gpk.proces.model.elements, diagrams: gpk.proces.model.diagrams, actiefDiagramId: eerste?.id });
     const leeg = !S.scenarioTekst || S.scenarioTekst.includes(`"naam": "${LEEG_SCENARIO.naam}"`);
-    zet({ sim: null, m1: null, fout: null, gpk: { beslissingen: gpk.beslissingen, edienst: gpk.edienst }, ...(leeg ? { scenarioTekst: JSON.stringify(await laadScenario(4), null, 2) } : {}) });
+    zet({ sim: null, m1: null, fout: null, startProces: null, gpk: { beslissingen: gpk.beslissingen, edienst: gpk.edienst }, ...(leeg ? { scenarioTekst: JSON.stringify(await laadScenario(4), null, 2) } : {}) });
     if (eerste) toonDiagram(useStore, eerste.id);
   };
   const kiesEdienst = (e) => {
@@ -257,6 +299,13 @@ export default function SimulatiePaneel({ useStore }) {
         toonMelding({ titel: "E-dienstmodel", tekst: `Geen geldige JSON: ${err.message}` });
       }
     });
+  };
+
+  /** Is dit gat er alleen omdat de beslistabel of het e-dienstmodel ontbreekt? */
+  const mistBron = (gat) => (gat.formulier && gat.formulierBekend === false) || (gat.kiest === "resultaat" && /niet gevonden/.test(gat.reden || ""));
+  const gebruikGpk = async () => {
+    const gpk = await laadGpk();
+    zet({ gpk: { beslissingen: gpk.beslissingen, edienst: gpk.edienst } });
   };
 
   const objecten = toestand ? Object.values(toestand.objecten) : [];
@@ -299,10 +348,36 @@ export default function SimulatiePaneel({ useStore }) {
           {standTekst(stand)}
         </div>
         {fout && <div style={{ color: TOKEN_KLEUR.vast, marginBottom: 6 }}>{fout}</div>}
-        {openGat && <GatFormulier gat={openGat} zaadje={zaadje} onVul={(w) => (sim.vul(openGat.id, w), ververs())} />}
+        {openGat && (
+          <GatFormulier
+            gat={openGat}
+            zaadje={zaadje}
+            onVul={(w) => (sim.vul(openGat.id, w), ververs())}
+            hulp={
+              mistBron(openGat) && (
+                <div style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", marginBottom: 6 }}>
+                  {openGat.formulier
+                    ? "Het taakformulier staat in het e-dienstmodel, en dat is niet geladen. "
+                    : "De beslistabel staat niet in een DMN-profiel van dit project. "}
+                  Stop de simulatie en kies onder "Waar de simulatie op draait" een e-dienstmodel of het GPK-voorbeeld; daarna vult de run dit gat zelf of toont hij de velden.
+                </div>
+              )
+            }
+          />
+        )}
 
         {!sim && (
           <>
+            <p style={{ ...kop, marginTop: 10 }}>Start bij</p>
+            <select style={veldstijl} value={startProces || ""} onChange={(e) => zet({ startProces: e.target.value })} data-testid="sim-startproces" title="Het proces waar het startobject binnenkomt">
+              {!startbaar.length && <option value="">(geen proces met een startevent)</option>}
+              {startbaar.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.naam}
+                  {p.gewoon ? "" : ` (start op een bericht${p.start.data?.bericht ? `: ${p.start.data.bericht}` : ""})`}
+                </option>
+              ))}
+            </select>
             <p style={{ ...kop, marginTop: 10 }}>Scenario</p>
             <div style={{ display: "flex", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
               <select style={{ ...veldstijl, width: "auto" }} value="" onChange={(e) => kiesVoorbeeld(Number(e.target.value))} data-testid="sim-voorbeeld">
@@ -330,8 +405,19 @@ export default function SimulatiePaneel({ useStore }) {
               E-dienstmodel: {edienst ? edienst.naam : gpkAanvulling ? "dat van het GPK-voorbeeld" : "geen; een taakformulier is dan vrije invoer"}.{" "}
               <label style={{ ...knop, display: "inline-block", marginTop: 4 }}>
                 Bestand kiezen
-                <input type="file" accept=".json" onChange={kiesEdienst} style={{ display: "none" }} />
+                <input type="file" accept=".json" onChange={kiesEdienst} style={{ display: "none" }} data-testid="sim-edienst" />
               </label>
+            </div>
+            <div style={{ marginTop: 4 }}>
+              {gpkAanvulling ? (
+                <button style={knop} onClick={() => zet({ gpk: null })} title="Gebruik alleen wat in het project staat en wat je zelf laadt">
+                  GPK-voorbeeld niet meer gebruiken
+                </button>
+              ) : (
+                <button style={knop} onClick={gebruikGpk} data-testid="sim-gebruik-gpk" title="De beslistabel aanvraag-ontvankelijk en het e-dienstmodel (process-id's en taakformulieren) van het GPK-voorbeeld; je eigen BPMN-model blijft staan">
+                  Beslistabel en e-dienstmodel van het GPK-voorbeeld gebruiken
+                </button>
+              )}
             </div>
           </>
         )}

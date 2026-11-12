@@ -293,6 +293,25 @@ test("bericht: geworpen vóórdat iemand wacht, blijft liggen tot het vangende e
   assert.deepEqual(sim.toestand().berichten, []);
 });
 
+test("start: het scenario kiest het proces; een proces dat op een bericht start, start alsof het bericht binnenkomt", () => {
+  const drie = (proces) => draai({ ...scenario(4), start: { ...scenario(4).start, proces } });
+  // Zonder e-dienstmodel is elk diagram met een startevent een proces, ook de schets "Kies zaak uit werkbak".
+  const zonder = maakSimulatie({ m1: { ...m1, edienst: null }, scenario: { ...scenario(1), start: { ...scenario(1).start, proces: "aanvraag-oppakken" } } });
+  assert.ok(zonder.processen.some((p) => p.id === "kies-zaak-uit-werkbak"));
+  assert.deepEqual(zonder.loop().eindes, [{ proces: "aanvraag-oppakken", einde: "Aanvraag niet opgepakt" }]);
+  // Op naam mag ook.
+  assert.equal(einde(drie("Aanvraag oppakken").stand, "aanvraag-behandelen"), "Beschikt");
+  // Het behandelproces start op een bericht; zelf gestart loopt het vast op de berichtnaam die het oppakken zou zetten.
+  const behandelen = drie("aanvraag-behandelen");
+  assert.equal(behandelen.sim.log[0].wat, 'Start: GehandicaptenparkeerkaartAanvraag bij "Behandeling gevraagd"');
+  assert.equal(behandelen.stand.soort, "vastgelopen");
+  assert.match(behandelen.stand.tokens[0].wachtOp.reden, /beoordelingsbericht/);
+  // Met die variabele in het scenario loopt het door.
+  const sc = scenario(4);
+  const met = draai({ ...sc, start: { ...sc.start, proces: "aanvraag-behandelen", variabelen: { ...sc.start.variabelen, beoordelingsbericht: "gehandicaptenparkeerkaart-beoordelen-gevraagd" } } });
+  assert.equal(einde(met.stand, "aanvraag-behandelen"), "Beschikt");
+});
+
 // ── Formaat ───────────────────────────────────────────────────────────
 
 test("formaat: M1-set met hashes, run met log; een gewijzigd model is te zien", async () => {
