@@ -2086,3 +2086,23 @@ uuid's met dezelfde namen (versies, probeersels en kopieën: nog open).
 DMN-artefact (`aanvraag-ontvankelijk`). De exportstap kan het DMN-model al kiezen (optie "BPMN- en
 DMN-modellen" neemt meerdere bestanden), maar e2e 37 gaf alleen het BPMN-bestand mee ("9 van 10
 artefacten gemaakt, 1 mislukt"). De test geeft nu ook `gpk-beslissingen.dmn-model.json` mee.
+
+## 41. Simulatie van BPMN en DMN met cm-objecten (2026-11-13)
+
+Ontwerp en stand: `docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten (ontwerp).md` (§8 vragen, §10
+stand). Fase 1 (de kern zonder scherm, `web/vite/src/simulatie/`) en fase 2 (het onder-dock Simulatie in
+de BPMN-activiteit, STUDIO.md) zijn gebouwd op de branch
+`claude/simulatie-bpmn-dmn-cm`; de vijf GPK-scenario's van FUNDAMENT slagen als test. Daarbij: CEL is de
+expressietaal in het BPMN- en DMN-model, JUEL en FEEL zijn uitvoer (`transformatie/celOmzetting.js`,
+TRANSFORMATIES §11.12).
+
+Open:
+
+- Het scherm: een startformulier naar het cm-type (nu JSON), de vulwijze met knoppen, twee open gaten tegelijk,
+  en het onder-dock standaard dicht.
+- De vragen 1, 3 tot 6 en 8 tot 14 uit het ontwerp; vraag 12 (Beslissing en beschikking als cm-objecten) na het
+  binnenhalen van main.
+- Het Studio-project Inrichten op omnium.fundament omzetten naar CEL (afspraak met FUNDAMENT).
+- `zetVariabelen` en de berichtnaam naar CEL, met de aanroep van de GZAC-bean in de regelset (`bpmnGzacRegels.js`).
+- JUEL → CEL bij de BPMN-import (`bpmnXmlImport`), en FEEL → CEL bij de DMN-import.
+- Fase 3: ketens met een andere partij (kopie, Berichttype en Procescontract), de semi-permanente store.

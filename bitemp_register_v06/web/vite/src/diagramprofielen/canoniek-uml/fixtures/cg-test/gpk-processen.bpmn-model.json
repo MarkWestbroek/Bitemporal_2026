@@ -247,7 +247,7 @@
         "target": "bp_zaak_aanmaken",
         "compartimenten": [],
         "data": {
-          "conditie": "${ontvankelijkheid.ontvankelijk}",
+          "conditie": "ontvankelijkheid.ontvankelijk",
           "standaard": false,
           "bpmnId": "f8"
         }
@@ -260,7 +260,7 @@
         "target": "bp_status_niet_opgepakt",
         "compartimenten": [],
         "data": {
-          "conditie": "${!ontvankelijkheid.ontvankelijk}",
+          "conditie": "!ontvankelijkheid.ontvankelijk",
           "standaard": false,
           "bpmnId": "f9",
           "knikken": [

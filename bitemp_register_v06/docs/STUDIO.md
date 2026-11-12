@@ -2236,3 +2236,26 @@ Het "Tabel"-menu exporteert context-afhankelijk:
 - Input/output variabelen mappen op metamodel-velden (FieldRef-binding voor DRD)
 - DMN-evaluatie integratie met process engine
 - Cross-referentie tussen DRD en tabel (decision → table mapping)
+
+## Simulatie van BPMN en DMN (onder-dock van de BPMN-activiteit, 2026-11-13)
+
+Onder het canvas van de BPMN-activiteit op de motor (`bpmnMotor05`) staat het onder-dock **Simulatie**: een
+proces met zijn beslistabellen doorlopen met een startobject uit het canonieke model, stap voor stap. Het is
+een denk- en demonstratiehulp, geen process engine; uitvoeren blijft bij Operaton.
+
+- **Token op het diagram**: een rand en een bolletje op het element waar het token staat (indigo = kan
+  verder, oranje = wacht op invoer, cyaan = wacht op een bericht of ander proces, rood = vastgelopen); waar
+  het geweest is blijft een dunne cyaan rand staan. Bij meer tokens op één element staat het aantal in het
+  bolletje. Het diagram volgt het token naar een ander proces.
+- **Gat**: waar de simulatie een waarde nodig heeft (een user task, een antwoord van een andere partij, een
+  actie buiten het cm, een conditie die niet te lezen is) vraagt het paneel erom, of vult het zelf:
+  willekeurig of uit het scenario.
+- **Objecten en log**: de objecten met hun state, en elke stap met zijn mutaties; een klik op een logregel
+  spoelt terug.
+- **GPK-voorbeeld laden** zet de drie GPK-processen met beslistabel, e-dienstmodel en een scenario klaar.
+
+Code: `web/vite/src/studio/activities/simulatiePaneel.jsx` (scherm) en `web/vite/src/simulatie/` (de kern,
+pure modules). Het token komt op het canvas via een stijlblok op element-id (`simulatie/weergave.js`); de
+motor is er niet voor gewijzigd. Ontwerp, keuzes en open vragen:
+`docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten (ontwerp).md`. E2E:
+`tests/e2e/63-studio-simulatie.spec.js`.

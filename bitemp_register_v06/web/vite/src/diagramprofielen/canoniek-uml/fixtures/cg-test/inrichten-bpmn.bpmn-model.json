@@ -268,7 +268,7 @@
         "id": "conn_1794148315720_9",
         "data": {
           "bpmnId": "toegekend",
-          "conditie": "${uitkomst == 'toegekend'}",
+          "conditie": "uitkomst == 'toegekend'",
           "standaard": false,
           "sourceHandle": null,
           "targetHandle": null
@@ -283,7 +283,7 @@
         "id": "conn_1794148364326_10",
         "data": {
           "bpmnId": "afgewezen",
-          "conditie": "${uitkomst == 'afgewezen'}",
+          "conditie": "uitkomst == 'afgewezen'",
           "sourceHandle": null,
           "targetHandle": null
         },
@@ -336,7 +336,7 @@
         "id": "conn_1794150219866_16",
         "data": {
           "bpmnId": "aanvulling",
-          "conditie": "${uitkomst == 'aanvulling'}",
+          "conditie": "uitkomst == 'aanvulling'",
           "sourceHandle": null,
           "targetHandle": null
         },
@@ -515,7 +515,7 @@
         "id": "bp_f8",
         "data": {
           "bpmnId": "f8",
-          "conditie": "${ontvankelijkheid.ontvankelijk}",
+          "conditie": "ontvankelijkheid.ontvankelijk",
           "standaard": false
         },
         "naam": "ja",
@@ -534,7 +534,7 @@
               "y": 260
             }
           ],
-          "conditie": "${!ontvankelijkheid.ontvankelijk}",
+          "conditie": "!ontvankelijkheid.ontvankelijk",
           "standaard": false
         },
         "naam": "nee",
