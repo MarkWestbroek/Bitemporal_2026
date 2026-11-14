@@ -215,10 +215,10 @@ export const BPMN_SHAPETYPES = [
   { id: "bpmn-gateway", renderer: "bpmn-gateway", parameters: { inhoud: "geen" }, minMaat: { w: 34, h: 34 } },
   { id: "bpmn-taak", renderer: "bpmn-taak", parameters: { inhoud: "naam", naamGrootte: 12, rand: "#7dd3fc" }, minMaat: { w: 90, h: 48 } },
   { id: "bpmn-subproces", renderer: "bpmn-subproces", parameters: { inhoud: "naam", naamGrootte: 12, rand: "#7dd3fc" }, minMaat: { w: 180, h: 52 } },
-  { id: "bpmn-data", renderer: "bpmn-data", parameters: { inhoud: "naam", naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
-  { id: "bpmn-datastore", renderer: "bpmn-datastore", parameters: { inhoud: "naam", naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
-  { id: "bpmn-lane", renderer: "kader", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "midden", lijn: "solid", hoekRadius: 4, kopHoogte: 26, kopLijn: true, tint: true, kleurAls: "rand" }, minMaat: { w: 240, h: 100 } },
-  { id: "bpmn-pool", renderer: "bpmn-pool", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "midden", kleurAls: "rand", rand: "#64748b" }, minMaat: { w: 320, h: 160 } },
+  { id: "bpmn-data", renderer: "bpmn-data", parameters: { inhoud: "naam", inktOpCanvas: true, naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
+  { id: "bpmn-datastore", renderer: "bpmn-datastore", parameters: { inhoud: "naam", inktOpCanvas: true, naamGrootte: 11, maxBreedte: 120, extraHoogte: FIGUUR_H - 2 }, minMaat: { w: 46, h: 40 } },
+  { id: "bpmn-lane", renderer: "kader", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "midden", lijn: "solid", hoekRadius: 4, kopHoogte: 26, kopLijn: true, tint: true, kleurAls: "rand", inktOpCanvas: true }, minMaat: { w: 240, h: 100 } },
+  { id: "bpmn-pool", renderer: "bpmn-pool", parameters: { inhoud: "naam", naamGrootte: 12, tekstAnker: "midden", kleurAls: "rand", rand: "#64748b", inktOpCanvas: true }, minMaat: { w: 320, h: 160 } },
 ];
 
 for (const st of BPMN_SHAPETYPES) registreerShapeType(st);

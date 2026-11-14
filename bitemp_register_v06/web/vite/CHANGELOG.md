@@ -8,6 +8,18 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Simulatie: het object in de cm-vorm** (POC, Mark 14-11): de GPK-aanvraag in het objectenpaneel als entiteit
+  met GE's en relaties, met de toets op de state (verplicht ingevuld, relatie met bekend doel) en wat buiten het cm
+  staat. **Versies per object**: elke stap die een object raakt is een versie; gewijzigde velden geel; oude
+  versies bekijken.
+
+### Opgelost
+- **Donker thema** (Mark 15-11): de naam onder een BPMN-data-object of -data store (en de band van een pool of
+  lane) was op het donkere canvas niet te lezen. Tekst op het canvas zelf gebruikt nu het token
+  `--diagram-canvastekst` (tekenaar `inktOpCanvas`, terugval de gewone tekstkleur). De tekening in Simulatie volgt
+  het thema (dezelfde tokens als het canvas). Raakt de tekenaar, dus ook de render-API.
+
 ## [studio/v0.43.0] — 2026-11-14
 
 Samen met render 0.4.7 en devloop 0.30.1 (api 0.27.0).

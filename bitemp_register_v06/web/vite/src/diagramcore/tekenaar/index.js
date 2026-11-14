@@ -31,7 +31,7 @@ import { voorkomenId } from "../model/voorkomens.js";
 import { lidConnectoren } from "../types/containerVoor.js";
 import { vorm } from "../types/shapeType.js";
 import { vormVoor } from "./vormen.js";
-import { bouwVoorkomen, tekenVoorkomen, basisVanPalet, FONT } from "./voorkomen.js";
+import { bouwVoorkomen, tekenVoorkomen, basisVanPalet, canvasInkt, FONT } from "./voorkomen.js";
 import { tekenLijnen } from "./lijnen.js";
 import { naarSvg } from "./serialiseer.js";
 
@@ -175,7 +175,7 @@ export function tekenDiagram({ diagram, elements, descriptor, idPrefix = null, t
     let onder = 0;
     if (buiten) {
       const regels = breekAf(element.naam, 11, BUITENLABEL_BREEDTE, { vet: true });
-      regels.forEach((r, i) => kinderen.push(vorm("text", { class: "dc-buitenlabel", x: b.w / 2, y: b.h + 3 + 11 + i * 14, "text-anchor": "middle", "font-size": 11, "font-weight": 600, fill: basis.text, ...(i === 0 ? { "data-dc-naam": "" } : {}) }, r)));
+      regels.forEach((r, i) => kinderen.push(vorm("text", { class: "dc-buitenlabel", x: b.w / 2, y: b.h + 3 + 11 + i * 14, "text-anchor": "middle", "font-size": 11, "font-weight": 600, fill: canvasInkt(basis, { inktOpCanvas: true }), ...(i === 0 ? { "data-dc-naam": "" } : {}) }, r)));
       onder = 3 + regels.length * 14;
       punten.push({ x: b.x + b.w / 2 - BUITENLABEL_BREEDTE / 2, y: b.y }, { x: b.x + b.w / 2 + BUITENLABEL_BREEDTE / 2, y: b.y + b.h + onder });
     }

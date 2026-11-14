@@ -163,3 +163,24 @@ test("GPK: eigen activiteit, token op het diagram, gat met de hand, doorlopen to
   await expect(page.locator("#sim-token-stijl")).toHaveCount(0);
   await expect(page.getByTestId("sim-start")).toBeEnabled();
 });
+
+test("donker thema: de tekening volgt het thema, namen buiten de vorm zijn licht (Mark 15-11)", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("studio05-hints-gezien", JSON.stringify({ gezien: {}, uit: true })));
+  await openStudio(page);
+  await naar(page, "Simulatie");
+  // Het thema blijft bewaard; staat het al op donker, dan heet de knop "Licht thema".
+  const wissel = page.getByTitle(/^(Donker|Licht) thema$/).first();
+  if ((await wissel.getAttribute("title")) === "Donker thema") await wissel.click();
+  await expect(page.locator('[data-studio-theme="dark"]').first()).toBeVisible();
+  await page.getByTestId("sim-laad-gpk").click();
+  await expect(page.getByTestId("sim-scenario")).toHaveValue(/GPK 4: toegekend/);
+  await expect(page.getByTestId("sim-start")).toBeEnabled();
+  await page.getByTestId("sim-start").click();
+  const tekening = page.getByTestId("sim-diagram");
+  const achtergrond = await tekening.evaluate((d) => getComputedStyle(d).backgroundColor);
+  expect(achtergrond).not.toBe("rgb(255, 255, 255)");
+  // De buitenlabels (events, gateways) zijn licht op het donkere vlak.
+  const label = await tekening.locator("text.dc-buitenlabel").first().evaluate((t) => getComputedStyle(t).fill);
+  expect(label).not.toBe("rgb(15, 23, 42)");
+  await foto(page, "7-donker");
+});
