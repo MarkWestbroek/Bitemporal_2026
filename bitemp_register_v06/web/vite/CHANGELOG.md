@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.43.0] — 2026-11-14
+
+Samen met render 0.4.7 en devloop 0.30.1 (api 0.27.0).
+
 ### Gewijzigd
 - **Samenvoegen naar MAIN: schuifje met drie standen** (voorstel Mark 14-11) in plaats van vinkje plus ↶.
   Per regel: ↶ MAIN overnemen in de branch, – niets doen (blijft in de branch), → naar MAIN (bij een

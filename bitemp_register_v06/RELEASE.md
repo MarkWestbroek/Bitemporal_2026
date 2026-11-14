@@ -8,6 +8,34 @@
 
 ---
 
+## studio 0.43.0 / render 0.4.7 / devloop 0.30.1 (2026-11-14)
+
+Akkoord Mark 14-11 ("C&M&R en daarna verder"). api blijft 0.27.0; devloop 0.30.1 is api 0.27.0 met
+studio 0.43.0.
+
+- **Fix, belangrijk voor Fundament:** de automatische plaatsing van een element in de map van zijn
+  diagram (BOOM-1) ging niet naar de server. De projectboom toonde het element in de map, maar
+  alleen lokaal; anderen, de server en *Verschil met MAIN* zagen het "zonder map". Oorzaak: de
+  plaatsing liep binnen de actie die haar uitlokte, en de sync legt alleen de buitenste actie vast.
+  Nu is het een eigen operatie. Bestaande projecten herstellen bij het openen in een Studio 0.43.0.
+- **Samenvoegen naar MAIN:** schuifje met drie standen per regel (↶ MAIN overnemen, – niets doen,
+  → naar MAIN / MAIN overschrijven); diagrammen en elementen onder een package liggen nu in de map
+  van dat package (op Fundament stonden ze "buiten de map"), met het package als ouder in de boom;
+  diagrambundels staan in de boom en gaan niet meer zonder hun diagrammen; de boom toont het type
+  uit het profiel (Entiteit, Gegevenselement, …).
+- **Startnaam met lidwoord:** NieuweEntiteit, NieuwGegevenselement (M3 `ElementType.lidwoord`).
+- render 0.4.7: de code van studio 0.43.0 (vergelijken en samenvoegen met packages en bundels).
+  Een render 0.4.6 werkt nog met deze studio, maar mist dan packages en bundels in de vergelijking.
+
+Getest: Studio-unit 1685/1685, render-svc `npm test` 28/28 (scenario's 9 en 10 erbij), e2e 23, 46,
+54, 58, 62 en 63; lokaal door Mark met echte API en sidecar.
+
+Uitrol:
+- App: `bitemp-render-svc:0.4.7` en `viz-frontend:0.43.0` via `update.sh`. Geen schemawijziging.
+- Fundament: `bitemp-devloop:0.30.1` (met frontend 0.43.0 en render 0.4.7), door FUNDAMENT.
+
+---
+
 ## studio 0.42.0 / render 0.4.6 / api 0.27.0 / devloop 0.30.0 (2026-11-14)
 
 Akkoord Mark 14-11 ("eerst C&M en misschien zelfs minor releasen, want een andere klus wacht op een

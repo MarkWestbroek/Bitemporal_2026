@@ -235,7 +235,7 @@ bundels en de soortenlijst gaan als geheel (per bundel, lijst in één keer).
   element komt terug; bij een conflict wint MAIN aan beide kanten. MAIN verandert niet. Ctrl+Z
   helpt hier niet: ongedaan maken werkt alleen op eigen, lokale stappen.
 
-**Stap 2a+ — schuifje met drie standen (gebouwd 14-11, nog niet uitgebracht; voorstel Mark).**
+**Stap 2a+ — schuifje met drie standen (uitgebracht in studio 0.43.0 / render 0.4.7; voorstel Mark).**
 Het vinkje en de knop ↶ zijn één schuifje per regel: **↶ links** = MAIN overnemen in de branch
 (`"terug"`), **– midden** = niets doen (`false`), **→ rechts** = naar MAIN (`true`; bij een conflict
 "MAIN overschrijven", in rood). De tekst achter de regel zegt wat de stand doet, per status
