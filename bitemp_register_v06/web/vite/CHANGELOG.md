@@ -8,6 +8,10 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.42.0] — 2026-11-14
+
+Samen met render 0.4.6, api 0.27.0 en devloop 0.30.0.
+
 ### Toegevoegd
 - **Samenvoegen naar MAIN: kiezen met vinkjes** (branch terugmergen, stap 2a; Mark 14-11). *Verschil met
   MAIN…* toont het verschil als boom: map → submap → diagram of element → relatie onder haar bron. Een

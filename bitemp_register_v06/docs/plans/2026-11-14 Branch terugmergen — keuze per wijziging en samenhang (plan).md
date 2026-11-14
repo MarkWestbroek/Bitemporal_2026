@@ -2,7 +2,7 @@
 
 *14-11-2026. Opgesteld met Claude, na gesprek met Mark. Status: plan met besluiten (§6);
 stap 1 (§5) uitgebracht in studio 0.41.0 / api 0.26.0 / render 0.4.5; stap 2a (vinkjes in een
-boom) gebouwd op 14-11, nog niet uitgebracht. Zie §7.*
+boom, terugzetten) in studio 0.42.0 / api 0.27.0 / render 0.4.6. Zie §7.*
 
 Vervolg op branch stap 1 (*Verschil met MAIN…*, zie `docs/STUDIO.md` "Branch = afgeleid
 project"). Daar laat de Studio zien wat er verschilt; mergen gaat nog met de hand. Dit plan
@@ -197,7 +197,7 @@ M0-set afhangt, en dus wanneer een opgeslagen simulatie na een merge niet meer p
 **Grenzen van stap 1:** volgorde-alleen-wijzigingen in de boom uit de branch gaan niet mee;
 bundels en de soortenlijst gaan als geheel (per bundel, lijst in één keer).
 
-**Stap 2a — gebouwd 14-11 (branch `feat/branch-samenvoegen-keuze`, nog niet uitgebracht).**
+**Stap 2a — uitgebracht 14-11 (studio 0.42.0 / api 0.27.0 / render 0.4.6).**
 
 - Keuze per **eenheid**: element (ook relatie), diagram, map, koppeling. Een verplaatsing hoort bij
   haar element of diagram. Sleutel `<soort>:<profielId>:<id>` (`verschilSleutel` in

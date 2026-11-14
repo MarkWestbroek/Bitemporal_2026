@@ -281,7 +281,7 @@ werkbestanden passen niet onder de standaardgrens van 5 MB (`RENDER_SVC_MAX_BYTE
 heeft daarom een eigen grens, `RENDER_SVC_MAX_BYTES_VERGELIJK` (standaard 32 MB), zodat er in
 compose of k8s niets ingesteld hoeft te worden.
 
-### `POST /samenvoegen` (sidecar): branch samenvoegen met MAIN — ✅ uitgebracht (render 0.4.5, 14-11; keuze uit stap 2 nog niet)
+### `POST /samenvoegen` (sidecar): branch samenvoegen met MAIN — ✅ uitgebracht (render 0.4.5, 14-11; keuze in 0.4.6)
 
 Branch terugmergen, stap 1 (plan "2026-11-14 Branch terugmergen"). Zelfde body en grens als
 `/vergelijk`. De sidecar speelt de drie kanten na, voegt per eenheid samen (drieweg,
@@ -293,7 +293,7 @@ opsMain: [{store, op, args}], opsTak: […], basis: werkbestand|null, telling, v
 renderVersie}`. Bij conflicten (zonder keuze) of samenhangfouten zijn de ops leeg en `basis` is
 `null`.
 
-**Stap 2 (14-11, nog niet uitgebracht):** optioneel `keuze: {<sleutel>: true|false|"terug"}` (alleen
+**Stap 2 (render 0.4.6, 14-11):** optioneel `keuze: {<sleutel>: true|false|"terug"}` (alleen
 op `/samenvoegen`; `/vergelijk` geeft 400). `"terug"`: de branch neemt de versie van MAIN over. Gekozen gaat naar MAIN, niet gekozen blijft in de branch
 (`opsTak` brengt de branch naar `nieuwTak`); een conflict blokkeert dan niet maar staat in `opgelost`
 met `gekozen: "tak"|"main"`. `samenhang` noemt verwijzingen die de keuze nieuw stuk maakt (relatie

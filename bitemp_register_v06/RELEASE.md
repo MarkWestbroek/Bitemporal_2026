@@ -8,6 +8,38 @@
 
 ---
 
+## studio 0.42.0 / render 0.4.6 / api 0.27.0 / devloop 0.30.0 (2026-11-14)
+
+Akkoord Mark 14-11 ("eerst C&M en misschien zelfs minor releasen, want een andere klus wacht op een
+duidelijke merge"). Branch terugmergen, stap 2a.
+
+- **Kiezen met vinkjes in een boom** in *Verschil met MAIN…*: map → submap → diagram of element →
+  relatie onder haar bron. Gekozen gaat naar MAIN; niet gekozen blijft in de branch en komt bij de
+  volgende vergelijking terug. Een conflict blokkeert niet meer (aan = de branch wint). Wat buiten
+  de map ligt staat standaard uit.
+- **Terugzetten naar MAIN** (↶ per regel, keuze `"terug"`): de branch neemt de versie van MAIN
+  letterlijk over, ook "geen kleur".
+- **Vangnet samenhang:** een keuze die een verwijzing stuk maakt (relatie zonder bron of doel,
+  node zonder element, koppeling zonder kant, plaatsing zonder map) weigert de API met
+  `409 reden "samenhang"`.
+- api 0.27.0: `keuze` (`true|false|"terug"`) op `POST …/samenvoegen`, doorgegeven aan de sidecar;
+  antwoord met `opgelost`. Zonder `keuze` werkt het als in 0.26.0.
+- render 0.4.6: `keuze` op `/samenvoegen` (`opgelost`, `samenhang` in het antwoord); `/vergelijk`
+  geeft per verschil `sleutel`, `mapId`, `ouderId` en de `mappen`. Een sidecar 0.4.5 weigert
+  `keuze` (400 → 502 in de API), dus api en render samen uitrollen.
+- devloop 0.30.0 = api 0.27.0 met studio 0.42.0.
+
+Getest: Studio-unit (incl. `keuzeBoom.test.js`), render-svc `npm test` met de nieuwe scenario's over
+meerdere rondes (`samenvoegScenario.test.mjs`, 8 scenario's), Go met integratietest tegen Postgres,
+e2e 63 en 58. Lokaal door Mark met echte API en sidecar ("lijkt wel goed te werken").
+
+Uitrol:
+- App: `bitemp-go-api:0.27.0`, `bitemp-render-svc:0.4.6` en `viz-frontend:0.42.0` via `update.sh`.
+  Geen schemawijziging.
+- Fundament: `bitemp-devloop:0.30.0` (met frontend 0.42.0 en render 0.4.6), door FUNDAMENT.
+
+---
+
 ## studio 0.41.0 / render 0.4.5 / api 0.26.0 / devloop 0.29.0 (2026-11-14)
 
 Akkoord Mark 14-11. Neemt studio 0.40.0 / render 0.4.4 mee: die zijn getagd, maar er zijn geen
