@@ -11,6 +11,8 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 ### Gewijzigd
 - **Modelleren, Koppelingen en Profielontwerp zijn geen preview meer** (Mark 13-11): geen oranje stip in de
   activiteitenbalk, en ze staan er ook als Labs uit staat.
+- **Rondleiding, stap "Het project" noemt de bundels** (Mark 14-11): de diagrambundels staan bovenaan de
+  projectboom maar kwamen in de uitleg niet voor. De stap zegt nu wat een bundel is en hoe je er een maakt.
 
 ## [studio/v0.39.0] — 2026-11-12
 
