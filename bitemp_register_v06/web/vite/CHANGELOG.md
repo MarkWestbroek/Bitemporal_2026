@@ -8,6 +8,29 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+## [studio/v0.40.0] — 2026-11-14
+
+Samen met render 0.4.4 (api 0.25.0).
+
+### Toegevoegd
+- **Simulatie van BPMN en DMN met cm-objecten** (activiteit *Simulatie*, ontwerp
+  `docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten (ontwerp).md`). Een token loopt door de
+  processen van het project; beslistabellen (DMN) worden uitgevoerd; waar gegevens nodig zijn staat een gat dat je
+  met de hand, willekeurig of uit een fixture vult. Rechts de objecten met hun state, de procesvariabelen en wat
+  buiten het cm gebeurde. Bediening: Stap, Afspelen (langzaam/gewoon/snel), Doorlopen, Terug (of klik op een
+  logregel), Stop. De sprong naar een ander proces staat boven het diagram. Scenario's hebben een naam en een
+  beschrijving. Het token staat alleen op het modeldiagram als je *ook op het modeldiagram* aanvinkt; het model
+  verandert nooit.
+- **GPK-voorbeeld in vier processen** (Mark 13-11): Aanvraag oppakken → signaal *zaak-in-werkbak* → Kies zaak om te
+  behandelen (kandidaatgroep, claim via een onderbrekend boundary event) → signaal *medewerker-gekoppeld* → Zaak
+  behandelen, met Gehandicaptenparkeerkaart beoordelen als call activity.
+- **Signalen** in de simulatie: een omroep met een filter (CEL) over de lading, en de lading is de zaak. Ontvangers
+  zijn een wachtend tussen-event, een boundary event of een signaalstart met *één lopende instantie per zaak*.
+- **BPMN-profiel 1.1.0** (minor): signaalnaam, filter en *één lopende instantie per zaak* op events, kandidaatgroep
+  op gebruikerstaken. De BPMN-export neemt ze nog niet mee (BACKLOG §41).
+- **JUEL naar CEL** (CEL is de expressietaal in het model): de BPMN-import zet condities om; voor bestaande
+  projecten de knop *Naar CEL* in Simulatie (één stap ongedaan te maken).
+
 ### Gewijzigd
 - **Modelleren, Koppelingen en Profielontwerp zijn geen preview meer** (Mark 13-11): geen oranje stip in de
   activiteitenbalk, en ze staan er ook als Labs uit staat.

@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.39.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.40.0`**
+  (2026-11-14: simulatie van BPMN en DMN met cm-objecten, BPMN-profiel 1.1.0, JUEL naar CEL;
+  samen met render 0.4.4), na **`studio/v0.39.0`**
   (2026-11-12: versie per profiel genoteerd in het project, klembord over projecten en tabs,
   werkkopie per project; samen met render 0.4.3 en devloop 0.28.4), na **`studio/v0.38.3`**
   (2026-11-10, patch: node-maat per diagram — geen lijnen in het niets na een diagramwissel;
@@ -180,7 +182,8 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.4.3`** (2026-11-12: de code van studio 0.39.0 — profielen met hun
+- Render-sidecar: **`render/v0.4.4`** (2026-11-14: de code van studio 0.40.0 — BPMN-profiel 1.1.0
+  in de bundel; image `bitemp-render-svc:0.4.4`), na **`render/v0.4.3`** (2026-11-12: de code van studio 0.39.0 — profielen met hun
   versie in de bundel, dezelfde tekenaar; image `bitemp-render-svc:0.4.3`), na **`render/v0.4.2`** (2026-11-10: `POST /materialiseer` — één profiel
   nagespeeld, voor `GET …/model/:profiel`; image `bitemp-render-svc:0.4.2`), na **`render/v0.4.1`** (2026-11-10, patch: deterministische mapvolgorde bij het
   naspelen in `/vergelijk` en `/export/v3`; image `bitemp-render-svc:0.4.1`), na **`render/v0.4.0`** (2026-11-10: `POST /vergelijk` voor branch stap 1, eigen
