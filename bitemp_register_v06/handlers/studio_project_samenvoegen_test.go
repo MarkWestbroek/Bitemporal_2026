@@ -143,3 +143,31 @@ func TestStudioProject_Samenvoegen(t *testing.T) {
 		t.Fatalf("buiten de map bevestigd: %d %s", rec.Code, rec.Body.String())
 	}
 }
+
+// Stap 2: de keuze van de gebruiker gaat mee in het sidecar-verzoek; de rest blijft staan.
+func TestMetKeuze(t *testing.T) {
+	uit, err := metKeuze([]byte(`{"basis":{"profiel":{}},"mapId":"m1"}`), map[string]any{"element:uml:D": true, "element:uml:E": false})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(uit, &m); err != nil {
+		t.Fatal(err)
+	}
+	if string(m["mapId"]) != `"m1"` || string(m["basis"]) != `{"profiel":{}}` {
+		t.Fatalf("bestaande velden veranderd: %s", uit)
+	}
+	var k map[string]bool
+	if err := json.Unmarshal(m["keuze"], &k); err != nil || !k["element:uml:D"] || k["element:uml:E"] || len(k) != 2 {
+		t.Fatalf("keuze niet goed meegegeven: %s", m["keuze"])
+	}
+	// "terug" mag; andere tekst of getallen niet.
+	if _, err := metKeuze([]byte(`{}`), map[string]any{"element:uml:C": "terug"}); err != nil {
+		t.Fatalf("terug geweigerd: %v", err)
+	}
+	for _, fout := range []any{"ja", 1.0, nil} {
+		if _, err := metKeuze([]byte(`{}`), map[string]any{"x": fout}); err == nil {
+			t.Fatalf("keuze %v had geweigerd moeten worden", fout)
+		}
+	}
+}

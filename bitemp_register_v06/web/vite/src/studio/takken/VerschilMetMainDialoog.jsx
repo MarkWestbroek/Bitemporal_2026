@@ -4,9 +4,13 @@
  * de elementen, diagrammen, mappen en koppelingen die verschillen, met de velden en of ze buiten de
  * afgesplitste map liggen.
  *
- * Samenvoegen naar MAIN (14-11, plan "Branch terugmergen", stap 1): alles uit de branch gaat mee,
- * een conflict blokkeert, en daarna haalt de branch MAIN op (POST …/samenvoegen). Kiezen per
- * wijziging (vinkjes in een boom) is stap 2.
+ * Samenvoegen naar MAIN (14-11, plan "Branch terugmergen"). Stap 2: kiezen met vinkjes in een
+ * boom (keuzeBoom.js): map → submap → diagram of element → relatie. Gekozen gaat naar MAIN; bij een
+ * conflict betekent aangevinkt "de versie van de branch", uitgevinkt "MAIN houdt de zijne". Wat niet
+ * gekozen is, blijft in de branch en komt bij de volgende vergelijking terug. Daarna haalt de branch
+ * MAIN op (POST …/samenvoegen met `keuze`). Een keuze die een verwijzing stuk maakt (relatie zonder
+ * haar bron, …) weigert de server met reden "samenhang". Per regel zet ↶ de eenheid in de branch
+ * terug naar de versie van MAIN (keuze "terug"; Mark 14-11: "per ongeluk een kleur gewijzigd").
  *
  * De API doet het werk (GET …/vergelijk → render-sidecar POST /vergelijk, verschilMetMain.js).
  * Een diagram opent met een klik; een element opent het eerste diagram waarop het staat.
@@ -14,13 +18,17 @@
  * Eén instantie hangt in de Main van Modelleren; openen via
  *   useVerschilMetMainStore.getState().openen({ projectId, regel, teVerzenden })
  */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { create } from "zustand";
 import { vergelijkMetMain, samenvoegenMetMain } from "../activities/projectSync.js";
 import { useSyncStore } from "../sync/verzender.js";
 import { getProfieltype } from "../profieltypeRegistry";
 import { openVerwijzing } from "../doorklik.js";
 import { STATUS_LABEL, STATUS_UITLEG, SOORT_LABEL } from "./herkomst.js";
+import { standaardKeuze, bouwKeuzeBoom, standVan, zetKnoop, keuzeTelling } from "./keuzeBoom.js";
+
+/** Heeft de branch een afgesplitste map? (anders telt "buiten de map" niet) */
+const heeftMapVan = (uitkomst) => (uitkomst?.scope || []).length > 0;
 
 export const useVerschilMetMainStore = create((set, get) => ({
   open: false,
@@ -30,6 +38,9 @@ export const useVerschilMetMainStore = create((set, get) => ({
   projectId: null,
   regel: "",
   teVerzenden: 0,
+  /** Keuze per eenheid (sleutel → aan/uit), na elke vergelijking opnieuw de standaard. */
+  keuze: {},
+  zetKeuze: (keuze) => set({ keuze }),
   /** Samenvoegen naar MAIN: bezig, en de uitkomst (melding) van de laatste poging. */
   samenvoegBezig: false,
   samenvoegMelding: null,
@@ -43,7 +54,7 @@ export const useVerschilMetMainStore = create((set, get) => ({
     set({ laden: true, fout: null });
     try {
       const uitkomst = await vergelijkMetMain(projectId);
-      set({ uitkomst, laden: false });
+      set({ uitkomst, laden: false, keuze: standaardKeuze(uitkomst?.verschillen || [], { heeftMap: heeftMapVan(uitkomst) }) });
     } catch (e) {
       const fout =
         e?.status === 404
@@ -55,28 +66,30 @@ export const useVerschilMetMainStore = create((set, get) => ({
     }
   },
   /**
-   * Alles uit de branch naar MAIN; daarna haalt de branch MAIN op. `ookBuitenMap` = de gebruiker
-   * heeft bevestigd dat wijzigingen buiten de map mee mogen.
+   * Het gekozene naar MAIN; daarna haalt de branch MAIN op. `ookBuitenMap` = de gebruiker heeft
+   * bevestigd dat gekozen wijzigingen buiten de map mee mogen.
    */
   samenvoegen: async ({ ookBuitenMap = false } = {}) => {
-    const { projectId } = get();
+    const { projectId, keuze } = get();
     set({ samenvoegBezig: true, samenvoegMelding: null });
     try {
-      const r = await samenvoegenMetMain(projectId, { ookBuitenMap });
+      const r = await samenvoegenMetMain(projectId, { ookBuitenMap, keuze });
       const naarMain = r?.main?.ops?.aantal || 0, naarTak = r?.tak?.ops?.aantal || 0;
       set({
         samenvoegBezig: false,
         samenvoegMelding: {
           soort: "ok",
           tekst: naarMain || naarTak
-            ? `Samengevoegd: ${naarMain} wijziging(en) naar MAIN, ${naarTak} van MAIN naar deze branch. Branch en MAIN zijn nu gelijk.`
-            : "Er was niets samen te voegen; branch en MAIN waren al gelijk.",
+            ? `Samengevoegd: ${naarMain} wijziging(en) naar MAIN, ${naarTak} naar deze branch. Wat je niet koos, staat hieronder nog open.`
+            : "Er was niets samen te voegen.",
         },
       });
     } catch (e) {
       const tekst =
         e?.reden === "conflicten"
           ? `Niet samengevoegd: ${e.conflicten.length} conflict(en). Los die eerst op in de branch (of op MAIN).`
+          : e?.reden === "samenhang"
+            ? `Niet samengevoegd: deze keuze laat ${e.samenhang.length} verwijzing(en) naar iets wat er niet is achter. Kies wat erbij hoort mee, of laat het samen weg. ${e.samenhang.slice(0, 3).map((s) => `(${s.kant === "main" ? "MAIN" : "branch"}) ${s.fout}`).join("; ")}`
           : e?.reden === "buiten_map"
             ? "Niet samengevoegd: de branch wijzigt ook iets buiten zijn map."
             : e?.reden === "volgnummer_verschoven"
@@ -108,12 +121,111 @@ function openRegel(v) {
   return d ? openVerwijzing({ profielId: v.profielId, diagramId: d.id }) : false;
 }
 
+/** Vinkje met drie standen (aan, uit, half). */
+function Vinkje({ stand, onChange, testId, titel }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = stand === "half";
+  }, [stand]);
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={stand === "aan"}
+      onChange={(e) => onChange(e.target.checked)}
+      data-testid={testId}
+      data-stand={stand}
+      title={titel}
+      style={{ margin: 0 }}
+    />
+  );
+}
+
+const knop = { font: "inherit", fontSize: 12, padding: "3px 10px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "transparent", color: "var(--s-fg)", cursor: "pointer" };
+
+/** Eén knoop van de keuzeboom, met zijn kinderen. */
+function KnoopRij({ knoop, diepte, keuze, zetKeuze, heeftMap, dicht, wisselDicht, sluiten }) {
+  const v = knoop.verschil;
+  const stand = standVan(knoop, keuze);
+  const isDicht = dicht.has(knoop.knoopId);
+  const heeftKinderen = knoop.kinderen.length > 0;
+  const terug = !!v && keuze[v.sleutel] === "terug";
+  const titel = v?.status === "conflict"
+    ? "Conflict: aangevinkt neemt de versie van deze branch, uitgevinkt houdt MAIN de zijne."
+    : "Aangevinkt gaat naar MAIN; uitgevinkt blijft in deze branch.";
+  return (
+    <>
+      <div
+        data-knoop={knoop.knoopId}
+        data-verschil-id={v?.id}
+        style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 4px", paddingLeft: 4 + diepte * 18, borderTop: "1px solid var(--s-border, #e2e8f0)", fontSize: 12 }}
+      >
+        <button
+          type="button"
+          onClick={() => heeftKinderen && wisselDicht(knoop.knoopId)}
+          aria-label={isDicht ? "Openklappen" : "Dichtklappen"}
+          style={{ ...knop, border: 0, padding: 0, width: 14, visibility: heeftKinderen ? "visible" : "hidden" }}
+        >
+          {isDicht ? "▸" : "▾"}
+        </button>
+        <Vinkje stand={stand} onChange={(aan) => zetKeuze(zetKnoop(knoop, keuze, aan))} testId={`keuze-${knoop.knoopId}`} titel={titel} />
+        {v && <span title={STATUS_UITLEG[v.status]} style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: KLEUR[v.status], flex: "none" }} />}
+        <span style={{ opacity: 0.6, width: 62, flex: "none" }}>{knoop.soort === "eenheid" ? SOORT_LABEL[v.soort] || v.soort : knoop.soort === "map" ? "map" : ""}</span>
+        <span style={{ flex: 1, minWidth: 0 }}>
+          {knoop.soort === "eenheid" && (v.soort === "element" || v.soort === "diagram") ? (
+            <button type="button" onClick={() => openRegel(v) && sluiten()} title="Openen" style={{ ...knop, border: 0, padding: 0, textDecoration: "underline" }}>
+              {knoop.label}
+            </button>
+          ) : (
+            <strong style={{ fontWeight: knoop.soort === "eenheid" ? 400 : 600 }}>{knoop.label}</strong>
+          )}
+          {v && <span style={{ marginLeft: 6, color: KLEUR[v.status] }}>{STATUS_LABEL[v.status].toLowerCase()}</span>}
+          {v?.status === "conflict" && !terug && (
+            <span style={{ marginLeft: 6, fontSize: 10, opacity: 0.8 }}>{keuze[v.sleutel] === true ? "→ versie van de branch" : "→ MAIN houdt de zijne"}</span>
+          )}
+          {terug && (
+            <span style={{ marginLeft: 6, fontSize: 10, color: KLEUR.weg }} data-testid={`terug-label-${knoop.knoopId}`}>
+              → wordt teruggezet naar MAIN
+            </span>
+          )}
+          {v && heeftMap && !v.inScope && (
+            <span style={{ marginLeft: 6, fontSize: 10, color: "var(--s-warn, #b45309)" }} title="Ligt niet in de afgesplitste map">buiten de map</span>
+          )}
+        </span>
+        {v && <span style={{ opacity: 0.6, flex: "none" }}>{profielNaam(v.profielId)}</span>}
+        {v && (
+          <button
+            type="button"
+            onClick={() => zetKeuze({ ...keuze, [v.sleutel]: terug ? false : "terug" })}
+            aria-pressed={terug}
+            data-testid={`terug-${knoop.knoopId}`}
+            title={terug
+              ? "Niet terugzetten: de wijziging blijft in deze branch."
+              : "Terugzetten naar MAIN: deze branch neemt de versie van MAIN over en de wijziging verdwijnt."}
+            style={{ ...knop, padding: "0 6px", flex: "none", background: terug ? "var(--s-hover, rgba(147,51,234,0.15))" : "transparent", borderColor: terug ? KLEUR.weg : undefined }}
+          >
+            ↶
+          </button>
+        )}
+        {v && <span style={{ opacity: 0.8, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: "none" }} title={(v.velden || []).join(", ")}>{(v.velden || []).join(", ")}</span>}
+      </div>
+      {!isDicht && knoop.kinderen.map((k) => (
+        <KnoopRij key={k.knoopId} knoop={k} diepte={diepte + 1} keuze={keuze} zetKeuze={zetKeuze} heeftMap={heeftMap} dicht={dicht} wisselDicht={wisselDicht} sluiten={sluiten} />
+      ))}
+    </>
+  );
+}
+
 export default function VerschilMetMainDialoog() {
-  const { open, laden, fout, uitkomst, regel, sluiten, ververs, samenvoegen, samenvoegBezig, samenvoegMelding } = useVerschilMetMainStore();
+  const { open, laden, fout, uitkomst, regel, sluiten, ververs, samenvoegen, samenvoegBezig, samenvoegMelding, keuze, zetKeuze } = useVerschilMetMainStore();
   // Live (niet de stand bij het openen): na verzenden mag samenvoegen alsnog.
   const teVerzenden = useSyncStore((s) => s.teVerzenden || 0);
-  const [metMain, setMetMain] = useState(true);
-  const [alleenScope, setAlleenScope] = useState(false);
+  const [dicht, setDicht] = useState(() => new Set());
+  const wisselDicht = (id) => setDicht((d) => {
+    const n = new Set(d);
+    if (n.has(id)) n.delete(id); else n.add(id);
+    return n;
+  });
 
   useEffect(() => {
     if (!open) return undefined;
@@ -122,27 +234,31 @@ export default function VerschilMetMainDialoog() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, sluiten]);
 
-  const groepen = useMemo(() => {
-    const lijst = (uitkomst?.verschillen || []).filter((v) => (metMain || v.status !== "main") && (!alleenScope || v.inScope));
-    return STATUSSEN.map((s) => [s, lijst.filter((v) => v.status === s)]).filter(([, l]) => l.length);
-  }, [uitkomst, metMain, alleenScope]);
+  const verschillen = uitkomst?.verschillen || [];
+  const boom = useMemo(() => bouwKeuzeBoom(uitkomst?.verschillen || [], uitkomst?.mappen || {}), [uitkomst]);
+  const vanMain = useMemo(() => (uitkomst?.verschillen || []).filter((v) => v.status === "main"), [uitkomst]);
 
   if (!open) return null;
   const t = uitkomst?.telling || {};
-  const buiten = (uitkomst?.verschillen || []).filter((v) => v.status !== "main" && !v.inScope).length;
-  const vanTak = (t.nieuw || 0) + (t.gewijzigd || 0) + (t.weg || 0);
-  const kanSamenvoegen = !!uitkomst && !laden && !samenvoegBezig && !(t.conflict > 0) && teVerzenden === 0 && vanTak + (t.main || 0) > 0;
-  const waaromNiet = !uitkomst || laden ? "" : t.conflict > 0 ? "Eerst de conflicten oplossen." : teVerzenden > 0 ? "Eerst je eigen wijzigingen verzenden." : vanTak + (t.main || 0) === 0 ? "Er is niets samen te voegen." : "";
+  const heeftMap = heeftMapVan(uitkomst);
+  const k = keuzeTelling(verschillen, keuze, { heeftMap });
+  const iets = k.gekozen + k.terug + k.vanMain > 0;
+  const kanSamenvoegen = !!uitkomst && !laden && !samenvoegBezig && teVerzenden === 0 && iets;
+  const waaromNiet = !uitkomst || laden ? "" : teVerzenden > 0 ? "Eerst je eigen wijzigingen verzenden." : !iets ? "Er is niets gekozen en niets op te halen." : "";
   const vraagSamenvoegen = () => {
     const regels = [
-      `${vanTak} wijziging(en) uit deze branch gaan naar MAIN.`,
-      t.main ? `${t.main} wijziging(en) die alleen op MAIN zijn gedaan, komen daarna in deze branch.` : null,
-      buiten ? `Let op: ${buiten} wijziging(en) liggen buiten de afgesplitste map en gaan ook mee.` : null,
-      "Daarna zijn branch en MAIN gelijk. Doorgaan?",
+      k.gekozen || !k.terug ? `${k.gekozen} gekozen wijziging(en) gaan naar MAIN.` : null,
+      k.terug ? `${k.terug} wijziging(en) in deze branch worden teruggezet naar de versie van MAIN.` : null,
+      k.conflictTak ? `Bij ${k.conflictTak} conflict(en) wint de versie van deze branch.` : null,
+      k.conflictMain ? `Bij ${k.conflictMain} conflict(en) houdt MAIN de zijne.` : null,
+      k.nietGekozen ? `${k.nietGekozen} niet gekozen wijziging(en) blijven alleen in deze branch.` : null,
+      k.vanMain ? `${k.vanMain} wijziging(en) die alleen op MAIN zijn gedaan, komen daarna in deze branch.` : null,
+      k.buitenGekozen ? `Let op: ${k.buitenGekozen} gekozen wijziging(en) liggen buiten de afgesplitste map.` : null,
+      "Doorgaan?",
     ].filter(Boolean);
-    if (window.confirm(regels.join("\n\n"))) samenvoegen({ ookBuitenMap: buiten > 0 });
+    if (window.confirm(regels.join("\n\n"))) samenvoegen({ ookBuitenMap: k.buitenGekozen > 0 });
   };
-  const knop = { font: "inherit", fontSize: 12, padding: "3px 10px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "transparent", color: "var(--s-fg)", cursor: "pointer" };
+  const alles = (aan) => zetKeuze(Object.fromEntries(Object.keys(keuze).map((s) => [s, aan])));
 
   return (
     <div
@@ -153,7 +269,7 @@ export default function VerschilMetMainDialoog() {
         role="dialog"
         aria-label="Verschil met MAIN"
         data-testid="verschil-met-main"
-        style={{ width: "min(780px, 92vw)", maxHeight: "82vh", overflow: "auto", background: "var(--s-panel)", color: "var(--s-fg)", border: "1px solid var(--s-border)", borderRadius: 10, boxShadow: "0 16px 48px rgba(0,0,0,0.4)", padding: 16 }}
+        style={{ width: "min(860px, 94vw)", maxHeight: "82vh", overflow: "auto", background: "var(--s-panel)", color: "var(--s-fg)", border: "1px solid var(--s-border)", borderRadius: 10, boxShadow: "0 16px 48px rgba(0,0,0,0.4)", padding: 16 }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           <h2 style={{ margin: 0, fontSize: 16 }}>Verschil met MAIN</h2>
@@ -162,11 +278,11 @@ export default function VerschilMetMainDialoog() {
               type="button"
               onClick={vraagSamenvoegen}
               disabled={!kanSamenvoegen}
-              title={waaromNiet || "Alles uit deze branch naar MAIN; daarna haalt de branch MAIN op."}
+              title={waaromNiet || "Het gekozene naar MAIN; daarna haalt de branch MAIN op."}
               data-testid="samenvoegen-naar-main"
               style={{ ...knop, opacity: kanSamenvoegen ? 1 : 0.5, cursor: kanSamenvoegen ? "pointer" : "default" }}
             >
-              {samenvoegBezig ? "Samenvoegen…" : "Samenvoegen naar MAIN"}
+              {samenvoegBezig ? "Samenvoegen…" : `Samenvoegen naar MAIN${uitkomst ? ` (${k.gekozen}${k.terug ? `, ${k.terug} terug` : ""})` : ""}`}
             </button>
             <button type="button" onClick={ververs} style={knop} disabled={laden}>Ververs</button>
             <button type="button" onClick={sluiten} style={{ ...knop, padding: "2px 8px" }} aria-label="Sluiten">×</button>
@@ -174,8 +290,9 @@ export default function VerschilMetMainDialoog() {
         </div>
         {regel && <p style={{ margin: "0 0 6px", fontSize: 12, opacity: 0.8 }}>{regel}</p>}
         <p style={{ margin: "0 0 10px", fontSize: 12, opacity: 0.8 }}>
-          Vergeleken met de stand bij het afsplitsen of de laatste samenvoeging. Samenvoegen neemt nu nog alles
-          mee; kiezen per wijziging volgt.
+          Vergeleken met de stand bij het afsplitsen of de laatste samenvoeging. Vink aan wat naar MAIN gaat; wat
+          uit staat, blijft in deze branch. Bij een conflict betekent aangevinkt: de versie van deze branch. Met ↶
+          zet je een wijziging in deze branch terug naar MAIN.
           {uitkomst?.main?.laatsteVolgnummer != null && <> MAIN staat op #{uitkomst.main.laatsteVolgnummer}.</>}
         </p>
         {teVerzenden > 0 && (
@@ -203,12 +320,16 @@ export default function VerschilMetMainDialoog() {
                 </span>
               ))}
               <span style={{ flex: 1 }} />
-              <label><input type="checkbox" checked={metMain} onChange={(e) => setMetMain(e.target.checked)} /> toon wat alleen op MAIN veranderde</label>
-              <label><input type="checkbox" checked={alleenScope} onChange={(e) => setAlleenScope(e.target.checked)} /> alleen in de map</label>
+              {boom.length > 0 && (
+                <>
+                  <button type="button" style={knop} onClick={() => alles(true)} data-testid="keuze-alles-aan">Alles aan</button>
+                  <button type="button" style={knop} onClick={() => alles(false)} data-testid="keuze-alles-uit">Alles uit</button>
+                </>
+              )}
             </div>
-            {buiten > 0 && (
+            {k.buitenGekozen > 0 && (
               <div style={{ fontSize: 12, marginBottom: 8, color: "var(--s-warn, #b45309)" }}>
-                {buiten} wijziging(en) in deze branch liggen buiten de afgesplitste map. Dat mag nu nog; bij samenvoegen
+                {k.buitenGekozen} gekozen wijziging(en) liggen buiten de afgesplitste map. Dat mag nu nog; bij samenvoegen
                 vraagt de Studio of die mee mogen.
               </div>
             )}
@@ -218,37 +339,31 @@ export default function VerschilMetMainDialoog() {
                 <ul style={{ margin: "4px 0 0 16px" }}>{uitkomst.meldingen.map((m, i) => <li key={i}>{m.kant}: {m.bericht}</li>)}</ul>
               </details>
             )}
-            {groepen.length === 0 && <div style={{ fontSize: 13, opacity: 0.7 }}>Geen verschil.</div>}
-            {groepen.map(([status, lijst]) => (
-              <section key={status} style={{ marginBottom: 10 }}>
-                <h3 style={{ margin: "8px 0 4px", fontSize: 13, color: KLEUR[status] }} title={STATUS_UITLEG[status]}>
-                  {STATUS_LABEL[status]} ({lijst.length})
-                </h3>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+            {boom.length === 0 && vanMain.length === 0 && <div style={{ fontSize: 13, opacity: 0.7 }}>Geen verschil.</div>}
+            {boom.length > 0 && (
+              <div data-testid="keuze-boom" style={{ borderBottom: "1px solid var(--s-border, #e2e8f0)", marginBottom: 10 }}>
+                {boom.map((knoop) => (
+                  <KnoopRij key={knoop.knoopId} knoop={knoop} diepte={0} keuze={keuze} zetKeuze={zetKeuze} heeftMap={heeftMap} dicht={dicht} wisselDicht={wisselDicht} sluiten={sluiten} />
+                ))}
+              </div>
+            )}
+            {vanMain.length > 0 && (
+              <details style={{ fontSize: 12 }} data-testid="van-main">
+                <summary title={STATUS_UITLEG.main}>{STATUS_LABEL.main} ({vanMain.length}): komt bij samenvoegen in deze branch</summary>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, marginTop: 4 }}>
                   <tbody>
-                    {lijst.map((v) => (
-                      <tr key={`${v.soort}:${v.profielId}:${v.id}`} style={{ borderTop: "1px solid var(--s-border, #e2e8f0)" }} data-verschil-id={v.id}>
+                    {vanMain.map((v) => (
+                      <tr key={v.sleutel} style={{ borderTop: "1px solid var(--s-border, #e2e8f0)" }} data-verschil-id={v.id}>
                         <td style={{ padding: "4px 6px", width: 80, opacity: 0.7 }}>{SOORT_LABEL[v.soort] || v.soort}</td>
-                        <td style={{ padding: "4px 6px" }}>
-                          {v.soort === "element" || v.soort === "diagram" ? (
-                            <button type="button" onClick={() => openRegel(v) && sluiten()} title="Openen" style={{ ...knop, border: 0, padding: 0, textDecoration: "underline" }}>
-                              {v.naam || v.id}
-                            </button>
-                          ) : (
-                            <strong>{v.naam || v.id}</strong>
-                          )}
-                          {!v.inScope && v.status !== "main" && (
-                            <span style={{ marginLeft: 6, fontSize: 10, color: "var(--s-warn, #b45309)" }} title="Ligt niet in de afgesplitste map">buiten de map</span>
-                          )}
-                        </td>
+                        <td style={{ padding: "4px 6px" }}><strong>{v.naam || v.id}</strong></td>
                         <td style={{ padding: "4px 6px", opacity: 0.7 }}>{profielNaam(v.profielId)}</td>
                         <td style={{ padding: "4px 6px", opacity: 0.8 }}>{(v.velden || []).join(", ")}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              </section>
-            ))}
+              </details>
+            )}
           </>
         )}
       </div>

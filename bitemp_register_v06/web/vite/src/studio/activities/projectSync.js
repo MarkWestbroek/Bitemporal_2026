@@ -103,6 +103,8 @@ export class ProjectSyncFout extends Error {
     /** bij 409 van …/samenvoegen: de conflicten, of de wijzigingen buiten de map */
     this.conflicten = Array.isArray(extra.conflicten) ? extra.conflicten : [];
     this.buitenMap = Array.isArray(extra.buitenMap) ? extra.buitenMap : [];
+    /** bij 409 samenhang (stap 2): verwijzingen die de keuze stuk zou maken, `{kant, fout}` */
+    this.samenhang = Array.isArray(extra.samenhang) ? extra.samenhang : [];
   }
 }
 
@@ -134,7 +136,7 @@ async function roep(pad, { methode = "GET", body, headers = {} } = {}) {
           ? "Geen rechten voor deze actie."
           : `Serverfout ${resp.status}.`);
     throw new ProjectSyncFout(bericht, resp.status, json?.server, {
-      reden: json?.reden, anderen: json?.anderen, projectId: json?.projectId, conflicten: json?.conflicten, buitenMap: json?.buitenMap,
+      reden: json?.reden, anderen: json?.anderen, projectId: json?.projectId, conflicten: json?.conflicten, buitenMap: json?.buitenMap, samenhang: json?.samenhang,
     });
   }
   return json;
@@ -163,13 +165,14 @@ export const haalProjectOp = (id) => roep(`/api/studio/projecten/${encodeURIComp
 export const vergelijkMetMain = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}/vergelijk`);
 
 /**
- * Branch terugmergen, stap 1 (14-11): alles uit de branch naar MAIN, daarna haalt de branch MAIN
- * op. → `{main: {ops}, tak: {ops}, basisVolgnummer, telling}`. 409 met `reden` "conflicten"
- * (`conflicten`), "buiten_map" (`buitenMap`; opnieuw met `ookBuitenMap`) of
- * "volgnummer_verschoven" (opnieuw vergelijken).
+ * Branch terugmergen (14-11): naar MAIN, daarna haalt de branch MAIN op. Stap 1 zonder `keuze`:
+ * alles mee. Stap 2 met `keuze` (sleutel → bool): alleen het gekozene; wat niet gekozen is blijft
+ * in de branch. → `{main: {ops}, tak: {ops}, basisVolgnummer, telling, opgelost}`. 409 met `reden`
+ * "conflicten" (`conflicten`, alleen zonder keuze), "samenhang" (`samenhang`), "buiten_map"
+ * (`buitenMap`; opnieuw met `ookBuitenMap`) of "volgnummer_verschoven" (opnieuw vergelijken).
  */
-export const samenvoegenMetMain = (id, { ookBuitenMap = false } = {}) =>
-  roep(`/api/studio/projecten/${encodeURIComponent(id)}/samenvoegen`, { methode: "POST", body: { ookBuitenMap } });
+export const samenvoegenMetMain = (id, { ookBuitenMap = false, keuze = null } = {}) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/samenvoegen`, { methode: "POST", body: { ookBuitenMap, ...(keuze ? { keuze } : {}) } });
 
 /** Aanmaken (versie 1). 409 als het id al bestaat. */
 export const maakProjectAan = ({ id, naam, inhoud }) =>

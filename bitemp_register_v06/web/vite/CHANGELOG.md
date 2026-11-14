@@ -8,6 +8,16 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Samenvoegen naar MAIN: kiezen met vinkjes** (branch terugmergen, stap 2a; Mark 14-11). *Verschil met
+  MAIN…* toont het verschil als boom: map → submap → diagram of element → relatie onder haar bron. Een
+  vinkje op een ouder zet alles eronder; half gekozen staat half. Gekozen gaat naar MAIN, niet gekozen
+  blijft in de branch en komt bij de volgende vergelijking terug. Een conflict blokkeert niet meer: uit =
+  MAIN houdt de zijne, aan = de versie van de branch. Wat buiten de map ligt staat standaard uit. Een
+  keuze die een verwijzing stuk maakt (relatie zonder haar bron, …) weigert de server met een melding.
+  Per regel zet **↶** een wijziging in de branch terug naar de versie van MAIN (ook "geen kleur").
+  Vraagt api en render-svc met `keuze` op `…/samenvoegen`.
+
 ## [studio/v0.41.0] — 2026-11-14
 
 Samen met render 0.4.5, api 0.26.0 en devloop 0.29.0.

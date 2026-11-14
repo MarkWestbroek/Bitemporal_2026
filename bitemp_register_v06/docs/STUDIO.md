@@ -685,6 +685,18 @@ te wijzigen.
 > `63-studio-samenvoegen-naar-main`. **Grenzen:** volgorde-alleen-wijzigingen in de boom (omhoog/
 > omlaag) uit de branch gaan niet mee; de nieuwe volgorde is die van MAIN met nieuwe plaatsingen
 > achteraan.
+>
+> **Kiezen met vinkjes (stap 2a, 14-11):** het verschil staat in een boom (`studio/takken/keuzeBoom.js`):
+> map → submap → diagram of element → relatie onder haar bron. Een vinkje op een ouder zet alles
+> eronder; half gekozen toont een half vinkje. Gekozen gaat naar MAIN; niet gekozen blijft in de branch
+> en komt bij de volgende vergelijking terug. Een conflict staat standaard uit (MAIN houdt de zijne);
+> aangevinkt wint de branch. Wat buiten de map ligt staat standaard uit. De keuze gaat als
+> `keuze: {sleutel: bool}` naar `POST …/samenvoegen`; `voegSamen` maakt daarmee de nieuwe MAIN én de
+> nieuwe stand van de branch (`nieuwTak`). Zolang de samenhanggraaf (stap 3) er niet is, weigert de
+> server een keuze die een verwijzing stuk maakt (`409 samenhang`, `samenhangFouten`). Per regel zet
+> **↶ terugzetten** de eenheid in de branch terug naar de versie van MAIN (keuze `"terug"`), letterlijk:
+> ook een veld dat MAIN niet heeft (bv. geen `kleur`) verdwijnt. Kiezen per veld binnen een element
+> volgt.
 > De vergelijking is `studio/takken/verschilMetMain.js`: een zuivere drieweg op drie
 > gematerialiseerde werkbestanden (basis, tak, MAIN) met per element, diagram, map en
 > kruisverband `nieuw`/`gewijzigd`/`weg`/`conflict`/`main` (alleen op MAIN veranderd), de

@@ -37,10 +37,25 @@ import { gelijk } from "../sync/operaties.js";
 /**
  * @typedef {{soort: "element"|"diagram"|"map"|"kruisverband", profielId: string|null, id: string,
  *            naam: string, status: VerschilStatus, velden: string[], inScope: boolean,
- *            kant?: "tak"|"main"}} Verschil
+ *            kant?: "tak"|"main", sleutel: string, mapId: string|null, ouderId: string|null}} Verschil
+ *
+ * Voor de keuze per eenheid (branch terugmergen stap 2, 14-11):
+ *   - `sleutel`: vaste naam van de eenheid (`verschilSleutel`), ook de sleutel in `keuze` bij
+ *     samenvoegen;
+ *   - `mapId`: de map waarin de eenheid in de branch ligt (anders op MAIN, anders in de basis);
+ *   - `ouderId`: bij een element de bron (relatie) of de boomouder, om het in de keuzeboom onder
+ *     zijn ouder te hangen; anders null.
  */
 
 const leeg = Object.freeze({});
+
+/**
+ * Vaste sleutel van een eenheid: `<soort>:<profielId>:<id>` (profielId leeg bij map en
+ * kruisverband). Een plaatsing hoort bij haar element of diagram; een bundel heet
+ * `bundel::<id>`, de soortenlijst `koppelsoorten::koppelsoorten`.
+ * @param {{soort: string, profielId?: string|null, id: string}} v
+ */
+export const verschilSleutel = (v) => `${v.soort}:${v.profielId ?? ""}:${v.id}`;
 
 /** Velden (bovenste sleutels, `data.*` uitgesplitst) die tussen a en b verschillen. */
 export function verschillendeVelden(a, b) {
@@ -98,7 +113,8 @@ const naamVan = (...kandidaten) => {
  * Het verschil tussen tak en MAIN, ten opzichte van de basis.
  * @param {{basis: any, tak: any, main: any, mapId?: string|null,
  *          ouderVan?: (profielId: string, elementId: string, stand: any) => string|null}} p
- * @returns {{verschillen: Verschil[], telling: Record<VerschilStatus, number>, scope: string[]}}
+ * @returns {{verschillen: Verschil[], telling: Record<VerschilStatus, number>, scope: string[],
+ *            mappen: Record<string, {id: string, naam: string, ouderId: string|null}>}}
  */
 export function verschilMetMain({ basis, tak, main, mapId = null, ouderVan = null }) {
   const standen = { basis: basis || leeg, tak: tak || leeg, main: main || leeg };
@@ -194,6 +210,41 @@ export function verschilMetMain({ basis, tak, main, mapId = null, ouderVan = nul
     }
   }
 
+  // Sleutel, map en ouder per verschil (voor de keuzeboom).
+  const ouderVanElement = (pid, id) => {
+    for (const k of ["tak", "main", "basis"]) {
+      const el = standen[k].profielen?.[pid]?.elements?.[id];
+      if (!el) continue;
+      if (el.source) return String(el.source);
+      const o = ouderVan ? ouderVan(pid, id, standen[k]) : null;
+      return o ? String(o) : null;
+    }
+    return null;
+  };
+  for (const v of verschillen) {
+    v.sleutel = verschilSleutel(v);
+    v.ouderId = v.soort === "element" ? ouderVanElement(v.profielId, v.id) : null;
+    v.mapId = null;
+    for (const k of ["tak", "main", "basis"]) {
+      const st = standen[k];
+      const m = v.soort === "element" ? mapVanElement(st, v.profielId, v.id)
+        : v.soort === "diagram" ? st.structuur?.plaatsing?.[`${v.profielId}::${v.id}`]
+          : v.soort === "map" ? (st.structuur?.mappen?.[v.id] ? st.structuur.mappen[v.id].ouderId ?? null : undefined)
+            : null;
+      if (m !== undefined && m !== null) { v.mapId = String(m); break; }
+      if (v.soort === "map" && m === null) break; // map in de wortel
+    }
+  }
+
+  // Alle mappen (naam en ouder), de branch het zwaarst: om de boom te tekenen.
+  /** @type {Record<string, {id: string, naam: string, ouderId: string|null}>} */
+  const mappen = {};
+  for (const k of ["basis", "main", "tak"]) {
+    for (const [id, m] of Object.entries(standen[k].structuur?.mappen || leeg)) {
+      mappen[id] = { id, naam: String(m?.naam || id), ouderId: m?.ouderId ?? null };
+    }
+  }
+
   const volgorde = { conflict: 0, nieuw: 1, gewijzigd: 2, weg: 3, main: 4 };
   const soortVolgorde = { map: 0, element: 1, diagram: 2, kruisverband: 3 };
   verschillen.sort((a, b) => volgorde[a.status] - volgorde[b.status]
@@ -202,7 +253,7 @@ export function verschilMetMain({ basis, tak, main, mapId = null, ouderVan = nul
     || a.naam.localeCompare(b.naam) || a.id.localeCompare(b.id));
   const telling = { nieuw: 0, gewijzigd: 0, weg: 0, conflict: 0, main: 0 };
   for (const v of verschillen) telling[v.status] += 1;
-  return { verschillen, telling, scope: [...scope] };
+  return { verschillen, telling, scope: [...scope], mappen };
 }
 
 /**

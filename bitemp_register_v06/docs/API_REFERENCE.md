@@ -799,7 +799,12 @@ onbereikbaar is of `/vergelijk` niet kent (`handlers/studio_project_vergelijk.go
 
 #### `POST /api/studio/projecten/:id/samenvoegen`
 Rol `modelleur`, schrijven op de branch én de ouder (`403` zonder schrijfrecht op de ouder). Body
-`{ookBuitenMap?: bool}` (mag leeg). Dezelfde drie kanten als `/vergelijk` gaan naar de sidecar
+`{ookBuitenMap?: bool, keuze?: {<sleutel>: true|false|"terug"}}` (mag leeg; een andere waarde → `400`). Zonder `keuze` gaat alles mee en
+blokkeert een conflict (stap 1). Met `keuze` (stap 2, sleutel `<soort>:<profielId>:<id>` zoals
+`verschillen[].sleutel` van `/vergelijk`) gaat alleen het gekozene mee; bij een conflict wint de
+branch als hij gekozen is, anders MAIN; wat niet gekozen is blijft in de branch. `"terug"` zet de
+eenheid in de branch terug naar de versie van MAIN (MAIN verandert niet). Een sleutel die
+ontbreekt: mee, behalve bij een conflict. Dezelfde drie kanten als `/vergelijk` gaan naar de sidecar
 (`POST /samenvoegen`), die alles uit de branch met MAIN samenvoegt en twee lijsten operaties
 teruggeeft: `opsMain` (MAIN → samengevoegd) en `opsTak` (branch → samengevoegd, "bijwerken"), plus de
 samengevoegde stand. In één transactie: ouder en branch `FOR UPDATE`, controle dat hun laatste
@@ -807,9 +812,11 @@ volgnummer nog dat van de berekening is, `opsMain` achter het log van de ouder e
 dat van de branch (`clientId: "samenvoegen"`, actor = wie samenvoegt), en de basis van de branch
 vervangen door de samengevoegde stand op het nieuwe laatste volgnummer van de ouder
 (`basisVolgnummer` in de herkomst idem). Na de commit gaan de ops via SSE uit. → `200 {main:
-{projectId, ops: {aantal, van?, tot?, laatsteVolgnummer}}, tak: {…}, basisVolgnummer, telling}`.
-`409` met `reden`: `"conflicten"` (+ `conflicten`), `"buiten_map"` (+ `buitenMap`; opnieuw met
-`ookBuitenMap: true`) of `"volgnummer_verschoven"` (opnieuw vergelijken). `404`, `413`, `422` en `502`
+{projectId, ops: {aantal, van?, tot?, laatsteVolgnummer}}, tak: {…}, basisVolgnummer, telling,
+opgelost}` (`opgelost` = aantal met de keuze beslist conflicten). `409` met `reden`: `"conflicten"`
+(+ `conflicten`, alleen zonder keuze), `"samenhang"` (+ `samenhang: [{kant, fout}]`: de keuze laat een
+verwijzing naar iets wat er niet is achter), `"buiten_map"` (+ `buitenMap`, alleen gekozen
+wijzigingen; opnieuw met `ookBuitenMap: true`) of `"volgnummer_verschoven"` (opnieuw vergelijken). `404`, `413`, `422` en `502`
 als bij `/vergelijk` (`handlers/studio_project_samenvoegen.go`).
 
 #### `GET /api/studio/projecten/:id/model/:profiel`
