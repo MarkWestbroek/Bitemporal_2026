@@ -25,6 +25,8 @@ import { vraagBevestiging, toonMelding } from "../naamDialog.jsx";
 import { willekeurig } from "../../simulatie/gaten.js";
 import { PROCESINSTANTIE } from "../../simulatie/store.js";
 import { tokenBeeld, standTekst, mutatieTekst, TOKEN_KLEUR } from "../../simulatie/weergave.js";
+import { beeldVoor } from "../../simulatie/cmVorm.js";
+import { CmObject } from "./simulatieCmVorm.jsx";
 import {
   BPMN_PROFIEL,
   VOORBEELDEN,
@@ -543,7 +545,11 @@ function Inspector() {
               <span style={{ marginLeft: 6, padding: "0 6px", borderRadius: 8, background: o.data.state === "lopend" ? TOKEN_KLEUR.klaar : o.data.state === "afgebroken" ? TOKEN_KLEUR.vast : "#64748b", color: "#fff", fontSize: 11 }}>{o.data.state || o.data.status}</span>
             )}
           </summary>
-          <pre style={{ ...mono, margin: "2px 0 0 12px", padding: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", background: "transparent", color: "inherit", border: "none" }}>{JSON.stringify(o.data, null, 1)}</pre>
+          {o.type !== PROCESINSTANTIE && beeldVoor(S.cm?.beelden, o.type) ? (
+            <CmObject beeld={beeldVoor(S.cm.beelden, o.type)} data={o.data} bron={S.cm.bron} />
+          ) : (
+            <pre style={{ ...mono, margin: "2px 0 0 12px", padding: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", background: "transparent", color: "inherit", border: "none" }}>{JSON.stringify(o.data, null, 1)}</pre>
+          )}
         </details>
       ))}
       {toestand && Object.keys(toestand.variabelen).length > 0 && (

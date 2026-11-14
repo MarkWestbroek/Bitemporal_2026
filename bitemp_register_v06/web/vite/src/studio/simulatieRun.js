@@ -24,6 +24,8 @@ import { leesProcessen, startVan, gewoneStart, metProcessen } from "../simulatie
 import { tokenBeeld, tokenCss } from "../simulatie/weergave.js";
 import { getProfieltype, getProfieltypen } from "./profieltypeRegistry";
 import { conditiesNaarCel } from "../diagramprofielen/bpmn/conditiesNaarCel.js";
+import { exporteerV3 } from "../diagramprofielen/canoniek-uml/serialisatie.js";
+import { maakCmBeelden } from "../simulatie/cmVorm.js";
 
 /** Het profiel waar de processen in staan. */
 export const BPMN_PROFIEL = "bpmnMotor05";
@@ -72,7 +74,7 @@ export const LEEG_SCENARIO = {
 // het is alleen een stijlblok in deze browsertab (andere tabs en gebruikers zien niets), maar
 // zolang het aan staat neemt een PNG/SVG-export van het canvas het token mee — handig als je een
 // plaatje van de stand van een procesinstantie wilt.
-const S = { sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, startProces: null, toonProces: null, opCanvas: false, fout: null, versie: 0 };
+const S = { sim: null, m1: null, scenarioTekst: null, edienst: null, gpk: null, startProces: null, toonProces: null, opCanvas: false, cm: null, fout: null, versie: 0 };
 const luisteraars = new Set();
 const STIJL_ID = "sim-token-stijl";
 
@@ -181,6 +183,45 @@ export function start() {
     sim.start();
     Object.assign(S, { sim, m1, toonProces: null });
   });
+  if (S.sim) laadCmBeelden(S.m1?.edienst).catch((e) => zet({ cm: { beelden: [], bron: null, fout: e.message } }));
+}
+
+// ── De cm-vorm van de objecten (POC, Mark 14-11, ontwerp §11.7) ──
+
+const CANONIEK_PROFIEL = "diagram05";
+
+async function sha256Hex(tekst) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(tekst));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Het canonieke model van het project als V3, of null als het leeg is. */
+function projectV3() {
+  const st = getProfieltype(CANONIEK_PROFIEL)?.useStore?.getState?.();
+  if (!st || !Object.keys(st.elements || {}).length) return null;
+  try {
+    return exporteerV3(st).v3;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Per objecttype van het e-dienstmodel de structuur uit het cm en de trace naar de platte vorm.
+ * Het cm komt uit het project als de bron-entiteiten daarin staan, anders uit het voorbeeld van
+ * cg-test (het model waartegen het GPK-e-dienstmodel is opgesteld).
+ */
+async function laadCmBeelden(edienst) {
+  if (!edienst) return zet({ cm: { beelden: [], bron: null } });
+  const project = projectV3();
+  let beelden = project ? await maakCmBeelden({ model: project, edienst, sha256Hex }) : [];
+  let bron = beelden.length ? "het canonieke model van het project" : null;
+  if (!beelden.length) {
+    const fixture = (await import("../diagramprofielen/canoniek-uml/fixtures/cg-test/inrichten-domeinen-v3.json")).default;
+    beelden = await maakCmBeelden({ model: fixture, edienst, sha256Hex });
+    bron = beelden.length ? "het canonieke model van cg-test (voorbeeld)" : null;
+  }
+  zet({ cm: { beelden, bron } });
 }
 
 export function stop() {

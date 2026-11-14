@@ -123,7 +123,17 @@ test("GPK: eigen activiteit, token op het diagram, gat met de hand, doorlopen to
   await expect(page.getByTestId("sim-log")).toContainText("△ zaak-in-werkbak → Kies zaak om te behandelen");
   await expect(page.getByTestId("sim-log")).toContainText("△ medewerker-gekoppeld → Zaak behandelen");
   await expect(page.getByTestId("sim-objecten")).toContainText("zaakAanmaken");
+  // De aanvraag in de cm-vorm (POC 14-11): entiteit, geërfde GE's, de toets, en wat buiten het cm staat.
+  const cm = page.getByTestId("sim-cm").first();
+  await expect(cm).toContainText("Gehandicaptenparkeerkaartaanvraag");
+  await expect(cm).toContainText("erft van Aanvraag");
+  await expect(cm.getByTestId("sim-cm-toets")).toContainText("✓ verplichte velden ingevuld");
+  await expect(cm.locator('[data-pad="Aanvraag.Aanvraagidentificatie.aanvraagnummer"]')).toContainText("GPK-2026-0001");
+  await expect(cm.getByTestId("sim-cm-buiten")).toContainText("toegekend");
+  await foto(page, "5b-cm-vorm");
+  await page.getByTestId("sim-cm-json").first().click();
   await expect(page.getByTestId("sim-objecten")).toContainText('"beoordeling": "toegekend"');
+  await page.getByTestId("sim-cm-vorm").first().click();
   await foto(page, "5-klaar");
 
   // Een ander proces bekijken, en weer het token volgen.
