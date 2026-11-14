@@ -1,6 +1,7 @@
 {
   "versie": "0.1",
   "naam": "GPK 3: bestuurder zonder rijbewijsnummer",
+  "beschrijving": "Een aanvraag voor een bestuurder zonder rijbewijsnummer. Niet ontvankelijk volgens de beslistabel; het oppakproces eindigt bij Aanvraag niet opgepakt.",
   "_toelichting": "Scenario 3 uit cg-stack-voor-simulatie.md §8 (Fundament). Verzonnen gegevens.",
   "start": {
     "proces": "aanvraag-oppakken",

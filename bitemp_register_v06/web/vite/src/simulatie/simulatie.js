@@ -19,8 +19,10 @@
  * Dekking (ontwerp §4): start- en eindevents (geen, bericht, terminate; fout,
  * escalatie en annulering breken af), tussen-events met een bericht, taken
  * (user, service, business rule, send, receive), exclusieve en parallelle
- * gateways, call activity en subproces als eigen instantie. Al het andere
- * (inclusieve gateway, boundary events, …) laat het token staan: de run
+ * gateways, call activity en subproces als eigen instantie, signalen (werpen
+ * als eind- of tussen-event; vangen als start-, tussen- of boundary event,
+ * met een filter op de lading; 13-11). Al het andere (inclusieve gateway,
+ * boundary events met een timer of bericht, …) laat het token staan: de run
  * eindigt dan als vastgelopen, met de reden erbij.
  *
  * Puur: alle toestand staat in het log (store.js).
@@ -36,6 +38,8 @@ import { zetLijst, berichtVariabele } from "../transformatie/bpmnXmlSchrijver.js
 const DOSSIERVELD = /^\s*\$\{\s*documentDelegateService\.findValueByJsonPointer(?:OrDefault)?\(\s*["']\/([A-Za-z0-9_/]+)["']/;
 
 const AFBREKEND = new Set(["fout", "escalatie", "annulering"]);
+/** Het id van de zaak in de store, zodra een servicetaak hem aanmaakt (zaakAanmaken). */
+const ZAAK = "zaak";
 
 /**
  * @param {Object} invoer
@@ -144,6 +148,14 @@ export function maakSimulatie({ m1, scenario }) {
       items.forEach((item, i) => {
         doe({ soort: "extern", actie: gat.actie, ...(gat.doel ? { doel: gat.doel } : {}), element: gat.naam, ...(item !== null ? { voor: item } : {}), verwijzing: items.length > 1 ? `${waarde.verwijzing}/${i + 1}` : waarde.verwijzing });
       });
+      // De zaak zelf (13-11): de lading van een signaal is de zaak, niet de aanvraag (FUNSIM). Een
+      // abonnement op Notificaties filtert op de kenmerken van de zaak, zoals het zaaktype; dat
+      // zaaktype komt uit het e-dienstmodel (artefact van soort zaaktype).
+      if (gat.actie === "zaakAanmaken" && !t.objecten[ZAAK]) {
+        const zaaktype = (m1.edienst?.artefacten || []).find((a) => a.soort === "zaaktype")?.identifier || null;
+        doe({ soort: "maak", id: ZAAK, type: "Zaak", data: { url: waarde.verwijzing, zaaktype } });
+        doe({ soort: "verbind", van: ZAAK, naar: sleutel, rol: "aanvraag" });
+      }
     } else if (gat.kiest === "pad") {
       const flow = (procesMet(el.id)?.uit.get(el.id) || []).find((f) => f.id === waarde.pad || f.naam === waarde.pad);
       if (!flow) throw new Error(`Gat "${gat.naam}": het pad "${waarde.pad}" bestaat niet`);
@@ -189,6 +201,113 @@ export function maakSimulatie({ m1, scenario }) {
     // Niemand luistert nu: het bericht blijft liggen tot een vangend event het ophaalt.
     doe({ soort: "bericht", naam });
     return true;
+  }
+
+  // ── Signalen ────────────────────────────────────────────────────────
+  //
+  // Een signaal is een omroep (ontwerp §11.6, besluit Mark 13-11): wie werpt kent de ontvangers
+  // niet. Elk vangend event met dezelfde signaalnaam reageert als zijn filter (CEL over de lading)
+  // waar is. De lading is de zaak: in de simulatie het object van de afhandeling, met de
+  // procesvariabelen; het filter ziet alleen de zaak (`lading`). Drie soorten ontvangers:
+  //   1. een token dat wacht op een vangend tussen-event met dit signaal;
+  //   2. een token op een taak met een boundary event met dit signaal (onderbrekend: de taak stopt
+  //      en het token gaat langs het boundary event verder; anders komt er een token bij). Zo
+  //      werkt de claim: wie het eerst koppelt, wint; de andere kandidaat loopt leeg af;
+  //   3. een proces met een signal-startevent: een nieuwe instantie. Met "één lopende instantie
+  //      per zaak" start het niet als er al een loopt; dat staat als weigering in het log.
+
+  /**
+   * De lading van een signaal: de zaak (zijn velden, zoals `zaaktype` en `url`), zoals een
+   * notificatie de kenmerken van de zaak draagt. Zonder zaak (een model zonder zaakAanmaken) het
+   * object van de afhandeling.
+   */
+  const lading = () => t.objecten[ZAAK]?.data || object()?.data || {};
+
+  /** Past het filter van een vangend signaal-event op de lading? Onleesbaar = nee, met de reden. */
+  function filterPast(el) {
+    const filter = el.data?.filter;
+    if (!filter || !String(filter).trim()) return { past: true };
+    try {
+      return { past: !!rekenCel(leesAlsCel(filter), lading()) };
+    } catch (e) {
+      if (!(e instanceof Onleesbaar)) throw e;
+      return { past: false, reden: `filter niet te lezen: ${e.message}` };
+    }
+  }
+
+  /** Is dit element een vangend event voor signaal `naam`? */
+  const vangtSignaal = (el, naam) => el?.data?.soort === "signaal" && el.data?.signaal === naam && el.data?.richting !== "werpt";
+
+  /** De instantie die door een token op een taak wordt aangeroepen (call activity, subproces). */
+  const kindVan = (token) => Object.values(t.objecten).find((o) => o.type === PROCESINSTANTIE && o.data.ouderToken === token.id && o.data.state === "lopend");
+
+  /** Breekt een lopende instantie af zonder de ouder mee te nemen (de ouder is zelf al onderbroken). */
+  function breekKindAf(instantie) {
+    for (const k of tokensVan(instantie.id)) {
+      const kleinkind = kindVan(k);
+      if (kleinkind) breekKindAf(kleinkind);
+      ruimOp(k);
+    }
+    doe({ soort: "overgang", id: instantie.id, veld: "state", naar: "afgebroken", bij: "onderbroken" });
+    doe({ soort: "zet", id: instantie.id, velden: { einde: "onderbroken" } });
+  }
+
+  /** Werpt signaal `naam` en laat iedereen die luistert reageren. */
+  function werpSignaal(naam) {
+    const ontvangers = [];
+    const geweigerd = [];
+    // 1. Wachtende vangende tussen-events.
+    for (const k of Object.values(t.tokens)) {
+      if (k.status !== "wacht" || k.wachtOp?.soort !== "signaal" || k.wachtOp.naam !== naam) continue;
+      const { past, reden } = filterPast(elementen[k.plek]);
+      if (!past) {
+        if (reden) geweigerd.push({ waar: elementen[k.plek]?.naam || k.plek, reden });
+        continue;
+      }
+      ontvangers.push(elementen[k.plek]?.naam || k.plek);
+      verder(k);
+    }
+    // 2. Boundary events op taken waar een token staat.
+    for (const b of Object.values(elementen)) {
+      if (b.elementType !== "boundary-event" || !vangtSignaal(b, naam)) continue;
+      const taak = b.data?.randVan;
+      const token = Object.values(t.tokens).find((k) => k.plek === taak && k.status === "wacht");
+      if (!token) continue;
+      const { past, reden } = filterPast(b);
+      if (!past) {
+        if (reden) geweigerd.push({ waar: b.naam || b.id, reden });
+        continue;
+      }
+      ontvangers.push(`${b.naam || "boundary"} op ${elementen[taak]?.naam || taak}`);
+      if (b.data?.onderbrekend !== false) {
+        const kind = kindVan(token);
+        if (kind) breekKindAf(kind);
+        if (token.wachtOp?.soort === "gat" && t.gaten[token.wachtOp.id]?.open) doe({ soort: "gat", id: token.wachtOp.id, open: false, vervallen: true });
+        doe({ soort: "token", id: token.id, instantie: token.instantie, plek: b.id, status: "klaar", wachtOp: null });
+      } else {
+        doe({ soort: "token", id: nieuwId("token"), instantie: token.instantie, plek: b.id, status: "klaar", wachtOp: null });
+      }
+    }
+    // 3. Processen met een signal-startevent.
+    for (const proces of processen) {
+      for (const eid of proces.elementen) {
+        const start = elementen[eid];
+        if (start?.elementType !== "start-event" || !vangtSignaal(start, naam)) continue;
+        const { past, reden } = filterPast(start);
+        if (!past) {
+          if (reden) geweigerd.push({ waar: proces.naam, reden });
+          continue;
+        }
+        const lopend = Object.values(t.objecten).some((o) => o.type === PROCESINSTANTIE && o.data.proces === proces.id && o.data.state === "lopend");
+        if (start.data?.eenPerZaak && lopend) {
+          geweigerd.push({ waar: proces.naam, reden: "er loopt voor deze zaak al een instantie" });
+          continue;
+        }
+        ontvangers.push(proces.naam);
+        startInstantie(proces, start);
+      }
+    }
+    regel.signaal = { naam, ontvangers, ...(geweigerd.length ? { geweigerd } : {}) };
   }
 
   // ── De regels per elementtype ───────────────────────────────────────
@@ -248,6 +367,7 @@ export function maakSimulatie({ m1, scenario }) {
       return openGat(token, el, partner || soort === "receive" ? "partner" : "taak", formulier.velden, {
         ...(d.formulier ? { formulier: d.formulier, formulierBekend: formulier.gevonden } : {}),
         ...(partner ? { partner } : {}),
+        ...(d.kandidaatgroep ? { kandidaatgroep: d.kandidaatgroep } : {}),
       });
     }
     return verder(token);
@@ -296,6 +416,7 @@ export function maakSimulatie({ m1, scenario }) {
     const soort = el.data?.soort || "";
     switch (el.elementType) {
       case "start-event":
+      case "boundary-event":
         return verder(token);
       case "taak":
         return voerTaak(token, el);
@@ -304,7 +425,14 @@ export function maakSimulatie({ m1, scenario }) {
       case "parallel":
         return voerParallel(token, el);
       case "tussen-event": {
-        if (soort !== "bericht") return verder(token); // timer, signaal, …: niet nagespeeld
+        if (soort === "signaal") {
+          if (el.data?.richting === "werpt") {
+            if (el.data?.signaal) werpSignaal(el.data.signaal);
+            return verder(t.tokens[token.id]);
+          }
+          return wacht(token, { soort: "signaal", naam: el.data?.signaal || "" });
+        }
+        if (soort !== "bericht") return verder(token); // timer, …: niet nagespeeld
         if (el.data?.richting === "werpt") return werp(token, el) ? verder(t.tokens[token.id]) : undefined;
         if (t.berichten.some((b) => b.naam === el.data?.bericht)) {
           doe({ soort: "bericht", naam: el.data.bericht, weg: true });
@@ -314,6 +442,12 @@ export function maakSimulatie({ m1, scenario }) {
       }
       case "eind-event": {
         if (soort === "bericht" && !werp(token, el)) return;
+        if (soort === "signaal" && el.data?.signaal) {
+          // Eerst dit pad afronden, dan omroepen: een boundary op een eigen, al verlaten taak
+          // hoort het niet, en wie start ziet deze instantie als klaar.
+          verbruik(token, el.naam || "einde");
+          return werpSignaal(el.data.signaal);
+        }
         if (AFBREKEND.has(soort)) return rondAf(token.instantie, el.naam || soort, true);
         if (soort === "terminate") for (const k of tokensVan(token.instantie)) if (k.id !== token.id) ruimOp(k);
         return verbruik(token, el.naam || "einde");

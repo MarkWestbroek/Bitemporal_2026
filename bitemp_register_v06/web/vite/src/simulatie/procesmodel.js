@@ -75,6 +75,20 @@ export function leesProcessen(modelBestand, edienst) {
   return { elementen, processen };
 }
 
+/**
+ * Een e-dienstmodel met andere processen: de artefacten van soort `bpmn` vervangen door
+ * `processen` ({identifier, diagram}). Voor een model dat de processen anders indeelt dan het
+ * e-dienstmodel (het GPK-voorbeeld in vier processen, ontwerp §11.6); de rest blijft gelijk.
+ * @param {any} edienst
+ * @param {{identifier: string, diagram: string}[]} processen
+ */
+export function metProcessen(edienst, processen) {
+  if (!edienst || !processen?.length) return edienst;
+  const anders = (edienst.artefacten || []).filter((a) => a.soort !== "bpmn");
+  const bpmn = processen.map((p) => ({ soort: "bpmn", identifier: p.identifier, bron: { model: "project:bpmnMotor05", diagram: p.diagram } }));
+  return { ...edienst, artefacten: [...anders, ...bpmn] };
+}
+
 /** Het startevent zonder trigger van een proces (of null). */
 export const gewoneStart = (proces, elementen) =>
   [...proces.elementen].map((id) => elementen[id]).find((e) => e.elementType === "start-event" && !e.data?.soort) || null;

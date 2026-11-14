@@ -104,3 +104,15 @@ test("DMN-schrijver: CEL in het model wordt FEEL in de XML; FEEL gaat door met e
   assert.equal(door.diagnostics.length, 1);
   assert.match(door.diagnostics[0].message, /geen CEL/);
 });
+
+test("juelNaarCel: ${…} eraf, woordoperatoren naar tekens, strings ongemoeid", async () => {
+  const { juelNaarCel } = await import("./celOmzetting.js");
+  assert.deepEqual(juelNaarCel("${uitkomst == 'toegekend'}"), { tekst: "uitkomst == 'toegekend'", fout: null });
+  assert.deepEqual(juelNaarCel("${!ontvankelijkheid.ontvankelijk}"), { tekst: "!ontvankelijkheid.ontvankelijk", fout: null });
+  assert.equal(juelNaarCel("${a eq 'x' and not b}").tekst, "a == 'x' && !b");
+  assert.equal(juelNaarCel("${toelichting == 'not and or'}").tekst, "toelichting == 'not and or'");
+  assert.equal(juelNaarCel("#{n gt 2}").tekst, "n > 2");
+  assert.deepEqual(juelNaarCel("uitkomst == 'x'"), { tekst: "uitkomst == 'x'", fout: null, geenJuel: true });
+  assert.match(juelNaarCel("${empty bijlagen}").fout, /empty/);
+  assert.ok(juelNaarCel("${a ==}").fout);
+});

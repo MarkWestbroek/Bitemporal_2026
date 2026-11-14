@@ -82,7 +82,7 @@ export function standTekst(stand) {
     case "uitzondering":
       return `Afgebroken bij ${stand.bij.join(", ")}.`;
     case "vastgelopen":
-      return `Vastgelopen: ${stand.tokens.map((k) => `${k.naam} (${k.wachtOp?.reden || (k.wachtOp?.soort === "bericht" ? `wacht op bericht ${k.wachtOp.naam}` : k.wachtOp?.soort === "samenkomst" ? "de samenkomst wordt niet compleet" : "wacht")})`).join("; ")}.`;
+      return `Vastgelopen: ${stand.tokens.map((k) => `${k.naam} (${k.wachtOp?.reden || (k.wachtOp?.soort === "bericht" ? `wacht op bericht ${k.wachtOp.naam}` : k.wachtOp?.soort === "signaal" ? `wacht op signaal ${k.wachtOp.naam}` : k.wachtOp?.soort === "samenkomst" ? "de samenkomst wordt niet compleet" : "wacht")})`).join("; ")}.`;
     default:
       return "";
   }

@@ -1,6 +1,7 @@
 {
   "versie": "0.1",
   "naam": "GPK 1: zonder bsn",
+  "beschrijving": "Een aanvraag zonder bsn van de aanvrager. De beslistabel aanvraag-ontvankelijk vindt hem niet ontvankelijk; het oppakproces eindigt bij Aanvraag niet opgepakt en er komt geen zaak.",
   "_toelichting": "Scenario 1 uit cg-stack-voor-simulatie.md §8 (Fundament). Verzonnen gegevens.",
   "start": {
     "proces": "aanvraag-oppakken",

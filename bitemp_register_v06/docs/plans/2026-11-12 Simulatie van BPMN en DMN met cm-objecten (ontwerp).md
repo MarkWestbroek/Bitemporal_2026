@@ -608,14 +608,23 @@ Deze volgen niet uit §8 en staan hier zodat Mark ze kan terugdraaien.
 ### 10.5 Fase 2: het scherm (13-11)
 
 Mark gaf op 13-11 aan dat fase 2 mocht beginnen zonder op zijn antwoorden te
-wachten. Het scherm is een onder-dock van de BPMN-activiteit op de motor
-(vraag 6): `studio/activities/simulatiePaneel.jsx`, aangesloten in
-`bpmnMotorActivity.jsx`. Het paneel is alleen weergave; de run zelf is de kern
-van fase 1.
+wachten. De eerste versie was een paneel onder het BPMN-canvas (het advies bij
+vraag 6). Mark probeerde het dezelfde dag uit en vond dat het daar niet hoort:
+het paneel hing ook onder een procesdiagram dat niet meedeed. Het scherm is
+daarom dezelfde dag een **eigen activiteit Simulatie** geworden; zie §11.1
+voor de reden.
 
-![Het token op de gateway, na de beslistabel](img/2026-11-13-simulatie-token.png)
+![Activiteit Simulatie: het token op de gateway, na de beslistabel](img/2026-11-13-simulatie-token.png)
 
-![Een open gat: de taak Aanvraag beoordelen](img/2026-11-13-simulatie-gat.png)
+![Een open gat: de taak Aanvraag beoordelen in het beoordelingsproces](img/2026-11-13-simulatie-gat.png)
+
+**De activiteit** (`studio/activities/simulatieActivity.jsx`), drie delen:
+
+| Deel | Inhoud |
+|---|---|
+| Links: scenario en bronnen | Bij welk proces de run start, het scenario als JSON (met de vijf GPK-scenario's als voorbeeld), en waar de run op draait: proces, beslistabellen, e-dienstmodel. Tijdens een run ligt dit vast. |
+| Midden | De bediening (Start, Stap, Doorlopen, Terug, Stop) met de stand in woorden; het open gat met een formulier naar de verwachte velden; het procesdiagram met het token; het log, waarin een klik op een regel terugspoelt. |
+| Rechts: objecten | De objecten met hun state (ook de procesinstanties), de procesvariabelen en wat er buiten het cm gebeurd is. |
 
 **Het token op het diagram.** Het element waar een token staat krijgt een rand
 en een bolletje rechtsboven; staan er meer tokens (na een parallelle gateway),
@@ -628,41 +637,43 @@ dan staat het aantal in het bolletje. De kleur zegt hoe het token erbij staat:
 | cyaan | wacht op een bericht, een ander proces of een samenkomst |
 | rood | vastgelopen |
 
-Waar het token geweest is blijft een dunne cyaan rand staan, en de flows die
-het gevolgd heeft kleuren mee. Met "volg het token" aan opent de Studio het
-diagram van het proces waar het token heen gaat.
+Waar het token geweest is blijft een dunne cyaan rand staan. Boven het diagram
+staat per proces een knop; het beeld volgt het token naar het proces waar het
+heen gaat, tenzij je zelf een proces kiest.
 
-De motor weet niets van de simulatie. Het paneel zet een stijlblok neer dat de
-canvas-nodes aanwijst op hun element-id (`simulatie/weergave.js`). Dat kost
-geen wijziging in de motor; het is ook de reden dat het token op een element
-staat en niet over een lijn beweegt.
+Het diagram in de activiteit is een tekening, gemaakt door dezelfde tekenaar
+als de documenten en de render-API (`tekenDiagram`), geen canvas: bewerken doe
+je in Modelleren. Het token staat op een element en beweegt niet over een lijn.
 
-**Het paneel**, drie kolommen:
+**Het token op het BPMN-canvas.** Zolang een run loopt staat het token ook op
+het diagram in Modelleren. `studio/simulatieRun.js` zet daarvoor een stijlblok
+in de pagina dat de canvas-nodes aanwijst op hun element-id
+(`simulatie/weergave.js`). De motor weet er niets van en is niet gewijzigd.
 
-1. Bediening (Start, Stap, Doorlopen, Terug, Stop), de stand in woorden, het
-   open gat met een formulier naar de verwachte velden, en vóór de start het
-   scenario als JSON met de vijf GPK-scenario's als voorbeeld.
-2. De objecten met hun state, de procesvariabelen en wat er buiten het cm
-   gebeurd is.
-3. Het log; een klik op een regel spoelt daarheen terug.
-
-**De M1-set in het scherm.** Het proces is het BPMN-model van de activiteit.
-De beslistabellen komen uit de DMN-profielen van het project. Het
-e-dienstmodel is een bestand dat je kiest. "GPK-voorbeeld laden" zet de drie
-GPK-processen in de activiteit, met beslistabel, e-dienstmodel en scenario 4.
+![Het token op het BPMN-canvas in Modelleren](img/2026-11-13-simulatie-canvas.png)
 
 **Welk proces start.** Onder "Start bij" kies je het proces waar het
 startobject binnenkomt. Kies je niets, dan is het het proces dat het scenario
-noemt, anders het diagram dat open staat, anders het eerste proces met een
+noemt, anders het BPMN-diagram dat open staat, anders het eerste proces met een
 startevent zonder trigger. Een proces dat op een bericht start is ook te
 kiezen: het start dan alsof dat bericht binnenkomt. Zonder e-dienstmodel is
 elk diagram met een startevent een proces, ook een schets (bevinding Mark
 13-11: de run begon ongevraagd bij "Kies zaak uit werkbak").
 
+**De M1-set in het scherm.** Het proces is het BPMN-model van het project
+(profiel `bpmnMotor05`). De beslistabellen komen uit de DMN-profielen op de
+motor; de klassieke DMN-activiteit (dmn-js) leest de simulatie niet. Het
+e-dienstmodel is een bestand dat je kiest: daar staan de process-id's en de
+taakformulieren in, en het is geen onderdeel van het Studio-project. De
+beslistabel en het e-dienstmodel van het GPK-voorbeeld zijn los te gebruiken
+naast een eigen BPMN-model; "GPK-voorbeeld laden" zet ook de drie processen
+in het project.
+
 **Getoetst** met `tests/e2e/63-studio-simulatie.spec.js`: voorbeeld laden,
-starten, het token op startevent en gateway, doorlopen tot het gat bij Aanvraag
-beoordelen (het diagram volgt naar het beoordelingsproces), een verplicht veld
-dat geweigerd wordt, invullen, doorlopen tot Beschikt, en terugspoelen.
+starten, het token op startevent en gateway, het token op het canvas in
+Modelleren en terug (de run blijft), doorlopen tot het gat bij Aanvraag
+beoordelen (het beeld volgt naar het beoordelingsproces), een verplicht veld
+dat geweigerd wordt, invullen, doorlopen tot Beschikt, terugspoelen en stoppen.
 
 **Wat het scherm nog niet heeft.**
 
@@ -671,9 +682,286 @@ dat geweigerd wordt, invullen, doorlopen tot Beschikt, en terugspoelen.
 - De vulwijze stel je in het scenario in (JSON), niet met knoppen.
 - Een scenario of run bewaren kan niet (bewust, §3.5); kopiëren uit het
   tekstvak wel.
-- Staan er twee gaten tegelijk open, dan toont het paneel het eerste.
-- Het onder-dock staat standaard open bij elke BPMN-diagram, ook als je niet
-  simuleert. Inklappen onthoudt de Studio.
+- Staan er twee gaten tegelijk open, dan toont het scherm het eerste.
+- De objecten staan er als JSON (§11.2).
+- Op het BPMN-canvas zie je het token, maar geen verwijzing naar de activiteit
+  Simulatie. Een strook "run actief" daar vraagt een haakje in de fabriek van
+  de diagramactiviteiten.
+
+## 11. Vervolg (13-11, na het eerste gebruik door Mark)
+
+Drie richtingen uit het gesprek van 13-11. De eerste is gebouwd, de andere
+twee zijn voorstel.
+
+### 11.1 De run is van niemands diagram: activiteit Simulatie (gebouwd)
+
+Wat je bij een simulatie ziet is geen procesinstantie maar een **run**: één
+afhandeling, met één startobject en één of meer procesinstanties. Elke
+procesinstantie is een M0-object van het type `Procesinstantie`, een instantie
+van een M1-proces (een diagram). In GPK-scenario 4 zijn dat er drie. De run
+hoort dus bij geen enkel diagram, en een paneel onder een diagram suggereert
+het omgekeerde.
+
+Daarom:
+
+- de **activiteit Simulatie** is de eigenaar van M1-set, scenario en run
+  (§3.5), en straks van het bewaren ervan;
+- het **token** is een weergave van de run op elk diagram dat erin meedoet: in
+  de activiteit zelf, en op het canvas in Modelleren.
+
+Dit vervangt het advies bij vraag 6. Dat ging uit van één proces per run.
+
+### 11.2 Objecten tekenen in plaats van JSON (voorstel)
+
+Mark: "Zouden we ook instanties, M0-visualisaties van M1-elementtypen, kunnen
+maken? Bij UML: klasse tegenover object. Het cm is een specialisatie van UML,
+dus zou ook objecten kunnen hebben: een ENT-object met GE-objecten. Een JSON
+is wel een heel technische vorm daarvan. Een formulier ligt weer iets verder
+af van de klassen."
+
+Voorstel: de objecten van een run als **objectdiagram**. Per object een vak
+`naam : Type` met de veldwaarden als slots, relaties als links, de
+procesinstanties erbij als objecten van hun proces; bij elke stap kleurt wat
+veranderd is, en terugspoelen laat het diagram mee teruglopen.
+
+| Nodig | Stand |
+|---|---|
+| De cm-vorm van een object: een entiteit met haar gegevenselementen, in plaats van de platte vorm van het objecttype. | De store is nu plat (§10.2 punt 1, vraag 14). De traceregels van het objecttype-artefact zeggen per cm-veld waar het in de platte vorm staat; daarmee is terug te groeperen. Deze wens is een reden om vraag 14 naar de cm-vorm te beantwoorden. |
+| Een tekenaar voor objecten. | Er is een Object-profiel in de Studio (`objectActivity.jsx`, "instantiediagram: objecten met slots, links"). Niet bekeken of het hierop past. |
+| De plek op het diagram. | Te genereren met een layout; een run heeft weinig objecten. |
+
+Niveaus: zo'n objectdiagram is een gegenereerde weergave van M0 (simulatie).
+Het is geen M1-model en komt niet in de projectboom. Wordt een scenario
+bewaard (§3.5), dan is het objectdiagram van het startobject de leesbare vorm
+daarvan.
+
+### 11.3 Sequence diagrammen (voorstel)
+
+Mark: "Zou simulatie voor sequence diagrammen eigenlijk ook mogelijk zijn
+volgens dezelfde principes: een M0-instantie van een SD waarop je data laat
+lopen?"
+
+Ja, in twee richtingen, met verschillend gewicht.
+
+**Een run tekenen als sequence diagram.** Het log is al een spoor: de
+berichten tussen de processen, het antwoord van de klant, de acties naar de
+Zaken API. De levenslijnen zijn de procesinstanties, de partners en "buiten
+het cm"; elk bericht en elke externe actie is een pijl, in de volgorde van het
+log. Dat is een afbeelding van het log naar het sequence-profiel en weinig
+werk; het laat in één beeld zien wie met wie praat. Voorstel: hiermee
+beginnen.
+
+**Een sequence diagram zelf laten lopen.** Dezelfde bouwstenen passen:
+
+| Simulatie van BPMN | In een sequence diagram |
+|---|---|
+| procesinstantie | levenslijn (een object of een partij) |
+| token | het bericht dat aan de beurt is |
+| conditie op een flow (CEL) | de guard van een fragment (alt, opt, loop) |
+| gat | een levenslijn zonder gedrag erachter, of een guard die niet te lezen is |
+| store en log | hetzelfde |
+
+Het verschil: een BPMN-proces beschrijft gedrag met alle paden, een sequence
+diagram één scenario (of enkele, met fragmenten). Een SD laten lopen is dus
+eerder naspelen en toetsen: volgt de data het scenario, en klopt het SD met
+wat het proces doet. Dat tweede is de waardevolle vraag: het SD uit een run
+(hierboven) naast het getekende SD leggen.
+
+Open bij sequence-v1 zelf: asynchrone episodes en het label van een bericht
+aan jezelf.
+
+### 11.4 Volgorde
+
+1. Activiteit Simulatie (gedaan).
+2. Objecten als objectdiagram, na het antwoord op vraag 14.
+3. Een run als sequence diagram.
+4. Een sequence diagram naspelen en vergelijken.
+
+### 11.5 Tweede ronde gebruik (13-11): afspelen, scenarionamen, rand
+
+Bevindingen van Mark en wat ermee gedaan is:
+
+| Bevinding | Gedaan |
+|---|---|
+| De rand om een event of gateway stond linksboven de vorm. | `getBBox()` van een kind telt zijn eigen transform niet mee, en een event of gateway is een `<g transform="scale(1.8)">`. De rand rekent die transform nu mee; de e2e-test toetst dat de rand om de vorm ligt. |
+| Scenario's verdienen een beschrijvende naam. | Elk scenario heeft `naam` en `beschrijving`; de keuzelijst toont de naam, de beschrijving staat eronder. |
+| Scenario 4 loopt in één keer door; je wilt elke stap zien. Het token springt via een bericht naar een ander proces, maar dat zie je niet, en na afloop staat het eerste proces weer in beeld. | **Afspelen** stapt in drie tempo's door (pauzeerbaar). Het beeld volgt het token; een melding boven het diagram noemt de laatste sprong ("van … naar … (bericht …)"). Zonder tokens toont het beeld het proces van de laatste stap. |
+
+### 11.6 De procesindeling van GPK: vier processen (open, vraag 15)
+
+Mark (13-11): "Aanvraag opgepakt" is te ver voor een oppakproces. Het
+intermediate throw-event *Behandeling gevraagd* hoort er niet in en moet
+ontkoppeld worden. **Oppakken** pakt alleen op en maakt een zaak; de zaak staat
+dan in de werkbak (bv. van de afdeling). Een medewerker pakt hem op of een
+werkverdeler wijst hem toe; dat proces ontbreekt (Mark heeft het in één variant
+getekend: *Kies zaak uit werkbak*, met einde *Medewerker aan zaak gekoppeld*,
+een signal). Dan volgt **behandelen**, waarbinnen **beoordelen** gebeurt. Vier
+processen.
+
+Antwoord van FUNSIM (Fundament, 13-11), samengevat:
+
+- Nu (geverifieerd op de generatie van 09-11): oppakken eindigt met het
+  throw-event; behandelen start daar direct op (correlateStartMessage met
+  dezelfde business key). Er zit geen mens tussen. Het werkbak-stuk bestaat
+  niet als proces.
+- In GZAC is toewijzen ingebouwd gedrag zonder BPMN: een dossier heeft een
+  behandelaar; de dossierlijst zonder behandelaar is de werkbak. Een wijziging
+  van de behandelaar start (voor zover bekend) geen proces. Niet nagelopen op
+  onze installatie.
+- Trigger voor behandelen na ontkoppeling: in het model (en de simulatie) is
+  Marks signal-einde prima. Voor GZAC drie routes: (1) Marks variant letterlijk,
+  signal met business key (te bewijzen); (2) hetzelfde met een bericht (bewezen
+  techniek); (3) geen eigen proces, behandelen begint met een user task voor de
+  kandidaatgroep (claimen = oppakken). Een zaakstatuswijziging als trigger valt
+  af.
+- Beoordelen is nu een los proces per bericht omdat behandelen het
+  beoordelingsproces uit een variabele kiest, en een call activity met een
+  expressie liet de dossierexport falen (30-10). Een call activity met een vaste
+  `calledElement` kan wel en is voor de simulatie schoner (uitvoer terug, geen
+  correlatie). Hangt samen met het open besluit of behandelen per aanvraagtype
+  een eigen sleutel krijgt.
+- Geen principiële bezwaren op Fundament; cg-test is 13-11 verwijderd, dus dit is
+  een goed moment. Gevolgen: een vierde process-id in e-dienstmodel en
+  dossierprocessen, oppakken verliest het throw-event en *Beoordelingsproces
+  bepalen* verhuist naar behandelen.
+- De koppeling *koppel medewerker als zaakbehandelaar* is in de stack de
+  behandelaar op het dossier plus een Rol (roltype Behandelaar) in Open Zaak. In
+  cm-termen: maak Rol, verbind Zaak – medewerker; de medewerker is geen Partij.
+- Terminologie: "oppakken" staat nu voor aanvraag → zaak én voor de medewerker
+  die de zaak neemt. Het tweede misschien "in behandeling nemen" of "toewijzen".
+
+Vraag 15 aan Mark: (a) signal of bericht als trigger voor behandelen; (b)
+beoordelen als call activity met vaste `calledElement` of los proces per
+bericht; (c) de naam van het werkbakproces. Voor de simulatie is nodig: een
+signal-start (omroep: elk proces dat luistert start; de business key gaat mee);
+die bestaat nog niet in de kern. Een call activity wel (eigen instantie, de
+ouder gaat verder als ze klaar is). Tot het besluit blijven de GPK-fixtures de
+drie processen van Fundament volgen.
+
+**Besloten (Mark, 13-11, via FUNSIM): de namen.** *Aanvraag behandelen* heet
+voortaan **Zaak behandelen**; het werkbakproces heet **Kies zaak om te
+behandelen** (niet "oppakken"). Volgorde: Aanvraag oppakken → zaak in de werkbak
+→ Kies zaak om te behandelen → Zaak behandelen (met beoordelen erin). Marks
+tekening van het werkbakproces: none-startevent → user task *Kies zaak om te
+behandelen*, data-association *koppel medewerker als zaakbehandelaar* naar data
+store Zaakregister → signal-einde *Medewerker aan zaak gekoppeld*.
+
+**Nog open: de trigger en beoordelen.** Mark weet niet of een signal in Valtimo
+werkt, en vindt een signal charmanter: op één werkbak kunnen meerdere
+werkverdelers zitten (per afdeling, domein of product), medewerkers pakken op
+gefilterd op soorten zaken, en een tweede proces kan automatisch routeren.
+Voorstel van FUNSIM, niet bekrachtigd:
+
+- twee gebeurtenissen: *Zaak staat in de werkbak* als signal (omroep: nul of
+  meer verdelers, routers en meldingen luisteren, elk met een eigen filter), en
+  *Medewerker aan zaak gekoppeld* als bericht gecorreleerd op de zaak (één
+  ontvanger: Zaak behandelen);
+- de medewerker die zelf kiest wordt door niets gestart: het none-startevent
+  klopt; de werkbak is een data store met een filter (zaken zonder behandelaar,
+  van deze soorten);
+- toewijzen is een **claim**: kiezen twee verdelers, of een router en een
+  medewerker, dezelfde zaak, dan wordt alleen de eerste behandelaar en loopt de
+  rest leeg af. Dat is in de simulatie goed zichtbaar te maken;
+- beoordelen in het model als call activity binnen Zaak behandelen; of de
+  vertaling naar GZAC een kopie met vaste `calledElement` maakt of het
+  berichtenpaar van nu, beslist de transformatie.
+
+**Besloten (Mark, 13-11, via FUNSIM): beoordelen is een call activity binnen
+Zaak behandelen.** Mark: "Het lijkt mij zuiverder om gewoon goede BPMN te
+tekenen, onafhankelijk van de rare dingen in Valtimo. De transformatie kan daar
+omheen transformeren. Dan is Valtimo geen direct uitvoerder van de BPMN, maar
+dat kan het worden (PR)." De berichten `beoordelingsbericht` en
+`beoordeling-afgerond` zijn een Valtimo-omweg en verdwijnen uit model en
+fixture; de regelset bpmn → GZAC vertaalt de call activity (FUNSIM stemt dat af
+met TRANSFORMATIES). De simulatie speelt de call activity rechtstreeks na: dat
+kan de kern al (een kind-instantie; de ouder gaat verder als het kind klaar is;
+de procesvariabelen gelden per afhandeling, dus de uitkomst is in de ouder te
+lezen).
+
+Nog open is alleen de trigger van Zaak behandelen: het signal *Medewerker aan
+zaak gekoppeld* uit Marks tekening, of een bericht. De vier-procesfixture voor
+de simulatie komt na dat besluit; tot dan blijft de fixture van Fundament (drie
+processen) staan, ook omdat de BPMN-XML-export ertegen getoetst wordt.
+
+**De trigger: Notificaties is een signal met filter (FUNSIM, 13-11, tweede
+antwoord; niet nagelopen op een cluster).** Mark vroeg of oppakken niet moet
+eindigen met een signal, en of de koppeling naar behandelen een bericht moet zijn
+("een bepaalde medewerker, een bepaalde behandeling") of via Notificaties gaat,
+"en dat is in wezen een signal". FUNSIM trekt het eerdere advies "bericht voor
+de koppeling" in:
+
+- Open Zaak publiceert op kanaal *zaken* bij elke schrijfactie (zaak
+  aangemaakt, rol aangemaakt, status, …), met kenmerken (zaaktype,
+  bronorganisatie, vertrouwelijkheid) en de zaak-url. De abonnee filtert. Beide
+  gebeurtenissen bestaan daar dus vanzelf, als bijwerking van het schrijven in
+  het Zaakregister: *zaak aangemaakt* = zaak in de werkbak, *rol behandelaar
+  aangemaakt* = medewerker gekoppeld.
+- Notificaties = signal + filter bij de abonnee. Een BPMN-signal kent geen
+  filter. Voorstel: één optionele eigenschap **filter** (CEL over de lading) op
+  een signal-start of signal-catch; de transformatie maakt er een abonnement of
+  een Valtimo-omweg van. GZAC start nu alleen op het kanaal *objecten* iets
+  (Verzoek-plugin, Portaaltaak); op *zaken* starten is extra code.
+- De lading van het signal is de Zaak; die is het startobject en de business
+  key van het gestarte proces. "Eén behandeling per zaak" is een tweede regel:
+  niet starten als er voor deze zaak al een loopt (idempotente start; een
+  dubbele start is in de simulatie als fout te tonen).
+- Een bericht alleen waar de afzender een bepaalde wachtende instantie bedoelt
+  (zoals het antwoord op een open portaaltaak). Kies zaak weet niet wie
+  behandelt, dus daar is een bericht alleen de Valtimo-uitvoering.
+- Oppakken eindigt met signal *Zaak staat in de werkbak* (lading: de zaak).
+  Daarna twee vormen voor de werkbak: (1) Kies zaak blijft een none-start, de
+  medewerker bladert zelf, het signal is alleen voor verdelers en meldingen;
+  (2) Kies zaak start op het signal, één instantie per zaak, met de user task
+  voor een kandidaatgroep (afdeling of soort zaak); de werkbak is de
+  takenlijst van de groep en claimen is de zaak nemen (in GZAC standaard:
+  candidateGroups). FUNSIM ziet in (2) het antwoord op "een bepaalde
+  medewerker".
+- Bij meer luisteraars (router en menselijke taak) wint wie het eerst koppelt;
+  de ander stopt via een onderbrekend signal-boundary-event *Medewerker aan zaak
+  gekoppeld* (gefilterd op deze zaak). Boundary events zitten nog niet in de
+  kern (§4).
+
+Vraag 15 is daarmee terug tot: (d) werkbakvorm 1 of 2; (e) het filter als
+eigenschap van een signal-event in het BPMN-profiel (M2); (f) claimgedrag met
+boundary events nu of later.
+
+**Besloten (Mark, 13-11): (d) vorm 2, (e) ja, (f) bouwen.** Gebouwd op 13-11:
+
+| Niveau | Wat |
+|---|---|
+| M2 (profiel bpmn-motor) | `signaal` (signaalnaam) op start-, tussen-, eind- en boundary event; `filter` (CEL over de lading) op een vangend signaal; `eenPerZaak` op een signal-start; `kandidaatgroep` op een user task. `bericht` ook op een boundary event. |
+| Kern (`simulatie.js`) | Signaal werpen (eind- of tussen-event) is een omroep, met drie soorten ontvangers: een wachtend vangend tussen-event, een boundary event op een taak waar een token staat (onderbrekend: de taak stopt, een open gat vervalt, een aangeroepen kind breekt af, het token gaat langs het boundary event; niet-onderbrekend: er komt een token bij), en een proces met een signal-start. Het filter wordt per ontvanger op de lading geëvalueerd; een onleesbaar filter telt als "past niet", met de reden. Met `eenPerZaak` start een proces niet als er voor de zaak al een instantie loopt; dat staat als weigering in het log (`regel.signaal = {naam, ontvangers, geweigerd}`). Een signal-einde rondt eerst het eigen pad af en roept dan om. |
+| M1 (voorbeeld) | `src/simulatie/fixtures/gpk-vier-processen.bpmn-model.json`, met een script afgeleid van de fixture van Fundament: Aanvraag oppakken eindigt met signaal `zaak-in-werkbak`; Kies zaak om te behandelen start daarop (filter `aanvraagtype.code == 'GPK'`, één per zaak), met de user task voor kandidaatgroep `behandelaars-gpk`, een onderbrekend boundary event *Medewerker aan zaak gekoppeld* → *Al toegewezen*, en signal-einde `medewerker-gekoppeld`; Zaak behandelen start daarop en roept *Beoordeel aanvraag* aan (call activity, uitvoer `uitkomst`). Het e-dienstmodel van Fundament krijgt de vier process-id's via `metProcessen` (procesmodel.js). De fixture van Fundament (drie processen) blijft: de BPMN-export wordt ertegen getoetst. |
+| Scherm | Het GPK-voorbeeld laadt de vier processen; het log toont een signaal met zijn ontvangers en weigeringen; het gat noemt de kandidaatgroep; de sprongmelding noemt het signaal. |
+
+**Correctie (FUNSIM, 13-11): de lading is de zaak.** De eerste versie
+filterde op `aanvraagtype.code == 'GPK'`; dat werkte omdat de lading toen het
+object van de afhandeling was, de aanvraag. Een abonnement op Notificaties
+filtert op de kenmerken van de *zaak* (zaaktype). Nu: de servicetaak *Zaak
+aanmaken* maakt in de store een object `zaak` van type `Zaak`, met `url` (de
+stub-verwijzing) en `zaaktype` (de identifier van het zaaktype-artefact in het
+e-dienstmodel), verbonden met de aanvraag. Het filter ziet alleen de zaak:
+`zaaktype == 'GPK'`. Zonder zaak (een model zonder *Zaak aanmaken*) is de
+lading het object van de afhandeling.
+
+Toetsen: de vijf scenario's op de vier processen (`gpkVier.test.js`), plus de
+scenario's 6 tot 8 van FUNSIM (cg-stack-voor-simulatie.md §9.5): (6) een ander
+zaaktype start Kies zaak niet; (7) router en medewerker op één zaak, de router
+koppelt eerst, de taak van de medewerker eindigt in *Al toegewezen*; (8)
+*medewerker-gekoppeld* twee keer, de tweede start van Zaak behandelen wordt
+geweigerd. Op een
+klein model de omroep met filter, één per zaak en de claim (router en
+medewerker luisteren; de router koppelt eerst; de taak van de medewerker stopt
+via het boundary event, zijn gat vervalt; `simulatie.test.js`).
+
+Nog niet: de BPMN-export van signaalnaam (`signalRef`), filter en
+kandidaatgroep (`candidateGroups`); dat is de regelset bpmn → GZAC
+(TRANSFORMATIES, via FUNSIM). Een router-proces als tweede luisteraar zit niet in
+het GPK-voorbeeld.
+
+Voor de simulatie volgt daaruit: signal-start (omroep, business key mee), een
+werkbak als data store met filter waaruit een none-start een zaak kiest, en een
+claim die een tweede kandidaat laat afvallen.
 
 ## Referenties
 

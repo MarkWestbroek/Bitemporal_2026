@@ -109,8 +109,8 @@ test("GPK scenario 4: toegekend, drie processen, zonder stoppen", () => {
     { naam: "beoordelingToelichting", type: "string", label: "Toelichting bij de beoordeling" },
   ]);
 
-  // Waarom heeft de aanvraag deze toestand?
-  assert.deepEqual(spoorVan(sim.log, "aanvraag-1").map((r) => r.wat), [sim.log[0].wat, "Aanvraag beoordelen", "Stel beschikking op"]);
+  // Waarom heeft de aanvraag deze toestand? Zaak aanmaken koppelt de zaak aan de aanvraag (13-11).
+  assert.deepEqual(spoorVan(sim.log, "aanvraag-1").map((r) => r.wat), [sim.log[0].wat, "Zaak aanmaken", "Aanvraag beoordelen", "Stel beschikking op"]);
 });
 
 test("GPK scenario 4: terugspoelen geeft de toestand van dat moment, en de run is daarna gelijk", () => {
@@ -330,4 +330,94 @@ test("formaat: M1-set met hashes, run met log; een gewijzigd model is te zien", 
   Object.values(anders.model.elements)[0].naam += " (gewijzigd)";
   assert.deepEqual(verschilM1Set(m1set, await beschrijfM1Set({ ...m1, proces: anders }, sha256Hex)), ["proces: Inrichten (bpmnMotor05)"]);
   assert.deepEqual(verschilM1Set(m1set, await beschrijfM1Set(m1, sha256Hex)), []);
+});
+
+// ── Signalen (13-11): omroep met filter, één per zaak, de claim ─────────
+
+/** Een model met meer processen: per diagram de knopen en flows. */
+function modelMet(diagrammen) {
+  const elements = {};
+  const diagrams = {};
+  for (const [naam, { knopen, flows = [] }] of Object.entries(diagrammen)) {
+    const ids = [];
+    for (const [id, elementType, data = {}] of knopen) {
+      elements[id] = { id, naam: data.naam || id, elementType, compartimenten: [], data };
+      ids.push(id);
+    }
+    for (const [source, target, data = {}] of flows) {
+      const id = `f${++teller}`;
+      elements[id] = { id, naam: data.naam || "", elementType: "sequence-flow", source, target, compartimenten: [], data };
+    }
+    diagrams[naam] = { id: naam, naam, diagramType: "bpmn-motor", nodes: ids.map((elementId) => ({ elementId })), edges: [] };
+  }
+  return { model: { elements, diagrams } };
+}
+
+test("signaal: een omroep start elk proces dat luistert en waarvan het filter past", () => {
+  const sim = klein(
+    modelMet({
+      werper: { knopen: [["w_start", "start-event"], ["w_einde", "eind-event", { soort: "signaal", signaal: "zaak-in-werkbak" }]], flows: [["w_start", "w_einde"]] },
+      rood: { knopen: [["r_start", "start-event", { soort: "signaal", signaal: "zaak-in-werkbak", filter: "kleur == 'rood'" }], ["r_einde", "eind-event"]], flows: [["r_start", "r_einde"]] },
+      blauw: { knopen: [["b_start", "start-event", { soort: "signaal", signaal: "zaak-in-werkbak", filter: "kleur == 'blauw'" }], ["b_einde", "eind-event"]], flows: [["b_start", "b_einde"]] },
+    }),
+    { start: { proces: "werper", object: { kleur: "rood" } } },
+  );
+  const stand = sim.loop();
+  assert.equal(stand.soort, "uitkomst");
+  assert.deepEqual(stand.eindes.map((e) => e.proces).sort(), ["rood", "werper"]);
+  const regel = sim.log.find((r) => r.signaal);
+  assert.deepEqual(regel.signaal, { naam: "zaak-in-werkbak", ontvangers: ["rood"] });
+});
+
+test("signaal: met 'één lopende instantie per zaak' start een tweede omroep niets, en dat staat in het log", () => {
+  const sim = klein(
+    modelMet({
+      werper: {
+        knopen: [["w_start", "start-event"], ["w1", "tussen-event", { soort: "signaal", richting: "werpt", signaal: "gekoppeld" }], ["w2", "tussen-event", { soort: "signaal", richting: "werpt", signaal: "gekoppeld" }], ["w_einde", "eind-event"]],
+        flows: [["w_start", "w1"], ["w1", "w2"], ["w2", "w_einde"]],
+      },
+      behandelen: {
+        knopen: [["z_start", "start-event", { soort: "signaal", signaal: "gekoppeld", eenPerZaak: true }], ["z_taak", "taak", { taakSoort: "user" }], ["z_einde", "eind-event"]],
+        flows: [["z_start", "z_taak"], ["z_taak", "z_einde"]],
+      },
+    }),
+    { start: { proces: "werper" }, vulwijze: { standaard: "hand" } },
+  );
+  const stand = sim.loop();
+  assert.equal(stand.soort, "gat");
+  assert.equal(objectenVanType(sim.toestand(), PROCESINSTANTIE).filter((i) => i.data.proces === "behandelen").length, 1);
+  const tweede = sim.log.filter((r) => r.signaal)[1];
+  assert.deepEqual(tweede.signaal.ontvangers, []);
+  assert.deepEqual(tweede.signaal.geweigerd, [{ waar: "behandelen", reden: "er loopt voor deze zaak al een instantie" }]);
+});
+
+test("claim: wie het eerst koppelt wint; de taak van de ander stopt via het onderbrekende boundary event", () => {
+  const sim = klein(
+    modelMet({
+      werkbak: {
+        knopen: [
+          ["s", "start-event"],
+          ["splits", "parallel"],
+          ["kies", "taak", { taakSoort: "user", naam: "Kies zaak om te behandelen", kandidaatgroep: "behandelaars" }],
+          ["al", "boundary-event", { soort: "signaal", signaal: "gekoppeld", onderbrekend: true, randVan: "kies", naam: "Medewerker aan zaak gekoppeld" }],
+          ["al_einde", "eind-event", { naam: "Al toegewezen" }],
+          ["router", "taak", { taakSoort: "service", naam: "Wijs automatisch toe" }],
+          ["gekoppeld", "eind-event", { soort: "signaal", signaal: "gekoppeld", naam: "Gekoppeld door de router" }],
+          ["kies_einde", "eind-event", { soort: "signaal", signaal: "gekoppeld", naam: "Gekoppeld door de medewerker" }],
+        ],
+        flows: [["s", "splits"], ["splits", "kies"], ["splits", "router"], ["router", "gekoppeld"], ["kies", "kies_einde"], ["al", "al_einde"]],
+      },
+    }),
+    { start: { proces: "werkbak" }, vulwijze: { standaard: "hand" } },
+  );
+  const stand = sim.loop();
+  assert.equal(stand.soort, "uitkomst", JSON.stringify(stand));
+  const t = sim.toestand();
+  const gat = Object.values(t.gaten)[0];
+  assert.equal(gat.open, false);
+  const spoor = sim.log.flatMap((r) => r.wijzigingen).filter((w) => w.soort === "gat");
+  assert.ok(spoor.some((w) => w.vervallen), "het gat van de medewerker vervalt");
+  assert.ok(sim.log.some((r) => r.plek === "al_einde"), "de medewerker loopt leeg af via Al toegewezen");
+  assert.ok(!sim.log.some((r) => r.plek === "kies_einde"));
+  assert.deepEqual(sim.log.find((r) => r.signaal).signaal.ontvangers, ["Medewerker aan zaak gekoppeld op Kies zaak om te behandelen"]);
 });

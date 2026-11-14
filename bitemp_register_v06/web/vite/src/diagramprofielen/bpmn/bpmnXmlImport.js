@@ -16,6 +16,7 @@ import { leesBpmn, lijktOpBpmn } from "../../transformatie/bpmnXml.js";
 import { pasRegelsToe } from "../../transformatie/regels.js";
 import { planNaarCoreModel } from "../../transformatie/planNaarCoreModel.js";
 import { BPMN_XML_NAAR_BPMN } from "./bpmnXmlRegels.js";
+import { conditiesNaarCel } from "./conditiesNaarCel.js";
 
 export const BPMN_PROFIEL_ID = "bpmnMotor05";
 // Gelijk aan BPMN_ID in ./index.js (dat bestand laadt .jsx-shapes).
@@ -48,6 +49,14 @@ export function bpmnXmlNaarModel(tekst, { DOMParser, bestaand = {}, elementTypes
   diagnostics.push(...plan.diagnostics);
   const resultaat = planNaarCoreModel(graaf, plan, { prefix: "bp", diagramTypeId: DIAGRAMTYPE_ID, elementTypes, bestaand, bestandsnaam, celMaat });
   diagnostics.push(...resultaat.diagnostics);
+  // CEL is de expressietaal in het model: JUEL-condities uit de XML worden CEL; wat geen CEL
+  // wordt blijft JUEL (de export laat het ongemoeid door) met een melding.
+  const cel = conditiesNaarCel(resultaat.core.elements);
+  for (const [id, patch] of Object.entries(cel.patches)) {
+    const el = resultaat.core.elements[id];
+    resultaat.core.elements[id] = { ...el, data: { ...el.data, ...patch.data } };
+  }
+  for (const b of cel.blijft) diagnostics.push({ severity: "warning", code: "BPMN-CONDITIE-JUEL", message: `Conditie ${b.naam || b.id} blijft JUEL: ${b.fout}`, sourceId: b.id, path: null });
   return { core: resultaat.core, diagnostics, trace: plan.trace, stats: resultaat.stats };
 }
 

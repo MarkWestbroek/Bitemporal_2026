@@ -20,8 +20,11 @@ DMN met cm-objecten, de verkenning (fase 0) doen en de kern zonder scherm (fase 
   natuurlijker zonder `${}`.
 - Fase 1 uitvoeren (Mark, 12-11), op het advies van §8 van het ontwerp waar Mark nog niet beslist heeft.
 - Fase 2 (het scherm) mocht beginnen zonder op de antwoorden bij §8 te wachten (Mark, 13-11).
-- Het token komt op het diagram via een stijlblok op element-id, zonder wijziging in de motor (keuze van de
-  sessie; Mark heeft het scherm nog niet gezien).
+- Het token komt op het canvas via een stijlblok op element-id, zonder wijziging in de motor (keuze van de
+  sessie).
+- De simulatie is een eigen activiteit, geen paneel onder een BPMN-diagram (Mark, 13-11, na het uitproberen): een
+  run is één afhandeling over meerdere processen en hoort bij geen enkel diagram.
+- Vervolg, als voorstel vastgelegd (ontwerp §11): objecten als objectdiagram, een run als sequence diagram.
 - De demo volgt `inrichten-bpmn.bpmn-model.json` (drie processen, de stand van de stack), geijkt tegen de vijf
   scenario's uit `cg-stack-voor-simulatie.md` van FUNDAMENT.
 
@@ -40,8 +43,8 @@ daarvoor.
 - DB/SQL: geen.
 - Frontend: nieuw `web/vite/src/simulatie/` (store, procesmodel, beslistabel, gaten, simulatie, formaat, vijf
   scenario's) en `web/vite/src/transformatie/celOmzetting.js`; `bpmnXmlSchrijver.js` en `dmnXmlSchrijver.js` zetten
-  CEL om; drie fixtures onder `fixtures/cg-test/` omgezet naar CEL. Fase 2: `studio/activities/simulatiePaneel.jsx`,
-  `simulatie/weergave.js`, aansluiting in `bpmnMotorActivity.jsx`, e2e `63-studio-simulatie.spec.js`.
+  CEL om; drie fixtures onder `fixtures/cg-test/` omgezet naar CEL. Fase 2: `studio/activities/simulatieActivity.jsx`,
+  `studio/simulatieRun.js`, `simulatie/weergave.js`, e2e `63-studio-simulatie.spec.js`.
 
 ## Open punten
 

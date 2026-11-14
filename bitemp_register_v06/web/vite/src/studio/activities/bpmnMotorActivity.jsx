@@ -2,14 +2,15 @@
  * bpmnMotorActivity — "BPMN": BPMN-diagrammen op de generieke motor (v0),
  * naast de klassieke bpmn.io-activiteit ("BPMN-processen"). Boundary events
  * op het rand-primitief, subproces-doorklik via de gedragsverwijzing.
- * Descriptor + fabriek — zie diagramprofielen/bpmn/ — plus het onder-dock
- * met de simulatie (token op het diagram, gaten, objecten, log; zie
- * simulatiePaneel.jsx en src/simulatie/).
+ * Descriptor + fabriek, verder niets — zie diagramprofielen/bpmn/.
+ *
+ * Simuleren doe je in de activiteit Simulatie (simulatieActivity.jsx); loopt
+ * daar een run, dan staat het token ook hier op het diagram (simulatieRun.js
+ * zet daarvoor een stijlblok in de pagina, de motor weet er niets van).
  */
 import { IconBPMN } from "../icons";
 import { registreerBpmnMotor, bpmnMotorDiagramType, maakElement } from "../../diagramprofielen/bpmn/index.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
-import SimulatiePaneel from "./simulatiePaneel.jsx";
 
 registreerBpmnMotor();
 
@@ -27,5 +28,4 @@ export default maakDiagramActiviteit({
   standaardVerborgen: true, // preview-profiel; via Modelleren + instellingen bereikbaar
   previewTekst: "BPMN op de eigen motor — taken, events (incl. boundary), gateways en lanes (v0).",
   devHookNaam: "__bpmnMotor05Store",
-  onderPaneel: { id: "simulatie", label: "Simulatie (token, gaten, objecten, log)", Component: SimulatiePaneel },
 });

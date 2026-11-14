@@ -1,6 +1,7 @@
 {
   "versie": "0.1",
   "naam": "GPK 5: aanvulling, daarna afgewezen",
+  "beschrijving": "Een volledige aanvraag; de behandelaar vraagt eerst om aanvulling (medische verklaring), beoordeelt daarna opnieuw en wijst af: twee keer beoordelen, eindigt bij Beschikt via Wijs af.",
   "_toelichting": "Scenario 5 uit cg-stack-voor-simulatie.md §8 (Fundament). Verzonnen gegevens.",
   "start": {
     "proces": "aanvraag-oppakken",
@@ -45,6 +46,9 @@
     }
   },
   "antwoorden": {
+    "zaak-kiezen": {
+      "behandelaar": "medewerker-gpk-1"
+    },
     "aanvraag-beoordelen": [
       {
         "beoordeling": "aanvulling",

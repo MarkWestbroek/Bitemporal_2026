@@ -2237,25 +2237,46 @@ Het "Tabel"-menu exporteert context-afhankelijk:
 - DMN-evaluatie integratie met process engine
 - Cross-referentie tussen DRD en tabel (decision → table mapping)
 
-## Simulatie van BPMN en DMN (onder-dock van de BPMN-activiteit, 2026-11-13)
+## Activiteit Simulatie: BPMN en DMN doorlopen met cm-objecten (2026-11-13)
 
-Onder het canvas van de BPMN-activiteit op de motor (`bpmnMotor05`) staat het onder-dock **Simulatie**: een
-proces met zijn beslistabellen doorlopen met een startobject uit het canonieke model, stap voor stap. Het is
-een denk- en demonstratiehulp, geen process engine; uitvoeren blijft bij Operaton.
+De activiteit **Simulatie** (groep Modelleren) doorloopt een BPMN-proces met zijn beslistabellen, stap voor
+stap, met een startobject uit het canonieke model. Het is een denk- en demonstratiehulp, geen process engine;
+uitvoeren blijft bij Operaton.
 
-- **Token op het diagram**: een rand en een bolletje op het element waar het token staat (indigo = kan
-  verder, oranje = wacht op invoer, cyaan = wacht op een bericht of ander proces, rood = vastgelopen); waar
-  het geweest is blijft een dunne cyaan rand staan. Bij meer tokens op één element staat het aantal in het
-  bolletje. Het diagram volgt het token naar een ander proces.
-- **Gat**: waar de simulatie een waarde nodig heeft (een user task, een antwoord van een andere partij, een
-  actie buiten het cm, een conditie die niet te lezen is) vraagt het paneel erom, of vult het zelf:
-  willekeurig of uit het scenario.
-- **Objecten en log**: de objecten met hun state, en elke stap met zijn mutaties; een klik op een logregel
-  spoelt terug.
-- **GPK-voorbeeld laden** zet de drie GPK-processen met beslistabel, e-dienstmodel en een scenario klaar.
+Een eigen activiteit en geen paneel onder een diagram: een run is één afhandeling over meerdere processen en
+hoort bij geen enkel diagram (de eerste versie, een onder-dock van de BPMN-activiteit, is om die reden dezelfde
+dag vervangen).
 
-Code: `web/vite/src/studio/activities/simulatiePaneel.jsx` (scherm) en `web/vite/src/simulatie/` (de kern,
-pure modules). Het token komt op het canvas via een stijlblok op element-id (`simulatie/weergave.js`); de
-motor is er niet voor gewijzigd. Ontwerp, keuzes en open vragen:
-`docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten (ontwerp).md`. E2E:
-`tests/e2e/63-studio-simulatie.spec.js`.
+- **Links, scenario en bronnen**: bij welk proces de run start, het scenario (startobject, antwoorden,
+  vulwijze) en waar de run op draait: het BPMN-model van het project, de beslistabellen uit de DMN-profielen
+  op de motor, en een e-dienstmodel uit een bestand. Het GPK-voorbeeld is te laden.
+- **Midden**: de bediening, het open gat met een formulier naar de verwachte velden, het procesdiagram met het
+  token, en het log (een klik op een regel spoelt terug). **Stap** zet één stap, **Afspelen** stapt in een
+  gekozen tempo door tot een gat of het einde (pauzeerbaar; de klok leeft in `simulatieRun.js`, dus wisselen
+  van activiteit laat hem doorlopen), **Doorlopen** gaat in één keer. Het beeld volgt het token naar een ander
+  proces; een melding boven het diagram zegt waar het naartoe ging (en via welk bericht). Na afloop blijft het
+  proces van de laatste stap in beeld.
+- **Scenario's** hebben een `naam` en een `beschrijving`; de keuzelijst toont de naam, onder de lijst staat de
+  beschrijving van het scenario in de tekst.
+- **GPK-voorbeeld** (13-11): vier processen, Aanvraag oppakken → signaal *zaak in de werkbak* → Kies zaak om te
+  behandelen (kandidaatgroep, claim via een onderbrekend boundary event) → signaal *medewerker aan zaak
+  gekoppeld* → Zaak behandelen, met beoordelen als call activity. Een signaal staat in het log met wie het
+  hoorde (△ naam → ontvangers) en wie het weigerde (filter, of "er loopt al een instantie").
+- **Condities naar CEL**: staan er in het BPMN-model van het project nog JUEL-condities (`${…}`), dan biedt de
+  zijbalk **Naar CEL** aan (één undo-stap). Een BPMN-import zet ze zelf om
+  (`diagramprofielen/bpmn/conditiesNaarCel.js`, `juelNaarCel` in `transformatie/celOmzetting.js`); wat geen CEL
+  wordt (bv. `empty x`) blijft JUEL, met een melding.
+- **Rechts, objecten**: de objecten met hun state, de procesvariabelen en wat buiten het cm gebeurde.
+- **Token**: een rand en een bolletje op het element waar het token staat (indigo = kan verder, oranje = wacht
+  op invoer, cyaan = wacht op een bericht of ander proces, rood = vastgelopen); waar het geweest is blijft een
+  dunne cyaan rand staan. Zolang de run loopt staat het token ook op het BPMN-canvas in Modelleren.
+
+Code: `web/vite/src/studio/activities/simulatieActivity.jsx` (scherm), `web/vite/src/studio/simulatieRun.js`
+(de run, gedeeld door de activiteit en het canvas) en `web/vite/src/simulatie/` (de kern, pure modules). Het
+diagram in de activiteit komt van de tekenaar (`tekenDiagram`), het token op het canvas via een stijlblok op
+element-id (`simulatie/weergave.js`); de motor is er niet voor gewijzigd. Let op bij een tekening in de pagina:
+de canvasregel `.dc-buitenlabel` (een transform) geldt ook voor de buitenlabels in de SVG en moet daar uit.
+En: een event of gateway in de tekening is een `<g transform="scale(…)">`; `getBBox()` van een kind telt die
+eigen transform niet mee, dus wie er iets omheen tekent moet de transform zelf toepassen.
+Ontwerp, keuzes en open vragen: `docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten (ontwerp).md`
+(§10.5 en §11). E2E: `tests/e2e/63-studio-simulatie.spec.js`.

@@ -2090,8 +2090,8 @@ artefacten gemaakt, 1 mislukt"). De test geeft nu ook `gpk-beslissingen.dmn-mode
 ## 41. Simulatie van BPMN en DMN met cm-objecten (2026-11-13)
 
 Ontwerp en stand: `docs/plans/2026-11-12 Simulatie van BPMN en DMN met cm-objecten (ontwerp).md` (§8 vragen, §10
-stand). Fase 1 (de kern zonder scherm, `web/vite/src/simulatie/`) en fase 2 (het onder-dock Simulatie in
-de BPMN-activiteit, STUDIO.md) zijn gebouwd op de branch
+stand, §11 vervolg). Fase 1 (de kern zonder scherm, `web/vite/src/simulatie/`) en fase 2 (de activiteit
+Simulatie, STUDIO.md) zijn gebouwd op de branch
 `claude/simulatie-bpmn-dmn-cm`; de vijf GPK-scenario's van FUNDAMENT slagen als test. Daarbij: CEL is de
 expressietaal in het BPMN- en DMN-model, JUEL en FEEL zijn uitvoer (`transformatie/celOmzetting.js`,
 TRANSFORMATIES §11.12).
@@ -2099,10 +2099,17 @@ TRANSFORMATIES §11.12).
 Open:
 
 - Het scherm: een startformulier naar het cm-type (nu JSON), de vulwijze met knoppen, twee open gaten tegelijk,
-  en het onder-dock standaard dicht.
+  en op het BPMN-canvas een verwijzing naar de lopende run.
+- Objecten van een run als objectdiagram in plaats van JSON (ontwerp §11.2; hangt aan vraag 14, de cm-vorm).
+- GPK in vier processen (ontwerp §11.6, besloten en in de simulatie gebouwd 13-11): de BPMN-export van
+  signaalnaam (`signalRef`), filter en kandidaatgroep (`candidateGroups`), en een signaal of een
+  zaken-notificatie als trigger in GZAC (regelset bpmn → GZAC; TRANSFORMATIES via FUNSIM). Een router-proces als
+  tweede luisteraar in het voorbeeld. De nieuwe velden brachten het profiel bpmnMotor05 naar versie 1.1.0
+  (minor, alleen uitbreiding; `render-svc/profielVersies.vast.json` bijgewerkt).
+- Een run als sequence diagram, en daarna een sequence diagram naspelen en vergelijken (ontwerp §11.3).
 - De vragen 1, 3 tot 6 en 8 tot 14 uit het ontwerp; vraag 12 (Beslissing en beschikking als cm-objecten) na het
   binnenhalen van main.
 - Het Studio-project Inrichten op omnium.fundament omzetten naar CEL (afspraak met FUNDAMENT).
 - `zetVariabelen` en de berichtnaam naar CEL, met de aanroep van de GZAC-bean in de regelset (`bpmnGzacRegels.js`).
-- JUEL → CEL bij de BPMN-import (`bpmnXmlImport`), en FEEL → CEL bij de DMN-import.
+- FEEL → CEL bij de DMN-import. (JUEL → CEL bij de BPMN-import en de knop Naar CEL: gedaan 13-11.)
 - Fase 3: ketens met een andere partij (kopie, Berichttype en Procescontract), de semi-permanente store.

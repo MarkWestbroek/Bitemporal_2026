@@ -107,6 +107,16 @@ export const IconBPMN = (p) => (
   </svg>
 );
 
+/** Simulatie: een token (bolletje) dat over een flow naar een taak loopt. */
+export const IconSimulatie = (p) => (
+  <svg {...base} {...p}>
+    <path d="M3 12h7" />
+    <circle cx="6.5" cy="12" r="2.2" fill="currentColor" />
+    <rect x="12" y="7.5" width="9" height="9" rx="1.5" />
+    <path d="M15.2 10.2v3.6l3-1.8z" fill="currentColor" />
+  </svg>
+);
+
 export const IconBericht = (p) => (
   <svg {...base} {...p}>
     <rect x="3" y="5" width="18" height="14" rx="2" />

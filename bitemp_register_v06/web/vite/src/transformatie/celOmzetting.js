@@ -190,3 +190,34 @@ export const celNaarJuel = (expressie) => zetOm(expressie, (boom) => `\${${juel(
  * @returns {{tekst: string|null, fout: string|null, geenCel?: boolean}}
  */
 export const celNaarFeel = (expressie) => zetOm(expressie, (boom) => feel(boom));
+
+/** De woordoperatoren van JUEL en hun CEL-teken. */
+const JUEL_WOORD = { and: "&&", or: "||", not: "!", eq: "==", ne: "!=", lt: "<", gt: ">", le: "<=", ge: ">=" };
+
+/**
+ * JUEL → CEL, voor condities die nog in JUEL staan (een BPMN-import, een ouder
+ * model). Haalt `${…}` eraf, zet de woordoperatoren (`and`, `eq`, …) om naar
+ * hun teken, en toetst of het resultaat geldige CEL is. Teksten tussen
+ * aanhalingstekens blijven ongemoeid. Wat geen CEL wordt (bv. `empty x`, een
+ * methode-aanroep op een Java-bean) geeft `fout`: dan blijft de JUEL staan.
+ * Een tekst die geen JUEL is, komt terug met `geenJuel: true`.
+ * @param {string} tekst
+ * @returns {{tekst: string|null, fout: string|null, geenJuel?: boolean}}
+ */
+export function juelNaarCel(tekst) {
+  if (!isJuel(tekst)) return { tekst: String(tekst ?? ""), fout: null, geenJuel: true };
+  const binnen = leesAlsCel(tekst);
+  // Woordoperatoren buiten strings omzetten; strings in stukken overslaan.
+  const stukken = binnen.split(/('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")/);
+  const cel = stukken
+    .map((s, i) => (i % 2 ? s : s.replace(/\b(and|or|not|eq|ne|lt|gt|le|ge)\b/g, (w) => (w === "not" ? "!" : ` ${JUEL_WOORD[w]} `)).replace(/!\s+/g, "!").replace(/ {2,}/g, " ")))
+    .join("")
+    .trim();
+  if (/\bempty\b/.test(stukken.filter((_, i) => i % 2 === 0).join(""))) return { tekst: null, fout: "`empty` heeft geen CEL-tegenhanger; schrijf het als `x == null` of `size(x) == 0`" };
+  try {
+    parseCelExpressie(cel);
+  } catch (e) {
+    return { tekst: null, fout: `geen CEL te maken van ${binnen}: ${e.message}` };
+  }
+  return { tekst: cel, fout: null };
+}
