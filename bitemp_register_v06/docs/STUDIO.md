@@ -669,6 +669,8 @@ te wijzigen.
 > traceregels (bronElementId) zonder kennis van branches werken. De map is de scope. Binnen een
 > branch werk je live samen (SSE per project); MAIN-wijzigingen zie je pas na bijwerken of mergen.
 > Stap 1 = herkomstregel en de lijst *verschil met MAIN*; mergen gaat dan nog met de hand.
+> Terugmergen via de Studio (vinkjes per wijziging, samenhang, uitgangspunt na de merge): plan
+> `docs/plans/2026-11-14 Branch terugmergen — keuze per wijziging en samenhang (plan).md`.
 > De vergelijking is `studio/takken/verschilMetMain.js`: een zuivere drieweg op drie
 > gematerialiseerde werkbestanden (basis, tak, MAIN) met per element, diagram, map en
 > kruisverband `nieuw`/`gewijzigd`/`weg`/`conflict`/`main` (alleen op MAIN veranderd), de
