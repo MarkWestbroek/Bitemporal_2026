@@ -8,6 +8,13 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Toegevoegd
+- **Samenvoegen naar MAIN** (branch terugmergen, stap 1; Mark 14-11): in *Verschil met MAIN…* van een
+  branch. Alles uit de branch gaat naar MAIN, een conflict blokkeert, en daarna haalt de branch MAIN
+  op, zodat beide gelijk zijn. Wijzigingen buiten de afgesplitste map gaan alleen na bevestiging mee.
+  Vraagt api met `POST …/samenvoegen` en render-svc met `/samenvoegen`. Kiezen per wijziging volgt
+  (plan "Branch terugmergen").
+
 ## [studio/v0.40.0] — 2026-11-14
 
 Samen met render 0.4.4 (api 0.25.0).

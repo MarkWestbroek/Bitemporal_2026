@@ -176,9 +176,15 @@ export function materialiseerProfiel({ profielId, profiel, ops = [] }) {
  */
 export function vergelijkProjecten({ basis, tak, main, mapId = null }) {
   const m = { basis: materialiseer(basis), tak: materialiseer(tak), main: materialiseer(main) };
-  // Boomouder per profiel en per stand (hiërarchie van de descriptor), voor kinderen zonder plaatsing.
+  const uit = verschilMetMain({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand, mapId, ouderVan: maakOuderVan() });
+  const meldingen = Object.entries(m).flatMap(([kant, x]) => x.problemen.map((bericht) => ({ regel: "OPS", kant, bericht })));
+  return { ...uit, meldingen };
+}
+
+/** Boomouder per profiel en per stand (hiërarchie van de descriptor), voor kinderen zonder plaatsing. */
+function maakOuderVan() {
   const cache = new Map();
-  const ouderVan = (profielId, elementId, stand) => {
+  return (profielId, elementId, stand) => {
     const sleutel = stand.profielen?.[profielId];
     if (!sleutel) return null;
     if (!cache.has(sleutel)) {
@@ -193,7 +199,51 @@ export function vergelijkProjecten({ basis, tak, main, mapId = null }) {
     }
     return cache.get(sleutel).get(elementId) || null;
   };
-  const uit = verschilMetMain({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand, mapId, ouderVan });
+}
+
+// ── Branch terugmergen, stap 1 (14-11, plan "Branch terugmergen") ──────────────────────────────
+// Alles uit de branch naar MAIN; een conflict blokkeert; daarna haalt de branch MAIN op.
+import { voegSamen, opsVoorVerschil } from "../web/vite/src/studio/takken/samenvoegen.js";
+import { buitenScope } from "../web/vite/src/studio/takken/verschilMetMain.js";
+import { splitsPatch } from "../web/vite/src/diagramprofielen/ea/sidecarImport.js";
+
+/**
+ * Samenvoegen van een branch met MAIN, als voorstel: de server schrijft het weg.
+ *
+ * → `{conflicten, buitenMap, opsMain, opsTak, basis, telling, verschillen, meldingen}`:
+ *   - `conflicten`: eenheden die aan beide kanten anders veranderden (dan zijn de ops leeg);
+ *   - `buitenMap`: wijzigingen van de branch buiten de afgesplitste map (de server vraagt
+ *     daarvoor een expliciete bevestiging);
+ *   - `opsMain`: MAIN → samengevoegd (de merge), `opsTak`: branch → samengevoegd (bijwerken);
+ *   - `basis`: het samengevoegde werkbestand zoals MAIN het na `opsMain` heeft; dat wordt het
+ *     nieuwe uitgangspunt van de branch.
+ *
+ * Vangnet: de sidecar speelt `opsMain` en `opsTak` na op de echte stores en vergelijkt de uitkomst
+ * met het samengevoegde werkbestand. Wijkt er iets af, dan gooit hij (422): liever geen merge dan
+ * een halve.
+ *
+ * @param {{basis: {profiel: any, ops?: any[]}, tak: {profiel: any, ops?: any[]}, main: {profiel: any, ops?: any[]}, mapId?: string|null}} p
+ */
+export function samenvoegProjecten({ basis, tak, main, mapId = null }) {
+  const m = { basis: materialiseer(basis), tak: materialiseer(tak), main: materialiseer(main) };
   const meldingen = Object.entries(m).flatMap(([kant, x]) => x.problemen.map((bericht) => ({ regel: "OPS", kant, bericht })));
-  return { ...uit, meldingen };
+  const verschil = verschilMetMain({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand, mapId, ouderVan: maakOuderVan() });
+  const buitenMap = mapId ? buitenScope(verschil.verschillen) : [];
+  const { samengevoegd, conflicten } = voegSamen({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand });
+  const kern = { conflicten, buitenMap, telling: verschil.telling, verschillen: verschil.verschillen, meldingen };
+  if (conflicten.length) return { ...kern, opsMain: [], opsTak: [], basis: null };
+
+  const splits = (p) => splitsPatch(p);
+  const opsMain = opsVoorVerschil(m.main.werkbestand, samengevoegd, { splits });
+  const opsTak = opsVoorVerschil(m.tak.werkbestand, samengevoegd, { splits });
+
+  // Vangnet: naspelen op de echte stores, dan mag er geen verschil meer zijn.
+  const naMain = materialiseer({ profiel: m.main.werkbestand, ops: opsMain });
+  const naTak = materialiseer({ profiel: m.tak.werkbestand, ops: opsTak });
+  const rest = verschilMetMain({ basis: samengevoegd, tak: naTak.werkbestand, main: naMain.werkbestand }).verschillen;
+  if (rest.length || naMain.problemen.length || naTak.problemen.length) {
+    const wat = [...rest.slice(0, 5).map((v) => `${v.soort} ${v.profielId ?? ""}/${v.id} (${v.status})`), ...naMain.problemen, ...naTak.problemen];
+    throw new Error(`Het samenvoegen klopt niet na naspelen: ${wat.join("; ")}`);
+  }
+  return { ...kern, opsMain, opsTak, basis: naMain.werkbestand };
 }

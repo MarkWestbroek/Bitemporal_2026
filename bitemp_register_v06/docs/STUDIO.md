@@ -671,6 +671,20 @@ te wijzigen.
 > Stap 1 = herkomstregel en de lijst *verschil met MAIN*; mergen gaat dan nog met de hand.
 > Terugmergen via de Studio (vinkjes per wijziging, samenhang, uitgangspunt na de merge): plan
 > `docs/plans/2026-11-14 Branch terugmergen — keuze per wijziging en samenhang (plan).md`.
+> **Samenvoegen naar MAIN (stap 1, 14-11):** knop in *Verschil met MAIN…*. Alles uit de branch
+> gaat mee; een conflict blokkeert (knop uit); eigen wijzigingen moeten eerst verzonden zijn;
+> wijzigingen buiten de map gaan alleen na bevestiging mee. Daarna haalt de branch MAIN op (optie
+> A, bijwerken): branch en MAIN zijn gelijk en de samengevoegde stand is de nieuwe basis. De API
+> (`POST …/samenvoegen`) laat de sidecar samenvoegen (`/samenvoegen`, `samenvoegProjecten` in
+> `render-svc/studioProfielen.js`): de zuivere kern is `studio/takken/samenvoegen.js`
+> (`voegSamen` = drieweg per eenheid, `opsVoorVerschil` = de patch-ops van stand naar stand). De
+> sidecar speelt beide lijsten ops na op de echte stores en weigert (422) als de uitkomst niet
+> klopt. De API schrijft ze in één transactie weg (ouder en branch op slot, controle op hun laatste
+> volgnummer) en vervangt de basis; via SSE krijgen open Studio's de ops. Tests:
+> `samenvoegen.test.js`, render-svc `server.test.mjs`, Go `studio_project_samenvoegen_test.go`, e2e
+> `63-studio-samenvoegen-naar-main`. **Grenzen:** volgorde-alleen-wijzigingen in de boom (omhoog/
+> omlaag) uit de branch gaan niet mee; de nieuwe volgorde is die van MAIN met nieuwe plaatsingen
+> achteraan.
 > De vergelijking is `studio/takken/verschilMetMain.js`: een zuivere drieweg op drie
 > gematerialiseerde werkbestanden (basis, tak, MAIN) met per element, diagram, map en
 > kruisverband `nieuw`/`gewijzigd`/`weg`/`conflict`/`main` (alleen op MAIN veranderd), de

@@ -158,7 +158,10 @@ export function maakServer() {
       }
       // Verschil tussen een afgeleid project en MAIN (09-11, branch stap 1): drie keer {profiel, ops}
       // zoals /export/v3, maar `profiel` is hier het hele werkbestand (studio-project v3).
-      if (req.method === "POST" && (pad === "/vergelijk" || pad === "/api/vergelijk")) {
+      // /samenvoegen (14-11, branch terugmergen stap 1): dezelfde invoer, maar het antwoord is een
+      // voorstel om weg te schrijven: {conflicten, buitenMap, opsMain, opsTak, basis, …}.
+      if (req.method === "POST" && (pad === "/vergelijk" || pad === "/api/vergelijk" || pad === "/samenvoegen" || pad === "/api/samenvoegen")) {
+        const samenvoegen = pad.endsWith("/samenvoegen");
         const invoer = await leesInvoer(req, MAX_BYTES_VERGELIJK);
         const onbekend = Object.keys(invoer).filter((k) => !["basis", "tak", "main", "mapId"].includes(k));
         if (onbekend.length) throw probleem(400, "ongeldige-parameter", "Ongeldige parameter", `Onbekende veld(en): ${onbekend.join(", ")}.`);
@@ -171,11 +174,12 @@ export function maakServer() {
         const bundel = await laadBundel();
         let uit;
         try {
-          uit = bundel.vergelijkProjecten({ basis: invoer.basis, tak: invoer.tak, main: invoer.main, mapId: invoer.mapId ?? null });
+          const p = { basis: invoer.basis, tak: invoer.tak, main: invoer.main, mapId: invoer.mapId ?? null };
+          uit = samenvoegen ? bundel.samenvoegProjecten(p) : bundel.vergelijkProjecten(p);
         } catch (e) {
-          console.error("render-svc: vergelijken mislukt", e);
+          console.error(`render-svc: ${samenvoegen ? "samenvoegen" : "vergelijken"} mislukt`, e);
           res.writeHead(422, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
-          return res.end(JSON.stringify({ fout: `Vergelijken mislukte: ${e?.message || e}`, renderVersie: RENDER_VERSIE }));
+          return res.end(JSON.stringify({ fout: `${samenvoegen ? "Samenvoegen" : "Vergelijken"} mislukte: ${e?.message || e}`, renderVersie: RENDER_VERSIE }));
         }
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "X-Render-Versie": RENDER_VERSIE });
         return res.end(JSON.stringify({ ...uit, renderVersie: RENDER_VERSIE }));

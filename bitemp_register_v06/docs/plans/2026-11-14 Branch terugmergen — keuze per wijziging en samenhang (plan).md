@@ -1,7 +1,7 @@
 # Branch terugmergen: keuze per wijziging en samenhang (plan)
 
-*14-11-2026. Opgesteld met Claude, na gesprek met Mark. Status: plan met besluiten (§6), nog
-niet gebouwd.*
+*14-11-2026. Opgesteld met Claude, na gesprek met Mark. Status: plan met besluiten (§6);
+stap 1 (§5) gebouwd op 14-11, nog niet uitgebracht. Zie §7.*
 
 Vervolg op branch stap 1 (*Verschil met MAIN…*, zie `docs/STUDIO.md` "Branch = afgeleid
 project"). Daar laat de Studio zien wat er verschilt; mergen gaat nog met de hand. Dit plan
@@ -176,3 +176,22 @@ M0-set afhangt, en dus wanneer een opgeslagen simulatie na een merge niet meer p
 - **Wie mag mergen:** eigenlijk een modelleur met rechten op die map. Zo fijn is de toegang
   (FTV/PBAC) nog niet; voorlopig is de granulariteit het project: wie mag schrijven op het
   MAIN-project, mag mergen. Later verfijnen met toegang op map-niveau.
+
+## 7. Stand van de bouw
+
+**Stap 1 — gebouwd 14-11 (branch `feat/branch-samenvoegen`, nog niet uitgebracht).**
+
+- Studio: knop *Samenvoegen naar MAIN* in *Verschil met MAIN…*: uit bij een conflict of als er
+  nog eigen wijzigingen te verzenden zijn; bevestiging met de aantallen; wijzigingen buiten de map
+  alleen na bevestiging.
+- Kern: `web/vite/src/studio/takken/samenvoegen.js` (`voegSamen`, `opsVoorVerschil`).
+- Sidecar: `POST /samenvoegen` (`samenvoegProjecten`), met vangnet: de ops worden op de echte stores
+  nagespeeld en moeten precies de samengevoegde stand geven.
+- API: `POST /api/studio/projecten/:id/samenvoegen`. Eén transactie: ops naar ouder en branch,
+  controle op de laatste volgnummers, basis vervangen.
+- Getest: unit (samenvoegen), render-svc, Go tegen Postgres, e2e met gemockte API. Nog niet getest:
+  de hele keten met echte API, sidecar en twee open Studio's (na uitrol op een testproject doen).
+- Uitbrengen vraagt api + render-svc + studio samen; een oudere sidecar geeft 502 ("te oud").
+
+**Grenzen van stap 1:** volgorde-alleen-wijzigingen in de boom uit de branch gaan niet mee;
+bundels en de soortenlijst gaan als geheel (per bundel, lijst in één keer).

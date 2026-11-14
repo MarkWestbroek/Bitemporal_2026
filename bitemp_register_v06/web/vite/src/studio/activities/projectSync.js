@@ -100,6 +100,9 @@ export class ProjectSyncFout extends Error {
     this.anderen = Array.isArray(extra.anderen) ? extra.anderen : [];
     /** bij 409 branch_bestaat (afsplitsen): het id van de bestaande branch */
     this.projectId = extra.projectId || null;
+    /** bij 409 van …/samenvoegen: de conflicten, of de wijzigingen buiten de map */
+    this.conflicten = Array.isArray(extra.conflicten) ? extra.conflicten : [];
+    this.buitenMap = Array.isArray(extra.buitenMap) ? extra.buitenMap : [];
   }
 }
 
@@ -130,7 +133,9 @@ async function roep(pad, { methode = "GET", body, headers = {} } = {}) {
         : resp.status === 403
           ? "Geen rechten voor deze actie."
           : `Serverfout ${resp.status}.`);
-    throw new ProjectSyncFout(bericht, resp.status, json?.server, { reden: json?.reden, anderen: json?.anderen, projectId: json?.projectId });
+    throw new ProjectSyncFout(bericht, resp.status, json?.server, {
+      reden: json?.reden, anderen: json?.anderen, projectId: json?.projectId, conflicten: json?.conflicten, buitenMap: json?.buitenMap,
+    });
   }
   return json;
 }
@@ -156,6 +161,15 @@ export const haalProjectOp = (id) => roep(`/api/studio/projecten/${encodeURIComp
  *                    main?: {laatsteVolgnummer: number}, tak?: {laatsteVolgnummer: number}}>}
  */
 export const vergelijkMetMain = (id) => roep(`/api/studio/projecten/${encodeURIComponent(id)}/vergelijk`);
+
+/**
+ * Branch terugmergen, stap 1 (14-11): alles uit de branch naar MAIN, daarna haalt de branch MAIN
+ * op. → `{main: {ops}, tak: {ops}, basisVolgnummer, telling}`. 409 met `reden` "conflicten"
+ * (`conflicten`), "buiten_map" (`buitenMap`; opnieuw met `ookBuitenMap`) of
+ * "volgnummer_verschoven" (opnieuw vergelijken).
+ */
+export const samenvoegenMetMain = (id, { ookBuitenMap = false } = {}) =>
+  roep(`/api/studio/projecten/${encodeURIComponent(id)}/samenvoegen`, { methode: "POST", body: { ookBuitenMap } });
 
 /** Aanmaken (versie 1). 409 als het id al bestaat. */
 export const maakProjectAan = ({ id, naam, inhoud }) =>
