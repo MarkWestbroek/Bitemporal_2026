@@ -4,13 +4,12 @@
  * de elementen, diagrammen, mappen en koppelingen die verschillen, met de velden en of ze buiten de
  * afgesplitste map liggen.
  *
- * Samenvoegen naar MAIN (14-11, plan "Branch terugmergen"). Stap 2: kiezen met vinkjes in een
- * boom (keuzeBoom.js): map → submap → diagram of element → relatie. Gekozen gaat naar MAIN; bij een
- * conflict betekent aangevinkt "de versie van de branch", uitgevinkt "MAIN houdt de zijne". Wat niet
- * gekozen is, blijft in de branch en komt bij de volgende vergelijking terug. Daarna haalt de branch
+ * Samenvoegen naar MAIN (14-11, plan "Branch terugmergen"). Stap 2: kiezen in een boom
+ * (keuzeBoom.js): map → submap → diagram of element → relatie, met per regel een schuifje met drie
+ * standen: ↶ MAIN overnemen in de branch, – niets doen (blijft in de branch en komt bij de volgende
+ * vergelijking terug), → naar MAIN (bij een conflict: MAIN overschrijven). Daarna haalt de branch
  * MAIN op (POST …/samenvoegen met `keuze`). Een keuze die een verwijzing stuk maakt (relatie zonder
- * haar bron, …) weigert de server met reden "samenhang". Per regel zet ↶ de eenheid in de branch
- * terug naar de versie van MAIN (keuze "terug"; Mark 14-11: "per ongeluk een kleur gewijzigd").
+ * haar bron, …) weigert de server met reden "samenhang".
  *
  * De API doet het werk (GET …/vergelijk → render-sidecar POST /vergelijk, verschilMetMain.js).
  * Een diagram opent met een klik; een element opent het eerste diagram waarop het staat.
@@ -18,14 +17,14 @@
  * Eén instantie hangt in de Main van Modelleren; openen via
  *   useVerschilMetMainStore.getState().openen({ projectId, regel, teVerzenden })
  */
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { create } from "zustand";
 import { vergelijkMetMain, samenvoegenMetMain } from "../activities/projectSync.js";
 import { useSyncStore } from "../sync/verzender.js";
 import { getProfieltype } from "../profieltypeRegistry";
 import { openVerwijzing } from "../doorklik.js";
 import { STATUS_LABEL, STATUS_UITLEG, SOORT_LABEL } from "./herkomst.js";
-import { standaardKeuze, bouwKeuzeBoom, standVan, zetKnoop, keuzeTelling } from "./keuzeBoom.js";
+import { standaardKeuze, bouwKeuzeBoom, standVan, zetKnoop, keuzeTelling, schuifTeksten } from "./keuzeBoom.js";
 
 /** Heeft de branch een afgesplitste map? (anders telt "buiten de map" niet) */
 const heeftMapVan = (uitkomst) => (uitkomst?.scope || []).length > 0;
@@ -111,6 +110,22 @@ const KLEUR = { conflict: "#dc2626", nieuw: "#16a34a", gewijzigd: "#2563eb", weg
 /** Profielnaam voor de lijst (val terug op het id). */
 const profielNaam = (pid) => (pid ? getProfieltype(pid)?.label || getProfieltype(pid)?.naam || pid : "");
 
+/**
+ * Naam van de soort in de boom: bij een element het type uit het profiel (M2: "entiteit",
+ * "gegevenselement", "domein", in een andere taal de eigen namen; Mark 14-11), anders de soort.
+ */
+function soortLabel(knoop) {
+  const v = knoop.verschil;
+  const typeVan = (profielId, elementType) => {
+    if (!elementType) return null;
+    const types = getProfieltype(profielId)?.descriptor?.elementTypes || [];
+    return types.find((t) => t.id === elementType)?.label || elementType;
+  };
+  if (knoop.soort === "eenheid") return (v.soort === "element" && typeVan(v.profielId, v.elementType)) || SOORT_LABEL[v.soort] || v.soort;
+  if (knoop.context) return typeVan(knoop.context.profielId, knoop.context.elementType) || "element";
+  return knoop.soort === "map" ? "map" : "";
+}
+
 /** Open het diagram, of bij een element het eerste diagram waarop het in deze branch staat. */
 function openRegel(v) {
   if (!v.profielId) return false;
@@ -121,38 +136,57 @@ function openRegel(v) {
   return d ? openVerwijzing({ profielId: v.profielId, diagramId: d.id }) : false;
 }
 
-/** Vinkje met drie standen (aan, uit, half). */
-function Vinkje({ stand, onChange, testId, titel }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (ref.current) ref.current.indeterminate = stand === "half";
-  }, [stand]);
+const knop = { font: "inherit", fontSize: 12, padding: "3px 10px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "transparent", color: "var(--s-fg)", cursor: "pointer" };
+
+/** Kleur van de actieve stand: links = MAIN (paars), midden = neutraal, rechts = naar MAIN (groen; rood bij overschrijven). */
+const STAND_KLEUR = { links: "#9333ea", midden: "#64748b", rechts: "#16a34a" };
+
+/**
+ * Schuifje met drie standen (Mark 14-11): ↶ links = MAIN overnemen in de branch, – midden = niets
+ * doen, → rechts = naar MAIN. "gemengd" (op een ouder): geen stand actief.
+ */
+function Schuif({ stand, teksten, onKies, testId }) {
+  const deel = (s, teken) => {
+    const actief = stand === s;
+    const kleur = s === "rechts" && teksten.rechtsWaarschuwing ? "#dc2626" : STAND_KLEUR[s];
+    return (
+      <button
+        type="button"
+        onClick={() => onKies(s)}
+        aria-pressed={actief}
+        data-testid={`${testId}-${s}`}
+        title={teksten[s]}
+        style={{
+          font: "inherit", fontSize: 11, lineHeight: "16px", width: 24, padding: 0, cursor: "pointer",
+          border: "1px solid var(--s-border, #cbd5e1)", borderLeftWidth: s === "links" ? 1 : 0,
+          borderRadius: s === "links" ? "8px 0 0 8px" : s === "rechts" ? "0 8px 8px 0" : 0,
+          background: actief ? kleur : "transparent", color: actief ? "#fff" : "var(--s-fg)", opacity: actief ? 1 : 0.7,
+        }}
+      >
+        {teken}
+      </button>
+    );
+  };
   return (
-    <input
-      ref={ref}
-      type="checkbox"
-      checked={stand === "aan"}
-      onChange={(e) => onChange(e.target.checked)}
-      data-testid={testId}
-      data-stand={stand}
-      title={titel}
-      style={{ margin: 0 }}
-    />
+    <span role="group" aria-label="Keuze" data-testid={testId} data-stand={stand} style={{ display: "inline-flex", flex: "none" }}>
+      {deel("links", "↶")}
+      {deel("midden", "–")}
+      {deel("rechts", "→")}
+    </span>
   );
 }
-
-const knop = { font: "inherit", fontSize: 12, padding: "3px 10px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "transparent", color: "var(--s-fg)", cursor: "pointer" };
 
 /** Eén knoop van de keuzeboom, met zijn kinderen. */
 function KnoopRij({ knoop, diepte, keuze, zetKeuze, heeftMap, dicht, wisselDicht, sluiten }) {
   const v = knoop.verschil;
+  // Een map met een eigen wijziging maar ook kinderen: het schuifje werkt op alles; de teksten zijn algemeen.
+  const eigen = knoop.soort === "eenheid" ? v : null;
   const stand = standVan(knoop, keuze);
+  const teksten = schuifTeksten(eigen);
   const isDicht = dicht.has(knoop.knoopId);
   const heeftKinderen = knoop.kinderen.length > 0;
-  const terug = !!v && keuze[v.sleutel] === "terug";
-  const titel = v?.status === "conflict"
-    ? "Conflict: aangevinkt neemt de versie van deze branch, uitgevinkt houdt MAIN de zijne."
-    : "Aangevinkt gaat naar MAIN; uitgevinkt blijft in deze branch.";
+  const keuzeTekst = stand === "gemengd" ? "gemengd" : teksten[stand];
+  const keuzeKleur = stand === "gemengd" ? "inherit" : stand === "rechts" && teksten.rechtsWaarschuwing ? "#dc2626" : STAND_KLEUR[stand];
   return (
     <>
       <div
@@ -168,9 +202,9 @@ function KnoopRij({ knoop, diepte, keuze, zetKeuze, heeftMap, dicht, wisselDicht
         >
           {isDicht ? "▸" : "▾"}
         </button>
-        <Vinkje stand={stand} onChange={(aan) => zetKeuze(zetKnoop(knoop, keuze, aan))} testId={`keuze-${knoop.knoopId}`} titel={titel} />
+        <Schuif stand={stand} teksten={teksten} onKies={(s) => zetKeuze(zetKnoop(knoop, keuze, s))} testId={`schuif-${knoop.knoopId}`} />
         {v && <span title={STATUS_UITLEG[v.status]} style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: KLEUR[v.status], flex: "none" }} />}
-        <span style={{ opacity: 0.6, width: 62, flex: "none" }}>{knoop.soort === "eenheid" ? SOORT_LABEL[v.soort] || v.soort : knoop.soort === "map" ? "map" : ""}</span>
+        <span style={{ opacity: 0.6, width: 110, flex: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={soortLabel(knoop)} data-testid={`soort-${knoop.knoopId}`}>{soortLabel(knoop)}</span>
         <span style={{ flex: 1, minWidth: 0 }}>
           {knoop.soort === "eenheid" && (v.soort === "element" || v.soort === "diagram") ? (
             <button type="button" onClick={() => openRegel(v) && sluiten()} title="Openen" style={{ ...knop, border: 0, padding: 0, textDecoration: "underline" }}>
@@ -180,33 +214,12 @@ function KnoopRij({ knoop, diepte, keuze, zetKeuze, heeftMap, dicht, wisselDicht
             <strong style={{ fontWeight: knoop.soort === "eenheid" ? 400 : 600 }}>{knoop.label}</strong>
           )}
           {v && <span style={{ marginLeft: 6, color: KLEUR[v.status] }}>{STATUS_LABEL[v.status].toLowerCase()}</span>}
-          {v?.status === "conflict" && !terug && (
-            <span style={{ marginLeft: 6, fontSize: 10, opacity: 0.8 }}>{keuze[v.sleutel] === true ? "→ versie van de branch" : "→ MAIN houdt de zijne"}</span>
-          )}
-          {terug && (
-            <span style={{ marginLeft: 6, fontSize: 10, color: KLEUR.weg }} data-testid={`terug-label-${knoop.knoopId}`}>
-              → wordt teruggezet naar MAIN
-            </span>
-          )}
+          <span style={{ marginLeft: 6, fontSize: 10, color: keuzeKleur }} data-testid={`keuze-tekst-${knoop.knoopId}`}>→ {keuzeTekst}</span>
           {v && heeftMap && !v.inScope && (
             <span style={{ marginLeft: 6, fontSize: 10, color: "var(--s-warn, #b45309)" }} title="Ligt niet in de afgesplitste map">buiten de map</span>
           )}
         </span>
         {v && <span style={{ opacity: 0.6, flex: "none" }}>{profielNaam(v.profielId)}</span>}
-        {v && (
-          <button
-            type="button"
-            onClick={() => zetKeuze({ ...keuze, [v.sleutel]: terug ? false : "terug" })}
-            aria-pressed={terug}
-            data-testid={`terug-${knoop.knoopId}`}
-            title={terug
-              ? "Niet terugzetten: de wijziging blijft in deze branch."
-              : "Terugzetten naar MAIN: deze branch neemt de versie van MAIN over en de wijziging verdwijnt."}
-            style={{ ...knop, padding: "0 6px", flex: "none", background: terug ? "var(--s-hover, rgba(147,51,234,0.15))" : "transparent", borderColor: terug ? KLEUR.weg : undefined }}
-          >
-            ↶
-          </button>
-        )}
         {v && <span style={{ opacity: 0.8, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: "none" }} title={(v.velden || []).join(", ")}>{(v.velden || []).join(", ")}</span>}
       </div>
       {!isDicht && knoop.kinderen.map((k) => (
@@ -235,7 +248,7 @@ export default function VerschilMetMainDialoog() {
   }, [open, sluiten]);
 
   const verschillen = uitkomst?.verschillen || [];
-  const boom = useMemo(() => bouwKeuzeBoom(uitkomst?.verschillen || [], uitkomst?.mappen || {}), [uitkomst]);
+  const boom = useMemo(() => bouwKeuzeBoom(uitkomst?.verschillen || [], uitkomst?.mappen || {}, uitkomst?.context || {}), [uitkomst]);
   const vanMain = useMemo(() => (uitkomst?.verschillen || []).filter((v) => v.status === "main"), [uitkomst]);
 
   if (!open) return null;
@@ -290,9 +303,9 @@ export default function VerschilMetMainDialoog() {
         </div>
         {regel && <p style={{ margin: "0 0 6px", fontSize: 12, opacity: 0.8 }}>{regel}</p>}
         <p style={{ margin: "0 0 10px", fontSize: 12, opacity: 0.8 }}>
-          Vergeleken met de stand bij het afsplitsen of de laatste samenvoeging. Vink aan wat naar MAIN gaat; wat
-          uit staat, blijft in deze branch. Bij een conflict betekent aangevinkt: de versie van deze branch. Met ↶
-          zet je een wijziging in deze branch terug naar MAIN.
+          Vergeleken met de stand bij het afsplitsen of de laatste samenvoeging. Per regel: <strong>↶</strong> MAIN
+          overnemen in deze branch, <strong>–</strong> niets doen (blijft in de branch), <strong>→</strong> naar MAIN (bij
+          een conflict: MAIN overschrijven). Op een map geldt het schuifje voor alles eronder.
           {uitkomst?.main?.laatsteVolgnummer != null && <> MAIN staat op #{uitkomst.main.laatsteVolgnummer}.</>}
         </p>
         {teVerzenden > 0 && (
@@ -322,8 +335,8 @@ export default function VerschilMetMainDialoog() {
               <span style={{ flex: 1 }} />
               {boom.length > 0 && (
                 <>
-                  <button type="button" style={knop} onClick={() => alles(true)} data-testid="keuze-alles-aan">Alles aan</button>
-                  <button type="button" style={knop} onClick={() => alles(false)} data-testid="keuze-alles-uit">Alles uit</button>
+                  <button type="button" style={knop} onClick={() => alles(true)} data-testid="keuze-alles-aan">Alles naar MAIN</button>
+                  <button type="button" style={knop} onClick={() => alles(false)} data-testid="keuze-alles-uit">Alles in de branch</button>
                 </>
               )}
             </div>

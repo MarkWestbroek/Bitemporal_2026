@@ -129,6 +129,8 @@
  * @typedef {Object} ElementType
  * @property {string} id
  * @property {string} label
+ * @property {"de"|"het"} [lidwoord] - Nederlands lidwoord bij `label`; geeft de startnaam van een
+ *   nieuw element: "de" → NieuweEntiteit, "het" of niets → NieuwGegevenselement (startNaam.js).
  * @property {string} [erft]                - id van het ouder-ElementType (EMOF
  *   Class.superClass, één ouder). Bij registratie vlakt `types/erfenis.js` uit:
  *   shape, kleur, compartments, properties, hooks, bron/doel, randElement … van

@@ -38,7 +38,7 @@
  * naar iets wat er niet is. Alleen wat de keuze nieuw stuk maakt telt (`nieuweSamenhangFouten`).
  */
 import { gelijk, diffMap, structuurNet, modelStoreNaam } from "../sync/operaties.js";
-import { verschilSleutel } from "./verschilMetMain.js";
+import { verschilSleutel, elementVanPlaatsing } from "./verschilMetMain.js";
 
 const leeg = Object.freeze({});
 
@@ -184,7 +184,9 @@ export function voegSamen({ basis, tak, main, keuze = null }) {
  *   - een relatie (element met `source`/`target`) naar een element dat ontbreekt;
  *   - een node op een diagram (`nodes[].elementId`) naar een element dat ontbreekt;
  *   - een kruisverband met een kant naar een element dat ontbreekt;
- *   - een plaatsing of map met een map die ontbreekt.
+ *   - een plaatsing of map met een map die ontbreekt, of een plaatsing onder een element dat
+ *     ontbreekt (element als ouder in de boom, `el::<profiel>::<id>`);
+ *   - een diagrambundel met een tab naar een diagram dat ontbreekt.
  * @param {any} stand
  * @returns {string[]}
  */
@@ -213,7 +215,17 @@ export function samenhangFouten(stand) {
   }
   const mappen = stand.structuur?.mappen || leeg;
   for (const [sleutel, mapId] of Object.entries(stand.structuur?.plaatsing || leeg)) {
-    if (mapId && !mappen[mapId]) uit.push(`plaatsing ${sleutel}: map ${mapId} ontbreekt`);
+    const ouderEl = elementVanPlaatsing(mapId);
+    if (ouderEl) {
+      if (!heeft(ouderEl.profielId, ouderEl.id)) uit.push(`plaatsing ${sleutel}: element ${ouderEl.profielId}/${ouderEl.id} ontbreekt`);
+    } else if (mapId && !mappen[mapId]) uit.push(`plaatsing ${sleutel}: map ${mapId} ontbreekt`);
+  }
+  for (const [id, b] of Object.entries(stand.structuur?.bundels || leeg)) {
+    for (const tab of Array.isArray(b?.tabs) ? b.tabs : []) {
+      if (tab?.profielId && tab?.diagramId && !profielen[tab.profielId]?.diagrams?.[tab.diagramId]) {
+        uit.push(`bundel ${id}: diagram ${tab.profielId}/${tab.diagramId} ontbreekt`);
+      }
+    }
   }
   for (const [id, m] of Object.entries(mappen)) {
     if (m?.ouderId && !mappen[m.ouderId]) uit.push(`map ${id}: bovenliggende map ${m.ouderId} ontbreekt`);

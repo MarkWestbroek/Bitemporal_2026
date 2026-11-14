@@ -5,22 +5,27 @@
  *
  * De boom volgt de projectboom van de branch, beperkt tot wat verschilt:
  *   map → submap → diagram of element → relatie (onder haar bron) of kind (onder zijn boomouder).
- * Koppelingen tussen talen (kruisverbanden) staan in een eigen groep, net als eenheden zonder map.
+ * Koppelingen tussen talen (kruisverbanden) en diagrambundels staan in een eigen groep, net als
+ * eenheden zonder map.
  * Wat alleen op MAIN veranderde, staat niet in de boom: dat komt altijd mee naar de branch.
  *
- * Een vinkje op een ouder zet alles eronder aan of uit; een half gekozen ouder staat "half". Een
- * map die zelf veranderde (naam, ouder) draagt zijn eigen wijziging als onderdeel van zijn vinkje.
+ * Per regel een **schuifje met drie standen** (Mark 14-11): links = MAIN overnemen in de branch
+ * ("terug"), midden = niets doen (blijft in de branch, false), rechts = naar MAIN (true; bij een
+ * conflict: MAIN overschrijven). Op een ouder zet het schuifje alles eronder; staan de kinderen
+ * verschillend, dan is de stand "gemengd". Een map die zelf veranderde (naam, ouder) draagt zijn
+ * eigen wijziging als onderdeel van zijn schuifje.
  *
  * Keuze = `{[verschilSleutel]: true | false | "terug"}` en gaat zo naar POST …/samenvoegen.
- * Standaard aan, behalve een conflict (dan blijft MAIN, tot je de branch kiest) en, bij een branch
- * van een map, wat buiten die map ligt. "terug" (per regel, knop ↶) zet de eenheid in de branch
- * terug naar de versie van MAIN; voor het vinkje telt dat als uit.
+ * Standaard rechts, behalve een conflict (midden: MAIN houdt de zijne, tot je kiest) en, bij een
+ * branch van een map, wat buiten die map ligt (midden).
  */
 
 /** @typedef {import("./verschilMetMain.js").Verschil} Verschil */
 /**
  * @typedef {{knoopId: string, soort: "map"|"groep"|"eenheid", label: string,
- *            verschil: Verschil|null, kinderen: Knoop[]}} Knoop
+ *            verschil: Verschil|null, kinderen: Knoop[],
+ *            context?: {profielId: string, elementType?: string}}} Knoop
+ * `context`: bij een ongewijzigde ouder (package) het profiel en type, voor het typelabel.
  */
 
 /**
@@ -37,16 +42,19 @@ export function standaardKeuze(verschillen, { heeftMap = true } = {}) {
   return uit;
 }
 
-const SOORT_VOLGORDE = { map: 0, groep: 1, diagram: 2, element: 3, kruisverband: 4 };
+const SOORT_VOLGORDE = { map: 0, groep: 1, diagram: 2, element: 3, bundel: 4, kruisverband: 5 };
 const volgordeVan = (k) => SOORT_VOLGORDE[k.soort === "eenheid" ? k.verschil?.soort : k.soort] ?? 9;
 
 /**
- * Bouw de keuzeboom.
+ * Bouw de keuzeboom. `context` (uit verschilMetMain): ouder-elementen die zelf niet veranderden,
+ * zoals het package waaronder een nieuw diagram staat; die komen als ouder (zonder eigen keuze) in
+ * de boom, zodat de indeling die van de projectboom is.
  * @param {Verschil[]} verschillen
  * @param {Record<string, {id: string, naam: string, ouderId: string|null}>} [mappen]
+ * @param {Record<string, {sleutel: string, profielId: string, id: string, naam: string, mapId: string|null, ouderId: string|null}>} [context]
  * @returns {Knoop[]} de wortels
  */
-export function bouwKeuzeBoom(verschillen, mappen = {}) {
+export function bouwKeuzeBoom(verschillen, mappen = {}, context = {}) {
   const items = (verschillen || []).filter((v) => v.status !== "main");
   /** @type {Map<string, Knoop>} */
   const mapKnopen = new Map();
@@ -87,7 +95,24 @@ export function bouwKeuzeBoom(verschillen, mappen = {}) {
     if (v.soort === "map") continue;
     eenheden.set(v.sleutel, { knoopId: `eenheid:${v.sleutel}`, soort: "eenheid", label: v.naam || v.id, verschil: v, kinderen: [] });
   }
-  const ouderSleutel = (v) => (v.soort === "element" && v.ouderId ? `element:${v.profielId ?? ""}:${v.ouderId}` : null);
+  const ouderSleutel = (v) => ((v.soort === "element" || v.soort === "diagram") && v.ouderId ? `element:${v.profielId ?? ""}:${v.ouderId}` : null);
+  // Context-ouders: alleen aanmaken als ze nodig zijn; zelf aan hun ouder of map gehangen.
+  /** @type {Map<string, Knoop>} */
+  const contextKnopen = new Map();
+  const contextKnoop = (sleutel, pad = new Set()) => {
+    if (contextKnopen.has(sleutel)) return contextKnopen.get(sleutel);
+    const c = context[sleutel];
+    /** @type {Knoop} */
+    const k = { knoopId: `context:${sleutel}`, soort: "groep", label: c.naam, verschil: null, kinderen: [], context: { profielId: c.profielId, elementType: c.elementType } };
+    contextKnopen.set(sleutel, k);
+    pad.add(sleutel);
+    const ouder = c.ouderId ? `element:${c.profielId}:${c.ouderId}` : null;
+    if (ouder && eenheden.has(ouder)) eenheden.get(ouder).kinderen.push(k);
+    else if (ouder && context[ouder] && !pad.has(ouder)) contextKnoop(ouder, pad).kinderen.push(k);
+    else if (c.mapId && mappen[c.mapId]) mapKnoop(c.mapId).kinderen.push(k);
+    else groep("zonder", "Zonder map").kinderen.push(k);
+    return k;
+  };
   // Een ouder telt alleen als de keten niet terugloopt.
   const geldigeOuder = (v) => {
     let s = ouderSleutel(v);
@@ -103,8 +128,11 @@ export function bouwKeuzeBoom(verschillen, mappen = {}) {
   for (const k of eenheden.values()) {
     const v = /** @type {Verschil} */ (k.verschil);
     const ouder = geldigeOuder(v);
+    const ctx = !ouder ? ouderSleutel(v) : null;
     if (ouder) eenheden.get(ouder).kinderen.push(k);
+    else if (ctx && context[ctx]) contextKnoop(ctx).kinderen.push(k);
     else if (v.soort === "kruisverband") groep("kruis", "Koppelingen tussen talen").kinderen.push(k);
+    else if (v.soort === "bundel") groep("bundels", "Diagrambundels").kinderen.push(k);
     else if (v.mapId && mappen[v.mapId]) mapKnoop(v.mapId).kinderen.push(k);
     else groep("zonder", "Zonder map").kinderen.push(k);
   }
@@ -118,7 +146,7 @@ export function bouwKeuzeBoom(verschillen, mappen = {}) {
   for (const g of groepen.values()) sorteer(g.kinderen);
   // Mappen die alleen voor de keten nodig waren maar niets bevatten, bestaan niet: elke map-knoop
   // ontstaat uit een verschil of uit een kind. De groepen komen achteraan.
-  return [...wortels, ...["zonder", "kruis"].filter((id) => groepen.has(id)).map((id) => groepen.get(id))];
+  return [...wortels, ...["zonder", "bundels", "kruis"].filter((id) => groepen.has(id)).map((id) => groepen.get(id))];
 }
 
 /** Alle sleutels van eenheden in deze knoop en eronder (ook de eigen wijziging van een map). */
@@ -132,24 +160,51 @@ export function sleutelsVan(knoop) {
   return uit;
 }
 
+/** De drie standen van het schuifje en de waarde in `keuze`. */
+export const SCHUIF = Object.freeze({ links: "terug", midden: false, rechts: true });
+
+/** Stand van één waarde uit `keuze`. */
+export const standVanWaarde = (w) => (w === "terug" ? "links" : w === true ? "rechts" : "midden");
+
 /**
- * Stand van het vinkje: "aan", "uit" of "half".
- * @param {Knoop} knoop @param {Record<string, boolean>} keuze
+ * Stand van het schuifje van een knoop: "links", "midden", "rechts", of "gemengd" als de eenheden
+ * eronder verschillend staan.
+ * @param {Knoop} knoop @param {Record<string, boolean|"terug">} keuze
+ * @returns {"links"|"midden"|"rechts"|"gemengd"}
  */
 export function standVan(knoop, keuze) {
-  const s = sleutelsVan(knoop);
-  const aan = s.filter((k) => keuze[k] === true).length;
-  return aan === 0 ? "uit" : aan === s.length ? "aan" : "half";
+  const standen = new Set(sleutelsVan(knoop).map((k) => standVanWaarde(keuze[k])));
+  if (standen.size === 1) return /** @type {any} */ ([...standen][0]);
+  return standen.size === 0 ? "midden" : "gemengd";
 }
 
 /**
- * Zet alles in en onder een knoop aan of uit. Geeft een nieuwe keuze.
- * @param {Knoop} knoop @param {Record<string, boolean>} keuze @param {boolean} aan
+ * Zet alles in en onder een knoop op een stand (of een waarde). Geeft een nieuwe keuze.
+ * @param {Knoop} knoop @param {Record<string, boolean|"terug">} keuze
+ * @param {"links"|"midden"|"rechts"|boolean|"terug"} stand
  */
-export function zetKnoop(knoop, keuze, aan) {
+export function zetKnoop(knoop, keuze, stand) {
+  const waarde = typeof stand === "string" && Object.hasOwn(SCHUIF, stand) ? SCHUIF[stand] : stand;
   const uit = { ...keuze };
-  for (const k of sleutelsVan(knoop)) uit[k] = aan;
+  for (const k of sleutelsVan(knoop)) uit[k] = waarde;
   return uit;
+}
+
+/**
+ * Wat links en rechts betekenen, per status (Mark 14-11: "er is verschil of je iets uit MAIN
+ * wijzigt of iets aan MAIN toevoegt"). Voor een ouder (geen eigen verschil): algemene tekst.
+ * @param {{status?: string}|null} v
+ * @returns {{links: string, midden: string, rechts: string, rechtsWaarschuwing?: boolean}}
+ */
+export function schuifTeksten(v) {
+  const midden = "blijft in de branch";
+  switch (v?.status) {
+    case "nieuw": return { links: "niet toevoegen (weg uit de branch)", midden, rechts: "toevoegen aan MAIN" };
+    case "weg": return { links: "terugzetten in de branch", midden, rechts: "ook uit MAIN verwijderen" };
+    case "conflict": return { links: "versie van MAIN, ook in de branch", midden: "MAIN houdt de zijne; blijft in de branch", rechts: "MAIN overschrijven", rechtsWaarschuwing: true };
+    case "gewijzigd": return { links: "versie van MAIN terug", midden, rechts: "wijziging naar MAIN" };
+    default: return { links: "alles: MAIN overnemen", midden: "alles: blijft in de branch", rechts: "alles naar MAIN" };
+  }
 }
 
 /**

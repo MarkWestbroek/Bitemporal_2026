@@ -40,6 +40,7 @@ export function superprofielTypen() {
     {
       id: "notitie",
       label: "Notitie",
+      lidwoord: "de",
       omschrijving: "Opmerking van de modelleur, in het model (UML Comment). Koppel hem met een annotatie-lijn aan wat hij toelicht.",
       kort: "NOT",
       shape: "note",
@@ -53,6 +54,7 @@ export function superprofielTypen() {
     {
       id: "constraint",
       label: "Constraint",
+      lidwoord: "de",
       omschrijving: "Regel die het standaardarsenaal niet kan uitdrukken (UML Constraint), tussen {…}; koppel hem met annotatie-lijnen aan wat hij beperkt (bv. {xor} tussen twee relaties).",
       kort: "{ }",
       shape: "constraint",
@@ -95,6 +97,7 @@ export function superprofielTypen() {
     {
       id: "diagramverwijzing",
       label: "Diagramverwijzing",
+      lidwoord: "de",
       omschrijving: "Verwijst naar een ander diagram (ook in een andere taal); dubbelklik opent het.",
       kort: "⧉",
       shape: "diagramverwijzing",

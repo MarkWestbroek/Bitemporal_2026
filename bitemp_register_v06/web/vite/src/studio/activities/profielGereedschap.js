@@ -14,6 +14,7 @@
  * `vertaalHooks` zet die id's om naar functies; `maakGeneriekeMaakElement`
  * geeft elk profiel een standaard element-fabriek.
  */
+import { startNaam } from "../../diagramcore/types/startNaam.js";
 
 /** Catalogus van benoembare hooks (uitbreidbaar; ids zijn het contract). */
 export const HOOK_CATALOGUS = {
@@ -89,7 +90,7 @@ export function maakGeneriekeMaakElement(descriptor) {
     teller += 1;
     const element = {
       id: `${descriptor.id}_${Date.now()}_${teller}`,
-      naam: `Nieuw${(et.label || et.id).replace(/[^A-Za-z0-9]/g, "")}`,
+      naam: startNaam(et, { tekens: /[^A-Za-z0-9]/g }),
       elementType: et.id,
       compartimenten: [],
       data: {},

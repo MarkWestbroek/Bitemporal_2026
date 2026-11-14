@@ -235,5 +235,27 @@ bundels en de soortenlijst gaan als geheel (per bundel, lijst in één keer).
   element komt terug; bij een conflict wint MAIN aan beide kanten. MAIN verandert niet. Ctrl+Z
   helpt hier niet: ongedaan maken werkt alleen op eigen, lokale stappen.
 
+**Stap 2a+ — schuifje met drie standen (gebouwd 14-11, nog niet uitgebracht; voorstel Mark).**
+Het vinkje en de knop ↶ zijn één schuifje per regel: **↶ links** = MAIN overnemen in de branch
+(`"terug"`), **– midden** = niets doen (`false`), **→ rechts** = naar MAIN (`true`; bij een conflict
+"MAIN overschrijven", in rood). De tekst achter de regel zegt wat de stand doet, per status
+(`schuifTeksten`): nieuw = "toevoegen aan MAIN" / "niet toevoegen (weg uit de branch)", weg = "ook
+uit MAIN verwijderen" / "terugzetten in de branch", gewijzigd = "wijziging naar MAIN" / "versie van
+MAIN terug". Op een map zet het schuifje alles eronder; verschillen de kinderen, dan "gemengd".
+Alleen Studio: de server kende de drie waarden al. Dat een toevoeging ook "de inhoud van de map"
+verandert, telt bewust niet apart: de plaatsing hoort bij het element.
+
+**Gevonden bij het proberen op Fundament (Mark 14-11):** een plaatsing kan naar een **element**
+wijzen (`el::<profiel>::<id>`, element als ouder in de boom), bv. het diagram *Besluit* onder het
+package "besluit". De vergelijking keek alleen naar mappen, dus zulke diagrammen stonden "buiten de
+map" en "zonder map". Nu volgt `verschilMetMain` de keten tot een echte map (`elementVanPlaatsing`),
+krijgt het diagram het package als `ouderId`, en staat een ongewijzigd package als ouder in de
+keuzeboom (`context`). Het vangnet meldt ook een plaatsing onder een ontbrekend element. Scenario 9.
+Ook gevonden: **diagrambundels** (`structuur.bundels`) gingen wel mee, maar onzichtbaar en zonder
+keuze, ook als hun diagrammen niet meegingen. Nu staan ze als eenheid `bundel` in de vergelijking en
+in de groep "Diagrambundels" van de boom (in de scope als een van hun diagrammen erin ligt); het
+vangnet meldt een tab naar een ontbrekend diagram. Scenario 10. Verder toont de boom het **type uit het
+profiel** (Entiteit, Gegevenselement, Package (domein), Compositie, …) in plaats van "element".
+
 **Nog open in stap 2:** kiezen per **veld** binnen een element (vraagt een drieweg per veld, dus
 ook conflicten per veld); 2b, buiten de map alleen-lezen in de branch.
