@@ -33,6 +33,9 @@
   --diagram-text: #0f172a;
   --diagram-muted: #64748b;
   --diagram-accent: var(--dc-selectie);
+  /* Tekst op het canvas zelf, niet op een kaart: de naam onder een data-object, de band van een
+     pool of lane, de buitenlabels in een tekening (tekenaar `inktOpCanvas`, 15-11). */
+  --diagram-canvastekst: var(--s-fg, #0f172a);
 }
 [data-studio-theme="dark"] .dc-canvas,
 [data-studio-theme="dark"] .dc-canvasvlak {

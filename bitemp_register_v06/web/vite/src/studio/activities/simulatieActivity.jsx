@@ -245,8 +245,9 @@ function DiagramMetToken({ diagramId, beeld, versie }) {
     <div
       ref={doos}
       data-testid="sim-diagram"
-      className="sim-diagram"
-      style={{ background: "#fff", borderRadius: 6, padding: 12, border: "1px solid var(--s-border, #cbd5e1)", overflow: "auto" }}
+      // dc-canvasvlak: dezelfde thema-tokens als het canvas (donker thema: donker vlak, lichte kaarten, lichte buitenlabels; Mark 15-11).
+      className="sim-diagram dc-canvasvlak"
+      style={{ background: "var(--dc-canvas-achtergrond, #fff)", borderRadius: 6, padding: 12, border: "1px solid var(--s-border, #cbd5e1)", overflow: "auto" }}
       // De tekening komt uit de eigen tekenaar (diagramcore/tekenaar), die tekst als tekstknoop schrijft.
       dangerouslySetInnerHTML={{ __html: svg }}
     />

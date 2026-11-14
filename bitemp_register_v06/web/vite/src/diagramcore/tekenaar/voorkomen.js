@@ -25,15 +25,27 @@ export const FONT = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto
  * `parameters.kleurAls: "rand"` (kaders) kleurt de eigen kleur de rand en blijft het vlak
  * open — de tekst kiest dan niet op contrast met die kleur, maar blijft de thematekst.
  */
+/**
+ * Tekst die niet op de vulling van de vorm staat maar op het canvas eronder (de naam onder een
+ * BPMN-data-object, de band van een pool of lane met alleen een tint): `parameters.inktOpCanvas`.
+ * Dan het token `--diagram-canvastekst` (het canvas zet het op zijn voorgrondkleur, zodat de naam
+ * in het donkere thema licht is), met de gewone tekstkleur als terugval (SVG zonder CSS, render-API).
+ * Gemeld door Mark 15-11: het data-object was in het donkere thema niet te lezen.
+ */
+export function canvasInkt(basis, parameters) {
+  // Alleen in het thema "auto" (tokens); een vast thema (light/dark) schrijft geen variabelen.
+  return parameters?.inktOpCanvas && String(basis.text).startsWith("var(") ? `var(--diagram-canvastekst, ${basis.text})` : basis.text;
+}
+
 export function kleurenVoor(basis, stijl, parameters) {
   const hex = veiligeKleur(stijl.kleur, null);
   const vast = veiligeKleur(parameters.vulling, null);
   if (parameters.kleurAls === "rand") {
-    const inkt = vast ? tekstOp(vast) : basis.text;
+    const inkt = vast ? tekstOp(vast) : canvasInkt(basis, parameters);
     return { ...basis, vulling: vast || basis.surface, rand: hex || veiligeKleur(parameters.rand, null) || basis.border, inkt, gedempt: vast ? inkt : basis.muted };
   }
   const vulling = hex || vast || basis.surface;
-  const inkt = hex ? tekstOp(hex) : vast ? tekstOp(vast) : basis.text;
+  const inkt = hex ? tekstOp(hex) : vast ? tekstOp(vast) : canvasInkt(basis, parameters);
   return {
     ...basis,
     vulling,
