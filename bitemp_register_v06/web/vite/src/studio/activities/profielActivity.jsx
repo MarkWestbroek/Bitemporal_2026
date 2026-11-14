@@ -293,7 +293,7 @@ export default {
   // Gereedschap, geen modelleeractiviteit: hoort bij beheer/instellingen
   // (consolidatieplan 2026-07-11, §2 — Instellingen bevat de profiel-editors).
   groep: "beheer",
-  status: "preview",
+  // Geen status meer (Mark 13-11): uit preview, dus geen stip en ook zichtbaar met Labs uit.
   Provider: ProfielProvider,
   Sidebar: ProfielSidebar,
   Main: ProfielMain,
