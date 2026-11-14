@@ -1,7 +1,8 @@
 # Branch terugmergen: keuze per wijziging en samenhang (plan)
 
 *14-11-2026. Opgesteld met Claude, na gesprek met Mark. Status: plan met besluiten (§6);
-stap 1 (§5) gebouwd op 14-11, nog niet uitgebracht. Zie §7.*
+stap 1 (§5) uitgebracht in studio 0.41.0 / api 0.26.0 / render 0.4.5; stap 2a (vinkjes in een
+boom) gebouwd op 14-11, nog niet uitgebracht. Zie §7.*
 
 Vervolg op branch stap 1 (*Verschil met MAIN…*, zie `docs/STUDIO.md` "Branch = afgeleid
 project"). Daar laat de Studio zien wat er verschilt; mergen gaat nog met de hand. Dit plan
@@ -179,7 +180,7 @@ M0-set afhangt, en dus wanneer een opgeslagen simulatie na een merge niet meer p
 
 ## 7. Stand van de bouw
 
-**Stap 1 — gebouwd 14-11 (branch `feat/branch-samenvoegen`, nog niet uitgebracht).**
+**Stap 1 — uitgebracht 14-11 (studio 0.41.0 / api 0.26.0 / render 0.4.5, live op app en Fundament).**
 
 - Studio: knop *Samenvoegen naar MAIN* in *Verschil met MAIN…*: uit bij een conflict of als er
   nog eigen wijzigingen te verzenden zijn; bevestiging met de aantallen; wijzigingen buiten de map
@@ -195,3 +196,44 @@ M0-set afhangt, en dus wanneer een opgeslagen simulatie na een merge niet meer p
 
 **Grenzen van stap 1:** volgorde-alleen-wijzigingen in de boom uit de branch gaan niet mee;
 bundels en de soortenlijst gaan als geheel (per bundel, lijst in één keer).
+
+**Stap 2a — gebouwd 14-11 (branch `feat/branch-samenvoegen-keuze`, nog niet uitgebracht).**
+
+- Keuze per **eenheid**: element (ook relatie), diagram, map, koppeling. Een verplaatsing hoort bij
+  haar element of diagram. Sleutel `<soort>:<profielId>:<id>` (`verschilSleutel` in
+  `verschilMetMain.js`); bundels en de soortenlijst staan niet in de boom en gaan mee.
+- Studio: de lijst per status is een **boom met vinkjes** (`studio/takken/keuzeBoom.js`): map →
+  submap → diagram of element → relatie onder haar bron (of kind onder zijn boomouder). Een vinkje
+  op een ouder zet alles eronder; half gekozen = driestandenvinkje. Koppelingen tussen talen en
+  eenheden zonder map in eigen groepen; wat alleen op MAIN veranderde apart (komt altijd mee).
+  Standaard aan, behalve een **conflict** (uit = MAIN houdt de zijne; aan = de versie van de branch)
+  en wat **buiten de map** ligt.
+- Kern: `voegSamen({…, keuze})` geeft `samengevoegd` (nieuwe MAIN en nieuwe basis) én `nieuwTak`:
+  wat niet gekozen is, blijft in de branch en komt bij de volgende vergelijking terug (weer
+  aangevinkt; het onthouden van "nee" is stap 4). Een conflict blokkeert met een keuze niet meer.
+- **Vangnet samenhang** (tot de samenhanggraaf van stap 3 er is): `samenhangFouten` zoekt
+  verwijzingen naar iets wat er niet is (relatie-`source`/`target`, `nodes[].elementId` op een
+  diagram, kruisverband-kanten, plaatsing/map naar een ontbrekende map). Alleen wat de keuze **nieuw**
+  stuk maakt telt, in MAIN of in de branch; dan weigert de API met `409 reden "samenhang"`.
+- API: body `{ookBuitenMap?, keuze?}`; zonder `keuze` geldt stap 1. Sidecar: `keuze` op
+  `/samenvoegen`; antwoord met `opgelost` en `samenhang`.
+- Getest: unit (`samenvoegen.test.js`, `keuzeBoom.test.js`, `verschilMetMain.test.js`), render-svc,
+  Go (`TestMetKeuze`), e2e 63 (boom, keuze in de POST, buiten de map, 409 samenhang).
+- **Scenario's over meerdere rondes** (Mark 14-11: "standaard in de test"):
+  `render-svc/samenvoegScenario.test.mjs`, in `npm test` van render-svc. Een nagebootste server
+  (logs per project, basis vervangen zoals de Go-handler) speelt met de echte profielstores na:
+  (1) Marks voorbeeld in twee rondes, (2) nieuw/weg/terugzetten incl. "geen kleur", (3) weg tegen
+  gewijzigd, ook zonder keuze, (4) relatie zonder bron, in MAIN én in de branch, (5) nieuwe submap
+  en verplaatsen, (6) koppeling zonder element, (7) alleen bijwerken, (8) drie rondes doorwerken.
+  Na elke ronde: MAIN nagespeeld = de nieuwe basis, en het resterende verschil is precies wat niet
+  gekozen werd.
+
+- **Terugzetten naar MAIN** (Mark 14-11, bij het proberen: "per ongeluk een kleur gewijzigd"):
+  per regel de knop ↶, keuze `"terug"`. De branch neemt de versie van MAIN letterlijk over, ook
+  "geen kleur" (een kleur met dezelfde waarde terugzetten is níet gelijk: MAIN had geen veld
+  `kleur`). Een element dat alleen in de branch bestaat gaat eruit, een in de branch verwijderd
+  element komt terug; bij een conflict wint MAIN aan beide kanten. MAIN verandert niet. Ctrl+Z
+  helpt hier niet: ongedaan maken werkt alleen op eigen, lokale stappen.
+
+**Nog open in stap 2:** kiezen per **veld** binnen een element (vraagt een drieweg per veld, dus
+ook conflicten per veld); 2b, buiten de map alleen-lezen in de branch.

@@ -1,15 +1,20 @@
 package handlers
 
-// Branch terugmergen, stap 1 (plan "2026-11-14 Branch terugmergen — keuze per wijziging en
-// samenhang"): alles uit de branch naar de ouder (MAIN); een conflict blokkeert; daarna haalt de
-// branch MAIN op (optie A, "bijwerken"), zodat branch en MAIN gelijk zijn en de samengevoegde
-// stand het nieuwe uitgangspunt (basis) van de branch is.
+// Branch terugmergen (plan "2026-11-14 Branch terugmergen — keuze per wijziging en samenhang").
+// Stap 1: alles uit de branch naar de ouder (MAIN); een conflict blokkeert. Stap 2: met `keuze`
+// (sleutel → true | false | "terug", zie verschilMetMain.js `verschilSleutel`) gaat alleen het
+// gekozene mee; een conflict blokkeert dan niet (gekozen = de branch wint, anders MAIN); "terug"
+// zet de eenheid in de branch terug naar de versie van MAIN. Daarna haalt de branch MAIN
+// op (optie A, "bijwerken"); wat niet gekozen werd, blijft als wijziging in de branch staan. De
+// samengevoegde stand is het nieuwe uitgangspunt (basis) van de branch.
 //
-//   POST /api/studio/projecten/:id/samenvoegen   {ookBuitenMap?: bool}   (op de branch)
-//     → 200 {main: {van, tot, aantal, laatsteVolgnummer}, tak: {…}, basisVolgnummer, telling}
-//     → 409 reden "conflicten"            {conflicten}: aan beide kanten anders gewijzigd
-//     → 409 reden "buiten_map"            {buitenMap}: wijzigingen buiten de afgesplitste map,
-//                                         alleen met ookBuitenMap: true
+//   POST /api/studio/projecten/:id/samenvoegen   {ookBuitenMap?: bool, keuze?: {sleutel: true|false|"terug"}}
+//     → 200 {main: {van, tot, aantal, laatsteVolgnummer}, tak: {…}, basisVolgnummer, telling, opgelost}
+//     → 409 reden "conflicten"            {conflicten}: aan beide kanten anders gewijzigd (zonder keuze)
+//     → 409 reden "samenhang"             {samenhang}: de keuze laat een verwijzing naar iets
+//                                         wat er niet is achter (bv. een relatie zonder haar doel)
+//     → 409 reden "buiten_map"            {buitenMap}: gekozen wijzigingen buiten de afgesplitste
+//                                         map, alleen met ookBuitenMap: true
 //     → 409 reden "volgnummer_verschoven": MAIN of de branch kreeg intussen nieuwe operaties;
 //                                         opnieuw proberen (de Studio vergelijkt dan opnieuw)
 //     → 403 zonder schrijfrecht op de ouder; 404/413/502 zoals …/vergelijk
@@ -31,6 +36,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -42,13 +48,16 @@ import (
 const samenvoegClientID = "samenvoegen"
 
 type samenvoegenInvoer struct {
-	OokBuitenMap bool `json:"ookBuitenMap"`
+	OokBuitenMap bool           `json:"ookBuitenMap"`
+	Keuze        map[string]any `json:"keuze"`
 }
 
 // samenvoegAntwoord is wat de sidecar op POST /samenvoegen teruggeeft (de delen die de server
 // gebruikt).
 type samenvoegAntwoord struct {
 	Conflicten []json.RawMessage `json:"conflicten"`
+	Opgelost   []json.RawMessage `json:"opgelost"`
+	Samenhang  []json.RawMessage `json:"samenhang"`
 	BuitenMap  []json.RawMessage `json:"buitenMap"`
 	OpsMain    []studioOpInvoer  `json:"opsMain"`
 	OpsTak     []studioOpInvoer  `json:"opsTak"`
@@ -67,6 +76,25 @@ func leesSamenvoegAntwoord(antw map[string]json.RawMessage) (*samenvoegAntwoord,
 		return nil, err
 	}
 	return uit, nil
+}
+
+// metKeuze voegt de keuze van de gebruiker toe aan het sidecar-verzoek. Zuiver (testbaar).
+func metKeuze(verzoek []byte, keuze map[string]any) ([]byte, error) {
+	for k, w := range keuze {
+		if _, ok := w.(bool); !ok && w != "terug" {
+			return nil, fmt.Errorf("keuze %q moet true, false of \"terug\" zijn", k)
+		}
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(verzoek, &m); err != nil {
+		return nil, err
+	}
+	k, err := json.Marshal(keuze)
+	if err != nil {
+		return nil, err
+	}
+	m["keuze"] = k
+	return json.Marshal(m)
 }
 
 // opsRijen maakt logregels van de operaties, doorgenummerd na `laatste`.
@@ -110,7 +138,15 @@ func MaakStudioProjectSamenvoegenHandler() gin.HandlerFunc {
 		if !ok {
 			return
 		}
-		ruw, ok := vraagSidecar(c, "/samenvoegen", d.verzoek)
+		var err error
+		verzoek := d.verzoek
+		if in.Keuze != nil {
+			if verzoek, err = metKeuze(d.verzoek, in.Keuze); err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Ongeldige keuze: " + err.Error()})
+				return
+			}
+		}
+		ruw, ok := vraagSidecar(c, "/samenvoegen", verzoek)
 		if !ok {
 			return
 		}
@@ -122,6 +158,11 @@ func MaakStudioProjectSamenvoegenHandler() gin.HandlerFunc {
 		if len(sv.Conflicten) > 0 {
 			c.JSON(http.StatusConflict, gin.H{"reden": "conflicten", "conflicten": sv.Conflicten,
 				"error": "Er zijn conflicten: eenheden die in de branch én op MAIN anders zijn gewijzigd. Los die eerst op."})
+			return
+		}
+		if len(sv.Samenhang) > 0 {
+			c.JSON(http.StatusConflict, gin.H{"reden": "samenhang", "samenhang": sv.Samenhang,
+				"error": "Deze keuze laat verwijzingen naar iets wat er niet is achter. Kies wat erbij hoort mee, of laat het samen weg."})
 			return
 		}
 		if len(sv.BuitenMap) > 0 && !in.OokBuitenMap {
@@ -145,7 +186,7 @@ func MaakStudioProjectSamenvoegenHandler() gin.HandlerFunc {
 		// Vergrendelen in een vaste volgorde (ouder, dan branch) en controleren dat niemand
 		// intussen iets schreef: de samenvoeging is op precies deze standen berekend.
 		for _, p := range []struct {
-			id      string
+			id       string
 			verwacht int64
 		}{{d.ouder.ID, d.mainLaatste}, {d.tak.ID, d.takLaatste}} {
 			if err := tx.NewSelect().Model((*model.StudioProject)(nil)).Column("id").Where("id = ?", p.id).For("UPDATE").Scan(ctx, new(string)); err != nil {
@@ -209,6 +250,7 @@ func MaakStudioProjectSamenvoegenHandler() gin.HandlerFunc {
 			"tak":             gin.H{"projectId": d.tak.ID, "ops": bereik(rijenTak, d.takLaatste)},
 			"basisVolgnummer": nieuwMain,
 			"telling":         sv.Telling,
+			"opgelost":        len(sv.Opgelost),
 		})
 	}
 }

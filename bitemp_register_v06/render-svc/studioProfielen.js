@@ -201,48 +201,71 @@ function maakOuderVan() {
   };
 }
 
-// ── Branch terugmergen, stap 1 (14-11, plan "Branch terugmergen") ──────────────────────────────
-// Alles uit de branch naar MAIN; een conflict blokkeert; daarna haalt de branch MAIN op.
-import { voegSamen, opsVoorVerschil } from "../web/vite/src/studio/takken/samenvoegen.js";
+// ── Branch terugmergen, stap 1 en 2 (14-11, plan "Branch terugmergen") ───────────────────────
+// Stap 1: alles uit de branch naar MAIN, een conflict blokkeert. Stap 2: keuze per eenheid;
+// daarna haalt de branch MAIN op, behalve wat niet gekozen werd (dat blijft in de branch).
+import { voegSamen, opsVoorVerschil, nieuweSamenhangFouten } from "../web/vite/src/studio/takken/samenvoegen.js";
 import { buitenScope } from "../web/vite/src/studio/takken/verschilMetMain.js";
 import { splitsPatch } from "../web/vite/src/diagramprofielen/ea/sidecarImport.js";
 
 /**
  * Samenvoegen van een branch met MAIN, als voorstel: de server schrijft het weg.
  *
- * → `{conflicten, buitenMap, opsMain, opsTak, basis, telling, verschillen, meldingen}`:
- *   - `conflicten`: eenheden die aan beide kanten anders veranderden (dan zijn de ops leeg);
- *   - `buitenMap`: wijzigingen van de branch buiten de afgesplitste map (de server vraagt
+ * Invoer `keuze` (stap 2, optioneel): sleutel (`verschilSleutel`) → true | false | "terug".
+ * Zonder keuze gaat alles mee en blokkeren conflicten (stap 1). Met keuze blokkeert een conflict
+ * niet: gekozen = de versie van de branch, niet gekozen = die van MAIN; "terug" = de branch neemt
+ * de versie van MAIN over (terugzetten).
+ *
+ * → `{conflicten, opgelost, buitenMap, samenhang, opsMain, opsTak, basis, telling, verschillen, meldingen}`:
+ *   - `conflicten`: conflicten die blokkeren (alleen zonder keuze; dan zijn de ops leeg);
+ *   - `opgelost`: conflicten die met de keuze zijn beslist (`gekozen`: "tak" of "main");
+ *   - `buitenMap`: gekozen wijzigingen van de branch buiten de afgesplitste map (de server vraagt
  *     daarvoor een expliciete bevestiging);
- *   - `opsMain`: MAIN → samengevoegd (de merge), `opsTak`: branch → samengevoegd (bijwerken);
+ *   - `samenhang`: verwijzingen die de keuze stuk zou maken (dan zijn de ops leeg; stap 2-vangnet);
+ *   - `opsMain`: MAIN → samengevoegd (de merge), `opsTak`: branch → nieuwe stand van de branch;
  *   - `basis`: het samengevoegde werkbestand zoals MAIN het na `opsMain` heeft; dat wordt het
  *     nieuwe uitgangspunt van de branch.
  *
  * Vangnet: de sidecar speelt `opsMain` en `opsTak` na op de echte stores en vergelijkt de uitkomst
- * met het samengevoegde werkbestand. Wijkt er iets af, dan gooit hij (422): liever geen merge dan
- * een halve.
+ * met wat er moest uitkomen. Wijkt er iets af, dan gooit hij (422): liever geen merge dan een halve.
  *
- * @param {{basis: {profiel: any, ops?: any[]}, tak: {profiel: any, ops?: any[]}, main: {profiel: any, ops?: any[]}, mapId?: string|null}} p
+ * @param {{basis: {profiel: any, ops?: any[]}, tak: {profiel: any, ops?: any[]}, main: {profiel: any, ops?: any[]},
+ *          mapId?: string|null, keuze?: Record<string, boolean|"terug">|null}} p
  */
-export function samenvoegProjecten({ basis, tak, main, mapId = null }) {
+export function samenvoegProjecten({ basis, tak, main, mapId = null, keuze = null }) {
   const m = { basis: materialiseer(basis), tak: materialiseer(tak), main: materialiseer(main) };
   const meldingen = Object.entries(m).flatMap(([kant, x]) => x.problemen.map((bericht) => ({ regel: "OPS", kant, bericht })));
   const verschil = verschilMetMain({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand, mapId, ouderVan: maakOuderVan() });
-  const buitenMap = mapId ? buitenScope(verschil.verschillen) : [];
-  const { samengevoegd, conflicten } = voegSamen({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand });
-  const kern = { conflicten, buitenMap, telling: verschil.telling, verschillen: verschil.verschillen, meldingen };
-  if (conflicten.length) return { ...kern, opsMain: [], opsTak: [], basis: null };
+  // Buiten de map telt alleen wat meegaat (zonder keuze: alles; met keuze: wat gekozen is, of
+  // ontbreekt en geen conflict is).
+  const gaatMee = (v) => !keuze || (keuze[v.sleutel] === undefined ? v.status !== "conflict" : keuze[v.sleutel] === true);
+  const buitenMap = mapId ? buitenScope(verschil.verschillen).filter(gaatMee) : [];
+  const { samengevoegd, nieuwTak, conflicten } = voegSamen({ basis: m.basis.werkbestand, tak: m.tak.werkbestand, main: m.main.werkbestand, keuze });
+  const blokkerend = keuze ? [] : conflicten;
+  const opgelost = keuze ? conflicten : [];
+  const kern = { conflicten: blokkerend, opgelost, buitenMap, samenhang: [], telling: verschil.telling, verschillen: verschil.verschillen, meldingen };
+  if (blokkerend.length) return { ...kern, opsMain: [], opsTak: [], basis: null };
+
+  // Stap-2-vangnet: geen verwijzing naar iets wat er niet meer is (alleen wat deze keuze stuk maakt).
+  const samenhang = [
+    ...nieuweSamenhangFouten(samengevoegd, m.main.werkbestand, m.tak.werkbestand).map((f) => ({ kant: "main", fout: f })),
+    ...nieuweSamenhangFouten(nieuwTak, m.main.werkbestand, m.tak.werkbestand).map((f) => ({ kant: "tak", fout: f })),
+  ];
+  if (samenhang.length) return { ...kern, samenhang, opsMain: [], opsTak: [], basis: null };
 
   const splits = (p) => splitsPatch(p);
   const opsMain = opsVoorVerschil(m.main.werkbestand, samengevoegd, { splits });
-  const opsTak = opsVoorVerschil(m.tak.werkbestand, samengevoegd, { splits });
+  const opsTak = opsVoorVerschil(m.tak.werkbestand, nieuwTak, { splits });
 
   // Vangnet: naspelen op de echte stores, dan mag er geen verschil meer zijn.
   const naMain = materialiseer({ profiel: m.main.werkbestand, ops: opsMain });
   const naTak = materialiseer({ profiel: m.tak.werkbestand, ops: opsTak });
-  const rest = verschilMetMain({ basis: samengevoegd, tak: naTak.werkbestand, main: naMain.werkbestand }).verschillen;
+  const rest = [
+    ...verschilMetMain({ basis: samengevoegd, tak: samengevoegd, main: naMain.werkbestand }).verschillen.map((v) => ({ ...v, kant: "main" })),
+    ...verschilMetMain({ basis: nieuwTak, tak: nieuwTak, main: naTak.werkbestand }).verschillen.map((v) => ({ ...v, kant: "tak" })),
+  ];
   if (rest.length || naMain.problemen.length || naTak.problemen.length) {
-    const wat = [...rest.slice(0, 5).map((v) => `${v.soort} ${v.profielId ?? ""}/${v.id} (${v.status})`), ...naMain.problemen, ...naTak.problemen];
+    const wat = [...rest.slice(0, 5).map((v) => `${v.kant}: ${v.soort} ${v.profielId ?? ""}/${v.id}`), ...naMain.problemen, ...naTak.problemen];
     throw new Error(`Het samenvoegen klopt niet na naspelen: ${wat.join("; ")}`);
   }
   return { ...kern, opsMain, opsTak, basis: naMain.werkbestand };

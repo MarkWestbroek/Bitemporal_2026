@@ -201,6 +201,46 @@ test("POST /samenvoegen: een conflict geeft geen ops", async () => {
   assert.equal(uit.basis, null);
 });
 
+// ── Branch terugmergen, stap 2: keuze per eenheid (14-11) ────────────────────────────────────
+
+test("POST /samenvoegen met keuze: conflict beslist, niet gekozen blijft in de branch, samenhang bewaakt", async () => {
+  const el = (id, naam, extra = {}) => ({ id, naam, elementType: "entiteit", compartimenten: [], data: {}, ...extra });
+  const werkbestand = { formaat: "studio-project", versie: 3, structuur: { mappen: {}, plaatsing: {} }, profielen: { diagram05: { diagramTypeId: "diagram05", elements: { E: el("E", "E"), F: el("F", "F") }, diagrams: {}, meta: {} } } };
+  const op = (volgnummer, zet) => ({ volgnummer, store: "model:diagram05", op: "patchElementen", args: [{ zet, wis: [] }] });
+  const basis = { profiel: werkbestand };
+  const tak = { profiel: werkbestand, ops: [op(1, { E: el("E", "E'") }), op(2, { F: el("F", "F'") })] };
+  const main = { profiel: werkbestand, ops: [op(1, { E: el("E", "E(b)") })] };
+
+  // E (conflict) naar de branch, F niet: MAIN krijgt E', de branch houdt F'.
+  let r = await post("/samenvoegen", { basis, tak, main, keuze: { "element:diagram05:E": true, "element:diagram05:F": false } });
+  assert.equal(r.status, 200);
+  let uit = await r.json();
+  assert.deepEqual(uit.conflicten, []);
+  assert.deepEqual(uit.opgelost, [{ soort: "element", profielId: "diagram05", id: "E", gekozen: "tak" }]);
+  assert.equal(uit.basis.profielen.diagram05.elements.E.naam, "E'");
+  assert.equal(uit.basis.profielen.diagram05.elements.F.naam, "F");
+  assert.deepEqual(uit.opsTak, [], "de branch had E' al en houdt F'");
+
+  // Een relatie kiezen zonder haar bron: samenhang, geen ops.
+  const tak2 = { profiel: werkbestand, ops: [op(1, { H: el("H", "H") }), op(2, { R: el("R", "R", { source: "H", target: "E" }) })] };
+  r = await post("/samenvoegen", { basis, tak: tak2, main: { profiel: werkbestand }, keuze: { "element:diagram05:H": false } });
+  uit = await r.json();
+  assert.deepEqual(uit.samenhang, [{ kant: "main", fout: "element diagram05/R: source H ontbreekt" }]);
+  assert.deepEqual(uit.opsMain, []);
+
+  // Terugzetten: F in de branch terug naar MAIN; MAIN verandert niet.
+  r = await post("/samenvoegen", { basis, tak, main, keuze: { "element:diagram05:E": false, "element:diagram05:F": "terug" } });
+  uit = await r.json();
+  assert.equal(r.status, 200);
+  assert.ok(!uit.opsMain.some((o) => o.op === "patchElementen" && "F" in o.args[0].zet), "F gaat niet naar MAIN");
+  const zetTak = uit.opsTak.filter((o) => o.op === "patchElementen").map((o) => o.args[0].zet.F).filter(Boolean);
+  assert.deepEqual(zetTak.map((f) => f.naam), ["F"], "de branch krijgt F van MAIN terug");
+
+  // Een ongeldige keuze is een 400.
+  assert.equal((await post("/samenvoegen", { basis, tak, main, keuze: { x: "ja" } })).status, 400);
+  assert.equal((await post("/vergelijk", { basis, tak, main, keuze: {} })).status, 400, "/vergelijk kent geen keuze");
+});
+
 // ── Eén profiel nagespeeld (10-11, laag 2 van de werkplaats) ─────────────────────────────────
 
 test("POST /materialiseer: blob-deel + alleen de ops op het eigen profiel", async () => {

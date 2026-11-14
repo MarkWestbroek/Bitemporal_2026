@@ -66,7 +66,7 @@ test("wijzigingen in de tak: nieuw in een submap, gewijzigd veld, relatie weg; s
   tak.profielen.uml.elements.A.data.velden = 4;
   delete tak.profielen.uml.elements.R;
   const r = verschilMetMain({ basis: BASIS, tak, main: kopie(BASIS), mapId: "dienst" });
-  assert.deepEqual({ ...vind(r, "C") }, { soort: "element", profielId: "uml", id: "C", naam: "Bijlage", status: "nieuw", velden: ["map"], inScope: true });
+  assert.deepEqual({ ...vind(r, "C") }, { soort: "element", profielId: "uml", id: "C", naam: "Bijlage", status: "nieuw", velden: ["map"], inScope: true, sleutel: "element:uml:C", ouderId: null, mapId: "stappen" });
   assert.equal(vind(r, "A").status, "gewijzigd");
   assert.deepEqual(vind(r, "A").velden, ["data.velden"]);
   assert.equal(vind(r, "R").status, "weg");

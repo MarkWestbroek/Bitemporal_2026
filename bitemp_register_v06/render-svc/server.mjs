@@ -158,12 +158,12 @@ export function maakServer() {
       }
       // Verschil tussen een afgeleid project en MAIN (09-11, branch stap 1): drie keer {profiel, ops}
       // zoals /export/v3, maar `profiel` is hier het hele werkbestand (studio-project v3).
-      // /samenvoegen (14-11, branch terugmergen stap 1): dezelfde invoer, maar het antwoord is een
-      // voorstel om weg te schrijven: {conflicten, buitenMap, opsMain, opsTak, basis, …}.
+      // /samenvoegen (14-11, branch terugmergen stap 1 en 2): dezelfde invoer plus `keuze`; het antwoord
+      // is een voorstel om weg te schrijven: {conflicten, opgelost, buitenMap, samenhang, opsMain, opsTak, basis, …}.
       if (req.method === "POST" && (pad === "/vergelijk" || pad === "/api/vergelijk" || pad === "/samenvoegen" || pad === "/api/samenvoegen")) {
         const samenvoegen = pad.endsWith("/samenvoegen");
         const invoer = await leesInvoer(req, MAX_BYTES_VERGELIJK);
-        const onbekend = Object.keys(invoer).filter((k) => !["basis", "tak", "main", "mapId"].includes(k));
+        const onbekend = Object.keys(invoer).filter((k) => !["basis", "tak", "main", "mapId", ...(samenvoegen ? ["keuze"] : [])].includes(k));
         if (onbekend.length) throw probleem(400, "ongeldige-parameter", "Ongeldige parameter", `Onbekende veld(en): ${onbekend.join(", ")}.`);
         for (const kant of ["basis", "tak", "main"]) {
           const x = invoer[kant];
@@ -171,10 +171,13 @@ export function maakServer() {
           if (x.ops !== undefined && !Array.isArray(x.ops)) throw probleem(400, "ongeldige-body", "Ongeldige body", `${kant}.ops moet een lijst zijn.`);
         }
         if (invoer.mapId != null && typeof invoer.mapId !== "string") throw probleem(400, "ongeldige-body", "Ongeldige body", "`mapId` moet tekst zijn.");
+        if (invoer.keuze != null && (typeof invoer.keuze !== "object" || Array.isArray(invoer.keuze) || Object.values(invoer.keuze).some((w) => typeof w !== "boolean" && w !== "terug"))) {
+          throw probleem(400, "ongeldige-body", "Ongeldige body", "`keuze` moet een object zijn met per sleutel true, false of \"terug\".");
+        }
         const bundel = await laadBundel();
         let uit;
         try {
-          const p = { basis: invoer.basis, tak: invoer.tak, main: invoer.main, mapId: invoer.mapId ?? null };
+          const p = { basis: invoer.basis, tak: invoer.tak, main: invoer.main, mapId: invoer.mapId ?? null, ...(samenvoegen ? { keuze: invoer.keuze ?? null } : {}) };
           uit = samenvoegen ? bundel.samenvoegProjecten(p) : bundel.vergelijkProjecten(p);
         } catch (e) {
           console.error(`render-svc: ${samenvoegen ? "samenvoegen" : "vergelijken"} mislukt`, e);
