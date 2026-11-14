@@ -61,7 +61,9 @@ dat, en forceert `git branch -D` het (met opzet).
 ## 6. Huidige stand
 
 - Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
-  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.42.0`**
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.43.0`**
+  (2026-11-14: samenvoegen met schuifje, packages en bundels in de boom; fix automatische
+  plaatsing naar de server; lidwoord; samen met render 0.4.7 en devloop 0.30.1), na **`studio/v0.42.0`**
   (2026-11-14: branch samenvoegen stap 2a — vinkjes in een boom, terugzetten naar MAIN,
   samenhang-vangnet; samen met render 0.4.6, api 0.27.0 en devloop 0.30.0), na **`studio/v0.41.0`**
   (2026-11-14: branch samenvoegen naar MAIN, stap 1; samen met render 0.4.5, api 0.26.0 en
@@ -188,7 +190,8 @@ dat, en forceert `git branch -D` het (met opzet).
   brekende wijzigingen). Daarvoor **`api/v0.11.0`** (2026-10-07: Studio-projecten op de server,
   tabel `studio_projecten`); zie `RELEASE.md`.
 - Generator: **`codegen/v0.1.0`**; sindsdien geen release.
-- Render-sidecar: **`render/v0.4.6`** (2026-11-14: `keuze` op `/samenvoegen`, samenhang-vangnet,
+- Render-sidecar: **`render/v0.4.7`** (2026-11-14: de code van studio 0.43.0 — packages en bundels
+  in vergelijken/samenvoegen; image `bitemp-render-svc:0.4.7`), na **`render/v0.4.6`** (2026-11-14: `keuze` op `/samenvoegen`, samenhang-vangnet,
   sleutel/map/ouder in `/vergelijk`; image `bitemp-render-svc:0.4.6`), na **`render/v0.4.5`** (2026-11-14: `POST /samenvoegen` met naspeel-controle;
   image `bitemp-render-svc:0.4.5`), na **`render/v0.4.4`** (2026-11-14: de code van studio 0.40.0 — BPMN-profiel 1.1.0
   in de bundel; image `bitemp-render-svc:0.4.4`), na **`render/v0.4.3`** (2026-11-12: de code van studio 0.39.0 — profielen met hun
