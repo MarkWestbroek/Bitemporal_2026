@@ -284,3 +284,39 @@ test("terug bij een conflict: MAIN wint aan beide kanten", () => {
   assert.equal(r.nieuwTak.profielen.uml.elements.E.naam, "E(b)");
   assert.deepEqual(r.conflicten, [{ soort: "element", profielId: "uml", id: "E", gekozen: "main" }]);
 });
+
+test("element als ouder in de boom (Mark 14-11): diagram onder een package ligt in de map van dat package", () => {
+  const tak = maakTak();
+  tak.profielen.uml.elements.PKG = { id: "PKG", naam: "besluit" };
+  tak.structuur.plaatsing["el::uml::PKG"] = "dienst";
+  tak.profielen.uml.diagrams.DB = { id: "DB", naam: "Besluit", nodes: [] };
+  tak.structuur.plaatsing["uml::DB"] = "el::uml::PKG";
+  tak.profielen.uml.elements.KL = { id: "KL", naam: "Beschikking" };
+  tak.structuur.plaatsing["el::uml::KL"] = "el::uml::PKG";
+  const r = verschilMetMain({ basis: BASIS, tak, main: maakMain(), mapId: "dienst" });
+  const db = r.verschillen.find((v) => v.id === "DB"), kl = r.verschillen.find((v) => v.id === "KL");
+  assert.deepEqual([db.inScope, db.mapId, db.ouderId], [true, "dienst", "PKG"]);
+  assert.deepEqual([kl.inScope, kl.mapId, kl.ouderId], [true, "dienst", "PKG"]);
+  // Package mee, diagram mee: goed. Diagram zonder package: samenhang.
+  const zonder = voegSamen({ basis: BASIS, tak, main: maakMain(), keuze: { "element:uml:PKG": false, "diagram:uml:DB": true, "element:uml:KL": false } });
+  assert.deepEqual(nieuweSamenhangFouten(zonder.samengevoegd, maakMain(), tak), ["plaatsing uml::DB: element uml/PKG ontbreekt"]);
+  const met = voegSamen({ basis: BASIS, tak, main: maakMain(), keuze: { "element:uml:PKG": true, "diagram:uml:DB": true, "element:uml:KL": true } });
+  assert.deepEqual(nieuweSamenhangFouten(met.samengevoegd, maakMain(), tak), []);
+});
+
+test("context: een ongewijzigd package boven een nieuw diagram staat als ouder in de keuzeboom", async () => {
+  const { bouwKeuzeBoom } = await import("./keuzeBoom.js");
+  const basis = kopie(BASIS);
+  basis.profielen.uml.elements.PKG = { id: "PKG", naam: "besluit" };
+  basis.structuur.plaatsing["el::uml::PKG"] = "dienst";
+  const tak = kopie(basis);
+  tak.profielen.uml.diagrams.DB = { id: "DB", naam: "Besluit", nodes: [] };
+  tak.structuur.plaatsing["uml::DB"] = "el::uml::PKG";
+  const r = verschilMetMain({ basis, tak, main: basis, mapId: "dienst" });
+  assert.deepEqual(Object.keys(r.context), ["element:uml:PKG"]);
+  const boom = bouwKeuzeBoom(r.verschillen, r.mappen, r.context);
+  assert.equal(boom[0].knoopId, "map:dienst");
+  assert.equal(boom[0].kinderen[0].knoopId, "context:element:uml:PKG");
+  assert.equal(boom[0].kinderen[0].label, "besluit");
+  assert.equal(boom[0].kinderen[0].kinderen[0].knoopId, "eenheid:diagram:uml:DB");
+});

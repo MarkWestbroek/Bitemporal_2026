@@ -29,6 +29,7 @@
  *
  * Geen nieuwe shapes: alles is `class-box`, zoals OAS en canoniek-uml.
  */
+import { startNaam } from "../../diagramcore/types/startNaam.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerHandlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
 import { INGEBOUWDE_SCALARS, kardinaliteit } from "./typeExpressie.js";
@@ -125,6 +126,7 @@ const elementTypes = [
     // root-connector; de naam is vrij (bv. de naam van de API).
     id: "schema",
     label: "Schema",
+    lidwoord: "het",
     kort: "SCH",
     stereotype: "«schema»",
     shape: "class-box",
@@ -136,6 +138,7 @@ const elementTypes = [
   {
     id: "object",
     label: "Type (object)",
+    lidwoord: "het",
     kort: "TYPE",
     stereotype: "«type»",
     shape: "class-box",
@@ -148,6 +151,7 @@ const elementTypes = [
   {
     id: "interface",
     label: "Interface",
+    lidwoord: "de",
     kort: "INT",
     stereotype: "«interface»",
     shape: "class-box",
@@ -160,6 +164,7 @@ const elementTypes = [
   {
     id: "union",
     label: "Union",
+    lidwoord: "de",
     kort: "UNION",
     stereotype: "«union»",
     shape: "class-box",
@@ -170,6 +175,7 @@ const elementTypes = [
   {
     id: "enum",
     label: "Enum",
+    lidwoord: "de",
     kort: "ENUM",
     stereotype: "«enum»",
     shape: "class-box",
@@ -181,6 +187,7 @@ const elementTypes = [
   {
     id: "input",
     label: "Input",
+    lidwoord: "de",
     kort: "INPUT",
     stereotype: "«input»",
     shape: "class-box",
@@ -192,6 +199,7 @@ const elementTypes = [
   {
     id: "scalar",
     label: "Scalar",
+    lidwoord: "de",
     kort: "SCAL",
     stereotype: "«scalar»",
     shape: "class-box",
@@ -204,6 +212,7 @@ const elementTypes = [
     // directives staan als tekst op het element of veld waar ze gelden.
     id: "directive",
     label: "Directive",
+    lidwoord: "de",
     kort: "@",
     stereotype: "«directive»",
     shape: "class-box",
@@ -230,6 +239,7 @@ const elementTypes = [
   {
     id: "notitie",
     label: "Notitie",
+    lidwoord: "de",
     kort: "NOT",
     shape: "note",
     icoon: "notitie",
@@ -239,6 +249,7 @@ const elementTypes = [
   {
     id: "boundary",
     label: "Kader",
+    lidwoord: "het",
     kort: "KADER",
     shape: "boundary",
     icoon: "kader",
@@ -536,7 +547,7 @@ export function maakElement(elementTypeId) {
   _teller += 1;
   const element = {
     id: `gql_${Date.now()}_${_teller}`,
-    naam: STARTNAMEN[et.id] ?? `Nieuw${et.label.replace(/[^A-Za-z]/g, "")}`,
+    naam: STARTNAMEN[et.id] ?? startNaam(et),
     elementType: et.id,
     compartimenten: [],
     data: {},

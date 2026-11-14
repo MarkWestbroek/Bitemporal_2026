@@ -237,3 +237,39 @@ test("scenario 8 — drie rondes met doorwerken aan beide kanten blijven kloppen
     assert.deepEqual(s.verschil(), ronde === 2 ? [[S("D"), "gewijzigd"]] : []);
   }
 });
+
+test("scenario 9 — nieuw package met een diagram eronder (element als ouder in de boom): alleen samen", () => {
+  const s = maakServer();
+  s.afsplitsen();
+  const diagram = (id, naam) => ({ store: `model:${P}`, op: "patchDiagrammen", args: [{ zet: { [id]: { id, naam, nodes: [], edges: [] } }, wis: [] }] });
+  const plaatsOnder = (sleutel, ouderSleutel) => ({ store: "structuur", op: "patchStructuur", args: [{ zetPlaatsing: { [sleutel]: ouderSleutel } }] });
+  s.tak(zet(el("PKG", "besluit")), plaats("PKG", "dienst"), diagram("DB", "Besluit"), plaatsOnder(`${P}::DB`, `el::${P}::PKG`));
+  assert.deepEqual(s.verschil(), [[`diagram:${P}:DB`, "nieuw"], [S("PKG"), "nieuw"]], "beide in de map, niet 'buiten de map'");
+  const r = vergelijkProjecten({ basis: { profiel: s.standMain() }, tak: { profiel: s.standTak() }, main: { profiel: s.standMain() }, mapId: "dienst" });
+  assert.ok(r.verschillen.every((v) => v.inScope));
+  const fout = s.samenvoegen({ [S("PKG")]: false, [`diagram:${P}:DB`]: true });
+  assert.deepEqual(fout.samenhang, [{ kant: "main", fout: `plaatsing ${P}::DB: element ${P}/PKG ontbreekt` }]);
+  s.samenvoegen({ [S("PKG")]: true, [`diagram:${P}:DB`]: true });
+  assert.equal(s.standMain().structuur.plaatsing[`${P}::DB`], `el::${P}::PKG`);
+  assert.deepEqual(s.verschil(), []);
+});
+
+test("scenario 10 — diagrambundel (Mark 14-11): zichtbaar en kiesbaar; niet zonder haar diagrammen", () => {
+  const s = maakServer();
+  s.afsplitsen();
+  const diagram = (id, naam) => ({ store: `model:${P}`, op: "patchDiagrammen", args: [{ zet: { [id]: { id, naam, nodes: [], edges: [] } }, wis: [] }] });
+  const bundel = (id, naam, diagramIds) => ({ store: "structuur", op: "patchStructuur", args: [{ zetMappen: {}, wisMappen: [], zetPlaatsing: {}, wisPlaatsing: [], zetBundels: { [id]: { id, naam, tabs: diagramIds.map((d) => ({ profielId: P, diagramId: d })) } }, wisBundels: [] }] });
+  s.tak(diagram("DB", "Besluit"), { store: "structuur", op: "patchStructuur", args: [{ zetPlaatsing: { [`${P}::DB`]: "dienst" } }] }, bundel("B1", "Besluit en Evenement", ["DB"]));
+  assert.deepEqual(s.verschil(), [["bundel::B1", "nieuw"], [`diagram:${P}:DB`, "nieuw"]], "de bundel staat in het verschil");
+  // Bundel mee, diagram niet: de tab wijst naar niets.
+  const fout = s.samenvoegen({ "bundel::B1": true, [`diagram:${P}:DB`]: false });
+  assert.deepEqual(fout.samenhang, [{ kant: "main", fout: `bundel B1: diagram ${P}/DB ontbreekt` }]);
+  // Diagram mee, bundel nog niet: mag; de bundel blijft in de branch.
+  s.samenvoegen({ "bundel::B1": false, [`diagram:${P}:DB`]: true });
+  assert.equal(s.standMain().structuur.bundels?.B1, undefined);
+  assert.deepEqual(s.verschil(), [["bundel::B1", "nieuw"]]);
+  // Volgende ronde: de bundel erbij.
+  s.samenvoegen({ "bundel::B1": true });
+  assert.equal(s.standMain().structuur.bundels.B1.naam, "Besluit en Evenement");
+  assert.deepEqual(s.verschil(), []);
+});

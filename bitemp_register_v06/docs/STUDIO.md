@@ -464,6 +464,12 @@ te wijzigen.
 > diagrammen), (2) een diagram dat in een map komt (abonnement op `plaatsing`), (3) het laden
 > (hydratatie, en `pasProjectToe` → `ruimNietIngedeeldOp`). Niet tijdens andermans operaties of
 > een snapshot (`operaties.isStil`). De plaatsing gaat als `plaatsPerMap` de sync in.
+> **Fout tot 14-11 (gemeld door Mark):** die `plaatsPerMap` liep binnen de omwikkelde actie die
+> de trigger afvuurde (addElementToDiagram, plaatsDiagram). De sync legt alleen de buitenste actie
+> vast (`actieDiepte` in `sync/operaties.js`, over álle stores), dus de plaatsing bleef lokaal: de
+> boom toonde het element in de map, de server en *Verschil met MAIN* niet. Nu draait
+> `plaatsBijDiagrammen` haar als microtaak ná de actie, als eigen operatie. Bestaande projecten
+> herstellen bij het openen (trigger 3). Test: `operaties.test.js` ("actie in een andere store").
 >
 > **AI-assistent stap 1b (2026-10-14):** de dialoog is een gesprek over een map. De assistent
 > krijgt mee wat er al is (`bestaandInMap`: diagrammen, elementen, relaties met ids) en mag in
@@ -693,9 +699,12 @@ te wijzigen.
 > aangevinkt wint de branch. Wat buiten de map ligt staat standaard uit. De keuze gaat als
 > `keuze: {sleutel: bool}` naar `POST …/samenvoegen`; `voegSamen` maakt daarmee de nieuwe MAIN én de
 > nieuwe stand van de branch (`nieuwTak`). Zolang de samenhanggraaf (stap 3) er niet is, weigert de
-> server een keuze die een verwijzing stuk maakt (`409 samenhang`, `samenhangFouten`). Per regel zet
-> **↶ terugzetten** de eenheid in de branch terug naar de versie van MAIN (keuze `"terug"`), letterlijk:
-> ook een veld dat MAIN niet heeft (bv. geen `kleur`) verdwijnt. Kiezen per veld binnen een element
+> server een keuze die een verwijzing stuk maakt (`409 samenhang`, `samenhangFouten`). Sinds 14-11
+> (voorstel Mark) is het vinkje een **schuifje met drie standen**: ↶ MAIN overnemen in de branch
+> (keuze `"terug"`, letterlijk: ook een veld dat MAIN niet heeft, bv. geen `kleur`, verdwijnt),
+> – niets doen, → naar MAIN (bij een conflict: MAIN overschrijven). De tekst per stand hangt af van
+> de status (`schuifTeksten` in `keuzeBoom.js`); op een map is de stand "gemengd" als de kinderen
+> verschillen. Kiezen per veld binnen een element
 > volgt.
 > De vergelijking is `studio/takken/verschilMetMain.js`: een zuivere drieweg op drie
 > gematerialiseerde werkbestanden (basis, tak, MAIN) met per element, diagram, map en

@@ -1,6 +1,7 @@
 // Studio — "Samenvoegen naar MAIN" in Verschil met MAIN (14-11, plan "Branch terugmergen",
 // stap 1 en 2). De API is gemockt: GET …/vergelijk en POST …/samenvoegen. Controleert: de boom met
-// vinkjes (map → element, half gekozen ouder), een conflict staat standaard uit en blokkeert niet;
+// per regel een schuifje (↶ MAIN overnemen, – niets, → naar MAIN; ouder "gemengd"), een conflict
+// staat standaard in het midden en blokkeert niet;
 // na bevestiging één POST met de keuze, een melding en opnieuw vergelijken; gekozen wijzigingen
 // buiten de map gaan alleen met bevestiging mee (ookBuitenMap); een 409 van de server (samenhang,
 // volgnummer verschoven) geeft een begrijpelijke melding.
@@ -42,28 +43,32 @@ async function openDialoog(page) {
   await expect(page.getByTestId("verschil-met-main")).toBeVisible();
 }
 
-test("boom: map met elementen, conflict standaard uit, ouder half; MAIN-wijzigingen apart", async ({ page }) => {
+test("boom: map met elementen, conflict in het midden, ouder gemengd; MAIN-wijzigingen apart", async ({ page }) => {
   await openStudio(page);
   await page.route(`**/api/studio/projecten/${TAK}/vergelijk`, (r) => r.fulfill({ json: vergelijking() }));
   await openDialoog(page);
   const boom = page.getByTestId("keuze-boom");
   await expect(boom.locator('[data-knoop="map:dienst"]')).toBeVisible();
-  const map = page.getByTestId("keuze-map:dienst");
-  const d = page.getByTestId("keuze-eenheid:element:diagram05:D");
-  const e = page.getByTestId("keuze-eenheid:element:diagram05:E");
-  await expect(d).toBeChecked();
-  await expect(e).not.toBeChecked();
-  await expect(map).toHaveAttribute("data-stand", "half");
-  await expect(boom).toContainText("MAIN houdt de zijne");
+  const map = page.getByTestId("schuif-map:dienst");
+  const d = page.getByTestId("schuif-eenheid:element:diagram05:D");
+  const e = page.getByTestId("schuif-eenheid:element:diagram05:E");
+  await expect(d).toHaveAttribute("data-stand", "rechts");
+  await expect(e).toHaveAttribute("data-stand", "midden");
+  await expect(map).toHaveAttribute("data-stand", "gemengd");
+  await expect(page.getByTestId("keuze-tekst-eenheid:element:diagram05:E")).toHaveText("→ MAIN houdt de zijne; blijft in de branch");
+  await expect(page.getByTestId("keuze-tekst-eenheid:element:diagram05:D")).toHaveText("→ wijziging naar MAIN");
   await expect(page.getByTestId("samenvoegen-naar-main")).toBeEnabled();
   await expect(page.getByTestId("samenvoegen-naar-main")).toHaveText("Samenvoegen naar MAIN (1)");
-  // Map aan: alles eronder aan, ook het conflict (dan wint de branch).
-  await map.click();
-  await expect(e).toBeChecked();
-  await expect(map).toHaveAttribute("data-stand", "aan");
-  await expect(boom).toContainText("versie van de branch");
-  await map.click();
-  await expect(d).not.toBeChecked();
+  // Map naar rechts: alles eronder naar MAIN, ook het conflict (dan overschrijft de branch MAIN).
+  await page.getByTestId("schuif-map:dienst-rechts").click();
+  await expect(e).toHaveAttribute("data-stand", "rechts");
+  await expect(map).toHaveAttribute("data-stand", "rechts");
+  await expect(page.getByTestId("keuze-tekst-eenheid:element:diagram05:E")).toHaveText("→ MAIN overschrijven");
+  await page.getByTestId("schuif-map:dienst-midden").click();
+  await expect(d).toHaveAttribute("data-stand", "midden");
+  await page.getByTestId("schuif-map:dienst-links").click();
+  await expect(d).toHaveAttribute("data-stand", "links");
+  await expect(page.getByTestId("keuze-tekst-eenheid:element:diagram05:D")).toHaveText("→ versie van MAIN terug");
   // G (alleen op MAIN) staat niet in de boom.
   await expect(boom.locator('[data-verschil-id="G"]')).toHaveCount(0);
   await expect(page.getByTestId("van-main")).toContainText("Alleen op MAIN (1)");
@@ -91,7 +96,7 @@ test("bevestigen: één POST met de keuze, melding, opnieuw vergelijken", async 
   await expect.poll(() => vergeleken).toBe(2);
 });
 
-test("buiten de map: standaard uit; aangevinkt alleen met bevestiging, dan ookBuitenMap", async ({ page }) => {
+test("buiten de map: standaard in het midden; naar rechts alleen met bevestiging, dan ookBuitenMap", async ({ page }) => {
   await openStudio(page);
   await page.route(`**/api/studio/projecten/${TAK}/vergelijk`, (r) => r.fulfill({ json: vergelijking({ buiten: true }) }));
   const bodies = [];
@@ -100,11 +105,12 @@ test("buiten de map: standaard uit; aangevinkt alleen met bevestiging, dan ookBu
     r.fulfill({ json: okAntwoord });
   });
   await openDialoog(page);
-  const x = page.getByTestId("keuze-eenheid:element:diagram05:X");
-  await expect(x).not.toBeChecked();
+  const x = page.getByTestId("schuif-eenheid:element:diagram05:X");
+  await expect(x).toHaveAttribute("data-stand", "midden");
   await expect(page.getByTestId("keuze-boom")).toContainText("buiten de map");
-  await x.click();
-  await expect(x).toBeChecked();
+  await page.getByTestId("schuif-eenheid:element:diagram05:X-rechts").click();
+  await expect(x).toHaveAttribute("data-stand", "rechts");
+  await expect(page.getByTestId("keuze-tekst-eenheid:element:diagram05:X")).toHaveText("→ toevoegen aan MAIN");
   // Eerst annuleren: geen POST.
   page.once("dialog", (d) => d.dismiss());
   await page.getByTestId("samenvoegen-naar-main").click();
@@ -140,7 +146,7 @@ test("409 samenhang en volgnummer_verschoven: melding, niets kapot", async ({ pa
   await expect(page.getByTestId("samenvoegen-naar-main")).toBeEnabled();
 });
 
-test("terugzetten (↶): keuze 'terug' in de POST, telt niet als gekozen, knop ook zonder keuze aan", async ({ page }) => {
+test("schuifje links (↶): keuze 'terug' in de POST, telt niet als gekozen, knop ook zonder keuze aan", async ({ page }) => {
   await openStudio(page);
   await page.route(`**/api/studio/projecten/${TAK}/vergelijk`, (r) => r.fulfill({ json: vergelijking() }));
   const bodies = [];
@@ -150,9 +156,8 @@ test("terugzetten (↶): keuze 'terug' in de POST, telt niet als gekozen, knop o
   });
   await openDialoog(page);
   await page.getByTestId("keuze-alles-uit").click();
-  await page.getByTestId("terug-eenheid:element:diagram05:D").click();
-  await expect(page.getByTestId("terug-label-eenheid:element:diagram05:D")).toHaveText("→ wordt teruggezet naar MAIN");
-  await expect(page.getByTestId("keuze-eenheid:element:diagram05:D")).not.toBeChecked();
+  await page.getByTestId("schuif-eenheid:element:diagram05:D-links").click();
+  await expect(page.getByTestId("schuif-eenheid:element:diagram05:D")).toHaveAttribute("data-stand", "links");
   await expect(page.getByTestId("samenvoegen-naar-main")).toHaveText("Samenvoegen naar MAIN (0, 1 terug)");
   let vraag = "";
   page.once("dialog", (d) => { vraag = d.message(); d.accept(); });

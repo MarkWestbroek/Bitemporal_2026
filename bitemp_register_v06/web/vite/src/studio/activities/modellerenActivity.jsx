@@ -1286,6 +1286,14 @@ function topVoorouder(ouderVan, elementId) {
  * profiel in de map van het eerste geplaatste diagram waarop ze staan.
  * `diagramIds` = alleen elementen op die (gewijzigde) diagrammen; null = alles.
  * plaatsPerMap is gesynct: anderen zien dezelfde plaatsing.
+ *
+ * Ná de lopende actie, niet erbinnen (gemeld door Mark 14-11: een nieuw element stond lokaal in
+ * de map van zijn diagram, maar niet op de server, en dus niet in *Verschil met MAIN*). De
+ * triggers zijn store-abonnementen die vuren tíjdens een omwikkelde actie (addElementToDiagram,
+ * plaatsDiagram). De sync legt alleen de buitenste actie vast (`actieDiepte` in operaties.js geldt
+ * voor alle stores samen), dus plaatsPerMap binnen die actie werd nooit een operatie. Als
+ * microtaak is het een eigen, buitenste actie; die draait direct na de lopende actie, vóór er
+ * iets anders kan gebeuren, dus de berekende indeling is nog actueel.
  */
 function plaatsBijDiagrammen(profiel, diagramIds = null) {
   const st = profiel.useStore?.getState?.();
@@ -1293,7 +1301,7 @@ function plaatsBijDiagrammen(profiel, diagramIds = null) {
   const ms = useModellerenStore.getState();
   const { ouderVan } = bepaalHierarchie(profiel, st.elements);
   const perMap = volgDiagram({ profielId: profiel.id, elements: st.elements, diagrams: st.diagrams, plaatsing: ms.plaatsing, ouderVan, diagramIds });
-  if (Object.keys(perMap).length) ms.plaatsPerMap(perMap);
+  if (Object.keys(perMap).length) queueMicrotask(() => useModellerenStore.getState().plaatsPerMap(perMap));
 }
 
 /** Alle profielen opruimen (project geladen): wat op een geplaatst diagram staat, in die map. */

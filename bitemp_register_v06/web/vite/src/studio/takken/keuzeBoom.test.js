@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { standaardKeuze, bouwKeuzeBoom, sleutelsVan, standVan, zetKnoop, keuzeTelling } from "./keuzeBoom.js";
+import { standaardKeuze, bouwKeuzeBoom, sleutelsVan, standVan, zetKnoop, keuzeTelling, schuifTeksten } from "./keuzeBoom.js";
 
 const v = (soort, id, extra = {}) => ({
   soort, profielId: soort === "map" || soort === "kruisverband" ? null : "uml", id, naam: extra.naam || id,
@@ -45,16 +45,16 @@ test("bouwKeuzeBoom: map → submap → element → relatie; groepen achteraan; 
   assert.ok(!boom.some((k) => k.knoopId === "map:leeg"), "een map zonder verschil komt niet in de boom");
 });
 
-test("vinkjes: ouder zet kinderen, half als gemengd", () => {
+test("schuifje: ouder zet kinderen, gemengd als ze verschillen", () => {
   const boom = bouwKeuzeBoom(VERSCHILLEN, MAPPEN);
   const dienst = boom[0];
   let keuze = standaardKeuze(VERSCHILLEN);
   assert.deepEqual(sleutelsVan(dienst).sort(), ["diagram:uml:D1", "element:uml:D", "element:uml:E", "element:uml:H", "element:uml:R", "map::stappen"]);
-  assert.equal(standVan(dienst, keuze), "half", "E (conflict) staat uit");
-  keuze = zetKnoop(dienst, keuze, true);
-  assert.equal(standVan(dienst, keuze), "aan");
-  keuze = zetKnoop(dienst.kinderen[0], keuze, false);
-  assert.equal(standVan(dienst.kinderen[0], keuze), "uit");
+  assert.equal(standVan(dienst, keuze), "gemengd", "E (conflict) staat in het midden");
+  keuze = zetKnoop(dienst, keuze, "rechts");
+  assert.equal(standVan(dienst, keuze), "rechts");
+  keuze = zetKnoop(dienst.kinderen[0], keuze, "midden");
+  assert.equal(standVan(dienst.kinderen[0], keuze), "midden");
   assert.equal(keuze["element:uml:R"], false, "ook de relatie onder H");
   assert.equal(keuze["element:uml:X"], false, "buiten de knoop niets veranderd");
 });
@@ -72,5 +72,15 @@ test("keuzeTelling", () => {
   const metTerug = { ...keuze, "element:uml:D": "terug", "element:uml:E": "terug" };
   assert.deepEqual(keuzeTelling(VERSCHILLEN, metTerug), { gekozen: 6, nietGekozen: 0, terug: 2, conflictTak: 0, conflictMain: 0, buitenGekozen: 1, vanMain: 1 });
   const dienst = bouwKeuzeBoom(VERSCHILLEN, MAPPEN)[0];
-  assert.equal(standVan(dienst, metTerug), "half", "terug telt als uit");
+  assert.equal(standVan(dienst, metTerug), "gemengd");
+  assert.equal(standVan(dienst, zetKnoop(dienst, metTerug, "links")), "links");
+  assert.equal(zetKnoop(dienst, metTerug, "links")["element:uml:D"], "terug");
+});
+
+test("schuifTeksten: links en rechts per status", () => {
+  assert.equal(schuifTeksten({ status: "nieuw" }).rechts, "toevoegen aan MAIN");
+  assert.equal(schuifTeksten({ status: "weg" }).rechts, "ook uit MAIN verwijderen");
+  assert.equal(schuifTeksten({ status: "gewijzigd" }).links, "versie van MAIN terug");
+  assert.deepEqual([schuifTeksten({ status: "conflict" }).rechts, schuifTeksten({ status: "conflict" }).rechtsWaarschuwing], ["MAIN overschrijven", true]);
+  assert.equal(schuifTeksten(null).rechts, "alles naar MAIN");
 });

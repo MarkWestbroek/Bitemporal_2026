@@ -8,6 +8,29 @@ De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
 
+### Gewijzigd
+- **Samenvoegen naar MAIN: schuifje met drie standen** (voorstel Mark 14-11) in plaats van vinkje plus ↶.
+  Per regel: ↶ MAIN overnemen in de branch, – niets doen (blijft in de branch), → naar MAIN (bij een
+  conflict: MAIN overschrijven, in rood). Achter de regel staat wat de stand doet, passend bij de status
+  (nieuw: "toevoegen aan MAIN", weg: "ook uit MAIN verwijderen", …). Op een map geldt het schuifje voor
+  alles eronder; verschillen de kinderen, dan staat het op "gemengd".
+
+### Opgelost
+- **Samenvoegen naar MAIN: diagrammen onder een package stonden "buiten de map"** (gemeld door Mark 14-11 op
+  Fundament). Een plaatsing onder een element (element als ouder in de boom) volgt nu de keten tot de map;
+  de keuzeboom toont het package als ouder, zoals de projectboom. Vraagt render-svc (`/vergelijk`, `/samenvoegen`).
+- **Samenvoegen naar MAIN: diagrambundels** gingen onzichtbaar mee, ook zonder hun diagrammen. Nu staan ze in de
+  boom (groep "Diagrambundels") met een eigen schuifje, en een bundel zonder haar diagrammen wordt geweigerd.
+- **Samenvoegen naar MAIN: het type uit het profiel** (Entiteit, Gegevenselement, Package (domein), …) in plaats van
+  "element" (Mark 14-11).
+- **De automatische plaatsing van een element in de map van zijn diagram ging niet naar de server** (gemeld door
+  Mark 14-11). De projectboom toonde het element in de map, maar alleen lokaal: de sync legde de plaatsing niet vast,
+  omdat ze binnen de actie "element op diagram" (of "diagram in map") gebeurde. Anderen, de server en *Verschil met
+  MAIN* zagen het element "zonder map". Nu is het een eigen operatie; bestaande projecten herstellen bij het openen.
+- **Startnaam met het goede lidwoord:** NieuweEntiteit, NieuweEnumeratie, NieuwGegevenselement (Mark 14-11). Het
+  elementtype (M3) heeft een optioneel `lidwoord` ("de"/"het"); canoniek model, MIM, OAS, GraphQL en het
+  superprofiel (notitie, constraint, diagramverwijzing) vullen het in.
+
 ## [studio/v0.42.0] — 2026-11-14
 
 Samen met render 0.4.6, api 0.27.0 en devloop 0.30.0.

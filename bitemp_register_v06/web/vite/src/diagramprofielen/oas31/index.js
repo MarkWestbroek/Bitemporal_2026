@@ -26,6 +26,7 @@
  * eigen elementen (pass-through via meta), YAML-import/-export (serialisatie
  * is een eigen fase — vgl. canoniek-uml fase 4).
  */
+import { startNaam } from "../../diagramcore/types/startNaam.js";
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerHandlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
 
@@ -99,6 +100,7 @@ const elementTypes = [
     // naam is de titel, versie/licentie verschijnen als weergave-regels.
     id: "api",
     label: "API (info)",
+    lidwoord: "de",
     kort: "API",
     stereotype: "«api»",
     shape: "class-box",
@@ -136,6 +138,7 @@ const elementTypes = [
     // Eén servers-item; de element-naam is de url.
     id: "server",
     label: "Server",
+    lidwoord: "de",
     kort: "SRV",
     stereotype: "«server»",
     shape: "class-box",
@@ -146,6 +149,7 @@ const elementTypes = [
   {
     id: "schema",
     label: "Schema (object)",
+    lidwoord: "het",
     kort: "SCH",
     stereotype: "«schema»",
     shape: "class-box",
@@ -183,6 +187,7 @@ const elementTypes = [
   {
     id: "enum",
     label: "Enum",
+    lidwoord: "de",
     kort: "ENUM",
     stereotype: "«enum»",
     shape: "class-box",
@@ -194,6 +199,7 @@ const elementTypes = [
   {
     id: "operatie",
     label: "Operatie",
+    lidwoord: "de",
     kort: "OP",
     stereotype: "«operation»",
     shape: "class-box",
@@ -229,6 +235,7 @@ const elementTypes = [
   {
     id: "notitie",
     label: "Notitie",
+    lidwoord: "de",
     kort: "NOT",
     shape: "note",
     icoon: "notitie",
@@ -238,6 +245,7 @@ const elementTypes = [
   {
     id: "boundary",
     label: "Kader",
+    lidwoord: "het",
     kort: "KADER",
     shape: "boundary",
     icoon: "kader",
@@ -555,7 +563,7 @@ export function maakElement(elementTypeId) {
   _teller += 1;
   const element = {
     id: `oas_${Date.now()}_${_teller}`,
-    naam: `Nieuw${et.label.replace(/[^A-Za-z]/g, "")}`,
+    naam: startNaam(et),
     elementType: et.id,
     compartimenten: [],
     data: {},
